@@ -206,7 +206,12 @@ mod rob {
                 if !self.cancel_handle.is_canceled(tag, 0) {
                     self.pushes[0].try_push_iter(tag, iter)
                 } else {
-                    trace_worker!("EARLY_START: output[{:?}] ch: {} cancel push data of {:?} to worker 0;", self.ch_info.scope_level, self.ch_info.index(), tag);
+                    trace_worker!(
+                        "EARLY_START: output[{:?}] ch: {} cancel push data of {:?} to worker 0;",
+                        self.ch_info.scope_level,
+                        self.ch_info.index(),
+                        tag
+                    );
                     Ok(())
                 }
             } else {
@@ -351,6 +356,7 @@ mod rob {
     use crate::api::function::{FnResult, RouteFunction};
     use crate::channel_id::ChannelInfo;
     use crate::communication::buffer::ScopeBufferPool;
+    use crate::communication::cancel::{CancelHandle, DynSingleConsCancelPtr, MultiConsCancelPtr};
     use crate::communication::decorator::evented::EventEmitPush;
     use crate::communication::decorator::BlockPush;
     use crate::communication::{IOResult, Magic};
@@ -361,7 +367,6 @@ mod rob {
     use crate::progress::{EndSignal, Weight};
     use crate::tag::tools::map::TidyTagMap;
     use crate::{Data, Tag};
-    use crate::communication::cancel::{MultiConsCancelPtr, CancelHandle, DynSingleConsCancelPtr};
 
     #[allow(dead_code)]
     struct Exchange<D> {
@@ -393,6 +398,7 @@ mod rob {
     pub(crate) struct ExchangeMicroBatchPush<D: Data> {
         pub src: u32,
         pub port: Port,
+        index: u32,
         buffers: Vec<ScopeBufferPool<D>>,
         pushes: Vec<EventEmitPush<D>>,
         route: Exchange<D>,
@@ -412,6 +418,7 @@ mod rob {
             ExchangeMicroBatchPush {
                 src,
                 port: info.source_port,
+                index: info.index(),
                 buffers,
                 pushes,
                 route: Exchange::new(len, router),
@@ -426,6 +433,7 @@ mod rob {
         }
 
         pub(crate) fn skip(&mut self, tag: &Tag) -> IOResult<()> {
+            // clean buffer first;
             for buf in self.buffers.iter_mut() {
                 buf.skip_buf(tag);
             }
@@ -550,13 +558,19 @@ mod rob {
                         self.push_to(target, tag.clone(), buf)?;
                     }
                     Err(e) => {
-                        if let Some(x) = e.0 {
-                            self.blocks
-                                .get_mut_or_insert(&tag)
-                                .push_back(BlockEntry::Single((target, x)));
+                        if !self.cancel_handle.is_canceled(&tag, target) {
                             has_block = true;
-                            trace_worker!("output[{:?}] blocked when push data of {:?} ;", self.port, tag);
-                            break;
+                            if let Some(x) = e.0 {
+                                self.blocks
+                                    .get_mut_or_insert(&tag)
+                                    .push_back(BlockEntry::Single((target, x)));
+                                trace_worker!(
+                                    "output[{:?}] blocked when push data of {:?} ;",
+                                    self.port,
+                                    tag
+                                );
+                                break;
+                            }
                         }
                     }
                     _ => (),
@@ -593,7 +607,12 @@ mod rob {
         fn push(&mut self, mut batch: MicroBatch<D>) -> Result<(), IOError> {
             if !self.blocks.is_empty() {
                 if let Some(b) = self.blocks.get_mut(&batch.tag) {
-                    warn_worker!("output[{:?}] block pushing batch of {:?} ;", self.port, batch.tag);
+                    warn_worker!(
+                        "output[{:?}] block pushing batch of {:?} to channel[{}] ;",
+                        self.port,
+                        batch.tag,
+                        self.index
+                    );
                     b.push_back(BlockEntry::Batch(batch));
                     return would_block!("no buffer available in exchange;");
                 }
@@ -610,6 +629,7 @@ mod rob {
             if len == 0 {
                 if let Some(mut end) = batch.take_end() {
                     if end.seq > 0 {
+                        // seq > 0 means there has data before it;
                         self.flush_last_buffer(&end.tag)?;
                         self.update_end_weight(&mut end);
                     }
@@ -754,9 +774,12 @@ mod rob {
         fn push(&mut self, mut batch: MicroBatch<D>) -> Result<(), IOError> {
             let end = batch.take_end();
             if !batch.is_empty() {
-                if !self.cancel_handle.is_canceled(&batch.tag) {
-                    let cur = batch.tag.current_uncheck() as u64;
-                    let target = self.magic.exec(cur) as usize;
+                let cur = batch.tag.current_uncheck() as u64;
+                let target = self.magic.exec(cur) as usize;
+                if !self
+                    .cancel_handle
+                    .is_canceled(&batch.tag, target)
+                {
                     self.pushes[target].push(batch)?;
                 }
             }

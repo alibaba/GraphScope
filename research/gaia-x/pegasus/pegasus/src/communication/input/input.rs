@@ -310,16 +310,25 @@ impl<D: Data> InputHandle<D> {
         if level == self.ch_info.scope_level {
             // cancel scopes in current scope level;
             if self.cancel.insert(tag.clone(), ()).is_none() {
-                trace_worker!("EARLY_STOP: channel[{}] cancel consume data scope {:?};", self.ch_info.index(), tag);
+                trace_worker!(
+                    "EARLY_STOP: channel[{}] cancel consume data of {:?};",
+                    self.ch_info.index(),
+                    tag
+                );
                 if let Some(stash) = self.stash_index.get_mut(tag) {
                     stash.discard();
                     if !stash.is_exhaust() {
-                       self.propagate_cancel(tag);
+                        self.propagate_cancel(tag);
                     } else {
                         // upstream had finished producing data of the tag;
                     }
                 } else {
-                    self.propagate_cancel(tag);
+                    // 1. because cancel scope level = current scope level,
+                    // 2. the cancel event is propagated from the downstream operator,
+                    // 3. the stash index has no entry of the scope, it seems only one reason:
+                    // the scope is exhaust and cleaned at current input port, so it is needn't
+                    // to propagate any more;
+                    // self.propagate_cancel(tag);
                 }
             };
         } else if *crate::config::ENABLE_CANCEL_CHILD {
@@ -366,10 +375,20 @@ impl<D: Data> InputHandle<D> {
         let ch = self.ch_info.id.index;
         let event = Event::new(source, self.ch_info.source_port, EventKind::Cancel((ch, tag.clone())));
         let result = if self.ch_info.source_peers > 1 {
-            trace_worker!("EARLY_STOP: channel[{}] broadcast backward cancel signal of {:?} to {:?}", self.ch_info.index(), tag, self.ch_info.source_port);
+            trace_worker!(
+                "EARLY_STOP: channel[{}] broadcast backward cancel signal of {:?} to {:?}",
+                self.ch_info.index(),
+                tag,
+                self.ch_info.source_port
+            );
             self.event_emitter.broadcast(event)
         } else {
-            trace_worker!("EARLY_STOP: channel[{}] send self backward cancel signal {:?} to {:?}", self.ch_info.index(), tag, self.ch_info.source_port);
+            trace_worker!(
+                "EARLY_STOP: channel[{}] send self backward cancel signal {:?} to {:?}",
+                self.ch_info.index(),
+                tag,
+                self.ch_info.source_port
+            );
             self.event_emitter.send(source, event)
         };
 
@@ -459,7 +478,10 @@ impl<D> StashedQueue<D> {
     }
 
     fn is_exhaust(&self) -> bool {
-        self.queue.back().map(|b| b.is_last()).unwrap_or(false)
+        self.queue
+            .back()
+            .map(|b| b.is_last())
+            .unwrap_or(false)
     }
 
     fn stash(&mut self, batch: MicroBatch<D>) {

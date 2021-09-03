@@ -118,11 +118,7 @@ impl<I: Data> Map<I> for Stream<I> {
                             let iter = func(item)?;
                             if let Err(err) = session.give_iterator(iter) {
                                 if err.is_would_block() || err.is_interrupted() {
-                                    trace_worker!(
-                                        "flat_map_{} is blocked on {:?};",
-                                        index,
-                                        session.tag,
-                                    );
+                                    trace_worker!("flat_map_{} is blocked on {:?};", index, session.tag,);
                                 }
                                 return Err(err)?;
                             }

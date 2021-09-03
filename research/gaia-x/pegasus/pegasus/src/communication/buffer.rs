@@ -357,6 +357,12 @@ mod rob {
             let pool = unsafe { NonNull::new_unchecked(Box::into_raw(ptr)) };
             MemoryBufferPool { pool }
         }
+
+        fn destroy(&mut self) {
+            unsafe {
+                self.pool.as_ptr().drop_in_place()
+            }
+        }
     }
 
     impl<D> Clone for MemoryBufferPool<D> {
@@ -438,6 +444,12 @@ mod rob {
             let ptr = unsafe { NonNull::new_unchecked(Box::into_raw(ptr)) };
             NonNullBufSlotPtr { ptr }
         }
+
+        fn destroy(&mut self) {
+            unsafe {
+                self.ptr.as_ptr().drop_in_place();
+            }
+        }
     }
 
     impl<D> Deref for NonNullBufSlotPtr<D> {
@@ -491,6 +503,10 @@ mod rob {
                 buf_slots: TidyTagMap::new(scope_level),
                 pinned: None,
             }
+        }
+
+        pub fn unpin(&mut self) {
+            self.pinned.take();
         }
 
         pub fn pin(&mut self, tag: &Tag) -> bool {
@@ -654,6 +670,16 @@ mod rob {
                 buf_slots: Default::default(),
                 pinned: None,
             }
+        }
+    }
+
+    impl<D: Data> Drop for ScopeBufferPool<D> {
+        fn drop(&mut self) {
+            self.pinned.take();
+            for (_, x) in self.buf_slots.iter_mut() {
+                x.destroy();
+            }
+            self.global_pool.destroy()
         }
     }
 }

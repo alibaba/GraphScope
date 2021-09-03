@@ -327,6 +327,7 @@ mod rob {
     use super::*;
     use crate::channel_id::{ChannelId, ChannelInfo};
     use crate::communication::buffer::ScopeBufferPool;
+    use crate::communication::cancel::{CancelHandle, SingleConsCancel};
     use crate::communication::decorator::aggregate::AggregateBatchPush;
     use crate::communication::decorator::broadcast::BroadcastBatchPush;
     use crate::communication::decorator::evented::EventEmitPush;
@@ -334,7 +335,6 @@ mod rob {
     use crate::communication::decorator::{LocalMicroBatchPush, MicroBatchPush};
     use crate::dataflow::DataflowBuilder;
     use crate::BuildJobError;
-    use crate::communication::cancel::{SingleConsCancel, CancelHandle};
 
     impl<T: Data> Channel<T> {
         fn build_pipeline(self, target: Port, id: ChannelId) -> MaterializedChannel<T> {
@@ -413,7 +413,8 @@ mod rob {
                     let (info, pushes, pull, notify) = self.build_remote(scope_level, target, id, dfb)?;
                     let push = BroadcastBatchPush::new(info, pushes);
                     let ch = push.get_cancel_handle();
-                    let push = ChannelPush::new(info, self.scope_delta, MicroBatchPush::Broadcast(push), ch);
+                    let push =
+                        ChannelPush::new(info, self.scope_delta, MicroBatchPush::Broadcast(push), ch);
                     Ok(MaterializedChannel { push, pull: pull.into(), notify: Some(notify) })
                 }
                 ChannelKind::Aggregate(worker) => {
@@ -422,7 +423,8 @@ mod rob {
                     ch_info.target_peers = 1;
                     let push = AggregateBatchPush::new(worker, ch_info, pushes, &cyclic);
                     let cancel = CancelHandle::SC(SingleConsCancel::new(worker));
-                    let push = ChannelPush::new(ch_info, self.scope_delta, MicroBatchPush::Global(push), cancel);
+                    let push =
+                        ChannelPush::new(ch_info, self.scope_delta, MicroBatchPush::Global(push), cancel);
                     Ok(MaterializedChannel { push, pull: pull.into(), notify: Some(notify) })
                 }
                 ChannelKind::ShuffleScope => {

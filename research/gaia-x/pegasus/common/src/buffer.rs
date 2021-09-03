@@ -10,7 +10,6 @@ mod rob {
     use super::*;
 
     struct BufferRecycleHook<D> {
-        batch_size: usize,
         proxy: Arc<BoundLinkQueue<Buffer<D>>>,
         dropped: Arc<AtomicBool>,
     }
@@ -378,7 +377,6 @@ mod rob {
 
         fn get_hook(&self) -> BufferRecycleHook<D> {
             BufferRecycleHook {
-                batch_size: self.batch_size,
                 proxy: self.recycle.clone(),
                 dropped: self.dropped.clone(),
             }

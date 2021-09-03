@@ -150,7 +150,12 @@ mod rob {
                         self.ch_info.index()
                     );
                 } else {
-                    trace_worker!("output[{:?}] notify end of {:?} into channel[{}];", self.port(), end.tag, self.ch_info.index());
+                    trace_worker!(
+                        "output[{:?}] notify end of {:?} into channel[{}];",
+                        self.port(),
+                        end.tag,
+                        self.ch_info.index()
+                    );
                 }
             }
             let seq = end.seq;
@@ -173,7 +178,13 @@ mod rob {
                     if cnt > 0 {
                         b.1 += cnt;
                         b.0 = 0;
-                        trace_worker!("output[{:?}] flush {} data of {:?} into channel[{}] to self;", port, cnt, a, self.ch_info.index());
+                        trace_worker!(
+                            "output[{:?}] flush {} data of {:?} into channel[{}] to self;",
+                            port,
+                            cnt,
+                            a,
+                            self.ch_info.index()
+                        );
                     }
                 }
             }
@@ -348,7 +359,7 @@ mod rob {
     pub struct LocalMicroBatchPush<T: Data> {
         pub ch_info: ChannelInfo,
         inner: ThreadPush<MicroBatch<T>>,
-        push_counts: TidyTagMap<usize>,
+        push_counts: TidyTagMap<(usize, usize)>,
     }
 
     #[allow(dead_code)]
@@ -363,33 +374,46 @@ mod rob {
         fn push(&mut self, batch: MicroBatch<T>) -> IOResult<()> {
             if log_enabled!(log::Level::Trace) {
                 if batch.is_last() {
-                    let mut c = self.push_counts.remove(&batch.tag).unwrap_or(0);
-                    c += batch.len();
+                    let mut c = self
+                        .push_counts
+                        .remove(&batch.tag)
+                        .unwrap_or((0, 0));
+                    c.0 += batch.len();
+                    c.1 += c.0;
                     trace_worker!(
                         "output[{:?}] push last batch(len={}) of {:?} to local ch {}, total pushed {};",
                         self.ch_info.source_port,
                         batch.len(),
                         batch.tag,
                         self.ch_info.id.index,
-                        c
+                        c.1
                     );
                 } else {
                     let c = self.push_counts.get_mut_or_insert(&batch.tag);
-                    *c += batch.len();
-                    trace_worker!(
-                        "output[{:?}] push {}th batch(len={}) of {:?} to local ch {};",
-                        self.ch_info.source_port,
-                        batch.get_seq() + 1,
-                        batch.len(),
-                        batch.tag,
-                        self.ch_info.id.index
-                    );
+                    c.0 += batch.len();
                 }
             }
             self.inner.push(batch)
         }
 
         fn flush(&mut self) -> IOResult<()> {
+            if log_enabled!(log::Level::Trace) {
+                let port = self.ch_info.source_port;
+                let index = self.ch_info.index();
+                for (t, (a, b)) in self.push_counts.iter_mut() {
+                    if *a > 0 {
+                        *b += *a;
+                        trace_worker!(
+                            "output[{:?}] flush {} data of {:?} to channel[{}] to self;",
+                            port,
+                            *a,
+                            t,
+                            index
+                        );
+                        *a = 0;
+                    }
+                }
+            }
             self.inner.flush()?;
             Ok(())
         }
@@ -442,7 +466,6 @@ mod rob {
     }
 
     impl<T: Data> BlockPush for MicroBatchPush<T> {
-
         fn try_unblock(&mut self, tag: &Tag) -> Result<bool, IOError> {
             match self {
                 MicroBatchPush::Exchange(p) => p.try_unblock(tag),
@@ -453,7 +476,7 @@ mod rob {
         fn clean_block_of(&mut self, tag: &Tag) -> IOResult<()> {
             match self {
                 MicroBatchPush::Exchange(p) => p.clean_block_of(tag),
-                _ => Ok(())
+                _ => Ok(()),
             }
         }
     }

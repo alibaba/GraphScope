@@ -38,7 +38,6 @@ impl CancelListener for ChannelCancel {
         let tag = self.inner.cancel(tag, to)?;
         let level = tag.len() as u32;
 
-
         if self.delta.scope_level_delta < 0 {
             // channel send data to parent scope;
             // cancel from parent scope;
@@ -53,7 +52,8 @@ impl CancelListener for ChannelCancel {
             // scope_level delta > 0;
             if level == self.scope_level {
                 let before_enter = self.delta.evolve_back(&tag);
-                self.before_enter.insert(before_enter.clone(), ());
+                self.before_enter
+                    .insert(before_enter.clone(), ());
                 Some(before_enter)
             } else if level < self.scope_level {
                 // cancel from parent scope;
@@ -64,7 +64,11 @@ impl CancelListener for ChannelCancel {
                     None
                 }
             } else {
-                warn_worker!("unexpected cancel of scope {:?} expect scope level {};", tag, self.scope_level);
+                warn_worker!(
+                    "unexpected cancel of scope {:?} expect scope level {};",
+                    tag,
+                    self.scope_level
+                );
                 // ignore:
                 None
             }
@@ -142,6 +146,7 @@ unsafe impl Send for ChannelCancelPtr {}
 
 #[cfg(not(feature = "rob"))]
 mod rob {
+    use nohash_hasher::IntSet;
     use pegasus_common::buffer::{Batch, BatchPool, MemBatchPool, MemBufAlloc};
     use smallvec::SmallVec;
 
@@ -155,7 +160,6 @@ mod rob {
     use crate::graph::Port;
     use crate::progress::EndSignal;
     use crate::{Data, Tag};
-    use nohash_hasher::IntSet;
 
     struct Buffer<D> {
         pin: Tag,
@@ -570,7 +574,10 @@ mod rob {
                             let mut queue = vec![];
                             for i in 0..self.pushes.len() {
                                 if !stat.contains(&i) {
-                                   let b = self.buffer_pool.fetch().unwrap_or(Batch::with_capacity(1024));
+                                    let b = self
+                                        .buffer_pool
+                                        .fetch()
+                                        .unwrap_or(Batch::with_capacity(1024));
                                     queue.push((i, b));
                                 }
                             }
@@ -593,7 +600,7 @@ mod rob {
                                         Err(IOError::cannot_block())
                                     } else {
                                         Err(err)
-                                    }
+                                    };
                                 }
                             }
                             if has_block {
@@ -610,7 +617,10 @@ mod rob {
                         let mut queue = vec![];
                         for i in 0..self.pushes.len() {
                             if !stat.contains(&i) {
-                                let b = self.buffer_pool.fetch().unwrap_or(Batch::with_capacity(1024));
+                                let b = self
+                                    .buffer_pool
+                                    .fetch()
+                                    .unwrap_or(Batch::with_capacity(1024));
                                 queue.push((i, b));
                             }
                         }
@@ -628,7 +638,11 @@ mod rob {
                             if let Err(err) = self.pushes[i].try_push_iter(tag, &mut b) {
                                 if err.is_would_block() || err.is_interrupted() {
                                     if !b.is_empty() {
-                                        error_worker!("can't handle block of tee push {} on port {:?};", i, self.port);
+                                        error_worker!(
+                                            "can't handle block of tee push {} on port {:?};",
+                                            i,
+                                            self.port
+                                        );
                                         return Err(IOError::cannot_block());
                                     }
                                 } else {
@@ -641,7 +655,6 @@ mod rob {
                         } else {
                             Ok(())
                         }
-
                     }
                 }
             }
@@ -746,15 +759,15 @@ mod rob {
 
     use crate::api::scope::MergedScopeDelta;
     use crate::channel_id::ChannelInfo;
+    use crate::communication::cancel::CancelHandle;
     use crate::communication::decorator::{BlockPush, MicroBatchPush};
+    use crate::communication::output::tee::ChannelCancelPtr;
     use crate::communication::IOResult;
     use crate::data::MicroBatch;
     use crate::data_plane::Push;
     use crate::errors::IOError;
     use crate::graph::Port;
     use crate::{Data, Tag};
-    use crate::communication::output::tee::ChannelCancelPtr;
-    use crate::communication::cancel::CancelHandle;
 
     #[allow(dead_code)]
     pub(crate) struct ChannelPush<D: Data> {
@@ -766,7 +779,9 @@ mod rob {
     }
 
     impl<D: Data> ChannelPush<D> {
-        pub(crate) fn new(ch_info: ChannelInfo, delta: MergedScopeDelta, push: MicroBatchPush<D>, ch: CancelHandle) -> Self {
+        pub(crate) fn new(
+            ch_info: ChannelInfo, delta: MergedScopeDelta, push: MicroBatchPush<D>, ch: CancelHandle,
+        ) -> Self {
             let src = crate::worker_id::get_current_worker().index;
             let cancel_handle = ChannelCancelPtr::new(ch_info.scope_level, delta.clone(), ch);
             ChannelPush { ch_info, src, delta, push, cancel_handle }
@@ -926,7 +941,7 @@ mod rob {
         }
 
         fn clean_block_of(&mut self, tag: &Tag) -> IOResult<()> {
-           self.main_push.clean_block_of(tag)?;
+            self.main_push.clean_block_of(tag)?;
             for o in self.other_pushes.iter_mut() {
                 o.clean_block_of(tag)?;
             }

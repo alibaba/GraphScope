@@ -1,7 +1,7 @@
 use std::cell::RefCell;
-use std::rc::Rc;
 
 use ahash::AHashMap;
+use pegasus_common::rc::UnsafeRcPtr;
 
 use crate::communication::Magic;
 use crate::tag::tools::map::TidyTagMap;
@@ -142,13 +142,13 @@ impl CancelListener for MultiConsCancel {
 
 #[derive(Clone)]
 pub(crate) struct MultiConsCancelPtr {
-    inner: Rc<RefCell<MultiConsCancel>>,
+    inner: UnsafeRcPtr<RefCell<MultiConsCancel>>,
 }
 
 impl MultiConsCancelPtr {
     pub(crate) fn new(scope_level: u32, targets: usize) -> Self {
         let inner = MultiConsCancel::new(scope_level, targets);
-        MultiConsCancelPtr { inner: Rc::new(RefCell::new(inner)) }
+        MultiConsCancelPtr { inner: UnsafeRcPtr::new(RefCell::new(inner)) }
     }
 
     pub fn cancel(&self, tag: &Tag, to: u32) -> Option<Tag> {
@@ -159,9 +159,6 @@ impl MultiConsCancelPtr {
         self.inner.borrow().is_canceled(target, tag)
     }
 }
-
-// won't be shared between threads;
-unsafe impl Send for MultiConsCancelPtr {}
 
 pub(crate) struct DynSingleConsCancel {
     scope_level: u32,
@@ -204,7 +201,7 @@ impl CancelListener for DynSingleConsCancel {
 }
 
 impl DynSingleConsCancel {
-    pub(crate) fn is_canceled(&self, tag: &Tag) -> bool {
+    pub(crate) fn is_canceled(&self, tag: &Tag, offset: usize) -> bool {
         let level = tag.len() as u32;
         if level == self.scope_level {
             if !self.current_level.is_empty() && self.current_level.contains_key(tag) {
@@ -213,21 +210,25 @@ impl DynSingleConsCancel {
 
             if *crate::config::ENABLE_CANCEL_CHILD && !self.parent.is_empty() {
                 let p = tag.to_parent_uncheck();
-                self.check_parent(p)
+                assert!(offset < self.targets);
+                self.check_parent(p, offset)
             } else {
                 false
             }
         } else if level < self.scope_level {
-            self.check_parent(tag.clone())
+            assert!(offset < self.targets);
+            self.check_parent(tag.clone(), offset)
         } else {
             false
         }
     }
 
-    fn check_parent(&self, mut p: Tag) -> bool {
+    fn check_parent(&self, mut p: Tag, target: usize) -> bool {
         loop {
-            if self.parent.contains_key(&p) {
-                return true;
+            if let Some(cal) = self.parent.get(&p) {
+                if cal[target] {
+                    return true;
+                }
             }
             if p.is_root() {
                 break;
@@ -241,7 +242,7 @@ impl DynSingleConsCancel {
 
 #[derive(Clone)]
 pub(crate) struct DynSingleConsCancelPtr {
-    inner: Rc<RefCell<DynSingleConsCancel>>,
+    inner: UnsafeRcPtr<RefCell<DynSingleConsCancel>>,
 }
 
 impl CancelListener for DynSingleConsCancelPtr {
@@ -260,15 +261,13 @@ impl DynSingleConsCancelPtr {
             parent: AHashMap::new(),
         };
 
-        DynSingleConsCancelPtr { inner: Rc::new(RefCell::new(inner)) }
+        DynSingleConsCancelPtr { inner: UnsafeRcPtr::new(RefCell::new(inner)) }
     }
 
-    pub(crate) fn is_canceled(&self, tag: &Tag) -> bool {
-        self.inner.borrow().is_canceled(tag)
+    pub(crate) fn is_canceled(&self, tag: &Tag, target: usize) -> bool {
+        self.inner.borrow().is_canceled(tag, target)
     }
 }
-
-unsafe impl Send for DynSingleConsCancelPtr {}
 
 pub(crate) enum CancelHandle {
     SC(SingleConsCancel),

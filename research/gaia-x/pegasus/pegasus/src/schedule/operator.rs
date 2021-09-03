@@ -40,7 +40,7 @@ impl OperatorScheduler {
         match kind {
             EventKind::End(end) => {
                 if let Some(Some(state)) = self.inputs_notify.get_mut(port.port) {
-                    trace_worker!("accept end of {:?} on port {:?} from worker {}", end.tag, port, src);
+                    trace_worker!("input[{:?}]: accept end of {:?} from worker {}", port, end.tag, src);
                     state.on_end(src, end)?;
                 } else {
                     warn_worker!("unrecognized event;")
@@ -55,8 +55,13 @@ impl OperatorScheduler {
                         ch,
                         src
                     );
-                    if let Some(t) = handle.on_cancel(ch, src, &tag) {
-                        trace_worker!("EARLY_STOP: output[{:?}] should stop sending data of {:?};", port, t);
+
+                    for t in handle.on_cancel(ch, src, &tag) {
+                        trace_worker!(
+                            "EARLY_STOP: output[{:?}] should stop sending data of {:?};",
+                            port,
+                            t
+                        );
                         self.discards.push_back((port, t));
                     }
                 } else {

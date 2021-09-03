@@ -11,9 +11,13 @@ struct CancelSingle {
 }
 
 impl CancelSingle {
-    fn cancel(&mut self, ch: u32, to: u32, tag: &Tag) -> Option<Tag> {
+    fn cancel(&mut self, ch: u32, to: u32, tag: &Tag) -> Vec<Tag> {
         assert_eq!(self.ch, ch);
-        self.listener.cancel(tag, to)
+        if let Some(res) = self.listener.cancel(tag, to) {
+            vec![res]
+        } else {
+            vec![]
+        }
     }
 }
 
@@ -29,22 +33,46 @@ struct CancelTee {
 }
 
 impl CancelTee {
-    fn cancel(&mut self, ch: u32, to: u32, tag: &Tag) -> Option<Tag> {
+    fn cancel(&mut self, ch: u32, to: u32, tag: &Tag) -> Vec<Tag> {
         let res = {
-            let listener = self.tee.get_mut(&ch)?;
-            listener.cancel(tag, to)
-        }?;
-        let level = res.len() as u32;
-        if level <= self.scope_level {
-            let guard = self.channels;
-            let set = self.cancel_trace[level as usize].get_mut_or_insert(&res);
-            set.insert(ch);
-            if set.len() == guard {
-                return Some(res);
+            if let Some(listener) = self.tee.get_mut(&ch) {
+                listener.cancel(tag, to)
+            } else {
+                None
             }
-        }
+        };
 
-        None
+        if let Some(res) = res {
+            let level = res.len() as u32;
+            let guard = self.channels;
+            let mut vec = vec![];
+
+            if level < self.scope_level {
+                for i in (level + 1..self.scope_level + 1).rev() {
+                    for (tag, st) in self.cancel_trace[i as usize].iter_mut() {
+                        if res.is_parent_of(&*tag) {
+                            st.insert(ch);
+                            if st.len() == guard {
+                                vec.push((&*tag).clone());
+                            }
+                        }
+                    }
+                }
+            }
+
+            if level <= self.scope_level {
+                let set = self.cancel_trace[level as usize].get_mut_or_insert(&res);
+                set.insert(ch);
+                if set.len() == guard {
+                    vec.push(res)
+                }
+            } else {
+                warn_worker!("unexpected cancel tag {:?} expected level <= {}", tag, self.scope_level);
+            }
+            vec
+        } else {
+            vec![]
+        }
     }
 }
 
@@ -54,7 +82,7 @@ enum HandleKind {
 }
 
 impl HandleKind {
-    fn cancel(&mut self, ch: u32, to: u32, tag: &Tag) -> Option<Tag> {
+    fn cancel(&mut self, ch: u32, to: u32, tag: &Tag) -> Vec<Tag> {
         match self {
             HandleKind::Single(x) => x.cancel(ch, to, tag),
             HandleKind::Tee(x) => x.cancel(ch, to, tag),
@@ -87,7 +115,7 @@ impl OutputCancelState {
         OutputCancelState { port, handle: HandleKind::Tee(handle) }
     }
 
-    pub fn on_cancel(&mut self, ch: u32, to: u32, tag: &Tag) -> Option<Tag> {
+    pub fn on_cancel(&mut self, ch: u32, to: u32, tag: &Tag) -> Vec<Tag> {
         self.handle.cancel(ch, to, tag)
     }
 }

@@ -85,12 +85,12 @@ mod rob {
 #[cfg(feature = "rob")]
 mod rob {
     use crate::channel_id::ChannelInfo;
+    use crate::communication::cancel::{CancelHandle, MultiConsCancelPtr};
     use crate::communication::decorator::evented::EventEmitPush;
     use crate::data::MicroBatch;
     use crate::data_plane::Push;
     use crate::errors::IOError;
     use crate::Data;
-    use crate::communication::cancel::{MultiConsCancelPtr, CancelHandle};
 
     pub struct BroadcastBatchPush<D: Data> {
         pub ch_info: ChannelInfo,

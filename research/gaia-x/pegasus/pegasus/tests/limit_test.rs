@@ -1,4 +1,4 @@
-use pegasus::api::{Collect, CorrelatedSubTask, Iteration, Limit, Map, Sink, Merge};
+use pegasus::api::{Collect, CorrelatedSubTask, Iteration, Limit, Map, Merge, Sink};
 use pegasus::JobConf;
 
 // the most common case with early-stop
@@ -34,7 +34,9 @@ fn limit_test_with_tee() {
     conf.set_workers(2);
     let mut result = pegasus::run(conf, || {
         |input, output| {
-            let (left, right) = input.input_from(1..1000u32)?.flat_map(|i| Ok(0..i))?
+            let (left, right) = input
+                .input_from(1..1000u32)?
+                .flat_map(|i| Ok(0..i))?
                 .repartition(|x: &u32| Ok(*x as u64))
                 .flat_map(|i| Ok(0..i))?
                 .copied()?;
@@ -42,12 +44,10 @@ fn limit_test_with_tee() {
             let left = left.limit(10)?;
             let right = right.limit(100)?;
 
-            left.merge(right)?
-                .sink_into(output)
+            left.merge(right)?.sink_into(output)
         }
     })
-        .expect("build job failure");
-
+    .expect("build job failure");
 
     let mut count = 0;
     while let Some(Ok(_)) = result.next() {
@@ -217,7 +217,7 @@ fn limit_test_06() {
 
 // early-stop with subtask in loop, triggered between OUTSIDE subtask but INSIDE loop
 #[test]
-#[ignore]// todo : wait fix;
+#[ignore] // todo : wait fix;
 fn limit_test_07() {
     let mut conf = JobConf::new("limit_test_07");
     conf.batch_capacity = 2;

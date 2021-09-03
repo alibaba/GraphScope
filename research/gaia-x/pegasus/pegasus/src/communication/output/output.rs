@@ -132,13 +132,21 @@ mod rob {
         pub fn cancel(&mut self, tag: &Tag) -> IOResult<()> {
             let level = tag.len() as u32;
             if level == self.scope_level {
-                if self.current_canceled.insert(tag.clone(), ()).is_none() {
+                if self
+                    .current_canceled
+                    .insert(tag.clone(), ())
+                    .is_none()
+                {
                     let len = self.blocks.len();
                     for _ in 0..len {
                         if let Some(bk) = self.blocks.pop_front() {
                             if bk.tag() == tag {
                                 self.in_block.remove(tag);
-                                trace_worker!("EARLY_STOP: output[{:?}] cancel block of {:?};", self.port, tag);
+                                trace_worker!(
+                                    "EARLY_STOP: output[{:?}] cancel block of {:?};",
+                                    self.port,
+                                    tag
+                                );
                             } else {
                                 self.blocks.push_back(bk);
                             }
@@ -154,7 +162,11 @@ mod rob {
                         if let Some(bk) = self.blocks.pop_front() {
                             if tag.is_parent_of(bk.tag()) {
                                 self.in_block.remove(bk.tag());
-                                trace_worker!("EARLY_STOP: output[{:?}] cancel block of {:?};", self.port, tag);
+                                trace_worker!(
+                                    "EARLY_STOP: output[{:?}] cancel block of {:?};",
+                                    self.port,
+                                    tag
+                                );
                             } else {
                                 self.blocks.push_back(bk);
                             }
@@ -173,7 +185,7 @@ mod rob {
             let level = tag.len() as u32;
             if level == self.scope_level {
                 if !self.current_canceled.is_empty() && self.current_canceled.contains_key(tag) {
-                   return true;
+                    return true;
                 }
                 if *crate::config::ENABLE_CANCEL_CHILD && !self.parent_canceled.is_empty() {
                     let p = tag.to_parent_uncheck();
@@ -307,6 +319,7 @@ mod rob {
     use crate::communication::decorator::{BlockPush, ScopeStreamPush};
     use crate::communication::output::builder::OutputMeta;
     use crate::communication::output::tee::Tee;
+    use crate::communication::output::BlockScope;
     use crate::communication::IOResult;
     use crate::data::MicroBatch;
     use crate::data_plane::Push;
@@ -315,7 +328,6 @@ mod rob {
     use crate::progress::EndSignal;
     use crate::tag::tools::map::TidyTagMap;
     use crate::{Data, Tag};
-    use crate::communication::output::BlockScope;
 
     enum BlockEntry<D: Data> {
         Single(D),
@@ -385,7 +397,8 @@ mod rob {
                             }
                         }
                     } else {
-                        self.blocks.push_back(BlockScope::new(tag.clone()));
+                        self.blocks
+                            .push_back(BlockScope::new(tag.clone()));
                         self.in_block
                             .insert(tag.clone(), BlockEntry::DynIter(None, Box::new(iter)));
                     }
@@ -467,7 +480,6 @@ mod rob {
                                     }
                                 }
                                 // trace_worker!("output[{:?}]: data in scope {:?} unblocked", self.port, tag);
-
                             } else {
                                 // trace_worker!("output[{:?}]: data in scope {:?} unblocked", self.port, tag);
                             }
@@ -705,7 +717,8 @@ mod rob {
                         self.in_block
                             .insert(tag.clone(), BlockEntry::Single(item));
                     }
-                    self.blocks.push_back(BlockScope::new(tag.clone()));
+                    self.blocks
+                        .push_back(BlockScope::new(tag.clone()));
                     would_block!("no buffer available")
                 }
                 Ok(_) => Ok(()),
@@ -730,7 +743,8 @@ mod rob {
                 }
                 Err(e) => {
                     if let Some(item) = e.0 {
-                        self.blocks.push_back(BlockScope::new(end.tag.clone()));
+                        self.blocks
+                            .push_back(BlockScope::new(end.tag.clone()));
                         self.in_block
                             .insert(end.tag.clone(), BlockEntry::LastSingle(item, end));
                     } else {
@@ -756,7 +770,8 @@ mod rob {
                     }
                     Err(e) => {
                         if let Some(item) = e.0 {
-                            self.blocks.push_back(BlockScope::new(tag.clone()));
+                            self.blocks
+                                .push_back(BlockScope::new(tag.clone()));
                             self.in_block
                                 .insert(tag.clone(), BlockEntry::Single(item));
                         }
