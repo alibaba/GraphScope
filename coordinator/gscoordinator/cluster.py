@@ -367,7 +367,7 @@ class KubernetesClusterLauncher(Launcher):
             schema_path,
             self.hosts,
             self._engine_container_name,
-            "'{}'".format(";".join(engine_params)),
+            "{}".format(";".join(engine_params)),
             str(enable_gaia),
             self._coordinator_name,
         ]

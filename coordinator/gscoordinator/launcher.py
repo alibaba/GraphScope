@@ -218,7 +218,7 @@ class LocalLauncher(Launcher):
             "1",  # server id
             self.vineyard_socket,
             str(self.zookeeper_port),
-            "'{}'".format(";".join(engine_params)),
+            "{}".format(";".join(engine_params)),
             str(enable_gaia),
         ]
         logger.info("Create GIE instance with command: {0}".format(" ".join(cmd)))
