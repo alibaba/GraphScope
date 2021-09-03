@@ -54,7 +54,7 @@ public class MaxGraphTraversalSource extends GraphTraversalSource {
 
     public MaxGraphTraversalSource(final RemoteConnection remoteConnection) {
         this(EmptyGraph.instance(), TraversalStrategies.GlobalCache.getStrategies(EmptyGraph.class).clone());
-        this.connection = connection;
+        this.connection = remoteConnection;
         this.strategies.addStrategies(new RemoteStrategy(connection));
     }
 
