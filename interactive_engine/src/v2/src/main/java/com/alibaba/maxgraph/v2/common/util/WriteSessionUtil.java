@@ -1,4 +1,4 @@
-package com.alibaba.maxgraph.v2.frontend.utils;
+package com.alibaba.maxgraph.v2.common.util;
 
 public class WriteSessionUtil {
 
