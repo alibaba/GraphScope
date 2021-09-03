@@ -1,11 +1,12 @@
 [package]
-name = "grel_core"
+name = "ir_core"
 version = "0.1.0"
 edition = "2018"
 
 [dependencies]
 dyn_type = {path = "../dyn_type"}
 prost = "0.7"
+pegasus_common = { path = "../../pegasus/common" }
 tonic = "0.4"
 
 [build-dependencies]

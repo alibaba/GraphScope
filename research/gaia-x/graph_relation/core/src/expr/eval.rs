@@ -14,34 +14,67 @@
 //! limitations under the License.
 //!
 
+use crate::error::{ParsePbError, ParsePbResult};
 use crate::expr::error::{ExprError, ExprResult};
 use crate::generated::common as pb;
 use crate::generated::common::expr_unit::Item;
 use crate::generated::common::{Arithmetic, ExprUnit, Logical};
+use crate::graph::element::Element;
+use crate::graph::property::{Details, PropKey};
+use crate::{FromPb, NameOrId};
 use dyn_type::arith::Exp;
 use dyn_type::{BorrowObject, Object};
 use std::cell::RefCell;
 
 pub struct Evaluator<'a> {
     /// A suffix-tree-based expression for evaluating
-    suffix_tree: Vec<pb::ExprUnit>,
+    suffix_tree: Vec<InnerOpr>,
     /// A stack for evaluating the suffix-tree-based expression
     /// Wrap it in a `RefCell` to avoid conflict mutable reference
     stack: RefCell<Vec<BorrowObject<'a>>>,
-    // todo shall take a concept to accept values for variable
 }
 
-impl<'a> From<Vec<pb::ExprUnit>> for Evaluator<'a> {
-    fn from(suffix_tree: Vec<ExprUnit>) -> Self {
-        Self {
-            suffix_tree,
-            stack: RefCell::new(vec![]),
+/// An inner representation of `pb::ExprUnit` for one-shot translation of `pb::ExprUnit`.
+enum InnerOpr {
+    Logical(pb::Logical),
+    Arith(pb::Arithmetic),
+    Const(Option<Object>),
+    Var {
+        tag: NameOrId,
+        prop_key: Option<PropKey>,
+    },
+}
+
+/// A `Context` gives the behavior of obtaining a certain tag from the runtime
+/// for evaluating variables in an expression.
+pub trait Context<E: Element> {
+    fn get(&self, _tag: &NameOrId) -> Option<&E> {
+        None
+    }
+}
+
+pub struct NoneContext {}
+
+impl Context<()> for NoneContext {}
+
+impl<'a> FromPb<Vec<pb::ExprUnit>> for Evaluator<'a> {
+    fn from_pb(suffix_tree: Vec<ExprUnit>) -> ParsePbResult<Self>
+    where
+        Self: Sized,
+    {
+        let mut inner_tree: Vec<InnerOpr> = Vec::with_capacity(suffix_tree.len());
+        for unit in suffix_tree {
+            inner_tree.push(InnerOpr::from_pb(unit)?);
         }
+        Ok(Self {
+            suffix_tree: inner_tree,
+            stack: RefCell::new(vec![]),
+        })
     }
 }
 
 fn apply_arith<'a>(
-    arith: pb::Arithmetic,
+    arith: &pb::Arithmetic,
     first: Option<BorrowObject<'a>>,
     second: Option<BorrowObject<'a>>,
 ) -> ExprResult<BorrowObject<'a>> {
@@ -57,18 +90,16 @@ fn apply_arith<'a>(
             Arithmetic::Exp => BorrowObject::Primitive(a.as_primitive()?.exp(b.as_primitive()?)),
         })
     } else {
-        Err(ExprError::OtherErr(
-            "invalid expression, the arithmetic operator misses operand".into(),
-        ))
+        Err(ExprError::MissingOperands)
     }
 }
 
 fn apply_logical<'a>(
-    logical: pb::Logical,
+    logical: &pb::Logical,
     first: Option<BorrowObject<'a>>,
     second: Option<BorrowObject<'a>>,
 ) -> ExprResult<BorrowObject<'a>> {
-    if logical == Logical::Not {
+    if logical == &Logical::Not {
         if let Some(a) = first {
             return Ok((!a.as_bool()?).into());
         }
@@ -93,44 +124,48 @@ fn apply_logical<'a>(
         }
     }
 
-    Err(ExprError::OtherErr(
-        "invalid expression, the logical operator misses operand".into(),
-    ))
+    Err(ExprError::MissingOperands)
 }
 
 // Private api
 impl<'a> Evaluator<'a> {
     /// Evaluate simple expression that contains less than three operators
     /// without using the stack.
-    fn eval_without_stack(&'a self) -> ExprResult<Object> {
+    fn eval_without_stack<E: Element, C: Context<E>>(
+        &'a self,
+        context: Option<&C>,
+    ) -> ExprResult<Object> {
         assert!(self.suffix_tree.len() <= 3);
         if self.suffix_tree.is_empty() {
-            return Err("empty expression".into());
+            return Err(ExprError::EmptyExpression);
         } else if self.suffix_tree.len() == 1 {
             return Ok(self.suffix_tree[0]
-                .as_borrow_object()
-                .ok_or(ExprError::from("invalid expression"))?
+                .eval_as_borrow_object(context)?
+                .ok_or(ExprError::NoneOperand)?
                 .into());
         } else if self.suffix_tree.len() == 2 {
             // must be not
-            if let Some(logical) = self.suffix_tree[1].as_logical() {
-                return Ok(
-                    apply_logical(logical, self.suffix_tree[0].as_borrow_object(), None)?.into(),
-                );
-            }
-        } else {
-            if let Some(logical) = self.suffix_tree[2].as_logical() {
+            if let InnerOpr::Logical(logical) = &self.suffix_tree[1] {
                 return Ok(apply_logical(
                     logical,
-                    self.suffix_tree[0].as_borrow_object(),
-                    self.suffix_tree[1].as_borrow_object(),
+                    self.suffix_tree[0].eval_as_borrow_object(context)?,
+                    None,
                 )?
                 .into());
-            } else if let Some(arith) = self.suffix_tree[2].as_arith() {
+            }
+        } else {
+            if let InnerOpr::Logical(logical) = &self.suffix_tree[2] {
+                return Ok(apply_logical(
+                    logical,
+                    self.suffix_tree[0].eval_as_borrow_object(context)?,
+                    self.suffix_tree[1].eval_as_borrow_object(context)?,
+                )?
+                .into());
+            } else if let InnerOpr::Arith(arith) = &self.suffix_tree[2] {
                 return Ok(apply_arith(
                     arith,
-                    self.suffix_tree[0].as_borrow_object(),
-                    self.suffix_tree[1].as_borrow_object(),
+                    self.suffix_tree[0].eval_as_borrow_object(context)?,
+                    self.suffix_tree[1].eval_as_borrow_object(context)?,
                 )?
                 .into());
             }
@@ -146,34 +181,39 @@ impl<'a> Evaluator<'a> {
         self.stack.borrow_mut().clear();
     }
 
-    /// Evaluate an expression without a context
-    pub fn eval(&'a self) -> ExprResult<Object> {
+    /// Evaluate an expression with an optional context.
+    pub fn eval<E: Element + 'a, C: Context<E> + 'a>(
+        &'a self,
+        context: Option<&'a C>,
+    ) -> ExprResult<Object> {
         let mut stack = self.stack.borrow_mut();
         if self.suffix_tree.len() <= 3 {
-            return self.eval_without_stack();
+            return self.eval_without_stack(context);
         }
         stack.clear();
         for opr in &self.suffix_tree {
             if opr.is_operand() {
-                if let Some(obj) = opr.as_borrow_object() {
+                if let Some(obj) = opr.eval_as_borrow_object(context)? {
                     stack.push(obj);
                 } else {
-                    return Err("cannot obtain object from the operand".into());
+                    return Err(ExprError::NoneOperand);
                 }
             } else {
                 let first = stack.pop();
-                if let Some(arith) = opr.as_arith() {
-                    let rst = apply_arith(arith, stack.pop(), first)?;
-                    stack.push(rst);
-                } else if let Some(logical) = opr.as_logical() {
-                    let rst = if logical == Logical::Not {
-                        apply_logical(logical, first, None)?
-                    } else {
-                        apply_logical(logical, stack.pop(), first)?
-                    };
-                    stack.push(rst);
-                } else {
-                    return Err("invalid expression".into());
+                match opr {
+                    InnerOpr::Logical(logical) => {
+                        let rst = if logical == &Logical::Not {
+                            apply_logical(logical, first, None)?
+                        } else {
+                            apply_logical(logical, stack.pop(), first)?
+                        };
+                        stack.push(rst);
+                    }
+                    InnerOpr::Arith(arith) => {
+                        let rst = apply_arith(arith, stack.pop(), first)?;
+                        stack.push(rst);
+                    }
+                    _ => unreachable!(),
                 }
             }
         }
@@ -184,113 +224,108 @@ impl<'a> Evaluator<'a> {
             Err("invalid expression".into())
         }
     }
+}
 
-    /// Evaluate an expression with a context to infer the value of variables
-    pub fn eval_with_context(&'a self, _suffix_expr: &Vec<pb::ExprUnit>) -> ExprResult<Object> {
-        todo!()
+impl FromPb<pb::ExprUnit> for InnerOpr {
+    fn from_pb(unit: ExprUnit) -> ParsePbResult<Self>
+    where
+        Self: Sized,
+    {
+        if let Some(item) = unit.item {
+            let result = match item {
+                Item::Logical(logical) => {
+                    Self::Logical(unsafe { std::mem::transmute::<_, pb::Logical>(logical) })
+                }
+                Item::Arith(arith) => {
+                    Self::Arith(unsafe { std::mem::transmute::<_, pb::Arithmetic>(arith) })
+                }
+                Item::Const(c) => Self::Const(c.into_object()?),
+                Item::Var(var) => {
+                    let tag = NameOrId::from_pb(var.tag.unwrap())?;
+                    if let Some(property) = var.property {
+                        Self::Var {
+                            tag,
+                            prop_key: Some(PropKey::from_pb(property)?),
+                        }
+                    } else {
+                        Self::Var {
+                            tag,
+                            prop_key: None,
+                        }
+                    }
+                }
+            };
+            Ok(result)
+        } else {
+            Err(ParsePbError::from("empty value provided"))
+        }
+    }
+}
+
+impl InnerOpr {
+    pub fn eval_as_borrow_object<'a, E: Element + 'a, C: Context<E> + 'a>(
+        &'a self,
+        context: Option<&'a C>,
+    ) -> ExprResult<Option<BorrowObject<'a>>> {
+        match self {
+            Self::Const(c_opt) => Ok(if let Some(opt) = c_opt {
+                Some(opt.as_borrow())
+            } else {
+                None
+            }),
+            Self::Var { tag, prop_key } => {
+                if context.is_some() {
+                    let ctxt = context.unwrap();
+                    if let Some(property) = prop_key {
+                        if let Some(element) = ctxt.get(tag) {
+                            if let Some(details) = element.details() {
+                                return Ok(details.get(property));
+                            }
+                        }
+                    } else {
+                        if let Some(field) = ctxt.get(tag) {
+                            return Ok(Some(field.as_borrow_object()));
+                        }
+                    }
+                }
+
+                Err(ExprError::MissingContext(
+                    "missing context for evaluating variables".into(),
+                ))
+            }
+            _ => Ok(None),
+        }
     }
 
-    pub fn eval_bool(&'a self) -> ExprResult<bool> {
-        let rst = self.eval()?.as_bool()?;
-        Ok(rst)
-    }
-
-    pub fn eval_integer(&'a self) -> ExprResult<i32> {
-        let rst = self.eval()?.as_i32()?;
-        Ok(rst)
-    }
-
-    pub fn eval_long(&'a self) -> ExprResult<i64> {
-        let rst = self.eval()?.as_i64()?;
-        Ok(rst)
-    }
-
-    pub fn eval_float(&'a self) -> ExprResult<f64> {
-        let rst = self.eval()?.as_f64()?;
-        Ok(rst)
+    pub fn is_operand(&self) -> bool {
+        match self {
+            InnerOpr::Const(_) | InnerOpr::Var { .. } => true,
+            _ => false,
+        }
     }
 }
 
 impl pb::Const {
-    pub fn as_object(&self) -> Option<Object> {
+    pub fn into_object(self) -> ParsePbResult<Option<Object>> {
         use pb::value::Item::*;
         if let Some(val) = &self.value {
-            val.item.as_ref().and_then(|item| match item {
-                Boolean(b) => Some((*b).into()),
-                I32(i) => Some((*i).into()),
-                I64(i) => Some((*i).into()),
-                F64(f) => Some((*f).into()),
-                Str(s) => Some(s.clone().into()),
-                Blob(blob) => Some(blob.clone().into()),
-                None(_) => Option::None,
-                I32Array(_) | I64Array(_) | F64Array(_) | StrArray(_) => {
-                    unimplemented!()
-                }
-            })
-        } else {
-            Option::None
-        }
-    }
-
-    pub fn as_borrow_object(&self) -> Option<BorrowObject> {
-        use pb::value::Item::*;
-        if let Some(val) = &self.value {
-            val.item.as_ref().and_then(|item| match item {
-                Boolean(b) => Some((*b).into()),
-                I32(i) => Some((*i).into()),
-                I64(i) => Some((*i).into()),
-                F64(f) => Some((*f).into()),
-                Str(s) => Some(s.as_str().into()),
-                Blob(blob) => Some(blob.as_slice().into()),
-                I32Array(_) | I64Array(_) | F64Array(_) | StrArray(_) => {
-                    unimplemented!()
-                }
-                None(_) => Option::None,
-            })
-        } else {
-            Option::None
-        }
-    }
-}
-
-impl pb::ExprUnit {
-    pub fn as_object(&self) -> Option<Object> {
-        self.item.as_ref().and_then(|item| match item {
-            Item::Const(c) => c.as_object(),
-            _ => None,
-        })
-    }
-
-    pub fn as_borrow_object(&self) -> Option<BorrowObject> {
-        self.item.as_ref().and_then(|item| match item {
-            Item::Const(c) => c.as_borrow_object(),
-            _ => None,
-        })
-    }
-
-    pub fn is_operand(&self) -> bool {
-        if let Some(item) = self.item.as_ref() {
-            match item {
-                Item::Const(_) | Item::Var(_) => true,
-                _ => false,
+            if let Some(item) = val.item.as_ref() {
+                return match item {
+                    Boolean(b) => Ok(Some((*b).into())),
+                    I32(i) => Ok(Some((*i).into())),
+                    I64(i) => Ok(Some((*i).into())),
+                    F64(f) => Ok(Some((*f).into())),
+                    Str(s) => Ok(Some(s.clone().into())),
+                    Blob(blob) => Ok(Some(blob.clone().into())),
+                    None(_) => Ok(Option::None),
+                    I32Array(_) | I64Array(_) | F64Array(_) | StrArray(_) => {
+                        Err(ParsePbError::from("the const values of `I32Array`, `I64Array`, `F64Array`, `StrArray` are unsupported"))
+                    }
+                };
             }
-        } else {
-            true
         }
-    }
 
-    pub fn as_arith(&self) -> Option<pb::Arithmetic> {
-        self.item.as_ref().and_then(|item| match item {
-            Item::Arith(arith) => Some(unsafe { std::mem::transmute::<_, pb::Arithmetic>(*arith) }),
-            _ => None,
-        })
-    }
-
-    pub fn as_logical(&self) -> Option<pb::Logical> {
-        self.item.as_ref().and_then(|item| match item {
-            Item::Logical(logi) => Some(unsafe { std::mem::transmute::<_, pb::Logical>(*logi) }),
-            _ => None,
-        })
+        Err(ParsePbError::from("empty value provided"))
     }
 }
 
@@ -361,8 +396,9 @@ mod tests {
         ];
 
         for (case, expected) in cases.into_iter().zip(expected.into_iter()) {
-            let eval = Evaluator::from(to_suffix_expr_pb(tokenize(case).unwrap()).unwrap());
-            assert_eq!(eval.eval().unwrap(), expected);
+            let eval =
+                Evaluator::from_pb(to_suffix_expr_pb(tokenize(case).unwrap()).unwrap()).unwrap();
+            assert_eq!(eval.eval::<(), NoneContext>(None).unwrap(), expected);
         }
     }
 
@@ -404,8 +440,9 @@ mod tests {
         ];
 
         for (case, expected) in cases.into_iter().zip(expected.into_iter()) {
-            let eval = Evaluator::from(to_suffix_expr_pb(tokenize(case).unwrap()).unwrap());
-            assert_eq!(eval.eval().unwrap(), expected);
+            let eval =
+                Evaluator::from_pb(to_suffix_expr_pb(tokenize(case).unwrap()).unwrap()).unwrap();
+            assert_eq!(eval.eval::<(), NoneContext>(None).unwrap(), expected);
         }
     }
 }

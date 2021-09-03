@@ -14,6 +14,7 @@
 //! limitations under the License.
 //!
 
+use crate::error::ParsePbError;
 use crate::expr::token::PartialToken;
 use dyn_type::CastError;
 use std::fmt::Display;
@@ -41,6 +42,17 @@ pub enum ExprError {
     CastError(CastError),
     /// Missing context for the certain variable,
     MissingContext(String),
+    /// The error caused by parsing invalid protobuf
+    ParsePbError(ParsePbError),
+    /// The error of missing required operands in an arithmetic or logical expression.
+    /// e.g., the plus expression requires two operands, and it is an error if less than two provided.
+    MissingOperands,
+    /// An error where an empty expression is to be evaluated
+    EmptyExpression,
+    /// Try to evaluate a const value or a variable but obtain `None` value
+    NoneOperand,
+    /// While evaluating a certain operator, but obtain a different one
+    UnmatchedOperator,
     /// Other unknown errors that is converted from a error description
     OtherErr(String),
 }
@@ -57,6 +69,20 @@ impl Display for ExprError {
             } => write!(f, "partial token {:?} cannot be completed by {:?}", s1, s2),
             CastError(e) => write!(f, "casting error {:?}", e),
             MissingContext(var) => write!(f, "missing context for {:?}", var),
+            ParsePbError(err) => write!(f, "parse protobuf error {:?}", err),
+            MissingOperands => write!(
+                f,
+                "missing operands for either arithmetic or logical expression."
+            ),
+            EmptyExpression => write!(f, "try to evaluate an empty expression"),
+            NoneOperand => write!(
+                f,
+                "try to evaluate a const value or a variable but obtain `None` value "
+            ),
+            UnmatchedOperator => write!(
+                f,
+                "while evaluating a certain operator, but obtain a different one"
+            ),
             OtherErr(e) => write!(f, "parse error {}", e),
         }
     }
@@ -77,6 +103,12 @@ impl ExprError {
 impl From<CastError> for ExprError {
     fn from(error: CastError) -> Self {
         Self::CastError(error)
+    }
+}
+
+impl From<ParsePbError> for ExprError {
+    fn from(err: ParsePbError) -> Self {
+        Self::ParsePbError(err)
     }
 }
 

@@ -475,7 +475,7 @@ pub enum Object {
 }
 
 /// Try to borrow an immutable reference of [crate::Object].
-#[derive(Debug)]
+#[derive(Debug, Clone, Copy)]
 pub enum BorrowObject<'a> {
     Primitive(Primitives),
     String(&'a str),

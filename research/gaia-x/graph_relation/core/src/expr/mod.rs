@@ -125,10 +125,14 @@ impl From<String> for pb::Property {
     }
 }
 
-const SPLITTER: &'static str = "$";
+const SPLITTER: &'static str = ".";
+const VAR_PREFIX: &'static str = "@";
 
 impl From<String> for pb::Variable {
     fn from(str: String) -> Self {
+        assert!(str.starts_with(VAR_PREFIX));
+        // skip the var variable
+        let str: String = str.chars().skip(1).collect();
         if !str.contains(SPLITTER) {
             pb::Variable {
                 tag: Some(str.into()),
@@ -186,8 +190,12 @@ impl From<Token> for ExprResult<pb::ExprUnit> {
             }
             .into()),
             Token::Identifier(ident) => {
-                let var: pb::Variable = ident.into();
-                Ok(var.into())
+                if !ident.starts_with(VAR_PREFIX) {
+                    Err("invalid token, a variable must start with \"@\"".into())
+                } else {
+                    let var: pb::Variable = ident.into();
+                    Ok(var.into())
+                }
             }
             _ => Err(format!("invalid token {:?}", token).as_str().into()),
         }
