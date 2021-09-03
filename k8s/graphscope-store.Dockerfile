@@ -39,4 +39,4 @@ COPY --from=builder /opt/graphscope /usr/local/
 COPY --from=builder /home/graphscope/gs/interactive_engine/distribution/target/maxgraph.tar.gz /tmp/maxgraph.tar.gz
 RUN sudo tar -zxf /tmp/maxgraph.tar.gz -C /usr/local
 
-ENV MAXGRAPH_HOME=/usr/local/maxgraph
+ENV GRAPHSCOPE_HOME=/usr/local

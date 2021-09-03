@@ -4,4 +4,4 @@ COPY ./opt/graphscope/ /usr/local/
 COPY ./maxgraph /usr/local/maxgraph
 COPY ./ready_probe.sh /tmp/ready_probe.sh
 
-ENV MAXGRAPH_HOME=/usr/local/maxgraph
+ENV GRAPHSCOPE_HOME=/usr/local
