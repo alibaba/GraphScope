@@ -563,7 +563,6 @@ jobs:
         cd ${GITHUB_WORKSPACE}
         mv interactive_engine/distribution/target/maxgraph.tar.gz ./
         tar -zcf lib.tar.gz /opt/graphscope
-        tar -zcf giectl.tar.gz interactive_engine/bin interactive_engine/conf
 
     - name: gremlin-test
       run: |
@@ -578,7 +577,6 @@ jobs:
         path: |
           maxgraph.tar.gz
           lib.tar.gz
-          giectl.tar.gz
         retention-days: 5
 
   gss-test:
@@ -613,7 +611,6 @@ jobs:
         pushd artifacts
         tar -zxf ./gss-${{ github.sha }}/lib.tar.gz
         tar -zxf ./gss-${{ github.sha }}/maxgraph.tar.gz
-        tar -zxf ./gss-${{ github.sha }}/giectl.tar.gz
 
         sudo docker pull registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-runtime:latest
         sudo docker build -t registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-store:${{ github.sha }} \
@@ -662,7 +659,17 @@ jobs:
         hadoop fs -put ${GS_TEST_DIR}/ldbc_sample/person_knows_person_0_0.csv /ldbc_sample/person_knows_person_0_0.csv
 
         cd ${GITHUB_WORKSPACE}/python
-        python3 -m pytest -s -vvv tests/kubernetes/test_store_service.py
+        python3 -m pytest -s -vvv tests/kubernetes/test_store_service.py -k test_demo_fresh
+
+        # helm restart ci release and run demo with the PersistentVolume
+        # FIXME(@haixia): restart seems not work.
+        # helm uninstall ci
+        # cd ${GITHUB_WORKSPACE}/charts
+        # helm install ci --set image.tag=${{ github.sha }},executor=${{ matrix.executor }} \
+        #                               ./graphscope-store
+        # helm test ci --timeout 5m0s
+        # cd ${GITHUB_WORKSPACE}/python
+        # python3 -m pytest -s -vvv tests/kubernetes/test_store_service.py -k test_demo_after_restart
 
     - name: Clean
       if: always()
