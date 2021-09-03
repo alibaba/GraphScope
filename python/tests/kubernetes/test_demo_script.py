@@ -136,6 +136,62 @@ def test_demo(gs_session, data_dir):
     # GNN engine
 
 
+@pytest.mark.skipif("HDFS_TEST_DIR" not in os.environ, reason="the test case need HDFS")
+def test_demo_on_hdfs(gs_session_distributed):
+    graph = gs_session_distributed.g()
+    graph = graph.add_vertices(
+        Loader(
+            os.environ["HDFS_TEST_DIR"] + "/person_0_0.csv",
+            host=os.environ["HDFS_HOST"],
+            port=9000,
+            delimiter="|",
+        ),
+        "person",
+        [
+            "firstName",
+            "lastName",
+            "gender",
+            "birthday",
+            "creationDate",
+            "locationIP",
+            "browserUsed",
+        ],
+        "id",
+    )
+    graph = graph.add_edges(
+        Loader(
+            os.environ["HDFS_TEST_DIR"] + "/person_knows_person_0_0.csv",
+            host=os.environ["HDFS_HOST"],
+            port=9000,
+            delimiter="|",
+        ),
+        "knows",
+        ["creationDate"],
+        src_label="person",
+        dst_label="person",
+    )
+
+    # Interactive engine
+    interactive = gs_session_distributed.gremlin(graph)
+    sub_graph = interactive.subgraph(  # noqa: F841
+        'g.V().hasLabel("person").outE("knows")'
+    )
+
+    # Analytical engine
+    # project the projected graph to simple graph.
+    simple_g = sub_graph.project(vertices={"person": []}, edges={"knows": []})
+
+    pr_result = graphscope.pagerank(simple_g, delta=0.8)
+
+    # output to hdfs
+    pr_result.output(
+        os.environ["HDFS_TEST_DIR"] + "/res.csv",
+        selector={"id": "v.id", "rank": "r"},
+        host=os.environ["HDFS_HOST"],
+        port=9000,
+    )
+
+
 def test_demo_distribute(gs_session_distributed, data_dir, modern_graph_data_dir):
     graph = load_ldbc(gs_session_distributed, data_dir)
 

@@ -39,10 +39,11 @@ from concurrent import futures
 import grpc
 from packaging import version
 
-from gscoordinator.io_utils import StdoutWrapper
+from gscoordinator.io_utils import StdStreamWrapper
 
 # capture system stdout
-sys.stdout = StdoutWrapper(sys.stdout)
+sys.stdout = StdStreamWrapper(sys.stdout)
+sys.stderr = StdStreamWrapper(sys.stderr)
 
 from graphscope.framework import utils
 from graphscope.framework.dag_utils import create_graph

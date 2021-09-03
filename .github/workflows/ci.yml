@@ -396,6 +396,32 @@ jobs:
                           --cov-report=term --exitfirst -s -vvv --log-cli-level=INFO \
                           ./tests/kubernetes
 
+    - name: HDFS test
+      env:
+        CHANGE_MINIKUBE_NONE_USER: true
+        GS_IMAGE: registry.cn-hongkong.aliyuncs.com/graphscope/graphscope:${{ github.sha }}
+      run: |
+        cd /tmp
+        wget -q https://mirror.cogentco.com/pub/apache/hadoop/common/hadoop-2.10.1/hadoop-2.10.1.tar.gz
+        tar -zxf hadoop-2.10.1.tar.gz
+        export JAVA_HOME=/usr/lib/jvm/default-java/
+
+        cd ${GITHUB_WORKSPACE}/.github/workflows/hadoop_scripts
+        ./prepare_hadoop.sh /tmp/hadoop-2.10.1
+        export PATH=${PATH}:/tmp/hadoop-2.10.1/bin
+        export GS_TEST_DIR=${GITHUB_WORKSPACE}/gstest
+        hadoop fs -mkdir /ldbc_sample || true
+        hadoop fs -chmod 777 /ldbc_sample
+        hadoop fs -put ${GS_TEST_DIR}/ldbc_sample/person_0_0.csv /ldbc_sample/person_0_0.csv
+        hadoop fs -put ${GS_TEST_DIR}/ldbc_sample/person_knows_person_0_0.csv /ldbc_sample/person_knows_person_0_0.csv
+        export HDFS_TEST_DIR=hdfs:///ldbc_sample
+        export HDFS_HOST=$(hostname -I | awk '{print $1}')
+
+        cd ${GITHUB_WORKSPACE}/python
+        python3 -m pytest ./tests/kubernetes/test_demo_script.py -k test_demo_on_hdfs
+        # FIXME: context.output file not found
+        hdfs dfs -test -e /ldbc_sample/res.csv_0 && hdfs dfs -test -e /ldbc_sample/res.csv_1
+
     - name: Helm test
       run: |
         curl https://raw.githubusercontent.com/helm/helm/master/scripts/get-helm-3 | bash
@@ -416,6 +442,9 @@ jobs:
     - name: Clean
       if: always()
       run: |
+        export JAVA_HOME=/usr/lib/jvm/default-java/
+        HADOOP_SSH_OPTS="-o StrictHostKeyChecking=no" /tmp/hadoop-2.10.1/sbin/stop-dfs.sh || true
+        rm -rf /tmp/hadoop* || true
         sudo docker rmi -f registry.cn-hongkong.aliyuncs.com/graphscope/graphscope:${{ github.sha }} || true
         helm uninstall graphscope || true
         kubectl delete pod graphscope-test-rpc-service --wait=false || true
