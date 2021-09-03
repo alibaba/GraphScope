@@ -210,7 +210,6 @@ class LocalLauncher(Launcher):
         engine_params = [
             "{}:{}".format(key, value) for key, value in engine_params.items()
         ]
-        logger.info("[debug]: engine params: {0}".format("'{}'".format(";".join(engine_params))))
         enable_gaia = config[types_pb2.GIE_ENABLE_GAIA].b
         cmd = [
             INTERACTIVE_ENGINE_SCRIPT,
