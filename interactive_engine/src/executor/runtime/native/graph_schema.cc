@@ -288,7 +288,7 @@ MGPropertyGraphSchema MGPropertyGraphSchema::TransformToMaxGraph() {
     new_entry.mapping.resize(new_entry.props_.size(), -1);
     new_entry.reverse_mapping.resize(maximum_possible_mg_prop_id, -1);
     new_entry.valid_properties.resize(maximum_possible_mg_prop_id, 1);
-    new_entry.id += vertex_label_num;
+    new_entry.id |= (1 << (sizeof(LabelId) * 8 - 1));;
     for (auto& prop : new_entry.props_) {
       int new_id = name_to_idx[prop.name];
       new_entry.mapping[prop.id] = new_id;
