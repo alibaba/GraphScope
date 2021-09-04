@@ -200,7 +200,7 @@ class LocalLauncher(Launcher):
         schema_path = config[types_pb2.SCHEMA_PATH].s.decode()
         # engine params format:
         #   k1:v1;k2:v2;k3:v3
-        engine_params = {}
+        engine_params = {"gaia.engine.port": self._get_free_port("localhost")}
         if types_pb2.GIE_GREMLIN_ENGINE_PARAMS in config:
             engine_params = json.loads(
                 config[types_pb2.GIE_GREMLIN_ENGINE_PARAMS].s.decode()
@@ -218,7 +218,7 @@ class LocalLauncher(Launcher):
             "1",  # server id
             self.vineyard_socket,
             str(self.zookeeper_port),
-            "'{}'".format(";".join(engine_params)),
+            "{}".format(";".join(engine_params)),
             str(enable_gaia),
         ]
         logger.info("Create GIE instance with command: {0}".format(" ".join(cmd)))

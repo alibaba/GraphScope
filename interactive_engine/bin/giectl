@@ -262,7 +262,6 @@ start_executor() {
     done
   fi
 
-
   # launch executor
   declare flag="maxgraph${object_id}executor"
   RUST_BACKTRACE=full ${GRAPHSCOPE_HOME}/bin/executor --config ${config_dir}/executor.vineyard.properties \

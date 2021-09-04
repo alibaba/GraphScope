@@ -150,6 +150,7 @@ class KubernetesClusterLauncher(Launcher):
     _mars_service_name_prefix = "mars-"
 
     _zookeeper_port = 2181  # fixed
+    _gaia_engine_port = random.randint(40001, 41000)
     _random_analytical_engine_rpc_port = random.randint(56001, 57000)
     _random_etcd_listen_peer_service_port = random.randint(57001, 58000)
     _random_etcd_listen_client_service_port = random.randint(58001, 59000)
@@ -347,7 +348,9 @@ class KubernetesClusterLauncher(Launcher):
         schema_path = config[types_pb2.SCHEMA_PATH].s.decode()
         # engine params format:
         #   k1:v1;k2:v2;k3:v3
-        engine_params = {}
+        engine_params = {
+            "gaia.engine.port": self._gaia_engine_port,
+        }
         if types_pb2.GIE_GREMLIN_ENGINE_PARAMS in config:
             engine_params = json.loads(
                 config[types_pb2.GIE_GREMLIN_ENGINE_PARAMS].s.decode()
@@ -364,7 +367,7 @@ class KubernetesClusterLauncher(Launcher):
             schema_path,
             self.hosts,
             self._engine_container_name,
-            "'{}'".format(";".join(engine_params)),
+            "{}".format(";".join(engine_params)),
             str(enable_gaia),
             self._coordinator_name,
         ]
