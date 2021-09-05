@@ -112,15 +112,15 @@ FROM registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-runtime:latest
 
 ARG profile=release
 
-COPY --from=builder /opt/graphscope /usr/local/
-RUN cd /usr/local/dist/ && pip3 install ./*.whl
+COPY --from=builder /opt/graphscope /usr/local/graphscope
+RUN cd /usr/local/graphscope/dist/ && pip3 install ./*.whl
 COPY --from=builder /home/graphscope/gs/k8s/precompile.py /tmp/precompile.py
 RUN python3 /tmp/precompile.py && rm /tmp/precompile.py
 
-COPY --from=builder /home/graphscope/gs/interactive_engine/src/executor/target/$profile/executor /usr/local/bin/executor
-COPY --from=builder /home/graphscope/gs/interactive_engine/src/executor/target/$profile/gaia_executor /usr/local/bin/gaia_executor
-COPY --from=builder /home/graphscope/gs/interactive_engine/bin/giectl /usr/local/bin/giectl
-COPY --from=builder /tmp/zetcd /usr/local/bin/zetcd
+COPY --from=builder /home/graphscope/gs/interactive_engine/src/executor/target/$profile/executor /usr/local/graphscope/bin/executor
+COPY --from=builder /home/graphscope/gs/interactive_engine/src/executor/target/$profile/gaia_executor /usr/local/graphscope/bin/gaia_executor
+COPY --from=builder /home/graphscope/gs/interactive_engine/bin/giectl /usr/local/graphscope//bin/giectl
+COPY --from=builder /tmp/zetcd /usr/local/graphscope/bin/zetcd
 
 # install mars
 RUN pip3 install git+https://github.com/mars-project/mars.git@35b44ed56e031c252e50373b88b85bd9f454332e#egg=pymars[distributed]
@@ -129,6 +129,8 @@ RUN pip3 install git+https://github.com/mars-project/mars.git@35b44ed56e031c252e
 ENV RUST_BACKTRACE=1
 
 COPY --from=builder /home/graphscope/gs/interactive_engine/src/assembly/target/0.0.1-SNAPSHOT.tar.gz /opt/graphscope/0.0.1-SNAPSHOT.tar.gz
-RUN sudo tar -xf /opt/graphscope/0.0.1-SNAPSHOT.tar.gz -C /usr/local
+RUN sudo tar -xf /opt/graphscope/0.0.1-SNAPSHOT.tar.gz -C /usr/local/graphscope
 
-ENV GRAPHSCOPE_HOME=/usr/local 
+ENV LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:/usr/local/graphscope/lib:/usr/local/graphscope/lib64
+ENV GRAPHSCOPE_HOME=/usr/local/graphscope
+ENV PATH=/usr/local/graphscope/bin:${PATH}
