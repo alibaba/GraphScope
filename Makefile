@@ -3,7 +3,7 @@ WORKING_DIR 			:= $(dir $(MKFILE_PATH))
 NUM_PROC                := $( $(command -v nproc &> /dev/null) && echo $(nproc) || echo $(sysctl -n hw.physicalcpu) )
 
 VERSION                     ?= 0.1.0
-INSTALL_PREFIX              ?= /usr/local
+INSTALL_PREFIX              ?= /opt/graphscope
 
 # GAE build options
 NETWORKX                    ?= OFF

@@ -21,7 +21,7 @@ readonly NUM_PROC=$( $(command -v nproc &> /dev/null) && echo $(nproc) || echo $
 readonly OUTPUT_ENV_FILE="${HOME}/.graphscope_env"
 IS_IN_WSL=false && [[ ! -z "${IS_WSL}" || ! -z "${WSL_DISTRO_NAME}" ]] && IS_IN_WSL=true
 readonly IS_IN_WSL
-INSTALL_PREFIX=/usr/local
+INSTALL_PREFIX=/opt/graphscope
 BASIC_PACKGES_TO_INSTALL=
 PLATFORM=
 OS_VERSION=
@@ -93,7 +93,7 @@ cat <<END
   Options:
     --help              Print usage information
     --verbose           Print the debug logging information
-    --prefix <path>     Install prefix of GraphScope, default is /usr/local
+    --prefix <path>     Install prefix of GraphScope, default is /opt/graphscope
 END
 }
 
@@ -784,6 +784,18 @@ install_graphscope() {
     make install WITH_LEARNING_ENGINE=OFF INSTALL_PREFIX=${INSTALL_PREFIX}
   else
     make install WITH_LEARNING_ENGINE=ON INSTALL_PREFIX=${INSTALL_PREFIX}
+  fi
+
+  # link to /usr/local
+  sudo ln -sf ${INSTALL_PREFIX}/bin/* /usr/local/bin/
+  sudo ln -sfn ${INSTALL_PREFIX}/include/graphscope /usr/local/include/graphscope
+  sudo ln -sf ${INSTALL_PREFIX}/lib/*so* /usr/local/lib
+  sudo ln -sf ${INSTALL_PREFIX}/lib64/*so* /usr/local/lib64
+
+  if [[ -d "${INSTALL_PREFIX}/lib64/cmake" ]]; then
+    sudo ln -sfn ${INSTALL_PREFIX}/lib64/cmake/graphscope-analytical /usr/local/lib64/cmake/graphscope-analytical
+  else
+    sudo ln -sfn ${INSTALL_PREFIX}/lib/cmake/graphscope-analytical /usr/local/lib/cmake/graphscope-analytical
   fi
   popd
 }

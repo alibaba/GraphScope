@@ -6,8 +6,8 @@ ARG BASE_VERSION=ubuntu
 FROM registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-runtime:$BASE_VERSION
 
 RUN cd /tmp && \
-    git clone https://github.com/alibaba/libgrape-lite.git --depth=1 && \
-    cd libgrape-lite && \
+    git clone https://github.com/alibaba/libgrape-lite.git && \
+    cd libgrape-lite && git checkout 9806e6 && \
     mkdir build && \
     cd build && \
     cmake .. && \
@@ -26,12 +26,12 @@ RUN cd /tmp && \
     cd /tmp/libvineyard && \
     python3 setup.py bdist_wheel && \
     cd dist && \
-    mkdir -p /opt/graphscope/dist && \
-    cp -f ./*.whl /opt/graphscope/dist && \
+    mkdir -p /opt/vineyard/dist && \
+    cp -f ./*.whl /opt/vineyard/dist && \
     pip3 install ./*.whl && \
     cd /tmp/libvineyard/modules/io && \
     python3 setup.py bdist_wheel && \
-    cp -f dist/* /opt/graphscope/dist && \
+    cp -f dist/* /opt/vineyard/dist && \
     pip3 install dist/* && \
     cd /tmp && \
     rm -fr /tmp/libvineyard /tmp/libgrape-lite && \

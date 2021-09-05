@@ -30,7 +30,10 @@ BUILTIN_APP_RESOURCE_PATH = (
     COORDINATOR_HOME / "gscoordinator" / "builtin" / "app" / "builtin_app.gar"
 )
 CMAKELISTS_TEMPLATE = TEMPLATE_DIR / "CMakeLists.template"
-ANALYTICAL_ENGINE_HOME = "/usr/local/bin"
+if "GRAPHSCOPE_HOME" in os.environ:
+    GRAPHSCOPE_HOME = os.environ["GRAPHSCOPE_HOME"]
+else:
+    GRAPHSCOPE_HOME = "/usr/local"
 WORKSPACE = Path("/tmp/gs/builtin")
 
 
@@ -56,7 +59,7 @@ def cmake_graph(graph_class):
     with open(CMAKELISTS_TEMPLATE, mode="r") as template:
         content = template.read()
         content = Template(content).safe_substitute(
-            _analytical_engine_home=ANALYTICAL_ENGINE_HOME,
+            _analytical_engine_home=GRAPHSCOPE_HOME,
             _frame_name=library_name,
             _graph_type=graph_class,
         )
@@ -92,7 +95,7 @@ def cmake_app(app):
     with open(CMAKELISTS_TEMPLATE, mode="r") as template:
         content = template.read()
         content = Template(content).safe_substitute(
-            _analytical_engine_home=ANALYTICAL_ENGINE_HOME,
+            _analytical_engine_home=GRAPHSCOPE_HOME,
             _frame_name=library_name,
             _graph_type=graph_class,
             _graph_header=graph_header,
