@@ -17,6 +17,7 @@ syntax = "proto3";
 
 package gs.rpc;
 
+import "proto/error_codes.proto";
 import "proto/op_def.proto";
 import "proto/types.proto";
 
@@ -88,7 +89,11 @@ message RunStepRequest {
 
 message RunStepResponse {
   // list of result of ops in dag
-  repeated OpResult results = 2;
+  repeated OpResult results = 1;
+
+  Code code = 2;
+  string error_msg = 3;
+  bytes full_exception = 4;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -44,6 +44,7 @@ from string import Template
 
 import yaml
 from graphscope.framework import utils
+from graphscope.framework.errors import CompilationError
 from graphscope.framework.graph_schema import GraphSchema
 from graphscope.proto import attr_value_pb2
 from graphscope.proto import graph_def_pb2
@@ -281,7 +282,8 @@ def compile_app(workspace: str, library_name, attr, engine_config: dict):
     setattr(make_process, "stderr_watcher", make_stderr_watcher)
     make_process.wait()
     lib_path = get_lib_path(app_dir, library_name)
-    assert os.path.isfile(lib_path), "Error occurs when building the frame library."
+    if not os.path.isfile(lib_path):
+        raise CompilationError(f"Failed to compile app {app_class}")
     return lib_path
 
 
@@ -366,7 +368,9 @@ def compile_graph_frame(workspace: str, library_name, attr: dict, engine_config:
     setattr(make_process, "stderr_watcher", make_stderr_watcher)
     make_process.wait()
     lib_path = get_lib_path(library_dir, library_name)
-    assert os.path.isfile(lib_path), "Error occurs when building the frame library."
+    if not os.path.isfile(lib_path):
+        raise CompilationError(f"Failed to compile graph {graph_class}")
+
     return lib_path
 
 

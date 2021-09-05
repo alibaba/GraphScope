@@ -48,18 +48,20 @@ def catch_grpc_error(fn):
             return fn(*args, **kwargs)
         except grpc.RpcError as exc:
             if grpc.StatusCode.INTERNAL == exc.code():
-                e = pickle.loads(exc.details())
-                raise e from exc
-            elif grpc.StatusCode.UNKNOWN == exc.code():
+                raise GRPCError("Internal Error: " + exc.details()) from None
+            elif (
+                grpc.StatusCode.UNKNOWN == exc.code()
+                or grpc.StatusCode.UNAVAIABLE == exc.code()
+            ):
                 logger.error(
                     "rpc %s: failed with error code %s, details: %s"
                     % (fn.__name__, exc.code(), exc.details())
                 )
-                raise FatalError("The analytical engine may crashed.")
+                raise FatalError("The analytical engine server may down.") from None
             else:
                 raise GRPCError(
                     "rpc %s failed: status %s" % (str(fn.__name__), exc)
-                ) from exc
+                ) from None
 
     return with_grpc_catch
 
@@ -92,6 +94,7 @@ class GRPCClient(object):
         options = [
             ("grpc.max_send_message_length", 2147483647),
             ("grpc.max_receive_message_length", 2147483647),
+            ("grpc.max_metadata_size", 2147483647),
         ]
         self._channel = grpc.insecure_channel(endpoint, options=options)
         self._stub = coordinator_service_pb2_grpc.CoordinatorServiceStub(self._channel)
@@ -162,7 +165,7 @@ class GRPCClient(object):
         request = message_pb2.HeartBeatRequest()
         return self._stub.HeartBeat(request)
 
-    @catch_grpc_error
+    # @catch_grpc_error
     def _connect_session_impl(self, cleanup_instance=True, dangling_timeout_seconds=60):
         """
         Args:
@@ -210,9 +213,18 @@ class GRPCClient(object):
         response = self._stub.CloseSession(request)
         return response
 
+    @catch_grpc_error
     def _run_step_impl(self, dag_def):
         request = message_pb2.RunStepRequest(
             session_id=self._session_id, dag_def=dag_def
         )
         response = self._stub.RunStep(request)
+        if response.code != error_codes_pb2.OK:
+            logger.error(
+                "Runstep failed with code: %s, message: %s",
+                error_codes_pb2.Code.Name(response.code),
+                response.error_msg,
+            )
+            if response.full_exception:
+                raise pickle.loads(response.full_exception)
         return response

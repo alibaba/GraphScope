@@ -47,6 +47,7 @@ sys.stdout = StdoutWrapper(sys.stdout)
 from graphscope.framework import utils
 from graphscope.framework.dag_utils import create_graph
 from graphscope.framework.dag_utils import create_loader
+from graphscope.framework.errors import AnalyticalEngineInternalError
 from graphscope.framework.graph_utils import normalize_parameter_edges
 from graphscope.framework.graph_utils import normalize_parameter_vertices
 from graphscope.framework.loader import Loader
@@ -212,7 +213,6 @@ class CoordinatorServiceServicer(
                     "Cannot setup more than one connection at the same time."
                 )
                 return message_pb2.ConnectSessionResponse()
-
         # Connect to serving coordinator.
         self._request = request
         try:
@@ -337,7 +337,16 @@ class CoordinatorServiceServicer(
                 e.code().name,
                 e.details(),
             )
-            raise
+            if e.code() == grpc.StatusCode.INTERNAL:
+                # TODO: make the stacktrace seperated from normal error messages
+                # Too verbose.
+                if len(e.details()) > 3072:  # 3k bytes
+                    msg = f"{e.details()[:3072]} ... [truncated]"
+                else:
+                    msg = e.details()
+                raise AnalyticalEngineInternalError(msg)
+            else:
+                raise
         op_results.extend(response.results)
         for r in response.results:
             op = self._key_to_op[r.key]
@@ -462,6 +471,12 @@ class CoordinatorServiceServicer(
             self._op_result_pool[op.key] = op_result
         return op_results
 
+    @staticmethod
+    def _make_response(code, msg, full_exc=b""):
+        return message_pb2.RunStepResponse(
+            code=code, error_msg=msg, full_exception=full_exc
+        )
+
     def RunStep(self, request, context):
         op_results = list()
         # split dag
@@ -483,13 +498,16 @@ class CoordinatorServiceServicer(
                 elif run_dag_on == GSEngine.coordinator:
                     self.run_on_coordinator(request.session_id, dag_def, op_results)
             except grpc.RpcError as exc:
+                # Not raised by graphscope, maybe socket closed, etc
                 context.set_code(exc.code())
                 context.set_details(exc.details())
                 return message_pb2.RunStepResponse()
             except Exception as exc:
-                context.set_code(grpc.StatusCode.INTERNAL)
-                context.set_details(pickle.dumps(exc))
-                return message_pb2.RunStepResponse()
+                return self._make_response(
+                    error_codes_pb2.ANALYTICAL_ENGINE_INTERNAL_ERROR,
+                    "Error occurred during preprocessing",
+                    pickle.dumps(exc),
+                )
         return message_pb2.RunStepResponse(results=op_results)
 
     def _maybe_compile_app(self, op):
@@ -551,7 +569,10 @@ class CoordinatorServiceServicer(
                     e.code().name,
                     e.details(),
                 )
-                raise
+                if e.code() == grpc.StatusCode.INTERNAL:
+                    raise AnalyticalEngineInternalError(e.details())
+                else:
+                    raise
             self._object_manager.put(
                 graph_sig,
                 LibMeta(
@@ -1020,6 +1041,7 @@ class CoordinatorServiceServicer(
         options = [
             ("grpc.max_send_message_length", GS_GRPC_MAX_MESSAGE_LENGTH),
             ("grpc.max_receive_message_length", GS_GRPC_MAX_MESSAGE_LENGTH),
+            ("grpc.max_metadata_size", GS_GRPC_MAX_MESSAGE_LENGTH),
         ]
 
         channel = grpc.insecure_channel(
@@ -1040,7 +1062,10 @@ class CoordinatorServiceServicer(
                 e.code().name,
                 e.details(),
             )
-            raise
+            if e.code() == grpc.StatusCode.INTERNAL:
+                raise AnalyticalEngineInternalError(e.details())
+            else:
+                raise
         config = json.loads(response.results[0].result.decode("utf-8"))
         config.update(self._launcher.get_engine_config())
         return config
@@ -1343,6 +1368,7 @@ def launch_graphscope():
         options=[
             ("grpc.max_send_message_length", GS_GRPC_MAX_MESSAGE_LENGTH),
             ("grpc.max_receive_message_length", GS_GRPC_MAX_MESSAGE_LENGTH),
+            ("grpc.max_metadata_size", GS_GRPC_MAX_MESSAGE_LENGTH),
         ],
     )
     coordinator_service_pb2_grpc.add_CoordinatorServiceServicer_to_server(

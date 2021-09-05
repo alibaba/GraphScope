@@ -135,7 +135,7 @@ class FatalError(GSError):
 
 class GRPCError(GSError):
     def __init__(self, message):
-        message = "RPC failed, the engine might have crashed: %s" % message
+        message = "RPC failed: %s" % message
         super().__init__(message)
 
 

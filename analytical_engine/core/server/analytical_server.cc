@@ -28,6 +28,7 @@ void AnalyticalServer::StartServer() {
   grpc::ServerBuilder builder;
   builder.SetMaxReceiveMessageSize(std::numeric_limits<int>::max());
   builder.SetMaxSendMessageSize(std::numeric_limits<int>::max());
+
   builder.AddListeningPort(server_address, grpc::InsecureServerCredentials());
   builder.RegisterService(&service);
 
