@@ -15,7 +15,6 @@
 
 use crate::accum::Accumulator;
 use crate::functions::EncodeFunction;
-use crate::generated::common as common_pb;
 use crate::generated::protobuf as result_pb;
 use crate::process::traversal::step::TraverserAccumulator;
 use crate::process::traversal::traverser::Traverser;
@@ -58,8 +57,17 @@ impl EncodeFunction<Traverser> for TraverserSinkEncoder {
 
 impl EncodeFunction<HashMap<Traverser, TraverserAccumulator>> for TraverserSinkEncoder {
     fn encode(
-        &self, _data: HashMap<Traverser, TraverserAccumulator>,
+        &self, data: HashMap<Traverser, TraverserAccumulator>,
     ) -> FnResult<result_pb::Result> {
-        todo!()
+        let mut pairs_encode = vec![];
+        for (k, mut accum) in data {
+            let key_pb = pair_element_to_pb(&k);
+            let value_pb = pair_element_to_pb(&accum.finalize());
+            let map_pair_pb = result_pb::MapPair { first: Some(key_pb), second: Some(value_pb) };
+            pairs_encode.push(map_pair_pb);
+        }
+        let map = result_pb::MapArray { item: pairs_encode };
+        let result_pb = result_pb::Result { inner: Some(result_pb::result::Inner::MapResult(map)) };
+        Ok(result_pb)
     }
 }

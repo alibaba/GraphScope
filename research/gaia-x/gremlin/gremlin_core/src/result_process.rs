@@ -217,6 +217,13 @@ pub fn result_to_pb(t: Traverser) -> result_pb::Result {
                     let map_pair_pb =
                         result_pb::MapPair { first: Some(key_pb), second: Some(value_pb) };
                     pairs_encode.push(map_pair_pb);
+                } else if let Some(result_count) = try_downcast_count(o) {
+                    debug!("result_process count result {:?}", result_count);
+                    return result_pb::Result {
+                        inner: Some(result_pb::result::Inner::Value(common_pb::Value {
+                            item: Some(common_pb::value::Item::I64(result_count as i64)),
+                        })),
+                    };
                 } else {
                     debug!("result_process other object result {:?}", x);
                 }
