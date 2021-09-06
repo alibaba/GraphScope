@@ -77,7 +77,7 @@ impl<I, O, A: AccumFactory<I, O>> AccumFactory<I, O> for RcPointer<A> {
 #[derive(Clone, Eq, PartialEq)]
 pub struct Count<D> {
     pub value: u64,
-    _ph: std::marker::PhantomData<D>,
+    pub _ph: std::marker::PhantomData<D>,
 }
 
 impl<D> Debug for Count<D> {

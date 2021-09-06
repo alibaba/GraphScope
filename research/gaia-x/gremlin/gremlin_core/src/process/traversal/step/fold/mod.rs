@@ -13,48 +13,29 @@
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 
-use crate::accum::{AccumFactory, Accumulator};
-use crate::process::traversal::step::fold::fold::TraverserAccumFactory;
-use crate::process::traversal::traverser::Traverser;
+use crate::accum::{Count, ToList};
 use crate::DynResult;
 use pegasus_server::pb as server_pb;
+use pegasus_server::pb::AccumKind;
 
 mod fold;
+pub use fold::TraverserAccumulator;
 
 #[enum_dispatch]
 pub trait AccumFactoryGen {
-    fn gen_accum(
-        self,
-    ) -> DynResult<
-        Box<
-            dyn AccumFactory<
-                Traverser,
-                Traverser,
-                Target = Box<dyn Accumulator<Traverser, Traverser>>,
-            >,
-        >,
-    >;
+    fn gen_accum(self) -> DynResult<TraverserAccumulator>;
 }
 
 impl AccumFactoryGen for server_pb::AccumKind {
-    fn gen_accum(
-        self,
-    ) -> DynResult<
-        Box<
-            dyn AccumFactory<
-                Traverser,
-                Traverser,
-                Target = Box<dyn Accumulator<Traverser, Traverser>>,
-            >,
-        >,
-    > {
-        Ok(Box::new(TraverserAccumFactory { accum_kind: self.clone() }))
-    }
-}
-
-// TODO(bingqing): this is just for compiling
-impl Clone for Box<dyn Accumulator<Traverser, Traverser>> {
-    fn clone(&self) -> Self {
-        todo!()
+    fn gen_accum(self) -> DynResult<TraverserAccumulator> {
+        match self {
+            AccumKind::Cnt => {
+                Ok(TraverserAccumulator::ToCount(Count { value: 0, _ph: Default::default() }))
+            }
+            AccumKind::ToList => Ok(TraverserAccumulator::ToList(ToList { inner: vec![] })),
+            _ => {
+                todo!()
+            }
+        }
     }
 }

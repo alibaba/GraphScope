@@ -13,67 +13,42 @@
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 
-use crate::accum::{AccumFactory, Accumulator, CountAccum, ToListAccum};
+use crate::accum::{Accumulator, Count, ToList};
 use crate::process::traversal::traverser::Traverser;
-use pegasus::Data;
-use pegasus_server::pb::AccumKind;
-use std::fmt::{Debug, Formatter};
+use pegasus::codec::{Decode, Encode, ReadExt, WriteExt};
+use std::fmt::Debug;
+use std::io::Error;
 
-//trait AccumulatorClone: Accumulator<Traverser, Traverser> + Clone {}
-
-pub struct TraverserAccumFactory {
-    pub accum_kind: AccumKind,
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum TraverserAccumulator {
+    ToCount(Count<Traverser>),
+    ToList(ToList<Traverser>),
 }
 
-impl AccumFactory<Traverser, Traverser> for TraverserAccumFactory {
-    type Target = Box<dyn Accumulator<Traverser, Traverser>>;
+impl Encode for TraverserAccumulator {
+    fn write_to<W: WriteExt>(&self, _writer: &mut W) -> std::io::Result<()> {
+        unimplemented!()
+    }
+}
 
-    fn create(&self) -> Self::Target {
-        match self.accum_kind {
-            AccumKind::ToList => {
-                info!("create tolist accum");
-                let traverser_accum = TraverserAccum::new(ToListAccum::new());
-                Box::new(traverser_accum) as Box<dyn Accumulator<Traverser, Traverser>>
-            }
-            AccumKind::Cnt => {
-                info!("create count accum");
-                let traverser_accum = TraverserAccum::new(CountAccum::new());
-                Box::new(traverser_accum) as Box<dyn Accumulator<Traverser, Traverser>>
-            }
-            _ => {
-                todo!()
-            }
+impl Decode for TraverserAccumulator {
+    fn read_from<R: ReadExt>(_reader: &mut R) -> std::io::Result<Self> {
+        unimplemented!()
+    }
+}
+
+impl Accumulator<Traverser, Traverser> for TraverserAccumulator {
+    fn accum(&mut self, next: Traverser) -> Result<(), Error> {
+        match self {
+            TraverserAccumulator::ToCount(count) => count.accum(next),
+            TraverserAccumulator::ToList(list) => list.accum(next),
         }
-    }
-}
-
-pub struct TraverserAccum<O, F: AccumFactory<Traverser, O>> {
-    inner: F::Target,
-}
-
-impl<O, F: AccumFactory<Traverser, O>> TraverserAccum<O, F> {
-    pub fn new(factory: F) -> Self {
-        let inner = factory.create();
-        TraverserAccum { inner }
-    }
-}
-
-impl<O, F: AccumFactory<Traverser, O>> Debug for TraverserAccum<O, F> {
-    fn fmt(&self, _f: &mut Formatter<'_>) -> std::fmt::Result {
-        //  write!(f, "{:?}", self.inner)
-        todo!()
-    }
-}
-
-impl<O: Data + Eq, F: AccumFactory<Traverser, O>> Accumulator<Traverser, Traverser>
-    for TraverserAccum<O, F>
-{
-    fn accum(&mut self, next: Traverser) -> Result<(), std::io::Error> {
-        info!("accum: {:?}", next);
-        self.inner.accum(next)
     }
 
     fn finalize(&mut self) -> Traverser {
-        Traverser::with(self.inner.finalize())
+        match self {
+            TraverserAccumulator::ToCount(count) => Traverser::with(count.finalize()),
+            TraverserAccumulator::ToList(list) => Traverser::with(list.finalize()),
+        }
     }
 }

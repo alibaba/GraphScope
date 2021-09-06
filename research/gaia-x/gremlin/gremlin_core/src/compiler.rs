@@ -16,12 +16,12 @@
 use crate::process::traversal::step::*;
 // use crate::process::traversal::step::{BySubJoin, HasAnyJoin};
 use crate::process::traversal::traverser::Traverser;
-use crate::Partitioner;
+use crate::{str_to_dyn_error, Partitioner};
 // use crate::TraverserSinkEncoder;
 use pegasus::api::function::*;
 use pegasus::api::{
-    Collect, CorrelatedSubTask, Count, Dedup, Filter, Fold, FoldByKey, IterCondition, Iteration,
-    KeyBy, Limit, Map, Merge, Reduce, Sink, SortBy, Source,
+    Collect, CorrelatedSubTask, Dedup, Filter, Fold, FoldByKey, IterCondition, Iteration, KeyBy,
+    Limit, Map, Merge, Sink, SortBy, Source,
 };
 use pegasus::result::ResultSink;
 use pegasus::BuildJobError;
@@ -33,12 +33,12 @@ use crate::generated as pb;
 use pegasus::stream::Stream;
 use pegasus_server::pb as server_pb;
 
-use pegasus_server::pb::{AccumKind, OperatorDef};
+use pegasus_server::pb::OperatorDef;
 use pegasus_server::service::JobParser;
 use pegasus_server::JobRequest;
 use prost::Message;
-use std::cmp::Ordering;
 
+use crate::accum::Accumulator;
 use std::collections::HashMap;
 use std::sync::Arc;
 
@@ -50,8 +50,7 @@ type TraverserLeftJoin = Box<dyn BinaryFunction<Traverser, Vec<Traverser>, Optio
 type TraverserKey = Box<dyn KeyFunction<Traverser, Traverser, Traverser>>;
 // type TraverserGroup = Box<dyn GroupFunction<Traverser, Traverser, Traverser>>;
 type TraverserEncode = Box<dyn EncodeFunction<Traverser>>;
-type TraverserGroupEncode = Box<dyn EncodeFunction<HashMap<Traverser, Vec<Traverser>>>>;
-type TraverserGroupCountEncode = Box<dyn EncodeFunction<HashMap<Traverser, i32>>>;
+type TraverserGroupEncode = Box<dyn EncodeFunction<HashMap<Traverser, TraverserAccumulator>>>;
 type TraverserShuffle = Box<dyn RouteFunction<Traverser>>;
 type BinaryResource = Vec<u8>;
 
@@ -118,15 +117,16 @@ impl FnGenerator {
         Ok(step.gen_key()?)
     }
 
+    fn gen_accum(&self, accum_kind: i32) -> Result<TraverserAccumulator, BuildJobError> {
+        let accum_kind: server_pb::AccumKind = unsafe { std::mem::transmute(accum_kind) };
+        Ok(accum_kind.gen_accum()?)
+    }
+
     fn gen_sink(&self) -> Result<TraverserEncode, BuildJobError> {
         Ok(Box::new(TraverserSinkEncoder))
     }
 
     fn gen_group_sink(&self) -> Result<TraverserGroupEncode, BuildJobError> {
-        Ok(Box::new(TraverserSinkEncoder))
-    }
-
-    fn gen_group_count_sink(&self) -> Result<TraverserGroupCountEncode, BuildJobError> {
         Ok(Box::new(TraverserSinkEncoder))
     }
 }
@@ -196,106 +196,34 @@ impl GremlinJobCompiler {
                         }
                     }
                     server_pb::operator_def::OpKind::Fold(fold) => {
-                        let accum_kind: server_pb::AccumKind =
-                            unsafe { std::mem::transmute(fold.accum) };
-                        match accum_kind {
-                            server_pb::AccumKind::Cnt => {
-                                stream = stream
-                                    .count()?
-                                    .into_stream()?
-                                    // TODO(bingqing): consider traverser type?
-                                    .map(|v| Ok(Traverser::with(v)))?;
-                            }
-                            server_pb::AccumKind::Sum => {
-                                stream = stream
-                                    .reduce(|| {
-                                        |mut sum, trav| {
-                                            sum = sum + trav;
-                                            Ok(sum)
-                                        }
-                                    })?
-                                    .into_stream()?;
-                            }
-                            server_pb::AccumKind::Max => {
-                                stream = stream
-                                    .reduce(|| {
-                                        move |max, curr| {
-                                            let ord = max.cmp(&curr);
-                                            match ord {
-                                                Ordering::Less => Ok(curr),
-                                                _ => Ok(max),
-                                            }
-                                        }
-                                    })?
-                                    .into_stream()?;
-                            }
-                            server_pb::AccumKind::Min => {
-                                stream = stream
-                                    .reduce(|| {
-                                        move |min, curr| {
-                                            let ord = min.cmp(&curr);
-                                            match ord {
-                                                Ordering::Greater => Ok(curr),
-                                                _ => Ok(min),
-                                            }
-                                        }
-                                    })?
-                                    .into_stream()?;
-                            }
-                            server_pb::AccumKind::ToList => {
-                                stream = stream
-                                    .fold(Vec::new(), || {
-                                        |mut list, trav| {
-                                            list.push(trav);
-                                            Ok(list)
-                                        }
-                                    })?
-                                    .into_stream()?
-                                    .map(|vec| Ok(Traverser::with(vec)))?;
-                            }
-                            _ => {
-                                return Err(format!(
-                                    "Unsupported accum_kind {:?} in fold",
-                                    accum_kind
-                                )
-                                .into());
-                            }
-                        }
+                        let accum = self.udf_gen.gen_accum(fold.accum)?;
+                        stream = stream
+                            .fold(accum, || {
+                                move |mut accum, next| {
+                                    accum.accum(next).map_err(|e| {
+                                        str_to_dyn_error(&format!("accum failure: {}", e))
+                                    })?;
+                                    Ok(accum)
+                                }
+                            })?
+                            .map(|mut accum| Ok(accum.finalize()))?
+                            .into_stream()?;
                     }
-
                     server_pb::operator_def::OpKind::Group(group) => {
                         let selector = self.udf_gen.gen_key(group.resource.as_ref())?;
-                        let accum_kind: server_pb::AccumKind =
-                            unsafe { std::mem::transmute(group.accum) };
-                        match accum_kind {
-                            AccumKind::Cnt => {
-                                stream = stream
-                                    .key_by(move |trav| selector.select_key(trav))?
-                                    .fold_by_key(0, || |cnt, _| Ok(cnt + 1))?
-                                    .unfold(|map| Ok(map.into_iter()))?
-                                    // TODO(bingqing): consider traverser type
-                                    .map(|pair| Ok(Traverser::with(pair)))?;
-                            }
-                            AccumKind::ToList => {
-                                stream = stream
-                                    .key_by(move |trav| selector.select_key(trav))?
-                                    .fold_by_key(Vec::new(), || {
-                                        |mut list, trav| {
-                                            list.push(trav);
-                                            Ok(list)
-                                        }
-                                    })?
-                                    .unfold(|map| Ok(map.into_iter()))?
-                                    .map(|pair| Ok(Traverser::with(pair)))?;
-                            }
-                            _ => {
-                                return Err(format!(
-                                    "Unsupported accum_kind {:?} in group",
-                                    accum_kind
-                                )
-                                .into());
-                            }
-                        }
+                        let accum = self.udf_gen.gen_accum(group.accum)?;
+                        stream = stream
+                            .key_by(move |trav| selector.select_key(trav))?
+                            .fold_by_key(accum, || {
+                                |mut accum, next| {
+                                    accum.accum(next).map_err(|e| {
+                                        str_to_dyn_error(&format!("accum failure: {}", e))
+                                    })?;
+                                    Ok(accum)
+                                }
+                            })?
+                            .unfold(|map| Ok(map.into_iter()))?
+                            .map(|pair| Ok(Traverser::with(pair)))?;
                     }
 
                     server_pb::operator_def::OpKind::Dedup(_) => {
@@ -320,7 +248,10 @@ impl GremlinJobCompiler {
                         //     ori_stream = copied.0;
                         //     stream = self.install(copied.1, &subtask.plan[..])?.merge(stream)?;
                         // }
-                        // TODO(bingqing): This is just for test, remove it when merge is ready
+                        // TODO(bingqing): remove the condition when merge is ready
+                        if union.branches.len() != 2 {
+                            Err("Only support union 2 branches for now")?;
+                        }
                         let (ori_stream, sub_stream) = stream.copied()?;
                         stream = self.install(ori_stream, &union.branches[0].plan[..])?;
                         stream =
@@ -369,6 +300,51 @@ impl GremlinJobCompiler {
         }
         Ok(stream)
     }
+
+    fn sink(
+        &self, stream: Stream<Traverser>, sink: Option<&server_pb::Sink>,
+        output: ResultSink<pb::protobuf::Result>,
+    ) -> Result<(), BuildJobError> {
+        let ec = self.udf_gen.gen_sink()?;
+        if let Some(sink) = sink {
+            match sink.sinker.as_ref() {
+                Some(server_pb::sink::Sinker::Fold(fold)) => {
+                    let accum = self.udf_gen.gen_accum(fold.accum)?;
+                    stream
+                        .fold(accum, || {
+                            move |mut accum, next| {
+                                accum.accum(next).map_err(|e| {
+                                    str_to_dyn_error(&format!("accum failure: {}", e))
+                                })?;
+                                Ok(accum)
+                            }
+                        })?
+                        .map(move |mut accum| ec.encode(accum.finalize()))?
+                        .sink_into(output)
+                }
+                Some(server_pb::sink::Sinker::Group(group)) => {
+                    let selector = self.udf_gen.gen_key(group.resource.as_ref())?;
+                    let accum = self.udf_gen.gen_accum(group.accum)?;
+                    let group_ec = self.udf_gen.gen_group_sink()?;
+                    stream
+                        .key_by(move |trav| selector.select_key(trav))?
+                        .fold_by_key(accum, || {
+                            |mut accum, next| {
+                                accum.accum(next).map_err(|e| {
+                                    str_to_dyn_error(&format!("accum failure: {}", e))
+                                })?;
+                                Ok(accum)
+                            }
+                        })?
+                        .map(move |pair| group_ec.encode(pair))?
+                        .sink_into(output)
+                }
+                _ => stream.map(move |trav| ec.encode(trav))?.sink_into(output),
+            }
+        } else {
+            stream.map(move |trav| ec.encode(trav))?.sink_into(output)
+        }
+    }
 }
 
 impl JobParser<Traverser, pb::protobuf::Result> for GremlinJobCompiler {
@@ -384,57 +360,7 @@ impl JobParser<Traverser, pb::protobuf::Result> for GremlinJobCompiler {
                 source
             };
 
-            let ec = self.udf_gen.gen_sink()?;
-            if let Some(sink) = plan.sink.as_ref() {
-                match sink.sinker.as_ref() {
-                    Some(server_pb::sink::Sinker::Fold(_fold)) => {
-                        // need to first fold and then sink
-                        todo!()
-                    }
-                    Some(server_pb::sink::Sinker::Group(group)) => {
-                        let selector = self.udf_gen.gen_key(group.resource.as_ref())?;
-                        // TODO: it's better like the old version, that gen_group and get_key and sink together?
-                        let accum_kind: server_pb::AccumKind =
-                            unsafe { std::mem::transmute(group.accum) };
-                        match accum_kind {
-                            AccumKind::Cnt => {
-                                let group_ec = self.udf_gen.gen_group_count_sink()?;
-                                stream
-                                    .key_by(move |trav| selector.select_key(trav))?
-                                    .fold_by_key(0, || |cnt, _| Ok(cnt + 1))?
-                                    .map(move |pair| group_ec.encode(pair))?
-                                    .sink_into(output)
-                            }
-
-                            AccumKind::ToList => {
-                                let group_ec = self.udf_gen.gen_group_sink()?;
-                                stream
-                                    .key_by(move |trav| selector.select_key(trav))?
-                                    .fold_by_key(Vec::new(), || {
-                                        |mut list, trav| {
-                                            list.push(trav);
-                                            Ok(list)
-                                        }
-                                    })?
-                                    .map(move |map|
-                                      //  map.drain()
-                                        group_ec.encode(map))?
-                                    .sink_into(output)
-                            }
-                            _ => {
-                                return Err(format!(
-                                    "Have not support accum_kind {:?} in group yet",
-                                    accum_kind
-                                )
-                                .into());
-                            }
-                        }
-                    }
-                    _ => stream.map(move |trav| ec.encode(trav))?.sink_into(output),
-                }
-            } else {
-                stream.map(move |trav| ec.encode(trav))?.sink_into(output)
-            }
+            self.sink(stream, plan.sink.as_ref(), output)
         } else {
             Err("source of job not found".into())
         }
