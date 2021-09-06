@@ -293,8 +293,8 @@ check_dependencies() {
   # check java
   if [[ "${PLATFORM}" == *"Darwin"* ]]; then
     if [[ ! -f "/usr/libexec/java_home" ]] || \
-       ! /usr/libexec/java_home -v 1.12 &> /dev/null; then
-      packages_to_install+=(jdk12)
+       ! /usr/libexec/java_home -v 1.11 &> /dev/null; then
+      packages_to_install+=(jdk)
     fi
   else
     if $(! command -v javac &> /dev/null) || \
@@ -302,7 +302,7 @@ check_dependencies() {
       if [[ "${PLATFORM}" == *"Ubuntu"* ]]; then
         packages_to_install+=(default-jdk)
       else
-        packages_to_install+=(java-1.8.0-openjdk-devel)  # CentOS
+        packages_to_install+=(java-11-openjdk-devel)  # CentOS
       fi
     fi
   fi
@@ -341,9 +341,9 @@ check_dependencies() {
     packages_to_install+=(rust)
   fi
 
-  # check golang
-  if ! command -v go &> /dev/null && ! command -v /usr/local/bin/go &> /dev/null && \
-     ! command -v /usr/local/go/bin/go &> /dev/null; then
+  # check go < 1.16 (vertion 1.16 can't install zetcd)
+  if $(! command -v go &> /dev/null) || \
+     [[ "$(go version 2>&1 | awk -F '.' '{print $2}')" -ge "16" ]]; then
     if [[ "${PLATFORM}" == *"CentOS"* ]]; then
       packages_to_install+=(golang)
     else
@@ -420,8 +420,9 @@ write_envs_config() {
         echo "export CPPFLAGS=-I/usr/local/opt/llvm@${LLVM_VERSION}/include"
         echo "export PATH=/usr/local/opt/llvm@${LLVM_VERSION}/bin:\$PATH"
       fi
-      echo "export JAVA_HOME=\$(/usr/libexec/java_home -v 1.12)"
-      echo "export PATH=/usr/local/opt/gnu-sed/libexec/gnubin:\$HOME/.cargo/bin:\${JAVA_HOME}/bin:\$PATH"
+      echo "export JAVA_HOME=\$(/usr/libexec/java_home -v 1.11)"
+      echo "export PATH=\$HOME/.cargo/bin:\${JAVA_HOME}/bin:/usr/local/go/bin:\$PATH"
+      echo "export PATH=\$(go env GOPATH)/bin:\$PATH"
       echo "export OPENSSL_ROOT_DIR=/usr/local/opt/openssl"
       echo "export OPENSSL_LIBRARIES=/usr/local/opt/openssl/lib"
       echo "export OPENSSL_SSL_LIBRARY=/usr/local/opt/openssl/lib/libssl.dylib"
@@ -429,8 +430,8 @@ write_envs_config() {
   elif [[ "${PLATFORM}" == *"Ubuntu"* ]]; then
     {
       echo "export LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:/usr/local/lib:/usr/local/lib64"
-      echo "export JAVA_HOME=/usr/lib/default-java"
-      echo "export PATH=\${JAVA_HOME}/bin:\$HOME/.cargo/bin:\$PATH:/usr/local/go/bin"
+      echo "export JAVA_HOME=/usr/lib/jvm/default-java"
+      echo "export PATH=\${JAVA_HOME}/bin:\$HOME/.cargo/bin:/usr/local/go/bin:\$PATH"
       echo "export PATH=\$(go env GOPATH)/bin:\$PATH"
     } >> ${OUTPUT_ENV_FILE}
   else
@@ -465,7 +466,7 @@ install_dependencies() {
     if [[ "${packages_to_install[@]}" =~ "go" ]]; then
       # packages_to_install contains go
       log "Installing Go."
-      wget -c --no-verbose https://golang.org/dl/go1.15.5.linux-amd64.tar.gz -P /tmp
+      wget -c https://golang.org/dl/go1.15.5.linux-amd64.tar.gz -P /tmp
       sudo tar -C /usr/local -xzf /tmp/go1.15.5.linux-amd64.tar.gz
       rm -fr /tmp/go1.15.5.linux-amd64.tar.gz
       # remove go from packages_to_install
@@ -515,7 +516,7 @@ install_dependencies() {
     sudo dnf config-manager --set-enabled powertools
 
     log "Instralling packages ${BASIC_PACKGES_TO_INSTALL[*]}"
-    sudo dnf -y ${BASIC_PACKGES_TO_INSTALL[*]}
+    sudo dnf install -y ${BASIC_PACKGES_TO_INSTALL[*]}
 
     if [[ "${packages_to_install[@]}" =~ "apache-arrow" ]]; then
       log "Installing apache-arrow."
@@ -621,13 +622,36 @@ install_dependencies() {
     rm -fr /tmp/grpc
 
   elif [[ "${PLATFORM}" == *"Darwin"* ]]; then
-    if [[ "${packages_to_install[@]}" =~ "jdk8" ]]; then
+    log "Installing packages ${BASIC_PACKGES_TO_INSTALL[*]}"
+    brew install ${BASIC_PACKGES_TO_INSTALL[*]}
+
+    if [[ "${packages_to_install[@]}" =~ "jdk" ]]; then
       # packages_to_install contains jdk8
-      log "Installing adoptopenjdk8."
-      brew tap adoptopenjdk/openjdk
-      brew install --cask adoptopenjdk8
+      log "Installing adoptopenjdk11."
+      wget -c https://github.com/adoptium/temurin11-binaries/releases/download/jdk-11.0.12%2B7/OpenJDK11U-jdk_x64_mac_hotspot_11.0.12_7.pkg \
+        -P /tmp
+      sudo installer -pkg /tmp/OpenJDK11U-jdk_x64_mac_hotspot_11.0.12_7.pkg -target /
+      rm -fr /tmp/OpenJDK11U-jdk_x64_mac_hotspot_11.0.12_7.pkg
       # remove jdk8 from packages_to_install
-      packages_to_install=("${packages_to_install[@]/jdk8}")
+      packages_to_install=("${packages_to_install[@]/jdk}")
+    fi
+
+    if [[ "${packages_to_install[@]}" =~ "go" ]]; then
+      # packages_to_install contains go
+      log "Installing Go."
+      wget -c https://dl.google.com/go/go1.15.15.darwin-amd64.pkg -P /tmp
+      sudo installer -pkg /tmp/go1.15.15.darwin-amd64.pkg -target /
+      rm -fr /tmp/go1.15.15.darwin-amd64.pkg
+      # remove go from packages_to_install
+      packages_to_install=("${packages_to_install[@]/go}")
+    fi
+
+    if [[ "${packages_to_install[@]}" =~ "zetcd" ]]; then
+      log "Installing zetcd."
+      export PATH=/usr/local/go/bin:${PATH}
+      go get github.com/etcd-io/zetcd/cmd/zetcd
+      # remove zetcd from packages_to_install
+      packages_to_install=("${packages_to_install[@]/zetcd}")
     fi
 
     if [[ "${packages_to_install[@]}" =~ "rust" ]]; then
@@ -644,8 +668,8 @@ install_dependencies() {
       packages_to_install+=(fmt)
     fi
 
-    log "Installing packages ${BASIC_PACKGES_TO_INSTALL[*]} ${packages_to_install[*]}"
-    brew install ${BASIC_PACKGES_TO_INSTALL[*]} ${packages_to_install[*]}
+    log "Installing packages ${packages_to_install[*]}"
+    brew install ${packages_to_install[*]}
 
     export OPENSSL_ROOT_DIR=/usr/local/opt/openssl
     export OPENSSL_LIBRARIES=/usr/local/opt/openssl/lib
