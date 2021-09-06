@@ -32,6 +32,7 @@ import signal
 import string
 import sys
 import threading
+import traceback
 import urllib.parse
 import urllib.request
 from concurrent import futures
@@ -505,7 +506,7 @@ class CoordinatorServiceServicer(
             except Exception as exc:
                 return self._make_response(
                     error_codes_pb2.ANALYTICAL_ENGINE_INTERNAL_ERROR,
-                    "Error occurred during preprocessing",
+                    "Error occurred during preprocessing: " + traceback.format_exc(),
                     pickle.dumps(exc),
                 )
         return message_pb2.RunStepResponse(results=op_results)
@@ -901,32 +902,29 @@ class CoordinatorServiceServicer(
         random_num = random.randint(0, 10000000)
         graph_name = "%s_%s" % (str(now_time), str(random_num))
 
-        try:
-            # create a graph handle by name
-            gremlin_client.submit(
-                "g.createGraph('{0}').with('graphType', 'vineyard')".format(graph_name),
-                request_options=request_options,
-            ).all().result()
+        # create a graph handle by name
+        gremlin_client.submit(
+            "g.createGraph('{0}').with('graphType', 'vineyard')".format(graph_name),
+            request_options=request_options,
+        ).all().result()
 
-            # start a thread to launch the graph
-            pool = futures.ThreadPoolExecutor()
-            subgraph_task = pool.submit(
-                load_subgraph,
-                oid_type,
-                graph_name,
-            )
+        # start a thread to launch the graph
+        pool = futures.ThreadPoolExecutor()
+        subgraph_task = pool.submit(
+            load_subgraph,
+            oid_type,
+            graph_name,
+        )
 
-            # add subgraph vertices and edges
-            subgraph_script = "{0}.subgraph('{1}').outputVineyard('{2}')".format(
-                gremlin_script, graph_name, graph_name
-            )
-            gremlin_client.submit(
-                subgraph_script, request_options=request_options
-            ).all().result()
+        # add subgraph vertices and edges
+        subgraph_script = "{0}.subgraph('{1}').outputVineyard('{2}')".format(
+            gremlin_script, graph_name, graph_name
+        )
+        gremlin_client.submit(
+            subgraph_script, request_options=request_options
+        ).all().result()
 
-            return subgraph_task.result()
-        except Exception as e:
-            raise RuntimeError("Failed to create subgraph from gremlin query") from e
+        return subgraph_task.result()
 
     def _create_learning_instance(self, op: op_def_pb2.OpDef):
         object_id = op.attr[types_pb2.VINEYARD_ID].i
