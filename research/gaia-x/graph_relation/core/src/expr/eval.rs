@@ -35,7 +35,8 @@ pub struct Evaluator<'a> {
 }
 
 /// An inner representation of `pb::ExprUnit` for one-shot translation of `pb::ExprUnit`.
-enum InnerOpr {
+#[derive(Debug, Clone)]
+pub(crate) enum InnerOpr {
     Logical(pb::Logical),
     Arith(pb::Arithmetic),
     Const(Option<Object>),
@@ -43,6 +44,39 @@ enum InnerOpr {
         tag: NameOrId,
         prop_key: Option<PropKey>,
     },
+}
+
+impl ToString for InnerOpr {
+    fn to_string(&self) -> String {
+        match self {
+            InnerOpr::Logical(logical) => format!("{:?}", logical),
+            InnerOpr::Arith(arith) => format!("{:?}", arith),
+            InnerOpr::Const(c) => format!("Const({:?})", c),
+            InnerOpr::Var { tag, prop_key } => {
+                if let Some(p) = prop_key {
+                    format!("Var (tag: {:?}, prop_key: {:?})", tag, p)
+                } else {
+                    format!("Var (tag: {:?})", tag)
+                }
+            }
+        }
+    }
+}
+
+/// A string representation of `InnerOpr`
+#[derive(Debug, Clone, PartialEq)]
+pub struct OperatorDesc(String);
+
+impl From<InnerOpr> for OperatorDesc {
+    fn from(inner: InnerOpr) -> Self {
+        Self::from(&inner)
+    }
+}
+
+impl From<&InnerOpr> for OperatorDesc {
+    fn from(inner: &InnerOpr) -> Self {
+        Self(inner.to_string())
+    }
 }
 
 /// A `Context` gives the behavior of obtaining a certain tag from the runtime
@@ -90,7 +124,7 @@ fn apply_arith<'a>(
             Arithmetic::Exp => BorrowObject::Primitive(a.as_primitive()?.exp(b.as_primitive()?)),
         })
     } else {
-        Err(ExprError::MissingOperands)
+        Err(ExprError::MissingOperands(InnerOpr::Arith(*arith).into()))
     }
 }
 
@@ -108,23 +142,27 @@ fn apply_logical<'a>(
             let a = first.unwrap();
             let b = second.unwrap();
             let rst = match logical {
-                Logical::Eq => (a == b).into(),
-                Logical::Ne => (a != b).into(),
-                Logical::Lt => (a < b).into(),
-                Logical::Le => (a <= b).into(),
-                Logical::Gt => (a > b).into(),
-                Logical::Ge => (a >= b).into(),
-                Logical::And => (a.as_bool()? && b.as_bool()?).into(),
-                Logical::Or => (a.as_bool()? || b.as_bool()?).into(),
+                Logical::Eq => Ok((a == b).into()),
+                Logical::Ne => Ok((a != b).into()),
+                Logical::Lt => Ok((a < b).into()),
+                Logical::Le => Ok((a <= b).into()),
+                Logical::Gt => Ok((a > b).into()),
+                Logical::Ge => Ok((a >= b).into()),
+                Logical::And => Ok((a.as_bool()? && b.as_bool()?).into()),
+                Logical::Or => Ok((a.as_bool()? || b.as_bool()?).into()),
                 Logical::Not => unreachable!(),
                 // todo within, without
-                _ => unimplemented!(),
+                _ => Err(ExprError::OtherErr(
+                    "`within`, `without` unimplemented!".to_string(),
+                )),
             };
-            return Ok(rst);
+            return rst;
         }
     }
 
-    Err(ExprError::MissingOperands)
+    Err(ExprError::MissingOperands(
+        InnerOpr::Logical(*logical).into(),
+    ))
 }
 
 // Private api
@@ -136,42 +174,53 @@ impl<'a> Evaluator<'a> {
         context: Option<&C>,
     ) -> ExprResult<Object> {
         assert!(self.suffix_tree.len() <= 3);
+        let _first = self.suffix_tree.get(0);
+        let _second = self.suffix_tree.get(1);
+        let _third = self.suffix_tree.get(2);
         if self.suffix_tree.is_empty() {
-            return Err(ExprError::EmptyExpression);
+            Err(ExprError::EmptyExpression)
         } else if self.suffix_tree.len() == 1 {
-            return Ok(self.suffix_tree[0]
+            let first = _first.unwrap();
+            Ok(first
                 .eval_as_borrow_object(context)?
-                .ok_or(ExprError::NoneOperand)?
-                .into());
+                .ok_or(ExprError::NoneOperand(first.into()))?
+                .into())
         } else if self.suffix_tree.len() == 2 {
+            let first = _first.unwrap();
+            let second = _second.unwrap();
             // must be not
-            if let InnerOpr::Logical(logical) = &self.suffix_tree[1] {
-                return Ok(apply_logical(
-                    logical,
-                    self.suffix_tree[0].eval_as_borrow_object(context)?,
-                    None,
-                )?
-                .into());
+            if let InnerOpr::Logical(logical) = second {
+                Ok(apply_logical(logical, first.eval_as_borrow_object(context)?, None)?.into())
+            } else {
+                if !second.is_operand() {
+                    Err(ExprError::MissingOperands(second.into()))
+                } else {
+                    Err(ExprError::OtherErr("invalid expression".to_string()))
+                }
             }
         } else {
-            if let InnerOpr::Logical(logical) = &self.suffix_tree[2] {
-                return Ok(apply_logical(
+            let first = _first.unwrap();
+            let second = _second.unwrap();
+            let third = _third.unwrap();
+
+            if let InnerOpr::Logical(logical) = third {
+                Ok(apply_logical(
                     logical,
-                    self.suffix_tree[0].eval_as_borrow_object(context)?,
-                    self.suffix_tree[1].eval_as_borrow_object(context)?,
+                    first.eval_as_borrow_object(context)?,
+                    second.eval_as_borrow_object(context)?,
                 )?
-                .into());
-            } else if let InnerOpr::Arith(arith) = &self.suffix_tree[2] {
-                return Ok(apply_arith(
+                .into())
+            } else if let InnerOpr::Arith(arith) = third {
+                Ok(apply_arith(
                     arith,
-                    self.suffix_tree[0].eval_as_borrow_object(context)?,
-                    self.suffix_tree[1].eval_as_borrow_object(context)?,
+                    first.eval_as_borrow_object(context)?,
+                    second.eval_as_borrow_object(context)?,
                 )?
-                .into());
+                .into())
+            } else {
+                Err(ExprError::OtherErr("invalid expression".to_string()))
             }
         }
-
-        Err("invalid expression".into())
     }
 }
 
@@ -232,7 +281,7 @@ impl<'a> Evaluator<'a> {
     ///         ],
     ///     };
     ///
-    /// let tokens = tokenize("@0.age == @1.age").unwrap();    
+    /// let tokens = tokenize("@0.age == @1.age").unwrap();
     /// let suffix_tree = to_suffix_expr_pb(tokens).unwrap();
     /// let eval = Evaluator::from_pb(suffix_tree).unwrap();
     ///
@@ -252,7 +301,7 @@ impl<'a> Evaluator<'a> {
                 if let Some(obj) = opr.eval_as_borrow_object(context)? {
                     stack.push(obj);
                 } else {
-                    return Err(ExprError::NoneOperand);
+                    return Err(ExprError::NoneOperand(opr.into()));
                 }
             } else {
                 let first = stack.pop();
@@ -330,26 +379,24 @@ impl InnerOpr {
                 None
             }),
             Self::Var { tag, prop_key } => {
-                if context.is_some() {
-                    let ctxt = context.unwrap();
-                    if let Some(property) = prop_key {
-                        if let Some(element) = ctxt.get(tag) {
+                if let Some(ctxt) = context {
+                    let mut result = Ok(None);
+                    if let Some(element) = ctxt.get(tag) {
+                        if let Some(property) = prop_key {
                             if let Some(details) = element.details() {
-                                return Ok(details.get(property));
+                                result = Ok(details.get(property))
                             }
-                        }
-                    } else {
-                        if let Some(field) = ctxt.get(tag) {
-                            return Ok(Some(field.as_borrow_object()));
+                        } else {
+                            result = Ok(Some(element.as_borrow_object()))
                         }
                     }
-                }
 
-                Err(ExprError::MissingContext(
-                    "missing context for evaluating variables".into(),
-                ))
+                    result
+                } else {
+                    Err(ExprError::MissingContext(self.into()))
+                }
             }
-            _ => Ok(None),
+            _ => Err(ExprError::UnmatchedOperator(self.into())),
         }
     }
 
@@ -390,6 +437,58 @@ mod tests {
     use super::*;
     use crate::expr::to_suffix_expr_pb;
     use crate::expr::token::tokenize;
+    use crate::graph::element::Vertex;
+    use crate::graph::property::{DefaultDetails, DynDetails, Label};
+    use std::collections::HashMap;
+
+    struct Vertices {
+        vec: Vec<Vertex>,
+    }
+    impl Context<Vertex> for Vertices {
+        fn get(&self, key: &NameOrId) -> Option<&Vertex> {
+            match key {
+                NameOrId::Str(_) => None,
+                NameOrId::Id(i) => self.vec.get(*i as usize),
+            }
+        }
+    }
+
+    fn prepare_context() -> Vertices {
+        let map1: HashMap<NameOrId, Object> = vec![
+            (NameOrId::from("age".to_string()), 31.into()),
+            (NameOrId::from("birthday".to_string()), 19900416.into()),
+            (
+                NameOrId::from("name".to_string()),
+                "John".to_string().into(),
+            ),
+        ]
+        .into_iter()
+        .collect();
+        let map2: HashMap<NameOrId, Object> = vec![
+            (NameOrId::from("age".to_string()), 26.into()),
+            (NameOrId::from("birthday".to_string()), 19950816.into()),
+            (
+                NameOrId::from("name".to_string()),
+                "Nancy".to_string().into(),
+            ),
+        ]
+        .into_iter()
+        .collect();
+        Vertices {
+            vec: vec![
+                Vertex::new(DynDetails::new(DefaultDetails::with_property(
+                    1,
+                    Label::from(9),
+                    map1,
+                ))),
+                Vertex::new(DynDetails::new(DefaultDetails::with_property(
+                    2,
+                    Label::from(11),
+                    map2,
+                ))),
+            ],
+        }
+    }
 
     #[test]
     fn test_eval_simple() {
@@ -502,5 +601,105 @@ mod tests {
         }
     }
 
-    // todo!(add test cases for evaluating expression with variables and errors)
+    #[test]
+    fn test_eval_variable() {
+        // [v0: id = 1, label = 9, age = 31, birthday = 19900416]
+        // [v1: id = 2, label = 11, age = 26, birthday = 19950816]
+        let ctxt = prepare_context();
+        let cases: Vec<&str> = vec![
+            "@0.ID",                                       // 1
+            "@1.LABEL",                                    // 1
+            "@0.ID < @1.ID",                               // true
+            "@0.birthday > @1.birthday",                   // false
+            "@0.LABEL == @1.LABEL",                        // false
+            "@0.name != @1.name",                          // true
+            "@0.name == \"John\"",                         // true
+            "@0.name == \"John\" && @1.name == \"Jimmy\"", // false
+            "@0.age + @0.birthday / 10000 == \
+                @1.age + @1.birthday / 10000", // true
+        ];
+
+        let expected: Vec<Object> = vec![
+            Object::from(1),
+            Object::from(11),
+            Object::from(true),
+            Object::from(false),
+            Object::from(false),
+            Object::from(true),
+            Object::from(true),
+            Object::from(false),
+            Object::from(true),
+        ];
+
+        for (case, expected) in cases.into_iter().zip(expected.into_iter()) {
+            let eval =
+                Evaluator::from_pb(to_suffix_expr_pb(tokenize(case).unwrap()).unwrap()).unwrap();
+            assert_eq!(eval.eval::<_, Vertices>(Some(&ctxt)).unwrap(), expected);
+        }
+    }
+
+    #[test]
+    fn test_eval_errors() {
+        let cases: Vec<&str> = vec![
+            "@2",
+            "@2",
+            "@1.nonexistent",
+            "+",
+            "1 + ",
+            "1 1",
+            "1 1 2",
+            "1 1 + 2",
+            "1 + @1.age * 1 1 - 1 - 5",
+        ];
+        let ctxt = prepare_context();
+
+        let expected: Vec<ExprError> = vec![
+            // Evaluate variable without providing the context
+            ExprError::MissingContext(
+                InnerOpr::Var {
+                    tag: 2.into(),
+                    prop_key: None,
+                }
+                .into(),
+            ),
+            // obtain non-value from the context
+            ExprError::NoneOperand(
+                InnerOpr::Var {
+                    tag: 2.into(),
+                    prop_key: None,
+                }
+                .into(),
+            ),
+            // obtain non-value from the context
+            ExprError::NoneOperand(
+                InnerOpr::Var {
+                    tag: 1.into(),
+                    prop_key: Some(PropKey::Key("nonexistent".to_string().into())),
+                }
+                .into(),
+            ),
+            // try to evaluate neither a variable nor a const
+            ExprError::UnmatchedOperator(InnerOpr::Arith(Arithmetic::Add).into()),
+            ExprError::MissingOperands(InnerOpr::Arith(Arithmetic::Add).into()),
+            ExprError::OtherErr("invalid expression".to_string()),
+            ExprError::OtherErr("invalid expression".to_string()),
+            ExprError::OtherErr("invalid expression".to_string()),
+            ExprError::OtherErr("invalid expression".to_string()),
+        ];
+
+        let mut is_context = false;
+        for (case, expected) in cases.into_iter().zip(expected.into_iter()) {
+            let eval =
+                Evaluator::from_pb(to_suffix_expr_pb(tokenize(case).unwrap()).unwrap()).unwrap();
+            assert_eq!(
+                if is_context {
+                    eval.eval::<_, Vertices>(Some(&ctxt)).err().unwrap()
+                } else {
+                    eval.eval::<_, NoneContext>(None).err().unwrap()
+                },
+                expected
+            );
+            is_context = true;
+        }
+    }
 }

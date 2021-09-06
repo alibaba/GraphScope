@@ -98,7 +98,7 @@ impl Decode for Label {
 }
 
 /// The three types of property to get
-#[derive(Debug, PartialEq, Eq, Hash)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub enum PropKey {
     Id,
     Label,

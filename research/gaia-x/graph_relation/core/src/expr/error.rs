@@ -15,6 +15,7 @@
 //!
 
 use crate::error::ParsePbError;
+use crate::expr::eval::OperatorDesc;
 use crate::expr::token::PartialToken;
 use dyn_type::CastError;
 use std::fmt::Display;
@@ -41,18 +42,18 @@ pub enum ExprError {
     /// The error while casting from different data types enabled by `dyn_type::object::Object`
     CastError(CastError),
     /// Missing context for the certain variable,
-    MissingContext(String),
+    MissingContext(OperatorDesc),
     /// The error caused by parsing invalid protobuf
     ParsePbError(ParsePbError),
     /// The error of missing required operands in an arithmetic or logical expression.
     /// e.g., the plus expression requires two operands, and it is an error if less than two provided.
-    MissingOperands,
+    MissingOperands(OperatorDesc),
     /// An error where an empty expression is to be evaluated
     EmptyExpression,
     /// Try to evaluate a const value or a variable but obtain `None` value
-    NoneOperand,
-    /// While evaluating a certain operator, but obtain a different one
-    UnmatchedOperator,
+    NoneOperand(OperatorDesc),
+    /// Meant to evaluate a certain operator, but obtain a different one
+    UnmatchedOperator(OperatorDesc),
     /// Other unknown errors that is converted from a error description
     OtherErr(String),
 }
@@ -70,18 +71,13 @@ impl Display for ExprError {
             CastError(e) => write!(f, "casting error {:?}", e),
             MissingContext(var) => write!(f, "missing context for {:?}", var),
             ParsePbError(err) => write!(f, "parse protobuf error {:?}", err),
-            MissingOperands => write!(
-                f,
-                "missing operands for either arithmetic or logical expression."
-            ),
+            MissingOperands(opr) => write!(f, "missing operands for {:?}", opr),
             EmptyExpression => write!(f, "try to evaluate an empty expression"),
-            NoneOperand => write!(
+            NoneOperand(opr) => write!(f, "try to evaluate {:?} but obtain `None` value", opr),
+            UnmatchedOperator(opr) => write!(
                 f,
-                "try to evaluate a const value or a variable but obtain `None` value "
-            ),
-            UnmatchedOperator => write!(
-                f,
-                "while evaluating a certain operator, but obtain a different one"
+                "meant to evaluate a certain operator, but obtain a different one： {:?}",
+                opr
             ),
             OtherErr(e) => write!(f, "parse error {}", e),
         }
@@ -93,10 +89,6 @@ impl std::error::Error for ExprError {}
 impl ExprError {
     pub fn unmatched_partial_token(first: PartialToken, second: Option<PartialToken>) -> Self {
         Self::UnmatchedPartialToken { first, second }
-    }
-
-    pub fn missing_context(variable: String) -> Self {
-        Self::MissingContext(variable)
     }
 }
 
