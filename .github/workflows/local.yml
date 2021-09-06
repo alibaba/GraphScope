@@ -43,7 +43,12 @@ jobs:
 
     - name: Install Dependencies of GraphScope
       run: |
-        /bin/bash ${GITHUB_WORKSPACE}/scripts/deploy_local.sh install_deps --verbose
+        if [ "${OS}" == "macOS-latest" ];
+        then
+          /bin/bash ${GITHUB_WORKSPACE}/scripts/deploy_local.sh install_deps --verbose --ci
+        else
+          /bin/bash ${GITHUB_WORKSPACE}/scripts/deploy_local.sh install_deps --verbose
+        fi
 
         # avoid access node by DNS hostnames
         r=`cat /etc/hosts | grep $(hostname) || true`

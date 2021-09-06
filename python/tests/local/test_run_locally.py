@@ -293,6 +293,7 @@ def test_demo_lazy_mode(sess_lazy, ogbn_mag_small, ogbn_small_script):
     train(config, r[1])
 
 
+@pytest.mark.skipif(sys.platform == "darwin", reason="MacOS need to test.")
 def test_enable_gaia(
     sess_enable_gaia, ogbn_mag_small, ogbn_small_script, ogbn_small_bytecode
 ):

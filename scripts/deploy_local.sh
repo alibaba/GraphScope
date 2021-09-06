@@ -26,6 +26,7 @@ BASIC_PACKGES_TO_INSTALL=
 PLATFORM=
 OS_VERSION=
 VERBOSE=false
+CI=false
 packages_to_install=()
 install_folly=false
 
@@ -366,7 +367,7 @@ check_dependencies() {
   fi
 
   # check folly
-  if [[ ! -f "/usr/local/include/folly/dynamic.h" ]]; then
+  if [[ "${CI}" == "false" ]] && [[ ! -f "/usr/local/include/folly/dynamic.h" ]]; then
     packages_to_install+=(folly)
   fi
 
@@ -542,14 +543,21 @@ install_dependencies() {
       packages_to_install=("${packages_to_install[@]/openmpi}")
     fi
 
+    if [[ "${packages_to_install[@]}" =~ "zetcd" ]]; then
+      log "Installing zetcd."
+      go get github.com/etcd-io/zetcd/cmd/zetcd
+      # remove zetcd from packages_to_install
+      packages_to_install=("${packages_to_install[@]/zetcd}")
+    fi
+
     if [[ "${packages_to_install[@]}" =~ "etcd" ]]; then
       log "Installing etcd v3.4.13"
+      check_and_remove_dir "/tmp/etcd-download-test"
       mkdir -p /tmp/etcd-download-test
       export ETCD_VER=v3.4.13 && \
       export DOWNLOAD_URL=https://github.com/etcd-io/etcd/releases/download && \
       curl -L ${DOWNLOAD_URL}/${ETCD_VER}/etcd-${ETCD_VER}-linux-amd64.tar.gz \
         -o /tmp/etcd-${ETCD_VER}-linux-amd64.tar.gz
-      check_and_remove_dir "/tmp/etcd-download-test"
       tar xzvf /tmp/etcd-${ETCD_VER}-linux-amd64.tar.gz \
         -C /tmp/etcd-download-test --strip-components=1
       sudo mv /tmp/etcd-download-test/etcd /usr/local/bin/
@@ -564,13 +572,6 @@ install_dependencies() {
       packages_to_install=("${packages_to_install[@]/folly}")
       # add fmt to packages_to_install
       packages_to_install+=(fmt-devel)
-    fi
-
-    if [[ "${packages_to_install[@]}" =~ "zetcd" ]]; then
-      log "Installing zetcd."
-      go get github.com/etcd-io/zetcd/cmd/zetcd
-      # remove zetcd from packages_to_install
-      packages_to_install=("${packages_to_install[@]/zetcd}")
     fi
 
     if [[ "${packages_to_install[@]}" =~ "rust" ]]; then
@@ -842,6 +843,7 @@ install_deps() {
     case ${arg} in
       --help) install_deps_usage; exit ;;
       --verbose) VERBOSE=true; readonly VERBOSE; ;;
+      --ci)   CI=true; readonly VERBOSE; ;;
       *)
         echo "unrecognized option '${arg}'"
         install_deps_usage; exit;;
@@ -888,6 +890,7 @@ build_and_deploy() {
     case ${arg} in
       --help)     build_and_deploy_usage; exit ;;
       --verbose)  VERBOSE=true; readonly VERBOSE; ;;
+      --ci)   CI=true; readonly VERBOSE; ;;
       --prefix)
         if [ $# -eq 0 ]; then
           echo "there should be given a path for prefix option."
