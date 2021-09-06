@@ -13,41 +13,21 @@
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 
-use crate::functions::{CompareFunction, SumFunction};
-use crate::process::traversal::traverser::Traverser;
+// use crate::functions::{CompareFunction, SumFunction};
 use pegasus::codec::{Decode, Encode, ReadExt, WriteExt};
-use pegasus_common::collections::Collection;
-use pegasus_common::downcast::{Any, AsAny};
+// use pegasus_common::collections::Collection;
+// use pegasus_common::downcast::{Any, AsAny};
 use pegasus_common::rc::RcPointer;
-use std::cmp::Ordering;
-use std::collections::HashSet;
+// use std::cmp::Ordering;
+// use std::collections::HashSet;
 use std::fmt::Debug;
-use std::hash::Hash;
+// use std::hash::Hash;
 use std::io;
 
-pub trait Accumulator<I, O>: Send + Debug + AsAny {
+pub trait Accumulator<I, O>: Send + Debug {
     fn accum(&mut self, next: I) -> Result<(), io::Error>;
 
     fn finalize(&mut self) -> O;
-}
-
-trait AccumulatorClone<I, O> {
-    fn clone_box(&self) -> Box<dyn Accumulator<I, O>>;
-}
-
-impl<I, O, T> AccumulatorClone<I, O> for T
-where
-    T: 'static + Accumulator<I, O> + Clone,
-{
-    fn clone_box(&self) -> Box<dyn Accumulator<I, O>> {
-        Box::new(self.clone())
-    }
-}
-
-impl<I: 'static, O: 'static> Clone for Box<dyn Accumulator<I, O>> {
-    fn clone(&self) -> Box<dyn Accumulator<I, O>> {
-        self.clone_box()
-    }
 }
 
 pub trait AccumFactory<I, O>: Send {
@@ -94,49 +74,67 @@ impl<I, O, A: AccumFactory<I, O>> AccumFactory<I, O> for RcPointer<A> {
     }
 }
 
-// #[derive(Clone, Eq, PartialEq)]
-// pub struct Count<D> {
-//     pub value: u64,
-//     _ph: std::marker::PhantomData<D>,
-// }
-//
-// impl<D> Debug for Count<D> {
-//     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
-//         write!(f, "count={}", self.value)
-//     }
-// }
-//
-// impl<D: Send + 'static> Accumulator<D> for Count<D> {
-//     fn accum(&mut self, _next: D) -> Result<(), io::Error> {
-//         self.value += 1;
-//         Ok(())
-//     }
-// }
-//
-// impl<D: 'static> AsAny for Count<D> {
-//     fn as_any_mut(&mut self) -> &mut dyn Any {
-//         self
-//     }
-//
-//     fn as_any_ref(&self) -> &dyn Any {
-//         self
-//     }
-// }
-//
-// impl<D> Encode for Count<D> {
-//     fn write_to<W: WriteExt>(&self, writer: &mut W) -> io::Result<()> {
-//         self.value.write_to(writer)?;
-//         Ok(())
-//     }
-// }
-//
-// impl<D> Decode for Count<D> {
-//     fn read_from<R: ReadExt>(reader: &mut R) -> io::Result<Self> {
-//         let value = u64::read_from(reader)?;
-//         Ok(Count { value, _ph: std::marker::PhantomData })
-//     }
-// }
-//
+#[derive(Clone, Eq, PartialEq)]
+pub struct Count<D> {
+    pub value: u64,
+    pub _ph: std::marker::PhantomData<D>,
+}
+
+impl<D> Debug for Count<D> {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        write!(f, "count={}", self.value)
+    }
+}
+
+impl<D: Send + 'static> Accumulator<D, u64> for Count<D> {
+    fn accum(&mut self, _next: D) -> Result<(), io::Error> {
+        self.value += 1;
+        Ok(())
+    }
+
+    fn finalize(&mut self) -> u64 {
+        let value = self.value;
+        self.value = 0;
+        value
+    }
+}
+
+impl<D> Encode for Count<D> {
+    fn write_to<W: WriteExt>(&self, writer: &mut W) -> io::Result<()> {
+        self.value.write_to(writer)?;
+        Ok(())
+    }
+}
+
+impl<D> Decode for Count<D> {
+    fn read_from<R: ReadExt>(reader: &mut R) -> io::Result<Self> {
+        let value = u64::read_from(reader)?;
+        Ok(Count { value, _ph: std::marker::PhantomData })
+    }
+}
+
+pub struct CountAccum<D> {
+    _ph: std::marker::PhantomData<D>,
+}
+
+impl<D> CountAccum<D> {
+    pub fn new() -> Self {
+        CountAccum { _ph: std::marker::PhantomData }
+    }
+}
+
+impl<D: Send + 'static> AccumFactory<D, u64> for CountAccum<D> {
+    type Target = Count<D>;
+
+    fn create(&self) -> Self::Target {
+        Count { value: 0, _ph: std::marker::PhantomData }
+    }
+
+    fn is_associative(&self) -> bool {
+        true
+    }
+}
+
 #[derive(Clone, Eq, PartialEq)]
 pub struct ToList<D> {
     pub inner: Vec<D>,
@@ -155,16 +153,6 @@ impl<D: Debug + Send + 'static> Accumulator<D, Vec<D>> for ToList<D> {
 
     fn finalize(&mut self) -> Vec<D> {
         std::mem::replace(&mut self.inner, vec![])
-    }
-}
-
-impl<D: 'static> AsAny for ToList<D> {
-    fn as_any_mut(&mut self) -> &mut dyn Any {
-        unimplemented!()
-    }
-
-    fn as_any_ref(&self) -> &dyn Any {
-        unimplemented!()
     }
 }
 
@@ -272,27 +260,6 @@ impl<D: Debug + Send + 'static> AccumFactory<D, Vec<D>> for ToListAccum<D> {
 //     }
 // }
 //
-// pub struct CountAccum<D> {
-//     _ph: std::marker::PhantomData<D>,
-// }
-//
-// impl<D> CountAccum<D> {
-//     pub fn new() -> Self {
-//         CountAccum { _ph: std::marker::PhantomData }
-//     }
-// }
-//
-// impl<D: Send + 'static> AccumFactory<D> for CountAccum<D> {
-//     type Target = Count<D>;
-//
-//     fn create(&self) -> Self::Target {
-//         Count { value: 0, _ph: std::marker::PhantomData }
-//     }
-//
-//     fn is_associative(&self) -> bool {
-//         true
-//     }
-// }
 //
 // pub struct HashSetAccum<D: Eq + Hash> {
 //     capacity: usize,

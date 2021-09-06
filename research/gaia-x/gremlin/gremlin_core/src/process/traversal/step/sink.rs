@@ -13,10 +13,13 @@
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 
+use crate::accum::Accumulator;
 use crate::functions::EncodeFunction;
+use crate::generated::common as common_pb;
 use crate::generated::protobuf as result_pb;
+use crate::process::traversal::step::TraverserAccumulator;
 use crate::process::traversal::traverser::Traverser;
-use crate::result_process::result_to_pb;
+use crate::result_process::{pair_element_to_pb, result_to_pb};
 use pegasus::api::function::FnResult;
 use pegasus::codec::{ReadExt, WriteExt};
 use pegasus_common::codec::{Decode, Encode};
@@ -53,14 +56,10 @@ impl EncodeFunction<Traverser> for TraverserSinkEncoder {
     }
 }
 
-impl EncodeFunction<HashMap<Traverser, Vec<Traverser>>> for TraverserSinkEncoder {
-    fn encode(&self, _data: HashMap<Traverser, Vec<Traverser>>) -> FnResult<result_pb::Result> {
-        unimplemented!()
-    }
-}
-
-impl EncodeFunction<HashMap<Traverser, i32>> for TraverserSinkEncoder {
-    fn encode(&self, _data: HashMap<Traverser, i32>) -> FnResult<result_pb::Result> {
-        unimplemented!()
+impl EncodeFunction<HashMap<Traverser, TraverserAccumulator>> for TraverserSinkEncoder {
+    fn encode(
+        &self, _data: HashMap<Traverser, TraverserAccumulator>,
+    ) -> FnResult<result_pb::Result> {
+        todo!()
     }
 }
