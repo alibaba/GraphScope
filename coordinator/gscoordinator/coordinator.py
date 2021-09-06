@@ -187,13 +187,18 @@ class CoordinatorServiceServicer(
 
         stdout_handler = logging.StreamHandler(sys.stdout)
         stdout_handler.setLevel(log_level)
+        stdout_handler.addFilter(lambda record: record.levelno <= logging.INFO)
+        stderr_handler = logging.StreamHandler(sys.stderr)
+        stderr_handler.setLevel(logging.ERROR)
 
         formatter = logging.Formatter(
             "%(asctime)s [%(levelname)s][%(module)s:%(lineno)d]: %(message)s"
         )
         stdout_handler.setFormatter(formatter)
+        stderr_handler.setFormatter(formatter)
 
         logger.addHandler(stdout_handler)
+        logger.addHandler(stderr_handler)
 
     def ConnectSession(self, request, context):
         # A session is already connected.
