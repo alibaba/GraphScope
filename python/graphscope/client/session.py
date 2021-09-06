@@ -974,9 +974,7 @@ class Session(object):
             self._coordinator_endpoint = self._launcher.coordinator_endpoint
 
         # waiting service ready
-        self._grpc_client = GRPCClient(
-            self._coordinator_endpoint, self._config_params["reconnect"]
-        )
+        self._grpc_client = GRPCClient(self._launcher, self._config_params["reconnect"])
         self._grpc_client.waiting_service_ready(
             timeout_seconds=self._config_params["timeout_seconds"],
         )

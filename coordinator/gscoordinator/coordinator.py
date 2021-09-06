@@ -32,6 +32,7 @@ import signal
 import string
 import sys
 import threading
+import time
 import traceback
 import urllib.parse
 import urllib.request
@@ -131,6 +132,7 @@ class CoordinatorServiceServicer(
             self._launcher._analytical_engine_endpoint = GS_DEBUG_ENDPOINT
         else:
             if not self._launcher.start():
+                logger.error("Launching analytical engine failed")
                 raise RuntimeError("Coordinator Launching failed.")
 
         self._launcher_type = self._launcher.type()
@@ -279,19 +281,26 @@ class CoordinatorServiceServicer(
 
         # analytical engine
         request = message_pb2.HeartBeatRequest()
+
         try:
             self._analytical_engine_stub.HeartBeat(request)
         except grpc.RpcError as e:
-            logger.error(
-                "Heartbeat engine failed, code: %s, details: %s",
-                e.code().name,
-                e.details(),
-            )
-            context.set_code(grpc.StatusCode.DEADLINE_EXCEEDED)
+            err_msg = f"code: {e.code().name}, details: {e.details()}"
+            if e.code() == grpc.StatusCode.UNAVAILABLE:
+                err_msg = f"Connect to analytical engine failed, engine may not started or closed. {err_msg}"
+                logger.warning(err_msg)
+                context.set_code(grpc.StatusCode.DEADLINE_EXCEEDED)
+                context.set_details(err_msg)
+            else:
+                err_msg = f"Connect to analytical engine failed with unknown exception. {err_msg}"
+                context.set_code(grpc.StatusCode.UNKNOWN)
+                context.set_details(err_msg)
+        except Exception:
+            context.set_code(grpc.StatusCode.UNKNOWN)
             context.set_details(
-                "Heart beat analytical engine failed, The engine may crashed."
+                f"Connect analytical engine failed with unknown exception, {traceback.format_exc()}"
             )
-            return message_pb2.HeartBeatResponse()
+
         return message_pb2.HeartBeatResponse()
 
     def run_on_analytical_engine(  # noqa: C901

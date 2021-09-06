@@ -88,7 +88,7 @@ def suppress_grpc_error(fn):
 
 
 class GRPCClient(object):
-    def __init__(self, endpoint, reconnect=False):
+    def __init__(self, launcher, reconnect=False):
         """Connect to GRAPE engine at the given :code:`endpoint`."""
         # create the gRPC stub
         options = [
@@ -96,7 +96,10 @@ class GRPCClient(object):
             ("grpc.max_receive_message_length", 2147483647),
             ("grpc.max_metadata_size", 2147483647),
         ]
-        self._channel = grpc.insecure_channel(endpoint, options=options)
+        self._launcher = launcher
+        self._channel = grpc.insecure_channel(
+            launcher.coordinator_endpoint, options=options
+        )
         self._stub = coordinator_service_pb2_grpc.CoordinatorServiceStub(self._channel)
         self._session_id = None
         self._logs_fetching_thread = None
@@ -106,6 +109,9 @@ class GRPCClient(object):
         begin_time = time.time()
         request = message_pb2.HeartBeatRequest()
         while True:
+            code = self._launcher.poll()
+            if code is not None and code != 0:
+                raise RuntimeError(f"Start coordinator failed with exit code {code}")
             try:
                 self._stub.HeartBeat(request)
                 logger.info("GraphScope coordinator service connected.")
@@ -113,18 +119,18 @@ class GRPCClient(object):
             except grpc.RpcError as e:
                 # Cannot connect to coordinator for a short time is expected
                 # as the coordinator takes some time to launch
-                logger.warning(
-                    "Heart beat analytical engine failed, code: %s, details: %s",
-                    e.code().name,
-                    e.details(),
-                )
-                time.sleep(1)
+                msg = f"code: {e.code().name}, details: {e.details()}"
+                if e.code() == grpc.StatusCode.DEADLINE_EXCEEDED:
+                    logger.warning("Heart beat analytical engine failed, %s", msg)
+                else:
+                    logger.warning("Heart beat coordinator failed, %s", msg)
                 if time.time() - begin_time >= timeout_seconds:
                     raise ConnectionError(
-                        "Connect coordinator timeout, code: %s, details: %s",
+                        "Connect coordinator timeout, coordinator code: %s, details: %s",
                         e.code().name,
                         e.details(),
                     )
+                time.sleep(1)
 
     def connect(self, cleanup_instance=True, dangling_timeout_seconds=60):
         return self._connect_session_impl(

@@ -350,6 +350,8 @@ class LocalLauncher(Launcher):
         self._start_analytical_engine()
         # create zetcd
         self._launch_zetcd()
+        if self.poll() is not None and self.poll() != 0:
+            raise RuntimeError("Initializing analytical engine failed.")
 
     def _start_analytical_engine(self):
         rmcp = ResolveMPICmdPrefix()

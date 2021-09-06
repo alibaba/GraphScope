@@ -154,6 +154,12 @@ class KubernetesClusterLauncher(Launcher):
     def __del__(self):
         self.stop()
 
+    # TODO(dongze): Check the coordinator pod status, like the poll in Popen
+    # we can use this to determine the coordinator status,
+    # None for pending, 0 for successed (not likely), other int value for failed.
+    def poll(self):
+        return 0
+
     def get_namespace(self):
         """Get kubernetes namespace which graphscope instance running on.
 
