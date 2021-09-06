@@ -293,7 +293,7 @@ check_dependencies() {
   # check java
   if [[ "${PLATFORM}" == *"Darwin"* ]]; then
     if [[ ! -f "/usr/libexec/java_home" ]] || \
-       ! /usr/libexec/java_home -v 1.11 &> /dev/null; then
+       ! /usr/libexec/java_home -v11 &> /dev/null; then
       packages_to_install+=(jdk)
     fi
   else
@@ -408,6 +408,7 @@ check_dependencies() {
 write_envs_config() {
   if [ -f "${OUTPUT_ENV_FILE}" ]; then
     warning "Found ${OUTPUT_ENV_FILE} exists, remove the environmen config file and generate a new one."
+    rm -fr ${OUTPUT_ENV_FILE}
   fi
 
   if [[ "${PLATFORM}" == *"Darwin"* ]]; then
@@ -420,7 +421,7 @@ write_envs_config() {
         echo "export CPPFLAGS=-I/usr/local/opt/llvm@${LLVM_VERSION}/include"
         echo "export PATH=/usr/local/opt/llvm@${LLVM_VERSION}/bin:\$PATH"
       fi
-      echo "export JAVA_HOME=\$(/usr/libexec/java_home -v 1.11)"
+      echo "export JAVA_HOME=\$(/usr/libexec/java_home -v11)"
       echo "export PATH=\$HOME/.cargo/bin:\${JAVA_HOME}/bin:/usr/local/go/bin:\$PATH"
       echo "export PATH=\$(go env GOPATH)/bin:\$PATH"
       echo "export OPENSSL_ROOT_DIR=/usr/local/opt/openssl"
