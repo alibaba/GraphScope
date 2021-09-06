@@ -428,7 +428,7 @@ NOTE: You should make sure `hadoop` can be found in the env `$PATH`.
 
 .. code:: bash
 
-    $ ./load_data.sh <path/to/config/file>
+    $ ./load_tool.sh hadoop-build <path/to/config/file>
 
 The config file should follow a format that is recognized by Java `java.util.Properties` class. Here is an example:
 
@@ -486,7 +486,7 @@ NOTE: You need to make sure that the HDFS endpoint that can be accessed from the
 
 .. code:: bash
 
-    $ ./load_data.sh -c ingest -d hdfs://1.2.3.4:9000/tmp/data_output
+    $ ./load_tool.sh -c ingest -d hdfs://1.2.3.4:9000/tmp/data_output
 
 
 The offline built data can be ingested successfully only once, otherwise errors will occur.
@@ -499,7 +499,7 @@ After data ingested into graph storage, you need to commit data loading. The dat
 
 .. code:: bash
 
-    $ ./load_data.sh -c commit -d hdfs://1.2.3.4:9000/tmp/data_output
+    $ ./load_tool.sh -c commit -d hdfs://1.2.3.4:9000/tmp/data_output
 
 Notice: The later committed data will overwrite the earlier committed data which have same vertex types or edge relations.
 
