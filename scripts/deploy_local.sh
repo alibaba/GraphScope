@@ -177,6 +177,10 @@ check_os_compatibility() {
 init_basic_packages() {
   if [[ "${PLATFORM}" == *"Ubuntu"* ]]; then
     BASIC_PACKGES_TO_INSTALL=(
+      build-essential
+      wget
+      curl
+      lsb-release
       libbrotli-dev
       libbz2-dev
       libcurl4-openssl-dev
@@ -207,6 +211,7 @@ init_basic_packages() {
       zip
       perl
       python3-pip
+      git
     )
   elif [[ "${PLATFORM}" == *"CentOS"* ]]; then
     BASIC_PACKGES_TO_INSTALL=(
@@ -237,6 +242,11 @@ init_basic_packages() {
       gflags-devel
       glog-devel
       gtest-devel
+      gcc
+      gcc-c++
+      make
+      wget
+      curl
     )
   else
     BASIC_PACKGES_TO_INSTALL=(
@@ -280,17 +290,17 @@ check_dependencies() {
     packages_to_install+=(cmake)
   fi
 
-  # check java == 1.8
+  # check java
   if [[ "${PLATFORM}" == *"Darwin"* ]]; then
     if [[ ! -f "/usr/libexec/java_home" ]] || \
-       ! /usr/libexec/java_home -v 1.8 &> /dev/null; then
-      packages_to_install+=(jdk8)
+       ! /usr/libexec/java_home -v 1.12 &> /dev/null; then
+      packages_to_install+=(jdk12)
     fi
   else
-    if $(! command -v java &> /dev/null) || \
-       [[ "$(java -version 2>&1 | awk -F '"' '/version/ {print $2}' | awk -F '.' '{print $2}')" -ne "8" ]]; then
+    if $(! command -v javac &> /dev/null) || \
+       [[ "$(javac -version 2>&1 | awk -F ' ' '{print $2}' | awk -F '.' '{print $1}')" -lt "7" ]]; then
       if [[ "${PLATFORM}" == *"Ubuntu"* ]]; then
-        packages_to_install+=(openjdk-8-jdk)
+        packages_to_install+=(default-jdk)
       else
         packages_to_install+=(java-1.8.0-openjdk-devel)  # CentOS
       fi
@@ -410,7 +420,7 @@ write_envs_config() {
         echo "export CPPFLAGS=-I/usr/local/opt/llvm@${LLVM_VERSION}/include"
         echo "export PATH=/usr/local/opt/llvm@${LLVM_VERSION}/bin:\$PATH"
       fi
-      echo "export JAVA_HOME=\$(/usr/libexec/java_home -v 1.8)"
+      echo "export JAVA_HOME=\$(/usr/libexec/java_home -v 1.12)"
       echo "export PATH=/usr/local/opt/gnu-sed/libexec/gnubin:\$HOME/.cargo/bin:\${JAVA_HOME}/bin:\$PATH"
       echo "export OPENSSL_ROOT_DIR=/usr/local/opt/openssl"
       echo "export OPENSSL_LIBRARIES=/usr/local/opt/openssl/lib"
@@ -419,14 +429,16 @@ write_envs_config() {
   elif [[ "${PLATFORM}" == *"Ubuntu"* ]]; then
     {
       echo "export LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:/usr/local/lib:/usr/local/lib64"
-      echo "export JAVA_HOME=/usr/lib/jvm/java-8-openjdk-amd64"
-      echo "export PATH=\${JAVA_HOME}/bin:\$(go env GOPATH)/bin:\$HOME/.cargo/bin:\$PATH"
+      echo "export JAVA_HOME=/usr/lib/default-java"
+      echo "export PATH=\${JAVA_HOME}/bin:\$HOME/.cargo/bin:\$PATH:/usr/local/go/bin"
+      echo "export PATH=\$(go env GOPATH)/bin:\$PATH"
     } >> ${OUTPUT_ENV_FILE}
   else
     {
       echo "export LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:/usr/local/lib:/usr/local/lib64"
       echo "export JAVA_HOME=/usr/lib/jvm/java"
-      echo "export PATH=\${JAVA_HOME}/bin:\$(go env GOPATH)/bin:\$HOME/.cargo/bin:/usr/local/bin:\$PATH"
+      echo "export PATH=\${JAVA_HOME}/bin:\$HOME/.cargo/bin:\$PATH:/usr/local/go/bin"
+      echo "export PATH=\$(go env GOPATH)/bin:\$PATH"
     } >> ${OUTPUT_ENV_FILE}
   fi
 }
@@ -446,10 +458,9 @@ install_dependencies() {
   # install dependencies for specific platforms.
   if [[ "${PLATFORM}" == *"Ubuntu"* ]]; then
     sudo apt-get update -y
-    sudo apt-get install -y build-essential \
-      wget \
-      curl \
-      lsb-release
+
+    log "Installing packages ${BASIC_PACKGES_TO_INSTALL[*]}"
+    sudo apt-get install -y ${BASIC_PACKGES_TO_INSTALL[*]}
 
     if [[ "${packages_to_install[@]}" =~ "go" ]]; then
       # packages_to_install contains go
@@ -487,13 +498,14 @@ install_dependencies() {
 
     if [[ "${packages_to_install[@]}" =~ "zetcd" ]]; then
       log "Installing zetcd."
+      export PATH=${PATH}:/usr/local/go/bin
       go get github.com/etcd-io/zetcd/cmd/zetcd
       # remove zetcd from packages_to_install
       packages_to_install=("${packages_to_install[@]/zetcd}")
     fi
 
-    log "Installing packages ${BASIC_PACKGES_TO_INSTALL[*]} ${packages_to_install[*]}"
-    sudo apt install -y ${BASIC_PACKGES_TO_INSTALL[*]} ${packages_to_install[*]}
+    log "Installing packages ${packages_to_install[*]}"
+    sudo apt install -y ${packages_to_install[*]}
 
   elif [[ "${PLATFORM}" == *"CentOS"* ]]; then
     sudo dnf install -y dnf-plugins-core \
@@ -501,11 +513,9 @@ install_dependencies() {
 
     sudo dnf config-manager --set-enabled epel
     sudo dnf config-manager --set-enabled powertools
-    sudo dnf -y install gcc \
-      gcc-c++ \
-      make \
-      wget \
-      curl
+
+    log "Instralling packages ${BASIC_PACKGES_TO_INSTALL[*]}"
+    sudo dnf -y ${BASIC_PACKGES_TO_INSTALL[*]}
 
     if [[ "${packages_to_install[@]}" =~ "apache-arrow" ]]; then
       log "Installing apache-arrow."
@@ -569,8 +579,8 @@ install_dependencies() {
       packages_to_install=("${packages_to_install[@]/rust}")
     fi
 
-    log "Installing packages ${BASIC_PACKGES_TO_INSTALL[*]} ${packages_to_install[*]}"
-    sudo dnf -y install ${BASIC_PACKGES_TO_INSTALL[*]} ${packages_to_install[*]}
+    log "Installing packages ${packages_to_install[*]}"
+    sudo dnf -y install  ${packages_to_install[*]}
 
     log "Installing protobuf v.3.13.0"
     wget -c https://github.com/protocolbuffers/protobuf/releases/download/v3.13.0/protobuf-all-3.13.0.tar.gz -P /tmp
