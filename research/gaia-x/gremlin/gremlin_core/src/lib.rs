@@ -35,8 +35,6 @@ use crate::process::traversal::traverser::{ShadeSync, Traverser};
 pub use crate::structure::{get_graph, register_graph};
 pub use crate::structure::{Element, GraphProxy, ID};
 
-
-
 pub mod process;
 pub mod structure;
 
@@ -44,6 +42,7 @@ pub mod compiler;
 mod result_process;
 #[macro_use]
 pub mod graph_proxy;
+mod accum;
 mod functions;
 
 use crate::process::traversal::path::ResultPath;
@@ -147,18 +146,6 @@ impl Partitioner for Partition {
         }
     }
 }
-
-// TODO(bingqing): result encoding
-// pub struct TraverserSinkEncoder;
-//
-// impl EncodeFunction<Traverser> for TraverserSinkEncoder {
-//     fn encode(&self, data: Vec<Traverser>) -> Vec<u8> {
-//         let result_pb = result_to_pb(data);
-//         let mut bytes = vec![];
-//         result_pb.encode_raw(&mut bytes);
-//         bytes
-//     }
-// }
 
 pub fn register_gremlin_types() -> io::Result<()> {
     dyn_type::register_type::<ShadeSync<(Traverser, Traverser)>>()?;

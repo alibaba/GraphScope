@@ -73,7 +73,7 @@ use bit_set::BitSet;
 // pub use dedup::CollectionFactoryGen;
 pub use filter::FilterFuncGen;
 pub use flat_map::FlatMapFuncGen;
-// pub use fold::FoldFunctionGen;
+pub use fold::AccumFactoryGen;
 pub use group_by::KeyFunctionGen;
 pub use map::MapFuncGen;
 pub use map::ResultProperty;
