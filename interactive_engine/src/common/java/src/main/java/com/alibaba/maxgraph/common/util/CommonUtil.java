@@ -17,7 +17,6 @@ package com.alibaba.maxgraph.common.util;
 
 import com.alibaba.maxgraph.common.SchedulerEnvs;
 import com.alibaba.maxgraph.common.cluster.FuxiClusterConfig;
-import com.alibaba.maxgraph.common.cluster.HadoopClusterConfig;
 import com.alibaba.maxgraph.common.cluster.InstanceConfig;
 import com.alibaba.maxgraph.common.cluster.MaxGraphConfiguration;
 import com.alibaba.maxgraph.sdkcommon.util.JSON;

@@ -16,7 +16,6 @@
 package com.alibaba.maxgraph.common.util;
 
 import com.alibaba.maxgraph.sdkcommon.client.Endpoint;
-import com.alibaba.maxgraph.common.client.SimpleWorkerInfo;
 import com.alibaba.maxgraph.sdkcommon.util.HTTPUtils;
 import com.alibaba.maxgraph.sdkcommon.util.JSON;
 import com.alibaba.maxgraph.proto.RoleType;
