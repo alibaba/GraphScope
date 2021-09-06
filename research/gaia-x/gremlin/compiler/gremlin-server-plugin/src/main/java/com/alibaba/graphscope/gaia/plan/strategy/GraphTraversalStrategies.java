@@ -32,8 +32,8 @@ import java.util.List;
 public class GraphTraversalStrategies extends DefaultTraversalStrategies {
     public static List<TraversalStrategy> strategies;
 
-    public static int PROPERTY_SHUFFLE_PRIORITY = 7;
-    public static int ORDER_GUARANTEE_PRIORITY = 11;
+    public static int PROPERTY_SHUFFLE_PRIORITY = 6;
+    public static int ORDER_GUARANTEE_PRIORITY = 10;
 
     public GraphTraversalStrategies(GaiaConfig config, GraphStoreService graphStore) {
         strategies = new ArrayList<>();
@@ -44,7 +44,7 @@ public class GraphTraversalStrategies extends DefaultTraversalStrategies {
         strategies.add(SchemaIdMakerStrategy.instance(config, graphStore));
         strategies.add(GaiaGraphStepStrategy.instance(graphStore));
         strategies.add(IncidentToAdjacentStrategy.instance());
-        strategies.add(OrderGlobalLimitStrategy.instance());
+//        strategies.add(OrderGlobalLimitStrategy.instance());
         strategies.add(PropertyShuffleStrategy.instance());
         strategies.add(BySubTraversalStrategy.instance());
         strategies.add(EarlyLimitStrategy.instance());
