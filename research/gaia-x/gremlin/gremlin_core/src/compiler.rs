@@ -222,7 +222,11 @@ impl GremlinJobCompiler {
                                     Ok(accum)
                                 }
                             })?
-                            .unfold(|map| Ok(map.into_iter()))?
+                            .unfold(|map| {
+                                Ok(map
+                                    .into_iter()
+                                    .map(|(trav, mut accum)| (trav, accum.finalize())))
+                            })?
                             .map(|pair| Ok(Traverser::with(pair)))?;
                     }
 
