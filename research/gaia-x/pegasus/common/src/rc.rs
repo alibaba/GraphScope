@@ -15,6 +15,7 @@
 
 use std::ops::Deref;
 use std::ptr::NonNull;
+use std::rc::Rc;
 use std::sync::atomic::{AtomicUsize, Ordering};
 use std::sync::Arc;
 
@@ -98,5 +99,31 @@ impl<T: ?Sized> Drop for RcPointer<T> {
         if self.count.fetch_sub(1, Ordering::SeqCst) == 1 {
             unsafe { std::ptr::drop_in_place(self.ptr.as_ptr()) }
         }
+    }
+}
+
+pub struct UnsafeRcPtr<T: ?Sized> {
+    ptr: Rc<T>,
+}
+
+unsafe impl<T: ?Sized + Send> Send for UnsafeRcPtr<T> {}
+
+impl<T: ?Sized> Clone for UnsafeRcPtr<T> {
+    fn clone(&self) -> Self {
+        UnsafeRcPtr { ptr: self.ptr.clone() }
+    }
+}
+
+impl<T: ?Sized> Deref for UnsafeRcPtr<T> {
+    type Target = T;
+
+    fn deref(&self) -> &Self::Target {
+        &*self.ptr
+    }
+}
+
+impl<T: Sized> UnsafeRcPtr<T> {
+    pub fn new(entry: T) -> Self {
+        UnsafeRcPtr { ptr: Rc::new(entry) }
     }
 }

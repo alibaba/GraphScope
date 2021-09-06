@@ -1,26 +1,20 @@
-use crate::api::Notification;
+use crate::api::notification::{CancelScope, EndScope};
 use crate::communication::input::{new_input_session, InputProxy};
 use crate::communication::output::{new_output, OutputProxy};
 use crate::errors::JobExecError;
-use crate::graph::Port;
-use crate::operator::{DefaultNotify, Notifiable, OperatorCore};
+use crate::operator::{Notifiable, OperatorCore};
 use crate::progress::{EndSignal, Weight};
 use crate::tag::tools::map::TidyTagMap;
-use crate::{Data, Tag};
+use crate::Data;
 
 pub(crate) struct IterSyncOperator<D: Data> {
     observer: TidyTagMap<usize>,
-    notify: DefaultNotify,
     _ph: std::marker::PhantomData<D>,
 }
 
 impl<D: Data> IterSyncOperator<D> {
     pub fn new(scope_level: u32) -> Self {
-        IterSyncOperator {
-            observer: TidyTagMap::new(scope_level),
-            notify: DefaultNotify::Single,
-            _ph: std::marker::PhantomData,
-        }
+        IterSyncOperator { observer: TidyTagMap::new(scope_level), _ph: std::marker::PhantomData }
     }
 }
 
@@ -62,36 +56,17 @@ impl<D: Data> OperatorCore for IterSyncOperator<D> {
 }
 
 impl<D: Data> Notifiable for IterSyncOperator<D> {
-    fn on_notify(&mut self, n: Notification, outputs: &[Box<dyn OutputProxy>]) -> Result<(), JobExecError> {
-        // the same as DefaultNotifyOperator
-        if outputs.len() > 0 {
-            match self.notify {
-                DefaultNotify::Single => {
-                    assert_eq!(n.port, 0);
-                    let end = n.take_end();
-                    if outputs.len() > 1 {
-                        for output in &outputs[1..] {
-                            output.notify_end(end.clone())?;
-                        }
-                    }
-                    outputs[0].notify_end(end)?;
-                    Ok(())
-                }
-                _ => unreachable!(),
-            }
-        } else {
-            Ok(())
-        }
+    fn on_notify(&mut self, n: EndScope, outputs: &[Box<dyn OutputProxy>]) -> Result<(), JobExecError> {
+        let end: EndSignal = n.into();
+        outputs[0].notify_end(end.clone())?;
+        outputs[1].notify_end(end)?;
+        Ok(())
     }
 
-    fn on_cancel(
-        &mut self, port: Port, tag: Tag, inputs: &[Box<dyn InputProxy>], outputs: &[Box<dyn OutputProxy>],
-    ) -> Result<bool, JobExecError> {
-        assert_eq!(port.port, 0);
-        inputs[0].cancel_scope(&tag);
-        inputs[0].propagate_cancel(&tag)?;
-        outputs[0].skip(&tag)?;
-        Ok(true)
+    fn on_cancel(&mut self, n: CancelScope, inputs: &[Box<dyn InputProxy>]) -> Result<(), JobExecError> {
+        assert_eq!(n.port, 0);
+        inputs[0].cancel_scope(&n.tag);
+        Ok(())
     }
 }
 
@@ -170,24 +145,19 @@ impl<D: Data> OperatorCore for FeedbackOperator<D> {
 }
 
 impl<D: Data> Notifiable for FeedbackOperator<D> {
-    fn on_notify(&mut self, n: Notification, outputs: &[Box<dyn OutputProxy>]) -> Result<(), JobExecError> {
-        debug_worker!("feedback: on notify of {:?} on {:?}", n.tag(), n.port);
+    fn on_notify(&mut self, n: EndScope, outputs: &[Box<dyn OutputProxy>]) -> Result<(), JobExecError> {
+        trace_worker!("feedback: on notify of {:?} on {:?}", n.tag(), n.port);
         if n.port == 0 {
-            let end = n.take_end();
-            if end.tag.is_root() {
-                outputs[0].notify_end(end)?;
+            if n.tag().is_root() {
+                outputs[0].notify_end(n.into())?;
             }
         }
         Ok(())
     }
 
-    fn on_cancel(
-        &mut self, port: Port, tag: Tag, inputs: &[Box<dyn InputProxy>], outputs: &[Box<dyn OutputProxy>],
-    ) -> Result<bool, JobExecError> {
-        assert_eq!(port.port, 0);
-        inputs[0].cancel_scope(&tag);
-        inputs[0].propagate_cancel(&tag)?;
-        outputs[0].skip(&tag)?;
-        Ok(true)
+    fn on_cancel(&mut self, n: CancelScope, inputs: &[Box<dyn InputProxy>]) -> Result<(), JobExecError> {
+        assert_eq!(n.port, 0);
+        inputs[0].cancel_scope(n.tag());
+        Ok(())
     }
 }

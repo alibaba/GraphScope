@@ -14,16 +14,15 @@
 //! limitations under the License.
 
 use std::cell::Cell;
-use std::collections::HashSet;
 use std::time::Instant;
 
+use nohash_hasher::IntSet;
+
 use crate::api::meta::OperatorInfo;
-use crate::api::scope::MergedScopeDelta;
-use crate::api::Notification;
+use crate::api::notification::{CancelScope, EndScope};
 use crate::channel_id::ChannelInfo;
-use crate::communication::input::{new_input, InputBlockGuard, InputProxy};
+use crate::communication::input::{new_input, InputProxy};
 use crate::communication::output::{OutputBuilder, OutputBuilderImpl, OutputProxy};
-use crate::config::BRANCH_OPT;
 use crate::data::MicroBatch;
 use crate::data_plane::{GeneralPull, GeneralPush};
 use crate::errors::{IOResult, JobExecError};
@@ -31,176 +30,191 @@ use crate::event::emitter::EventEmitter;
 use crate::graph::Port;
 use crate::progress::EndSignal;
 use crate::schedule::state::inbound::InputEndNotify;
+use crate::schedule::state::outbound::OutputCancelState;
 use crate::tag::tools::map::TidyTagMap;
 use crate::{Data, Tag};
 
 pub trait Notifiable: Send + 'static {
-    fn on_notify(&mut self, n: Notification, outputs: &[Box<dyn OutputProxy>]) -> Result<(), JobExecError>;
+    fn on_notify(&mut self, n: EndScope, outputs: &[Box<dyn OutputProxy>]) -> Result<(), JobExecError>;
 
-    /// `on_cancel` is used to judge if the all the signals are received,
-    /// as well as propagating signals and cleaning data.
-    /// Return `Ok(true)` means that early-stop signals from all the ports are received.  
-    fn on_cancel(
-        &mut self, port: Port, tag: Tag, inputs: &[Box<dyn InputProxy>], outputs: &[Box<dyn OutputProxy>],
-    ) -> Result<bool, JobExecError>;
+    fn on_cancel(&mut self, n: CancelScope, inputs: &[Box<dyn InputProxy>]) -> Result<(), JobExecError>;
 }
 
 impl<T: ?Sized + Notifiable> Notifiable for Box<T> {
-    fn on_notify(&mut self, n: Notification, outputs: &[Box<dyn OutputProxy>]) -> Result<(), JobExecError> {
+    fn on_notify(&mut self, n: EndScope, outputs: &[Box<dyn OutputProxy>]) -> Result<(), JobExecError> {
         (**self).on_notify(n, outputs)
     }
 
-    fn on_cancel(
-        &mut self, port: Port, tag: Tag, inputs: &[Box<dyn InputProxy>], outputs: &[Box<dyn OutputProxy>],
-    ) -> Result<bool, JobExecError> {
-        (**self).on_cancel(port, tag, inputs, outputs)
+    fn on_cancel(&mut self, n: CancelScope, inputs: &[Box<dyn InputProxy>]) -> Result<(), JobExecError> {
+        (**self).on_cancel(n, inputs)
     }
 }
 
-struct MultiNotifyMerge {
+struct MultiInputsMerge {
     input_size: usize,
-    in_merge: Vec<TidyTagMap<(EndSignal, usize)>>,
+    end_merge: Vec<TidyTagMap<(EndScope, IntSet<u64>)>>,
 }
 
-impl MultiNotifyMerge {
+impl MultiInputsMerge {
     pub fn new(input_size: usize, scope_level: u32) -> Self {
-        let mut merge = Vec::with_capacity(scope_level as usize + 1);
+        let mut end_merge = Vec::with_capacity(scope_level as usize + 1);
         for i in 0..scope_level + 1 {
-            merge.push(TidyTagMap::new(i))
+            end_merge.push(TidyTagMap::new(i));
         }
-        MultiNotifyMerge { input_size, in_merge: merge }
+        MultiInputsMerge { input_size, end_merge }
     }
 
-    fn merge(&mut self, n: Notification) -> Option<EndSignal> {
+    fn merge_end(&mut self, n: EndScope) -> Option<EndScope> {
         let idx = n.tag().len();
-        assert!(idx < self.in_merge.len());
-        if let Some((mut sig, mut count)) = self.in_merge[idx].remove(n.tag()) {
-            trace_worker!("merge {}th end of {:?} from input port {}", count + 1, n.tag(), n.port);
-            let (tag, weight, _) = n.take_end().take();
-            sig.source_weight.merge(weight);
-            count += 1;
-            if count == self.input_size {
-                Some(sig)
+        assert!(idx < self.end_merge.len());
+        if let Some((mut merged, mut count)) = self.end_merge[idx].remove(n.tag()) {
+            let EndScope { port, tag, weight } = n;
+            if count.insert(port as u64) {
+                trace_worker!("merge {}th end of {:?} from input port {}", count.len(), tag, port);
+                merged.weight.merge(weight);
+                if count.len() == self.input_size {
+                    Some(merged)
+                } else {
+                    self.end_merge[idx].insert(tag, (merged, count));
+                    None
+                }
             } else {
-                self.in_merge[idx].insert(tag, (sig, count));
                 None
             }
         } else {
             trace_worker!("merge first end of {:?} from input port {}", n.tag(), n.port);
-            let end = n.take_end();
-            self.in_merge[idx].insert(end.tag.clone(), (end, 1));
+            let mut m = IntSet::default();
+            m.insert(n.port as u64);
+            self.end_merge[idx].insert(n.tag().clone(), (n, m));
+            None
+        }
+    }
+}
+
+#[allow(dead_code)]
+struct MultiOutputsMerge {
+    output_size: usize,
+    scope_level: u32,
+    cancel_merge: Vec<TidyTagMap<IntSet<u64>>>,
+}
+
+impl MultiOutputsMerge {
+    fn new(output_size: usize, scope_level: u32) -> MultiOutputsMerge {
+        let mut cancel_merge = Vec::with_capacity(scope_level as usize + 1);
+        for i in 0..scope_level + 1 {
+            cancel_merge.push(TidyTagMap::new(i));
+        }
+        MultiOutputsMerge { output_size, scope_level, cancel_merge }
+    }
+
+    // TODO: enable merge cancel from parent into children;
+    fn merge_cancel(&mut self, n: CancelScope) -> Option<Tag> {
+        let level = n.tag().len();
+        assert!(level < self.cancel_merge.len());
+        if let Some(mut in_merge) = self.cancel_merge[level].remove(n.tag()) {
+            in_merge.insert(n.port as u64);
+            let left = self.output_size - in_merge.len();
+            if left == 0 {
+                Some(n.tag)
+            } else {
+                trace_worker!("EARLY_STOP: other {} output still send data of {:?};", left, n.tag);
+                self.cancel_merge[level].insert(n.tag().clone(), in_merge);
+                None
+            }
+        } else {
+            let mut m = IntSet::default();
+            m.insert(n.port as u64);
+            self.cancel_merge[level].insert(n.tag().clone(), m);
             None
         }
     }
 }
 
 enum DefaultNotify {
-    Single,
-    Merge(MultiNotifyMerge),
+    SISO,
+    /// Multi-Inputs-Single-Output
+    MISO(MultiInputsMerge),
+    /// Single-Input-Multi-Outputs
+    SIMO(MultiOutputsMerge),
+    /// Multi-Inputs-Multi-Outputs
+    MIMO(MultiInputsMerge, MultiOutputsMerge),
+}
+
+impl DefaultNotify {
+    fn new(input_size: usize, output_size: usize, scope_level: u32) -> Self {
+        if input_size > 1 {
+            let mim = MultiInputsMerge::new(input_size, scope_level);
+            if output_size > 1 {
+                let mom = MultiOutputsMerge::new(output_size, scope_level);
+                DefaultNotify::MIMO(mim, mom)
+            } else {
+                DefaultNotify::MISO(mim)
+            }
+        } else if output_size > 1 {
+            let mom = MultiOutputsMerge::new(output_size, scope_level);
+            DefaultNotify::SIMO(mom)
+        } else {
+            DefaultNotify::SISO
+        }
+    }
+
+    fn merge_end(&mut self, end: EndScope) -> Option<EndScope> {
+        match self {
+            DefaultNotify::SISO | DefaultNotify::SIMO(_) => Some(end),
+            DefaultNotify::MISO(mim) => mim.merge_end(end),
+            DefaultNotify::MIMO(mim, _) => mim.merge_end(end),
+        }
+    }
+
+    fn merge_cancel(&mut self, cancel: CancelScope) -> Option<Tag> {
+        match self {
+            DefaultNotify::SISO | DefaultNotify::MISO(_) => Some(cancel.tag),
+            DefaultNotify::SIMO(mom) => mom.merge_cancel(cancel),
+            DefaultNotify::MIMO(_, mom) => mom.merge_cancel(cancel),
+        }
+    }
 }
 
 pub struct DefaultNotifyOperator<T> {
     op: T,
     notify: DefaultNotify,
-    cancels_received: Vec<TidyTagMap<HashSet<usize>>>,
 }
 
 impl<T> DefaultNotifyOperator<T> {
-    fn new(input_size: usize, scope_level: u32, op: T) -> Self {
-        let notify = if input_size > 1 {
-            DefaultNotify::Merge(MultiNotifyMerge::new(input_size, scope_level))
-        } else {
-            DefaultNotify::Single
-        };
-        let cancels_received = (0..scope_level + 1)
-            .map(|i| TidyTagMap::new(i))
-            .collect();
-        DefaultNotifyOperator { op, notify, cancels_received }
-    }
-
-    fn notify_output(
-        &mut self, n: Notification, outputs: &[Box<dyn OutputProxy>],
-    ) -> Result<(), JobExecError> {
-        if outputs.len() > 0 {
-            match self.notify {
-                DefaultNotify::Single => {
-                    assert_eq!(n.port, 0);
-                    let end = n.take_end();
-                    if outputs.len() > 1 {
-                        for output in &outputs[1..] {
-                            output.notify_end(end.clone())?;
-                        }
-                    }
-                    outputs[0].notify_end(end)?;
-                    Ok(())
-                }
-                DefaultNotify::Merge(ref mut m) => {
-                    if let Some(end) = m.merge(n) {
-                        if outputs.len() > 1 {
-                            for output in &outputs[1..] {
-                                output.notify_end(end.clone())?;
-                            }
-                        }
-                        outputs[0].notify_end(end)?;
-                    }
-                    Ok(())
-                }
-            }
-        } else {
-            Ok(())
-        }
+    fn new(input_size: usize, output_size: usize, scope_level: u32, op: T) -> Self {
+        let notify = DefaultNotify::new(input_size, output_size, scope_level);
+        DefaultNotifyOperator { op, notify }
     }
 }
 
 impl<T: Send + 'static> Notifiable for DefaultNotifyOperator<T> {
-    fn on_notify(&mut self, n: Notification, outputs: &[Box<dyn OutputProxy>]) -> Result<(), JobExecError> {
+    fn on_notify(&mut self, n: EndScope, outputs: &[Box<dyn OutputProxy>]) -> Result<(), JobExecError> {
         if !outputs.is_empty() {
-            self.notify_output(n, outputs)
+            if let Some(end) = self.notify.merge_end(n) {
+                let EndScope { port: _port, tag, weight } = end;
+                let sig = EndSignal::new(tag, weight);
+                if outputs.len() > 1 {
+                    for i in 1..outputs.len() {
+                        outputs[i].notify_end(sig.clone())?;
+                    }
+                }
+                outputs[0].notify_end(sig)?;
+            }
+            Ok(())
         } else {
             Ok(())
         }
     }
 
-    fn on_cancel(
-        &mut self, port: Port, tag: Tag, inputs: &[Box<dyn InputProxy>], outputs: &[Box<dyn OutputProxy>],
-    ) -> Result<bool, JobExecError> {
-        if outputs.len() == 1 {
-            for input in inputs.iter() {
-                input.cancel_scope(&tag);
-                input.propagate_cancel(&tag)?;
-            }
-            outputs[0].skip(&tag)?;
-            Ok(true)
-        } else {
-            let idx = tag.len();
-            if *BRANCH_OPT {
-                outputs[port.port].skip(&tag)?;
-            }
-            if let Some(mut port_set) = self.cancels_received[idx].remove(&tag) {
-                port_set.insert(port.port);
-                if port_set.len() == outputs.len() {
-                    // received from all the ports, propagate cancel signal and clear data
-                    for input in inputs.iter() {
-                        input.cancel_scope(&tag);
-                        input.propagate_cancel(&tag)?;
-                    }
-                    if !*BRANCH_OPT {
-                        for output in outputs.iter() {
-                            output.skip(&tag)?;
-                        }
-                    }
-                    Ok(true)
-                } else {
-                    self.cancels_received[idx].insert(tag, port_set);
-                    Ok(false)
+    fn on_cancel(&mut self, n: CancelScope, inputs: &[Box<dyn InputProxy>]) -> Result<(), JobExecError> {
+        if !inputs.is_empty() {
+            if let Some(cancel) = self.notify.merge_cancel(n) {
+                for input in inputs {
+                    input.cancel_scope(&cancel);
                 }
-            } else {
-                let mut port_set = HashSet::new();
-                port_set.insert(port.port);
-                self.cancels_received[idx].insert(tag, port_set);
-                Ok(false)
             }
         }
+        Ok(())
     }
 }
 
@@ -251,28 +265,11 @@ pub struct Operator {
     inputs: Vec<Box<dyn InputProxy>>,
     outputs: Vec<Box<dyn OutputProxy>>,
     core: Box<dyn NotifiableOperator>,
-    block_guards: Vec<TidyTagMap<Vec<InputBlockGuard>>>,
-    unblocked: Vec<Tag>,
     fire_times: u128,
     exec_st: Cell<u128>,
 }
 
 impl Operator {
-    // #[inline]
-    // pub fn index(&self) -> usize {
-    //     self.info.index
-    // }
-
-    // #[inline]
-    // pub fn inputs(&self) -> &[Box<dyn InputProxy>] {
-    //     &self.inputs
-    // }
-    //
-    // #[inline]
-    // pub fn outputs(&self) -> &[Box<dyn OutputProxy>] {
-    //     &self.outputs
-    // }
-
     pub fn has_outstanding(&self) -> IOResult<bool> {
         for input in self.inputs.iter() {
             if input.has_outstanding()? {
@@ -282,7 +279,6 @@ impl Operator {
         Ok(false)
     }
 
-    #[inline]
     pub fn is_finished(&self) -> bool {
         for output in self.outputs.iter() {
             if !output.get_blocks().is_empty() {
@@ -309,28 +305,22 @@ impl Operator {
         debug_worker!("fire operator {:?}", self.info);
         self.fire_times += 1;
 
-        let mut unblocks = std::mem::replace(&mut self.unblocked, vec![]);
-        for (i, output) in self.outputs.iter().enumerate() {
-            output.try_unblock(&mut unblocks)?;
-            for x in unblocks.drain(..) {
-                self.block_guards[i].remove(&x);
-            }
+        for output in self.outputs.iter() {
+            output.try_unblock()?;
         }
-        self.unblocked = unblocks;
 
         let result = self
             .core
             .on_receive(&self.inputs, &self.outputs);
 
-        for (i, output) in self.outputs.iter().enumerate() {
-            for b in output.get_blocks().iter() {
-                if !self.block_guards[i].contains_key(b) {
-                    let mut guards = Vec::with_capacity(self.inputs.len());
-                    for input in self.inputs.iter() {
-                        let g = input.block(b);
-                        guards.push(g);
+        for output in self.outputs.iter() {
+            let blocks = output.get_blocks();
+            for bs in blocks.iter() {
+                for (index, input) in self.inputs.iter().enumerate() {
+                    if !bs.has_block(index) {
+                        let res = input.block(bs.tag());
+                        bs.block(index, res);
                     }
-                    self.block_guards[i].insert(b.clone(), guards);
                 }
             }
         }
@@ -346,7 +336,8 @@ impl Operator {
 
         for (port, input) in self.inputs.iter().enumerate() {
             while let Some(end) = input.extract_end() {
-                let notification = Notification::new(port, end);
+                let (tag, weight, _) = end.take();
+                let notification = EndScope { port, tag, weight };
                 self.core
                     .on_notify(notification, &self.outputs)?;
             }
@@ -359,42 +350,15 @@ impl Operator {
         r
     }
 
-    pub fn cancel(&mut self, port: Port, tag: Tag) -> Result<(), JobExecError> {
-        debug_worker!(
-            "EARLY-STOP: try to cancel scope tag {:?} of port {:?} in operator {:?}",
+    pub fn cancel(&mut self, port: usize, tag: Tag) -> Result<(), JobExecError> {
+        trace_worker!(
+            "EARLY_STOP output[{:?}] stop sending data of scope {:?};",
+            Port::new(self.info.index, port),
             tag,
-            port,
-            self.info
         );
-        if *BRANCH_OPT {
-            if *crate::config::ENABLE_CANCEL_CHILD {
-                self.block_guards[port.port].retain(|t, _| !tag.is_parent_of(t) && !tag.eq(t));
-            } else {
-                self.block_guards[port.port].remove(&tag);
-            }
-        }
-        let tag_clone = tag.clone();
-        if self
-            .core
-            .on_cancel(port, tag, &self.inputs, &self.outputs)?
-        {
-            debug_worker!(
-            "EARLY-STOP: received cancel signals tag {:?} from all ports in operator {:?}, cancel data and propagate backward", 
-            tag_clone,
-            self.info
-        );
-            if !*BRANCH_OPT {
-                if *crate::config::ENABLE_CANCEL_CHILD {
-                    for block_guard in self.block_guards.iter_mut() {
-                        block_guard.retain(|t, _| !tag_clone.is_parent_of(t) && !tag_clone.eq(t));
-                    }
-                } else {
-                    for block_guard in self.block_guards.iter_mut() {
-                        block_guard.remove(&tag_clone);
-                    }
-                }
-            }
-        }
+        self.outputs[port].cancel(&tag)?;
+        let cancel = CancelScope { port, tag };
+        self.core.on_cancel(cancel, &self.inputs)?;
         Ok(())
     }
 
@@ -433,10 +397,10 @@ impl OperatorBuilder {
 
     pub(crate) fn add_input<T: Data>(
         &mut self, ch_info: ChannelInfo, pull: GeneralPull<MicroBatch<T>>,
-        notify: Option<GeneralPush<MicroBatch<T>>>, event_emitter: &EventEmitter, delta: MergedScopeDelta,
+        notify: Option<GeneralPush<MicroBatch<T>>>, event_emitter: &EventEmitter,
     ) {
         assert_eq!(ch_info.target_port.port, self.inputs.len());
-        let input = new_input(ch_info, pull, event_emitter, delta);
+        let input = new_input(ch_info, pull, event_emitter);
         self.inputs.push(input);
         let n = notify.map(|p| Box::new(p) as Box<dyn InputEndNotify>);
         self.inputs_notify.push(n);
@@ -460,20 +424,29 @@ impl OperatorBuilder {
         std::mem::replace(&mut self.inputs_notify, vec![])
     }
 
+    pub(crate) fn build_outputs_cancel(&self) -> Vec<Option<OutputCancelState>> {
+        let mut vec = Vec::with_capacity(self.outputs.len());
+        for o in self.outputs.iter() {
+            let handle = o.build_cancel_handle();
+            vec.push(handle);
+        }
+        vec
+    }
+
     pub(crate) fn build(self) -> Operator {
         let mut outputs = Vec::new();
-        let mut block_guards = Vec::new();
         for ob in self.outputs {
             if let Some(o) = ob.build() {
                 outputs.push(o);
             }
-            block_guards.push(TidyTagMap::new(self.info.scope_level));
         }
 
         let core = match self.core {
             GeneralOperator::Simple(op) => {
                 let scope_level = self.info.scope_level;
-                let op = DefaultNotifyOperator::new(self.inputs.len(), scope_level, op);
+                let input_size = self.inputs.len();
+                let output_size = outputs.len();
+                let op = DefaultNotifyOperator::new(input_size, output_size, scope_level, op);
                 Box::new(op) as Box<dyn NotifiableOperator>
             }
             GeneralOperator::Notifiable(op) => op,
@@ -483,8 +456,6 @@ impl OperatorBuilder {
             inputs: self.inputs,
             outputs,
             core,
-            block_guards,
-            unblocked: vec![],
             fire_times: 0,
             exec_st: Cell::new(0),
         }

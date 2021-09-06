@@ -19,10 +19,12 @@ use std::rc::Rc;
 use pegasus_common::downcast::*;
 
 use crate::api::scope::ScopeDelta;
+use crate::communication::cancel::CancelListener;
 use crate::communication::output::output::OutputHandle;
 use crate::communication::output::tee::{ChannelPush, Tee};
 use crate::communication::output::{OutputBuilder, OutputProxy, RefWrapOutput};
 use crate::graph::Port;
+use crate::schedule::state::outbound::OutputCancelState;
 use crate::Data;
 
 #[derive(Copy, Clone, Debug)]
@@ -113,6 +115,36 @@ impl<D: Data> Clone for OutputBuilderImpl<D> {
 impl_as_any!(OutputBuilderImpl<D: Data>);
 
 impl<D: Data> OutputBuilder for OutputBuilderImpl<D> {
+    fn build_cancel_handle(&self) -> Option<OutputCancelState> {
+        let port = self.meta.borrow().port;
+        let scope_level = self.meta.borrow().scope_level;
+
+        let shared = self.shared.borrow();
+        let size = shared.iter().filter(|x| x.is_some()).count();
+        if size == 0 {
+            None
+        } else if size == 1 {
+            for ch in shared.iter() {
+                if let Some(ch) = ch.as_ref() {
+                    let listener = ch.get_cancel_handle();
+                    let index = ch.ch_info.id.index;
+                    return Some(OutputCancelState::single(port, index, Box::new(listener)));
+                }
+            }
+            None
+        } else {
+            let mut vec = Vec::with_capacity(size);
+            for ch in shared.iter() {
+                if let Some(ch) = ch.as_ref() {
+                    let listener = ch.get_cancel_handle();
+                    let index = ch.ch_info.id.index;
+                    vec.push((index, Box::new(listener) as Box<dyn CancelListener>));
+                }
+            }
+            Some(OutputCancelState::tee(port, scope_level, vec))
+        }
+    }
+
     fn build(self: Box<Self>) -> Option<Box<dyn OutputProxy>> {
         let mut shared = self.shared.borrow_mut();
         let mut main_push = None;

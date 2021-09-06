@@ -4,6 +4,7 @@ use std::fmt::{Debug, Formatter};
 
 use pegasus_common::codec::Encode;
 
+use crate::api::notification::EndScope;
 use crate::codec::{Decode, ReadExt, WriteExt};
 use crate::Tag;
 
@@ -270,6 +271,12 @@ pub struct EndSignal {
     pub seq: u64,
     pub(crate) source_weight: Weight,
     pub(crate) update_weight: Option<Weight>,
+}
+
+impl From<EndScope> for EndSignal {
+    fn from(end: EndScope) -> Self {
+        EndSignal::new(end.tag, end.weight)
+    }
 }
 
 impl EndSignal {

@@ -31,7 +31,7 @@ impl<D: Data> CorrelatedSubTask<D> for Stream<D> {
         F: FnOnce(Stream<D>) -> Result<SingleItem<T>, BuildJobError>,
     {
         let entered = self.enter()?;
-        let (main, to_sub) = entered.copied()?;
+        let (to_sub, main) = entered.copied()?;
         let scope_capacity = to_sub.get_scope_capacity();
         let sub = to_sub.unary("fork_subtask", move |info| {
             assert!(info.scope_level > 0);

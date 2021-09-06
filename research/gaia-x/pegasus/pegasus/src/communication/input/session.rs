@@ -18,7 +18,7 @@ use std::cell::RefMut;
 use crate::communication::input::input::InputBlockGuard;
 use crate::communication::input::InputHandle;
 use crate::data::MicroBatch;
-use crate::errors::{ErrorKind, IOResult, JobExecError};
+use crate::errors::{ErrorKind, JobExecError};
 use crate::{Data, Tag};
 
 pub struct InputSession<'a, D: Data> {
@@ -36,8 +36,8 @@ impl<'a, D: Data> InputSession<'a, D> {
     where
         F: FnMut(D) -> Result<(), JobExecError>,
     {
-        self.for_each_batch(|dataset| {
-            for item in dataset.drain() {
+        self.for_each_batch(|batch| {
+            for item in batch.drain() {
                 func(item)?;
             }
             Ok(())
@@ -52,39 +52,40 @@ impl<'a, D: Data> InputSession<'a, D> {
             if self.input.is_exhaust() {
                 return Ok(());
             } else {
-                if let Some(mut data) = self.input.next()? {
-                    let is_last = data.is_last();
+                if let Some(mut batch) = self.input.next()? {
+                    let is_last = batch.is_last();
                     if log_enabled!(log::Level::Trace) {
-                        if !data.is_empty() {
+                        if !batch.is_empty() {
                             if is_last {
-                                trace_worker!("handle last batch of {:?}, len = {}", data.tag, data.len());
+                                trace_worker!(
+                                    "handle last batch of {:?}, len = {}",
+                                    batch.tag,
+                                    batch.len()
+                                );
                             } else {
-                                trace_worker!("handle batch of {:?}, len = {}", data.tag, data.len());
+                                trace_worker!("handle batch of {:?}, len = {}", batch.tag, batch.len());
                             }
                         } else if is_last {
-                            trace_worker!("handle end of {:?}", data.tag);
+                            trace_worker!("handle end of {:?}", batch.tag);
                         }
                     }
-                    match func(&mut data) {
+                    match func(&mut batch) {
                         Ok(_) => {
-                            self.on_cancel(&mut data)?;
-                            self.on_finish(&mut data);
-                            if !is_last {
-                                self.for_each_batch_of(&data.tag, &mut func)?;
+                            if self.on_consumed(is_last, &mut batch) {
+                                self.for_each_batch_of(&batch.tag, &mut func)?;
                             }
                         }
                         Err(mut err) => match &mut err.kind {
-                            ErrorKind::WouldBlock(tag) => {
-                                self.on_interrupt(data);
-                                if let Some(tag) = tag {
-                                    if tag.is_root() {
-                                        err.kind = ErrorKind::Interrupted;
-                                        return Err(err);
-                                    }
+                            ErrorKind::WouldBlock(_) => {
+                                if batch.tag.is_root() {
+                                    self.on_interrupt(batch);
+                                    return Err(err);
+                                } else {
+                                    self.on_interrupt(batch);
                                 }
                             }
                             ErrorKind::Interrupted => {
-                                self.on_interrupt(data);
+                                self.on_interrupt(batch);
                                 return Err(err);
                             }
                             _ => return Err(err),
@@ -104,40 +105,37 @@ impl<'a, D: Data> InputSession<'a, D> {
     where
         F: FnMut(&mut MicroBatch<D>) -> Result<(), JobExecError>,
     {
-        while let Some(mut dataset) = self.input.next_of(tag)? {
-            let is_last = dataset.is_last();
+        while let Some(mut batch) = self.input.next_of(tag)? {
+            let is_last = batch.is_last();
             if log_enabled!(log::Level::Trace) {
-                if !dataset.is_empty() {
+                if !batch.is_empty() {
                     if is_last {
-                        trace_worker!("handle last batch of {:?}, len = {}", dataset.tag, dataset.len());
+                        trace_worker!("handle last batch of {:?}, len = {}", batch.tag, batch.len());
                     } else {
-                        trace_worker!("handle batch of {:?}, len = {}", dataset.tag, dataset.len());
+                        trace_worker!("handle batch of {:?}, len = {}", batch.tag, batch.len());
                     }
                 } else if is_last {
-                    trace_worker!("handle end of {:?}", dataset.tag);
+                    trace_worker!("handle end of {:?}", batch.tag);
                 }
             }
-            match (*func)(&mut dataset) {
+            match (*func)(&mut batch) {
                 Ok(_) => {
-                    self.on_cancel(&mut dataset)?;
-                    self.on_finish(&mut dataset);
-                    if is_last {
+                    if !self.on_consumed(is_last, &mut batch) {
                         return Ok(());
                     }
                 }
-                Err(mut err) => match &err.kind {
-                    ErrorKind::WouldBlock(tag) => {
-                        self.on_interrupt(dataset);
-                        if let Some(tag) = tag {
-                            if tag.is_root() {
-                                err.kind = ErrorKind::Interrupted;
-                                return Err(err);
-                            }
+                Err(err) => match &err.kind {
+                    ErrorKind::WouldBlock(_) => {
+                        if batch.tag.is_root() {
+                            self.on_interrupt(batch);
+                            return Err(err);
+                        } else {
+                            self.on_interrupt(batch);
+                            return Ok(());
                         }
-                        return Ok(());
                     }
                     ErrorKind::Interrupted => {
-                        self.on_interrupt(dataset);
+                        self.on_interrupt(batch);
                         return Err(err);
                     }
                     _ => return Err(err),
@@ -148,38 +146,34 @@ impl<'a, D: Data> InputSession<'a, D> {
     }
 
     #[inline]
-    fn on_interrupt(&mut self, dataset: MicroBatch<D>) {
-        if !dataset.is_empty() || dataset.is_last() {
-            trace_worker!("block pull data of scope {:?}", dataset.tag);
-            let b = self.input.stash_block_front(dataset);
+    fn on_interrupt(&mut self, batch: MicroBatch<D>) {
+        if !batch.is_empty() || batch.is_last() {
+            trace_worker!("block pull data of scope {:?}", batch.tag);
+            let b = self.input.stash_block_front(batch);
             self.block_tmp.push(b);
         }
     }
 
     #[inline]
-    fn on_finish(&mut self, dataset: &mut MicroBatch<D>) {
-        assert!(dataset.is_empty());
-        if let Some(end) = dataset.take_end() {
-            self.input.end_on(end);
+    fn on_consumed(&mut self, is_last: bool, batch: &mut MicroBatch<D>) -> bool {
+        if batch.is_discarded() {
+            batch.take_data();
+            if is_last {
+                if let Some(end) = batch.take_end() {
+                    self.input.end_on(end);
+                }
+            } else {
+                self.input.cancel_scope(&batch.tag);
+            }
+            false
+        } else {
+            assert!(batch.is_empty(), "batch of {:?} not consumed; ", batch.tag);
+            if let Some(end) = batch.take_end() {
+                self.input.end_on(end);
+                false
+            } else {
+                true
+            }
         }
-    }
-
-    #[inline]
-    fn on_cancel(&mut self, dataset: &mut MicroBatch<D>) -> Result<(), JobExecError> {
-        if dataset.is_discarded() {
-            dataset.clear();
-            self.cancel_scope(&dataset.tag);
-            self.propagate_cancel(&dataset.tag)?;
-        }
-        Ok(())
-    }
-
-    pub fn cancel_scope(&mut self, tag: &Tag) {
-        self.input.cancel_scope(tag);
-    }
-
-    pub fn propagate_cancel(&mut self, tag: &Tag) -> IOResult<bool> {
-        debug_worker!("EARLY-STOP: trigger propagation of early-stop signal of {:?}", tag);
-        self.input.propagate_cancel(tag)
     }
 }

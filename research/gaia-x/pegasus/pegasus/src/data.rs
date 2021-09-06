@@ -90,7 +90,7 @@ mod rob {
             self.end.take()
         }
 
-        pub fn take_batch(&mut self) -> Batch<D> {
+        pub fn take_data(&mut self) -> Batch<D> {
             std::mem::replace(&mut self.data, Batch::new())
         }
 

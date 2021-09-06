@@ -22,6 +22,7 @@ mod rob {
     struct ScopeBatchPool<D: Data> {
         src: u32,
         scope_capacity: usize,
+        batch_capacity: usize,
         top_pool: MemBatchPoolRef<D>,
         sec_pool: TidyTagMap<DataSetPool<D, MemBatchPoolRef<D>>>,
         exe_metric: Option<ExecuteTimeMetric>,
@@ -42,6 +43,7 @@ mod rob {
             ScopeBatchPool {
                 src,
                 scope_capacity,
+                batch_capacity,
                 top_pool,
                 sec_pool: TidyTagMap::new(scope_level),
                 exe_metric,
@@ -65,7 +67,7 @@ mod rob {
             let p = self.top_pool.clone();
             let br = p.borrow();
             let batch_size = br.batch_size;
-            let capacity = self.scope_capacity;
+            let capacity = self.batch_capacity;
             std::mem::drop(br);
             let src = self.src;
 
@@ -339,6 +341,7 @@ mod rob {
 mod rob {
     use std::ops::{Deref, DerefMut};
     use std::ptr::NonNull;
+
     use pegasus_common::buffer::{Buffer, BufferFactory, BufferPool, MemBufAlloc, ReadBuffer};
 
     use crate::tag::tools::map::TidyTagMap;
@@ -353,6 +356,12 @@ mod rob {
             let ptr = Box::new(pool);
             let pool = unsafe { NonNull::new_unchecked(Box::into_raw(ptr)) };
             MemoryBufferPool { pool }
+        }
+
+        fn destroy(&mut self) {
+            unsafe {
+                self.pool.as_ptr().drop_in_place()
+            }
         }
     }
 
@@ -435,6 +444,12 @@ mod rob {
             let ptr = unsafe { NonNull::new_unchecked(Box::into_raw(ptr)) };
             NonNullBufSlotPtr { ptr }
         }
+
+        fn destroy(&mut self) {
+            unsafe {
+                self.ptr.as_ptr().drop_in_place();
+            }
+        }
     }
 
     impl<D> Deref for NonNullBufSlotPtr<D> {
@@ -488,6 +503,10 @@ mod rob {
                 buf_slots: TidyTagMap::new(scope_level),
                 pinned: None,
             }
+        }
+
+        pub fn unpin(&mut self) {
+            self.pinned.take();
         }
 
         pub fn pin(&mut self, tag: &Tag) -> bool {
@@ -651,6 +670,16 @@ mod rob {
                 buf_slots: Default::default(),
                 pinned: None,
             }
+        }
+    }
+
+    impl<D: Data> Drop for ScopeBufferPool<D> {
+        fn drop(&mut self) {
+            self.pinned.take();
+            for (_, x) in self.buf_slots.iter_mut() {
+                x.destroy();
+            }
+            self.global_pool.destroy()
         }
     }
 }
