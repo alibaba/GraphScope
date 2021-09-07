@@ -42,7 +42,7 @@ GraphBuilder create_graph_builder(const char *graph_name, Schema schema,
   LOG(INFO) << "create graph builder: yields "
             << vineyard::ObjectIDToString(stream->id());
   // create a shared_ptr object on heap.
-  return new std::shared_ptr<vineyard::PropertyGraphOutStream>(stream);
+  return new std::shared_ptr<vineyard::PropertyGraphOutStream>(stream.release());
 }
 
 void get_builder_id(GraphBuilder builder, ObjectId *object_id,
