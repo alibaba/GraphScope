@@ -249,7 +249,10 @@ class GraphSchema:
             if edge_label not in edge_kinds:
                 edge_kinds[edge_label] = []
             edge_kinds[edge_label].append(
-                (id_to_label[kind.src_vertex_label_id.id], id_to_label[kind.dst_vertex_label_id.id])
+                (
+                    id_to_label[kind.src_vertex_label_id.id],
+                    id_to_label[kind.dst_vertex_label_id.id],
+                )
             )
         for type_def_pb in graph_def.type_defs:
             if type_def_pb.type_enum == graph_def_pb2.VERTEX:
