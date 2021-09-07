@@ -32,7 +32,7 @@ serde = "1.0.72"
 serde_derive = "1.0.72"
 serde_json = "1.0.3"
 structopt = "0.2"
-zookeeper = "0.5"
+zookeeper = { git = "https://github.com/bonifaido/rust-zookeeper.git", rev = "fd222dd" }
 lru_time_cache = "0.8.0"
 pegasus = { path = "../Pegasus" }
 libc = "0.2"

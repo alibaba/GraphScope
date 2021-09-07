@@ -19,6 +19,7 @@
     <properties>
         <maven.compiler.source>1.8</maven.compiler.source>
         <maven.compiler.target>1.8</maven.compiler.target>
+        <tinkerpop.version>3.4.12</tinkerpop.version>
     </properties>
 
     <dependencyManagement>
@@ -36,32 +37,32 @@
             <dependency>
                 <groupId>org.apache.tinkerpop</groupId>
                 <artifactId>gremlin-core</artifactId>
-                <version>3.4.9</version>
+                <version>${tinkerpop.version}</version>
             </dependency>
             <dependency>
                 <groupId>org.apache.tinkerpop</groupId>
                 <artifactId>gremlin-console</artifactId>
-                <version>3.4.9</version>
+                <version>${tinkerpop.version}</version>
             </dependency>
             <dependency>
                 <groupId>org.apache.tinkerpop</groupId>
                 <artifactId>tinkergraph-gremlin</artifactId>
-                <version>3.4.9</version>
+                <version>${tinkerpop.version}</version>
             </dependency>
             <dependency>
                 <groupId>org.apache.tinkerpop</groupId>
                 <artifactId>gremlin-server</artifactId>
-                <version>3.4.9</version>
+                <version>${tinkerpop.version}</version>
             </dependency>
             <dependency>
                 <groupId>org.apache.tinkerpop</groupId>
                 <artifactId>gremlin-driver</artifactId>
-                <version>3.4.9</version>
+                <version>${tinkerpop.version}</version>
             </dependency>
             <dependency>
                 <groupId>org.apache.tinkerpop</groupId>
                 <artifactId>gremlin-test</artifactId>
-                <version>3.4.9</version>
+                <version>${tinkerpop.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.fasterxml.jackson.core</groupId>

@@ -67,7 +67,9 @@ class Operation(object):
             TypeError: value in inputs is not a :class:`Operation`
         """
         self._session_id = session_id
-        self._op_def = op_def_pb2.OpDef(op=op_type, key=uuid.uuid4().hex)
+        self._op_def = op_def_pb2.OpDef(
+            op=op_type, key=uuid.uuid4().hex, output_type=output_types
+        )
         self._parents = list()
         if config:
             for k, v in config.items():

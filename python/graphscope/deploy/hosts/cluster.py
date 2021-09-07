@@ -67,6 +67,11 @@ class HostsClusterLauncher(Launcher):
         self._proc = None
         self._closed = True
 
+    def poll(self):
+        if self._proc is not None:
+            return self._proc.poll()
+        return -1
+
     def _launch_coordinator(self):
         if self._port is None:
             port = random.randint(60801, 63801)
@@ -120,7 +125,7 @@ class HostsClusterLauncher(Launcher):
             encoding="utf-8",
             stdin=subprocess.DEVNULL,
             stdout=sys.stdout if gs_config.show_log else subprocess.DEVNULL,
-            stderr=sys.stderr if gs_config.show_log else subprocess.DEVNULL,
+            stderr=sys.stderr,
             bufsize=1,
             env=env,
         )
@@ -134,7 +139,7 @@ class HostsClusterLauncher(Launcher):
         Raises:
             RuntimeError: If instance launch failed or timeout.
 
-        Returns: tulpe of process and endpoint
+        Returns: tuple of process and endpoint
         """
         try:
             self._launch_coordinator()

@@ -28,7 +28,6 @@ OS_VERSION=
 VERBOSE=false
 packages_to_install=()
 install_folly=false
-install_zookeeper=false
 
 err() {
   echo -e "${RED}[$(date +'%Y-%m-%dT%H:%M:%S%z')]: [ERROR] $*${NC}" >&2
@@ -361,9 +360,10 @@ check_dependencies() {
     packages_to_install+=(folly)
   fi
 
-  # check zookeeper
-  if [[ ! -f "/usr/local/zookeeper/bin/zkServer.sh" ]]; then
-    packages_to_install+=(zookeeper)
+  # check zetcd
+  if ! command -v zetcd &> /dev/null && ! command -v ${HOME}/go/bin/zetcd &> /dev/null && \
+     ! command -v /usr/local/go/bin/zetcd &> /dev/null; then
+    packages_to_install+=(zetcd)
   fi
 
   # check c++ compiler
@@ -411,7 +411,7 @@ write_envs_config() {
         echo "export PATH=/usr/local/opt/llvm@${LLVM_VERSION}/bin:\$PATH"
       fi
       echo "export JAVA_HOME=\$(/usr/libexec/java_home -v 1.8)"
-      echo "export PATH=/usr/local/opt/gnu-sed/libexec/gnubin:\$HOME/.cargo/bin:\${JAVA_HOME}/bin:\$PATH:/usr/local/zookeeper/bin"
+      echo "export PATH=/usr/local/opt/gnu-sed/libexec/gnubin:\$HOME/.cargo/bin:\${JAVA_HOME}/bin:\$PATH"
       echo "export OPENSSL_ROOT_DIR=/usr/local/opt/openssl"
       echo "export OPENSSL_LIBRARIES=/usr/local/opt/openssl/lib"
       echo "export OPENSSL_SSL_LIBRARY=/usr/local/opt/openssl/lib/libssl.dylib"
@@ -420,13 +420,13 @@ write_envs_config() {
     {
       echo "export LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:/usr/local/lib:/usr/local/lib64"
       echo "export JAVA_HOME=/usr/lib/jvm/java-8-openjdk-amd64"
-      echo "export PATH=\${JAVA_HOME}/bin:/usr/local/go/bin:\$HOME/.cargo/bin:\$PATH:/usr/local/zookeeper/bin"
+      echo "export PATH=\${JAVA_HOME}/bin:\$(go env GOPATH)/bin:\$HOME/.cargo/bin:\$PATH"
     } >> ${OUTPUT_ENV_FILE}
   else
     {
       echo "export LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:/usr/local/lib:/usr/local/lib64"
       echo "export JAVA_HOME=/usr/lib/jvm/java"
-      echo "export PATH=\${JAVA_HOME}/bin:/usr/local/go/bin:\$HOME/.cargo/bin:/usr/local/bin:\$PATH:/usr/local/zookeeper/bin"
+      echo "export PATH=\${JAVA_HOME}/bin:\$(go env GOPATH)/bin:\$HOME/.cargo/bin:/usr/local/bin:\$PATH"
     } >> ${OUTPUT_ENV_FILE}
   fi
 }
@@ -485,10 +485,11 @@ install_dependencies() {
       packages_to_install=("${packages_to_install[@]/folly}")
     fi
 
-    if [[ "${packages_to_install[@]}" =~ "zookeeper" ]]; then
-      install_zookeeper=true  # set zookeeper install flag
-      # remove zookeeper from packages_to_install
-      packages_to_install=("${packages_to_install[@]/zookeeper}")
+    if [[ "${packages_to_install[@]}" =~ "zetcd" ]]; then
+      log "Installing zetcd."
+      go get github.com/etcd-io/zetcd/cmd/zetcd
+      # remove zetcd from packages_to_install
+      packages_to_install=("${packages_to_install[@]/zetcd}")
     fi
 
     log "Installing packages ${BASIC_PACKGES_TO_INSTALL[*]} ${packages_to_install[*]}"
@@ -553,10 +554,11 @@ install_dependencies() {
       packages_to_install+=(fmt-devel)
     fi
 
-    if [[ "${packages_to_install[@]}" =~ "zookeeper" ]]; then
-      install_zookeeper=true  # set zookeeper install flag
-      # remove zookeeper from packages_to_install
-      packages_to_install=("${packages_to_install[@]/zookeeper}")
+    if [[ "${packages_to_install[@]}" =~ "zetcd" ]]; then
+      log "Installing zetcd."
+      go get github.com/etcd-io/zetcd/cmd/zetcd
+      # remove zetcd from packages_to_install
+      packages_to_install=("${packages_to_install[@]/zetcd}")
     fi
 
     if [[ "${packages_to_install[@]}" =~ "rust" ]]; then
@@ -632,12 +634,6 @@ install_dependencies() {
       packages_to_install+=(fmt)
     fi
 
-    if [[ "${packages_to_install[@]}" =~ "zookeeper" ]]; then
-      install_zookeeper=true  # set zookeeper install flag
-      # remove zookeeper from packages_to_install
-      packages_to_install=("${packages_to_install[@]/zookeeper}")
-    fi
-
     log "Installing packages ${BASIC_PACKGES_TO_INSTALL[*]} ${packages_to_install[*]}"
     brew install ${BASIC_PACKGES_TO_INSTALL[*]} ${packages_to_install[*]}
 
@@ -677,16 +673,6 @@ install_dependencies() {
     sudo make install
     popd
     rm -fr /tmp/v2020.10.19.00.tar.gz /tmp/folly-2020.10.19.00
-  fi
-
-  if [[ ${install_zookeeper} == true ]]; then
-    log "Installing zookeeper."
-    wget -c https://archive.apache.org/dist/zookeeper/zookeeper-3.4.14/zookeeper-3.4.14.tar.gz -P /tmp
-    check_and_remove_dir "/tmp/zookeeper-3.4.14"
-    tar xf /tmp/zookeeper-3.4.14.tar.gz -C /tmp/
-    cp /tmp/zookeeper-3.4.14/conf/zoo_sample.cfg /tmp/zookeeper-3.4.14/conf/zoo.cfg
-    sudo cp -r /tmp/zookeeper-3.4.14 /usr/local/zookeeper || true
-    rm -fr /tmp/zookeeper-3.4.14*
   fi
 
   log "Installing python packages for vineyard codegen."

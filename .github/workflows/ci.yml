@@ -43,8 +43,8 @@ jobs:
     - name: Cpp Format And Lint Check
       run: |
         # install clang-format
-        curl -L https://github.com/muttleyxd/clang-tools-static-binaries/releases/download/master-22538c65/clang-format-8_linux-amd64 --output /usr/bin/clang-format
-        chmod +x /usr/bin/clang-format
+        sudo curl -L https://github.com/muttleyxd/clang-tools-static-binaries/releases/download/master-22538c65/clang-format-8_linux-amd64 --output /usr/bin/clang-format
+        sudo chmod +x /usr/bin/clang-format
 
         # run clang-format
         cd analytical_engine/
@@ -130,12 +130,13 @@ jobs:
     defaults:
       run:
         shell: scl enable devtoolset-7 -- bash --noprofile --norc -eo pipefail {0}
-    container: registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-vineyard:v0.2.6
+    container:
+      image: registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-vineyard:v0.2.6
     steps:
     - name: Install Dependencies
       run: |
         wget --no-verbose https://golang.org/dl/go1.15.5.linux-amd64.tar.gz
-        tar -C /usr/local -xzf go1.15.5.linux-amd64.tar.gz
+        sudo tar -C /usr/local -xzf go1.15.5.linux-amd64.tar.gz
         curl -sf -L https://static.rust-lang.org/rustup.sh | sh -s -- -y --profile minimal --default-toolchain 1.54.0
         echo "source ~/.cargo/env" >> ~/.bashrc
         source ~/.bashrc
@@ -151,13 +152,18 @@ jobs:
         export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/opt/graphscope/lib:/opt/graphscope/lib64
         source ~/.bashrc
 
+        # install zetcd
+        go get github.com/etcd-io/zetcd/cmd/zetcd
+        cp $(go env GOPATH)/bin/zetcd interactive_engine/bin/
+
         cd interactive_engine/src/executor
         ./exec.sh cargo build --all --release
         cd ${GITHUB_WORKSPACE}
         tar -cf gie.tar interactive_engine/src/executor/target/release/executor \
+                        interactive_engine/src/executor/target/release/gaia_executor \
                         interactive_engine/src/executor/store/log4rs.yml \
                         interactive_engine/bin \
-                        interactive_engine/conf
+                        interactive_engine/conf \
 
     - uses: actions/upload-artifact@v2
       with:
@@ -170,7 +176,8 @@ jobs:
     defaults:
       run:
         shell: scl enable devtoolset-7 -- bash --noprofile --norc -eo pipefail {0}
-    container: registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-vineyard:v0.2.6
+    container:
+      image: registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-vineyard:v0.2.6
     steps:
     - uses: actions/checkout@v2.3.2
       with:
@@ -193,7 +200,7 @@ jobs:
 
     - name: build wheel
       run: |
-        sed -i 's/p.error/logger.warning/g' /usr/local/lib/python3.6/site-packages/auditwheel/main_repair.py
+        sudo sed -i 's/p.error/logger.warning/g' /usr/local/lib/python3.6/site-packages/auditwheel/main_repair.py
 
         export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/opt/graphscope/lib:/opt/graphscope/lib64
         export WITH_LEARNING_ENGINE=ON
@@ -227,20 +234,17 @@ jobs:
     defaults:
       run:
         shell: scl enable devtoolset-7 -- bash --noprofile --norc -eo pipefail {0}
-    container: registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-runtime:latest
-
+    container:
+      image: registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-runtime:latest
     steps:
     - uses: actions/checkout@v2.3.2
 
     - name: Build
       run: |
-        mkdir /root/.m2
-        mv interactive_engine/deploy/docker/dockerfile/maven.settings.xml /root/.m2/settings.xml
         cd interactive_engine
-        mvn clean package -DskipTests -Pjava-release --quiet
+        for i in {1..3}; do mvn clean package -DskipTests -Pjava-release --quiet && break || sleep 60; done
         cd ${GITHUB_WORKSPACE}
-        tar -cf manager.tar interactive_engine/src/assembly/target/0.0.1-SNAPSHOT.tar.gz \
-                            interactive_engine/src/instance-manager/target/0.0.1-SNAPSHOT.tar.gz
+        tar -cf manager.tar interactive_engine/src/assembly/target/0.0.1-SNAPSHOT.tar.gz
 
     - uses: actions/upload-artifact@v2
       with:
@@ -268,15 +272,21 @@ jobs:
 
     - name: Prepare environment for dataset
       run: |
-        export GS_TEST_DIR='/root/gstest'
+        export GS_TEST_DIR='/home/graphscope/gstest'
         git clone -b master --single-branch --depth=1 https://github.com/7br/gstest.git ${GS_TEST_DIR}
 
     - name: Prepare environment for deps
       run: |
+        # install zetcd
+        wget --no-verbose https://golang.org/dl/go1.15.5.linux-amd64.tar.gz
+        sudo tar -C /usr/local -xzf go1.15.5.linux-amd64.tar.gz
+        go get github.com/etcd-io/zetcd/cmd/zetcd
+        sudo cp $(go env GOPATH)/bin/zetcd /usr/local/bin/
+
         python3 -m pip install pytest-cov
         tar -xf ./gae-${{ github.sha }}/gae.tar
         tar -xf ./gle-${{ github.sha }}/gle.tar
-        cp -R -n opt/graphscope/* /usr/local/
+        sudo cp -R -n opt/graphscope/* /usr/local/
         ls -la /usr/local/bin/
         pushd /usr/local/dist/ && pip3 install ./*.whl && popd
         python3 -m pip install -r python/requirements.txt
@@ -294,7 +304,8 @@ jobs:
         # prelaunch the etcd
         /usr/local/bin/etcd --data-dir=/tmp/default.etcd &
 
-        export GS_TEST_DIR='/root/gstest'
+        export GRAPHSCOPE_HOME='/usr/local'
+        export GS_TEST_DIR='/home/graphscope/gstest'
         cd python
         python3 -m pytest --cov=graphscope --cov-config=.coveragerc \
                           --cov-report=xml --cov-report=term --exitfirst -s -v tests/unittest/
@@ -314,7 +325,8 @@ jobs:
         # prelaunch the etcd
         /usr/local/bin/etcd --data-dir=/tmp/default.etcd &
 
-        export GS_TEST_DIR='/root/gstest'
+        export GRAPHSCOPE_HOME='/usr/local'
+        export GS_TEST_DIR='/home/graphscope/gstest'
         python3 -m pytest --exitfirst -s -v python/graphscope/nx/tests \
                           --ignore=python/graphscope/nx/tests/algorithms/forward
 
@@ -329,6 +341,7 @@ jobs:
         echo "CI is running on host $(curl -s 'https://api.ipify.org')"
         sudo docker ps --no-trunc -aqf "status=exited" | xargs sudo docker rm || true
         sudo docker images --no-trunc -aqf "dangling=true" | xargs sudo docker rmi -f || true
+        sudo chmod -R a+wrx ${GITHUB_WORKSPACE}
         sudo rm -rf ./* || true
         find ./ -name "*.egg-info" | xargs sudo rm -rf || true
         find ./ -name "*.whl" | xargs sudo rm -rf || true
@@ -341,7 +354,7 @@ jobs:
       with:
         path: |
           ~/.cache/pip
-          /root/.cache/pip
+          /home/graphscope/.cache/pip
         key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
         restore-keys: |
           ${{ runner.os }}-pip-
@@ -362,9 +375,6 @@ jobs:
         sudo docker build -t registry.cn-hongkong.aliyuncs.com/graphscope/graphscope:${{ github.sha }} \
                           --network=host \
                           -f ./graphscope.Dockerfile .
-        sudo docker build -t registry.cn-hongkong.aliyuncs.com/graphscope/maxgraph_standalone_manager:${{ github.sha }} \
-                          --network=host \
-                          -f ./manager.Dockerfile .
         popd
         python3 -m pip install -r python/requirements.txt --user
         python3 -m pip install -r python/requirements-dev.txt --user
@@ -377,7 +387,6 @@ jobs:
       env:
         CHANGE_MINIKUBE_NONE_USER: true
         GS_IMAGE: registry.cn-hongkong.aliyuncs.com/graphscope/graphscope:${{ github.sha }}
-        GIE_MANAGER_IMAGE: registry.cn-hongkong.aliyuncs.com/graphscope/maxgraph_standalone_manager:${{ github.sha }}
       run: |
         export GS_TEST_DIR=${GITHUB_WORKSPACE}/gstest
         git clone -b master --single-branch --depth=1 https://github.com/7br/gstest.git ${GS_TEST_DIR}
@@ -387,13 +396,38 @@ jobs:
                           --cov-report=term --exitfirst -s -vvv --log-cli-level=INFO \
                           ./tests/kubernetes
 
+    - name: HDFS test
+      env:
+        CHANGE_MINIKUBE_NONE_USER: true
+        GS_IMAGE: registry.cn-hongkong.aliyuncs.com/graphscope/graphscope:${{ github.sha }}
+      run: |
+        cd /tmp
+        wget -q https://mirror.cogentco.com/pub/apache/hadoop/common/hadoop-2.10.1/hadoop-2.10.1.tar.gz
+        tar -zxf hadoop-2.10.1.tar.gz
+        export JAVA_HOME=/usr/lib/jvm/default-java/
+
+        cd ${GITHUB_WORKSPACE}/.github/workflows/hadoop_scripts
+        ./prepare_hadoop.sh /tmp/hadoop-2.10.1
+        export PATH=${PATH}:/tmp/hadoop-2.10.1/bin
+        export GS_TEST_DIR=${GITHUB_WORKSPACE}/gstest
+        hadoop fs -mkdir /ldbc_sample || true
+        hadoop fs -chmod 777 /ldbc_sample
+        hadoop fs -put ${GS_TEST_DIR}/ldbc_sample/person_0_0.csv /ldbc_sample/person_0_0.csv
+        hadoop fs -put ${GS_TEST_DIR}/ldbc_sample/person_knows_person_0_0.csv /ldbc_sample/person_knows_person_0_0.csv
+        export HDFS_TEST_DIR=hdfs:///ldbc_sample
+        export HDFS_HOST=$(hostname -I | awk '{print $1}')
+
+        cd ${GITHUB_WORKSPACE}/python
+        python3 -m pytest ./tests/kubernetes/test_demo_script.py -k test_demo_on_hdfs
+        # FIXME: context.output file not found
+        hdfs dfs -test -e /ldbc_sample/res.csv_0 && hdfs dfs -test -e /ldbc_sample/res.csv_1
+
     - name: Helm test
       run: |
         curl https://raw.githubusercontent.com/helm/helm/master/scripts/get-helm-3 | bash
         cd charts
         helm install graphscope --set coordinator.image.tag=${{ github.sha }} \
-                                --set engines.gae.image.tag=${{ github.sha }} \
-                                --set engines.gie.graph_manager.image.tag=${{ github.sha }} \
+                                --set engines.image.tag=${{ github.sha }} \
                                 --set vineyard.image.tag=${{ github.sha }} \
                                 --set imagePullPolicy=IfNotPresent \
                                 ./graphscope
@@ -408,8 +442,10 @@ jobs:
     - name: Clean
       if: always()
       run: |
-        sudo docker rmi -f registry.cn-hongkong.aliyuncs.com/graphscope/graphscope:${{ github.sha }} \
-            registry.cn-hongkong.aliyuncs.com/graphscope/maxgraph_standalone_manager:${{ github.sha }} || true
+        export JAVA_HOME=/usr/lib/jvm/default-java/
+        HADOOP_SSH_OPTS="-o StrictHostKeyChecking=no" /tmp/hadoop-2.10.1/sbin/stop-dfs.sh || true
+        rm -rf /tmp/hadoop* || true
+        sudo docker rmi -f registry.cn-hongkong.aliyuncs.com/graphscope/graphscope:${{ github.sha }} || true
         helm uninstall graphscope || true
         kubectl delete pod graphscope-test-rpc-service --wait=false || true
 
@@ -422,6 +458,7 @@ jobs:
         echo "CI is running on host $(curl -s 'https://api.ipify.org')"
         sudo docker ps --no-trunc -aqf "status=exited" | xargs sudo docker rm || true
         sudo docker images --no-trunc -aqf "dangling=true" | xargs sudo docker rmi -f || true
+        sudo chmod -R a+wrx ${GITHUB_WORKSPACE}
         sudo rm -rf ./* || true
         sudo rm -rf /tmp/graphscope/app_* || true
         find ./ -name "*.egg-info" | xargs sudo rm -rf || true
@@ -435,7 +472,7 @@ jobs:
       with:
         path: |
           ~/.cache/pip
-          /root/.cache/pip
+          /home/graphscope/.cache/pip
         key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
         restore-keys: |
           ${{ runner.os }}-pip-
@@ -461,9 +498,6 @@ jobs:
         sudo docker build -t registry.cn-hongkong.aliyuncs.com/graphscope/graphscope:${{ github.sha }} \
                           --network=host \
                           -f ./graphscope.Dockerfile .
-        sudo docker build -t registry.cn-hongkong.aliyuncs.com/graphscope/maxgraph_standalone_manager:${{ github.sha }} \
-                          --network=host \
-                          -f ./manager.Dockerfile .
         popd
         python3 -m pip install -r python/requirements.txt
         python3 -m pip install -r python/requirements-dev.txt
@@ -474,34 +508,45 @@ jobs:
       run: |
         export PYTHONPATH=${GITHUB_WORKSPACE}/python
         cd interactive_engine/tests
-        ./function_test.sh 8111 1 registry.cn-hongkong.aliyuncs.com/graphscope/graphscope:${{ github.sha }} \
-                           registry.cn-hongkong.aliyuncs.com/graphscope/maxgraph_standalone_manager:${{ github.sha }}
-        ./function_test.sh 8112 2 registry.cn-hongkong.aliyuncs.com/graphscope/graphscope:${{ github.sha }} \
-                           registry.cn-hongkong.aliyuncs.com/graphscope/maxgraph_standalone_manager:${{ github.sha }}
+        ./function_test.sh 8111 1 registry.cn-hongkong.aliyuncs.com/graphscope/graphscope:${{ github.sha }}
+        ./function_test.sh 8112 2 registry.cn-hongkong.aliyuncs.com/graphscope/graphscope:${{ github.sha }}
     - name: Clean
       if: always()
       run: |
-        sudo docker rmi -f registry.cn-hongkong.aliyuncs.com/graphscope/graphscope:${{ github.sha }} \
-            registry.cn-hongkong.aliyuncs.com/graphscope/maxgraph_standalone_manager:${{ github.sha }} || true
+        sudo docker rmi -f registry.cn-hongkong.aliyuncs.com/graphscope/graphscope:${{ github.sha }} || true
 
   build-gss:
-    runs-on: ubuntu-20.04
+    # Note that this step is running in a container, and github will start the container by `docker run balabala`,
+    # so it requires the host is able to run docker without sudo, which may need to be configured manually when a new
+    # self-hosted runner is added.
+    runs-on: self-hosted
     defaults:
       run:
         shell: scl enable devtoolset-7 -- bash --noprofile --norc -eo pipefail {0}
-    container: registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-vineyard:v0.2.6
+    container:
+      image: registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-vineyard:v0.2.6
     steps:
+
+    #- name: "Debug: Package dependancies for tmate"
+      #run: |
+        #sudo yum update -y
+        #sudo yum install -y xz
+        #sudo ln -s /bin/true /bin/apt-get
+
+    #- name: Setup tmate session debug
+      #if: true
+      #uses: mxschmitt/action-tmate@v3
 
     - name: Install Dependencies
       run: |
+        sudo chown -R $(id -u):$(id -g) ${HOME}
+        sudo chmod -R a+wrx ${HOME} ${GITHUB_WORKSPACE}
         wget --no-verbose https://golang.org/dl/go1.15.5.linux-amd64.tar.gz
-        tar -C /usr/local -xzf go1.15.5.linux-amd64.tar.gz
+        sudo tar -C /usr/local -xzf go1.15.5.linux-amd64.tar.gz
         curl -sf -L https://static.rust-lang.org/rustup.sh | sh -s -- -y --profile minimal --default-toolchain 1.54.0
         echo "source ~/.cargo/env" >> ~/.bashrc
         source ~/.bashrc
         rustup component add rustfmt
-        yum install -y xz
-        ln -s /bin/true /bin/apt-get
 
     - uses: actions/checkout@v2.3.2
 
@@ -514,11 +559,10 @@ jobs:
         source ~/.bashrc
 
         cd interactive_engine
-        mvn clean install -Pv2 -Drust.compile.mode=debug -DskipTests --quiet
+        for i in {1..3}; do mvn clean install -Pv2 -Drust.compile.mode=debug -DskipTests --quiet  && break || sleep 60; done
         cd ${GITHUB_WORKSPACE}
         mv interactive_engine/distribution/target/maxgraph.tar.gz ./
         tar -zcf lib.tar.gz /opt/graphscope
-        tar -zcf giectl.tar.gz interactive_engine/bin interactive_engine/conf
 
     - name: gremlin-test
       run: |
@@ -533,7 +577,6 @@ jobs:
         path: |
           maxgraph.tar.gz
           lib.tar.gz
-          giectl.tar.gz
         retention-days: 5
 
   gss-test:
@@ -546,6 +589,7 @@ jobs:
     - name: Clean up
       run: |
         echo "CI is running on host $(curl -s 'https://api.ipify.org')"
+        sudo chmod -R a+wrx ${GITHUB_WORKSPACE}
         sudo docker ps --no-trunc -aqf "status=exited" | xargs sudo docker rm || true
         sudo docker images --no-trunc -aqf "dangling=true" | xargs sudo docker rmi -f || true
         sudo rm -rf ./* || true
@@ -567,7 +611,6 @@ jobs:
         pushd artifacts
         tar -zxf ./gss-${{ github.sha }}/lib.tar.gz
         tar -zxf ./gss-${{ github.sha }}/maxgraph.tar.gz
-        tar -zxf ./gss-${{ github.sha }}/giectl.tar.gz
 
         sudo docker pull registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-runtime:latest
         sudo docker build -t registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-store:${{ github.sha }} \
@@ -616,7 +659,17 @@ jobs:
         hadoop fs -put ${GS_TEST_DIR}/ldbc_sample/person_knows_person_0_0.csv /ldbc_sample/person_knows_person_0_0.csv
 
         cd ${GITHUB_WORKSPACE}/python
-        python3 -m pytest -s -vvv tests/kubernetes/test_store_service.py
+        python3 -m pytest -s -vvv tests/kubernetes/test_store_service.py -k test_demo_fresh
+
+        # helm restart ci release and run demo with the PersistentVolume
+        # FIXME(@haixia): restart seems not work.
+        # helm uninstall ci
+        # cd ${GITHUB_WORKSPACE}/charts
+        # helm install ci --set image.tag=${{ github.sha }},executor=${{ matrix.executor }} \
+        #                               ./graphscope-store
+        # helm test ci --timeout 5m0s
+        # cd ${GITHUB_WORKSPACE}/python
+        # python3 -m pytest -s -vvv tests/kubernetes/test_store_service.py -k test_demo_after_restart
 
     - name: Clean
       if: always()
@@ -655,9 +708,6 @@ jobs:
         sudo docker build -t registry.cn-hongkong.aliyuncs.com/graphscope/graphscope:${{ github.sha }} \
                           --network=host \
                           -f ./graphscope.Dockerfile .
-        sudo docker build -t registry.cn-hongkong.aliyuncs.com/graphscope/maxgraph_standalone_manager:${{ github.sha }} \
-                          --network=host \
-                          -f ./manager.Dockerfile .
         sudo docker build -t registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-store:${{ github.sha }} \
                           --network=host \
                           -f ./graphscope-store.Dockerfile .
@@ -670,11 +720,6 @@ jobs:
         sudo docker push registry.cn-hongkong.aliyuncs.com/graphscope/graphscope:${{ github.sha }}
         sudo docker push registry.cn-hongkong.aliyuncs.com/graphscope/graphscope:latest
 
-        sudo docker tag registry.cn-hongkong.aliyuncs.com/graphscope/maxgraph_standalone_manager:${{ github.sha }} \
-                        registry.cn-hongkong.aliyuncs.com/graphscope/maxgraph_standalone_manager:latest
-        sudo docker push registry.cn-hongkong.aliyuncs.com/graphscope/maxgraph_standalone_manager:${{ github.sha }}
-        sudo docker push registry.cn-hongkong.aliyuncs.com/graphscope/maxgraph_standalone_manager:latest
-
         sudo docker tag registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-store:${{ github.sha }} \
                         registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-store:latest
         sudo docker push registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-store:${{ github.sha }}
@@ -684,8 +729,6 @@ jobs:
       if: always()
       run: |
         sudo docker rmi -f registry.cn-hongkong.aliyuncs.com/graphscope/graphscope:latest \
-            registry.cn-hongkong.aliyuncs.com/graphscope/maxgraph_standalone_manager:latest \
             registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-store:latest \
             registry.cn-hongkong.aliyuncs.com/graphscope/graphscope:${{ github.sha }} \
-            registry.cn-hongkong.aliyuncs.com/graphscope/maxgraph_standalone_manager:${{ github.sha }} \
             registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-store:${{ github.sha}} || true

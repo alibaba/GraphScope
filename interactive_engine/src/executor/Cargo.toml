@@ -1,12 +1,6 @@
-[package]
-name = "maxgraph"
-version = "0.1.0"
-authors = ["maxgraph@alibaba-inc.com"]
-
 [workspace]
 
 members = [
-    "./",
     "runtime",
     "store",
     "server",

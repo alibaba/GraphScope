@@ -2,9 +2,10 @@ Developer Guide
 ===============
 
 GraphScope has been developed by an active team of software engineers and researchers.
-Any contributions from the open-source community to improve this project are  greatly appreciated!
+Any contributions from the open-source community to improve this project are greatly appreciated!
 
 GraphScope is licensed under Apache License 2.0.
+
 
 Building and Testing
 --------------------
@@ -57,6 +58,36 @@ Or use the test script to pass all test cases.
 .. code:: bash
 
     ./scripts/test.sh --all --image graphscope/graphscope:SHORTSHA
+
+
+Building and Testing GraphScope Locally with Docker
+---------------------------------------------------
+
+We provide a docker images based on ubuntu:20.04 with all required dependencies
+installed.
+
+    - registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-vineyard:ubuntu
+
+For developers, they just need to start a container with ``docker run`` and
+``git clone`` the latest version of code from our `repo <https://github.com/alibaba/GraphScope>`_,
+make their changes to the code and build with command:
+
+.. code:: bash
+
+    docker pull registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-vineyard:ubuntu
+    # set docker container shared memory: 10G
+    docker run --shm-size 10240m -it registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-vineyard:ubuntu /bin/bash
+    # inner container
+    git clone https://github.com/alibaba/GraphScope.git
+    git clone https://github.com/GraphScope/gstest.git
+    # building
+    cd GraphScope && make install
+    # testing:
+    #       export GS_TEST_DIR=<path_to_your_gstest_dir>
+    #       export WITH_LEARNING_ENGINE=ON
+    #       export GRAPHSCOPE_HOME=/usr/local
+    cd GraphScope/python && python3 -m pytest -s -v ./tests/unittest
+
 
 Build Python Wheels
 -------------------

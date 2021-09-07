@@ -340,7 +340,7 @@ fn to_runtime_vertex<V: StoreVertex>(v: &V) -> Vertex {
 
 #[inline]
 fn to_runtime_edge<E: StoreEdge>(e: &E) -> Edge {
-    let id = ((e.get_dst_id() as u64 as ID) << 64) | (e.get_src_id()) as u64 as ID;
+    let id = e.get_edge_id() as ID;
     let label = Some(Label::Id(e.get_label_id() as RuntimeLabelId));
     let properties = e
         .get_properties()
