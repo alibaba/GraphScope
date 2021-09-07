@@ -85,8 +85,6 @@ make their changes to the code and build with command:
     export GRAPHSCOPE_HOME=/opt/graphscope
     cd GraphScope && make INSTALL_PREFIX=/opt/graphscope install
     # testing:
-    export LD_LIBRARY_PATH=/opt/graphscope/lib:/opt/graphscope/lib64:${LD_LIBRARY_PATH}
-    export PATH=/opt/graphscope/bin:${PATH}
     #   export GS_TEST_DIR=<path_to_your_gstest_dir>
     cd GraphScope/python && python3 -m pytest -s -v ./tests/unittest
 

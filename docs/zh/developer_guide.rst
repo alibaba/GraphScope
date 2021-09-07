@@ -78,8 +78,6 @@ GraphScope 的 Python 客户端不包含在该镜像中，构建也与引擎有�
     export GRAPHSCOPE_HOME=/opt/graphscope
     cd GraphScope && make INSTALL_PREFIX=/opt/graphscope install
     # 测试：
-    export LD_LIBRARY_PATH=/opt/graphscope/lib:/opt/graphscope/lib64:${LD_LIBRARY_PATH}
-    export PATH=/opt/graphscope/bin:${PATH}
     #   export GS_TEST_DIR=<path_to_your_gstest_dir>
     cd GraphScope/python && python3 -m pytest -s -v ./tests/unittest
 
