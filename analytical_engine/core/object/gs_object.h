@@ -36,7 +36,7 @@ inline const char* ObjectTypeToString(ObjectType ob_type) {
   case ObjectType::kFragmentWrapper:
     return "FragmentWrapper";
   case ObjectType::kLabeledFragmentWrapper:
-    return "LABELED_FRAGMENT_WRAPPER";
+    return "LabeledFragmentWrapper";
   case ObjectType::kAppEntry:
     return "AppEntry";
   case ObjectType::kContextWrapper:

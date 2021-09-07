@@ -221,7 +221,7 @@ class LocalLauncher(Launcher):
             "{}".format(";".join(engine_params)),
             str(enable_gaia),
         ]
-        logger.info("Create GIE instance with command: {0}".format(" ".join(cmd)))
+        logger.info("Create GIE instance with command: %s", " ".join(cmd))
         process = subprocess.Popen(
             cmd,
             start_new_session=True,
@@ -243,7 +243,7 @@ class LocalLauncher(Launcher):
             self._session_workspace,
             str(object_id),
         ]
-        logger.info("Close GIE instance with command: {0}".format(" ".join(cmd)))
+        logger.info("Close GIE instance with command: %s", " ".join(cmd))
         process = subprocess.Popen(
             cmd,
             start_new_session=True,
@@ -313,15 +313,15 @@ class LocalLauncher(Launcher):
     def _create_vineyard(self):
         if not self._vineyard_socket:
             ts = get_timestamp()
-            vineyard_socket = "{0}{1}".format(self._vineyard_socket_prefix, ts)
+            vineyard_socket = f"{self._vineyard_socket_prefix}{ts}"
             cmd = [self._find_vineyardd()]
             cmd.extend(["--socket", vineyard_socket])
             cmd.extend(["--size", self._shared_mem])
-            cmd.extend(["--etcd_prefix", "vineyard.gsa.{0}".format(ts)])
+            cmd.extend(["--etcd_prefix", f"vineyard.gsa.{ts}"])
             env = os.environ.copy()
             env["GLOG_v"] = str(self._glog_level)
 
-            logger.info("Launch vineyardd with command: {0}".format(" ".join(cmd)))
+            logger.info("Launch vineyardd with command: %s", " ".join(cmd))
 
             process = subprocess.Popen(
                 cmd,
@@ -350,6 +350,8 @@ class LocalLauncher(Launcher):
         self._start_analytical_engine()
         # create zetcd
         self._launch_zetcd()
+        if self.poll() is not None and self.poll() != 0:
+            raise RuntimeError("Initializing analytical engine failed.")
 
     def _start_analytical_engine(self):
         rmcp = ResolveMPICmdPrefix()
@@ -357,7 +359,7 @@ class LocalLauncher(Launcher):
 
         master = self._hosts.split(",")[0]
         rpc_port = self._get_free_port(master)
-        self._analytical_engine_endpoint = "{}:{}".format(master, str(rpc_port))
+        self._analytical_engine_endpoint = f"{master}:{rpc_port}"
 
         cmd.append(ANALYTICAL_ENGINE_PATH)
         cmd.extend(["--host", "0.0.0.0"])
@@ -374,7 +376,7 @@ class LocalLauncher(Launcher):
         env = os.environ.copy()
         env.update(mpi_env)
 
-        logger.info("Launch analytical engine with command: {}".format(" ".join(cmd)))
+        logger.info("Launch analytical engine with command: %s", " ".join(cmd))
 
         process = subprocess.Popen(
             cmd,
@@ -403,9 +405,7 @@ class LocalLauncher(Launcher):
 
         server_list = []
         for i in range(self._num_workers):
-            server_list.append(
-                "localhost:{0}".format(str(self._get_free_port("localhost")))
-            )
+            server_list.append(f"localhost:{str(self._get_free_port('localhost'))}")
         hosts = ",".join(server_list)
         handle["server"] = hosts
         handle = base64.b64encode(json.dumps(handle).encode("utf-8")).decode("utf-8")
