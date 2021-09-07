@@ -432,14 +432,18 @@ write_envs_config() {
   elif [[ "${PLATFORM}" == *"Ubuntu"* ]]; then
     {
       echo "export LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:/usr/local/lib:/usr/local/lib64"
-      echo "export JAVA_HOME=/usr/lib/jvm/default-java"
+      if [ -z "${JAVA_HOME}" ]; then
+        echo "export JAVA_HOME=/usr/lib/jvm/default-java"
+      fi
       echo "export PATH=\${JAVA_HOME}/bin:\$HOME/.cargo/bin:/usr/local/go/bin:\$PATH"
       echo "export PATH=\$(go env GOPATH)/bin:\$PATH"
     } >> ${OUTPUT_ENV_FILE}
   else
     {
       echo "export LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:/usr/local/lib:/usr/local/lib64"
-      echo "export JAVA_HOME=/usr/lib/jvm/java"
+      if [ -z "${JAVA_HOME}" ]; then
+        echo "export JAVA_HOME=/usr/lib/jvm/java"
+      fi
       echo "export PATH=\${JAVA_HOME}/bin:\$HOME/.cargo/bin:\$PATH:/usr/local/go/bin"
       echo "export PATH=\$(go env GOPATH)/bin:\$PATH"
     } >> ${OUTPUT_ENV_FILE}
