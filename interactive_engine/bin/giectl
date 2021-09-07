@@ -52,11 +52,6 @@ cat <<END
     start_coordinator                   start coordinator of instance
     start_frontend                      start frontend of instance
     start_executor                      start executor of instance
-    max_node_gaia                       start max_node of gaia
-    max_node                            start max_node of v2
-    maxgraph                            start maxgraph with v2
-    admin_tools                         start admin_tools of v2
-    load_tools                          start load_tools of maxgraph
 END
 }
 
@@ -266,7 +261,6 @@ start_executor() {
       sed -i "s/^\(${key}\s*=\s*\).*\$/\1${value}/" ${config_dir}/executor.vineyard.properties
     done
   fi
-
 
   # launch executor
   declare flag="maxgraph${object_id}executor"
@@ -697,121 +691,66 @@ close_gremlin_instance_on_k8s() {
   done
 }
 
-# below is commands of v2 and gaia
-# a function to setup common variable and env
-_setup_maxgraph_env() {
+##########################
+# Start graph manager service.
+# Globals:
+#   None
+# Arguments:
+#   cluster_type: local or k8s
+#   server_port
+#   service_id
+#   zookeeper_port
+##########################
+start_manager_service() {
+  declare -r cluster_type=$1
+  declare -r server_port=$2
+  declare -r service_id=$3
+  declare -r zookeeper_port=$4
+
   if [ ! -n "${GRAPHSCOPE_RUNTIME}" ]; then
     export GRAPHSCOPE_RUNTIME=/tmp/graphscope/runtime
   fi
 
-  if [ -z "${LOG_NAME}" ]; then
-    LOG_NAME="maxgraph"
-  fi
+  declare -r libpath="$(echo "${WORKSPACE}"/lib/*.jar | tr ' ' ':')"
 
-  export LD_LIBRARY_PATH=${GRAPHSCOPE_HOME}/maxgraph/native:${LD_LIBRARY_PATH}:/usr/local/lib
-
-  log_dir=${GRAPHSCOPE_RUNTIME}/logs
-  config_dir=${GRAPHSCOPE_RUNTIME}/config
-  mkdir -p ${log_dir} ${config_dir}
-
-  libpath="$(echo "${GRAPHSCOPE_HOME}"/maxgraph/lib/*.jar | tr ' ' ':')"
-}
-
-# start max_node of {gaia, v2}
-max_node() {
-  type=$1; shift
-
-  _setup_maxgraph_env
-
-  sed -e "s@LOG4RS_CONFIG@${GRAPHSCOPE_HOME}/conf/log4rs.yml@g" \
-      ${GRAPHSCOPE_HOME}/conf/config.template > ${config_dir}/max_node_${type}.config
-
-  if [[ "${type}" == "gaia" ]]; then
-    java -server \
-         -Dlogback.configurationFile="${GRAPHSCOPE_HOME}/conf/logback.xml" \
-         -Dconfig.file="${config_dir}/max_node_${type}.config" \
-         -Dlog.dir="${log_dir}" \
-         -Dlog.name="${LOG_NAME}" \
-         -cp "${libpath}" com.alibaba.graphscope.gaia.MaxNode \
-         "$@" > "${log_dir}/${LOG_NAME}.out" 2>&1 <&- &
+  declare -r service_dir=${GRAPHSCOPE_RUNTIME}/${service_id}
+  mkdir -p ${service_dir}
+  sed -e "s@SERVER_PORT@${server_port}@g" \
+      -e "s@CREATE_SCRIPT@${WORKSPACE}/bin/giectl@g" \
+      -e "s@CLOSE_SCRIPT@${WORKSPACE}/bin/giectl@g" \
+      ${WORKSPACE}/conf/application.properties > ${service_dir}/application.properties
+  if [[ "${cluster_type}" == "local" ]]; then
+    java -cp ${libpath} -Dspring.config.location=${service_dir}/application.properties \
+         com.alibaba.maxgraph.admin.InstanceManagerApplication &
+    echo $! > ${service_dir}/graphmanager.pid
   else
-    java -server \
-         -Dlogback.configurationFile="${GRAPHSCOPE_HOME}/conf/logback.xml" \
-         -Dconfig.file="${config_dir}/max_node_${type}.config" \
-         -Dlog.dir="${log_dir}" \
-         -Dlog.name="${LOG_NAME}" \
-         -cp "${libpath}" com.alibaba.maxgraph.v2.MaxNode \
-         "$@" > "${log_dir}/${LOG_NAME}.out" 2>&1 <&- &
-  fi
-
-  pid=$!
-  if ! ps -p $pid > /dev/null ; then
-    err "max node $type start failed."
-    exit 1
+    java -cp ${libpath} -Dspring.config.location=${service_dir}/application.properties \
+         com.alibaba.maxgraph.admin.InstanceManagerApplication
   fi
 }
 
-# start admin_tools of v2
-admin_tools() {
-  config_file=$1; shift
+##########################
+# Stop graph manager service.
+# Globals:
+#   None
+# Arguments:
+#   cluster_type: local or k8s
+#   service_id
+##########################
+stop_manager_service() {
+  declare -r cluster_type=$1
+  declare -r service_id=$2
 
-  _setup_maxgraph_env
+  if [ ! -n "${GRAPHSCOPE_RUNTIME}" ]; then
+    export GRAPHSCOPE_RUNTIME=/tmp/graphscope/runtime
+  fi
 
-  java_opt="-server ${MAXGRAPH_JAVA_OPTS}"
-  java ${java_opt} \
-      -Dlogback.configurationFile="${GRAPHSCOPE_HOME}/logback.xml" \
-      -Dconfig.file="${config_file}" \
-      -Dlog.dir="${log_dir}" \
-      -Dlog.name="${LOG_NAME}" \
-      -cp "${libpath}" com.alibaba.maxgraph.v2.AdminTools \
-      "$@"
-}
-
-load_tools() {
-  _setup_maxgraph_env
-  java -cp "${GRAPHSCOPE_HOME}/lib/data_load_tools-0.0.1-SNAPSHOT.jar" \
-       com.alibaba.maxgraph.dataload.LoadTool "$@"
-}
-
-# start maxgraph with v2
-maxgraph() {
-  config_file=$1; shift
-
-  _setup_maxgraph_env
-
-  java_opt="-server
-            -Djava.awt.headless=true
-            -Dfile.encoding=UTF-8
-            -Dsun.jnu.encoding=UTF-8
-            -XX:+UseG1GC
-            -XX:ConcGCThreads=2
-            -XX:ParallelGCThreads=5
-            -XX:MaxGCPauseMillis=50
-            -XX:InitiatingHeapOccupancyPercent=20
-            -XX:-OmitStackTraceInFastThrow
-            -XX:+HeapDumpOnOutOfMemoryError
-            -XX:HeapDumpPath=${log_dir}/${LOG_NAME}.hprof
-            -XX:+PrintGCDetails
-            -XX:+PrintGCDateStamps
-            -XX:+PrintTenuringDistribution
-            -XX:+PrintGCApplicationStoppedTime
-            -Xloggc:${log_dir}/${LOG_NAME}.gc.log
-            -XX:+UseGCLogFileRotation
-            -XX:NumberOfGCLogFiles=32
-            -XX:GCLogFileSize=64m"
-
-  java ${java_opt} \
-      -Dlogback.configurationFile="${GRAPHSCOPE_HOME}/logback.xml" \
-      -Dconfig.file=${config_file} \
-      -Dlog.dir="${log_dir}" \
-      -Dlog.name="${LOG_NAME}" \
-      -cp "${libpath}" com.alibaba.maxgraph.v2.MaxGraph \
-      "$@" > "${log_dir}/${LOG_NAME}.out" 2>&1 <&- &
-
-  pid=$!
-  if ! ps -p $pid > /dev/null ; then
-    err "maxgraph start failed."
-    exit 1
+  if [[ "${cluster_type}" == "local" ]]; then
+    declare -r service_dir=${GRAPHSCOPE_RUNTIME}/$service_id
+    declare -r manager_pid=$(cat ${service_dir}/graphmanager.pid)
+    kill ${manager_pid} || true > /dev/null 2>&1
+  else
+    jps | grep InstanceManagerApplication | awk '{print $1}' | xargs kill -9
   fi
 }
 
@@ -827,11 +766,6 @@ while test $# -ne 0; do
     start_coordinator) start_coordinator "$@"; exit;;
     start_frontend) start_frontend "$@"; exit;;
     start_executor) start_executor "$@"; exit;;
-    max_node_gaia) max_node "gaia" "$@"; exit;;
-    max_node_maxgraph) max_node "maxgraph" "$@"; exit;;
-    maxgraph) maxgraph "$@"; exit;;
-    admin_tools) admin_tools "$@"; exit;;
-    load_tools) load_tools "$@"; exit;;
     *)
       echo "unrecognized option or command '${arg}'"
       usage; exit;;

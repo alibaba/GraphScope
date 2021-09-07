@@ -138,7 +138,7 @@ impl ServerManager for GaiaServerManager {
                 }
                 if !address_list.is_empty() && !task_partition_list.is_empty() {
                     // start gaia_pegasus
-                    let configuration = build_gaia_config(worker_id as usize, address_list);
+                    let configuration = build_gaia_config(worker_id as usize, address_list, store_config.clone());
                     info!("gaia configuration {:?}", configuration);
 		    if let Err(err) = gaia_pegasus::startup(configuration) {
                         info!("start pegasus failed {:?}", err);
@@ -198,8 +198,8 @@ impl ServerManager for GaiaServerManager {
     }
 }
 
-fn build_gaia_config(worker_id: usize, address_list: &[RuntimeAddressProto]) -> Configuration {
-    let peers = parse_store_ip_list_for_gaia(address_list);
+fn build_gaia_config(worker_id: usize, address_list: &[RuntimeAddressProto], store_config: Arc<StoreConfig>) -> Configuration {
+    let peers = parse_store_ip_list_for_gaia(address_list, store_config);
     info!("gaia peers list: {:?}", peers);
     let ip = peers.get(worker_id as usize).unwrap().ip.clone();
     let port = peers.get(worker_id as usize).unwrap().port.clone();
@@ -210,7 +210,7 @@ fn build_gaia_config(worker_id: usize, address_list: &[RuntimeAddressProto]) -> 
     }
 }
 
-fn parse_store_ip_list_for_gaia(address_list: &[RuntimeAddressProto]) -> Vec<PeerConfig> {
+fn parse_store_ip_list_for_gaia(address_list: &[RuntimeAddressProto], store_config: Arc<StoreConfig>) -> Vec<PeerConfig> {
     let mut peers_list = Vec::with_capacity(address_list.len());
     let mut server_idx = 0;
     for address in address_list {
@@ -218,7 +218,7 @@ fn parse_store_ip_list_for_gaia(address_list: &[RuntimeAddressProto]) -> Vec<Pee
             server_id: server_idx,
             ip: address.get_ip().to_string(),
             // assign a random port for pegasus
-            port: 0,
+            port: store_config.gaia_engine_port as u16,
         };
         peers_list.push(peer_config);
         server_idx += 1;

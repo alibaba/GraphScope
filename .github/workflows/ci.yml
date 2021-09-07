@@ -396,6 +396,32 @@ jobs:
                           --cov-report=term --exitfirst -s -vvv --log-cli-level=INFO \
                           ./tests/kubernetes
 
+    - name: HDFS test
+      env:
+        CHANGE_MINIKUBE_NONE_USER: true
+        GS_IMAGE: registry.cn-hongkong.aliyuncs.com/graphscope/graphscope:${{ github.sha }}
+      run: |
+        cd /tmp
+        wget -q https://mirror.cogentco.com/pub/apache/hadoop/common/hadoop-2.10.1/hadoop-2.10.1.tar.gz
+        tar -zxf hadoop-2.10.1.tar.gz
+        export JAVA_HOME=/usr/lib/jvm/default-java/
+
+        cd ${GITHUB_WORKSPACE}/.github/workflows/hadoop_scripts
+        ./prepare_hadoop.sh /tmp/hadoop-2.10.1
+        export PATH=${PATH}:/tmp/hadoop-2.10.1/bin
+        export GS_TEST_DIR=${GITHUB_WORKSPACE}/gstest
+        hadoop fs -mkdir /ldbc_sample || true
+        hadoop fs -chmod 777 /ldbc_sample
+        hadoop fs -put ${GS_TEST_DIR}/ldbc_sample/person_0_0.csv /ldbc_sample/person_0_0.csv
+        hadoop fs -put ${GS_TEST_DIR}/ldbc_sample/person_knows_person_0_0.csv /ldbc_sample/person_knows_person_0_0.csv
+        export HDFS_TEST_DIR=hdfs:///ldbc_sample
+        export HDFS_HOST=$(hostname -I | awk '{print $1}')
+
+        cd ${GITHUB_WORKSPACE}/python
+        python3 -m pytest ./tests/kubernetes/test_demo_script.py -k test_demo_on_hdfs
+        # FIXME: context.output file not found
+        hdfs dfs -test -e /ldbc_sample/res.csv_0 && hdfs dfs -test -e /ldbc_sample/res.csv_1
+
     - name: Helm test
       run: |
         curl https://raw.githubusercontent.com/helm/helm/master/scripts/get-helm-3 | bash
@@ -416,8 +442,10 @@ jobs:
     - name: Clean
       if: true
       run: |
-        sudo docker rmi -f registry.cn-hongkong.aliyuncs.com/graphscope/graphscope:${{ github.sha }} \
-            registry.cn-hongkong.aliyuncs.com/graphscope/maxgraph_standalone_manager:${{ github.sha }} || true
+        export JAVA_HOME=/usr/lib/jvm/default-java/
+        HADOOP_SSH_OPTS="-o StrictHostKeyChecking=no" /tmp/hadoop-2.10.1/sbin/stop-dfs.sh || true
+        rm -rf /tmp/hadoop* || true
+        sudo docker rmi -f registry.cn-hongkong.aliyuncs.com/graphscope/graphscope:${{ github.sha }} || true
         helm uninstall graphscope || true
         kubectl delete pod graphscope-test-rpc-service --wait=false || true
 
@@ -519,9 +547,6 @@ jobs:
         echo "source ~/.cargo/env" >> ~/.bashrc
         source ~/.bashrc
         rustup component add rustfmt
-        sudo yum update -y
-        sudo yum install -y xz
-        sudo ln -s /bin/true /bin/apt-get
 
     - uses: actions/checkout@v2.3.2
 
@@ -538,7 +563,6 @@ jobs:
         cd ${GITHUB_WORKSPACE}
         mv interactive_engine/distribution/target/maxgraph.tar.gz ./
         tar -zcf lib.tar.gz /opt/graphscope
-        tar -zcf giectl.tar.gz interactive_engine/bin interactive_engine/conf
 
     - name: gremlin-test
       run: |
@@ -553,7 +577,6 @@ jobs:
         path: |
           maxgraph.tar.gz
           lib.tar.gz
-          giectl.tar.gz
         retention-days: 5
 
   gss-test:
@@ -588,7 +611,6 @@ jobs:
         pushd artifacts
         tar -zxf ./gss-${{ github.sha }}/lib.tar.gz
         tar -zxf ./gss-${{ github.sha }}/maxgraph.tar.gz
-        tar -zxf ./gss-${{ github.sha }}/giectl.tar.gz
 
         sudo docker pull registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-runtime:latest
         sudo docker build -t registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-store:${{ github.sha }} \
@@ -637,7 +659,17 @@ jobs:
         hadoop fs -put ${GS_TEST_DIR}/ldbc_sample/person_knows_person_0_0.csv /ldbc_sample/person_knows_person_0_0.csv
 
         cd ${GITHUB_WORKSPACE}/python
-        python3 -m pytest -s -vvv tests/kubernetes/test_store_service.py
+        python3 -m pytest -s -vvv tests/kubernetes/test_store_service.py -k test_demo_fresh
+
+        # helm restart ci release and run demo with the PersistentVolume
+        # FIXME(@haixia): restart seems not work.
+        # helm uninstall ci
+        # cd ${GITHUB_WORKSPACE}/charts
+        # helm install ci --set image.tag=${{ github.sha }},executor=${{ matrix.executor }} \
+        #                               ./graphscope-store
+        # helm test ci --timeout 5m0s
+        # cd ${GITHUB_WORKSPACE}/python
+        # python3 -m pytest -s -vvv tests/kubernetes/test_store_service.py -k test_demo_after_restart
 
     - name: Clean
       if: always()

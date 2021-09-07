@@ -32,6 +32,8 @@ import signal
 import string
 import sys
 import threading
+import time
+import traceback
 import urllib.parse
 import urllib.request
 from concurrent import futures
@@ -39,14 +41,16 @@ from concurrent import futures
 import grpc
 from packaging import version
 
-from gscoordinator.io_utils import StdoutWrapper
+from gscoordinator.io_utils import StdStreamWrapper
 
 # capture system stdout
-sys.stdout = StdoutWrapper(sys.stdout)
+sys.stdout = StdStreamWrapper(sys.stdout)
+sys.stderr = StdStreamWrapper(sys.stderr)
 
 from graphscope.framework import utils
 from graphscope.framework.dag_utils import create_graph
 from graphscope.framework.dag_utils import create_loader
+from graphscope.framework.errors import AnalyticalEngineInternalError
 from graphscope.framework.graph_utils import normalize_parameter_edges
 from graphscope.framework.graph_utils import normalize_parameter_vertices
 from graphscope.framework.loader import Loader
@@ -129,6 +133,7 @@ class CoordinatorServiceServicer(
             self._launcher._analytical_engine_endpoint = GS_DEBUG_ENDPOINT
         else:
             if not self._launcher.start():
+                logger.error("Launching analytical engine failed")
                 raise RuntimeError("Coordinator Launching failed.")
 
         self._launcher_type = self._launcher.type()
@@ -186,21 +191,24 @@ class CoordinatorServiceServicer(
 
         stdout_handler = logging.StreamHandler(sys.stdout)
         stdout_handler.setLevel(log_level)
+        stdout_handler.addFilter(lambda record: record.levelno <= logging.INFO)
+        stderr_handler = logging.StreamHandler(sys.stderr)
+        stderr_handler.setLevel(logging.WARNING)
 
         formatter = logging.Formatter(
             "%(asctime)s [%(levelname)s][%(module)s:%(lineno)d]: %(message)s"
         )
         stdout_handler.setFormatter(formatter)
+        stderr_handler.setFormatter(formatter)
 
         logger.addHandler(stdout_handler)
+        logger.addHandler(stderr_handler)
 
     def ConnectSession(self, request, context):
         # A session is already connected.
         if self._request:
             if getattr(request, "reconnect", False):
-                self._make_response(
-                    message_pb2.ConnectSessionResponse,
-                    code=error_codes_pb2.OK,
+                return message_pb2.ConnectSessionResponse(
                     session_id=self._session_id,
                     cluster_type=self._launcher.type(),
                     num_workers=self._launcher.num_workers,
@@ -209,16 +217,24 @@ class CoordinatorServiceServicer(
                     namespace=self._k8s_namespace,
                 )
             else:
-                return self._make_response(
-                    message_pb2.ConnectSessionResponse,
-                    code=error_codes_pb2.CONNECTION_ERROR,
-                    error_msg="Cannot setup more than one connection at the same time.",
+                context.set_code(grpc.StatusCode.ALREADY_EXISTS)
+                context.set_details(
+                    "Cannot setup more than one connection at the same time."
                 )
-
+                return message_pb2.ConnectSessionResponse()
         # Connect to serving coordinator.
         self._request = request
-        self._analytical_engine_config = self._get_engine_config()
-
+        try:
+            self._analytical_engine_config = self._get_engine_config()
+        except grpc.RpcError as e:
+            logger.error(
+                "Get engine config failed, code: %s, details: %s",
+                e.code().name,
+                e.details(),
+            )
+            context.set_code(e.code())
+            context.set_details(e.details())
+            return message_pb2.ConnectSessionResponse()
         # Generate session id
         self._session_id = self._generate_session_id()
         self._key_to_op = dict()
@@ -244,9 +260,7 @@ class CoordinatorServiceServicer(
                 __version__,
             )
 
-        return self._make_response(
-            message_pb2.ConnectSessionResponse,
-            code=error_codes_pb2.OK,
+        return message_pb2.ConnectSessionResponse(
             session_id=self._session_id,
             cluster_type=self._launcher.type(),
             num_workers=self._launcher.num_workers,
@@ -273,60 +287,45 @@ class CoordinatorServiceServicer(
 
         # analytical engine
         request = message_pb2.HeartBeatRequest()
+
         try:
             self._analytical_engine_stub.HeartBeat(request)
-        except Exception as e:
-            return self._make_response(
-                message_pb2.HeartBeatResponse,
-                error_codes_pb2.CONNECTION_ERROR,
-                "connect analytical engine failed: {}".format(str(e)),
+        except grpc.RpcError as e:
+            err_msg = f"code: {e.code().name}, details: {e.details()}"
+            if e.code() == grpc.StatusCode.UNAVAILABLE:
+                err_msg = f"Connect to analytical engine failed, engine may not started or closed. {err_msg}"
+                logger.warning(err_msg)
+                context.set_code(grpc.StatusCode.DEADLINE_EXCEEDED)
+                context.set_details(err_msg)
+            else:
+                err_msg = f"Connect to analytical engine failed with unknown exception. {err_msg}"
+                context.set_code(grpc.StatusCode.UNKNOWN)
+                context.set_details(err_msg)
+        except Exception:
+            context.set_code(grpc.StatusCode.UNKNOWN)
+            context.set_details(
+                f"Connect analytical engine failed with unknown exception, {traceback.format_exc()}"
             )
-        else:
-            return self._make_response(
-                message_pb2.HeartBeatResponse, error_codes_pb2.OK
-            )
+
+        return message_pb2.HeartBeatResponse()
 
     def run_on_analytical_engine(  # noqa: C901
         self, session_id, dag_def: op_def_pb2.DagDef, op_results: list
     ):
         for op in dag_def.op:
             self._key_to_op[op.key] = op
-            try:
-                op_pre_process(
-                    op,
-                    self._op_result_pool,
-                    self._key_to_op,
-                    engine_hosts=self._engine_hosts,
-                    engine_config=self._get_engine_config(),
-                )
-            except Exception as e:
-                error_msg = (
-                    "Failed to pre process op {0} with error message {1}".format(
-                        op, str(e)
-                    )
-                )
-                logger.error(error_msg)
-                return self._make_response(
-                    message_pb2.RunStepResponse,
-                    error_codes_pb2.COORDINATOR_INTERNAL_ERROR,
-                    error_msg,
-                    full_exception=pickle.dumps(e),
-                    results=op_results,
-                )
+            op_pre_process(
+                op,
+                self._op_result_pool,
+                self._key_to_op,
+                engine_hosts=self._engine_hosts,
+                engine_config=self._analytical_engine_config,
+            )
 
             # Compile app or not.
             if op.op == types_pb2.BIND_APP:
-                try:
-                    op, app_sig, app_lib_path = self._maybe_compile_app(op)
-                except Exception as e:
-                    error_msg = "Failed to compile app: {0}".format(str(e))
-                    logger.error(error_msg)
-                    return self._make_response(
-                        message_pb2.RunStepResponse,
-                        error_codes_pb2.COMPILATION_ERROR,
-                        error_msg,
-                        results=op_results,
-                    )
+                op, app_sig, app_lib_path = self._maybe_compile_app(op)
+
             # Compile graph or not
             # arrow property graph and project graph need to compile
             # If engine crashed, we will get a SocketClosed grpc Exception.
@@ -341,31 +340,7 @@ class CoordinatorServiceServicer(
                 or op.op == types_pb2.PROJECT_TO_SIMPLE
                 or op.op == types_pb2.ADD_LABELS
             ):
-                try:
-                    op = self._maybe_register_graph(op, session_id)
-                except grpc.RpcError as e:
-                    logger.error("self._launcher.poll() = %s", self._launcher.poll())
-                    if self._launcher.poll() is not None:
-                        message = (
-                            "Analytical engine exited with %s" % self._launcher.poll()
-                        )
-                    else:
-                        message = str(e)
-                    return self._make_response(
-                        message_pb2.RunStepResponse,
-                        error_codes_pb2.COMPILATION_ERROR,
-                        message,
-                        results=op_results,
-                    )
-                except Exception as e:
-                    error_msg = "Graph compile error: {}".format(str(e))
-                    logger.error(error_msg)
-                    return self._make_response(
-                        message_pb2.RunStepResponse,
-                        error_codes_pb2.COMPILATION_ERROR,
-                        error_msg,
-                        results=op_results,
-                    )
+                op = self._maybe_register_graph(op, session_id)
 
         request = message_pb2.RunStepRequest(
             session_id=self._session_id, dag_def=dag_def
@@ -373,27 +348,21 @@ class CoordinatorServiceServicer(
         try:
             response = self._analytical_engine_stub.RunStep(request)
         except grpc.RpcError as e:
-            logger.error("self._launcher.poll() = %s", self._launcher.poll())
-            if self._launcher.poll() is not None:
-                message = "Analytical engine exited with %s" % self._launcher.poll()
+            logger.error(
+                "Engine RunStep failed, code: %s, details: %s",
+                e.code().name,
+                e.details(),
+            )
+            if e.code() == grpc.StatusCode.INTERNAL:
+                # TODO: make the stacktrace seperated from normal error messages
+                # Too verbose.
+                if len(e.details()) > 3072:  # 3k bytes
+                    msg = f"{e.details()[:3072]} ... [truncated]"
+                else:
+                    msg = e.details()
+                raise AnalyticalEngineInternalError(msg)
             else:
-                message = str(e)
-            # op_results.extend(response.results)
-            return self._make_response(
-                message_pb2.RunStepResponse,
-                error_codes_pb2.FATAL_ERROR,
-                message,
-                results=op_results,
-            )
-        except Exception as e:
-            # op_results.extend(response.results)
-            return self._make_response(
-                message_pb2.RunStepResponse,
-                error_codes_pb2.UNKNOWN,
-                str(e),
-                results=op_results,
-            )
-
+                raise
         op_results.extend(response.results)
         for r in response.results:
             op = self._key_to_op[r.key]
@@ -404,75 +373,57 @@ class CoordinatorServiceServicer(
             ):
                 self._op_result_pool[r.key] = r
 
-        if response.status.code == error_codes_pb2.OK:
-            for op_result in response.results:
-                key = op_result.key
-                op = self._key_to_op[key]
-                if op.op in (
-                    types_pb2.CREATE_GRAPH,
-                    types_pb2.PROJECT_GRAPH,
-                    types_pb2.ADD_LABELS,
-                    types_pb2.ADD_COLUMN,
-                ):
-                    schema_path = os.path.join(
-                        "/tmp", op_result.graph_def.key + ".json"
-                    )
-                    vy_info = graph_def_pb2.VineyardInfoPb()
-                    op_result.graph_def.extension.Unpack(vy_info)
-                    self._object_manager.put(
+        for op_result in response.results:
+            key = op_result.key
+            op = self._key_to_op[key]
+            if op.op in (
+                types_pb2.CREATE_GRAPH,
+                types_pb2.PROJECT_GRAPH,
+                types_pb2.ADD_LABELS,
+                types_pb2.ADD_COLUMN,
+            ):
+                schema_path = os.path.join("/tmp", op_result.graph_def.key + ".json")
+                vy_info = graph_def_pb2.VineyardInfoPb()
+                op_result.graph_def.extension.Unpack(vy_info)
+                self._object_manager.put(
+                    op_result.graph_def.key,
+                    GraphMeta(
                         op_result.graph_def.key,
-                        GraphMeta(
-                            op_result.graph_def.key,
-                            vy_info.vineyard_id,
-                            op_result.graph_def,
-                            schema_path,
-                        ),
+                        vy_info.vineyard_id,
+                        op_result.graph_def,
+                        schema_path,
+                    ),
+                )
+                if op_result.graph_def.graph_type == graph_def_pb2.ARROW_PROPERTY:
+                    dump_string(
+                        to_maxgraph_schema(vy_info.property_schema_json),
+                        schema_path,
                     )
-                    if op_result.graph_def.graph_type == graph_def_pb2.ARROW_PROPERTY:
-                        dump_string(
-                            to_maxgraph_schema(vy_info.property_schema_json),
-                            schema_path,
-                        )
-                        vy_info.schema_path = schema_path
-                        op_result.graph_def.extension.Pack(vy_info)
-                elif op.op == types_pb2.BIND_APP:
-                    self._object_manager.put(
-                        app_sig,
-                        LibMeta(op_result.result.decode("utf-8"), "app", app_lib_path),
-                    )
-                elif op.op == types_pb2.UNLOAD_GRAPH:
-                    self._object_manager.pop(op.attr[types_pb2.GRAPH_NAME].s.decode())
-                elif op.op == types_pb2.UNLOAD_APP:
-                    self._object_manager.pop(op.attr[types_pb2.APP_NAME].s.decode())
-        return response
+                    vy_info.schema_path = schema_path
+                    op_result.graph_def.extension.Pack(vy_info)
+            elif op.op == types_pb2.BIND_APP:
+                self._object_manager.put(
+                    app_sig,
+                    LibMeta(op_result.result.decode("utf-8"), "app", app_lib_path),
+                )
+            elif op.op == types_pb2.UNLOAD_GRAPH:
+                self._object_manager.pop(op.attr[types_pb2.GRAPH_NAME].s.decode())
+            elif op.op == types_pb2.UNLOAD_APP:
+                self._object_manager.pop(op.attr[types_pb2.APP_NAME].s.decode())
+        return response.results
 
     def run_on_interactive_engine(
         self, session_id, dag_def: op_def_pb2.DagDef, op_results: list
     ):
         for op in dag_def.op:
             self._key_to_op[op.key] = op
-            try:
-                op_pre_process(
-                    op,
-                    self._op_result_pool,
-                    self._key_to_op,
-                    engine_hosts=self._engine_hosts,
-                    engine_config=self._get_engine_config(),
-                )
-            except Exception as e:
-                error_msg = (
-                    "Failed to pre process op {0} with error message {1}".format(
-                        op, str(e)
-                    )
-                )
-                logger.error(error_msg)
-                return self._make_response(
-                    message_pb2.RunStepResponse,
-                    error_codes_pb2.COORDINATOR_INTERNAL_ERROR,
-                    error_msg,
-                    full_exception=pickle.dumps(e),
-                    results=op_results,
-                )
+            op_pre_process(
+                op,
+                self._op_result_pool,
+                self._key_to_op,
+                engine_hosts=self._engine_hosts,
+                engine_config=self._analytical_engine_config,
+            )
             if op.op == types_pb2.CREATE_INTERACTIVE_QUERY:
                 op_result = self._create_interactive_instance(op)
             elif op.op == types_pb2.GREMLIN_QUERY:
@@ -484,22 +435,62 @@ class CoordinatorServiceServicer(
             elif op.op == types_pb2.SUBGRAPH:
                 op_result = self._gremlin_to_subgraph(op)
             else:
-                logger.error("Unsupport op type: %s", str(op.op))
+                raise RuntimeError("Unsupport op type: " + str(op.op))
             op_results.append(op_result)
-            if op_result.code == error_codes_pb2.OK:
-                # don't record the results of these ops to avoid
-                # taking up too much memory in coordinator
-                if op.op not in [types_pb2.FETCH_GREMLIN_RESULT]:
-                    self._op_result_pool[op.key] = op_result
+            # don't record the results of these ops to avoid
+            # taking up too much memory in coordinator
+            if op.op not in [types_pb2.FETCH_GREMLIN_RESULT]:
+                self._op_result_pool[op.key] = op_result
+        return op_results
+
+    def run_on_learning_engine(
+        self, session_id, dag_def: op_def_pb2.DagDef, op_results: list
+    ):
+        for op in dag_def.op:
+            self._key_to_op[op.key] = op
+            op_pre_process(
+                op,
+                self._op_result_pool,
+                self._key_to_op,
+                engine_hosts=self._engine_hosts,
+                engine_config=self._analytical_engine_config,
+            )
+            if op.op == types_pb2.CREATE_LEARNING_INSTANCE:
+                op_result = self._create_learning_instance(op)
+            elif op.op == types_pb2.CLOSE_LEARNING_INSTANCE:
+                op_result = self._close_learning_instance(op)
             else:
-                return self._make_response(
-                    message_pb2.RunStepResponse,
-                    error_codes_pb2.INTERACTIVE_ENGINE_INTERNAL_ERROR,
-                    error_msg=op_result.error_msg,
-                    results=op_results,
-                )
-        return self._make_response(
-            message_pb2.RunStepResponse, error_codes_pb2.OK, results=op_results
+                raise RuntimeError("Unsupport op type: " + str(op.op))
+            op_results.append(op_result)
+            self._op_result_pool[op.key] = op_result
+        return op_results
+
+    def run_on_coordinator(
+        self, session_id, dag_def: op_def_pb2.DagDef, op_results: list
+    ):
+        for op in dag_def.op:
+            self._key_to_op[op.key] = op
+            op_pre_process(
+                op,
+                self._op_result_pool,
+                self._key_to_op,
+                engine_hosts=self._engine_hosts,
+                engine_config=self._analytical_engine_config,
+            )
+            if op.op == types_pb2.DATA_SOURCE:
+                op_result = self._process_data_source(op)
+            elif op.op == types_pb2.OUTPUT:
+                op_result = self._output(op)
+            else:
+                raise RuntimeError("Unsupport op type: " + str(op.op))
+            op_results.append(op_result)
+            self._op_result_pool[op.key] = op_result
+        return op_results
+
+    @staticmethod
+    def _make_response(code, msg, full_exc=b""):
+        return message_pb2.RunStepResponse(
+            code=code, error_msg=msg, full_exception=full_exc
         )
 
     def RunStep(self, request, context):
@@ -509,106 +500,31 @@ class CoordinatorServiceServicer(
         while not dag_manager.empty():
             next_dag = dag_manager.get_next_dag()
             run_dag_on, dag_def = next_dag
-            if run_dag_on == GSEngine.analytical_engine:
-                ret = self.run_on_analytical_engine(
-                    request.session_id, dag_def, op_results
-                )
-            if run_dag_on == GSEngine.interactive_engine:
-                ret = self.run_on_interactive_engine(
-                    request.session_id, dag_def, op_results
-                )
-
-            if run_dag_on == GSEngine.learning_engine:
-                ret = self.run_on_learning_engine(
-                    request.session_id, dag_def, op_results
-                )
-            if run_dag_on == GSEngine.coordinator:
-                ret = self.run_on_coordinator(request.session_id, dag_def, op_results)
-            if ret.status.code != error_codes_pb2.OK:
-                return ret
-        return self._make_response(
-            message_pb2.RunStepResponse, error_codes_pb2.OK, results=op_results
-        )
-
-    def run_on_learning_engine(
-        self, session_id, dag_def: op_def_pb2.DagDef, op_results: list
-    ):
-        for op in dag_def.op:
-            self._key_to_op[op.key] = op
             try:
-                op_pre_process(
-                    op,
-                    self._op_result_pool,
-                    self._key_to_op,
-                    engine_hosts=self._engine_hosts,
-                    engine_config=self._get_engine_config(),
-                )
-            except Exception as e:
-                error_msg = (
-                    "Failed to pre process op {0} with error message {1}".format(
-                        op, str(e)
+                if run_dag_on == GSEngine.analytical_engine:
+                    self.run_on_analytical_engine(
+                        request.session_id, dag_def, op_results
                     )
-                )
-                logger.error(error_msg)
-                return self._make_response(
-                    message_pb2.RunStepResponse,
-                    error_codes_pb2.COORDINATOR_INTERNAL_ERROR,
-                    error_msg,
-                    full_exception=pickle.dumps(e),
-                    results=op_results,
-                )
-            if op.op == types_pb2.CREATE_LEARNING_INSTANCE:
-                op_result = self._create_learning_instance(op)
-            elif op.op == types_pb2.CLOSE_LEARNING_INSTANCE:
-                op_result = self._close_learning_instance(op)
-            else:
-                logger.error("Unsupport op type: %s", str(op.op))
-            op_results.append(op_result)
-            if op_result.code == error_codes_pb2.OK:
-                self._op_result_pool[op.key] = op_result
-        return self._make_response(
-            message_pb2.RunStepResponse, error_codes_pb2.OK, results=op_results
-        )
-
-    def run_on_coordinator(
-        self, session_id, dag_def: op_def_pb2.DagDef, op_results: list
-    ):
-        for op in dag_def.op:
-            self._key_to_op[op.key] = op
-            try:
-                op_pre_process(
-                    op,
-                    self._op_result_pool,
-                    self._key_to_op,
-                    engine_hosts=self._engine_hosts,
-                    engine_config=self._get_engine_config(),
-                )
-            except Exception as e:
-                error_msg = (
-                    "Failed to pre process op {0} with error message {1}".format(
-                        op, str(e)
+                elif run_dag_on == GSEngine.interactive_engine:
+                    self.run_on_interactive_engine(
+                        request.session_id, dag_def, op_results
                     )
-                )
-                logger.error(error_msg)
+                elif run_dag_on == GSEngine.learning_engine:
+                    self.run_on_learning_engine(request.session_id, dag_def, op_results)
+                elif run_dag_on == GSEngine.coordinator:
+                    self.run_on_coordinator(request.session_id, dag_def, op_results)
+            except grpc.RpcError as exc:
+                # Not raised by graphscope, maybe socket closed, etc
+                context.set_code(exc.code())
+                context.set_details(exc.details())
+                return message_pb2.RunStepResponse()
+            except Exception as exc:
                 return self._make_response(
-                    message_pb2.RunStepResponse,
-                    error_codes_pb2.COORDINATOR_INTERNAL_ERROR,
-                    error_msg,
-                    full_exception=pickle.dumps(e),
-                    results=op_results,
+                    error_codes_pb2.ANALYTICAL_ENGINE_INTERNAL_ERROR,
+                    "Error occurred during preprocessing: " + traceback.format_exc(),
+                    pickle.dumps(exc),
                 )
-            if op.op == types_pb2.DATA_SOURCE:
-                op_result = self._process_data_source(op)
-            elif op.op == types_pb2.OUTPUT:
-                op_result = self._output(op)
-            else:
-                logger.error("Unsupport op type: %s", str(op.op))
-            op_results.append(op_result)
-            if op_result.code == error_codes_pb2.OK:
-                self._op_result_pool[op.key] = op_result
-        return self._make_response(
-            message_pb2.RunStepResponse, error_codes_pb2.OK, results=op_results
-        )
+        return message_pb2.RunStepResponse(results=op_results)
 
     def _maybe_compile_app(self, op):
         app_sig = get_app_sha256(op.attr)
@@ -619,7 +535,9 @@ class CoordinatorServiceServicer(
         if not os.path.isfile(app_lib_path):
             compiled_path = self._compile_lib_and_distribute(compile_app, app_sig, op)
             if app_lib_path != compiled_path:
-                raise RuntimeError("Computed path not equal to compiled path.")
+                raise RuntimeError(
+                    f"Computed application library path not equal to compiled path, {app_lib_path} versus {compiled_path}"
+                )
 
         op.attr[types_pb2.APP_LIBRARY_PATH].CopyFrom(
             attr_value_pb2.AttrValue(s=app_lib_path.encode("utf-8"))
@@ -635,7 +553,9 @@ class CoordinatorServiceServicer(
                 compile_graph_frame, graph_sig, op
             )
             if graph_lib_path != compiled_path:
-                raise RuntimeError("Computed path not equal to compiled path.")
+                raise RuntimeError(
+                    f"Computed graph library path not equal to compiled path, {graph_lib_path} versus {compiled_path}"
+                )
         if graph_sig not in self._object_manager:
             # register graph
             op_def = op_def_pb2.OpDef(op=types_pb2.REGISTER_GRAPH_TYPE)
@@ -655,19 +575,28 @@ class CoordinatorServiceServicer(
             register_request = message_pb2.RunStepRequest(
                 session_id=session_id, dag_def=dag_def
             )
-            register_response = self._analytical_engine_stub.RunStep(register_request)
-
-            if register_response.status.code == error_codes_pb2.OK:
-                self._object_manager.put(
-                    graph_sig,
-                    LibMeta(
-                        register_response.results[0].result,
-                        "graph_frame",
-                        graph_lib_path,
-                    ),
+            try:
+                register_response = self._analytical_engine_stub.RunStep(
+                    register_request
                 )
-            else:
-                raise RuntimeError("Error occur when register graph")
+            except grpc.RpcError as e:
+                logger.error(
+                    "Register graph failed, code: %s, details: %s",
+                    e.code().name,
+                    e.details(),
+                )
+                if e.code() == grpc.StatusCode.INTERNAL:
+                    raise AnalyticalEngineInternalError(e.details())
+                else:
+                    raise
+            self._object_manager.put(
+                graph_sig,
+                LibMeta(
+                    register_response.results[0].result,
+                    "graph_frame",
+                    graph_lib_path,
+                ),
+            )
         op.attr[types_pb2.TYPE_SIGNATURE].CopyFrom(
             attr_value_pb2.AttrValue(s=graph_sig.encode("utf-8"))
         )
@@ -686,11 +615,8 @@ class CoordinatorServiceServicer(
 
             if info_message or error_message:
                 if self._streaming_logs:
-                    yield self._make_response(
-                        message_pb2.FetchLogsResponse,
-                        error_codes_pb2.OK,
-                        info_message=info_message,
-                        error_message=error_message,
+                    yield message_pb2.FetchLogsResponse(
+                        info_message=info_message, error_message=error_message
                     )
 
     def CloseSession(self, request, context):
@@ -698,10 +624,9 @@ class CoordinatorServiceServicer(
         Disconnect session, note that it doesn't clean up any resources.
         """
         if request.session_id != self._session_id:
-            return self._make_response(
-                message_pb2.CloseSessionResponse,
-                error_codes_pb2.INVALID_ARGUMENT_ERROR,
-                "Session handle does not match",
+            context.set_code(grpc.StatusCode.INVALID_ARGUMENT)
+            context.set_details(
+                f"Session handle not matched, {request.session_id} versus {self._session_id}"
             )
 
         self._cleanup(
@@ -712,8 +637,7 @@ class CoordinatorServiceServicer(
         # Session closed, stop streaming logs
         sys.stdout.drop(True)
         self._streaming_logs = False
-
-        return self._make_response(message_pb2.CloseSessionResponse, error_codes_pb2.OK)
+        return message_pb2.CloseSessionResponse()
 
     def _create_interactive_instance(self, op: op_def_pb2.OpDef):
         def _match_frontend_endpoint(pattern, lines):
@@ -795,16 +719,12 @@ class CoordinatorServiceServicer(
                 )
             else:
                 raise RuntimeError(
-                    "error code: {0}, message {1}".format(return_code, outs)
+                    "Error code: {0}, message {1}".format(return_code, outs)
                 )
         except Exception as e:
             proc.kill()
             self._launcher.close_interactive_instance(object_id)
-            return op_def_pb2.OpResult(
-                code=error_codes_pb2.INTERACTIVE_ENGINE_INTERNAL_ERROR,
-                key=op.key,
-                error_msg="Create interactive instance failed: {0}".format(str(e)),
-            )
+            raise RuntimeError("Create interactive instance failed.") from e
 
     def _execute_gremlin_query(self, op: op_def_pb2.OpDef):
         message = op.attr[types_pb2.GIE_GREMLIN_QUERY_MESSAGE].s.decode()
@@ -822,19 +742,9 @@ class CoordinatorServiceServicer(
                 message, request_options=request_options, query_gaia=query_gaia
             )
         except Exception as e:
-            error_message = "Gremlin query failed with error message {0}".format(str(e))
-            logger.error(error_message)
-            return op_def_pb2.OpResult(
-                code=error_codes_pb2.GREMLIN_QUERY_ERROR,
-                key=op.key,
-                error_msg=error_message,
-            )
-        else:
-            self._object_manager.put(op.key, GremlinResultSet(op.key, rlt))
-            return op_def_pb2.OpResult(
-                code=error_codes_pb2.OK,
-                key=op.key,
-            )
+            raise RuntimeError("Gremlin query failed.") from e
+        self._object_manager.put(op.key, GremlinResultSet(op.key, rlt))
+        return op_def_pb2.OpResult(code=error_codes_pb2.OK, key=op.key)
 
     def _fetch_gremlin_result(self, op: op_def_pb2.OpDef):
         fetch_result_type = op.attr[types_pb2.GIE_GREMLIN_FETCH_RESULT_TYPE].s.decode()
@@ -846,19 +756,11 @@ class CoordinatorServiceServicer(
             elif fetch_result_type == "all":
                 rlt = result_set.all().result()
         except Exception as e:
-            error_message = "Fetch gremlin result failed with error message {0}".format(
-                e
-            )
-            logger.error(error_message)
-            return op_def_pb2.OpResult(
-                code=error_codes_pb2.GREMLIN_QUERY_ERROR,
-                key=op.key,
-                error_msg=error_message,
-            )
-        else:
-            return op_def_pb2.OpResult(
-                code=error_codes_pb2.OK, key=op.key, result=pickle.dumps(rlt)
-            )
+            raise RuntimeError("Fetch gremlin result failed") from e
+
+        return op_def_pb2.OpResult(
+            code=error_codes_pb2.OK, key=op.key, result=pickle.dumps(rlt)
+        )
 
     def _output(self, op: op_def_pb2.OpDef):
         import vineyard
@@ -867,7 +769,7 @@ class CoordinatorServiceServicer(
         storage_options = json.loads(op.attr[types_pb2.STORAGE_OPTIONS].s.decode())
         fd = op.attr[types_pb2.FD].s.decode()
         df = op.attr[types_pb2.VINEYARD_ID].s.decode()
-        engine_config = self._get_engine_config()
+        engine_config = self._analytical_engine_config
         vineyard_endpoint = engine_config["vineyard_rpc_endpoint"]
         vineyard_ipc_socket = engine_config["vineyard_socket"]
         deployment, hosts = self._launcher.get_vineyard_stream_info()
@@ -896,7 +798,7 @@ class CoordinatorServiceServicer(
             import vineyard
             import vineyard.io
 
-            engine_config = self._get_engine_config()
+            engine_config = self._analytical_engine_config
             vineyard_endpoint = engine_config["vineyard_rpc_endpoint"]
             vineyard_ipc_socket = engine_config["vineyard_socket"]
             deployment, hosts = self._launcher.get_vineyard_stream_info()
@@ -955,9 +857,9 @@ class CoordinatorServiceServicer(
             proc.wait(timeout=60)
             gremlin_client.closed = True
         except Exception as e:
-            logger.error(
-                "Failed to close interactive instance with %ld: %s", object_id, str(e)
-            )
+            raise RuntimeError(
+                f"Failed to close interactive instance {object_id}"
+            ) from e
         return op_def_pb2.OpResult(
             code=error_codes_pb2.OK,
             key=op.key,
@@ -1006,49 +908,38 @@ class CoordinatorServiceServicer(
             dag = op_def_pb2.DagDef()
             dag.op.extend([new_op_def])
             self.run_on_coordinator(self._session_id, coordinator_dag, [])
-            resp = self.run_on_analytical_engine(self._session_id, dag, [])
+            results = self.run_on_analytical_engine(self._session_id, dag, [])
             logger.info("subgraph has been loaded")
-            return resp.results[-1]
+            return results[-1]
 
         # generate a random graph name
         now_time = datetime.datetime.now().strftime("%Y%m%d%H%M%S")
         random_num = random.randint(0, 10000000)
         graph_name = "%s_%s" % (str(now_time), str(random_num))
 
-        try:
-            # create a graph handle by name
-            gremlin_client.submit(
-                "g.createGraph('{0}').with('graphType', 'vineyard')".format(graph_name),
-                request_options=request_options,
-            ).all().result()
+        # create a graph handle by name
+        gremlin_client.submit(
+            "g.createGraph('{0}').with('graphType', 'vineyard')".format(graph_name),
+            request_options=request_options,
+        ).all().result()
 
-            # start a thread to launch the graph
-            pool = futures.ThreadPoolExecutor()
-            subgraph_task = pool.submit(
-                load_subgraph,
-                oid_type,
-                graph_name,
-            )
+        # start a thread to launch the graph
+        pool = futures.ThreadPoolExecutor()
+        subgraph_task = pool.submit(
+            load_subgraph,
+            oid_type,
+            graph_name,
+        )
 
-            # add subgraph vertices and edges
-            subgraph_script = "{0}.subgraph('{1}').outputVineyard('{2}')".format(
-                gremlin_script, graph_name, graph_name
-            )
-            gremlin_client.submit(
-                subgraph_script, request_options=request_options
-            ).all().result()
+        # add subgraph vertices and edges
+        subgraph_script = "{0}.subgraph('{1}').outputVineyard('{2}')".format(
+            gremlin_script, graph_name, graph_name
+        )
+        gremlin_client.submit(
+            subgraph_script, request_options=request_options
+        ).all().result()
 
-            return subgraph_task.result()
-        except Exception as e:
-            error_message = "Failed to create subgraph from gremlin query with error message: {0}".format(
-                str(e)
-            )
-            logger.error(error_message)
-            return op_def_pb2.OpResult(
-                code=error_codes_pb2.GREMLIN_QUERY_ERROR,
-                key=op.key,
-                error_msg=error_message,
-            )
+        return subgraph_task.result()
 
     def _create_learning_instance(self, op: op_def_pb2.OpDef):
         object_id = op.attr[types_pb2.VINEYARD_ID].i
@@ -1086,26 +977,12 @@ class CoordinatorServiceServicer(
             key=op.key,
         )
 
-    @staticmethod
-    def _make_response(
-        resp_cls, code, error_msg="", op=None, full_exception=None, **kwargs
-    ):
-        resp = resp_cls(
-            status=message_pb2.ResponseStatus(code=code, error_msg=error_msg), **kwargs
-        )
-        if op:
-            resp.status.op.CopyFrom(op)
-        elif full_exception:
-            # bytes
-            resp.status.full_exception = full_exception
-        return resp
-
     def _cleanup(self, cleanup_instance=True, is_dangling=False):
         # clean up session resources.
         for key in self._object_manager.keys():
             obj = self._object_manager.get(key)
             obj_type = obj.type
-            unload_type = None
+            unload_type, config = None, None
 
             if obj_type == "app":
                 unload_type = types_pb2.UNLOAD_APP
@@ -1148,7 +1025,14 @@ class CoordinatorServiceServicer(
                 request = message_pb2.RunStepRequest(
                     session_id=self._session_id, dag_def=dag_def
                 )
-                self._analytical_engine_stub.RunStep(request)
+                try:
+                    self._analytical_engine_stub.RunStep(request)
+                except grpc.RpcError as e:
+                    logger.error(
+                        "Cleanup failed, code: %s, details: %s",
+                        e.code().name,
+                        e.details(),
+                    )
 
         self._object_manager.clear()
 
@@ -1170,6 +1054,7 @@ class CoordinatorServiceServicer(
         options = [
             ("grpc.max_send_message_length", GS_GRPC_MAX_MESSAGE_LENGTH),
             ("grpc.max_receive_message_length", GS_GRPC_MAX_MESSAGE_LENGTH),
+            ("grpc.max_metadata_size", GS_GRPC_MAX_MESSAGE_LENGTH),
         ]
 
         channel = grpc.insecure_channel(
@@ -1178,22 +1063,27 @@ class CoordinatorServiceServicer(
         return engine_service_pb2_grpc.EngineServiceStub(channel)
 
     def _get_engine_config(self):
-        op_def = op_def_pb2.OpDef(op=types_pb2.GET_ENGINE_CONFIG)
-        dag_def = op_def_pb2.DagDef()
-        dag_def.op.extend([op_def])
-        fetch_request = message_pb2.RunStepRequest(
+        dag_def = create_single_op_dag(types_pb2.GET_ENGINE_CONFIG)
+        request = message_pb2.RunStepRequest(
             session_id=self._session_id, dag_def=dag_def
         )
-        fetch_response = self._analytical_engine_stub.RunStep(fetch_request)
-
-        config = json.loads(fetch_response.results[0].result.decode("utf-8"))
+        try:
+            response = self._analytical_engine_stub.RunStep(request)
+        except grpc.RpcError as e:
+            logger.error(
+                "Get engine config failed, code: %s, details: %s",
+                e.code().name,
+                e.details(),
+            )
+            if e.code() == grpc.StatusCode.INTERNAL:
+                raise AnalyticalEngineInternalError(e.details())
+            else:
+                raise
+        config = json.loads(response.results[0].result.decode("utf-8"))
         config.update(self._launcher.get_engine_config())
         return config
 
     def _compile_lib_and_distribute(self, compile_func, lib_name, op):
-        if self._analytical_engine_config is None:
-            # fetch NETWORKX compile option from engine
-            self._analytical_engine_config = self._get_engine_config()
         space = self._builtin_workspace
         if types_pb2.GAR in op.attr:
             space = self._udf_app_workspace
@@ -1213,7 +1103,7 @@ def parse_sys_args():
         "--num_workers",
         type=int,
         default=4,
-        help="The number of engine workers.",
+        help="The number of graphscope engine workers.",
     )
     parser.add_argument(
         "--preemptive",
@@ -1238,63 +1128,61 @@ def parse_sys_args():
         "--log_level",
         type=str,
         default="info",
-        help="Log level, info or debug.",
+        help="Log level, choose from 'info' or 'debug'.",
     )
     parser.add_argument(
         "--hosts",
         type=str,
         default="localhost",
-        help="A list of hostname, comma separated.",
+        help="list of comma seperated hostnames of graphscope engine workers.",
     )
     parser.add_argument(
         "--vineyard_socket",
         type=str,
         default=None,
-        help="Socket path to connect to vineyard, random socket will be created if param missing.",
+        help="Vineyard IPC socket path, a socket suffixed by timestamp will be created in '/tmp' if not given.",
     )
     parser.add_argument(
         "--cluster_type",
         type=str,
         default="k8s",
-        help="Deploy graphscope components on local or kubernetes cluster.",
+        help="Cluster type of deploying, choose from 'k8s' or 'local'.",
     )
     parser.add_argument(
         "--k8s_namespace",
         type=str,
         default="graphscope",
-        help="Contains the namespace to create all resource inside, namespace must be exist.",
+        help="The namespace to create all resource, which must exist in advance.",
     )
     parser.add_argument(
         "--k8s_service_type",
         type=str,
         default="NodePort",
-        help="Valid options are NodePort, and LoadBalancer.",
+        help="Service type, choose from 'NodePort' or 'LoadBalancer'.",
     )
     parser.add_argument(
         "--k8s_gs_image",
         type=str,
-        default="registry.cn-hongkong.aliyuncs.com/graphscope/graphscope:{}".format(
-            __version__
-        ),
+        default=f"registry.cn-hongkong.aliyuncs.com/graphscope/graphscope:{__version__}",
         help="Docker image of graphscope engines.",
     )
     parser.add_argument(
         "--k8s_coordinator_name",
         type=str,
         default="",
-        help="Coordinator name in graphscope instance.",
+        help="Coordinator name of graphscope instance.",
     )
     parser.add_argument(
         "--k8s_coordinator_service_name",
         type=str,
         default="",
-        help="Coordinator service name in graphscope instance.",
+        help="Coordinator service name of graphscope instance.",
     )
     parser.add_argument(
         "--k8s_etcd_image",
         type=str,
         default="registry.cn-hongkong.aliyuncs.com/graphscope/etcd:v3.4.13",
-        help="Docker image of etcd, used by vineyard.",
+        help="Docker image of etcd, needed by vineyard.",
     )
     parser.add_argument(
         "--k8s_image_pull_policy",
@@ -1306,19 +1194,19 @@ def parse_sys_args():
         "--k8s_image_pull_secrets",
         type=str,
         default="graphscope",
-        help="A list of secret name, comma separated.",
+        help="A list of comma sparated secrets to pull image.",
     )
     parser.add_argument(
         "--k8s_vineyard_daemonset",
         type=str,
         default="",
-        help="Try to use the existing vineyard DaemonSet with name 'k8s_vineyard_daemonset'.",
+        help="Use the existing vineyard DaemonSet with name 'k8s_vineyard_daemonset'.",
     )
     parser.add_argument(
         "--k8s_vineyard_cpu",
         type=float,
         default=1.0,
-        help="Cpu cores of vinayard container.",
+        help="CPU cores of vinayard container.",
     )
     parser.add_argument(
         "--k8s_vineyard_mem",
@@ -1336,7 +1224,7 @@ def parse_sys_args():
         "--k8s_engine_cpu",
         type=float,
         default=1.0,
-        help="Cpu cores of engine container, default: 1.0",
+        help="CPU cores of engine container, default: 1.0",
     )
     parser.add_argument(
         "--k8s_engine_mem",
@@ -1354,7 +1242,7 @@ def parse_sys_args():
         "--k8s_etcd_cpu",
         type=float,
         default=1.0,
-        help="Cpu cores of etcd pod, default: 1.0",
+        help="CPU cores of etcd pod, default: 1.0",
     )
     parser.add_argument(
         "--k8s_etcd_mem",
@@ -1374,43 +1262,43 @@ def parse_sys_args():
         "--k8s_mars_worker_cpu",
         type=float,
         default=0.5,
-        help="Cpu cores of mars worker container, default: 0.5",
+        help="CPU cores of mars worker container, default: 0.5",
     )
     parser.add_argument(
         "--k8s_mars_worker_mem",
         type=str,
         default="4Gi",
-        help="Memory of mars worker container, default: 4Gi",
+        help="Memory of Mars worker container, default: 4Gi",
     )
     parser.add_argument(
         "--k8s_mars_scheduler_cpu",
         type=float,
         default=0.5,
-        help="Cpu cores of mars scheduler container, default: 0.5",
+        help="CPU cores of Mars scheduler container, default: 0.5",
     )
     parser.add_argument(
         "--k8s_mars_scheduler_mem",
         type=str,
         default="2Gi",
-        help="Memory of mars scheduler container, default: 2Gi",
+        help="Memory of Mars scheduler container, default: 2Gi",
     )
     parser.add_argument(
         "--k8s_volumes",
         type=str,
         default="{}",
-        help="A json string for kubernetes volumes.",
+        help="A json string spcifies the kubernetes volumes to mount.",
     )
     parser.add_argument(
         "--timeout_seconds",
         type=int,
         default=600,
-        help="Launch failed after waiting timeout seconds.",
+        help="The length of time to wait before giving up launching graphscope.",
     )
     parser.add_argument(
         "--dangling_timeout_seconds",
         type=int,
         default=600,
-        help="Kill graphscope instance after seconds of client disconnect.",
+        help="The length of time to wait starting from client disconnected before killing the graphscope instance",
     )
     parser.add_argument(
         "--waiting_for_delete",
@@ -1418,7 +1306,7 @@ def parse_sys_args():
         nargs="?",
         const=True,
         default=False,
-        help="Waiting for delete graphscope instance.",
+        help="Wait until the graphscope instance has been deleted successfully",
     )
     parser.add_argument(
         "--k8s_delete_namespace",
@@ -1426,7 +1314,7 @@ def parse_sys_args():
         nargs="?",
         const=True,
         default=False,
-        help="Delete namespace or not.",
+        help="Delete the namespace that created by graphscope.",
     )
     return parser.parse_args()
 
@@ -1493,12 +1381,13 @@ def launch_graphscope():
         options=[
             ("grpc.max_send_message_length", GS_GRPC_MAX_MESSAGE_LENGTH),
             ("grpc.max_receive_message_length", GS_GRPC_MAX_MESSAGE_LENGTH),
+            ("grpc.max_metadata_size", GS_GRPC_MAX_MESSAGE_LENGTH),
         ],
     )
     coordinator_service_pb2_grpc.add_CoordinatorServiceServicer_to_server(
         coordinator_service_servicer, server
     )
-    server.add_insecure_port("0.0.0.0:{}".format(args.port))
+    server.add_insecure_port(f"0.0.0.0:{args.port}")
     logger.info("Coordinator server listen at 0.0.0.0:%d", args.port)
 
     server.start()

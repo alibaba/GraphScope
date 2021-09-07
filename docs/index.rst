@@ -29,6 +29,7 @@ and the vineyard store that offers efficient in-memory data transfers.
    analytics_engine
    interactive_engine
    learning_engine
+   persistent_graph_store
    frequently_asked_questions
    developer_guide
 

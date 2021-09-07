@@ -74,6 +74,8 @@ public class Frontend extends NodeBase {
         MetricsCollector metricsCollector = new MetricsCollector(configs);
         RoleClients<IngestorWriteClient> ingestorWriteClients = new RoleClients<>(this.channelManager,
                 RoleType.INGESTOR, IngestorWriteClient::new);
+        RealtimeWriter realtimeWriter = new RealtimeWriter(this.metaService, snapshotCache, ingestorWriteClients,
+                metricsCollector);
         FrontendSnapshotService frontendSnapshotService = new FrontendSnapshotService(snapshotCache);
         RoleClients<MetricsCollectClient> frontendMetricsCollectClients = new RoleClients<>(this.channelManager,
                 RoleType.FRONTEND, MetricsCollectClient::new);
@@ -86,10 +88,11 @@ public class Frontend extends NodeBase {
         SchemaWriter schemaWriter = new SchemaWriter(new RoleClients<>(this.channelManager,
                 RoleType.COORDINATOR, SchemaClient::new));
         DdlExecutors ddlExecutors = new DdlExecutors();
-        BatchDdlClient batchDdlClient = new BatchDdlClient(ddlExecutors, snapshotCache, schemaWriter);
-        ClientService clientService = new ClientService(snapshotCache, metricsAggregator,
-                storeIngestClients, this.metaService, batchDdlClient);
-        ClientDdlService clientDdlService = new ClientDdlService(snapshotCache, batchDdlClient);
+        MaxGraphWriter writer = new MaxGraphWriterImpl(realtimeWriter, schemaWriter, ddlExecutors,
+                snapshotCache, "schema", false, null);
+        ClientService clientService = new ClientService(realtimeWriter, snapshotCache, metricsAggregator,
+                storeIngestClients, this.metaService, queryStoreClients, writer);
+        ClientDdlService clientDdlService = new ClientDdlService(schemaWriter, snapshotCache, ddlExecutors);
         MetricsCollectService metricsCollectService = new MetricsCollectService(metricsCollector);
         WriteSessionGenerator writeSessionGenerator = new WriteSessionGenerator(configs);
         EdgeIdGenerator edgeIdGenerator = new DefaultEdgeIdGenerator(configs, this.channelManager);

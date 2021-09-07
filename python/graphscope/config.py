@@ -53,10 +53,6 @@ class GSConfig(object):
     k8s_etcd_cpu = 1.0
     k8s_etcd_mem = "512Mi"
 
-    # GIE gremlin server resource configuration
-    k8s_gie_gremlin_server_cpu = 0.5
-    k8s_gie_gremlin_server_mem = "512Mi"
-
     # vineyard resource configuration
     k8s_vineyard_daemonset = "none"
     k8s_vineyard_cpu = 0.2
