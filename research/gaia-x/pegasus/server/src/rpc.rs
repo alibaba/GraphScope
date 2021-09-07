@@ -170,7 +170,7 @@ impl<S: pb::job_service_server::JobService> RpcServer<S> {
             serve.await?;
         } else {
             tokio::spawn(async move {
-                serve.await;
+                serve.await.expect("Rpc server start error");
             });
         }
         Ok(local_addr)
