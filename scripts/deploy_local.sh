@@ -848,7 +848,7 @@ install_deps() {
     case ${arg} in
       --help) install_deps_usage; exit ;;
       --verbose) VERBOSE=true; readonly VERBOSE; ;;
-      --ci)   IS_CI=true; readonly VERBOSE; ;;
+      --ci)   IS_CI=true; readonly IS_CI; ;;
       *)
         echo "unrecognized option '${arg}'"
         install_deps_usage; exit;;
@@ -895,7 +895,7 @@ build_and_deploy() {
     case ${arg} in
       --help)     build_and_deploy_usage; exit ;;
       --verbose)  VERBOSE=true; readonly VERBOSE; ;;
-      --ci)   IS_CI=true; readonly VERBOSE; ;;
+      --ci)   IS_CI=true; readonly IS_CI; ;;
       --prefix)
         if [ $# -eq 0 ]; then
           echo "there should be given a path for prefix option."
