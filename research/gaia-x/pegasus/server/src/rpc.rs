@@ -31,6 +31,7 @@ use tonic::{Code, Request, Response, Status};
 
 use crate::generated::protocol as pb;
 use crate::service::{JobParser, Service};
+use tokio::net::TcpListener;
 
 pub struct RpcSink {
     pub job_id: u64,
@@ -140,16 +141,16 @@ pub struct RpcServer<S: pb::job_service_server::JobService> {
 }
 
 pub async fn start_rpc_server<I, O, P>(
-    addr: SocketAddr, service: RpcService<I, O, P>,
-) -> Result<(), Box<dyn std::error::Error>>
+    addr: SocketAddr, service: RpcService<I, O, P>, blocking: bool,
+) -> Result<SocketAddr, Box<dyn std::error::Error>>
 where
     I: Data,
     O: Send + Debug + Message + 'static,
     P: JobParser<I, O>,
 {
     let server = RpcServer::new(addr, service);
-    server.run().await?;
-    Ok(())
+    let local_addr = server.run(blocking).await?;
+    Ok(local_addr)
 }
 
 impl<S: pb::job_service_server::JobService> RpcServer<S> {
@@ -157,14 +158,22 @@ impl<S: pb::job_service_server::JobService> RpcServer<S> {
         RpcServer { service, addr }
     }
 
-    pub async fn run(self) -> Result<(), Box<dyn std::error::Error>> {
+    pub async fn run(self, blocking: bool) -> Result<SocketAddr, Box<dyn std::error::Error>> {
         let RpcServer { service, addr } = self;
-        info!("Rpc server started on {}", addr);
-        Server::builder()
+        let listener = TcpListener::bind(addr).await?;
+        let local_addr = listener.local_addr()?;
+        info!("Rpc server started on {}", local_addr);
+        let serve = Server::builder()
             .add_service(pb::job_service_server::JobServiceServer::new(service))
-            .serve(addr)
-            .await?;
-        Ok(())
+            .serve_with_incoming(tokio_stream::wrappers::TcpListenerStream::new(listener));
+        if blocking {
+            serve.await?;
+        } else {
+            tokio::spawn(async move {
+                serve.await;
+            });
+        }
+        Ok(local_addr)
     }
 }
 
