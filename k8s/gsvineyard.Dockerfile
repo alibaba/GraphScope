@@ -16,27 +16,27 @@ RUN sudo mkdir -p /opt/graphscope && \
     make -j`nproc` && \
     make install && \
     cd /tmp && \
-    git clone -b v0.2.7 https://github.com/alibaba/libvineyard.git --depth=1 && \
-    cd libvineyard && \
+    git clone -b zsy/schema https://github.com/siyuan0322/v6d.git --depth=1 && \
+    cd v6d && \
     git submodule update --init && \
-    mkdir -p /tmp/libvineyard/build && \
-    cd /tmp/libvineyard/build && \
+    mkdir -p /tmp/v6d/build && \
+    cd /tmp/v6d/build && \
     cmake .. -DCMAKE_PREFIX_PATH=/opt/graphscope \
              -DCMAKE_INSTALL_PREFIX=/opt/graphscope \
              -DBUILD_VINEYARD_PYPI_PACKAGES=ON \
              -DBUILD_SHARED_LIBS=ON \
              -DBUILD_VINEYARD_IO_OSS=ON && \
     make install vineyard_client_python -j && \
-    cd /tmp/libvineyard && \
+    cd /tmp/v6d && \
     python3 setup.py bdist_wheel && \
     cd dist && \
     auditwheel repair --plat=manylinux2014_x86_64 ./*.whl && \
     mkdir -p /opt/graphscope/dist && \
     cp -f wheelhouse/* /opt/graphscope/dist && \
     pip3 install wheelhouse/*.whl && \
-    cd /tmp/libvineyard/modules/io && \
+    cd /tmp/v6d/modules/io && \
     python3 setup.py bdist_wheel && \
     cp -f dist/* /opt/graphscope/dist && \
     pip3 install dist/* && \
     cd /tmp && \
-    rm -fr /tmp/libvineyard /tmp/libgrape-lite
+    rm -fr /tmp/v6d /tmp/libgrape-lite
