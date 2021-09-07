@@ -19,7 +19,7 @@ use gremlin_core::structure::LabelId as RuntimeLabelId;
 use gremlin_core::structure::{
     DefaultDetails, Direction, DynDetails, Edge, Label, PropKey, QueryParams, Statement, Vertex,
 };
-use gremlin_core::{filter_limit, filter_limit_ok, limit_n, str_to_dyn_error, IterList};
+use gremlin_core::{filter_limit, limit_n, str_to_dyn_error, IterList};
 use gremlin_core::{register_graph, DynResult, GraphProxy, ID};
 use maxgraph_store::api::graph_partition::GraphPartitionManager;
 use maxgraph_store::api::graph_schema::Schema;
@@ -247,7 +247,7 @@ where
             };
             let iters = iter.map(|(_src, vi)| vi).collect();
             let iter_list = IterList::new(iters).map(move |v| to_runtime_vertex(&v));
-            Ok(filter_limit_ok!(iter_list, filter, None))
+            Ok(filter_limit!(iter_list, filter, None))
         });
         Ok(stmt)
     }
@@ -320,7 +320,7 @@ where
             };
             let iters = iter.map(|(_src, ei)| ei).collect();
             let iter_list = IterList::new(iters).map(move |e| to_runtime_edge(&e));
-            Ok(filter_limit_ok!(iter_list, filter, None))
+            Ok(filter_limit!(iter_list, filter, None))
         });
         Ok(stmt)
     }
