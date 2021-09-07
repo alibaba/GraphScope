@@ -201,6 +201,10 @@ def simple_flow(sess, ogbn_mag_small, ogbn_small_script):
         ],
     )
 
+    # MacOS skip the GLE test
+    if sys.platform == "darwin":
+        return
+
     # hyperparameters config.
     config = {
         "class_num": 349,  # output dimension
