@@ -295,7 +295,7 @@ jobs:
         # install vineyard into /usr/local
         sudo cp -r -n opt/vineyard/* /usr/local/
 
-        # link and install graphscope into /opt/graphscope
+        # Install to /opt/graphscope and link them to /usr/local
         sudo mkdir -p /opt/graphscope
         sudo chown -R $(id -u):$(id -g) /opt/graphscope
         cp -r opt/graphscope/* /opt/graphscope/

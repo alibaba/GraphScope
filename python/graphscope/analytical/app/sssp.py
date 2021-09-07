@@ -31,6 +31,8 @@ __all__ = [
 def sssp(graph, src=0):
     """Compute single source shortest path on the `graph`.
 
+    Note that SSSP requires an numerical property on the edge.
+
     Args:
         graph (:class:`Graph`): A projected simple graph.
         src (int, optional): The source vertex. Defaults to 0.

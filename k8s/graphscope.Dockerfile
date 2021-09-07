@@ -130,7 +130,7 @@ RUN sudo tar -xf /opt/graphscope/0.0.1-SNAPSHOT.tar.gz -C /opt/graphscope \
   && sudo ln -sf /opt/graphscope/lib/*so* /usr/local/lib \
   && sudo ln -sf /opt/graphscope/lib64/*so* /usr/local/lib64 \
   && sudo ln -sfn /opt/graphscope/lib64/cmake/graphscope-analytical /usr/local/lib64/cmake/graphscope-analytical \
-  && python3 /tmp/precompile.py && rm /tmp/precompile.py
+  && python3 /tmp/precompile.py && sudo rm -fr /tmp/precompile.py /usr/local/dist /opt/graphscope/dist/*.whl
 
 # enable debugging
 ENV RUST_BACKTRACE=1

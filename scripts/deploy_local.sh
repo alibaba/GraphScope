@@ -786,17 +786,6 @@ install_graphscope() {
     make install WITH_LEARNING_ENGINE=ON INSTALL_PREFIX=${INSTALL_PREFIX}
   fi
 
-  # link to /usr/local
-  sudo ln -sf ${INSTALL_PREFIX}/bin/* /usr/local/bin/
-  sudo ln -sfn ${INSTALL_PREFIX}/include/graphscope /usr/local/include/graphscope
-  sudo ln -sf ${INSTALL_PREFIX}/lib/*so* /usr/local/lib
-  sudo ln -sf ${INSTALL_PREFIX}/lib64/*so* /usr/local/lib64
-
-  if [[ -d "${INSTALL_PREFIX}/lib64/cmake" ]]; then
-    sudo ln -sfn ${INSTALL_PREFIX}/lib64/cmake/graphscope-analytical /usr/local/lib64/cmake/graphscope-analytical
-  else
-    sudo ln -sfn ${INSTALL_PREFIX}/lib/cmake/graphscope-analytical /usr/local/lib/cmake/graphscope-analytical
-  fi
   popd
 }
 

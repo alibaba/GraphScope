@@ -30,10 +30,7 @@ BUILTIN_APP_RESOURCE_PATH = (
     COORDINATOR_HOME / "gscoordinator" / "builtin" / "app" / "builtin_app.gar"
 )
 CMAKELISTS_TEMPLATE = TEMPLATE_DIR / "CMakeLists.template"
-if "GRAPHSCOPE_HOME" in os.environ:
-    GRAPHSCOPE_HOME = os.environ["GRAPHSCOPE_HOME"]
-else:
-    GRAPHSCOPE_HOME = "/opt/graphscope"
+GRAPHSCOPE_HOME = os.environ["GRAPHSCOPE_HOME"] if "GRAPHSCOPE_HOME" in os.environ else "/opt/graphscope"
 WORKSPACE = Path("/tmp/gs/builtin")
 
 
