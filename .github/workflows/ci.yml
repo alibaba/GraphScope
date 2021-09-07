@@ -684,52 +684,52 @@ jobs:
         sudo docker rmi -f registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-store:${{ github.sha }} || true
 
 
-  release-image:
-    runs-on: ubuntu-20.04
-    if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
-    needs: [ gie-test, python-test, k8s-test, gss-test ]
-    steps:
-    - uses: actions/checkout@v2.3.2
-
-    - uses: actions/download-artifact@v2
-      with:
-        path: artifacts
-    - name: Prepare Image
-      run: |
-        cp .github/workflows/*.Dockerfile artifacts/
-        cp k8s/ready_probe.sh artifacts/
-        pushd artifacts
-
-        tar -xf ./gae-${{ github.sha }}/gae.tar
-        tar -xf ./gle-${{ github.sha }}/gle.tar
-        tar -xf ./gie-${{ github.sha }}/gie.tar
-        tar -xf ./manager-${{ github.sha }}/manager.tar
-        tar -zxf ./gss-${{ github.sha }}/maxgraph.tar.gz
-
-        sudo docker build -t registry.cn-hongkong.aliyuncs.com/graphscope/graphscope:${{ github.sha }} \
-                          --network=host \
-                          -f ./graphscope.Dockerfile .
-        sudo docker build -t registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-store:${{ github.sha }} \
-                          --network=host \
-                          -f ./graphscope-store.Dockerfile .
-
-    - name: Release images
-      run: |
-        echo ${{ secrets.ALIYUN_TOKEN }} | sudo docker login --username=grape_dev registry.cn-hongkong.aliyuncs.com --password-stdin
-        sudo docker tag registry.cn-hongkong.aliyuncs.com/graphscope/graphscope:${{ github.sha }} \
-                        registry.cn-hongkong.aliyuncs.com/graphscope/graphscope:latest
-        sudo docker push registry.cn-hongkong.aliyuncs.com/graphscope/graphscope:${{ github.sha }}
-        sudo docker push registry.cn-hongkong.aliyuncs.com/graphscope/graphscope:latest
-
-        sudo docker tag registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-store:${{ github.sha }} \
-                        registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-store:latest
-        sudo docker push registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-store:${{ github.sha }}
-        sudo docker push registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-store:latest
-
-    - name: Clean
-      if: always()
-      run: |
-        sudo docker rmi -f registry.cn-hongkong.aliyuncs.com/graphscope/graphscope:latest \
-            registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-store:latest \
-            registry.cn-hongkong.aliyuncs.com/graphscope/graphscope:${{ github.sha }} \
-            registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-store:${{ github.sha}} || true
+#  release-image:
+#    runs-on: ubuntu-20.04
+#    if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
+#    needs: [ gie-test, python-test, k8s-test, gss-test ]
+#    steps:
+#    - uses: actions/checkout@v2.3.2
+#
+#    - uses: actions/download-artifact@v2
+#      with:
+#        path: artifacts
+#    - name: Prepare Image
+#      run: |
+#        cp .github/workflows/*.Dockerfile artifacts/
+#        cp k8s/ready_probe.sh artifacts/
+#        pushd artifacts
+#
+#        tar -xf ./gae-${{ github.sha }}/gae.tar
+#        tar -xf ./gle-${{ github.sha }}/gle.tar
+#        tar -xf ./gie-${{ github.sha }}/gie.tar
+#        tar -xf ./manager-${{ github.sha }}/manager.tar
+#        tar -zxf ./gss-${{ github.sha }}/maxgraph.tar.gz
+#
+#        sudo docker build -t registry.cn-hongkong.aliyuncs.com/graphscope/graphscope:${{ github.sha }} \
+#                          --network=host \
+#                          -f ./graphscope.Dockerfile .
+#        sudo docker build -t registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-store:${{ github.sha }} \
+#                          --network=host \
+#                          -f ./graphscope-store.Dockerfile .
+#
+#    - name: Release images
+#      run: |
+#        echo ${{ secrets.ALIYUN_TOKEN }} | sudo docker login --username=grape_dev registry.cn-hongkong.aliyuncs.com --password-stdin
+#        sudo docker tag registry.cn-hongkong.aliyuncs.com/graphscope/graphscope:${{ github.sha }} \
+#                        registry.cn-hongkong.aliyuncs.com/graphscope/graphscope:latest
+#        sudo docker push registry.cn-hongkong.aliyuncs.com/graphscope/graphscope:${{ github.sha }}
+#        sudo docker push registry.cn-hongkong.aliyuncs.com/graphscope/graphscope:latest
+#
+#        sudo docker tag registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-store:${{ github.sha }} \
+#                        registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-store:latest
+#        sudo docker push registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-store:${{ github.sha }}
+#        sudo docker push registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-store:latest
+#
+#    - name: Clean
+#      if: always()
+#      run: |
+#        sudo docker rmi -f registry.cn-hongkong.aliyuncs.com/graphscope/graphscope:latest \
+#            registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-store:latest \
+#            registry.cn-hongkong.aliyuncs.com/graphscope/graphscope:${{ github.sha }} \
+#            registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-store:${{ github.sha}} || true
