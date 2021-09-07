@@ -260,7 +260,7 @@ start_executor() {
       value=$(echo ${param} | awk -F":" '{print $2}')
       key=$(printf '%s\n' "${key}" | sed -e 's/[\/&]/\\&/g')
       value=$(printf '%s\n' "${value}" | sed -e 's/[\/&]/\\&/g')
-      sed -i "s/^\(${key}\s*=\s*\).*\$/\1${value}/" ${config_dir}/executor.vineyard.properties
+      sed -i'.bak' "s/^\(${key}\s*=\s*\).*\$/\1${value}/" ${config_dir}/executor.vineyard.properties
     done
   fi
 
