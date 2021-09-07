@@ -9,8 +9,8 @@ FROM registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-runtime:$BASE_VERSI
 RUN sudo mkdir -p /opt/vineyard && \
     sudo chown -R $(id -u):$(id -g) /opt/vineyard && \
     cd /tmp && \
-    git clone https://github.com/alibaba/libgrape-lite.git && \
-    cd libgrape-lite && git checkout 9806e6 && \
+    git clone https://github.com/alibaba/libgrape-lite.git --depth=1 && \
+    cd libgrape-lite && \
     mkdir build && \
     cd build && \
     cmake .. -DCMAKE_INSTALL_PREFIX=/opt/vineyard && \

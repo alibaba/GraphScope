@@ -95,7 +95,7 @@ class PropertySSSP
     vertex_t source;
     bool native_source = frag.GetInnerVertex(0, ctx.source_id, source);
 
-    ctx.next_modified.ParallelClear(thread_num());
+    ctx.next_modified.ParallelClear(GetThreadPool());
 
     // Get the channel. Messages assigned to this channel will be sent by the
     // message manager in parallel with the evaluation process.
@@ -145,7 +145,7 @@ class PropertySSSP
     auto dist_column = frag.template edge_data_column<int64_t>(0, 0);
 #endif
 
-    ctx.next_modified.ParallelClear(thread_num());
+    ctx.next_modified.ParallelClear(GetThreadPool());
 
     // parallel process and reduce the received messages
     messages.ParallelProcess<fragment_t, double>(
