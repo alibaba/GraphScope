@@ -664,16 +664,16 @@ jobs:
 
         # helm restart ci release and run demo with the PersistentVolume
         # FIXME(@haixia): restart seems not work.
-        # helm uninstall ci
-        # cd ${GITHUB_WORKSPACE}/charts
-        # helm install ci --set image.tag=${{ github.sha }},executor=${{ matrix.executor }} \
-        #                               ./graphscope-store
-        # helm test ci --timeout 5m0s
-        # cd ${GITHUB_WORKSPACE}/python
-        # python3 -m pytest -s -vvv tests/kubernetes/test_store_service.py -k test_demo_after_restart
+        helm uninstall ci
+        cd ${GITHUB_WORKSPACE}/charts
+        helm install ci --set image.tag=${{ github.sha }},executor=${{ matrix.executor }} \
+                                      ./graphscope-store
+        helm test ci --timeout 5m0s
+        cd ${GITHUB_WORKSPACE}/python
+        python3 -m pytest -s -vvv tests/kubernetes/test_store_service.py -k test_demo_after_restart
 
     - name: Clean
-      if: always()
+      if: true
       run: |
         export JAVA_HOME=/usr/lib/jvm/default-java/
         HADOOP_SSH_OPTS="-o StrictHostKeyChecking=no" /tmp/hadoop-2.10.1/sbin/stop-dfs.sh || true
