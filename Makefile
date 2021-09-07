@@ -3,7 +3,7 @@ WORKING_DIR 			:= $(dir $(MKFILE_PATH))
 NUM_PROC                := $( $(command -v nproc &> /dev/null) && echo $(nproc) || echo $(sysctl -n hw.physicalcpu) )
 
 VERSION                     ?= 0.1.0
-INSTALL_PREFIX              ?= /usr/local
+INSTALL_PREFIX              ?= /opt/graphscope
 
 # GAE build options
 NETWORKX                    ?= OFF
@@ -63,6 +63,17 @@ gae:
 	cmake -DCMAKE_INSTALL_PREFIX=$(INSTALL_PREFIX) -DNETWORKX=$(NETWORKX) -DBUILD_TESTS=${BUILD_TEST} .. && \
 	make -j$(NUM_PROC) && \
 	sudo make install
+ifneq ($(INSTALL_PREFIX), /usr/local)
+	sudo ln -sf $(INSTALL_PREFIX)/bin/* /usr/local/bin/ && \
+	sudo ln -sfn $(INSTALL_PREFIX)/include/graphscope /usr/local/include/graphscope && \
+	sudo ln -sf ${INSTALL_PREFIX}/lib/*so* /usr/local/lib && \
+	if [ -d "${INSTALL_PREFIX}/lib64/cmake/graphscope-analytical" ]; then \
+		sudo ln -sfn ${INSTALL_PREFIX}/lib64/cmake/graphscope-analytical /usr/local/lib64/cmake/graphscope-analytical; \
+	else \
+		sudo ln -sfn ${INSTALL_PREFIX}/lib/cmake/graphscope-analytical /usr/local/lib/cmake/graphscope-analytical; \
+	fi
+endif
+
 
 .PHONY: gie
 gie:
@@ -96,6 +107,9 @@ ifeq ($(WITH_LEARNING_ENGINE), ON)
 	cmake -DCMAKE_INSTALL_PREFIX=$(INSTALL_PREFIX) -DWITH_VINEYARD=ON -DTESTING=${BUILD_TEST} .. && \
 	make -j$(NUM_PROC) && \
 	sudo make install
+ifneq ($(INSTALL_PREFIX), /usr/local)
+	sudo ln -sf ${INSTALL_PREFIX}/lib/*so* /usr/local/lib
+endif
 endif
 
 .PHONY: prepare-client

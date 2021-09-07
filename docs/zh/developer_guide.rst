@@ -74,11 +74,11 @@ GraphScope 的 Python 客户端不包含在该镜像中，构建也与引擎有�
     git clone https://github.com/alibaba/GraphScope.git
     git clone https://github.com/GraphScope/gstest.git
     # 编译
-    cd GraphScope && make install
+    export WITH_LEARNING_ENGINE=ON
+    export GRAPHSCOPE_HOME=/opt/graphscope
+    cd GraphScope && make INSTALL_PREFIX=/opt/graphscope install
     # 测试：
-    #       export GS_TEST_DIR=<path_to_your_gstest_dir>
-    #       export WITH_LEARNING_ENGINE=ON
-    #       export GRAPHSCOPE_HOME=/usr/local
+    #   export GS_TEST_DIR=<path_to_your_gstest_dir>
     cd GraphScope/python && python3 -m pytest -s -v ./tests/unittest
 
 
