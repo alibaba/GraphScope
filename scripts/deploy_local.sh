@@ -775,7 +775,8 @@ install_vineyard() {
   git submodule update --init
   mkdir -p build && pushd build
   if [[ "${PLATFORM}" == *"Darwin"* ]]; then
-    cmake .. -DBUILD_VINEYARD_PYTHON_BINDINGS=ON -DBUILD_SHARED_LIBS=ON \
+    cmake .. -DCMAKE_BUILD_TYPE=RelWithDebInfo \
+             -DBUILD_VINEYARD_PYTHON_BINDINGS=ON -DBUILD_SHARED_LIBS=ON \
              -DBUILD_VINEYARD_IO_OSS=ON -DBUILD_VINEYARD_TESTS=OFF
   else
     cmake .. -DBUILD_VINEYARD_PYPI_PACKAGES=ON -DBUILD_SHARED_LIBS=ON \
