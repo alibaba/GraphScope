@@ -230,7 +230,8 @@ def test_demo(sess, ogbn_mag_small, ogbn_small_script):
     demo(sess, ogbn_mag_small, ogbn_small_script)
 
 
-@pytest.mark.skipif(sys.platform == "darwin", reason="MacOS need to test.")
+@pytest.mark.skipif(sys.platform == "darwin",
+                    reason="TODO: open the test case after testing the lazy mode on MacOS.")
 def test_demo_lazy_mode(sess_lazy, ogbn_mag_small, ogbn_small_script):
     graph_node = load_ogbn_mag(sess_lazy, ogbn_mag_small)
     # Interactive query
@@ -294,7 +295,8 @@ def test_demo_lazy_mode(sess_lazy, ogbn_mag_small, ogbn_small_script):
     train(config, r[1])
 
 
-@pytest.mark.skipif(sys.platform == "darwin", reason="MacOS need to test.")
+@pytest.mark.skipif(sys.platform == "darwin",
+                    reason="TODO: open the test case after testing the gaia on MacOS.")
 def test_enable_gaia(
     sess_enable_gaia, ogbn_mag_small, ogbn_small_script, ogbn_small_bytecode
 ):

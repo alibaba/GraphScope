@@ -26,7 +26,7 @@ BASIC_PACKGES_TO_INSTALL=
 PLATFORM=
 OS_VERSION=
 VERBOSE=false
-CI=false
+IS_CI=false
 packages_to_install=()
 install_folly=false
 
@@ -367,7 +367,7 @@ check_dependencies() {
   fi
 
   # check folly
-  if [[ "${CI}" == "false" ]] && [[ ! -f "/usr/local/include/folly/dynamic.h" ]]; then
+  if [[ "${IS_CI}" == "false" ]] && [[ ! -f "/usr/local/include/folly/dynamic.h" ]]; then
     packages_to_install+=(folly)
   fi
 
@@ -848,7 +848,7 @@ install_deps() {
     case ${arg} in
       --help) install_deps_usage; exit ;;
       --verbose) VERBOSE=true; readonly VERBOSE; ;;
-      --ci)   CI=true; readonly VERBOSE; ;;
+      --ci)   IS_CI=true; readonly VERBOSE; ;;
       *)
         echo "unrecognized option '${arg}'"
         install_deps_usage; exit;;
@@ -895,7 +895,7 @@ build_and_deploy() {
     case ${arg} in
       --help)     build_and_deploy_usage; exit ;;
       --verbose)  VERBOSE=true; readonly VERBOSE; ;;
-      --ci)   CI=true; readonly VERBOSE; ;;
+      --ci)   IS_CI=true; readonly VERBOSE; ;;
       --prefix)
         if [ $# -eq 0 ]; then
           echo "there should be given a path for prefix option."
