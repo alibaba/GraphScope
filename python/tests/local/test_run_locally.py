@@ -133,10 +133,6 @@ def demo(sess, ogbn_mag_small, ogbn_small_script):
     sub_graph = sub_graph.add_column(ret1, {"kcore": "r"})
     sub_graph = sub_graph.add_column(ret2, {"tc": "r"})
 
-    # MacOS skip the GLE test
-    if sys.platform == "darwin":
-        return
-
     # GLE on ogbn_mag_small graph
     paper_features = []
     for i in range(128):
@@ -234,6 +230,7 @@ def test_demo(sess, ogbn_mag_small, ogbn_small_script):
     demo(sess, ogbn_mag_small, ogbn_small_script)
 
 
+@pytest.mark.skipif(sys.platform == "darwin", reason="MacOS need to test.")
 def test_demo_lazy_mode(sess_lazy, ogbn_mag_small, ogbn_small_script):
     graph_node = load_ogbn_mag(sess_lazy, ogbn_mag_small)
     # Interactive query
