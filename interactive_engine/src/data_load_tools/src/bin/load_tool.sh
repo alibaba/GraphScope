@@ -18,7 +18,8 @@ while [ -h "$SCRIPT" ] ; do
 done
 
 LOAD_TOOL_HOME=`dirname "$SCRIPT"`
-LOAD_TOOL_HOME=`cd "$MAXGRAPH_HOME"; pwd`
+LOAD_TOOL_HOME=`cd "$LOAD_TOOL_HOME"; pwd`
+LOAD_TOOL_HOME=`dirname "$LOAD_TOOL_HOME"`
 JAR_FILE="$(echo "$LOAD_TOOL_HOME"/lib/*.jar | tr ' ' ':')"
 
 if [ "$1" = "hadoop-build" ]; then

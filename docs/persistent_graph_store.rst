@@ -10,14 +10,14 @@ The store is a distributed graph store built on top of the popular RocksDB key v
 
 
 Known Limitation
-~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~
 
 *  Initially, the new persistent store is provided as a separate option from Vineyard, and it can accept Gremlin queries for data access. Going foward we hope to evole them into an integrated hybrid graph store suitable for all kinds of workloads.
 *  In the v0.5 release, data can only be loaded into the store in a bulk fashion. APIs for real-time updates (inserts and deletes of individual vertices and egdes) were added in the v0.7 release.
 
 
 Deploying Store Service
-----------------------
+-----------------------
 
 This chart bootstraps a `GraphScope Store <https://github.com/alibaba/GraphScope/tree/main/interactive_engine/src/v2/src/main>`_ cluster deployment on a `Kubernetes <http://kubernetes.io>`_ cluster using the `Helm <https://helm.sh>`_ package manager.
 
@@ -32,7 +32,7 @@ Prerequisites
 
 
 Installing the Chart
-~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~
 
 To install the chart with the release name `my-release`:
 
@@ -66,7 +66,7 @@ Note that it may take a few minutes for pulling image at first time, you can wat
 
 
 Uninstalling the Chart
-~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~
 
 To uninstall/delete the `my-release` deployment:
 
@@ -118,7 +118,7 @@ Alternatively, a YAML file that specifies the values for the parameters can be p
 
 
 Defining Graph Schema
--------------------
+----------------------
 
 After we deployed a cluster, there is an empty graph inside, we can then use the Python API to get the graph, and define schema over the graph, then we can load data according to that schema.
 
@@ -178,6 +178,20 @@ Here we give an example to define a simple `person -> knows <- person` schema.
             "date", "str"
         )
     schema.update()
+
+
+Running Gremlin Queries
+-----------------------
+
+As we have the gremlin endpoint avaiable, we can do gremlin queries over the graph.
+It's simple just use one line to get the traversal source,
+
+.. code:: python
+
+    g = gs_conn.gremlin()
+    print(g.V().count().toList())
+
+The graph is empty for now, so the count should be 0. Let's write some data.
 
 
 Realtime Write
@@ -359,7 +373,7 @@ Apart from real-time write, we provide a data-loading utility for bulk-loading d
 
 
 Prequisities
-~~~~~~~~~~~
+~~~~~~~~~~~~~
 
 
 *  Java compilation environment (Maven 3.5+ / JDK1.8), if you need to build the tools from source code
@@ -368,13 +382,13 @@ Prequisities
 
 
 Get Binary
-~~~~~~~~
+~~~~~~~~~~
 
-You can download the data-loading utility from `#TODO`. Decompress it, and you can find the executable here: `./data_load/load_tool.sh`.
+You can download the data-loading utility from here: `data_load.tar.gz <https://github.com/alibaba/GraphScope/releases/download/latest/data_load.tar.gz>`_. Decompress it, and you can find the executable here: `./data_load/bin/load_tool.sh`.
 
 
 Data Format
-~~~~~~~~~
+~~~~~~~~~~~
 
 The data loading tools assume the original data files are in the HDFS.
 
@@ -408,7 +422,7 @@ All the data fields will be parsed according to the data-type defined in the gra
 
 
 Loading Process
-~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~
 
 The loading process contains three steps:
 
@@ -420,7 +434,7 @@ Step 3: Commit to the online service so that data is ready for serving queries
 
 
 1. Building a partitioned graph
-"""""""""""""""""
+"""""""""""""""""""""""""""""""
 
 Build data by running the hadoop map-reduce job with following command.
 
@@ -428,7 +442,7 @@ NOTE: You should make sure `hadoop` can be found in the env `$PATH`.
 
 .. code:: bash
 
-    $ ./load_tool.sh hadoop-build <path/to/config/file>
+    $ ./data_load/bin/load_tool.sh hadoop-build <path/to/config/file>
 
 The config file should follow a format that is recognized by Java `java.util.Properties` class. Here is an example:
 
@@ -478,7 +492,7 @@ After data building completed, you can find the output files in the `output.path
 
 
 2. Loading graph partitions
-""""""""""""""""""""
+""""""""""""""""""""""""""""
 
 Now ingest the offline built data into the graph storage:
 
@@ -486,7 +500,7 @@ NOTE: You need to make sure that the HDFS endpoint that can be accessed from the
 
 .. code:: bash
 
-    $ ./load_tool.sh -c ingest -d hdfs://1.2.3.4:9000/tmp/data_output
+    $ ./data_laod/bin/load_tool.sh -c ingest -d hdfs://1.2.3.4:9000/tmp/data_output
 
 
 The offline built data can be ingested successfully only once, otherwise errors will occur.
@@ -499,18 +513,8 @@ After data ingested into graph storage, you need to commit data loading. The dat
 
 .. code:: bash
 
-    $ ./load_tool.sh -c commit -d hdfs://1.2.3.4:9000/tmp/data_output
+    $ ./data_load/bin/load_tool.sh -c commit -d hdfs://1.2.3.4:9000/tmp/data_output
 
 Notice: The later committed data will overwrite the earlier committed data which have same vertex types or edge relations.
 
 
-Running Gremlin Queries
------------------------
-
-As we have the gremlin endpoint avaiable, we can do gremlin queries over the graph.
-It's simple just use one line to get the traversal source,
-
-.. code:: python
-
-    g = gs_conn.gremlin()
-    print(g.V().count().toList())
