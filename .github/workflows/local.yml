@@ -42,6 +42,8 @@ jobs:
       uses: mxschmitt/action-tmate@v2
 
     - name: Install Dependencies of GraphScope
+      env:
+        OS : ${{ matrix.os }}
       run: |
         if [ "${OS}" == "macOS-latest" ];
         then
