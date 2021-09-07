@@ -33,7 +33,7 @@ CMAKELISTS_TEMPLATE = TEMPLATE_DIR / "CMakeLists.template"
 if "GRAPHSCOPE_HOME" in os.environ:
     GRAPHSCOPE_HOME = os.environ["GRAPHSCOPE_HOME"]
 else:
-    GRAPHSCOPE_HOME = "/usr/local"
+    GRAPHSCOPE_HOME = "/opt/graphscope"
 WORKSPACE = Path("/tmp/gs/builtin")
 
 
