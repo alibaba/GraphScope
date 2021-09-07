@@ -218,7 +218,7 @@ impl<D: Data> InputHandle<D> {
         if !self.current_end.is_empty() {
             self.current_end.pop_front()
         } else {
-            self.stash_index.retain(|_, s| !s.is_empty());
+            self.stash_index.retain(|_, s| !s.is_empty() || s.is_block());
             if self.stash_index.is_empty() {
                 self.parent_ends.pop_front()
             } else {
@@ -258,13 +258,13 @@ impl<D: Data> InputHandle<D> {
 
                         if self.is_discard(&batch.tag) {
                             batch.take_data();
+                            trace_worker!(
+                                "channel[{}] discard batch of {:?} from {};",
+                                self.ch_info.id.index,
+                                batch.tag,
+                                batch.src
+                            );
                             if batch.is_last() {
-                                trace_worker!(
-                                    "channel[{}] pull last batch of {:?} from {};",
-                                    self.ch_info.id.index,
-                                    batch.tag,
-                                    batch.src
-                                );
                                 return Ok(Some(batch));
                             }
                         } else {
@@ -323,12 +323,7 @@ impl<D: Data> InputHandle<D> {
                         // upstream had finished producing data of the tag;
                     }
                 } else {
-                    // 1. because cancel scope level = current scope level,
-                    // 2. the cancel event is propagated from the downstream operator,
-                    // 3. the stash index has no entry of the scope, it seems only one reason:
-                    // the scope is exhaust and cleaned at current input port, so it is needn't
-                    // to propagate any more;
-                    // self.propagate_cancel(tag);
+                    self.propagate_cancel(tag);
                 }
             };
         } else if *crate::config::ENABLE_CANCEL_CHILD {
@@ -484,12 +479,13 @@ impl<D> StashedQueue<D> {
             .unwrap_or(false)
     }
 
-    fn stash(&mut self, batch: MicroBatch<D>) {
+    fn stash(&mut self, mut batch: MicroBatch<D>) {
         if batch.is_empty() {
-            if batch.is_last() {
+            if let Some(end) = batch.take_end() {
                 if let Some(last) = self.queue.back_mut() {
-                    last.end = batch.end;
+                    last.end = Some(end);
                 } else {
+                    batch.set_end(end);
                     self.queue.push_back(batch);
                 }
             }

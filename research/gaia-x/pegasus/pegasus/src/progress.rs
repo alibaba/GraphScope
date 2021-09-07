@@ -189,7 +189,8 @@ impl Weight {
             (Mask::Single(a), Mask::Single(b)) => {
                 *a = b;
             }
-            (Mask::Single(_), Mask::Partial(b)) => {
+            (Mask::Single(a), Mask::Partial(mut b)) => {
+                b.insert(*a);
                 self.mask = Mask::Partial(b);
             }
             (Mask::Single(_), Mask::All(b)) => {

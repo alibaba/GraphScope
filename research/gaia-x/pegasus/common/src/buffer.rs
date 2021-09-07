@@ -24,7 +24,7 @@ mod rob {
                     return if let Err(e) = self.proxy.push(buf) {
                         Some(e.0)
                     } else {
-                        trace!("try to recycle buf with capacity={}", cap);
+                        // trace!("try to recycle buf with capacity={}", cap);
                         None
                     };
                 }
@@ -372,14 +372,11 @@ mod rob {
 
         #[inline]
         pub fn is_idle(&self) -> bool {
-            self.alloc == 0 || self.alloc == self.recycle.len()
+            self.alloc == 0 || self.alloc <= self.recycle.len()
         }
 
         fn get_hook(&self) -> BufferRecycleHook<D> {
-            BufferRecycleHook {
-                proxy: self.recycle.clone(),
-                dropped: self.dropped.clone(),
-            }
+            BufferRecycleHook { proxy: self.recycle.clone(), dropped: self.dropped.clone() }
         }
     }
 

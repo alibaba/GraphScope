@@ -472,6 +472,12 @@ mod rob {
         }
     }
 
+    // impl<D> Drop for MicroBatch<D> {
+    //     fn drop(&mut self) {
+    //         trace_worker!("drop {}th batch of {:?};", self.seq, self.tag);
+    //     }
+    // }
+
     struct DrainEndIter<'a, D: Clone> {
         len: usize,
         data: &'a mut ReadBuffer<D>,

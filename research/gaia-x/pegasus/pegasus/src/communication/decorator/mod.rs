@@ -381,7 +381,7 @@ mod rob {
                     c.0 += batch.len();
                     c.1 += c.0;
                     trace_worker!(
-                        "output[{:?}] push last batch(len={}) of {:?} to local ch {}, total pushed {};",
+                        "output[{:?}] push last batch(len={}) of {:?} to channel[{}] to self, total pushed {};",
                         self.ch_info.source_port,
                         batch.len(),
                         batch.tag,

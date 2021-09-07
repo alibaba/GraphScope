@@ -272,12 +272,12 @@ mod rob {
                     .unwrap_or((0, 0, 0));
                 end.seq = size.0 as u64;
                 trace_worker!(
-                    "output[{:?}]: finish pushing data of {:?} to channel[{}] to worker {}, total pushed {};",
+                    "output[{:?}]: notify end of {:?} to channel[{}] to worker {}, total pushed {};",
                     self.ch_info.source_port,
                     end.tag,
                     self.ch_info.id.index,
                     self.target_worker,
-                    size.1
+                    size.2
                 );
             }
 
@@ -307,13 +307,12 @@ mod rob {
         fn push(&mut self, mut batch: MicroBatch<D>) -> IOResult<()> {
             let len = batch.len();
             if batch.is_last() {
-                let (seq, mut cnt, mut total) = self
+                let (seq, _cnt, mut total) = self
                     .push_monitor
                     .remove(&batch.tag)
                     .unwrap_or((0, 0, 0));
                 batch.set_seq(seq as u64);
-                cnt += len;
-                total += cnt;
+                total += len;
                 trace_worker!(
                     "output[{:?}] push last batch(len={}) of {:?} to channel[{}] to worker {}, total pushed {} ;",
                     self.ch_info.source_port,
@@ -325,8 +324,9 @@ mod rob {
                 );
             } else {
                 assert!(len > 0, "push batch size = 0;");
-                let (seq, cnt, _) = self.push_monitor.get_mut_or_insert(&batch.tag);
+                let (seq, cnt, total) = self.push_monitor.get_mut_or_insert(&batch.tag);
                 *cnt += len;
+                *total += len;
                 batch.set_seq(*seq as u64);
                 *seq += 1;
             }
@@ -336,9 +336,14 @@ mod rob {
         fn flush(&mut self) -> IOResult<()> {
             let index = self.ch_info.index();
             let target = self.target_worker;
-            for (t, (_, b, c)) in self.push_monitor.iter_mut() {
+            trace_worker!(
+                "output[{:?}] flush channel[{}] to worker {};",
+                self.ch_info.source_port,
+                self.ch_info.index(),
+                target
+            );
+            for (t, (_, b, _)) in self.push_monitor.iter_mut() {
                 if *b > 0 {
-                    *c += *b;
                     trace_worker!(
                         "output[{:?}] flush {} data of {:?} to channel[{}] to worker {} ;",
                         self.ch_info.source_port,

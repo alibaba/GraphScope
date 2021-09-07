@@ -75,7 +75,7 @@ impl<D: Data> CorrelatedSubTask<D> for Stream<D> {
                         }
                     }
 
-                    if dataset.is_last() {
+                    if let Some(_end) = dataset.take_end() {
                         let idx = tumbling_scope.remove(&p).unwrap_or(index);
                         let cnt = (idx - worker) / offset;
                         trace_worker!("totally fork {} scope for {:?}", cnt - 1, p);
@@ -93,44 +93,67 @@ impl<D: Data> CorrelatedSubTask<D> for Stream<D> {
             move |input_left, input_right, output| {
                 input_left.for_each_batch(|dataset| {
                     let p_tag = dataset.tag.to_parent_uncheck();
-                    let barrier = parent_data.get_mut_or_else(&p_tag, || vec![]);
+                    let barrier = parent_data.get_mut_or_else(&p_tag, || (vec![], None, 0, 0));
                     for item in dataset.drain() {
-                        barrier.push(Some(item));
+                        barrier.0.push(Some(item));
                     }
-                    dataset.take_end();
+                    if let Some(ref e) = dataset.end {
+                        barrier.1 = Some(e.clone());
+                        let size = barrier.0.len();
+                        barrier.2 = size;
+                        trace_worker!("{} subtasks of {:?} waiting finish;", size, e.tag.to_parent_uncheck());
+                    }
                     Ok(())
                 })?;
 
                 input_right.for_each_batch(|dataset| {
                     if !dataset.is_empty() {
-                        let seq = dataset.tag.current_uncheck();
-                        if seq > 0 {
-                            let p_tag = dataset.tag.to_parent_uncheck();
-                            if let Some(parent) = parent_data.get_mut(&p_tag) {
-                                trace_worker!("join result of subtask {:?}", seq);
-                                let offset = (seq / peers) as usize - 1;
-                                let tag = Tag::inherit(&p_tag, 0);
-                                let mut session = output.new_session(&tag)?;
-                                assert_eq!(dataset.len(), 1);
-                                for item in dataset.drain() {
-                                    if let Some(p) = parent[offset].take() {
+                        let p_tag = dataset.tag.to_parent_uncheck();
+                        if let Some(parent) = parent_data.get_mut(&p_tag) {
+                            if parent.1.is_some() {
+                                let seq = dataset.tag.current_uncheck();
+                                if seq > 0 {
+                                    let p_tag = dataset.tag.to_parent_uncheck();
+                                    let offset = (seq / peers) as usize - 1;
+                                    trace_worker!("join result of {}th subtask {:?}", offset, dataset.tag);
+                                    let tag = Tag::inherit(&p_tag, 0);
+                                    let mut session = output.new_session(&tag)?;
+                                    assert_eq!(dataset.len(), 1);
+                                    let item = dataset.next().unwrap();
+                                    if let Some(p) = parent.0[offset].take() {
                                         session.give((p, item.0))?;
+                                        parent.3 += 1;
+                                    } else {
+                                        error_worker!("{}th subtask in scope {:?} had been joined before;", offset, dataset.tag);
+                                        panic!("{}th subtask in scope {:?} had been joined;", offset, dataset.tag);
                                     }
-                                }
-                                if log_enabled!(log::Level::Trace) {
-                                    // assert!(dataset.is_last());
-                                    trace_worker!("all results of subtask {:?} joined;", dataset.tag);
+                                    dataset.take_end();
+
+                                    if parent.2 == parent.3 {
+                                        // assert!(dataset.is_last());
+                                        trace_worker!("all {} results of subtask {:?} joined;", parent.2, p_tag);
+                                        let end = parent.1.take().expect("parent not end;");
+                                        dataset.set_end(end);
+                                    }
+                                } else {
+                                    // seq = 0 is not a subtask; it should be empty;
+                                    // but it is not empty now, may be because of some aggregation operations;
+                                    warn_worker!("data of scope {:?};", dataset.tag);
+                                    dataset.clear();
                                 }
                             } else {
-                                warn_worker!("parent not found;")
+                                warn_worker!("{:?} subtask waiting parent scope end {:?};", dataset.tag, p_tag);
+                                would_block!("subtask waiting parent;")?;
                             }
                         } else {
-                            // seq = 0 is not a subtask; it should be empty;
-                            // but it is not empty now, may be because of some aggregation operations;
-                            dataset.clear();
+                            would_block!("subtask waiting parent;")?;
                         }
+                    } else {
+                        //warn_worker!("empty subtask result of {:?};", dataset.tag);
+                        dataset.take_end();
                     }
-                    dataset.take_end();
+
+                    // dataset.take_end();
                     Ok(())
                 })
             }

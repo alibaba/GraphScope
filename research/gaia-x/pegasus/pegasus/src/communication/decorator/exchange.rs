@@ -494,6 +494,7 @@ mod rob {
                         self.push_to(index, tag.clone(), last.into_read_only())?;
                     }
                 }
+                self.pushes[index].flush()?;
             }
             Ok(())
         }
@@ -506,6 +507,7 @@ mod rob {
                         self.push_to(i, tag, buf.into_read_only())?;
                     }
                 }
+                self.pushes[i].flush()?;
             }
             Ok(())
         }
@@ -620,8 +622,11 @@ mod rob {
 
             if self.pushes.len() == 1 {
                 if !self.cancel_handle.is_canceled(&batch.tag, 0) {
-                    return self.pushes[0].push(batch);
+                    self.pushes[0].push(batch)?;
+                } else if let Some(end) = batch.take_end() {
+                    self.pushes[0].notify_end(end)?;
                 }
+                return Ok(());
             }
 
             let len = batch.len();
@@ -646,6 +651,8 @@ mod rob {
                     .get(0)
                     .expect("expect at least one entry as len = 1");
                 let target = self.route.route(x)? as usize;
+
+                let mut end_opt = None;
                 if let Some(mut end) = batch.take_end() {
                     if end.seq > 0 {
                         self.flush_last_buffer(&end.tag)?;
@@ -659,15 +666,18 @@ mod rob {
                         batch.set_end(end);
                         return self.pushes[target].push(batch);
                     }
-
-                    for i in 0..self.pushes.len() {
-                        if i != target {
-                            self.pushes[i].notify_end(end.clone())?;
-                        }
-                    }
-                    batch.set_end(end);
+                    end_opt = Some(end);
                 }
-                self.pushes[target].push(batch)
+
+                self.pushes[target].push(batch)?;
+                if let Some(end) = end_opt {
+                    for i in 1..self.pushes.len() {
+                        self.pushes[i].notify_end(end.clone())?;
+                    }
+                    self.pushes[0].notify_end(end)
+                } else {
+                    Ok(())
+                }
             } else {
                 let tag = batch.tag.clone();
                 for p in self.buffers.iter_mut() {

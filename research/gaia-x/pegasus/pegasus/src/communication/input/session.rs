@@ -147,9 +147,13 @@ impl<'a, D: Data> InputSession<'a, D> {
 
     #[inline]
     fn on_interrupt(&mut self, batch: MicroBatch<D>) {
+        trace_worker!("block pull data of scope {:?}", batch.tag);
         if !batch.is_empty() || batch.is_last() {
-            trace_worker!("block pull data of scope {:?}", batch.tag);
             let b = self.input.stash_block_front(batch);
+            self.block_tmp.push(b);
+        } else {
+            // batch is empty and is not last;
+            let b = self.input.block(&batch.tag);
             self.block_tmp.push(b);
         }
     }

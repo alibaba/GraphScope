@@ -349,25 +349,30 @@ mod rob {
 
     struct MemoryBufferPool<D> {
         pool: NonNull<BufferPool<D, MemBufAlloc<D>>>,
+        need_drop: bool,
     }
 
     impl<D> MemoryBufferPool<D> {
         fn new(pool: BufferPool<D, MemBufAlloc<D>>) -> Self {
             let ptr = Box::new(pool);
             let pool = unsafe { NonNull::new_unchecked(Box::into_raw(ptr)) };
-            MemoryBufferPool { pool }
+            MemoryBufferPool { pool, need_drop: true }
         }
 
         fn destroy(&mut self) {
-            unsafe {
-                self.pool.as_ptr().drop_in_place()
+            if self.need_drop {
+                unsafe {
+                    debug!("drop memory buffer pool");
+                    let ptr = self.pool;
+                    Box::from_raw(ptr.as_ptr());
+                }
             }
         }
     }
 
     impl<D> Clone for MemoryBufferPool<D> {
         fn clone(&self) -> Self {
-            MemoryBufferPool { pool: self.pool }
+            MemoryBufferPool { pool: self.pool, need_drop: self.need_drop }
         }
     }
 
@@ -446,8 +451,9 @@ mod rob {
         }
 
         fn destroy(&mut self) {
-            unsafe {
-                self.ptr.as_ptr().drop_in_place();
+             unsafe {
+                let ptr = self.ptr;
+                Box::from_raw(ptr.as_ptr());
             }
         }
     }
@@ -515,13 +521,13 @@ mod rob {
                     self.pinned = Some((p, buf));
                     true
                 } else {
-                    self.buf_slots.insert(p, buf);
+                    // self.buf_slots.insert(p, buf);
                     if let Some(buf) = self.buf_slots.get(tag) {
                         trace_worker!("update pinned buffers to scope {:?};", tag);
                         self.pinned = Some((tag.clone(), buf.clone()));
                         true
                     } else {
-                        trace_worker!("can't pin buffer for scope {:?} as slot not created;", tag);
+                        // trace_worker!("can't pin buffer for scope {:?} as slot not created;", tag);
                         false
                     }
                 }
@@ -531,7 +537,7 @@ mod rob {
                     self.pinned = Some((tag.clone(), buf.clone()));
                     true
                 } else {
-                    trace_worker!("can't pin buffer for scope {:?} as slot not created;", tag);
+                    // trace_worker!("can't pin buffer for scope {:?} as slot not created;", tag);
                     false
                 }
             }
@@ -641,6 +647,8 @@ mod rob {
                         if b.is_idle() {
                             find = Some((&*t).clone());
                             break;
+                        } else {
+                            //trace_worker!("slot of {:?} is in use: is_end = {}, in use ={}", t, b.end, b.pool.in_use_size());
                         }
                     }
 
@@ -660,8 +668,7 @@ mod rob {
 
     impl<D: Data> Default for ScopeBufferPool<D> {
         fn default() -> Self {
-            let pool = BufferPool::new(1, 1, MemBufAlloc::new());
-            let global_pool = MemoryBufferPool::new(pool);
+            let global_pool = MemoryBufferPool { pool: NonNull::dangling(), need_drop: false };
             ScopeBufferPool {
                 batch_size: 1,
                 batch_capacity: 1,
@@ -679,7 +686,7 @@ mod rob {
             for (_, x) in self.buf_slots.iter_mut() {
                 x.destroy();
             }
-            self.global_pool.destroy()
+            self.global_pool.destroy();
         }
     }
 }
