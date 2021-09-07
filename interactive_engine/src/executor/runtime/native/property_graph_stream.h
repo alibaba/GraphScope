@@ -190,10 +190,10 @@ class PropertyGraphOutStream : public Registered<PropertyGraphOutStream> {
     return meta_.GetClient()->instance_id();
   }
 
-  static std::shared_ptr<PropertyGraphOutStream> Create(
+  static std::unique_ptr<PropertyGraphOutStream> Create(
       Client& client, const char* graph_name, MGPropertyGraphSchema* schema,
       const int index) {
-    auto s = std::make_shared<PropertyGraphOutStream>();
+    auto s = std::unique_ptr<PropertyGraphOutStream>(new PropertyGraphOutStream());
 
     // take ownership of the `MGPropertyGraphSchema` object.
     s->graph_schema_ = std::shared_ptr<MGPropertyGraphSchema>(schema);
