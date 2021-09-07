@@ -20,19 +20,6 @@ pub fn try_downcast_pair(obj: &Object) -> Option<&(Traverser, Traverser)> {
     }
 }
 
-/// downcast count value, i.e., Traverser::Unknown(Object::DynOwned(ShadeSync<u64>))
-pub fn try_downcast_count(obj: &Object) -> Option<u64> {
-    if let Object::DynOwned(object) = obj {
-        if let Some(count) = object.try_downcast_ref::<ShadeSync<u64>>() {
-            Some(count.inner)
-        } else {
-            None
-        }
-    } else {
-        None
-    }
-}
-
 /// downcast list value, i.e., Traverser::Unknown(Object::DynOwned(ShadeSync<Vec<Traverser>>))
 pub fn try_downcast_list(obj: &Object) -> Option<Vec<Traverser>> {
     if let Object::DynOwned(object) = obj {
@@ -56,7 +43,7 @@ pub fn try_downcast_group_key(obj: &Object) -> Option<&Traverser> {
     }
 }
 
-/// downcast result of group().by() and get value where key is a Traverser
+/// downcast result of group().by() and get value where value is a Traverser
 pub fn try_downcast_group_value(obj: &Object) -> Option<&Traverser> {
     if let Some(pair) = try_downcast_pair(obj) {
         let second = &pair.1;
@@ -68,9 +55,9 @@ pub fn try_downcast_group_value(obj: &Object) -> Option<&Traverser> {
 
 /// downcast result of groupCount() and get value where value is u64 (i.e., AccumKind is CNT)
 pub fn try_downcast_group_count_value(obj: &Object) -> Option<u64> {
-    if let Some(group_value) = try_downcast_group_value(obj) {
-        if let Some(object) = group_value.get_object() {
-            try_downcast_count(object)
+    if let Some(pair) = try_downcast_pair(obj) {
+        if let Some(object) = pair.1.get_object() {
+            object.as_u64().ok()
         } else {
             None
         }

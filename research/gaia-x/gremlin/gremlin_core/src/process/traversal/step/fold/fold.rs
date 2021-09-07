@@ -47,7 +47,7 @@ impl Accumulator<Traverser, Traverser> for TraverserAccumulator {
 
     fn finalize(&mut self) -> Traverser {
         match self {
-            TraverserAccumulator::ToCount(count) => Traverser::with(count.finalize()),
+            TraverserAccumulator::ToCount(count) => Traverser::Object(count.finalize().into()),
             TraverserAccumulator::ToList(list) => Traverser::with(list.finalize()),
         }
     }

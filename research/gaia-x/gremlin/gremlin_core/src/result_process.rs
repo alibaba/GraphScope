@@ -17,9 +17,7 @@ use crate::generated::common as common_pb;
 use crate::generated::protobuf as result_pb;
 use crate::generated::protobuf::OneTagValue;
 use crate::process::traversal::path::{PathItem, ResultPath};
-use crate::process::traversal::step::result_downcast::{
-    try_downcast_count, try_downcast_list, try_downcast_pair,
-};
+use crate::process::traversal::step::result_downcast::{try_downcast_list, try_downcast_pair};
 use crate::process::traversal::step::ResultProperty;
 use crate::process::traversal::traverser::Traverser;
 use crate::structure::{Edge, GraphElement, Label, PropKey, Vertex, VertexOrEdge};
@@ -136,12 +134,8 @@ fn object_to_pb_value(value: &Object) -> common_pb::Value {
         Object::String(s) => common_pb::value::Item::Str(s.clone()),
         Object::Blob(b) => common_pb::value::Item::Blob(b.to_vec()),
         Object::DynOwned(_u) => {
-            if let Some(count_val) = try_downcast_count(value) {
-                common_pb::value::Item::I64(count_val as i64)
-            } else {
-                // TODO: more dyn type downcast
-                unimplemented!()
-            }
+            // TODO: more dyn type downcast
+            unimplemented!()
         }
     };
     common_pb::Value { item: Some(item) }
@@ -217,13 +211,6 @@ pub fn result_to_pb(t: Traverser) -> result_pb::Result {
                     let map_pair_pb =
                         result_pb::MapPair { first: Some(key_pb), second: Some(value_pb) };
                     pairs_encode.push(map_pair_pb);
-                } else if let Some(result_count) = try_downcast_count(o) {
-                    debug!("result_process count result {:?}", result_count);
-                    return result_pb::Result {
-                        inner: Some(result_pb::result::Inner::Value(common_pb::Value {
-                            item: Some(common_pb::value::Item::I64(result_count as i64)),
-                        })),
-                    };
                 } else {
                     debug!("result_process other object result {:?}", x);
                 }
