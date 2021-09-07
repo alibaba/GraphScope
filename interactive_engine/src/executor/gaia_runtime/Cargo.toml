@@ -39,10 +39,10 @@ libc = "0.2"
 
 tokio = { version = "1.0", features = ["macros", "sync"] }
 futures = { version = "0.3.0", features = ["thread-pool"]}
-gaia_pegasus = { path = "../../../../research/gaia/pegasus/pegasus", package = "pegasus" }
-pegasus_network = { path = "../../../../research/gaia/pegasus/network" }
-pegasus_server = { path = "../../../../research/gaia/pegasus/server" }
-gremlin_core = { path = "../../../../research/gaia/gremlin/gremlin_core" }
+gaia_pegasus = { path = "../../../../research/gaia-x/pegasus/pegasus", package = "pegasus" }
+pegasus_network = { path = "../../../../research/gaia-x/pegasus/network" }
+pegasus_server = { path = "../../../../research/gaia-x/pegasus/server" }
+gremlin_core = { path = "../../../../research/gaia-x/gremlin/gremlin_core" }
 gs_gremlin = {path = "../../../../research/gaia/gremlin/gs_gremlin" }
 
 [dev-dependencies]

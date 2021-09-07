@@ -7,7 +7,7 @@ use gaia_pegasus::Configuration as GaiaConfig;
 use maxgraph_store::db::api::GraphErrorCode::EngineError;
 use tokio::runtime::Runtime;
 use pegasus_server::service::Service;
-use pegasus_server::rpc::start_rpc_server;
+use pegasus_server::rpc::{start_rpc_server, RpcService};
 use pegasus_network::manager::SimpleServerDetector;
 use pegasus_network::config::NetworkConfig;
 use gs_gremlin::{InitializeJobCompiler, QueryMaxGraph};
@@ -69,7 +69,8 @@ impl GaiaServer {
             let query_maxgraph = QueryMaxGraph::new(self.graph.clone(), self.graph.clone(), worker_num, server_id);
             let job_compiler = query_maxgraph.initialize_job_compiler();
             let service = Service::new(job_compiler);
-            let local_addr = start_rpc_server(addr, service, report, false).await.unwrap();
+            let rpc_service = RpcService::new(service, report);
+            let local_addr = start_rpc_server(addr, rpc_service, false).await.unwrap();
             local_addr.port()
         });
         Ok((socket_addr.port(), rpc_port))

@@ -48,7 +48,7 @@ use maxgraph_server::StoreContext;
 use maxgraph_store::api::graph_partition::GraphPartitionManager;
 use maxgraph_store::api::prelude::*;
 use maxgraph_store::config::{StoreConfig, VINEYARD_GRAPH};
-use pegasus_server::rpc::start_rpc_server;
+use pegasus_server::rpc::{start_rpc_server, RpcService};
 use pegasus_server::service::Service;
 use protobuf::Message;
 use std::collections::HashMap;
@@ -295,7 +295,8 @@ where
             let job_compiler = query_vineyard.initialize_job_compiler();
             let service = Service::new(job_compiler);
             let addr = format!("{}:{}", "0.0.0.0", self.store_config.rpc_port);
-            let local_addr = start_rpc_server(addr.parse().unwrap(), service, true, false)
+            let rpc_service = RpcService::new(service, true);
+            let local_addr = start_rpc_server(addr.parse().unwrap(), rpc_service, false)
                 .await
                 .unwrap();
             local_addr.port()
