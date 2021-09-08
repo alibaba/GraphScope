@@ -14,6 +14,7 @@ option(ENABLE_PREGEL_COMBINE "Whether enable combinator in pregel app." False)
 
 option(NETWORKX "networkx on?" ON)
 
+include(GNUInstallDirs)
 if (NETWORKX)
     add_definitions(-DNETWORKX)
 endif ()
@@ -46,7 +47,7 @@ set(CMAKE_THREAD_PREFER_PTHREAD ON)
 find_package(Threads REQUIRED)
 
 # find vineyard-----------------------------------------------------------------
-find_package(vineyard 0.2.6 REQUIRED)
+find_package(vineyard 0.2.9 REQUIRED)
 include_directories(${VINEYARD_INCLUDE_DIRS})
 add_compile_options(-DENABLE_SELECTOR)
 
@@ -67,7 +68,7 @@ set(FRAME_NAME $_frame_name)
 
 # find Glog---------------------------------------------------------------------
 if(GRAPHSCOPE_ANALYTICAL_HOME)
-    include("${ANALYTICAL_ENGINE_HOME}/lib/cmake/FindGlog.cmake")
+    include("${ANALYTICAL_ENGINE_HOME}/${CMAKE_INSTALL_LIBDIR}/cmake/graphscope-analytical/cmake/FindGlog.cmake")
 else()
     include("${ANALYTICAL_ENGINE_HOME}/cmake/FindGlog.cmake")
 endif()
@@ -76,7 +77,7 @@ include_directories(SYSTEM ${GLOG_INCLUDE_DIRS})
 # find Arrow--------------------------------------------------------------------
 if(NOT Arrow_FOUND)
     if(GRAPHSCOPE_ANALYTICAL_HOME)
-        include("${ANALYTICAL_ENGINE_HOME}/lib/cmake/FindArrow.cmake")
+        include("${ANALYTICAL_ENGINE_HOME}/${CMAKE_INSTALL_LIBDIR}/cmake/graphscope-analytical/cmake/FindArrow.cmake")
     else()
         include("${ANALYTICAL_ENGINE_HOME}/cmake/FindArrow.cmake")
     endif()
@@ -84,7 +85,7 @@ endif()
 
 # find Libunwind----------------------------------------------------------------
 if(GRAPHSCOPE_ANALYTICAL_HOME)
-    include("${ANALYTICAL_ENGINE_HOME}/lib/cmake/FindLibUnwind.cmake")
+    include("${ANALYTICAL_ENGINE_HOME}/${CMAKE_INSTALL_LIBDIR}/cmake/graphscope-analytical/cmake/FindLibUnwind.cmake")
 else()
     include("${ANALYTICAL_ENGINE_HOME}/cmake/FindLibUnwind.cmake")
 endif()

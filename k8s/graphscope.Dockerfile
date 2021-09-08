@@ -4,7 +4,7 @@
 # the result image includes all runtime stuffs of graphscope, with analytical engine,
 # learning engine and interactive engine installed.
 
-ARG BASE_VERSION=latest
+ARG BASE_VERSION=v0.2.9
 FROM registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-vineyard:$BASE_VERSION as builder
 
 SHELL ["/usr/bin/scl", "enable", "devtoolset-7"]
@@ -18,32 +18,27 @@ ENV NETWORKX=$NETWORKX
 ARG profile=release
 ENV profile=$profile
 
-COPY ./k8s/kube_ssh /opt/graphscope/bin/kube_ssh
-COPY ./k8s/pre_stop.py /opt/graphscope/bin/pre_stop.py
-COPY ./k8s/ready_probe.sh /tmp/ready_probe.sh
 COPY . /home/graphscope/gs
 
 # build & install graph-learn library
-RUN sudo chown -R graphscope:graphscope ${HOME}/gs && \
+RUN sudo mkdir -p /opt/graphscope && \
+    sudo chown -R $(id -u):$(id -g) ${HOME}/gs /opt/graphscope && \
     cd ${HOME}/gs/learning_engine && \
     cd graph-learn/ && \
     git submodule update --init third_party/pybind11 && \
     mkdir cmake-build && \
     cd cmake-build && \
-    cmake -DCMAKE_PREFIX_PATH=/opt/graphscope \
-          -DCMAKE_INSTALL_PREFIX=/opt/graphscope \
+    cmake -DCMAKE_INSTALL_PREFIX=/opt/graphscope \
           -DWITH_VINEYARD=ON \
           -DTESTING=OFF .. && \
     make graphlearn_shared -j && \
     make install
 
 # build analytical engine
-RUN export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/opt/graphscope/lib:/opt/graphscope/lib64 && \
-    cd ${HOME}/gs/analytical_engine && \
+RUN cd ${HOME}/gs/analytical_engine && \
     mkdir -p build && \
     cd build && \
-    cmake .. -DCMAKE_PREFIX_PATH=/opt/graphscope \
-             -DCMAKE_INSTALL_PREFIX=/opt/graphscope \
+    cmake .. -DCMAKE_INSTALL_PREFIX=/opt/graphscope \
              -DNETWORKX=$NETWORKX && \
     make gsa_cpplint && \
     make -j`nproc` && \
@@ -63,7 +58,7 @@ RUN export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/opt/graphscope/lib:/opt/graphscope/
     python3 setup.py bdist_wheel && \
     cd ./dist && \
     auditwheel repair --plat=manylinux2014_x86_64 ./*.whl || true && \
-    cp ./wheelhouse/* /opt/graphscope/dist/ && \
+    mkdir -p /opt/graphscope/dist && cp ./wheelhouse/* /opt/graphscope/dist/ && \
     cd ${HOME}/gs/coordinator && \
     pip3 install -r requirements.txt -r requirements-dev.txt && \
     python3 setup.py bdist_wheel && \
@@ -112,23 +107,31 @@ FROM registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-runtime:latest
 
 ARG profile=release
 
-COPY --from=builder /opt/graphscope /usr/local/
-RUN cd /usr/local/dist/ && pip3 install ./*.whl
+# install vineyard into /usr/local
+COPY --from=builder /opt/vineyard/ /usr/local/
+COPY --from=builder /opt/graphscope /opt/graphscope
+COPY --from=builder /tmp/zetcd /opt/graphscope/bin/zetcd
 COPY --from=builder /home/graphscope/gs/k8s/precompile.py /tmp/precompile.py
-RUN python3 /tmp/precompile.py && rm /tmp/precompile.py
-
-COPY --from=builder /home/graphscope/gs/interactive_engine/src/executor/target/$profile/executor /usr/local/bin/executor
-COPY --from=builder /home/graphscope/gs/interactive_engine/src/executor/target/$profile/gaia_executor /usr/local/bin/gaia_executor
-COPY --from=builder /home/graphscope/gs/interactive_engine/bin/giectl /usr/local/bin/giectl
-COPY --from=builder /tmp/zetcd /usr/local/bin/zetcd
+COPY --from=builder /home/graphscope/gs/k8s/kube_ssh /opt/graphscope/bin/kube_ssh
+COPY --from=builder /home/graphscope/gs/k8s/pre_stop.py /opt/graphscope/bin/pre_stop.py
+COPY --from=builder /home/graphscope/gs/interactive_engine/bin/giectl /opt/graphscope//bin/giectl
+COPY --from=builder /home/graphscope/gs/interactive_engine/src/executor/target/$profile/executor /opt/graphscope/bin/executor
+COPY --from=builder /home/graphscope/gs/interactive_engine/src/executor/target/$profile/gaia_executor /opt/graphscope/bin/gaia_executor
+COPY --from=builder /home/graphscope/gs/interactive_engine/src/assembly/target/0.0.1-SNAPSHOT.tar.gz /opt/graphscope/0.0.1-SNAPSHOT.tar.gz
 
 # install mars
-RUN pip3 install git+https://github.com/mars-project/mars.git@35b44ed56e031c252e50373b88b85bd9f454332e#egg=pymars[distributed]
+# RUN pip3 install git+https://github.com/mars-project/mars.git@35b44ed56e031c252e50373b88b85bd9f454332e#egg=pymars[distributed]
+
+RUN sudo tar -xf /opt/graphscope/0.0.1-SNAPSHOT.tar.gz -C /opt/graphscope \
+  && cd /usr/local/dist && pip3 install ./*.whl \
+  && cd /opt/graphscope/dist && pip3 install ./*.whl \
+  && sudo ln -sf /opt/graphscope/bin/* /usr/local/bin/ \
+  && sudo ln -sfn /opt/graphscope/include/graphscope /usr/local/include/graphscope \
+  && sudo ln -sf /opt/graphscope/lib/*so* /usr/local/lib \
+  && sudo ln -sf /opt/graphscope/lib64/*so* /usr/local/lib64 \
+  && sudo ln -sfn /opt/graphscope/lib64/cmake/graphscope-analytical /usr/local/lib64/cmake/graphscope-analytical \
+  && python3 /tmp/precompile.py && sudo rm -fr /tmp/precompile.py /usr/local/dist /opt/graphscope/dist/*.whl
 
 # enable debugging
 ENV RUST_BACKTRACE=1
-
-COPY --from=builder /home/graphscope/gs/interactive_engine/src/assembly/target/0.0.1-SNAPSHOT.tar.gz /opt/graphscope/0.0.1-SNAPSHOT.tar.gz
-RUN sudo tar -xf /opt/graphscope/0.0.1-SNAPSHOT.tar.gz -C /usr/local
-
-ENV GRAPHSCOPE_HOME=/usr/local 
+ENV GRAPHSCOPE_HOME=/opt/graphscope

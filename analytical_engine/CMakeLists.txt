@@ -119,7 +119,7 @@ endif ()
 find_package(libgrapelite REQUIRED)
 include_directories(${LIBGRAPELITE_INCLUDE_DIRS})
 
-find_package(vineyard 0.2.6 REQUIRED)
+find_package(vineyard 0.2.9 REQUIRED)
 include_directories(${VINEYARD_INCLUDE_DIRS})
 add_compile_options(-DENABLE_SELECTOR)
 
@@ -301,9 +301,9 @@ endmacro()
 macro(install_gsa_dependency_modules cmake_target)
     get_filename_component(ABS_DIR ${cmake_target} REALPATH)
     install(DIRECTORY ${ABS_DIR}
-            DESTINATION lib                     # target directory
-            FILES_MATCHING                      # install only matched files
-            PATTERN "*.cmake"                   # select cmake files
+            DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/graphscope-analytical  # target directory
+            FILES_MATCHING                                                   # install only matched files
+            PATTERN "*.cmake"                                                # select cmake files
             )
 endmacro()
 
