@@ -1,5 +1,5 @@
-use crate::functions::KeyFunction;
 use crate::generated::gremlin as pb;
+use crate::process::traversal::step::functions::KeyFunction;
 use crate::process::traversal::traverser::Traverser;
 use crate::{str_to_dyn_error, DynResult};
 
@@ -15,7 +15,7 @@ impl KeyFunctionGen for pb::GremlinStep {
         if let Some(step) = self.step {
             match step {
                 pb::gremlin_step::Step::GroupByStep(g) => g.gen_key(),
-                _ => Err(str_to_dyn_error("pb GremlinStep is not a Compare Step")),
+                _ => Err(str_to_dyn_error("pb GremlinStep is not a Group Step")),
             }
         } else {
             Err(str_to_dyn_error("pb GremlinStep does not have a step"))

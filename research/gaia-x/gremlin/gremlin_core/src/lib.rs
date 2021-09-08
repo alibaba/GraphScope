@@ -39,11 +39,8 @@ pub mod process;
 pub mod structure;
 
 pub mod compiler;
-mod result_process;
 #[macro_use]
 pub mod graph_proxy;
-mod accum;
-mod functions;
 
 use crate::process::traversal::path::ResultPath;
 

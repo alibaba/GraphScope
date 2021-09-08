@@ -13,12 +13,12 @@
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 
-use crate::accum::{Count, ToList};
 use crate::DynResult;
 use pegasus_server::pb as server_pb;
 use pegasus_server::pb::AccumKind;
 
 mod fold;
+use crate::process::traversal::step::accum::{Count, ToList};
 pub use fold::TraverserAccumulator;
 
 #[enum_dispatch]

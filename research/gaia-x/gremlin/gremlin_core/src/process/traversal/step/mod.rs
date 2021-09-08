@@ -83,4 +83,4 @@ pub use source::graph_step_from;
 pub use source::GraphVertexStep;
 pub use sub_traversal::TraverserLeftJoinGen;
 pub use traverser_router::Router;
-pub use util::result_downcast;
+pub use util::*;

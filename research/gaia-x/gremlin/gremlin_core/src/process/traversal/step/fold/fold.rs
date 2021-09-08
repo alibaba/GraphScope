@@ -13,7 +13,7 @@
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 
-use crate::accum::{Accumulator, Count, ToList};
+use crate::process::traversal::step::accum::{Accumulator, Count, ToList};
 use crate::process::traversal::traverser::Traverser;
 use pegasus::codec::{Decode, Encode, ReadExt, WriteExt};
 use std::fmt::Debug;

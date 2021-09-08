@@ -13,8 +13,11 @@
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 
-mod predicate;
+pub mod accum;
+pub mod functions;
+pub mod predicate;
 pub mod result_downcast;
+pub mod result_process;
 
 pub use predicate::TraverserPredicate;
 

@@ -13,9 +13,9 @@
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 
-use crate::functions::CompareFunction;
 use crate::generated::gremlin as pb;
 use crate::process::traversal::step::by_key::{ByStepOption, TagKey};
+use crate::process::traversal::step::functions::CompareFunction;
 use crate::process::traversal::step::order_by::CompareFunctionGen;
 use crate::process::traversal::step::util::result_downcast::{
     try_downcast_group_count_value, try_downcast_group_key,

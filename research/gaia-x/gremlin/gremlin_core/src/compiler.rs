@@ -13,24 +13,18 @@
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 
+use crate::generated as pb;
 use crate::process::traversal::step::*;
-// use crate::process::traversal::step::{BySubJoin, HasAnyJoin};
 use crate::process::traversal::traverser::Traverser;
 use crate::{str_to_dyn_error, Partitioner};
-// use crate::TraverserSinkEncoder;
 use pegasus::api::function::*;
 use pegasus::api::{
     Collect, CorrelatedSubTask, Dedup, Filter, Fold, FoldByKey, IterCondition, Iteration, KeyBy,
     Limit, Map, Merge, Sink, SortBy, Source,
 };
 use pegasus::result::ResultSink;
-use pegasus::BuildJobError;
-// use pegasus_common::collections::CollectionFactory;
-
-// use pegasus_server::factory::{CompileResult, FoldFunction, GroupFunction, JobCompiler};
-use crate::functions::{CompareFunction, EncodeFunction, KeyFunction};
-use crate::generated as pb;
 use pegasus::stream::Stream;
+use pegasus::BuildJobError;
 use pegasus_server::pb as server_pb;
 
 use pegasus_server::pb::OperatorDef;
@@ -38,7 +32,8 @@ use pegasus_server::service::JobParser;
 use pegasus_server::JobRequest;
 use prost::Message;
 
-use crate::accum::Accumulator;
+use crate::process::traversal::step::accum::Accumulator;
+use crate::process::traversal::step::functions::{CompareFunction, EncodeFunction, KeyFunction};
 use std::collections::HashMap;
 use std::sync::Arc;
 
@@ -48,7 +43,6 @@ type TraverserFilter = Box<dyn FilterFunction<Traverser>>;
 type TraverserCompare = Box<dyn CompareFunction<Traverser>>;
 type TraverserLeftJoin = Box<dyn BinaryFunction<Traverser, Vec<Traverser>, Option<Traverser>>>;
 type TraverserKey = Box<dyn KeyFunction<Traverser, Traverser, Traverser>>;
-// type TraverserGroup = Box<dyn GroupFunction<Traverser, Traverser, Traverser>>;
 type TraverserEncode = Box<dyn EncodeFunction<Traverser>>;
 type TraverserGroupEncode = Box<dyn EncodeFunction<HashMap<Traverser, TraverserAccumulator>>>;
 type TraverserShuffle = Box<dyn RouteFunction<Traverser>>;
@@ -217,7 +211,7 @@ impl GremlinJobCompiler {
                             .fold_by_key(accum, || {
                                 |mut accum, next| {
                                     accum.accum(next).map_err(|e| {
-                                        str_to_dyn_error(&format!("accum failure: {}", e))
+                                        str_to_dyn_error(&format!("group accum failure: {}", e))
                                     })?;
                                     Ok(accum)
                                 }
