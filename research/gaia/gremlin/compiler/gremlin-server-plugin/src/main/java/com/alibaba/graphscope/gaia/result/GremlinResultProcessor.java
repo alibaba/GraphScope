@@ -48,16 +48,12 @@ public class GremlinResultProcessor implements ResultProcessor {
             try {
                 if (!locked) {
                     logger.debug("start to process response");
-                    if (response.getResultCase() == PegasusClient.JobResponse.ResultCase.DATA) {
-                        GremlinResult.Result resultData = GremlinResult.Result.parseFrom(response.getData());
-                        if (resultData.toByteString().equals(ByteString.EMPTY)) {
-                            logger.info("data is empty");
-                        }
-                        logger.debug("data is {}", resultData);
-                        resultCollectors.addAll(resultParser.parseFrom(resultData));
-                    } else if (response.getResultCase() == PegasusClient.JobResponse.ResultCase.ERR) {
-                        logger.debug("error is {}", response.getErr());
+                    GremlinResult.Result resultData = GremlinResult.Result.parseFrom(response.getData());
+                    if (resultData.toByteString().equals(ByteString.EMPTY)) {
+                        logger.error("data is empty");
                     }
+                    logger.debug("data is {}", resultData);
+                    resultCollectors.addAll(resultParser.parseFrom(resultData));
                 }
             } catch (Exception e) {
                 GaiaGraphOpProcessor.writeResultList(writeResult, Collections.singletonList(e.getMessage()), ResponseStatusCode.SERVER_ERROR);

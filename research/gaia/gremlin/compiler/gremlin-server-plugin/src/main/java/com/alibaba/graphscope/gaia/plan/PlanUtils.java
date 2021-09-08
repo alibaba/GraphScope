@@ -187,7 +187,6 @@ public class PlanUtils {
         try {
             Map<String, Object> results = new HashMap<>();
             results.put("op_kind", op.getOpKindCase().name());
-            results.put("shuffle", op.getCh().getChKindCase().name());
             if (op.getOpKindCase() == PegasusClient.OperatorDef.OpKindCase.ITERATE) {
                 results.put("times", op.getIterate().getMaxIters());
                 List<Object> body = new ArrayList<>();
@@ -201,7 +200,8 @@ public class PlanUtils {
                 results.put("limit", op.getOrder().getLimit());
                 results.put("compare", printGremlinStep(op.getOrder().getCompare()));
             } else if (op.getOpKindCase() == PegasusClient.OperatorDef.OpKindCase.GROUP) {
-                results.put("map", printGremlinStep(op.getGroup().getMap()));
+                results.put("map", printGremlinStep(op.getGroup().getResource()));
+                results.put("accum", op.getGroup().getAccumValue());
             } else if (op.getOpKindCase() == PegasusClient.OperatorDef.OpKindCase.UNION) {
                 for (int i = 0; i < op.getUnion().getBranchesList().size(); ++i) {
                     List<Object> branches = new ArrayList<>();
@@ -214,12 +214,10 @@ public class PlanUtils {
                 results.put("resource", printGremlinStep(op.getFlatMap().getResource()));
             } else if (op.getOpKindCase() == PegasusClient.OperatorDef.OpKindCase.FILTER) {
                 results.put("resource", printGremlinStep(op.getFilter().getResource()));
-            } else if (op.getOpKindCase() == PegasusClient.OperatorDef.OpKindCase.FOLD
-                    || op.getOpKindCase() == PegasusClient.OperatorDef.OpKindCase.LIMIT
-                    || op.getOpKindCase() == PegasusClient.OperatorDef.OpKindCase.DEDUP) {
-                // do nothing
+            } else if (op.getOpKindCase() == PegasusClient.OperatorDef.OpKindCase.COMM) {
+                results.put("ch_kind", op.getComm().getChKindCase());
             } else {
-                throw new UnsupportedOperationException("op_kind " + op.getOpKindCase().name() + " not supported");
+                // do nothing
             }
             return results;
         } catch (Exception e) {
@@ -286,11 +284,10 @@ public class PlanUtils {
         Gremlin.GroupByStep.Builder builder = Gremlin.GroupByStep.newBuilder();
         Gremlin.TagKey tagKey = TagKeyExtractorFactory.GroupKeyBy.extractFrom(keyTraversal, false, conf);
         if (!isEmpty(tagKey)) builder.setKey(tagKey);
-        builder.setAccum(getAccumKind(groupByStep));
         return builder.build();
     }
 
-    public static Gremlin.GroupByStep.AccumKind getAccumKind(Step groupByStep) {
+    public static PegasusClient.AccumKind getAccumKind(Step groupByStep) {
         Traversal.Admin valueTraversal;
         if (groupByStep instanceof GroupStep) {
             valueTraversal = PlanUtils.getValueTraversal(groupByStep);
@@ -299,14 +296,14 @@ public class PlanUtils {
                     || valueTraversal.getSteps().size() == 1 && valueTraversal.getStartStep() instanceof FoldStep
                     || valueTraversal.getSteps().size() == 2 && isIdentityTraversalMap(valueTraversal.getStartStep())
                     && valueTraversal.getEndStep() instanceof FoldStep) {
-                return Gremlin.GroupByStep.AccumKind.TO_LIST;
+                return PegasusClient.AccumKind.TO_LIST;
             } else if (valueTraversal.getSteps().size() == 1 && valueTraversal.getStartStep() instanceof CountGlobalStep) {
-                return Gremlin.GroupByStep.AccumKind.CNT;
+                return PegasusClient.AccumKind.CNT;
             } else {
                 throw new UnsupportedOperationException("cannot support other value traversal " + valueTraversal);
             }
         } else if (groupByStep instanceof GroupCountStep) {
-            return Gremlin.GroupByStep.AccumKind.CNT;
+            return PegasusClient.AccumKind.CNT;
         } else {
             throw new UnsupportedOperationException("cannot support step other than group by " + groupByStep.getClass());
         }
