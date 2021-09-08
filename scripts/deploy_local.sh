@@ -26,7 +26,6 @@ BASIC_PACKGES_TO_INSTALL=
 PLATFORM=
 OS_VERSION=
 VERBOSE=false
-IS_CI=false
 packages_to_install=()
 install_folly=false
 
@@ -367,8 +366,11 @@ check_dependencies() {
   fi
 
   # check folly
-  if [[ "${IS_CI}" == "false" ]] && [[ ! -f "/usr/local/include/folly/dynamic.h" ]]; then
-    packages_to_install+=(folly)
+  # TODO(@weibin): remove the ci check after GraphScope support clang 12.
+  if [[ -z "${CI}" ]] || ( [[ "${CI}" == "true" ]] && [[ "${PLATFORM}" != *"Darwin"* ]] ); then
+    if [[ ! -f "/usr/local/include/folly/dynamic.h" ]]; then
+      packages_to_install+=(folly)
+    fi
   fi
 
   # check zetcd
@@ -848,7 +850,6 @@ install_deps() {
     case ${arg} in
       --help) install_deps_usage; exit ;;
       --verbose) VERBOSE=true; readonly VERBOSE; ;;
-      --ci)   IS_CI=true; readonly IS_CI; ;;
       *)
         echo "unrecognized option '${arg}'"
         install_deps_usage; exit;;
@@ -895,7 +896,6 @@ build_and_deploy() {
     case ${arg} in
       --help)     build_and_deploy_usage; exit ;;
       --verbose)  VERBOSE=true; readonly VERBOSE; ;;
-      --ci)   IS_CI=true; readonly IS_CI; ;;
       --prefix)
         if [ $# -eq 0 ]; then
           echo "there should be given a path for prefix option."

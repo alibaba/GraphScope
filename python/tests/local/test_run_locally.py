@@ -113,7 +113,6 @@ def ogbn_small_bytecode():
 
     return func
 
-
 def demo(sess, ogbn_mag_small, ogbn_small_script):
     graph = load_ogbn_mag(sess, ogbn_mag_small)
 
@@ -182,6 +181,10 @@ def simple_flow(sess, ogbn_mag_small, ogbn_small_script):
     interactive = sess.gremlin(graph)
     papers = interactive.execute(ogbn_small_script).one()
 
+    # MacOS skip the GLE test
+    if sys.platform == "darwin":
+        return
+
     # GLE on ogbn_mag_small graph
     paper_features = []
     for i in range(128):
@@ -196,10 +199,6 @@ def simple_flow(sess, ogbn_mag_small, ogbn_small_script):
             ("test", "paper", 100, (85, 100)),
         ],
     )
-
-    # MacOS skip the GLE test
-    if sys.platform == "darwin":
-        return
 
     # hyperparameters config.
     config = {
@@ -226,13 +225,22 @@ def simple_flow(sess, ogbn_mag_small, ogbn_small_script):
     train(config, lg)
 
 
+@pytest.mark.skipif(
+    sys.platform == "darwin",
+    reason="FIXME: executor got segmentation fault: 11 crash on macOS github runner(#781).",
+)
 def test_demo(sess, ogbn_mag_small, ogbn_small_script):
     demo(sess, ogbn_mag_small, ogbn_small_script)
 
 
+@pytest.mark.skipif(sys.platform != "darwin", reason="A small test for macOS")
+def test_simpleflow_on_mac(sess, ogbn_mag_small, ogbn_small_script):
+    simple_flow(sess, ogbn_mag_small, ogbn_small_script)
+
+
 @pytest.mark.skipif(
     sys.platform == "darwin",
-    reason="TODO: open the test case after testing the lazy mode on MacOS."
+    reason="TODO: open the test case after testing the lazy mode on MacOS.",
 )
 def test_demo_lazy_mode(sess_lazy, ogbn_mag_small, ogbn_small_script):
     graph_node = load_ogbn_mag(sess_lazy, ogbn_mag_small)
@@ -299,7 +307,7 @@ def test_demo_lazy_mode(sess_lazy, ogbn_mag_small, ogbn_small_script):
 
 @pytest.mark.skipif(
     sys.platform == "darwin",
-    reason="TODO: open the test case after testing the gaia on MacOS."
+    reason="TODO: open the test case after testing the gaia on MacOS.",
 )
 def test_enable_gaia(
     sess_enable_gaia, ogbn_mag_small, ogbn_small_script, ogbn_small_bytecode

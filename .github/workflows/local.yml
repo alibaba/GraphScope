@@ -42,15 +42,8 @@ jobs:
       uses: mxschmitt/action-tmate@v2
 
     - name: Install Dependencies of GraphScope
-      env:
-        OS : ${{ matrix.os }}
       run: |
-        if [ "${OS}" == "macOS-latest" ];
-        then
-          /bin/bash ${GITHUB_WORKSPACE}/scripts/deploy_local.sh install_deps --verbose --ci
-        else
-          /bin/bash ${GITHUB_WORKSPACE}/scripts/deploy_local.sh install_deps --verbose
-        fi
+        /bin/bash ${GITHUB_WORKSPACE}/scripts/deploy_local.sh install_deps --verbose
 
         # avoid access node by DNS hostnames
         r=`cat /etc/hosts | grep $(hostname) || true`
@@ -62,19 +55,8 @@ jobs:
       uses: mxschmitt/action-tmate@v2
 
     - name: Build GraphScope
-      env:
-        OS : ${{ matrix.os }}
       run: |
-        if [ "${OS}" == "macOS-latest" ];
-        then
-          /bin/bash ${GITHUB_WORKSPACE}/scripts/deploy_local.sh build_and_deploy --verbose --ci
-        else
-          /bin/bash ${GITHUB_WORKSPACE}/scripts/deploy_local.sh build_and_deploy --verbose
-        fi
-
-    - name: Setup tmate session
-      if: matrix.os == 'macOS-latest'
-      uses: mxschmitt/action-tmate@v2
+        /bin/bash ${GITHUB_WORKSPACE}/scripts/deploy_local.sh build_and_deploy --verbose
 
     - name: Run Local Test
       env:
