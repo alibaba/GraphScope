@@ -43,7 +43,6 @@ __all__ = [
     "UnknownError",
     "FatalError",
     "GRPCError",
-    "check_grpc_response",
     "check_argument",
 ]
 
@@ -136,7 +135,7 @@ class FatalError(GSError):
 
 class GRPCError(GSError):
     def __init__(self, message):
-        message = "RPC failed, the engine might have crashed: %s" % message
+        message = "RPC failed: %s" % message
         super().__init__(message)
 
 
@@ -161,30 +160,6 @@ _gs_error_types = {
     error_codes_pb2.UNKNOWN_ERROR: UnknownError,
     error_codes_pb2.FATAL_ERROR: FatalError,
 }
-
-
-def check_grpc_response(response):
-    status = response.status
-    if status.code == error_codes_pb2.OK:
-        return response
-
-    if status.WhichOneof("detail") is None:
-        detail = None
-    else:
-        detail = getattr(status, status.WhichOneof("detail"), None)
-
-    error_type = _gs_error_types.get(status.code)
-    if error_type:
-        if error_type == CoordinatorInternalError:
-            e = pickle.loads(detail)
-            raise (e)
-        raise error_type(status.error_msg, detail)
-    else:
-        raise RuntimeError(
-            "Undefined error: {}: {}, {}".format(
-                status.code, status.error_msg, status.detail
-            )
-        )
 
 
 def check_argument(condition, message=None):

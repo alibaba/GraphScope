@@ -28,7 +28,10 @@ from typing import List
 from typing import Mapping
 from typing import Union
 
-import vineyard
+try:
+    import vineyard
+except ImportError:
+    vineyard = None
 
 from graphscope.config import GSConfig as gs_config
 from graphscope.framework import dag_utils
@@ -316,7 +319,7 @@ class GraphDAGNode(DAGNode, GraphInterface):
             if incoming_data.session_id != self.session_id:
                 raise RuntimeError("{0} not in the same session.".formar(incoming_data))
             raise NotImplementedError
-        elif isinstance(
+        elif vineyard is not None and isinstance(
             incoming_data, (vineyard.Object, vineyard.ObjectID, vineyard.ObjectName)
         ):
             self._op = self._from_vineyard(incoming_data)
@@ -940,8 +943,19 @@ class Graph(GraphInterface):
         Args:
             path (str): supported storages are local, hdfs, oss, s3
         """
-        import vineyard
-        import vineyard.io
+        try:
+            import vineyard
+            import vineyard.io
+        except ImportError:
+            raise RuntimeError(
+                "Saving context to locations requires 'vineyard', "
+                "please install those two dependencies via "
+                "\n"
+                "\n"
+                "    pip3 install vineyard vineyard-io"
+                "\n"
+                "\n"
+            )
 
         sess = self._session
         deployment = "kubernetes" if sess.info["type"] == "k8s" else "ssh"
@@ -982,8 +996,19 @@ class Graph(GraphInterface):
             `Graph`: A new graph object. Schema and data is supposed to be
                 identical with the one that called serialized method.
         """
-        import vineyard
-        import vineyard.io
+        try:
+            import vineyard
+            import vineyard.io
+        except ImportError:
+            raise RuntimeError(
+                "Saving context to locations requires 'vineyard', "
+                "please install those two dependencies via "
+                "\n"
+                "\n"
+                "    pip3 install vineyard vineyard-io"
+                "\n"
+                "\n"
+            )
 
         deployment = "kubernetes" if sess.info["type"] == "k8s" else "ssh"
         conf = sess.info["engine_config"]

@@ -123,7 +123,7 @@ class SSSP_Pregel(AppAssets):
 # Example of pie sssp
 @pie(vd_type="string", md_type="string")
 class PIE_API_Test(AppAssets):
-    """ PIE API Test on ldbc sample graph. """
+    """PIE API Test on ldbc sample graph."""
 
     @staticmethod
     def Init(frag, context):
@@ -220,7 +220,7 @@ class PIE_API_Test(AppAssets):
 # Pregel API Test
 @pregel(vd_type="string", md_type="string")
 class Pregel_API_Test(AppAssets):
-    """ Pregel API Test on ldbc_sample graph """
+    """Pregel API Test on ldbc_sample graph"""
 
     @staticmethod
     def Init(v, context):

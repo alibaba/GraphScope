@@ -332,7 +332,7 @@ class Session(object):
         with_mars=gs_config.with_mars,
         enable_gaia=gs_config.enable_gaia,
         reconnect=False,
-        **kw
+        **kw,
     ):
         """Construct a new GraphScope session.
 
@@ -617,7 +617,7 @@ class Session(object):
                     )
                 if param == "k8s_vineyard_shared_mem":
                     warnings.warn(
-                        "Please use vineyard_shared_mem instead",
+                        "Please use 'vineyard_shared_mem' instead",
                         category=DeprecationWarning,
                     )
                 kw.pop(param, None)
@@ -627,7 +627,7 @@ class Session(object):
 
         # There should be no more custom keyword arguments.
         if kw:
-            raise ValueError("Not recognized value: ", list(kw.keys()))
+            raise ValueError("Value not recognized: ", list(kw.keys()))
 
         if self._config_params["addr"]:
             logger.info(
@@ -764,7 +764,7 @@ class Session(object):
             if self._grpc_client:
                 try:
                     self._grpc_client.send_heartbeat()
-                except GRPCError as exc:
+                except Exception as exc:
                     logger.warning(exc)
                     self._disconnected = True
                 else:
@@ -846,7 +846,7 @@ class Session(object):
     def _check_closed(self, msg=None):
         """Internal: raise a ValueError if session is closed"""
         if self.closed:
-            raise ValueError("Operation on closed session." if msg is None else msg)
+            raise ValueError(msg or "Operation on closed session.")
 
     # Context manager
     def __enter__(self):
@@ -964,7 +964,9 @@ class Session(object):
                 **self._config_params,
             )
         else:
-            raise RuntimeError("Session initialize failed.")
+            raise RuntimeError(
+                f"Unrecognized cluster type {types_pb2.ClusterType.Name(self._cluster_type)}."
+            )
 
         # launching graphscope service
         if self._launcher is not None:
@@ -972,9 +974,7 @@ class Session(object):
             self._coordinator_endpoint = self._launcher.coordinator_endpoint
 
         # waiting service ready
-        self._grpc_client = GRPCClient(
-            self._coordinator_endpoint, self._config_params["reconnect"]
-        )
+        self._grpc_client = GRPCClient(self._launcher, self._config_params["reconnect"])
         self._grpc_client.waiting_service_ready(
             timeout_seconds=self._config_params["timeout_seconds"],
         )
@@ -1131,8 +1131,7 @@ class Session(object):
 
         if sys.platform != "linux" and sys.platform != "linux2":
             raise RuntimeError(
-                "The learning engine currently supports Linux only, doesn't support %s"
-                % sys.platform
+                f"The learning engine currently only supports running on Linux, got {sys.platform}"
             )
 
         if not graph.graph_type == graph_def_pb2.ARROW_PROPERTY:
@@ -1155,8 +1154,8 @@ class Session(object):
     def nx(self):
         if not self.eager():
             raise RuntimeError(
-                "Networkx module need session to be eager mode. "
-                "The session is lazy mode."
+                "Networkx module need the session to be eager mode. "
+                "Current session is lazy mode."
             )
         if self._nx:
             return self._nx
@@ -1226,7 +1225,7 @@ def set_option(**kwargs):
     # check exists
     for k, v in kwargs.items():
         if not hasattr(gs_config, k):
-            raise ValueError("No such option {} exists.".format(k))
+            raise ValueError(f"No such option {k} exists.")
 
     for k, v in kwargs.items():
         setattr(gs_config, k, v)
