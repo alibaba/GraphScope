@@ -78,6 +78,7 @@ public class Client implements Closeable {
     public Client(ManagedChannel channel) {
         this.channel = channel;
         this.stub = ClientGrpc.newBlockingStub(this.channel);
+        this.writeStub = ClientWriteGrpc.newBlockingStub(this.channel);
         this.init();
     }
 
