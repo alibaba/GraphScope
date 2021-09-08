@@ -38,7 +38,7 @@ message Vertex {
 }
 
 message Edge {
-  string id = 1;
+  bytes id = 1;
   Label label = 2;
   int64 src_id = 3;
   Label src_label = 4;
