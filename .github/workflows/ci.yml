@@ -673,7 +673,7 @@ jobs:
         export NODE_IP=$(kubectl get nodes --namespace default -o jsonpath="{.items[0].status.addresses[0].address}")
         helm test ci --timeout 5m0s
         cd ${GITHUB_WORKSPACE}/python
-        python3 -m pytest -s -vvv tests/kubernetes/test_store_service.py -k test_demo_after_restart
+        for i in {1..3}; do python3 -m pytest -s -vvv tests/kubernetes/test_store_service.py -k test_demo_after_restart && break || sleep 10; done
 
     - name: Clean
       if: true
