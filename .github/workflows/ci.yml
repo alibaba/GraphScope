@@ -593,8 +593,14 @@ jobs:
         name: gss-${{ github.sha }}
         path: |
           maxgraph.tar.gz
-          graphscope_store_data_load.tar.gz
           vineyard.tar.gz
+        retention-days: 5
+   
+    - uses: actions/upload-artifact@v2
+      with:
+        name: data_load-${{ github.sha }}
+        path: |
+          graphscope_store_data_load.tar.gz
         retention-days: 5
 
   gss-test:
