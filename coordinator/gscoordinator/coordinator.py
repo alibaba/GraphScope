@@ -859,7 +859,7 @@ class CoordinatorServiceServicer(
             proc = self._launcher.close_interactive_instance(object_id)
             # 60s is enough
             proc.wait(timeout=60)
-            gremlin_client.closed = True
+            gremlin_client.close()
         except Exception as e:
             raise RuntimeError(
                 f"Failed to close interactive instance {object_id}"
