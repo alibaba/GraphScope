@@ -363,13 +363,13 @@ impl Operator {
 
     fn fire_inner(&mut self) -> Result<(), JobExecError> {
         for output in self.outputs.iter() {
-           if let Err(e) = output.try_unblock() {
-               if e.is_would_block() {
-                   //
-               } else {
-                   return Err(e)?;
-               }
-           }
+            if let Err(e) = output.try_unblock() {
+                if e.is_would_block() {
+                    //
+                } else {
+                    return Err(e)?;
+                }
+            }
         }
 
         let result = self

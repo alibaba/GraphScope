@@ -916,7 +916,7 @@ mod rob {
                 }
                 Err(err) => {
                     if err.is_would_block() {
-                        trace_worker!("tee[{:?}] main push blocked on push batch;", self.port, );
+                        trace_worker!("tee[{:?}] main push blocked on push batch;", self.port,);
                     }
                     Err(err)
                 }

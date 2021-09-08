@@ -101,7 +101,11 @@ impl<D: Data> CorrelatedSubTask<D> for Stream<D> {
                         barrier.1 = Some(e.clone());
                         let size = barrier.0.len();
                         barrier.2 = size;
-                        trace_worker!("{} subtasks of {:?} waiting finish;", size, e.tag.to_parent_uncheck());
+                        trace_worker!(
+                            "{} subtasks of {:?} waiting finish;",
+                            size,
+                            e.tag.to_parent_uncheck()
+                        );
                     }
                     Ok(())
                 })?;
@@ -124,14 +128,25 @@ impl<D: Data> CorrelatedSubTask<D> for Stream<D> {
                                         session.give((p, item.0))?;
                                         parent.3 += 1;
                                     } else {
-                                        error_worker!("{}th subtask in scope {:?} had been joined before;", offset, dataset.tag);
-                                        panic!("{}th subtask in scope {:?} had been joined;", offset, dataset.tag);
+                                        error_worker!(
+                                            "{}th subtask in scope {:?} had been joined before;",
+                                            offset,
+                                            dataset.tag
+                                        );
+                                        panic!(
+                                            "{}th subtask in scope {:?} had been joined;",
+                                            offset, dataset.tag
+                                        );
                                     }
                                     dataset.take_end();
 
                                     if parent.2 == parent.3 {
                                         // assert!(dataset.is_last());
-                                        trace_worker!("all {} results of subtask {:?} joined;", parent.2, p_tag);
+                                        trace_worker!(
+                                            "all {} results of subtask {:?} joined;",
+                                            parent.2,
+                                            p_tag
+                                        );
                                         let end = parent.1.take().expect("parent not end;");
                                         dataset.set_end(end);
                                     }
@@ -142,7 +157,11 @@ impl<D: Data> CorrelatedSubTask<D> for Stream<D> {
                                     dataset.clear();
                                 }
                             } else {
-                                warn_worker!("{:?} subtask waiting parent scope end {:?};", dataset.tag, p_tag);
+                                warn_worker!(
+                                    "{:?} subtask waiting parent scope end {:?};",
+                                    dataset.tag,
+                                    p_tag
+                                );
                                 would_block!("subtask waiting parent;")?;
                             }
                         } else {

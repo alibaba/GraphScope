@@ -51,11 +51,11 @@ fn subtask_test_2(workers: u32) {
     let name = format!("subtask_test_2_{}", workers);
     let mut conf = JobConf::new(name);
     conf.set_workers(workers);
-    conf.plan_print = true;
+    //conf.plan_print = true;
     let num = 100u32;
     let mut result = pegasus::run(conf, move || {
         let index = pegasus::get_current_worker().index;
-        let source = (num * index) .. (index + 1u32) * num;
+        let source = (num * index)..(index + 1u32) * num;
         move |input, output| {
             let src = input.input_from(source)?;
             src.apply(|sub| {

@@ -218,7 +218,8 @@ impl<D: Data> InputHandle<D> {
         if !self.current_end.is_empty() {
             self.current_end.pop_front()
         } else {
-            self.stash_index.retain(|_, s| !s.is_empty() || s.is_block());
+            self.stash_index
+                .retain(|_, s| !s.is_empty() || s.is_block());
             if self.stash_index.is_empty() {
                 self.parent_ends.pop_front()
             } else {

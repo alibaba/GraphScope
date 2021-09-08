@@ -451,7 +451,7 @@ mod rob {
         }
 
         fn destroy(&mut self) {
-             unsafe {
+            unsafe {
                 let ptr = self.ptr;
                 Box::from_raw(ptr.as_ptr());
             }

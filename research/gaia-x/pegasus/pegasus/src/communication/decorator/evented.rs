@@ -271,6 +271,25 @@ mod rob {
                     .remove(&end.tag)
                     .unwrap_or((0, 0, 0));
                 end.seq = size.0 as u64;
+
+                if size.2 == 0
+                    && !end.tag.is_root()
+                    && !end
+                        .update_weight
+                        .as_ref()
+                        .map(|w| w.contains_source(self.target_worker))
+                        .unwrap_or(true)
+                {
+                    trace_worker!(
+                        "output[{:?}] ignore end of {:?} to channel[{}] to worker {};",
+                        self.ch_info.source_port,
+                        end.tag,
+                        self.ch_info.index(),
+                        self.target_worker
+                    );
+                    return Ok(());
+                }
+
                 trace_worker!(
                     "output[{:?}]: notify end of {:?} to channel[{}] to worker {}, total pushed {};",
                     self.ch_info.source_port,
