@@ -45,8 +45,8 @@ class GSConfig(object):
     k8s_image_pull_secrets = []
 
     # coordinator resource configuration
-    k8s_coordinator_cpu = 0.5
-    k8s_coordinator_mem = "512Mi"
+    k8s_coordinator_cpu = 1.5
+    k8s_coordinator_mem = "2Gi"
 
     # etcd resource configuration
     k8s_etcd_num_pods = 1
