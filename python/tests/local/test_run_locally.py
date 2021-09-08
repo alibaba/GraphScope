@@ -228,7 +228,7 @@ def simple_flow(sess, ogbn_mag_small, ogbn_small_script):
 
 @pytest.mark.skipif(
     sys.platform == "darwin",
-    reason="FIXME: executor got segmentation fault: 11 crash on macOS github runner(#781).",
+    reason="FIXME: executor get segmentation fault: 11 crash on macOS github runner(#781).",
 )
 def test_demo(sess, ogbn_mag_small, ogbn_small_script):
     demo(sess, ogbn_mag_small, ogbn_small_script)
