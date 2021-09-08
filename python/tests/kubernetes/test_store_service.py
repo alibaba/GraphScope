@@ -37,8 +37,6 @@ def gs_conn():
     gremlin_port = os.environ["GREMLIN_PORT"]
     grpc_endpoint = f"{node_ip}:{grpc_port}"
     gremlin_endpoint = f"{node_ip}:{gremlin_port}"
-    print(grpc_endpoint)
-    print(gremlin_endpoint)
     yield graphscope.conn(grpc_endpoint, gremlin_endpoint)
 
 

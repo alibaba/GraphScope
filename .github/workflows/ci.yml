@@ -1,4 +1,4 @@
-name: GrphScope CI
+name: GraphScope CI
 
 on:
   # Trigger the workflow on push or pull request, but only for the main branch
@@ -30,7 +30,7 @@ jobs:
       run:
         shell: scl enable devtoolset-7 -- bash --noprofile --norc -eo pipefail {0}
     container:
-      image: registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-vineyard:v0.2.6
+      image: registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-vineyard:v0.2.9
       options:
         --shm-size 4096m
     strategy:
@@ -92,14 +92,16 @@ jobs:
 
     - name: Build
       run: |
-        strip /opt/graphscope/lib/* || true
-        strip /opt/graphscope/lib64/* || true
+        strip /opt/vineyard/lib/* || true
+        strip /opt/vineyard/lib64/* || true
+        tar -cf vineyard.tar /opt/vineyard
 
-        export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/opt/graphscope/lib:/opt/graphscope/lib64
+        sudo mkdir -p /opt/graphscope
+        sudo chown -R $(id -u):$(id -g) /opt/graphscope
+
         mkdir analytical_engine/build
         cd analytical_engine/build
-        cmake .. -DCMAKE_PREFIX_PATH=/opt/graphscope \
-                 -DCMAKE_INSTALL_PREFIX=/opt/graphscope \
+        cmake .. -DCMAKE_INSTALL_PREFIX=/opt/graphscope \
                  -DNETWORKX=${{ matrix.networkx }}
         make -j`nproc`
         make install
@@ -122,7 +124,9 @@ jobs:
       uses: actions/upload-artifact@v2
       with:
         name: gae-${{ github.sha }}
-        path: gae.tar
+        path: |
+          gae.tar
+          vineyard.tar
         retention-days: 5
 
   build-gie:
@@ -131,7 +135,7 @@ jobs:
       run:
         shell: scl enable devtoolset-7 -- bash --noprofile --norc -eo pipefail {0}
     container:
-      image: registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-vineyard:v0.2.6
+      image: registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-vineyard:v0.2.9
     steps:
     - name: Install Dependencies
       run: |
@@ -147,9 +151,6 @@ jobs:
     - name: Build
       run: |
         export PATH=${PATH}:/usr/local/go/bin
-        export CMAKE_PREFIX_PATH=/opt/graphscope
-        export LIBRARY_PATH=$LIBRARY_PATH:/opt/graphscope/lib
-        export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/opt/graphscope/lib:/opt/graphscope/lib64
         source ~/.bashrc
 
         # install zetcd
@@ -177,23 +178,25 @@ jobs:
       run:
         shell: scl enable devtoolset-7 -- bash --noprofile --norc -eo pipefail {0}
     container:
-      image: registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-vineyard:v0.2.6
+      image: registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-vineyard:v0.2.9
     steps:
     - uses: actions/checkout@v2.3.2
       with:
         submodules: true
     - name: Build
       run: |
-        strip /opt/graphscope/lib/* || true
-        strip /opt/graphscope/lib64/* || true
-        export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/opt/graphscope/lib:/opt/graphscope/lib64
+        strip /opt/vineyard/lib/* || true
+        strip /opt/vineyard/lib64/* || true
+
+        sudo mkdir -p /opt/graphscope
+        sudo chown -R $(id -u):$(id -g) /opt/graphscope
+
         export PATH=${PATH}:/opt/rh/devtoolset-7/root/usr/bin
         cd learning_engine/graph-learn
         git submodule update --init third_party/pybind11
         mkdir cmake-build
         cd cmake-build
-        cmake -DCMAKE_PREFIX_PATH=/opt/graphscope \
-              -DCMAKE_INSTALL_PREFIX=/opt/graphscope \
+        cmake -DCMAKE_INSTALL_PREFIX=/opt/graphscope \
               -DWITH_VINEYARD=ON \
               -DTESTING=OFF ..
         make graphlearn_shared install -j
@@ -210,6 +213,7 @@ jobs:
         python3 setup.py bdist_wheel
         pushd ./dist
         auditwheel repair --plat=manylinux2014_x86_64 ./*.whl
+        mkdir -p /opt/graphscope/dist
         cp ./wheelhouse/* /opt/graphscope/dist/
         popd
         popd
@@ -284,11 +288,25 @@ jobs:
         sudo cp $(go env GOPATH)/bin/zetcd /usr/local/bin/
 
         python3 -m pip install pytest-cov
+        tar -xf ./gae-${{ github.sha }}/vineyard.tar
         tar -xf ./gae-${{ github.sha }}/gae.tar
         tar -xf ./gle-${{ github.sha }}/gle.tar
-        sudo cp -R -n opt/graphscope/* /usr/local/
-        ls -la /usr/local/bin/
+
+        # install vineyard into /usr/local
+        sudo cp -r -n opt/vineyard/* /usr/local/
+
+        # Install to /opt/graphscope and link them to /usr/local
+        sudo mkdir -p /opt/graphscope
+        sudo chown -R $(id -u):$(id -g) /opt/graphscope
+        cp -r opt/graphscope/* /opt/graphscope/
+        sudo ln -sf /opt/graphscope/bin/* /usr/local/bin/
+        sudo ln -sfn /opt/graphscope/include/graphscope /usr/local/include/graphscope
+        sudo ln -sf /opt/graphscope/lib/*so* /usr/local/lib
+        sudo ln -sf /opt/graphscope/lib64/*so* /usr/local/lib64
+        sudo ln -sfn /opt/graphscope/lib64/cmake/graphscope-analytical /usr/local/lib64/cmake/graphscope-analytical
+
         pushd /usr/local/dist/ && pip3 install ./*.whl && popd
+        pushd /opt/graphscope/dist/ && pip3 install ./*.whl && popd
         python3 -m pip install -r python/requirements.txt
         python3 -m pip install -r python/requirements-dev.txt
         pushd python && python3 setup.py build_proto && popd
@@ -304,7 +322,7 @@ jobs:
         # prelaunch the etcd
         /usr/local/bin/etcd --data-dir=/tmp/default.etcd &
 
-        export GRAPHSCOPE_HOME='/usr/local'
+        export GRAPHSCOPE_HOME='/opt/graphscope'
         export GS_TEST_DIR='/home/graphscope/gstest'
         cd python
         python3 -m pytest --cov=graphscope --cov-config=.coveragerc \
@@ -325,7 +343,7 @@ jobs:
         # prelaunch the etcd
         /usr/local/bin/etcd --data-dir=/tmp/default.etcd &
 
-        export GRAPHSCOPE_HOME='/usr/local'
+        export GRAPHSCOPE_HOME='/opt/graphscope'
         export GS_TEST_DIR='/home/graphscope/gstest'
         python3 -m pytest --exitfirst -s -v python/graphscope/nx/tests \
                           --ignore=python/graphscope/nx/tests/algorithms/forward
@@ -367,6 +385,7 @@ jobs:
       run: |
         cp .github/workflows/*.Dockerfile artifacts/
         pushd artifacts
+        tar -xf ./gae-${{ github.sha }}/vineyard.tar
         tar -xf ./gae-${{ github.sha }}/gae.tar
         tar -xf ./gle-${{ github.sha }}/gle.tar
         tar -xf ./gie-${{ github.sha }}/gie.tar
@@ -380,8 +399,7 @@ jobs:
         python3 -m pip install -r python/requirements-dev.txt --user
         python3 -m pip install pytest-cov --user
         pushd python && sudo -E python3 setup.py develop && popd
-
-        pip3 install git+https://github.com/mars-project/mars.git@35b44ed56e031c252e50373b88b85bd9f454332e#egg=pymars[distributed]
+        # pip3 install git+https://github.com/mars-project/mars.git@35b44ed56e031c252e50373b88b85bd9f454332e#egg=pymars[distributed]
 
     - name: Kubernetes test
       env:
@@ -490,6 +508,7 @@ jobs:
       run: |
         cp .github/workflows/*.Dockerfile artifacts/
         pushd artifacts
+        tar -xf ./gae-${{ github.sha }}/vineyard.tar
         tar -xf ./gae-${{ github.sha }}/gae.tar
         tar -xf ./gle-${{ github.sha }}/gle.tar
         tar -xf ./gie-${{ github.sha }}/gie.tar
@@ -565,8 +584,6 @@ jobs:
 
     - name: gremlin-test
       run: |
-        export LIBRARY_PATH=$LIBRARY_PATH:/opt/graphscope/lib
-        export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/opt/graphscope/lib:/opt/graphscope/lib64
         cd interactive_engine/src/v2
         mvn test -Pgremlin-test
 
@@ -671,7 +688,8 @@ jobs:
         export NODE_IP=$(kubectl get nodes --namespace default -o jsonpath="{.items[0].status.addresses[0].address}")
         helm test ci --timeout 5m0s
         cd ${GITHUB_WORKSPACE}/python
-        for i in {1..3}; do python3 -m pytest -s -vvv tests/kubernetes/test_store_service.py -k test_demo_after_restart && break || sleep 10; done
+        sleep 30
+        python3 -m pytest -s -vvv tests/kubernetes/test_store_service.py -k test_demo_after_restart
 
     - name: Clean
       if: always()
@@ -701,6 +719,7 @@ jobs:
         cp k8s/ready_probe.sh artifacts/
         pushd artifacts
 
+        tar -xf ./gae-${{ github.sha }}/vineyard.tar
         tar -xf ./gae-${{ github.sha }}/gae.tar
         tar -xf ./gle-${{ github.sha }}/gle.tar
         tar -xf ./gie-${{ github.sha }}/gie.tar
