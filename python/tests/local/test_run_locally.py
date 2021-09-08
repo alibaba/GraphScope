@@ -113,6 +113,7 @@ def ogbn_small_bytecode():
 
     return func
 
+
 def demo(sess, ogbn_mag_small, ogbn_small_script):
     graph = load_ogbn_mag(sess, ogbn_mag_small)
 
