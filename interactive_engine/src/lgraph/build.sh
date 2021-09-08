@@ -1,6 +1,5 @@
 set -e
 
-NUM_PROC=$( $(command -v nproc &> /dev/null) && echo $(nproc) || echo $(sysctl -n hw.physicalcpu) )
 MODE=$1
 
 mkdir -p build

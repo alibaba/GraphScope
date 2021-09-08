@@ -54,6 +54,34 @@ GraphScope 的 Python 客户端不包含在该镜像中，构建也与引擎有�
     ./scripts/test.sh --all --image graphscope/graphscope:SHORTSHA
 
 
+基于 Docker 镜像在本地构建并测试 GraphScope
+---------------------------------------
+
+基于 ubuntu:20.04，我们提供了一个具备 GraphScope 所需依赖的 docker 镜像
+
+
+    - registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-vineyard:ubuntu
+
+开发者需要通过 ``docker run`` 启动一个 docker 容器，并通过 ``git clone`` 的命令从我们的开源代码库
+`repo <https://github.com/alibaba/GraphScope>`_ 中获得最新版的代码, 在此基础上做开发或代码的更改，然后执行：
+
+.. code:: bash
+
+    docker pull registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-vineyard:ubuntu
+    # set docker container shared memory: 10G
+    docker run --shm-size 10240m -it registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-vineyard:ubuntu /bin/bash
+    # inner container
+    git clone https://github.com/alibaba/GraphScope.git
+    git clone https://github.com/GraphScope/gstest.git
+    # 编译
+    export WITH_LEARNING_ENGINE=ON
+    export GRAPHSCOPE_HOME=/opt/graphscope
+    cd GraphScope && make INSTALL_PREFIX=/opt/graphscope install
+    # 测试：
+    #   export GS_TEST_DIR=<path_to_your_gstest_dir>
+    cd GraphScope/python && python3 -m pytest -s -v ./tests/unittest
+
+
 构建 Python Wheels
 -------------------
 

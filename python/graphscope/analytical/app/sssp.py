@@ -31,6 +31,8 @@ __all__ = [
 def sssp(graph, src=0):
     """Compute single source shortest path on the `graph`.
 
+    Note that SSSP requires an numerical property on the edge.
+
     Args:
         graph (:class:`Graph`): A projected simple graph.
         src (int, optional): The source vertex. Defaults to 0.
@@ -46,7 +48,7 @@ def sssp(graph, src=0):
         import graphscope as gs
         sess = gs.session()
         g = sess.g()
-        pg = g.project(vertices={"vlabel": []}, edges={"elabel": []})
+        pg = g.project(vertices={"vlabel": []}, edges={"elabel": ["e_property"]})
         r = gs.sssp(pg, src=0)
         s.close()
 

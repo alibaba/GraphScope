@@ -31,6 +31,8 @@ import org.apache.tinkerpop.gremlin.GraphProvider;
 import org.apache.tinkerpop.gremlin.LoadGraphWith;
 import org.apache.tinkerpop.gremlin.structure.Graph;
 import org.junit.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.lang.annotation.Annotation;
 import java.util.HashMap;
@@ -38,8 +40,10 @@ import java.util.List;
 import java.util.Map;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 public class FfiTest {
+    private static final Logger logger = LoggerFactory.getLogger(FfiTest.class);
 
     @Test
     public void testFfi() throws Exception {
@@ -69,8 +73,12 @@ public class FfiTest {
         StoreService storeService = store.getStoreService();
         JnaGraphStore jnaGraphStore = (JnaGraphStore) storeService.getIdToPartition().get(0);
         Pointer wrapperPartitionGraph = GraphLibrary.INSTANCE.createWrapperPartitionGraph(jnaGraphStore.getPointer());
+
         GnnLibrary.INSTANCE.setPartitionGraph(wrapperPartitionGraph);
-        GnnLibrary.INSTANCE.runLocalTests();
+        GnnLibrary.TestResult testResult = new GnnLibrary.TestResult(GnnLibrary.INSTANCE.runLocalTests());
+        logger.info(testResult.getInfo());
+        assertTrue(testResult.getFlag());
+
         provider.clear(graph, graphConf);
         maxNode.close();
     }

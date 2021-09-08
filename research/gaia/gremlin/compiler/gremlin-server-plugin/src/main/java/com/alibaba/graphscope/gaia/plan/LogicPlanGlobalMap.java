@@ -25,6 +25,7 @@ import com.alibaba.graphscope.gaia.plan.strategy.global.TransformTraverserStep;
 import com.alibaba.graphscope.gaia.FilterHelper;
 import com.alibaba.graphscope.gaia.plan.strategy.global.property.cache.ToFetchProperties;
 import com.alibaba.graphscope.gaia.plan.translator.builder.PlanConfig;
+import com.alibaba.graphscope.gaia.store.GraphElementId;
 import com.alibaba.pegasus.builder.JobBuilder;
 import com.alibaba.pegasus.builder.ReduceBuilder;
 import com.alibaba.graphscope.gaia.plan.extractor.TagKeyExtractorFactory;
@@ -38,7 +39,6 @@ import com.alibaba.graphscope.gaia.plan.translator.TraversalTranslator;
 import com.alibaba.graphscope.gaia.plan.translator.builder.StepBuilder;
 import com.alibaba.graphscope.gaia.plan.translator.builder.TraversalBuilder;
 import com.google.protobuf.ByteString;
-import com.google.protobuf.Option;
 import org.apache.commons.configuration.Configuration;
 import org.apache.tinkerpop.gremlin.process.traversal.P;
 import org.apache.tinkerpop.gremlin.process.traversal.Step;
@@ -108,10 +108,14 @@ public class LogicPlanGlobalMap {
         stepPlanMap.put(STEP.GraphStep, new GremlinStepResource() {
             @Override
             protected Object getStepResource(Step t, Configuration conf) {
-                return Gremlin.GraphStep.newBuilder().addAllIds(PlanUtils.extractIds(((GraphStep) t).getIds()))
-                        .setReturnType(((GraphStep) t).returnsVertex() ? Gremlin.EntityType.VERTEX : Gremlin.EntityType.EDGE)
-                        .addTraverserRequirements(Gremlin.TraverserRequirement.PATH)
-                        .build();
+                Gremlin.GraphStep.Builder builder = Gremlin.GraphStep.newBuilder();
+                builder.setReturnType(((GraphStep) t).returnsVertex() ? Gremlin.EntityType.VERTEX : Gremlin.EntityType.EDGE)
+                        .addTraverserRequirements(Gremlin.TraverserRequirement.PATH);
+                Object[] ids = ((GraphStep) t).getIds();
+                for (int i = 0; i < ids.length; ++i) {
+                    builder.addIds(ByteString.copyFrom(GraphElementId.toBytes(ids[i])));
+                }
+                return builder.build();
             }
         });
         stepPlanMap.put(STEP.GaiaGraphStep, new GremlinStepResource() {
@@ -121,12 +125,15 @@ public class LogicPlanGlobalMap {
                         .setGraphLabels(((GaiaGraphStep) t).getGraphLabels())
                         .setPredicates(new PredicateTranslator(new HasContainerP((GaiaGraphStep) t)).translate())
                         .build();
-                return Gremlin.GraphStep.newBuilder()
-                        .addAllIds(PlanUtils.extractIds(((GaiaGraphStep) t).getIds()))
-                        .setReturnType(((GraphStep) t).returnsVertex() ? Gremlin.EntityType.VERTEX : Gremlin.EntityType.EDGE)
+                Gremlin.GraphStep.Builder builder = Gremlin.GraphStep.newBuilder();
+                builder.setReturnType(((GraphStep) t).returnsVertex() ? Gremlin.EntityType.VERTEX : Gremlin.EntityType.EDGE)
                         .addTraverserRequirements(Gremlin.TraverserRequirement.valueOf(((GaiaGraphStep) t).getTraverserRequirement().name()))
-                        .setQueryParams(params)
-                        .build();
+                        .setQueryParams(params);
+                Object[] ids = ((GaiaGraphStep) t).getIds();
+                for (int i = 0; i < ids.length; ++i) {
+                    builder.addIds(ByteString.copyFrom(GraphElementId.toBytes(ids[i])));
+                }
+                return builder.build();
             }
         });
         stepPlanMap.put(STEP.CachePropGaiaGraphStep, new GremlinStepResource() {
@@ -142,12 +149,15 @@ public class LogicPlanGlobalMap {
                     Common.Value value = Common.Value.newBuilder().setI64(snapshotId).build();
                     paramsBuider.setExtraParams(Collections.singletonMap(PlanConfig.SNAPSHOT_ID, value));
                 }
-                return Gremlin.GraphStep.newBuilder()
-                        .addAllIds(PlanUtils.extractIds(((CachePropGaiaGraphStep) t).getIds()))
-                        .setReturnType(((GraphStep) t).returnsVertex() ? Gremlin.EntityType.VERTEX : Gremlin.EntityType.EDGE)
+                Gremlin.GraphStep.Builder builder = Gremlin.GraphStep.newBuilder();
+                builder.setReturnType(((GraphStep) t).returnsVertex() ? Gremlin.EntityType.VERTEX : Gremlin.EntityType.EDGE)
                         .addTraverserRequirements(Gremlin.TraverserRequirement.valueOf(((CachePropGaiaGraphStep) t).getTraverserRequirement().name()))
-                        .setQueryParams(paramsBuider.build())
-                        .build();
+                        .setQueryParams(paramsBuider.build());
+                Object[] ids = ((CachePropGaiaGraphStep) t).getIds();
+                for (int i = 0; i < ids.length; ++i) {
+                    builder.addIds(ByteString.copyFrom(GraphElementId.toBytes(ids[i])));
+                }
+                return builder.build();
             }
         });
         stepPlanMap.put(STEP.HasStep, new JobBuilderResource() {

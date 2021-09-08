@@ -113,6 +113,9 @@ class BaseContextDAGNode(DAGNode):
     def context_type(self):
         raise NotImplementedError()
 
+    def _build_schema(self, result_properties):
+        raise NotImplementedError()
+
     def to_numpy(self, selector, vertex_range=None, axis=0):
         """Get the context data as a numpy array.
 
@@ -206,6 +209,38 @@ class BaseContextDAGNode(DAGNode):
         op = dag_utils.to_vineyard_dataframe(self, selector, vertex_range)
         return ResultDAGNode(self, op)
 
+    def output(self, fd, selector, vertex_range=None, **kwargs):
+        """Dump results to `fd`.
+        Support dumps data to local (respect to pod) files, hdfs or oss.
+        It first write results to a vineyard dataframe, and let vineyard
+        do the data dumping job.
+        `fd` must meet specific formats, with auth information if needed. As follows:
+
+            - local
+                `file:///tmp/result_path`
+            - oss
+                `oss:///bucket/object`
+            - hdfs
+                `hdfs:///tmp/result_path`
+
+        Args:
+            fd (str): Output location.
+            selector (dict): Similar to `to_dataframe`.
+            vertex_range (dict, optional): Similar to `to_dataframe`. Defaults to None.
+            kwargs (dict, optional): Storage options with respect to output storage type.
+                    for example:
+                    key, secret, endpoint for oss,
+                    key, secret, client_kwargs for s3,
+                    host, port for hdfs,
+                    None for local.
+
+        Returns:
+            :class:`graphscope.framework.context.ResultDAGNode`, evaluated in eager mode.
+        """
+        df = self.to_vineyard_dataframe(selector, vertex_range)
+        op = dag_utils.output(df, fd, **kwargs)
+        return ResultDAGNode(self, op)
+
 
 class TensorContextDAGNode(BaseContextDAGNode):
     """Tensor context DAG node holds a tensor.
@@ -215,6 +250,9 @@ class TensorContextDAGNode(BaseContextDAGNode):
     @property
     def context_type(self):
         return "tensor"
+
+    def _build_schema(self, result_properties):
+        return "axis"
 
     def _check_selector(self, selector):
         return True
@@ -242,6 +280,10 @@ class VertexDataContextDAGNode(BaseContextDAGNode):
     @property
     def context_type(self):
         return "vertex_data"
+
+    def _build_schema(self, result_properties):
+        ret = {"v": ["id", "data"], "e": ["src", "dst", "data"], "r": []}
+        return json.dumps(ret, indent=4)
 
     def _check_selector(self, selector):
         """
@@ -300,6 +342,15 @@ class LabeledVertexDataContextDAGNode(BaseContextDAGNode):
     def context_type(self):
         return "labeled_vertex_data"
 
+    def _build_schema(self, result_properties):
+        schema = self._graph.schema
+        ret = {
+            "v": _get_property_v_context_schema_str(schema),
+            "e": _get_property_e_context_schema_str(schema),
+            "r": schema.vertex_labels,
+        }
+        return json.dumps(ret, indent=4)
+
     def _check_selector(self, selector):
         """
         Raises:
@@ -350,6 +401,20 @@ class VertexPropertyContextDAGNode(BaseContextDAGNode):
     @property
     def context_type(self):
         return "vertex_property"
+
+    def _build_schema(self, result_properties):
+        """Build context schema.
+
+        Args:
+            result_properties (str): Returned by c++,
+            example_format(str): "id,name,age,"
+
+        Returns:
+            str: return schema as human readable string
+        """
+        result_properties = [i for i in result_properties.split(",") if i]
+        ret = {"v": ["id", "data"], "e": ["src", "dst", "data"], "r": result_properties}
+        return json.dumps(ret, indent=4)
 
     def _check_selector(self, selector):
         """
@@ -410,6 +475,35 @@ class LabeledVertexPropertyContextDAGNode(BaseContextDAGNode):
     def context_type(self):
         return "labeled_vertex_property"
 
+    def _build_schema(self, result_properties):
+        """Build context schema.
+
+        Args:
+            result_properties (str): Returned by c++,
+            example_format:
+                0:a,b,c,
+                1:e,f,g,
+
+        Returns:
+            str: return schema as human readable string
+        """
+        schema = self._graph.schema
+        ret = {
+            "v": _get_property_v_context_schema_str(schema),
+            "e": _get_property_e_context_schema_str(schema),
+            "r": {},
+        }
+        result_properties = [i for i in result_properties.split("\n") if i]
+        label_property_dict = {}
+        for r_props in result_properties:
+            label_id, props = r_props.split(":")
+            label_property_dict[label_id] = [i for i in props.split(",") if i]
+        for label in schema.vertex_labels:
+            label_id = schema.get_vertex_label_id(label)
+            props = label_property_dict.get(label_id, [])
+            ret["r"][label] = props
+        return json.dumps(ret, indent=4)
+
     def _check_selector(self, selector):
         if selector is None:
             raise InvalidArgumentError(
@@ -435,11 +529,12 @@ class Context(object):
     and can be referenced through a handle.
     """
 
-    def __init__(self, context_node, key):
+    def __init__(self, context_node, key, result_schema):
         self._context_node = context_node
         self._session = context_node.session
         self._graph = self._context_node._graph
         self._key = key
+        self._result_schema = result_schema
         # copy and set op evaluated
         self._context_node.op = deepcopy(self._context_node.op)
         self._context_node.evaluated = True
@@ -457,6 +552,10 @@ class Context(object):
     @property
     def context_type(self):
         return self._context_node.context_type
+
+    @property
+    def schema(self):
+        return self._context_node._build_schema(self._result_schema)
 
     @property
     def signature(self):
@@ -507,70 +606,16 @@ class Context(object):
         )
 
     def output(self, fd, selector, vertex_range=None, **kwargs):
-        """Dump results to `fd`.
-        Support dumps data to local (respect to pod) files, hdfs or oss.
-        It first write results to a vineyard dataframe, and let vineyard
-        do the data dumping job.
-        `fd` must meet specific formats, with auth information if needed. As follows:
-
-            - local
-                `file:///tmp/result_path`
-            - oss
-                `oss:///bucket/object`
-            - hdfs
-                `hdfs:///tmp/result_path`
-
-        Args:
-            fd (str): Output location.
-            selector (dict): Similar to `to_dataframe`.
-            vertex_range (dict, optional): Similar to `to_dataframe`. Defaults to None.
-            kwargs (dict, optional): Storage options with respect to output storage type.
-                    for example:
-                    key, secret, endpoint for oss,
-                    key, secret, client_kwargs for s3,
-                    host, port for hdfs,
-                    None for local.
-
+        """
         Examples:
             context.output('s3://test-bucket/res.csv', selector={'id': 'v.id', 'rank': 'r'},
                            key='access-key', secret='access-secret', client_kwargs={})
             context.output('hdfs:///output/res.csv', selector={'id': 'v.id', 'rank': 'r'},
                            host='localhost', port=9000)
         """
-        import vineyard
-        import vineyard.io
-
-        df = self.to_vineyard_dataframe(selector, vertex_range)
-        sess = self._session
-        deployment = "kubernetes" if sess.info["type"] == "k8s" else "ssh"
-        conf = sess.info["engine_config"]
-        vineyard_endpoint = conf["vineyard_rpc_endpoint"]
-        vineyard_ipc_socket = conf["vineyard_socket"]
-        if sess.info["type"] == "k8s":
-            hosts = [
-                "{}:{}".format(sess.info["namespace"], s)
-                for s in sess.info["engine_hosts"].split(",")
-            ]
-        else:  # type == "hosts"
-            hosts = sess.info["engine_hosts"].split(",")
-        # Write vineyard dataframe as a readable stream
-        dfstream = vineyard.io.open(
-            "vineyard://" + str(df),
-            mode="r",
-            vineyard_ipc_socket=vineyard_ipc_socket,
-            vineyard_endpoint=vineyard_endpoint,
-            deployment=deployment,
-            hosts=hosts,
-        )
-        vineyard.io.open(
-            fd,
-            dfstream,
-            mode="w",
-            vineyard_ipc_socket=vineyard_ipc_socket,
-            vineyard_endpoint=vineyard_endpoint,
-            storage_options=kwargs,
-            deployment=deployment,
-            hosts=hosts,
+        self._check_unmodified()
+        return self._session._wrapper(
+            self._context_node.output(fd, selector, vertex_range, **kwargs)
         )
 
     def output_to_client(self, fd, selector, vertex_range=None):
@@ -639,3 +684,23 @@ def create_context_node(context_type, bound_app, graph, *args, **kwargs):
     else:
         # dynamic_vertex_data for networkx
         return BaseContextDAGNode(bound_app, graph, *args, **kwargs)
+
+
+def _get_property_v_context_schema_str(schema):
+    ret = {}
+    for label in schema.vertex_labels:
+        ret[label] = ["id"]
+        for prop in schema.get_vertex_properties(label):
+            if prop.name != "id":  # avoid property name duplicate
+                ret[label].append(prop.name)
+    return ret
+
+
+def _get_property_e_context_schema_str(schema):
+    ret = {}
+    for label in schema.edge_labels:
+        ret[label] = ["src", "dst"]
+        for prop in schema.get_edge_properties(label):
+            if prop.name not in ("src", "dst"):
+                ret[label].append(prop.name)
+    return ret

@@ -17,6 +17,7 @@ package com.alibaba.maxgraph.v2.frontend;
 
 import com.alibaba.maxgraph.v2.common.SnapshotListener;
 import com.alibaba.maxgraph.v2.common.SnapshotWithSchema;
+import com.alibaba.maxgraph.v2.common.exception.MaxGraphException;
 import com.alibaba.maxgraph.v2.common.frontend.api.schema.SchemaFetcher;
 import com.alibaba.maxgraph.v2.common.frontend.api.schema.SnapshotSchema;
 import com.alibaba.maxgraph.v2.common.schema.GraphDef;
@@ -100,9 +101,11 @@ public class SnapshotCache implements SchemaFetcher {
                     this.snapshotToListeners.headMap(snapshotId, true);
             for (Map.Entry<Long, List<SnapshotListener>> listenerEntry : listenersToTrigger.entrySet()) {
                 List<SnapshotListener> listeners = listenerEntry.getValue();
+                long listenSnapshotId = listenerEntry.getKey();
                 for (SnapshotListener listener : listeners) {
                     try {
                         listener.onSnapshotAvailable();
+                        logger.info("notify listener for snapshot id [" + listenSnapshotId + "]");
                     } catch (Exception e) {
                         logger.warn("trigger snapshotListener failed. snapshotId [" + snapshotId + "]");
                     }
@@ -128,6 +131,10 @@ public class SnapshotCache implements SchemaFetcher {
         if (snapshotWithSchema == null) {
             return null;
         }
-        return new SnapshotSchema(snapshotWithSchema.getSnapshotId(), snapshotWithSchema.getGraphDef());
+        long snapshotId = snapshotWithSchema.getSnapshotId();
+        if (snapshotId == -1L) {
+            throw new MaxGraphException("Not started yet");
+        }
+        return new SnapshotSchema(snapshotId, snapshotWithSchema.getGraphDef());
     }
 }

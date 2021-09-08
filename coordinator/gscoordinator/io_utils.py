@@ -20,9 +20,9 @@ import threading
 from queue import Queue
 
 
-class StdoutWrapper(object):
-    def __init__(self, stdout, queue=None, drop=True):
-        self._stdout_backup = stdout
+class StdStreamWrapper(object):
+    def __init__(self, std_stream, queue=None, drop=True):
+        self._stream_backup = std_stream
         if queue is None:
             self._lines = Queue()
         else:
@@ -31,19 +31,23 @@ class StdoutWrapper(object):
 
     @property
     def stdout(self):
-        return self._stdout_backup
+        return self._stream_backup
+
+    @property
+    def stderr(self):
+        return self._stream_backup
 
     def drop(self, drop=True):
         self._drop = drop
 
     def write(self, line):
         line = line.encode("ascii", "ignore").decode("ascii")
-        self._stdout_backup.write(line)
+        self._stream_backup.write(line)
         if not self._drop:
             self._lines.put(line)
 
     def flush(self):
-        self._stdout_backup.flush()
+        self._stream_backup.flush()
 
     def poll(self, block=True, timeout=None):
         return self._lines.get(block=block, timeout=timeout)

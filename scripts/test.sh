@@ -12,7 +12,6 @@ platform=$(awk -F= '/^NAME/{print $2}' /etc/os-release)
 
 test_dir=""
 gs_image="registry.cn-hongkong.aliyuncs.com/graphscope/graphscope:${version}"
-gie_manager_image="registry.cn-hongkong.aliyuncs.com/graphscope/maxgraph_standalone_manager:${version}"
 test_GIE=0
 test_on_k8s=0
 
@@ -44,7 +43,6 @@ function usage() {
      -h, --help                             show this help message and exit
      -t, --test_dir DIRECTORY               the existing test data dir.
      -g, --gs_image DOCKER_IMAGE            GraphScope engine's docker image uri
-     -i, --gie_manager_image DOCKER_IMAGE   GIE graph manager docker image uri
      --all                                  run all tests
      --gie                                  run graph interactive engine tests
      --python                               run python tests
@@ -81,7 +79,6 @@ function get_test_data() {
 # Globals:
 #   graphscope_home
 #   gs_image
-#   gie_manager_image
 # Arguments:
 #   None
 # Outputs:
@@ -90,7 +87,7 @@ function get_test_data() {
 ##########################
 function run_gie_test() {
   pushd "${graphscope_home}"/interactive_engine/tests
-  ./function_test.sh 8111 1 ${gs_image} ${gie_manager_image}
+  ./function_test.sh 8111 1 ${gs_image}
 
   res=$(grep "failed" ./target/surefire-reports/testng-results.xml)
   if [[ ${res} == *"failed=\"0\""* ]]; then
@@ -115,9 +112,8 @@ function run_gie_test() {
 ##########################
 function run_k8s_test() {
   export GS_IMAGE="${gs_image}"  # let session use specified image tag
-  export GIE_MANAGER_IMAGE="${gie_manager_image}"
 
-  python3 -m pytest -v "${graphscope_home}"/python/graphscope/deploy/tests
+  python3 -m pytest -v "${graphscope_home}"/python/tests/kubernetes/
 }
 
 while [[ $# -gt 0 ]]; do
@@ -135,11 +131,6 @@ while [[ $# -gt 0 ]]; do
     ;;
   -g | --gs_image)
     gs_image="$2"
-    shift
-    shift
-    ;;
-  -i | --gie_manager_image)
-    gie_manager_image="$2"
     shift
     shift
     ;;

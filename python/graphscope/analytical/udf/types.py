@@ -58,4 +58,26 @@ class __PlaceHolder(object):
 
 
 def declare(graphscope_type, variable):
+    """Declare a GraphScope data type.
+
+    Args:
+        graphscope_type (:class:`graphscope.analytical.udf.GraphScopeType`):
+            Valid options are `graphscope.Vertex`
+        variable:
+            Python variable.
+
+    Examples:
+        >>> @pie(vd_type="string", md_type="string")
+        >>> class MyAlgorithm(AppAssets):
+        >>>     @staticmethod
+        >>>     def Init(frag, context):
+        >>>         graphscope.declare(graphscope.Vertex, source)
+        >>>         # means `Vertex source;` in c++ code
+        >>>     @staticmethod
+        >>>     def PEval(frag, context):
+        >>>         pass
+        >>>     @staticmethod
+        >>>     def IncEval(frag, context):
+        >>>         pass
+    """
     return __PlaceHolder(declare)

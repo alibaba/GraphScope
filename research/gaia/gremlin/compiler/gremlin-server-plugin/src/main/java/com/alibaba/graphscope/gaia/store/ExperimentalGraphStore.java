@@ -15,6 +15,7 @@
  */
 package com.alibaba.graphscope.gaia.store;
 
+import com.alibaba.graphscope.common.proto.GremlinResult;
 import com.alibaba.graphscope.gaia.JsonUtils;
 import com.alibaba.graphscope.gaia.config.GaiaConfig;
 import com.alibaba.graphscope.gaia.idmaker.IdMaker;
@@ -24,6 +25,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
+import java.math.BigInteger;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
 
@@ -68,6 +70,16 @@ public class ExperimentalGraphStore extends GraphStoreService {
     @Override
     public long getGlobalId(long labelId, long propertyId) {
         return (Long) idMaker.getId(Arrays.asList(labelId, propertyId));
+    }
+
+    @Override
+    public Object getCompositeId(GremlinResult.Edge edge) {
+        return fromBytes(edge.getId().toByteArray());
+    }
+
+    @Override
+    public Object fromBytes(byte[] edgeId) {
+        return new BigInteger(edgeId);
     }
 
     @Override

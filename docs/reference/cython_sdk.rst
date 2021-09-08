@@ -596,47 +596,47 @@ PIE
    .. py:method:: Fragment.inner_nodes(vertex_label_id: int) -> VertexRange
       :noindex:
 
-        Get inner vertex range of this fragment by label id.
+        Get inner vertex range in this fragment by label id.
 
    .. py:method:: Fragment.outer_nodes(vertex_label_id: int) -> VertexRange
       :noindex:
 
-        Get outer vertex range of this fragment by label id.
+        Get outer vertex range in this fragment by label id.
 
    .. py:method:: Fragment.get_node_fid(v: Vertex) -> int
       :noindex:
 
-        Get vertex fragment id.
+        Get fragment id of the `v`.
 
    .. py:method:: Fragment.is_inner_node(v: Vertex) -> bool
       :noindex:
 
-        Return True if inner vertex of this fragment.
+        Return True if `v` is the inner vertex of this fragment.
 
    .. py:method:: Fragment.is_outer_node(v: Vertex) -> bool
       :noindex:
 
-        Return False if outer vertex of this fragment.
+        Return False if `v` is the outer vertex of this fragment.
 
    .. py:method:: Fragment.get_node(label_id: int, oid: int64_t, v: Vertex&) -> bool
       :noindex:
 
-        Return True if oid exist in this fragment.
+        Return True if oid exists in this fragment.
 
    .. py:method:: Fragment.get_inner_node(label_id: int, oid: int64_t, v: Vertex&) -> bool
       :noindex:
 
-        Return True if oid exist of inner vertex in this fragment.
+        Return True if oid exists in the inner vertex in this fragment, and assign the node to `v`.
 
    .. py:method:: Fragment.get_outer_node(label_id: int, oid: int64_t, v: Vertex&) -> bool
       :noindex:
 
-        Return True if oid exist of outer vertex in this fragment.
+        Return True if oid exists in the outer vertex in this fragment, and assign the node to `v`.
 
    .. py:method:: Fragment.get_node_id(v: Vertex) -> int64_t
       :noindex:
 
-        Get vertex oid.
+        Return vertex oid of `v`.
 
    .. py:method:: Fragment.get_outgoing_edges(v: Vertex, edge_label_id: int) -> AdjList
       :noindex:
@@ -834,3 +834,29 @@ PIE
       :noindex:
 
          Aggregator for calculating products of values.
+
+   .. py:data:: kOverwriteAggregate
+      :noindex:
+
+         Aggregator that stores a value that is overwritten once another value is aggregated.
+         Note that, in case multiple vertices write to this aggregator, the behavior is
+         non-deterministic.
+
+   .. py:data:: kTextAppendAggregate
+      :noindex:
+
+         Aggregator with string as its value which keeps appending text to it.
+
+GraphScope types
+----------------
+.. autosummary::
+   :toctree: generated/
+
+   graphscope.Vertex
+
+Functions
+---------
+.. autosummary::
+   :toctree: generated/
+
+   graphscope.declare

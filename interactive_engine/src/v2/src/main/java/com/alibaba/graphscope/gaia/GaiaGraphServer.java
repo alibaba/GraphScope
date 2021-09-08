@@ -117,13 +117,8 @@ public class GaiaGraphServer implements MaxGraphServer {
         }
     }
 
-    public GremlinExecutor getGremlinExecutor() {
-        return this.server.getServerGremlinExecutor().getGremlinExecutor();
-    }
-
     private void loadSettings() {
-        InputStream input = com.alibaba.maxgraph.server.MaxGraphServer.class.getClassLoader()
-                .getResourceAsStream("conf/server.gaia.yaml");
+        InputStream input = GaiaGraphServer.class.getClassLoader().getResourceAsStream("conf/server.gaia.yaml");
         this.settings = Settings.read(input);
     }
 

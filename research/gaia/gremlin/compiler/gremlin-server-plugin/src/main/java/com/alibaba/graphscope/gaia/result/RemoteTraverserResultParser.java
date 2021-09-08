@@ -84,9 +84,9 @@ public class RemoteTraverserResultParser extends DefaultResultParser {
     @Override
     protected Map<String, Object> extractProperties(GremlinResult.Edge edge) {
         Map<String, Object> result = new HashMap<>();
-        Set<String> keys = graphStore.getEdgeKeys(extractEdgeId(edge));
+        Set<String> keys = graphStore.getEdgeKeys(edge);
         for (String key : keys) {
-            Optional propertyOpt = graphStore.getEdgeProperty(extractEdgeId(edge), key);
+            Optional propertyOpt = graphStore.getEdgeProperty(edge, key);
             if (propertyOpt.isPresent()) {
                 result.put(key, propertyOpt.get());
             }
