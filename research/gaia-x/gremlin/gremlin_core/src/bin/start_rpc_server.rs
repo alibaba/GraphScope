@@ -93,7 +93,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let factory = GremlinJobCompiler::new(partition, num_servers, server_config.server_id);
     let service = Service::new(factory);
     let rpc_service = RpcService::new(service, server_config.report);
-    start_rpc_server(addr.parse().unwrap(), rpc_service, false).await?;
+    start_rpc_server(addr.parse().unwrap(), rpc_service, true).await?;
 
     Ok(())
 }
