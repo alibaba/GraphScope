@@ -15,9 +15,13 @@
  */
 package com.alibaba.maxgraph.v2.sdk;
 
+import com.alibaba.graphscope.proto.write.*;
 import com.alibaba.maxgraph.proto.v2.*;
+import com.alibaba.maxgraph.proto.v2.RemoteFlushRequest;
 import com.alibaba.maxgraph.v2.common.frontend.api.schema.GraphSchema;
 import com.alibaba.maxgraph.v2.common.schema.GraphDef;
+import com.alibaba.maxgraph.v2.frontend.write.EdgeRecordKey;
+import com.alibaba.maxgraph.v2.frontend.write.VertexRecordKey;
 import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
 import org.slf4j.Logger;
@@ -31,6 +35,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
@@ -39,11 +44,11 @@ public class Client implements Closeable {
     private static final Logger logger = LoggerFactory.getLogger(Client.class);
 
     private ClientGrpc.ClientBlockingStub stub;
+    private ClientWriteGrpc.ClientWriteBlockingStub writeStub;
     private ManagedChannel channel;
     private String name = "";
 
-    private AddVerticesRequest.Builder verticesBuilder;
-    private AddEdgesRequest.Builder edgesBuilder;
+    private BatchWriteRequest.Builder batchWriteBuilder;
 
     public Client(String hosts, String name) {
         this.name = name;
@@ -60,6 +65,7 @@ public class Client implements Closeable {
                 .build();
         this.channel = channel;
         this.stub = ClientGrpc.newBlockingStub(this.channel);
+        this.writeStub = ClientWriteGrpc.newBlockingStub(this.channel);
         this.init();
     }
 
@@ -76,38 +82,41 @@ public class Client implements Closeable {
     }
 
     private void init() {
-        this.verticesBuilder = AddVerticesRequest.newBuilder().setSession(this.name);
-        this.edgesBuilder = AddEdgesRequest.newBuilder().setSession(this.name);
+        this.batchWriteBuilder = BatchWriteRequest.newBuilder().setClientId("0-1");
     }
 
     public void addVertex(String label, Map<String, String> properties) {
-        this.verticesBuilder.addDataList(VertexDataPb.newBuilder()
-                .setLabel(label)
-                .putAllProperties(properties)
-                .build());
+        VertexRecordKey vertexRecordKey = new VertexRecordKey(label);
+        WriteRequestPb writeRequest = WriteRequestPb.newBuilder()
+                .setWriteType(WriteTypePb.INSERT)
+                .setDataRecord(DataRecordPb.newBuilder()
+                        .setVertexRecordKey(vertexRecordKey.toProto())
+                        .putAllProperties(properties)
+                        .build())
+                .build();
+        this.batchWriteBuilder.addWriteRequests(writeRequest);
     }
 
     public void addEdge(String label, String srcLabel, String dstLabel, Map<String, String> srcPk,
                         Map<String, String> dstPk, Map<String, String> properties) {
-        this.edgesBuilder.addDataList(EdgeDataPb.newBuilder()
-                .setLabel(label)
-                .setSrcLabel(srcLabel)
-                .setDstLabel(dstLabel)
-                .putAllSrcPk(srcPk)
-                .putAllDstPk(dstPk)
-                .putAllProperties(properties)
-                .build());
+        VertexRecordKey srcVertexKey = new VertexRecordKey(srcLabel, Collections.unmodifiableMap(srcPk));
+        VertexRecordKey dstVertexKey = new VertexRecordKey(dstLabel, Collections.unmodifiableMap(dstPk));
+        EdgeRecordKey edgeRecordKey = new EdgeRecordKey(label, srcVertexKey, dstVertexKey);
+        WriteRequestPb writeRequest = WriteRequestPb.newBuilder()
+                .setWriteType(WriteTypePb.INSERT)
+                .setDataRecord(DataRecordPb.newBuilder()
+                        .setEdgeRecordKey(edgeRecordKey.toProto())
+                        .putAllProperties(properties)
+                        .build())
+                .build();
+        this.batchWriteBuilder.addWriteRequests(writeRequest);
     }
 
     public long commit() {
         long snapshotId = 0L;
-        if (this.verticesBuilder.getDataListCount() > 0) {
-            AddVerticesResponse verticesResponse = this.stub.addVertices(this.verticesBuilder.build());
-            snapshotId = verticesResponse.getSnapshotId();
-        }
-        if (this.edgesBuilder.getDataListCount() > 0) {
-            AddEdgesResponse edgesResponse = this.stub.addEdges(this.edgesBuilder.build());
-            snapshotId = edgesResponse.getSnapshotId();
+        if (this.batchWriteBuilder.getWriteRequestsCount() > 0) {
+            BatchWriteResponse response = this.writeStub.batchWrite(this.batchWriteBuilder.build());
+            snapshotId = response.getSnapshotId();
         }
         this.init();
         return snapshotId;

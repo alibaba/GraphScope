@@ -31,4 +31,10 @@ public class VertexRecordKey {
         Map<String, Object> pkPropertiesMap = Collections.unmodifiableMap(proto.getPkPropertiesMap());
         return new VertexRecordKey(label, pkPropertiesMap);
     }
+
+    public VertexRecordKeyPb toProto() {
+        VertexRecordKeyPb.Builder builder = VertexRecordKeyPb.newBuilder();
+        properties.forEach((k, v) -> builder.putPkProperties(k, v.toString()));
+        return builder.build();
+    }
 }
