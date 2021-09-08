@@ -26,14 +26,35 @@ pub enum TraverserAccumulator {
 }
 
 impl Encode for TraverserAccumulator {
-    fn write_to<W: WriteExt>(&self, _writer: &mut W) -> std::io::Result<()> {
-        unimplemented!()
+    fn write_to<W: WriteExt>(&self, writer: &mut W) -> std::io::Result<()> {
+        match self {
+            TraverserAccumulator::ToCount(count) => {
+                writer.write_u8(0)?;
+                count.write_to(writer)?;
+            }
+            TraverserAccumulator::ToList(list) => {
+                writer.write_u8(1)?;
+                list.write_to(writer)?;
+            }
+        }
+        Ok(())
     }
 }
 
 impl Decode for TraverserAccumulator {
-    fn read_from<R: ReadExt>(_reader: &mut R) -> std::io::Result<Self> {
-        unimplemented!()
+    fn read_from<R: ReadExt>(reader: &mut R) -> std::io::Result<Self> {
+        let e = reader.read_u8()?;
+        match e {
+            0 => {
+                let cnt = Count::read_from(reader)?;
+                Ok(TraverserAccumulator::ToCount(cnt))
+            }
+            1 => {
+                let list = ToList::read_from(reader)?;
+                Ok(TraverserAccumulator::ToList(list))
+            }
+            _ => Err(std::io::Error::new(std::io::ErrorKind::Other, "unreachable")),
+        }
     }
 }
 
