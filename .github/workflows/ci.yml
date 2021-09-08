@@ -591,6 +591,7 @@ jobs:
         name: gss-${{ github.sha }}
         path: |
           maxgraph.tar.gz
+          graphscope_store_data_load.tar.gz
           vineyard.tar.gz
         retention-days: 5
    
