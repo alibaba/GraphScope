@@ -46,6 +46,9 @@ if vineyard is not None:
         str,
         Sequence[np.ndarray],
         pd.DataFrame,
+        vineyard.Object,
+        vineyard.ObjectID,
+        vineyard.ObjectName,
     ]
 else:
     VineyardObjectTypes = ()
@@ -54,9 +57,6 @@ else:
         str,
         Sequence[np.ndarray],
         pd.DataFrame,
-        vineyard.Object,
-        vineyard.ObjectID,
-        vineyard.ObjectName,
     ]
 
 
