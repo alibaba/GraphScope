@@ -34,6 +34,7 @@ public class VertexRecordKey {
 
     public VertexRecordKeyPb toProto() {
         VertexRecordKeyPb.Builder builder = VertexRecordKeyPb.newBuilder();
+        builder.setLabel(label);
         properties.forEach((k, v) -> builder.putPkProperties(k, v.toString()));
         return builder.build();
     }
