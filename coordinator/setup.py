@@ -16,10 +16,10 @@
 # limitations under the License.
 #
 
+import contextlib
 import os
 import shutil
 import subprocess
-import contextlib
 from distutils.cmd import Command
 
 from setuptools import find_packages
