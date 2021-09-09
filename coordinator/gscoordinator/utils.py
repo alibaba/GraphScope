@@ -1504,7 +1504,9 @@ def check_gremlin_server_ready(endpoint):
         except Exception as e:
             error_message = str(e)
         else:
+            client.close()
             return True
         time.sleep(3)
         if time.time() - begin_time > INTERAVTIVE_INSTANCE_TIMEOUT_SECONDS:
+            client.close()
             raise TimeoutError(f"Gremlin check query failed: {error_message}")

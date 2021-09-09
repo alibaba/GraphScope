@@ -502,16 +502,20 @@ class CoordinatorServiceServicer(
             run_dag_on, dag_def = next_dag
             try:
                 if run_dag_on == GSEngine.analytical_engine:
+                    error_code = error_codes_pb2.ANALYTICAL_ENGINE_INTERNAL_ERROR
                     self.run_on_analytical_engine(
                         request.session_id, dag_def, op_results
                     )
                 elif run_dag_on == GSEngine.interactive_engine:
+                    error_code = error_codes_pb2.INTERACTIVE_ENGINE_INTERNAL_ERROR
                     self.run_on_interactive_engine(
                         request.session_id, dag_def, op_results
                     )
                 elif run_dag_on == GSEngine.learning_engine:
+                    error_code = error_codes_pb2.LEARNING_ENGINE_INTERNAL_ERROR
                     self.run_on_learning_engine(request.session_id, dag_def, op_results)
                 elif run_dag_on == GSEngine.coordinator:
+                    error_code = error_codes_pb2.COORDINATOR_INTERNAL_ERROR
                     self.run_on_coordinator(request.session_id, dag_def, op_results)
             except grpc.RpcError as exc:
                 # Not raised by graphscope, maybe socket closed, etc
@@ -520,8 +524,8 @@ class CoordinatorServiceServicer(
                 return message_pb2.RunStepResponse()
             except Exception as exc:
                 return self._make_response(
-                    error_codes_pb2.ANALYTICAL_ENGINE_INTERNAL_ERROR,
-                    "Error occurred during preprocessing: " + traceback.format_exc(),
+                    error_code,
+                    f"Error occurred during preprocessing, The traceback is: {traceback.format_exc()}",
                     pickle.dumps(exc),
                 )
         return message_pb2.RunStepResponse(results=op_results)
@@ -855,7 +859,7 @@ class CoordinatorServiceServicer(
             proc = self._launcher.close_interactive_instance(object_id)
             # 60s is enough
             proc.wait(timeout=60)
-            gremlin_client.closed = True
+            gremlin_client.close()
         except Exception as e:
             raise RuntimeError(
                 f"Failed to close interactive instance {object_id}"

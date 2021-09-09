@@ -57,7 +57,7 @@ class MutableDict(Mutable):
 
 @widgets.register
 class GraphModel(widgets.DOMWidget):
-    """ Graph Widget """
+    """Graph Widget"""
 
     # Name of the widget model class in front-end
     _model_name = Unicode("GraphModel").tag(sync=True)

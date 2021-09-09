@@ -104,8 +104,8 @@ start_coordinator() {
             -Dsun.jnu.encoding=UTF-8
             -Dlogfilename=${log_dir}/maxgraph-coordinator.log
             -Dlogbasedir=${log_dir}/coordinator
-            -Dlog4j.configurationFile=file:${GRAPHSCOPE_HOME}/0.0.1-SNAPSHOT/conf/log4j2.xml
-            -classpath ${GRAPHSCOPE_HOME}/0.0.1-SNAPSHOT/conf/*:${GRAPHSCOPE_HOME}/0.0.1-SNAPSHOT/lib/*:"
+            -Dlog4j.configurationFile=file:${GRAPHSCOPE_HOME}/maxgraph-assembly-0.0.1-SNAPSHOT/conf/log4j2.xml
+            -classpath ${GRAPHSCOPE_HOME}/maxgraph-assembly-0.0.1-SNAPSHOT/conf/*:${GRAPHSCOPE_HOME}/maxgraph-assembly-0.0.1-SNAPSHOT/lib/*:"
 
   # set coordinator config file
   sed -e "s@GRAPH_NAME@${object_id}@g" \
@@ -178,8 +178,8 @@ start_frontend() {
             -Dsun.jnu.encoding=UTF-8
             -Dlogfilename=${log_dir}/maxgraph-frontend.log
             -Dlogbasedir=${log_dir}/frontend
-            -Dlog4j.configurationFile=file:${GRAPHSCOPE_HOME}/0.0.1-SNAPSHOT/conf/log4j2.xml
-            -classpath ${GRAPHSCOPE_HOME}/0.0.1-SNAPSHOT/conf/*:${GRAPHSCOPE_HOME}/0.0.1-SNAPSHOT/lib/*:"
+            -Dlog4j.configurationFile=file:${GRAPHSCOPE_HOME}/maxgraph-assembly-0.0.1-SNAPSHOT/conf/log4j2.xml
+            -classpath ${GRAPHSCOPE_HOME}/maxgraph-assembly-0.0.1-SNAPSHOT/conf/*:${GRAPHSCOPE_HOME}/maxgraph-assembly-0.0.1-SNAPSHOT/lib/*:"
 
   declare frontend_port="0"  # 0 means random
   # set frontend config file

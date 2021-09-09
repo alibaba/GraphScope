@@ -1,6 +1,7 @@
 name: GraphScope Docker Nightly Build CI
 
 on:
+  workflow_dispatch:
   schedule:
     # The notifications for scheduled workflows are sent to the user who
     # last modified the cron syntax in the workflow file.

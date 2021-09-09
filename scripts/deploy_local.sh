@@ -12,8 +12,8 @@ readonly GREEN="\033[0;32m"
 readonly NC="\033[0m" # No Color
 
 readonly GRAPE_BRANCH="master" # libgrape-lite branch
-readonly V6D_VERSION="0.2.6"  # vineyard version
-readonly V6D_BRANCH="v0.2.6" # vineyard branch
+readonly V6D_VERSION="0.2.9"  # vineyard version
+readonly V6D_BRANCH="v0.2.9" # vineyard branch
 readonly LLVM_VERSION=9  # llvm version we use in Darwin platform
 
 readonly SOURCE_DIR="$( cd "$(dirname $0)/.." >/dev/null 2>&1 ; pwd -P )"
@@ -21,7 +21,7 @@ readonly NUM_PROC=$( $(command -v nproc &> /dev/null) && echo $(nproc) || echo $
 readonly OUTPUT_ENV_FILE="${HOME}/.graphscope_env"
 IS_IN_WSL=false && [[ ! -z "${IS_WSL}" || ! -z "${WSL_DISTRO_NAME}" ]] && IS_IN_WSL=true
 readonly IS_IN_WSL
-INSTALL_PREFIX=/usr/local
+INSTALL_PREFIX=/opt/graphscope
 BASIC_PACKGES_TO_INSTALL=
 PLATFORM=
 OS_VERSION=
@@ -93,7 +93,7 @@ cat <<END
   Options:
     --help              Print usage information
     --verbose           Print the debug logging information
-    --prefix <path>     Install prefix of GraphScope, default is /usr/local
+    --prefix <path>     Install prefix of GraphScope, default is /opt/graphscope
 END
 }
 
@@ -785,6 +785,7 @@ install_graphscope() {
   else
     make install WITH_LEARNING_ENGINE=ON INSTALL_PREFIX=${INSTALL_PREFIX}
   fi
+
   popd
 }
 
