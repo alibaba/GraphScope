@@ -1,0 +1,6 @@
+﻿graphscope.experimental.nx.DiGraph.adj
+======================================
+
+.. currentmodule:: graphscope.experimental.nx
+
+.. autoproperty:: DiGraph.adj

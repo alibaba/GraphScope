@@ -1,0 +1,6 @@
+﻿graphscope.experimental.nx.classes.function.edge\_subgraph
+==========================================================
+
+.. currentmodule:: graphscope.experimental.nx.classes
+
+.. autofunction:: function.edge_subgraph

@@ -1,0 +1,6 @@
+﻿graphscope.experimental.nx.classes.function.non\_neighbors
+==========================================================
+
+.. currentmodule:: graphscope.experimental.nx.classes
+
+.. autofunction:: function.non_neighbors

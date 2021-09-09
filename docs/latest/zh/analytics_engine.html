@@ -1,33 +1,45 @@
 
 
 <!DOCTYPE html>
-<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
-<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<html class="writer-html5" lang="en" >
 <head>
-  <meta charset="utf-8">
-  <meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
-
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="utf-8" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   
   <title>图分析引擎 &mdash; GraphScope  documentation</title>
   
 
   
-  
-  
-  
-
-  
-
-  
-  
-    
-
-  
-
   <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
   <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
   <link rel="stylesheet" href="../_static/css/custom.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+
+    
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
     <link rel="next" title="图交互式分析引擎" href="interactive_engine.html" />
@@ -46,21 +58,16 @@
 </script>
 
 
-
-  
-  <script src="../_static/js/modernizr.min.js"></script>
-
 </head>
 
 <body class="wy-body-for-nav">
 
    
   <div class="wy-grid-for-nav">
-
     
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
-        <div class="wy-side-nav-search">
+        <div class="wy-side-nav-search" >
           
 
           
@@ -91,8 +98,9 @@
           
         </div>
 
-        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
-          
+        
+  <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+    
       
       
         
@@ -100,7 +108,7 @@
         
       
       
-        <p><span class="caption-text">目录</span></p>
+        <p class="caption"><span class="caption-text">目录</span></p>
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="installation.html">安装</a></li>
 <li class="toctree-l1"><a class="reference internal" href="getting_started.html">快速上手</a></li>
@@ -121,7 +129,7 @@
 <li class="toctree-l1"><a class="reference internal" href="frequently_asked_questions.html">常见问题</a></li>
 <li class="toctree-l1"><a class="reference internal" href="developer_guide.html">开发者指南</a></li>
 </ul>
-<p><span class="caption-text">API 参考</span></p>
+<p class="caption"><span class="caption-text">API 参考</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference external" href="https://graphscope.io/docs/reference/python_index.html">Python API 参考</a></li>
 <li class="toctree-l1"><a class="reference external" href="https://graphscope.io/docs/reference/analytical_engine_index.html">图分析引擎 API 参考</a></li>
@@ -129,7 +137,8 @@
 
       
     
-        </div>
+  </div>
+
       </div>
     </nav>
 
@@ -164,11 +173,13 @@
 
 
 
+
+
 <div role="navigation" aria-label="breadcrumbs navigation">
 
   <ul class="wy-breadcrumbs">
     
-      <li><a href="../index.html">Docs</a> &raquo;</li>
+      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
         
           <li><a href="index.html">GraphScope: 一站式图计算系统</a> &raquo;</li>
         
@@ -177,7 +188,7 @@
     
       <li class="wy-breadcrumbs-aside">
         
-            
+          
             <a href="../_sources/zh/analytics_engine.rst.txt" rel="nofollow"> View page source</a>
           
         
@@ -191,14 +202,14 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <section id="id1">
+  <div class="section" id="id1">
 <h1>图分析引擎<a class="headerlink" href="#id1" title="Permalink to this headline">¶</a></h1>
 <p>GraphScope 的图分析引擎继承了 <a class="reference external" href="https://dl.acm.org/doi/10.1145/3282488">GRAPE</a> ，
 该系统于 SIGMOD2017 上首次提出并获得最佳论文奖。</p>
 <p>与以往的系统的不同，GRAPE 支持将串行图算法自动并行化。在 GRAPE 中，
 只需进行很小的更改即可轻松地将串行算法即插即用，使其并行化的运行在分布式环境，并高效地处理大规模图数据。
 除了易于编程外，GRAPE 还被设计为高效且可拓展的系统，可灵活应对现实中图应用多变的规模、多样性和复杂性。</p>
-<section id="id2">
+<div class="section" id="id2">
 <h2>内置算法<a class="headerlink" href="#id2" title="Permalink to this headline">¶</a></h2>
 <p>GraphScope 图分析引擎内置了许多常用的图分析算法，包括连通性分析算法、路径分析算法、社区检测和中心度计算等类型。</p>
 <p>内置算法可以在图上轻松调用。例如，</p>
@@ -239,8 +250,8 @@
 <li><p><a class="reference internal" href="../reference/app.html#graphscope.wcc" title="graphscope.wcc"><code class="xref py py-func docutils literal notranslate"><span class="pre">wcc()</span></code></a></p></li>
 </ul>
 <p>算法的支持列表会随着不断增加持续更新中。</p>
-</section>
-<section id="id3">
+</div>
+<div class="section" id="id3">
 <h2>对计算结果的处理<a class="headerlink" href="#id3" title="Permalink to this headline">¶</a></h2>
 <p>当完成一次图计算，计算结果会被包装成 <a class="reference internal" href="../reference/context.html#context"><span class="std std-ref">Context</span></a> 类，保存在分布式集群的内存中。</p>
 <p>用户可能希望将结果传到客户端进行处理，或是写入云中某位置或分布式文件系统。GraphScope 支持用户通过以下方法来获取结果数据。</p>
@@ -293,14 +304,14 @@
 </pre></div>
 </div>
 <p>可以查看 <a class="reference internal" href="../reference/context.html#context"><span class="std std-ref">Context</span></a> 和 <a class="reference internal" href="../reference/selector.html#selector"><span class="std std-ref">Selector</span></a> 获取更多细节。</p>
-</section>
-<section id="pie">
+</div>
+<div class="section" id="pie">
 <h2>使用 PIE 编程模型自定义算法<a class="headerlink" href="#pie" title="Permalink to this headline">¶</a></h2>
 <p>如果内置算法无法满足需求，用户可以编写自己的算法。用户可以通过 <cite>graphscope</cite> 在纯 Python 模式
 下使用 <a class="reference external" href="https://dl.acm.org/doi/10.1145/3282488">PIE</a> 编程模型编写算法。</p>
-<a class="reference internal image-reference" href="../_images/pie1.png"><img alt="Workflow of PIE" class="align-center" src="../_images/pie1.png" style="width: 600px;" /></a>
+<a class="reference internal image-reference" href="../_images/pie.png"><img alt="Workflow of PIE" class="align-center" src="../_images/pie.png" style="width: 600px;" /></a>
 <p>为了实现自己的算法，用户需要实现此类。</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="nd">@graphscope.analytical.udf.pie</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="nd">@graphscope</span><span class="o">.</span><span class="n">analytical</span><span class="o">.</span><span class="n">udf</span><span class="o">.</span><span class="n">pie</span>
 <span class="k">class</span> <span class="nc">YourAlgorithm</span><span class="p">(</span><span class="n">AppAssets</span><span class="p">):</span>
     <span class="nd">@staticmethod</span>
     <span class="k">def</span> <span class="nf">Initialize</span><span class="p">(</span><span class="n">context</span><span class="p">,</span> <span class="n">frag</span><span class="p">):</span>
@@ -319,7 +330,7 @@
 图算法函数。其中，<cite>Initialize</cite> 函数用于设置算法初始状态，<cite>PEval</cite> 函数定义算法的局部计算，
 <cite>IncEval</cite> 函数定义对分区数据的增量计算。与 fragment 相关的完整 API 可以参考 <a class="reference internal" href="../reference/cython_sdk.html#cython-sdk-api"><span class="std std-ref">Cython SDK API</span></a>。</p>
 <p>以单源最短路径算法 SSSP 为例，用户在 PIE 模型中定义的 SSSP 算法可如下所示。</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="nd">@graphscope.analytical.udf.pie</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="nd">@graphscope</span><span class="o">.</span><span class="n">analytical</span><span class="o">.</span><span class="n">udf</span><span class="o">.</span><span class="n">pie</span>
 <span class="k">class</span> <span class="nc">SSSP</span><span class="p">:</span>
     <span class="nd">@staticmethod</span>
     <span class="k">def</span> <span class="nf">Initialize</span><span class="p">(</span><span class="n">context</span><span class="p">,</span> <span class="n">frag</span><span class="p">):</span>
@@ -336,11 +347,11 @@
         <span class="c1"># 从context中获取源顶点</span>
         <span class="n">src</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">context</span><span class="o">.</span><span class="n">get_config</span><span class="p">(</span><span class="sa">b</span><span class="s1">&#39;src&#39;</span><span class="p">))</span>
         <span class="n">graphscope</span><span class="o">.</span><span class="n">declare</span><span class="p">(</span><span class="n">graphscope</span><span class="o">.</span><span class="n">Vertex</span><span class="p">,</span> <span class="n">source</span><span class="p">)</span>
-        <span class="n">native_source</span> <span class="o">=</span> <span class="bp">False</span>
+        <span class="n">native_source</span> <span class="o">=</span> <span class="kc">False</span>
         <span class="n">v_label_num</span> <span class="o">=</span> <span class="n">frag</span><span class="o">.</span><span class="n">vertex_label_num</span><span class="p">()</span>
         <span class="k">for</span> <span class="n">v_label_id</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">v_label_num</span><span class="p">):</span>
             <span class="k">if</span> <span class="n">frag</span><span class="o">.</span><span class="n">get_inner_node</span><span class="p">(</span><span class="n">v_label_id</span><span class="p">,</span> <span class="n">src</span><span class="p">,</span> <span class="n">source</span><span class="p">):</span>
-                <span class="n">native_source</span> <span class="o">=</span> <span class="bp">True</span>
+                <span class="n">native_source</span> <span class="o">=</span> <span class="kc">True</span>
                 <span class="k">break</span>
         <span class="k">if</span> <span class="n">native_source</span><span class="p">:</span>
             <span class="n">context</span><span class="o">.</span><span class="n">set_node_value</span><span class="p">(</span><span class="n">source</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
@@ -377,8 +388,8 @@
 </div>
 <p>如代码所示，用户仅需要设计和实现单分区的串行算法，而不需要考虑分布式环境中的分区通信和消息传递。
 在这种情况下，经典的 Dijkstra 算法及其增量版本就可以用于在集群上的大规模图数据计算。</p>
-</section>
-<section id="pregel">
+</div>
+<div class="section" id="pregel">
 <h2>使用 Pregel 编程模型自定义算法<a class="headerlink" href="#pregel" title="Permalink to this headline">¶</a></h2>
 <p>除了基于子图的 PIE 模型之外，<cite>graphscope</cite> 也支持以顶点为中心的 <cite>Pregel</cite> 编程模型。
 您可以通过实现以下算法类来在 <cite>Pregel</cite> 模型中开发算法。</p>
@@ -434,8 +445,8 @@
         <span class="k">return</span> <span class="n">ret</span>
 </pre></div>
 </div>
-</section>
-<section id="id5">
+</div>
+<div class="section" id="id5">
 <h2>运行自定义算法<a class="headerlink" href="#id5" title="Permalink to this headline">¶</a></h2>
 <p>运行自定义算法，用户需要在定义算法后调用算法。</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">graphscope</span>
@@ -473,37 +484,37 @@
 <li><p>Wenfei Fan, Jingbo Xu, Yinghui Wu, Wenyuan Yu, Jiaxin Jiang. <a class="reference external" href="http://www.vldb.org/pvldb/vol10/p1889-fan.pdf">GRAPE: Parallelizing Sequential Graph Computations.</a>, The 43rd International Conference on Very Large Data Bases (VLDB), demo, 2017 (the Best Demo Award).</p></li>
 <li><p>Wenfei Fan, Jingbo Xu, Yinghui Wu, Wenyuan Yu, Jiaxin Jiang, Zeyu Zheng, Bohan Zhang, Yang Cao, and Chao Tian. <a class="reference external" href="https://dl.acm.org/doi/10.1145/3035918.3035942">Parallelizing Sequential Graph Computations.</a>, ACM SIG Conference on Management of Data (SIGMOD), 2017 (the Best Paper Award).</p></li>
 </ul>
-</section>
-</section>
+</div>
+</div>
 
 
            </div>
            
           </div>
           <footer>
-  
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
-      
-        <a href="interactive_engine.html" class="btn btn-neutral float-right" title="图交互式分析引擎" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
-      
-      
-        <a href="graph_transformation.html" class="btn btn-neutral" title="图的变换操作" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
-      
+        <a href="interactive_engine.html" class="btn btn-neutral float-right" title="图交互式分析引擎" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="graph_transformation.html" class="btn btn-neutral float-left" title="图的变换操作" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
     </div>
-  
 
   <hr/>
 
   <div role="contentinfo">
     <p>
-        &copy; Copyright 2020-2023, Damo Academy, Alibaba Inc.
+        &#169; Copyright 2020-2023, Damo Academy, Alibaba Inc..
 
     </p>
   </div>
-  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
 
 </footer>
-
         </div>
       </div>
 
@@ -512,28 +523,16 @@
   </div>
   
 
-
-  
-
-    
-    
-      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
-        <script src="../_static/jquery.js"></script>
-        <script src="../_static/underscore.js"></script>
-        <script src="../_static/doctools.js"></script>
-        <script src="../_static/language_data.js"></script>
-        <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
-    
-
-  
-
-  <script type="text/javascript" src="../_static/js/theme.js"></script>
-
   <script type="text/javascript">
       jQuery(function () {
           SphinxRtdTheme.Navigation.enable(true);
       });
   </script>
+
+  
+  
+    
+  
   
 
   <div class="rst-versions" data-toggle="rst-versions" role="note" aria-label="versions">
@@ -561,6 +560,16 @@
             
               
                 <dd><a href="../../zh/index.html">stable</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../v0.7.0/zh/index.html">v0.7.0</a></dd>
               
             
 

@@ -1,0 +1,6 @@
+﻿graphscope.experimental.nx.classes.function.get\_edge\_attributes
+=================================================================
+
+.. currentmodule:: graphscope.experimental.nx.classes
+
+.. autofunction:: function.get_edge_attributes

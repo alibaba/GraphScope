@@ -1,0 +1,6 @@
+﻿graphscope.experimental.nx.Graph.number\_of\_nodes
+==================================================
+
+.. currentmodule:: graphscope.experimental.nx
+
+.. automethod:: Graph.number_of_nodes

@@ -81,11 +81,11 @@ make their changes to the code and build with command:
     git clone https://github.com/alibaba/GraphScope.git
     git clone https://github.com/GraphScope/gstest.git
     # building
-    cd GraphScope && make install
+    export WITH_LEARNING_ENGINE=ON
+    export GRAPHSCOPE_HOME=/opt/graphscope
+    cd GraphScope && make INSTALL_PREFIX=/opt/graphscope install
     # testing:
-    #       export GS_TEST_DIR=<path_to_your_gstest_dir>
-    #       export WITH_LEARNING_ENGINE=ON
-    #       export GRAPHSCOPE_HOME=/usr/local
+    #   export GS_TEST_DIR=<path_to_your_gstest_dir>
     cd GraphScope/python && python3 -m pytest -s -v ./tests/unittest
 
 

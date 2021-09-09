@@ -1,33 +1,45 @@
 
 
 <!DOCTYPE html>
-<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
-<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<html class="writer-html5" lang="en" >
 <head>
-  <meta charset="utf-8">
-  <meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
-
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="utf-8" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   
   <title>快速上手 &mdash; GraphScope  documentation</title>
   
 
   
-  
-  
-  
-
-  
-
-  
-  
-    
-
-  
-
   <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
   <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
   <link rel="stylesheet" href="../_static/css/custom.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+
+    
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
     <link rel="next" title="部署" href="deployment.html" />
@@ -46,21 +58,16 @@
 </script>
 
 
-
-  
-  <script src="../_static/js/modernizr.min.js"></script>
-
 </head>
 
 <body class="wy-body-for-nav">
 
    
   <div class="wy-grid-for-nav">
-
     
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
-        <div class="wy-side-nav-search">
+        <div class="wy-side-nav-search" >
           
 
           
@@ -91,8 +98,9 @@
           
         </div>
 
-        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
-          
+        
+  <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+    
       
       
         
@@ -100,7 +108,7 @@
         
       
       
-        <p><span class="caption-text">目录</span></p>
+        <p class="caption"><span class="caption-text">目录</span></p>
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="installation.html">安装</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">快速上手</a><ul>
@@ -123,7 +131,7 @@
 <li class="toctree-l1"><a class="reference internal" href="frequently_asked_questions.html">常见问题</a></li>
 <li class="toctree-l1"><a class="reference internal" href="developer_guide.html">开发者指南</a></li>
 </ul>
-<p><span class="caption-text">API 参考</span></p>
+<p class="caption"><span class="caption-text">API 参考</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference external" href="https://graphscope.io/docs/reference/python_index.html">Python API 参考</a></li>
 <li class="toctree-l1"><a class="reference external" href="https://graphscope.io/docs/reference/analytical_engine_index.html">图分析引擎 API 参考</a></li>
@@ -131,7 +139,8 @@
 
       
     
-        </div>
+  </div>
+
       </div>
     </nav>
 
@@ -166,11 +175,13 @@
 
 
 
+
+
 <div role="navigation" aria-label="breadcrumbs navigation">
 
   <ul class="wy-breadcrumbs">
     
-      <li><a href="../index.html">Docs</a> &raquo;</li>
+      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
         
           <li><a href="index.html">GraphScope: 一站式图计算系统</a> &raquo;</li>
         
@@ -179,7 +190,7 @@
     
       <li class="wy-breadcrumbs-aside">
         
-            
+          
             <a href="../_sources/zh/getting_started.rst.txt" rel="nofollow"> View page source</a>
           
         
@@ -193,12 +204,12 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <section id="id1">
+  <div class="section" id="id1">
 <h1>快速上手<a class="headerlink" href="#id1" title="Permalink to this headline">¶</a></h1>
 <p><cite>graphscope</cite> 是一站式图计算系统 GraphScope 的 Python 客户端，
 可以处理图的交互式查询、图分析和图学习任务。它具有易于使用、高性能和良好的可扩展性等特点。</p>
 <p>本章节将通过一个例子介绍 <cite>graphscope</cite> 如何帮助数据科学家来高效的分析大图。</p>
-<section id="id2">
+<div class="section" id="id2">
 <h2>示例: 论文引用网络中的节点分类任务<a class="headerlink" href="#id2" title="Permalink to this headline">¶</a></h2>
 <p><a class="reference external" href="https://ogb.stanford.edu/docs/nodeprop/#ogbn-mag)">ogbn-mag</a> 是
 由微软学术关系图（Microsoft Academic Graph）的子集组成的异构图网络。
@@ -210,7 +221,7 @@
 通过对论文属性和引用图上的结构信息对论文进行分类。在该数据中，
 每个论文节点包含了一个从论文标题、摘要抽取的 128 维 word2vec 向量作为表征，
 该表征是经过预训练提前获取的；而结构信息是在以下过程中即时计算的。</p>
-<a class="reference internal image-reference" href="../_images/how-it-works1.png"><img alt="How it works." class="align-center" src="../_images/how-it-works1.png" style="width: 600px;" /></a>
+<a class="reference internal image-reference" href="../_images/how-it-works.png"><img alt="How it works." class="align-center" src="../_images/how-it-works.png" style="width: 600px;" /></a>
 <p>上图表示了用户通过 Python 客户端调用 GraphScope 解决该问题的工作流程。</p>
 <ul class="simple">
 <li><p><em>步骤 1</em>. 建立一个会话（session），为 GraphScope 创建一个工作空间；</p></li>
@@ -220,8 +231,8 @@
 <li><p><em>步骤 5</em>. 执行基于图数据的机器学习任务；</p></li>
 <li><p><em>步骤 6</em>. 关闭会话。</p></li>
 </ul>
-</section>
-<section id="id3">
+</div>
+<div class="section" id="id3">
 <h2>创建会话<a class="headerlink" href="#id3" title="Permalink to this headline">¶</a></h2>
 <p>使用 GraphScope 的第一步，我们需要在 Python 中创建一个会话（session）。</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">os</span>
@@ -253,12 +264,12 @@
 <p>会话（<a class="reference internal" href="../reference/session.html#session"><span class="std std-ref">Session</span></a>）的建立过程中，首选会在背后尝试拉起一个 <cite>coordinator</cite> 作为后端引擎的入口。
 该 <cite>coordinator</cite> 负责管理该次会话的所有资源（k8s pods），以及交互式查询、图分析、图学习引擎的生命周期。
 在 <cite>coordinator</cite> 后续拉起的其他每个 pod 中，都有一个 vineyard 实例作为内存管理层，分布式的管理图数据。</p>
-</section>
-<section id="id4">
+</div>
+<div class="section" id="id4">
 <h2>载图<a class="headerlink" href="#id4" title="Permalink to this headline">¶</a></h2>
 <p>GraphScope 以属性图（property graph）建模图数据。属性图中，点和边都有一个标签（label），不同的标签有不同的属性（property）。
 以 <cite>ogbn-mag</cite> 为例，下图展示了属性图的模型。</p>
-<a class="reference internal image-reference" href="../_images/sample_pg1.png"><img alt="a sample property graph." class="align-center" src="../_images/sample_pg1.png" style="width: 600px;" /></a>
+<a class="reference internal image-reference" href="../_images/sample_pg.png"><img alt="a sample property graph." class="align-center" src="../_images/sample_pg.png" style="width: 600px;" /></a>
 <p>该图具有四种顶点，分别标记为“论文”、“作者”、“机构”和“研究领域”。有四种连接它们的边，
 每种边都有一个标签，并且边的两端顶点的标签也是确定的。
 例如，“引用”这种标签的边连接两个“论文”顶点。另一个例子是标记为“撰写”的边，
@@ -302,8 +313,8 @@
 </div>
 <p>请注意，这里的 <cite>g</cite> 已经是一个分布式存储在 vineyard 中的图。图数据分布在这个会话背后拉起的 k8s pods中。
 更多细节请查看 <a class="reference internal" href="loading_graph.html#loading-graphs"><span class="std std-ref">载图</span></a></p>
-</section>
-<section id="id6">
+</div>
+<div class="section" id="id6">
 <h2>交互式查询<a class="headerlink" href="#id6" title="Permalink to this headline">¶</a></h2>
 <p>交互式查询允许用户以“探索性”方式来探索、查看和显示图数据，
 以方便的定位和洞察特定的深入信息。GraphScope 采用称为 <a class="reference external" href="http://tinkerpop.apache.org/">Gremlin</a>  的高级语言进行图遍历，
@@ -321,8 +332,8 @@
 <span class="s2">                .where(__.in(&#39;writes&#39;).has(&#39;id&#39;, 4307)).count()&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">one</span><span class="p">()</span>
 </pre></div>
 </div>
-</section>
-<section id="id7">
+</div>
+<div class="section" id="id7">
 <h2>图分析<a class="headerlink" href="#id7" title="Permalink to this headline">¶</a></h2>
 <p>图分析是在真实场景中被广泛使用的一类图计算。事实证明，
 许多算法（例如社区检测，路径和连接性，集中性）在各种业务中都非常有效。
@@ -346,8 +357,8 @@ GraphScope 内建了一组预置常用算法，方便用户可以轻松分析图
 </pre></div>
 </div>
 <p>此外，用户还可以在 GraphScope 中编写自己的算法。当前，GraphScope 支持用户以 Pregel 模型和 PIE 模型自定义图算法。</p>
-</section>
-<section id="gnns">
+</div>
+<div class="section" id="gnns">
 <h2>图神经网络 (GNNs)<a class="headerlink" href="#gnns" title="Permalink to this headline">¶</a></h2>
 <p>图神经网络（GNN）结合了图结构和机器学习的优势，
 可以将图中的结构信息和属性信息压缩为每个节点上的低维嵌入向量。
@@ -414,7 +425,7 @@ GraphScope 内建了一组预置常用算法，方便用户可以轻松分析图
           <span class="s2">&quot;in_drop_rate&quot;</span><span class="p">:</span> <span class="mf">0.5</span><span class="p">,</span>
           <span class="s2">&quot;hops_num&quot;</span><span class="p">:</span> <span class="mi">2</span><span class="p">,</span>
           <span class="s2">&quot;neighs_num&quot;</span><span class="p">:</span> <span class="p">[</span><span class="mi">5</span><span class="p">,</span> <span class="mi">10</span><span class="p">],</span>
-          <span class="s2">&quot;full_graph_mode&quot;</span><span class="p">:</span> <span class="bp">False</span><span class="p">,</span>
+          <span class="s2">&quot;full_graph_mode&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
           <span class="s2">&quot;agg_type&quot;</span><span class="p">:</span> <span class="s2">&quot;gcn&quot;</span><span class="p">,</span>  <span class="c1"># mean, sum</span>
           <span class="s2">&quot;learning_algo&quot;</span><span class="p">:</span> <span class="s2">&quot;adam&quot;</span><span class="p">,</span>
           <span class="s2">&quot;learning_rate&quot;</span><span class="p">:</span> <span class="mf">0.0005</span><span class="p">,</span>
@@ -426,44 +437,44 @@ GraphScope 内建了一组预置常用算法，方便用户可以轻松分析图
 <span class="n">train</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">lg</span><span class="p">)</span>
 </pre></div>
 </div>
-</section>
-<section id="id8">
+</div>
+<div class="section" id="id8">
 <h2>关闭会话<a class="headerlink" href="#id8" title="Permalink to this headline">¶</a></h2>
 <p>最后，当我们完成所有的计算过程后，关闭当前的会话。该步骤会告知背后的 <cite>Coordinator</cite> 和引擎，释放当前所有的资源</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">sess</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
 </pre></div>
 </div>
-</section>
-</section>
+</div>
+</div>
 
 
            </div>
            
           </div>
           <footer>
-  
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
-      
-        <a href="deployment.html" class="btn btn-neutral float-right" title="部署" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
-      
-      
-        <a href="installation.html" class="btn btn-neutral" title="安装" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
-      
+        <a href="deployment.html" class="btn btn-neutral float-right" title="部署" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="installation.html" class="btn btn-neutral float-left" title="安装" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
     </div>
-  
 
   <hr/>
 
   <div role="contentinfo">
     <p>
-        &copy; Copyright 2020-2023, Damo Academy, Alibaba Inc.
+        &#169; Copyright 2020-2023, Damo Academy, Alibaba Inc..
 
     </p>
   </div>
-  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
 
 </footer>
-
         </div>
       </div>
 
@@ -472,28 +483,16 @@ GraphScope 内建了一组预置常用算法，方便用户可以轻松分析图
   </div>
   
 
-
-  
-
-    
-    
-      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
-        <script src="../_static/jquery.js"></script>
-        <script src="../_static/underscore.js"></script>
-        <script src="../_static/doctools.js"></script>
-        <script src="../_static/language_data.js"></script>
-        <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
-    
-
-  
-
-  <script type="text/javascript" src="../_static/js/theme.js"></script>
-
   <script type="text/javascript">
       jQuery(function () {
           SphinxRtdTheme.Navigation.enable(true);
       });
   </script>
+
+  
+  
+    
+  
   
 
   <div class="rst-versions" data-toggle="rst-versions" role="note" aria-label="versions">
@@ -521,6 +520,16 @@ GraphScope 内建了一组预置常用算法，方便用户可以轻松分析图
             
               
                 <dd><a href="index.html">stable</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../v0.7.0/zh/index.html">v0.7.0</a></dd>
               
             
 

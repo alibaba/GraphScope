@@ -1,0 +1,6 @@
+﻿graphscope.experimental.nx.DiGraph.\_\_iter\_\_
+===============================================
+
+.. currentmodule:: graphscope.experimental.nx
+
+.. automethod:: DiGraph.__iter__

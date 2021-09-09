@@ -1,0 +1,6 @@
+﻿graphscope.framework.operation.Operation.set\_output
+====================================================
+
+.. currentmodule:: graphscope.framework.operation
+
+.. automethod:: Operation.set_output

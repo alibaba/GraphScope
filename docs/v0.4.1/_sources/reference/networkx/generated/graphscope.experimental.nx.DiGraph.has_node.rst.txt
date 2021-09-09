@@ -1,0 +1,6 @@
+﻿graphscope.experimental.nx.DiGraph.has\_node
+============================================
+
+.. currentmodule:: graphscope.experimental.nx
+
+.. automethod:: DiGraph.has_node

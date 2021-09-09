@@ -1,0 +1,6 @@
+﻿graphscope.experimental.nx.DiGraph.number\_of\_edges
+====================================================
+
+.. currentmodule:: graphscope.experimental.nx
+
+.. automethod:: DiGraph.number_of_edges

@@ -1,0 +1,6 @@
+﻿graphscope.experimental.nx.classes.function.density
+===================================================
+
+.. currentmodule:: graphscope.experimental.nx.classes
+
+.. autofunction:: function.density

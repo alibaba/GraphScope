@@ -1,0 +1,6 @@
+﻿graphscope.experimental.nx.Graph.get\_node\_data
+================================================
+
+.. currentmodule:: graphscope.experimental.nx
+
+.. automethod:: Graph.get_node_data

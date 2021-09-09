@@ -1,33 +1,45 @@
 
 
 <!DOCTYPE html>
-<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
-<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<html class="writer-html5" lang="en" >
 <head>
-  <meta charset="utf-8">
-  <meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
-
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="utf-8" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   
   <title>Quick Start &mdash; GraphScope  documentation</title>
   
 
   
-  
-  
-  
-
-  
-
-  
-  
-    
-
-  
-
   <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
   <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
   <link rel="stylesheet" href="../../_static/css/custom.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+        <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
+        <script src="../../_static/jquery.js"></script>
+        <script src="../../_static/underscore.js"></script>
+        <script src="../../_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="../../_static/js/theme.js"></script>
+
+    
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
 
@@ -44,21 +56,16 @@
 </script>
 
 
-
-  
-  <script src="../../_static/js/modernizr.min.js"></script>
-
 </head>
 
 <body class="wy-body-for-nav">
 
    
   <div class="wy-grid-for-nav">
-
     
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
-        <div class="wy-side-nav-search">
+        <div class="wy-side-nav-search" >
           
 
           
@@ -89,8 +96,9 @@
           
         </div>
 
-        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
-          
+        
+  <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+    
       
       
         
@@ -98,7 +106,7 @@
         
       
       
-        <p><span class="caption-text">Contents</span></p>
+        <p class="caption"><span class="caption-text">Contents</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../../installation.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../getting_started.html">Getting Started</a></li>
@@ -109,10 +117,11 @@
 <li class="toctree-l1"><a class="reference internal" href="../../analytics_engine.html">GraphScope Analytical Engine</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../interactive_engine.html">GraphScope Interactive Engine</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../learning_engine.html">GraphScope Learning Engine</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../persistent_graph_store.html">Persistent Graph Store</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../frequently_asked_questions.html">Frequently Asked Questions</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../developer_guide.html">Developer Guide</a></li>
 </ul>
-<p><span class="caption-text">Reference</span></p>
+<p class="caption"><span class="caption-text">Reference</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../python_index.html">Python API Reference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../analytical_engine_index.html">Analytical Engine API Reference</a></li>
@@ -120,7 +129,8 @@
 
       
     
-        </div>
+  </div>
+
       </div>
     </nav>
 
@@ -155,18 +165,20 @@
 
 
 
+
+
 <div role="navigation" aria-label="breadcrumbs navigation">
 
   <ul class="wy-breadcrumbs">
     
-      <li><a href="../../index.html">Docs</a> &raquo;</li>
+      <li><a href="../../index.html" class="icon icon-home"></a> &raquo;</li>
         
       <li>Quick Start</li>
     
     
       <li class="wy-breadcrumbs-aside">
         
-            
+          
             <a href="../../_sources/reference/gnn_engine/quick_start_en.rst.txt" rel="nofollow"> View page source</a>
           
         
@@ -180,15 +192,15 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <section id="quick-start">
+  <div class="section" id="quick-start">
 <h1>Quick Start<a class="headerlink" href="#quick-start" title="Permalink to this headline">¶</a></h1>
 <p>This tutorial has three parts: - How to quickly try out a graph learning
 model using <strong>GL</strong>. - How to import data into <strong>GL</strong>, and use the graph
 data, graph sampling and negative sampling APIs. - How to develop your
 own GNN models using <strong>GL</strong> and Tensorflow using <strong>GraphSAGE</strong> as an
 example.</p>
-</section>
-<section id="trying-out-the-built-in-models">
+</div>
+<div class="section" id="trying-out-the-built-in-models">
 <h1>1 Trying out the built-in models<a class="headerlink" href="#trying-out-the-built-in-models" title="Permalink to this headline">¶</a></h1>
 <p>We have implemented in <strong>GL</strong> a set of popular GNN models, such as
 <strong>GCN</strong>, <strong>GraphSAGE</strong>, and some datasets, such as <strong>cora</strong>, <strong>ppi</strong>. To
@@ -203,8 +215,8 @@ python cora.py
 python train_supervised.py
 </pre></div>
 </div>
-</section>
-<section id="how-to-use-the-gl-apis">
+</div>
+<div class="section" id="how-to-use-the-gl-apis">
 <h1>2 How to use the <strong>GL</strong> APIs<a class="headerlink" href="#how-to-use-the-gl-apis" title="Permalink to this headline">¶</a></h1>
 <p><strong>GL</strong> provides a large collection of basic APIs for developing GNN
 models. In this part, we will go through how to use them to (1)
@@ -219,8 +231,8 @@ sure all the processes have access to the data file.</p>
 <span class="kn">import</span> <span class="nn">sys</span><span class="o">,</span> <span class="nn">os</span>
 <span class="kn">import</span> <span class="nn">getopt</span>
 
-<span class="kn">import</span> <span class="nn">graphlearn</span> <span class="kn">as</span> <span class="nn">gl</span>
-<span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">graphlearn</span> <span class="k">as</span> <span class="nn">gl</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 
 <span class="k">def</span> <span class="nf">main</span><span class="p">(</span><span class="n">argv</span><span class="p">):</span>
   <span class="n">cur_path</span> <span class="o">=</span> <span class="n">sys</span><span class="o">.</span><span class="n">path</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
@@ -243,12 +255,12 @@ sure all the processes have access to the data file.</p>
   <span class="c1"># init distributed graph</span>
   <span class="n">g</span> <span class="o">=</span> <span class="n">gl</span><span class="o">.</span><span class="n">Graph</span><span class="p">()</span> \
        <span class="o">.</span><span class="n">node</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">cur_path</span><span class="p">,</span> <span class="s2">&quot;data/user&quot;</span><span class="p">),</span>
-            <span class="n">node_type</span><span class="o">=</span><span class="s2">&quot;user&quot;</span><span class="p">,</span> <span class="n">decoder</span><span class="o">=</span><span class="n">gl</span><span class="o">.</span><span class="n">Decoder</span><span class="p">(</span><span class="n">weighted</span><span class="o">=</span><span class="bp">True</span><span class="p">))</span> \
+            <span class="n">node_type</span><span class="o">=</span><span class="s2">&quot;user&quot;</span><span class="p">,</span> <span class="n">decoder</span><span class="o">=</span><span class="n">gl</span><span class="o">.</span><span class="n">Decoder</span><span class="p">(</span><span class="n">weighted</span><span class="o">=</span><span class="kc">True</span><span class="p">))</span> \
        <span class="o">.</span><span class="n">node</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">cur_path</span><span class="p">,</span> <span class="s2">&quot;data/item&quot;</span><span class="p">),</span>
              <span class="n">node_type</span><span class="o">=</span><span class="s2">&quot;item&quot;</span><span class="p">,</span>
              <span class="n">decoder</span><span class="o">=</span><span class="n">gl</span><span class="o">.</span><span class="n">Decoder</span><span class="p">(</span><span class="n">attr_types</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;string&#39;</span><span class="p">,</span> <span class="s1">&#39;int&#39;</span><span class="p">,</span> <span class="s1">&#39;float&#39;</span><span class="p">,</span> <span class="s1">&#39;float&#39;</span><span class="p">,</span> <span class="s1">&#39;string&#39;</span><span class="p">]))</span> \
        <span class="o">.</span><span class="n">edge</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">cur_path</span><span class="p">,</span> <span class="s2">&quot;data/u-i&quot;</span><span class="p">),</span>
-             <span class="n">edge_type</span><span class="o">=</span><span class="p">(</span><span class="s2">&quot;user&quot;</span><span class="p">,</span> <span class="s2">&quot;item&quot;</span><span class="p">,</span> <span class="s2">&quot;buy&quot;</span><span class="p">),</span> <span class="n">decoder</span><span class="o">=</span><span class="n">gl</span><span class="o">.</span><span class="n">Decoder</span><span class="p">(</span><span class="n">weighted</span><span class="o">=</span><span class="bp">True</span><span class="p">),</span> <span class="n">directed</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+             <span class="n">edge_type</span><span class="o">=</span><span class="p">(</span><span class="s2">&quot;user&quot;</span><span class="p">,</span> <span class="s2">&quot;item&quot;</span><span class="p">,</span> <span class="s2">&quot;buy&quot;</span><span class="p">),</span> <span class="n">decoder</span><span class="o">=</span><span class="n">gl</span><span class="o">.</span><span class="n">Decoder</span><span class="p">(</span><span class="n">weighted</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span> <span class="n">directed</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
   <span class="n">g</span><span class="o">.</span><span class="n">init</span><span class="p">(</span><span class="n">cluster</span><span class="o">=</span><span class="n">cluster</span><span class="p">,</span> <span class="n">job_name</span><span class="o">=</span><span class="n">job_name</span><span class="p">,</span> <span class="n">task_index</span><span class="o">=</span><span class="n">task_index</span><span class="p">)</span>
   <span class="c1"># g.init() # For local.</span>
 
@@ -258,16 +270,16 @@ sure all the processes have access to the data file.</p>
   <span class="k">if</span> <span class="n">job_name</span> <span class="o">==</span> <span class="s2">&quot;client&quot;</span><span class="p">:</span>
     <span class="c1"># Lookup a batch of user nodes with given ids.</span>
     <span class="n">nodes</span> <span class="o">=</span> <span class="n">g</span><span class="o">.</span><span class="n">V</span><span class="p">(</span><span class="s2">&quot;item&quot;</span><span class="p">,</span> <span class="n">feed</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">100</span><span class="p">,</span> <span class="mi">102</span><span class="p">]))</span><span class="o">.</span><span class="n">emit</span><span class="p">()</span>
-    <span class="k">print</span><span class="p">(</span><span class="n">nodes</span><span class="o">.</span><span class="n">ids</span><span class="p">)</span>
-    <span class="k">print</span><span class="p">(</span><span class="n">nodes</span><span class="o">.</span><span class="n">int_attrs</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">nodes</span><span class="o">.</span><span class="n">ids</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">nodes</span><span class="o">.</span><span class="n">int_attrs</span><span class="p">)</span>
 
     <span class="c1"># Iterate users and random sample items the user has buy.</span>
     <span class="n">q</span> <span class="o">=</span> <span class="n">g</span><span class="o">.</span><span class="n">V</span><span class="p">(</span><span class="s2">&quot;user&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">batch</span><span class="p">(</span><span class="mi">4</span><span class="p">)</span> \
              <span class="o">.</span><span class="n">outV</span><span class="p">(</span><span class="s2">&quot;buy&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">sample</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span><span class="o">.</span><span class="n">by</span><span class="p">(</span><span class="s2">&quot;random&quot;</span><span class="p">)</span> \
              <span class="o">.</span><span class="n">values</span><span class="p">(</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">weights</span><span class="p">,</span> <span class="n">x</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">ids</span><span class="p">))</span>
-    <span class="k">while</span> <span class="bp">True</span><span class="p">:</span>
+    <span class="k">while</span> <span class="kc">True</span><span class="p">:</span>
       <span class="k">try</span><span class="p">:</span>
-        <span class="k">print</span><span class="p">(</span><span class="n">g</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">q</span><span class="p">))</span>
+        <span class="nb">print</span><span class="p">(</span><span class="n">g</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">q</span><span class="p">))</span>
       <span class="k">except</span> <span class="n">gl</span><span class="o">.</span><span class="n">OutOfRangeError</span><span class="p">:</span>
         <span class="k">break</span>
 
@@ -277,7 +289,7 @@ sure all the processes have access to the data file.</p>
          <span class="o">.</span><span class="n">inV</span><span class="p">()</span> \
          <span class="o">.</span><span class="n">inNeg</span><span class="p">(</span><span class="s2">&quot;buy&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">sample</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span><span class="o">.</span><span class="n">by</span><span class="p">(</span><span class="s2">&quot;in_degree&quot;</span><span class="p">)</span> \
          <span class="o">.</span><span class="n">values</span><span class="p">(</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="o">.</span><span class="n">ids</span><span class="p">)</span>
-    <span class="k">print</span><span class="p">(</span><span class="n">g</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">q</span><span class="p">))</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">g</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">q</span><span class="p">))</span>
 
     <span class="n">g</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
 <span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">&quot;__main__&quot;</span><span class="p">:</span>
@@ -314,13 +326,13 @@ python <span class="nv">$HERE</span>/test.py <span class="se">\</span>
   --job_name<span class="o">=</span><span class="s2">&quot;client&quot;</span> --task_index<span class="o">=</span><span class="m">1</span>
 </pre></div>
 </div>
-</section>
-<section id="developing-a-gnn-model">
+</div>
+<div class="section" id="developing-a-gnn-model">
 <h1>3 Developing a GNN model<a class="headerlink" href="#developing-a-gnn-model" title="Permalink to this headline">¶</a></h1>
 <p>Next we will go through how to develop a supervised <strong>GraphSAGE</strong> model
 using <strong>GL</strong> and <strong>TensorFlow</strong>, and train it on the Cora dataset.
 Please refer to <a class="reference external" href="algo_en.md">Developing Your Own Model</a> for details.</p>
-<section id="data-preparation">
+<div class="section" id="data-preparation">
 <h2>3.1 Data Preparation<a class="headerlink" href="#data-preparation" title="Permalink to this headline">¶</a></h2>
 <p>We use the open-source dataset Cora as an example. The Cora dataset
 contains papers from the machine learning field, and the citation
@@ -355,23 +367,23 @@ data format is described through <code class="docutils literal notranslate"><spa
 <span class="mi">1106406</span>    <span class="mi">2</span>    <span class="mf">0.0</span><span class="p">:</span><span class="mf">0.0</span><span class="p">:</span><span class="o">...</span>
 </pre></div>
 </div>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">graphlearn</span> <span class="kn">as</span> <span class="nn">gl</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">graphlearn</span> <span class="k">as</span> <span class="nn">gl</span>
 
 <span class="n">N_FEATURE</span> <span class="o">=</span> <span class="mi">1433</span>
 
 <span class="c1"># Describe the vertex data format，with lable and attributes</span>
-<span class="n">node_decoder</span> <span class="o">=</span> <span class="n">gl</span><span class="o">.</span><span class="n">Decoder</span><span class="p">(</span><span class="n">labeled</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">attr_types</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;float&quot;</span><span class="p">]</span> <span class="o">*</span> <span class="n">N_FEATURE</span><span class="p">)</span>
+<span class="n">node_decoder</span> <span class="o">=</span> <span class="n">gl</span><span class="o">.</span><span class="n">Decoder</span><span class="p">(</span><span class="n">labeled</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">attr_types</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;float&quot;</span><span class="p">]</span> <span class="o">*</span> <span class="n">N_FEATURE</span><span class="p">)</span>
 
 <span class="c1"># Describe the edge data format, with weights.</span>
-<span class="n">edge_decoder</span> <span class="o">=</span> <span class="n">gl</span><span class="o">.</span><span class="n">Decoder</span><span class="p">(</span><span class="n">weighted</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+<span class="n">edge_decoder</span> <span class="o">=</span> <span class="n">gl</span><span class="o">.</span><span class="n">Decoder</span><span class="p">(</span><span class="n">weighted</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 </pre></div>
 </div>
-</section>
-<section id="graph-construction">
+</div>
+<div class="section" id="graph-construction">
 <h2>3.2 Graph Construction<a class="headerlink" href="#graph-construction" title="Permalink to this headline">¶</a></h2>
 <p>Graph construction is the process of loading the vertex and edge data
 into memory. After construction, the graph can be queries and sampled.</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">graphlearn</span> <span class="kn">as</span> <span class="nn">gl</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">graphlearn</span> <span class="k">as</span> <span class="nn">gl</span>
 
 <span class="c1"># Configure the parameters</span>
 <span class="n">N_CLASS</span> <span class="o">=</span> <span class="mi">7</span>
@@ -390,17 +402,17 @@ into memory. After construction, the graph can be queries and sampled.</p>
 <span class="c1"># Add the edge data into the graph through `.edge()` and define its type through a triple (source vertex type, destination vertex type, edge type).</span>
 <span class="n">g</span><span class="o">.</span><span class="n">node</span><span class="p">(</span><span class="s2">&quot;examples/data/cora/node_table&quot;</span><span class="p">,</span>
        <span class="n">node_type</span><span class="o">=</span><span class="s2">&quot;item&quot;</span><span class="p">,</span>
-       <span class="n">decoder</span><span class="o">=</span><span class="n">gl</span><span class="o">.</span><span class="n">Decoder</span><span class="p">(</span><span class="n">labeled</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">attr_types</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;float&quot;</span><span class="p">]</span> <span class="o">*</span> <span class="n">N_FEATURE</span><span class="p">))</span> \
+       <span class="n">decoder</span><span class="o">=</span><span class="n">gl</span><span class="o">.</span><span class="n">Decoder</span><span class="p">(</span><span class="n">labeled</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">attr_types</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;float&quot;</span><span class="p">]</span> <span class="o">*</span> <span class="n">N_FEATURE</span><span class="p">))</span> \
   <span class="o">.</span><span class="n">edge</span><span class="p">(</span><span class="s2">&quot;examples/data/cora/edge_table&quot;</span><span class="p">,</span>
-        <span class="n">edge_type</span><span class="o">=</span><span class="p">(</span><span class="s2">&quot;item&quot;</span><span class="p">,</span> <span class="s2">&quot;item&quot;</span><span class="p">,</span> <span class="s2">&quot;relation&quot;</span><span class="p">),</span> <span class="n">decoder</span><span class="o">=</span><span class="n">gl</span><span class="o">.</span><span class="n">Decoder</span><span class="p">(</span><span class="n">weighted</span><span class="o">=</span><span class="bp">True</span><span class="p">),</span> <span class="n">directed</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span> \
+        <span class="n">edge_type</span><span class="o">=</span><span class="p">(</span><span class="s2">&quot;item&quot;</span><span class="p">,</span> <span class="s2">&quot;item&quot;</span><span class="p">,</span> <span class="s2">&quot;relation&quot;</span><span class="p">),</span> <span class="n">decoder</span><span class="o">=</span><span class="n">gl</span><span class="o">.</span><span class="n">Decoder</span><span class="p">(</span><span class="n">weighted</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span> <span class="n">directed</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span> \
 
 
 <span class="c1"># Construct the graph. This is a local example. For the distributed example, see [Graph Object#Initialization](graph_object_cn.md)。</span>
 <span class="n">g</span><span class="o">.</span><span class="n">init</span><span class="p">()</span>
 </pre></div>
 </div>
-</section>
-<section id="graph-sampling">
+</div>
+<div class="section" id="graph-sampling">
 <h2>3.3 Graph Sampling<a class="headerlink" href="#graph-sampling" title="Permalink to this headline">¶</a></h2>
 <p>GraphSAGE requires graph sampling to generate input for the neural
 network. Here, we use the following sampling steps: (1) sample a batch
@@ -415,7 +427,7 @@ through graph traversal.</p>
                <span class="o">.</span><span class="n">outV</span><span class="p">(</span><span class="s2">&quot;relation&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">sample</span><span class="p">(</span><span class="mi">10</span><span class="p">)</span><span class="o">.</span><span class="n">by</span><span class="p">(</span><span class="s2">&quot;random&quot;</span><span class="p">)</span> \
                <span class="o">.</span><span class="n">outV</span><span class="p">(</span><span class="s2">&quot;relation&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">sample</span><span class="p">(</span><span class="mi">5</span><span class="p">)</span><span class="o">.</span><span class="n">by</span><span class="p">(</span><span class="s2">&quot;random&quot;</span><span class="p">)</span> \
                <span class="o">.</span><span class="n">values</span><span class="p">(</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">float_attrs</span><span class="p">,</span> <span class="n">x</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">float_attrs</span><span class="p">,</span> <span class="n">x</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="o">.</span><span class="n">float_attrs</span><span class="p">,</span> <span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">labels</span><span class="p">))</span>
-  <span class="k">while</span> <span class="bp">True</span><span class="p">:</span>
+  <span class="k">while</span> <span class="kc">True</span><span class="p">:</span>
     <span class="k">try</span><span class="p">:</span>
       <span class="n">res</span> <span class="o">=</span> <span class="n">g</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">query</span><span class="p">)</span>
       <span class="k">if</span> <span class="n">res</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">&lt;</span> <span class="n">BATCH_SIZE</span><span class="p">:</span>
@@ -426,15 +438,15 @@ through graph traversal.</p>
       <span class="k">break</span>
 </pre></div>
 </div>
-</section>
-<section id="gnn-model">
+</div>
+<div class="section" id="gnn-model">
 <h2>3.4 GNN Model<a class="headerlink" href="#gnn-model" title="Permalink to this headline">¶</a></h2>
 <p>In this part, we use the TensorFlow Estimator as an example to
 demonstrate developing a GNN model on <strong>GL</strong>.</p>
 <ul class="simple">
 <li><p>Generate training data through graph sampling as <code class="docutils literal notranslate"><span class="pre">input_fn</span></code></p></li>
 </ul>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">tensorflow</span> <span class="kn">as</span> <span class="nn">tf</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">tensorflow</span> <span class="k">as</span> <span class="nn">tf</span>
 <span class="k">def</span> <span class="nf">sample_input_fn</span><span class="p">():</span>
   <span class="n">ds</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">Dataset</span><span class="o">.</span><span class="n">from_generator</span><span class="p">(</span>
     <span class="n">sample_gen</span><span class="p">,</span>
@@ -526,28 +538,33 @@ demonstrate developing a GNN model on <strong>GL</strong>.</p>
 <span class="n">model</span><span class="o">.</span><span class="n">train</span><span class="p">(</span><span class="n">input_fn</span><span class="o">=</span><span class="n">sample_input_fn</span><span class="p">)</span>
 </pre></div>
 </div>
-</section>
-</section>
+</div>
+</div>
 
 
            </div>
            
           </div>
           <footer>
-  
 
   <hr/>
 
   <div role="contentinfo">
     <p>
-        &copy; Copyright 2020-2023, Damo Academy, Alibaba Inc.
+        &#169; Copyright 2020-2023, Damo Academy, Alibaba Inc..
 
     </p>
   </div>
-  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
 
 </footer>
-
         </div>
       </div>
 
@@ -556,28 +573,16 @@ demonstrate developing a GNN model on <strong>GL</strong>.</p>
   </div>
   
 
-
-  
-
-    
-    
-      <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
-        <script src="../../_static/jquery.js"></script>
-        <script src="../../_static/underscore.js"></script>
-        <script src="../../_static/doctools.js"></script>
-        <script src="../../_static/language_data.js"></script>
-        <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
-    
-
-  
-
-  <script type="text/javascript" src="../../_static/js/theme.js"></script>
-
   <script type="text/javascript">
       jQuery(function () {
           SphinxRtdTheme.Navigation.enable(true);
       });
   </script>
+
+  
+  
+    
+  
   
 
   <div class="rst-versions" data-toggle="rst-versions" role="note" aria-label="versions">
@@ -605,6 +610,16 @@ demonstrate developing a GNN model on <strong>GL</strong>.</p>
             
               
                 <dd><a href="../../../index.html">stable</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../v0.7.0/index.html">v0.7.0</a></dd>
               
             
 

@@ -1,0 +1,6 @@
+﻿graphscope.experimental.nx.classes.function.edges
+=================================================
+
+.. currentmodule:: graphscope.experimental.nx.classes
+
+.. autofunction:: function.edges

@@ -1,0 +1,6 @@
+﻿graphscope.experimental.nx.Graph.\_\_init\_\_
+=============================================
+
+.. currentmodule:: graphscope.experimental.nx
+
+.. automethod:: Graph.__init__

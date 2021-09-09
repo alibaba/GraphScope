@@ -1,0 +1,195 @@
+@media print {
+	.rst-languages,
+	footer,
+	.wy-nav-side {
+		display: none
+	}
+	.wy-nav-content-wrap {
+		margin-left: 0
+	}
+}
+
+.rst-versions {
+    bottom: 128px !important;
+}
+
+.rst-languages {
+    height: 128px !important;
+}
+
+.rst-languages {
+	position: fixed;
+	bottom: 0;
+	left: 0;
+	width: 300px;
+	color: #fcfcfc;
+	background: #1f1d1d;
+	font-family: "Lato", "proxima-nova", "Helvetica Neue", Arial, sans-serif;
+	z-index: 400
+}
+
+.rst-languages a {
+	color: #2980B9;
+	text-decoration: none
+}
+
+.rst-languages .rst-badge-small {
+	display: none
+}
+
+.rst-languages .rst-current-language {
+	padding: 12px;
+	background-color: #272525;
+	display: block;
+	text-align: right;
+	font-size: 90%;
+	cursor: pointer;
+	color: #27AE60;
+	*zoom: 1
+}
+
+.rst-languages .rst-current-language:before,
+.rst-languages .rst-current-language:after {
+	display: table;
+	content: ""
+}
+
+.rst-languages .rst-current-language:after {
+	clear: both
+}
+
+.rst-languages .rst-current-language .fa,
+.rst-languages .rst-current-language .wy-menu-vertical li span.toctree-expand,
+.wy-menu-vertical li .rst-languages .rst-current-language span.toctree-expand,
+.rst-languages .rst-current-language .rst-content .admonition-title,
+.rst-content .rst-languages .rst-current-language .admonition-title,
+.rst-languages .rst-current-language .rst-content h1 .headerlink,
+.rst-content h1 .rst-languages .rst-current-language .headerlink,
+.rst-languages .rst-current-language .rst-content h2 .headerlink,
+.rst-content h2 .rst-languages .rst-current-language .headerlink,
+.rst-languages .rst-current-language .rst-content h3 .headerlink,
+.rst-content h3 .rst-languages .rst-current-language .headerlink,
+.rst-languages .rst-current-language .rst-content h4 .headerlink,
+.rst-content h4 .rst-languages .rst-current-language .headerlink,
+.rst-languages .rst-current-language .rst-content h5 .headerlink,
+.rst-content h5 .rst-languages .rst-current-language .headerlink,
+.rst-languages .rst-current-language .rst-content h6 .headerlink,
+.rst-content h6 .rst-languages .rst-current-language .headerlink,
+.rst-languages .rst-current-language .rst-content dl dt .headerlink,
+.rst-content dl dt .rst-languages .rst-current-language .headerlink,
+.rst-languages .rst-current-language .rst-content p.caption .headerlink,
+.rst-content p.caption .rst-languages .rst-current-language .headerlink,
+.rst-languages .rst-current-language .rst-content table>caption .headerlink,
+.rst-content table>caption .rst-languages .rst-current-language .headerlink,
+.rst-languages .rst-current-language .rst-content tt.download span:first-child,
+.rst-content tt.download .rst-languages .rst-current-language span:first-child,
+.rst-languages .rst-current-language .rst-content code.download span:first-child,
+.rst-content code.download .rst-languages .rst-current-language span:first-child,
+.rst-languages .rst-current-language .icon {
+	color: #fcfcfc
+}
+
+.rst-languages .rst-current-language .fa-book,
+.rst-languages .rst-current-language .icon-book {
+	float: left
+}
+
+.rst-languages .rst-current-language .icon-book {
+	float: left
+}
+
+.rst-languages .rst-current-language.rst-out-of-date {
+	background-color: #E74C3C;
+	color: #fff
+}
+
+.rst-languages .rst-current-language.rst-active-old-language {
+	background-color: #F1C40F;
+	color: #000
+}
+
+.rst-languages.shift-up {
+	height: auto;
+	max-height: 100%
+}
+
+.rst-languages.shift-up .rst-other-languages {
+	display: block
+}
+
+.rst-languages .rst-other-languages {
+	font-size: 90%;
+	padding: 12px;
+	color: gray;
+	display: none
+}
+
+.rst-languages .rst-other-languages hr {
+	display: block;
+	height: 1px;
+	border: 0;
+	margin: 20px 0;
+	padding: 0;
+	border-top: solid 1px #413d3d
+}
+
+.rst-languages .rst-other-languages dd {
+	display: inline-block;
+	margin: 0
+}
+
+.rst-languages .rst-other-languages dd a {
+	display: inline-block;
+	padding: 6px;
+	color: #fcfcfc
+}
+
+.rst-languages.rst-badge {
+	width: auto;
+	bottom: 20px;
+	right: 20px;
+	left: auto;
+	border: none;
+	max-width: 300px
+}
+
+.rst-languages.rst-badge .icon-book {
+	float: none
+}
+
+.rst-languages.rst-badge .fa-book,
+.rst-languages.rst-badge .icon-book {
+	float: none
+}
+
+.rst-languages.rst-badge.shift-up .rst-current-language {
+	text-align: right
+}
+
+.rst-languages.rst-badge.shift-up .rst-current-language .fa-book,
+.rst-languages.rst-badge.shift-up .rst-current-language .icon-book {
+	float: left
+}
+
+.rst-languages.rst-badge.shift-up .rst-current-language .icon-book {
+	float: left
+}
+
+.rst-languages.rst-badge .rst-current-language {
+	width: auto;
+	height: 30px;
+	line-height: 30px;
+	padding: 0 6px;
+	display: block;
+	text-align: center
+}
+
+@media screen and (max-width: 768px) {
+	.rst-languages {
+		width: 85%;
+		display: none
+	}
+	.rst-languages.shift {
+		display: block
+	}
+}

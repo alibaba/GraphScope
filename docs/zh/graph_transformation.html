@@ -1,33 +1,45 @@
 
 
 <!DOCTYPE html>
-<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
-<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<html class="writer-html5" lang="en" >
 <head>
-  <meta charset="utf-8">
-  <meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
-
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="utf-8" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   
   <title>图的变换操作 &mdash; GraphScope  documentation</title>
   
 
   
-  
-  
-  
-
-  
-
-  
-  
-    
-
-  
-
   <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
   <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
   <link rel="stylesheet" href="../_static/css/custom.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+
+    
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
     <link rel="next" title="图分析引擎" href="analytics_engine.html" />
@@ -46,21 +58,16 @@
 </script>
 
 
-
-  
-  <script src="../_static/js/modernizr.min.js"></script>
-
 </head>
 
 <body class="wy-body-for-nav">
 
    
   <div class="wy-grid-for-nav">
-
     
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
-        <div class="wy-side-nav-search">
+        <div class="wy-side-nav-search" >
           
 
           
@@ -91,8 +98,9 @@
           
         </div>
 
-        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
-          
+        
+  <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+    
       
       
         
@@ -100,7 +108,7 @@
         
       
       
-        <p><span class="caption-text">目录</span></p>
+        <p class="caption"><span class="caption-text">目录</span></p>
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="installation.html">安装</a></li>
 <li class="toctree-l1"><a class="reference internal" href="getting_started.html">快速上手</a></li>
@@ -120,7 +128,7 @@
 <li class="toctree-l1"><a class="reference internal" href="frequently_asked_questions.html">常见问题</a></li>
 <li class="toctree-l1"><a class="reference internal" href="developer_guide.html">开发者指南</a></li>
 </ul>
-<p><span class="caption-text">API 参考</span></p>
+<p class="caption"><span class="caption-text">API 参考</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference external" href="https://graphscope.io/docs/reference/python_index.html">Python API 参考</a></li>
 <li class="toctree-l1"><a class="reference external" href="https://graphscope.io/docs/reference/analytical_engine_index.html">图分析引擎 API 参考</a></li>
@@ -128,7 +136,8 @@
 
       
     
-        </div>
+  </div>
+
       </div>
     </nav>
 
@@ -163,11 +172,13 @@
 
 
 
+
+
 <div role="navigation" aria-label="breadcrumbs navigation">
 
   <ul class="wy-breadcrumbs">
     
-      <li><a href="../index.html">Docs</a> &raquo;</li>
+      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
         
           <li><a href="index.html">GraphScope: 一站式图计算系统</a> &raquo;</li>
         
@@ -176,7 +187,7 @@
     
       <li class="wy-breadcrumbs-aside">
         
-            
+          
             <a href="../_sources/zh/graph_transformation.rst.txt" rel="nofollow"> View page source</a>
           
         
@@ -190,7 +201,7 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <section id="graph-transformation">
+  <div class="section" id="graph-transformation">
 <span id="id1"></span><h1>图的变换操作<a class="headerlink" href="#graph-transformation" title="Permalink to this headline">¶</a></h1>
 <p>我们将介绍一系列可以在图上进行新增/投影的方法，以及如何将一个复杂的图转换为可以适配普通算法应用的方法。
 最后，我们展示如何将算法得到的结果加回到图中去。</p>
@@ -198,7 +209,7 @@
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">add_vertices</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">vertices</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s2">&quot;_&quot;</span><span class="p">,</span> <span class="n">properties</span><span class="o">=</span><span class="p">[],</span> <span class="n">vid_field</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
     <span class="k">pass</span>
 
-<span class="k">def</span> <span class="nf">add_edges</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">edges</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s2">&quot;_&quot;</span><span class="p">,</span> <span class="n">properties</span><span class="o">=</span><span class="p">[],</span> <span class="n">src_label</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">dst_label</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">src_field</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">dst_field</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
+<span class="k">def</span> <span class="nf">add_edges</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">edges</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s2">&quot;_&quot;</span><span class="p">,</span> <span class="n">properties</span><span class="o">=</span><span class="p">[],</span> <span class="n">src_label</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">dst_label</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">src_field</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">dst_field</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
     <span class="k">pass</span>
 
 <span class="k">def</span> <span class="nf">project</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">vertices</span><span class="p">,</span> <span class="n">edges</span><span class="p">):</span>
@@ -208,7 +219,7 @@
 <p>其中，我们已经在 <a class="reference internal" href="loading_graph.html#loading-graphs"><span class="std std-ref">载图</span></a> 一节见到过 <cite>add_vertices</cite> 和 <cite>add_edges</cite> 这两个函数，当时我们用它来构建一张图。
 进一步的，当图构建好并载入了 Vineyard 中之后，我们仍然可以用其增加更多的标签。当然这一步并不会在原图上修改，而是会返回基于原图之上，
 增加了新的标签的新图。</p>
-<section id="id2">
+<div class="section" id="id2">
 <h2>添加新的标签<a class="headerlink" href="#id2" title="Permalink to this headline">¶</a></h2>
 <p>以 LDBC-SNB 属性图为例，我们现在载入其中一部分标签，作为接下来一系列转换操作的起始图。</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">graphscope</span>
@@ -224,32 +235,32 @@
     <span class="p">)</span>
 
 <span class="c1"># graph has 1 vertex label &quot;person&quot;</span>
-<span class="k">print</span><span class="p">(</span><span class="n">graph</span><span class="o">.</span><span class="n">schema</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">graph</span><span class="o">.</span><span class="n">schema</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>到这里， 我们已经载入了一张图。接下来我们在这张图上再添加几个标签。</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">graph1</span> <span class="o">=</span> <span class="n">graph</span><span class="o">.</span><span class="n">add_vertices</span><span class="p">(</span><span class="n">Loader</span><span class="p">(</span><span class="s2">&quot;comment_0_0.csv&quot;</span><span class="p">,</span> <span class="n">delimiter</span><span class="o">=</span><span class="s2">&quot;|&quot;</span><span class="p">),</span> <span class="s2">&quot;comment&quot;</span><span class="p">)</span>
 
 <span class="c1"># Now graph1 has 2 vertex labels &quot;person&quot; and &quot;comment&quot;</span>
-<span class="k">print</span><span class="p">(</span><span class="n">graph1</span><span class="o">.</span><span class="n">schema</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">graph1</span><span class="o">.</span><span class="n">schema</span><span class="p">)</span>
 
 <span class="n">graph2</span> <span class="o">=</span> <span class="n">graph1</span><span class="o">.</span><span class="n">add_edges</span><span class="p">(</span><span class="n">Loader</span><span class="p">(</span><span class="s2">&quot;comment_replyOf_comment_0_0.csv&quot;</span><span class="p">,</span> <span class="n">delimiter</span><span class="o">=</span><span class="s2">&quot;|&quot;</span><span class="p">),</span>
             <span class="s2">&quot;replyOf&quot;</span><span class="p">,</span> <span class="n">src_label</span><span class="o">=</span><span class="s2">&quot;comment&quot;</span><span class="p">,</span> <span class="n">dst_label</span><span class="o">=</span><span class="s2">&quot;comment&quot;</span>
     <span class="p">)</span>
 
 <span class="c1"># graph2 has 2 edge labels &quot;knows&quot; and &quot;replyOf&quot;</span>
-<span class="k">print</span><span class="p">(</span><span class="n">graph2</span><span class="o">.</span><span class="n">schema</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">graph2</span><span class="o">.</span><span class="n">schema</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>可以看到每次 <cite>add</cite> 都会产生一张新的图，在底层，他们共有的部分会指向同一块内存，所以并不会将原图的数据复制一份。</p>
-</section>
-<section id="id3">
+</div>
+<div class="section" id="id3">
 <h2>投影<a class="headerlink" href="#id3" title="Permalink to this headline">¶</a></h2>
 <p>在某些场景下，我们需要将从一张复杂的图提取出一个子图。这个操作可以借助 <cite>project</cite> 来完成。</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">project</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
-        <span class="n">vertices</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Union</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="bp">None</span><span class="p">]],</span>
-        <span class="n">edges</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Union</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="bp">None</span><span class="p">]],</span> <span class="bp">None</span><span class="p">]</span>
+        <span class="n">vertices</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Union</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="kc">None</span><span class="p">]],</span>
+        <span class="n">edges</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Union</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="kc">None</span><span class="p">]],</span> <span class="kc">None</span><span class="p">]</span>
     <span class="p">):</span>
     <span class="k">pass</span>
 </pre></div>
@@ -258,19 +269,19 @@
 代表选择所有的属性。</p>
 <p><cite>project</cite> 的返回值也是一个属性图，并且可以被进一步 <cite>project</cite>。
 以下是几个例子。</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">sub_graph</span> <span class="o">=</span> <span class="n">graph2</span><span class="o">.</span><span class="n">project</span><span class="p">(</span><span class="n">vertices</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;person&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;firstName&quot;</span><span class="p">,</span> <span class="s2">&quot;lastName&quot;</span><span class="p">]},</span> <span class="n">edges</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;knows&quot;</span><span class="p">:</span> <span class="bp">None</span><span class="p">})</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">sub_graph</span> <span class="o">=</span> <span class="n">graph2</span><span class="o">.</span><span class="n">project</span><span class="p">(</span><span class="n">vertices</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;person&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;firstName&quot;</span><span class="p">,</span> <span class="s2">&quot;lastName&quot;</span><span class="p">]},</span> <span class="n">edges</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;knows&quot;</span><span class="p">:</span> <span class="kc">None</span><span class="p">})</span>
 
 <span class="c1"># 包含一个点标签 &quot;person&quot; 和一个边标签 &quot;knows&quot;， 以及所选择的属性。</span>
-<span class="k">print</span><span class="p">(</span><span class="n">sub_graph</span><span class="o">.</span><span class="n">schema</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">sub_graph</span><span class="o">.</span><span class="n">schema</span><span class="p">)</span>
 
 <span class="n">sub_graph2</span> <span class="o">=</span> <span class="n">sub_graph</span><span class="o">.</span><span class="n">project</span><span class="p">(</span><span class="n">vertices</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;person&quot;</span><span class="p">:</span> <span class="p">[]},</span> <span class="n">edges</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;knows&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;creationDate&quot;</span><span class="p">]})</span>
 
 <span class="c1"># 现在点上没有属性，边上有一个属性</span>
-<span class="k">print</span><span class="p">(</span><span class="n">sub_graph2</span><span class="o">.</span><span class="n">schema</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">sub_graph2</span><span class="o">.</span><span class="n">schema</span><span class="p">)</span>
 </pre></div>
 </div>
-</section>
-<section id="id4">
+</div>
+<div class="section" id="id4">
 <h2>自动转换为简单图<a class="headerlink" href="#id4" title="Permalink to this headline">¶</a></h2>
 <p>当执行一个仅可以跑在简单图上的算法时，其会默认将其参数中的属性图转换为简单图，如果不能进行这种转换（即多于一个点标签和一个边标签，或多于一个属性），
 那么就会报错。</p>
@@ -282,8 +293,8 @@
 <span class="c1"># wcc(sub_graph)  # 错误！转换不合法，多于一个属性</span>
 </pre></div>
 </div>
-</section>
-<section id="id5">
+</div>
+<div class="section" id="id5">
 <h2>将计算结果作为新的属性加入图中<a class="headerlink" href="#id5" title="Permalink to this headline">¶</a></h2>
 <p>上一步算法的运行结果可以被加入一张图中, 作为点的一个属性。</p>
 <p>不仅可以加入运算结果到直接被查询的图上，还可以将这个查询结果加到被 <cite>project</cite> 而得到被查询的图上，只要被加入属性的点标签相同。</p>
@@ -294,37 +305,37 @@
 <span class="n">new_graph</span> <span class="o">=</span> <span class="n">graph</span><span class="o">.</span><span class="n">add_column</span><span class="p">(</span><span class="n">ret</span><span class="p">,</span> <span class="n">selector</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;cc&#39;</span><span class="p">:</span> <span class="s1">&#39;r&#39;</span><span class="p">})</span>
 </pre></div>
 </div>
-</section>
-</section>
+</div>
+</div>
 
 
            </div>
            
           </div>
           <footer>
-  
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
-      
-        <a href="analytics_engine.html" class="btn btn-neutral float-right" title="图分析引擎" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
-      
-      
-        <a href="loading_graph.html" class="btn btn-neutral" title="载图" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
-      
+        <a href="analytics_engine.html" class="btn btn-neutral float-right" title="图分析引擎" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="loading_graph.html" class="btn btn-neutral float-left" title="载图" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
     </div>
-  
 
   <hr/>
 
   <div role="contentinfo">
     <p>
-        &copy; Copyright 2020-2023, Damo Academy, Alibaba Inc.
+        &#169; Copyright 2020-2023, Damo Academy, Alibaba Inc..
 
     </p>
   </div>
-  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
 
 </footer>
-
         </div>
       </div>
 
@@ -333,28 +344,16 @@
   </div>
   
 
-
-  
-
-    
-    
-      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
-        <script src="../_static/jquery.js"></script>
-        <script src="../_static/underscore.js"></script>
-        <script src="../_static/doctools.js"></script>
-        <script src="../_static/language_data.js"></script>
-        <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
-    
-
-  
-
-  <script type="text/javascript" src="../_static/js/theme.js"></script>
-
   <script type="text/javascript">
       jQuery(function () {
           SphinxRtdTheme.Navigation.enable(true);
       });
   </script>
+
+  
+  
+    
+  
   
 
   <div class="rst-versions" data-toggle="rst-versions" role="note" aria-label="versions">
@@ -382,6 +381,16 @@
             
               
                 <dd><a href="index.html">stable</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../v0.7.0/zh/index.html">v0.7.0</a></dd>
               
             
 

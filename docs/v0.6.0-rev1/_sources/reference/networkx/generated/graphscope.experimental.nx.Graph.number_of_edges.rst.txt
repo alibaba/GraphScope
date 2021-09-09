@@ -1,0 +1,6 @@
+﻿graphscope.experimental.nx.Graph.number\_of\_edges
+==================================================
+
+.. currentmodule:: graphscope.experimental.nx
+
+.. automethod:: Graph.number_of_edges

@@ -1,0 +1,6 @@
+﻿graphscope.experimental.nx.DiGraph.subgraph
+===========================================
+
+.. currentmodule:: graphscope.experimental.nx
+
+.. automethod:: DiGraph.subgraph

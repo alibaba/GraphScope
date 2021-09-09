@@ -1,0 +1,6 @@
+﻿graphscope.experimental.nx.generators.classic.path\_graph
+=========================================================
+
+.. currentmodule:: graphscope.experimental.nx.generators.classic
+
+.. autofunction:: path_graph
