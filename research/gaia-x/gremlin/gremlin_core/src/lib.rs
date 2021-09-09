@@ -146,9 +146,7 @@ impl Partitioner for Partition {
 
 pub fn register_gremlin_types() -> io::Result<()> {
     dyn_type::register_type::<ShadeSync<(Traverser, Traverser)>>()?;
-    // TODO(bingqing): consider how to register Count/ToList
-    //  dyn_type::register_type::<ShadeSync<Count<Traverser>>>()?;
-    //  dyn_type::register_type::<ShadeSync<ToList<Traverser>>>()?;
+    dyn_type::register_type::<ShadeSync<Vec<Traverser>>>()?;
     dyn_type::register_type::<ResultPath>()?;
     Ok(())
 }
