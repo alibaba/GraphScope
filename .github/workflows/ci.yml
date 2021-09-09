@@ -581,11 +581,11 @@ jobs:
         mv interactive_engine/src/data_load_tools/target/data_load.tar.gz ./graphscope_store_data_load.tar.gz
         tar -zcf vineyard.tar.gz /opt/vineyard
 
-#    - name: gremlin-test
-#      run: |
-#        cd interactive_engine/src/v2
-#        mvn test -Pgremlin-test
-#
+    - name: gremlin-test
+      run: |
+        cd interactive_engine/src/v2
+        mvn test -Pgremlin-test
+
     - uses: actions/upload-artifact@v2
       with:
         name: gss-${{ github.sha }}
@@ -697,7 +697,7 @@ jobs:
         python3 -m pytest -s -vvv tests/kubernetes/test_store_service.py -k test_demo_after_restart
 
     - name: Clean
-      if: true
+      if: always()
       run: |
         export JAVA_HOME=/usr/lib/jvm/default-java/
         HADOOP_SSH_OPTS="-o StrictHostKeyChecking=no" /tmp/hadoop-2.10.1/sbin/stop-dfs.sh || true
