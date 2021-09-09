@@ -27,7 +27,6 @@ import time
 
 import grpc
 
-from graphscope.config import GSConfig as gs_config
 from graphscope.framework.errors import ConnectionError
 from graphscope.framework.errors import FatalError
 from graphscope.framework.errors import GRPCError
@@ -51,7 +50,7 @@ def catch_grpc_error(fn):
                 raise GRPCError("Internal Error: " + exc.details()) from None
             elif (
                 grpc.StatusCode.UNKNOWN == exc.code()
-                or grpc.StatusCode.UNAVAIABLE == exc.code()
+                or grpc.StatusCode.UNAVAILABLE == exc.code()
             ):
                 logger.error(
                     "rpc %s: failed with error code %s, details: %s"
