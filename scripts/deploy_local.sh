@@ -424,7 +424,9 @@ write_envs_config() {
         echo "export CPPFLAGS=-I/usr/local/opt/llvm@${LLVM_VERSION}/include"
         echo "export PATH=/usr/local/opt/llvm@${LLVM_VERSION}/bin:\$PATH"
       fi
-      echo "export JAVA_HOME=\$(/usr/libexec/java_home -v11)"
+      if [ -z "${JAVA_HOME}" ]; then
+        echo "export JAVA_HOME=\$(/usr/libexec/java_home -v11)"
+      fi
       echo "export PATH=\$HOME/.cargo/bin:\${JAVA_HOME}/bin:/usr/local/go/bin:\$PATH"
       echo "export PATH=\$(go env GOPATH)/bin:\$PATH"
       echo "export OPENSSL_ROOT_DIR=/usr/local/opt/openssl"
