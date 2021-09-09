@@ -35,7 +35,6 @@ COPY --from=builder /opt/vineyard/ /usr/local/
 
 COPY ./k8s/ready_probe.sh /tmp/ready_probe.sh
 COPY --from=builder /home/graphscope/gs/interactive_engine/distribution/target/maxgraph.tar.gz /tmp/maxgraph.tar.gz
-COPY --from=builder /home/graphscope/gs/interactive_engine/src/data_load_tools/target/data_load.tar.gz /tmp/graphscope_store_data_load.tar.gz
 RUN sudo tar -zxf /tmp/maxgraph.tar.gz -C /usr/local
 
 ENV GRAPHSCOPE_HOME=/usr/local

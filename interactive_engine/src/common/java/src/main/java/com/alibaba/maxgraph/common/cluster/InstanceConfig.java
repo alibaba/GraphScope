@@ -582,20 +582,12 @@ public class InstanceConfig extends MaxGraphConfiguration {
         return getString(ZK_AUTH_PASSWORD, ZK_AUTH_PASSWORD_DEFAULT_VALUE);
     }
 
-    public PlatformKind getPlatformKind() {
-        return PlatformKind.valueOf(getString(PLATFORM_KIND).toUpperCase());
-    }
-
     public String getCoordinatorPort() {
         return getString(COORDINATOR_PORT, "8388");
     }
 
     public Boolean isBlockGrpcEnable() {
         return getBoolean(BLOCK_GRPC_ENABLE, true);
-    }
-
-    public GraphType getGraphType() {
-        return GraphType.valueOf(getString(GRAPH_TYPE, GraphType.DISTRIBUTED_STOREAGE.name()));
     }
 
     public int getPartitionNum() {
@@ -696,10 +688,6 @@ public class InstanceConfig extends MaxGraphConfiguration {
 
     public int getRequestEdgeIdInterval() {
         return getInt(REQUEST_EDGEID_INTERVAL, 10000000);
-    }
-
-    public DataSnapshotMode getDataSnapshotMode() {
-        return DataSnapshotMode.valueOf(getString(DATA_SNAPSHOT_MODE, DataSnapshotMode.NONE.name()));
     }
 
     public String getExecutorBinaryName() {
