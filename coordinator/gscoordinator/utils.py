@@ -405,6 +405,8 @@ def op_pre_process(op, op_result_pool, key_to_op, **kwargs):  # noqa: C901
         _pre_process_for_output_graph_op(op, op_result_pool, key_to_op, **kwargs)
     if op.op == types_pb2.UNLOAD_APP:
         _pre_process_for_unload_app_op(op, op_result_pool, key_to_op, **kwargs)
+    if op.op == types_pb2.UNLOAD_CONTEXT:
+        _pre_process_for_unload_context_op(op, op_result_pool, key_to_op, **kwargs)
     if op.op == types_pb2.CREATE_INTERACTIVE_QUERY:
         _pre_process_for_create_interactive_query_op(
             op, op_result_pool, key_to_op, **kwargs
@@ -599,6 +601,7 @@ def _pre_process_for_unload_app_op(op, op_result_pool, key_to_op, **kwargs):
     result = op_result_pool[key_of_parent_op]
     op.attr[types_pb2.APP_NAME].CopyFrom(utils.s_to_attr(result.result.decode("utf-8")))
 
+
 def _pre_process_for_unload_context_op(op, op_result_pool, key_to_op, **kwargs):
     assert len(op.parents) == 1
     key_of_parent_op = op.parents[0]
@@ -608,6 +611,7 @@ def _pre_process_for_unload_context_op(op, op_result_pool, key_to_op, **kwargs):
     op.attr[types_pb2.CONTEXT_KEY].CopyFrom(
         attr_value_pb2.AttrValue(s=context_key.encode("utf-8"))
     )
+
 
 def _pre_process_for_add_column_op(op, op_result_pool, key_to_op, **kwargs):
     for key_of_parent_op in op.parents:

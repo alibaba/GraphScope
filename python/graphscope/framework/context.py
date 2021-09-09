@@ -253,7 +253,7 @@ class BaseContextDAGNode(DAGNode):
 
     def unload(self):
         op = dag_utils.unload_context(self)
-        return UnloadedContext(self, op)
+        return UnloadedContext(self._session, op)
 
 
 class TensorContextDAGNode(BaseContextDAGNode):

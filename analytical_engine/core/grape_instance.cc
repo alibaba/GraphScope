@@ -237,7 +237,7 @@ bl::result<std::string> GrapeInstance::query(const rpc::GSParams& params,
 
 bl::result<void> GrapeInstance::unloadContext(const rpc::GSParams& params) {
   BOOST_LEAF_AUTO(context_key, params.Get<std::string>(rpc::CONTEXT_KEY));
-  return object_manager_.RemoveObject(graph_name);
+  return object_manager_.RemoveObject(context_key);
 }
 
 bl::result<std::string> GrapeInstance::reportGraph(
