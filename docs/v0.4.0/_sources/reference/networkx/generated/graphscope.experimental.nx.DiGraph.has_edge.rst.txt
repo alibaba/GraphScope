@@ -1,0 +1,6 @@
+﻿graphscope.experimental.nx.DiGraph.has\_edge
+============================================
+
+.. currentmodule:: graphscope.experimental.nx
+
+.. automethod:: DiGraph.has_edge

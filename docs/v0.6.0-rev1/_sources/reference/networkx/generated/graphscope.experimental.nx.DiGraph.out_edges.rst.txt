@@ -1,0 +1,6 @@
+﻿graphscope.experimental.nx.DiGraph.out\_edges
+=============================================
+
+.. currentmodule:: graphscope.experimental.nx
+
+.. autoproperty:: DiGraph.out_edges

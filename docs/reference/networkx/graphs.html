@@ -1,33 +1,45 @@
 
 
 <!DOCTYPE html>
-<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
-<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<html class="writer-html5" lang="en" >
 <head>
-  <meta charset="utf-8">
-  <meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
-
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="utf-8" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   
   <title>Graph types &mdash; GraphScope  documentation</title>
   
 
   
-  
-  
-  
-
-  
-
-  
-  
-    
-
-  
-
   <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
   <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
   <link rel="stylesheet" href="../../_static/css/custom.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+        <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
+        <script src="../../_static/jquery.js"></script>
+        <script src="../../_static/underscore.js"></script>
+        <script src="../../_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="../../_static/js/theme.js"></script>
+
+    
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
     <link rel="next" title="Builtin algorithms" href="builtin.html" />
@@ -46,21 +58,16 @@
 </script>
 
 
-
-  
-  <script src="../../_static/js/modernizr.min.js"></script>
-
 </head>
 
 <body class="wy-body-for-nav">
 
    
   <div class="wy-grid-for-nav">
-
     
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
-        <div class="wy-side-nav-search">
+        <div class="wy-side-nav-search" >
           
 
           
@@ -91,8 +98,9 @@
           
         </div>
 
-        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
-          
+        
+  <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+    
       
       
         
@@ -100,7 +108,7 @@
         
       
       
-        <p><span class="caption-text">Contents</span></p>
+        <p class="caption"><span class="caption-text">Contents</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../../installation.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../getting_started.html">Getting Started</a></li>
@@ -111,10 +119,11 @@
 <li class="toctree-l1"><a class="reference internal" href="../../analytics_engine.html">GraphScope Analytical Engine</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../interactive_engine.html">GraphScope Interactive Engine</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../learning_engine.html">GraphScope Learning Engine</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../persistent_graph_store.html">Persistent Graph Store</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../frequently_asked_questions.html">Frequently Asked Questions</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../developer_guide.html">Developer Guide</a></li>
 </ul>
-<p><span class="caption-text">Reference</span></p>
+<p class="caption"><span class="caption-text">Reference</span></p>
 <ul class="current">
 <li class="toctree-l1 current"><a class="reference internal" href="../python_index.html">Python API Reference</a><ul class="current">
 <li class="toctree-l2"><a class="reference internal" href="../session.html">Session</a></li>
@@ -146,7 +155,8 @@
 
       
     
-        </div>
+  </div>
+
       </div>
     </nav>
 
@@ -181,11 +191,13 @@
 
 
 
+
+
 <div role="navigation" aria-label="breadcrumbs navigation">
 
   <ul class="wy-breadcrumbs">
     
-      <li><a href="../../index.html">Docs</a> &raquo;</li>
+      <li><a href="../../index.html" class="icon icon-home"></a> &raquo;</li>
         
           <li><a href="../python_index.html">Python API Reference</a> &raquo;</li>
         
@@ -196,7 +208,7 @@
     
       <li class="wy-breadcrumbs-aside">
         
-            
+          
             <a href="../../_sources/reference/networkx/graphs.rst.txt" rel="nofollow"> View page source</a>
           
         
@@ -210,7 +222,7 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <section id="graph-types">
+  <div class="section" id="graph-types">
 <span id="graphs"></span><h1>Graph types<a class="headerlink" href="#graph-types" title="Permalink to this headline">¶</a></h1>
 <table class="docutils align-default">
 <colgroup>
@@ -240,12 +252,12 @@
 </tbody>
 </table>
 <p>Notice that graphscope.nx not support MultiGraph and MultiDiGraph.</p>
-<section id="graph">
+<div class="section" id="graph">
 <h2>Graph<a class="headerlink" href="#graph" title="Permalink to this headline">¶</a></h2>
 <p>Undirected graphs with self loops</p>
 <dl class="py class">
-<dt id="graphscope.nx.Graph">
-<em class="property">class </em><code class="sig-prename descclassname">graphscope.nx.</code><code class="sig-name descname">Graph</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">incoming_graph_data</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">attr</span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/graphscope/nx/classes/graph.html#Graph"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#graphscope.nx.Graph" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="graphscope.nx.Graph">
+<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">graphscope.nx.</span></span><span class="sig-name descname"><span class="pre">Graph</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">incoming_graph_data</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">attr</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/graphscope/nx/classes/graph.html#Graph"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#graphscope.nx.Graph" title="Permalink to this definition">¶</a></dt>
 <dd><p>Base class for undirected graphs in graphscope.nx.</p>
 <p>A Graph that hold the metadata of a graph, and provide NetworkX-like Graph APIs.</p>
 <p>It is worth noticing that the graph is actually stored by the Analytical Engine backend.
@@ -374,8 +386,8 @@ via lookup (e.g. <cite>nodes[n], `edges[u, v]</cite>, <cite>adj[u][v]</cite>) an
 Views exist for <cite>nodes</cite>, <cite>edges</cite>, <cite>neighbors()</cite>/<cite>adj</cite> and <cite>degree</cite>.</p>
 <p>For details on these and other miscellaneous methods, see below.</p>
 <dl class="py method">
-<dt id="graphscope.nx.Graph.__contains__">
-<code class="sig-name descname">__contains__</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">n</span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/graphscope/nx/classes/graph.html#Graph.__contains__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#graphscope.nx.Graph.__contains__" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="graphscope.nx.Graph.__contains__">
+<span class="sig-name descname"><span class="pre">__contains__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/graphscope/nx/classes/graph.html#Graph.__contains__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#graphscope.nx.Graph.__contains__" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns True if n is a node, False otherwise. Use: ‘n in G’.</p>
 <p class="rubric">Examples</p>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">G</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">path_graph</span><span class="p">(</span><span class="mi">4</span><span class="p">)</span>  <span class="c1"># or DiGraph</span>
@@ -386,8 +398,8 @@ Views exist for <cite>nodes</cite>, <cite>edges</cite>, <cite>neighbors()</cite>
 </dd></dl>
 
 <dl class="py method">
-<dt id="graphscope.nx.Graph.__getitem__">
-<code class="sig-name descname">__getitem__</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">n</span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/graphscope/nx/classes/graph.html#Graph.__getitem__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#graphscope.nx.Graph.__getitem__" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="graphscope.nx.Graph.__getitem__">
+<span class="sig-name descname"><span class="pre">__getitem__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/graphscope/nx/classes/graph.html#Graph.__getitem__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#graphscope.nx.Graph.__getitem__" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns a dict of neighbors of node n.  Use: ‘G[n]’.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -412,8 +424,8 @@ Views exist for <cite>nodes</cite>, <cite>edges</cite>, <cite>neighbors()</cite>
 </dd></dl>
 
 <dl class="py method">
-<dt id="graphscope.nx.Graph.__init__">
-<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">incoming_graph_data</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">attr</span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/graphscope/nx/classes/graph.html#Graph.__init__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#graphscope.nx.Graph.__init__" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="graphscope.nx.Graph.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">incoming_graph_data</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">attr</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/graphscope/nx/classes/graph.html#Graph.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#graphscope.nx.Graph.__init__" title="Permalink to this definition">¶</a></dt>
 <dd><p>Initialize a graph with edges, name, or graph attributes</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -457,8 +469,8 @@ of nodes and edges would be cleaned in nx.Graph.</p>
 </dd></dl>
 
 <dl class="py method">
-<dt id="graphscope.nx.Graph.__iter__">
-<code class="sig-name descname">__iter__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/graphscope/nx/classes/graph.html#Graph.__iter__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#graphscope.nx.Graph.__iter__" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="graphscope.nx.Graph.__iter__">
+<span class="sig-name descname"><span class="pre">__iter__</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/graphscope/nx/classes/graph.html#Graph.__iter__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#graphscope.nx.Graph.__iter__" title="Permalink to this definition">¶</a></dt>
 <dd><p>Iterate over the nodes. Use: ‘for n in G’.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns</dt>
@@ -479,8 +491,8 @@ of nodes and edges would be cleaned in nx.Graph.</p>
 </dd></dl>
 
 <dl class="py method">
-<dt id="graphscope.nx.Graph.__len__">
-<code class="sig-name descname">__len__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/graphscope/nx/classes/graph.html#Graph.__len__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#graphscope.nx.Graph.__len__" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="graphscope.nx.Graph.__len__">
+<span class="sig-name descname"><span class="pre">__len__</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/graphscope/nx/classes/graph.html#Graph.__len__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#graphscope.nx.Graph.__len__" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns the number of nodes in the graph. Use: ‘len(G)’.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns</dt>
@@ -503,8 +515,8 @@ of nodes and edges would be cleaned in nx.Graph.</p>
 </dd></dl>
 
 <dl class="py method">
-<dt id="graphscope.nx.Graph.add_edge">
-<code class="sig-name descname">add_edge</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">u_of_edge</span></em>, <em class="sig-param"><span class="n">v_of_edge</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">attr</span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/graphscope/nx/classes/graph.html#Graph.add_edge"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#graphscope.nx.Graph.add_edge" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="graphscope.nx.Graph.add_edge">
+<span class="sig-name descname"><span class="pre">add_edge</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">u_of_edge</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">v_of_edge</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">attr</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/graphscope/nx/classes/graph.html#Graph.add_edge"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#graphscope.nx.Graph.add_edge" title="Permalink to this definition">¶</a></dt>
 <dd><p>Add an edge between u and v.</p>
 <p>The nodes u and v will be automatically added if they are
 not already in the graph.</p>
@@ -556,8 +568,8 @@ an edge attribute (by default <cite>weight</cite>) to hold a numerical value.</p
 </dd></dl>
 
 <dl class="py method">
-<dt id="graphscope.nx.Graph.add_edges_from">
-<code class="sig-name descname">add_edges_from</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">ebunch_to_add</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">attr</span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/graphscope/nx/classes/graph.html#Graph.add_edges_from"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#graphscope.nx.Graph.add_edges_from" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="graphscope.nx.Graph.add_edges_from">
+<span class="sig-name descname"><span class="pre">add_edges_from</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ebunch_to_add</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">attr</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/graphscope/nx/classes/graph.html#Graph.add_edges_from"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#graphscope.nx.Graph.add_edges_from" title="Permalink to this definition">¶</a></dt>
 <dd><p>Add all the edges in ebunch_to_add.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -599,8 +611,8 @@ attributes specified via keyword arguments.</p>
 </dd></dl>
 
 <dl class="py method">
-<dt id="graphscope.nx.Graph.add_node">
-<code class="sig-name descname">add_node</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">node_for_adding</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">attr</span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/graphscope/nx/classes/graph.html#Graph.add_node"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#graphscope.nx.Graph.add_node" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="graphscope.nx.Graph.add_node">
+<span class="sig-name descname"><span class="pre">add_node</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">node_for_adding</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">attr</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/graphscope/nx/classes/graph.html#Graph.add_node"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#graphscope.nx.Graph.add_node" title="Permalink to this definition">¶</a></dt>
 <dd><p>Add a single node <cite>node_for_adding</cite> and update node attributes.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -632,8 +644,8 @@ attributes specified via keyword arguments.</p>
 </dd></dl>
 
 <dl class="py method">
-<dt id="graphscope.nx.Graph.add_nodes_from">
-<code class="sig-name descname">add_nodes_from</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">nodes_for_adding</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">attr</span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/graphscope/nx/classes/graph.html#Graph.add_nodes_from"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#graphscope.nx.Graph.add_nodes_from" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="graphscope.nx.Graph.add_nodes_from">
+<span class="sig-name descname"><span class="pre">add_nodes_from</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">nodes_for_adding</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">attr</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/graphscope/nx/classes/graph.html#Graph.add_nodes_from"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#graphscope.nx.Graph.add_nodes_from" title="Permalink to this definition">¶</a></dt>
 <dd><p>Add multiple nodes.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -679,8 +691,8 @@ precedence over attributes specified via keyword arguments.</p></li>
 </dd></dl>
 
 <dl class="py method">
-<dt id="graphscope.nx.Graph.add_weighted_edges_from">
-<code class="sig-name descname">add_weighted_edges_from</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">ebunch_to_add</span></em>, <em class="sig-param"><span class="n">weight</span><span class="o">=</span><span class="default_value">'weight'</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">attr</span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/graphscope/nx/classes/graph.html#Graph.add_weighted_edges_from"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#graphscope.nx.Graph.add_weighted_edges_from" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="graphscope.nx.Graph.add_weighted_edges_from">
+<span class="sig-name descname"><span class="pre">add_weighted_edges_from</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ebunch_to_add</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">weight</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'weight'</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">attr</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/graphscope/nx/classes/graph.html#Graph.add_weighted_edges_from"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#graphscope.nx.Graph.add_weighted_edges_from" title="Permalink to this definition">¶</a></dt>
 <dd><p>Add weighted edges in <cite>ebunch_to_add</cite> with specified weight attr</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -712,9 +724,9 @@ the edge data.</p>
 </div>
 </dd></dl>
 
-<dl class="py method">
-<dt id="graphscope.nx.Graph.adj">
-<em class="property">property </em><code class="sig-name descname">adj</code><a class="headerlink" href="#graphscope.nx.Graph.adj" title="Permalink to this definition">¶</a></dt>
+<dl class="py property">
+<dt class="sig sig-object py" id="graphscope.nx.Graph.adj">
+<em class="property"><span class="pre">property</span> </em><span class="sig-name descname"><span class="pre">adj</span></span><a class="headerlink" href="#graphscope.nx.Graph.adj" title="Permalink to this definition">¶</a></dt>
 <dd><p>Graph adjacency object holding the neighbors of each node.</p>
 <p>This object is a read-only dict-like structure with node keys
 and neighbor-dict values.  The neighbor-dict is keyed by neighbor
@@ -728,8 +740,8 @@ So <cite>for nbr, foovalue in G[node].data(‘foo’, default=1):</cite> works.<
 </dd></dl>
 
 <dl class="py method">
-<dt id="graphscope.nx.Graph.adjacency">
-<code class="sig-name descname">adjacency</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/graphscope/nx/classes/graph.html#Graph.adjacency"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#graphscope.nx.Graph.adjacency" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="graphscope.nx.Graph.adjacency">
+<span class="sig-name descname"><span class="pre">adjacency</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/graphscope/nx/classes/graph.html#Graph.adjacency"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#graphscope.nx.Graph.adjacency" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns an iterator over (node, adjacency dict) tuples for all nodes.</p>
 <p>For directed graphs, only outgoing neighbors/adjacencies are included.</p>
 <dl class="field-list simple">
@@ -750,8 +762,8 @@ the graph.</p>
 </dd></dl>
 
 <dl class="py method">
-<dt id="graphscope.nx.Graph.clear">
-<code class="sig-name descname">clear</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/graphscope/nx/classes/graph.html#Graph.clear"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#graphscope.nx.Graph.clear" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="graphscope.nx.Graph.clear">
+<span class="sig-name descname"><span class="pre">clear</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/graphscope/nx/classes/graph.html#Graph.clear"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#graphscope.nx.Graph.clear" title="Permalink to this definition">¶</a></dt>
 <dd><p>Remove all nodes and edges from the graph.</p>
 <p>This also removes the name, and all graph, node, and edge attributes.</p>
 <p class="rubric">Examples</p>
@@ -766,8 +778,8 @@ the graph.</p>
 </dd></dl>
 
 <dl class="py method">
-<dt id="graphscope.nx.Graph.clear_edges">
-<code class="sig-name descname">clear_edges</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/graphscope/nx/classes/graph.html#Graph.clear_edges"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#graphscope.nx.Graph.clear_edges" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="graphscope.nx.Graph.clear_edges">
+<span class="sig-name descname"><span class="pre">clear_edges</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/graphscope/nx/classes/graph.html#Graph.clear_edges"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#graphscope.nx.Graph.clear_edges" title="Permalink to this definition">¶</a></dt>
 <dd><p>Remove all edges from the graph without altering nodes.</p>
 <p class="rubric">Examples</p>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">G</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">path_graph</span><span class="p">(</span><span class="mi">4</span><span class="p">)</span>  <span class="c1"># or DiGraph</span>
@@ -781,8 +793,8 @@ the graph.</p>
 </dd></dl>
 
 <dl class="py method">
-<dt id="graphscope.nx.Graph.copy">
-<code class="sig-name descname">copy</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">as_view</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/graphscope/nx/classes/graph.html#Graph.copy"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#graphscope.nx.Graph.copy" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="graphscope.nx.Graph.copy">
+<span class="sig-name descname"><span class="pre">copy</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">as_view</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/graphscope/nx/classes/graph.html#Graph.copy"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#graphscope.nx.Graph.copy" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns a copy of the graph.</p>
 <p>The copy method by default returns an independent deep copy
 of the graph and attributes.</p>
@@ -816,7 +828,7 @@ of the original graph without actually copying any data.</p>
 <dd class="field-even"><p><strong>G</strong> – A copy of the graph.</p>
 </dd>
 <dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p><a class="reference internal" href="../graph.html#graphscope.framework.graph.Graph" title="graphscope.framework.graph.Graph">Graph</a></p>
+<dd class="field-odd"><p><a class="reference internal" href="#graphscope.nx.Graph" title="graphscope.nx.Graph">Graph</a></p>
 </dd>
 </dl>
 <div class="admonition seealso">
@@ -833,9 +845,9 @@ of the original graph without actually copying any data.</p>
 </div>
 </dd></dl>
 
-<dl class="py method">
-<dt id="graphscope.nx.Graph.degree">
-<em class="property">property </em><code class="sig-name descname">degree</code><a class="headerlink" href="#graphscope.nx.Graph.degree" title="Permalink to this definition">¶</a></dt>
+<dl class="py property">
+<dt class="sig sig-object py" id="graphscope.nx.Graph.degree">
+<em class="property"><span class="pre">property</span> </em><span class="sig-name descname"><span class="pre">degree</span></span><a class="headerlink" href="#graphscope.nx.Graph.degree" title="Permalink to this definition">¶</a></dt>
 <dd><p>A DegreeView for the Graph as G.degree or G.degree().</p>
 <p>The node degree is the number of edges adjacent to the node.
 The weighted node degree is the sum of the edge weights for
@@ -872,8 +884,8 @@ The degree is the sum of the edge weights adjacent to the node.</p></li>
 </dd></dl>
 
 <dl class="py method">
-<dt id="graphscope.nx.Graph.edge_subgraph">
-<code class="sig-name descname">edge_subgraph</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">edges</span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/graphscope/nx/classes/graph.html#Graph.edge_subgraph"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#graphscope.nx.Graph.edge_subgraph" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="graphscope.nx.Graph.edge_subgraph">
+<span class="sig-name descname"><span class="pre">edge_subgraph</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">edges</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/graphscope/nx/classes/graph.html#Graph.edge_subgraph"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#graphscope.nx.Graph.edge_subgraph" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns a independent deep copy subgraph induced by the specified edges.</p>
 <p>The induced subgraph contains each edge in <cite>edges</cite> and each
 node incident to any one of those edges.</p>
@@ -886,7 +898,7 @@ node incident to any one of those edges.</p>
 attributes.</p>
 </dd>
 <dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p><a class="reference internal" href="../graph.html#graphscope.framework.graph.Graph" title="graphscope.framework.graph.Graph">Graph</a></p>
+<dd class="field-odd"><p><a class="reference internal" href="#graphscope.nx.Graph" title="graphscope.nx.Graph">Graph</a></p>
 </dd>
 </dl>
 <p class="rubric">Notes</p>
@@ -902,9 +914,9 @@ attributes.</p>
 </div>
 </dd></dl>
 
-<dl class="py method">
-<dt id="graphscope.nx.Graph.edges">
-<em class="property">property </em><code class="sig-name descname">edges</code><a class="headerlink" href="#graphscope.nx.Graph.edges" title="Permalink to this definition">¶</a></dt>
+<dl class="py property">
+<dt class="sig sig-object py" id="graphscope.nx.Graph.edges">
+<em class="property"><span class="pre">property</span> </em><span class="sig-name descname"><span class="pre">edges</span></span><a class="headerlink" href="#graphscope.nx.Graph.edges" title="Permalink to this definition">¶</a></dt>
 <dd><p>An EdgeView of the Graph as G.edges or G.edges().</p>
 <p>edges(self, nbunch=None, data=False, default=None)</p>
 <p>The EdgeView provides set-like operations on the edge-tuples
@@ -957,8 +969,8 @@ For directed graphs this returns the out-edges.</p>
 </dd></dl>
 
 <dl class="py method">
-<dt id="graphscope.nx.Graph.get_edge_data">
-<code class="sig-name descname">get_edge_data</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">u</span></em>, <em class="sig-param"><span class="n">v</span></em>, <em class="sig-param"><span class="n">default</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/graphscope/nx/classes/graph.html#Graph.get_edge_data"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#graphscope.nx.Graph.get_edge_data" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="graphscope.nx.Graph.get_edge_data">
+<span class="sig-name descname"><span class="pre">get_edge_data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">u</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">v</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">default</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/graphscope/nx/classes/graph.html#Graph.get_edge_data"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#graphscope.nx.Graph.get_edge_data" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns the attribute dictionary associated with edge (u, v).</p>
 <p>This is identical to <cite>G[u][v]</cite> except the default is returned
 instead of an exception if the edge doesn’t exist.</p>
@@ -1005,14 +1017,14 @@ But it is safe to assign attributes <cite>G[u][v][‘foo’]</cite></p>
 </dd></dl>
 
 <dl class="py attribute">
-<dt id="graphscope.nx.Graph.graph_attr_dict_factory">
-<code class="sig-name descname">graph_attr_dict_factory</code><a class="headerlink" href="#graphscope.nx.Graph.graph_attr_dict_factory" title="Permalink to this definition">¶</a></dt>
-<dd><p>alias of <code class="xref py py-class docutils literal notranslate"><span class="pre">builtins.dict</span></code></p>
+<dt class="sig sig-object py" id="graphscope.nx.Graph.graph_attr_dict_factory">
+<span class="sig-name descname"><span class="pre">graph_attr_dict_factory</span></span><a class="headerlink" href="#graphscope.nx.Graph.graph_attr_dict_factory" title="Permalink to this definition">¶</a></dt>
+<dd><p>alias of <code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></p>
 </dd></dl>
 
-<dl class="py method">
-<dt id="graphscope.nx.Graph.graph_type">
-<em class="property">property </em><code class="sig-name descname">graph_type</code><a class="headerlink" href="#graphscope.nx.Graph.graph_type" title="Permalink to this definition">¶</a></dt>
+<dl class="py property">
+<dt class="sig sig-object py" id="graphscope.nx.Graph.graph_type">
+<em class="property"><span class="pre">property</span> </em><span class="sig-name descname"><span class="pre">graph_type</span></span><a class="headerlink" href="#graphscope.nx.Graph.graph_type" title="Permalink to this definition">¶</a></dt>
 <dd><p>The type of the graph object.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns</dt>
@@ -1025,8 +1037,8 @@ But it is safe to assign attributes <cite>G[u][v][‘foo’]</cite></p>
 </dd></dl>
 
 <dl class="py method">
-<dt id="graphscope.nx.Graph.has_edge">
-<code class="sig-name descname">has_edge</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">u</span></em>, <em class="sig-param"><span class="n">v</span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/graphscope/nx/classes/graph.html#Graph.has_edge"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#graphscope.nx.Graph.has_edge" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="graphscope.nx.Graph.has_edge">
+<span class="sig-name descname"><span class="pre">has_edge</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">u</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">v</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/graphscope/nx/classes/graph.html#Graph.has_edge"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#graphscope.nx.Graph.has_edge" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns True if the edge (u, v) is in the graph.</p>
 <p>This is the same as <cite>v in G[u]</cite> without KeyError exceptions.</p>
 <dl class="field-list simple">
@@ -1067,8 +1079,8 @@ Nodes must be int, str, float, tuple, bool  hashable Python objects.</p></li>
 </dd></dl>
 
 <dl class="py method">
-<dt id="graphscope.nx.Graph.has_node">
-<code class="sig-name descname">has_node</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">n</span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/graphscope/nx/classes/graph.html#Graph.has_node"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#graphscope.nx.Graph.has_node" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="graphscope.nx.Graph.has_node">
+<span class="sig-name descname"><span class="pre">has_node</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/graphscope/nx/classes/graph.html#Graph.has_node"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#graphscope.nx.Graph.has_node" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns True if the graph contains the node n.</p>
 <p>Identical to <cite>n in G</cite></p>
 <dl class="field-list simple">
@@ -1090,26 +1102,26 @@ Nodes must be int, str, float, tuple, bool  hashable Python objects.</p></li>
 </dd></dl>
 
 <dl class="py method">
-<dt id="graphscope.nx.Graph.is_directed">
-<code class="sig-name descname">is_directed</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/graphscope/nx/classes/graph.html#Graph.is_directed"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#graphscope.nx.Graph.is_directed" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="graphscope.nx.Graph.is_directed">
+<span class="sig-name descname"><span class="pre">is_directed</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/graphscope/nx/classes/graph.html#Graph.is_directed"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#graphscope.nx.Graph.is_directed" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns True if graph is directed, False otherwise.</p>
 </dd></dl>
 
 <dl class="py method">
-<dt id="graphscope.nx.Graph.is_multigraph">
-<code class="sig-name descname">is_multigraph</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/graphscope/nx/classes/graph.html#Graph.is_multigraph"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#graphscope.nx.Graph.is_multigraph" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="graphscope.nx.Graph.is_multigraph">
+<span class="sig-name descname"><span class="pre">is_multigraph</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/graphscope/nx/classes/graph.html#Graph.is_multigraph"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#graphscope.nx.Graph.is_multigraph" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns True if graph is a multigraph, False otherwise.</p>
 </dd></dl>
 
-<dl class="py method">
-<dt id="graphscope.nx.Graph.key">
-<em class="property">property </em><code class="sig-name descname">key</code><a class="headerlink" href="#graphscope.nx.Graph.key" title="Permalink to this definition">¶</a></dt>
+<dl class="py property">
+<dt class="sig sig-object py" id="graphscope.nx.Graph.key">
+<em class="property"><span class="pre">property</span> </em><span class="sig-name descname"><span class="pre">key</span></span><a class="headerlink" href="#graphscope.nx.Graph.key" title="Permalink to this definition">¶</a></dt>
 <dd><p>String key of the coresponding engine graph.</p>
 </dd></dl>
 
-<dl class="py method">
-<dt id="graphscope.nx.Graph.name">
-<em class="property">property </em><code class="sig-name descname">name</code><a class="headerlink" href="#graphscope.nx.Graph.name" title="Permalink to this definition">¶</a></dt>
+<dl class="py property">
+<dt class="sig sig-object py" id="graphscope.nx.Graph.name">
+<em class="property"><span class="pre">property</span> </em><span class="sig-name descname"><span class="pre">name</span></span><a class="headerlink" href="#graphscope.nx.Graph.name" title="Permalink to this definition">¶</a></dt>
 <dd><p>String identifier of the graph.</p>
 <p>This graph attribute appears in the attribute dict G.graph
 keyed by the string <cite>“name”</cite>. as well as an attribute (technically
@@ -1117,8 +1129,8 @@ a property) <cite>G.name</cite>. This is entirely user controlled.</p>
 </dd></dl>
 
 <dl class="py method">
-<dt id="graphscope.nx.Graph.nbunch_iter">
-<code class="sig-name descname">nbunch_iter</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">nbunch</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/graphscope/nx/classes/graph.html#Graph.nbunch_iter"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#graphscope.nx.Graph.nbunch_iter" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="graphscope.nx.Graph.nbunch_iter">
+<span class="sig-name descname"><span class="pre">nbunch_iter</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">nbunch</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/graphscope/nx/classes/graph.html#Graph.nbunch_iter"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#graphscope.nx.Graph.nbunch_iter" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns an iterator over nodes contained in nbunch that are
 also in the graph.</p>
 <p>The nodes in nbunch are checked for membership in the graph
@@ -1154,8 +1166,8 @@ nbunch is not hashable, a <code class="xref py py-exc docutils literal notransla
 </dd></dl>
 
 <dl class="py method">
-<dt id="graphscope.nx.Graph.neighbors">
-<code class="sig-name descname">neighbors</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">n</span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/graphscope/nx/classes/graph.html#Graph.neighbors"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#graphscope.nx.Graph.neighbors" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="graphscope.nx.Graph.neighbors">
+<span class="sig-name descname"><span class="pre">neighbors</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/graphscope/nx/classes/graph.html#Graph.neighbors"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#graphscope.nx.Graph.neighbors" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns an iterator over all neighbors of node n.</p>
 <p>This is identical to <cite>iter(G[n])</cite></p>
 <dl class="field-list simple">
@@ -1191,9 +1203,9 @@ nbunch is not hashable, a <code class="xref py py-exc docutils literal notransla
 </div>
 </dd></dl>
 
-<dl class="py method">
-<dt id="graphscope.nx.Graph.nodes">
-<em class="property">property </em><code class="sig-name descname">nodes</code><a class="headerlink" href="#graphscope.nx.Graph.nodes" title="Permalink to this definition">¶</a></dt>
+<dl class="py property">
+<dt class="sig sig-object py" id="graphscope.nx.Graph.nodes">
+<em class="property"><span class="pre">property</span> </em><span class="sig-name descname"><span class="pre">nodes</span></span><a class="headerlink" href="#graphscope.nx.Graph.nodes" title="Permalink to this definition">¶</a></dt>
 <dd><p>A NodeView of the Graph as G.nodes or G.nodes().</p>
 <p>Can be used as <cite>G.nodes</cite> for data lookup and for set-like operations.
 Can also be used as <cite>G.nodes(data=’color’, default=None)</cite> to return a
@@ -1284,8 +1296,8 @@ to guarantee the value is never None:</p>
 </dd></dl>
 
 <dl class="py method">
-<dt id="graphscope.nx.Graph.number_of_edges">
-<code class="sig-name descname">number_of_edges</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">u</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">v</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/graphscope/nx/classes/graph.html#Graph.number_of_edges"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#graphscope.nx.Graph.number_of_edges" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="graphscope.nx.Graph.number_of_edges">
+<span class="sig-name descname"><span class="pre">number_of_edges</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">u</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">v</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/graphscope/nx/classes/graph.html#Graph.number_of_edges"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#graphscope.nx.Graph.number_of_edges" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns the number of edges between two nodes.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -1336,8 +1348,8 @@ directed edges from <cite>u</cite> to <cite>v</cite>:</p>
 </dd></dl>
 
 <dl class="py method">
-<dt id="graphscope.nx.Graph.number_of_nodes">
-<code class="sig-name descname">number_of_nodes</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/graphscope/nx/classes/graph.html#Graph.number_of_nodes"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#graphscope.nx.Graph.number_of_nodes" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="graphscope.nx.Graph.number_of_nodes">
+<span class="sig-name descname"><span class="pre">number_of_nodes</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/graphscope/nx/classes/graph.html#Graph.number_of_nodes"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#graphscope.nx.Graph.number_of_nodes" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns the number of nodes in the graph.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns</dt>
@@ -1359,15 +1371,15 @@ directed edges from <cite>u</cite> to <cite>v</cite>:</p>
 </div>
 </dd></dl>
 
-<dl class="py method">
-<dt id="graphscope.nx.Graph.op">
-<em class="property">property </em><code class="sig-name descname">op</code><a class="headerlink" href="#graphscope.nx.Graph.op" title="Permalink to this definition">¶</a></dt>
+<dl class="py property">
+<dt class="sig sig-object py" id="graphscope.nx.Graph.op">
+<em class="property"><span class="pre">property</span> </em><span class="sig-name descname"><span class="pre">op</span></span><a class="headerlink" href="#graphscope.nx.Graph.op" title="Permalink to this definition">¶</a></dt>
 <dd><p>The DAG op of this graph.</p>
 </dd></dl>
 
 <dl class="py method">
-<dt id="graphscope.nx.Graph.order">
-<code class="sig-name descname">order</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/graphscope/nx/classes/graph.html#Graph.order"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#graphscope.nx.Graph.order" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="graphscope.nx.Graph.order">
+<span class="sig-name descname"><span class="pre">order</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/graphscope/nx/classes/graph.html#Graph.order"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#graphscope.nx.Graph.order" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns the number of nodes in the graph.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns</dt>
@@ -1390,8 +1402,8 @@ directed edges from <cite>u</cite> to <cite>v</cite>:</p>
 </dd></dl>
 
 <dl class="py method">
-<dt id="graphscope.nx.Graph.remove_edge">
-<code class="sig-name descname">remove_edge</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">u</span></em>, <em class="sig-param"><span class="n">v</span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/graphscope/nx/classes/graph.html#Graph.remove_edge"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#graphscope.nx.Graph.remove_edge" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="graphscope.nx.Graph.remove_edge">
+<span class="sig-name descname"><span class="pre">remove_edge</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">u</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">v</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/graphscope/nx/classes/graph.html#Graph.remove_edge"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#graphscope.nx.Graph.remove_edge" title="Permalink to this definition">¶</a></dt>
 <dd><p>Remove the edge between u and v.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -1423,8 +1435,8 @@ directed edges from <cite>u</cite> to <cite>v</cite>:</p>
 </dd></dl>
 
 <dl class="py method">
-<dt id="graphscope.nx.Graph.remove_edges_from">
-<code class="sig-name descname">remove_edges_from</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">ebunch</span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/graphscope/nx/classes/graph.html#Graph.remove_edges_from"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#graphscope.nx.Graph.remove_edges_from" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="graphscope.nx.Graph.remove_edges_from">
+<span class="sig-name descname"><span class="pre">remove_edges_from</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ebunch</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/graphscope/nx/classes/graph.html#Graph.remove_edges_from"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#graphscope.nx.Graph.remove_edges_from" title="Permalink to this definition">¶</a></dt>
 <dd><p>Remove all edges specified in ebunch.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -1457,8 +1469,8 @@ from the graph. The edges can be:</p>
 </dd></dl>
 
 <dl class="py method">
-<dt id="graphscope.nx.Graph.remove_node">
-<code class="sig-name descname">remove_node</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">n</span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/graphscope/nx/classes/graph.html#Graph.remove_node"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#graphscope.nx.Graph.remove_node" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="graphscope.nx.Graph.remove_node">
+<span class="sig-name descname"><span class="pre">remove_node</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/graphscope/nx/classes/graph.html#Graph.remove_node"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#graphscope.nx.Graph.remove_node" title="Permalink to this definition">¶</a></dt>
 <dd><p>Remove node n.</p>
 <p>Removes the node n and all adjacent edges.
 Attempting to remove a non-existent node will raise an exception.</p>
@@ -1486,8 +1498,8 @@ Attempting to remove a non-existent node will raise an exception.</p>
 </dd></dl>
 
 <dl class="py method">
-<dt id="graphscope.nx.Graph.remove_nodes_from">
-<code class="sig-name descname">remove_nodes_from</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">nodes_for_removing</span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/graphscope/nx/classes/graph.html#Graph.remove_nodes_from"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#graphscope.nx.Graph.remove_nodes_from" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="graphscope.nx.Graph.remove_nodes_from">
+<span class="sig-name descname"><span class="pre">remove_nodes_from</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">nodes_for_removing</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/graphscope/nx/classes/graph.html#Graph.remove_nodes_from"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#graphscope.nx.Graph.remove_nodes_from" title="Permalink to this definition">¶</a></dt>
 <dd><p>Remove multiple nodes.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -1512,9 +1524,9 @@ ignored.</p>
 </div>
 </dd></dl>
 
-<dl class="py method">
-<dt id="graphscope.nx.Graph.schema">
-<em class="property">property </em><code class="sig-name descname">schema</code><a class="headerlink" href="#graphscope.nx.Graph.schema" title="Permalink to this definition">¶</a></dt>
+<dl class="py property">
+<dt class="sig sig-object py" id="graphscope.nx.Graph.schema">
+<em class="property"><span class="pre">property</span> </em><span class="sig-name descname"><span class="pre">schema</span></span><a class="headerlink" href="#graphscope.nx.Graph.schema" title="Permalink to this definition">¶</a></dt>
 <dd><p>Schema of the graph.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns</dt>
@@ -1526,9 +1538,9 @@ ignored.</p>
 </dl>
 </dd></dl>
 
-<dl class="py method">
-<dt id="graphscope.nx.Graph.session">
-<em class="property">property </em><code class="sig-name descname">session</code><a class="headerlink" href="#graphscope.nx.Graph.session" title="Permalink to this definition">¶</a></dt>
+<dl class="py property">
+<dt class="sig sig-object py" id="graphscope.nx.Graph.session">
+<em class="property"><span class="pre">property</span> </em><span class="sig-name descname"><span class="pre">session</span></span><a class="headerlink" href="#graphscope.nx.Graph.session" title="Permalink to this definition">¶</a></dt>
 <dd><p>Get the currrent session.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns</dt>
@@ -1537,9 +1549,9 @@ ignored.</p>
 </dl>
 </dd></dl>
 
-<dl class="py method">
-<dt id="graphscope.nx.Graph.session_id">
-<em class="property">property </em><code class="sig-name descname">session_id</code><a class="headerlink" href="#graphscope.nx.Graph.session_id" title="Permalink to this definition">¶</a></dt>
+<dl class="py property">
+<dt class="sig sig-object py" id="graphscope.nx.Graph.session_id">
+<em class="property"><span class="pre">property</span> </em><span class="sig-name descname"><span class="pre">session_id</span></span><a class="headerlink" href="#graphscope.nx.Graph.session_id" title="Permalink to this definition">¶</a></dt>
 <dd><p>Get the currrent session_id.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns</dt>
@@ -1552,8 +1564,8 @@ ignored.</p>
 </dd></dl>
 
 <dl class="py method">
-<dt id="graphscope.nx.Graph.set_edge_data">
-<code class="sig-name descname">set_edge_data</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">u</span></em>, <em class="sig-param"><span class="n">v</span></em>, <em class="sig-param"><span class="n">data</span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/graphscope/nx/classes/graph.html#Graph.set_edge_data"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#graphscope.nx.Graph.set_edge_data" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="graphscope.nx.Graph.set_edge_data">
+<span class="sig-name descname"><span class="pre">set_edge_data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">u</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">v</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/graphscope/nx/classes/graph.html#Graph.set_edge_data"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#graphscope.nx.Graph.set_edge_data" title="Permalink to this definition">¶</a></dt>
 <dd><p>Set edge data of edge (u, v).</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -1584,8 +1596,8 @@ ignored.</p>
 </dd></dl>
 
 <dl class="py method">
-<dt id="graphscope.nx.Graph.set_node_data">
-<code class="sig-name descname">set_node_data</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">n</span></em>, <em class="sig-param"><span class="n">data</span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/graphscope/nx/classes/graph.html#Graph.set_node_data"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#graphscope.nx.Graph.set_node_data" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="graphscope.nx.Graph.set_node_data">
+<span class="sig-name descname"><span class="pre">set_node_data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/graphscope/nx/classes/graph.html#Graph.set_node_data"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#graphscope.nx.Graph.set_node_data" title="Permalink to this definition">¶</a></dt>
 <dd><p>Set data of node.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -1614,15 +1626,15 @@ ignored.</p>
 </div>
 </dd></dl>
 
-<dl class="py method">
-<dt id="graphscope.nx.Graph.signature">
-<em class="property">property </em><code class="sig-name descname">signature</code><a class="headerlink" href="#graphscope.nx.Graph.signature" title="Permalink to this definition">¶</a></dt>
+<dl class="py property">
+<dt class="sig sig-object py" id="graphscope.nx.Graph.signature">
+<em class="property"><span class="pre">property</span> </em><span class="sig-name descname"><span class="pre">signature</span></span><a class="headerlink" href="#graphscope.nx.Graph.signature" title="Permalink to this definition">¶</a></dt>
 <dd><p>Generate a signature of the current graph</p>
 </dd></dl>
 
 <dl class="py method">
-<dt id="graphscope.nx.Graph.size">
-<code class="sig-name descname">size</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">weight</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/graphscope/nx/classes/graph.html#Graph.size"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#graphscope.nx.Graph.size" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="graphscope.nx.Graph.size">
+<span class="sig-name descname"><span class="pre">size</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">weight</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/graphscope/nx/classes/graph.html#Graph.size"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#graphscope.nx.Graph.size" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns the number of edges or total of all edge weights.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -1662,8 +1674,8 @@ as a weight. If None, then each edge has weight 1.</p>
 </dd></dl>
 
 <dl class="py method">
-<dt id="graphscope.nx.Graph.subgraph">
-<code class="sig-name descname">subgraph</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">nodes</span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/graphscope/nx/classes/graph.html#Graph.subgraph"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#graphscope.nx.Graph.subgraph" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="graphscope.nx.Graph.subgraph">
+<span class="sig-name descname"><span class="pre">subgraph</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">nodes</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/graphscope/nx/classes/graph.html#Graph.subgraph"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#graphscope.nx.Graph.subgraph" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns a independent deep copy subgraph induced on <cite>nodes</cite>.</p>
 <p>The induced subgraph of the graph contains the nodes in <cite>nodes</cite>
 and the edges between those nodes.</p>
@@ -1675,7 +1687,7 @@ and the edges between those nodes.</p>
 <dd class="field-even"><p><strong>G</strong> – A subgraph of the graph.</p>
 </dd>
 <dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p><a class="reference internal" href="../graph.html#graphscope.framework.graph.Graph" title="graphscope.framework.graph.Graph">Graph</a></p>
+<dd class="field-odd"><p><a class="reference internal" href="#graphscope.nx.Graph" title="graphscope.nx.Graph">Graph</a></p>
 </dd>
 </dl>
 <p class="rubric">Notes</p>
@@ -1690,8 +1702,8 @@ and the edges between those nodes.</p>
 </dd></dl>
 
 <dl class="py method">
-<dt id="graphscope.nx.Graph.to_directed">
-<code class="sig-name descname">to_directed</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">as_view</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/graphscope/nx/classes/graph.html#Graph.to_directed"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#graphscope.nx.Graph.to_directed" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="graphscope.nx.Graph.to_directed">
+<span class="sig-name descname"><span class="pre">to_directed</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">as_view</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/graphscope/nx/classes/graph.html#Graph.to_directed"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#graphscope.nx.Graph.to_directed" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns a directed representation of the graph.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -1729,16 +1741,16 @@ all of the data and references.</p>
 </dd></dl>
 
 <dl class="py method">
-<dt id="graphscope.nx.Graph.to_directed_class">
-<code class="sig-name descname">to_directed_class</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/graphscope/nx/classes/graph.html#Graph.to_directed_class"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#graphscope.nx.Graph.to_directed_class" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="graphscope.nx.Graph.to_directed_class">
+<span class="sig-name descname"><span class="pre">to_directed_class</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/graphscope/nx/classes/graph.html#Graph.to_directed_class"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#graphscope.nx.Graph.to_directed_class" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns the class to use for empty directed copies.</p>
 <p>If you subclass the base classes, use this to designate
 what directed class to use for <cite>to_directed()</cite> copies.</p>
 </dd></dl>
 
 <dl class="py method">
-<dt id="graphscope.nx.Graph.to_undirected">
-<code class="sig-name descname">to_undirected</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">as_view</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/graphscope/nx/classes/graph.html#Graph.to_undirected"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#graphscope.nx.Graph.to_undirected" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="graphscope.nx.Graph.to_undirected">
+<span class="sig-name descname"><span class="pre">to_undirected</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">as_view</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/graphscope/nx/classes/graph.html#Graph.to_undirected"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#graphscope.nx.Graph.to_undirected" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns an undirected copy of the graph.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -1748,7 +1760,7 @@ what directed class to use for <cite>to_directed()</cite> copies.</p>
 <dd class="field-even"><p><strong>G</strong> – A deepcopy of the graph.</p>
 </dd>
 <dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p><a class="reference internal" href="../graph.html#graphscope.framework.graph.Graph" title="graphscope.framework.graph.Graph">Graph</a></p>
+<dd class="field-odd"><p><a class="reference internal" href="#graphscope.nx.Graph" title="graphscope.nx.Graph">Graph</a></p>
 </dd>
 </dl>
 <div class="admonition seealso">
@@ -1772,16 +1784,16 @@ all of the data and references.</p>
 </dd></dl>
 
 <dl class="py method">
-<dt id="graphscope.nx.Graph.to_undirected_class">
-<code class="sig-name descname">to_undirected_class</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/graphscope/nx/classes/graph.html#Graph.to_undirected_class"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#graphscope.nx.Graph.to_undirected_class" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="graphscope.nx.Graph.to_undirected_class">
+<span class="sig-name descname"><span class="pre">to_undirected_class</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/graphscope/nx/classes/graph.html#Graph.to_undirected_class"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#graphscope.nx.Graph.to_undirected_class" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns the class to use for empty undirected copies.</p>
 <p>If you subclass the base classes, use this to designate
 what directed class to use for <cite>to_directed()</cite> copies.</p>
 </dd></dl>
 
 <dl class="py method">
-<dt id="graphscope.nx.Graph.update">
-<code class="sig-name descname">update</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">edges</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">nodes</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/graphscope/nx/classes/graph.html#Graph.update"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#graphscope.nx.Graph.update" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="graphscope.nx.Graph.update">
+<span class="sig-name descname"><span class="pre">update</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">edges</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nodes</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/graphscope/nx/classes/graph.html#Graph.update"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#graphscope.nx.Graph.update" title="Permalink to this definition">¶</a></dt>
 <dd><p>Update the graph using nodes/edges/graphs as input.</p>
 <p>Like dict.update, this method takes a graph as input, adding the
 graph’s nodes and edges to this graph. It can also take two inputs:
@@ -1810,7 +1822,7 @@ If the first parameter is a Graph, then <cite>nodes</cite> is ignored.</p></li>
 <p class="rubric">Examples</p>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">G</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">path_graph</span><span class="p">(</span><span class="mi">5</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">G</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">nx</span><span class="o">.</span><span class="n">complete_graph</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="mi">4</span><span class="p">,</span> <span class="mi">10</span><span class="p">)))</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">itertools</span> <span class="k">import</span> <span class="n">combinations</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">itertools</span> <span class="kn">import</span> <span class="n">combinations</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">edges</span> <span class="o">=</span> <span class="p">(</span>
 <span class="gp">... </span>    <span class="p">(</span><span class="n">u</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="p">{</span><span class="s2">&quot;power&quot;</span><span class="p">:</span> <span class="n">u</span> <span class="o">*</span> <span class="n">v</span><span class="p">})</span>
 <span class="gp">... </span>    <span class="k">for</span> <span class="n">u</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">combinations</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span> <span class="mi">20</span><span class="p">),</span> <span class="mi">2</span><span class="p">)</span>
@@ -1833,13 +1845,13 @@ If the first parameter is a Graph, then <cite>nodes</cite> is ignored.</p></li>
 
 </dd></dl>
 
-</section>
-<section id="digraph">
+</div>
+<div class="section" id="digraph">
 <h2>DiGraph<a class="headerlink" href="#digraph" title="Permalink to this headline">¶</a></h2>
 <p>Directed graphs with self loops</p>
 <dl class="py class">
-<dt id="graphscope.nx.DiGraph">
-<em class="property">class </em><code class="sig-prename descclassname">graphscope.nx.</code><code class="sig-name descname">DiGraph</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">incoming_graph_data</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">attr</span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/graphscope/nx/classes/digraph.html#DiGraph"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#graphscope.nx.DiGraph" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="graphscope.nx.DiGraph">
+<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">graphscope.nx.</span></span><span class="sig-name descname"><span class="pre">DiGraph</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">incoming_graph_data</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">attr</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/graphscope/nx/classes/digraph.html#DiGraph"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#graphscope.nx.DiGraph" title="Permalink to this definition">¶</a></dt>
 <dd><p>Base class for directed graphs in graphscope.nx.</p>
 <p>A DiGraph that hold the metadata of a graph, and provide NetworkX-like DiGraph APIs.</p>
 <p>It is worth noticing that the graph is actually stored by the Analytical Engine backend.
@@ -1969,8 +1981,8 @@ via lookup (e.g. <cite>nodes[n], `edges[u, v]</cite>, <cite>adj[u][v]</cite>) an
 Views exist for <cite>nodes</cite>, <cite>edges</cite>, <cite>neighbors()</cite>/<cite>adj</cite> and <cite>degree</cite>.</p>
 <p>For details on these and other miscellaneous methods, see below.</p>
 <dl class="py method">
-<dt id="graphscope.nx.DiGraph.__contains__">
-<code class="sig-name descname">__contains__</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">n</span></em><span class="sig-paren">)</span><a class="headerlink" href="#graphscope.nx.DiGraph.__contains__" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="graphscope.nx.DiGraph.__contains__">
+<span class="sig-name descname"><span class="pre">__contains__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#graphscope.nx.DiGraph.__contains__" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns True if n is a node, False otherwise. Use: ‘n in G’.</p>
 <p class="rubric">Examples</p>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">G</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">path_graph</span><span class="p">(</span><span class="mi">4</span><span class="p">)</span>  <span class="c1"># or DiGraph</span>
@@ -1981,8 +1993,8 @@ Views exist for <cite>nodes</cite>, <cite>edges</cite>, <cite>neighbors()</cite>
 </dd></dl>
 
 <dl class="py method">
-<dt id="graphscope.nx.DiGraph.__getitem__">
-<code class="sig-name descname">__getitem__</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">n</span></em><span class="sig-paren">)</span><a class="headerlink" href="#graphscope.nx.DiGraph.__getitem__" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="graphscope.nx.DiGraph.__getitem__">
+<span class="sig-name descname"><span class="pre">__getitem__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#graphscope.nx.DiGraph.__getitem__" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns a dict of neighbors of node n.  Use: ‘G[n]’.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -2007,8 +2019,8 @@ Views exist for <cite>nodes</cite>, <cite>edges</cite>, <cite>neighbors()</cite>
 </dd></dl>
 
 <dl class="py method">
-<dt id="graphscope.nx.DiGraph.__init__">
-<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">incoming_graph_data</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">attr</span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/graphscope/nx/classes/digraph.html#DiGraph.__init__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#graphscope.nx.DiGraph.__init__" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="graphscope.nx.DiGraph.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">incoming_graph_data</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">attr</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/graphscope/nx/classes/digraph.html#DiGraph.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#graphscope.nx.DiGraph.__init__" title="Permalink to this definition">¶</a></dt>
 <dd><p>Initialize a graph with edges, name, or graph attributes</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -2052,8 +2064,8 @@ of nodes and edges would be cleaned in nx.Graph.</p>
 </dd></dl>
 
 <dl class="py method">
-<dt id="graphscope.nx.DiGraph.__iter__">
-<code class="sig-name descname">__iter__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#graphscope.nx.DiGraph.__iter__" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="graphscope.nx.DiGraph.__iter__">
+<span class="sig-name descname"><span class="pre">__iter__</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#graphscope.nx.DiGraph.__iter__" title="Permalink to this definition">¶</a></dt>
 <dd><p>Iterate over the nodes. Use: ‘for n in G’.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns</dt>
@@ -2074,8 +2086,8 @@ of nodes and edges would be cleaned in nx.Graph.</p>
 </dd></dl>
 
 <dl class="py method">
-<dt id="graphscope.nx.DiGraph.__len__">
-<code class="sig-name descname">__len__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#graphscope.nx.DiGraph.__len__" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="graphscope.nx.DiGraph.__len__">
+<span class="sig-name descname"><span class="pre">__len__</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#graphscope.nx.DiGraph.__len__" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns the number of nodes in the graph. Use: ‘len(G)’.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns</dt>
@@ -2098,8 +2110,8 @@ of nodes and edges would be cleaned in nx.Graph.</p>
 </dd></dl>
 
 <dl class="py method">
-<dt id="graphscope.nx.DiGraph.add_edge">
-<code class="sig-name descname">add_edge</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">u_of_edge</span></em>, <em class="sig-param"><span class="n">v_of_edge</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">attr</span></em><span class="sig-paren">)</span><a class="headerlink" href="#graphscope.nx.DiGraph.add_edge" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="graphscope.nx.DiGraph.add_edge">
+<span class="sig-name descname"><span class="pre">add_edge</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">u_of_edge</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">v_of_edge</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">attr</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#graphscope.nx.DiGraph.add_edge" title="Permalink to this definition">¶</a></dt>
 <dd><p>Add an edge between u and v.</p>
 <p>The nodes u and v will be automatically added if they are
 not already in the graph.</p>
@@ -2151,8 +2163,8 @@ an edge attribute (by default <cite>weight</cite>) to hold a numerical value.</p
 </dd></dl>
 
 <dl class="py method">
-<dt id="graphscope.nx.DiGraph.add_edges_from">
-<code class="sig-name descname">add_edges_from</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">ebunch_to_add</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">attr</span></em><span class="sig-paren">)</span><a class="headerlink" href="#graphscope.nx.DiGraph.add_edges_from" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="graphscope.nx.DiGraph.add_edges_from">
+<span class="sig-name descname"><span class="pre">add_edges_from</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ebunch_to_add</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">attr</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#graphscope.nx.DiGraph.add_edges_from" title="Permalink to this definition">¶</a></dt>
 <dd><p>Add all the edges in ebunch_to_add.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -2194,8 +2206,8 @@ attributes specified via keyword arguments.</p>
 </dd></dl>
 
 <dl class="py method">
-<dt id="graphscope.nx.DiGraph.add_node">
-<code class="sig-name descname">add_node</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">node_for_adding</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">attr</span></em><span class="sig-paren">)</span><a class="headerlink" href="#graphscope.nx.DiGraph.add_node" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="graphscope.nx.DiGraph.add_node">
+<span class="sig-name descname"><span class="pre">add_node</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">node_for_adding</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">attr</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#graphscope.nx.DiGraph.add_node" title="Permalink to this definition">¶</a></dt>
 <dd><p>Add a single node <cite>node_for_adding</cite> and update node attributes.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -2227,8 +2239,8 @@ attributes specified via keyword arguments.</p>
 </dd></dl>
 
 <dl class="py method">
-<dt id="graphscope.nx.DiGraph.add_nodes_from">
-<code class="sig-name descname">add_nodes_from</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">nodes_for_adding</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">attr</span></em><span class="sig-paren">)</span><a class="headerlink" href="#graphscope.nx.DiGraph.add_nodes_from" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="graphscope.nx.DiGraph.add_nodes_from">
+<span class="sig-name descname"><span class="pre">add_nodes_from</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">nodes_for_adding</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">attr</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#graphscope.nx.DiGraph.add_nodes_from" title="Permalink to this definition">¶</a></dt>
 <dd><p>Add multiple nodes.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -2274,8 +2286,8 @@ precedence over attributes specified via keyword arguments.</p></li>
 </dd></dl>
 
 <dl class="py method">
-<dt id="graphscope.nx.DiGraph.add_weighted_edges_from">
-<code class="sig-name descname">add_weighted_edges_from</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">ebunch_to_add</span></em>, <em class="sig-param"><span class="n">weight</span><span class="o">=</span><span class="default_value">'weight'</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">attr</span></em><span class="sig-paren">)</span><a class="headerlink" href="#graphscope.nx.DiGraph.add_weighted_edges_from" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="graphscope.nx.DiGraph.add_weighted_edges_from">
+<span class="sig-name descname"><span class="pre">add_weighted_edges_from</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ebunch_to_add</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">weight</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'weight'</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">attr</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#graphscope.nx.DiGraph.add_weighted_edges_from" title="Permalink to this definition">¶</a></dt>
 <dd><p>Add weighted edges in <cite>ebunch_to_add</cite> with specified weight attr</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -2307,9 +2319,9 @@ the edge data.</p>
 </div>
 </dd></dl>
 
-<dl class="py method">
-<dt id="graphscope.nx.DiGraph.adj">
-<em class="property">property </em><code class="sig-name descname">adj</code><a class="headerlink" href="#graphscope.nx.DiGraph.adj" title="Permalink to this definition">¶</a></dt>
+<dl class="py property">
+<dt class="sig sig-object py" id="graphscope.nx.DiGraph.adj">
+<em class="property"><span class="pre">property</span> </em><span class="sig-name descname"><span class="pre">adj</span></span><a class="headerlink" href="#graphscope.nx.DiGraph.adj" title="Permalink to this definition">¶</a></dt>
 <dd><p>Graph adjacency object holding the neighbors of each node.</p>
 <p>This object is a read-only dict-like structure with node keys
 and neighbor-dict values.  The neighbor-dict is keyed by neighbor
@@ -2323,8 +2335,8 @@ So <cite>for nbr, foovalue in G[node].data(‘foo’, default=1):</cite> works.<
 </dd></dl>
 
 <dl class="py method">
-<dt id="graphscope.nx.DiGraph.adjacency">
-<code class="sig-name descname">adjacency</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#graphscope.nx.DiGraph.adjacency" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="graphscope.nx.DiGraph.adjacency">
+<span class="sig-name descname"><span class="pre">adjacency</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#graphscope.nx.DiGraph.adjacency" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns an iterator over (node, adjacency dict) tuples for all nodes.</p>
 <p>For directed graphs, only outgoing neighbors/adjacencies are included.</p>
 <dl class="field-list simple">
@@ -2345,8 +2357,8 @@ the graph.</p>
 </dd></dl>
 
 <dl class="py method">
-<dt id="graphscope.nx.DiGraph.clear">
-<code class="sig-name descname">clear</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#graphscope.nx.DiGraph.clear" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="graphscope.nx.DiGraph.clear">
+<span class="sig-name descname"><span class="pre">clear</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#graphscope.nx.DiGraph.clear" title="Permalink to this definition">¶</a></dt>
 <dd><p>Remove all nodes and edges from the graph.</p>
 <p>This also removes the name, and all graph, node, and edge attributes.</p>
 <p class="rubric">Examples</p>
@@ -2361,8 +2373,8 @@ the graph.</p>
 </dd></dl>
 
 <dl class="py method">
-<dt id="graphscope.nx.DiGraph.clear_edges">
-<code class="sig-name descname">clear_edges</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#graphscope.nx.DiGraph.clear_edges" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="graphscope.nx.DiGraph.clear_edges">
+<span class="sig-name descname"><span class="pre">clear_edges</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#graphscope.nx.DiGraph.clear_edges" title="Permalink to this definition">¶</a></dt>
 <dd><p>Remove all edges from the graph without altering nodes.</p>
 <p class="rubric">Examples</p>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">G</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">path_graph</span><span class="p">(</span><span class="mi">4</span><span class="p">)</span>  <span class="c1"># or DiGraph</span>
@@ -2376,8 +2388,8 @@ the graph.</p>
 </dd></dl>
 
 <dl class="py method">
-<dt id="graphscope.nx.DiGraph.copy">
-<code class="sig-name descname">copy</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">as_view</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span><a class="headerlink" href="#graphscope.nx.DiGraph.copy" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="graphscope.nx.DiGraph.copy">
+<span class="sig-name descname"><span class="pre">copy</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">as_view</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#graphscope.nx.DiGraph.copy" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns a copy of the graph.</p>
 <p>The copy method by default returns an independent deep copy
 of the graph and attributes.</p>
@@ -2411,7 +2423,7 @@ of the original graph without actually copying any data.</p>
 <dd class="field-even"><p><strong>G</strong> – A copy of the graph.</p>
 </dd>
 <dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p><a class="reference internal" href="../graph.html#graphscope.framework.graph.Graph" title="graphscope.framework.graph.Graph">Graph</a></p>
+<dd class="field-odd"><p><a class="reference internal" href="#graphscope.nx.Graph" title="graphscope.nx.Graph">Graph</a></p>
 </dd>
 </dl>
 <div class="admonition seealso">
@@ -2428,9 +2440,9 @@ of the original graph without actually copying any data.</p>
 </div>
 </dd></dl>
 
-<dl class="py method">
-<dt id="graphscope.nx.DiGraph.degree">
-<em class="property">property </em><code class="sig-name descname">degree</code><a class="headerlink" href="#graphscope.nx.DiGraph.degree" title="Permalink to this definition">¶</a></dt>
+<dl class="py property">
+<dt class="sig sig-object py" id="graphscope.nx.DiGraph.degree">
+<em class="property"><span class="pre">property</span> </em><span class="sig-name descname"><span class="pre">degree</span></span><a class="headerlink" href="#graphscope.nx.DiGraph.degree" title="Permalink to this definition">¶</a></dt>
 <dd><p>A DegreeView for the Graph as G.degree or G.degree().</p>
 <p>The node degree is the number of edges adjacent to the node.
 The weighted node degree is the sum of the edge weights for
@@ -2472,8 +2484,8 @@ The degree is the sum of the edge weights adjacent to the node.</p></li>
 </dd></dl>
 
 <dl class="py method">
-<dt id="graphscope.nx.DiGraph.edge_subgraph">
-<code class="sig-name descname">edge_subgraph</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">edges</span></em><span class="sig-paren">)</span><a class="headerlink" href="#graphscope.nx.DiGraph.edge_subgraph" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="graphscope.nx.DiGraph.edge_subgraph">
+<span class="sig-name descname"><span class="pre">edge_subgraph</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">edges</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#graphscope.nx.DiGraph.edge_subgraph" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns a independent deep copy subgraph induced by the specified edges.</p>
 <p>The induced subgraph contains each edge in <cite>edges</cite> and each
 node incident to any one of those edges.</p>
@@ -2486,7 +2498,7 @@ node incident to any one of those edges.</p>
 attributes.</p>
 </dd>
 <dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p><a class="reference internal" href="../graph.html#graphscope.framework.graph.Graph" title="graphscope.framework.graph.Graph">Graph</a></p>
+<dd class="field-odd"><p><a class="reference internal" href="#graphscope.nx.Graph" title="graphscope.nx.Graph">Graph</a></p>
 </dd>
 </dl>
 <p class="rubric">Notes</p>
@@ -2502,9 +2514,9 @@ attributes.</p>
 </div>
 </dd></dl>
 
-<dl class="py method">
-<dt id="graphscope.nx.DiGraph.edges">
-<em class="property">property </em><code class="sig-name descname">edges</code><a class="headerlink" href="#graphscope.nx.DiGraph.edges" title="Permalink to this definition">¶</a></dt>
+<dl class="py property">
+<dt class="sig sig-object py" id="graphscope.nx.DiGraph.edges">
+<em class="property"><span class="pre">property</span> </em><span class="sig-name descname"><span class="pre">edges</span></span><a class="headerlink" href="#graphscope.nx.DiGraph.edges" title="Permalink to this definition">¶</a></dt>
 <dd><p>An OutEdgeView of the DiGraph as G.edges or G.edges().</p>
 <p>edges(self, nbunch=None, data=False, default=None)</p>
 <p>The OutEdgeView provides set-like operations on the edge-tuples
@@ -2562,8 +2574,8 @@ For directed graphs this returns the out-edges.</p>
 </dd></dl>
 
 <dl class="py method">
-<dt id="graphscope.nx.DiGraph.get_edge_data">
-<code class="sig-name descname">get_edge_data</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">u</span></em>, <em class="sig-param"><span class="n">v</span></em>, <em class="sig-param"><span class="n">default</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#graphscope.nx.DiGraph.get_edge_data" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="graphscope.nx.DiGraph.get_edge_data">
+<span class="sig-name descname"><span class="pre">get_edge_data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">u</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">v</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">default</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#graphscope.nx.DiGraph.get_edge_data" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns the attribute dictionary associated with edge (u, v).</p>
 <p>This is identical to <cite>G[u][v]</cite> except the default is returned
 instead of an exception if the edge doesn’t exist.</p>
@@ -2610,14 +2622,14 @@ But it is safe to assign attributes <cite>G[u][v][‘foo’]</cite></p>
 </dd></dl>
 
 <dl class="py attribute">
-<dt id="graphscope.nx.DiGraph.graph_attr_dict_factory">
-<code class="sig-name descname">graph_attr_dict_factory</code><a class="headerlink" href="#graphscope.nx.DiGraph.graph_attr_dict_factory" title="Permalink to this definition">¶</a></dt>
-<dd><p>alias of <code class="xref py py-class docutils literal notranslate"><span class="pre">builtins.dict</span></code></p>
+<dt class="sig sig-object py" id="graphscope.nx.DiGraph.graph_attr_dict_factory">
+<span class="sig-name descname"><span class="pre">graph_attr_dict_factory</span></span><a class="headerlink" href="#graphscope.nx.DiGraph.graph_attr_dict_factory" title="Permalink to this definition">¶</a></dt>
+<dd><p>alias of <code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></p>
 </dd></dl>
 
-<dl class="py method">
-<dt id="graphscope.nx.DiGraph.graph_type">
-<em class="property">property </em><code class="sig-name descname">graph_type</code><a class="headerlink" href="#graphscope.nx.DiGraph.graph_type" title="Permalink to this definition">¶</a></dt>
+<dl class="py property">
+<dt class="sig sig-object py" id="graphscope.nx.DiGraph.graph_type">
+<em class="property"><span class="pre">property</span> </em><span class="sig-name descname"><span class="pre">graph_type</span></span><a class="headerlink" href="#graphscope.nx.DiGraph.graph_type" title="Permalink to this definition">¶</a></dt>
 <dd><p>The type of the graph object.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns</dt>
@@ -2630,8 +2642,8 @@ But it is safe to assign attributes <cite>G[u][v][‘foo’]</cite></p>
 </dd></dl>
 
 <dl class="py method">
-<dt id="graphscope.nx.DiGraph.has_edge">
-<code class="sig-name descname">has_edge</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">u</span></em>, <em class="sig-param"><span class="n">v</span></em><span class="sig-paren">)</span><a class="headerlink" href="#graphscope.nx.DiGraph.has_edge" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="graphscope.nx.DiGraph.has_edge">
+<span class="sig-name descname"><span class="pre">has_edge</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">u</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">v</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#graphscope.nx.DiGraph.has_edge" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns True if the edge (u, v) is in the graph.</p>
 <p>This is the same as <cite>v in G[u]</cite> without KeyError exceptions.</p>
 <dl class="field-list simple">
@@ -2672,8 +2684,8 @@ Nodes must be int, str, float, tuple, bool  hashable Python objects.</p></li>
 </dd></dl>
 
 <dl class="py method">
-<dt id="graphscope.nx.DiGraph.has_node">
-<code class="sig-name descname">has_node</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">n</span></em><span class="sig-paren">)</span><a class="headerlink" href="#graphscope.nx.DiGraph.has_node" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="graphscope.nx.DiGraph.has_node">
+<span class="sig-name descname"><span class="pre">has_node</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#graphscope.nx.DiGraph.has_node" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns True if the graph contains the node n.</p>
 <p>Identical to <cite>n in G</cite></p>
 <dl class="field-list simple">
@@ -2695,22 +2707,22 @@ Nodes must be int, str, float, tuple, bool  hashable Python objects.</p></li>
 </dd></dl>
 
 <dl class="py method">
-<dt id="graphscope.nx.DiGraph.has_predecessor">
-<code class="sig-name descname">has_predecessor</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">u</span></em>, <em class="sig-param"><span class="n">v</span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/graphscope/nx/classes/digraph.html#DiGraph.has_predecessor"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#graphscope.nx.DiGraph.has_predecessor" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="graphscope.nx.DiGraph.has_predecessor">
+<span class="sig-name descname"><span class="pre">has_predecessor</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">u</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">v</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/graphscope/nx/classes/digraph.html#DiGraph.has_predecessor"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#graphscope.nx.DiGraph.has_predecessor" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns True if node u has predecessor v.</p>
 <p>This is true if graph has the edge u&lt;-v.</p>
 </dd></dl>
 
 <dl class="py method">
-<dt id="graphscope.nx.DiGraph.has_successor">
-<code class="sig-name descname">has_successor</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">u</span></em>, <em class="sig-param"><span class="n">v</span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/graphscope/nx/classes/digraph.html#DiGraph.has_successor"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#graphscope.nx.DiGraph.has_successor" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="graphscope.nx.DiGraph.has_successor">
+<span class="sig-name descname"><span class="pre">has_successor</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">u</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">v</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/graphscope/nx/classes/digraph.html#DiGraph.has_successor"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#graphscope.nx.DiGraph.has_successor" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns True if node u has predecessor v.</p>
 <p>This is true if graph has the edge u&lt;-v.</p>
 </dd></dl>
 
-<dl class="py method">
-<dt id="graphscope.nx.DiGraph.in_degree">
-<em class="property">property </em><code class="sig-name descname">in_degree</code><a class="headerlink" href="#graphscope.nx.DiGraph.in_degree" title="Permalink to this definition">¶</a></dt>
+<dl class="py property">
+<dt class="sig sig-object py" id="graphscope.nx.DiGraph.in_degree">
+<em class="property"><span class="pre">property</span> </em><span class="sig-name descname"><span class="pre">in_degree</span></span><a class="headerlink" href="#graphscope.nx.DiGraph.in_degree" title="Permalink to this definition">¶</a></dt>
 <dd><p>An InDegreeView for (node, in_degree) or in_degree for single node.</p>
 <p>The node in_degree is the number of edges pointing to the node.
 The weighted node degree is the sum of the edge weights for
@@ -2751,9 +2763,9 @@ The degree is the sum of the edge weights adjacent to the node.</p></li>
 </div>
 </dd></dl>
 
-<dl class="py method">
-<dt id="graphscope.nx.DiGraph.in_edges">
-<em class="property">property </em><code class="sig-name descname">in_edges</code><a class="headerlink" href="#graphscope.nx.DiGraph.in_edges" title="Permalink to this definition">¶</a></dt>
+<dl class="py property">
+<dt class="sig sig-object py" id="graphscope.nx.DiGraph.in_edges">
+<em class="property"><span class="pre">property</span> </em><span class="sig-name descname"><span class="pre">in_edges</span></span><a class="headerlink" href="#graphscope.nx.DiGraph.in_edges" title="Permalink to this definition">¶</a></dt>
 <dd><p>An InEdgeView of the Graph as G.in_edges or G.in_edges().</p>
 <p>in_edges(self, nbunch=None, data=False, default=None):</p>
 <dl class="field-list simple">
@@ -2783,26 +2795,26 @@ attribute lookup as <cite>edges[u, v][‘foo’]</cite>.</p>
 </dd></dl>
 
 <dl class="py method">
-<dt id="graphscope.nx.DiGraph.is_directed">
-<code class="sig-name descname">is_directed</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/graphscope/nx/classes/digraph.html#DiGraph.is_directed"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#graphscope.nx.DiGraph.is_directed" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="graphscope.nx.DiGraph.is_directed">
+<span class="sig-name descname"><span class="pre">is_directed</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/graphscope/nx/classes/digraph.html#DiGraph.is_directed"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#graphscope.nx.DiGraph.is_directed" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns True if graph is directed, False otherwise.</p>
 </dd></dl>
 
 <dl class="py method">
-<dt id="graphscope.nx.DiGraph.is_multigraph">
-<code class="sig-name descname">is_multigraph</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/graphscope/nx/classes/digraph.html#DiGraph.is_multigraph"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#graphscope.nx.DiGraph.is_multigraph" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="graphscope.nx.DiGraph.is_multigraph">
+<span class="sig-name descname"><span class="pre">is_multigraph</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/graphscope/nx/classes/digraph.html#DiGraph.is_multigraph"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#graphscope.nx.DiGraph.is_multigraph" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns True if graph is a multigraph, False otherwise.</p>
 </dd></dl>
 
-<dl class="py method">
-<dt id="graphscope.nx.DiGraph.key">
-<em class="property">property </em><code class="sig-name descname">key</code><a class="headerlink" href="#graphscope.nx.DiGraph.key" title="Permalink to this definition">¶</a></dt>
+<dl class="py property">
+<dt class="sig sig-object py" id="graphscope.nx.DiGraph.key">
+<em class="property"><span class="pre">property</span> </em><span class="sig-name descname"><span class="pre">key</span></span><a class="headerlink" href="#graphscope.nx.DiGraph.key" title="Permalink to this definition">¶</a></dt>
 <dd><p>String key of the coresponding engine graph.</p>
 </dd></dl>
 
-<dl class="py method">
-<dt id="graphscope.nx.DiGraph.name">
-<em class="property">property </em><code class="sig-name descname">name</code><a class="headerlink" href="#graphscope.nx.DiGraph.name" title="Permalink to this definition">¶</a></dt>
+<dl class="py property">
+<dt class="sig sig-object py" id="graphscope.nx.DiGraph.name">
+<em class="property"><span class="pre">property</span> </em><span class="sig-name descname"><span class="pre">name</span></span><a class="headerlink" href="#graphscope.nx.DiGraph.name" title="Permalink to this definition">¶</a></dt>
 <dd><p>String identifier of the graph.</p>
 <p>This graph attribute appears in the attribute dict G.graph
 keyed by the string <cite>“name”</cite>. as well as an attribute (technically
@@ -2810,8 +2822,8 @@ a property) <cite>G.name</cite>. This is entirely user controlled.</p>
 </dd></dl>
 
 <dl class="py method">
-<dt id="graphscope.nx.DiGraph.nbunch_iter">
-<code class="sig-name descname">nbunch_iter</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">nbunch</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#graphscope.nx.DiGraph.nbunch_iter" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="graphscope.nx.DiGraph.nbunch_iter">
+<span class="sig-name descname"><span class="pre">nbunch_iter</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">nbunch</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#graphscope.nx.DiGraph.nbunch_iter" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns an iterator over nodes contained in nbunch that are
 also in the graph.</p>
 <p>The nodes in nbunch are checked for membership in the graph
@@ -2847,8 +2859,8 @@ nbunch is not hashable, a <code class="xref py py-exc docutils literal notransla
 </dd></dl>
 
 <dl class="py method">
-<dt id="graphscope.nx.DiGraph.neighbors">
-<code class="sig-name descname">neighbors</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">n</span></em><span class="sig-paren">)</span><a class="headerlink" href="#graphscope.nx.DiGraph.neighbors" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="graphscope.nx.DiGraph.neighbors">
+<span class="sig-name descname"><span class="pre">neighbors</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#graphscope.nx.DiGraph.neighbors" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns an iterator over successor nodes of n.</p>
 <p>A successor of n is a node m such that there exists a directed
 edge from n to m.</p>
@@ -2868,9 +2880,9 @@ edge from n to m.</p>
 <p>neighbors() and successors() are the same.</p>
 </dd></dl>
 
-<dl class="py method">
-<dt id="graphscope.nx.DiGraph.nodes">
-<em class="property">property </em><code class="sig-name descname">nodes</code><a class="headerlink" href="#graphscope.nx.DiGraph.nodes" title="Permalink to this definition">¶</a></dt>
+<dl class="py property">
+<dt class="sig sig-object py" id="graphscope.nx.DiGraph.nodes">
+<em class="property"><span class="pre">property</span> </em><span class="sig-name descname"><span class="pre">nodes</span></span><a class="headerlink" href="#graphscope.nx.DiGraph.nodes" title="Permalink to this definition">¶</a></dt>
 <dd><p>A NodeView of the Graph as G.nodes or G.nodes().</p>
 <p>Can be used as <cite>G.nodes</cite> for data lookup and for set-like operations.
 Can also be used as <cite>G.nodes(data=’color’, default=None)</cite> to return a
@@ -2961,8 +2973,8 @@ to guarantee the value is never None:</p>
 </dd></dl>
 
 <dl class="py method">
-<dt id="graphscope.nx.DiGraph.number_of_edges">
-<code class="sig-name descname">number_of_edges</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">u</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">v</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#graphscope.nx.DiGraph.number_of_edges" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="graphscope.nx.DiGraph.number_of_edges">
+<span class="sig-name descname"><span class="pre">number_of_edges</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">u</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">v</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#graphscope.nx.DiGraph.number_of_edges" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns the number of edges between two nodes.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -3013,8 +3025,8 @@ directed edges from <cite>u</cite> to <cite>v</cite>:</p>
 </dd></dl>
 
 <dl class="py method">
-<dt id="graphscope.nx.DiGraph.number_of_nodes">
-<code class="sig-name descname">number_of_nodes</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#graphscope.nx.DiGraph.number_of_nodes" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="graphscope.nx.DiGraph.number_of_nodes">
+<span class="sig-name descname"><span class="pre">number_of_nodes</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#graphscope.nx.DiGraph.number_of_nodes" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns the number of nodes in the graph.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns</dt>
@@ -3036,15 +3048,15 @@ directed edges from <cite>u</cite> to <cite>v</cite>:</p>
 </div>
 </dd></dl>
 
-<dl class="py method">
-<dt id="graphscope.nx.DiGraph.op">
-<em class="property">property </em><code class="sig-name descname">op</code><a class="headerlink" href="#graphscope.nx.DiGraph.op" title="Permalink to this definition">¶</a></dt>
+<dl class="py property">
+<dt class="sig sig-object py" id="graphscope.nx.DiGraph.op">
+<em class="property"><span class="pre">property</span> </em><span class="sig-name descname"><span class="pre">op</span></span><a class="headerlink" href="#graphscope.nx.DiGraph.op" title="Permalink to this definition">¶</a></dt>
 <dd><p>The DAG op of this graph.</p>
 </dd></dl>
 
 <dl class="py method">
-<dt id="graphscope.nx.DiGraph.order">
-<code class="sig-name descname">order</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#graphscope.nx.DiGraph.order" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="graphscope.nx.DiGraph.order">
+<span class="sig-name descname"><span class="pre">order</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#graphscope.nx.DiGraph.order" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns the number of nodes in the graph.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns</dt>
@@ -3066,9 +3078,9 @@ directed edges from <cite>u</cite> to <cite>v</cite>:</p>
 </div>
 </dd></dl>
 
-<dl class="py method">
-<dt id="graphscope.nx.DiGraph.out_degree">
-<em class="property">property </em><code class="sig-name descname">out_degree</code><a class="headerlink" href="#graphscope.nx.DiGraph.out_degree" title="Permalink to this definition">¶</a></dt>
+<dl class="py property">
+<dt class="sig sig-object py" id="graphscope.nx.DiGraph.out_degree">
+<em class="property"><span class="pre">property</span> </em><span class="sig-name descname"><span class="pre">out_degree</span></span><a class="headerlink" href="#graphscope.nx.DiGraph.out_degree" title="Permalink to this definition">¶</a></dt>
 <dd><p>An OutDegreeView for (node, out_degree)</p>
 <p>The node out_degree is the number of edges pointing out of the node.
 The weighted node degree is the sum of the edge weights for
@@ -3109,9 +3121,9 @@ The degree is the sum of the edge weights adjacent to the node.</p></li>
 </div>
 </dd></dl>
 
-<dl class="py method">
-<dt id="graphscope.nx.DiGraph.out_edges">
-<em class="property">property </em><code class="sig-name descname">out_edges</code><a class="headerlink" href="#graphscope.nx.DiGraph.out_edges" title="Permalink to this definition">¶</a></dt>
+<dl class="py property">
+<dt class="sig sig-object py" id="graphscope.nx.DiGraph.out_edges">
+<em class="property"><span class="pre">property</span> </em><span class="sig-name descname"><span class="pre">out_edges</span></span><a class="headerlink" href="#graphscope.nx.DiGraph.out_edges" title="Permalink to this definition">¶</a></dt>
 <dd><p>An OutEdgeView of the DiGraph as G.edges or G.edges().</p>
 <p>edges(self, nbunch=None, data=False, default=None)</p>
 <p>The OutEdgeView provides set-like operations on the edge-tuples
@@ -3168,9 +3180,9 @@ For directed graphs this returns the out-edges.</p>
 </div>
 </dd></dl>
 
-<dl class="py method">
-<dt id="graphscope.nx.DiGraph.pred">
-<em class="property">property </em><code class="sig-name descname">pred</code><a class="headerlink" href="#graphscope.nx.DiGraph.pred" title="Permalink to this definition">¶</a></dt>
+<dl class="py property">
+<dt class="sig sig-object py" id="graphscope.nx.DiGraph.pred">
+<em class="property"><span class="pre">property</span> </em><span class="sig-name descname"><span class="pre">pred</span></span><a class="headerlink" href="#graphscope.nx.DiGraph.pred" title="Permalink to this definition">¶</a></dt>
 <dd><p>Graph adjacency object holding the predecessors of each node.</p>
 <p>This object is a read-only dict-like structure with node keys
 and neighbor-dict values.  The neighbor-dict is keyed by neighbor
@@ -3183,8 +3195,8 @@ A default can be set via a <cite>default</cite> argument to the <cite>data</cite
 </dd></dl>
 
 <dl class="py method">
-<dt id="graphscope.nx.DiGraph.predecessors">
-<code class="sig-name descname">predecessors</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">n</span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/graphscope/nx/classes/digraph.html#DiGraph.predecessors"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#graphscope.nx.DiGraph.predecessors" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="graphscope.nx.DiGraph.predecessors">
+<span class="sig-name descname"><span class="pre">predecessors</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/graphscope/nx/classes/digraph.html#DiGraph.predecessors"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#graphscope.nx.DiGraph.predecessors" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns an iterator over predecessor nodes of n.</p>
 <p>A predecessor of n is a node m such that there exists a directed
 edge from m to n.</p>
@@ -3203,8 +3215,8 @@ edge from m to n.</p>
 </dd></dl>
 
 <dl class="py method">
-<dt id="graphscope.nx.DiGraph.remove_edge">
-<code class="sig-name descname">remove_edge</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">u</span></em>, <em class="sig-param"><span class="n">v</span></em><span class="sig-paren">)</span><a class="headerlink" href="#graphscope.nx.DiGraph.remove_edge" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="graphscope.nx.DiGraph.remove_edge">
+<span class="sig-name descname"><span class="pre">remove_edge</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">u</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">v</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#graphscope.nx.DiGraph.remove_edge" title="Permalink to this definition">¶</a></dt>
 <dd><p>Remove the edge between u and v.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -3236,8 +3248,8 @@ edge from m to n.</p>
 </dd></dl>
 
 <dl class="py method">
-<dt id="graphscope.nx.DiGraph.remove_edges_from">
-<code class="sig-name descname">remove_edges_from</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">ebunch</span></em><span class="sig-paren">)</span><a class="headerlink" href="#graphscope.nx.DiGraph.remove_edges_from" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="graphscope.nx.DiGraph.remove_edges_from">
+<span class="sig-name descname"><span class="pre">remove_edges_from</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ebunch</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#graphscope.nx.DiGraph.remove_edges_from" title="Permalink to this definition">¶</a></dt>
 <dd><p>Remove all edges specified in ebunch.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -3270,8 +3282,8 @@ from the graph. The edges can be:</p>
 </dd></dl>
 
 <dl class="py method">
-<dt id="graphscope.nx.DiGraph.remove_node">
-<code class="sig-name descname">remove_node</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">n</span></em><span class="sig-paren">)</span><a class="headerlink" href="#graphscope.nx.DiGraph.remove_node" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="graphscope.nx.DiGraph.remove_node">
+<span class="sig-name descname"><span class="pre">remove_node</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#graphscope.nx.DiGraph.remove_node" title="Permalink to this definition">¶</a></dt>
 <dd><p>Remove node n.</p>
 <p>Removes the node n and all adjacent edges.
 Attempting to remove a non-existent node will raise an exception.</p>
@@ -3299,8 +3311,8 @@ Attempting to remove a non-existent node will raise an exception.</p>
 </dd></dl>
 
 <dl class="py method">
-<dt id="graphscope.nx.DiGraph.remove_nodes_from">
-<code class="sig-name descname">remove_nodes_from</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">nodes_for_removing</span></em><span class="sig-paren">)</span><a class="headerlink" href="#graphscope.nx.DiGraph.remove_nodes_from" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="graphscope.nx.DiGraph.remove_nodes_from">
+<span class="sig-name descname"><span class="pre">remove_nodes_from</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">nodes_for_removing</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#graphscope.nx.DiGraph.remove_nodes_from" title="Permalink to this definition">¶</a></dt>
 <dd><p>Remove multiple nodes.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -3326,8 +3338,8 @@ ignored.</p>
 </dd></dl>
 
 <dl class="py method">
-<dt id="graphscope.nx.DiGraph.reverse">
-<code class="sig-name descname">reverse</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">copy</span><span class="o">=</span><span class="default_value">True</span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/graphscope/nx/classes/digraph.html#DiGraph.reverse"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#graphscope.nx.DiGraph.reverse" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="graphscope.nx.DiGraph.reverse">
+<span class="sig-name descname"><span class="pre">reverse</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">copy</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/graphscope/nx/classes/digraph.html#DiGraph.reverse"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#graphscope.nx.DiGraph.reverse" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns the reverse of the graph.</p>
 <p>The reverse is a graph with the same nodes and edges
 but with the directions of the edges reversed.</p>
@@ -3340,9 +3352,9 @@ the original graph.</p>
 </dl>
 </dd></dl>
 
-<dl class="py method">
-<dt id="graphscope.nx.DiGraph.schema">
-<em class="property">property </em><code class="sig-name descname">schema</code><a class="headerlink" href="#graphscope.nx.DiGraph.schema" title="Permalink to this definition">¶</a></dt>
+<dl class="py property">
+<dt class="sig sig-object py" id="graphscope.nx.DiGraph.schema">
+<em class="property"><span class="pre">property</span> </em><span class="sig-name descname"><span class="pre">schema</span></span><a class="headerlink" href="#graphscope.nx.DiGraph.schema" title="Permalink to this definition">¶</a></dt>
 <dd><p>Schema of the graph.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns</dt>
@@ -3354,9 +3366,9 @@ the original graph.</p>
 </dl>
 </dd></dl>
 
-<dl class="py method">
-<dt id="graphscope.nx.DiGraph.session">
-<em class="property">property </em><code class="sig-name descname">session</code><a class="headerlink" href="#graphscope.nx.DiGraph.session" title="Permalink to this definition">¶</a></dt>
+<dl class="py property">
+<dt class="sig sig-object py" id="graphscope.nx.DiGraph.session">
+<em class="property"><span class="pre">property</span> </em><span class="sig-name descname"><span class="pre">session</span></span><a class="headerlink" href="#graphscope.nx.DiGraph.session" title="Permalink to this definition">¶</a></dt>
 <dd><p>Get the currrent session.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns</dt>
@@ -3365,9 +3377,9 @@ the original graph.</p>
 </dl>
 </dd></dl>
 
-<dl class="py method">
-<dt id="graphscope.nx.DiGraph.session_id">
-<em class="property">property </em><code class="sig-name descname">session_id</code><a class="headerlink" href="#graphscope.nx.DiGraph.session_id" title="Permalink to this definition">¶</a></dt>
+<dl class="py property">
+<dt class="sig sig-object py" id="graphscope.nx.DiGraph.session_id">
+<em class="property"><span class="pre">property</span> </em><span class="sig-name descname"><span class="pre">session_id</span></span><a class="headerlink" href="#graphscope.nx.DiGraph.session_id" title="Permalink to this definition">¶</a></dt>
 <dd><p>Get the currrent session_id.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns</dt>
@@ -3380,8 +3392,8 @@ the original graph.</p>
 </dd></dl>
 
 <dl class="py method">
-<dt id="graphscope.nx.DiGraph.set_edge_data">
-<code class="sig-name descname">set_edge_data</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">u</span></em>, <em class="sig-param"><span class="n">v</span></em>, <em class="sig-param"><span class="n">data</span></em><span class="sig-paren">)</span><a class="headerlink" href="#graphscope.nx.DiGraph.set_edge_data" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="graphscope.nx.DiGraph.set_edge_data">
+<span class="sig-name descname"><span class="pre">set_edge_data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">u</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">v</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#graphscope.nx.DiGraph.set_edge_data" title="Permalink to this definition">¶</a></dt>
 <dd><p>Set edge data of edge (u, v).</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -3412,8 +3424,8 @@ the original graph.</p>
 </dd></dl>
 
 <dl class="py method">
-<dt id="graphscope.nx.DiGraph.set_node_data">
-<code class="sig-name descname">set_node_data</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">n</span></em>, <em class="sig-param"><span class="n">data</span></em><span class="sig-paren">)</span><a class="headerlink" href="#graphscope.nx.DiGraph.set_node_data" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="graphscope.nx.DiGraph.set_node_data">
+<span class="sig-name descname"><span class="pre">set_node_data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#graphscope.nx.DiGraph.set_node_data" title="Permalink to this definition">¶</a></dt>
 <dd><p>Set data of node.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -3442,15 +3454,15 @@ the original graph.</p>
 </div>
 </dd></dl>
 
-<dl class="py method">
-<dt id="graphscope.nx.DiGraph.signature">
-<em class="property">property </em><code class="sig-name descname">signature</code><a class="headerlink" href="#graphscope.nx.DiGraph.signature" title="Permalink to this definition">¶</a></dt>
+<dl class="py property">
+<dt class="sig sig-object py" id="graphscope.nx.DiGraph.signature">
+<em class="property"><span class="pre">property</span> </em><span class="sig-name descname"><span class="pre">signature</span></span><a class="headerlink" href="#graphscope.nx.DiGraph.signature" title="Permalink to this definition">¶</a></dt>
 <dd><p>Generate a signature of the current graph</p>
 </dd></dl>
 
 <dl class="py method">
-<dt id="graphscope.nx.DiGraph.size">
-<code class="sig-name descname">size</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">weight</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#graphscope.nx.DiGraph.size" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="graphscope.nx.DiGraph.size">
+<span class="sig-name descname"><span class="pre">size</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">weight</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#graphscope.nx.DiGraph.size" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns the number of edges or total of all edge weights.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -3490,8 +3502,8 @@ as a weight. If None, then each edge has weight 1.</p>
 </dd></dl>
 
 <dl class="py method">
-<dt id="graphscope.nx.DiGraph.subgraph">
-<code class="sig-name descname">subgraph</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">nodes</span></em><span class="sig-paren">)</span><a class="headerlink" href="#graphscope.nx.DiGraph.subgraph" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="graphscope.nx.DiGraph.subgraph">
+<span class="sig-name descname"><span class="pre">subgraph</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">nodes</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#graphscope.nx.DiGraph.subgraph" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns a independent deep copy subgraph induced on <cite>nodes</cite>.</p>
 <p>The induced subgraph of the graph contains the nodes in <cite>nodes</cite>
 and the edges between those nodes.</p>
@@ -3503,7 +3515,7 @@ and the edges between those nodes.</p>
 <dd class="field-even"><p><strong>G</strong> – A subgraph of the graph.</p>
 </dd>
 <dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p><a class="reference internal" href="../graph.html#graphscope.framework.graph.Graph" title="graphscope.framework.graph.Graph">Graph</a></p>
+<dd class="field-odd"><p><a class="reference internal" href="#graphscope.nx.Graph" title="graphscope.nx.Graph">Graph</a></p>
 </dd>
 </dl>
 <p class="rubric">Notes</p>
@@ -3517,9 +3529,9 @@ and the edges between those nodes.</p>
 </div>
 </dd></dl>
 
-<dl class="py method">
-<dt id="graphscope.nx.DiGraph.succ">
-<em class="property">property </em><code class="sig-name descname">succ</code><a class="headerlink" href="#graphscope.nx.DiGraph.succ" title="Permalink to this definition">¶</a></dt>
+<dl class="py property">
+<dt class="sig sig-object py" id="graphscope.nx.DiGraph.succ">
+<em class="property"><span class="pre">property</span> </em><span class="sig-name descname"><span class="pre">succ</span></span><a class="headerlink" href="#graphscope.nx.DiGraph.succ" title="Permalink to this definition">¶</a></dt>
 <dd><p>Graph adjacency object holding the neighbors of each node.</p>
 <p>This object is a read-only dict-like structure with node keys
 and neighbor-dict values.  The neighbor-dict is keyed by neighbor
@@ -3533,8 +3545,8 @@ So <cite>for nbr, foovalue in G[node].data(‘foo’, default=1):</cite> works.<
 </dd></dl>
 
 <dl class="py method">
-<dt id="graphscope.nx.DiGraph.successors">
-<code class="sig-name descname">successors</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">n</span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/graphscope/nx/classes/digraph.html#DiGraph.successors"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#graphscope.nx.DiGraph.successors" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="graphscope.nx.DiGraph.successors">
+<span class="sig-name descname"><span class="pre">successors</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/graphscope/nx/classes/digraph.html#DiGraph.successors"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#graphscope.nx.DiGraph.successors" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns an iterator over successor nodes of n.</p>
 <p>A successor of n is a node m such that there exists a directed
 edge from n to m.</p>
@@ -3555,8 +3567,8 @@ edge from n to m.</p>
 </dd></dl>
 
 <dl class="py method">
-<dt id="graphscope.nx.DiGraph.to_directed">
-<code class="sig-name descname">to_directed</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">as_view</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span><a class="headerlink" href="#graphscope.nx.DiGraph.to_directed" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="graphscope.nx.DiGraph.to_directed">
+<span class="sig-name descname"><span class="pre">to_directed</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">as_view</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#graphscope.nx.DiGraph.to_directed" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns a directed representation of the graph.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -3594,16 +3606,16 @@ all of the data and references.</p>
 </dd></dl>
 
 <dl class="py method">
-<dt id="graphscope.nx.DiGraph.to_directed_class">
-<code class="sig-name descname">to_directed_class</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#graphscope.nx.DiGraph.to_directed_class" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="graphscope.nx.DiGraph.to_directed_class">
+<span class="sig-name descname"><span class="pre">to_directed_class</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#graphscope.nx.DiGraph.to_directed_class" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns the class to use for empty directed copies.</p>
 <p>If you subclass the base classes, use this to designate
 what directed class to use for <cite>to_directed()</cite> copies.</p>
 </dd></dl>
 
 <dl class="py method">
-<dt id="graphscope.nx.DiGraph.to_undirected">
-<code class="sig-name descname">to_undirected</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">as_view</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span><a class="headerlink" href="#graphscope.nx.DiGraph.to_undirected" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="graphscope.nx.DiGraph.to_undirected">
+<span class="sig-name descname"><span class="pre">to_undirected</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">as_view</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#graphscope.nx.DiGraph.to_undirected" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns an undirected copy of the graph.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -3613,7 +3625,7 @@ what directed class to use for <cite>to_directed()</cite> copies.</p>
 <dd class="field-even"><p><strong>G</strong> – A deepcopy of the graph.</p>
 </dd>
 <dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p><a class="reference internal" href="../graph.html#graphscope.framework.graph.Graph" title="graphscope.framework.graph.Graph">Graph</a></p>
+<dd class="field-odd"><p><a class="reference internal" href="#graphscope.nx.Graph" title="graphscope.nx.Graph">Graph</a></p>
 </dd>
 </dl>
 <div class="admonition seealso">
@@ -3637,16 +3649,16 @@ all of the data and references.</p>
 </dd></dl>
 
 <dl class="py method">
-<dt id="graphscope.nx.DiGraph.to_undirected_class">
-<code class="sig-name descname">to_undirected_class</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#graphscope.nx.DiGraph.to_undirected_class" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="graphscope.nx.DiGraph.to_undirected_class">
+<span class="sig-name descname"><span class="pre">to_undirected_class</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#graphscope.nx.DiGraph.to_undirected_class" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns the class to use for empty undirected copies.</p>
 <p>If you subclass the base classes, use this to designate
 what directed class to use for <cite>to_directed()</cite> copies.</p>
 </dd></dl>
 
 <dl class="py method">
-<dt id="graphscope.nx.DiGraph.update">
-<code class="sig-name descname">update</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">edges</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">nodes</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#graphscope.nx.DiGraph.update" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="graphscope.nx.DiGraph.update">
+<span class="sig-name descname"><span class="pre">update</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">edges</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nodes</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#graphscope.nx.DiGraph.update" title="Permalink to this definition">¶</a></dt>
 <dd><p>Update the graph using nodes/edges/graphs as input.</p>
 <p>Like dict.update, this method takes a graph as input, adding the
 graph’s nodes and edges to this graph. It can also take two inputs:
@@ -3675,7 +3687,7 @@ If the first parameter is a Graph, then <cite>nodes</cite> is ignored.</p></li>
 <p class="rubric">Examples</p>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">G</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">path_graph</span><span class="p">(</span><span class="mi">5</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">G</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">nx</span><span class="o">.</span><span class="n">complete_graph</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="mi">4</span><span class="p">,</span> <span class="mi">10</span><span class="p">)))</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">itertools</span> <span class="k">import</span> <span class="n">combinations</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">itertools</span> <span class="kn">import</span> <span class="n">combinations</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">edges</span> <span class="o">=</span> <span class="p">(</span>
 <span class="gp">... </span>    <span class="p">(</span><span class="n">u</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="p">{</span><span class="s2">&quot;power&quot;</span><span class="p">:</span> <span class="n">u</span> <span class="o">*</span> <span class="n">v</span><span class="p">})</span>
 <span class="gp">... </span>    <span class="k">for</span> <span class="n">u</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">combinations</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span> <span class="mi">20</span><span class="p">),</span> <span class="mi">2</span><span class="p">)</span>
@@ -3698,21 +3710,21 @@ If the first parameter is a Graph, then <cite>nodes</cite> is ignored.</p></li>
 
 </dd></dl>
 
-</section>
-<section id="transformation">
+</div>
+<div class="section" id="transformation">
 <h2>transformation<a class="headerlink" href="#transformation" title="Permalink to this headline">¶</a></h2>
 <p>In GraphScope, the immutable graphscope.Graph and the mutable graphscope.nx.Graph
 can be transformed into each other. We define the transformation in each Graph class
 constructors.</p>
 <dl class="py function">
-<dt id="graphscope.framework.graph.Graph.__init__">
-<code class="sig-prename descclassname">graphscope.framework.graph.Graph.</code><code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em>, <em class="sig-param"><span class="n">graph_node</span></em><span class="sig-paren">)</span><a class="headerlink" href="#graphscope.framework.graph.Graph.__init__" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="graphscope.framework.graph.Graph.__init__">
+<span class="sig-prename descclassname"><span class="pre">graphscope.framework.graph.Graph.</span></span><span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">graph_node</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#graphscope.framework.graph.Graph.__init__" title="Permalink to this definition">¶</a></dt>
 <dd><p>Construct a <code class="xref py py-class docutils literal notranslate"><span class="pre">Graph</span></code> object.</p>
 </dd></dl>
 
 <dl class="py function">
-<dt id="id0">
-<code class="sig-prename descclassname">graphscope.nx.Graph.</code><code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em>, <em class="sig-param"><span class="n">incoming_graph_data</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">attr</span></em><span class="sig-paren">)</span><a class="headerlink" href="#id0" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="id0">
+<span class="sig-prename descclassname"><span class="pre">graphscope.nx.Graph.</span></span><span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">incoming_graph_data</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">attr</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#id0" title="Permalink to this definition">¶</a></dt>
 <dd><p>Initialize a graph with edges, name, or graph attributes</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -3756,8 +3768,8 @@ of nodes and edges would be cleaned in nx.Graph.</p>
 </dd></dl>
 
 <dl class="py function">
-<dt id="graphscope.nx.convert.from_gs_graph">
-<code class="sig-prename descclassname">graphscope.nx.convert.</code><code class="sig-name descname">from_gs_graph</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">gs_graph</span></em>, <em class="sig-param"><span class="n">dst_nx_graph</span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/graphscope/nx/convert.html#from_gs_graph"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#graphscope.nx.convert.from_gs_graph" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="graphscope.nx.convert.from_gs_graph">
+<span class="sig-prename descclassname"><span class="pre">graphscope.nx.convert.</span></span><span class="sig-name descname"><span class="pre">from_gs_graph</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">gs_graph</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dst_nx_graph</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/graphscope/nx/convert.html#from_gs_graph"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#graphscope.nx.convert.from_gs_graph" title="Permalink to this definition">¶</a></dt>
 <dd><p>Create a new nx graph from a gs graph.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -3783,7 +3795,7 @@ in all labels and not has parallel edge between edge label.</p></li>
 </dl>
 <p class="rubric">Examples</p>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">graphscope</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">graphscope</span> <span class="k">import</span> <span class="n">nx</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">graphscope</span> <span class="kn">import</span> <span class="n">nx</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">gs_g</span> <span class="o">=</span> <span class="n">graphscope</span><span class="o">.</span><span class="n">g</span><span class="p">(</span><span class="n">directed</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">gs_g</span> <span class="o">=</span> <span class="n">gs_g</span><span class="o">.</span><span class="n">add_vertices</span><span class="p">(</span><span class="o">...</span><span class="p">)</span><span class="o">.</span><span class="n">add_edges</span><span class="p">(</span><span class="o">...</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">nx_g</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">Graph</span><span class="p">(</span><span class="n">gs_g</span><span class="p">)</span>
@@ -3791,37 +3803,37 @@ in all labels and not has parallel edge between edge label.</p></li>
 </div>
 </dd></dl>
 
-</section>
-</section>
+</div>
+</div>
 
 
            </div>
            
           </div>
           <footer>
-  
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
-      
-        <a href="builtin.html" class="btn btn-neutral float-right" title="Builtin algorithms" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
-      
-      
-        <a href="index.html" class="btn btn-neutral" title="NetworkX-style API" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
-      
+        <a href="builtin.html" class="btn btn-neutral float-right" title="Builtin algorithms" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="index.html" class="btn btn-neutral float-left" title="NetworkX-style API" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
     </div>
-  
 
   <hr/>
 
   <div role="contentinfo">
     <p>
-        &copy; Copyright 2020-2023, Damo Academy, Alibaba Inc.
+        &#169; Copyright 2020-2023, Damo Academy, Alibaba Inc..
 
     </p>
   </div>
-  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
 
 </footer>
-
         </div>
       </div>
 
@@ -3830,28 +3842,16 @@ in all labels and not has parallel edge between edge label.</p></li>
   </div>
   
 
-
-  
-
-    
-    
-      <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
-        <script src="../../_static/jquery.js"></script>
-        <script src="../../_static/underscore.js"></script>
-        <script src="../../_static/doctools.js"></script>
-        <script src="../../_static/language_data.js"></script>
-        <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
-    
-
-  
-
-  <script type="text/javascript" src="../../_static/js/theme.js"></script>
-
   <script type="text/javascript">
       jQuery(function () {
           SphinxRtdTheme.Navigation.enable(true);
       });
   </script>
+
+  
+  
+    
+  
   
 
   <div class="rst-versions" data-toggle="rst-versions" role="note" aria-label="versions">
@@ -3879,6 +3879,16 @@ in all labels and not has parallel edge between edge label.</p></li>
             
               
                 <dd><a href="../../index.html">stable</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../v0.7.0/index.html">v0.7.0</a></dd>
               
             
 

@@ -1,0 +1,6 @@
+﻿graphscope.experimental.nx.generators.classic.turan\_graph
+==========================================================
+
+.. currentmodule:: graphscope.experimental.nx.generators.classic
+
+.. autofunction:: turan_graph

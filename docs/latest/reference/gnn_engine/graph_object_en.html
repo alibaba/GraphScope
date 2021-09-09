@@ -1,33 +1,45 @@
 
 
 <!DOCTYPE html>
-<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
-<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<html class="writer-html5" lang="en" >
 <head>
-  <meta charset="utf-8">
-  <meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
-
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="utf-8" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   
   <title>Graph Object &mdash; GraphScope  documentation</title>
   
 
   
-  
-  
-  
-
-  
-
-  
-  
-    
-
-  
-
   <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
   <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
   <link rel="stylesheet" href="../../_static/css/custom.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+        <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
+        <script src="../../_static/jquery.js"></script>
+        <script src="../../_static/underscore.js"></script>
+        <script src="../../_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="../../_static/js/theme.js"></script>
+
+    
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
 
@@ -44,21 +56,16 @@
 </script>
 
 
-
-  
-  <script src="../../_static/js/modernizr.min.js"></script>
-
 </head>
 
 <body class="wy-body-for-nav">
 
    
   <div class="wy-grid-for-nav">
-
     
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
-        <div class="wy-side-nav-search">
+        <div class="wy-side-nav-search" >
           
 
           
@@ -89,8 +96,9 @@
           
         </div>
 
-        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
-          
+        
+  <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+    
       
       
         
@@ -98,7 +106,7 @@
         
       
       
-        <p><span class="caption-text">Contents</span></p>
+        <p class="caption"><span class="caption-text">Contents</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../../installation.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../getting_started.html">Getting Started</a></li>
@@ -109,10 +117,11 @@
 <li class="toctree-l1"><a class="reference internal" href="../../analytics_engine.html">GraphScope Analytical Engine</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../interactive_engine.html">GraphScope Interactive Engine</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../learning_engine.html">GraphScope Learning Engine</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../persistent_graph_store.html">Persistent Graph Store</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../frequently_asked_questions.html">Frequently Asked Questions</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../developer_guide.html">Developer Guide</a></li>
 </ul>
-<p><span class="caption-text">Reference</span></p>
+<p class="caption"><span class="caption-text">Reference</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../python_index.html">Python API Reference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../analytical_engine_index.html">Analytical Engine API Reference</a></li>
@@ -120,7 +129,8 @@
 
       
     
-        </div>
+  </div>
+
       </div>
     </nav>
 
@@ -155,18 +165,20 @@
 
 
 
+
+
 <div role="navigation" aria-label="breadcrumbs navigation">
 
   <ul class="wy-breadcrumbs">
     
-      <li><a href="../../index.html">Docs</a> &raquo;</li>
+      <li><a href="../../index.html" class="icon icon-home"></a> &raquo;</li>
         
       <li>Graph Object</li>
     
     
       <li class="wy-breadcrumbs-aside">
         
-            
+          
             <a href="../../_sources/reference/gnn_engine/graph_object_en.rst.txt" rel="nofollow"> View page source</a>
           
         
@@ -180,7 +192,7 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <section id="graph-object">
+  <div class="section" id="graph-object">
 <h1>Graph Object<a class="headerlink" href="#graph-object" title="Permalink to this headline">¶</a></h1>
 <p>The Graph object is the data structure that organizes the raw data for
 further graph operations such as sampling. The Graph object can support
@@ -196,12 +208,12 @@ includes <strong>3 steps</strong>:</p>
 <p># 1 Declare Graph Object It’s very simple to declare a Graph object
 <code class="docutils literal notranslate"><span class="pre">g</span></code> and all subsequent related operations are based on <code class="docutils literal notranslate"><span class="pre">g</span></code>. The
 detailed implementation is as follow:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">graphlearn</span> <span class="kn">as</span> <span class="nn">gl</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">graphlearn</span> <span class="k">as</span> <span class="nn">gl</span>
 <span class="n">g</span> <span class="o">=</span> <span class="n">gl</span><span class="o">.</span><span class="n">Graph</span><span class="p">()</span>
 </pre></div>
 </div>
-</section>
-<section id="describe-the-topology">
+</div>
+<div class="section" id="describe-the-topology">
 <h1>2 Describe the Topology<a class="headerlink" href="#describe-the-topology" title="Permalink to this headline">¶</a></h1>
 <p>Topological structure describes the relationship between edges and
 vertices in the graph. The topology here refers to the relationship of a
@@ -259,7 +271,7 @@ object through the following code. Please note that the node_type cannot
 be the same at each time you call <code class="docutils literal notranslate"><span class="pre">node()</span></code> when there are multiple
 types of vertices.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">g</span><span class="o">.</span><span class="n">node</span><span class="p">(</span><span class="n">source</span><span class="o">=</span><span class="s2">&quot;table_1&quot;</span><span class="p">,</span> <span class="n">node_type</span><span class="o">=</span><span class="s2">&quot;user&quot;</span><span class="p">,</span> <span class="n">decoder</span><span class="o">=</span><span class="n">Decoder</span><span class="p">(</span><span class="n">attr_types</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;int&quot;</span><span class="p">,</span> <span class="s2">&quot;float&quot;</span><span class="p">,</span> <span class="s2">&quot;int&quot;</span><span class="p">]))</span> \
- <span class="o">.</span><span class="n">node</span><span class="p">(</span><span class="n">source</span><span class="o">=</span><span class="s2">&quot;table_2&quot;</span><span class="p">,</span> <span class="n">node_type</span><span class="o">=</span><span class="s2">&quot;movie&quot;</span><span class="p">,</span> <span class="n">decoder</span><span class="o">=</span><span class="n">Decoder</span><span class="p">(</span><span class="n">weighted</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+ <span class="o">.</span><span class="n">node</span><span class="p">(</span><span class="n">source</span><span class="o">=</span><span class="s2">&quot;table_2&quot;</span><span class="p">,</span> <span class="n">node_type</span><span class="o">=</span><span class="s2">&quot;movie&quot;</span><span class="p">,</span> <span class="n">decoder</span><span class="o">=</span><span class="n">Decoder</span><span class="p">(</span><span class="n">weighted</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>## 2.2 Adding Edges The Graph object provides the <strong>edge()</strong> interface
@@ -271,7 +283,7 @@ determine the corresponding relationship between the edge type and the
 source/destination vertex type in the graph, and then the corresponding
 vertex type data source can be combined to form a connected graph. The
 interface and its parameters are as follows:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">edge</span><span class="p">(</span><span class="n">source</span><span class="p">,</span> <span class="n">edge_type</span><span class="p">,</span> <span class="n">decoder</span><span class="p">,</span> <span class="n">directed</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">edge</span><span class="p">(</span><span class="n">source</span><span class="p">,</span> <span class="n">edge_type</span><span class="p">,</span> <span class="n">decoder</span><span class="p">,</span> <span class="n">directed</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 <span class="sd">&#39;&#39;&#39; Describe the relationship between the edge type and its source vertex and destination vertex type, and the relationship between the edge type and the data schema.</span>
 
 <span class="sd">source:    string type, edge data source, see chapter &quot;Data Source&quot; for details.</span>
@@ -355,8 +367,8 @@ interface and its parameters are as follows:</p>
 object through the following code. Please note that for each edge_type,
 <code class="docutils literal notranslate"><span class="pre">edge()</span></code> can only be called once when there are multiple types of
 edges.</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">ui_decoder</span> <span class="o">=</span> <span class="n">Decoder</span><span class="p">(</span><span class="n">weighted</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
-<span class="n">uv_decoder</span> <span class="o">=</span> <span class="n">Decoder</span><span class="p">(</span><span class="n">weighted</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">attr_types</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;float&quot;</span><span class="p">]</span> <span class="o">*</span> <span class="mi">10</span><span class="p">,</span> <span class="n">attr_delimiter</span><span class="o">=</span><span class="s1">&#39;,&#39;</span><span class="p">)</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">ui_decoder</span> <span class="o">=</span> <span class="n">Decoder</span><span class="p">(</span><span class="n">weighted</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="n">uv_decoder</span> <span class="o">=</span> <span class="n">Decoder</span><span class="p">(</span><span class="n">weighted</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">attr_types</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;float&quot;</span><span class="p">]</span> <span class="o">*</span> <span class="mi">10</span><span class="p">,</span> <span class="n">attr_delimiter</span><span class="o">=</span><span class="s1">&#39;,&#39;</span><span class="p">)</span>
 
 <span class="n">g</span><span class="o">.</span><span class="n">edge</span><span class="p">(</span><span class="n">source</span><span class="o">=</span><span class="s2">&quot;table_3&quot;</span><span class="p">,</span> <span class="n">edge_type</span><span class="o">=</span><span class="p">(</span><span class="s2">&quot;user&quot;</span><span class="p">,</span> <span class="s2">&quot;item&quot;</span><span class="p">,</span> <span class="s2">&quot;click&quot;</span><span class="p">),</span> <span class="n">decoder</span><span class="o">=</span><span class="n">ui_decoder</span><span class="p">)</span>
  <span class="o">.</span><span class="n">edge</span><span class="p">(</span><span class="n">source</span><span class="o">=</span><span class="s2">&quot;table_4&quot;</span><span class="p">,</span> <span class="n">edge_type</span><span class="o">=</span><span class="p">(</span><span class="s2">&quot;user&quot;</span><span class="p">,</span> <span class="s2">&quot;movie&quot;</span><span class="p">,</span> <span class="s2">&quot;click_v&quot;</span><span class="p">),</span> <span class="n">decoder</span><span class="o">=</span><span class="n">uv_decoder</span><span class="p">)</span>
@@ -369,7 +381,7 @@ determined in the initialization process, either stand-alone or
 distributed. It is necessary to further distinguish Server Mode and
 Client-Server Mode if distributed mode is set. After the initialization
 is complete, the Graph object is ready to use.</p>
-<section id="stand-alone-mode">
+<div class="section" id="stand-alone-mode">
 <h2>3.1 Stand-alone Mode<a class="headerlink" href="#stand-alone-mode" title="Permalink to this headline">¶</a></h2>
 <p>The stand-alone mode is relatively simple where the Graph object holds
 all graph data.</p>
@@ -403,8 +415,8 @@ Server Mode for scenarios where models are trained in parallel.</p>
   <span class="c1"># ps.join()</span>
 </pre></div>
 </div>
-</section>
-<section id="distributed-mode-client-server-mode">
+</div>
+<div class="section" id="distributed-mode-client-server-mode">
 <h2>3.2 Distributed Mode – Client/Server Mode<a class="headerlink" href="#distributed-mode-client-server-mode" title="Permalink to this headline">¶</a></h2>
 <p>In this mode, data is also distributed on each server and the servers
 are interconnected which are similar to Server Mode. However, only the
@@ -450,28 +462,33 @@ TensorFlow. The code is as follows:</p>
 </div>
 <p><strong>Please note that you need to explicitly call ``g.close()`` after
 using the graph store no matter which deployment mode is used.</strong></p>
-</section>
-</section>
+</div>
+</div>
 
 
            </div>
            
           </div>
           <footer>
-  
 
   <hr/>
 
   <div role="contentinfo">
     <p>
-        &copy; Copyright 2020-2023, Damo Academy, Alibaba Inc.
+        &#169; Copyright 2020-2023, Damo Academy, Alibaba Inc..
 
     </p>
   </div>
-  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
 
 </footer>
-
         </div>
       </div>
 
@@ -480,28 +497,16 @@ using the graph store no matter which deployment mode is used.</strong></p>
   </div>
   
 
-
-  
-
-    
-    
-      <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
-        <script src="../../_static/jquery.js"></script>
-        <script src="../../_static/underscore.js"></script>
-        <script src="../../_static/doctools.js"></script>
-        <script src="../../_static/language_data.js"></script>
-        <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
-    
-
-  
-
-  <script type="text/javascript" src="../../_static/js/theme.js"></script>
-
   <script type="text/javascript">
       jQuery(function () {
           SphinxRtdTheme.Navigation.enable(true);
       });
   </script>
+
+  
+  
+    
+  
   
 
   <div class="rst-versions" data-toggle="rst-versions" role="note" aria-label="versions">
@@ -529,6 +534,16 @@ using the graph store no matter which deployment mode is used.</strong></p>
             
               
                 <dd><a href="../../../index.html">stable</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../v0.7.0/index.html">v0.7.0</a></dd>
               
             
 

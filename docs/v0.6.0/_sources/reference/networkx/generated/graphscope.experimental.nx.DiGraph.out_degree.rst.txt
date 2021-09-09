@@ -1,0 +1,6 @@
+﻿graphscope.experimental.nx.DiGraph.out\_degree
+==============================================
+
+.. currentmodule:: graphscope.experimental.nx
+
+.. autoproperty:: DiGraph.out_degree

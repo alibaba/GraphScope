@@ -1,32 +1,45 @@
 
 
 <!DOCTYPE html>
-<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
-<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<html class="writer-html5" lang="en" >
 <head>
-  <meta charset="utf-8">
+  <meta charset="utf-8" />
   
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   
   <title>graphscope.framework.graph_builder &mdash; GraphScope  documentation</title>
   
 
   
-  
-  
-  
-
-  
-
-  
-  
-    
-
-  
-
   <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
   <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
   <link rel="stylesheet" href="../../../_static/css/custom.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
+        <script data-url_root="../../../" id="documentation_options" src="../../../_static/documentation_options.js"></script>
+        <script src="../../../_static/jquery.js"></script>
+        <script src="../../../_static/underscore.js"></script>
+        <script src="../../../_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="../../../_static/js/theme.js"></script>
+
+    
     <link rel="index" title="Index" href="../../../genindex.html" />
     <link rel="search" title="Search" href="../../../search.html" />
 
@@ -43,21 +56,16 @@
 </script>
 
 
-
-  
-  <script src="../../../_static/js/modernizr.min.js"></script>
-
 </head>
 
 <body class="wy-body-for-nav">
 
    
   <div class="wy-grid-for-nav">
-
     
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
-        <div class="wy-side-nav-search">
+        <div class="wy-side-nav-search" >
           
 
           
@@ -88,8 +96,9 @@
           
         </div>
 
-        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
-          
+        
+  <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+    
       
       
         
@@ -97,7 +106,7 @@
         
       
       
-        <p><span class="caption-text">Contents</span></p>
+        <p class="caption"><span class="caption-text">Contents</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../../../installation.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../getting_started.html">Getting Started</a></li>
@@ -108,10 +117,11 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../analytics_engine.html">GraphScope Analytical Engine</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../interactive_engine.html">GraphScope Interactive Engine</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../learning_engine.html">GraphScope Learning Engine</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../persistent_graph_store.html">Persistent Graph Store</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../frequently_asked_questions.html">Frequently Asked Questions</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../developer_guide.html">Developer Guide</a></li>
 </ul>
-<p><span class="caption-text">Reference</span></p>
+<p class="caption"><span class="caption-text">Reference</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../../../reference/python_index.html">Python API Reference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../reference/analytical_engine_index.html">Analytical Engine API Reference</a></li>
@@ -119,7 +129,8 @@
 
       
     
-        </div>
+  </div>
+
       </div>
     </nav>
 
@@ -154,11 +165,13 @@
 
 
 
+
+
 <div role="navigation" aria-label="breadcrumbs navigation">
 
   <ul class="wy-breadcrumbs">
     
-      <li><a href="../../../index.html">Docs</a> &raquo;</li>
+      <li><a href="../../../index.html" class="icon icon-home"></a> &raquo;</li>
         
           <li><a href="../../index.html">Module code</a> &raquo;</li>
         
@@ -196,44 +209,27 @@
 <span class="c1"># limitations under the License.</span>
 <span class="c1">#</span>
 
-<span class="kn">from</span> <span class="nn">itertools</span> <span class="k">import</span> <span class="n">chain</span>
-<span class="kn">from</span> <span class="nn">typing</span> <span class="k">import</span> <span class="n">Any</span>
-<span class="kn">from</span> <span class="nn">typing</span> <span class="k">import</span> <span class="n">Dict</span>
-<span class="kn">from</span> <span class="nn">typing</span> <span class="k">import</span> <span class="n">Mapping</span>
-<span class="kn">from</span> <span class="nn">typing</span> <span class="k">import</span> <span class="n">Sequence</span>
-<span class="kn">from</span> <span class="nn">typing</span> <span class="k">import</span> <span class="n">Tuple</span>
-<span class="kn">from</span> <span class="nn">typing</span> <span class="k">import</span> <span class="n">Union</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Mapping</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Sequence</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Union</span>
 
-<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
-<span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
-<span class="kn">import</span> <span class="nn">vineyard</span>
+<span class="k">try</span><span class="p">:</span>
+    <span class="kn">import</span> <span class="nn">vineyard</span>
+<span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
+    <span class="n">vineyard</span> <span class="o">=</span> <span class="kc">None</span>
 
-<span class="kn">from</span> <span class="nn">graphscope.client.session</span> <span class="k">import</span> <span class="n">get_default_session</span>
-<span class="kn">from</span> <span class="nn">graphscope.framework</span> <span class="k">import</span> <span class="n">dag_utils</span>
-<span class="kn">from</span> <span class="nn">graphscope.framework</span> <span class="k">import</span> <span class="n">utils</span>
-<span class="kn">from</span> <span class="nn">graphscope.framework.errors</span> <span class="k">import</span> <span class="n">InvalidArgumentError</span>
-<span class="kn">from</span> <span class="nn">graphscope.framework.errors</span> <span class="k">import</span> <span class="n">check_argument</span>
-<span class="kn">from</span> <span class="nn">graphscope.framework.graph</span> <span class="k">import</span> <span class="n">Graph</span>
-<span class="kn">from</span> <span class="nn">graphscope.framework.graph_utils</span> <span class="k">import</span> <span class="n">normalize_parameter_edges</span>
-<span class="kn">from</span> <span class="nn">graphscope.framework.graph_utils</span> <span class="k">import</span> <span class="n">normalize_parameter_vertices</span>
-<span class="kn">from</span> <span class="nn">graphscope.framework.loader</span> <span class="k">import</span> <span class="n">Loader</span>
-<span class="kn">from</span> <span class="nn">graphscope.proto</span> <span class="k">import</span> <span class="n">graph_def_pb2</span>
-<span class="kn">from</span> <span class="nn">graphscope.proto</span> <span class="k">import</span> <span class="n">types_pb2</span>
+<span class="kn">from</span> <span class="nn">graphscope.client.session</span> <span class="kn">import</span> <span class="n">get_default_session</span>
+<span class="kn">from</span> <span class="nn">graphscope.framework</span> <span class="kn">import</span> <span class="n">dag_utils</span>
+<span class="kn">from</span> <span class="nn">graphscope.framework</span> <span class="kn">import</span> <span class="n">utils</span>
+<span class="kn">from</span> <span class="nn">graphscope.framework.graph</span> <span class="kn">import</span> <span class="n">Graph</span>
+<span class="kn">from</span> <span class="nn">graphscope.framework.graph_utils</span> <span class="kn">import</span> <span class="n">LoaderVariants</span>
+<span class="kn">from</span> <span class="nn">graphscope.framework.graph_utils</span> <span class="kn">import</span> <span class="n">VineyardObjectTypes</span>
+<span class="kn">from</span> <span class="nn">graphscope.framework.graph_utils</span> <span class="kn">import</span> <span class="n">normalize_parameter_edges</span>
+<span class="kn">from</span> <span class="nn">graphscope.framework.graph_utils</span> <span class="kn">import</span> <span class="n">normalize_parameter_vertices</span>
+<span class="kn">from</span> <span class="nn">graphscope.proto</span> <span class="kn">import</span> <span class="n">graph_def_pb2</span>
+<span class="kn">from</span> <span class="nn">graphscope.proto</span> <span class="kn">import</span> <span class="n">types_pb2</span>
 
 <span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;load_from&quot;</span><span class="p">]</span>
-
-
-<span class="n">VineyardObjectTypes</span> <span class="o">=</span> <span class="p">(</span><span class="n">vineyard</span><span class="o">.</span><span class="n">Object</span><span class="p">,</span> <span class="n">vineyard</span><span class="o">.</span><span class="n">ObjectID</span><span class="p">,</span> <span class="n">vineyard</span><span class="o">.</span><span class="n">ObjectName</span><span class="p">)</span>
-
-<span class="n">LoaderVariants</span> <span class="o">=</span> <span class="n">Union</span><span class="p">[</span>
-    <span class="n">Loader</span><span class="p">,</span>
-    <span class="nb">str</span><span class="p">,</span>
-    <span class="n">Sequence</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">],</span>
-    <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span>
-    <span class="n">vineyard</span><span class="o">.</span><span class="n">Object</span><span class="p">,</span>
-    <span class="n">vineyard</span><span class="o">.</span><span class="n">ObjectID</span><span class="p">,</span>
-    <span class="n">vineyard</span><span class="o">.</span><span class="n">ObjectName</span><span class="p">,</span>
-<span class="p">]</span>
 
 
 <div class="viewcode-block" id="load_from"><a class="viewcode-back" href="../../../reference/graph.html#graphscope.framework.graph_builder.load_from">[docs]</a><span class="k">def</span> <span class="nf">load_from</span><span class="p">(</span>
@@ -350,7 +346,7 @@
 
     <span class="c1"># Don&#39;t import the :code:`nx` in top-level statments to improve the</span>
     <span class="c1"># performance of :code:`import graphscope`.</span>
-    <span class="kn">from</span> <span class="nn">graphscope</span> <span class="k">import</span> <span class="n">nx</span>
+    <span class="kn">from</span> <span class="nn">graphscope</span> <span class="kn">import</span> <span class="n">nx</span>
 
     <span class="n">sess</span> <span class="o">=</span> <span class="n">get_default_session</span><span class="p">()</span>
     <span class="k">if</span> <span class="n">sess</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
@@ -384,20 +380,25 @@
            
           </div>
           <footer>
-  
 
   <hr/>
 
   <div role="contentinfo">
     <p>
-        &copy; Copyright 2020-2023, Damo Academy, Alibaba Inc.
+        &#169; Copyright 2020-2023, Damo Academy, Alibaba Inc..
 
     </p>
   </div>
-  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
 
 </footer>
-
         </div>
       </div>
 
@@ -406,28 +407,16 @@
   </div>
   
 
-
-  
-
-    
-    
-      <script type="text/javascript" id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
-        <script src="../../../_static/jquery.js"></script>
-        <script src="../../../_static/underscore.js"></script>
-        <script src="../../../_static/doctools.js"></script>
-        <script src="../../../_static/language_data.js"></script>
-        <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
-    
-
-  
-
-  <script type="text/javascript" src="../../../_static/js/theme.js"></script>
-
   <script type="text/javascript">
       jQuery(function () {
           SphinxRtdTheme.Navigation.enable(true);
       });
   </script>
+
+  
+  
+    
+  
   
 
   <div class="rst-versions" data-toggle="rst-versions" role="note" aria-label="versions">
@@ -455,6 +444,16 @@
             
               
                 <dd><a href="../../../index.html">stable</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../v0.7.0/index.html">v0.7.0</a></dd>
               
             
 

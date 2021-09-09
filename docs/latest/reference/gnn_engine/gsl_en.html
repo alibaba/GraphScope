@@ -1,33 +1,45 @@
 
 
 <!DOCTYPE html>
-<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
-<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<html class="writer-html5" lang="en" >
 <head>
-  <meta charset="utf-8">
-  <meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
-
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="utf-8" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   
   <title>Graph Sampling Language（GSL) &mdash; GraphScope  documentation</title>
   
 
   
-  
-  
-  
-
-  
-
-  
-  
-    
-
-  
-
   <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
   <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
   <link rel="stylesheet" href="../../_static/css/custom.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+        <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
+        <script src="../../_static/jquery.js"></script>
+        <script src="../../_static/underscore.js"></script>
+        <script src="../../_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="../../_static/js/theme.js"></script>
+
+    
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
 
@@ -44,21 +56,16 @@
 </script>
 
 
-
-  
-  <script src="../../_static/js/modernizr.min.js"></script>
-
 </head>
 
 <body class="wy-body-for-nav">
 
    
   <div class="wy-grid-for-nav">
-
     
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
-        <div class="wy-side-nav-search">
+        <div class="wy-side-nav-search" >
           
 
           
@@ -89,8 +96,9 @@
           
         </div>
 
-        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
-          
+        
+  <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+    
       
       
         
@@ -98,7 +106,7 @@
         
       
       
-        <p><span class="caption-text">Contents</span></p>
+        <p class="caption"><span class="caption-text">Contents</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../../installation.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../getting_started.html">Getting Started</a></li>
@@ -109,10 +117,11 @@
 <li class="toctree-l1"><a class="reference internal" href="../../analytics_engine.html">GraphScope Analytical Engine</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../interactive_engine.html">GraphScope Interactive Engine</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../learning_engine.html">GraphScope Learning Engine</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../persistent_graph_store.html">Persistent Graph Store</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../frequently_asked_questions.html">Frequently Asked Questions</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../developer_guide.html">Developer Guide</a></li>
 </ul>
-<p><span class="caption-text">Reference</span></p>
+<p class="caption"><span class="caption-text">Reference</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../python_index.html">Python API Reference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../analytical_engine_index.html">Analytical Engine API Reference</a></li>
@@ -120,7 +129,8 @@
 
       
     
-        </div>
+  </div>
+
       </div>
     </nav>
 
@@ -155,18 +165,20 @@
 
 
 
+
+
 <div role="navigation" aria-label="breadcrumbs navigation">
 
   <ul class="wy-breadcrumbs">
     
-      <li><a href="../../index.html">Docs</a> &raquo;</li>
+      <li><a href="../../index.html" class="icon icon-home"></a> &raquo;</li>
         
       <li>Graph Sampling Language（GSL)</li>
     
     
       <li class="wy-breadcrumbs-aside">
         
-            
+          
             <a href="../../_sources/reference/gnn_engine/gsl_en.rst.txt" rel="nofollow"> View page source</a>
           
         
@@ -180,7 +192,7 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <section id="graph-sampling-language-gsl">
+  <div class="section" id="graph-sampling-language-gsl">
 <h1>Graph Sampling Language（GSL)<a class="headerlink" href="#graph-sampling-language-gsl" title="Permalink to this headline">¶</a></h1>
 <p># 1. Introduction There has been a well-developed programming paradigm
 since Graph Neural Network (GNN) was introduced. Developing a GNN model
@@ -222,7 +234,7 @@ of execution results. In GSL, a query must have a SOURCE and SINK.</p>
 <p>## 2.1 SOURCE #### 2.1.1 V/E</p>
 <p>SOURCE is the entrance of a GSL query, supporting <code class="docutils literal notranslate"><span class="pre">V()</span></code> 和 <code class="docutils literal notranslate"><span class="pre">E()</span></code>
 APIs, which represent querying from vertices and edges respectively.</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">V</span><span class="p">(</span><span class="n">node_type</span><span class="p">,</span> <span class="n">feed</span><span class="o">=</span><span class="bp">None</span><span class="p">)</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">V</span><span class="p">(</span><span class="n">node_type</span><span class="p">,</span> <span class="n">feed</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
 <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">Args:</span>
 <span class="sd">  node_type(string): vertex type, the following operations are based on the vertex type;</span>
@@ -233,7 +245,7 @@ APIs, which represent querying from vertices and edges respectively.</p>
 <span class="sd">  a Query object</span>
 <span class="sd">&quot;&quot;&quot;</span>
 
-<span class="k">def</span> <span class="nf">E</span><span class="p">(</span><span class="n">edge_type</span><span class="p">,</span> <span class="n">feed</span><span class="o">=</span><span class="bp">None</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">E</span><span class="p">(</span><span class="n">edge_type</span><span class="p">,</span> <span class="n">feed</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
 <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">Args:</span>
 <span class="sd">  edge_type(string): Edge type, the following operations are based on the vertex type;</span>
@@ -249,7 +261,7 @@ APIs, which represent querying from vertices and edges respectively.</p>
 <p><code class="docutils literal notranslate"><span class="pre">V()</span></code> and <code class="docutils literal notranslate"><span class="pre">E()</span></code> can be followed by <code class="docutils literal notranslate"><span class="pre">shuffle()</span></code>. <code class="docutils literal notranslate"><span class="pre">shuffle()</span></code> is
 an optional API，which provides options to sample the data randomly when
 retrieving data from graphs (<code class="docutils literal notranslate"><span class="pre">feed</span> <span class="pre">=</span> <span class="pre">None</span></code>).</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">shuffle</span><span class="p">(</span><span class="n">traverse</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">shuffle</span><span class="p">(</span><span class="n">traverse</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
 <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">Args:</span>
 <span class="sd">  traverse(boolean): if traverse the data source，default is False。</span>
@@ -286,7 +298,7 @@ and otherwise <code class="docutils literal notranslate"><span class="pre">OutOf
 </div>
 <p>Get user type vertices from a generator.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">gen</span><span class="p">():</span>
-  <span class="k">while</span> <span class="bp">True</span><span class="p">:</span>
+  <span class="k">while</span> <span class="kc">True</span><span class="p">:</span>
     <span class="k">yield</span>  <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">])</span>
 
 <span class="n">generator</span> <span class="o">=</span> <span class="n">gen</span><span class="p">()</span>
@@ -294,7 +306,7 @@ and otherwise <code class="docutils literal notranslate"><span class="pre">OutOf
 </pre></div>
 </div>
 <p>Get 64 buy type edges in order.</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">g</span><span class="o">.</span><span class="n">E</span><span class="p">(</span><span class="s2">&quot;buy&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">shuffle</span><span class="p">(</span><span class="bp">True</span><span class="p">)</span><span class="o">.</span><span class="n">batch</span><span class="p">(</span><span class="mi">64</span><span class="p">)</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">g</span><span class="o">.</span><span class="n">E</span><span class="p">(</span><span class="s2">&quot;buy&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">shuffle</span><span class="p">(</span><span class="kc">True</span><span class="p">)</span><span class="o">.</span><span class="n">batch</span><span class="p">(</span><span class="mi">64</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>Provide src_id and dst_ids for buy type edges.</p>
@@ -303,7 +315,7 @@ and otherwise <code class="docutils literal notranslate"><span class="pre">OutOf
 </div>
 <p>Get buy type edges from a generator.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">gen</span><span class="p">():</span>
-  <span class="k">while</span> <span class="bp">True</span><span class="p">:</span>
+  <span class="k">while</span> <span class="kc">True</span><span class="p">:</span>
     <span class="k">yield</span>  <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">]),</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">4</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="mi">6</span><span class="p">]))</span>
 
 <span class="n">generator</span> <span class="o">=</span> <span class="n">gen</span><span class="p">()</span>
@@ -516,7 +528,7 @@ in a certain isomorphic undirected graph, we would like to sample a
 vertex’s 10-hop neighbors. <code class="docutils literal notranslate"><span class="pre">repeat()</span></code> takes in a function, similar to
 the one in <code class="docutils literal notranslate"><span class="pre">each()</span></code>, which means that the operation represented by
 that function is repeated <code class="docutils literal notranslate"><span class="pre">times</span></code> times.</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">repeat</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">func</span><span class="p">,</span> <span class="n">times</span><span class="p">,</span> <span class="n">parmas_list</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">repeat</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">func</span><span class="p">,</span> <span class="n">times</span><span class="p">,</span> <span class="n">parmas_list</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">Args:</span>
 <span class="sd">  func(function): The function body to be expanded; the first parameter is the object to be executed.</span>
@@ -589,7 +601,7 @@ the value is the corresponding <code class="docutils literal notranslate"><span 
 <p>### 2.3.1 values The generator that returns the execution result of the
 query can be executed by <code class="docutils literal notranslate"><span class="pre">g.run()</span></code>, which is suitable for recursive
 training settings.</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">values</span><span class="p">(</span><span class="n">func</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">values</span><span class="p">(</span><span class="n">func</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">Args:</span>
 <span class="sd">  func(function): Post-processing function that processes the result</span>
@@ -625,7 +637,7 @@ func is a dict or list, depending on whether there exists <code class="docutils 
        <span class="o">.</span><span class="n">values</span><span class="p">()</span>
 
 <span class="n">res</span> <span class="o">=</span> <span class="n">g</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">gen</span><span class="p">)</span>  <span class="c1"># res = [Nodes, Nodes, Nodes]</span>
-<span class="k">print</span><span class="p">(</span><span class="n">res</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">ids</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">res</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">ids</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>### 2.3.2 emit <code class="docutils literal notranslate"><span class="pre">Emit()</span></code> is equivalent to the combination of
@@ -634,7 +646,7 @@ executed once and its result is returned. The result is a dict or a list
 depending on whether there exists <code class="docutils literal notranslate"><span class="pre">alias()</span></code>. Under normal
 circumstances, <code class="docutils literal notranslate"><span class="pre">emit()</span></code> is used in the debugging phase to verify the
 correctness of the code and data.</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">emit</span><span class="p">(</span><span class="n">func</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">emit</span><span class="p">(</span><span class="n">func</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">Args:</span>
 <span class="sd">  func(function): Post-processing function that returns the result</span>
@@ -649,7 +661,7 @@ correctness of the code and data.</p>
        <span class="o">.</span><span class="n">emit</span><span class="p">()</span>
 
 <span class="c1"># res = [Nodes, Nodes, Nodes]</span>
-<span class="k">print</span><span class="p">(</span><span class="n">res</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">ids</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">res</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">ids</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>Worth noticing that when the query only contains Soure (<code class="docutils literal notranslate"><span class="pre">g.V()</span></code> /
@@ -683,27 +695,32 @@ directly connected to TensorFlow’s
 <span class="n">value</span> <span class="o">=</span> <span class="n">ds</span><span class="o">.</span><span class="n">make_one_shot_iterator</span><span class="p">()</span><span class="o">.</span><span class="n">get_next</span><span class="p">()</span>
 </pre></div>
 </div>
-</section>
+</div>
 
 
            </div>
            
           </div>
           <footer>
-  
 
   <hr/>
 
   <div role="contentinfo">
     <p>
-        &copy; Copyright 2020-2023, Damo Academy, Alibaba Inc.
+        &#169; Copyright 2020-2023, Damo Academy, Alibaba Inc..
 
     </p>
   </div>
-  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
 
 </footer>
-
         </div>
       </div>
 
@@ -712,28 +729,16 @@ directly connected to TensorFlow’s
   </div>
   
 
-
-  
-
-    
-    
-      <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
-        <script src="../../_static/jquery.js"></script>
-        <script src="../../_static/underscore.js"></script>
-        <script src="../../_static/doctools.js"></script>
-        <script src="../../_static/language_data.js"></script>
-        <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
-    
-
-  
-
-  <script type="text/javascript" src="../../_static/js/theme.js"></script>
-
   <script type="text/javascript">
       jQuery(function () {
           SphinxRtdTheme.Navigation.enable(true);
       });
   </script>
+
+  
+  
+    
+  
   
 
   <div class="rst-versions" data-toggle="rst-versions" role="note" aria-label="versions">
@@ -761,6 +766,16 @@ directly connected to TensorFlow’s
             
               
                 <dd><a href="../../../index.html">stable</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../v0.7.0/index.html">v0.7.0</a></dd>
               
             
 

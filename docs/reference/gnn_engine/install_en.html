@@ -1,33 +1,45 @@
 
 
 <!DOCTYPE html>
-<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
-<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<html class="writer-html5" lang="en" >
 <head>
-  <meta charset="utf-8">
-  <meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
-
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="utf-8" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   
   <title>Install from pip &mdash; GraphScope  documentation</title>
   
 
   
-  
-  
-  
-
-  
-
-  
-  
-    
-
-  
-
   <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
   <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
   <link rel="stylesheet" href="../../_static/css/custom.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+        <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
+        <script src="../../_static/jquery.js"></script>
+        <script src="../../_static/underscore.js"></script>
+        <script src="../../_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="../../_static/js/theme.js"></script>
+
+    
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
 
@@ -44,21 +56,16 @@
 </script>
 
 
-
-  
-  <script src="../../_static/js/modernizr.min.js"></script>
-
 </head>
 
 <body class="wy-body-for-nav">
 
    
   <div class="wy-grid-for-nav">
-
     
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
-        <div class="wy-side-nav-search">
+        <div class="wy-side-nav-search" >
           
 
           
@@ -89,8 +96,9 @@
           
         </div>
 
-        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
-          
+        
+  <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+    
       
       
         
@@ -98,7 +106,7 @@
         
       
       
-        <p><span class="caption-text">Contents</span></p>
+        <p class="caption"><span class="caption-text">Contents</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../../installation.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../getting_started.html">Getting Started</a></li>
@@ -109,10 +117,11 @@
 <li class="toctree-l1"><a class="reference internal" href="../../analytics_engine.html">GraphScope Analytical Engine</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../interactive_engine.html">GraphScope Interactive Engine</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../learning_engine.html">GraphScope Learning Engine</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../persistent_graph_store.html">Persistent Graph Store</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../frequently_asked_questions.html">Frequently Asked Questions</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../developer_guide.html">Developer Guide</a></li>
 </ul>
-<p><span class="caption-text">Reference</span></p>
+<p class="caption"><span class="caption-text">Reference</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../python_index.html">Python API Reference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../analytical_engine_index.html">Analytical Engine API Reference</a></li>
@@ -120,7 +129,8 @@
 
       
     
-        </div>
+  </div>
+
       </div>
     </nav>
 
@@ -155,18 +165,20 @@
 
 
 
+
+
 <div role="navigation" aria-label="breadcrumbs navigation">
 
   <ul class="wy-breadcrumbs">
     
-      <li><a href="../../index.html">Docs</a> &raquo;</li>
+      <li><a href="../../index.html" class="icon icon-home"></a> &raquo;</li>
         
       <li>Install from pip</li>
     
     
       <li class="wy-breadcrumbs-aside">
         
-            
+          
             <a href="../../_sources/reference/gnn_engine/install_en.rst.txt" rel="nofollow"> View page source</a>
           
         
@@ -180,7 +192,7 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <section id="install-from-pip">
+  <div class="section" id="install-from-pip">
 <h1>Install from pip<a class="headerlink" href="#install-from-pip" title="Permalink to this headline">¶</a></h1>
 <p>We build the wheel package with<code class="docutils literal notranslate"><span class="pre">g++</span> <span class="pre">5.4.0</span></code> and <code class="docutils literal notranslate"><span class="pre">python</span> <span class="pre">2.7</span></code> on
 <code class="docutils literal notranslate"><span class="pre">Ubuntu</span> <span class="pre">16.04</span></code>. If you have the same environment, you can download and
@@ -190,40 +202,40 @@ based on <strong>TensorFlow 1.12</strong>. To run the example models, please ins
 <strong>TensorFlow 1.12</strong>. Users who only rely on system interfaces for model
 development can modify the source code slightly and remove the relevant
 part of <code class="docutils literal notranslate"><span class="pre">import</span> <span class="pre">*tf*</span></code> in the <code class="docutils literal notranslate"><span class="pre">__init__.py</span></code> file.</p>
-<section id="get-wheel-package">
+<div class="section" id="get-wheel-package">
 <h2>Get wheel package<a class="headerlink" href="#get-wheel-package" title="Permalink to this headline">¶</a></h2>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>wget http://graph-learn-whl.oss-cn-zhangjiakou.aliyuncs.com/graphlearn-0.1-cp27-cp27mu-linux_x86_64.whl
 </pre></div>
 </div>
-</section>
-<section id="install-using-pip">
+</div>
+<div class="section" id="install-using-pip">
 <h2>Install using pip<a class="headerlink" href="#install-using-pip" title="Permalink to this headline">¶</a></h2>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>sudo pip install graphlearn-0.1-cp27-cp27mu-linux_x86_64.whl
 </pre></div>
 </div>
-</section>
-<section id="install-tensorflow">
+</div>
+<div class="section" id="install-tensorflow">
 <h2>Install TensorFlow<a class="headerlink" href="#install-tensorflow" title="Permalink to this headline">¶</a></h2>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>sudo pip install <span class="nv">tensorflow</span><span class="o">==</span><span class="m">1</span>.12.0
 </pre></div>
 </div>
-</section>
-</section>
-<section id="build-from-source">
+</div>
+</div>
+<div class="section" id="build-from-source">
 <h1>Build from source<a class="headerlink" href="#build-from-source" title="Permalink to this headline">¶</a></h1>
-<section id="install-git">
+<div class="section" id="install-git">
 <h2>Install git<a class="headerlink" href="#install-git" title="Permalink to this headline">¶</a></h2>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>sudo apt-get install git-all
 </pre></div>
 </div>
-</section>
-<section id="install-dependent-libraries">
+</div>
+<div class="section" id="install-dependent-libraries">
 <h2>Install dependent libraries<a class="headerlink" href="#install-dependent-libraries" title="Permalink to this headline">¶</a></h2>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>sudo apt-get install autoconf automake libtool cmake python-numpy
 </pre></div>
 </div>
-</section>
-<section id="compile">
+</div>
+<div class="section" id="compile">
 <h2>Compile<a class="headerlink" href="#compile" title="Permalink to this headline">¶</a></h2>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>git clone https://github.com/alibaba/graph-learn.git
 <span class="nb">cd</span> graph-learn
@@ -232,57 +244,62 @@ make <span class="nb">test</span>
 make python
 </pre></div>
 </div>
-</section>
-<section id="install">
+</div>
+<div class="section" id="install">
 <h2>Install<a class="headerlink" href="#install" title="Permalink to this headline">¶</a></h2>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>sudo pip install dist/your_wheel_name.whl
 </pre></div>
 </div>
-</section>
-<section id="run-test">
+</div>
+<div class="section" id="run-test">
 <h2>Run test<a class="headerlink" href="#run-test" title="Permalink to this headline">¶</a></h2>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nb">source</span> env.sh
 ./test_cpp_ut.sh
 ./test_python_ut.sh
 </pre></div>
 </div>
-</section>
-</section>
-<section id="docker-image">
+</div>
+</div>
+<div class="section" id="docker-image">
 <h1>Docker image<a class="headerlink" href="#docker-image" title="Permalink to this headline">¶</a></h1>
 <p>You can download our docker image to run <strong>GL</strong> projects.</p>
 <p>CPU version:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">docker</span> <span class="n">pull</span> <span class="n">registry</span><span class="o">.</span><span class="n">cn</span><span class="o">-</span><span class="n">zhangjiakou</span><span class="o">.</span><span class="n">aliyuncs</span><span class="o">.</span><span class="n">com</span><span class="o">/</span><span class="n">pai</span><span class="o">-</span><span class="n">image</span><span class="o">/</span><span class="n">graph</span><span class="o">-</span><span class="n">learn</span><span class="p">:</span><span class="n">v0</span><span class="o">.</span><span class="mi">1</span><span class="o">-</span><span class="n">cpu</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">docker</span> <span class="n">pull</span> <span class="n">registry</span><span class="o">.</span><span class="n">cn</span><span class="o">-</span><span class="n">zhangjiakou</span><span class="o">.</span><span class="n">aliyuncs</span><span class="o">.</span><span class="n">com</span><span class="o">/</span><span class="n">pai</span><span class="o">-</span><span class="n">image</span><span class="o">/</span><span class="n">graph</span><span class="o">-</span><span class="n">learn</span><span class="p">:</span><span class="n">v0</span><span class="mf">.1</span><span class="o">-</span><span class="n">cpu</span>
 </pre></div>
 </div>
 <p>GPU version:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">docker</span> <span class="n">pull</span> <span class="n">registry</span><span class="o">.</span><span class="n">cn</span><span class="o">-</span><span class="n">zhangjiakou</span><span class="o">.</span><span class="n">aliyuncs</span><span class="o">.</span><span class="n">com</span><span class="o">/</span><span class="n">pai</span><span class="o">-</span><span class="n">image</span><span class="o">/</span><span class="n">graph</span><span class="o">-</span><span class="n">learn</span><span class="p">:</span><span class="n">v0</span><span class="o">.</span><span class="mi">1</span><span class="o">-</span><span class="n">gpu</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">docker</span> <span class="n">pull</span> <span class="n">registry</span><span class="o">.</span><span class="n">cn</span><span class="o">-</span><span class="n">zhangjiakou</span><span class="o">.</span><span class="n">aliyuncs</span><span class="o">.</span><span class="n">com</span><span class="o">/</span><span class="n">pai</span><span class="o">-</span><span class="n">image</span><span class="o">/</span><span class="n">graph</span><span class="o">-</span><span class="n">learn</span><span class="p">:</span><span class="n">v0</span><span class="mf">.1</span><span class="o">-</span><span class="n">gpu</span>
 </pre></div>
 </div>
 <p>You can also refer to our Dockerfile to build your own image. Please
 checkout this <a class="reference external" href="../docker_image/README.md">document</a>.</p>
 <p><a class="reference external" href="../README.md">Home</a></p>
-</section>
+</div>
 
 
            </div>
            
           </div>
           <footer>
-  
 
   <hr/>
 
   <div role="contentinfo">
     <p>
-        &copy; Copyright 2020-2023, Damo Academy, Alibaba Inc.
+        &#169; Copyright 2020-2023, Damo Academy, Alibaba Inc..
 
     </p>
   </div>
-  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
 
 </footer>
-
         </div>
       </div>
 
@@ -291,28 +308,16 @@ checkout this <a class="reference external" href="../docker_image/README.md">doc
   </div>
   
 
-
-  
-
-    
-    
-      <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
-        <script src="../../_static/jquery.js"></script>
-        <script src="../../_static/underscore.js"></script>
-        <script src="../../_static/doctools.js"></script>
-        <script src="../../_static/language_data.js"></script>
-        <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
-    
-
-  
-
-  <script type="text/javascript" src="../../_static/js/theme.js"></script>
-
   <script type="text/javascript">
       jQuery(function () {
           SphinxRtdTheme.Navigation.enable(true);
       });
   </script>
+
+  
+  
+    
+  
   
 
   <div class="rst-versions" data-toggle="rst-versions" role="note" aria-label="versions">
@@ -340,6 +345,16 @@ checkout this <a class="reference external" href="../docker_image/README.md">doc
             
               
                 <dd><a href="../../index.html">stable</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../v0.7.0/index.html">v0.7.0</a></dd>
               
             
 

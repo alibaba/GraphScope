@@ -1,0 +1,6 @@
+﻿graphscope.experimental.nx.DiGraph.remove\_edges\_from
+======================================================
+
+.. currentmodule:: graphscope.experimental.nx
+
+.. automethod:: DiGraph.remove_edges_from

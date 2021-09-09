@@ -1,33 +1,45 @@
 
 
 <!DOCTYPE html>
-<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
-<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<html class="writer-html5" lang="en" >
 <head>
-  <meta charset="utf-8">
-  <meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
-
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="utf-8" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   
   <title>GraphScope Analytical Engine &mdash; GraphScope  documentation</title>
   
 
   
-  
-  
-  
-
-  
-
-  
-  
-    
-
-  
-
   <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
   <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
   <link rel="stylesheet" href="_static/css/custom.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+
+    
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="GraphScope Interactive Engine" href="interactive_engine.html" />
@@ -46,21 +58,16 @@
 </script>
 
 
-
-  
-  <script src="_static/js/modernizr.min.js"></script>
-
 </head>
 
 <body class="wy-body-for-nav">
 
    
   <div class="wy-grid-for-nav">
-
     
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
-        <div class="wy-side-nav-search">
+        <div class="wy-side-nav-search" >
           
 
           
@@ -91,8 +98,9 @@
           
         </div>
 
-        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
-          
+        
+  <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+    
       
       
         
@@ -100,7 +108,7 @@
         
       
       
-        <p><span class="caption-text">Contents</span></p>
+        <p class="caption"><span class="caption-text">Contents</span></p>
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="getting_started.html">Getting Started</a></li>
@@ -148,10 +156,11 @@
 </li>
 <li class="toctree-l1"><a class="reference internal" href="interactive_engine.html">GraphScope Interactive Engine</a></li>
 <li class="toctree-l1"><a class="reference internal" href="learning_engine.html">GraphScope Learning Engine</a></li>
+<li class="toctree-l1"><a class="reference internal" href="persistent_graph_store.html">Persistent Graph Store</a></li>
 <li class="toctree-l1"><a class="reference internal" href="frequently_asked_questions.html">Frequently Asked Questions</a></li>
 <li class="toctree-l1"><a class="reference internal" href="developer_guide.html">Developer Guide</a></li>
 </ul>
-<p><span class="caption-text">Reference</span></p>
+<p class="caption"><span class="caption-text">Reference</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="reference/python_index.html">Python API Reference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="reference/analytical_engine_index.html">Analytical Engine API Reference</a></li>
@@ -159,7 +168,8 @@
 
       
     
-        </div>
+  </div>
+
       </div>
     </nav>
 
@@ -194,18 +204,20 @@
 
 
 
+
+
 <div role="navigation" aria-label="breadcrumbs navigation">
 
   <ul class="wy-breadcrumbs">
     
-      <li><a href="index.html">Docs</a> &raquo;</li>
+      <li><a href="index.html" class="icon icon-home"></a> &raquo;</li>
         
       <li>GraphScope Analytical Engine</li>
     
     
       <li class="wy-breadcrumbs-aside">
         
-            
+          
             <a href="_sources/analytics_engine.rst.txt" rel="nofollow"> View page source</a>
           
         
@@ -219,7 +231,7 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <section id="graphscope-analytical-engine">
+  <div class="section" id="graphscope-analytical-engine">
 <h1>GraphScope Analytical Engine<a class="headerlink" href="#graphscope-analytical-engine" title="Permalink to this headline">¶</a></h1>
 <p>The analytical engine in GraphScope derives from
 <a class="reference external" href="https://dl.acm.org/doi/10.1145/3282488">GRAPE</a>,
@@ -231,7 +243,7 @@ with only minor changes and get parallelized to handle large graphs efficiently.
 In addition to the ease of programming, GRAPE is designed to be
 highly efficient and flexible, to cope the scale,
 variety and complexity from real-life graph applications.</p>
-<section id="built-in-algorithms">
+<div class="section" id="built-in-algorithms">
 <h2>Built-in Algorithms<a class="headerlink" href="#built-in-algorithms" title="Permalink to this headline">¶</a></h2>
 <p>GraphScope analytical engine provides many common used algorithms,
 including connectivity and path
@@ -275,8 +287,8 @@ property graph or not is described in its docstring.</p>
 <li><p><a class="reference internal" href="reference/app.html#graphscope.wcc" title="graphscope.wcc"><code class="xref py py-func docutils literal notranslate"><span class="pre">wcc()</span></code></a></p></li>
 </ul>
 <p>The list is continuously growing.</p>
-</section>
-<section id="result-processing">
+</div>
+<div class="section" id="result-processing">
 <h2>Result Processing<a class="headerlink" href="#result-processing" title="Permalink to this headline">¶</a></h2>
 <p>When finish a computation, the results are wrapped as <a class="reference internal" href="reference/context.html#context"><span class="std std-ref">Context</span></a>
 and preserved on the distributed machines.</p>
@@ -331,8 +343,8 @@ Here are some examples for selectors on result processing.</p>
 </pre></div>
 </div>
 <p>See more details in <a class="reference internal" href="reference/context.html#context"><span class="std std-ref">Context</span></a> and <a class="reference internal" href="reference/selector.html#selector"><span class="std std-ref">Selector</span></a>.</p>
-</section>
-<section id="writing-your-own-algorithms-in-pie">
+</div>
+<div class="section" id="writing-your-own-algorithms-in-pie">
 <h2>Writing Your Own Algorithms in PIE<a class="headerlink" href="#writing-your-own-algorithms-in-pie" title="Permalink to this headline">¶</a></h2>
 <p>Users may write their own algorithms if the built-in algorithms
 do not meet their needs. <cite>graphscope</cite> enables users to write
@@ -340,7 +352,7 @@ algorithms in the <a class="reference external" href="https://dl.acm.org/doi/10.
 programming model in a pure Python mode.</p>
 <a class="reference internal image-reference" href="_images/pie.png"><img alt="Workflow of PIE" class="align-center" src="_images/pie.png" style="width: 600px;" /></a>
 <p>To implement this, a user just need to fulfill this class.</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="nd">@graphscope.analytical.udf.pie</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="nd">@graphscope</span><span class="o">.</span><span class="n">analytical</span><span class="o">.</span><span class="n">udf</span><span class="o">.</span><span class="n">pie</span>
 <span class="k">class</span> <span class="nc">YourAlgorithm</span><span class="p">(</span><span class="n">AppAssets</span><span class="p">):</span>
     <span class="nd">@staticmethod</span>
     <span class="k">def</span> <span class="nf">Initialize</span><span class="p">(</span><span class="n">context</span><span class="p">,</span> <span class="n">frag</span><span class="p">):</span>
@@ -362,7 +374,7 @@ a sequential method for partial evaluation, and <cite>IncEval</cite> is a sequen
 for incremental evaluation over the partitioned fragment. The full API of fragment
 can be found in <a class="reference internal" href="reference/cython_sdk.html#cython-sdk-api"><span class="std std-ref">Cython SDK API</span></a>.</p>
 <p>Let’s take SSSP as example, a user defined SSSP in PIE model may be like this.</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="nd">@graphscope.analytical.udf.pie</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="nd">@graphscope</span><span class="o">.</span><span class="n">analytical</span><span class="o">.</span><span class="n">udf</span><span class="o">.</span><span class="n">pie</span>
 <span class="k">class</span> <span class="nc">SSSP</span><span class="p">:</span>
     <span class="nd">@staticmethod</span>
     <span class="k">def</span> <span class="nf">Initialize</span><span class="p">(</span><span class="n">context</span><span class="p">,</span> <span class="n">frag</span><span class="p">):</span>
@@ -379,11 +391,11 @@ can be found in <a class="reference internal" href="reference/cython_sdk.html#cy
         <span class="c1"># get the source node from the query, passed from context.</span>
         <span class="n">src</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">context</span><span class="o">.</span><span class="n">get_config</span><span class="p">(</span><span class="sa">b</span><span class="s1">&#39;src&#39;</span><span class="p">))</span>
         <span class="n">graphscope</span><span class="o">.</span><span class="n">declare</span><span class="p">(</span><span class="n">graphscope</span><span class="o">.</span><span class="n">Vertex</span><span class="p">,</span> <span class="n">source</span><span class="p">)</span>
-        <span class="n">native_source</span> <span class="o">=</span> <span class="bp">False</span>
+        <span class="n">native_source</span> <span class="o">=</span> <span class="kc">False</span>
         <span class="n">v_label_num</span> <span class="o">=</span> <span class="n">frag</span><span class="o">.</span><span class="n">vertex_label_num</span><span class="p">()</span>
         <span class="k">for</span> <span class="n">v_label_id</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">v_label_num</span><span class="p">):</span>
             <span class="k">if</span> <span class="n">frag</span><span class="o">.</span><span class="n">get_inner_node</span><span class="p">(</span><span class="n">v_label_id</span><span class="p">,</span> <span class="n">src</span><span class="p">,</span> <span class="n">source</span><span class="p">):</span>
-                <span class="n">native_source</span> <span class="o">=</span> <span class="bp">True</span>
+                <span class="n">native_source</span> <span class="o">=</span> <span class="kc">True</span>
                 <span class="k">break</span>
         <span class="k">if</span> <span class="n">native_source</span><span class="p">:</span>
             <span class="n">context</span><span class="o">.</span><span class="n">set_node_value</span><span class="p">(</span><span class="n">source</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
@@ -422,8 +434,8 @@ can be found in <a class="reference internal" href="reference/cython_sdk.html#cy
 over a fragment, rather than considering the communication and message passing
 in the distributed setting. In this case, the classic dijkstra algorithm and its
 incremental version works for large graphs partitioned on a cluster.</p>
-</section>
-<section id="writing-algorithms-in-pregel">
+</div>
+<div class="section" id="writing-algorithms-in-pregel">
 <h2>Writing Algorithms in Pregel<a class="headerlink" href="#writing-algorithms-in-pregel" title="Permalink to this headline">¶</a></h2>
 <p>In addition to the sub-graph based PIE model,
 <cite>graphscope</cite> supports vertex-centric
@@ -481,8 +493,8 @@ Take SSSP as example, the algorithm in Pregel model looks like this.</p>
         <span class="k">return</span> <span class="n">ret</span>
 </pre></div>
 </div>
-</section>
-<section id="run-your-own-algorithms">
+</div>
+<div class="section" id="run-your-own-algorithms">
 <h2>Run Your Own Algorithms<a class="headerlink" href="#run-your-own-algorithms" title="Permalink to this headline">¶</a></h2>
 <p>To run your own algorithms, you may trigger it in place where you defined it.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">graphscope</span>
@@ -520,130 +532,130 @@ Take SSSP as example, the algorithm in Pregel model looks like this.</p>
 <li><p>Wenfei Fan, Jingbo Xu, Yinghui Wu, Wenyuan Yu, Jiaxin Jiang. <a class="reference external" href="http://www.vldb.org/pvldb/vol10/p1889-fan.pdf">GRAPE: Parallelizing Sequential Graph Computations.</a>, The 43rd International Conference on Very Large Data Bases (VLDB), demo, 2017 (the Best Demo Award).</p></li>
 <li><p>Wenfei Fan, Jingbo Xu, Yinghui Wu, Wenyuan Yu, Jiaxin Jiang, Zeyu Zheng, Bohan Zhang, Yang Cao, and Chao Tian. <a class="reference external" href="https://dl.acm.org/doi/10.1145/3035918.3035942">Parallelizing Sequential Graph Computations.</a>, ACM SIG Conference on Management of Data (SIGMOD), 2017 (the Best Paper Award).</p></li>
 </ul>
-</section>
-<section id="glossory">
+</div>
+<div class="section" id="glossory">
 <h2>Glossory<a class="headerlink" href="#glossory" title="Permalink to this headline">¶</a></h2>
-<section id="loadstrategy">
+<div class="section" id="loadstrategy">
 <h3>LoadStrategy<a class="headerlink" href="#loadstrategy" title="Permalink to this headline">¶</a></h3>
 <p>There are three ways to maintain the nodes crossing different fragments in GraphScope analytical engine.</p>
-<section id="onlyout">
+<div class="section" id="onlyout">
 <h4>OnlyOut<a class="headerlink" href="#onlyout" title="Permalink to this headline">¶</a></h4>
 <p>Each fragment Fi maintains “local” nodes v and a set of “mirrors” for nodes v’ in other fragments such that there exists an edge (v, v’). For instance, in addition to local nodes {4, 5, 6, 7}, F1 in graph G also stores a “mirror” node 3 and the edge (5, 3) when using OnlyOut strategy, as shown below.</p>
 <img alt="OnlyOut" src="_images/onlyout.png" />
-</section>
-<section id="onlyin">
+</div>
+<div class="section" id="onlyin">
 <h4>OnlyIn<a class="headerlink" href="#onlyin" title="Permalink to this headline">¶</a></h4>
 <p>Under this case, each fragment Fi maintains “local” nodes v and a set of “mirrors” for nodes v’ in other fragments such that there exists an edge (v’, v). In graph G, F1 maintains “mirror” nodes {1, 9, 12} besides its local nodes.</p>
 <img alt="OnlyIn" src="_images/onlyin.png" />
-</section>
-<section id="bothinout">
+</div>
+<div class="section" id="bothinout">
 <h4>BothInOut<a class="headerlink" href="#bothinout" title="Permalink to this headline">¶</a></h4>
 <p>Each fragment Fi maintains “local” nodes v and a set of “mirrors” for nodes v’ in other fragments such that there exists an edge (v, v’) or (v’, v). Hence, in graph G, “mirror” nodes {1, 3, 9, 12} are stored in F1 when BothInOut is applied.</p>
 <img alt="BothInOut" src="_images/inandout.png" />
-</section>
-</section>
-<section id="partitionstrategy">
+</div>
+</div>
+<div class="section" id="partitionstrategy">
 <h3>PartitionStrategy<a class="headerlink" href="#partitionstrategy" title="Permalink to this headline">¶</a></h3>
-<section id="edge-cut">
+<div class="section" id="edge-cut">
 <h4>Edge Cut<a class="headerlink" href="#edge-cut" title="Permalink to this headline">¶</a></h4>
 <p>An <em>edge cut</em> partitioning splits vertices of a graph into roughly equal size clusters. The edges are stored in the same cluster as one or both of its endpoints. Edges with endpoints distributed across different clusters are <em>crossing edges</em>.</p>
 <img alt="Edge Cut" src="_images/ecut.png" />
-</section>
-<section id="vertex-cut">
+</div>
+<div class="section" id="vertex-cut">
 <h4>Vertex Cut<a class="headerlink" href="#vertex-cut" title="Permalink to this headline">¶</a></h4>
 <p>A <em>vertex-cut</em> partitioning divides edges of a graph into roughly equal size fragments. The vertices that hold the endpoints of an edge are also placed in the same fragment as the edge itself. A vertex has to be replicated when its adjacent edges are distributed across different fragments.</p>
 <img alt="Vertex Cut" src="_images/vcut.png" />
-</section>
-</section>
-<section id="vertices-on-graphscope-analytical-engine">
+</div>
+</div>
+<div class="section" id="vertices-on-graphscope-analytical-engine">
 <h3>Vertices on GraphScope analytical engine<a class="headerlink" href="#vertices-on-graphscope-analytical-engine" title="Permalink to this headline">¶</a></h3>
 <p>A node v is referred to as an</p>
-<section id="outervertex">
+<div class="section" id="outervertex">
 <h4>OuterVertex<a class="headerlink" href="#outervertex" title="Permalink to this headline">¶</a></h4>
 <p>OuterVertex of fragment Fi if it resides at another fragment Fj and there exists a node v’ in Fi such that (v, v’) or (v’, v) is an edge; e.g., nodes {1, 3, 9, 12} are OuterVertex of fragment F1 in graph G;</p>
 <img alt="OuterVertex" src="_images/outvertex.png" />
-</section>
-<section id="innervertex">
+</div>
+<div class="section" id="innervertex">
 <h4>InnerVertex<a class="headerlink" href="#innervertex" title="Permalink to this headline">¶</a></h4>
 <p>InnerVertex of fragment Fi if it is distributed to Fi; e.g. nodes {4, 5, 6, 7} are InnerVertex of fragment F1 in G;</p>
 <img alt="InnerVertex" src="_images/invertex.png" />
-</section>
-<section id="innervertexwithoutgoingedge">
+</div>
+<div class="section" id="innervertexwithoutgoingedge">
 <h4>InnerVertexWithOutgoingEdge<a class="headerlink" href="#innervertexwithoutgoingedge" title="Permalink to this headline">¶</a></h4>
 <p>InnerVertexWithOutgoingEdge of fragment Fi if it is stored in Fi and has an adjacent edge (v, v’) outcoming to a node v’ in another fragment Fj; e.g., node 5 is an InnerVertexWithOutgoingEdge of F1 in G with the outgoing edge (5, 3);</p>
 <img alt="InnerVertexWithOutgoingEdge" src="_images/invertexout.png" />
-</section>
-<section id="innervertexwithincomingedge">
+</div>
+<div class="section" id="innervertexwithincomingedge">
 <h4>InnerVertexWithIncomingEdge<a class="headerlink" href="#innervertexwithincomingedge" title="Permalink to this headline">¶</a></h4>
 <p>InnerVertexWithIncomingEdge of fragment Fi if it is maintained in Fi has an adjacent edge (v’, v) incoming from a node v’ in another fragment Fj; e.g., nodes {4, 5, 7} are InnerVertexWithIncomingEdge of F1 in G, and (1, 4), (9, 5), and (12, 7) are corresponding incoming edges.</p>
 <img alt="InnerVertexWithIncomingEdge" src="_images/invertexin.png" />
-</section>
-</section>
-<section id="messagestrategy">
+</div>
+</div>
+<div class="section" id="messagestrategy">
 <h3>MessageStrategy<a class="headerlink" href="#messagestrategy" title="Permalink to this headline">¶</a></h3>
 <p>Below are some message passing and synchronization strategies adopted by GraphScope analytical engine.</p>
-<section id="alongoutgoingedgetooutervertex">
+<div class="section" id="alongoutgoingedgetooutervertex">
 <h4>AlongOutgoingEdgeToOuterVertex<a class="headerlink" href="#alongoutgoingedgetooutervertex" title="Permalink to this headline">¶</a></h4>
 <p>Here the message is passed along crossing edges from InnerVertexWithOutgoingEdge to OuterVertex. For instance, the message is passed from node 5 to 3 in graph G.</p>
 <img alt="AlongOutgoingEdgeToOuterVertex" src="_images/intoout.png" />
-</section>
-<section id="alongincomingedgetooutervertex">
+</div>
+<div class="section" id="alongincomingedgetooutervertex">
 <h4>AlongIncomingEdgeToOuterVertex<a class="headerlink" href="#alongincomingedgetooutervertex" title="Permalink to this headline">¶</a></h4>
 <p>Under this case, the message is passed along crossing edges from InnerVertexWithIncomingEdge to OuterVertex. For example, the message is passed from node 5 to 9 in graph G.</p>
 <img alt="AlongIncomingEdgeToOuterVertex" src="_images/intoout2.png" />
-</section>
-<section id="alongedgetooutervertex">
+</div>
+<div class="section" id="alongedgetooutervertex">
 <h4>AlongEdgeToOuterVertex<a class="headerlink" href="#alongedgetooutervertex" title="Permalink to this headline">¶</a></h4>
 <p>Each message is passed along crossing edges from nodes that are both  InnerVertexWithIncomingEdge and InnerVertexWithOutgoingEdge to OuterVertex, e.g., messages are passed from node 5 to 3 and 9 and vice versa in graph G.</p>
 <img alt="AlongEdgeToOuterVertex" src="_images/intoout3.png" />
-</section>
-<section id="synconoutervertexastarget">
+</div>
+<div class="section" id="synconoutervertexastarget">
 <h4>SyncOnOuterVertexAsTarget<a class="headerlink" href="#synconoutervertexastarget" title="Permalink to this headline">¶</a></h4>
 <p>It is applied in company with the OnlyOut loading strategy. Here each fragment Fi sends the states of its “mirror” node of OuterVertex v to Fj that v resides, if there exists edge (v’, v) and v’ is “local” node of Fi, for synchronizing different states of v. For instance, the state of “mirror” node 3 is sent from F1 to F0 for synchronization at F0.</p>
 <img alt="SyncOnOuterVertexAsTarget" src="_images/sync1.png" />
-</section>
-<section id="synconoutervertexassource">
+</div>
+<div class="section" id="synconoutervertexassource">
 <h4>SyncOnOuterVertexAsSource<a class="headerlink" href="#synconoutervertexassource" title="Permalink to this headline">¶</a></h4>
 <p>It is applied together with the OnlyIn loading strategy. Similar to <strong>SyncStateOnOuterVertexAsTarget</strong>, each fragment Fi sends the states of its “mirror” nodes v to the corresponding fragments for synchronization. The difference is that for each such “mirror”, there exists outgoing edge (v, v’) to certain “local” node v’ of Fi. For example, the states of “mirror” nodes 1, 9, and 12 are sent from F1 to F0 and F2 for synchronization with other states.</p>
 <img alt="SyncOnOuterVertexAsSource" src="_images/sync2.png" />
-</section>
-<section id="synconoutervertex">
+</div>
+<div class="section" id="synconoutervertex">
 <h4>SyncOnOuterVertex<a class="headerlink" href="#synconoutervertex" title="Permalink to this headline">¶</a></h4>
 <p>This is applied together with the BothInOut loading strategy. Under this case, each fragment Fi sends the states of all its “mirror” nodes v to the corresponding fragments for synchronization, regardless of the directions of edges adjacent to v, e.g., the states of “mirror” nodes 1, 3, 9 and 12 are sent from F1 to F0 and F2 for further synchronization.</p>
 <img alt="SyncOnOuterVertex" src="_images/sync3.png" />
-</section>
-</section>
-</section>
-</section>
+</div>
+</div>
+</div>
+</div>
 
 
            </div>
            
           </div>
           <footer>
-  
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
-      
-        <a href="interactive_engine.html" class="btn btn-neutral float-right" title="GraphScope Interactive Engine" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
-      
-      
-        <a href="graph_transformation.html" class="btn btn-neutral" title="Graph Transformations" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
-      
+        <a href="interactive_engine.html" class="btn btn-neutral float-right" title="GraphScope Interactive Engine" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="graph_transformation.html" class="btn btn-neutral float-left" title="Graph Transformations" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
     </div>
-  
 
   <hr/>
 
   <div role="contentinfo">
     <p>
-        &copy; Copyright 2020-2023, Damo Academy, Alibaba Inc.
+        &#169; Copyright 2020-2023, Damo Academy, Alibaba Inc..
 
     </p>
   </div>
-  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
 
 </footer>
-
         </div>
       </div>
 
@@ -652,28 +664,16 @@ Take SSSP as example, the algorithm in Pregel model looks like this.</p>
   </div>
   
 
-
-  
-
-    
-    
-      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
-        <script src="_static/jquery.js"></script>
-        <script src="_static/underscore.js"></script>
-        <script src="_static/doctools.js"></script>
-        <script src="_static/language_data.js"></script>
-        <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
-    
-
-  
-
-  <script type="text/javascript" src="_static/js/theme.js"></script>
-
   <script type="text/javascript">
       jQuery(function () {
           SphinxRtdTheme.Navigation.enable(true);
       });
   </script>
+
+  
+  
+    
+  
   
 
   <div class="rst-versions" data-toggle="rst-versions" role="note" aria-label="versions">
@@ -701,6 +701,16 @@ Take SSSP as example, the algorithm in Pregel model looks like this.</p>
             
               
                 <dd><a href="index.html">stable</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="v0.7.0/index.html">v0.7.0</a></dd>
               
             
 

@@ -1,0 +1,6 @@
+﻿graphscope.experimental.nx.Graph.to\_directed
+=============================================
+
+.. currentmodule:: graphscope.experimental.nx
+
+.. automethod:: Graph.to_directed

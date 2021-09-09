@@ -1,0 +1,6 @@
+﻿graphscope.experimental.nx.generators.classic.full\_rary\_tree
+==============================================================
+
+.. currentmodule:: graphscope.experimental.nx.generators.classic
+
+.. autofunction:: full_rary_tree

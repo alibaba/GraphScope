@@ -1,33 +1,45 @@
 
 
 <!DOCTYPE html>
-<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
-<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<html class="writer-html5" lang="en" >
 <head>
-  <meta charset="utf-8">
-  <meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
-
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="utf-8" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   
   <title>Graph &mdash; GraphScope  documentation</title>
   
 
   
-  
-  
-  
-
-  
-
-  
-  
-    
-
-  
-
   <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
   <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
   <link rel="stylesheet" href="../_static/css/custom.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+
+    
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
     <link rel="next" title="Analytical App" href="app.html" />
@@ -46,21 +58,16 @@
 </script>
 
 
-
-  
-  <script src="../_static/js/modernizr.min.js"></script>
-
 </head>
 
 <body class="wy-body-for-nav">
 
    
   <div class="wy-grid-for-nav">
-
     
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
-        <div class="wy-side-nav-search">
+        <div class="wy-side-nav-search" >
           
 
           
@@ -91,8 +98,9 @@
           
         </div>
 
-        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
-          
+        
+  <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+    
       
       
         
@@ -100,7 +108,7 @@
         
       
       
-        <p><span class="caption-text">Contents</span></p>
+        <p class="caption"><span class="caption-text">Contents</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../getting_started.html">Getting Started</a></li>
@@ -111,10 +119,11 @@
 <li class="toctree-l1"><a class="reference internal" href="../analytics_engine.html">GraphScope Analytical Engine</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../interactive_engine.html">GraphScope Interactive Engine</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../learning_engine.html">GraphScope Learning Engine</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../persistent_graph_store.html">Persistent Graph Store</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../frequently_asked_questions.html">Frequently Asked Questions</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../developer_guide.html">Developer Guide</a></li>
 </ul>
-<p><span class="caption-text">Reference</span></p>
+<p class="caption"><span class="caption-text">Reference</span></p>
 <ul class="current">
 <li class="toctree-l1 current"><a class="reference internal" href="python_index.html">Python API Reference</a><ul class="current">
 <li class="toctree-l2"><a class="reference internal" href="session.html">Session</a></li>
@@ -139,7 +148,8 @@
 
       
     
-        </div>
+  </div>
+
       </div>
     </nav>
 
@@ -174,11 +184,13 @@
 
 
 
+
+
 <div role="navigation" aria-label="breadcrumbs navigation">
 
   <ul class="wy-breadcrumbs">
     
-      <li><a href="../index.html">Docs</a> &raquo;</li>
+      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
         
           <li><a href="python_index.html">Python API Reference</a> &raquo;</li>
         
@@ -187,7 +199,7 @@
     
       <li class="wy-breadcrumbs-aside">
         
-            
+          
             <a href="../_sources/reference/graph.rst.txt" rel="nofollow"> View page source</a>
           
         
@@ -201,39 +213,39 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <section id="graph">
+  <div class="section" id="graph">
 <span id="id1"></span><h1>Graph<a class="headerlink" href="#graph" title="Permalink to this headline">¶</a></h1>
-<section id="graph-object">
+<div class="section" id="graph-object">
 <h2>Graph object<a class="headerlink" href="#graph-object" title="Permalink to this headline">¶</a></h2>
 <dl class="py class">
-<dt id="graphscope.framework.graph.GraphDAGNode">
-<em class="property">class </em><code class="sig-prename descclassname">graphscope.framework.graph.</code><code class="sig-name descname">GraphDAGNode</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">session</span></em>, <em class="sig-param"><span class="n">incoming_data</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">oid_type</span><span class="o">=</span><span class="default_value">'int64'</span></em>, <em class="sig-param"><span class="n">directed</span><span class="o">=</span><span class="default_value">True</span></em>, <em class="sig-param"><span class="n">generate_eid</span><span class="o">=</span><span class="default_value">True</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/graphscope/framework/graph.html#GraphDAGNode"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#graphscope.framework.graph.GraphDAGNode" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="graphscope.framework.graph.GraphDAGNode">
+<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">graphscope.framework.graph.</span></span><span class="sig-name descname"><span class="pre">GraphDAGNode</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">session</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">incoming_data</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">oid_type</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'int64'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">directed</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">generate_eid</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/graphscope/framework/graph.html#GraphDAGNode"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#graphscope.framework.graph.GraphDAGNode" title="Permalink to this definition">¶</a></dt>
 <dd><p>A class represents a graph node in a DAG.</p>
 <p>In GraphScope, all operations that generate a new graph will return
 a instance of <a class="reference internal" href="#graphscope.framework.graph.GraphDAGNode" title="graphscope.framework.graph.GraphDAGNode"><code class="xref py py-class docutils literal notranslate"><span class="pre">GraphDAGNode</span></code></a>, which will be automatically
 executed by <a href="#id2"><span class="problematic" id="id3">:method:`sess.run`</span></a> in <cite>eager</cite> mode.</p>
 <p>The following example demonstrates its usage:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="c1"># lazy mode</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">graphscope</span> <span class="kn">as</span> <span class="nn">gs</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">graphscope</span> <span class="k">as</span> <span class="nn">gs</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">sess</span> <span class="o">=</span> <span class="n">gs</span><span class="o">.</span><span class="n">session</span><span class="p">(</span><span class="n">mode</span><span class="o">=</span><span class="s2">&quot;lazy&quot;</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">g</span> <span class="o">=</span> <span class="n">sess</span><span class="o">.</span><span class="n">g</span><span class="p">()</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">g1</span> <span class="o">=</span> <span class="n">g</span><span class="o">.</span><span class="n">add_vertices</span><span class="p">(</span><span class="s2">&quot;person.csv&quot;</span><span class="p">,</span><span class="s2">&quot;person&quot;</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span><span class="p">(</span><span class="n">g1</span><span class="p">)</span> <span class="c1"># &lt;graphscope.framework.graph.GraphDAGNode object&gt;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">g1</span><span class="p">)</span> <span class="c1"># &lt;graphscope.framework.graph.GraphDAGNode object&gt;</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">g2</span> <span class="o">=</span> <span class="n">sess</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">g1</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span><span class="p">(</span><span class="n">g2</span><span class="p">)</span> <span class="c1"># &lt;graphscope.framework.graph.Graph object&gt;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">g2</span><span class="p">)</span> <span class="c1"># &lt;graphscope.framework.graph.Graph object&gt;</span>
 
 <span class="gp">&gt;&gt;&gt; </span><span class="c1"># eager mode</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">graphscope</span> <span class="kn">as</span> <span class="nn">gs</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">graphscope</span> <span class="k">as</span> <span class="nn">gs</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">sess</span> <span class="o">=</span> <span class="n">gs</span><span class="o">.</span><span class="n">session</span><span class="p">(</span><span class="n">mode</span><span class="o">=</span><span class="s2">&quot;eager&quot;</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">g</span> <span class="o">=</span> <span class="n">sess</span><span class="o">.</span><span class="n">g</span><span class="p">()</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">g1</span> <span class="o">=</span> <span class="n">g</span><span class="o">.</span><span class="n">add_vertices</span><span class="p">(</span><span class="s2">&quot;person.csv&quot;</span><span class="p">,</span><span class="s2">&quot;person&quot;</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span><span class="p">(</span><span class="n">g1</span><span class="p">)</span> <span class="c1"># &lt;graphscope.framework.graph.Graph object&gt;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">g1</span><span class="p">)</span> <span class="c1"># &lt;graphscope.framework.graph.Graph object&gt;</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">g1</span><span class="o">.</span><span class="n">unload</span><span class="p">()</span>
 </pre></div>
 </div>
 <dl class="py method">
-<dt id="graphscope.framework.graph.GraphDAGNode.__init__">
-<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">session</span></em>, <em class="sig-param"><span class="n">incoming_data</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">oid_type</span><span class="o">=</span><span class="default_value">'int64'</span></em>, <em class="sig-param"><span class="n">directed</span><span class="o">=</span><span class="default_value">True</span></em>, <em class="sig-param"><span class="n">generate_eid</span><span class="o">=</span><span class="default_value">True</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/graphscope/framework/graph.html#GraphDAGNode.__init__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#graphscope.framework.graph.GraphDAGNode.__init__" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="graphscope.framework.graph.GraphDAGNode.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">session</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">incoming_data</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">oid_type</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'int64'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">directed</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">generate_eid</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/graphscope/framework/graph.html#GraphDAGNode.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#graphscope.framework.graph.GraphDAGNode.__init__" title="Permalink to this definition">¶</a></dt>
 <dd><p>Construct a <a class="reference internal" href="#graphscope.framework.graph.GraphDAGNode" title="graphscope.framework.graph.GraphDAGNode"><code class="xref py py-class docutils literal notranslate"><span class="pre">GraphDAGNode</span></code></a> object.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -259,8 +271,8 @@ which can be one of:</p>
 </dd></dl>
 
 <dl class="py method">
-<dt id="graphscope.framework.graph.GraphDAGNode.add_column">
-<code class="sig-name descname">add_column</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">results</span></em>, <em class="sig-param"><span class="n">selector</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/graphscope/framework/graph.html#GraphDAGNode.add_column"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#graphscope.framework.graph.GraphDAGNode.add_column" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="graphscope.framework.graph.GraphDAGNode.add_column">
+<span class="sig-name descname"><span class="pre">add_column</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">results</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">selector</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/graphscope/framework/graph.html#GraphDAGNode.add_column"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#graphscope.framework.graph.GraphDAGNode.add_column" title="Permalink to this definition">¶</a></dt>
 <dd><p>Add the results as a column to the graph. Modification rules are given by the selector.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -281,8 +293,8 @@ Format is similar to selectors in <a class="reference internal" href="context.ht
 </dd></dl>
 
 <dl class="py method">
-<dt id="graphscope.framework.graph.GraphDAGNode.add_edges">
-<code class="sig-name descname">add_edges</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">edges</span></em>, <em class="sig-param"><span class="n">label</span><span class="o">=</span><span class="default_value">'_'</span></em>, <em class="sig-param"><span class="n">properties</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">src_label</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">dst_label</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">src_field</span><span class="o">=</span><span class="default_value">0</span></em>, <em class="sig-param"><span class="n">dst_field</span><span class="o">=</span><span class="default_value">1</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/graphscope/framework/graph.html#GraphDAGNode.add_edges"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#graphscope.framework.graph.GraphDAGNode.add_edges" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="graphscope.framework.graph.GraphDAGNode.add_edges">
+<span class="sig-name descname"><span class="pre">add_edges</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">edges</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">label</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'_'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">properties</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">src_label</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dst_label</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">src_field</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dst_field</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/graphscope/framework/graph.html#GraphDAGNode.add_edges"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#graphscope.framework.graph.GraphDAGNode.add_edges" title="Permalink to this definition">¶</a></dt>
 <dd><p>Add edges to the graph, and return a new graph.</p>
 <ol class="arabic">
 <li><p>Add edges to a uninitialized graph.</p>
@@ -332,8 +344,8 @@ src_label and dst_label must be specified and existed in current graph.</p>
 </dd></dl>
 
 <dl class="py method">
-<dt id="graphscope.framework.graph.GraphDAGNode.add_vertices">
-<code class="sig-name descname">add_vertices</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">vertices</span></em>, <em class="sig-param"><span class="n">label</span><span class="o">=</span><span class="default_value">'_'</span></em>, <em class="sig-param"><span class="n">properties</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">vid_field</span><span class="o">=</span><span class="default_value">0</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/graphscope/framework/graph.html#GraphDAGNode.add_vertices"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#graphscope.framework.graph.GraphDAGNode.add_vertices" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="graphscope.framework.graph.GraphDAGNode.add_vertices">
+<span class="sig-name descname"><span class="pre">add_vertices</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">vertices</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">label</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'_'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">properties</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">vid_field</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/graphscope/framework/graph.html#GraphDAGNode.add_vertices"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#graphscope.framework.graph.GraphDAGNode.add_vertices" title="Permalink to this definition">¶</a></dt>
 <dd><p>Add vertices to the graph, and return a new graph.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -357,8 +369,8 @@ src_label and dst_label must be specified and existed in current graph.</p>
 </dd></dl>
 
 <dl class="py method">
-<dt id="graphscope.framework.graph.GraphDAGNode.project">
-<code class="sig-name descname">project</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">vertices</span><span class="p">:</span> <span class="n">Mapping<span class="p">[</span>str<span class="p">, </span>Optional<span class="p">[</span>List<span class="p">[</span>str<span class="p">]</span><span class="p">]</span><span class="p">]</span></span></em>, <em class="sig-param"><span class="n">edges</span><span class="p">:</span> <span class="n">Mapping<span class="p">[</span>str<span class="p">, </span>Optional<span class="p">[</span>List<span class="p">[</span>str<span class="p">]</span><span class="p">]</span><span class="p">]</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/graphscope/framework/graph.html#GraphDAGNode.project"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#graphscope.framework.graph.GraphDAGNode.project" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="graphscope.framework.graph.GraphDAGNode.project">
+<span class="sig-name descname"><span class="pre">project</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">vertices</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Mapping</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span> </span><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">edges</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Mapping</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span> </span><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/graphscope/framework/graph.html#GraphDAGNode.project"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#graphscope.framework.graph.GraphDAGNode.project" title="Permalink to this definition">¶</a></dt>
 <dd><p>Project a subgraph from the property graph, and return a new graph.
 A graph produced by project just like a normal property graph, and can be projected further.</p>
 <dl class="field-list simple">
@@ -381,8 +393,8 @@ name of properties. Specifically, it will select all properties if value is None
 </dd></dl>
 
 <dl class="py method">
-<dt id="graphscope.framework.graph.GraphDAGNode.unload">
-<code class="sig-name descname">unload</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/graphscope/framework/graph.html#GraphDAGNode.unload"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#graphscope.framework.graph.GraphDAGNode.unload" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="graphscope.framework.graph.GraphDAGNode.unload">
+<span class="sig-name descname"><span class="pre">unload</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/graphscope/framework/graph.html#GraphDAGNode.unload"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#graphscope.framework.graph.GraphDAGNode.unload" title="Permalink to this definition">¶</a></dt>
 <dd><p>Unload this graph from graphscope engine.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns</dt>
@@ -397,47 +409,47 @@ name of properties. Specifically, it will select all properties if value is None
 </dd></dl>
 
 <dl class="py class">
-<dt id="graphscope.framework.graph.Graph">
-<em class="property">class </em><code class="sig-prename descclassname">graphscope.framework.graph.</code><code class="sig-name descname">Graph</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">graph_node</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/graphscope/framework/graph.html#Graph"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#graphscope.framework.graph.Graph" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="graphscope.framework.graph.Graph">
+<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">graphscope.framework.graph.</span></span><span class="sig-name descname"><span class="pre">Graph</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">graph_node</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/graphscope/framework/graph.html#Graph"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#graphscope.framework.graph.Graph" title="Permalink to this definition">¶</a></dt>
 <dd><p>A class for representing metadata of a graph in the GraphScope.</p>
 <p>A <a class="reference internal" href="#graphscope.framework.graph.Graph" title="graphscope.framework.graph.Graph"><code class="xref py py-class docutils literal notranslate"><span class="pre">Graph</span></code></a> object holds the metadata of a graph, such as key, schema, and the graph is directed or not.</p>
 <p>It is worth noticing that the graph is stored by the backend such as Analytical Engine, Vineyard.
 In other words, the graph object holds nothing but metadata.</p>
 <p>The following example demonstrates its usage:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">graphscope</span> <span class="kn">as</span> <span class="nn">gs</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">graphscope</span> <span class="k">as</span> <span class="nn">gs</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">sess</span> <span class="o">=</span> <span class="n">gs</span><span class="o">.</span><span class="n">session</span><span class="p">()</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">graph</span> <span class="o">=</span> <span class="n">sess</span><span class="o">.</span><span class="n">g</span><span class="p">()</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">graph</span> <span class="o">=</span> <span class="n">graph</span><span class="o">.</span><span class="n">add_vertices</span><span class="p">(</span><span class="s2">&quot;person.csv&quot;</span><span class="p">,</span><span class="s2">&quot;person&quot;</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">graph</span> <span class="o">=</span> <span class="n">graph</span><span class="o">.</span><span class="n">add_vertices</span><span class="p">(</span><span class="s2">&quot;software.csv&quot;</span><span class="p">,</span> <span class="s2">&quot;software&quot;</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">graph</span> <span class="o">=</span> <span class="n">graph</span><span class="o">.</span><span class="n">add_edges</span><span class="p">(</span><span class="s2">&quot;knows.csv&quot;</span><span class="p">,</span> <span class="s2">&quot;knows&quot;</span><span class="p">,</span> <span class="n">src_label</span><span class="o">=</span><span class="s2">&quot;person&quot;</span><span class="p">,</span> <span class="n">dst_label</span><span class="o">=</span><span class="s2">&quot;person&quot;</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">graph</span> <span class="o">=</span> <span class="n">graph</span><span class="o">.</span><span class="n">add_edges</span><span class="p">(</span><span class="s2">&quot;created.csv&quot;</span><span class="p">,</span> <span class="s2">&quot;created&quot;</span><span class="p">,</span> <span class="n">src_label</span><span class="o">=</span><span class="s2">&quot;person&quot;</span><span class="p">,</span> <span class="n">dst_label</span><span class="o">=</span><span class="s2">&quot;software&quot;</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span><span class="p">(</span><span class="n">graph</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span><span class="p">(</span><span class="n">graph</span><span class="o">.</span><span class="n">schema</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">graph</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">graph</span><span class="o">.</span><span class="n">schema</span><span class="p">)</span>
 </pre></div>
 </div>
 <dl class="py method">
-<dt id="graphscope.framework.graph.Graph.__init__">
-<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">graph_node</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/graphscope/framework/graph.html#Graph.__init__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#graphscope.framework.graph.Graph.__init__" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="graphscope.framework.graph.Graph.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">graph_node</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/graphscope/framework/graph.html#Graph.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#graphscope.framework.graph.Graph.__init__" title="Permalink to this definition">¶</a></dt>
 <dd><p>Construct a <a class="reference internal" href="#graphscope.framework.graph.Graph" title="graphscope.framework.graph.Graph"><code class="xref py py-class docutils literal notranslate"><span class="pre">Graph</span></code></a> object.</p>
 </dd></dl>
 
 <dl class="py method">
-<dt id="graphscope.framework.graph.Graph.detach">
-<code class="sig-name descname">detach</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/graphscope/framework/graph.html#Graph.detach"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#graphscope.framework.graph.Graph.detach" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="graphscope.framework.graph.Graph.detach">
+<span class="sig-name descname"><span class="pre">detach</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/graphscope/framework/graph.html#Graph.detach"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#graphscope.framework.graph.Graph.detach" title="Permalink to this definition">¶</a></dt>
 <dd><p>Detaching a graph makes it being left in vineyard even when the varaible for
 this <a class="reference internal" href="#graphscope.framework.graph.Graph" title="graphscope.framework.graph.Graph"><code class="xref py py-class docutils literal notranslate"><span class="pre">Graph</span></code></a> object leaves the lexical scope.</p>
 <p>The graph can be accessed using the graph’s <code class="code docutils literal notranslate"><span class="pre">ObjectID</span></code> or its name later.</p>
 </dd></dl>
 
-<dl class="py method">
-<dt id="graphscope.framework.graph.Graph.key">
-<em class="property">property </em><code class="sig-name descname">key</code><a class="headerlink" href="#graphscope.framework.graph.Graph.key" title="Permalink to this definition">¶</a></dt>
+<dl class="py property">
+<dt class="sig sig-object py" id="graphscope.framework.graph.Graph.key">
+<em class="property"><span class="pre">property</span> </em><span class="sig-name descname"><span class="pre">key</span></span><a class="headerlink" href="#graphscope.framework.graph.Graph.key" title="Permalink to this definition">¶</a></dt>
 <dd><p>The key of the corresponding graph in engine.</p>
 </dd></dl>
 
 <dl class="py method">
-<dt id="graphscope.framework.graph.Graph.load_from">
-<em class="property">classmethod </em><code class="sig-name descname">load_from</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">path</span></em>, <em class="sig-param"><span class="n">sess</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/graphscope/framework/graph.html#Graph.load_from"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#graphscope.framework.graph.Graph.load_from" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="graphscope.framework.graph.Graph.load_from">
+<em class="property"><span class="pre">classmethod</span> </em><span class="sig-name descname"><span class="pre">load_from</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sess</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/graphscope/framework/graph.html#Graph.load_from"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#graphscope.framework.graph.Graph.load_from" title="Permalink to this definition">¶</a></dt>
 <dd><p>Construct a <cite>Graph</cite> by deserialize from <cite>path</cite>.
 It will read all serialization files, which is dumped by
 <cite>Graph.serialize</cite>.
@@ -464,8 +476,8 @@ that the graph will be construct in</p></li>
 </dd></dl>
 
 <dl class="py method">
-<dt id="graphscope.framework.graph.Graph.save_to">
-<code class="sig-name descname">save_to</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">path</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/graphscope/framework/graph.html#Graph.save_to"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#graphscope.framework.graph.Graph.save_to" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="graphscope.framework.graph.Graph.save_to">
+<span class="sig-name descname"><span class="pre">save_to</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/graphscope/framework/graph.html#Graph.save_to"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#graphscope.framework.graph.Graph.save_to" title="Permalink to this definition">¶</a></dt>
 <dd><p>Serialize graph to a location.
 The meta and data of graph is dumped to specified location,
 and can be restored by <cite>Graph.deserialize</cite> in other sessions.</p>
@@ -475,9 +487,9 @@ a <cite>path_{worker_id}</cite> file to storage.
 :type path: str</p>
 </dd></dl>
 
-<dl class="py method">
-<dt id="graphscope.framework.graph.Graph.schema">
-<em class="property">property </em><code class="sig-name descname">schema</code><a class="headerlink" href="#graphscope.framework.graph.Graph.schema" title="Permalink to this definition">¶</a></dt>
+<dl class="py property">
+<dt class="sig sig-object py" id="graphscope.framework.graph.Graph.schema">
+<em class="property"><span class="pre">property</span> </em><span class="sig-name descname"><span class="pre">schema</span></span><a class="headerlink" href="#graphscope.framework.graph.Graph.schema" title="Permalink to this definition">¶</a></dt>
 <dd><p>Schema of the graph.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns</dt>
@@ -489,9 +501,9 @@ a <cite>path_{worker_id}</cite> file to storage.
 </dl>
 </dd></dl>
 
-<dl class="py method">
-<dt id="graphscope.framework.graph.Graph.schema_path">
-<em class="property">property </em><code class="sig-name descname">schema_path</code><a class="headerlink" href="#graphscope.framework.graph.Graph.schema_path" title="Permalink to this definition">¶</a></dt>
+<dl class="py property">
+<dt class="sig sig-object py" id="graphscope.framework.graph.Graph.schema_path">
+<em class="property"><span class="pre">property</span> </em><span class="sig-name descname"><span class="pre">schema_path</span></span><a class="headerlink" href="#graphscope.framework.graph.Graph.schema_path" title="Permalink to this definition">¶</a></dt>
 <dd><p>Path that Coordinator will write interactive schema path to.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns</dt>
@@ -503,9 +515,9 @@ a <cite>path_{worker_id}</cite> file to storage.
 </dl>
 </dd></dl>
 
-<dl class="py method">
-<dt id="graphscope.framework.graph.Graph.session_id">
-<em class="property">property </em><code class="sig-name descname">session_id</code><a class="headerlink" href="#graphscope.framework.graph.Graph.session_id" title="Permalink to this definition">¶</a></dt>
+<dl class="py property">
+<dt class="sig sig-object py" id="graphscope.framework.graph.Graph.session_id">
+<em class="property"><span class="pre">property</span> </em><span class="sig-name descname"><span class="pre">session_id</span></span><a class="headerlink" href="#graphscope.framework.graph.Graph.session_id" title="Permalink to this definition">¶</a></dt>
 <dd><p>Get the currrent session_id.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns</dt>
@@ -518,8 +530,8 @@ a <cite>path_{worker_id}</cite> file to storage.
 </dd></dl>
 
 <dl class="py method">
-<dt id="graphscope.framework.graph.Graph.to_dataframe">
-<code class="sig-name descname">to_dataframe</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">selector</span></em>, <em class="sig-param"><span class="n">vertex_range</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/graphscope/framework/graph.html#Graph.to_dataframe"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#graphscope.framework.graph.Graph.to_dataframe" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="graphscope.framework.graph.Graph.to_dataframe">
+<span class="sig-name descname"><span class="pre">to_dataframe</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">selector</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">vertex_range</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/graphscope/framework/graph.html#Graph.to_dataframe"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#graphscope.framework.graph.Graph.to_dataframe" title="Permalink to this definition">¶</a></dt>
 <dd><p>Select some elements of the graph and output as a pandas.DataFrame</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -535,8 +547,8 @@ a <cite>path_{worker_id}</cite> file to storage.
 </dd></dl>
 
 <dl class="py method">
-<dt id="graphscope.framework.graph.Graph.to_numpy">
-<code class="sig-name descname">to_numpy</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">selector</span></em>, <em class="sig-param"><span class="n">vertex_range</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/graphscope/framework/graph.html#Graph.to_numpy"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#graphscope.framework.graph.Graph.to_numpy" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="graphscope.framework.graph.Graph.to_numpy">
+<span class="sig-name descname"><span class="pre">to_numpy</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">selector</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">vertex_range</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/graphscope/framework/graph.html#Graph.to_numpy"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#graphscope.framework.graph.Graph.to_numpy" title="Permalink to this definition">¶</a></dt>
 <dd><p>Select some elements of the graph and output to numpy.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -552,14 +564,14 @@ a <cite>path_{worker_id}</cite> file to storage.
 </dd></dl>
 
 <dl class="py method">
-<dt id="graphscope.framework.graph.Graph.unload">
-<code class="sig-name descname">unload</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/graphscope/framework/graph.html#Graph.unload"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#graphscope.framework.graph.Graph.unload" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="graphscope.framework.graph.Graph.unload">
+<span class="sig-name descname"><span class="pre">unload</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/graphscope/framework/graph.html#Graph.unload"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#graphscope.framework.graph.Graph.unload" title="Permalink to this definition">¶</a></dt>
 <dd><p>Unload this graph from graphscope engine.</p>
 </dd></dl>
 
-<dl class="py method">
-<dt id="graphscope.framework.graph.Graph.vineyard_id">
-<em class="property">property </em><code class="sig-name descname">vineyard_id</code><a class="headerlink" href="#graphscope.framework.graph.Graph.vineyard_id" title="Permalink to this definition">¶</a></dt>
+<dl class="py property">
+<dt class="sig sig-object py" id="graphscope.framework.graph.Graph.vineyard_id">
+<em class="property"><span class="pre">property</span> </em><span class="sig-name descname"><span class="pre">vineyard_id</span></span><a class="headerlink" href="#graphscope.framework.graph.Graph.vineyard_id" title="Permalink to this definition">¶</a></dt>
 <dd><p>Get the vineyard object_id of this graph.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns</dt>
@@ -573,17 +585,17 @@ a <cite>path_{worker_id}</cite> file to storage.
 
 </dd></dl>
 
-</section>
-<section id="loader-object">
+</div>
+<div class="section" id="loader-object">
 <h2>Loader object<a class="headerlink" href="#loader-object" title="Permalink to this headline">¶</a></h2>
 <dl class="py class">
-<dt id="graphscope.framework.loader.Loader">
-<em class="property">class </em><code class="sig-prename descclassname">graphscope.framework.loader.</code><code class="sig-name descname">Loader</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">source</span></em>, <em class="sig-param"><span class="n">delimiter</span><span class="o">=</span><span class="default_value">','</span></em>, <em class="sig-param"><span class="n">header_row</span><span class="o">=</span><span class="default_value">True</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/graphscope/framework/loader.html#Loader"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#graphscope.framework.loader.Loader" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="graphscope.framework.loader.Loader">
+<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">graphscope.framework.loader.</span></span><span class="sig-name descname"><span class="pre">Loader</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">source</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">delimiter</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">','</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">header_row</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/graphscope/framework/loader.html#Loader"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#graphscope.framework.loader.Loader" title="Permalink to this definition">¶</a></dt>
 <dd><p>Generic data source wrapper.
 Loader can take various data sources, and assemble necessary information into a AttrValue.</p>
 <dl class="py method">
-<dt id="graphscope.framework.loader.Loader.__init__">
-<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">source</span></em>, <em class="sig-param"><span class="n">delimiter</span><span class="o">=</span><span class="default_value">','</span></em>, <em class="sig-param"><span class="n">header_row</span><span class="o">=</span><span class="default_value">True</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/graphscope/framework/loader.html#Loader.__init__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#graphscope.framework.loader.Loader.__init__" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="graphscope.framework.loader.Loader.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">source</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">delimiter</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">','</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">header_row</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/graphscope/framework/loader.html#Loader.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#graphscope.framework.loader.Loader.__init__" title="Permalink to this definition">¶</a></dt>
 <dd><p>Initialize a loader with configurable options.
 Note: Loader cannot be reused since it may change inner state when constructing
 information for loading a graph.</p>
@@ -622,12 +634,12 @@ See more additional info in <cite>Loading Graph</cite> section of Docs, and impl
 
 </dd></dl>
 
-</section>
-<section id="graph-functions">
+</div>
+<div class="section" id="graph-functions">
 <h2>Graph Functions<a class="headerlink" href="#graph-functions" title="Permalink to this headline">¶</a></h2>
 <dl class="py function">
-<dt id="graphscope.framework.graph_builder.load_from">
-<code class="sig-prename descclassname">graphscope.framework.graph_builder.</code><code class="sig-name descname">load_from</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">edges</span><span class="p">:</span> <span class="n">Union<span class="p">[</span>Mapping<span class="p">[</span>str<span class="p">, </span>Union<span class="p">[</span><a class="reference internal" href="#graphscope.framework.loader.Loader" title="graphscope.framework.loader.Loader">graphscope.framework.loader.Loader</a><span class="p">, </span>str<span class="p">, </span>Sequence<span class="p">[</span>numpy.ndarray<span class="p">]</span><span class="p">, </span>pandas.core.frame.DataFrame<span class="p">, </span>vineyard.Object<span class="p">, </span>vineyard.ObjectID<span class="p">, </span>vineyard.ObjectName<span class="p">, </span>Sequence<span class="p">, </span>Mapping<span class="p">]</span><span class="p">]</span><span class="p">, </span><a class="reference internal" href="#graphscope.framework.loader.Loader" title="graphscope.framework.loader.Loader">graphscope.framework.loader.Loader</a><span class="p">, </span>str<span class="p">, </span>Sequence<span class="p">[</span>numpy.ndarray<span class="p">]</span><span class="p">, </span>pandas.core.frame.DataFrame<span class="p">, </span>vineyard.Object<span class="p">, </span>vineyard.ObjectID<span class="p">, </span>vineyard.ObjectName<span class="p">, </span>Sequence<span class="p">]</span></span></em>, <em class="sig-param"><span class="n">vertices</span><span class="p">:</span> <span class="n">Optional<span class="p">[</span>Union<span class="p">[</span>Mapping<span class="p">[</span>str<span class="p">, </span>Union<span class="p">[</span><a class="reference internal" href="#graphscope.framework.loader.Loader" title="graphscope.framework.loader.Loader">graphscope.framework.loader.Loader</a><span class="p">, </span>str<span class="p">, </span>Sequence<span class="p">[</span>numpy.ndarray<span class="p">]</span><span class="p">, </span>pandas.core.frame.DataFrame<span class="p">, </span>vineyard.Object<span class="p">, </span>vineyard.ObjectID<span class="p">, </span>vineyard.ObjectName<span class="p">, </span>Sequence<span class="p">, </span>Mapping<span class="p">]</span><span class="p">]</span><span class="p">, </span><a class="reference internal" href="#graphscope.framework.loader.Loader" title="graphscope.framework.loader.Loader">graphscope.framework.loader.Loader</a><span class="p">, </span>str<span class="p">, </span>Sequence<span class="p">[</span>numpy.ndarray<span class="p">]</span><span class="p">, </span>pandas.core.frame.DataFrame<span class="p">, </span>vineyard.Object<span class="p">, </span>vineyard.ObjectID<span class="p">, </span>vineyard.ObjectName<span class="p">, </span>Sequence<span class="p">]</span><span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">directed</span><span class="o">=</span><span class="default_value">True</span></em>, <em class="sig-param"><span class="n">oid_type</span><span class="o">=</span><span class="default_value">'int64_t'</span></em>, <em class="sig-param"><span class="n">generate_eid</span><span class="o">=</span><span class="default_value">True</span></em><span class="sig-paren">)</span> &#x2192; <a class="reference internal" href="#graphscope.framework.graph.Graph" title="graphscope.framework.graph.Graph">graphscope.framework.graph.Graph</a><a class="reference internal" href="../_modules/graphscope/framework/graph_builder.html#load_from"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#graphscope.framework.graph_builder.load_from" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="graphscope.framework.graph_builder.load_from">
+<span class="sig-prename descclassname"><span class="pre">graphscope.framework.graph_builder.</span></span><span class="sig-name descname"><span class="pre">load_from</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">edges</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">Mapping</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span> </span><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">Sequence</span><span class="p"><span class="pre">,</span> </span><a class="reference internal" href="#graphscope.framework.loader.Loader" title="graphscope.framework.loader.Loader"><span class="pre">graphscope.framework.loader.Loader</span></a><span class="p"><span class="pre">,</span> </span><span class="pre">str</span><span class="p"><span class="pre">,</span> </span><span class="pre">Sequence</span><span class="p"><span class="pre">[</span></span><span class="pre">numpy.ndarray</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span> </span><span class="pre">pandas.core.frame.DataFrame</span><span class="p"><span class="pre">,</span> </span><span class="pre">vineyard.Object</span><span class="p"><span class="pre">,</span> </span><span class="pre">vineyard.ObjectID</span><span class="p"><span class="pre">,</span> </span><span class="pre">vineyard.ObjectName</span><span class="p"><span class="pre">,</span> </span><span class="pre">Mapping</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span> </span><a class="reference internal" href="#graphscope.framework.loader.Loader" title="graphscope.framework.loader.Loader"><span class="pre">graphscope.framework.loader.Loader</span></a><span class="p"><span class="pre">,</span> </span><span class="pre">str</span><span class="p"><span class="pre">,</span> </span><span class="pre">Sequence</span><span class="p"><span class="pre">[</span></span><span class="pre">numpy.ndarray</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span> </span><span class="pre">pandas.core.frame.DataFrame</span><span class="p"><span class="pre">,</span> </span><span class="pre">vineyard.Object</span><span class="p"><span class="pre">,</span> </span><span class="pre">vineyard.ObjectID</span><span class="p"><span class="pre">,</span> </span><span class="pre">vineyard.ObjectName</span><span class="p"><span class="pre">,</span> </span><span class="pre">Sequence</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">vertices</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">Mapping</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span> </span><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">Sequence</span><span class="p"><span class="pre">,</span> </span><a class="reference internal" href="#graphscope.framework.loader.Loader" title="graphscope.framework.loader.Loader"><span class="pre">graphscope.framework.loader.Loader</span></a><span class="p"><span class="pre">,</span> </span><span class="pre">str</span><span class="p"><span class="pre">,</span> </span><span class="pre">Sequence</span><span class="p"><span class="pre">[</span></span><span class="pre">numpy.ndarray</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span> </span><span class="pre">pandas.core.frame.DataFrame</span><span class="p"><span class="pre">,</span> </span><span class="pre">vineyard.Object</span><span class="p"><span class="pre">,</span> </span><span class="pre">vineyard.ObjectID</span><span class="p"><span class="pre">,</span> </span><span class="pre">vineyard.ObjectName</span><span class="p"><span class="pre">,</span> </span><span class="pre">Mapping</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span> </span><a class="reference internal" href="#graphscope.framework.loader.Loader" title="graphscope.framework.loader.Loader"><span class="pre">graphscope.framework.loader.Loader</span></a><span class="p"><span class="pre">,</span> </span><span class="pre">str</span><span class="p"><span class="pre">,</span> </span><span class="pre">Sequence</span><span class="p"><span class="pre">[</span></span><span class="pre">numpy.ndarray</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span> </span><span class="pre">pandas.core.frame.DataFrame</span><span class="p"><span class="pre">,</span> </span><span class="pre">vineyard.Object</span><span class="p"><span class="pre">,</span> </span><span class="pre">vineyard.ObjectID</span><span class="p"><span class="pre">,</span> </span><span class="pre">vineyard.ObjectName</span><span class="p"><span class="pre">,</span> </span><span class="pre">Sequence</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">directed</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">oid_type</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'int64_t'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">generate_eid</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span> &#x2192; <a class="reference internal" href="#graphscope.framework.graph.Graph" title="graphscope.framework.graph.Graph"><span class="pre">graphscope.framework.graph.Graph</span></a><a class="reference internal" href="../_modules/graphscope/framework/graph_builder.html#load_from"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#graphscope.framework.graph_builder.load_from" title="Permalink to this definition">¶</a></dt>
 <dd><p>Load a Arrow property graph using a list of vertex/edge specifications.</p>
 <div class="deprecated">
 <p><span class="versionmodified deprecated">Deprecated since version version: </span>0.3
@@ -732,37 +744,37 @@ If you only need to work with analytical engine, set it to False. Defaults to Fa
 </dl>
 </dd></dl>
 
-</section>
-</section>
+</div>
+</div>
 
 
            </div>
            
           </div>
           <footer>
-  
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
-      
-        <a href="app.html" class="btn btn-neutral float-right" title="Analytical App" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
-      
-      
-        <a href="generated/graphscope.get_option.html" class="btn btn-neutral" title="graphscope.get_option" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
-      
+        <a href="app.html" class="btn btn-neutral float-right" title="Analytical App" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="generated/graphscope.get_option.html" class="btn btn-neutral float-left" title="graphscope.get_option" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
     </div>
-  
 
   <hr/>
 
   <div role="contentinfo">
     <p>
-        &copy; Copyright 2020-2023, Damo Academy, Alibaba Inc.
+        &#169; Copyright 2020-2023, Damo Academy, Alibaba Inc..
 
     </p>
   </div>
-  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
 
 </footer>
-
         </div>
       </div>
 
@@ -771,28 +783,16 @@ If you only need to work with analytical engine, set it to False. Defaults to Fa
   </div>
   
 
-
-  
-
-    
-    
-      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
-        <script src="../_static/jquery.js"></script>
-        <script src="../_static/underscore.js"></script>
-        <script src="../_static/doctools.js"></script>
-        <script src="../_static/language_data.js"></script>
-        <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
-    
-
-  
-
-  <script type="text/javascript" src="../_static/js/theme.js"></script>
-
   <script type="text/javascript">
       jQuery(function () {
           SphinxRtdTheme.Navigation.enable(true);
       });
   </script>
+
+  
+  
+    
+  
   
 
   <div class="rst-versions" data-toggle="rst-versions" role="note" aria-label="versions">
@@ -820,6 +820,16 @@ If you only need to work with analytical engine, set it to False. Defaults to Fa
             
               
                 <dd><a href="../../index.html">stable</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../v0.7.0/index.html">v0.7.0</a></dd>
               
             
 

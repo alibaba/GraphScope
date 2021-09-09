@@ -1,0 +1,6 @@
+﻿graphscope.experimental.nx.classes.function.nodes
+=================================================
+
+.. currentmodule:: graphscope.experimental.nx.classes
+
+.. autofunction:: function.nodes

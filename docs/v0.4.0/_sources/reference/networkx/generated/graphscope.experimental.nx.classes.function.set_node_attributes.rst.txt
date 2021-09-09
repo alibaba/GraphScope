@@ -1,0 +1,6 @@
+﻿graphscope.experimental.nx.classes.function.set\_node\_attributes
+=================================================================
+
+.. currentmodule:: graphscope.experimental.nx.classes
+
+.. autofunction:: function.set_node_attributes

@@ -1,0 +1,6 @@
+﻿graphscope.experimental.nx.DiGraph.nbunch\_iter
+===============================================
+
+.. currentmodule:: graphscope.experimental.nx
+
+.. automethod:: DiGraph.nbunch_iter

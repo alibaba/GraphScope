@@ -1,0 +1,6 @@
+﻿graphscope.experimental.nx.generators.classic.complete\_multipartite\_graph
+===========================================================================
+
+.. currentmodule:: graphscope.experimental.nx.generators.classic
+
+.. autofunction:: complete_multipartite_graph

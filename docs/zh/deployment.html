@@ -1,33 +1,45 @@
 
 
 <!DOCTYPE html>
-<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
-<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<html class="writer-html5" lang="en" >
 <head>
-  <meta charset="utf-8">
-  <meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
-
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="utf-8" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   
   <title>部署 &mdash; GraphScope  documentation</title>
   
 
   
-  
-  
-  
-
-  
-
-  
-  
-    
-
-  
-
   <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
   <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
   <link rel="stylesheet" href="../_static/css/custom.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+
+    
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
     <link rel="next" title="入门教程" href="tutorials.html" />
@@ -46,21 +58,16 @@
 </script>
 
 
-
-  
-  <script src="../_static/js/modernizr.min.js"></script>
-
 </head>
 
 <body class="wy-body-for-nav">
 
    
   <div class="wy-grid-for-nav">
-
     
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
-        <div class="wy-side-nav-search">
+        <div class="wy-side-nav-search" >
           
 
           
@@ -91,8 +98,9 @@
           
         </div>
 
-        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
-          
+        
+  <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+    
       
       
         
@@ -100,7 +108,7 @@
         
       
       
-        <p><span class="caption-text">目录</span></p>
+        <p class="caption"><span class="caption-text">目录</span></p>
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="installation.html">安装</a></li>
 <li class="toctree-l1"><a class="reference internal" href="getting_started.html">快速上手</a></li>
@@ -119,7 +127,7 @@
 <li class="toctree-l1"><a class="reference internal" href="frequently_asked_questions.html">常见问题</a></li>
 <li class="toctree-l1"><a class="reference internal" href="developer_guide.html">开发者指南</a></li>
 </ul>
-<p><span class="caption-text">API 参考</span></p>
+<p class="caption"><span class="caption-text">API 参考</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference external" href="https://graphscope.io/docs/reference/python_index.html">Python API 参考</a></li>
 <li class="toctree-l1"><a class="reference external" href="https://graphscope.io/docs/reference/analytical_engine_index.html">图分析引擎 API 参考</a></li>
@@ -127,7 +135,8 @@
 
       
     
-        </div>
+  </div>
+
       </div>
     </nav>
 
@@ -162,11 +171,13 @@
 
 
 
+
+
 <div role="navigation" aria-label="breadcrumbs navigation">
 
   <ul class="wy-breadcrumbs">
     
-      <li><a href="../index.html">Docs</a> &raquo;</li>
+      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
         
           <li><a href="index.html">GraphScope: 一站式图计算系统</a> &raquo;</li>
         
@@ -175,7 +186,7 @@
     
       <li class="wy-breadcrumbs-aside">
         
-            
+          
             <a href="../_sources/zh/deployment.rst.txt" rel="nofollow"> View page source</a>
           
         
@@ -189,7 +200,7 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <section id="id1">
+  <div class="section" id="id1">
 <h1>部署<a class="headerlink" href="#id1" title="Permalink to this headline">¶</a></h1>
 <p>GraphScope 以 docker 镜像的方式分发引擎等组件。
 默认情况下，如果运行 GraphScope 的集群机器上不存在该镜像，则会拉取对应版本的最新镜像。
@@ -207,7 +218,7 @@
 <p>Coordinator 作为 GraphScope 后端服务的入口，通过 grpc 接收来自 Python 客户端的连接和命令，并管理着图分析引擎(GAE)、
 图查询引擎(GIE)，图学习引擎(GLE)的生命周期。</p>
 <p>您可以根据需求配置引擎镜像地址等参数，请在 <a class="reference internal" href="../reference/session.html#session"><span class="std std-ref">Session</span></a> 中参阅更多的详细信息。</p>
-<section id="helmgraphscope">
+<div class="section" id="helmgraphscope">
 <h2>使用Helm部署GraphScope<a class="headerlink" href="#helmgraphscope" title="Permalink to this headline">¶</a></h2>
 <p>获取并添加仓库信息</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$ helm repo add graphscope https://graphscope.oss-cn-beijing.aliyuncs.com/charts/
@@ -228,8 +239,8 @@ $ helm <span class="nb">test</span> <span class="o">[</span>RELEASE_NAME<span cl
 </pre></div>
 </div>
 <p>参考 <a class="reference external" href="https://github.com/alibaba/GraphScope/blob/main/charts/graphscope/README.md">该链接</a> 以通过python客户端连接到预启动的GraphScope服务。</p>
-</section>
-<section id="aws">
+</div>
+<div class="section" id="aws">
 <h2>在AWS/阿里云上部署集群<a class="headerlink" href="#aws" title="Permalink to this headline">¶</a></h2>
 <p>我们提供了一个可在AWS或阿里云上创建 Kubernetes 集群的交互式脚本。这一脚本可以帮助用户使用已有的集群或创建新的 Kubernetes 集群，然后输出集群的配置文件。
 用法如下。你也可以通过 <cite>./scripts/launch_cluster.py –help</cite> 获得更详细的帮助信息。</p>
@@ -247,8 +258,8 @@ $ helm <span class="nb">test</span> <span class="o">[</span>RELEASE_NAME<span cl
 ./scripts/launch_cluster.py --type aliyun --id your_access_key_id --secret your_access_key_secret --region your_region_id --output kube_config_path
 </pre></div>
 </div>
-</section>
-<section id="graphscope">
+</div>
+<div class="section" id="graphscope">
 <h2>本地部署GraphScope<a class="headerlink" href="#graphscope" title="Permalink to this headline">¶</a></h2>
 <p>我们提供了一个可在本地安装GraphScope相关依赖以及部署GraphScope的脚本，这一脚本可以运行在
 Ubuntu 20.04+或MacOS平台上, 主要的用法如下。你可以通过 <cite>./scripts/deploy_local.sh -h</cite>
@@ -264,40 +275,40 @@ Ubuntu 20.04+或MacOS平台上, 主要的用法如下。你可以通过 <cite>./
 <li><p>使用`deploy_local.sh`本地部署GraphScope</p></li>
 </ul>
 <div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>./scripts/deploy_local.sh build_and_deploy
-<span class="nb">export</span> <span class="nv">GRAPHSCOPE_HOME</span><span class="o">=</span>/usr/local
+<span class="nb">export</span> <span class="nv">GRAPHSCOPE_HOME</span><span class="o">=</span>/opt/graphscope
 </pre></div>
 </div>
-</section>
-</section>
+</div>
+</div>
 
 
            </div>
            
           </div>
           <footer>
-  
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
-      
-        <a href="tutorials.html" class="btn btn-neutral float-right" title="入门教程" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
-      
-      
-        <a href="getting_started.html" class="btn btn-neutral" title="快速上手" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
-      
+        <a href="tutorials.html" class="btn btn-neutral float-right" title="入门教程" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="getting_started.html" class="btn btn-neutral float-left" title="快速上手" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
     </div>
-  
 
   <hr/>
 
   <div role="contentinfo">
     <p>
-        &copy; Copyright 2020-2023, Damo Academy, Alibaba Inc.
+        &#169; Copyright 2020-2023, Damo Academy, Alibaba Inc..
 
     </p>
   </div>
-  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
 
 </footer>
-
         </div>
       </div>
 
@@ -306,28 +317,16 @@ Ubuntu 20.04+或MacOS平台上, 主要的用法如下。你可以通过 <cite>./
   </div>
   
 
-
-  
-
-    
-    
-      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
-        <script src="../_static/jquery.js"></script>
-        <script src="../_static/underscore.js"></script>
-        <script src="../_static/doctools.js"></script>
-        <script src="../_static/language_data.js"></script>
-        <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
-    
-
-  
-
-  <script type="text/javascript" src="../_static/js/theme.js"></script>
-
   <script type="text/javascript">
       jQuery(function () {
           SphinxRtdTheme.Navigation.enable(true);
       });
   </script>
+
+  
+  
+    
+  
   
 
   <div class="rst-versions" data-toggle="rst-versions" role="note" aria-label="versions">
@@ -355,6 +354,16 @@ Ubuntu 20.04+或MacOS平台上, 主要的用法如下。你可以通过 <cite>./
             
               
                 <dd><a href="index.html">stable</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../v0.7.0/zh/index.html">v0.7.0</a></dd>
               
             
 

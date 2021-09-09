@@ -1,0 +1,6 @@
+﻿graphscope.experimental.nx.generators.classic.cycle\_graph
+==========================================================
+
+.. currentmodule:: graphscope.experimental.nx.generators.classic
+
+.. autofunction:: cycle_graph
