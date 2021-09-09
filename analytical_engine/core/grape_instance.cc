@@ -235,6 +235,11 @@ bl::result<std::string> GrapeInstance::query(const rpc::GSParams& params,
                  {"context_schema", context_schema}});
 }
 
+bl::result<void> GrapeInstance::unloadContext(const rpc::GSParams& params) {
+  BOOST_LEAF_AUTO(context_key, params.Get<std::string>(rpc::CONTEXT_KEY));
+  return object_manager_.RemoveObject(graph_name);
+}
+
 bl::result<std::string> GrapeInstance::reportGraph(
     const rpc::GSParams& params) {
 #ifdef NETWORKX
@@ -330,9 +335,9 @@ bl::result<std::shared_ptr<grape::InArchive>> GrapeInstance::contextToNumpy(
     BOOST_LEAF_ASSIGN(s_selector, params.Get<std::string>(rpc::SELECTOR));
   }
 
-  BOOST_LEAF_AUTO(ctx_name, params.Get<std::string>(rpc::CTX_NAME));
+  BOOST_LEAF_AUTO(context_key, params.Get<std::string>(rpc::CONTEXT_KEY));
   BOOST_LEAF_AUTO(base_ctx_wrapper,
-                  object_manager_.GetObject<IContextWrapper>(ctx_name));
+                  object_manager_.GetObject<IContextWrapper>(context_key));
 
   auto ctx_type = base_ctx_wrapper->context_type();
 
@@ -374,9 +379,9 @@ bl::result<std::shared_ptr<grape::InArchive>> GrapeInstance::contextToNumpy(
 
 bl::result<std::string> GrapeInstance::getContextData(
     const rpc::GSParams& params) {
-  BOOST_LEAF_AUTO(ctx_name, params.Get<std::string>(rpc::CTX_NAME));
+  BOOST_LEAF_AUTO(context_key, params.Get<std::string>(rpc::CONTEXT_KEY));
   BOOST_LEAF_AUTO(base_ctx_wrapper,
-                  object_manager_.GetObject<IContextWrapper>(ctx_name));
+                  object_manager_.GetObject<IContextWrapper>(context_key));
 
   auto wrapper =
       std::dynamic_pointer_cast<IVertexDataContextWrapper>(base_ctx_wrapper);
@@ -397,9 +402,9 @@ bl::result<std::shared_ptr<grape::InArchive>> GrapeInstance::contextToDataframe(
     BOOST_LEAF_ASSIGN(s_selectors, params.Get<std::string>(rpc::SELECTOR));
   }
 
-  BOOST_LEAF_AUTO(ctx_name, params.Get<std::string>(rpc::CTX_NAME));
+  BOOST_LEAF_AUTO(context_key, params.Get<std::string>(rpc::CONTEXT_KEY));
   BOOST_LEAF_AUTO(base_ctx_wrapper,
-                  object_manager_.GetObject<IContextWrapper>(ctx_name));
+                  object_manager_.GetObject<IContextWrapper>(context_key));
 
   auto ctx_type = base_ctx_wrapper->context_type();
 
@@ -440,9 +445,9 @@ bl::result<std::shared_ptr<grape::InArchive>> GrapeInstance::contextToDataframe(
 
 bl::result<std::string> GrapeInstance::contextToVineyardTensor(
     const rpc::GSParams& params) {
-  BOOST_LEAF_AUTO(ctx_name, params.Get<std::string>(rpc::CTX_NAME));
+  BOOST_LEAF_AUTO(context_key, params.Get<std::string>(rpc::CONTEXT_KEY));
   BOOST_LEAF_AUTO(base_ctx_wrapper,
-                  object_manager_.GetObject<IContextWrapper>(ctx_name));
+                  object_manager_.GetObject<IContextWrapper>(context_key));
   auto ctx_type = base_ctx_wrapper->context_type();
   std::pair<std::string, std::string> range;
 
@@ -508,9 +513,9 @@ bl::result<std::string> GrapeInstance::contextToVineyardDataFrame(
     const rpc::GSParams& params) {
   std::pair<std::string, std::string> range;
 
-  BOOST_LEAF_AUTO(ctx_name, params.Get<std::string>(rpc::CTX_NAME));
+  BOOST_LEAF_AUTO(context_key, params.Get<std::string>(rpc::CONTEXT_KEY));
   BOOST_LEAF_AUTO(base_ctx_wrapper,
-                  object_manager_.GetObject<IContextWrapper>(ctx_name));
+                  object_manager_.GetObject<IContextWrapper>(context_key));
   if (params.HasKey(rpc::VERTEX_RANGE)) {
     BOOST_LEAF_AUTO(range_in_json, params.Get<std::string>(rpc::VERTEX_RANGE));
     range = parseRange(range_in_json);
@@ -574,7 +579,7 @@ bl::result<std::string> GrapeInstance::contextToVineyardDataFrame(
 bl::result<rpc::graph::GraphDefPb> GrapeInstance::addColumn(
     const rpc::GSParams& params) {
   BOOST_LEAF_AUTO(graph_name, params.Get<std::string>(rpc::GRAPH_NAME));
-  BOOST_LEAF_AUTO(ctx_name, params.Get<std::string>(rpc::CTX_NAME));
+  BOOST_LEAF_AUTO(context_key, params.Get<std::string>(rpc::CONTEXT_KEY));
   BOOST_LEAF_AUTO(s_selectors, params.Get<std::string>(rpc::SELECTOR));
   BOOST_LEAF_AUTO(
       frag_wrapper,
@@ -585,7 +590,7 @@ bl::result<rpc::graph::GraphDefPb> GrapeInstance::addColumn(
                     "AddColumn is only available for ArrowFragment");
   }
   BOOST_LEAF_AUTO(ctx_wrapper,
-                  object_manager_.GetObject<IContextWrapper>(ctx_name));
+                  object_manager_.GetObject<IContextWrapper>(context_key));
   std::string dst_graph_name = "graph_" + generateId();
 
   BOOST_LEAF_AUTO(new_frag_wrapper,
@@ -932,8 +937,8 @@ bl::result<std::shared_ptr<DispatchResult>> GrapeInstance::OnReceive(
     break;
   }
   case rpc::RUN_APP: {
-    BOOST_LEAF_AUTO(ctx_name, query(params, cmd.query_args));
-    r->set_data(ctx_name);
+    BOOST_LEAF_AUTO(context_key, query(params, cmd.query_args));
+    r->set_data(context_key);
     break;
   }
   case rpc::UNLOAD_APP: {
@@ -942,6 +947,10 @@ bl::result<std::shared_ptr<DispatchResult>> GrapeInstance::OnReceive(
   }
   case rpc::UNLOAD_GRAPH: {
     BOOST_LEAF_CHECK(unloadGraph(params));
+    break;
+  }
+  case rpc::UNLOAD_CONTEXT: {
+    BOOST_LEAF_CHECK(unloadContext(params));
     break;
   }
   case rpc::REPORT_GRAPH: {
