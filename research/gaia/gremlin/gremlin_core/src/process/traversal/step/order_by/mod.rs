@@ -14,10 +14,10 @@
 //! limitations under the License.
 
 use crate::generated::gremlin as pb;
+use crate::process::traversal::step::functions::CompareFunction;
 pub use crate::process::traversal::step::order_by::order::Order;
 use crate::process::traversal::traverser::Traverser;
 use crate::{str_to_dyn_error, DynResult};
-use pegasus::api::function::CompareFunction;
 
 mod order;
 

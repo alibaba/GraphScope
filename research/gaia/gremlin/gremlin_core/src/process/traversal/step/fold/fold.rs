@@ -13,77 +13,63 @@
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 
-use crate::generated::common as common_pb;
-use crate::generated::protobuf as pb_result;
+use crate::process::traversal::step::accum::{Accumulator, Count, ToList};
 use crate::process::traversal::traverser::Traverser;
-use crate::str_to_dyn_error;
-use pegasus::api::accum::{AccumFactory, Accumulator};
-use pegasus::api::function::{DynIter, EncodeFunction, FlatMapFunction, FnResult};
-use pegasus_common::downcast::AsAny;
-use pegasus_server::factory::{CompileResult, FoldFunction};
-use prost::Message;
+use pegasus::codec::{Decode, Encode, ReadExt, WriteExt};
+use std::fmt::Debug;
+use std::io::Error;
 
-pub struct FoldFunc {}
-struct FoldUnfold {}
-struct FoldSink {}
-
-type DynFoldUnfold = Box<
-    dyn FlatMapFunction<Box<dyn Accumulator<Traverser>>, Traverser, Target = DynIter<Traverser>>,
->;
-
-impl FoldFunction<Traverser> for FoldFunc {
-    // TODO(yyy)
-    fn accumulate(
-        &self,
-    ) -> CompileResult<Box<dyn AccumFactory<Traverser, Target = Box<dyn Accumulator<Traverser>>>>>
-    {
-        unimplemented!()
-    }
-
-    fn fold_unfold(&self) -> CompileResult<DynFoldUnfold> {
-        let fold_unfold = FoldUnfold {};
-        Ok(Box::new(fold_unfold) as DynFoldUnfold)
-    }
-
-    fn fold_sink(&self) -> CompileResult<Box<dyn EncodeFunction<Box<dyn Accumulator<Traverser>>>>> {
-        let count_sink = FoldSink {};
-        Ok(Box::new(count_sink) as Box<dyn EncodeFunction<Box<dyn Accumulator<Traverser>>>>)
-    }
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum TraverserAccumulator {
+    ToCount(Count<Traverser>),
+    ToList(ToList<Traverser>),
 }
 
-impl FlatMapFunction<Box<dyn Accumulator<Traverser>>, Traverser> for FoldUnfold {
-    type Target = DynIter<Traverser>;
-
-    fn exec(&self, input: Box<dyn Accumulator<Traverser>>) -> FnResult<Self::Target> {
-        if let Some(count) = input.as_any_ref().downcast_ref::<u64>() {
-            let result = vec![Ok(Traverser::Object((*count).into()))];
-            Ok(Box::new(result.into_iter()) as DynIter<Traverser>)
-        } else {
-            // TODO: for other fold-unfold cases
-            Err(str_to_dyn_error("Unimplemented fold-unfold cases"))
-        }
-    }
-}
-
-impl EncodeFunction<Box<dyn Accumulator<Traverser>>> for FoldSink {
-    fn encode(&self, data: Vec<Box<dyn Accumulator<Traverser>>>) -> Vec<u8> {
-        for datum in data {
-            if let Some(count) = datum.as_any_ref().downcast_ref::<u64>() {
-                println!("count result {:?}", count);
-                let val_item = common_pb::value::Item::I64(*count as i64);
-                let result_pb = pb_result::Result {
-                    inner: Some(pb_result::result::Inner::Value {
-                        0: common_pb::Value { item: Some(val_item) },
-                    }),
-                };
-                let mut bytes = vec![];
-                result_pb.encode_raw(&mut bytes);
-                return bytes;
-            } else {
-                // TODO: for other fold-sink cases
-                unimplemented!()
+impl Encode for TraverserAccumulator {
+    fn write_to<W: WriteExt>(&self, writer: &mut W) -> std::io::Result<()> {
+        match self {
+            TraverserAccumulator::ToCount(count) => {
+                writer.write_u8(0)?;
+                count.write_to(writer)?;
+            }
+            TraverserAccumulator::ToList(list) => {
+                writer.write_u8(1)?;
+                list.write_to(writer)?;
             }
         }
-        vec![]
+        Ok(())
+    }
+}
+
+impl Decode for TraverserAccumulator {
+    fn read_from<R: ReadExt>(reader: &mut R) -> std::io::Result<Self> {
+        let e = reader.read_u8()?;
+        match e {
+            0 => {
+                let cnt = Count::read_from(reader)?;
+                Ok(TraverserAccumulator::ToCount(cnt))
+            }
+            1 => {
+                let list = ToList::read_from(reader)?;
+                Ok(TraverserAccumulator::ToList(list))
+            }
+            _ => Err(std::io::Error::new(std::io::ErrorKind::Other, "unreachable")),
+        }
+    }
+}
+
+impl Accumulator<Traverser, Traverser> for TraverserAccumulator {
+    fn accum(&mut self, next: Traverser) -> Result<(), Error> {
+        match self {
+            TraverserAccumulator::ToCount(count) => count.accum(next),
+            TraverserAccumulator::ToList(list) => list.accum(next),
+        }
+    }
+
+    fn finalize(&mut self) -> Traverser {
+        match self {
+            TraverserAccumulator::ToCount(count) => Traverser::Object(count.finalize().into()),
+            TraverserAccumulator::ToList(list) => Traverser::with(list.finalize()),
+        }
     }
 }

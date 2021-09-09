@@ -16,11 +16,11 @@ crossbeam-queue = "0.1"
 crossbeam-utils = "0.6"
 dyn-clonable = "0.9.0"
 dyn_type = { path = "../../dyn_type" }
-pegasus = { path = "../../pegasus/pegasus" }
-pegasus_common = { path = "../../pegasus/common" }
-pegasus_config = { path = "../../pegasus/config" }
-pegasus_server = { path = "../../pegasus/server" }
-prost = "0.7"
+pegasus = { path = "../../../gaia-x/pegasus/pegasus" }
+pegasus_common = { path = "../../../gaia-x/pegasus/common" }
+pegasus_config = { path = "../../../gaia-x/pegasus/config" }
+pegasus_server = { path = "../../../gaia-x/pegasus/server" }
+prost = "0.8"
 graph_store = { path = "../../graph_store" }
 tonic = "0.4"
 tokio = { version = "1.0", features = ["macros", "sync"] }

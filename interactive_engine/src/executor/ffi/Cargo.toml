@@ -16,7 +16,7 @@ pegasus = { path = "../Pegasus", package = "pegasus" }
 gaia_pegasus = { path = "../../../../research/gaia-x/pegasus/pegasus", package = "pegasus" }
 pegasus_network = { path = "../../../../research/gaia-x/pegasus/network" }
 pegasus_server = { path = "../../../../research/gaia-x/pegasus/server" }
-gremlin_core = { path = "../../../../research/gaia-x/gremlin/gremlin_core" }
+gremlin_core = { path = "../../../../research/gaia/gremlin/gremlin_core" }
 gs_gremlin = {path = "../../../../research/gaia/gremlin/gs_gremlin" }
 itertools = "0.7.8"
 log = "0.3"

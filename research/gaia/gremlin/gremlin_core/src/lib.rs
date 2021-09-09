@@ -34,20 +34,16 @@ extern crate dyn_type;
 use crate::process::traversal::traverser::{ShadeSync, Traverser};
 pub use crate::structure::{get_graph, register_graph};
 pub use crate::structure::{Element, GraphProxy, ID};
-use pegasus::api::accum::{Count, ToList};
-use pegasus::api::function::*;
-use prost::Message;
 
 pub mod process;
 pub mod structure;
 
 pub mod compiler;
-mod result_process;
 #[macro_use]
 pub mod graph_proxy;
 
 use crate::process::traversal::path::ResultPath;
-use crate::result_process::result_to_pb;
+
 use crate::structure::filter::codec::ParseError;
 pub use generated::gremlin::GremlinStep as GremlinStepPb;
 pub use graph_proxy::{create_demo_graph, ID_MASK};
@@ -81,7 +77,7 @@ mod generated {
 
 pub type DynError = Box<dyn std::error::Error + Send>;
 pub type DynResult<T> = Result<T, Box<dyn std::error::Error + Send>>;
-pub type DynIter<T> = Box<dyn Iterator<Item = DynResult<T>> + Send>;
+pub type DynIter<T> = Box<dyn Iterator<Item = T> + Send>;
 
 impl From<ParseError> for DynError {
     fn from(e: ParseError) -> Self {
@@ -148,21 +144,9 @@ impl Partitioner for Partition {
     }
 }
 
-pub struct TraverserSinkEncoder;
-
-impl EncodeFunction<Traverser> for TraverserSinkEncoder {
-    fn encode(&self, data: Vec<Traverser>) -> Vec<u8> {
-        let result_pb = result_to_pb(data);
-        let mut bytes = vec![];
-        result_pb.encode_raw(&mut bytes);
-        bytes
-    }
-}
-
 pub fn register_gremlin_types() -> io::Result<()> {
     dyn_type::register_type::<ShadeSync<(Traverser, Traverser)>>()?;
-    dyn_type::register_type::<ShadeSync<Count<Traverser>>>()?;
-    dyn_type::register_type::<ShadeSync<ToList<Traverser>>>()?;
+    dyn_type::register_type::<ShadeSync<Vec<Traverser>>>()?;
     dyn_type::register_type::<ResultPath>()?;
     Ok(())
 }

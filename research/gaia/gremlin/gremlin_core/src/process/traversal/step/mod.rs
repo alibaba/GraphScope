@@ -55,7 +55,6 @@ impl Step for pb::GremlinStep {
 }
 
 mod by_key;
-mod dedup;
 mod filter;
 mod flat_map;
 mod fold;
@@ -71,17 +70,17 @@ mod util;
 use crate::structure::{Tag, INIT_TAG_NUM};
 use crate::FromPb;
 use bit_set::BitSet;
-pub use dedup::CollectionFactoryGen;
+// pub use dedup::CollectionFactoryGen;
 pub use filter::FilterFuncGen;
 pub use flat_map::FlatMapFuncGen;
-pub use fold::FoldFunctionGen;
-pub use group_by::GroupFunctionGen;
+pub use fold::{AccumFactoryGen, TraverserAccumulator};
+pub use group_by::KeyFunctionGen;
 pub use map::MapFuncGen;
 pub use map::ResultProperty;
 pub use order_by::CompareFunctionGen;
-pub use sink::SinkFuncGen;
+pub use sink::TraverserSinkEncoder;
 pub use source::graph_step_from;
 pub use source::GraphVertexStep;
-pub use sub_traversal::{BySubJoin, GroupBySubJoin, HasAnyJoin, JoinFuncGen, SelectBySubJoin};
+pub use sub_traversal::TraverserLeftJoinGen;
 pub use traverser_router::Router;
-pub use util::result_downcast;
+pub use util::*;

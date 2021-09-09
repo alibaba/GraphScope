@@ -15,6 +15,7 @@
 
 use crate::generated::gremlin as pb;
 use crate::process::traversal::step::by_key::{ByStepOption, TagKey};
+use crate::process::traversal::step::functions::CompareFunction;
 use crate::process::traversal::step::order_by::CompareFunctionGen;
 use crate::process::traversal::step::util::result_downcast::{
     try_downcast_group_count_value, try_downcast_group_key,
@@ -23,7 +24,6 @@ use crate::process::traversal::traverser::Traverser;
 use crate::structure::codec::ParseError;
 use crate::structure::{Details, GraphElement, Token};
 use crate::{str_to_dyn_error, DynResult, Element, FromPb};
-use pegasus::api::function::CompareFunction;
 use std::cmp::Ordering;
 
 #[derive(Clone, Debug)]

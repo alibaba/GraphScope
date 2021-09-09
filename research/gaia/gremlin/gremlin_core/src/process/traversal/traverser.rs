@@ -22,14 +22,17 @@ use crate::structure::{GraphElement, Tag};
 use crate::{DynIter, Element, FromPb};
 use bit_set::BitSet;
 use dyn_type::Object;
-use pegasus::api::function::{FnResult, Partition};
+
+// use pegasus::api::function::Partition;
 use pegasus::codec::*;
 use pegasus::Data;
 use pegasus_server::AnyData;
-use std::collections::hash_map::DefaultHasher;
+use std::cmp::Ordering;
+
 use std::fmt::Debug;
 use std::hash::{Hash, Hasher};
 use std::io;
+use std::ops::Add;
 use std::sync::Arc;
 
 bitflags! {
@@ -481,16 +484,15 @@ impl<E> TraverserSplitIter<E> {
 }
 
 impl<E: Into<GraphElement>> Iterator for TraverserSplitIter<E> {
-    type Item = Result<Traverser, Box<dyn std::error::Error + Send>>;
+    type Item = Traverser;
 
     fn next(&mut self) -> Option<Self::Item> {
         let mut traverser = self.origin.clone();
         match self.children.next() {
-            Some(Ok(elem)) => {
+            Some(elem) => {
                 traverser.split(elem, &self.tags);
-                Some(Ok(traverser))
+                Some(traverser)
             }
-            Some(Err(e)) => Some(Err(e)),
             None => None,
         }
     }
@@ -516,18 +518,40 @@ impl Hash for Traverser {
     }
 }
 
-impl Partition for Traverser {
-    fn get_partition(&self) -> FnResult<u64> {
-        let mut state = DefaultHasher::new();
-        self.hash(&mut state);
-        Ok(state.finish())
-    }
-}
+// impl Partition for Traverser {
+//     fn get_partition(&self) -> FnResult<u64> {
+//         let mut state = DefaultHasher::new();
+//         self.hash(&mut state);
+//         Ok(state.finish())
+//     }
+// }
 
 impl AnyData for Traverser {}
+unsafe impl Sync for Traverser {}
+
 impl Traverser {
     pub fn with<T: Data + Eq>(raw: T) -> Self {
         let v = ShadeSync { inner: raw };
         Traverser::Object(Object::DynOwned(Box::new(v)))
+    }
+}
+
+impl PartialOrd for Traverser {
+    fn partial_cmp(&self, _other: &Self) -> Option<Ordering> {
+        todo!()
+    }
+}
+
+impl Ord for Traverser {
+    fn cmp(&self, _other: &Self) -> Ordering {
+        todo!()
+    }
+}
+
+impl Add for Traverser {
+    type Output = Traverser;
+
+    fn add(self, _rhs: Self) -> Self::Output {
+        todo!()
     }
 }

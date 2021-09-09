@@ -35,7 +35,7 @@ impl HasTraverser {
 }
 
 impl FilterFunction<Traverser> for HasTraverser {
-    fn exec(&self, input: &Traverser) -> FnResult<bool> {
+    fn test(&self, input: &Traverser) -> FnResult<bool> {
         if let Some(true) = self.filter.test(input) {
             Ok(true)
         } else {

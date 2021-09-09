@@ -13,22 +13,29 @@
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 
-use crate::generated::gremlin as pb;
-use crate::process::traversal::step::fold::fold::FoldFunc;
-use crate::process::traversal::traverser::Traverser;
 use crate::DynResult;
-use pegasus_server::factory::FoldFunction;
+use pegasus_server::pb as server_pb;
+use pegasus_server::pb::AccumKind;
 
 mod fold;
+use crate::process::traversal::step::accum::{Count, ToList};
+pub use fold::TraverserAccumulator;
 
 #[enum_dispatch]
-pub trait FoldFunctionGen {
-    fn gen_fold(self) -> DynResult<Box<dyn FoldFunction<Traverser>>>;
+pub trait AccumFactoryGen {
+    fn gen_accum(self) -> DynResult<TraverserAccumulator>;
 }
 
-impl FoldFunctionGen for pb::GremlinStep {
-    fn gen_fold(self) -> DynResult<Box<dyn FoldFunction<Traverser>>> {
-        // TODO: should define a unfold step pb with compiler, which provides the choices of different unfold types
-        Ok(Box::new(FoldFunc {}))
+impl AccumFactoryGen for server_pb::AccumKind {
+    fn gen_accum(self) -> DynResult<TraverserAccumulator> {
+        match self {
+            AccumKind::Cnt => {
+                Ok(TraverserAccumulator::ToCount(Count { value: 0, _ph: Default::default() }))
+            }
+            AccumKind::ToList => Ok(TraverserAccumulator::ToList(ToList { inner: vec![] })),
+            _ => {
+                todo!()
+            }
+        }
     }
 }
