@@ -26,6 +26,7 @@ Author: Ning Xin
 #include "grape/grape.h"
 
 #include "apps/assortativity/attribute/attribute_assortativity_context.h"
+#include "apps/assortativity/attribute/attribute_common.h"
 #include "apps/assortativity/utils.h"
 #include "core/app/app_base.h"
 #include "core/worker/default_worker.h"
@@ -57,7 +58,7 @@ class NumericAssortativity
              message_manager_t& messages) {
     auto inner_vertices = frag.InnerVertices();
     for (auto v : inner_vertices) {
-      processVertex(v, frag, ctx, messages);
+      ProcessVertex<vdata_t>(v, frag, ctx, messages);
     }
     messages.ForceContinue();
   }
@@ -65,45 +66,21 @@ class NumericAssortativity
   void IncEval(const fragment_t& frag, context_t& ctx,
                message_manager_t& messages) {
     if (!ctx.merge_stage) {
-      vdata_t source_data;
-      vertex_t u;
-      while (messages.GetMessage(frag, u, source_data)) {
-        vdata_t target_data = frag.GetData(u);
-        attributeMixingCount(source_data, target_data, ctx);
-      }
-      ctx.merge_stage = true;
-      // send message to work 0
-      if (frag.fid() != 0) {
-        messages.SendToFragment(0, ctx.attribute_mixing_map);
-      }
-      messages.ForceContinue();
+      UpdateAttributeMixingMap<vertex_t, vdata_t>(frag, ctx, messages);
     } else {
-      // merge in work 0
+      // merge in worker 0
       if (frag.fid() == 0) {
-        std::unordered_map<vdata_t, std::unordered_map<vdata_t, int>> msg;
-        while (messages.GetMessage(msg)) {
-          for (auto& pair1 : msg) {
-            for (auto& pair2 : pair1.second) {
-              // merge
-              if (ctx.attribute_mixing_map.count(pair1.first) == 0 ||
-                  ctx.attribute_mixing_map[pair1.first].count(pair2.first) ==
-                      0) {
-                ctx.attribute_mixing_map[pair1.first][pair2.first] =
-                    pair2.second;
-              } else {
-                ctx.attribute_mixing_map[pair1.first][pair2.first] +=
-                    pair2.second;
-              }
-            }
-          }
-        }
+        MergeAttributeMixingMap<vdata_t>(ctx, messages);
         std::vector<std::vector<double>> attribute_mixing_matrix;
         std::unordered_map<int, double> map;
         getAttributeMixingMatrix(ctx, attribute_mixing_matrix, map);
+        // compute numeric assortativity
         ctx.attribute_assortativity =
             ProcessMatrix(attribute_mixing_matrix, map);
+
         std::vector<size_t> shape{1};
         ctx.set_shape(shape);
+        // write result to ctx
         ctx.assign(ctx.attribute_assortativity);
         VLOG(0) << "attribute assortatity: " << ctx.attribute_assortativity
                 << std::endl;
@@ -112,48 +89,6 @@ class NumericAssortativity
   }
 
  private:
-  /**
-   * @brief traverse the outgoing neighbors of vertex v and update the numeric
-   * attribute-attribute pairs.
-   *
-   * @param v
-   * @param frag
-   * @param ctx
-   * @param messages
-   */
-  void processVertex(const vertex_t& v, const fragment_t& frag, context_t& ctx,
-                     message_manager_t& messages) {
-    vdata_t source_data = frag.GetData(v);
-    // get all neighbors of vertex v
-    auto oes = frag.GetOutgoingAdjList(v);
-    for (auto& e : oes) {
-      vertex_t neighbor = e.get_neighbor();
-      if (frag.IsOuterVertex(neighbor)) {
-        messages.SyncStateOnOuterVertex(frag, neighbor, source_data);
-      } else {
-        vdata_t target_data = frag.GetData(neighbor);
-        attributeMixingCount(source_data, target_data, ctx);
-      }
-    }
-  }
-
-  /**
-   * @brief count the attribute-attribute pairs
-   *
-   * @param source_data the data of source node
-   * @param target_data the data of target node
-   * @param ctx
-   */
-  inline void attributeMixingCount(vdata_t source_data, vdata_t target_data,
-                                   context_t& ctx) {
-    if (ctx.attribute_mixing_map.count(source_data) == 0 ||
-        ctx.attribute_mixing_map[source_data].count(target_data) == 0) {
-      ctx.attribute_mixing_map[source_data][target_data] = 1;
-    } else {
-      ctx.attribute_mixing_map[source_data][target_data] += 1;
-    }
-  }
-
   /**
    * @brief get attribute mixing matrix by attribute mixing map
    *
