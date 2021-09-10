@@ -44,7 +44,7 @@ public class GraphTraversalStrategies extends DefaultTraversalStrategies {
         strategies.add(SchemaIdMakerStrategy.instance(config, graphStore));
         strategies.add(GaiaGraphStepStrategy.instance(graphStore));
         strategies.add(IncidentToAdjacentStrategy.instance());
-//        strategies.add(OrderGlobalLimitStrategy.instance());
+        strategies.add(OrderGlobalLimitStrategy.instance());
         strategies.add(PropertyShuffleStrategy.instance());
         strategies.add(BySubTraversalStrategy.instance());
         strategies.add(EarlyLimitStrategy.instance());
