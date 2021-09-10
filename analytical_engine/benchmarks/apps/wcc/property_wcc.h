@@ -155,7 +155,7 @@ class PropertyWCC
 
   void IncEval(const fragment_t& frag, context_t& ctx,
                message_manager_t& messages) {
-    ctx.next_modified.ParallelClear(thread_num());
+    ctx.next_modified.ParallelClear(GetThreadPool());
     // aggregate messages
     messages.ParallelProcess<fragment_t, vid_t>(
         thread_num(), frag, [&ctx](int tid, vertex_t u, vid_t msg) {

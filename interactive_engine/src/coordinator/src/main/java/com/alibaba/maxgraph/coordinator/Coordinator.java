@@ -109,42 +109,31 @@ public class Coordinator {
     }
 
     public static void initPrepareDir(InstanceConfig config) throws IOException {
-        switch (config.getPlatformKind()) {
-            case LOCAL_MEMORY:
-            case FUXI:
-                // TODO
-                break;
-            case YARN:
-                String hdfsPath = config.getYarnHdfsAddress();
-                if (hdfsPath != null) {
-                    Configuration conf = new Configuration();
-                    conf.set("fs.defaultFS", hdfsPath);
-                    FileSystem fs = FileSystem.get(conf);
-                    Path prepareDir = new Path(config.getTimelyPrepareDir());
-                    if (!fs.exists(prepareDir)) {
-                        if (fs.mkdirs(prepareDir)) {
-                            LOG.info("Directory: {} created . ", prepareDir.getName());
-                        } else {
-                            LOG.error("Failed to create directory : {}", prepareDir.getName());
-                        }
-                    }
-
-                    Path lockDir = new Path(config.getTimelyPrepareLockDir());
-                    if (fs.exists(lockDir)) {
-                        fs.delete(lockDir, true);
-                    }
-
-                    if (fs.mkdirs(lockDir)) {
-                        LOG.info("Directory: {} created . ", lockDir.getName());
-                    } else {
-                        LOG.error("Failed to create directory : {}", lockDir.getName());
-                    }
+        String hdfsPath = config.getYarnHdfsAddress();
+        if (hdfsPath != null) {
+            Configuration conf = new Configuration();
+            conf.set("fs.defaultFS", hdfsPath);
+            FileSystem fs = FileSystem.get(conf);
+            Path prepareDir = new Path(config.getTimelyPrepareDir());
+            if (!fs.exists(prepareDir)) {
+                if (fs.mkdirs(prepareDir)) {
+                    LOG.info("Directory: {} created . ", prepareDir.getName());
+                } else {
+                    LOG.error("Failed to create directory : {}", prepareDir.getName());
                 }
-                break;
-            default:
-                throw new RuntimeException("illegal platform kind");
-        }
+            }
 
+            Path lockDir = new Path(config.getTimelyPrepareLockDir());
+            if (fs.exists(lockDir)) {
+                fs.delete(lockDir, true);
+            }
+
+            if (fs.mkdirs(lockDir)) {
+                LOG.info("Directory: {} created . ", lockDir.getName());
+            } else {
+                LOG.error("Failed to create directory : {}", lockDir.getName());
+            }
+        }
     }
 
     private void startRpcService() throws Exception {

@@ -54,6 +54,14 @@ class InteractiveQueryManager(object):
         else:
             return self.clients[0].submit(message, bindings, request_options)
 
+    def close(self):
+        for client in self.clients:
+            try:
+                client.close()
+            except Exception:
+                pass
+        self.closed = True
+
 
 class GremlinResultSet(object):
     def __init__(self, key, result_set):

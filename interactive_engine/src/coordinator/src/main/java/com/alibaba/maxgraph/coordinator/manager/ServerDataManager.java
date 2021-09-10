@@ -41,7 +41,7 @@ import org.slf4j.LoggerFactory;
  * @create 2018-06-07 下午3:22
  **/
 
-public class ServerDataManager implements IServerDataManager {
+public class ServerDataManager {
 
     private static final Logger LOG = LoggerFactory.getLogger(ServerDataManager.class);
 

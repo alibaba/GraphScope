@@ -31,9 +31,7 @@ from graphscope.dataset.modern_graph import load_modern_graph
 from graphscope.framework.graph import Graph
 from graphscope.framework.loader import Loader
 
-graphscope.set_option(
-    show_log=True, k8s_gie_gremlin_server_cpu=1.0, k8s_gie_gremlin_server_mem="4Gi"
-)
+graphscope.set_option(show_log=True)
 logger = logging.getLogger("graphscope")
 
 
@@ -49,19 +47,18 @@ def get_k8s_volumes():
 
 
 def get_gs_image_on_ci_env():
-    if "GS_IMAGE" in os.environ and "GIE_MANAGER_IMAGE" in os.environ:
-        return os.environ["GS_IMAGE"], os.environ["GIE_MANAGER_IMAGE"]
+    if "GS_IMAGE" in os.environ:
+        return os.environ["GS_IMAGE"]
     else:
-        return gs_config.k8s_gs_image, gs_config.k8s_gie_graph_manager_image
+        return gs_config.k8s_gs_image
 
 
 @pytest.fixture
 def gs_session():
-    gs_image, gie_manager_image = get_gs_image_on_ci_env()
+    gs_image = get_gs_image_on_ci_env()
     sess = graphscope.session(
         num_workers=1,
         k8s_gs_image=gs_image,
-        k8s_gie_graph_manager_image=gie_manager_image,
         k8s_coordinator_cpu=2,
         k8s_coordinator_mem="4Gi",
         k8s_vineyard_cpu=2,
@@ -71,8 +68,6 @@ def gs_session():
         k8s_etcd_cpu=2,
         k8s_etcd_mem="256Mi",
         k8s_etcd_num_pods=3,
-        k8s_gie_graph_manager_cpu=1,
-        k8s_gie_graph_manager_mem="4Gi",
         vineyard_shared_mem="4Gi",
         k8s_volumes=get_k8s_volumes(),
     )
@@ -82,11 +77,10 @@ def gs_session():
 
 @pytest.fixture
 def gs_session_distributed():
-    gs_image, gie_manager_image = get_gs_image_on_ci_env()
+    gs_image = get_gs_image_on_ci_env()
     sess = graphscope.session(
         num_workers=2,
         k8s_gs_image=gs_image,
-        k8s_gie_graph_manager_image=gie_manager_image,
         k8s_coordinator_cpu=2,
         k8s_coordinator_mem="4Gi",
         k8s_vineyard_cpu=2,
@@ -96,8 +90,6 @@ def gs_session_distributed():
         k8s_etcd_cpu=4,
         k8s_etcd_mem="256Mi",
         k8s_etcd_num_pods=3,
-        k8s_gie_graph_manager_cpu=1,
-        k8s_gie_graph_manager_mem="4Gi",
         vineyard_shared_mem="4Gi",
         k8s_volumes=get_k8s_volumes(),
     )
@@ -142,6 +134,62 @@ def test_demo(gs_session, data_dir):
     sub_graph.add_column(tc_result, {"TC": "r"})
 
     # GNN engine
+
+
+@pytest.mark.skipif("HDFS_TEST_DIR" not in os.environ, reason="the test case need HDFS")
+def test_demo_on_hdfs(gs_session_distributed):
+    graph = gs_session_distributed.g()
+    graph = graph.add_vertices(
+        Loader(
+            os.environ["HDFS_TEST_DIR"] + "/person_0_0.csv",
+            host=os.environ["HDFS_HOST"],
+            port=9000,
+            delimiter="|",
+        ),
+        "person",
+        [
+            "firstName",
+            "lastName",
+            "gender",
+            "birthday",
+            "creationDate",
+            "locationIP",
+            "browserUsed",
+        ],
+        "id",
+    )
+    graph = graph.add_edges(
+        Loader(
+            os.environ["HDFS_TEST_DIR"] + "/person_knows_person_0_0.csv",
+            host=os.environ["HDFS_HOST"],
+            port=9000,
+            delimiter="|",
+        ),
+        "knows",
+        ["creationDate"],
+        src_label="person",
+        dst_label="person",
+    )
+
+    # Interactive engine
+    interactive = gs_session_distributed.gremlin(graph)
+    sub_graph = interactive.subgraph(  # noqa: F841
+        'g.V().hasLabel("person").outE("knows")'
+    )
+
+    # Analytical engine
+    # project the projected graph to simple graph.
+    simple_g = sub_graph.project(vertices={"person": []}, edges={"knows": []})
+
+    pr_result = graphscope.pagerank(simple_g, delta=0.8)
+
+    # output to hdfs
+    pr_result.output(
+        os.environ["HDFS_TEST_DIR"] + "/res.csv",
+        selector={"id": "v.id", "rank": "r"},
+        host=os.environ["HDFS_HOST"],
+        port=9000,
+    )
 
 
 def test_demo_distribute(gs_session_distributed, data_dir, modern_graph_data_dir):
@@ -199,11 +247,10 @@ def test_multiple_session():
         [random.choice(string.ascii_lowercase) for _ in range(6)]
     )
 
-    gs_image, gie_manager_image = get_gs_image_on_ci_env()
+    gs_image = get_gs_image_on_ci_env()
     sess = graphscope.session(
         num_workers=1,
         k8s_gs_image=gs_image,
-        k8s_gie_graph_manager_image=gie_manager_image,
         k8s_volumes=get_k8s_volumes(),
     )
     info = sess.info
@@ -214,7 +261,6 @@ def test_multiple_session():
         k8s_namespace=namespace,
         num_workers=2,
         k8s_gs_image=gs_image,
-        k8s_gie_graph_manager_image=gie_manager_image,
         k8s_volumes=get_k8s_volumes(),
     )
 

@@ -21,18 +21,6 @@ import "proto/error_codes.proto";
 import "proto/op_def.proto";
 import "proto/types.proto";
 
-message ResponseStatus {
-  enum NullDetail { NULL_DETAIL = 0; }
-
-  Code code = 1;
-  string error_msg = 2;
-  oneof detail {
-    NullDetail null = 3;
-    OpDef op = 4;
-    // pickle coordinator python exception
-    bytes full_exception = 5;
-  }
-}
 
 ////////////////////////////////////////////////////////////////////////////////
 //
@@ -56,8 +44,6 @@ message ConnectSessionRequest {
 }
 
 message ConnectSessionResponse {
-  ResponseStatus status = 1;
-
   // The session handle to be used in subsequent calls for the created session.
   //
   // The client must arrange to call CloseSession with this returned
@@ -80,7 +66,6 @@ message HeartBeatRequest {
 }
 
 message HeartBeatResponse {
-  ResponseStatus status = 1;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -103,10 +88,12 @@ message RunStepRequest {
 }
 
 message RunStepResponse {
-  ResponseStatus status = 1;
-
   // list of result of ops in dag
-  repeated OpResult results = 2;
+  repeated OpResult results = 1;
+
+  Code code = 2;
+  string error_msg = 3;
+  bytes full_exception = 4;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -120,10 +107,10 @@ message FetchLogsRequest {
 }
 
 message FetchLogsResponse {
-  ResponseStatus status = 1;
-
   // log info.
-  string message = 2;
+  string info_message = 2;
+  // log error.
+  string error_message = 3;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -139,5 +126,4 @@ message CloseSessionRequest {
 }
 
 message CloseSessionResponse {
-  ResponseStatus status = 1;
 }

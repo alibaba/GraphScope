@@ -46,3 +46,7 @@ class Launcher(metaclass=ABCMeta):
     @abstractmethod
     def stop(self, wait=False):
         pass
+
+    @abstractmethod
+    def poll(self):
+        pass

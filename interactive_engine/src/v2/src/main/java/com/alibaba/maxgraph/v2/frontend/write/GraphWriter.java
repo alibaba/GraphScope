@@ -17,7 +17,7 @@ import com.alibaba.maxgraph.v2.common.schema.PropertyValue;
 import com.alibaba.maxgraph.v2.common.util.PkHashUtils;
 import com.alibaba.maxgraph.v2.frontend.IngestorWriteClient;
 import com.alibaba.maxgraph.v2.frontend.SnapshotCache;
-import com.alibaba.maxgraph.v2.frontend.utils.WriteSessionUtil;
+import com.alibaba.maxgraph.v2.common.util.WriteSessionUtil;
 
 import java.util.ArrayList;
 import java.util.HashMap;

@@ -14,7 +14,7 @@ RUN cd /tmp && \
     make -j`nproc` && \
     make install && \
     cd /tmp && \
-    git clone -b v0.2.6 https://github.com/alibaba/libvineyard.git --depth=1 && \
+    git clone -b v0.2.9 https://github.com/alibaba/libvineyard.git --depth=1 && \
     cd libvineyard && \
     git submodule update --init && \
     mkdir -p /tmp/libvineyard/build && \
@@ -26,12 +26,24 @@ RUN cd /tmp && \
     cd /tmp/libvineyard && \
     python3 setup.py bdist_wheel && \
     cd dist && \
-    mkdir -p /opt/graphscope/dist && \
-    cp -f ./*.whl /opt/graphscope/dist && \
+    mkdir -p /opt/vineyard/dist && \
+    cp -f ./*.whl /opt/vineyard/dist && \
     pip3 install ./*.whl && \
     cd /tmp/libvineyard/modules/io && \
     python3 setup.py bdist_wheel && \
-    cp -f dist/* /opt/graphscope/dist && \
+    cp -f dist/* /opt/vineyard/dist && \
     pip3 install dist/* && \
     cd /tmp && \
-    rm -fr /tmp/libvineyard /tmp/libgrape-lite
+    rm -fr /tmp/libvineyard /tmp/libgrape-lite && \
+    useradd -m graphscope -u 1001 && \
+    echo 'graphscope ALL=(ALL) NOPASSWD:ALL' >> /etc/sudoers && \
+    cp -r ~/.cargo /home/graphscope/.cargo && \
+    chown -R graphscope:graphscope /home/graphscope/.cargo
+
+USER graphscope
+
+SHELL ["/bin/bash", "-c"]
+
+RUN source /home/graphscope/.cargo/env && \
+    rustup install stable && rustup default stable && rustup component add rustfmt && \
+    echo "source ~/.cargo/env" >> ~/.bashrc

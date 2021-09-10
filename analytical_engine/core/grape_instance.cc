@@ -101,7 +101,8 @@ bl::result<rpc::graph::GraphDefPb> GrapeInstance::loadGraph(
     return graph_def;
 #else
     RETURN_GS_ERROR(vineyard::ErrorCode::kInvalidOperationError,
-                    "GS is built with networkx off");
+                    "GraphScope is built with NETWORKX=OFF, please recompile "
+                    "it with NETWORKX=ON");
 #endif
   }
   case rpc::graph::ARROW_PROPERTY: {
@@ -119,8 +120,9 @@ bl::result<rpc::graph::GraphDefPb> GrapeInstance::loadGraph(
     return wrapper->graph_def();
   }
   default:
-    RETURN_GS_ERROR(vineyard::ErrorCode::kInvalidValueError,
-                    "Unsupported graph type " + std::to_string(graph_type));
+    RETURN_GS_ERROR(
+        vineyard::ErrorCode::kInvalidValueError,
+        "Unsupported graph type " + rpc::graph::GraphTypePb_Name(graph_type));
   }
 }
 
@@ -153,7 +155,8 @@ bl::result<std::string> GrapeInstance::loadApp(const rpc::GSParams& params) {
   BOOST_LEAF_AUTO(lib_path, params.Get<std::string>(rpc::APP_LIBRARY_PATH));
 
   auto app = std::make_shared<AppEntry>(app_name, lib_path);
-
+  VLOG(1) << "Loading application, application name: " << app_name
+          << " , library path: " << lib_path;
   BOOST_LEAF_CHECK(app->Init());
   BOOST_LEAF_CHECK(object_manager_.PutObject(app));
   return app_name;
@@ -241,9 +244,11 @@ bl::result<std::string> GrapeInstance::reportGraph(
   auto graph_type = wrapper->graph_def().graph_type();
 
   if (graph_type != rpc::graph::DYNAMIC_PROPERTY) {
-    RETURN_GS_ERROR(vineyard::ErrorCode::kInvalidValueError,
-                    "Error graph type: " + std::to_string(graph_type) +
-                        ", graph id: " + graph_name);
+    RETURN_GS_ERROR(
+        vineyard::ErrorCode::kInvalidValueError,
+        "GraphType must be DYNAMIC_PROPERTY, the origin graph type is:  " +
+            rpc::graph::GraphTypePb_Name(graph_type) +
+            ", graph id: " + graph_name);
   }
   auto fragment =
       std::static_pointer_cast<DynamicFragment>(wrapper->fragment());
@@ -251,7 +256,8 @@ bl::result<std::string> GrapeInstance::reportGraph(
   return reporter.Report(fragment, params);
 #else
   RETURN_GS_ERROR(vineyard::ErrorCode::kUnimplementedMethod,
-                  "GS is compiled without folly");
+                  "GraphScope is built with NETWORKX=OFF, please recompile it "
+                  "with NETWORKX=ON");
 #endif  // NETWORKX
 }
 
@@ -265,9 +271,11 @@ bl::result<void> GrapeInstance::modifyVertices(
   auto graph_type = wrapper->graph_def().graph_type();
 
   if (graph_type != rpc::graph::DYNAMIC_PROPERTY) {
-    RETURN_GS_ERROR(vineyard::ErrorCode::kInvalidValueError,
-                    "Error graph type: " + std::to_string(graph_type) +
-                        ", graph id: " + graph_name);
+    RETURN_GS_ERROR(
+        vineyard::ErrorCode::kInvalidValueError,
+        "GraphType must be DYNAMIC_PROPERTY, the origin graph type is:  " +
+            rpc::graph::GraphTypePb_Name(graph_type) +
+            ", graph id: " + graph_name);
   }
 
   auto fragment =
@@ -276,7 +284,8 @@ bl::result<void> GrapeInstance::modifyVertices(
   return {};
 #else
   RETURN_GS_ERROR(vineyard::ErrorCode::kUnimplementedMethod,
-                  "GS is compiled without folly");
+                  "GraphScope is built with NETWORKX=OFF, please recompile it "
+                  "with NETWORKX=ON");
 #endif
 }
 
@@ -290,9 +299,10 @@ bl::result<void> GrapeInstance::modifyEdges(
   auto graph_type = wrapper->graph_def().graph_type();
 
   if (graph_type != rpc::graph::DYNAMIC_PROPERTY) {
-    RETURN_GS_ERROR(vineyard::ErrorCode::kInvalidValueError,
-                    "Error graph type: " + std::to_string(graph_type) +
-                        ", graph id: " + graph_name);
+    RETURN_GS_ERROR(
+        vineyard::ErrorCode::kInvalidValueError,
+        "GraphType must be DYNAMIC_PROPERTY, the origin graph type is: " +
+            std::to_string(graph_type) + ", graph name: " + graph_name);
   }
 
   auto fragment =
@@ -300,7 +310,8 @@ bl::result<void> GrapeInstance::modifyEdges(
   fragment->ModifyEdges(edges, modify_type);
 #else
   RETURN_GS_ERROR(vineyard::ErrorCode::kUnimplementedMethod,
-                  "GS is compiled without folly");
+                  "GraphScope is built with NETWORKX=OFF, please recompile it "
+                  "with NETWORKX=ON");
 #endif  // NETWORKX
   return {};
 }
@@ -357,7 +368,7 @@ bl::result<std::shared_ptr<grape::InArchive>> GrapeInstance::contextToNumpy(
     BOOST_LEAF_AUTO(selector, LabeledSelector::parse(s_selector));
     return wrapper->ToNdArray(comm_spec_, selector, range);
   }
-  RETURN_GS_ERROR(vineyard::ErrorCode::kIllegalStateError,
+  RETURN_GS_ERROR(vineyard::ErrorCode::kInvalidValueError,
                   "Unsupported context type: " + std::string(ctx_type));
 }
 
@@ -423,7 +434,7 @@ bl::result<std::shared_ptr<grape::InArchive>> GrapeInstance::contextToDataframe(
     BOOST_LEAF_AUTO(selectors, LabeledSelector::ParseSelectors(s_selectors));
     return wrapper->ToDataframe(comm_spec_, selectors, range);
   }
-  RETURN_GS_ERROR(vineyard::ErrorCode::kIllegalStateError,
+  RETURN_GS_ERROR(vineyard::ErrorCode::kInvalidValueError,
                   "Unsupported context type: " + std::string(ctx_type));
 }
 
@@ -482,7 +493,8 @@ bl::result<std::string> GrapeInstance::contextToVineyardTensor(
     BOOST_LEAF_ASSIGN(
         id, wrapper->ToVineyardTensor(comm_spec_, *client_, selector, range));
   } else {
-    CHECK(false);
+    RETURN_GS_ERROR(vineyard::ErrorCode::kInvalidValueError,
+                    "Unsupported context type: " + std::string(ctx_type));
   }
 
   auto s_id = vineyard::ObjectIDToString(id);
@@ -548,7 +560,8 @@ bl::result<std::string> GrapeInstance::contextToVineyardDataFrame(
     BOOST_LEAF_ASSIGN(id, vd_ctx_wrapper->ToVineyardDataframe(
                               comm_spec_, *client_, selectors, range));
   } else {
-    CHECK(false);
+    RETURN_GS_ERROR(vineyard::ErrorCode::kInvalidValueError,
+                    "Unsupported context type: " + std::string(ctx_type));
   }
 
   auto s_id = vineyard::ObjectIDToString(id);
@@ -591,8 +604,8 @@ bl::result<rpc::graph::GraphDefPb> GrapeInstance::convertGraph(
   std::string dst_graph_name = "graph_" + generateId();
 
   VLOG(1) << "Converting graph, src graph name: " << src_graph_name
-          << ", dst graph name: " << dst_graph_name
-          << ", dst graph type: " << dst_graph_type
+          << ", dst graph name: " << dst_graph_name << ", dst graph type: "
+          << rpc::graph::GraphTypePb_Name(dst_graph_type)
           << ", type_sig: " << type_sig;
 
   BOOST_LEAF_AUTO(g_utils,
@@ -618,9 +631,9 @@ bl::result<rpc::graph::GraphDefPb> GrapeInstance::convertGraph(
     return dst_graph_wrapper->graph_def();
   }
   RETURN_GS_ERROR(vineyard::ErrorCode::kInvalidOperationError,
-                  "Unsupported conversion direction, from " +
-                      std::to_string(src_graph_type) + " to " +
-                      std::to_string(dst_graph_type));
+                  "Unsupported conversion direction from " +
+                      rpc::graph::GraphTypePb_Name(src_graph_type) + " to " +
+                      rpc::graph::GraphTypePb_Name(dst_graph_type));
 }
 
 bl::result<rpc::graph::GraphDefPb> GrapeInstance::copyGraph(
@@ -654,7 +667,8 @@ bl::result<rpc::graph::GraphDefPb> GrapeInstance::toDirected(
   return dst_wrapper->graph_def();
 #else
   RETURN_GS_ERROR(vineyard::ErrorCode::kUnimplementedMethod,
-                  "GS is compiled without folly");
+                  "GraphScope is built with NETWORKX=OFF, please recompile it "
+                  "with NETWORKX=ON");
 #endif  // NETWORKX
 }
 
@@ -673,7 +687,8 @@ bl::result<rpc::graph::GraphDefPb> GrapeInstance::toUnDirected(
   return dst_wrapper->graph_def();
 #else
   RETURN_GS_ERROR(vineyard::ErrorCode::kUnimplementedMethod,
-                  "GS is compiled without folly");
+                  "GraphScope is built with NETWORKX=OFF, please recompile it "
+                  "with NETWORKX=ON");
 #endif  // NETWORKX
 }
 
@@ -731,9 +746,11 @@ bl::result<void> GrapeInstance::clearGraph(const rpc::GSParams& params) {
   auto graph_type = wrapper->graph_def().graph_type();
 
   if (graph_type != rpc::graph::DYNAMIC_PROPERTY) {
-    RETURN_GS_ERROR(vineyard::ErrorCode::kInvalidValueError,
-                    "Error graph type: " + std::to_string(graph_type) +
-                        ", graph id: " + graph_name);
+    RETURN_GS_ERROR(
+        vineyard::ErrorCode::kInvalidValueError,
+        "GraphType must be DYNAMIC_PROPERTY, the origin graph type is: " +
+            rpc::graph::GraphTypePb_Name(graph_type) +
+            ", graph id: " + graph_name);
   }
 
   auto vm_ptr = std::shared_ptr<DynamicFragment::vertex_map_t>(
@@ -744,7 +761,8 @@ bl::result<void> GrapeInstance::clearGraph(const rpc::GSParams& params) {
   fragment->ClearGraph(vm_ptr);
 #else
   RETURN_GS_ERROR(vineyard::ErrorCode::kUnimplementedMethod,
-                  "GS is compiled without folly");
+                  "GraphScope is built with NETWORKX=OFF, please recompile it "
+                  "with NETWORKX=ON");
 #endif  // NETWORKX
   return {};
 }
@@ -757,9 +775,11 @@ bl::result<void> GrapeInstance::clearEdges(const rpc::GSParams& params) {
   auto graph_type = wrapper->graph_def().graph_type();
 
   if (graph_type != rpc::graph::DYNAMIC_PROPERTY) {
-    RETURN_GS_ERROR(vineyard::ErrorCode::kInvalidValueError,
-                    "Error graph type: " + std::to_string(graph_type) +
-                        ", graph id: " + graph_name);
+    RETURN_GS_ERROR(
+        vineyard::ErrorCode::kInvalidValueError,
+        "GraphType must be DYNAMIC_PROPERTY, the origin graph type is: " +
+            rpc::graph::GraphTypePb_Name(graph_type) +
+            ", graph id: " + graph_name);
   }
 
   auto fragment =
@@ -767,7 +787,8 @@ bl::result<void> GrapeInstance::clearEdges(const rpc::GSParams& params) {
   fragment->ClearEdges();
 #else
   RETURN_GS_ERROR(vineyard::ErrorCode::kUnimplementedMethod,
-                  "GS is compiled without folly");
+                  "GraphScope is built with NETWORKX=OFF, please recompile it "
+                  "with NETWORKX=ON");
 #endif  // NETWORKX
   return {};
 }
@@ -779,7 +800,7 @@ bl::result<rpc::graph::GraphDefPb> GrapeInstance::createGraphView(
   BOOST_LEAF_AUTO(graph_name, params.Get<std::string>(rpc::GRAPH_NAME));
   BOOST_LEAF_AUTO(view_type, params.Get<std::string>(rpc::VIEW_TYPE));
 
-  VLOG(1) << "Get graph view, dst graph name: " << view_id
+  VLOG(1) << "Creating graph view, dst graph name: " << view_id
           << ", view type: " << view_type;
 
   BOOST_LEAF_AUTO(wrapper,
@@ -791,7 +812,8 @@ bl::result<rpc::graph::GraphDefPb> GrapeInstance::createGraphView(
   return view_wrapper->graph_def();
 #else
   RETURN_GS_ERROR(vineyard::ErrorCode::kUnimplementedMethod,
-                  "GS is compiled without folly");
+                  "GraphScope is built with NETWORKX=OFF, please recompile it "
+                  "with NETWORKX=ON");
 #endif  // NETWORKX
 }
 
@@ -803,7 +825,7 @@ bl::result<rpc::graph::GraphDefPb> GrapeInstance::addLabelsToGraph(
       object_manager_.GetObject<ILabeledFragmentWrapper>(graph_name));
   if (src_wrapper->graph_def().graph_type() != rpc::graph::ARROW_PROPERTY) {
     RETURN_GS_ERROR(vineyard::ErrorCode::kInvalidOperationError,
-                    "AddEdges is only avaiable for ArrowFragment");
+                    "AddLabelsToGraph is only avaiable for ArrowFragment");
   }
 
   auto src_frag_id =
@@ -864,11 +886,12 @@ bl::result<void> GrapeInstance::registerGraphType(const rpc::GSParams& params) {
   BOOST_LEAF_AUTO(type_sig, params.Get<std::string>(rpc::TYPE_SIGNATURE));
   BOOST_LEAF_AUTO(lib_path, params.Get<std::string>(rpc::GRAPH_LIBRARY_PATH));
 
-  VLOG(1) << "Registering Graph, graph type: " << graph_type
-          << ", Type sig: " << type_sig << ", lib path: " << lib_path;
+  VLOG(1) << "Registering Graph, graph type: "
+          << rpc::graph::GraphTypePb_Name(graph_type)
+          << ", Type sigature: " << type_sig << ", lib path: " << lib_path;
 
   if (object_manager_.HasObject(type_sig)) {
-    VLOG(1) << "Graph already registered, sig: " << type_sig;
+    VLOG(1) << "Graph already registered, signature is: " << type_sig;
     return {};
   }
 
@@ -884,7 +907,7 @@ bl::result<void> GrapeInstance::registerGraphType(const rpc::GSParams& params) {
   } else {
     RETURN_GS_ERROR(
         vineyard::ErrorCode::kInvalidValueError,
-        "Only ArrowProperty/ArrowProjected/DynamicProjected are accepted");
+        "Unsupported graph type: " + rpc::graph::GraphTypePb_Name(graph_type));
   }
 }
 
@@ -948,7 +971,8 @@ bl::result<std::shared_ptr<DispatchResult>> GrapeInstance::OnReceive(
     BOOST_LEAF_CHECK(modifyVertices(params, vertices_to_modify));
 #else
     RETURN_GS_ERROR(vineyard::ErrorCode::kInvalidOperationError,
-                    "GS is built with networkx off");
+                    "GraphScope is built with NETWORKX=OFF, please recompile "
+                    "it with NETWORKX=ON");
 #endif
     break;
   }
@@ -963,7 +987,8 @@ bl::result<std::shared_ptr<DispatchResult>> GrapeInstance::OnReceive(
     BOOST_LEAF_CHECK(modifyEdges(params, edges_to_modify));
 #else
     RETURN_GS_ERROR(vineyard::ErrorCode::kInvalidOperationError,
-                    "GS is built with networkx off");
+                    "GraphScope is built with NETWORKX=OFF, please recompile "
+                    "it with NETWORKX=ON");
 #endif
     break;
   }
@@ -973,7 +998,8 @@ bl::result<std::shared_ptr<DispatchResult>> GrapeInstance::OnReceive(
     r->set_graph_def(graph_def);
 #else
     RETURN_GS_ERROR(vineyard::ErrorCode::kInvalidOperationError,
-                    "GS is built with networkx off");
+                    "GraphScope is built with NETWORKX=OFF, please recompile "
+                    "it with NETWORKX=ON");
 #endif
     break;
   }
@@ -988,7 +1014,8 @@ bl::result<std::shared_ptr<DispatchResult>> GrapeInstance::OnReceive(
     r->set_graph_def(graph_def);
 #else
     RETURN_GS_ERROR(vineyard::ErrorCode::kInvalidOperationError,
-                    "GS is built with networkx off");
+                    "GraphScope is built with NETWORKX=OFF, please recompile "
+                    "it with NETWORKX=ON");
 #endif
     break;
   }
@@ -998,7 +1025,8 @@ bl::result<std::shared_ptr<DispatchResult>> GrapeInstance::OnReceive(
     r->set_graph_def(graph_def);
 #else
     RETURN_GS_ERROR(vineyard::ErrorCode::kInvalidOperationError,
-                    "GS is built with networkx off");
+                    "GraphScope is built with NETWORKX=OFF, please recompile "
+                    "it with NETWORKX=ON");
 #endif
     break;
   }
@@ -1038,7 +1066,8 @@ bl::result<std::shared_ptr<DispatchResult>> GrapeInstance::OnReceive(
     r->set_graph_def(graph_def);
 #else
     RETURN_GS_ERROR(vineyard::ErrorCode::kInvalidOperationError,
-                    "GS is built with networkx off");
+                    "GraphScope is built with NETWORKX=OFF, please recompile "
+                    "it with NETWORKX=ON");
 #endif
     break;
   }
@@ -1047,7 +1076,8 @@ bl::result<std::shared_ptr<DispatchResult>> GrapeInstance::OnReceive(
     BOOST_LEAF_CHECK(clearGraph(params));
 #else
     RETURN_GS_ERROR(vineyard::ErrorCode::kInvalidOperationError,
-                    "GS is built with networkx off");
+                    "GraphScope is built with NETWORKX=OFF, please recompile "
+                    "it with NETWORKX=ON");
 #endif
     break;
   }
@@ -1056,7 +1086,8 @@ bl::result<std::shared_ptr<DispatchResult>> GrapeInstance::OnReceive(
     BOOST_LEAF_CHECK(clearEdges(params));
 #else
     RETURN_GS_ERROR(vineyard::ErrorCode::kInvalidOperationError,
-                    "GS is built with networkx off");
+                    "GraphScope is built with NETWORKX=OFF, please recompile "
+                    "it with NETWORKX=ON");
 #endif
     break;
   }
@@ -1066,7 +1097,8 @@ bl::result<std::shared_ptr<DispatchResult>> GrapeInstance::OnReceive(
     r->set_graph_def(graph_def);
 #else
     RETURN_GS_ERROR(vineyard::ErrorCode::kInvalidOperationError,
-                    "GS is built with networkx off");
+                    "GraphScope is built with NETWORKX=OFF, please recompile "
+                    "it with NETWORKX=ON");
 #endif
     break;
   }
@@ -1135,7 +1167,7 @@ bl::result<std::shared_ptr<DispatchResult>> GrapeInstance::OnReceive(
   }
   default:
     RETURN_GS_ERROR(vineyard::ErrorCode::kInvalidValueError,
-                    "Unknown command type: " + std::to_string(cmd.type));
+                    "Unsupported command type: " + std::to_string(cmd.type));
   }
   return r;
 }

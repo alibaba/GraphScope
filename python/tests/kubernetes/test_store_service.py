@@ -40,20 +40,21 @@ def gs_conn():
     yield graphscope.conn(grpc_endpoint, gremlin_endpoint)
 
 
-def test_demo(gs_conn):
+def demo(gs_conn, restart):
     graph = gs_conn.g()
-    # Create schema
-    schema = graph.schema()
-    schema.add_vertex_label("person").add_primary_key("id", "long").add_property(
-        "name", "str"
-    )
-    schema.add_edge_label("knows").source("person").destination("person").add_property(
-        "date", "str"
-    )
-    schema.update()
-    # Bulk load data
-    load_script = os.environ["LOAD_DATA_SCRIPT"]
-    os.system(load_script)
+    if not restart:
+        # Create schema
+        schema = graph.schema()
+        schema.add_vertex_label("person").add_primary_key("id", "long").add_property(
+            "name", "str"
+        )
+        schema.add_edge_label("knows").source("person").destination(
+            "person"
+        ).add_property("date", "str")
+        schema.update()
+        # Bulk load data
+        load_script = os.environ["LOAD_DATA_SCRIPT"]
+        os.system(load_script)
 
     interactive = gs_conn.gremlin()
     assert interactive.V().count().toList()[0] == 903
@@ -111,7 +112,6 @@ def test_demo(gs_conn):
         .toList()[0]
         .id
     )
-
     snapshot_id = graph.insert_edges(edges)
 
     assert gs_conn.remote_flush(snapshot_id)
@@ -126,14 +126,7 @@ def test_demo(gs_conn):
             .toList()[0]
             .id
         )
-    # FIXME: In GAIA the eid is 128 bit, which cannot fit in the proto.
-    # Fix the bug and remove the try block.
-    # And we will allow the maxgraph executor to run the remaining tests.
-    try:
-        snapshot_id = graph.update_edge_properties(*edge_update)
-    except ValueError:
-        print("Knows bugs in GAIA, will be fixed later.")
-        return
+    snapshot_id = graph.update_edge_properties(*edge_update)
 
     assert gs_conn.remote_flush(snapshot_id)
 
@@ -158,3 +151,11 @@ def test_demo(gs_conn):
 
     assert interactive.V().count().toList()[0] == 903
     assert interactive.E().count().toList()[0] == 6626
+
+
+def test_demo_fresh(gs_conn):
+    demo(gs_conn, False)
+
+
+def test_demo_after_restart(gs_conn):
+    demo(gs_conn, True)

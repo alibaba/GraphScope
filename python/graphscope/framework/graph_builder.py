@@ -16,44 +16,27 @@
 # limitations under the License.
 #
 
-from itertools import chain
-from typing import Any
-from typing import Dict
 from typing import Mapping
 from typing import Sequence
-from typing import Tuple
 from typing import Union
 
-import numpy as np
-import pandas as pd
-import vineyard
+try:
+    import vineyard
+except ImportError:
+    vineyard = None
 
 from graphscope.client.session import get_default_session
 from graphscope.framework import dag_utils
 from graphscope.framework import utils
-from graphscope.framework.errors import InvalidArgumentError
-from graphscope.framework.errors import check_argument
 from graphscope.framework.graph import Graph
+from graphscope.framework.graph_utils import LoaderVariants
+from graphscope.framework.graph_utils import VineyardObjectTypes
 from graphscope.framework.graph_utils import normalize_parameter_edges
 from graphscope.framework.graph_utils import normalize_parameter_vertices
-from graphscope.framework.loader import Loader
 from graphscope.proto import graph_def_pb2
 from graphscope.proto import types_pb2
 
 __all__ = ["load_from"]
-
-
-VineyardObjectTypes = (vineyard.Object, vineyard.ObjectID, vineyard.ObjectName)
-
-LoaderVariants = Union[
-    Loader,
-    str,
-    Sequence[np.ndarray],
-    pd.DataFrame,
-    vineyard.Object,
-    vineyard.ObjectID,
-    vineyard.ObjectName,
-]
 
 
 def load_from(

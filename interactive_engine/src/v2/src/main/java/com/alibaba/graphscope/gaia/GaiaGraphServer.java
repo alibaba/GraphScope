@@ -24,10 +24,9 @@ import com.alibaba.graphscope.gaia.processor.TraversalOpProcessor;
 import com.alibaba.graphscope.gaia.store.GraphStoreService;
 import com.alibaba.maxgraph.v2.common.config.Configs;
 import com.alibaba.maxgraph.v2.common.frontend.api.MaxGraphServer;
-import com.alibaba.maxgraph.v2.frontend.config.FrontendConfig;
+import com.alibaba.maxgraph.v2.common.config.GremlinConfig;
 import io.netty.channel.Channel;
 import org.apache.commons.configuration.BaseConfiguration;
-import org.apache.tinkerpop.gremlin.groovy.engine.GremlinExecutor;
 import org.apache.tinkerpop.gremlin.server.GremlinServer;
 import org.apache.tinkerpop.gremlin.server.OpProcessor;
 import org.apache.tinkerpop.gremlin.server.Settings;
@@ -67,13 +66,13 @@ public class GaiaGraphServer implements MaxGraphServer {
         this.loadSettings();
 
         logger.info(GremlinServer.getHeader());
-        this.settings.port = FrontendConfig.GREMLIN_PORT.get(this.configs);
+        this.settings.port = GremlinConfig.GREMLIN_PORT.get(this.configs);
         this.settings.host = "0.0.0.0";
         if (settings.gremlinPool == 0) {
             settings.gremlinPool = Runtime.getRuntime().availableProcessors();
         }
-        settings.writeBufferHighWaterMark = FrontendConfig.SERVER_WRITE_BUFFER_HIGH_WATER.get(this.configs);
-        settings.writeBufferLowWaterMark = FrontendConfig.SERVER_WRITE_BUFFER_LOW_WATER.get(this.configs);
+        settings.writeBufferHighWaterMark = GremlinConfig.SERVER_WRITE_BUFFER_HIGH_WATER.get(this.configs);
+        settings.writeBufferLowWaterMark = GremlinConfig.SERVER_WRITE_BUFFER_LOW_WATER.get(this.configs);
         this.server = new GremlinServer(settings);
 
         loadProcessor(gaiaConfig, broadcastProcessor, storeService);

@@ -20,7 +20,6 @@ import com.alibaba.maxgraph.compiler.api.schema.GraphSchema;
 import com.alibaba.maxgraph.compiler.api.schema.PropDataType;
 import com.alibaba.maxgraph.compiler.tree.addition.JoinZeroNode;
 import com.alibaba.maxgraph.compiler.tree.source.EstimateCountTreeNode;
-import com.alibaba.maxgraph.compiler.tree.source.GraphSourceTreeNode;
 import com.alibaba.maxgraph.compiler.tree.source.SourceCreateGraphTreeNode;
 import com.alibaba.maxgraph.compiler.utils.SchemaUtils;
 import com.alibaba.maxgraph.compiler.utils.TreeNodeUtils;
@@ -29,7 +28,6 @@ import com.alibaba.maxgraph.sdkcommon.compiler.custom.branch.CustomCaseWhenFunct
 import com.alibaba.maxgraph.sdkcommon.compiler.custom.branch.CustomWhenThenFunction;
 import com.alibaba.maxgraph.sdkcommon.compiler.custom.map.MapPropFillFunction;
 import com.alibaba.maxgraph.sdkcommon.compiler.custom.map.RangeSumFunction;
-import com.alibaba.maxgraph.sdkcommon.compiler.custom.output.OutputOdpsFunction;
 import com.alibaba.maxgraph.sdkcommon.compiler.custom.program.VertexRatioProgram;
 import com.alibaba.maxgraph.sdkcommon.compiler.custom.CustomPredicate;
 import com.alibaba.maxgraph.sdkcommon.compiler.custom.ListKeyPredicate;
@@ -422,8 +420,6 @@ public class TreeBuilder {
                     return visitVertexByModulatingStep((VertexByModulatingStep) step, prev);
                 case OrStep:
                     return visitOrStep((OrStep) step, prev);
-                case GraphSourceStep:
-                    return visitGraphSourceStep((GraphSourceStep) step, prev);
                 case CustomVertexProgramStep:
                     return visitCustomVertexProgramStep((CustomVertexProgramStep) step, prev);
                 case ChooseStep:
@@ -783,10 +779,6 @@ public class TreeBuilder {
         return new OutputTreeNode(prev, schema, step.path, step.properties);
     }
 
-    private TreeNode visitGraphSourceStep(GraphSourceStep step, TreeNode prev) {
-        return new GraphSourceTreeNode(schema, step.getGraphSource());
-    }
-
     private TreeNode visitVertexByModulatingStep(VertexByModulatingStep step, TreeNode prev) {
         checkNotNull(prev);
         Direction direction = step.getDirection();
@@ -954,7 +946,7 @@ public class TreeBuilder {
             }
             this.rootPathFlag = saveFlag;
             return new AggregationListTreeNode(prev, schema, customAggregationListTraversal.getNameList(), aggregateNodeList);
-        } else if (mapFunction instanceof OutputOdpsFunction || mapFunction instanceof MapPropFillFunction || mapFunction instanceof RangeSumFunction) {
+        } else if (mapFunction instanceof MapPropFillFunction || mapFunction instanceof RangeSumFunction) {
             return new LambdaMapTreeNode(prev, schema, mapFunction, null);
         } else {
             if (this.lambdaEnableFlag) {

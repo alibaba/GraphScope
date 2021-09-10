@@ -190,10 +190,10 @@ class PropertyGraphOutStream : public Registered<PropertyGraphOutStream> {
     return meta_.GetClient()->instance_id();
   }
 
-  static std::shared_ptr<PropertyGraphOutStream> Create(
+  static std::unique_ptr<PropertyGraphOutStream> Create(
       Client& client, const char* graph_name, MGPropertyGraphSchema* schema,
       const int index) {
-    auto s = std::make_shared<PropertyGraphOutStream>();
+    auto s = std::unique_ptr<PropertyGraphOutStream>(new PropertyGraphOutStream());
 
     // take ownership of the `MGPropertyGraphSchema` object.
     s->graph_schema_ = std::shared_ptr<MGPropertyGraphSchema>(schema);
@@ -234,9 +234,9 @@ class PropertyGraphOutStream : public Registered<PropertyGraphOutStream> {
     return s;
   }
 
-  static std::shared_ptr<Object> Create() __attribute__((used)) {
+  static std::unique_ptr<Object> Create() __attribute__((used)) {
     return std::static_pointer_cast<Object>(
-        std::make_shared<PropertyGraphOutStream>());
+        std::unique_ptr<PropertyGraphOutStream>(new PropertyGraphOutStream()));
   }
 
   void Construct(const ObjectMeta& meta) override {
@@ -367,9 +367,9 @@ class GlobalPGStreamBuilder;
 
 class GlobalPGStream : public Registered<GlobalPGStream>, GlobalObject {
  public:
-  static std::shared_ptr<Object> Create() __attribute__((used)) {
+  static std::unique_ptr<Object> Create() __attribute__((used)) {
     return std::static_pointer_cast<Object>(
-        std::make_shared<GlobalPGStream>());
+        std::unique_ptr<GlobalPGStream>(new GlobalPGStream()));
   }
 
   std::shared_ptr<PropertyGraphOutStream> StreamAt(size_t const index) const {

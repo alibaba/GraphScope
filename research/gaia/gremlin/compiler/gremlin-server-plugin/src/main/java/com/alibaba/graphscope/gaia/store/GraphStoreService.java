@@ -15,6 +15,7 @@
  */
 package com.alibaba.graphscope.gaia.store;
 
+import com.alibaba.graphscope.common.proto.GremlinResult;
 import com.alibaba.graphscope.gaia.JsonUtils;
 import com.fasterxml.jackson.core.type.TypeReference;
 import org.apache.commons.io.IOUtils;
@@ -27,7 +28,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 
-public abstract class GraphStoreService {
+public abstract class GraphStoreService extends GraphElementId {
     protected Map<String, Map<String, Map<String, Object>>> cachedPropertyForTest;
 
     public GraphStoreService(String propertyResourceName) {
@@ -77,16 +78,20 @@ public abstract class GraphStoreService {
         return result.keySet();
     }
 
-    public <P> Optional<P> getEdgeProperty(BigInteger id, String key) {
+    public <P> Optional<P> getEdgeProperty(GremlinResult.Edge edge, String key) {
+        Object id = getCompositeId(edge);
         String idStr = String.valueOf(id);
-        if (getEdgeKeys(id).isEmpty()) return Optional.empty();
+        if (getEdgeKeys(edge).isEmpty()) return Optional.empty();
         return Optional.ofNullable((P) cachedPropertyForTest.get("edge_properties").get(idStr).get(key));
     }
 
-    public Set<String> getEdgeKeys(BigInteger id) {
+    public Set<String> getEdgeKeys(GremlinResult.Edge edge) {
+        Object id = getCompositeId(edge);
         String idStr = String.valueOf(id);
         Map<String, Object> result = cachedPropertyForTest.get("edge_properties").get(idStr);
         if (result == null) return Collections.EMPTY_SET;
         return result.keySet();
     }
+
+    public abstract Object getCompositeId(GremlinResult.Edge edge);
 }
