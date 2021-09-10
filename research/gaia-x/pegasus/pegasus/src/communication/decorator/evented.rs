@@ -26,7 +26,7 @@ mod rob {
     use crate::data_plane::{GeneralPush, Push};
     use crate::errors::IOResult;
     use crate::event::emitter::EventEmitter;
-    use crate::event::{Event, Signal};
+    use crate::event::{Event, EventKind};
     use crate::graph::Port;
     use crate::progress::EndSignal;
     use crate::tag::tools::map::TidyTagMap;
@@ -83,10 +83,11 @@ mod rob {
                 let size = c.0 + c.1 + msg.len();
                 if size > 0 {
                     trace_worker!(
-                        "output[{:?}]: push last data of {:?}, total pushed {} to {};",
+                        "output[{:?}]: push last data of {:?}, total pushed {} into channel[{}] to {};",
                         self.port(),
                         msg.tag,
                         size,
+                        self.ch_info.index(),
                         self.target_worker
                     );
                 }
@@ -103,13 +104,12 @@ mod rob {
                 // of the data; It must guarantee that if the event reached, then all data were also reached;
                 self.flush()?;
                 trace_worker!(
-                    "send end event of {:?} on to [worker {}: port: {:?} ;",
+                    "send end event of {:?} on to [worker_{}]: port: {:?} ;",
                     end.tag,
                     self.target_worker,
                     self.ch_info.target_port
                 );
-                let event =
-                    Event::new(self.source_worker, self.ch_info.target_port, Signal::EndSignal(end));
+                let event = Event::new(self.source_worker, self.ch_info.target_port, EventKind::End(end));
                 self.event_emitter
                     .send(self.target_worker, event)?;
             }
@@ -126,10 +126,11 @@ mod rob {
                             .unwrap_or((0, 0));
                         let size = c.0 + c.1;
                         trace_worker!(
-                            "output[{:?}]: notify end of {:?}, total pushed {} to {};",
+                            "output[{:?}]: notify end of {:?}, total pushed {} into channel[{}] to {};",
                             self.port(),
                             end.tag,
                             size,
+                            self.ch_info.index(),
                             self.target_worker
                         );
                     }
@@ -149,26 +150,31 @@ mod rob {
                             .unwrap_or((0, 0));
                         let size = c.0 + c.1;
                         trace_worker!(
-                            "output[{:?}]: notify end of {:?}, total pushed {} to {};",
+                            "output[{:?}]: notify end of {:?}, total pushed {} into channel[{}] to {};",
                             self.port(),
                             end.tag,
                             size,
+                            self.ch_info.index(),
                             self.target_worker
                         );
                     } else {
-                        trace_worker!("output[{:?}] notify end of {:?}", self.port(), end.tag);
+                        trace_worker!(
+                            "output[{:?}] notify end of {:?} of channel[{}]",
+                            self.port(),
+                            end.tag,
+                            self.ch_info.index()
+                        );
                     }
                 }
 
                 self.flush()?;
                 trace_worker!(
-                    "send end event of {:?} on to [worker {}]: port: {:?} ;",
+                    "send end event of {:?} on to {}: port: {:?} ;",
                     end.tag,
                     self.target_worker,
                     self.ch_info.target_port
                 );
-                let event =
-                    Event::new(self.source_worker, self.ch_info.target_port, Signal::EndSignal(end));
+                let event = Event::new(self.source_worker, self.ch_info.target_port, EventKind::End(end));
                 self.event_emitter
                     .send(self.target_worker, event)?;
             }
@@ -178,17 +184,23 @@ mod rob {
         fn flush(&mut self) -> IOResult<()> {
             if log_enabled!(log::Level::Trace) {
                 let port = self.port();
-                trace_worker!("output[{:?}] flush;", port);
+                trace_worker!(
+                    "output[{:?}] flush channel[{}] to {};",
+                    port,
+                    self.ch_info.index(),
+                    self.target_worker
+                );
                 for (a, b) in self.push_counts.iter_mut() {
                     let cnt = b.0;
                     if cnt > 0 {
                         b.1 += cnt;
                         b.0 = 0;
                         trace_worker!(
-                            "output[{:?}] flush {} data of {:?} to {};",
+                            "output[{:?}] flush {} data of {:?} into channel[{}] to {};",
                             port,
                             cnt,
                             a,
+                            self.ch_info.index(),
                             self.target_worker
                         );
                     }
@@ -208,12 +220,14 @@ mod rob {
 ////////////////////////////////////////////////////////
 #[cfg(feature = "rob")]
 mod rob {
+    use pegasus_common::buffer::ReadBuffer;
+
     use crate::channel_id::ChannelInfo;
     use crate::communication::IOResult;
     use crate::data::MicroBatch;
     use crate::data_plane::{GeneralPush, Push};
     use crate::event::emitter::EventEmitter;
-    use crate::event::{Event, Signal};
+    use crate::event::{Event, EventKind};
     use crate::progress::EndSignal;
     use crate::tag::tools::map::TidyTagMap;
     use crate::{Data, Tag};
@@ -225,7 +239,8 @@ mod rob {
         pub target_worker: u32,
         inner: GeneralPush<MicroBatch<T>>,
         event_emitter: EventEmitter,
-        push_counts: TidyTagMap<usize>,
+        // scope -> (sequence, counts)
+        push_monitor: TidyTagMap<(usize, usize, usize)>,
     }
 
     #[allow(dead_code)]
@@ -241,62 +256,124 @@ mod rob {
                 target_worker,
                 inner: push,
                 event_emitter: emitter,
-                push_counts,
+                push_monitor: push_counts,
             }
         }
 
         pub fn get_push_count(&self, tag: &Tag) -> Option<usize> {
-            self.push_counts.get(tag).copied()
+            self.push_monitor.get(tag).map(|(_, _, x)| *x)
         }
 
-        pub fn notify_end(&mut self, end: EndSignal) -> IOResult<()> {
-            if end.tag.len() == self.push_counts.scope_level as usize {
-                let size = self.push_counts.remove(&end.tag).unwrap_or(0);
+        pub fn notify_end(&mut self, mut end: EndSignal) -> IOResult<()> {
+            if end.tag.len() == self.push_monitor.scope_level as usize {
+                let size = self
+                    .push_monitor
+                    .remove(&end.tag)
+                    .unwrap_or((0, 0, 0));
+                end.seq = size.0 as u64;
+
+                if size.2 == 0
+                    && !end.tag.is_root()
+                    && !end
+                        .update_weight
+                        .as_ref()
+                        .map(|w| w.contains_source(self.target_worker))
+                        .unwrap_or(true)
+                {
+                    trace_worker!(
+                        "output[{:?}] ignore end of {:?} to channel[{}] to worker {};",
+                        self.ch_info.source_port,
+                        end.tag,
+                        self.ch_info.index(),
+                        self.target_worker
+                    );
+                    return Ok(());
+                }
+
                 trace_worker!(
-                    "output[{:?}]:  pushed {} records of {:?} to {} totally, notify end;",
+                    "output[{:?}]: notify end of {:?} to channel[{}] to worker {}, total pushed {};",
                     self.ch_info.source_port,
-                    size,
                     end.tag,
-                    self.target_worker
+                    self.ch_info.id.index,
+                    self.target_worker,
+                    size.2
                 );
-            } else {
-                trace_worker!("output[{:?}] notify end of {:?}", self.ch_info.source_port, end.tag);
             }
 
-            trace_worker!(
-                "send end event of {:?} on to [worker {}]: port: {:?} ;",
-                end.tag,
-                self.target_worker,
-                self.ch_info.target_port
-            );
-            let event = Event::new(self.source_worker, self.ch_info.target_port, Signal::EndSignal(end));
-            self.event_emitter
-                .send(self.target_worker, event)
+            if end.source_weight.value() == 1 {
+                let mut last = MicroBatch::new(end.tag.clone(), self.source_worker, ReadBuffer::new());
+                let seq = end.seq;
+                last.set_end(end);
+                last.set_seq(seq);
+                self.inner.push(last)
+            } else {
+                trace_worker!(
+                    "output[{:?}]: send end event of {:?} of channel[{}] to worker {} to port {:?};",
+                    self.ch_info.source_port,
+                    end.tag,
+                    self.ch_info.id.index,
+                    self.target_worker,
+                    self.ch_info.target_port
+                );
+                let event = Event::new(self.source_worker, self.ch_info.target_port, EventKind::End(end));
+                self.event_emitter
+                    .send(self.target_worker, event)
+            }
         }
     }
 
     impl<D: Data> Push<MicroBatch<D>> for EventEmitPush<D> {
-        fn push(&mut self, batch: MicroBatch<D>) -> IOResult<()> {
+        fn push(&mut self, mut batch: MicroBatch<D>) -> IOResult<()> {
             let len = batch.len();
-            assert!(len > 0, "push batch size = 0;");
             if batch.is_last() {
-                let mut cnt = self.push_counts.remove(&batch.tag).unwrap_or(0);
-                cnt += len;
+                let (seq, _cnt, mut total) = self
+                    .push_monitor
+                    .remove(&batch.tag)
+                    .unwrap_or((0, 0, 0));
+                batch.set_seq(seq as u64);
+                total += len;
                 trace_worker!(
-                    "output[{:?}] pushed {} records of {:?} to {} totally, notify end;",
+                    "output[{:?}] push last batch(len={}) of {:?} to channel[{}] to worker {}, total pushed {} ;",
                     self.ch_info.source_port,
-                    cnt,
+                    len,
                     batch.tag,
-                    self.target_worker
+                    self.ch_info.id.index,
+                    self.target_worker,
+                    total
                 );
             } else {
-                let cnt = self.push_counts.get_mut_or_insert(&batch.tag);
+                assert!(len > 0, "push batch size = 0;");
+                let (seq, cnt, total) = self.push_monitor.get_mut_or_insert(&batch.tag);
                 *cnt += len;
+                *total += len;
+                batch.set_seq(*seq as u64);
+                *seq += 1;
             }
             self.inner.push(batch)
         }
 
         fn flush(&mut self) -> IOResult<()> {
+            let index = self.ch_info.index();
+            let target = self.target_worker;
+            trace_worker!(
+                "output[{:?}] flush channel[{}] to worker {};",
+                self.ch_info.source_port,
+                self.ch_info.index(),
+                target
+            );
+            for (t, (_, b, _)) in self.push_monitor.iter_mut() {
+                if *b > 0 {
+                    trace_worker!(
+                        "output[{:?}] flush {} data of {:?} to channel[{}] to worker {} ;",
+                        self.ch_info.source_port,
+                        *b,
+                        t,
+                        index,
+                        target
+                    );
+                    *b = 0;
+                }
+            }
             self.inner.flush()
         }
 

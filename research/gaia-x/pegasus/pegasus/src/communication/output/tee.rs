@@ -13,21 +13,152 @@
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 
+use std::cell::RefCell;
+use std::rc::Rc;
+
+use ahash::AHashSet;
 pub(crate) use rob::*;
+
+use crate::api::scope::MergedScopeDelta;
+use crate::communication::cancel::{CancelHandle, CancelListener};
+use crate::tag::tools::map::TidyTagMap;
+use crate::Tag;
+
+struct ChannelCancel {
+    scope_level: u32,
+    inner: CancelHandle,
+    delta: MergedScopeDelta,
+    /// used to check cancel before evolve and push;
+    before_enter: TidyTagMap<()>,
+    parent: AHashSet<Tag>,
+}
+
+impl CancelListener for ChannelCancel {
+    fn cancel(&mut self, tag: &Tag, to: u32) -> Option<Tag> {
+        let tag = self.inner.cancel(tag, to)?;
+        let level = tag.len() as u32;
+
+        if self.delta.scope_level_delta < 0 {
+            // channel send data to parent scope;
+            // cancel from parent scope;
+            assert!(level < self.before_enter.scope_level);
+            if *crate::config::ENABLE_CANCEL_CHILD {
+                self.parent.insert(tag.clone());
+                return Some(tag.clone());
+            } else {
+                None
+            }
+        } else {
+            // scope_level delta > 0;
+            if level == self.scope_level {
+                let before_enter = self.delta.evolve_back(&tag);
+                self.before_enter
+                    .insert(before_enter.clone(), ());
+                Some(before_enter)
+            } else if level < self.scope_level {
+                // cancel from parent scope;
+                if *crate::config::ENABLE_CANCEL_CHILD {
+                    self.parent.insert(tag.clone());
+                    Some(tag.clone())
+                } else {
+                    None
+                }
+            } else {
+                warn_worker!(
+                    "unexpected cancel of scope {:?} expect scope level {};",
+                    tag,
+                    self.scope_level
+                );
+                // ignore:
+                None
+            }
+        }
+    }
+}
+
+impl ChannelCancel {
+    fn is_canceled(&self, tag: &Tag) -> bool {
+        let level = tag.len() as u32;
+        if level == self.before_enter.scope_level {
+            if !self.before_enter.is_empty() && self.before_enter.contains_key(tag) {
+                return true;
+            }
+
+            if *crate::config::ENABLE_CANCEL_CHILD && !self.parent.is_empty() {
+                let p = tag.to_parent_uncheck();
+                self.check_parent(p)
+            } else {
+                false
+            }
+        } else if level < self.before_enter.scope_level {
+            self.check_parent(tag.clone())
+        } else {
+            false
+        }
+    }
+
+    fn check_parent(&self, mut p: Tag) -> bool {
+        loop {
+            if self.parent.contains(&p) {
+                return true;
+            }
+            if p.is_root() {
+                break;
+            } else {
+                p = p.to_parent_uncheck();
+            }
+        }
+
+        false
+    }
+}
+
+#[derive(Clone)]
+pub(crate) struct ChannelCancelPtr {
+    inner: Rc<RefCell<ChannelCancel>>,
+}
+
+impl CancelListener for ChannelCancelPtr {
+    fn cancel(&mut self, tag: &Tag, to: u32) -> Option<Tag> {
+        self.inner.borrow_mut().cancel(tag, to)
+    }
+}
+
+impl ChannelCancelPtr {
+    fn new(scope_level: u32, delta: MergedScopeDelta, ch: CancelHandle) -> Self {
+        let level_before = delta.origin_scope_level as u32;
+        let inner = ChannelCancel {
+            scope_level,
+            inner: ch,
+            delta,
+            before_enter: TidyTagMap::new(level_before),
+            parent: AHashSet::new(),
+        };
+        ChannelCancelPtr { inner: Rc::new(RefCell::new(inner)) }
+    }
+
+    fn is_canceled(&self, tag: &Tag) -> bool {
+        self.inner.borrow().is_canceled(tag)
+    }
+}
+
+unsafe impl Send for ChannelCancelPtr {}
 
 #[cfg(not(feature = "rob"))]
 mod rob {
+    use nohash_hasher::IntSet;
     use pegasus_common::buffer::{Batch, BatchPool, MemBatchPool, MemBufAlloc};
     use smallvec::SmallVec;
 
+    use super::*;
     use crate::api::scope::MergedScopeDelta;
     use crate::channel_id::ChannelInfo;
+    use crate::communication::cancel::CancelHandle;
     use crate::communication::decorator::{MicroBatchPush, ScopeStreamBuffer, ScopeStreamPush};
     use crate::data::MicroBatch;
     use crate::errors::{IOError, IOResult};
     use crate::graph::Port;
     use crate::progress::EndSignal;
-    use crate::tag::tools::map::TidyTagMap;
     use crate::{Data, Tag};
 
     struct Buffer<D> {
@@ -56,11 +187,24 @@ mod rob {
         /// describe the scope change through this push;
         /// buffer for small push;
         buffer: Option<Buffer<D>>,
+        cancel_handle: ChannelCancelPtr,
     }
 
     impl<D: Data> ChannelPush<D> {
-        pub(crate) fn new(ch_info: ChannelInfo, delta: MergedScopeDelta, push: MicroBatchPush<D>) -> Self {
-            ChannelPush { ch_info, push, delta, buffer: None }
+        pub(crate) fn new(
+            ch_info: ChannelInfo, delta: MergedScopeDelta, push: MicroBatchPush<D>, cancel: CancelHandle,
+        ) -> Self {
+            let cancel_handle = ChannelCancelPtr::new(ch_info.scope_level, delta.clone(), cancel);
+            ChannelPush { ch_info, push, delta, buffer: None, cancel_handle }
+        }
+
+        pub(crate) fn get_cancel_handle(&self) -> ChannelCancelPtr {
+            self.cancel_handle.clone()
+        }
+
+        #[inline]
+        fn is_canceled(&self, tag: &Tag) -> bool {
+            self.cancel_handle.is_canceled(tag)
         }
 
         fn push_without_evolve(&mut self, tag: Tag, msg: D) -> IOResult<()> {
@@ -139,6 +283,9 @@ mod rob {
 
         fn push(&mut self, tag: &Tag, msg: D) -> IOResult<()> {
             assert_eq!(tag.len(), self.delta.origin_scope_level);
+            if self.cancel_handle.is_canceled(&tag) {
+                return Ok(());
+            }
             let tag = self.delta.evolve(tag);
             self.push_without_evolve(tag, msg)
         }
@@ -174,6 +321,9 @@ mod rob {
 
         fn try_push_iter<I: Iterator<Item = D>>(&mut self, tag: &Tag, iter: &mut I) -> IOResult<()> {
             assert_eq!(tag.len(), self.delta.origin_scope_level);
+            if self.cancel_handle.is_canceled(tag) {
+                return Ok(());
+            }
             let tag = self.delta.evolve(tag);
             if let Some(b) = self.buffer.as_mut() {
                 if b.pin == tag {
@@ -270,17 +420,15 @@ mod rob {
         pub port: Port,
         main_push: ChannelPush<D>,
         pushes: SmallVec<[ChannelPush<D>; 2]>,
-        buffers: TidyTagMap<SmallVec<[Batch<D>; 2]>>,
         buffer_pool: MemBatchPool<D>,
     }
 
     impl<D: Data> Tee<D> {
-        pub fn new(port: Port, scope_level: u32, push: ChannelPush<D>) -> Self {
+        pub fn new(port: Port, _scope_level: u32, push: ChannelPush<D>) -> Self {
             Tee {
                 port,
                 main_push: push,
                 pushes: SmallVec::new(),
-                buffers: TidyTagMap::new(scope_level),
                 buffer_pool: BatchPool::new(1023, 128, MemBufAlloc::new()),
             }
         }
@@ -399,67 +547,115 @@ mod rob {
             if len == 0 {
                 self.main_push.try_push_iter(tag, iter)
             } else {
-                let mut buffer_map = std::mem::replace(&mut self.buffers, Default::default());
-                let buffers = buffer_map.get_mut_or_insert(tag);
-                if buffers.is_empty() {
-                    let b = self
-                        .buffer_pool
-                        .fetch()
-                        .unwrap_or(Batch::with_capacity(1023));
-                    buffers.push(b);
-                }
-                let mut cor = Iter::new(iter, buffers);
-                let mut error = None;
-                if let Err(e) = self.main_push.try_push_iter(tag, &mut cor) {
-                    if !e.is_interrupted() && !e.is_would_block() {
-                        return Err(e);
-                    } else {
-                        error = Some(e);
+                // if no cancel has been triggered, the 'stat' won't be allocated;
+                let mut stat = IntSet::default();
+                for (i, p) in self.pushes.iter().enumerate() {
+                    if p.is_canceled(tag) {
+                        stat.insert(i);
                     }
                 }
 
-                let mut errors = Vec::new();
-                for (i, buf) in buffers.iter_mut().enumerate() {
-                    if !buf.is_empty() {
-                        if let Err(e) = self.pushes[i].try_push_iter(tag, buf) {
-                            if e.is_interrupted() {
-                                errors.push(0);
-                            } else if e.is_would_block() {
-                                errors.push(1);
+                if self.main_push.is_canceled(tag) {
+                    if stat.len() == self.pushes.len() {
+                        // all canceled;
+                        Ok(())
+                    } else if self.pushes.len() == 1 {
+                        self.pushes[0].try_push_iter(tag, iter)
+                    } else {
+                        // corner case;
+                        if self.pushes.len() - stat.len() == 1 {
+                            for (i, p) in self.pushes.iter_mut().enumerate() {
+                                if !stat.contains(&i) {
+                                    return p.try_push_iter(tag, iter);
+                                }
+                            }
+                            Ok(())
+                        } else {
+                            let mut queue = vec![];
+                            for i in 0..self.pushes.len() {
+                                if !stat.contains(&i) {
+                                    let b = self
+                                        .buffer_pool
+                                        .fetch()
+                                        .unwrap_or(Batch::with_capacity(1024));
+                                    queue.push((i, b));
+                                }
+                            }
+                            assert!(queue.len() > 1);
+                            let first = queue.swap_remove(queue.len() - 1);
+                            let mut cor = Iter::new(iter, queue.as_mut_slice());
+                            let mut has_block = false;
+                            if let Err(err) = self.pushes[first.0].try_push_iter(tag, &mut cor) {
+                                if err.is_would_block() || err.is_interrupted() {
+                                    has_block = true;
+                                } else {
+                                    return Err(err);
+                                }
+                            }
+
+                            for (i, mut b) in queue.drain(..) {
+                                if let Err(err) = self.pushes[i].try_push_iter(tag, &mut b) {
+                                    return if err.is_would_block() || err.is_interrupted() {
+                                        error_worker!("can't handle block of tee push;");
+                                        Err(IOError::cannot_block())
+                                    } else {
+                                        Err(err)
+                                    };
+                                }
+                            }
+                            if has_block {
+                                would_block!("main push block in tee;")
                             } else {
-                                return Err(e);
+                                Ok(())
                             }
                         }
                     }
-                }
-
-                if errors.is_empty() {
-                    assert!(buffers.iter().all(|b| b.is_empty()));
-                    buffers.clear();
                 } else {
-                    if buffers.iter().all(|b| b.is_empty()) {
-                        buffers.clear();
-                    }
-                }
-                self.buffers = buffer_map;
-                if let Some(err) = error {
-                    if err.is_interrupted() {
-                        return Err(err);
+                    if stat.len() == self.pushes.len() {
+                        self.main_push.try_push_iter(tag, iter)
                     } else {
-                        if errors.iter().any(|x| *x == 0) {
-                            return interrupt!("tee");
+                        let mut queue = vec![];
+                        for i in 0..self.pushes.len() {
+                            if !stat.contains(&i) {
+                                let b = self
+                                    .buffer_pool
+                                    .fetch()
+                                    .unwrap_or(Batch::with_capacity(1024));
+                                queue.push((i, b));
+                            }
+                        }
+                        let mut cor = Iter::new(iter, queue.as_mut_slice());
+                        let mut has_block = false;
+                        if let Err(err) = self.main_push.try_push_iter(tag, &mut cor) {
+                            if err.is_would_block() || err.is_interrupted() {
+                                has_block = true;
+                            } else {
+                                return Err(err);
+                            }
+                        }
+
+                        for (i, mut b) in queue.drain(..) {
+                            if let Err(err) = self.pushes[i].try_push_iter(tag, &mut b) {
+                                if err.is_would_block() || err.is_interrupted() {
+                                    if !b.is_empty() {
+                                        error_worker!(
+                                            "can't handle block of tee push {} on port {:?};",
+                                            i,
+                                            self.port
+                                        );
+                                        return Err(IOError::cannot_block());
+                                    }
+                                } else {
+                                    return Err(err);
+                                }
+                            }
+                        }
+                        if has_block {
+                            would_block!("main push block in tee;")
                         } else {
-                            return Err(err);
+                            Ok(())
                         }
                     }
-                } else if !errors.is_empty() {
-                    if errors.iter().any(|x| *x == 0) {
-                        return interrupt!("tee");
-                    } else {
-                        return would_block!("tee");
-                    }
-                } else {
-                    Ok(())
                 }
             }
         }
@@ -527,11 +723,11 @@ mod rob {
 
     struct Iter<'a, D, I> {
         iter: &'a mut I,
-        buf: &'a mut [Batch<D>],
+        buf: &'a mut [(usize, Batch<D>)],
     }
 
     impl<'a, D, I> Iter<'a, D, I> {
-        pub fn new(iter: &'a mut I, buf: &'a mut [Batch<D>]) -> Self {
+        pub fn new(iter: &'a mut I, buf: &'a mut [(usize, Batch<D>)]) -> Self {
             Iter { iter, buf }
         }
     }
@@ -546,7 +742,7 @@ mod rob {
         fn next(&mut self) -> Option<Self::Item> {
             if let Some(next) = self.iter.next() {
                 for b in self.buf.iter_mut() {
-                    b.push(next.clone());
+                    b.1.push(next.clone());
                 }
                 Some(next)
             } else {
@@ -559,9 +755,14 @@ mod rob {
 
 #[cfg(feature = "rob")]
 mod rob {
+    use pegasus_common::buffer::ReadBuffer;
+
     use crate::api::scope::MergedScopeDelta;
     use crate::channel_id::ChannelInfo;
+    use crate::communication::cancel::CancelHandle;
     use crate::communication::decorator::{BlockPush, MicroBatchPush};
+    use crate::communication::output::tee::ChannelCancelPtr;
+    use crate::communication::IOResult;
     use crate::data::MicroBatch;
     use crate::data_plane::Push;
     use crate::errors::IOError;
@@ -571,25 +772,84 @@ mod rob {
     #[allow(dead_code)]
     pub(crate) struct ChannelPush<D: Data> {
         pub ch_info: ChannelInfo,
+        pub src: u32,
         pub(crate) delta: MergedScopeDelta,
         push: MicroBatchPush<D>,
+        cancel_handle: ChannelCancelPtr,
     }
 
     impl<D: Data> ChannelPush<D> {
-        pub(crate) fn new(ch_info: ChannelInfo, delta: MergedScopeDelta, push: MicroBatchPush<D>) -> Self {
-            ChannelPush { ch_info, delta, push }
+        pub(crate) fn new(
+            ch_info: ChannelInfo, delta: MergedScopeDelta, push: MicroBatchPush<D>, ch: CancelHandle,
+        ) -> Self {
+            let src = crate::worker_id::get_current_worker().index;
+            let cancel_handle = ChannelCancelPtr::new(ch_info.scope_level, delta.clone(), ch);
+            ChannelPush { ch_info, src, delta, push, cancel_handle }
+        }
+
+        pub(crate) fn get_cancel_handle(&self) -> ChannelCancelPtr {
+            self.cancel_handle.clone()
+        }
+
+        #[inline]
+        fn is_canceled(&self, tag: &Tag) -> bool {
+            self.cancel_handle.is_canceled(tag)
         }
     }
 
     impl<D: Data> Push<MicroBatch<D>> for ChannelPush<D> {
-        fn push(&mut self, mut msg: MicroBatch<D>) -> Result<(), IOError> {
-            assert_eq!(msg.tag.len(), self.delta.origin_scope_level);
-            let tag = self.delta.evolve(&msg.tag);
-            msg.tag = tag;
-            self.push.push(msg)
+        fn push(&mut self, mut batch: MicroBatch<D>) -> Result<(), IOError> {
+            if self.is_canceled(&batch.tag) {
+                if batch.is_last() {
+                    batch.clear();
+                } else {
+                    return Ok(());
+                }
+            }
+
+            if batch.tag.len() == self.delta.origin_scope_level {
+                let tag = self.delta.evolve(&batch.tag);
+                if let Some(end) = batch.take_end() {
+                    if self.delta.scope_level_delta > 0 {
+                        // enter
+                        let end_cp = end.clone();
+                        batch.set_end(end);
+                        batch.set_tag(tag);
+                        self.push.push(batch)?;
+                        let mut p = MicroBatch::new(end_cp.tag.clone(), self.src, ReadBuffer::new());
+                        p.set_end(end_cp);
+                        self.push.push(p)
+                    } else if self.delta.scope_level_delta == 0 {
+                        batch.set_end(end);
+                        batch.set_tag(tag);
+                        self.push.push(batch)
+                    } else {
+                        // leave:
+                        batch.set_tag(tag);
+                        self.push.push(batch)
+                    }
+                } else if !batch.is_empty() {
+                    batch.set_tag(tag);
+                    self.push.push(batch)
+                } else {
+                    //ignore;
+                    Ok(())
+                }
+            } else if batch.tag.len() < self.delta.origin_scope_level {
+                assert!(batch.is_empty(), "batch from parent is not empty;");
+                assert!(batch.is_last(), "batch from parent is not last;");
+                self.push.push(batch)
+            } else {
+                unreachable!("unrecognized batch from child scope {:?}", batch.tag);
+            }
         }
 
         fn flush(&mut self) -> Result<(), IOError> {
+            trace_worker!(
+                "output[{:?}] flush channel [{}]",
+                self.ch_info.source_port,
+                self.ch_info.index()
+            );
             self.push.flush()
         }
 
@@ -602,16 +862,23 @@ mod rob {
         fn try_unblock(&mut self, tag: &Tag) -> Result<bool, IOError> {
             self.push.try_unblock(tag)
         }
+
+        fn clean_block_of(&mut self, tag: &Tag) -> IOResult<()> {
+            self.push.clean_block_of(tag)
+        }
     }
 
+    #[allow(dead_code)]
     pub(crate) struct Tee<D: Data> {
+        port: Port,
+        scope_level: u32,
         main_push: ChannelPush<D>,
         other_pushes: Vec<ChannelPush<D>>,
     }
 
     impl<D: Data> Tee<D> {
-        pub fn new(_port: Port, scope_level: u32, push: ChannelPush<D>) -> Self {
-            Tee { main_push: push, other_pushes: Vec::new() }
+        pub fn new(port: Port, scope_level: u32, push: ChannelPush<D>) -> Self {
+            Tee { port, scope_level, main_push: push, other_pushes: Vec::new() }
         }
 
         pub fn add_push(&mut self, push: ChannelPush<D>) {
@@ -627,6 +894,11 @@ mod rob {
                     let msg_cp = msg.share();
                     if let Err(err) = tx.push(msg_cp) {
                         if err.is_would_block() {
+                            trace_worker!(
+                                "tee[{:?}] other push blocked on push batch of {:?} ;",
+                                self.port,
+                                msg.tag
+                            );
                             would_block = true;
                         } else {
                             return Err(err);
@@ -642,7 +914,12 @@ mod rob {
                         Ok(())
                     }
                 }
-                Err(err) => Err(err),
+                Err(err) => {
+                    if err.is_would_block() {
+                        trace_worker!("tee[{:?}] main push blocked on push batch;", self.port,);
+                    }
+                    Err(err)
+                }
             }
         }
 
@@ -670,6 +947,14 @@ mod rob {
                 would_block |= o.try_unblock(tag)?;
             }
             Ok(would_block)
+        }
+
+        fn clean_block_of(&mut self, tag: &Tag) -> IOResult<()> {
+            self.main_push.clean_block_of(tag)?;
+            for o in self.other_pushes.iter_mut() {
+                o.clean_block_of(tag)?;
+            }
+            Ok(())
         }
     }
 }

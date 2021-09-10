@@ -5,6 +5,7 @@ use pegasus::JobConf;
 fn count_test_01() {
     let mut conf = JobConf::new("count_test_01");
     conf.set_workers(3);
+    //conf.plan_print = true;
     let num = 4000;
     let mut result = pegasus::run(conf, || {
         let index = pegasus::get_current_worker().index;
@@ -33,6 +34,7 @@ fn count_test_01() {
 fn count_test_02() {
     let mut conf = JobConf::new("count_test_02");
     conf.set_workers(3);
+    // conf.plan_print = true;
     let num = 4000;
     let mut result = pegasus::run(conf, || {
         let index = pegasus::get_current_worker().index;
@@ -119,6 +121,7 @@ fn collect_in_apply_test() {
 fn collect_in_apply_2_test() {
     let mut conf = JobConf::new("collect_in_apply_2");
     conf.set_workers(2);
+    //conf.plan_print = true;
     let mut result = pegasus::run(conf, || {
         move |input, output| {
             input

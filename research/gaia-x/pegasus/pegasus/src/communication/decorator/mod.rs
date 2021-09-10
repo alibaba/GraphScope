@@ -55,6 +55,8 @@ pub trait ScopeStreamBuffer {
 pub trait BlockPush {
     // try to unblock data on scope, return true if the data is unblocked;
     fn try_unblock(&mut self, tag: &Tag) -> IOResult<bool>;
+
+    fn clean_block_of(&mut self, tag: &Tag) -> IOResult<()>;
 }
 
 pub use rob::*;
@@ -66,6 +68,7 @@ mod rob {
     use super::*;
     use crate::channel_id::ChannelInfo;
     use crate::communication::buffer::BufferedPush;
+    use crate::communication::cancel::CancelListener;
     use crate::communication::decorator::aggregate::AggregateBatchPush;
     use crate::communication::decorator::broadcast::BroadcastBatchPush;
     use crate::communication::decorator::exchange::{ExchangeByScopePush, ExchangeMicroBatchPush};
@@ -116,10 +119,11 @@ mod rob {
                 let size = c.0 + c.1 + msg.len();
                 if size > 0 {
                     trace_worker!(
-                        "output[{:?}]: push last data of {:?}, total pushed {} to self;",
+                        "output[{:?}]: push last data of {:?}, total pushed {} into channel[{}] to self;",
                         self.port(),
                         msg.tag,
-                        size
+                        size,
+                        self.ch_info.index()
                     );
                 }
             }
@@ -139,13 +143,19 @@ mod rob {
                         .unwrap_or((0, 0));
                     let size = c.0 + c.1;
                     trace_worker!(
-                        "output[{:?}]: notify end of {:?}, total pushed {} to self;",
+                        "output[{:?}]: notify end of {:?}, total pushed {} into channel[{}] to self;",
                         self.port(),
                         end.tag,
-                        size
+                        size,
+                        self.ch_info.index()
                     );
                 } else {
-                    trace_worker!("output[{:?}] notify end of {:?}", self.port(), end.tag);
+                    trace_worker!(
+                        "output[{:?}] notify end of {:?} into channel[{}];",
+                        self.port(),
+                        end.tag,
+                        self.ch_info.index()
+                    );
                 }
             }
             let seq = end.seq;
@@ -162,13 +172,19 @@ mod rob {
         fn flush(&mut self) -> IOResult<()> {
             if log_enabled!(log::Level::Trace) {
                 let port = self.port();
-                trace_worker!("output[{:?}] flush;", port);
+                trace_worker!("output[{:?}] flush channel[{}];", port, self.ch_info.index());
                 for (a, b) in self.push_counts.iter_mut() {
                     let cnt = b.0;
                     if cnt > 0 {
                         b.1 += cnt;
                         b.0 = 0;
-                        trace_worker!("output[{:?}] flush {} data of {:?} to self;", port, cnt, a);
+                        trace_worker!(
+                            "output[{:?}] flush {} data of {:?} into channel[{}] to self;",
+                            port,
+                            cnt,
+                            a,
+                            self.ch_info.index()
+                        );
                     }
                 }
             }
@@ -259,7 +275,7 @@ mod rob {
 
         #[inline]
         fn push_last(&mut self, msg: T, end: EndSignal) -> IOResult<()> {
-            trace_worker!("out port {:?} push end of {:?}", self.port(), end.tag);
+            trace_worker!("output[{:?}] push last of {:?}", self.port(), end.tag);
             match self {
                 MicroBatchPush::Pipeline(p) => p.push_last(msg, end),
                 MicroBatchPush::Shuffle(p) => p.push_last(msg, end),
@@ -281,7 +297,7 @@ mod rob {
 
         #[inline]
         fn notify_end(&mut self, end: EndSignal) -> IOResult<()> {
-            trace_worker!("out port {:?} notify end of {:?}", self.port(), end.tag);
+            trace_worker!("output[{:?}]: notify end of {:?}", self.port(), end.tag);
             match self {
                 MicroBatchPush::Pipeline(p) => p.notify_end(end),
                 MicroBatchPush::Shuffle(p) => p.notify_end(end),
@@ -311,6 +327,14 @@ mod rob {
                 MicroBatchPush::Broadcast(p) => p.close(),
                 MicroBatchPush::ScopeShuffle(p) => p.close(),
             }
+        }
+    }
+
+    pub(crate) struct DefaultCancelListener;
+
+    impl CancelListener for DefaultCancelListener {
+        fn cancel(&mut self, tag: &Tag, _to: u32) -> Option<Tag> {
+            Some(tag.clone())
         }
     }
 }
@@ -347,23 +371,46 @@ mod rob {
     }
 
     impl<T: Data> Push<MicroBatch<T>> for LocalMicroBatchPush<T> {
-        fn push(&mut self, msg: MicroBatch<T>) -> IOResult<()> {
+        fn push(&mut self, batch: MicroBatch<T>) -> IOResult<()> {
             if log_enabled!(log::Level::Trace) {
-                let c = self.push_counts.get_mut_or_insert(&msg.tag);
-                c.0 += msg.len();
+                if batch.is_last() {
+                    let mut c = self
+                        .push_counts
+                        .remove(&batch.tag)
+                        .unwrap_or((0, 0));
+                    c.0 += batch.len();
+                    c.1 += c.0;
+                    trace_worker!(
+                        "output[{:?}] push last batch(len={}) of {:?} to channel[{}] to self, total pushed {};",
+                        self.ch_info.source_port,
+                        batch.len(),
+                        batch.tag,
+                        self.ch_info.id.index,
+                        c.1
+                    );
+                } else {
+                    let c = self.push_counts.get_mut_or_insert(&batch.tag);
+                    c.0 += batch.len();
+                }
             }
-            self.inner.push(msg)
+            self.inner.push(batch)
         }
 
         fn flush(&mut self) -> IOResult<()> {
             if log_enabled!(log::Level::Trace) {
                 let port = self.ch_info.source_port;
-                for (a, b) in self.push_counts.iter_mut() {
-                    let cnt = b.0;
-                    if cnt > 0 {
-                        b.1 += cnt;
-                        b.0 = 0;
-                        trace_worker!("output[{:?}] flush {} data of {:?} to self;", port, cnt, a);
+                let index = self.ch_info.index();
+                for (t, (a, b)) in self.push_counts.iter_mut() {
+                    if *a > 0 {
+                        *b += *a;
+                        trace_worker!(
+                            "output[{:?}] flush {} data of {:?} to channel[{}] to self;",
+                            port,
+                            *a,
+                            t,
+                            index
+                        );
+                        *a = 0;
                     }
                 }
             }
@@ -387,22 +434,50 @@ mod rob {
     }
 
     impl<T: Data> Push<MicroBatch<T>> for MicroBatchPush<T> {
-        fn push(&mut self, _msg: MicroBatch<T>) -> Result<(), IOError> {
-            todo!()
+        fn push(&mut self, batch: MicroBatch<T>) -> Result<(), IOError> {
+            match self {
+                MicroBatchPush::Local(p) => p.push(batch),
+                MicroBatchPush::Exchange(p) => p.push(batch),
+                MicroBatchPush::Broadcast(p) => p.push(batch),
+                MicroBatchPush::Global(p) => p.push(batch),
+                MicroBatchPush::ScopeGlobal(p) => p.push(batch),
+            }
         }
 
         fn flush(&mut self) -> Result<(), IOError> {
-            todo!()
+            match self {
+                MicroBatchPush::Local(p) => p.flush(),
+                MicroBatchPush::Exchange(p) => p.flush(),
+                MicroBatchPush::Broadcast(p) => p.flush(),
+                MicroBatchPush::Global(p) => p.flush(),
+                MicroBatchPush::ScopeGlobal(p) => p.flush(),
+            }
         }
 
         fn close(&mut self) -> Result<(), IOError> {
-            todo!()
+            match self {
+                MicroBatchPush::Local(p) => p.close(),
+                MicroBatchPush::Exchange(p) => p.close(),
+                MicroBatchPush::Broadcast(p) => p.close(),
+                MicroBatchPush::Global(p) => p.close(),
+                MicroBatchPush::ScopeGlobal(p) => p.close(),
+            }
         }
     }
 
     impl<T: Data> BlockPush for MicroBatchPush<T> {
-        fn try_unblock(&mut self, _tag: &Tag) -> Result<bool, IOError> {
-            todo!()
+        fn try_unblock(&mut self, tag: &Tag) -> Result<bool, IOError> {
+            match self {
+                MicroBatchPush::Exchange(p) => p.try_unblock(tag),
+                _ => Ok(true),
+            }
+        }
+
+        fn clean_block_of(&mut self, tag: &Tag) -> IOResult<()> {
+            match self {
+                MicroBatchPush::Exchange(p) => p.clean_block_of(tag),
+                _ => Ok(()),
+            }
         }
     }
 }

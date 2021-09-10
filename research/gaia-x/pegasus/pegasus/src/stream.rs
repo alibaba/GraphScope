@@ -306,9 +306,8 @@ impl<D: Data> Stream<D> {
         let channel = ch.connect_to(target, cyclic, &self.dfb)?;
         let (push, pull, notify) = channel.take();
         let ch_info = push.ch_info;
-        let delta = push.delta.clone();
         self.port.set_push(push);
-        op.add_input(ch_info, pull, notify, &self.dfb.event_emitter, delta);
+        op.add_input(ch_info, pull, notify, &self.dfb.event_emitter);
         let edge = Edge::new(ch_info);
         Ok(edge)
     }

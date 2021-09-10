@@ -10,19 +10,23 @@ mod rob {
     use super::*;
 
     struct BufferRecycleHook<D> {
-        batch_size: usize,
         proxy: Arc<BoundLinkQueue<Buffer<D>>>,
         dropped: Arc<AtomicBool>,
     }
 
     impl<D> BufferRecycleHook<D> {
         pub fn recycle(&self, mut buf: Buffer<D>) -> Option<Buffer<D>> {
-            if buf.capacity() > 0 {
-                assert!(buf.capacity() >= self.batch_size);
+            let cap = buf.capacity();
+            if cap > 0 {
+                //assert!(cap >= self.batch_size);
                 if !self.dropped.load(Ordering::SeqCst) {
-                    //debug!("try to recycle batch;");
                     buf.clear();
-                    return if let Err(e) = self.proxy.push(buf) { Some(e.0) } else { None };
+                    return if let Err(e) = self.proxy.push(buf) {
+                        Some(e.0)
+                    } else {
+                        // trace!("try to recycle buf with capacity={}", cap);
+                        None
+                    };
                 }
             }
             Some(buf)
@@ -103,8 +107,9 @@ mod rob {
 
         fn recycle(&mut self) {
             if !self.recycle_hooks.is_empty() {
+                // trace!("try to recycle buf with {} hooks;", self.recycle_hooks.len());
                 let mut batch = std::mem::replace(self, Buffer::new());
-                while let Some(hook) = self.recycle_hooks.pop() {
+                while let Some(hook) = batch.recycle_hooks.pop() {
                     if let Some(b) = hook.recycle(batch) {
                         batch = b;
                     } else {
@@ -112,6 +117,8 @@ mod rob {
                     }
                 }
                 batch.inner = vec![];
+            } else {
+                // trace!("no recycle hook found;")
             }
         }
     }
@@ -327,6 +334,7 @@ mod rob {
                 // self reuse;
                 buf.clear();
                 buf.insert_recycle_hook(self.get_hook());
+                trace!("reuse idle buf;");
                 return Some(buf);
             } else if self.alloc < self.capacity {
                 // create new and use;
@@ -364,15 +372,11 @@ mod rob {
 
         #[inline]
         pub fn is_idle(&self) -> bool {
-            self.alloc == 0 || self.alloc == self.recycle.len()
+            self.alloc == 0 || self.alloc <= self.recycle.len()
         }
 
         fn get_hook(&self) -> BufferRecycleHook<D> {
-            BufferRecycleHook {
-                batch_size: self.batch_size,
-                proxy: self.recycle.clone(),
-                dropped: self.dropped.clone(),
-            }
+            BufferRecycleHook { proxy: self.recycle.clone(), dropped: self.dropped.clone() }
         }
     }
 
@@ -418,7 +422,7 @@ mod rob {
     use crate::rc::RcPointer;
 
     type Buf<D> = VecDeque<D>;
-    pub type BufferReader<D> = Batch<D>;
+    pub type ReadBuffer<D> = Batch<D>;
     pub type Buffer<D> = Batch<D>;
     pub type BufferPool<D, F> = BatchPool<D, F>;
 

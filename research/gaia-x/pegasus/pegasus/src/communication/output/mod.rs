@@ -17,24 +17,65 @@ use std::any::Any;
 use std::cell::{Ref, RefCell};
 use std::collections::VecDeque;
 
+pub(crate) use builder::OutputBuilderImpl;
+pub use output::OutputSession;
 use pegasus_common::downcast::AsAny;
+pub(crate) use tee::ChannelPush;
 
+use crate::communication::decorator::ScopeStreamPush;
+use crate::communication::output::output::OutputHandle;
+use crate::data::MicroBatch;
 use crate::errors::IOResult;
+use crate::progress::EndSignal;
+use crate::schedule::state::outbound::OutputCancelState;
 use crate::{Data, Tag};
+
+pub struct BlockScope {
+    tag: Tag,
+    resource: RefCell<Vec<Option<Box<dyn Any + Send>>>>,
+}
+
+impl BlockScope {
+    pub fn new(tag: Tag) -> Self {
+        BlockScope { tag, resource: RefCell::new(vec![]) }
+    }
+
+    #[inline]
+    pub fn tag(&self) -> &Tag {
+        &self.tag
+    }
+
+    pub fn block<T: Send + 'static>(&self, index: usize, res: T) {
+        let mut reses = self.resource.borrow_mut();
+        while index >= reses.len() {
+            reses.push(None);
+        }
+        reses[index] = Some(Box::new(res));
+    }
+
+    pub fn has_block(&self, index: usize) -> bool {
+        let res = self.resource.borrow();
+        if index >= res.len() {
+            false
+        } else {
+            res[index].is_some()
+        }
+    }
+}
 
 pub trait OutputProxy: AsAny + Send {
     fn flush(&self) -> IOResult<()>;
 
-    fn get_blocks(&self) -> Ref<VecDeque<Tag>>;
+    fn get_blocks(&self) -> Ref<VecDeque<BlockScope>>;
 
-    fn try_unblock(&self, unblocked: &mut Vec<Tag>) -> IOResult<()>;
+    fn try_unblock(&self) -> IOResult<()>;
 
     /// Notify this output that the scope with tag was closed, no more data of this scope will be send
     /// on this output;
     fn notify_end(&self, end: EndSignal) -> IOResult<()>;
 
     /// Stop to output data of scope with this tag in output port from now on;
-    fn skip(&self, tag: &Tag);
+    fn cancel(&self, tag: &Tag) -> IOResult<()>;
 
     /// Close all output ports, all the channels connected on this output would be notified;
     fn close(&self) -> IOResult<()>;
@@ -44,20 +85,14 @@ pub trait OutputProxy: AsAny + Send {
 }
 
 pub trait OutputBuilder: AsAny {
+    fn build_cancel_handle(&self) -> Option<OutputCancelState>;
+
     fn build(self: Box<Self>) -> Option<Box<dyn OutputProxy>>;
 }
 
 mod builder;
 mod output;
 mod tee;
-pub(crate) use builder::OutputBuilderImpl;
-pub use output::OutputSession;
-pub(crate) use tee::ChannelPush;
-
-use crate::communication::decorator::ScopeStreamPush;
-use crate::communication::output::output::OutputHandle;
-use crate::data::MicroBatch;
-use crate::progress::EndSignal;
 
 pub struct RefWrapOutput<D: Data> {
     pub(crate) output: RefCell<OutputHandle<D>>,
@@ -99,9 +134,15 @@ impl<D: Data> RefWrapOutput<D> {
         self.output.borrow_mut().push_batch_mut(batch)
     }
 
-    pub fn push_into_iter<I: Iterator<Item = D> + Send + 'static>(
-        &self, tag: &Tag, iter: I,
-    ) -> IOResult<()> {
+    #[cfg(feature = "rob")]
+    pub fn push_iter<I: Iterator<Item = D> + Send + 'static>(&self, tag: &Tag, iter: I) -> IOResult<()> {
+        let mut output = self.output.borrow_mut();
+        output.pin(tag);
+        output.push_iter(tag, iter)
+    }
+
+    #[cfg(not(feature = "rob"))]
+    pub fn push_iter<I: Iterator<Item = D> + Send + 'static>(&self, tag: &Tag, iter: I) -> IOResult<()> {
         self.output.borrow_mut().push_iter(tag, iter)
     }
 }
@@ -112,14 +153,14 @@ impl<D: Data> OutputProxy for RefWrapOutput<D> {
         self.output.borrow_mut().flush()
     }
 
-    fn get_blocks(&self) -> Ref<VecDeque<Tag>> {
+    fn get_blocks(&self) -> Ref<VecDeque<BlockScope>> {
         let b = self.output.borrow();
         Ref::map(b, |b| b.get_blocks())
     }
 
     #[inline]
-    fn try_unblock(&self, unblocked: &mut Vec<Tag>) -> IOResult<()> {
-        self.output.borrow_mut().try_unblock(unblocked)
+    fn try_unblock(&self) -> IOResult<()> {
+        self.output.borrow_mut().try_unblock()
     }
 
     #[inline]
@@ -128,8 +169,8 @@ impl<D: Data> OutputProxy for RefWrapOutput<D> {
     }
 
     #[inline]
-    fn skip(&self, tag: &Tag) {
-        self.output.borrow_mut().skip(tag);
+    fn cancel(&self, tag: &Tag) -> IOResult<()> {
+        self.output.borrow_mut().cancel(tag)
     }
 
     #[inline]

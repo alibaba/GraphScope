@@ -108,29 +108,3 @@ pub trait Binary<L: Data> {
         B: FnOnce(&OperatorInfo) -> F,
         F: FnMut(&mut Input<L>, &mut Input<R>, &Output<O>) -> Result<(), JobExecError> + Send + 'static;
 }
-
-// pub trait BinaryMap<L, R, O>: Send + 'static {
-//     fn on_left(&mut self, data: L) -> FnResult<O>;
-//
-//     fn on_right(&mut self, data: R) -> FnResult<O>;
-// }
-//
-// pub trait BinaryNotify<L: Data, R: Data, O: Data>: BinaryMap<L, R, O> {
-//     fn notify_left(&mut self) -> FnResult<O>;
-//
-//     fn notify_right(&mut self) -> FnResult<O>;
-// }
-//
-// impl<FL, FR, L, R, O> BinaryMap<L, R, O> for (FL, FR)
-// where
-//     FL: MapFunction<L, O>,
-//     FR: MapFunction<R, O>,
-// {
-//     fn on_left(&mut self, data: L) -> FnResult<O> {
-//         self.0.exec(data)
-//     }
-//
-//     fn on_right(&mut self, data: R) -> FnResult<O> {
-//         self.1.exec(data)
-//     }
-// }

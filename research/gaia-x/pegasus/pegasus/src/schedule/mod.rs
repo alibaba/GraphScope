@@ -22,6 +22,7 @@ use crate::event::emitter::{EventCollector, EventEmitter};
 use crate::event::Event;
 use crate::schedule::operator::OperatorScheduler;
 use crate::schedule::state::inbound::InputEndNotify;
+use crate::schedule::state::outbound::OutputCancelState;
 
 pub(crate) mod operator;
 pub(crate) mod state;
@@ -58,10 +59,10 @@ impl Schedule {
     }
 
     pub fn add_schedule_op(
-        &mut self, index: usize, scope_level: u32, state: Vec<Option<Box<dyn InputEndNotify>>>,
-        output_ports: Option<&[Vec<(usize, bool, usize)>]>,
+        &mut self, index: usize, scope_level: u32, inputs_notify: Vec<Option<Box<dyn InputEndNotify>>>,
+        outputs_cancel: Vec<Option<OutputCancelState>>,
     ) {
-        let op = OperatorScheduler::new(index, scope_level, state, output_ports);
+        let op = OperatorScheduler::new(index, scope_level, inputs_notify, outputs_cancel);
         self.sch_ops.push(op);
     }
 
@@ -85,7 +86,9 @@ impl Schedule {
 
         for i in (0..task.operator_length()).rev() {
             let discards = self.sch_ops[i].get_discards();
-            task.try_cancel(i, discards)?;
+            if !discards.is_empty() {
+                task.try_cancel(i, discards)?;
+            }
         }
 
         // fire;

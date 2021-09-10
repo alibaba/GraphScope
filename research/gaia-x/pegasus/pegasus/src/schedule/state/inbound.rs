@@ -7,7 +7,7 @@ use crate::tag::tools::map::TidyTagMap;
 use crate::{Data, Tag};
 
 #[allow(dead_code)]
-struct Panel {
+struct ScopeEndPanel {
     tag: Tag,
     expect_weight: Option<Weight>,
     update_weight: Option<Weight>,
@@ -15,9 +15,9 @@ struct Panel {
     is_exhaust: bool,
 }
 
-impl Panel {
+impl ScopeEndPanel {
     fn new(tag: Tag) -> Self {
-        Panel {
+        ScopeEndPanel {
             tag,
             expect_weight: None,
             update_weight: None,
@@ -93,7 +93,7 @@ impl<T: Data> InputEndNotify for GeneralPush<MicroBatch<T>> {
 pub struct InboundStreamState {
     port: Port,
     scope_level: u32,
-    notify_guards: Vec<TidyTagMap<Panel>>,
+    notify_guards: Vec<TidyTagMap<ScopeEndPanel>>,
     notify: Box<dyn InputEndNotify>,
 }
 
@@ -108,7 +108,7 @@ impl InboundStreamState {
 
     pub fn on_end(&mut self, src: u32, end: EndSignal) -> IOResult<()> {
         //debug_worker!("accept eos {:?} from {}", end, src);
-        assert!(end.source_weight.value() > 1);
+        assert!(end.source_weight.value() > 1, "source weight = 1 should be passed with data;");
         let idx = end.tag.len();
         assert!(idx <= self.scope_level as usize);
         let tag = end.tag.clone();
@@ -143,7 +143,7 @@ impl InboundStreamState {
                 self.notify_guards[idx].insert(tag, p);
             }
         } else {
-            let mut p = Panel::new(tag.clone());
+            let mut p = ScopeEndPanel::new(tag.clone());
             p.update_end(src, end);
             self.notify_guards[idx].insert(tag, p);
         }

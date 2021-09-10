@@ -27,8 +27,8 @@ where
         entry.unary("source", |_info| {
             move |input, output| {
                 input.for_each_batch(|dataset| {
+                    let mut session = output.new_session(&dataset.tag)?;
                     if let Some(iter) = iter.take() {
-                        let mut session = output.new_session(&dataset.tag)?;
                         session.give_iterator(iter.fuse())?;
                         session.flush()?;
                     }

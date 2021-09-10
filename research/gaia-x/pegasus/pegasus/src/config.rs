@@ -67,7 +67,7 @@ pub fn read_from<P: AsRef<Path>>(path: P) -> Result<Configuration, StartupError>
 
 lazy_static! {
     /// set `true` to enable canceling all descendants' data of the early-stop scope
-    pub static ref CANCEL_DESC: bool = configure_with_default!(bool, "CANCEL_DESC", true);
+    pub static ref ENABLE_CANCEL_CHILD: bool = configure_with_default!(bool, "ENABLE_CANCEL_CHILD", true);
     /// set `true` to enable propagating early-stop to the parent scope out of loop
     pub static ref LOOP_OPT: bool = configure_with_default!(bool, "LOOP_OPT", true);
     /// set `true` to enable immediately cleaning the data of ports received signals from all workers

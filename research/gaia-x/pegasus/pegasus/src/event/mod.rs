@@ -20,19 +20,28 @@ use crate::progress::EndSignal;
 use crate::Tag;
 
 #[derive(Debug, Clone)]
+pub enum EventKind {
+    /// end signal indicates that no more data of a scope will be produced;
+    End(EndSignal),
+    /// hint to cancel producing data of scope to channel;
+    /// Cancel( (channel index,  scope tag) )
+    Cancel((u32, Tag)),
+}
+
+#[derive(Debug, Clone)]
 pub struct Event {
     pub from_worker: u32,
     pub target_port: Port,
-    signal: Signal,
+    kind: EventKind,
 }
 
 impl Event {
-    pub fn new(worker: u32, target: Port, signal: Signal) -> Self {
-        Event { from_worker: worker, target_port: target, signal }
+    pub fn new(worker: u32, target: Port, kind: EventKind) -> Self {
+        Event { from_worker: worker, target_port: target, kind }
     }
 
-    pub fn take_signal(self) -> Signal {
-        self.signal
+    pub fn take_kind(self) -> EventKind {
+        self.kind
     }
 }
 
@@ -41,13 +50,14 @@ impl Encode for Event {
         writer.write_u32(self.from_worker)?;
         writer.write_u32(self.target_port.index as u32)?;
         writer.write_u32(self.target_port.port as u32)?;
-        match &self.signal {
-            Signal::EndSignal(end) => {
+        match &self.kind {
+            EventKind::End(end) => {
                 writer.write_u8(0)?;
                 end.write_to(writer)?;
             }
-            Signal::CancelSignal(tag) => {
+            EventKind::Cancel((ch, tag)) => {
                 writer.write_u8(1)?;
+                writer.write_u32(*ch)?;
                 tag.write_to(writer)?;
             }
         }
@@ -62,25 +72,20 @@ impl Decode for Event {
         let port = reader.read_u32()? as usize;
         let target_port = Port::new(index, port);
         let e = reader.read_u8()?;
-        let signal = match e {
+        let kind = match e {
             0 => {
                 let end = EndSignal::read_from(reader)?;
-                Signal::EndSignal(end)
+                EventKind::End(end)
             }
             1 => {
+                let ch = reader.read_u32()?;
                 let tag = Tag::read_from(reader)?;
-                Signal::CancelSignal(tag)
+                EventKind::Cancel((ch, tag))
             }
-            _ => unreachable!(),
+            _ => unreachable!("unrecognized event;"),
         };
-        Ok(Event { from_worker, target_port, signal })
+        Ok(Event { from_worker, target_port, kind })
     }
-}
-
-#[derive(Debug, Clone)]
-pub enum Signal {
-    EndSignal(EndSignal),
-    CancelSignal(Tag),
 }
 
 pub mod emitter;

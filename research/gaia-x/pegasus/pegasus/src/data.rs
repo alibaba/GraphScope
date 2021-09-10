@@ -90,7 +90,7 @@ mod rob {
             self.end.take()
         }
 
-        pub fn take_batch(&mut self) -> Batch<D> {
+        pub fn take_data(&mut self) -> Batch<D> {
             std::mem::replace(&mut self.data, Batch::new())
         }
 
@@ -390,11 +390,6 @@ mod rob {
             self.tag.clone()
         }
 
-        #[inline]
-        pub fn drain_to_end(&mut self) -> impl Iterator<Item = MarkedData<D>> + '_ {
-            std::iter::empty()
-        }
-
         pub fn discard(&mut self) {
             self.is_discarded = true;
         }
@@ -409,6 +404,12 @@ mod rob {
         #[inline]
         pub fn drain(&mut self) -> impl Iterator<Item = D> + '_ {
             &mut self.data
+        }
+
+        #[inline]
+        pub fn drain_to_end(&mut self) -> impl Iterator<Item = MarkedData<D>> + '_ {
+            let len = self.data.len();
+            DrainEndIter { len, data: &mut self.data, end: &mut self.end, cur: 0 }
         }
     }
 
@@ -468,6 +469,49 @@ mod rob {
             // let end = Option::<EndSignal>::read_from(reader)?;
             // let len = reader.read_u64()?;
             todo!("buffer reuse")
+        }
+    }
+
+    // impl<D> Drop for MicroBatch<D> {
+    //     fn drop(&mut self) {
+    //         trace_worker!("drop {}th batch of {:?};", self.seq, self.tag);
+    //     }
+    // }
+
+    struct DrainEndIter<'a, D: Clone> {
+        len: usize,
+        data: &'a mut ReadBuffer<D>,
+        end: &'a mut Option<EndSignal>,
+        cur: usize,
+    }
+
+    impl<'a, D: Clone> Iterator for DrainEndIter<'a, D> {
+        type Item = MarkedData<D>;
+
+        fn next(&mut self) -> Option<Self::Item> {
+            if self.len == 0 {
+                if let Some(end) = self.end.take() {
+                    Some(MarkedData::Marked(None, end))
+                } else {
+                    None
+                }
+            } else {
+                if let Some(data) = self.data.next() {
+                    self.cur += 1;
+                    if self.cur == self.len {
+                        // this maybe the last;
+                        if let Some(end) = self.end.take() {
+                            Some(MarkedData::Marked(Some(data), end))
+                        } else {
+                            Some(MarkedData::Data(data))
+                        }
+                    } else {
+                        Some(MarkedData::Data(data))
+                    }
+                } else {
+                    None
+                }
+            }
         }
     }
 }

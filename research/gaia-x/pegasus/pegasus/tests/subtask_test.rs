@@ -48,13 +48,16 @@ fn subtask_test_1() {
 }
 
 fn subtask_test_2(workers: u32) {
-    let mut conf = JobConf::new("subtask_test_2");
+    let name = format!("subtask_test_2_{}", workers);
+    let mut conf = JobConf::new(name);
     conf.set_workers(workers);
+    //conf.plan_print = true;
     let num = 100u32;
     let mut result = pegasus::run(conf, move || {
         let index = pegasus::get_current_worker().index;
+        let source = (num * index)..(index + 1u32) * num;
         move |input, output| {
-            let src = if index == 0 { input.input_from(0..num) } else { input.input_from(num..2 * num) }?;
+            let src = input.input_from(source)?;
             src.apply(|sub| {
                 sub.flat_map(|i| Ok(0..i + 1))?
                     .repartition(|x| Ok(*x as u64))
