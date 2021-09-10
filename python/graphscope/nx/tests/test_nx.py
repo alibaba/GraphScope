@@ -590,7 +590,7 @@ class TestImportNetworkxModuleWithSession(object):
     def test_error_import_with_wrong_session(self):
         with pytest.raises(
             RuntimeError,
-            match="Networkx module need session to be eager mode. The session is lazy mode.",
+            match="Networkx module need the session to be eager mode. Current session is lazy mode.",
         ):
             nx = self.session_lazy.nx()
         self.session_lazy.close()

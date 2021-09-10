@@ -27,26 +27,37 @@ from typing import Union
 
 import numpy as np
 import pandas as pd
-import vineyard
+
+try:
+    import vineyard
+except ImportError:
+    vineyard = None
 
 from graphscope.framework import utils
-from graphscope.framework.errors import InvalidArgumentError
 from graphscope.framework.errors import check_argument
 from graphscope.framework.loader import Loader
 from graphscope.proto import attr_value_pb2
 from graphscope.proto import types_pb2
 
-VineyardObjectTypes = (vineyard.Object, vineyard.ObjectID, vineyard.ObjectName)
-
-LoaderVariants = Union[
-    Loader,
-    str,
-    Sequence[np.ndarray],
-    pd.DataFrame,
-    vineyard.Object,
-    vineyard.ObjectID,
-    vineyard.ObjectName,
-]
+if vineyard is not None:
+    VineyardObjectTypes = (vineyard.Object, vineyard.ObjectID, vineyard.ObjectName)
+    LoaderVariants = Union[
+        Loader,
+        str,
+        Sequence[np.ndarray],
+        pd.DataFrame,
+        vineyard.Object,
+        vineyard.ObjectID,
+        vineyard.ObjectName,
+    ]
+else:
+    VineyardObjectTypes = ()
+    LoaderVariants = Union[
+        Loader,
+        str,
+        Sequence[np.ndarray],
+        pd.DataFrame,
+    ]
 
 
 class VertexLabel(object):

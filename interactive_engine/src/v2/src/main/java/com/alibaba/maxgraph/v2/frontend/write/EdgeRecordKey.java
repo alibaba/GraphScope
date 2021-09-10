@@ -44,4 +44,12 @@ public class EdgeRecordKey {
         VertexRecordKey dstVertexRecordKey = VertexRecordKey.parseProto(proto.getDstVertexKey());
         return new EdgeRecordKey(label, srcVertexRecordKey, dstVertexRecordKey, innerId);
     }
+
+    public EdgeRecordKeyPb toProto() {
+        return EdgeRecordKeyPb.newBuilder()
+                .setLabel(label)
+                .setSrcVertexKey(srcVertexRecordKey.toProto())
+                .setDstVertexKey(dstVertexRecordKey.toProto())
+                .build();
+    }
 }

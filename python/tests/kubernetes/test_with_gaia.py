@@ -25,9 +25,7 @@ import graphscope
 from graphscope.config import GSConfig as gs_config
 from graphscope.dataset.modern_graph import load_modern_graph
 
-graphscope.set_option(
-    show_log=True, k8s_gie_gremlin_server_cpu=1.0, k8s_gie_gremlin_server_mem="4Gi"
-)
+graphscope.set_option(show_log=True)
 logger = logging.getLogger("graphscope")
 
 
@@ -43,20 +41,19 @@ def get_k8s_volumes():
 
 
 def get_gs_image_on_ci_env():
-    if "GS_IMAGE" in os.environ and "GIE_MANAGER_IMAGE" in os.environ:
-        return os.environ["GS_IMAGE"], os.environ["GIE_MANAGER_IMAGE"]
+    if "GS_IMAGE" in os.environ:
+        return os.environ["GS_IMAGE"]
     else:
-        return gs_config.k8s_gs_image, gs_config.k8s_gie_graph_manager_image
+        return gs_config.k8s_gs_image
 
 
 @pytest.fixture
 def gs_session():
-    gs_image, gie_manager_image = get_gs_image_on_ci_env()
+    gs_image = get_gs_image_on_ci_env()
     sess = graphscope.session(
-        num_workers=1,
+        num_workers=2,
         enable_gaia=True,
         k8s_gs_image=gs_image,
-        k8s_gie_graph_manager_image=gie_manager_image,
         k8s_coordinator_cpu=2,
         k8s_coordinator_mem="4Gi",
         k8s_vineyard_cpu=2,
@@ -66,8 +63,6 @@ def gs_session():
         k8s_etcd_cpu=2,
         k8s_etcd_mem="256Mi",
         k8s_etcd_num_pods=3,
-        k8s_gie_graph_manager_cpu=1,
-        k8s_gie_graph_manager_mem="4Gi",
         vineyard_shared_mem="4Gi",
         k8s_volumes=get_k8s_volumes(),
     )
@@ -80,18 +75,15 @@ def modern_graph_data_dir():
     return "/testingdata/modern_graph"
 
 
-@pytest.mark.skip(reason="GAIA is not supported on k8s yet")
 def test_query_modern_graph(gs_session, modern_graph_data_dir, modern_scripts):
     graph = load_modern_graph(gs_session, modern_graph_data_dir)
     interactive = gs_session.gremlin(graph)
     for q in modern_scripts:
-        result = interactive.gaia().execute(q).all().result()[0]
+        result = interactive.gaia().execute(q).all()[0]
         assert result == 1
 
 
-@pytest.mark.skip(reason="GAIA is not supported on k8s yet")
 def test_traversal_modern_graph(gs_session, modern_graph_data_dir, modern_bytecode):
-    gs_image, gie_manager_image = get_gs_image_on_ci_env()
     graph = load_modern_graph(gs_session, modern_graph_data_dir)
     interactive = gs_session.gremlin(graph)
     g = interactive.traversal_source()

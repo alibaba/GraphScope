@@ -75,7 +75,6 @@ public enum TreeNodeStep {
     SampleLocalStep,
     VertexByModulatingStep,
     OrStep,
-    GraphSourceStep,
     CustomVertexProgramStep,
     VertexWithByStep,
     StoreStep,

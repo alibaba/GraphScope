@@ -68,7 +68,7 @@ class Graph:
     def insert_edge(self, edge: EdgeRecordKey, properties: dict):
         return self.insert_edges([[edge, properties]])
 
-    def insert_edges(self, edges=list):
+    def insert_edges(self, edges: list):
         request = to_write_requests_pb("EDGE", edges, write_service_pb2.INSERT)
         return self._conn.batch_write(request)
 

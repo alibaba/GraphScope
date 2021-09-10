@@ -89,7 +89,7 @@ class SSSP : public grape::ParallelAppBase<FRAG_T, SSSPContext<FRAG_T>>,
     vertex_t source;
     bool native_source = frag.GetInnerVertex(ctx.source_id, source);
 
-    ctx.next_modified.ParallelClear(thread_num());
+    ctx.next_modified.ParallelClear(GetThreadPool());
 
     // Get the channel. Messages assigned to this channel will be sent by the
     // message manager in parallel with the evaluation process.
@@ -123,7 +123,7 @@ class SSSP : public grape::ParallelAppBase<FRAG_T, SSSPContext<FRAG_T>>,
 
     auto& channels = messages.Channels();
 
-    ctx.next_modified.ParallelClear(thread_num());
+    ctx.next_modified.ParallelClear(GetThreadPool());
 
     // parallel process and reduce the received messages
     messages.ParallelProcess<fragment_t, double>(

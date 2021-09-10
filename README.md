@@ -328,8 +328,7 @@ a `runtime-base` image. To build images with latest version of GraphScope, go to
 # ./scripts/prepare_dev.sh
 
 make graphscope
-make interactive_manager
-# by default, the built image is tagged as graphscope/graphscope:SHORTSHA and graphscope/maxgraph_standalone_manager:SHORTSHA
+# by default, the built image is tagged as graphscope/graphscope:SHORTSHA
 ```
 
 ### Building client library
@@ -364,7 +363,7 @@ You may run the whole test suite with commands:
 ./scripts/test.sh --all
 
 # run all test cases on your built image
-./scripts/test.sh --all --gs_image graphscope/graphscope:SHORTSHA --gie_manager_image graphscope/maxgraph_standalone_manager:SHORTSHA
+./scripts/test.sh --all --gs_image graphscope/graphscope:SHORTSHA
 
 # or run the selected cases on a certain module. e.g.,
 ./scripts/test.sh --python

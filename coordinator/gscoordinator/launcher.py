@@ -31,8 +31,9 @@ from abc import abstractmethod
 from graphscope.proto import types_pb2
 
 from gscoordinator.io_utils import PipeWatcher
-from gscoordinator.utils import ANALYTICAL_ENGINE_HOME
 from gscoordinator.utils import ANALYTICAL_ENGINE_PATH
+from gscoordinator.utils import INTERACTIVE_ENGINE_SCRIPT
+from gscoordinator.utils import WORKSPACE
 from gscoordinator.utils import ResolveMPICmdPrefix
 from gscoordinator.utils import get_timestamp
 from gscoordinator.utils import is_port_in_use
@@ -43,6 +44,7 @@ logger = logging.getLogger("graphscope")
 
 class Launcher(metaclass=ABCMeta):
     def __init__(self):
+        self._instance_id = None
         self._num_workers = None
         self._analytical_engine_endpoint = None
 
@@ -57,6 +59,12 @@ class Launcher(metaclass=ABCMeta):
         if self._num_workers is None:
             raise RuntimeError("Get None value of workers number.")
         return int(self._num_workers)
+
+    @property
+    def instance_id(self):
+        if self._instance_id is None:
+            raise RuntimeError("Get None value of instance id.")
+        return self._instance_id
 
     @abstractmethod
     def type(self):
@@ -82,8 +90,6 @@ class LocalLauncher(Launcher):
 
     _vineyard_socket_prefix = "/tmp/vineyard.sock."
 
-    _default_graphscope_runtime_workspace = "/tmp/graphscope/runtime"
-
     def __init__(
         self,
         num_workers,
@@ -103,29 +109,15 @@ class LocalLauncher(Launcher):
         self._instance_id = instance_id
         self._timeout_seconds = timeout_seconds
 
-        if "GRAPHSCOPE_HOME" not in os.environ:
-            # only launch GAE
-            logger.info("Can't found GRAPHSCOPE_HOME in environment.")
-            self._graphscope_home = None
-        else:
-            self._graphscope_home = os.environ["GRAPHSCOPE_HOME"]
-
-        if "GRAPHSCOPE_RUNTIME" not in os.environ:
-            self._graphscope_runtime_workspace = os.path.join(
-                self._default_graphscope_runtime_workspace, self._instance_id
-            )
-        else:
-            self._graphscope_runtime_workspace = os.path.join(
-                os.environ["GRAPHSCOPE_RUNTIME"], self._instance_id
-            )
-        os.makedirs(self._graphscope_runtime_workspace, exist_ok=True)
+        # A graphsope instance may has multiple session by reconnecting to coordinator
+        self._instance_workspace = os.path.join(WORKSPACE, self._instance_id)
+        os.makedirs(self._instance_workspace, exist_ok=True)
+        # setting during client connect to coordinator
+        self._session_workspace = None
 
         # zookeeper
         self._zookeeper_port = None
         self._zetcd_process = None
-        # graph manager
-        self._graph_manager_endpoint = None
-        self._graph_manager_process = None
         # vineyardd
         self._vineyardd_process = None
         # analytical engine
@@ -150,11 +142,14 @@ class LocalLauncher(Launcher):
 
     def stop(self, is_dangling=False):
         if not self._closed:
-            if self._graphscope_home is not None:
-                self._stop_interactive_engine_service()
+            self._stop_interactive_engine_service()
             self._stop_vineyard()
             self._stop_analytical_engine()
             self._closed = True
+
+    def set_session_workspace(self, session_id):
+        self._session_workspace = os.path.join(self._instance_workspace, session_id)
+        os.makedirs(self._session_workspace, exist_ok=True)
 
     def distribute_file(self, path):
         dir = os.path.dirname(path)
@@ -171,10 +166,6 @@ class LocalLauncher(Launcher):
     @property
     def hosts(self):
         return self._hosts
-
-    @property
-    def graph_manager_endpoint(self):
-        return self._graph_manager_endpoint
 
     @property
     def vineyard_socket(self):
@@ -200,6 +191,73 @@ class LocalLauncher(Launcher):
             port = random.randint(60001, 65535)
         return port
 
+    def create_interactive_instance(self, config: dict):
+        """
+        Args:
+            config (dict): dict of op_def_pb2.OpDef.attr.
+        """
+        object_id = config[types_pb2.VINEYARD_ID].i
+        schema_path = config[types_pb2.SCHEMA_PATH].s.decode()
+        # engine params format:
+        #   k1:v1;k2:v2;k3:v3
+        engine_params = {"gaia.engine.port": self._get_free_port("localhost")}
+        if types_pb2.GIE_GREMLIN_ENGINE_PARAMS in config:
+            engine_params = json.loads(
+                config[types_pb2.GIE_GREMLIN_ENGINE_PARAMS].s.decode()
+            )
+        engine_params = [
+            "{}:{}".format(key, value) for key, value in engine_params.items()
+        ]
+        enable_gaia = config[types_pb2.GIE_ENABLE_GAIA].b
+        cmd = [
+            INTERACTIVE_ENGINE_SCRIPT,
+            "create_gremlin_instance_on_local",
+            self._session_workspace,
+            str(object_id),
+            schema_path,
+            "1",  # server id
+            self.vineyard_socket,
+            str(self.zookeeper_port),
+            "{}".format(";".join(engine_params)),
+            str(enable_gaia),
+        ]
+        logger.info("Create GIE instance with command: %s", " ".join(cmd))
+        process = subprocess.Popen(
+            cmd,
+            start_new_session=True,
+            cwd=os.getcwd(),
+            env=os.environ.copy(),
+            universal_newlines=True,
+            encoding="utf-8",
+            stdin=subprocess.DEVNULL,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
+            bufsize=1,
+        )
+        return process
+
+    def close_interactive_instance(self, object_id):
+        cmd = [
+            INTERACTIVE_ENGINE_SCRIPT,
+            "close_gremlin_instance_on_local",
+            self._session_workspace,
+            str(object_id),
+        ]
+        logger.info("Close GIE instance with command: %s", " ".join(cmd))
+        process = subprocess.Popen(
+            cmd,
+            start_new_session=True,
+            cwd=os.getcwd(),
+            env=os.environ.copy(),
+            universal_newlines=True,
+            encoding="utf-8",
+            stdin=subprocess.DEVNULL,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
+            bufsize=1,
+        )
+        return process
+
     def _launch_zetcd(self):
         self._zookeeper_port = self._get_free_port(self._hosts.split(",")[0])
 
@@ -223,7 +281,7 @@ class LocalLauncher(Launcher):
             encoding="utf-8",
             stdin=subprocess.DEVNULL,
             stdout=subprocess.DEVNULL,
-            stderr=sys.stderr,
+            stderr=subprocess.STDOUT,
             bufsize=1,
         )
 
@@ -238,51 +296,9 @@ class LocalLauncher(Launcher):
                 and self._timeout_seconds + start_time < time.time()
             ):
                 raise RuntimeError("Launch zetcd proxy service failed.")
-
-    def _launch_graph_manager(self):
-        port = self._get_free_port(self._hosts.split(",")[0])
-        gm_sh = os.path.join(self._graphscope_home, "bin", "giectl")
-        cmd = [
-            "bash",
-            gm_sh,
-            "start_manager_service",
-            "local",
-            str(port),
-            self._instance_id,
-            str(self._zookeeper_port),
-        ]
-        logger.info("Launch graph manager command: %s", " ".join(cmd))
-
-        process = subprocess.Popen(
-            cmd,
-            start_new_session=True,
-            cwd=os.getcwd(),
-            env=os.environ.copy(),
-            universal_newlines=True,
-            encoding="utf-8",
-            stdin=subprocess.DEVNULL,
-            stdout=subprocess.DEVNULL,
-            stderr=sys.stderr,
-            bufsize=1,
+        logger.info(
+            "ZEtcd is ready, endpoint is localhost:{0}".format(self._zookeeper_port)
         )
-
-        logger.info("Server is initializing graph manager")
-        self._graph_manager_process = process
-
-        start_time = time.time()
-        while not is_port_in_use(self._hosts.split(",")[0], port):
-            time.sleep(1)
-            if (
-                self._timeout_seconds
-                and self._timeout_seconds + start_time < time.time()
-            ):
-                raise RuntimeError("Launch GraphManager service failed.")
-
-        self._graph_manager_endpoint = "{0}:{1}".format(self._hosts.split(",")[0], port)
-
-    def _create_interactive_engine_service(self):
-        self._launch_zetcd()
-        self._launch_graph_manager()
 
     def _find_vineyardd(self):
         vineyardd = ""
@@ -297,15 +313,15 @@ class LocalLauncher(Launcher):
     def _create_vineyard(self):
         if not self._vineyard_socket:
             ts = get_timestamp()
-            vineyard_socket = "{0}{1}".format(self._vineyard_socket_prefix, ts)
+            vineyard_socket = f"{self._vineyard_socket_prefix}{ts}"
             cmd = [self._find_vineyardd()]
             cmd.extend(["--socket", vineyard_socket])
             cmd.extend(["--size", self._shared_mem])
-            cmd.extend(["--etcd_prefix", "vineyard.gsa.{0}".format(ts)])
+            cmd.extend(["--etcd_prefix", f"vineyard.gsa.{ts}"])
             env = os.environ.copy()
             env["GLOG_v"] = str(self._glog_level)
 
-            logger.info("Launch vineyardd with command: {0}".format(" ".join(cmd)))
+            logger.info("Launch vineyardd with command: %s", " ".join(cmd))
 
             process = subprocess.Popen(
                 cmd,
@@ -332,9 +348,10 @@ class LocalLauncher(Launcher):
         self._create_vineyard()
         # create GAE rpc service
         self._start_analytical_engine()
-        # create GIE graph manager
-        if self._graphscope_home is not None:
-            self._create_interactive_engine_service()
+        # create zetcd
+        self._launch_zetcd()
+        if self.poll() is not None and self.poll() != 0:
+            raise RuntimeError("Initializing analytical engine failed.")
 
     def _start_analytical_engine(self):
         rmcp = ResolveMPICmdPrefix()
@@ -342,7 +359,7 @@ class LocalLauncher(Launcher):
 
         master = self._hosts.split(",")[0]
         rpc_port = self._get_free_port(master)
-        self._analytical_engine_endpoint = "{}:{}".format(master, str(rpc_port))
+        self._analytical_engine_endpoint = f"{master}:{rpc_port}"
 
         cmd.append(ANALYTICAL_ENGINE_PATH)
         cmd.extend(["--host", "0.0.0.0"])
@@ -359,7 +376,7 @@ class LocalLauncher(Launcher):
         env = os.environ.copy()
         env.update(mpi_env)
 
-        logger.info("Launch analytical engine with command: {}".format(" ".join(cmd)))
+        logger.info("Launch analytical engine with command: %s", " ".join(cmd))
 
         process = subprocess.Popen(
             cmd,
@@ -370,13 +387,15 @@ class LocalLauncher(Launcher):
             encoding="utf-8",
             stdin=subprocess.DEVNULL,
             stdout=subprocess.PIPE,
-            stderr=subprocess.STDOUT,
+            stderr=subprocess.PIPE,
             bufsize=1,
         )
 
         logger.info("Server is initializing analytical engine.")
         stdout_watcher = PipeWatcher(process.stdout, sys.stdout)
+        stderr_watcher = PipeWatcher(process.stderr, sys.stderr)
         setattr(process, "stdout_watcher", stdout_watcher)
+        setattr(process, "stderr_watcher", stderr_watcher)
 
         self._analytical_engine_process = process
 
@@ -386,9 +405,7 @@ class LocalLauncher(Launcher):
 
         server_list = []
         for i in range(self._num_workers):
-            server_list.append(
-                "localhost:{0}".format(str(self._get_free_port("localhost")))
-            )
+            server_list.append(f"localhost:{str(self._get_free_port('localhost'))}")
         hosts = ",".join(server_list)
         handle["server"] = hosts
         handle = base64.b64encode(json.dumps(handle).encode("utf-8")).decode("utf-8")
@@ -428,25 +445,6 @@ class LocalLauncher(Launcher):
 
     def _stop_interactive_engine_service(self):
         self._stop_subprocess(self._zetcd_process)
-        # stop shell process
-        self._stop_subprocess(self._graph_manager_process)
-        self._graph_manager_endpoint = None
-
-        gm_stop_sh = os.path.join(self._graphscope_home, "bin", "giectl")
-        cmd = ["bash", gm_stop_sh, "stop_manager_service", "local", self._instance_id]
-
-        process = subprocess.Popen(  # noqa: F841
-            cmd,
-            start_new_session=True,
-            cwd=os.getcwd(),
-            env=os.environ.copy(),
-            universal_newlines=True,
-            encoding="utf-8",
-            stdin=subprocess.DEVNULL,
-            stdout=subprocess.DEVNULL,
-            stderr=sys.stderr,
-            bufsize=1,
-        )
 
     def _stop_analytical_engine(self):
         self._stop_subprocess(self._analytical_engine_process)

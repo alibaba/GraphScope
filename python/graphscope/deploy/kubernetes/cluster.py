@@ -83,7 +83,6 @@ class KubernetesClusterLauncher(Launcher):
         preemptive=None,
         k8s_gs_image=None,
         k8s_etcd_image=None,
-        k8s_gie_graph_manager_image=None,
         k8s_image_pull_policy=None,
         k8s_image_pull_secrets=None,
         k8s_vineyard_daemonset=None,
@@ -102,8 +101,6 @@ class KubernetesClusterLauncher(Launcher):
         k8s_mars_scheduler_cpu=None,
         k8s_mars_scheduler_mem=None,
         with_mars=None,
-        k8s_gie_graph_manager_cpu=None,
-        k8s_gie_graph_manager_mem=None,
         k8s_volumes=None,
         timeout_seconds=None,
         dangling_timeout_seconds=None,
@@ -156,6 +153,12 @@ class KubernetesClusterLauncher(Launcher):
 
     def __del__(self):
         self.stop()
+
+    # TODO(dongze): Check the coordinator pod status, like the poll in Popen
+    # we can use this to determine the coordinator status,
+    # None for pending, 0 for successed (not likely), other int value for failed.
+    def poll(self):
+        return 0
 
     def get_namespace(self):
         """Get kubernetes namespace which graphscope instance running on.
@@ -339,6 +342,7 @@ class KubernetesClusterLauncher(Launcher):
             "PYTHONUNBUFFERED": "TRUE",
             "KUBE_NAMESPACE": self._namespace,
             "INSTANCE_ID": self._instance_id,
+            "GREMLIN_EXPOSE": self._saved_locals["k8s_service_type"],
         }
         if "KUBE_API_ADDRESS" in os.environ:
             envs.update({"KUBE_API_ADDRESS": os.environ["KUBE_API_ADDRESS"]})
@@ -395,8 +399,6 @@ class KubernetesClusterLauncher(Launcher):
             self._saved_locals["k8s_gs_image"],
             "--k8s_etcd_image",
             self._saved_locals["k8s_etcd_image"],
-            "--k8s_gie_graph_manager_image",
-            self._saved_locals["k8s_gie_graph_manager_image"],
             "--k8s_image_pull_policy",
             self._saved_locals["k8s_image_pull_policy"],
             "--k8s_image_pull_secrets",
@@ -411,10 +413,6 @@ class KubernetesClusterLauncher(Launcher):
             str(self._saved_locals["k8s_etcd_cpu"]),
             "--k8s_etcd_mem",
             self._saved_locals["k8s_etcd_mem"],
-            "--k8s_gie_graph_manager_cpu",
-            str(self._saved_locals["k8s_gie_graph_manager_cpu"]),
-            "--k8s_gie_graph_manager_mem",
-            self._saved_locals["k8s_gie_graph_manager_mem"],
             "--k8s_vineyard_daemonset",
             str(self._saved_locals["k8s_vineyard_daemonset"]),
             "--k8s_vineyard_cpu",
