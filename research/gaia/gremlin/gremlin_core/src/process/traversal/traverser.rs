@@ -23,7 +23,6 @@ use crate::{DynIter, Element, FromPb};
 use bit_set::BitSet;
 use dyn_type::Object;
 
-// use pegasus::api::function::Partition;
 use pegasus::codec::*;
 use pegasus::Data;
 use pegasus_server::AnyData;
@@ -518,15 +517,9 @@ impl Hash for Traverser {
     }
 }
 
-// impl Partition for Traverser {
-//     fn get_partition(&self) -> FnResult<u64> {
-//         let mut state = DefaultHasher::new();
-//         self.hash(&mut state);
-//         Ok(state.finish())
-//     }
-// }
-
 impl AnyData for Traverser {}
+
+/// not sure if is correct to unsafe impl Sync for Traverser
 unsafe impl Sync for Traverser {}
 
 impl Traverser {

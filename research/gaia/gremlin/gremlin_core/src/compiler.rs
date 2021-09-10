@@ -41,8 +41,9 @@ type TraverserFilter = Box<dyn FilterFunction<Traverser>>;
 type TraverserCompare = Box<dyn CompareFunction<Traverser>>;
 type TraverserLeftJoin = Box<dyn BinaryFunction<Traverser, Vec<Traverser>, Option<Traverser>>>;
 type TraverserKey = Box<dyn KeyFunction<Traverser, Traverser, Traverser>>;
-type TraverserEncode = Box<dyn EncodeFunction<Traverser>>;
-type TraverserGroupEncode = Box<dyn EncodeFunction<HashMap<Traverser, TraverserAccumulator>>>;
+type TraverserEncode = Box<dyn EncodeFunction<Traverser, pb::protobuf::Result>>;
+type TraverserGroupEncode =
+    Box<dyn EncodeFunction<HashMap<Traverser, TraverserAccumulator>, pb::protobuf::Result>>;
 type TraverserShuffle = Box<dyn RouteFunction<Traverser>>;
 type BinaryResource = Vec<u8>;
 

@@ -13,7 +13,6 @@
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 
-use crate::generated::protobuf as result_pb;
 use pegasus::api::function::FnResult;
 
 use std::cmp::Ordering;
@@ -26,8 +25,8 @@ pub trait KeyFunction<D, K, V>: Send + 'static {
     fn select_key(&self, item: D) -> FnResult<(K, V)>;
 }
 
-pub trait EncodeFunction<D>: Send + 'static {
-    fn encode(&self, data: D) -> FnResult<result_pb::Result>;
+pub trait EncodeFunction<D, O>: Send + 'static {
+    fn encode(&self, data: D) -> FnResult<O>;
 }
 
 ///
@@ -45,6 +44,12 @@ mod box_impl {
     impl<D, K, V, F: KeyFunction<D, K, V> + ?Sized> KeyFunction<D, K, V> for Box<F> {
         fn select_key(&self, item: D) -> FnResult<(K, V)> {
             (**self).select_key(item)
+        }
+    }
+
+    impl<D, O, F: EncodeFunction<D, O> + ?Sized> EncodeFunction<D, O> for Box<F> {
+        fn encode(&self, item: D) -> FnResult<O> {
+            (**self).encode(item)
         }
     }
 }

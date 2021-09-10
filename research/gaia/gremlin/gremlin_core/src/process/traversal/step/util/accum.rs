@@ -13,10 +13,7 @@
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 
-// use crate::functions::{CompareFunction, SumFunction};
 use pegasus::codec::{Decode, Encode, ReadExt, WriteExt};
-// use pegasus_common::collections::Collection;
-// use pegasus_common::downcast::{Any, AsAny};
 use pegasus_common::rc::RcPointer;
 use std::cmp::Ordering;
 use std::collections::HashSet;

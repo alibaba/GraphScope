@@ -48,14 +48,16 @@ impl Decode for result_pb::Result {
     }
 }
 
-impl EncodeFunction<Traverser> for TraverserSinkEncoder {
+impl EncodeFunction<Traverser, result_pb::Result> for TraverserSinkEncoder {
     fn encode(&self, data: Traverser) -> FnResult<result_pb::Result> {
         let result_pb = result_to_pb(data);
         Ok(result_pb)
     }
 }
 
-impl EncodeFunction<HashMap<Traverser, TraverserAccumulator>> for TraverserSinkEncoder {
+impl EncodeFunction<HashMap<Traverser, TraverserAccumulator>, result_pb::Result>
+    for TraverserSinkEncoder
+{
     fn encode(
         &self, data: HashMap<Traverser, TraverserAccumulator>,
     ) -> FnResult<result_pb::Result> {
