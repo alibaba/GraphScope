@@ -37,3 +37,5 @@ jobs:
         cd research/gaia/gremlin/gremlin_core/tests
         sh prepare_all_test_plan.sh
         cargo test
+        cd ../../../../gaia-x/pegasus/pegasus
+        cargo test --tests
