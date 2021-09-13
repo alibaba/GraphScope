@@ -135,23 +135,23 @@ impl ConnectionParams {
 #[derive(Debug, Deserialize)]
 pub struct NetworkConfig {
     pub server_id: u64,
-    ip: String,
-    port: u16,
-    nonblocking: Option<bool>,
-    read_timeout_ms: Option<u32>,
-    write_timeout_ms: Option<u32>,
-    read_slab_size: Option<u32>,
-    no_delay: Option<bool>,
-    send_buffer: Option<u32>,
-    heartbeat_sec: Option<u32>,
-    peers: Option<Vec<PeerConfig>>,
+    pub ip: String,
+    pub port: u16,
+    pub nonblocking: Option<bool>,
+    pub read_timeout_ms: Option<u32>,
+    pub write_timeout_ms: Option<u32>,
+    pub read_slab_size: Option<u32>,
+    pub no_delay: Option<bool>,
+    pub send_buffer: Option<u32>,
+    pub heartbeat_sec: Option<u32>,
+    pub peers: Option<Vec<PeerConfig>>,
 }
 
 #[derive(Debug, Deserialize)]
 pub struct PeerConfig {
-    server_id: u64,
-    ip: String,
-    port: u16,
+    pub server_id: u64,
+    pub ip: String,
+    pub port: u16,
 }
 
 pub fn read_from<P: AsRef<Path>>(path: P) -> Result<NetworkConfig, NetError> {
@@ -160,6 +160,22 @@ pub fn read_from<P: AsRef<Path>>(path: P) -> Result<NetworkConfig, NetError> {
 }
 
 impl NetworkConfig {
+    pub fn with_default_config(server_id: u64, ip: String, port: u16, peers: Vec<PeerConfig>) -> Self {
+        NetworkConfig {
+            server_id,
+            ip,
+            port,
+            nonblocking: None,
+            read_timeout_ms: None,
+            write_timeout_ms: None,
+            read_slab_size: None,
+            no_delay: None,
+            send_buffer: None,
+            heartbeat_sec: None,
+            peers: Some(peers),
+        }
+    }
+
     pub fn parse(content: &str) -> Result<Self, NetError> {
         Ok(toml::from_str(&content)?)
     }

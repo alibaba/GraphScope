@@ -76,12 +76,6 @@ public class RpcClient {
                 return;
             }
             try {
-                if (jobResponse.hasErr()) {
-                    String msg = jobResponse.getErr().getErrMsg();
-                    logger.error("job failed: {}", msg);
-                    onError(new InterruptedException(msg));
-                    return;
-                }
                 this.iterator.putData(jobResponse);
             } catch (InterruptedException e) {
                 onError(e);

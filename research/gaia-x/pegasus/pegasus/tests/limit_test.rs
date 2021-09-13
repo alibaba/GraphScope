@@ -1,4 +1,6 @@
-use pegasus::api::{Collect, CorrelatedSubTask, Iteration, Limit, Map, Merge, Sink};
+use pegasus::api::{
+    Collect, CorrelatedSubTask, Iteration, Limit, Map, Merge, OrderLimit, OrderLimitBy, Sink,
+};
 use pegasus::JobConf;
 
 // the most common case with early-stop
@@ -69,11 +71,7 @@ fn limit_test_02() {
         |input, output| {
             input
                 .input_from(1..1_000_000u32)?
-                .iterate(2, |start| {
-                    start
-                        .repartition(|x: &u32| Ok(*x as u64))
-                        .flat_map(|i| Ok(0..i))
-                })?
+                .iterate(2, |start| start.repartition(|x: &u32| Ok(*x as u64)).flat_map(|i| Ok(0..i)))?
                 .limit(10)?
                 .sink_into(output)
         }
@@ -100,10 +98,7 @@ fn limit_test_03() {
             input
                 .input_from(1..1000u32)?
                 .iterate(2, |start| {
-                    start
-                        .repartition(|x: &u32| Ok(*x as u64))
-                        .flat_map(|i| Ok(0..i * 1000))?
-                        .limit(10)
+                    start.repartition(|x: &u32| Ok(*x as u64)).flat_map(|i| Ok(0..i * 1000))?.limit(10)
                 })?
                 .sink_into(output)
         }
@@ -292,4 +287,52 @@ fn limit_test_08() {
     }
 
     assert_eq!(count, 10);
+}
+
+#[test]
+fn sort_limit_test() {
+    let mut conf = JobConf::new("sort_limit_test");
+    conf.set_workers(2);
+    let mut result = pegasus::run(conf, || {
+        let index = pegasus::get_current_worker().index;
+        move |input, output| {
+            let src = if index == 0 { input.input_from(1..100u32) } else { input.input_from(vec![]) }?;
+            src.repartition(|x: &u32| Ok(*x as u64)).sort_limit(10)?.sink_into(output)
+        }
+    })
+    .expect("build job failure");
+
+    let mut vec = vec![];
+    while let Some(Ok(d)) = result.next() {
+        assert!(d <= 10);
+        vec.push(d);
+    }
+
+    let expected = vec![1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
+    assert_eq!(vec, expected);
+}
+
+#[test]
+fn sort_limit_by_test() {
+    let mut conf = JobConf::new("sort_limit_by_test");
+    conf.set_workers(2);
+    let mut result = pegasus::run(conf, || {
+        let index = pegasus::get_current_worker().index;
+        move |input, output| {
+            let src = if index == 0 { input.input_from(1..100u32) } else { input.input_from(vec![]) }?;
+            src.repartition(|x: &u32| Ok(*x as u64))
+                .sort_limit_by(10, |x, y| x.cmp(y).reverse())?
+                .sink_into(output)
+        }
+    })
+    .expect("build job failure");
+
+    let mut vec = vec![];
+    while let Some(Ok(d)) = result.next() {
+        assert!(d >= 90);
+        vec.push(d);
+    }
+
+    let expected = vec![99, 98, 97, 96, 95, 94, 93, 92, 91, 90];
+    assert_eq!(vec, expected);
 }

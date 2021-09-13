@@ -16,6 +16,7 @@
 use crate::errors::BuildJobError;
 use crate::stream::Stream;
 use crate::Data;
+use std::cmp::Ordering;
 
 /// Produce certain number of data in the output stream
 pub trait Limit<D: Data> {
@@ -69,4 +70,11 @@ pub trait OrderLimit<D: Data + Ord> {
     /// [`sort()`]: crate::api::order::Sort::sort()
     /// [`limit()`]: crate::api::limit::Limit::limit()
     fn sort_limit(self, size: u32) -> Result<Stream<D>, BuildJobError>;
+}
+
+pub trait OrderLimitBy<D: Data> {
+    /// Sort and limit the input data stream via a user-defined comparator `cmp`.
+    fn sort_limit_by<F>(self, size: u32, cmp: F) -> Result<Stream<D>, BuildJobError>
+    where
+        F: Fn(&D, &D) -> Ordering + Send + 'static;
 }
