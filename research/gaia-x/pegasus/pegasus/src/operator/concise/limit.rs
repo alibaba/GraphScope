@@ -98,7 +98,7 @@ where
             input.for_each_batch(|dataset| {
                 if !dataset.is_empty() {
                     let custom_heap = table.get_mut_or_else(&dataset.tag, || {
-                        FixedSizeHeap::new(size as usize, share_cmp.cmp.clone())
+                        FixedSizeHeap::with_cmp(size as usize, share_cmp.cmp.clone())
                     });
                     for d in dataset.drain() {
                         custom_heap.add(d)?;
@@ -116,13 +116,13 @@ where
     })
 }
 
-struct FixedSizeHeap<D, C: Fn(&D, &D) -> Ordering + Send + 'static> {
+struct FixedSizeHeap<D> {
     pub limit: usize,
-    cmp: Rc<C>,
-    pub heap: BinaryHeap<Item<D, C>>,
+    cmp: Rc<dyn Fn(&D, &D) -> Ordering + Send + 'static>,
+    pub heap: BinaryHeap<Item<D>>,
 }
 
-impl<D, C: Fn(&D, &D) -> Ordering + Send + 'static> IntoIterator for FixedSizeHeap<D, C> {
+impl<D> IntoIterator for FixedSizeHeap<D> {
     type Item = D;
     type IntoIter = std::vec::IntoIter<D>;
 
@@ -135,8 +135,15 @@ impl<D, C: Fn(&D, &D) -> Ordering + Send + 'static> IntoIterator for FixedSizeHe
     }
 }
 
-impl<D, C: Fn(&D, &D) -> Ordering + Send + 'static> FixedSizeHeap<D, C> {
-    fn new(limit: usize, cmp: Rc<C>) -> Self {
+#[allow(dead_code)]
+impl<D: Ord> FixedSizeHeap<D> {
+    fn new(limit: usize) -> Self {
+        FixedSizeHeap::with_cmp(limit, Rc::new(|x, y| x.cmp(y)))
+    }
+}
+
+impl<D> FixedSizeHeap<D> {
+    fn with_cmp(limit: usize, cmp: Rc<dyn Fn(&D, &D) -> Ordering + Send + 'static>) -> Self {
         if limit < 10240 {
             FixedSizeHeap { limit, cmp, heap: BinaryHeap::with_capacity(limit) }
         } else {
@@ -145,70 +152,65 @@ impl<D, C: Fn(&D, &D) -> Ordering + Send + 'static> FixedSizeHeap<D, C> {
     }
 
     fn add(&mut self, item: D) -> Result<(), io::Error> {
-        if self.limit > 0 {
-            if self.heap.len() >= self.limit {
-                let mut head = self
-                    .heap
-                    .peek_mut()
-                    .expect("unreachable: len > 0");
-                // if others <= head > item,
+        if self.heap.len() >= self.limit {
+            if let Some(mut head) = self.heap.peek_mut() {
                 if Some(Ordering::Greater) == head.partial_cmp(&item) {
                     head.inner = item;
                 }
-            } else {
-                self.heap
-                    .push(Item { inner: item, cmp: self.cmp.clone() });
             }
+        } else {
+            self.heap
+                .push(Item { inner: item, cmp: self.cmp.clone() });
         }
         Ok(())
     }
 }
 
-unsafe impl<D: Send, C: Fn(&D, &D) -> Ordering + Send + 'static> Send for FixedSizeHeap<D, C> {}
+unsafe impl<D: Send> Send for FixedSizeHeap<D> {}
 
-struct Item<D, C: Fn(&D, &D) -> Ordering + Send + 'static> {
+struct Item<D> {
     inner: D,
-    cmp: Rc<C>,
+    cmp: Rc<dyn Fn(&D, &D) -> Ordering + Send + 'static>,
 }
 
-impl<D, C: Fn(&D, &D) -> Ordering + Send + 'static> PartialEq for Item<D, C> {
+impl<D> PartialEq for Item<D> {
     fn eq(&self, other: &Self) -> bool {
         let left = &self.inner;
         (*(self.cmp))(left, &other.inner) == Ordering::Equal
     }
 }
 
-impl<D, C: Fn(&D, &D) -> Ordering + Send + 'static> PartialEq<D> for Item<D, C> {
+impl<D> PartialEq<D> for Item<D> {
     fn eq(&self, other: &D) -> bool {
         let left = &self.inner;
         (*(self.cmp))(left, other) == Ordering::Equal
     }
 }
 
-impl<D, C: Fn(&D, &D) -> Ordering + Send + 'static> Eq for Item<D, C> {}
+impl<D> Eq for Item<D> {}
 
-impl<D, C: Fn(&D, &D) -> Ordering + Send + 'static> PartialOrd for Item<D, C> {
+impl<D> PartialOrd for Item<D> {
     fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
         let left = &self.inner;
         Some((*(self.cmp))(left, &other.inner))
     }
 }
 
-impl<D, C: Fn(&D, &D) -> Ordering + Send + 'static> PartialOrd<D> for Item<D, C> {
+impl<D> PartialOrd<D> for Item<D> {
     fn partial_cmp(&self, other: &D) -> Option<Ordering> {
         let left = &self.inner;
         Some((*(self.cmp))(left, other))
     }
 }
 
-impl<D, C: Fn(&D, &D) -> Ordering + Send + 'static> Ord for Item<D, C> {
+impl<D> Ord for Item<D> {
     fn cmp(&self, other: &Self) -> Ordering {
         let left = &self.inner;
         (*(self.cmp))(left, &other.inner)
     }
 }
 
-unsafe impl<D: Send, C: Fn(&D, &D) -> Ordering + Send + 'static> Send for Item<D, C> {}
+unsafe impl<D: Send> Send for Item<D> {}
 
 struct ShadeCmp<C> {
     cmp: Rc<C>,
