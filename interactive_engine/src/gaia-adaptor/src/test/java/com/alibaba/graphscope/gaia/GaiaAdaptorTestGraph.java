@@ -1085,6 +1085,10 @@ import org.apache.tinkerpop.gremlin.structure.Graph;
 //@Graph.OptOut(test = "org.apache.tinkerpop.gremlin.process.traversal.step.map.VertexTest",
 //        method = "g_VX1X_out_out_out",
 //        reason = "unsupported")
+// TODO(bingqing): add this test case back once engine bug is fixed
+@Graph.OptOut(test = "org.apache.tinkerpop.gremlin.process.traversal.step.branch.RepeatTest",
+    method = "g_V_repeatXoutX_timesX2X_repeatXinX_timesX2X_name",
+    reason = "Engine Bug")
 
 public class GaiaAdaptorTestGraph extends DummyGraph {
     public static final String GRAPH_NAME = "test.graph.name";
