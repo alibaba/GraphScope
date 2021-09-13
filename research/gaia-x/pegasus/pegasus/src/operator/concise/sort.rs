@@ -22,7 +22,7 @@ use crate::{BuildJobError, Data};
 
 impl<D: Data + Ord> Sort<D> for Stream<D> {
     fn sort(self) -> Result<Stream<D>, BuildJobError> {
-        self.unary("sort", |info| {
+        self.aggregate().unary("sort", |info| {
             let mut map = TidyTagMap::new(info.scope_level);
             move |input, output| {
                 input.for_each_batch(|dataset| {
@@ -52,7 +52,7 @@ impl<D: Data> SortBy<D> for Stream<D> {
     where
         F: Fn(&D, &D) -> Ordering + Send + 'static,
     {
-        self.unary("sort_by", |info| {
+        self.aggregate().unary("sort_by", |info| {
             let mut map = TidyTagMap::new(info.scope_level);
             move |input, output| {
                 input.for_each_batch(|dataset| {

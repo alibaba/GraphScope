@@ -129,7 +129,7 @@ pub(crate) fn add_network_thread(server_id: u64, guard: JoinHandle<()>) {
 
 pub mod config;
 mod error;
-mod manager;
+pub mod manager;
 mod message;
 mod receive;
 mod send;

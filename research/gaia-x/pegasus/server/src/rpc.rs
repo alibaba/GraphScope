@@ -22,7 +22,7 @@ use std::sync::Arc;
 use pegasus::api::function::FnResult;
 use pegasus::api::FromStream;
 use pegasus::result::{FromStreamExt, ResultSink};
-use pegasus::{Data, JobConf};
+use pegasus::{Data, JobConf, ServerConf};
 use prost::Message;
 use tokio::sync::mpsc::UnboundedSender;
 use tokio_stream::wrappers::UnboundedReceiverStream;
@@ -31,6 +31,7 @@ use tonic::{Code, Request, Response, Status};
 
 use crate::generated::protocol as pb;
 use crate::service::{JobParser, Service};
+use tokio::net::TcpListener;
 
 pub struct RpcSink {
     pub job_id: u64,
@@ -96,6 +97,12 @@ pub struct RpcService<I: Data, O, P> {
     report: bool,
 }
 
+impl<I: Data, O, P> RpcService<I, O, P> {
+    pub fn new(service: Service<I, O, P>, report: bool) -> RpcService<I, O, P> {
+        RpcService { inner: service, report }
+    }
+}
+
 #[tonic::async_trait]
 impl<I, O, P> pb::job_service_server::JobService for RpcService<I, O, P>
 where
@@ -134,16 +141,16 @@ pub struct RpcServer<S: pb::job_service_server::JobService> {
 }
 
 pub async fn start_rpc_server<I, O, P>(
-    addr: SocketAddr, service: RpcService<I, O, P>,
-) -> Result<(), Box<dyn std::error::Error>>
+    addr: SocketAddr, service: RpcService<I, O, P>, blocking: bool,
+) -> Result<SocketAddr, Box<dyn std::error::Error>>
 where
     I: Data,
     O: Send + Debug + Message + 'static,
     P: JobParser<I, O>,
 {
     let server = RpcServer::new(addr, service);
-    server.run().await?;
-    Ok(())
+    let local_addr = server.run(blocking).await?;
+    Ok(local_addr)
 }
 
 impl<S: pb::job_service_server::JobService> RpcServer<S> {
@@ -151,17 +158,42 @@ impl<S: pb::job_service_server::JobService> RpcServer<S> {
         RpcServer { service, addr }
     }
 
-    pub async fn run(self) -> Result<(), Box<dyn std::error::Error>> {
+    pub async fn run(self, blocking: bool) -> Result<SocketAddr, Box<dyn std::error::Error>> {
         let RpcServer { service, addr } = self;
-        info!("Rpc server started on {}", addr);
-        Server::builder()
+        let listener = TcpListener::bind(addr).await?;
+        let local_addr = listener.local_addr()?;
+        info!("Rpc server started on {}", local_addr);
+        let serve = Server::builder()
             .add_service(pb::job_service_server::JobServiceServer::new(service))
-            .serve(addr)
-            .await?;
-        Ok(())
+            .serve_with_incoming(tokio_stream::wrappers::TcpListenerStream::new(listener));
+        if blocking {
+            serve.await?;
+        } else {
+            tokio::spawn(async move {
+                serve.await.expect("Rpc server start error");
+            });
+        }
+        Ok(local_addr)
     }
 }
 
-fn parse_conf_req(_req: pb::JobConfig) -> JobConf {
-    todo!()
+fn parse_conf_req(conf: pb::JobConfig) -> JobConf {
+    let mut job_conf = JobConf::with_id(conf.job_id, conf.job_name, conf.workers);
+    if conf.time_limit != 0 {
+        job_conf.time_limit = conf.time_limit;
+    }
+    if conf.batch_size != 0 {
+        job_conf.batch_size = conf.batch_size;
+    }
+    if conf.output_capacity != 0 {
+        job_conf.batch_capacity = conf.output_capacity;
+    }
+    if conf.memory_limit != 0 {
+        job_conf.memory_limit = conf.memory_limit;
+    }
+    job_conf.plan_print = conf.plan_print;
+    if !conf.servers.is_empty() {
+        job_conf.reset_servers(ServerConf::Partial(conf.servers.clone()));
+    }
+    job_conf
 }

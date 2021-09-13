@@ -23,8 +23,8 @@ pub use keyed::*;
 pub use limit::*;
 pub use map::*;
 pub use merge::*;
-pub use order::*;
 pub use reduce::*;
+pub use sort::*;
 
 mod collect;
 mod correlate;
@@ -36,7 +36,7 @@ mod keyed;
 mod limit;
 mod map;
 mod merge;
-mod order;
 mod reduce;
+mod sort;
 mod switch;
 mod zip;
