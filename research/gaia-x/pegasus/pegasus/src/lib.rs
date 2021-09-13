@@ -210,7 +210,7 @@ where
     DI: Data,
     DO: Debug + Send + 'static,
     F: Fn() -> FN,
-    FN: FnOnce(&mut Source<DI>, ResultSink<DO>) -> Result<(), BuildJobError>,
+    FN: FnOnce(&mut Source<DI>, ResultSink<DO>) -> Result<(), BuildJobError> + 'static,
 {
     let (tx, rx) = crossbeam_channel::unbounded();
     let sink = ResultSink::new(tx);
