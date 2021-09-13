@@ -30,6 +30,7 @@ mod test {
     }
 
     #[test]
+    // g.V(1).where(both('KNOWS').both('KNOWS').both('KNOWS')).limit(1)
     fn early_stop_test_02() {
         initialize();
         let expected = 1;

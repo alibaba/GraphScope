@@ -145,7 +145,7 @@ impl GremlinJobCompiler {
         self.udf_gen.partitioner.clone()
     }
 
-    fn install(
+    pub fn install(
         &self, mut stream: Stream<Traverser>, plan: &[OperatorDef],
     ) -> Result<Stream<Traverser>, BuildJobError> {
         for op in &plan[..] {
@@ -204,6 +204,10 @@ impl GremlinJobCompiler {
                             .into_stream()?;
                     }
                     server_pb::operator_def::OpKind::Group(group) => {
+                        if group.unfold.is_none() {
+                            Err("only support group unfold or sink for now")?;
+                        }
+                        // Group unfold by default here. Group sink will be processed in sink.
                         let selector = self.udf_gen.gen_key(group.resource.as_ref())?;
                         let accum = self.udf_gen.gen_accum(group.accum)?;
                         stream = stream

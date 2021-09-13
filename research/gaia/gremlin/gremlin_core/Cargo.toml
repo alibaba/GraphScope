@@ -14,6 +14,7 @@ strum = "0.18.0"
 strum_macros = "0.18.0"
 crossbeam-queue = "0.1"
 crossbeam-utils = "0.6"
+crossbeam-channel = "0.3.6"
 dyn-clonable = "0.9.0"
 dyn_type = { path = "../../dyn_type" }
 pegasus = { path = "../../../gaia-x/pegasus/pegasus" }

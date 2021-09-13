@@ -19,32 +19,39 @@
 #[allow(dead_code)]
 #[allow(unused_imports)]
 pub mod test {
-
+    use core::time;
     use dyn_type::Object;
     use graph_store::ldbc::LDBCVertexParser;
     use graph_store::prelude::DefaultId;
     use gremlin_core::compiler::GremlinJobCompiler;
     use gremlin_core::process::traversal::path::ResultPath;
+    use gremlin_core::process::traversal::step::accum::Accumulator;
+    use gremlin_core::process::traversal::step::functions::EncodeFunction;
     use gremlin_core::process::traversal::step::result_downcast::{
-        try_downcast_count, try_downcast_list, try_downcast_pair,
+        try_downcast_list, try_downcast_pair,
     };
     use gremlin_core::process::traversal::step::{graph_step_from, ResultProperty};
     use gremlin_core::process::traversal::traverser::{Requirement, Traverser};
     use gremlin_core::structure::{Details, PropKey, Tag, VertexOrEdge};
-    use gremlin_core::{create_demo_graph, DynIter, Element, Partitioner, ID};
+    use gremlin_core::{create_demo_graph, str_to_dyn_error, DynIter, Element, Partitioner, ID};
     use gremlin_core::{GremlinStepPb, Partition};
     use pegasus::api::function::{
-        CompareFunction, EncodeFunction, FilterFunction, FlatMapFunction, LeftJoinFunction,
-        MapFunction, MultiRouteFunction, RouteFunction,
+        FilterFunction, FlatMapFunction, FnResult, MapFunction, RouteFunction,
     };
-    use pegasus::{Configuration, StartupError};
-    use pegasus_common::collections::{Collection, CollectionFactory, Set};
-    use pegasus_server::factory::{CompileResult, FoldFunction, GroupFunction, JobCompiler};
-    use pegasus_server::service::{Output, Service};
-    use pegasus_server::{JobRequest, JobResponse, JobResult};
+    use pegasus::api::{Count, Fold, FoldByKey, KeyBy, Map, Sink, Source};
+    use pegasus::result::{ResultSink, ResultStream};
+    use pegasus::stream::Stream;
+    use pegasus::{run_opt, BuildJobError, Configuration, JobConf, StartupError};
+    use pegasus_common::collections::{Collection, Set};
+    use pegasus_server::pb as server_pb;
+    use pegasus_server::pb::AccumKind;
+    use pegasus_server::service::{JobParser, Service};
+    use pegasus_server::{JobRequest, JobResponse};
     use prost::Message;
+    use std::error::Error;
     use std::path::{Path, PathBuf};
     use std::sync::Once;
+    use std::thread::sleep;
 
     const TEST_PLAN_PATH: &'static str = "resource/test/query_plans";
 
@@ -151,32 +158,70 @@ pub mod test {
         }
     }
 
-    pub struct TestSinkEncoder {
-        expected_ids: Option<Vec<ID>>,
-        expected_values: Option<Vec<Object>>,
-        expected_paths: Option<Vec<Vec<ID>>>,
-        expected_group_result: Option<Vec<(ID, Vec<ID>)>>,
-        is_ordered: bool,
-        property_opt: Option<(Vec<PropKey>, Vec<PropKey>)>,
-        expected_path_len: Option<usize>,
-        expected_tag_props: Option<Vec<Vec<(Tag, Vec<(PropKey, Object)>)>>>,
-        expected_result_num: Option<usize>,
+    impl JobParser<Traverser, Traverser> for TestJobFactory {
+        fn parse(
+            &self, plan: &JobRequest, input: &mut Source<Traverser>, output: ResultSink<Traverser>,
+        ) -> Result<(), BuildJobError> {
+            if let Some(source) = plan.source.as_ref() {
+                let source = input.input_from(self.gen_source(source.resource.as_ref())?)?;
+                let stream = if let Some(task) = plan.plan.as_ref() {
+                    self.inner.install(source, &task.plan)?
+                } else {
+                    source
+                };
+                match plan.sink.as_ref().unwrap().sinker.as_ref() {
+                    // TODO: more sink process here
+                    Some(server_pb::sink::Sinker::Fold(fold)) => {
+                        let accum_kind: server_pb::AccumKind =
+                            unsafe { std::mem::transmute(fold.accum) };
+                        match accum_kind {
+                            AccumKind::Cnt => stream
+                                .count()?
+                                .into_stream()?
+                                .map(|v| Ok(Traverser::Object(v.into())))?
+                                .sink_into(output),
+                            _ => todo!(),
+                        }
+                    }
+                    _ => stream.sink_into(output),
+                }
+            } else {
+                Err("source of job not found".into())
+            }
+        }
     }
 
-    impl EncodeFunction<Traverser> for TestSinkEncoder {
-        fn encode(&self, data: Vec<Traverser>) -> Vec<u8> {
-            println!("result to encode {:?}", data);
+    impl TestJobFactory {
+        fn gen_source(
+            &self, src: &[u8],
+        ) -> Result<Box<dyn Iterator<Item = Traverser> + Send>, BuildJobError> {
+            let mut step = GremlinStepPb::decode(&src[0..])
+                .map_err(|e| format!("protobuf decode failure: {}", e))?;
+            let worker_id = pegasus::get_current_worker();
+            let job_workers = worker_id.local_peers as usize;
+            let mut step = graph_step_from(
+                &mut step,
+                job_workers,
+                worker_id.index,
+                self.inner.get_partitioner(),
+            )?;
+            step.set_requirement(self.requirement);
+            Ok(step.gen_source(worker_id.index as usize))
+        }
+
+        fn check_result(&self, result: Vec<Traverser>) {
+            println!("result to check {:?}", result);
             if self.expected_result_num.is_some() {
-                assert_eq!(self.expected_result_num.unwrap(), data.len());
+                assert_eq!(self.expected_result_num.unwrap(), result.len());
             }
             let mut id_result = vec![];
             let mut obj_result = vec![];
             let mut path_result = vec![];
             let mut map_result = vec![];
             let mut tag_result = vec![];
-            for traverser in data.iter() {
+            for traverser in result.iter() {
                 if let Some(element) = traverser.get_element() {
-                    if let Some(property_opt) = self.property_opt.clone() {
+                    if let Some(property_opt) = self.expected_properties.clone() {
                         // to test property optimization, we assume the last op generates graph_element traverser
                         for saved_properties in property_opt.0.iter() {
                             assert!(element.details().get_property(saved_properties).is_some());
@@ -247,7 +292,7 @@ pub mod test {
                                     };
                                 let group_value =
                                     result_pair.1.get_object().expect("we assume value is object");
-                                if let Some(count) = try_downcast_count(group_value) {
+                                if let Ok(count) = group_value.as_u64() {
                                     map_result.push((group_key, vec![count as ID]));
                                 } else if let Some(list) = try_downcast_list(group_value) {
                                     let value_list: Vec<ID> = list
@@ -266,8 +311,8 @@ pub mod test {
             }
             if self.expected_ids.is_some() {
                 assert_eq!(self.expected_ids.as_ref().unwrap(), &id_result);
-            } else if self.expected_paths.is_some() {
-                assert_eq!(self.expected_paths.as_ref().unwrap(), &path_result);
+            } else if self.expected_path_result.is_some() {
+                assert_eq!(self.expected_path_result.as_ref().unwrap(), &path_result);
             } else if self.expected_group_result.is_some() {
                 assert_eq!(self.expected_group_result.as_ref().unwrap(), &map_result);
             } else if self.expected_tag_props.is_some() {
@@ -277,102 +322,6 @@ pub mod test {
             } else {
                 println!("no expected values specified in test");
             }
-            vec![]
-        }
-    }
-
-    impl JobCompiler<Traverser> for TestJobFactory {
-        fn shuffle(&self, res: &[u8]) -> CompileResult<Box<dyn RouteFunction<Traverser>>> {
-            self.inner.shuffle(res)
-        }
-
-        fn broadcast(&self, res: &[u8]) -> CompileResult<Box<dyn MultiRouteFunction<Traverser>>> {
-            self.inner.broadcast(res)
-        }
-
-        fn source(&self, src: &[u8]) -> CompileResult<Box<dyn Iterator<Item = Traverser> + Send>> {
-            let mut step = GremlinStepPb::decode(&src[0..])
-                .map_err(|e| format!("protobuf decode failure: {}", e))?;
-            if let Some(worker_id) = pegasus::get_current_worker() {
-                let job_workers = worker_id.peers as usize / self.inner.get_num_servers();
-                let mut step = graph_step_from(
-                    &mut step,
-                    job_workers,
-                    worker_id.index,
-                    self.inner.get_partitioner(),
-                )?;
-                step.set_requirement(self.requirement);
-                Ok(step.gen_source(worker_id.index as usize))
-            } else {
-                let mut step = graph_step_from(&mut step, 1, 0, self.inner.get_partitioner())?;
-                step.set_requirement(self.requirement);
-                Ok(step.gen_source(self.inner.get_server_index() as usize))
-            }
-        }
-
-        fn map(&self, res: &[u8]) -> CompileResult<Box<dyn MapFunction<Traverser, Traverser>>> {
-            self.inner.map(res)
-        }
-
-        fn flat_map(
-            &self, res: &[u8],
-        ) -> CompileResult<
-            Box<dyn FlatMapFunction<Traverser, Traverser, Target = DynIter<Traverser>>>,
-        > {
-            self.inner.flat_map(res)
-        }
-
-        fn filter(&self, res: &[u8]) -> CompileResult<Box<dyn FilterFunction<Traverser>>> {
-            self.inner.filter(res)
-        }
-
-        fn left_join(&self, res: &[u8]) -> CompileResult<Box<dyn LeftJoinFunction<Traverser>>> {
-            self.inner.left_join(res)
-        }
-
-        fn compare(&self, res: &[u8]) -> CompileResult<Box<dyn CompareFunction<Traverser>>> {
-            self.inner.compare(res)
-        }
-
-        fn group(
-            &self, map_factory: &[u8], unfold: &[u8], sink: &[u8],
-        ) -> CompileResult<Box<dyn GroupFunction<Traverser>>> {
-            self.inner.group(map_factory, unfold, sink)
-        }
-
-        fn fold(
-            &self, accum: &[u8], unfold: &[u8], sink: &[u8],
-        ) -> CompileResult<Box<dyn FoldFunction<Traverser>>> {
-            self.inner.fold(accum, unfold, sink)
-        }
-
-        fn collection_factory(
-            &self, res: &[u8],
-        ) -> CompileResult<
-            Box<dyn CollectionFactory<Traverser, Target = Box<dyn Collection<Traverser>>>>,
-        > {
-            self.inner.collection_factory(res)
-        }
-
-        fn set_factory(
-            &self, res: &[u8],
-        ) -> CompileResult<Box<dyn CollectionFactory<Traverser, Target = Box<dyn Set<Traverser>>>>>
-        {
-            self.inner.set_factory(res)
-        }
-
-        fn sink(&self, _res: &[u8]) -> CompileResult<Box<dyn EncodeFunction<Traverser>>> {
-            Ok(Box::new(TestSinkEncoder {
-                expected_ids: self.expected_ids.clone(),
-                expected_values: self.expected_values.clone(),
-                expected_paths: self.expected_path_result.clone(),
-                expected_group_result: self.expected_group_result.clone(),
-                is_ordered: self.is_ordered,
-                property_opt: self.expected_properties.clone(),
-                expected_path_len: self.expected_path_len,
-                expected_tag_props: self.expected_tag_props.clone(),
-                expected_result_num: self.expected_result_num,
-            }))
         }
     }
 
@@ -389,11 +338,6 @@ pub mod test {
         }
     }
 
-    fn start_test_service(factory: TestJobFactory) -> Service<Traverser> {
-        let service = Service::new(factory);
-        service
-    }
-
     pub fn read_pb_request<P: AsRef<Path>>(file_name: P) -> Option<JobRequest> {
         if let Ok(content) = std::fs::read(&file_name) {
             {
@@ -408,21 +352,6 @@ pub mod test {
             println!("read file {:?} failed", file_name.as_ref());
             None
         }
-    }
-
-    #[derive(Clone)]
-    struct TestOutputStruct;
-
-    impl Output for TestOutputStruct {
-        fn send(&self, res: JobResponse) {
-            if let Some(result) = res.result {
-                if let JobResult::Err(e) = result {
-                    panic!("send result into test output failure {:?}", e);
-                }
-            }
-        }
-
-        fn close(&self) {}
     }
 
     pub fn to_global_id(id: usize) -> DefaultId {
@@ -456,27 +385,33 @@ pub mod test {
         Path::new(TEST_PLAN_PATH).join(file.to_string())
     }
 
-    fn submit_query(service: &Service<Traverser>, mut job_req: JobRequest, num_workers: u32) {
-        let job_id = job_req.conf.clone().expect("no job_conf").job_id;
-        job_req.conf.as_mut().expect("no job_conf").workers = num_workers;
-        println!("job_id: {}", job_id);
-        service.accept(job_req, TestOutputStruct);
-        if let Ok(mut job_guards) = service.job_guards.write() {
-            if let Some(job_guard) = job_guards.get_mut(&job_id) {
-                job_guard.join().expect("run query failed");
+    fn submit_query(factory: &TestJobFactory, job_req: JobRequest, num_workers: u32) {
+        let job_config = job_req.conf.clone().expect("no job_conf");
+        let conf = JobConf::with_id(job_config.job_id, job_config.job_name, num_workers);
+        let mut results =
+            pegasus::run(conf, || |input, output| factory.parse(&job_req, input, output))
+                .expect("submit job failure;");
+        let mut trav_results = vec![];
+        while let Some(result) = results.next() {
+            match result {
+                Ok(res) => {
+                    trav_results.push(res);
+                }
+                Err(e) => {
+                    panic!("err result {:?}", e);
+                }
             }
         }
+        factory.check_result(trav_results);
     }
 
     pub fn run_test_with_worker_num(
         factory: TestJobFactory, job_request: JobRequest, num_workers: u32,
     ) {
-        let service = start_test_service(factory);
-        submit_query(&service, job_request, num_workers);
+        submit_query(&factory, job_request, num_workers);
     }
 
     pub fn run_test(factory: TestJobFactory, job_request: JobRequest) {
-        let service = start_test_service(factory);
-        submit_query(&service, job_request, 1);
+        submit_query(&factory, job_request, 1);
     }
 }
