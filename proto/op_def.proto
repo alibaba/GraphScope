@@ -62,7 +62,7 @@ message OpResult {
 
   string error_msg = 4;
 
-  // result represents app_name or ctx_name or raw bytes If the op returns a NDArray or DataFrame
+  // result represents app_name or context_key or raw bytes If the op returns a NDArray or DataFrame
   bytes result = 5;
 
   // learning graph handle
