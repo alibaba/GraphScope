@@ -116,9 +116,11 @@ where
     })
 }
 
+type Cmp<D> = Rc<dyn Fn(&D, &D) -> Ordering + Send>;
+
 struct FixedSizeHeap<D> {
     pub limit: usize,
-    cmp: Rc<dyn Fn(&D, &D) -> Ordering + Send + 'static>,
+    cmp: Cmp<D>,
     pub heap: BinaryHeap<Item<D>>,
 }
 
@@ -143,7 +145,7 @@ impl<D: Ord> FixedSizeHeap<D> {
 }
 
 impl<D> FixedSizeHeap<D> {
-    fn with_cmp(limit: usize, cmp: Rc<dyn Fn(&D, &D) -> Ordering + Send + 'static>) -> Self {
+    fn with_cmp(limit: usize, cmp: Cmp<D>) -> Self {
         if limit < 10240 {
             FixedSizeHeap { limit, cmp, heap: BinaryHeap::with_capacity(limit) }
         } else {
@@ -170,7 +172,7 @@ unsafe impl<D: Send> Send for FixedSizeHeap<D> {}
 
 struct Item<D> {
     inner: D,
-    cmp: Rc<dyn Fn(&D, &D) -> Ordering + Send + 'static>,
+    cmp: Cmp<D>,
 }
 
 impl<D> PartialEq for Item<D> {
