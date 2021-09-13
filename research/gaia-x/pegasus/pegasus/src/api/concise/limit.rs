@@ -57,7 +57,7 @@ pub trait Limit<D: Data> {
 
 /// Similar to `Limit`, but requires the output items are the minimum ones according to the
 /// data ordering.
-pub trait OrderLimit<D: Data + Ord> {
+pub trait SortLimit<D: Data + Ord> {
     /// Given a `size` argument, `sort_limit()` produces an output stream that contains up to
     /// `size` number of data, where these data items are the **minimum** ones among all data. The
     /// ordering of data is determined by [`Ord`]. The `sort_limit()` function is semantically
@@ -72,7 +72,7 @@ pub trait OrderLimit<D: Data + Ord> {
     fn sort_limit(self, size: u32) -> Result<Stream<D>, BuildJobError>;
 }
 
-pub trait OrderLimitBy<D: Data> {
+pub trait SortLimitBy<D: Data> {
     /// Sort and limit the input data stream via a user-defined comparator `cmp`.
     fn sort_limit_by<F>(self, size: u32, cmp: F) -> Result<Stream<D>, BuildJobError>
     where

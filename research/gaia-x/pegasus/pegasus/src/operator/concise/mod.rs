@@ -33,8 +33,8 @@ mod keyed;
 mod limit;
 mod map;
 mod merge;
-mod order;
 mod reduce;
+mod sort;
 
 #[inline]
 fn never_clone<T>(raw: T) -> NeverClone<T> {

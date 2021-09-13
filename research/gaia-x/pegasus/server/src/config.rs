@@ -67,29 +67,22 @@ pub fn combine_config(
 ) -> Option<Configuration> {
     if let Some(host_config) = host_config {
         let local_host = &host_config.peers[server_id as usize];
-        let ip = local_host.ip.to_owned();
-        let port = local_host.port;
+        let ip = local_host.get_ip().to_owned();
+        let port = local_host.get_port();
         let config = if let Some(common_config) = common_config {
-            let network_config = NetworkConfig {
-                server_id,
-                ip,
-                port,
-                nonblocking: common_config.nonblocking,
-                read_timeout_ms: common_config.read_timeout_ms,
-                write_timeout_ms: common_config.write_timeout_ms,
-                read_slab_size: common_config.read_slab_size,
-                no_delay: common_config.no_delay,
-                send_buffer: common_config.send_buffer,
-                heartbeat_sec: common_config.heartbeat_sec,
-                peers: Some(host_config.peers),
-            };
-            Configuration {
-                network: Some(network_config),
-                max_pool_size: common_config.max_pool_size,
-            }
+            let network_config = NetworkConfig::new(server_id, ip, port)
+                .with_nonblocking(common_config.nonblocking)
+                .with_read_timeout_ms(common_config.read_timeout_ms)
+                .with_write_timeout_ms(common_config.write_timeout_ms)
+                .with_read_slab_size(common_config.read_slab_size)
+                .with_no_delay(common_config.no_delay)
+                .with_send_buffer(common_config.send_buffer)
+                .with_heartbeat_sec(common_config.heartbeat_sec)
+                .with_peers(Some(host_config.peers));
+            Configuration { network: Some(network_config), max_pool_size: common_config.max_pool_size }
         } else {
             let network_config =
-                NetworkConfig::with_default_config(server_id, ip, port, host_config.peers);
+                NetworkConfig::new(server_id, ip, port).with_peers(Some(host_config.peers));
             Configuration { network: Some(network_config), max_pool_size: None }
         };
         Some(config)

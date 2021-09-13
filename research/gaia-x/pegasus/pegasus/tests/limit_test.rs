@@ -1,5 +1,5 @@
 use pegasus::api::{
-    Collect, CorrelatedSubTask, Iteration, Limit, Map, Merge, OrderLimit, OrderLimitBy, Sink,
+    Collect, CorrelatedSubTask, Iteration, Limit, Map, Merge, Sink, SortLimit, SortLimitBy,
 };
 use pegasus::JobConf;
 
@@ -71,7 +71,11 @@ fn limit_test_02() {
         |input, output| {
             input
                 .input_from(1..1_000_000u32)?
-                .iterate(2, |start| start.repartition(|x: &u32| Ok(*x as u64)).flat_map(|i| Ok(0..i)))?
+                .iterate(2, |start| {
+                    start
+                        .repartition(|x: &u32| Ok(*x as u64))
+                        .flat_map(|i| Ok(0..i))
+                })?
                 .limit(10)?
                 .sink_into(output)
         }
@@ -98,7 +102,10 @@ fn limit_test_03() {
             input
                 .input_from(1..1000u32)?
                 .iterate(2, |start| {
-                    start.repartition(|x: &u32| Ok(*x as u64)).flat_map(|i| Ok(0..i * 1000))?.limit(10)
+                    start
+                        .repartition(|x: &u32| Ok(*x as u64))
+                        .flat_map(|i| Ok(0..i * 1000))?
+                        .limit(10)
                 })?
                 .sink_into(output)
         }
@@ -297,7 +304,9 @@ fn sort_limit_test() {
         let index = pegasus::get_current_worker().index;
         move |input, output| {
             let src = if index == 0 { input.input_from(1..100u32) } else { input.input_from(vec![]) }?;
-            src.repartition(|x: &u32| Ok(*x as u64)).sort_limit(10)?.sink_into(output)
+            src.repartition(|x: &u32| Ok(*x as u64))
+                .sort_limit(10)?
+                .sink_into(output)
         }
     })
     .expect("build job failure");

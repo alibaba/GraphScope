@@ -13,7 +13,7 @@
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 
-use crate::api::{Limit, OrderLimit, OrderLimitBy, Unary};
+use crate::api::{Limit, SortLimit, SortLimitBy, Unary};
 use crate::stream::Stream;
 use crate::tag::tools::map::TidyTagMap;
 use crate::{BuildJobError, Data};
@@ -61,68 +61,53 @@ impl<D: Data> Limit<D> for Stream<D> {
     }
 }
 
-struct SmallHeap<D: Ord> {
-    pub limit: usize,
-    pub heap: BinaryHeap<D>,
-}
-
-impl<D: Ord> IntoIterator for SmallHeap<D> {
-    type Item = D;
-    type IntoIter = std::vec::IntoIter<D>;
-
-    fn into_iter(self) -> Self::IntoIter {
-        self.heap.into_sorted_vec().into_iter()
-    }
-}
-
-impl<D: Ord> SmallHeap<D> {
-    fn new(limit: usize) -> Self {
-        SmallHeap { limit, heap: BinaryHeap::new() }
-    }
-
-    fn add(&mut self, item: D) -> Result<(), io::Error> {
-        if self.heap.len() >= self.limit {
-            let mut head = self
-                .heap
-                .peek_mut()
-                .expect("unreachable: len > 0");
-            // if others <= head > item,
-            if Ordering::Greater == head.cmp(&item) {
-                *head = item;
-            }
-        } else {
-            self.heap.push(item);
-        }
-        Ok(())
-    }
-}
-
-impl<D: Data + Ord> OrderLimit<D> for Stream<D> {
+impl<D: Data + Ord> SortLimit<D> for Stream<D> {
     fn sort_limit(self, size: u32) -> Result<Stream<D>, BuildJobError> {
         if size == 0 {
             return BuildJobError::unsupported("sort_limit n cannot equal to zero");
         }
-        let local_sort = sort_limit_partition(self, size)?;
-        sort_limit_partition(local_sort.aggregate(), size)
+        self.sort_limit_by(size, |x, y| x.cmp(y))
+    }
+}
+
+impl<D: Data> SortLimitBy<D> for Stream<D> {
+    fn sort_limit_by<F>(self, size: u32, cmp: F) -> Result<Stream<D>, BuildJobError>
+    where
+        F: Fn(&D, &D) -> Ordering + Send + 'static,
+    {
+        if size == 0 {
+            return BuildJobError::unsupported("sort_limit n cannot equal to zero");
+        }
+        let share_cmp = ShadeCmp { cmp: Rc::new(cmp) };
+        let cmp_clone = ShadeCmp { cmp: share_cmp.cmp.clone() };
+        let local_sort = sort_limit_by_partition(self, size, cmp_clone)?;
+        sort_limit_by_partition(local_sort.aggregate(), size, share_cmp)
     }
 }
 
 #[inline]
-fn sort_limit_partition<D: Data + Ord>(stream: Stream<D>, size: u32) -> Result<Stream<D>, BuildJobError> {
-    stream.unary("sort_limit_local", |info| {
+fn sort_limit_by_partition<D: Data, F>(
+    stream: Stream<D>, size: u32, share_cmp: ShadeCmp<F>,
+) -> Result<Stream<D>, BuildJobError>
+where
+    F: Fn(&D, &D) -> Ordering + Send + 'static,
+{
+    stream.unary("sort_limit_by_partition", |info| {
         let mut table = TidyTagMap::new(info.scope_level);
         move |input, output| {
             input.for_each_batch(|dataset| {
                 if !dataset.is_empty() {
-                    let small_heap = table.get_mut_or_else(&dataset.tag, || SmallHeap::new(size as usize));
+                    let custom_heap = table.get_mut_or_else(&dataset.tag, || {
+                        FixedSizeHeap::new(size as usize, share_cmp.cmp.clone())
+                    });
                     for d in dataset.drain() {
-                        small_heap.add(d)?;
+                        custom_heap.add(d)?;
                     }
                 }
                 if dataset.is_last() {
                     let mut session = output.new_session(&dataset.tag)?;
-                    if let Some(small_heap) = table.remove(&dataset.tag) {
-                        session.give_iterator(small_heap.into_iter())?
+                    if let Some(custom_heap) = table.remove(&dataset.tag) {
+                        session.give_iterator(custom_heap.into_iter())?
                     }
                 }
                 Ok(())
@@ -131,13 +116,13 @@ fn sort_limit_partition<D: Data + Ord>(stream: Stream<D>, size: u32) -> Result<S
     })
 }
 
-struct CustomHeap<D, C: Fn(&D, &D) -> Ordering + Send + 'static> {
+struct FixedSizeHeap<D, C: Fn(&D, &D) -> Ordering + Send + 'static> {
     pub limit: usize,
     cmp: Rc<C>,
     pub heap: BinaryHeap<Item<D, C>>,
 }
 
-impl<D, C: Fn(&D, &D) -> Ordering + Send + 'static> IntoIterator for CustomHeap<D, C> {
+impl<D, C: Fn(&D, &D) -> Ordering + Send + 'static> IntoIterator for FixedSizeHeap<D, C> {
     type Item = D;
     type IntoIter = std::vec::IntoIter<D>;
 
@@ -150,30 +135,36 @@ impl<D, C: Fn(&D, &D) -> Ordering + Send + 'static> IntoIterator for CustomHeap<
     }
 }
 
-impl<D, C: Fn(&D, &D) -> Ordering + Send + 'static> CustomHeap<D, C> {
+impl<D, C: Fn(&D, &D) -> Ordering + Send + 'static> FixedSizeHeap<D, C> {
     fn new(limit: usize, cmp: Rc<C>) -> Self {
-        CustomHeap { limit, cmp, heap: BinaryHeap::new() }
+        if limit < 10240 {
+            FixedSizeHeap { limit, cmp, heap: BinaryHeap::with_capacity(limit) }
+        } else {
+            FixedSizeHeap { limit, cmp, heap: BinaryHeap::with_capacity(10240) }
+        }
     }
 
     fn add(&mut self, item: D) -> Result<(), io::Error> {
-        if self.heap.len() >= self.limit {
-            let mut head = self
-                .heap
-                .peek_mut()
-                .expect("unreachable: len > 0");
-            // if others <= head > item,
-            if Some(Ordering::Greater) == head.partial_cmp(&item) {
-                head.inner = item;
+        if self.limit > 0 {
+            if self.heap.len() >= self.limit {
+                let mut head = self
+                    .heap
+                    .peek_mut()
+                    .expect("unreachable: len > 0");
+                // if others <= head > item,
+                if Some(Ordering::Greater) == head.partial_cmp(&item) {
+                    head.inner = item;
+                }
+            } else {
+                self.heap
+                    .push(Item { inner: item, cmp: self.cmp.clone() });
             }
-        } else {
-            self.heap
-                .push(Item { inner: item, cmp: self.cmp.clone() });
         }
         Ok(())
     }
 }
 
-unsafe impl<D: Send, C: Fn(&D, &D) -> Ordering + Send + 'static> Send for CustomHeap<D, C> {}
+unsafe impl<D: Send, C: Fn(&D, &D) -> Ordering + Send + 'static> Send for FixedSizeHeap<D, C> {}
 
 struct Item<D, C: Fn(&D, &D) -> Ordering + Send + 'static> {
     inner: D,
@@ -224,49 +215,3 @@ struct ShadeCmp<C> {
 }
 
 unsafe impl<C: Send> Send for ShadeCmp<C> {}
-
-impl<D: Data> OrderLimitBy<D> for Stream<D> {
-    fn sort_limit_by<F>(self, size: u32, cmp: F) -> Result<Stream<D>, BuildJobError>
-    where
-        F: Fn(&D, &D) -> Ordering + Send + 'static,
-    {
-        if size == 0 {
-            return BuildJobError::unsupported("sort_limit n cannot equal to zero");
-        }
-        let share_cmp = ShadeCmp { cmp: Rc::new(cmp) };
-        let cmp_clone = ShadeCmp { cmp: share_cmp.cmp.clone() };
-        let local_sort = sort_limit_by_partition(self, size, cmp_clone)?;
-        sort_limit_by_partition(local_sort.aggregate(), size, share_cmp)
-    }
-}
-
-#[inline]
-fn sort_limit_by_partition<D: Data, F>(
-    stream: Stream<D>, size: u32, share_cmp: ShadeCmp<F>,
-) -> Result<Stream<D>, BuildJobError>
-where
-    F: Fn(&D, &D) -> Ordering + Send + 'static,
-{
-    stream.unary("sort_limit_by_partition", |info| {
-        let mut table = TidyTagMap::new(info.scope_level);
-        move |input, output| {
-            input.for_each_batch(|dataset| {
-                if !dataset.is_empty() {
-                    let custom_heap = table.get_mut_or_else(&dataset.tag, || {
-                        CustomHeap::new(size as usize, share_cmp.cmp.clone())
-                    });
-                    for d in dataset.drain() {
-                        custom_heap.add(d)?;
-                    }
-                }
-                if dataset.is_last() {
-                    let mut session = output.new_session(&dataset.tag)?;
-                    if let Some(custom_heap) = table.remove(&dataset.tag) {
-                        session.give_iterator(custom_heap.into_iter())?
-                    }
-                }
-                Ok(())
-            })
-        }
-    })
-}
