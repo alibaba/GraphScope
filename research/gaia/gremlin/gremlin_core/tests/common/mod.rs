@@ -388,9 +388,15 @@ pub mod test {
     fn submit_query(factory: &TestJobFactory, job_req: JobRequest, num_workers: u32) {
         let job_config = job_req.conf.clone().expect("no job_conf");
         let conf = JobConf::with_id(job_config.job_id, job_config.job_name, num_workers);
-        let mut results =
-            pegasus::run(conf, || |input, output| factory.parse(&job_req, input, output))
-                .expect("submit job failure;");
+        let (tx, rx) = crossbeam_channel::unbounded();
+        let sink = ResultSink::new(tx);
+        let cancel_hook = sink.get_cancel_hook().clone();
+        let mut results = ResultStream::new(conf.job_id, cancel_hook, rx);
+        run_opt(conf, sink, |worker| {
+            worker.dataflow(|input, output| factory.parse(&job_req, input, output))
+        })
+        .expect("submit job failure;");
+
         let mut trav_results = vec![];
         while let Some(result) = results.next() {
             match result {
