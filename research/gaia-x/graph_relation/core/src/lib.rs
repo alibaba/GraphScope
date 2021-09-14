@@ -15,6 +15,7 @@
 
 #[macro_use]
 extern crate pegasus_common;
+pub use expr::api::*;
 
 use crate::error::{ParsePbError, ParsePbResult};
 use crate::generated::common as pb;

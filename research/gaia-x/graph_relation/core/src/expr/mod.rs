@@ -14,6 +14,7 @@
 //! limitations under the License.
 //!
 
+pub mod api;
 pub mod error;
 pub mod eval;
 pub mod token;
