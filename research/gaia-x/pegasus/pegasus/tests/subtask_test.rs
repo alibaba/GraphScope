@@ -42,6 +42,8 @@ fn subtask_test_1() {
         if count < 10 {
             println!("{}: {}=>{}", count, d.0, d.1);
         }
+        let cnt = Some(d.0).into_iter().map(|i| i + 1).flat_map(|i| (0..i)).count() as u64;
+        assert_eq!(cnt, d.1);
         count += 1;
     }
     assert_eq!(count, num * 2);

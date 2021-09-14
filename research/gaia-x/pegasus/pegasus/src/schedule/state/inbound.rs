@@ -1,5 +1,5 @@
 use crate::communication::IOResult;
-use crate::data::MicroBatch;
+use crate::data::{EndByScope, MicroBatch};
 use crate::data_plane::{GeneralPush, Push};
 use crate::graph::Port;
 use crate::progress::{EndSignal, Weight};
@@ -9,59 +9,53 @@ use crate::{Data, Tag};
 #[allow(dead_code)]
 struct ScopeEndPanel {
     tag: Tag,
-    expect_weight: Option<Weight>,
-    update_weight: Option<Weight>,
-    current_weight: Weight,
+    source: Weight,
+    children: Weight,
+    merged: Weight,
+    count: u64,
     is_exhaust: bool,
 }
 
 impl ScopeEndPanel {
-    fn new(tag: Tag) -> Self {
+    fn new(src: u32, end: EndSignal) -> Self {
+        let mut merged = Weight::partial_empty();
+        merged.add_source(src);
+        let (end, children) = end.take();
         ScopeEndPanel {
-            tag,
-            expect_weight: None,
-            update_weight: None,
-            current_weight: Weight::partial_empty(),
+            tag: end.tag,
+            source: end.source,
+            children,
+            merged,
+            count: end.count,
             is_exhaust: false,
         }
     }
 
-    fn update_end(&mut self, src: u32, end: EndSignal) -> Option<EndSignal> {
-        let (_, weight, update) = end.take();
-        if let Some(ref pre) = self.expect_weight {
-            assert_eq!(pre, &weight, "conflict weight;");
-        } else {
-            self.expect_weight = Some(weight);
-            self.update_weight = update;
-            self.add_end_source(src);
-            return None;
-        }
+    fn merge(&mut self, src: u32, end: EndSignal) -> Option<EndByScope> {
+        let (end, children) = end.take();
+        assert_eq!(end.tag, self.tag);
+        assert_eq!(end.source, self.source);
+        self.merged.add_source(src);
+        self.children.merge(children);
+        self.count += end.count;
 
-        if let Some(update) = update {
-            if let Some(ref mut pre_update) = self.update_weight {
-                pre_update.merge(update);
-            } else {
-                self.update_weight = Some(update);
-            }
-        }
-
-        self.add_end_source(src)
-    }
-
-    fn add_end_source(&mut self, src: u32) -> Option<EndSignal> {
-        self.current_weight.add_source(src);
-        // debug_worker!("current weight {:?}", self.current_weight);
-        if let Some(expect) = self.expect_weight.take() {
-            if self.current_weight >= expect {
-                self.is_exhaust = true;
-                let mut end = EndSignal::new(self.tag.clone(), expect);
-                if let Some(update) = self.update_weight.take() {
-                    end.update_to(update);
+        if self.merged == self.source {
+            self.is_exhaust = true;
+            let mut src = std::mem::replace(&mut self.children, Weight::partial_empty());
+            if src.value() == 0 {
+                assert!(self.tag.len() > 0);
+                assert_eq!(self.count, 0);
+                // empty scope;
+                let worker_id = crate::worker_id::get_current_worker();
+                let owner = self.tag.current_uncheck() % worker_id.total_peers();
+                if owner == worker_id.index {
+                    src = Weight::single(owner);
+                    Some(EndByScope::new(self.tag.clone(), src, self.count))
+                } else {
+                    None
                 }
-                Some(end)
             } else {
-                self.expect_weight = Some(expect);
-                None
+                Some(EndByScope::new(self.tag.clone(), src, self.count))
             }
         } else {
             None
@@ -70,23 +64,19 @@ impl ScopeEndPanel {
 }
 
 pub trait InputEndNotify: Send + 'static {
-    fn notify(&mut self, end: EndSignal) -> IOResult<()>;
+    fn notify(&mut self, end: EndByScope) -> IOResult<()>;
 }
 
 impl<T: Data> InputEndNotify for GeneralPush<MicroBatch<T>> {
-    fn notify(&mut self, mut end: EndSignal) -> IOResult<()> {
-        end.update();
-        assert_eq!(end.update_weight, None);
-        let mut d = MicroBatch::empty();
-        d.tag = end.tag.clone();
-        d.end = Some(end);
-        if d.tag.is_root() {
-            self.push(d)?;
-            self.close()
-            // Ok(())
+    fn notify(&mut self, end: EndByScope) -> IOResult<()> {
+        let last = MicroBatch::last(0, end);
+        if last.tag().is_root() {
+            self.push(last)?;
+            self.close()?;
         } else {
-            self.push(d)
+            self.push(last)?;
         }
+        Ok(())
     }
 }
 
@@ -107,29 +97,32 @@ impl InboundStreamState {
     }
 
     pub fn on_end(&mut self, src: u32, end: EndSignal) -> IOResult<()> {
-        //debug_worker!("accept eos {:?} from {}", end, src);
-        assert!(end.source_weight.value() > 1, "source weight = 1 should be passed with data;");
-        let idx = end.tag.len();
-        assert!(idx <= self.scope_level as usize);
-        let tag = end.tag.clone();
-        if idx < self.scope_level as usize {
-            // this is an end of parent scope;
-            let mut notify_guards = std::mem::replace(&mut self.notify_guards, vec![]);
-            for i in idx + 1..self.scope_level as usize + 1 {
-                for (t, p) in notify_guards[i].iter_mut() {
-                    if tag.is_parent_of(&*t) {
-                        if let Some(end) = p.add_end_source(src) {
-                            self.notify.notify(end)?;
-                        }
-                    }
-                }
-            }
-            // TODO: clean notify guards; (only retain not exhaust;)
-            self.notify_guards = notify_guards;
+        if end.sources() == 1 {
+            warn_worker!("scope {:?} end[source = 1] should be be passed with data;", end.tag());
+            return self.notify.notify(end.into_end());
         }
 
-        if let Some(mut p) = self.notify_guards[idx].remove(&end.tag) {
-            if let Some(e) = p.update_end(src, end) {
+        let idx = end.tag().len();
+        assert!(idx <= self.scope_level as usize);
+        let tag = end.tag().clone();
+        // if idx < self.scope_level as usize {
+        //     // this is an end of parent scope;
+        //     let mut notify_guards = std::mem::replace(&mut self.notify_guards, vec![]);
+        //     for i in idx + 1..self.scope_level as usize + 1 {
+        //         for (t, p) in notify_guards[i].iter_mut() {
+        //             if tag.is_parent_of(&*t) {
+        //                 if let Some(end) = p.add_end_source(src) {
+        //                     self.notify.notify(end)?;
+        //                 }
+        //             }
+        //         }
+        //     }
+        //     // TODO: clean notify guards; (only retain not exhaust;)
+        //     self.notify_guards = notify_guards;
+        // }
+
+        if let Some(mut p) = self.notify_guards[idx].remove(end.tag()) {
+            if let Some(e) = p.merge(src, end) {
                 trace_worker!("in port {:?} get end of {:?}", self.port, e.tag);
                 self.notify.notify(e)?;
             } else {
@@ -137,14 +130,13 @@ impl InboundStreamState {
                     "in port {:?} partial end of {:?}, expect {:?}, current {:?};",
                     self.port,
                     p.tag,
-                    p.expect_weight,
-                    p.current_weight
+                    p.source,
+                    p.merged
                 );
                 self.notify_guards[idx].insert(tag, p);
             }
         } else {
-            let mut p = ScopeEndPanel::new(tag.clone());
-            p.update_end(src, end);
+            let p = ScopeEndPanel::new(src, end);
             self.notify_guards[idx].insert(tag, p);
         }
         Ok(())

@@ -5,7 +5,7 @@ use crate::{BuildJobError, Data};
 
 mod feedback;
 mod switch;
-use feedback::{FeedbackOperator, IterSyncOperator};
+use feedback::FeedbackOperator;
 use switch::SwitchOperator;
 
 use crate::macros::map::FnResult;
@@ -27,6 +27,7 @@ impl<D: Data> Iteration<D> for Stream<D> {
         }
     }
 
+    #[cfg(not(feature = "rob"))]
     fn iterate_until<F>(self, until: IterCondition<D>, func: F) -> Result<Stream<D>, BuildJobError>
     where
         F: FnOnce(Stream<D>) -> Result<Stream<D>, BuildJobError>,
@@ -44,6 +45,26 @@ impl<D: Data> Iteration<D> for Stream<D> {
         let feedback: Stream<D> = pipeline.union_notify_transform("feedback", sync, move |info| {
             FeedbackOperator::<D>::new(info.scope_level, max_iters)
         })?;
+        feedback.feedback_to(index)?;
+        leave.leave()
+    }
+
+    #[cfg(feature = "rob")]
+    fn iterate_until<F>(self, until: IterCondition<D>, func: F) -> Result<Stream<D>, BuildJobError>
+    where
+        F: FnOnce(Stream<D>) -> Result<Stream<D>, BuildJobError>,
+    {
+        let max_iters = until.max_iters;
+        let (leave, enter) = self
+            .enter()?
+            .binary_branch_notify("switch", |info| SwitchOperator::<D>::new(info.scope_level, until))?;
+        let index = enter.port().index;
+        let after_body = func(enter)?;
+        let feedback: Stream<D> = after_body
+            .sync_state()?
+            .transform_notify("feedback", move |info| {
+                FeedbackOperator::<D>::new(info.scope_level, max_iters)
+            })?;
         feedback.feedback_to(index)?;
         leave.leave()
     }

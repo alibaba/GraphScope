@@ -126,4 +126,8 @@ impl<T: Sized> UnsafeRcPtr<T> {
     pub fn new(entry: T) -> Self {
         UnsafeRcPtr { ptr: Rc::new(entry) }
     }
+
+    pub fn try_unwrap(this: Self) -> Result<T, Self> {
+        Rc::try_unwrap(this.ptr).map_err(|ptr| UnsafeRcPtr { ptr })
+    }
 }

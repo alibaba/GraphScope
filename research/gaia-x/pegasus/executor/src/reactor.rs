@@ -83,6 +83,7 @@ pub struct ExecutorRuntime {
 fn do_user_task(
     mut task: GeneralTask, not_readies: &Arc<SegQueue<GeneralTask>>, re_active: &WorkStealQueue<RunTask>,
 ) {
+
     // 1. execute task;
     // 2. check task state:
     let result = std::panic::catch_unwind(AssertUnwindSafe(|| {
@@ -127,8 +128,7 @@ fn do_select(mut select: SelectTask, re_active: &WorkStealQueue<RunTask>) {
                     re_active.push(RunTask::Users(task));
                 }
                 Some(TaskState::Finished) => {
-                    let task = task.take().unwrap();
-                    debug!("task {} finished;", task.get_name());
+                    task.take().unwrap();
                 }
                 _ => {}
             }

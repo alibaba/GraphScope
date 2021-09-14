@@ -28,12 +28,14 @@ dot = "0.1.4"
 dyn-clonable = "0.9.0"
 
 [features]
-default = []
 mem = ["pegasus_memory/mem"]
 rob = ["pegasus_common/rob"]
+default = ["rob"]
 
 [dev-dependencies]
 time = "0.1"
 env_logger = { version = "0.6" }
 structopt = "0.2"
 rand = "0.8.3"
+
+

@@ -27,7 +27,7 @@ mod rob {
     use crate::communication::decorator::evented::EventEmitPush;
     use crate::communication::decorator::{ScopeStreamBuffer, ScopeStreamPush};
     use crate::communication::Magic;
-    use crate::data::MicroBatch;
+    use crate::data::{EndByScope, MicroBatch};
     use crate::errors::{IOError, IOResult};
     use crate::graph::Port;
     use crate::progress::{EndSignal, Weight};
@@ -183,7 +183,7 @@ mod rob {
             }
         }
 
-        fn push_last(&mut self, msg: D, mut end: EndSignal) -> IOResult<()> {
+        fn push_last(&mut self, msg: D, mut end: EndByScope) -> IOResult<()> {
             let len = self.pushes.len();
             if len == 1 {
                 return self.pushes[0].push_last(msg, end);
@@ -237,7 +237,7 @@ mod rob {
             }
         }
 
-        fn notify_end(&mut self, mut end: EndSignal) -> IOResult<()> {
+        fn notify_end(&mut self, mut end: EndByScope) -> IOResult<()> {
             self.update_weight(&mut end, None);
             for p in &mut self.pushes[1..] {
                 p.notify_end(end.clone())?;
@@ -312,7 +312,7 @@ mod rob {
             } else {
                 // end is only send to aggregate target,
                 let w = crate::worker_id::get_current_worker().index;
-                end.update_weight = Some(Weight::single(w));
+                end.child_weight = Some(Weight::single(w));
             }
             self.pushes[offset].push_last(msg, end)
         }
@@ -349,7 +349,6 @@ mod rob {
 #[cfg(feature = "rob")]
 mod rob {
     use std::collections::VecDeque;
-    use std::sync::{atomic::AtomicBool, atomic::Ordering, Arc};
 
     use pegasus_common::buffer::ReadBuffer;
 
@@ -360,7 +359,7 @@ mod rob {
     use crate::communication::decorator::evented::EventEmitPush;
     use crate::communication::decorator::BlockPush;
     use crate::communication::{IOResult, Magic};
-    use crate::data::MicroBatch;
+    use crate::data::{EndByScope, MicroBatch};
     use crate::data_plane::Push;
     use crate::errors::IOError;
     use crate::graph::Port;
@@ -403,15 +402,14 @@ mod rob {
         buffers: Vec<ScopeBufferPool<D>>,
         pushes: Vec<EventEmitPush<D>>,
         route: Exchange<D>,
-        _cyclic: Arc<AtomicBool>,
         blocks: TidyTagMap<VecDeque<BlockEntry<D>>>,
         cancel_handle: MultiConsCancelPtr,
     }
 
     impl<D: Data> ExchangeMicroBatchPush<D> {
         pub(crate) fn new(
-            info: ChannelInfo, _cyclic: Arc<AtomicBool>, router: Box<dyn RouteFunction<D>>,
-            buffers: Vec<ScopeBufferPool<D>>, pushes: Vec<EventEmitPush<D>>,
+            info: ChannelInfo, router: Box<dyn RouteFunction<D>>, buffers: Vec<ScopeBufferPool<D>>,
+            pushes: Vec<EventEmitPush<D>>,
         ) -> Self {
             let src = crate::worker_id::get_current_worker().index;
             let len = pushes.len();
@@ -424,7 +422,6 @@ mod rob {
                 buffers,
                 pushes,
                 route: Exchange::new(len, router),
-                _cyclic,
                 blocks: TidyTagMap::new(info.scope_level),
                 cancel_handle,
             }
@@ -514,33 +511,45 @@ mod rob {
             Ok(())
         }
 
-        fn update_end_weight(&mut self, target: Option<usize>, end: &mut EndSignal) {
-            let src_weight = end.source_weight.value();
-            if src_weight < self.pushes.len() {
-                let mut weight = Weight::partial_empty();
-                if let Some(ref target) = target {
-                    weight.add_source(*target as u32);
-                }
-                for (index, p) in self.pushes.iter().enumerate() {
-                    if let Some(ref target) = target {
-                        if *target == index {
-                            continue;
-                        }
+        fn update_end(&mut self, target: Option<usize>, end: &EndByScope) -> Vec<EndSignal> {
+            let mut push_stat = vec![];
+            for (index, p) in self.pushes.iter().enumerate() {
+                let mut pushes = p.get_push_count(&end.tag).unwrap_or(0);
+                if let Some(target) = target {
+                    if target == index {
+                        pushes += 1;
                     }
+                }
+                push_stat.push(pushes);
+            }
 
-                    if p.get_push_count(&end.tag).unwrap_or(0) > 0 {
-                        weight.add_source(index as u32);
+            let weight = if end.tag.is_root() {
+                Weight::all()
+            } else {
+                let mut weight = Weight::partial_empty();
+                for (i, p) in push_stat.iter().enumerate() {
+                    if *p > 0 {
+                        weight.add_source(i as u32);
                     }
                 }
 
                 trace_worker!(
-                        "output[{:?}]: try to update eos weight to {:?} of scope {:?}",
-                        self.port,
-                        weight,
-                        end.tag
-                    );
-                end.update_to(weight);
+                    "output[{:?}]: try to update eos weight to {:?} of scope {:?}",
+                    self.port,
+                    weight,
+                    end.tag
+                );
+                weight
+            };
+
+            let mut result = vec![];
+            for p in push_stat.into_iter() {
+                let mut end = end.clone();
+                end.count = p as u64;
+                result.push(EndSignal::new(end, weight.clone()));
             }
+
+            result
         }
 
         fn push_to(&mut self, index: usize, tag: Tag, buf: ReadBuffer<D>) -> IOResult<()> {
@@ -562,7 +571,7 @@ mod rob {
 
         fn push_inner(&mut self, mut batch: MicroBatch<D>) -> IOResult<()> {
             let mut has_block = false;
-            let tag = batch.tag();
+            let tag = batch.tag().clone();
             for item in batch.drain() {
                 let target = self.route.route(&item)? as usize;
                 match self.buffers[target].push(&tag, item) {
@@ -603,11 +612,22 @@ mod rob {
                 }
                 would_block!("no buffer available in exchange;")
             } else {
-                if let Some(mut end) = batch.take_end() {
+                if let Some(end) = batch.take_end() {
                     self.flush_last_buffer(&batch.tag)?;
-                    self.update_end_weight(None, &mut end);
-                    for i in 0..self.pushes.len() {
-                        self.pushes[i].notify_end(end.clone())?;
+                    let result = self.update_end(None, &end);
+                    if end.source.value() == 1 {
+                        assert!(self.scope_level > 0);
+                        for (i, e) in result.into_iter().enumerate() {
+                            let end = e.into_end();
+                            if end.count > 0 {
+                                let batch = MicroBatch::last(self.src, end);
+                                self.pushes[i].push(batch)?;
+                            }
+                        }
+                    } else {
+                        for (i, e) in result.into_iter().enumerate() {
+                            self.pushes[i].notify_end(e)?;
+                        }
                     }
                 }
                 Ok(())
@@ -630,74 +650,140 @@ mod rob {
                 }
             }
 
+            let level = batch.tag.len() as u32;
+
             if self.pushes.len() == 1 {
-                if !self.cancel_handle.is_canceled(&batch.tag, 0) {
-                    self.pushes[0].push(batch)?;
-                } else if let Some(end) = batch.take_end() {
-                    self.pushes[0].notify_end(end)?;
+                if level == self.scope_level && self.cancel_handle.is_canceled(&batch.tag, 0) {
+                    batch.clear();
+                    if !batch.is_last() {
+                        return Ok(());
+                    }
                 }
-                return Ok(());
+                return self.pushes[0].push(batch);
             }
 
             let len = batch.len();
-            let level = batch.tag.len() as u32;
+
             if len == 0 {
                 if let Some(mut end) = batch.take_end() {
                     if level == self.scope_level {
                         // this is an end of scope of current level;
-                        self.flush_last_buffer(&end.tag)?;
-                        self.update_end_weight(None, &mut end);
-                        for i in 1..self.pushes.len() {
-                            self.pushes[i].notify_end(end.clone())?;
+                        if end.source.value() == 1 {
+                            assert!(self.scope_level > 0);
+                            if batch.get_seq() == 0 {
+                                // an empty scope without any data;
+                                trace_worker!("output[{:?}] empty scope {:?};", self.port, batch.tag());
+                            } else {
+                                self.flush_last_buffer(batch.tag())?;
+                                let mut total_pushed = 0;
+                                for (i, sig) in self
+                                    .update_end(None, &end)
+                                    .into_iter()
+                                    .enumerate()
+                                {
+                                    let end = sig.into_end();
+                                    total_pushed += end.count;
+                                    if end.count > 0 {
+                                        let last = MicroBatch::last(self.src, end);
+                                        self.pushes[i].push(last)?;
+                                    }
+                                }
+                                if total_pushed == 0 {
+                                    trace_worker!(
+                                        "output[{:?}] no more data of {:?};",
+                                        self.port,
+                                        batch.tag()
+                                    );
+                                }
+                            }
+                        } else {
+                            if batch.get_seq() == 0 {
+                                for p in self.pushes.iter_mut() {
+                                    let end = EndSignal::new(end.clone(), Weight::partial_empty());
+                                    p.notify_end(end)?;
+                                }
+                            } else {
+                                self.flush_last_buffer(batch.tag())?;
+                                let sigs = self.update_end(None, &end);
+                                for (i, s) in sigs.into_iter().enumerate() {
+                                    self.pushes[i].notify_end(s)?;
+                                }
+                            }
                         }
-                        self.pushes[0].notify_end(end)
                     } else {
                         // this is an end of parent scope;
-                        for i in 1..self.pushes.len() {
-                            self.pushes[i].notify_end(end.clone())?;
+                        if end.source.value() == 1 {
+                            end.source = Weight::all();
+                            batch.set_end(end);
+                            for p in self.pushes.iter_mut() {
+                                p.push(batch.clone())?;
+                            }
+                        } else {
+                            for p in self.pushes.iter_mut() {
+                                let sig = EndSignal::new(end.clone(), Weight::all());
+                                p.notify_end(sig)?;
+                            }
                         }
-                        self.pushes[0].notify_end(end)
                     }
                 } else {
                     warn_worker!("output[{:?}]: empty batch of {:?};", self.port, batch.tag);
-                    Ok(())
                 }
+                Ok(())
             } else if len == 1 {
                 // only one data, not need re-batching;
-                if let Some(mut end) = batch.take_end() {
+                assert_eq!(level, self.scope_level);
+                if let Some(end) = batch.take_end() {
                     let x = batch
                         .get(0)
                         .expect("expect at least one entry as len = 1");
                     let target = self.route.route(x)? as usize;
 
                     if batch.get_seq() == 0 {
-                        // the first and last batch, with only one message;
-                        // won't flush or update;
-                        batch.set_end(end);
-                        return self.pushes[target].push(batch);
+                        // only one data scope;
+                        if end.source.value() == 1 {
+                            assert!(level > 0);
+                            batch.set_end(end);
+                            self.pushes[target].push(batch)?;
+                        } else {
+                            // multi source;
+                            self.pushes[target].push(batch)?;
+                            let weight = if end.tag.is_root() {
+                                Weight::all()
+                            } else {
+                                Weight::single(target as u32)
+                            };
+                            let end = EndSignal::new(end, weight);
+                            for i in 1..self.pushes.len() {
+                                self.pushes[i].notify_end(end.clone())?;
+                            }
+                            self.pushes[0].notify_end(end)?;
+                        }
                     } else {
                         // flush previous buffered data;
                         self.flush_last_buffer(&batch.tag)?;
-                        // update after flush;
-                        self.update_end_weight(Some(target), &mut end);
-                    }
-
-                    if end.source_weight.value() == 1 {
-                        // will send end through data queue;
-                        batch.set_end(end.clone());
-                        self.pushes[target].push(batch)?;
-                        for i in 0..self.pushes.len() {
-                            if i != target {
-                                self.pushes[i].notify_end(end.clone())?;
+                        let result = self.update_end(Some(target), &end);
+                        if end.source.value() == 1 {
+                            assert!(self.scope_level > 0);
+                            for (i, e) in result.into_iter().enumerate() {
+                                let mut empty =
+                                    MicroBatch::new(end.tag.clone(), self.src, ReadBuffer::new());
+                                if i == target {
+                                    let mut batch = std::mem::replace(&mut batch, empty);
+                                    batch.set_end(e.into_end());
+                                    self.pushes[i].push(batch)?;
+                                } else {
+                                    let end = e.into_end();
+                                    if end.count > 0 {
+                                        empty.set_end(end);
+                                        self.pushes[i].push(empty)?;
+                                    }
+                                }
+                            }
+                        } else {
+                            for (i, e) in result.into_iter().enumerate() {
+                                self.pushes[i].notify_end(e)?;
                             }
                         }
-                        Ok(())
-                    } else {
-                        self.pushes[target].push(batch)?;
-                        for i in 1..self.pushes.len() {
-                            self.pushes[i].notify_end(end.clone())?;
-                        }
-                        self.pushes[0].notify_end(end)
                     }
                 } else {
                     let item = batch
@@ -709,8 +795,8 @@ mod rob {
                         .is_canceled(&batch.tag, target)
                     {
                         match self.buffers[target].push(&batch.tag, item) {
-                            Ok(Some(buf)) => self.push_to(target, batch.tag(), buf),
-                            Ok(None) => Ok(()),
+                            Ok(Some(buf)) => self.push_to(target, batch.tag().clone(), buf)?,
+                            Ok(None) => (),
                             Err(e) => {
                                 if let Some(x) = e.0 {
                                     self.blocks
@@ -722,15 +808,17 @@ mod rob {
                                         batch.tag,
                                     );
                                 }
-                                would_block!("no buffer available in exchange;")
+                                would_block!("no buffer available in exchange;")?;
                             }
                         }
                     } else {
-                        Ok(())
+                        // ignore is canceled;
                     }
                 }
+                Ok(())
             } else {
-                let tag = batch.tag.clone();
+                assert_eq!(level, self.scope_level);
+                let tag = batch.tag().clone();
                 for p in self.buffers.iter_mut() {
                     p.pin(&tag);
                 }
@@ -813,17 +901,16 @@ mod rob {
         pub ch_info: ChannelInfo,
         pushes: Vec<EventEmitPush<D>>,
         magic: Magic,
-        has_cycles: Arc<AtomicBool>,
         cancel_handle: DynSingleConsCancelPtr,
     }
 
     impl<D: Data> ExchangeByScopePush<D> {
-        pub fn new(ch_info: ChannelInfo, cyclic: &Arc<AtomicBool>, pushes: Vec<EventEmitPush<D>>) -> Self {
+        pub fn new(ch_info: ChannelInfo, pushes: Vec<EventEmitPush<D>>) -> Self {
             assert!(ch_info.scope_level > 0);
             let len = pushes.len();
             let magic = Magic::new(len);
             let cancel_handle = DynSingleConsCancelPtr::new(ch_info.scope_level, len);
-            ExchangeByScopePush { ch_info, pushes, magic, has_cycles: cyclic.clone(), cancel_handle }
+            ExchangeByScopePush { ch_info, pushes, magic, cancel_handle }
         }
 
         pub(crate) fn get_cancel_handle(&self) -> CancelHandle {
@@ -833,38 +920,60 @@ mod rob {
 
     impl<D: Data> Push<MicroBatch<D>> for ExchangeByScopePush<D> {
         fn push(&mut self, mut batch: MicroBatch<D>) -> Result<(), IOError> {
-            let end = batch.take_end();
-            if !batch.is_empty() {
+            let level = batch.tag.len() as u32;
+            if level == self.ch_info.scope_level {
                 let cur = batch.tag.current_uncheck() as u64;
                 let target = self.magic.exec(cur) as usize;
-                if !self
+                if self
                     .cancel_handle
-                    .is_canceled(&batch.tag, target)
+                    .is_canceled(batch.tag(), target)
                 {
-                    self.pushes[target].push(batch)?;
-                }
-            }
-
-            if let Some(mut end) = end {
-                if end.tag.len() < self.ch_info.scope_level as usize
-                    || self.has_cycles.load(Ordering::SeqCst)
-                {
-                    if self.pushes.len() > 1 {
-                        for i in 1..self.pushes.len() {
-                            self.pushes[i].notify_end(end.clone())?;
-                        }
+                    batch.clear();
+                    if !batch.is_last() {
+                        return Ok(());
                     }
-                    self.pushes[0].notify_end(end)
+                }
+
+                if let Some(mut end) = batch.take_end() {
+                    if end.source.value() == 1 {
+                        end.source = Weight::single(target as u32);
+                        batch.set_end(end);
+                        self.pushes[target].push(batch)?;
+                    } else {
+                        if !batch.is_empty() {
+                            self.pushes[target].push(batch)?;
+                        }
+                        // only notify the target;
+                        let end = EndSignal::new(end, Weight::single(target as u32));
+                        self.pushes[target].notify_end(end)?;
+                    }
                 } else {
-                    let idx = end.tag.current_uncheck() as u64;
-                    let offset = self.magic.exec(idx) as usize;
-                    let w = crate::worker_id::get_current_worker().index;
-                    end.update_weight = Some(Weight::single(w));
-                    self.pushes[offset].notify_end(end)
+                    if !batch.is_empty() {
+                        self.pushes[target].push(batch)?;
+                    } else {
+                        // ignore empty batch;
+                    }
                 }
             } else {
-                Ok(())
+                assert!(batch.is_empty());
+                if let Some(mut end) = batch.take_end() {
+                    if end.source.value() == 1 {
+                        end.source = Weight::all();
+                        batch.set_end(end);
+                        for p in self.pushes.iter_mut() {
+                            p.push(batch.clone())?;
+                        }
+                    } else {
+                        let end = EndSignal::new(end, Weight::all());
+                        for p in self.pushes.iter_mut() {
+                            p.notify_end(end.clone())?;
+                        }
+                    }
+                } else {
+                    // ignore empty batch;
+                }
             }
+            Ok(())
         }
 
         fn flush(&mut self) -> IOResult<()> {

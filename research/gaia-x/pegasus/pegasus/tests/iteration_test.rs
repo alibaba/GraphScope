@@ -20,6 +20,7 @@ use pegasus::JobConf;
 fn ping_pong_test_01() {
     let mut conf = JobConf::new("ping_pong_test_01");
     conf.set_workers(2);
+    // conf.plan_print = true;
     let mut result = pegasus::run(conf, || {
         let index = pegasus::get_current_worker().index;
         move |input, output| {
@@ -51,6 +52,7 @@ fn ping_pong_test_01() {
 fn ping_pong_test_02() {
     let mut conf = JobConf::new("ping_pong_test_02");
     conf.set_workers(2);
+    conf.plan_print = true;
     let mut result = pegasus::run(conf, || {
         let index = pegasus::get_current_worker().index;
         move |input, output| {

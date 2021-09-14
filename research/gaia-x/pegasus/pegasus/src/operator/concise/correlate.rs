@@ -17,12 +17,13 @@
 use pegasus_common::buffer::{Buffer, BufferPool, MemBufAlloc};
 
 use crate::api::{Binary, CorrelatedSubTask, Unary};
-use crate::data::MicroBatch;
-use crate::errors::IOError;
-use crate::progress::{EndSignal, Weight};
+use crate::data::{EndByScope, MicroBatch};
+use crate::errors::{IOError, JobExecError};
+use crate::progress::Weight;
 use crate::stream::{SingleItem, Stream};
 use crate::tag::tools::map::TidyTagMap;
 use crate::{BuildJobError, Data, Tag};
+use std::collections::VecDeque;
 
 impl<D: Data> CorrelatedSubTask<D> for Stream<D> {
     fn apply<T, F>(self, func: F) -> Result<Stream<(D, T)>, BuildJobError>
@@ -57,7 +58,7 @@ impl<D: Data> CorrelatedSubTask<D> for Stream<D> {
                                     let i = (cur - worker) / offset;
                                     trace_worker!("fork {}th scope {:?} from {:?};", i, tag, p);
                                     let mut batch = new_batch(tag.clone(), worker, buf);
-                                    let end = EndSignal::new(tag, Weight::single(worker));
+                                    let end = EndByScope::new(tag, Weight::single(worker), 1);
                                     batch.set_end(end);
                                     output.push_batch(batch)?;
                                 } else {
@@ -93,19 +94,12 @@ impl<D: Data> CorrelatedSubTask<D> for Stream<D> {
             move |input_left, input_right, output| {
                 input_left.for_each_batch(|dataset| {
                     let p_tag = dataset.tag.to_parent_uncheck();
-                    let barrier = parent_data.get_mut_or_else(&p_tag, || (vec![], None, 0, 0));
+                    let barrier = parent_data.get_mut_or_else(&p_tag, || (ZipSubtaskBuf::new(), None));
                     for item in dataset.drain() {
-                        barrier.0.push(Some(item));
+                        barrier.0.add_req(item);
                     }
-                    if let Some(ref e) = dataset.end {
+                    if let Some(e) = dataset.get_end() {
                         barrier.1 = Some(e.clone());
-                        let size = barrier.0.len();
-                        barrier.2 = size;
-                        trace_worker!(
-                            "{} subtasks of {:?} waiting finish;",
-                            size,
-                            e.tag.to_parent_uncheck()
-                        );
                     }
                     Ok(())
                 })?;
@@ -114,63 +108,38 @@ impl<D: Data> CorrelatedSubTask<D> for Stream<D> {
                     if !dataset.is_empty() {
                         let p_tag = dataset.tag.to_parent_uncheck();
                         if let Some(parent) = parent_data.get_mut(&p_tag) {
-                            if parent.1.is_some() {
-                                let seq = dataset.tag.current_uncheck();
-                                if seq > 0 {
-                                    let p_tag = dataset.tag.to_parent_uncheck();
-                                    let offset = (seq / peers) as usize - 1;
+                            let tag = Tag::inherit(&p_tag, 0);
+                            let mut session = output.new_session(&tag)?;
+                            let seq = dataset.tag.current_uncheck();
+                            let res = dataset.next().unwrap();
+                            assert!(seq > 0);
+                            let offset = (seq / peers) as usize - 1;
+                            match parent.0.take(offset) {
+                                Ok(req) => {
                                     trace_worker!("join result of {}th subtask {:?}", offset, dataset.tag);
-                                    let tag = Tag::inherit(&p_tag, 0);
-                                    let mut session = output.new_session(&tag)?;
-                                    assert_eq!(dataset.len(), 1);
-                                    let item = dataset.next().unwrap();
-                                    if let Some(p) = parent.0[offset].take() {
-                                        session.give((p, item.0))?;
-                                        parent.3 += 1;
-                                    } else {
-                                        error_worker!(
-                                            "{}th subtask in scope {:?} had been joined before;",
-                                            offset,
-                                            dataset.tag
-                                        );
-                                        panic!(
-                                            "{}th subtask in scope {:?} had been joined;",
-                                            offset, dataset.tag
-                                        );
-                                    }
-                                    dataset.take_end();
-
-                                    if parent.2 == parent.3 {
-                                        // assert!(dataset.is_last());
-                                        trace_worker!(
-                                            "all {} results of subtask {:?} joined;",
-                                            parent.2,
-                                            p_tag
-                                        );
-                                        let end = parent.1.take().expect("parent not end;");
-                                        dataset.set_end(end);
-                                    }
-                                } else {
-                                    // seq = 0 is not a subtask; it should be empty;
-                                    // but it is not empty now, may be because of some aggregation operations;
-                                    warn_worker!("data of scope {:?};", dataset.tag);
-                                    dataset.clear();
+                                    session.give((req, res.0))?;
+                                },
+                                Err(TakeErr::AlreadyTake) => {
+                                    Err(JobExecError::panic(format!("{}th subtask with scope {:?} had been joined;", offset, dataset.tag)))?;
+                                },
+                                Err(TakeErr::NotExist) => {
+                                    Err(JobExecError::panic(format!("req data of {}th task not found;", offset)))?;
                                 }
-                            } else {
-                                warn_worker!(
-                                    "{:?} subtask waiting parent scope end {:?};",
-                                    dataset.tag,
-                                    p_tag
-                                );
-                                would_block!("subtask waiting parent;")?;
+                            }
+
+                            if parent.0.is_empty() {
+                                if let Some(end) = parent.1.take() {
+                                    trace_worker!("all subtask from {:?} are joined;", end.tag.to_parent_uncheck());
+                                    session.notify_end(end)?;
+                                }
                             }
                         } else {
-                            would_block!("subtask waiting parent;")?;
+                            Err(JobExecError::panic(format!("req scope {:?} not found;", dataset.tag)))?;
                         }
                     } else {
                         //warn_worker!("empty subtask result of {:?};", dataset.tag);
-                        dataset.take_end();
                     }
+                    dataset.take_end();
 
                     // dataset.take_end();
                     Ok(())
@@ -189,4 +158,127 @@ fn new_batch<D>(tag: Tag, worker: u32, buf: Buffer<D>) -> MicroBatch<D> {
 #[cfg(feature = "rob")]
 fn new_batch<D>(tag: Tag, worker: u32, buf: Buffer<D>) -> MicroBatch<D> {
     MicroBatch::new(tag.clone(), worker, buf.into_read_only())
+}
+
+struct ZipSubtaskBuf<D> {
+    reqs : VecDeque<Option<D>>,
+    head: usize,
+    len : usize ,
+}
+
+impl<D> ZipSubtaskBuf<D> {
+    pub fn new() -> Self {
+        ZipSubtaskBuf {
+            reqs: VecDeque::new(),
+            head: 0,
+            len: 0,
+        }
+    }
+
+    pub fn add_req(&mut self, req: D) {
+        self.len += 1;
+        self.reqs.push_back(Some(req));
+    }
+
+    pub fn take(&mut self, offset: usize) -> Result<D, TakeErr> {
+        if offset < self.head {
+            Err(TakeErr::AlreadyTake)
+        } else {
+            let offset = offset - self.head;
+            if offset == 0 {
+                if let Some(opt) = self.reqs.pop_front() {
+                    assert!(opt.is_some());
+                    self.head += 1;
+                    loop {
+                        match self.reqs.pop_front() {
+                            Some(Some(item)) => {
+                                self.reqs.push_front(Some(item));
+                                break;
+                            },
+                            Some(None) => {
+                                self.head += 1;
+                            },
+                            None => {
+                                break;
+                            }
+                        }
+                    }
+                    self.len -= 1;
+                    Ok(opt.unwrap())
+                } else {
+                    Err(TakeErr::NotExist)
+                }
+            } else {
+                if let Some(opt) = self.reqs.get_mut(offset) {
+                    if let Some(item) = opt.take() {
+                        self.len -= 1;
+                        Ok(item)
+                    } else {
+                        Err(TakeErr::AlreadyTake)
+                    }
+                } else {
+                    Err(TakeErr::NotExist)
+                }
+            }
+        }
+    }
+
+    pub fn is_empty(&self) -> bool {
+        self.len == 0
+    }
+}
+
+#[derive(Debug, Copy, Clone, Eq, PartialEq)]
+enum TakeErr {
+    NotExist,
+    AlreadyTake,
+}
+
+#[cfg(test)]
+mod test {
+
+    use super::*;
+
+    #[test]
+    fn zip_subtask_buf_test() {
+        let mut buf = ZipSubtaskBuf::new();
+        for i in 0..100 {
+            buf.add_req(i);
+        }
+
+        for i in 0..100 {
+            let item = buf.take(i).expect("");
+            assert_eq!(item, i as u32);
+        }
+
+        assert_eq!(buf.take(99), Err(TakeErr::AlreadyTake));
+        assert_eq!(buf.take(100), Err(TakeErr::NotExist));
+        assert_eq!(buf.take(100), Err(TakeErr::NotExist));
+        assert!(buf.is_empty());
+
+        for i in 100..200 {
+            buf.add_req(i);
+        }
+
+        for i in 100..200 {
+            let item = buf.take(i).expect("");
+            assert_eq!(item, i as u32);
+        }
+
+        assert_eq!(buf.take(100), Err(TakeErr::AlreadyTake));
+        assert_eq!(buf.take(200), Err(TakeErr::NotExist));
+        assert!(buf.is_empty());
+
+        for i in 200..300 {
+            buf.add_req(i);
+        }
+
+        for i in (200..300).rev() {
+            let item = buf.take(i).expect("");
+            assert_eq!(item, i as u32);
+        }
+        assert_eq!(buf.take(0), Err(TakeErr::AlreadyTake));
+        assert_eq!(buf.take(100), Err(TakeErr::AlreadyTake));
+        assert!(buf.is_empty());
+    }
 }

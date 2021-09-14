@@ -10,7 +10,7 @@ mod rob {
 
     use crate::communication::decorator::{ScopeStreamBuffer, ScopeStreamPush};
     use crate::communication::IOResult;
-    use crate::data::{DataSetPool, MicroBatch};
+    use crate::data::{DataSetPool, EndByScope, MicroBatch};
     use crate::errors::IOError;
     use crate::graph::Port;
     use crate::progress::EndSignal;
@@ -144,8 +144,12 @@ mod rob {
         }
 
         /// inner usage only for pipeline channel;
-        pub fn forward_buffer(&mut self, data: MicroBatch<D>) -> IOResult<()> {
-            self.push.push(&data.tag.clone(), data)
+        pub fn forward_buffer(&mut self, mut data: MicroBatch<D>) -> IOResult<()> {
+            if let Some(end) = data.take_end() {
+                self.push.push_last(data, end)
+            } else {
+                self.push.push(&data.tag.clone(), data)
+            }
         }
 
         #[inline]
@@ -244,7 +248,7 @@ mod rob {
             }
         }
 
-        fn push_last(&mut self, msg: D, end: EndSignal) -> IOResult<()> {
+        fn push_last(&mut self, msg: D, end: EndByScope) -> IOResult<()> {
             if let Some(pool) = self.pool.sec_pool.get_mut(&end.tag) {
                 if let Some(batch) = pool.get_batch_mut() {
                     batch.push(msg);
@@ -301,13 +305,13 @@ mod rob {
             }
         }
 
-        fn notify_end(&mut self, mut end: EndSignal) -> Result<(), IOError> {
+        fn notify_end(&mut self, mut end: EndByScope) -> Result<(), IOError> {
             if let Some(pool) = self.pool.sec_pool.get_mut(&end.tag) {
                 let batch = pool.take_current();
                 if !batch.is_empty() {
                     self.push.push_last(batch, end)
                 } else {
-                    end.seq = pool.get_seq();
+                    end.batches = pool.get_seq();
                     self.push.notify_end(end)
                 }
             } else {
@@ -612,7 +616,7 @@ mod rob {
                 .map(|(tag, b)| ((&*tag).clone(), b.buf.take().unwrap()))
         }
 
-        pub fn buffers_of(
+        pub fn child_buffers_of(
             &mut self, parent: &Tag, is_last: bool,
         ) -> impl Iterator<Item = (Tag, Buffer<D>)> + '_ {
             let p = parent.clone();

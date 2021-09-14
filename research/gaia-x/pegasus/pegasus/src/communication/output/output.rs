@@ -26,7 +26,7 @@ mod rob {
     use crate::communication::output::builder::OutputMeta;
     use crate::communication::output::tee::Tee;
     use crate::communication::output::BlockScope;
-    use crate::data::MicroBatch;
+    use crate::data::{EndByScope, MicroBatch};
     use crate::errors::IOResult;
     use crate::graph::Port;
     use crate::progress::EndSignal;
@@ -63,22 +63,31 @@ mod rob {
             }
         }
 
-        pub fn push_batch(&mut self, dataset: MicroBatch<D>) -> IOResult<()> {
-            if !self.is_canceled(&dataset.tag) {
-                self.tee.forward(dataset)
-            } else {
-                Ok(())
+        pub fn push_batch(&mut self, mut batch: MicroBatch<D>) -> IOResult<()> {
+            if self.is_canceled(&batch.tag) {
+                if batch.is_last() {
+                    batch.take_data();
+                } else {
+                    return Ok(());
+                }
             }
+            self.tee.forward(batch)
         }
 
         pub fn push_batch_mut(&mut self, batch: &mut MicroBatch<D>) -> IOResult<()> {
-            if !self.is_canceled(&batch.tag) {
-                let seq = batch.seq;
-                let data = MicroBatch::new(batch.tag.clone(), self.src, seq, batch.take_data());
-                self.push_batch(data)
-            } else {
-                Ok(())
+            if self.is_canceled(&batch.tag) {
+                if batch.is_last() {
+                    batch.take_data();
+                } else {
+                    return Ok(());
+                }
             }
+            let seq = batch.seq;
+            let mut data = MicroBatch::new(batch.tag.clone(), self.src, seq, batch.take_data());
+            if let Some(end) = batch.take_end() {
+                data.set_end(end);
+            }
+            self.tee.forward(data)
         }
 
         pub fn push_iter<I: Iterator<Item = D> + Send + 'static>(
@@ -236,7 +245,7 @@ mod rob {
         }
 
         #[inline]
-        fn push_last(&mut self, msg: D, end: EndSignal) -> IOResult<()> {
+        fn push_last(&mut self, msg: D, end: EndByScope) -> IOResult<()> {
             self.tee.push_last(msg, end)
         }
 
@@ -249,7 +258,7 @@ mod rob {
         }
 
         #[inline]
-        fn notify_end(&mut self, end: EndSignal) -> IOResult<()> {
+        fn notify_end(&mut self, end: EndByScope) -> IOResult<()> {
             self.tee.notify_end(end)
         }
 
@@ -284,7 +293,7 @@ mod rob {
             self.output.push(&self.tag, msg)
         }
 
-        pub fn give_last(&mut self, msg: D, end: EndSignal) -> IOResult<()> {
+        pub fn give_last(&mut self, msg: D, end: EndByScope) -> IOResult<()> {
             assert_eq!(self.tag, end.tag);
             self.output.push_last(msg, end)
         }
@@ -296,7 +305,7 @@ mod rob {
             self.output.push_iter(&self.tag, iter)
         }
 
-        pub fn notify_end(&mut self, end: EndSignal) -> IOResult<()> {
+        pub fn notify_end(&mut self, end: EndByScope) -> IOResult<()> {
             assert_eq!(self.tag, end.tag);
             self.output.notify_end(end)
         }
@@ -321,17 +330,16 @@ mod rob {
     use crate::communication::output::tee::Tee;
     use crate::communication::output::BlockScope;
     use crate::communication::IOResult;
-    use crate::data::MicroBatch;
+    use crate::data::{EndByScope, MicroBatch};
     use crate::data_plane::Push;
     use crate::errors::IOError;
     use crate::graph::Port;
-    use crate::progress::EndSignal;
     use crate::tag::tools::map::TidyTagMap;
     use crate::{Data, Tag};
 
     enum BlockEntry<D: Data> {
         Single(D),
-        LastSingle(D, EndSignal),
+        LastSingle(D, EndByScope),
         DynIter(Option<D>, Box<dyn Iterator<Item = D> + Send + 'static>),
     }
 
@@ -341,7 +349,7 @@ mod rob {
         pub src: u32,
         tee: Tee<D>,
         buf_pool: ScopeBufferPool<D>,
-        in_block: TidyTagMap<BlockEntry<D>>,
+        block_entries: TidyTagMap<BlockEntry<D>>,
         blocks: VecDeque<BlockScope>,
         seq_emit: TidyTagMap<u64>,
         is_closed: bool,
@@ -364,7 +372,7 @@ mod rob {
                 src,
                 tee: output,
                 buf_pool,
-                in_block: TidyTagMap::new(scope_level),
+                block_entries: TidyTagMap::new(scope_level),
                 blocks: VecDeque::new(),
                 seq_emit: TidyTagMap::new(scope_level),
                 is_closed: false,
@@ -384,7 +392,7 @@ mod rob {
                 Ok(None) => Ok(()),
                 Ok(Some(item)) => {
                     trace_worker!("output[{:?}] blocked on push iterator of {:?} ;", self.port, tag);
-                    self.in_block
+                    self.block_entries
                         .insert(tag.clone(), BlockEntry::DynIter(Some(item), Box::new(iter)));
                     self.blocks
                         .push_back(BlockScope::new(tag.clone()));
@@ -393,11 +401,11 @@ mod rob {
                 Err(e) => {
                     if e.is_would_block() {
                         trace_worker!("output[{:?}] blocked on push iterator of {:?} ;", self.port, tag);
-                        self.in_block
+                        self.block_entries
                             .insert(tag.clone(), BlockEntry::DynIter(None, Box::new(iter)));
                         self.blocks
                             .push_back(BlockScope::new(tag.clone()));
-                        would_block!("push iter")
+                        would_block!("push iterator")
                     } else {
                         Err(e)
                     }
@@ -405,22 +413,31 @@ mod rob {
             }
         }
 
-        pub fn push_batch(&mut self, batch: MicroBatch<D>) -> IOResult<()> {
+        pub fn push_batch(&mut self, mut batch: MicroBatch<D>) -> IOResult<()> {
             if self.is_skipped(&batch.tag) {
-                Ok(())
-            } else {
-                self.tee.push(batch)
+                if batch.is_last() {
+                    batch.take_data();
+                } else {
+                    return Ok(());
+                }
             }
+
+            self.send_batch(batch)
         }
 
         pub fn push_batch_mut(&mut self, batch: &mut MicroBatch<D>) -> IOResult<()> {
             if self.is_skipped(&batch.tag) {
-                Ok(())
-            } else {
-                let mut new_batch = MicroBatch::new(batch.tag.clone(), self.src, batch.take_data());
-                new_batch.set_seq(batch.get_seq());
-                self.push_batch(new_batch)
+                if batch.is_last() {
+                    batch.take_data();
+                } else {
+                    return Ok(());
+                }
             }
+            let mut new_batch = MicroBatch::new(batch.tag.clone(), self.src, batch.take_data());
+            if let Some(end) = batch.take_end() {
+                new_batch.set_end(end);
+            }
+            self.send_batch(new_batch)
         }
 
         pub fn is_closed(&self) -> bool {
@@ -438,7 +455,7 @@ mod rob {
                     if let Some(bk) = self.blocks.pop_front() {
                         trace_worker!("output[{:?}] try to unblock data of {:?};", self.port, bk.tag());
                         if self.tee.try_unblock(bk.tag())? {
-                            if let Some(iter) = self.in_block.remove(bk.tag()) {
+                            if let Some(iter) = self.block_entries.remove(bk.tag()) {
                                 match iter {
                                     BlockEntry::Single(x) => {
                                         self.push(bk.tag(), x)?;
@@ -450,10 +467,12 @@ mod rob {
                                         if let Some(x) = head {
                                             if let Err(e) = self.push(bk.tag(), x) {
                                                 if e.is_would_block() {
-                                                    if let Some(blocked) = self.in_block.remove(bk.tag()) {
+                                                    if let Some(blocked) =
+                                                        self.block_entries.remove(bk.tag())
+                                                    {
                                                         match blocked {
                                                             BlockEntry::Single(x) => {
-                                                                self.in_block.insert(
+                                                                self.block_entries.insert(
                                                                     bk.tag().clone(),
                                                                     BlockEntry::DynIter(Some(x), iter),
                                                                 );
@@ -461,7 +480,7 @@ mod rob {
                                                             _ => unreachable!("unexpected blocking;"),
                                                         }
                                                     } else {
-                                                        self.in_block.insert(
+                                                        self.block_entries.insert(
                                                             bk.tag().clone(),
                                                             BlockEntry::DynIter(None, iter),
                                                         );
@@ -503,7 +522,7 @@ mod rob {
                     for _ in 0..block_len {
                         if let Some(b) = self.blocks.pop_front() {
                             if tag.is_parent_of(b.tag()) {
-                                if let Some(b) = self.in_block.remove(b.tag()) {
+                                if let Some(b) = self.block_entries.remove(b.tag()) {
                                     match b {
                                         BlockEntry::LastSingle(_, end) => {
                                             self.notify_end(end)?;
@@ -527,7 +546,7 @@ mod rob {
                 for _ in 0..block_len {
                     if let Some(b) = self.blocks.pop_front() {
                         if tag == b.tag() {
-                            if let Some(b) = self.in_block.remove(b.tag()) {
+                            if let Some(b) = self.block_entries.remove(b.tag()) {
                                 match b {
                                     BlockEntry::LastSingle(_, end) => {
                                         self.notify_end(end)?;
@@ -574,14 +593,14 @@ mod rob {
             match self.try_push_iter_inner(bks.tag(), &mut iter) {
                 Ok(None) => Ok(()),
                 Ok(Some(item)) => {
-                    self.in_block
+                    self.block_entries
                         .insert(bks.tag().clone(), BlockEntry::DynIter(Some(item), iter));
                     self.blocks.push_back(bks);
                     would_block!("unblock push iter")
                 }
                 Err(e) => {
                     if e.is_would_block() {
-                        self.in_block
+                        self.block_entries
                             .insert(bks.tag().clone(), BlockEntry::DynIter(None, iter));
                         self.blocks.push_back(bks);
                         would_block!("unblock push iter")
@@ -593,27 +612,38 @@ mod rob {
         }
 
         #[inline]
-        fn flush_batch(&mut self, mut batch: MicroBatch<D>) -> IOResult<()> {
-            let seq = self.seq_emit.get_mut_or_insert(&batch.tag);
+        fn send_batch(&mut self, mut batch: MicroBatch<D>) -> IOResult<()> {
+            assert_eq!(batch.tag().len(), self.scope_level as usize);
             if batch.is_empty() {
-                if *seq > 0 {
-                    batch.set_seq(*seq - 1);
+                if batch.is_last() {
+                    let seq = self.seq_emit.remove(&batch.tag).unwrap_or(0);
+                    if seq > 0 {
+                        batch.set_seq(seq);
+                    } else {
+                        batch.set_seq(0);
+                    }
                 } else {
-                    batch.set_seq(0);
+                    return Ok(());
                 }
             } else {
-                batch.set_seq(*seq);
-                *seq += 1;
+                let seq = if batch.is_last() {
+                    self.seq_emit.remove(&batch.tag).unwrap_or(0)
+                } else {
+                    let seq = self.seq_emit.get_mut_or_insert(&batch.tag);
+                    *seq += 1;
+                    *seq - 1
+                };
+                batch.set_seq(seq);
             }
 
-            let tag = batch.tag();
+            let tag = batch.tag().clone();
             if batch.is_last() {
-                trace_worker!("output[{:?}] push last batch(len={}) of {:?} ;", self.port, batch.len(), tag)
+                trace_worker!("output[{:?}] send last batch(len={}) of {:?} ;", self.port, batch.len(), tag)
             } else {
                 trace_worker!(
-                    "output[{:?}] push {}th batch(len={}) of {:?} ;",
+                    "output[{:?}] send {}th batch(len={}) of {:?} ;",
                     self.port,
-                    seq,
+                    batch.get_seq(),
                     batch.len(),
                     tag
                 );
@@ -621,6 +651,11 @@ mod rob {
             match self.tee.push(batch) {
                 Err(e) => {
                     if e.is_would_block() {
+                        trace_worker!(
+                            "output[{:?}] been blocked when sending batch of {:?};",
+                            self.port,
+                            tag
+                        );
                         self.blocks.push_back(BlockScope::new(tag));
                     }
                     Err(e)
@@ -629,21 +664,21 @@ mod rob {
             }
         }
 
-        fn flush_inner(&mut self, buffers: &mut ScopeBufferPool<D>) -> IOResult<()> {
+        fn flush_buffer(&mut self, buffers: &mut ScopeBufferPool<D>) -> IOResult<()> {
             for (tag, buf) in buffers.buffers() {
                 let batch = MicroBatch::new(tag, self.src, buf.into_read_only());
-                self.flush_batch(batch)?;
+                self.send_batch(batch)?;
             }
             self.tee.flush()
         }
 
         fn clean_lost_end_child(&mut self, tag: &Tag, buf_pool: &mut ScopeBufferPool<D>) -> IOResult<()> {
-            for (tag, buf) in buf_pool.buffers_of(tag, true) {
+            for (tag, buf) in buf_pool.child_buffers_of(tag, true) {
                 if !buf.is_empty() {
                     // 正常情况不应进入这段逻辑，除非用户算子hold了end 信号， 通常这类情况需要用户定义on_notify算子；
                     warn_worker!("output[{:?}] the end signal of scope {:?} lost;", self.port, tag);
                     let batch = MicroBatch::new(tag, self.src, buf.into_read_only());
-                    if let Err(err) = self.flush_batch(batch) {
+                    if let Err(err) = self.send_batch(batch) {
                         return if err.is_would_block() { Err(IOError::cannot_block()) } else { Err(err) };
                     }
                 }
@@ -659,7 +694,7 @@ mod rob {
                 match self.buf_pool.push_iter(tag, iter) {
                     Ok(Some(buf)) => {
                         let batch = MicroBatch::new(tag.clone(), self.src, buf);
-                        self.flush_batch(batch)?;
+                        self.send_batch(batch)?;
                     }
                     Ok(None) => {
                         // all data in iter should be send;
@@ -698,7 +733,7 @@ mod rob {
             }
         }
 
-        pub fn give_last(&mut self, msg: D, end: EndSignal) -> IOResult<()> {
+        pub fn give_last(&mut self, msg: D, end: EndByScope) -> IOResult<()> {
             if self.skip {
                 self.output.notify_end(end)
             } else {
@@ -718,7 +753,7 @@ mod rob {
             }
         }
 
-        pub fn notify_end(&mut self, end: EndSignal) -> IOResult<()> {
+        pub fn notify_end(&mut self, end: EndByScope) -> IOResult<()> {
             assert_eq!(self.tag, end.tag);
             self.output.notify_end(end)
         }
@@ -738,12 +773,12 @@ mod rob {
             match self.buf_pool.push(tag, msg) {
                 Ok(Some(buf)) => {
                     let batch = MicroBatch::new(tag.clone(), self.src, buf);
-                    self.flush_batch(batch)
+                    self.send_batch(batch)
                 }
                 Err(e) => {
                     trace_worker!("output[{:?}] block on pushing data of {:?};", self.port, tag);
                     if let Some(item) = e.0 {
-                        self.in_block
+                        self.block_entries
                             .insert(tag.clone(), BlockEntry::Single(item));
                     }
                     self.blocks
@@ -754,12 +789,12 @@ mod rob {
             }
         }
 
-        fn push_last(&mut self, msg: D, end: EndSignal) -> IOResult<()> {
+        fn push_last(&mut self, msg: D, end: EndByScope) -> IOResult<()> {
             match self.buf_pool.push(&end.tag, msg) {
                 Ok(Some(buf)) => {
                     let mut batch = MicroBatch::new(end.tag.clone(), self.src, buf);
                     batch.set_end(end);
-                    self.flush_batch(batch)
+                    self.send_batch(batch)
                 }
                 Ok(None) => {
                     let buf = self
@@ -768,14 +803,14 @@ mod rob {
                         .expect("buf can't be none");
                     let mut batch = MicroBatch::new(end.tag.clone(), self.src, buf.into_read_only());
                     batch.set_end(end);
-                    self.flush_batch(batch)
+                    self.send_batch(batch)
                 }
                 Err(e) => {
                     trace_worker!("output[{:?}]: block on pushing last data of {:?};", self.port, &end.tag);
                     if let Some(item) = e.0 {
                         self.blocks
                             .push_back(BlockScope::new(end.tag.clone()));
-                        self.in_block
+                        self.block_entries
                             .insert(end.tag.clone(), BlockEntry::LastSingle(item, end));
                     } else {
                         unreachable!("data may lost;")
@@ -790,7 +825,7 @@ mod rob {
             unimplemented!("use push iter;");
         }
 
-        fn notify_end(&mut self, end: EndSignal) -> IOResult<()> {
+        fn notify_end(&mut self, end: EndByScope) -> IOResult<()> {
             let level = end.tag.len() as u32;
             if level == self.scope_level {
                 let mut batch = if let Some(buf) = self.buf_pool.take_buf(&end.tag, true) {
@@ -800,7 +835,7 @@ mod rob {
                 };
                 batch.set_end(end);
                 trace_worker!("output[{:?}] notify end of {:?}", self.port, batch.tag);
-                self.flush_batch(batch)
+                self.send_batch(batch)
             } else if level < self.scope_level {
                 trace_worker!("output[{:?}] notify end of parent scope {:?}", self.port, end.tag);
                 let mut buf_pool = std::mem::replace(&mut self.buf_pool, Default::default());
@@ -811,7 +846,7 @@ mod rob {
                 }
                 let mut batch = MicroBatch::new(end.tag.clone(), self.src, ReadBuffer::new());
                 batch.set_end(end);
-                self.flush_batch(batch)
+                self.tee.push(batch)
             } else {
                 warn_worker!("end signal from child scope {:?};", end.tag);
                 // ignore;
@@ -822,7 +857,7 @@ mod rob {
         fn flush(&mut self) -> IOResult<()> {
             trace_worker!("output[{:?}] force flush all buffers;", self.port);
             let mut buffers = std::mem::replace(&mut self.buf_pool, Default::default());
-            let result = self.flush_inner(&mut buffers);
+            let result = self.flush_buffer(&mut buffers);
             self.buf_pool = buffers;
             result
         }
