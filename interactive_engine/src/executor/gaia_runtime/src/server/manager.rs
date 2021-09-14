@@ -203,7 +203,7 @@ fn build_gaia_config(worker_id: usize, address_list: &[RuntimeAddressProto], sto
     info!("gaia peers list: {:?}", peers);
     let ip = peers.get(worker_id as usize).unwrap().ip.clone();
     let port = peers.get(worker_id as usize).unwrap().port.clone();
-    let network_config = NetworkConfig::new(worker_id as u64, ip, port).with_peers(peers);
+    let network_config = NetworkConfig::new(worker_id as u64, ip, port).with_peers(Some(peers));
     Configuration {
         network: Some(network_config),
         max_pool_size: None,
