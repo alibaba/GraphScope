@@ -352,10 +352,10 @@ def test_on_macOS(sess, ogbn_mag_small, ogbn_small_script):
     graph = load_ogbn_mag(sess, ogbn_mag_small)
     interactive = sess.gremlin(graph)
 
-    simple_g = sub_graph.project(vertices={"paper": []}, edges={"cites": []})
+    simple_g = graph.project(vertices={"paper": []}, edges={"cites": []})
 
     ret1 = graphscope.k_core(simple_g, k=5)
     ret2 = graphscope.triangles(simple_g)
 
-    sub_graph = sub_graph.add_column(ret1, {"kcore": "r"})
-    sub_graph = sub_graph.add_column(ret2, {"tc": "r"})
+    graph = graph.add_column(ret1, {"kcore": "r"})
+    graph = graph.add_column(ret2, {"tc": "r"})
