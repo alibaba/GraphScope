@@ -298,14 +298,13 @@ check_dependencies() {
   if [[ "${PLATFORM}" == *"Darwin"* ]]; then
     if [[ ! -z "${JAVA_HOME}" ]]; then
       declare -r java_version=$(${JAVA_HOME}/bin/javac -version 2>&1 | awk -F ' ' '{print $2}' | awk -F '.' '{print $1}')
-      if [[ "${java_version}" -lt "8" ]] || [[ "${java_version}" -gt "15"]]; then
+      if [[ "${java_version}" -lt "8" ]] || [[ "${java_version}" -gt "15" ]]; then
         warning "Found the java version is ${java_version}, do not meet the requirement of GraphScope."
         warning "Would install jdk 11 instead."
         JAVA_HOME=""  # reset JAVA_HOME to
         packages_to_install+=(jdk)
       fi
     else
-      if java
       if [[ ! -f "/usr/libexec/java_home" ]] || \
          ! /usr/libexec/java_home -v11 &> /dev/null; then
         packages_to_install+=(jdk)
@@ -358,6 +357,7 @@ check_dependencies() {
 
   # check go < 1.16 (vertion 1.16 can't install zetcd)
   # FIXME(weibin): version check is not universed.
+  # FIXME(weibin): go would reinstall if not source graphscope_env, maybe add a soft link
   if $(! command -v go &> /dev/null) || \
      [[ "$(go version 2>&1 | awk -F '.' '{print $2}')" -ge "16" ]]; then
     if [[ "${PLATFORM}" == *"CentOS"* ]]; then
