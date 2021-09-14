@@ -36,6 +36,18 @@ PIE_NECESSARY_DEFS = ["Init", "PEval", "IncEval"]
 _BASE_MEMBERS = [k for k, _ in inspect.getmembers(AppAssets)]
 
 
+_common_imports = [
+    "from libc.stdint cimport int32_t",
+    "from libc.stdint cimport uint32_t",
+    "from libc.stdint cimport int64_t",
+    "from libc.stdint cimport uint64_t",
+    "from libcpp cimport bool",
+    "from libcpp.string cimport string",
+    "from libc cimport limits",
+    "from libc cimport math",
+]
+
+
 def pie(vd_type, md_type):
     """Decorator to mark algorithm class as PIE program model.
 
@@ -97,12 +109,8 @@ def pie(vd_type, md_type):
         pyx_header.putline("from pie cimport MessageStrategy")
         pyx_header.putline("from pie cimport to_string")
         pyx_header.putline("")
-        pyx_header.putline("from libc.stdint cimport int32_t")
-        pyx_header.putline("from libc.stdint cimport uint32_t")
-        pyx_header.putline("from libc.stdint cimport int64_t")
-        pyx_header.putline("from libc.stdint cimport uint64_t")
-        pyx_header.putline("from libcpp cimport bool")
-        pyx_header.putline("from libcpp.string cimport string")
+        for line in _common_imports:
+            pyx_header.putline(line)
 
         pyx_codegen(algo, defs, ProgramModel.PIE, pyx_header, vd_type, md_type)
         # pyx_codegen(algo, defs, pyx_wrapper, vd_type, md_type)
@@ -174,12 +182,8 @@ def pregel(vd_type, md_type):
         pyx_header.putline("from pregel cimport Vertex")
         pyx_header.putline("from pregel cimport to_string")
         pyx_header.putline("")
-        pyx_header.putline("from libc.stdint cimport int32_t")
-        pyx_header.putline("from libc.stdint cimport uint32_t")
-        pyx_header.putline("from libc.stdint cimport int64_t")
-        pyx_header.putline("from libc.stdint cimport uint64_t")
-        pyx_header.putline("from libcpp cimport bool")
-        pyx_header.putline("from libcpp.string cimport string")
+        for line in _common_imports:
+            pyx_header.putline(line)
 
         pyx_codegen(
             algo,

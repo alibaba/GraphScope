@@ -229,7 +229,6 @@ over a fragment, rather than considering the communication and message passing
 in the distributed setting. In this case, the classic dijkstra algorithm and its
 incremental version works for large graphs partitioned on a cluster.
 
-
 Writing Algorithms in Pregel
 ----------------------------------------------
 
@@ -293,6 +292,25 @@ Take SSSP as example, the algorithm in Pregel model looks like this.
                 ret = min(ret, m)
             return ret
 
+Using ``math.h`` Functions in Algorithms
+----------------------------------------
+
+GraphScope supports using C functions from :code:`math.h` in user-defined algorithms,
+via the :code:`context.math` interface. E.g.,
+
+.. code:: python
+
+    @staticmethod
+    def Init(v, context):
+        v.set_value(context.math.sin(1000000000.0 * context.math.M_PI))
+
+will be translated to the following efficient C code
+
+.. code:: c
+
+    ... Init(...)
+
+        v.set_value(sin(1000000000.0 * M_PI));
 
 Run Your Own Algorithms
 -------------------------
