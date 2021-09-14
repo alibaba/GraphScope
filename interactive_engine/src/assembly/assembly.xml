@@ -21,60 +21,18 @@
 
     <fileSets>
         <fileSet>
-            <directory>${project.basedir}/../api/cluster/target</directory>
-            <outputDirectory>lib</outputDirectory>
+            <directory>${project.basedir}/../../bin</directory>
             <includes>
-                <include>*.jar</include>
+                <include>*</include>
             </includes>
+            <outputDirectory>bin</outputDirectory>
         </fileSet>
         <fileSet>
-            <directory>${project.basedir}/../common/java/target</directory>
-            <outputDirectory>lib</outputDirectory>
-            <includes>
-                <include>*.jar</include>
-            </includes>
-        </fileSet>
-        <fileSet>
-            <directory>${project.basedir}/../coordinator/target</directory>
-            <outputDirectory>lib</outputDirectory>
-            <includes>
-                <include>*.jar</include>
-            </includes>
-        </fileSet>
-        <fileSet>
-            <directory>${project.basedir}/../api/loader/target</directory>
-            <outputDirectory>lib</outputDirectory>
-            <includes>
-                <include>*.jar</include>
-            </includes>
-        </fileSet>
-        <fileSet>
-            <directory>${project.basedir}/../admin-tools/target</directory>
-            <outputDirectory>lib</outputDirectory>
-            <includes>
-                <include>*.jar</include>
-            </includes>
-        </fileSet>
-        <fileSet>
-            <directory>${project.basedir}/../api/store/target</directory>
-            <outputDirectory>lib</outputDirectory>
-            <includes>
-                <include>*.jar</include>
-            </includes>
-        </fileSet>
-        <fileSet>
-            <directory>${project.basedir}/conf</directory>
+            <directory>${project.basedir}/../../conf</directory>
             <includes>
                 <include>*</include>
             </includes>
             <outputDirectory>conf</outputDirectory>
-        </fileSet>
-        <fileSet>
-            <directory>${project.basedir}/script</directory>
-            <includes>
-                <include>*</include>
-            </includes>
-            <outputDirectory>script</outputDirectory>
         </fileSet>
     </fileSets>
 </assembly>
