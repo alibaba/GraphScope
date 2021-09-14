@@ -1,0 +1,167 @@
+/**
+ * Copyright 2020 Alibaba Group Holding Limited.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+syntax = "proto3";
+package protocol;
+option java_package = "com.alibaba.pegasus.service.protocol";
+option java_outer_classname = "PegasusClient";
+
+
+
+message Exchange {
+  bytes resource  = 1;
+}
+
+message Broadcast {
+  bytes resource = 1;
+}
+
+message Aggregate {
+  uint32 target = 1;
+}
+
+message Communicate {
+  oneof ch_kind {
+    Exchange to_another  = 1;
+    Broadcast to_others  = 2;
+    Aggregate to_one     = 3;
+  }
+}
+
+message Source {
+  bytes resource = 1;
+}
+
+message Map {
+  bytes resource = 1;
+}
+
+message FlatMap {
+  bytes resource = 1;
+}
+
+message Filter {
+  bytes resource = 1;
+}
+
+message Sink {
+  oneof sinker {
+    bytes resource = 1;
+    Fold fold      = 2;
+    GroupBy group  = 3;
+  }
+}
+
+message LeftJoin {
+  bytes resource = 1;
+}
+
+message Limit {
+  uint32 limit = 2;
+}
+
+message Dedup {
+}
+
+message OrderBy {
+  int64 limit = 1;
+  bytes compare = 2;
+}
+
+enum AccumKind {
+  CNT       = 0;
+  SUM       = 1;
+  MAX       = 2;
+  MIN       = 3;
+  TO_LIST   = 4;
+  TO_SET    = 5;
+  CUSTOM    = 6;
+}
+
+message Fold {
+  AccumKind accum = 1;
+  bytes resource  = 2;
+  FlatMap unfold  = 3;
+}
+
+message GroupBy {
+  AccumKind accum = 1;
+  bytes resource = 2;
+  FlatMap unfold  = 3;
+}
+
+message Union {
+  repeated TaskPlan branches = 1;
+}
+
+message Iteration {
+  uint32 max_iters = 1;
+  Filter until    = 2;
+  TaskPlan body   = 3;
+}
+
+message Subtask {
+  LeftJoin join = 1;
+  TaskPlan task = 2;
+}
+
+message OperatorDef {
+  oneof op_kind {
+    Communicate comm = 1;
+    Map map = 3;
+    FlatMap flat_map = 4;
+    Filter filter = 5;
+    Limit limit = 6;
+    OrderBy order = 7;
+    Fold fold = 8;
+    GroupBy group = 9;
+    Union union = 10;
+    Iteration iterate = 11;
+    Subtask subtask = 12;
+    Dedup dedup = 13;
+  }
+}
+
+message TaskPlan {
+  repeated OperatorDef plan = 1;
+}
+
+message JobConfig {
+  uint64 job_id             = 1;
+  string job_name           = 2;
+  uint32 workers            = 3;
+  uint64 time_limit         = 4;
+  uint32 batch_size         = 5;
+  uint32 output_capacity    = 6;
+  uint32 memory_limit       = 7;
+  bool plan_print           = 8;
+  repeated uint64 servers   = 9;
+}
+
+message JobRequest {
+  JobConfig conf                = 1;
+  Source source                  = 2;
+  TaskPlan plan     = 3;
+  Sink sink = 4;
+}
+
+message JobResponse {
+  uint64 job_id           = 1;
+  bytes data = 2;
+}
+
+service JobService {
+  rpc Submit(JobRequest) returns(stream JobResponse) {}
+}
