@@ -22,7 +22,7 @@ use crate::{str_to_dyn_error, Partitioner};
 use pegasus::api::function::*;
 use pegasus::api::{
     Collect, CorrelatedSubTask, Dedup, Filter, Fold, FoldByKey, IterCondition, Iteration, KeyBy,
-    Limit, Map, Merge, OrderLimitBy, Sink, SortBy, Source,
+    Limit, Map, Merge, Sink, SortBy, SortLimitBy, Source,
 };
 use pegasus::result::ResultSink;
 use pegasus::stream::Stream;
