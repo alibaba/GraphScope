@@ -16,16 +16,12 @@
 package com.alibaba.maxgraph.v2.frontend;
 
 import com.alibaba.graphscope.proto.ddl.*;
-import com.alibaba.maxgraph.v2.common.frontend.api.exception.GraphCreateSchemaException;
 import com.alibaba.maxgraph.v2.common.schema.*;
 import com.alibaba.maxgraph.v2.common.schema.GraphDef;
-import com.alibaba.maxgraph.v2.common.schema.ddl.DdlExecutors;
 import com.alibaba.maxgraph.v2.common.schema.request.DdlRequestBatch;
-import com.alibaba.maxgraph.v2.common.util.UuidUtils;
 import com.google.protobuf.Any;
 import com.google.protobuf.ByteString;
 import io.grpc.Status;
-import io.grpc.StatusRuntimeException;
 import io.grpc.stub.StreamObserver;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -37,14 +33,12 @@ public class ClientDdlService extends ClientDdlGrpc.ClientDdlImplBase {
 
     public static final int FORMAT_VERSION = 1;
 
-    private SchemaWriter schemaWriter;
     private SnapshotCache snapshotCache;
-    private DdlExecutors ddlExecutors;
+    private BatchDdlClient batchDdlClient;
 
-    public ClientDdlService(SchemaWriter schemaWriter, SnapshotCache snapshotCache, DdlExecutors ddlExecutors) {
-        this.schemaWriter = schemaWriter;
+    public ClientDdlService(SnapshotCache snapshotCache, BatchDdlClient batchDdlClient) {
         this.snapshotCache = snapshotCache;
-        this.ddlExecutors = ddlExecutors;
+        this.batchDdlClient = batchDdlClient;
     }
 
     @Override
@@ -95,15 +89,7 @@ public class ClientDdlService extends ClientDdlGrpc.ClientDdlImplBase {
                         break;
                 }
             }
-            DdlRequestBatch ddlRequestBatch = builder.build();
-            try {
-                GraphDef graphDef = this.snapshotCache.getSnapshotWithSchema().getGraphDef();
-                this.ddlExecutors.executeDdlRequestBatch(ddlRequestBatch, graphDef, 0);
-            } catch (Exception e) {
-                logger.error("ddl failed", e);
-                throw new GraphCreateSchemaException("try execute DDL batch failed", e);
-            }
-            long snapshotId = this.schemaWriter.submitBatchDdl(UuidUtils.getBase64UUIDString(), "", ddlRequestBatch);
+            long snapshotId = batchDdlClient.batchDdl(builder.build());
             this.snapshotCache.addListener(snapshotId, () -> {
                 BatchSubmitResponse.Builder responseBuilder = BatchSubmitResponse.newBuilder();
                 responseBuilder.setFormatVersion(FORMAT_VERSION);

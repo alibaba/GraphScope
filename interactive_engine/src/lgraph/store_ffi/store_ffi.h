@@ -64,7 +64,7 @@ extern "C" {
   StringSlice GetPropertyAsString(PropertyHandle prop_hdl, ErrorHandle* error);
 
   /// Error FFIs
-  void PrintError(ErrorHandle error_hdl);
+  StringSlice GetErrorInfo(ErrorHandle error_hdl);
 
   /// Release FFIs
   void ReleasePartitionSnapshotHandle(PartitionSnapshotHandle ptr);

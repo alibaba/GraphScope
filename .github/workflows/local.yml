@@ -58,16 +58,12 @@ jobs:
       run: |
         /bin/bash ${GITHUB_WORKSPACE}/scripts/deploy_local.sh build_and_deploy --verbose
 
-    - name: DEBUG
-      if: false
-      uses: mxschmitt/action-tmate@v2
-
     - name: Run Local Test
       env:
         OS : ${{ matrix.os }}
       run: |
         source ~/.graphscope_env
-        export GRAPHSCOPE_HOME=/usr/local
+        export GRAPHSCOPE_HOME=/opt/graphscope
 
         # install tensorflow for graphlearn if os is ubuntu20.04
         if [ "${OS}" == "ubuntu-20.04" ];
@@ -88,11 +84,23 @@ jobs:
         # delete etcd dir
         rm -fr /tmp/default.etcd || true
 
+    - name: DEBUG
+      if: false
+      uses: mxschmitt/action-tmate@v2
+
+    - name: Run Gaia on Vineyard Store Test
+      if: matrix.os == 'ubuntu-20.04'
+      run: |
+        source ~/.graphscope_env
+        export GRAPHSCOPE_HOME=/opt/graphscope
+        export GS_TEST_DIR=${GITHUB_WORKSPACE}/gstest
+        # run test
+        cd interactive_engine/src/gaia-adaptor && ./gaia_on_vineyard_test.sh
+
     - name: Run Gaia on Maxgraph Store Test
       if: matrix.os == 'ubuntu-20.04'
       run: |
         source ~/.graphscope_env
-        export GRAPHSCOPE_HOME=/usr/local
         # run test
         cd interactive_engine/src/gaia-adaptor && ./gremlin_test.sh
 

@@ -38,10 +38,12 @@ message Vertex {
 }
 
 message Edge {
-  string id = 1;
+  bytes id = 1;
   Label label = 2;
+  // TODO: should be consistent, bytes?
   int64 src_id = 3;
   Label src_label = 4;
+  // TODO: should be consistent, bytes?
   int64 dst_id = 5;
   Label dst_label = 6;
   repeated Property properties = 7;

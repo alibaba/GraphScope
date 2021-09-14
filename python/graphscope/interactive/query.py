@@ -26,7 +26,6 @@ from enum import Enum
 from gremlin_python.driver.driver_remote_connection import DriverRemoteConnection
 from gremlin_python.process.anonymous_traversal import traversal
 
-from graphscope.config import GSConfig as gs_config
 from graphscope.framework.dag import DAGNode
 from graphscope.framework.dag_utils import close_interactive_query
 from graphscope.framework.dag_utils import create_interactive_query
@@ -139,8 +138,6 @@ class InteractiveQueryDAGNode(DAGNode):
         self._op = create_interactive_query(
             self._graph,
             self._engine_params,
-            gs_config.k8s_gie_gremlin_server_cpu,
-            gs_config.k8s_gie_gremlin_server_mem,
             enable_gaia,
         )
         # add op to dag

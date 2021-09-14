@@ -78,7 +78,7 @@ executorWorkerPerProcess: 2
 executorQueryThreadCount: 2
 executorQueryManagerThreadCount: 2
 executorQueryStoreThreadCount: 2
-log4rsConfig: "./conf/log4rs.yml"
+log4rsConfig: "LOG4RS_CONFIG"
 
 
 
@@ -233,7 +233,7 @@ store:
     selector: {}
 
   initContainers: []
-  
+
 
   ## GraphScope store Service parameters
   ##

@@ -1,4 +1,4 @@
-ARG BASE_VERSION=v0.2.6
+ARG BASE_VERSION=v0.2.9
 FROM registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-vineyard:$BASE_VERSION as builder
 
 ARG CI=true
@@ -10,21 +10,19 @@ ENV NETWORKX=$NETWORKX
 ARG profile=debug
 ENV profile=$profile
 
-COPY . /root/gs
-COPY ./interactive_engine/deploy/docker/dockerfile/maven.settings.xml /root/.m2/settings.xml
+COPY . /home/graphscope/gs
+COPY ./interactive_engine/deploy/docker/dockerfile/maven.settings.xml /home/graphscope/.m2/settings.xml
 
-RUN wget --no-verbose https://golang.org/dl/go1.15.5.linux-amd64.tar.gz && \
-    tar -C /usr/local -xzf go1.15.5.linux-amd64.tar.gz && \
+RUN sudo chown -R $(id -u):$(id -g) /home/graphscope/gs /home/graphscope/.m2 && \
+    wget --no-verbose https://golang.org/dl/go1.15.5.linux-amd64.tar.gz && \
+    sudo tar -C /usr/local -xzf go1.15.5.linux-amd64.tar.gz && \
     curl -sf -L https://static.rust-lang.org/rustup.sh | \
-        sh -s -- -y --profile minimal --default-toolchain 1.53.0 && \
+        sh -s -- -y --profile minimal --default-toolchain 1.54.0 && \
     echo "source ~/.cargo/env" >> ~/.bashrc \
     && source ~/.bashrc \
     && rustup component add rustfmt \
     && echo "build with profile: $profile" \
-    && cd /root/gs/interactive_engine \
-    && export CMAKE_PREFIX_PATH=/opt/graphscope \
-    && export LIBRARY_PATH=$LIBRARY_PATH:/opt/graphscope/lib \
-    && export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/opt/graphscope/lib \
+    && cd /home/graphscope/gs/interactive_engine \
     && if [ "$profile" = "release" ]; then \
            echo "release mode" && mvn clean package -Pv2 -DskipTests -Drust.compile.mode=release; \
        else \
@@ -33,11 +31,10 @@ RUN wget --no-verbose https://golang.org/dl/go1.15.5.linux-amd64.tar.gz && \
 
 FROM registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-runtime:latest
 
+COPY --from=builder /opt/vineyard/ /usr/local/
+
 COPY ./k8s/ready_probe.sh /tmp/ready_probe.sh
-COPY --from=builder /opt/graphscope /usr/local/
-COPY --from=builder /root/gs/interactive_engine/distribution/target/maxgraph.tar.gz /tmp/maxgraph.tar.gz
-RUN mkdir -p /home/maxgraph \
-    && tar -zxf /tmp/maxgraph.tar.gz -C /home/maxgraph
+COPY --from=builder /home/graphscope/gs/interactive_engine/distribution/target/maxgraph.tar.gz /tmp/maxgraph.tar.gz
+RUN sudo tar -zxf /tmp/maxgraph.tar.gz -C /usr/local
 
-WORKDIR /home/maxgraph/
-
+ENV GRAPHSCOPE_HOME=/usr/local

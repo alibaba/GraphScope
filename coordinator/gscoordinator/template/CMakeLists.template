@@ -9,13 +9,20 @@ option(CYTHON_PREGEL_APP "Whether to build cython pregel app." False)
 option(CYTHON_PIE_APP "Whether to build cython pie app" False)
 option(PROPERTY_GRAPH_FRAME "Whether to build property graph frame" False)
 option(PROJECT_FRAME "Whether to build project frame" False)
-
 option(ENABLE_PREGEL_COMBINE "Whether enable combinator in pregel app." False)
+option(NETWORKX "networkx on?" ON)
+
+include(GNUInstallDirs)
+
+set(DEFAULT_BUILD_TYPE "RelWithDebInfo")
+if (NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
+    message(STATUS "Setting build type to '${DEFAULT_BUILD_TYPE}' as none was specified.")
+    set(CMAKE_BUILD_TYPE "${DEFAULT_BUILD_TYPE}" CACHE STRING "Choose the type of build." FORCE)
+    set_property(CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS "Debug" "Release" "MinSizeRel" "RelWithDebInfo")
+endif ()
 
 if (NETWORKX)
     add_definitions(-DNETWORKX)
-    # TODO: need by vineyard, remove when vineyard version update.
-    add_definitions(-DEXPERIMENTAL_ON)
 endif ()
 
 if (ENABLE_PREGEL_COMBINE)
@@ -28,8 +35,9 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -O0 -g")
 if (APPLE)
     set(CMAKE_MACOSX_RPATH ON)
 else ()
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fopenmp -Wl,-rpath,$ORIGIN")
+    set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -Wl,-rpath,$ORIGIN")
 endif ()
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fopenmp")
 
 include_directories(${CMAKE_SOURCE_DIR})
 
@@ -45,7 +53,7 @@ set(CMAKE_THREAD_PREFER_PTHREAD ON)
 find_package(Threads REQUIRED)
 
 # find vineyard-----------------------------------------------------------------
-find_package(vineyard 0.2.6 REQUIRED)
+find_package(vineyard 0.2.9 REQUIRED)
 include_directories(${VINEYARD_INCLUDE_DIRS})
 add_compile_options(-DENABLE_SELECTOR)
 
@@ -66,7 +74,7 @@ set(FRAME_NAME $_frame_name)
 
 # find Glog---------------------------------------------------------------------
 if(GRAPHSCOPE_ANALYTICAL_HOME)
-    include("${ANALYTICAL_ENGINE_HOME}/lib/cmake/FindGlog.cmake")
+    include("${ANALYTICAL_ENGINE_HOME}/${CMAKE_INSTALL_LIBDIR}/cmake/graphscope-analytical/cmake/FindGlog.cmake")
 else()
     include("${ANALYTICAL_ENGINE_HOME}/cmake/FindGlog.cmake")
 endif()
@@ -75,7 +83,7 @@ include_directories(SYSTEM ${GLOG_INCLUDE_DIRS})
 # find Arrow--------------------------------------------------------------------
 if(NOT Arrow_FOUND)
     if(GRAPHSCOPE_ANALYTICAL_HOME)
-        include("${ANALYTICAL_ENGINE_HOME}/lib/cmake/FindArrow.cmake")
+        include("${ANALYTICAL_ENGINE_HOME}/${CMAKE_INSTALL_LIBDIR}/cmake/graphscope-analytical/cmake/FindArrow.cmake")
     else()
         include("${ANALYTICAL_ENGINE_HOME}/cmake/FindArrow.cmake")
     endif()
@@ -83,7 +91,7 @@ endif()
 
 # find Libunwind----------------------------------------------------------------
 if(GRAPHSCOPE_ANALYTICAL_HOME)
-    include("${ANALYTICAL_ENGINE_HOME}/lib/cmake/FindLibUnwind.cmake")
+    include("${ANALYTICAL_ENGINE_HOME}/${CMAKE_INSTALL_LIBDIR}/cmake/graphscope-analytical/cmake/FindLibUnwind.cmake")
 else()
     include("${ANALYTICAL_ENGINE_HOME}/cmake/FindLibUnwind.cmake")
 endif()

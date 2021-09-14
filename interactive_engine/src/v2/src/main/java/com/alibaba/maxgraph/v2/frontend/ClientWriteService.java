@@ -55,6 +55,7 @@ public class ClientWriteService extends ClientWriteGrpc.ClientWriteImplBase {
     public void remoteFlush(RemoteFlushRequest request, StreamObserver<RemoteFlushResponse> responseObserver) {
         long flushSnapshotId = request.getSnapshotId();
         long waitTimeMs = request.getWaitTimeMs();
+        logger.info("flush snapshot id [" + flushSnapshotId + "] with timeout [" + waitTimeMs + "]ms");
         try {
             boolean suc;
             if (flushSnapshotId == 0L) {

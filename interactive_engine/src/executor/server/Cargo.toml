@@ -9,7 +9,7 @@ maxgraph-store = { path = "../store" }
 maxgraph-common = { path = "../../common/rust/common" }
 
 byteorder = "1"
-crossbeam-channel = "0.3.2"
+crossbeam-channel = "0.4.4"
 futures = "0.1"
 psutil = "=1.1.1"
 grpcio = "=0.4.1"

@@ -1,5 +1,9 @@
-cmake_minimum_required(VERSION 2.8)
+cmake_minimum_required(VERSION 3.1)
 project(gloabl_store_api C CXX)
+
+if(POLICY CMP0025)
+  cmake_policy(SET CMP0025 NEW)
+endif()
 
 set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
@@ -44,7 +48,7 @@ find_package(Threads REQUIRED)
 #  we need edge src/dst ids in etable.
 add_definitions(-DENDPOINT_LISTS)
 
-find_package(vineyard 0.2.6 REQUIRED)
+find_package(vineyard 0.2.9 REQUIRED)
 add_library(native_store global_store_ffi.cc
                          htap_ds_impl.cc
                          graph_builder_ffi.cc

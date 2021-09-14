@@ -15,12 +15,9 @@
  */
 package com.alibaba.graphscope.gaia.vineyard.store;
 
-import com.alibaba.graphscope.gaia.AsyncRpcBroadcastProcessor;
-import com.alibaba.graphscope.gaia.AsyncRpcChannelFetcher;
-import com.alibaba.graphscope.gaia.GaiaGraphServer;
-import com.alibaba.graphscope.gaia.MaxGraphStore;
+import com.alibaba.graphscope.gaia.broadcast.AsyncRpcBroadcastProcessor;
+import com.alibaba.graphscope.gaia.broadcast.channel.AsyncRpcChannelFetcher;
 import com.alibaba.graphscope.gaia.broadcast.AbstractBroadcastProcessor;
-import com.alibaba.graphscope.gaia.broadcast.channel.RpcChannelFetcher;
 import com.alibaba.graphscope.gaia.store.GraphStoreService;
 import com.alibaba.maxgraph.common.cluster.InstanceConfig;
 import com.alibaba.maxgraph.compiler.api.schema.SchemaFetcher;
@@ -29,12 +26,8 @@ import com.alibaba.maxgraph.compiler.schema.JsonFileSchemaFetcher;
 import com.alibaba.maxgraph.frontendservice.RemoteGraph;
 import com.alibaba.maxgraph.frontendservice.server.ExecutorAddressFetcher;
 import com.alibaba.maxgraph.structure.graph.TinkerMaxGraph;
-import com.alibaba.maxgraph.v2.common.config.Configs;
-import com.alibaba.maxgraph.v2.frontend.config.FrontendConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.util.Properties;
 
 public class Frontend extends com.alibaba.maxgraph.frontendservice.Frontend {
     private static final Logger logger = LoggerFactory.getLogger(Frontend.class);
@@ -56,15 +49,13 @@ public class Frontend extends com.alibaba.maxgraph.frontendservice.Frontend {
         this.remoteGraph.refresh();
 
         this.graph = new TinkerMaxGraph(instanceConfig, remoteGraph, new DefaultGraphDfs());
-
         // add gaia compiler
-        Configs configs = loadConfigs(this.instanceConfig);
         AsyncRpcChannelFetcher gaiaRpcFetcher = new AddressChannelFetcher(new ExecutorAddressFetcher(this.clientManager));
-        GraphStoreService gaiaStoreService = new MaxGraphStore(schemaFetcher);
+        GraphStoreService gaiaStoreService = new VineyardGraphStore(schemaFetcher);
         AbstractBroadcastProcessor broadcastProcessor = new AsyncRpcBroadcastProcessor(gaiaRpcFetcher);
-        gaiaGraphServer = new GaiaGraphServer(configs, gaiaStoreService, broadcastProcessor, new VineyardConfig(instanceConfig));
+        gaiaGraphServer = new GaiaGraphServer(this.graph, instanceConfig, gaiaStoreService, broadcastProcessor, new VineyardConfig(instanceConfig));
 
-        gaiaGraphServer.start();
+        gaiaGraphServer.start(0, null, false);
         this.gremlinServerPort = gaiaGraphServer.getGremlinServerPort();
     }
 
@@ -74,18 +65,5 @@ public class Frontend extends com.alibaba.maxgraph.frontendservice.Frontend {
         startRpcService();
         startHBThread();
         this.gremlinExecutor = gaiaGraphServer.getGremlinExecutor();
-    }
-
-    private Configs loadConfigs(InstanceConfig instanceConfig) {
-        logger.info("start to load configs");
-        Properties properties = new Properties();
-        instanceConfig.getAll().forEach((k, v) -> {
-            if (v != null) {
-                properties.setProperty(k, v);
-            }
-        });
-        properties.setProperty(FrontendConfig.GREMLIN_PORT.getKey(), String.valueOf(instanceConfig.getGremlinServerPort()));
-        logger.info("properties are {}", properties);
-        return new Configs(properties);
     }
 }

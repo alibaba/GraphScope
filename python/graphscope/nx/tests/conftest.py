@@ -22,7 +22,7 @@ import pytest
 import graphscope
 
 
-@pytest.fixture(scope="session")
+@pytest.fixture(scope="module")
 def graphscope_session():
     graphscope.set_option(show_log=True)
     graphscope.set_option(initializing_interactive_engine=False)

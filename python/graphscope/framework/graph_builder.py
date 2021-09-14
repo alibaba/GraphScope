@@ -16,45 +16,27 @@
 # limitations under the License.
 #
 
-from itertools import chain
-from typing import Any
-from typing import Dict
 from typing import Mapping
 from typing import Sequence
-from typing import Tuple
 from typing import Union
 
-import numpy as np
-import pandas as pd
-import vineyard
+try:
+    import vineyard
+except ImportError:
+    vineyard = None
 
 from graphscope.client.session import get_default_session
 from graphscope.framework import dag_utils
 from graphscope.framework import utils
-from graphscope.framework.errors import InvalidArgumentError
-from graphscope.framework.errors import check_argument
 from graphscope.framework.graph import Graph
-from graphscope.framework.graph_utils import assemble_op_config
+from graphscope.framework.graph_utils import LoaderVariants
+from graphscope.framework.graph_utils import VineyardObjectTypes
 from graphscope.framework.graph_utils import normalize_parameter_edges
 from graphscope.framework.graph_utils import normalize_parameter_vertices
-from graphscope.framework.loader import Loader
 from graphscope.proto import graph_def_pb2
 from graphscope.proto import types_pb2
 
 __all__ = ["load_from"]
-
-
-VineyardObjectTypes = (vineyard.Object, vineyard.ObjectID, vineyard.ObjectName)
-
-LoaderVariants = Union[
-    Loader,
-    str,
-    Sequence[np.ndarray],
-    pd.DataFrame,
-    vineyard.Object,
-    vineyard.ObjectID,
-    vineyard.ObjectName,
-]
 
 
 def load_from(
@@ -181,11 +163,21 @@ def load_from(
     oid_type = utils.normalize_data_type_str(oid_type)
     if oid_type not in ("int64_t", "std::string"):
         raise ValueError("oid_type can only be int64_t or string.")
-    v_labels = normalize_parameter_vertices(vertices)
-    e_labels = normalize_parameter_edges(edges)
-    config = assemble_op_config(v_labels, e_labels, oid_type, directed, generate_eid)
+    v_labels = normalize_parameter_vertices(vertices, oid_type)
+    e_labels = normalize_parameter_edges(edges, oid_type)
+    # generate and add a loader op to dag
+    loader_op = dag_utils.create_loader(v_labels + e_labels)
+    sess.dag.add_op(loader_op)
+    # construct create graph op
+    config = {
+        types_pb2.DIRECTED: utils.b_to_attr(directed),
+        types_pb2.OID_TYPE: utils.s_to_attr(oid_type),
+        types_pb2.GENERATE_EID: utils.b_to_attr(generate_eid),
+        types_pb2.VID_TYPE: utils.s_to_attr("uint64_t"),
+        types_pb2.IS_FROM_VINEYARD_ID: utils.b_to_attr(False),
+    }
     op = dag_utils.create_graph(
-        sess.session_id, graph_def_pb2.ARROW_PROPERTY, attrs=config
+        sess.session_id, graph_def_pb2.ARROW_PROPERTY, inputs=[loader_op], attrs=config
     )
     graph = sess.g(op)
     return graph

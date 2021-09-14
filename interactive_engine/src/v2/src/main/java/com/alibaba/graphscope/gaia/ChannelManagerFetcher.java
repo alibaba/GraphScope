@@ -15,6 +15,7 @@
  */
 package com.alibaba.graphscope.gaia;
 
+import com.alibaba.graphscope.gaia.broadcast.channel.AsyncRpcChannelFetcher;
 import com.alibaba.maxgraph.v2.common.discovery.RoleType;
 import com.alibaba.maxgraph.v2.common.rpc.ChannelManager;
 import com.alibaba.pegasus.RpcChannel;

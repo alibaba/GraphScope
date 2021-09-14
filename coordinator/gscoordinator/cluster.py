@@ -22,6 +22,8 @@ import json
 import logging
 import os
 import random
+import shutil
+import socket
 import subprocess
 import sys
 import time
@@ -46,7 +48,6 @@ except ImportError:
 
 from graphscope.deploy.kubernetes.resource_builder import GSEngineBuilder
 from graphscope.deploy.kubernetes.resource_builder import GSEtcdBuilder
-from graphscope.deploy.kubernetes.resource_builder import GSGraphManagerBuilder
 from graphscope.deploy.kubernetes.resource_builder import ServiceBuilder
 from graphscope.deploy.kubernetes.resource_builder import VolumeBuilder
 from graphscope.deploy.kubernetes.resource_builder import resolve_volume_builder
@@ -58,7 +59,10 @@ from graphscope.proto import types_pb2
 
 from gscoordinator.io_utils import PipeWatcher
 from gscoordinator.launcher import Launcher
+from gscoordinator.utils import INTERACTIVE_ENGINE_SCRIPT
+from gscoordinator.utils import WORKSPACE
 from gscoordinator.utils import ResolveMPICmdPrefix
+from gscoordinator.utils import is_port_in_use
 from gscoordinator.utils import parse_as_glog_level
 
 logger = logging.getLogger("graphscope")
@@ -127,31 +131,26 @@ class ResourceManager(object):
 class KubernetesClusterLauncher(Launcher):
     _gs_etcd_builder_cls = GSEtcdBuilder
     _gs_engine_builder_cls = GSEngineBuilder
-    _gs_graph_manager_builder_cls = GSGraphManagerBuilder
     _gs_mars_scheduler_builder_cls = GSEngineBuilder
 
     _etcd_name_prefix = "gs-etcd-"
     _etcd_service_name_prefix = "gs-etcd-service-"
     _engine_name_prefix = "gs-engine-"
     _vineyard_service_name_prefix = "gs-vineyard-service-"
-    _gie_graph_manager_name_prefix = "gs-graphmanager-"
-    _gie_graph_manager_service_name_prefix = "gs-graphmanager-service-"
     _gle_service_name_prefix = "gs-graphlearn-service-"
 
     _analytical_engine_exec = "grape_engine"
     _vineyard_container_name = "vineyard"  # fixed
     _etcd_container_name = "etcd"
     _engine_container_name = "engine"  # fixed
-    _gie_manager_container_name = "manager"
-    _gie_zookeeper_container_name = "zookeeper"
 
     _mars_scheduler_container_name = "marsscheduler"  # fixed
     _mars_worker_container_name = "marsworker"  # fixed
     _mars_scheduler_name_prefix = "marsscheduler-"
     _mars_service_name_prefix = "mars-"
 
-    _interactive_engine_manager_port = 8080  # fixed
     _zookeeper_port = 2181  # fixed
+    _gaia_engine_port = random.randint(40001, 41000)
     _random_analytical_engine_rpc_port = random.randint(56001, 57000)
     _random_etcd_listen_peer_service_port = random.randint(57001, 58000)
     _random_etcd_listen_client_service_port = random.randint(58001, 59000)
@@ -160,25 +159,17 @@ class KubernetesClusterLauncher(Launcher):
     _mars_scheduler_port = 7103  # fixed
     _mars_worker_port = 7104  # fixed
 
-    _MAXGRAPH_MANAGER_HOST = "http://%s.%s.svc.cluster.local:8080"
-
     def __init__(
         self,
         namespace=None,
         service_type=None,
         gs_image=None,
         etcd_image=None,
-        zookeeper_image=None,
-        gie_graph_manager_image=None,
         coordinator_name=None,
         coordinator_service_name=None,
         etcd_num_pods=None,
         etcd_cpu=None,
         etcd_mem=None,
-        zookeeper_cpu=None,
-        zookeeper_mem=None,
-        gie_graph_manager_cpu=None,
-        gie_graph_manager_mem=None,
         engine_cpu=None,
         engine_mem=None,
         vineyard_daemonset=None,
@@ -208,6 +199,7 @@ class KubernetesClusterLauncher(Launcher):
 
         self._saved_locals = locals()
         self._num_workers = self._saved_locals["num_workers"]
+        self._instance_id = self._saved_locals["instance_id"]
 
         # random for multiple k8s cluster in the same namespace
         self._engine_name = self._engine_name_prefix + self._saved_locals["instance_id"]
@@ -217,10 +209,6 @@ class KubernetesClusterLauncher(Launcher):
         )
         self._mars_scheduler_name = (
             self._mars_scheduler_name_prefix + self._saved_locals["instance_id"]
-        )
-
-        self._gie_graph_manager_name = (
-            self._gie_graph_manager_name_prefix + self._saved_locals["instance_id"]
         )
 
         self._coordinator_name = coordinator_name
@@ -253,17 +241,21 @@ class KubernetesClusterLauncher(Launcher):
         self._glog_level = parse_as_glog_level(log_level)
 
         self._analytical_engine_process = None
+        self._zetcd_process = None
 
         # 8000 ~ 9000 is exposed
         self._learning_engine_ports_usage = 8000
         self._graphlearn_services = dict()
         self._learning_instance_processes = {}
 
-        # component service name
-        self._gie_graph_manager_service_name = (
-            self._gie_graph_manager_service_name_prefix
-            + self._saved_locals["instance_id"]
+        # workspace
+        self._instance_workspace = os.path.join(
+            WORKSPACE, self._saved_locals["instance_id"]
         )
+        os.makedirs(self._instance_workspace, exist_ok=True)
+        self._session_workspace = None
+
+        # component service name
         if self._exists_vineyard_daemonset(self._saved_locals["vineyard_daemonset"]):
             self._vineyard_service_name = (
                 self._saved_locals["vineyard_daemonset"] + "-rpc"
@@ -300,18 +292,29 @@ class KubernetesClusterLauncher(Launcher):
     def get_namespace(self):
         return self._saved_locals["namespace"]
 
-    def get_gie_graph_manager_service_name(self):
-        return self._gie_graph_manager_service_name
+    def get_vineyard_stream_info(self):
+        hosts = [
+            "%s:%s" % (self._saved_locals["namespace"], host)
+            for host in self._pod_name_list
+        ]
+        return "kubernetes", hosts
 
-    def get_manager_host(self):
-        return "http://{0}".format(self._get_graph_manager_service_endpoint())
+    def set_session_workspace(self, session_id):
+        self._session_workspace = os.path.join(self._instance_workspace, session_id)
+        os.makedirs(self._session_workspace, exist_ok=True)
 
     @property
     def preemptive(self):
         return self._saved_locals["preemptive"]
 
+    @property
+    def hosts(self):
+        """String of a list of pod name, comma separated."""
+        return ",".join(self._pod_name_list)
+
     def distribute_file(self, path):
         dir = os.path.dirname(path)
+        # TODO(dongze): This command may fail, and it will cause the cluster to stuck. #761
         for pod in self._pod_name_list:
             subprocess.check_call(
                 [
@@ -336,6 +339,77 @@ class KubernetesClusterLauncher(Launcher):
                     "engine",
                 ]
             )
+
+    def create_interactive_instance(self, config: dict):
+        """
+        Args:
+            config (dict): dict of op_def_pb2.OpDef.attr
+        """
+        object_id = config[types_pb2.VINEYARD_ID].i
+        schema_path = config[types_pb2.SCHEMA_PATH].s.decode()
+        # engine params format:
+        #   k1:v1;k2:v2;k3:v3
+        engine_params = {
+            "gaia.engine.port": self._gaia_engine_port,
+        }
+        if types_pb2.GIE_GREMLIN_ENGINE_PARAMS in config:
+            engine_params = json.loads(
+                config[types_pb2.GIE_GREMLIN_ENGINE_PARAMS].s.decode()
+            )
+        engine_params = [
+            "{}:{}".format(key, value) for key, value in engine_params.items()
+        ]
+        enable_gaia = config[types_pb2.GIE_ENABLE_GAIA].b
+        cmd = [
+            INTERACTIVE_ENGINE_SCRIPT,
+            "create_gremlin_instance_on_k8s",
+            self._session_workspace,
+            str(object_id),
+            schema_path,
+            self.hosts,
+            self._engine_container_name,
+            "{}".format(";".join(engine_params)),
+            str(enable_gaia),
+            self._coordinator_name,
+        ]
+        logger.info("Create GIE instance with command: {0}".format(" ".join(cmd)))
+        process = subprocess.Popen(
+            cmd,
+            start_new_session=True,
+            cwd=os.getcwd(),
+            env=os.environ.copy(),
+            universal_newlines=True,
+            encoding="utf-8",
+            stdin=subprocess.DEVNULL,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
+            bufsize=1,
+        )
+        return process
+
+    def close_interactive_instance(self, object_id):
+        cmd = [
+            INTERACTIVE_ENGINE_SCRIPT,
+            "close_gremlin_instance_on_k8s",
+            self._session_workspace,
+            str(object_id),
+            self.hosts,
+            self._engine_container_name,
+        ]
+        logger.info("Close GIE instance with command: {0}".format(" ".join(cmd)))
+        process = subprocess.Popen(
+            cmd,
+            start_new_session=True,
+            cwd=os.getcwd(),
+            env=os.environ.copy(),
+            universal_newlines=True,
+            encoding="utf-8",
+            stdin=subprocess.DEVNULL,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
+            bufsize=1,
+        )
+        return process
 
     def _create_mars_scheduler(self):
         logger.info("Launching mars scheduler pod for GraphScope ...")
@@ -459,7 +533,6 @@ class KubernetesClusterLauncher(Launcher):
                 field=vineyard_socket_volume_fields,
                 mounts_list=[
                     {"mountPath": "/tmp/vineyard_workspace"},
-                    {"mountPath": "/home/maxgraph/data/vineyard"},
                 ],
             )
         )
@@ -680,137 +753,79 @@ class KubernetesClusterLauncher(Launcher):
             return endpoints
         raise RuntimeError("Get graphlearn service endpoint failed.")
 
-    def _create_interactive_engine_service(self):
-        logger.info("Launching GIE graph manager ...")
-        labels = {"app": self._gie_graph_manager_name}
-        service_builder = ServiceBuilder(
-            name=self._gie_graph_manager_service_name,
-            service_type="ClusterIP",
-            port=self._interactive_engine_manager_port,
-            selector=labels,
-        )
-        self._resource_object.append(
-            self._core_api.create_namespaced_service(
-                self._saved_locals["namespace"], service_builder.build()
-            )
-        )
-
-        time.sleep(1)
-
-        # create graph manager deployment
-        graph_manager_builder = self._gs_graph_manager_builder_cls(
-            name=self._gie_graph_manager_name,
-            labels=labels,
-            replicas=1,
-            image_pull_policy=self._saved_locals["image_pull_policy"],
-        )
-        for name in self._image_pull_secrets:
-            graph_manager_builder.add_image_pull_secret(name)
-
-        envs = {
-            "GREMLIN_IMAGE": self._saved_locals["gie_graph_manager_image"],
-            "ENGINE_NAMESPACE": self._saved_locals["namespace"],
-            "COORDINATOR_IMAGE": self._saved_locals["gie_graph_manager_image"],
-            "GREMLIN_EXPOSE": self._saved_locals["service_type"],
+    def get_engine_config(self):
+        config = {
+            "vineyard_service_name": self.get_vineyard_service_name(),
+            "vineyard_rpc_endpoint": self.get_vineyard_rpc_endpoint(),
+            "mars_endpoint": self.get_mars_scheduler_endpoint(),
         }
-        graph_manager_builder.add_simple_envs(envs)
+        return config
 
-        # add manager container
-        graph_manager_builder.add_manager_container(
-            cmd=["/bin/bash", "-c", "--"],
-            args=["/home/maxgraph/manager-entrypoint.sh"],
-            name=self._gie_manager_container_name,
-            image=self._saved_locals["gie_graph_manager_image"],
-            cpu=self._saved_locals["gie_graph_manager_cpu"],
-            mem=self._saved_locals["gie_graph_manager_mem"],
-            preemptive=self._saved_locals["preemptive"],
-            ports=self._interactive_engine_manager_port,
+    def _create_interactive_engine_service(self):
+        # launch zetcd proxy
+        logger.info("Launching zetcd proxy service ...")
+        zetcd_cmd = shutil.which("zetcd")
+        if not zetcd_cmd:
+            raise RuntimeError("zetcd command not found.")
+        port = self._random_etcd_listen_client_service_port
+        etcd_endpoints = ["http://%s:%s" % (self._etcd_service_name, port)]
+        for i in range(self._etcd_num_pods):
+            etcd_endpoints.append("http://%s-%d:%s" % (self._etcd_name, i, port))
+        cmd = [
+            zetcd_cmd,
+            "--zkaddr",
+            "0.0.0.0:{}".format(self._zookeeper_port),
+            "--endpoints",
+            "{}".format(",".join(etcd_endpoints)),
+        ]
+        logger.info("zetcd cmd {}".format(" ".join(cmd)))
+
+        self._zetcd_process = subprocess.Popen(
+            cmd,
+            start_new_session=True,
+            cwd=os.getcwd(),
+            env=os.environ.copy(),
+            universal_newlines=True,
+            encoding="utf-8",
+            stdin=subprocess.DEVNULL,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
+            bufsize=1,
         )
+        stdout_watcher = PipeWatcher(self._zetcd_process.stdout, sys.stdout, drop=True)
+        setattr(self._zetcd_process, "stdout_watcher", stdout_watcher)
 
-        # add zookeeper container
-        graph_manager_builder.add_zookeeper_container(
-            name=self._gie_zookeeper_container_name,
-            image=self._saved_locals["zookeeper_image"],
-            cpu=self._saved_locals["zookeeper_cpu"],
-            mem=self._saved_locals["zookeeper_mem"],
-            preemptive=self._saved_locals["preemptive"],
-            ports=self._zookeeper_port,
-        )
-
-        self._resource_object.append(
-            self._app_api.create_namespaced_deployment(
-                self._saved_locals["namespace"], graph_manager_builder.build()
-            )
-        )
-
-    def _waiting_interactive_engine_service_ready(self):
         start_time = time.time()
-        event_messages = []
-        while True:
-            deployments = self._app_api.list_namespaced_deployment(
-                self._saved_locals["namespace"]
-            )
-            service_available = False
-            for deployment in deployments.items:
-                if deployment.metadata.name == self._gie_graph_manager_name:
-                    # replicas is 1
-                    if deployment.status.available_replicas == 1:
-                        # service is ready
-                        service_available = True
-                        break
-                    # check container status
-                    selector = ""
-                    for k, v in deployment.spec.selector.match_labels.items():
-                        selector += k + "=" + v + ","
-                    selector = selector[:-1]
-
-                    pods = self._core_api.list_namespaced_pod(
-                        namespace=self._saved_locals["namespace"],
-                        label_selector=selector,
-                    )
-
-                    for pod in pods.items:
-                        pod_name = pod.metadata.name
-                        field_selector = "involvedObject.name=" + pod_name
-                        stream = kube_watch.Watch().stream(
-                            self._core_api.list_namespaced_event,
-                            self._saved_locals["namespace"],
-                            field_selector=field_selector,
-                            timeout_seconds=1,
-                        )
-                        for event in stream:
-                            msg = "[{}]: {}".format(pod_name, event["object"].message)
-                            if msg not in event_messages:
-                                event_messages.append(msg)
-                                logger.info(msg)
-                                if event["object"].reason == "Failed":
-                                    raise RuntimeError("Kubernetes event error: ", msg)
-
-            if service_available:
-                break
+        while not is_port_in_use(
+            socket.gethostbyname(socket.gethostname()), self._zookeeper_port
+        ):
+            time.sleep(1)
             if (
                 self._saved_locals["timeout_seconds"]
                 and self._saved_locals["timeout_seconds"] + start_time < time.time()
             ):
-                raise TimeoutError("Waiting GIE graph manager start timeout.")
-            time.sleep(2)
-        logger.info("GIE graph manager service is ready.")
+                raise RuntimeError("Launch zetcd service failed.")
+        logger.info(
+            "ZEtcd is ready, endpoint is {0}:{1}".format(
+                socket.gethostbyname(socket.gethostname()), self._zookeeper_port
+            )
+        )
 
     def _create_services(self):
-        # create interactive engine service
-        self._create_interactive_engine_service()
-        self._waiting_interactive_engine_service_ready()
-
-        # etcd used by vineyard
         self._create_etcd()
         self._etcd_endpoint = self._get_etcd_service_endpoint()
         logger.info("Etcd is ready, endpoint is {}".format(self._etcd_endpoint))
+
+        # create interactive engine service
+        logger.info("Creating interactive engine service...")
+        self._create_interactive_engine_service()
 
         if self._saved_locals["with_mars"]:
             # scheduler used by mars
             self._create_mars_scheduler()
             self._create_mars_service()
 
+        logger.info("Creating engine replicaset...")
         self._create_engine_replicaset()
         if not self._exists_vineyard_daemonset(
             self._saved_locals["vineyard_daemonset"]
@@ -920,16 +935,6 @@ class KubernetesClusterLauncher(Launcher):
         )
         return endpoints[0]
 
-    def _get_graph_manager_service_endpoint(self):
-        # Always len(endpoints) >= 1
-        endpoints = get_service_endpoints(
-            api_client=self._api_client,
-            namespace=self._saved_locals["namespace"],
-            name=self._gie_graph_manager_service_name,
-            type="ClusterIP",
-        )
-        return endpoints[0]
-
     def _launch_analytical_engine_locally(self):
         logger.info(
             "Starting GAE rpc service on {} ...".format(
@@ -950,7 +955,7 @@ class KubernetesClusterLauncher(Launcher):
                     self._saved_locals["namespace"],
                     "cp",
                     "/tmp/kube_hosts",
-                    "{}:/etc/hosts_of_nodes".format(pod),
+                    "{}:/tmp/hosts_of_nodes".format(pod),
                     "-c",
                     self._engine_container_name,
                 ]
@@ -979,14 +984,18 @@ class KubernetesClusterLauncher(Launcher):
             cmd,
             env=env,
             stdout=subprocess.PIPE,
-            stderr=subprocess.STDOUT,
+            stderr=subprocess.PIPE,
             encoding="utf-8",
         )
 
         stdout_watcher = PipeWatcher(
             self._analytical_engine_process.stdout, sys.stdout, drop=True
         )
+        stderr_watcher = PipeWatcher(
+            self._analytical_engine_process.stderr, sys.stderr, drop=True
+        )
         setattr(self._analytical_engine_process, "stdout_watcher", stdout_watcher)
+        setattr(self._analytical_engine_process, "stderr_watcher", stderr_watcher)
 
     def _delete_dangling_coordinator(self):
         # delete service
@@ -1073,7 +1082,7 @@ class KubernetesClusterLauncher(Launcher):
             self._resource_object = []
 
             if is_dangling:
-                logger.info("Dangling coordinator detected, clean up soon.")
+                logger.info("Dangling coordinator detected, cleaning up...")
                 # delete everything inside namespace of graphscope instance
                 if self._saved_locals["delete_namespace"]:
                     # delete namespace created by graphscope

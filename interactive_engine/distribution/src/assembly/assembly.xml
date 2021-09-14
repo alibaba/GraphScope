@@ -7,10 +7,6 @@
     </formats>
     <fileSets>
         <fileSet>
-            <directory>${project.basedir}/src/config</directory>
-            <outputDirectory>conf</outputDirectory>
-        </fileSet>
-        <fileSet>
             <directory>${project.parent.basedir}/src/executor/target</directory>
             <includes>
                 <include>libmaxgraph_ffi*</include>
@@ -28,6 +24,13 @@
             <directory>${project.basedir}/src/bin</directory>
             <outputDirectory>bin</outputDirectory>
             <fileMode>0755</fileMode>
+        </fileSet>
+        <fileSet>
+            <directory>${project.basedir}/src/conf</directory>
+            <outputDirectory>conf</outputDirectory>
+            <includes>
+                <include>*</include>
+            </includes>
         </fileSet>
     </fileSets>
     <dependencySets>

@@ -73,7 +73,10 @@ impl Partitioner for MaxGraphMultiPartition {
                 worker_partition_list.push(pid as u64)
             }
         }
-        info!("job_workers {:?}, worker id: {:?},  worker_partition_list {:?}", job_workers, worker_id, worker_partition_list);
+        info!(
+            "job_workers {:?}, worker id: {:?},  worker_partition_list {:?}",
+            job_workers, worker_id, worker_partition_list
+        );
         Ok(Some(worker_partition_list))
     }
 }
@@ -87,6 +90,8 @@ pub struct VineyardMultiPartition {
     partition_worker_mapping: Arc<RwLock<Option<HashMap<u32, u32>>>>,
     // mapping of worker id -> partition list
     worker_partition_list_mapping: Arc<RwLock<Option<HashMap<u32, Vec<u32>>>>>,
+    num_servers: usize,
+    server_index: u64,
 }
 
 impl VineyardMultiPartition {
@@ -94,41 +99,66 @@ impl VineyardMultiPartition {
         graph_partition_manager: Arc<dyn GraphPartitionManager>,
         partition_worker_mapping: Arc<RwLock<Option<HashMap<u32, u32>>>>,
         worker_partition_list_mapping: Arc<RwLock<Option<HashMap<u32, Vec<u32>>>>>,
+        num_servers: usize,
+        server_index: u64,
     ) -> VineyardMultiPartition {
         VineyardMultiPartition {
             graph_partition_manager,
             partition_worker_mapping,
             worker_partition_list_mapping,
+            num_servers,
+            server_index,
         }
     }
 }
 
 impl Partitioner for VineyardMultiPartition {
-    fn get_partition(&self, id: &ID, _worker_num_per_server: usize) -> DynResult<u64> {
+    fn get_partition(&self, id: &ID, worker_num_per_server: usize) -> DynResult<u64> {
         // The partitioning logics is as follows:
         // 1. `partition_id = self.graph_partition_manager.get_partition_id(*id as VertexId)` routes a given id
         // to the partition that holds its data.
         // 2. get worker_id by the prebuild partition_worker_map, which specifies partition_id -> worker_id
-        let vid = (*id & (ID_MASK)) as VertexId;
-        let partition_id = self.graph_partition_manager.get_partition_id(vid) as PartitionId;
-        if let Ok(partition_worker_mapping) = self.partition_worker_mapping.read() {
-            if let Some(partition_worker_mapping) = partition_worker_mapping.as_ref() {
-                if let Some(worker_id) = partition_worker_mapping.get(&partition_id) {
-                    Ok(*worker_id as u64)
+
+        // Firstly, we check if the job parallelism is identical to the pre-allocated parallelism,
+        // while one exception is that GAIA will optimize when the plan only have a source step (which may access the storage);
+        // Then we just follow the above routing rule.
+        let parallelism = self
+            .worker_partition_list_mapping
+            .read()
+            .unwrap()
+            .as_ref()
+            .map_or(0, |map| map.len());
+        if self.num_servers * worker_num_per_server != parallelism {
+            // GAIA will optimize to directly query the storage if it only has a source step
+            if worker_num_per_server == 1 {
+                Ok(self.server_index)
+            } else {
+                Err(str_to_dyn_error(
+                    "Job parallelism is not identical to the pre-allocated parallelism",
+                ))
+            }
+        } else {
+            let vid = (*id & (ID_MASK)) as VertexId;
+            let partition_id = self.graph_partition_manager.get_partition_id(vid) as PartitionId;
+            if let Ok(partition_worker_mapping) = self.partition_worker_mapping.read() {
+                if let Some(partition_worker_mapping) = partition_worker_mapping.as_ref() {
+                    if let Some(worker_id) = partition_worker_mapping.get(&partition_id) {
+                        Ok(*worker_id as u64)
+                    } else {
+                        Err(str_to_dyn_error(
+                            "get worker id failed in VineyardMultiPartition",
+                        ))
+                    }
                 } else {
                     Err(str_to_dyn_error(
-                        "get worker id failed in VineyardMultiPartition",
+                        "partition_worker_mapping is not initialized in VineyardMultiPartition",
                     ))
                 }
             } else {
                 Err(str_to_dyn_error(
-                    "partition_worker_mapping is not initialized in VineyardMultiPartition",
+                    "read partition_worker_mapping in VineyardMultiPartition failed",
                 ))
             }
-        } else {
-            Err(str_to_dyn_error(
-                "read partition_worker_mapping in VineyardMultiPartition failed",
-            ))
         }
     }
 
@@ -139,10 +169,17 @@ impl Partitioner for VineyardMultiPartition {
     ) -> DynResult<Option<Vec<u64>>> {
         // If only one worker each server, it will process all partitions
         if job_workers == 1 {
-            Ok(Some(self.graph_partition_manager.get_process_partition_list().into_iter().map(|pid| pid as u64).collect()))
+            Ok(Some(
+                self.graph_partition_manager
+                    .get_process_partition_list()
+                    .into_iter()
+                    .map(|pid| pid as u64)
+                    .collect(),
+            ))
         }
         // Vineyard will pre-allocate the worker_partition_list mapping
-        else if let Ok(worker_partition_list_mapping) = self.worker_partition_list_mapping.read() {
+        else if let Ok(worker_partition_list_mapping) = self.worker_partition_list_mapping.read()
+        {
             if let Some(worker_partition_list_mapping) = worker_partition_list_mapping.as_ref() {
                 if let Some(partition_list) = worker_partition_list_mapping.get(&worker_id) {
                     Ok(Some(partition_list.iter().map(|pid| *pid as u64).collect()))

@@ -8,14 +8,18 @@ import org.apache.tinkerpop.gremlin.process.traversal.step.util.HasContainer;
 import org.apache.tinkerpop.gremlin.structure.T;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 public class CachePropGaiaGraphStep extends GaiaGraphStep implements PropertiesCacheStep {
+    private ToFetchProperties toFetchProperties;
+
     public CachePropGaiaGraphStep(GaiaGraphStep originalGraphStep) {
         super(originalGraphStep);
         originalGraphStep.getGraphLabels().forEach(k -> this.addGraphLabels((String) k));
         originalGraphStep.getHasContainers().forEach(k -> this.addHasContainer((HasContainer) k));
         this.setTraverserRequirement(originalGraphStep.getTraverserRequirement());
+        this.toFetchProperties = new ToFetchProperties(false, Collections.EMPTY_LIST);
     }
 
     @Override
@@ -27,11 +31,12 @@ public class CachePropGaiaGraphStep extends GaiaGraphStep implements PropertiesC
                 keys.add(container.getKey());
             }
         }
-        return PlanUtils.convertFrom(new ToFetchProperties(false, keys));
+        keys.addAll(toFetchProperties.getProperties());
+        return PlanUtils.convertFrom(new ToFetchProperties(toFetchProperties.isAll(), keys));
     }
 
     @Override
     public void addPropertiesToCache(ToFetchProperties properties) {
-        throw new UnsupportedOperationException();
+        this.toFetchProperties = properties;
     }
 }

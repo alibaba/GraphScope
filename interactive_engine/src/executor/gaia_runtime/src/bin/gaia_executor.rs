@@ -209,7 +209,7 @@ fn build_runtime_req(runtime_info: Arc<Mutex<RuntimeInfo>>) -> RuntimeHBReq {
     runtime_req.set_runtimePort(hb_req.get_server_port() as i32);
     runtime_req.set_worker_num_per_process(hb_req.get_worker_num_per_process());
     runtime_req.set_process_partition_list(hb_req.get_process_partition_list().to_vec());
-    info!("Build runtime request {:?} in heartbeat", &runtime_req);
+    debug!("Build runtime request {:?} in heartbeat", &runtime_req);
 
     runtime_req
 }

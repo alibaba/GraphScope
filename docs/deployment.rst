@@ -94,4 +94,4 @@ Ubuntu 20.04+ or MacOS.
 .. code:: shell
 
     ./scripts/deploy_local.sh build_and_deploy
-    export GRAPHSCOPE_HOME=/usr/local
+    export GRAPHSCOPE_HOME=/opt/graphscope

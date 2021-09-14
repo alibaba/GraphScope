@@ -62,6 +62,10 @@ impl Meta {
         all.extend(drop_edge_items.into_iter().map(|i| MetaItem::DropEdgeType(i)));
         let remove_edge_kind_items = res_unwrap!(get_items::<RemoveEdgeKindItem>(store_ref), recover)?;
         all.extend(remove_edge_kind_items.into_iter().map(|i| MetaItem::RemoveEdgeKind(i)));
+        let prepare_data_load_items = res_unwrap!(get_items::<PrepareDataLoadItem>(store_ref), recover)?;
+        all.extend(prepare_data_load_items.into_iter().map(|i| MetaItem::PrepareDataLoad(i)));
+        let commit_data_load_items = res_unwrap!(get_items::<CommitDataLoadItem>(store_ref), recover)?;
+        all.extend(commit_data_load_items.into_iter().map(|i| MetaItem::CommitDataLoad(i)));
         all.sort_by(|a, b| {
             let s1 = a.get_schema_version();
             let s2 = b.get_schema_version();
@@ -295,8 +299,8 @@ impl Meta {
         Ok(())
     }
 
-    pub fn gen_next_table_id(&self) -> GraphResult<TableId> {
-        let key = gen_key("NextTableId");
+    pub fn _gen_next_table_id(&self) -> GraphResult<TableId> {
+        let key = _gen_key("NextTableId");
         let table_id = match res_unwrap!(self.store.get(&key), get_next_table_id)? {
             Some(v) => {
                 let res = transform::bytes_to_i64(v.as_bytes()).and_then(|id| {
@@ -328,7 +332,7 @@ impl Meta {
     }
 }
 
-fn gen_key(key: &str) -> Vec<u8> {
+fn _gen_key(key: &str) -> Vec<u8> {
     let mut buf = Vec::new();
     buf.extend(transform::i64_to_vec(META_TABLE_ID.to_be()));
     buf.extend(key.as_bytes());

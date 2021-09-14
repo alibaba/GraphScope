@@ -16,10 +16,10 @@
 # limitations under the License.
 #
 
+import contextlib
 import os
 import shutil
 import subprocess
-import sys
 from distutils.cmd import Command
 
 from setuptools import find_packages
@@ -42,31 +42,22 @@ class BuildBuiltin(Command):
         pass
 
     def run(self):
-        shutil.rmtree(
-            os.path.join(
-                repo_root, "gscoordinator", "builtin", "app", "builtin_app.gar"
-            ),
-            ignore_errors=True,
-        )
-        shutil.rmtree(
-            os.path.join(
-                repo_root, "gscoordinator", "builtin", "app", "builtin_app.zip"
-            ),
-            ignore_errors=True,
-        )
+        app_home_path = os.path.join(repo_root, "gscoordinator", "builtin", "app")
+        gar_file = os.path.join(app_home_path, "builtin_app.gar")
+        zip_file = os.path.join(app_home_path, "builtin_app.zip")
+        # Remove previous files if exist.
+        for f in [gar_file, zip_file]:
+            with contextlib.suppress(FileNotFoundError):
+                os.remove(f)
         shutil.make_archive(
-            os.path.join(repo_root, "gscoordinator", "builtin", "app", "builtin_app"),
+            os.path.join(app_home_path, "builtin_app"),
             format="zip",
-            root_dir=os.path.join(repo_root, "gscoordinator", "builtin", "app"),
+            root_dir=app_home_path,
             base_dir=None,
         )
         shutil.move(
-            src=os.path.join(
-                repo_root, "gscoordinator", "builtin", "app", "builtin_app.zip"
-            ),
-            dst=os.path.join(
-                repo_root, "gscoordinator", "builtin", "app", "builtin_app.gar"
-            ),
+            src=zip_file,
+            dst=gar_file,
         )
 
 

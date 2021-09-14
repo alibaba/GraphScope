@@ -22,7 +22,6 @@
         <module>coordinator</module>
         <module>frontend</module>
         <module>assembly</module>
-        <module>instance-manager</module>
         <module>executor</module>
         <module>v2</module>
         <module>data_load_tools</module>
@@ -38,19 +37,6 @@
             <activation>
                 <activeByDefault>true</activeByDefault>
             </activation>
-            <modules>
-                <module>common/rust</module>
-            </modules>
-        </profile>
-        <!-- release profile, build with rust module  -->
-        <profile>
-            <id>maxgraph-release</id>
-            <modules>
-                <module>common/rust</module>
-            </modules>
-            <properties>
-                <rust.release.flag>--release</rust.release.flag>
-            </properties>
         </profile>
         <!-- java modules only, build without rust module-->
         <profile>
