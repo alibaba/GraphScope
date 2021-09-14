@@ -133,6 +133,10 @@ def demo(sess, ogbn_mag_small, ogbn_small_script):
     sub_graph = sub_graph.add_column(ret1, {"kcore": "r"})
     sub_graph = sub_graph.add_column(ret2, {"tc": "r"})
 
+    # MacOS skip the GLE test
+    if sys.platform == "darwin":
+        return
+
     # GLE on ogbn_mag_small graph
     paper_features = []
     for i in range(128):
@@ -226,13 +230,17 @@ def simple_flow(sess, ogbn_mag_small, ogbn_small_script):
     train(config, lg)
 
 
+@pytest.mark.skipif(
+    sys.platform == "darwin",
+    reason="TODO: pass on local, open the test case after macOS runner is normal. see issue 781",
+)
 def test_demo(sess, ogbn_mag_small, ogbn_small_script):
     demo(sess, ogbn_mag_small, ogbn_small_script)
 
 
 @pytest.mark.skipif(
     sys.platform == "darwin",
-    reason="TODO: open the test case after testing the lazy mode on MacOS.",
+    reason="TODO: pass on local, open the test case after macOS runner is normal. see issue 781",
 )
 def test_demo_lazy_mode(sess_lazy, ogbn_mag_small, ogbn_small_script):
     graph_node = load_ogbn_mag(sess_lazy, ogbn_mag_small)
@@ -253,6 +261,12 @@ def test_demo_lazy_mode(sess_lazy, ogbn_mag_small, ogbn_small_script):
     ret2 = graphscope.triangles(simple_graph_node)
     sub_graph_node = sub_graph_node.add_column(ret1, {"kcore": "r"})
     sub_graph_node = sub_graph_node.add_column(ret2, {"tc": "r"})
+
+    # MacOS skip the GLE test
+    if sys.platform == "darwin":
+        sess_lazy.run(paper_result_node, sub_graph_node)
+        return
+
     # GLE on ogbn_mag_small graph
     paper_features = []
     for i in range(128):
@@ -328,3 +342,19 @@ def test_multiple_session(ogbn_mag_small, ogbn_small_script):
 
     sess1.close()
     sess2.close()
+
+
+@pytest.mark.skipif(
+    sys.platform == "linux",
+    reason="this is test case for macOS",
+)
+def test_on_macOS(sess, ogbn_mag_small, ogbn_small_script):
+    graph = load_ogbn_mag(sess, ogbn_mag_small)
+
+    simple_g = sub_graph.project(vertices={"paper": []}, edges={"cites": []})
+
+    ret1 = graphscope.k_core(simple_g, k=5)
+    ret2 = graphscope.triangles(simple_g)
+
+    sub_graph = sub_graph.add_column(ret1, {"kcore": "r"})
+    sub_graph = sub_graph.add_column(ret2, {"tc": "r"})
