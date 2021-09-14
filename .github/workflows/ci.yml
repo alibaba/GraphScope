@@ -436,8 +436,8 @@ jobs:
         export HDFS_HOST=$(hostname -I | awk '{print $1}')
 
         cd ${GITHUB_WORKSPACE}/python
-        python3 -m pytest ./tests/kubernetes/test_demo_script.py -k test_demo_on_hdfs
-        # FIXME: context.output file not found
+        python3 -m pytest -s ./tests/kubernetes/test_demo_script.py -k test_demo_on_hdfs
+        # Check the result file have successfully written to the given location
         hdfs dfs -test -e /ldbc_sample/res.csv_0 && hdfs dfs -test -e /ldbc_sample/res.csv_1
 
     - name: Helm test
@@ -580,6 +580,7 @@ jobs:
         for i in {1..3}; do mvn clean install -Pv2 -Drust.compile.mode=debug -DskipTests --quiet  && break || sleep 60; done
         cd ${GITHUB_WORKSPACE}
         mv interactive_engine/distribution/target/maxgraph.tar.gz ./
+        mv interactive_engine/src/data_load_tools/target/data_load.tar.gz ./graphscope_store_data_load.tar.gz
         tar -zcf vineyard.tar.gz /opt/vineyard
 
     - name: gremlin-test
@@ -593,6 +594,13 @@ jobs:
         path: |
           maxgraph.tar.gz
           vineyard.tar.gz
+        retention-days: 5
+   
+    - uses: actions/upload-artifact@v2
+      with:
+        name: data_load-${{ github.sha }}
+        path: |
+          graphscope_store_data_load.tar.gz
         retention-days: 5
 
   gss-test:

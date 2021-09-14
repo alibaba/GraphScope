@@ -12,21 +12,16 @@ scriptEngines: {
       org.apache.tinkerpop.gremlin.jsr223.ImportGremlinPlugin: {classImports: [java.lang.Math,
                                                                                com.alibaba.maxgraph.sdkcommon.compiler.custom.Text,
                                                                                com.alibaba.maxgraph.sdkcommon.compiler.custom.Lists,
-                                                                               com.alibaba.maxgraph.sdkcommon.compiler.custom.dim.Dim,
-                                                                               com.alibaba.maxgraph.sdkcommon.compiler.custom.output.Output,
                                                                                com.alibaba.maxgraph.sdkcommon.compiler.custom.map.Prop,
                                                                                com.alibaba.maxgraph.sdkcommon.compiler.custom.map.Mapper,
-                                                                               com.alibaba.maxgraph.sdkcommon.compiler.custom.graph.OdpsGraph,
                                                                                com.alibaba.maxgraph.sdkcommon.compiler.custom.program.Program,
-                                                                               com.alibaba.maxgraph.sdkcommon.compiler.custom.branch.CustomBranch,
-                                                                               com.alibaba.maxgraph.sdkcommon.compiler.custom.aggregate.CustomAggregation],
+                                                                               com.alibaba.maxgraph.sdkcommon.compiler.custom.branch.CustomBranch],
                                                                 methodImports: [
                                                                   java.lang.Math#*,
                                                                   com.alibaba.maxgraph.sdkcommon.compiler.custom.program.Program#*,
                                                                   com.alibaba.maxgraph.sdkcommon.compiler.custom.branch.CustomBranch#*,
                                                                   com.alibaba.maxgraph.sdkcommon.compiler.custom.map.Mapper#*,
-                                                                  com.alibaba.maxgraph.sdkcommon.compiler.custom.map.Prop#*,
-                                                                  com.alibaba.maxgraph.sdkcommon.compiler.custom.aggregate.CustomAggregation#*],},
+                                                                  com.alibaba.maxgraph.sdkcommon.compiler.custom.map.Prop#*],},
       org.apache.tinkerpop.gremlin.jsr223.ScriptFileGremlinPlugin: {files: [/tmp/generate-classic.groovy]}
     }
   },

@@ -22,11 +22,11 @@ import com.alibaba.maxgraph.common.rpc.RpcAddressFetcher;
 import com.alibaba.maxgraph.compiler.api.schema.SchemaFetcher;
 import com.alibaba.maxgraph.compiler.cost.statistics.CostDataStatistics;
 import com.alibaba.maxgraph.server.MaxGraphOpLoader;
+import com.alibaba.maxgraph.server.ProcessorLoader;
 import com.alibaba.maxgraph.server.processor.MixedOpProcessor;
 import com.alibaba.maxgraph.server.processor.MixedTraversalOpProcessor;
 import com.alibaba.maxgraph.structure.graph.TinkerMaxGraph;
 import com.alibaba.maxgraph.v2.common.config.Configs;
-import com.alibaba.maxgraph.v2.frontend.server.loader.ProcessorLoader;
 import org.apache.tinkerpop.gremlin.server.Settings;
 import org.apache.tinkerpop.gremlin.server.op.OpLoader;
 

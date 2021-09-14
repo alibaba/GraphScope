@@ -91,6 +91,8 @@ class GrapeInstance : public Subscriber {
   bl::result<std::string> query(const rpc::GSParams& params,
                                 const rpc::QueryArgs& query_args);
 
+  bl::result<void> unloadContext(const rpc::GSParams& params);
+
   bl::result<std::string> reportGraph(const rpc::GSParams& params);
 
   bl::result<rpc::graph::GraphDefPb> projectGraph(const rpc::GSParams& params);

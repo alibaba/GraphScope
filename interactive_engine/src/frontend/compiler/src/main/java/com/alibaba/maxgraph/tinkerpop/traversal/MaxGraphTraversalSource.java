@@ -18,21 +18,21 @@ package com.alibaba.maxgraph.tinkerpop.traversal;
 import com.alibaba.maxgraph.QueryFlowOuterClass;
 import com.alibaba.maxgraph.common.util.CompilerConstant;
 import com.alibaba.maxgraph.sdkcommon.compiler.custom.graph.CustomSymbols;
-import com.alibaba.maxgraph.sdkcommon.compiler.custom.graph.MaxGraphSource;
 import com.alibaba.maxgraph.tinkerpop.steps.CreateGraphStep;
 import com.alibaba.maxgraph.tinkerpop.steps.EstimateCountStep;
-import com.alibaba.maxgraph.tinkerpop.steps.GraphSourceStep;
 import com.alibaba.maxgraph.tinkerpop.steps.MaxGraphStep;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
+import org.apache.tinkerpop.gremlin.process.remote.RemoteConnection;
+import org.apache.tinkerpop.gremlin.process.remote.traversal.strategy.decoration.RemoteStrategy;
 import org.apache.tinkerpop.gremlin.process.traversal.TraversalStrategies;
 import org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.GraphTraversal;
 import org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.GraphTraversalSource;
-import org.apache.tinkerpop.gremlin.process.traversal.step.map.GraphStep;
 import org.apache.tinkerpop.gremlin.structure.Edge;
 import org.apache.tinkerpop.gremlin.structure.Element;
 import org.apache.tinkerpop.gremlin.structure.Graph;
 import org.apache.tinkerpop.gremlin.structure.Vertex;
+import org.apache.tinkerpop.gremlin.structure.util.empty.EmptyGraph;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -49,6 +49,12 @@ public class MaxGraphTraversalSource extends GraphTraversalSource {
         this(graph, TraversalStrategies.GlobalCache.getStrategies(graph.getClass()));
     }
 
+    public MaxGraphTraversalSource(final RemoteConnection remoteConnection) {
+        this(EmptyGraph.instance(), TraversalStrategies.GlobalCache.getStrategies(EmptyGraph.class).clone());
+        this.connection = remoteConnection;
+        this.strategies.addStrategies(new RemoteStrategy(connection));
+    }
+
     public GraphTraversal<Vertex, Vertex> V(final Object... vertexIds) {
         final GraphTraversalSource clone = this.clone();
         clone.getBytecode().addStep(GraphTraversal.Symbols.V, vertexIds);
@@ -63,13 +69,6 @@ public class MaxGraphTraversalSource extends GraphTraversalSource {
         final GraphTraversal.Admin<Edge, Edge> traversal = new DefaultMaxGraphTraversal<>(clone);
         MaxGraphStep maxGraphStep = new MaxGraphStep<>(this.removeQueryConfig(), traversal, Edge.class, true, edgesIds);
         return traversal.addStep(maxGraphStep);
-    }
-
-    public DefaultMaxGraphTraversal<Vertex, Element> fromGraph(MaxGraphSource graphSource) {
-        final GraphTraversalSource clone = this.clone();
-        clone.getBytecode().addStep(CustomSymbols.graph_source);
-        final GraphTraversal.Admin<Vertex, Vertex> traversal = new DefaultMaxGraphTraversal<>(clone);
-        return (DefaultMaxGraphTraversal) traversal.addStep(new GraphSourceStep(traversal, graphSource));
     }
 
     public GraphTraversal<Vertex, Element> estimateVCount(final String... labels) {
