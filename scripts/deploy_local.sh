@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 #
 # A script to install dependencies of GraphScope.
+# TODO: check dependencies revise
+# TODO: install depedencies faster
 
 set -e
 set -o pipefail
@@ -291,10 +293,23 @@ check_dependencies() {
   fi
 
   # check java
+  # FIXME: what if user is java 8 or already installed but can't not check with java_home ?
+  # use the JAVA_HOME to check.
   if [[ "${PLATFORM}" == *"Darwin"* ]]; then
-    if [[ ! -f "/usr/libexec/java_home" ]] || \
-       ! /usr/libexec/java_home -v11 &> /dev/null; then
-      packages_to_install+=(jdk)
+    if [[ ! -z "${JAVA_HOME}" ]]; then
+      declare -r java_version=$(${JAVA_HOME}/bin/javac -version 2>&1 | awk -F ' ' '{print $2}' | awk -F '.' '{print $1}')
+      if [[ "${java_version}" -lt "8" ]] || [[ "${java_version}" -gt "15"]]; then
+        warning "Found the java version is ${java_version}, do not meet the requirement of GraphScope."
+        warning "Would install jdk 11 instead."
+        JAVA_HOME=""  # reset JAVA_HOME to
+        packages_to_install+=(jdk)
+      fi
+    else
+      if java
+      if [[ ! -f "/usr/libexec/java_home" ]] || \
+         ! /usr/libexec/java_home -v11 &> /dev/null; then
+        packages_to_install+=(jdk)
+      fi
     fi
   else
     if $(! command -v javac &> /dev/null) || \
@@ -342,6 +357,7 @@ check_dependencies() {
   fi
 
   # check go < 1.16 (vertion 1.16 can't install zetcd)
+  # FIXME(weibin): version check is not universed.
   if $(! command -v go &> /dev/null) || \
      [[ "$(go version 2>&1 | awk -F '.' '{print $2}')" -ge "16" ]]; then
     if [[ "${PLATFORM}" == *"CentOS"* ]]; then
@@ -366,6 +382,7 @@ check_dependencies() {
   fi
 
   # check folly
+  # FIXME: if the brew already install folly, what should we do.
   # TODO(@weibin): remove the ci check after GraphScope support clang 12.
   if [[ -z "${CI}" ]] || ( [[ "${CI}" == "true" ]] && [[ "${PLATFORM}" != *"Darwin"* ]] ); then
     if [[ ! -f "/usr/local/include/folly/dynamic.h" ]]; then
@@ -416,6 +433,7 @@ write_envs_config() {
 
   if [[ "${PLATFORM}" == *"Darwin"* ]]; then
     {
+      # FIXME: graphscope_env not correct when the script run mutiple times.
       if [[ "${packages_to_install[@]}" =~ "llvm@${LLVM_VERSION}" ]]; then
         # packages_to_install contains llvm
         echo "export CC=/usr/local/opt/llvm@${LLVM_VERSION}/bin/clang"
