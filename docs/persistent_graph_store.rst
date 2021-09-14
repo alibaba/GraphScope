@@ -384,7 +384,7 @@ Prequisities
 Get Binary
 ~~~~~~~~~~
 
-You can download the data-loading utility from here: `data_load.tar.gz <https://github.com/alibaba/GraphScope/releases/download/latest/data_load.tar.gz>`_. Decompress it, and you can find the executable here: `./data_load/bin/load_tool.sh`.
+You can download the data-loading utility from here: `data_load.tar.gz <https://github.com/alibaba/GraphScope/releases/latest/download/graphscope_store_data_load.tar.gz>`_. Decompress it, and you can find the executable here: `./data_load/bin/load_tool.sh`.
 
 
 Data Format
@@ -500,7 +500,7 @@ NOTE: You need to make sure that the HDFS endpoint that can be accessed from the
 
 .. code:: bash
 
-    $ ./data_laod/bin/load_tool.sh -c ingest -d hdfs://1.2.3.4:9000/tmp/data_output
+    $ ./data_load/bin/load_tool.sh -c ingest -d hdfs://1.2.3.4:9000/tmp/data_output
 
 
 The offline built data can be ingested successfully only once, otherwise errors will occur.
