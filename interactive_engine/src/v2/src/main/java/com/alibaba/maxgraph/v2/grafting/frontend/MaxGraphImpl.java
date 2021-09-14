@@ -24,15 +24,16 @@ import com.alibaba.maxgraph.sdkcommon.graph.ElementId;
 import com.alibaba.maxgraph.structure.Edge;
 import com.alibaba.maxgraph.structure.Vertex;
 import com.alibaba.maxgraph.structure.graph.MaxGraph;
+import com.alibaba.maxgraph.v2.common.MetaService;
 import com.alibaba.maxgraph.v2.common.discovery.MaxGraphNode;
 import com.alibaba.maxgraph.v2.common.discovery.NodeDiscovery;
 import com.alibaba.maxgraph.v2.common.discovery.RoleType;
-import com.alibaba.maxgraph.v2.common.frontend.api.graph.GraphPartitionManager;
 import com.alibaba.maxgraph.v2.common.operation.EdgeId;
 import com.alibaba.maxgraph.v2.common.operation.LabelId;
 import com.alibaba.maxgraph.v2.common.operation.OperationType;
 import com.alibaba.maxgraph.v2.common.operation.VertexId;
 import com.alibaba.maxgraph.v2.common.schema.EdgeKind;
+import com.alibaba.maxgraph.v2.common.util.PartitionUtils;
 import com.alibaba.maxgraph.v2.frontend.WriteSessionGenerator;
 import com.alibaba.maxgraph.v2.frontend.write.*;
 import com.google.common.collect.Lists;
@@ -54,19 +55,21 @@ public class MaxGraphImpl implements MaxGraph, NodeDiscovery.Listener {
     private static final Logger logger = LoggerFactory.getLogger(MaxGraphImpl.class);
 
     private SchemaFetcher schemaFetcher;
-    private GraphPartitionManager partitionManager;
     private GraphWriter graphWriter;
+    private MetaService metaService;
     private String writeSession;
 
     private Map<Integer, RemoteProxy> proxys = new ConcurrentHashMap<>();
+    private long startEdgeInnerId;
 
-    public MaxGraphImpl(NodeDiscovery discovery, SchemaFetcher schemaFetcher, GraphPartitionManager partitionManager,
-                        GraphWriter graphWriter, WriteSessionGenerator writeSessionGenerator) {
+    public MaxGraphImpl(NodeDiscovery discovery, SchemaFetcher schemaFetcher, GraphWriter graphWriter,
+                        WriteSessionGenerator writeSessionGenerator, MetaService metaService) {
         this.schemaFetcher = schemaFetcher;
-        this.partitionManager = partitionManager;
         this.graphWriter = graphWriter;
         this.writeSession = writeSessionGenerator.newWriteSession();
+        this.metaService = metaService;
         discovery.addListener(this);
+        startEdgeInnerId = System.nanoTime();
     }
 
     @Override
@@ -100,10 +103,16 @@ public class MaxGraphImpl implements MaxGraph, NodeDiscovery.Listener {
         graphWriter.flushLastSnapshot(30000);
     }
 
+    private int getVertexStoreId(long vertexId) {
+        int partitionCount = this.metaService.getPartitionCount();
+        int partitionId = PartitionUtils.getPartitionIdFromKey(vertexId, partitionCount);
+        return this.metaService.getStoreIdByPartition(partitionId);
+    }
+
     @Override
     public Iterator<Vertex> getVertex(Set<ElementId> id) {
         Map<Integer, Set<ElementId>> classified = id.stream().map(v -> {
-            int storeId = this.partitionManager.getVertexStoreId(v.typeId(), v.id());
+            int storeId = getVertexStoreId(v.id());
             return Pair.of(storeId, v);
         }).collect(groupingBy(Pair::getLeft, mapping(Pair::getRight, toSet())));
         return classified.entrySet().parallelStream()
@@ -214,7 +223,8 @@ public class MaxGraphImpl implements MaxGraph, NodeDiscovery.Listener {
                 .setSrcVertexLabelId(new LabelId(src.id.typeId()))
                 .setDstVertexLabelId(new LabelId(dst.id.typeId()))
                 .build();
-        EdgeId edgeId = new EdgeId(new VertexId(src.id.id()), new VertexId(dst.id.id()), 0L);
+        long innerId = ++startEdgeInnerId;
+        EdgeId edgeId = new EdgeId(new VertexId(src.id.id()), new VertexId(dst.id.id()), innerId);
         EdgeTarget edgeTarget = new EdgeTarget(edgeKind, edgeId);
         DataRecord dataRecord = new DataRecord(edgeTarget, properties);
         WriteRequest writeRequest = new WriteRequest(OperationType.OVERWRITE_EDGE, dataRecord);

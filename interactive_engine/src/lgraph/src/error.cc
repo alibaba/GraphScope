@@ -25,8 +25,9 @@ Error::~Error() {
   }
 }
 
-void Error::Print() {
-  ffi::PrintError(handle_);
+std::string Error::GetInfo() {
+  auto str_slice = ffi::GetErrorInfo(handle_);
+  return std::string{static_cast<const char*>(str_slice.data), str_slice.len};
 }
 
 }  // namespace DB_NAMESPACE

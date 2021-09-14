@@ -20,10 +20,10 @@ pub enum Error {
 }
 
 impl Error {
-    pub fn what(&self) {
-        match &self {
+    pub fn what(&self) -> &String {
+        return match &self {
             Error::Internal(msg) => {
-                println!("{}", msg);
+                msg
             }
         }
     }

@@ -22,4 +22,5 @@
    基于Gremlin的交互式查询 <https://nbviewer.jupyter.org/github/alibaba/GraphScope/blob/main/tutorials/zh/6_interactive_query_with_gremlin.ipynb>
    基于GraphSage的无监督学习 <https://nbviewer.jupyter.org/github/alibaba/GraphScope/blob/main/tutorials/zh/7_unsupervised_learning_with_graphsage.ipynb>
    基于GCN的有监督学习 <https://nbviewer.jupyter.org/github/alibaba/GraphScope/blob/main/tutorials/zh/8_supervised_learning_with_gcn.ipynb>
-   论文引用网络中的节点分类任务 <https://nbviewer.jupyter.org/github/alibaba/GraphScope/blob/main/tutorials/zh/9_node_classification_on_citation_network.ipynb>
+   基予BipartiteGraphSage的二部图无监督学习 <https://nbviewer.jupyter.org/github/alibaba/GraphScope/blob/main/tutorials/zh/9_unsupervised_learning_with_bipartite_graphsage.ipynb>
+   论文引用网络中的节点分类任务 <https://nbviewer.jupyter.org/github/alibaba/GraphScope/blob/main/tutorials/zh/10_node_classification_on_citation_network.ipynb>

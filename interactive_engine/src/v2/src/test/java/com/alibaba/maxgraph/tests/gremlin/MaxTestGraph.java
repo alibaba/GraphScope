@@ -15,17 +15,16 @@
  */
 package com.alibaba.maxgraph.tests.gremlin;
 
+import com.alibaba.maxgraph.sdkcommon.io.MaxGraphIORegistry;
+import com.alibaba.maxgraph.tinkerpop.traversal.MaxGraphTraversalSource;
 import com.alibaba.maxgraph.v2.MaxNode;
 import com.alibaba.maxgraph.v2.common.NodeBase;
 import com.alibaba.maxgraph.v2.common.config.CommonConfig;
 import com.alibaba.maxgraph.v2.common.config.Configs;
-import com.alibaba.maxgraph.v2.common.config.StoreConfig;
 import com.alibaba.maxgraph.v2.common.exception.MaxGraphException;
-import com.alibaba.maxgraph.v2.common.frontend.api.io.MaxGraphIORegistry;
 import com.alibaba.maxgraph.v2.common.frontend.api.schema.GraphSchema;
 import com.alibaba.maxgraph.v2.common.schema.GraphDef;
-import com.alibaba.maxgraph.v2.frontend.config.FrontendConfig;
-import com.alibaba.maxgraph.v2.frontend.graph.MaxGraphTraversalSource;
+import com.alibaba.maxgraph.v2.common.config.GremlinConfig;
 import org.apache.commons.configuration.Configuration;
 import org.apache.tinkerpop.gremlin.LoadGraphWith;
 import org.apache.tinkerpop.gremlin.driver.Cluster;
@@ -47,13 +46,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
-import java.io.InputStream;
 import java.net.URISyntaxException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Iterator;
-import java.util.List;
-import java.util.Properties;
 
 @Graph.OptIn("com.alibaba.maxgraph.tests.gremlin.GremlinStandardTestSuite")
 
@@ -351,6 +347,31 @@ import java.util.Properties;
 @Graph.OptOut(test = "org.apache.tinkerpop.gremlin.process.traversal.step.map.PropertiesTest",
         method = "g_injectXg_VX1X_propertiesXnameX_nextX_value",
         reason = "Not support inject operator")
+
+@Graph.OptOut(test = "org.apache.tinkerpop.gremlin.process.traversal.step.map.SelectTest",
+        method = "g_V_hasXperson_name_markoX_elementMapXnameX_asXaX_unionXidentity_identityX_selectXaX_selectXnameX",
+        reason = "Not support inject operator")
+@Graph.OptOut(test = "org.apache.tinkerpop.gremlin.process.traversal.step.map.OrderTest",
+        method = "g_VX1X_elementMap_orderXlocalX_byXkeys_descXunfold",
+        reason = "Not support inject operator")
+@Graph.OptOut(test = "org.apache.tinkerpop.gremlin.process.traversal.step.map.ValueMapTest",
+        method = "g_V_valueMapXname_ageX_withXtokens_idsX_byXunfoldX",
+        reason = "Not support inject operator")
+@Graph.OptOut(test = "org.apache.tinkerpop.gremlin.process.traversal.step.filter.HasTest",
+        method = "g_V_bothE_properties_dedup_hasKeyXweightX_hasValueXltX0d3XX_value",
+        reason = "Not support inject operator")
+@Graph.OptOut(test = "org.apache.tinkerpop.gremlin.process.traversal.step.filter.HasTest",
+        method = "g_V_bothE_properties_dedup_hasKeyXweightX_value",
+        reason = "Not support inject operator")
+@Graph.OptOut(test = "org.apache.tinkerpop.gremlin.process.traversal.step.map.OrderTest",
+        method = "g_V_both_hasLabelXpersonX_order_byXage_descX_name",
+        reason = "Not support inject operator")
+@Graph.OptOut(test = "org.apache.tinkerpop.gremlin.process.traversal.step.map.SelectTest",
+        method = "g_V_hasXperson_name_markoX_path_asXaX_unionXidentity_identityX_selectXaX_unfold",
+        reason = "Not support select traversal")
+@Graph.OptOut(test = "org.apache.tinkerpop.gremlin.process.traversal.step.map.SelectTest",
+        method = "g_V_hasXperson_name_markoX_count_asXaX_unionXidentity_identityX_selectXaX",
+        reason = "Not support select traversal")
 public class MaxTestGraph implements Graph {
     private static final Logger logger = LoggerFactory.getLogger(MaxTestGraph.class);
 
@@ -365,7 +386,7 @@ public class MaxTestGraph implements Graph {
         try {
             this.maxNode = new MaxNode(configs);
             this.maxNode.start();
-            int port = FrontendConfig.GREMLIN_PORT.get(configs);
+            int port = GremlinConfig.GREMLIN_PORT.get(configs);
             this.cluster = createCluster("localhost", port);
             this.sdkClient = new com.alibaba.maxgraph.v2.sdk.Client("localhost", 55556);
             this.remoteConnection = DriverRemoteConnection.using(cluster);

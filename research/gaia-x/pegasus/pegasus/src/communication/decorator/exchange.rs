@@ -399,17 +399,18 @@ mod rob {
         pub src: u32,
         pub port: Port,
         index: u32,
+        scope_level: u32,
         buffers: Vec<ScopeBufferPool<D>>,
         pushes: Vec<EventEmitPush<D>>,
         route: Exchange<D>,
-        cyclic: Arc<AtomicBool>,
+        _cyclic: Arc<AtomicBool>,
         blocks: TidyTagMap<VecDeque<BlockEntry<D>>>,
         cancel_handle: MultiConsCancelPtr,
     }
 
     impl<D: Data> ExchangeMicroBatchPush<D> {
         pub(crate) fn new(
-            info: ChannelInfo, cyclic: Arc<AtomicBool>, router: Box<dyn RouteFunction<D>>,
+            info: ChannelInfo, _cyclic: Arc<AtomicBool>, router: Box<dyn RouteFunction<D>>,
             buffers: Vec<ScopeBufferPool<D>>, pushes: Vec<EventEmitPush<D>>,
         ) -> Self {
             let src = crate::worker_id::get_current_worker().index;
@@ -419,10 +420,11 @@ mod rob {
                 src,
                 port: info.source_port,
                 index: info.index(),
+                scope_level: info.scope_level,
                 buffers,
                 pushes,
                 route: Exchange::new(len, router),
-                cyclic,
+                _cyclic,
                 blocks: TidyTagMap::new(info.scope_level),
                 cancel_handle,
             }
@@ -494,6 +496,7 @@ mod rob {
                         self.push_to(index, tag.clone(), last.into_read_only())?;
                     }
                 }
+                self.pushes[index].flush()?;
             }
             Ok(())
         }
@@ -506,28 +509,37 @@ mod rob {
                         self.push_to(i, tag, buf.into_read_only())?;
                     }
                 }
+                self.pushes[i].flush()?;
             }
             Ok(())
         }
 
-        fn update_end_weight(&mut self, end: &mut EndSignal) {
+        fn update_end_weight(&mut self, target: Option<usize>, end: &mut EndSignal) {
             let src_weight = end.source_weight.value();
             if src_weight < self.pushes.len() {
                 let mut weight = Weight::partial_empty();
+                if let Some(ref target) = target {
+                    weight.add_source(*target as u32);
+                }
                 for (index, p) in self.pushes.iter().enumerate() {
+                    if let Some(ref target) = target {
+                        if *target == index {
+                            continue;
+                        }
+                    }
+
                     if p.get_push_count(&end.tag).unwrap_or(0) > 0 {
                         weight.add_source(index as u32);
                     }
                 }
-                if weight.value() >= src_weight {
-                    trace_worker!(
+
+                trace_worker!(
                         "output[{:?}]: try to update eos weight to {:?} of scope {:?}",
                         self.port,
                         weight,
                         end.tag
                     );
-                    end.update_to(weight);
-                }
+                end.update_to(weight);
             }
         }
 
@@ -593,7 +605,7 @@ mod rob {
             } else {
                 if let Some(mut end) = batch.take_end() {
                     self.flush_last_buffer(&batch.tag)?;
-                    self.update_end_weight(&mut end);
+                    self.update_end_weight(None, &mut end);
                     for i in 0..self.pushes.len() {
                         self.pushes[i].notify_end(end.clone())?;
                     }
@@ -620,54 +632,103 @@ mod rob {
 
             if self.pushes.len() == 1 {
                 if !self.cancel_handle.is_canceled(&batch.tag, 0) {
-                    return self.pushes[0].push(batch);
+                    self.pushes[0].push(batch)?;
+                } else if let Some(end) = batch.take_end() {
+                    self.pushes[0].notify_end(end)?;
                 }
+                return Ok(());
             }
 
             let len = batch.len();
-
+            let level = batch.tag.len() as u32;
             if len == 0 {
                 if let Some(mut end) = batch.take_end() {
-                    if end.seq > 0 {
-                        // seq > 0 means there has data before it;
+                    if level == self.scope_level {
+                        // this is an end of scope of current level;
                         self.flush_last_buffer(&end.tag)?;
-                        self.update_end_weight(&mut end);
-                    }
-                    for i in 0..self.pushes.len() {
-                        self.pushes[i].notify_end(end.clone())?;
-                    }
-                } else {
-                    warn_worker!("output[{:?}]: empty batch of {:?} in exchange;", self.port, batch.tag);
-                }
-                Ok(())
-            } else if len == 1 {
-                // only one data, not need re-batching;
-                let x = batch
-                    .get(0)
-                    .expect("expect at least one entry as len = 1");
-                let target = self.route.route(x)? as usize;
-                if let Some(mut end) = batch.take_end() {
-                    if end.seq > 0 {
-                        self.flush_last_buffer(&end.tag)?;
-                        self.update_end_weight(&mut end);
-                    } else if end.source_weight.value() == 1 && !self.cyclic.load(Ordering::SeqCst) {
-                        // 1. seq = 0 indicates this is the first batch;
-                        // 2. len = 1, exchange to one target;
-                        // 3. source_weight = 1, only current worker produce data of the scope;
-                        // 4. no cyclic,
-                        // circuit for apply subtasks;
-                        batch.set_end(end);
-                        return self.pushes[target].push(batch);
-                    }
-
-                    for i in 0..self.pushes.len() {
-                        if i != target {
+                        self.update_end_weight(None, &mut end);
+                        for i in 1..self.pushes.len() {
                             self.pushes[i].notify_end(end.clone())?;
                         }
+                        self.pushes[0].notify_end(end)
+                    } else {
+                        // this is an end of parent scope;
+                        for i in 1..self.pushes.len() {
+                            self.pushes[i].notify_end(end.clone())?;
+                        }
+                        self.pushes[0].notify_end(end)
                     }
-                    batch.set_end(end);
+                } else {
+                    warn_worker!("output[{:?}]: empty batch of {:?};", self.port, batch.tag);
+                    Ok(())
                 }
-                self.pushes[target].push(batch)
+            } else if len == 1 {
+                // only one data, not need re-batching;
+                if let Some(mut end) = batch.take_end() {
+                    let x = batch
+                        .get(0)
+                        .expect("expect at least one entry as len = 1");
+                    let target = self.route.route(x)? as usize;
+
+                    if batch.get_seq() == 0 {
+                        // the first and last batch, with only one message;
+                        // won't flush or update;
+                        batch.set_end(end);
+                        return self.pushes[target].push(batch);
+                    } else {
+                        // flush previous buffered data;
+                        self.flush_last_buffer(&batch.tag)?;
+                        // update after flush;
+                        self.update_end_weight(Some(target), &mut end);
+                    }
+
+                    if end.source_weight.value() == 1 {
+                        // will send end through data queue;
+                        batch.set_end(end.clone());
+                        self.pushes[target].push(batch)?;
+                        for i in 0..self.pushes.len() {
+                            if i != target {
+                                self.pushes[i].notify_end(end.clone())?;
+                            }
+                        }
+                        Ok(())
+                    } else {
+                        self.pushes[target].push(batch)?;
+                        for i in 1..self.pushes.len() {
+                            self.pushes[i].notify_end(end.clone())?;
+                        }
+                        self.pushes[0].notify_end(end)
+                    }
+                } else {
+                    let item = batch
+                        .next()
+                        .expect("expect at least one entry as len = 1");
+                    let target = self.route.route(&item)? as usize;
+                    if !self
+                        .cancel_handle
+                        .is_canceled(&batch.tag, target)
+                    {
+                        match self.buffers[target].push(&batch.tag, item) {
+                            Ok(Some(buf)) => self.push_to(target, batch.tag(), buf),
+                            Ok(None) => Ok(()),
+                            Err(e) => {
+                                if let Some(x) = e.0 {
+                                    self.blocks
+                                        .get_mut_or_insert(&batch.tag)
+                                        .push_back(BlockEntry::Single((target, x)));
+                                    trace_worker!(
+                                        "output[{:?}] blocked when push data of {:?} ;",
+                                        self.port,
+                                        batch.tag,
+                                    );
+                                }
+                                would_block!("no buffer available in exchange;")
+                            }
+                        }
+                    } else {
+                        Ok(())
+                    }
+                }
             } else {
                 let tag = batch.tag.clone();
                 for p in self.buffers.iter_mut() {

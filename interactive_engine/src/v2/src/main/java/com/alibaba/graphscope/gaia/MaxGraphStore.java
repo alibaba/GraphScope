@@ -15,6 +15,8 @@
  */
 package com.alibaba.graphscope.gaia;
 
+import com.alibaba.graphscope.common.proto.GremlinResult;
+import com.alibaba.graphscope.gaia.store.GraphElementId;
 import com.alibaba.graphscope.gaia.store.GraphStoreService;
 import com.alibaba.graphscope.gaia.store.SchemaNotFoundException;
 import com.alibaba.maxgraph.compiler.api.schema.GraphSchema;
@@ -80,4 +82,24 @@ public class MaxGraphStore extends GraphStoreService {
     public synchronized void updateSnapShotId() {
         this.cachedGraphSchemaPair.update();
     }
+
+    @Override
+    public Object getCompositeId(GremlinResult.Edge edge) {
+        return String.format("%d_%d", edge.getSrcId(), edge.getDstId());
+    }
+
+    @Override
+    public Object fromBytes(byte[] edgeId) {
+        Long value = 0L;
+        if (edgeId.length < GraphElementId.BYTE_SIZE) {
+            logger.error("invalid edge id array {}, use zero as default", edgeId);
+            return value;
+        }
+        for (int i = Long.BYTES; i < GraphElementId.BYTE_SIZE; ++i) {
+            value = (value << 8) + (0x00FF & edgeId[i]);
+        }
+        return value;
+    }
+
+
 }

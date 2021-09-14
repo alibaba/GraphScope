@@ -16,6 +16,7 @@
 # limitations under the License.
 #
 
+import json
 import logging
 import pathlib
 from typing import Dict
@@ -33,7 +34,6 @@ from graphscope.proto import types_pb2
 
 try:
     import vineyard
-    import vineyard.io
 except ImportError:
     vineyard = None
 
@@ -129,7 +129,6 @@ class Loader(object):
         """
         self.protocol = ""
         self.source = ""
-
         # options for data source is csv
         self.options = CSVOptions()
         check_argument(
@@ -138,20 +137,16 @@ class Loader(object):
         )
         self.options.delimiter = delimiter
         self.options.header_row = header_row
-
-        self.finished = False
         # metas for data source is numpy or dataframe
         self.row_num = 0
         self.column_num = 0
         self.deduced_properties = None
         self.property_bytes = None
-
         # extra args directly passed to storage system
+        # find more details in fsspec
+        #   https://filesystem-spec.readthedocs.io/en/latest/
         self.storage_options = kwargs
-
-        # Allow to defer some execution until `finish()`
-        self.preprocessor = None
-
+        # also parse protocol and source in `resolve` method
         self.resolve(source)
 
     def __str__(self) -> str:
@@ -192,10 +187,7 @@ class Loader(object):
         # If protocol is not set, use 'file' as default
         if not self.protocol:
             self.protocol = "file"
-        if self.protocol in ("hdfs", "hive", "oss", "s3", "vineyard"):
-            self.process_vineyard(source)
-        else:
-            self.source = source
+        self.source = source
 
     def process_numpy(self, source: Sequence[np.ndarray]):
         self.protocol = "numpy"
@@ -239,66 +231,6 @@ class Loader(object):
         self.deduced_properties = list(zip(col_names, col_types))
         self.property_bytes = [source[name].values.tobytes("F") for name in col_names]
 
-    def process_vineyard(self, source):
-        if vineyard is None:
-            raise RuntimeError("Vineyard is not installed")
-        # defer execution of `vineyard.io.open` because `read_options` is unknown
-        # until loading statement has been fully processed.
-
-        def func(source, storage_options, read_options, sess):
-            info = sess.info
-            vineyard_endpoint = info["engine_config"]["vineyard_rpc_endpoint"]
-            vineyard_ipc_socket = info["engine_config"]["vineyard_socket"]
-            hosts = info["engine_hosts"].split(",")
-            if "namespace" in info:
-                deployment = "kubernetes"
-                hosts = ["%s:%s" % (info["namespace"], host) for host in hosts]
-            else:
-                deployment = "ssh"
-            num_workers = info["num_workers"]
-
-            stream_id = repr(
-                vineyard.io.open(
-                    source,
-                    mode="r",
-                    vineyard_endpoint=vineyard_endpoint,
-                    vineyard_ipc_socket=vineyard_ipc_socket,
-                    hosts=hosts,
-                    num_workers=num_workers,
-                    deployment=deployment,
-                    read_options=read_options,
-                    storage_options=storage_options,
-                )
-            )
-            return "vineyard", stream_id
-
-        self.source = source
-        self.preprocessor = func
-
-    def finish(self, session_id=None):
-        if self.finished:
-            return
-        if self.preprocessor is not None:
-            if session_id is None:
-                from graphscope.client.session import get_default_session
-
-                sess = get_default_session()
-            else:
-                from graphscope.client.session import get_session_by_id
-
-                sess = get_session_by_id(session_id)
-
-            self.protocol, self.source = self.preprocessor(
-                self.source,
-                self.storage_options,
-                self.options.to_dict(),
-                sess,
-            )
-            logger.debug(
-                f"processed protocol = {self.protocol}, source = {self.source}"
-            )
-        self.finished = True
-
     def process_vy_object(self, source):
         self.protocol = "vineyard"
         # encoding: add a `o` prefix to object id, and a `s` prefix to object name.
@@ -320,8 +252,6 @@ class Loader(object):
         self.options.force_include_all = include_all
 
     def get_attr(self):
-        if not self.finished:
-            self.finish()
         attr = attr_value_pb2.AttrValue()
         attr.func.name = "loader"
         attr.func.attr[types_pb2.PROTOCOL].CopyFrom(utils.s_to_attr(self.protocol))
@@ -347,4 +277,12 @@ class Loader(object):
             attr.func.attr[types_pb2.VALUES].CopyFrom(
                 utils.bytes_to_attr(self.source.encode("utf-8"))
             )
+            if self.protocol != "vineyard":
+                # need spawn an io stream in coordinator
+                attr.func.attr[types_pb2.STORAGE_OPTIONS].CopyFrom(
+                    utils.s_to_attr(json.dumps(self.storage_options))
+                )
+                attr.func.attr[types_pb2.READ_OPTIONS].CopyFrom(
+                    utils.s_to_attr(json.dumps(self.options.to_dict()))
+                )
         return attr

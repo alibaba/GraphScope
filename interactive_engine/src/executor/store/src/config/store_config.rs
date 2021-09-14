@@ -103,6 +103,9 @@ pub struct StoreConfig {
     #[structopt(long = "engine-port", default_value = "0")]
     pub engine_port: u32,
 
+    #[structopt(long = "gaia-engine-port", default_value = "0")]
+    pub gaia_engine_port: u32,
+
     #[structopt(long = "timely-worker-per-process", default_value = "2")]
     pub timely_worker_per_process: u32,
 

@@ -17,6 +17,7 @@ use std::cell::Cell;
 use std::time::Instant;
 
 use nohash_hasher::IntSet;
+use pegasus_common::rc::UnsafeRcPtr;
 
 use crate::api::meta::OperatorInfo;
 use crate::api::notification::{CancelScope, EndScope};
@@ -266,7 +267,7 @@ pub struct Operator {
     outputs: Vec<Box<dyn OutputProxy>>,
     core: Box<dyn NotifiableOperator>,
     fire_times: u128,
-    exec_st: Cell<u128>,
+    exec_st: UnsafeRcPtr<Cell<u128>>,
 }
 
 impl Operator {
@@ -301,36 +302,16 @@ impl Operator {
 
     #[inline]
     pub fn fire(&mut self) -> Result<(), JobExecError> {
-        let _f = Finally::new(&self.exec_st);
+        let _f = Finally::new(self.exec_st.clone());
         debug_worker!("fire operator {:?}", self.info);
         self.fire_times += 1;
 
-        for output in self.outputs.iter() {
-            output.try_unblock()?;
-        }
-
-        let result = self
-            .core
-            .on_receive(&self.inputs, &self.outputs);
-
-        for output in self.outputs.iter() {
-            let blocks = output.get_blocks();
-            for bs in blocks.iter() {
-                for (index, input) in self.inputs.iter().enumerate() {
-                    if !bs.has_block(index) {
-                        let res = input.block(bs.tag());
-                        bs.block(index, res);
-                    }
-                }
-            }
-        }
-
-        let mut r = Ok(());
+        let mut result = self.fire_inner();
         if let Err(err) = result {
             if !err.can_be_retried() {
                 return Err(err);
             } else {
-                r = Err(err);
+                result = Err(err);
             }
         };
 
@@ -347,9 +328,12 @@ impl Operator {
             output.flush()?;
         }
         debug_worker!("after fire operator {:?}", self.info);
-        r
+        result
     }
 
+    // cancel output data of the scope on output port: `port`, if all output ports have canceled outputing
+    // this scope, the operator will cancel consuming the data of this scope, and try to notify its upstream
+    // don't producing data of this scope to it;
     pub fn cancel(&mut self, port: usize, tag: Tag) -> Result<(), JobExecError> {
         trace_worker!(
             "EARLY_STOP output[{:?}] stop sending data of scope {:?};",
@@ -375,6 +359,35 @@ impl Operator {
             self.fire_times,
             self.exec_st.get() / self.fire_times
         );
+    }
+
+    fn fire_inner(&mut self) -> Result<(), JobExecError> {
+        for output in self.outputs.iter() {
+            if let Err(e) = output.try_unblock() {
+                if e.is_would_block() {
+                    //
+                } else {
+                    return Err(e)?;
+                }
+            }
+        }
+
+        let result = self
+            .core
+            .on_receive(&self.inputs, &self.outputs);
+
+        for output in self.outputs.iter() {
+            let blocks = output.get_blocks();
+            for bs in blocks.iter() {
+                for (index, input) in self.inputs.iter().enumerate() {
+                    if !bs.has_block(index) {
+                        let res = input.block(bs.tag());
+                        bs.block(index, res);
+                    }
+                }
+            }
+        }
+        result
     }
 }
 
@@ -457,23 +470,23 @@ impl OperatorBuilder {
             outputs,
             core,
             fire_times: 0,
-            exec_st: Cell::new(0),
+            exec_st: UnsafeRcPtr::new(Cell::new(0)),
         }
     }
 }
 
-struct Finally<'a> {
-    exec_st: &'a Cell<u128>,
+struct Finally {
+    exec_st: UnsafeRcPtr<Cell<u128>>,
     start: Instant,
 }
 
-impl<'a> Finally<'a> {
-    pub fn new(exec_st: &'a Cell<u128>) -> Self {
+impl Finally {
+    pub fn new(exec_st: UnsafeRcPtr<Cell<u128>>) -> Self {
         Finally { exec_st, start: Instant::now() }
     }
 }
 
-impl<'a> Drop for Finally<'a> {
+impl Drop for Finally {
     fn drop(&mut self) {
         let s = self.exec_st.get() + self.start.elapsed().as_micros();
         self.exec_st.set(s);

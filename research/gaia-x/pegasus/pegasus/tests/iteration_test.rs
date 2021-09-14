@@ -140,7 +140,7 @@ fn iter_with_aggregate() {
 fn iter_nested_iter_test() {
     let mut conf = JobConf::new("iter_nested_iter");
     conf.set_workers(2);
-    // conf.plan_print = true;
+    //conf.plan_print = true;
     let mut result = pegasus::run(conf, || {
         let index = pegasus::get_current_worker().index;
         let src = if index == 0 { 0..1u32 } else { 0..0u32 };

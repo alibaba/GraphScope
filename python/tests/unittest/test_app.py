@@ -80,7 +80,7 @@ def test_errors_on_create_app(arrow_property_graph, arrow_project_graph):
 
     # algo not exist
     with pytest.raises(
-        graphscope.CompilationError,
+        KeyError,
         match="Algorithm does not exist in the gar resource",
     ):
         a = AppAssets(algo="invalid", context="vertex_data")

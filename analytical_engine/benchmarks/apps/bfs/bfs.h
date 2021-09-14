@@ -80,8 +80,8 @@ class BFS : public grape::ParallelAppBase<FRAG_T, BFSContext<FRAG_T>>,
     auto outer_vertices = frag.OuterVertices();
 
     // init double buffer which contains updated vertices using bitmap
-    ctx.curr_inner_updated.Init(inner_vertices, thread_num());
-    ctx.next_inner_updated.Init(inner_vertices, thread_num());
+    ctx.curr_inner_updated.Init(inner_vertices, GetThreadPool());
+    ctx.next_inner_updated.Init(inner_vertices, GetThreadPool());
 
     auto& channel_0 = messages.Channels()[0];
 
@@ -112,7 +112,7 @@ class BFS : public grape::ParallelAppBase<FRAG_T, BFSContext<FRAG_T>>,
 
     depth_type next_depth = ctx.current_depth + 1;
     int thrd_num = thread_num();
-    ctx.next_inner_updated.ParallelClear(thrd_num);
+    ctx.next_inner_updated.ParallelClear(GetThreadPool());
 
     // process received messages and update depth
     messages.ParallelProcess<fragment_t, grape::EmptyType>(

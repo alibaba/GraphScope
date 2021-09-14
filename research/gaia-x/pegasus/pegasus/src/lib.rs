@@ -172,24 +172,28 @@ pub fn startup(conf: Configuration) -> Result<(), StartupError> {
     Ok(())
 }
 
-pub fn startup_with<D: ServerDetect + 'static>(conf: Configuration, detect: D) -> Result<(), StartupError> {
-    if let Some(pool_size) = conf.max_pool_size {
-        pegasus_executor::set_core_pool_size(pool_size as usize);
-    }
-    pegasus_executor::try_start_executor_async();
-
+pub fn startup_with<D: ServerDetect + 'static>(
+    conf: Configuration, detect: D,
+) -> Result<Option<SocketAddr>, StartupError> {
     let server_id = conf.server_id();
     if let Some(id) = set_server_id(server_id) {
         return Err(StartupError::AlreadyStarted(id));
     }
-
-    if let Some(net_conf) = conf.network_config() {
+    let res = if let Some(net_conf) = conf.network_config() {
         let addr = net_conf.local_addr()?;
         let conn_conf = net_conf.get_connection_param();
         let addr = pegasus_network::start_up(server_id, conn_conf, addr, detect)?;
         info!("server {} start on {:?}", server_id, addr);
+        Some(addr)
+    } else {
+        None
+    };
+
+    if let Some(pool_size) = conf.max_pool_size {
+        pegasus_executor::set_core_pool_size(pool_size as usize);
     }
-    Ok(())
+    pegasus_executor::try_start_executor_async();
+    Ok(res)
 }
 
 pub fn shutdown_all() {
@@ -323,6 +327,7 @@ fn allocate_local_worker(conf: &Arc<JobConf>) -> Result<Option<WorkerIdIter>, Bu
     }
 }
 
+use std::net::SocketAddr;
 use std::sync::Once;
 lazy_static! {
     static ref SINGLETON_INIT: Once = Once::new();

@@ -60,7 +60,7 @@ class Column : public IColumn {
   using vertex_array_t = typename fragment_t::template vertex_array_t<DATA_T>;
   static_assert(std::is_pod<DATA_T>::value ||
                     std::is_same<DATA_T, std::string>::value,
-                "Unsupported data type");
+                "Unsupported data type in Column, expect POD value or string.");
 
   Column(const std::string& name, vertex_range_t range) {
     this->set_name(name);

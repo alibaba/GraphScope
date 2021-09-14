@@ -147,6 +147,15 @@ class VertexPropertyContextWrapper : public IVertexPropertyContextWrapper {
 
   std::string context_type() override { return CONTEXT_TYPE_VERTEX_PROPERTY; }
 
+  std::string schema() override {
+    std::ostringstream os;
+    auto property_map = ctx_->properties_map();
+    for (auto& pair : property_map) {
+      os << pair.first + ",";
+    }
+    return os.str();
+  }
+
   std::shared_ptr<IFragmentWrapper> fragment_wrapper() override {
     return frag_wrapper_;
   }

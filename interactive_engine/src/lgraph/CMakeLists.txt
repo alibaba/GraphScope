@@ -33,7 +33,7 @@ set(HEADER_FILES
     include/db/graph/vertex.h
     include/db/util/result.h
     jna/native.h
-    jna/test.h
+    jna/ffi_test.h
     store_ffi/store_ffi.h)
 set(SOURCE_FILES
     src/edge.cc
@@ -42,7 +42,7 @@ set(SOURCE_FILES
     src/snapshot.cc
     src/vertex.cc
     src/jna/native.cc
-    src/jna/test.cc)
+    src/jna/ffi_test.cc)
 
 add_library(lgraph SHARED
     ${HEADER_FILES}

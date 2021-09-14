@@ -58,7 +58,7 @@
                             <descriptors>
                                 <descriptor>assembly.xml</descriptor>
                             </descriptors>
-                            <finalName>${project.version}</finalName>
+                            <finalName>maxgraph-assembly-${project.version}</finalName>
                             <appendAssemblyId>false</appendAssemblyId>
                         </configuration>
                         <executions>
@@ -85,7 +85,7 @@
                             <descriptors>
                                 <descriptor>assembly.xml</descriptor>
                             </descriptors>
-                            <finalName>${project.version}</finalName>
+                            <finalName>maxgraph-assembly-${project.version}</finalName>
                             <appendAssemblyId>false</appendAssemblyId>
                         </configuration>
                         <executions>

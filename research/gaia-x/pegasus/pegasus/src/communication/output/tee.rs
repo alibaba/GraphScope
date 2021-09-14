@@ -800,7 +800,11 @@ mod rob {
     impl<D: Data> Push<MicroBatch<D>> for ChannelPush<D> {
         fn push(&mut self, mut batch: MicroBatch<D>) -> Result<(), IOError> {
             if self.is_canceled(&batch.tag) {
-                return Ok(());
+                if batch.is_last() {
+                    batch.clear();
+                } else {
+                    return Ok(());
+                }
             }
 
             if batch.tag.len() == self.delta.origin_scope_level {
@@ -841,6 +845,11 @@ mod rob {
         }
 
         fn flush(&mut self) -> Result<(), IOError> {
+            trace_worker!(
+                "output[{:?}] flush channel [{}]",
+                self.ch_info.source_port,
+                self.ch_info.index()
+            );
             self.push.flush()
         }
 
@@ -907,7 +916,7 @@ mod rob {
                 }
                 Err(err) => {
                     if err.is_would_block() {
-                        trace_worker!("tee[{:?}] main push blocked on push batch of;", self.port);
+                        trace_worker!("tee[{:?}] main push blocked on push batch;", self.port,);
                     }
                     Err(err)
                 }

@@ -39,7 +39,7 @@ typedef void* CreateWorkerT(const std::shared_ptr<void>& fragment,
 typedef void DeleteWorkerT(void* worker_handler);
 
 typedef void QueryT(void* worker_handler, const rpc::QueryArgs& query_args,
-                    const std::string& ctx_name,
+                    const std::string& context_key,
                     std::shared_ptr<IFragmentWrapper> frag_wrapper,
                     std::shared_ptr<IContextWrapper>& ctx_wrapper);
 
@@ -88,10 +88,10 @@ class AppEntry : public GSObject {
 
   bl::result<std::shared_ptr<IContextWrapper>> Query(
       void* worker_handler, const rpc::QueryArgs& query_args,
-      const std::string& ctx_name,
+      const std::string& context_key,
       std::shared_ptr<IFragmentWrapper>& frag_wrapper) {
     std::shared_ptr<IContextWrapper> ctx_wrapper;
-    query_(worker_handler, query_args, ctx_name, frag_wrapper, ctx_wrapper);
+    query_(worker_handler, query_args, context_key, frag_wrapper, ctx_wrapper);
     return ctx_wrapper;
   }
 

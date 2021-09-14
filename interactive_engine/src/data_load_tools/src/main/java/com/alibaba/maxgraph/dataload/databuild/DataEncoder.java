@@ -19,7 +19,7 @@ import com.alibaba.maxgraph.v2.common.exception.InvalidDataException;
 import com.alibaba.maxgraph.v2.common.frontend.api.schema.*;
 import com.alibaba.maxgraph.v2.common.schema.PropertyValue;
 import com.alibaba.maxgraph.v2.common.util.PkHashUtils;
-import com.alibaba.maxgraph.v2.frontend.compiler.utils.SchemaUtils;
+import com.alibaba.maxgraph.v2.common.util.SchemaUtils;
 
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
