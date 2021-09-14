@@ -15,6 +15,9 @@ python/proto
 # Gar file
 *.gar
 
+# dot file
+*.dot
+
 # Protobuf GRPC
 *.pb.*
 *_pb2.py
