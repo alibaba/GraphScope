@@ -5,9 +5,9 @@
     <formats>
         <format>tar.gz</format>
     </formats>
+
     <dependencySets>
         <dependencySet>
-            <useProjectArtifact>false</useProjectArtifact>
             <outputDirectory>lib</outputDirectory>
             <unpack>false</unpack>
             <excludes>
@@ -15,6 +15,9 @@
                 <exclude>org.codehaus.groovy:groovy-sql</exclude>
                 <exclude>org.hamcrest:hamcrest-all</exclude>
                 <exclude>com.carrotsearch:junit-benchmarks</exclude>
+                <exclude>com.alibaba.maxgraph:maxgraph-coordinator</exclude>
+                <exclude>com.alibaba.maxgraph:maxgraph-frontendservice</exclude>
+                <exclude>com.alibaba.maxgraph:gaia-adaptor</exclude>
             </excludes>
         </dependencySet>
     </dependencySets>
@@ -22,17 +25,40 @@
     <fileSets>
         <fileSet>
             <directory>${project.basedir}/../../bin</directory>
+            <outputDirectory>bin</outputDirectory>
             <includes>
                 <include>*</include>
             </includes>
-            <outputDirectory>bin</outputDirectory>
+            <fileMode>0755</fileMode>
+            <directoryMode>0755</directoryMode>
         </fileSet>
         <fileSet>
             <directory>${project.basedir}/../../conf</directory>
+            <outputDirectory>conf</outputDirectory>
             <includes>
                 <include>*</include>
             </includes>
-            <outputDirectory>conf</outputDirectory>
+        </fileSet>
+        <fileSet>
+            <directory>${project.basedir}/../coordinator/target</directory>
+            <outputDirectory>/</outputDirectory>
+            <includes>
+                <include>maxgraph*.jar</include>
+            </includes>
+        </fileSet>
+        <fileSet>
+            <directory>${project.basedir}/../frontend/frontendservice/target</directory>
+            <outputDirectory>/</outputDirectory>
+            <includes>
+                <include>maxgraph*.jar</include>
+            </includes>
+        </fileSet>
+        <fileSet>
+            <directory>${project.basedir}/../gaia-adaptor/target</directory>
+            <outputDirectory>/</outputDirectory>
+            <includes>
+                <include>gaia*.jar</include>
+            </includes>
         </fileSet>
     </fileSets>
 </assembly>
