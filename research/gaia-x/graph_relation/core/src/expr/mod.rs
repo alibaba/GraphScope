@@ -14,9 +14,9 @@
 //! limitations under the License.
 //!
 
-pub mod api;
 pub mod error;
 pub mod eval;
+pub mod ffi;
 pub mod token;
 
 use crate::expr::error::{ExprError, ExprResult};
@@ -247,7 +247,7 @@ fn to_suffix_tokens(tokens: Vec<Token>) -> ExprResult<Vec<Token>> {
     Ok(results)
 }
 
-pub fn to_suffix_expr_pb(tokens: Vec<Token>) -> ExprResult<Vec<pb::ExprUnit>> {
+pub fn to_suffix_tree_pb(tokens: Vec<Token>) -> ExprResult<pb::ExprSuffixTree> {
     let tokens = to_suffix_tokens(tokens)?;
     let mut suffix_expr = Vec::<pb::ExprUnit>::with_capacity(tokens.len());
 
@@ -255,7 +255,9 @@ pub fn to_suffix_expr_pb(tokens: Vec<Token>) -> ExprResult<Vec<pb::ExprUnit>> {
         suffix_expr.push(ExprResult::<pb::ExprUnit>::from(token)?);
     }
 
-    Ok(suffix_expr)
+    Ok(pb::ExprSuffixTree {
+        operators: suffix_expr,
+    })
 }
 
 #[cfg(test)]

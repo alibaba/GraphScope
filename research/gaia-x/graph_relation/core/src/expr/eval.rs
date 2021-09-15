@@ -91,13 +91,13 @@ pub struct NoneContext {}
 
 impl Context<()> for NoneContext {}
 
-impl<'a> FromPb<Vec<pb::ExprUnit>> for Evaluator<'a> {
-    fn from_pb(suffix_tree: Vec<ExprUnit>) -> ParsePbResult<Self>
+impl<'a> FromPb<pb::ExprSuffixTree> for Evaluator<'a> {
+    fn from_pb(suffix_tree: pb::ExprSuffixTree) -> ParsePbResult<Self>
     where
         Self: Sized,
     {
-        let mut inner_tree: Vec<InnerOpr> = Vec::with_capacity(suffix_tree.len());
-        for unit in suffix_tree {
+        let mut inner_tree: Vec<InnerOpr> = Vec::with_capacity(suffix_tree.operators.len());
+        for unit in suffix_tree.operators {
             inner_tree.push(InnerOpr::from_pb(unit)?);
         }
         Ok(Self {
@@ -244,7 +244,7 @@ impl<'a> Evaluator<'a> {
     /// # use std::collections::HashMap;
     /// # use dyn_type::Object;
     /// # use ir_core::expr::token::tokenize;
-    /// # use ir_core::expr::to_suffix_expr_pb;
+    /// # use ir_core::expr::to_suffix_tree_pb;
     ///
     /// struct Vertices {
     ///     vec: Vec<Vertex>,
@@ -282,7 +282,7 @@ impl<'a> Evaluator<'a> {
     ///     };
     ///
     /// let tokens = tokenize("@0.age == @1.age").unwrap();
-    /// let suffix_tree = to_suffix_expr_pb(tokens).unwrap();
+    /// let suffix_tree = to_suffix_tree_pb(tokens).unwrap();
     /// let eval = Evaluator::from_pb(suffix_tree).unwrap();
     ///
     /// assert!(eval.eval::<_, _>(Some(&ctxt)).unwrap().as_bool().unwrap())
@@ -435,7 +435,7 @@ impl pb::Const {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::expr::to_suffix_expr_pb;
+    use crate::expr::to_suffix_tree_pb;
     use crate::expr::token::tokenize;
     use crate::graph::element::Vertex;
     use crate::graph::property::{DefaultDetails, DynDetails, Label};
@@ -552,7 +552,7 @@ mod tests {
 
         for (case, expected) in cases.into_iter().zip(expected.into_iter()) {
             let eval =
-                Evaluator::from_pb(to_suffix_expr_pb(tokenize(case).unwrap()).unwrap()).unwrap();
+                Evaluator::from_pb(to_suffix_tree_pb(tokenize(case).unwrap()).unwrap()).unwrap();
             assert_eq!(eval.eval::<(), NoneContext>(None).unwrap(), expected);
         }
     }
@@ -596,7 +596,7 @@ mod tests {
 
         for (case, expected) in cases.into_iter().zip(expected.into_iter()) {
             let eval =
-                Evaluator::from_pb(to_suffix_expr_pb(tokenize(case).unwrap()).unwrap()).unwrap();
+                Evaluator::from_pb(to_suffix_tree_pb(tokenize(case).unwrap()).unwrap()).unwrap();
             assert_eq!(eval.eval::<(), NoneContext>(None).unwrap(), expected);
         }
     }
@@ -633,7 +633,7 @@ mod tests {
 
         for (case, expected) in cases.into_iter().zip(expected.into_iter()) {
             let eval =
-                Evaluator::from_pb(to_suffix_expr_pb(tokenize(case).unwrap()).unwrap()).unwrap();
+                Evaluator::from_pb(to_suffix_tree_pb(tokenize(case).unwrap()).unwrap()).unwrap();
             assert_eq!(eval.eval::<_, Vertices>(Some(&ctxt)).unwrap(), expected);
         }
     }
@@ -690,7 +690,7 @@ mod tests {
         let mut is_context = false;
         for (case, expected) in cases.into_iter().zip(expected.into_iter()) {
             let eval =
-                Evaluator::from_pb(to_suffix_expr_pb(tokenize(case).unwrap()).unwrap()).unwrap();
+                Evaluator::from_pb(to_suffix_tree_pb(tokenize(case).unwrap()).unwrap()).unwrap();
             assert_eq!(
                 if is_context {
                     eval.eval::<_, Vertices>(Some(&ctxt)).err().unwrap()

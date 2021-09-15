@@ -17,7 +17,6 @@
 use crate::expr::error::{ExprError, ExprResult};
 
 #[derive(Debug, PartialEq, Clone)]
-#[repr(C)]
 pub enum Token {
     // Arithmetic
     Plus,    // +
