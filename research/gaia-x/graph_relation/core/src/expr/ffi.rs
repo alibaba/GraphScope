@@ -29,7 +29,7 @@ pub struct FfiExpr {
 /// This is to offer an interface for "C" to convert a C-string-represented
 /// expression into a suffix expression tree that is encoded via protobuf.
 /// The following codes show a C++ example of using this api:
-/// First produce a header for the C program using cbinggen, which likes:
+/// Produce a header file <ir_core.h> for the C program using cbindgen, which looks like:
 ///
 /// <ir_core.h>:
 /// extern "C" {
@@ -39,9 +39,10 @@ pub struct FfiExpr {
 ///   size_t len;
 /// } FfiExpr;
 ///
-/// FfiExpr cstr_suffix_expr(const char *cstr);
+/// FfiExpr cstr_to_suffix_expr(const char *cstr);
 /// }
 ///
+/// Use the api in a C++ program.
 /// <test.cc>:
 /// #include "ir_core.h"
 /// #include "expr.pb.h"
@@ -54,12 +55,12 @@ pub struct FfiExpr {
 ///     const char* expr = "1 + 2 * 4";
 ///     // Accept a c_str as input, and call the api to process and build into a suffix tree
 ///     // encoded as `FfiExpr`
-///     FfiExpr expr_tree = cstr_to_suffix_expr(expr);
-///     common::ExprSuffixTree tree;
+///     FfiExpr expr = cstr_to_suffix_expr(expr);
+///     common::SuffixExpr expr_pb;
 ///     // To convert an `FfiExpr` back to a protobuf structure
-///     tree.ParseFromArray(expr_tree.data, expr_tree.len);
-///     cout << expr_tree.len << endl;
-///     for (auto opr: tree.operators()) {
+///     expr_pb.ParseFromArray(expr.data, expr.len);
+///     cout << expr.len << endl;
+///     for (auto opr: expr_pb.operators()) {
 ///         cout << opr.DebugString() << endl;
 ///     }
 ///     return 0;

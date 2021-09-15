@@ -108,8 +108,8 @@ message ExprUnit {
   }
 }
 
-// A suffix tree to represent an expression
-message ExprSuffix {
+// A suffix representation of an expression
+message SuffixExpr {
   repeated ExprUnit operators = 1;
 }
 
