@@ -1,0 +1,380 @@
+{
+  "vertex_type_map": {
+    "PLACE": 0,
+    "PERSON": 1,
+    "COMMENT": 2,
+    "POST": 3,
+    "FORUM": 4,
+    "ORGANISATION": 5,
+    "TAGCLASS": 6,
+    "TAG": 7,
+    "COUNTRY": 8,
+    "CITY": 9,
+    "CONTINENT": 10,
+    "COMPANY": 11,
+    "UNIVERSITY": 12
+  },
+  "edge_type_map": {
+    "HASCREATOR": 0,
+    "HASTAG": 1,
+    "REPLYOF": 3,
+    "CONTAINEROF": 5,
+    "HASMEMBER": 6,
+    "HASMODERATOR": 7,
+    "HASINTEREST": 10,
+    "ISLOCATEDIN": 11,
+    "KNOWS": 12,
+    "LIKES": 13,
+    "STUDYAT": 15,
+    "WORKAT": 16,
+    "ISPARTOF": 17,
+    "HASTYPE": 21,
+    "ISSUBCLASSOF": 22
+  },
+  "vertex_prop": {
+    "TAGCLASS": [
+      [
+        "id",
+        "ID"
+      ],
+      [
+        "name",
+        "String"
+      ],
+      [
+        "url",
+        "String"
+      ]
+    ],
+    "FORUM": [
+      [
+        "id",
+        "ID"
+      ],
+      [
+        "title",
+        "String"
+      ],
+      [
+        "creationDate",
+        "Date"
+      ]
+    ],
+    "POST": [
+      [
+        "id",
+        "ID"
+      ],
+      [
+        "imageFile",
+        "String"
+      ],
+      [
+        "creationDate",
+        "Date"
+      ],
+      [
+        "locationIP",
+        "String"
+      ],
+      [
+        "browserUsed",
+        "String"
+      ],
+      [
+        "language",
+        "String"
+      ],
+      [
+        "content",
+        "String"
+      ],
+      [
+        "length",
+        "Integer"
+      ]
+    ],
+    "PERSON": [
+      [
+        "id",
+        "ID"
+      ],
+      [
+        "firstName",
+        "String"
+      ],
+      [
+        "lastName",
+        "String"
+      ],
+      [
+        "gender",
+        "String"
+      ],
+      [
+        "birthday",
+        "Date"
+      ],
+      [
+        "creationDate",
+        "Date"
+      ],
+      [
+        "locationIP",
+        "String"
+      ],
+      [
+        "browserUsed",
+        "String"
+      ]
+    ],
+    "TAG": [
+      [
+        "id",
+        "ID"
+      ],
+      [
+        "name",
+        "String"
+      ],
+      [
+        "url",
+        "String"
+      ]
+    ],
+    "PLACE": [
+      [
+        "id",
+        "ID"
+      ],
+      [
+        "name",
+        "String"
+      ],
+      [
+        "url",
+        "String"
+      ],
+      [
+        "~LABEL",
+        "LABEL"
+      ]
+    ],
+    "ORGANISATION": [
+      [
+        "id",
+        "ID"
+      ],
+      [
+        "~LABEL",
+        "LABEL"
+      ],
+      [
+        "name",
+        "String"
+      ],
+      [
+        "url",
+        "String"
+      ]
+    ],
+    "COMMENT": [
+      [
+        "id",
+        "ID"
+      ],
+      [
+        "creationDate",
+        "Date"
+      ],
+      [
+        "locationIP",
+        "String"
+      ],
+      [
+        "browserUsed",
+        "String"
+      ],
+      [
+        "content",
+        "String"
+      ],
+      [
+        "length",
+        "Integer"
+      ]
+    ]
+  },
+  "edge_prop": {
+    "HASCREATOR": [
+      [
+        "start_id",
+        "ID"
+      ],
+      [
+        "end_id",
+        "ID"
+      ]
+    ],
+    "HASTAG": [
+      [
+        "start_id",
+        "ID"
+      ],
+      [
+        "end_id",
+        "ID"
+      ]
+    ],
+    "ISLOCATEDIN": [
+      [
+        "start_id",
+        "ID"
+      ],
+      [
+        "end_id",
+        "ID"
+      ]
+    ],
+    "REPLYOF": [
+      [
+        "start_id",
+        "ID"
+      ],
+      [
+        "end_id",
+        "ID"
+      ]
+    ],
+    "CONTAINEROF": [
+      [
+        "start_id",
+        "ID"
+      ],
+      [
+        "end_id",
+        "ID"
+      ]
+    ],
+    "HASMEMBER": [
+      [
+        "start_id",
+        "ID"
+      ],
+      [
+        "end_id",
+        "ID"
+      ],
+      [
+        "joinDate",
+        "Date"
+      ]
+    ],
+    "HASMODERATOR": [
+      [
+        "start_id",
+        "ID"
+      ],
+      [
+        "end_id",
+        "ID"
+      ]
+    ],
+    "HASINTEREST": [
+      [
+        "start_id",
+        "ID"
+      ],
+      [
+        "end_id",
+        "ID"
+      ]
+    ],
+    "KNOWS": [
+      [
+        "start_id",
+        "ID"
+      ],
+      [
+        "end_id",
+        "ID"
+      ],
+      [
+        "creationDate",
+        "Date"
+      ]
+    ],
+    "LIKES": [
+      [
+        "start_id",
+        "ID"
+      ],
+      [
+        "end_id",
+        "ID"
+      ],
+      [
+        "creationDate",
+        "Date"
+      ]
+    ],
+    "STUDYAT": [
+      [
+        "start_id",
+        "ID"
+      ],
+      [
+        "end_id",
+        "ID"
+      ],
+      [
+        "classYear",
+        "Integer"
+      ]
+    ],
+    "WORKAT": [
+      [
+        "start_id",
+        "ID"
+      ],
+      [
+        "end_id",
+        "ID"
+      ],
+      [
+        "workFrom",
+        "Integer"
+      ]
+    ],
+    "ISPARTOF": [
+      [
+        "start_id",
+        "ID"
+      ],
+      [
+        "end_id",
+        "ID"
+      ]
+    ],
+    "HASTYPE": [
+      [
+        "start_id",
+        "ID"
+      ],
+      [
+        "end_id",
+        "ID"
+      ]
+    ],
+    "ISSUBCLASSOF": [
+      [
+        "start_id",
+        "ID"
+      ],
+      [
+        "end_id",
+        "ID"
+      ]
+    ]
+  }
+}
