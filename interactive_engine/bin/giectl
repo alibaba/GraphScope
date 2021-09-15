@@ -191,8 +191,9 @@ start_frontend() {
       -e "s@SERVER_PORT@${frontend_port}@g" \
       ${GRAPHSCOPE_HOME}/conf/frontend.vineyard.properties > ${config_dir}/frontend.vineyard.properties
 
+  # maxgraph frontend service hold a handle client of coordinator
   java ${java_opt} \
-    -cp ${GRAPHSCOPE_HOME}/maxgraph-frontendservice-0.0.1-SNAPSHOT.jar:${GRAPHSCOPE_HOME}/lib/*: \
+    -cp ${GRAPHSCOPE_HOME}/maxgraph-frontendservice-0.0.1-SNAPSHOT.jar:${GRAPHSCOPE_HOME}/maxgraph-coordinator-0.0.1-SNAPSHOT.jar:${GRAPHSCOPE_HOME}/lib/*: \
     com.alibaba.maxgraph.frontendservice.FrontendServiceMain \
     ${config_dir}/frontend.vineyard.properties \
     ${object_id} 1>${log_dir}/maxgraph-frontend.out 2>${log_dir}/maxgraph-frontend.err&
@@ -202,7 +203,7 @@ start_frontend() {
   if [ "${enable_gaia}" = True ]; then
     java_opt=${java_opt//maxgraph-frontend/gaia-frontend}
     java ${java_opt} \
-      -cp ${GRAPHSCOPE_HOME}/gaia-adaptor-0.0.1-SNAPSHOT.jar:${GRAPHSCOPE_HOME}/lib/*: \
+      -cp ${GRAPHSCOPE_HOME}/gaia-adaptor-0.0.1-SNAPSHOT.jar:${GRAPHSCOPE_HOME}/maxgraph-coordinator-0.0.1-SNAPSHOT.jar:${GRAPHSCOPE_HOME}/maxgraph-frontendservice-0.0.1-SNAPSHOT.jar:${GRAPHSCOPE_HOME}/lib/*: \
       com.alibaba.graphscope.gaia.vineyard.store.FrontendServiceMain \
       ${config_dir}/frontend.vineyard.properties \
       ${object_id} ${object_id}_gaia 1>${log_dir}/gaia-frontend.out \
