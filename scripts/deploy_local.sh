@@ -325,9 +325,11 @@ check_dependencies() {
     packages_to_install+=(maven)
   fi
 
-  # check rust
-  if ! command -v rustup &> /dev/null && \
-     ! command -v ${HOME}/.cargo/bin/rustup &> /dev/null; then
+  # check rust > 1.52.0
+  if ( ! command -v rustup &> /dev/null || \
+    [[ "$(rustc --V | awk -F ' ' '{print $2}')" < "1.52.0" ]] ) && \
+     ( ! command -v ${HOME}/.cargo/bin/rustup &> /dev/null || \
+    [[ "$(rustc --V | awk -F ' ' '{print $2}')" < "1.52.0" ]] ); then
     packages_to_install+=(rust)
   fi
 
