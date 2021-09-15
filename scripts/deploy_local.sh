@@ -293,15 +293,13 @@ check_dependencies() {
   fi
 
   # check java
-  # FIXME: what if user is java 8 or already installed but can't not check with java_home ?
-  # use the JAVA_HOME to check.
   if [[ "${PLATFORM}" == *"Darwin"* ]]; then
     if [[ ! -z "${JAVA_HOME}" ]]; then
       declare -r java_version=$(${JAVA_HOME}/bin/javac -version 2>&1 | awk -F ' ' '{print $2}' | awk -F '.' '{print $1}')
       if [[ "${java_version}" -lt "8" ]] || [[ "${java_version}" -gt "15" ]]; then
         warning "Found the java version is ${java_version}, do not meet the requirement of GraphScope."
-        warning "Would install jdk 11 instead."
-        JAVA_HOME=""  # reset JAVA_HOME to
+        warning "Would install jdk 11 instead and reset the JAVA_HOME"
+        JAVA_HOME=""  # reset JAVA_HOME to jdk11
         packages_to_install+=(jdk)
       fi
     else
@@ -357,7 +355,6 @@ check_dependencies() {
 
   # check go < 1.16 (vertion 1.16 can't install zetcd)
   # FIXME(weibin): version check is not universed.
-  # FIXME(weibin): go would reinstall if not source graphscope_env, maybe add a soft link
   if $(! command -v go &> /dev/null) || \
      [[ "$(go version 2>&1 | awk -F '.' '{print $2}')" -ge "16" ]]; then
     if [[ "${PLATFORM}" == *"CentOS"* ]]; then
@@ -497,6 +494,7 @@ install_dependencies() {
       wget -c https://golang.org/dl/go1.15.5.linux-amd64.tar.gz -P /tmp
       sudo tar -C /usr/local -xzf /tmp/go1.15.5.linux-amd64.tar.gz
       rm -fr /tmp/go1.15.5.linux-amd64.tar.gz
+      sudo ln -sf /usr/local/go/bin/go /usr/local/bin/go
       # remove go from packages_to_install
       packages_to_install=("${packages_to_install[@]/go}")
     fi
@@ -670,6 +668,7 @@ install_dependencies() {
       wget -c https://dl.google.com/go/go1.15.15.darwin-amd64.pkg -P /tmp
       sudo installer -pkg /tmp/go1.15.15.darwin-amd64.pkg -target /
       rm -fr /tmp/go1.15.15.darwin-amd64.pkg
+      sudo ln -sf /usr/local/go/bin/go /usr/local/bin/go
       # remove go from packages_to_install
       packages_to_install=("${packages_to_install[@]/go}")
     fi
