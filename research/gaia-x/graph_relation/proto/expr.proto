@@ -109,7 +109,7 @@ message ExprUnit {
 }
 
 // A suffix tree to represent an expression
-message ExprSuffixTree {
+message ExprSuffix {
   repeated ExprUnit operators = 1;
 }
 

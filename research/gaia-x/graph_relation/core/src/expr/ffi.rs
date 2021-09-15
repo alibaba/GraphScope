@@ -14,7 +14,7 @@
 //! limitations under the License.
 //!
 
-use crate::expr::to_suffix_tree_pb;
+use crate::expr::to_suffix_expr_pb;
 use crate::expr::token::tokenize;
 use prost::Message;
 use std::ffi::{c_void, CStr};
@@ -70,7 +70,7 @@ pub extern "C" fn cstr_to_suffix_expr(cstr: *const c_char) -> FfiExpr {
         .to_str()
         .expect("transform from `CStr` error");
     let tokens = tokenize(str).expect("the expression may contain invalid tokens");
-    let rst = to_suffix_tree_pb(tokens);
+    let rst = to_suffix_expr_pb(tokens);
     if let Ok(suffix_expr) = rst {
         let mut buf: Vec<u8> = Vec::new();
         let len = suffix_expr.encoded_len();

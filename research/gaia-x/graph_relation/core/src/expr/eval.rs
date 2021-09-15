@@ -91,8 +91,8 @@ pub struct NoneContext {}
 
 impl Context<()> for NoneContext {}
 
-impl<'a> FromPb<pb::ExprSuffixTree> for Evaluator<'a> {
-    fn from_pb(suffix_tree: pb::ExprSuffixTree) -> ParsePbResult<Self>
+impl<'a> FromPb<pb::ExprSuffix> for Evaluator<'a> {
+    fn from_pb(suffix_tree: pb::ExprSuffix) -> ParsePbResult<Self>
     where
         Self: Sized,
     {

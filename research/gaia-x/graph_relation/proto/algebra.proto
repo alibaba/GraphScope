@@ -26,7 +26,7 @@ import "expr.proto";
 message Project {
   message ExprAlias {
     // The expression to be aliased
-    common.ExprSuffixTree expr = 1;
+    common.ExprSuffix expr = 1;
     // The name/name identifier of the aliased attribute
     common.NameOrId alias = 2;
   }
@@ -39,7 +39,7 @@ message Project {
 // To filter a relation based on a given predicate
 message Select {
   // A predicate formulated as an expression tree
-  common.ExprSuffixTree predicate = 1;
+  common.ExprSuffix predicate = 1;
 }
 
 // Join two relations based on whether the given keys of both relations are equal. In general, a join operator
@@ -131,7 +131,7 @@ message Unwind {
 // The operation of getting vertices from the graph
 message GetV {
   // The predicate that defines conditions these vertices shall satisfy
-  common.ExprSuffixTree predicate = 1;
+  common.ExprSuffix predicate = 1;
   // The alias for the vertices
   common.NameOrId alias = 2;
 }
@@ -148,9 +148,9 @@ message ExpandBase {
   // The direction of the expanded edge
   Direction direction = 2;
   // The optional predicate for the edge
-  common.ExprSuffixTree edge_predicate = 5;
+  common.ExprSuffix edge_predicate = 5;
   // The optional predicate for the vertex
-  common.ExprSuffixTree vertex_predicate = 6;
+  common.ExprSuffix vertex_predicate = 6;
 }
 
 message EdgeExpand {
@@ -194,7 +194,7 @@ message ShortestPathExpand {
     // e.g. the expression: "start.value + end.value * weight" defines that the weight of each edge
     // is calculated by multiplying the edge vertex's value with the edge's weight and then summing
     // it with the start vertex's value.
-    common.ExprSuffixTree weight_each = 1;
+    common.ExprSuffix weight_each = 1;
     // Define how to aggregate the calculated weight of each edge as the path weight
     Aggregate aggregate = 2;
   }
