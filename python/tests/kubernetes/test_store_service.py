@@ -112,7 +112,6 @@ def demo(gs_conn, restart):
         .toList()[0]
         .id
     )
-
     snapshot_id = graph.insert_edges(edges)
 
     assert gs_conn.remote_flush(snapshot_id)

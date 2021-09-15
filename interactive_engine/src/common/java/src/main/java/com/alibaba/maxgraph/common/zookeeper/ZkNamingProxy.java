@@ -16,7 +16,6 @@
 package com.alibaba.maxgraph.common.zookeeper;
 
 import com.alibaba.maxgraph.common.ServerAssignment;
-import com.alibaba.maxgraph.common.cluster.RequestResourceInfo;
 import com.alibaba.maxgraph.proto.RoleType;
 import com.alibaba.maxgraph.sdkcommon.client.Endpoint;
 import com.alibaba.maxgraph.sdkcommon.util.JSON;
@@ -173,21 +172,6 @@ public class ZkNamingProxy {
     public Map<Integer, String> getWorker2ContainerString() {
         String containerInfo = readStringValueFromZK(ZKPaths.getMasterWorkerContainerInfoPath(graphName));
         Map<Integer, String> infoMap = JSON.fromJson(containerInfo, new TypeReference<Map<Integer, String>>() {
-        });
-        if (infoMap == null) {
-            return Maps.newHashMap();
-        }
-        return infoMap;
-    }
-
-    public void persistWorkerResourceInfo(Map<Integer, RequestResourceInfo> resourceInfoMap) throws Exception {
-        zkUtils.createOrUpdatePath(ZKPaths.getMasterWorkerResourceInfo(graphName), JSON.toJson(resourceInfoMap), CreateMode.PERSISTENT);
-        LOG.info("persist worker resource info into zk: {}", resourceInfoMap);
-    }
-
-    public Map<Integer, RequestResourceInfo> getWorkerResourceInfo() {
-        String containerInfo = readStringValueFromZK(ZKPaths.getMasterWorkerResourceInfo(graphName));
-        Map<Integer, RequestResourceInfo> infoMap = JSON.fromJson(containerInfo, new TypeReference<Map<Integer, RequestResourceInfo>>() {
         });
         if (infoMap == null) {
             return Maps.newHashMap();

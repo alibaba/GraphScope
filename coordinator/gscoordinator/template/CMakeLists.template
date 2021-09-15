@@ -9,12 +9,18 @@ option(CYTHON_PREGEL_APP "Whether to build cython pregel app." False)
 option(CYTHON_PIE_APP "Whether to build cython pie app" False)
 option(PROPERTY_GRAPH_FRAME "Whether to build property graph frame" False)
 option(PROJECT_FRAME "Whether to build project frame" False)
-
 option(ENABLE_PREGEL_COMBINE "Whether enable combinator in pregel app." False)
-
 option(NETWORKX "networkx on?" ON)
 
 include(GNUInstallDirs)
+
+set(DEFAULT_BUILD_TYPE "RelWithDebInfo")
+if (NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
+    message(STATUS "Setting build type to '${DEFAULT_BUILD_TYPE}' as none was specified.")
+    set(CMAKE_BUILD_TYPE "${DEFAULT_BUILD_TYPE}" CACHE STRING "Choose the type of build." FORCE)
+    set_property(CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS "Debug" "Release" "MinSizeRel" "RelWithDebInfo")
+endif ()
+
 if (NETWORKX)
     add_definitions(-DNETWORKX)
 endif ()

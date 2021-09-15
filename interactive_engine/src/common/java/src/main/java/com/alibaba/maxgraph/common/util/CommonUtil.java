@@ -16,8 +16,6 @@
 package com.alibaba.maxgraph.common.util;
 
 import com.alibaba.maxgraph.common.SchedulerEnvs;
-import com.alibaba.maxgraph.common.cluster.FuxiClusterConfig;
-import com.alibaba.maxgraph.common.cluster.HadoopClusterConfig;
 import com.alibaba.maxgraph.common.cluster.InstanceConfig;
 import com.alibaba.maxgraph.common.cluster.MaxGraphConfiguration;
 import com.alibaba.maxgraph.sdkcommon.util.JSON;
@@ -50,18 +48,6 @@ public class CommonUtil {
         return MaxGraphConfiguration.getAllStaticMembers(configClass).stream()
                 .filter(key -> conf.getOption(key).isPresent())
                 .collect(Collectors.toMap(x -> x, conf::getString));
-    }
-
-    public static InstanceConfig extractInstanceConfig(MaxGraphConfiguration maxGraphConfiguration) {
-        return new InstanceConfig(extractConfig(InstanceConfig.class, maxGraphConfiguration));
-    }
-
-    public static HadoopClusterConfig extractHadoopClusterConfig(MaxGraphConfiguration maxGraphConfiguration) {
-        return new HadoopClusterConfig(extractConfig(HadoopClusterConfig.class, maxGraphConfiguration));
-    }
-
-    public static FuxiClusterConfig extractFuxiClusterConfig(MaxGraphConfiguration maxGraphConfiguration) {
-        return new FuxiClusterConfig(extractConfig(FuxiClusterConfig.class, maxGraphConfiguration));
     }
 
     public static ThreadFactory createFactoryWithDefaultExceptionHandler(String serviceName, Logger LOG) {

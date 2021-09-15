@@ -30,7 +30,6 @@ import com.alibaba.maxgraph.compiler.logical.LogicalEdge;
 import com.alibaba.maxgraph.compiler.tree.*;
 import com.alibaba.maxgraph.sdkcommon.compiler.custom.*;
 import com.alibaba.maxgraph.sdkcommon.compiler.custom.dim.DimMatchType;
-import com.alibaba.maxgraph.sdkcommon.compiler.custom.dim.DimOdpsTable;
 import com.alibaba.maxgraph.sdkcommon.compiler.custom.dim.DimPredicate;
 import com.alibaba.maxgraph.sdkcommon.graph.CompositeId;
 import com.alibaba.maxgraph.sdkcommon.meta.DataType;
@@ -313,39 +312,6 @@ public class CompilerUtils {
         return valueBuilder;
     }
 
-    /**
-     * Parse dim odps table to OdpsQueryInput
-     *
-     * @param dimOdpsTable The given dim odps table
-     * @return The odps query input result
-     */
-    public static QueryFlowOuterClass.OdpsQueryInput parseDimOdpsTable(DimOdpsTable dimOdpsTable) {
-        QueryFlowOuterClass.OdpsQueryInput.Builder odpsQueryBuilder = QueryFlowOuterClass.OdpsQueryInput.newBuilder()
-                .setProject(checkNotNull(dimOdpsTable.getProject(), "project can't be null"))
-                .setTableName(checkNotNull(dimOdpsTable.getTable(), "table can't be null"))
-                .setEndpoint(checkNotNull(dimOdpsTable.getEndpoint()))
-                .setAccessId(checkNotNull(dimOdpsTable.getAccessId()))
-                .setAccessKey(checkNotNull(dimOdpsTable.getAccessKey()))
-                .addAllPkNameList(dimOdpsTable.getPkList());
-        for (Pair<String, P<?>> filterPair : dimOdpsTable.getFilterPairList()) {
-            P<?> predicate = filterPair.getRight();
-            BiPredicate biPredicate = predicate instanceof CustomPredicate ? null : predicate.getBiPredicate();
-            Object value = predicate instanceof CustomPredicate ? null : predicate.getValue();
-            Pair<Message.CompareType, Message.Value.Builder> compareValuePair = parseCompareValuePair(predicate, biPredicate, value);
-            Message.ColumnLogicalCompare columnLogicalCompare = Message.ColumnLogicalCompare.newBuilder()
-                    .setColumnName(filterPair.getLeft())
-                    .setCompare(compareValuePair.getLeft())
-                    .setValue(compareValuePair.getRight())
-                    .setType(compareValuePair.getRight().getValueType())
-                    .build();
-            odpsQueryBuilder.addLogicalCompare(columnLogicalCompare);
-        }
-        if (StringUtils.isNotEmpty(dimOdpsTable.getDs())) {
-            odpsQueryBuilder.setDs(dimOdpsTable.getDs());
-        }
-
-        return odpsQueryBuilder.build();
-    }
 
     /**
      * Get {@link Message.VariantType} from Class<\?>
@@ -358,8 +324,6 @@ public class CompilerUtils {
             List<Object> valueList = List.class.cast(value);
             Object valueObject = valueList.get(0);
             return Message.VariantType.valueOf("VT_" + StringUtils.upperCase(valueObject.getClass().getSimpleName()) + "_LIST");
-        } else if (value instanceof DimOdpsTable) {
-            return Message.VariantType.VT_DIM_ODPS;
         } else if (StringUtils.contains(value.getClass().toString(), "PickTokenKey")) {
             Number number = ReflectionUtils.getFieldValue(BranchStep.class.getDeclaredClasses()[0], value, "number");
             return Message.VariantType.valueOf("VT_" + StringUtils.upperCase(number.getClass().getSimpleName()));

@@ -117,12 +117,12 @@ COPY --from=builder /home/graphscope/gs/k8s/pre_stop.py /opt/graphscope/bin/pre_
 COPY --from=builder /home/graphscope/gs/interactive_engine/bin/giectl /opt/graphscope//bin/giectl
 COPY --from=builder /home/graphscope/gs/interactive_engine/src/executor/target/$profile/executor /opt/graphscope/bin/executor
 COPY --from=builder /home/graphscope/gs/interactive_engine/src/executor/target/$profile/gaia_executor /opt/graphscope/bin/gaia_executor
-COPY --from=builder /home/graphscope/gs/interactive_engine/src/assembly/target/0.0.1-SNAPSHOT.tar.gz /opt/graphscope/0.0.1-SNAPSHOT.tar.gz
+COPY --from=builder /home/graphscope/gs/interactive_engine/src/assembly/target/maxgraph-assembly-0.0.1-SNAPSHOT.tar.gz /opt/graphscope/maxgraph-assembly-0.0.1-SNAPSHOT.tar.gz
 
 # install mars
 # RUN pip3 install git+https://github.com/mars-project/mars.git@35b44ed56e031c252e50373b88b85bd9f454332e#egg=pymars[distributed]
 
-RUN sudo tar -xf /opt/graphscope/0.0.1-SNAPSHOT.tar.gz -C /opt/graphscope \
+RUN sudo tar -xf /opt/graphscope/maxgraph-assembly-0.0.1-SNAPSHOT.tar.gz -C /opt/graphscope \
   && cd /usr/local/dist && pip3 install ./*.whl \
   && cd /opt/graphscope/dist && pip3 install ./*.whl \
   && sudo ln -sf /opt/graphscope/bin/* /usr/local/bin/ \

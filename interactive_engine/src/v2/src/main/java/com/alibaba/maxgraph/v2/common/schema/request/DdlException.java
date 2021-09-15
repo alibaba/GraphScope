@@ -22,4 +22,8 @@ public class DdlException extends MaxGraphException {
     public DdlException(String msg) {
         super(msg);
     }
+
+    public DdlException(Throwable t) {
+        super(t);
+    }
 }

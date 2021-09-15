@@ -2,7 +2,7 @@ package com.alibaba.maxgraph.v2.frontend;
 
 import com.alibaba.maxgraph.v2.common.config.CommonConfig;
 import com.alibaba.maxgraph.v2.common.config.Configs;
-import com.alibaba.maxgraph.v2.frontend.utils.WriteSessionUtil;
+import com.alibaba.maxgraph.v2.common.util.WriteSessionUtil;
 
 import java.util.Random;
 import java.util.concurrent.atomic.AtomicLong;

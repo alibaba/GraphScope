@@ -656,6 +656,18 @@ class PIE_GetSchema(AppAssets):
         pass
 
 
+# Example of pregel sssp
+@pregel(vd_type="double", md_type="double")
+class MathInAlgorithm(AppAssets):
+    @staticmethod
+    def Init(v, context):
+        v.set_value(context.math.log2(1000000000.0 * context.math.M_PI))
+
+    @staticmethod
+    def Compute(messages, v, context):
+        v.vote_to_halt()
+
+
 def test_error_with_missing_necessary_method():
     with pytest.raises(ValueError, match="Can't find method definition"):
 
@@ -1041,6 +1053,10 @@ def test_run_cython_pregel_app(
     # aggregator test
     a6 = Aggregators_Pregel_Test()
     a6(p2p_property_graph)
+
+    # math.h function test
+    a7 = MathInAlgorithm()
+    a7(p2p_property_graph)
 
 
 def test_run_cython_pie_app(
