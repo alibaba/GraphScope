@@ -7,7 +7,7 @@ appenders:
   file:
     kind: rolling_file
     append: true
-    path: "${env:LOG_DIR:-/tmp/graphscope-store}/rust.log"
+    path: "/tmp/graphscope-store/rust.log"
     encoder:
       pattern: "{d(%Y-%m-%d %H:%M:%S.%f)} {h({l:<5})} (({f}:{L})) [{T}] {m}{n}"
     policy:
@@ -16,7 +16,7 @@ appenders:
         limit: 100mb
       roller:
         kind: fixed_window
-        pattern: "${env:LOG_DIR:-/tmp/graphscope-store}/rust.log.{}"
+        pattern: "/tmp/graphscope-store/rust.log.{}"
         count: 10
 
 root:
