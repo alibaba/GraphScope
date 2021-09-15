@@ -26,9 +26,47 @@ pub struct FfiExpr {
     len: usize,
 }
 
+/// This is to offer an interface for "C" to convert a C-string-represented
+/// expression into a suffix expression tree that is encoded via protobuf.
+/// The following codes show a C++ example of using this api:
+/// First produce a header for the C program using cbinggen, which likes:
+///
+/// <ir_core.h>:
+/// extern "C" {
+///
+/// typedef struct FfiExpr {
+///   const void *data;
+///   size_t len;
+/// } FfiExpr;
+///
+/// FfiExpr cstr_suffix_expr(const char *cstr);
+/// }
+///
+/// <test.cc>:
+/// #include "ir_core.h"
+/// #include "expr.pb.h"
+/// #include "google/protobuf/message_lite.h"
+/// #include <stdio.h>
+///
+/// using namespace std;
+///
+/// int main(int argc, char** argv) {
+///     const char* expr = "1 + 2 * 4";
+///     // Accept a c_str as input, and call the api to process and build into a suffix tree
+///     // encoded as `FfiExpr`
+///     FfiExpr expr_tree = cstr_to_suffix_expr(expr);
+///     common::ExprSuffixTree tree;
+///     // To convert an `FfiExpr` back to a protobuf structure
+///     tree.ParseFromArray(expr_tree.data, expr_tree.len);
+///     cout << expr_tree.len << endl;
+///     for (auto opr: tree.operators()) {
+///         cout << opr.DebugString() << endl;
+///     }
+///     return 0;
+/// }
 #[no_mangle]
-pub extern "C" fn to_suffix_expr_pb(cexpr: *const c_char) -> FfiExpr {
-    let str = unsafe { CStr::from_ptr(cexpr) }
+pub extern "C" fn cstr_to_suffix_expr(cstr: *const c_char) -> FfiExpr {
+    let str = unsafe { CStr::from_ptr(cstr) }
         .to_str()
         .expect("transform from `CStr` error");
     let tokens = tokenize(str).expect("the expression may contain invalid tokens");
