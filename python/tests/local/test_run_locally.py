@@ -22,8 +22,8 @@ import sys
 import pytest
 
 import graphscope
-from graphscope.dataset.ogbn_mag import load_ogbn_mag
 from graphscope.dataset.ldbc import load_ldbc
+from graphscope.dataset.ogbn_mag import load_ogbn_mag
 
 if sys.platform == "linux":
     from graphscope.learning.examples import GCN
@@ -358,7 +358,7 @@ def test_on_macOS(sess, ldbc_sample):
     graph = load_ldbc(sess, ldbc_sample)
     interactive = sess.gremlin(graph)
 
-    simple_g = graph.project(vertices={"paper": []}, edges={"knows": []})
+    simple_g = graph.project(vertices={"person": []}, edges={"knows": []})
 
     pr_result = graphscope.pagerank(simple_g, delta=0.8)
     tc_result = graphscope.triangles(simple_g)
