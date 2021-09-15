@@ -1,0 +1,1 @@
+g.V().as("a").out().as("b").out().select("a").select("b")

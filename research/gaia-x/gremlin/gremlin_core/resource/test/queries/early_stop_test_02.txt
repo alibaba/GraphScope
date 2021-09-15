@@ -1,0 +1,1 @@
+g.V(1).where(both('knows').both('knows').both('knows')).limit(1)
