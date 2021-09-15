@@ -52,14 +52,13 @@ pub struct FfiExpr {
 /// using namespace std;
 ///
 /// int main(int argc, char** argv) {
-///     const char* expr = "1 + 2 * 4";
+///     const char* cstr = "1 + 2 * 4";
 ///     // Accept a c_str as input, and call the api to process and build into a suffix tree
 ///     // encoded as `FfiExpr`
-///     FfiExpr expr = cstr_to_suffix_expr(expr);
+///     FfiExpr expr = cstr_to_suffix_expr(cstr);
 ///     common::SuffixExpr expr_pb;
 ///     // To convert an `FfiExpr` back to a protobuf structure
 ///     expr_pb.ParseFromArray(expr.data, expr.len);
-///     cout << expr.len << endl;
 ///     for (auto opr: expr_pb.operators()) {
 ///         cout << opr.DebugString() << endl;
 ///     }

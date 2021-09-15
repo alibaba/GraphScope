@@ -17,8 +17,8 @@
 use crate::error::{ParsePbError, ParsePbResult};
 use crate::expr::error::{ExprError, ExprResult};
 use crate::generated::common as pb;
-use crate::generated::common::expr_unit::Item;
-use crate::generated::common::{Arithmetic, ExprUnit, Logical};
+use crate::generated::common::expr_opr::Item;
+use crate::generated::common::{Arithmetic, ExprOpr, Logical};
 use crate::graph::element::Element;
 use crate::graph::property::{Details, PropKey};
 use crate::{FromPb, NameOrId};
@@ -34,7 +34,7 @@ pub struct Evaluator<'a> {
     stack: RefCell<Vec<BorrowObject<'a>>>,
 }
 
-/// An inner representation of `pb::ExprUnit` for one-shot translation of `pb::ExprUnit`.
+/// An inner representation of `pb::ExprOpr` for one-shot translation of `pb::ExprOpr`.
 #[derive(Debug, Clone)]
 pub(crate) enum InnerOpr {
     Logical(pb::Logical),
@@ -331,8 +331,8 @@ impl<'a> Evaluator<'a> {
     }
 }
 
-impl FromPb<pb::ExprUnit> for InnerOpr {
-    fn from_pb(unit: ExprUnit) -> ParsePbResult<Self>
+impl FromPb<pb::ExprOpr> for InnerOpr {
+    fn from_pb(unit: ExprOpr) -> ParsePbResult<Self>
     where
         Self: Sized,
     {

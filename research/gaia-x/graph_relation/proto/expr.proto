@@ -96,10 +96,8 @@ message Variable {
   Property property = 2;
 }
 
-// A basic unit of expression is one of Logical, Arithmetic, Const and Variable.
-// This can basically be recognized as an operator, but we may want to differentiate
-// from the operator of the relational algebra.
-message ExprUnit {
+// An operator of expression is one of Logical, Arithmetic, Const and Variable.
+message ExprOpr {
   oneof item {
     Logical logical = 2;
     Arithmetic arith = 3;
@@ -110,6 +108,6 @@ message ExprUnit {
 
 // A suffix representation of an expression
 message SuffixExpr {
-  repeated ExprUnit operators = 1;
+  repeated ExprOpr operators = 1;
 }
 

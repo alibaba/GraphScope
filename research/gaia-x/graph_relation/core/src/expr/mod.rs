@@ -23,38 +23,38 @@ use crate::expr::error::{ExprError, ExprResult};
 use crate::expr::token::Token;
 use crate::generated::common as pb;
 
-impl From<pb::Arithmetic> for pb::ExprUnit {
+impl From<pb::Arithmetic> for pb::ExprOpr {
     fn from(arith: pb::Arithmetic) -> Self {
-        pb::ExprUnit {
-            item: Some(pb::expr_unit::Item::Arith(unsafe {
+        pb::ExprOpr {
+            item: Some(pb::expr_opr::Item::Arith(unsafe {
                 std::mem::transmute::<pb::Arithmetic, i32>(arith)
             })),
         }
     }
 }
 
-impl From<pb::Logical> for pb::ExprUnit {
+impl From<pb::Logical> for pb::ExprOpr {
     fn from(logical: pb::Logical) -> Self {
-        pb::ExprUnit {
-            item: Some(pb::expr_unit::Item::Logical(unsafe {
+        pb::ExprOpr {
+            item: Some(pb::expr_opr::Item::Logical(unsafe {
                 std::mem::transmute::<pb::Logical, i32>(logical)
             })),
         }
     }
 }
 
-impl From<pb::Const> for pb::ExprUnit {
+impl From<pb::Const> for pb::ExprOpr {
     fn from(const_val: pb::Const) -> Self {
-        pb::ExprUnit {
-            item: Some(pb::expr_unit::Item::Const(const_val)),
+        pb::ExprOpr {
+            item: Some(pb::expr_opr::Item::Const(const_val)),
         }
     }
 }
 
-impl From<pb::Variable> for pb::ExprUnit {
+impl From<pb::Variable> for pb::ExprOpr {
     fn from(var: pb::Variable) -> Self {
-        pb::ExprUnit {
-            item: Some(pb::expr_unit::Item::Var(var)),
+        pb::ExprOpr {
+            item: Some(pb::expr_opr::Item::Var(var)),
         }
     }
 }
@@ -156,7 +156,7 @@ impl From<String> for pb::Variable {
     }
 }
 
-impl From<Token> for ExprResult<pb::ExprUnit> {
+impl From<Token> for ExprResult<pb::ExprOpr> {
     fn from(token: Token) -> Self {
         match token {
             Token::Plus => Ok(pb::Arithmetic::Add.into()),
@@ -249,10 +249,10 @@ fn to_suffix_tokens(tokens: Vec<Token>) -> ExprResult<Vec<Token>> {
 
 pub fn to_suffix_expr_pb(tokens: Vec<Token>) -> ExprResult<pb::SuffixExpr> {
     let tokens = to_suffix_tokens(tokens)?;
-    let mut operators = Vec::<pb::ExprUnit>::with_capacity(tokens.len());
+    let mut operators = Vec::<pb::ExprOpr>::with_capacity(tokens.len());
 
     for token in tokens {
-        operators.push(ExprResult::<pb::ExprUnit>::from(token)?);
+        operators.push(ExprResult::<pb::ExprOpr>::from(token)?);
     }
 
     Ok(pb::SuffixExpr { operators })
