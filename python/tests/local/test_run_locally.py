@@ -23,6 +23,7 @@ import pytest
 
 import graphscope
 from graphscope.dataset.ogbn_mag import load_ogbn_mag
+from graphscope.dataset.ldbc import load_ldbc
 
 if sys.platform == "linux":
     from graphscope.learning.examples import GCN
@@ -88,6 +89,11 @@ def sess_enable_gaia():
 @pytest.fixture
 def ogbn_mag_small():
     return "{}/ogbn_mag_small".format(test_repo_dir)
+
+
+@pytest.fixture
+def ldbc_sample():
+    return "{}/ldbc_sample".format(test_repo_dir)
 
 
 @pytest.fixture(scope="module")
@@ -348,14 +354,14 @@ def test_multiple_session(ogbn_mag_small, ogbn_small_script):
     sys.platform == "linux",
     reason="this is test case for macOS",
 )
-def test_on_macOS(sess, ogbn_mag_small, ogbn_small_script):
-    graph = load_ogbn_mag(sess, ogbn_mag_small)
+def test_on_macOS(sess, ldbc_sample):
+    graph = load_ldbc(sess, ldbc_sample)
     interactive = sess.gremlin(graph)
 
-    simple_g = graph.project(vertices={"paper": []}, edges={"cites": []})
+    simple_g = graph.project(vertices={"paper": []}, edges={"knows": []})
 
-    ret1 = graphscope.k_core(simple_g, k=5)
-    ret2 = graphscope.triangles(simple_g)
+    pr_result = graphscope.pagerank(simple_g, delta=0.8)
+    tc_result = graphscope.triangles(simple_g)
 
-    graph = graph.add_column(ret1, {"kcore": "r"})
-    graph = graph.add_column(ret2, {"tc": "r"})
+    graph.add_column(pr_result, {"Ranking": "r"})
+    graph.add_column(tc_result, {"TC": "r"})
