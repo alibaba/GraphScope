@@ -28,6 +28,7 @@ from graphscope.nx.utils.compat import import_as_graphscope_nx
 
 import_as_graphscope_nx(networkx.utils.misc)
 
+
 def empty_graph_in_engine(graph, directed, distributed):
     """create empty graph in grape_engine with the graph metadata.
 
