@@ -62,8 +62,8 @@ def parse_ret_as_dict(func):
 
 
 def check_node_is_legal(n):
-    if not isinstance(n, (int, float, str, tuple)):
-        msg = "Node {} is illegal. Type of node must be one of [int, float, str, tuple]".format(
+    if not isinstance(n, (int, float, str, bool)):
+        msg = "Node {} is illegal. Type of node must be one of [int, float, str, bool]".format(
             n
         )
         raise NetworkXError(msg)
