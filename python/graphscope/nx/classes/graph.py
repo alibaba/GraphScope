@@ -276,6 +276,9 @@ class Graph(_GraphBase):
             "create_empty_in_engine", True
         )  # a hidden parameter
         self._distributed = attr.pop("dist", False)
+        if incoming_graph_data is not None and self._is_gs_graph(incoming_graph_data):
+            # convert from gs graph always use distributed mode
+            self._distributed = True
         if not self._is_gs_graph(incoming_graph_data) and create_empty_in_engine:
             graph_def = empty_graph_in_engine(
                 self, self.is_directed(), self._distributed
