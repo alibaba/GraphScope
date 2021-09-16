@@ -38,8 +38,8 @@ from graphscope.nx.classes.graph import Graph
 from graphscope.nx.convert import from_gs_graph
 from graphscope.nx.convert import to_nx_graph
 from graphscope.nx.utils.compat import patch_docstring
-from graphscope.nx.utils.other import check_node_is_legal
-from graphscope.nx.utils.other import empty_graph_in_engine
+from graphscope.nx.utils.misc import check_node_is_legal
+from graphscope.nx.utils.misc import empty_graph_in_engine
 from graphscope.proto import types_pb2
 
 
