@@ -32,6 +32,7 @@ from graphscope.proto import types_pb2
 
 from gscoordinator.io_utils import PipeWatcher
 from gscoordinator.utils import ANALYTICAL_ENGINE_PATH
+from gscoordinator.utils import GRAPHSCOPE_HOME
 from gscoordinator.utils import INTERACTIVE_ENGINE_SCRIPT
 from gscoordinator.utils import WORKSPACE
 from gscoordinator.utils import ResolveMPICmdPrefix
@@ -209,6 +210,8 @@ class LocalLauncher(Launcher):
             "{}:{}".format(key, value) for key, value in engine_params.items()
         ]
         enable_gaia = config[types_pb2.GIE_ENABLE_GAIA].b
+        env = os.environ.copy()
+        env.update({"GRAPHSCOPE_HOME": GRAPHSCOPE_HOME})
         cmd = [
             INTERACTIVE_ENGINE_SCRIPT,
             "create_gremlin_instance_on_local",
@@ -226,7 +229,7 @@ class LocalLauncher(Launcher):
             cmd,
             start_new_session=True,
             cwd=os.getcwd(),
-            env=os.environ.copy(),
+            env=env,
             universal_newlines=True,
             encoding="utf-8",
             stdin=subprocess.DEVNULL,
@@ -237,6 +240,8 @@ class LocalLauncher(Launcher):
         return process
 
     def close_interactive_instance(self, object_id):
+        env = os.environ.copy()
+        env.update({"GRAPHSCOPE_HOME": GRAPHSCOPE_HOME})
         cmd = [
             INTERACTIVE_ENGINE_SCRIPT,
             "close_gremlin_instance_on_local",
@@ -248,7 +253,7 @@ class LocalLauncher(Launcher):
             cmd,
             start_new_session=True,
             cwd=os.getcwd(),
-            env=os.environ.copy(),
+            env=env,
             universal_newlines=True,
             encoding="utf-8",
             stdin=subprocess.DEVNULL,

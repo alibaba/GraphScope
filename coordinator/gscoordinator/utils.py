@@ -88,7 +88,15 @@ DEFAULT_GS_CONFIG_FILE = ".gs_conf.yaml"
 try:
     GRAPHSCOPE_HOME = os.environ["GRAPHSCOPE_HOME"]
 except KeyError:
-    GRAPHSCOPE_HOME = os.path.join(COORDINATOR_HOME, "..")
+    if os.path.isdir(os.path.join(COORDINATOR_HOME, "graphscope.runtime")):
+        # install graphscope by bdist wheel
+        GRAPHSCOPE_HOME = os.path.join(COORDINATOR_HOME, "graphscope.runtime")
+    elif os.path.isdir(os.path.join(COORDINATOR_HOME, "..", "graphscope.runtime")):
+        # install graphscope with egg package:
+        GRAPHSCOPE_HOME = os.path.join(COORDINATOR_HOME, "..", "graphscope.runtime")
+    else:
+        # source code
+        GRAPHSCOPE_HOME = os.path.join(COORDINATOR_HOME, "..")
 
 # ANALYTICAL_ENGINE_HOME
 #   1) infer from GRAPHSCOPE_HOME
