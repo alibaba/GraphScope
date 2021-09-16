@@ -58,6 +58,10 @@ jobs:
       run: |
         /bin/bash ${GITHUB_WORKSPACE}/scripts/deploy_local.sh build_and_deploy --verbose
 
+    - name: Setup tmate session
+      if: matrix.os == 'ubuntu-20.04'
+      uses: mxschmitt/action-tmate@v2
+
     - name: Run Local Test
       env:
         OS : ${{ matrix.os }}
