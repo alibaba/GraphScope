@@ -600,7 +600,11 @@ class Graph(_GraphBase):
                 try:
                     nodes.append(json.dumps(node))
                 except TypeError as e:
-                    raise TypeError("The node and its data failed to be serialized by json: {}".format(node)) from e
+                    raise TypeError(
+                        "The node and its data failed to be serialized by json: {}".format(
+                            node
+                        )
+                    ) from e
         self._op = dag_utils.modify_vertices(self, types_pb2.NX_ADD_NODES, nodes)
         return self._op.eval()
 
@@ -670,7 +674,9 @@ class Graph(_GraphBase):
             try:
                 nodes.append(json.dumps([n]))
             except TypeError as e:
-                raise TypeError("The node {} failed to be serialized by json.".format(n)) from e
+                raise TypeError(
+                    "The node {} failed to be serialized by json.".format(n)
+                ) from e
         self._op = dag_utils.modify_vertices(self, types_pb2.NX_DEL_NODES, nodes)
         return self._op.eval()
 
@@ -718,7 +724,9 @@ class Graph(_GraphBase):
         try:
             node = json.dumps([n])
         except TypeError as e:
-            raise TypeError("The node {} failed to be serialized by json.".format(n)) from e
+            raise TypeError(
+                "The node {} failed to be serialized by json.".format(n)
+            ) from e
         op = dag_utils.report_graph(self, types_pb2.NODE_DATA, node=node)
         return op.eval()
 
@@ -903,7 +911,11 @@ class Graph(_GraphBase):
             try:
                 edges.append(json.dumps(edge))
             except TypeError as e:
-                raise TypeError("The edge and its data {} failed to be serialized by json.".format(edge)) from e
+                raise TypeError(
+                    "The edge and its data {} failed to be serialized by json.".format(
+                        edge
+                    )
+                ) from e
             if len(edges) > 10000:  # make sure messages size not larger than rpc max
                 op = dag_utils.modify_edges(self, types_pb2.NX_ADD_EDGES, edges)
                 op.eval()
@@ -1019,7 +1031,11 @@ class Graph(_GraphBase):
         try:
             edge = [json.dumps((u, v, data))]
         except TypeError as e:
-            raise TypeError("The edge and its data {} failed to be serialized by json.".format((u, v, data))) from e
+            raise TypeError(
+                "The edge and its data {} failed to be serialized by json.".format(
+                    (u, v, data)
+                )
+            ) from e
         self._schema.add_nx_edge_properties(data)
         self._op = dag_utils.modify_edges(self, types_pb2.NX_UPDATE_EDGES, edge)
         return self._op.eval()
@@ -1056,7 +1072,11 @@ class Graph(_GraphBase):
         try:
             node = [json.dumps((n, data))]
         except TypeError as e:
-            raise TypeError("The node and its data {} failed to be serialized by json.".format((n, data))) from e
+            raise TypeError(
+                "The node and its data {} failed to be serialized by json.".format(
+                    (n, data)
+                )
+            ) from e
         self._op = dag_utils.modify_vertices(self, types_pb2.NX_UPDATE_NODES, node)
         return self._op.eval()
 
@@ -1370,12 +1390,12 @@ class Graph(_GraphBase):
         try:
             edge = json.dumps((u, v))
         except TypeError as e:
-            raise TypeError("The edge and {} failed to be serialized by json.".format((u, v))) from e
+            raise TypeError(
+                "The edge and {} failed to be serialized by json.".format((u, v))
+            ) from e
 
         if self.has_edge(u, v):
-            op = dag_utils.report_graph(
-                self, types_pb2.EDGE_DATA, edge=edge, key=""
-            )
+            op = dag_utils.report_graph(self, types_pb2.EDGE_DATA, edge=edge, key="")
             return json.loads(op.eval())
         else:
             return default
@@ -1738,7 +1758,9 @@ class Graph(_GraphBase):
             try:
                 induced_nodes.append(json.dumps([n]))
             except TypeError as e:
-                raise TypeError("The node {} failed to be serialized by json.".format(n)) from e
+                raise TypeError(
+                    "The node {} failed to be serialized by json.".format(n)
+                ) from e
         g = self.__class__(create_empty_in_engine=False)
         g.graph.update(self.graph)
         op = dag_utils.create_subgraph(self, nodes=induced_nodes)
@@ -1787,7 +1809,9 @@ class Graph(_GraphBase):
             try:
                 induced_edges.append(json.dumps((u, v)))
             except TypeError as e:
-                raise TypeError("The edge {} failed to be serialized by json.".format((u, v))) from e
+                raise TypeError(
+                    "The edge {} failed to be serialized by json.".format((u, v))
+                ) from e
         g = self.__class__(create_empty_in_engine=False)
         g.graph.update(self.graph)
         op = dag_utils.create_subgraph(self, edges=induced_edges)

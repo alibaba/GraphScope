@@ -18,9 +18,10 @@
 
 import json
 
+from networkx.exception import NetworkXError
+
 from graphscope.client.session import get_session_by_id
 from graphscope.framework import dag_utils
-from networkx.exception import NetworkXError
 
 
 def empty_graph_in_engine(graph, directed, distributed):
@@ -62,5 +63,7 @@ def parse_ret_as_dict(func):
 
 def check_node_is_legal(n):
     if not isinstance(n, (int, float, str, tuple)):
-        msg = "Node {} is illegal. Type of node must be one of [int, float, str, tuple]".format(n)
+        msg = "Node {} is illegal. Type of node must be one of [int, float, str, tuple]".format(
+            n
+        )
         raise NetworkXError(msg)
