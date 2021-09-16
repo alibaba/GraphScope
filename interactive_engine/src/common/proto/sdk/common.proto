@@ -46,24 +46,6 @@ message Response {
 message Empty {
 }
 
-enum OperationType {
-    // overwrite whole vertex
-    INSERT_OVERWRITE_VERTEX                    = 0;
-
-    // overwrite the property by property key
-    INSERT_OVERWRITE_VERTEX_PROPERTY           = 1;
-
-    // delete vertex
-    DELETE_VERTEX                              = 2;
-
-    INSERT_OVERWRITE_EDGE                      = 3;
-    INSERT_OVERWRITE_EDGE_PROPERTY             = 4;
-    DELETE_EDGE                                = 5;
-    BARRIER_MARKER                             = 6;
-    INSERT_REPLACE_VERTEX                      = 7;
-    INSERT_REPLACE_EDGE                        = 8;
-}
-
 message MetricInfoProto {
     map<string, string> metricInfo = 1;
     repeated DiskMetricProto diskMetrics = 2;

@@ -15,9 +15,6 @@
  */
 package com.alibaba.maxgraph.v2.common.util;
 
-import com.alibaba.maxgraph.proto.v2.RuntimeLabelIdNameProto;
-import com.alibaba.maxgraph.proto.v2.RuntimePropertyIdNameProto;
-import com.alibaba.maxgraph.proto.v2.RuntimeSchemaProto;
 import com.alibaba.maxgraph.v2.common.frontend.api.schema.*;
 import com.alibaba.maxgraph.v2.common.schema.DataType;
 import com.google.common.collect.Lists;
@@ -117,44 +114,5 @@ public class SchemaUtils {
         }
 
         return dataTypeList;
-    }
-
-    /**
-     * Build runtime schema proto for query plan
-     *
-     * @param schema The given schema
-     * @return The runtime schema proto
-     */
-    public static RuntimeSchemaProto buildRuntimeSchema(GraphSchema schema) {
-        RuntimeSchemaProto.Builder schemaBuilder = RuntimeSchemaProto.newBuilder();
-        List<RuntimeLabelIdNameProto> labelIdNameProtoList = Lists.newArrayList();
-        Set<Integer> propertyIdSet = Sets.newHashSet();
-        for (VertexType vertexType : schema.getVertexTypes()) {
-            labelIdNameProtoList.add(RuntimeLabelIdNameProto.newBuilder()
-                    .setLabelId(vertexType.getLabelId())
-                    .setLabelName(vertexType.getLabel())
-                    .build());
-            propertyIdSet.addAll(vertexType.getPropertyList().stream().map(GraphProperty::getId).collect(Collectors.toSet()));
-        }
-        for (EdgeType edgeType : schema.getEdgeTypes()) {
-            labelIdNameProtoList.add(RuntimeLabelIdNameProto.newBuilder()
-                    .setLabelId(edgeType.getLabelId())
-                    .setLabelName(edgeType.getLabel())
-                    .build());
-            propertyIdSet.addAll(edgeType.getPropertyList().stream().map(GraphProperty::getId).collect(Collectors.toSet()));
-        }
-
-
-        List<RuntimePropertyIdNameProto> propertyIdNameProtoList = Lists.newArrayList();
-        for (Integer propertyId : propertyIdSet) {
-            propertyIdNameProtoList.add(RuntimePropertyIdNameProto.newBuilder()
-                    .setPropertyId(propertyId)
-                    .setPropertyName(getPropertyName(propertyId, schema))
-                    .build());
-        }
-
-        return schemaBuilder.addAllLabels(labelIdNameProtoList)
-                .addAllProperties(propertyIdNameProtoList)
-                .build();
     }
 }
