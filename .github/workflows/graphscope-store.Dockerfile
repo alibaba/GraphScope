@@ -1,4 +1,4 @@
-FROM registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-runtime:latest-root-user
+FROM registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-runtime:latest
 
 COPY ./opt/vineyard/ /usr/local/
 COPY ./maxgraph /usr/local/maxgraph

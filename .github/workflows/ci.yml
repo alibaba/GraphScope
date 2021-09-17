@@ -456,7 +456,7 @@ jobs:
         fail_ci_if_error: true
 
     - name: Clean
-      if: true
+      if: always()
       run: |
         export JAVA_HOME=/usr/lib/jvm/default-java/
         HADOOP_SSH_OPTS="-o StrictHostKeyChecking=no" /tmp/hadoop-2.10.1/sbin/stop-dfs.sh || true
