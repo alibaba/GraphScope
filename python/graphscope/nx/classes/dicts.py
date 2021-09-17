@@ -61,7 +61,6 @@ class NodeDict(MutableMapping):
             batch = ret["batch"]
             count += len(batch)
             for node in batch:
-                # yield node["id"]
                 yield tuple(node["id"]) if isinstance(node["id"], list) else node["id"]
 
 
@@ -141,7 +140,6 @@ class AdjDict(MutableMapping):
             batch = ret["batch"]
             count += len(batch)
             for node in batch:
-                # yield node["id"]
                 yield tuple(node["id"]) if isinstance(node["id"], list) else node["id"]
 
     def __repr__(self):

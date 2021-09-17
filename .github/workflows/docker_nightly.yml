@@ -10,7 +10,7 @@ on:
 
 jobs:
   docker-test:
-    if: ${{ github.ref == 'refs/heads/main' }}
+    if: ${{ github.ref == 'refs/heads/main' && github.repository == 'alibaba/GraphScope' }}
     runs-on: self-hosted
     steps:
     - name: Build graphscope image

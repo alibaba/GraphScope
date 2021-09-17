@@ -65,7 +65,7 @@ _setup_maxgraph_env() {
   export LD_LIBRARY_PATH=${MAXGRAPH_HOME}/native:${LD_LIBRARY_PATH}:/usr/local/lib
 
   if [ -z "${LOG_DIR}" ]; then
-    LOG_DIR="/tmp/graphscope-store"
+    export LOG_DIR="/tmp/graphscope-store"
   fi
 
   mkdir -p ${LOG_DIR}
