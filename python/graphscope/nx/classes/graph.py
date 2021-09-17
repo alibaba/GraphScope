@@ -279,6 +279,8 @@ class Graph(_GraphBase):
         if incoming_graph_data is not None and self._is_gs_graph(incoming_graph_data):
             # convert from gs graph always use distributed mode
             self._distributed = True
+        self._default_label = attr.pop("default_label", "_")
+
         if not self._is_gs_graph(incoming_graph_data) and create_empty_in_engine:
             graph_def = empty_graph_in_engine(
                 self, self.is_directed(), self._distributed
@@ -288,7 +290,7 @@ class Graph(_GraphBase):
         # attempt to load graph with data
         if incoming_graph_data is not None:
             if self._is_gs_graph(incoming_graph_data):
-                graph_def = from_gs_graph(incoming_graph_data, self)
+                graph_def = from_gs_graph(incoming_graph_data, self, self._default_label)
                 self._key = graph_def.key
                 self._schema.init_nx_schema(incoming_graph_data.schema)
             else:

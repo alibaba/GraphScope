@@ -622,9 +622,10 @@ bl::result<rpc::graph::GraphDefPb> GrapeInstance::convertGraph(
 
   if (src_graph_type == rpc::graph::ARROW_PROPERTY &&
       dst_graph_type == rpc::graph::DYNAMIC_PROPERTY) {
+    BOOST_LEAF_AUTO(default_label, params.Get<std::string>(rpc::DEFAULT_LABEL));
     BOOST_LEAF_AUTO(dst_graph_wrapper,
                     g_utils->ToDynamicFragment(comm_spec_, src_frag_wrapper,
-                                               dst_graph_name));
+                                               dst_graph_name, default_label));
     BOOST_LEAF_CHECK(object_manager_.PutObject(dst_graph_wrapper));
     return dst_graph_wrapper->graph_def();
   } else if (src_graph_type == rpc::graph::DYNAMIC_PROPERTY &&

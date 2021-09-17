@@ -95,28 +95,6 @@ def ldbc_sample_multi_labels(prefix, directed):
     return graph
 
 
-def ldbc_sample_with_duplicated_oid(prefix, directed):
-    graph = graphscope.g(directed=directed)
-    graph = graph.add_vertices(
-        Loader(os.path.join(prefix, "place_0_0.csv"), delimiter="|"), "place"
-    ).add_vertices(
-        Loader(os.path.join(prefix, "person_0_0.csv"), delimiter="|"), "person"
-    )
-    graph = graph.add_edges(
-        Loader(os.path.join(prefix, "place_isPartOf_place_0_0.csv"), delimiter="|"),
-        "isPartOf",
-        src_label="place",
-        dst_label="place",
-    ).add_edges(
-        Loader(os.path.join(prefix, "person_knows_person_0_0.csv"), delimiter="|"),
-        "knows",
-        ["creationDate"],
-        src_label="person",
-        dst_label="person",
-    )
-    return graph
-
-
 def load_p2p(prefix, directed):
     graph = graphscope.load_from(
         edges={
@@ -141,7 +119,6 @@ class TestGraphTransformation(object):
         cls.data_dir = os.path.expandvars("${GS_TEST_DIR}/ldbc_sample")
         cls.single_label_g = ldbc_sample_single_label(cls.data_dir, False)
         cls.multi_label_g = ldbc_sample_multi_labels(cls.data_dir, False)
-        cls.duplicated_oid_g = ldbc_sample_with_duplicated_oid(cls.data_dir, False)
         cls.p2p = load_p2p(os.path.expandvars("${GS_TEST_DIR}"), False)
         cls.p2p_nx = nx.read_edgelist(
             os.path.expandvars("${GS_TEST_DIR}/dynamic/p2p-31_dynamic.edgelist"),
@@ -154,7 +131,6 @@ class TestGraphTransformation(object):
     def teardown_class(cls):
         cls.single_label_g.unload()
         cls.multi_label_g.unload()
-        cls.duplicated_oid_g.unload()
         cls.str_oid_g.unload()
 
     def assert_convert_success(self, gs_g, nx_g):
@@ -356,11 +332,6 @@ class TestGraphTransformation(object):
         with pytest.raises(TypeError):
             nx_g = nx.DiGraph(g)
 
-    def test_error_on_duplicate_oid(self):
-        g = self.duplicated_oid_g
-        with pytest.raises(AnalyticalEngineInternalError):
-            nx_g = self.NXGraph(g)
-
     @pytest.mark.skip(reason="FIXME: multiple session crash in ci.")
     def test_multiple_sessions(self):
         sess2 = graphscope.session(cluster_type="hosts", num_workers=1)
@@ -526,7 +497,6 @@ class TestDigraphTransformation(TestGraphTransformation):
         data_dir = os.path.expandvars("${GS_TEST_DIR}/ldbc_sample")
         cls.single_label_g = ldbc_sample_single_label(data_dir, True)
         cls.multi_label_g = ldbc_sample_multi_labels(data_dir, True)
-        cls.duplicated_oid_g = ldbc_sample_with_duplicated_oid(data_dir, True)
         cls.p2p = load_p2p(os.path.expandvars("${GS_TEST_DIR}"), True)
         cls.p2p_nx = nx.read_edgelist(
             os.path.expandvars("${GS_TEST_DIR}/dynamic/p2p-31_dynamic.edgelist"),
@@ -540,7 +510,6 @@ class TestDigraphTransformation(TestGraphTransformation):
     def teardown_class(cls):
         cls.single_label_g.unload()
         cls.multi_label_g.unload()
-        cls.duplicated_oid_g.unload()
         cls.str_oid_g.unload()
 
     def test_error_on_wrong_nx_type(self):

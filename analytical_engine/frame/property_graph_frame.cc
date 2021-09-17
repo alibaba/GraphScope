@@ -222,7 +222,7 @@ void ToArrowFragment(
 void ToDynamicFragment(
     const grape::CommSpec& comm_spec,
     std::shared_ptr<gs::IFragmentWrapper>& wrapper_in,
-    const std::string& dst_graph_name,
+    const std::string& dst_graph_name, const std::string& default_label,
     gs::bl::result<std::shared_ptr<gs::IFragmentWrapper>>& wrapper_out) {
   wrapper_out = gs::bl::try_handle_some([&]() -> gs::bl::result<std::shared_ptr<
                                                   gs::IFragmentWrapper>> {
@@ -234,7 +234,8 @@ void ToDynamicFragment(
     }
     auto arrow_frag =
         std::static_pointer_cast<_GRAPH_TYPE>(wrapper_in->fragment());
-    gs::ArrowToDynamicConverter<_GRAPH_TYPE> converter(comm_spec);
+    gs::ArrowToDynamicConverter<_GRAPH_TYPE> converter(comm_spec,
+                                                       default_label);
 
     BOOST_LEAF_AUTO(dynamic_frag, converter.Convert(arrow_frag));
 

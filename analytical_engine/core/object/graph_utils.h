@@ -52,7 +52,7 @@ typedef void ToArrowFragmentT(
 typedef void ToDynamicFragmentT(
     const grape::CommSpec& comm_spec,
     std::shared_ptr<IFragmentWrapper>& wrapper_in,
-    const std::string& dst_graph_name,
+    const std::string& dst_graph_name, const std::string& default_label,
     bl::result<std::shared_ptr<IFragmentWrapper>>& wrapper_out);
 
 /**
@@ -134,11 +134,13 @@ class PropertyGraphUtils : public GSObject {
   bl::result<std::shared_ptr<IFragmentWrapper>> ToDynamicFragment(
       const grape::CommSpec& comm_spec,
       std::shared_ptr<IFragmentWrapper>& wrapper_in,
-      const std::string& dst_graph_name) {
+      const std::string& dst_graph_name,
+      const std::string& default_label) {
 #ifdef NETWORKX
     bl::result<std::shared_ptr<IFragmentWrapper>> wrapper;
 
-    to_dynamic_fragment_(comm_spec, wrapper_in, dst_graph_name, wrapper);
+    to_dynamic_fragment_(comm_spec, wrapper_in, dst_graph_name, default_label,
+                         wrapper);
     return wrapper;
 #else
     RETURN_GS_ERROR(vineyard::ErrorCode::kUnsupportedOperationError,
