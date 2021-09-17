@@ -43,8 +43,9 @@ from graphscope.nx.classes.dicts import NodeDict
 from graphscope.nx.convert import from_gs_graph
 from graphscope.nx.convert import to_nx_graph
 from graphscope.nx.utils.compat import patch_docstring
-from graphscope.nx.utils.other import empty_graph_in_engine
-from graphscope.nx.utils.other import parse_ret_as_dict
+from graphscope.nx.utils.misc import check_node_is_legal
+from graphscope.nx.utils.misc import empty_graph_in_engine
+from graphscope.nx.utils.misc import parse_ret_as_dict
 from graphscope.proto import graph_def_pb2
 from graphscope.proto import types_pb2
 
@@ -591,10 +592,19 @@ class Graph(_GraphBase):
                 nn, dd = n
                 data.update(dd)
                 node = [nn, data]
+                n = nn
             except (TypeError, ValueError):
                 node = [n, data]
+            check_node_is_legal(n)
             if self._schema.add_nx_vertex_properties(data):
-                nodes.append(json.dumps(node))
+                try:
+                    nodes.append(json.dumps(node))
+                except TypeError as e:
+                    raise NetworkXError(
+                        "The node and its {} data failed to be serialized by json.".format(
+                            node
+                        )
+                    ) from e
         self._op = dag_utils.modify_vertices(self, types_pb2.NX_ADD_NODES, nodes)
         return self._op.eval()
 
@@ -660,6 +670,7 @@ class Graph(_GraphBase):
         """
         nodes = []
         for n in nodes_for_removing:
+            check_node_is_legal(n)
             nodes.append(json.dumps([n]))
         self._op = dag_utils.modify_vertices(self, types_pb2.NX_DEL_NODES, nodes)
         return self._op.eval()
@@ -704,6 +715,7 @@ class Graph(_GraphBase):
         {}
 
         """
+        check_node_is_legal(n)
         op = dag_utils.report_graph(self, types_pb2.NODE_DATA, node=json.dumps([n]))
         return op.eval()
 
@@ -770,9 +782,10 @@ class Graph(_GraphBase):
 
         """
         try:
+            check_node_is_legal(n)
             op = dag_utils.report_graph(self, types_pb2.HAS_NODE, node=json.dumps([n]))
             return int(op.eval())
-        except TypeError:
+        except (TypeError, NetworkXError):
             return False
 
     def add_edge(self, u_of_edge, v_of_edge, **attr):
@@ -880,9 +893,18 @@ class Graph(_GraphBase):
                     "Edge tuple %s must be a 2-tuple or 3-tuple." % (e,)
                 )
             # FIXME: support dynamic data type in same property
+            check_node_is_legal(u)
+            check_node_is_legal(v)
             self._schema.add_nx_edge_properties(data)
             edge = [u, v, data]
-            edges.append(json.dumps(edge))
+            try:
+                edges.append(json.dumps(edge))
+            except TypeError as e:
+                raise NetworkXError(
+                    "The edge and its data {} failed to be serialized by json.".format(
+                        edge
+                    )
+                ) from e
             if len(edges) > 10000:  # make sure messages size not larger than rpc max
                 op = dag_utils.modify_edges(self, types_pb2.NX_ADD_EDGES, edges)
                 op.eval()
@@ -961,6 +983,8 @@ class Graph(_GraphBase):
             ne = len(e)
             if ne < 2:
                 raise ValueError("Edge tuple %s must be a 2-tuple or 3-tuple." % (e,))
+            check_node_is_legal(e[0])
+            check_node_is_legal(e[1])
             edges.append(json.dumps(e[:2]))  # ignore edge data if present
         self._op = dag_utils.modify_edges(self, types_pb2.NX_DEL_EDGES, edges)
         return self._op.eval()
@@ -993,8 +1017,17 @@ class Graph(_GraphBase):
         {'foo': 'bar'}
 
         """
+        check_node_is_legal(u)
+        check_node_is_legal(v)
+        try:
+            edge = [json.dumps((u, v, data))]
+        except TypeError as e:
+            raise TypeError(
+                "The edge and its data {} failed to be serialized by json.".format(
+                    (u, v, data)
+                )
+            ) from e
         self._schema.add_nx_edge_properties(data)
-        edge = [json.dumps((u, v, data))]
         self._op = dag_utils.modify_edges(self, types_pb2.NX_UPDATE_EDGES, edge)
         return self._op.eval()
 
@@ -1026,7 +1059,15 @@ class Graph(_GraphBase):
         {'weight': 3}
 
         """
-        node = [json.dumps((n, data))]
+        check_node_is_legal(n)
+        try:
+            node = [json.dumps((n, data))]
+        except TypeError as e:
+            raise NetworkXError(
+                "The node and its data {} failed to be serialized by json.".format(
+                    (n, data)
+                )
+            ) from e
         self._op = dag_utils.modify_vertices(self, types_pb2.NX_UPDATE_NODES, node)
         return self._op.eval()
 
@@ -1186,6 +1227,8 @@ class Graph(_GraphBase):
         True
 
         """
+        check_node_is_legal(u)
+        check_node_is_legal(v)
         try:
             return v in self._adj[u]
         except KeyError:
@@ -1229,6 +1272,7 @@ class Graph(_GraphBase):
         >>> [n for n in G[0]]
         [1]
         """
+        check_node_is_legal(n)
         try:
             return iter(self._adj[n])
         except KeyError:
@@ -1460,6 +1504,7 @@ class Graph(_GraphBase):
             def bunch_iter(nlist, adj):
                 try:
                     for n in nlist:
+                        check_node_is_legal(n)
                         if n in adj:
                             yield n
                 except TypeError as e:
@@ -1693,7 +1738,13 @@ class Graph(_GraphBase):
         """
         induced_nodes = []
         for n in nodes:
-            induced_nodes.append(json.dumps([n]))
+            check_node_is_legal(n)
+            try:
+                induced_nodes.append(json.dumps([n]))
+            except TypeError as e:
+                raise TypeError(
+                    "The node {} failed to be serialized by json.".format(n)
+                ) from e
         g = self.__class__(create_empty_in_engine=False)
         g.graph.update(self.graph)
         op = dag_utils.create_subgraph(self, nodes=induced_nodes)
@@ -1737,7 +1788,14 @@ class Graph(_GraphBase):
         induced_edges = []
         for e in edges:
             u, v = e
-            induced_edges.append(json.dumps([u, v]))
+            check_node_is_legal(u)
+            check_node_is_legal(v)
+            try:
+                induced_edges.append(json.dumps((u, v)))
+            except TypeError as e:
+                raise NetworkXError(
+                    "The edge {} failed to be serialized by json.".format((u, v))
+                ) from e
         g = self.__class__(create_empty_in_engine=False)
         g.graph.update(self.graph)
         op = dag_utils.create_subgraph(self, edges=induced_edges)
@@ -1871,6 +1929,7 @@ class Graph(_GraphBase):
         -----
         Raise NetworkxError if node not in graph.
         """
+        check_node_is_legal(n)
         op = dag_utils.report_graph(self, report_type, node=json.dumps([n]), key=weight)
         degree = float(op.eval())
         return degree if weight is not None else int(degree)
