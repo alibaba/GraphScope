@@ -15,11 +15,11 @@
  */
 package com.alibaba.maxgraph.tests.coordinator;
 
-import com.alibaba.maxgraph.v2.common.config.Configs;
-import com.alibaba.maxgraph.v2.common.config.ZkConfig;
-import com.alibaba.maxgraph.v2.common.util.CuratorUtils;
-import com.alibaba.maxgraph.v2.coordinator.MetaStore;
-import com.alibaba.maxgraph.v2.coordinator.ZkMetaStore;
+import com.alibaba.maxgraph.common.config.Configs;
+import com.alibaba.maxgraph.common.config.ZkConfig;
+import com.alibaba.maxgraph.common.util.CuratorUtils;
+import com.alibaba.maxgraph.groot.coordinator.MetaStore;
+import com.alibaba.maxgraph.groot.coordinator.ZkMetaStore;
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.test.TestingServer;
 import org.junit.jupiter.api.Test;

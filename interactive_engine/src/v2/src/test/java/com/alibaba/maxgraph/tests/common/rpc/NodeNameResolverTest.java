@@ -15,10 +15,10 @@
  */
 package com.alibaba.maxgraph.tests.common.rpc;
 
-import com.alibaba.maxgraph.v2.common.discovery.MaxGraphNode;
-import com.alibaba.maxgraph.v2.common.discovery.NodeDiscovery;
-import com.alibaba.maxgraph.v2.common.discovery.RoleType;
-import com.alibaba.maxgraph.v2.common.rpc.MaxGraphNameResolverFactory;
+import com.alibaba.maxgraph.groot.common.discovery.MaxGraphNode;
+import com.alibaba.maxgraph.groot.common.discovery.NodeDiscovery;
+import com.alibaba.maxgraph.common.RoleType;
+import com.alibaba.maxgraph.groot.common.rpc.MaxGraphNameResolverFactory;
 import io.grpc.ConnectivityState;
 import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;

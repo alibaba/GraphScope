@@ -35,5 +35,26 @@ public interface GraphProperty {
      *
      * @return The datatype
      */
-    PropDataType getDataType();
+    DataType getDataType();
+
+    /**
+     * The comment of the property
+     *
+     * @return The comment
+     */
+    String getComment();
+
+    /**
+     * The property has default value
+     *
+     * @return true if the property has default value
+     */
+    boolean hasDefaultValue();
+
+    /**
+     * Return the default value
+     *
+     * @return The default value of the property
+     */
+    Object getDefaultValue();
 }

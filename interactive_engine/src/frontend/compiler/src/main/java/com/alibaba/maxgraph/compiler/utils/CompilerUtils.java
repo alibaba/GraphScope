@@ -22,7 +22,7 @@ import com.alibaba.maxgraph.compiler.api.schema.GraphElement;
 import com.alibaba.maxgraph.compiler.api.schema.GraphProperty;
 import com.alibaba.maxgraph.compiler.api.schema.GraphSchema;
 import com.alibaba.maxgraph.compiler.api.schema.GraphVertex;
-import com.alibaba.maxgraph.compiler.api.schema.PropDataType;
+import com.alibaba.maxgraph.compiler.api.schema.DataType;
 import com.alibaba.maxgraph.compiler.tree.value.ListValueType;
 import com.alibaba.maxgraph.compiler.tree.value.ValueType;
 import com.alibaba.maxgraph.compiler.tree.value.VarietyValueType;
@@ -32,7 +32,6 @@ import com.alibaba.maxgraph.sdkcommon.compiler.custom.*;
 import com.alibaba.maxgraph.sdkcommon.compiler.custom.dim.DimMatchType;
 import com.alibaba.maxgraph.sdkcommon.compiler.custom.dim.DimPredicate;
 import com.alibaba.maxgraph.sdkcommon.graph.CompositeId;
-import com.alibaba.maxgraph.sdkcommon.meta.DataType;
 import com.alibaba.maxgraph.sdkcommon.meta.InternalDataType;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
@@ -332,46 +331,46 @@ public class CompilerUtils {
         }
     }
 
-    public static Message.VariantType parseVariantFromDataType(PropDataType dataType) {
+    public static Message.VariantType parseVariantFromDataType(DataType dataType) {
         return Message.VariantType.valueOf("VT_" + StringUtils.upperCase(dataType.name()));
     }
 
-    public static DataType parseDataTypeFromPropDataType(PropDataType dataType) {
+    public static com.alibaba.maxgraph.sdkcommon.meta.DataType parseDataTypeFromPropDataType(DataType dataType) {
         try {
             switch (dataType) {
-                case INTEGER: {
-                    return DataType.INT;
+                case INT: {
+                    return com.alibaba.maxgraph.sdkcommon.meta.DataType.INT;
                 }
-                case INTEGER_LIST: {
-                    DataType type = new DataType(InternalDataType.LIST);
+                case INT_LIST: {
+                    com.alibaba.maxgraph.sdkcommon.meta.DataType type = new com.alibaba.maxgraph.sdkcommon.meta.DataType(InternalDataType.LIST);
                     type.setExpression("INT");
                     return type;
                 }
                 case LONG_LIST: {
-                    DataType type = new DataType(InternalDataType.LIST);
+                    com.alibaba.maxgraph.sdkcommon.meta.DataType type = new com.alibaba.maxgraph.sdkcommon.meta.DataType(InternalDataType.LIST);
                     type.setExpression("LONG");
                     return type;
                 }
                 case FLOAT_LIST: {
-                    DataType type = new DataType(InternalDataType.LIST);
+                    com.alibaba.maxgraph.sdkcommon.meta.DataType type = new com.alibaba.maxgraph.sdkcommon.meta.DataType(InternalDataType.LIST);
                     type.setExpression("FLOAT");
                     return type;
                 }
                 case DOUBLE_LIST: {
-                    DataType type = new DataType(InternalDataType.LIST);
+                    com.alibaba.maxgraph.sdkcommon.meta.DataType type = new com.alibaba.maxgraph.sdkcommon.meta.DataType(InternalDataType.LIST);
                     type.setExpression("DOUBLE");
                     return type;
                 }
                 case STRING_LIST: {
-                    DataType type = new DataType(InternalDataType.LIST);
+                    com.alibaba.maxgraph.sdkcommon.meta.DataType type = new com.alibaba.maxgraph.sdkcommon.meta.DataType(InternalDataType.LIST);
                     type.setExpression("STRING");
                     return type;
                 }
-                case BINARY: {
-                    return DataType.BYTES;
+                case BYTES: {
+                    return com.alibaba.maxgraph.sdkcommon.meta.DataType.BYTES;
                 }
                 default: {
-                    return DataType.valueOf(dataType.name());
+                    return com.alibaba.maxgraph.sdkcommon.meta.DataType.valueOf(dataType.name());
                 }
             }
         } catch (Exception e) {

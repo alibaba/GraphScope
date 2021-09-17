@@ -15,8 +15,8 @@
  */
 package com.alibaba.maxgraph.tests.common.schema;
 
-import com.alibaba.maxgraph.v2.common.schema.DataType;
-import com.alibaba.maxgraph.v2.common.schema.SerdeUtils;
+import com.alibaba.maxgraph.compiler.api.schema.DataType;
+import com.alibaba.maxgraph.groot.common.schema.SerdeUtils;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 

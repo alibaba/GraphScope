@@ -15,7 +15,7 @@
  */
 package com.alibaba.maxgraph.tests.gremlin;
 
-import com.alibaba.maxgraph.v2.common.exception.MaxGraphException;
+import com.alibaba.maxgraph.compiler.api.exception.MaxGraphException;
 import org.apache.commons.configuration.Configuration;
 import org.apache.tinkerpop.gremlin.AbstractGraphProvider;
 import org.apache.tinkerpop.gremlin.LoadGraphWith;
@@ -23,9 +23,6 @@ import org.apache.tinkerpop.gremlin.structure.Graph;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.File;
-import java.io.IOException;
-import java.net.URISyntaxException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;

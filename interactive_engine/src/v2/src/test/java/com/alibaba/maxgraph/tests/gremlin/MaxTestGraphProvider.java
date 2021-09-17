@@ -15,8 +15,8 @@
  */
 package com.alibaba.maxgraph.tests.gremlin;
 
-import com.alibaba.maxgraph.v2.common.config.StoreConfig;
-import com.alibaba.maxgraph.v2.common.exception.MaxGraphException;
+import com.alibaba.maxgraph.common.config.StoreConfig;
+import com.alibaba.maxgraph.compiler.api.exception.MaxGraphException;
 import org.apache.commons.configuration.Configuration;
 import org.apache.tinkerpop.gremlin.AbstractGraphProvider;
 import org.apache.tinkerpop.gremlin.LoadGraphWith;

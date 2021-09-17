@@ -17,8 +17,8 @@ package com.alibaba.graphscope.gaia;
 
 import com.alibaba.graphscope.gaia.config.GaiaConfig;
 import com.alibaba.graphscope.gaia.store.GraphType;
-import com.alibaba.maxgraph.v2.common.config.CommonConfig;
-import com.alibaba.maxgraph.v2.common.config.Configs;
+import com.alibaba.maxgraph.common.config.CommonConfig;
+import com.alibaba.maxgraph.common.config.Configs;
 
 public class MaxGraphConfig implements GaiaConfig {
     private Configs configs;

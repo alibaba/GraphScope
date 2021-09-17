@@ -15,17 +15,17 @@
  */
 package com.alibaba.graphscope.gaia;
 
-import com.alibaba.maxgraph.v2.common.NodeBase;
-import com.alibaba.maxgraph.v2.common.NodeLauncher;
-import com.alibaba.maxgraph.v2.common.config.CommonConfig;
-import com.alibaba.maxgraph.v2.common.config.Configs;
-import com.alibaba.maxgraph.v2.common.config.KafkaConfig;
-import com.alibaba.maxgraph.v2.common.config.ZkConfig;
-import com.alibaba.maxgraph.v2.common.discovery.RoleType;
-import com.alibaba.maxgraph.v2.common.exception.MaxGraphException;
-import com.alibaba.maxgraph.v2.coordinator.Coordinator;
-import com.alibaba.maxgraph.v2.ingestor.Ingestor;
-import com.alibaba.maxgraph.v2.store.GaiaStore;
+import com.alibaba.maxgraph.groot.common.NodeBase;
+import com.alibaba.maxgraph.groot.common.NodeLauncher;
+import com.alibaba.maxgraph.common.config.CommonConfig;
+import com.alibaba.maxgraph.common.config.Configs;
+import com.alibaba.maxgraph.common.config.KafkaConfig;
+import com.alibaba.maxgraph.common.config.ZkConfig;
+import com.alibaba.maxgraph.common.RoleType;
+import com.alibaba.maxgraph.compiler.api.exception.MaxGraphException;
+import com.alibaba.maxgraph.groot.coordinator.Coordinator;
+import com.alibaba.maxgraph.groot.ingestor.Ingestor;
+import com.alibaba.maxgraph.groot.store.GaiaStore;
 import com.salesforce.kafka.test.KafkaTestCluster;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

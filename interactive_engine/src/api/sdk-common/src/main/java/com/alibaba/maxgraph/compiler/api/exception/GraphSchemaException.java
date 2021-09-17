@@ -15,7 +15,7 @@
  */
 package com.alibaba.maxgraph.compiler.api.exception;
 
-public class GraphSchemaException extends RuntimeException {
+public class GraphSchemaException extends MaxGraphException {
     public GraphSchemaException() {
         super();
     }

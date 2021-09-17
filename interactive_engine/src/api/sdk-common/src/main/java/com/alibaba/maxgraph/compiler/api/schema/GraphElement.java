@@ -56,4 +56,31 @@ public interface GraphElement {
      * @return The graph property
      */
     GraphProperty getProperty(String propName);
+
+    /**
+     * Get version of given graph element
+     * @return
+     */
+    int getVersionId();
+
+    /**
+     * Get primary key list
+     *
+     * @return The primary key list
+     */
+    List<GraphProperty> getPrimaryKeyList();
+
+    /**
+     * Get indices of primary key properties
+     *
+     * @return Indices of pk properties
+     */
+    List<Integer> getPkPropertyIndices();
+
+    /**
+     * Get primary key constraint for the given vertex type
+     *
+     * @return The primary key constraint
+     */
+    PrimaryKeyConstraint getPrimaryKeyConstraint();
 }

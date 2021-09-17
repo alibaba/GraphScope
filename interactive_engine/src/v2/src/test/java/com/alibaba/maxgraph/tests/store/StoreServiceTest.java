@@ -15,14 +15,14 @@
  */
 package com.alibaba.maxgraph.tests.store;
 
-import com.alibaba.maxgraph.v2.common.MetaService;
-import com.alibaba.maxgraph.v2.common.OperationBatch;
-import com.alibaba.maxgraph.v2.common.OperationBlob;
-import com.alibaba.maxgraph.v2.common.StoreDataBatch;
-import com.alibaba.maxgraph.v2.common.config.CommonConfig;
-import com.alibaba.maxgraph.v2.common.config.Configs;
-import com.alibaba.maxgraph.v2.store.GraphPartition;
-import com.alibaba.maxgraph.v2.store.StoreService;
+import com.alibaba.maxgraph.groot.common.MetaService;
+import com.alibaba.maxgraph.groot.common.OperationBatch;
+import com.alibaba.maxgraph.groot.common.OperationBlob;
+import com.alibaba.maxgraph.groot.common.StoreDataBatch;
+import com.alibaba.maxgraph.common.config.CommonConfig;
+import com.alibaba.maxgraph.common.config.Configs;
+import com.alibaba.maxgraph.groot.store.GraphPartition;
+import com.alibaba.maxgraph.groot.store.StoreService;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;

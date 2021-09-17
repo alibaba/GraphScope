@@ -15,11 +15,14 @@
  */
 package com.alibaba.maxgraph.dataload.databuild;
 
-import com.alibaba.maxgraph.v2.common.exception.InvalidDataException;
-import com.alibaba.maxgraph.v2.common.frontend.api.schema.*;
-import com.alibaba.maxgraph.v2.common.schema.PropertyValue;
-import com.alibaba.maxgraph.v2.common.util.PkHashUtils;
-import com.alibaba.maxgraph.v2.common.util.SchemaUtils;
+import com.alibaba.maxgraph.compiler.api.exception.InvalidDataException;
+import com.alibaba.maxgraph.compiler.api.schema.GraphEdge;
+import com.alibaba.maxgraph.compiler.api.schema.GraphElement;
+import com.alibaba.maxgraph.compiler.api.schema.GraphSchema;
+import com.alibaba.maxgraph.compiler.api.schema.GraphVertex;
+import com.alibaba.maxgraph.groot.common.schema.PropertyValue;
+import com.alibaba.maxgraph.common.util.PkHashUtils;
+import com.alibaba.maxgraph.common.util.SchemaUtils;
 
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
@@ -31,7 +34,7 @@ public class DataEncoder {
 
     private static final long SNAPSHOT_ID = ~0L;
     private ByteBuffer scratch = ByteBuffer.allocate(1 << 20);
-    private Map<SchemaElement, List<Integer>> labelPkIds = new HashMap<>();
+    private Map<GraphElement, List<Integer>> labelPkIds = new HashMap<>();
 
     private Map<Integer, Codec> labelToCodec;
 
@@ -39,7 +42,7 @@ public class DataEncoder {
         this.labelToCodec = buildCodecs(graphSchema);
     }
 
-    public BytesRef encodeVertexKey(VertexType type, Map<Integer, PropertyValue> propertiesMap, long tableId) {
+    public BytesRef encodeVertexKey(GraphVertex type, Map<Integer, PropertyValue> propertiesMap, long tableId) {
         scratch.clear();
         List<Integer> pkIds = labelPkIds.computeIfAbsent(type, k -> SchemaUtils.getVertexPrimaryKeyList(type));
         long hashId = getHashId(type.getLabelId(), propertiesMap, pkIds);
@@ -50,8 +53,8 @@ public class DataEncoder {
         return new BytesRef(scratch.array(), 0, scratch.limit());
     }
 
-    public BytesRef encodeEdgeKey(VertexType srcType, Map<Integer, PropertyValue> srcPkMap, VertexType dstType,
-                                  Map<Integer, PropertyValue> dstPkMap, EdgeType type,
+    public BytesRef encodeEdgeKey(GraphVertex srcType, Map<Integer, PropertyValue> srcPkMap, GraphVertex dstType,
+                                  Map<Integer, PropertyValue> dstPkMap, GraphEdge type,
                                   Map<Integer, PropertyValue> propertiesMap, long tableId, boolean outEdge) {
         scratch.clear();
         List<Integer> srcPkIds = labelPkIds.computeIfAbsent(srcType, k -> SchemaUtils.getVertexPrimaryKeyList(srcType));
@@ -104,11 +107,11 @@ public class DataEncoder {
 
     private Map<Integer, Codec> buildCodecs(GraphSchema graphSchema) {
         Map<Integer, Codec> res = new HashMap<>();
-        for (VertexType vertexType : graphSchema.getVertexTypes()) {
-            res.put(vertexType.getLabelId(), new Codec(vertexType));
+        for (GraphVertex graphVertex : graphSchema.getVertexList()) {
+            res.put(graphVertex.getLabelId(), new Codec(graphVertex));
         }
-        for (EdgeType edgeType : graphSchema.getEdgeTypes()) {
-            res.put(edgeType.getLabelId(), new Codec(edgeType));
+        for (GraphEdge graphEdge : graphSchema.getEdgeList()) {
+            res.put(graphEdge.getLabelId(), new Codec(graphEdge));
         }
         return res;
     }

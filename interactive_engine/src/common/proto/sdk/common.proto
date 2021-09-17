@@ -33,6 +33,23 @@ message EndpointProto {
     int32 runtimCtrlAndAsyncPort      =  5;
 }
 
+enum DataTypePb {
+    UNKNOWN = 0;
+    BOOL = 1;
+    CHAR = 2;
+    SHORT = 3;
+    INT = 4;
+    LONG = 5;
+    FLOAT = 6;
+    DOUBLE = 7;
+    STRING = 8;
+    BYTES = 9;
+    INT_LIST = 10;
+    LONG_LIST = 11;
+    FLOAT_LIST = 12;
+    DOUBLE_LIST = 13;
+    STRING_LIST = 14;
+}
 
 message Request {
     string traceId                                     = 1;

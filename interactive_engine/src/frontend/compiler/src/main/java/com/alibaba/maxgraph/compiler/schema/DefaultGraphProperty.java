@@ -16,15 +16,15 @@
 package com.alibaba.maxgraph.compiler.schema;
 
 import com.alibaba.maxgraph.compiler.api.schema.GraphProperty;
-import com.alibaba.maxgraph.compiler.api.schema.PropDataType;
+import com.alibaba.maxgraph.compiler.api.schema.DataType;
 import com.google.common.base.MoreObjects;
 
 public class DefaultGraphProperty implements GraphProperty {
     private int id;
     private String name;
-    private PropDataType dataType;
+    private DataType dataType;
 
-    public DefaultGraphProperty(int id, String name, PropDataType dataType) {
+    public DefaultGraphProperty(int id, String name, DataType dataType) {
         this.id = id;
         this.name = name;
         this.dataType = dataType;
@@ -41,8 +41,23 @@ public class DefaultGraphProperty implements GraphProperty {
     }
 
     @Override
-    public PropDataType getDataType() {
+    public DataType getDataType() {
         return this.dataType;
+    }
+
+    @Override
+    public String getComment() {
+        return null;
+    }
+
+    @Override
+    public boolean hasDefaultValue() {
+        return false;
+    }
+
+    @Override
+    public Object getDefaultValue() {
+        return null;
     }
 
     @Override

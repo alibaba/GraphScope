@@ -18,10 +18,8 @@ package com.alibaba.maxgraph.compiler.utils;
 import com.alibaba.maxgraph.compiler.api.schema.GraphProperty;
 import com.alibaba.maxgraph.compiler.api.schema.GraphSchema;
 import com.alibaba.maxgraph.compiler.api.schema.GraphVertex;
-import com.alibaba.maxgraph.compiler.api.schema.PropDataType;
-import com.google.common.collect.Lists;
+import com.alibaba.maxgraph.compiler.api.schema.DataType;
 import com.google.common.collect.Sets;
-import com.google.protobuf.TextFormat;
 import org.apache.tinkerpop.gremlin.structure.T;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -61,8 +59,8 @@ public class SchemaUtils {
         return schema.getPropertyId(name);
     }
 
-    public static Set<PropDataType> getPropDataTypeList(String propName, GraphSchema schema) {
-        Set<PropDataType> dataTypeList = Sets.newHashSet();
+    public static Set<DataType> getPropDataTypeList(String propName, GraphSchema schema) {
+        Set<DataType> dataTypeList = Sets.newHashSet();
         if (tokenNameList.contains(propName)) {
             return dataTypeList;
         }

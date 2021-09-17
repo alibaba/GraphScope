@@ -15,12 +15,12 @@
  */
 package com.alibaba.maxgraph.tests.common.rpc;
 
-import com.alibaba.maxgraph.v2.common.config.CommonConfig;
-import com.alibaba.maxgraph.v2.common.config.Configs;
-import com.alibaba.maxgraph.v2.common.discovery.LocalNodeProvider;
-import com.alibaba.maxgraph.v2.common.discovery.MaxGraphNode;
-import com.alibaba.maxgraph.v2.common.discovery.RoleType;
-import com.alibaba.maxgraph.v2.common.rpc.RpcServer;
+import com.alibaba.maxgraph.common.config.CommonConfig;
+import com.alibaba.maxgraph.common.config.Configs;
+import com.alibaba.maxgraph.groot.common.discovery.LocalNodeProvider;
+import com.alibaba.maxgraph.groot.common.discovery.MaxGraphNode;
+import com.alibaba.maxgraph.common.RoleType;
+import com.alibaba.maxgraph.groot.common.rpc.RpcServer;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;

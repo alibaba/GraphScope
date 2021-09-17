@@ -15,11 +15,11 @@
  */
 package com.alibaba.maxgraph.tests.common.rpc;
 
-import com.alibaba.maxgraph.v2.common.config.CommonConfig;
-import com.alibaba.maxgraph.v2.common.config.Configs;
-import com.alibaba.maxgraph.v2.common.discovery.RoleType;
-import com.alibaba.maxgraph.v2.common.exception.NodeConnectException;
-import com.alibaba.maxgraph.v2.common.rpc.ChannelManager;
+import com.alibaba.maxgraph.common.config.CommonConfig;
+import com.alibaba.maxgraph.common.config.Configs;
+import com.alibaba.maxgraph.common.RoleType;
+import com.alibaba.maxgraph.compiler.api.exception.NodeConnectException;
+import com.alibaba.maxgraph.groot.common.rpc.ChannelManager;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 

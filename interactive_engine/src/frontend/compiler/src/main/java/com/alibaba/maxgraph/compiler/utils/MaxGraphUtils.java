@@ -16,10 +16,9 @@
 package com.alibaba.maxgraph.compiler.utils;
 
 import com.alibaba.maxgraph.Message;
-import com.alibaba.maxgraph.QueryFlowOuterClass;
 import com.alibaba.maxgraph.Message.LogicalCompare;
 import com.alibaba.maxgraph.compiler.api.schema.GraphSchema;
-import com.alibaba.maxgraph.compiler.api.schema.PropDataType;
+import com.alibaba.maxgraph.compiler.api.schema.DataType;
 import com.alibaba.maxgraph.compiler.tree.TreeConstants;
 import com.alibaba.maxgraph.sdkcommon.compiler.custom.CustomPredicate;
 import com.alibaba.maxgraph.sdkcommon.compiler.custom.ListMatchType;
@@ -50,7 +49,6 @@ import com.google.protobuf.ByteString;
 import com.google.protobuf.InvalidProtocolBufferException;
 import org.apache.commons.lang3.StringUtils;
 
-import org.apache.commons.lang3.tuple.Pair;
 import org.apache.tinkerpop.gremlin.process.traversal.Compare;
 import org.apache.tinkerpop.gremlin.process.traversal.Contains;
 import org.apache.tinkerpop.gremlin.process.traversal.Order;
@@ -551,7 +549,7 @@ public class MaxGraphUtils {
 
     public static Message.VariantType parsePropertyDataType(String propKey, GraphSchema schema) {
         try {
-            Set<PropDataType> dataTypeSet = SchemaUtils.getPropDataTypeList(propKey, schema);
+            Set<DataType> dataTypeSet = SchemaUtils.getPropDataTypeList(propKey, schema);
             if (dataTypeSet.size() != 1) {
                 throw new IllegalArgumentException("invalid data type " + dataTypeSet + " for prop " + propKey);
             }
