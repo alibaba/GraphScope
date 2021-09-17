@@ -100,6 +100,7 @@ start_coordinator() {
             -XX:-OmitStackTraceInFastThrow
             -XX:+UseG1GC
             -XX:InitiatingHeapOccupancyPercent=75
+            -XX:+IgnoreUnrecognizedVMOptions
             -Dfile.encoding=UTF-8
             -Dsun.jnu.encoding=UTF-8
             -Dlogfilename=${log_dir}/maxgraph-coordinator.log
@@ -175,6 +176,7 @@ start_frontend() {
             -XX:-OmitStackTraceInFastThrow
             -XX:+UseG1GC
             -XX:InitiatingHeapOccupancyPercent=75
+            -XX:+IgnoreUnrecognizedVMOptions
             -Dfile.encoding=UTF-8
             -Dsun.jnu.encoding=UTF-8
             -Dlogfilename=${log_dir}/maxgraph-frontend.log
@@ -261,7 +263,7 @@ start_executor() {
       value=$(echo ${param} | awk -F":" '{print $2}')
       key=$(printf '%s\n' "${key}" | sed -e 's/[\/&]/\\&/g')
       value=$(printf '%s\n' "${value}" | sed -e 's/[\/&]/\\&/g')
-      sed -i "s/^\(${key}\s*=\s*\).*\$/\1${value}/" ${config_dir}/executor.vineyard.properties
+      sed -i'.bak' "s/^\(${key}\s*=\s*\).*\$/\1${value}/" ${config_dir}/executor.vineyard.properties
     done
   fi
 
