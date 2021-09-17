@@ -17,6 +17,7 @@ package com.alibaba.maxgraph.compiler.utils;
 
 import com.alibaba.maxgraph.Message;
 import com.alibaba.maxgraph.Message.PropertyEntityProto;
+import com.alibaba.maxgraph.common.util.SchemaUtils;
 import com.alibaba.maxgraph.compiler.api.schema.GraphSchema;
 import com.alibaba.maxgraph.result.EdgeResult;
 import com.alibaba.maxgraph.result.ListResult;

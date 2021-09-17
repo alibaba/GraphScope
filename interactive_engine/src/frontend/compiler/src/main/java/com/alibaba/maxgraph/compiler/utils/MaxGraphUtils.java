@@ -17,6 +17,7 @@ package com.alibaba.maxgraph.compiler.utils;
 
 import com.alibaba.maxgraph.Message;
 import com.alibaba.maxgraph.Message.LogicalCompare;
+import com.alibaba.maxgraph.common.util.SchemaUtils;
 import com.alibaba.maxgraph.compiler.api.schema.GraphSchema;
 import com.alibaba.maxgraph.compiler.api.schema.DataType;
 import com.alibaba.maxgraph.compiler.tree.TreeConstants;

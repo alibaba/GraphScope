@@ -17,6 +17,7 @@ package com.alibaba.maxgraph.compiler.utils;
 
 import com.alibaba.maxgraph.Message;
 import com.alibaba.maxgraph.QueryFlowOuterClass;
+import com.alibaba.maxgraph.common.util.SchemaUtils;
 import com.alibaba.maxgraph.compiler.api.schema.GraphSchema;
 import com.alibaba.maxgraph.compiler.logical.LogicalBinaryVertex;
 import com.alibaba.maxgraph.compiler.logical.LogicalEdge;

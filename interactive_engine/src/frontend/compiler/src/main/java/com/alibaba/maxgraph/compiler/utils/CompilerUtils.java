@@ -17,6 +17,7 @@ package com.alibaba.maxgraph.compiler.utils;
 
 import com.alibaba.maxgraph.Message;
 import com.alibaba.maxgraph.QueryFlowOuterClass;
+import com.alibaba.maxgraph.common.util.SchemaUtils;
 import com.alibaba.maxgraph.compiler.api.schema.GraphEdge;
 import com.alibaba.maxgraph.compiler.api.schema.GraphElement;
 import com.alibaba.maxgraph.compiler.api.schema.GraphProperty;
@@ -53,8 +54,6 @@ import java.util.*;
 import java.util.function.BiPredicate;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
-
-import static com.google.common.base.Preconditions.checkNotNull;
 
 public class CompilerUtils {
     public static long parseLongIdValue(Object id, boolean vertexFlag) {

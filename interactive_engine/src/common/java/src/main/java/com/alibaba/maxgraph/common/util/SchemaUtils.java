@@ -67,4 +67,38 @@ public class SchemaUtils {
 
         return dataTypeList;
     }
+
+    public static boolean checkPropExist(String propName, GraphSchema schema) {
+        try {
+            schema.getPropertyId(propName);
+            return true;
+        } catch (Exception ignored) {
+            return false;
+        }
+    }
+
+    public static String getPropertyName(int propId, GraphSchema schema) {
+        return schema.getPropertyName(propId);
+    }
+
+    public static int getPropId(String name, GraphSchema schema) {
+        return schema.getPropertyId(name);
+    }
+
+    public static Set<DataType> getPropDataTypeList(String propName, GraphSchema schema) {
+        Set<DataType> dataTypeList = Sets.newHashSet();
+        if (tokenNameList.contains(propName)) {
+            return dataTypeList;
+        }
+
+        try {
+            for (GraphProperty propertyDef : schema.getPropertyList(propName).values()) {
+                dataTypeList.add(propertyDef.getDataType());
+            }
+        } catch (Exception e) {
+            logger.warn("parse data type for prop " + propName + " fail in schema " + schema, e);
+        }
+
+        return dataTypeList;
+    }
 }

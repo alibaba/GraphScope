@@ -17,23 +17,19 @@ package com.alibaba.maxgraph.compiler.tree;
 
 import com.alibaba.maxgraph.Message;
 import com.alibaba.maxgraph.QueryFlowOuterClass;
+import com.alibaba.maxgraph.common.util.SchemaUtils;
 import com.alibaba.maxgraph.compiler.api.schema.GraphSchema;
 import com.alibaba.maxgraph.compiler.tree.value.MapEntryValueType;
-import com.alibaba.maxgraph.compiler.logical.edge.EdgeShuffleType;
 import com.alibaba.maxgraph.compiler.optimizer.ContextManager;
-import com.alibaba.maxgraph.compiler.utils.SchemaUtils;
 import com.alibaba.maxgraph.sdkcommon.compiler.custom.map.RangeSumFunction;
 import com.alibaba.maxgraph.sdkcommon.compiler.custom.map.MapPropFillFunction;
 import com.alibaba.maxgraph.compiler.tree.value.ValueType;
 import com.alibaba.maxgraph.compiler.tree.value.ValueValueType;
-import com.alibaba.maxgraph.compiler.logical.LogicalEdge;
 import com.alibaba.maxgraph.compiler.logical.LogicalSourceDelegateVertex;
 import com.alibaba.maxgraph.compiler.logical.LogicalSubQueryPlan;
-import com.alibaba.maxgraph.compiler.logical.LogicalUnaryVertex;
 import com.alibaba.maxgraph.compiler.logical.LogicalVertex;
 import com.alibaba.maxgraph.compiler.logical.function.ProcessorFunction;
 import com.alibaba.maxgraph.compiler.utils.CompilerUtils;
-import org.apache.commons.lang3.StringUtils;
 
 import java.util.List;
 import java.util.function.Function;

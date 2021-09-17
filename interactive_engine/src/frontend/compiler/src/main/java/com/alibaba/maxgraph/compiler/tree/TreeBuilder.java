@@ -16,12 +16,12 @@
 package com.alibaba.maxgraph.compiler.tree;
 
 import com.alibaba.maxgraph.Message;
+import com.alibaba.maxgraph.common.util.SchemaUtils;
 import com.alibaba.maxgraph.compiler.api.schema.GraphSchema;
 import com.alibaba.maxgraph.compiler.api.schema.DataType;
 import com.alibaba.maxgraph.compiler.tree.addition.JoinZeroNode;
 import com.alibaba.maxgraph.compiler.tree.source.EstimateCountTreeNode;
 import com.alibaba.maxgraph.compiler.tree.source.SourceCreateGraphTreeNode;
-import com.alibaba.maxgraph.compiler.utils.SchemaUtils;
 import com.alibaba.maxgraph.compiler.utils.TreeNodeUtils;
 import com.alibaba.maxgraph.sdkcommon.compiler.custom.aggregate.CustomAggregationListTraversal;
 import com.alibaba.maxgraph.sdkcommon.compiler.custom.branch.CustomCaseWhenFunction;

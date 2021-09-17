@@ -28,7 +28,7 @@ import com.alibaba.maxgraph.compiler.tree.value.VertexValueType;
 
 import com.alibaba.maxgraph.compiler.utils.MaxGraphUtils;
 import com.alibaba.maxgraph.compiler.utils.ReflectionUtils;
-import com.alibaba.maxgraph.compiler.utils.SchemaUtils;
+import com.alibaba.maxgraph.common.util.SchemaUtils;
 import org.apache.tinkerpop.gremlin.process.computer.traversal.step.map.ShortestPathVertexProgramStep;
 import org.apache.tinkerpop.gremlin.process.traversal.Step;
 import org.apache.tinkerpop.gremlin.process.traversal.Traversal;
