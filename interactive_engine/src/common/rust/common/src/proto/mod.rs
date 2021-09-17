@@ -20,8 +20,6 @@ pub mod coordinator;
 pub mod coordinator_grpc;
 pub mod data;
 pub mod data_grpc;
-pub mod debug;
-pub mod debug_grpc;
 pub mod gremlin_query;
 pub mod gremlin_query_grpc;
 pub mod gremlin_service;
