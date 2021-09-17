@@ -1,10 +1,10 @@
 package com.alibaba.maxgraph.groot.frontend;
 
+import com.alibaba.maxgraph.common.util.UuidUtils;
 import com.alibaba.maxgraph.groot.common.schema.GraphDef;
 import com.alibaba.maxgraph.groot.common.schema.ddl.DdlExecutors;
 import com.alibaba.maxgraph.groot.common.schema.request.DdlException;
 import com.alibaba.maxgraph.groot.common.schema.request.DdlRequestBatch;
-import com.alibaba.maxgraph.common.util.UuidUtils;
 import com.google.protobuf.InvalidProtocolBufferException;
 
 public class BatchDdlClient {
