@@ -290,7 +290,9 @@ class Graph(_GraphBase):
         # attempt to load graph with data
         if incoming_graph_data is not None:
             if self._is_gs_graph(incoming_graph_data):
-                graph_def = from_gs_graph(incoming_graph_data, self, self._default_label)
+                graph_def = from_gs_graph(
+                    incoming_graph_data, self, self._default_label
+                )
                 self._key = graph_def.key
                 self._schema.init_nx_schema(incoming_graph_data.schema)
             else:

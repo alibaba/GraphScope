@@ -78,15 +78,16 @@ def check_node_is_legal(n):
     NetworkXError
         If the type of node is illegal.
     """
+
     def check_node_type(n):
         if not isinstance(n, (int, float, str, bool, type(None))):
             raise NetworkXError(
-                "Node %s is illegal. Type of node must be one of [int, float, str, bool, NoneType]" % (n,)
+                "Node %s is illegal. Type of node must be one of [int, float, str, bool, NoneType]"
+                % (n,)
             )
 
     if isinstance(n, tuple):
         if len(n) != 2 or not isinstance(n[0], str):
-            mag = "Node tuple with label"
             raise NetworkXError(
                 "Labeled node %s must be a 2-tuple and label must be str" % (n,)
             )
