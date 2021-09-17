@@ -110,12 +110,12 @@ public class ClientService extends ClientGrpc.ClientImplBase {
             DdlRequestBatch.Builder ddlBatchBuilder = DdlRequestBatch.newBuilder();
             for (GraphVertex graphVertex : graphSchema.getVertexList()) {
                 String label = graphVertex.getLabel();
-                List<GraphProperty> primaryKeyList = graphVertex.getPrimaryKeyList();
+                List<String> primaryKeyList = graphVertex.getPrimaryKeyConstraint().getPrimaryKeyList();
                 List<GraphProperty> propertyList = graphVertex.getPropertyList();
                 TypeDef.Builder typeDefBuilder = TypeDef.newBuilder();
                 typeDefBuilder.setLabel(label);
                 typeDefBuilder.setTypeEnum(TypeEnum.VERTEX);
-                Set<String> primaryKeys = primaryKeyList.stream().map(p -> p.getName()).collect(Collectors.toSet());
+                Set<String> primaryKeys = new HashSet<>(primaryKeyList);
                 for (GraphProperty graphProperty : propertyList) {
                     PropertyDef.Builder propertyBuilder = PropertyDef.newBuilder();
                     String propertyName = graphProperty.getName();
