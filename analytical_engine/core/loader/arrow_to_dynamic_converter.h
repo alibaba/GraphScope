@@ -210,16 +210,11 @@ class ArrowToDynamicConverter {
              e_label++) {
           auto oe = src_frag->GetOutgoingAdjList(u, e_label);
           auto e_data = src_frag->edge_data_table(e_label);
-          const auto& entry = schema.GetEntry(e_label, "EDGE");
-          std::string v_label_name;
-          for (const auto& rel : entry.relations) {
-            if (label_name == rel.first) {
-              v_label_name = rel.second;
-            }
-          }
           for (auto& e : oe) {
             auto v = e.neighbor();
             auto e_id = e.edge_id();
+            auto v_label_id = src_frag->vertex_label(v);
+            auto v_label_name = schema.GetVertexLabelName(v_label_id);
             auto v_label_oid =
                 folly::dynamic::array(v_label_name, src_frag->GetId(v));
             vid_t v_gid;
@@ -231,16 +226,13 @@ class ArrowToDynamicConverter {
             processed_edges.emplace_back(gid, v_gid, data);
 
             if (src_frag->directed()) {
-              for (const auto& rel : entry.relations) {
-                if (label_name == rel.second) {
-                  v_label_name = rel.first;
-                }
-              }
               auto ie = src_frag->GetIncomingAdjList(u, e_label);
               for (auto& e : ie) {
                 auto v = e.neighbor();
                 if (src_frag->IsOuterVertex(v)) {
                   auto e_id = e.edge_id();
+                  auto v_label_id = src_frag->vertex_label(v);
+                  auto v_label_name = schema.GetVertexLabelName(v_label_id);
                   auto v_label_oid =
                     folly::dynamic::array(v_label_name, src_frag->GetId(v));
                   vid_t v_gid;
