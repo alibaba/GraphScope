@@ -1051,3 +1051,10 @@ def is_simple_path(G, nodes):
         return ctx.to_numpy("r", axis=0)[0]
     else:
         raise ValueError("input nodes is not a list object!")
+
+
+@project_to_simple
+def all_simple_paths(G, source, target_nodes, cutoff):
+    n1json = json.dumps(target_nodes)
+    AppAssets(algo="all_simple_paths", context="tensor")(G, source, n1json, cutoff)
+    return

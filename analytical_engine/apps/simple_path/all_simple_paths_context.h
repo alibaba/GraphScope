@@ -11,6 +11,7 @@ distributed under the License is distributed on an "AS IS" BASIS,
 WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
+Author: Ma JingYuan
 */
 
 #ifndef ANALYTICAL_ENGINE_APPS_SIMPLE_PATH_ALL_SIMPLE_PATHS_CONTEXT_H_
@@ -26,6 +27,7 @@ limitations under the License.
 #include <utility>
 #include <vector>
 
+#include "apps/simple_path/utils.h"
 #include "folly/dynamic.h"
 #include "folly/json.h"
 #include "grape/grape.h"
@@ -61,11 +63,12 @@ class AllSimplePathsContext : public TensorContext<FRAG_T, bool> {
     // init targets.
     std::set<vid_t> visit_p;
     vid_t v;
+    std::vector<oid_t> oid_array;
     folly::dynamic nodes_array = folly::parseJson(targets_json);
-    for (const auto& val : nodes_array) {
-      oid_t key = val.getInt();  // pass cmake
-      if (!frag.Oid2Gid(key, v)) {
-        LOG(ERROR) << "Input oid error" << std::endl;
+    convert_to_oid_array(nodes_array, oid_array);
+    for (const auto& val : oid_array) {
+      if (!frag.Oid2Gid(val, v)) {
+        LOG(ERROR) << "Graph not contain vertex " << val << std::endl;
         break;
       }
       if (!visit_p.count(v)) {
@@ -84,7 +87,7 @@ class AllSimplePathsContext : public TensorContext<FRAG_T, bool> {
     vertex_t source;
     bool native_source = frag.GetInnerVertex(source_id, source);
     if (native_source) {
-      int v_size = (int) frag.GetTotalVerticesNum();
+      int v_size = frag.GetTotalVerticesNum();
       VLOG(0) << "vsize: " << v_size << std::endl;
       frag_vertex_num.resize(frag.fnum());
       frag_vertex_num[frag.fid()] = frag.GetInnerVerticesNum();
@@ -189,7 +192,7 @@ class AllSimplePathsContext : public TensorContext<FRAG_T, bool> {
   std::queue<std::pair<vid_t, int>> curr_level_inner, next_level_inner;
   std::set<vid_t> visit;
   std::vector<vid_t> targets;
-  std::vector<int> frag_vertex_num;
+  std::vector<vid_t> frag_vertex_num;
   int cutoff;
   bool source_flag = false;
   fid_t soucre_fid;

@@ -11,6 +11,7 @@ distributed under the License is distributed on an "AS IS" BASIS,
 WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
+Author: Ma JingYuan
 */
 
 #ifndef ANALYTICAL_ENGINE_APPS_SIMPLE_PATH_ALL_SIMPLE_PATHS_H_
@@ -92,7 +93,7 @@ class AllSimplePaths : public AppBase<FRAG_T, AllSimplePathsContext<FRAG_T>>,
       vid_t msg2 = std::get<0>(msg).second;
       if (std::get<2>(msg) == true) {
         init_counter++;
-        ctx.frag_vertex_num[gid] = (int) msg2;
+        ctx.frag_vertex_num[gid] = msg2;
         if (init_counter == (int) frag.fnum() - 1) {
           vertex_t source;
           frag.GetInnerVertex(ctx.source_id, source);
