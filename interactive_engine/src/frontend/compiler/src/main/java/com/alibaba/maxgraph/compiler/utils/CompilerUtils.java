@@ -328,7 +328,7 @@ public class CompilerUtils {
         } else {
             String className = valueClazz.getSimpleName();
             if (className.contains("Integer")) {
-                className.replace("Integer", "Int");
+                className = className.replace("Integer", "Int");
             }
             return Message.VariantType.valueOf("VT_" + StringUtils.upperCase(className));
         }
