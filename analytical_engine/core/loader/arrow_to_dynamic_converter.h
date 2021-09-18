@@ -32,9 +32,7 @@ namespace gs {
  */
 template <typename T>
 struct DynamicWrapper {
-  static folly::dynamic to_dynamic(T e) {
-    return folly::dynamic(e);
-  }
+  static folly::dynamic to_dynamic(T e) { return folly::dynamic(e); }
 
   static folly::dynamic to_dynamic_array(const std::string& label, T e) {
     return folly::dynamic::array(label, e);
@@ -160,8 +158,8 @@ class ArrowToDynamicConverter {
 
           CHECK(src_vm_ptr->GetOid(gid, oid));
           if (v_label == default_label_id) {
-            dst_vm_ptr->AddVertex(
-                fid, DynamicWrapper<oid_t>::to_dynamic(oid), gid);
+            dst_vm_ptr->AddVertex(fid, DynamicWrapper<oid_t>::to_dynamic(oid),
+                                  gid);
           } else {
             dst_vm_ptr->AddVertex(
                 fid, DynamicWrapper<oid_t>::to_dynamic_array(label_name, oid),
@@ -267,8 +265,9 @@ class ArrowToDynamicConverter {
                   CHECK(dst_vm->GetGid(v_oid, v_gid));
                   folly::dynamic data = folly::dynamic::object();
                   for (auto col_id = 0; col_id < e_data->num_columns();
-                     col_id++) {
-                    BOOST_LEAF_CHECK(extractProperty(e_data, e_id, col_id, data));
+                       col_id++) {
+                    BOOST_LEAF_CHECK(
+                        extractProperty(e_data, e_id, col_id, data));
                   }
                   processed_edges.emplace_back(v_gid, u_gid, data);
                 }

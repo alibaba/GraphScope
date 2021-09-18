@@ -134,8 +134,7 @@ class PropertyGraphUtils : public GSObject {
   bl::result<std::shared_ptr<IFragmentWrapper>> ToDynamicFragment(
       const grape::CommSpec& comm_spec,
       std::shared_ptr<IFragmentWrapper>& wrapper_in,
-      const std::string& dst_graph_name,
-      const std::string& default_label) {
+      const std::string& dst_graph_name, const std::string& default_label) {
 #ifdef NETWORKX
     bl::result<std::shared_ptr<IFragmentWrapper>> wrapper;
 
