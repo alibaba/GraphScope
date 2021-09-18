@@ -18,25 +18,57 @@
 
 import os
 
+from graphscope.dataset.io_utils import download_file
 from graphscope.framework.graph import Graph
 
 
-def load_ogbn_mag(sess, prefix):
+def load_ogbn_mag(sess, prefix=None):
     """Load ogbn_mag graph.
-    The ogbn-mag dataset is a heterogeneous network composed of a subset of the Microsoft Academic Graph (MAG).
-    See more details here:
-    https://ogb.stanford.edu/docs/nodeprop/#ogbn-mag
+    The ogbn-mag dataset is a heterogeneous network composed of a subset
+    of the Microsoft Academic Graph (MAG). See more details here:
+
+        https://ogb.stanford.edu/docs/nodeprop/#ogbn-mag
 
     Args:
         sess (:class:`graphscope.Session`): Load graph within the session.
-        prefix (str): Data directory.
-        directed (bool, optional): Determine to load a directed or undirected graph.
-            Defaults to True.
+        prefix: `PathLike` object that represents a path.
+            With standalone mode, set prefix None will try to download from
+            source URL. Defaults to None.
 
     Returns:
-        :class:`graphscope.Graph`: A Graph object which graph type is ArrowProperty
+        :class:`graphscope.framework.graph.GraphDAGNode`:
+            A Graph node which graph type is ArrowProperty, evaluated in eager mode.
+
+    Examples:
+        .. code:: python
+
+        >>> # lazy mode
+        >>> import graphscope
+        >>> from graphscope.dataset.ogbn_mag import load_ogbn_mag
+        >>> sess = graphscope.session(mode="lazy")
+        >>> g = load_ogbn_mag(sess, "/path/to/dataset")
+        >>> g1 = sess.run(g)
+
+        >>> # eager mode
+        >>> import graphscope
+        >>> from graphscope.dataset.ogbn_mag import load_ogbn_mag
+        >>> sess = graphscope.session(mode="eager")
+        >>> g = load_ogbn_mag(sess, "/path/to/dataset")
     """
-    prefix = os.path.expandvars(prefix)
+    if prefix is not None:
+        prefix = os.path.expandvars(prefix)
+    else:
+        fname = "ogbn_mag_small.tar.gz"
+        origin = "https://graphscope.oss-cn-beijing.aliyuncs.com/dataset/ogbn_mag_small.tar.gz"
+        fpath = download_file(
+            fname,
+            origin=origin,
+            extract=True,
+            file_hash="ccd128ab673e5d7dd1cceeaa4ba5d65b67a18212c4a27b0cd090359bd7042b10",
+        )
+        # assumed dirname is ogbn_mag_small after extracting from ogbn_mag_small.tar.gz
+        prefix = fpath[0:-7]
+
     graph = sess.g()
     graph = (
         graph.add_vertices(os.path.join(prefix, "paper.csv"), "paper")
