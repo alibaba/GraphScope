@@ -321,7 +321,11 @@ public class CompilerUtils {
         if (value instanceof List) {
             List<Object> valueList = List.class.cast(value);
             Object valueObject = valueList.get(0);
-            return Message.VariantType.valueOf("VT_" + StringUtils.upperCase(valueObject.getClass().getSimpleName()) + "_LIST");
+            String className = valueObject.getClass().getSimpleName();
+            if (className.contains("Integer")) {
+                className = className.replace("Integer", "Int");
+            }
+            return Message.VariantType.valueOf("VT_" + StringUtils.upperCase(className) + "_LIST");
         } else if (StringUtils.contains(value.getClass().toString(), "PickTokenKey")) {
             Number number = ReflectionUtils.getFieldValue(BranchStep.class.getDeclaredClasses()[0], value, "number");
             return Message.VariantType.valueOf("VT_" + StringUtils.upperCase(number.getClass().getSimpleName()));
