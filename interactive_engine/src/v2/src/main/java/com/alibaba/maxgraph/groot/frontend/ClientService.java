@@ -33,7 +33,6 @@ import org.slf4j.LoggerFactory;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.stream.Collectors;
 
 public class ClientService extends ClientGrpc.ClientImplBase {
     private static final Logger logger = LoggerFactory.getLogger(ClientService.class);
