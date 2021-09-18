@@ -19,6 +19,7 @@
 import os
 
 import pytest
+from networkx.utils.misc import default_opener
 
 import graphscope
 import graphscope.nx as nx
@@ -28,6 +29,7 @@ from graphscope.framework.errors import AnalyticalEngineInternalError
 from graphscope.framework.errors import InvalidArgumentError
 from graphscope.framework.loader import Loader
 from graphscope.proto import graph_def_pb2
+from graphscope.proto.types_pb2 import SRC_LABEL
 
 
 def ldbc_sample_single_label(prefix, directed):
@@ -80,17 +82,28 @@ def ldbc_sample_multi_labels(prefix, directed):
             "post",
         )
     )
-    graph = graph.add_edges(
-        Loader(os.path.join(prefix, "comment_replyOf_comment_0_0.csv"), delimiter="|"),
-        "replyOf",
-        src_label="comment",
-        dst_label="comment",
-    ).add_edges(
-        Loader(os.path.join(prefix, "person_knows_person_0_0.csv"), delimiter="|"),
-        "knows",
-        ["creationDate"],
-        src_label="person",
-        dst_label="person",
+    graph = (
+        graph.add_edges(
+            Loader(
+                os.path.join(prefix, "comment_replyOf_comment_0_0.csv"), delimiter="|"
+            ),
+            "replyOf",
+            src_label="comment",
+            dst_label="comment",
+        )
+        .add_edges(
+            Loader(os.path.join(prefix, "person_knows_person_0_0.csv"), delimiter="|"),
+            "knows",
+            ["creationDate"],
+            src_label="person",
+            dst_label="person",
+        )
+        .add_edges(
+            Loader(os.path.join(prefix, "comment_replyOf_post_0_0.csv"), delimiter="|"),
+            "replyOf2",
+            src_label="comment",
+            dst_label="post",
+        )
     )
     return graph
 
@@ -299,28 +312,52 @@ class TestGraphTransformation(object):
     def test_empty_gs_to_nx(self):
         empty_nx = self.NXGraph(dist=True)
         empty_gs_graph = g(empty_nx)
-        nx_g = self.NXGraph(empty_gs_graph, dist=True)
+        nx_g = self.NXGraph(empty_gs_graph)
         self.assert_convert_success(empty_gs_graph, nx_g)
 
     def test_single_label_gs_to_nx(self):
         g = self.single_label_g
-        nx_g = self.NXGraph(g, dist=True)
+        nx_g = self.NXGraph(g)
         self.assert_convert_success(g, nx_g)
         assert nx_g.number_of_nodes() == 76830
         assert nx_g.number_of_edges() == 38786
+        assert 618475290625 not in nx_g
+        assert ("comment", 618475290625) in nx_g
+        nx_g2 = self.NXGraph(g, default_label="comment")
+        assert nx_g2.number_of_nodes() == 76830
+        assert nx_g2.number_of_edges() == 38786
+        assert 618475290625 in nx_g2
+        assert ("comment", 618475290625) not in nx_g2
 
     def test_multi_label_gs_to_nx(self):
         g = self.multi_label_g
-        nx_g = self.NXGraph(g, dist=True)
+        nx_g = self.NXGraph(g)
         self.assert_convert_success(g, nx_g)
+        assert nx_g.number_of_nodes == (76830 + 903 + 78976)
+        assert nx_g.number_of_edges == (38786 + 6626 + 38044)
+        assert 618475290625 not in nx_g  # comment node is (label, id) format
+        assert ("comment", 618475290625) in nx_g
+        assert 933 not in nx_g  # person node is (label, id) format
+        assert ("person", 933) in nx_g
+        assert 618475290624 not in nx_g  # post node is (label, id) format
+        assert ("post", 618475290624) in nx_g
+        nx_g2 = self.NXGraph(g, default_label="comment")
+        assert nx_g2.number_of_nodes == (76830 + 903 + 78976)
+        assert nx_g2.number_of_edges == (38786 + 6626 + 38044)
+        assert 618475290625 in nx_g2  # comment node is default label node
+        assert ("comment", 618475290625) not in nx_g2
+        assert 933 not in nx_g2  # person node is (label, id) format
+        assert ("person", 933) in nx_g2
+        assert 618475290624 not in nx_g2  # post node is (label, id) format
+        assert ("post", 618475290624) in nx_g2
 
     def test_str_oid_gs_to_nx(self):
         g = self.str_oid_g
-        nx_g = self.NXGraph(g, dist=True)
+        nx_g = self.NXGraph(g)
         self.assert_convert_success(g, nx_g)
 
     def test_gs_to_nx_with_sssp(self):
-        nx_g = self.NXGraph(self.p2p, dist=True)
+        nx_g = self.NXGraph(self.p2p)
         ret = nx.builtin.single_source_dijkstra_path_length(nx_g, 6, weight="f2")
         ret2 = nx.builtin.single_source_dijkstra_path_length(
             self.p2p_nx, 6, weight="weight"
