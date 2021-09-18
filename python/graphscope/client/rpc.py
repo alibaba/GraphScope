@@ -124,11 +124,7 @@ class GRPCClient(object):
                 else:
                     logger.warning("Heart beat coordinator failed, %s", msg)
                 if time.time() - begin_time >= timeout_seconds:
-                    raise ConnectionError(
-                        "Connect coordinator timeout, coordinator code: %s, details: %s",
-                        e.code().name,
-                        e.details(),
-                    )
+                    raise ConnectionError(f"Connect coordinator timeout, {msg}")
                 time.sleep(1)
 
     def connect(self, cleanup_instance=True, dangling_timeout_seconds=60):
