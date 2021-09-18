@@ -333,7 +333,7 @@ public class MaxGraphUtils {
     public static Message.Value.Builder createValueFromType(Object value, Message.VariantType variantType, CompilerConfig compilerConfig) {
         Message.Value.Builder valueBuilder = Message.Value.newBuilder();
         switch (variantType) {
-            case VT_INTEGER:
+            case VT_INT:
                 valueBuilder.setIntValue(Integer.class.cast(value));
                 break;
             case VT_LONG:
@@ -354,7 +354,7 @@ public class MaxGraphUtils {
             case VT_LONG_LIST:
                 valueBuilder.addAllLongValueList((List<Long>) value);
                 break;
-            case VT_INTEGER_LIST:
+            case VT_INT_LIST:
                 valueBuilder.addAllIntValueList((List<Integer>) value);
                 break;
             default:
@@ -467,7 +467,7 @@ public class MaxGraphUtils {
         ByteBuffer byteBuffer = ByteBuffer.wrap(byteString.toByteArray());
         Object value;
         switch (variantType) {
-            case VT_INTEGER:
+            case VT_INT:
                 value = byteBuffer.getInt();
                 break;
             case VT_LONG:
@@ -482,7 +482,7 @@ public class MaxGraphUtils {
             case VT_DOUBLE:
                 value = byteBuffer.getDouble();
                 break;
-            case VT_INTEGER_LIST: {
+            case VT_INT_LIST: {
                 try {
                     Message.ListInt listIntValue = Message.ListInt.parseFrom(byteString);
                     return Lists.newArrayList(listIntValue.getValueList());
@@ -537,8 +537,8 @@ public class MaxGraphUtils {
 
     private static ValueType parseValueTypeFromDataType(Message.VariantType variantType) {
         switch (variantType) {
-            case VT_INTEGER_LIST:
-                return new ListValueType(new ElementValueType(ElementType.VALUE, Message.VariantType.VT_INTEGER));
+            case VT_INT_LIST:
+                return new ListValueType(new ElementValueType(ElementType.VALUE, Message.VariantType.VT_INT));
             case VT_LONG_LIST:
                 return new ListValueType(new ElementValueType(ElementType.VALUE, Message.VariantType.VT_LONG));
             case VT_STRING_LIST:
