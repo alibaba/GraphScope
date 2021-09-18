@@ -18,7 +18,7 @@ cur_dir = $(cd "$(dirname "$0")"; pwd)
 
 curl -XPOST $url -d 'modern_graph = session.load_from(
     vertices={
-    "person": (Loader("/testingdata/modern_graph/person.csv", delimiter="|", header_row=True), ["name", ("age", "int")], "id"),
+    "person": (Loader("/testingdata/modern_graph/person.csv", delimiter="|", header_row=True), ["name", ("age", "integer")], "id"),
     "software": (Loader("/testingdata/modern_graph/software.csv", delimiter="|", header_row=True), ["name", "lang"], "id"),
     },
     edges={

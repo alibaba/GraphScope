@@ -31,7 +31,7 @@ curl -XPOST $url -d 'crew_graph = session.load_from(
         ),
         "uses": (
             Loader( "/testingdata/crew/uses_vineyard.dat", header_row=True, delimiter=","),
-            ["id", ("skill","int")],
+            ["id", ("skill","integer")],
             ("srcId", "person"),
             ("dstId", "software"),
         ),
