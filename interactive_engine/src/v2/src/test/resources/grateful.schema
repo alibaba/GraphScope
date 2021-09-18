@@ -57,7 +57,7 @@
         {
           "id": 4,
           "name": "performances",
-          "data_type": "INT",
+          "data_type": "INTEGER",
           "hasDefaultValue": false,
           "defaultValue": null,
           "comment": "performances"
@@ -99,7 +99,7 @@
         {
           "id": 5,
           "name": "weight",
-          "data_type": "INT",
+          "data_type": "INTEGER",
           "hasDefaultValue": false,
           "defaultValue": null,
           "comment": "weight"

@@ -45,7 +45,7 @@ public class DataTypeTest {
         data2.setExpression("iNT");
         Assert.expectThrows(MaxGraphException.class, () -> data2.setExpression("INt1,StrinG"));
 
-        final DataType data3 = DataType.INT;
+        final DataType data3 = DataType.INTEGER;
         data3.setExpression("String");
     }
 

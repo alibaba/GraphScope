@@ -48,7 +48,7 @@ public class ConstantTreeNode extends UnaryTreeNode {
         Message.Value.Builder argumentBuilder = Message.Value.newBuilder()
                 .setValueType(variantType);
         switch (variantType) {
-            case VT_INT: {
+            case VT_INTEGER: {
                 argumentBuilder.setIntValue((int) constant);
                 break;
             }
@@ -68,7 +68,7 @@ public class ConstantTreeNode extends UnaryTreeNode {
                 argumentBuilder.setStrValue((String) constant);
                 break;
             }
-            case VT_INT_LIST: {
+            case VT_INTEGER_LIST: {
                 argumentBuilder.addAllIntValueList((Collection<Integer>) constant);
                 break;
             }

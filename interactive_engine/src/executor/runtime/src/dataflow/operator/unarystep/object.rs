@@ -384,7 +384,7 @@ impl<F> ConstantOperator<F>
         let value = base.get_argument().clone();
         let message = {
             match value.get_value_type() {
-                VariantType::VT_INT => {
+                VariantType::VT_INTEGER => {
                     RawMessage::from_value(ValuePayload::Int(value.get_int_value()))
                 }
                 VariantType::VT_LONG => {

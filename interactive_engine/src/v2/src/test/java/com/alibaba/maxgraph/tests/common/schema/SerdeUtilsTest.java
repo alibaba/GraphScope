@@ -41,7 +41,7 @@ public class SerdeUtilsTest {
         assertEquals(SerdeUtils.bytesToObject(DataType.SHORT, SerdeUtils.objectToBytes(DataType.SHORT, s)), s);
 
         int i = 10;
-        assertEquals(SerdeUtils.bytesToObject(DataType.INT, SerdeUtils.objectToBytes(DataType.INT, i)), i);
+        assertEquals(SerdeUtils.bytesToObject(DataType.INTEGER, SerdeUtils.objectToBytes(DataType.INTEGER, i)), i);
 
         long l = 100000000000000L;
         assertEquals(SerdeUtils.bytesToObject(DataType.LONG, SerdeUtils.objectToBytes(DataType.LONG, l)), l);
@@ -59,7 +59,7 @@ public class SerdeUtilsTest {
         assertEquals(SerdeUtils.bytesToObject(DataType.BYTES, SerdeUtils.objectToBytes(DataType.BYTES, bts)), bts);
 
         List<Integer> il = Arrays.asList(1, 2, 3);
-        assertEquals(SerdeUtils.bytesToObject(DataType.INT_LIST, SerdeUtils.objectToBytes(DataType.INT_LIST, il)), il);
+        assertEquals(SerdeUtils.bytesToObject(DataType.INTEGER_LIST, SerdeUtils.objectToBytes(DataType.INTEGER_LIST, il)), il);
 
         List<Long> ll = Arrays.asList(100000000000001L, 100000000000002L, 100000000000003L);
         assertEquals(SerdeUtils.bytesToObject(DataType.LONG_LIST, SerdeUtils.objectToBytes(DataType.LONG_LIST, ll)),

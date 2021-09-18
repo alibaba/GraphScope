@@ -41,7 +41,7 @@ public class SerdeUtils {
                     return ByteBuffer.allocate(Character.BYTES).putChar((Character) valObject).array();
                 case SHORT:
                     return ByteBuffer.allocate(Short.BYTES).putShort(Short.valueOf(valObject.toString())).array();
-                case INT:
+                case INTEGER:
                     return ByteBuffer.allocate(Integer.BYTES).putInt(Integer.valueOf(valObject.toString())).array();
                 case LONG:
                     return ByteBuffer.allocate(Long.BYTES).putLong(Long.valueOf(valObject.toString())).array();
@@ -53,7 +53,7 @@ public class SerdeUtils {
                     return ((String) valObject).getBytes(StandardCharsets.UTF_8);
                 case BYTES:
                     return (byte[]) valObject;
-                case INT_LIST:
+                case INTEGER_LIST:
                     List<Integer> intList = ((List<Object>) valObject).stream().map(o -> Integer.valueOf(o.toString()))
                             .collect(Collectors.toList());
                     return listToBytes(intList, (dos, e) -> {
@@ -140,7 +140,7 @@ public class SerdeUtils {
                 case SHORT:
                     valObject = ByteBuffer.wrap(valBytes).getShort();
                     break;
-                case INT:
+                case INTEGER:
                     valObject = ByteBuffer.wrap(valBytes).getInt();
                     break;
                 case LONG:
@@ -158,7 +158,7 @@ public class SerdeUtils {
                 case BYTES:
                     valObject = valBytes;
                     break;
-                case INT_LIST:
+                case INTEGER_LIST:
                     valObject = parseListVal(valBytes, dis -> {
                         try {
                             return dis.readInt();

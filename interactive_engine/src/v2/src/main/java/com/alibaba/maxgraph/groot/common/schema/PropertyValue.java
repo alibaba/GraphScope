@@ -53,7 +53,7 @@ public class PropertyValue {
                     return valString.charAt(0);
                 case SHORT:
                     return Short.valueOf(valString);
-                case INT:
+                case INTEGER:
                     return Integer.valueOf(valString);
                 case LONG:
                     return Long.valueOf(valString);

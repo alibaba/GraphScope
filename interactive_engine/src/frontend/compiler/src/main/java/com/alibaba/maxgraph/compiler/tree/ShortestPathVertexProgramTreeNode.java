@@ -92,7 +92,7 @@ public class ShortestPathVertexProgramTreeNode extends UnaryTreeNode {
 
                 propertyValueBuilder.setValueType(variantType);
                 switch (variantType) {
-                    case VT_INT:
+                    case VT_INTEGER:
                         propertyValueBuilder.setIntValue(Integer.parseInt(value.toString()));
                         break;
                     case VT_LONG:

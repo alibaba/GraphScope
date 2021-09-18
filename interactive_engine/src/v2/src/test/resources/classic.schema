@@ -25,7 +25,7 @@
         {
           "id": 3,
           "name": "age",
-          "data_type": "INT",
+          "data_type": "INTEGER",
           "hasDefaultValue": false,
           "defaultValue": null,
           "comment": "age"
@@ -221,7 +221,7 @@
         {
           "id": 3,
           "name": "age",
-          "data_type": "INT",
+          "data_type": "INTEGER",
           "hasDefaultValue": false,
           "defaultValue": null,
           "comment": "age"

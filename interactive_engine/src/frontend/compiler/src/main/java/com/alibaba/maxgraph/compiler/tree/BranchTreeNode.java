@@ -132,7 +132,7 @@ public class BranchTreeNode extends UnaryTreeNode {
             Message.VariantType variantType = CompilerUtils.parseVariantType(pickValue.getClass(), pickValue);
             Message.Value.Builder valueBuilder = Message.Value.newBuilder().setValueType(variantType);
             switch (variantType) {
-                case VT_INT: {
+                case VT_INTEGER: {
                     if (pickValue instanceof Integer) {
                         valueBuilder.setIntValue((Integer) pickValue);
                     } else {

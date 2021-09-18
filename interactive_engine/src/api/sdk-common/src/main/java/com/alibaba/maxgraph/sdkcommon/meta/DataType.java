@@ -39,7 +39,7 @@ public class DataType {
     public final static DataType BOOL = new DataType(InternalDataType.BOOL);
     public final static DataType CHAR = new DataType(InternalDataType.CHAR);
     public final static DataType SHORT = new DataType(InternalDataType.SHORT);
-    public final static DataType INT = new DataType(InternalDataType.INT);
+    public final static DataType INTEGER = new DataType(InternalDataType.INTEGER);
     public final static DataType LONG = new DataType(InternalDataType.LONG);
     public final static DataType FLOAT = new DataType(InternalDataType.FLOAT);
     public final static DataType DOUBLE = new DataType(InternalDataType.DOUBLE);
@@ -65,7 +65,8 @@ public class DataType {
     }
 
     public boolean isInt() {
-        return this.type == InternalDataType.SHORT || this.type == InternalDataType.INT || this.type == InternalDataType.LONG;
+        return this.type == InternalDataType.SHORT || this.type == InternalDataType.INTEGER
+            || this.type == InternalDataType.LONG;
     }
 
     public void setExpression(String expression) throws MaxGraphException {
@@ -132,7 +133,7 @@ public class DataType {
             case BOOL:
             case CHAR:
             case SHORT:
-            case INT:
+            case INTEGER:
             case LONG:
             case FLOAT:
             case DOUBLE:
@@ -149,7 +150,7 @@ public class DataType {
                 return 1;
             case SHORT:
                 return 2;
-            case INT:
+            case INTEGER:
             case FLOAT:
                 return 4;
             case LONG:

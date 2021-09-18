@@ -38,13 +38,13 @@ enum DataTypePb {
     BOOL = 1;
     CHAR = 2;
     SHORT = 3;
-    INT = 4;
+    INTEGER = 4;
     LONG = 5;
     FLOAT = 6;
     DOUBLE = 7;
     STRING = 8;
     BYTES = 9;
-    INT_LIST = 10;
+    INTEGER_LIST = 10;
     LONG_LIST = 11;
     FLOAT_LIST = 12;
     DOUBLE_LIST = 13;

@@ -135,7 +135,7 @@ public class ResultParserUtils {
             case VT_SHORT: {
                 return byteBuffer.getShort();
             }
-            case VT_INT:
+            case VT_INTEGER:
                 return byteBuffer.getInt();
             case VT_LONG:
                 return byteBuffer.getLong();
@@ -148,7 +148,7 @@ public class ResultParserUtils {
                 return byteBuffer.getDouble();
             case VT_BINARY:
                 return byteString.toByteArray();
-            case VT_INT_LIST: {
+            case VT_INTEGER_LIST: {
                 try {
                     Message.ListInt listIntValue = Message.ListInt.parseFrom(byteString);
                     return Lists.newArrayList(listIntValue.getValueList());
@@ -328,7 +328,7 @@ public class ResultParserUtils {
             valueEntity.setValueType(Message.VariantType.VT_SHORT);
             valueEntity.setPayload(ByteString.copyFromUtf8(String.valueOf((Short) value)));
         } else if (value instanceof Integer) {
-            valueEntity.setValueType(Message.VariantType.VT_INT);
+            valueEntity.setValueType(Message.VariantType.VT_INTEGER);
             valueEntity.setPayload(ByteString.copyFromUtf8(String.valueOf((Integer) value)));
         } else if (value instanceof Long) {
             valueEntity.setValueType(Message.VariantType.VT_LONG);
@@ -352,7 +352,7 @@ public class ResultParserUtils {
         } else if (value instanceof List) {
             List listValue = (List) value;
             if (listValue.isEmpty() || listValue.get(0) instanceof Integer) {
-                valueEntity.setValueType(Message.VariantType.VT_INT_LIST);
+                valueEntity.setValueType(Message.VariantType.VT_INTEGER_LIST);
                 Message.ListInt listInt = Message.ListInt.newBuilder().addAllValue(listValue).build();
                 valueEntity.setPayload(listInt.toByteString());
             } else if (listValue.get(0) instanceof Long) {

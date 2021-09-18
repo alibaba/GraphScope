@@ -72,8 +72,8 @@ public class SchemaManagerTest {
         schemaManager.start();
         assertEquals(initialGraphDef, schemaManager.getGraphDef());
 
-        PropertyValue defaultValue = new PropertyValue(DataType.INT, ByteBuffer.allocate(Integer.BYTES).putInt(1).array());
-        PropertyDef propertyDef = new PropertyDef(1, 1, "p1", DataType.INT, defaultValue, true, "property_1");
+        PropertyValue defaultValue = new PropertyValue(DataType.INTEGER, ByteBuffer.allocate(Integer.BYTES).putInt(1).array());
+        PropertyDef propertyDef = new PropertyDef(1, 1, "p1", DataType.INTEGER, defaultValue, true, "property_1");
         TypeDef typeDef = TypeDef.newBuilder()
                 .setLabel("vertex1")
                 .addPropertyDef(propertyDef)

@@ -107,11 +107,11 @@ public class CompilerUtils {
                     }
                     logicalCompareBuilder.setValue(Message.Value.newBuilder()
                             .setIntValue(labelId)
-                            .setValueType(Message.VariantType.VT_INT))
-                            .setType(Message.VariantType.VT_INT);
+                            .setValueType(Message.VariantType.VT_INTEGER))
+                            .setType(Message.VariantType.VT_INTEGER);
                 } else if (hasContainer.getBiPredicate() instanceof Contains) {
                     Collection<String> labelIdList = (Collection<String>) hasContainer.getValue();
-                    Message.Value.Builder valueBuilder = Message.Value.newBuilder().setValueType(Message.VariantType.VT_INT_LIST);
+                    Message.Value.Builder valueBuilder = Message.Value.newBuilder().setValueType(Message.VariantType.VT_INTEGER_LIST);
                     labelIdList.forEach(v -> {
                         try {
                             GraphElement element = schema.getElement(v);
@@ -119,7 +119,7 @@ public class CompilerUtils {
                         } catch (Exception ignored) {
                         }
                     });
-                    logicalCompareBuilder.setValue(valueBuilder).setType(Message.VariantType.VT_INT_LIST);
+                    logicalCompareBuilder.setValue(valueBuilder).setType(Message.VariantType.VT_INTEGER_LIST);
                 } else {
                     throw new IllegalArgumentException("label compare => " + hasContainer.getBiPredicate());
                 }
@@ -279,7 +279,7 @@ public class CompilerUtils {
     private static Message.Value.Builder parseValueBuilderFromType(Object value, Message.VariantType variantType) {
         Message.Value.Builder valueBuilder = Message.Value.newBuilder().setValueType(variantType);
         switch (variantType) {
-            case VT_INT:
+            case VT_INTEGER:
                 valueBuilder.setIntValue(Integer.class.cast(value));
                 break;
             case VT_LONG:
@@ -300,7 +300,7 @@ public class CompilerUtils {
             case VT_LONG_LIST:
                 valueBuilder.addAllLongValueList((List<Long>) value);
                 break;
-            case VT_INT_LIST:
+            case VT_INTEGER_LIST:
                 valueBuilder.addAllIntValueList((List<Integer>) value);
                 break;
             default:
@@ -337,10 +337,10 @@ public class CompilerUtils {
     public static com.alibaba.maxgraph.sdkcommon.meta.DataType parseDataTypeFromPropDataType(DataType dataType) {
         try {
             switch (dataType) {
-                case INT: {
-                    return com.alibaba.maxgraph.sdkcommon.meta.DataType.INT;
+                case INTEGER: {
+                    return com.alibaba.maxgraph.sdkcommon.meta.DataType.INTEGER;
                 }
-                case INT_LIST: {
+                case INTEGER_LIST: {
                     com.alibaba.maxgraph.sdkcommon.meta.DataType type = new com.alibaba.maxgraph.sdkcommon.meta.DataType(InternalDataType.LIST);
                     type.setExpression("INT");
                     return type;
@@ -544,7 +544,7 @@ public class CompilerUtils {
 
     public static Object convertValueWithType(Object value, Message.VariantType dataType) {
         switch (dataType) {
-            case VT_INT:
+            case VT_INTEGER:
                 return Integer.parseInt(value.toString());
             case VT_LONG:
                 return Long.parseLong(value.toString());
@@ -554,7 +554,7 @@ public class CompilerUtils {
                 return Double.parseDouble(value.toString());
             case VT_STRING:
                 return value.toString();
-            case VT_INT_LIST:
+            case VT_INTEGER_LIST:
                 if (value instanceof Collection) {
                     return ((Collection) value).stream().map(v -> Integer.parseInt(v.toString())).collect(Collectors.toList());
                 } else {
