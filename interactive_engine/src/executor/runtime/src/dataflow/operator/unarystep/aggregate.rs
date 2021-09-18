@@ -632,7 +632,7 @@ impl<F> UnaryOperator for SumOperator<F>
             if let Some(value) = message.get_value() {
                 let bulk = message.get_bulk();
                 match self.value_type {
-                    VariantType::VT_INTEGER | VariantType::VT_LONG => {
+                    VariantType::VT_INT | VariantType::VT_LONG => {
                         if let Ok(val) = value.get_long() {
                             curr_agg_value.val_long += val * bulk;
                         }
@@ -653,7 +653,7 @@ impl<F> UnaryOperator for SumOperator<F>
     fn finish(&mut self) -> Box<dyn Iterator<Item=RawMessage> + Send> {
         let output_value_type = {
             match self.value_type {
-                VariantType::VT_INTEGER | VariantType::VT_LONG => VariantType::VT_LONG,
+                VariantType::VT_INT | VariantType::VT_LONG => VariantType::VT_LONG,
                 _ => VariantType::VT_DOUBLE,
             }
         };
@@ -747,7 +747,7 @@ impl<F> UnaryOperator for MaxOperator<F>
             };
             if let Some(value) = message.get_value() {
                 match self.value_type {
-                    VariantType::VT_INTEGER => {
+                    VariantType::VT_INT => {
                         if let Ok(val) = value.get_int() {
                             if val > curr_agg_value.val_int {
                                 curr_agg_value.val_int = val;
@@ -881,7 +881,7 @@ impl<F> UnaryOperator for MinOperator<F>
             };
             if let Some(value) = message.get_value() {
                 match self.value_type {
-                    VariantType::VT_INTEGER => {
+                    VariantType::VT_INT => {
                         if let Ok(val) = value.get_int() {
                             if val < curr_agg_value.val_int {
                                 curr_agg_value.val_int = val;
@@ -949,7 +949,7 @@ impl<F> UnaryOperator for MinOperator<F>
 fn build_aggregate_value_from_message(message: &RawMessage, value_type: VariantType) -> AggregateValue {
     if let Some(value) = message.get_value() {
         match value_type {
-            VariantType::VT_INTEGER => {
+            VariantType::VT_INT => {
                 if let Ok(val) = value.get_int() {
                     return AggregateValue {
                         val_int: val,
@@ -1021,7 +1021,7 @@ fn build_aggregate_value_from_message(message: &RawMessage, value_type: VariantT
 
 fn build_aggregate_value(value_type: VariantType, agg_value: &mut AggregateValue) -> Option<RawMessage> {
     match value_type {
-        VariantType::VT_INTEGER => Some(RawMessage::from_value(ValuePayload::Int(agg_value.val_int))),
+        VariantType::VT_INT => Some(RawMessage::from_value(ValuePayload::Int(agg_value.val_int))),
         VariantType::VT_LONG => Some(RawMessage::from_value(ValuePayload::Long(agg_value.val_long))),
         VariantType::VT_FLOAT => Some(RawMessage::from_value(ValuePayload::Float(agg_value.val_float.into_bytes()))),
         VariantType::VT_DOUBLE => Some(RawMessage::from_value(ValuePayload::Double(agg_value.val_double.into_bytes()))),
