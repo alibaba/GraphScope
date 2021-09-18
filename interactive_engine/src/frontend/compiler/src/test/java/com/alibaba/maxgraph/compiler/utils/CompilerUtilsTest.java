@@ -28,8 +28,8 @@ public class CompilerUtilsTest {
         Assert.assertEquals(boolType, com.alibaba.maxgraph.sdkcommon.meta.DataType.BOOL);
         com.alibaba.maxgraph.sdkcommon.meta.DataType shortType = CompilerUtils.parseDataTypeFromPropDataType(DataType.SHORT);
         Assert.assertEquals(shortType, com.alibaba.maxgraph.sdkcommon.meta.DataType.SHORT);
-        com.alibaba.maxgraph.sdkcommon.meta.DataType intType = CompilerUtils.parseDataTypeFromPropDataType(DataType.INTEGER);
-        Assert.assertEquals(intType, com.alibaba.maxgraph.sdkcommon.meta.DataType.INTEGER);
+        com.alibaba.maxgraph.sdkcommon.meta.DataType intType = CompilerUtils.parseDataTypeFromPropDataType(DataType.INT);
+        Assert.assertEquals(intType, com.alibaba.maxgraph.sdkcommon.meta.DataType.INT);
         com.alibaba.maxgraph.sdkcommon.meta.DataType longType = CompilerUtils.parseDataTypeFromPropDataType(DataType.LONG);
         Assert.assertEquals(longType, com.alibaba.maxgraph.sdkcommon.meta.DataType.LONG);
         com.alibaba.maxgraph.sdkcommon.meta.DataType stringType = CompilerUtils.parseDataTypeFromPropDataType(DataType.STRING);
@@ -38,7 +38,7 @@ public class CompilerUtilsTest {
         Assert.assertEquals(floatType, com.alibaba.maxgraph.sdkcommon.meta.DataType.FLOAT);
         com.alibaba.maxgraph.sdkcommon.meta.DataType doubleType = CompilerUtils.parseDataTypeFromPropDataType(DataType.DOUBLE);
         Assert.assertEquals(doubleType, com.alibaba.maxgraph.sdkcommon.meta.DataType.DOUBLE);
-        com.alibaba.maxgraph.sdkcommon.meta.DataType intListType = CompilerUtils.parseDataTypeFromPropDataType(DataType.INTEGER_LIST);
+        com.alibaba.maxgraph.sdkcommon.meta.DataType intListType = CompilerUtils.parseDataTypeFromPropDataType(DataType.INT_LIST);
         Assert.assertEquals(intListType.getType(), InternalDataType.LIST);
         Assert.assertEquals(StringUtils.lowerCase(intListType.getExpression()), "int");
         com.alibaba.maxgraph.sdkcommon.meta.DataType longListType = CompilerUtils.parseDataTypeFromPropDataType(DataType.LONG_LIST);

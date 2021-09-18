@@ -36,7 +36,7 @@ public enum InternalDataType {
     /**
      * INT data type in MaxGraph, map to Integer(int) in Java
      */
-    INTEGER,
+    INT,
     /**
      * LONG data type in MaxGraph, map to Long(long) in Java
      */

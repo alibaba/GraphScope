@@ -39,7 +39,7 @@ curl -XPOST $url -d 'grateful_graph = session.load_from(
     vertices={
         "song": (
             Loader( "/testingdata/grateful/song.dat", header_row=True, delimiter=","),
-            ["name", "songType", ("performances", "integer")],
+            ["name", "songType", ("performances", "int")],
             "id",
         ),
         "artist": (

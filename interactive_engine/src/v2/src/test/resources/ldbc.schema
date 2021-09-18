@@ -84,7 +84,7 @@
         },
         {
           "name": "length",
-          "dataType": "INTEGER",
+          "dataType": "INT",
           "comment": "",
           "id": 10
         },
@@ -330,7 +330,7 @@
         },
         {
           "name": "length",
-          "dataType": "INTEGER",
+          "dataType": "INT",
           "comment": "",
           "id": 10
         },

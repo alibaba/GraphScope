@@ -62,7 +62,7 @@ public class RpcProcessorUtils {
                 return read.readChar();
             case SHORT:
                 return read.readShort();
-            case INTEGER:
+            case INT:
                 return read.readInt();
             case LONG:
                 return read.readLong();
@@ -97,11 +97,11 @@ public class RpcProcessorUtils {
                 }
                 return code;
             }
-            case INTEGER_LIST: {
+            case INT_LIST: {
                 int count = read.readInt();
                 List valueList = Lists.newArrayList();
                 for (int valIdx = 0; valIdx < count; valIdx++) {
-                    valueList.add(readValueByType(DataType.INTEGER, read));
+                    valueList.add(readValueByType(DataType.INT, read));
                 }
 
                 return valueList;

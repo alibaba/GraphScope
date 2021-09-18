@@ -326,7 +326,11 @@ public class CompilerUtils {
             Number number = ReflectionUtils.getFieldValue(BranchStep.class.getDeclaredClasses()[0], value, "number");
             return Message.VariantType.valueOf("VT_" + StringUtils.upperCase(number.getClass().getSimpleName()));
         } else {
-            return Message.VariantType.valueOf("VT_" + StringUtils.upperCase(valueClazz.getSimpleName()));
+            String className = valueClazz.getSimpleName();
+            if (className.contains("Integer")) {
+                className.replace("Integer", "Int");
+            }
+            return Message.VariantType.valueOf("VT_" + StringUtils.upperCase(className));
         }
     }
 
@@ -337,10 +341,10 @@ public class CompilerUtils {
     public static com.alibaba.maxgraph.sdkcommon.meta.DataType parseDataTypeFromPropDataType(DataType dataType) {
         try {
             switch (dataType) {
-                case INTEGER: {
-                    return com.alibaba.maxgraph.sdkcommon.meta.DataType.INTEGER;
+                case INT: {
+                    return com.alibaba.maxgraph.sdkcommon.meta.DataType.INT;
                 }
-                case INTEGER_LIST: {
+                case INT_LIST: {
                     com.alibaba.maxgraph.sdkcommon.meta.DataType type = new com.alibaba.maxgraph.sdkcommon.meta.DataType(InternalDataType.LIST);
                     type.setExpression("INT");
                     return type;

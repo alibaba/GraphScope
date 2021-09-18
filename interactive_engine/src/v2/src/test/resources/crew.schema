@@ -110,7 +110,7 @@
     {
       "id": 4,
       "name": "since",
-      "data_type": "INTEGER",
+      "data_type": "INT",
       "hasDefaultValue": false,
       "defaultValue": null,
       "comment": "since"
@@ -195,7 +195,7 @@
     {
       "id": 5,
       "name": "skill",
-      "data_type": "INTEGER",
+      "data_type": "INT",
       "hasDefaultValue": false,
       "defaultValue": null,
       "comment": "skill"

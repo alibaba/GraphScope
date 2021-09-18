@@ -16,7 +16,6 @@
 package com.alibaba.maxgraph.tests.gremlin;
 
 import com.alibaba.maxgraph.compiler.api.schema.GraphSchema;
-import com.alibaba.maxgraph.groot.sdk.Client;
 import com.alibaba.maxgraph.sdkcommon.io.MaxGraphIORegistry;
 import com.alibaba.maxgraph.tinkerpop.traversal.MaxGraphTraversalSource;
 import com.alibaba.maxgraph.groot.MaxNode;
@@ -381,7 +380,7 @@ public class MaxTestGraph implements Graph {
     private NodeBase maxNode;
     private RemoteConnection remoteConnection;
     private Cluster cluster;
-    private Client sdkClient;
+    private com.alibaba.maxgraph.groot.sdk.Client sdkClient;
 
     public MaxTestGraph(Configs configs) {
         try {
@@ -389,7 +388,7 @@ public class MaxTestGraph implements Graph {
             this.maxNode.start();
             int port = GremlinConfig.GREMLIN_PORT.get(configs);
             this.cluster = createCluster("localhost", port);
-            this.sdkClient = new Client("localhost", 55556);
+            this.sdkClient = new com.alibaba.maxgraph.groot.sdk.Client("localhost", 55556);
             this.remoteConnection = DriverRemoteConnection.using(cluster);
         } catch (Throwable e) {
             this.closeGraph();

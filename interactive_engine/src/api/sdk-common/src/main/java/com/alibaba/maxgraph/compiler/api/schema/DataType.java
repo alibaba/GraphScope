@@ -29,13 +29,13 @@ public enum DataType {
     BOOL(1),
     CHAR(2),
     SHORT(3),
-    INTEGER(4),
+    INT(4),
     LONG(5),
     FLOAT(6),
     DOUBLE(7),
     STRING(8),
     BYTES(9),
-    INTEGER_LIST(10),
+    INT_LIST(10),
     LONG_LIST(11),
     FLOAT_LIST(12),
     DOUBLE_LIST(13),
@@ -92,7 +92,7 @@ public enum DataType {
             case BOOL:
             case CHAR:
             case SHORT:
-            case INTEGER:
+            case INT:
             case LONG:
             case FLOAT:
             case DOUBLE:
@@ -110,7 +110,7 @@ public enum DataType {
                 return 2;
             case SHORT:
                 return 2;
-            case INTEGER:
+            case INT:
                 return 4;
             case LONG:
                 return 8;
@@ -135,8 +135,8 @@ public enum DataType {
             case SHORT: {
                 return DataType.SHORT;
             }
-            case INTEGER: {
-                return DataType.INTEGER;
+            case INT: {
+                return DataType.INT;
             }
             case LONG: {
                 return DataType.LONG;
@@ -158,8 +158,8 @@ public enum DataType {
             }
             case LIST: {
                 switch (InternalDataType.valueOf(dataType.getExpression())) {
-                    case INTEGER: {
-                        return DataType.INTEGER_LIST;
+                    case INT: {
+                        return DataType.INT_LIST;
                     }
                     case LONG: {
                         return DataType.LONG_LIST;
@@ -194,7 +194,7 @@ public enum DataType {
                 return new Date().toString();
             case SHORT:
                 return (short) RandomUtils.nextInt();
-            case INTEGER:
+            case INT:
                 return RandomUtils.nextInt();
             case LONG:
                 return RandomUtils.nextLong();
@@ -206,7 +206,7 @@ public enum DataType {
                 return RandomStringUtils.randomAlphanumeric(64);
             case BYTES:
                 return RandomStringUtils.random(64).getBytes();
-            case INTEGER_LIST:
+            case INT_LIST:
                 return Lists.newArrayList(RandomUtils.nextInt(), RandomUtils.nextInt(), RandomUtils.nextInt());
             case LONG_LIST:
                 return Lists.newArrayList(RandomUtils.nextLong(), RandomUtils.nextLong(), RandomUtils.nextLong());
