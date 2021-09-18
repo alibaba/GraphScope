@@ -19,9 +19,6 @@ import com.alibaba.maxgraph.Message;
 import com.alibaba.maxgraph.QueryFlowOuterClass;
 import com.alibaba.maxgraph.QueryFlowOuterClass.RequirementType;
 import com.alibaba.maxgraph.compiler.api.schema.GraphSchema;
-import com.alibaba.maxgraph.compiler.cost.RowFieldManager;
-import com.alibaba.maxgraph.compiler.logical.LogicalQueryPlan;
-import com.alibaba.maxgraph.compiler.optimizer.ContextManager;
 import com.alibaba.maxgraph.compiler.logical.LogicalVertex;
 import com.alibaba.maxgraph.compiler.tree.source.SourceVertexTreeNode;
 import com.alibaba.maxgraph.compiler.utils.CompilerUtils;
@@ -29,7 +26,10 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import org.apache.tinkerpop.gremlin.process.traversal.step.util.HasContainer;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -38,6 +38,7 @@ import static com.alibaba.maxgraph.QueryFlowOuterClass.RequirementType.*;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 public abstract class BaseTreeNode implements TreeNode {
+    private static final Logger logger = LoggerFactory.getLogger(BaseTreeNode.class);
     private TreeNode output = null;
     protected NodeType nodeType;
     protected QueryFlowOuterClass.RangeLimit.Builder rangeLimit = null;
@@ -129,38 +130,27 @@ public abstract class BaseTreeNode implements TreeNode {
 
     @Override
     public List<QueryFlowOuterClass.RequirementValue.Builder> buildAfterRequirementList(TreeNodeLabelManager nodeLabelManager) {
-        List<QueryFlowOuterClass.RequirementValue.Builder> afterRequirementValueList = Lists.newArrayList();
-        for (Map.Entry<RequirementType, Object> entry : afterRequirementList.entrySet()) {
-            switch (entry.getKey()) {
-                case LABEL_START: {
-                    Set<String> startLabelList = (Set<String>) entry.getValue();
-                    if (startLabelList == null || startLabelList.isEmpty()) {
-                        throw new IllegalArgumentException("There's label start requirement but start label list is empty");
-                    }
-                    Message.Value.Builder valueBuilder = Message.Value.newBuilder();
-                    for (String startLabel : startLabelList) {
-                        valueBuilder.addIntValueList(nodeLabelManager.getLabelIndex(startLabel));
-                    }
-                    afterRequirementValueList.add(QueryFlowOuterClass.RequirementValue.newBuilder()
-                            .setReqArgument(valueBuilder)
-                            .setReqType(entry.getKey()));
-                    break;
-                }
-                default: {
-                    throw new IllegalArgumentException(entry.getKey() + " can't exist in after requirement");
-                }
-            }
-        }
-        return afterRequirementValueList;
+        return getRequirementList(afterRequirementList, Arrays.asList(LABEL_START), nodeLabelManager);
     }
 
     @Override
     public List<QueryFlowOuterClass.RequirementValue.Builder> buildBeforeRequirementList(TreeNodeLabelManager nodeLabelManager) {
-        List<QueryFlowOuterClass.RequirementValue.Builder> beforeRequirementValueList = Lists.newArrayList();
-        for (Map.Entry<RequirementType, Object> entry : beforeRequirementList.entrySet()) {
-            switch (entry.getKey()) {
+        return getRequirementList(beforeRequirementList, Arrays.asList(PATH_ADD, LABEL_START), nodeLabelManager);
+    }
+
+    private List<QueryFlowOuterClass.RequirementValue.Builder> getRequirementList(Map<RequirementType, Object> requirementMap,
+                                                                                  List<RequirementType> requirementTypes,
+                                                                                  TreeNodeLabelManager nodeLabelManager) {
+        List<QueryFlowOuterClass.RequirementValue.Builder> requirementList = Lists.newArrayList();
+        for (RequirementType type : requirementTypes) {
+            if (!requirementMap.containsKey(type)) {
+                logger.warn("requirement type {} not exist in map", type);
+                continue;
+            }
+            Object conf = requirementMap.get(type);
+            switch (type) {
                 case LABEL_START: {
-                    Set<String> startLabelList = (Set<String>) entry.getValue();
+                    Set<String> startLabelList = (Set<String>) conf;
                     if (startLabelList == null || startLabelList.isEmpty()) {
                         throw new IllegalArgumentException("There's label start requirement but start label list is empty");
                     }
@@ -168,24 +158,24 @@ public abstract class BaseTreeNode implements TreeNode {
                     for (String startLabel : startLabelList) {
                         valueBuilder.addIntValueList(nodeLabelManager.getLabelIndex(startLabel));
                     }
-                    beforeRequirementValueList.add(QueryFlowOuterClass.RequirementValue.newBuilder()
+                    requirementList.add(QueryFlowOuterClass.RequirementValue.newBuilder()
                             .setReqArgument(valueBuilder)
-                            .setReqType(entry.getKey()));
+                            .setReqType(type));
                     break;
                 }
                 case PATH_ADD: {
                     Message.Value.Builder valueBuilder = Message.Value.newBuilder();
-                    beforeRequirementValueList.add(QueryFlowOuterClass.RequirementValue.newBuilder()
+                    requirementList.add(QueryFlowOuterClass.RequirementValue.newBuilder()
                             .setReqArgument(valueBuilder)
-                            .setReqType(entry.getKey()));
+                            .setReqType(type));
                     break;
                 }
                 default: {
-                    throw new IllegalArgumentException(entry.getKey() + " can't exist in before requirement");
+                    throw new IllegalArgumentException(type + " can't exist in before requirement");
                 }
             }
         }
-        return beforeRequirementValueList;
+        return requirementList;
     }
 
     @Override
