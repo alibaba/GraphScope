@@ -333,8 +333,8 @@ class TestGraphTransformation(object):
         g = self.multi_label_g
         nx_g = self.NXGraph(g)
         self.assert_convert_success(g, nx_g)
-        assert nx_g.number_of_nodes == (76830 + 903 + 78976)
-        assert nx_g.number_of_edges == (38786 + 6626 + 38044)
+        assert nx_g.number_of_nodes() == (76830 + 903 + 78976)
+        assert nx_g.number_of_edges() == (38786 + 6626 + 38044)
         assert 618475290625 not in nx_g  # comment node is (label, id) format
         assert ("comment", 618475290625) in nx_g
         assert 933 not in nx_g  # person node is (label, id) format
@@ -342,8 +342,8 @@ class TestGraphTransformation(object):
         assert 618475290624 not in nx_g  # post node is (label, id) format
         assert ("post", 618475290624) in nx_g
         nx_g2 = self.NXGraph(g, default_label="comment")
-        assert nx_g2.number_of_nodes == (76830 + 903 + 78976)
-        assert nx_g2.number_of_edges == (38786 + 6626 + 38044)
+        assert nx_g2.number_of_nodes() == (76830 + 903 + 78976)
+        assert nx_g2.number_of_edges() == (38786 + 6626 + 38044)
         assert 618475290625 in nx_g2  # comment node is default label node
         assert ("comment", 618475290625) not in nx_g2
         assert 933 not in nx_g2  # person node is (label, id) format
