@@ -197,7 +197,7 @@ def download_file(
     if cache_dir is None:
         cache_dir = os.path.join(os.path.expanduser("~"), ".graphscope")
     cache_dir = os.path.expanduser(cache_dir)
-    if not os.access(cache_dir, os.W_OK):
+    if os.path.exists(cache_dir) and not os.access(cache_dir, os.W_OK):
         cache_dir = os.path.join("/tmp", ".graphscope")
     datadir = os.path.join(cache_dir, cache_subdir)
     os.makedirs(datadir, exist_ok=True)
