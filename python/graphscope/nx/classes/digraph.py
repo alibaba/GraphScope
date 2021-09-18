@@ -31,8 +31,8 @@ from networkx.classes.reportviews import OutDegreeView
 from networkx.classes.reportviews import OutEdgeView
 
 from graphscope.framework import dag_utils
-from graphscope.framework.errors import check_argument
 from graphscope.framework.dag_utils import copy_graph
+from graphscope.framework.errors import check_argument
 from graphscope.framework.graph_schema import GraphSchema
 from graphscope.nx import NetworkXError
 from graphscope.nx.classes.graph import Graph
