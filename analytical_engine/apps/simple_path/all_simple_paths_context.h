@@ -142,7 +142,7 @@ class AllSimplePathsContext : public TensorContext<FRAG_T, bool> {
       return;
     }
 
-    for (long unsigned int t = 0; t < edge_map[from].size(); t++) {
+    for (uint64_t t = 0; t < edge_map[from].size(); t++) {
       int to = edge_map[from][t];
       vid_t gid = index2gid(to);
       if (qvisit.count(gid) == 1) {

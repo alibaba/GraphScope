@@ -18,6 +18,7 @@ limitations under the License.
 #include <gflags/gflags.h>
 #include <gflags/gflags_declare.h>
 #include <glog/logging.h>
+#include <limits>
 
 DEFINE_string(application, "", "application name");
 DEFINE_string(efile, "", "edge file");

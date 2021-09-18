@@ -17,6 +17,7 @@ Author: Ma JingYuan
 #ifndef ANALYTICAL_ENGINE_APPS_SIMPLE_PATH_ALL_SIMPLE_PATHS_H_
 #define ANALYTICAL_ENGINE_APPS_SIMPLE_PATH_ALL_SIMPLE_PATHS_H_
 
+#include <set>
 #include <tuple>
 #include <utility>
 #include <vector>
@@ -91,7 +92,7 @@ class AllSimplePaths : public AppBase<FRAG_T, AllSimplePathsContext<FRAG_T>>,
       if (std::get<2>(msg) == true) {
         init_counter++;
         ctx.frag_vertex_num[gid] = msg2;
-        if (init_counter == (int) frag.fnum() - 1) {
+        if (init_counter == static_cast<int>(frag.fnum()) - 1) {
           vertex_t source;
           frag.GetInnerVertex(ctx.source_id, source);
           vertexProcess(source, frag, ctx, messages, 0);
@@ -103,7 +104,7 @@ class AllSimplePaths : public AppBase<FRAG_T, AllSimplePathsContext<FRAG_T>>,
       } else if (std::get<1>(msg) == false) {
         if (ctx.visit.count(gid) == 0) {
           ctx.visit.insert(gid);
-          ctx.next_level_inner.push(std::make_pair(gid, (int) msg2));
+          ctx.next_level_inner.push(std::make_pair(gid, msg2));
         }
       } else if (ctx.source_flag == true && std::get<1>(msg) == true) {
         int a = find_edge_map_index(ctx, gid);
