@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 #
 # A script to install dependencies of GraphScope.
+# TODO: check dependencies revise
+# TODO: install depedencies faster
 
 set -e
 set -o pipefail
@@ -12,8 +14,8 @@ readonly GREEN="\033[0;32m"
 readonly NC="\033[0m" # No Color
 
 readonly GRAPE_BRANCH="master" # libgrape-lite branch
-readonly V6D_VERSION="0.2.6"  # vineyard version
-readonly V6D_BRANCH="v0.2.6" # vineyard branch
+readonly V6D_VERSION="0.2.9"  # vineyard version
+readonly V6D_BRANCH="v0.2.9" # vineyard branch
 readonly LLVM_VERSION=9  # llvm version we use in Darwin platform
 
 readonly SOURCE_DIR="$( cd "$(dirname $0)/.." >/dev/null 2>&1 ; pwd -P )"
@@ -21,14 +23,13 @@ readonly NUM_PROC=$( $(command -v nproc &> /dev/null) && echo $(nproc) || echo $
 readonly OUTPUT_ENV_FILE="${HOME}/.graphscope_env"
 IS_IN_WSL=false && [[ ! -z "${IS_WSL}" || ! -z "${WSL_DISTRO_NAME}" ]] && IS_IN_WSL=true
 readonly IS_IN_WSL
-INSTALL_PREFIX=/usr/local
+INSTALL_PREFIX=/opt/graphscope
 BASIC_PACKGES_TO_INSTALL=
 PLATFORM=
 OS_VERSION=
 VERBOSE=false
 packages_to_install=()
 install_folly=false
-install_zookeeper=false
 
 err() {
   echo -e "${RED}[$(date +'%Y-%m-%dT%H:%M:%S%z')]: [ERROR] $*${NC}" >&2
@@ -94,7 +95,7 @@ cat <<END
   Options:
     --help              Print usage information
     --verbose           Print the debug logging information
-    --prefix <path>     Install prefix of GraphScope, default is /usr/local
+    --prefix <path>     Install prefix of GraphScope, default is /opt/graphscope
 END
 }
 
@@ -178,6 +179,10 @@ check_os_compatibility() {
 init_basic_packages() {
   if [[ "${PLATFORM}" == *"Ubuntu"* ]]; then
     BASIC_PACKGES_TO_INSTALL=(
+      build-essential
+      wget
+      curl
+      lsb-release
       libbrotli-dev
       libbz2-dev
       libcurl4-openssl-dev
@@ -208,6 +213,7 @@ init_basic_packages() {
       zip
       perl
       python3-pip
+      git
     )
   elif [[ "${PLATFORM}" == *"CentOS"* ]]; then
     BASIC_PACKGES_TO_INSTALL=(
@@ -238,6 +244,11 @@ init_basic_packages() {
       gflags-devel
       glog-devel
       gtest-devel
+      gcc
+      gcc-c++
+      make
+      wget
+      curl
     )
   else
     BASIC_PACKGES_TO_INSTALL=(
@@ -281,19 +292,29 @@ check_dependencies() {
     packages_to_install+=(cmake)
   fi
 
-  # check java == 1.8
+  # check java
   if [[ "${PLATFORM}" == *"Darwin"* ]]; then
-    if [[ ! -f "/usr/libexec/java_home" ]] || \
-       ! /usr/libexec/java_home -v 1.8 &> /dev/null; then
-      packages_to_install+=(jdk8)
+    if [[ ! -z "${JAVA_HOME}" ]]; then
+      declare -r java_version=$(${JAVA_HOME}/bin/javac -version 2>&1 | awk -F ' ' '{print $2}' | awk -F '.' '{print $1}')
+      if [[ "${java_version}" -lt "8" ]] || [[ "${java_version}" -gt "15" ]]; then
+        warning "Found the java version is ${java_version}, do not meet the requirement of GraphScope."
+        warning "Would install jdk 11 instead and reset the JAVA_HOME"
+        JAVA_HOME=""  # reset JAVA_HOME to jdk11
+        packages_to_install+=(jdk)
+      fi
+    else
+      if [[ ! -f "/usr/libexec/java_home" ]] || \
+         ! /usr/libexec/java_home -v11 &> /dev/null; then
+        packages_to_install+=(jdk)
+      fi
     fi
   else
-    if $(! command -v java &> /dev/null) || \
-       [[ "$(java -version 2>&1 | awk -F '"' '/version/ {print $2}' | awk -F '.' '{print $2}')" -ne "8" ]]; then
+    if $(! command -v javac &> /dev/null) || \
+       [[ "$(javac -version 2>&1 | awk -F ' ' '{print $2}' | awk -F '.' '{print $1}')" -lt "7" ]]; then
       if [[ "${PLATFORM}" == *"Ubuntu"* ]]; then
-        packages_to_install+=(openjdk-8-jdk)
+        packages_to_install+=(default-jdk)
       else
-        packages_to_install+=(java-1.8.0-openjdk-devel)  # CentOS
+        packages_to_install+=(java-11-openjdk-devel)  # CentOS
       fi
     fi
   fi
@@ -326,15 +347,18 @@ check_dependencies() {
     packages_to_install+=(maven)
   fi
 
-  # check rust
-  if ! command -v rustup &> /dev/null && \
-     ! command -v ${HOME}/.cargo/bin/rustup &> /dev/null; then
+  # check rust > 1.52.0
+  if ( ! command -v rustup &> /dev/null || \
+    [[ "$(rustc --V | awk -F ' ' '{print $2}')" < "1.52.0" ]] ) && \
+     ( ! command -v ${HOME}/.cargo/bin/rustup &> /dev/null || \
+    [[ "$(rustc --V | awk -F ' ' '{print $2}')" < "1.52.0" ]] ); then
     packages_to_install+=(rust)
   fi
 
-  # check golang
-  if ! command -v go &> /dev/null && ! command -v /usr/local/bin/go &> /dev/null && \
-     ! command -v /usr/local/go/bin/go &> /dev/null; then
+  # check go < 1.16 (vertion 1.16 can't install zetcd)
+  # FIXME(weibin): version check is not universed.
+  if $(! command -v go &> /dev/null) || \
+     [[ "$(go version 2>&1 | awk -F '.' '{print $2}')" -ge "16" ]]; then
     if [[ "${PLATFORM}" == *"CentOS"* ]]; then
       packages_to_install+=(golang)
     else
@@ -357,13 +381,18 @@ check_dependencies() {
   fi
 
   # check folly
-  if [[ ! -f "/usr/local/include/folly/dynamic.h" ]]; then
-    packages_to_install+=(folly)
+  # FIXME: if the brew already install folly, what should we do.
+  # TODO(@weibin): remove the ci check after GraphScope support clang 12.
+  if [[ -z "${CI}" ]] || ( [[ "${CI}" == "true" ]] && [[ "${PLATFORM}" != *"Darwin"* ]] ); then
+    if [[ ! -f "/usr/local/include/folly/dynamic.h" ]]; then
+      packages_to_install+=(folly)
+    fi
   fi
 
-  # check zookeeper
-  if [[ ! -f "/usr/local/zookeeper/bin/zkServer.sh" ]]; then
-    packages_to_install+=(zookeeper)
+  # check zetcd
+  if ! command -v zetcd &> /dev/null && ! command -v ${HOME}/go/bin/zetcd &> /dev/null && \
+     ! command -v /usr/local/go/bin/zetcd &> /dev/null; then
+    packages_to_install+=(zetcd)
   fi
 
   # check c++ compiler
@@ -398,10 +427,12 @@ check_dependencies() {
 write_envs_config() {
   if [ -f "${OUTPUT_ENV_FILE}" ]; then
     warning "Found ${OUTPUT_ENV_FILE} exists, remove the environmen config file and generate a new one."
+    rm -fr ${OUTPUT_ENV_FILE}
   fi
 
   if [[ "${PLATFORM}" == *"Darwin"* ]]; then
     {
+      # FIXME: graphscope_env not correct when the script run mutiple times.
       if [[ "${packages_to_install[@]}" =~ "llvm@${LLVM_VERSION}" ]]; then
         # packages_to_install contains llvm
         echo "export CC=/usr/local/opt/llvm@${LLVM_VERSION}/bin/clang"
@@ -410,8 +441,11 @@ write_envs_config() {
         echo "export CPPFLAGS=-I/usr/local/opt/llvm@${LLVM_VERSION}/include"
         echo "export PATH=/usr/local/opt/llvm@${LLVM_VERSION}/bin:\$PATH"
       fi
-      echo "export JAVA_HOME=\$(/usr/libexec/java_home -v 1.8)"
-      echo "export PATH=/usr/local/opt/gnu-sed/libexec/gnubin:\$HOME/.cargo/bin:\${JAVA_HOME}/bin:\$PATH:/usr/local/zookeeper/bin"
+      if [ -z "${JAVA_HOME}" ]; then
+        echo "export JAVA_HOME=\$(/usr/libexec/java_home -v11)"
+      fi
+      echo "export PATH=\$HOME/.cargo/bin:\${JAVA_HOME}/bin:/usr/local/go/bin:\$PATH"
+      echo "export PATH=\$(go env GOPATH)/bin:\$PATH"
       echo "export OPENSSL_ROOT_DIR=/usr/local/opt/openssl"
       echo "export OPENSSL_LIBRARIES=/usr/local/opt/openssl/lib"
       echo "export OPENSSL_SSL_LIBRARY=/usr/local/opt/openssl/lib/libssl.dylib"
@@ -419,14 +453,20 @@ write_envs_config() {
   elif [[ "${PLATFORM}" == *"Ubuntu"* ]]; then
     {
       echo "export LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:/usr/local/lib:/usr/local/lib64"
-      echo "export JAVA_HOME=/usr/lib/jvm/java-8-openjdk-amd64"
-      echo "export PATH=\${JAVA_HOME}/bin:/usr/local/go/bin:\$HOME/.cargo/bin:\$PATH:/usr/local/zookeeper/bin"
+      if [ -z "${JAVA_HOME}" ]; then
+        echo "export JAVA_HOME=/usr/lib/jvm/default-java"
+      fi
+      echo "export PATH=\${JAVA_HOME}/bin:\$HOME/.cargo/bin:/usr/local/go/bin:\$PATH"
+      echo "export PATH=\$(go env GOPATH)/bin:\$PATH"
     } >> ${OUTPUT_ENV_FILE}
   else
     {
       echo "export LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:/usr/local/lib:/usr/local/lib64"
-      echo "export JAVA_HOME=/usr/lib/jvm/java"
-      echo "export PATH=\${JAVA_HOME}/bin:/usr/local/go/bin:\$HOME/.cargo/bin:/usr/local/bin:\$PATH:/usr/local/zookeeper/bin"
+      if [ -z "${JAVA_HOME}" ]; then
+        echo "export JAVA_HOME=/usr/lib/jvm/java"
+      fi
+      echo "export PATH=\${JAVA_HOME}/bin:\$HOME/.cargo/bin:\$PATH:/usr/local/go/bin"
+      echo "export PATH=\$(go env GOPATH)/bin:\$PATH"
     } >> ${OUTPUT_ENV_FILE}
   fi
 }
@@ -446,17 +486,17 @@ install_dependencies() {
   # install dependencies for specific platforms.
   if [[ "${PLATFORM}" == *"Ubuntu"* ]]; then
     sudo apt-get update -y
-    sudo apt-get install -y build-essential \
-      wget \
-      curl \
-      lsb-release
+
+    log "Installing packages ${BASIC_PACKGES_TO_INSTALL[*]}"
+    sudo apt-get install -y ${BASIC_PACKGES_TO_INSTALL[*]}
 
     if [[ "${packages_to_install[@]}" =~ "go" ]]; then
       # packages_to_install contains go
       log "Installing Go."
-      wget -c --no-verbose https://golang.org/dl/go1.15.5.linux-amd64.tar.gz -P /tmp
+      wget -c https://golang.org/dl/go1.15.5.linux-amd64.tar.gz -P /tmp
       sudo tar -C /usr/local -xzf /tmp/go1.15.5.linux-amd64.tar.gz
       rm -fr /tmp/go1.15.5.linux-amd64.tar.gz
+      sudo ln -sf /usr/local/go/bin/go /usr/local/bin/go
       # remove go from packages_to_install
       packages_to_install=("${packages_to_install[@]/go}")
     fi
@@ -485,14 +525,16 @@ install_dependencies() {
       packages_to_install=("${packages_to_install[@]/folly}")
     fi
 
-    if [[ "${packages_to_install[@]}" =~ "zookeeper" ]]; then
-      install_zookeeper=true  # set zookeeper install flag
-      # remove zookeeper from packages_to_install
-      packages_to_install=("${packages_to_install[@]/zookeeper}")
+    if [[ "${packages_to_install[@]}" =~ "zetcd" ]]; then
+      log "Installing zetcd."
+      export PATH=${PATH}:/usr/local/go/bin
+      go get github.com/etcd-io/zetcd/cmd/zetcd
+      # remove zetcd from packages_to_install
+      packages_to_install=("${packages_to_install[@]/zetcd}")
     fi
 
-    log "Installing packages ${BASIC_PACKGES_TO_INSTALL[*]} ${packages_to_install[*]}"
-    sudo apt install -y ${BASIC_PACKGES_TO_INSTALL[*]} ${packages_to_install[*]}
+    log "Installing packages ${packages_to_install[*]}"
+    sudo apt install -y ${packages_to_install[*]}
 
   elif [[ "${PLATFORM}" == *"CentOS"* ]]; then
     sudo dnf install -y dnf-plugins-core \
@@ -500,11 +542,9 @@ install_dependencies() {
 
     sudo dnf config-manager --set-enabled epel
     sudo dnf config-manager --set-enabled powertools
-    sudo dnf -y install gcc \
-      gcc-c++ \
-      make \
-      wget \
-      curl
+
+    log "Instralling packages ${BASIC_PACKGES_TO_INSTALL[*]}"
+    sudo dnf install -y ${BASIC_PACKGES_TO_INSTALL[*]}
 
     if [[ "${packages_to_install[@]}" =~ "apache-arrow" ]]; then
       log "Installing apache-arrow."
@@ -529,14 +569,21 @@ install_dependencies() {
       packages_to_install=("${packages_to_install[@]/openmpi}")
     fi
 
+    if [[ "${packages_to_install[@]}" =~ "zetcd" ]]; then
+      log "Installing zetcd."
+      go get github.com/etcd-io/zetcd/cmd/zetcd
+      # remove zetcd from packages_to_install
+      packages_to_install=("${packages_to_install[@]/zetcd}")
+    fi
+
     if [[ "${packages_to_install[@]}" =~ "etcd" ]]; then
       log "Installing etcd v3.4.13"
+      check_and_remove_dir "/tmp/etcd-download-test"
       mkdir -p /tmp/etcd-download-test
       export ETCD_VER=v3.4.13 && \
       export DOWNLOAD_URL=https://github.com/etcd-io/etcd/releases/download && \
       curl -L ${DOWNLOAD_URL}/${ETCD_VER}/etcd-${ETCD_VER}-linux-amd64.tar.gz \
         -o /tmp/etcd-${ETCD_VER}-linux-amd64.tar.gz
-      check_and_remove_dir "/tmp/etcd-download-test"
       tar xzvf /tmp/etcd-${ETCD_VER}-linux-amd64.tar.gz \
         -C /tmp/etcd-download-test --strip-components=1
       sudo mv /tmp/etcd-download-test/etcd /usr/local/bin/
@@ -553,12 +600,6 @@ install_dependencies() {
       packages_to_install+=(fmt-devel)
     fi
 
-    if [[ "${packages_to_install[@]}" =~ "zookeeper" ]]; then
-      install_zookeeper=true  # set zookeeper install flag
-      # remove zookeeper from packages_to_install
-      packages_to_install=("${packages_to_install[@]/zookeeper}")
-    fi
-
     if [[ "${packages_to_install[@]}" =~ "rust" ]]; then
       # packages_to_install contains rust
       log "Installing rust."
@@ -567,8 +608,8 @@ install_dependencies() {
       packages_to_install=("${packages_to_install[@]/rust}")
     fi
 
-    log "Installing packages ${BASIC_PACKGES_TO_INSTALL[*]} ${packages_to_install[*]}"
-    sudo dnf -y install ${BASIC_PACKGES_TO_INSTALL[*]} ${packages_to_install[*]}
+    log "Installing packages ${packages_to_install[*]}"
+    sudo dnf -y install  ${packages_to_install[*]}
 
     log "Installing protobuf v.3.13.0"
     wget -c https://github.com/protocolbuffers/protobuf/releases/download/v3.13.0/protobuf-all-3.13.0.tar.gz -P /tmp
@@ -609,13 +650,37 @@ install_dependencies() {
     rm -fr /tmp/grpc
 
   elif [[ "${PLATFORM}" == *"Darwin"* ]]; then
-    if [[ "${packages_to_install[@]}" =~ "jdk8" ]]; then
+    log "Installing packages ${BASIC_PACKGES_TO_INSTALL[*]}"
+    brew install ${BASIC_PACKGES_TO_INSTALL[*]}
+
+    if [[ "${packages_to_install[@]}" =~ "jdk" ]]; then
       # packages_to_install contains jdk8
-      log "Installing adoptopenjdk8."
-      brew tap adoptopenjdk/openjdk
-      brew install --cask adoptopenjdk8
+      log "Installing adoptopenjdk11."
+      wget -c https://github.com/adoptium/temurin11-binaries/releases/download/jdk-11.0.12%2B7/OpenJDK11U-jdk_x64_mac_hotspot_11.0.12_7.pkg \
+        -P /tmp
+      sudo installer -pkg /tmp/OpenJDK11U-jdk_x64_mac_hotspot_11.0.12_7.pkg -target /
+      rm -fr /tmp/OpenJDK11U-jdk_x64_mac_hotspot_11.0.12_7.pkg
       # remove jdk8 from packages_to_install
-      packages_to_install=("${packages_to_install[@]/jdk8}")
+      packages_to_install=("${packages_to_install[@]/jdk}")
+    fi
+
+    if [[ "${packages_to_install[@]}" =~ "go" ]]; then
+      # packages_to_install contains go
+      log "Installing Go."
+      wget -c https://dl.google.com/go/go1.15.15.darwin-amd64.pkg -P /tmp
+      sudo installer -pkg /tmp/go1.15.15.darwin-amd64.pkg -target /
+      rm -fr /tmp/go1.15.15.darwin-amd64.pkg
+      sudo ln -sf /usr/local/go/bin/go /usr/local/bin/go
+      # remove go from packages_to_install
+      packages_to_install=("${packages_to_install[@]/go}")
+    fi
+
+    if [[ "${packages_to_install[@]}" =~ "zetcd" ]]; then
+      log "Installing zetcd."
+      export PATH=/usr/local/go/bin:${PATH}
+      go get github.com/etcd-io/zetcd/cmd/zetcd
+      # remove zetcd from packages_to_install
+      packages_to_install=("${packages_to_install[@]/zetcd}")
     fi
 
     if [[ "${packages_to_install[@]}" =~ "rust" ]]; then
@@ -632,14 +697,8 @@ install_dependencies() {
       packages_to_install+=(fmt)
     fi
 
-    if [[ "${packages_to_install[@]}" =~ "zookeeper" ]]; then
-      install_zookeeper=true  # set zookeeper install flag
-      # remove zookeeper from packages_to_install
-      packages_to_install=("${packages_to_install[@]/zookeeper}")
-    fi
-
-    log "Installing packages ${BASIC_PACKGES_TO_INSTALL[*]} ${packages_to_install[*]}"
-    brew install ${BASIC_PACKGES_TO_INSTALL[*]} ${packages_to_install[*]}
+    log "Installing packages ${packages_to_install[*]}"
+    brew install ${packages_to_install[*]}
 
     export OPENSSL_ROOT_DIR=/usr/local/opt/openssl
     export OPENSSL_LIBRARIES=/usr/local/opt/openssl/lib
@@ -677,16 +736,6 @@ install_dependencies() {
     sudo make install
     popd
     rm -fr /tmp/v2020.10.19.00.tar.gz /tmp/folly-2020.10.19.00
-  fi
-
-  if [[ ${install_zookeeper} == true ]]; then
-    log "Installing zookeeper."
-    wget -c https://archive.apache.org/dist/zookeeper/zookeeper-3.4.14/zookeeper-3.4.14.tar.gz -P /tmp
-    check_and_remove_dir "/tmp/zookeeper-3.4.14"
-    tar xf /tmp/zookeeper-3.4.14.tar.gz -C /tmp/
-    cp /tmp/zookeeper-3.4.14/conf/zoo_sample.cfg /tmp/zookeeper-3.4.14/conf/zoo.cfg
-    sudo cp -r /tmp/zookeeper-3.4.14 /usr/local/zookeeper || true
-    rm -fr /tmp/zookeeper-3.4.14*
   fi
 
   log "Installing python packages for vineyard codegen."
@@ -753,7 +802,8 @@ install_vineyard() {
   git submodule update --init
   mkdir -p build && pushd build
   if [[ "${PLATFORM}" == *"Darwin"* ]]; then
-    cmake .. -DBUILD_VINEYARD_PYTHON_BINDINGS=ON -DBUILD_SHARED_LIBS=ON \
+    cmake .. -DCMAKE_BUILD_TYPE=RelWithDebInfo \
+             -DBUILD_VINEYARD_PYTHON_BINDINGS=ON -DBUILD_SHARED_LIBS=ON \
              -DBUILD_VINEYARD_IO_OSS=ON -DBUILD_VINEYARD_TESTS=OFF
   else
     cmake .. -DBUILD_VINEYARD_PYPI_PACKAGES=ON -DBUILD_SHARED_LIBS=ON \
@@ -799,6 +849,7 @@ install_graphscope() {
   else
     make install WITH_LEARNING_ENGINE=ON INSTALL_PREFIX=${INSTALL_PREFIX}
   fi
+
   popd
 }
 

@@ -80,7 +80,7 @@ jobs:
         fi
 
     - name: Upload Docs
-      if: ${{ github.ref == 'refs/heads/main' }}
+      if: ${{ github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/v') }}
       shell: bash
       run: |
         shopt -s extglob
@@ -118,6 +118,6 @@ jobs:
         rm -rf ../python || true
 
         git add -A
-        git commit --amend --no-edit -m "Generate latest docs on CI, from commit ${{ github.sha }}."
+        git commit --amend --no-edit -m "Generate latest docs on CI, from commit ${{ github.sha }}." --author "github-actions <github-actions@github.com>" -s --date="$(date -R)"
         git push -f origin gh-pages
 

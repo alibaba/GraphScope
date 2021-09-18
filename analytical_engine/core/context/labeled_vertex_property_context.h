@@ -17,6 +17,7 @@
 
 #include <map>
 #include <memory>
+#include <sstream>
 #include <string>
 #include <utility>
 #include <vector>
@@ -178,6 +179,21 @@ class LabeledVertexPropertyContextWrapper
 
   std::string context_type() override {
     return CONTEXT_TYPE_LABELED_VERTEX_PROPERTY;
+  }
+
+  std::string schema() override {
+    auto frag = ctx_->fragment();
+    auto label_num = frag.vertex_label_num();
+    std::ostringstream os;
+    for (int i = 0; i < label_num; ++i) {
+      os << i << ":";
+      auto property_map = ctx_->properties_map()[i];
+      for (auto& pair : property_map) {
+        os << pair.first + ",";
+      }
+      os << "\n";
+    }
+    return os.str();
   }
 
   std::shared_ptr<IFragmentWrapper> fragment_wrapper() override {

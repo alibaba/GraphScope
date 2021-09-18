@@ -52,6 +52,13 @@ class IContextWrapper : public GSObject {
 
   virtual std::string context_type() = 0;
 
+  // Return the schema of context, in human readable format.
+  // This is consistent with the syntax of selector.
+  // For simplicity, only return those parts that cannot be known
+  // from client.
+  // Those context who need it may override this method.
+  virtual std::string schema() { return ""; }
+
   virtual std::shared_ptr<IFragmentWrapper> fragment_wrapper() = 0;
 };
 

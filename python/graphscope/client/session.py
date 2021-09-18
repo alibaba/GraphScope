@@ -175,7 +175,7 @@ class _FetchHandler(object):
             # for nx
             return DynamicVertexDataContext(context_dag_node, ret["context_key"])
         else:
-            return Context(context_dag_node, ret["context_key"])
+            return Context(context_dag_node, ret["context_key"], ret["context_schema"])
 
     def _rebuild_gremlin_results(
         self, seq, op: Operation, op_result: op_def_pb2.OpResult
@@ -308,8 +308,6 @@ class Session(object):
         k8s_service_type=gs_config.k8s_service_type,
         k8s_gs_image=gs_config.k8s_gs_image,
         k8s_etcd_image=gs_config.k8s_etcd_image,
-        k8s_gie_graph_manager_image=gs_config.k8s_gie_graph_manager_image,
-        k8s_zookeeper_image=gs_config.k8s_zookeeper_image,
         k8s_image_pull_policy=gs_config.k8s_image_pull_policy,
         k8s_image_pull_secrets=gs_config.k8s_image_pull_secrets,
         k8s_coordinator_cpu=gs_config.k8s_coordinator_cpu,
@@ -317,10 +315,6 @@ class Session(object):
         k8s_etcd_num_pods=gs_config.k8s_etcd_num_pods,
         k8s_etcd_cpu=gs_config.k8s_etcd_cpu,
         k8s_etcd_mem=gs_config.k8s_etcd_mem,
-        k8s_zookeeper_cpu=gs_config.k8s_zookeeper_cpu,
-        k8s_zookeeper_mem=gs_config.k8s_zookeeper_mem,
-        k8s_gie_graph_manager_cpu=gs_config.k8s_gie_graph_manager_cpu,
-        k8s_gie_graph_manager_mem=gs_config.k8s_gie_graph_manager_mem,
         k8s_vineyard_daemonset=gs_config.k8s_vineyard_daemonset,
         k8s_vineyard_cpu=gs_config.k8s_vineyard_cpu,
         k8s_vineyard_mem=gs_config.k8s_vineyard_mem,
@@ -337,7 +331,8 @@ class Session(object):
         dangling_timeout_seconds=gs_config.dangling_timeout_seconds,
         with_mars=gs_config.with_mars,
         enable_gaia=gs_config.enable_gaia,
-        **kw
+        reconnect=False,
+        **kw,
     ):
         """Construct a new GraphScope session.
 
@@ -384,10 +379,6 @@ class Session(object):
 
             k8s_image_pull_secrets (list[str], optional): A list of secret name used to authorize pull image.
 
-            k8s_gie_graph_manager_image (str, optional): The GraphScope interactive engine's graph manager image.
-
-            k8s_zookeeper_image (str, optional): The image of zookeeper, which used by GIE graph manager.
-
             k8s_vineyard_daemonset (str, optional): The name of vineyard Helm deployment to use. GraphScope will try to
                 discovery the daemonset from kubernetes cluster, then use it if exists, and fallback to launching
                 a bundled vineyard container otherwise.
@@ -411,18 +402,6 @@ class Session(object):
             k8s_etcd_cpu (float, optional): Minimum number of CPU cores request for etcd pod. Defaults to 0.5.
 
             k8s_etcd_mem (str, optional): Minimum number of memory request for etcd pod. Defaults to '128Mi'.
-
-            k8s_zookeeper_cpu (float, optional):
-                Minimum number of CPU cores request for zookeeper container. Defaults to 0.5.
-
-            k8s_zookeeper_mem (str, optional):
-                Minimum number of memory request for zookeeper container. Defaults to '256Mi'.
-
-            k8s_gie_graph_manager_cpu (float, optional):
-                Minimum number of CPU cores request for graphmanager container. Defaults to 1.0.
-
-            k8s_gie_graph_manager_mem (str, optional):
-                Minimum number of memory request for graphmanager container. Defaults to '4Gi'.
 
             k8s_mars_worker_cpu (float, optional):
                 Minimum number of CPU cores request for mars worker container. Defaults to 0.5.
@@ -523,6 +502,24 @@ class Session(object):
                 - k8s_vineyard_shared_mem: Deprecated.
                     Please use vineyard_shared_mem instead.
 
+            reconnect (bool, optional): When connecting to a pre-launched GraphScope cluster with :code:`addr`,
+                the connect request would be rejected with there is still an existing session connected. There
+                are cases where the session still exists and user's client has lost connection with the backend,
+                e.g., in a jupyter notebook. We have a :code:`dangling_timeout_seconds` for it, but a more
+                deterministic behavior would be better.
+
+                If :code:`reconnect` is True, the existing session will be reused. It is the user's responsibility
+                to ensure there's no such an active client actually.
+
+                Defaults to :code:`False`.
+                - k8s_gie_graph_manager_image: Deprecated.
+                - k8s_gie_graph_manager_cpu: Deprecated.
+                - k8s_gie_graph_manager_mem: Deprecated.
+
+                - k8s_zookeeper_image: Deprecated.
+                - k8s_zookeeper_cpu: Deprecated.
+                - k8s_zookeeper_mem: Deprecated.
+
         Raises:
             TypeError: If the given argument combination is invalid and cannot be used to create
                 a GraphScope session.
@@ -540,17 +537,11 @@ class Session(object):
             "k8s_etcd_image",
             "k8s_image_pull_policy",
             "k8s_image_pull_secrets",
-            "k8s_gie_graph_manager_image",
-            "k8s_zookeeper_image",
             "k8s_coordinator_cpu",
             "k8s_coordinator_mem",
             "k8s_etcd_num_pods",
             "k8s_etcd_cpu",
             "k8s_etcd_mem",
-            "k8s_zookeeper_cpu",
-            "k8s_zookeeper_mem",
-            "k8s_gie_graph_manager_cpu",
-            "k8s_gie_graph_manager_mem",
             "k8s_vineyard_daemonset",
             "k8s_vineyard_cpu",
             "k8s_vineyard_mem",
@@ -563,10 +554,22 @@ class Session(object):
             "k8s_mars_scheduler_mem",
             "with_mars",
             "enable_gaia",
+            "reconnect",
             "k8s_volumes",
             "k8s_waiting_for_delete",
             "timeout_seconds",
             "dangling_timeout_seconds",
+        )
+        self._deprecated_params = (
+            "show_log",
+            "log_level",
+            "k8s_vineyard_shared_mem",
+            "k8s_gie_graph_manager_image",
+            "k8s_gie_graph_manager_cpu",
+            "k8s_gie_graph_manager_mem",
+            "k8s_zookeeper_image",
+            "k8s_zookeeper_cpu",
+            "k8s_zookeeper_mem",
         )
         saved_locals = locals()
         for param in self._accessable_params:
@@ -597,34 +600,34 @@ class Session(object):
             )
 
         # deprecated params handle
-        if "show_log" in kw:
-            warnings.warn(
-                "The `show_log` parameter has been deprecated and has no effect, "
-                "please use `graphscope.set_option(show_log=%s)` instead."
-                % kw.pop("show_log", None),
-                category=DeprecationWarning,
-            )
-        if "log_level" in kw:
-            warnings.warn(
-                "The `log_level` parameter has been deprecated and has no effect, "
-                "please use `graphscope.set_option(log_level=%r)` instead."
-                % kw.pop("show_log", None),
-                category=DeprecationWarning,
-            )
-        if "k8s_vineyard_shared_mem" in kw:
-            warnings.warn(
-                "The `k8s_vineyard_shared_mem` has been deprecated and has no effect, "
-                "please use `vineyard_shared_mem` instead."
-                % kw.pop("k8s_vineyard_shared_mem", None),
-                category=DeprecationWarning,
-            )
+        for param in self._deprecated_params:
+            if param in kw:
+                warnings.warn(
+                    "The `{0}` parameter has been deprecated and has no effect.".format(
+                        param
+                    ),
+                    category=DeprecationWarning,
+                )
+                if param == "show_log" or param == "log_level":
+                    warnings.warn(
+                        "Please use `graphscope.set_option({0}={1})` instead".format(
+                            param, kw.pop(param, None)
+                        ),
+                        category=DeprecationWarning,
+                    )
+                if param == "k8s_vineyard_shared_mem":
+                    warnings.warn(
+                        "Please use 'vineyard_shared_mem' instead",
+                        category=DeprecationWarning,
+                    )
+                kw.pop(param, None)
 
         # update k8s_client_config params
         self._config_params["k8s_client_config"] = kw.pop("k8s_client_config", {})
 
         # There should be no more custom keyword arguments.
         if kw:
-            raise ValueError("Not recognized value: ", list(kw.keys()))
+            raise ValueError("Value not recognized: ", list(kw.keys()))
 
         if self._config_params["addr"]:
             logger.info(
@@ -761,7 +764,7 @@ class Session(object):
             if self._grpc_client:
                 try:
                     self._grpc_client.send_heartbeat()
-                except GRPCError as exc:
+                except Exception as exc:
                     logger.warning(exc)
                     self._disconnected = True
                 else:
@@ -843,7 +846,7 @@ class Session(object):
     def _check_closed(self, msg=None):
         """Internal: raise a ValueError if session is closed"""
         if self.closed:
-            raise ValueError("Operation on closed session." if msg is None else msg)
+            raise ValueError(msg or "Operation on closed session.")
 
     # Context manager
     def __enter__(self):
@@ -961,7 +964,9 @@ class Session(object):
                 **self._config_params,
             )
         else:
-            raise RuntimeError("Session initialize failed.")
+            raise RuntimeError(
+                f"Unrecognized cluster type {types_pb2.ClusterType.Name(self._cluster_type)}."
+            )
 
         # launching graphscope service
         if self._launcher is not None:
@@ -969,7 +974,7 @@ class Session(object):
             self._coordinator_endpoint = self._launcher.coordinator_endpoint
 
         # waiting service ready
-        self._grpc_client = GRPCClient(self._coordinator_endpoint)
+        self._grpc_client = GRPCClient(self._launcher, self._config_params["reconnect"])
         self._grpc_client.waiting_service_ready(
             timeout_seconds=self._config_params["timeout_seconds"],
         )
@@ -1126,8 +1131,7 @@ class Session(object):
 
         if sys.platform != "linux" and sys.platform != "linux2":
             raise RuntimeError(
-                "The learning engine currently supports Linux only, doesn't support %s"
-                % sys.platform
+                f"The learning engine currently only supports running on Linux, got {sys.platform}"
             )
 
         if not graph.graph_type == graph_def_pb2.ARROW_PROPERTY:
@@ -1150,8 +1154,8 @@ class Session(object):
     def nx(self):
         if not self.eager():
             raise RuntimeError(
-                "Networkx module need session to be eager mode. "
-                "The session is lazy mode."
+                "Networkx module need the session to be eager mode. "
+                "Current session is lazy mode."
             )
         if self._nx:
             return self._nx
@@ -1177,6 +1181,8 @@ session = Session
 def set_option(**kwargs):
     """Set the value of specified options.
 
+    Find params detail in :class:`graphscope.Session`
+
     Available options:
         - num_workers
         - log_level
@@ -1186,8 +1192,6 @@ def set_option(**kwargs):
         - k8s_service_type
         - k8s_gs_image
         - k8s_etcd_image
-        - k8s_gie_graph_manager_image
-        - k8s_zookeeper_image
         - k8s_image_pull_policy
         - k8s_image_pull_secrets
         - k8s_coordinator_cpu
@@ -1203,6 +1207,7 @@ def set_option(**kwargs):
         - k8s_mars_scheduler_mem
         - with_mars
         - enable_gaia
+        - k8s_volumes
         - k8s_waiting_for_delete
         - engine_params
         - initializing_interactive_engine
@@ -1220,7 +1225,7 @@ def set_option(**kwargs):
     # check exists
     for k, v in kwargs.items():
         if not hasattr(gs_config, k):
-            raise ValueError("No such option {} exists.".format(k))
+            raise ValueError(f"No such option {k} exists.")
 
     for k, v in kwargs.items():
         setattr(gs_config, k, v)
@@ -1231,6 +1236,8 @@ def set_option(**kwargs):
 def get_option(key):
     """Get the value of specified option.
 
+    Find params detail in :class:`graphscope.Session`
+
     Available options:
         - num_workers
         - log_level
@@ -1240,8 +1247,6 @@ def get_option(key):
         - k8s_service_type
         - k8s_gs_image
         - k8s_etcd_image
-        - k8s_gie_graph_manager_image
-        - k8s_zookeeper_image
         - k8s_image_pull_policy
         - k8s_image_pull_secrets
         - k8s_coordinator_cpu
@@ -1257,6 +1262,7 @@ def get_option(key):
         - k8s_mars_scheduler_mem
         - with_mars
         - enable_gaia
+        - k8s_volumes
         - k8s_waiting_for_delete
         - engine_params
         - initializing_interactive_engine

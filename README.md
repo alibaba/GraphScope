@@ -328,8 +328,7 @@ a `runtime-base` image. To build images with latest version of GraphScope, go to
 # ./scripts/prepare_dev.sh
 
 make graphscope
-make interactive_manager
-# by default, the built image is tagged as graphscope/graphscope:SHORTSHA and graphscope/maxgraph_standalone_manager:SHORTSHA
+# by default, the built image is tagged as graphscope/graphscope:SHORTSHA
 ```
 
 ### Building client library
@@ -364,7 +363,7 @@ You may run the whole test suite with commands:
 ./scripts/test.sh --all
 
 # run all test cases on your built image
-./scripts/test.sh --all --gs_image graphscope/graphscope:SHORTSHA --gie_manager_image graphscope/maxgraph_standalone_manager:SHORTSHA
+./scripts/test.sh --all --gs_image graphscope/graphscope:SHORTSHA
 
 # or run the selected cases on a certain module. e.g.,
 ./scripts/test.sh --python
@@ -390,6 +389,12 @@ The latest version of online documentation can be found at https://graphscope.io
 ## License
 
 GraphScope is released under [Apache License 2.0](https://www.apache.org/licenses/LICENSE-2.0). Please note that third-party libraries may not have the same license as GraphScope.
+
+
+## Publications
+
+- Wenfei Fan, Tao He, Longbin Lai, Xue Li, Yong Li, Zhao Li, Zhengping Qian, Chao Tian, Lei Wang, Jingbo Xu, Youyang Yao, Qiang Yin, Wenyuan Yu, Jingren Zhou, Diwen Zhu, Rong Zhu. [GraphScope: A Unified Engine For Big Graph Processing](http://vldb.org/pvldb/vol14/p2879-qian.pdf). The 47th International Conference on Very Large Data Bases (VLDB), industry, 2021.
+- Jingbo Xu, Zhanning Bai, Wenfei Fan, Longbin Lai, Xue Li, Zhao Li, Zhengping Qian, Lei Wang, Yanyan Wang, Wenyuan Yu, Jingren Zhou. [GraphScope: A One-Stop Large Graph Processing System](http://vldb.org/pvldb/vol14/p2703-xu.pdf). The 47th International Conference on Very Large Data Bases (VLDB), demo, 2021
 
 
 ## Contributing

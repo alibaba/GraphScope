@@ -670,6 +670,7 @@ pub fn build_test_route() -> impl Fn(&i64) -> u64 + 'static {
         graph_port: 0,
         query_port: 0,
         engine_port: 0,
+        gaia_engine_port: 0,
         timely_worker_per_process: 2,
         monitor_interval_ms: 0,
         total_memory_mb: 0,

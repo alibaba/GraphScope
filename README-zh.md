@@ -322,8 +322,7 @@ GraphScope 包含一个 [Dockerfile](k8s/graphscope.Dockerfile)，可以构建 D
 # ./scripts/prepare_dev.sh
 
 make graphscope
-make interactive_manager
-# by default, the built image is tagged as graphscope/graphscope:SHORTSHA and graphscope/maxgraph_standalone_manager:SHORTSHA
+# by default, the built image is tagged as graphscope/graphscope:SHORTSHA
 ```
 
 ### 构建客户端 Python 包
@@ -351,7 +350,7 @@ python3 setup.py install
 ./scripts/test.sh --all
 
 # run all test cases on your built image
-./scripts/test.sh --all --gs_image graphscope/graphscope:SHORTSHA --gie_manager_image graphscope/maxgraph_standalone_manager:SHORTSHA
+./scripts/test.sh --all --gs_image graphscope/graphscope:SHORTSHA
 
 # or run the selected cases on a certain module. e.g.,
 ./scripts/test.sh --python

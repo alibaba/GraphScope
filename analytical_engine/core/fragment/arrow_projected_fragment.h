@@ -26,6 +26,7 @@
 #include "boost/lexical_cast.hpp"
 
 #include "vineyard/basic/ds/arrow_utils.h"
+#include "vineyard/common/util/version.h"
 #include "vineyard/graph/fragment/arrow_fragment.h"
 #include "vineyard/graph/vertex_map/arrow_vertex_map.h"
 
@@ -366,11 +367,21 @@ class ArrowProjectedFragment
   static constexpr grape::LoadStrategy load_strategy =
       grape::LoadStrategy::kBothOutIn;
 
+#if defined(VINEYARD_VERSION) && defined(VINEYARD_VERSION_MAJOR)
+#if VINEYARD_VERSION >= 2007
+  static std::unique_ptr<vineyard::Object> Create() __attribute__((used)) {
+    return std::static_pointer_cast<vineyard::Object>(
+        std::unique_ptr<ArrowProjectedFragment<oid_t, vid_t, vdata_t, edata_t>>{
+            new ArrowProjectedFragment<oid_t, vid_t, vdata_t, edata_t>()});
+  }
+#endif
+#else
   static std::shared_ptr<vineyard::Object> Create() __attribute__((used)) {
     return std::static_pointer_cast<vineyard::Object>(
         std::make_shared<
             ArrowProjectedFragment<oid_t, vid_t, vdata_t, edata_t>>());
   }
+#endif
 
   ~ArrowProjectedFragment() {}
 

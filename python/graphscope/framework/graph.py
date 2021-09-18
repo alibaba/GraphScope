@@ -23,11 +23,15 @@ import threading
 from abc import ABCMeta
 from abc import abstractmethod
 from copy import deepcopy
+from itertools import chain
 from typing import List
 from typing import Mapping
 from typing import Union
 
-import vineyard
+try:
+    import vineyard
+except ImportError:
+    vineyard = None
 
 from graphscope.config import GSConfig as gs_config
 from graphscope.framework import dag_utils
@@ -315,7 +319,7 @@ class GraphDAGNode(DAGNode, GraphInterface):
             if incoming_data.session_id != self.session_id:
                 raise RuntimeError("{0} not in the same session.".formar(incoming_data))
             raise NotImplementedError
-        elif isinstance(
+        elif vineyard is not None and isinstance(
             incoming_data, (vineyard.Object, vineyard.ObjectID, vineyard.ObjectName)
         ):
             self._op = self._from_vineyard(incoming_data)
@@ -391,16 +395,17 @@ class GraphDAGNode(DAGNode, GraphInterface):
             loader=vertices,
             properties=properties,
             vid_field=vid_field,
+            id_type=self._oid_type,
             session_id=self._session.session_id,
         )
         unsealed_vertices_and_edges.append((self.op.key, vertex_label))
         v_labels = deepcopy(self._v_labels)
         v_labels.append(label)
-        # construct op
-        config = graph_utils.assemble_op_config(
-            [vertex_label], [], self._oid_type, self._directed, self._generate_eid
-        )
-        op = dag_utils.add_labels_to_graph(self, attrs=config)
+        # generate and add a loader op to dag
+        loader_op = dag_utils.create_loader(vertex_label)
+        self._session.dag.add_op(loader_op)
+        # construct add label op
+        op = dag_utils.add_labels_to_graph(self, loader_op)
         # construct dag node
         graph_dag_node = GraphDAGNode(
             self._session, op, self._oid_type, self._directed, self._generate_eid
@@ -484,7 +489,7 @@ class GraphDAGNode(DAGNode, GraphInterface):
 
         if self.evaluated:
             if label in self._e_labels:
-                raise ValueError(f"Label  {label} already existed in graph")
+                raise ValueError(f"Label {label} already existed in graph")
 
         unsealed_vertices = list()
         unsealed_edges = list()
@@ -512,6 +517,7 @@ class GraphDAGNode(DAGNode, GraphInterface):
                             dst_label,
                             src_field,
                             dst_field,
+                            id_type=self._oid_type,
                         )
                     )
                     fork = True
@@ -528,23 +534,25 @@ class GraphDAGNode(DAGNode, GraphInterface):
             unsealed_vertices_and_edges = deepcopy(self._unsealed_vertices_and_edges)
             e_labels.append(label)
             relations.append([(src_label, dst_label)])
-            cur_label = EdgeLabel(label, self._session.session_id)
+            cur_label = EdgeLabel(label, self._oid_type, self._session.session_id)
             cur_label.add_sub_label(
                 EdgeSubLabel(
-                    edges, properties, src_label, dst_label, src_field, dst_field
+                    edges,
+                    properties,
+                    src_label,
+                    dst_label,
+                    src_field,
+                    dst_field,
+                    id_type=self._oid_type,
                 )
             )
             unsealed_edges.append(cur_label)
             unsealed_vertices_and_edges.append((parent.op.key, cur_label))
-        # construct op
-        config = graph_utils.assemble_op_config(
-            unsealed_vertices,
-            unsealed_edges,
-            self._oid_type,
-            self._directed,
-            self._generate_eid,
-        )
-        op = dag_utils.add_labels_to_graph(parent, attrs=config)
+        # generate and add a loader op to dag
+        loader_op = dag_utils.create_loader(unsealed_vertices + unsealed_edges)
+        self._session.dag.add_op(loader_op)
+        # construct add label op
+        op = dag_utils.add_labels_to_graph(parent, loader_op)
         # construct dag node
         graph_dag_node = GraphDAGNode(
             self._session, op, self._oid_type, self._directed, self._generate_eid
@@ -935,8 +943,19 @@ class Graph(GraphInterface):
         Args:
             path (str): supported storages are local, hdfs, oss, s3
         """
-        import vineyard
-        import vineyard.io
+        try:
+            import vineyard
+            import vineyard.io
+        except ImportError:
+            raise RuntimeError(
+                "Saving context to locations requires 'vineyard', "
+                "please install those two dependencies via "
+                "\n"
+                "\n"
+                "    pip3 install vineyard vineyard-io"
+                "\n"
+                "\n"
+            )
 
         sess = self._session
         deployment = "kubernetes" if sess.info["type"] == "k8s" else "ssh"
@@ -977,8 +996,19 @@ class Graph(GraphInterface):
             `Graph`: A new graph object. Schema and data is supposed to be
                 identical with the one that called serialized method.
         """
-        import vineyard
-        import vineyard.io
+        try:
+            import vineyard
+            import vineyard.io
+        except ImportError:
+            raise RuntimeError(
+                "Saving context to locations requires 'vineyard', "
+                "please install those two dependencies via "
+                "\n"
+                "\n"
+                "    pip3 install vineyard vineyard-io"
+                "\n"
+                "\n"
+            )
 
         deployment = "kubernetes" if sess.info["type"] == "k8s" else "ssh"
         conf = sess.info["engine_config"]

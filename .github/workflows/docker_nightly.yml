@@ -1,6 +1,7 @@
 name: GraphScope Docker Nightly Build CI
 
 on:
+  workflow_dispatch:
   schedule:
     # The notifications for scheduled workflows are sent to the user who
     # last modified the cron syntax in the workflow file.
@@ -9,6 +10,7 @@ on:
 
 jobs:
   docker-test:
+    if: ${{ github.ref == 'refs/heads/main' && github.repository == 'alibaba/GraphScope' }}
     runs-on: self-hosted
     steps:
     - name: Build graphscope image
@@ -16,21 +18,20 @@ jobs:
         cd ${GITHUB_WORKSPACE}
         sudo make graphscope
 
-    - name: Build interactive_manager image
-      run: |
-        cd ${GITHUB_WORKSPACE}
-        sudo make interactive_manager
-
     - name: Build graphscope-store image
       run: |
         cd ${GITHUB_WORKSPACE}
         sudo make graphscope-store
 
+    - name: Add envs to GITHUB_ENV
+      run: |
+        short_sha=$(git rev-parse --short HEAD)
+        echo "SHORT_SHA=${short_sha}" >> $GITHUB_ENV
+        echo "GS_IMAGE=graphscope/graphscope:${short_sha}" >> $GITHUB_ENV
+
     - name: Kubernetes test
       env:
         CHANGE_MINIKUBE_NONE_USER: true
-        GS_IMAGE: graphscope/graphscope:${{ github.sha }}
-        GIE_MANAGER_IMAGE: graphscope/maxgraph_standalone_manager:${{ github.sha }}
       run: |
         export GS_TEST_DIR=${GITHUB_WORKSPACE}/gstest
         if [ ! -d "${GS_TEST_DIR}" ]; then
@@ -45,23 +46,18 @@ jobs:
     - name: Release Nightly Images
       run: |
         echo ${{ secrets.ALIYUN_TOKEN }} | sudo docker login --username=grape_dev registry.cn-hongkong.aliyuncs.com --password-stdin
-        sudo docker tag graphscope/graphscope:${{ github.sha }} \
+        sudo docker tag graphscope/graphscope:${SHORT_SHA} \
                         registry.cn-hongkong.aliyuncs.com/graphscope/graphscope:nightly
-        sudo docker tag graphscope/maxgraph_standalone_manager:${{ github.sha }} \
-                        registry.cn-hongkong.aliyuncs.com/graphscope/maxgraph_standalone_manager:nightly
-        sudo docker tag graphscope/graphscope-store:${{ github.sha }} \
+        sudo docker tag graphscope/graphscope-store:${SHORT_SHA} \
                         registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-store:nightly
 
         sudo docker push registry.cn-hongkong.aliyuncs.com/graphscope/graphscope:nightly
-        sudo docker push registry.cn-hongkong.aliyuncs.com/graphscope/maxgraph_standalone_manager:nightly
         sudo docker push registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-store:nightly
 
     - name: Clean
       if: always()
       run: |
-        sudo docker rmi -f graphscope/graphscope:${{ github.sha }} \
-            graphscope/maxgraph_standalone_manager:${{ github.sha }} \
-            graphscope/graphscope-store:${{ github.sha}} \
+        sudo docker rmi -f graphscope/graphscope:${SHORT_SHA} \
+            graphscope/graphscope-store:${SHORT_SHA} \
             registry.cn-hongkong.aliyuncs.com/graphscope/graphscope:nightly \
-            registry.cn-hongkong.aliyuncs.com/graphscope/maxgraph_standalone_manager:nightly \
             registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-store:nightly || true

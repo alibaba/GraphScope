@@ -22,9 +22,6 @@ import com.alibaba.maxgraph.v2.common.frontend.api.schema.GraphProperty;
 import com.alibaba.maxgraph.v2.common.frontend.api.schema.VertexType;
 import com.alibaba.maxgraph.v2.common.schema.TypeEnum;
 import com.alibaba.maxgraph.v2.frontend.graph.memory.schema.DefaultEdgeType;
-import com.alibaba.maxgraph.v2.frontend.graph.memory.schema.DefaultVertexType;
-import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.collect.Lists;
 
 import java.util.List;

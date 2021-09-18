@@ -25,7 +25,7 @@ jobs:
 
     - name: Install Dependencies
       run: |
-        curl -sf -L https://static.rust-lang.org/rustup.sh | sh -s -- -y --profile minimal --default-toolchain 1.48.0
+        curl -sf -L https://static.rust-lang.org/rustup.sh | sh -s -- -y --profile minimal --default-toolchain 1.52.1
         echo "source ~/.cargo/env" >> ~/.bashrc
 
         rustup component add rustfmt
@@ -34,5 +34,10 @@ jobs:
       run: |
         source ~/.bashrc
 
-        cd research/gaia/gremlin/gremlin_core
+        cd research/gaia/gremlin/gremlin_core/tests
+        sh prepare_all_test_plan.sh
+        cargo test
+
+        cd ../../../../gaia-x/gremlin/gremlin_core/tests/
+        sh prepare_all_test_plan.sh
         cargo test

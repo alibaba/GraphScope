@@ -23,7 +23,7 @@ RUN yum install -y https://packages.endpoint.com/rhel/7/os/x86_64/endpoint-repo-
 # yum install dependencies
 RUN yum install -y autoconf automake double-conversion-devel git \
         libcurl-devel libevent-devel libgsasl-devel librdkafka-devel libunwind-devel.x86_64 \
-        libuuid-devel libxml2-devel libzip libzip-devel m4 minizip minizip-devel \
+        libuuid-devel libxml2-devel libzip libzip-devel m4 minizip minizip-devel sudo \
         make net-tools openssl-devel python3-devel rsync telnet tools unzip vim wget which zip bind-utils && \
     yum clean all && \
     rm -fr /var/cache/yum
@@ -284,8 +284,7 @@ ENV PATH $PATH:$HADOOP_HOME/bin
 RUN bash -l -c 'echo export CLASSPATH="$($HADOOP_HOME/bin/hdfs classpath --glob)" >> /etc/bashrc'
 
 # Prepare and set workspace
-RUN mkdir -p /root/maxgraph \
-    && mkdir -p /tmp/maven /usr/share/maven/ref \
+RUN mkdir -p /tmp/maven /usr/share/maven/ref \
     && curl -fsSL -o /tmp/apache-maven.tar.gz https://apache.osuosl.org/maven/maven-3/3.6.3/binaries/apache-maven-3.6.3-bin.tar.gz \
     && tar -xzf /tmp/apache-maven.tar.gz -C /usr/share/maven --strip-components=1 \
     && rm -f /tmp/apache-maven.tar.gz \
@@ -320,3 +319,8 @@ ENV LANG='en_US.UTF-8' LANGUAGE='en_US:en' LC_ALL='en_US.UTF-8'
 ENV PATH=${PATH}:/usr/local/go/bin
 ENV RUST_BACKTRACE=1
 
+# change user: graphscope
+RUN useradd -m graphscope -u 1001 \
+    && echo 'graphscope ALL=(ALL) NOPASSWD:ALL' >> /etc/sudoers
+USER graphscope
+WORKDIR /home/graphscope
