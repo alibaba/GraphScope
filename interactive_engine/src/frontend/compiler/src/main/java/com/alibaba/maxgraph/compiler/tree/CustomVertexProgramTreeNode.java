@@ -142,7 +142,7 @@ public class CustomVertexProgramTreeNode extends UnaryTreeNode {
 
     private ValueType getValueType(VertexProgram customProgram) {
         if (customProgram instanceof ConnectedComponentVertexProgram) {
-            return new MapEntryValueType(new VertexValueType(), new ValueValueType(Message.VariantType.VT_INTEGER));
+            return new MapEntryValueType(new VertexValueType(), new ValueValueType(Message.VariantType.VT_INT));
         } else if (customProgram instanceof GraphConnectedComponentVertexProgram) {
             return new VertexValueType();
         } else if (customProgram instanceof GraphPageRankVertexProgram) {

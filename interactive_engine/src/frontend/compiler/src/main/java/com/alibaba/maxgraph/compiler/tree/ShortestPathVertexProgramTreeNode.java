@@ -40,7 +40,6 @@ import org.apache.tinkerpop.gremlin.process.traversal.step.sideEffect.IdentitySt
 import org.apache.tinkerpop.gremlin.process.traversal.step.util.HasContainer;
 import org.apache.tinkerpop.gremlin.structure.Direction;
 
-import java.math.BigDecimal;
 import java.util.List;
 
 import static com.google.common.base.Preconditions.checkArgument;
@@ -93,7 +92,7 @@ public class ShortestPathVertexProgramTreeNode extends UnaryTreeNode {
 
                 propertyValueBuilder.setValueType(variantType);
                 switch (variantType) {
-                    case VT_INTEGER:
+                    case VT_INT:
                         propertyValueBuilder.setIntValue(Integer.parseInt(value.toString()));
                         break;
                     case VT_LONG:

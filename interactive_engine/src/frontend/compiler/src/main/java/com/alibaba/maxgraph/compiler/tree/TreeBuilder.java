@@ -1343,7 +1343,7 @@ public class TreeBuilder {
                 break;
             }
             case LIST: {
-                checkArgument(variantType == Message.VariantType.VT_INTEGER_LIST ||
+                checkArgument(variantType == Message.VariantType.VT_INT_LIST ||
                                 variantType == Message.VariantType.VT_LONG_LIST ||
                                 variantType == Message.VariantType.VT_STRING_LIST,
                         "List predicate only support list output while current value type=>" + variantType);
