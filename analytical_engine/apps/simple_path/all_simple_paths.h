@@ -56,12 +56,9 @@ class AllSimplePaths : public AppBase<FRAG_T, AllSimplePathsContext<FRAG_T>>,
     bool native_source = frag.GetInnerVertex(ctx.source_id, source);
     if (native_source) {
       ctx.source_flag = true;
-      int total_vertex_num = (int) frag.GetTotalVerticesNum();
+      size_t total_vertex_num = frag.GetTotalVerticesNum();
       VLOG(0) << "before init map: " << std::endl;
       ctx.edge_map.resize(total_vertex_num);
-      // for(long unsigned int i=0;i<ctx.edge_map.size();i++){
-      //   ctx.edge_map[i].resize(total_vertex_num,false);
-      // }
       VLOG(0) << "after init map: " << std::endl;
     } else {
       vid_t in_num = frag.GetInnerVerticesNum();
@@ -111,7 +108,6 @@ class AllSimplePaths : public AppBase<FRAG_T, AllSimplePathsContext<FRAG_T>>,
       } else if (ctx.source_flag == true && std::get<1>(msg) == true) {
         int a = find_edge_map_index(ctx, gid);
         int b = find_edge_map_index(ctx, msg2);
-        // ctx.edge_map[a][b] = true;
         ctx.edge_map[a].push_back(b);
       }
     }
@@ -167,8 +163,8 @@ class AllSimplePaths : public AppBase<FRAG_T, AllSimplePathsContext<FRAG_T>>,
           }
         } else {
           fid_t fid = frag.GetFragId(u);
-          std::tuple<std::pair<vid_t, vid_t>, bool, bool> msg = std::make_tuple(
-              std::make_pair(u_gid, (vid_t) (depth + 1)), false, false);
+          std::tuple<std::pair<vid_t, vid_t>, bool, bool> msg =
+              std::make_tuple(std::make_pair(u_gid, depth + 1), false, false);
           messages.SendToFragment(fid, msg);
         }
       }
@@ -176,8 +172,8 @@ class AllSimplePaths : public AppBase<FRAG_T, AllSimplePathsContext<FRAG_T>>,
   }
 
   int find_edge_map_index(context_t& ctx, vid_t gid) {
-    int fid = (int) (gid >> ctx.fid_offset);
-    int lid = (int) (gid & ctx.id_mask);
+    int fid = gid >> ctx.fid_offset;
+    int lid = gid & ctx.id_mask;
     int ret = 0;
     for (int i = 0; i < fid; i++) {
       ret += ctx.frag_vertex_num[i];

@@ -61,7 +61,6 @@ class AllSimplePathsContext : public TensorContext<FRAG_T, bool> {
     }
 
     // init targets.
-    std::set<vid_t> visit_p;
     vid_t v;
     std::vector<oid_t> oid_array;
     folly::dynamic nodes_array = folly::parseJson(targets_json);
@@ -71,16 +70,15 @@ class AllSimplePathsContext : public TensorContext<FRAG_T, bool> {
         LOG(ERROR) << "Graph not contain vertex " << val << std::endl;
         break;
       }
-      if (!visit_p.count(v)) {
-        visit_p.insert(v);
-        targets.push_back(v);
+      if (!targets.count(v)) {
+        targets.insert(v);
       }
     }
 
     if (!frag.Oid2Gid(source_id, v)) {
       return;
     }
-    if (visit_p.count(v) || this->cutoff < 1) {
+    if (targets.count(v) || this->cutoff < 1) {
       return;
     }
 
@@ -126,7 +124,9 @@ class AllSimplePathsContext : public TensorContext<FRAG_T, bool> {
     auto& frag = this->fragment();
     if (depth == (this->cutoff - 1)) {
       // VLOG(0) << "in last: " << std::endl;
-      for (auto t : targets) {
+      typename std::set<vid_t>::iterator it;
+      for (it = targets.begin(); it != targets.end(); it++) {
+        auto t = *it;
         if (qvisit.count(t) == 1) {
           continue;
         }
@@ -149,7 +149,7 @@ class AllSimplePathsContext : public TensorContext<FRAG_T, bool> {
         continue;
       }
       qvisit.insert(gid);
-      if (std::find(targets.begin(), targets.end(), gid) != targets.end()) {
+      if (targets.count(gid)) {
         for (auto v : q) {
           os << frag.Gid2Oid(v) << " ";
         }
@@ -163,8 +163,8 @@ class AllSimplePathsContext : public TensorContext<FRAG_T, bool> {
   }
 
   int find_edge_map_index(vid_t gid) {
-    int fid = (int) (gid >> fid_offset);
-    int lid = (int) (gid & id_mask);
+    int fid = gid >> fid_offset;
+    int lid = gid & id_mask;
     int ret = 0;
     for (int i = 0; i < fid; i++) {
       ret += frag_vertex_num[i];
@@ -180,7 +180,7 @@ class AllSimplePathsContext : public TensorContext<FRAG_T, bool> {
       sum += frag_vertex_num[i];
       if (sum > index) {
         int lid = index - sum_last;
-        vid_t gid = (vid_t) ((i << fid_offset) | lid);
+        vid_t gid = (i << fid_offset) | lid;
         return gid;
       }
       i++;
@@ -191,7 +191,7 @@ class AllSimplePathsContext : public TensorContext<FRAG_T, bool> {
   oid_t source_id;
   std::queue<std::pair<vid_t, int>> curr_level_inner, next_level_inner;
   std::set<vid_t> visit;
-  std::vector<vid_t> targets;
+  std::set<vid_t> targets;
   std::vector<vid_t> frag_vertex_num;
   int cutoff;
   bool source_flag = false;
