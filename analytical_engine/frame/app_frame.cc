@@ -71,16 +71,16 @@ void DeleteWorker(void* worker_handler) {
 }
 
 void Query(void* worker_handler, const gs::rpc::QueryArgs& query_args,
-           const std::string& ctx_name,
+           const std::string& context_key,
            std::shared_ptr<gs::IFragmentWrapper> frag_wrapper,
            std::shared_ptr<gs::IContextWrapper>& ctx_wrapper) {
   auto worker = static_cast<worker_handler_t*>(worker_handler)->worker;
   gs::AppInvoker<_APP_TYPE>::Query(worker, query_args);
   auto ctx = worker->GetContext();
 
-  if (!ctx_name.empty()) {
+  if (!context_key.empty()) {
     ctx_wrapper = gs::CtxWrapperBuilder<typename _APP_TYPE::context_t>::build(
-        ctx_name, frag_wrapper, ctx);
+        context_key, frag_wrapper, ctx);
   }
 }
 }

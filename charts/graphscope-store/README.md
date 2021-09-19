@@ -69,6 +69,48 @@ $ kubectl delete pvc -l app.kubernetes.io/instance=my-release
 ```
 
 
+## Parameters
+
+Here we give a list of most frequently used parameters.
+
+### Common parameters
+
+| Name | Description | Value |
+|---|---|---|
+| image.registry | Docker image registry | registry.cn-hongkong.aliyuncs.com |
+| image.repository | Docker image repository | graphscope/graphscope-store |
+| image.tag | Docker image tag | "" |
+| image.pullPolicy | Docker image pull policy | IfNotPresent |
+| image.pullSecrets | Docker-registry secrets | [] |
+| clusterDomain | Default Kubernetes cluster domain | cluster.local |
+| commonLabels | Labels to add to all deployed objects | {} |
+| commonAnnotations | Annotations to add to all deployed objects | {} |
+| executor | Executor type, "maxgraph" or "gaia" | maxgraph |
+| javaOpts | Java options | "" |
+
+
+### Statefulset parameters
+
+| Name | Description | Value |
+|---|---|---|
+| store.replicaCount | Number of nodes | 2 |
+| store.updateStrategy | Update strategy for the store | RollingUpdate |
+| frontend.replicaCount | Number of nodes | 1 |
+| frontend.updateStrategy | Update strategy for the frontend | RollingUpdate |
+| frontend.service.type| Kubernetes Service type| NodePort |
+| ingestor.replicaCount | Number of nodes | 1 |
+| ingestor.updateStrategy | Update strategy for the ingestor | RollingUpdate |
+| coordinator.replicaCount | Number of nodes | 1 |
+| coordinator.updateStrategy | Update strategy for the coordinator | RollingUpdate |
+
+### Kafka chart parameters
+
+| Name | Description | Value |
+|---|---|---|
+| kafka.enabled | Switch to enable or disable the Kafka helm chart | true |
+| kafka.replicaCount | Number of Kafka nodes | 1 |
+| externalKafka.servers | Server or list of external Kafka servers to use | [] |
+
 ## Configuration
 
 See [*Customizing the Chart Before Installing*](https://helm.sh/docs/intro/using_helm/#customizing-the-chart-before-installing). To see all configurable options with detailed comments, visit the chart's [values.yaml](https://github.com/alibaba/GraphScope/blob/main/charts/graphscope-store/values.yaml), or run these configuration commands:

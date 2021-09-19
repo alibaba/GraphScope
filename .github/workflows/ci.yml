@@ -162,9 +162,7 @@ jobs:
         cd ${GITHUB_WORKSPACE}
         tar -cf gie.tar interactive_engine/src/executor/target/release/executor \
                         interactive_engine/src/executor/target/release/gaia_executor \
-                        interactive_engine/src/executor/store/log4rs.yml \
-                        interactive_engine/bin \
-                        interactive_engine/conf \
+                        interactive_engine/bin/zetcd
 
     - uses: actions/upload-artifact@v2
       with:
@@ -436,8 +434,8 @@ jobs:
         export HDFS_HOST=$(hostname -I | awk '{print $1}')
 
         cd ${GITHUB_WORKSPACE}/python
-        python3 -m pytest ./tests/kubernetes/test_demo_script.py -k test_demo_on_hdfs
-        # FIXME: context.output file not found
+        python3 -m pytest -s ./tests/kubernetes/test_demo_script.py -k test_demo_on_hdfs
+        # Check the result file have successfully written to the given location
         hdfs dfs -test -e /ldbc_sample/res.csv_0 && hdfs dfs -test -e /ldbc_sample/res.csv_1
 
     - name: Helm test
