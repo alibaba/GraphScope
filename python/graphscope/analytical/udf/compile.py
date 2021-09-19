@@ -69,6 +69,7 @@ it is, except:
 """
 
 import ast
+import copy
 import functools
 import inspect
 import textwrap
@@ -582,7 +583,8 @@ class GRAPECompiler(ast.NodeVisitor):
         return cascade.__module__ == "graphscope.analytical.udf.types"
 
     def __visit_GraphScopeAPICall(self, node):
-        obj = self.__flatten_func_name(node.func)[0]
+        full_func_name = self.__flatten_func_name(node.func)
+        obj = full_func_name[0]
         name = node.func.attr
         if obj == "graphscope":
             # graphscope.declare()
@@ -668,6 +670,10 @@ class GRAPECompiler(ast.NodeVisitor):
                 ),
                 args=[self.visit(arg) for arg in node.args],
             )
+        elif obj == "context" and full_func_name[1] == "math":
+            mnode = copy.copy(node)
+            mnode.func = ast.Attribute(value=ast.Name(id="math"), attr=name)
+            return self.visit(mnode)
         else:
             return SimpleCallNode(
                 self.loc(node),
@@ -716,9 +722,15 @@ class GRAPECompiler(ast.NodeVisitor):
         )
 
     def visit_Attribute(self, node):
-        return AttributeNode(
-            self.loc(node), obj=self.visit(node.value), attribute=node.attr
-        )
+        full_attr_name = self.__flatten_func_name(node)
+        if full_attr_name[0] == "context" and full_attr_name[1] == "math":
+            mnode = copy.copy(node)
+            mnode.value = ast.Name(id="math")
+            return self.visit(mnode)
+        else:
+            return AttributeNode(
+                self.loc(node), obj=self.visit(node.value), attribute=node.attr
+            )
 
     def visit_Subscript(self, node):
         return IndexNode(

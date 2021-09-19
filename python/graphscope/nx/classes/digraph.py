@@ -30,7 +30,6 @@ from networkx.classes.reportviews import InEdgeView
 from networkx.classes.reportviews import OutDegreeView
 from networkx.classes.reportviews import OutEdgeView
 
-from graphscope.client.session import get_default_session
 from graphscope.framework import dag_utils
 from graphscope.framework.dag_utils import copy_graph
 from graphscope.framework.graph_schema import GraphSchema
@@ -39,7 +38,8 @@ from graphscope.nx.classes.graph import Graph
 from graphscope.nx.convert import from_gs_graph
 from graphscope.nx.convert import to_nx_graph
 from graphscope.nx.utils.compat import patch_docstring
-from graphscope.nx.utils.other import empty_graph_in_engine
+from graphscope.nx.utils.misc import check_node_is_legal
+from graphscope.nx.utils.misc import empty_graph_in_engine
 from graphscope.proto import types_pb2
 
 
@@ -267,6 +267,7 @@ class DiGraph(Graph):
 
     @patch_docstring(RefDiGraph.successors)
     def successors(self, n):
+        check_node_is_legal(n)
         try:
             return iter(self._succ[n])
         except KeyError:
@@ -277,6 +278,7 @@ class DiGraph(Graph):
 
     @patch_docstring(RefDiGraph.predecessors)
     def predecessors(self, n):
+        check_node_is_legal(n)
         try:
             return iter(self._pred[n])
         except KeyError:

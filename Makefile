@@ -67,6 +67,7 @@ ifneq ($(INSTALL_PREFIX), /usr/local)
 	sudo ln -sf $(INSTALL_PREFIX)/bin/* /usr/local/bin/ && \
 	sudo ln -sfn $(INSTALL_PREFIX)/include/graphscope /usr/local/include/graphscope && \
 	sudo ln -sf ${INSTALL_PREFIX}/lib/*so* /usr/local/lib && \
+	sudo ln -sf ${INSTALL_PREFIX}/lib/*dylib* /usr/local/lib && \
 	if [ -d "${INSTALL_PREFIX}/lib64/cmake/graphscope-analytical" ]; then \
 		sudo ln -sfn ${INSTALL_PREFIX}/lib64/cmake/graphscope-analytical /usr/local/lib64/cmake/graphscope-analytical; \
 	else \
@@ -86,13 +87,9 @@ gie:
 	cargo build --all
 	# install
 	mkdir -p $(WORKING_DIR)/.install_prefix && \
-	mkdir -p $(WORKING_DIR)/.install_prefix/bin && \
-	mkdir -p $(WORKING_DIR)/.install_prefix/conf && \
-	tar -xf $(WORKING_DIR)/interactive_engine/src/assembly/target/maxgraph-assembly-0.0.1-SNAPSHOT.tar.gz -C $(WORKING_DIR)/.install_prefix && \
+	tar -xf $(WORKING_DIR)/interactive_engine/src/assembly/target/maxgraph-assembly-0.0.1-SNAPSHOT.tar.gz --strip-components 1 -C $(WORKING_DIR)/.install_prefix && \
 	cp $(WORKING_DIR)/interactive_engine/src/executor/target/debug/executor $(WORKING_DIR)/.install_prefix/bin/executor && \
 	cp $(WORKING_DIR)/interactive_engine/src/executor/target/debug/gaia_executor $(WORKING_DIR)/.install_prefix/bin/gaia_executor && \
-	cp -r $(WORKING_DIR)/interactive_engine/bin/* $(WORKING_DIR)/.install_prefix/bin/ && \
-	cp -r $(WORKING_DIR)/interactive_engine/conf/* $(WORKING_DIR)/.install_prefix/conf/ && \
 	sudo cp -r $(WORKING_DIR)/.install_prefix/* $(INSTALL_PREFIX) && \
 	rm -fr $(WORKING_DIR)/.install_prefix
 

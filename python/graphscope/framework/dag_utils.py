@@ -673,11 +673,9 @@ def unload_app(app):
     Returns:
         An op to unload the `app`.
     """
-    config = {}
     op = Operation(
         app.session_id,
         types_pb2.UNLOAD_APP,
-        config=config,
         inputs=[app.op],
         output_types=types_pb2.NULL_OUTPUT,
     )
@@ -693,12 +691,20 @@ def unload_graph(graph):
     Returns:
         An op to unload the `graph`.
     """
-    config = {}
     op = Operation(
         graph.session_id,
         types_pb2.UNLOAD_GRAPH,
-        config=config,
         inputs=[graph.op],
+        output_types=types_pb2.NULL_OUTPUT,
+    )
+    return op
+
+
+def unload_context(context):
+    op = Operation(
+        context.session_id,
+        types_pb2.UNLOAD_CONTEXT,
+        inputs=[context.op],
         output_types=types_pb2.NULL_OUTPUT,
     )
     return op
@@ -838,7 +844,7 @@ def output(result, fd, **kwargs):
 
 def get_context_data(results, node):
     config = {
-        types_pb2.CTX_NAME: utils.s_to_attr(results.key),
+        types_pb2.CONTEXT_KEY: utils.s_to_attr(results.key),
         types_pb2.NODE: utils.s_to_attr(node),
     }
     op = Operation(

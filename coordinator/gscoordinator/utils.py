@@ -405,6 +405,8 @@ def op_pre_process(op, op_result_pool, key_to_op, **kwargs):  # noqa: C901
         _pre_process_for_output_graph_op(op, op_result_pool, key_to_op, **kwargs)
     if op.op == types_pb2.UNLOAD_APP:
         _pre_process_for_unload_app_op(op, op_result_pool, key_to_op, **kwargs)
+    if op.op == types_pb2.UNLOAD_CONTEXT:
+        _pre_process_for_unload_context_op(op, op_result_pool, key_to_op, **kwargs)
     if op.op == types_pb2.CREATE_INTERACTIVE_QUERY:
         _pre_process_for_create_interactive_query_op(
             op, op_result_pool, key_to_op, **kwargs
@@ -600,6 +602,17 @@ def _pre_process_for_unload_app_op(op, op_result_pool, key_to_op, **kwargs):
     op.attr[types_pb2.APP_NAME].CopyFrom(utils.s_to_attr(result.result.decode("utf-8")))
 
 
+def _pre_process_for_unload_context_op(op, op_result_pool, key_to_op, **kwargs):
+    assert len(op.parents) == 1
+    key_of_parent_op = op.parents[0]
+    result = op_result_pool[key_of_parent_op]
+    parent_op_result = json.loads(result.result.decode("utf-8"))
+    context_key = parent_op_result["context_key"]
+    op.attr[types_pb2.CONTEXT_KEY].CopyFrom(
+        attr_value_pb2.AttrValue(s=context_key.encode("utf-8"))
+    )
+
+
 def _pre_process_for_add_column_op(op, op_result_pool, key_to_op, **kwargs):
     for key_of_parent_op in op.parents:
         parent_op = key_to_op[key_of_parent_op]
@@ -621,7 +634,7 @@ def _pre_process_for_add_column_op(op, op_result_pool, key_to_op, **kwargs):
             selector = _tranform_dataframe_selector(context_type, schema, selector)
     op.attr[types_pb2.GRAPH_NAME].CopyFrom(utils.s_to_attr(graph_name))
     op.attr[types_pb2.GRAPH_TYPE].CopyFrom(utils.graph_type_to_attr(graph_type))
-    op.attr[types_pb2.CTX_NAME].CopyFrom(utils.s_to_attr(context_key))
+    op.attr[types_pb2.CONTEXT_KEY].CopyFrom(utils.s_to_attr(context_key))
     op.attr[types_pb2.SELECTOR].CopyFrom(utils.s_to_attr(selector))
 
 
@@ -654,7 +667,7 @@ def _pre_process_for_context_op(op, op_result_pool, key_to_op, **kwargs):
     parent_op_result = json.loads(r.result.decode("utf-8"))
     context_key = parent_op_result["context_key"]
     context_type = parent_op_result["context_type"]
-    op.attr[types_pb2.CTX_NAME].CopyFrom(
+    op.attr[types_pb2.CONTEXT_KEY].CopyFrom(
         attr_value_pb2.AttrValue(s=context_key.encode("utf-8"))
     )
     r = op_result_pool[graph_op.key]

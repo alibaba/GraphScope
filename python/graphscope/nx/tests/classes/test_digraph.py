@@ -126,10 +126,10 @@ class TestDiGraph(BaseAttrDiGraphTester, TestGraph):
         with pytest.raises(nx.NetworkXError):
             R.remove_edge(1, 0)
 
-    # original test use function object as node, here we change to tuple.
+    # original test use function object as node, here we change to bool and int.
     def test_reverse_hashable(self):
-        x = (1, 2)
-        y = (2, 3)
+        x = True
+        y = False
         G = nx.DiGraph()
         G.add_edge(x, y)
         assert_nodes_equal(G.nodes(), G.reverse().nodes())
