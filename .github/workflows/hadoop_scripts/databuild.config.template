@@ -1,7 +1,0 @@
-split.size=256
-partition.num=16
-input.path=/ldbc_sample
-output.path=/data_output
-graph.endpoint=GRAPH_ENDPOINT
-column.mapping.config={"person_0_0.csv":{"label":"person","srcLabel":null,"dstLabel":null,"srcPkColMap":null,"dstPkColMap":null,"propertiesColMap":{"0":"id","1":"name"}},"person_knows_person_0_0.csv":{"label":"knows","srcLabel":"person","dstLabel":"person","srcPkColMap":{"0":"id"},"dstPkColMap":{"1":"id"},"propertiesColMap":{"2":"date"}}}
-load.after.build=true
