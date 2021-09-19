@@ -1,5 +1,0 @@
-JOIN_LABEL  Left(value) join right(<key, value>) and set value in <key, value> to specify label in left data
-JOIN_COUNT_LABEL    Left(value) join right(<key, value>) and set value in <key, value> to specify label in left data, if <key, value> is null then set the value 0
-JOIN_DIRECT_FILTER  Left(value) join right(Value) directly and output left value if right stream is not null
-JOIN_DIRECT_FILTER_NEGATE  Left(value) join right(value) and directly output left value if right stream is null
-JOIN_DIRECT_FILTER_KEY_NEGATE   Left(value) join right(<key, value>) and directly output left value if right stream is null

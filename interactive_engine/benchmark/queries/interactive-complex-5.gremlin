@@ -1,1 +1,0 @@
-g.timeout(600000).V().hasLabel('person').has('id', $personId).out('knows').union(identity(), out('knows')).dedup().as('p').inE('hasMember').has('joinDate', gt($minDate)).inV().as('f').group().by().by(out('containerOf').hasLabel('post').out('hasCreator').where(eq('p')).count()).unfold().order().by(select(values), decr).by(select(keys).values('id'), incr).limit(20)

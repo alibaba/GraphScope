@@ -1,1 +1,0 @@
-g.V().hasLabel('person').has('id',$personId).in('hasCreator').as('message').inE('likes').as('like').values('creationDate').as('likedate').select('like').outV().as('liker').order().by(select('likedate'), decr).by('id', incr).limit(20).select('message', 'likedate', 'liker')

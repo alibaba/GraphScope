@@ -1,1 +1,0 @@
-g.V().has('person','id',$personId).out('knows').union(identity(),out('knows').union(identity(),out('knows'))).dedup().by('id').has('firstName',eq('$firstName')).as('a').path().count(local).as('b').select('a').order().by(select('b'),incr).by('lastName').by('id').limit(20).select('a', 'b')
