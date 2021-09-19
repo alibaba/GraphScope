@@ -1,4 +1,0 @@
-#!/bin/sh
-POD_NAME=$1
-shift
-kubectl exec ${POD_NAME} -c engine -- /bin/sh -c "cat /tmp/hosts_of_nodes | sudo tee -a /etc/hosts && $*"
