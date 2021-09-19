@@ -25,15 +25,17 @@ Author: Ning Xin
 #include "grape/grape.h"
 
 #include "apps/assortativity/attribute/attribute_assortativity_context.h"
-#include "apps/assortativity/attribute/attribute_common.h"
+#include "apps/assortativity/utils.h"
 #include "core/app/app_base.h"
 #include "core/worker/default_worker.h"
 
 namespace gs {
 /**
- * @brief Compute the attribute assortativity for graph.
- *  Assortativity measures the similarity of connections in the graph with
- * respect to the attribute.
+ * @brief Compute the attribute assortativity or numeric assortativity for
+ * graph. The parameter numeric in context determines which app to use.
+ * If numeric is true, it is numeric assortativity app, else attribute
+ * assortativity app. Assortativity measures the similarity of connections in
+ * the graph with respect to the attribute.
  * @tparam FRAG_T
  */
 template <typename FRAG_T>
@@ -70,16 +72,121 @@ class AttributeAssortativity
       if (frag.fid() == 0) {
         MergeAttributeMixingMap<vdata_t>(ctx, messages);
         std::vector<std::vector<double>> attribute_mixing_matrix;
-        getAttributeMixingMatrix(ctx, attribute_mixing_matrix);
-        // compute attribute assortativity
-        ctx.attribute_assortativity =
-            computeAssortativity(attribute_mixing_matrix);
+        // numeric assortativity app
+        if (ctx.numeric) {
+          std::unordered_map<int, double> map;
+          getAttributeMixingMatrix(ctx, attribute_mixing_matrix, map);
+          // compute numeric assortativity
+          ctx.attribute_assortativity =
+              ProcessMatrix(attribute_mixing_matrix, map);
+        } else {  // attribute assortativity app
+          std::unordered_map<int, vdata_t> map;
+          getAttributeMixingMatrix(ctx, attribute_mixing_matrix, map);
+          // compute attribute assortativity
+          ctx.attribute_assortativity =
+              computeAssortativity(attribute_mixing_matrix);
+        }
         // write result to ctx
         std::vector<size_t> shape{1};
         ctx.set_shape(shape);
         ctx.assign(ctx.attribute_assortativity);
         VLOG(0) << "attribute assortatity: " << ctx.attribute_assortativity
                 << std::endl;
+      }
+    }
+  }
+  /**
+   * @brief count the attribute-attribute pairs
+   *
+   * @param source_data the data of source node
+   * @param target_data the data of target node
+   * @param ctx
+   */
+  template <typename vdata_t, typename context_t>
+  inline void AttributeMixingCount(vdata_t source_data, vdata_t target_data,
+                                   context_t& ctx) {
+    if (ctx.attribute_mixing_map.count(source_data) == 0 ||
+        ctx.attribute_mixing_map[source_data].count(target_data) == 0) {
+      ctx.attribute_mixing_map[source_data][target_data] = 1;
+    } else {
+      ctx.attribute_mixing_map[source_data][target_data] += 1;
+    }
+  }
+
+  /**
+   * @brief traverse the outgoing neighbors of vertex v and update the
+   * attribute-attribute pairs.
+   *
+   * @param v
+   * @param frag
+   * @param ctx
+   * @param messages
+   */
+  template <typename vdata_t, typename vertex_t, typename fragment_t,
+            typename context_t, typename message_manager_t>
+  void ProcessVertex(const vertex_t& v, const fragment_t& frag, context_t& ctx,
+                     message_manager_t& messages) {
+    vdata_t source_data = frag.GetData(v);
+    // get all neighbors of vertex v
+    auto oes = frag.GetOutgoingAdjList(v);
+    for (auto& e : oes) {
+      vertex_t neighbor = e.get_neighbor();
+      if (frag.IsOuterVertex(neighbor)) {
+        messages.SyncStateOnOuterVertex(frag, neighbor, source_data);
+      } else {
+        vdata_t target_data = frag.GetData(neighbor);
+        AttributeMixingCount(source_data, target_data, ctx);
+      }
+    }
+  }
+  /**
+   * @brief update the attribute-attribute pairs from the outer vertex.
+   *
+   * @param frag
+   * @param ctx
+   * @param messages
+   */
+  template <typename vertex_t, typename vdata_t, typename fragment_t,
+            typename context_t, typename message_manager_t>
+  void UpdateAttributeMixingMap(const fragment_t& frag, context_t& ctx,
+                                message_manager_t& messages) {
+    vdata_t source_data;
+    vertex_t u;
+    // update attribute mixing map
+    while (messages.GetMessage(frag, u, source_data)) {
+      vdata_t target_data = frag.GetData(u);
+      AttributeMixingCount(source_data, target_data, ctx);
+    }
+    ctx.merge_stage = true;
+    // send message to worker 0
+    if (frag.fid() != 0) {
+      messages.SendToFragment(0, ctx.attribute_mixing_map);
+    }
+    messages.ForceContinue();
+  }
+
+  /**
+   * @brief merge attribute mixing map of all workers in worker 0 and the result
+   * is saved in the contxt of worker 0.
+   *
+   * @param ctx
+   * @param messages
+   *
+   */
+  template <typename vdata_t, typename context_t, typename message_manager_t>
+  void MergeAttributeMixingMap(context_t& ctx, message_manager_t& messages) {
+    std::unordered_map<vdata_t, std::unordered_map<vdata_t, int>> msg;
+    while (messages.GetMessage(msg)) {
+      for (auto& pair1 : msg) {
+        for (auto& pair2 : pair1.second) {
+          // merge
+          if (ctx.attribute_mixing_map.count(pair1.first) == 0 ||
+              ctx.attribute_mixing_map[pair1.first].count(pair2.first) == 0) {
+            ctx.attribute_mixing_map[pair1.first][pair2.first] = pair2.second;
+          } else {
+            ctx.attribute_mixing_map[pair1.first][pair2.first] += pair2.second;
+          }
+        }
       }
     }
   }
@@ -121,34 +228,38 @@ class AttributeAssortativity
    *
    * @param ctx
    * @param[out] attribute_mixing_matrix
+   * @param[out] map index -> data of a node
    */
+  template <typename data_t>
   void getAttributeMixingMatrix(
-      context_t& ctx,
-      std::vector<std::vector<double>>& attribute_mixing_matrix) {
+      context_t& ctx, std::vector<std::vector<double>>& attribute_mixing_matrix,
+      std::unordered_map<int, data_t>& map) {
     int total_edge_num = 0;
-    // data-index map, index:{0, 1, ..., n}
-    std::unordered_map<vdata_t, int> property_map;
+    // <data, index> pair, index:{0, 1, ..., n}
+    std::unordered_map<vdata_t, int> index_map;
     int count = 0;
     for (auto& pair1 : ctx.attribute_mixing_map) {
       for (auto& pair2 : pair1.second) {
-        if (property_map.count(pair1.first) == 0) {
-          property_map[pair1.first] = count;
+        if (index_map.count(pair1.first) == 0) {
+          index_map[pair1.first] = count;
+          map[count] = static_cast<data_t>(pair1.first);
           count++;
         }
-        if (property_map.count(pair2.first) == 0) {
-          property_map[pair2.first] = count;
+        if (index_map.count(pair2.first) == 0) {
+          index_map[pair2.first] = count;
+          map[count] = static_cast<data_t>(pair2.first);
           count++;
         }
         total_edge_num += pair2.second;
       }
     }
-    int n = property_map.size();
+    int n = index_map.size();
     std::vector<std::vector<double>> tmp(n, std::vector<double>(n, 0.0));
     attribute_mixing_matrix.swap(tmp);
     for (auto& pair1 : ctx.attribute_mixing_map) {
       for (auto& pair2 : pair1.second) {
-        int row = property_map[pair1.first];
-        int column = property_map[pair2.first];
+        int row = index_map[pair1.first];
+        int column = index_map[pair2.first];
         attribute_mixing_matrix[row][column] =
             pair2.second / static_cast<double>(total_edge_num);
       }

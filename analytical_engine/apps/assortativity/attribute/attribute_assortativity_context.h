@@ -36,7 +36,10 @@ class AttributeAssortativityContext : public TensorContext<FRAG_T, double> {
   explicit AttributeAssortativityContext(const FRAG_T& fragment)
       : TensorContext<FRAG_T, double>(fragment) {}
 
-  void Init(grape::DefaultMessageManager& messages) { merge_stage = false; }
+  void Init(grape::DefaultMessageManager& messages, bool numeric) {
+    merge_stage = false;
+    this->numeric = numeric;
+  }
 
   void Output(std::ostream& os) override {
     auto& frag = this->fragment();
@@ -48,6 +51,8 @@ class AttributeAssortativityContext : public TensorContext<FRAG_T, double> {
       attribute_mixing_map;
   double attribute_assortativity;
   bool merge_stage;
+  // if true, it is numeric assortativity app else attribute assortativity app
+  bool numeric;
 };
 }  // namespace gs
 
