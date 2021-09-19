@@ -75,13 +75,12 @@ class AttributeAssortativity
         // numeric assortativity app
         if (ctx.numeric) {
           std::unordered_map<int, double> map;
-          getAttributeMixingMatrix(ctx, attribute_mixing_matrix, map);
+          getNumericMixingMatrix(ctx, attribute_mixing_matrix, map);
           // compute numeric assortativity
           ctx.attribute_assortativity =
               ProcessMatrix(attribute_mixing_matrix, map);
         } else {  // attribute assortativity app
-          std::unordered_map<int, vdata_t> map;
-          getAttributeMixingMatrix(ctx, attribute_mixing_matrix, map);
+          getAttributeMixingMatrix(ctx, attribute_mixing_matrix);
           // compute attribute assortativity
           ctx.attribute_assortativity =
               computeAssortativity(attribute_mixing_matrix);
@@ -228,12 +227,10 @@ class AttributeAssortativity
    *
    * @param ctx
    * @param[out] attribute_mixing_matrix
-   * @param[out] map index -> data of a node
    */
-  template <typename data_t>
   void getAttributeMixingMatrix(
-      context_t& ctx, std::vector<std::vector<double>>& attribute_mixing_matrix,
-      std::unordered_map<int, data_t>& map) {
+      context_t& ctx,
+      std::vector<std::vector<double>>& attribute_mixing_matrix) {
     int total_edge_num = 0;
     // <data, index> pair, index:{0, 1, ..., n}
     std::unordered_map<vdata_t, int> index_map;
@@ -242,12 +239,52 @@ class AttributeAssortativity
       for (auto& pair2 : pair1.second) {
         if (index_map.count(pair1.first) == 0) {
           index_map[pair1.first] = count;
-          map[count] = static_cast<data_t>(pair1.first);
           count++;
         }
         if (index_map.count(pair2.first) == 0) {
           index_map[pair2.first] = count;
-          map[count] = static_cast<data_t>(pair2.first);
+          count++;
+        }
+        total_edge_num += pair2.second;
+      }
+    }
+    int n = index_map.size();
+    std::vector<std::vector<double>> tmp(n, std::vector<double>(n, 0.0));
+    attribute_mixing_matrix.swap(tmp);
+    for (auto& pair1 : ctx.attribute_mixing_map) {
+      for (auto& pair2 : pair1.second) {
+        int row = index_map[pair1.first];
+        int column = index_map[pair2.first];
+        attribute_mixing_matrix[row][column] =
+            pair2.second / static_cast<double>(total_edge_num);
+      }
+    }
+  }
+
+  /**
+   * @brief get numeric mixing matrix by attribute mixing map
+   *
+   * @param ctx
+   * @param[out] attribute_mixing_matrix
+   * @param[out] map index -> data of a node
+   */
+  void getNumericMixingMatrix(
+      context_t& ctx, std::vector<std::vector<double>>& attribute_mixing_matrix,
+      std::unordered_map<int, double>& map) {
+    int total_edge_num = 0;
+    // <data, index> pair, index:{0, 1, ..., n}
+    std::unordered_map<vdata_t, int> index_map;
+    int count = 0;
+    for (auto& pair1 : ctx.attribute_mixing_map) {
+      for (auto& pair2 : pair1.second) {
+        if (index_map.count(pair1.first) == 0) {
+          index_map[pair1.first] = count;
+          map[count] = static_cast<double>(pair1.first);
+          count++;
+        }
+        if (index_map.count(pair2.first) == 0) {
+          index_map[pair2.first] = count;
+          map[count] = static_cast<double>(pair2.first);
           count++;
         }
         total_edge_num += pair2.second;
