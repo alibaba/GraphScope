@@ -494,7 +494,7 @@ PartitionId get_partition_id(GraphHandle graph, VertexId v) {
   htap_impl::GraphHandleImpl* casted_graph =
       static_cast<htap_impl::GraphHandleImpl*>(graph);
 
-  int fid = casted_graph->vid_parser.GetFid((htap_impl::VID_TYPE)v);
+  auto fid = casted_graph->vid_parser.GetFid((htap_impl::VID_TYPE)v);
   LabelId label_id =
       casted_graph->vid_parser.GetLabelId((htap_impl::VID_TYPE)v);
   htap_impl::VID_TYPE offset =
