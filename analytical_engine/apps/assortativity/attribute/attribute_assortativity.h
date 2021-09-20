@@ -27,6 +27,7 @@ Author: Ning Xin
 #include "apps/assortativity/attribute/attribute_assortativity_context.h"
 #include "apps/assortativity/utils.h"
 #include "core/app/app_base.h"
+#include "core/utils/app_utils.h"
 #include "core/worker/default_worker.h"
 
 namespace gs {
@@ -279,12 +280,26 @@ class AttributeAssortativity
       for (auto& pair2 : pair1.second) {
         if (index_map.count(pair1.first) == 0) {
           index_map[pair1.first] = count;
-          map[count] = static_cast<double>(pair1.first);
+          vdata_t vdata = pair1.first;
+          double data = 1.0;
+          // convert vdata_t to double in compile-time
+          static_if<Conversion<double, vdata_t>::exists>(
+              [&](auto& data, auto& vdata) {
+                data = static_cast<double>(vdata);
+              })(data, vdata);
+          map[count] = data;
           count++;
         }
         if (index_map.count(pair2.first) == 0) {
           index_map[pair2.first] = count;
-          map[count] = static_cast<double>(pair2.first);
+          vdata_t vdata = pair2.first;
+          double data = 1.0;
+          // convert vdata_t to double in compile-time
+          static_if<Conversion<double, vdata_t>::exists>(
+              [&](auto& data, auto& vdata) {
+                data = static_cast<double>(vdata);
+              })(data, vdata);
+          map[count] = data;
           count++;
         }
         total_edge_num += pair2.second;
