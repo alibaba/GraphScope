@@ -35,7 +35,6 @@ except ImportError:
 
 from graphscope.config import GSConfig as gs_config
 from graphscope.framework import dag_utils
-from graphscope.framework import graph_utils
 from graphscope.framework import utils
 from graphscope.framework.dag import DAGNode
 from graphscope.framework.errors import check_argument
@@ -428,22 +427,11 @@ class GraphDAGNode(DAGNode, GraphInterface):
         dst_field=1,
     ):
         """Add edges to the graph, and return a new graph.
-
-        1. Add edges to a uninitialized graph.
-
-            i.   src_label and dst_label both unspecified. In this case, current graph must
-                 has 0 (we deduce vertex label from edge table, and set vertex label name to '_'),
-                 or 1 vertex label (we set src_label and dst label to this).
-            ii.  src_label and dst_label both specified and existed in current graph's vertex labels.
-            iii. src_label and dst_label both specified and there is no vertex labels in current graph.
-                 we deduce all vertex labels from edge tables.
-                 Note that you either provide all vertex labels, or let graphscope deduce all vertex labels.
-                 We don't support mixed style.
-
-        2. Add edges to a existed graph.
-            Must add a new kind of edge label, not a new relation to builded graph.
-            But you can add a new relation to uninitialized part of the graph.
-            src_label and dst_label must be specified and existed in current graph.
+        Here the src_label and dst_label must be both specified or both unspecified,
+        If the src_label or dst_label are not existed in the previous graph, then new vertex labels will be
+        created, and the values are deduced from the edges.
+        Further, if the src_label and dst_label are not specified, default label names will
+        be used, default names are '_', the followings will be like '_1', '_2', '_3', etc.
 
         Args:
             edges (Union[str, Loader]): Edge data source.
@@ -461,27 +449,25 @@ class GraphDAGNode(DAGNode, GraphInterface):
             :class:`graphscope.framework.graph.GraphDAGNode`:
                 A new graph with edge added, evaluated in eager mode.
         """
-        if src_label is None and dst_label is None:
-            check_argument(
-                len(self._v_labels) <= 1,
-                "Ambiguous vertex label, please specify the src_label and dst_label.",
-            )
-            if len(self._v_labels) == 1:
-                src_label = dst_label = self._v_labels[0]
-            else:
-                src_label = dst_label = "_"
-
         if src_label is None or dst_label is None:
             raise ValueError(
                 "src and dst label must be both specified or either unspecified."
             )
 
-        if self._v_labels:
-            if src_label not in self._v_labels or dst_label not in self._v_labels:
-                raise ValueError("src label or dst_label not existed in graph.")
-        else:
-            # We can infer all vertices label in the graph constructing stage.
-            pass
+        if src_label is None and dst_label is None:
+            if not self._v_labels:
+                src_label = dst_label = '_'
+            else:
+                # Find previous max default label index
+                prev_default_label_indices = [label[1:] for label in self._v_labels if label.startswith('_')]
+                max_index = 0
+                for index in prev_default_label_indices:
+                    try:
+                        max_index = max(max_index, int(index))
+                    except ValueError:
+                        pass
+                src_label = dst_label = f'_{max_index + 1}'
+            logger.warning("Creating default vertex labels as no vertex label is assigned, src_label: %s and dst_label: %s...", src_label, dst_label)
 
         check_argument(
             src_field != dst_field, "src and dst field cannot refer to the same field"
