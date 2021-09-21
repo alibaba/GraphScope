@@ -456,18 +456,24 @@ class GraphDAGNode(DAGNode, GraphInterface):
 
         if src_label is None and dst_label is None:
             if not self._v_labels:
-                src_label = dst_label = '_'
+                src_label = dst_label = "_"
             else:
                 # Find previous max default label index
-                prev_default_label_indices = [label[1:] for label in self._v_labels if label.startswith('_')]
+                prev_default_label_indices = [
+                    label[1:] for label in self._v_labels if label.startswith("_")
+                ]
                 max_index = 0
                 for index in prev_default_label_indices:
                     try:
                         max_index = max(max_index, int(index))
                     except ValueError:
                         pass
-                src_label = dst_label = f'_{max_index + 1}'
-            logger.warning("Creating default vertex labels as no vertex label is assigned, src_label: %s and dst_label: %s...", src_label, dst_label)
+                src_label = dst_label = f"_{max_index + 1}"
+            logger.warning(
+                "Creating default vertex labels as no vertex label is assigned, src_label: %s and dst_label: %s...",
+                src_label,
+                dst_label,
+            )
 
         check_argument(
             src_field != dst_field, "src and dst field cannot refer to the same field"
