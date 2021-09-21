@@ -312,19 +312,30 @@ def test_add_vertices_edges(graphscope_session):
     assert graph.schema.vertex_labels == ["person"]
     assert graph.schema.edge_labels == ["knows"]
 
-    with pytest.raises(ValueError, match="src label or dst_label not existed in graph"):
-        graph = graph.add_edges(
-            Loader(f"{prefix}/created.csv", delimiter="|"),
-            "created",
-            src_label="person",
-            dst_label="software",
-        )
+    graph_tmp = graph.add_edges(
+        Loader(f"{prefix}/created.csv", delimiter="|"),
+        "created",
+        src_label="src_label",
+        dst_label="dst_label",
+    )
+    assert "src_label" in graph_tmp.schema.vertex_labels
+    assert "dst_label" in graph_tmp.schema.vertex_labels
 
     graph = graph.add_vertices(
         Loader(f"{prefix}/software.csv", delimiter="|"), "software"
     )
-    with pytest.raises(ValueError, match="Ambiguous vertex label"):
-        graph = graph.add_edges(Loader(f"{prefix}/knows.csv", delimiter="|"), "created")
+
+    graph_tmp = graph.add_edges(
+        Loader(f"{prefix}/created.csv", delimiter="|"), "new_elabel"
+    )
+    assert "_" in graph_tmp.schema.vertex_labels
+    assert "new_elabel" in graph_tmp.schema.edge_labels
+
+    graph_tmp = graph.add_edges(
+        Loader(f"{prefix}/created.csv", delimiter="|"), "new_elabel_1"
+    )
+    assert "_1" in graph_tmp.schema.vertex_labels
+    assert "new_elabel_1" in graph_tmp.schema.edge_labels
 
     with pytest.raises(ValueError, match="already existed in graph"):
         graph = graph.add_edges(
