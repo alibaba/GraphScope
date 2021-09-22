@@ -213,7 +213,7 @@ class Graph(_GraphBase):
     graph_attr_dict_factory = dict
     _graph_type = graph_def_pb2.DYNAMIC_PROPERTY
 
-    def __init__(self, incoming_graph_data=None, **attr):
+    def __init__(self, incoming_graph_data=None, default_label="_", **attr):
         """Initialize a graph with edges, name, or graph attributes
 
         Parameters
@@ -232,6 +232,10 @@ class Graph(_GraphBase):
             not allow parallel edge in different edge label, otherwise would raise
             AnalyticalEngineInternalError in transformation. finally, the labels
             of nodes and edges would be cleaned in nx.Graph.
+
+        default_label : default label of graph (optional, default: "_")
+            default label to use in transforms from graphscope graph. The nodes of
+            default label can access without the label.
 
         attr : keyword arguments, optional (default= no attributes)
             Attributes to add to graph as key=value pairs.
@@ -279,7 +283,7 @@ class Graph(_GraphBase):
         if incoming_graph_data is not None and self._is_gs_graph(incoming_graph_data):
             # convert from gs graph always use distributed mode
             self._distributed = True
-        self._default_label = attr.pop("default_label", "_")
+        self._default_label = default_label
 
         if not self._is_gs_graph(incoming_graph_data) and create_empty_in_engine:
             graph_def = empty_graph_in_engine(

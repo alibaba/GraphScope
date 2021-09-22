@@ -195,7 +195,7 @@ class DiGraph(Graph):
     """
 
     @patch_docstring(Graph.__init__)
-    def __init__(self, incoming_graph_data=None, **attr):
+    def __init__(self, incoming_graph_data=None, default_label="_", **attr):
         if self._session is None:
             self._try_to_get_default_session()
 
@@ -223,7 +223,7 @@ class DiGraph(Graph):
         if incoming_graph_data is not None and self._is_gs_graph(incoming_graph_data):
             # convert from gs graph always use distributed mode
             self._distributed = True
-        self._default_label = attr.pop("default_label", "_")
+        self._default_label = default_label
 
         if not self._is_gs_graph(incoming_graph_data) and create_empty_in_engine:
             graph_def = empty_graph_in_engine(
