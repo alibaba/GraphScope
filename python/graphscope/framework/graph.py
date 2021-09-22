@@ -428,9 +428,9 @@ class GraphDAGNode(DAGNode, GraphInterface):
     ):
         """Add edges to the graph, and return a new graph.
         Here the src_label and dst_label must be both specified or both unspecified,
-            i.   src_label and dst_label both unspecified and current graph has 0 vertex label.
+            i.   src_label and dst_label both unspecified and current graph has no vertex label.
                  We deduce vertex label from edge table, and set vertex label name to '_'.
-            ii.  src_label and dst_label both unspecified and current graph has 1 vertex label.
+            ii.  src_label and dst_label both unspecified and current graph has one vertex label.
                  We set src_label and dst label to this single vertex label.
             ii.  src_label and dst_label both specified and existed in current graph's vertex labels.
             iii. src_label and dst_label both specified and some are not existed in current graph's vertex labels.
