@@ -17,6 +17,7 @@
 #
 
 import contextlib
+import glob
 import os
 import shutil
 import subprocess
@@ -29,6 +30,10 @@ from setuptools.command.develop import develop
 from setuptools.command.sdist import sdist
 
 repo_root = os.path.dirname(os.path.abspath(__file__))
+
+
+# copy any files contains in /opt/graphscope into site-packages/graphscope.runtime
+extra_data = {"/opt/graphscope/": "graphscope.runtime"}
 
 
 class BuildBuiltin(Command):
@@ -92,6 +97,23 @@ class FormatAndLint(Command):
 
 
 class CustomBuildPy(build_py):
+    def _get_data_files(self):
+        """Add custom out-of-tree package data files."""
+        rs = super()._get_data_files()
+
+        if os.environ.get("WITH_EXTRA_DATA") != "ON":
+            return rs
+
+        for sources, package in extra_data.items():
+            src_dir = sources
+            build_dir = os.path.join(*([self.build_lib] + [package]))
+            filenames = []
+            for file in glob.glob(sources + "/**/*", recursive=True):
+                if os.path.isfile(file) or os.path.islink(file):
+                    filenames.append(os.path.relpath(file, src_dir))
+            rs.append((package, src_dir, build_dir, filenames))
+        return rs
+
     def run(self):
         self.run_command("build_builtin")
         build_py.run(self)
@@ -180,7 +202,7 @@ del version_file_path
 
 
 setup(
-    name="gscoordinator",
+    name="graphscope",
     description="",
     include_package_data=True,
     long_description=long_description,
@@ -219,7 +241,7 @@ setup(
             "builtin/app/builtin_app.gar",
             "builtin/app/*.yaml",
             "template/*.template",
-        ]
+        ],
     },
     cmdclass={
         "build_builtin": BuildBuiltin,

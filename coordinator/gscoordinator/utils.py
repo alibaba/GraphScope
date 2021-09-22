@@ -80,6 +80,7 @@ BUILTIN_APP_RESOURCE_PATH = os.path.join(
 )
 # default config file in gar resource
 DEFAULT_GS_CONFIG_FILE = ".gs_conf.yaml"
+DEFAULT_GRAPHSCOPE_HOME = "/opt/graphscope"
 
 # GRAPHSCOPE_HOME
 #   1) get from environment variable `GRAPHSCOPE_HOME`, if not exist,
@@ -91,10 +92,9 @@ if GRAPHSCOPE_HOME is None:
     if os.path.isdir(os.path.join(COORDINATOR_HOME, "graphscope.runtime")):
         GRAPHSCOPE_HOME = os.path.join(COORDINATOR_HOME, "graphscope.runtime")
 
-# resolve from egg installed package
-if GRAPHSCOPE_HOME is None:
-    if os.path.isdir(os.path.join(COORDINATOR_HOME, "..", "graphscope.runtime")):
-        GRAPHSCOPE_HOME = os.path.join(COORDINATOR_HOME, "..", "graphscope.runtime")
+# find from DEFAULT_GRAPHSCOPE_HOME
+if os.path.isdir(DEFAULT_GRAPHSCOPE_HOME):
+    GRAPHSCOPE_HOME = DEFAULT_GRAPHSCOPE_HOME
 
 # resolve from develop source tree
 if GRAPHSCOPE_HOME is None:

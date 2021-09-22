@@ -65,7 +65,7 @@ graphscope-jupyter-manylinux2010-py2-py3:
 					cd /work/python/jupyter/graphscope && \
 					python3 setup.py bdist_wheel"'
 
-graphscope-manylinux2010-py36:
+graphscope-client-manylinux2010-py36:
 	docker run --rm -it -v $(WORKING_DIR)/..:/work \
 		   ${REGISTRY}/$(DOCKER_ORG)/graphscope-manylinux2010:${VERSION} \
 		   /usr/bin/scl enable devtoolset-8 'sh -c "export PATH=$$PATH:/opt/python/cp36-cp36m/bin && \
@@ -85,7 +85,7 @@ graphscope-manylinux2010-py36:
 				  cd dist && \
 				  auditwheel repair ./*.whl"'
 
-graphscope-manylinux2010-py37:
+graphscope-client-manylinux2010-py37:
 	docker run --rm -it -v $(WORKING_DIR)/..:/work \
 		   ${REGISTRY}/$(DOCKER_ORG)/graphscope-manylinux2010:${VERSION} \
 		   /usr/bin/scl enable devtoolset-8 'sh -c "export PATH=$$PATH:/opt/python/cp37-cp37m/bin && \
@@ -105,7 +105,7 @@ graphscope-manylinux2010-py37:
 				  cd dist && \
 				  auditwheel repair ./*.whl"'
 
-graphscope-manylinux2010-py38:
+graphscope-client-manylinux2010-py38:
 	docker run --rm -it -v $(WORKING_DIR)/..:/work \
 		   ${REGISTRY}/$(DOCKER_ORG)/graphscope-manylinux2010:${VERSION} \
 		   /usr/bin/scl enable devtoolset-8 'sh -c "export PATH=$$PATH:/opt/python/cp38-cp38/bin && \
@@ -125,7 +125,7 @@ graphscope-manylinux2010-py38:
 				  cd dist && \
 				  auditwheel repair ./*.whl"'
 
-graphscope-manylinux2010-py39:
+graphscope-client-manylinux2010-py39:
 	docker run --rm -it -v $(WORKING_DIR)/..:/work \
 		   ${REGISTRY}/$(DOCKER_ORG)/graphscope-manylinux2010:${VERSION} \
 		   /usr/bin/scl enable devtoolset-8 'sh -c "export PATH=$$PATH:/opt/python/cp39-cp39/bin && \

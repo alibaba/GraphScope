@@ -1,6 +1,6 @@
 daemons
 etcd-distro
-graphscope
+graphscope-client
 grpcio
 kubernetes
 protobuf

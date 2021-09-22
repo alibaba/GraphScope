@@ -286,7 +286,7 @@ del version_file_path
 
 
 setup(
-    name="graphscope",
+    name="graphscope-client",
     description="GraphScope: A One-Stop Large-Scale Graph Computing System from Alibaba",
     long_description=long_description,
     long_description_content_type="text/markdown",
