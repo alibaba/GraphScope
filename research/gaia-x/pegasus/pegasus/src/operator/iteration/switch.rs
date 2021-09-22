@@ -1,25 +1,36 @@
-use pegasus_common::rc::UnsafeRcPtr;
-
 use crate::api::IterCondition;
 use crate::data::EndByScope;
 use crate::tag::tools::map::TidyTagMap;
 
-#[derive(Clone)]
-struct EndGuard {
-    end: UnsafeRcPtr<EndByScope>,
+struct IterateState {
+    iterating: bool,
+    src_end: Option<EndByScope>,
 }
 
-impl EndGuard {
-    fn new(end: EndByScope) -> Self {
-        EndGuard { end: UnsafeRcPtr::new(end) }
+impl IterateState {
+    fn new() -> Self {
+        IterateState { iterating: true, src_end: None }
     }
 
-    fn try_unwrap(self) -> Option<EndByScope> {
-        UnsafeRcPtr::try_unwrap(self.end).ok()
+    fn set_end(&mut self, end: EndByScope) {
+        self.src_end = Some(end);
+    }
+
+    fn take_end(&mut self) -> Option<EndByScope> {
+        self.src_end.take()
+    }
+
+    fn leave_iteration(&mut self) {
+        self.iterating = false;
+    }
+
+    fn is_iterating(&self) -> bool {
+        self.iterating
     }
 }
 
 pub(crate) struct SwitchOperator<D> {
+    worker_index: u32,
     scope_level: u32,
     cond: IterCondition<D>,
     // record scopes in iteration;
@@ -28,20 +39,25 @@ pub(crate) struct SwitchOperator<D> {
     //  [0] -> [(end of 0), (end of root)]
     //  [1] -> [(end of 1), (end of root)]
     //
-    parent_scope_ends: TidyTagMap<Vec<EndGuard>>,
-    in_iteration: TidyTagMap<()>,
-    exhaust_port: Option<EndByScope>,
+    iterate_states: TidyTagMap<IterateState>,
+    parent_parent_scope_ends: Vec<Vec<EndByScope>>,
+    has_synchronized: bool,
 }
 
 impl<D> SwitchOperator<D> {
     pub fn new(scope_level: u32, cond: IterCondition<D>) -> Self {
         assert!(scope_level > 0);
+        let mut parent_parent_scope_ends = Vec::with_capacity(scope_level as usize + 1);
+        for _ in 0..scope_level + 1 {
+            parent_parent_scope_ends.push(vec![]);
+        }
         SwitchOperator {
+            worker_index: crate::worker_id::get_current_worker().index,
             scope_level,
             cond,
-            parent_scope_ends: TidyTagMap::new(scope_level - 1),
-            in_iteration: TidyTagMap::new(scope_level - 1),
-            exhaust_port: None,
+            iterate_states: TidyTagMap::new(scope_level - 1),
+            parent_parent_scope_ends,
+            has_synchronized: false,
         }
     }
 }
@@ -285,15 +301,16 @@ mod rob {
                 if let Some(end) = batch.take_end() {
                     let p = batch.tag.to_parent_uncheck();
                     trace_worker!("detect scope {:?} in iteration;", batch.tag);
-                    self.in_iteration.insert(p, ());
+                    self.iterate_states.insert(p, IterateState::new());
                     enter.notify_end(end)?;
                 }
 
                 Ok(())
             })?;
 
-            let mut feedback = new_input_session::<D>(&inputs[1]);
-            feedback.for_each_batch(|batch| {
+            let mut feedback_sync = new_input_session::<D>(&inputs[1]);
+            feedback_sync.for_each_batch(|batch| {
+                self.has_synchronized = true;
                 if batch.tag.current_uncheck() >= self.cond.max_iters {
                     let end = batch.take_end();
                     if !batch.is_empty() {
@@ -302,29 +319,18 @@ mod rob {
                     if let Some(_) = end {
                         trace_worker!("detect {:?} leave iteration;", batch.tag);
                         let p = batch.tag.to_parent_uncheck();
-                        if self.in_iteration.remove(&p).is_some() {
-                            if let Some(ends) = self.parent_scope_ends.remove(&p) {
-                                for e in ends {
-                                    if let Some(end) = e.try_unwrap() {
-                                        leave.notify_end(end.clone())?;
-                                        enter.notify_end(end)?;
-                                    }
-                                }
-                            }
-                            if self.in_iteration.is_empty() {
-                                if self.parent_scope_ends.is_empty() {
-                                    if let Some(ref end) = self.exhaust_port {
-                                        enter.notify_end(end.clone())?;
-                                    }
-                                } else {
-                                    error_worker!("no scope in iteration, parent scope end size = {};", self.parent_scope_ends.len());
-                                    for (x, _) in self.parent_scope_ends.iter() {
-                                        error_worker!("parent scope {:?} end exist;", x);
-                                    }
-                                }
+                        if let Some(mut state) = self.iterate_states.remove(&p) {
+                            state.leave_iteration();
+                            if let Some(end) = state.take_end() {
+                                leave.notify_end(end.clone())?;
+                                enter.notify_end(end)?;
+                            } else {
+                                warn_worker!("{:?} not end while {:?} leave iteration;", p, batch.tag);
+                                self.iterate_states.insert(p, state);
                             }
                         } else {
                             error_worker!("iteration for {:?} not found;", p);
+                            panic!("iteration for {:?} not found", p);
                         }
                     }
                 } else {
@@ -339,10 +345,13 @@ mod rob {
                     }
                     if let Some(end) = batch.take_end() {
                         let p = batch.tag.to_parent_uncheck();
-                        if self.in_iteration.insert(p, ()).is_none() {
+                        if !self.iterate_states.contains_key(&p) {
                             trace_worker!("detect scope {:?} in iteration;", batch.tag);
+                            self.iterate_states.insert(p, IterateState::new());
                         }
-                        enter.notify_end(end)?;
+                        if end.contains_source(self.worker_index) {
+                            enter.notify_end(end)?;
+                        }
                     }
                 }
 
@@ -356,39 +365,32 @@ mod rob {
             let level = n.tag().len() as u32;
             if n.port == 0 {
                 // the main input;
-                if level == 0 {
-                    self.exhaust_port = Some(n.take());
-                } else if level == self.scope_level - 1 {
-                    assert!(self.in_iteration.contains_key(n.tag()));
-                    self.parent_scope_ends
-                        .insert(n.tag().clone(), vec![EndGuard::new(n.take())]);
-                } else {
-                    let end = EndGuard::new(n.take());
-                    for (t, e) in self.parent_scope_ends.iter_mut() {
-                        if end.end.tag.is_parent_of(&*t) {
-                            e.push(end.clone());
+                if level == self.scope_level - 1 {
+                    if let Some(state)= self.iterate_states.get_mut(n.tag()) {
+                        if !state.is_iterating() {
+                            warn_worker!("{:?} get end after leave iteration;", n.tag());
                         }
+                        state.set_end(n.take());
+                    } else {
+                        panic!("iteration of {:?} not found;", n.tag())
                     }
-                    if let Some(end) = end.try_unwrap() {
-                        outputs[0].notify_end(end)?;
+                } else {
+                    // parent of parent scope end;
+                    assert!(level < self.scope_level - 1);
+                    if self.has_synchronized && self.iterate_states.is_empty() {
+                        let end = n.take();
+                        if !end.tag.is_root() {
+                            outputs[0].notify_end(end.clone())?;
+                        }
+                        outputs[1].notify_end(end)?;
+                    } else {
+                        self.parent_parent_scope_ends[level as usize].push(n.take());
                     }
                 }
             } else if n.port == 1 {
                 if level == 0 {
-                    if let Some(end) = self.exhaust_port.take() {
-                        if !self.in_iteration.is_empty() {
-                            for (t, _) in self.in_iteration.iter() {
-                                error_worker!("can't close iteration as scope {:?} in iteration;", t);
-                            }
-                            return Err(JobExecError::panic("can't close iteration;".to_owned()));
-                        }
-                        assert!(self.parent_scope_ends.is_empty());
-                        outputs[0].notify_end(end.clone())?;
-                    } else {
-                        return Err(JobExecError::panic(
-                            "inner error : feedback can't exhaust before main input;".to_owned(),
-                        ));
-                    }
+                    assert!(self.has_synchronized && self.iterate_states.is_empty());
+                    outputs[0].notify_end(n.take())?;
                 }
             } else {
                 unreachable!("unknown port {}", n.port);

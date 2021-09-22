@@ -18,14 +18,28 @@ use pegasus_common::codec::*;
 use crate::graph::Port;
 use crate::progress::EndSignal;
 use crate::Tag;
+use std::fmt::{Debug, Formatter};
 
-#[derive(Debug, Clone)]
+#[derive(Clone)]
 pub enum EventKind {
     /// end signal indicates that no more data of a scope will be produced;
     End(EndSignal),
     /// hint to cancel producing data of scope to channel;
     /// Cancel( (channel index,  scope tag) )
     Cancel((u32, Tag)),
+}
+
+impl Debug for EventKind {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        match self {
+            EventKind::End(es) => {
+                write!(f, "End({:?})", es.tag())
+            }
+            EventKind::Cancel(cs) => {
+                write!(f, "Cancel({:?})", cs.1)
+            }
+        }
+    }
 }
 
 #[derive(Debug, Clone)]

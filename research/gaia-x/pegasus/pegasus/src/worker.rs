@@ -35,6 +35,7 @@ use crate::resource::{KeyedResources, ResourceMap};
 use crate::result::ResultSink;
 use crate::schedule::Schedule;
 use crate::{Data, JobConf, Tag, WorkerId};
+use crate::data_plane::Push;
 
 pub struct Worker<D: Data, T: Debug + Send + 'static> {
     pub conf: Arc<JobConf>,
@@ -77,7 +78,10 @@ impl<D: Data, T: Debug + Send + 'static> Worker<D, T> {
         let resource =
             crate::communication::build_channel::<Event>(ChannelId::new(self.id.job_id, 0), &self.conf)?;
         assert_eq!(resource.ch_id.index, 0);
-        let (tx, rx) = resource.take();
+        let (mut tx, rx) = resource.take();
+        assert_eq!(tx.len(), self.id.total_peers() as usize + 1);
+        let mut abort = tx.swap_remove(self.id.index as usize);
+        abort.close().ok();
         let event_emitter = EventEmitter::new(tx);
         let dfb = DataflowBuilder::new(self.id, event_emitter.clone(), &self.conf);
         let root_builder = OutputBuilderImpl::new(

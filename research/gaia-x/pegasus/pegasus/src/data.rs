@@ -41,6 +41,10 @@ impl EndByScope {
         self.source.merge(other.source);
         self.count += other.count;
     }
+
+    pub(crate) fn contains_source(&self, src: u32) -> bool {
+        self.count != 0 || self.source.contains_source(src)
+    }
 }
 
 impl Debug for EndByScope {

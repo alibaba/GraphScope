@@ -19,7 +19,7 @@ use std::io;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
 
-use pegasus_common::rc::{RcPointer, UnsafeRcPtr};
+use pegasus_common::rc::{UnsafeRcPtr};
 
 use crate::channel_id::ChannelId;
 use crate::data_plane::{Pull, Push};
