@@ -18,16 +18,11 @@
 
 import json
 import os
-import shutil
-import subprocess
-import sys
 import tempfile
-import time
 
 import pytest
 
 import graphscope
-from graphscope.client.session import DEFAULT_CONFIG_FILE
 
 COORDINATOR_HOME = os.path.join(os.path.dirname(__file__), "../", "../coordinator")
 new_data_dir = os.path.expandvars("${GS_TEST_DIR}/new_property/v2_e2")

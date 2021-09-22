@@ -16,17 +16,12 @@
 # limitations under the License.
 #
 
-import os
 
 import pandas as pd
 import pytest
-import vineyard
 import vineyard.io
 
-from graphscope import hits
 from graphscope import lpa
-from graphscope import property_bfs
-from graphscope import property_sssp
 from graphscope import sssp
 from graphscope.framework.app import AppAssets
 from graphscope.framework.errors import InvalidArgumentError

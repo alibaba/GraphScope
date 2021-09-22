@@ -419,7 +419,7 @@ class GraphDAGNode(DAGNode, GraphInterface):
     def add_edges(
         self,
         edges,
-        label="_",
+        label="_e",
         properties=None,
         src_label=None,
         dst_label=None,
@@ -428,14 +428,18 @@ class GraphDAGNode(DAGNode, GraphInterface):
     ):
         """Add edges to the graph, and return a new graph.
         Here the src_label and dst_label must be both specified or both unspecified,
-        If the src_label or dst_label are not existed in the previous graph, then new vertex labels will be
-        created, and the values are deduced from the edges.
-        Further, if the src_label and dst_label are not specified, default label names will
-        be used, default names are '_', the followings will be like '_1', '_2', '_3', etc.
+            i.   src_label and dst_label both unspecified and current graph has 0 vertex label.
+                 We deduce vertex label from edge table, and set vertex label name to '_'.
+            ii.  src_label and dst_label both unspecified and current graph has 1 vertex label.
+                 We set src_label and dst label to this single vertex label.
+            ii.  src_label and dst_label both specified and existed in current graph's vertex labels.
+            iii. src_label and dst_label both specified and some are not existed in current graph's vertex labels.
+                 we deduce missing vertex labels from edge tables.
+
 
         Args:
             edges (Union[str, Loader]): Edge data source.
-            label (str, optional): Edge label name. Defaults to "_".
+            label (str, optional): Edge label name. Defaults to "_e".
             properties (list[str], optional): List of column names loaded as properties. Defaults to None.
             src_label (str, optional): Source vertex label. Defaults to None.
             dst_label (str, optional): Destination vertex label. Defaults to None.
@@ -449,30 +453,19 @@ class GraphDAGNode(DAGNode, GraphInterface):
             :class:`graphscope.framework.graph.GraphDAGNode`:
                 A new graph with edge added, evaluated in eager mode.
         """
+        if src_label is None and dst_label is None:
+            check_argument(
+                len(self._v_labels) <= 1,
+                "Ambiguous vertex label, please specify the src_label and dst_label.",
+            )
+            if len(self._v_labels) == 1:
+                src_label = dst_label = self._v_labels[0]
+            else:
+                src_label = dst_label = "_"
+
         if src_label is None or dst_label is None:
             raise ValueError(
                 "src and dst label must be both specified or either unspecified."
-            )
-
-        if src_label is None and dst_label is None:
-            if not self._v_labels:
-                src_label = dst_label = "_"
-            else:
-                # Find previous max default label index
-                prev_default_label_indices = [
-                    label[1:] for label in self._v_labels if label.startswith("_")
-                ]
-                max_index = 0
-                for index in prev_default_label_indices:
-                    try:
-                        max_index = max(max_index, int(index))
-                    except ValueError:
-                        pass
-                src_label = dst_label = f"_{max_index + 1}"
-            logger.warning(
-                "Creating default vertex labels as no vertex label is assigned, src_label: %s and dst_label: %s...",
-                src_label,
-                dst_label,
             )
 
         check_argument(
@@ -486,8 +479,17 @@ class GraphDAGNode(DAGNode, GraphInterface):
         unsealed_vertices = list()
         unsealed_edges = list()
 
+        v_labels = deepcopy(self._v_labels)
         e_labels = deepcopy(self._e_labels)
         relations = deepcopy(self._e_relationships)
+
+        if src_label not in self._v_labels:
+            logger.warning("Deducing vertex labels %s", src_label)
+            v_labels.append(src_label)
+
+        if src_label != dst_label and dst_label not in self._v_labels:
+            logger.warning("Deducing vertex labels %s", dst_label)
+            v_labels.append(dst_label)
 
         parent = self
         if label in self.e_labels:
@@ -549,7 +551,7 @@ class GraphDAGNode(DAGNode, GraphInterface):
         graph_dag_node = GraphDAGNode(
             self._session, op, self._oid_type, self._directed, self._generate_eid
         )
-        graph_dag_node._v_labels = self._v_labels
+        graph_dag_node._v_labels = v_labels
         graph_dag_node._e_labels = e_labels
         graph_dag_node._e_relationships = relations
         graph_dag_node._unsealed_vertices_and_edges = unsealed_vertices_and_edges
