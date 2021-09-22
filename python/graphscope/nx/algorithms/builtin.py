@@ -1087,11 +1087,7 @@ def attribute_assortativity_coefficient(G, attribute):
     .. [1] M. E. J. Newman, Mixing patterns in networks,
        Physical Review E, 67 026126, 2003
     """
-
-    ctx = AppAssets(algo="attribute_assortativity_coefficient", context="tensor")(
-        G, False
-    )
-    return ctx.to_numpy("r", axis=0)[0]
+    return graphscope.attribute_assortativity_coefficient(G)
 
 
 @project_to_simple
@@ -1132,11 +1128,7 @@ def numeric_assortativity_coefficient(G, attribute):
     .. [1] M. E. J. Newman, Mixing patterns in networks
            Physical Review E, 67 026126, 2003
     """
-
-    ctx = AppAssets(algo="attribute_assortativity_coefficient", context="tensor")(
-        G, True
-    )
-    return ctx.to_numpy("r", axis=0)[0]
+    return graphscope.numeric_assortativity_coefficient(G)
 
 
 @project_to_simple
