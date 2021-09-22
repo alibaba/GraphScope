@@ -30,7 +30,7 @@ jobs:
       run:
         shell: scl enable devtoolset-7 -- bash --noprofile --norc -eo pipefail {0}
     container:
-      image: registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-vineyard:v0.2.11
+      image: registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-vineyard:debug
       options:
         --shm-size 4096m
     strategy:
@@ -135,7 +135,7 @@ jobs:
       run:
         shell: scl enable devtoolset-7 -- bash --noprofile --norc -eo pipefail {0}
     container:
-      image: registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-vineyard:v0.2.11
+      image: registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-vineyard:debug
     steps:
     - name: Install Dependencies
       run: |
@@ -176,7 +176,7 @@ jobs:
       run:
         shell: scl enable devtoolset-7 -- bash --noprofile --norc -eo pipefail {0}
     container:
-      image: registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-vineyard:v0.2.11
+      image: registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-vineyard:debug
     steps:
     - uses: actions/checkout@v2.3.2
       with:
@@ -541,7 +541,7 @@ jobs:
       run:
         shell: scl enable devtoolset-7 -- bash --noprofile --norc -eo pipefail {0}
     container:
-      image: registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-vineyard:v0.2.11
+      image: registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-vineyard:debug
     steps:
 
     #- name: "Debug: Package dependancies for tmate"
