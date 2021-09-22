@@ -21,6 +21,12 @@ from graphscope.analytical.app.bfs import bfs
 from graphscope.analytical.app.bfs import property_bfs
 from graphscope.analytical.app.cdlp import cdlp
 from graphscope.analytical.app.clustering import clustering
+
+# fmt: off
+from graphscope.analytical.app.degree_assortativity_coefficient import \
+    degree_assortativity_coefficient
+
+# fmt: on
 from graphscope.analytical.app.degree_centrality import degree_centrality
 from graphscope.analytical.app.eigenvector_centrality import eigenvector_centrality
 from graphscope.analytical.app.hits import hits

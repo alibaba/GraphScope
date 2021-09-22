@@ -41,7 +41,6 @@ import org.apache.tinkerpop.gremlin.process.traversal.lambda.TokenTraversal;
 import org.apache.tinkerpop.gremlin.process.traversal.step.ComparatorHolder;
 import org.apache.tinkerpop.gremlin.process.traversal.step.map.*;
 import org.apache.tinkerpop.gremlin.process.traversal.util.TraversalRing;
-import org.apache.tinkerpop.gremlin.structure.Element;
 import org.apache.tinkerpop.gremlin.server.GremlinServer;
 import org.apache.tinkerpop.gremlin.server.util.ServerGremlinExecutor;
 import org.apache.tinkerpop.gremlin.structure.T;
@@ -53,7 +52,6 @@ import javax.script.Bindings;
 import java.io.File;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
-import java.math.BigInteger;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -61,22 +59,6 @@ import java.util.stream.Collectors;
 public class PlanUtils {
     private static final Logger logger = LoggerFactory.getLogger(PlanUtils.class);
     public static final String DIRECTION_OTHER = "OTHER";
-
-    public static List<String> extractIds(Object[] ids) {
-        List<String> resultIds = new ArrayList<>();
-        for (Object id : ids) {
-            if (id instanceof Long || id instanceof Integer || id instanceof BigInteger) {
-                resultIds.add(String.valueOf(id));
-            } else if (id instanceof Element) {
-                resultIds.add(String.valueOf(((Element) id).id()));
-            } else if (id instanceof String) {
-                resultIds.add((String) id);
-            } else {
-                throw new RuntimeException("invalid id type " + id.getClass());
-            }
-        }
-        return resultIds;
-    }
 
     public static PegasusClient.JobConfig getDefaultConfig(long queryId, GaiaConfig config) {
         try {

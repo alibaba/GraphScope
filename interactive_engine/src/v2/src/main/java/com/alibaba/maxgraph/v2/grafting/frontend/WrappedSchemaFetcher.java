@@ -24,6 +24,8 @@ import com.alibaba.maxgraph.v2.common.frontend.api.schema.SchemaElement;
 import com.alibaba.maxgraph.v2.common.frontend.api.schema.SnapshotSchema;
 import com.alibaba.maxgraph.v2.common.frontend.api.schema.VertexType;
 import org.apache.commons.lang3.tuple.Pair;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -31,6 +33,7 @@ import java.util.List;
 import java.util.Map;
 
 public class WrappedSchemaFetcher implements SchemaFetcher {
+    private static final Logger logger = LoggerFactory.getLogger(WrappedSchemaFetcher.class);
 
     private com.alibaba.maxgraph.v2.common.frontend.api.schema.SchemaFetcher v2Fetcher;
     private MetaService metaService;
@@ -46,6 +49,7 @@ public class WrappedSchemaFetcher implements SchemaFetcher {
         SnapshotSchema snapshotSchema = this.v2Fetcher.fetchSchema();
         long snapshotId = snapshotSchema.getSnapshotId();
         com.alibaba.maxgraph.v2.common.frontend.api.schema.GraphSchema schema = snapshotSchema.getSchema();
+        logger.debug("fetch schema of snapshot id [" + snapshotId + "]");
         return Pair.of(new WrappedSchema(schema), snapshotId);
     }
 

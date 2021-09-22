@@ -43,10 +43,6 @@ graphscope: submodule
 				 -t graphscope/graphscope:${SHORT_SHA} \
 				 --network=host \
 				 -f $(WORKING_DIR)/graphscope.Dockerfile ..
-manager:
-	docker build --target manager \
-				 -t graphscope/maxgraph_standalone_manager:${SHORT_SHA} \
-				 -f $(WORKING_DIR)/manager.Dockerfile ..
 
 graphscope-store:
 	docker build --progress=$(BUILD_PROGRESS) \

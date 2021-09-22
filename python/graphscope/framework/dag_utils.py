@@ -138,13 +138,39 @@ def create_graph(session_id, graph_type, inputs=None, **kwargs):
     return op
 
 
-def add_labels_to_graph(graph, **kwargs):
+def create_loader(vertex_or_edge_label_list):
+    """Create a loader operation.
+    Args:
+        vertex_or_edge_label_list: List of
+            (:class:`graphscope.framework.graph_utils.VertexLabel`) or
+            (:class:`graphscope.framework.graph_utils.EdgeLabel`)
+    Returns:
+        An op to take various data sources as a loader.
+    """
+    if not isinstance(vertex_or_edge_label_list, list):
+        vertex_or_edge_label_list = [vertex_or_edge_label_list]
+    attr = attr_value_pb2.AttrValue()
+    attr.list.func.extend([label.attr() for label in vertex_or_edge_label_list])
+    config = {}
+    config[types_pb2.ARROW_PROPERTY_DEFINITION] = attr
+    op = Operation(
+        vertex_or_edge_label_list[0]._session_id,
+        types_pb2.DATA_SOURCE,
+        config=config,
+        output_types=types_pb2.NULL_OUTPUT,
+    )
+    return op
+
+
+def add_labels_to_graph(graph, loader_op):
     """Add new labels to existed graph.
 
     Args:
         graph (:class:`Graph`): A graph instance.
             May not be fully loaded. i.e. it's in a building
             procedure.
+        loader_op (:class:`graphscope.framework.operation.Operation`):
+            Operation of loader.
 
     Raises:
         NotImplementedError: When encountered not supported graph type.
@@ -159,19 +185,19 @@ def add_labels_to_graph(graph, **kwargs):
     from graphscope.framework.graph import GraphDAGNode
 
     assert isinstance(graph, GraphDAGNode)
-    inputs = [graph.op]
+    inputs = [graph.op, loader_op]
+    # vid_type is fixed
     config = {
         types_pb2.GRAPH_TYPE: utils.graph_type_to_attr(graph._graph_type),
+        types_pb2.DIRECTED: utils.b_to_attr(graph._directed),
+        types_pb2.OID_TYPE: utils.s_to_attr(graph._oid_type),
+        types_pb2.GENERATE_EID: utils.b_to_attr(graph._generate_eid),
+        types_pb2.VID_TYPE: utils.s_to_attr("uint64_t"),
+        types_pb2.IS_FROM_VINEYARD_ID: utils.b_to_attr(False),
     }
     # inferred from the context of the dag.
     config.update({types_pb2.GRAPH_NAME: utils.place_holder_to_attr()})
-    if graph._graph_type == graph_def_pb2.ARROW_PROPERTY:
-        attrs = kwargs.pop("attrs", None)
-        if attrs:
-            for k, v in attrs.items():
-                if isinstance(v, attr_value_pb2.AttrValue):
-                    config[k] = v
-    else:
+    if graph._graph_type != graph_def_pb2.ARROW_PROPERTY:
         raise NotImplementedError(
             f"Add vertices or edges is not supported yet on graph type {graph._graph_type}"
         )
@@ -230,7 +256,7 @@ def dynamic_to_arrow(graph):
     return op
 
 
-def arrow_to_dynamic(graph):
+def arrow_to_dynamic(graph, default_label):
     """Transform a :class:`Graph` object to :class:`nx.Graph`.
 
     Args:
@@ -252,6 +278,7 @@ def arrow_to_dynamic(graph):
         types_pb2.VID_TYPE: utils.s_to_attr(
             utils.data_type_to_cpp(graph.schema.vid_type)
         ),
+        types_pb2.DEFAULT_LABEL: utils.s_to_attr(default_label),
     }
     op = Operation(
         graph.session_id,
@@ -647,11 +674,9 @@ def unload_app(app):
     Returns:
         An op to unload the `app`.
     """
-    config = {}
     op = Operation(
         app.session_id,
         types_pb2.UNLOAD_APP,
-        config=config,
         inputs=[app.op],
         output_types=types_pb2.NULL_OUTPUT,
     )
@@ -667,12 +692,20 @@ def unload_graph(graph):
     Returns:
         An op to unload the `graph`.
     """
-    config = {}
     op = Operation(
         graph.session_id,
         types_pb2.UNLOAD_GRAPH,
-        config=config,
         inputs=[graph.op],
+        output_types=types_pb2.NULL_OUTPUT,
+    )
+    return op
+
+
+def unload_context(context):
+    op = Operation(
+        context.session_id,
+        types_pb2.UNLOAD_CONTEXT,
+        inputs=[context.op],
         output_types=types_pb2.NULL_OUTPUT,
     )
     return op
@@ -784,9 +817,35 @@ def to_vineyard_dataframe(context, selector=None, vertex_range=None):
     return op
 
 
+def output(result, fd, **kwargs):
+    """Dump result to `fd`
+
+    Parameters:
+        result (:class:`graphscope.framework.context.ResultDAGNode`):
+            Dataframe or numpy or result hold the object id of vineyard dataframe.
+        fd (str): Such as `file:///tmp/result_path`
+        kwargs (dict, optional): Storage options with respect to output storage type
+
+    Returns:
+        An op to dump result to `fd`.
+    """
+    config = {
+        types_pb2.STORAGE_OPTIONS: utils.s_to_attr(json.dumps(kwargs)),
+        types_pb2.FD: utils.s_to_attr(str(fd)),
+    }
+    op = Operation(
+        result.session_id,
+        types_pb2.OUTPUT,
+        config=config,
+        inputs=[result.op],
+        output_types=types_pb2.NULL_OUTPUT,
+    )
+    return op
+
+
 def get_context_data(results, node):
     config = {
-        types_pb2.CTX_NAME: utils.s_to_attr(results.key),
+        types_pb2.CONTEXT_KEY: utils.s_to_attr(results.key),
         types_pb2.NODE: utils.s_to_attr(node),
     }
     op = Operation(
@@ -873,7 +932,7 @@ def graph_to_dataframe(graph, selector=None, vertex_range=None):
     return op
 
 
-def create_interactive_query(graph, engine_params, cpu, mem, enable_gaia):
+def create_interactive_query(graph, engine_params, enable_gaia):
     """Create a interactive engine that query on the :code:`graph`
 
     Args:
@@ -882,15 +941,11 @@ def create_interactive_query(graph, engine_params, cpu, mem, enable_gaia):
         engine_params (dict, optional):
             Configuration to startup the interactive engine. See detail in:
             `interactive_engine/deploy/docker/dockerfile/executor.vineyard.properties`
-        cpu (float): The number of CPU cores for gremlin server.
-        mem (str): The number of mem  for gremlin server.
 
     Returns:
         An op to create a interactive engine based on a graph.
     """
     config = {}
-    config[types_pb2.GIE_GREMLIN_SERVER_CPU] = utils.f_to_attr(cpu)
-    config[types_pb2.GIE_GREMLIN_SERVER_MEM] = utils.s_to_attr(mem)
     if engine_params is not None:
         config[types_pb2.GIE_GREMLIN_ENGINE_PARAMS] = utils.s_to_attr(
             json.dumps(engine_params)

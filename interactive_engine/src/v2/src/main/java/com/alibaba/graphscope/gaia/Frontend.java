@@ -27,7 +27,6 @@ import com.alibaba.maxgraph.v2.common.config.Configs;
 import com.alibaba.maxgraph.v2.common.discovery.*;
 import com.alibaba.maxgraph.v2.common.exception.MaxGraphException;
 import com.alibaba.maxgraph.v2.common.frontend.api.MaxGraphServer;
-import com.alibaba.maxgraph.v2.common.frontend.api.graph.MaxGraphWriter;
 import com.alibaba.maxgraph.v2.common.metrics.MetricsAggregator;
 import com.alibaba.maxgraph.v2.common.metrics.MetricsCollectClient;
 import com.alibaba.maxgraph.v2.common.metrics.MetricsCollectService;
@@ -39,8 +38,10 @@ import com.alibaba.maxgraph.v2.common.rpc.RpcServer;
 import com.alibaba.maxgraph.v2.common.schema.ddl.DdlExecutors;
 import com.alibaba.maxgraph.v2.common.util.CuratorUtils;
 import com.alibaba.maxgraph.v2.frontend.*;
-import com.alibaba.maxgraph.v2.frontend.compiler.client.QueryStoreRpcClient;
 
+import com.alibaba.maxgraph.v2.frontend.write.DefaultEdgeIdGenerator;
+import com.alibaba.maxgraph.v2.frontend.write.EdgeIdGenerator;
+import com.alibaba.maxgraph.v2.frontend.write.GraphWriter;
 import com.alibaba.maxgraph.v2.grafting.frontend.WrappedSchemaFetcher;
 import io.grpc.NameResolver;
 import org.apache.curator.framework.CuratorFramework;
@@ -53,7 +54,6 @@ public class Frontend extends NodeBase {
     private NodeDiscovery discovery;
     private ChannelManager channelManager;
     private MetaService metaService;
-    private RealtimeWriter realtimeWriter;
     private RpcServer rpcServer;
     private MaxGraphServer maxGraphServer;
 
@@ -74,8 +74,6 @@ public class Frontend extends NodeBase {
         MetricsCollector metricsCollector = new MetricsCollector(configs);
         RoleClients<IngestorWriteClient> ingestorWriteClients = new RoleClients<>(this.channelManager,
                 RoleType.INGESTOR, IngestorWriteClient::new);
-        this.realtimeWriter = new RealtimeWriter(this.metaService, snapshotCache, ingestorWriteClients,
-                metricsCollector);
         FrontendSnapshotService frontendSnapshotService = new FrontendSnapshotService(snapshotCache);
         RoleClients<MetricsCollectClient> frontendMetricsCollectClients = new RoleClients<>(this.channelManager,
                 RoleType.FRONTEND, MetricsCollectClient::new);
@@ -85,20 +83,21 @@ public class Frontend extends NodeBase {
                 ingestorMetricsCollectClients);
         StoreIngestor storeIngestClients = new StoreIngestClients(this.channelManager, RoleType.STORE,
                 StoreIngestClient::new);
-        RoleClients<QueryStoreRpcClient> queryStoreClients = new RoleClients<>(this.channelManager,
-                RoleType.EXECUTOR_GRAPH, QueryStoreRpcClient::new);
         SchemaWriter schemaWriter = new SchemaWriter(new RoleClients<>(this.channelManager,
                 RoleType.COORDINATOR, SchemaClient::new));
         DdlExecutors ddlExecutors = new DdlExecutors();
-        MaxGraphWriter writer = new MaxGraphWriterImpl(this.realtimeWriter, schemaWriter, ddlExecutors,
-                snapshotCache, "schema", false, null);
-        ClientService clientService = new ClientService(this.realtimeWriter, snapshotCache, metricsAggregator,
-                storeIngestClients, this.metaService, queryStoreClients, writer);
-        ClientDdlService clientDdlService = new ClientDdlService(schemaWriter, snapshotCache, ddlExecutors);
+        BatchDdlClient batchDdlClient = new BatchDdlClient(ddlExecutors, snapshotCache, schemaWriter);
+        ClientService clientService = new ClientService(snapshotCache, metricsAggregator,
+                storeIngestClients, this.metaService, batchDdlClient);
+        ClientDdlService clientDdlService = new ClientDdlService(snapshotCache, batchDdlClient);
         MetricsCollectService metricsCollectService = new MetricsCollectService(metricsCollector);
-
+        WriteSessionGenerator writeSessionGenerator = new WriteSessionGenerator(configs);
+        EdgeIdGenerator edgeIdGenerator = new DefaultEdgeIdGenerator(configs, this.channelManager);
+        GraphWriter graphWriter = new GraphWriter(snapshotCache, edgeIdGenerator, this.metaService,
+                ingestorWriteClients);
+        ClientWriteService clientWriteService = new ClientWriteService(writeSessionGenerator, graphWriter);
         this.rpcServer = new RpcServer(configs, localNodeProvider, frontendSnapshotService, clientService,
-                metricsCollectService, clientDdlService);
+                metricsCollectService, clientDdlService, clientWriteService);
         int executorCount = CommonConfig.STORE_NODE_COUNT.get(configs);
         WrappedSchemaFetcher wrappedSchemaFetcher = new WrappedSchemaFetcher(snapshotCache, metaService);
 

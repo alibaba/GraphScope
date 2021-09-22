@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.1)
 
 if ("${GRAPHSCOPE_VERSION}" STREQUAL "")
     set(GRAPHSCOPE_ANALYTICAL_MAJOR_VERSION 0)
-    set(GRAPHSCOPE_ANALYTICAL_MINOR_VERSION 6)
+    set(GRAPHSCOPE_ANALYTICAL_MINOR_VERSION 7)
     set(GRAPHSCOPE_ANALYTICAL_PATCH_VERSION 0)
     set(GRAPHSCOPE_ANALYTICAL_VERSION ${GRAPHSCOPE_ANALYTICAL_MAJOR_VERSION}.${GRAPHSCOPE_ANALYTICAL_MINOR_VERSION}.${GRAPHSCOPE_ANALYTICAL_PATCH_VERSION})
 else ()
@@ -40,6 +40,7 @@ else ()
     add_custom_target(ccache-stats COMMAND echo "ccache not found.")
 endif (ccache_EXECUTABLE)
 
+include(CheckCXXCompilerFlag)
 include(CheckLibraryExists)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 include_directories(${PROJECT_SOURCE_DIR})
@@ -52,8 +53,17 @@ set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -std=c99")
 if (APPLE)
     set(CMAKE_MACOSX_RPATH ON)
 else ()
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fopenmp -Werror -Wl,-rpath,$ORIGIN -Wno-redundant-move -Wno-class-memaccess")
+    set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -Wl,-rpath,$ORIGIN")
 endif ()
+check_cxx_compiler_flag(-Wno-class-memaccess W_NO_CLASS_MEMACCESS)
+check_cxx_compiler_flag(-Wno-redundant-move W_NO_REDUNDANT_MOVE)
+if(W_NO_CLASS_MEMACCESS)
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-class-memaccess")
+endif()
+if(W_NO_REDUNDANT_MOVE)
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-redundant-move")
+endif()
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fopenmp")
 set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -O0 -g")
 set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -O3 -g")
 if (NOT APPLE)
@@ -109,7 +119,7 @@ endif ()
 find_package(libgrapelite REQUIRED)
 include_directories(${LIBGRAPELITE_INCLUDE_DIRS})
 
-find_package(vineyard 0.2.6 REQUIRED)
+find_package(vineyard 0.2.9 REQUIRED)
 include_directories(${VINEYARD_INCLUDE_DIRS})
 add_compile_options(-DENABLE_SELECTOR)
 
@@ -291,9 +301,9 @@ endmacro()
 macro(install_gsa_dependency_modules cmake_target)
     get_filename_component(ABS_DIR ${cmake_target} REALPATH)
     install(DIRECTORY ${ABS_DIR}
-            DESTINATION lib                     # target directory
-            FILES_MATCHING                      # install only matched files
-            PATTERN "*.cmake"                   # select cmake files
+            DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/graphscope-analytical  # target directory
+            FILES_MATCHING                                                   # install only matched files
+            PATTERN "*.cmake"                                                # select cmake files
             )
 endmacro()
 

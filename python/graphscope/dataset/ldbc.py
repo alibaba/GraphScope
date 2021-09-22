@@ -18,6 +18,8 @@
 
 import os
 
+from graphscope.dataset import DATA_SITE
+from graphscope.dataset.io_utils import download_file
 from graphscope.framework.graph import Graph
 from graphscope.framework.loader import Loader
 
@@ -270,16 +272,51 @@ def load_ldbc(sess, prefix, directed=True):
 """
 
 
-def load_ldbc(sess, prefix, directed=True):
+def load_ldbc(sess, prefix=None, directed=True):
     """Load ldbc dataset as a ArrowProperty Graph.
+
     Args:
         sess (:class:`graphscope.Session`): Load graph within the session.
-        prefix (str): Data directory.
+        prefix: `PathLike` object that represents a path.
+            With standalone mode, set prefix None will try to download from
+            source URL. Defaults to None.
         directed (bool, optional): Determine to load a directed or undirected graph.
             Defaults to True.
     Returns:
-        :class:`graphscope.Graph`: A Graph object which graph type is ArrowProperty
+        :class:`graphscope.framework.graph.GraphDAGNode`:
+            A Graph node which graph type is ArrowProperty, evaluated in eager mode.
+
+    Examples:
+        .. code:: python
+
+        >>> # lazy mode
+        >>> import graphscope
+        >>> from graphscope.dataset.ldbc import load_ldbc
+        >>> sess = graphscope.session(mode="lazy")
+        >>> g = load_ldbc(sess, "/path/to/dataset", True)
+        >>> g1 = sess.run(g)
+
+        >>> # eager mode
+        >>> import graphscope
+        >>> from graphscope.dataset.ldbc import load_ldbc
+        >>> sess = graphscope.session(mode="eager")
+        >>> g = load_ldbc(sess, "/path/to/dataset", True)
+
     """
+    if prefix is not None:
+        prefix = os.path.expandvars(prefix)
+    else:
+        fname = "ldbc_sample.tar.gz"
+        origin = f"{DATA_SITE}/ldbc_sample.tar.gz"
+        fpath = download_file(
+            fname,
+            origin=origin,
+            extract=True,
+            file_hash="1a3d3c36fbf416c2a02ca4163734192eed602649220d7ceef2735fc11173fc6c",
+        )
+        # assumed dirname is ldbc_sample after extracting from ldbc_sample.tar.gz
+        prefix = fpath[0:-7]
+
     vertices = {
         "comment": (
             Loader(

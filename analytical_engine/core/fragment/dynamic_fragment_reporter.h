@@ -129,6 +129,7 @@ class DynamicGraphReporter : public grape::Communicator {
     default:
       CHECK(false);
     }
+    return std::string("");
   }
 
  private:

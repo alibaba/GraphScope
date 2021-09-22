@@ -19,6 +19,7 @@
 import os
 
 import pytest
+from networkx.utils.misc import default_opener
 
 import graphscope
 import graphscope.nx as nx
@@ -28,6 +29,7 @@ from graphscope.framework.errors import AnalyticalEngineInternalError
 from graphscope.framework.errors import InvalidArgumentError
 from graphscope.framework.loader import Loader
 from graphscope.proto import graph_def_pb2
+from graphscope.proto.types_pb2 import SRC_LABEL
 
 
 def ldbc_sample_single_label(prefix, directed):
@@ -80,39 +82,28 @@ def ldbc_sample_multi_labels(prefix, directed):
             "post",
         )
     )
-    graph = graph.add_edges(
-        Loader(os.path.join(prefix, "comment_replyOf_comment_0_0.csv"), delimiter="|"),
-        "replyOf",
-        src_label="comment",
-        dst_label="comment",
-    ).add_edges(
-        Loader(os.path.join(prefix, "person_knows_person_0_0.csv"), delimiter="|"),
-        "knows",
-        ["creationDate"],
-        src_label="person",
-        dst_label="person",
-    )
-    return graph
-
-
-def ldbc_sample_with_duplicated_oid(prefix, directed):
-    graph = graphscope.g(directed=directed)
-    graph = graph.add_vertices(
-        Loader(os.path.join(prefix, "place_0_0.csv"), delimiter="|"), "place"
-    ).add_vertices(
-        Loader(os.path.join(prefix, "person_0_0.csv"), delimiter="|"), "person"
-    )
-    graph = graph.add_edges(
-        Loader(os.path.join(prefix, "place_isPartOf_place_0_0.csv"), delimiter="|"),
-        "isPartOf",
-        src_label="place",
-        dst_label="place",
-    ).add_edges(
-        Loader(os.path.join(prefix, "person_knows_person_0_0.csv"), delimiter="|"),
-        "knows",
-        ["creationDate"],
-        src_label="person",
-        dst_label="person",
+    graph = (
+        graph.add_edges(
+            Loader(
+                os.path.join(prefix, "comment_replyOf_comment_0_0.csv"), delimiter="|"
+            ),
+            "replyOf",
+            src_label="comment",
+            dst_label="comment",
+        )
+        .add_edges(
+            Loader(os.path.join(prefix, "person_knows_person_0_0.csv"), delimiter="|"),
+            "knows",
+            ["creationDate"],
+            src_label="person",
+            dst_label="person",
+        )
+        .add_edges(
+            Loader(os.path.join(prefix, "comment_replyOf_post_0_0.csv"), delimiter="|"),
+            "replyOf2",
+            src_label="comment",
+            dst_label="post",
+        )
     )
     return graph
 
@@ -141,7 +132,6 @@ class TestGraphTransformation(object):
         cls.data_dir = os.path.expandvars("${GS_TEST_DIR}/ldbc_sample")
         cls.single_label_g = ldbc_sample_single_label(cls.data_dir, False)
         cls.multi_label_g = ldbc_sample_multi_labels(cls.data_dir, False)
-        cls.duplicated_oid_g = ldbc_sample_with_duplicated_oid(cls.data_dir, False)
         cls.p2p = load_p2p(os.path.expandvars("${GS_TEST_DIR}"), False)
         cls.p2p_nx = nx.read_edgelist(
             os.path.expandvars("${GS_TEST_DIR}/dynamic/p2p-31_dynamic.edgelist"),
@@ -154,7 +144,6 @@ class TestGraphTransformation(object):
     def teardown_class(cls):
         cls.single_label_g.unload()
         cls.multi_label_g.unload()
-        cls.duplicated_oid_g.unload()
         cls.str_oid_g.unload()
 
     def assert_convert_success(self, gs_g, nx_g):
@@ -323,28 +312,52 @@ class TestGraphTransformation(object):
     def test_empty_gs_to_nx(self):
         empty_nx = self.NXGraph(dist=True)
         empty_gs_graph = g(empty_nx)
-        nx_g = self.NXGraph(empty_gs_graph, dist=True)
+        nx_g = self.NXGraph(empty_gs_graph)
         self.assert_convert_success(empty_gs_graph, nx_g)
 
     def test_single_label_gs_to_nx(self):
         g = self.single_label_g
-        nx_g = self.NXGraph(g, dist=True)
+        nx_g = self.NXGraph(g)
         self.assert_convert_success(g, nx_g)
         assert nx_g.number_of_nodes() == 76830
         assert nx_g.number_of_edges() == 38786
+        assert 618475290625 not in nx_g
+        assert ("comment", 618475290625) in nx_g
+        nx_g2 = self.NXGraph(g, default_label="comment")
+        assert nx_g2.number_of_nodes() == 76830
+        assert nx_g2.number_of_edges() == 38786
+        assert 618475290625 in nx_g2
+        assert ("comment", 618475290625) not in nx_g2
 
     def test_multi_label_gs_to_nx(self):
         g = self.multi_label_g
-        nx_g = self.NXGraph(g, dist=True)
+        nx_g = self.NXGraph(g)
         self.assert_convert_success(g, nx_g)
+        assert nx_g.number_of_nodes() == (76830 + 903 + 78976)
+        assert nx_g.number_of_edges() == (38786 + 6626 + 38044)
+        assert 618475290625 not in nx_g  # comment node is (label, id) format
+        assert ("comment", 618475290625) in nx_g
+        assert 933 not in nx_g  # person node is (label, id) format
+        assert ("person", 933) in nx_g
+        assert 618475290624 not in nx_g  # post node is (label, id) format
+        assert ("post", 618475290624) in nx_g
+        nx_g2 = self.NXGraph(g, default_label="comment")
+        assert nx_g2.number_of_nodes() == (76830 + 903 + 78976)
+        assert nx_g2.number_of_edges() == (38786 + 6626 + 38044)
+        assert 618475290625 in nx_g2  # comment node is default label node
+        assert ("comment", 618475290625) not in nx_g2
+        assert 933 not in nx_g2  # person node is (label, id) format
+        assert ("person", 933) in nx_g2
+        assert 618475290624 not in nx_g2  # post node is (label, id) format
+        assert ("post", 618475290624) in nx_g2
 
     def test_str_oid_gs_to_nx(self):
         g = self.str_oid_g
-        nx_g = self.NXGraph(g, dist=True)
+        nx_g = self.NXGraph(g)
         self.assert_convert_success(g, nx_g)
 
     def test_gs_to_nx_with_sssp(self):
-        nx_g = self.NXGraph(self.p2p, dist=True)
+        nx_g = self.NXGraph(self.p2p)
         ret = nx.builtin.single_source_dijkstra_path_length(nx_g, 6, weight="f2")
         ret2 = nx.builtin.single_source_dijkstra_path_length(
             self.p2p_nx, 6, weight="weight"
@@ -355,11 +368,6 @@ class TestGraphTransformation(object):
         g = self.single_label_g
         with pytest.raises(TypeError):
             nx_g = nx.DiGraph(g)
-
-    def test_error_on_duplicate_oid(self):
-        g = self.duplicated_oid_g
-        with pytest.raises(AnalyticalEngineInternalError):
-            nx_g = self.NXGraph(g)
 
     @pytest.mark.skip(reason="FIXME: multiple session crash in ci.")
     def test_multiple_sessions(self):
@@ -526,7 +534,6 @@ class TestDigraphTransformation(TestGraphTransformation):
         data_dir = os.path.expandvars("${GS_TEST_DIR}/ldbc_sample")
         cls.single_label_g = ldbc_sample_single_label(data_dir, True)
         cls.multi_label_g = ldbc_sample_multi_labels(data_dir, True)
-        cls.duplicated_oid_g = ldbc_sample_with_duplicated_oid(data_dir, True)
         cls.p2p = load_p2p(os.path.expandvars("${GS_TEST_DIR}"), True)
         cls.p2p_nx = nx.read_edgelist(
             os.path.expandvars("${GS_TEST_DIR}/dynamic/p2p-31_dynamic.edgelist"),
@@ -540,7 +547,6 @@ class TestDigraphTransformation(TestGraphTransformation):
     def teardown_class(cls):
         cls.single_label_g.unload()
         cls.multi_label_g.unload()
-        cls.duplicated_oid_g.unload()
         cls.str_oid_g.unload()
 
     def test_error_on_wrong_nx_type(self):
@@ -590,7 +596,7 @@ class TestImportNetworkxModuleWithSession(object):
     def test_error_import_with_wrong_session(self):
         with pytest.raises(
             RuntimeError,
-            match="Networkx module need session to be eager mode. The session is lazy mode.",
+            match="Networkx module need the session to be eager mode. Current session is lazy mode.",
         ):
             nx = self.session_lazy.nx()
         self.session_lazy.close()

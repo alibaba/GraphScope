@@ -13,22 +13,24 @@
  * limitations under the License.
  */
 
+#include "core/server/graphscope_service.h"
+
 #include <unordered_map>
 
-#include "core/server/graphscope_service.h"
+#include "google/protobuf/util/message_differencer.h"
 
 #include "core/server/rpc_utils.h"
 
 namespace gs {
 namespace rpc {
 
-::grpc::Status GraphScopeService::HeartBeat(::grpc::ServerContext* context,
-                                            const HeartBeatRequest* request,
-                                            HeartBeatResponse* response) {
-  ResponseStatus* res_status = response->mutable_status();
-  res_status->set_code(rpc::Code::OK);
+using ::grpc::Status;
+using ::grpc::StatusCode;
 
-  return ::grpc::Status::OK;
+Status GraphScopeService::HeartBeat(::grpc::ServerContext* context,
+                                    const HeartBeatRequest* request,
+                                    HeartBeatResponse* response) {
+  return Status::OK;
 }
 
 ::grpc::Status GraphScopeService::RunStep(::grpc::ServerContext* context,
@@ -36,7 +38,6 @@ namespace rpc {
                                           RunStepResponse* response) {
   CHECK(request->has_dag_def());
   const DagDef& dag_def = request->dag_def();
-  auto* res_status = response->mutable_status();
   std::unordered_map<std::string, OpResult*> op_key_to_result;
 
   for (const auto& op : dag_def.op()) {
@@ -60,9 +61,12 @@ namespace rpc {
         if (!graph_def.key().empty()) {
           if (op_result->graph_def().key().empty()) {
             op_result->mutable_graph_def()->CopyFrom(graph_def);
-          } else if (graph_def.SerializeAsString() !=
-                     op_result->graph_def().SerializeAsString()) {
-            LOG(FATAL) << "BUG: Multiple workers return different graph def.";
+          } else if (!::google::protobuf::util::MessageDifferencer::Equals(
+                         graph_def, op_result->graph_def())) {
+            std::string error_msg =
+                "BUG: Multiple workers return different graph def.";
+            LOG(ERROR) << error_msg;
+            return Status(StatusCode::INTERNAL, error_msg);
           }
         }
       } else {
@@ -73,11 +77,9 @@ namespace rpc {
     }
 
     if (!success) {
-      res_status->set_code(rpc::Code::ANALYTICAL_ENGINE_INTERNAL_ERROR);
-      res_status->set_error_msg(error_msgs);
       op_result->set_error_msg(error_msgs);
       // break dag exection flow
-      break;
+      return Status(StatusCode::INTERNAL, error_msgs);
     }
 
     // Second pass: aggregate result according to the policy
@@ -111,10 +113,9 @@ namespace rpc {
              << " vs the previous: " << op_result->result();
 
           op_result->set_code(rpc::Code::WORKER_RESULTS_INCONSISTENT_ERROR);
-          res_status->set_error_msg(ss.str());
+          op_result->set_error_msg(ss.str());
           LOG(ERROR) << ss.str();
-          success &= false;
-          break;
+          return Status(StatusCode::INTERNAL, ss.str());
         }
       }
       break;
@@ -125,12 +126,6 @@ namespace rpc {
       }
       break;
     }
-    }
-
-    if (!success) {
-      res_status->set_code(rpc::Code::ANALYTICAL_ENGINE_INTERNAL_ERROR);
-      // break dag exection flow
-      break;
     }
   }
 

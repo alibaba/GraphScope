@@ -12,9 +12,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+#include "core/server/analytical_server.h"
+
 #include <limits>
 
-#include "core/server/analytical_server.h"
 #include "core/server/graphscope_service.h"
 
 namespace gs {
@@ -27,6 +28,7 @@ void AnalyticalServer::StartServer() {
   grpc::ServerBuilder builder;
   builder.SetMaxReceiveMessageSize(std::numeric_limits<int>::max());
   builder.SetMaxSendMessageSize(std::numeric_limits<int>::max());
+
   builder.AddListeningPort(server_address, grpc::InsecureServerCredentials());
   builder.RegisterService(&service);
 

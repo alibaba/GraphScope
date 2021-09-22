@@ -68,17 +68,18 @@ spec:
 
             [[ `hostname` =~ -([0-9]+)$ ]] || exit 1
             ordinal=${BASH_REMATCH[1]}
-            sed -e "s/ROLE/$(ROLE)/g" \
-                -e "s/INDEX/${ordinal}/g" \
-                -e "s/KAFKA_SERVERS/$(KAFKA_SERVERS)/g" \
-                -e "s/FRONTEND/$(DNS_NAME_PREFIX_FRONTEND)/g" \
-                -e "s/INGESTOR/$(DNS_NAME_PREFIX_INGESTOR)/g" \
-                -e "s/COORDINATOR/$(DNS_NAME_PREFIX_COORDINATOR)/g" \
-                -e "s/STORE/$(DNS_NAME_PREFIX_STORE)/g" \
-                -e "s@LOG4RS_CONFIG@${GRAPHSCOPE_HOME}/conf/log4rs.yml@g" \
-            /etc/graphscope-store/my.cnf.tpl > /etc/graphscope-store/my.cnf
-            LOG_NAME=graphscope-store.log /home/maxgraph/bin/giectl maxgraph /etc/graphscope-store/my.cnf coordinator
-            tail -f /dev/null
+            sudo sed -e "s/ROLE/$(ROLE)/g" \
+                     -e "s/INDEX/${ordinal}/g" \
+                     -e "s/KAFKA_SERVERS/$(KAFKA_SERVERS)/g" \
+                     -e "s/FRONTEND/$(DNS_NAME_PREFIX_FRONTEND)/g" \
+                     -e "s/INGESTOR/$(DNS_NAME_PREFIX_INGESTOR)/g" \
+                     -e "s/COORDINATOR/$(DNS_NAME_PREFIX_COORDINATOR)/g" \
+                     -e "s/STORE/$(DNS_NAME_PREFIX_STORE)/g" \
+                     -e "s@LOG4RS_CONFIG@${GRAPHSCOPE_HOME}/maxgraph/conf/log4rs.yml@g" \
+            /etc/graphscope-store/my.cnf.tpl | sudo tee /etc/graphscope-store/my.cnf
+
+            LOG_NAME=graphscope-store MAXGRAPH_CONF_FILE=/etc/graphscope-store/my.cnf \
+              ${GRAPHSCOPE_HOME}/maxgraph/bin/store_ctl.sh maxgraph coordinator
           env:
             - name: DEBUG
               value: "false"

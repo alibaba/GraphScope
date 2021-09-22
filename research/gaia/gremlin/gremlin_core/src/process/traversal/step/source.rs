@@ -23,8 +23,8 @@ use crate::{FromPb, Partitioner};
 use bit_set::BitSet;
 use pegasus::BuildJobError;
 use pegasus_common::downcast::*;
-use prost::alloc::str::FromStr;
 use std::collections::HashMap;
+use std::convert::TryInto;
 use std::sync::Arc;
 
 /// V(), E()
@@ -169,15 +169,9 @@ pub fn graph_step_from(
                 let mut step = GraphVertexStep::new(return_type, requirements);
                 step.set_tags(gremlin_step.get_tags());
                 let mut ids = vec![];
-                for id in opt.ids {
-                    let id = if let Ok(uid) = ID::from_str(&id) {
-                        uid
-                    } else if let Ok(id) = i64::from_str(&id) {
-                        // in case that source id is negative
-                        id as ID
-                    } else {
-                        return Err("Parse source id failed")?;
-                    };
+                for id_bytes in opt.ids {
+                    let id = read_be_u128(&mut id_bytes.as_slice());
+                    debug!("source id_bytes: {:?}, id: {:?}", id_bytes, id);
                     ids.push(id);
                 }
                 if return_type == EntityType::Vertex {
@@ -196,4 +190,10 @@ pub fn graph_step_from(
         }
     }
     Err("Unsupported source step in pb_request")?
+}
+
+fn read_be_u128(input: &mut &[u8]) -> u128 {
+    let (int_bytes, rest) = input.split_at(std::mem::size_of::<u128>());
+    *input = rest;
+    u128::from_be_bytes(int_bytes.try_into().unwrap())
 }

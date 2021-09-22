@@ -99,6 +99,7 @@ enum OperationType {
   CLEAR_GRAPH = 20;  // clear graph
   VIEW_GRAPH = 21;  // create graph view
   INDUCE_SUBGRAPH = 22;  // induce subgraph
+  UNLOAD_CONTEXT = 23;  // unload context
 
   CREATE_INTERACTIVE_QUERY = 31;  // interactive query
   SUBGRAPH = 32;  // subgraph in interactive query
@@ -108,6 +109,8 @@ enum OperationType {
 
   CREATE_LEARNING_INSTANCE = 41;  // learning graph
   CLOSE_LEARNING_INSTANCE = 42;
+
+  DATA_SOURCE = 46;  // loader
 
   // data
   CONTEXT_TO_NUMPY = 50;
@@ -122,6 +125,7 @@ enum OperationType {
   REGISTER_GRAPH_TYPE = 58;
 
   GET_CONTEXT_DATA = 59;
+  OUTPUT = 60;  // dump result to fd
 
   FROM_NUMPY = 80;
   FROM_DATAFRAME = 81;
@@ -133,7 +137,7 @@ enum OperationType {
 enum ParamKey {
   GRAPH_NAME = 0;
   DST_GRAPH_NAME = 1;
-  CTX_NAME = 2;
+  CONTEXT_KEY = 2;
   GRAPH_TYPE = 3;
   DST_GRAPH_TYPE = 4;
 
@@ -167,8 +171,6 @@ enum ParamKey {
 
   DISTRIBUTED = 27;
   SCHEMA_PATH = 31;
-  GIE_GREMLIN_SERVER_CPU = 32;
-  GIE_GREMLIN_SERVER_MEM = 33;
   GIE_GREMLIN_ENGINE_PARAMS = 34;
   GIE_GREMLIN_QUERY_MESSAGE = 35;
   GIE_GREMLIN_REQUEST_OPTIONS = 36;
@@ -229,6 +231,11 @@ enum ParamKey {
   COLUMN_NUM = 313;
   SUB_LABEL = 315;
   GENERATE_EID = 316;
+  DEFAULT_LABEL = 317;
+
+  STORAGE_OPTIONS = 321;
+  READ_OPTIONS = 322;
+  FD = 323;  // file descriptor
 
   GRAPH_LIBRARY_PATH = 400;
 }

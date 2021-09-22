@@ -1,12 +1,12 @@
 //
 //! Copyright 2020 Alibaba Group Holding Limited.
-//! 
+//!
 //! Licensed under the Apache License, Version 2.0 (the "License");
 //! you may not use this file except in compliance with the License.
 //! You may obtain a copy of the License at
-//! 
+//!
 //!     http://www.apache.org/licenses/LICENSE-2.0
-//! 
+//!
 //! Unless required by applicable law or agreed to in writing, software
 //! distributed under the License is distributed on an "AS IS" BASIS,
 //! WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -19,6 +19,8 @@ use std::error::Error;
 use std::sync::atomic::{AtomicUsize, AtomicBool, Ordering};
 use std::sync::mpsc::Receiver;
 use std::env;
+use std::{ thread};
+use core::time;
 
 use grpcio::{RpcContext, UnarySink, ServerStreamingSink};
 use protobuf::Message;
@@ -166,10 +168,20 @@ impl<V, VI, E, EI> AsyncMaxGraphServiceImpl<V, VI, E, EI>
 
         let mut workers = pegasus.create_workers(task_id, thread_count, process_count).unwrap();
 
-        let task_partition_manager = {
-            let task_partition_manager = task_partition_manager.read().unwrap();
-            task_partition_manager.clone().unwrap()
-        };
+        let initialized_task_partition_manager;
+        loop {
+            match task_partition_manager.try_read() {
+                Ok(n) => { if n.is_some() {
+                    initialized_task_partition_manager = n.clone().unwrap();
+                    break;
+                } else {
+                    continue;
+                }
+            },
+                Err(_) => continue,
+            }
+        }
+        let task_partition_manager = initialized_task_partition_manager;
 
         for worker in workers.iter_mut() {
             worker.set_schedule_strategy(DefaultStrategy::new(10240, 9216, Some(1024)));
