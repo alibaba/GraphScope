@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 #
-# Copyright 2020 Alibaba Group Holding Limited. All Rights Reserved.
+# Copyright 2021 Alibaba Group Holding Limited. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -26,7 +26,7 @@ import urllib
 import zipfile
 from urllib.request import urlretrieve
 
-import progressbar
+from tqdm import tqdm
 
 logger = logging.getLogger("graphscope")
 
@@ -227,17 +227,25 @@ def download_file(
         class ProgressTracker(object):
             # Maintain progbar for the lifetime of download
             progbar = None
+            record_downloaded = None
 
         def show_progress(block_num, block_size, total_size):
             if ProgressTracker.progbar is None:
-                ProgressTracker.progbar = progressbar.ProgressBar(maxval=total_size)
-                ProgressTracker.progbar.start()
-            downloaded = block_num * block_size
-            if downloaded < total_size:
-                ProgressTracker.progbar.update(downloaded)
+                ProgressTracker.progbar = tqdm(
+                    total=total_size, unit="iB", unit_scale=True
+                )
+            downloaded = min(block_num * block_size, total_size)
+            if ProgressTracker.record_downloaded is None:
+                ProgressTracker.record_downloaded = downloaded
+                update_downloaded = downloaded
             else:
-                ProgressTracker.progbar.finish()
+                update_downloaded = downloaded - ProgressTracker.record_downloaded
+                ProgressTracker.record_downloaded = downloaded
+            ProgressTracker.progbar.update(update_downloaded)
+            if downloaded >= total_size:
+                ProgressTracker.progbar.close()
                 ProgressTracker.progbar = None
+                ProgressTracker.record_downloaded = None
 
         error_msg = "URL fetch failure on {}:{} -- {}"
         try:

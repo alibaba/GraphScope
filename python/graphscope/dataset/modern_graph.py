@@ -18,6 +18,7 @@
 
 import os
 
+from graphscope.dataset import DATA_SITE
 from graphscope.dataset.io_utils import download_file
 from graphscope.framework.graph import Graph
 from graphscope.framework.loader import Loader
@@ -57,9 +58,7 @@ def load_modern_graph(sess, prefix=None, directed=True):
         prefix = os.path.expandvars(prefix)
     else:
         fname = "modern_graph.tar.gz"
-        origin = (
-            "https://graphscope.oss-cn-beijing.aliyuncs.com/dataset/modern_graph.tar.gz"
-        )
+        origin = f"{DATA_SITE}/modern_graph.tar.gz"
         fpath = download_file(
             fname,
             origin=origin,

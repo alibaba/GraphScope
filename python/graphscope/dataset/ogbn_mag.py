@@ -18,6 +18,7 @@
 
 import os
 
+from graphscope.dataset import DATA_SITE
 from graphscope.dataset.io_utils import download_file
 from graphscope.framework.graph import Graph
 
@@ -59,7 +60,7 @@ def load_ogbn_mag(sess, prefix=None):
         prefix = os.path.expandvars(prefix)
     else:
         fname = "ogbn_mag_small.tar.gz"
-        origin = "https://graphscope.oss-cn-beijing.aliyuncs.com/dataset/ogbn_mag_small.tar.gz"
+        origin = f"{DATA_SITE}/ogbn_mag_small.tar.gz"
         fpath = download_file(
             fname,
             origin=origin,

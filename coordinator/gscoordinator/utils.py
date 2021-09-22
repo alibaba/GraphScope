@@ -85,18 +85,21 @@ DEFAULT_GS_CONFIG_FILE = ".gs_conf.yaml"
 # GRAPHSCOPE_HOME
 #   1) get from environment variable `GRAPHSCOPE_HOME`, if not exist,
 #   2) infer from COORDINATOR_HOME
-try:
-    GRAPHSCOPE_HOME = os.environ["GRAPHSCOPE_HOME"]
-except KeyError:
+GRAPHSCOPE_HOME = os.environ.get("GRAPHSCOPE_HOME", None)
+
+# resolve from pip installed package
+if GRAPHSCOPE_HOME is None:
     if os.path.isdir(os.path.join(COORDINATOR_HOME, "graphscope.runtime")):
-        # install graphscope by bdist wheel
         GRAPHSCOPE_HOME = os.path.join(COORDINATOR_HOME, "graphscope.runtime")
-    elif os.path.isdir(os.path.join(COORDINATOR_HOME, "..", "graphscope.runtime")):
-        # install graphscope with egg package:
+
+# resolve from egg installed package
+if GRAPHSCOPE_HOME is None:
+    if os.path.isdir(os.path.join(COORDINATOR_HOME, "..", "graphscope.runtime")):
         GRAPHSCOPE_HOME = os.path.join(COORDINATOR_HOME, "..", "graphscope.runtime")
-    else:
-        # source code
-        GRAPHSCOPE_HOME = os.path.join(COORDINATOR_HOME, "..")
+
+# resolve from develop source tree
+if GRAPHSCOPE_HOME is None:
+    GRAPHSCOPE_HOME = os.path.join(COORDINATOR_HOME, "..")
 
 # ANALYTICAL_ENGINE_HOME
 #   1) infer from GRAPHSCOPE_HOME

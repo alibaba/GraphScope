@@ -6,9 +6,9 @@ kubernetes
 nest_asyncio
 networkx
 numpy
+packaging
 pandas
-progressbar
 protobuf>=3.12.0
 PyYAML
 scipy
-packaging
+tqdm
