@@ -17,8 +17,6 @@
 use crate::error::{ParsePbError, ParsePbResult};
 use crate::expr::error::{ExprError, ExprResult};
 use crate::generated::common as pb;
-use crate::generated::common::expr_opr::Item;
-use crate::generated::common::{Arithmetic, ExprOpr, Logical};
 use crate::graph::element::Element;
 use crate::graph::property::{Details, PropKey};
 use crate::{FromPb, NameOrId};
@@ -112,16 +110,17 @@ fn apply_arith<'a>(
     first: Option<BorrowObject<'a>>,
     second: Option<BorrowObject<'a>>,
 ) -> ExprResult<BorrowObject<'a>> {
+    use pb::Arithmetic::*;
     if first.is_some() && second.is_some() {
         let a = first.unwrap();
         let b = second.unwrap();
         Ok(match arith {
-            Arithmetic::Add => BorrowObject::Primitive(a.as_primitive()? + b.as_primitive()?),
-            Arithmetic::Sub => BorrowObject::Primitive(a.as_primitive()? - b.as_primitive()?),
-            Arithmetic::Mul => BorrowObject::Primitive(a.as_primitive()? * b.as_primitive()?),
-            Arithmetic::Div => BorrowObject::Primitive(a.as_primitive()? / b.as_primitive()?),
-            Arithmetic::Mod => BorrowObject::Primitive(a.as_primitive()? % b.as_primitive()?),
-            Arithmetic::Exp => BorrowObject::Primitive(a.as_primitive()?.exp(b.as_primitive()?)),
+            Add => BorrowObject::Primitive(a.as_primitive()? + b.as_primitive()?),
+            Sub => BorrowObject::Primitive(a.as_primitive()? - b.as_primitive()?),
+            Mul => BorrowObject::Primitive(a.as_primitive()? * b.as_primitive()?),
+            Div => BorrowObject::Primitive(a.as_primitive()? / b.as_primitive()?),
+            Mod => BorrowObject::Primitive(a.as_primitive()? % b.as_primitive()?),
+            Exp => BorrowObject::Primitive(a.as_primitive()?.exp(b.as_primitive()?)),
         })
     } else {
         Err(ExprError::MissingOperands(InnerOpr::Arith(*arith).into()))
@@ -133,7 +132,8 @@ fn apply_logical<'a>(
     first: Option<BorrowObject<'a>>,
     second: Option<BorrowObject<'a>>,
 ) -> ExprResult<BorrowObject<'a>> {
-    if logical == &Logical::Not {
+    use pb::Logical::*;
+    if logical == &Not {
         if let Some(a) = first {
             return Ok((!a.as_bool()?).into());
         }
@@ -142,15 +142,15 @@ fn apply_logical<'a>(
             let a = first.unwrap();
             let b = second.unwrap();
             let rst = match logical {
-                Logical::Eq => Ok((a == b).into()),
-                Logical::Ne => Ok((a != b).into()),
-                Logical::Lt => Ok((a < b).into()),
-                Logical::Le => Ok((a <= b).into()),
-                Logical::Gt => Ok((a > b).into()),
-                Logical::Ge => Ok((a >= b).into()),
-                Logical::And => Ok((a.as_bool()? && b.as_bool()?).into()),
-                Logical::Or => Ok((a.as_bool()? || b.as_bool()?).into()),
-                Logical::Not => unreachable!(),
+                Eq => Ok((a == b).into()),
+                Ne => Ok((a != b).into()),
+                Lt => Ok((a < b).into()),
+                Le => Ok((a <= b).into()),
+                Gt => Ok((a > b).into()),
+                Ge => Ok((a >= b).into()),
+                And => Ok((a.as_bool()? && b.as_bool()?).into()),
+                Or => Ok((a.as_bool()? || b.as_bool()?).into()),
+                Not => unreachable!(),
                 // todo within, without
                 _ => Err(ExprError::OtherErr(
                     "`within`, `without` unimplemented!".to_string(),
@@ -307,7 +307,7 @@ impl<'a> Evaluator<'a> {
                 let first = stack.pop();
                 match opr {
                     InnerOpr::Logical(logical) => {
-                        let rst = if logical == &Logical::Not {
+                        let rst = if logical == &pb::Logical::Not {
                             apply_logical(logical, first, None)?
                         } else {
                             apply_logical(logical, stack.pop(), first)?
@@ -332,20 +332,21 @@ impl<'a> Evaluator<'a> {
 }
 
 impl FromPb<pb::ExprOpr> for InnerOpr {
-    fn from_pb(unit: ExprOpr) -> ParsePbResult<Self>
+    fn from_pb(unit: pb::ExprOpr) -> ParsePbResult<Self>
     where
         Self: Sized,
     {
+        use pb::expr_opr::Item::*;
         if let Some(item) = unit.item {
             let result = match item {
-                Item::Logical(logical) => {
+                Logical(logical) => {
                     Self::Logical(unsafe { std::mem::transmute::<_, pb::Logical>(logical) })
                 }
-                Item::Arith(arith) => {
+                Arith(arith) => {
                     Self::Arith(unsafe { std::mem::transmute::<_, pb::Arithmetic>(arith) })
                 }
-                Item::Const(c) => Self::Const(c.into_object()?),
-                Item::Var(var) => {
+                Const(c) => Self::Const(c.into_object()?),
+                Var(var) => {
                     let tag = NameOrId::from_pb(var.tag.unwrap())?;
                     if let Some(property) = var.property {
                         Self::Var {
@@ -679,8 +680,8 @@ mod tests {
                 .into(),
             ),
             // try to evaluate neither a variable nor a const
-            ExprError::UnmatchedOperator(InnerOpr::Arith(Arithmetic::Add).into()),
-            ExprError::MissingOperands(InnerOpr::Arith(Arithmetic::Add).into()),
+            ExprError::UnmatchedOperator(InnerOpr::Arith(pb::Arithmetic::Add).into()),
+            ExprError::MissingOperands(InnerOpr::Arith(pb::Arithmetic::Add).into()),
             ExprError::OtherErr("invalid expression".to_string()),
             ExprError::OtherErr("invalid expression".to_string()),
             ExprError::OtherErr("invalid expression".to_string()),

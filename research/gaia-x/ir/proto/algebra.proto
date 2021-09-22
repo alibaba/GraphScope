@@ -44,8 +44,8 @@ message Select {
 
 // Join two relations based on whether the given keys of both relations are equal. In general, a join operator
 // can join on any arbitrary predicate regarding certain attributes of left and right participants, while
-// the engine only supports the equivalence of two keys.
-message Join {
+// we currently only supports the equivalence of two keys.
+message EquiJoin {
   enum JoinKind {
     // Inner join
     INNER = 0;
@@ -62,69 +62,72 @@ message Join {
     // aka. Cartesian product
     TIMES = 6;
   }
-  common.Variable left_key = 1;
-  common.Variable right_key = 2;
+  // TODO(longbin) An expression-ish predicate here is a more general form
+  repeated common.Variable left_keys = 1;
+  repeated common.Variable right_keys = 2;
   JoinKind kind = 3;
 }
 
 // Union two relations
 message Union {}
 
-// To define the function to be applied on each group after performing grouping. For example,
-// GROUPBY({a, b}, COUNT_DISTINCT(c, d) as e), one shall count distinct present of the pairs
-// (c, d), and alias the count as e.
-message GroupFunc {
-  enum Aggregate {
-    SUM = 0;
-    MIN = 1;
-    MAX = 2;
-    COUNT = 3;
-    COUNT_DISTINCT = 4;
-    TO_LIST = 5;
-    TO_SET = 6;
-    AVG = 7;
-  }
-
-  // Point to the values upon which the aggregation is applied
-  repeated common.Variable values = 1;
-  // The aggregate function
-  Aggregate aggregate = 2;
-  // The alias for the aggregated value
-  common.NameOrId alias = 3;
-}
-
 message GroupBy {
+  // To define the function to be applied on each group after performing grouping. For example,
+  // GROUPBY({a, b}, COUNT_DISTINCT(c, d) as e), one shall count distinct present of the pairs
+  // (c, d), and alias the count as e.
+  message AggFunc {
+    enum Aggregate {
+      SUM = 0;
+      MIN = 1;
+      MAX = 2;
+      COUNT = 3;
+      COUNT_DISTINCT = 4;
+      TO_LIST = 5;
+      TO_SET = 6;
+      AVG = 7;
+    }
+
+    // Point to the values upon which the aggregation is applied
+    // TODO(longbin) An expression here is a more general form
+    repeated common.Variable values = 1;
+    // The aggregate function
+    Aggregate aggregate = 2;
+    // The alias for the aggregated value
+    common.NameOrId alias = 3;
+  }
   // The keys to perform grouping
+  // TODO(longbin) An expression here is a more general form
   repeated common.Variable keys = 1;
   // The grouping functions
-  repeated GroupFunc functions = 2;
-}
-
-message OrderingPair {
-  enum Order {
-    // random
-    SHUFFLE = 0;
-    // ascending
-    ASC = 1;
-    // descending
-    DESC = 2;
-  }
-  common.Variable key = 1;
-  Order order = 2;
+  repeated AggFunc functions = 2;
 }
 
 message OrderBy {
+  message OrderingPair {
+    enum Order {
+      // random
+      SHUFFLE = 0;
+      // ascending
+      ASC = 1;
+      // descending
+      DESC = 2;
+    }
+    // TODO(longbin) An expression here is a more general form
+    common.Variable key = 1;
+    Order order = 2;
+  }
   repeated OrderingPair pairs = 2;
 }
 
 message Dedup {
+  // TODO(longbin) An expression here is a more general form
   repeated common.Variable keys = 1;
 }
 
-message Unwind {
+message Unfold {
   // The tag of a graph relation that **must** have a type of collection
   common.NameOrId tag = 1;
-  // The alias tag for the elements that are unwinded from the collection
+  // The alias tag for the elements that are unfolded from the collection
   common.NameOrId alias = 2;
 }
 
@@ -209,7 +212,7 @@ message ShortestPathExpand {
 // of input relations, and then the result of the subtask will be joined back to each input tuple.
 message Apply {
   // Define how to join the result of the subtask back to the original relation
-  Join.JoinKind join_kind = 1;
+  EquiJoin.JoinKind join_kind = 1;
   // The subtask will be perform on certain tags as keys of the input relation
   repeated common.NameOrId tags = 2;
   // The root node of the subtask
@@ -235,12 +238,12 @@ message LogicalPlan {
     oneof opr {
       Project project =  1;
       Select select = 2;
-      Join join = 3 ;
+      EquiJoin join = 3 ;
       Union union = 4;
       GroupBy group_by = 5;
       OrderBy order_by = 6;
       Dedup dedup = 7;
-      Unwind unwind = 8;
+      Unfold unfold = 8;
       Apply apply = 9;
       SegmentApply seg_apply = 10;
       // Saving the room for relational operators
@@ -254,10 +257,9 @@ message LogicalPlan {
     // The current node's operator identifier
     int32 opr_id = 1;
     // The children operators' identifiers
-    repeated int32 children = 2;
+    repeated Node children = 2;
   }
   // A array of operators, where the index stands for the operator's identifier
+  // operators[0] is the root of the logical plan
   repeated Operator operators = 1;
-  // The root node of the logical plan
-  Node root = 2;
 }
