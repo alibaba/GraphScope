@@ -9,7 +9,7 @@ SHELL ["/usr/bin/scl", "enable", "devtoolset-8"]
 RUN yum install -y autoconf m4 double-conversion-devel git \
         libcurl-devel libevent-devel libgsasl-devel librdkafka-devel libunwind-devel.x86_64 \
         libuuid-devel libxml2-devel libzip libzip-devel minizip minizip-devel \
-        make net-tools python3-devel rsync telnet tools unzip vim wget which zip && \
+        make net-tools python3-devel rsync telnet tools unzip vim wget which zip bind-utils && \
     yum clean all && \
     rm -fr /var/cache/yum && \
     cd /tmp && \
@@ -31,6 +31,67 @@ RUN cd /tmp && \
     make install -j || true && \
     cd /tmp && \
     rm -rf /tmp/OpenSSL_1_1_1h.tar.gz /tmp/openssl-OpenSSL_1_1_1h
+
+# apache arrow v1.0.1
+RUN cd /tmp && \
+    wget https://github.com/apache/arrow/archive/apache-arrow-1.0.1.tar.gz && \
+    tar zxvf apache-arrow-1.0.1.tar.gz && \
+    cd arrow-apache-arrow-1.0.1 && \
+    mkdir build && \
+    cd build && \
+    cmake ../cpp \
+        -DARROW_COMPUTE=ON \
+        -DARROW_WITH_UTF8PROC=OFF \
+        -DARROW_CSV=ON \
+        -DARROW_CUDA=OFF \
+        -DARROW_DATASET=OFF \
+        -DARROW_FILESYSTEM=ON \
+        -DARROW_FLIGHT=OFF \
+        -DARROW_GANDIVA=OFF \
+        -DARROW_GANDIVA_JAVA=OFF \
+        -DARROW_HDFS=OFF \
+        -DARROW_HIVESERVER2=OFF \
+        -DARROW_JSON=OFF \
+        -DARROW_ORC=OFF \
+        -DARROW_PARQUET=OFF \
+        -DARROW_PLASMA=OFF \
+        -DARROW_PLASMA_JAVA_CLIENT=OFF \
+        -DARROW_PYTHON=ON \
+        -DARROW_S3=OFF \
+        -DARROW_WITH_BZ2=OFF \
+        -DARROW_WITH_ZLIB=OFF \
+        -DARROW_WITH_LZ4=OFF \
+        -DARROW_WITH_SNAPPY=OFF \
+        -DARROW_WITH_ZSTD=OFF \
+        -DARROW_WITH_BROTLI=OFF \
+        -DARROW_IPC=ON \
+        -DARROW_BUILD_BENCHMARKS=OFF \
+        -DARROW_BUILD_EXAMPLES=OFF \
+        -DARROW_BUILD_INTEGRATION=OFF \
+        -DARROW_BUILD_UTILITIES=OFF \
+        -DARROW_BUILD_TESTS=OFF \
+        -DARROW_ENABLE_TIMING_TESTS=OFF \
+        -DARROW_FUZZING=OFF \
+        -DARROW_USE_ASAN=OFF \
+        -DARROW_USE_TSAN=OFF \
+        -DARROW_USE_UBSAN=OFF \
+        -DARROW_JEMALLOC=OFF \
+        -DARROW_BUILD_SHARED=ON \
+        -DARROW_BUILD_STATIC=OFF && \
+    make -j`nproc` && \
+    make install && \
+    cd /tmp && \
+    rm -fr /tmp/arrow-apache-arrow-1.0.1 /tmp/apache-arrow-1.0.1.tar.gz
+
+# boost v1.73.0
+RUN cd /tmp && \
+    wget https://boostorg.jfrog.io/artifactory/main/release/1.73.0/source/boost_1_73_0.tar.gz && \
+    tar zxf boost_1_73_0.tar.gz && \
+    cd boost_1_73_0 && \
+    ./bootstrap.sh && \
+    ./b2 install link=shared runtime-link=shared variant=release threading=multi || true && \
+    cd /tmp && \
+    rm -fr /tmp/boost_1_73_0 /tmp/boost_1_73_0.tar.gz
 
 # gflags v2.2.2
 RUN cd /tmp && \
@@ -110,6 +171,68 @@ RUN cd /tmp && \
     make install && \
     cd /tmp && \
     rm -fr /tmp/grpc
+
+# fmt v7.0.3, required by folly
+RUN cd /tmp && \
+    wget https://github.com/fmtlib/fmt/archive/7.0.3.tar.gz && \
+    tar zxvf 7.0.3.tar.gz && \
+    cd fmt-7.0.3/ && \
+    mkdir build && \
+    cd build && \
+    cmake .. -DBUILD_SHARED_LIBS=ON && \
+    make install -j && \
+    cd /tmp && \
+    rm -fr /tmp/7.0.3.tar.gz /tmp/fmt-7.0.3
+
+# folly v2020.10.19.00
+RUN cd /tmp && \
+    wget https://github.com/facebook/folly/archive/v2020.10.19.00.tar.gz && \
+    tar zxvf v2020.10.19.00.tar.gz && \
+    cd folly-2020.10.19.00 && mkdir _build && \
+    cd _build && \
+    cmake -DBUILD_SHARED_LIBS=ON -DCMAKE_POSITION_INDEPENDENT_CODE=ON .. && \
+    make install -j && \
+    cd /tmp && \
+    rm -fr /tmp/v2020.10.19.00.tar.gz /tmp/folly-2020.10.19.00
+
+# openmpi v4.0.5
+RUN cd /tmp && \
+    wget https://download.open-mpi.org/release/open-mpi/v4.0/openmpi-4.0.5.tar.gz && \
+    tar zxvf openmpi-4.0.5.tar.gz && \
+    cd openmpi-4.0.5 && ./configure --enable-mpi-cxx && \
+    make -j`nproc` && \
+    make install && \
+    cd /tmp && \
+    rm -fr /tmp/openmpi-4.0.5 /tmp/openmpi-4.0.5.tar.gz
+
+# install hdfs runtime library
+RUN cd /tmp && \
+    git clone https://github.com/7br/libhdfs3-downstream.git && \
+    cd libhdfs3-downstream/libhdfs3 && \
+    mkdir -p /tmp/libhdfs3-downstream/libhdfs3/build && \
+    cd /tmp/libhdfs3-downstream/libhdfs3/build && \
+    cmake .. -DBUILD_SHARED_LIBS=ON \
+             -DBUILD_HDFS3_TESTS=OFF && \
+    make install -j && \
+    cd /tmp && \
+    rm -rf /tmp/libhdfs3-downstream
+
+# GIE RUNTIME
+
+# Install java and maven
+RUN yum install -y perl java-1.8.0-openjdk-devel && \
+    yum clean all && \
+    rm -fr /var/cache/yum
+
+ENV JAVA_HOME /usr/lib/jvm/java
+
+# Prepare and set workspace
+RUN mkdir -p /tmp/maven /usr/share/maven/ref \
+    && curl -fsSL -o /tmp/apache-maven.tar.gz https://apache.osuosl.org/maven/maven-3/3.6.3/binaries/apache-maven-3.6.3-bin.tar.gz \
+    && tar -xzf /tmp/apache-maven.tar.gz -C /usr/share/maven --strip-components=1 \
+    && rm -f /tmp/apache-maven.tar.gz \
+    && ln -s /usr/share/maven/bin/mvn /usr/bin/mvn \
+    && export LD_LIBRARY_PATH=$(echo "$LD_LIBRARY_PATH" | sed "s/::/:/g")
 
 # patchelf
 RUN cd /tmp && \

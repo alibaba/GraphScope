@@ -5,6 +5,8 @@ NUM_PROC                := $( $(command -v nproc &> /dev/null) && echo $(nproc) 
 VERSION                     ?= 0.1.0
 INSTALL_PREFIX              ?= /opt/graphscope
 
+BUILD_TYPE                  ?= release
+
 # GAE build options
 NETWORKX                    ?= OFF
 
@@ -84,12 +86,16 @@ gie:
 	# executor
 	cd $(WORKING_DIR)/interactive_engine/src/executor && \
 	rustup component add rustfmt && \
-	cargo build --all
+	if [ x"release" = x"${BUILD_TYPE}" ]; then \
+		cargo build --all --release; \
+	else \
+		cargo build --all; \
+	fi
 	# install
 	mkdir -p $(WORKING_DIR)/.install_prefix && \
 	tar -xf $(WORKING_DIR)/interactive_engine/src/assembly/target/maxgraph-assembly-0.0.1-SNAPSHOT.tar.gz --strip-components 1 -C $(WORKING_DIR)/.install_prefix && \
-	cp $(WORKING_DIR)/interactive_engine/src/executor/target/debug/executor $(WORKING_DIR)/.install_prefix/bin/executor && \
-	cp $(WORKING_DIR)/interactive_engine/src/executor/target/debug/gaia_executor $(WORKING_DIR)/.install_prefix/bin/gaia_executor && \
+	cp $(WORKING_DIR)/interactive_engine/src/executor/target/$(BUILD_TYPE)/executor $(WORKING_DIR)/.install_prefix/bin/executor && \
+	cp $(WORKING_DIR)/interactive_engine/src/executor/target/$(BUILD_TYPE)/gaia_executor $(WORKING_DIR)/.install_prefix/bin/gaia_executor && \
 	sudo cp -r $(WORKING_DIR)/.install_prefix/* $(INSTALL_PREFIX) && \
 	rm -fr $(WORKING_DIR)/.install_prefix
 
