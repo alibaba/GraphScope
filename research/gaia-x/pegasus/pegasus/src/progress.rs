@@ -6,8 +6,8 @@ use std::ops::{Add, AddAssign, Div};
 use nohash_hasher::IntSet;
 use pegasus_common::codec::Encode;
 
-use crate::api::notification::EndScope;
 use crate::codec::{Decode, ReadExt, WriteExt};
+use crate::data::EndByScope;
 use crate::Tag;
 
 #[derive(Clone, Debug)]
@@ -276,66 +276,57 @@ impl Decode for Weight {
     }
 }
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct EndSignal {
-    pub tag: Tag,
-    pub seq: u64,
-    pub(crate) source_weight: Weight,
-    pub(crate) update_weight: Option<Weight>,
-}
-
-impl From<EndScope> for EndSignal {
-    fn from(end: EndScope) -> Self {
-        EndSignal::new(end.tag, end.weight)
-    }
+    end: EndByScope,
+    children: Weight,
 }
 
 impl EndSignal {
-    pub fn new(tag: Tag, weight: Weight) -> Self {
-        EndSignal { tag, seq: 0, source_weight: weight, update_weight: None }
+    pub fn new(end: EndByScope, children: Weight) -> Self {
+        EndSignal { end, children }
     }
 
-    pub fn update_to(&mut self, weight: Weight) {
-        self.update_weight = Some(weight);
+    pub fn merge_children(&mut self, other: Weight) {
+        self.children.merge(other)
     }
 
-    pub fn update(&mut self) {
-        if let Some(weight) = self.update_weight.take() {
-            self.source_weight = weight;
-        }
+    pub fn set_push_count(&mut self, count: u64) {
+        self.end.count = count;
     }
 
-    pub fn take(self) -> (Tag, Weight, Option<Weight>) {
-        (self.tag, self.source_weight, self.update_weight)
+    pub fn push_count(&self) -> u64 {
+        self.end.count
     }
-}
 
-impl Debug for EndSignal {
-    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        if let Some(w) = self.update_weight.as_ref() {
-            write!(f, "EOS({:?}: {:?}=>{:?})", self.tag, self.source_weight, w)
-        } else {
-            write!(f, "EOS({:?}: {:?})", self.tag, self.source_weight)
-        }
+    pub fn sources(&self) -> usize {
+        self.end.source.value()
+    }
+
+    pub fn tag(&self) -> &Tag {
+        &self.end.tag
+    }
+
+    pub fn into_end(mut self) -> EndByScope {
+        let child = std::mem::replace(&mut self.children, Weight::partial_empty());
+        self.end.source = child;
+        self.end
+    }
+
+    pub fn take(self) -> (EndByScope, Weight) {
+        (self.end, self.children)
     }
 }
 
 impl Encode for EndSignal {
-    fn write_to<W: WriteExt>(&self, writer: &mut W) -> std::io::Result<()> {
-        self.tag.write_to(writer)?;
-        writer.write_u64(self.seq)?;
-        self.source_weight.write_to(writer)?;
-        self.update_weight.write_to(writer)
+    fn write_to<W: WriteExt>(&self, _writer: &mut W) -> std::io::Result<()> {
+        todo!()
     }
 }
 
 impl Decode for EndSignal {
-    fn read_from<R: ReadExt>(reader: &mut R) -> std::io::Result<Self> {
-        let tag = Tag::read_from(reader)?;
-        let seq = reader.read_u64()?;
-        let source_weight = Weight::read_from(reader)?;
-        let update_weight = Option::<Weight>::read_from(reader)?;
-        Ok(EndSignal { tag, seq, source_weight, update_weight })
+    fn read_from<R: ReadExt>(_reader: &mut R) -> std::io::Result<Self> {
+        todo!()
     }
 }
 

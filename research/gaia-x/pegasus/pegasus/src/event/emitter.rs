@@ -18,6 +18,10 @@ impl EventEmitter {
         EventEmitter { tx: RcPointer::new(RefCell::new(tx)) }
     }
 
+    pub fn peers(&self) -> usize {
+        self.tx.borrow().len()
+    }
+
     pub fn send(&mut self, target: u32, event: Event) -> IOResult<()> {
         let offset = target as usize;
         let mut borrow = self.tx.borrow_mut();

@@ -86,10 +86,6 @@ struct GeneralTask {
 }
 
 impl GeneralTask {
-    fn get_name(&self) -> &str {
-        todo!()
-    }
-
     fn new<T: Task + 'static>(task: T) -> Self {
         IN_PROGRESS_TASK_COUNT.fetch_add(1, Ordering::SeqCst);
         GeneralTask { inner: Box::new(task) }

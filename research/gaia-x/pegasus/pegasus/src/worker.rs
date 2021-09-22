@@ -24,12 +24,13 @@ use pegasus_executor::{Task, TaskState};
 use crate::api::primitive::source::Source;
 use crate::channel_id::ChannelId;
 use crate::communication::output::{OutputBuilder, OutputBuilderImpl};
+use crate::data::EndByScope;
 use crate::dataflow::{Dataflow, DataflowBuilder};
 use crate::errors::{BuildJobError, JobExecError};
 use crate::event::emitter::EventEmitter;
 use crate::event::Event;
 use crate::graph::Port;
-use crate::progress::{EndSignal, Weight};
+use crate::progress::Weight;
 use crate::resource::{KeyedResources, ResourceMap};
 use crate::result::ResultSink;
 use crate::schedule::Schedule;
@@ -95,7 +96,7 @@ impl<D: Data, T: Debug + Send + 'static> Worker<D, T> {
         let root = Box::new(root_builder)
             .build()
             .expect("no output;");
-        let end = EndSignal::new(Tag::Root, Weight::all());
+        let end = EndByScope::new(Tag::Root, Weight::all(), 0);
         root.notify_end(end).ok();
         root.close().ok();
         Ok(())
@@ -224,6 +225,7 @@ impl<D: Data, T: Debug + Send + 'static> Task for Worker<D, T> {
                 state
             }
             Err(e) => {
+                error_worker!("job({}) execute error: {}", self.id.job_id, e);
                 self.sink.on_error(e);
                 TaskState::Finished
             }
@@ -249,6 +251,7 @@ impl<D: Data, T: Debug + Send + 'static> Task for Worker<D, T> {
                 state
             }
             Err(e) => {
+                error_worker!("job({}) execute error: {}", self.id.job_id, e);
                 self.sink.on_error(e);
                 TaskState::Finished
             }

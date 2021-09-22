@@ -19,7 +19,7 @@ use std::io;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
 
-use pegasus_common::rc::RcPointer;
+use pegasus_common::rc::{RcPointer, UnsafeRcPtr};
 
 use crate::channel_id::ChannelId;
 use crate::data_plane::{Pull, Push};
@@ -27,15 +27,27 @@ use crate::errors::{IOError, IOErrorKind};
 
 pub struct ThreadPush<T> {
     pub id: ChannelId,
-    ptr: RcPointer<RefCell<VecDeque<T>>>,
+    ptr: UnsafeRcPtr<RefCell<VecDeque<T>>>,
     exhaust: Arc<AtomicBool>,
     exhaust_local: bool,
     failed: Option<T>,
 }
 
 impl<T> ThreadPush<T> {
-    fn new(id: ChannelId, ptr: RcPointer<RefCell<VecDeque<T>>>, exhaust: &Arc<AtomicBool>) -> Self {
+    fn new(id: ChannelId, ptr: UnsafeRcPtr<RefCell<VecDeque<T>>>, exhaust: &Arc<AtomicBool>) -> Self {
         ThreadPush { id, ptr, exhaust: exhaust.clone(), exhaust_local: false, failed: None }
+    }
+}
+
+impl<T> Clone for ThreadPush<T> {
+    fn clone(&self) -> Self {
+        ThreadPush {
+            id: self.id,
+            ptr: self.ptr.clone(),
+            exhaust: self.exhaust.clone(),
+            exhaust_local: false,
+            failed: None,
+        }
     }
 }
 
@@ -60,14 +72,16 @@ impl<T: Send> Push<T> for ThreadPush<T> {
     #[inline]
     fn close(&mut self) -> Result<(), IOError> {
         self.exhaust_local = true;
-        self.exhaust.store(true, Ordering::SeqCst);
+        if Arc::strong_count(&self.exhaust) == 2 {
+            self.exhaust.store(true, Ordering::SeqCst);
+        }
         Ok(())
     }
 }
 
 impl<T> Drop for ThreadPush<T> {
     fn drop(&mut self) {
-        if !self.exhaust.load(Ordering::SeqCst) {
+        if Arc::strong_count(&self.exhaust) == 2 && !self.exhaust.load(Ordering::SeqCst) {
             warn_worker!("{:?}: drop 'ThreadPush' without close;", self.id);
             // if cfg!(debug_assertions) {
             //     let bt = backtrace::Backtrace::new();
@@ -79,13 +93,13 @@ impl<T> Drop for ThreadPush<T> {
 
 pub struct ThreadPull<T> {
     pub id: ChannelId,
-    ptr: RcPointer<RefCell<VecDeque<T>>>,
+    ptr: UnsafeRcPtr<RefCell<VecDeque<T>>>,
     exhaust: Arc<AtomicBool>,
     exhaust_local: bool,
 }
 
 impl<T> ThreadPull<T> {
-    fn new(id: ChannelId, ptr: RcPointer<RefCell<VecDeque<T>>>, exhaust: Arc<AtomicBool>) -> Self {
+    fn new(id: ChannelId, ptr: UnsafeRcPtr<RefCell<VecDeque<T>>>, exhaust: Arc<AtomicBool>) -> Self {
         ThreadPull { id, ptr, exhaust, exhaust_local: false }
     }
 }
@@ -121,7 +135,7 @@ impl<T: Send> Pull<T> for ThreadPull<T> {
 }
 
 pub fn pipeline<T>(id: ChannelId) -> (ThreadPush<T>, ThreadPull<T>) {
-    let queue = RcPointer::new(RefCell::new(VecDeque::new()));
+    let queue = UnsafeRcPtr::new(RefCell::new(VecDeque::new()));
     let exhaust = Arc::new(AtomicBool::new(false));
     (ThreadPush::new(id, queue.clone(), &exhaust), ThreadPull::new(id, queue, exhaust))
 }

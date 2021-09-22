@@ -40,10 +40,10 @@ impl OperatorScheduler {
         match kind {
             EventKind::End(end) => {
                 if let Some(Some(state)) = self.inputs_notify.get_mut(port.port) {
-                    trace_worker!("input[{:?}]: accept end of {:?} from worker {}", port, end.tag, src);
+                    trace_worker!("input[{:?}]: accept end of {:?} from worker {}", port, end.tag(), src);
                     state.on_end(src, end)?;
                 } else {
-                    warn_worker!("unrecognized event;")
+                    warn_worker!("unrecognized end of {:?} to port {:?};", end.tag(), port)
                 }
             }
             EventKind::Cancel((ch, tag)) => {

@@ -59,8 +59,8 @@ impl JobExecError {
         JobExecError { kind, is_system: false, cause: Box::new(cause) }
     }
 
-    pub fn panic() -> Self {
-        let err: Box<dyn Error + Send + Sync> = "unknown panic".to_owned().into();
+    pub fn panic(msg: String) -> Self {
+        let err: Box<dyn Error + Send + Sync> = msg.into();
         JobExecError { kind: ErrorKind::Others, is_system: false, cause: err as Box<dyn Error + Send> }
     }
 

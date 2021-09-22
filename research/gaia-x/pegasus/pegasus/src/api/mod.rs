@@ -23,33 +23,36 @@ pub use primitive::unary::Unary;
 
 pub mod notification {
 
-    use crate::progress::Weight;
+    use crate::data::EndByScope;
     use crate::Tag;
 
     #[derive(Debug, Clone)]
-    pub struct EndScope {
+    pub struct End {
         pub(crate) port: usize,
-        pub(crate) tag: Tag,
-        pub(crate) weight: Weight,
+        pub(crate) end: EndByScope,
     }
 
     #[derive(Debug, Clone)]
-    pub struct CancelScope {
+    pub struct Cancel {
         pub(crate) port: usize,
         pub(crate) tag: Tag,
     }
 
-    impl EndScope {
+    impl End {
         pub fn tag(&self) -> &Tag {
-            &self.tag
+            &self.end.tag
         }
 
         pub fn port(&self) -> usize {
             self.port
         }
+
+        pub fn take(self) -> EndByScope {
+            self.end
+        }
     }
 
-    impl CancelScope {
+    impl Cancel {
         pub fn tag(&self) -> &Tag {
             &self.tag
         }
