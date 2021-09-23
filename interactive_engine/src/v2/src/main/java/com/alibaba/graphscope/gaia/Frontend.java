@@ -19,30 +19,30 @@ import com.alibaba.graphscope.gaia.broadcast.AsyncRpcBroadcastProcessor;
 import com.alibaba.graphscope.gaia.broadcast.channel.AsyncRpcChannelFetcher;
 import com.alibaba.graphscope.gaia.store.GraphStoreService;
 import com.alibaba.maxgraph.common.RoleType;
-import com.alibaba.maxgraph.groot.common.DefaultMetaService;
-import com.alibaba.maxgraph.groot.common.MetaService;
+import com.alibaba.graphscope.groot.meta.DefaultMetaService;
+import com.alibaba.graphscope.groot.meta.MetaService;
 import com.alibaba.maxgraph.groot.common.NodeBase;
 import com.alibaba.maxgraph.groot.common.NodeLauncher;
 import com.alibaba.maxgraph.common.config.CommonConfig;
 import com.alibaba.maxgraph.common.config.Configs;
-import com.alibaba.maxgraph.groot.common.discovery.*;
+import com.alibaba.graphscope.groot.discovery.*;
 import com.alibaba.maxgraph.compiler.api.exception.MaxGraphException;
-import com.alibaba.maxgraph.groot.common.frontend.api.MaxGraphServer;
-import com.alibaba.maxgraph.groot.common.metrics.MetricsAggregator;
-import com.alibaba.maxgraph.groot.common.metrics.MetricsCollectClient;
-import com.alibaba.maxgraph.groot.common.metrics.MetricsCollectService;
-import com.alibaba.maxgraph.groot.common.metrics.MetricsCollector;
-import com.alibaba.maxgraph.groot.common.rpc.ChannelManager;
-import com.alibaba.maxgraph.groot.common.rpc.MaxGraphNameResolverFactory;
-import com.alibaba.maxgraph.groot.common.rpc.RoleClients;
-import com.alibaba.maxgraph.groot.common.rpc.RpcServer;
-import com.alibaba.maxgraph.groot.common.schema.ddl.DdlExecutors;
+import com.alibaba.maxgraph.groot.MaxGraphServer;
+import com.alibaba.graphscope.groot.metrics.MetricsAggregator;
+import com.alibaba.graphscope.groot.metrics.MetricsCollectClient;
+import com.alibaba.graphscope.groot.metrics.MetricsCollectService;
+import com.alibaba.graphscope.groot.metrics.MetricsCollector;
+import com.alibaba.graphscope.groot.rpc.ChannelManager;
+import com.alibaba.graphscope.groot.rpc.MaxGraphNameResolverFactory;
+import com.alibaba.graphscope.groot.rpc.RoleClients;
+import com.alibaba.graphscope.groot.rpc.RpcServer;
+import com.alibaba.graphscope.groot.schema.ddl.DdlExecutors;
 import com.alibaba.maxgraph.common.util.CuratorUtils;
-import com.alibaba.maxgraph.groot.frontend.*;
+import com.alibaba.graphscope.groot.frontend.*;
 
-import com.alibaba.maxgraph.groot.frontend.write.DefaultEdgeIdGenerator;
-import com.alibaba.maxgraph.groot.frontend.write.EdgeIdGenerator;
-import com.alibaba.maxgraph.groot.frontend.write.GraphWriter;
+import com.alibaba.graphscope.groot.frontend.write.DefaultEdgeIdGenerator;
+import com.alibaba.graphscope.groot.frontend.write.EdgeIdGenerator;
+import com.alibaba.graphscope.groot.frontend.write.GraphWriter;
 import com.alibaba.maxgraph.groot.grafting.frontend.WrappedSchemaFetcher;
 import io.grpc.NameResolver;
 import org.apache.curator.framework.CuratorFramework;
@@ -73,39 +73,67 @@ public class Frontend extends NodeBase {
         SnapshotCache snapshotCache = new SnapshotCache();
         this.metaService = new DefaultMetaService(configs);
         MetricsCollector metricsCollector = new MetricsCollector(configs);
-        RoleClients<IngestorWriteClient> ingestorWriteClients = new RoleClients<>(this.channelManager,
-                RoleType.INGESTOR, IngestorWriteClient::new);
-        FrontendSnapshotService frontendSnapshotService = new FrontendSnapshotService(snapshotCache);
-        RoleClients<MetricsCollectClient> frontendMetricsCollectClients = new RoleClients<>(this.channelManager,
-                RoleType.FRONTEND, MetricsCollectClient::new);
-        RoleClients<MetricsCollectClient> ingestorMetricsCollectClients = new RoleClients<>(this.channelManager,
-                RoleType.INGESTOR, MetricsCollectClient::new);
-        MetricsAggregator metricsAggregator = new MetricsAggregator(configs, frontendMetricsCollectClients,
-                ingestorMetricsCollectClients);
-        StoreIngestor storeIngestClients = new StoreIngestClients(this.channelManager, RoleType.STORE,
-                StoreIngestClient::new);
-        SchemaWriter schemaWriter = new SchemaWriter(new RoleClients<>(this.channelManager,
-                RoleType.COORDINATOR, SchemaClient::new));
+        RoleClients<IngestorWriteClient> ingestorWriteClients =
+                new RoleClients<>(this.channelManager, RoleType.INGESTOR, IngestorWriteClient::new);
+        FrontendSnapshotService frontendSnapshotService =
+                new FrontendSnapshotService(snapshotCache);
+        RoleClients<MetricsCollectClient> frontendMetricsCollectClients =
+                new RoleClients<>(
+                        this.channelManager, RoleType.FRONTEND, MetricsCollectClient::new);
+        RoleClients<MetricsCollectClient> ingestorMetricsCollectClients =
+                new RoleClients<>(
+                        this.channelManager, RoleType.INGESTOR, MetricsCollectClient::new);
+        MetricsAggregator metricsAggregator =
+                new MetricsAggregator(
+                        configs, frontendMetricsCollectClients, ingestorMetricsCollectClients);
+        StoreIngestor storeIngestClients =
+                new StoreIngestClients(this.channelManager, RoleType.STORE, StoreIngestClient::new);
+        SchemaWriter schemaWriter =
+                new SchemaWriter(
+                        new RoleClients<>(
+                                this.channelManager, RoleType.COORDINATOR, SchemaClient::new));
         DdlExecutors ddlExecutors = new DdlExecutors();
-        BatchDdlClient batchDdlClient = new BatchDdlClient(ddlExecutors, snapshotCache, schemaWriter);
-        ClientService clientService = new ClientService(snapshotCache, metricsAggregator,
-                storeIngestClients, this.metaService, batchDdlClient);
+        BatchDdlClient batchDdlClient =
+                new BatchDdlClient(ddlExecutors, snapshotCache, schemaWriter);
+        ClientService clientService =
+                new ClientService(
+                        snapshotCache,
+                        metricsAggregator,
+                        storeIngestClients,
+                        this.metaService,
+                        batchDdlClient);
         ClientDdlService clientDdlService = new ClientDdlService(snapshotCache, batchDdlClient);
         MetricsCollectService metricsCollectService = new MetricsCollectService(metricsCollector);
         WriteSessionGenerator writeSessionGenerator = new WriteSessionGenerator(configs);
         EdgeIdGenerator edgeIdGenerator = new DefaultEdgeIdGenerator(configs, this.channelManager);
-        GraphWriter graphWriter = new GraphWriter(snapshotCache, edgeIdGenerator, this.metaService,
-                ingestorWriteClients);
-        ClientWriteService clientWriteService = new ClientWriteService(writeSessionGenerator, graphWriter);
-        this.rpcServer = new RpcServer(configs, localNodeProvider, frontendSnapshotService, clientService,
-                metricsCollectService, clientDdlService, clientWriteService);
+        GraphWriter graphWriter =
+                new GraphWriter(
+                        snapshotCache, edgeIdGenerator, this.metaService, ingestorWriteClients);
+        ClientWriteService clientWriteService =
+                new ClientWriteService(writeSessionGenerator, graphWriter);
+        this.rpcServer =
+                new RpcServer(
+                        configs,
+                        localNodeProvider,
+                        frontendSnapshotService,
+                        clientService,
+                        metricsCollectService,
+                        clientDdlService,
+                        clientWriteService);
         int executorCount = CommonConfig.STORE_NODE_COUNT.get(configs);
-        WrappedSchemaFetcher wrappedSchemaFetcher = new WrappedSchemaFetcher(snapshotCache, metaService);
+        WrappedSchemaFetcher wrappedSchemaFetcher =
+                new WrappedSchemaFetcher(snapshotCache, metaService);
 
         // add gaia compiler
-        AsyncRpcChannelFetcher gaiaRpcFetcher = new ChannelManagerFetcher(this.channelManager, executorCount, RoleType.GAIA_RPC);
+        AsyncRpcChannelFetcher gaiaRpcFetcher =
+                new ChannelManagerFetcher(this.channelManager, executorCount, RoleType.GAIA_RPC);
         GraphStoreService gaiaStoreService = new MaxGraphStore(wrappedSchemaFetcher);
-        this.maxGraphServer = new GaiaGraphServer(configs, gaiaStoreService, new AsyncRpcBroadcastProcessor(gaiaRpcFetcher), new MaxGraphConfig(configs));
+        this.maxGraphServer =
+                new GaiaGraphServer(
+                        configs,
+                        gaiaStoreService,
+                        new AsyncRpcBroadcastProcessor(gaiaRpcFetcher),
+                        new MaxGraphConfig(configs));
     }
 
     @Override
@@ -144,4 +172,3 @@ public class Frontend extends NodeBase {
         nodeLauncher.start();
     }
 }
-

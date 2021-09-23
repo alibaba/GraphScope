@@ -1,16 +1,14 @@
 /**
  * Copyright 2020 Alibaba Group Holding Limited.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- * 
- *     http://www.apache.org/licenses/LICENSE-2.0
- * 
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
+ *
+ * <p>Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of the License at
+ *
+ * <p>http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * <p>Unless required by applicable law or agreed to in writing, software distributed under the
+ * License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
+ * express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
  */
 package com.alibaba.maxgraph.groot.grafting.frontend;
@@ -19,29 +17,28 @@ import com.alibaba.maxgraph.common.RoleType;
 import com.alibaba.maxgraph.common.cluster.InstanceConfig;
 import com.alibaba.maxgraph.compiler.dfs.DefaultGraphDfs;
 import com.alibaba.maxgraph.structure.graph.TinkerMaxGraph;
-import com.alibaba.maxgraph.groot.common.DefaultMetaService;
-import com.alibaba.maxgraph.groot.common.MetaService;
+import com.alibaba.graphscope.groot.meta.DefaultMetaService;
+import com.alibaba.graphscope.groot.meta.MetaService;
 import com.alibaba.maxgraph.groot.common.NodeBase;
 import com.alibaba.maxgraph.groot.common.NodeLauncher;
 import com.alibaba.maxgraph.common.config.CommonConfig;
 import com.alibaba.maxgraph.common.config.Configs;
-import com.alibaba.maxgraph.groot.common.discovery.*;
+import com.alibaba.graphscope.groot.discovery.*;
 import com.alibaba.maxgraph.compiler.api.exception.MaxGraphException;
-import com.alibaba.maxgraph.groot.common.frontend.api.MaxGraphServer;
-import com.alibaba.maxgraph.groot.common.metrics.MetricsAggregator;
-import com.alibaba.maxgraph.groot.common.metrics.MetricsCollectClient;
-import com.alibaba.maxgraph.groot.common.metrics.MetricsCollectService;
-import com.alibaba.maxgraph.groot.common.metrics.MetricsCollector;
-import com.alibaba.maxgraph.groot.common.rpc.ChannelManager;
-import com.alibaba.maxgraph.groot.common.rpc.MaxGraphNameResolverFactory;
-import com.alibaba.maxgraph.groot.common.rpc.RoleClients;
-import com.alibaba.maxgraph.groot.common.rpc.RpcServer;
-import com.alibaba.maxgraph.groot.common.schema.ddl.DdlExecutors;
+import com.alibaba.maxgraph.groot.MaxGraphServer;
+import com.alibaba.graphscope.groot.metrics.MetricsAggregator;
+import com.alibaba.graphscope.groot.metrics.MetricsCollectClient;
+import com.alibaba.graphscope.groot.metrics.MetricsCollectService;
+import com.alibaba.graphscope.groot.metrics.MetricsCollector;
+import com.alibaba.graphscope.groot.rpc.ChannelManager;
+import com.alibaba.graphscope.groot.rpc.MaxGraphNameResolverFactory;
+import com.alibaba.graphscope.groot.rpc.RoleClients;
+import com.alibaba.graphscope.groot.rpc.RpcServer;
+import com.alibaba.graphscope.groot.schema.ddl.DdlExecutors;
 import com.alibaba.maxgraph.common.util.CuratorUtils;
-import com.alibaba.maxgraph.groot.frontend.*;
-import com.alibaba.maxgraph.groot.frontend.write.DefaultEdgeIdGenerator;
-import com.alibaba.maxgraph.groot.frontend.write.EdgeIdGenerator;
-import com.alibaba.maxgraph.groot.frontend.write.GraphWriter;
+import com.alibaba.graphscope.groot.frontend.write.DefaultEdgeIdGenerator;
+import com.alibaba.graphscope.groot.frontend.write.EdgeIdGenerator;
+import com.alibaba.graphscope.groot.frontend.write.GraphWriter;
 import io.grpc.NameResolver;
 import org.apache.curator.framework.CuratorFramework;
 
@@ -71,39 +68,73 @@ public class Frontend extends NodeBase {
         SnapshotCache snapshotCache = new SnapshotCache();
         this.metaService = new DefaultMetaService(configs);
         MetricsCollector metricsCollector = new MetricsCollector(configs);
-        RoleClients<IngestorWriteClient> ingestorWriteClients = new RoleClients<>(this.channelManager,
-                RoleType.INGESTOR, IngestorWriteClient::new);
-        FrontendSnapshotService frontendSnapshotService = new FrontendSnapshotService(snapshotCache);
-        RoleClients<MetricsCollectClient> frontendMetricsCollectClients = new RoleClients<>(this.channelManager,
-                RoleType.FRONTEND, MetricsCollectClient::new);
-        RoleClients<MetricsCollectClient> ingestorMetricsCollectClients = new RoleClients<>(this.channelManager,
-                RoleType.INGESTOR, MetricsCollectClient::new);
-        MetricsAggregator metricsAggregator = new MetricsAggregator(configs, frontendMetricsCollectClients,
-                ingestorMetricsCollectClients);
-        StoreIngestor storeIngestClients = new StoreIngestClients(this.channelManager, RoleType.STORE,
-                StoreIngestClient::new);
-        SchemaWriter schemaWriter = new SchemaWriter(new RoleClients<>(this.channelManager,
-                RoleType.COORDINATOR, SchemaClient::new));
+        RoleClients<IngestorWriteClient> ingestorWriteClients =
+                new RoleClients<>(this.channelManager, RoleType.INGESTOR, IngestorWriteClient::new);
+        FrontendSnapshotService frontendSnapshotService =
+                new FrontendSnapshotService(snapshotCache);
+        RoleClients<MetricsCollectClient> frontendMetricsCollectClients =
+                new RoleClients<>(
+                        this.channelManager, RoleType.FRONTEND, MetricsCollectClient::new);
+        RoleClients<MetricsCollectClient> ingestorMetricsCollectClients =
+                new RoleClients<>(
+                        this.channelManager, RoleType.INGESTOR, MetricsCollectClient::new);
+        MetricsAggregator metricsAggregator =
+                new MetricsAggregator(
+                        configs, frontendMetricsCollectClients, ingestorMetricsCollectClients);
+        StoreIngestor storeIngestClients =
+                new StoreIngestClients(this.channelManager, RoleType.STORE, StoreIngestClient::new);
+        SchemaWriter schemaWriter =
+                new SchemaWriter(
+                        new RoleClients<>(
+                                this.channelManager, RoleType.COORDINATOR, SchemaClient::new));
         DdlExecutors ddlExecutors = new DdlExecutors();
-        BatchDdlClient batchDdlClient = new BatchDdlClient(ddlExecutors, snapshotCache, schemaWriter);
-        ClientService clientService = new ClientService(snapshotCache, metricsAggregator,
-                storeIngestClients, this.metaService, batchDdlClient);
+        BatchDdlClient batchDdlClient =
+                new BatchDdlClient(ddlExecutors, snapshotCache, schemaWriter);
+        ClientService clientService =
+                new ClientService(
+                        snapshotCache,
+                        metricsAggregator,
+                        storeIngestClients,
+                        this.metaService,
+                        batchDdlClient);
         ClientDdlService clientDdlService = new ClientDdlService(snapshotCache, batchDdlClient);
         MetricsCollectService metricsCollectService = new MetricsCollectService(metricsCollector);
         WriteSessionGenerator writeSessionGenerator = new WriteSessionGenerator(configs);
         EdgeIdGenerator edgeIdGenerator = new DefaultEdgeIdGenerator(configs, this.channelManager);
-        GraphWriter graphWriter = new GraphWriter(snapshotCache, edgeIdGenerator, this.metaService,
-                ingestorWriteClients);
-        ClientWriteService clientWriteService = new ClientWriteService(writeSessionGenerator, graphWriter);
-        this.rpcServer = new RpcServer(configs, localNodeProvider, frontendSnapshotService, clientService,
-                metricsCollectService, clientDdlService, clientWriteService);
-        WrappedSchemaFetcher wrappedSchemaFetcher = new WrappedSchemaFetcher(snapshotCache, metaService);
-        MaxGraphImpl maxGraphImpl = new MaxGraphImpl(this.discovery, wrappedSchemaFetcher, graphWriter,
-                writeSessionGenerator, metaService);
-        TinkerMaxGraph graph = new TinkerMaxGraph(new InstanceConfig(configs.getInnerProperties()), maxGraphImpl,
-                new DefaultGraphDfs());
-        this.maxGraphServer = new ReadOnlyMaxGraphServer(configs, graph, wrappedSchemaFetcher,
-                new DiscoveryAddressFetcher(this.discovery));
+        GraphWriter graphWriter =
+                new GraphWriter(
+                        snapshotCache, edgeIdGenerator, this.metaService, ingestorWriteClients);
+        ClientWriteService clientWriteService =
+                new ClientWriteService(writeSessionGenerator, graphWriter);
+        this.rpcServer =
+                new RpcServer(
+                        configs,
+                        localNodeProvider,
+                        frontendSnapshotService,
+                        clientService,
+                        metricsCollectService,
+                        clientDdlService,
+                        clientWriteService);
+        WrappedSchemaFetcher wrappedSchemaFetcher =
+                new WrappedSchemaFetcher(snapshotCache, metaService);
+        MaxGraphImpl maxGraphImpl =
+                new MaxGraphImpl(
+                        this.discovery,
+                        wrappedSchemaFetcher,
+                        graphWriter,
+                        writeSessionGenerator,
+                        metaService);
+        TinkerMaxGraph graph =
+                new TinkerMaxGraph(
+                        new InstanceConfig(configs.getInnerProperties()),
+                        maxGraphImpl,
+                        new DefaultGraphDfs());
+        this.maxGraphServer =
+                new ReadOnlyMaxGraphServer(
+                        configs,
+                        graph,
+                        wrappedSchemaFetcher,
+                        new DiscoveryAddressFetcher(this.discovery));
     }
 
     @Override

@@ -1,16 +1,14 @@
 /**
  * Copyright 2020 Alibaba Group Holding Limited.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- * 
- *     http://www.apache.org/licenses/LICENSE-2.0
- * 
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
+ *
+ * <p>Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of the License at
+ *
+ * <p>http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * <p>Unless required by applicable law or agreed to in writing, software distributed under the
+ * License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
+ * express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
  */
 package com.alibaba.maxgraph.groot.grafting.frontend;
@@ -23,7 +21,7 @@ import com.alibaba.maxgraph.structure.graph.TinkerMaxGraph;
 import com.alibaba.maxgraph.tinkerpop.Utils;
 import com.alibaba.maxgraph.common.config.Configs;
 import com.alibaba.maxgraph.compiler.api.exception.MaxGraphException;
-import com.alibaba.maxgraph.groot.common.frontend.api.MaxGraphServer;
+import com.alibaba.maxgraph.groot.MaxGraphServer;
 import com.alibaba.maxgraph.common.config.GremlinConfig;
 import io.netty.channel.Channel;
 import org.apache.commons.io.IOUtils;
@@ -59,8 +57,11 @@ public class ReadOnlyMaxGraphServer implements MaxGraphServer {
     private SchemaFetcher schemaFetcher;
     private RpcAddressFetcher rpcAddressFetcher;
 
-    public ReadOnlyMaxGraphServer(Configs configs, TinkerMaxGraph graph, SchemaFetcher schemaFetcher,
-                                  RpcAddressFetcher rpcAddressFetcher) {
+    public ReadOnlyMaxGraphServer(
+            Configs configs,
+            TinkerMaxGraph graph,
+            SchemaFetcher schemaFetcher,
+            RpcAddressFetcher rpcAddressFetcher) {
         this.configs = configs;
         this.graph = graph;
         this.schemaFetcher = schemaFetcher;
@@ -80,33 +81,47 @@ public class ReadOnlyMaxGraphServer implements MaxGraphServer {
         if (StringUtils.equals(settings.channelizer, WsAndHttpChannelizer.class.getName())) {
             settings.channelizer = MaxGraphWsAndHttpSocketChannelizer.class.getName();
         } else {
-            throw new IllegalArgumentException("Not support for channelizer=>" + settings.channelizer);
+            throw new IllegalArgumentException(
+                    "Not support for channelizer=>" + settings.channelizer);
         }
-        settings.writeBufferHighWaterMark = GremlinConfig.SERVER_WRITE_BUFFER_HIGH_WATER.get(this.configs);
-        settings.writeBufferLowWaterMark = GremlinConfig.SERVER_WRITE_BUFFER_LOW_WATER.get(this.configs);
+        settings.writeBufferHighWaterMark =
+                GremlinConfig.SERVER_WRITE_BUFFER_HIGH_WATER.get(this.configs);
+        settings.writeBufferLowWaterMark =
+                GremlinConfig.SERVER_WRITE_BUFFER_LOW_WATER.get(this.configs);
         this.server = new GremlinServer(settings);
 
-        ServerGremlinExecutor serverGremlinExecutor = Utils.getFieldValue(GremlinServer.class, this.server, "serverGremlinExecutor");
+        ServerGremlinExecutor serverGremlinExecutor =
+                Utils.getFieldValue(GremlinServer.class, this.server, "serverGremlinExecutor");
         serverGremlinExecutor.getGraphManager().putGraph("graph", graph);
         serverGremlinExecutor.getGraphManager().putTraversalSource("g", graph.traversal());
-        GremlinExecutor gremlinExecutor = Utils.getFieldValue(ServerGremlinExecutor.class, serverGremlinExecutor, "gremlinExecutor");
-        Bindings globalBindings = Utils.getFieldValue(GremlinExecutor.class, gremlinExecutor, "globalBindings");
+        GremlinExecutor gremlinExecutor =
+                Utils.getFieldValue(
+                        ServerGremlinExecutor.class, serverGremlinExecutor, "gremlinExecutor");
+        Bindings globalBindings =
+                Utils.getFieldValue(GremlinExecutor.class, gremlinExecutor, "globalBindings");
         globalBindings.put("graph", graph);
         globalBindings.put("g", graph.traversal());
 
-        ProcessorLoader processorLoader = new ReadOnlyMaxGraphProcessorLoader(this.configs,
-                this.graph, this.schemaFetcher, this.rpcAddressFetcher);
+        ProcessorLoader processorLoader =
+                new ReadOnlyMaxGraphProcessorLoader(
+                        this.configs, this.graph, this.schemaFetcher, this.rpcAddressFetcher);
         try {
             processorLoader.loadProcessor(settings);
         } catch (Exception e) {
             throw new MaxGraphException(e);
         }
         try {
-            this.server.start().exceptionally(t -> {
-                logger.error("Gremlin Server was unable to start and will now begin shutdown: {}", t.getMessage());
-                this.server.stop().join();
-                return null;
-            }).join();
+            this.server
+                    .start()
+                    .exceptionally(
+                            t -> {
+                                logger.error(
+                                        "Gremlin Server was unable to start and will now begin shutdown: {}",
+                                        t.getMessage());
+                                this.server.stop().join();
+                                return null;
+                            })
+                    .join();
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
@@ -131,10 +146,14 @@ public class ReadOnlyMaxGraphServer implements MaxGraphServer {
     }
 
     private void loadSettings() {
-        InputStream input = com.alibaba.maxgraph.server.MaxGraphServer.class.getClassLoader()
-                .getResourceAsStream("conf/server.yaml");
-        InputStream groovy = com.alibaba.maxgraph.server.MaxGraphServer.class.getClassLoader()
-                .getResourceAsStream("conf/generate-classic.groovy");
+        InputStream input =
+                com.alibaba.maxgraph.server.MaxGraphServer.class
+                        .getClassLoader()
+                        .getResourceAsStream("conf/server.yaml");
+        InputStream groovy =
+                com.alibaba.maxgraph.server.MaxGraphServer.class
+                        .getClassLoader()
+                        .getResourceAsStream("conf/generate-classic.groovy");
         checkNotNull(input, "cant find conf/server.yaml in path");
         checkNotNull(groovy, "cant find conf/generate-classic.groovy file in path");
         File tmp = new File("/tmp/generate-classic.groovy");
@@ -147,8 +166,12 @@ public class ReadOnlyMaxGraphServer implements MaxGraphServer {
         this.settings = Settings.read(input);
         List<String> customSerializerList = null;
         try {
-            customSerializerList = IOUtils.readLines(com.alibaba.maxgraph.server.MaxGraphServer.class
-                    .getClassLoader().getResourceAsStream("serializer.custom.config"), "utf-8");
+            customSerializerList =
+                    IOUtils.readLines(
+                            com.alibaba.maxgraph.server.MaxGraphServer.class
+                                    .getClassLoader()
+                                    .getResourceAsStream("serializer.custom.config"),
+                            "utf-8");
         } catch (IOException e) {
             throw new RuntimeException(e);
         }

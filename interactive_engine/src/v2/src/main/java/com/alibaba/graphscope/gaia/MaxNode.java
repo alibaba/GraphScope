@@ -23,9 +23,9 @@ import com.alibaba.maxgraph.common.config.KafkaConfig;
 import com.alibaba.maxgraph.common.config.ZkConfig;
 import com.alibaba.maxgraph.common.RoleType;
 import com.alibaba.maxgraph.compiler.api.exception.MaxGraphException;
-import com.alibaba.maxgraph.groot.coordinator.Coordinator;
-import com.alibaba.maxgraph.groot.ingestor.Ingestor;
-import com.alibaba.maxgraph.groot.store.GaiaStore;
+import com.alibaba.maxgraph.groot.Coordinator;
+import com.alibaba.maxgraph.groot.Ingestor;
+import com.alibaba.maxgraph.groot.GaiaStore;
 import com.salesforce.kafka.test.KafkaTestCluster;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -52,46 +52,85 @@ public class MaxNode extends NodeBase {
         int storeCount = CommonConfig.STORE_NODE_COUNT.get(configs);
         int partitionCount = 4;
 
-        Configs baseConfigs = Configs.newBuilder(configs)
-                .put(ZkConfig.ZK_CONNECT_STRING.getKey(), this.kafkaTestCluster.getZookeeperConnectString())
-                .put(KafkaConfig.KAFKA_SERVERS.getKey(), this.kafkaTestCluster.getKafkaConnectString())
-                .put(CommonConfig.INGESTOR_NODE_COUNT.getKey(), String.valueOf(ingestorCount))
-                .put(CommonConfig.INGESTOR_QUEUE_COUNT.getKey(), String.valueOf(ingestorCount))
-                .put(String.format(CommonConfig.NODE_COUNT_FORMAT, RoleType.EXECUTOR_ENGINE.getName()), String.valueOf(storeCount))
-                .put(String.format(CommonConfig.NODE_COUNT_FORMAT, RoleType.EXECUTOR_GRAPH.getName()), String.valueOf(storeCount))
-                .put(String.format(CommonConfig.NODE_COUNT_FORMAT, RoleType.EXECUTOR_MANAGE.getName()), String.valueOf(storeCount))
-                .put(String.format(CommonConfig.NODE_COUNT_FORMAT, RoleType.EXECUTOR_QUERY.getName()), String.valueOf(storeCount))
-                .put(String.format(CommonConfig.NODE_COUNT_FORMAT, RoleType.GAIA_RPC.getName()), String.valueOf(storeCount))
-                .put(String.format(CommonConfig.NODE_COUNT_FORMAT, RoleType.GAIA_ENGINE.getName()), String.valueOf(storeCount))
-                .put(CommonConfig.PARTITION_COUNT.getKey(), String.valueOf(partitionCount))
-                .put(CommonConfig.FRONTEND_NODE_COUNT.getKey(), String.valueOf(frontendCount))
-                .build();
+        Configs baseConfigs =
+                Configs.newBuilder(configs)
+                        .put(
+                                ZkConfig.ZK_CONNECT_STRING.getKey(),
+                                this.kafkaTestCluster.getZookeeperConnectString())
+                        .put(
+                                KafkaConfig.KAFKA_SERVERS.getKey(),
+                                this.kafkaTestCluster.getKafkaConnectString())
+                        .put(
+                                CommonConfig.INGESTOR_NODE_COUNT.getKey(),
+                                String.valueOf(ingestorCount))
+                        .put(
+                                CommonConfig.INGESTOR_QUEUE_COUNT.getKey(),
+                                String.valueOf(ingestorCount))
+                        .put(
+                                String.format(
+                                        CommonConfig.NODE_COUNT_FORMAT,
+                                        RoleType.EXECUTOR_ENGINE.getName()),
+                                String.valueOf(storeCount))
+                        .put(
+                                String.format(
+                                        CommonConfig.NODE_COUNT_FORMAT,
+                                        RoleType.EXECUTOR_GRAPH.getName()),
+                                String.valueOf(storeCount))
+                        .put(
+                                String.format(
+                                        CommonConfig.NODE_COUNT_FORMAT,
+                                        RoleType.EXECUTOR_MANAGE.getName()),
+                                String.valueOf(storeCount))
+                        .put(
+                                String.format(
+                                        CommonConfig.NODE_COUNT_FORMAT,
+                                        RoleType.EXECUTOR_QUERY.getName()),
+                                String.valueOf(storeCount))
+                        .put(
+                                String.format(
+                                        CommonConfig.NODE_COUNT_FORMAT,
+                                        RoleType.GAIA_RPC.getName()),
+                                String.valueOf(storeCount))
+                        .put(
+                                String.format(
+                                        CommonConfig.NODE_COUNT_FORMAT,
+                                        RoleType.GAIA_ENGINE.getName()),
+                                String.valueOf(storeCount))
+                        .put(CommonConfig.PARTITION_COUNT.getKey(), String.valueOf(partitionCount))
+                        .put(
+                                CommonConfig.FRONTEND_NODE_COUNT.getKey(),
+                                String.valueOf(frontendCount))
+                        .build();
 
-        Configs coordinatorConfigs = Configs.newBuilder(baseConfigs)
-                .put(CommonConfig.ROLE_NAME.getKey(), RoleType.COORDINATOR.getName())
-                .put(CommonConfig.NODE_IDX.getKey(), "0")
-                .build();
+        Configs coordinatorConfigs =
+                Configs.newBuilder(baseConfigs)
+                        .put(CommonConfig.ROLE_NAME.getKey(), RoleType.COORDINATOR.getName())
+                        .put(CommonConfig.NODE_IDX.getKey(), "0")
+                        .build();
         this.coordinator = new Coordinator(coordinatorConfigs);
         for (int i = 0; i < frontendCount; i++) {
-            Configs frontendConfigs = Configs.newBuilder(baseConfigs)
-                    .put(CommonConfig.ROLE_NAME.getKey(), RoleType.FRONTEND.getName())
-                    .put(CommonConfig.NODE_IDX.getKey(), String.valueOf(i))
-                    .put(CommonConfig.RPC_PORT.getKey(), "55555")
-                    .build();
+            Configs frontendConfigs =
+                    Configs.newBuilder(baseConfigs)
+                            .put(CommonConfig.ROLE_NAME.getKey(), RoleType.FRONTEND.getName())
+                            .put(CommonConfig.NODE_IDX.getKey(), String.valueOf(i))
+                            .put(CommonConfig.RPC_PORT.getKey(), "55555")
+                            .build();
             this.frontends.add(new Frontend(frontendConfigs));
         }
         for (int i = 0; i < ingestorCount; i++) {
-            Configs ingestConfigs = Configs.newBuilder(baseConfigs)
-                    .put(CommonConfig.ROLE_NAME.getKey(), RoleType.INGESTOR.getName())
-                    .put(CommonConfig.NODE_IDX.getKey(), String.valueOf(i))
-                    .build();
+            Configs ingestConfigs =
+                    Configs.newBuilder(baseConfigs)
+                            .put(CommonConfig.ROLE_NAME.getKey(), RoleType.INGESTOR.getName())
+                            .put(CommonConfig.NODE_IDX.getKey(), String.valueOf(i))
+                            .build();
             this.ingestors.add(new Ingestor(ingestConfigs));
         }
         for (int i = 0; i < storeCount; i++) {
-            Configs storeConfigs = Configs.newBuilder(baseConfigs)
-                    .put(CommonConfig.ROLE_NAME.getKey(), RoleType.STORE.getName())
-                    .put(CommonConfig.NODE_IDX.getKey(), String.valueOf(i))
-                    .build();
+            Configs storeConfigs =
+                    Configs.newBuilder(baseConfigs)
+                            .put(CommonConfig.ROLE_NAME.getKey(), RoleType.STORE.getName())
+                            .put(CommonConfig.NODE_IDX.getKey(), String.valueOf(i))
+                            .build();
             this.stores.add(new GaiaStore(storeConfigs));
         }
     }
@@ -99,28 +138,36 @@ public class MaxNode extends NodeBase {
     public void start() {
         List<Thread> startThreads = new ArrayList<>();
         for (NodeBase store : this.stores) {
-            startThreads.add(new Thread(() -> {
-                store.start();
-                logger.info("[" + store.getName() + "] started");
-            }));
+            startThreads.add(
+                    new Thread(
+                            () -> {
+                                store.start();
+                                logger.info("[" + store.getName() + "] started");
+                            }));
         }
         for (NodeBase frontend : this.frontends) {
-            startThreads.add(new Thread(() -> {
-                frontend.start();
-                logger.info("[" + frontend.getName() + "] started");
-            }));
+            startThreads.add(
+                    new Thread(
+                            () -> {
+                                frontend.start();
+                                logger.info("[" + frontend.getName() + "] started");
+                            }));
         }
         for (NodeBase ingestor : this.ingestors) {
-            startThreads.add(new Thread(() -> {
-                ingestor.start();
-                logger.info("[" + ingestor.getName() + "] started");
-            }));
+            startThreads.add(
+                    new Thread(
+                            () -> {
+                                ingestor.start();
+                                logger.info("[" + ingestor.getName() + "] started");
+                            }));
         }
 
-        startThreads.add(new Thread(() -> {
-            this.coordinator.start();
-            logger.info("[" + this.coordinator.getName() + "] started");
-        }));
+        startThreads.add(
+                new Thread(
+                        () -> {
+                            this.coordinator.start();
+                            logger.info("[" + this.coordinator.getName() + "] started");
+                        }));
         for (Thread startThread : startThreads) {
             startThread.start();
         }
@@ -161,6 +208,4 @@ public class MaxNode extends NodeBase {
         NodeLauncher nodeLauncher = new NodeLauncher(maxNode);
         nodeLauncher.start();
     }
-
 }
-

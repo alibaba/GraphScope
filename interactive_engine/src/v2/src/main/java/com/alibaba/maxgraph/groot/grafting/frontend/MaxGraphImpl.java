@@ -1,16 +1,14 @@
 /**
  * Copyright 2020 Alibaba Group Holding Limited.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- * 
- *     http://www.apache.org/licenses/LICENSE-2.0
- * 
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
+ *
+ * <p>Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of the License at
+ *
+ * <p>http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * <p>Unless required by applicable law or agreed to in writing, software distributed under the
+ * License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
+ * express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
  */
 package com.alibaba.maxgraph.groot.grafting.frontend;
@@ -24,18 +22,18 @@ import com.alibaba.maxgraph.sdkcommon.graph.ElementId;
 import com.alibaba.maxgraph.structure.Edge;
 import com.alibaba.maxgraph.structure.Vertex;
 import com.alibaba.maxgraph.structure.graph.MaxGraph;
-import com.alibaba.maxgraph.groot.common.MetaService;
-import com.alibaba.maxgraph.groot.common.discovery.MaxGraphNode;
-import com.alibaba.maxgraph.groot.common.discovery.NodeDiscovery;
+import com.alibaba.graphscope.groot.meta.MetaService;
+import com.alibaba.graphscope.groot.discovery.MaxGraphNode;
+import com.alibaba.graphscope.groot.discovery.NodeDiscovery;
 import com.alibaba.maxgraph.common.RoleType;
-import com.alibaba.maxgraph.groot.common.operation.EdgeId;
-import com.alibaba.maxgraph.groot.common.operation.LabelId;
-import com.alibaba.maxgraph.groot.common.operation.OperationType;
-import com.alibaba.maxgraph.groot.common.operation.VertexId;
-import com.alibaba.maxgraph.groot.common.schema.EdgeKind;
+import com.alibaba.graphscope.groot.operation.EdgeId;
+import com.alibaba.graphscope.groot.operation.LabelId;
+import com.alibaba.graphscope.groot.operation.OperationType;
+import com.alibaba.graphscope.groot.operation.VertexId;
+import com.alibaba.graphscope.groot.schema.EdgeKind;
 import com.alibaba.maxgraph.common.util.PartitionUtils;
-import com.alibaba.maxgraph.groot.frontend.WriteSessionGenerator;
-import com.alibaba.maxgraph.groot.frontend.write.*;
+import com.alibaba.graphscope.groot.frontend.WriteSessionGenerator;
+import com.alibaba.graphscope.groot.frontend.write.*;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import org.apache.commons.lang3.tuple.Pair;
@@ -62,8 +60,12 @@ public class MaxGraphImpl implements MaxGraph, NodeDiscovery.Listener {
     private Map<Integer, RemoteProxy> proxys = new ConcurrentHashMap<>();
     private long startEdgeInnerId;
 
-    public MaxGraphImpl(NodeDiscovery discovery, SchemaFetcher schemaFetcher, GraphWriter graphWriter,
-                        WriteSessionGenerator writeSessionGenerator, MetaService metaService) {
+    public MaxGraphImpl(
+            NodeDiscovery discovery,
+            SchemaFetcher schemaFetcher,
+            GraphWriter graphWriter,
+            WriteSessionGenerator writeSessionGenerator,
+            MetaService metaService) {
         this.schemaFetcher = schemaFetcher;
         this.graphWriter = graphWriter;
         this.writeSession = writeSessionGenerator.newWriteSession();
@@ -75,26 +77,35 @@ public class MaxGraphImpl implements MaxGraph, NodeDiscovery.Listener {
     @Override
     public void nodesJoin(RoleType role, Map<Integer, MaxGraphNode> nodes) {
         if (role == RoleType.EXECUTOR_GRAPH) {
-            nodes.forEach((id, node) -> {
-                this.proxys.put(id,
-                        new RemoteProxy(node.getHost(), node.getPort(), 120L, this.schemaFetcher, this));
-            });
+            nodes.forEach(
+                    (id, node) -> {
+                        this.proxys.put(
+                                id,
+                                new RemoteProxy(
+                                        node.getHost(),
+                                        node.getPort(),
+                                        120L,
+                                        this.schemaFetcher,
+                                        this));
+                    });
         }
     }
 
     @Override
     public void nodesLeft(RoleType role, Map<Integer, MaxGraphNode> nodes) {
         if (role == RoleType.EXECUTOR_GRAPH) {
-            nodes.keySet().forEach(k -> {
-                RemoteProxy remove = this.proxys.remove(k);
-                if (remove != null) {
-                    try {
-                        remove.close();
-                    } catch (IOException e) {
-                        logger.warn("close node [" + k + "] failed, ignore", e);
-                    }
-                }
-            });
+            nodes.keySet()
+                    .forEach(
+                            k -> {
+                                RemoteProxy remove = this.proxys.remove(k);
+                                if (remove != null) {
+                                    try {
+                                        remove.close();
+                                    } catch (IOException e) {
+                                        logger.warn("close node [" + k + "] failed, ignore", e);
+                                    }
+                                }
+                            });
         }
     }
 
@@ -111,19 +122,26 @@ public class MaxGraphImpl implements MaxGraph, NodeDiscovery.Listener {
 
     @Override
     public Iterator<Vertex> getVertex(Set<ElementId> id) {
-        Map<Integer, Set<ElementId>> classified = id.stream().map(v -> {
-            int storeId = getVertexStoreId(v.id());
-            return Pair.of(storeId, v);
-        }).collect(groupingBy(Pair::getLeft, mapping(Pair::getRight, toSet())));
+        Map<Integer, Set<ElementId>> classified =
+                id.stream()
+                        .map(
+                                v -> {
+                                    int storeId = getVertexStoreId(v.id());
+                                    return Pair.of(storeId, v);
+                                })
+                        .collect(groupingBy(Pair::getLeft, mapping(Pair::getRight, toSet())));
         return classified.entrySet().parallelStream()
-                .flatMap(e -> {
-                    Iterator<Vertex> vertex = proxys.get(e.getKey()).getVertex(e.getValue());
-                    return IteratorUtils.stream(vertex);
-                })
-                .map(v -> {
-                    v.setGraph(this);
-                    return v;
-                })
+                .flatMap(
+                        e -> {
+                            Iterator<Vertex> vertex =
+                                    proxys.get(e.getKey()).getVertex(e.getValue());
+                            return IteratorUtils.stream(vertex);
+                        })
+                .map(
+                        v -> {
+                            v.setGraph(this);
+                            return v;
+                        })
                 .iterator();
     }
 
@@ -132,14 +150,10 @@ public class MaxGraphImpl implements MaxGraph, NodeDiscovery.Listener {
         List<Iterator<Vertex>> vertexList;
         Collection<RemoteProxy> remoteProxies = proxys.values();
         if (null == label || label.length == 0) {
-            vertexList = remoteProxies.stream()
-                    .map(RemoteProxy::scan)
-                    .collect(toList());
+            vertexList = remoteProxies.stream().map(RemoteProxy::scan).collect(toList());
         } else {
             Set<String> labelList = Sets.newHashSet(label);
-            vertexList = remoteProxies.stream()
-                    .map(v -> v.scan(labelList))
-                    .collect(toList());
+            vertexList = remoteProxies.stream().map(v -> v.scan(labelList)).collect(toList());
         }
 
         return new IteratorList<>(vertexList);
@@ -150,7 +164,8 @@ public class MaxGraphImpl implements MaxGraph, NodeDiscovery.Listener {
         VertexRecordKey vertexRecordKey = new VertexRecordKey(label);
         DataRecord dataRecord = new DataRecord(vertexRecordKey, properties);
         WriteRequest writeRequest = new WriteRequest(OperationType.OVERWRITE_VERTEX, dataRecord);
-        graphWriter.writeBatch(getClass().getCanonicalName(), this.writeSession, Arrays.asList(writeRequest));
+        graphWriter.writeBatch(
+                getClass().getCanonicalName(), this.writeSession, Arrays.asList(writeRequest));
         return null;
     }
 
@@ -175,27 +190,30 @@ public class MaxGraphImpl implements MaxGraph, NodeDiscovery.Listener {
         List<Iterator<Edge>> edgeItorList = Lists.newArrayList();
         Collection<RemoteProxy> remoteProxies = proxys.values();
         switch (direction) {
-            case OUT: {
-                for (RemoteProxy proxy : remoteProxies) {
-                    edgeItorList.add(proxy.getOutEdges(v, label));
+            case OUT:
+                {
+                    for (RemoteProxy proxy : remoteProxies) {
+                        edgeItorList.add(proxy.getOutEdges(v, label));
+                    }
+                    break;
                 }
-                break;
-            }
-            case IN: {
-                for (RemoteProxy proxy : remoteProxies) {
-                    edgeItorList.add(proxy.getInEdges(v, label));
+            case IN:
+                {
+                    for (RemoteProxy proxy : remoteProxies) {
+                        edgeItorList.add(proxy.getInEdges(v, label));
+                    }
+                    break;
                 }
-                break;
-            }
-            case BOTH: {
-                for (RemoteProxy proxy : remoteProxies) {
-                    edgeItorList.add(proxy.getOutEdges(v, label));
+            case BOTH:
+                {
+                    for (RemoteProxy proxy : remoteProxies) {
+                        edgeItorList.add(proxy.getOutEdges(v, label));
+                    }
+                    for (RemoteProxy proxy : remoteProxies) {
+                        edgeItorList.add(proxy.getInEdges(v, label));
+                    }
+                    break;
                 }
-                for (RemoteProxy proxy : remoteProxies) {
-                    edgeItorList.add(proxy.getInEdges(v, label));
-                }
-                break;
-            }
         }
 
         return new IteratorList<>(edgeItorList);
@@ -209,7 +227,8 @@ public class MaxGraphImpl implements MaxGraph, NodeDiscovery.Listener {
             edgeIteratorList = remoteProxies.stream().map(RemoteProxy::scanEdge).collect(toList());
         } else {
             final Set<String> edgeLabelList = Sets.newHashSet(label);
-            edgeIteratorList = remoteProxies.stream().map(v -> v.scanEdge(edgeLabelList)).collect(toList());
+            edgeIteratorList =
+                    remoteProxies.stream().map(v -> v.scanEdge(edgeLabelList)).collect(toList());
         }
         return new IteratorList<>(edgeIteratorList);
     }
@@ -218,22 +237,25 @@ public class MaxGraphImpl implements MaxGraph, NodeDiscovery.Listener {
     public Edge addEdge(String label, Vertex src, Vertex dst, Map<String, Object> properties) {
         GraphSchema schema = getSchema();
         int edgeLabelId = schema.getElement(label).getLabelId();
-        EdgeKind edgeKind = EdgeKind.newBuilder()
-                .setEdgeLabelId(new LabelId(edgeLabelId))
-                .setSrcVertexLabelId(new LabelId(src.id.typeId()))
-                .setDstVertexLabelId(new LabelId(dst.id.typeId()))
-                .build();
+        EdgeKind edgeKind =
+                EdgeKind.newBuilder()
+                        .setEdgeLabelId(new LabelId(edgeLabelId))
+                        .setSrcVertexLabelId(new LabelId(src.id.typeId()))
+                        .setDstVertexLabelId(new LabelId(dst.id.typeId()))
+                        .build();
         long innerId = ++startEdgeInnerId;
         EdgeId edgeId = new EdgeId(new VertexId(src.id.id()), new VertexId(dst.id.id()), innerId);
         EdgeTarget edgeTarget = new EdgeTarget(edgeKind, edgeId);
         DataRecord dataRecord = new DataRecord(edgeTarget, properties);
         WriteRequest writeRequest = new WriteRequest(OperationType.OVERWRITE_EDGE, dataRecord);
-        graphWriter.writeBatch(getClass().getCanonicalName(), this.writeSession, Arrays.asList(writeRequest));
+        graphWriter.writeBatch(
+                getClass().getCanonicalName(), this.writeSession, Arrays.asList(writeRequest));
         return null;
     }
 
     @Override
-    public List<Edge> addEdges(List<Triple<String, Pair<Vertex, Vertex>, Map<String, Object>>> edgeList) {
+    public List<Edge> addEdges(
+            List<Triple<String, Pair<Vertex, Vertex>, Map<String, Object>>> edgeList) {
         throw new UnsupportedOperationException();
     }
 
@@ -243,7 +265,8 @@ public class MaxGraphImpl implements MaxGraph, NodeDiscovery.Listener {
     }
 
     @Override
-    public void updateEdge(Vertex src, Vertex dst, String label, long edgeId, Map<String, Object> propertyList) {
+    public void updateEdge(
+            Vertex src, Vertex dst, String label, long edgeId, Map<String, Object> propertyList) {
         throw new UnsupportedOperationException();
     }
 
@@ -258,10 +281,5 @@ public class MaxGraphImpl implements MaxGraph, NodeDiscovery.Listener {
     }
 
     @Override
-    public void close() throws IOException {
-
-    }
-
-
-
+    public void close() throws IOException {}
 }

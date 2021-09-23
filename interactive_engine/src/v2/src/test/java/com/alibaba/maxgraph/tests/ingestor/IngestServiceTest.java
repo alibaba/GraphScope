@@ -1,32 +1,30 @@
 /**
  * Copyright 2020 Alibaba Group Holding Limited.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- * 
- *     http://www.apache.org/licenses/LICENSE-2.0
- * 
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
+ *
+ * <p>Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of the License at
+ *
+ * <p>http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * <p>Unless required by applicable law or agreed to in writing, software distributed under the
+ * License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
+ * express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
  */
 package com.alibaba.maxgraph.tests.ingestor;
 
-import com.alibaba.maxgraph.groot.common.MetaService;
+import com.alibaba.graphscope.groot.meta.MetaService;
 import com.alibaba.maxgraph.common.config.CommonConfig;
 import com.alibaba.maxgraph.common.config.Configs;
 import com.alibaba.maxgraph.common.config.IngestorConfig;
-import com.alibaba.maxgraph.groot.common.discovery.MaxGraphNode;
-import com.alibaba.maxgraph.groot.common.discovery.NodeDiscovery;
+import com.alibaba.graphscope.groot.discovery.MaxGraphNode;
+import com.alibaba.graphscope.groot.discovery.NodeDiscovery;
 import com.alibaba.maxgraph.common.RoleType;
-import com.alibaba.maxgraph.groot.common.wal.LogService;
-import com.alibaba.maxgraph.groot.ingestor.IngestProcessor;
-import com.alibaba.maxgraph.groot.ingestor.IngestProgressFetcher;
-import com.alibaba.maxgraph.groot.ingestor.IngestService;
-import com.alibaba.maxgraph.groot.ingestor.StoreWriter;
+import com.alibaba.graphscope.groot.wal.LogService;
+import com.alibaba.graphscope.groot.ingestor.IngestProcessor;
+import com.alibaba.graphscope.groot.ingestor.IngestProgressFetcher;
+import com.alibaba.graphscope.groot.ingestor.IngestService;
+import com.alibaba.graphscope.groot.ingestor.StoreWriter;
 import org.junit.jupiter.api.Test;
 
 import java.util.Arrays;
@@ -39,11 +37,12 @@ public class IngestServiceTest {
 
     @Test
     void testIngestService() {
-        Configs configs = Configs.newBuilder()
-                .put(CommonConfig.NODE_IDX.getKey(), "0")
-                .put(CommonConfig.STORE_NODE_COUNT.getKey(), "1")
-                .put(IngestorConfig.INGESTOR_CHECK_PROCESSOR_INTERVAL_MS.getKey(), "100")
-                .build();
+        Configs configs =
+                Configs.newBuilder()
+                        .put(CommonConfig.NODE_IDX.getKey(), "0")
+                        .put(CommonConfig.STORE_NODE_COUNT.getKey(), "1")
+                        .put(IngestorConfig.INGESTOR_CHECK_PROCESSOR_INTERVAL_MS.getKey(), "100")
+                        .build();
 
         MockDiscovery mockDiscovery = new MockDiscovery();
 
@@ -53,15 +52,26 @@ public class IngestServiceTest {
         LogService mockLogService = mock(LogService.class);
 
         IngestProgressFetcher mockIngestProgressFetcher = mock(IngestProgressFetcher.class);
-        when(mockIngestProgressFetcher.getTailOffsets(Arrays.asList(0))).thenReturn(Arrays.asList(50L));
+        when(mockIngestProgressFetcher.getTailOffsets(Arrays.asList(0)))
+                .thenReturn(Arrays.asList(50L));
 
         StoreWriter mockStoreWriter = mock(StoreWriter.class);
 
-        IngestService spyIngestService = spy(new IngestService(configs, mockDiscovery, mockMetaService, mockLogService,
-                mockIngestProgressFetcher, mockStoreWriter, null));
+        IngestService spyIngestService =
+                spy(
+                        new IngestService(
+                                configs,
+                                mockDiscovery,
+                                mockMetaService,
+                                mockLogService,
+                                mockIngestProgressFetcher,
+                                mockStoreWriter,
+                                null));
 
         IngestProcessor mockIngestProcessor = mock(IngestProcessor.class);
-        doReturn(mockIngestProcessor).when(spyIngestService).makeIngestProcessor(any(), any(), any(), eq(0), any(), any());
+        doReturn(mockIngestProcessor)
+                .when(spyIngestService)
+                .makeIngestProcessor(any(), any(), any(), eq(0), any(), any());
         spyIngestService.start();
 
         verify(mockIngestProcessor, never()).start();
@@ -70,7 +80,8 @@ public class IngestServiceTest {
         verify(mockIngestProcessor, timeout(5000L)).start();
 
         spyIngestService.advanceIngestSnapshotId(5L, null);
-        verify(mockIngestProcessor).ingestBatch(eq("marker"), eq(IngestService.MARKER_BATCH), any());
+        verify(mockIngestProcessor)
+                .ingestBatch(eq("marker"), eq(IngestService.MARKER_BATCH), any());
 
         mockDiscovery.removeNode(RoleType.STORE, Collections.singletonMap(0, null));
         verify(mockIngestProcessor, timeout(5000L).times(2)).stop();
@@ -91,14 +102,10 @@ public class IngestServiceTest {
         }
 
         @Override
-        public void start() {
-
-        }
+        public void start() {}
 
         @Override
-        public void stop() {
-
-        }
+        public void stop() {}
 
         @Override
         public void addListener(Listener listener) {

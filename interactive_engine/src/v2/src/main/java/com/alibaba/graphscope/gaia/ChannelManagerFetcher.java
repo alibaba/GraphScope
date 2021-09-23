@@ -17,7 +17,7 @@ package com.alibaba.graphscope.gaia;
 
 import com.alibaba.graphscope.gaia.broadcast.channel.AsyncRpcChannelFetcher;
 import com.alibaba.maxgraph.common.RoleType;
-import com.alibaba.maxgraph.groot.common.rpc.ChannelManager;
+import com.alibaba.graphscope.groot.rpc.ChannelManager;
 import com.alibaba.pegasus.RpcChannel;
 
 import java.util.ArrayList;
@@ -28,7 +28,8 @@ public class ChannelManagerFetcher extends AsyncRpcChannelFetcher {
     private int pegasusServerNum;
     private RoleType targetRole;
 
-    public ChannelManagerFetcher(ChannelManager manager, int pegasusServerNum, RoleType targetRole) {
+    public ChannelManagerFetcher(
+            ChannelManager manager, int pegasusServerNum, RoleType targetRole) {
         this.manager = manager;
         this.pegasusServerNum = pegasusServerNum;
         this.targetRole = targetRole;

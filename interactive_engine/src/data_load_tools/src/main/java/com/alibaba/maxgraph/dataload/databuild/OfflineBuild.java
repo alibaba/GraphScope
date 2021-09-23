@@ -18,7 +18,7 @@ package com.alibaba.maxgraph.dataload.databuild;
 import com.alibaba.maxgraph.compiler.api.schema.GraphEdge;
 import com.alibaba.maxgraph.compiler.api.schema.GraphElement;
 import com.alibaba.maxgraph.compiler.api.schema.GraphSchema;
-import com.alibaba.maxgraph.groot.common.schema.GraphSchemaMapper;
+import com.alibaba.graphscope.groot.schema.GraphSchemaMapper;
 import com.alibaba.maxgraph.groot.sdk.Client;
 import com.alibaba.maxgraph.groot.sdk.DataLoadTarget;
 import com.fasterxml.jackson.core.type.TypeReference;

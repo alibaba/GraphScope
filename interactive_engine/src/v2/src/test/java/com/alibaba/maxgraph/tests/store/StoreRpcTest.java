@@ -1,16 +1,14 @@
 /**
  * Copyright 2020 Alibaba Group Holding Limited.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- * 
- *     http://www.apache.org/licenses/LICENSE-2.0
- * 
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
+ *
+ * <p>Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of the License at
+ *
+ * <p>http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * <p>Unless required by applicable law or agreed to in writing, software distributed under the
+ * License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
+ * express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
  */
 package com.alibaba.maxgraph.tests.store;
@@ -22,11 +20,11 @@ import com.alibaba.maxgraph.proto.groot.GraphDefPb;
 import com.alibaba.maxgraph.proto.groot.SnapshotCommitGrpc;
 import com.alibaba.maxgraph.proto.groot.WriteStoreRequest;
 import com.alibaba.maxgraph.proto.groot.WriteStoreResponse;
-import com.alibaba.maxgraph.groot.store.SnapshotCommitClient;
-import com.alibaba.maxgraph.groot.store.StoreSchemaService;
-import com.alibaba.maxgraph.groot.store.StoreService;
-import com.alibaba.maxgraph.groot.store.StoreWriteService;
-import com.alibaba.maxgraph.groot.store.WriterAgent;
+import com.alibaba.graphscope.groot.store.SnapshotCommitClient;
+import com.alibaba.graphscope.groot.store.StoreSchemaService;
+import com.alibaba.graphscope.groot.store.StoreService;
+import com.alibaba.graphscope.groot.store.StoreWriteService;
+import com.alibaba.graphscope.groot.store.WriterAgent;
 import io.grpc.stub.StreamObserver;
 import org.junit.jupiter.api.Test;
 
@@ -39,15 +37,18 @@ public class StoreRpcTest {
 
     @Test
     void testSnapshotCommitClient() {
-        SnapshotCommitGrpc.SnapshotCommitBlockingStub stub = mock(SnapshotCommitGrpc.SnapshotCommitBlockingStub.class);
+        SnapshotCommitGrpc.SnapshotCommitBlockingStub stub =
+                mock(SnapshotCommitGrpc.SnapshotCommitBlockingStub.class);
         SnapshotCommitClient client = new SnapshotCommitClient(stub);
         client.commitSnapshotId(1, 10L, 8L, Arrays.asList(11L, 12L));
-        verify(stub).commitSnapshotId(CommitSnapshotIdRequest.newBuilder()
-                .setStoreId(1)
-                .setSnapshotId(10L)
-                .setDdlSnapshotId(8L)
-                .addAllQueueOffsets(Arrays.asList(11L, 12L))
-                .build());
+        verify(stub)
+                .commitSnapshotId(
+                        CommitSnapshotIdRequest.newBuilder()
+                                .setStoreId(1)
+                                .setSnapshotId(10L)
+                                .setDdlSnapshotId(8L)
+                                .addAllQueueOffsets(Arrays.asList(11L, 12L))
+                                .build());
     }
 
     @Test
@@ -57,7 +58,11 @@ public class StoreRpcTest {
         StoreSchemaService storeSchemaService = new StoreSchemaService(storeService);
         StreamObserver observer = mock(StreamObserver.class);
         storeSchemaService.fetchSchema(FetchSchemaRequest.newBuilder().build(), observer);
-        verify(observer).onNext(FetchSchemaResponse.newBuilder().setGraphDef(GraphDefPb.newBuilder().build()).build());
+        verify(observer)
+                .onNext(
+                        FetchSchemaResponse.newBuilder()
+                                .setGraphDef(GraphDefPb.newBuilder().build())
+                                .build());
         verify(observer).onCompleted();
     }
 

@@ -23,7 +23,7 @@ import com.alibaba.maxgraph.groot.common.NodeBase;
 import com.alibaba.maxgraph.common.config.CommonConfig;
 import com.alibaba.maxgraph.common.config.Configs;
 import com.alibaba.maxgraph.compiler.api.exception.MaxGraphException;
-import com.alibaba.maxgraph.groot.common.schema.GraphDef;
+import com.alibaba.graphscope.groot.schema.GraphDef;
 import com.alibaba.maxgraph.common.config.GremlinConfig;
 import org.apache.commons.configuration.Configuration;
 import org.apache.tinkerpop.gremlin.LoadGraphWith;

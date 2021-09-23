@@ -1,31 +1,29 @@
 /**
  * Copyright 2020 Alibaba Group Holding Limited.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- * 
- *     http://www.apache.org/licenses/LICENSE-2.0
- * 
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
+ *
+ * <p>Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of the License at
+ *
+ * <p>http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * <p>Unless required by applicable law or agreed to in writing, software distributed under the
+ * License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
+ * express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
  */
 package com.alibaba.maxgraph.tests.common.wal.kafka;
 
-import com.alibaba.maxgraph.groot.common.OperationBatch;
-import com.alibaba.maxgraph.groot.common.OperationBlob;
+import com.alibaba.graphscope.groot.operation.OperationBatch;
+import com.alibaba.graphscope.groot.operation.OperationBlob;
 import com.alibaba.maxgraph.common.config.CommonConfig;
 import com.alibaba.maxgraph.common.config.Configs;
 import com.alibaba.maxgraph.common.config.KafkaConfig;
-import com.alibaba.maxgraph.groot.common.wal.LogEntry;
-import com.alibaba.maxgraph.groot.common.wal.LogReader;
-import com.alibaba.maxgraph.groot.common.wal.LogService;
-import com.alibaba.maxgraph.groot.common.wal.LogWriter;
-import com.alibaba.maxgraph.groot.common.wal.ReadLogEntry;
-import com.alibaba.maxgraph.groot.common.wal.kafka.KafkaLogService;
+import com.alibaba.graphscope.groot.wal.LogEntry;
+import com.alibaba.graphscope.groot.wal.LogReader;
+import com.alibaba.graphscope.groot.wal.LogService;
+import com.alibaba.graphscope.groot.wal.LogWriter;
+import com.alibaba.graphscope.groot.wal.ReadLogEntry;
+import com.alibaba.graphscope.groot.wal.kafka.KafkaLogService;
 import com.salesforce.kafka.test.junit5.SharedKafkaTestResource;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -41,11 +39,14 @@ public class KafkaWalTest {
 
     @Test
     void testDoubleDestroy() {
-        Configs configs = Configs.newBuilder()
-                .put(KafkaConfig.KAFKA_SERVERS.getKey(), sharedKafkaTestResource.getKafkaConnectString())
-                .put(KafkaConfig.KAKFA_TOPIC.getKey(), "test_double_destroy")
-                .put(CommonConfig.INGESTOR_QUEUE_COUNT.getKey(), "1")
-                .build();
+        Configs configs =
+                Configs.newBuilder()
+                        .put(
+                                KafkaConfig.KAFKA_SERVERS.getKey(),
+                                sharedKafkaTestResource.getKafkaConnectString())
+                        .put(KafkaConfig.KAKFA_TOPIC.getKey(), "test_double_destroy")
+                        .put(CommonConfig.INGESTOR_QUEUE_COUNT.getKey(), "1")
+                        .build();
         LogService logService = new KafkaLogService(configs);
         logService.init();
         logService.destroy();
@@ -54,11 +55,14 @@ public class KafkaWalTest {
 
     @Test
     void testDoubleInit() {
-        Configs configs = Configs.newBuilder()
-                .put(KafkaConfig.KAFKA_SERVERS.getKey(), sharedKafkaTestResource.getKafkaConnectString())
-                .put(KafkaConfig.KAKFA_TOPIC.getKey(), "test_double_init")
-                .put(CommonConfig.INGESTOR_QUEUE_COUNT.getKey(), "1")
-                .build();
+        Configs configs =
+                Configs.newBuilder()
+                        .put(
+                                KafkaConfig.KAFKA_SERVERS.getKey(),
+                                sharedKafkaTestResource.getKafkaConnectString())
+                        .put(KafkaConfig.KAKFA_TOPIC.getKey(), "test_double_init")
+                        .put(CommonConfig.INGESTOR_QUEUE_COUNT.getKey(), "1")
+                        .build();
         LogService logService = new KafkaLogService(configs);
         logService.init();
         assertThrows(Exception.class, () -> logService.init());
@@ -67,18 +71,25 @@ public class KafkaWalTest {
 
     @Test
     void testLogService() throws IOException {
-        Configs configs = Configs.newBuilder()
-                .put(KafkaConfig.KAFKA_SERVERS.getKey(), sharedKafkaTestResource.getKafkaConnectString())
-                .put(KafkaConfig.KAKFA_TOPIC.getKey(), "test_logservice")
-                .put(CommonConfig.INGESTOR_QUEUE_COUNT.getKey(), "1")
-                .build();
+        Configs configs =
+                Configs.newBuilder()
+                        .put(
+                                KafkaConfig.KAFKA_SERVERS.getKey(),
+                                sharedKafkaTestResource.getKafkaConnectString())
+                        .put(KafkaConfig.KAKFA_TOPIC.getKey(), "test_logservice")
+                        .put(CommonConfig.INGESTOR_QUEUE_COUNT.getKey(), "1")
+                        .build();
         LogService logService = new KafkaLogService(configs);
         logService.init();
         int queueId = 0;
         long snapshotId = 1L;
         LogWriter writer = logService.createWriter(queueId);
-        LogEntry logEntry = new LogEntry(snapshotId,
-                OperationBatch.newBuilder().addOperationBlob(OperationBlob.MARKER_OPERATION_BLOB).build());
+        LogEntry logEntry =
+                new LogEntry(
+                        snapshotId,
+                        OperationBatch.newBuilder()
+                                .addOperationBlob(OperationBlob.MARKER_OPERATION_BLOB)
+                                .build());
         assertEquals(writer.append(logEntry), 0);
 
         LogReader reader = logService.createReader(queueId, 0);
@@ -87,8 +98,7 @@ public class KafkaWalTest {
 
         assertAll(
                 () -> assertEquals(readLogEntry.getOffset(), 0),
-                () -> assertEquals(readLogEntry.getLogEntry().getSnapshotId(), snapshotId)
-        );
+                () -> assertEquals(readLogEntry.getLogEntry().getSnapshotId(), snapshotId));
 
         OperationBatch operationBatch = readLogEntry.getLogEntry().getOperationBatch();
         assertEquals(operationBatch.getOperationCount(), 1);
@@ -108,5 +118,4 @@ public class KafkaWalTest {
         writer.close();
         logService.destroy();
     }
-
 }

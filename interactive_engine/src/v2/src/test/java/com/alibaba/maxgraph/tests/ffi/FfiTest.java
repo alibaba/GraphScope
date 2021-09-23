@@ -21,10 +21,10 @@ import com.alibaba.maxgraph.tests.gremlin.MaxTestGraphProvider;
 import com.alibaba.maxgraph.groot.MaxNode;
 import com.alibaba.maxgraph.groot.common.NodeBase;
 import com.alibaba.maxgraph.common.config.CommonConfig;
-import com.alibaba.maxgraph.groot.store.Store;
-import com.alibaba.maxgraph.groot.store.StoreService;
-import com.alibaba.maxgraph.groot.store.jna.GraphLibrary;
-import com.alibaba.maxgraph.groot.store.jna.JnaGraphStore;
+import com.alibaba.maxgraph.groot.Store;
+import com.alibaba.graphscope.groot.store.StoreService;
+import com.alibaba.graphscope.groot.store.jna.GraphLibrary;
+import com.alibaba.graphscope.groot.store.jna.JnaGraphStore;
 import com.sun.jna.Pointer;
 import org.apache.commons.configuration.Configuration;
 import org.apache.tinkerpop.gremlin.GraphProvider;
@@ -52,19 +52,22 @@ public class FfiTest {
         Map<String, Object> conf = new HashMap<>();
         conf.put(CommonConfig.STORE_NODE_COUNT.getKey(), "1");
         conf.put(CommonConfig.PARTITION_COUNT.getKey(), "1");
-        Configuration graphConf = provider.newGraphConfiguration("ffi-test", FfiTest.class, "testFfi", conf, modern);
+        Configuration graphConf =
+                provider.newGraphConfiguration("ffi-test", FfiTest.class, "testFfi", conf, modern);
         provider.clear(graphConf);
         Graph graph = provider.openTestGraph(graphConf);
-        LoadGraphWith loadGraphWith = new LoadGraphWith() {
-            @Override
-            public Class<? extends Annotation> annotationType() {
-                return null;
-            }
-            @Override
-            public GraphData value() {
-                return modern;
-            }
-        };
+        LoadGraphWith loadGraphWith =
+                new LoadGraphWith() {
+                    @Override
+                    public Class<? extends Annotation> annotationType() {
+                        return null;
+                    }
+
+                    @Override
+                    public GraphData value() {
+                        return modern;
+                    }
+                };
         provider.loadGraphData(graph, loadGraphWith, FfiTest.class, "testFfi");
         MaxNode maxNode = ((MaxTestGraph) graph).getMaxNode();
         List<NodeBase> storeNodes = maxNode.getStores();
@@ -72,10 +75,12 @@ public class FfiTest {
         Store store = (Store) storeNodes.get(0);
         StoreService storeService = store.getStoreService();
         JnaGraphStore jnaGraphStore = (JnaGraphStore) storeService.getIdToPartition().get(0);
-        Pointer wrapperPartitionGraph = GraphLibrary.INSTANCE.createWrapperPartitionGraph(jnaGraphStore.getPointer());
+        Pointer wrapperPartitionGraph =
+                GraphLibrary.INSTANCE.createWrapperPartitionGraph(jnaGraphStore.getPointer());
 
         GnnLibrary.INSTANCE.setPartitionGraph(wrapperPartitionGraph);
-        GnnLibrary.TestResult testResult = new GnnLibrary.TestResult(GnnLibrary.INSTANCE.runLocalTests());
+        GnnLibrary.TestResult testResult =
+                new GnnLibrary.TestResult(GnnLibrary.INSTANCE.runLocalTests());
         logger.info(testResult.getInfo());
         assertTrue(testResult.getFlag());
 

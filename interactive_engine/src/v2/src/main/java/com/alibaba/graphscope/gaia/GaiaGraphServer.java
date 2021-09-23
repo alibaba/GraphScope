@@ -23,7 +23,7 @@ import com.alibaba.graphscope.gaia.processor.LogicPlanProcessor;
 import com.alibaba.graphscope.gaia.processor.TraversalOpProcessor;
 import com.alibaba.graphscope.gaia.store.GraphStoreService;
 import com.alibaba.maxgraph.common.config.Configs;
-import com.alibaba.maxgraph.groot.common.frontend.api.MaxGraphServer;
+import com.alibaba.maxgraph.groot.MaxGraphServer;
 import com.alibaba.maxgraph.common.config.GremlinConfig;
 import io.netty.channel.Channel;
 import org.apache.commons.configuration.BaseConfiguration;
@@ -54,7 +54,11 @@ public class GaiaGraphServer implements MaxGraphServer {
     private GaiaConfig gaiaConfig;
     private AbstractBroadcastProcessor broadcastProcessor;
 
-    public GaiaGraphServer(Configs configs, GraphStoreService storeService, AbstractBroadcastProcessor broadcastProcessor, GaiaConfig gaiaConfig) {
+    public GaiaGraphServer(
+            Configs configs,
+            GraphStoreService storeService,
+            AbstractBroadcastProcessor broadcastProcessor,
+            GaiaConfig gaiaConfig) {
         this.configs = configs;
         this.broadcastProcessor = broadcastProcessor;
         this.storeService = storeService;
@@ -71,28 +75,37 @@ public class GaiaGraphServer implements MaxGraphServer {
         if (settings.gremlinPool == 0) {
             settings.gremlinPool = Runtime.getRuntime().availableProcessors();
         }
-        settings.writeBufferHighWaterMark = GremlinConfig.SERVER_WRITE_BUFFER_HIGH_WATER.get(this.configs);
-        settings.writeBufferLowWaterMark = GremlinConfig.SERVER_WRITE_BUFFER_LOW_WATER.get(this.configs);
+        settings.writeBufferHighWaterMark =
+                GremlinConfig.SERVER_WRITE_BUFFER_HIGH_WATER.get(this.configs);
+        settings.writeBufferLowWaterMark =
+                GremlinConfig.SERVER_WRITE_BUFFER_LOW_WATER.get(this.configs);
         this.server = new GremlinServer(settings);
 
         loadProcessor(gaiaConfig, broadcastProcessor, storeService);
 
         // bind g to traversal source
         Graph traversalGraph = TraversalSourceGraph.open(new BaseConfiguration());
-        ServerGremlinExecutor serverGremlinExecutor = PlanUtils.getServerGremlinExecutor(this.server);
+        ServerGremlinExecutor serverGremlinExecutor =
+                PlanUtils.getServerGremlinExecutor(this.server);
         serverGremlinExecutor.getGraphManager().putGraph("graph", traversalGraph);
         serverGremlinExecutor.getGraphManager().putTraversalSource("g", traversalGraph.traversal());
-        Bindings globalBindings = PlanUtils.getGlobalBindings(server.getServerGremlinExecutor().getGremlinExecutor());
+        Bindings globalBindings =
+                PlanUtils.getGlobalBindings(server.getServerGremlinExecutor().getGremlinExecutor());
         globalBindings.put("graph", traversalGraph);
         globalBindings.put("g", traversalGraph.traversal());
 
         // start gremlin server
         try {
-            server.start().exceptionally(t -> {
-                logger.error("Gremlin Server was unable to start and will now begin shutdown {}", t);
-                server.stop().join();
-                return null;
-            }).join();
+            server.start()
+                    .exceptionally(
+                            t -> {
+                                logger.error(
+                                        "Gremlin Server was unable to start and will now begin shutdown {}",
+                                        t);
+                                server.stop().join();
+                                return null;
+                            })
+                    .join();
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
@@ -117,16 +130,23 @@ public class GaiaGraphServer implements MaxGraphServer {
     }
 
     private void loadSettings() {
-        InputStream input = GaiaGraphServer.class.getClassLoader().getResourceAsStream("conf/server.gaia.yaml");
+        InputStream input =
+                GaiaGraphServer.class.getClassLoader().getResourceAsStream("conf/server.gaia.yaml");
         this.settings = Settings.read(input);
     }
 
-    private static void loadProcessor(GaiaConfig config, AbstractBroadcastProcessor broadcastProcessor, GraphStoreService storeService) {
+    private static void loadProcessor(
+            GaiaConfig config,
+            AbstractBroadcastProcessor broadcastProcessor,
+            GraphStoreService storeService) {
         try {
             Map<String, OpProcessor> gaiaProcessors = new HashMap<>();
-            gaiaProcessors.put("", new GaiaGraphOpProcessor(config, storeService, broadcastProcessor));
+            gaiaProcessors.put(
+                    "", new GaiaGraphOpProcessor(config, storeService, broadcastProcessor));
             gaiaProcessors.put("plan", new LogicPlanProcessor(config, storeService));
-            gaiaProcessors.put("traversal", new TraversalOpProcessor(config, storeService, broadcastProcessor));
+            gaiaProcessors.put(
+                    "traversal",
+                    new TraversalOpProcessor(config, storeService, broadcastProcessor));
             PlanUtils.setFinalStaticField(OpLoader.class, "processors", gaiaProcessors);
         } catch (Exception e) {
             throw new RuntimeException(e);

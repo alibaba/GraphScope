@@ -1,16 +1,14 @@
 /**
  * Copyright 2020 Alibaba Group Holding Limited.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- * 
- *     http://www.apache.org/licenses/LICENSE-2.0
- * 
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
+ *
+ * <p>Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of the License at
+ *
+ * <p>http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * <p>Unless required by applicable law or agreed to in writing, software distributed under the
+ * License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
+ * express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
  */
 package com.alibaba.maxgraph.groot;
@@ -20,11 +18,7 @@ import com.alibaba.maxgraph.groot.common.NodeLauncher;
 import com.alibaba.maxgraph.common.config.Configs;
 import com.alibaba.maxgraph.common.RoleType;
 import com.alibaba.maxgraph.compiler.api.exception.MaxGraphException;
-import com.alibaba.maxgraph.groot.coordinator.Coordinator;
 import com.alibaba.maxgraph.groot.grafting.frontend.Frontend;
-import com.alibaba.maxgraph.groot.ingestor.Ingestor;
-import com.alibaba.maxgraph.groot.store.GaiaStore;
-import com.alibaba.maxgraph.groot.store.Store;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -48,7 +42,7 @@ public class MaxGraph {
             String roleName = args[0];
             if (roleName.equalsIgnoreCase("store-gaia")) {
                 node = new GaiaStore(conf);
-            } else if(roleName.equalsIgnoreCase("frontend-gaia")) {
+            } else if (roleName.equalsIgnoreCase("frontend-gaia")) {
                 node = new com.alibaba.graphscope.gaia.Frontend(conf);
             } else {
                 RoleType roleType = RoleType.fromName(roleName);

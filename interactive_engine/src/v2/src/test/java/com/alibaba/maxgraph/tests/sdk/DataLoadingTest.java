@@ -1,7 +1,7 @@
 package com.alibaba.maxgraph.tests.sdk;
 
 import com.alibaba.maxgraph.compiler.api.schema.GraphSchema;
-import com.alibaba.maxgraph.groot.common.schema.GraphDef;
+import com.alibaba.graphscope.groot.schema.GraphDef;
 import com.alibaba.maxgraph.groot.sdk.Client;
 import org.junit.Test;
 
