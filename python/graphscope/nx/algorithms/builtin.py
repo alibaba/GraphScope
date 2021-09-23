@@ -45,6 +45,9 @@ def project_to_simple(func):
             ):  # func has 'weight' argument
                 weight = kwargs.get("weight", None)
                 graph = graph._project_to_simple(e_prop=weight)
+            elif "attribute" in inspect.getfullargspec(func)[0]:
+                attribute = kwargs.get("attribute", None)
+                graph = graph._project_to_simple(v_prop=attribute)
             else:
                 graph = graph._project_to_simple()
         return func(graph, *args[1:], **kwargs)
@@ -1086,11 +1089,11 @@ def average_degree_connectivity(G, source="in+out", target="in+out", weight=None
     ValueError
         If either `source` or `target` are not one of 'in',
         'out', or 'in+out'.
-
+         >>> G.add_edges_from([(0, 1), (2, 3)], weight=1)
+         
     Examples
     --------
     >>> G = nx.Graph()
-    >>> G.add_edges_from([(0, 1), (2, 3)], weight=1)
     >>> G.add_edge(1, 2, weight=3)
     >>> nx.builtin.average_degree_connectivity(G)
     {1: 2.0, 2: 1.5}
@@ -1117,7 +1120,90 @@ def average_degree_connectivity(G, source="in+out", target="in+out", weight=None
     degree_connectivity = res_list[1::2]
     res = dict(zip(degree, degree_connectivity))
     return res
- 
+
+
+@project_to_simple
+def attribute_assortativity_coefficient(G, attribute):
+    """Compute assortativity for node attributes.
+
+    Assortativity measures the similarity of connections
+    in the graph with respect to the given attribute.
+
+    Parameters
+    ----------
+    G : NetworkX graph
+
+    attribute : string
+        Node attribute key
+
+    Returns
+    -------
+    r: float
+       Assortativity of graph for given attribute
+
+    Examples
+    --------
+    >>> G = nx.Graph()
+    >>> G.add_nodes_from([0, 1], color="red")
+    >>> G.add_nodes_from([2, 3], color="blue")
+    >>> G.add_edges_from([(0, 1), (2, 3)])
+    >>> print(nx.builtin.attribute_assortativity_coefficient(G, "color"))
+    1.0
+
+    Notes
+    -----
+    This computes Eq. (2) in Ref. [1]_ , (trace(M)-sum(M^2))/(1-sum(M^2)),
+    where M is the joint probability distribution (mixing matrix)
+    of the specified attribute.
+
+    References
+    ----------
+    .. [1] M. E. J. Newman, Mixing patterns in networks,
+       Physical Review E, 67 026126, 2003
+    """
+    return graphscope.attribute_assortativity_coefficient(G)
+
+
+@project_to_simple
+def numeric_assortativity_coefficient(G, attribute):
+    """Compute assortativity for numerical node attributes.
+
+    Assortativity measures the similarity of connections
+    in the graph with respect to the given numeric attribute.
+
+    Parameters
+    ----------
+    G : NetworkX graph
+
+    attribute : string
+        Node attribute key.
+
+    Returns
+    -------
+    r: float
+       Assortativity of graph for given attribute
+
+    Examples
+    --------
+    >>> G = nx.Graph()
+    >>> G.add_nodes_from([0, 1], size=2)
+    >>> G.add_nodes_from([2, 3], size=3)
+    >>> G.add_edges_from([(0, 1), (2, 3)])
+    >>> print(nx.builtin.numeric_assortativity_coefficient(G, "size"))
+    1.0
+
+    Notes
+    -----
+    This computes Eq. (21) in Ref. [1]_ , for the mixing matrix
+    of the specified attribute.
+
+    References
+    ----------
+    .. [1] M. E. J. Newman, Mixing patterns in networks
+           Physical Review E, 67 026126, 2003
+    """
+    return graphscope.numeric_assortativity_coefficient(G)
+
 
 @project_to_simple
 def is_simple_path(G, nodes):

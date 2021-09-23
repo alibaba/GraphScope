@@ -217,6 +217,14 @@ app:
       - grape::ImmutableEdgecutFragment
       - gs::ArrowProjectedFragment
       - gs::DynamicProjectedFragment
+  - algo: attribute_assortativity_coefficient
+    type: cpp_pie
+    class_name: gs::AttributeAssortativity
+    src: apps/assortativity/attribute/attribute_assortativity.h
+    compatible_graph:
+      - grape::ImmutableEdgecutFragment
+      - gs::ArrowProjectedFragment
+      - gs::DynamicProjectedFragment
   - algo: is_simple_path
     type: cpp_pie
     class_name: gs::IsSimplePath
