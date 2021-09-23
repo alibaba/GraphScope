@@ -78,6 +78,14 @@ double ProcessMatrix(std::vector<std::vector<T>>& degree_mixing_matrix,
   double varb = Variance(b, map);
   return static_cast<double>(sum) / (vara * varb);
 }
+
+/**
+ * @brief deterimine if type T can convert to type U in compile-time.
+ *
+ * @tparam T
+ * @tparam U
+ *
+ */
 template <typename T, typename U>
 class Conversion {
  private:

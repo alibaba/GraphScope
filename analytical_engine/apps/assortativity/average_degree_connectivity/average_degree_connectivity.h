@@ -65,7 +65,7 @@ class AverageDegreeConnectivity
     }
     auto inner_vertices = frag.InnerVertices();
     for (auto& v : inner_vertices) {
-      vertexProcess(v, frag, ctx, messages);
+      traverseVertex(v, frag, ctx, messages);
     }
     messages.ForceContinue();
   }
@@ -78,7 +78,7 @@ class AverageDegreeConnectivity
       while (messages.GetMessage<fragment_t, pair_msg_t>(frag, vertex, msg)) {
         int source_degree = msg.first;
         double weight = msg.second;
-        int target_degree = GetDegreeByType(
+        int target_degree = getDegreeByType(
             frag, vertex, ctx.target_degree_type_, ctx.directed);
         if (ctx.degree_connectivity_map.count(source_degree) == 0) {
           ctx.degree_connectivity_map[source_degree].first =
@@ -129,11 +129,21 @@ class AverageDegreeConnectivity
       }
     }
   }
-  void vertexProcess(vertex_t v, const fragment_t& frag, context_t& ctx,
-                     message_manager_t& messages) {
+
+ private:
+  /**
+   * @brief traverse the neighbors of vertex v
+   *
+   * @param v
+   * @param frag
+   * @param ctx
+   * @param messages
+   */
+  void traverseVertex(vertex_t v, const fragment_t& frag, context_t& ctx,
+                      message_manager_t& messages) {
     int source_degree =
-        GetDegreeByType(frag, v, ctx.source_degree_type_, ctx.directed);
-    double norm = GetWeightedDegree(v, frag, ctx);
+        getDegreeByType(frag, v, ctx.source_degree_type_, ctx.directed);
+    double norm = getWeightedDegree(v, frag, ctx);
     if (ctx.degree_connectivity_map.count(source_degree) == 0) {
       ctx.degree_connectivity_map[source_degree].second = norm;
     } else {
@@ -167,7 +177,7 @@ class AverageDegreeConnectivity
       messages.SyncStateOnOuterVertex<fragment_t, pair_msg_t>(
           frag, neighbor, std::make_pair(source_degree, data));
     } else {
-      int target_degree = GetDegreeByType(
+      int target_degree = getDegreeByType(
           frag, neighbor, ctx.target_degree_type_, ctx.directed);
       if (ctx.degree_connectivity_map.count(source_degree) == 0) {
         ctx.degree_connectivity_map[source_degree].first =
@@ -179,31 +189,36 @@ class AverageDegreeConnectivity
     }
   }
 
-  double GetWeightedDegree(vertex_t v, const fragment_t& frag, context_t& ctx) {
+  double getWeightedDegree(vertex_t v, const fragment_t& frag, context_t& ctx) {
     double res = 0.0;
     if (ctx.weighted) {
       if (!ctx.directed || ctx.source_degree_type_ == DegreeType::OUT) {
         auto oes = frag.GetOutgoingAdjList(v);
         // compute the sum of weight
-        res = ComputeWeightedDegree(oes);
+        res = computeWeightedDegree(oes);
       } else if (ctx.source_degree_type_ == DegreeType::IN) {
         auto oes = frag.GetIncomingAdjList(v);
-        res = ComputeWeightedDegree(oes);
+        res = computeWeightedDegree(oes);
       } else {
         auto oes = frag.GetIncomingAdjList(v);
-        res = ComputeWeightedDegree(oes);
+        res = computeWeightedDegree(oes);
         auto oes1 = frag.GetOutgoingAdjList(v);
-        res += ComputeWeightedDegree(oes1);
+        res += computeWeightedDegree(oes1);
       }
     } else {
       res = static_cast<double>(
-          GetDegreeByType(frag, v, ctx.source_degree_type_, ctx.directed));
+          getDegreeByType(frag, v, ctx.source_degree_type_, ctx.directed));
     }
     return res;
   }
 
+  /**
+   * @brief compute the weighted degree by the adjacent list.
+   *
+   * @param adjList
+   */
   template <typename T>
-  double ComputeWeightedDegree(T adjList) {
+  double computeWeightedDegree(T adjList) {
     double res = 0.0;
     for (auto& e : adjList) {
       double data = 0.0;
@@ -215,7 +230,7 @@ class AverageDegreeConnectivity
     }
     return res;
   }
-  int GetDegreeByType(const fragment_t& frag, const vertex_t& vertex,
+  int getDegreeByType(const fragment_t& frag, const vertex_t& vertex,
                       DegreeType type, bool directed) {
     if (!directed) {
       return frag.GetLocalOutDegree(vertex);

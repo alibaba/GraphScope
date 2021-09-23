@@ -1089,12 +1089,13 @@ def average_degree_connectivity(G, source="in+out", target="in+out", weight=None
     ValueError
         If either `source` or `target` are not one of 'in',
         'out', or 'in+out'.
-         >>> G.add_edges_from([(0, 1), (2, 3)], weight=1)
-         
+
+
     Examples
     --------
     >>> G = nx.Graph()
     >>> G.add_edge(1, 2, weight=3)
+    >>> G.add_edges_from([(0, 1), (2, 3)], weight=1)
     >>> nx.builtin.average_degree_connectivity(G)
     {1: 2.0, 2: 1.5}
     >>> nx.builtin.average_degree_connectivity(G, weight="weight")
@@ -1106,20 +1107,7 @@ def average_degree_connectivity(G, source="in+out", target="in+out", weight=None
        "The architecture of complex weighted networks".
        PNAS 101 (11): 3747–3752 (2004).
     """
-    if G.is_directed():
-        if source not in ("in", "out", "in+out"):
-            raise ValueError('source must be one of "in", "out", or "in+out"')
-        if target not in ("in", "out", "in+out"):
-            raise ValueError('target must be one of "in", "out", or "in+out"')
-    ctx = AppAssets(algo="average_degree_connectivity", context="tensor")(
-        G, source, target, G.is_directed()
-    )
-    res_list = ctx.to_numpy("r", axis=0).tolist()
-    res_list = [i for item in res_list for i in item]
-    degree = [int(i) for i in res_list[0::2]]
-    degree_connectivity = res_list[1::2]
-    res = dict(zip(degree, degree_connectivity))
-    return res
+    return graphscope.average_degree_connectivity(G, source, target, weight)
 
 
 @project_to_simple
