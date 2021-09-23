@@ -248,6 +248,9 @@ bl::result<std::string> GrapeInstance::reportGraph(
                   object_manager_.GetObject<IFragmentWrapper>(graph_name));
   auto graph_type = wrapper->graph_def().graph_type();
 
+  VLOG(1) << "Reporting graph, graph name: " << graph_name
+          << ", graph type: " << graph_type;
+  /*
   if (graph_type != rpc::graph::DYNAMIC_PROPERTY) {
     RETURN_GS_ERROR(
         vineyard::ErrorCode::kInvalidValueError,
@@ -255,10 +258,15 @@ bl::result<std::string> GrapeInstance::reportGraph(
             rpc::graph::GraphTypePb_Name(graph_type) +
             ", graph id: " + graph_name);
   }
-  auto fragment =
-      std::static_pointer_cast<DynamicFragment>(wrapper->fragment());
-  DynamicGraphReporter reporter(comm_spec_);
-  return reporter.Report(fragment, params);
+  */
+  if (graph_type == rpc::graph::DYNAMIC_PROPERTY) {
+    auto fragment =
+        std::static_pointer_cast<DynamicFragment>(wrapper->fragment());
+    DynamicGraphReporter reporter(comm_spec_);
+    return reporter.Report(fragment, params);
+  } else {
+    return wrapper->ReportGraph(comm_spec_, params);
+  }
 #else
   RETURN_GS_ERROR(vineyard::ErrorCode::kUnimplementedMethod,
                   "GraphScope is built with NETWORKX=OFF, please recompile it "

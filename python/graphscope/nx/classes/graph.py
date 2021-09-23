@@ -294,11 +294,14 @@ class Graph(_GraphBase):
         # attempt to load graph with data
         if incoming_graph_data is not None:
             if self._is_gs_graph(incoming_graph_data):
-                graph_def = from_gs_graph(
-                    incoming_graph_data, self, self._default_label
-                )
-                self._key = graph_def.key
-                self._schema.init_nx_schema(incoming_graph_data.schema)
+                # TODO: add session check and directed check here
+                # graph_def = from_gs_graph(
+                #     incoming_graph_data, self, self._default_label
+                # )
+                self._key = incoming_graph_data.key
+                self._graph_type = graph_def_pb2.ARROW_PROPERTY
+                self._schema = incoming_graph_data.schema
+                self._default_label_id = self._schema._v_label_index[self._default_label]
             else:
                 g = to_nx_graph(incoming_graph_data, create_using=self)
                 check_argument(isinstance(g, Graph))
@@ -596,6 +599,7 @@ class Graph(_GraphBase):
         11
 
         """
+        self._check_converted()
         nodes = []
         for n in nodes_for_adding:
             data = dict(attr)
@@ -679,6 +683,7 @@ class Graph(_GraphBase):
         []
 
         """
+        self._check_converted()
         nodes = []
         for n in nodes_for_removing:
             check_node_is_legal(n)
@@ -889,6 +894,7 @@ class Graph(_GraphBase):
         >>> G.add_edges_from([(1, 2), (2, 3)], weight=3)
         >>> G.add_edges_from([(3, 4), (1, 4)], label="WN2898")
         """
+        self._check_converted()
         edges = []
         for e in ebunch_to_add:
             ne = len(e)
@@ -989,6 +995,7 @@ class Graph(_GraphBase):
         >>> ebunch = [(1, 2), (2, 3)]
         >>> G.remove_edges_from(ebunch)
         """
+        self._check_converted()
         edges = []
         for e in ebunch:
             ne = len(e)
@@ -1030,6 +1037,7 @@ class Graph(_GraphBase):
         """
         check_node_is_legal(u)
         check_node_is_legal(v)
+        self._check_converted()
         try:
             edge = [json.dumps((u, v, data))]
         except TypeError as e:
@@ -1071,6 +1079,7 @@ class Graph(_GraphBase):
 
         """
         check_node_is_legal(n)
+        self._check_converted()
         try:
             node = [json.dumps((n, data))]
         except TypeError as e:
@@ -1128,6 +1137,7 @@ class Graph(_GraphBase):
         add_edges_from: add multiple edges to a graph
         add_nodes_from: add multiple nodes to a graph
         """
+        self._check_converted()
         if edges is not None:
             if nodes is not None:
                 self.add_nodes_from(nodes)
@@ -1475,6 +1485,7 @@ class Graph(_GraphBase):
         []
 
         """
+        self._check_converted()
         self.graph.clear()
         self.schema.clear()
         self.schema.init_nx_schema()
@@ -1493,6 +1504,7 @@ class Graph(_GraphBase):
         >>> list(G.edges)
         []
         """
+        self._check_converted()
         op = dag_utils.clear_edges(self)
         op.eval()
 
@@ -2058,3 +2070,15 @@ class Graph(_GraphBase):
         graph._op = op
         graph._is_client_view = False
         return graph
+
+    def _check_converted(self):
+        if self._graph_type == graph_def_pb2.ARROW_PROPERTY:
+                graph_def = from_gs_graph(
+                    self, self._default_label
+                )
+                self._key = graph_def.key
+                self._graph_type = graph_def_pb2.DYNAMIC_PROPERTY
+                schema = GraphSchema()
+                schema.init_nx_schema()
+                schema.init_nx_schema(self._schema)
+                self._schema = schema

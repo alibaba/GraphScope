@@ -30,6 +30,7 @@
 #include "core/context/vertex_data_context.h"
 #include "core/context/vertex_property_context.h"
 #include "core/error.h"
+#include "core/fragment/dynamic_fragment_reporter.h"
 #include "core/fragment/dynamic_fragment_view.h"
 #include "core/fragment/dynamic_projected_fragment.h"
 #include "core/loader/arrow_fragment_loader.h"
@@ -254,6 +255,12 @@ class FragmentWrapper<vineyard::ArrowFragment<OID_T, VID_T>>
     auto wrapper = std::make_shared<FragmentWrapper<fragment_t>>(
         dst_graph_name, dst_graph_def, fragment_);
     return std::dynamic_pointer_cast<IFragmentWrapper>(wrapper);
+  }
+
+  bl::result<std::string> ReportGraph(const grape::CommSpec& comm_spec,
+                                      const rpc::GSParams& params) override {
+    ImmutableGraphReporter<fragment_t> reporter(comm_spec);
+    return reporter.Report(fragment_, params);
   }
 
   bl::result<std::shared_ptr<ILabeledFragmentWrapper>> Project(
@@ -620,6 +627,12 @@ class FragmentWrapper<ArrowProjectedFragment<OID_T, VID_T, VDATA_T, EDATA_T>>
                     "Cannot copy the ArrowProjectedFragment");
   }
 
+  bl::result<std::string> ReportGraph(const grape::CommSpec& comm_spec,
+                                      const rpc::GSParams& params) {
+    RETURN_GS_ERROR(vineyard::ErrorCode::kInvalidOperationError,
+                    "Not implemented.");
+  }
+
   bl::result<std::shared_ptr<IFragmentWrapper>> ToDirected(
       const grape::CommSpec& comm_spec,
       const std::string& dst_graph_name) override {
@@ -673,6 +686,12 @@ class FragmentWrapper<DynamicFragment> : public IFragmentWrapper {
 
   const rpc::graph::GraphDefPb& graph_def() const override {
     return graph_def_;
+  }
+
+  bl::result<std::string> ReportGraph(const grape::CommSpec& comm_spec,
+                                      const rpc::GSParams& params) override {
+    RETURN_GS_ERROR(vineyard::ErrorCode::kInvalidOperationError,
+                    "Not implemented.");
   }
 
   bl::result<std::shared_ptr<IFragmentWrapper>> CopyGraph(
@@ -832,6 +851,12 @@ class FragmentWrapper<DynamicProjectedFragment<VDATA_T, EDATA_T>>
 
   const rpc::graph::GraphDefPb& graph_def() const override {
     return graph_def_;
+  }
+
+  bl::result<std::string> ReportGraph(const grape::CommSpec& comm_spec,
+                                      const rpc::GSParams& params) {
+    RETURN_GS_ERROR(vineyard::ErrorCode::kInvalidOperationError,
+                    "Not implemented.");
   }
 
   bl::result<std::shared_ptr<IFragmentWrapper>> CopyGraph(

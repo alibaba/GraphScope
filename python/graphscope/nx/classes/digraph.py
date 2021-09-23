@@ -41,6 +41,7 @@ from graphscope.nx.convert import to_nx_graph
 from graphscope.nx.utils.compat import patch_docstring
 from graphscope.nx.utils.misc import check_node_is_legal
 from graphscope.nx.utils.misc import empty_graph_in_engine
+from graphscope.proto import graph_def_pb2
 from graphscope.proto import types_pb2
 
 
@@ -234,11 +235,14 @@ class DiGraph(Graph):
         # attempt to load graph with data
         if incoming_graph_data is not None:
             if self._is_gs_graph(incoming_graph_data):
-                graph_def = from_gs_graph(
-                    incoming_graph_data, self, self._default_label
-                )
-                self._key = graph_def.key
-                self._schema.init_nx_schema(incoming_graph_data.schema)
+                # graph_def = from_gs_graph(
+                #     incoming_graph_data, self, self._default_label
+                # )
+                # self._key = graph_def.key
+                # self._schema.init_nx_schema(incoming_graph_data.schema)
+                self._key = incoming_graph_data.key
+                self._graph_type = graph_def_pb2.ARROW_PROPERTY
+                self._schema = incoming_graph_data.schema
             else:
                 g = to_nx_graph(incoming_graph_data, create_using=self)
                 check_argument(isinstance(g, Graph))

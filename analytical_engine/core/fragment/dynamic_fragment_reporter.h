@@ -374,6 +374,206 @@ class DynamicGraphReporter : public grape::Communicator {
   static const int batch_num_ = 100;
   folly::json::serialization_opts json_opts_;
 };
+
+template <typename T>
+T convert_oid(folly::dynamic node) {}
+
+template <>
+int64_t convert_oid(folly::dynamic node) {
+  return node.asInt();
+}
+
+template <>
+std::string convert_oid(folly::dynamic node) {
+  return node.asString();
+}
+
+template <typename FRAG_T>
+class ImmutableGraphReporter {};
+
+template <typename OID_T, typename VID_T>
+class ImmutableGraphReporter<vineyard::ArrowFragment<OID_T, VID_T>>
+    : public grape::Communicator {
+  using fragment_t = vineyard::ArrowFragment<OID_T, VID_T>;
+  using label_id_t = typename fragment_t::label_id_t;
+  using oid_t = OID_T;
+  using vid_t = VID_T;
+  using vertex_t = typename fragment_t::vertex_t;
+
+ public:
+  explicit ImmutableGraphReporter(const grape::CommSpec& comm_spec)
+      : comm_spec_(comm_spec) {
+    InitCommunicator(comm_spec.comm());
+    json_opts_.allow_non_string_keys = true;
+    json_opts_.allow_nan_inf = true;
+  }
+
+  bl::result<std::string> Report(std::shared_ptr<fragment_t>& fragment,
+                                 const rpc::GSParams& params) {
+    BOOST_LEAF_AUTO(report_type, params.Get<rpc::ReportType>(rpc::REPORT_TYPE));
+    //  BOOST_LEAF_AUTO(default_label_id, params.Get<int>(rpc::V_LABEL_ID));
+    label_id_t default_label_id = 1;
+    switch (report_type) {
+    case rpc::NODE_NUM: {
+      return std::to_string(reportNodeNum(fragment));
+    }
+    case rpc::EDGE_NUM: {
+      return std::to_string(reportEdgeNum(fragment));
+    }
+    case rpc::SELFLOOPS_NUM: {
+      // return std::to_string(reportSelfloopsNum(fragment));
+      return std::string();
+    }
+    case rpc::HAS_NODE: {
+      BOOST_LEAF_AUTO(node_in_json, params.Get<std::string>(rpc::NODE));
+      label_id_t v_label_id = default_label_id;
+      oid_t oid;
+      folly::dynamic node = folly::parseJson(node_in_json, json_opts_)[0];
+      if (node.isArray()) {
+        v_label_id = node[0].asInt();
+        oid = convert_oid<oid_t>(node[1]);
+      } else {
+        oid = convert_oid<oid_t>(node);
+      }
+      return std::to_string(hasNode(fragment, v_label_id, oid));
+    }
+    case rpc::HAS_EDGE: {
+      /*
+      BOOST_LEAF_AUTO(edge_in_json, params.Get<std::string>(rpc::EDGE));
+      oid_t edge = folly::parseJson(edge_in_json, json_opts_);
+      auto& src_id = edge[0];
+      auto& dst_id = edge[1];
+      return std::to_string(hasEdge(fragment, src_id, dst_id));
+      */
+      return std::string();
+    }
+    case rpc::NODE_DATA: {
+      // BOOST_LEAF_AUTO(node_in_json, params.Get<std::string>(rpc::NODE));
+      // oid_t node_id = folly::parseJson(node_in_json, json_opts_)[0];
+      // return getNodeData(fragment, node_id);
+      return std::string();
+    }
+    /*
+    case rpc::EDGE_DATA: {
+      BOOST_LEAF_AUTO(edge_in_json, params.Get<std::string>(rpc::EDGE));
+      oid_t edge = folly::parseJson(edge_in_json, json_opts_);
+      auto& src_id = edge[0];
+      auto& dst_id = edge[1];
+      return getEdgeData(fragment, src_id, dst_id);
+    }
+    case rpc::DEG_BY_NODE:
+    case rpc::IN_DEG_BY_NODE:
+    case rpc::OUT_DEG_BY_NODE: {
+      BOOST_LEAF_AUTO(node_in_json, params.Get<std::string>(rpc::NODE));
+      BOOST_LEAF_AUTO(edge_key, params.Get<std::string>(rpc::EDGE_KEY));
+      oid_t node_id = folly::parseJson(node_in_json, json_opts_)[0];
+      return std::to_string(
+          getDegree(fragment, node_id, report_type, edge_key));
+    }
+    case rpc::DEG_BY_LOC:
+    case rpc::IN_DEG_BY_LOC:
+    case rpc::OUT_DEG_BY_LOC: {
+      BOOST_LEAF_AUTO(fid, params.Get<int64_t>(rpc::FID));
+      BOOST_LEAF_AUTO(lid, params.Get<int64_t>(rpc::LID));
+      BOOST_LEAF_AUTO(edge_key, params.Get<std::string>(rpc::EDGE_KEY));
+
+      return batchGetDegree(fragment, fid, lid, report_type, edge_key);
+    }
+    case rpc::NEIGHBORS_BY_NODE:
+    case rpc::SUCCS_BY_NODE:
+    case rpc::PREDS_BY_NODE: {
+      BOOST_LEAF_AUTO(node_in_json, params.Get<std::string>(rpc::NODE));
+      oid_t node_id = folly::parseJson(node_in_json, json_opts_)[0];
+      return getNeighbors(fragment, node_id, report_type);
+    }
+    case rpc::NEIGHBORS_BY_LOC:
+    case rpc::SUCCS_BY_LOC:
+    case rpc::PREDS_BY_LOC: {
+      BOOST_LEAF_AUTO(fid, params.Get<int64_t>(rpc::FID));
+      BOOST_LEAF_AUTO(lid, params.Get<int64_t>(rpc::LID));
+      return batchGetNeighbors(fragment, fid, lid, report_type);
+    }
+    case rpc::NODES_BY_LOC: {
+      BOOST_LEAF_AUTO(fid, params.Get<int64_t>(rpc::FID));
+      BOOST_LEAF_AUTO(lid, params.Get<int64_t>(rpc::LID));
+      return batchGetNodes(fragment, fid, lid);
+    }
+    */
+    default:
+      CHECK(false);
+    }
+    return std::string();
+  }
+
+ private:
+  inline size_t reportNodeNum(std::shared_ptr<fragment_t>& fragment) {
+    return fragment->GetTotalNodesNum();;
+  }
+
+  inline size_t reportEdgeNum(std::shared_ptr<fragment_t>& fragment) {
+    size_t frag_enum = 0, total_enum = 0;
+    frag_enum = fragment->GetEdgeNum();
+    Sum(frag_enum, total_enum);
+    return total_enum;
+  }
+
+  /*
+  inline size_t reportSelfloopsNum(std::shared_ptr<fragment_t>& fragment) {
+    size_t frag_selfloops_num = 0, total_selfloops_num = 0;
+    frag_selfloops_num = fragment->selfloops_num();
+    Sum(frag_selfloops_num, total_selfloops_num);
+    return total_selfloops_num;
+  }
+  */
+
+  bool hasNode(std::shared_ptr<fragment_t>& fragment, label_id_t label_id,
+               const oid_t& oid) {
+    bool ret = false;
+    vid_t gid;
+    bool existed = fragment->GetVertexMap()->GetGid(fragment->fid(), label_id,
+                                                   oid, gid);
+    Sum(existed, ret);
+    return ret;
+  }
+  /*
+
+  bool hasEdge(std::shared_ptr<fragment_t>& fragment, const oid_t& u,
+               const oid_t& v) {
+    bool ret = false;
+    bool to_send = fragment->HasEdge(u, v);
+    Sum(to_send, ret);
+    return ret;
+  }
+
+  std::string getNodeData(std::shared_ptr<fragment_t>& fragment,
+                          const oid_t& n) {
+    std::string ret;
+    fragment->GetVertexData(n, ret);
+    return ret;
+  }
+
+  std::string getEdgeData(std::shared_ptr<fragment_t>& fragment, const oid_t& u,
+                          const oid_t& v) {
+    std::string ret;
+    fragment->GetEdgeData(u, v, ret);
+    return ret;
+  }
+
+  double getDegree(std::shared_ptr<fragment_t>& fragment, const oid_t& node,
+                   const rpc::ReportType& type, const std::string& weight) {
+    vertex_t v;
+    double degree = 0, sum_degree = 0;
+    if (fragment->GetInnerVertex(node, v) && fragment->IsAliveInnerVertex(v)) {
+      degree = getGraphDegree(fragment, v, type, weight);
+    }
+    Sum(degree, sum_degree);
+    return sum_degree;
+  }
+  */
+
+  grape::CommSpec comm_spec_;
+  folly::json::serialization_opts json_opts_;
+};
 }  // namespace gs
 
 #endif  // NETWORKX

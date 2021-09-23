@@ -382,7 +382,13 @@ def report_graph(
         types_pb2.GRAPH_NAME: utils.s_to_attr(graph.key),
         types_pb2.REPORT_TYPE: utils.report_type_to_attr(report_type),
     }
+    # if graph.graph_type == graph_def_pb2.ARROW_PROPERTY:
+    print("default label id", graph._default_label_id)
+    print("v_label_id", types_pb2.V_LABEL_ID)
+    # config[types_pb2.V_LABEL_ID] = utils.i_to_attr(graph._default_label_id)
+
     if node is not None:
+        print("node", node)
         config[types_pb2.NODE] = utils.s_to_attr(node)
     if edge is not None:
         config[types_pb2.EDGE] = utils.s_to_attr(edge)

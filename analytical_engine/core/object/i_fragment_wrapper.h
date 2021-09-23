@@ -26,6 +26,7 @@
 
 #include "core/context/i_context.h"
 #include "core/object/gs_object.h"
+#include "core/server/rpc_utils.h"
 #include "proto/attr_value.pb.h"
 #include "proto/graph_def.pb.h"
 
@@ -47,6 +48,10 @@ class IFragmentWrapper : public GSObject {
   virtual bl::result<std::shared_ptr<IFragmentWrapper>> CopyGraph(
       const grape::CommSpec& comm_spec, const std::string& dst_graph_name,
       const std::string& copy_type) = 0;
+
+  virtual bl::result<std::string> ReportGraph(const grape::CommSpec& comm_spec,
+                                              const rpc::GSParams& params) = 0;
+
 
   virtual bl::result<std::shared_ptr<IFragmentWrapper>> ToDirected(
       const grape::CommSpec& comm_spec, const std::string& dst_graph_name) = 0;
