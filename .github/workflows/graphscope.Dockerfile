@@ -10,7 +10,7 @@ COPY ./interactive_engine/src/executor/target/release/gaia_executor /opt/graphsc
 COPY ./interactive_engine/src/assembly/target/maxgraph-assembly-0.0.1-SNAPSHOT.tar.gz /opt/graphscope/maxgraph-assembly-0.0.1-SNAPSHOT.tar.gz
 
 # install mars
-# RUN pip3 install git+https://github.com/mars-project/mars.git@35b44ed56e031c252e50373b88b85bd9f454332e#egg=pymars[distributed]
+RUN pip3 install git+https://github.com/mars-project/mars.git@d09e1e4c3e32ceb05f42d0b5b79775b1ebd299fb#egg=pymars
 
 RUN sudo tar -xf /opt/graphscope/maxgraph-assembly-0.0.1-SNAPSHOT.tar.gz --strip-components 1 -C /opt/graphscope \
   && sudo chown -R $(id -u):$(id -g) /opt/graphscope \
