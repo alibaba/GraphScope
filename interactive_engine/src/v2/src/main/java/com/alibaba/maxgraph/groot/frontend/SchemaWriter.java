@@ -15,7 +15,7 @@
  */
 package com.alibaba.maxgraph.groot.frontend;
 
-import com.alibaba.maxgraph.proto.v2.DdlRequestBatchPb;
+import com.alibaba.maxgraph.proto.groot.DdlRequestBatchPb;
 import com.alibaba.maxgraph.groot.common.rpc.RoleClients;
 import com.alibaba.maxgraph.groot.common.schema.request.DdlRequestBatch;
 

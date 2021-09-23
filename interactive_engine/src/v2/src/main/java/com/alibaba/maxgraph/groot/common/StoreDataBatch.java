@@ -15,8 +15,8 @@
  */
 package com.alibaba.maxgraph.groot.common;
 
-import com.alibaba.maxgraph.proto.v2.PartitionToBatchPb;
-import com.alibaba.maxgraph.proto.v2.StoreDataBatchPb;
+import com.alibaba.maxgraph.proto.groot.PartitionToBatchPb;
+import com.alibaba.maxgraph.proto.groot.StoreDataBatchPb;
 
 import java.util.ArrayList;
 import java.util.Collections;

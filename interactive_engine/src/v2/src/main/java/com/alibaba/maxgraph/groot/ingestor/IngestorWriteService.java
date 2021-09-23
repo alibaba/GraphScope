@@ -15,9 +15,9 @@
  */
 package com.alibaba.maxgraph.groot.ingestor;
 
-import com.alibaba.maxgraph.proto.v2.IngestorWriteGrpc;
-import com.alibaba.maxgraph.proto.v2.WriteIngestorRequest;
-import com.alibaba.maxgraph.proto.v2.WriteIngestorResponse;
+import com.alibaba.maxgraph.proto.groot.IngestorWriteGrpc;
+import com.alibaba.maxgraph.proto.groot.WriteIngestorRequest;
+import com.alibaba.maxgraph.proto.groot.WriteIngestorResponse;
 import com.alibaba.maxgraph.groot.common.OperationBatch;
 import io.grpc.stub.StreamObserver;
 

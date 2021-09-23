@@ -15,9 +15,9 @@
  */
 package com.alibaba.maxgraph.groot.common.metrics;
 
-import com.alibaba.maxgraph.proto.v2.CollectMetricsRequest;
-import com.alibaba.maxgraph.proto.v2.CollectMetricsResponse;
-import com.alibaba.maxgraph.proto.v2.MetricsCollectGrpc;
+import com.alibaba.maxgraph.proto.groot.CollectMetricsRequest;
+import com.alibaba.maxgraph.proto.groot.CollectMetricsResponse;
+import com.alibaba.maxgraph.proto.groot.MetricsCollectGrpc;
 import io.grpc.stub.StreamObserver;
 
 import java.util.Map;

@@ -15,7 +15,7 @@
  */
 package com.alibaba.maxgraph.groot.common.operation;
 
-import com.alibaba.maxgraph.proto.v2.EdgeIdPb;
+import com.alibaba.maxgraph.proto.groot.EdgeIdPb;
 
 public class EdgeId {
 

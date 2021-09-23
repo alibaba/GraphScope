@@ -15,7 +15,7 @@
  */
 package com.alibaba.maxgraph.common.config;
 
-import com.alibaba.maxgraph.proto.v2.ConfigPb;
+import com.alibaba.maxgraph.proto.groot.ConfigPb;
 
 import java.io.FileInputStream;
 import java.io.IOException;

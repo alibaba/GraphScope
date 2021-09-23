@@ -15,7 +15,7 @@
  */
 package com.alibaba.maxgraph.groot.store;
 
-import com.alibaba.maxgraph.proto.v2.*;
+import com.alibaba.maxgraph.proto.groot.*;
 import com.alibaba.maxgraph.groot.common.CompletionCallback;
 import io.grpc.Status;
 import io.grpc.stub.StreamObserver;

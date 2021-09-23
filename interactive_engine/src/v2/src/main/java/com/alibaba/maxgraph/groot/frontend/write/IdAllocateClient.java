@@ -1,8 +1,8 @@
 package com.alibaba.maxgraph.groot.frontend.write;
 
-import com.alibaba.maxgraph.proto.v2.AllocateIdRequest;
-import com.alibaba.maxgraph.proto.v2.AllocateIdResponse;
-import com.alibaba.maxgraph.proto.v2.IdAllocateGrpc;
+import com.alibaba.maxgraph.proto.groot.AllocateIdRequest;
+import com.alibaba.maxgraph.proto.groot.AllocateIdResponse;
+import com.alibaba.maxgraph.proto.groot.IdAllocateGrpc;
 import com.alibaba.maxgraph.groot.common.rpc.RpcClient;
 import io.grpc.ManagedChannel;
 

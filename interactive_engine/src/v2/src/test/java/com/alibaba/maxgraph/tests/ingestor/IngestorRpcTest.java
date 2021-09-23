@@ -15,14 +15,14 @@
  */
 package com.alibaba.maxgraph.tests.ingestor;
 
-import com.alibaba.maxgraph.proto.v2.AdvanceIngestSnapshotIdRequest;
-import com.alibaba.maxgraph.proto.v2.AdvanceIngestSnapshotIdResponse;
-import com.alibaba.maxgraph.proto.v2.GetTailOffsetsResponse;
-import com.alibaba.maxgraph.proto.v2.IngestProgressGrpc;
-import com.alibaba.maxgraph.proto.v2.StoreWriteGrpc;
-import com.alibaba.maxgraph.proto.v2.WriteIngestorRequest;
-import com.alibaba.maxgraph.proto.v2.WriteIngestorResponse;
-import com.alibaba.maxgraph.proto.v2.WriteStoreResponse;
+import com.alibaba.maxgraph.proto.groot.AdvanceIngestSnapshotIdRequest;
+import com.alibaba.maxgraph.proto.groot.AdvanceIngestSnapshotIdResponse;
+import com.alibaba.maxgraph.proto.groot.GetTailOffsetsResponse;
+import com.alibaba.maxgraph.proto.groot.IngestProgressGrpc;
+import com.alibaba.maxgraph.proto.groot.StoreWriteGrpc;
+import com.alibaba.maxgraph.proto.groot.WriteIngestorRequest;
+import com.alibaba.maxgraph.proto.groot.WriteIngestorResponse;
+import com.alibaba.maxgraph.proto.groot.WriteStoreResponse;
 import com.alibaba.maxgraph.groot.common.CompletionCallback;
 import com.alibaba.maxgraph.groot.common.OperationBatch;
 import com.alibaba.maxgraph.groot.common.StoreDataBatch;

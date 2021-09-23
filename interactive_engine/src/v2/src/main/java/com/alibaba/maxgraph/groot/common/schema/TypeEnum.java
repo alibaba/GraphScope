@@ -15,7 +15,7 @@
  */
 package com.alibaba.maxgraph.groot.common.schema;
 
-import com.alibaba.maxgraph.proto.v2.TypeEnumPb;
+import com.alibaba.maxgraph.proto.groot.TypeEnumPb;
 
 public enum TypeEnum {
     /**

@@ -16,8 +16,8 @@
 package com.alibaba.maxgraph.tests.common.schema.ddl;
 
 import com.alibaba.maxgraph.compiler.api.schema.DataType;
-import com.alibaba.maxgraph.proto.v2.DdlRequestBatchPb;
-import com.alibaba.maxgraph.proto.v2.GraphDefPb;
+import com.alibaba.maxgraph.proto.groot.DdlRequestBatchPb;
+import com.alibaba.maxgraph.proto.groot.GraphDefPb;
 import com.alibaba.maxgraph.groot.common.operation.LabelId;
 import com.alibaba.maxgraph.groot.common.operation.Operation;
 import com.alibaba.maxgraph.groot.common.operation.ddl.AddEdgeKindOperation;

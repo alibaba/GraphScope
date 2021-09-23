@@ -15,8 +15,8 @@
  */
 package com.alibaba.maxgraph.tests.coordinator;
 
-import com.alibaba.maxgraph.proto.v2.GetTailOffsetsRequest;
-import com.alibaba.maxgraph.proto.v2.GetTailOffsetsResponse;
+import com.alibaba.maxgraph.proto.groot.GetTailOffsetsRequest;
+import com.alibaba.maxgraph.proto.groot.GetTailOffsetsResponse;
 import com.alibaba.maxgraph.groot.coordinator.IngestProgressService;
 import com.alibaba.maxgraph.groot.coordinator.SnapshotManager;
 import io.grpc.stub.StreamObserver;

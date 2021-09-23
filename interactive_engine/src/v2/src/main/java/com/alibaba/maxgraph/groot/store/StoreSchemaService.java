@@ -15,10 +15,10 @@
  */
 package com.alibaba.maxgraph.groot.store;
 
-import com.alibaba.maxgraph.proto.v2.FetchSchemaRequest;
-import com.alibaba.maxgraph.proto.v2.FetchSchemaResponse;
-import com.alibaba.maxgraph.proto.v2.GraphDefPb;
-import com.alibaba.maxgraph.proto.v2.StoreSchemaGrpc;
+import com.alibaba.maxgraph.proto.groot.FetchSchemaRequest;
+import com.alibaba.maxgraph.proto.groot.FetchSchemaResponse;
+import com.alibaba.maxgraph.proto.groot.GraphDefPb;
+import com.alibaba.maxgraph.proto.groot.StoreSchemaGrpc;
 import io.grpc.stub.StreamObserver;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

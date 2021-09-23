@@ -15,10 +15,10 @@
  */
 package com.alibaba.maxgraph.groot.ingestor;
 
-import com.alibaba.maxgraph.proto.v2.StoreDataBatchPb;
-import com.alibaba.maxgraph.proto.v2.StoreWriteGrpc;
-import com.alibaba.maxgraph.proto.v2.WriteStoreRequest;
-import com.alibaba.maxgraph.proto.v2.WriteStoreResponse;
+import com.alibaba.maxgraph.proto.groot.StoreDataBatchPb;
+import com.alibaba.maxgraph.proto.groot.StoreWriteGrpc;
+import com.alibaba.maxgraph.proto.groot.WriteStoreRequest;
+import com.alibaba.maxgraph.proto.groot.WriteStoreResponse;
 import com.alibaba.maxgraph.groot.common.CompletionCallback;
 import com.alibaba.maxgraph.groot.common.StoreDataBatch;
 import com.alibaba.maxgraph.groot.common.rpc.RpcClient;

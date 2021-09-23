@@ -15,9 +15,9 @@
  */
 package com.alibaba.maxgraph.groot.coordinator;
 
-import com.alibaba.maxgraph.proto.v2.GetTailOffsetsRequest;
-import com.alibaba.maxgraph.proto.v2.GetTailOffsetsResponse;
-import com.alibaba.maxgraph.proto.v2.IngestProgressGrpc;
+import com.alibaba.maxgraph.proto.groot.GetTailOffsetsRequest;
+import com.alibaba.maxgraph.proto.groot.GetTailOffsetsResponse;
+import com.alibaba.maxgraph.proto.groot.IngestProgressGrpc;
 import io.grpc.stub.StreamObserver;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

@@ -15,9 +15,9 @@
  */
 package com.alibaba.maxgraph.groot.ingestor;
 
-import com.alibaba.maxgraph.proto.v2.IngestorSnapshotGrpc;
-import com.alibaba.maxgraph.proto.v2.AdvanceIngestSnapshotIdRequest;
-import com.alibaba.maxgraph.proto.v2.AdvanceIngestSnapshotIdResponse;
+import com.alibaba.maxgraph.proto.groot.IngestorSnapshotGrpc;
+import com.alibaba.maxgraph.proto.groot.AdvanceIngestSnapshotIdRequest;
+import com.alibaba.maxgraph.proto.groot.AdvanceIngestSnapshotIdResponse;
 import com.alibaba.maxgraph.groot.common.CompletionCallback;
 import io.grpc.stub.StreamObserver;
 

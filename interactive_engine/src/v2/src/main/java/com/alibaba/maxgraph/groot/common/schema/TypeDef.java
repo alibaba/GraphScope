@@ -18,8 +18,8 @@ package com.alibaba.maxgraph.groot.common.schema;
 import com.alibaba.maxgraph.compiler.api.schema.GraphElement;
 import com.alibaba.maxgraph.compiler.api.schema.GraphProperty;
 import com.alibaba.maxgraph.compiler.api.schema.PrimaryKeyConstraint;
-import com.alibaba.maxgraph.proto.v2.PropertyDefPb;
-import com.alibaba.maxgraph.proto.v2.TypeDefPb;
+import com.alibaba.maxgraph.proto.groot.PropertyDefPb;
+import com.alibaba.maxgraph.proto.groot.TypeDefPb;
 import com.alibaba.maxgraph.groot.common.operation.LabelId;
 
 import java.util.ArrayList;

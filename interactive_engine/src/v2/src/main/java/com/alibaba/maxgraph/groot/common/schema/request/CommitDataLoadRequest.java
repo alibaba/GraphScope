@@ -15,7 +15,7 @@
  */
 package com.alibaba.maxgraph.groot.common.schema.request;
 
-import com.alibaba.maxgraph.proto.v2.PrepareDataLoadPb;
+import com.alibaba.maxgraph.proto.groot.PrepareDataLoadPb;
 import com.alibaba.maxgraph.groot.common.operation.OperationType;
 import com.alibaba.maxgraph.groot.sdk.DataLoadTarget;
 import com.google.protobuf.ByteString;

@@ -15,9 +15,9 @@
  */
 package com.alibaba.maxgraph.groot.coordinator;
 
-import com.alibaba.maxgraph.proto.v2.FetchSchemaRequest;
-import com.alibaba.maxgraph.proto.v2.FetchSchemaResponse;
-import com.alibaba.maxgraph.proto.v2.StoreSchemaGrpc;
+import com.alibaba.maxgraph.proto.groot.FetchSchemaRequest;
+import com.alibaba.maxgraph.proto.groot.FetchSchemaResponse;
+import com.alibaba.maxgraph.proto.groot.StoreSchemaGrpc;
 import com.alibaba.maxgraph.groot.common.rpc.RpcClient;
 import com.alibaba.maxgraph.groot.common.schema.GraphDef;
 import io.grpc.ManagedChannel;

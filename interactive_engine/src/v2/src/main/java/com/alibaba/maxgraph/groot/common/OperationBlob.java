@@ -15,7 +15,7 @@
  */
 package com.alibaba.maxgraph.groot.common;
 
-import com.alibaba.maxgraph.proto.v2.OperationPb;
+import com.alibaba.maxgraph.proto.groot.OperationPb;
 import com.alibaba.maxgraph.groot.common.operation.MarkerOperation;
 import com.alibaba.maxgraph.groot.common.operation.OperationType;
 import com.google.protobuf.ByteString;

@@ -15,7 +15,7 @@
  */
 package com.alibaba.maxgraph.groot.store.jna;
 
-import com.alibaba.maxgraph.proto.v2.GraphDefPb;
+import com.alibaba.maxgraph.proto.groot.GraphDefPb;
 import com.alibaba.maxgraph.groot.common.OperationBatch;
 import com.alibaba.maxgraph.common.config.Configs;
 import com.alibaba.maxgraph.common.config.StoreConfig;

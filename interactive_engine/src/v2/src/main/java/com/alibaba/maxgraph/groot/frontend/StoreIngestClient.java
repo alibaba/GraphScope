@@ -15,9 +15,9 @@
  */
 package com.alibaba.maxgraph.groot.frontend;
 
-import com.alibaba.maxgraph.proto.v2.StoreIngestGrpc;
-import com.alibaba.maxgraph.proto.v2.StoreIngestRequest;
-import com.alibaba.maxgraph.proto.v2.StoreIngestResponse;
+import com.alibaba.maxgraph.proto.groot.StoreIngestGrpc;
+import com.alibaba.maxgraph.proto.groot.StoreIngestRequest;
+import com.alibaba.maxgraph.proto.groot.StoreIngestResponse;
 import com.alibaba.maxgraph.groot.common.CompletionCallback;
 import com.alibaba.maxgraph.groot.common.rpc.RpcClient;
 import io.grpc.ManagedChannel;

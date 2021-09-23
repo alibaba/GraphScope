@@ -17,16 +17,16 @@ syntax = "proto3";
 
 import "model.proto";
 
-option java_package = "com.alibaba.maxgraph.proto.v2";
+option java_package = "com.alibaba.maxgraph.proto.groot";
 option java_multiple_files = true;
 
 service StoreSchema {
-    rpc fetchSchema(FetchSchemaRequest) returns (FetchSchemaResponse);
+  rpc fetchSchema(FetchSchemaRequest) returns (FetchSchemaResponse);
 }
 
 message FetchSchemaRequest {
 }
 
 message FetchSchemaResponse {
-    GraphDefPb graphDef = 1;
+  GraphDefPb graphDef = 1;
 }

@@ -15,7 +15,7 @@
  */
 package com.alibaba.maxgraph.groot.common.wal.kafka;
 
-import com.alibaba.maxgraph.proto.v2.LogEntryPb;
+import com.alibaba.maxgraph.proto.groot.LogEntryPb;
 import com.alibaba.maxgraph.compiler.api.exception.MaxGraphException;
 import com.alibaba.maxgraph.groot.common.wal.LogEntry;
 import com.google.protobuf.InvalidProtocolBufferException;

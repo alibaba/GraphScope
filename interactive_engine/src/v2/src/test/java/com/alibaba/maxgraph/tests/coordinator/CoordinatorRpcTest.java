@@ -15,18 +15,18 @@
  */
 package com.alibaba.maxgraph.tests.coordinator;
 
-import com.alibaba.maxgraph.proto.v2.AdvanceIngestSnapshotIdRequest;
-import com.alibaba.maxgraph.proto.v2.AdvanceIngestSnapshotIdResponse;
-import com.alibaba.maxgraph.proto.v2.AdvanceQuerySnapshotRequest;
-import com.alibaba.maxgraph.proto.v2.AdvanceQuerySnapshotResponse;
-import com.alibaba.maxgraph.proto.v2.CommitSnapshotIdRequest;
-import com.alibaba.maxgraph.proto.v2.CommitSnapshotIdResponse;
-import com.alibaba.maxgraph.proto.v2.FetchSchemaResponse;
-import com.alibaba.maxgraph.proto.v2.FrontendSnapshotGrpc;
-import com.alibaba.maxgraph.proto.v2.IngestorSnapshotGrpc;
-import com.alibaba.maxgraph.proto.v2.StoreSchemaGrpc;
-import com.alibaba.maxgraph.proto.v2.SubmitBatchDdlRequest;
-import com.alibaba.maxgraph.proto.v2.SubmitBatchDdlResponse;
+import com.alibaba.maxgraph.proto.groot.AdvanceIngestSnapshotIdRequest;
+import com.alibaba.maxgraph.proto.groot.AdvanceIngestSnapshotIdResponse;
+import com.alibaba.maxgraph.proto.groot.AdvanceQuerySnapshotRequest;
+import com.alibaba.maxgraph.proto.groot.AdvanceQuerySnapshotResponse;
+import com.alibaba.maxgraph.proto.groot.CommitSnapshotIdRequest;
+import com.alibaba.maxgraph.proto.groot.CommitSnapshotIdResponse;
+import com.alibaba.maxgraph.proto.groot.FetchSchemaResponse;
+import com.alibaba.maxgraph.proto.groot.FrontendSnapshotGrpc;
+import com.alibaba.maxgraph.proto.groot.IngestorSnapshotGrpc;
+import com.alibaba.maxgraph.proto.groot.StoreSchemaGrpc;
+import com.alibaba.maxgraph.proto.groot.SubmitBatchDdlRequest;
+import com.alibaba.maxgraph.proto.groot.SubmitBatchDdlResponse;
 import com.alibaba.maxgraph.groot.common.CompletionCallback;
 import com.alibaba.maxgraph.groot.common.rpc.RoleClients;
 import com.alibaba.maxgraph.groot.common.schema.GraphDef;

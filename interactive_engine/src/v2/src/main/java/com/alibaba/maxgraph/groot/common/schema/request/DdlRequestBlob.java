@@ -15,7 +15,7 @@
  */
 package com.alibaba.maxgraph.groot.common.schema.request;
 
-import com.alibaba.maxgraph.proto.v2.DdlRequestPb;
+import com.alibaba.maxgraph.proto.groot.DdlRequestPb;
 import com.alibaba.maxgraph.groot.common.operation.OperationType;
 import com.google.common.base.Objects;
 import com.google.protobuf.ByteString;

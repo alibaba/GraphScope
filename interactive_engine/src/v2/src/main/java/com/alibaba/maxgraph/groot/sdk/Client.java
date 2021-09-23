@@ -17,8 +17,8 @@ package com.alibaba.maxgraph.groot.sdk;
 
 import com.alibaba.graphscope.proto.write.*;
 import com.alibaba.maxgraph.compiler.api.schema.GraphSchema;
-import com.alibaba.maxgraph.proto.v2.*;
-import com.alibaba.maxgraph.proto.v2.RemoteFlushRequest;
+import com.alibaba.maxgraph.proto.groot.*;
+import com.alibaba.maxgraph.proto.groot.RemoteFlushRequest;
 import com.alibaba.maxgraph.groot.common.schema.GraphDef;
 import com.alibaba.maxgraph.groot.frontend.write.EdgeRecordKey;
 import com.alibaba.maxgraph.groot.frontend.write.VertexRecordKey;

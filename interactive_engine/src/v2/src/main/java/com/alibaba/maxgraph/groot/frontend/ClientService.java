@@ -16,9 +16,9 @@
 package com.alibaba.maxgraph.groot.frontend;
 
 import com.alibaba.maxgraph.compiler.api.schema.*;
-import com.alibaba.maxgraph.proto.v2.*;
-import com.alibaba.maxgraph.proto.v2.CommitDataLoadRequest;
-import com.alibaba.maxgraph.proto.v2.PrepareDataLoadRequest;
+import com.alibaba.maxgraph.proto.groot.*;
+import com.alibaba.maxgraph.proto.groot.CommitDataLoadRequest;
+import com.alibaba.maxgraph.proto.groot.PrepareDataLoadRequest;
 import com.alibaba.maxgraph.groot.common.CompletionCallback;
 import com.alibaba.maxgraph.groot.common.MetaService;
 import com.alibaba.maxgraph.groot.common.metrics.MetricsAggregator;
@@ -33,7 +33,6 @@ import org.slf4j.LoggerFactory;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.stream.Collectors;
 
 public class ClientService extends ClientGrpc.ClientImplBase {
     private static final Logger logger = LoggerFactory.getLogger(ClientService.class);

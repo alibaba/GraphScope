@@ -15,7 +15,7 @@
  */
 package com.alibaba.maxgraph.groot.common.schema.ddl;
 
-import com.alibaba.maxgraph.proto.v2.TypeDefPb;
+import com.alibaba.maxgraph.proto.groot.TypeDefPb;
 import com.alibaba.maxgraph.groot.common.operation.LabelId;
 import com.alibaba.maxgraph.groot.common.operation.Operation;
 import com.alibaba.maxgraph.groot.common.schema.EdgeKind;

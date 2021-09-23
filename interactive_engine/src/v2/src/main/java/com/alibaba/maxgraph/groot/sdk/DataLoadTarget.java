@@ -15,7 +15,7 @@
  */
 package com.alibaba.maxgraph.groot.sdk;
 
-import com.alibaba.maxgraph.proto.v2.DataLoadTargetPb;
+import com.alibaba.maxgraph.proto.groot.DataLoadTargetPb;
 
 public class DataLoadTarget {
     private String label;

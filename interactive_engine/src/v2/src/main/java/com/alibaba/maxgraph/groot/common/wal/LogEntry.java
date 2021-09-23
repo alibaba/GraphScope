@@ -15,7 +15,7 @@
  */
 package com.alibaba.maxgraph.groot.common.wal;
 
-import com.alibaba.maxgraph.proto.v2.LogEntryPb;
+import com.alibaba.maxgraph.proto.groot.LogEntryPb;
 import com.alibaba.maxgraph.groot.common.OperationBatch;
 
 public class LogEntry {

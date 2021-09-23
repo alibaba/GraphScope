@@ -15,9 +15,9 @@
  */
 package com.alibaba.maxgraph.groot.coordinator;
 
-import com.alibaba.maxgraph.proto.v2.SchemaGrpc;
-import com.alibaba.maxgraph.proto.v2.SubmitBatchDdlRequest;
-import com.alibaba.maxgraph.proto.v2.SubmitBatchDdlResponse;
+import com.alibaba.maxgraph.proto.groot.SchemaGrpc;
+import com.alibaba.maxgraph.proto.groot.SubmitBatchDdlRequest;
+import com.alibaba.maxgraph.proto.groot.SubmitBatchDdlResponse;
 import com.alibaba.maxgraph.groot.common.CompletionCallback;
 import com.alibaba.maxgraph.groot.common.schema.request.DdlException;
 import com.alibaba.maxgraph.groot.common.schema.request.DdlRequestBatch;

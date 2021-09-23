@@ -16,7 +16,7 @@
 package com.alibaba.maxgraph.groot.common.schema;
 
 import com.alibaba.maxgraph.compiler.api.schema.DataType;
-import com.alibaba.maxgraph.proto.v2.PropertyValuePb;
+import com.alibaba.maxgraph.proto.groot.PropertyValuePb;
 import com.google.protobuf.ByteString;
 
 import java.util.Arrays;

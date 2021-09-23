@@ -15,8 +15,8 @@
  */
 package com.alibaba.maxgraph.groot.common.operation.dml;
 
-import com.alibaba.maxgraph.proto.v2.DataOperationPb;
-import com.alibaba.maxgraph.proto.v2.EdgeLocationPb;
+import com.alibaba.maxgraph.proto.groot.DataOperationPb;
+import com.alibaba.maxgraph.proto.groot.EdgeLocationPb;
 import com.alibaba.maxgraph.groot.common.operation.EdgeId;
 import com.alibaba.maxgraph.groot.common.schema.EdgeKind;
 import com.alibaba.maxgraph.groot.common.operation.Operation;

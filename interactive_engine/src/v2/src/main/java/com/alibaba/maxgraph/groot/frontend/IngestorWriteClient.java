@@ -15,9 +15,9 @@
  */
 package com.alibaba.maxgraph.groot.frontend;
 
-import com.alibaba.maxgraph.proto.v2.IngestorWriteGrpc;
-import com.alibaba.maxgraph.proto.v2.WriteIngestorRequest;
-import com.alibaba.maxgraph.proto.v2.WriteIngestorResponse;
+import com.alibaba.maxgraph.proto.groot.IngestorWriteGrpc;
+import com.alibaba.maxgraph.proto.groot.WriteIngestorRequest;
+import com.alibaba.maxgraph.proto.groot.WriteIngestorResponse;
 import com.alibaba.maxgraph.groot.common.BatchId;
 import com.alibaba.maxgraph.groot.common.OperationBatch;
 import com.alibaba.maxgraph.groot.common.rpc.RpcClient;

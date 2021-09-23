@@ -15,13 +15,13 @@
  */
 package com.alibaba.maxgraph.tests.store;
 
-import com.alibaba.maxgraph.proto.v2.CommitSnapshotIdRequest;
-import com.alibaba.maxgraph.proto.v2.FetchSchemaRequest;
-import com.alibaba.maxgraph.proto.v2.FetchSchemaResponse;
-import com.alibaba.maxgraph.proto.v2.GraphDefPb;
-import com.alibaba.maxgraph.proto.v2.SnapshotCommitGrpc;
-import com.alibaba.maxgraph.proto.v2.WriteStoreRequest;
-import com.alibaba.maxgraph.proto.v2.WriteStoreResponse;
+import com.alibaba.maxgraph.proto.groot.CommitSnapshotIdRequest;
+import com.alibaba.maxgraph.proto.groot.FetchSchemaRequest;
+import com.alibaba.maxgraph.proto.groot.FetchSchemaResponse;
+import com.alibaba.maxgraph.proto.groot.GraphDefPb;
+import com.alibaba.maxgraph.proto.groot.SnapshotCommitGrpc;
+import com.alibaba.maxgraph.proto.groot.WriteStoreRequest;
+import com.alibaba.maxgraph.proto.groot.WriteStoreResponse;
 import com.alibaba.maxgraph.groot.store.SnapshotCommitClient;
 import com.alibaba.maxgraph.groot.store.StoreSchemaService;
 import com.alibaba.maxgraph.groot.store.StoreService;

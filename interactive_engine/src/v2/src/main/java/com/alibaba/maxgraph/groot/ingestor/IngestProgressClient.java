@@ -15,9 +15,9 @@
  */
 package com.alibaba.maxgraph.groot.ingestor;
 
-import com.alibaba.maxgraph.proto.v2.GetTailOffsetsRequest;
-import com.alibaba.maxgraph.proto.v2.GetTailOffsetsResponse;
-import com.alibaba.maxgraph.proto.v2.IngestProgressGrpc;
+import com.alibaba.maxgraph.proto.groot.GetTailOffsetsRequest;
+import com.alibaba.maxgraph.proto.groot.GetTailOffsetsResponse;
+import com.alibaba.maxgraph.proto.groot.IngestProgressGrpc;
 import com.alibaba.maxgraph.groot.common.rpc.RpcClient;
 import io.grpc.ManagedChannel;
 

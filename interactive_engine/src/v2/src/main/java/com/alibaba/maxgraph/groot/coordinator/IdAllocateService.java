@@ -1,8 +1,8 @@
 package com.alibaba.maxgraph.groot.coordinator;
 
-import com.alibaba.maxgraph.proto.v2.AllocateIdRequest;
-import com.alibaba.maxgraph.proto.v2.AllocateIdResponse;
-import com.alibaba.maxgraph.proto.v2.IdAllocateGrpc;
+import com.alibaba.maxgraph.proto.groot.AllocateIdRequest;
+import com.alibaba.maxgraph.proto.groot.AllocateIdResponse;
+import com.alibaba.maxgraph.proto.groot.IdAllocateGrpc;
 import io.grpc.Status;
 import io.grpc.stub.StreamObserver;
 import org.slf4j.Logger;

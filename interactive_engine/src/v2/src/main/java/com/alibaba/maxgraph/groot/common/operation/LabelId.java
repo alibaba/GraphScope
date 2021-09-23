@@ -15,7 +15,7 @@
  */
 package com.alibaba.maxgraph.groot.common.operation;
 
-import com.alibaba.maxgraph.proto.v2.LabelIdPb;
+import com.alibaba.maxgraph.proto.groot.LabelIdPb;
 
 public class LabelId {
     private int id;

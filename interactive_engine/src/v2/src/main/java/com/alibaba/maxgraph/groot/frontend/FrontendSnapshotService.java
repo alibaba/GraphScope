@@ -15,9 +15,9 @@
  */
 package com.alibaba.maxgraph.groot.frontend;
 
-import com.alibaba.maxgraph.proto.v2.AdvanceQuerySnapshotRequest;
-import com.alibaba.maxgraph.proto.v2.AdvanceQuerySnapshotResponse;
-import com.alibaba.maxgraph.proto.v2.FrontendSnapshotGrpc;
+import com.alibaba.maxgraph.proto.groot.AdvanceQuerySnapshotRequest;
+import com.alibaba.maxgraph.proto.groot.AdvanceQuerySnapshotResponse;
+import com.alibaba.maxgraph.proto.groot.FrontendSnapshotGrpc;
 import com.alibaba.maxgraph.groot.common.schema.GraphDef;
 import io.grpc.stub.StreamObserver;
 import org.slf4j.Logger;

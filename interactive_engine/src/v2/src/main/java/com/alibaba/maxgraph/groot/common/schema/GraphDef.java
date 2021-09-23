@@ -18,7 +18,7 @@ package com.alibaba.maxgraph.groot.common.schema;
 import com.alibaba.maxgraph.compiler.api.exception.GraphElementNotFoundException;
 import com.alibaba.maxgraph.compiler.api.exception.GraphPropertyNotFoundException;
 import com.alibaba.maxgraph.compiler.api.schema.*;
-import com.alibaba.maxgraph.proto.v2.*;
+import com.alibaba.maxgraph.proto.groot.*;
 import com.alibaba.maxgraph.compiler.api.exception.InvalidSchemaException;
 import com.alibaba.maxgraph.compiler.api.exception.TypeDefNotFoundException;
 import com.alibaba.maxgraph.groot.common.operation.LabelId;

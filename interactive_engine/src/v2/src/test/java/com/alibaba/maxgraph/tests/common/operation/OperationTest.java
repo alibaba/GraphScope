@@ -16,14 +16,14 @@
 package com.alibaba.maxgraph.tests.common.operation;
 
 import com.alibaba.maxgraph.compiler.api.schema.DataType;
-import com.alibaba.maxgraph.proto.v2.DataOperationPb;
-import com.alibaba.maxgraph.proto.v2.DdlOperationPb;
-import com.alibaba.maxgraph.proto.v2.EdgeKindPb;
-import com.alibaba.maxgraph.proto.v2.LabelIdPb;
-import com.alibaba.maxgraph.proto.v2.OpTypePb;
-import com.alibaba.maxgraph.proto.v2.OperationPb;
-import com.alibaba.maxgraph.proto.v2.PropertyValuePb;
-import com.alibaba.maxgraph.proto.v2.TypeDefPb;
+import com.alibaba.maxgraph.proto.groot.DataOperationPb;
+import com.alibaba.maxgraph.proto.groot.DdlOperationPb;
+import com.alibaba.maxgraph.proto.groot.EdgeKindPb;
+import com.alibaba.maxgraph.proto.groot.LabelIdPb;
+import com.alibaba.maxgraph.proto.groot.OpTypePb;
+import com.alibaba.maxgraph.proto.groot.OperationPb;
+import com.alibaba.maxgraph.proto.groot.PropertyValuePb;
+import com.alibaba.maxgraph.proto.groot.TypeDefPb;
 import com.alibaba.maxgraph.groot.common.operation.EdgeId;
 import com.alibaba.maxgraph.groot.common.operation.LabelId;
 import com.alibaba.maxgraph.groot.common.operation.VertexId;

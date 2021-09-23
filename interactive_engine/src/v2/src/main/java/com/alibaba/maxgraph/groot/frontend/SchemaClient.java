@@ -15,10 +15,10 @@
  */
 package com.alibaba.maxgraph.groot.frontend;
 
-import com.alibaba.maxgraph.proto.v2.DdlRequestBatchPb;
-import com.alibaba.maxgraph.proto.v2.SchemaGrpc;
-import com.alibaba.maxgraph.proto.v2.SubmitBatchDdlRequest;
-import com.alibaba.maxgraph.proto.v2.SubmitBatchDdlResponse;
+import com.alibaba.maxgraph.proto.groot.DdlRequestBatchPb;
+import com.alibaba.maxgraph.proto.groot.SchemaGrpc;
+import com.alibaba.maxgraph.proto.groot.SubmitBatchDdlRequest;
+import com.alibaba.maxgraph.proto.groot.SubmitBatchDdlResponse;
 import com.alibaba.maxgraph.groot.common.rpc.RpcClient;
 import com.alibaba.maxgraph.groot.common.schema.request.DdlException;
 import io.grpc.ManagedChannel;

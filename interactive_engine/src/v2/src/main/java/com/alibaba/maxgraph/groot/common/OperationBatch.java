@@ -15,8 +15,8 @@
  */
 package com.alibaba.maxgraph.groot.common;
 
-import com.alibaba.maxgraph.proto.v2.OperationBatchPb;
-import com.alibaba.maxgraph.proto.v2.OperationPb;
+import com.alibaba.maxgraph.proto.groot.OperationBatchPb;
+import com.alibaba.maxgraph.proto.groot.OperationPb;
 import com.alibaba.maxgraph.groot.common.operation.Operation;
 
 import java.util.ArrayList;

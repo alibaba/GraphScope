@@ -15,7 +15,7 @@
  */
 package com.alibaba.maxgraph.groot.common.operation;
 
-import com.alibaba.maxgraph.proto.v2.OpTypePb;
+import com.alibaba.maxgraph.proto.groot.OpTypePb;
 
 public enum OperationType {
     MARKER(0),

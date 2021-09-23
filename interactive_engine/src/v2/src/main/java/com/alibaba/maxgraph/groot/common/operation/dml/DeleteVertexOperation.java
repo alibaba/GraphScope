@@ -15,7 +15,7 @@
  */
 package com.alibaba.maxgraph.groot.common.operation.dml;
 
-import com.alibaba.maxgraph.proto.v2.DataOperationPb;
+import com.alibaba.maxgraph.proto.groot.DataOperationPb;
 import com.alibaba.maxgraph.groot.common.operation.LabelId;
 import com.alibaba.maxgraph.groot.common.operation.Operation;
 import com.alibaba.maxgraph.groot.common.operation.OperationType;
