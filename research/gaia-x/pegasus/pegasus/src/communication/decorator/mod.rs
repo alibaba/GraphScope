@@ -377,7 +377,14 @@ mod rob {
         ) -> Self {
             let push_counts = TidyTagMap::new(ch_info.scope_level);
             let worker_index = crate::worker_id::get_current_worker().index;
-            LocalMicroBatchPush { ch_info, worker_index, inner: push, event_emit, global_state: false, push_counts }
+            LocalMicroBatchPush {
+                ch_info,
+                worker_index,
+                inner: push,
+                event_emit,
+                global_state: false,
+                push_counts,
+            }
         }
 
         pub fn sync_global_state(&mut self) {

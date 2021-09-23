@@ -20,7 +20,6 @@ use pegasus::JobConf;
 fn ping_pong_test_01() {
     let mut conf = JobConf::new("ping_pong_test_01");
     conf.set_workers(2);
-    // conf.plan_print = true;
     let mut result = pegasus::run(conf, || {
         let index = pegasus::get_current_worker().index;
         move |input, output| {
@@ -52,7 +51,6 @@ fn ping_pong_test_01() {
 fn ping_pong_test_02() {
     let mut conf = JobConf::new("ping_pong_test_02");
     conf.set_workers(2);
-    conf.plan_print = true;
     let mut result = pegasus::run(conf, || {
         let index = pegasus::get_current_worker().index;
         move |input, output| {
@@ -142,7 +140,6 @@ fn iter_with_aggregate() {
 fn iter_nested_iter_test() {
     let mut conf = JobConf::new("iter_nested_iter");
     conf.set_workers(2);
-    conf.plan_print = true;
     let mut result = pegasus::run(conf, || {
         let index = pegasus::get_current_worker().index;
         let src = if index == 0 { 0..1u32 } else { 0..0u32 };
@@ -171,7 +168,6 @@ fn iter_nested_iter_test() {
 fn iter_nested_iter_nested_iter_test() {
     let mut conf = JobConf::new("iter_nested_iter_nested_iter");
     conf.set_workers(2);
-    // conf.plan_print = true;
     let mut result = pegasus::run(conf, || {
         let index = pegasus::get_current_worker().index;
         let src = if index == 0 { 0..1u32 } else { 0..0u32 };
@@ -202,7 +198,6 @@ fn iter_nested_iter_nested_iter_test() {
 fn iter_nested_iter_with_condition_test() {
     let mut conf = JobConf::new("iter_nested_iter_with_condition");
     conf.set_workers(2);
-    conf.plan_print = true;
     let mut result = pegasus::run(conf, || {
         let index = pegasus::get_current_worker().index;
         let src = if index == 0 { 0..1u32 } else { 0..0u32 };

@@ -56,13 +56,13 @@ pub trait Binary<L: Data> {
     ///                 let src2 = src2.map(|d| Ok(d + 1))?.repartition(|x| Ok(*x as u64 - 1));
     ///                 src1.repartition(|x| Ok(*x as u64))
     ///                      .binary("binary_operator", src2, |_info| move |in1, in2, out| {    ///
-    ///                         in1.for_each_batch(|dataset| {
-    ///                             let mut pair = hashmap.entry(dataset.tag()).or_insert(DataPair::default());
-    ///                             pair.left.data.extend(dataset.drain());
-    ///                             if dataset.is_last() {
+    ///                         in1.for_each_batch(|batch| {
+    ///                             let mut pair = hashmap.entry(batch.tag().clone()).or_insert(DataPair::default());
+    ///                             pair.left.data.extend(batch.drain());
+    ///                             if batch.is_last() {
     ///                                 pair.left.is_end = true;
     ///                                 if pair.right.is_end {
-    ///                                     let mut session = out.new_session(&dataset.tag())?;
+    ///                                     let mut session = out.new_session(&batch.tag())?;
     ///                                     pair.left.data.sort();
     ///                                     pair.right.data.sort();
     ///                                     for (d1, d2) in pair.left.data.iter().zip(pair.right.data.iter()) {
@@ -72,13 +72,13 @@ pub trait Binary<L: Data> {
     ///                             }     
     ///                             Ok(())
     ///                         })?;
-    ///                         in2.for_each_batch(|dataset| {
-    ///                             let mut pair = hashmap.entry(dataset.tag()).or_insert(DataPair::default());
-    ///                             pair.right.data.extend(dataset.drain());
-    ///                             if dataset.is_last() {
+    ///                         in2.for_each_batch(|batch| {
+    ///                             let mut pair = hashmap.entry(batch.tag().clone()).or_insert(DataPair::default());
+    ///                             pair.right.data.extend(batch.drain());
+    ///                             if batch.is_last() {
     ///                                 pair.right.is_end = true;
     ///                                 if pair.left.is_end {
-    ///                                     let mut session = out.new_session(&dataset.tag())?;
+    ///                                     let mut session = out.new_session(&batch.tag())?;
     ///                                     pair.left.data.sort();
     ///                                     pair.right.data.sort();
     ///                                     for (d1, d2) in pair.left.data.iter().zip(pair.right.data.iter()) {

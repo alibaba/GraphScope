@@ -301,7 +301,8 @@ mod rob {
                 if let Some(end) = batch.take_end() {
                     let p = batch.tag.to_parent_uncheck();
                     trace_worker!("detect scope {:?} in iteration;", batch.tag);
-                    self.iterate_states.insert(p, IterateState::new());
+                    self.iterate_states
+                        .insert(p, IterateState::new());
                     enter.notify_end(end)?;
                 }
 
@@ -347,7 +348,8 @@ mod rob {
                         let p = batch.tag.to_parent_uncheck();
                         if !self.iterate_states.contains_key(&p) {
                             trace_worker!("detect scope {:?} in iteration;", batch.tag);
-                            self.iterate_states.insert(p, IterateState::new());
+                            self.iterate_states
+                                .insert(p, IterateState::new());
                         }
                         if end.contains_source(self.worker_index) {
                             enter.notify_end(end)?;
@@ -366,7 +368,7 @@ mod rob {
             if n.port == 0 {
                 // the main input;
                 if level == self.scope_level - 1 {
-                    if let Some(state)= self.iterate_states.get_mut(n.tag()) {
+                    if let Some(state) = self.iterate_states.get_mut(n.tag()) {
                         if !state.is_iterating() {
                             warn_worker!("{:?} get end after leave iteration;", n.tag());
                         }

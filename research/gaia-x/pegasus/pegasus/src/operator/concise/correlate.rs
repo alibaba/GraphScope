@@ -14,6 +14,8 @@
 //! limitations under the License.
 //
 
+use std::collections::VecDeque;
+
 use pegasus_common::buffer::{Buffer, BufferPool, MemBufAlloc};
 
 use crate::api::{Binary, CorrelatedSubTask, Unary};
@@ -23,7 +25,6 @@ use crate::progress::Weight;
 use crate::stream::{SingleItem, Stream};
 use crate::tag::tools::map::TidyTagMap;
 use crate::{BuildJobError, Data, Tag};
-use std::collections::VecDeque;
 
 impl<D: Data> CorrelatedSubTask<D> for Stream<D> {
     fn apply<T, F>(self, func: F) -> Result<Stream<(D, T)>, BuildJobError>
@@ -118,18 +119,27 @@ impl<D: Data> CorrelatedSubTask<D> for Stream<D> {
                                 Ok(req) => {
                                     trace_worker!("join result of {}th subtask {:?}", offset, dataset.tag);
                                     session.give((req, res.0))?;
-                                },
+                                }
                                 Err(TakeErr::AlreadyTake) => {
-                                    Err(JobExecError::panic(format!("{}th subtask with scope {:?} had been joined;", offset, dataset.tag)))?;
-                                },
+                                    Err(JobExecError::panic(format!(
+                                        "{}th subtask with scope {:?} had been joined;",
+                                        offset, dataset.tag
+                                    )))?;
+                                }
                                 Err(TakeErr::NotExist) => {
-                                    Err(JobExecError::panic(format!("req data of {}th task not found;", offset)))?;
+                                    Err(JobExecError::panic(format!(
+                                        "req data of {}th task not found;",
+                                        offset
+                                    )))?;
                                 }
                             }
 
                             if parent.0.is_empty() {
                                 if let Some(end) = parent.1.take() {
-                                    trace_worker!("all subtask from {:?} are joined;", end.tag.to_parent_uncheck());
+                                    trace_worker!(
+                                        "all subtask from {:?} are joined;",
+                                        end.tag.to_parent_uncheck()
+                                    );
                                     session.notify_end(end)?;
                                 }
                             }
@@ -161,18 +171,14 @@ fn new_batch<D>(tag: Tag, worker: u32, buf: Buffer<D>) -> MicroBatch<D> {
 }
 
 struct ZipSubtaskBuf<D> {
-    reqs : VecDeque<Option<D>>,
+    reqs: VecDeque<Option<D>>,
     head: usize,
-    len : usize ,
+    len: usize,
 }
 
 impl<D> ZipSubtaskBuf<D> {
     pub fn new() -> Self {
-        ZipSubtaskBuf {
-            reqs: VecDeque::new(),
-            head: 0,
-            len: 0,
-        }
+        ZipSubtaskBuf { reqs: VecDeque::new(), head: 0, len: 0 }
     }
 
     pub fn add_req(&mut self, req: D) {
@@ -194,10 +200,10 @@ impl<D> ZipSubtaskBuf<D> {
                             Some(Some(item)) => {
                                 self.reqs.push_front(Some(item));
                                 break;
-                            },
+                            }
                             Some(None) => {
                                 self.head += 1;
-                            },
+                            }
                             None => {
                                 break;
                             }

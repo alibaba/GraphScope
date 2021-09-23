@@ -215,7 +215,13 @@ impl<T: Send + 'static> Notifiable for DefaultNotifyOperator<T> {
                 if !end.tag.is_root() && !end.contains_source(self.worker_index) {
                     let owner = end.tag.current_uncheck() % self.worker_peers;
                     if owner != self.worker_index {
-                        trace_worker!("operator {} ignore scope end of {:?} source = {:?}, count = {};", self.op_index, end.tag, end.source, end.count);
+                        trace_worker!(
+                            "operator {} ignore scope end of {:?} source = {:?}, count = {};",
+                            self.op_index,
+                            end.tag,
+                            end.source,
+                            end.count
+                        );
                         continue;
                     }
                     // if end.source.value() != 1 {

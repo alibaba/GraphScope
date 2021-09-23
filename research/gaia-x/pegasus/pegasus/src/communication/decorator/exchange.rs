@@ -705,7 +705,12 @@ mod rob {
                         } else {
                             if batch.get_seq() == 0 {
                                 for p in self.pushes.iter_mut() {
-                                    let end = EndSignal::new(end.clone(), Weight::partial_empty());
+                                    let children = if end.tag.is_root() {
+                                        Weight::all()
+                                    } else {
+                                        Weight::partial_empty()
+                                    };
+                                    let end = EndSignal::new(end.clone(), children);
                                     p.notify_end(end)?;
                                 }
                             } else {

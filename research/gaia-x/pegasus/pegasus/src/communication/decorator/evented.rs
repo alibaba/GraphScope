@@ -281,13 +281,13 @@ mod rob {
                 );
             } else {
                 trace_worker!(
-                "output[{:?}]: send end event of {:?} of channel[{}] to worker {} to port {:?};",
-                self.ch_info.source_port,
-                end.tag(),
-                self.ch_info.id.index,
-                self.target_worker,
-                self.ch_info.target_port
-            );
+                    "output[{:?}]: send end event of {:?} of channel[{}] to worker {} to port {:?};",
+                    self.ch_info.source_port,
+                    end.tag(),
+                    self.ch_info.id.index,
+                    self.target_worker,
+                    self.ch_info.target_port
+                );
             }
             let event = Event::new(self.source_worker, self.ch_info.target_port, EventKind::End(end));
             self.event_emitter

@@ -42,7 +42,11 @@ fn subtask_test_1() {
         if count < 10 {
             println!("{}: {}=>{}", count, d.0, d.1);
         }
-        let cnt = Some(d.0).into_iter().map(|i| i + 1).flat_map(|i| (0..i)).count() as u64;
+        let cnt = Some(d.0)
+            .into_iter()
+            .map(|i| i + 1)
+            .flat_map(|i| (0..i))
+            .count() as u64;
         assert_eq!(cnt, d.1);
         count += 1;
     }
@@ -53,7 +57,6 @@ fn subtask_test_2(workers: u32) {
     let name = format!("subtask_test_2_{}", workers);
     let mut conf = JobConf::new(name);
     conf.set_workers(workers);
-    //conf.plan_print = true;
     let num = 100u32;
     let mut result = pegasus::run(conf, move || {
         let index = pegasus::get_current_worker().index;
@@ -119,7 +122,6 @@ fn subtask_test_2_8_workers() {
 fn subtask_test_3() {
     let mut conf = JobConf::new("subtask_test_3");
     conf.set_workers(2);
-    conf.plan_print = true;
 
     let num = 100u32;
     let mut result = pegasus::run(conf, move || {

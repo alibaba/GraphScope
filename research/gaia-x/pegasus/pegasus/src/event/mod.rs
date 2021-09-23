@@ -13,12 +13,13 @@
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 
+use std::fmt::{Debug, Formatter};
+
 use pegasus_common::codec::*;
 
 use crate::graph::Port;
 use crate::progress::EndSignal;
 use crate::Tag;
-use std::fmt::{Debug, Formatter};
 
 #[derive(Clone)]
 pub enum EventKind {
