@@ -66,6 +66,9 @@ class ArrowFragmentLoader {
 #else
   using partitioner_t = SegmentedPartitioner<oid_t>;
 #endif
+  using vertex_table_info_t =
+      std::map<std::string, std::shared_ptr<arrow::Table>>;
+  using edge_table_info_t = std::vector<vineyard::InputTable>;
 
  public:
   ArrowFragmentLoader(vineyard::Client& client,
@@ -158,82 +161,55 @@ class ArrowFragmentLoader {
     BOOST_LEAF_AUTO(partial_v_tables, LoadVertexTables());
     BOOST_LEAF_AUTO(partial_e_tables, LoadEdgeTables());
 
+    auto frag = std::static_pointer_cast<vineyard::ArrowFragment<oid_t, vid_t>>(
+        client_.GetObject(frag_id));
+    auto schema = frag->schema();
+
+    std::map<std::string, label_id_t> vertex_label_to_index;
+    std::set<std::string> previous_labels;
+
+    for (auto& entry : schema.vertex_entries()) {
+      vertex_label_to_index[entry.label] = entry.id;
+      previous_labels.insert(entry.label);
+    }
+
+    BOOST_LEAF_AUTO(v_e_tables,
+                    preprocessInputs(partitioner, partial_v_tables,
+                                     partial_e_tables, previous_labels));
+
+    auto vertex_tables_with_label = v_e_tables.first;
+    auto edge_tables_with_label = v_e_tables.second;
+
     auto basic_fragment_loader = std::make_shared<
         vineyard::BasicEVFragmentLoader<OID_T, VID_T, partitioner_t>>(
         client_, comm_spec_, partitioner, directed_, true, generate_eid_);
-    auto frag = std::static_pointer_cast<vineyard::ArrowFragment<oid_t, vid_t>>(
-        client_.GetObject(frag_id));
-    for (auto table : partial_v_tables) {
-      auto meta = table->schema()->metadata();
-      if (meta == nullptr) {
-        RETURN_GS_ERROR(vineyard::ErrorCode::kInvalidValueError,
-                        "Metadata of input vertex tables shouldn't be empty.");
-      }
-      int label_meta_index = meta->FindKey(LABEL_TAG);
-      if (label_meta_index == -1) {
-        RETURN_GS_ERROR(
-            vineyard::ErrorCode::kInvalidValueError,
-            "Metadata of input vertex tables should contain label name.");
-      }
-      std::string label_name = meta->value(label_meta_index);
+
+    for (auto& pair : vertex_tables_with_label) {
       BOOST_LEAF_CHECK(
-          basic_fragment_loader->AddVertexTable(label_name, table));
+          basic_fragment_loader->AddVertexTable(pair.first, pair.second));
     }
-    partial_v_tables.clear();
     auto old_vm_ptr = frag->GetVertexMap();
     BOOST_LEAF_CHECK(
         basic_fragment_loader->ConstructVertices(old_vm_ptr->id()));
 
+    partial_v_tables.clear();
+    vertex_tables_with_label.clear();
+
     label_id_t pre_label_num = old_vm_ptr->label_num();
-    auto schema = frag->schema();
-    std::map<std::string, label_id_t> vertex_label_to_index;
-    for (auto& entry : schema.vertex_entries()) {
-      vertex_label_to_index[entry.label] = entry.id;
-    }
+
     auto new_labels_index = basic_fragment_loader->get_vertex_label_to_index();
     for (auto& pair : new_labels_index) {
       vertex_label_to_index[pair.first] = pair.second + pre_label_num;
     }
     basic_fragment_loader->set_vertex_label_to_index(
         std::move(vertex_label_to_index));
-    for (auto& table_vec : partial_e_tables) {
-      for (auto table : table_vec) {
-        auto meta = table->schema()->metadata();
-        if (meta == nullptr) {
-          RETURN_GS_ERROR(vineyard::ErrorCode::kInvalidValueError,
-                          "Metadata of input edge tables shouldn't be empty.");
-        }
-
-        int label_meta_index = meta->FindKey(LABEL_TAG);
-        if (label_meta_index == -1) {
-          RETURN_GS_ERROR(
-              vineyard::ErrorCode::kInvalidValueError,
-              "Metadata of input edge tables should contain label name.");
-        }
-        std::string label_name = meta->value(label_meta_index);
-
-        int src_label_meta_index = meta->FindKey(SRC_LABEL_TAG);
-        if (src_label_meta_index == -1) {
-          RETURN_GS_ERROR(
-              vineyard::ErrorCode::kInvalidValueError,
-              "Metadata of input edge tables should contain src label name.");
-        }
-        std::string src_label_name = meta->value(src_label_meta_index);
-
-        int dst_label_meta_index = meta->FindKey(DST_LABEL_TAG);
-        if (dst_label_meta_index == -1) {
-          RETURN_GS_ERROR(
-              vineyard::ErrorCode::kInvalidValueError,
-              "Metadata of input edge tables should contain dst label name.");
-        }
-        std::string dst_label_name = meta->value(dst_label_meta_index);
-
-        BOOST_LEAF_CHECK(basic_fragment_loader->AddEdgeTable(
-            src_label_name, dst_label_name, label_name, table));
-      }
+    for (auto& table : edge_tables_with_label) {
+      BOOST_LEAF_CHECK(basic_fragment_loader->AddEdgeTable(
+          table.src_label, table.dst_label, table.edge_label, table.table));
     }
 
     partial_e_tables.clear();
+    edge_tables_with_label.clear();
 
     BOOST_LEAF_CHECK(basic_fragment_loader->ConstructEdges(
         schema.all_edge_label_num(), schema.all_vertex_label_num()));
@@ -276,64 +252,7 @@ class ArrowFragmentLoader {
   }
 
   boost::leaf::result<vineyard::ObjectID> addEdges(vineyard::ObjectID frag_id) {
-    BOOST_LEAF_AUTO(partitioner, initPartitioner());
-    BOOST_LEAF_AUTO(partial_e_tables, LoadEdgeTables());
-
-    auto basic_fragment_loader = std::make_shared<
-        vineyard::BasicEVFragmentLoader<OID_T, VID_T, partitioner_t>>(
-        client_, comm_spec_, partitioner, directed_, true, generate_eid_);
-    auto frag = std::static_pointer_cast<vineyard::ArrowFragment<oid_t, vid_t>>(
-        client_.GetObject(frag_id));
-    auto schema = frag->schema();
-    std::map<std::string, label_id_t> vertex_label_to_index;
-    for (auto& entry : schema.vertex_entries()) {
-      vertex_label_to_index[entry.label] = entry.id;
-    }
-    basic_fragment_loader->set_vertex_label_to_index(
-        std::move(vertex_label_to_index));
-    basic_fragment_loader->set_vm_ptr(frag->GetVertexMap());
-    for (auto& table_vec : partial_e_tables) {
-      for (auto table : table_vec) {
-        auto meta = table->schema()->metadata();
-        if (meta == nullptr) {
-          RETURN_GS_ERROR(vineyard::ErrorCode::kInvalidValueError,
-                          "Metadata of input edge tables shouldn't be empty.");
-        }
-
-        int label_meta_index = meta->FindKey(LABEL_TAG);
-        if (label_meta_index == -1) {
-          RETURN_GS_ERROR(
-              vineyard::ErrorCode::kInvalidValueError,
-              "Metadata of input edge tables should contain label name.");
-        }
-        std::string label_name = meta->value(label_meta_index);
-
-        int src_label_meta_index = meta->FindKey(SRC_LABEL_TAG);
-        if (src_label_meta_index == -1) {
-          RETURN_GS_ERROR(
-              vineyard::ErrorCode::kInvalidValueError,
-              "Metadata of input edge tables should contain src label name.");
-        }
-        std::string src_label_name = meta->value(src_label_meta_index);
-
-        int dst_label_meta_index = meta->FindKey(DST_LABEL_TAG);
-        if (dst_label_meta_index == -1) {
-          RETURN_GS_ERROR(
-              vineyard::ErrorCode::kInvalidValueError,
-              "Metadata of input edge tables should contain dst label name.");
-        }
-        std::string dst_label_name = meta->value(dst_label_meta_index);
-
-        BOOST_LEAF_CHECK(basic_fragment_loader->AddEdgeTable(
-            src_label_name, dst_label_name, label_name, table));
-      }
-    }
-
-    partial_e_tables.clear();
-
-    BOOST_LEAF_CHECK(basic_fragment_loader->ConstructEdges(
-        frag->edge_label_num(), frag->vertex_label_num()));
-    return basic_fragment_loader->AddEdgesToFragment(frag);
+    return addVerticesAndEdges(frag_id);
   }
 
   boost::leaf::result<vineyard::ObjectID> LoadFragment() {
@@ -341,129 +260,37 @@ class ArrowFragmentLoader {
     BOOST_LEAF_AUTO(partial_v_tables, LoadVertexTables());
     BOOST_LEAF_AUTO(partial_e_tables, LoadEdgeTables());
 
-    if (!partial_v_tables.empty()) {
-      std::shared_ptr<
-          vineyard::BasicEVFragmentLoader<OID_T, VID_T, partitioner_t>>
-          basic_fragment_loader = std::make_shared<
-              vineyard::BasicEVFragmentLoader<OID_T, VID_T, partitioner_t>>(
-              client_, comm_spec_, partitioner, directed_, true, generate_eid_);
+    BOOST_LEAF_AUTO(v_e_tables, preprocessInputs(partitioner, partial_v_tables,
+                                                 partial_e_tables));
 
-      for (auto table : partial_v_tables) {
-        auto meta = table->schema()->metadata();
-        if (meta == nullptr) {
-          RETURN_GS_ERROR(
-              vineyard::ErrorCode::kInvalidValueError,
-              "Metadata of input vertex tables shouldn't be empty.");
-        }
-        int label_meta_index = meta->FindKey(LABEL_TAG);
-        if (label_meta_index == -1) {
-          RETURN_GS_ERROR(
-              vineyard::ErrorCode::kInvalidValueError,
-              "Metadata of input vertex tables should contain label name.");
-        }
-        std::string label_name = meta->value(label_meta_index);
-        BOOST_LEAF_CHECK(
-            basic_fragment_loader->AddVertexTable(label_name, table));
-      }
+    auto vertex_tables_with_label = v_e_tables.first;
+    auto edge_tables_with_label = v_e_tables.second;
 
-      partial_v_tables.clear();
+    std::shared_ptr<
+        vineyard::BasicEVFragmentLoader<OID_T, VID_T, partitioner_t>>
+        basic_fragment_loader = std::make_shared<
+            vineyard::BasicEVFragmentLoader<OID_T, VID_T, partitioner_t>>(
+            client_, comm_spec_, partitioner, directed_, true, generate_eid_);
 
-      BOOST_LEAF_CHECK(basic_fragment_loader->ConstructVertices());
-
-      for (auto& table_vec : partial_e_tables) {
-        for (auto table : table_vec) {
-          auto meta = table->schema()->metadata();
-          if (meta == nullptr) {
-            RETURN_GS_ERROR(
-                vineyard::ErrorCode::kInvalidValueError,
-                "Metadata of input edge tables shouldn't be empty.");
-          }
-
-          int label_meta_index = meta->FindKey(LABEL_TAG);
-          if (label_meta_index == -1) {
-            RETURN_GS_ERROR(
-                vineyard::ErrorCode::kInvalidValueError,
-                "Metadata of input edge tables should contain label name.");
-          }
-          std::string label_name = meta->value(label_meta_index);
-
-          int src_label_meta_index = meta->FindKey(SRC_LABEL_TAG);
-          if (src_label_meta_index == -1) {
-            RETURN_GS_ERROR(
-                vineyard::ErrorCode::kInvalidValueError,
-                "Metadata of input edge tables should contain src label name.");
-          }
-          std::string src_label_name = meta->value(src_label_meta_index);
-
-          int dst_label_meta_index = meta->FindKey(DST_LABEL_TAG);
-          if (dst_label_meta_index == -1) {
-            RETURN_GS_ERROR(
-                vineyard::ErrorCode::kInvalidValueError,
-                "Metadata of input edge tables should contain dst label name.");
-          }
-          std::string dst_label_name = meta->value(dst_label_meta_index);
-
-          BOOST_LEAF_CHECK(basic_fragment_loader->AddEdgeTable(
-              src_label_name, dst_label_name, label_name, table));
-        }
-      }
-
-      partial_e_tables.clear();
-
-      BOOST_LEAF_CHECK(basic_fragment_loader->ConstructEdges());
-
-      return basic_fragment_loader->ConstructFragment();
-    } else {
-      std::shared_ptr<
-          vineyard::BasicEFragmentLoader<OID_T, VID_T, partitioner_t>>
-          basic_fragment_loader = std::make_shared<
-              vineyard::BasicEFragmentLoader<OID_T, VID_T, partitioner_t>>(
-              client_, comm_spec_, partitioner, directed_, true, generate_eid_);
-
-      for (auto& table_vec : partial_e_tables) {
-        for (auto table : table_vec) {
-          auto meta = table->schema()->metadata();
-          if (meta == nullptr) {
-            RETURN_GS_ERROR(
-                vineyard::ErrorCode::kInvalidValueError,
-                "Metadata of input edge tables shouldn't be empty.");
-          }
-
-          int label_meta_index = meta->FindKey(LABEL_TAG);
-          if (label_meta_index == -1) {
-            RETURN_GS_ERROR(
-                vineyard::ErrorCode::kInvalidValueError,
-                "Metadata of input edge tables should contain label name.");
-          }
-          std::string label_name = meta->value(label_meta_index);
-
-          int src_label_meta_index = meta->FindKey(SRC_LABEL_TAG);
-          if (src_label_meta_index == -1) {
-            RETURN_GS_ERROR(
-                vineyard::ErrorCode::kInvalidValueError,
-                "Metadata of input edge tables should contain src label name.");
-          }
-          std::string src_label_name = meta->value(src_label_meta_index);
-
-          int dst_label_meta_index = meta->FindKey(DST_LABEL_TAG);
-          if (dst_label_meta_index == -1) {
-            RETURN_GS_ERROR(
-                vineyard::ErrorCode::kInvalidValueError,
-                "Metadata of input edge tables should contain dst label name.");
-          }
-          std::string dst_label_name = meta->value(dst_label_meta_index);
-
-          BOOST_LEAF_CHECK(basic_fragment_loader->AddEdgeTable(
-              src_label_name, dst_label_name, label_name, table));
-        }
-      }
-
-      partial_e_tables.clear();
-
-      BOOST_LEAF_CHECK(basic_fragment_loader->ConstructEdges());
-
-      return basic_fragment_loader->ConstructFragment();
+    for (auto& pair : vertex_tables_with_label) {
+      BOOST_LEAF_CHECK(
+          basic_fragment_loader->AddVertexTable(pair.first, pair.second));
     }
+    BOOST_LEAF_CHECK(basic_fragment_loader->ConstructVertices());
+
+    partial_v_tables.clear();
+    vertex_tables_with_label.clear();
+
+    for (auto& table : edge_tables_with_label) {
+      BOOST_LEAF_CHECK(basic_fragment_loader->AddEdgeTable(
+          table.src_label, table.dst_label, table.edge_label, table.table));
+    }
+    partial_e_tables.clear();
+    edge_tables_with_label.clear();
+
+    BOOST_LEAF_CHECK(basic_fragment_loader->ConstructEdges());
+
+    return basic_fragment_loader->ConstructFragment();
   }
 
   boost::leaf::result<vineyard::ObjectID> AddLabelsToGraphAsFragmentGroup(
@@ -927,6 +754,79 @@ class ArrowFragmentLoader {
       }
     }
     return tables;
+  }
+
+  boost::leaf::result<std::pair<vertex_table_info_t, edge_table_info_t>>
+  preprocessInputs(
+      partitioner_t partitioner,
+      const std::vector<std::shared_ptr<arrow::Table>>& v_tables,
+      const std::vector<std::vector<std::shared_ptr<arrow::Table>>>& e_tables,
+      const std::set<std::string>& previous_vertex_labels =
+          std::set<std::string>()) {
+    vertex_table_info_t vertex_tables_with_label;
+    edge_table_info_t edge_tables_with_label;
+    std::set<std::string> deduced_labels;
+    for (auto table : v_tables) {
+      auto meta = table->schema()->metadata();
+      if (meta == nullptr) {
+        RETURN_GS_ERROR(vineyard::ErrorCode::kInvalidValueError,
+                        "Metadata of input vertex files shouldn't be empty");
+      }
+
+      int label_meta_index = meta->FindKey(LABEL_TAG);
+      if (label_meta_index == -1) {
+        RETURN_GS_ERROR(
+            vineyard::ErrorCode::kInvalidValueError,
+            "Metadata of input vertex files should contain label name");
+      }
+      std::string label_name = meta->value(label_meta_index);
+      vertex_tables_with_label[label_name] = table;
+    }
+
+    auto label_not_exists = [&](const std::string& label) {
+      return vertex_tables_with_label.find(label) ==
+                 vertex_tables_with_label.end() &&
+             previous_vertex_labels.find(label) == previous_vertex_labels.end();
+    };
+
+    for (auto& table_vec : e_tables) {
+      for (auto table : table_vec) {
+        auto meta = table->schema()->metadata();
+        int label_meta_index = meta->FindKey(LABEL_TAG);
+        std::string label_name = meta->value(label_meta_index);
+        int src_label_meta_index = meta->FindKey(SRC_LABEL_TAG);
+        std::string src_label_name = meta->value(src_label_meta_index);
+        int dst_label_meta_index = meta->FindKey(DST_LABEL_TAG);
+        std::string dst_label_name = meta->value(dst_label_meta_index);
+        edge_tables_with_label.emplace_back(src_label_name, dst_label_name,
+                                            label_name, table);
+        // Find vertex labels that need to be deduced, i.e. not assigned by user
+        // directly
+
+        if (label_not_exists(src_label_name)) {
+          deduced_labels.insert(src_label_name);
+        }
+        if (label_not_exists(dst_label_name)) {
+          deduced_labels.insert(dst_label_name);
+        }
+      }
+    }
+
+    if (!deduced_labels.empty()) {
+      vineyard::FragmentLoaderUtils<OID_T, VID_T, partitioner_t> loader_utils(
+          comm_spec_, partitioner);
+      BOOST_LEAF_AUTO(vertex_labels,
+                      loader_utils.GatherVertexLabels(edge_tables_with_label));
+      BOOST_LEAF_AUTO(vertex_label_to_index,
+                      loader_utils.GetVertexLabelToIndex(vertex_labels));
+      BOOST_LEAF_AUTO(v_tables_map, loader_utils.BuildVertexTableFromEdges(
+                                        edge_tables_with_label,
+                                        vertex_label_to_index, deduced_labels));
+      for (auto& pair : v_tables_map) {
+        vertex_tables_with_label[pair.first] = pair.second;
+      }
+    }
+    return std::make_pair(vertex_tables_with_label, edge_tables_with_label);
   }
 
   boost::leaf::result<vineyard::ObjectID> resolveVYObject(

@@ -256,7 +256,7 @@ def dynamic_to_arrow(graph):
     return op
 
 
-def arrow_to_dynamic(graph):
+def arrow_to_dynamic(graph, default_label):
     """Transform a :class:`Graph` object to :class:`nx.Graph`.
 
     Args:
@@ -278,6 +278,7 @@ def arrow_to_dynamic(graph):
         types_pb2.VID_TYPE: utils.s_to_attr(
             utils.data_type_to_cpp(graph.schema.vid_type)
         ),
+        types_pb2.DEFAULT_LABEL: utils.s_to_attr(default_label),
     }
     op = Operation(
         graph.session_id,

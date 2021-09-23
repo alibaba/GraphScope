@@ -18,25 +18,56 @@
 
 import os
 
+from graphscope.dataset import DATA_SITE
+from graphscope.dataset.io_utils import download_file
 from graphscope.framework.graph import Graph
 from graphscope.framework.loader import Loader
 
 
-def load_modern_graph(sess, prefix, directed=True):
+def load_modern_graph(sess, prefix=None, directed=True):
     """Load modern graph.
     Modern graph consist 6 vertices and 6 edges, useful to test the basic
     functionalities.
 
     Args:
         sess (:class:`graphscope.Session`): Load graph within the session.
-        prefix (str): Data directory.
+        prefix (str): `PathLike` object that represents a path.
+            With standalone mode, set prefix None will try to download from
+            source URL. Defaults to None.
         directed (bool, optional): Determine to load a directed or undirected graph.
             Defaults to True.
 
     Returns:
-        :class:`graphscope.Graph`: A Graph object which graph type is ArrowProperty
+        :class:`graphscope.framework.graph.GraphDAGNode`:
+            A Graph node which graph type is ArrowProperty, evaluated in eager mode.
+
+        >>> # lazy mode
+        >>> import graphscope
+        >>> from graphscope.dataset. modern_graph import load_modern_graph
+        >>> sess = graphscope.session(mode="lazy")
+        >>> g = load_modern_graph(sess, "/path/to/dataset", True)
+        >>> g1 = sess.run(g)
+
+        >>> # eager mode
+        >>> import graphscope
+        >>> from graphscope.dataset. modern_graph import load_modern_graph
+        >>> sess = graphscope.session(mode="eager")
+        >>> g = load_modern_graph(sess, "/path/to/dataset", True)
     """
-    prefix = os.path.expandvars(prefix)
+    if prefix is not None:
+        prefix = os.path.expandvars(prefix)
+    else:
+        fname = "modern_graph.tar.gz"
+        origin = f"{DATA_SITE}/modern_graph.tar.gz"
+        fpath = download_file(
+            fname,
+            origin=origin,
+            extract=True,
+            file_hash="a67c02191ea9dfa618a83d94087349a25937b92973f42206a28fdf6fa5299dec",
+        )
+        # assumed dirname is modern_graph after extracting from modern_graph.tar.gz
+        prefix = fpath[0:-7]
+
     graph = sess.g(directed=directed)
     graph = (
         graph.add_vertices(

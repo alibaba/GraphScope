@@ -3,7 +3,7 @@ query_plan {
     base {
       id: 1
       argument {
-        long_value_list: -9223372036854775808
+        long_value_list: 9223372036854775807
       }
     }
   }

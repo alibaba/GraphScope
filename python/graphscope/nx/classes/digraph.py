@@ -32,6 +32,7 @@ from networkx.classes.reportviews import OutEdgeView
 
 from graphscope.framework import dag_utils
 from graphscope.framework.dag_utils import copy_graph
+from graphscope.framework.errors import check_argument
 from graphscope.framework.graph_schema import GraphSchema
 from graphscope.nx import NetworkXError
 from graphscope.nx.classes.graph import Graph
@@ -194,7 +195,7 @@ class DiGraph(Graph):
     """
 
     @patch_docstring(Graph.__init__)
-    def __init__(self, incoming_graph_data=None, **attr):
+    def __init__(self, incoming_graph_data=None, default_label="_", **attr):
         if self._session is None:
             self._try_to_get_default_session()
 
@@ -219,6 +220,10 @@ class DiGraph(Graph):
             "create_empty_in_engine", True
         )  # a hidden parameter
         self._distributed = attr.pop("dist", False)
+        if incoming_graph_data is not None and self._is_gs_graph(incoming_graph_data):
+            # convert from gs graph always use distributed mode
+            self._distributed = True
+        self._default_label = default_label
 
         if not self._is_gs_graph(incoming_graph_data) and create_empty_in_engine:
             graph_def = empty_graph_in_engine(
@@ -229,11 +234,14 @@ class DiGraph(Graph):
         # attempt to load graph with data
         if incoming_graph_data is not None:
             if self._is_gs_graph(incoming_graph_data):
-                graph_def = from_gs_graph(incoming_graph_data, self)
+                graph_def = from_gs_graph(
+                    incoming_graph_data, self, self._default_label
+                )
                 self._key = graph_def.key
                 self._schema.init_nx_schema(incoming_graph_data.schema)
             else:
-                to_nx_graph(incoming_graph_data, create_using=self)
+                g = to_nx_graph(incoming_graph_data, create_using=self)
+                check_argument(isinstance(g, Graph))
 
         # load graph attributes (must be after to_nx_graph)
         self.graph.update(attr)

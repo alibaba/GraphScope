@@ -15,3 +15,5 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
+
+DATA_SITE = "https://graphscope.oss-cn-beijing.aliyuncs.com/dataset"

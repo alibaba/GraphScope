@@ -27,6 +27,8 @@ import graphscope
 from graphscope import property_sssp
 from graphscope import sssp
 from graphscope.dataset.ldbc import load_ldbc
+from graphscope.dataset.modern_graph import load_modern_graph
+from graphscope.dataset.ogbn_mag import load_ogbn_mag
 from graphscope.framework.errors import AnalyticalEngineInternalError
 from graphscope.framework.errors import GRPCError
 from graphscope.framework.errors import InvalidArgumentError
@@ -310,19 +312,9 @@ def test_add_vertices_edges(graphscope_session):
     assert graph.schema.vertex_labels == ["person"]
     assert graph.schema.edge_labels == ["knows"]
 
-    with pytest.raises(ValueError, match="src label or dst_label not existed in graph"):
-        graph = graph.add_edges(
-            Loader(f"{prefix}/created.csv", delimiter="|"),
-            "created",
-            src_label="person",
-            dst_label="software",
-        )
-
     graph = graph.add_vertices(
         Loader(f"{prefix}/software.csv", delimiter="|"), "software"
     )
-    with pytest.raises(ValueError, match="Ambiguous vertex label"):
-        graph = graph.add_edges(Loader(f"{prefix}/knows.csv", delimiter="|"), "created")
 
     with pytest.raises(ValueError, match="already existed in graph"):
         graph = graph.add_edges(
@@ -341,6 +333,30 @@ def test_add_vertices_edges(graphscope_session):
 
     assert graph.schema.vertex_labels == ["person", "software"]
     assert graph.schema.edge_labels == ["knows", "created"]
+
+
+def test_complicated_add_edges(graphscope_session):
+    prefix = os.path.expandvars("${GS_TEST_DIR}/modern_graph")
+    graph = graphscope_session.g()
+    graph = graph.add_vertices(Loader(f"{prefix}/person.csv", delimiter="|"), "person")
+    graph = graph.add_edges(
+        Loader(f"{prefix}/knows.csv", delimiter="|"),
+        "knows",
+        src_label="v1",
+        dst_label="v1",
+    )
+    assert "v1" in graph.schema.vertex_labels
+
+    graph = graph.add_edges(
+        Loader(f"{prefix}/knows.csv", delimiter="|"),
+        "knows2",
+        src_label="v1",
+        dst_label="v2",
+    )
+    assert "v2" in graph.schema.vertex_labels
+
+    with pytest.raises(AssertionError, match="Ambiguous vertex label"):
+        graph = graph.add_edges(Loader(f"{prefix}/knows.csv", delimiter="|"), "knows")
 
 
 @pytest.mark.skip("use project to simulate remove.")
@@ -622,3 +638,12 @@ def test_add_column(ldbc_graph, arrow_modern_graph):
     # g6 = sub_graph_5.add_column(ret, selector={"cc": "r"})
     # with pytest.raises(AnalyticalEngineInternalError):
     #     print(g6.schema)
+
+
+def test_download_dataset(graphscope_session):
+    g1 = load_modern_graph(graphscope_session)
+    g1.unload()
+    g2 = load_ldbc(graphscope_session)
+    g2.unload()
+    g3 = load_ogbn_mag(graphscope_session)
+    g3.unload()

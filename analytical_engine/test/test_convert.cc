@@ -89,7 +89,8 @@ int main(int argc, char** argv) {
           BOOST_LEAF_AUTO(obj_id, loader.LoadFragment());
           auto arrow_frag =
               std::dynamic_pointer_cast<FragmentType>(client.GetObject(obj_id));
-          gs::ArrowToDynamicConverter<FragmentType> a2d_converter(comm_spec);
+          gs::ArrowToDynamicConverter<FragmentType> a2d_converter(comm_spec,
+                                                                  "_");
 
           BOOST_LEAF_AUTO(dynamic_frag, a2d_converter.Convert(arrow_frag));
           LOG(INFO) << "ArrowFragment->DynamicFragment done.";
