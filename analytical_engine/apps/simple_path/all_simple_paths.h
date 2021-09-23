@@ -163,10 +163,6 @@ class AllSimplePaths : public AppBase<FRAG_T, AllSimplePathsContext<FRAG_T>>,
         } else {
           int a = find_edge_map_index(ctx, gid);
           int b = find_edge_map_index(ctx, u_gid);
-          // ctx.edge_map[a][b] = true;
-          VLOG(0) << "edge: " << frag.Gid2Oid(gid) << " - "
-                  << frag.Gid2Oid(u_gid) << "a b" << a << " - " << b
-                  << std::endl;
           ctx.edge_map[a].push_back(b);
         }
         ret = true;
