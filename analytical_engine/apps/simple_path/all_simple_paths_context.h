@@ -37,14 +37,15 @@ Author: Ma JingYuan
 namespace gs {
 
 template <typename FRAG_T>
-class AllSimplePathsContext : public TensorContext<FRAG_T, bool> {
+class AllSimplePathsContext
+    : public TensorContext<FRAG_T, typename FRAG_T::oid_t> {
  public:
   using oid_t = typename FRAG_T::oid_t;
   using vid_t = typename FRAG_T::vid_t;
   using vertex_t = typename FRAG_T::vertex_t;
 
   explicit AllSimplePathsContext(const FRAG_T& fragment)
-      : TensorContext<FRAG_T, bool>(fragment) {}
+      : TensorContext<FRAG_T, typename FRAG_T::oid_t>(fragment) {}
 
   void Init(grape::DefaultMessageManager& messages, oid_t source_id,
             const std::string& targets_json,
@@ -199,7 +200,8 @@ class AllSimplePathsContext : public TensorContext<FRAG_T, bool> {
   vid_t id_mask;
   int fid_offset;
   std::vector<std::vector<int>> edge_map;
-
+  int frag_finish_counter = 0;
+  int path_num = 0;
   double exec_time = 0;
 };
 }  // namespace gs

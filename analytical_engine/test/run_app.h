@@ -61,7 +61,6 @@ limitations under the License.
 #include "apps/hits/hits.h"
 #include "apps/kcore/kcore.h"
 #include "apps/kshell/kshell.h"
-#include "apps/simple_path/all_simple_paths.h"
 #include "apps/sssp/sssp_average_length.h"
 #include "apps/sssp/sssp_has_path.h"
 #include "apps/sssp/sssp_path.h"
@@ -116,10 +115,6 @@ DECLARE_int32(app_concurrency);
 
 DECLARE_int64(dfs_source);
 DECLARE_string(dfs_format);
-
-DECLARE_int64(source_id);
-DECLARE_string(targets_json);
-DECLARE_int32(cutoff);
 
 namespace gs {
 
@@ -426,14 +421,6 @@ void Run() {
     CreateAndQuery<GraphType, AppType>(comm_spec, efile, vfile, out_prefix,
                                        FLAGS_datasource, fnum, spec,
                                        FLAGS_bfs_source);
-  } else if (name == "all_simple_paths") {
-    using GraphType =
-        grape::ImmutableEdgecutFragment<OID_T, VID_T, VDATA_T, EDATA_T,
-                                        grape::LoadStrategy::kBothOutIn>;
-    using AppType = AllSimplePaths<GraphType>;
-    CreateAndQuery<GraphType, AppType>(
-        comm_spec, efile, vfile, out_prefix, FLAGS_datasource, fnum, spec,
-        FLAGS_source_id, FLAGS_targets_json, FLAGS_cutoff);
   } else {
     LOG(FATAL) << "No available application named [" << name << "].";
   }
