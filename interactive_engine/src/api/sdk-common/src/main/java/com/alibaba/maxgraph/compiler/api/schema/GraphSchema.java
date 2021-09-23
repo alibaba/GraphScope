@@ -40,6 +40,13 @@ public interface GraphSchema {
 
     Map<GraphElement, GraphProperty> getPropertyList(int propId);
 
+    /**
+     * Get the version of the schema
+     *
+     * @return The schema version
+     */
+    int getVersion();
+
     default String formatJson() {
         JSONObject jsonObject = new JSONObject();
         JSONArray typeArray = new JSONArray();

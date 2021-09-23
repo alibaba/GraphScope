@@ -15,18 +15,18 @@
  */
 package com.alibaba.maxgraph.tests.ingestor;
 
-import com.alibaba.maxgraph.v2.common.MetaService;
-import com.alibaba.maxgraph.v2.common.config.CommonConfig;
-import com.alibaba.maxgraph.v2.common.config.Configs;
-import com.alibaba.maxgraph.v2.common.config.IngestorConfig;
-import com.alibaba.maxgraph.v2.common.discovery.MaxGraphNode;
-import com.alibaba.maxgraph.v2.common.discovery.NodeDiscovery;
-import com.alibaba.maxgraph.v2.common.discovery.RoleType;
-import com.alibaba.maxgraph.v2.common.wal.LogService;
-import com.alibaba.maxgraph.v2.ingestor.IngestProcessor;
-import com.alibaba.maxgraph.v2.ingestor.IngestProgressFetcher;
-import com.alibaba.maxgraph.v2.ingestor.IngestService;
-import com.alibaba.maxgraph.v2.ingestor.StoreWriter;
+import com.alibaba.maxgraph.groot.common.MetaService;
+import com.alibaba.maxgraph.common.config.CommonConfig;
+import com.alibaba.maxgraph.common.config.Configs;
+import com.alibaba.maxgraph.common.config.IngestorConfig;
+import com.alibaba.maxgraph.groot.common.discovery.MaxGraphNode;
+import com.alibaba.maxgraph.groot.common.discovery.NodeDiscovery;
+import com.alibaba.maxgraph.common.RoleType;
+import com.alibaba.maxgraph.groot.common.wal.LogService;
+import com.alibaba.maxgraph.groot.ingestor.IngestProcessor;
+import com.alibaba.maxgraph.groot.ingestor.IngestProgressFetcher;
+import com.alibaba.maxgraph.groot.ingestor.IngestService;
+import com.alibaba.maxgraph.groot.ingestor.StoreWriter;
 import org.junit.jupiter.api.Test;
 
 import java.util.Arrays;

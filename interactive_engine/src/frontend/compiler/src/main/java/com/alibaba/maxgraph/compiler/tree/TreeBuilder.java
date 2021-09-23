@@ -16,12 +16,12 @@
 package com.alibaba.maxgraph.compiler.tree;
 
 import com.alibaba.maxgraph.Message;
+import com.alibaba.maxgraph.common.util.SchemaUtils;
 import com.alibaba.maxgraph.compiler.api.schema.GraphSchema;
-import com.alibaba.maxgraph.compiler.api.schema.PropDataType;
+import com.alibaba.maxgraph.compiler.api.schema.DataType;
 import com.alibaba.maxgraph.compiler.tree.addition.JoinZeroNode;
 import com.alibaba.maxgraph.compiler.tree.source.EstimateCountTreeNode;
 import com.alibaba.maxgraph.compiler.tree.source.SourceCreateGraphTreeNode;
-import com.alibaba.maxgraph.compiler.utils.SchemaUtils;
 import com.alibaba.maxgraph.compiler.utils.TreeNodeUtils;
 import com.alibaba.maxgraph.sdkcommon.compiler.custom.aggregate.CustomAggregationListTraversal;
 import com.alibaba.maxgraph.sdkcommon.compiler.custom.branch.CustomCaseWhenFunction;
@@ -53,14 +53,12 @@ import com.alibaba.maxgraph.compiler.tree.source.SourceTreeNode;
 import com.alibaba.maxgraph.compiler.tree.source.SourceVertexTreeNode;
 import com.alibaba.maxgraph.compiler.utils.CompilerUtils;
 import com.alibaba.maxgraph.compiler.utils.ReflectionUtils;
-import com.alibaba.maxgraph.tinkerpop.Filter;
 import com.alibaba.maxgraph.tinkerpop.steps.AllPathStep;
 import com.alibaba.maxgraph.tinkerpop.steps.ConnectedComponentsStep;
 import com.alibaba.maxgraph.tinkerpop.steps.CreateGraphStep;
 import com.alibaba.maxgraph.tinkerpop.steps.CustomVertexProgramStep;
 import com.alibaba.maxgraph.tinkerpop.steps.EdgeVertexWithByStep;
 import com.alibaba.maxgraph.tinkerpop.steps.EstimateCountStep;
-import com.alibaba.maxgraph.tinkerpop.steps.GraphSourceStep;
 import com.alibaba.maxgraph.tinkerpop.steps.HitsStep;
 import com.alibaba.maxgraph.tinkerpop.steps.HitsVertexProgramStep;
 import com.alibaba.maxgraph.tinkerpop.steps.LabelPropagationStep;
@@ -1278,7 +1276,7 @@ public class TreeBuilder {
                 validPredicateVariantType(variantType, predicateType);
                 return new HasContainer(key, CustomPredicate.class.cast(predicate));
             } else {
-                Set<PropDataType> dataTypeSet = SchemaUtils.getPropDataTypeList(key, schema);
+                Set<DataType> dataTypeSet = SchemaUtils.getPropDataTypeList(key, schema);
                 if (dataTypeSet.isEmpty()) {
                     return new HasContainer(key, CustomPredicate.class.cast(predicate));
                 } else {
@@ -1298,7 +1296,7 @@ public class TreeBuilder {
                 Message.VariantType variantType = ValueValueType.class.cast(inputValueType).getDataType();
                 return createContainerFromVariantyType(key, P.class.cast(predicate), variantType);
             } else {
-                Set<PropDataType> dataTypeSet = SchemaUtils.getPropDataTypeList(key, schema);
+                Set<DataType> dataTypeSet = SchemaUtils.getPropDataTypeList(key, schema);
                 if (dataTypeSet.isEmpty()) {
                     return new HasContainer(key, P.class.cast(predicate));
                 } else {
@@ -1356,7 +1354,7 @@ public class TreeBuilder {
                 break;
             }
             case LIST: {
-                checkArgument(variantType == Message.VariantType.VT_INTEGER_LIST ||
+                checkArgument(variantType == Message.VariantType.VT_INT_LIST ||
                                 variantType == Message.VariantType.VT_LONG_LIST ||
                                 variantType == Message.VariantType.VT_STRING_LIST,
                         "List predicate only support list output while current value type=>" + variantType);

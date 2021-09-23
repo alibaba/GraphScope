@@ -16,10 +16,10 @@
 package com.alibaba.maxgraph.compiler.utils;
 
 import com.alibaba.maxgraph.Message;
-import com.alibaba.maxgraph.QueryFlowOuterClass;
 import com.alibaba.maxgraph.Message.LogicalCompare;
+import com.alibaba.maxgraph.common.util.SchemaUtils;
 import com.alibaba.maxgraph.compiler.api.schema.GraphSchema;
-import com.alibaba.maxgraph.compiler.api.schema.PropDataType;
+import com.alibaba.maxgraph.compiler.api.schema.DataType;
 import com.alibaba.maxgraph.compiler.tree.TreeConstants;
 import com.alibaba.maxgraph.sdkcommon.compiler.custom.CustomPredicate;
 import com.alibaba.maxgraph.sdkcommon.compiler.custom.ListMatchType;
@@ -50,7 +50,6 @@ import com.google.protobuf.ByteString;
 import com.google.protobuf.InvalidProtocolBufferException;
 import org.apache.commons.lang3.StringUtils;
 
-import org.apache.commons.lang3.tuple.Pair;
 import org.apache.tinkerpop.gremlin.process.traversal.Compare;
 import org.apache.tinkerpop.gremlin.process.traversal.Contains;
 import org.apache.tinkerpop.gremlin.process.traversal.Order;
@@ -334,7 +333,7 @@ public class MaxGraphUtils {
     public static Message.Value.Builder createValueFromType(Object value, Message.VariantType variantType, CompilerConfig compilerConfig) {
         Message.Value.Builder valueBuilder = Message.Value.newBuilder();
         switch (variantType) {
-            case VT_INTEGER:
+            case VT_INT:
                 valueBuilder.setIntValue(Integer.class.cast(value));
                 break;
             case VT_LONG:
@@ -355,7 +354,7 @@ public class MaxGraphUtils {
             case VT_LONG_LIST:
                 valueBuilder.addAllLongValueList((List<Long>) value);
                 break;
-            case VT_INTEGER_LIST:
+            case VT_INT_LIST:
                 valueBuilder.addAllIntValueList((List<Integer>) value);
                 break;
             default:
@@ -468,7 +467,7 @@ public class MaxGraphUtils {
         ByteBuffer byteBuffer = ByteBuffer.wrap(byteString.toByteArray());
         Object value;
         switch (variantType) {
-            case VT_INTEGER:
+            case VT_INT:
                 value = byteBuffer.getInt();
                 break;
             case VT_LONG:
@@ -483,7 +482,7 @@ public class MaxGraphUtils {
             case VT_DOUBLE:
                 value = byteBuffer.getDouble();
                 break;
-            case VT_INTEGER_LIST: {
+            case VT_INT_LIST: {
                 try {
                     Message.ListInt listIntValue = Message.ListInt.parseFrom(byteString);
                     return Lists.newArrayList(listIntValue.getValueList());
@@ -538,8 +537,8 @@ public class MaxGraphUtils {
 
     private static ValueType parseValueTypeFromDataType(Message.VariantType variantType) {
         switch (variantType) {
-            case VT_INTEGER_LIST:
-                return new ListValueType(new ElementValueType(ElementType.VALUE, Message.VariantType.VT_INTEGER));
+            case VT_INT_LIST:
+                return new ListValueType(new ElementValueType(ElementType.VALUE, Message.VariantType.VT_INT));
             case VT_LONG_LIST:
                 return new ListValueType(new ElementValueType(ElementType.VALUE, Message.VariantType.VT_LONG));
             case VT_STRING_LIST:
@@ -551,7 +550,7 @@ public class MaxGraphUtils {
 
     public static Message.VariantType parsePropertyDataType(String propKey, GraphSchema schema) {
         try {
-            Set<PropDataType> dataTypeSet = SchemaUtils.getPropDataTypeList(propKey, schema);
+            Set<DataType> dataTypeSet = SchemaUtils.getPropDataTypeList(propKey, schema);
             if (dataTypeSet.size() != 1) {
                 throw new IllegalArgumentException("invalid data type " + dataTypeSet + " for prop " + propKey);
             }

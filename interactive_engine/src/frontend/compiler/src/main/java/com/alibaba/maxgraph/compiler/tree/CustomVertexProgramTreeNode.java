@@ -17,16 +17,15 @@ package com.alibaba.maxgraph.compiler.tree;
 
 import com.alibaba.maxgraph.Message;
 import com.alibaba.maxgraph.QueryFlowOuterClass;
+import com.alibaba.maxgraph.common.util.SchemaUtils;
 import com.alibaba.maxgraph.compiler.api.schema.GraphSchema;
 import com.alibaba.maxgraph.compiler.tree.value.MapEntryValueType;
 import com.alibaba.maxgraph.compiler.tree.value.ValueType;
 import com.alibaba.maxgraph.compiler.tree.value.ValueValueType;
 import com.alibaba.maxgraph.compiler.tree.value.VertexValueType;
 import com.alibaba.maxgraph.compiler.logical.LogicalSubQueryPlan;
-import com.alibaba.maxgraph.compiler.logical.VertexIdManager;
 import com.alibaba.maxgraph.compiler.logical.function.ProcessorFunction;
 import com.alibaba.maxgraph.compiler.optimizer.ContextManager;
-import com.alibaba.maxgraph.compiler.utils.SchemaUtils;
 import com.alibaba.maxgraph.sdkcommon.compiler.custom.program.*;
 import org.apache.tinkerpop.gremlin.process.computer.VertexProgram;
 
@@ -143,7 +142,7 @@ public class CustomVertexProgramTreeNode extends UnaryTreeNode {
 
     private ValueType getValueType(VertexProgram customProgram) {
         if (customProgram instanceof ConnectedComponentVertexProgram) {
-            return new MapEntryValueType(new VertexValueType(), new ValueValueType(Message.VariantType.VT_INTEGER));
+            return new MapEntryValueType(new VertexValueType(), new ValueValueType(Message.VariantType.VT_INT));
         } else if (customProgram instanceof GraphConnectedComponentVertexProgram) {
             return new VertexValueType();
         } else if (customProgram instanceof GraphPageRankVertexProgram) {

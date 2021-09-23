@@ -15,9 +15,9 @@
  */
 package com.alibaba.maxgraph.tests.common;
 
-import com.alibaba.maxgraph.v2.common.DefaultMetaService;
-import com.alibaba.maxgraph.v2.common.MetaService;
-import com.alibaba.maxgraph.v2.common.config.Configs;
+import com.alibaba.maxgraph.groot.common.DefaultMetaService;
+import com.alibaba.maxgraph.groot.common.MetaService;
+import com.alibaba.maxgraph.common.config.Configs;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 

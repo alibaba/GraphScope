@@ -22,10 +22,16 @@ import com.google.common.base.MoreObjects;
 public class DefaultEdgeRelation implements EdgeRelation {
     private GraphVertex source;
     private GraphVertex target;
+    private long tableId;
 
     public DefaultEdgeRelation(GraphVertex source, GraphVertex target) {
+        this(source, target, -1L);
+    }
+
+    public DefaultEdgeRelation(GraphVertex source, GraphVertex target, long tableId) {
         this.source = source;
         this.target = target;
+        this.tableId = tableId;
     }
 
     @Override
@@ -43,6 +49,12 @@ public class DefaultEdgeRelation implements EdgeRelation {
         return MoreObjects.toStringHelper(this)
                 .add("source", source)
                 .add("target", target)
+                .add("tableId", tableId)
                 .toString();
+    }
+
+    @Override
+    public long getTableId() {
+        return this.tableId;
     }
 }

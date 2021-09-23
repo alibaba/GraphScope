@@ -17,6 +17,7 @@ package com.alibaba.maxgraph.compiler.tree;
 
 import com.alibaba.maxgraph.Message;
 import com.alibaba.maxgraph.QueryFlowOuterClass;
+import com.alibaba.maxgraph.common.util.SchemaUtils;
 import com.alibaba.maxgraph.compiler.api.schema.GraphSchema;
 import com.alibaba.maxgraph.compiler.logical.function.ProcessorFilterFunction;
 import com.alibaba.maxgraph.compiler.tree.value.ValueType;
@@ -34,7 +35,6 @@ import com.alibaba.maxgraph.compiler.tree.addition.PropertyNode;
 import com.alibaba.maxgraph.compiler.tree.source.SourceTreeNode;
 import com.alibaba.maxgraph.compiler.utils.CompilerUtils;
 import com.alibaba.maxgraph.compiler.utils.ReflectionUtils;
-import com.alibaba.maxgraph.compiler.utils.SchemaUtils;
 import com.alibaba.maxgraph.compiler.utils.TreeNodeUtils;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -132,7 +132,7 @@ public class BranchTreeNode extends UnaryTreeNode {
             Message.VariantType variantType = CompilerUtils.parseVariantType(pickValue.getClass(), pickValue);
             Message.Value.Builder valueBuilder = Message.Value.newBuilder().setValueType(variantType);
             switch (variantType) {
-                case VT_INTEGER: {
+                case VT_INT: {
                     if (pickValue instanceof Integer) {
                         valueBuilder.setIntValue((Integer) pickValue);
                     } else {

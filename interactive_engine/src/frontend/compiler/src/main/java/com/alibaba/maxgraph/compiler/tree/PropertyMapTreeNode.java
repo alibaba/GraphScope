@@ -17,9 +17,9 @@ package com.alibaba.maxgraph.compiler.tree;
 
 import com.alibaba.maxgraph.Message;
 import com.alibaba.maxgraph.QueryFlowOuterClass;
+import com.alibaba.maxgraph.common.util.SchemaUtils;
 import com.alibaba.maxgraph.compiler.api.schema.GraphSchema;
 import com.alibaba.maxgraph.compiler.optimizer.ContextManager;
-import com.alibaba.maxgraph.compiler.utils.SchemaUtils;
 import com.alibaba.maxgraph.compiler.tree.value.EdgeValueType;
 import com.alibaba.maxgraph.compiler.tree.value.ListValueType;
 import com.alibaba.maxgraph.compiler.tree.value.MapValueType;
@@ -36,8 +36,6 @@ import org.apache.tinkerpop.gremlin.structure.PropertyType;
 
 import java.util.Arrays;
 import java.util.Set;
-
-import static com.google.common.base.Preconditions.checkArgument;
 
 public class PropertyMapTreeNode extends UnaryTreeNode implements PropertyNode {
     private String[] propertyKeys;

@@ -15,17 +15,17 @@
  */
 package com.alibaba.maxgraph.tests.common.wal.kafka;
 
-import com.alibaba.maxgraph.v2.common.OperationBatch;
-import com.alibaba.maxgraph.v2.common.OperationBlob;
-import com.alibaba.maxgraph.v2.common.config.CommonConfig;
-import com.alibaba.maxgraph.v2.common.config.Configs;
-import com.alibaba.maxgraph.v2.common.config.KafkaConfig;
-import com.alibaba.maxgraph.v2.common.wal.LogEntry;
-import com.alibaba.maxgraph.v2.common.wal.LogReader;
-import com.alibaba.maxgraph.v2.common.wal.LogService;
-import com.alibaba.maxgraph.v2.common.wal.LogWriter;
-import com.alibaba.maxgraph.v2.common.wal.ReadLogEntry;
-import com.alibaba.maxgraph.v2.common.wal.kafka.KafkaLogService;
+import com.alibaba.maxgraph.groot.common.OperationBatch;
+import com.alibaba.maxgraph.groot.common.OperationBlob;
+import com.alibaba.maxgraph.common.config.CommonConfig;
+import com.alibaba.maxgraph.common.config.Configs;
+import com.alibaba.maxgraph.common.config.KafkaConfig;
+import com.alibaba.maxgraph.groot.common.wal.LogEntry;
+import com.alibaba.maxgraph.groot.common.wal.LogReader;
+import com.alibaba.maxgraph.groot.common.wal.LogService;
+import com.alibaba.maxgraph.groot.common.wal.LogWriter;
+import com.alibaba.maxgraph.groot.common.wal.ReadLogEntry;
+import com.alibaba.maxgraph.groot.common.wal.kafka.KafkaLogService;
 import com.salesforce.kafka.test.junit5.SharedKafkaTestResource;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;

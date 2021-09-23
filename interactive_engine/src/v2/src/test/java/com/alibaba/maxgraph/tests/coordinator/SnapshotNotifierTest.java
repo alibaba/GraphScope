@@ -15,16 +15,16 @@
  */
 package com.alibaba.maxgraph.tests.coordinator;
 
-import com.alibaba.maxgraph.v2.common.config.CommonConfig;
-import com.alibaba.maxgraph.v2.common.config.Configs;
-import com.alibaba.maxgraph.v2.common.discovery.MaxGraphNode;
-import com.alibaba.maxgraph.v2.common.discovery.NodeDiscovery;
-import com.alibaba.maxgraph.v2.common.discovery.RoleType;
-import com.alibaba.maxgraph.v2.common.rpc.RoleClients;
-import com.alibaba.maxgraph.v2.coordinator.FrontendSnapshotClient;
-import com.alibaba.maxgraph.v2.coordinator.NotifyFrontendListener;
-import com.alibaba.maxgraph.v2.coordinator.SnapshotManager;
-import com.alibaba.maxgraph.v2.coordinator.SnapshotNotifier;
+import com.alibaba.maxgraph.common.config.CommonConfig;
+import com.alibaba.maxgraph.common.config.Configs;
+import com.alibaba.maxgraph.groot.common.discovery.MaxGraphNode;
+import com.alibaba.maxgraph.groot.common.discovery.NodeDiscovery;
+import com.alibaba.maxgraph.common.RoleType;
+import com.alibaba.maxgraph.groot.common.rpc.RoleClients;
+import com.alibaba.maxgraph.groot.coordinator.FrontendSnapshotClient;
+import com.alibaba.maxgraph.groot.coordinator.NotifyFrontendListener;
+import com.alibaba.maxgraph.groot.coordinator.SnapshotManager;
+import com.alibaba.maxgraph.groot.coordinator.SnapshotNotifier;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 
