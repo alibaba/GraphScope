@@ -15,15 +15,15 @@
  */
 package com.alibaba.maxgraph.tests.ingestor;
 
-import com.alibaba.maxgraph.v2.common.OperationBatch;
-import com.alibaba.maxgraph.v2.common.config.Configs;
-import com.alibaba.maxgraph.v2.common.wal.LogReader;
-import com.alibaba.maxgraph.v2.common.wal.LogService;
-import com.alibaba.maxgraph.v2.common.wal.LogWriter;
-import com.alibaba.maxgraph.v2.common.wal.ReadLogEntry;
-import com.alibaba.maxgraph.v2.ingestor.BatchSender;
-import com.alibaba.maxgraph.v2.ingestor.IngestCallback;
-import com.alibaba.maxgraph.v2.ingestor.IngestProcessor;
+import com.alibaba.maxgraph.groot.common.OperationBatch;
+import com.alibaba.maxgraph.common.config.Configs;
+import com.alibaba.maxgraph.groot.common.wal.LogReader;
+import com.alibaba.maxgraph.groot.common.wal.LogService;
+import com.alibaba.maxgraph.groot.common.wal.LogWriter;
+import com.alibaba.maxgraph.groot.common.wal.ReadLogEntry;
+import com.alibaba.maxgraph.groot.ingestor.BatchSender;
+import com.alibaba.maxgraph.groot.ingestor.IngestCallback;
+import com.alibaba.maxgraph.groot.ingestor.IngestProcessor;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;

@@ -33,6 +33,23 @@ message EndpointProto {
     int32 runtimCtrlAndAsyncPort      =  5;
 }
 
+enum DataTypePb {
+    UNKNOWN = 0;
+    BOOL = 1;
+    CHAR = 2;
+    SHORT = 3;
+    INT = 4;
+    LONG = 5;
+    FLOAT = 6;
+    DOUBLE = 7;
+    STRING = 8;
+    BYTES = 9;
+    INT_LIST = 10;
+    LONG_LIST = 11;
+    FLOAT_LIST = 12;
+    DOUBLE_LIST = 13;
+    STRING_LIST = 14;
+}
 
 message Request {
     string traceId                                     = 1;
@@ -44,24 +61,6 @@ message Response {
 }
 
 message Empty {
-}
-
-enum OperationType {
-    // overwrite whole vertex
-    INSERT_OVERWRITE_VERTEX                    = 0;
-
-    // overwrite the property by property key
-    INSERT_OVERWRITE_VERTEX_PROPERTY           = 1;
-
-    // delete vertex
-    DELETE_VERTEX                              = 2;
-
-    INSERT_OVERWRITE_EDGE                      = 3;
-    INSERT_OVERWRITE_EDGE_PROPERTY             = 4;
-    DELETE_EDGE                                = 5;
-    BARRIER_MARKER                             = 6;
-    INSERT_REPLACE_VERTEX                      = 7;
-    INSERT_REPLACE_EDGE                        = 8;
 }
 
 message MetricInfoProto {

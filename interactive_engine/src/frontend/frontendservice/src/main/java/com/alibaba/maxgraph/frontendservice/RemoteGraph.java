@@ -15,11 +15,7 @@
  */
 package com.alibaba.maxgraph.frontendservice;
 
-import com.alibaba.maxgraph.compiler.api.schema.GraphElement;
-import com.alibaba.maxgraph.compiler.api.schema.GraphProperty;
 import com.alibaba.maxgraph.compiler.api.schema.GraphSchema;
-import com.alibaba.maxgraph.compiler.api.schema.GraphVertex;
-import com.alibaba.maxgraph.compiler.api.schema.PropDataType;
 import com.alibaba.maxgraph.compiler.api.schema.SchemaFetcher;
 import com.alibaba.maxgraph.iterator.IteratorList;
 import com.alibaba.maxgraph.sdkcommon.client.Endpoint;
@@ -37,10 +33,8 @@ import com.alibaba.maxgraph.structure.GraphPartitioner;
 import com.alibaba.maxgraph.structure.IdManager;
 import com.alibaba.maxgraph.structure.Vertex;
 import com.alibaba.maxgraph.structure.graph.MaxGraph;
-import com.alibaba.maxgraph.compiler.exception.DataException;
 
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Joiner;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;

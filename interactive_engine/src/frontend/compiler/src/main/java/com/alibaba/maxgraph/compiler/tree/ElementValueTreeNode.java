@@ -18,17 +18,16 @@ package com.alibaba.maxgraph.compiler.tree;
 import com.alibaba.maxgraph.Message;
 import com.alibaba.maxgraph.QueryFlowOuterClass;
 import com.alibaba.maxgraph.compiler.api.schema.GraphSchema;
-import com.alibaba.maxgraph.compiler.api.schema.PropDataType;
+import com.alibaba.maxgraph.compiler.api.schema.DataType;
 import com.alibaba.maxgraph.compiler.tree.value.VarietyValueType;
 import com.alibaba.maxgraph.compiler.optimizer.ContextManager;
-import com.alibaba.maxgraph.compiler.utils.SchemaUtils;
+import com.alibaba.maxgraph.common.util.SchemaUtils;
 import com.alibaba.maxgraph.compiler.utils.TreeNodeUtils;
 import com.alibaba.maxgraph.compiler.tree.value.EdgeValueType;
 import com.alibaba.maxgraph.compiler.tree.value.ValueType;
 import com.alibaba.maxgraph.compiler.tree.value.ValueValueType;
 import com.alibaba.maxgraph.compiler.logical.LogicalSubQueryPlan;
 import com.alibaba.maxgraph.compiler.logical.LogicalVertex;
-import com.alibaba.maxgraph.compiler.logical.VertexIdManager;
 import com.alibaba.maxgraph.compiler.logical.function.ProcessorFunction;
 import com.alibaba.maxgraph.compiler.tree.addition.PropertyNode;
 import com.alibaba.maxgraph.compiler.utils.CompilerUtils;
@@ -81,10 +80,10 @@ public class ElementValueTreeNode extends UnaryTreeNode implements PropertyNode 
     @Override
     public ValueType getOutputValueType() {
         if (null == bypassTreeNode) {
-            Set<PropDataType> dataTypeSet = SchemaUtils.getPropDataTypeList(propKey, schema);
+            Set<DataType> dataTypeSet = SchemaUtils.getPropDataTypeList(propKey, schema);
             if (dataTypeSet.size() > 1) {
                 Set<ValueType> valueTypeList = Sets.newHashSet();
-                for (PropDataType dataType : dataTypeSet) {
+                for (DataType dataType : dataTypeSet) {
                     valueTypeList.add(new ValueValueType(CompilerUtils.parseVariantFromDataType(dataType)));
                 }
                 return new VarietyValueType(valueTypeList);

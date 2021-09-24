@@ -1,6 +1,6 @@
 package com.alibaba.maxgraph.dataload;
 
-import com.alibaba.maxgraph.v2.sdk.Client;
+import com.alibaba.maxgraph.groot.sdk.Client;
 
 import java.io.IOException;
 

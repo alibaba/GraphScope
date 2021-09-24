@@ -22,7 +22,7 @@ import com.alibaba.maxgraph.compiler.logical.LogicalBinaryVertex;
 import com.alibaba.maxgraph.compiler.logical.LogicalQueryPlan;
 import com.alibaba.maxgraph.compiler.optimizer.ContextManager;
 import com.alibaba.maxgraph.compiler.tree.addition.AbstractUseKeyNode;
-import com.alibaba.maxgraph.compiler.utils.SchemaUtils;
+import com.alibaba.maxgraph.common.util.SchemaUtils;
 import com.alibaba.maxgraph.compiler.utils.TreeNodeUtils;
 import com.alibaba.maxgraph.compiler.tree.value.ValueType;
 import com.alibaba.maxgraph.compiler.logical.LogicalEdge;

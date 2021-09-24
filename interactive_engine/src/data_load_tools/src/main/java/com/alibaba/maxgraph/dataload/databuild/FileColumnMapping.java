@@ -15,8 +15,8 @@
  */
 package com.alibaba.maxgraph.dataload.databuild;
 
-import com.alibaba.maxgraph.v2.common.exception.InvalidSchemaException;
-import com.alibaba.maxgraph.v2.common.frontend.api.schema.*;
+import com.alibaba.maxgraph.compiler.api.exception.InvalidSchemaException;
+import com.alibaba.maxgraph.compiler.api.schema.*;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -73,20 +73,20 @@ public class FileColumnMapping {
     }
 
     public ColumnMappingInfo toColumnMappingInfo(GraphSchema graphSchema) {
-        SchemaElement type = graphSchema.getSchemaElement(this.label);
+        GraphElement type = graphSchema.getElement(this.label);
         int labelId = type.getLabelId();
         Map<Integer, Integer> propertiesMap = convertMapValueToId(this.propertiesColMap, graphSchema);
-        if (type instanceof VertexType) {
-            long tableId = ((VertexType) type).getTableId();
+        if (type instanceof GraphVertex) {
+            long tableId = ((GraphVertex) type).getTableId();
             return new ColumnMappingInfo(labelId, tableId, propertiesMap);
         } else {
-            SchemaElement srcType = graphSchema.getSchemaElement(this.srcLabel);
+            GraphElement srcType = graphSchema.getElement(this.srcLabel);
             int srcLabelId = srcType.getLabelId();
             Map<Integer, Integer> srcPkMap = convertMapValueToId(this.srcPkColMap, graphSchema);
-            SchemaElement dstType = graphSchema.getSchemaElement(this.dstLabel);
+            GraphElement dstType = graphSchema.getElement(this.dstLabel);
             int dstLabelId = dstType.getLabelId();
             Map<Integer, Integer> dstPkMap = convertMapValueToId(this.dstPkColMap, graphSchema);
-            for (EdgeRelation relation : ((EdgeType) type).getRelationList()) {
+            for (EdgeRelation relation : ((GraphEdge) type).getRelationList()) {
                 if (relation.getSource().getLabelId() == srcLabelId &&
                         relation.getTarget().getLabelId() == dstLabelId) {
                     long tableId = relation.getTableId();
@@ -102,7 +102,7 @@ public class FileColumnMapping {
     private Map<Integer, Integer> convertMapValueToId(Map<Integer, String> colNameMap, GraphSchema graphSchema) {
         Map<Integer, Integer> res = new HashMap<>(colNameMap.size());
         colNameMap.forEach((colIdx, propName) -> {
-            int propertyId = graphSchema.getPropertyId(propName).values().iterator().next();
+            int propertyId = graphSchema.getPropertyId(propName);
             res.put(colIdx, propertyId);
         });
         return res;

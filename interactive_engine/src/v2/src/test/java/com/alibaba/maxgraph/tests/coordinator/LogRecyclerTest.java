@@ -15,11 +15,11 @@
  */
 package com.alibaba.maxgraph.tests.coordinator;
 
-import com.alibaba.maxgraph.v2.common.config.Configs;
-import com.alibaba.maxgraph.v2.common.config.CoordinatorConfig;
-import com.alibaba.maxgraph.v2.common.wal.LogService;
-import com.alibaba.maxgraph.v2.coordinator.LogRecycler;
-import com.alibaba.maxgraph.v2.coordinator.SnapshotManager;
+import com.alibaba.maxgraph.common.config.Configs;
+import com.alibaba.maxgraph.common.config.CoordinatorConfig;
+import com.alibaba.maxgraph.groot.common.wal.LogService;
+import com.alibaba.maxgraph.groot.coordinator.LogRecycler;
+import com.alibaba.maxgraph.groot.coordinator.SnapshotManager;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;

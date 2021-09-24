@@ -24,7 +24,9 @@ logger = logging.getLogger("graphscope")
 
 
 class Launcher(metaclass=ABCMeta):
-    "Base Class to derive KubernetesClusterLauncher and HostsClusterLauncher"
+    """
+    Base Class to derive KubernetesClusterLauncher and HostsClusterLauncher.
+    """
 
     def __init__(self):
         self._coordinator_endpoint = None

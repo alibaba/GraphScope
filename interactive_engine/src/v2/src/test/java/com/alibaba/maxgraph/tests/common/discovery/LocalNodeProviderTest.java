@@ -15,11 +15,11 @@
  */
 package com.alibaba.maxgraph.tests.common.discovery;
 
-import com.alibaba.maxgraph.v2.common.config.Configs;
-import com.alibaba.maxgraph.v2.common.discovery.LocalNodeProvider;
-import com.alibaba.maxgraph.v2.common.discovery.MaxGraphNode;
-import com.alibaba.maxgraph.v2.common.discovery.RoleType;
-import com.alibaba.maxgraph.v2.common.exception.MaxGraphException;
+import com.alibaba.maxgraph.common.config.Configs;
+import com.alibaba.maxgraph.groot.common.discovery.LocalNodeProvider;
+import com.alibaba.maxgraph.groot.common.discovery.MaxGraphNode;
+import com.alibaba.maxgraph.common.RoleType;
+import com.alibaba.maxgraph.compiler.api.exception.MaxGraphException;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 

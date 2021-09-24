@@ -387,8 +387,6 @@ def test_error_on_non_default_and_non_existing_v_label(
 ):
     graph = graphscope_session.g()
     graph = graph.add_vertices(student_v, "student")
-    with pytest.raises(ValueError, match="src label or dst_label not existed in graph"):
-        graph = graph.add_edges(student_group_e, "group", src_label="v", dst_label="v")
     with pytest.raises(
         ValueError, match="must be both specified or either unspecified"
     ):
