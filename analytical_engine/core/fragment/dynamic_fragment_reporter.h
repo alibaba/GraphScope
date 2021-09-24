@@ -451,24 +451,19 @@ class ImmutableGraphReporter<vineyard::ArrowFragment<OID_T, VID_T>>
       // BOOST_LEAF_AUTO(node_in_json, params.Get<std::string>(rpc::NODE));
       // oid_t node_id = folly::parseJson(node_in_json, json_opts_)[0];
       // return getNodeData(fragment, node_id);
-      return std::string();
     }
-    /*
     case rpc::EDGE_DATA: {
       BOOST_LEAF_AUTO(edge_in_json, params.Get<std::string>(rpc::EDGE));
-      oid_t edge = folly::parseJson(edge_in_json, json_opts_);
+      folly::dynamic edge = folly::parseJson(edge_in_json, json_opts_);
       auto& src_id = edge[0];
       auto& dst_id = edge[1];
-      return getEdgeData(fragment, src_id, dst_id);
     }
     case rpc::DEG_BY_NODE:
     case rpc::IN_DEG_BY_NODE:
     case rpc::OUT_DEG_BY_NODE: {
       BOOST_LEAF_AUTO(node_in_json, params.Get<std::string>(rpc::NODE));
       BOOST_LEAF_AUTO(edge_key, params.Get<std::string>(rpc::EDGE_KEY));
-      oid_t node_id = folly::parseJson(node_in_json, json_opts_)[0];
-      return std::to_string(
-          getDegree(fragment, node_id, report_type, edge_key));
+      folly::dynamic node_id = folly::parseJson(node_in_json, json_opts_)[0];
     }
     case rpc::DEG_BY_LOC:
     case rpc::IN_DEG_BY_LOC:
@@ -476,29 +471,23 @@ class ImmutableGraphReporter<vineyard::ArrowFragment<OID_T, VID_T>>
       BOOST_LEAF_AUTO(fid, params.Get<int64_t>(rpc::FID));
       BOOST_LEAF_AUTO(lid, params.Get<int64_t>(rpc::LID));
       BOOST_LEAF_AUTO(edge_key, params.Get<std::string>(rpc::EDGE_KEY));
-
-      return batchGetDegree(fragment, fid, lid, report_type, edge_key);
     }
     case rpc::NEIGHBORS_BY_NODE:
     case rpc::SUCCS_BY_NODE:
     case rpc::PREDS_BY_NODE: {
       BOOST_LEAF_AUTO(node_in_json, params.Get<std::string>(rpc::NODE));
-      oid_t node_id = folly::parseJson(node_in_json, json_opts_)[0];
-      return getNeighbors(fragment, node_id, report_type);
+      folly::dynamic node_id = folly::parseJson(node_in_json, json_opts_)[0];
     }
     case rpc::NEIGHBORS_BY_LOC:
     case rpc::SUCCS_BY_LOC:
     case rpc::PREDS_BY_LOC: {
       BOOST_LEAF_AUTO(fid, params.Get<int64_t>(rpc::FID));
       BOOST_LEAF_AUTO(lid, params.Get<int64_t>(rpc::LID));
-      return batchGetNeighbors(fragment, fid, lid, report_type);
     }
     case rpc::NODES_BY_LOC: {
       BOOST_LEAF_AUTO(fid, params.Get<int64_t>(rpc::FID));
       BOOST_LEAF_AUTO(lid, params.Get<int64_t>(rpc::LID));
-      return batchGetNodes(fragment, fid, lid);
     }
-    */
     default:
       CHECK(false);
     }
@@ -517,15 +506,6 @@ class ImmutableGraphReporter<vineyard::ArrowFragment<OID_T, VID_T>>
     return total_enum;
   }
 
-  /*
-  inline size_t reportSelfloopsNum(std::shared_ptr<fragment_t>& fragment) {
-    size_t frag_selfloops_num = 0, total_selfloops_num = 0;
-    frag_selfloops_num = fragment->selfloops_num();
-    Sum(frag_selfloops_num, total_selfloops_num);
-    return total_selfloops_num;
-  }
-  */
-
   bool hasNode(std::shared_ptr<fragment_t>& fragment, label_id_t label_id,
                const oid_t& oid) {
     bool ret = false;
@@ -535,41 +515,6 @@ class ImmutableGraphReporter<vineyard::ArrowFragment<OID_T, VID_T>>
     Sum(existed, ret);
     return ret;
   }
-  /*
-
-  bool hasEdge(std::shared_ptr<fragment_t>& fragment, const oid_t& u,
-               const oid_t& v) {
-    bool ret = false;
-    bool to_send = fragment->HasEdge(u, v);
-    Sum(to_send, ret);
-    return ret;
-  }
-
-  std::string getNodeData(std::shared_ptr<fragment_t>& fragment,
-                          const oid_t& n) {
-    std::string ret;
-    fragment->GetVertexData(n, ret);
-    return ret;
-  }
-
-  std::string getEdgeData(std::shared_ptr<fragment_t>& fragment, const oid_t& u,
-                          const oid_t& v) {
-    std::string ret;
-    fragment->GetEdgeData(u, v, ret);
-    return ret;
-  }
-
-  double getDegree(std::shared_ptr<fragment_t>& fragment, const oid_t& node,
-                   const rpc::ReportType& type, const std::string& weight) {
-    vertex_t v;
-    double degree = 0, sum_degree = 0;
-    if (fragment->GetInnerVertex(node, v) && fragment->IsAliveInnerVertex(v)) {
-      degree = getGraphDegree(fragment, v, type, weight);
-    }
-    Sum(degree, sum_degree);
-    return sum_degree;
-  }
-  */
 
   grape::CommSpec comm_spec_;
   folly::json::serialization_opts json_opts_;
