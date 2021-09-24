@@ -1262,7 +1262,7 @@ def all_simple_paths(G, source, target_nodes, cutoff=None):
     paths = ctx.to_numpy("r", axis=0).tolist()
     # delte path tail padding
     for path in paths:
-        for i in range(len(path)-1, -1, -1):
+        for i in range(len(path) - 1, -1, -1):
             if path[i] == -1:
                 path.pop(i)
             else:
@@ -1340,7 +1340,7 @@ def all_simple_edge_paths(G, source, target_nodes, cutoff=None):
     paths = ctx.to_numpy("r", axis=0).tolist()
     # delte path tail padding and merge vertex to edge
     for path in paths:
-        for i in range(len(path)-1, -1, -1):
+        for i in range(len(path) - 1, -1, -1):
             if path[i] == -1:
                 a = path.pop(i)
             else:

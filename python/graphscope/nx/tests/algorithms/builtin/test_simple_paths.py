@@ -241,8 +241,8 @@ class TestAllSimplePaths:
         G = nx.complete_graph(4)
         paths = nx.all_simple_paths(G, 0, 3, cutoff=0)
         assert list(list(p) for p in paths) == []
-        #paths = nx.all_simple_paths(nx.MultiGraph(G), 0, 3, cutoff=0)
-        #assert list(list(p) for p in paths) == []
+        # paths = nx.all_simple_paths(nx.MultiGraph(G), 0, 3, cutoff=0)
+        # assert list(list(p) for p in paths) == []
 
     def test_source_missing(self):
         with pytest.raises(nx.NodeNotFound):
@@ -331,7 +331,11 @@ class TestAllSimpleEdgePaths:
         paths = nx.all_simple_edge_paths(G, 0, 1, cutoff=1)
         assert {tuple(p) for p in paths} == {((0, 1),)}
         paths = nx.all_simple_edge_paths(G, 0, 1, cutoff=2)
-        assert {tuple(p) for p in paths} == {((0, 1),), ((0, 2), (2, 1)), ((0, 3), (3, 1))}
+        assert {tuple(p) for p in paths} == {
+            ((0, 1),),
+            ((0, 2), (2, 1)),
+            ((0, 3), (3, 1))
+        }
 
     def test_all_simple_edge_paths_on_non_trivial_graph(self):
         """you may need to draw this graph to make sure it is reasonable"""
@@ -420,8 +424,8 @@ class TestAllSimpleEdgePaths:
         G = nx.complete_graph(4)
         paths = nx.all_simple_edge_paths(G, 0, 3, cutoff=0)
         assert list(list(p) for p in paths) == []
-        #paths = nx.all_simple_edge_paths(nx.MultiGraph(G), 0, 3, cutoff=0)
-        #assert list(list(p) for p in paths) == []
+        # paths = nx.all_simple_edge_paths(nx.MultiGraph(G), 0, 3, cutoff=0)
+        # assert list(list(p) for p in paths) == []
 
     def test_edge_source_missing(self):
         with pytest.raises(nx.NodeNotFound):
