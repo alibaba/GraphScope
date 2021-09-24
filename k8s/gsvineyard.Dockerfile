@@ -5,7 +5,6 @@
 ARG BASE_VERSION=latest
 FROM registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-runtime:$BASE_VERSION
 
-# TODO: adapt to the latest API of libgrape-lite
 RUN sudo mkdir -p /opt/vineyard && \
     sudo chown -R $(id -u):$(id -g) /opt/vineyard && \
     cd /tmp && \

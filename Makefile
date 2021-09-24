@@ -44,7 +44,7 @@ push:
 	$(MAKE) -C $(WORKING_DIR)/k8s/ push
 
 .PHONY: install
-install: gle client coordinator gae gie
+install: gle client gae gie coordinator
 
 .PHONY: client
 client: gle

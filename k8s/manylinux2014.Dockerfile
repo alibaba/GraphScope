@@ -1,15 +1,13 @@
 # the graphscope-manylinux2010 image is based on manylinux2010, including all necessary
 # dependencies for graphscope's wheel package.
 
-FROM quay.io/pypa/manylinux2010_x86_64:2020-12-06-3a8b363
-
-SHELL ["/usr/bin/scl", "enable", "devtoolset-8"]
+FROM quay.io/pypa/manylinux2014_x86_64:2021-09-19-a5ef179
 
 # yum install dependencies
-RUN yum install -y autoconf m4 double-conversion-devel git \
-        libcurl-devel libevent-devel libgsasl-devel librdkafka-devel libunwind-devel.x86_64 \
+RUN yum install -y autoconf m4 git krb5-devel \
+        libcurl-devel libevent-devel libgsasl-devel libunwind-devel.x86_64 \
         libuuid-devel libxml2-devel libzip libzip-devel minizip minizip-devel \
-        make net-tools python3-devel rsync telnet tools unzip vim wget which zip bind-utils && \
+        make net-tools rsync telnet unzip vim wget which zip bind-utils sudo && \
     yum clean all && \
     rm -fr /var/cache/yum && \
     cd /tmp && \
@@ -56,7 +54,7 @@ RUN cd /tmp && \
         -DARROW_PARQUET=OFF \
         -DARROW_PLASMA=OFF \
         -DARROW_PLASMA_JAVA_CLIENT=OFF \
-        -DARROW_PYTHON=ON \
+        -DARROW_PYTHON=OFF \
         -DARROW_S3=OFF \
         -DARROW_WITH_BZ2=OFF \
         -DARROW_WITH_ZLIB=OFF \
@@ -184,6 +182,17 @@ RUN cd /tmp && \
     cd /tmp && \
     rm -fr /tmp/7.0.3.tar.gz /tmp/fmt-7.0.3
 
+# double conversion v3.1.5, required by folly
+RUN cd /tmp && \
+  wget https://github.com/google/double-conversion/archive/refs/tags/v3.1.5.tar.gz && \
+  tar zxvf v3.1.5.tar.gz && \
+  cd double-conversion-3.1.5 && \
+  mkdir build && \
+  cd build && \
+  cmake -DBUILD_SHARED_LIBS=ON .. && \
+  make install -j && \
+  rm -fr /tmp/v3.1.5.tar.gz /tmp/double-conversion-3.1.5
+
 # folly v2020.10.19.00
 RUN cd /tmp && \
     wget https://github.com/facebook/folly/archive/v2020.10.19.00.tar.gz && \
@@ -233,6 +242,17 @@ RUN mkdir -p /tmp/maven /usr/share/maven/ref \
     && rm -f /tmp/apache-maven.tar.gz \
     && ln -s /usr/share/maven/bin/mvn /usr/bin/mvn \
     && export LD_LIBRARY_PATH=$(echo "$LD_LIBRARY_PATH" | sed "s/::/:/g")
+
+# rust
+RUN cd /tmp && \
+    wget --no-verbose https://golang.org/dl/go1.15.5.linux-amd64.tar.gz && \
+    tar -C /usr/local -xzf go1.15.5.linux-amd64.tar.gz && \
+    curl -sf -L https://static.rust-lang.org/rustup.sh | \
+        sh -s -- -y --profile minimal --default-toolchain 1.54.0 && \
+    echo "source ~/.cargo/env" >> ~/.bashrc && \
+    export PATH=${PATH}::/usr/local/go/bin && \
+    go get github.com/etcd-io/zetcd/cmd/zetcd && \
+    cp $(go env GOPATH)/bin/zetcd /tmp/zetcd
 
 # patchelf
 RUN cd /tmp && \

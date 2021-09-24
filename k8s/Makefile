@@ -51,23 +51,70 @@ graphscope-store:
                  --network=host \
                  -f $(WORKING_DIR)/graphscope-store.Dockerfile ..
 
-graphscope-manylinux2010:
+graphscope-manylinux2014:
 	docker build --progress=$(BUILD_PROGRESS) \
-				 -t ${REGISTRY}/$(DOCKER_ORG)/graphscope-manylinux2010:${VERSION} \
+				 -t ${REGISTRY}/$(DOCKER_ORG)/graphscope-manylinux2014:${VERSION} \
 				 --network=host \
-				 -f $(WORKING_DIR)/manylinux2010.Dockerfile .
+				 -f $(WORKING_DIR)/manylinux2014.Dockerfile .
 
-graphscope-jupyter-manylinux2010-py2-py3:
+graphscope-jupyter-manylinux2014-py2-py3:
 	docker run --rm -it -v $(WORKING_DIR)/..:/work \
-		   ${REGISTRY}/$(DOCKER_ORG)/graphscope-manylinux2010:${VERSION} \
+		   ${REGISTRY}/$(DOCKER_ORG)/graphscope-manylinux2014:${VERSION} \
 		   /usr/bin/scl enable devtoolset-8 'sh -c "export PATH=$$PATH:/opt/python/cp36-cp36m/bin && \
 					pip3 install graphscope -U && \
 					cd /work/python/jupyter/graphscope && \
 					python3 setup.py bdist_wheel"'
 
-graphscope-client-manylinux2010-py36:
+graphscope-manylinux2014-py:
 	docker run --rm -it -v $(WORKING_DIR)/..:/work \
-		   ${REGISTRY}/$(DOCKER_ORG)/graphscope-manylinux2010:${VERSION} \
+			${REGISTRY}/$(DOCKER_ORG)/graphscope-manylinux2014:${VERSION} \
+			bash -c "export PATH=$$PATH:/opt/python/cp39-cp39/bin && \
+				pip3 install libclang parsec && \
+				mkdir -p /opt/vineyard && \
+				cd /tmp && \
+				git clone https://github.com/alibaba/libgrape-lite.git --depth=1 && \
+				cd libgrape-lite && mkdir build && cd build && \
+				cmake .. -DCMAKE_INSTALL_PREFIX=/opt/vineyard && \
+				make -j install && \
+				cd /tmp && \
+				git clone https://github.com/alibaba/libvineyard.git --depth=1 && \
+				cd libvineyard && \
+				git submodule update --init && \
+				mkdir -p build && cd build && \
+				cmake .. -DCMAKE_PREFIX_PATH=/opt/vineyard \
+					-DCMAKE_INSTALL_PREFIX=/opt/vineyard \
+					-DBUILD_VINEYARD_PYPI_PACKAGES=ON \
+					-DBUILD_SHARED_LIBS=ON \
+					-DBUILD_VINEYARD_IO_OSS=ON && \
+				make install vineyard_client_python -j && \
+				cd /tmp/libvineyard && \
+				python3 setup.py bdist_wheel && \
+				cd dist && \
+				auditwheel repair --plat=manylinux2014_x86_64 ./*.whl && \
+				mkdir -p /opt/vineyard/dist && \
+				cp -f wheelhouse/* /opt/vineyard/dist && \
+				pip3 install wheelhouse/*.whl && \
+				cd /tmp/libvineyard/modules/io && \
+				python3 setup.py bdist_wheel && \
+				cp -f dist/* /opt/vineyard/dist && \
+				pip3 install dist/* && \
+				cp -r /opt/vineyard/* /usr/local/ && \
+				mkdir -p /work/.build && cp -r /opt/vineyard /work/.build/vineyard && \
+				cd /tmp && 
+				rm -fr /tmp/libvineyard /tmp/libgrape-lite && \
+				cd /work && \
+				make install && \
+				cp /tmp/zetcd /opt/graphscope/bin/zetcd && \
+				export WITH_EXTRA_DATA=ON && \
+				cd /work/coordinator && \
+				rm -fr build dist/*.whl && \
+				python3 setup.py bdist_wheel && \
+				cd dist && \
+				auditwheel repair ./*.whl --plat=manylinux2014_x86_64"
+
+graphscope-client-manylinux2014-py36:
+	docker run --rm -it -v $(WORKING_DIR)/..:/work \
+		   ${REGISTRY}/$(DOCKER_ORG)/graphscope-manylinux2014:${VERSION} \
 		   /usr/bin/scl enable devtoolset-8 'sh -c "export PATH=$$PATH:/opt/python/cp36-cp36m/bin && \
           cd /work/learning_engine/graph-learn && \
 					git submodule update --init third_party/pybind11 && \
@@ -85,9 +132,9 @@ graphscope-client-manylinux2010-py36:
 				  cd dist && \
 				  auditwheel repair ./*.whl"'
 
-graphscope-client-manylinux2010-py37:
+graphscope-client-manylinux2014-py37:
 	docker run --rm -it -v $(WORKING_DIR)/..:/work \
-		   ${REGISTRY}/$(DOCKER_ORG)/graphscope-manylinux2010:${VERSION} \
+		   ${REGISTRY}/$(DOCKER_ORG)/graphscope-manylinux2014:${VERSION} \
 		   /usr/bin/scl enable devtoolset-8 'sh -c "export PATH=$$PATH:/opt/python/cp37-cp37m/bin && \
           cd /work/learning_engine/graph-learn && \
 					git submodule update --init third_party/pybind11 && \
@@ -105,9 +152,9 @@ graphscope-client-manylinux2010-py37:
 				  cd dist && \
 				  auditwheel repair ./*.whl"'
 
-graphscope-client-manylinux2010-py38:
+graphscope-client-manylinux2014-py38:
 	docker run --rm -it -v $(WORKING_DIR)/..:/work \
-		   ${REGISTRY}/$(DOCKER_ORG)/graphscope-manylinux2010:${VERSION} \
+		   ${REGISTRY}/$(DOCKER_ORG)/graphscope-manylinux2014:${VERSION} \
 		   /usr/bin/scl enable devtoolset-8 'sh -c "export PATH=$$PATH:/opt/python/cp38-cp38/bin && \
           cd /work/learning_engine/graph-learn && \
 					git submodule update --init third_party/pybind11 && \
@@ -125,9 +172,9 @@ graphscope-client-manylinux2010-py38:
 				  cd dist && \
 				  auditwheel repair ./*.whl"'
 
-graphscope-client-manylinux2010-py39:
+graphscope-client-manylinux2014-py39:
 	docker run --rm -it -v $(WORKING_DIR)/..:/work \
-		   ${REGISTRY}/$(DOCKER_ORG)/graphscope-manylinux2010:${VERSION} \
+		   ${REGISTRY}/$(DOCKER_ORG)/graphscope-manylinux2014:${VERSION} \
 		   /usr/bin/scl enable devtoolset-8 'sh -c "export PATH=$$PATH:/opt/python/cp39-cp39/bin && \
           cd /work/learning_engine/graph-learn && \
 					git submodule update --init third_party/pybind11 && \
