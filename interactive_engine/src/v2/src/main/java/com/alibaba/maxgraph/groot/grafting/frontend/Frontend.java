@@ -13,6 +13,19 @@
  */
 package com.alibaba.maxgraph.groot.grafting.frontend;
 
+import com.alibaba.graphscope.groot.frontend.BatchDdlClient;
+import com.alibaba.graphscope.groot.frontend.ClientDdlService;
+import com.alibaba.graphscope.groot.frontend.ClientService;
+import com.alibaba.graphscope.groot.frontend.ClientWriteService;
+import com.alibaba.graphscope.groot.frontend.FrontendSnapshotService;
+import com.alibaba.graphscope.groot.frontend.IngestorWriteClient;
+import com.alibaba.graphscope.groot.frontend.SchemaClient;
+import com.alibaba.graphscope.groot.frontend.SchemaWriter;
+import com.alibaba.graphscope.groot.frontend.SnapshotCache;
+import com.alibaba.graphscope.groot.frontend.StoreIngestClient;
+import com.alibaba.graphscope.groot.frontend.StoreIngestClients;
+import com.alibaba.graphscope.groot.frontend.StoreIngestor;
+import com.alibaba.graphscope.groot.frontend.WriteSessionGenerator;
 import com.alibaba.maxgraph.common.RoleType;
 import com.alibaba.maxgraph.common.cluster.InstanceConfig;
 import com.alibaba.maxgraph.compiler.dfs.DefaultGraphDfs;
@@ -39,6 +52,7 @@ import com.alibaba.maxgraph.common.util.CuratorUtils;
 import com.alibaba.graphscope.groot.frontend.write.DefaultEdgeIdGenerator;
 import com.alibaba.graphscope.groot.frontend.write.EdgeIdGenerator;
 import com.alibaba.graphscope.groot.frontend.write.GraphWriter;
+import com.google.common.annotations.VisibleForTesting;
 import io.grpc.NameResolver;
 import org.apache.curator.framework.CuratorFramework;
 
@@ -52,6 +66,7 @@ public class Frontend extends NodeBase {
     private MetaService metaService;
     private RpcServer rpcServer;
     private MaxGraphServer maxGraphServer;
+    private ClientService clientService;
 
     public Frontend(Configs configs) {
         super(configs);
@@ -90,7 +105,7 @@ public class Frontend extends NodeBase {
         DdlExecutors ddlExecutors = new DdlExecutors();
         BatchDdlClient batchDdlClient =
                 new BatchDdlClient(ddlExecutors, snapshotCache, schemaWriter);
-        ClientService clientService =
+        this.clientService =
                 new ClientService(
                         snapshotCache,
                         metricsAggregator,
@@ -171,5 +186,10 @@ public class Frontend extends NodeBase {
         Frontend frontend = new Frontend(conf);
         NodeLauncher nodeLauncher = new NodeLauncher(frontend);
         nodeLauncher.start();
+    }
+
+    @VisibleForTesting
+    public ClientService getClientService() {
+        return this.clientService;
     }
 }

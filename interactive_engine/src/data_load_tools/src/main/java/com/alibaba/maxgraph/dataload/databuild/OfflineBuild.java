@@ -1,26 +1,24 @@
 /**
  * Copyright 2020 Alibaba Group Holding Limited.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- * 
- *     http://www.apache.org/licenses/LICENSE-2.0
- * 
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
+ *
+ * <p>Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of the License at
+ *
+ * <p>http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * <p>Unless required by applicable law or agreed to in writing, software distributed under the
+ * License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
+ * express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
  */
 package com.alibaba.maxgraph.dataload.databuild;
 
+import com.alibaba.graphscope.groot.sdk.Client;
 import com.alibaba.maxgraph.compiler.api.schema.GraphEdge;
 import com.alibaba.maxgraph.compiler.api.schema.GraphElement;
 import com.alibaba.maxgraph.compiler.api.schema.GraphSchema;
 import com.alibaba.graphscope.groot.schema.GraphSchemaMapper;
-import com.alibaba.maxgraph.groot.sdk.Client;
-import com.alibaba.maxgraph.groot.sdk.DataLoadTarget;
+import com.alibaba.maxgraph.sdkcommon.common.DataLoadTarget;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.hadoop.conf.Configuration;
@@ -57,7 +55,8 @@ public class OfflineBuild {
     public static final String LOAD_AFTER_BUILD = "load.after.build";
     public static final String SKIP_HEADER = "skip.header";
 
-    public static void main(String[] args) throws IOException, ClassNotFoundException, InterruptedException {
+    public static void main(String[] args)
+            throws IOException, ClassNotFoundException, InterruptedException {
         String propertiesFile = args[0];
         Properties properties = new Properties();
         try (InputStream is = new FileInputStream(propertiesFile)) {
@@ -69,28 +68,33 @@ public class OfflineBuild {
         String graphEndpoint = properties.getProperty(GRAPH_ENDPOINT);
         Client client = new Client(graphEndpoint, "");
         ObjectMapper objectMapper = new ObjectMapper();
-        Map<String, FileColumnMapping> columnMappingConfig = objectMapper.readValue(columnMappingConfigStr,
-                new TypeReference<Map<String, FileColumnMapping>>() {});
+        Map<String, FileColumnMapping> columnMappingConfig =
+                objectMapper.readValue(
+                        columnMappingConfigStr,
+                        new TypeReference<Map<String, FileColumnMapping>>() {});
 
         List<DataLoadTarget> targets = new ArrayList<>();
         for (FileColumnMapping fileColumnMapping : columnMappingConfig.values()) {
-            targets.add(DataLoadTarget.newBuilder()
-                    .setLabel(fileColumnMapping.getLabel())
-                    .setSrcLabel(fileColumnMapping.getSrcLabel())
-                    .setDstLabel(fileColumnMapping.getDstLabel())
-                    .build());
+            targets.add(
+                    DataLoadTarget.newBuilder()
+                            .setLabel(fileColumnMapping.getLabel())
+                            .setSrcLabel(fileColumnMapping.getSrcLabel())
+                            .setDstLabel(fileColumnMapping.getDstLabel())
+                            .build());
         }
         GraphSchema schema = client.prepareDataLoad(targets);
         String schemaJson = GraphSchemaMapper.parseFromSchema(schema).toJsonString();
         int partitionNum = client.getPartitionNum();
 
         Map<String, ColumnMappingInfo> columnMappingInfos = new HashMap<>();
-        columnMappingConfig.forEach((fileName, fileColumnMapping) -> {
-            columnMappingInfos.put(fileName, fileColumnMapping.toColumnMappingInfo(schema));
-        });
+        columnMappingConfig.forEach(
+                (fileName, fileColumnMapping) -> {
+                    columnMappingInfos.put(fileName, fileColumnMapping.toColumnMappingInfo(schema));
+                });
         String ldbcCustomize = properties.getProperty(LDBC_CUSTOMIZE, "true");
         long splitSize = Long.valueOf(properties.getProperty(SPLIT_SIZE, "256")) * 1024 * 1024;
-        boolean loadAfterBuild = properties.getProperty(LOAD_AFTER_BUILD, "false").equalsIgnoreCase("true");
+        boolean loadAfterBuild =
+                properties.getProperty(LOAD_AFTER_BUILD, "false").equalsIgnoreCase("true");
         boolean skipHeader = properties.getProperty(SKIP_HEADER, "true").equalsIgnoreCase("true");
         Configuration conf = new Configuration();
         conf.setBoolean("mapreduce.map.speculative", false);
@@ -149,13 +153,14 @@ public class OfflineBuild {
                 DataLoadTarget.Builder builder = DataLoadTarget.newBuilder();
                 builder.setLabel(label);
                 if (graphElement instanceof GraphEdge) {
-                    builder.setSrcLabel(schema.getElement(columnMappingInfo.getSrcLabelId()).getLabel());
-                    builder.setDstLabel(schema.getElement(columnMappingInfo.getDstLabelId()).getLabel());
+                    builder.setSrcLabel(
+                            schema.getElement(columnMappingInfo.getSrcLabelId()).getLabel());
+                    builder.setDstLabel(
+                            schema.getElement(columnMappingInfo.getDstLabelId()).getLabel());
                 }
                 tableToTarget.put(tableId, builder.build());
             }
             client.commitDataLoad(tableToTarget);
         }
     }
-
 }

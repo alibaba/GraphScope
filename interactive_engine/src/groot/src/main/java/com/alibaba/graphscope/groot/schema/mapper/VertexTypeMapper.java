@@ -17,7 +17,6 @@ import com.alibaba.maxgraph.compiler.api.schema.GraphProperty;
 import com.alibaba.maxgraph.compiler.api.schema.GraphVertex;
 import com.alibaba.maxgraph.compiler.api.schema.PrimaryKeyConstraint;
 import com.alibaba.graphscope.groot.schema.TypeEnum;
-import com.alibaba.graphscope.groot.frontend.graph.memory.schema.DefaultGraphVertex;
 import com.google.common.collect.Lists;
 
 import java.util.List;

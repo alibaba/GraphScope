@@ -1,5 +1,9 @@
 package com.alibaba.graphscope.groot.frontend.write;
 
+import com.alibaba.graphscope.groot.operation.EdgeId;
+import com.alibaba.graphscope.groot.operation.LabelId;
+import com.alibaba.graphscope.groot.operation.OperationType;
+import com.alibaba.graphscope.groot.operation.VertexId;
 import com.alibaba.maxgraph.compiler.api.schema.DataType;
 import com.alibaba.maxgraph.compiler.api.schema.GraphElement;
 import com.alibaba.maxgraph.compiler.api.schema.GraphProperty;

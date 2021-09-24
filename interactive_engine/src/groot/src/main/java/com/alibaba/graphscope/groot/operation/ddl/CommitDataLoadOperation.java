@@ -13,7 +13,7 @@
  */
 package com.alibaba.graphscope.groot.operation.ddl;
 
-import com.alibaba.maxgraph.proto.groot.CommitDataLoadPb;
+import com.alibaba.maxgraph.proto.CommitDataLoadPb;
 import com.alibaba.maxgraph.proto.groot.DdlOperationPb;
 import com.alibaba.graphscope.groot.operation.Operation;
 import com.alibaba.graphscope.groot.operation.OperationType;

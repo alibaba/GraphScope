@@ -18,6 +18,7 @@ import com.alibaba.graphscope.groot.schema.GraphDef;
 import com.alibaba.graphscope.groot.frontend.SnapshotCache;
 import org.junit.jupiter.api.Test;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.*;
 
 public class SnapshotCacheTest {

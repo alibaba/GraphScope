@@ -211,4 +211,9 @@ public class MaxNode extends NodeBase {
     public List<NodeBase> getStores() {
         return stores;
     }
+
+    @VisibleForTesting
+    public List<NodeBase> getFrontends() {
+        return frontends;
+    }
 }

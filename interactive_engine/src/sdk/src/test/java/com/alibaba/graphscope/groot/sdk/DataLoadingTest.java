@@ -1,8 +1,7 @@
-package com.alibaba.maxgraph.tests.sdk;
+package com.alibaba.graphscope.groot.sdk;
 
 import com.alibaba.maxgraph.compiler.api.schema.GraphSchema;
 import com.alibaba.graphscope.groot.schema.GraphDef;
-import com.alibaba.maxgraph.groot.sdk.Client;
 import org.junit.Test;
 
 import java.io.IOException;
@@ -20,7 +19,12 @@ public class DataLoadingTest {
 
     @Test
     public void testLoadSchema() throws URISyntaxException, IOException {
-        Path path = Paths.get(Thread.currentThread().getContextClassLoader().getResource("modern.schema").toURI());
+        Path path =
+                Paths.get(
+                        Thread.currentThread()
+                                .getContextClassLoader()
+                                .getResource("modern.schema")
+                                .toURI());
         String jsonSchemaRes = client.loadJsonSchema(path);
         System.out.println(jsonSchemaRes);
     }
@@ -73,42 +77,48 @@ public class DataLoadingTest {
 
         Thread.sleep(5000);
 
-        client.addEdge("knows",
+        client.addEdge(
+                "knows",
                 "person",
                 "person",
                 Collections.singletonMap("id", "1"),
                 Collections.singletonMap("id", "2"),
                 Collections.singletonMap("weight", "0.5"));
 
-        client.addEdge("created",
+        client.addEdge(
+                "created",
                 "person",
                 "software",
                 Collections.singletonMap("id", "1"),
                 Collections.singletonMap("id", "3"),
                 Collections.singletonMap("weight", "0.4"));
 
-        client.addEdge("knows",
+        client.addEdge(
+                "knows",
                 "person",
                 "person",
                 Collections.singletonMap("id", "1"),
                 Collections.singletonMap("id", "4"),
                 Collections.singletonMap("weight", "1.0"));
 
-        client.addEdge("created",
+        client.addEdge(
+                "created",
                 "person",
                 "software",
                 Collections.singletonMap("id", "4"),
                 Collections.singletonMap("id", "3"),
                 Collections.singletonMap("weight", "0.4"));
 
-        client.addEdge("created",
+        client.addEdge(
+                "created",
                 "person",
                 "software",
                 Collections.singletonMap("id", "4"),
                 Collections.singletonMap("id", "5"),
                 Collections.singletonMap("weight", "1.0"));
 
-        client.addEdge("created",
+        client.addEdge(
+                "created",
                 "person",
                 "software",
                 Collections.singletonMap("id", "6"),

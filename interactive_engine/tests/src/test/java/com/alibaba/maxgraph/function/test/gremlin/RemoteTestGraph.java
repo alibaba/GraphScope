@@ -11,28 +11,13 @@
  * express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.alibaba.maxgraph.tests.gremlin;
+package com.alibaba.maxgraph.function.test.gremlin;
 
-import com.alibaba.graphscope.groot.frontend.ClientService;
+import com.alibaba.graphscope.groot.sdk.Client;
 import com.alibaba.maxgraph.compiler.api.schema.GraphSchema;
-import com.alibaba.maxgraph.groot.grafting.frontend.Frontend;
-import com.alibaba.maxgraph.proto.groot.DropSchemaRequest;
-import com.alibaba.maxgraph.proto.groot.DropSchemaResponse;
-import com.alibaba.maxgraph.proto.groot.LoadJsonSchemaRequest;
-import com.alibaba.maxgraph.proto.groot.LoadJsonSchemaResponse;
 import com.alibaba.maxgraph.sdkcommon.io.MaxGraphIORegistry;
 import com.alibaba.maxgraph.tinkerpop.traversal.MaxGraphTraversalSource;
-import com.alibaba.maxgraph.groot.MaxNode;
-import com.alibaba.maxgraph.groot.common.NodeBase;
-import com.alibaba.maxgraph.common.config.CommonConfig;
-import com.alibaba.maxgraph.common.config.Configs;
-import com.alibaba.maxgraph.compiler.api.exception.MaxGraphException;
 import com.alibaba.graphscope.groot.schema.GraphDef;
-import com.alibaba.maxgraph.common.config.GremlinConfig;
-import io.grpc.stub.StreamObserver;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.util.concurrent.CompletableFuture;
 import org.apache.commons.configuration.Configuration;
 import org.apache.tinkerpop.gremlin.LoadGraphWith;
 import org.apache.tinkerpop.gremlin.driver.Cluster;
@@ -451,81 +436,25 @@ import java.util.Iterator;
         test = "org.apache.tinkerpop.gremlin.process.traversal.step.map.PropertiesTest",
         method = "g_injectXg_VX1X_propertiesXnameX_nextX_value",
         reason = "Not support inject operator")
-@Graph.OptOut(
-        test = "org.apache.tinkerpop.gremlin.process.traversal.step.map.SelectTest",
-        method =
-                "g_V_hasXperson_name_markoX_elementMapXnameX_asXaX_unionXidentity_identityX_selectXaX_selectXnameX",
-        reason = "Not support inject operator")
-@Graph.OptOut(
-        test = "org.apache.tinkerpop.gremlin.process.traversal.step.map.OrderTest",
-        method = "g_VX1X_elementMap_orderXlocalX_byXkeys_descXunfold",
-        reason = "Not support inject operator")
-@Graph.OptOut(
-        test = "org.apache.tinkerpop.gremlin.process.traversal.step.map.ValueMapTest",
-        method = "g_V_valueMapXname_ageX_withXtokens_idsX_byXunfoldX",
-        reason = "Not support inject operator")
-@Graph.OptOut(
-        test = "org.apache.tinkerpop.gremlin.process.traversal.step.filter.HasTest",
-        method = "g_V_bothE_properties_dedup_hasKeyXweightX_hasValueXltX0d3XX_value",
-        reason = "Not support inject operator")
-@Graph.OptOut(
-        test = "org.apache.tinkerpop.gremlin.process.traversal.step.filter.HasTest",
-        method = "g_V_bothE_properties_dedup_hasKeyXweightX_value",
-        reason = "Not support inject operator")
-@Graph.OptOut(
-        test = "org.apache.tinkerpop.gremlin.process.traversal.step.map.OrderTest",
-        method = "g_V_both_hasLabelXpersonX_order_byXage_descX_name",
-        reason = "Not support inject operator")
-@Graph.OptOut(
-        test = "org.apache.tinkerpop.gremlin.process.traversal.step.map.SelectTest",
-        method = "g_V_hasXperson_name_markoX_path_asXaX_unionXidentity_identityX_selectXaX_unfold",
-        reason = "Not support select traversal")
-@Graph.OptOut(
-        test = "org.apache.tinkerpop.gremlin.process.traversal.step.map.SelectTest",
-        method = "g_V_hasXperson_name_markoX_count_asXaX_unionXidentity_identityX_selectXaX",
-        reason = "Not support select traversal")
-public class MaxTestGraph implements Graph {
-    private static final Logger logger = LoggerFactory.getLogger(MaxTestGraph.class);
+public class RemoteTestGraph implements Graph {
+    private static final Logger logger = LoggerFactory.getLogger(RemoteTestGraph.class);
 
-    public static MaxTestGraph INSTANCE = null;
-
-    private NodeBase maxNode;
     private RemoteConnection remoteConnection;
     private Cluster cluster;
+    private boolean started = false;
+    private Client sdkClient;
 
-    private ClientService clientService;
-
-    public MaxTestGraph(Configs configs) {
-        try {
-            this.maxNode = new MaxNode(configs);
-            this.maxNode.start();
-            int port = GremlinConfig.GREMLIN_PORT.get(configs);
-            this.cluster = createCluster("localhost", port);
-            this.clientService =
-                    ((Frontend) ((MaxNode) this.maxNode).getFrontends().get(0)).getClientService();
-            this.remoteConnection = DriverRemoteConnection.using(cluster);
-        } catch (Throwable e) {
-            this.closeGraph();
-            throw new MaxGraphException(e);
-        }
+    public RemoteTestGraph(String host, int port) {
+        this.cluster = createCluster(host, port);
+        this.remoteConnection = DriverRemoteConnection.using(cluster);
+        this.sdkClient = new Client(host, 55555);
+        this.started = true;
     }
 
-    public static MaxTestGraph open(final Configuration conf) throws Exception {
-        if (INSTANCE == null) {
-            logger.info("open new MaxTestGraph");
-            String log4rsPath =
-                    Paths.get(
-                                    Thread.currentThread()
-                                            .getContextClassLoader()
-                                            .getResource("log4rs.yml")
-                                            .toURI())
-                            .toString();
-            Configs.Builder builder = Configs.newBuilder();
-            conf.getKeys().forEachRemaining((k) -> builder.put(k, conf.getString(k)));
-            Configs configs = builder.put(CommonConfig.LOG4RS_CONFIG.getKey(), log4rsPath).build();
-            INSTANCE = new MaxTestGraph(configs);
-        }
-        return INSTANCE;
+    public static RemoteTestGraph open(final Configuration conf) throws Exception {
+        String host = conf.getString("remote.graph.host");
+        int port = conf.getInt("remote.graph.port");
+        return new RemoteTestGraph(host, port);
     }
 
     private Cluster createCluster(String ip, int port) {
@@ -541,29 +470,7 @@ public class MaxTestGraph implements Graph {
     }
 
     private void dropData() {
-        CompletableFuture<GraphSchema> future = new CompletableFuture<>();
-        this.clientService.dropSchema(
-                DropSchemaRequest.newBuilder().build(),
-                new StreamObserver<DropSchemaResponse>() {
-                    @Override
-                    public void onNext(DropSchemaResponse value) {
-                        future.complete(GraphDef.parseProto(value.getGraphDef()));
-                    }
-
-                    @Override
-                    public void onError(Throwable t) {
-                        future.completeExceptionally(t);
-                    }
-
-                    @Override
-                    public void onCompleted() {}
-                });
-        GraphSchema schema;
-        try {
-            schema = future.get();
-        } catch (Exception e) {
-            throw new MaxGraphException(e);
-        }
+        GraphSchema schema = sdkClient.dropSchema();
         logger.info("drop schema: " + ((GraphDef) schema).toProto().toString());
     }
 
@@ -576,30 +483,7 @@ public class MaxTestGraph implements Graph {
                                 .getContextClassLoader()
                                 .getResource(schemaResource)
                                 .toURI());
-        String json = new String(Files.readAllBytes(path), StandardCharsets.UTF_8);
-        CompletableFuture<String> future = new CompletableFuture<>();
-        clientService.loadJsonSchema(
-                LoadJsonSchemaRequest.newBuilder().setSchemaJson(json).build(),
-                new StreamObserver<LoadJsonSchemaResponse>() {
-                    @Override
-                    public void onNext(LoadJsonSchemaResponse value) {
-                        future.complete(value.getGraphDef().toString());
-                    }
-
-                    @Override
-                    public void onError(Throwable t) {
-                        future.completeExceptionally(t);
-                    }
-
-                    @Override
-                    public void onCompleted() {}
-                });
-        try {
-            String schemaString = future.get();
-            logger.info("load json schema: " + schemaString);
-        } catch (Exception e) {
-            throw new MaxGraphException(e);
-        }
+        logger.info("load json schema: " + sdkClient.loadJsonSchema(path));
     }
 
     @Override
@@ -644,11 +528,15 @@ public class MaxTestGraph implements Graph {
 
     @Override
     public void close() {
-        dropData();
+        if (started) {
+            dropData();
+            closeGraph();
+        }
+        started = false;
     }
 
     private void closeGraph() {
-        logger.info("close MaxTestGraph");
+        logger.info("disconnect RemoteTestGraph");
         if (this.remoteConnection != null) {
             try {
                 this.remoteConnection.close();
@@ -658,13 +546,6 @@ public class MaxTestGraph implements Graph {
         }
         if (this.cluster != null) {
             this.cluster.close();
-        }
-        if (this.maxNode != null) {
-            try {
-                this.maxNode.close();
-            } catch (IOException e) {
-                logger.error("close maxNode failed", e);
-            }
         }
     }
 
@@ -676,9 +557,5 @@ public class MaxTestGraph implements Graph {
     @Override
     public Configuration configuration() {
         return null;
-    }
-
-    public MaxNode getMaxNode() {
-        return (MaxNode) maxNode;
     }
 }

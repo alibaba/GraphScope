@@ -15,7 +15,6 @@ package com.alibaba.graphscope.groot.schema.mapper;
 
 import com.alibaba.maxgraph.compiler.api.schema.EdgeRelation;
 import com.alibaba.maxgraph.compiler.api.schema.GraphVertex;
-import com.alibaba.graphscope.groot.frontend.graph.memory.schema.DefaultEdgeRelation;
 
 import java.util.Map;
 

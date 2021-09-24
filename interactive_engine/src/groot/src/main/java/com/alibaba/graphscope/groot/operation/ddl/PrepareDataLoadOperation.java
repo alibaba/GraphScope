@@ -13,11 +13,11 @@
  */
 package com.alibaba.graphscope.groot.operation.ddl;
 
+import com.alibaba.maxgraph.proto.PrepareDataLoadPb;
 import com.alibaba.maxgraph.proto.groot.DdlOperationPb;
-import com.alibaba.maxgraph.proto.groot.PrepareDataLoadPb;
 import com.alibaba.graphscope.groot.operation.Operation;
 import com.alibaba.graphscope.groot.operation.OperationType;
-import com.alibaba.maxgraph.groot.sdk.DataLoadTarget;
+import com.alibaba.maxgraph.sdkcommon.common.DataLoadTarget;
 import com.google.protobuf.ByteString;
 
 public class PrepareDataLoadOperation extends Operation {

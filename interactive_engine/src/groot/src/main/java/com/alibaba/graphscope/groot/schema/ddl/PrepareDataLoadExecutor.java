@@ -22,7 +22,7 @@ import com.alibaba.graphscope.groot.schema.GraphDef;
 import com.alibaba.graphscope.groot.schema.TypeDef;
 import com.alibaba.graphscope.groot.schema.TypeEnum;
 import com.alibaba.graphscope.groot.schema.request.DdlException;
-import com.alibaba.maxgraph.groot.sdk.DataLoadTarget;
+import com.alibaba.maxgraph.sdkcommon.common.DataLoadTarget;
 import com.google.protobuf.ByteString;
 import com.google.protobuf.InvalidProtocolBufferException;
 
