@@ -1193,9 +1193,159 @@ def is_simple_path(G, nodes):
 
 
 @project_to_simple
-def all_simple_paths(G, source, target_nodes, cutoff):
-    n1json = json.dumps(target_nodes)
-    ctx = AppAssets(algo="all_simple_paths", context="tensor")(
-        G, source, n1json, cutoff
-    )
-    return ctx.to_numpy("r", axis=0).tolist()
+def all_simple_paths(G, source, target_nodes, cutoff=None):
+    """Generate all simple paths in the graph G from source to target.
+
+    A simple path is a path with no repeated nodes.
+
+    Parameters
+    ----------
+    G : NetworkX graph
+
+    source : node
+       Starting node for path
+
+    target : nodes
+       Single node or iterable of nodes at which to end path
+
+    cutoff : integer, optional
+        Depth to stop the search. Only paths of length <= cutoff are returned.
+
+    Returns
+    -------
+    path_generator: generator
+       A generator that produces lists of simple paths.  If there are no paths
+       between the source and target within the given cutoff the generator
+       produces no output.
+
+    Examples
+    --------
+        >>> G = nx.complete_graph(4)
+        >>> print(nx.builtin.all_simple_paths(G, 0, 3))
+        ...
+        [0, 1, 2, 3]
+        [0, 1, 3]
+        [0, 2, 1, 3]
+        [0, 2, 3]
+        [0, 3]
+
+    Notes
+    -----
+    This algorithm uses a modified depth-first search to generate the
+    paths [1]_.  A single path can be found in $O(V+E)$ time but the
+    number of simple paths in a graph can be very large, e.g. $O(n!)$ in
+    the complete graph of order $n$.
+
+    References
+    ----------
+    .. [1] R. Sedgewick, "Algorithms in C, Part 5: Graph Algorithms",
+       Addison Wesley Professional, 3rd ed., 2001.
+
+    See Also
+    --------
+    all_shortest_paths, shortest_path
+
+    """
+    if not isinstance(target_nodes, list):
+        tolist = [target_nodes]
+        n1json = json.dumps(tolist)
+    else:
+        n1json = json.dumps(target_nodes)
+    if cutoff:
+        ctx = AppAssets(algo="all_simple_paths", context="tensor")(
+            G, source, n1json, cutoff
+        )
+    else:
+        ctx = AppAssets(algo="all_simple_paths", context="tensor")(
+            G, source, n1json, 2147483647
+        )
+    paths = ctx.to_numpy("r", axis=0).tolist()
+    # delte path tail padding
+    for path in paths:
+        for i in range(len(path)-1, -1, -1):
+            if path[i] == -1:
+                path.pop(i)
+            else:
+                break
+    return paths
+
+
+@project_to_simple
+def all_simple_edge_paths(G, source, target_nodes, cutoff=None):
+    """Generate lists of edges for all simple paths in G from source to target.
+
+    A simple path is a path with no repeated nodes.
+
+    Parameters
+    ----------
+    G : NetworkX graph
+
+    source : node
+       Starting node for path
+
+    target : nodes
+       Single node or iterable of nodes at which to end path
+
+    cutoff : integer, optional
+        Depth to stop the search. Only paths of length <= cutoff are returned.
+
+    Returns
+    -------
+    path_generator: generator
+       A generator that produces lists of simple paths.  If there are no paths
+       between the source and target within the given cutoff the generator
+       produces no output.
+       For multigraphs, the list of edges have elements of the form `(u,v,k)`.
+       Where `k` corresponds to the edge key.
+
+    Examples
+    --------
+    Print the simple path edges of a Graph::
+
+        >>> g = nx.Graph([(1, 2), (2, 4), (1, 3), (3, 4)])
+        >>> print(nx.builtin.all_simple_paths(G, 1, 4))
+        [(1, 2), (2, 4)]
+        [(1, 3), (3, 4)]
+
+    Notes
+    -----
+    This algorithm uses a modified depth-first search to generate the
+    paths [1]_.  A single path can be found in $O(V+E)$ time but the
+    number of simple paths in a graph can be very large, e.g. $O(n!)$ in
+    the complete graph of order $n$.
+
+    References
+    ----------
+    .. [1] R. Sedgewick, "Algorithms in C, Part 5: Graph Algorithms",
+       Addison Wesley Professional, 3rd ed., 2001.
+
+    See Also
+    --------
+    all_shortest_paths, shortest_path, all_simple_paths
+
+    """
+    if not isinstance(target_nodes, list):
+        tolist = [target_nodes]
+        n1json = json.dumps(tolist)
+    else:
+        n1json = json.dumps(target_nodes)
+    if cutoff:
+        ctx = AppAssets(algo="all_simple_paths", context="tensor")(
+            G, source, n1json, cutoff
+        )
+    else:
+        ctx = AppAssets(algo="all_simple_paths", context="tensor")(
+            G, source, n1json, 2147483647
+        )
+    paths = ctx.to_numpy("r", axis=0).tolist()
+    # delte path tail padding and merge vertex to edge
+    for path in paths:
+        for i in range(len(path)-1, -1, -1):
+            if path[i] == -1:
+                a = path.pop(i)
+            else:
+                b = path.pop(i)
+                if a != -1 and a != "":
+                    path.insert(i, (b, a))
+                a = b
+    return paths

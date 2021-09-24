@@ -106,25 +106,14 @@ class AllSimplePathsContext
       qvisit.insert(source_gid);
       q.push_back(source_gid);
       int index = find_edge_map_index(source_gid);
-
-      struct timeval t;
-      gettimeofday(&t, 0);
-      counter_time -= static_cast<double>(t.tv_sec) +
-                      static_cast<double>(t.tv_usec) / 1000000;
       Pint_Result(index, 0, q, qvisit, os);
-      gettimeofday(&t, 0);
-      counter_time += static_cast<double>(t.tv_sec) +
-                      static_cast<double>(t.tv_usec) / 1000000;
-      VLOG(0) << "counter_time : " << counter_time << std::endl;
     }
-    VLOG(0) << "exec_time : " << exec_time << std::endl;
   }
 
   void Pint_Result(int from, int depth, std::vector<vid_t>& q,
                    std::set<vid_t>& qvisit, std::ostream& os) {
     auto& frag = this->fragment();
     if (depth == (this->cutoff - 1)) {
-      // VLOG(0) << "in last: " << std::endl;
       typename std::set<vid_t>::iterator it;
       for (it = targets.begin(); it != targets.end(); it++) {
         auto t = *it;
@@ -164,8 +153,8 @@ class AllSimplePathsContext
   }
 
   int find_edge_map_index(vid_t gid) {
-    int fid = gid >> fid_offset;
-    int lid = gid & id_mask;
+    int fid = static_cast<int>(gid >> fid_offset);
+    int lid = static_cast<int>(gid & id_mask);
     int ret = 0;
     for (int i = 0; i < fid; i++) {
       ret += frag_vertex_num[i];
@@ -181,7 +170,8 @@ class AllSimplePathsContext
       sum += frag_vertex_num[i];
       if (sum > index) {
         int lid = index - sum_last;
-        vid_t gid = (i << fid_offset) | lid;
+        vid_t gid =
+            (static_cast<vid_t>(i) << fid_offset) | static_cast<vid_t>(lid);
         return gid;
       }
       i++;
@@ -202,7 +192,6 @@ class AllSimplePathsContext
   std::vector<std::vector<int>> edge_map;
   int frag_finish_counter = 0;
   int path_num = 0;
-  double exec_time = 0;
 };
 }  // namespace gs
 

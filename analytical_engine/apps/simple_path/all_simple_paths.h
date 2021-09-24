@@ -47,20 +47,13 @@ class AllSimplePaths : public AppBase<FRAG_T, AllSimplePathsContext<FRAG_T>>,
     vertex_t source;
     vid_t source_gid;
 
-    struct timeval t;
-    gettimeofday(&t, 0);
-    ctx.exec_time -= static_cast<double>(t.tv_sec) +
-                     static_cast<double>(t.tv_usec) / 1000000;
-
     frag.Oid2Gid(ctx.source_id, source_gid);
     ctx.soucre_fid = source_gid >> ctx.fid_offset;
     bool native_source = frag.GetInnerVertex(ctx.source_id, source);
     if (native_source) {
       ctx.source_flag = true;
       size_t total_vertex_num = frag.GetTotalVerticesNum();
-      VLOG(0) << "before init map: " << std::endl;
       ctx.edge_map.resize(total_vertex_num);
-      VLOG(0) << "after init map: " << std::endl;
     } else {
       vid_t in_num = frag.GetInnerVerticesNum();
       fid_t fid = frag.fid();
@@ -68,11 +61,6 @@ class AllSimplePaths : public AppBase<FRAG_T, AllSimplePathsContext<FRAG_T>>,
           std::make_tuple(std::make_pair((vid_t) fid, in_num), false, true);
       messages.SendToFragment(ctx.soucre_fid, msg);
     }
-
-    gettimeofday(&t, 0);
-    ctx.exec_time += static_cast<double>(t.tv_sec) +
-                     static_cast<double>(t.tv_usec) / 1000000;
-
     messages.ForceContinue();
   }
 
@@ -81,11 +69,6 @@ class AllSimplePaths : public AppBase<FRAG_T, AllSimplePathsContext<FRAG_T>>,
     int frag_finish_counter = 0;
     int init_counter = 0;
     std::tuple<std::pair<vid_t, vid_t>, bool, bool> msg;
-
-    struct timeval t;
-    gettimeofday(&t, 0);
-    ctx.exec_time -= static_cast<double>(t.tv_sec) +
-                     static_cast<double>(t.tv_usec) / 1000000;
 
     while (messages.GetMessage(msg)) {
       vid_t gid = std::get<0>(msg).first;
@@ -138,10 +121,6 @@ class AllSimplePaths : public AppBase<FRAG_T, AllSimplePathsContext<FRAG_T>>,
     if (ctx.frag_finish_counter == 0 && frag.fid() == ctx.soucre_fid) {
       writeToCtx(frag, ctx);
     }
-
-    gettimeofday(&t, 0);
-    ctx.exec_time += static_cast<double>(t.tv_sec) +
-                     static_cast<double>(t.tv_usec) / 1000000;
   }
 
  private:
@@ -217,7 +196,7 @@ class AllSimplePaths : public AppBase<FRAG_T, AllSimplePathsContext<FRAG_T>>,
           }
           data.push_back(frag.Gid2Oid(t));
           len_counter++;
-          // fill path to cutoff
+          // fill path to cutoff with -1
           while (len_counter != ctx.cutoff + 1) {
             data.push_back(-1);
             len_counter++;
@@ -243,7 +222,7 @@ class AllSimplePaths : public AppBase<FRAG_T, AllSimplePathsContext<FRAG_T>>,
         }
         data.push_back(frag.Gid2Oid(gid));
         len_counter++;
-        // fill path length to cutoff
+        // fill path length to cutoff with -1
         while (len_counter != ctx.cutoff + 1) {
           data.push_back(-1);
           len_counter++;
@@ -285,7 +264,6 @@ class AllSimplePaths : public AppBase<FRAG_T, AllSimplePathsContext<FRAG_T>>,
     }
   }
 };
-
 }  // namespace gs
 
 #endif  // ANALYTICAL_ENGINE_APPS_SIMPLE_PATH_ALL_SIMPLE_PATHS_H_
