@@ -49,7 +49,6 @@ limitations under the License.
 #include "wcc/wcc.h"
 #include "wcc/wcc_auto.h"
 
-#include "apps/assortativity/average_degree_connectivity/average_degree_connectivity.h"
 #include "apps/bfs/bfs_generic.h"
 #include "apps/centrality/degree/degree_centrality.h"
 #include "apps/centrality/eigenvector/eigenvector_centrality.h"
@@ -116,9 +115,6 @@ DECLARE_int32(app_concurrency);
 
 DECLARE_int64(dfs_source);
 DECLARE_string(dfs_format);
-
-DECLARE_string(source_degree_type);
-DECLARE_string(target_degree_type);
 
 namespace gs {
 
@@ -425,14 +421,6 @@ void Run() {
     CreateAndQuery<GraphType, AppType>(comm_spec, efile, vfile, out_prefix,
                                        FLAGS_datasource, fnum, spec,
                                        FLAGS_bfs_source);
-  } else if (name == "average_degree_connectivity") {
-    using GraphType =
-        grape::ImmutableEdgecutFragment<OID_T, VID_T, VDATA_T, int64_t,
-                                        grape::LoadStrategy::kBothOutIn>;
-    using AppType = AverageDegreeConnectivity<GraphType>;
-    CreateAndQuery<GraphType, AppType>(
-        comm_spec, efile, vfile, out_prefix, FLAGS_datasource, fnum, spec,
-        FLAGS_source_degree_type, FLAGS_target_degree_type, FLAGS_directed);
   } else {
     LOG(FATAL) << "No available application named [" << name << "].";
   }
