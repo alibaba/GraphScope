@@ -82,7 +82,7 @@ class AverageDegreeConnectivityContext : public TensorContext<FRAG_T, double> {
   bool weighted;
   DegreeType source_degree_type_;
   DegreeType target_degree_type_;
-  // <degree, degree_connectivity> pair
+  // <degree, <sum of neighbor's, weighted degree> pair
   std::unordered_map<int, std::pair<double, double>> degree_connectivity_map;
 };
 }  // namespace gs

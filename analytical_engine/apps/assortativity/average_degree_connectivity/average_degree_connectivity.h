@@ -95,7 +95,7 @@ class AverageDegreeConnectivity
       }
       messages.ForceContinue();
     } else {
-      // merge in work 0
+      // merge in worker 0
       if (frag.fid() == 0) {
         std::unordered_map<int, std::pair<double, double>> msg;
         while (messages.GetMessage(msg)) {
