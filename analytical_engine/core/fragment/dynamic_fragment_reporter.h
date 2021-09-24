@@ -171,9 +171,11 @@ class DynamicGraphReporter : public grape::Communicator {
 
   std::string getNodeData(std::shared_ptr<fragment_t>& fragment,
                           const oid_t& n) {
-    std::string ret;
-    fragment->GetVertexData(n, ret);
-    return ret;
+    vertex_t v;
+    if (fragment->GetInnerVertex(n, v) && fragment->IsAliveInnerVertex(v)) {
+      return folly::toJson(fragment->GetData(v));
+    }
+    return std::string();
   }
 
   std::string getEdgeData(std::shared_ptr<fragment_t>& fragment, const oid_t& u,
@@ -411,8 +413,7 @@ class ImmutableGraphReporter<vineyard::ArrowFragment<OID_T, VID_T>>
   bl::result<std::string> Report(std::shared_ptr<fragment_t>& fragment,
                                  const rpc::GSParams& params) {
     BOOST_LEAF_AUTO(report_type, params.Get<rpc::ReportType>(rpc::REPORT_TYPE));
-    //  BOOST_LEAF_AUTO(default_label_id, params.Get<int>(rpc::V_LABEL_ID));
-    label_id_t default_label_id = 1;
+    BOOST_LEAF_AUTO(default_label_id, params.Get<int64_t>(rpc::V_LABEL_ID));
     switch (report_type) {
     case rpc::NODE_NUM: {
       return std::to_string(reportNodeNum(fragment));
@@ -426,31 +427,27 @@ class ImmutableGraphReporter<vineyard::ArrowFragment<OID_T, VID_T>>
     }
     case rpc::HAS_NODE: {
       BOOST_LEAF_AUTO(node_in_json, params.Get<std::string>(rpc::NODE));
-      label_id_t v_label_id = default_label_id;
-      oid_t oid;
       folly::dynamic node = folly::parseJson(node_in_json, json_opts_)[0];
-      if (node.isArray()) {
-        v_label_id = node[0].asInt();
-        oid = convert_oid<oid_t>(node[1]);
-      } else {
-        oid = convert_oid<oid_t>(node);
-      }
-      return std::to_string(hasNode(fragment, v_label_id, oid));
+      label_id_t label_id = node[0].asInt();
+      oid_t oid = convert_oid<oid_t>(node[1]);
+      return std::to_string(hasNode(fragment, label_id, oid));
     }
     case rpc::HAS_EDGE: {
-      /*
       BOOST_LEAF_AUTO(edge_in_json, params.Get<std::string>(rpc::EDGE));
-      oid_t edge = folly::parseJson(edge_in_json, json_opts_);
-      auto& src_id = edge[0];
-      auto& dst_id = edge[1];
-      return std::to_string(hasEdge(fragment, src_id, dst_id));
-      */
-      return std::string();
+      folly::dynamic edge = folly::parseJson(edge_in_json, json_opts_);
+      label_id_t u_label_id = edge[0][0].asInt();
+      label_id_t v_label_id = edge[1][0].asInt();
+      auto u_oid = convert_oid<oid_t>(edge[0][1]);
+      auto v_oid = convert_oid<oid_t>(edge[1][1]);
+      return std::to_string(hasEdge(fragment, u_label_id, u_oid, v_label_id,
+                                    v_oid));
     }
     case rpc::NODE_DATA: {
-      // BOOST_LEAF_AUTO(node_in_json, params.Get<std::string>(rpc::NODE));
-      // oid_t node_id = folly::parseJson(node_in_json, json_opts_)[0];
-      // return getNodeData(fragment, node_id);
+      BOOST_LEAF_AUTO(node_in_json, params.Get<std::string>(rpc::NODE));
+      folly::dynamic node = folly::parseJson(node_in_json, json_opts_)[0];
+      label_id_t label_id = node[0].asInt();
+      oid_t oid = convert_oid<oid_t>(node[1]);
+      return getNodeData(fragment, label_id, oid);
     }
     case rpc::EDGE_DATA: {
       BOOST_LEAF_AUTO(edge_in_json, params.Get<std::string>(rpc::EDGE));
@@ -514,6 +511,77 @@ class ImmutableGraphReporter<vineyard::ArrowFragment<OID_T, VID_T>>
                                                    oid, gid);
     Sum(existed, ret);
     return ret;
+  }
+
+  bool hasEdge(std::shared_ptr<fragment_t>& fragment, label_id_t u_label_id,
+               const oid_t& u_oid, label_id_t v_label_id, const oid_t& v_oid) {
+    bool ret = false, existed = false;
+    vid_t u_gid, v_gid;
+    vertex_t u, v;
+    auto vm_ptr = fragment->GetVertexMap();
+    if (vm_ptr->GetGid(fragment->fid(), u_label_id, u_oid, u_gid)
+        && vm_ptr->GetGid(v_label_id, v_oid, v_gid)
+        && fragment->InnerVertexGid2Vertex(u_gid, u)
+        && fragment->Gid2Vertex(v_gid, v)) {
+      for (label_id_t e_label = 0; e_label < fragment->edge_label_num();
+           e_label++) {
+        auto oe = fragment->GetOutgoingAdjList(u, e_label);
+        for (auto& e : oe) {
+          if (v == e.neighbor()) {
+            existed = true;
+            break;
+          }
+        }
+      }
+    }
+
+    Sum(existed, ret);
+    return ret;
+  }
+
+  std::string getNodeData(std::shared_ptr<fragment_t>& fragment,
+                          label_id_t label_id, const oid_t& n) {
+    folly::dynamic ob = folly::dynamic::object;
+    vid_t gid;
+    vertex_t v;
+    auto vm_ptr = fragment->GetVertexMap();
+    if (vm_ptr->GetGid(fragment->fid(), label_id, n, gid)
+        && fragment->InnerVertexGid2Vertex(gid, v)) {
+      auto vertex_data = fragment->vertex_data_table(label_id);
+      for (auto col_id = 0; col_id < vertex_data->num_columns(); col_id++) {
+        auto property_name = vertex_data->field(col_id)->name();
+        auto type = vertex_data->column(col_id)->type();
+        switch (type) {
+          case arrow::int32():
+            ob.insert(property_name, fragment->template GetData<int32_t>(v, col_id));
+            break;
+          case arrow::int64():
+            ob.insert(property_name, fragment->template GetData<int64_t>(v, col_id));
+            break;
+          case arrow::uint32():
+            ob.insert(property_name, fragment->template GetData<uint32_t>(v, col_id));
+            break;
+          case arrow::uint64():
+            ob.insert(property_name, fragment->template GetData<uint64_t>(v, col_id));
+            break;
+          case arrow::float32():
+            ob.insert(property_name, fragment->template GetData<float>(v, col_id));
+            break;
+          case arrow::float64():
+            ob.insert(property_name, fragment->template GetData<double>(v, col_id));
+            break;
+          case arrow::utf8():
+            ob.insert(property_name, fragment->template GetData<std::string>(v, col_id));
+            break;
+          case arrow::large_utf8():
+            ob.insert(property_name, fragment->template GetData<std::string>(v, col_id));
+            break;
+          default:
+            break;
+        }
+      }
+    }
+    return ob.empty() ? std::string() : folly::toJson(ob);
   }
 
   grape::CommSpec comm_spec_;

@@ -301,7 +301,7 @@ class Graph(_GraphBase):
                 self._key = incoming_graph_data.key
                 self._graph_type = graph_def_pb2.ARROW_PROPERTY
                 self._schema = incoming_graph_data.schema
-                self._default_label_id = self._schema._v_label_index[self._default_label]
+                self._default_label_id = self._schema.get_vertex_label_id(self._default_label)
             else:
                 g = to_nx_graph(incoming_graph_data, create_using=self)
                 check_argument(isinstance(g, Graph))
@@ -799,9 +799,11 @@ class Graph(_GraphBase):
         """
         try:
             check_node_is_legal(n)
+            if self.graph_type == graph_def_pb2.ARROW_PROPERTY:
+                n = self._replace_node_with_label_id(n)
             op = dag_utils.report_graph(self, types_pb2.HAS_NODE, node=json.dumps([n]))
             return int(op.eval())
-        except (TypeError, NetworkXError):
+        except (TypeError, NetworkXError, KeyError):
             return False
 
     def add_edge(self, u_of_edge, v_of_edge, **attr):
@@ -1251,9 +1253,17 @@ class Graph(_GraphBase):
         check_node_is_legal(u)
         check_node_is_legal(v)
         try:
-            return v in self._adj[u]
+            if self.graph_type == graph_def_pb2.ARROW_PROPERTY:
+                u = self._replace_node_with_label_id(u)
+                v = self._replace_node_with_label_id(v)
+            op = dag_utils.report_graph(self, types_pb2.HAS_EDGE, edge=json.dumps([u, v]))
+            return int(op.eval())
         except KeyError:
             return False
+        # try:
+        #     return v in self._adj[u]
+        # except KeyError:
+        #     return False
 
     def neighbors(self, n):
         """Returns an iterator over all neighbors of node n.
@@ -2082,3 +2092,10 @@ class Graph(_GraphBase):
                 schema.init_nx_schema()
                 schema.init_nx_schema(self._schema)
                 self._schema = schema
+
+    def _replace_node_with_label_id(self, u):
+        if isinstance(u, tuple):
+            new_u = (self._schema.get_vertex_label_id(u[0]), u[1])
+        else:
+            new_u = (self._default_label_id, u)
+        return new_u
