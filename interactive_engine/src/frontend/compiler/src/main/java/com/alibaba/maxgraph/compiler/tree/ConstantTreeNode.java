@@ -22,7 +22,6 @@ import com.alibaba.maxgraph.compiler.optimizer.ContextManager;
 import com.alibaba.maxgraph.compiler.tree.value.ValueType;
 import com.alibaba.maxgraph.compiler.tree.value.ValueValueType;
 import com.alibaba.maxgraph.compiler.logical.LogicalSubQueryPlan;
-import com.alibaba.maxgraph.compiler.logical.VertexIdManager;
 import com.alibaba.maxgraph.compiler.logical.function.ProcessorFunction;
 import com.alibaba.maxgraph.compiler.utils.CompilerUtils;
 
@@ -49,7 +48,7 @@ public class ConstantTreeNode extends UnaryTreeNode {
         Message.Value.Builder argumentBuilder = Message.Value.newBuilder()
                 .setValueType(variantType);
         switch (variantType) {
-            case VT_INTEGER: {
+            case VT_INT: {
                 argumentBuilder.setIntValue((int) constant);
                 break;
             }
@@ -69,7 +68,7 @@ public class ConstantTreeNode extends UnaryTreeNode {
                 argumentBuilder.setStrValue((String) constant);
                 break;
             }
-            case VT_INTEGER_LIST: {
+            case VT_INT_LIST: {
                 argumentBuilder.addAllIntValueList((Collection<Integer>) constant);
                 break;
             }

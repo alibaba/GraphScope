@@ -397,7 +397,7 @@ jobs:
         python3 -m pip install -r python/requirements-dev.txt --user
         python3 -m pip install pytest-cov --user
         pushd python && sudo -E python3 setup.py develop && popd
-        # pip3 install git+https://github.com/mars-project/mars.git@35b44ed56e031c252e50373b88b85bd9f454332e#egg=pymars[distributed]
+        python3 -m pip install git+https://github.com/mars-project/mars.git@d09e1e4c3e32ceb05f42d0b5b79775b1ebd299fb#egg=pymars
 
     - name: Kubernetes test
       env:

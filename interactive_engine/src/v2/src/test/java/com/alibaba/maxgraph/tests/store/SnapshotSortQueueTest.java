@@ -15,10 +15,10 @@
  */
 package com.alibaba.maxgraph.tests.store;
 
-import com.alibaba.maxgraph.v2.common.MetaService;
-import com.alibaba.maxgraph.v2.common.StoreDataBatch;
-import com.alibaba.maxgraph.v2.common.config.Configs;
-import com.alibaba.maxgraph.v2.store.SnapshotSortQueue;
+import com.alibaba.maxgraph.groot.common.MetaService;
+import com.alibaba.maxgraph.groot.common.StoreDataBatch;
+import com.alibaba.maxgraph.common.config.Configs;
+import com.alibaba.maxgraph.groot.store.SnapshotSortQueue;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;

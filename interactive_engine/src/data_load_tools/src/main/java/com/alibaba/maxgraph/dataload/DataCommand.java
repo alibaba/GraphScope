@@ -1,8 +1,8 @@
 package com.alibaba.maxgraph.dataload;
 
+import com.alibaba.maxgraph.compiler.api.schema.GraphSchema;
 import com.alibaba.maxgraph.dataload.databuild.ColumnMappingInfo;
-import com.alibaba.maxgraph.v2.common.frontend.api.schema.GraphSchema;
-import com.alibaba.maxgraph.v2.common.schema.GraphSchemaMapper;
+import com.alibaba.maxgraph.groot.common.schema.GraphSchemaMapper;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.hadoop.conf.Configuration;

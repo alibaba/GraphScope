@@ -15,27 +15,24 @@
  */
 package com.alibaba.maxgraph.tests.coordinator;
 
-import com.alibaba.maxgraph.v2.common.config.CommonConfig;
-import com.alibaba.maxgraph.v2.common.config.Configs;
-import com.alibaba.maxgraph.v2.common.config.CoordinatorConfig;
-import com.alibaba.maxgraph.v2.common.wal.LogService;
-import com.alibaba.maxgraph.v2.coordinator.IngestorWriteSnapshotIdNotifier;
-import com.alibaba.maxgraph.v2.coordinator.MetaStore;
-import com.alibaba.maxgraph.v2.coordinator.SnapshotInfo;
-import com.alibaba.maxgraph.v2.coordinator.SnapshotManager;
+import com.alibaba.maxgraph.common.config.CommonConfig;
+import com.alibaba.maxgraph.common.config.Configs;
+import com.alibaba.maxgraph.common.config.CoordinatorConfig;
+import com.alibaba.maxgraph.groot.common.wal.LogService;
+import com.alibaba.maxgraph.groot.coordinator.IngestorWriteSnapshotIdNotifier;
+import com.alibaba.maxgraph.groot.coordinator.MetaStore;
+import com.alibaba.maxgraph.groot.coordinator.SnapshotInfo;
+import com.alibaba.maxgraph.groot.coordinator.SnapshotManager;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
 
-import java.io.ByteArrayOutputStream;
-import java.io.DataOutputStream;
 import java.io.IOException;
-import java.nio.ByteBuffer;
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
-import static com.alibaba.maxgraph.v2.coordinator.SnapshotManager.*;
+import static com.alibaba.maxgraph.groot.coordinator.SnapshotManager.*;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.*;

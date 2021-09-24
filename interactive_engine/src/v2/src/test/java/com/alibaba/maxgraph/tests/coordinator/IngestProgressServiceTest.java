@@ -17,8 +17,8 @@ package com.alibaba.maxgraph.tests.coordinator;
 
 import com.alibaba.maxgraph.proto.v2.GetTailOffsetsRequest;
 import com.alibaba.maxgraph.proto.v2.GetTailOffsetsResponse;
-import com.alibaba.maxgraph.v2.coordinator.IngestProgressService;
-import com.alibaba.maxgraph.v2.coordinator.SnapshotManager;
+import com.alibaba.maxgraph.groot.coordinator.IngestProgressService;
+import com.alibaba.maxgraph.groot.coordinator.SnapshotManager;
 import io.grpc.stub.StreamObserver;
 import org.junit.jupiter.api.Test;
 

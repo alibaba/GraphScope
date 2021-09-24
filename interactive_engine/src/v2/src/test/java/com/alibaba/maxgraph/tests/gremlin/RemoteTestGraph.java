@@ -15,10 +15,10 @@
  */
 package com.alibaba.maxgraph.tests.gremlin;
 
+import com.alibaba.maxgraph.compiler.api.schema.GraphSchema;
 import com.alibaba.maxgraph.sdkcommon.io.MaxGraphIORegistry;
 import com.alibaba.maxgraph.tinkerpop.traversal.MaxGraphTraversalSource;
-import com.alibaba.maxgraph.v2.common.frontend.api.schema.GraphSchema;
-import com.alibaba.maxgraph.v2.common.schema.GraphDef;
+import com.alibaba.maxgraph.groot.common.schema.GraphDef;
 import org.apache.commons.configuration.Configuration;
 import org.apache.tinkerpop.gremlin.LoadGraphWith;
 import org.apache.tinkerpop.gremlin.driver.Cluster;
@@ -347,12 +347,12 @@ public class RemoteTestGraph implements Graph {
     private RemoteConnection remoteConnection;
     private Cluster cluster;
     private boolean started = false;
-    private com.alibaba.maxgraph.v2.sdk.Client sdkClient;
+    private com.alibaba.maxgraph.groot.sdk.Client sdkClient;
 
     public RemoteTestGraph(String host, int port) {
         this.cluster = createCluster(host, port);
         this.remoteConnection = DriverRemoteConnection.using(cluster);
-        this.sdkClient = new com.alibaba.maxgraph.v2.sdk.Client(host, 55555);
+        this.sdkClient = new com.alibaba.maxgraph.groot.sdk.Client(host, 55555);
         this.started = true;
     }
 

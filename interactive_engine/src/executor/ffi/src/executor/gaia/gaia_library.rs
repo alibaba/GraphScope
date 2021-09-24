@@ -1,5 +1,4 @@
 use std::os::raw::{c_void, c_char};
-use maxgraph_store::db::proto::common::ConfigPb;
 use maxgraph_store::db::common::bytes::util::parse_pb;
 use maxgraph_store::db::api::GraphConfigBuilder;
 use std::sync::Arc;
@@ -9,6 +8,7 @@ use std::ffi::CStr;
 use std::net::{SocketAddr, ToSocketAddrs};
 use crate::executor::gaia::gaia_server::GaiaServer;
 use crate::executor::gaia::engine_ports_response::EnginePortsResponse;
+use maxgraph_store::db::proto::model::ConfigPb;
 
 pub type EngineHandle = *const c_void;
 pub type GraphHandle = *const c_void;

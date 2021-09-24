@@ -28,7 +28,7 @@ import com.alibaba.maxgraph.compiler.tree.value.VertexValueType;
 
 import com.alibaba.maxgraph.compiler.utils.MaxGraphUtils;
 import com.alibaba.maxgraph.compiler.utils.ReflectionUtils;
-import com.alibaba.maxgraph.compiler.utils.SchemaUtils;
+import com.alibaba.maxgraph.common.util.SchemaUtils;
 import org.apache.tinkerpop.gremlin.process.computer.traversal.step.map.ShortestPathVertexProgramStep;
 import org.apache.tinkerpop.gremlin.process.traversal.Step;
 import org.apache.tinkerpop.gremlin.process.traversal.Traversal;
@@ -40,7 +40,6 @@ import org.apache.tinkerpop.gremlin.process.traversal.step.sideEffect.IdentitySt
 import org.apache.tinkerpop.gremlin.process.traversal.step.util.HasContainer;
 import org.apache.tinkerpop.gremlin.structure.Direction;
 
-import java.math.BigDecimal;
 import java.util.List;
 
 import static com.google.common.base.Preconditions.checkArgument;
@@ -93,7 +92,7 @@ public class ShortestPathVertexProgramTreeNode extends UnaryTreeNode {
 
                 propertyValueBuilder.setValueType(variantType);
                 switch (variantType) {
-                    case VT_INTEGER:
+                    case VT_INT:
                         propertyValueBuilder.setIntValue(Integer.parseInt(value.toString()));
                         break;
                     case VT_LONG:

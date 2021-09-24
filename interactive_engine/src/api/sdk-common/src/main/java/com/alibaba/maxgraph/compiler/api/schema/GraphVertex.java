@@ -15,13 +15,5 @@
  */
 package com.alibaba.maxgraph.compiler.api.schema;
 
-import java.util.List;
-
-public interface GraphVertex extends GraphElement {
-    /**
-     * Get primary key list
-     *
-     * @return The primary key list
-     */
-    List<GraphProperty> getPrimaryKeyList();
+public interface GraphVertex extends GraphElement, GraphTable {
 }

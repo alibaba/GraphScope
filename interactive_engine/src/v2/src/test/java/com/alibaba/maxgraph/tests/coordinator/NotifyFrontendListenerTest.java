@@ -15,11 +15,11 @@
  */
 package com.alibaba.maxgraph.tests.coordinator;
 
-import com.alibaba.maxgraph.v2.common.CompletionCallback;
-import com.alibaba.maxgraph.v2.common.schema.GraphDef;
-import com.alibaba.maxgraph.v2.coordinator.FrontendSnapshotClient;
-import com.alibaba.maxgraph.v2.coordinator.NotifyFrontendListener;
-import com.alibaba.maxgraph.v2.coordinator.SchemaManager;
+import com.alibaba.maxgraph.groot.common.CompletionCallback;
+import com.alibaba.maxgraph.groot.common.schema.GraphDef;
+import com.alibaba.maxgraph.groot.coordinator.FrontendSnapshotClient;
+import com.alibaba.maxgraph.groot.coordinator.NotifyFrontendListener;
+import com.alibaba.maxgraph.groot.coordinator.SchemaManager;
 import org.junit.jupiter.api.Test;
 
 import static org.mockito.Mockito.*;

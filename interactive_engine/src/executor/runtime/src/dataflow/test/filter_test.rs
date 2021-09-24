@@ -59,7 +59,7 @@ mod tests {
         age_compare.set_prop_id(age_id);
         age_compare.set_compare(message::CompareType::GT);
         let mut age_value = message::Value::new();
-        age_value.set_value_type(message::VariantType::VT_INTEGER);
+        age_value.set_value_type(message::VariantType::VT_INT);
         age_value.set_int_value(29);
         age_compare.set_value(age_value);
         or_compare.mut_child_compare_list().push(age_compare);
@@ -230,9 +230,9 @@ mod tests {
         has_val_compare.set_compare(message::CompareType::EQ);
         let mut value_v = Value::new();
         value_v.set_int_value(30);
-        value_v.set_value_type(VariantType::VT_INTEGER);
+        value_v.set_value_type(VariantType::VT_INT);
         has_val_compare.set_value(value_v);
-        has_val_compare.set_field_type(VariantType::VT_INTEGER);
+        has_val_compare.set_field_type(VariantType::VT_INT);
 
         let schema = build_modern_mock_schema();
         let age_id = schema.get_prop_id("age").unwrap();
@@ -263,9 +263,9 @@ mod tests {
         let mut int_contains = message::LogicalCompare::new();
         int_contains.set_prop_id(int_list);
         int_contains.set_compare(CompareType::LIST_CONTAINS);
-        int_contains.set_field_type(VariantType::VT_INTEGER);
+        int_contains.set_field_type(VariantType::VT_INT);
         let mut int_value = Value::new();
-        int_value.set_value_type(VariantType::VT_INTEGER);
+        int_value.set_value_type(VariantType::VT_INT);
         int_value.set_int_value(3);
         int_contains.set_value(int_value);
 

@@ -15,7 +15,7 @@
  */
 package com.alibaba.maxgraph.dataload.databuild;
 
-import com.alibaba.maxgraph.v2.common.util.PartitionUtils;
+import com.alibaba.maxgraph.common.util.PartitionUtils;
 import org.apache.hadoop.io.BytesWritable;
 import org.apache.hadoop.mapreduce.Partitioner;
 import org.slf4j.Logger;

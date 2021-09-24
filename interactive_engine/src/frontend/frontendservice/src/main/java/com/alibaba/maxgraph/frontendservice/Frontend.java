@@ -233,10 +233,6 @@ public class Frontend {
                 .executor(CommonUtil.getGrpcExecutor(threadCount))
                 .maxInboundMessageSize(Constants.MAXGRAPH_RPC_MAX_MESSAGE_SIZE);
 
-        // process client request
-        FrontendApiServer frontendApiServer = new FrontendApiServer(this);
-        frontendApiServer.init(serverBuilder);
-
         Server rpcServer = serverBuilder.build().start();
 
         this.endpoint = new Endpoint(hostName, rpcServer.getPort(), gremlinServerPort);

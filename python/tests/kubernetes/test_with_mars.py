@@ -18,20 +18,11 @@
 
 import logging
 import os
-import random
-import string
-import subprocess
-import sys
 
-import numpy as np
 import pytest
 
 import graphscope
 from graphscope.config import GSConfig as gs_config
-from graphscope.dataset.ldbc import load_ldbc
-from graphscope.dataset.modern_graph import load_modern_graph
-from graphscope.framework.graph import Graph
-from graphscope.framework.loader import Loader
 
 graphscope.set_option(show_log=True)
 logger = logging.getLogger("graphscope")
@@ -78,14 +69,14 @@ def gs_session():
     sess.close()
 
 
-@pytest.mark.skip(reason="TODO: the mars integration with vineyard will be revisited.")
+@pytest.mark.skip(reason="Requires our runtime image has Python>=3.7.")
 def test_mars_session(gs_session):
-    from mars import dataframe as md
+    from mars import new_session
     from mars import tensor as mt
-    from mars.session import new_session
 
     ep = gs_session.engine_config["mars_endpoint"]
     mars_session = new_session(ep).as_default()
 
     tensor = mt.ones((4, 5, 6))
-    mt.to_vineyard(tensor).execute(session=mars_session).fetch(session=mars_session)
+    b = mt.to_vineyard(tensor)
+    b.execute().fetch()[0]

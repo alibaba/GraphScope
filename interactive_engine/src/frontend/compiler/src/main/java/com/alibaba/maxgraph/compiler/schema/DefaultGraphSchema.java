@@ -25,10 +25,8 @@ import com.alibaba.maxgraph.compiler.api.schema.GraphElement;
 import com.alibaba.maxgraph.compiler.api.schema.GraphProperty;
 import com.alibaba.maxgraph.compiler.api.schema.GraphSchema;
 import com.alibaba.maxgraph.compiler.api.schema.GraphVertex;
-import com.alibaba.maxgraph.compiler.api.schema.PropDataType;
-import com.alibaba.maxgraph.result.EdgeResult;
+import com.alibaba.maxgraph.compiler.api.schema.DataType;
 import com.alibaba.maxgraph.sdkcommon.exception.MaxGraphException;
-import com.alibaba.maxgraph.sdkcommon.meta.DataType;
 import com.alibaba.maxgraph.sdkcommon.meta.InternalDataType;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -38,7 +36,6 @@ import org.slf4j.LoggerFactory;
 
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 
 public class DefaultGraphSchema implements GraphSchema {
     private static final Logger logger = LoggerFactory.getLogger(DefaultGraphSchema.class);
@@ -134,6 +131,11 @@ public class DefaultGraphSchema implements GraphSchema {
         }
     }
 
+    @Override
+    public int getVersion() {
+        return 0;
+    }
+
     public static GraphSchema buildSchemaFromJson(String schemaJson) {
         JSONObject jsonObject = JSONObject.parseObject(schemaJson);
         Map<String, GraphVertex> vertexList = Maps.newHashMap();
@@ -160,20 +162,20 @@ public class DefaultGraphSchema implements GraphSchema {
                             currPropId = propId++;
                         }
                         String propDataTypeString = propObject.getString("data_type");
-                        DataType dataType;
+                        com.alibaba.maxgraph.sdkcommon.meta.DataType dataType;
                         if (StringUtils.startsWith(propDataTypeString, "LIST")) {
-                            dataType = new DataType(InternalDataType.LIST);
+                            dataType = new com.alibaba.maxgraph.sdkcommon.meta.DataType(InternalDataType.LIST);
                             try {
                                 dataType.setExpression(StringUtils.removeEnd(StringUtils.removeStart(propDataTypeString, "LIST<"), ">"));
                             } catch (MaxGraphException e) {
                                 throw new RuntimeException(e);
                             }
                         } else {
-                            dataType = DataType.valueOf(propDataTypeString);
+                            dataType = com.alibaba.maxgraph.sdkcommon.meta.DataType.valueOf(propDataTypeString);
                         }
                         GraphProperty property = new DefaultGraphProperty(currPropId,
                                 propName,
-                                PropDataType.parseFromDataType(dataType));
+                                DataType.parseFromDataType(dataType));
                         propertyList.add(property);
                         namePropertyList.put(propName, property);
                         propNameToIdList.put(propName, currPropId);

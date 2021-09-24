@@ -18,7 +18,7 @@ package com.alibaba.maxgraph.compiler.cost;
 import com.alibaba.maxgraph.compiler.api.schema.GraphEdge;
 import com.alibaba.maxgraph.compiler.api.schema.GraphSchema;
 import com.alibaba.maxgraph.compiler.api.schema.GraphVertex;
-import com.alibaba.maxgraph.compiler.api.schema.PropDataType;
+import com.alibaba.maxgraph.compiler.api.schema.DataType;
 import com.alibaba.maxgraph.compiler.cost.statistics.CostDataStatistics;
 import com.alibaba.maxgraph.compiler.cost.statistics.NodeStatistics;
 import com.alibaba.maxgraph.compiler.schema.DefaultEdgeRelation;
@@ -42,7 +42,7 @@ public class CostDataStatisticsTest {
     private GraphSchema schema;
 
     public CostDataStatisticsTest() {
-        DefaultGraphProperty postIdProp = new DefaultGraphProperty(1, "id", PropDataType.LONG);
+        DefaultGraphProperty postIdProp = new DefaultGraphProperty(1, "id", DataType.LONG);
         Map<String, Integer> propNameToIdList = Maps.newHashMap();
         propNameToIdList.put("name", 1);
 

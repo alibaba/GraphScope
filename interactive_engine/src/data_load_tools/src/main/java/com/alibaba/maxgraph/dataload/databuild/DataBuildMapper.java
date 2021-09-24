@@ -15,9 +15,9 @@
  */
 package com.alibaba.maxgraph.dataload.databuild;
 
-import com.alibaba.maxgraph.v2.common.exception.PropertyDefNotFoundException;
-import com.alibaba.maxgraph.v2.common.frontend.api.schema.*;
-import com.alibaba.maxgraph.v2.common.schema.*;
+import com.alibaba.maxgraph.compiler.api.exception.PropertyDefNotFoundException;
+import com.alibaba.maxgraph.compiler.api.schema.*;
+import com.alibaba.maxgraph.groot.common.schema.*;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.hadoop.conf.Configuration;
@@ -84,31 +84,31 @@ public class DataBuildMapper extends Mapper<LongWritable, Text, BytesWritable, B
         long tableId = columnMappingInfo.getTableId();
         Map<Integer, Integer> propertiesColumnMapping = columnMappingInfo.getPropertiesColMap();
         String[] items = value.toString().split(separator);
-        SchemaElement type = this.graphSchema.getSchemaElement(labelId);
+        GraphElement type = this.graphSchema.getElement(labelId);
         Map<Integer, PropertyValue> propertiesMap = buildPropertiesMap(type, items, propertiesColumnMapping);
         BytesRef valRef = this.dataEncoder.encodeProperties(labelId, propertiesMap);
         this.outVal.set(valRef.getArray(), valRef.getOffset(), valRef.getLength());
-        if (type instanceof VertexType) {
-            BytesRef keyBytesRef = this.dataEncoder.encodeVertexKey((VertexType) type, propertiesMap, tableId);
+        if (type instanceof GraphVertex) {
+            BytesRef keyBytesRef = this.dataEncoder.encodeVertexKey((GraphVertex) type, propertiesMap, tableId);
             this.outKey.set(keyBytesRef.getArray(), keyBytesRef.getOffset(), keyBytesRef.getLength());
             context.write(this.outKey, this.outVal);
-        } else if (type instanceof EdgeType) {
+        } else if (type instanceof GraphEdge) {
             int srcLabelId = columnMappingInfo.getSrcLabelId();
             Map<Integer, Integer> srcPkColMap = columnMappingInfo.getSrcPkColMap();
-            SchemaElement srcType = this.graphSchema.getSchemaElement(srcLabelId);
+            GraphElement srcType = this.graphSchema.getElement(srcLabelId);
             Map<Integer, PropertyValue> srcPkMap = buildPropertiesMap(srcType, items, srcPkColMap);
 
             int dstLabelId = columnMappingInfo.getDstLabelId();
             Map<Integer, Integer> dstPkColMap = columnMappingInfo.getDstPkColMap();
-            SchemaElement dstType = this.graphSchema.getSchemaElement(dstLabelId);
+            GraphElement dstType = this.graphSchema.getElement(dstLabelId);
             Map<Integer, PropertyValue> dstPkMap = buildPropertiesMap(dstType, items, dstPkColMap);
 
-            BytesRef outEdgeKeyRef = this.dataEncoder.encodeEdgeKey((VertexType) srcType, srcPkMap,
-                    (VertexType) dstType, dstPkMap, (EdgeType) type, propertiesMap, tableId, true);
+            BytesRef outEdgeKeyRef = this.dataEncoder.encodeEdgeKey((GraphVertex) srcType, srcPkMap,
+                    (GraphVertex) dstType, dstPkMap, (GraphEdge) type, propertiesMap, tableId, true);
             this.outKey.set(outEdgeKeyRef.getArray(), outEdgeKeyRef.getOffset(), outEdgeKeyRef.getLength());
             context.write(this.outKey, this.outVal);
-            BytesRef inEdgeKeyRef = this.dataEncoder.encodeEdgeKey((VertexType) srcType, srcPkMap, (VertexType) dstType,
-                    dstPkMap, (EdgeType) type, propertiesMap, tableId, false);
+            BytesRef inEdgeKeyRef = this.dataEncoder.encodeEdgeKey((GraphVertex) srcType, srcPkMap, (GraphVertex) dstType,
+                    dstPkMap, (GraphEdge) type, propertiesMap, tableId, false);
             this.outKey.set(inEdgeKeyRef.getArray(), inEdgeKeyRef.getOffset(), inEdgeKeyRef.getLength());
             context.write(this.outKey, this.outVal);
         } else {
@@ -116,7 +116,7 @@ public class DataBuildMapper extends Mapper<LongWritable, Text, BytesWritable, B
         }
     }
 
-    private Map<Integer, PropertyValue> buildPropertiesMap(SchemaElement typeDef, String[] items,
+    private Map<Integer, PropertyValue> buildPropertiesMap(GraphElement typeDef, String[] items,
                                                            Map<Integer, Integer> columnMapping) {
         Map<Integer, PropertyValue> operationProperties = new HashMap<>(columnMapping.size());
         columnMapping.forEach((colIdx, propertyId) -> {

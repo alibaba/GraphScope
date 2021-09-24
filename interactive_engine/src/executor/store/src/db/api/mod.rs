@@ -15,7 +15,7 @@ pub use self::config::*;
 pub use self::graph::*;
 pub use self::property::*;
 pub use self::schema::*;
-use crate::db::proto::common::{EdgeKindPb, EdgeIdPb, DataLoadTargetPb};
+use crate::db::proto::model::{EdgeKindPb, EdgeIdPb, DataLoadTargetPb};
 
 pub type SnapshotId = i64;
 pub type VertexId = i64;

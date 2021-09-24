@@ -611,7 +611,7 @@
                 </plugin>
                 <plugin>
                     <artifactId>maven-surefire-plugin</artifactId>
-                    <version>2.20.1</version>
+                    <version>${maven.surefire.version}</version>
                     <configuration>
                         <excludes>
                             <exclude>com/alibaba/maxgraph/client/gremlin/additional/*</exclude>
