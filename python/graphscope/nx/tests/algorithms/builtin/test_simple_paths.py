@@ -334,7 +334,7 @@ class TestAllSimpleEdgePaths:
         assert {tuple(p) for p in paths} == {
             ((0, 1),),
             ((0, 2), (2, 1)),
-            ((0, 3), (3, 1))
+            ((0, 3), (3, 1)),
         }
 
     def test_all_simple_edge_paths_on_non_trivial_graph(self):
