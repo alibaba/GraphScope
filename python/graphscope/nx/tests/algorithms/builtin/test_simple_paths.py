@@ -358,7 +358,7 @@ class TestAllSimpleEdgePaths:
             ((1, 2), (2, 3)),
             ((1, 5), (5, 4), (4, 3)),
         }
-        paths = nx.all_simple_edge_paths(G, 1, [2, 3], cutoff=2)
+        paths = nx.builtin.all_simple_edge_paths(G, 1, [2, 3], cutoff=2)
         assert {tuple(p) for p in paths} == {((1, 2),), ((1, 3),), ((1, 2), (2, 3))}
 
     @pytest.mark.skip(reason="not support multidigraph")
