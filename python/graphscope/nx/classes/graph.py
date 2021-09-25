@@ -732,6 +732,8 @@ class Graph(_GraphBase):
 
         """
         check_node_is_legal(n)
+        if self.graph_type == graph_def_pb2.ARROW_PROPERTY:
+            n = self._replace_node_with_label_id(n)
         op = dag_utils.report_graph(self, types_pb2.NODE_DATA, node=json.dumps([n]))
         return op.eval()
 
@@ -1408,6 +1410,9 @@ class Graph(_GraphBase):
         0
         """
         if self.has_edge(u, v):
+            if self.graph_type == graph_def_pb2.ARROW_PROPERTY:
+                u = self._replace_node_with_label_id(u)
+                v = self._replace_node_with_label_id(v)
             op = dag_utils.report_graph(
                 self, types_pb2.EDGE_DATA, edge=json.dumps((u, v)), key=""
             )
@@ -1903,6 +1908,8 @@ class Graph(_GraphBase):
         """
         if n not in self:
             raise NetworkXError("The node %s is not in the graph." % (n,))
+        if self.graph_type == graph_def_pb2.ARROW_PROPERTY:
+            n = self._replace_node_with_label_id(n)
         op = dag_utils.report_graph(self, report_type, node=json.dumps([n]))
         ret = op.eval()
         return ret
