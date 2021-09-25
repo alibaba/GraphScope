@@ -1251,7 +1251,7 @@ def all_simple_paths(G, source, target_nodes, cutoff=None):
         n1json = json.dumps(tolist)
     else:
         n1json = json.dumps(target_nodes)
-    if not cutoff == None:
+    if not cutoff is None:
         ctx = AppAssets(algo="all_simple_paths", context="tensor")(
             G, source, n1json, cutoff
         )
@@ -1336,7 +1336,7 @@ def all_simple_edge_paths(G, source, target_nodes, cutoff=None):
         n1json = json.dumps(tolist)
     else:
         n1json = json.dumps(target_nodes)
-    if not cutoff == None:
+    if not cutoff is None:
         ctx = AppAssets(algo="all_simple_paths", context="tensor")(
             G, source, n1json, cutoff
         )
