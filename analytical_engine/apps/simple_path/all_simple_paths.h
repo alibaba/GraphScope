@@ -46,9 +46,32 @@ class AllSimplePaths : public AppBase<FRAG_T, AllSimplePathsContext<FRAG_T>>,
              message_manager_t& messages) {
     vertex_t source;
     vid_t source_gid;
+    bool empty_flag = false;
 
-    frag.Oid2Gid(ctx.source_id, source_gid);
+    if (!frag.Oid2Gid(ctx.source_id, source_gid)) {
+      empty_flag = true;
+      ctx.nodes_not_found = true;
+    }
+    if (ctx.nodes_not_found == true && frag.fid() == 0) {
+      std::vector<typename fragment_t::oid_t> data;
+      std::vector<size_t> shape{1};
+      data.push_back(2);
+      ctx.assign(data, shape);
+      return;
+    }
     ctx.soucre_fid = source_gid >> ctx.fid_offset;
+    if (ctx.targets.count(source_gid) || ctx.cutoff < 1) {
+      empty_flag = true;
+    }
+    if (empty_flag == true && frag.fid() == ctx.soucre_fid) {
+      std::vector<typename fragment_t::oid_t> data;
+      std::vector<size_t> shape{1};
+      data.push_back(1);
+      ctx.assign(data, shape);
+      return;
+    } else if (empty_flag == true || ctx.nodes_not_found == true) {
+      return;
+    }
     bool native_source = frag.GetInnerVertex(ctx.source_id, source);
     if (native_source) {
       ctx.source_flag = true;
@@ -114,7 +137,7 @@ class AllSimplePaths : public AppBase<FRAG_T, AllSimplePathsContext<FRAG_T>>,
           frag_finish_counter++;
       }
     }
-    if (!ctx.next_level_inner.empty())
+    if (!ctx.next_level_inner.empty() || frag_finish_counter > 0)
       messages.ForceContinue();
 
     Sum(frag_finish_counter, ctx.frag_finish_counter);
@@ -173,6 +196,11 @@ class AllSimplePaths : public AppBase<FRAG_T, AllSimplePathsContext<FRAG_T>>,
     Pint_Result(index, 0, q, qvisit, data, frag, ctx);
     std::vector<size_t> shape{static_cast<size_t>(ctx.path_num),
                               static_cast<size_t>(ctx.cutoff + 1)};
+    if (ctx.path_num == 0) {
+      data.push_back(1);
+      shape.pop_back();
+      shape[0] = 1;
+    }
     ctx.assign(data, shape);
   }
   void Pint_Result(int from, int depth, std::vector<vid_t>& q,
@@ -254,7 +282,6 @@ class AllSimplePaths : public AppBase<FRAG_T, AllSimplePathsContext<FRAG_T>>,
       sum += ctx.frag_vertex_num[i];
       if (sum > index) {
         int lid = index - sum_last;
-        int tmp = i << ctx.fid_offset;
         vid_t gid =
             (static_cast<vid_t>(i) << ctx.fid_offset) | static_cast<vid_t>(lid);
         return gid;

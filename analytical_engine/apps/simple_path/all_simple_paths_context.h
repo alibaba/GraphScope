@@ -69,6 +69,7 @@ class AllSimplePathsContext
     for (const auto& val : oid_array) {
       if (!frag.Oid2Gid(val, v)) {
         LOG(ERROR) << "Graph not contain vertex " << val << std::endl;
+        nodes_not_found = true;
         break;
       }
       if (!targets.count(v)) {
@@ -94,8 +95,6 @@ class AllSimplePathsContext
   }
 
   void Output(std::ostream& os) override {
-    double counter_time = 0;
-
     auto& frag = this->fragment();
     vertex_t source;
     bool native_source = frag.GetInnerVertex(source_id, source);
@@ -192,6 +191,7 @@ class AllSimplePathsContext
   std::vector<std::vector<int>> edge_map;
   int frag_finish_counter = 0;
   int path_num = 0;
+  bool nodes_not_found = false;
 };
 }  // namespace gs
 

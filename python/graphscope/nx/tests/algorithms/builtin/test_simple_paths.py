@@ -100,69 +100,67 @@ class TestAllSimplePaths:
 
     def test_all_simple_paths(self):
         G = nx.path_graph(4)
-        paths = nx.all_simple_paths(G, 0, 3)
+        paths = nx.builtin.all_simple_paths(G, 0, 3)
         assert {tuple(p) for p in paths} == {(0, 1, 2, 3)}
 
     def test_all_simple_paths_with_two_targets_emits_two_paths(self):
         G = nx.path_graph(4)
         G.add_edge(2, 4)
-        paths = nx.all_simple_paths(G, 0, [3, 4])
+        paths = nx.builtin.all_simple_paths(G, 0, [3, 4])
         assert {tuple(p) for p in paths} == {(0, 1, 2, 3), (0, 1, 2, 4)}
 
     def test_digraph_all_simple_paths_with_two_targets_emits_two_paths(self):
         G = nx.path_graph(4, create_using=nx.DiGraph())
         G.add_edge(2, 4)
-        paths = nx.all_simple_paths(G, 0, [3, 4])
+        paths = nx.builtin.all_simple_paths(G, 0, [3, 4])
         assert {tuple(p) for p in paths} == {(0, 1, 2, 3), (0, 1, 2, 4)}
 
     def test_all_simple_paths_with_two_targets_cutoff(self):
         G = nx.path_graph(4)
         G.add_edge(2, 4)
-        paths = nx.all_simple_paths(G, 0, [3, 4], cutoff=3)
-        print("ok")
-        print(tuple(p) for p in paths)
+        paths = nx.builtin.all_simple_paths(G, 0, [3, 4], cutoff=3)
         assert {tuple(p) for p in paths} == {(0, 1, 2, 3), (0, 1, 2, 4)}
 
     def test_digraph_all_simple_paths_with_two_targets_cutoff(self):
         G = nx.path_graph(4, create_using=nx.DiGraph())
         G.add_edge(2, 4)
-        paths = nx.all_simple_paths(G, 0, [3, 4], cutoff=3)
+        paths = nx.builtin.all_simple_paths(G, 0, [3, 4], cutoff=3)
         assert {tuple(p) for p in paths} == {(0, 1, 2, 3), (0, 1, 2, 4)}
 
     def test_all_simple_paths_with_two_targets_in_line_emits_two_paths(self):
         G = nx.path_graph(4)
-        paths = nx.all_simple_paths(G, 0, [2, 3])
+        paths = nx.builtin.all_simple_paths(G, 0, [2, 3])
         assert {tuple(p) for p in paths} == {(0, 1, 2), (0, 1, 2, 3)}
 
     def test_all_simple_paths_ignores_cycle(self):
         G = nx.cycle_graph(3, create_using=nx.DiGraph())
         G.add_edge(1, 3)
-        paths = nx.all_simple_paths(G, 0, 3)
+        paths = nx.builtin.all_simple_paths(G, 0, 3)
         assert {tuple(p) for p in paths} == {(0, 1, 3)}
 
     def test_all_simple_paths_with_two_targets_inside_cycle_emits_two_paths(self):
         G = nx.cycle_graph(3, create_using=nx.DiGraph())
         G.add_edge(1, 3)
-        paths = nx.all_simple_paths(G, 0, [2, 3])
+        paths = nx.builtin.all_simple_paths(G, 0, [2, 3])
         assert {tuple(p) for p in paths} == {(0, 1, 2), (0, 1, 3)}
 
     def test_all_simple_paths_source_target(self):
         G = nx.path_graph(4)
-        paths = nx.all_simple_paths(G, 1, 1)
+        paths = nx.builtin.all_simple_paths(G, 1, 1)
         assert list(paths) == []
 
     def test_all_simple_paths_cutoff(self):
         G = nx.complete_graph(4)
-        paths = nx.all_simple_paths(G, 0, 1, cutoff=1)
+        paths = nx.builtin.all_simple_paths(G, 0, 1, cutoff=1)
         assert {tuple(p) for p in paths} == {(0, 1)}
-        paths = nx.all_simple_paths(G, 0, 1, cutoff=2)
+        paths = nx.builtin.all_simple_paths(G, 0, 1, cutoff=2)
         assert {tuple(p) for p in paths} == {(0, 1), (0, 2, 1), (0, 3, 1)}
 
     def test_all_simple_paths_on_non_trivial_graph(self):
         """you may need to draw this graph to make sure it is reasonable"""
         G = nx.path_graph(5, create_using=nx.DiGraph())
         G.add_edges_from([(0, 5), (1, 5), (1, 3), (5, 4), (4, 2), (4, 3)])
-        paths = nx.all_simple_paths(G, 1, [2, 3])
+        paths = nx.builtin.all_simple_paths(G, 1, [2, 3])
         assert {tuple(p) for p in paths} == {
             (1, 2),
             (1, 3, 4, 2),
@@ -172,7 +170,7 @@ class TestAllSimplePaths:
             (1, 5, 4, 3),
             (1, 5, 4, 2, 3),
         }
-        paths = nx.all_simple_paths(G, 1, [2, 3], cutoff=3)
+        paths = nx.builtin.all_simple_paths(G, 1, [2, 3], cutoff=3)
         assert {tuple(p) for p in paths} == {
             (1, 2),
             (1, 3, 4, 2),
@@ -181,23 +179,23 @@ class TestAllSimplePaths:
             (1, 2, 3),
             (1, 5, 4, 3),
         }
-        paths = nx.all_simple_paths(G, 1, [2, 3], cutoff=2)
+        paths = nx.builtin.all_simple_paths(G, 1, [2, 3], cutoff=2)
         assert {tuple(p) for p in paths} == {(1, 2), (1, 3), (1, 2, 3)}
 
     @pytest.mark.skip(reason="not support multidigraph")
     def test_all_simple_paths_multigraph(self):
         G = nx.MultiGraph([(1, 2), (1, 2)])
-        paths = nx.all_simple_paths(G, 1, 1)
+        paths = nx.builtin.all_simple_paths(G, 1, 1)
         assert list(paths) == []
         nx.add_path(G, [3, 1, 10, 2])
-        paths = list(nx.all_simple_paths(G, 1, 2))
+        paths = list(nx.builtin.all_simple_paths(G, 1, 2))
         assert len(paths) == 3
         assert {tuple(p) for p in paths} == {(1, 2), (1, 2), (1, 10, 2)}
 
     @pytest.mark.skip(reason="not support multidigraph")
     def test_all_simple_paths_multigraph_with_cutoff(self):
         G = nx.MultiGraph([(1, 2), (1, 2), (1, 10), (10, 2)])
-        paths = list(nx.all_simple_paths(G, 1, 2, cutoff=1))
+        paths = list(nx.builtin.all_simple_paths(G, 1, 2, cutoff=1))
         assert len(paths) == 2
         assert {tuple(p) for p in paths} == {(1, 2), (1, 2)}
 
@@ -205,18 +203,18 @@ class TestAllSimplePaths:
         G = nx.DiGraph()
         nx.add_path(G, [1, 2, 3])
         nx.add_path(G, [3, 2, 1])
-        paths = nx.all_simple_paths(G, 1, 3)
+        paths = nx.builtin.all_simple_paths(G, 1, 3)
         assert {tuple(p) for p in paths} == {(1, 2, 3)}
 
     def test_all_simple_paths_empty(self):
         G = nx.path_graph(4)
-        paths = nx.all_simple_paths(G, 0, 3, cutoff=2)
+        paths = nx.builtin.all_simple_paths(G, 0, 3, cutoff=2)
         assert list(paths) == []
 
     def test_all_simple_paths_corner_cases(self):
-        assert list(nx.all_simple_paths(nx.empty_graph(2), 0, 0)) == []
-        assert list(nx.all_simple_paths(nx.empty_graph(2), 0, 1)) == []
-        assert list(nx.all_simple_paths(nx.path_graph(9), 0, 8, 0)) == []
+        assert list(nx.builtin.all_simple_paths(nx.empty_graph(2), 0, 0)) == []
+        assert list(nx.builtin.all_simple_paths(nx.empty_graph(2), 0, 1)) == []
+        assert list(nx.builtin.all_simple_paths(nx.path_graph(9), 0, 8, 0)) == []
 
     @pytest.mark.skip(reason="not support hamiltonian_path")
     def hamiltonian_path(G, source):
@@ -224,7 +222,7 @@ class TestAllSimplePaths:
         neighbors = set(G[source]) - {source}
         n = len(G)
         for target in neighbors:
-            for path in nx.all_simple_paths(G, source, target):
+            for path in nx.builtin.all_simple_paths(G, source, target):
                 if len(path) == n:
                     yield path
 
@@ -239,22 +237,22 @@ class TestAllSimplePaths:
 
     def test_cutoff_zero(self):
         G = nx.complete_graph(4)
-        paths = nx.all_simple_paths(G, 0, 3, cutoff=0)
+        paths = nx.builtin.all_simple_paths(G, 0, 3, cutoff=0)
         assert list(list(p) for p in paths) == []
-        # paths = nx.all_simple_paths(nx.MultiGraph(G), 0, 3, cutoff=0)
+        # paths = nx.builtin.all_simple_paths(nx.MultiGraph(G), 0, 3, cutoff=0)
         # assert list(list(p) for p in paths) == []
 
     def test_source_missing(self):
-        with pytest.raises(nx.NodeNotFound):
+        with pytest.raises(ValueError, match="nx.NodeNotFound"):
             G = nx.Graph()
             nx.add_path(G, [1, 2, 3])
-            list(nx.all_simple_paths(nx.DiGraph(G), 0, 3))
+            list(nx.builtin.all_simple_paths(nx.DiGraph(G), 0, 3))
 
     def test_target_missing(self):
-        with pytest.raises(nx.NodeNotFound):
+        with pytest.raises(ValueError, match="nx.NodeNotFound"):
             G = nx.Graph()
             nx.add_path(G, [1, 2, 3])
-            list(nx.all_simple_paths(nx.DiGraph(G), 1, 4))
+            list(nx.builtin.all_simple_paths(nx.DiGraph(G), 1, 4))
 
 
 @pytest.mark.usefixtures("graphscope_session")
@@ -265,13 +263,13 @@ class TestAllSimpleEdgePaths:
 
     def test_all_simple_edge_paths(self):
         G = nx.path_graph(4)
-        paths = nx.all_simple_edge_paths(G, 0, 3)
+        paths = nx.builtin.all_simple_edge_paths(G, 0, 3)
         assert {tuple(p) for p in paths} == {((0, 1), (1, 2), (2, 3))}
 
     def test_all_simple_edge_paths_with_two_targets_emits_two_paths(self):
         G = nx.path_graph(4)
         G.add_edge(2, 4)
-        paths = nx.all_simple_edge_paths(G, 0, [3, 4])
+        paths = nx.builtin.all_simple_edge_paths(G, 0, [3, 4])
         assert {tuple(p) for p in paths} == {
             ((0, 1), (1, 2), (2, 3)),
             ((0, 1), (1, 2), (2, 4)),
@@ -280,7 +278,7 @@ class TestAllSimpleEdgePaths:
     def test_digraph_all_simple_edge_paths_with_two_targets_emits_two_paths(self):
         G = nx.path_graph(4, create_using=nx.DiGraph())
         G.add_edge(2, 4)
-        paths = nx.all_simple_edge_paths(G, 0, [3, 4])
+        paths = nx.builtin.all_simple_edge_paths(G, 0, [3, 4])
         assert {tuple(p) for p in paths} == {
             ((0, 1), (1, 2), (2, 3)),
             ((0, 1), (1, 2), (2, 4)),
@@ -289,7 +287,7 @@ class TestAllSimpleEdgePaths:
     def test_all_simple_edge_paths_with_two_targets_cutoff(self):
         G = nx.path_graph(4)
         G.add_edge(2, 4)
-        paths = nx.all_simple_edge_paths(G, 0, [3, 4], cutoff=3)
+        paths = nx.builtin.all_simple_edge_paths(G, 0, [3, 4], cutoff=3)
         assert {tuple(p) for p in paths} == {
             ((0, 1), (1, 2), (2, 3)),
             ((0, 1), (1, 2), (2, 4)),
@@ -298,7 +296,7 @@ class TestAllSimpleEdgePaths:
     def test_digraph_all_simple_edge_paths_with_two_targets_cutoff(self):
         G = nx.path_graph(4, create_using=nx.DiGraph())
         G.add_edge(2, 4)
-        paths = nx.all_simple_edge_paths(G, 0, [3, 4], cutoff=3)
+        paths = nx.builtin.all_simple_edge_paths(G, 0, [3, 4], cutoff=3)
         assert {tuple(p) for p in paths} == {
             ((0, 1), (1, 2), (2, 3)),
             ((0, 1), (1, 2), (2, 4)),
@@ -306,31 +304,31 @@ class TestAllSimpleEdgePaths:
 
     def test_all_simple_edge_paths_with_two_targets_in_line_emits_two_paths(self):
         G = nx.path_graph(4)
-        paths = nx.all_simple_edge_paths(G, 0, [2, 3])
+        paths = nx.builtin.all_simple_edge_paths(G, 0, [2, 3])
         assert {tuple(p) for p in paths} == {((0, 1), (1, 2)), ((0, 1), (1, 2), (2, 3))}
 
     def test_all_simple_edge_paths_ignores_cycle(self):
         G = nx.cycle_graph(3, create_using=nx.DiGraph())
         G.add_edge(1, 3)
-        paths = nx.all_simple_edge_paths(G, 0, 3)
+        paths = nx.builtin.all_simple_edge_paths(G, 0, 3)
         assert {tuple(p) for p in paths} == {((0, 1), (1, 3))}
 
     def test_all_simple_edge_paths_with_two_targets_inside_cycle_emits_two_paths(self):
         G = nx.cycle_graph(3, create_using=nx.DiGraph())
         G.add_edge(1, 3)
-        paths = nx.all_simple_edge_paths(G, 0, [2, 3])
+        paths = nx.builtin.all_simple_edge_paths(G, 0, [2, 3])
         assert {tuple(p) for p in paths} == {((0, 1), (1, 2)), ((0, 1), (1, 3))}
 
     def test_all_simple_edge_paths_source_target(self):
         G = nx.path_graph(4)
-        paths = nx.all_simple_edge_paths(G, 1, 1)
+        paths = nx.builtin.all_simple_edge_paths(G, 1, 1)
         assert list(paths) == []
 
     def test_all_simple_edge_paths_cutoff(self):
         G = nx.complete_graph(4)
-        paths = nx.all_simple_edge_paths(G, 0, 1, cutoff=1)
+        paths = nx.builtin.all_simple_edge_paths(G, 0, 1, cutoff=1)
         assert {tuple(p) for p in paths} == {((0, 1),)}
-        paths = nx.all_simple_edge_paths(G, 0, 1, cutoff=2)
+        paths = nx.builtin.all_simple_edge_paths(G, 0, 1, cutoff=2)
         assert {tuple(p) for p in paths} == {
             ((0, 1),),
             ((0, 2), (2, 1)),
@@ -341,7 +339,7 @@ class TestAllSimpleEdgePaths:
         """you may need to draw this graph to make sure it is reasonable"""
         G = nx.path_graph(5, create_using=nx.DiGraph())
         G.add_edges_from([(0, 5), (1, 5), (1, 3), (5, 4), (4, 2), (4, 3)])
-        paths = nx.all_simple_edge_paths(G, 1, [2, 3])
+        paths = nx.builtin.all_simple_edge_paths(G, 1, [2, 3])
         assert {tuple(p) for p in paths} == {
             ((1, 2),),
             ((1, 3), (3, 4), (4, 2)),
@@ -351,7 +349,7 @@ class TestAllSimpleEdgePaths:
             ((1, 5), (5, 4), (4, 3)),
             ((1, 5), (5, 4), (4, 2), (2, 3)),
         }
-        paths = nx.all_simple_edge_paths(G, 1, [2, 3], cutoff=3)
+        paths = nx.builtin.all_simple_edge_paths(G, 1, [2, 3], cutoff=3)
         assert {tuple(p) for p in paths} == {
             ((1, 2),),
             ((1, 3), (3, 4), (4, 2)),
@@ -366,10 +364,10 @@ class TestAllSimpleEdgePaths:
     @pytest.mark.skip(reason="not support multidigraph")
     def test_all_simple_edge_paths_multigraph(self):
         G = nx.MultiGraph([(1, 2), (1, 2)])
-        paths = nx.all_simple_edge_paths(G, 1, 1)
+        paths = nx.builtin.all_simple_edge_paths(G, 1, 1)
         assert list(paths) == []
         nx.add_path(G, [3, 1, 10, 2])
-        paths = list(nx.all_simple_edge_paths(G, 1, 2))
+        paths = list(nx.builtin.all_simple_edge_paths(G, 1, 2))
         assert len(paths) == 3
         assert {tuple(p) for p in paths} == {
             ((1, 2, 0),),
@@ -380,7 +378,7 @@ class TestAllSimpleEdgePaths:
     @pytest.mark.skip(reason="not support multidigraph")
     def test_all_simple_edge_paths_multigraph_with_cutoff(self):
         G = nx.MultiGraph([(1, 2), (1, 2), (1, 10), (10, 2)])
-        paths = list(nx.all_simple_edge_paths(G, 1, 2, cutoff=1))
+        paths = list(nx.builtin.all_simple_edge_paths(G, 1, 2, cutoff=1))
         assert len(paths) == 2
         assert {tuple(p) for p in paths} == {((1, 2, 0),), ((1, 2, 1),)}
 
@@ -388,18 +386,18 @@ class TestAllSimpleEdgePaths:
         G = nx.DiGraph()
         nx.add_path(G, [1, 2, 3])
         nx.add_path(G, [3, 2, 1])
-        paths = nx.all_simple_edge_paths(G, 1, 3)
+        paths = nx.builtin.all_simple_edge_paths(G, 1, 3)
         assert {tuple(p) for p in paths} == {((1, 2), (2, 3))}
 
     def test_all_simple_edge_paths_empty(self):
         G = nx.path_graph(4)
-        paths = nx.all_simple_edge_paths(G, 0, 3, cutoff=2)
+        paths = nx.builtin.all_simple_edge_paths(G, 0, 3, cutoff=2)
         assert list(paths) == []
 
     def test_all_simple_edge_paths_corner_cases(self):
-        assert list(nx.all_simple_edge_paths(nx.empty_graph(2), 0, 0)) == []
-        assert list(nx.all_simple_edge_paths(nx.empty_graph(2), 0, 1)) == []
-        assert list(nx.all_simple_edge_paths(nx.path_graph(9), 0, 8, 0)) == []
+        assert list(nx.builtin.all_simple_edge_paths(nx.empty_graph(2), 0, 0)) == []
+        assert list(nx.builtin.all_simple_edge_paths(nx.empty_graph(2), 0, 1)) == []
+        assert list(nx.builtin.all_simple_edge_paths(nx.path_graph(9), 0, 8, 0)) == []
 
     @pytest.mark.skip(reason="not support hamiltonian_path")
     def hamiltonian_edge_path(G, source):
@@ -407,7 +405,7 @@ class TestAllSimpleEdgePaths:
         neighbors = set(G[source]) - {source}
         n = len(G)
         for target in neighbors:
-            for path in nx.all_simple_edge_paths(G, source, target):
+            for path in nx.builtin.all_simple_edge_paths(G, source, target):
                 if len(path) == n - 1:
                     yield path
 
@@ -422,19 +420,19 @@ class TestAllSimpleEdgePaths:
 
     def test_edge_cutoff_zero(self):
         G = nx.complete_graph(4)
-        paths = nx.all_simple_edge_paths(G, 0, 3, cutoff=0)
+        paths = nx.builtin.all_simple_edge_paths(G, 0, 3, cutoff=0)
         assert list(list(p) for p in paths) == []
         # paths = nx.all_simple_edge_paths(nx.MultiGraph(G), 0, 3, cutoff=0)
         # assert list(list(p) for p in paths) == []
 
     def test_edge_source_missing(self):
-        with pytest.raises(nx.NodeNotFound):
+        with pytest.raises(ValueError, match="nx.NodeNotFound"):
             G = nx.Graph()
             nx.add_path(G, [1, 2, 3])
-            list(nx.all_simple_edge_paths(nx.DiGraph(G), 0, 3))
+            list(nx.builtin.all_simple_edge_paths(nx.DiGraph(G), 0, 3))
 
     def test_edge_target_missing(self):
-        with pytest.raises(nx.NodeNotFound):
+        with pytest.raises(ValueError, match="nx.NodeNotFound"):
             G = nx.Graph()
             nx.add_path(G, [1, 2, 3])
-            list(nx.all_simple_edge_paths(nx.DiGraph(G), 1, 4))
+            list(nx.builtin.all_simple_edge_paths(nx.DiGraph(G), 1, 4))

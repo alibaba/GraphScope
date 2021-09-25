@@ -1251,7 +1251,7 @@ def all_simple_paths(G, source, target_nodes, cutoff=None):
         n1json = json.dumps(tolist)
     else:
         n1json = json.dumps(target_nodes)
-    if cutoff:
+    if not cutoff == None:
         ctx = AppAssets(algo="all_simple_paths", context="tensor")(
             G, source, n1json, cutoff
         )
@@ -1260,6 +1260,13 @@ def all_simple_paths(G, source, target_nodes, cutoff=None):
             G, source, n1json, 2147483647
         )
     paths = ctx.to_numpy("r", axis=0).tolist()
+    # return error type
+    if len(paths) == 1:
+        if not isinstance(paths[0], list):
+            if paths[0] == 1:
+                return []
+            if paths[0] == 2:
+                raise ValueError("nx.NodeNotFound")
     # delte path tail padding
     for path in paths:
         for i in range(len(path) - 1, -1, -1):
@@ -1329,7 +1336,7 @@ def all_simple_edge_paths(G, source, target_nodes, cutoff=None):
         n1json = json.dumps(tolist)
     else:
         n1json = json.dumps(target_nodes)
-    if cutoff:
+    if not cutoff == None:
         ctx = AppAssets(algo="all_simple_paths", context="tensor")(
             G, source, n1json, cutoff
         )
@@ -1338,8 +1345,16 @@ def all_simple_edge_paths(G, source, target_nodes, cutoff=None):
             G, source, n1json, 2147483647
         )
     paths = ctx.to_numpy("r", axis=0).tolist()
-    # delte path tail padding and merge vertex to edge
+    # return error type
+    if len(paths) == 1:
+        if not isinstance(paths[0], list):
+            if paths[0] == 1:
+                return []
+            if paths[0] == 2:
+                raise ValueError("nx.NodeNotFound")
     for path in paths:
+        a = ""
+        b = ""
         for i in range(len(path) - 1, -1, -1):
             if path[i] == -1:
                 a = path.pop(i)
