@@ -363,6 +363,7 @@ mod rob {
     #[allow(dead_code)]
     pub struct LocalMicroBatchPush<T: Data> {
         pub ch_info: ChannelInfo,
+        pub worker_index: u32,
         inner: ThreadPush<MicroBatch<T>>,
         event_emit: EventEmitter,
         global_state: bool,
@@ -375,7 +376,15 @@ mod rob {
             ch_info: ChannelInfo, push: ThreadPush<MicroBatch<T>>, event_emit: EventEmitter,
         ) -> Self {
             let push_counts = TidyTagMap::new(ch_info.scope_level);
-            LocalMicroBatchPush { ch_info, inner: push, event_emit, global_state: false, push_counts }
+            let worker_index = crate::worker_id::get_current_worker().index;
+            LocalMicroBatchPush {
+                ch_info,
+                worker_index,
+                inner: push,
+                event_emit,
+                global_state: false,
+                push_counts,
+            }
         }
 
         pub fn sync_global_state(&mut self) {
@@ -390,8 +399,7 @@ mod rob {
                     .push_counts
                     .remove(&batch.tag)
                     .unwrap_or((0, 0));
-                c.0 += batch.len();
-                c.1 += c.0;
+                c.1 += batch.len();
                 trace_worker!(
                     "output[{:?}] push last batch(len={}) of {:?} to channel[{}] to self, total pushed {};",
                     self.ch_info.source_port,
@@ -403,7 +411,7 @@ mod rob {
                 end.count = c.1 as u64;
 
                 if self.global_state {
-                    let worker = batch.src;
+                    let worker = self.worker_index;
                     let port = self.ch_info.target_port;
 
                     if end.source.value() == 1 {
@@ -419,7 +427,6 @@ mod rob {
                         }
                         batch.set_end(end);
                     } else {
-
                         if !batch.is_empty() {
                             self.inner.push(batch)?;
                         }

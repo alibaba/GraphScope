@@ -9,6 +9,7 @@ use crate::Data;
 #[allow(dead_code)]
 pub(crate) struct FeedbackOperator<D: Data> {
     pub _scope_level: u32,
+    worker_index: u32,
     max_iters: u32,
     observer: TidyTagMap<()>,
     _ph: std::marker::PhantomData<D>,
@@ -16,8 +17,10 @@ pub(crate) struct FeedbackOperator<D: Data> {
 
 impl<D: Data> FeedbackOperator<D> {
     pub fn new(_scope_level: u32, max_iters: u32) -> Self {
+        let worker_index = crate::worker_id::get_current_worker().index;
         FeedbackOperator {
             _scope_level,
+            worker_index,
             max_iters,
             observer: TidyTagMap::new(_scope_level - 1),
             _ph: std::marker::PhantomData,
@@ -175,7 +178,8 @@ mod rob {
             let output = new_output::<D>(&outputs[0]);
             input.for_each_batch(|batch| {
                 let end = batch.take_end();
-                if !batch.is_empty() {
+                let len = batch.len();
+                if len > 0 {
                     output.push_batch_mut(batch)?;
                 }
 
@@ -183,6 +187,9 @@ mod rob {
                     if end.count == 0 {
                         trace_worker!("no data of {:?} feedback into next iteration;", batch.tag);
                         end.tag = end.tag.advance_to(self.max_iters - 1);
+                    }
+                    if len == 0 && end.source.contains_source(self.worker_index) {
+                        end.count = 0;
                     }
                     output.notify_end(end)?;
                 }

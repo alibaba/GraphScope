@@ -673,7 +673,13 @@ mod rob {
                             if batch.get_seq() == 0 {
                                 // an empty scope without any data;
                                 trace_worker!("output[{:?}] empty scope {:?};", self.port, batch.tag());
+                                let tag_cur = end.tag.current_uncheck() as u64;
+                                let owner = self.route.magic.exec(tag_cur) as usize;
+                                end.count = 0;
+                                end.source = Weight::single(self.src);
+                                self.pushes[owner].push(MicroBatch::last(self.src, end))?;
                             } else {
+                                // source = 1, batch.seq > 0
                                 self.flush_last_buffer(batch.tag())?;
                                 let mut total_pushed = 0;
                                 for (i, sig) in self
@@ -682,24 +688,29 @@ mod rob {
                                     .enumerate()
                                 {
                                     let end = sig.into_end();
-                                    total_pushed += end.count;
                                     if end.count > 0 {
+                                        total_pushed += end.count;
                                         let last = MicroBatch::last(self.src, end);
                                         self.pushes[i].push(last)?;
                                     }
                                 }
                                 if total_pushed == 0 {
-                                    trace_worker!(
-                                        "output[{:?}] no more data of {:?};",
-                                        self.port,
-                                        batch.tag()
-                                    );
+                                    let tag_cur = end.tag.current_uncheck() as u64;
+                                    let owner = self.route.magic.exec(tag_cur) as usize;
+                                    end.count = 0;
+                                    end.source = Weight::single(self.src);
+                                    self.pushes[owner].push(MicroBatch::last(self.src, end))?;
                                 }
                             }
                         } else {
                             if batch.get_seq() == 0 {
                                 for p in self.pushes.iter_mut() {
-                                    let end = EndSignal::new(end.clone(), Weight::partial_empty());
+                                    let children = if end.tag.is_root() {
+                                        Weight::all()
+                                    } else {
+                                        Weight::partial_empty()
+                                    };
+                                    let end = EndSignal::new(end.clone(), children);
                                     p.notify_end(end)?;
                                 }
                             } else {

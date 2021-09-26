@@ -70,21 +70,23 @@ pub trait Unary<I: Data> {
     ///         move |input, output| {
     ///                 input.input_from(vec![1_u32, 1, 2, 2, 3, 3].into_iter())?
     ///                      .repartition(|x| Ok(*x as u64))
-    ///                      .unary("unary_operator", |_info| move |unary_input, unary_output| {
-    ///                         unary_input.for_each_batch(|dataset| {
-    ///                             // Each batch of data is bound with a tag to indicate the scope
-    ///                             // it is currently in.
-    ///                             let mut session = unary_output.new_session(&dataset.tag())?;
-    ///                             let mut exists = map.entry(dataset.tag()).or_insert_with(HashSet::new);
-    ///                             for data in dataset.drain() {
-    ///                                 // the unary operator capture a hashset as states to dedup
-    ///                                 if !exists.contains(&data) {
-    ///                                     exists.insert(data);
-    ///                                     session.give(data)?;
-    ///                                 }
+    ///                      .unary("unary_operator", |_info| {
+    ///                             move |unary_input, unary_output| {
+    ///                                 unary_input.for_each_batch(|batch| {
+    ///                                     // Each batch of data is bound with a tag to indicate the scope
+    ///                                     // it is currently in.
+    ///                                     let mut session = unary_output.new_session(batch.tag())?;
+    ///                                     let mut exists = map.entry(batch.tag().clone()).or_insert_with(HashSet::new);
+    ///                                     for data in batch.drain() {
+    ///                                     // the unary operator capture a hashset as states to dedup
+    ///                                         if !exists.contains(&data) {
+    ///                                             exists.insert(data);
+    ///                                             session.give(data)?;
+    ///                                         }
+    ///                                     }
+    ///                                     Ok(())
+    ///                                 })
     ///                             }
-    ///                             Ok(())
-    ///                         })
     ///                     })?
     ///                     .collect::<Vec<u32>>()?
     ///                     .sink_into(output)

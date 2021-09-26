@@ -25,12 +25,14 @@ impl EventEmitter {
     pub fn send(&mut self, target: u32, event: Event) -> IOResult<()> {
         let offset = target as usize;
         let mut borrow = self.tx.borrow_mut();
+        trace_worker!("EventBus: send {:?} to {} port {:?};", event.kind, target, event.target_port);
         borrow[offset].push(event)
     }
 
     pub fn broadcast(&mut self, event: Event) -> IOResult<()> {
+        trace_worker!("EventBus: broadcast {:?} to port {:?}", event.kind, event.target_port);
         let mut borrow = self.tx.borrow_mut();
-        for i in 1..borrow.len() - 1 {
+        for i in 1..borrow.len() {
             borrow[i].push(event.clone())?;
         }
         borrow[0].push(event)?;

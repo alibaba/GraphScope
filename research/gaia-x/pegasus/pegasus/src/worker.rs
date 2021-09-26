@@ -25,6 +25,7 @@ use crate::api::primitive::source::Source;
 use crate::channel_id::ChannelId;
 use crate::communication::output::{OutputBuilder, OutputBuilderImpl};
 use crate::data::EndByScope;
+use crate::data_plane::Push;
 use crate::dataflow::{Dataflow, DataflowBuilder};
 use crate::errors::{BuildJobError, JobExecError};
 use crate::event::emitter::EventEmitter;
@@ -77,7 +78,12 @@ impl<D: Data, T: Debug + Send + 'static> Worker<D, T> {
         let resource =
             crate::communication::build_channel::<Event>(ChannelId::new(self.id.job_id, 0), &self.conf)?;
         assert_eq!(resource.ch_id.index, 0);
-        let (tx, rx) = resource.take();
+        let (mut tx, rx) = resource.take();
+        if self.conf.total_workers() > 1 {
+            assert_eq!(tx.len(), self.id.total_peers() as usize + 1);
+            let mut abort = tx.swap_remove(self.id.index as usize);
+            abort.close().ok();
+        }
         let event_emitter = EventEmitter::new(tx);
         let dfb = DataflowBuilder::new(self.id, event_emitter.clone(), &self.conf);
         let root_builder = OutputBuilderImpl::new(

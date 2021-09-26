@@ -191,14 +191,19 @@ impl DefaultNotify {
 }
 
 pub struct DefaultNotifyOperator<T> {
+    worker_index: u32,
+    worker_peers: u32,
+    op_index: usize,
     op: T,
     notify: DefaultNotify,
 }
 
 impl<T> DefaultNotifyOperator<T> {
-    fn new(input_size: usize, output_size: usize, scope_level: u32, op: T) -> Self {
+    fn new(op_index: usize, input_size: usize, output_size: usize, scope_level: u32, op: T) -> Self {
         let notify = DefaultNotify::new(input_size, output_size, scope_level);
-        DefaultNotifyOperator { op, notify }
+        let worker_index = crate::worker_id::get_current_worker().index;
+        let worker_peers = crate::worker_id::get_current_worker().total_peers();
+        DefaultNotifyOperator { worker_index, worker_peers, op_index, op, notify }
     }
 }
 
@@ -207,10 +212,21 @@ impl<T: Send + 'static> Notifiable for DefaultNotifyOperator<T> {
         if !outputs.is_empty() {
             let merged = self.notify.merge_end(n);
             for end in merged {
-                if !end.tag.is_root() && end.count == 0 {
-                    if end.source.value() != 1 {
+                if !end.tag.is_root() && !end.contains_source(self.worker_index) {
+                    let owner = end.tag.current_uncheck() % self.worker_peers;
+                    if owner != self.worker_index {
+                        trace_worker!(
+                            "operator {} ignore scope end of {:?} source = {:?}, count = {};",
+                            self.op_index,
+                            end.tag,
+                            end.source,
+                            end.count
+                        );
                         continue;
                     }
+                    // if end.source.value() != 1 {
+                    //     continue;
+                    // }
                 }
                 if outputs.len() > 1 {
                     for i in 1..outputs.len() {
@@ -463,19 +479,19 @@ impl OperatorBuilder {
     }
 
     pub(crate) fn build(self) -> Operator {
+        let op_index = self.index();
         let mut outputs = Vec::new();
         for ob in self.outputs {
             if let Some(o) = ob.build() {
                 outputs.push(o);
             }
         }
-
         let core = match self.core {
             GeneralOperator::Simple(op) => {
                 let scope_level = self.info.scope_level;
                 let input_size = self.inputs.len();
                 let output_size = outputs.len();
-                let op = DefaultNotifyOperator::new(input_size, output_size, scope_level, op);
+                let op = DefaultNotifyOperator::new(op_index, input_size, output_size, scope_level, op);
                 Box::new(op) as Box<dyn NotifiableOperator>
             }
             GeneralOperator::Notifiable(op) => op,
