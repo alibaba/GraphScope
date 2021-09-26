@@ -428,6 +428,7 @@ def op_pre_process(op, op_result_pool, key_to_op, **kwargs):  # noqa: C901
     if op.op == types_pb2.OUTPUT:
         _pre_process_for_output_op(op, op_result_pool, key_to_op, **kwargs)
 
+
 def _pre_process_for_create_graph_op(op, op_result_pool, key_to_op, **kwargs):
     assert len(op.parents) <= 1
     if len(op.parents) == 1:

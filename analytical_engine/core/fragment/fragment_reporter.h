@@ -425,10 +425,6 @@ class ArrowFragmentReporter<vineyard::ArrowFragment<OID_T, VID_T>>
     case rpc::EDGE_NUM: {
       return std::to_string(reportEdgeNum(fragment));
     }
-    case rpc::SELFLOOPS_NUM: {
-      // TODO: support selfloops on arrow fragment
-      return std::string();
-    }
     case rpc::HAS_NODE: {
       BOOST_LEAF_AUTO(node_in_json, params.Get<std::string>(rpc::NODE));
       folly::dynamic node = folly::parseJson(node_in_json, json_opts_)[0];
