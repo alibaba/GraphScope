@@ -70,4 +70,8 @@ public class DoubleArrayWrapper {
     public int getSize() {
         return size;
     }
+
+    public void clear() {
+        set(Double.MAX_VALUE);
+    }
 }

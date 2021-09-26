@@ -20,13 +20,14 @@ import com.alibaba.fastffi.FFIGen;
 import com.alibaba.fastffi.FFINameAlias;
 import com.alibaba.fastffi.FFITypeAlias;
 import com.alibaba.graphscope.app.DefaultAppBase;
+import com.alibaba.graphscope.app.DefaultProjectedAppBase;
 import com.alibaba.graphscope.ds.Vertex;
 import com.alibaba.graphscope.fragment.ArrowProjectedFragment;
 import com.alibaba.graphscope.fragment.ImmutableEdgecutFragment;
 
 /**
  * The default message manager, used in serial apps {@link DefaultAppBase} and {@link
- * com.alibaba.graphscope.app.ProjectedDefaultAppBase}.
+ * DefaultProjectedAppBase}.
  */
 @FFIGen(library = JNI_LIBRARY_NAME)
 @FFITypeAlias(GRAPE_DEFAULT_MESSAGE_MANAGER)

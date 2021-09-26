@@ -20,7 +20,7 @@ import com.alibaba.graphscope.context.ProjectedDefaultContextBase;
 import com.alibaba.graphscope.fragment.ArrowProjectedFragment;
 import com.alibaba.graphscope.parallel.DefaultMessageManager;
 
-public interface ProjectedDefaultAppBase<
+public interface DefaultProjectedAppBase<
         OID_T,
         VID_T,
         VDATA_T,

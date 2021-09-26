@@ -25,7 +25,7 @@ limitations under the License.
 #include "grape/types.h"
 
 #include "core/app/app_base.h"
-#include "core/context/java_pie_projected_default_context.h"
+#include "core/context/java_pie_projected_context.h"
 #include "core/error.h"
 
 namespace gs {
@@ -58,8 +58,9 @@ class JavaPIEProjectedDefaultApp
       JNIEnv* env = m.env();
 
       jobject app_object = ctx.app_object();
+      auto communicator = static_cast<grape::Communicator*>(this);
       InitJavaCommunicator(env, ctx.url_class_loader_object(), app_object,
-                           reinterpret_cast<jlong>(this));
+                           reinterpret_cast<jlong>(communicator));
 
       jclass app_class = env->GetObjectClass(app_object);
       CHECK_NOTNULL(app_class);
@@ -67,7 +68,7 @@ class JavaPIEProjectedDefaultApp
       const char* descriptor =
           "(Lcom/alibaba/graphscope/fragment/ArrowProjectedFragment;"
           "Lcom/alibaba/graphscope/context/ProjectedDefaultContextBase;"
-          "Lcom/alibaba/grape/parallel/DefaultMessageManager;)V";
+          "Lcom/alibaba/graphscope/parallel/DefaultMessageManager;)V";
       jmethodID pEval_methodID =
           env->GetMethodID(app_class, "PEval", descriptor);
       CHECK_NOTNULL(pEval_methodID);
@@ -103,7 +104,7 @@ class JavaPIEProjectedDefaultApp
       const char* descriptor =
           "(Lcom/alibaba/graphscope/fragment/ArrowProjectedFragment;"
           "Lcom/alibaba/graphscope/context/ProjectedDefaultContextBase;"
-          "Lcom/alibaba/grape/parallel/DefaultMessageManager;)V";
+          "Lcom/alibaba/graphscope/parallel/DefaultMessageManager;)V";
       jmethodID incEval_methodID =
           env->GetMethodID(app_class, "IncEval", descriptor);
       CHECK_NOTNULL(incEval_methodID);

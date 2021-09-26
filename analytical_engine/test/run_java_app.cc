@@ -233,7 +233,7 @@ void QueryProperty(vineyard::Client& client,
   worker->Output(ostream);
   ostream.close();
 
-  std::shared_ptr<gs::JavaPIEPropertyDefaultContext<FragmentType>> ctx =
+  std::shared_ptr<gs::JavaPIEPropertyContext<FragmentType>> ctx =
       worker->GetContext();
   worker->Finalize();
 
@@ -352,8 +352,8 @@ void QueryProjected(vineyard::Client& client,
   worker->Output(ostream);
   ostream.close();
 
-  std::shared_ptr<gs::JavaPIEProjectedDefaultContext<ProjectedFragmentType>>
-      ctx = worker->GetContext();
+  std::shared_ptr<gs::JavaPIEProjectedContext<ProjectedFragmentType>> ctx =
+      worker->GetContext();
   worker->Finalize();
 
   gs::rpc::graph::GraphDefPb graph_def;
@@ -521,15 +521,6 @@ void Run(vineyard::Client& client, const grape::CommSpec& comm_spec,
     vertex_t vertex;
     projected_fragment->GetInnerVertex(4, vertex);
     VLOG(1) << "source vertex" << vertex.GetValue();
-
-    int cnt = 0;
-    // vdata print
-    while (cnt < 5) {
-      vertex.SetValue(cnt);
-      VLOG(1) << "vertex: " << vertex.GetValue()
-              << ",data: " << projected_fragment->GetData(vertex);
-      cnt += 1;
-    }
     {
       std::string selector_string;
       std::string selectors_string;

@@ -26,8 +26,7 @@ import com.alibaba.graphscope.utils.CppClassName;
 import com.alibaba.graphscope.utils.FFITypeFactoryhelper;
 import java.util.Objects;
 
-public abstract class LabeledVertexDataContext<OID_T, DATA_T>
-        implements PropertyDefaultContextBase<OID_T> {
+public abstract class LabeledVertexDataContext<OID_T, DATA_T> {
     private long ffiContextAddress;
     private FFILabeledVertexDataContext<ArrowFragment<OID_T>, DATA_T> ffiLabeledVertexDataContext;
     private FFILabeledVertexDataContext.Factory factory;

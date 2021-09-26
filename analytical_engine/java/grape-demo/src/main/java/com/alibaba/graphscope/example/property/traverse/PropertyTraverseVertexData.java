@@ -16,7 +16,7 @@
 
 package com.alibaba.graphscope.example.property.traverse;
 
-import com.alibaba.graphscope.app.PropertyDefaultAppBase;
+import com.alibaba.graphscope.app.DefaultPropertyAppBase;
 import com.alibaba.graphscope.context.PropertyDefaultContextBase;
 import com.alibaba.graphscope.ds.PropertyAdjList;
 import com.alibaba.graphscope.ds.PropertyNbr;
@@ -26,7 +26,7 @@ import com.alibaba.graphscope.fragment.ArrowFragment;
 import com.alibaba.graphscope.parallel.PropertyMessageManager;
 
 public class PropertyTraverseVertexData
-        implements PropertyDefaultAppBase<Long, PropertyTraverseVertexDataContext> {
+        implements DefaultPropertyAppBase<Long, PropertyTraverseVertexDataContext> {
     private static int propertyId = 0;
 
     @Override

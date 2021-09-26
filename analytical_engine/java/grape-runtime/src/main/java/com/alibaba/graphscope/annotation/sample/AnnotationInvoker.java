@@ -11,8 +11,15 @@ import com.alibaba.fastffi.FFIGenBatch;
 
 @FFIGenBatch(
         value = {
+            @FFIGen(type = "com.alibaba.graphscope.ds.EmptyType"),
             @FFIGen(type = "com.alibaba.graphscope.parallel.message.DoubleMsg"),
             @FFIGen(type = "com.alibaba.graphscope.parallel.message.LongMsg"),
+            @FFIGen(
+                    type = "com.alibaba.graphscope.parallel.message.PrimitiveMessage",
+                    templates = {
+                        @CXXTemplate(cxx = "double", java = "Double"),
+                        @CXXTemplate(cxx = "int64_t", java = "Long")
+                    }),
             @FFIGen(
                     type = "com.alibaba.graphscope.ds.Vertex",
                     templates = {
@@ -79,9 +86,6 @@ import com.alibaba.fastffi.FFIGenBatch;
                         @CXXTemplate(cxx = "int64_t", java = "Long"),
                         @CXXTemplate(cxx = "double", java = "Double"),
                         @CXXTemplate(cxx = "int32_t", java = "Integer"),
-                        @CXXTemplate(cxx = "uint64_t", java = "Long"),
-                        @CXXTemplate(cxx = "double", java = "Double"),
-                        @CXXTemplate(cxx = "uint32_t", java = "Integer"),
                     }),
             @FFIGen(
                     type = "com.alibaba.graphscope.stdcxx.StdVector",
@@ -123,12 +127,31 @@ import com.alibaba.fastffi.FFIGenBatch;
                         @CXXTemplate(cxx = "uint64_t", java = "Long"),
                         @CXXTemplate(cxx = "uint32_t", java = "Integer"),
                     }),
-            @FFIGen(
-                    type = "com.alibaba.graphscope.fragment.ArrowFragment",
-                    templates = {
-                        @CXXTemplate(cxx = "int64_t", java = "Long"),
-                        @CXXTemplate(cxx = "int32_t", java = "Integer"),
-                    }),
+            //            @FFIGen(
+            //                    type = "com.alibaba.graphscope.ds.EdgeDataColumn",
+            //                    templates = {
+            //                        @CXXTemplate(cxx = "int64_t", java = "Long"),
+            //                        @CXXTemplate(cxx = "int32_t", java = "Integer"),
+            //                        @CXXTemplate(cxx = "double", java = "Double")
+            //                    }),
+            //            @FFIGen(
+            //                    type = "com.alibaba.graphscope.fragment.ArrowFragment",
+            //                    templates = {
+            //                        @CXXTemplate(cxx = "int64_t", java = "Long"),
+            //                        @CXXTemplate(cxx = "int32_t", java = "Integer"),
+            //                    },
+            //                    functionTemplates = {
+            //                        @FFIFunGen(
+            //                                name = "edgeDataColumn",
+            //                                parameterTypes = {"DATA_T"},
+            //                                returnType =
+            // "com.alibaba.graphscope.ds.EdgeDataColumn<DATA_T>",
+            //                                templates = {
+            //                                    @CXXTemplate(cxx = "int32_t", java = "Integer"),
+            //                                    @CXXTemplate(cxx = "int64_t", java = "Long"),
+            //                                    @CXXTemplate(cxx = "double", java = "Double")
+            //                                })
+            //                    }),
             @FFIGen(
                     type = "com.alibaba.graphscope.fragment.ArrowProjectedFragment",
                     templates = {
@@ -314,6 +337,7 @@ import com.alibaba.fastffi.FFIGenBatch;
                                     "com.alibaba.graphscope.fragment.ArrowProjectedFragment<java.lang.Long,java.lang.Long,com.alibaba.graphscope.ds.EmptyType,java.lang.Long>"
                                 })
                     }),
+
             //            @FFIGen(
             //                    type = "com.alibaba.graphscope.parallel.PropertyMessageManager",
             //                    functionTemplates = {

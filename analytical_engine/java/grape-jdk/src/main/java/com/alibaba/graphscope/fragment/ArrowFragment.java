@@ -229,6 +229,9 @@ public interface ArrowFragment<OID_T> extends FFIPointer {
     <DATA_T> VertexDataColumn<DATA_T> vertexDataColumn(
             int vertexLabelId, int propertyId, @FFISkip DATA_T unused);
 
+    // // @CXXTemplate(cxx = {"uint64_t"}, java = {"Long"})
+    // // @CXXTemplate(cxx = {"double"}, java = {"Double"})
+    // // @CXXTemplate(cxx = {"uint32_t"}, java = {"Integer"})
     // @FFINameAlias("GetData")
     // @CXXValue <DATA_T>
     // DATA_T getData(@FFITypeAlias(GRAPE_VERTEX + "<uint64_t>") @CXXReference

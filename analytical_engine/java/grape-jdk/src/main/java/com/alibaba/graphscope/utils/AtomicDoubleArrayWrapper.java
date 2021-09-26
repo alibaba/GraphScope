@@ -92,4 +92,8 @@ public class AtomicDoubleArrayWrapper {
     public int getSize() {
         return size;
     }
+
+    public void clear() {
+        set(0.0);
+    }
 }
