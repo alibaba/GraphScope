@@ -119,6 +119,88 @@ class JavaPIEProjectedDefaultApp
   }
 };
 
+template <typename FRAG_T>
+class JavaPIEProjectedDefaultAppV2
+    : public AppBase<FRAG_T, JavaPIEProjectedDefaultContext<FRAG_T>>,
+      public grape::Communicator {
+ public:
+  // specialize the templated worker.
+  INSTALL_DEFAULT_WORKERV2(JavaPIEProjectedDefaultAppV2<FRAG_T>,
+                         JavaPIEProjectedDefaultContext<FRAG_T>, FRAG_T)
+  static constexpr grape::LoadStrategy load_strategy =
+      grape::LoadStrategy::kBothOutIn;
+  static constexpr grape::MessageStrategy message_strategy =
+      grape::MessageStrategy::kAlongOutgoingEdgeToOuterVertex;
+  static constexpr bool need_split_edges = true;
+
+ public:
+  void PEval(const fragment_t& frag, context_t& ctx,
+             message_manager_t& messages) {
+    JNIEnvMark m;
+    if (m.env()) {
+      JNIEnv* env = m.env();
+
+      jobject app_object = ctx.app_object();
+      auto communicator = static_cast<grape::Communicator*>(this);
+      InitJavaCommunicator(env, ctx.url_class_loader_object(), app_object,
+                           reinterpret_cast<jlong>(communicator));
+
+      jclass app_class = env->GetObjectClass(app_object);
+
+      const char* descriptor =
+          "(Lcom/alibaba/graphscope/fragment/IFragment;"
+          "Lcom/alibaba/graphscope/context/DefaultContextBase;"
+          "Lcom/alibaba/graphscope/parallel/DefaultMessageManager;)V";
+      jmethodID pEval_methodID =
+          env->GetMethodID(app_class, "PEval", descriptor);
+      CHECK_NOTNULL(pEval_methodID);
+
+      jobject frag_object = ctx.fragment_object();
+      jobject context_object = ctx.context_object();
+      jobject mm_object = ctx.message_manager_object();
+
+      env->CallVoidMethod(app_object, pEval_methodID, frag_object,
+                          context_object, mm_object);
+    } else {
+      LOG(ERROR) << "JNI env not available.";
+    }
+  }
+
+  /**
+   * @brief Incremental evaluation.
+   *
+   * @param frag
+   * @param ctx
+   */
+  void IncEval(const fragment_t& frag, context_t& ctx,
+               message_manager_t& messages) {
+    JNIEnvMark m;
+    if (m.env()) {
+      JNIEnv* env = m.env();
+
+      jobject app_object = ctx.app_object();
+
+      jclass app_class = env->GetObjectClass(app_object);
+
+      const char* descriptor =
+          "(Lcom/alibaba/graphscope/fragment/IFragment;"
+          "Lcom/alibaba/graphscope/context/DefaultContextBase;"
+          "Lcom/alibaba/graphscope/parallel/DefaultMessageManager;)V";
+      jmethodID incEval_methodID =
+          env->GetMethodID(app_class, "IncEval", descriptor);
+      CHECK_NOTNULL(incEval_methodID);
+
+      jobject frag_object = ctx.fragment_object();
+      jobject context_object = ctx.context_object();
+      jobject mm_object = ctx.message_manager_object();
+
+      env->CallVoidMethod(app_object, incEval_methodID, frag_object,
+                          context_object, mm_object);
+    } else {
+      LOG(ERROR) << "JNI env not available.";
+    }
+  }
+};
 }  // namespace gs
 #endif
 #endif  // ANALYTICAL_ENGINE_APPS_JAVA_PIE_JAVA_PIE_PROJECTED_DEFAULT_APP_H_

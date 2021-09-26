@@ -399,6 +399,7 @@ def compile_graph_frame(workspace: str, library_name, attr: dict, engine_config:
         shutil.which("cmake"),
         ".",
         f"-DNETWORKX={engine_config['networkx']}",
+        f"-DENABLE_JAVA_SDK={engine_config['enable_java_sdk']}",
         f"-DCMAKE_PREFIX_PATH='{GRAPHSCOPE_HOME};{OPAL_PREFIX}'",
     ]
     if graph_type == graph_def_pb2.ARROW_PROPERTY:
@@ -683,7 +684,21 @@ def _pre_process_for_run_app_op(op, op_result_pool, key_to_op, **kwargs):
         lib_path = parent_op.attr[types_pb2.APP_LIBRARY_PATH].s.decode("utf-8")
         param.Pack(data_types_pb2.StringValue(value=lib_path))
         op.query_args.args.extend([param])
-        logger.info("Lib path {}".format(lib_path))
+        
+        # # For java app, we need vineyard id as an explicit arg.
+        key_of_grad_parent_op = op.parents[0].parents[0]
+        grand_parent_op = key_to_op[key_of_grad_parent_op]
+        assert grand_parent_op.op == types_pb2.GRAPH
+        result = op_result_pool[key_of_parent_op]
+        assert result.graph_def.extension.Is(graph_def_pb2.VineyardInfoPb.DESCRIPTOR)
+        vy_info = graph_def_pb2.VineyardInfoPb()
+        result.graph_def.extension.Unpack(vy_info)
+        param = Any()
+        param.Pack(data_types_pb2.int64Value(value=vy_info.vineyard_id))
+        op.query_args.args.extend(param)
+        logger.info("Java app: Lib path {}, graph vy id {}".format(lib_path, vy_info.vineyard_id))
+        
+
 
 
 def _pre_process_for_unload_graph_op(op, op_result_pool, key_to_op, **kwargs):

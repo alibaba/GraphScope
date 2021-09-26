@@ -25,7 +25,6 @@ import com.alibaba.graphscope.fragment.ArrowFragment;
 import com.alibaba.graphscope.fragment.IFragment;
 import com.alibaba.graphscope.parallel.DefaultMessageManager;
 import com.alibaba.graphscope.parallel.PropertyMessageManager;
-
 import org.junit.Assert;
 import org.junit.Test;
 

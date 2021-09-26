@@ -25,12 +25,10 @@ import com.alibaba.graphscope.context.LabeledVertexDataContext;
 import com.alibaba.graphscope.context.ParallelContextBase;
 import com.alibaba.graphscope.context.PropertyDefaultContextBase;
 import com.alibaba.graphscope.context.VertexDataContext;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class AppContextGetter {
     private static Logger logger = LoggerFactory.getLogger(AppContextGetter.class.getName());
@@ -90,14 +88,20 @@ public class AppContextGetter {
     }
 
     /**
-     * For ProjectedDefaultApp, the context should be the 2rd, i.e. index of 1.
+     * For ProjectedDefaultApp, the context should be the index 4
      *
      * @param appClass user-defined app class object.
      * @return the base class name.
      */
     public static String getDefaultContextName(Class<? extends DefaultAppBase> appClass) {
+        // There is a special case: GiraphComputation, which is a driver, since ctx type is
+        // not specified at compile time, so it is not possible to retrive in a normal way.
+        if (appClass.getName().equals("com.alibaba.graphscope.app.GiraphComputationAdaptor")) {
+            return "com.alibaba.graphscope.context.GiraphComputationAdaptorContext";
+        }
         Class<? extends DefaultContextBase> clz =
                 (Class<? extends DefaultContextBase>) getInterfaceTemplateType(appClass, 4);
+        logger.info("app class {}, context class {}", appClass.getName(), clz.getName());
         return clz.getName();
     }
 

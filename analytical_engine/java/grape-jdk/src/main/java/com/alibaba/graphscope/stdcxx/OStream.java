@@ -22,7 +22,6 @@ import com.alibaba.fastffi.CXXHead;
 import com.alibaba.fastffi.FFIGen;
 import com.alibaba.fastffi.FFIPointer;
 import com.alibaba.fastffi.FFITypeAlias;
-
 import java.io.OutputStream;
 
 @FFIGen(library = JNI_LIBRARY_NAME)

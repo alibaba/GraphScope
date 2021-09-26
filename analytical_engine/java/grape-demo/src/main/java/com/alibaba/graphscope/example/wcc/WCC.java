@@ -29,12 +29,10 @@ import com.alibaba.graphscope.parallel.ParallelMessageManager;
 import com.alibaba.graphscope.parallel.message.DoubleMsg;
 import com.alibaba.graphscope.parallel.message.LongMsg;
 import com.alibaba.graphscope.utils.FFITypeFactoryhelper;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import java.util.function.BiConsumer;
 import java.util.function.Supplier;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class WCC implements ParallelAppBase<Long, Long, Long, Double, WCCContext>, ParallelEngine {
     private static Logger logger = LoggerFactory.getLogger(WCC.class);
@@ -51,7 +49,7 @@ public class WCC implements ParallelAppBase<Long, Long, Long, Double, WCCContext
                     long cid = ctx.comp_id.get(vertex);
                     // AdjListv2<Long, Double> adjListv2 = frag.GetOutgoingAdjListV2(vertex);
                     AdjList<Long, Double> adjList = fragment.getOutgoingAdjList(vertex);
-                    for (Nbr<Long, Double> nbr : adjList.iterator()) {
+                    for (Nbr<Long, Double> nbr : adjList.iterable()) {
                         Vertex<Long> cur = nbr.neighbor();
                         if (Long.compareUnsigned(ctx.comp_id.get(cur), cid) > 0) {
                             ctx.comp_id.compareAndSetMinUnsigned(cur, cid);
@@ -88,7 +86,7 @@ public class WCC implements ParallelAppBase<Long, Long, Long, Double, WCCContext
                     long oldCid = ctx.comp_id.get(vertex);
                     long newCid = oldCid;
                     AdjList<Long, Double> adjList = fragment.getIncomingAdjList(vertex);
-                    for (Nbr<Long, Double> nbr : adjList.iterator()) {
+                    for (Nbr<Long, Double> nbr : adjList.iterable()) {
                         long value = ctx.comp_id.get(nbr.neighbor());
                         if (Long.compareUnsigned(value, newCid) < 0) {
                             newCid = value;
@@ -104,7 +102,7 @@ public class WCC implements ParallelAppBase<Long, Long, Long, Double, WCCContext
                     long oldCid = ctx.comp_id.get(vertex);
                     long newCid = oldCid;
                     AdjList<Long, Double> adjList = fragment.getIncomingAdjList(vertex);
-                    for (Nbr<Long, Double> nbr : adjList.iterator()) {
+                    for (Nbr<Long, Double> nbr : adjList.iterable()) {
                         long value = ctx.comp_id.get(nbr.neighbor());
                         if (Long.compareUnsigned(value, newCid) < 0) {
                             newCid = value;

@@ -28,12 +28,10 @@ import com.alibaba.graphscope.parallel.ParallelMessageManager;
 import com.alibaba.graphscope.parallel.message.DoubleMsg;
 import com.alibaba.graphscope.utils.AtomicDoubleArrayWrapper;
 import com.alibaba.graphscope.utils.FFITypeFactoryhelper;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import java.util.function.BiConsumer;
 import java.util.function.Supplier;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class SSSP
         implements ParallelAppBase<Long, Long, Long, Double, SSSPContext>, ParallelEngine {
@@ -66,7 +64,7 @@ public class SSSP
         if (sourceInThisFrag) {
             partialResults.set(source, 0.0);
             AdjList<Long, Double> adjList = fragment.getOutgoingAdjList(source);
-            for (Nbr<Long, Double> nbr : adjList.iterator()) {
+            for (Nbr<Long, Double> nbr : adjList.iterable()) {
                 Vertex<Long> vertex = nbr.neighbor();
                 partialResults.set(vertex, Math.min(nbr.data(), partialResults.get(vertex)));
                 if (fragment.isOuterVertex(vertex)) {
@@ -134,7 +132,7 @@ public class SSSP
                 (vertex, finalTid) -> {
                     double curDist = context.partialResults.get(vertex);
                     AdjList<Long, Double> nbrs = frag.getOutgoingAdjList(vertex);
-                    for (Nbr<Long, Double> nbr : nbrs.iterator()) {
+                    for (Nbr<Long, Double> nbr : nbrs.iterable()) {
                         long curLid = nbr.neighbor().GetValue();
                         double nextDist = curDist + nbr.data();
                         if (nextDist < context.partialResults.get(curLid)) {

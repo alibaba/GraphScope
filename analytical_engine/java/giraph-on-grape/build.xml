@@ -1,0 +1,71 @@
+<!--
+  ~ Copyright 2021 Alibaba Group Holding Limited.
+  ~
+  ~ Licensed under the Apache License, Version 2.0 (the "License");
+  ~ you may not use this file except in compliance with the License.
+  ~ You may obtain a copy of the License at
+  ~
+  ~  	http://www.apache.org/licenses/LICENSE-2.0
+  ~
+  ~ Unless required by applicable law or agreed to in writing, software
+  ~ distributed under the License is distributed on an "AS IS" BASIS,
+  ~ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  ~ See the License for the specific language governing permissions and
+  ~ limitations under the License.
+  -->
+<project name="Giraph-JNI">
+  <target name="giraph-jni">
+
+    <condition property="platform" value="linux64">
+      <os arch="amd64" family="unix"/>
+    </condition>
+
+    <mkdir dir="${project.build.directory}/native"/>
+
+    <property environment="env"/>
+    <fail unless="env.LLVM11_HOME" message="LLVM11_HOME not set."/>
+    <!--<fail unless="env.GRAPH_TYPE" message="graph type not set"/>-->
+    <!--<fail unless="env.APP_TYPE" message="app type not set"/>-->
+
+    <condition property="platform" value="mac">
+      <os arch="x86_64" family="mac"/>
+    </condition>
+
+    <condition property="lld" value="${env.LLVM11_HOME}/bin/ld.lld">
+      <os family="unix" arch="amd64"/>
+    </condition>
+
+    <fail message="lld ${lld} not set or missing">
+      <condition>
+        <and>
+          <not>
+            <available file="${lld}"/>
+          </not>
+          <os family="unix" arch="amd64"/>
+        </and>
+      </condition>
+    </fail>
+
+    
+    <echo level="info" message="Make graphscope java sdk jni code"/>
+
+    <echo level="info" message="Native Library Name: ${jni.library.name}"/>
+
+    <exec dir="${project.build.directory}/native" executable="cmake" failonerror="true" os="Linux">
+      <arg
+        line="-DCMAKE_BUILD_TYPE=Debug -DCMAKE_C_COMPILER=&quot;${env.LLVM11_HOME}/bin/clang&quot; -DCMAKE_CXX_COMPILER=&quot;${env.LLVM11_HOME}/bin/clang++&quot;  ${basedir}"/>
+    </exec>
+    <exec dir="${project.build.directory}/native" executable="cmake" failonerror="true"
+      os="Mac OS X">
+      <arg line=" ${basedir}"/>
+    </exec>
+
+    <exec dir="${project.build.directory}/native" executable="make" failonerror="true">
+      <arg line="VERBOSE=1 -j4"/>
+    </exec>
+
+    <fail message="Not a supported platform." unless="platform"/>
+
+    <mkdir dir="${project.build.directory}/native"/>
+  </target>
+</project>

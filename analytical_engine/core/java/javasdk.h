@@ -29,6 +29,13 @@
 #include <utility>
 #include <vector>
 
+// These files are not used in this file need to be compiled along with
+// javasdk.cc to be used by java.
+#include "ffi_byte_vec_vector.h"
+#include "ffi_byte_vector.h"
+#include "ffi_int_vec_vector.h"
+#include "ffi_int_vector.h"
+
 #include "grape/grape.h"
 
 #include "core/error.h"
@@ -83,6 +90,12 @@ std::string GetJavaProperty(JNIEnv* env, const char* property_name);
 
 jclass LoadClassWithClassLoader(JNIEnv* env, const jobject& url_class_loader,
                                 const char* class_name);
+
+jobject CreateGiraphAdaptor(JNIEnv* env, const char* app_class_name,
+                            const jobject& fragment_obj);
+
+jobject CreateGiraphAdaptorContext(JNIEnv* env, const char* context_class_name,
+                                   const jobject& fragment_obj);
 
 }  // namespace gs
 #endif

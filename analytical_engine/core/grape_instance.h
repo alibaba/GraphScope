@@ -50,12 +50,14 @@ namespace gs {
  */
 struct EngineConfig {
   std::string networkx;
+  std::string enable_java_sdk;
   std::string vineyard_socket;
   std::string vineyard_rpc_endpoint;
 
   std::string ToJsonString() const {
     boost::property_tree::ptree pt;
     pt.put("networkx", networkx);
+    pt.put("enable_java_sdk", enable_java_sdk);
     pt.put("vineyard_socket", vineyard_socket);
     pt.put("vineyard_rpc_endpoint", vineyard_rpc_endpoint);
     std::stringstream ss;

@@ -63,6 +63,12 @@ class JavaPIEPropertyContext : public JavaContextBase<FRAG_T> {
   virtual ~JavaPIEPropertyContext() {}
 
   void init(jlong messages_addr, const char* java_message_manager_name,
+            const std::string& params, const std::string& lib_path,
+            int64_t frag_group_id) {
+    JavaContextBase<FRAG_T>::init(messages_addr, java_message_manager_name,
+                                  params, lib_path, frag_group_id);
+  }
+  void init(jlong messages_addr, const char* java_message_manager_name,
             const std::string& params, const std::string& lib_path) {
     JavaContextBase<FRAG_T>::init(messages_addr, java_message_manager_name,
                                   params, lib_path);
@@ -210,6 +216,15 @@ class JavaPIEPropertyDefaultContext : public JavaPIEPropertyContext<FRAG_T> {
                                          params, lib_path);
   }
 
+  // giraph_app need frag_group_id
+  void Init(PropertyMessageManager& messages, const std::string& params,
+            const std::string& lib_path, int64_t frag_group_id) {
+    VLOG(1) << "lib path: " << lib_path;
+    JavaPIEPropertyContext<FRAG_T>::init(reinterpret_cast<jlong>(&messages),
+                                         _java_property_message_manager_name,
+                                         params, lib_path, frag_group_id);
+  }
+
  protected:
   const char* evalDescriptor() override {
     return "(Lcom/alibaba/graphscope/fragment/ArrowFragment;"
@@ -233,6 +248,15 @@ class JavaPIEPropertyParallelContext : public JavaPIEPropertyContext<FRAG_T> {
   explicit JavaPIEPropertyParallelContext(const FRAG_T& fragment)
       : JavaPIEPropertyContext<FRAG_T>(fragment) {}
   virtual ~JavaPIEPropertyParallelContext() {}
+  void Init(ParallelPropertyMessageManager& messages, const std::string& params,
+            const std::string& lib_path, int64_t frag_group_id) {
+    VLOG(1) << "lib path: " << lib_path;
+    JavaPIEPropertyContext<FRAG_T>::init(
+        reinterpret_cast<jlong>(&messages),
+        _java_parallel_property_message_manager_name, params, lib_path,
+        frag_group_id);
+  }
+
   void Init(ParallelPropertyMessageManager& messages, const std::string& params,
             const std::string& lib_path) {
     VLOG(1) << "lib path: " << lib_path;

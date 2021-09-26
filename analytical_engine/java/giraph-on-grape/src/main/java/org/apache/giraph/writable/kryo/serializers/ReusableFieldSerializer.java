@@ -1,0 +1,57 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+package org.apache.giraph.writable.kryo.serializers;
+
+import com.esotericsoftware.kryo.Kryo;
+import com.esotericsoftware.kryo.io.Input;
+import com.esotericsoftware.kryo.serializers.FieldSerializer;
+import com.google.common.base.Preconditions;
+
+/**
+ * Serializer used to deserialize data into object, instead of creating a new
+ * value readIntoObject needs to be set right before deserialization is called
+ * on it.
+ *
+ * @param <T> Object type
+ */
+public class ReusableFieldSerializer<T> extends FieldSerializer<T> {
+  /** Current object into which to deserialize */
+  private T readIntoObject;
+
+  /**
+   * Creates new reusable field serializer for a given type.
+   * @param kryo HadoopKryo object
+   * @param type Type of object
+   */
+  public ReusableFieldSerializer(Kryo kryo, Class type) {
+    super(kryo, type);
+  }
+
+  public void setReadIntoObject(T value) {
+    this.readIntoObject = value;
+  }
+
+  @Override
+  protected T create(Kryo kryo, Input input, Class<T> type) {
+    Preconditions.checkNotNull(readIntoObject);
+    Preconditions.checkState(readIntoObject.getClass().equals(type));
+    T toReturn = readIntoObject;
+    readIntoObject = null;
+    return toReturn;
+  }
+}

@@ -16,9 +16,6 @@
 
 package com.alibaba.graphscope.runtime;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import java.io.File;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
@@ -33,6 +30,8 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Vector;
 import java.util.stream.Collectors;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * GraphScope Class Loader contains several static functions which will be used by GraphScope
@@ -132,37 +131,26 @@ public class GraphScopeClassLoader {
             URLClassLoader classLoader, String foreignName, long address)
             throws ClassNotFoundException, NoSuchMethodException, InvocationTargetException,
                     IllegalAccessException, InstantiationException {
-        // FFITypeFactor class need to be ensure loaded in current classLoader,
-        // don't make it static.
-        Class<?> ffiTypeFactoryClass = classLoader.loadClass(FFI_TYPE_FACTORY_CLASS);
-        logger.info(
-                "Creating FFIPointer, typename ["
-                        + foreignName
-                        + "], address ["
-                        + address
-                        + "]"
-                        + ", ffi type factory ["
-                        + ffiTypeFactoryClass
-                        + "], loaded by "
-                        + ffiTypeFactoryClass.getClassLoader());
-        // a new classLoader contains new class path, we load the ffi.properties
-        // here.
-        Method loadClassLoaderMethod =
-                ffiTypeFactoryClass.getDeclaredMethod("loadClassLoader", ClassLoader.class);
-        loadClassLoaderMethod.invoke(null, classLoader);
+        Class<?> javaClass = null;
+        // For FFIIntVector/ FFIByteVector, we use we optimized class.
+        if (foreignName.equals("std::vector<char>")) {
+            javaClass = classLoader.loadClass("com.alibaba.graphscope.stdcxx.FFIByteVector");
+        } else if (foreignName.equals("std::vector<std::vector<char>>")) {
+            javaClass = classLoader.loadClass("com.alibaba.graphscope.stdcxx.FFIByteVecVector");
+        } else if (foreignName.equals("std::vector<int>")) {
+            javaClass = classLoader.loadClass("com.alibaba.graphscope.stdcxx.FFIIntVector");
+        } else if (foreignName.equals("std::vector<std::vector<int>>")) {
+            javaClass = classLoader.loadClass("com.alibaba.graphscope.stdcxx.FFIIntVecVector");
+        } else {
+            javaClass = loadFFIClassFromTypeFactory(classLoader, foreignName, address);
+        }
+        if (Objects.isNull(javaClass)) {
+            throw new IllegalArgumentException("Get ffi java class null");
+        }
 
-        // To make FFITypeFactor use our classLoader to find desired type matching,
-        // we load FFIType with our classLoader.
-        // Class<?> ffiTypeClass = classLoader.loadClass("com.alibaba.fastffi.FFIType");
-        // logger.info("ffitype cl :" + ffiTypeClass.getClassLoader() + ", url cl: " + classLoader);
-
-        // First load class by FFITypeFactor
-        Method getTypeMethod =
-                ffiTypeFactoryClass.getDeclaredMethod("getType", ClassLoader.class, String.class);
-        Class<?> ffiJavaClass = (Class<?>) getTypeMethod.invoke(null, classLoader, foreignName);
         // The class loaded by FFITypeFactor's classLoader can not be directly used
         // by us. We load again with our class loader.
-        Class<?> javaClass = classLoader.loadClass(ffiJavaClass.getName());
+        //        Class<?> javaClass = classLoader.loadClass(ffiJavaClass.getName());
         if (Objects.nonNull(javaClass)) {
             Constructor[] constructors = javaClass.getDeclaredConstructors();
             for (Constructor constructor : constructors) {
@@ -266,6 +254,45 @@ public class GraphScopeClassLoader {
         } else {
             throw new IllegalStateException("Not a parameterized type");
         }
+    }
+
+    private static Class<?> loadFFIClassFromTypeFactory(
+            URLClassLoader classLoader, String foreignName, long address)
+            throws InvocationTargetException, IllegalAccessException, NoSuchMethodException,
+                    ClassNotFoundException {
+        // FFITypeFactor class need to be ensure loaded in current classLoader,
+        // don't make it static.
+        logger.info(
+                "class loader path: "
+                        + (Arrays.stream(classLoader.getURLs())
+                                .map(URL::toString)
+                                .collect(Collectors.joining())));
+        Class<?> ffiTypeFactoryClass = classLoader.loadClass(FFI_TYPE_FACTORY_CLASS);
+        logger.info(
+                "Creating FFIPointer, typename ["
+                        + foreignName
+                        + "], address ["
+                        + address
+                        + "]"
+                        + ", ffi type factory ["
+                        + ffiTypeFactoryClass
+                        + "], loaded by "
+                        + ffiTypeFactoryClass.getClassLoader());
+        // a new classLoader contains new class path, we load the ffi.properties
+        // here.
+        Method loadClassLoaderMethod =
+                ffiTypeFactoryClass.getDeclaredMethod("loadClassLoader", ClassLoader.class);
+        loadClassLoaderMethod.invoke(null, classLoader);
+
+        // To make FFITypeFactor use our classLoader to find desired type matching,
+        // we load FFIType with our classLoader.
+        // Class<?> ffiTypeClass = classLoader.loadClass("com.alibaba.fastffi.FFIType");
+        // logger.info("ffitype cl :" + ffiTypeClass.getClassLoader() + ", url cl: " + classLoader);
+
+        // First load class by FFITypeFactor
+        Method getTypeMethod =
+                ffiTypeFactoryClass.getDeclaredMethod("getType", ClassLoader.class, String.class);
+        return (Class<?>) getTypeMethod.invoke(null, classLoader, foreignName);
     }
 
     private static class ClassScope {

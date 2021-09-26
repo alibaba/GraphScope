@@ -25,7 +25,7 @@ then
     echo "find env RUNTIME_LLVM4JNI_OUTPUT, append to init java class path"
     class_path=${RUNTIME_LLVM4JNI_OUTPUT}:${GRAPHSCOPE_HOME}/lib/grape-runtime-0.1-shaded.jar
 else 
-    class_path=${GRAPHSCOPE_HOME}/lib/grape-runtime-0.1-shaded.jar
+    class_path=${GRAPHSCOPE_HOME}/lib/grape-runtime-0.1-shaded.jar:
 fi
 
 export GRAPE_JVM_OPTS="-Dcom.alibaba.fastffi.rvBuffer=2147483648 -XX:+StartAttachListener -XX:+PreserveFramePointer \
@@ -33,7 +33,14 @@ export GRAPE_JVM_OPTS="-Dcom.alibaba.fastffi.rvBuffer=2147483648 -XX:+StartAttac
 -XX:+UnlockDiagnosticVMOptions -XX:LoopUnrollLimit=1 \
 -XX:CompileCommandFile=${GRAPHSCOPE_HOME}/conf/compile-commands.txt \
 -Djava.library.path=${GRAPHSCOPE_HOME}/lib \
--Djava.class.path=${class_path}"
+-Djava.class.path=/tmp/llvm4jni:${GRAPHSCOPE_HOME}/conf/:${class_path}"
 
-#-XX:+PrintInlining \
+export MAX_SUPER_STEP=10
+export MESSAGE_MANAGER_TYPE=mpi
+export USER_JAR_PATH=/home/graphscope/gs/analytical_engine/java/giraph-on-grape/target/giraph-on-grape-shaded.jar
+export OUT_MESSAGE_CACHE_TYPE=ByteBuf
+export MESSAGE_STORE_TYPE=primitive
+export LOADING_THREAD_NUM=1
+
 #-XX:+TraceClassLoading \
+#-XX:+PrintInlining \

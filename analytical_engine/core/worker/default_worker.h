@@ -40,7 +40,7 @@ class AppBase;
  * @tparam APP_T
  */
 template <typename APP_T>
-class DefaultWorker {
+class DefaultWorkerV2 {
   static_assert(std::is_base_of<AppBase<typename APP_T::fragment_t,
                                         typename APP_T::context_t>,
                                 APP_T>::value,
@@ -52,10 +52,10 @@ class DefaultWorker {
 
   using message_manager_t = grape::DefaultMessageManager;
 
-  DefaultWorker(std::shared_ptr<APP_T> app, std::shared_ptr<fragment_t> graph)
+  DefaultWorkerV2(std::shared_ptr<APP_T> app, std::shared_ptr<fragment_t> graph)
       : app_(app), context_(std::make_shared<context_t>(*graph)) {}
 
-  ~DefaultWorker() = default;
+  ~DefaultWorkerV2() = default;
 
   void Init(const grape::CommSpec& comm_spec,
             const grape::ParallelEngineSpec& pe_spec =
@@ -82,15 +82,18 @@ class DefaultWorker {
   void Finalize() {}
 
   template <class... Args>
-  void Query(Args&&... args) {
-    auto& graph = context_->fragment();
+  void Query0(Args&&... args) {
 
     MPI_Barrier(comm_spec_.comm());
 
     context_->Init(messages_, std::forward<Args>(args)...);
+    MPI_Barrier(comm_spec_.comm());
+  }
 
+  void Query1() {
     int round = 0;
 
+    auto& graph = context_->fragment();
     messages_.Start();
 
     messages_.StartARound();
@@ -135,6 +138,99 @@ class DefaultWorker {
 
   grape::CommSpec comm_spec_;
 };
+template <typename APP_T>
+class DefaultWorker {
+  static_assert(std::is_base_of<AppBase<typename APP_T::fragment_t,
+                                        typename APP_T::context_t>,
+                                APP_T>::value,
+                "DefaultWorker should work with App");
+
+ public:
+  using fragment_t = typename APP_T::fragment_t;
+  using context_t = typename APP_T::context_t;
+
+  using message_manager_t = grape::DefaultMessageManager;
+
+  DefaultWorker(std::shared_ptr<APP_T> app, std::shared_ptr<fragment_t> graph)
+      : app_(app), context_(std::make_shared<context_t>(*graph)) {}
+
+  ~DefaultWorker() = default;
+
+  void Init(const grape::CommSpec& comm_spec,
+            const grape::ParallelEngineSpec& pe_spec =
+                grape::DefaultParallelEngineSpec()) {
+    auto& graph = const_cast<fragment_t&>(context_->fragment());
+
+    // prepare for the query
+    graph.PrepareToRunApp(APP_T::message_strategy, APP_T::need_split_edges);
+
+    comm_spec_ = comm_spec;
+
+    MPI_Barrier(comm_spec_.comm());
+
+    messages_.Init(comm_spec_.comm());
+
+    InitParallelEngine(app_, pe_spec);
+    grape::InitCommunicator(app_, comm_spec.comm());
+  }
+
+  void Finalize() {}
+
+  template <class... Args>
+  void Query(Args&&... args) {
+    auto& graph = context_->fragment();
+
+    MPI_Barrier(comm_spec_.comm());
+
+    context_->Init(messages_, std::forward<Args>(args)...);
+    int round = 0;
+
+    messages_.Start();
+
+    messages_.StartARound();
+
+    app_->PEval(graph, *context_, messages_);
+
+    messages_.FinishARound();
+
+    if (comm_spec_.worker_id() == grape::kCoordinatorRank) {
+      VLOG(1) << "[Coordinator]: Finished PEval";
+    }
+
+    int step = 1;
+
+    while (!messages_.ToTerminate()) {
+      round++;
+      messages_.StartARound();
+
+      app_->IncEval(graph, *context_, messages_);
+
+      messages_.FinishARound();
+
+      if (comm_spec_.worker_id() == grape::kCoordinatorRank) {
+        VLOG(1) << "[Coordinator]: Finished IncEval - " << step;
+      }
+      ++step;
+    }
+
+    MPI_Barrier(comm_spec_.comm());
+
+    messages_.Finalize();
+  }
+
+
+  std::shared_ptr<context_t> GetContext() { return context_; }
+
+  void Output(std::ostream& os) { context_->Output(os); }
+
+ private:
+  std::shared_ptr<APP_T> app_;
+  std::shared_ptr<context_t> context_;
+  message_manager_t messages_;
+
+  grape::CommSpec comm_spec_;
+};
+
 
 }  // namespace gs
 

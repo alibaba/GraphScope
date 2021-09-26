@@ -18,7 +18,6 @@ package com.alibaba.graphscope.utils;
 
 import com.alibaba.graphscope.ds.Vertex;
 import com.alibaba.graphscope.ds.VertexRange;
-
 import java.util.Arrays;
 
 public class IntArrayWrapper {

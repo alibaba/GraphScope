@@ -1286,6 +1286,12 @@ bl::result<std::shared_ptr<DispatchResult>> GrapeInstance::OnReceive(
 #else
     conf.networkx = "OFF";
 #endif
+
+#ifdef ENABLE_JAVA_SDK
+  conf.enable_java_sdk = "ON";
+#else 
+  conf.enable_java_sdk= "OFF";
+#endif
     conf.vineyard_socket = client_->IPCSocket();
     conf.vineyard_rpc_endpoint = client_->RPCEndpoint();
     r->set_data(conf.ToJsonString(),

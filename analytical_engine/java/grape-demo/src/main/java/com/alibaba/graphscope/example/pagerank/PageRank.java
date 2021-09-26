@@ -28,12 +28,10 @@ import com.alibaba.graphscope.parallel.ParallelEngine;
 import com.alibaba.graphscope.parallel.ParallelMessageManager;
 import com.alibaba.graphscope.parallel.message.DoubleMsg;
 import com.alibaba.graphscope.utils.FFITypeFactoryhelper;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import java.util.function.BiConsumer;
 import java.util.function.Supplier;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class PageRank extends Communicator
         implements ParallelAppBase<Long, Long, Long, Double, PageRankContext>, ParallelEngine {
@@ -123,7 +121,7 @@ public class PageRank extends Communicator
                     } else {
                         double cur = 0.0;
                         AdjList<Long, Double> nbrs = fragment.getIncomingAdjList(vertex);
-                        for (Nbr<Long, Double> nbr : nbrs.iterator()) {
+                        for (Nbr<Long, Double> nbr : nbrs.iterable()) {
                             cur += ctx.pagerank.get(nbr.neighbor());
                         }
                         cur = (cur * ctx.alpha + base) / ctx.degree.get(vertex);

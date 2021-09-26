@@ -111,8 +111,15 @@ class JavaContextBase : public grape::ContextBase {
 
  protected:
   virtual const char* evalDescriptor() = 0;
+
+  // Set frag_group_id to zero inidicate not available.
   void init(jlong messages_addr, const char* java_message_manager_name,
             const std::string& params, const std::string& lib_path) {
+    init(messages_addr, java_message_manager_name, params, lib_path, 0);
+  }
+  void init(jlong messages_addr, const char* java_message_manager_name,
+            const std::string& params, const std::string& lib_path,
+            int64_t frag_group_id) {
     if (params.empty()) {
       LOG(ERROR) << "no args received";
       return;
@@ -120,7 +127,7 @@ class JavaContextBase : public grape::ContextBase {
     std::string user_library_name;
     std::string user_class_path;
     std::string args_str = parseParamsAndSetupJVMEnv(
-        params, lib_path, user_library_name, user_class_path);
+        params, lib_path, user_library_name, user_class_path, frag_group_id);
 
     JavaVM* jvm = GetJavaVM();
     (void) jvm;
@@ -136,9 +143,9 @@ class JavaContextBase : public grape::ContextBase {
     if (m.env()) {
       JNIEnv* env = m.env();
 
-      // Create a graphscope class loader to load app_class and ctx_class. This
-      // means will create a new class loader for each for run_app.
-      // The intent is to provide isolation, and avoid class conflicts。
+      // Create a graphscope class loader to load app_class and ctx_class.
+      // This means will create a new class loader for each for run_app. The
+      // intent is to provide isolation, and avoid class conflicts。
       {
         jobject gs_class_loader_obj = CreateClassLoader(env, user_class_path);
         CHECK_NOTNULL(gs_class_loader_obj);
@@ -148,8 +155,8 @@ class JavaContextBase : public grape::ContextBase {
       {
         if (!user_library_name.empty()) {
           // Since we load loadLibraryClass with urlClassLoader, the
-          // fromClass.classLoader literal, which is used in System.load, should
-          // be urlClassLoader.
+          // fromClass.classLoader literal, which is used in System.load,
+          // should be urlClassLoader.
           jclass load_library_class = (jclass) LoadClassWithClassLoader(
               env, url_class_loader_object_, LOAD_LIBRARY_CLASS);
           CHECK_NOTNULL(load_library_class);
@@ -211,7 +218,8 @@ class JavaContextBase : public grape::ContextBase {
         CHECK_NOTNULL(ifragment_helper_clz);
         jmethodID adapt2SimpleFragment_methodID = env->GetStaticMethodID(
             ifragment_helper_clz, "adapt2SimpleFragment",
-            "(Ljava/lang/Object;)Lcom/alibaba/graphscope/fragment/IFragment;");
+            "(Ljava/lang/Object;)Lcom/alibaba/graphscope/fragment/"
+            "IFragment;");
         CHECK_NOTNULL(adapt2SimpleFragment_methodID);
 
         jobject res = (jobject) env->CallStaticObjectMethod(
@@ -259,7 +267,8 @@ class JavaContextBase : public grape::ContextBase {
           LOG(ERROR) << "Exception in context Init";
         }
         VLOG(1) << "Successfully invokd ctx init method.";
-        // 5. to output the result, we need the c++ context held by java object.
+        // 5. to output the result, we need the c++ context held by java
+        // object.
         jfieldID inner_ctx_address_field =
             env->GetFieldID(context_class, "ffiContextAddress", "J");
         CHECK_NOTNULL(inner_ctx_address_field);
@@ -279,9 +288,9 @@ class JavaContextBase : public grape::ContextBase {
    * @brief Generate user class path, i.e. URLClassLoader class path, from lib
    * path.
    *
-   * @note lib_path is the path to user_app lib, if empty, we will skip llvm4jni
-   * and gs-ffi-gen in generated class path, and we will take jar_name as full
-   * path.
+   * @note lib_path is the path to user_app lib, if empty, we will skip
+   * llvm4jni and gs-ffi-gen in generated class path, and we will take
+   * jar_name as full path.
    *
    */
   std::string libPath2UserClassPath(const boost::filesystem::path& lib_dir,
@@ -319,7 +328,9 @@ class JavaContextBase : public grape::ContextBase {
   std::string parseParamsAndSetupJVMEnv(const std::string& params,
                                         const std::string lib_path,
                                         std::string& user_library_name,
-                                        std::string& user_class_path) {
+                                        std::string& user_class_path,
+                                        int frag_group_id) {
+    VLOG(10) << "received params: " << params;
     boost::property_tree::ptree pt;
     std::stringstream ss;
     {
@@ -336,7 +347,7 @@ class JavaContextBase : public grape::ContextBase {
     CHECK(!frag_name.empty());
     VLOG(1) << "Parse frag name: " << frag_name;
     graph_type_str_ = frag_name;
-    pt.erase("frag_name");
+    // pt.erase("frag_name");
 
     std::string jar_name = pt.get<std::string>("jar_name");
     CHECK(!jar_name.empty());
@@ -363,6 +374,10 @@ class JavaContextBase : public grape::ContextBase {
 
     user_class_path = libPath2UserClassPath(lib_dir, lib_path_fs, jar_name);
     VLOG(1) << "user cp: " << user_class_path;
+
+    // Giraph adaptor context need to map java graph data to
+    // vineyard_id(frag_group_id)
+    pt.put("vineyard_id", frag_group_id);
 
     // JVM runtime opt should consists of java.libaray.path and
     // java.class.path maybe this should be set by the backend not user.
@@ -398,6 +413,11 @@ class JavaContextBase : public grape::ContextBase {
     // Pass app class's class object
     jstring context_class_jstring = (jstring) env->CallStaticObjectMethod(
         app_context_getter_class, app_context_getter_method, app_object_);
+    if (env->ExceptionCheck()) {
+            LOG(ERROR) << "Exception occurred when get context class string";
+            env->ExceptionDescribe();
+            env->ExceptionClear();
+    }
     CHECK_NOTNULL(context_class_jstring);
     return JString2String(env, context_class_jstring);
   }

@@ -25,11 +25,9 @@ import com.alibaba.graphscope.context.ffi.FFILabeledVertexPropertyContext;
 import com.alibaba.graphscope.fragment.ArrowFragment;
 import com.alibaba.graphscope.utils.CppClassName;
 import com.alibaba.graphscope.utils.FFITypeFactoryhelper;
-
+import java.util.Objects;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.util.Objects;
 
 public abstract class LabeledVertexPropertyContext<OID_T> {
     private static Logger logger =

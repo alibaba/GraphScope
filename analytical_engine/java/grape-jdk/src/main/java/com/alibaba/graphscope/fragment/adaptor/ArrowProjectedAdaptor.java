@@ -9,7 +9,6 @@ import com.alibaba.graphscope.ds.adaptor.AdjList;
 import com.alibaba.graphscope.ds.adaptor.ProjectedAdjListAdaptor;
 import com.alibaba.graphscope.fragment.ArrowProjectedFragment;
 import com.alibaba.graphscope.fragment.IFragment;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -211,8 +210,8 @@ public class ArrowProjectedAdaptor<OID_T, VID_T, VDATA_T, EDATA_T>
      */
     @Override
     public VDATA_T getData(Vertex<VID_T> vertex) {
-        logger.error("Method not implemented");
-        return null;
+        //        throw new IllegalStateException("Not implemented");
+        return fragment.getData(vertex);
     }
 
     /**

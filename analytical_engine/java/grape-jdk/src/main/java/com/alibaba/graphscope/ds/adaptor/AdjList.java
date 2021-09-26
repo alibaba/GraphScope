@@ -1,5 +1,6 @@
 package com.alibaba.graphscope.ds.adaptor;
 
+import com.alibaba.graphscope.ds.NbrBase;
 import java.util.Iterator;
 import java.util.Objects;
 
@@ -39,7 +40,7 @@ public interface AdjList<VID_T, EDATA_T> {
      *
      * @return the iterator.
      */
-    default Iterable<Nbr<VID_T, EDATA_T>> iterator() {
+    default Iterable<Nbr<VID_T, EDATA_T>> iterable() {
         if (type().equals(GrapeAdjListAdaptor.TYPE)) {
             return () ->
                     new Iterator<Nbr<VID_T, EDATA_T>>() {
@@ -91,7 +92,7 @@ public interface AdjList<VID_T, EDATA_T> {
                             }
                             return flag;
                         }
-
+                        //
                         @Override
                         public Nbr<VID_T, EDATA_T> next() {
                             flag = false;
@@ -100,5 +101,18 @@ public interface AdjList<VID_T, EDATA_T> {
                     };
         }
         return null;
+    }
+
+    default Iterable<? extends NbrBase<VID_T, EDATA_T>> nbrBases() {
+        if (this
+                instanceof GrapeAdjListAdaptor) { // use string equal cause performance degradation.
+            return ((GrapeAdjListAdaptor<VID_T, EDATA_T>) this).getAdjList().locals();
+        } else if (this instanceof ProjectedAdjListAdaptor) {
+            return ((ProjectedAdjListAdaptor<VID_T, EDATA_T>) this)
+                    .getProjectedAdjList()
+                    .iterable();
+        } else {
+            throw new IllegalStateException("not supported");
+        }
     }
 }

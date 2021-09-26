@@ -36,18 +36,12 @@ from graphscope.framework.dag import DAGNode
 from graphscope.framework.dag_utils import bind_app
 from graphscope.framework.errors import InvalidArgumentError
 from graphscope.framework.graph import Graph
-from graphscope.framework.utils import get_tempdir
 from graphscope.proto import graph_def_pb2
 
 __all__ = ["JavaApp"]
 
 logger = logging.getLogger("graphscope")
 
-# runtime workspace
-try:
-    WORKSPACE = os.environ["GRAPHSCOPE_RUNTIME"]
-except KeyError:
-    WORKSPACE = os.path.join(get_tempdir(), "gs")
 DEFAULT_GS_CONFIG_FILE = ".gs_conf.yaml"
 
 POSSIBLE_APP_TYPES = [
@@ -55,6 +49,7 @@ POSSIBLE_APP_TYPES = [
     "parallel_property",
     "default_simple",
     "parallel_simple",
+    "giraph_default"
 ]
 
 
@@ -96,6 +91,8 @@ def _parse_user_app(java_app_class: str, java_jar_full_path: str):
         logger.info(line)
         if len(line) == 0:
             continue
+        elif line.find("GiraphDefault") != -1:
+            _java_app_type = "giraph"
         if line.find("DefaultPropertyApp") != -1:
             _java_app_type = "default_property"
         elif line.find("ParallelPropertyApp") != -1:
@@ -110,6 +107,7 @@ def _parse_user_app(java_app_class: str, java_jar_full_path: str):
             _frag_param_str = line.split(":")[-1].strip()
         elif line.find("ContextType") != -1:
             _java_inner_context_type = line.split(":")[-1].strip()
+    # for giraph app, we manually set java inner ctx type 
     logger.info(
         "Java app type: {}, frag type str: {}, ctx type: {}".format(
             _java_app_type, _frag_param_str, _java_inner_context_type
@@ -133,6 +131,22 @@ def _type_param_consistent(graph_actucal_type_param, java_app_type_param):
         if graph_actucal_type_param in {"int32_t", "uint32_t"}:
             return True
         return False
+    if java_app_type_param == "org.apache.hadoop.io.LongWritable":
+        if graph_actucal_type_param in {"uint64_t", "int64_t"}:
+            return True
+        return False
+    if java_app_type_param == "org.apache.hadoop.io.DoubleWritable":
+        if graph_actucal_type_param in {"double",}:
+            return True
+        return False
+    if java_app_type_param == "org.apache.hadoop.io.IntWritable":
+        if graph_actucal_type_param in {"int32_t","uint32_t"}:
+            return True
+        return False
+    # For other types, we assume it is udf, warn user.
+    if graph_actucal_type_param in {"std::string"}:
+        logger.warn("Assuming {} as udf type, try map it to the string type,  move on with finger crosses")
+        return True
     return False
 
 
@@ -185,7 +199,14 @@ class JavaApp(AppAssets):
             gs_config["app"][0]["compatible_graph"] = ["gs::ArrowProjectedFragment"]
 
         gs_config["app"][0]["context_type"] = _java_ctx_type
-        if self._java_app_type == "default_property":
+        if self._java_app_type == "giraph":
+            gs_config["app"][0][
+                "driver_header"
+            ] = "apps/java_pie/java_pie_projected_default_app.h"
+            gs_config["app"][0]["class_name"] = "gs::JavaPIEProjectedDefaultApp"
+            #special for giraph app
+            gs_config["app"][0]["driver_app"] = "com.alibaba.graphscope.app.GiraphComputationAdaptor"
+        elif self._java_app_type == "default_property":
             gs_config["app"][0][
                 "driver_header"
             ] = "apps/java_pie/java_pie_property_default_app.h"

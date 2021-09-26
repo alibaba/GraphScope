@@ -94,6 +94,8 @@ ifeq (${ENABLE_JAVA_SDK}, ON)
 	mvn clean install -DskipTests --quiet && \
 	sudo cp ${WORKING_DIR}/analytical_engine/java/grape-runtime/target/native/libgrape-jni.so ${INSTALL_PREFIX}/lib/ && \
 	sudo cp ${WORKING_DIR}/analytical_engine/java/grape-runtime/target/grape-runtime-0.1-shaded.jar ${INSTALL_PREFIX}/lib/ && \
+	sudo cp ${WORKING_DIR}/analytical_engine/java/giraph-on-grape/target/giraph-on-grape-shaded.jar ${INSTALL_PREFIX}/lib/ && \
+	sudo cp ${WORKING_DIR}/analytical_engine/java/giraph-on-grape/target/native/libgiraph-jni.so ${INSTALL_PREFIX}/lib/ && \
 	sudo mkdir -p ${INSTALL_PREFIX}/conf/ && \
 	sudo cp ${WORKING_DIR}/analytical_engine/java/grape_jvm_opts ${INSTALL_PREFIX}/conf/
 endif

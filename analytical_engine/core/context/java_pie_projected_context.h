@@ -63,6 +63,12 @@ class JavaPIEProjectedContext : public JavaContextBase<FRAG_T> {
 
   virtual ~JavaPIEProjectedContext() {}
   void init(jlong messages_addr, const char* java_message_manager_name,
+            const std::string& params, const std::string& lib_path,
+            int64_t frag_group_id) {
+    JavaContextBase<FRAG_T>::init(messages_addr, java_message_manager_name,
+                                  params, lib_path, frag_group_id);
+  }
+  void init(jlong messages_addr, const char* java_message_manager_name,
             const std::string& params, const std::string& lib_path) {
     JavaContextBase<FRAG_T>::init(messages_addr, java_message_manager_name,
                                   params, lib_path);
@@ -213,6 +219,13 @@ class JavaPIEProjectedDefaultContext : public JavaPIEProjectedContext<FRAG_T> {
   virtual ~JavaPIEProjectedDefaultContext() {}
 
   void Init(grape::DefaultMessageManager& messages, const std::string& params,
+            const std::string& lib_path, int64_t frag_group_id) {
+    VLOG(1) << "lib path: " << lib_path;
+    JavaPIEProjectedContext<FRAG_T>::init(reinterpret_cast<jlong>(&messages),
+                                          _java_projected_message_manager_name,
+                                          params, lib_path, frag_group_id);
+  }
+  void Init(grape::DefaultMessageManager& messages, const std::string& params,
             const std::string& lib_path) {
     VLOG(1) << "lib path: " << lib_path;
     JavaPIEProjectedContext<FRAG_T>::init(reinterpret_cast<jlong>(&messages),
@@ -238,6 +251,15 @@ class JavaPIEProjectedParallelContext : public JavaPIEProjectedContext<FRAG_T> {
   explicit JavaPIEProjectedParallelContext(const FRAG_T& fragment)
       : JavaPIEProjectedContext<FRAG_T>(fragment) {}
   virtual ~JavaPIEProjectedParallelContext() {}
+
+  void Init(grape::ParallelMessageManager& messages, const std::string& params,
+            const std::string& lib_path, int64_t frag_group_id) {
+    VLOG(1) << "lib path: " << lib_path;
+    JavaPIEProjectedContext<FRAG_T>::init(
+        reinterpret_cast<jlong>(&messages),
+        _java_projected_parallel_message_manager_name, params, lib_path,
+        frag_group_id);
+  }
 
   void Init(grape::ParallelMessageManager& messages, const std::string& params,
             const std::string& lib_path) {

@@ -1,0 +1,231 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <parent>
+    <artifactId>grape-jdk-parent</artifactId>
+    <groupId>com.alibaba.graphscope</groupId>
+    <version>0.1</version>
+  </parent>
+  <modelVersion>4.0.0</modelVersion>
+  <version>0.1</version>
+  <packaging>jar</packaging>
+  <name>giraph-on-grape</name>
+  <artifactId>giraph-on-grape</artifactId>
+
+  <properties>
+    <maven.compiler.source>8</maven.compiler.source>
+    <maven.compiler.target>8</maven.compiler.target>
+    <hadoop-core.version>1.2.1</hadoop-core.version>
+    <jmh.version>1.21</jmh.version>
+    <skip.perf.benchmarks>true</skip.perf.benchmarks>
+    <benchmark.filter>org.apache.hadoop.io.StdVectorTest.write*</benchmark.filter>
+    <benchmark.forks>1</benchmark.forks>
+    <benchmark.jvmargs></benchmark.jvmargs>
+    <benchmark.warmups>0</benchmark.warmups>
+    <benchmark.runs>1</benchmark.runs>
+    <benchmark.list></benchmark.list>
+    <benchmark.resultfile>jmh-result.json</benchmark.resultfile>
+    <benchmark.resultformat>json</benchmark.resultformat>
+    <uberjar.name>giraph-on-grape-shaded</uberjar.name>
+    <benchmark.jvmargs>-Darrow.enable_null_check_for_get=false
+      -Darrow.enable_unsafe_memory_access=true
+      -Djava.library.path=${project.build.directory}/native:${project.build.directory}/../../grape-runtime/target/native
+      -XX:CompileCommandFile=/home/graphscope/compile-commands.txt
+    </benchmark.jvmargs>
+  </properties>
+
+  <dependencies>
+    <dependency>
+      <groupId>org.apache.hadoop</groupId>
+      <artifactId>hadoop-core</artifactId>
+      <version>${hadoop-core.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.openjdk.jmh</groupId>
+      <artifactId>jmh-generator-annprocess</artifactId>
+      <version>${jmh.version}</version>
+      <scope>provided</scope>
+    </dependency>
+    <dependency>
+      <groupId>com.alibaba.fastffi</groupId>
+      <artifactId>ffi</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>com.alibaba.fastffi</groupId>
+      <artifactId>annotation-processor</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>com.alibaba.fastffi</groupId>
+      <artifactId>llvm4jni-runtime</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>com.esotericsoftware</groupId>
+      <artifactId>kryo</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>com.alibaba.graphscope</groupId>
+      <artifactId>grape-jdk</artifactId>
+      <classifier>shaded</classifier>
+      <version>0.1</version>
+    </dependency>
+    <dependency>
+      <groupId>ch.qos.logback</groupId>
+      <artifactId>logback-classic</artifactId>
+    </dependency>
+    <!--    <dependency>-->
+    <!--      <groupId>org.apache.arrow</groupId>-->
+    <!--      <artifactId>arrow-vector</artifactId>-->
+    <!--      <version>7.0.0-SNAPSHOT</version>-->
+    <!--      <classifier>shade-format-flatbuffers</classifier>-->
+    <!--    </dependency>-->
+    <!--    <dependency>-->
+    <!--      <groupId>org.apache.arrow</groupId>-->
+    <!--      <artifactId>arrow-memory-core</artifactId>-->
+    <!--      <version>7.0.0-SNAPSHOT</version>-->
+    <!--    </dependency>-->
+    <!--    <dependency>-->
+    <!--      <groupId>org.apache.arrow</groupId>-->
+    <!--      <artifactId>arrow-memory-netty</artifactId>-->
+    <!--      <version>7.0.0-SNAPSHOT</version>-->
+    <!--    </dependency>-->
+    <dependency>
+      <groupId>org.jodah</groupId>
+      <artifactId>typetools</artifactId>
+      <version>0.2.1</version>
+    </dependency>
+    <dependency>
+      <groupId>io.netty</groupId>
+      <artifactId>netty-all</artifactId>
+      <version>${dep.netty.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>it.unimi.dsi</groupId>
+      <artifactId>fastutil</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.mockito</groupId>
+      <artifactId>mockito-core</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.json</groupId>
+      <artifactId>json</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>de.javakaffee</groupId>
+      <artifactId>kryo-serializers</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.zookeeper</groupId>
+      <artifactId>zookeeper</artifactId>
+    </dependency>
+  </dependencies>
+
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-antrun-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>make</id>
+            <goals>
+              <goal>run</goal>
+            </goals>
+            <phase>compile</phase>
+            <configuration>
+              <target>
+                <ant antfile="${basedir}/build.xml">
+                  <target name="giraph-jni"></target>
+                </ant>
+              </target>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-surefire-plugin</artifactId>
+        <configuration>
+          <skipTests>true</skipTests>
+        </configuration>
+      </plugin>
+<!--      <plugin>-->
+<!--        <groupId>org.codehaus.mojo</groupId>-->
+<!--        <artifactId>exec-maven-plugin</artifactId>-->
+<!--        <version>1.6.0</version>-->
+<!--        <configuration>-->
+<!--          <skip>${skip.perf.benchmarks}</skip>-->
+<!--          <classpathScope>test</classpathScope>-->
+<!--          <executable>java</executable>-->
+<!--          <arguments>-->
+<!--            <argument>-classpath</argument>-->
+<!--            <argument>${env.giraphcp}</argument>-->
+<!--            <argument>org.openjdk.jmh.Main</argument>-->
+<!--            <argument>${benchmark.filter}</argument>-->
+<!--            <argument>-f</argument>-->
+<!--            <argument>${benchmark.forks}</argument>-->
+<!--            <argument>-jvmArgs</argument>-->
+<!--            <argument>${benchmark.jvmargs}</argument>-->
+<!--            <argument>-wi</argument>-->
+<!--            <argument>${benchmark.warmups}</argument>-->
+<!--            <argument>-i</argument>-->
+<!--            <argument>${benchmark.runs}</argument>-->
+<!--            <argument>-rff</argument>-->
+<!--            <argument>${benchmark.resultfile}</argument>-->
+<!--            <argument>-rf</argument>-->
+<!--            <argument>${benchmark.resultformat}</argument>-->
+
+<!--          </arguments>-->
+<!--        </configuration>-->
+<!--        <executions>-->
+<!--          <execution>-->
+<!--            <id>run-java-benchmarks</id>-->
+<!--            <goals>-->
+<!--              <goal>exec</goal>-->
+<!--            </goals>-->
+<!--            <phase>integration-test</phase>-->
+<!--          </execution>-->
+<!--        </executions>-->
+<!--      </plugin>-->
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-shade-plugin</artifactId>
+        <version>2.2</version>
+        <executions>
+          <execution>
+            <phase>package</phase>
+            <goals>
+              <goal>shade</goal>
+            </goals>
+            <configuration>
+              <finalName>${uberjar.name}</finalName>
+
+              <filters>
+                <filter>
+                  <artifact>*:*</artifact>
+                  <excludes>
+                    <exclude>META-INF/*.SF</exclude>
+                    <exclude>META-INF/*.DSA</exclude>
+                    <exclude>META-INF/*.RSA</exclude>
+                  </excludes>
+                </filter>
+              </filters>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-surefire-plugin</artifactId>
+        <configuration>
+          <argLine>
+            -Djava.library.path=${project.build.directory}/native:${project.build.directory}/../../grape-runtime/target/native
+          </argLine>
+        </configuration>
+      </plugin>
+    </plugins>
+  </build>
+
+</project>
