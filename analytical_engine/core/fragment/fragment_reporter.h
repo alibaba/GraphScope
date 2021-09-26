@@ -377,17 +377,21 @@ class DynamicFragmentReporter : public grape::Communicator {
   folly::json::serialization_opts json_opts_;
 };
 
+/*
+ *
+ *
+ */
 template <typename T>
-T convert_oid(folly::dynamic node) {}
+T ExtractOidFromDynamic(folly::dynamic node_id) {}
 
 template <>
-int64_t convert_oid(folly::dynamic node) {
-  return node.asInt();
+int64_t ExtractOidFromDynamic(folly::dynamic node_id) {
+  return node_id.asInt();
 }
 
 template <>
-std::string convert_oid(folly::dynamic node) {
-  return node.asString();
+std::string ExtractOidFromDynamic(folly::dynamic node_id) {
+  return node_id.asString();
 }
 
 template <typename FRAG_T>
@@ -429,7 +433,7 @@ class ArrowFragmentReporter<vineyard::ArrowFragment<OID_T, VID_T>>
       BOOST_LEAF_AUTO(node_in_json, params.Get<std::string>(rpc::NODE));
       folly::dynamic node = folly::parseJson(node_in_json, json_opts_)[0];
       label_id_t label_id = node[0].asInt();
-      oid_t oid = convert_oid<oid_t>(node[1]);
+      oid_t oid = ExtractOidFromDynamic<oid_t>(node[1]);
       return std::to_string(hasNode(fragment, label_id, oid));
     }
     case rpc::HAS_EDGE: {
@@ -437,8 +441,8 @@ class ArrowFragmentReporter<vineyard::ArrowFragment<OID_T, VID_T>>
       folly::dynamic edge = folly::parseJson(edge_in_json, json_opts_);
       label_id_t u_label_id = edge[0][0].asInt();
       label_id_t v_label_id = edge[1][0].asInt();
-      auto u_oid = convert_oid<oid_t>(edge[0][1]);
-      auto v_oid = convert_oid<oid_t>(edge[1][1]);
+      auto u_oid = ExtractOidFromDynamic<oid_t>(edge[0][1]);
+      auto v_oid = ExtractOidFromDynamic<oid_t>(edge[1][1]);
       return std::to_string(
           hasEdge(fragment, u_label_id, u_oid, v_label_id, v_oid));
     }
@@ -446,7 +450,7 @@ class ArrowFragmentReporter<vineyard::ArrowFragment<OID_T, VID_T>>
       BOOST_LEAF_AUTO(node_in_json, params.Get<std::string>(rpc::NODE));
       folly::dynamic node = folly::parseJson(node_in_json, json_opts_)[0];
       label_id_t label_id = node[0].asInt();
-      oid_t oid = convert_oid<oid_t>(node[1]);
+      oid_t oid = ExtractOidFromDynamic<oid_t>(node[1]);
       return getNodeData(fragment, label_id, oid);
     }
     case rpc::EDGE_DATA: {
@@ -454,8 +458,8 @@ class ArrowFragmentReporter<vineyard::ArrowFragment<OID_T, VID_T>>
       folly::dynamic edge = folly::parseJson(edge_in_json, json_opts_);
       label_id_t u_label_id = edge[0][0].asInt();
       label_id_t v_label_id = edge[1][0].asInt();
-      auto u_oid = convert_oid<oid_t>(edge[0][1]);
-      auto v_oid = convert_oid<oid_t>(edge[1][1]);
+      auto u_oid = ExtractOidFromDynamic<oid_t>(edge[0][1]);
+      auto v_oid = ExtractOidFromDynamic<oid_t>(edge[1][1]);
       return getEdgeData(fragment, u_label_id, u_oid, v_label_id, v_oid);
     }
     case rpc::NEIGHBORS_BY_NODE:
@@ -464,7 +468,7 @@ class ArrowFragmentReporter<vineyard::ArrowFragment<OID_T, VID_T>>
       BOOST_LEAF_AUTO(node_in_json, params.Get<std::string>(rpc::NODE));
       folly::dynamic node = folly::parseJson(node_in_json, json_opts_)[0];
       label_id_t label_id = node[0].asInt();
-      oid_t oid = convert_oid<oid_t>(node[1]);
+      oid_t oid = ExtractOidFromDynamic<oid_t>(node[1]);
       return getNeighbors(fragment, label_id, oid);
     }
     case rpc::NODES_BY_LOC: {
