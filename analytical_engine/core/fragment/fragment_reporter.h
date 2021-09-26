@@ -444,8 +444,8 @@ class ArrowFragmentReporter<vineyard::ArrowFragment<OID_T, VID_T>>
       label_id_t v_label_id = edge[1][0].asInt();
       auto u_oid = convert_oid<oid_t>(edge[0][1]);
       auto v_oid = convert_oid<oid_t>(edge[1][1]);
-      return std::to_string(hasEdge(fragment, u_label_id, u_oid, v_label_id,
-                                    v_oid));
+      return std::to_string(
+          hasEdge(fragment, u_label_id, u_oid, v_label_id, v_oid));
     }
     case rpc::NODE_DATA: {
       BOOST_LEAF_AUTO(node_in_json, params.Get<std::string>(rpc::NODE));
@@ -487,7 +487,7 @@ class ArrowFragmentReporter<vineyard::ArrowFragment<OID_T, VID_T>>
 
  private:
   inline size_t reportNodeNum(std::shared_ptr<fragment_t>& fragment) {
-    return fragment->GetTotalNodesNum();;
+    return fragment->GetTotalNodesNum();
   }
 
   inline size_t reportEdgeNum(std::shared_ptr<fragment_t>& fragment) {
@@ -501,8 +501,8 @@ class ArrowFragmentReporter<vineyard::ArrowFragment<OID_T, VID_T>>
                const oid_t& oid) {
     bool ret = false;
     vid_t gid;
-    bool existed = fragment->GetVertexMap()->GetGid(fragment->fid(), label_id,
-                                                   oid, gid);
+    bool existed =
+        fragment->GetVertexMap()->GetGid(fragment->fid(), label_id, oid, gid);
     Sum(existed, ret);
     return ret;
   }
@@ -513,10 +513,10 @@ class ArrowFragmentReporter<vineyard::ArrowFragment<OID_T, VID_T>>
     vid_t u_gid, v_gid;
     vertex_t u, v;
     auto vm_ptr = fragment->GetVertexMap();
-    if (vm_ptr->GetGid(fragment->fid(), u_label_id, u_oid, u_gid)
-        && vm_ptr->GetGid(v_label_id, v_oid, v_gid)
-        && fragment->InnerVertexGid2Vertex(u_gid, u)
-        && fragment->Gid2Vertex(v_gid, v)) {
+    if (vm_ptr->GetGid(fragment->fid(), u_label_id, u_oid, u_gid) &&
+        vm_ptr->GetGid(v_label_id, v_oid, v_gid) &&
+        fragment->InnerVertexGid2Vertex(u_gid, u) &&
+        fragment->Gid2Vertex(v_gid, v)) {
       for (label_id_t e_label = 0; e_label < fragment->edge_label_num();
            e_label++) {
         auto oe = fragment->GetOutgoingAdjList(u, e_label);
@@ -539,8 +539,8 @@ class ArrowFragmentReporter<vineyard::ArrowFragment<OID_T, VID_T>>
     vid_t gid;
     vertex_t v;
     auto vm_ptr = fragment->GetVertexMap();
-    if (vm_ptr->GetGid(fragment->fid(), label_id, n, gid)
-        && fragment->InnerVertexGid2Vertex(gid, v)) {
+    if (vm_ptr->GetGid(fragment->fid(), label_id, n, gid) &&
+        fragment->InnerVertexGid2Vertex(gid, v)) {
       extractNodeProperty(fragment, label_id, v, ob);
     }
     return ob.empty() ? std::string() : folly::toJson(ob);
@@ -553,10 +553,10 @@ class ArrowFragmentReporter<vineyard::ArrowFragment<OID_T, VID_T>>
     vid_t u_gid, v_gid;
     vertex_t u, v;
     auto vm_ptr = fragment->GetVertexMap();
-    if (vm_ptr->GetGid(fragment->fid(), u_label_id, u_oid, u_gid)
-        && vm_ptr->GetGid(v_label_id, v_oid, v_gid)
-        && fragment->InnerVertexGid2Vertex(u_gid, u)
-        && fragment->Gid2Vertex(v_gid, v)) {
+    if (vm_ptr->GetGid(fragment->fid(), u_label_id, u_oid, u_gid) &&
+        vm_ptr->GetGid(v_label_id, v_oid, v_gid) &&
+        fragment->InnerVertexGid2Vertex(u_gid, u) &&
+        fragment->Gid2Vertex(v_gid, v)) {
       for (label_id_t e_label = 0; e_label < fragment->edge_label_num();
            e_label++) {
         auto oe = fragment->GetOutgoingAdjList(u, e_label);
@@ -577,8 +577,8 @@ class ArrowFragmentReporter<vineyard::ArrowFragment<OID_T, VID_T>>
     vertex_t v;
     folly::dynamic nbrs = folly::dynamic::array;
     auto vm_ptr = fragment->GetVertexMap();
-    if (vm_ptr->GetGid(fragment->fid(), label_id, n, gid)
-        && fragment->InnerVertexGid2Vertex(gid, v)) {
+    if (vm_ptr->GetGid(fragment->fid(), label_id, n, gid) &&
+        fragment->InnerVertexGid2Vertex(gid, v)) {
       nbrs.resize(2, folly::dynamic::array);
       for (label_id_t e_label = 0; e_label < fragment->edge_label_num();
            e_label++) {
@@ -652,21 +652,29 @@ class ArrowFragmentReporter<vineyard::ArrowFragment<OID_T, VID_T>>
       auto property_name = vertex_data->field(col_id)->name();
       auto type = vertex_data->column(col_id)->type();
       if (type == arrow::int32()) {
-        ret.insert(property_name, fragment->template GetData<int32_t>(v, col_id));
+        ret.insert(property_name,
+                   fragment->template GetData<int32_t>(v, col_id));
       } else if (type == arrow::int64()) {
-        ret.insert(property_name, fragment->template GetData<int64_t>(v, col_id));
+        ret.insert(property_name,
+                   fragment->template GetData<int64_t>(v, col_id));
       } else if (type == arrow::uint32()) {
-        ret.insert(property_name, fragment->template GetData<uint32_t>(v, col_id));
+        ret.insert(property_name,
+                   fragment->template GetData<uint32_t>(v, col_id));
       } else if (type == arrow::uint64()) {
-        ret.insert(property_name, fragment->template GetData<uint64_t>(v, col_id));
+        ret.insert(property_name,
+                   fragment->template GetData<uint64_t>(v, col_id));
       } else if (type == arrow::float32()) {
-        ret.insert(property_name, fragment->template GetData<float>(v, col_id));
+        ret.insert(property_name,
+                   fragment->template GetData<float>(v, col_id));
       } else if (type == arrow::float64()) {
-        ret.insert(property_name, fragment->template GetData<double>(v, col_id));
+        ret.insert(property_name,
+                   fragment->template GetData<double>(v, col_id));
       } else if (type == arrow::utf8()) {
-        ret.insert(property_name, fragment->template GetData<std::string>(v, col_id));
+        ret.insert(property_name,
+                   fragment->template GetData<std::string>(v, col_id));
       } else if (type == arrow::large_utf8()) {
-        ret.insert(property_name, fragment->template GetData<std::string>(v, col_id));
+        ret.insert(property_name,
+                   fragment->template GetData<std::string>(v, col_id));
       }
     }
   }
@@ -706,9 +714,9 @@ class ArrowFragmentReporter<vineyard::ArrowFragment<OID_T, VID_T>>
             std::dynamic_pointer_cast<arrow::StringArray>(column->chunk(0));
         ret.insert(property_name, array->GetString(row_id));
       } else if (type == arrow::large_utf8()) {
-        auto array =
-            std::dynamic_pointer_cast<arrow::LargeStringArray>(column->chunk(0));
-       ret.insert(property_name, array->GetString(row_id));
+        auto array = std::dynamic_pointer_cast<arrow::LargeStringArray>(
+            column->chunk(0));
+        ret.insert(property_name, array->GetString(row_id));
       }
     }
   }

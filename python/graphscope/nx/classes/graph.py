@@ -301,7 +301,9 @@ class Graph(_GraphBase):
                 self._key = incoming_graph_data.key
                 self._graph_type = graph_def_pb2.ARROW_PROPERTY
                 self._schema = incoming_graph_data.schema
-                self._default_label_id = self._schema.get_vertex_label_id(self._default_label)
+                self._default_label_id = self._schema.get_vertex_label_id(
+                    self._default_label
+                )
             else:
                 g = to_nx_graph(incoming_graph_data, create_using=self)
                 check_argument(isinstance(g, Graph))
@@ -1258,7 +1260,9 @@ class Graph(_GraphBase):
             if self.graph_type == graph_def_pb2.ARROW_PROPERTY:
                 u = self._replace_node_with_label_id(u)
                 v = self._replace_node_with_label_id(v)
-            op = dag_utils.report_graph(self, types_pb2.HAS_EDGE, edge=json.dumps([u, v]))
+            op = dag_utils.report_graph(
+                self, types_pb2.HAS_EDGE, edge=json.dumps([u, v])
+            )
             return int(op.eval())
         except KeyError:
             return False
@@ -1878,7 +1882,11 @@ class Graph(_GraphBase):
             )
         else:
             op = dag_utils.report_graph(
-                self, types_pb2.NODES_BY_LOC, fid=location[0], lid=location[1], label_id=location[2]
+                self,
+                types_pb2.NODES_BY_LOC,
+                fid=location[0],
+                lid=location[1],
+                label_id=location[2],
             )
         return op.eval()
 
@@ -2095,15 +2103,13 @@ class Graph(_GraphBase):
 
     def _check_converted(self):
         if self._graph_type == graph_def_pb2.ARROW_PROPERTY:
-                graph_def = from_gs_graph(
-                    self, self._default_label
-                )
-                self._key = graph_def.key
-                self._graph_type = graph_def_pb2.DYNAMIC_PROPERTY
-                schema = GraphSchema()
-                schema.init_nx_schema()
-                schema.init_nx_schema(self._schema)
-                self._schema = schema
+            graph_def = from_gs_graph(self, self._default_label)
+            self._key = graph_def.key
+            self._graph_type = graph_def_pb2.DYNAMIC_PROPERTY
+            schema = GraphSchema()
+            schema.init_nx_schema()
+            schema.init_nx_schema(self._schema)
+            self._schema = schema
 
     def _replace_node_with_label_id(self, u):
         if isinstance(u, tuple):

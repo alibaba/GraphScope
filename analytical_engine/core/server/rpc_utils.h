@@ -101,7 +101,7 @@ class GSParams {
   bl::result<T> Get(rpc::ParamKey key) const {
     if (params_.find(key) == params_.end()) {
       RETURN_GS_ERROR(vineyard::ErrorCode::kInvalidValueError,
-                      "Can not found key: " + rpc::ParamKey_Name(key) + " " + std::to_string(key));
+                      "Can not found key: " + rpc::ParamKey_Name(key);
     }
     return get_param_impl<T>(params_, key);
   }

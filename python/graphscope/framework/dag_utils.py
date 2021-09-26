@@ -340,7 +340,14 @@ def modify_vertices(graph, modify_type, vertices):
 
 
 def report_graph(
-    graph, report_type, node=None, edge=None, fid=None, lid=None, key=None, label_id=None,
+    graph,
+    report_type,
+    node=None,
+    edge=None,
+    fid=None,
+    lid=None,
+    key=None,
+    label_id=None,
 ):
     """Create report operation for nx graph.
 
