@@ -16,8 +16,6 @@ limitations under the License.
 #ifndef ANALYTICAL_ENGINE_APPS_CENTRALITY_BETWEENNESS_BETWEENNESS_CENTRALITY_GENERIC_H_
 #define ANALYTICAL_ENGINE_APPS_CENTRALITY_BETWEENNESS_BETWEENNESS_CENTRALITY_GENERIC_H_
 
-#ifdef NETWORKX
-
 #include <limits>
 #include <map>
 #include <queue>
@@ -38,7 +36,7 @@ namespace gs {
 
 /**
  * @brief Compute the betweenness centrality for vertices. The betweenness
- * centrality fora vertex v is the fraction of vertices it is connected to.
+ * centrality for a vertex v is the fraction of vertices it is connected to.
  * @tparam FRAG_T
  */
 template <typename FRAG_T>
@@ -222,5 +220,4 @@ class BetweennessCentralityGeneric
 
 }  // namespace gs
 
-#endif  // NETWORKX
 #endif  // ANALYTICAL_ENGINE_APPS_CENTRALITY_BETWEENNESS_BETWEENNESS_CENTRALITY_GENERIC_H_
