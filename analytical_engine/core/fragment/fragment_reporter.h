@@ -418,7 +418,6 @@ class ArrowFragmentReporter<vineyard::ArrowFragment<OID_T, VID_T>>
   bl::result<std::string> Report(std::shared_ptr<fragment_t>& fragment,
                                  const rpc::GSParams& params) {
     BOOST_LEAF_AUTO(report_type, params.Get<rpc::ReportType>(rpc::REPORT_TYPE));
-    BOOST_LEAF_AUTO(default_label_id_, params.Get<int64_t>(rpc::V_LABEL_ID));
     switch (report_type) {
     case rpc::NODE_NUM: {
       return std::to_string(reportNodeNum(fragment));
@@ -664,8 +663,7 @@ class ArrowFragmentReporter<vineyard::ArrowFragment<OID_T, VID_T>>
         ret.insert(property_name,
                    fragment->template GetData<uint64_t>(v, col_id));
       } else if (type == arrow::float32()) {
-        ret.insert(property_name,
-                   fragment->template GetData<float>(v, col_id));
+        ret.insert(property_name, fragment->template GetData<float>(v, col_id));
       } else if (type == arrow::float64()) {
         ret.insert(property_name,
                    fragment->template GetData<double>(v, col_id));
