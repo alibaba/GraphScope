@@ -139,11 +139,13 @@ impl ServerManager for GaiaServerManager {
                 }
                 if !address_list.is_empty() && !task_partition_list.is_empty() {
                     // start gaia_pegasus
-                    register_gremlin_types().expect("register gremlin types failed");
+                    if let Err(err) = register_gremlin_types() {
+                        error!("register_gremlin_types failed {:?}", err);
+                    }
                     let configuration = build_gaia_config(worker_id as usize, address_list, store_config.clone());
                     info!("gaia configuration {:?}", configuration);
                     if let Err(err) = gaia_pegasus::startup(configuration) {
-                        info!("start pegasus failed {:?}", err);
+                        error!("start pegasus failed {:?}", err);
                     } else {
                         info!("start pegasus successfully");
                     }

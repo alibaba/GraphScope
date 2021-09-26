@@ -42,7 +42,7 @@ impl GaiaServer {
     }
 
     pub fn start(&self) -> GraphResult<(u16, u16)> {
-        register_gremlin_types().expect("register gremlin types failed");
+        register_gremlin_types().map_err(|e| GraphError::new(EngineError, format!("{:?}", e)))?;
         let report = match self.config.get_storage_option("gaia.report") {
             None => false,
             Some(report_string) => report_string.parse()
