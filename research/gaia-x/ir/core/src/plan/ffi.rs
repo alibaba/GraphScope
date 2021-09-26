@@ -60,13 +60,14 @@ use std::os::raw::c_char;
 #[repr(i32)]
 #[derive(Copy, Clone, Debug)]
 pub enum NameIdOpt {
-    Name = 0,
-    Id = 1,
+    None = 0,
+    Name = 1,
+    Id = 2,
 }
 
 impl Default for NameIdOpt {
     fn default() -> Self {
-        Self::Name
+        Self::None
     }
 }
 
@@ -92,6 +93,7 @@ impl TryFrom<FfiNameOrId> for common_pb::NameOrId {
 
     fn try_from(ffi: FfiNameOrId) -> FfiResult<Self> {
         match &ffi.opt {
+            NameIdOpt::None => Err(ResultCode::NotExistError),
             NameIdOpt::Name => Ok(common_pb::NameOrId {
                 item: Some(common_pb::name_or_id::Item::Name(cstr_to_string(ffi.name)?)),
             }),
@@ -105,14 +107,15 @@ impl TryFrom<FfiNameOrId> for common_pb::NameOrId {
 #[repr(i32)]
 #[derive(Copy, Clone)]
 pub enum PropertyOpt {
-    Id = 0,
-    Label = 1,
-    Key = 2,
+    None = 0,
+    Id = 1,
+    Label = 2,
+    Key = 3,
 }
 
 impl Default for PropertyOpt {
     fn default() -> Self {
-        Self::Id
+        Self::None
     }
 }
 
@@ -256,7 +259,11 @@ mod project {
     /// * `parent_id`: The unique parent operator's index in the logical plan.
     /// * `id`: An index pointer that gonna hold the index for this operator.
     ///
-    /// Returning [`ResultCode`] to check if there is any error.
+    /// After successfully appending to the logical plan, the `ptr_project` shall be released by
+    /// by the rust program. Therefore, the caller needs not to deallocate the pointer.
+    ///
+    /// # Return
+    /// * Returning [`ResultCode`] to capture any error.
     ///
     /// **Note**: All following `append_xx_operator()` apis have the same usage as this one.
     ///
