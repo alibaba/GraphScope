@@ -35,17 +35,17 @@
 
 namespace gs {
 /**
- * @brief DynamicGraphReporter is used to query the vertex and edge information
- * of DynamicFragment.
+ * @brief DynamicFragmentReporter is used to query the vertex and edge
+ * information of DynamicFragment.
  */
-class DynamicGraphReporter : public grape::Communicator {
+class DynamicFragmentReporter : public grape::Communicator {
   using fragment_t = DynamicFragment;
   using oid_t = typename fragment_t::oid_t;
   using vid_t = typename fragment_t::vid_t;
   using vertex_t = typename fragment_t::vertex_t;
 
  public:
-  explicit DynamicGraphReporter(const grape::CommSpec& comm_spec)
+  explicit DynamicFragmentReporter(const grape::CommSpec& comm_spec)
       : comm_spec_(comm_spec) {
     InitCommunicator(comm_spec.comm());
     json_opts_.allow_non_string_keys = true;
@@ -391,10 +391,14 @@ std::string convert_oid(folly::dynamic node) {
 }
 
 template <typename FRAG_T>
-class ImmutableGraphReporter {};
+class ArrowFragmentReporter {};
 
+/**
+ * @brief ArrowFragmentReporter is used to query the vertex and edge
+ * information of ArrowFragment.
+ */
 template <typename OID_T, typename VID_T>
-class ImmutableGraphReporter<vineyard::ArrowFragment<OID_T, VID_T>>
+class ArrowFragmentReporter<vineyard::ArrowFragment<OID_T, VID_T>>
     : public grape::Communicator {
   using fragment_t = vineyard::ArrowFragment<OID_T, VID_T>;
   using label_id_t = typename fragment_t::label_id_t;
@@ -403,8 +407,9 @@ class ImmutableGraphReporter<vineyard::ArrowFragment<OID_T, VID_T>>
   using vertex_t = typename fragment_t::vertex_t;
 
  public:
-  explicit ImmutableGraphReporter(const grape::CommSpec& comm_spec)
-      : comm_spec_(comm_spec) {
+  explicit ArrowFragmentReporter(const grape::CommSpec& comm_spec,
+                                 label_id_t default_label_id)
+      : comm_spec_(comm_spec), default_label_id_(default_label_id) {
     InitCommunicator(comm_spec.comm());
     json_opts_.allow_non_string_keys = true;
     json_opts_.allow_nan_inf = true;
@@ -413,7 +418,7 @@ class ImmutableGraphReporter<vineyard::ArrowFragment<OID_T, VID_T>>
   bl::result<std::string> Report(std::shared_ptr<fragment_t>& fragment,
                                  const rpc::GSParams& params) {
     BOOST_LEAF_AUTO(report_type, params.Get<rpc::ReportType>(rpc::REPORT_TYPE));
-    BOOST_LEAF_AUTO(default_label_id, params.Get<int64_t>(rpc::V_LABEL_ID));
+    BOOST_LEAF_AUTO(default_label_id_, params.Get<int64_t>(rpc::V_LABEL_ID));
     switch (report_type) {
     case rpc::NODE_NUM: {
       return std::to_string(reportNodeNum(fragment));
@@ -422,7 +427,7 @@ class ImmutableGraphReporter<vineyard::ArrowFragment<OID_T, VID_T>>
       return std::to_string(reportEdgeNum(fragment));
     }
     case rpc::SELFLOOPS_NUM: {
-      // return std::to_string(reportSelfloopsNum(fragment));
+      // TODO: support selfloops on arrow fragment
       return std::string();
     }
     case rpc::HAS_NODE: {
@@ -465,17 +470,14 @@ class ImmutableGraphReporter<vineyard::ArrowFragment<OID_T, VID_T>>
       folly::dynamic node = folly::parseJson(node_in_json, json_opts_)[0];
       label_id_t label_id = node[0].asInt();
       oid_t oid = convert_oid<oid_t>(node[1]);
-      return getNeighbors(fragment, default_label_id, label_id, oid);
-    }
-    case rpc::NEIGHBORS_BY_LOC:
-    case rpc::SUCCS_BY_LOC:
-    case rpc::PREDS_BY_LOC: {
-      BOOST_LEAF_AUTO(fid, params.Get<int64_t>(rpc::FID));
-      BOOST_LEAF_AUTO(lid, params.Get<int64_t>(rpc::LID));
+      return getNeighbors(fragment, label_id, oid);
     }
     case rpc::NODES_BY_LOC: {
       BOOST_LEAF_AUTO(fid, params.Get<int64_t>(rpc::FID));
-      BOOST_LEAF_AUTO(lid, params.Get<int64_t>(rpc::LID));
+      BOOST_LEAF_AUTO(label_id, params.Get<int64_t>(rpc::LABEL_ID));
+      BOOST_LEAF_AUTO(start, params.Get<int64_t>(rpc::LID));
+      vid_t end = start + batch_num_;
+      return batchGetNodes(fragment, fid, label_id, start, end);
     }
     default:
       CHECK(false);
@@ -539,28 +541,7 @@ class ImmutableGraphReporter<vineyard::ArrowFragment<OID_T, VID_T>>
     auto vm_ptr = fragment->GetVertexMap();
     if (vm_ptr->GetGid(fragment->fid(), label_id, n, gid)
         && fragment->InnerVertexGid2Vertex(gid, v)) {
-      auto vertex_data = fragment->vertex_data_table(label_id);
-      for (auto col_id = 0; col_id < vertex_data->num_columns(); col_id++) {
-        auto property_name = vertex_data->field(col_id)->name();
-        auto type = vertex_data->column(col_id)->type();
-        if (type == arrow::int32()) {
-          ob.insert(property_name, fragment->template GetData<int32_t>(v, col_id));
-        } else if (type == arrow::int64()) {
-          ob.insert(property_name, fragment->template GetData<int64_t>(v, col_id));
-        } else if (type == arrow::uint32()) {
-          ob.insert(property_name, fragment->template GetData<uint32_t>(v, col_id));
-        } else if (type == arrow::uint64()) {
-          ob.insert(property_name, fragment->template GetData<uint64_t>(v, col_id));
-        } else if (type == arrow::float32()) {
-          ob.insert(property_name, fragment->template GetData<float>(v, col_id));
-        } else if (type == arrow::float64()) {
-          ob.insert(property_name, fragment->template GetData<double>(v, col_id));
-        } else if (type == arrow::utf8()) {
-          ob.insert(property_name, fragment->template GetData<std::string>(v, col_id));
-        } else if (type == arrow::large_utf8()) {
-          ob.insert(property_name, fragment->template GetData<std::string>(v, col_id));
-        }
-      }
+      extractNodeProperty(fragment, label_id, v, ob);
     }
     return ob.empty() ? std::string() : folly::toJson(ob);
   }
@@ -579,48 +560,10 @@ class ImmutableGraphReporter<vineyard::ArrowFragment<OID_T, VID_T>>
       for (label_id_t e_label = 0; e_label < fragment->edge_label_num();
            e_label++) {
         auto oe = fragment->GetOutgoingAdjList(u, e_label);
-        auto edge_data = fragment->edge_data_table(e_label);
         for (auto& e : oe) {
           if (v == e.neighbor()) {
-            auto e_id = e.edge_id();
-            for (auto col_id = 0; col_id < edge_data->num_columns(); col_id++) {
-              auto column = edge_data->column(col_id);
-              auto type = edge_data->column(col_id)->type();
-              auto property_name = edge_data->field(col_id)->name();
-              if (type == arrow::int32()) {
-                auto array =
-                    std::dynamic_pointer_cast<arrow::Int32Array>(column->chunk(0));
-                ob.insert(property_name, array->Value(e_id));
-              } else if (type == arrow::int64()) {
-                auto array =
-                    std::dynamic_pointer_cast<arrow::Int64Array>(column->chunk(0));
-                ob.insert(property_name, array->Value(e_id));
-              } else if (type == arrow::uint32()) {
-                auto array =
-                    std::dynamic_pointer_cast<arrow::UInt32Array>(column->chunk(0));
-                ob.insert(property_name, array->Value(e_id));
-              } else if (type == arrow::uint64()) {
-                auto array =
-                    std::dynamic_pointer_cast<arrow::UInt64Array>(column->chunk(0));
-                ob.insert(property_name, array->Value(e_id));
-              } else if (type == arrow::float32()) {
-                auto array =
-                    std::dynamic_pointer_cast<arrow::FloatArray>(column->chunk(0));
-                ob.insert(property_name, array->Value(e_id));
-              } else if (type == arrow::float64()) {
-                auto array =
-                    std::dynamic_pointer_cast<arrow::DoubleArray>(column->chunk(0));
-                ob.insert(property_name, array->Value(e_id));
-              } else if (type == arrow::utf8()) {
-                auto array =
-                    std::dynamic_pointer_cast<arrow::StringArray>(column->chunk(0));
-                ob.insert(property_name, array->GetString(e_id));
-              } else if (type == arrow::large_utf8()) {
-                auto array =
-                    std::dynamic_pointer_cast<arrow::LargeStringArray>(column->chunk(0));
-                ob.insert(property_name, array->GetString(e_id));
-              }
-            }
+            auto edge_data = fragment->edge_data_table(e_label);
+            extractEdgeProperty(edge_data, e.edge_id(), ob);
           }
         }
       }
@@ -629,8 +572,7 @@ class ImmutableGraphReporter<vineyard::ArrowFragment<OID_T, VID_T>>
   }
 
   std::string getNeighbors(std::shared_ptr<fragment_t>& fragment,
-                           label_id_t default_label_id, label_id_t label_id,
-                           const oid_t& n) {
+                           label_id_t label_id, const oid_t& n) {
     vid_t gid;
     vertex_t v;
     folly::dynamic nbrs = folly::dynamic::array;
@@ -644,7 +586,7 @@ class ImmutableGraphReporter<vineyard::ArrowFragment<OID_T, VID_T>>
         auto edge_data = fragment->edge_data_table(e_label);
         for (auto& e : oe) {
           auto n_label_id = fragment->vertex_label(e.neighbor());
-          if (n_label_id == default_label_id) {
+          if (n_label_id == default_label_id_) {
             nbrs[0].push_back(fragment->GetId(e.neighbor()));
           } else {
             nbrs[0].push_back(folly::dynamic::array(
@@ -652,45 +594,7 @@ class ImmutableGraphReporter<vineyard::ArrowFragment<OID_T, VID_T>>
                 fragment->GetId(e.neighbor())));
           }
           folly::dynamic ob = folly::dynamic::object;
-          auto e_id = e.edge_id();
-          for (auto col_id = 0; col_id < edge_data->num_columns(); col_id++) {
-            auto column = edge_data->column(col_id);
-            auto type = edge_data->column(col_id)->type();
-            auto property_name = edge_data->field(col_id)->name();
-            if (type == arrow::int32()) {
-              auto array =
-                  std::dynamic_pointer_cast<arrow::Int32Array>(column->chunk(0));
-              ob.insert(property_name, array->Value(e_id));
-            } else if (type == arrow::int64()) {
-              auto array =
-                  std::dynamic_pointer_cast<arrow::Int64Array>(column->chunk(0));
-              ob.insert(property_name, array->Value(e_id));
-            } else if (type == arrow::uint32()) {
-              auto array =
-                  std::dynamic_pointer_cast<arrow::UInt32Array>(column->chunk(0));
-              ob.insert(property_name, array->Value(e_id));
-            } else if (type == arrow::uint64()) {
-              auto array =
-                  std::dynamic_pointer_cast<arrow::UInt64Array>(column->chunk(0));
-              ob.insert(property_name, array->Value(e_id));
-            } else if (type == arrow::float32()) {
-              auto array =
-                  std::dynamic_pointer_cast<arrow::FloatArray>(column->chunk(0));
-              ob.insert(property_name, array->Value(e_id));
-            } else if (type == arrow::float64()) {
-              auto array =
-                  std::dynamic_pointer_cast<arrow::DoubleArray>(column->chunk(0));
-              ob.insert(property_name, array->Value(e_id));
-            } else if (type == arrow::utf8()) {
-              auto array =
-                  std::dynamic_pointer_cast<arrow::StringArray>(column->chunk(0));
-              ob.insert(property_name, array->GetString(e_id));
-            } else if (type == arrow::large_utf8()) {
-              auto array =
-                  std::dynamic_pointer_cast<arrow::LargeStringArray>(column->chunk(0));
-              ob.insert(property_name, array->GetString(e_id));
-            }
-          }
+          extractEdgeProperty(edge_data, e.edge_id(), ob);
           nbrs[1].push_back(ob);
         }
       }
@@ -698,8 +602,121 @@ class ImmutableGraphReporter<vineyard::ArrowFragment<OID_T, VID_T>>
     return nbrs.empty() ? std::string() : folly::toJson(nbrs);
   }
 
+  std::string batchGetNodes(std::shared_ptr<fragment_t>& fragment, vid_t fid,
+                            label_id_t label_id, vid_t start, vid_t end) {
+    folly::dynamic ob = folly::dynamic::object;
+    if (fragment->fid() == fid) {
+      folly::dynamic batch_nodes = folly::dynamic::array;
+      auto label_name = fragment->schema().GetVertexLabelName(label_id);
+      for (auto v : fragment->InnerVerticesSlice(label_id, start, end)) {
+        folly::dynamic one_item = folly::dynamic::object;
+        if (label_id == default_label_id_) {
+          one_item["id"] = fragment->GetId(v);
+        } else {
+          one_item["id"] =
+              folly::dynamic::array(label_name, fragment->GetId(v));
+        }
+        one_item["data"] = folly::dynamic::object;
+        extractNodeProperty(fragment, label_id, v, one_item["data"]);
+        batch_nodes.push_back(one_item);
+      }
+      if (end >= fragment->GetInnerVerticesNum(label_id)) {
+        // switch to next label
+        ++label_id;
+        start = 0;
+      } else {
+        start = end;
+      }
+      if (label_id >= fragment->vertex_label_num()) {
+        // switch to next fragment
+        ++fid;
+        label_id = 0;
+        start = 0;
+      }
+      if (batch_nodes.empty()) {
+        ob["status"] = false;
+      } else {
+        ob["status"] = true;
+        ob["batch"] = batch_nodes;
+      }
+      ob["next"] = folly::dynamic::array(fid, start, label_id);
+    }
+    return ob.empty() ? std::string() : folly::toJson(ob);
+  }
+
+  void extractNodeProperty(std::shared_ptr<fragment_t>& fragment,
+                           const label_id_t& label_id, const vertex_t& v,
+                           folly::dynamic& ret) {
+    auto vertex_data = fragment->vertex_data_table(label_id);
+    for (auto col_id = 0; col_id < vertex_data->num_columns(); col_id++) {
+      auto property_name = vertex_data->field(col_id)->name();
+      auto type = vertex_data->column(col_id)->type();
+      if (type == arrow::int32()) {
+        ret.insert(property_name, fragment->template GetData<int32_t>(v, col_id));
+      } else if (type == arrow::int64()) {
+        ret.insert(property_name, fragment->template GetData<int64_t>(v, col_id));
+      } else if (type == arrow::uint32()) {
+        ret.insert(property_name, fragment->template GetData<uint32_t>(v, col_id));
+      } else if (type == arrow::uint64()) {
+        ret.insert(property_name, fragment->template GetData<uint64_t>(v, col_id));
+      } else if (type == arrow::float32()) {
+        ret.insert(property_name, fragment->template GetData<float>(v, col_id));
+      } else if (type == arrow::float64()) {
+        ret.insert(property_name, fragment->template GetData<double>(v, col_id));
+      } else if (type == arrow::utf8()) {
+        ret.insert(property_name, fragment->template GetData<std::string>(v, col_id));
+      } else if (type == arrow::large_utf8()) {
+        ret.insert(property_name, fragment->template GetData<std::string>(v, col_id));
+      }
+    }
+  }
+
+  void extractEdgeProperty(const std::shared_ptr<arrow::Table>& edge_data,
+                           int64_t row_id, folly::dynamic& ret) {
+    for (auto col_id = 0; col_id < edge_data->num_columns(); col_id++) {
+      auto column = edge_data->column(col_id);
+      auto type = edge_data->column(col_id)->type();
+      auto property_name = edge_data->field(col_id)->name();
+      if (type == arrow::int32()) {
+        auto array =
+            std::dynamic_pointer_cast<arrow::Int32Array>(column->chunk(0));
+        ret.insert(property_name, array->Value(row_id));
+      } else if (type == arrow::int64()) {
+        auto array =
+            std::dynamic_pointer_cast<arrow::Int64Array>(column->chunk(0));
+        ret.insert(property_name, array->Value(row_id));
+      } else if (type == arrow::uint32()) {
+        auto array =
+            std::dynamic_pointer_cast<arrow::UInt32Array>(column->chunk(0));
+        ret.insert(property_name, array->Value(row_id));
+      } else if (type == arrow::uint64()) {
+        auto array =
+            std::dynamic_pointer_cast<arrow::UInt64Array>(column->chunk(0));
+        ret.insert(property_name, array->Value(row_id));
+      } else if (type == arrow::float32()) {
+        auto array =
+            std::dynamic_pointer_cast<arrow::FloatArray>(column->chunk(0));
+        ret.insert(property_name, array->Value(row_id));
+      } else if (type == arrow::float64()) {
+        auto array =
+            std::dynamic_pointer_cast<arrow::DoubleArray>(column->chunk(0));
+        ret.insert(property_name, array->Value(row_id));
+      } else if (type == arrow::utf8()) {
+        auto array =
+            std::dynamic_pointer_cast<arrow::StringArray>(column->chunk(0));
+        ret.insert(property_name, array->GetString(row_id));
+      } else if (type == arrow::large_utf8()) {
+        auto array =
+            std::dynamic_pointer_cast<arrow::LargeStringArray>(column->chunk(0));
+       ret.insert(property_name, array->GetString(row_id));
+      }
+    }
+  }
+
   grape::CommSpec comm_spec_;
+  label_id_t default_label_id_;
   folly::json::serialization_opts json_opts_;
+  static const int batch_num_ = 100;
 };
 }  // namespace gs
 

@@ -22,7 +22,7 @@
 #include "core/context/vertex_data_context.h"
 #include "core/context/vertex_property_context.h"
 #include "core/fragment/dynamic_fragment.h"
-#include "core/fragment/dynamic_fragment_reporter.h"
+#include "core/fragment/fragment_reporter.h"
 #include "core/grape_instance.h"
 #include "core/io/property_parser.h"
 #include "core/launcher.h"
@@ -262,7 +262,7 @@ bl::result<std::string> GrapeInstance::reportGraph(
   if (graph_type == rpc::graph::DYNAMIC_PROPERTY) {
     auto fragment =
         std::static_pointer_cast<DynamicFragment>(wrapper->fragment());
-    DynamicGraphReporter reporter(comm_spec_);
+    DynamicFragmentReporter reporter(comm_spec_);
     return reporter.Report(fragment, params);
   } else {
     return wrapper->ReportGraph(comm_spec_, params);

@@ -340,7 +340,7 @@ def modify_vertices(graph, modify_type, vertices):
 
 
 def report_graph(
-    graph, report_type, node=None, edge=None, fid=None, lid=None, key=None
+    graph, report_type, node=None, edge=None, fid=None, lid=None, key=None, label_id=None,
 ):
     """Create report operation for nx graph.
 
@@ -393,9 +393,10 @@ def report_graph(
         config[types_pb2.FID] = utils.i_to_attr(fid)
     if lid is not None:
         config[types_pb2.LID] = utils.i_to_attr(lid)
+    if label_id is not None:
+        config[types_pb2.LABEL_ID] = utils.i_to_attr(label_id)
 
     config[types_pb2.EDGE_KEY] = utils.s_to_attr(str(key) if key is not None else "")
-    print("config", config)
     op = Operation(
         graph.session_id,
         types_pb2.REPORT_GRAPH,

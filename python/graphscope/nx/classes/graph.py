@@ -1872,9 +1872,14 @@ class Graph(_GraphBase):
         >>> g._batch_get_node((0, 0))  # start from frag-0, lid-0, mpirun np=1
         {'status': True, 'next': [1, 0], 'batch': [1, 2, 3]}
         """
-        op = dag_utils.report_graph(
-            self, types_pb2.NODES_BY_LOC, fid=location[0], lid=location[1]
-        )
+        if len(location) == 2:
+            op = dag_utils.report_graph(
+                self, types_pb2.NODES_BY_LOC, fid=location[0], lid=location[1]
+            )
+        else:
+            op = dag_utils.report_graph(
+                self, types_pb2.NODES_BY_LOC, fid=location[0], lid=location[1], label_id=location[2]
+            )
         return op.eval()
 
     @parse_ret_as_dict

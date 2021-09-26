@@ -374,7 +374,6 @@ def compile_graph_frame(workspace: str, library_name, attr: dict, engine_config:
 def op_pre_process(op, op_result_pool, key_to_op, **kwargs):  # noqa: C901
     if op.op == types_pb2.REPORT_GRAPH:
         return
-        # _pre_process_for_report_graph_op(op, op_result_pool, key_to_op, **kwargs)
     if op.op == types_pb2.CREATE_GRAPH:
         _pre_process_for_create_graph_op(op, op_result_pool, key_to_op, **kwargs)
     if op.op == types_pb2.ADD_LABELS:
@@ -428,16 +427,6 @@ def op_pre_process(op, op_result_pool, key_to_op, **kwargs):  # noqa: C901
         )
     if op.op == types_pb2.OUTPUT:
         _pre_process_for_output_op(op, op_result_pool, key_to_op, **kwargs)
-
-def _pre_process_for_report_graph_op(op, op_result_pool, key_to_op, **kwargs):
-    assert len(op.parents) <= 1
-    if len(op.parents) == 1:
-        key_of_parent_op = op.parents[0]
-        r = op_result_pool[key_of_parent_op]
-        graph_name = r.graph_def.key
-        op.attr[types_pb2.GRAPH_NAME].CopyFrom(
-            attr_value_pb2.AttrValue(s=graph_name.encode("utf-8"))
-        )
 
 def _pre_process_for_create_graph_op(op, op_result_pool, key_to_op, **kwargs):
     assert len(op.parents) <= 1

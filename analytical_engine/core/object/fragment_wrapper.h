@@ -30,7 +30,7 @@
 #include "core/context/vertex_data_context.h"
 #include "core/context/vertex_property_context.h"
 #include "core/error.h"
-#include "core/fragment/dynamic_fragment_reporter.h"
+#include "core/fragment/fragment_reporter.h"
 #include "core/fragment/dynamic_fragment_view.h"
 #include "core/fragment/dynamic_projected_fragment.h"
 #include "core/loader/arrow_fragment_loader.h"
@@ -259,7 +259,8 @@ class FragmentWrapper<vineyard::ArrowFragment<OID_T, VID_T>>
 
   bl::result<std::string> ReportGraph(const grape::CommSpec& comm_spec,
                                       const rpc::GSParams& params) override {
-    ImmutableGraphReporter<fragment_t> reporter(comm_spec);
+    BOOST_LEAF_AUTO(default_label_id, params.Get<int64_t>(rpc::V_LABEL_ID));
+    ArrowFragmentReporter<fragment_t> reporter(comm_spec, default_label_id);
     return reporter.Report(fragment_, params);
   }
 
