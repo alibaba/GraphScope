@@ -22,7 +22,6 @@
 #include "core/context/vertex_data_context.h"
 #include "core/context/vertex_property_context.h"
 #include "core/fragment/dynamic_fragment.h"
-#include "core/fragment/fragment_reporter.h"
 #include "core/grape_instance.h"
 #include "core/io/property_parser.h"
 #include "core/launcher.h"
@@ -246,27 +245,7 @@ bl::result<std::string> GrapeInstance::reportGraph(
   BOOST_LEAF_AUTO(graph_name, params.Get<std::string>(rpc::GRAPH_NAME));
   BOOST_LEAF_AUTO(wrapper,
                   object_manager_.GetObject<IFragmentWrapper>(graph_name));
-  auto graph_type = wrapper->graph_def().graph_type();
-
-  VLOG(1) << "Reporting graph, graph name: " << graph_name
-          << ", graph type: " << graph_type;
-  /*
-  if (graph_type != rpc::graph::DYNAMIC_PROPERTY) {
-    RETURN_GS_ERROR(
-        vineyard::ErrorCode::kInvalidValueError,
-        "GraphType must be DYNAMIC_PROPERTY, the origin graph type is:  " +
-            rpc::graph::GraphTypePb_Name(graph_type) +
-            ", graph id: " + graph_name);
-  }
-  */
-  if (graph_type == rpc::graph::DYNAMIC_PROPERTY) {
-    auto fragment =
-        std::static_pointer_cast<DynamicFragment>(wrapper->fragment());
-    DynamicFragmentReporter reporter(comm_spec_);
-    return reporter.Report(fragment, params);
-  } else {
-    return wrapper->ReportGraph(comm_spec_, params);
-  }
+  return wrapper->ReportGraph(comm_spec_, params);
 #else
   RETURN_GS_ERROR(vineyard::ErrorCode::kUnimplementedMethod,
                   "GraphScope is built with NETWORKX=OFF, please recompile it "

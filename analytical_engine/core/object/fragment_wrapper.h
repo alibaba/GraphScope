@@ -691,8 +691,8 @@ class FragmentWrapper<DynamicFragment> : public IFragmentWrapper {
 
   bl::result<std::string> ReportGraph(const grape::CommSpec& comm_spec,
                                       const rpc::GSParams& params) override {
-    RETURN_GS_ERROR(vineyard::ErrorCode::kInvalidOperationError,
-                    "Not implemented.");
+    DynamicFragmentReporter reporter(comm_spec);
+    return reporter.Report(fragment_, params);
   }
 
   bl::result<std::shared_ptr<IFragmentWrapper>> CopyGraph(
