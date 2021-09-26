@@ -1264,6 +1264,14 @@ class ResolveMPICmdPrefix(object):
         ['mpirun', '-n', '4', '-host', 'h1:2,h2:1,h3:1']
         >>> env
         {} # always empty
+
+        >>> # run without mpi on localhost if workers num is 1
+        >>> rmcp = ResolveMPICmdPrefix()
+        >>> (cmd, env) = rmcp.resolve(1, 'localhost')
+        >>> cmd
+        []
+        >>> env
+        {}
     """
 
     _OPENMPI_RSH_AGENT = "OMPI_MCA_plm_rsh_agent"
@@ -1307,6 +1315,10 @@ class ResolveMPICmdPrefix(object):
     def resolve(self, num_workers, hosts):
         cmd = []
         env = {}
+
+        if num_workers == 1 and (hosts == "localhost" or hosts == "127.0.0.1"):
+            # run without mpi on localhost if workers num is 1
+            return cmd, env
 
         if self.openmpi():
             env["OMPI_MCA_btl_vader_single_copy_mechanism"] = "none"

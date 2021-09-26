@@ -90,6 +90,8 @@ class LocalLauncher(Launcher):
     """
 
     _vineyard_socket_prefix = "/tmp/vineyard.sock."
+    # set `GRAPHSCOPE_HOME/bin` to ${PATH}
+    os.environ["PATH"] += os.pathsep + os.path.join(GRAPHSCOPE_HOME, "bin")
 
     def __init__(
         self,
@@ -448,6 +450,9 @@ class LocalLauncher(Launcher):
 
         env = os.environ.copy()
         env.update(mpi_env)
+        # open MPI system need open RET daemon
+        if os.path.isfile(os.path.join(GRAPHSCOPE_HOME, "bin", "orted")):
+            env.update({"OPAL_BINDIR": os.path.join(GRAPHSCOPE_HOME, "bin")})
 
         logger.info("Launch analytical engine with command: %s", " ".join(cmd))
 

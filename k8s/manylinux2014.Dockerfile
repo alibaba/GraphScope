@@ -208,7 +208,8 @@ RUN cd /tmp && \
 RUN cd /tmp && \
     wget https://download.open-mpi.org/release/open-mpi/v4.0/openmpi-4.0.5.tar.gz && \
     tar zxvf openmpi-4.0.5.tar.gz && \
-    cd openmpi-4.0.5 && ./configure --enable-mpi-cxx && \
+    cd openmpi-4.0.5 && \
+    ./configure --enable-mpi-cxx --disable-dlopen && \
     make -j`nproc` && \
     make install && \
     cd /tmp && \

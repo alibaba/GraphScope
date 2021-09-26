@@ -68,7 +68,7 @@ graphscope-jupyter-manylinux2014-py2-py3:
 graphscope-manylinux2014-py:
 	docker run --rm -it -v $(WORKING_DIR)/..:/work \
 			${REGISTRY}/$(DOCKER_ORG)/graphscope-manylinux2014:${VERSION} \
-			bash -c "export PATH=$$PATH:/opt/python/cp39-cp39/bin && \
+			bash -c 'export PATH=$$PATH:/opt/python/cp39-cp39/bin && \
 				pip3 install libclang parsec && \
 				mkdir -p /opt/vineyard && \
 				cd /tmp && \
@@ -98,8 +98,7 @@ graphscope-manylinux2014-py:
 				python3 setup.py bdist_wheel && \
 				cp -f dist/* /opt/vineyard/dist && \
 				pip3 install dist/* && \
-				cp -r /opt/vineyard/* /usr/local/ && \
-				mkdir -p /work/.build && cp -r /opt/vineyard /work/.build/vineyard && \
+				cp -rf /opt/vineyard/* /usr/local/ && \
 				cd /tmp && 
 				rm -fr /tmp/libvineyard /tmp/libgrape-lite && \
 				cd /work && \
@@ -110,12 +109,12 @@ graphscope-manylinux2014-py:
 				rm -fr build dist/*.whl && \
 				python3 setup.py bdist_wheel && \
 				cd dist && \
-				auditwheel repair ./*.whl --plat=manylinux2014_x86_64"
+				auditwheel repair ./*.whl --plat=manylinux2014_x86_64'
 
 graphscope-client-manylinux2014-py36:
 	docker run --rm -it -v $(WORKING_DIR)/..:/work \
 		   ${REGISTRY}/$(DOCKER_ORG)/graphscope-manylinux2014:${VERSION} \
-		   /usr/bin/scl enable devtoolset-8 'sh -c "export PATH=$$PATH:/opt/python/cp36-cp36m/bin && \
+		   bash -c 'export PATH=$$PATH:/opt/python/cp36-cp36m/bin && \
           cd /work/learning_engine/graph-learn && \
 					git submodule update --init third_party/pybind11 && \
 				  rm -rf cmake-build-py36 && \
@@ -130,12 +129,12 @@ graphscope-client-manylinux2014-py36:
 				  rm -rf dist/*.whl && \
 				  python3 setup.py bdist_wheel && \
 				  cd dist && \
-				  auditwheel repair ./*.whl"'
+				  auditwheel repair ./*.whl'
 
 graphscope-client-manylinux2014-py37:
 	docker run --rm -it -v $(WORKING_DIR)/..:/work \
 		   ${REGISTRY}/$(DOCKER_ORG)/graphscope-manylinux2014:${VERSION} \
-		   /usr/bin/scl enable devtoolset-8 'sh -c "export PATH=$$PATH:/opt/python/cp37-cp37m/bin && \
+		   bash -c 'export PATH=$$PATH:/opt/python/cp37-cp37m/bin && \
           cd /work/learning_engine/graph-learn && \
 					git submodule update --init third_party/pybind11 && \
 				  rm -rf cmake-build-py36 && \
@@ -150,12 +149,12 @@ graphscope-client-manylinux2014-py37:
 				  rm -rf dist/*.whl && \
 				  python3 setup.py bdist_wheel && \
 				  cd dist && \
-				  auditwheel repair ./*.whl"'
+				  auditwheel repair ./*.whl'
 
 graphscope-client-manylinux2014-py38:
 	docker run --rm -it -v $(WORKING_DIR)/..:/work \
 		   ${REGISTRY}/$(DOCKER_ORG)/graphscope-manylinux2014:${VERSION} \
-		   /usr/bin/scl enable devtoolset-8 'sh -c "export PATH=$$PATH:/opt/python/cp38-cp38/bin && \
+		   bash -c 'export PATH=$$PATH:/opt/python/cp38-cp38/bin && \
           cd /work/learning_engine/graph-learn && \
 					git submodule update --init third_party/pybind11 && \
 				  rm -rf cmake-build-py36 && \
@@ -170,12 +169,12 @@ graphscope-client-manylinux2014-py38:
 				  rm -rf dist/*.whl && \
 				  python3 setup.py bdist_wheel && \
 				  cd dist && \
-				  auditwheel repair ./*.whl"'
+				  auditwheel repair ./*.whl'
 
 graphscope-client-manylinux2014-py39:
 	docker run --rm -it -v $(WORKING_DIR)/..:/work \
 		   ${REGISTRY}/$(DOCKER_ORG)/graphscope-manylinux2014:${VERSION} \
-		   /usr/bin/scl enable devtoolset-8 'sh -c "export PATH=$$PATH:/opt/python/cp39-cp39/bin && \
+		   bash -c 'export PATH=$$PATH:/opt/python/cp39-cp39/bin && \
           cd /work/learning_engine/graph-learn && \
 					git submodule update --init third_party/pybind11 && \
 				  rm -rf cmake-build-py36 && \
@@ -190,7 +189,7 @@ graphscope-client-manylinux2014-py39:
 				  rm -rf dist/*.whl && \
 				  python3 setup.py bdist_wheel && \
 				  cd dist && \
-				  auditwheel repair ./*.whl"'
+				  auditwheel repair ./*.whl'
 
 push:
 	docker push ${REGISTRY}/$(DOCKER_ORG)/graphscope-runtime:${VERSION}
