@@ -12,6 +12,43 @@
 //! WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
+//!
+//!
+//!
+//! The ffi module gives the C-like apis for the Gaia client to build the plan from the
+//! query semantics, and to connect with the distributed service of Gaia.
+//!
+//! We instruct how to use these apis as follows.
+//!
+//! First of all, call `cbindgen` to generate the header of apis for C-binded caller, as:
+//! `cbindgen --crate ir_core --output /path/to/c-caller/ir_core.h`
+//!
+//! Secondly, build the dynamic ir_core library, as: `cargo build --release`,
+//! which will generate the `libir_core.dylib` under `./target/release`.
+//! Copy it to `/path/to/c-caller`.
+//!
+//! Thirdly, write the C-code for building the ir plan, as:
+//!  #include<ir_core.h>
+//!  using namespace std;
+//!  int main(int argc, char** argv) {
+//!     const void* ptr_plan = init_logical_plan();`
+//!     const void* ptr_project = init_project_operator();
+//!     add_project_meta(ptr_project, "@name", as_tag_id(0));
+//!     int opr_id = 0;
+//!     append_project_operator(ptr_plan, ptr_project, 0, &opr_id);
+//!     cout << "the id is: " << opr_id << endl;
+//!
+//!     const void* ptr_select = init_select_operator();
+//!     set_select_meta(ptr_select, "@age > 20 && @name == \"John\"");
+//!     append_select_operator(ptr_plan, ptr_select, opr_id, &opr_id);
+//!     cout << "the id is: " << opr_id << endl;
+//!
+//!     debug_plan(ptr_plan);
+//!     destroy_logical_plan(ptr_plan);
+//! }
+//!
+//! Save the codes as </path/to/c-caller/test.cc>, and build like:
+//! `g++ -o test test.cc -std=c++11 -L. -lir_core`
 
 use crate::generated::algebra as pb;
 use crate::generated::common as common_pb;
@@ -134,7 +171,7 @@ pub extern "C" fn as_var_ppt(tag: FfiNameOrId, property: FfiProperty) -> FfiVari
 #[no_mangle]
 pub extern "C" fn init_logical_plan() -> *const c_void {
     let plan = Box::new(LogicalPlan::default());
-    Box::into_raw(plan) as *mut c_void
+    Box::into_raw(plan) as *const c_void
 }
 
 /// To destroy a logical plan.
@@ -180,13 +217,13 @@ mod project {
     #[no_mangle]
     pub extern "C" fn init_project_operator() -> *const c_void {
         let args = Box::new(Vec::<pb::project::ExprAlias>::new());
-        Box::into_raw(args) as *mut c_void
+        Box::into_raw(args) as *const c_void
     }
 
-    /// To add an argument for the project operator, which is a c-like string to represent an
+    /// To add a meta data for the project operator, which is a c-like string to represent an
     /// expression, together with a `NameOrId` parameter that represents an alias.
     #[no_mangle]
-    pub extern "C" fn add_project_arg(
+    pub extern "C" fn add_project_meta(
         ptr_project: *const c_void,
         expr: *const c_char,
         alias: FfiNameOrId,
@@ -239,29 +276,52 @@ mod project {
 
 mod select {
     use super::*;
+
+    /// To initialize a select operator
+    #[no_mangle]
+    pub extern "C" fn init_select_operator() -> *const c_void {
+        let select = Box::new(pb::Select { predicate: None });
+        Box::into_raw(select) as *const c_void
+    }
+
+    /// To set a select operator's metadata, which is a C-string predicate
+    #[no_mangle]
+    pub extern "C" fn set_select_meta(
+        ptr_select: *const c_void,
+        ptr_predicate: *const c_char,
+    ) -> ResultCode {
+        let predicate_str = cstr_to_string(ptr_predicate);
+        if predicate_str.is_err() {
+            predicate_str.err().unwrap()
+        } else {
+            let predicate_pb = common_pb::SuffixExpr::try_from(predicate_str.unwrap());
+            if predicate_pb.is_ok() {
+                let mut select = unsafe { Box::from_raw(ptr_select as *mut pb::Select) };
+                select.predicate = predicate_pb.ok();
+                std::mem::forget(select);
+                ResultCode::Success
+            } else {
+                ResultCode::ParseExprError
+            }
+        }
+    }
+
     /// Append a select operator to the logical plan
     #[no_mangle]
     pub extern "C" fn append_select_operator(
         ptr_plan: *const c_void,
-        ptr_predicate: *const c_char,
+        ptr_select: *const c_void,
         parent_id: i32,
         id: *mut i32,
     ) -> ResultCode {
         if parent_id >= 0 {
-            let predicate_str = cstr_to_string(ptr_predicate);
-            if predicate_str.is_err() {
-                predicate_str.err().unwrap()
-            } else {
-                let predicate_pb = common_pb::SuffixExpr::try_from(predicate_str.unwrap());
-                if predicate_pb.is_ok() {
-                    let select_pb = pb::Select {
-                        predicate: predicate_pb.ok(),
-                    };
-                    append_operator(ptr_plan, select_pb.into(), parent_id as u32, id)
-                } else {
-                    ResultCode::ParseExprError
-                }
-            }
+            let select = unsafe { Box::from_raw(ptr_select as *mut pb::Select) };
+            append_operator(
+                ptr_plan,
+                select.as_ref().clone().into(),
+                parent_id as u32,
+                id,
+            )
         } else {
             ResultCode::NegativeIndexError
         }
