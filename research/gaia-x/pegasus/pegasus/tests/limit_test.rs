@@ -12,7 +12,8 @@ fn limit_test_01() {
             input
                 .input_from(1..1000u32)?
                 .flat_map(|i| Ok(0..i))?
-                .repartition(|x: &u32| Ok(*x as u64))
+                .repartition(|x: &u32| Ok(*x as u64)
+                )
                 .flat_map(|i| Ok(0..i))?
                 .limit(10)?
                 .sink_into(output)

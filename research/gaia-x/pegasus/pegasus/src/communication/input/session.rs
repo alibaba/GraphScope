@@ -174,10 +174,8 @@ impl<'a, D: Data> InputSession<'a, D> {
             assert!(batch.is_empty(), "batch of {:?} not consumed; ", batch.tag);
             if let Some(end) = batch.take_end() {
                 self.input.end_on(end);
-                false
-            } else {
-                true
             }
+            !is_last
         }
     }
 }

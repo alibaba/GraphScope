@@ -246,7 +246,7 @@ where
     DO: Debug + Send + 'static,
     F: FnMut(&mut Worker<DI, DO>) -> Result<(), BuildJobError>,
 {
-    init_singleton();
+    init_env();
     let peer_guard = Arc::new(AtomicUsize::new(0));
     let conf = Arc::new(conf);
     let workers = allocate_local_worker(&conf)?;
@@ -328,11 +328,9 @@ lazy_static! {
     static ref SINGLETON_INIT: Once = Once::new();
 }
 
-fn init_singleton() {
+fn init_env() {
     if pegasus_executor::is_shutdown() {
         pegasus_common::logs::init_log();
-        SINGLETON_INIT.call_once(|| {
-            pegasus_executor::try_start_executor_async();
-        })
+        pegasus_executor::try_start_executor_async();
     }
 }
