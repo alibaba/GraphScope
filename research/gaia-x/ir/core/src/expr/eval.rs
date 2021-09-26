@@ -329,6 +329,13 @@ impl<'a> Evaluator<'a> {
             Err("invalid expression".into())
         }
     }
+
+    pub fn eval_bool<E: Element + 'a, C: Context<E> + 'a>(
+        &'a self,
+        context: Option<&'a C>,
+    ) -> ExprResult<bool> {
+        Ok(self.eval(context)?.as_bool()?)
+    }
 }
 
 impl FromPb<pb::ExprOpr> for InnerOpr {

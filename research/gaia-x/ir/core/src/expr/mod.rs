@@ -16,7 +16,6 @@
 
 pub mod error;
 pub mod eval;
-pub mod ffi;
 pub mod token;
 
 use crate::expr::error::{ExprError, ExprResult};

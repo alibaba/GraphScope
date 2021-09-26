@@ -270,4 +270,6 @@ message LogicalPlan {
   // A array of operators, where the index stands for the operator's identifier
   // operators[0] is the root of the logical plan
   repeated Operator operators = 1;
+  // The root of this logical plan
+  Node root = 2;
 }

@@ -15,7 +15,7 @@
 
 #[macro_use]
 extern crate pegasus_common;
-pub use expr::ffi::*;
+pub use crate::plan::ffi::*;
 
 use crate::error::{ParsePbError, ParsePbResult};
 use crate::generated::common as pb;
@@ -36,7 +36,7 @@ mod generated {
         tonic::include_proto!("common");
     }
 
-    pub mod protobuf {
+    pub mod algebra {
         tonic::include_proto!("algebra");
     }
 }
@@ -44,6 +44,7 @@ mod generated {
 pub mod error;
 pub mod expr;
 pub mod graph;
+pub mod plan;
 
 pub type KeyId = i32;
 
@@ -127,7 +128,7 @@ impl FromPb<pb::NameOrId> for NameOrId {
 /// we use this `trait` to support the transformation while capture any possible error.
 pub trait FromPb<T> {
     /// A function to transfer a proto-buf structure into a Rust structure
-    fn from_pb(t: T) -> ParsePbResult<Self>
+    fn from_pb(pb: T) -> ParsePbResult<Self>
     where
         Self: Sized;
 }
