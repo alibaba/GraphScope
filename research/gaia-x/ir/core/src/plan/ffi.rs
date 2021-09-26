@@ -183,7 +183,6 @@ pub extern "C" fn destroy_logical_plan(ptr_plan: *const c_void) {
     }
 }
 
-/// An internal helper function for appending an operator into the logical plan
 fn append_operator(
     ptr_plan: *const c_void,
     operator: pb::logical_plan::Operator,
@@ -251,7 +250,16 @@ mod project {
         }
     }
 
-    /// Append a project operator to the logical plan
+    /// Append a project operator to the logical plan. To do so, one specifies the following arguments:
+    /// * `ptr_plan`: A rust-owned pointer created by `init_logical_plan()`.
+    /// * `ptr_project`: A rust-owned pointer created by `init_project_operator()`.
+    /// * `parent_id`: The unique parent operator's index in the logical plan.
+    /// * `id`: An index pointer that gonna hold the index for this operator.
+    ///
+    /// Returning [`ResultCode`] to check if there is any error.
+    ///
+    /// **Note**: All following `append_xx_operator()` apis have the same usage as this one.
+    ///
     #[no_mangle]
     pub extern "C" fn append_project_operator(
         ptr_plan: *const c_void,
