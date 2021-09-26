@@ -1104,9 +1104,13 @@ class CoordinatorServiceServicer(
         space = self._builtin_workspace
         if types_pb2.GAR in op.attr:
             space = self._udf_app_workspace
-        app_lib_path = compile_func(
+        app_lib_path, java_jar_path, java_ffi_path, app_type = compile_func(
             space, lib_name, op.attr, self._analytical_engine_config
         )
+        # for java app compilation, we need to distribute the jar and ffi generated
+        if app_type == "java_pie":
+            self._launcher.distribute_file(java_jar_path)
+            self._launcher.distribute_file(java_ffi_path)
         self._launcher.distribute_file(app_lib_path)
         return app_lib_path
 

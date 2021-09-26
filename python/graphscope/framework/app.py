@@ -207,7 +207,7 @@ class AppAssets(DAGNode):
 
     @property
     def type(self):
-        """Algorithm type, one of `cpp_pie`, `cython_pie` or `cython_pregel`.
+        """Algorithm type, one of `cpp_pie`, `cython_pie`, `java_pie` or `cython_pregel`.
 
         Returns:
             str: Algorithm type of this asset.
@@ -344,7 +344,7 @@ class AppDAGNode(DAGNode):
         if not isinstance(self._graph, DAGNode) and not self._graph.loaded():
             raise RuntimeError("The graph is not loaded")
 
-        if self._app_assets.type in ["cython_pie", "cython_pregel"]:
+        if self._app_assets.type in ["cython_pie", "cython_pregel", "java_pie"]:
             # cython app support kwargs only
             check_argument(
                 not args, "Only support using keyword arguments in cython app."

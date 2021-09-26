@@ -33,6 +33,10 @@ jobs:
       image: registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-vineyard:v0.3.6
       options:
         --shm-size 4096m
+    strategy:
+      matrix:
+        networkx: [ON, OFF]
+        javasdk : [ON]
 
     steps:
     - uses: actions/checkout@v2.3.2
@@ -96,8 +100,10 @@ jobs:
         pushd ${GITHUB_WORKSPACE}
         make gae BUILD_TEST=ON
         sudo chown -R $(id -u):$(id -g) /opt/graphscope
-        cp k8s/kube_ssh /opt/graphscope/bin/kube_ssh
-        cp k8s/pre_stop.py /opt/graphscope/bin/pre_stop.py
+        make gae ENABLE_JAVA_SDK=${{ matrix.javasdk }} NETWORKX=${{ matrix.networkx }} BUILD_TEST=ON INSTALL_PREFIX=/opt/graphscope
+        cd ${GITHUB_WORKSPACE}
+        sudo cp k8s/kube_ssh /opt/graphscope/bin/kube_ssh
+        sudo cp k8s/pre_stop.py /opt/graphscope/bin/pre_stop.py
         tar -cf gae.tar /opt/graphscope
         popd
 
@@ -105,9 +111,16 @@ jobs:
       run: |
         export GS_TEST_DIR=${GITHUB_WORKSPACE}/gstest
         export PATH=${PATH}:/opt/graphscope/bin/
+        export GRAPHSCOPE_HOME='/opt/graphscope'
+        export RUN_JAVA_TESTS=ON
         git clone -b master --single-branch --depth=1 https://github.com/7br/gstest.git ${GS_TEST_DIR}
 
-        cd analytical_engine/build
+        cd ${GITHUB_WORKSPACE}/analytical_engine/java
+        mvn test -Dmaven.antrun.skip=true
+
+        source ${GRAPHSCOPE_HOME}/conf/grape_jvm_opts
+        export USER_JAR_PATH=${GITHUB_WORKSPACE}/analytical_engine/java/grape-demo/target/grape-demo-0.1-shaded.jar
+        cd ${GITHUB_WORKSPACE}/analytical_engine/build
         ../test/app_tests.sh --test_dir ${GITHUB_WORKSPACE}/gstest
 
     - name: Upload Artifact
@@ -309,6 +322,13 @@ jobs:
         pushd python && python3 setup.py build_proto && popd
         pushd coordinator && python3 setup.py build_builtin && popd
 
+        cd /tmp/
+        git clone https://github.com/alibaba/fastFFI.git
+        cd fastFFI
+        git checkout a166c6287f2efb938c27fb01b3d499932d484f9c
+        export PATH=${PATH}:${LLVM11_HOME}/bin
+        mvn clean install -DskipTests
+
     - name: Setup tmate session debug
       if: false
       uses: mxschmitt/action-tmate@v2
@@ -317,7 +337,14 @@ jobs:
       run: |
         export GRAPHSCOPE_HOME='/opt/graphscope'
         export GS_TEST_DIR='/home/graphscope/gstest'
-        cd python
+        export RUN_JAVA_TESTS=ON
+
+        cd ${GITHUB_WORKSPACE}/analytical_engine/java/
+        mvn clean install -DskipTests -Dmaven.antrun.skip=true
+
+        export USER_JAR_PATH=${GITHUB_WORKSPACE}/analytical_engine/java/grape-demo/target/grape-demo-0.1-shaded.jar
+        source ${GRAPHSCOPE_HOME}/conf/grape_jvm_opts
+        cd ${GITHUB_WORKSPACE}/python
         python3 -m pytest --cov=graphscope --cov-config=.coveragerc \
                           --cov-report=xml --cov-report=term --exitfirst -s -v tests/unittest/
 

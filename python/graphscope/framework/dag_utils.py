@@ -62,7 +62,7 @@ def bind_app(graph, app_assets):
         graph.session_id,
         types_pb2.BIND_APP,
         inputs=inputs,
-        config={},
+        config={types_pb2.APP_ALGO: utils.s_to_attr(app_assets.algo)},
         output_types=types_pb2.BOUND_APP,
     )
     return op

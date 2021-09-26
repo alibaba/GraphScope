@@ -16,6 +16,7 @@
 #ifndef ANALYTICAL_ENGINE_CORE_FRAGMENT_ARROW_PROJECTED_FRAGMENT_H_
 #define ANALYTICAL_ENGINE_CORE_FRAGMENT_ARROW_PROJECTED_FRAGMENT_H_
 
+#include <limits>
 #include <memory>
 #include <set>
 #include <string>
@@ -746,6 +747,16 @@ class ArrowProjectedFragment
     return vm_ptr_->GetGid(internal_oid_t(oid), gid);
   }
 
+  // For Java use, can not use Oid2Gid(const oid_t & oid, vid_t & gid) since
+  // Java can not pass vid_t by reference.
+  inline vid_t Oid2Gid(const oid_t& oid) const {
+    vid_t gid;
+    if (vm_ptr_->GetGid(internal_oid_t(oid), gid)) {
+      return gid;
+    }
+    return std::numeric_limits<vid_t>::max();
+  }
+
   inline bool InnerVertexGid2Vertex(const vid_t& gid, vertex_t& v) const {
     v.SetValue(vid_parser_.GetLid(gid));
     return true;
@@ -863,6 +874,7 @@ class ArrowProjectedFragment
     assert(offset < static_cast<int64_t>(ivnum_));
     return grape::DestList(iodoffset_[offset], iodoffset_[offset + 1]);
   }
+
   inline bool directed() const { return directed_; }
 
  private:
