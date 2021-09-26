@@ -1,0 +1,42 @@
+/*
+ * Copyright 2021 Alibaba Group Holding Limited.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *  	http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+package org.apache.giraph.graph;
+
+import org.apache.hadoop.io.Writable;
+import org.apache.hadoop.io.WritableComparable;
+
+import java.util.Iterator;
+
+/**
+ * Providing message related interfaces.
+ *
+ * @param <OID_T>     vertex original id
+ * @param <VDATA_T>   vertex data type
+ * @param <EDATA_T>   edge data type
+ * @param <OUT_MSG_T> out msg type
+ */
+public interface MessageSender<
+        OID_T extends WritableComparable,
+        VDATA_T extends Writable,
+        EDATA_T extends Writable,
+        OUT_MSG_T extends Writable> {
+
+    void sendMessage(OID_T id, OUT_MSG_T message);
+
+    void sendMessageToAllEdges(Vertex<OID_T, VDATA_T, EDATA_T> vertex, OUT_MSG_T message);
+
+    void sendMessageToMultipleEdges(Iterator<OID_T> vertexIdIterator, OUT_MSG_T message);
+}

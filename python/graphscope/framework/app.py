@@ -169,7 +169,10 @@ class AppAssets(DAGNode):
         """
         self._algo = algo
         self._context_type = context
-        self._type = "cpp_pie"  # default is builtin app with `built_in` type
+        if isinstance(self._algo, str) and "." in self._algo:
+            self._type = "java_pie"
+        else:
+            self._type = "cpp_pie"  # default is builtin app with `built_in` type
         self._meta = {}
 
         # used for gar resource
@@ -461,6 +464,8 @@ def load_app(gar=None, algo=None, context=None, **kwargs):
           if there is only one app in it.
         gar: bytes or BytesIO or str
           str represent the path of resource.
+          for java apps, gar can be none to indicate we should find the app in
+          previouse added libs.
 
     Returns:
         Instance of <graphscope.framework.app.AppAssets>
@@ -492,5 +497,9 @@ def load_app(gar=None, algo=None, context=None, **kwargs):
         if not zipfile.is_zipfile(gar):
             raise InvalidArgumentError("{} is not a zip file.".format(gar))
         return AppAssets(algo, context, content, **kwargs)
+    elif isinstance(algo, str) and algo.startswith("giraph:"):
+        if gar is not None:
+            raise InvalidArgumentError("Running giraph app expect no gar resource")
+        return AppAssets(algo, "vertex_data", None, **kwargs)
     else:
         raise InvalidArgumentError("Wrong type with {}".format(gar))

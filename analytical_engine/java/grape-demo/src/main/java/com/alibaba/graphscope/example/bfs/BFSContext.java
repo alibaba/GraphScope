@@ -38,6 +38,7 @@ import java.util.concurrent.Executors;
 
 public class BFSContext extends VertexDataContext<IFragment<Long, Long, Double, Long>, Long>
         implements ParallelContextBase<Long, Long, Double, Long> {
+
     private static Logger logger = LoggerFactory.getLogger(BFSContext.class);
 
     public long sourceOid;

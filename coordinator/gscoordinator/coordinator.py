@@ -36,7 +36,9 @@ import threading
 import traceback
 import urllib.parse
 import urllib.request
+import zipfile
 from concurrent import futures
+from io import BytesIO
 
 import grpc
 from packaging import version
@@ -78,7 +80,10 @@ from gscoordinator.object_manager import InteractiveQueryManager
 from gscoordinator.object_manager import LearningInstanceManager
 from gscoordinator.object_manager import LibMeta
 from gscoordinator.object_manager import ObjectManager
+from gscoordinator.utils import ANALYTICAL_ENGINE_JAVA_INIT_CLASS_PATH
+from gscoordinator.utils import ANALYTICAL_ENGINE_JAVA_JVM_OPTS
 from gscoordinator.utils import GRAPHSCOPE_HOME
+from gscoordinator.utils import RESOURCE_DIR_NAME
 from gscoordinator.utils import WORKSPACE
 from gscoordinator.utils import check_gremlin_server_ready
 from gscoordinator.utils import compile_app
@@ -185,6 +190,12 @@ class CoordinatorServiceServicer(
         self._builtin_workspace = os.path.join(WORKSPACE, "builtin")
         # udf app workspace should be bound to a specific session when client connect.
         self._udf_app_workspace = None
+        # java class path should contains
+        # 1) java runtime path
+        # 2) add resources, the recents added resource will be placed first.
+        self._java_class_path = ANALYTICAL_ENGINE_JAVA_INIT_CLASS_PATH
+        logger.info("Java initial class path set to: {}".format(self._java_class_path))
+        self._jvm_opts = ANALYTICAL_ENGINE_JAVA_JVM_OPTS
 
         # control log fetching
         self._streaming_logs = True
@@ -284,6 +295,9 @@ class CoordinatorServiceServicer(
         self._udf_app_workspace = os.path.join(
             WORKSPACE, self._instance_id, self._session_id
         )
+        self._resource_dir = os.path.join(
+            WORKSPACE, self._instance_id, self._session_id, RESOURCE_DIR_NAME
+        )
         self._launcher.set_session_workspace(self._session_id)
 
         # Session connected, fetch logs via gRPC.
@@ -382,13 +396,29 @@ class CoordinatorServiceServicer(
         # preprocess of op before run on analytical engine
         for op in dag_def.op:
             self._key_to_op[op.key] = op
-            op_pre_process(
-                op,
-                self._op_result_pool,
-                self._key_to_op,
-                engine_hosts=self._engine_hosts,
-                engine_config=self._analytical_engine_config,
-            )
+            if (
+                op.op == types_pb2.CREATE_GRAPH or op.op == types_pb2.RUN_APP
+            ) and self._analytical_engine_config["enable_java_sdk"] == "ON":
+                logger.info(
+                    "op preprocess for java sdk enabled, and op is one of create graph and run app"
+                )
+                op_pre_process(
+                    op,
+                    self._op_result_pool,
+                    self._key_to_op,
+                    engine_hosts=self._engine_hosts,
+                    engine_config=self._analytical_engine_config,
+                    engine_java_class_path=self._java_class_path,
+                    engine_jvm_opts=self._jvm_opts,
+                )
+            else:
+                op_pre_process(
+                    op,
+                    self._op_result_pool,
+                    self._key_to_op,
+                    engine_hosts=self._engine_hosts,
+                    engine_config=self._analytical_engine_config,
+                )
 
             # Handle op that depends on loader (data source)
             if op.op == types_pb2.CREATE_GRAPH or op.op == types_pb2.ADD_LABELS:
@@ -418,7 +448,6 @@ class CoordinatorServiceServicer(
                 or op.op == types_pb2.ADD_LABELS
             ):
                 op = self._maybe_register_graph(op, self._session_id)
-
         # generate runstep requests, and run on analytical engine
         requests = _generate_runstep_request(self._session_id, dag_def, dag_bodies)
         # response
@@ -665,13 +694,15 @@ class CoordinatorServiceServicer(
     )(_RunStep)
 
     def _maybe_compile_app(self, op):
-        app_sig = get_app_sha256(op.attr)
+        app_sig = get_app_sha256(op.attr, self._java_class_path)
         # try to get compiled file from GRAPHSCOPE_HOME/precompiled
         space = os.path.join(GRAPHSCOPE_HOME, "precompiled", "builtin")
         app_lib_path = get_lib_path(os.path.join(space, app_sig), app_sig)
         if not os.path.isfile(app_lib_path):
             space = self._builtin_workspace
-            if types_pb2.GAR in op.attr:
+            if (types_pb2.GAR in op.attr) or (
+                op.attr[types_pb2.APP_ALGO].s.decode("utf-8").startswith("giraph:")
+            ):
                 space = self._udf_app_workspace
             # try to get compiled file from workspace
             app_lib_path = get_lib_path(os.path.join(space, app_sig), app_sig)
@@ -762,6 +793,35 @@ class CoordinatorServiceServicer(
                     yield message_pb2.FetchLogsResponse(
                         info_message=info_message, error_message=error_message
                     )
+
+    def AddLib(self, request, context):
+        if request.session_id != self._session_id:
+            context.set_code(grpc.StatusCode.INVALID_ARGUMENT)
+            context.set_details(
+                f"Session handle not matched, {request.session_id} versus {self._session_id}"
+            )
+        os.makedirs(self._resource_dir, exist_ok=True)
+        gar = request.gar
+        fp = BytesIO(gar)
+        filename = None
+        with zipfile.ZipFile(fp, "r") as zip_ref:
+            zip_ref.extractall(self._resource_dir)
+            logger.info(
+                "Coordinator recieved add lib request contains file {}".format(
+                    zip_ref.namelist()
+                )
+            )
+            if len(zip_ref.namelist()) != 1:
+                raise RuntimeError("Expect only one resource in one gar")
+            filename = zip_ref.namelist()[0]
+        full_filename = os.path.join(self._resource_dir, filename)
+        self._launcher.distribute_file(full_filename)
+        logger.info("Successfully distributed {}".format(full_filename))
+        if full_filename.endswith(".jar"):
+            logger.info("adding lib to java class path since it ends with .jar")
+            self._java_class_path = full_filename + ":" + self._java_class_path
+            logger.info("current java class path: {}".format(self._java_class_path))
+        return message_pb2.AddLibResponse()
 
     def CloseSession(self, request, context):
         for result in self.CloseSessionWrapped(request, context):
@@ -1210,10 +1270,16 @@ class CoordinatorServiceServicer(
 
     def _compile_lib_and_distribute(self, compile_func, lib_name, op):
         space = self._builtin_workspace
-        if types_pb2.GAR in op.attr:
+        if (types_pb2.GAR in op.attr) or (
+            op.attr[types_pb2.APP_ALGO].s.decode("utf-8").startswith("giraph:")
+        ):
             space = self._udf_app_workspace
         app_lib_path, java_jar_path, java_ffi_path, app_type = compile_func(
-            space, lib_name, op.attr, self._analytical_engine_config
+            space,
+            lib_name,
+            op.attr,
+            self._analytical_engine_config,
+            self._java_class_path,
         )
         # for java app compilation, we need to distribute the jar and ffi generated
         if app_type == "java_pie":

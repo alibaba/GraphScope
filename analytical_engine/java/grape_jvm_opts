@@ -25,7 +25,7 @@ then
     echo "find env RUNTIME_LLVM4JNI_OUTPUT, append to init java class path"
     class_path=${RUNTIME_LLVM4JNI_OUTPUT}:${GRAPHSCOPE_HOME}/lib/grape-runtime-0.1-shaded.jar
 else 
-    class_path=${GRAPHSCOPE_HOME}/lib/grape-runtime-0.1-shaded.jar
+    class_path=${GRAPHSCOPE_HOME}/lib/grape-runtime-0.1-shaded.jar:
 fi
 
 export GRAPE_JVM_OPTS="-Dcom.alibaba.fastffi.rvBuffer=2147483648 -XX:+StartAttachListener -XX:+PreserveFramePointer \
@@ -35,5 +35,5 @@ export GRAPE_JVM_OPTS="-Dcom.alibaba.fastffi.rvBuffer=2147483648 -XX:+StartAttac
 -Djava.library.path=${GRAPHSCOPE_HOME}/lib \
 -Djava.class.path=${class_path}"
 
-#-XX:+PrintInlining \
 #-XX:+TraceClassLoading \
+#-XX:+PrintInlining \

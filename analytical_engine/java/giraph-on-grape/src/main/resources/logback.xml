@@ -1,0 +1,59 @@
+<configuration>
+  <appender class="ch.qos.logback.core.ConsoleAppender" name="STDOUT">
+    　　　　　
+    <encoder>
+      　　　　　　　　　
+      <pattern>[%d{ISO8601}][%p][%t][%c:%L] %m%n</pattern>
+      　　　　　
+    </encoder>
+    　　　
+  </appender>
+
+  <logger level="error" name="com.alibaba.graphscope.stdcxx.FFIByteVector"/>
+  <logger level="error" name="com.alibaba.graphscope.serialization.FFIByteVectorInputStream"/>
+  <logger level="error" name="com.alibaba.graphscope.serialization.FFIByteVectorOutputStream"/>
+  <logger level="error" name="com.alibaba.graphscope.parallel.mm.impl.GiraphDefaultMessageManager"/>
+  <logger level="info" name="com.alibaba.graphscope.app.GiraphComputationAdaptor"/>
+  <logger level="info" name="org.apache.giraph.utils.ConfigurationUtils"/>
+  <logger level="info" name="org.apache.giraph.conf.GiraphClasses"/>
+  <logger level="info" name="org.apache.giraph.conf.GiraphTypes"/>
+  <logger level="info" name="org.apache.giraph.graph.impl.VertexDataManagerImpl"/>
+  <logger level="info" name="com.alibaba.graphscope.example.giraph.MessageApp"/>
+  <logger level="info" name="com.alibaba.graphscope.example.giraph.MessageBenchMark"/>
+  <logger level="info" name="com.alibaba.graphscope.example.giraph.MaxApp"/>
+  <logger level="error" name="com.alibaba.graphscope.example.giraph.SSSP"/>
+  <logger level="info" name="com.alibaba.graphscope.example.giraph.PageRank"/>
+  <logger level="info" name="com.alibaba.graphscope.factory.GiraphComputationFactory"/>
+  <logger level="error" name="org.apache.giraph.graph.impl.AggregatorManagerImpl"/>
+  <logger level="error" name="org.apache.giraph.graph.impl.AggregatorManagerNettyImpl"/>
+  <logger level="error" name="org.apache.giraph.comm.requests.NettyMessageDecoder"/>
+  <logger level="error" name="org.apache.giraph.comm.requests.NettyMessageEncoder"/>
+  <logger level="error" name="org.apache.giraph.comm.netty.NettyClient"/>
+  <logger level="error" name="org.apache.giraph.comm.netty.NettyServer"/>
+  <logger level="error" name="org.apache.giraph.comm.netty.handler.NettyClientHandler"/>
+  <logger level="error" name="org.apache.giraph.comm.netty.handler.NettyClientHandlerV2"/>
+  <logger level="error" name="org.apache.giraph.comm.netty.hanlder.NettyServerHandler"/>
+  <logger level="debug" name="com.alibaba.graphscope.parallel.mm.impl.GiraphNettyMessageManager"/>
+  <logger level="error" name="com.alibaba.graphscope.parallel.mm.impl.GiraphMpiMessageManager"/>
+  <logger level="info" name="com.alibaba.graphscope.parallel.netty.NettyClient"/>
+  <logger level="info" name="com.alibaba.graphscope.parallel.netty.NettyServer"/>
+  <logger level="debug" name="com.alibaba.graphscope.parallel.netty.handler.NettyServerHandler"/>
+  <logger level="debug" name="com.alibaba.graphscope.parallel.netty.handler.NettyClientHandler"/>
+  <logger level="debug"
+    name="com.alibaba.graphscope.parallel.netty.request.impl.BatchWritableRequest"/>
+  <logger level="error" name="com.alibaba.graphscope.parallel.netty.request.impl.ByteBufRequest"/>
+  <logger level="error" name="com.alibaba.graphscope.parallel.message.SimpleMessageStore"/>
+  <logger level="error" name="com.alibaba.graphscope.parallel.message.LongDoubleMessageStore"/>
+  <logger level="error"
+    name="com.alibaba.graphscope.fragment.adaptor.ImmutableEdgecutFragmentAdaptor"/>
+  <logger level="info"
+    name="com.alibaba.graphscope.parallel.netty.request.serialization.WritableRequestEncoder"/>
+  <logger level="info"
+    name="com.alibaba.graphscope.parallel.netty.request.serialization.WritableRequestDecoder"/>
+  <logger level="info" name="com.alibaba.graphscope.parallel.cache.impl.ByteBufMessageCache"/>
+  <root level="info">
+    <appender-ref ref="STDOUT"/>
+  </root>
+</configuration>
+
+

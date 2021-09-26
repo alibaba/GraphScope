@@ -37,6 +37,7 @@ import java.util.function.Supplier;
 
 public class PageRank extends Communicator
         implements ParallelAppBase<Long, Long, Long, Double, PageRankContext>, ParallelEngine {
+
     private static Logger logger = LoggerFactory.getLogger(PageRank.class);
 
     @Override
@@ -123,7 +124,7 @@ public class PageRank extends Communicator
                     } else {
                         double cur = 0.0;
                         AdjList<Long, Double> nbrs = fragment.getIncomingAdjList(vertex);
-                        for (Nbr<Long, Double> nbr : nbrs.iterator()) {
+                        for (Nbr<Long, Double> nbr : nbrs.iterable()) {
                             cur += ctx.pagerank.get(nbr.neighbor());
                         }
                         cur = (cur * ctx.alpha + base) / ctx.degree.get(vertex);

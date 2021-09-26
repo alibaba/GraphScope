@@ -40,6 +40,7 @@ import java.util.concurrent.Executors;
 
 public class PageRankContext extends VertexDataContext<IFragment<Long, Long, Long, Double>, Double>
         implements ParallelContextBase<Long, Long, Long, Double> {
+
     private static Logger logger = LoggerFactory.getLogger(PageRankContext.class);
 
     public double alpha;

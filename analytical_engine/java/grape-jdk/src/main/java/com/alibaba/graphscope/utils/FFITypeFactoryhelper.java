@@ -186,6 +186,10 @@ public class FFITypeFactoryhelper {
         return getVertexLongFactory().create();
     }
 
+    public static Vertex<Integer> newVertexInt() {
+        return getVertexIntegerFactory().create();
+    }
+
     public static <T> Vertex<T> newVertex(Class<? extends T> vidClass) {
         if (vidClass.equals(Long.class)) {
             return getVertexLongFactory().create();
