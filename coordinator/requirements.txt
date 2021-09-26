@@ -1,3 +1,4 @@
+cmake>=3.21.2
 daemons
 etcd-distro
 graphscope-client
