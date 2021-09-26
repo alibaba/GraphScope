@@ -90,10 +90,16 @@ def _parse_user_app(java_app_class: str, java_jar_full_path: str):
         logger.info(line)
         if len(line) == 0:
             continue
-        if line.find("PropertyDefaultApp") != -1:
+        if (
+            line.find("DefaultPropertyApp") != -1
+            or line.find("ParallelPropertyApp") != -1
+        ):
             _java_app_type = "property"
             continue
-        if line.find("ProjectedDefaultApp") != -1:
+        if (
+            line.find("DefaultProjectedApp") != -1
+            or line.find("ParallelProjectedApp") != -1
+        ):
             _java_app_type = "projected"
             continue
         if line.find("Error") != -1:

@@ -32,32 +32,6 @@ import com.alibaba.fastffi.FFITypeAlias;
 @CXXHead(system = {"vector", "string"})
 @CXXHead(CORE_JAVA_TYPE_ALIAS_H)
 @FFITypeAlias("std::vector")
-// @CXXTemplate(cxx = "jshort", java = "java.lang.Short")
-// @CXXTemplate(cxx = "jint", java = "java.lang.Integer")
-// @CXXTemplate(cxx = "jchar", java = "java.lang.Character")
-// @CXXTemplate(cxx = "jbyte", java = "java.lang.Byte")
-// @CXXTemplate(cxx = "jlong", java = "java.lang.Long")
-// @CXXTemplate(cxx = "jdouble", java = "java.lang.Double")
-// @CXXTemplate(cxx = "jfloat", java = "java.lang.Float")
-// @CXXTemplate(cxx = "jboolean", java = "java.lang.Boolean")
-// @CXXTemplate(cxx = "int64_t", java = "java.lang.Long")
-// @CXXTemplate(cxx = "char", java = "java.lang.Byte")
-// @CXXTemplate(cxx = "std::string", java = "com.alibaba.fastffi.FFIByteString")
-// @CXXTemplate(cxx = "std::vector<char>", java =
-// "com.alibaba.graphscope.stdcxx.StdVector<java.lang.Byte>")
-// @CXXTemplate(
-// cxx = "std::vector<int64_t>",
-// java = "com.alibaba.graphscope.stdcxx.StdVector<java.lang.Long>")
-//// @CXXTemplate(
-// cxx = "std::vector<jint>",
-// java = "com.alibaba.graphscope.stdcxx.StdVector<java.lang.Integer>")
-//// @CXXTemplate(
-// cxx = "std::vector<std::string>",
-// java =
-// "com.alibaba.graphscope.stdcxx.StdVector<com.alibaba.fastffi.FFIByteString>")
-//// @CXXTemplate(
-// cxx = GS_VERTEX_ARRAY + "<double>",
-// java = "com.alibaba.graphscope.ds.GSVertexArray<java.lang.Double>")
 public interface StdVector<E> extends CXXPointer {
     long size();
 

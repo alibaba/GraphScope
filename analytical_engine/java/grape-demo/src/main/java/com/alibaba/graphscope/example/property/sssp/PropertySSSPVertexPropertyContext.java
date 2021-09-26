@@ -19,6 +19,7 @@ package com.alibaba.graphscope.example.property.sssp;
 import com.alibaba.fastjson.JSONObject;
 import com.alibaba.graphscope.context.ContextDataType;
 import com.alibaba.graphscope.context.LabeledVertexPropertyContext;
+import com.alibaba.graphscope.context.PropertyDefaultContextBase;
 import com.alibaba.graphscope.ds.GSVertexArray;
 import com.alibaba.graphscope.ds.VertexRange;
 import com.alibaba.graphscope.ds.VertexSet;
@@ -35,7 +36,8 @@ import org.slf4j.LoggerFactory;
  * An implementation of {@link com.alibaba.graphscope.context.LabeledVertexPropertyContext}. By
  * calling addColumn, you can create a vertex data vector, and label it with a <em>property</em>.
  */
-public class PropertySSSPVertexPropertyContext extends LabeledVertexPropertyContext<Long> {
+public class PropertySSSPVertexPropertyContext extends LabeledVertexPropertyContext<Long>
+        implements PropertyDefaultContextBase<Long> {
     private static Logger logger =
             LoggerFactory.getLogger(PropertySSSPVertexPropertyContext.class.getName());
     public List<VertexSet> curModified;

@@ -21,5 +21,6 @@ fi
 export GRAPE_JVM_OPTS="-Dcom.alibaba.fastffi.rvBuffer=2147483648 -XX:+StartAttachListener -XX:+PreserveFramePointer \
 -XX:+UseParallelGC -XX:+UseParallelOldGC -XX:+PrintGCDetails -XX:+PrintGCDateStamps \
 -XX:+UnlockDiagnosticVMOptions -XX:LoopUnrollLimit=1 \
+-XX:CompileCommandFile=${GRAPHSCOPE_HOME}/conf/compile-commands.txt \
 -Djava.library.path=${GRAPHSCOPE_HOME}/lib \
 -Djava.class.path=${GRAPHSCOPE_HOME}/lib/grape-runtime-0.1-shaded.jar"

@@ -13,8 +13,8 @@
  * limitations under the License.
  */
 
-#ifndef ANALYTICAL_ENGINE_CORE_CONTEXT_JAVA_PIE_PROPERTY_DEFAULT_CONTEXT_H_
-#define ANALYTICAL_ENGINE_CORE_CONTEXT_JAVA_PIE_PROPERTY_DEFAULT_CONTEXT_H_
+#ifndef ANALYTICAL_ENGINE_CORE_CONTEXT_JAVA_PIE_PROPERTY_CONTEXT_H_
+#define ANALYTICAL_ENGINE_CORE_CONTEXT_JAVA_PIE_PROPERTY_CONTEXT_H_
 
 #ifdef ENABLE_JAVA_SDK
 
@@ -38,31 +38,58 @@
 #include "core/error.h"
 #include "core/java/javasdk.h"
 #include "core/object/i_fragment_wrapper.h"
+#include "core/parallel/parallel_property_message_manager.h"
 #include "core/parallel/property_message_manager.h"
 
-#define CONTEXT_TYPE_JAVA_PIE_PROPERTY_DEFAULT "java_pie_property_default"
+#define CONTEXT_TYPE_JAVA_PIE_PROPERTY "java_pie_property"
 
 namespace gs {
 
 static constexpr const char* _java_property_message_manager_name =
     "gs::PropertyMessageManager";
+static constexpr const char* _java_parallel_property_message_manager_name =
+    "gs::ParallelPropertyMessageManager";
 /**
  * @brief Context for the java pie app, used by java sdk.
  *
  * @tparam FRAG_T
  */
 template <typename FRAG_T>
-class JavaPIEPropertyDefaultContext : public JavaContextBase<FRAG_T> {
+class JavaPIEPropertyContext : public JavaContextBase<FRAG_T> {
  public:
-  explicit JavaPIEPropertyDefaultContext(const FRAG_T& fragment)
+  explicit JavaPIEPropertyContext(const FRAG_T& fragment)
       : JavaContextBase<FRAG_T>(fragment) {}
-  virtual ~JavaPIEPropertyDefaultContext() {}
-  void Init(PropertyMessageManager& messages, const std::string& params,
-            const std::string& lib_path) {
-    VLOG(1) << "lib path: " << lib_path;
-    JavaContextBase<FRAG_T>::init(reinterpret_cast<jlong>(&messages),
-                                  _java_property_message_manager_name, params,
-                                  lib_path);
+
+  virtual ~JavaPIEPropertyContext() {}
+
+  void init(jlong messages_addr, const char* java_message_manager_name,
+            const std::string& params, const std::string& lib_path) {
+    JavaContextBase<FRAG_T>::init(messages_addr, java_message_manager_name,
+                                  params, lib_path);
+  }
+
+  void Output(std::ostream& os) override {
+    JNIEnvMark m;
+    if (m.env()) {
+      JNIEnv* env = m.env();
+
+      jclass context_class = env->GetObjectClass(this->context_object());
+      CHECK_NOTNULL(context_class);
+
+      const char* descriptor =
+          "(Lcom/alibaba/graphscope/fragment/ArrowFragment;)V";
+      jmethodID output_methodID =
+          env->GetMethodID(context_class, "Output", descriptor);
+      if (output_methodID) {
+        VLOG(1) << "Found output method in java context.";
+        env->CallVoidMethod(this->context_object(), output_methodID,
+                            this->fragment_object());
+      } else {
+        VLOG(1) << "Output method not found, skip.";
+      }
+    } else {
+      LOG(ERROR) << "JNI env not available.";
+    }
   }
 
   std::shared_ptr<gs::IContextWrapper> CreateInnerCtxWrapper(
@@ -120,11 +147,7 @@ class JavaPIEPropertyDefaultContext : public JavaContextBase<FRAG_T> {
   }
 
  protected:
-  const char* evalDescriptor() override {
-    return "(Lcom/alibaba/graphscope/fragment/ArrowFragment;"
-           "Lcom/alibaba/graphscope/parallel/PropertyMessageManager;"
-           "Lcom/alibaba/fastjson/JSONObject;)V";
-  }
+  virtual const char* getPropertyCtxObjBaseClazNameDesc() = 0;
 
  private:
   std::string getJavaCtxTypeName(const jobject& ctx_object) {
@@ -135,8 +158,8 @@ class JavaPIEPropertyDefaultContext : public JavaContextBase<FRAG_T> {
       CHECK_NOTNULL(context_utils_class);
       jmethodID ctx_base_class_name_get_method = m.env()->GetStaticMethodID(
           context_utils_class, "getPropertyCtxObjBaseClzName",
-          "(Lcom/alibaba/graphscope/context/PropertyDefaultContextBase;)"
-          "Ljava/lang/String;");
+          getPropertyCtxObjBaseClazNameDesc());
+
       CHECK_NOTNULL(ctx_base_class_name_get_method);
       jstring ctx_base_clz_name = (jstring) m.env()->CallStaticObjectMethod(
           context_utils_class, ctx_base_class_name_get_method, ctx_object);
@@ -168,27 +191,88 @@ class JavaPIEPropertyDefaultContext : public JavaContextBase<FRAG_T> {
   }
 };
 
+/**
+ * @brief Context for the java pie default property app, used by java sdk.
+ *
+ * @tparam FRAG_T
+ */
+template <typename FRAG_T>
+class JavaPIEPropertyDefaultContext : public JavaPIEPropertyContext<FRAG_T> {
+ public:
+  explicit JavaPIEPropertyDefaultContext(const FRAG_T& fragment)
+      : JavaPIEPropertyContext<FRAG_T>(fragment) {}
+  virtual ~JavaPIEPropertyDefaultContext() {}
+  void Init(PropertyMessageManager& messages, const std::string& params,
+            const std::string& lib_path) {
+    VLOG(1) << "lib path: " << lib_path;
+    JavaPIEPropertyContext<FRAG_T>::init(reinterpret_cast<jlong>(&messages),
+                                         _java_property_message_manager_name,
+                                         params, lib_path);
+  }
+
+ protected:
+  const char* evalDescriptor() override {
+    return "(Lcom/alibaba/graphscope/fragment/ArrowFragment;"
+           "Lcom/alibaba/graphscope/parallel/PropertyMessageManager;"
+           "Lcom/alibaba/fastjson/JSONObject;)V";
+  }
+  const char* getPropertyCtxObjBaseClazNameDesc() override {
+    return "(Lcom/alibaba/graphscope/context/PropertyDefaultContextBase;)"
+           "Ljava/lang/String;";
+  }
+};
+
+/**
+ * @brief Context for the java pie parallel property app, used by java sdk.
+ *
+ * @tparam FRAG_T
+ */
+template <typename FRAG_T>
+class JavaPIEPropertyParallelContext : public JavaPIEPropertyContext<FRAG_T> {
+ public:
+  explicit JavaPIEPropertyParallelContext(const FRAG_T& fragment)
+      : JavaPIEPropertyContext<FRAG_T>(fragment) {}
+  virtual ~JavaPIEPropertyParallelContext() {}
+  void Init(ParallelPropertyMessageManager& messages, const std::string& params,
+            const std::string& lib_path) {
+    VLOG(1) << "lib path: " << lib_path;
+    JavaPIEPropertyContext<FRAG_T>::init(
+        reinterpret_cast<jlong>(&messages),
+        _java_parallel_property_message_manager_name, params, lib_path);
+  }
+
+ protected:
+  const char* evalDescriptor() override {
+    return "(Lcom/alibaba/graphscope/fragment/ArrowFragment;"
+           "Lcom/alibaba/graphscope/parallel/ParallelPropertyMessageManager;"
+           "Lcom/alibaba/fastjson/JSONObject;)V";
+  }
+  const char* getPropertyCtxObjBaseClazNameDesc() override {
+    return "(Lcom/alibaba/graphscope/context/PropertyParallelContextBase;)"
+           "Ljava/lang/String;";
+  }
+};
+
 // This Wrapper works as a proxy, forward requests like toNdArray, to the c++
 // context held by java object.
 template <typename FRAG_T>
-class JavaPIEPropertyDefaultContextWrapper
-    : public IJavaPIEPropertyDefaultContextWrapper {
+class JavaPIEPropertyContextWrapper : public IJavaPIEPropertyContextWrapper {
   using fragment_t = FRAG_T;
   using label_id_t = typename fragment_t::label_id_t;
   using prop_id_t = typename fragment_t::prop_id_t;
   using oid_t = typename fragment_t::oid_t;
-  using context_t = JavaPIEPropertyDefaultContext<fragment_t>;
+  using context_t = JavaPIEPropertyContext<fragment_t>;
   static_assert(vineyard::is_property_fragment<FRAG_T>::value,
-                "JavaPIEPropertyDefaultContextWrapper is only available for "
+                "JavaPIEPropertyContextWrapper is only available for "
                 "property graph");
 
  public:
-  JavaPIEPropertyDefaultContextWrapper(
-      const std::string& id, std::shared_ptr<IFragmentWrapper> frag_wrapper,
-      std::shared_ptr<context_t> context) {}
+  JavaPIEPropertyContextWrapper(const std::string& id,
+                                std::shared_ptr<IFragmentWrapper> frag_wrapper,
+                                std::shared_ptr<context_t> context) {}
 
   std::string context_type() override {
-    return std::string(CONTEXT_TYPE_JAVA_PIE_PROPERTY_DEFAULT);
+    return std::string(CONTEXT_TYPE_JAVA_PIE_PROPERTY);
   }
 
   std::shared_ptr<IFragmentWrapper> fragment_wrapper() override {
@@ -239,4 +323,4 @@ class JavaPIEPropertyDefaultContextWrapper
 }  // namespace gs
 
 #endif
-#endif  // ANALYTICAL_ENGINE_CORE_CONTEXT_JAVA_PIE_PROPERTY_DEFAULT_CONTEXT_H_
+#endif  // ANALYTICAL_ENGINE_CORE_CONTEXT_JAVA_PIE_PROPERTY_CONTEXT_H_

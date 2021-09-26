@@ -17,6 +17,7 @@
 package com.alibaba.graphscope.utils;
 
 import static com.alibaba.graphscope.utils.CppClassName.GRAPE_MESSAGE_IN_BUFFER;
+import static com.alibaba.graphscope.utils.CppClassName.GS_PRIMITIVE_MESSAGE;
 import static com.alibaba.graphscope.utils.CppClassName.GS_VERTEX_ARRAY;
 
 import com.alibaba.fastffi.FFIForeignType;
@@ -33,6 +34,7 @@ import com.alibaba.graphscope.ds.VertexRange;
 import com.alibaba.graphscope.parallel.MessageInBuffer;
 import com.alibaba.graphscope.parallel.message.DoubleMsg;
 import com.alibaba.graphscope.parallel.message.LongMsg;
+import com.alibaba.graphscope.parallel.message.PrimitiveMessage;
 import com.alibaba.graphscope.stdcxx.StdString;
 import com.alibaba.graphscope.stdcxx.StdString.Factory;
 import java.lang.annotation.Annotation;
@@ -56,6 +58,8 @@ public class FFITypeFactoryhelper {
     private static volatile HashMap<String, GSVertexArray.Factory> gsVertexArrayFactoryMap =
             new HashMap<>();
     private static volatile HashMap<String, FFIVector.Factory> ffiVectorFactoryMap =
+            new HashMap<>();
+    private static volatile HashMap<String, PrimitiveMessage.Factory> primitiveMsgFactoryMap =
             new HashMap<>();
 
     public static String javaType2CppType(Class<?> clz) {
@@ -166,6 +170,53 @@ public class FFITypeFactoryhelper {
 
     public static Vertex<Long> newVertexLong() {
         return getVertexLongFactory().create();
+    }
+
+    /**
+     * This is the same as DoubleMsg.factory.create();
+     *
+     * @return created instance
+     */
+    public static PrimitiveMessage<Double> newDoublePrimitiveMsg() {
+        String templateStr = GS_PRIMITIVE_MESSAGE + "<double>";
+        return getPrimitivemessageFactory(templateStr).create();
+    }
+
+    public static PrimitiveMessage<Long> newLongPrimitiveMsg() {
+        String templateStr = GS_PRIMITIVE_MESSAGE + "<int64_t>";
+        return getPrimitivemessageFactory(templateStr).create();
+    }
+
+    /**
+     * Create the template msg instance.
+     *
+     * @param clz element class instace.
+     * @param <T> element type
+     * @return created instance.
+     */
+    public static <T> PrimitiveMessage<T> newPrimitiveMsg(Class<T> clz) {
+        String templateStr = GS_PRIMITIVE_MESSAGE;
+        if (clz.getName().equals(Double.class.getName())) {
+            templateStr += "<double>";
+        } else if (clz.getName().equals(Long.class.getName())) {
+            templateStr += "<int64_t>";
+        } else {
+            templateStr += FFITypeFactory.getFFITypeName(clz, true);
+        }
+        return getPrimitivemessageFactory(templateStr).create();
+    }
+
+    public static PrimitiveMessage.Factory getPrimitivemessageFactory(String templateStr) {
+        if (!primitiveMsgFactoryMap.containsKey(templateStr)) {
+            synchronized (primitiveMsgFactoryMap) {
+                if (!primitiveMsgFactoryMap.containsKey(templateStr)) {
+                    primitiveMsgFactoryMap.put(
+                            templateStr,
+                            FFITypeFactory.getFactory(PrimitiveMessage.class, templateStr));
+                }
+            }
+        }
+        return primitiveMsgFactoryMap.get(templateStr);
     }
 
     public static VertexRange<Long> newVertexRangeLong() {
