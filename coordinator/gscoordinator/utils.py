@@ -49,6 +49,7 @@ from graphscope.framework import utils
 from graphscope.framework.errors import CompilationError
 from graphscope.framework.graph_schema import GraphSchema
 from graphscope.framework.utils import PipeWatcher
+from graphscope.framework.utils import find_java
 from graphscope.framework.utils import get_platform_info
 from graphscope.framework.utils import get_tempdir
 from graphscope.proto import attr_value_pb2
@@ -59,6 +60,7 @@ from graphscope.proto import types_pb2
 
 logger = logging.getLogger("graphscope")
 
+RESOURCE_DIR_NAME = "resource"
 
 # runtime workspace
 try:
@@ -117,6 +119,20 @@ if not os.path.isfile(ANALYTICAL_ENGINE_PATH):
         ANALYTICAL_ENGINE_HOME, "build", "grape_engine"
     )
 
+# ANALYTICAL_ENGINE_JAVA_HOME
+ANALYTICAL_ENGINE_JAVA_HOME = ANALYTICAL_ENGINE_HOME
+# ANALYTICAL_ENGINE_JAVA_INIT_CLASS_PATH=os.path.join(ANALYTICAL_ENGINE_JAVA_HOME, "lib/*")
+# There should be only grape-runtime.jar we need
+ANALYTICAL_ENGINE_JAVA_INIT_CLASS_PATH = (
+    ANALYTICAL_ENGINE_JAVA_HOME + "/lib/grape-runtime-0.1-shaded.jar"
+)
+ANALYTICAL_ENGINE_JAVA_JVM_OPTS = (
+    "-Djava.library.path={}/lib -Djava.class.path={}".format(
+        GRAPHSCOPE_HOME, ANALYTICAL_ENGINE_JAVA_INIT_CLASS_PATH
+    )
+)
+
+
 # INTERACTIVE_ENGINE_SCRIPT
 INTERAVTIVE_INSTANCE_TIMEOUT_SECONDS = 600  # 10 mins
 INTERACTIVE_ENGINE_SCRIPT = os.path.join(GRAPHSCOPE_HOME, "bin", "giectl")
@@ -133,6 +149,7 @@ JAVA_CODEGNE_OUTPUT_PREFIX = "gs-ffi"
 GRAPE_PROCESSOR_JAR = os.path.join(
     GRAPHSCOPE_HOME, "lib", "grape-runtime-0.1-shaded.jar"
 )
+GIRAPH_DIRVER_CLASS = "com.alibaba.graphscope.app.GiraphComputationAdaptor"
 
 
 def get_timestamp():
@@ -151,7 +168,7 @@ def get_lib_path(app_dir, app_name):
     return lib_path
 
 
-def get_app_sha256(attr):
+def get_app_sha256(attr, java_class_path: str):
     (
         app_type,
         app_header,
@@ -161,7 +178,7 @@ def get_app_sha256(attr):
         pregel_combine,
         java_jar_path,
         java_app_class,
-    ) = _codegen_app_info(attr, DEFAULT_GS_CONFIG_FILE)
+    ) = _codegen_app_info(attr, DEFAULT_GS_CONFIG_FILE, java_class_path)
     graph_header, graph_type, _ = _codegen_graph_info(attr)
     logger.info("Codegened graph type: %s, Graph header: %s", graph_type, graph_header)
 
@@ -192,7 +209,9 @@ def get_graph_sha256(attr):
     return hashlib.sha256(graph_class.encode("utf-8")).hexdigest()
 
 
-def compile_app(workspace: str, library_name, attr, engine_config: dict):
+def compile_app(
+    workspace: str, library_name, attr, engine_config: dict, java_class_path: str
+):
     """Compile an application.
 
     Args:
@@ -222,7 +241,7 @@ def compile_app(workspace: str, library_name, attr, engine_config: dict):
         pregel_combine,
         java_jar_path,
         java_app_class,
-    ) = _codegen_app_info(attr, DEFAULT_GS_CONFIG_FILE)
+    ) = _codegen_app_info(attr, DEFAULT_GS_CONFIG_FILE, java_class_path)
     logger.info(
         "Codegened application type: %s, app header: %s, app_class: %s, vd_type: %s, md_type: %s, pregel_combine: %s, \
             java_jar_path: %s, java_app_class: %s",
@@ -363,7 +382,9 @@ def compile_app(workspace: str, library_name, attr, engine_config: dict):
     return lib_path, java_jar_path, java_codegen_out_dir, app_type
 
 
-def compile_graph_frame(workspace: str, library_name, attr: dict, engine_config: dict):
+def compile_graph_frame(
+    workspace: str, library_name, attr: dict, engine_config: dict, java_class_path: str
+):
     """Compile an application.
 
     Args:
@@ -399,8 +420,10 @@ def compile_graph_frame(workspace: str, library_name, attr: dict, engine_config:
         shutil.which("cmake"),
         ".",
         f"-DNETWORKX={engine_config['networkx']}",
+        f"-DENABLE_JAVA_SDK={engine_config['enable_java_sdk']}",
         f"-DCMAKE_PREFIX_PATH='{GRAPHSCOPE_HOME};{OPAL_PREFIX}'",
     ]
+    logger.info("enable java sdk {}".format(engine_config["enable_java_sdk"]))
     if graph_type == graph_def_pb2.ARROW_PROPERTY:
         cmake_commands += ["-DPROPERTY_GRAPH_FRAME=True"]
     elif graph_type in (
@@ -528,6 +551,16 @@ def _pre_process_for_create_graph_op(op, op_result_pool, key_to_op, **kwargs):
         parent_op = key_to_op[key_of_parent_op]
         if parent_op.op == types_pb2.DATA_SOURCE:
             op.large_attr.CopyFrom(parent_op.large_attr)
+
+        # loading graph with giraph format need jvm environ.
+        if "engine_java_class_path" in kwargs:
+            engine_java_class_path = kwargs.pop("engine_java_class_path")
+            op.attr[types_pb2.JAVA_CLASS_PATH].CopyFrom(
+                utils.s_to_attr(engine_java_class_path)
+            )
+        if "engine_jvm_opts" in kwargs:
+            engine_jvm_opts = kwargs.pop("engine_jvm_opts")
+            op.attr[types_pb2.JVM_OPTS].CopyFrom(utils.s_to_attr(engine_jvm_opts))
 
 
 def _pre_process_for_add_labels_op(op, op_result_pool, key_to_op, **kwargs):
@@ -676,14 +709,57 @@ def _pre_process_for_run_app_op(op, op_result_pool, key_to_op, **kwargs):
         attr_value_pb2.AttrValue(s=result.result.decode("utf-8").encode("utf-8"))
     )
 
+    # loading graph with giraph format need jvm environ.
+    if "engine_java_class_path" in kwargs:
+        engine_java_class_path = kwargs.pop("engine_java_class_path")
+        op.attr[types_pb2.JAVA_CLASS_PATH].CopyFrom(
+            utils.s_to_attr(engine_java_class_path)
+        )
+    if "engine_jvm_opts" in kwargs:
+        engine_jvm_opts = kwargs.pop("engine_jvm_opts")
+        op.attr[types_pb2.JVM_OPTS].CopyFrom(utils.s_to_attr(engine_jvm_opts))
+
     app_type = parent_op.attr[types_pb2.APP_ALGO].s.decode("utf-8")
-    if app_type == "java_app":
+
+    # for giraph app, we need to add args into orginal query_args, which is a json string
+    # first one should be user params, second should be lib_path
+    if app_type.startswith("giraph:"):
+        logger.debug("len {}".format(len(op.query_args.args)))
+        if len(op.query_args.args) == 1:
+            original_json_param = data_types_pb2.StringValue()
+            op.query_args.args[0].Unpack(original_json_param)
+            logger.debug("original user param {}".format(original_json_param))
+            user_params = json.loads(original_json_param.value)
+            del op.query_args.args[0]
+        elif len(op.query_args.args) == 0:
+            user_params = {}
+        else:
+            raise RuntimeError(
+                "Unexpected num of params{}".format(len(op.query_args.args))
+            )
+
+        user_params["app_class"] = GIRAPH_DIRVER_CLASS
+        user_params["jar_name"] = engine_java_class_path
+        user_params["frag_name"] = "gs::ArrowProjectedFragment<{},{},{},{}>".format(
+            parent_op.attr[types_pb2.OID_TYPE].s.decode("utf-8"),
+            parent_op.attr[types_pb2.VID_TYPE].s.decode("utf-8"),
+            parent_op.attr[types_pb2.V_DATA_TYPE].s.decode("utf-8"),
+            parent_op.attr[types_pb2.E_DATA_TYPE].s.decode("utf-8"),
+        )
+        user_params["user_app_class"] = app_type[7:]
+        logger.debug("user params {}".format(json.dumps(user_params)))
+        param = Any()
+        param.Pack(data_types_pb2.StringValue(value=json.dumps(user_params)))
+        op.query_args.args.extend([param])
+
+    if app_type == "java_app" or app_type.startswith("giraph:"):
         # For java app, we need lib path as an explicit arg.
         param = Any()
         lib_path = parent_op.attr[types_pb2.APP_LIBRARY_PATH].s.decode("utf-8")
         param.Pack(data_types_pb2.StringValue(value=lib_path))
         op.query_args.args.extend([param])
-        logger.info("Lib path {}".format(lib_path))
+
+        logger.info("Java app: Lib path {}".format(lib_path))
 
 
 def _pre_process_for_unload_graph_op(op, op_result_pool, key_to_op, **kwargs):
@@ -1211,7 +1287,68 @@ def _extract_gar(app_dir: str, attr):
         zip_ref.extractall(app_dir)
 
 
-def _codegen_app_info(attr, meta_file: str):
+def _parse_giraph_app_type(java_class_path, real_algo):
+    _java_app_type = ""
+    _frag_param_str = ""
+    _java_inner_context_type = ""
+    _java_executable = find_java()
+    parse_user_app_cmd = [
+        _java_executable,
+        "-cp",
+        "{}".format(java_class_path),
+        "com.alibaba.graphscope.utils.AppBaseParser",
+        real_algo,
+    ]
+    logger.info(" ".join(parse_user_app_cmd))
+    parse_user_app_process = subprocess.Popen(
+        parse_user_app_cmd,
+        env=os.environ.copy(),
+        encoding="utf-8",
+        errors="replace",
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        universal_newlines=True,
+        bufsize=1,
+    )
+    out, err = parse_user_app_process.communicate()
+    logger.error(err)
+    for line in out.split("\n"):
+        logger.info(line)
+        if len(line) == 0:
+            continue
+        elif line.find("Giraph") != -1:
+            _java_app_type = "giraph"
+        elif line.find("Error") != -1:
+            raise Exception("Error occured in verifying user app")
+        elif line.find("TypeParams") != -1:
+            _frag_param_str = line.split(":")[-1].strip()
+        elif line.find("ContextType") != -1:
+            _java_inner_context_type = line.split(":")[-1].strip()
+    # for giraph app, we manually set java inner ctx type
+    logger.info(
+        "Java app type: {}, frag type str: {}, ctx type: {}".format(
+            _java_app_type, _frag_param_str, _java_inner_context_type
+        )
+    )
+    if not _java_app_type or not _frag_param_str or not _java_inner_context_type:
+        raise RuntimeError("Parsed giraph app error")
+
+    parse_user_app_process.wait()
+    return _java_app_type, _frag_param_str, _java_inner_context_type
+
+
+def _probe_for_giraph_app(attr, java_class_path, real_algo):
+    _java_app_type, _frag_param_str, _java_inner_context_type = _parse_giraph_app_type(
+        java_class_path, real_algo
+    )
+    if _java_app_type == "giraph":
+        driver_header = "apps/java_pie/java_pie_projected_default_app.h"
+        class_name = "gs::JavaPIEProjectedDefaultApp"
+        return driver_header, class_name
+    raise RuntimeError("Not a supported java_app_type: {}".format(_java_app_type))
+
+
+def _codegen_app_info(attr, meta_file: str, java_class_path: str):
     """Codegen application by instanize the template specialization.
 
     Args:
@@ -1235,6 +1372,22 @@ def _codegen_app_info(attr, meta_file: str):
             config_yaml = yaml.safe_load(f)
 
     algo = attr[types_pb2.APP_ALGO].s.decode("utf-8")
+    # for algo start with giraph:, we don't find info in meta
+    if algo.startswith("giraph:"):
+        real_algo = algo[7:]
+        logger.info("codegen app info for giraph app : {}".format(real_algo))
+        src_header, app_class = _probe_for_giraph_app(attr, java_class_path, real_algo)
+        return (
+            "java_pie",
+            src_header,
+            "{}<_GRAPH_TYPE>".format(app_class),
+            None,
+            None,
+            None,
+            java_class_path,
+            real_algo,
+        )
+
     for app in config_yaml["app"]:
         if app["algo"] == algo:
             app_type = app["type"]  # cpp_pie or cython_pregel or cython_pie, java_pie

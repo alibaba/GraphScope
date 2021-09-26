@@ -19,6 +19,7 @@ package com.alibaba.graphscope.utils;
 import org.junit.Test;
 
 public class AppBaseParserTest {
+
     @Test
     public void test() {
         // AppBaseParser.main(new String[]{AppClass.class.getCanonicalName()});

@@ -157,6 +157,11 @@ class GRPCClient(object):
             self._logs_fetching_thread.daemon = True
             self._logs_fetching_thread.start()
 
+    def add_lib(self, gar):
+        if self._session_id:
+            return self._add_lib_impl(gar)
+        logger.error("adding lib to a closed session")
+
     def close(self):
         if self._session_id:
             self._close_session_impl()
@@ -169,7 +174,12 @@ class GRPCClient(object):
         request = message_pb2.HeartBeatRequest()
         return self._stub.HeartBeat(request)
 
-    # @catch_grpc_error
+    @catch_grpc_error
+    def _add_lib_impl(self, gar):
+        request = message_pb2.AddLibRequest(session_id=self._session_id, gar=gar)
+        return self._stub.AddLib(request)
+
+    @catch_grpc_error
     def _connect_session_impl(self, cleanup_instance=True, dangling_timeout_seconds=60):
         """
         Args:

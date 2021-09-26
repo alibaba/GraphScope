@@ -38,6 +38,7 @@ import java.util.concurrent.Executors;
 
 public class WCCContext extends VertexDataContext<IFragment<Long, Long, Long, Double>, Double>
         implements ParallelContextBase<Long, Long, Long, Double> {
+
     private static Logger logger = LoggerFactory.getLogger(WCCContext.class);
 
     public VertexSet currModified;
