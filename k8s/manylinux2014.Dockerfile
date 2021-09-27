@@ -253,7 +253,7 @@ RUN cd /tmp && \
     echo "source ~/.cargo/env" >> ~/.bashrc && \
     export PATH=${PATH}::/usr/local/go/bin && \
     go get github.com/etcd-io/zetcd/cmd/zetcd && \
-    cp $(go env GOPATH)/bin/zetcd /tmp/zetcd
+    cp $(go env GOPATH)/bin/zetcd /usr/local/bin/zetcd
 
 # patchelf
 RUN cd /tmp && \

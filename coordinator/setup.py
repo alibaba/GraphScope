@@ -18,6 +18,7 @@
 
 import contextlib
 import glob
+import itertools
 import os
 import shutil
 import subprocess
@@ -33,7 +34,29 @@ repo_root = os.path.dirname(os.path.abspath(__file__))
 
 
 # copy any files contains in /opt/graphscope into site-packages/graphscope.runtime
-extra_data = {"/opt/graphscope/": "graphscope.runtime"}
+
+
+def _get_extra_data():
+    # copy
+    #   1) /opt/graphscope
+    #   2) headers of arrow/glog/gflags/google/openmpi/vineyard
+    #   3) openmpi daemon process `orted`
+    #   4) zetcd
+    # into site-packages/graphscope.runtime
+    RUNTIME_ROOT = "graphscope.runtime"
+    return {
+        "/opt/graphscope/": os.path.join(RUNTIME_ROOT),
+        "/opt/vineyard/include/": os.path.join(RUNTIME_ROOT, "include"),
+        "/usr/local/include/arrow": os.path.join(RUNTIME_ROOT, "include"),
+        "/usr/local/include/boost": os.path.join(RUNTIME_ROOT, "include"),
+        "/usr/local/include/glog": os.path.join(RUNTIME_ROOT, "include"),
+        "/usr/local/include/gflags": os.path.join(RUNTIME_ROOT, "include"),
+        "/usr/local/include/google": os.path.join(RUNTIME_ROOT, "include"),
+        "/usr/local/include/mpi*.h": os.path.join(RUNTIME_ROOT, "include"),
+        "/usr/local/include/openmpi": os.path.join(RUNTIME_ROOT, "include"),
+        "/usr/local/bin/orted": os.path.join(RUNTIME_ROOT, "bin"),
+        "/usr/local/bin/zetcd": os.path.join(RUNTIME_ROOT, "bin"),
+    }
 
 
 class BuildBuiltin(Command):
@@ -104,11 +127,14 @@ class CustomBuildPy(build_py):
         if os.environ.get("WITH_EXTRA_DATA") != "ON":
             return rs
 
-        for sources, package in extra_data.items():
-            src_dir = sources
-            build_dir = os.path.join(*([self.build_lib] + [package]))
+        for sources, package in _get_extra_data().items():
+            src_dir = os.path.dirname(sources)
+            build_dir = os.path.join(*([self.build_lib] + package.split(os.sep)))
             filenames = []
-            for file in glob.glob(sources + "/**/*", recursive=True):
+            for file in itertools.chain(
+                glob.glob(sources + "/**/*", recursive=True),
+                glob.glob(sources, recursive=False),
+            ):
                 if os.path.isfile(file) or os.path.islink(file):
                     filenames.append(os.path.relpath(file, src_dir))
             rs.append((package, src_dir, build_dir, filenames))

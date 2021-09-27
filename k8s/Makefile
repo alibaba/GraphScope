@@ -103,7 +103,6 @@ graphscope-manylinux2014-py:
 				rm -fr /tmp/libvineyard /tmp/libgrape-lite && \
 				cd /work && \
 				make install && \
-				cp /tmp/zetcd /opt/graphscope/bin/zetcd && \
 				export WITH_EXTRA_DATA=ON && \
 				cd /work/coordinator && \
 				rm -fr build dist/*.whl && \
