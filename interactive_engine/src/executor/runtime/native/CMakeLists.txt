@@ -61,25 +61,6 @@ if(BUILD_SHARED_LIBS)
     install_vineyard_target(native_store)
 endif()
 
-add_executable(vineyard_htap_reader htap_reader.c)
-target_link_libraries(vineyard_htap_reader native_store ${VINEYARD_LIBRARIES} Threads::Threads)
-install_vineyard_target(vineyard_htap_reader)
 
-add_executable(vineyard_htap_mc_reader htap_mc_reader.c)
-target_link_libraries(vineyard_htap_mc_reader native_store ${VINEYARD_LIBRARIES} Threads::Threads)
-install_vineyard_target(vineyard_htap_mc_reader)
 
-add_executable(vineyard_htap_loader htap_loader.cc)
-target_include_directories(vineyard_htap_loader PRIVATE ${VINEYARD_INCLUDE_DIRS})
-target_link_libraries(vineyard_htap_loader native_store ${VINEYARD_LIBRARIES} Threads::Threads)
-install_vineyard_target(vineyard_htap_loader)
 
-add_executable(vineyard_htap_stream_loader htap_stream_loader.cc)
-target_include_directories(vineyard_htap_stream_loader PRIVATE ${VINEYARD_INCLUDE_DIRS})
-target_link_libraries(vineyard_htap_stream_loader native_store ${VINEYARD_LIBRARIES} Threads::Threads)
-install_vineyard_target(vineyard_htap_stream_loader)
-
-add_executable(vineyard_htap_stream_generator htap_stream_generator.cc)
-target_include_directories(vineyard_htap_stream_generator PRIVATE ${VINEYARD_INCLUDE_DIRS})
-target_link_libraries(vineyard_htap_stream_generator native_store ${VINEYARD_LIBRARIES} Threads::Threads)
-install_vineyard_target(vineyard_htap_stream_generator)
