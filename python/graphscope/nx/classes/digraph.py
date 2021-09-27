@@ -243,6 +243,9 @@ class DiGraph(Graph):
                 self._key = incoming_graph_data.key
                 self._graph_type = graph_def_pb2.ARROW_PROPERTY
                 self._schema = incoming_graph_data.schema
+                self._default_label_id = self._schema.get_vertex_label_id(
+                    self._default_label
+                )
             else:
                 g = to_nx_graph(incoming_graph_data, create_using=self)
                 check_argument(isinstance(g, Graph))
@@ -434,6 +437,9 @@ class DiGraph(Graph):
 
     @patch_docstring(RefDiGraph.reverse)
     def reverse(self, copy=True):
+        if self._graph_type == graph_def_pb2.ARROW_PROPERTY:
+            self._arrow_to_dynamic()
+
         if not copy:
             g = self.__class__(create_empty_in_engine=False)
             g.graph.update(self.graph)

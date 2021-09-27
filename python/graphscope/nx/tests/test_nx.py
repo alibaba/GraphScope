@@ -351,6 +351,65 @@ class TestGraphTransformation(object):
         assert 618475290624 not in nx_g2  # post node is (label, id) format
         assert ("post", 618475290624) in nx_g2
 
+    def test_report_methods_on_arrrow_property_graph(self):
+        G = self.NXGraph(self.multi_label_g, default_label="person")
+        assert G.graph_type == graph_def_pb2.ARROW_PROPERTY
+        # test NODE_NUM and EDGE_NUM
+        assert G.number_of_nodes() == (76830 + 903 + 78976)
+        assert G.number_of_edges() == (38786 + 6626 + 38044)
+        # test HAS_NODE and HAS_EDGE
+        assert 0 not in G
+        assert 933 in G
+        assert ("person", 933) in G
+        assert ("random", 933) not in G
+        assert G.has_edge(933, 4398046511628)
+        assert G.has_edge(("comment", 618475290625), ("post", 618475290624))
+        assert not G.has_edge(("person", 618475290625), ("post", 618475290624))
+        # test GET_NODE_DATA and GET_EDGE_DATA
+        assert G.get_node_data(933) == {
+            "id": 933,
+            "browserUsed": "Firefox",
+            "locationIP": "119.235.7.103",
+            "creationDate": "2010-02-14T15:32:10.447+0000",
+            "birthday": 7276,
+            "gender": "male",
+            "lastName": "Perera",
+            "firstName": "Mahinda",
+        }
+        assert G.get_edge_data(933, 4398046511628) == {
+            "creationDate": "2010-07-30T15:19:53.298+0000",
+            "eid": 72057594037927936,
+        }
+        assert list(G.neighbors(933)) == [28587302322537, 8796093023017, 4398046511628]
+        G.add_node(0)  # modify graph to make copy on write
+        assert G.graph_type == graph_def_pb2.DYNAMIC_PROPERTY
+        assert G.number_of_nodes() == (76831 + 903 + 78976)
+        assert G.number_of_edges() == (38786 + 6626 + 38044)
+        # test HAS_NODE and HAS_EDGE
+        assert 0 in G
+        assert 933 in G
+        assert ("person", 933) in G
+        assert ("random", 933) not in G
+        assert G.has_edge(933, 4398046511628)
+        assert G.has_edge(("comment", 618475290625), ("post", 618475290624))
+        assert not G.has_edge(("person", 618475290625), ("post", 618475290624))
+        # test GET_NODE_DATA and GET_EDGE_DATA
+        assert G.get_node_data(933) == {
+            "id": 933,
+            "browserUsed": "Firefox",
+            "locationIP": "119.235.7.103",
+            "creationDate": "2010-02-14T15:32:10.447+0000",
+            "birthday": 7276,
+            "gender": "male",
+            "lastName": "Perera",
+            "firstName": "Mahinda",
+        }
+        assert G.get_edge_data(933, 4398046511628) == {
+            "creationDate": "2010-07-30T15:19:53.298+0000",
+            "eid": 72057594037927936,
+        }
+        assert list(G.neighbors(933)) == [28587302322537, 8796093023017, 4398046511628]
+
     def test_str_oid_gs_to_nx(self):
         g = self.str_oid_g
         nx_g = self.NXGraph(g)
