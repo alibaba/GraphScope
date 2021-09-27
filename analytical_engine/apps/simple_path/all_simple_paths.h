@@ -11,7 +11,7 @@ distributed under the License is distributed on an "AS IS" BASIS,
 WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
-Author: Ma JingYuan
+Author: Ma JingYuan<nn9902@qq.com>
 */
 
 #ifndef ANALYTICAL_ENGINE_APPS_SIMPLE_PATH_ALL_SIMPLE_PATHS_H_
@@ -137,6 +137,7 @@ class AllSimplePaths : public AppBase<FRAG_T, AllSimplePathsContext<FRAG_T>>,
           frag_finish_counter++;
       }
     }
+    VLOG(0) << "frag_finish_counter: " << frag_finish_counter << std::endl;
     if (!ctx.next_level_inner.empty() || frag_finish_counter > 0)
       messages.ForceContinue();
 
@@ -162,12 +163,12 @@ class AllSimplePaths : public AppBase<FRAG_T, AllSimplePathsContext<FRAG_T>>,
           std::tuple<std::pair<vid_t, vid_t>, bool, bool> msg =
               std::make_tuple(std::make_pair(gid, u_gid), true, false);
           messages.SendToFragment(ctx.soucre_fid, msg);
+          ret = true;
         } else {
           int a = find_edge_map_index(ctx, gid);
           int b = find_edge_map_index(ctx, u_gid);
           ctx.edge_map[a].push_back(b);
         }
-        ret = true;
         if (!frag.IsOuterVertex(u)) {
           if (ctx.visit.count(u_gid) == 0) {
             ctx.visit.insert(u_gid);
@@ -178,6 +179,7 @@ class AllSimplePaths : public AppBase<FRAG_T, AllSimplePathsContext<FRAG_T>>,
           std::tuple<std::pair<vid_t, vid_t>, bool, bool> msg =
               std::make_tuple(std::make_pair(u_gid, depth + 1), false, false);
           messages.SendToFragment(fid, msg);
+          ret = true;
         }
       }
     }
@@ -201,6 +203,7 @@ class AllSimplePaths : public AppBase<FRAG_T, AllSimplePathsContext<FRAG_T>>,
       shape.pop_back();
       shape[0] = 1;
     }
+    VLOG(0) << "path_num: " << ctx.path_num << std::endl;
     ctx.assign(data, shape);
   }
   void Pint_Result(int from, int depth, std::vector<vid_t>& q,

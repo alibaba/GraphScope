@@ -1184,12 +1184,7 @@ def is_simple_path(G, nodes):
     False
 
     """
-    if isinstance(nodes, list):
-        n1json = json.dumps(nodes)
-        ctx = AppAssets(algo="is_simple_path", context="tensor")(G, n1json)
-        return ctx.to_numpy("r", axis=0)[0]
-    else:
-        raise ValueError("input nodes is not a list object!")
+    return graphscope.is_simple_path(G, nodes)
 
 
 @project_to_simple
