@@ -727,4 +727,4 @@ class ArrowFragmentReporter<vineyard::ArrowFragment<OID_T, VID_T>>
 }  // namespace gs
 
 #endif  // NETWORKX
-#endif  // ANALYTICAL_ENGINE_CORE_FRAGMENT__FRAGMENT_REPORTER_H_
+#endif  // ANALYTICAL_ENGINE_CORE_FRAGMENT_FRAGMENT_REPORTER_H_
