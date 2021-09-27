@@ -1504,12 +1504,20 @@ class Graph(_GraphBase):
         []
 
         """
-        self._check_converted()
+        if self._graph_type == graph_def_pb2.ARROW_PROPERTY:
+            # create an empty graph, no need to convert arrow to dynamic
+            graph_def = empty_graph_in_engine(
+                self, self.is_directed(), self._distributed
+            )
+            self._key = graph_def.key
+            self._graph_type = graph_def_pb2.DYNAMIC_PROPERTY
+        else:
+            op = dag_utils.clear_graph(self)
+            op.eval()
+
         self.graph.clear()
         self.schema.clear()
         self.schema.init_nx_schema()
-        op = dag_utils.clear_graph(self)
-        op.eval()
 
     def clear_edges(self):
         """Remove all edges from the graph without altering nodes.
@@ -1523,8 +1531,6 @@ class Graph(_GraphBase):
         >>> list(G.edges)
         []
         """
-        self._check_converted()
-
         if self._graph_type == graph_def_pb2.ARROW_PROPERTY:
             self._arrow_to_dynamic()
         op = dag_utils.clear_edges(self)
