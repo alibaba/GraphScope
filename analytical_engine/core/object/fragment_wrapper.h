@@ -635,7 +635,7 @@ class FragmentWrapper<ArrowProjectedFragment<OID_T, VID_T, VDATA_T, EDATA_T>>
   }
 
   bl::result<std::string> ReportGraph(const grape::CommSpec& comm_spec,
-                                      const rpc::GSParams& params) {
+                                      const rpc::GSParams& params) override {
     RETURN_GS_ERROR(vineyard::ErrorCode::kInvalidOperationError,
                     "Not implemented.");
   }
@@ -861,7 +861,7 @@ class FragmentWrapper<DynamicProjectedFragment<VDATA_T, EDATA_T>>
   }
 
   bl::result<std::string> ReportGraph(const grape::CommSpec& comm_spec,
-                                      const rpc::GSParams& params) {
+                                      const rpc::GSParams& params) override {
     RETURN_GS_ERROR(vineyard::ErrorCode::kInvalidOperationError,
                     "Not implemented.");
   }

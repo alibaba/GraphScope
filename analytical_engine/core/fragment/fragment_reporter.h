@@ -377,10 +377,6 @@ class DynamicFragmentReporter : public grape::Communicator {
   folly::json::serialization_opts json_opts_;
 };
 
-/*
- *
- *
- */
 template <typename T>
 T ExtractOidFromDynamic(folly::dynamic node_id) {}
 
@@ -431,6 +427,7 @@ class ArrowFragmentReporter<vineyard::ArrowFragment<OID_T, VID_T>>
     }
     case rpc::HAS_NODE: {
       BOOST_LEAF_AUTO(node_in_json, params.Get<std::string>(rpc::NODE));
+      // the input node format: (label_id, oid)
       folly::dynamic node = folly::parseJson(node_in_json, json_opts_)[0];
       label_id_t label_id = node[0].asInt();
       oid_t oid = ExtractOidFromDynamic<oid_t>(node[1]);
@@ -438,6 +435,7 @@ class ArrowFragmentReporter<vineyard::ArrowFragment<OID_T, VID_T>>
     }
     case rpc::HAS_EDGE: {
       BOOST_LEAF_AUTO(edge_in_json, params.Get<std::string>(rpc::EDGE));
+      // the input edge format: ((u_label_id, u_oid), (v_label_id, v_oid))
       folly::dynamic edge = folly::parseJson(edge_in_json, json_opts_);
       label_id_t u_label_id = edge[0][0].asInt();
       label_id_t v_label_id = edge[1][0].asInt();
@@ -448,6 +446,7 @@ class ArrowFragmentReporter<vineyard::ArrowFragment<OID_T, VID_T>>
     }
     case rpc::NODE_DATA: {
       BOOST_LEAF_AUTO(node_in_json, params.Get<std::string>(rpc::NODE));
+      // the input node format: (label_id, oid)
       folly::dynamic node = folly::parseJson(node_in_json, json_opts_)[0];
       label_id_t label_id = node[0].asInt();
       oid_t oid = ExtractOidFromDynamic<oid_t>(node[1]);
@@ -455,6 +454,7 @@ class ArrowFragmentReporter<vineyard::ArrowFragment<OID_T, VID_T>>
     }
     case rpc::EDGE_DATA: {
       BOOST_LEAF_AUTO(edge_in_json, params.Get<std::string>(rpc::EDGE));
+      // the input edge format: ((u_label_id, u_oid), (v_label_id, v_oid))
       folly::dynamic edge = folly::parseJson(edge_in_json, json_opts_);
       label_id_t u_label_id = edge[0][0].asInt();
       label_id_t v_label_id = edge[1][0].asInt();
@@ -466,6 +466,7 @@ class ArrowFragmentReporter<vineyard::ArrowFragment<OID_T, VID_T>>
     case rpc::SUCCS_BY_NODE:
     case rpc::PREDS_BY_NODE: {
       BOOST_LEAF_AUTO(node_in_json, params.Get<std::string>(rpc::NODE));
+      // the input node format: (label_id, oid)
       folly::dynamic node = folly::parseJson(node_in_json, json_opts_)[0];
       label_id_t label_id = node[0].asInt();
       oid_t oid = ExtractOidFromDynamic<oid_t>(node[1]);
