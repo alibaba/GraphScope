@@ -214,6 +214,10 @@ if (BUILD_TESTS)
         target_link_libraries(run_append_frag ${GFLAGS_LIBRARIES} ${RDKAFKA_LIBRARIES})
     endif ()
 
+    add_vineyard_app(run_ctx SRCS test/run_ctx.cc)
+    target_include_directories(run_ctx PRIVATE ${LIBGRAPELITE_INCLUDE_DIRS}/grape/analytical_apps)
+    target_link_libraries(run_ctx gs_proto)
+
     add_vineyard_app(run_pregel_app SRCS test/run_pregel_app.cc)
 
     add_vineyard_app(run_string_oid SRCS test/run_string_oid.cc)
@@ -237,13 +241,8 @@ if (BUILD_TESTS)
         target_include_directories(test_convert PRIVATE ${FOLLY_ROOT_DIR}/include)
         target_link_libraries(test_convert ${FOLLY_LIBRARIES} ${DOUBLE_CONVERSION_LIBRARY})
 
-        add_vineyard_app(run_ctx SRCS test/run_ctx.cc)
-        target_include_directories(run_ctx PRIVATE ${LIBGRAPELITE_INCLUDE_DIRS}/grape/analytical_apps ${FOLLY_ROOT_DIR}/include)
-        target_link_libraries(run_ctx gs_proto ${FOLLY_LIBRARIES})
-    else ()
-        add_vineyard_app(run_ctx SRCS test/run_ctx.cc)
-        target_include_directories(run_ctx PRIVATE ${LIBGRAPELITE_INCLUDE_DIRS}/grape/analytical_apps)
-        target_link_libraries(run_ctx gs_proto)
+        target_include_directories(run_ctx PUBLIC ${FOLLY_ROOT_DIR}/include)
+        target_link_libraries(run_ctx ${FOLLY_LIBRARIES} ${DOUBLE_CONVERSION_LIBRARY})
     endif ()
 endif ()
 

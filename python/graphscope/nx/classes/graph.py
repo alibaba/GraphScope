@@ -601,7 +601,8 @@ class Graph(_GraphBase):
         11
 
         """
-        self._check_converted()
+        if self._graph_type == graph_def_pb2.ARROW_PROPERTY:
+            self._arrow_to_dynamic()
         nodes = []
         for n in nodes_for_adding:
             data = dict(attr)
@@ -685,7 +686,8 @@ class Graph(_GraphBase):
         []
 
         """
-        self._check_converted()
+        if self._graph_type == graph_def_pb2.ARROW_PROPERTY:
+            self._arrow_to_dynamic()
         nodes = []
         for n in nodes_for_removing:
             check_node_is_legal(n)
@@ -735,7 +737,7 @@ class Graph(_GraphBase):
         """
         check_node_is_legal(n)
         if self.graph_type == graph_def_pb2.ARROW_PROPERTY:
-            n = self._replace_node_with_label_id(n)
+            n = self._convert_node_to_label_id_tuple(n)
         op = dag_utils.report_graph(self, types_pb2.NODE_DATA, node=json.dumps([n]))
         return op.eval()
 
@@ -804,7 +806,7 @@ class Graph(_GraphBase):
         try:
             check_node_is_legal(n)
             if self.graph_type == graph_def_pb2.ARROW_PROPERTY:
-                n = self._replace_node_with_label_id(n)
+                n = self._convert_node_to_label_id_tuple(n)
             op = dag_utils.report_graph(self, types_pb2.HAS_NODE, node=json.dumps([n]))
             return int(op.eval())
         except (TypeError, NetworkXError, KeyError):
@@ -900,7 +902,9 @@ class Graph(_GraphBase):
         >>> G.add_edges_from([(1, 2), (2, 3)], weight=3)
         >>> G.add_edges_from([(3, 4), (1, 4)], label="WN2898")
         """
-        self._check_converted()
+        if self._graph_type == graph_def_pb2.ARROW_PROPERTY:
+            self._arrow_to_dynamic()
+
         edges = []
         for e in ebunch_to_add:
             ne = len(e)
@@ -1001,7 +1005,9 @@ class Graph(_GraphBase):
         >>> ebunch = [(1, 2), (2, 3)]
         >>> G.remove_edges_from(ebunch)
         """
-        self._check_converted()
+        if self._graph_type == graph_def_pb2.ARROW_PROPERTY:
+            self._arrow_to_dynamic()
+
         edges = []
         for e in ebunch:
             ne = len(e)
@@ -1043,7 +1049,10 @@ class Graph(_GraphBase):
         """
         check_node_is_legal(u)
         check_node_is_legal(v)
-        self._check_converted()
+
+        if self._graph_type == graph_def_pb2.ARROW_PROPERTY:
+            self._arrow_to_dynamic()
+
         try:
             edge = [json.dumps((u, v, data))]
         except TypeError as e:
@@ -1085,7 +1094,9 @@ class Graph(_GraphBase):
 
         """
         check_node_is_legal(n)
-        self._check_converted()
+        if self._graph_type == graph_def_pb2.ARROW_PROPERTY:
+            self._arrow_to_dynamic()
+
         try:
             node = [json.dumps((n, data))]
         except TypeError as e:
@@ -1143,7 +1154,6 @@ class Graph(_GraphBase):
         add_edges_from: add multiple edges to a graph
         add_nodes_from: add multiple nodes to a graph
         """
-        self._check_converted()
         if edges is not None:
             if nodes is not None:
                 self.add_nodes_from(nodes)
@@ -1257,19 +1267,9 @@ class Graph(_GraphBase):
         check_node_is_legal(u)
         check_node_is_legal(v)
         try:
-            if self.graph_type == graph_def_pb2.ARROW_PROPERTY:
-                u = self._replace_node_with_label_id(u)
-                v = self._replace_node_with_label_id(v)
-            op = dag_utils.report_graph(
-                self, types_pb2.HAS_EDGE, edge=json.dumps([u, v])
-            )
-            return int(op.eval())
+            return v in self._adj[u]
         except KeyError:
             return False
-        # try:
-        #     return v in self._adj[u]
-        # except KeyError:
-        #     return False
 
     def neighbors(self, n):
         """Returns an iterator over all neighbors of node n.
@@ -1415,8 +1415,8 @@ class Graph(_GraphBase):
         """
         if self.has_edge(u, v):
             if self.graph_type == graph_def_pb2.ARROW_PROPERTY:
-                u = self._replace_node_with_label_id(u)
-                v = self._replace_node_with_label_id(v)
+                u = self._convert_node_to_label_id_tuple(u)
+                v = self._convert_node_to_label_id_tuple(v)
             op = dag_utils.report_graph(
                 self, types_pb2.EDGE_DATA, edge=json.dumps((u, v)), key=""
             )
@@ -1524,6 +1524,9 @@ class Graph(_GraphBase):
         []
         """
         self._check_converted()
+
+        if self._graph_type == graph_def_pb2.ARROW_PROPERTY:
+            self._arrow_to_dynamic()
         op = dag_utils.clear_edges(self)
         op.eval()
 
@@ -1618,6 +1621,9 @@ class Graph(_GraphBase):
         >>> H = G.copy()
 
         """
+        if self._graph_type == graph_def_pb2.ARROW_PROPERTY:
+            self._arrow_to_dynamic()
+
         if as_view:
             g = generic_graph_view(self)
             g._is_client_view = True
@@ -1664,6 +1670,9 @@ class Graph(_GraphBase):
         >>> list(G2.edges)
         [(0, 1)]
         """
+        if self._graph_type == graph_def_pb2.ARROW_PROPERTY:
+            self._arrow_to_dynamic()
+
         if self.is_directed():
             graph_class = self.to_undirected_class()
             if as_view:
@@ -1726,6 +1735,9 @@ class Graph(_GraphBase):
         >>> list(H.edges)
         [(0, 1)]
         """
+        if self._graph_type == graph_def_pb2.ARROW_PROPERTY:
+            self._arrow_to_dynamic()
+
         if self.is_directed():
             return self.copy(as_view=as_view)
         else:
@@ -1778,6 +1790,9 @@ class Graph(_GraphBase):
         >>> list(H.edges)
         [(0, 1), (1, 2)]
         """
+        if self._graph_type == graph_def_pb2.ARROW_PROPERTY:
+            self._arrow_to_dynamic()
+
         induced_nodes = []
         for n in nodes:
             check_node_is_legal(n)
@@ -1827,6 +1842,9 @@ class Graph(_GraphBase):
         [(0, 1), (3, 4)]
 
         """
+        if self._graph_type == graph_def_pb2.ARROW_PROPERTY:
+            self._arrow_to_dynamic()
+
         induced_edges = []
         for e in edges:
             u, v = e
@@ -1922,7 +1940,7 @@ class Graph(_GraphBase):
         if n not in self:
             raise NetworkXError("The node %s is not in the graph." % (n,))
         if self.graph_type == graph_def_pb2.ARROW_PROPERTY:
-            n = self._replace_node_with_label_id(n)
+            n = self._convert_node_to_label_id_tuple(n)
         op = dag_utils.report_graph(self, report_type, node=json.dumps([n]))
         ret = op.eval()
         return ret
@@ -2101,19 +2119,33 @@ class Graph(_GraphBase):
         graph._is_client_view = False
         return graph
 
-    def _check_converted(self):
-        if self._graph_type == graph_def_pb2.ARROW_PROPERTY:
-            graph_def = from_gs_graph(self, self._default_label)
-            self._key = graph_def.key
-            self._graph_type = graph_def_pb2.DYNAMIC_PROPERTY
-            schema = GraphSchema()
-            schema.init_nx_schema()
-            schema.init_nx_schema(self._schema)
-            self._schema = schema
+    def _arrow_to_dynamic(self):
+        """Convert the hosted graph from arrow property to dynamic property.
 
-    def _replace_node_with_label_id(self, u):
-        if isinstance(u, tuple):
-            new_u = (self._schema.get_vertex_label_id(u[0]), u[1])
+        Notes
+        -------
+            the method is implicit called by modification methods.
+        """
+        graph_def = from_gs_graph(self, self._default_label)
+        self._key = graph_def.key
+        self._graph_type = graph_def_pb2.DYNAMIC_PROPERTY
+        schema = GraphSchema()
+        schema.init_nx_schema()
+        schema.init_nx_schema(self._schema)
+        self._schema = schema
+
+    def _convert_node_to_label_id_tuple(self, n):
+        """Convert the node to (label_id, id) format.
+        The input node may be id or (label, id), for simplicity, convert the node
+        to tuple (label_id, id) format.
+
+        Notes
+        -------
+            the method is implicit called by report methods and the hosted graph is
+        arrow property graph.
+        """
+        if isinstance(n, tuple):
+            new_n = (self._schema.get_vertex_label_id(n[0]), n[1])
         else:
-            new_u = (self._default_label_id, u)
-        return new_u
+            new_n = (self._default_label_id, n)
+        return new_n
