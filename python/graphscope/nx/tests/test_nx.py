@@ -73,17 +73,34 @@ def ldbc_sample_multi_labels(prefix, directed):
     graph = graphscope.g(directed=directed)
     graph = (
         graph.add_vertices(
-            Loader(os.path.join(prefix, "comment_0_0.csv"), delimiter="|"), "comment",
-            ["creationDate", "locationIP", "browserUsed", "content", "length"]
+            Loader(os.path.join(prefix, "comment_0_0.csv"), delimiter="|"),
+            "comment",
+            ["creationDate", "locationIP", "browserUsed", "content", "length"],
         )
         .add_vertices(
-            Loader(os.path.join(prefix, "person_0_0.csv"), delimiter="|"), "person"
-            ["firstName", "lastName", "gender", ("birthday", str), "creationDate", "locationIP", "browserUsed"]
+            Loader(os.path.join(prefix, "person_0_0.csv"), delimiter="|"),
+            "person"[
+                "firstName",
+                "lastName",
+                "gender",
+                ("birthday", str),
+                "creationDate",
+                "locationIP",
+                "browserUsed",
+            ],
         )
         .add_vertices(
             Loader(os.path.join(prefix, "post_0_0.csv"), delimiter="|"),
             "post",
-            ["imageFile", "creationDate", "locationIP", "browserUsed", "language", "content", "length"]
+            [
+                "imageFile",
+                "creationDate",
+                "locationIP",
+                "browserUsed",
+                "language",
+                "content",
+                "length",
+            ],
         )
     )
     graph = (
