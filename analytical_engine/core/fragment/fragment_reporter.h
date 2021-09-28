@@ -427,7 +427,7 @@ class ArrowFragmentReporter<vineyard::ArrowFragment<OID_T, VID_T>>
     }
     case rpc::SELFLOOPS_NUM: {
       // TODO(acezen): support selfloops num from arrow fragment.
-      return std::to_string();
+      return std::string();
     }
     case rpc::HAS_NODE: {
       BOOST_LEAF_AUTO(node_in_json, params.Get<std::string>(rpc::NODE));
