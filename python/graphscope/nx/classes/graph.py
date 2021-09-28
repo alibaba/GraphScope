@@ -1616,12 +1616,11 @@ class Graph(_GraphBase):
         >>> H = G.copy()
 
         """
-        self._try_convert_arrow_to_dynamic()
-
         if as_view:
             g = generic_graph_view(self)
             g._is_client_view = True
         else:
+            self._try_convert_arrow_to_dynamic()
             g = self.__class__(create_empty_in_engine=False)
             g.graph = copy.deepcopy(self.graph)
             op = dag_utils.copy_graph(self, "identical")
@@ -2165,6 +2164,7 @@ class Graph(_GraphBase):
         arrow_property graph.
         """
         if isinstance(n, tuple):
+            id = n[1]
             new_n = (self._schema.get_vertex_label_id(n[0]), n[1])
             if new_n[0] == self._default_label_id:
                 raise KeyError("default label's node must be non-tuple format.")
@@ -2172,5 +2172,9 @@ class Graph(_GraphBase):
             # the n is non-tuple, but default id is -1
             raise KeyError("default label id is -1.")
         else:
+            id = n
             new_n = (self._default_label_id, n)
+        if not isinstance(id, utils.data_type_to_python(self._schema.oid_type)):
+            # id is not oid type
+            raise KeyError("the node type is not arrow_property oid_type.")
         return new_n

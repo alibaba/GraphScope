@@ -534,21 +534,22 @@ class ArrowFragmentReporter<vineyard::ArrowFragment<OID_T, VID_T>>
 
   std::string getNodeData(std::shared_ptr<fragment_t>& fragment,
                           label_id_t label_id, const oid_t& n) {
-    folly::dynamic ob = folly::dynamic::object;
+    folly::dynamic ref_data;
     vid_t gid;
     vertex_t v;
     auto vm_ptr = fragment->GetVertexMap();
     if (vm_ptr->GetGid(fragment->fid(), label_id, n, gid) &&
         fragment->InnerVertexGid2Vertex(gid, v)) {
-      extractNodeProperty(fragment, label_id, v, ob);
+      ref_data = folly::dynamic::object;
+      extractNodeProperty(fragment, label_id, v, ref_data);
     }
-    return ob.empty() ? std::string() : folly::toJson(ob);
+    return ref_data.isNull() ? std::string() : folly::toJson(ref_data);
   }
 
   std::string getEdgeData(std::shared_ptr<fragment_t>& fragment,
                           label_id_t u_label_id, const oid_t& u_oid,
                           label_id_t v_label_id, const oid_t& v_oid) {
-    folly::dynamic ob = folly::dynamic::object;
+    folly::dynamic ref_data;
     vid_t u_gid, v_gid;
     vertex_t u, v;
     auto vm_ptr = fragment->GetVertexMap();
@@ -561,13 +562,14 @@ class ArrowFragmentReporter<vineyard::ArrowFragment<OID_T, VID_T>>
         auto oe = fragment->GetOutgoingAdjList(u, e_label);
         for (auto& e : oe) {
           if (v == e.neighbor()) {
+            ref_data = folly::dynamic::object;
             auto edge_data = fragment->edge_data_table(e_label);
-            extractEdgeProperty(edge_data, e.edge_id(), ob);
+            extractEdgeProperty(edge_data, e.edge_id(), ref_data);
           }
         }
       }
     }
-    return ob.empty() ? std::string() : folly::toJson(ob);
+    return ref_data.isNull() ? std::string() : folly::toJson(ref_data);
   }
 
   std::string getNeighbors(std::shared_ptr<fragment_t>& fragment,
@@ -653,7 +655,8 @@ class ArrowFragmentReporter<vineyard::ArrowFragment<OID_T, VID_T>>
                            const label_id_t& label_id, const vertex_t& v,
                            folly::dynamic& ret) {
     auto vertex_data = fragment->vertex_data_table(label_id);
-    for (auto col_id = 0; col_id < vertex_data->num_columns(); col_id++) {
+    // ignore the id column
+    for (auto col_id = 0; col_id < vertex_data->num_columns() - 1; col_id++) {
       auto property_name = vertex_data->field(col_id)->name();
       auto type = vertex_data->column(col_id)->type();
       if (type == arrow::int32()) {

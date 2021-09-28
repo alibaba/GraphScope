@@ -20,6 +20,7 @@ import os
 
 import pytest
 from networkx.exception import NetworkXError
+from networkx.testing.utils import assert_graphs_equal
 from networkx.utils.misc import default_opener
 
 import graphscope
@@ -29,12 +30,43 @@ from graphscope.client.session import get_default_session
 from graphscope.framework.errors import AnalyticalEngineInternalError
 from graphscope.framework.errors import InvalidArgumentError
 from graphscope.framework.loader import Loader
+from graphscope.nx.tests.classes.test_digraph import TestDiGraph as _TestDiGraph
+from graphscope.nx.tests.classes.test_graph import TestGraph as _TestGraph
 from graphscope.proto import graph_def_pb2
 from graphscope.proto.types_pb2 import SRC_LABEL
 
 
+def k3_graph(prefix, directed):
+    graph = graphscope.g(directed=directed, generate_eid=False)
+    graph = graph.add_vertices(
+        Loader(os.path.join(prefix, "k3_v.csv"), delimiter="|"), "vertex"
+    )
+    if directed is False:
+        graph = graph.add_edges(
+            Loader(os.path.join(prefix, "k3_undirected.csv"), delimiter="|"),
+            "edge",
+        )
+    else:
+        graph = graph.add_edges(
+            Loader(os.path.join(prefix, "k3_directed.csv"), delimiter="|"),
+            "edge",
+        )
+    return graph
+
+
+def p3_graph(prefix, directed):
+    graph = graphscope.g(directed=directed, generate_eid=False)
+    graph = graph.add_vertices(
+        Loader(os.path.join(prefix, "k3_v.csv"), delimiter="|"), "vertex"
+    )
+    graph = graph.add_edges(
+        Loader(os.path.join(prefix, "p3_e.csv"), delimiter="|"),
+        "edge",
+    )
+
+
 def ldbc_sample_single_label(prefix, directed):
-    graph = graphscope.g(directed=directed)
+    graph = graphscope.g(directed=directed, generate_eid=False)
     graph = graph.add_vertices(
         Loader(os.path.join(prefix, "comment_0_0.csv"), delimiter="|"), "comment"
     )
@@ -46,7 +78,7 @@ def ldbc_sample_single_label(prefix, directed):
 
 
 def ldbc_sample_string_oid(prefix, directed):
-    graph = graphscope.g(directed=directed, oid_type="string")
+    graph = graphscope.g(directed=directed, oid_type="string", generate_eid=False)
     graph = graph.add_vertices(
         Loader(os.path.join(prefix, "comment_0_0.csv"), delimiter="|"), "comment"
     )
@@ -58,7 +90,7 @@ def ldbc_sample_string_oid(prefix, directed):
 
 
 def ldbc_sample_single_label_with_sess(sess, prefix, directed):
-    graph = sess.g(directed=directed)
+    graph = sess.g(directed=directed, generate_eid=False)
     graph = graph.add_vertices(
         Loader(os.path.join(prefix, "comment_0_0.csv"), delimiter="|"), "comment"
     )
@@ -70,7 +102,7 @@ def ldbc_sample_single_label_with_sess(sess, prefix, directed):
 
 
 def ldbc_sample_multi_labels(prefix, directed):
-    graph = graphscope.g(directed=directed)
+    graph = graphscope.g(directed=directed, generate_eid=False)
     graph = (
         graph.add_vertices(
             Loader(os.path.join(prefix, "comment_0_0.csv"), delimiter="|"),
@@ -385,7 +417,6 @@ class TestGraphTransformation(object):
         assert not G.has_edge(933, ("post", 618475290624))
         # test GET_NODE_DATA and GET_EDGE_DATA
         assert G.get_node_data(933) == {
-            "id": 933,
             "browserUsed": "Firefox",
             "locationIP": "119.235.7.103",
             "creationDate": "2010-02-14T15:32:10.447+0000",
@@ -416,7 +447,6 @@ class TestGraphTransformation(object):
         assert not G.has_edge(618475290625, ("post", 618475290624))
         # test GET_NODE_DATA and GET_EDGE_DATA
         assert G.get_node_data(933) == {
-            "id": 933,
             "browserUsed": "Firefox",
             "locationIP": "119.235.7.103",
             "creationDate": "2010-02-14T15:32:10.447+0000",
@@ -427,7 +457,6 @@ class TestGraphTransformation(object):
         }
         assert G.get_edge_data(933, 4398046511628) == {
             "creationDate": "2010-07-30T15:19:53.298+0000",
-            "eid": 72057594037927936,
         }
         assert list(G.neighbors(933)) == [28587302322537, 8796093023017, 4398046511628]
         if G.is_directed():
@@ -683,3 +712,104 @@ class TestImportNetworkxModuleWithSession(object):
         ):
             nx = self.session_lazy.nx()
         self.session_lazy.close()
+
+
+@pytest.mark.skip(reason="TODO: open after test file ready")
+@pytest.mark.usefixtures("graphscope_session")
+class TestGraphWithArrowProperty(_TestGraph):
+    def setup_method(self):
+        self.Graph = nx.Graph
+        self.k3nodes = [0, 1, 2]
+        self.k3edges = [(0, 1), (0, 2), (1, 2)]
+        self.k3 = k3_graph(os.path.expandvars("${GS_TEST_DIR}"), False)
+        self.K3 = nx.Graph(self.k3, default_label="vertex")
+
+    def test_update(self):
+        # specify both edgees and nodes
+        G = self.K3.copy()
+        G.update(nodes=[3, (4, {"size": 2})], edges=[(4, 5), (6, 7, {"weight": 2})])
+        nlist = [
+            (0, {}),
+            (1, {}),
+            (2, {}),
+            (3, {}),
+            (4, {"size": 2}),
+            (5, {}),
+            (6, {}),
+            (7, {}),
+        ]
+        assert sorted(G.nodes.data()) == nlist
+        if G.is_directed():
+            elist = [
+                (0, 1, {}),
+                (0, 2, {}),
+                (1, 0, {}),
+                (1, 2, {}),
+                (2, 0, {}),
+                (2, 1, {}),
+                (4, 5, {}),
+                (6, 7, {"weight": 2}),
+            ]
+        else:
+            elist = [
+                (0, 1, {}),
+                (2, 0, {}),
+                (2, 1, {}),
+                (4, 5, {}),
+                (6, 7, {"weight": 2}),
+            ]
+        assert sorted(G.edges.data()) == elist
+        assert G.graph == {}
+
+        # no keywords -- order is edges, nodes
+        G = self.K3.copy()
+        G.update([(4, 5), (6, 7, {"weight": 2})], [3, (4, {"size": 2})])
+        assert sorted(G.nodes.data()) == nlist
+        assert sorted(G.edges.data()) == elist
+        assert G.graph == {}
+
+        # update using only a graph
+        G = self.Graph()
+        G.graph["foo"] = "bar"
+        G.add_node(2, data=4)
+        G.add_edge(0, 1, weight=0.5)
+        GG = G.copy()
+        H = self.Graph()
+        GG.update(H)
+        assert_graphs_equal(G, GG)
+        H.update(G)
+        assert_graphs_equal(H, G)
+
+        # update nodes only
+        H = self.Graph()
+        H.update(nodes=[3, 4])
+        assert H.nodes ^ {3, 4} == set()
+        assert H.size() == 0
+
+        # update edges only
+        H = self.Graph()
+        H.update(edges=[(3, 4)])
+        if H.is_directed():
+            assert sorted(H.edges.data()) == [(3, 4, {})]
+        else:
+            assert sorted(H.edges.data()) == [(4, 3, {})]
+        assert H.size() == 1
+
+        # No inputs -> exception
+        with pytest.raises(nx.NetworkXError):
+            nx.Graph().update()
+
+
+@pytest.mark.skip(reason="TODO: open after test file ready")
+@pytest.mark.usefixtures("graphscope_session")
+class TestDiGraphWithArrowProperty(_TestDiGraph):
+    def setup_method(self):
+        self.Graph = nx.DiGraph
+        # build K3
+        self.k3edges = [(0, 1), (0, 2), (1, 2)]
+        self.k3nodes = [0, 1, 2]
+        self.k3 = k3_graph(os.path.expandvars("${GS_TEST_DIR}"), True)
+        self.K3 = nx.DiGraph(self.k3, default_label="vertex")
+
+        self.p3 = p3_graph(os.path.expandvars("${GS_TEST_DIR}"), True)
+        self.P3 = nx.DiGraph(self.p3, default_label="vertex")
