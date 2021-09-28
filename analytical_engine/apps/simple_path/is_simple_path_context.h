@@ -60,7 +60,7 @@ class IsSimplePathContext : public TensorContext<FRAG_T, bool> {
     std::vector<oid_t> oid_array;
 
     folly::dynamic nodes_array = folly::parseJson(nodes_json);
-    convert_to_oid_array(nodes_array, oid_array);
+    ExtractOidArrayFromDynamic(nodes_array, oid_array);
     for (const auto& val : oid_array) {
       counter++;
       if (!frag.Oid2Gid(val, p1)) {
