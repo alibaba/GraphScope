@@ -1267,7 +1267,7 @@ class ResolveMPICmdPrefix(object):
         >>> env
         {} # always empty
 
-        >>> # run without mpi on localhost if workers num is 1
+        >>> # run without mpi on localhost when setting `num_workers` to 1
         >>> rmcp = ResolveMPICmdPrefix()
         >>> (cmd, env) = rmcp.resolve(1, 'localhost')
         >>> cmd

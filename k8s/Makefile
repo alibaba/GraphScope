@@ -143,7 +143,7 @@ graphscope-client-manylinux2014-py3:
 				make graphlearn_shared -j && \
 				export LD_LIBRARY_PATH=/work/learning_engine/graph-learn/built/lib:$$LD_LIBRARY_PATH && \
 				export WITH_LEARNING_ENGINE=ON && \
-				for py in cp36-cp36m cp37-cp37m cp38-cp38 cp39-cp39; do \
+				for py in cp36-cp36m cp37-cp37m cp38-cp38 cp39-cp39 cp310-cp310; do \
 					cd /work/python; \
 					export PATH=/opt/python/$$py/bin:$$PATH; \
 					rm -rf build; \

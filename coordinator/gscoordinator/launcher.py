@@ -455,7 +455,7 @@ class LocalLauncher(Launcher):
 
         env = os.environ.copy()
         env.update(mpi_env)
-        # open MPI system need open RET daemon
+        # open MPI system need open ORTED daemon
         if os.path.isfile(os.path.join(GRAPHSCOPE_HOME, "bin", "orted")):
             env.update({"OPAL_BINDIR": os.path.join(GRAPHSCOPE_HOME, "bin")})
 
