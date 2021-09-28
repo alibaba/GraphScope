@@ -260,7 +260,8 @@ class FragmentWrapper<vineyard::ArrowFragment<OID_T, VID_T>>
   bl::result<std::string> ReportGraph(const grape::CommSpec& comm_spec,
                                       const rpc::GSParams& params) override {
 #ifdef NETWORKX
-    BOOST_LEAF_AUTO(default_label_id, params.Get<int64_t>(rpc::V_LABEL_ID));
+    BOOST_LEAF_AUTO(default_label_id,
+                    params.Get<int64_t>(rpc::DEFAULT_LABEL_ID));
     ArrowFragmentReporter<fragment_t> reporter(comm_spec, default_label_id);
     return reporter.Report(fragment_, params);
 #else

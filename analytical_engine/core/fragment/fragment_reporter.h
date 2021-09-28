@@ -474,7 +474,7 @@ class ArrowFragmentReporter<vineyard::ArrowFragment<OID_T, VID_T>>
     }
     case rpc::NODES_BY_LOC: {
       BOOST_LEAF_AUTO(fid, params.Get<int64_t>(rpc::FID));
-      BOOST_LEAF_AUTO(label_id, params.Get<int64_t>(rpc::LABEL_ID));
+      BOOST_LEAF_AUTO(label_id, params.Get<int64_t>(rpc::V_LABEL_ID));
       BOOST_LEAF_AUTO(start, params.Get<int64_t>(rpc::LID));
       vid_t end = start + batch_num_;
       return batchGetNodes(fragment, fid, label_id, start, end);

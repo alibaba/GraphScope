@@ -241,16 +241,10 @@ bl::result<void> GrapeInstance::unloadContext(const rpc::GSParams& params) {
 
 bl::result<std::string> GrapeInstance::reportGraph(
     const rpc::GSParams& params) {
-#ifdef NETWORKX
   BOOST_LEAF_AUTO(graph_name, params.Get<std::string>(rpc::GRAPH_NAME));
   BOOST_LEAF_AUTO(wrapper,
                   object_manager_.GetObject<IFragmentWrapper>(graph_name));
   return wrapper->ReportGraph(comm_spec_, params);
-#else
-  RETURN_GS_ERROR(vineyard::ErrorCode::kUnimplementedMethod,
-                  "GraphScope is built with NETWORKX=OFF, please recompile it "
-                  "with NETWORKX=ON");
-#endif  // NETWORKX
 }
 
 bl::result<void> GrapeInstance::modifyVertices(
@@ -609,10 +603,12 @@ bl::result<rpc::graph::GraphDefPb> GrapeInstance::convertGraph(
 
   if (src_graph_type == rpc::graph::ARROW_PROPERTY &&
       dst_graph_type == rpc::graph::DYNAMIC_PROPERTY) {
-    BOOST_LEAF_AUTO(default_label, params.Get<std::string>(rpc::DEFAULT_LABEL));
+    BOOST_LEAF_AUTO(default_label_id,
+                    params.Get<int64_t>(rpc::DEFAULT_LABEL_ID));
     BOOST_LEAF_AUTO(dst_graph_wrapper,
                     g_utils->ToDynamicFragment(comm_spec_, src_frag_wrapper,
-                                               dst_graph_name, default_label));
+                                               dst_graph_name,
+                                               default_label_id));
     BOOST_LEAF_CHECK(object_manager_.PutObject(dst_graph_wrapper));
     return dst_graph_wrapper->graph_def();
   } else if (src_graph_type == rpc::graph::DYNAMIC_PROPERTY &&

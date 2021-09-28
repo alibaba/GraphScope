@@ -160,17 +160,14 @@ def to_nx_graph(data, create_using=None, multigraph_input=False):  # noqa: C901
     raise nx.NetworkXError("Input is not a known data type for conversion.")
 
 
-def from_gs_graph(graph, default_label):
+def from_gs_graph(graph):
     """Create a new nx graph from a gs graph.
 
     Parameters
     ----------
     graph: gs graph
-        A gs graph that contains graph data. the gs graph shoube be nodes id unique
+        A gs graph that contains graph data. the gs graph should be nodes id unique
         in all labels and not has parallel edge between edge label.
-
-    dst_nx_graph: nx graph
-        the nx graph convert to.
 
     Returns
     -------
@@ -200,7 +197,7 @@ def from_gs_graph(graph, default_label):
     #     )
     # if dst_nx_graph.is_directed() != gs_graph.is_directed():
     #    raise TypeError("is_directed of gs_graph must agree with create_using")
-    op = arrow_to_dynamic(graph, default_label)
+    op = arrow_to_dynamic(graph)
     graph_def = op.eval()
     return graph_def
 

@@ -29,6 +29,7 @@ from networkx.classes.graphviews import generic_graph_view
 from networkx.classes.reportviews import DegreeView
 from networkx.classes.reportviews import EdgeView
 from networkx.classes.reportviews import NodeView
+from networkx.generators.degree_seq import expected_degree_graph
 
 from graphscope import nx
 from graphscope.client.session import get_default_session
@@ -213,7 +214,7 @@ class Graph(_GraphBase):
     graph_attr_dict_factory = dict
     _graph_type = graph_def_pb2.DYNAMIC_PROPERTY
 
-    def __init__(self, incoming_graph_data=None, default_label="_", **attr):
+    def __init__(self, incoming_graph_data=None, default_label=None, **attr):
         """Initialize a graph with edges, name, or graph attributes
 
         Parameters
@@ -294,16 +295,27 @@ class Graph(_GraphBase):
         # attempt to load graph with data
         if incoming_graph_data is not None:
             if self._is_gs_graph(incoming_graph_data):
+                # load graph from arrow property graph
                 # TODO: add session check and directed check here
                 # graph_def = from_gs_graph(
                 #     incoming_graph_data, self, self._default_label
                 # )
                 self._key = incoming_graph_data.key
-                self._graph_type = graph_def_pb2.ARROW_PROPERTY
                 self._schema = incoming_graph_data.schema
-                self._default_label_id = self._schema.get_vertex_label_id(
-                    self._default_label
-                )
+                if self._default_label is not None:
+                    try:
+                        self._default_label_id = self._schema.get_vertex_label_id(
+                            self._default_label
+                        )
+                    except KeyError:
+                        raise NetworkXError(
+                            "default label {} not existed in graph."
+                            % self._default_label
+                        )
+                else:
+                    # default_label is None
+                    self._default_label_id = -1
+                self._graph_type = graph_def_pb2.ARROW_PROPERTY
             else:
                 g = to_nx_graph(incoming_graph_data, create_using=self)
                 check_argument(isinstance(g, Graph))
@@ -328,7 +340,7 @@ class Graph(_GraphBase):
             )
         if not session.eager():
             raise RuntimeError(
-                "Networkx module need session to be eager mode. "
+                "NetworkX module need session to be eager mode. "
                 "The default session is lazy mode."
             )
         self._session = session
@@ -400,6 +412,10 @@ class Graph(_GraphBase):
             vdata_type = utils.data_type_to_cpp(self._schema.vdata_type)
             edata_type = utils.data_type_to_cpp(self._schema.edata_type)
             return f"gs::DynamicProjectedFragment<{vdata_type},{edata_type}>"
+        elif self._graph_type == graph_def_pb2.ARROW_PROPERTY:
+            oid_type = utils.normalize_data_type_str(str(self._schema.oid_type))
+            vid_type = self._schema.vid_type
+            return f"vineyard::ArrowFragment<{oid_type},{vid_type}>"
         else:
             raise ValueError(f"Unsupported graph type: {self._graph_type}")
 
@@ -2132,7 +2148,7 @@ class Graph(_GraphBase):
         -------
             the method is implicit called by modification methods.
         """
-        graph_def = from_gs_graph(self, self._default_label)
+        graph_def = from_gs_graph(self)
         self._key = graph_def.key
         self._graph_type = graph_def_pb2.DYNAMIC_PROPERTY
         schema = GraphSchema()
@@ -2152,6 +2168,10 @@ class Graph(_GraphBase):
         """
         if isinstance(n, tuple):
             new_n = (self._schema.get_vertex_label_id(n[0]), n[1])
+            if new_n[0] == self._default_label_id:
+                raise KeyError("default label's node must be id format.")
+        elif self._default_label_id == -1:
+            raise KeyError("default label id is -1.")
         else:
             new_n = (self._default_label_id, n)
         return new_n

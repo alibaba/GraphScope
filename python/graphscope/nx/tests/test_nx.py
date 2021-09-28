@@ -312,44 +312,42 @@ class TestGraphTransformation(object):
     def test_empty_gs_to_nx(self):
         empty_nx = self.NXGraph(dist=True)
         empty_gs_graph = g(empty_nx)
-        nx_g = self.NXGraph(empty_gs_graph)
-        self.assert_convert_success(empty_gs_graph, nx_g)
+        G = self.NXGraph(empty_gs_graph)
+        self.assert_convert_success(empty_gs_graph, G)
 
     def test_single_label_gs_to_nx(self):
-        g = self.single_label_g
-        nx_g = self.NXGraph(g)
-        self.assert_convert_success(g, nx_g)
-        assert nx_g.number_of_nodes() == 76830
-        assert nx_g.number_of_edges() == 38786
-        assert 618475290625 not in nx_g
-        assert ("comment", 618475290625) in nx_g
-        nx_g2 = self.NXGraph(g, default_label="comment")
-        assert nx_g2.number_of_nodes() == 76830
-        assert nx_g2.number_of_edges() == 38786
-        assert 618475290625 in nx_g2
-        assert ("comment", 618475290625) not in nx_g2
+        G = self.NXGraph(self.single_label_g)
+        self.assert_convert_success(self.single_label_g, G)
+        assert G.number_of_nodes() == 76830
+        assert G.number_of_edges() == 38786
+        assert 618475290625 not in G
+        assert ("comment", 618475290625) in G
+        G2 = self.NXGraph(self.single_label_g, default_label="comment")
+        assert G2.number_of_nodes() == 76830
+        assert G2.number_of_edges() == 38786
+        assert 618475290625 in G2
+        assert ("comment", 618475290625) not in G2
 
     def test_multi_label_gs_to_nx(self):
-        g = self.multi_label_g
-        nx_g = self.NXGraph(g)
-        self.assert_convert_success(g, nx_g)
-        assert nx_g.number_of_nodes() == (76830 + 903 + 78976)
-        assert nx_g.number_of_edges() == (38786 + 6626 + 38044)
-        assert 618475290625 not in nx_g  # comment node is (label, id) format
-        assert ("comment", 618475290625) in nx_g
-        assert 933 not in nx_g  # person node is (label, id) format
-        assert ("person", 933) in nx_g
-        assert 618475290624 not in nx_g  # post node is (label, id) format
-        assert ("post", 618475290624) in nx_g
-        nx_g2 = self.NXGraph(g, default_label="comment")
-        assert nx_g2.number_of_nodes() == (76830 + 903 + 78976)
-        assert nx_g2.number_of_edges() == (38786 + 6626 + 38044)
-        assert 618475290625 in nx_g2  # comment node is default label node
-        assert ("comment", 618475290625) not in nx_g2
-        assert 933 not in nx_g2  # person node is (label, id) format
-        assert ("person", 933) in nx_g2
-        assert 618475290624 not in nx_g2  # post node is (label, id) format
-        assert ("post", 618475290624) in nx_g2
+        G = self.NXGraph(self.multi_label_g)
+        # self.assert_convert_success(self.multi_label_g, G)
+        assert G.number_of_nodes() == (76830 + 903 + 78976)
+        assert G.number_of_edges() == (38786 + 6626 + 38044)
+        assert 618475290625 not in G  # comment node is (label, id) format
+        assert ("comment", 618475290625) in G
+        assert 933 not in G  # person node is (label, id) format
+        assert ("person", 933) in G
+        assert 618475290624 not in G  # post node is (label, id) format
+        assert ("post", 618475290624) in G
+        G2 = self.NXGraph(self.multi_label_g, default_label="comment")
+        assert G2.number_of_nodes() == (76830 + 903 + 78976)
+        assert G2.number_of_edges() == (38786 + 6626 + 38044)
+        assert 618475290625 in G2  # comment node is default label node
+        assert ("comment", 618475290625) not in G2
+        assert 933 not in G2  # person node is (label, id) format
+        assert ("person", 933) in G2
+        assert 618475290624 not in G2  # post node is (label, id) format
+        assert ("post", 618475290624) in G
 
     def test_report_methods_on_arrrow_property_graph(self):
         G = self.NXGraph(self.multi_label_g, default_label="person")
@@ -360,11 +358,11 @@ class TestGraphTransformation(object):
         # test HAS_NODE and HAS_EDGE
         assert 0 not in G
         assert 933 in G
-        assert ("person", 933) in G
+        assert ("person", 933) not in G
         assert ("random", 933) not in G
         assert G.has_edge(933, 4398046511628)
         assert G.has_edge(("comment", 618475290625), ("post", 618475290624))
-        assert not G.has_edge(("person", 618475290625), ("post", 618475290624))
+        assert not G.has_edge(933, ("post", 618475290624))
         # test GET_NODE_DATA and GET_EDGE_DATA
         assert G.get_node_data(933) == {
             "id": 933,
@@ -388,11 +386,11 @@ class TestGraphTransformation(object):
         # test HAS_NODE and HAS_EDGE
         assert 0 in G
         assert 933 in G
-        assert ("person", 933) in G
+        assert ("person", 933) not in G
         assert ("random", 933) not in G
         assert G.has_edge(933, 4398046511628)
         assert G.has_edge(("comment", 618475290625), ("post", 618475290624))
-        assert not G.has_edge(("person", 618475290625), ("post", 618475290624))
+        assert not G.has_edge(618475290625, ("post", 618475290624))
         # test GET_NODE_DATA and GET_EDGE_DATA
         assert G.get_node_data(933) == {
             "id": 933,
@@ -415,6 +413,7 @@ class TestGraphTransformation(object):
         nx_g = self.NXGraph(g)
         self.assert_convert_success(g, nx_g)
 
+    @pytest.mark.skip(reason="TODO: open after supporting run app on arrow_property")
     def test_gs_to_nx_with_sssp(self):
         nx_g = self.NXGraph(self.p2p)
         ret = nx.builtin.single_source_dijkstra_path_length(nx_g, 6, weight="f2")
@@ -423,6 +422,7 @@ class TestGraphTransformation(object):
         )
         assert dict(ret.values) == dict(ret2.values)
 
+    @pytest.mark.skip(reason="TODO: open after supporting run app on arrow_property")
     def test_error_on_wrong_nx_type(self):
         g = self.single_label_g
         with pytest.raises(TypeError):
@@ -608,6 +608,7 @@ class TestDigraphTransformation(TestGraphTransformation):
         cls.multi_label_g.unload()
         cls.str_oid_g.unload()
 
+    @pytest.mark.skip(reason="TODO: open after supporting run app on arrow_property")
     def test_error_on_wrong_nx_type(self):
         g = self.single_label_g
         with pytest.raises(TypeError):

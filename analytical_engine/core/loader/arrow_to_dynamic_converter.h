@@ -72,8 +72,8 @@ class ArrowToDynamicConverter {
 
  public:
   explicit ArrowToDynamicConverter(const grape::CommSpec& comm_spec,
-                                   const std::string& default_label)
-      : comm_spec_(comm_spec), default_label_(default_label) {}
+                                   int default_label_id)
+      : comm_spec_(comm_spec), default_label_id_(default_label_id) {}
 
   bl::result<std::shared_ptr<dst_fragment_t>> Convert(
       const std::shared_ptr<src_fragment_t>& arrow_frag) {
@@ -139,7 +139,6 @@ class ArrowToDynamicConverter {
       const std::shared_ptr<src_fragment_t>& arrow_frag) {
     auto src_vm_ptr = arrow_frag->GetVertexMap();
     const auto& schema = arrow_frag->schema();
-    label_id_t default_label_id = schema.GetVertexLabelId(default_label_);
     auto fnum = src_vm_ptr->fnum();
     auto dst_vm_ptr = std::make_shared<vertex_map_t>(comm_spec_);
     vineyard::IdParser<vid_t> id_parser;
@@ -157,7 +156,7 @@ class ArrowToDynamicConverter {
           typename vineyard::InternalType<oid_t>::type oid;
 
           CHECK(src_vm_ptr->GetOid(gid, oid));
-          if (v_label == default_label_id) {
+          if (v_label == default_label_id_) {
             dst_vm_ptr->AddVertex(fid, DynamicWrapper<oid_t>::to_dynamic(oid),
                                   gid);
           } else {
@@ -177,7 +176,6 @@ class ArrowToDynamicConverter {
       const std::shared_ptr<vertex_map_t>& dst_vm) {
     auto fid = src_frag->fid();
     const auto& schema = src_frag->schema();
-    label_id_t default_label_id = schema.GetVertexLabelId(default_label_);
     std::vector<grape::internal::Vertex<vid_t, vdata_t>> processed_vertices;
     std::vector<grape::Edge<vid_t, edata_t>> processed_edges;
 
@@ -190,7 +188,7 @@ class ArrowToDynamicConverter {
 
       // traverse vertices and extract data from ArrowFragment
       for (const auto& u : src_frag->InnerVertices(v_label)) {
-        if (v_label == default_label_id) {
+        if (v_label == default_label_id_) {
           u_oid = folly::dynamic(src_frag->GetId(u));
         } else {
           u_oid = folly::dynamic::array(label_name, src_frag->GetId(u));
@@ -235,7 +233,7 @@ class ArrowToDynamicConverter {
             auto v = e.neighbor();
             auto e_id = e.edge_id();
             auto v_label_id = src_frag->vertex_label(v);
-            if (v_label_id == default_label_id) {
+            if (v_label_id == default_label_id_) {
               v_oid = folly::dynamic(src_frag->GetId(v));
             } else {
               v_oid = folly::dynamic::array(
@@ -256,7 +254,7 @@ class ArrowToDynamicConverter {
               if (src_frag->IsOuterVertex(v)) {
                 auto e_id = e.edge_id();
                 auto v_label_id = src_frag->vertex_label(v);
-                if (v_label_id == default_label_id) {
+                if (v_label_id == default_label_id_) {
                   v_oid = folly::dynamic(src_frag->GetId(v));
                 } else {
                   v_oid = folly::dynamic::array(
@@ -284,7 +282,7 @@ class ArrowToDynamicConverter {
   }
 
   grape::CommSpec comm_spec_;
-  std::string default_label_;
+  label_id_t default_label_id_;
 };
 
 }  // namespace gs

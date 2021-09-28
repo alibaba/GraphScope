@@ -196,7 +196,7 @@ class DiGraph(Graph):
     """
 
     @patch_docstring(Graph.__init__)
-    def __init__(self, incoming_graph_data=None, default_label="_", **attr):
+    def __init__(self, incoming_graph_data=None, default_label=None, **attr):
         if self._session is None:
             self._try_to_get_default_session()
 
@@ -241,11 +241,20 @@ class DiGraph(Graph):
                 # self._key = graph_def.key
                 # self._schema.init_nx_schema(incoming_graph_data.schema)
                 self._key = incoming_graph_data.key
-                self._graph_type = graph_def_pb2.ARROW_PROPERTY
                 self._schema = incoming_graph_data.schema
-                self._default_label_id = self._schema.get_vertex_label_id(
-                    self._default_label
-                )
+                if self._default_label is not None:
+                    try:
+                        self._default_label_id = self._schema.get_vertex_label_id(
+                            self._default_label
+                        )
+                    except KeyError:
+                        raise NetworkXError(
+                            "default label {} not existed in graph."
+                            % self._default_label
+                        )
+                else:
+                    # default_label is None
+                    self._default_label_id = -1
             else:
                 g = to_nx_graph(incoming_graph_data, create_using=self)
                 check_argument(isinstance(g, Graph))
