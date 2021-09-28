@@ -28,23 +28,23 @@
 //! Copy it to `/path/to/c-caller`.
 //!
 //! Thirdly, write the C-code for building the ir plan, as:
-//!  #include<ir_core.h>
-//!  using namespace std;
-//!  int main(int argc, char** argv) {
-//!     const void* ptr_plan = init_logical_plan();`
-//!     const void* ptr_project = init_project_operator();
-//!     add_project_meta(ptr_project, "@name", as_tag_id(0));
-//!     int opr_id = 0;
-//!     append_project_operator(ptr_plan, ptr_project, 0, &opr_id);
-//!     cout << "the id is: " << opr_id << endl;
+//! # #include<ir_core.h>
+//! # using namespace std;
+//! # int main(int argc, char** argv) {
+//! #    `const void* ptr_plan = init_logical_plan();
+//! #    const void* ptr_project = init_project_operator();
+//! #    add_project_meta(ptr_project, "@name", as_tag_id(0));
+//! #    int opr_id = 0;
+//! #    append_project_operator(ptr_plan, ptr_project, 0, &opr_id);
+//! #    cout << "the id is: " << opr_id << endl;
 //!
-//!     const void* ptr_select = init_select_operator();
-//!     set_select_meta(ptr_select, "@age > 20 && @name == \"John\"");
-//!     append_select_operator(ptr_plan, ptr_select, opr_id, &opr_id);
-//!     cout << "the id is: " << opr_id << endl;
+//! #    const void* ptr_select = init_select_operator();
+//! #    set_select_meta(ptr_select, "@age > 20 && @name == \"John\"");
+//! #    append_select_operator(ptr_plan, ptr_select, opr_id, &opr_id);
+//! #    cout << "the id is: " << opr_id << endl;
 //!
-//!     debug_plan(ptr_plan);
-//!     destroy_logical_plan(ptr_plan);
+//! #    debug_plan(ptr_plan);
+//! #    destroy_logical_plan(ptr_plan);
 //! }
 //!
 //! Save the codes as </path/to/c-caller/test.cc>, and build like:
@@ -53,19 +53,19 @@
 use crate::generated::algebra as pb;
 use crate::generated::common as common_pb;
 use crate::plan::utils::{cstr_to_string, FfiResult, LogicalPlan, ResultCode};
-use std::convert::TryFrom;
+use std::convert::{TryFrom, TryInto};
 use std::ffi::c_void;
 use std::os::raw::c_char;
 
 #[repr(i32)]
 #[derive(Copy, Clone, Debug)]
-pub enum NameIdOpt {
+pub enum FfiNameIdOpt {
     None = 0,
     Name = 1,
     Id = 2,
 }
 
-impl Default for NameIdOpt {
+impl Default for FfiNameIdOpt {
     fn default() -> Self {
         Self::None
     }
@@ -73,7 +73,7 @@ impl Default for NameIdOpt {
 
 #[repr(C)]
 pub struct FfiNameOrId {
-    opt: NameIdOpt,
+    opt: FfiNameIdOpt,
     name: *const c_char,
     name_id: i32,
 }
@@ -81,7 +81,7 @@ pub struct FfiNameOrId {
 impl Default for FfiNameOrId {
     fn default() -> Self {
         Self {
-            opt: NameIdOpt::default(),
+            opt: FfiNameIdOpt::default(),
             name: std::ptr::null() as *const c_char,
             name_id: 0,
         }
@@ -93,11 +93,11 @@ impl TryFrom<FfiNameOrId> for common_pb::NameOrId {
 
     fn try_from(ffi: FfiNameOrId) -> FfiResult<Self> {
         match &ffi.opt {
-            NameIdOpt::None => Err(ResultCode::NotExistError),
-            NameIdOpt::Name => Ok(common_pb::NameOrId {
+            FfiNameIdOpt::None => Err(ResultCode::NotExistError),
+            FfiNameIdOpt::Name => Ok(common_pb::NameOrId {
                 item: Some(common_pb::name_or_id::Item::Name(cstr_to_string(ffi.name)?)),
             }),
-            NameIdOpt::Id => Ok(common_pb::NameOrId {
+            FfiNameIdOpt::Id => Ok(common_pb::NameOrId {
                 item: Some(common_pb::name_or_id::Item::NameId(ffi.name_id)),
             }),
         }
@@ -106,14 +106,14 @@ impl TryFrom<FfiNameOrId> for common_pb::NameOrId {
 
 #[repr(i32)]
 #[derive(Copy, Clone)]
-pub enum PropertyOpt {
+pub enum FfiPropertyOpt {
     None = 0,
     Id = 1,
     Label = 2,
     Key = 3,
 }
 
-impl Default for PropertyOpt {
+impl Default for FfiPropertyOpt {
     fn default() -> Self {
         Self::None
     }
@@ -122,8 +122,29 @@ impl Default for PropertyOpt {
 #[repr(C)]
 #[derive(Default)]
 pub struct FfiProperty {
-    opt: PropertyOpt,
+    opt: FfiPropertyOpt,
     key: FfiNameOrId,
+}
+
+impl TryFrom<FfiProperty> for Option<common_pb::Property> {
+    type Error = ResultCode;
+
+    fn try_from(ffi: FfiProperty) -> FfiResult<Self> {
+        let result = match &ffi.opt {
+            FfiPropertyOpt::None => None,
+            FfiPropertyOpt::Id => Some(common_pb::Property {
+                item: Some(common_pb::property::Item::Id(common_pb::IdKey {})),
+            }),
+            FfiPropertyOpt::Label => Some(common_pb::Property {
+                item: Some(common_pb::property::Item::Label(common_pb::LabelKey {})),
+            }),
+            FfiPropertyOpt::Key => Some(common_pb::Property {
+                item: Some(common_pb::property::Item::Key(ffi.key.try_into()?)),
+            }),
+        };
+
+        Ok(result)
+    }
 }
 
 #[repr(C)]
@@ -132,11 +153,25 @@ pub struct FfiVariable {
     property: FfiProperty,
 }
 
-/// Transform a c-like string into `NameOrId`.
+impl TryFrom<FfiVariable> for common_pb::Variable {
+    type Error = ResultCode;
+
+    fn try_from(ffi: FfiVariable) -> Result<Self, Self::Error> {
+        let (tag, property) = (ffi.tag.try_into()?, ffi.property.try_into()?);
+        Ok(Self {
+            tag: Some(tag),
+            property,
+        })
+    }
+}
+
+/// Transform a c-like string into `NameOrId`
+///
+/// .
 #[no_mangle]
 pub extern "C" fn as_tag_name(name: *const c_char) -> FfiNameOrId {
     FfiNameOrId {
-        opt: NameIdOpt::Name,
+        opt: FfiNameIdOpt::Name,
         name,
         name_id: 0,
     }
@@ -146,7 +181,7 @@ pub extern "C" fn as_tag_name(name: *const c_char) -> FfiNameOrId {
 #[no_mangle]
 pub extern "C" fn as_tag_id(name_id: i32) -> FfiNameOrId {
     FfiNameOrId {
-        opt: NameIdOpt::Id,
+        opt: FfiNameIdOpt::Id,
         name: std::ptr::null(),
         name_id,
     }
@@ -189,11 +224,11 @@ pub extern "C" fn destroy_logical_plan(ptr_plan: *const c_void) {
 fn append_operator(
     ptr_plan: *const c_void,
     operator: pb::logical_plan::Operator,
-    parent_id: u32,
+    parent_ids: Vec<i32>,
     id: *mut i32,
 ) -> ResultCode {
     let mut plan = unsafe { Box::from_raw(ptr_plan as *mut LogicalPlan) };
-    let result = plan.append_operator(operator, parent_id as u32);
+    let result = plan.append_node(operator, parent_ids.into_iter().map(|x| x as u32).collect());
     // Do not let rust drop the pointer before explicitly calling `destroy_logical_plan`
     std::mem::forget(plan);
     if let Ok(opr_id) = result {
@@ -282,7 +317,7 @@ mod project {
                 attributes.push(expr_alias);
             }
             let project_pb = pb::Project { attributes };
-            append_operator(ptr_plan, project_pb.into(), parent_id as u32, id)
+            append_operator(ptr_plan, project_pb.into(), vec![parent_id], id)
         } else {
             ResultCode::NegativeIndexError
         }
@@ -299,9 +334,11 @@ mod select {
         Box::into_raw(select) as *const c_void
     }
 
-    /// To set a select operator's metadata, which is a C-string predicate
+    /// To add a select operator's metadata, which is a predicate represented as a c-string.
+    /// Note that, we use **add** here to make apis consistent. If multiple adds are conducted,
+    /// only the latest one is kept.
     #[no_mangle]
-    pub extern "C" fn set_select_meta(
+    pub extern "C" fn add_select_meta(
         ptr_select: *const c_void,
         ptr_predicate: *const c_char,
     ) -> ResultCode {
@@ -314,6 +351,7 @@ mod select {
                 let mut select = unsafe { Box::from_raw(ptr_select as *mut pb::Select) };
                 select.predicate = predicate_pb.ok();
                 std::mem::forget(select);
+
                 ResultCode::Success
             } else {
                 ResultCode::ParseExprError
@@ -334,7 +372,98 @@ mod select {
             append_operator(
                 ptr_plan,
                 select.as_ref().clone().into(),
-                parent_id as u32,
+                vec![parent_id],
+                id,
+            )
+        } else {
+            ResultCode::NegativeIndexError
+        }
+    }
+}
+
+mod join {
+    use super::*;
+
+    #[allow(dead_code)]
+    #[repr(i32)]
+    #[derive(Copy, Clone, Debug)]
+    pub enum FfiJoinKind {
+        /// Inner join
+        Inner = 0,
+        /// Left outer join
+        LeftOuter = 1,
+        /// Right outer join
+        RightOuter = 2,
+        /// Full outer join
+        FullOuter = 3,
+        /// Left semi-join, right alternative can be naturally adapted
+        Semi = 4,
+        /// Left anti-join, right alternative can be naturally adapted
+        Anti = 5,
+        /// aka. Cartesian product
+        Times = 6,
+    }
+
+    /// To initialize a join operator
+    #[no_mangle]
+    pub extern "C" fn init_join_operator(join_kind: FfiJoinKind) -> *const c_void {
+        let kind = match join_kind {
+            FfiJoinKind::Inner => 0,
+            FfiJoinKind::LeftOuter => 1,
+            FfiJoinKind::RightOuter => 2,
+            FfiJoinKind::FullOuter => 3,
+            FfiJoinKind::Semi => 4,
+            FfiJoinKind::Anti => 5,
+            FfiJoinKind::Times => 6,
+        };
+        let join = Box::new(pb::Join {
+            left_keys: vec![],
+            right_keys: vec![],
+            kind,
+        });
+        Box::into_raw(join) as *const c_void
+    }
+
+    /// To add a join operator's metadata, which is a pair of left and right keys.
+    /// In the join processing, a pair of data will be output if the corresponding fields
+    /// regarding left and right keys are **equivalent**.
+    #[no_mangle]
+    pub extern "C" fn add_join_meta(
+        ptr_join: *const c_void,
+        left_key: FfiVariable,
+        right_key: FfiVariable,
+    ) -> ResultCode {
+        let mut join = unsafe { Box::from_raw(ptr_join as *mut pb::Join) };
+        let left_key_pb: FfiResult<common_pb::Variable> = left_key.try_into();
+        let right_key_pb: FfiResult<common_pb::Variable> = right_key.try_into();
+        if left_key_pb.is_err() {
+            return left_key_pb.err().unwrap();
+        }
+        if right_key_pb.is_err() {
+            return right_key_pb.err().unwrap();
+        }
+        join.left_keys.push(left_key_pb.unwrap());
+        join.right_keys.push(right_key_pb.unwrap());
+        std::mem::forget(join);
+
+        ResultCode::Success
+    }
+
+    /// Append a join operator to the logical plan
+    #[no_mangle]
+    pub extern "C" fn append_join_operator(
+        ptr_plan: *const c_void,
+        ptr_select: *const c_void,
+        parent_left: i32,
+        parent_right: i32,
+        id: *mut i32,
+    ) -> ResultCode {
+        if parent_left >= 0 && parent_right >= 0 {
+            let join = unsafe { Box::from_raw(ptr_select as *mut pb::Join) };
+            append_operator(
+                ptr_plan,
+                join.as_ref().clone().into(),
+                vec![parent_left, parent_right],
                 id,
             )
         } else {

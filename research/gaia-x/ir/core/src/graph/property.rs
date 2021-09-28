@@ -15,11 +15,12 @@
 
 use crate::error::{ParsePbError, ParsePbResult};
 use crate::generated::common as pb;
-use crate::{FromPb, NameOrId};
+use crate::NameOrId;
 use dyn_type::{BorrowObject, Object};
 use pegasus_common::codec::{Decode, Encode, ReadExt, WriteExt};
 use pegasus_common::downcast::*;
 use std::collections::HashMap;
+use std::convert::TryFrom;
 use std::io;
 use std::ops::{Deref, DerefMut};
 use std::sync::Arc;
@@ -105,8 +106,10 @@ pub enum PropKey {
     Key(NameOrId),
 }
 
-impl FromPb<pb::Property> for PropKey {
-    fn from_pb(p: pb::Property) -> ParsePbResult<Self>
+impl TryFrom<pb::Property> for PropKey {
+    type Error = ParsePbError;
+
+    fn try_from(p: pb::Property) -> ParsePbResult<Self>
     where
         Self: Sized,
     {
@@ -115,7 +118,7 @@ impl FromPb<pb::Property> for PropKey {
             match item {
                 Item::Id(_) => Ok(PropKey::Id),
                 Item::Label(_) => Ok(PropKey::Label),
-                Item::Key(k) => Ok(PropKey::Key(NameOrId::from_pb(k)?)),
+                Item::Key(k) => Ok(PropKey::Key(NameOrId::try_from(k)?)),
             }
         } else {
             Err(ParsePbError::from("empty content provided"))

@@ -12,14 +12,21 @@
 //! WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
+extern crate vec_map;
 
+use crate::error::{ParsePbError, ParsePbResult};
 use crate::expr::to_suffix_expr_pb;
 use crate::expr::token::tokenize;
 use crate::generated::algebra as pb;
 use crate::generated::common as common_pb;
+use std::cell::RefCell;
+use std::collections::BTreeSet;
 use std::convert::TryFrom;
 use std::ffi::CStr;
+use std::iter::FromIterator;
 use std::os::raw::c_char;
+use std::rc::Rc;
+use vec_map::VecMap;
 
 #[repr(i32)]
 #[derive(Clone, Copy, Debug, PartialEq)]
@@ -57,136 +64,175 @@ pub(crate) type FfiResult<T> = Result<T, ResultCode>;
 #[derive(Clone, Debug, PartialEq)]
 pub(crate) struct Node {
     pub id: u32,
-    pub min_child_id: u32,
-    pub max_child_id: u32,
-    pub children: Vec<Node>,
-}
-
-impl Default for Node {
-    fn default() -> Self {
-        Self {
-            id: 0,
-            min_child_id: u32::MAX,
-            max_child_id: 0,
-            children: vec![],
-        }
-    }
+    pub opr: pb::logical_plan::Operator,
+    pub parents: BTreeSet<u32>,
+    pub children: BTreeSet<u32>,
 }
 
 #[allow(dead_code)]
 impl Node {
-    pub fn new(id: u32) -> Node {
-        let mut node = Self::default();
-        node.id = id;
-        node
-    }
-
-    pub fn append_child(&mut self, node: Node) {
-        // The child must have larger id
-        assert!(self.id < node.id);
-        if node.id < self.min_child_id {
-            self.min_child_id = node.id;
-        }
-        if node.id > self.max_child_id {
-            self.max_child_id = node.id;
-        }
-        self.children.push(node);
-    }
-
-    pub fn get_mut(&mut self, id: u32) -> Option<&mut Node> {
-        if self.id == id {
-            Some(self)
-        } else {
-            let mut find = None;
-            if id >= self.min_child_id && id <= self.max_child_id {
-                for node in &mut self.children {
-                    if node.id == id {
-                        find = Some(node);
-                        break;
-                    }
-                }
-            } else if id > self.max_child_id {
-                for node in &mut self.children {
-                    find = node.get_mut(id);
-                    if find.is_some() {
-                        break;
-                    }
-                }
-            }
-            find
+    pub fn new(id: u32, opr: pb::logical_plan::Operator) -> Node {
+        Node {
+            id,
+            opr,
+            parents: BTreeSet::new(),
+            children: BTreeSet::new(),
         }
     }
 
-    pub fn get(&self, id: u32) -> Option<&Node> {
-        if self.id == id {
-            Some(self)
-        } else {
-            let mut find = None;
-            if id >= self.min_child_id && id <= self.max_child_id {
-                for node in &self.children {
-                    if node.id == id {
-                        find = Some(node);
-                        break;
-                    }
-                }
-            } else if id > self.max_child_id {
-                for node in &self.children {
-                    find = node.get(id);
-                    if find.is_some() {
-                        break;
-                    }
-                }
-            }
-            find
-        }
+    pub fn add_child(&mut self, child_id: u32) {
+        self.children.insert(child_id);
     }
 
-    pub fn has_child(&self) -> bool {
-        !self.children.is_empty()
+    pub fn add_parent(&mut self, parent_id: u32) {
+        self.parents.insert(parent_id);
     }
 }
+
+type NodeType = Rc<RefCell<Node>>;
 
 /// An internal representation of the pb-[`LogicalPlan`].
 ///
 /// [`Node`]: crate::generated::algebra::LogicalPlan
 #[derive(Default, Debug)]
 pub(crate) struct LogicalPlan {
-    pub operators: Vec<pb::logical_plan::Operator>,
-    pub root: Option<Node>,
+    pub nodes: VecMap<NodeType>,
+    /// To record the total number of operators ever created in the logical plan ,
+    /// **ignorant of the removed nodes**
+    pub total_size: usize,
+}
+
+fn parse_pb_node(
+    node_pbs: &Vec<pb::logical_plan::Node>,
+    nodes: &Vec<NodeType>,
+) -> ParsePbResult<()> {
+    for (node_pb, node) in node_pbs.iter().zip(nodes.iter()) {
+        for child_id in &node_pb.children {
+            &(*node).borrow_mut().add_child(*child_id as u32);
+            if let Some(child_node) = nodes.get(*child_id as usize) {
+                &(*child_node)
+                    .borrow_mut()
+                    .add_parent(node.borrow().id as u32);
+            } else {
+                return Err(ParsePbError::InvalidPb(
+                    "the child id is out of index".to_string(),
+                ));
+            }
+        }
+    }
+
+    Ok(())
+}
+
+impl TryFrom<pb::LogicalPlan> for LogicalPlan {
+    type Error = ParsePbError;
+
+    fn try_from(pb: pb::LogicalPlan) -> Result<Self, Self::Error> {
+        let nodes_pb = pb.nodes;
+        let mut nodes = Vec::<NodeType>::with_capacity(nodes_pb.len());
+
+        for (id, node) in nodes_pb.iter().enumerate() {
+            if let Some(opr) = &node.opr {
+                nodes.push(Rc::new(RefCell::new(Node::new(
+                    id as u32,
+                    opr.to_owned().clone(),
+                ))));
+            } else {
+                return Err(ParsePbError::InvalidPb(
+                    "do not specify operator in a node".to_string(),
+                ));
+            }
+        }
+
+        parse_pb_node(&nodes_pb, &nodes)?;
+
+        let plan = LogicalPlan {
+            total_size: nodes.len(),
+            nodes: VecMap::from_iter(nodes.into_iter().enumerate()),
+        };
+
+        Ok(plan)
+    }
 }
 
 #[allow(dead_code)]
 impl LogicalPlan {
-    pub fn append_operator(
+    pub fn root(&self) -> Option<NodeType> {
+        self.nodes.get(0).cloned()
+    }
+
+    pub fn get_node(&self, id: u32) -> Option<NodeType> {
+        self.nodes.get(id as usize).cloned()
+    }
+
+    /// Append an operator into the logical plan, as a new node, with specified `parent_ids`
+    /// as its parent node. In order to do so, all specified parents must present in the
+    /// logical plan.
+    ///
+    /// # Return
+    ///   * If succeed, the id of the newly added node
+    ///   * Otherwise, a `ResultCode` indicating any error, mostly the parent node does not present
+    pub fn append_node(
         &mut self,
         opr: pb::logical_plan::Operator,
-        parent_id: u32,
+        parent_ids: Vec<u32>,
     ) -> FfiResult<u32> {
-        let id = self.new_id();
-        let node = Node::new(id);
-        if let Some(root) = self.root.as_mut() {
-            if let Some(parent) = root.get_mut(parent_id) {
-                parent.append_child(node);
-            } else {
-                return Err(ResultCode::NotExistError);
+        let id = self.total_size as u32;
+        let mut node = Node::new(id, opr);
+        if !self.is_empty() {
+            let mut parent_nodes = vec![];
+            for parent_id in parent_ids {
+                if let Some(parent_node) = self.get_node(parent_id) {
+                    parent_nodes.push(parent_node);
+                } else {
+                    return Err(ResultCode::NotExistError);
+                }
             }
-        } else {
-            self.root = Some(node);
+            for parent_node in parent_nodes {
+                node.add_parent(parent_node.borrow().id);
+                &(*parent_node).borrow_mut().add_child(id);
+            }
         }
-        self.operators.push(opr);
+        self.nodes.insert(id as usize, Rc::new(RefCell::new(node)));
+        self.total_size += 1;
         Ok(id)
     }
 
-    pub fn new_id(&self) -> u32 {
-        self.len() as u32
+    /// Remove a node from the logical plan, and do the following:
+    /// * For each of its parent, if present, shall remove node's id reference from the `children`.
+    /// * For each of its children, shall remove the node's id reference from the `parent`, and if
+    /// the child's parent becomes empty, the child must be removed recursively.
+    ///
+    ///  Note that this does not decrease `self.total_size`, which serves as the indication
+    /// of new id of the plan.
+    pub fn remove_node(&mut self, id: u32) -> Option<NodeType> {
+        let node = self.nodes.remove(id as usize);
+        if let Some(n) = &node {
+            for p in &n.borrow().parents {
+                if let Some(parent_node) = self.get_node(*p) {
+                    (&*parent_node).borrow_mut().children.remove(&id);
+                }
+            }
+
+            for c in &n.borrow().children {
+                if let Some(child) = self.get_node(*c) {
+                    (&*child).borrow_mut().parents.remove(&id);
+                    if (&*child).borrow_mut().parents.is_empty() {
+                        // Recursively remove the child
+                        let _ = self.remove_node(*c);
+                    }
+                }
+            }
+        }
+        node
     }
 
     pub fn len(&self) -> usize {
-        self.operators.len()
+        self.nodes.len()
     }
 
     pub fn is_empty(&self) -> bool {
-        self.root.is_none()
+        self.nodes.is_empty()
     }
 }
 
@@ -330,79 +376,182 @@ mod test {
     use super::*;
 
     #[test]
-    fn get_node_test() {
-        let mut root = Node::new(0);
-        let mut node1 = Node::new(1);
-        let mut node2 = Node::new(2);
-        let node3 = Node::new(3);
-        let node4 = Node::new(4);
+    fn test_logical_plan() {
+        let opr = pb::logical_plan::Operator { opr: None };
+        let mut plan = LogicalPlan::default();
 
-        node1.append_child(node3.clone());
-        node2.append_child(node4.clone());
-        root.append_child(node1.clone());
-        root.append_child(node2.clone());
+        let id = plan.append_node(opr.clone(), vec![]).unwrap();
+        assert_eq!(id, 0);
+        assert_eq!(plan.len(), 1);
+        assert_eq!(plan.total_size, 1);
+        let node0 = plan.get_node(0).unwrap().clone();
 
-        let node = root.get(0);
-        assert_eq!(node, Some(&root));
+        let id = plan.append_node(opr.clone(), vec![0]).unwrap();
+        assert_eq!(id, 1);
+        assert_eq!(plan.len(), 2);
+        assert_eq!(plan.total_size, 2);
+        let node1 = plan.get_node(1).unwrap().clone();
 
-        let node = root.get(1);
-        assert_eq!(node, Some(&node1));
+        let parents = node1
+            .borrow()
+            .parents
+            .iter()
+            .map(|x| *x)
+            .collect::<Vec<u32>>();
+        assert_eq!(parents, vec![0]);
 
-        let node = root.get(2);
-        assert_eq!(node, Some(&node2));
+        let children = node0
+            .borrow()
+            .children
+            .iter()
+            .map(|x| *x)
+            .collect::<Vec<u32>>();
+        assert_eq!(children, vec![1]);
 
-        let node = root.get(3);
-        assert_eq!(node, Some(&node3));
+        let id = plan.append_node(opr.clone(), vec![0, 1]).unwrap();
+        assert_eq!(id, 2);
+        assert_eq!(plan.len(), 3);
+        assert_eq!(plan.total_size, 3);
+        let node2 = plan.get_node(2).unwrap().clone();
 
-        let node = root.get(4);
-        assert_eq!(node, Some(&node4));
+        let parents = node2
+            .borrow()
+            .parents
+            .iter()
+            .map(|x| *x)
+            .collect::<Vec<u32>>();
+        assert_eq!(parents, vec![0, 1]);
 
-        let node = root.get(5);
-        assert!(node.is_none());
+        let children = node0
+            .borrow()
+            .children
+            .iter()
+            .map(|x| *x)
+            .collect::<Vec<u32>>();
+        assert_eq!(children, vec![1, 2]);
 
-        let node = node1.get(3);
-        assert_eq!(node, Some(&node3));
+        let children = node1
+            .borrow()
+            .children
+            .iter()
+            .map(|x| *x)
+            .collect::<Vec<u32>>();
+        assert_eq!(children, vec![2]);
 
-        let node = node1.get(4);
-        assert!(node.is_none());
+        let node2 = plan.remove_node(2);
+        assert_eq!(node2.unwrap().borrow().id, 2);
+        assert_eq!(plan.len(), 2);
+        assert_eq!(plan.total_size, 3);
+        let children = node0
+            .borrow()
+            .children
+            .iter()
+            .map(|x| *x)
+            .collect::<Vec<u32>>();
+        assert_eq!(children, vec![1]);
+
+        let children = node1
+            .borrow()
+            .children
+            .iter()
+            .map(|x| *x)
+            .collect::<Vec<u32>>();
+        assert!(children.is_empty());
+
+        let _id = plan.append_node(opr.clone(), vec![0, 2]);
+        assert!(_id.is_err());
+        assert_eq!(plan.len(), 2);
+        assert_eq!(plan.total_size, 3);
+        let children = node0
+            .borrow()
+            .children
+            .iter()
+            .map(|x| *x)
+            .collect::<Vec<u32>>();
+        assert_eq!(children, vec![1]);
+
+        // add node2 back again for further testing recursive removal
+        let _ = plan.append_node(opr.clone(), vec![0, 1]).unwrap();
+        let node3 = plan.get_node(3).unwrap();
+        let _ = plan.remove_node(1);
+        assert_eq!(plan.len(), 2);
+        assert_eq!(plan.total_size, 4);
+        let children = node0
+            .borrow()
+            .children
+            .iter()
+            .map(|x| *x)
+            .collect::<Vec<u32>>();
+        assert_eq!(children, vec![3]);
+
+        let parents = node3
+            .borrow()
+            .parents
+            .iter()
+            .map(|x| *x)
+            .collect::<Vec<u32>>();
+        assert_eq!(parents, vec![0]);
     }
 
     #[test]
-    fn get_node_test2() {
-        let mut root = Node::new(0);
-        let mut node1 = Node::new(1);
-        let mut node2 = Node::new(2);
-        let mut node3 = Node::new(3);
-        let mut node4 = Node::new(4);
-        let mut node5 = Node::new(5);
-        let node20 = Node::new(20);
+    fn test_logical_plan_from_pb() {
+        let opr = pb::logical_plan::Operator { opr: None };
 
-        node4.append_child(node5.clone());
-        node4.append_child(node20.clone());
-        node2.append_child(node4.clone());
-        root.append_child(node1.clone());
-        root.append_child(node2.clone());
-        root.append_child(node3.clone());
+        let root_pb = pb::logical_plan::Node {
+            opr: Some(opr.clone()),
+            children: vec![1, 2],
+        };
 
-        let node = root.get(0);
-        assert_eq!(node, Some(&root));
+        let node1_pb = pb::logical_plan::Node {
+            opr: Some(opr.clone()),
+            children: vec![2],
+        };
 
-        let node = root.get(1);
-        assert_eq!(node, Some(&node1));
+        let node2_pb = pb::logical_plan::Node {
+            opr: Some(opr.clone()),
+            children: vec![],
+        };
 
-        let node = root.get(2);
-        assert_eq!(node, Some(&node2));
+        let plan_pb = pb::LogicalPlan {
+            nodes: vec![root_pb, node1_pb, node2_pb],
+        };
 
-        let node = root.get(3);
-        assert_eq!(node, Some(&node3));
+        let plan = LogicalPlan::try_from(plan_pb).unwrap();
+        assert_eq!(plan.len(), 3);
+        let node0 = plan.get_node(0).unwrap();
+        let node1 = plan.get_node(1).unwrap();
+        let node2 = plan.get_node(2).unwrap();
 
-        let node = root.get(4);
-        assert_eq!(node, Some(&node4));
+        let children = node0
+            .borrow()
+            .children
+            .iter()
+            .map(|x| *x)
+            .collect::<Vec<u32>>();
+        assert_eq!(children, vec![1, 2]);
 
-        let node = root.get(5);
-        assert_eq!(node, Some(&node5));
+        let children = node1
+            .borrow()
+            .children
+            .iter()
+            .map(|x| *x)
+            .collect::<Vec<u32>>();
+        assert_eq!(children, vec![2]);
 
-        let node = root.get(20);
-        assert_eq!(node, Some(&node20));
+        let parents = node1
+            .borrow()
+            .parents
+            .iter()
+            .map(|x| *x)
+            .collect::<Vec<u32>>();
+        assert_eq!(parents, vec![0]);
+
+        let parents = node2
+            .borrow()
+            .parents
+            .iter()
+            .map(|x| *x)
+            .collect::<Vec<u32>>();
+        assert_eq!(parents, vec![0, 1]);
     }
 }

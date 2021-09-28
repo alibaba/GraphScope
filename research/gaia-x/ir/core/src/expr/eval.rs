@@ -19,10 +19,11 @@ use crate::expr::error::{ExprError, ExprResult};
 use crate::generated::common as pb;
 use crate::graph::element::Element;
 use crate::graph::property::{Details, PropKey};
-use crate::{FromPb, NameOrId};
+use crate::NameOrId;
 use dyn_type::arith::Exp;
 use dyn_type::{BorrowObject, Object};
 use std::cell::RefCell;
+use std::convert::TryFrom;
 
 pub struct Evaluator<'a> {
     /// A suffix-tree-based expression for evaluating
@@ -89,14 +90,16 @@ pub struct NoneContext {}
 
 impl Context<()> for NoneContext {}
 
-impl<'a> FromPb<pb::SuffixExpr> for Evaluator<'a> {
-    fn from_pb(suffix_tree: pb::SuffixExpr) -> ParsePbResult<Self>
+impl<'a> TryFrom<pb::SuffixExpr> for Evaluator<'a> {
+    type Error = ParsePbError;
+
+    fn try_from(suffix_tree: pb::SuffixExpr) -> ParsePbResult<Self>
     where
         Self: Sized,
     {
         let mut inner_tree: Vec<InnerOpr> = Vec::with_capacity(suffix_tree.operators.len());
         for unit in suffix_tree.operators {
-            inner_tree.push(InnerOpr::from_pb(unit)?);
+            inner_tree.push(InnerOpr::try_from(unit)?);
         }
         Ok(Self {
             suffix_tree: inner_tree,
@@ -239,12 +242,13 @@ impl<'a> Evaluator<'a> {
     /// ```
     /// # use ir_core::graph::element::Vertex;
     /// # use ir_core::expr::eval::{Context, Evaluator};
-    /// # use ir_core::{NameOrId, FromPb};
+    /// # use ir_core::NameOrId;
     /// # use ir_core::graph::property::{DefaultDetails, DynDetails, Label};
     /// # use std::collections::HashMap;
     /// # use dyn_type::Object;
     /// # use ir_core::expr::token::tokenize;
     /// # use ir_core::expr::to_suffix_expr_pb;
+    /// use std::convert::TryFrom;
     ///
     /// struct Vertices {
     ///     vec: Vec<Vertex>,
@@ -283,7 +287,7 @@ impl<'a> Evaluator<'a> {
     ///
     /// let tokens = tokenize("@0.age == @1.age").unwrap();
     /// let suffix_tree = to_suffix_expr_pb(tokens).unwrap();
-    /// let eval = Evaluator::from_pb(suffix_tree).unwrap();
+    /// let eval = Evaluator::try_from(suffix_tree).unwrap();
     ///
     /// assert!(eval.eval::<_, _>(Some(&ctxt)).unwrap().as_bool().unwrap())
     /// ```
@@ -338,8 +342,10 @@ impl<'a> Evaluator<'a> {
     }
 }
 
-impl FromPb<pb::ExprOpr> for InnerOpr {
-    fn from_pb(unit: pb::ExprOpr) -> ParsePbResult<Self>
+impl TryFrom<pb::ExprOpr> for InnerOpr {
+    type Error = ParsePbError;
+
+    fn try_from(unit: pb::ExprOpr) -> ParsePbResult<Self>
     where
         Self: Sized,
     {
@@ -354,11 +360,11 @@ impl FromPb<pb::ExprOpr> for InnerOpr {
                 }
                 Const(c) => Self::Const(c.into_object()?),
                 Var(var) => {
-                    let tag = NameOrId::from_pb(var.tag.unwrap())?;
+                    let tag = NameOrId::try_from(var.tag.unwrap())?;
                     if let Some(property) = var.property {
                         Self::Var {
                             tag,
-                            prop_key: Some(PropKey::from_pb(property)?),
+                            prop_key: Some(PropKey::try_from(property)?),
                         }
                     } else {
                         Self::Var {
@@ -560,7 +566,7 @@ mod tests {
 
         for (case, expected) in cases.into_iter().zip(expected.into_iter()) {
             let eval =
-                Evaluator::from_pb(to_suffix_expr_pb(tokenize(case).unwrap()).unwrap()).unwrap();
+                Evaluator::try_from(to_suffix_expr_pb(tokenize(case).unwrap()).unwrap()).unwrap();
             assert_eq!(eval.eval::<(), NoneContext>(None).unwrap(), expected);
         }
     }
@@ -604,7 +610,7 @@ mod tests {
 
         for (case, expected) in cases.into_iter().zip(expected.into_iter()) {
             let eval =
-                Evaluator::from_pb(to_suffix_expr_pb(tokenize(case).unwrap()).unwrap()).unwrap();
+                Evaluator::try_from(to_suffix_expr_pb(tokenize(case).unwrap()).unwrap()).unwrap();
             assert_eq!(eval.eval::<(), NoneContext>(None).unwrap(), expected);
         }
     }
@@ -641,7 +647,7 @@ mod tests {
 
         for (case, expected) in cases.into_iter().zip(expected.into_iter()) {
             let eval =
-                Evaluator::from_pb(to_suffix_expr_pb(tokenize(case).unwrap()).unwrap()).unwrap();
+                Evaluator::try_from(to_suffix_expr_pb(tokenize(case).unwrap()).unwrap()).unwrap();
             assert_eq!(eval.eval::<_, Vertices>(Some(&ctxt)).unwrap(), expected);
         }
     }
@@ -698,7 +704,7 @@ mod tests {
         let mut is_context = false;
         for (case, expected) in cases.into_iter().zip(expected.into_iter()) {
             let eval =
-                Evaluator::from_pb(to_suffix_expr_pb(tokenize(case).unwrap()).unwrap()).unwrap();
+                Evaluator::try_from(to_suffix_expr_pb(tokenize(case).unwrap()).unwrap()).unwrap();
             assert_eq!(
                 if is_context {
                     eval.eval::<_, Vertices>(Some(&ctxt)).err().unwrap()

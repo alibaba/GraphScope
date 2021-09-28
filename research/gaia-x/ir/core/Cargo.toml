@@ -11,6 +11,7 @@ dyn_type = {path = "../dyn_type"}
 prost = "0.7"
 pegasus_common = { path = "../../pegasus/common" }
 tonic = "0.4"
+vec_map = "0.8.2"
 
 [build-dependencies]
 tonic-build = "0.4"

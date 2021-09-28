@@ -219,7 +219,7 @@ message Apply {
     // Node gives the identity of a certain operation, which is an index to the
     // array of operators in a LogicalPlan. As a result, for Apply to make sense, it must only
     // be used by referencing a LogicalPlan.
-    LogicalPlan.Node task = 2;
+    int32 subtask = 2;
     // An alias for the result of the subtask. In order for Apply to be semantically intact,
     // the subtask must return a scalar value.
     common.NameOrId alias = 3;
@@ -262,14 +262,11 @@ message LogicalPlan {
     }
   }
   message Node {
-    // The current node's operator identifier
-    int32 opr_id = 1;
-    // The children operators' identifiers
-    repeated Node children = 2;
+    // The node's operator
+    Operator opr = 1;
+    // The children operators' identifiers, where the id refers to its array index in the plan
+    repeated int32 children = 2;
   }
-  // A array of operators, where the index stands for the operator's identifier
-  // operators[0] is the root of the logical plan
-  repeated Operator operators = 1;
-  // The root of this logical plan
-  Node root = 2;
+  // A array of nodes
+  repeated Node nodes = 1;
 }

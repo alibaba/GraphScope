@@ -20,6 +20,7 @@ pub use crate::plan::ffi::*;
 use crate::error::{ParsePbError, ParsePbResult};
 use crate::generated::common as pb;
 use pegasus_common::codec::{Decode, Encode, ReadExt, WriteExt};
+use std::convert::TryFrom;
 use std::io;
 
 #[cfg(feature = "proto_inplace")]
@@ -100,8 +101,10 @@ impl Decode for NameOrId {
     }
 }
 
-impl FromPb<pb::NameOrId> for NameOrId {
-    fn from_pb(t: pb::NameOrId) -> ParsePbResult<Self>
+impl TryFrom<pb::NameOrId> for NameOrId {
+    type Error = ParsePbError;
+
+    fn try_from(t: pb::NameOrId) -> ParsePbResult<Self>
     where
         Self: Sized,
     {
@@ -122,13 +125,4 @@ impl FromPb<pb::NameOrId> for NameOrId {
             Err(ParsePbError::from("empty content provided"))
         }
     }
-}
-
-/// While it is frequently needed to transfer a proto-buf structure into a Rust structure,
-/// we use this `trait` to support the transformation while capture any possible error.
-pub trait FromPb<T> {
-    /// A function to transfer a proto-buf structure into a Rust structure
-    fn from_pb(pb: T) -> ParsePbResult<Self>
-    where
-        Self: Sized;
 }
