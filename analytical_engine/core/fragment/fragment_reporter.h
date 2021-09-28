@@ -43,6 +43,7 @@ class DynamicFragmentReporter : public grape::Communicator {
   using oid_t = typename fragment_t::oid_t;
   using vid_t = typename fragment_t::vid_t;
   using vertex_t = typename fragment_t::vertex_t;
+  using adj_list_t = typename fragment_t::adj_list_t;
 
  public:
   explicit DynamicFragmentReporter(const grape::CommSpec& comm_spec)
@@ -156,16 +157,16 @@ class DynamicFragmentReporter : public grape::Communicator {
 
   bool hasNode(std::shared_ptr<fragment_t>& fragment, const oid_t& node) {
     bool ret = false;
-    bool to_send = fragment->HasNode(node);
-    Sum(to_send, ret);
+    bool existed_in_frag = fragment->HasNode(node);
+    Sum(existed_in_frag, ret);
     return ret;
   }
 
   bool hasEdge(std::shared_ptr<fragment_t>& fragment, const oid_t& u,
                const oid_t& v) {
     bool ret = false;
-    bool to_send = fragment->HasEdge(u, v);
-    Sum(to_send, ret);
+    bool existed_in_frag = fragment->HasEdge(u, v);
+    Sum(existed_in_frag, ret);
     return ret;
   }
 
@@ -180,9 +181,10 @@ class DynamicFragmentReporter : public grape::Communicator {
 
   std::string getEdgeData(std::shared_ptr<fragment_t>& fragment, const oid_t& u,
                           const oid_t& v) {
-    std::string ret;
-    fragment->GetEdgeData(u, v, ret);
-    return ret;
+    folly::dynamic ref_data;
+    fragment->GetEdgeData(u, v, ref_data);
+    return ref_data.isNull() ? std::string()
+                             : folly::json::serialize(ref_data, json_opts_);
   }
 
   double getDegree(std::shared_ptr<fragment_t>& fragment, const oid_t& node,
@@ -197,34 +199,27 @@ class DynamicFragmentReporter : public grape::Communicator {
   }
 
   std::string getNeighbors(std::shared_ptr<fragment_t>& fragment,
-                           const oid_t& node, const rpc::ReportType& type) {
+                           const oid_t& node,
+                           const rpc::ReportType& report_type) {
     vertex_t v;
-    std::string ret;
     folly::dynamic nbrs = folly::dynamic::array;
-    nbrs.resize(2, folly::dynamic::array);
     if (fragment->GetInnerVertex(node, v) && fragment->IsAliveInnerVertex(v)) {
-      if (type == rpc::NEIGHBORS_BY_NODE || type == rpc::SUCCS_BY_NODE) {
-        auto oe = fragment->GetOutgoingAdjList(v);
-        for (auto& e : oe) {
-          nbrs[0].push_back(fragment->GetId(e.neighbor()));
-          nbrs[1].push_back(e.data());
-        }
+      adj_list_t edges;
+      nbrs.resize(2, folly::dynamic::array);
+      report_type == rpc::PREDS_BY_NODE
+          ? edges = fragment->GetIncomingAdjList(v)
+          : edges = fragment->GetOutgoingAdjList(v);
+      for (auto& e : edges) {
+        nbrs[0].push_back(fragment->GetId(e.neighbor()));
+        nbrs[1].push_back(e.data());
       }
-      if (type == rpc::NEIGHBORS_BY_NODE || type == rpc::PREDS_BY_NODE) {
-        auto ie = fragment->GetIncomingAdjList(v);
-        for (auto& e : ie) {
-          nbrs[0].push_back(fragment->GetId(e.neighbor()));
-          nbrs[1].push_back(e.data());
-        }
-      }
-      ret = folly::json::serialize(nbrs, json_opts_);
     }
-    return ret;
+    return nbrs.empty() ? std::string()
+                        : folly::json::serialize(nbrs, json_opts_);
   }
 
   std::string batchGetNodes(std::shared_ptr<fragment_t>& fragment, vid_t fid,
                             vid_t start_lid) {
-    std::string ret;
     if (fragment->fid() == fid) {
       int cnt = 0;
       vertex_t v(start_lid);
@@ -252,9 +247,9 @@ class DynamicFragmentReporter : public grape::Communicator {
         nodes["status"] = false;
         nodes["next"] = folly::dynamic::array(fid + 1, 0);
       }
-      ret = folly::json::serialize(nodes, json_opts_);
+      return folly::json::serialize(nodes, json_opts_);
     }
-    return ret;
+    return std::string();
   }
 
   std::string batchGetDegree(std::shared_ptr<fragment_t>& fragment, vid_t fid,
@@ -298,7 +293,6 @@ class DynamicFragmentReporter : public grape::Communicator {
   std::string batchGetNeighbors(std::shared_ptr<fragment_t>& fragment,
                                 vid_t fid, vid_t start_lid,
                                 const rpc::ReportType& type) {
-    std::string ret;
     if (fragment->fid() == fid) {
       int cnt = 0;
       vertex_t v(start_lid);
@@ -338,9 +332,9 @@ class DynamicFragmentReporter : public grape::Communicator {
         ret_dy["status"] = false;
         ret_dy["next"] = folly::dynamic::array(fid + 1, 0);
       }
-      ret = folly::json::serialize(ret_dy, json_opts_);
+      return folly::json::serialize(ret_dy, json_opts_);
     }
-    return ret;
+    return std::string();
   }
 
   double getGraphDegree(std::shared_ptr<fragment_t>& fragment, vertex_t& v,
