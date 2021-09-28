@@ -73,14 +73,17 @@ def ldbc_sample_multi_labels(prefix, directed):
     graph = graphscope.g(directed=directed)
     graph = (
         graph.add_vertices(
-            Loader(os.path.join(prefix, "comment_0_0.csv"), delimiter="|"), "comment"
+            Loader(os.path.join(prefix, "comment_0_0.csv"), delimiter="|"), "comment",
+            ["creationDate", "locationIP", "browserUsed", "content", "length"]
         )
         .add_vertices(
             Loader(os.path.join(prefix, "person_0_0.csv"), delimiter="|"), "person"
+            ["firstName", "lastName", "gender", ("birthday", str), "creationDate", "locationIP", "browserUsed"]
         )
         .add_vertices(
             Loader(os.path.join(prefix, "post_0_0.csv"), delimiter="|"),
             "post",
+            ["imageFile", "creationDate", "locationIP", "browserUsed", "language", "content", "length"]
         )
     )
     graph = (
@@ -350,7 +353,7 @@ class TestGraphTransformation(object):
         assert 618475290624 not in G2  # post node is (label, id) format
         assert ("post", 618475290624) in G
 
-    def test_report_methods_on_arrrow_property_graph(self):
+    def test_report_methods_on_copy_on_write_strategy(self):
         G = self.NXGraph(self.multi_label_g, default_label="person")
         assert G.graph_type == graph_def_pb2.ARROW_PROPERTY
         # test NODE_NUM and EDGE_NUM
@@ -370,7 +373,7 @@ class TestGraphTransformation(object):
             "browserUsed": "Firefox",
             "locationIP": "119.235.7.103",
             "creationDate": "2010-02-14T15:32:10.447+0000",
-            "birthday": 7276,
+            "birthday": "1989-12-03",
             "gender": "male",
             "lastName": "Perera",
             "firstName": "Mahinda",
@@ -380,6 +383,8 @@ class TestGraphTransformation(object):
             "eid": 72057594037927936,
         }
         assert list(G.neighbors(933)) == [28587302322537, 8796093023017, 4398046511628]
+        assert len(G.nodes) == G.number_of_nodes()
+
         G.add_node(0)  # modify graph to make copy on write
         assert G.graph_type == graph_def_pb2.DYNAMIC_PROPERTY
         assert G.number_of_nodes() == (76831 + 903 + 78976)
@@ -398,7 +403,7 @@ class TestGraphTransformation(object):
             "browserUsed": "Firefox",
             "locationIP": "119.235.7.103",
             "creationDate": "2010-02-14T15:32:10.447+0000",
-            "birthday": 7276,
+            "birthday": "1989-12-03",
             "gender": "male",
             "lastName": "Perera",
             "firstName": "Mahinda",

@@ -597,8 +597,7 @@ class Graph(_GraphBase):
         11
 
         """
-        if self._graph_type == graph_def_pb2.ARROW_PROPERTY:
-            self._arrow_to_dynamic()
+        self._try_convert_arrow_to_dynamic()
         nodes = []
         for n in nodes_for_adding:
             data = dict(attr)
@@ -682,8 +681,7 @@ class Graph(_GraphBase):
         []
 
         """
-        if self._graph_type == graph_def_pb2.ARROW_PROPERTY:
-            self._arrow_to_dynamic()
+        self._try_convert_arrow_to_dynamic()
         nodes = []
         for n in nodes_for_removing:
             check_node_is_legal(n)
@@ -733,7 +731,7 @@ class Graph(_GraphBase):
         """
         check_node_is_legal(n)
         if self.graph_type == graph_def_pb2.ARROW_PROPERTY:
-            n = self._convert_node_to_label_id_tuple(n)
+            n = self._convert_to_label_id_tuple(n)
         op = dag_utils.report_graph(self, types_pb2.NODE_DATA, node=json.dumps([n]))
         return op.eval()
 
@@ -802,7 +800,7 @@ class Graph(_GraphBase):
         try:
             check_node_is_legal(n)
             if self.graph_type == graph_def_pb2.ARROW_PROPERTY:
-                n = self._convert_node_to_label_id_tuple(n)
+                n = self._convert_to_label_id_tuple(n)
             op = dag_utils.report_graph(self, types_pb2.HAS_NODE, node=json.dumps([n]))
             return int(op.eval())
         except (TypeError, NetworkXError, KeyError):
@@ -898,8 +896,7 @@ class Graph(_GraphBase):
         >>> G.add_edges_from([(1, 2), (2, 3)], weight=3)
         >>> G.add_edges_from([(3, 4), (1, 4)], label="WN2898")
         """
-        if self._graph_type == graph_def_pb2.ARROW_PROPERTY:
-            self._arrow_to_dynamic()
+        self._try_convert_arrow_to_dynamic()
 
         edges = []
         for e in ebunch_to_add:
@@ -1001,8 +998,7 @@ class Graph(_GraphBase):
         >>> ebunch = [(1, 2), (2, 3)]
         >>> G.remove_edges_from(ebunch)
         """
-        if self._graph_type == graph_def_pb2.ARROW_PROPERTY:
-            self._arrow_to_dynamic()
+        self._try_convert_arrow_to_dynamic()
 
         edges = []
         for e in ebunch:
@@ -1045,9 +1041,7 @@ class Graph(_GraphBase):
         """
         check_node_is_legal(u)
         check_node_is_legal(v)
-
-        if self._graph_type == graph_def_pb2.ARROW_PROPERTY:
-            self._arrow_to_dynamic()
+        self._try_convert_arrow_to_dynamic()
 
         try:
             edge = [json.dumps((u, v, data))]
@@ -1090,8 +1084,7 @@ class Graph(_GraphBase):
 
         """
         check_node_is_legal(n)
-        if self._graph_type == graph_def_pb2.ARROW_PROPERTY:
-            self._arrow_to_dynamic()
+        self._try_convert_arrow_to_dynamic()
 
         try:
             node = [json.dumps((n, data))]
@@ -1411,8 +1404,8 @@ class Graph(_GraphBase):
         """
         if self.has_edge(u, v):
             if self.graph_type == graph_def_pb2.ARROW_PROPERTY:
-                u = self._convert_node_to_label_id_tuple(u)
-                v = self._convert_node_to_label_id_tuple(v)
+                u = self._convert_to_label_id_tuple(u)
+                v = self._convert_to_label_id_tuple(v)
             op = dag_utils.report_graph(
                 self, types_pb2.EDGE_DATA, edge=json.dumps((u, v)), key=""
             )
@@ -1527,8 +1520,7 @@ class Graph(_GraphBase):
         >>> list(G.edges)
         []
         """
-        if self._graph_type == graph_def_pb2.ARROW_PROPERTY:
-            self._arrow_to_dynamic()
+        self._try_convert_arrow_to_dynamic()
         op = dag_utils.clear_edges(self)
         op.eval()
 
@@ -1623,8 +1615,7 @@ class Graph(_GraphBase):
         >>> H = G.copy()
 
         """
-        if self._graph_type == graph_def_pb2.ARROW_PROPERTY:
-            self._arrow_to_dynamic()
+        self._try_convert_arrow_to_dynamic()
 
         if as_view:
             g = generic_graph_view(self)
@@ -1672,8 +1663,7 @@ class Graph(_GraphBase):
         >>> list(G2.edges)
         [(0, 1)]
         """
-        if self._graph_type == graph_def_pb2.ARROW_PROPERTY:
-            self._arrow_to_dynamic()
+        self._try_convert_arrow_to_dynamic()
 
         if self.is_directed():
             graph_class = self.to_undirected_class()
@@ -1737,8 +1727,7 @@ class Graph(_GraphBase):
         >>> list(H.edges)
         [(0, 1)]
         """
-        if self._graph_type == graph_def_pb2.ARROW_PROPERTY:
-            self._arrow_to_dynamic()
+        self._try_convert_arrow_to_dynamic()
 
         if self.is_directed():
             return self.copy(as_view=as_view)
@@ -1792,8 +1781,7 @@ class Graph(_GraphBase):
         >>> list(H.edges)
         [(0, 1), (1, 2)]
         """
-        if self._graph_type == graph_def_pb2.ARROW_PROPERTY:
-            self._arrow_to_dynamic()
+        self._try_convert_arrow_to_dynamic()
 
         induced_nodes = []
         for n in nodes:
@@ -1844,8 +1832,7 @@ class Graph(_GraphBase):
         [(0, 1), (3, 4)]
 
         """
-        if self._graph_type == graph_def_pb2.ARROW_PROPERTY:
-            self._arrow_to_dynamic()
+        self._try_convert_arrow_to_dynamic()
 
         induced_edges = []
         for e in edges:
@@ -1942,7 +1929,7 @@ class Graph(_GraphBase):
         if n not in self:
             raise NetworkXError("The node %s is not in the graph." % (n,))
         if self.graph_type == graph_def_pb2.ARROW_PROPERTY:
-            n = self._convert_node_to_label_id_tuple(n)
+            n = self._convert_to_label_id_tuple(n)
         op = dag_utils.report_graph(self, report_type, node=json.dumps([n]))
         ret = op.eval()
         return ret
@@ -2126,12 +2113,12 @@ class Graph(_GraphBase):
         # check session and direction compatible
         if arrow_property_graph.session_id != self.session_id:
             raise NetworkXError(
-                "Try to init with another session's arrow property graph."
+                "Try to init with another session's arrow_property graph."
                 + "Graphs must be the same session."
             )
         if arrow_property_graph.is_directed() != self.is_directed():
             raise NetworkXError(
-                "Try to init with another direction type's arrow property graph."
+                "Try to init with another direction type's arrow_property graph."
                 + "Graphs must have the same direction type."
             )
         self._key = arrow_property_graph.key
@@ -2150,38 +2137,40 @@ class Graph(_GraphBase):
             self._default_label_id = -1
         self._graph_type = graph_def_pb2.ARROW_PROPERTY
 
-    def _arrow_to_dynamic(self):
-        """Convert the hosted graph from arrow property to dynamic property.
+    def _try_convert_arrow_to_dynamic(self):
+        """Try to convert the hosted graph from arrow_property to dynamic_property.
 
         Notes
         -------
-            the method is implicit called by modification methods.
+            the method is implicit called by modification and graph view methods.
         """
-        graph_def = from_gs_graph(self)
-        self._key = graph_def.key
-        self._graph_type = graph_def_pb2.DYNAMIC_PROPERTY
-        # TODO(weibin): unify the schema of dynamic property graph and arrow
-        # property graph
-        schema = GraphSchema()
-        schema.init_nx_schema()
-        schema.init_nx_schema(self._schema)
-        self._schema = schema
+        if self.graph_type == graph_def_pb2.ARROW_PROPERTY:
+            graph_def = from_gs_graph(self)
+            self._key = graph_def.key
+            # TODO(acezen): unify the schema of dynamic property graph and arrow
+            # property graph
+            schema = GraphSchema()
+            schema.init_nx_schema()
+            schema.init_nx_schema(self._schema)
+            self._schema = schema
+            self._graph_type = graph_def_pb2.DYNAMIC_PROPERTY
 
-    def _convert_node_to_label_id_tuple(self, n):
+    def _convert_to_label_id_tuple(self, n):
         """Convert the node to (label_id, id) format.
-        The input node may be id or (label, id), for simplicity, convert the node
+        The input node may be id or (label, id), convert the node
         to tuple (label_id, id) format.
 
         Notes
         -------
             the method is implicit called by report methods and the hosted graph is
-        arrow property graph.
+        arrow_property graph.
         """
         if isinstance(n, tuple):
             new_n = (self._schema.get_vertex_label_id(n[0]), n[1])
             if new_n[0] == self._default_label_id:
-                raise KeyError("default label's node must be id format.")
+                raise KeyError("default label's node must be non-tuple format.")
         elif self._default_label_id == -1:
+            # the n is non-tuple, but default id is -1
             raise KeyError("default label id is -1.")
         else:
             new_n = (self._default_label_id, n)
