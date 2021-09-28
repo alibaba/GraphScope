@@ -1190,29 +1190,22 @@ def is_simple_path(G, nodes):
 @project_to_simple
 def all_simple_paths(G, source, target_nodes, cutoff=None):
     """Generate all simple paths in the graph G from source to target.
-
     A simple path is a path with no repeated nodes.
-
     Parameters
     ----------
     G : NetworkX graph
-
     source : node
        Starting node for path
-
     target : nodes
        Single node or iterable of nodes at which to end path
-
     cutoff : integer, optional
         Depth to stop the search. Only paths of length <= cutoff are returned.
-
     Returns
     -------
     path_generator: generator
        A generator that produces lists of simple paths.  If there are no paths
        between the source and target within the given cutoff the generator
        produces no output.
-
     Examples
     --------
         >>> G = nx.complete_graph(4)
@@ -1223,23 +1216,19 @@ def all_simple_paths(G, source, target_nodes, cutoff=None):
         [0, 2, 1, 3]
         [0, 2, 3]
         [0, 3]
-
     Notes
     -----
     This algorithm uses a modified depth-first search to generate the
     paths [1]_.  A single path can be found in $O(V+E)$ time but the
     number of simple paths in a graph can be very large, e.g. $O(n!)$ in
     the complete graph of order $n$.
-
     References
     ----------
     .. [1] R. Sedgewick, "Algorithms in C, Part 5: Graph Algorithms",
        Addison Wesley Professional, 3rd ed., 2001.
-
     See Also
     --------
     all_shortest_paths, shortest_path
-
     """
     if not isinstance(target_nodes, list):
         tolist = [target_nodes]
@@ -1275,22 +1264,16 @@ def all_simple_paths(G, source, target_nodes, cutoff=None):
 @project_to_simple
 def all_simple_edge_paths(G, source, target_nodes, cutoff=None):
     """Generate lists of edges for all simple paths in G from source to target.
-
     A simple path is a path with no repeated nodes.
-
     Parameters
     ----------
     G : NetworkX graph
-
     source : node
        Starting node for path
-
     target : nodes
        Single node or iterable of nodes at which to end path
-
     cutoff : integer, optional
         Depth to stop the search. Only paths of length <= cutoff are returned.
-
     Returns
     -------
     path_generator: generator
@@ -1299,32 +1282,26 @@ def all_simple_edge_paths(G, source, target_nodes, cutoff=None):
        produces no output.
        For multigraphs, the list of edges have elements of the form `(u,v,k)`.
        Where `k` corresponds to the edge key.
-
     Examples
     --------
     Print the simple path edges of a Graph::
-
         >>> g = nx.Graph([(1, 2), (2, 4), (1, 3), (3, 4)])
         >>> print(nx.builtin.all_simple_paths(G, 1, 4))
         [(1, 2), (2, 4)]
         [(1, 3), (3, 4)]
-
     Notes
     -----
     This algorithm uses a modified depth-first search to generate the
     paths [1]_.  A single path can be found in $O(V+E)$ time but the
     number of simple paths in a graph can be very large, e.g. $O(n!)$ in
     the complete graph of order $n$.
-
     References
     ----------
     .. [1] R. Sedgewick, "Algorithms in C, Part 5: Graph Algorithms",
        Addison Wesley Professional, 3rd ed., 2001.
-
     See Also
     --------
     all_shortest_paths, shortest_path, all_simple_paths
-
     """
     if not isinstance(target_nodes, list):
         tolist = [target_nodes]
@@ -1359,3 +1336,120 @@ def all_simple_edge_paths(G, source, target_nodes, cutoff=None):
                     path.insert(i, (b, a))
                 a = b
     return paths
+
+
+@project_to_simple
+def betweenness_centrality(
+    G, k=None, normalized=True, weight=None, endpoints=False, seed=None
+):
+    r"""Compute the shortest-path betweenness centrality for nodes.
+
+    Betweenness centrality of a node $v$ is the sum of the
+    fraction of all-pairs shortest paths that pass through $v$
+
+    .. math::
+
+       c_B(v) =\sum_{s,t \in V} \frac{\sigma(s, t|v)}{\sigma(s, t)}
+
+    where $V$ is the set of nodes, $\sigma(s, t)$ is the number of
+    shortest $(s, t)$-paths,  and $\sigma(s, t|v)$ is the number of
+    those paths  passing through some  node $v$ other than $s, t$.
+    If $s = t$, $\sigma(s, t) = 1$, and if $v \in {s, t}$,
+    $\sigma(s, t|v) = 0$ [2]_.
+
+    Parameters
+    ----------
+    G : graph
+      A NetworkX graph.
+
+    k : int, optional (default=None)
+      If k is not None use k node samples to estimate betweenness.
+      The value of k <= n where n is the number of nodes in the graph.
+      Higher values give better approximation.
+
+    normalized : bool, optional
+      If True the betweenness values are normalized by `2/((n-1)(n-2))`
+      for graphs, and `1/((n-1)(n-2))` for directed graphs where `n`
+      is the number of nodes in G.
+
+    weight : None or string, optional (default=None)
+      If None, all edge weights are considered equal.
+      Otherwise holds the name of the edge attribute used as weight.
+      Weights are used to calculate weighted shortest paths, so they are
+      interpreted as distances.
+
+    endpoints : bool, optional
+      If True include the endpoints in the shortest path counts.
+
+    seed : integer, random_state, or None (default)
+        Indicator of random number generation state.
+        See :ref:`Randomness<randomness>`.
+        Note that this is only used if k is not None.
+
+    Returns
+    -------
+    nodes : dictionary
+       Dictionary of nodes with betweenness centrality as the value.
+
+    See Also
+    --------
+    edge_betweenness_centrality
+    load_centrality
+
+    Notes
+    -----
+    The algorithm is from Ulrik Brandes [1]_.
+    See [4]_ for the original first published version and [2]_ for details on
+    algorithms for variations and related metrics.
+
+    For approximate betweenness calculations set k=#samples to use
+    k nodes ("pivots") to estimate the betweenness values. For an estimate
+    of the number of pivots needed see [3]_.
+
+    For weighted graphs the edge weights must be greater than zero.
+    Zero edge weights can produce an infinite number of equal length
+    paths between pairs of nodes.
+
+    The total number of paths between source and target is counted
+    differently for directed and undirected graphs. Directed paths
+    are easy to count. Undirected paths are tricky: should a path
+    from "u" to "v" count as 1 undirected path or as 2 directed paths?
+
+    For betweenness_centrality we report the number of undirected
+    paths when G is undirected.
+
+    For betweenness_centrality_subset the reporting is different.
+    If the source and target subsets are the same, then we want
+    to count undirected paths. But if the source and target subsets
+    differ -- for example, if sources is {0} and targets is {1},
+    then we are only counting the paths in one direction. They are
+    undirected paths but we are counting them in a directed way.
+    To count them as undirected paths, each should count as half a path.
+
+    References
+    ----------
+    .. [1] Ulrik Brandes:
+       A Faster Algorithm for Betweenness Centrality.
+       Journal of Mathematical Sociology 25(2):163-177, 2001.
+       https://doi.org/10.1080/0022250X.2001.9990249
+    .. [2] Ulrik Brandes:
+       On Variants of Shortest-Path Betweenness
+       Centrality and their Generic Computation.
+       Social Networks 30(2):136-145, 2008.
+       https://doi.org/10.1016/j.socnet.2007.11.001
+    .. [3] Ulrik Brandes and Christian Pich:
+       Centrality Estimation in Large Networks.
+       International Journal of Bifurcation and Chaos 17(7):2303-2318, 2007.
+       https://dx.doi.org/10.1142/S0218127407018403
+    .. [4] Linton C. Freeman:
+       A set of measures of centrality based on betweenness.
+       Sociometry 40: 35–41, 1977
+       https://doi.org/10.2307/3033543
+    """
+    algorithm = "betweenness_centrality"
+    if weight is not None:
+        algorithm = "betweenness_centrality_generic"
+    ctx = AppAssets(algo=algorithm, context="vertex_data")(
+        G, normalized=normalized, endpoints=endpoints
+    )
+    return dict(zip(ctx.to_numpy("v.id"), ctx.to_numpy("r")))
