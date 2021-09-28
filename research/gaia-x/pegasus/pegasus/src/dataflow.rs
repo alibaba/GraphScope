@@ -110,7 +110,8 @@ impl DataflowBuilder {
     }
 
     pub(crate) fn build(self, sch: &mut Schedule) -> Result<Dataflow, BuildJobError> {
-        let report = self.worker_id.index == 0 && (self.config.plan_print || self.config.trace_enable);
+        let report = self.worker_id.index == 0
+            && (self.config.plan_print || self.config.trace_enable || log_enabled!(log::Level::Trace));
         let mut plan_desc = String::new();
         if report {
             writeln!(plan_desc, "\n============ Build Dataflow ==============").ok();

@@ -331,7 +331,7 @@ mod rob {
             let index = self.ch_info.index();
             let target = self.target_worker;
             trace_worker!(
-                "output[{:?}] flush channel[{}] to worker {};",
+                "output[{:?}] try to flush channel[{}] to worker {};",
                 self.ch_info.source_port,
                 self.ch_info.index(),
                 target

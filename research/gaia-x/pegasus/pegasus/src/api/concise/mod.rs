@@ -13,6 +13,7 @@
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 
+pub use any::*;
 pub use collect::*;
 pub use correlate::*;
 pub use count::*;
@@ -26,6 +27,7 @@ pub use merge::*;
 pub use order::*;
 pub use reduce::*;
 
+mod any;
 mod collect;
 mod correlate;
 mod count;

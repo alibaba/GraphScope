@@ -530,12 +530,12 @@ mod rob {
                                         _ => (),
                                     }
                                 }
-                                self.buf_pool.skip_buf(b.tag());
                             } else {
                                 self.blocks.push_back(b);
                             }
                         }
                     }
+                    self.buf_pool.skip_buf(tag);
                     self.tee.clean_block_of(tag)?;
                 }
             } else if level == self.scope_level {
@@ -546,6 +546,11 @@ mod rob {
                 for _ in 0..block_len {
                     if let Some(b) = self.blocks.pop_front() {
                         if tag == b.tag() {
+                            trace_worker!(
+                                "output[{:?}] clean blocking data of {:?} as canceled;",
+                                self.port,
+                                b.tag()
+                            );
                             if let Some(b) = self.block_entries.remove(b.tag()) {
                                 match b {
                                     BlockEntry::LastSingle(_, end) => {
@@ -673,6 +678,7 @@ mod rob {
         }
 
         fn clean_lost_end_child(&mut self, tag: &Tag, buf_pool: &mut ScopeBufferPool<D>) -> IOResult<()> {
+            trace_worker!("clean buffer child of {:?}", tag);
             for (tag, buf) in buf_pool.child_buffers_of(tag, true) {
                 if !buf.is_empty() {
                     // 正常情况不应进入这段逻辑，除非用户算子hold了end 信号， 通常这类情况需要用户定义on_notify算子；

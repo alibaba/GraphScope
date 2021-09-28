@@ -341,7 +341,6 @@ mod rob {
                                 }
                             }
                         } else {
-
                         }
                     }
                 } else {

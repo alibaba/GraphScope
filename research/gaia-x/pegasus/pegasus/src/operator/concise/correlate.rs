@@ -93,37 +93,38 @@ impl<D: Data> CorrelatedSubTask<D> for Stream<D> {
             let mut parent_data = TidyTagMap::new(info.scope_level - 1);
             let peers = crate::worker_id::get_current_worker().total_peers();
             move |input_left, input_right, output| {
-                input_left.for_each_batch(|dataset| {
-                    let p_tag = dataset.tag.to_parent_uncheck();
+                input_left.for_each_batch(|batch| {
+                    let p_tag = batch.tag.to_parent_uncheck();
                     let barrier = parent_data.get_mut_or_else(&p_tag, || (ZipSubtaskBuf::new(), None));
-                    for item in dataset.drain() {
+                    for item in batch.drain() {
                         barrier.0.add_req(item);
                     }
-                    if let Some(e) = dataset.get_end() {
+                    if let Some(e) = batch.get_end() {
                         barrier.1 = Some(e.clone());
                     }
                     Ok(())
                 })?;
 
-                input_right.for_each_batch(|dataset| {
-                    if !dataset.is_empty() {
-                        let p_tag = dataset.tag.to_parent_uncheck();
+                input_right.for_each_batch(|batch| {
+                    if !batch.is_empty() {
+                        assert_eq!(batch.len(), 1);
+                        let p_tag = batch.tag.to_parent_uncheck();
                         if let Some(parent) = parent_data.get_mut(&p_tag) {
                             let tag = Tag::inherit(&p_tag, 0);
                             let mut session = output.new_session(&tag)?;
-                            let seq = dataset.tag.current_uncheck();
-                            let res = dataset.next().unwrap();
+                            let seq = batch.tag.current_uncheck();
+                            let res = batch.next().unwrap();
                             assert!(seq > 0);
                             let offset = (seq / peers) as usize - 1;
                             match parent.0.take(offset) {
                                 Ok(req) => {
-                                    trace_worker!("join result of {}th subtask {:?}", offset, dataset.tag);
+                                    trace_worker!("join result of {}th subtask {:?}", offset, batch.tag);
                                     session.give((req, res.0))?;
                                 }
                                 Err(TakeErr::AlreadyTake) => {
                                     Err(JobExecError::panic(format!(
                                         "{}th subtask with scope {:?} had been joined;",
-                                        offset, dataset.tag
+                                        offset, batch.tag
                                     )))?;
                                 }
                                 Err(TakeErr::NotExist) => {
@@ -144,12 +145,12 @@ impl<D: Data> CorrelatedSubTask<D> for Stream<D> {
                                 }
                             }
                         } else {
-                            Err(JobExecError::panic(format!("req scope {:?} not found;", dataset.tag)))?;
+                            Err(JobExecError::panic(format!("req scope {:?} not found;", batch.tag)))?;
                         }
                     } else {
                         //warn_worker!("empty subtask result of {:?};", dataset.tag);
                     }
-                    dataset.take_end();
+                    batch.take_end();
 
                     // dataset.take_end();
                     Ok(())

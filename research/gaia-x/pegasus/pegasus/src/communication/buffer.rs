@@ -398,7 +398,7 @@ mod rob {
 
     pub(crate) struct BufSlot<D> {
         batch_size: usize,
-        end: bool,
+        discard: bool,
         buf: Option<Buffer<D>>,
         pool: BufferPool<D, MemoryBufferPool<D>>,
     }
@@ -407,10 +407,14 @@ mod rob {
         fn new(
             batch_size: usize, buf: Option<Buffer<D>>, pool: BufferPool<D, MemoryBufferPool<D>>,
         ) -> Self {
-            BufSlot { batch_size, end: false, buf, pool }
+            BufSlot { batch_size, discard: false, buf, pool }
         }
 
         pub(crate) fn push(&mut self, entry: D) -> Result<Option<ReadBuffer<D>>, WouldBlock<D>> {
+            if self.discard {
+                // trace_worker!("discard data");
+                return Ok(None);
+            }
             if self.batch_size == 1 {
                 return if let Some(mut b) = self.pool.fetch() {
                     b.push(entry);
@@ -439,7 +443,7 @@ mod rob {
         }
 
         fn is_idle(&self) -> bool {
-            self.end && self.pool.is_idle()
+            self.discard && self.pool.is_idle()
         }
     }
 
@@ -589,7 +593,10 @@ mod rob {
 
         pub fn take_buf(&mut self, tag: &Tag, is_last: bool) -> Option<Buffer<D>> {
             let b = self.buf_slots.get_mut(tag)?;
-            b.end = is_last;
+            if !b.discard {
+                trace_worker!("discard buffer of {:?} because of last;", tag);
+            }
+            b.discard = is_last;
             b.buf.take()
         }
 
@@ -599,8 +606,9 @@ mod rob {
                 self.take_buf(tag, true);
             } else if level < self.buf_slots.scope_level {
                 for (k, v) in self.buf_slots.iter_mut() {
-                    if tag.is_parent_of(&k) {
-                        v.end = true;
+                    if tag.is_parent_of(&*k) {
+                        trace_worker!("discard buffer of {:?};", k);
+                        v.discard = true;
                         v.buf.take();
                     }
                 }
@@ -624,7 +632,7 @@ mod rob {
                 .iter_mut()
                 .filter_map(move |(t, b)| {
                     if p.is_parent_of(&*t) {
-                        b.end = is_last;
+                        b.discard = is_last;
                         b.buf.take().map(|b| ((&*t).clone(), b))
                     } else {
                         None
@@ -658,7 +666,9 @@ mod rob {
 
                     if let Some(f) = find {
                         trace_worker!("reuse idle buffer slot for scope {:?};", tag);
-                        let slot = self.buf_slots.remove(&f).expect("find lost");
+                        let mut slot = self.buf_slots.remove(&f).expect("find lost");
+                        slot.discard = false;
+                        assert!(slot.buf.is_none());
                         self.buf_slots.insert(tag.clone(), slot.clone());
                         Some(slot)
                     } else {
