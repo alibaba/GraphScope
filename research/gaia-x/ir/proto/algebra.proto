@@ -31,7 +31,7 @@ message Project {
     common.NameOrId alias = 2;
   }
   // A list of [expression -> alias] to be projected from the graph relation.
-  // e.g., project_{a.birthday / 100 % 100 > 11 }
+  // e.g., project_{a.birthday / 100 % 100 as birth_month }
   repeated ExprAlias attributes = 1;
 }
 
@@ -132,12 +132,14 @@ message Unfold {
   common.NameOrId alias = 2;
 }
 
-// The operation of getting vertices from the graph
-message GetV {
-  // The predicate that defines conditions these vertices shall satisfy
-  common.SuffixExpr predicate = 1;
-  // The alias for the vertices
-  common.NameOrId alias = 2;
+// The operation of fetching a source from the (graph) database
+message Source {
+  // A location to tell where to fetch the source data
+  string location = 1;
+  // The predicate that defines conditions these data shall satisfy
+  common.SuffixExpr predicate = 2;
+  // The alias for the data
+  repeated common.NameOrId alias = 3;
 }
 
 // To expand satisfied edges from a tag of the graph relation that refers to a vertex attribute
@@ -255,7 +257,7 @@ message LogicalPlan {
       Apply apply = 9;
       SegmentApply seg_apply = 10;
       // Saving the room for relational operators
-      GetV get_v = 20;
+      Source source = 20;
       EdgeExpand edge = 21;
       PathExpand path = 22;
       ShortestPathExpand shortest_path = 23;

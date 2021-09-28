@@ -20,7 +20,7 @@ use crate::expr::token::tokenize;
 use crate::generated::algebra as pb;
 use crate::generated::common as common_pb;
 use std::cell::RefCell;
-use std::collections::BTreeSet;
+use std::collections::{BTreeSet, HashMap};
 use std::convert::TryFrom;
 use std::ffi::CStr;
 use std::iter::FromIterator;
@@ -97,7 +97,7 @@ type NodeType = Rc<RefCell<Node>>;
 #[derive(Default, Debug)]
 pub(crate) struct LogicalPlan {
     pub nodes: VecMap<NodeType>,
-    /// To record the total number of operators ever created in the logical plan ,
+    /// To record the total number of operators ever created in the logical plan,
     /// **ignorant of the removed nodes**
     pub total_size: usize,
 }
@@ -152,6 +152,33 @@ impl TryFrom<pb::LogicalPlan> for LogicalPlan {
         };
 
         Ok(plan)
+    }
+}
+
+impl From<LogicalPlan> for pb::LogicalPlan {
+    fn from(plan: LogicalPlan) -> Self {
+        let mut id_map: HashMap<u32, i32> = HashMap::with_capacity(plan.len());
+        // As there might be some nodes being removed, we gonna remap the nodes's ids
+        for (id, node) in plan.nodes.iter().enumerate() {
+            id_map.insert(node.0 as u32, id as i32);
+        }
+        let mut plan_pb = pb::LogicalPlan { nodes: vec![] };
+        for (_, node) in &plan.nodes {
+            let mut node_pb = pb::logical_plan::Node {
+                opr: None,
+                children: vec![],
+            };
+            node_pb.opr = Some(node.borrow().opr.clone());
+            node_pb.children = node
+                .borrow()
+                .children
+                .iter()
+                .map(|old_id| *id_map.get(old_id).unwrap())
+                .collect();
+            plan_pb.nodes.push(node_pb);
+        }
+
+        plan_pb
     }
 }
 
@@ -339,10 +366,10 @@ impl From<pb::SegmentApply> for pb::logical_plan::Operator {
     }
 }
 
-impl From<pb::GetV> for pb::logical_plan::Operator {
-    fn from(opr: pb::GetV) -> Self {
+impl From<pb::Source> for pb::logical_plan::Operator {
+    fn from(opr: pb::Source) -> Self {
         pb::logical_plan::Operator {
-            opr: Some(pb::logical_plan::operator::Opr::GetV(opr)),
+            opr: Some(pb::logical_plan::operator::Opr::Source(opr)),
         }
     }
 }
@@ -553,5 +580,27 @@ mod test {
             .map(|x| *x)
             .collect::<Vec<u32>>();
         assert_eq!(parents, vec![0, 1]);
+    }
+
+    #[test]
+    fn test_logical_plan_into_pb() {
+        let opr = pb::logical_plan::Operator { opr: None };
+        let mut plan = LogicalPlan::default();
+
+        let _ = plan.append_node(opr.clone(), vec![]).unwrap();
+        let _ = plan.append_node(opr.clone(), vec![0]).unwrap();
+        let _ = plan.append_node(opr.clone(), vec![0]).unwrap();
+
+        let _ = plan.remove_node(1);
+
+        let plan_pb = pb::LogicalPlan::from(plan);
+        assert_eq!(plan_pb.nodes.len(), 2);
+
+        let node0 = &plan_pb.nodes[0];
+        let node1 = &plan_pb.nodes[1];
+        assert_eq!(node0.opr, Some(opr.clone()));
+        assert_eq!(node0.children, vec![1]);
+        assert_eq!(node1.opr, Some(opr.clone()));
+        assert!(node1.children.is_empty());
     }
 }

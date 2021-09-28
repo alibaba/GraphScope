@@ -45,7 +45,7 @@
 //!
 //! #    debug_plan(ptr_plan);
 //! #    destroy_logical_plan(ptr_plan);
-//! }
+//! # }
 //!
 //! Save the codes as </path/to/c-caller/test.cc>, and build like:
 //! `g++ -o test test.cc -std=c++11 -L. -lir_core`
