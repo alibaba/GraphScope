@@ -405,6 +405,7 @@ class ArrowFragmentReporter<vineyard::ArrowFragment<OID_T, VID_T>>
   using oid_t = OID_T;
   using vid_t = VID_T;
   using vertex_t = typename fragment_t::vertex_t;
+  using adj_list_t = typename fragment_t::adj_list_t;
 
  public:
   explicit ArrowFragmentReporter(const grape::CommSpec& comm_spec,
@@ -426,7 +427,7 @@ class ArrowFragmentReporter<vineyard::ArrowFragment<OID_T, VID_T>>
       return std::to_string(reportEdgeNum(fragment));
     }
     case rpc::SELFLOOPS_NUM: {
-      // TODO(acezen): support selfloops num from arrow fragment.
+      // TODO(acezen): support selfloops num for arrow fragment.
       return std::string();
     }
     case rpc::HAS_NODE: {
@@ -474,7 +475,7 @@ class ArrowFragmentReporter<vineyard::ArrowFragment<OID_T, VID_T>>
       folly::dynamic node = folly::parseJson(node_in_json, json_opts_)[0];
       label_id_t label_id = node[0].asInt();
       oid_t oid = ExtractOidFromDynamic<oid_t>(node[1]);
-      return getNeighbors(fragment, label_id, oid);
+      return getNeighbors(fragment, label_id, oid, report_type);
     }
     case rpc::NODES_BY_LOC: {
       BOOST_LEAF_AUTO(fid, params.Get<int64_t>(rpc::FID));
@@ -576,7 +577,8 @@ class ArrowFragmentReporter<vineyard::ArrowFragment<OID_T, VID_T>>
   }
 
   std::string getNeighbors(std::shared_ptr<fragment_t>& fragment,
-                           label_id_t label_id, const oid_t& n) {
+                           label_id_t label_id, const oid_t& n,
+                           const rpc::ReportType& report_type) {
     vid_t gid;
     vertex_t v;
     folly::dynamic nbrs = folly::dynamic::array;
@@ -586,9 +588,14 @@ class ArrowFragmentReporter<vineyard::ArrowFragment<OID_T, VID_T>>
       nbrs.resize(2, folly::dynamic::array);
       for (label_id_t e_label = 0; e_label < fragment->edge_label_num();
            e_label++) {
-        auto oe = fragment->GetOutgoingAdjList(v, e_label);
+        adj_list_t edges;
         auto edge_data = fragment->edge_data_table(e_label);
-        for (auto& e : oe) {
+        if (report_type == rpc::PREDS_BY_NODE) {
+          edges = fragment->GetIncomingAdjList(v, e_label);
+        } else {
+          edges = fragment->GetOutgoingAdjList(v, e_label);
+        }
+        for (auto& e : edges) {
           auto n_label_id = fragment->vertex_label(e.neighbor());
           if (n_label_id == default_label_id_) {
             nbrs[0].push_back(fragment->GetId(e.neighbor()));

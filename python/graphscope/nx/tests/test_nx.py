@@ -79,7 +79,8 @@ def ldbc_sample_multi_labels(prefix, directed):
         )
         .add_vertices(
             Loader(os.path.join(prefix, "person_0_0.csv"), delimiter="|"),
-            "person"[
+            "person",
+            [
                 "firstName",
                 "lastName",
                 "gender",
@@ -400,7 +401,8 @@ class TestGraphTransformation(object):
             "eid": 72057594037927936,
         }
         assert list(G.neighbors(933)) == [28587302322537, 8796093023017, 4398046511628]
-        assert len(G.nodes) == G.number_of_nodes()
+        if G.is_directed():
+            assert list(G.predecessors(4398046511628)) == [2199023256530, 318, 933, 987]
 
         G.add_node(0)  # modify graph to make copy on write
         assert G.graph_type == graph_def_pb2.DYNAMIC_PROPERTY
@@ -430,6 +432,8 @@ class TestGraphTransformation(object):
             "eid": 72057594037927936,
         }
         assert list(G.neighbors(933)) == [28587302322537, 8796093023017, 4398046511628]
+        if G.is_directed():
+            assert list(G.predecessors(4398046511628)) == [2199023256530, 318, 987, 933]
 
     def test_str_oid_gs_to_nx(self):
         g = self.str_oid_g
