@@ -62,33 +62,29 @@ class AllSimplePathsContext
     }
 
     // init targets.
-    vid_t v;
-    std::vector<oid_t> oid_array;
-    folly::dynamic nodes_array = folly::parseJson(targets_json);
-    convert_to_oid_array(nodes_array, oid_array);
-    for (const auto& val : oid_array) {
-      if (!frag.Oid2Gid(val, v)) {
-        LOG(ERROR) << "Graph not contain vertex " << val << std::endl;
+    vid_t gid;
+    std::vector<oid_t> target_oid_array;
+    folly::dynamic target_nodes_id_array = folly::parseJson(targets_json);
+    ExtractOidArrayFromDynamic(target_nodes_id_array, target_oid_array);
+    for (const auto& oid : target_oid_array) {
+      if (!frag.Oid2Gid(oid, gid)) {
+        LOG(ERROR) << "Graph not contain vertex " << oid << std::endl;
         nodes_not_found = true;
         break;
       }
-      if (!targets.count(v)) {
-        targets.insert(v);
+      if (!targets.count(gid)) {
+        targets.insert(gid);
       }
     }
 
-    if (!frag.Oid2Gid(source_id, v)) {
-      return;
-    }
-    if (targets.count(v) || this->cutoff < 1) {
+    if (!frag.Oid2Gid(source_id, gid) || targets.count(gid) ||
+        this->cutoff < 1) {
       return;
     }
 
     vertex_t source;
     bool native_source = frag.GetInnerVertex(source_id, source);
     if (native_source) {
-      int v_size = frag.GetTotalVerticesNum();
-      VLOG(0) << "vsize: " << v_size << std::endl;
       frag_vertex_num.resize(frag.fnum());
       frag_vertex_num[frag.fid()] = frag.GetInnerVerticesNum();
     }
@@ -98,83 +94,14 @@ class AllSimplePathsContext
     auto& frag = this->fragment();
     vertex_t source;
     bool native_source = frag.GetInnerVertex(source_id, source);
-    std::vector<vid_t> q;
+    std::vector<vid_t> path;
     if (native_source) {
-      std::set<vid_t> qvisit;
+      std::set<vid_t> pvisit;
       vid_t source_gid = frag.Vertex2Gid(source);
-      qvisit.insert(source_gid);
-      q.push_back(source_gid);
-      int index = find_edge_map_index(source_gid);
-      Pint_Result(index, 0, q, qvisit, os);
-    }
-  }
-
-  void Pint_Result(int from, int depth, std::vector<vid_t>& q,
-                   std::set<vid_t>& qvisit, std::ostream& os) {
-    auto& frag = this->fragment();
-    if (depth == (this->cutoff - 1)) {
-      typename std::set<vid_t>::iterator it;
-      for (it = targets.begin(); it != targets.end(); it++) {
-        auto t = *it;
-        if (qvisit.count(t) == 1) {
-          continue;
-        }
-        int to = find_edge_map_index(t);
-        if (std::find(edge_map[from].begin(), edge_map[from].end(), to) !=
-            edge_map[from].end()) {
-          for (auto gid : q) {
-            os << frag.Gid2Oid(gid) << " ";
-          }
-          os << frag.Gid2Oid(t) << " " << std::endl;
-        }
-      }
-      return;
-    }
-
-    for (uint64_t t = 0; t < edge_map[from].size(); t++) {
-      int to = edge_map[from][t];
-      vid_t gid = index2gid(to);
-      if (qvisit.count(gid) == 1) {
-        continue;
-      }
-      qvisit.insert(gid);
-      if (targets.count(gid)) {
-        for (auto v : q) {
-          os << frag.Gid2Oid(v) << " ";
-        }
-        os << frag.Gid2Oid(gid) << " " << std::endl;
-      }
-      q.push_back(gid);
-      Pint_Result(to, depth + 1, q, qvisit, os);
-      q.pop_back();
-      qvisit.erase(gid);
-    }
-  }
-
-  int find_edge_map_index(vid_t gid) {
-    int fid = static_cast<int>(gid >> fid_offset);
-    int lid = static_cast<int>(gid & id_mask);
-    int ret = 0;
-    for (int i = 0; i < fid; i++) {
-      ret += frag_vertex_num[i];
-    }
-    return ret + lid;
-  }
-
-  vid_t index2gid(int index) {
-    int i = 0;
-    int sum = 0;
-    int sum_last = 0;
-    while (true) {
-      sum += frag_vertex_num[i];
-      if (sum > index) {
-        int lid = index - sum_last;
-        vid_t gid =
-            (static_cast<vid_t>(i) << fid_offset) | static_cast<vid_t>(lid);
-        return gid;
-      }
-      i++;
-      sum_last = sum;
+      pvisit.insert(source_gid);
+      path.push_back(source_gid);
+      int index = findVertexGlobalIndex(source_gid);
+      printResult(index, 0, path, pvisit, os);
     }
   }
 
@@ -192,6 +119,76 @@ class AllSimplePathsContext
   int frag_finish_counter = 0;
   int path_num = 0;
   bool nodes_not_found = false;
+
+ private:
+  void printResult(int from, int depth, std::vector<vid_t>& path,
+                   std::set<vid_t>& pvisit, std::ostream& os) {
+    auto& frag = this->fragment();
+    if (depth == (this->cutoff - 1)) {
+      typename std::set<vid_t>::iterator it;
+      for (it = targets.begin(); it != targets.end(); it++) {
+        auto t = *it;
+        if (pvisit.count(t) == 1) {
+          continue;
+        }
+        int to = findVertexGlobalIndex(t);
+        if (std::find(edge_map[from].begin(), edge_map[from].end(), to) !=
+            edge_map[from].end()) {
+          for (auto gid : path) {
+            os << frag.Gid2Oid(gid) << " ";
+          }
+          os << frag.Gid2Oid(t) << " " << std::endl;
+        }
+      }
+      return;
+    }
+
+    for (uint64_t t = 0; t < edge_map[from].size(); t++) {
+      int to = edge_map[from][t];
+      vid_t gid = globalIndex2Gid(to);
+      if (pvisit.count(gid) == 1) {
+        continue;
+      }
+      pvisit.insert(gid);
+      if (targets.count(gid)) {
+        for (auto v : path) {
+          os << frag.Gid2Oid(v) << " ";
+        }
+        os << frag.Gid2Oid(gid) << " " << std::endl;
+      }
+      path.push_back(gid);
+      printResult(to, depth + 1, path, pvisit, os);
+      path.pop_back();
+      pvisit.erase(gid);
+    }
+  }
+
+  int findVertexGlobalIndex(vid_t gid) {
+    int fid = static_cast<int>(gid >> fid_offset);
+    int lid = static_cast<int>(gid & id_mask);
+    int ret = 0;
+    for (int i = 0; i < fid; i++) {
+      ret += frag_vertex_num[i];
+    }
+    return ret + lid;
+  }
+
+  vid_t globalIndex2Gid(int index) {
+    int i = 0;
+    int sum = 0;
+    int sum_last = 0;
+    while (true) {
+      sum += frag_vertex_num[i];
+      if (sum > index) {
+        int lid = index - sum_last;
+        vid_t gid =
+            (static_cast<vid_t>(i) << fid_offset) | static_cast<vid_t>(lid);
+        return gid;
+      }
+      i++;
+      sum_last = sum;
+    }
+  }
 };
 }  // namespace gs
 

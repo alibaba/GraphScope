@@ -47,11 +47,12 @@ class AllSimplePaths : public AppBase<FRAG_T, AllSimplePathsContext<FRAG_T>>,
     vertex_t source;
     vid_t source_gid;
     bool empty_flag = false;
-
+    // Source does not exist.
     if (!frag.Oid2Gid(ctx.source_id, source_gid)) {
       empty_flag = true;
       ctx.nodes_not_found = true;
     }
+    // nodes_not_found = true, return 2 as NodeNotFound.
     if (ctx.nodes_not_found == true && frag.fid() == 0) {
       std::vector<typename fragment_t::oid_t> data;
       std::vector<size_t> shape{1};
@@ -63,6 +64,7 @@ class AllSimplePaths : public AppBase<FRAG_T, AllSimplePathsContext<FRAG_T>>,
     if (ctx.targets.count(source_gid) || ctx.cutoff < 1) {
       empty_flag = true;
     }
+    // empty_flag == true, return 1 as empty path.
     if (empty_flag == true && frag.fid() == ctx.soucre_fid) {
       std::vector<typename fragment_t::oid_t> data;
       std::vector<size_t> shape{1};
@@ -73,6 +75,8 @@ class AllSimplePaths : public AppBase<FRAG_T, AllSimplePathsContext<FRAG_T>>,
       return;
     }
     bool native_source = frag.GetInnerVertex(ctx.source_id, source);
+    // If native_source resize edge_map, else send frag innervertices num to
+    // source frag.
     if (native_source) {
       ctx.source_flag = true;
       size_t total_vertex_num = frag.GetTotalVerticesNum();
@@ -96,6 +100,8 @@ class AllSimplePaths : public AppBase<FRAG_T, AllSimplePathsContext<FRAG_T>>,
     while (messages.GetMessage(msg)) {
       vid_t gid = std::get<0>(msg).first;
       vid_t msg2 = std::get<0>(msg).second;
+      // msg[2] == true means init frag_vertex_num, msg[1] == false means new
+      // vertex to deal with, msg[1] == true means update edge_map.
       if (std::get<2>(msg) == true) {
         init_counter++;
         ctx.frag_vertex_num[gid] = msg2;
@@ -115,32 +121,26 @@ class AllSimplePaths : public AppBase<FRAG_T, AllSimplePathsContext<FRAG_T>>,
           ctx.next_level_inner.push(std::make_pair(gid, msg2));
         }
       } else if (ctx.source_flag == true && std::get<1>(msg) == true) {
-        int a = find_edge_map_index(ctx, gid);
-        int b = find_edge_map_index(ctx, msg2);
+        int a = findVertexGlobalIndex(ctx, gid);
+        int b = findVertexGlobalIndex(ctx, msg2);
         ctx.edge_map[a].push_back(b);
       }
     }
     ctx.curr_level_inner.swap(ctx.next_level_inner);
-    VLOG(0) << "frag id: " << frag.fid()
-            << " curr_level_inner size: " << ctx.curr_level_inner.size()
-            << std::endl;
     while (!ctx.curr_level_inner.empty()) {
       vid_t gid = ctx.curr_level_inner.front().first;
       int depth = ctx.curr_level_inner.front().second;
       ctx.curr_level_inner.pop();
       vertex_t v;
       frag.Gid2Vertex(gid, v);
-
       if (depth <= ctx.cutoff) {
         bool ret = vertexProcess(v, frag, ctx, messages, depth);
         if (ret == true)
           frag_finish_counter++;
       }
     }
-    VLOG(0) << "frag_finish_counter: " << frag_finish_counter << std::endl;
     if (!ctx.next_level_inner.empty() || frag_finish_counter > 0)
       messages.ForceContinue();
-
     Sum(frag_finish_counter, ctx.frag_finish_counter);
     if (ctx.frag_finish_counter == 0 && frag.fid() == ctx.soucre_fid) {
       writeToCtx(frag, ctx);
@@ -165,8 +165,8 @@ class AllSimplePaths : public AppBase<FRAG_T, AllSimplePathsContext<FRAG_T>>,
           messages.SendToFragment(ctx.soucre_fid, msg);
           ret = true;
         } else {
-          int a = find_edge_map_index(ctx, gid);
-          int b = find_edge_map_index(ctx, u_gid);
+          int a = findVertexGlobalIndex(ctx, gid);
+          int b = findVertexGlobalIndex(ctx, u_gid);
           ctx.edge_map[a].push_back(b);
         }
         if (!frag.IsOuterVertex(u)) {
@@ -188,14 +188,14 @@ class AllSimplePaths : public AppBase<FRAG_T, AllSimplePathsContext<FRAG_T>>,
 
   void writeToCtx(const fragment_t& frag, context_t& ctx) {
     std::vector<typename fragment_t::oid_t> data;
-    std::set<vid_t> qvisit;
-    std::vector<vid_t> q;
+    std::set<vid_t> pvisit;
+    std::vector<vid_t> path;
     vid_t source_gid;
     frag.Oid2Gid(ctx.source_id, source_gid);
-    qvisit.insert(source_gid);
-    q.push_back(source_gid);
-    int index = find_edge_map_index(ctx, source_gid);
-    Pint_Result(index, 0, q, qvisit, data, frag, ctx);
+    pvisit.insert(source_gid);
+    path.push_back(source_gid);
+    int index = findVertexGlobalIndex(ctx, source_gid);
+    generatePath(index, 0, path, pvisit, data, frag, ctx);
     std::vector<size_t> shape{static_cast<size_t>(ctx.path_num),
                               static_cast<size_t>(ctx.cutoff + 1)};
     if (ctx.path_num == 0) {
@@ -206,22 +206,35 @@ class AllSimplePaths : public AppBase<FRAG_T, AllSimplePathsContext<FRAG_T>>,
     VLOG(0) << "path_num: " << ctx.path_num << std::endl;
     ctx.assign(data, shape);
   }
-  void Pint_Result(int from, int depth, std::vector<vid_t>& q,
-                   std::set<vid_t>& qvisit,
-                   std::vector<typename fragment_t::oid_t>& data,
-                   const fragment_t& frag, context_t& ctx) {
+
+  /**
+   * @brief generate all the path from edge_map
+   *
+   * @param from
+   * @param depth dfs depth
+   * @param path vector contain current path
+   * @param path set to record whether the vertex is accessed
+   * @param data storage all paths
+   * @param frag
+   * @param ctx
+   */
+  void generatePath(int from, int depth, std::vector<vid_t>& path,
+                    std::set<vid_t>& pvisit,
+                    std::vector<typename fragment_t::oid_t>& data,
+                    const fragment_t& frag, context_t& ctx) {
+    // if depth == cutoff-1, just check set::targets.
     if (depth == (ctx.cutoff - 1)) {
       typename std::set<vid_t>::iterator it;
       for (it = ctx.targets.begin(); it != ctx.targets.end(); it++) {
         auto t = *it;
-        if (qvisit.count(t) == 1) {
+        if (pvisit.count(t) == 1) {
           continue;
         }
-        int to = find_edge_map_index(ctx, t);
+        int to = findVertexGlobalIndex(ctx, t);
         if (std::find(ctx.edge_map[from].begin(), ctx.edge_map[from].end(),
                       to) != ctx.edge_map[from].end()) {
           int len_counter = 0;
-          for (auto gid : q) {
+          for (auto gid : path) {
             data.push_back(frag.Gid2Oid(gid));
             len_counter++;
           }
@@ -240,14 +253,14 @@ class AllSimplePaths : public AppBase<FRAG_T, AllSimplePathsContext<FRAG_T>>,
 
     for (uint64_t t = 0; t < ctx.edge_map[from].size(); t++) {
       int to = ctx.edge_map[from][t];
-      vid_t gid = index2gid(ctx, to);
-      if (qvisit.count(gid) == 1) {
+      vid_t gid = globalIndex2Gid(ctx, to);
+      if (pvisit.count(gid) == 1) {
         continue;
       }
-      qvisit.insert(gid);
+      pvisit.insert(gid);
       if (ctx.targets.count(gid)) {
         int len_counter = 0;
-        for (auto v : q) {
+        for (auto v : path) {
           data.push_back(frag.Gid2Oid(v));
           len_counter++;
         }
@@ -260,14 +273,20 @@ class AllSimplePaths : public AppBase<FRAG_T, AllSimplePathsContext<FRAG_T>>,
         }
         ctx.path_num++;
       }
-      q.push_back(gid);
-      Pint_Result(to, depth + 1, q, qvisit, data, frag, ctx);
-      q.pop_back();
-      qvisit.erase(gid);
+      path.push_back(gid);
+      generatePath(to, depth + 1, path, pvisit, data, frag, ctx);
+      path.pop_back();
+      pvisit.erase(gid);
     }
   }
 
-  int find_edge_map_index(context_t& ctx, vid_t gid) {
+  /**
+   * @brief gid to vertex global index
+   *
+   * @param ctx
+   * @param gid
+   */
+  int findVertexGlobalIndex(context_t& ctx, vid_t gid) {
     int fid = static_cast<int>(gid >> ctx.fid_offset);
     int lid = static_cast<int>(gid & ctx.id_mask);
     int ret = 0;
@@ -277,7 +296,13 @@ class AllSimplePaths : public AppBase<FRAG_T, AllSimplePathsContext<FRAG_T>>,
     return ret + lid;
   }
 
-  vid_t index2gid(context_t& ctx, int index) {
+  /**
+   * @brief vertex global index to gid
+   *
+   * @param ctx
+   * @param index
+   */
+  vid_t globalIndex2Gid(context_t& ctx, int index) {
     int i = 0;
     int sum = 0;
     int sum_last = 0;

@@ -21,27 +21,27 @@ Author: Ma JingYuan
 
 namespace gs {
 template <typename T>
-void convert_to_oid_array(folly::dynamic node_array,
-                          std::vector<T>& oid_array) {}
+void ExtractOidArrayFromDynamic(folly::dynamic node_array,
+                                std::vector<T>& oid_array) {}
 
 template <>
-void convert_to_oid_array<int64_t>(folly::dynamic node_array,
-                                   std::vector<int64_t>& oid_array) {
+void ExtractOidArrayFromDynamic<int64_t>(folly::dynamic node_array,
+                                         std::vector<int64_t>& oid_array) {
   for (const auto& val : node_array) {
     oid_array.push_back(val.asInt());
   }
 }
 
 template <>
-void convert_to_oid_array<std::string>(folly::dynamic node_array,
-                                       std::vector<std::string>& oid_array) {
+void ExtractOidArrayFromDynamic<std::string>(
+    folly::dynamic node_array, std::vector<std::string>& oid_array) {
   for (const auto& val : node_array) {
     oid_array.push_back(val.asString());
   }
 }
 
 template <>
-void convert_to_oid_array<folly::dynamic>(
+void ExtractOidArrayFromDynamic<folly::dynamic>(
     folly::dynamic node_array, std::vector<folly::dynamic>& oid_array) {
   for (const auto& val : node_array) {
     oid_array.push_back(val);
