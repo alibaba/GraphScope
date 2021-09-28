@@ -295,27 +295,7 @@ class Graph(_GraphBase):
         # attempt to load graph with data
         if incoming_graph_data is not None:
             if self._is_gs_graph(incoming_graph_data):
-                # load graph from arrow property graph
-                # TODO: add session check and directed check here
-                # graph_def = from_gs_graph(
-                #     incoming_graph_data, self, self._default_label
-                # )
-                self._key = incoming_graph_data.key
-                self._schema = incoming_graph_data.schema
-                if self._default_label is not None:
-                    try:
-                        self._default_label_id = self._schema.get_vertex_label_id(
-                            self._default_label
-                        )
-                    except KeyError:
-                        raise NetworkXError(
-                            "default label {} not existed in graph."
-                            % self._default_label
-                        )
-                else:
-                    # default_label is None
-                    self._default_label_id = -1
-                self._graph_type = graph_def_pb2.ARROW_PROPERTY
+                self._init_with_arrow_property_graph(incoming_graph_data)
             else:
                 g = to_nx_graph(incoming_graph_data, create_using=self)
                 check_argument(isinstance(g, Graph))
@@ -2141,6 +2121,35 @@ class Graph(_GraphBase):
         graph._is_client_view = False
         return graph
 
+    def _init_with_arrow_property_graph(self, arrow_property_graph):
+        """Init graph with arrow property graph"""
+        # check session and direction compatible
+        if arrow_property_graph.session_id != self.session_id:
+            raise NetworkXError(
+                "Try to init with another session's arrow property graph."
+                + "Graphs must be the same session."
+            )
+        if arrow_property_graph.is_directed() != self.is_directed():
+            raise NetworkXError(
+                "Try to init with another direction type's arrow property graph."
+                + "Graphs must have the same direction type."
+            )
+        self._key = arrow_property_graph.key
+        self._schema = arrow_property_graph.schema
+        if self._default_label is not None:
+            try:
+                self._default_label_id = self._schema.get_vertex_label_id(
+                    self._default_label
+                )
+            except KeyError:
+                raise NetworkXError(
+                    "default label {} not existed in graph." % self._default_label
+                )
+        else:
+            # default_label is None
+            self._default_label_id = -1
+        self._graph_type = graph_def_pb2.ARROW_PROPERTY
+
     def _arrow_to_dynamic(self):
         """Convert the hosted graph from arrow property to dynamic property.
 
@@ -2151,6 +2160,8 @@ class Graph(_GraphBase):
         graph_def = from_gs_graph(self)
         self._key = graph_def.key
         self._graph_type = graph_def_pb2.DYNAMIC_PROPERTY
+        # TODO(weibin): unify the schema of dynamic property graph and arrow
+        # property graph
         schema = GraphSchema()
         schema.init_nx_schema()
         schema.init_nx_schema(self._schema)

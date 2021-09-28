@@ -19,6 +19,7 @@
 import os
 
 import pytest
+from networkx.exception import NetworkXError
 from networkx.utils.misc import default_opener
 
 import graphscope
@@ -422,10 +423,9 @@ class TestGraphTransformation(object):
         )
         assert dict(ret.values) == dict(ret2.values)
 
-    @pytest.mark.skip(reason="TODO: open after supporting run app on arrow_property")
     def test_error_on_wrong_nx_type(self):
         g = self.single_label_g
-        with pytest.raises(TypeError):
+        with pytest.raises(NetworkXError):
             nx_g = nx.DiGraph(g)
 
     @pytest.mark.skip(reason="FIXME: multiple session crash in ci.")
@@ -608,10 +608,9 @@ class TestDigraphTransformation(TestGraphTransformation):
         cls.multi_label_g.unload()
         cls.str_oid_g.unload()
 
-    @pytest.mark.skip(reason="TODO: open after supporting run app on arrow_property")
     def test_error_on_wrong_nx_type(self):
         g = self.single_label_g
-        with pytest.raises(TypeError):
+        with pytest.raises(NetworkXError):
             nx_g = nx.Graph(g)
 
 

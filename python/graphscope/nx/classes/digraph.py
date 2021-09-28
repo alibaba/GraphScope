@@ -235,26 +235,7 @@ class DiGraph(Graph):
         # attempt to load graph with data
         if incoming_graph_data is not None:
             if self._is_gs_graph(incoming_graph_data):
-                # graph_def = from_gs_graph(
-                #     incoming_graph_data, self, self._default_label
-                # )
-                # self._key = graph_def.key
-                # self._schema.init_nx_schema(incoming_graph_data.schema)
-                self._key = incoming_graph_data.key
-                self._schema = incoming_graph_data.schema
-                if self._default_label is not None:
-                    try:
-                        self._default_label_id = self._schema.get_vertex_label_id(
-                            self._default_label
-                        )
-                    except KeyError:
-                        raise NetworkXError(
-                            "default label {} not existed in graph."
-                            % self._default_label
-                        )
-                else:
-                    # default_label is None
-                    self._default_label_id = -1
+                self._init_with_arrow_property_graph(incoming_graph_data)
             else:
                 g = to_nx_graph(incoming_graph_data, create_using=self)
                 check_argument(isinstance(g, Graph))
