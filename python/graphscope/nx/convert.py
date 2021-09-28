@@ -160,41 +160,6 @@ def to_nx_graph(data, create_using=None, multigraph_input=False):  # noqa: C901
     raise nx.NetworkXError("Input is not a known data type for conversion.")
 
 
-def from_gs_graph(graph):
-    """Create a new nx graph from a gs graph.
-
-    Parameters
-    ----------
-    graph: gs graph
-        A gs graph that contains graph data. the gs graph should be nodes id unique
-        in all labels and not has parallel edge between edge label.
-
-    Returns
-    -------
-    graph_def: GraphDef
-        graph definition contains meta data and schema.
-
-    Raises
-    -------
-    TypeError
-        if directed of gs graph not match to dst_nx_graph
-    AnalyticalEngineInternalError
-        if gs graph contain same node id between labels or has parallel edges
-        between edge labels.
-
-    Examples
-    --------
-    >>> import graphscope
-    >>> from graphscope import nx
-    >>> gs_g = graphscope.g(directed=False)
-    >>> gs_g = gs_g.add_vertices(...).add_edges(...)
-    >>> nx_g = nx.Graph(gs_g)
-    """
-    op = arrow_to_dynamic(graph)
-    graph_def = op.eval()
-    return graph_def
-
-
 def to_networkx_graph(nx_graph):
     import networkx
 

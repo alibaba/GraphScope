@@ -339,7 +339,6 @@ class TestGraphTransformation(object):
 
     def test_single_label_gs_to_nx(self):
         G = self.NXGraph(self.single_label_g)
-        self.assert_convert_success(self.single_label_g, G)
         assert G.number_of_nodes() == 76830
         assert G.number_of_edges() == 38786
         assert 618475290625 not in G
@@ -352,7 +351,6 @@ class TestGraphTransformation(object):
 
     def test_multi_label_gs_to_nx(self):
         G = self.NXGraph(self.multi_label_g)
-        # self.assert_convert_success(self.multi_label_g, G)
         assert G.number_of_nodes() == (76830 + 903 + 78976)
         assert G.number_of_edges() == (38786 + 6626 + 38044)
         assert 618475290625 not in G  # comment node is (label, id) format
@@ -380,7 +378,7 @@ class TestGraphTransformation(object):
         # test HAS_NODE and HAS_EDGE
         assert 0 not in G
         assert 933 in G
-        assert ("person", 933) not in G
+        assert ("person", 933) not in G  # deault node must be non-tuple format
         assert ("random", 933) not in G
         assert G.has_edge(933, 4398046511628)
         assert G.has_edge(("comment", 618475290625), ("post", 618475290624))

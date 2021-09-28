@@ -41,7 +41,6 @@ from graphscope.framework.graph_schema import GraphSchema
 from graphscope.nx import NetworkXError
 from graphscope.nx.classes.dicts import AdjDict
 from graphscope.nx.classes.dicts import NodeDict
-from graphscope.nx.convert import from_gs_graph
 from graphscope.nx.convert import to_nx_graph
 from graphscope.nx.utils.compat import patch_docstring
 from graphscope.nx.utils.misc import check_node_is_legal
@@ -393,7 +392,9 @@ class Graph(_GraphBase):
             edata_type = utils.data_type_to_cpp(self._schema.edata_type)
             return f"gs::DynamicProjectedFragment<{vdata_type},{edata_type}>"
         elif self._graph_type == graph_def_pb2.ARROW_PROPERTY:
-            oid_type = utils.normalize_data_type_str(str(self._schema.oid_type))
+            oid_type = utils.normalize_data_type_str(
+                utils.data_type_to_cpp(self._schema.oid_type)
+            )
             vid_type = self._schema.vid_type
             return f"vineyard::ArrowFragment<{oid_type},{vid_type}>"
         else:
@@ -2145,12 +2146,10 @@ class Graph(_GraphBase):
             the method is implicit called by modification and graph view methods.
         """
         if self.graph_type == graph_def_pb2.ARROW_PROPERTY:
-            graph_def = from_gs_graph(self)
+            op = dag_utils.arrow_to_dynamic(self)
+            graph_def = op.eval()
             self._key = graph_def.key
-            # TODO(acezen): unify the schema of dynamic property graph and arrow
-            # property graph
             schema = GraphSchema()
-            schema.init_nx_schema()
             schema.init_nx_schema(self._schema)
             self._schema = schema
             self._graph_type = graph_def_pb2.DYNAMIC_PROPERTY
