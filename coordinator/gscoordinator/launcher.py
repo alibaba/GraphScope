@@ -20,7 +20,6 @@ import base64
 import json
 import logging
 import os
-import random
 import shutil
 import subprocess
 import sys
@@ -28,6 +27,8 @@ import time
 from abc import ABCMeta
 from abc import abstractmethod
 
+from graphscope.framework.utils import get_free_port
+from graphscope.framework.utils import is_free_port
 from graphscope.proto import types_pb2
 
 from gscoordinator.io_utils import PipeWatcher
@@ -37,7 +38,6 @@ from gscoordinator.utils import INTERACTIVE_ENGINE_SCRIPT
 from gscoordinator.utils import WORKSPACE
 from gscoordinator.utils import ResolveMPICmdPrefix
 from gscoordinator.utils import get_timestamp
-from gscoordinator.utils import is_port_in_use
 from gscoordinator.utils import parse_as_glog_level
 
 logger = logging.getLogger("graphscope")
@@ -116,6 +116,10 @@ class LocalLauncher(Launcher):
         # setting during client connect to coordinator
         self._session_workspace = None
 
+        # etcd
+        self._etcd_listen_peer_port = None
+        self._etcd_listen_client_port = None
+        self._etcd_process = None
         # zookeeper
         self._zookeeper_port = None
         self._zetcd_process = None
@@ -145,6 +149,7 @@ class LocalLauncher(Launcher):
         if not self._closed:
             self._stop_interactive_engine_service()
             self._stop_vineyard()
+            self._stop_etcd()
             self._stop_analytical_engine()
             self._closed = True
 
@@ -173,6 +178,10 @@ class LocalLauncher(Launcher):
         return self._vineyard_socket
 
     @property
+    def etcd_port(self):
+        return self._etcd_listen_client_port
+
+    @property
     def zookeeper_port(self):
         return self._zookeeper_port
 
@@ -186,12 +195,6 @@ class LocalLauncher(Launcher):
     def get_vineyard_stream_info(self):
         return "ssh", self._hosts.split(",")
 
-    def _get_free_port(self, host):
-        port = random.randint(60001, 65535)
-        while is_port_in_use(host, port):
-            port = random.randint(60001, 65535)
-        return port
-
     def create_interactive_instance(self, config: dict):
         """
         Args:
@@ -201,7 +204,7 @@ class LocalLauncher(Launcher):
         schema_path = config[types_pb2.SCHEMA_PATH].s.decode()
         # engine params format:
         #   k1:v1;k2:v2;k3:v3
-        engine_params = {"gaia.engine.port": self._get_free_port("localhost")}
+        engine_params = {"gaia.engine.port": get_free_port("localhost")}
         if types_pb2.GIE_GREMLIN_ENGINE_PARAMS in config:
             engine_params = json.loads(
                 config[types_pb2.GIE_GREMLIN_ENGINE_PARAMS].s.decode()
@@ -263,18 +266,77 @@ class LocalLauncher(Launcher):
         )
         return process
 
-    def _launch_zetcd(self):
-        self._zookeeper_port = self._get_free_port(self._hosts.split(",")[0])
+    def _launch_etcd(self):
+        self._etcd_listen_peer_port = get_free_port("localhost")
+        self._etcd_listen_client_port = get_free_port("localhost")
 
-        zetcd_cmd = shutil.which("zetcd")
-        if not zetcd_cmd:
+        etcd_exec = shutil.which("etcd")
+        if not etcd_exec:
+            raise RuntimeError("etcd command not found.")
+
+        env = os.environ.copy()
+        env.update({"ETCD_MAX_TXN_OPS": "102400"})
+
+        cmd = [
+            etcd_exec,
+            "--data-dir",
+            str(self._instance_workspace),
+            "--listen-peer-urls",
+            "http://0.0.0.0:{0}".format(str(self._etcd_listen_peer_port)),
+            "--listen-client-urls",
+            "http://0.0.0.0:{0}".format(str(self._etcd_listen_client_port)),
+            "--advertise-client-urls",
+            "http://localhost:{0}".format(str(self._etcd_listen_client_port)),
+            "--initial-cluster",
+            "default=http://localhost:{0}".format(str(self._etcd_listen_peer_port)),
+            "--initial-advertise-peer-urls",
+            "http://localhost:{0}".format(str(self._etcd_listen_peer_port)),
+        ]
+        logger.info("Launch etcd with command: %s", " ".join(cmd))
+
+        process = subprocess.Popen(
+            cmd,
+            start_new_session=True,
+            cwd=os.getcwd(),
+            env=env,
+            universal_newlines=True,
+            encoding="utf-8",
+            stdin=subprocess.DEVNULL,
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+            bufsize=1,
+        )
+
+        logger.info("Server is initializing etcd.")
+        self._etcd_process = process
+
+        start_time = time.time()
+
+        while is_free_port(self._etcd_listen_client_port):
+            time.sleep(1)
+            if (
+                self._timeout_seconds
+                and self._timeout_seconds + start_time < time.time()
+            ):
+                raise RuntimeError("Launch etcd service failed.")
+        logger.info(
+            "Etcd is ready, endpoint is localhost:{0}".format(
+                self._etcd_listen_client_port
+            )
+        )
+
+    def _launch_zetcd(self):
+        self._zookeeper_port = get_free_port(self._hosts.split(",")[0])
+
+        zetcd_exec = shutil.which("zetcd")
+        if not zetcd_exec:
             raise RuntimeError("zetcd command not found.")
         cmd = [
-            zetcd_cmd,
+            zetcd_exec,
             "--zkaddr",
             "0.0.0.0:{}".format(self._zookeeper_port),
             "--endpoints",
-            "localhost:2379",  # FIXME: get etcd port from vineyard
+            "localhost:{0}".format(self._etcd_listen_client_port),
         ]
 
         process = subprocess.Popen(
@@ -294,7 +356,7 @@ class LocalLauncher(Launcher):
         self._zetcd_process = process
 
         start_time = time.time()
-        while not is_port_in_use(self._hosts.split(",")[0], self._zookeeper_port):
+        while is_free_port(self._zookeeper_port):
             time.sleep(1)
             if (
                 self._timeout_seconds
@@ -322,6 +384,12 @@ class LocalLauncher(Launcher):
             cmd = [self._find_vineyardd()]
             cmd.extend(["--socket", vineyard_socket])
             cmd.extend(["--size", self._shared_mem])
+            cmd.extend(
+                [
+                    "-etcd_endpoint",
+                    "http://localhost:{0}".format(self._etcd_listen_client_port),
+                ]
+            )
             cmd.extend(["--etcd_prefix", f"vineyard.gsa.{ts}"])
             env = os.environ.copy()
             env["GLOG_v"] = str(self._glog_level)
@@ -349,6 +417,8 @@ class LocalLauncher(Launcher):
             self._vineyardd_process = process
 
     def _create_services(self):
+        # create etcd
+        self._launch_etcd()
         # create vineyard
         self._create_vineyard()
         # create GAE rpc service
@@ -363,7 +433,7 @@ class LocalLauncher(Launcher):
         cmd, mpi_env = rmcp.resolve(self._num_workers, self._hosts)
 
         master = self._hosts.split(",")[0]
-        rpc_port = self._get_free_port(master)
+        rpc_port = get_free_port(master)
         self._analytical_engine_endpoint = f"{master}:{rpc_port}"
 
         cmd.append(ANALYTICAL_ENGINE_PATH)
@@ -410,7 +480,7 @@ class LocalLauncher(Launcher):
 
         server_list = []
         for i in range(self._num_workers):
-            server_list.append(f"localhost:{str(self._get_free_port('localhost'))}")
+            server_list.append(f"localhost:{str(get_free_port('localhost'))}")
         hosts = ",".join(server_list)
         handle["server"] = hosts
         handle = base64.b64encode(json.dumps(handle).encode("utf-8")).decode("utf-8")
@@ -444,6 +514,9 @@ class LocalLauncher(Launcher):
         for proc in self._learning_instance_processes[object_id]:
             self._stop_subprocess(proc, kill=True)
         self._learning_instance_processes.clear()
+
+    def _stop_etcd(self):
+        self._stop_subprocess(self._etcd_process)
 
     def _stop_vineyard(self):
         self._stop_subprocess(self._vineyardd_process)
