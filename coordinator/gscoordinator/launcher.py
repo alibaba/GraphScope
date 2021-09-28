@@ -37,6 +37,7 @@ from gscoordinator.utils import GRAPHSCOPE_HOME
 from gscoordinator.utils import INTERACTIVE_ENGINE_SCRIPT
 from gscoordinator.utils import WORKSPACE
 from gscoordinator.utils import ResolveMPICmdPrefix
+from gscoordinator.utils import get_java_version
 from gscoordinator.utils import get_timestamp
 from gscoordinator.utils import parse_as_glog_level
 
@@ -202,6 +203,10 @@ class LocalLauncher(Launcher):
         Args:
             config (dict): dict of op_def_pb2.OpDef.attr.
         """
+        # check java version
+        java_version = get_java_version()
+        logger.info("Java version: %s", java_version)
+
         object_id = config[types_pb2.VINEYARD_ID].i
         schema_path = config[types_pb2.SCHEMA_PATH].s.decode()
         # engine params format:

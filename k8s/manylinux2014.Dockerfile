@@ -265,7 +265,7 @@ RUN cd /tmp && \
     rm -rf patchelf/
 
 # install python deps for all
-RUN for py in cp36-cp36m cp37-cp37m cp38-cp38 cp39-cp39; \
+RUN for py in cp36-cp36m cp37-cp37m cp38-cp38 cp39-cp39 cp310-cp310; \
     do \
         echo "Installing deps for $py"; \
         /opt/python/$py/bin/pip3 install -U pip auditwheel grpcio grpcio_tools numpy wheel; \

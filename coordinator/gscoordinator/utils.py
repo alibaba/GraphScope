@@ -28,6 +28,7 @@ import logging
 import numbers
 import os
 import pickle
+import re
 import shutil
 import socket
 import subprocess
@@ -93,8 +94,9 @@ if GRAPHSCOPE_HOME is None:
         GRAPHSCOPE_HOME = os.path.join(COORDINATOR_HOME, "graphscope.runtime")
 
 # find from DEFAULT_GRAPHSCOPE_HOME
-if os.path.isdir(DEFAULT_GRAPHSCOPE_HOME):
-    GRAPHSCOPE_HOME = DEFAULT_GRAPHSCOPE_HOME
+if GRAPHSCOPE_HOME is None:
+    if os.path.isdir(DEFAULT_GRAPHSCOPE_HOME):
+        GRAPHSCOPE_HOME = DEFAULT_GRAPHSCOPE_HOME
 
 # resolve from develop source tree
 if GRAPHSCOPE_HOME is None:
@@ -1504,6 +1506,14 @@ def check_argument(condition, message=None):
         if message is None:
             message = "in '%s'" % inspect.stack()[1].code_context[0]
         raise ValueError(f"Check failed: {message}")
+
+
+def get_java_version():
+    if not shutil.which("java"):
+        raise RuntimeError("java command not found.")
+    pattern = r'"(\d+\.\d+\.\d+).*"'
+    version = subprocess.check_output(["java", "-version"], stderr=subprocess.STDOUT)
+    return re.search(pattern, version.decode("utf-8")).groups()[0]
 
 
 def check_gremlin_server_ready(endpoint):
