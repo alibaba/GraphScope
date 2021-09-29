@@ -1416,10 +1416,10 @@ def gremlin(graph, engine_params=None):
 def learning(self, graph, nodes=None, edges=None, gen_labels=None):
     """Create a graph learning engine.
 
-    See params detail in :meth:`graphscope.Session.gremlin`
+    See params detail in :meth:`graphscope.Session.learning`
 
     Returns:
-        :class:`graphscope.learning.GraphDAGNode`::
+        :class:`graphscope.learning.GraphDAGNode`:
             An instance of learning graph that could be feed to the learning engine, evaluated in eager node.
 
     Example:
