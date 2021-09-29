@@ -147,6 +147,27 @@ impl Decode for () {
     }
 }
 
+
+impl Encode for bool {
+    fn write_to<W: WriteExt>(&self, writer: &mut W) -> io::Result<()> {
+        if *self {
+            writer.write_u8(1)
+        } else {
+            writer.write_u8(0)
+        }
+    }
+}
+
+impl Decode for bool {
+    fn read_from<R: ReadExt>(reader: &mut R) -> io::Result<Self> {
+        if reader.read_u8()? > 0 {
+            Ok(true)
+        } else {
+            Ok(false)
+        }
+    }
+}
+
 macro_rules! serialize_numbers {
     ($ty: ty, $write: ident, $read: ident) => {
         impl Encode for $ty {

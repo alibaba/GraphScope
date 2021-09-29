@@ -17,8 +17,8 @@ use pegasus::api::{CorrelatedSubTask, Count, Map, Sink};
 use pegasus::JobConf;
 
 #[test]
-fn subtask_test_1() {
-    let mut conf = JobConf::new("subtask_test_1");
+fn apply_x_map_flatmap_count_x_test() {
+    let mut conf = JobConf::new("apply_x_map_flatmap_count_x_test");
     conf.set_workers(2);
     let num = 1000u32;
     let mut result = pegasus::run(conf, move || {
@@ -42,16 +42,21 @@ fn subtask_test_1() {
         if count < 10 {
             println!("{}: {}=>{}", count, d.0, d.1);
         }
+        let cnt = Some(d.0)
+            .into_iter()
+            .map(|i| i + 1)
+            .flat_map(|i| (0..i))
+            .count() as u64;
+        assert_eq!(cnt, d.1);
         count += 1;
     }
     assert_eq!(count, num * 2);
 }
 
-fn subtask_test_2(workers: u32) {
-    let name = format!("subtask_test_2_{}", workers);
+fn apply_x_flatmap_flatmap_count_x_test(workers: u32) {
+    let name = format!("apply_x_flatmap_flatmap_count_x_{}_test", workers);
     let mut conf = JobConf::new(name);
     conf.set_workers(workers);
-    //conf.plan_print = true;
     let num = 100u32;
     let mut result = pegasus::run(conf, move || {
         let index = pegasus::get_current_worker().index;
@@ -79,46 +84,44 @@ fn subtask_test_2(workers: u32) {
 }
 
 #[test]
-fn subtask_test_2_2_workers() {
-    subtask_test_2(2)
+fn apply_x_flatmap_flatmap_count_x_2_test() {
+    apply_x_flatmap_flatmap_count_x_test(2)
 }
 
 #[test]
-fn subtask_test_2_3_workers() {
-    subtask_test_2(3)
+fn apply_x_flatmap_flatmap_count_x_3_test() {
+    apply_x_flatmap_flatmap_count_x_test(3)
 }
 
 #[test]
-fn subtask_test_2_4_workers() {
-    subtask_test_2(4)
+fn apply_x_flatmap_flatmap_count_x_4_test() {
+    apply_x_flatmap_flatmap_count_x_test(4)
 }
 
 #[test]
-fn subtask_test_2_5_workers() {
-    subtask_test_2(5)
+fn apply_x_flatmap_flatmap_count_x_5_test() {
+    apply_x_flatmap_flatmap_count_x_test(5)
 }
 
 #[test]
-fn subtask_test_2_6_workers() {
-    subtask_test_2(6)
+fn apply_x_flatmap_flatmap_count_x_6_test() {
+    apply_x_flatmap_flatmap_count_x_test(6)
 }
 
 #[test]
-fn subtask_test_2_7_workers() {
-    subtask_test_2(7)
+fn apply_x_flatmap_flatmap_count_x_7_test() {
+    apply_x_flatmap_flatmap_count_x_test(7)
 }
 
 #[test]
-fn subtask_test_2_8_workers() {
-    subtask_test_2(8)
+fn apply_x_flatmap_flatmap_count_x_8_test() {
+    apply_x_flatmap_flatmap_count_x_test(8)
 }
 
 #[test]
-fn subtask_test_3() {
-    let mut conf = JobConf::new("subtask_test_3");
+fn apply_x_flatmap_flatmap_agg_map_count_x_test() {
+    let mut conf = JobConf::new("apply_x_flatmap_flatmap_agg_map_count_x_test");
     conf.set_workers(2);
-    conf.plan_print = true;
-
     let num = 100u32;
     let mut result = pegasus::run(conf, move || {
         let index = pegasus::get_current_worker().index;

@@ -170,6 +170,7 @@ impl JobConf {
 
 impl Default for JobConf {
     fn default() -> Self {
+        let plan_print = log_enabled!(log::Level::Trace);
         JobConf {
             job_id: 0,
             job_name: "anonymity".to_owned(),
@@ -179,7 +180,7 @@ impl Default for JobConf {
             batch_capacity: 64,
             scope_capacity: 128,
             memory_limit: !0u32,
-            plan_print: false,
+            plan_print,
             servers: ServerConf::Local,
             trace_enable: false,
             debug: false,

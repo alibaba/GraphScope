@@ -24,12 +24,14 @@ use pegasus_executor::{Task, TaskState};
 use crate::api::primitive::source::Source;
 use crate::channel_id::ChannelId;
 use crate::communication::output::{OutputBuilder, OutputBuilderImpl};
+use crate::data::EndByScope;
+use crate::data_plane::Push;
 use crate::dataflow::{Dataflow, DataflowBuilder};
 use crate::errors::{BuildJobError, JobExecError};
 use crate::event::emitter::EventEmitter;
 use crate::event::Event;
 use crate::graph::Port;
-use crate::progress::{EndSignal, Weight};
+use crate::progress::Weight;
 use crate::resource::{KeyedResources, ResourceMap};
 use crate::result::ResultSink;
 use crate::schedule::Schedule;
@@ -76,7 +78,12 @@ impl<D: Data, T: Debug + Send + 'static> Worker<D, T> {
         let resource =
             crate::communication::build_channel::<Event>(ChannelId::new(self.id.job_id, 0), &self.conf)?;
         assert_eq!(resource.ch_id.index, 0);
-        let (tx, rx) = resource.take();
+        let (mut tx, rx) = resource.take();
+        if self.conf.total_workers() > 1 {
+            assert_eq!(tx.len(), self.id.total_peers() as usize + 1);
+            let mut abort = tx.swap_remove(self.id.index as usize);
+            abort.close().ok();
+        }
         let event_emitter = EventEmitter::new(tx);
         let dfb = DataflowBuilder::new(self.id, event_emitter.clone(), &self.conf);
         let root_builder = OutputBuilderImpl::new(
@@ -95,7 +102,7 @@ impl<D: Data, T: Debug + Send + 'static> Worker<D, T> {
         let root = Box::new(root_builder)
             .build()
             .expect("no output;");
-        let end = EndSignal::new(Tag::Root, Weight::all());
+        let end = EndByScope::new(Tag::Root, Weight::all(), 0);
         root.notify_end(end).ok();
         root.close().ok();
         Ok(())
@@ -224,6 +231,7 @@ impl<D: Data, T: Debug + Send + 'static> Task for Worker<D, T> {
                 state
             }
             Err(e) => {
+                error_worker!("job({}) execute error: {}", self.id.job_id, e);
                 self.sink.on_error(e);
                 TaskState::Finished
             }
@@ -249,6 +257,7 @@ impl<D: Data, T: Debug + Send + 'static> Task for Worker<D, T> {
                 state
             }
             Err(e) => {
+                error_worker!("job({}) execute error: {}", self.id.job_id, e);
                 self.sink.on_error(e);
                 TaskState::Finished
             }

@@ -24,12 +24,11 @@ use pegasus_common::downcast::*;
 
 use crate::channel_id::ChannelInfo;
 use crate::communication::input::{InputProxy, InputSession};
-use crate::data::MicroBatch;
+use crate::data::{EndByScope, MicroBatch};
 use crate::data_plane::{GeneralPull, Pull};
 use crate::errors::IOResult;
 use crate::event::emitter::EventEmitter;
 use crate::event::{Event, EventKind};
-use crate::progress::EndSignal;
 use crate::tag::tools::map::TidyTagMap;
 use crate::{Data, Tag};
 
@@ -48,8 +47,8 @@ pub struct InputHandle<D: Data> {
     pub ch_info: ChannelInfo,
     pull: GeneralPull<MicroBatch<D>>,
     stash_index: TidyTagMap<StashedQueue<D>>,
-    current_end: VecDeque<EndSignal>,
-    parent_ends: VecDeque<EndSignal>,
+    current_end: VecDeque<EndByScope>,
+    parent_ends: VecDeque<EndByScope>,
     data_exhaust: bool,
     event_emitter: EventEmitter,
     // scope skip manager:
@@ -201,7 +200,7 @@ impl<D: Data> InputHandle<D> {
         }
     }
 
-    pub(crate) fn end_on(&mut self, end: EndSignal) {
+    pub(crate) fn end_on(&mut self, end: EndByScope) {
         self.stash_index.remove(&end.tag);
         self.current_end.push_back(end);
     }
@@ -214,7 +213,7 @@ impl<D: Data> InputHandle<D> {
                 .all(|(_, s)| s.is_empty())
     }
 
-    pub(crate) fn extract_end(&mut self) -> Option<EndSignal> {
+    pub(crate) fn extract_end(&mut self) -> Option<EndByScope> {
         if !self.current_end.is_empty() {
             self.current_end.pop_front()
         } else {
@@ -248,8 +247,7 @@ impl<D: Data> InputHandle<D> {
                         let end = batch.take_end().expect("unreachable");
                         self.parent_ends.push_back(end);
                     } else {
-                        if let Some(mut end) = batch.take_end() {
-                            end.update();
+                        if let Some(end) = batch.take_end() {
                             batch.set_end(end);
                             if batch.tag.is_root() {
                                 debug_worker!("channel[{}] exhaust;", self.ch_info.index());
@@ -439,7 +437,7 @@ impl<D: Data> InputProxy for RefWrapInput<D> {
         self.inbound.borrow_mut().block(tag)
     }
 
-    fn extract_end(&self) -> Option<EndSignal> {
+    fn extract_end(&self) -> Option<EndByScope> {
         self.inbound.borrow_mut().extract_end()
     }
 
@@ -484,7 +482,7 @@ impl<D> StashedQueue<D> {
         if batch.is_empty() {
             if let Some(end) = batch.take_end() {
                 if let Some(last) = self.queue.back_mut() {
-                    last.end = Some(end);
+                    last.set_end(end);
                 } else {
                     batch.set_end(end);
                     self.queue.push_back(batch);

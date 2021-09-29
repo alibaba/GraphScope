@@ -13,20 +13,61 @@
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 
-use std::fmt::Debug;
+use std::fmt::{Debug, Formatter};
 
 use pegasus_common::codec::{Decode, Encode};
 use pegasus_common::io::{ReadExt, WriteExt};
 
-use crate::progress::EndSignal;
+use crate::progress::Weight;
 use crate::tag::Tag;
 
 pub trait Data: Clone + Send + Sync + Debug + Encode + Decode + 'static {}
 impl<T: Clone + Send + Sync + Debug + Encode + Decode + 'static> Data for T {}
 
+#[derive(Clone)]
+pub struct EndByScope {
+    pub(crate) tag: Tag,
+    pub(crate) source: Weight,
+    pub(crate) count: u64,
+}
+
+impl EndByScope {
+    pub(crate) fn new(tag: Tag, source: Weight, count: u64) -> Self {
+        EndByScope { tag, source, count }
+    }
+
+    pub(crate) fn merge(&mut self, other: EndByScope) {
+        assert_eq!(self.tag, other.tag);
+        self.source.merge(other.source);
+        self.count += other.count;
+    }
+
+    pub(crate) fn contains_source(&self, src: u32) -> bool {
+        self.count != 0 || self.source.contains_source(src)
+    }
+}
+
+impl Debug for EndByScope {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        write!(f, "end({:?}_{})", self.tag, self.count)
+    }
+}
+
+impl Encode for EndByScope {
+    fn write_to<W: WriteExt>(&self, _writer: &mut W) -> std::io::Result<()> {
+        todo!()
+    }
+}
+
+impl Decode for EndByScope {
+    fn read_from<R: ReadExt>(_reader: &mut R) -> std::io::Result<Self> {
+        todo!()
+    }
+}
+
 pub enum MarkedData<D> {
     Data(D),
-    Marked(Option<D>, EndSignal),
+    Marked(Option<D>, EndByScope),
 }
 
 pub use rob::*;
@@ -45,7 +86,7 @@ mod rob {
         /// batch sequence;
         pub seq: u64,
         /// sequence of the data set;
-        pub end: Option<EndSignal>,
+        pub end: Option<EndByScope>,
         /// data details;
         data: Batch<T>,
         /// flag indicates if the stream is abandoned
@@ -69,8 +110,8 @@ mod rob {
             MicroBatch { tag, src, seq, end: None, data, is_discarded: false }
         }
 
-        pub fn set_end(&mut self, mut end: EndSignal) {
-            end.seq = self.seq;
+        pub fn set_end(&mut self, mut end: EndByScope) {
+            end.batches = self.seq;
             self.end = Some(end);
         }
 
@@ -86,7 +127,7 @@ mod rob {
             self.end.is_some()
         }
 
-        pub fn take_end(&mut self) -> Option<EndSignal> {
+        pub fn take_end(&mut self) -> Option<EndByScope> {
             self.end.take()
         }
 
@@ -116,7 +157,7 @@ mod rob {
     struct DrainEndIter<'a, D> {
         len: usize,
         data: &'a mut Batch<D>,
-        end: &'a mut Option<EndSignal>,
+        end: &'a mut Option<EndByScope>,
         cur: usize,
     }
 
@@ -203,7 +244,7 @@ mod rob {
             let tag = Tag::read_from(reader)?;
             let src = reader.read_u32()?;
             let seq = reader.read_u64()?;
-            let end = Option::<EndSignal>::read_from(reader)?;
+            let end = Option::<EndByScope>::read_from(reader)?;
             let len = reader.read_u64()? as usize;
             let batch = if len == 0 {
                 Batch::new()
@@ -306,7 +347,7 @@ mod rob {
         /// sequence of the data batch;
         seq: u64,
         /// if this is the last batch of a scope;
-        pub(crate) end: Option<EndSignal>,
+        end: Option<EndByScope>,
         /// read only data details;
         data: ReadBuffer<T>,
 
@@ -331,7 +372,18 @@ mod rob {
             MicroBatch { tag, src, seq: 0, end: None, data, is_discarded: false }
         }
 
-        pub fn set_end(&mut self, end: EndSignal) {
+        pub fn last(src: u32, end: EndByScope) -> Self {
+            MicroBatch {
+                tag: end.tag.clone(),
+                src,
+                seq: 0,
+                end: Some(end),
+                data: ReadBuffer::new(),
+                is_discarded: false,
+            }
+        }
+
+        pub fn set_end(&mut self, end: EndByScope) {
             self.end = Some(end);
         }
 
@@ -344,9 +396,6 @@ mod rob {
 
         pub fn set_seq(&mut self, seq: u64) {
             self.seq = seq;
-            if let Some(ref mut end) = self.end {
-                end.seq = seq;
-            }
         }
 
         pub fn get_seq(&self) -> u64 {
@@ -357,11 +406,19 @@ mod rob {
             self.end.is_some()
         }
 
+        pub fn get_end(&self) -> Option<&EndByScope> {
+            self.end.as_ref()
+        }
+
+        pub fn get_end_mut(&mut self) -> Option<&mut EndByScope> {
+            self.end.as_mut()
+        }
+
         pub fn is_empty(&self) -> bool {
             self.data.len() == 0
         }
 
-        pub fn take_end(&mut self) -> Option<EndSignal> {
+        pub fn take_end(&mut self) -> Option<EndByScope> {
             self.end.take()
         }
 
@@ -386,8 +443,8 @@ mod rob {
         }
 
         #[inline]
-        pub fn tag(&self) -> Tag {
-            self.tag.clone()
+        pub fn tag(&self) -> &Tag {
+            &self.tag
         }
 
         pub fn discard(&mut self) {
@@ -399,7 +456,6 @@ mod rob {
         }
     }
 
-    #[allow(dead_code)]
     impl<D: Clone> MicroBatch<D> {
         #[inline]
         pub fn drain(&mut self) -> impl Iterator<Item = D> + '_ {
@@ -481,7 +537,7 @@ mod rob {
     struct DrainEndIter<'a, D: Clone> {
         len: usize,
         data: &'a mut ReadBuffer<D>,
-        end: &'a mut Option<EndSignal>,
+        end: &'a mut Option<EndByScope>,
         cur: usize,
     }
 

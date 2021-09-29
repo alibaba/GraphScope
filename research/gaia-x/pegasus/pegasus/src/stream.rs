@@ -15,7 +15,6 @@
 
 use std::fmt::{Debug, Formatter};
 use std::ops::{Deref, DerefMut};
-use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
 
 use pegasus_common::codec::ShadeCodec;
@@ -36,7 +35,6 @@ use crate::{Data, JobConf};
 
 #[must_use = "this `Stream` may be consumed"]
 pub struct Stream<D: Data> {
-    has_cycles: Vec<Arc<AtomicBool>>,
     port: OutputBuilderImpl<D>,
     ch: Channel<D>,
     dfb: DataflowBuilder,
@@ -59,7 +57,7 @@ impl<D: Data> DerefMut for Stream<D> {
 impl<D: Data> Stream<D> {
     pub(crate) fn create(port: OutputBuilderImpl<D>, dfb: &DataflowBuilder) -> Self {
         let ch = Channel::mount_to(&port);
-        Stream { has_cycles: vec![Arc::new(Default::default())], port, ch, dfb: dfb.clone() }
+        Stream { port, ch, dfb: dfb.clone() }
     }
 
     pub fn get_conf(&self) -> Arc<JobConf> {
@@ -71,13 +69,8 @@ impl<D: Data> Stream<D> {
     }
 
     pub fn copied(self) -> Result<(Stream<D>, Stream<D>), BuildJobError> {
-        if self.ch.is_local() {
-            let copy = Stream {
-                has_cycles: self.has_cycles.clone(),
-                port: self.port.copy_data(),
-                ch: self.ch.clone(),
-                dfb: self.dfb.clone(),
-            };
+        if self.ch.is_pipeline() {
+            let copy = Stream { port: self.port.copy_data(), ch: self.ch.clone(), dfb: self.dfb.clone() };
             Ok((self, copy))
         } else {
             let shuffled = self.unary("shuffle_clone", |_| {
@@ -90,7 +83,6 @@ impl<D: Data> Stream<D> {
             })?;
 
             let copy = Stream {
-                has_cycles: shuffled.has_cycles.clone(),
                 port: shuffled.port.copy_data(),
                 ch: shuffled.ch.clone(),
                 dfb: shuffled.dfb.clone(),
@@ -124,6 +116,28 @@ impl<D: Data> Stream<D> {
         self
     }
 
+    pub(crate) fn sync_state(mut self) -> Result<Stream<D>, BuildJobError> {
+        if self.ch.is_pipeline() {
+            self.ch
+                .set_channel_kind(ChannelKind::Pipeline(true));
+            Ok(self)
+        } else {
+            let mut shuffled = self.unary("shuffle", |_| {
+                |input, output| {
+                    input.for_each_batch(|dataset| {
+                        output.push_batch_mut(dataset)?;
+                        Ok(())
+                    })
+                }
+            })?;
+
+            shuffled
+                .ch
+                .set_channel_kind(ChannelKind::Pipeline(true));
+            Ok(shuffled)
+        }
+    }
+
     pub fn set_batch_size(&mut self, batch_size: usize) {
         self.ch.set_batch_size(batch_size);
     }
@@ -135,13 +149,29 @@ impl<D: Data> Stream<D> {
         F: FnOnce(&OperatorInfo) -> T,
     {
         let dfb = self.dfb.clone();
-        let has_cycles = self.has_cycles.clone();
         let op = self.add_operator(name, op_builder)?;
 
         let port = op.new_output::<O>();
         let ch = Channel::mount_to(&port);
 
-        Ok(Stream { has_cycles, port, ch, dfb })
+        Ok(Stream { port, ch, dfb })
+    }
+
+    pub fn transform_notify<F, O, T>(
+        mut self, name: &str, op_builder: F,
+    ) -> Result<Stream<O>, BuildJobError>
+    where
+        O: Data,
+        T: NotifiableOperator,
+        F: FnOnce(&OperatorInfo) -> T,
+    {
+        let dfb = self.dfb.clone();
+        let op = self.add_notify_operator(name, op_builder)?;
+
+        let port = op.new_output::<O>();
+        let ch = Channel::mount_to(&port);
+
+        Ok(Stream { port, ch, dfb })
     }
 
     pub fn union_transform<R, O, F, T>(
@@ -166,11 +196,11 @@ impl<D: Data> Stream<D> {
             let port = op.new_output::<O>();
 
             let ch = Channel::mount_to(&port);
-            Ok(Stream { has_cycles: self.has_cycles.clone(), port, ch, dfb })
+            Ok(Stream { port, ch, dfb })
         }
     }
 
-    pub fn union_notify_transform<R, O, F, T>(
+    pub fn union_transform_notify<R, O, F, T>(
         mut self, name: &str, mut other: Stream<R>, op_builder: F,
     ) -> Result<Stream<O>, BuildJobError>
     where
@@ -191,7 +221,7 @@ impl<D: Data> Stream<D> {
             let dfb = self.dfb.clone();
             let output = op.new_output::<O>();
             let ch = Channel::mount_to(&output);
-            Ok(Stream { has_cycles: self.has_cycles.clone(), ch, port: output, dfb })
+            Ok(Stream { ch, port: output, dfb })
         }
     }
 
@@ -209,9 +239,9 @@ impl<D: Data> Stream<D> {
         let right = op.new_output::<R>();
         let dfb = self.dfb.clone();
         let ch = Channel::mount_to(&left);
-        let left = Stream { has_cycles: self.has_cycles.clone(), port: left, ch, dfb: dfb.clone() };
+        let left = Stream { port: left, ch, dfb: dfb.clone() };
         let ch = Channel::mount_to(&right);
-        let right = Stream { has_cycles: self.has_cycles.clone(), port: right, ch, dfb };
+        let right = Stream { port: right, ch, dfb };
         Ok((left, right))
     }
 
@@ -229,9 +259,9 @@ impl<D: Data> Stream<D> {
         let right = op.new_output::<R>();
         let dfb = self.dfb.clone();
         let ch = Channel::mount_to(&left);
-        let left = Stream { has_cycles: self.has_cycles.clone(), port: left, ch, dfb: dfb.clone() };
+        let left = Stream { port: left, ch, dfb: dfb.clone() };
         let ch = Channel::mount_to(&right);
-        let right = Stream { has_cycles: self.has_cycles.clone(), port: right, ch, dfb };
+        let right = Stream { port: right, ch, dfb };
         Ok((left, right))
     }
 
@@ -253,21 +283,16 @@ impl<D: Data> Stream<D> {
         let mut op = self.dfb.get_operator(op_index);
         let edge = self.connect(&mut op)?;
         self.dfb.add_edge(edge);
-        let cyclic = self.has_cycles.last().expect("unreachable");
-        cyclic.store(true, Ordering::SeqCst);
         Ok(())
     }
 
     pub fn enter(mut self) -> Result<Self, BuildJobError> {
         self.ch.add_delta(ScopeDelta::ToChild(1));
-        self.has_cycles
-            .push(Arc::new(Default::default()));
         Ok(self)
     }
 
     pub fn leave(mut self) -> Result<Self, BuildJobError> {
         self.ch.add_delta(ScopeDelta::ToParent(1));
-        self.has_cycles.pop();
         Ok(self)
     }
 
@@ -302,8 +327,7 @@ impl<D: Data> Stream<D> {
     fn connect(&mut self, op: &OperatorRef) -> Result<Edge, BuildJobError> {
         let target = op.next_input_port();
         let ch = std::mem::replace(&mut self.ch, Channel::default());
-        let cyclic = self.has_cycles.last().unwrap().clone();
-        let channel = ch.connect_to(target, cyclic, &self.dfb)?;
+        let channel = ch.connect_to(target, &self.dfb)?;
         let (push, pull, notify) = channel.take();
         let ch_info = push.ch_info;
         self.port.set_push(push);

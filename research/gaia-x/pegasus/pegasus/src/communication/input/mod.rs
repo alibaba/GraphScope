@@ -16,11 +16,10 @@
 use pegasus_common::downcast::*;
 
 use crate::channel_id::ChannelInfo;
-use crate::data::MicroBatch;
+use crate::data::{EndByScope, MicroBatch};
 use crate::data_plane::GeneralPull;
 use crate::errors::IOResult;
 use crate::event::emitter::EventEmitter;
-use crate::progress::EndSignal;
 use crate::{Data, Tag};
 
 /// Input abstraction without data type;
@@ -29,7 +28,7 @@ pub trait InputProxy: AsAny + Send {
 
     fn block(&self, tag: &Tag) -> InputBlockGuard;
 
-    fn extract_end(&self) -> Option<EndSignal>;
+    fn extract_end(&self) -> Option<EndByScope>;
 
     fn is_exhaust(&self) -> bool;
 

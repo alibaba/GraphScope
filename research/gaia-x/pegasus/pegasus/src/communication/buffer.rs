@@ -10,7 +10,7 @@ mod rob {
 
     use crate::communication::decorator::{ScopeStreamBuffer, ScopeStreamPush};
     use crate::communication::IOResult;
-    use crate::data::{DataSetPool, MicroBatch};
+    use crate::data::{DataSetPool, EndByScope, MicroBatch};
     use crate::errors::IOError;
     use crate::graph::Port;
     use crate::progress::EndSignal;
@@ -144,8 +144,12 @@ mod rob {
         }
 
         /// inner usage only for pipeline channel;
-        pub fn forward_buffer(&mut self, data: MicroBatch<D>) -> IOResult<()> {
-            self.push.push(&data.tag.clone(), data)
+        pub fn forward_buffer(&mut self, mut data: MicroBatch<D>) -> IOResult<()> {
+            if let Some(end) = data.take_end() {
+                self.push.push_last(data, end)
+            } else {
+                self.push.push(&data.tag.clone(), data)
+            }
         }
 
         #[inline]
@@ -244,7 +248,7 @@ mod rob {
             }
         }
 
-        fn push_last(&mut self, msg: D, end: EndSignal) -> IOResult<()> {
+        fn push_last(&mut self, msg: D, end: EndByScope) -> IOResult<()> {
             if let Some(pool) = self.pool.sec_pool.get_mut(&end.tag) {
                 if let Some(batch) = pool.get_batch_mut() {
                     batch.push(msg);
@@ -301,13 +305,13 @@ mod rob {
             }
         }
 
-        fn notify_end(&mut self, mut end: EndSignal) -> Result<(), IOError> {
+        fn notify_end(&mut self, mut end: EndByScope) -> Result<(), IOError> {
             if let Some(pool) = self.pool.sec_pool.get_mut(&end.tag) {
                 let batch = pool.take_current();
                 if !batch.is_empty() {
                     self.push.push_last(batch, end)
                 } else {
-                    end.seq = pool.get_seq();
+                    end.batches = pool.get_seq();
                     self.push.notify_end(end)
                 }
             } else {
@@ -394,7 +398,7 @@ mod rob {
 
     pub(crate) struct BufSlot<D> {
         batch_size: usize,
-        end: bool,
+        discard: bool,
         buf: Option<Buffer<D>>,
         pool: BufferPool<D, MemoryBufferPool<D>>,
     }
@@ -403,10 +407,14 @@ mod rob {
         fn new(
             batch_size: usize, buf: Option<Buffer<D>>, pool: BufferPool<D, MemoryBufferPool<D>>,
         ) -> Self {
-            BufSlot { batch_size, end: false, buf, pool }
+            BufSlot { batch_size, discard: false, buf, pool }
         }
 
         pub(crate) fn push(&mut self, entry: D) -> Result<Option<ReadBuffer<D>>, WouldBlock<D>> {
+            if self.discard {
+                // trace_worker!("discard data");
+                return Ok(None);
+            }
             if self.batch_size == 1 {
                 return if let Some(mut b) = self.pool.fetch() {
                     b.push(entry);
@@ -435,7 +443,7 @@ mod rob {
         }
 
         fn is_idle(&self) -> bool {
-            self.end && self.pool.is_idle()
+            self.discard && self.pool.is_idle()
         }
     }
 
@@ -585,7 +593,10 @@ mod rob {
 
         pub fn take_buf(&mut self, tag: &Tag, is_last: bool) -> Option<Buffer<D>> {
             let b = self.buf_slots.get_mut(tag)?;
-            b.end = is_last;
+            if !b.discard {
+                trace_worker!("discard buffer of {:?} because of last;", tag);
+            }
+            b.discard = is_last;
             b.buf.take()
         }
 
@@ -595,8 +606,9 @@ mod rob {
                 self.take_buf(tag, true);
             } else if level < self.buf_slots.scope_level {
                 for (k, v) in self.buf_slots.iter_mut() {
-                    if tag.is_parent_of(&k) {
-                        v.end = true;
+                    if tag.is_parent_of(&*k) {
+                        trace_worker!("discard buffer of {:?};", k);
+                        v.discard = true;
                         v.buf.take();
                     }
                 }
@@ -612,7 +624,7 @@ mod rob {
                 .map(|(tag, b)| ((&*tag).clone(), b.buf.take().unwrap()))
         }
 
-        pub fn buffers_of(
+        pub fn child_buffers_of(
             &mut self, parent: &Tag, is_last: bool,
         ) -> impl Iterator<Item = (Tag, Buffer<D>)> + '_ {
             let p = parent.clone();
@@ -620,7 +632,7 @@ mod rob {
                 .iter_mut()
                 .filter_map(move |(t, b)| {
                     if p.is_parent_of(&*t) {
-                        b.end = is_last;
+                        b.discard = is_last;
                         b.buf.take().map(|b| ((&*t).clone(), b))
                     } else {
                         None
@@ -654,7 +666,9 @@ mod rob {
 
                     if let Some(f) = find {
                         trace_worker!("reuse idle buffer slot for scope {:?};", tag);
-                        let slot = self.buf_slots.remove(&f).expect("find lost");
+                        let mut slot = self.buf_slots.remove(&f).expect("find lost");
+                        slot.discard = false;
+                        assert!(slot.buf.is_none());
                         self.buf_slots.insert(tag.clone(), slot.clone());
                         Some(slot)
                     } else {

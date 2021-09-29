@@ -1,0 +1,274 @@
+/**
+ * Copyright 2020 Alibaba Group Holding Limited.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+syntax = "proto3";
+package algebra;
+option java_package = "com.alibaba.graphscope.gaia.proto";
+option java_outer_classname = "GraphAlgebra";
+
+import "common.proto";
+import "expr.proto";
+
+// To project a relation on certain attributes or further their properties
+message Project {
+  message ExprAlias {
+    // The expression to be aliased
+    common.SuffixExpr expr = 1;
+    // The name/name identifier of the aliased attribute
+    common.NameOrId alias = 2;
+  }
+  // A list of [expression -> alias] to be projected from the graph relation.
+  // e.g., project_{a.birthday / 100 % 100 as birth_month }
+  repeated ExprAlias attributes = 1;
+}
+
+
+// To filter a relation based on a given predicate
+message Select {
+  // A predicate formulated as an expression tree
+  common.SuffixExpr predicate = 1;
+}
+
+// Join two relations based on certain predicate.
+message Join {
+  enum JoinKind {
+    // Inner join
+    INNER = 0;
+    // Left outer join
+    LEFT_OUTER = 1;
+    // Right outer join
+    RIGHT_OUTER = 2;
+    // Full outer join
+    FULL_OUTER = 3;
+    // Left semi-join, right alternative can be naturally adapted
+    SEMI = 4;
+    // Left anti-join, right alternative can be naturally adapted
+    ANTI = 5;
+    // aka. Cartesian product
+    TIMES = 6;
+  }
+  // TODO(longbin) An expression-ish predicate here is a more general form:
+  // We currently only support the predicate of the equality of the given keys of both relations are equal.
+  // In general, a join operator can join on any arbitrary predicate regarding certain attributes of left and right
+  // participants.
+  repeated common.Variable left_keys = 1;
+  repeated common.Variable right_keys = 2;
+  JoinKind kind = 3;
+}
+
+// Union two relations
+message Union {}
+
+message GroupBy {
+  // To define the function to be applied on each group after performing grouping. For example,
+  // GROUPBY({a, b}, COUNT_DISTINCT(c, d) as e), one shall count distinct present of the pairs
+  // (c, d), and alias the count as e.
+  message AggFunc {
+    enum Aggregate {
+      SUM = 0;
+      MIN = 1;
+      MAX = 2;
+      COUNT = 3;
+      COUNT_DISTINCT = 4;
+      TO_LIST = 5;
+      TO_SET = 6;
+      AVG = 7;
+    }
+
+    // The variables to apply this aggregation
+    // TODO(longbin) An expression here is a more general form
+    repeated common.Variable vars = 1;
+    // The aggregate function
+    Aggregate aggregate = 2;
+    // The alias for the aggregated value
+    common.NameOrId alias = 3;
+  }
+  // The keys to perform grouping
+  // TODO(longbin) An expression here is a more general form
+  repeated common.Variable keys = 1;
+  // The grouping functions
+  repeated AggFunc functions = 2;
+}
+
+message OrderBy {
+  message OrderingPair {
+    enum Order {
+      // random
+      SHUFFLE = 0;
+      // ascending
+      ASC = 1;
+      // descending
+      DESC = 2;
+    }
+    // TODO(longbin) An expression here is a more general form
+    common.Variable key = 1;
+    Order order = 2;
+  }
+  repeated OrderingPair pairs = 2;
+}
+
+message Dedup {
+  // TODO(longbin) An expression here is a more general form
+  repeated common.Variable keys = 1;
+}
+
+message Unfold {
+  // The tag of a graph relation that **must** have a type of collection
+  common.NameOrId tag = 1;
+  // The alias tag for the elements that are unfolded from the collection
+  common.NameOrId alias = 2;
+}
+
+// The operation of fetching a source from the (graph) database
+message Source {
+  // A location to tell where to fetch the source data
+  string location = 1;
+  // The predicate that defines conditions these data shall satisfy
+  common.SuffixExpr predicate = 2;
+  // The alias for the data
+  repeated common.NameOrId alias = 3;
+}
+
+// To expand satisfied edges from a tag of the graph relation that refers to a vertex attribute
+message ExpandBase {
+  enum Direction {
+    OUT = 0;
+    IN = 1;
+    BOTH = 2;
+  }
+  // The tag that refers to the starting vertex
+  common.NameOrId start_v_tag = 1;
+  // The direction of the expanded edge
+  Direction direction = 2;
+  // The optional predicate for the edge
+  common.SuffixExpr edge_predicate = 5;
+  // The optional predicate for the vertex
+  common.SuffixExpr vertex_predicate = 6;
+}
+
+message EdgeExpand {
+  // The base expansion
+  ExpandBase base = 1;
+  // An optional alias for the expanded edge
+  common.NameOrId edge_alias = 2;
+  // An optional alias for the other end vertex of the edge.
+  common.NameOrId end_v_alias = 3;
+}
+
+message PathExpand {
+  message Range {
+    // The lower bound of the range, inclusive
+    int32 lower = 2;
+    // The upper bound of the range, exclusive
+    int32 upper = 1;
+  }
+  // A path expansion has a base of edge expansion
+  ExpandBase edge_expansion = 1;
+  // An optional alias for the expanded path
+  common.NameOrId path_alias = 2;
+  // An optional alias for the other end vertex of the path.
+  common.NameOrId end_v_alias = 3;
+  // The range that defines the minimum and maximum number of hops of the path expansion.
+  // This is optional, if not set, the minimum number is 1, and the maximum is INT_MAX
+  Range range = 4;
+}
+
+message ShortestPathExpand {
+  message WeightCal {
+    enum Aggregate {
+      SUM = 0;
+      MAX = 1;
+      MIN = 2;
+      AVG = 3;
+      MUL = 4;
+    }
+    // This optional expression defines how to calculate the weight on each edge. In the expression,
+    // one can directly write start, end to indicate the start/edge vertices of the edge.
+    // e.g. the expression: "start.value + end.value * weight" defines that the weight of each edge
+    // is calculated by multiplying the edge vertex's value with the edge's weight and then summing
+    // it with the start vertex's value.
+    common.SuffixExpr weight_each = 1;
+    // Define how to aggregate the calculated weight of each edge as the path weight
+    Aggregate aggregate = 2;
+  }
+  // A shortest path expansion has a base of path expansion
+  PathExpand path_expand = 1;
+  // An optional weight calculation function for shortest path. If not specified, the weight is
+  // by default the length of the path.
+  WeightCal weight_cal = 2;
+}
+
+// Apply is a relational operation where it first performs a inner correlated subtask for each tuple
+// of input relations, and then the result of the subtask will be joined back to each input tuple.
+message Apply {
+  message Subtask {
+    // To project on certain tags of the input relation to execute the subtask
+    repeated common.NameOrId tags = 1;
+    // The subtask for each input tuple, which is given as the root to an inner logical plan
+    // Node gives the identity of a certain operation, which is an index to the
+    // array of operators in a LogicalPlan. As a result, for Apply to make sense, it must only
+    // be used by referencing a LogicalPlan.
+    int32 subtask = 2;
+    // An alias for the result of the subtask. In order for Apply to be semantically intact,
+    // the subtask must return a scalar value.
+    common.NameOrId alias = 3;
+  }
+  // Define how to join the result of the subtask back to the original relation
+  Join.JoinKind join_kind = 1;
+  // The subtask will be perform on certain tags as keys of the input relation
+  Subtask subtask = 2;
+}
+
+message SegmentApply {
+  // The keys to perform grouping, or segmenting. For simplicity, we only allows grouping by the
+  // existed tags of the graph relation, which is unlike GroupBy that we further allows digging
+  // into the properties of a vertex/edge that the tag refers to.
+  repeated common.NameOrId keys = 1;
+  // A base of apply operation that is conducted on each group of the relations instead of tuple
+  Apply apply_subtask = 2;
+}
+
+// A logical plan of graph relation algebra forms a DAG, where each node is an operator and the
+// edge indicates the execution flow.
+message LogicalPlan {
+  message Operator {
+    oneof opr {
+      Project project =  1;
+      Select select = 2;
+      Join join = 3 ;
+      Union union = 4;
+      GroupBy group_by = 5;
+      OrderBy order_by = 6;
+      Dedup dedup = 7;
+      Unfold unfold = 8;
+      Apply apply = 9;
+      SegmentApply seg_apply = 10;
+      // Saving the room for relational operators
+      Source source = 20;
+      EdgeExpand edge = 21;
+      PathExpand path = 22;
+      ShortestPathExpand shortest_path = 23;
+    }
+  }
+  message Node {
+    // The node's operator
+    Operator opr = 1;
+    // The children operators' identifiers, where the id refers to its array index in the plan
+    repeated int32 children = 2;
+  }
+  // A array of nodes
+  repeated Node nodes = 1;
+}

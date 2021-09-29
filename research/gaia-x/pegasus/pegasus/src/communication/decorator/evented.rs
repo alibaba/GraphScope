@@ -92,7 +92,7 @@ mod rob {
                     );
                 }
             }
-            end.seq = msg.seq + 1;
+            end.batches = msg.seq + 1;
 
             if end.source_weight.value() == 1 {
                 msg.set_end(end);
@@ -118,7 +118,7 @@ mod rob {
 
         fn notify_end(&mut self, end: EndSignal) -> IOResult<()> {
             if end.source_weight.value() == 1 {
-                if end.seq > 0 || self.has_cycles.load(Ordering::SeqCst) {
+                if end.batches > 0 || self.has_cycles.load(Ordering::SeqCst) {
                     if log_enabled!(log::Level::Trace) {
                         let c = self
                             .push_counts
@@ -220,7 +220,6 @@ mod rob {
 ////////////////////////////////////////////////////////
 #[cfg(feature = "rob")]
 mod rob {
-    use pegasus_common::buffer::ReadBuffer;
 
     use crate::channel_id::ChannelInfo;
     use crate::communication::IOResult;
@@ -265,73 +264,49 @@ mod rob {
         }
 
         pub fn notify_end(&mut self, mut end: EndSignal) -> IOResult<()> {
-            if end.tag.len() == self.push_monitor.scope_level as usize {
+            assert!(end.sources() > 1);
+            if end.tag().len() == self.push_monitor.scope_level as usize {
                 let size = self
                     .push_monitor
-                    .remove(&end.tag)
+                    .remove(end.tag())
                     .unwrap_or((0, 0, 0));
-                end.seq = size.0 as u64;
-
-                if size.2 == 0
-                    && !end.tag.is_root()
-                    && !end
-                        .update_weight
-                        .as_ref()
-                        .map(|w| w.contains_source(self.target_worker))
-                        .unwrap_or(true)
-                {
-                    trace_worker!(
-                        "output[{:?}] ignore end of {:?} to channel[{}] to worker {};",
-                        self.ch_info.source_port,
-                        end.tag,
-                        self.ch_info.index(),
-                        self.target_worker
-                    );
-                    return Ok(());
-                }
-
+                end.set_push_count(size.2 as u64);
                 trace_worker!(
                     "output[{:?}]: notify end of {:?} to channel[{}] to worker {}, total pushed {};",
                     self.ch_info.source_port,
-                    end.tag,
+                    end.tag(),
                     self.ch_info.id.index,
                     self.target_worker,
                     size.2
                 );
-            }
-
-            if end.source_weight.value() == 1 {
-                let mut last = MicroBatch::new(end.tag.clone(), self.source_worker, ReadBuffer::new());
-                let seq = end.seq;
-                last.set_end(end);
-                last.set_seq(seq);
-                self.inner.push(last)
             } else {
                 trace_worker!(
                     "output[{:?}]: send end event of {:?} of channel[{}] to worker {} to port {:?};",
                     self.ch_info.source_port,
-                    end.tag,
+                    end.tag(),
                     self.ch_info.id.index,
                     self.target_worker,
                     self.ch_info.target_port
                 );
-                let event = Event::new(self.source_worker, self.ch_info.target_port, EventKind::End(end));
-                self.event_emitter
-                    .send(self.target_worker, event)
             }
+            let event = Event::new(self.source_worker, self.ch_info.target_port, EventKind::End(end));
+            self.event_emitter
+                .send(self.target_worker, event)
         }
     }
 
     impl<D: Data> Push<MicroBatch<D>> for EventEmitPush<D> {
         fn push(&mut self, mut batch: MicroBatch<D>) -> IOResult<()> {
             let len = batch.len();
-            if batch.is_last() {
+            if let Some(mut end) = batch.take_end() {
                 let (seq, _cnt, mut total) = self
                     .push_monitor
                     .remove(&batch.tag)
                     .unwrap_or((0, 0, 0));
-                batch.set_seq(seq as u64);
                 total += len;
+                end.count = total as u64;
+                batch.set_end(end);
+                batch.set_seq(seq as u64);
                 trace_worker!(
                     "output[{:?}] push last batch(len={}) of {:?} to channel[{}] to worker {}, total pushed {} ;",
                     self.ch_info.source_port,
@@ -356,7 +331,7 @@ mod rob {
             let index = self.ch_info.index();
             let target = self.target_worker;
             trace_worker!(
-                "output[{:?}] flush channel[{}] to worker {};",
+                "output[{:?}] try to flush channel[{}] to worker {};",
                 self.ch_info.source_port,
                 self.ch_info.index(),
                 target

@@ -22,6 +22,7 @@ use pegasus_common::io::{ReadExt, WriteExt};
 
 use crate::codec::{Decode, Encode};
 
+mod any;
 mod collect;
 mod correlate;
 mod count;

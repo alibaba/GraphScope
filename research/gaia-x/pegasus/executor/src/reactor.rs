@@ -25,6 +25,7 @@ use pegasus_common::queue::*;
 use pending::PendingPool;
 
 use super::*;
+use std::cell::RefCell;
 
 struct SelectTask {
     pub last: Instant,
@@ -127,8 +128,7 @@ fn do_select(mut select: SelectTask, re_active: &WorkStealQueue<RunTask>) {
                     re_active.push(RunTask::Users(task));
                 }
                 Some(TaskState::Finished) => {
-                    let task = task.take().unwrap();
-                    debug!("task {} finished;", task.get_name());
+                    task.take().unwrap();
                 }
                 _ => {}
             }
@@ -445,15 +445,57 @@ pub fn init_executor() -> (Mutex<Option<ExecutorRuntime>>, ExecutorProxy) {
     (runtime, proxy)
 }
 
+struct ExecutorGuard {
+    seq: usize,
+    guard: Arc<AtomicUsize>
+}
+
+impl ExecutorGuard {
+    fn new() -> Self {
+        ExecutorGuard {
+            seq: 0,
+            guard: Arc::new(AtomicUsize::new(0))
+        }
+    }
+
+    fn size(&self) -> usize {
+        Arc::strong_count(&self.guard)
+    }
+}
+
+impl Clone for ExecutorGuard {
+    fn clone(&self) -> Self {
+        let seq = self.guard.fetch_add(1, Ordering::SeqCst) + 1;
+        ExecutorGuard {
+           seq, guard: self.guard.clone()
+        }
+    }
+}
+
+impl Drop for ExecutorGuard {
+    fn drop(&mut self) {
+        if self.seq > 0 {
+            let seq = self.guard.fetch_sub(1, Ordering::SeqCst);
+            if seq == 1 {
+
+            }
+        }
+    }
+}
+
 lazy_static! {
     static ref EXECUTOR: (Mutex<Option<ExecutorRuntime>>, ExecutorProxy) = init_executor();
     static ref THREAD_JOIN: Mutex<Option<JoinHandle<()>>> = Mutex::new(None);
-    static ref EXECUTOR_GUARD: Arc<AtomicUsize> = Arc::new(AtomicUsize::new(0));
+    static ref EXECUTOR_GUARD: ExecutorGuard = ExecutorGuard::new();
+}
+
+thread_local! {
+    static LOCAL_EXECUTOR_HOOK: RefCell<Option<ExecutorGuard>> = RefCell::new(None);
 }
 
 /// Start the [`Executor`] runtime, this function will **block** current thread;
 /// The global executor runtime can only be started once, other invoking on this function will fail;
-pub fn start_executor() {
+fn start_executor() {
     if SHUTDOWN_HOOK.swap(false, Ordering::SeqCst) {
         let mut lock = EXECUTOR.0.lock().expect("Executor lock poison");
         if let Some(executor) = lock.take() {
@@ -464,44 +506,50 @@ pub fn start_executor() {
     }
 }
 
-pub fn start_executor_async() -> JoinHandle<()> {
-    std::thread::Builder::new()
+pub fn start_executor_async() {
+    let join = std::thread::Builder::new()
         .name("reactor 0".to_owned())
         .spawn(|| start_executor())
-        .expect("start executor thread failure")
+        .expect("start executor thread failure");
+    THREAD_JOIN
+        .lock()
+        .expect("THREAD_JOIN lock poison")
+        .replace(join);
 }
 
 pub fn try_start_executor_async() {
-    if EXECUTOR_GUARD.fetch_add(1, Ordering::SeqCst) == 0 {
-        let join = start_executor_async();
-        THREAD_JOIN
-            .lock()
-            .expect("THREAD_JOIN lock poison")
-            .replace(join);
+    LOCAL_EXECUTOR_HOOK.with(|x| {
+        let mut borrow = x.borrow_mut();
+        if borrow.is_none() {
+            let guard = EXECUTOR_GUARD.clone();
+            if guard.seq == 1 {
+                start_executor_async();
+            }
+            borrow.replace(guard);
+        }
+    });
+
+    while is_shutdown() {
+        std::thread::sleep(Duration::from_millis(100));
     }
 }
 
 #[inline]
-pub fn shutdown() {
+fn shutdown() {
     info!("Executor going to shutdown ...");
     SHUTDOWN_HOOK.store(true, Ordering::SeqCst);
 }
 
-pub fn try_termination() {
-    if EXECUTOR_GUARD.fetch_sub(1, Ordering::SeqCst) == 1 {
-        shutdown();
-        await_termination();
-    }
-}
-
 pub fn try_shutdown() {
-    if EXECUTOR_GUARD.fetch_sub(1, Ordering::SeqCst) == 1 {
+    LOCAL_EXECUTOR_HOOK.with(|x| x.borrow_mut().take());
+    if EXECUTOR_GUARD.size() == 1 {
         shutdown();
     }
 }
 
 pub fn await_termination() {
-    if EXECUTOR_GUARD.load(Ordering::SeqCst) == 0 {
+    try_shutdown();
+    if EXECUTOR_GUARD.size() == 1 {
         if let Some(join) = THREAD_JOIN
             .lock()
             .expect("THREAD_JOIN lock poison")
@@ -546,65 +594,4 @@ pub fn spawn<T: Task + 'static>(task: T) -> Result<(), RejectError<T>> {
 
 pub fn spawn_batch<T: Task + 'static, I: IntoIterator<Item = T>>(tasks: I) -> Result<(), RejectError<()>> {
     EXECUTOR.1.spawn_batch(tasks)
-}
-
-#[cfg(test)]
-mod test {
-    use super::*;
-
-    pub struct TaskImpl {
-        step: usize,
-    }
-
-    impl TaskImpl {
-        pub fn new() -> Self {
-            TaskImpl { step: 0 }
-        }
-    }
-
-    impl Task for TaskImpl {
-        fn execute(&mut self) -> TaskState {
-            self.step += 1;
-            ::std::thread::sleep(Duration::from_millis(1));
-            if self.step < 10 {
-                TaskState::NotReady
-            } else {
-                // println!("Task cost {:?}", self.start.elapsed());
-                TaskState::Finished
-            }
-        }
-
-        fn check_ready(&mut self) -> TaskState {
-            TaskState::Ready
-        }
-    }
-
-    #[test]
-    fn test_reactor_executor() {
-        std::env::set_var(CORE_POOL_SIZE, "4");
-        let guard = start_executor_async();
-        let start = Instant::now();
-        let mut guards = Vec::with_capacity(4);
-        for _ in 0..4 {
-            guards.push(std::thread::spawn(move || {
-                let mut task_guards = Vec::with_capacity(100);
-                for _i in 0..100 {
-                    task_guards.push(spawn(TaskImpl::new()).unwrap());
-                }
-                for mut task in task_guards {
-                    let result = task.join();
-                    assert!(result.is_ok());
-                }
-            }));
-        }
-        // shutdown();
-
-        for g in guards {
-            g.join().unwrap();
-        }
-
-        println!("400 task cost {:?}", start.elapsed());
-        shutdown();
-        guard.join().unwrap();
-    }
 }

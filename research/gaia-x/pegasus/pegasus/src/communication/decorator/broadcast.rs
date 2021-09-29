@@ -90,6 +90,7 @@ mod rob {
     use crate::data::MicroBatch;
     use crate::data_plane::Push;
     use crate::errors::IOError;
+    use crate::progress::{EndSignal, Weight};
     use crate::Data;
 
     pub struct BroadcastBatchPush<D: Data> {
@@ -107,41 +108,58 @@ mod rob {
         pub(crate) fn get_cancel_handle(&self) -> CancelHandle {
             CancelHandle::MC(self.cancel_handle.clone())
         }
+
+        fn push_to(&mut self, target: usize, mut batch: MicroBatch<D>) -> Result<(), IOError> {
+            let level = batch.tag.len() as u32;
+            if level == self.ch_info.scope_level
+                && self
+                    .cancel_handle
+                    .is_canceled(&batch.tag, target)
+            {
+                batch.clear();
+                if !batch.is_last() {
+                    return Ok(());
+                }
+            }
+
+            if let Some(mut end) = batch.take_end() {
+                if end.source.value() == 1 {
+                    end.source = Weight::all();
+                    batch.set_end(end);
+                    self.pushes[target].push(batch)?;
+                } else {
+                    if !batch.is_empty() {
+                        self.pushes[target].push(batch)?;
+                    }
+                    let end = EndSignal::new(end, Weight::all());
+                    self.pushes[target].notify_end(end)?;
+                }
+            } else {
+                self.pushes[target].push(batch)?;
+            }
+
+            Ok(())
+        }
     }
 
     impl<D: Data> Push<MicroBatch<D>> for BroadcastBatchPush<D> {
         fn push(&mut self, mut batch: MicroBatch<D>) -> Result<(), IOError> {
+            let level = batch.tag.len() as u32;
             if self.pushes.len() == 1 {
-                if !self.cancel_handle.is_canceled(&batch.tag, 0) {
-                    self.pushes[0].push(batch)
-                } else {
-                    if let Some(end) = batch.take_end() {
-                        self.pushes[0].notify_end(end)?;
+                // corner case;
+                if level == self.ch_info.scope_level && self.cancel_handle.is_canceled(&batch.tag, 0) {
+                    batch.clear();
+                    if !batch.is_last() {
+                        return Ok(());
                     }
-                    Ok(())
                 }
+                self.pushes[0].push(batch)
             } else {
-                let end = batch.take_end();
-                if !batch.is_empty() {
-                    for i in 1..self.pushes.len() {
-                        if !self.cancel_handle.is_canceled(&batch.tag, i) {
-                            let b = batch.share();
-                            self.pushes[i].push(b)?;
-                        }
-                    }
-                    if !self.cancel_handle.is_canceled(&batch.tag, 0) {
-                        self.pushes[0].push(batch)?;
-                    }
+                for i in 1..self.pushes.len() {
+                    self.push_to(i, batch.share())?;
                 }
 
-                if let Some(end) = end {
-                    for i in 1..self.pushes.len() {
-                        self.pushes[i].notify_end(end.clone())?;
-                    }
-                    self.pushes[0].notify_end(end)
-                } else {
-                    Ok(())
-                }
+                self.push_to(0, batch)
             }
         }
 

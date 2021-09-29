@@ -20,40 +20,39 @@ use nohash_hasher::IntSet;
 use pegasus_common::rc::UnsafeRcPtr;
 
 use crate::api::meta::OperatorInfo;
-use crate::api::notification::{CancelScope, EndScope};
+use crate::api::notification::{Cancel, End};
 use crate::channel_id::ChannelInfo;
 use crate::communication::input::{new_input, InputProxy};
 use crate::communication::output::{OutputBuilder, OutputBuilderImpl, OutputProxy};
-use crate::data::MicroBatch;
+use crate::data::{EndByScope, MicroBatch};
 use crate::data_plane::{GeneralPull, GeneralPush};
 use crate::errors::{IOResult, JobExecError};
 use crate::event::emitter::EventEmitter;
 use crate::graph::Port;
-use crate::progress::EndSignal;
 use crate::schedule::state::inbound::InputEndNotify;
 use crate::schedule::state::outbound::OutputCancelState;
 use crate::tag::tools::map::TidyTagMap;
 use crate::{Data, Tag};
 
 pub trait Notifiable: Send + 'static {
-    fn on_notify(&mut self, n: EndScope, outputs: &[Box<dyn OutputProxy>]) -> Result<(), JobExecError>;
+    fn on_end(&mut self, n: End, outputs: &[Box<dyn OutputProxy>]) -> Result<(), JobExecError>;
 
-    fn on_cancel(&mut self, n: CancelScope, inputs: &[Box<dyn InputProxy>]) -> Result<(), JobExecError>;
+    fn on_cancel(&mut self, n: Cancel, inputs: &[Box<dyn InputProxy>]) -> Result<(), JobExecError>;
 }
 
 impl<T: ?Sized + Notifiable> Notifiable for Box<T> {
-    fn on_notify(&mut self, n: EndScope, outputs: &[Box<dyn OutputProxy>]) -> Result<(), JobExecError> {
-        (**self).on_notify(n, outputs)
+    fn on_end(&mut self, n: End, outputs: &[Box<dyn OutputProxy>]) -> Result<(), JobExecError> {
+        (**self).on_end(n, outputs)
     }
 
-    fn on_cancel(&mut self, n: CancelScope, inputs: &[Box<dyn InputProxy>]) -> Result<(), JobExecError> {
+    fn on_cancel(&mut self, n: Cancel, inputs: &[Box<dyn InputProxy>]) -> Result<(), JobExecError> {
         (**self).on_cancel(n, inputs)
     }
 }
 
 struct MultiInputsMerge {
     input_size: usize,
-    end_merge: Vec<TidyTagMap<(EndScope, IntSet<u64>)>>,
+    end_merge: Vec<TidyTagMap<(EndByScope, IntSet<u64>)>>,
 }
 
 impl MultiInputsMerge {
@@ -65,30 +64,45 @@ impl MultiInputsMerge {
         MultiInputsMerge { input_size, end_merge }
     }
 
-    fn merge_end(&mut self, n: EndScope) -> Option<EndScope> {
+    fn merge_end(&mut self, n: End) -> Vec<EndByScope> {
         let idx = n.tag().len();
         assert!(idx < self.end_merge.len());
-        if let Some((mut merged, mut count)) = self.end_merge[idx].remove(n.tag()) {
-            let EndScope { port, tag, weight } = n;
+        let mut ends = vec![];
+        let guard = self.input_size;
+        if idx + 1 < self.end_merge.len() {
+            for i in (idx + 1..self.end_merge.len()).rev() {
+                for (t, (e, s)) in self.end_merge[i].iter_mut() {
+                    if n.tag().is_parent_of(&*t) {
+                        s.insert(n.port() as u64);
+                        if s.len() == guard {
+                            ends.push(e.clone());
+                        }
+                    }
+                }
+                self.end_merge[i].retain(|_t, (_e, s)| s.len() < guard);
+            }
+        }
+
+        let End { port, end } = n;
+        if let Some((mut merged, mut count)) = self.end_merge[idx].remove(&end.tag) {
             if count.insert(port as u64) {
-                trace_worker!("merge {}th end of {:?} from input port {}", count.len(), tag, port);
-                merged.weight.merge(weight);
+                trace_worker!("merge {}th end of {:?} from input port {}", count.len(), end.tag, port);
+                merged.merge(end);
                 if count.len() == self.input_size {
-                    Some(merged)
+                    ends.push(merged);
                 } else {
-                    self.end_merge[idx].insert(tag, (merged, count));
-                    None
+                    self.end_merge[idx].insert(merged.tag.clone(), (merged, count));
                 }
             } else {
-                None
+                self.end_merge[idx].insert(merged.tag.clone(), (merged, count));
             }
         } else {
-            trace_worker!("merge first end of {:?} from input port {}", n.tag(), n.port);
+            trace_worker!("merge first end of {:?} from input port {}", end.tag, port);
             let mut m = IntSet::default();
-            m.insert(n.port as u64);
-            self.end_merge[idx].insert(n.tag().clone(), (n, m));
-            None
+            m.insert(port as u64);
+            self.end_merge[idx].insert(end.tag.clone(), (end, m));
         }
+        ends
     }
 }
 
@@ -109,7 +123,7 @@ impl MultiOutputsMerge {
     }
 
     // TODO: enable merge cancel from parent into children;
-    fn merge_cancel(&mut self, n: CancelScope) -> Option<Tag> {
+    fn merge_cancel(&mut self, n: Cancel) -> Option<Tag> {
         let level = n.tag().len();
         assert!(level < self.cancel_merge.len());
         if let Some(mut in_merge) = self.cancel_merge[level].remove(n.tag()) {
@@ -159,15 +173,15 @@ impl DefaultNotify {
         }
     }
 
-    fn merge_end(&mut self, end: EndScope) -> Option<EndScope> {
+    fn merge_end(&mut self, end: End) -> Vec<EndByScope> {
         match self {
-            DefaultNotify::SISO | DefaultNotify::SIMO(_) => Some(end),
+            DefaultNotify::SISO | DefaultNotify::SIMO(_) => vec![end.take()],
             DefaultNotify::MISO(mim) => mim.merge_end(end),
             DefaultNotify::MIMO(mim, _) => mim.merge_end(end),
         }
     }
 
-    fn merge_cancel(&mut self, cancel: CancelScope) -> Option<Tag> {
+    fn merge_cancel(&mut self, cancel: Cancel) -> Option<Tag> {
         match self {
             DefaultNotify::SISO | DefaultNotify::MISO(_) => Some(cancel.tag),
             DefaultNotify::SIMO(mom) => mom.merge_cancel(cancel),
@@ -177,29 +191,49 @@ impl DefaultNotify {
 }
 
 pub struct DefaultNotifyOperator<T> {
+    worker_index: u32,
+    worker_peers: u32,
+    op_index: usize,
     op: T,
     notify: DefaultNotify,
 }
 
 impl<T> DefaultNotifyOperator<T> {
-    fn new(input_size: usize, output_size: usize, scope_level: u32, op: T) -> Self {
+    fn new(op_index: usize, input_size: usize, output_size: usize, scope_level: u32, op: T) -> Self {
         let notify = DefaultNotify::new(input_size, output_size, scope_level);
-        DefaultNotifyOperator { op, notify }
+        let worker_index = crate::worker_id::get_current_worker().index;
+        let worker_peers = crate::worker_id::get_current_worker().total_peers();
+        DefaultNotifyOperator { worker_index, worker_peers, op_index, op, notify }
     }
 }
 
 impl<T: Send + 'static> Notifiable for DefaultNotifyOperator<T> {
-    fn on_notify(&mut self, n: EndScope, outputs: &[Box<dyn OutputProxy>]) -> Result<(), JobExecError> {
+    fn on_end(&mut self, n: End, outputs: &[Box<dyn OutputProxy>]) -> Result<(), JobExecError> {
         if !outputs.is_empty() {
-            if let Some(end) = self.notify.merge_end(n) {
-                let EndScope { port: _port, tag, weight } = end;
-                let sig = EndSignal::new(tag, weight);
+            let merged = self.notify.merge_end(n);
+            for end in merged {
+                if !end.tag.is_root() && !end.contains_source(self.worker_index) {
+                    let owner = end.tag.current_uncheck() % self.worker_peers;
+                    if owner != self.worker_index {
+                        trace_worker!(
+                            "operator {} ignore scope end of {:?} source = {:?}, count = {};",
+                            self.op_index,
+                            end.tag,
+                            end.source,
+                            end.count
+                        );
+                        continue;
+                    }
+                    // if end.source.value() != 1 {
+                    //     continue;
+                    // }
+                }
                 if outputs.len() > 1 {
                     for i in 1..outputs.len() {
-                        outputs[i].notify_end(sig.clone())?;
+                        outputs[i].notify_end(end.clone())?;
                     }
                 }
-                outputs[0].notify_end(sig)?;
+                outputs[0].notify_end(end)?;
             }
             Ok(())
         } else {
@@ -207,7 +241,7 @@ impl<T: Send + 'static> Notifiable for DefaultNotifyOperator<T> {
         }
     }
 
-    fn on_cancel(&mut self, n: CancelScope, inputs: &[Box<dyn InputProxy>]) -> Result<(), JobExecError> {
+    fn on_cancel(&mut self, n: Cancel, inputs: &[Box<dyn InputProxy>]) -> Result<(), JobExecError> {
         if !inputs.is_empty() {
             if let Some(cancel) = self.notify.merge_cancel(n) {
                 for input in inputs {
@@ -317,10 +351,8 @@ impl Operator {
 
         for (port, input) in self.inputs.iter().enumerate() {
             while let Some(end) = input.extract_end() {
-                let (tag, weight, _) = end.take();
-                let notification = EndScope { port, tag, weight };
-                self.core
-                    .on_notify(notification, &self.outputs)?;
+                let notification = End { port, end };
+                self.core.on_end(notification, &self.outputs)?;
             }
         }
 
@@ -341,7 +373,7 @@ impl Operator {
             tag,
         );
         self.outputs[port].cancel(&tag)?;
-        let cancel = CancelScope { port, tag };
+        let cancel = Cancel { port, tag };
         self.core.on_cancel(cancel, &self.inputs)?;
         Ok(())
     }
@@ -447,19 +479,19 @@ impl OperatorBuilder {
     }
 
     pub(crate) fn build(self) -> Operator {
+        let op_index = self.index();
         let mut outputs = Vec::new();
         for ob in self.outputs {
             if let Some(o) = ob.build() {
                 outputs.push(o);
             }
         }
-
         let core = match self.core {
             GeneralOperator::Simple(op) => {
                 let scope_level = self.info.scope_level;
                 let input_size = self.inputs.len();
                 let output_size = outputs.len();
-                let op = DefaultNotifyOperator::new(input_size, output_size, scope_level, op);
+                let op = DefaultNotifyOperator::new(op_index, input_size, output_size, scope_level, op);
                 Box::new(op) as Box<dyn NotifiableOperator>
             }
             GeneralOperator::Notifiable(op) => op,
