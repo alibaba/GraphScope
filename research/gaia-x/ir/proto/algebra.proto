@@ -88,9 +88,9 @@ message GroupBy {
       AVG = 7;
     }
 
-    // Point to the values upon which the aggregation is applied
+    // The variables to apply this aggregation
     // TODO(longbin) An expression here is a more general form
-    repeated common.Variable values = 1;
+    repeated common.Variable vars = 1;
     // The aggregate function
     Aggregate aggregate = 2;
     // The alias for the aggregated value

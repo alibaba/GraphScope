@@ -52,7 +52,7 @@
 
 use crate::generated::algebra as pb;
 use crate::generated::common as common_pb;
-use crate::plan::utils::{cstr_to_string, FfiResult, LogicalPlan, ResultCode};
+use crate::plan::{cstr_to_string, FfiResult, LogicalPlan, ResultCode};
 use std::convert::{TryFrom, TryInto};
 use std::ffi::c_void;
 use std::os::raw::c_char;
@@ -166,10 +166,8 @@ impl TryFrom<FfiVariable> for common_pb::Variable {
 }
 
 /// Transform a c-like string into `NameOrId`
-///
-/// .
 #[no_mangle]
-pub extern "C" fn as_tag_name(name: *const c_char) -> FfiNameOrId {
+pub extern "C" fn as_name(name: *const c_char) -> FfiNameOrId {
     FfiNameOrId {
         opt: FfiNameIdOpt::Name,
         name,
@@ -179,7 +177,7 @@ pub extern "C" fn as_tag_name(name: *const c_char) -> FfiNameOrId {
 
 /// Transform an integer into `NameOrId`.
 #[no_mangle]
-pub extern "C" fn as_tag_id(name_id: i32) -> FfiNameOrId {
+pub extern "C" fn as_id(name_id: i32) -> FfiNameOrId {
     FfiNameOrId {
         opt: FfiNameIdOpt::Id,
         name: std::ptr::null(),
@@ -244,7 +242,8 @@ fn append_operator(
 #[no_mangle]
 pub extern "C" fn debug_plan(ptr_plan: *const c_void) {
     let plan = unsafe { Box::from_raw(ptr_plan as *mut LogicalPlan) };
-    println!("{:?}", plan);
+
+    println!("{:#?}", plan);
     std::mem::forget(plan);
 }
 
@@ -265,27 +264,28 @@ mod project {
         expr: *const c_char,
         alias: FfiNameOrId,
     ) -> ResultCode {
+        let mut return_code = ResultCode::Success;
         let mut args = unsafe { Box::from_raw(ptr_project as *mut Vec<pb::project::ExprAlias>) };
         let expr_str = cstr_to_string(expr);
         let alias_pb = common_pb::NameOrId::try_from(alias);
 
         if !expr_str.is_ok() || !alias_pb.is_ok() {
-            return ResultCode::CStringError;
-        }
-
-        let expr_rst = common_pb::SuffixExpr::try_from(expr_str.unwrap());
-        if expr_rst.is_ok() {
-            let arg = pb::project::ExprAlias {
-                expr: expr_rst.ok(),
-                alias: alias_pb.ok(),
-            };
-            args.push(arg);
-            std::mem::forget(args);
-
-            ResultCode::Success
+            return_code = ResultCode::CStringError;
         } else {
-            expr_rst.err().unwrap()
+            let expr_rst = common_pb::SuffixExpr::try_from(expr_str.unwrap());
+            if expr_rst.is_ok() {
+                let arg = pb::project::ExprAlias {
+                    expr: expr_rst.ok(),
+                    alias: alias_pb.ok(),
+                };
+                args.push(arg);
+            } else {
+                return_code = expr_rst.err().unwrap()
+            }
         }
+
+        std::mem::forget(args);
+        return_code
     }
 
     /// Append a project operator to the logical plan. To do so, one specifies the following arguments:
@@ -295,7 +295,8 @@ mod project {
     /// * `id`: An index pointer that gonna hold the index for this operator.
     ///
     /// After successfully appending to the logical plan, the `ptr_project` shall be released by
-    /// by the rust program. Therefore, the caller needs not to deallocate the pointer.
+    /// by the rust program. Therefore, the caller needs not to deallocate the pointer, and must
+    /// **not** use it thereafter.
     ///
     /// # Return
     /// * Returning [`ResultCode`] to capture any error.
@@ -342,21 +343,21 @@ mod select {
         ptr_select: *const c_void,
         ptr_predicate: *const c_char,
     ) -> ResultCode {
+        let mut return_code = ResultCode::Success;
         let predicate_str = cstr_to_string(ptr_predicate);
         if predicate_str.is_err() {
-            predicate_str.err().unwrap()
+            return_code = predicate_str.err().unwrap()
         } else {
             let predicate_pb = common_pb::SuffixExpr::try_from(predicate_str.unwrap());
             if predicate_pb.is_ok() {
                 let mut select = unsafe { Box::from_raw(ptr_select as *mut pb::Select) };
                 select.predicate = predicate_pb.ok();
                 std::mem::forget(select);
-
-                ResultCode::Success
             } else {
-                ResultCode::ParseExprError
+                return_code = ResultCode::ParseExprError
             }
         }
+        return_code
     }
 
     /// Append a select operator to the logical plan
@@ -433,39 +434,192 @@ mod join {
         left_key: FfiVariable,
         right_key: FfiVariable,
     ) -> ResultCode {
+        let mut return_code = ResultCode::Success;
         let mut join = unsafe { Box::from_raw(ptr_join as *mut pb::Join) };
         let left_key_pb: FfiResult<common_pb::Variable> = left_key.try_into();
         let right_key_pb: FfiResult<common_pb::Variable> = right_key.try_into();
         if left_key_pb.is_err() {
-            return left_key_pb.err().unwrap();
+            return_code = left_key_pb.err().unwrap();
+        } else if right_key_pb.is_err() {
+            return_code = right_key_pb.err().unwrap();
+        } else {
+            join.left_keys.push(left_key_pb.unwrap());
+            join.right_keys.push(right_key_pb.unwrap());
         }
-        if right_key_pb.is_err() {
-            return right_key_pb.err().unwrap();
-        }
-        join.left_keys.push(left_key_pb.unwrap());
-        join.right_keys.push(right_key_pb.unwrap());
         std::mem::forget(join);
 
-        ResultCode::Success
+        return_code
     }
 
     /// Append a join operator to the logical plan
     #[no_mangle]
     pub extern "C" fn append_join_operator(
         ptr_plan: *const c_void,
-        ptr_select: *const c_void,
+        ptr_join: *const c_void,
         parent_left: i32,
         parent_right: i32,
         id: *mut i32,
     ) -> ResultCode {
         if parent_left >= 0 && parent_right >= 0 {
-            let join = unsafe { Box::from_raw(ptr_select as *mut pb::Join) };
+            let join = unsafe { Box::from_raw(ptr_join as *mut pb::Join) };
             append_operator(
                 ptr_plan,
                 join.as_ref().clone().into(),
                 vec![parent_left, parent_right],
                 id,
             )
+        } else {
+            ResultCode::NegativeIndexError
+        }
+    }
+}
+
+mod union {
+    use super::*;
+
+    /// To initialize a union operator
+    #[no_mangle]
+    pub extern "C" fn init_union_operator() -> *const c_void {
+        let union = Box::new(pb::Union {});
+        Box::into_raw(union) as *const c_void
+    }
+
+    /// Append a union operator to the logical plan
+    #[no_mangle]
+    pub extern "C" fn append_union_operator(
+        ptr_plan: *const c_void,
+        ptr_union: *const c_void,
+        parent_left: i32,
+        parent_right: i32,
+        id: *mut i32,
+    ) -> ResultCode {
+        if parent_left >= 0 && parent_right >= 0 {
+            let union = unsafe { Box::from_raw(ptr_union as *mut pb::Union) };
+            append_operator(
+                ptr_plan,
+                union.as_ref().clone().into(),
+                vec![parent_left, parent_right],
+                id,
+            )
+        } else {
+            ResultCode::NegativeIndexError
+        }
+    }
+}
+
+mod groupby {
+    use super::*;
+
+    /// To initialize a union operator
+    #[no_mangle]
+    pub extern "C" fn init_groupby_operator() -> *const c_void {
+        let group = Box::new(pb::GroupBy {
+            keys: vec![],
+            functions: vec![],
+        });
+        Box::into_raw(group) as *const c_void
+    }
+
+    #[allow(dead_code)]
+    #[repr(i32)]
+    #[derive(Clone, Copy)]
+    pub enum FfiAggOpt {
+        Sum = 0,
+        Min = 1,
+        Max = 2,
+        Count = 3,
+        CountDistinct = 4,
+        ToList = 5,
+        ToSet = 6,
+        Avg = 7,
+    }
+
+    #[repr(C)]
+    pub struct FfiAggFn {
+        vars: *const FfiVariable,
+        aggregate: FfiAggOpt,
+        alias: FfiNameOrId,
+    }
+
+    impl TryFrom<FfiAggFn> for pb::group_by::AggFunc {
+        type Error = ResultCode;
+
+        fn try_from(value: FfiAggFn) -> Result<Self, Self::Error> {
+            let mut agg_fn_pb = pb::group_by::AggFunc {
+                vars: vec![],
+                aggregate: unsafe { std::mem::transmute::<FfiAggOpt, i32>(value.aggregate) },
+                alias: None,
+            };
+            let (vars, alias) = (value.vars as *mut Vec<FfiVariable>, value.alias);
+            let vars: Box<Vec<FfiVariable>> = unsafe { Box::from_raw(vars) };
+            for var in vars.into_iter() {
+                agg_fn_pb.vars.push(var.try_into()?)
+            }
+            agg_fn_pb.alias = Some(alias.try_into()?);
+
+            Ok(agg_fn_pb)
+        }
+    }
+
+    /// The group function actually requires a collection of variables. Right now we
+    /// provide the support of just one variable cause it suits for most cases already.
+    /// TODO(longbin) Will provide the support for multiple grouping variables
+    #[no_mangle]
+    pub extern "C" fn build_agg_fn(
+        agg_var: FfiVariable,
+        aggregate: FfiAggOpt,
+        alias: FfiNameOrId,
+    ) -> FfiAggFn {
+        let vars: Box<Vec<FfiVariable>> = Box::new(vec![agg_var]);
+        FfiAggFn {
+            vars: unsafe { Box::into_raw(vars) as *const FfiVariable },
+            aggregate,
+            alias,
+        }
+    }
+
+    #[no_mangle]
+    pub extern "C" fn add_agg_fn(ptr_group: *const c_void, agg_fn: FfiAggFn) -> ResultCode {
+        let mut return_code = ResultCode::Success;
+        let mut group = unsafe { Box::from_raw(ptr_group as *mut pb::GroupBy) };
+        let agg_fn_pb: FfiResult<pb::group_by::AggFunc> = agg_fn.try_into();
+
+        if agg_fn_pb.is_ok() {
+            group.as_mut().functions.push(agg_fn_pb.unwrap());
+        } else {
+            return_code = agg_fn_pb.err().unwrap();
+        }
+        std::mem::forget(group);
+
+        return_code
+    }
+
+    #[no_mangle]
+    pub extern "C" fn add_grouping_key(ptr_group: *const c_void, key: FfiVariable) -> ResultCode {
+        let mut return_code = ResultCode::Success;
+        let mut group = unsafe { Box::from_raw(ptr_group as *mut pb::GroupBy) };
+        let key_pb: FfiResult<common_pb::Variable> = key.try_into();
+        if key_pb.is_ok() {
+            group.keys.push(key_pb.unwrap());
+        } else {
+            return_code = key_pb.err().unwrap();
+        }
+        std::mem::forget(group);
+
+        return_code
+    }
+
+    /// Append a union operator to the logical plan
+    #[no_mangle]
+    pub extern "C" fn append_groupby_operator(
+        ptr_plan: *const c_void,
+        ptr_group: *const c_void,
+        parent: i32,
+        id: *mut i32,
+    ) -> ResultCode {
+        if parent >= 0 {
+            let group = unsafe { Box::from_raw(ptr_group as *mut pb::GroupBy) };
+            append_operator(ptr_plan, group.as_ref().clone().into(), vec![parent], id)
         } else {
             ResultCode::NegativeIndexError
         }
