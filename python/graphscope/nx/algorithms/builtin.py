@@ -1217,6 +1217,7 @@ def all_simple_paths(G, source, target_nodes, cutoff=None):
         [0, 3]
 
     """
+
     @project_to_simple
     def _all_simple_paths(G, source, target_nodes, cutoff):
         targets_json = json.dumps(target_nodes)
@@ -1274,6 +1275,7 @@ def all_simple_edge_paths(G, source, target_nodes, cutoff=None):
         [(1, 3), (3, 4)]
 
     """
+
     @project_to_simple
     def _all_simple_paths(G, source, target_nodes, cutoff):
         targets_json = json.dumps(target_nodes)
