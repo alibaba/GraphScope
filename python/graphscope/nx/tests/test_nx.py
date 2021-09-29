@@ -63,6 +63,7 @@ def p3_graph(prefix, directed):
         Loader(os.path.join(prefix, "p3_e.csv"), delimiter="|"),
         "edge",
     )
+    return graph
 
 
 def ldbc_sample_single_label(prefix, directed):
@@ -427,7 +428,6 @@ class TestGraphTransformation(object):
         }
         assert G.get_edge_data(933, 4398046511628) == {
             "creationDate": "2010-07-30T15:19:53.298+0000",
-            "eid": 72057594037927936,
         }
         assert list(G.neighbors(933)) == [28587302322537, 8796093023017, 4398046511628]
         if G.is_directed():
@@ -716,7 +716,7 @@ class TestImportNetworkxModuleWithSession(object):
 
 @pytest.mark.skip(reason="TODO: open after test file ready")
 @pytest.mark.usefixtures("graphscope_session")
-class TestGraphWithArrowProperty(_TestGraph):
+class TestGraphCopyOnWrite(_TestGraph):
     def setup_method(self):
         self.Graph = nx.Graph
         self.k3nodes = [0, 1, 2]
@@ -753,7 +753,7 @@ class TestGraphWithArrowProperty(_TestGraph):
         else:
             elist = [
                 (0, 1, {}),
-                (2, 0, {}),
+                (2, 0, {}),  # N.B: diff with _TestGraph, update the order of id
                 (2, 1, {}),
                 (4, 5, {}),
                 (6, 7, {"weight": 2}),
@@ -802,7 +802,7 @@ class TestGraphWithArrowProperty(_TestGraph):
 
 @pytest.mark.skip(reason="TODO: open after test file ready")
 @pytest.mark.usefixtures("graphscope_session")
-class TestDiGraphWithArrowProperty(_TestDiGraph):
+class TestDiGraphCopyOnWrite(_TestDiGraph):
     def setup_method(self):
         self.Graph = nx.DiGraph
         # build K3
