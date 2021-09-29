@@ -40,7 +40,6 @@ class AllSimplePaths : public AppBase<FRAG_T, AllSimplePathsContext<FRAG_T>>,
   static constexpr grape::LoadStrategy load_strategy =
       grape::LoadStrategy::kBothOutIn;
   enum MsgType { init_msg, bfs_msg, edge_map_msg };
-  // MsgType a = init_msg;
   using vertex_t = typename fragment_t::vertex_t;
   using vid_t = typename fragment_t::vid_t;
   using msg_t = typename std::tuple<enum MsgType, vid_t, vid_t>;
@@ -49,34 +48,9 @@ class AllSimplePaths : public AppBase<FRAG_T, AllSimplePathsContext<FRAG_T>>,
              message_manager_t& messages) {
     vertex_t source;
     vid_t source_gid;
-    bool empty_flag = false;
-    // Source does not exist.
-    if (!frag.Oid2Gid(ctx.source_id, source_gid)) {
-      empty_flag = true;
-      ctx.nodes_not_found = true;
-    }
-    // nodes_not_found = true, return 2 as NodeNotFound.
-    if (ctx.nodes_not_found == true && frag.fid() == 0) {
-      std::vector<typename fragment_t::oid_t> data;
-      std::vector<size_t> shape{1};
-      data.push_back(2);
-      ctx.assign(data, shape);
-      return;
-    }
+
+    frag.Oid2Gid(ctx.source_id, source_gid);
     ctx.soucre_fid = source_gid >> ctx.fid_offset;
-    if (ctx.targets.count(source_gid) || ctx.cutoff < 1) {
-      empty_flag = true;
-    }
-    // empty_flag == true, return 1 as empty path.
-    if (empty_flag == true && frag.fid() == ctx.soucre_fid) {
-      std::vector<typename fragment_t::oid_t> data;
-      std::vector<size_t> shape{1};
-      data.push_back(1);
-      ctx.assign(data, shape);
-      return;
-    } else if (empty_flag == true || ctx.nodes_not_found == true) {
-      return;
-    }
     bool native_source = frag.GetInnerVertex(ctx.source_id, source);
     // If is native_source, resize the edge_map, otherwise send the fragment
     // inner vertex num to source-vertex's fragment.
@@ -100,13 +74,13 @@ class AllSimplePaths : public AppBase<FRAG_T, AllSimplePathsContext<FRAG_T>>,
     msg_t msg;
 
     while (messages.GetMessage(msg)) {
-      // if msg[2] == true, msg[0].first is frag_id and msg[0].second is frag's
-      // inner_vertex_num.
-      // Else if msg[1] == false, means the message is the
-      // vertices waiting to be accessed, msg[0].first is frag's gid and
-      // msg[0].second is vertex's depth.
-      // Else mgs[1] == true, means the message is send to source frag to update
-      // edge_map. The msg[0].first is from's gid and msg[0].second is to's gid.
+      // msg_type = init_msg means the message is to init frag_vertex_num,
+      // msg[1] is frag's gid and msg[2] is vertex's depth.
+      // msg_type = bfs_msg means the message is the
+      // vertices waiting to be accessed, msg[1] is frag's gid and
+      // msg[2] is vertex's depth.
+      // msg_type = edge_map_msg means the message is send to source frag to
+      // update edge_map. The msg[1] is from's gid and msg[2] is to's gid.
       MsgType msg_type = std::get<0>(msg);
       if (msg_type == init_msg) {
         vid_t fid = std::get<1>(msg);
@@ -117,8 +91,6 @@ class AllSimplePaths : public AppBase<FRAG_T, AllSimplePathsContext<FRAG_T>>,
           vertex_t source;
           frag.GetInnerVertex(ctx.source_id, source);
           bfs(source, frag, ctx, messages, 0);
-          // vid_t source_gid;
-          // frag.Oid2Gid(ctx.source_id, source_gid);
           ctx.visited[source] = true;
           messages.ForceContinue();
           frag_finish_counter++;
@@ -293,44 +265,6 @@ class AllSimplePaths : public AppBase<FRAG_T, AllSimplePathsContext<FRAG_T>>,
       vertex_visit.erase(gid);
     }
   }
-
-  /**
-   * @brief gid to vertex global index
-   *
-   * @param ctx
-   * @param gid
-   */
-  // vid_t Gid2VertexGlobalIndex(context_t& ctx, vid_t gid) {
-  //   vid_t fid = gid >> ctx.fid_offset;
-  //   vid_t lid = gid & ctx.id_mask;
-  //   vid_t ret = 0;
-  //   for (vid_t i = 0; i < fid; i++) {
-  //     ret += ctx.frag_vertex_num[i];
-  //   }
-  //   return ret + lid;
-  // }
-
-  // /**
-  //  * @brief vertex global index to gid
-  //  *
-  //  * @param ctx
-  //  * @param index
-  //  */
-  // vid_t globalIndex2Gid(context_t& ctx, vid_t index) {
-  //   vid_t i = 0;
-  //   vid_t sum = 0;
-  //   vid_t sum_last = 0;
-  //   while (true) {
-  //     sum += ctx.frag_vertex_num[i];
-  //     if (sum > index) {
-  //       vid_t lid = index - sum_last;
-  //       vid_t gid = (i << ctx.fid_offset) | lid;
-  //       return gid;
-  //     }
-  //     i++;
-  //     sum_last = sum;
-  //   }
-  // }
 };
 }  // namespace gs
 

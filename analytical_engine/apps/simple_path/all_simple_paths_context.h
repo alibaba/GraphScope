@@ -68,19 +68,8 @@ class AllSimplePathsContext
     folly::dynamic target_nodes_id_array = folly::parseJson(targets_json);
     ExtractOidArrayFromDynamic(target_nodes_id_array, target_oid_array);
     for (const auto& oid : target_oid_array) {
-      if (!frag.Oid2Gid(oid, gid)) {
-        LOG(ERROR) << "Graph not contain vertex " << oid << std::endl;
-        nodes_not_found = true;
-        break;
-      }
-      if (!targets.count(gid)) {
-        targets.insert(gid);
-      }
-    }
-
-    if (!frag.Oid2Gid(source_id, gid) || targets.count(gid) ||
-        this->cutoff < 1) {
-      return;
+      frag.Oid2Gid(oid, gid);
+      targets.insert(gid);
     }
 
     visited.Init(vertices, false);
@@ -107,6 +96,11 @@ class AllSimplePathsContext
     }
   }
 
+  /**
+   * @brief gid to vertex global index
+   *
+   * @param gid
+   */
   vid_t Gid2VertexGlobalIndex(vid_t gid) {
     vid_t fid = gid >> fid_offset;
     vid_t lid = gid & id_mask;
@@ -117,6 +111,11 @@ class AllSimplePathsContext
     return ret + lid;
   }
 
+  /**
+   * @brief vertex global index to gid
+   *
+   * @param index
+   */
   vid_t GlobalIndex2Gid(vid_t index) {
     vid_t i = 0;
     vid_t sum = 0;
@@ -136,7 +135,6 @@ class AllSimplePathsContext
   oid_t source_id;
   std::queue<std::pair<vid_t, int>> curr_level_inner, next_level_inner;
   typename FRAG_T::template vertex_array_t<bool> visited;
-  std::set<vid_t> visit;
   std::set<vid_t> targets;
   std::vector<vid_t> frag_vertex_num;
   int cutoff;
@@ -147,7 +145,6 @@ class AllSimplePathsContext
   std::vector<std::vector<vid_t>> simple_paths_edge_map;
   int frag_finish_counter = 0;
   int path_num = 0;
-  bool nodes_not_found = false;
 
  private:
   void printResult(int from, int depth, std::vector<vid_t>& path,

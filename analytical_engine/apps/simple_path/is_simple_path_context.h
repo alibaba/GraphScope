@@ -57,11 +57,10 @@ class IsSimplePathContext : public TensorContext<FRAG_T, bool> {
     vertex_t source;
     counter = 0;
     vid_t p1, p2;
-    std::vector<oid_t> oid_array;
-
-    folly::dynamic nodes_array = folly::parseJson(nodes_json);
-    ExtractOidArrayFromDynamic(nodes_array, oid_array);
-    for (const auto& val : oid_array) {
+    std::vector<oid_t> path_oid_array;
+    folly::dynamic path_nodes_id_array = folly::parseJson(nodes_json);
+    ExtractOidArrayFromDynamic(path_nodes_id_array, path_oid_array);
+    for (const auto& val : path_oid_array) {
       counter++;
       if (!frag.Oid2Gid(val, p1)) {
         LOG(ERROR) << "Input oid error" << std::endl;
@@ -88,7 +87,7 @@ class IsSimplePathContext : public TensorContext<FRAG_T, bool> {
     if (counter == 0) {
       is_simple_path = false;
     } else if (counter == 1) {
-      if (frag.GetInnerVertex(oid_array[0], source))
+      if (frag.GetInnerVertex(path_oid_array[0], source))
         is_simple_path = true;
       else
         is_simple_path = false;

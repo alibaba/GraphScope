@@ -1187,7 +1187,6 @@ def is_simple_path(G, nodes):
     return graphscope.is_simple_path(G, nodes)
 
 
-@project_to_simple
 def all_simple_paths(G, source, target_nodes, cutoff=None):
     """Generate all simple paths in the graph G from source to target.
     A simple path is a path with no repeated nodes.
@@ -1218,27 +1217,26 @@ def all_simple_paths(G, source, target_nodes, cutoff=None):
         [0, 3]
 
     """
+    @project_to_simple
+    def _all_simple_paths(G, source, target_nodes, cutoff):
+        targets_json = json.dumps(target_nodes)
+        return AppAssets(algo="all_simple_paths", context="tensor")(
+            G, source, targets_json, cutoff
+        )
+
     if not isinstance(target_nodes, list):
-        tolist = [target_nodes]
-        n1json = json.dumps(tolist)
-    else:
-        n1json = json.dumps(target_nodes)
-    if cutoff is not None:
-        ctx = AppAssets(algo="all_simple_paths", context="tensor")(
-            G, source, n1json, cutoff
-        )
-    else:
-        ctx = AppAssets(algo="all_simple_paths", context="tensor")(
-            G, source, n1json, 2147483647
-        )
+        target_nodes = [target_nodes]
+    if source not in G or len(target_nodes) != len(list(G.nbunch_iter(target_nodes))):
+        raise ValueError("nx.NodeNotFound")
+    if cutoff is None:
+        cutoff = len(G) - 1
+    if cutoff < 1 or source in target_nodes:
+        return []
+    ctx = _all_simple_paths(G, source, list(set(target_nodes)), cutoff)
     paths = ctx.to_numpy("r", axis=0).tolist()
-    # return error type
     if len(paths) == 1:
         if not isinstance(paths[0], list):
-            if paths[0] == 1:
-                return []
-            if paths[0] == 2:
-                raise ValueError("nx.NodeNotFound")
+            return []
     # delte path tail padding
     for path in paths:
         for i in range(len(path) - 1, -1, -1):
@@ -1249,7 +1247,6 @@ def all_simple_paths(G, source, target_nodes, cutoff=None):
     return paths
 
 
-@project_to_simple
 def all_simple_edge_paths(G, source, target_nodes, cutoff=None):
     """Generate lists of edges for all simple paths in G from source to target.
     A simple path is a path with no repeated nodes.
@@ -1277,27 +1274,26 @@ def all_simple_edge_paths(G, source, target_nodes, cutoff=None):
         [(1, 3), (3, 4)]
 
     """
+    @project_to_simple
+    def _all_simple_paths(G, source, target_nodes, cutoff):
+        targets_json = json.dumps(target_nodes)
+        return AppAssets(algo="all_simple_paths", context="tensor")(
+            G, source, targets_json, cutoff
+        )
+
     if not isinstance(target_nodes, list):
-        tolist = [target_nodes]
-        n1json = json.dumps(tolist)
-    else:
-        n1json = json.dumps(target_nodes)
-    if cutoff is not None:
-        ctx = AppAssets(algo="all_simple_paths", context="tensor")(
-            G, source, n1json, cutoff
-        )
-    else:
-        ctx = AppAssets(algo="all_simple_paths", context="tensor")(
-            G, source, n1json, 2147483647
-        )
+        target_nodes = [target_nodes]
+    if source not in G or len(target_nodes) != len(list(G.nbunch_iter(target_nodes))):
+        raise ValueError("nx.NodeNotFound")
+    if cutoff is None:
+        cutoff = len(G) - 1
+    if cutoff < 1 or source in target_nodes:
+        return []
+    ctx = _all_simple_paths(G, source, list(set(target_nodes)), cutoff)
     paths = ctx.to_numpy("r", axis=0).tolist()
-    # return error type
     if len(paths) == 1:
         if not isinstance(paths[0], list):
-            if paths[0] == 1:
-                return []
-            if paths[0] == 2:
-                raise ValueError("nx.NodeNotFound")
+            return []
     for path in paths:
         a = ""
         b = ""
