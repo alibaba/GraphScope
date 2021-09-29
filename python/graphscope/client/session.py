@@ -1058,6 +1058,12 @@ class Session(object):
             :class:`graphscope.interactive.query.InteractiveQueryDAGNode`:
                 InteractiveQuery to execute gremlin queries, evaluated in eager mode.
         """
+        if self._session_id != graph.session_id:
+            raise RuntimeError(
+                "Failed to create interactive engine on the graph with different session: {0} vs {1}".format(
+                    self._session_id, graph.session_id
+                )
+            )
 
         # Interactive query instance won't add to self._interactive_instance_dict in lazy mode.
         # self._interactive_instance_dict[graph.vineyard_id] will be None if InteractiveQuery closed
@@ -1121,6 +1127,12 @@ class Session(object):
             :class:`graphscope.learning.GraphDAGNode`:
                 An instance of learning graph that could be feed to the learning engine, evaluated in eager node.
         """
+        if self._session_id != graph.session_id:
+            raise RuntimeError(
+                "Failed to create learning engine on the graph with different session: {0} vs {1}".format(
+                    self._session_id, graph.session_id
+                )
+            )
         if (
             self.eager()
             and graph.vineyard_id in self._learning_instance_dict
@@ -1329,7 +1341,7 @@ class _DefaultSessionStack(object):
 
     def get_default(self):
         if not self.stack:
-            raise RuntimeError("No default session found.")
+            self.stack.append(session(cluster_type="hosts", num_workers=1))
         return self.stack[-1]
 
     def reset(self):
@@ -1354,4 +1366,69 @@ _default_session_stack = _DefaultSessionStack()  # pylint: disable=protected-acc
 
 
 def g(incoming_data=None, oid_type="int64", directed=True, generate_eid=True):
+    """Construct a GraphScope graph object on the default session.
+
+    It will launch and set a session to default when there is no default session found.
+
+    See params detail in :class:`graphscope.framework.graph.GraphDAGNode`
+
+    Returns:
+        :class:`graphscope.framework.graph.GraphDAGNode`: Evaluated in eager mode.
+
+    Examples:
+
+    .. code:: python
+
+        >>> import graphscope
+        >>> g = graphscope.g()
+
+        >>> import graphscope
+        >>> sess = graphscope.session()
+        >>> sess.as_default()
+        >>> g = graphscope.g() # creating graph on the session "sess"
+    """
     return get_default_session().g(incoming_data, oid_type, directed, generate_eid)
+
+
+def gremlin(graph, engine_params=None):
+    """Create a interactive engine and get the handler to execute the gremlin queries.
+
+    See params detail in :meth:`graphscope.Session.gremlin`
+
+    Returns:
+        :class:`graphscope.interactive.query.InteractiveQueryDAGNode`:
+            InteractiveQuery to execute gremlin queries, evaluated in eager mode.
+
+    Examples:
+
+    .. code:: python
+
+        >>> import graphscope
+        >>> g = graphscope.g()
+        >>> interactive_query = graphscope.gremlin()
+    """
+    if _default_session_stack.is_cleared():
+        raise RuntimeError("No default session found.")
+    return get_default_session().gremlin(graph, engine_params)
+
+
+def learning(self, graph, nodes=None, edges=None, gen_labels=None):
+    """Create a graph learning engine.
+
+    See params detail in :meth:`graphscope.Session.gremlin`
+
+    Returns:
+        :class:`graphscope.learning.GraphDAGNode`::
+            An instance of learning graph that could be feed to the learning engine, evaluated in eager node.
+
+    Example:
+
+    .. code:: python
+
+        >>> import graphscope
+        >>> g = graphscope.g()
+        >>> lg = graphscope.learning(g)
+    """
+    if _default_session_stack.is_cleared():
+        raise RuntimeError("No de fault session found.")
+    return get_default_session().learning(graph, nodes, edges, gen_labels)

@@ -18,6 +18,7 @@
 
 import os
 
+from graphscope.client.session import get_default_session
 from graphscope.dataset import DATA_SITE
 from graphscope.dataset.io_utils import download_file
 from graphscope.framework.graph import Graph
@@ -277,6 +278,7 @@ def load_ldbc(sess, prefix=None, directed=True):
 
     Args:
         sess (:class:`graphscope.Session`): Load graph within the session.
+            Default session will be used when setting to None. Defaults to None.
         prefix: `PathLike` object that represents a path.
             With standalone mode, set prefix None will try to download from
             source URL. Defaults to None.
@@ -316,6 +318,9 @@ def load_ldbc(sess, prefix=None, directed=True):
         )
         # assumed dirname is ldbc_sample after extracting from ldbc_sample.tar.gz
         prefix = fpath[0:-7]
+
+    if sess is None:
+        sess = get_default_session()
 
     vertices = {
         "comment": (
