@@ -714,7 +714,6 @@ class TestImportNetworkxModuleWithSession(object):
         self.session_lazy.close()
 
 
-@pytest.mark.skip(reason="TODO: open when data files ready")
 @pytest.mark.usefixtures("graphscope_session")
 class TestGraphCopyOnWrite(_TestGraph):
     def setup_method(self):
@@ -800,7 +799,6 @@ class TestGraphCopyOnWrite(_TestGraph):
             nx.Graph().update()
 
 
-@pytest.mark.skip(reason="TODO: open when data file ready")
 @pytest.mark.usefixtures("graphscope_session")
 class TestDiGraphCopyOnWrite(_TestDiGraph):
     def setup_method(self):
