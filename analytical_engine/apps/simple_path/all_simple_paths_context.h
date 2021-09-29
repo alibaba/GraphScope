@@ -51,6 +51,7 @@ class AllSimplePathsContext
             const std::string& targets_json,
             int cutoff = std::numeric_limits<int>::max()) {
     auto& frag = this->fragment();
+    auto vertices = frag.Vertices();
     this->source_id = source_id;
     this->id_mask = frag.id_mask();
     this->fid_offset = frag.fid_offset();
@@ -82,6 +83,7 @@ class AllSimplePathsContext
       return;
     }
 
+    visited.Init(vertices, false);
     vertex_t source;
     bool native_source = frag.GetInnerVertex(source_id, source);
     if (native_source) {
@@ -96,44 +98,72 @@ class AllSimplePathsContext
     bool native_source = frag.GetInnerVertex(source_id, source);
     std::vector<vid_t> path;
     if (native_source) {
-      std::set<vid_t> pvisit;
+      std::set<vid_t> vertex_visit;
       vid_t source_gid = frag.Vertex2Gid(source);
-      pvisit.insert(source_gid);
+      vertex_visit.insert(source_gid);
       path.push_back(source_gid);
-      int index = findVertexGlobalIndex(source_gid);
-      printResult(index, 0, path, pvisit, os);
+      vid_t index = Gid2VertexGlobalIndex(source_gid);
+      printResult(index, 0, path, vertex_visit, os);
+    }
+  }
+
+  vid_t Gid2VertexGlobalIndex(vid_t gid) {
+    vid_t fid = gid >> fid_offset;
+    vid_t lid = gid & id_mask;
+    vid_t ret = 0;
+    for (vid_t i = 0; i < fid; i++) {
+      ret += frag_vertex_num[i];
+    }
+    return ret + lid;
+  }
+
+  vid_t GlobalIndex2Gid(vid_t index) {
+    vid_t i = 0;
+    vid_t sum = 0;
+    vid_t sum_last = 0;
+    while (true) {
+      sum += frag_vertex_num[i];
+      if (sum > index) {
+        vid_t lid = index - sum_last;
+        vid_t gid = (i << fid_offset) | lid;
+        return gid;
+      }
+      i++;
+      sum_last = sum;
     }
   }
 
   oid_t source_id;
   std::queue<std::pair<vid_t, int>> curr_level_inner, next_level_inner;
+  typename FRAG_T::template vertex_array_t<bool> visited;
   std::set<vid_t> visit;
   std::set<vid_t> targets;
   std::vector<vid_t> frag_vertex_num;
   int cutoff;
-  bool source_flag = false;
+  bool native_source = false;
   fid_t soucre_fid;
   vid_t id_mask;
   int fid_offset;
-  std::vector<std::vector<int>> edge_map;
+  std::vector<std::vector<vid_t>> simple_paths_edge_map;
   int frag_finish_counter = 0;
   int path_num = 0;
   bool nodes_not_found = false;
 
  private:
   void printResult(int from, int depth, std::vector<vid_t>& path,
-                   std::set<vid_t>& pvisit, std::ostream& os) {
+                   std::set<vid_t>& vertex_visit, std::ostream& os) {
     auto& frag = this->fragment();
     if (depth == (this->cutoff - 1)) {
       typename std::set<vid_t>::iterator it;
       for (it = targets.begin(); it != targets.end(); it++) {
         auto t = *it;
-        if (pvisit.count(t) == 1) {
+        if (vertex_visit.count(t) == 1) {
           continue;
         }
-        int to = findVertexGlobalIndex(t);
-        if (std::find(edge_map[from].begin(), edge_map[from].end(), to) !=
-            edge_map[from].end()) {
+        vid_t to = Gid2VertexGlobalIndex(t);
+        if (std::find(simple_paths_edge_map[from].begin(),
+                      simple_paths_edge_map[from].end(),
+                      to) != simple_paths_edge_map[from].end()) {
           for (auto gid : path) {
             os << frag.Gid2Oid(gid) << " ";
           }
@@ -143,13 +173,13 @@ class AllSimplePathsContext
       return;
     }
 
-    for (uint64_t t = 0; t < edge_map[from].size(); t++) {
-      int to = edge_map[from][t];
-      vid_t gid = globalIndex2Gid(to);
-      if (pvisit.count(gid) == 1) {
+    for (uint64_t t = 0; t < simple_paths_edge_map[from].size(); t++) {
+      vid_t to = simple_paths_edge_map[from][t];
+      vid_t gid = GlobalIndex2Gid(to);
+      if (vertex_visit.count(gid) == 1) {
         continue;
       }
-      pvisit.insert(gid);
+      vertex_visit.insert(gid);
       if (targets.count(gid)) {
         for (auto v : path) {
           os << frag.Gid2Oid(v) << " ";
@@ -157,36 +187,9 @@ class AllSimplePathsContext
         os << frag.Gid2Oid(gid) << " " << std::endl;
       }
       path.push_back(gid);
-      printResult(to, depth + 1, path, pvisit, os);
+      printResult(to, depth + 1, path, vertex_visit, os);
       path.pop_back();
-      pvisit.erase(gid);
-    }
-  }
-
-  int findVertexGlobalIndex(vid_t gid) {
-    int fid = static_cast<int>(gid >> fid_offset);
-    int lid = static_cast<int>(gid & id_mask);
-    int ret = 0;
-    for (int i = 0; i < fid; i++) {
-      ret += frag_vertex_num[i];
-    }
-    return ret + lid;
-  }
-
-  vid_t globalIndex2Gid(int index) {
-    int i = 0;
-    int sum = 0;
-    int sum_last = 0;
-    while (true) {
-      sum += frag_vertex_num[i];
-      if (sum > index) {
-        int lid = index - sum_last;
-        vid_t gid =
-            (static_cast<vid_t>(i) << fid_offset) | static_cast<vid_t>(lid);
-        return gid;
-      }
-      i++;
-      sum_last = sum;
+      vertex_visit.erase(gid);
     }
   }
 };
