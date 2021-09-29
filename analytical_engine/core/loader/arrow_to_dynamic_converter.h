@@ -196,7 +196,7 @@ class ArrowToDynamicConverter {
 
         CHECK(dst_vm->GetGid(fid, u_oid, u_gid));
         data = folly::dynamic::object();
-        // ignore the last id column
+        // N.B: th last column is id, we ignore it.
         for (auto col_id = 0; col_id < v_data->num_columns() - 1; col_id++) {
           auto column = v_data->column(col_id);
           auto prop_key = v_data->field(col_id)->name();

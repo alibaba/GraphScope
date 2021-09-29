@@ -655,7 +655,7 @@ class ArrowFragmentReporter<vineyard::ArrowFragment<OID_T, VID_T>>
                            const label_id_t& label_id, const vertex_t& v,
                            folly::dynamic& ret) {
     auto vertex_data = fragment->vertex_data_table(label_id);
-    // ignore the id column
+    // N.B: th last column is id, we ignore it.
     for (auto col_id = 0; col_id < vertex_data->num_columns() - 1; col_id++) {
       auto property_name = vertex_data->field(col_id)->name();
       auto type = vertex_data->column(col_id)->type();

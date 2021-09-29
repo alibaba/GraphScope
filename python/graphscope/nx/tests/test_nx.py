@@ -39,16 +39,16 @@ from graphscope.proto.types_pb2 import SRC_LABEL
 def k3_graph(prefix, directed):
     graph = graphscope.g(directed=directed, generate_eid=False)
     graph = graph.add_vertices(
-        Loader(os.path.join(prefix, "k3_v.csv"), delimiter="|"), "vertex"
+        Loader(os.path.join(prefix, "3v.csv"), delimiter="|"), "vertex"
     )
-    if directed is False:
+    if directed:
         graph = graph.add_edges(
-            Loader(os.path.join(prefix, "k3_undirected.csv"), delimiter="|"),
+            Loader(os.path.join(prefix, "k3_directed.csv"), delimiter="|"),
             "edge",
         )
     else:
         graph = graph.add_edges(
-            Loader(os.path.join(prefix, "k3_directed.csv"), delimiter="|"),
+            Loader(os.path.join(prefix, "k3_undirected.csv"), delimiter="|"),
             "edge",
         )
     return graph
@@ -57,10 +57,10 @@ def k3_graph(prefix, directed):
 def p3_graph(prefix, directed):
     graph = graphscope.g(directed=directed, generate_eid=False)
     graph = graph.add_vertices(
-        Loader(os.path.join(prefix, "k3_v.csv"), delimiter="|"), "vertex"
+        Loader(os.path.join(prefix, "3v.csv"), delimiter="|"), "vertex"
     )
     graph = graph.add_edges(
-        Loader(os.path.join(prefix, "p3_e.csv"), delimiter="|"),
+        Loader(os.path.join(prefix, "p3_directed.csv"), delimiter="|"),
         "edge",
     )
     return graph
@@ -714,7 +714,7 @@ class TestImportNetworkxModuleWithSession(object):
         self.session_lazy.close()
 
 
-@pytest.mark.skip(reason="TODO: open after test file ready")
+@pytest.mark.skip(reason="TODO: open when data files ready")
 @pytest.mark.usefixtures("graphscope_session")
 class TestGraphCopyOnWrite(_TestGraph):
     def setup_method(self):
@@ -800,7 +800,7 @@ class TestGraphCopyOnWrite(_TestGraph):
             nx.Graph().update()
 
 
-@pytest.mark.skip(reason="TODO: open after test file ready")
+@pytest.mark.skip(reason="TODO: open when data file ready")
 @pytest.mark.usefixtures("graphscope_session")
 class TestDiGraphCopyOnWrite(_TestDiGraph):
     def setup_method(self):
@@ -808,8 +808,9 @@ class TestDiGraphCopyOnWrite(_TestDiGraph):
         # build K3
         self.k3edges = [(0, 1), (0, 2), (1, 2)]
         self.k3nodes = [0, 1, 2]
-        self.k3 = k3_graph(os.path.expandvars("${GS_TEST_DIR}"), True)
+        data_dir = os.path.expandvars("${GS_TEST_DIR}/networkx")
+        self.k3 = k3_graph(data_dir, True)
         self.K3 = nx.DiGraph(self.k3, default_label="vertex")
 
-        self.p3 = p3_graph(os.path.expandvars("${GS_TEST_DIR}"), True)
+        self.p3 = p3_graph(data_dir, True)
         self.P3 = nx.DiGraph(self.p3, default_label="vertex")
