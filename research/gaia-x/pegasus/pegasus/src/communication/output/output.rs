@@ -514,7 +514,7 @@ mod rob {
         pub(crate) fn cancel(&mut self, tag: &Tag) -> IOResult<()> {
             let level = tag.len() as u32;
             if level < self.scope_level {
-                assert_eq!(level + 1, self.scope_level);
+                //assert_eq!(level + 1, self.scope_level);
                 self.parent_skips.insert(tag.clone(), ());
                 // skip from parent scope;
                 if *crate::config::ENABLE_CANCEL_CHILD {
@@ -643,7 +643,16 @@ mod rob {
 
             let tag = batch.tag().clone();
             if batch.is_last() {
-                trace_worker!("output[{:?}] send last batch(len={}) of {:?} ;", self.port, batch.len(), tag)
+                if batch.is_empty() {
+                    trace_worker!("output[{:?}] send end of {:?};", self.port, tag);
+                } else {
+                    trace_worker!(
+                        "output[{:?}] send last batch(len={}) of {:?} ;",
+                        self.port,
+                        batch.len(),
+                        tag
+                    )
+                }
             } else {
                 trace_worker!(
                     "output[{:?}] send {}th batch(len={}) of {:?} ;",

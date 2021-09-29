@@ -200,7 +200,7 @@ impl<D: Data> Stream<D> {
         }
     }
 
-    pub fn union_notify_transform<R, O, F, T>(
+    pub fn union_transform_notify<R, O, F, T>(
         mut self, name: &str, mut other: Stream<R>, op_builder: F,
     ) -> Result<Stream<O>, BuildJobError>
     where

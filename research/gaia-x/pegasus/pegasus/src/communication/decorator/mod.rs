@@ -400,7 +400,16 @@ mod rob {
                     .remove(&batch.tag)
                     .unwrap_or((0, 0));
                 c.1 += batch.len();
-                trace_worker!(
+                if batch.is_empty() {
+                    trace_worker!(
+                        "output[{:?}] push end of {:?} to channel[{}] to self, total pushed {};",
+                        self.ch_info.source_port,
+                        batch.tag,
+                        self.ch_info.index(),
+                        c.1
+                    )
+                } else {
+                    trace_worker!(
                     "output[{:?}] push last batch(len={}) of {:?} to channel[{}] to self, total pushed {};",
                     self.ch_info.source_port,
                     batch.len(),
@@ -408,6 +417,7 @@ mod rob {
                     self.ch_info.id.index,
                     c.1
                 );
+                }
                 end.count = c.1 as u64;
 
                 if self.global_state {
