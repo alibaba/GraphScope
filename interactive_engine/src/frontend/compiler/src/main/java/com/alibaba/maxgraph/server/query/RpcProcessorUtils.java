@@ -18,7 +18,7 @@ package com.alibaba.maxgraph.server.query;
 import com.alibaba.maxgraph.compiler.api.schema.GraphElement;
 import com.alibaba.maxgraph.compiler.api.schema.GraphProperty;
 import com.alibaba.maxgraph.compiler.api.schema.GraphSchema;
-import com.alibaba.maxgraph.compiler.api.schema.PropDataType;
+import com.alibaba.maxgraph.compiler.api.schema.DataType;
 import com.alibaba.maxgraph.compiler.exception.DataException;
 import com.google.common.collect.Lists;
 import org.apache.commons.lang3.StringUtils;
@@ -54,7 +54,7 @@ public class RpcProcessorUtils {
         return kv;
     }
 
-    private static Object readValueByType(PropDataType dataType, DataInputStream read) throws IOException {
+    private static Object readValueByType(DataType dataType, DataInputStream read) throws IOException {
         switch (dataType) {
             case BOOL:
                 return read.readByte();
@@ -62,7 +62,7 @@ public class RpcProcessorUtils {
                 return read.readChar();
             case SHORT:
                 return read.readShort();
-            case INTEGER:
+            case INT:
                 return read.readInt();
             case LONG:
                 return read.readLong();
@@ -84,7 +84,7 @@ public class RpcProcessorUtils {
                 }
                 return new String(code, "UTF-8");
             }
-            case BINARY: {
+            case BYTES: {
                 int length = read.readInt();
                 if (length <= 0) {
                     return "";
@@ -97,11 +97,11 @@ public class RpcProcessorUtils {
                 }
                 return code;
             }
-            case INTEGER_LIST: {
+            case INT_LIST: {
                 int count = read.readInt();
                 List valueList = Lists.newArrayList();
                 for (int valIdx = 0; valIdx < count; valIdx++) {
-                    valueList.add(readValueByType(PropDataType.INTEGER, read));
+                    valueList.add(readValueByType(DataType.INT, read));
                 }
 
                 return valueList;
@@ -110,7 +110,7 @@ public class RpcProcessorUtils {
                 int count = read.readInt();
                 List valueList = Lists.newArrayList();
                 for (int valIdx = 0; valIdx < count; valIdx++) {
-                    valueList.add(readValueByType(PropDataType.LONG, read));
+                    valueList.add(readValueByType(DataType.LONG, read));
                 }
 
                 return valueList;
@@ -119,7 +119,7 @@ public class RpcProcessorUtils {
                 int count = read.readInt();
                 List valueList = Lists.newArrayList();
                 for (int valIdx = 0; valIdx < count; valIdx++) {
-                    valueList.add(readValueByType(PropDataType.STRING, read));
+                    valueList.add(readValueByType(DataType.STRING, read));
                 }
 
                 return valueList;
@@ -128,7 +128,7 @@ public class RpcProcessorUtils {
                 int count = read.readInt();
                 List valueList = Lists.newArrayList();
                 for (int valIdx = 0; valIdx < count; valIdx++) {
-                    valueList.add(readValueByType(PropDataType.FLOAT, read));
+                    valueList.add(readValueByType(DataType.FLOAT, read));
                 }
 
                 return valueList;
@@ -137,7 +137,7 @@ public class RpcProcessorUtils {
                 int count = read.readInt();
                 List valueList = Lists.newArrayList();
                 for (int valIdx = 0; valIdx < count; valIdx++) {
-                    valueList.add(readValueByType(PropDataType.DOUBLE, read));
+                    valueList.add(readValueByType(DataType.DOUBLE, read));
                 }
 
                 return valueList;
@@ -146,7 +146,7 @@ public class RpcProcessorUtils {
                 int count = read.readInt();
                 List valueList = Lists.newArrayList();
                 for (int valIdx = 0; valIdx < count; valIdx++) {
-                    valueList.add(readValueByType(PropDataType.BINARY, read));
+                    valueList.add(readValueByType(DataType.BYTES, read));
                 }
 
                 return valueList;

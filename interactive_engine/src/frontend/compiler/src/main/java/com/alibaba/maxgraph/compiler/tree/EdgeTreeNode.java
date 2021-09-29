@@ -21,7 +21,7 @@ import com.alibaba.maxgraph.compiler.api.schema.GraphSchema;
 import com.alibaba.maxgraph.compiler.logical.LogicalEdge;
 import com.alibaba.maxgraph.compiler.logical.edge.EdgeShuffleType;
 import com.alibaba.maxgraph.compiler.optimizer.ContextManager;
-import com.alibaba.maxgraph.compiler.utils.SchemaUtils;
+import com.alibaba.maxgraph.common.util.SchemaUtils;
 import com.alibaba.maxgraph.compiler.tree.value.EdgeValueType;
 import com.alibaba.maxgraph.compiler.tree.value.ValueType;
 import com.alibaba.maxgraph.compiler.logical.LogicalSubQueryPlan;

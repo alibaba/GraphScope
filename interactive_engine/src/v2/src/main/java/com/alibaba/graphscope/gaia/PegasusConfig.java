@@ -1,6 +1,6 @@
 package com.alibaba.graphscope.gaia;
 
-import com.alibaba.maxgraph.v2.common.config.Config;
+import com.alibaba.maxgraph.common.config.Config;
 
 public class PegasusConfig {
     public static final Config<Integer> PEGASUS_WORKER_NUM =

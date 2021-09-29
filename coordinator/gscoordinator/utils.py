@@ -28,7 +28,6 @@ import logging
 import numbers
 import os
 import pickle
-import random
 import shutil
 import socket
 import subprocess
@@ -85,9 +84,20 @@ DEFAULT_GS_CONFIG_FILE = ".gs_conf.yaml"
 # GRAPHSCOPE_HOME
 #   1) get from environment variable `GRAPHSCOPE_HOME`, if not exist,
 #   2) infer from COORDINATOR_HOME
-try:
-    GRAPHSCOPE_HOME = os.environ["GRAPHSCOPE_HOME"]
-except KeyError:
+GRAPHSCOPE_HOME = os.environ.get("GRAPHSCOPE_HOME", None)
+
+# resolve from pip installed package
+if GRAPHSCOPE_HOME is None:
+    if os.path.isdir(os.path.join(COORDINATOR_HOME, "graphscope.runtime")):
+        GRAPHSCOPE_HOME = os.path.join(COORDINATOR_HOME, "graphscope.runtime")
+
+# resolve from egg installed package
+if GRAPHSCOPE_HOME is None:
+    if os.path.isdir(os.path.join(COORDINATOR_HOME, "..", "graphscope.runtime")):
+        GRAPHSCOPE_HOME = os.path.join(COORDINATOR_HOME, "..", "graphscope.runtime")
+
+# resolve from develop source tree
+if GRAPHSCOPE_HOME is None:
     GRAPHSCOPE_HOME = os.path.join(COORDINATOR_HOME, "..")
 
 # ANALYTICAL_ENGINE_HOME
@@ -108,19 +118,6 @@ if not os.path.isfile(INTERACTIVE_ENGINE_SCRIPT):
     INTERACTIVE_ENGINE_SCRIPT = os.path.join(
         GRAPHSCOPE_HOME, "interactive_engine", "bin", "giectl"
     )
-
-
-def is_port_in_use(host, port):
-    """Check whether a port is in use.
-
-    Args:
-        port (int): A port.
-
-    Returns:
-        bool: True if the port in use.
-    """
-    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-        return s.connect_ex((host, port)) == 0
 
 
 def get_timestamp():

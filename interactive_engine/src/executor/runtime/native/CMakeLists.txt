@@ -48,7 +48,7 @@ find_package(Threads REQUIRED)
 #  we need edge src/dst ids in etable.
 add_definitions(-DENDPOINT_LISTS)
 
-find_package(vineyard 0.2.9 REQUIRED)
+find_package(vineyard 0.2.12 REQUIRED)
 add_library(native_store global_store_ffi.cc
                          htap_ds_impl.cc
                          graph_builder_ffi.cc
@@ -61,25 +61,6 @@ if(BUILD_SHARED_LIBS)
     install_vineyard_target(native_store)
 endif()
 
-add_executable(vineyard_htap_reader htap_reader.c)
-target_link_libraries(vineyard_htap_reader native_store ${VINEYARD_LIBRARIES} Threads::Threads)
-install_vineyard_target(vineyard_htap_reader)
 
-add_executable(vineyard_htap_mc_reader htap_mc_reader.c)
-target_link_libraries(vineyard_htap_mc_reader native_store ${VINEYARD_LIBRARIES} Threads::Threads)
-install_vineyard_target(vineyard_htap_mc_reader)
 
-add_executable(vineyard_htap_loader htap_loader.cc)
-target_include_directories(vineyard_htap_loader PRIVATE ${VINEYARD_INCLUDE_DIRS})
-target_link_libraries(vineyard_htap_loader native_store ${VINEYARD_LIBRARIES} Threads::Threads)
-install_vineyard_target(vineyard_htap_loader)
 
-add_executable(vineyard_htap_stream_loader htap_stream_loader.cc)
-target_include_directories(vineyard_htap_stream_loader PRIVATE ${VINEYARD_INCLUDE_DIRS})
-target_link_libraries(vineyard_htap_stream_loader native_store ${VINEYARD_LIBRARIES} Threads::Threads)
-install_vineyard_target(vineyard_htap_stream_loader)
-
-add_executable(vineyard_htap_stream_generator htap_stream_generator.cc)
-target_include_directories(vineyard_htap_stream_generator PRIVATE ${VINEYARD_INCLUDE_DIRS})
-target_link_libraries(vineyard_htap_stream_generator native_store ${VINEYARD_LIBRARIES} Threads::Threads)
-install_vineyard_target(vineyard_htap_stream_generator)

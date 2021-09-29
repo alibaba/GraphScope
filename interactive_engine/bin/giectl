@@ -100,12 +100,12 @@ start_coordinator() {
             -XX:-OmitStackTraceInFastThrow
             -XX:+UseG1GC
             -XX:InitiatingHeapOccupancyPercent=75
+            -XX:+IgnoreUnrecognizedVMOptions
             -Dfile.encoding=UTF-8
             -Dsun.jnu.encoding=UTF-8
             -Dlogfilename=${log_dir}/maxgraph-coordinator.log
             -Dlogbasedir=${log_dir}/coordinator
-            -Dlog4j.configurationFile=file:${GRAPHSCOPE_HOME}/maxgraph-assembly-0.0.1-SNAPSHOT/conf/log4j2.xml
-            -classpath ${GRAPHSCOPE_HOME}/maxgraph-assembly-0.0.1-SNAPSHOT/conf/*:${GRAPHSCOPE_HOME}/maxgraph-assembly-0.0.1-SNAPSHOT/lib/*:"
+            -Dlog4j.configurationFile=file:${GRAPHSCOPE_HOME}/conf/log4j2.xml"
 
   # set coordinator config file
   sed -e "s@GRAPH_NAME@${object_id}@g" \
@@ -115,6 +115,7 @@ start_coordinator() {
       ${GRAPHSCOPE_HOME}/conf/coordinator.application.properties > ${config_dir}/coordinator.application.properties
 
   java ${java_opt} \
+    -cp ${GRAPHSCOPE_HOME}/maxgraph-coordinator-0.0.1-SNAPSHOT.jar:${GRAPHSCOPE_HOME}/lib/*: \
     com.alibaba.maxgraph.coordinator.CoordinatorMain \
     ${config_dir}/coordinator.application.properties \
     ${object_id} 1>${log_dir}/maxgraph-coordinator.out 2>${log_dir}/maxgraph-coordinator.err&
@@ -123,6 +124,7 @@ start_coordinator() {
   if [ "${enable_gaia}" = True ]; then
     java_opt=${java_opt//maxgraph-coordinator/gaia-coordinator}
     java ${java_opt} \
+      -cp ${GRAPHSCOPE_HOME}/maxgraph-coordinator-0.0.1-SNAPSHOT.jar:${GRAPHSCOPE_HOME}/lib/*: \
       com.alibaba.maxgraph.coordinator.CoordinatorMain \
       ${config_dir}/coordinator.application.properties \
       ${object_id} ${object_id}_gaia 1>${log_dir}/gaia-coordinator.out \
@@ -174,12 +176,12 @@ start_frontend() {
             -XX:-OmitStackTraceInFastThrow
             -XX:+UseG1GC
             -XX:InitiatingHeapOccupancyPercent=75
+            -XX:+IgnoreUnrecognizedVMOptions
             -Dfile.encoding=UTF-8
             -Dsun.jnu.encoding=UTF-8
             -Dlogfilename=${log_dir}/maxgraph-frontend.log
             -Dlogbasedir=${log_dir}/frontend
-            -Dlog4j.configurationFile=file:${GRAPHSCOPE_HOME}/maxgraph-assembly-0.0.1-SNAPSHOT/conf/log4j2.xml
-            -classpath ${GRAPHSCOPE_HOME}/maxgraph-assembly-0.0.1-SNAPSHOT/conf/*:${GRAPHSCOPE_HOME}/maxgraph-assembly-0.0.1-SNAPSHOT/lib/*:"
+            -Dlog4j.configurationFile=file:${GRAPHSCOPE_HOME}/conf/log4j2.xml"
 
   declare frontend_port="0"  # 0 means random
   # set frontend config file
@@ -191,7 +193,9 @@ start_frontend() {
       -e "s@SERVER_PORT@${frontend_port}@g" \
       ${GRAPHSCOPE_HOME}/conf/frontend.vineyard.properties > ${config_dir}/frontend.vineyard.properties
 
+  # maxgraph frontend service hold a handle client of coordinator
   java ${java_opt} \
+    -cp ${GRAPHSCOPE_HOME}/maxgraph-frontendservice-0.0.1-SNAPSHOT.jar:${GRAPHSCOPE_HOME}/maxgraph-coordinator-0.0.1-SNAPSHOT.jar:${GRAPHSCOPE_HOME}/lib/*: \
     com.alibaba.maxgraph.frontendservice.FrontendServiceMain \
     ${config_dir}/frontend.vineyard.properties \
     ${object_id} 1>${log_dir}/maxgraph-frontend.out 2>${log_dir}/maxgraph-frontend.err&
@@ -201,6 +205,7 @@ start_frontend() {
   if [ "${enable_gaia}" = True ]; then
     java_opt=${java_opt//maxgraph-frontend/gaia-frontend}
     java ${java_opt} \
+      -cp ${GRAPHSCOPE_HOME}/gaia-adaptor-0.0.1-SNAPSHOT.jar:${GRAPHSCOPE_HOME}/maxgraph-coordinator-0.0.1-SNAPSHOT.jar:${GRAPHSCOPE_HOME}/maxgraph-frontendservice-0.0.1-SNAPSHOT.jar:${GRAPHSCOPE_HOME}/lib/*: \
       com.alibaba.graphscope.gaia.vineyard.store.FrontendServiceMain \
       ${config_dir}/frontend.vineyard.properties \
       ${object_id} ${object_id}_gaia 1>${log_dir}/gaia-frontend.out \
@@ -258,7 +263,7 @@ start_executor() {
       value=$(echo ${param} | awk -F":" '{print $2}')
       key=$(printf '%s\n' "${key}" | sed -e 's/[\/&]/\\&/g')
       value=$(printf '%s\n' "${value}" | sed -e 's/[\/&]/\\&/g')
-      sed -i "s/^\(${key}\s*=\s*\).*\$/\1${value}/" ${config_dir}/executor.vineyard.properties
+      sed -i'.bak' "s/^\(${key}\s*=\s*\).*\$/\1${value}/" ${config_dir}/executor.vineyard.properties
     done
   fi
 

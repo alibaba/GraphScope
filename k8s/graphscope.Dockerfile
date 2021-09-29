@@ -4,7 +4,7 @@
 # the result image includes all runtime stuffs of graphscope, with analytical engine,
 # learning engine and interactive engine installed.
 
-ARG BASE_VERSION=v0.2.9
+ARG BASE_VERSION=v0.2.12
 FROM registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-vineyard:$BASE_VERSION as builder
 
 SHELL ["/usr/bin/scl", "enable", "devtoolset-7"]
@@ -79,8 +79,6 @@ RUN wget --no-verbose https://golang.org/dl/go1.15.5.linux-amd64.tar.gz && \
 
 RUN source ~/.bashrc \
     && rustup component add rustfmt \
-    && mkdir -p /opt/graphscope/conf \
-    && cp ${HOME}/gs/interactive_engine/conf/* /opt/graphscope/conf/ \
     && echo "build with profile: $profile" \
     && cd ${HOME}/gs/interactive_engine/src/executor \
     && export CMAKE_PREFIX_PATH=/opt/graphscope \
@@ -114,15 +112,14 @@ COPY --from=builder /tmp/zetcd /opt/graphscope/bin/zetcd
 COPY --from=builder /home/graphscope/gs/k8s/precompile.py /tmp/precompile.py
 COPY --from=builder /home/graphscope/gs/k8s/kube_ssh /opt/graphscope/bin/kube_ssh
 COPY --from=builder /home/graphscope/gs/k8s/pre_stop.py /opt/graphscope/bin/pre_stop.py
-COPY --from=builder /home/graphscope/gs/interactive_engine/bin/giectl /opt/graphscope//bin/giectl
 COPY --from=builder /home/graphscope/gs/interactive_engine/src/executor/target/$profile/executor /opt/graphscope/bin/executor
 COPY --from=builder /home/graphscope/gs/interactive_engine/src/executor/target/$profile/gaia_executor /opt/graphscope/bin/gaia_executor
 COPY --from=builder /home/graphscope/gs/interactive_engine/src/assembly/target/maxgraph-assembly-0.0.1-SNAPSHOT.tar.gz /opt/graphscope/maxgraph-assembly-0.0.1-SNAPSHOT.tar.gz
 
 # install mars
-# RUN pip3 install git+https://github.com/mars-project/mars.git@35b44ed56e031c252e50373b88b85bd9f454332e#egg=pymars[distributed]
+RUN pip3 install git+https://github.com/mars-project/mars.git@d09e1e4c3e32ceb05f42d0b5b79775b1ebd299fb#egg=pymars
 
-RUN sudo tar -xf /opt/graphscope/maxgraph-assembly-0.0.1-SNAPSHOT.tar.gz -C /opt/graphscope \
+RUN sudo tar -xf /opt/graphscope/maxgraph-assembly-0.0.1-SNAPSHOT.tar.gz --strip-components 1 -C /opt/graphscope \
   && cd /usr/local/dist && pip3 install ./*.whl \
   && cd /opt/graphscope/dist && pip3 install ./*.whl \
   && sudo ln -sf /opt/graphscope/bin/* /usr/local/bin/ \

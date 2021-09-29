@@ -11,7 +11,7 @@ use protobuf::Message;
 use crate::db::api::GraphErrorCode::InvalidData;
 use crate::db::util::lock::GraphMutexLock;
 use crate::db::common::bytes::util::parse_pb;
-use crate::db::proto::common::{EdgeKindPb, DataLoadTargetPb};
+use crate::db::proto::model::{EdgeKindPb, DataLoadTargetPb};
 use std::collections::{HashMap, HashSet};
 
 const META_TABLE_ID: TableId = i64::min_value();

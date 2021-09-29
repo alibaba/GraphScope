@@ -203,7 +203,7 @@ void PropertyGraphOutStream::AddVertex(VertexId id, LabelId labelid,
   std::shared_ptr<arrow::RecordBatch> batch_chunk = nullptr;
   appender->Apply(builder, id, property_size, properties,
                   vertex_property_id_mapping_[labelid], batch_chunk);
-  if (batch_chunk != nullptr && vertex_primary_key_column_[labelid] != -1) {
+  if (batch_chunk != nullptr && vertex_primary_key_column_[labelid] != kNoPrimaryKeyColumn) {
 #if defined(ARROW_VERSION) && ARROW_VERSION < 17000
     ARROW_OK_OR_RAISE(
       batch_chunk->RemoveColumn(vertex_primary_key_column_[labelid], &batch_chunk));
@@ -310,7 +310,7 @@ void PropertyGraphOutStream::initialTables() {
     if (!entry.primary_keys.empty()) {
       field_name = entry.primary_keys[0];
     }
-    vertex_primary_key_column_[entry.id] = -1;
+    vertex_primary_key_column_[entry.id] = kNoPrimaryKeyColumn;
 
     for (size_t idx = 0; idx < entry.props_.size(); ++idx) {
 #ifndef NDEBUG
@@ -441,7 +441,7 @@ void PropertyGraphOutStream::FinishAllVertices() {
 #ifndef NDEBUG
     LOG(INFO) << "finish vertices: " << batch;
 #endif
-    if (batch != nullptr && vertex_primary_key_column_[vertices.first] != -1) {
+    if (batch != nullptr && vertex_primary_key_column_[vertices.first] != kNoPrimaryKeyColumn) {
 #if defined(ARROW_VERSION) && ARROW_VERSION < 17000
       ARROW_OK_OR_RAISE(
         batch->RemoveColumn(vertex_primary_key_column_[vertices.first], &batch));

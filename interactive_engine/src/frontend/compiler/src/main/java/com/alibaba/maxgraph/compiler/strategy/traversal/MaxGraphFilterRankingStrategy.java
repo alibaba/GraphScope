@@ -43,6 +43,7 @@ import org.apache.tinkerpop.gremlin.process.traversal.step.filter.WhereTraversal
 import org.apache.tinkerpop.gremlin.process.traversal.step.map.OrderGlobalStep;
 import org.apache.tinkerpop.gremlin.process.traversal.strategy.AbstractTraversalStrategy;
 import org.apache.tinkerpop.gremlin.process.traversal.strategy.optimization.IdentityRemovalStrategy;
+import org.apache.tinkerpop.gremlin.process.traversal.strategy.optimization.LazyBarrierStrategy;
 import org.apache.tinkerpop.gremlin.process.traversal.util.TraversalHelper;
 
 import java.util.Collections;
@@ -65,6 +66,7 @@ public final class MaxGraphFilterRankingStrategy extends AbstractTraversalStrate
 
     private static final MaxGraphFilterRankingStrategy INSTANCE = new MaxGraphFilterRankingStrategy();
     private static final Set<Class<? extends OptimizationStrategy>> PRIORS = Collections.singleton(IdentityRemovalStrategy.class);
+    private static final Set<Class<? extends OptimizationStrategy>> POSTS = Collections.singleton(LazyBarrierStrategy.class);
 
     private MaxGraphFilterRankingStrategy() {
     }
@@ -169,6 +171,11 @@ public final class MaxGraphFilterRankingStrategy extends AbstractTraversalStrate
     @Override
     public Set<Class<? extends OptimizationStrategy>> applyPrior() {
         return PRIORS;
+    }
+
+    @Override
+    public Set<Class<? extends OptimizationStrategy>> applyPost() {
+        return POSTS;
     }
 
     public static MaxGraphFilterRankingStrategy instance() {

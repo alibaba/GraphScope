@@ -65,7 +65,7 @@ _setup_maxgraph_env() {
   export LD_LIBRARY_PATH=${MAXGRAPH_HOME}/native:${LD_LIBRARY_PATH}:/usr/local/lib
 
   if [ -z "${LOG_DIR}" ]; then
-    LOG_DIR="/tmp/graphscope-store"
+    export LOG_DIR="/tmp/graphscope-store"
   fi
 
   mkdir -p ${LOG_DIR}
@@ -147,7 +147,7 @@ maxgraph() {
       -Dconfig.file="${MAXGRAPH_CONF_FILE}" \
       -Dlog.dir="${LOG_DIR}" \
       -Dlog.name="${LOG_NAME}" \
-      -cp "${libpath}" com.alibaba.maxgraph.v2.MaxGraph \
+      -cp "${libpath}" com.alibaba.maxgraph.groot.MaxGraph \
       "$@" > >(tee -a "${LOG_DIR}/${LOG_NAME}.out") 2> >(tee -a "${LOG_DIR}/${LOG_NAME}.err" >&2)
 }
 

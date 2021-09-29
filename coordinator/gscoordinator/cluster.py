@@ -55,14 +55,15 @@ from graphscope.deploy.kubernetes.utils import delete_kubernetes_object
 from graphscope.deploy.kubernetes.utils import get_kubernetes_object_info
 from graphscope.deploy.kubernetes.utils import get_service_endpoints
 from graphscope.deploy.kubernetes.utils import try_to_resolve_api_client
+from graphscope.framework.utils import is_free_port
 from graphscope.proto import types_pb2
 
 from gscoordinator.io_utils import PipeWatcher
 from gscoordinator.launcher import Launcher
+from gscoordinator.utils import GRAPHSCOPE_HOME
 from gscoordinator.utils import INTERACTIVE_ENGINE_SCRIPT
 from gscoordinator.utils import WORKSPACE
 from gscoordinator.utils import ResolveMPICmdPrefix
-from gscoordinator.utils import is_port_in_use
 from gscoordinator.utils import parse_as_glog_level
 
 logger = logging.getLogger("graphscope")
@@ -360,6 +361,8 @@ class KubernetesClusterLauncher(Launcher):
             "{}:{}".format(key, value) for key, value in engine_params.items()
         ]
         enable_gaia = config[types_pb2.GIE_ENABLE_GAIA].b
+        env = os.environ.copy()
+        env.update({"GRAPHSCOPE_HOME": GRAPHSCOPE_HOME})
         cmd = [
             INTERACTIVE_ENGINE_SCRIPT,
             "create_gremlin_instance_on_k8s",
@@ -377,7 +380,7 @@ class KubernetesClusterLauncher(Launcher):
             cmd,
             start_new_session=True,
             cwd=os.getcwd(),
-            env=os.environ.copy(),
+            env=env,
             universal_newlines=True,
             encoding="utf-8",
             stdin=subprocess.DEVNULL,
@@ -388,6 +391,8 @@ class KubernetesClusterLauncher(Launcher):
         return process
 
     def close_interactive_instance(self, object_id):
+        env = os.environ.copy()
+        env.update({"GRAPHSCOPE_HOME": GRAPHSCOPE_HOME})
         cmd = [
             INTERACTIVE_ENGINE_SCRIPT,
             "close_gremlin_instance_on_k8s",
@@ -401,7 +406,7 @@ class KubernetesClusterLauncher(Launcher):
             cmd,
             start_new_session=True,
             cwd=os.getcwd(),
-            env=os.environ.copy(),
+            env=env,
             universal_newlines=True,
             encoding="utf-8",
             stdin=subprocess.DEVNULL,
@@ -764,15 +769,15 @@ class KubernetesClusterLauncher(Launcher):
     def _create_interactive_engine_service(self):
         # launch zetcd proxy
         logger.info("Launching zetcd proxy service ...")
-        zetcd_cmd = shutil.which("zetcd")
-        if not zetcd_cmd:
+        zetcd_exec = shutil.which("zetcd")
+        if not zetcd_exec:
             raise RuntimeError("zetcd command not found.")
         port = self._random_etcd_listen_client_service_port
         etcd_endpoints = ["http://%s:%s" % (self._etcd_service_name, port)]
         for i in range(self._etcd_num_pods):
             etcd_endpoints.append("http://%s-%d:%s" % (self._etcd_name, i, port))
         cmd = [
-            zetcd_cmd,
+            zetcd_exec,
             "--zkaddr",
             "0.0.0.0:{}".format(self._zookeeper_port),
             "--endpoints",
@@ -796,8 +801,9 @@ class KubernetesClusterLauncher(Launcher):
         setattr(self._zetcd_process, "stdout_watcher", stdout_watcher)
 
         start_time = time.time()
-        while not is_port_in_use(
-            socket.gethostbyname(socket.gethostname()), self._zookeeper_port
+        while is_free_port(
+            self._zookeeper_port,
+            socket.gethostbyname(socket.gethostname()),
         ):
             time.sleep(1)
             if (

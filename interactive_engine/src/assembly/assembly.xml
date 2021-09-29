@@ -5,9 +5,9 @@
     <formats>
         <format>tar.gz</format>
     </formats>
+
     <dependencySets>
         <dependencySet>
-            <useProjectArtifact>false</useProjectArtifact>
             <outputDirectory>lib</outputDirectory>
             <unpack>false</unpack>
             <excludes>
@@ -15,66 +15,50 @@
                 <exclude>org.codehaus.groovy:groovy-sql</exclude>
                 <exclude>org.hamcrest:hamcrest-all</exclude>
                 <exclude>com.carrotsearch:junit-benchmarks</exclude>
+                <exclude>com.alibaba.maxgraph:maxgraph-coordinator</exclude>
+                <exclude>com.alibaba.maxgraph:maxgraph-frontendservice</exclude>
+                <exclude>com.alibaba.maxgraph:gaia-adaptor</exclude>
             </excludes>
         </dependencySet>
     </dependencySets>
 
     <fileSets>
         <fileSet>
-            <directory>${project.basedir}/../api/cluster/target</directory>
-            <outputDirectory>lib</outputDirectory>
+            <directory>${project.basedir}/../../bin</directory>
+            <outputDirectory>bin</outputDirectory>
             <includes>
-                <include>*.jar</include>
+                <include>*</include>
             </includes>
+            <fileMode>0755</fileMode>
+            <directoryMode>0755</directoryMode>
         </fileSet>
         <fileSet>
-            <directory>${project.basedir}/../common/java/target</directory>
-            <outputDirectory>lib</outputDirectory>
+            <directory>${project.basedir}/../../conf</directory>
+            <outputDirectory>conf</outputDirectory>
             <includes>
-                <include>*.jar</include>
+                <include>*</include>
             </includes>
         </fileSet>
         <fileSet>
             <directory>${project.basedir}/../coordinator/target</directory>
-            <outputDirectory>lib</outputDirectory>
+            <outputDirectory>/</outputDirectory>
             <includes>
-                <include>*.jar</include>
+                <include>maxgraph*.jar</include>
             </includes>
         </fileSet>
         <fileSet>
-            <directory>${project.basedir}/../api/loader/target</directory>
-            <outputDirectory>lib</outputDirectory>
+            <directory>${project.basedir}/../frontend/frontendservice/target</directory>
+            <outputDirectory>/</outputDirectory>
             <includes>
-                <include>*.jar</include>
+                <include>maxgraph*.jar</include>
             </includes>
         </fileSet>
         <fileSet>
-            <directory>${project.basedir}/../admin-tools/target</directory>
-            <outputDirectory>lib</outputDirectory>
+            <directory>${project.basedir}/../gaia-adaptor/target</directory>
+            <outputDirectory>/</outputDirectory>
             <includes>
-                <include>*.jar</include>
+                <include>gaia*.jar</include>
             </includes>
-        </fileSet>
-        <fileSet>
-            <directory>${project.basedir}/../api/store/target</directory>
-            <outputDirectory>lib</outputDirectory>
-            <includes>
-                <include>*.jar</include>
-            </includes>
-        </fileSet>
-        <fileSet>
-            <directory>${project.basedir}/conf</directory>
-            <includes>
-                <include>*</include>
-            </includes>
-            <outputDirectory>conf</outputDirectory>
-        </fileSet>
-        <fileSet>
-            <directory>${project.basedir}/script</directory>
-            <includes>
-                <include>*</include>
-            </includes>
-            <outputDirectory>script</outputDirectory>
         </fileSet>
     </fileSets>
 </assembly>

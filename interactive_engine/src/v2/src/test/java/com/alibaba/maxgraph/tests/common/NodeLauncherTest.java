@@ -15,8 +15,8 @@
  */
 package com.alibaba.maxgraph.tests.common;
 
-import com.alibaba.maxgraph.v2.common.NodeBase;
-import com.alibaba.maxgraph.v2.common.NodeLauncher;
+import com.alibaba.maxgraph.groot.common.NodeBase;
+import com.alibaba.maxgraph.groot.common.NodeLauncher;
 import org.junit.jupiter.api.Test;
 
 import static org.mockito.Mockito.mock;

@@ -18,7 +18,6 @@
 
 import datetime
 import logging
-import random
 from concurrent.futures import ThreadPoolExecutor
 from copy import deepcopy
 from enum import Enum

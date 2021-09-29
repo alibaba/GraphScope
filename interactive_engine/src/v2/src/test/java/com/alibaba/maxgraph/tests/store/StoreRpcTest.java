@@ -22,11 +22,11 @@ import com.alibaba.maxgraph.proto.v2.GraphDefPb;
 import com.alibaba.maxgraph.proto.v2.SnapshotCommitGrpc;
 import com.alibaba.maxgraph.proto.v2.WriteStoreRequest;
 import com.alibaba.maxgraph.proto.v2.WriteStoreResponse;
-import com.alibaba.maxgraph.v2.store.SnapshotCommitClient;
-import com.alibaba.maxgraph.v2.store.StoreSchemaService;
-import com.alibaba.maxgraph.v2.store.StoreService;
-import com.alibaba.maxgraph.v2.store.StoreWriteService;
-import com.alibaba.maxgraph.v2.store.WriterAgent;
+import com.alibaba.maxgraph.groot.store.SnapshotCommitClient;
+import com.alibaba.maxgraph.groot.store.StoreSchemaService;
+import com.alibaba.maxgraph.groot.store.StoreService;
+import com.alibaba.maxgraph.groot.store.StoreWriteService;
+import com.alibaba.maxgraph.groot.store.WriterAgent;
 import io.grpc.stub.StreamObserver;
 import org.junit.jupiter.api.Test;
 

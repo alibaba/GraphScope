@@ -130,15 +130,15 @@ class TestGraph(_TestGraph):
 
     def test_node_type(self):
         G = self.Graph()
-        nodes = [(0, 1), 3, "n", 3.14, True, False]
-        edges = [((0, 1), 3, 1), ("n", 3.14, 3.14), (True, False, True)]
+        nodes = [3, "n", 3.14, True, False]
+        edges = [(3, "n", 1), ("n", 3.14, 3.14), (True, False, True)]
         G.add_nodes_from(nodes)
         G.add_weighted_edges_from(edges)
         nlist = list(G.nodes)
-        assert len(nlist) == 6
+        assert len(nlist) == 5
         for n in nlist:
-            assert n in [False, (0, 1), 3, "n", 3.14, True]
-        assert G[(0, 1)][3]["weight"] == 1
+            assert n in [False, 3, "n", 3.14, True]
+        assert G[3]["n"]["weight"] == 1
         assert G["n"][3.14]["weight"] == 3.14
         assert G[True][False]["weight"] == True
 

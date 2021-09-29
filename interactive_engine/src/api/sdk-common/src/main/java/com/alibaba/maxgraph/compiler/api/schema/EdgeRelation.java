@@ -18,7 +18,7 @@ package com.alibaba.maxgraph.compiler.api.schema;
 /**
  * Relation in edge
  */
-public interface EdgeRelation {
+public interface EdgeRelation extends GraphTable {
     /**
      * Source vertex
      * @return The source vertex

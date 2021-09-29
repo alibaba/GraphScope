@@ -12,6 +12,7 @@ use pegasus_network::manager::SimpleServerDetector;
 use pegasus_network::config::NetworkConfig;
 use gs_gremlin::{InitializeJobCompiler, QueryMaxGraph};
 use maxgraph_store::api::PartitionId;
+use gremlin_core::register_gremlin_types;
 
 pub struct GaiaServer {
     config: Arc<GraphConfig>,
@@ -41,6 +42,7 @@ impl GaiaServer {
     }
 
     pub fn start(&self) -> GraphResult<(u16, u16)> {
+        register_gremlin_types().map_err(|e| GraphError::new(EngineError, format!("{:?}", e)))?;
         let report = match self.config.get_storage_option("gaia.report") {
             None => false,
             Some(report_string) => report_string.parse()

@@ -15,16 +15,16 @@
  */
 package com.alibaba.maxgraph.tests.gremlin;
 
+import com.alibaba.maxgraph.compiler.api.schema.GraphSchema;
 import com.alibaba.maxgraph.sdkcommon.io.MaxGraphIORegistry;
 import com.alibaba.maxgraph.tinkerpop.traversal.MaxGraphTraversalSource;
-import com.alibaba.maxgraph.v2.MaxNode;
-import com.alibaba.maxgraph.v2.common.NodeBase;
-import com.alibaba.maxgraph.v2.common.config.CommonConfig;
-import com.alibaba.maxgraph.v2.common.config.Configs;
-import com.alibaba.maxgraph.v2.common.exception.MaxGraphException;
-import com.alibaba.maxgraph.v2.common.frontend.api.schema.GraphSchema;
-import com.alibaba.maxgraph.v2.common.schema.GraphDef;
-import com.alibaba.maxgraph.v2.common.config.GremlinConfig;
+import com.alibaba.maxgraph.groot.MaxNode;
+import com.alibaba.maxgraph.groot.common.NodeBase;
+import com.alibaba.maxgraph.common.config.CommonConfig;
+import com.alibaba.maxgraph.common.config.Configs;
+import com.alibaba.maxgraph.compiler.api.exception.MaxGraphException;
+import com.alibaba.maxgraph.groot.common.schema.GraphDef;
+import com.alibaba.maxgraph.common.config.GremlinConfig;
 import org.apache.commons.configuration.Configuration;
 import org.apache.tinkerpop.gremlin.LoadGraphWith;
 import org.apache.tinkerpop.gremlin.driver.Cluster;
@@ -380,7 +380,7 @@ public class MaxTestGraph implements Graph {
     private NodeBase maxNode;
     private RemoteConnection remoteConnection;
     private Cluster cluster;
-    private com.alibaba.maxgraph.v2.sdk.Client sdkClient;
+    private com.alibaba.maxgraph.groot.sdk.Client sdkClient;
 
     public MaxTestGraph(Configs configs) {
         try {
@@ -388,7 +388,7 @@ public class MaxTestGraph implements Graph {
             this.maxNode.start();
             int port = GremlinConfig.GREMLIN_PORT.get(configs);
             this.cluster = createCluster("localhost", port);
-            this.sdkClient = new com.alibaba.maxgraph.v2.sdk.Client("localhost", 55556);
+            this.sdkClient = new com.alibaba.maxgraph.groot.sdk.Client("localhost", 55556);
             this.remoteConnection = DriverRemoteConnection.using(cluster);
         } catch (Throwable e) {
             this.closeGraph();

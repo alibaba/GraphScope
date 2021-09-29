@@ -15,13 +15,9 @@
 
 pub mod gremlin;
 
-mod debug;
-
-pub use self::debug::*;
 pub use self::gremlin::*;
 use std::sync::Arc;
 use std::sync::mpsc::channel;
-use maxgraph_common::proto::debug_grpc;
 use grpcio::*;
 use std::thread;
 use std::time::Duration;
@@ -42,14 +38,10 @@ pub(crate) fn start_all<F, VV, VVI, EE, EEI>(store: Arc<Store>,
     let (tx, rx) = channel();
     thread::spawn(move || {
         let config = store.get_config();
-        let debug_service = debug_grpc::create_debug_service_api(DebugService::new(store.clone()));
-        // let store_api_service = store_api_grpc::create_store_service(StoreApiServer::new(store.get_graph()));
         let gremlin_service = gremlin_query_grpc::create_gremlin_service(gremlin_server);
-        // let graph_store_service = store_node_grpc::create_graph_store_service(GraphStoreServer::new(store.get_graph()));
         let env = Arc::new(Environment::new(config.rpc_thread_count as usize));
         let mut server_builder = ServerBuilder::new(env.clone())
             .channel_args(ChannelBuilder::new(env).reuse_port(false).build_args())
-            .register_service(debug_service)
             .register_service(gremlin_service)
             .bind("0.0.0.0", config.rpc_port as u16);
         if let Some(s) = rpc_service_fn() {

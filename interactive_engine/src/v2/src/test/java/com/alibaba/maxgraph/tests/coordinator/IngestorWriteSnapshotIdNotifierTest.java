@@ -15,11 +15,11 @@
  */
 package com.alibaba.maxgraph.tests.coordinator;
 
-import com.alibaba.maxgraph.v2.common.config.CommonConfig;
-import com.alibaba.maxgraph.v2.common.config.Configs;
-import com.alibaba.maxgraph.v2.common.rpc.RoleClients;
-import com.alibaba.maxgraph.v2.coordinator.IngestorSnapshotClient;
-import com.alibaba.maxgraph.v2.coordinator.IngestorWriteSnapshotIdNotifier;
+import com.alibaba.maxgraph.common.config.CommonConfig;
+import com.alibaba.maxgraph.common.config.Configs;
+import com.alibaba.maxgraph.groot.common.rpc.RoleClients;
+import com.alibaba.maxgraph.groot.coordinator.IngestorSnapshotClient;
+import com.alibaba.maxgraph.groot.coordinator.IngestorWriteSnapshotIdNotifier;
 import org.junit.jupiter.api.Test;
 
 import static org.mockito.Mockito.*;

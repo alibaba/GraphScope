@@ -17,10 +17,10 @@ package com.alibaba.maxgraph.compiler.tree;
 
 import com.alibaba.maxgraph.Message;
 import com.alibaba.maxgraph.QueryFlowOuterClass;
+import com.alibaba.maxgraph.common.util.SchemaUtils;
 import com.alibaba.maxgraph.compiler.api.schema.GraphSchema;
-import com.alibaba.maxgraph.compiler.api.schema.PropDataType;
+import com.alibaba.maxgraph.compiler.api.schema.DataType;
 import com.alibaba.maxgraph.compiler.optimizer.ContextManager;
-import com.alibaba.maxgraph.compiler.utils.SchemaUtils;
 import com.alibaba.maxgraph.compiler.tree.value.EdgeValueType;
 import com.alibaba.maxgraph.compiler.tree.value.PropertyValueType;
 import com.alibaba.maxgraph.compiler.tree.value.ValueType;
@@ -65,7 +65,7 @@ public class PropertiesTreeNode extends UnaryTreeNode implements PropertyNode {
         Set<Message.VariantType> variantTypeList = Sets.newHashSet();
         if (null != propertyKeys) {
             for (String propKey : propertyKeys) {
-                Set<PropDataType> dataTypeList = SchemaUtils.getPropDataTypeList(propKey, schema);
+                Set<DataType> dataTypeList = SchemaUtils.getPropDataTypeList(propKey, schema);
                 dataTypeList.forEach(v -> variantTypeList.add(CompilerUtils.parseVariantFromDataType(v)));
             }
         }

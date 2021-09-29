@@ -4,7 +4,7 @@ use std::ffi::CStr;
 use std::str;
 use maxgraph_store::db::api::{GraphConfigBuilder, SnapshotId, GraphResult, GraphStorage, TypeDef, EdgeId, EdgeKind, DataLoadTarget};
 use maxgraph_store::db::api::PropertyMap;
-use maxgraph_store::db::proto::common::{OpTypePb, OperationBatchPb, OperationPb, DataOperationPb, VertexIdPb, LabelIdPb, EdgeIdPb, EdgeKindPb, TypeDefPb, DdlOperationPb, ConfigPb, CreateVertexTypePb, AddEdgeKindPb, PrepareDataLoadPb, CommitDataLoadPb, EdgeLocationPb};
+use maxgraph_store::db::proto::model::{OpTypePb, OperationBatchPb, OperationPb, DataOperationPb, VertexIdPb, LabelIdPb, EdgeIdPb, EdgeKindPb, TypeDefPb, DdlOperationPb, ConfigPb, CreateVertexTypePb, AddEdgeKindPb, PrepareDataLoadPb, CommitDataLoadPb, EdgeLocationPb};
 use maxgraph_store::db::graph::store::GraphStore;
 use maxgraph_store::db::common::bytes::util::parse_pb;
 use std::sync::{Once, Arc};
