@@ -13,7 +13,7 @@
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 //
-use pegasus::api::{IterCondition, Iteration, Map, Reduce, Sink};
+use pegasus::api::{CorrelatedSubTask, Count, IterCondition, Iteration, Map, Reduce, Sink};
 use pegasus::JobConf;
 
 #[test]
@@ -83,8 +83,8 @@ fn ping_pong_test_02() {
 }
 
 #[test]
-fn iter_with_aggregate() {
-    let mut conf = JobConf::new("iter_with_aggregate");
+fn iterate_x_map_reduce_unfold_x_test() {
+    let mut conf = JobConf::new("iterate_x_map_reduce_unfold_x_test");
     conf.set_workers(2);
     let mut result = pegasus::run(conf, || {
         let index = pegasus::get_current_worker().index;
@@ -137,8 +137,8 @@ fn iter_with_aggregate() {
 }
 
 #[test]
-fn iter_nested_iter_test() {
-    let mut conf = JobConf::new("iter_nested_iter");
+fn iterate_x_iterate_x_map_x_x_test() {
+    let mut conf = JobConf::new("iterate_x_iterate_x_map_x_x_test");
     conf.set_workers(2);
     let mut result = pegasus::run(conf, || {
         let index = pegasus::get_current_worker().index;
@@ -165,8 +165,8 @@ fn iter_nested_iter_test() {
 }
 
 #[test]
-fn iter_nested_iter_nested_iter_test() {
-    let mut conf = JobConf::new("iter_nested_iter_nested_iter");
+fn iterate_x_iterate_x_iterate_x_map_x_x_x_test() {
+    let mut conf = JobConf::new("iterate_x_iterate_x_iterate_x_map_x_x_x_test");
     conf.set_workers(2);
     let mut result = pegasus::run(conf, || {
         let index = pegasus::get_current_worker().index;
@@ -195,8 +195,8 @@ fn iter_nested_iter_nested_iter_test() {
 }
 
 #[test]
-fn iter_nested_iter_with_condition_test() {
-    let mut conf = JobConf::new("iter_nested_iter_with_condition");
+fn map_iterate_until_x_iterate_until_x_map_x_map_x_test() {
+    let mut conf = JobConf::new("map_iterate_until_x_iterate_until_x_map_x_map_x_test");
     conf.set_workers(2);
     let mut result = pegasus::run(conf, || {
         let index = pegasus::get_current_worker().index;
@@ -229,4 +229,139 @@ fn iter_nested_iter_with_condition_test() {
         vec.push(item);
     }
     assert_eq!(vec, vec![100]);
+}
+
+fn iterate_x_apply_x_flatmap_count_x_map_x(workers: u32) {
+    let name = format!("iterate_x_apply_x_flatmap_count_x_map_x_{}_test", workers);
+    let mut conf = JobConf::new(name);
+    conf.set_workers(workers);
+    let mut result = pegasus::run(conf, || {
+        let index = pegasus::get_current_worker().index + 1;
+        let src = vec![index];
+        move |input, output| {
+            input
+                .input_from(src)?
+                .iterate(10, |start| {
+                    start
+                        .repartition(|x| Ok(*x as u64))
+                        .apply(|stream| stream.flat_map(|x| Ok(0..x + 1))?.count())?
+                        .map(|(_p, c)| Ok(c as u32))
+                })?
+                .sink_into(output)
+        }
+    })
+    .expect("submit job failure;");
+
+    let mut vec = vec![];
+    while let Some(Ok(item)) = result.next() {
+        vec.push(item);
+    }
+
+    let mut expect = vec![];
+    for i in 0..workers {
+        let mut value = i + 1;
+        for _ in 0..10 {
+            value = Some(value)
+                .into_iter()
+                .flat_map(|x| 0..x + 1)
+                .count() as u32;
+        }
+        expect.push(value);
+    }
+    vec.sort();
+    println!("get result {:?}", vec);
+    assert_eq!(expect, vec);
+}
+
+#[test]
+fn iterate_x_apply_x_flatmap_count_x_map_x_2_test() {
+    iterate_x_apply_x_flatmap_count_x_map_x(2)
+}
+
+#[test]
+fn iterate_x_apply_x_flatmap_count_x_map_x_3_test() {
+    iterate_x_apply_x_flatmap_count_x_map_x(3)
+}
+
+#[test]
+fn iterate_x_apply_x_flatmap_count_x_map_x_4_test() {
+    iterate_x_apply_x_flatmap_count_x_map_x(4)
+}
+
+#[test]
+fn iterate_x_apply_x_flatmap_count_x_map_x_5_test() {
+    iterate_x_apply_x_flatmap_count_x_map_x(5)
+}
+
+#[test]
+fn flatmap_iterate_x_apply_x_flatmap_count_x_map_x_test() {
+    let mut conf = JobConf::new("flatmap_iterate_x_apply_x_flatmap_count_x_map_x_test");
+    conf.set_workers(2);
+    let mut result = pegasus::run(conf, || {
+        let index = pegasus::get_current_worker().index;
+        let src = vec![index];
+        move |input, output| {
+            input
+                .input_from(src)?
+                .flat_map(|i| Ok((i * 1000)..(i * 1000 + 1000)))?
+                .iterate(10, |start| {
+                    start
+                        .repartition(|x| Ok(*x as u64))
+                        .apply(|stream| stream.flat_map(|x| Ok(0..x + 1))?.count())?
+                        .map(|(_p, c)| Ok(c as u32))
+                })?
+                .sink_into(output)
+        }
+    })
+    .expect("submit job failure;");
+
+    let mut vec = vec![];
+    while let Some(Ok(item)) = result.next() {
+        vec.push(item);
+    }
+
+    let mut expect = vec![];
+    for i in 0..2000 {
+        let mut value = i;
+        for _ in 0..10 {
+            value = Some(value)
+                .into_iter()
+                .flat_map(|x| 0..x + 1)
+                .count() as u32;
+        }
+        expect.push(value);
+    }
+    vec.sort();
+    println!("get {} result from {}..{}", vec.len(), vec[0], vec.last().unwrap());
+    assert_eq!(expect, vec);
+}
+
+#[test]
+fn apply_x_iterate_x_flatmap_x_count_x_test() {
+    let mut conf = JobConf::new("apply_x_iterate_x_flatmap_x_count_x_test");
+    conf.set_workers(2);
+    let mut result = pegasus::run(conf, || {
+        let index = pegasus::get_current_worker().index;
+        let src = index * 10..(index + 1) * 10;
+        move |input, output| {
+            input
+                .input_from(src)?
+                .apply(|sub| {
+                    sub.iterate(10, |iter| {
+                        iter.repartition(|x| Ok(*x as u64))
+                            .flat_map(|x| Ok(x..(x + 2)))
+                    })?
+                    .count()
+                })?
+                .sink_into(output)
+        }
+    })
+    .expect("submit job failure");
+
+    let mut vec = vec![];
+    while let Some(Ok(item)) = result.next() {
+        vec.push(item.1);
+    }
+
+    println!("get result {:?}", vec);
 }

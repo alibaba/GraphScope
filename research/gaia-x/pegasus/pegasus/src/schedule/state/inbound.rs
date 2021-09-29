@@ -98,7 +98,7 @@ impl InboundStreamState {
 
     pub fn on_end(&mut self, src: u32, end: EndSignal) -> IOResult<()> {
         if end.sources() == 1 {
-            warn_worker!("scope {:?} end[source = 1] should be be passed with data;", end.tag());
+            trace_worker!("scope {:?} end[source = 1] should be be passed with data;", end.tag());
             return self.notify.notify(end.into_end());
         }
 

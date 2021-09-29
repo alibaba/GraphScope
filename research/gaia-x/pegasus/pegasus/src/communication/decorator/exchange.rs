@@ -830,8 +830,12 @@ mod rob {
             } else {
                 assert_eq!(level, self.scope_level);
                 let tag = batch.tag().clone();
-                for p in self.buffers.iter_mut() {
-                    p.pin(&tag);
+                for (target, p) in self.buffers.iter_mut().enumerate() {
+                    if self.cancel_handle.is_canceled(&tag, target) {
+                        p.skip_buf(&tag);
+                    } else {
+                        p.pin(&tag);
+                    }
                 }
                 self.push_inner(batch)
             }

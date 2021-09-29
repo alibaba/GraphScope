@@ -23,10 +23,6 @@ impl IterateState {
     fn leave_iteration(&mut self) {
         self.iterating = false;
     }
-
-    fn is_iterating(&self) -> bool {
-        self.iterating
-    }
 }
 
 pub(crate) struct SwitchOperator<D> {
@@ -327,11 +323,24 @@ mod rob {
                                 enter.notify_end(end)?;
                             } else {
                                 warn_worker!("{:?} not end while {:?} leave iteration;", p, batch.tag);
-                                self.iterate_states.insert(p, state);
                             }
                         } else {
                             error_worker!("iteration for {:?} not found;", p);
                             panic!("iteration for {:?} not found", p);
+                        }
+
+                        if self.iterate_states.is_empty() {
+                            trace_worker!("detect no scope in iteration;");
+                            let len = self.parent_parent_scope_ends.len();
+                            for i in (0..len).rev() {
+                                for end in self.parent_parent_scope_ends[i].drain(..) {
+                                    if !end.tag.is_root() {
+                                        outputs[0].notify_end(end.clone())?;
+                                    }
+                                    outputs[1].notify_end(end)?;
+                                }
+                            }
+                        } else {
                         }
                     }
                 } else {
@@ -367,11 +376,9 @@ mod rob {
             let level = n.tag().len() as u32;
             if n.port == 0 {
                 // the main input;
+                trace_worker!("iteration on notify end of {:?};", n.tag());
                 if level == self.scope_level - 1 {
                     if let Some(state) = self.iterate_states.get_mut(n.tag()) {
-                        if !state.is_iterating() {
-                            warn_worker!("{:?} get end after leave iteration;", n.tag());
-                        }
                         state.set_end(n.take());
                     } else {
                         panic!("iteration of {:?} not found;", n.tag())

@@ -29,7 +29,7 @@ struct ChannelCancel {
     inner: CancelHandle,
     delta: MergedScopeDelta,
     /// used to check cancel before evolve and push;
-    before_enter: TidyTagMap<()>,
+    before_send: TidyTagMap<()>,
     parent: AHashSet<Tag>,
 }
 
@@ -39,30 +39,22 @@ impl CancelListener for ChannelCancel {
         let level = tag.len() as u32;
 
         if self.delta.scope_level_delta < 0 {
-            // channel send data to parent scope;
+            // leave: channel send data to parent scope;
             // cancel from parent scope;
-            assert!(level < self.before_enter.scope_level);
-            if *crate::config::ENABLE_CANCEL_CHILD {
-                self.parent.insert(tag.clone());
-                return Some(tag.clone());
-            } else {
-                None
-            }
+            assert!(level < self.before_send.scope_level);
+            self.parent.insert(tag.clone());
+            Some(tag.clone())
         } else {
-            // scope_level delta > 0;
+            // scope_level delta >= 0;
             if level == self.scope_level {
                 let before_enter = self.delta.evolve_back(&tag);
-                self.before_enter
+                self.before_send
                     .insert(before_enter.clone(), ());
                 Some(before_enter)
             } else if level < self.scope_level {
                 // cancel from parent scope;
-                if *crate::config::ENABLE_CANCEL_CHILD {
-                    self.parent.insert(tag.clone());
-                    Some(tag.clone())
-                } else {
-                    None
-                }
+                self.parent.insert(tag.clone());
+                Some(tag.clone())
             } else {
                 warn_worker!(
                     "unexpected cancel of scope {:?} expect scope level {};",
@@ -79,18 +71,18 @@ impl CancelListener for ChannelCancel {
 impl ChannelCancel {
     fn is_canceled(&self, tag: &Tag) -> bool {
         let level = tag.len() as u32;
-        if level == self.before_enter.scope_level {
-            if !self.before_enter.is_empty() && self.before_enter.contains_key(tag) {
+        if level == self.before_send.scope_level {
+            if !self.before_send.is_empty() && self.before_send.contains_key(tag) {
                 return true;
             }
 
-            if *crate::config::ENABLE_CANCEL_CHILD && !self.parent.is_empty() {
+            if !tag.is_root() && !self.parent.is_empty() {
                 let p = tag.to_parent_uncheck();
                 self.check_parent(p)
             } else {
                 false
             }
-        } else if level < self.before_enter.scope_level {
+        } else if level < self.before_send.scope_level {
             self.check_parent(tag.clone())
         } else {
             false
@@ -131,7 +123,7 @@ impl ChannelCancelPtr {
             scope_level,
             inner: ch,
             delta,
-            before_enter: TidyTagMap::new(level_before),
+            before_send: TidyTagMap::new(level_before),
             parent: AHashSet::new(),
         };
         ChannelCancelPtr { inner: Rc::new(RefCell::new(inner)) }
