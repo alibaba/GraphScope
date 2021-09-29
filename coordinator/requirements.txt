@@ -1,4 +1,5 @@
 daemons
+etcd-distro
 graphscope
 grpcio
 kubernetes
