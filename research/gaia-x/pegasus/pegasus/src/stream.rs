@@ -73,15 +73,7 @@ impl<D: Data> Stream<D> {
             let copy = Stream { port: self.port.copy_data(), ch: self.ch.clone(), dfb: self.dfb.clone() };
             Ok((self, copy))
         } else {
-            let shuffled = self.unary("shuffle_clone", |_| {
-                |input, output| {
-                    input.for_each_batch(|dataset| {
-                        output.push_batch_mut(dataset)?;
-                        Ok(())
-                    })
-                }
-            })?;
-
+            let shuffled = self.forward("shuffle_clone")?;
             let copy = Stream {
                 port: shuffled.port.copy_data(),
                 ch: shuffled.ch.clone(),
@@ -287,13 +279,21 @@ impl<D: Data> Stream<D> {
     }
 
     pub fn enter(mut self) -> Result<Self, BuildJobError> {
-        self.ch.add_delta(ScopeDelta::ToChild(1));
-        Ok(self)
+        if let Some(_delta) = self.ch.add_delta(ScopeDelta::ToChild(1)) {
+            let forward = self.forward("forward_enter")?;
+            forward.enter()
+        } else {
+            Ok(self)
+        }
     }
 
     pub fn leave(mut self) -> Result<Self, BuildJobError> {
-        self.ch.add_delta(ScopeDelta::ToParent(1));
-        Ok(self)
+        if let Some(_) = self.ch.add_delta(ScopeDelta::ToParent(1)) {
+            let forward = self.forward("forward_leave")?;
+            forward.leave()
+        } else {
+            Ok(self)
+        }
     }
 
     pub fn add_operator<O, F>(&mut self, name: &str, builder: F) -> Result<OperatorRef, BuildJobError>
@@ -334,6 +334,17 @@ impl<D: Data> Stream<D> {
         op.add_input(ch_info, pull, notify, &self.dfb.event_emitter);
         let edge = Edge::new(ch_info);
         Ok(edge)
+    }
+
+    fn forward(self, name: &str) -> Result<Stream<D>, BuildJobError> {
+        self.unary(name, |_info| {
+            |input, output| {
+                input.for_each_batch(|batch| {
+                    output.push_batch_mut(batch)?;
+                    Ok(())
+                })
+            }
+        })
     }
 }
 

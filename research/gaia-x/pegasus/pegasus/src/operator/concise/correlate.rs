@@ -64,7 +64,7 @@ fn new_batch<D>(tag: Tag, worker: u32, buf: Buffer<D>) -> MicroBatch<D> {
 struct ForkProgress<D> {
     next_seq: u32,
     current_input_seq: Option<u64>,
-    buf: BufferPool<D, MemBufAlloc<D>>
+    buf: BufferPool<D, MemBufAlloc<D>>,
 }
 
 impl<D> ForkProgress<D> {
@@ -72,7 +72,7 @@ impl<D> ForkProgress<D> {
         ForkProgress {
             next_seq,
             current_input_seq: None,
-            buf: BufferPool::new(1, capacity, MemBufAlloc::new())
+            buf: BufferPool::new(1, capacity, MemBufAlloc::new()),
         }
     }
 
@@ -416,10 +416,17 @@ struct ZipSubtaskBuf<D> {
 
 impl<D> ZipSubtaskBuf<D> {
     fn new() -> Self {
-        ZipSubtaskBuf { reqs: VecDeque::new(), head: 0, len: 0, is_canceled: false, cur_end: None, end: None }
+        ZipSubtaskBuf {
+            reqs: VecDeque::new(),
+            head: 0,
+            len: 0,
+            is_canceled: false,
+            cur_end: None,
+            end: None,
+        }
     }
 
-    fn cur_end(&mut self, end:EndByScope) {
+    fn cur_end(&mut self, end: EndByScope) {
         self.cur_end = Some(end);
     }
 

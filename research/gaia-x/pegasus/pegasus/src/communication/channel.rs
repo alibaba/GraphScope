@@ -134,8 +134,8 @@ impl<T: Data> Channel<T> {
         self
     }
 
-    pub fn add_delta(&mut self, delta: ScopeDelta) {
-        self.scope_delta.add_delta(delta);
+    pub fn add_delta(&mut self, delta: ScopeDelta) -> Option<ScopeDelta> {
+        self.scope_delta.add_delta(delta)
     }
 
     pub fn get_scope_level(&self) -> u32 {
