@@ -129,8 +129,9 @@ graphscope-client-manylinux2014-py3:
 				cmake .. -DCMAKE_PREFIX_PATH=/opt/vineyard \
 					-DCMAKE_INSTALL_PREFIX=/opt/vineyard \
 					-DBUILD_VINEYARD_PYPI_PACKAGES=ON \
-					-DBUILD_SHARED_LIBS=ON \
-					-DBUILD_VINEYARD_IO_OSS=ON && \
+					-DBUILD_SHARED_LIBS=OFF \
+					-DBUILD_VINEYARD_IO_OSS=ON \
+					-DBUILD_VINEYARD_MIGRATION=OFF && \
 				make install vineyard_client_python -j && \
 				cp -rf /opt/vineyard/* /usr/local/ && \
 				rm -fr /tmp/libvineyard /tmp/libgrape-lite && \
