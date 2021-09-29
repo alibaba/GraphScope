@@ -25,7 +25,7 @@ from graphscope.framework.graph import Graph
 from graphscope.framework.loader import Loader
 
 
-def load_modern_graph(sess, prefix=None, directed=True):
+def load_modern_graph(sess=None, prefix=None, directed=True):
     """Load modern graph.
     Modern graph consist 6 vertices and 6 edges, useful to test the basic
     functionalities.

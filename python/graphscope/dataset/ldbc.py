@@ -273,7 +273,7 @@ def load_ldbc(sess, prefix, directed=True):
 """
 
 
-def load_ldbc(sess, prefix=None, directed=True):
+def load_ldbc(sess=None, prefix=None, directed=True):
     """Load ldbc dataset as a ArrowProperty Graph.
 
     Args:
