@@ -117,8 +117,8 @@ class LocalLauncher(Launcher):
         self._session_workspace = None
 
         # etcd
-        self._etcd_listen_peer_port = None
-        self._etcd_listen_client_port = None
+        self._etcd_peer_port = None
+        self._etcd_client_port = None
         self._etcd_process = None
         # zookeeper
         self._zookeeper_port = None
@@ -179,7 +179,7 @@ class LocalLauncher(Launcher):
 
     @property
     def etcd_port(self):
-        return self._etcd_listen_client_port
+        return self._etcd_client_port
 
     @property
     def zookeeper_port(self):
@@ -267,12 +267,12 @@ class LocalLauncher(Launcher):
         return process
 
     def _launch_etcd(self):
-        self._etcd_listen_peer_port = get_free_port("localhost")
-        self._etcd_listen_client_port = get_free_port("localhost")
-
         etcd_exec = shutil.which("etcd")
         if not etcd_exec:
             raise RuntimeError("etcd command not found.")
+
+        self._etcd_peer_port = 2380 if is_free_port(2380) else get_free_port()
+        self._etcd_client_port = 2379 if is_free_port(2379) else get_free_port()
 
         env = os.environ.copy()
         env.update({"ETCD_MAX_TXN_OPS": "102400"})
@@ -282,15 +282,15 @@ class LocalLauncher(Launcher):
             "--data-dir",
             str(self._instance_workspace),
             "--listen-peer-urls",
-            "http://0.0.0.0:{0}".format(str(self._etcd_listen_peer_port)),
+            "http://0.0.0.0:{0}".format(str(self._etcd_peer_port)),
             "--listen-client-urls",
-            "http://0.0.0.0:{0}".format(str(self._etcd_listen_client_port)),
+            "http://0.0.0.0:{0}".format(str(self._etcd_client_port)),
             "--advertise-client-urls",
-            "http://localhost:{0}".format(str(self._etcd_listen_client_port)),
+            "http://localhost:{0}".format(str(self._etcd_client_port)),
             "--initial-cluster",
-            "default=http://localhost:{0}".format(str(self._etcd_listen_peer_port)),
+            "default=http://localhost:{0}".format(str(self._etcd_peer_port)),
             "--initial-advertise-peer-urls",
-            "http://localhost:{0}".format(str(self._etcd_listen_peer_port)),
+            "http://localhost:{0}".format(str(self._etcd_peer_port)),
         ]
         logger.info("Launch etcd with command: %s", " ".join(cmd))
 
@@ -312,21 +312,19 @@ class LocalLauncher(Launcher):
 
         start_time = time.time()
 
-        while is_free_port(self._etcd_listen_client_port):
+        while is_free_port(self._etcd_client_port):
             time.sleep(1)
             if (
                 self._timeout_seconds
                 and self._timeout_seconds + start_time < time.time()
             ):
-                raise RuntimeError("Launch etcd service failed.")
+                raise RuntimeError("Launch etcd service failed due to timeout.")
         logger.info(
-            "Etcd is ready, endpoint is localhost:{0}".format(
-                self._etcd_listen_client_port
-            )
+            "Etcd is ready, endpoint is localhost:{0}".format(self._etcd_client_port)
         )
 
     def _launch_zetcd(self):
-        self._zookeeper_port = get_free_port(self._hosts.split(",")[0])
+        self._zookeeper_port = 2181 if is_free_port(2181) else get_free_port()
 
         zetcd_exec = shutil.which("zetcd")
         if not zetcd_exec:
@@ -336,7 +334,7 @@ class LocalLauncher(Launcher):
             "--zkaddr",
             "0.0.0.0:{}".format(self._zookeeper_port),
             "--endpoints",
-            "localhost:{0}".format(self._etcd_listen_client_port),
+            "localhost:{0}".format(self._etcd_client_port),
         ]
 
         process = subprocess.Popen(
@@ -362,7 +360,7 @@ class LocalLauncher(Launcher):
                 self._timeout_seconds
                 and self._timeout_seconds + start_time < time.time()
             ):
-                raise RuntimeError("Launch zetcd proxy service failed.")
+                raise RuntimeError("Launch zetcd proxy service failed due to timeout.")
         logger.info(
             "ZEtcd is ready, endpoint is localhost:{0}".format(self._zookeeper_port)
         )
@@ -387,7 +385,7 @@ class LocalLauncher(Launcher):
             cmd.extend(
                 [
                     "-etcd_endpoint",
-                    "http://localhost:{0}".format(self._etcd_listen_client_port),
+                    "http://localhost:{0}".format(self._etcd_client_port),
                 ]
             )
             cmd.extend(["--etcd_prefix", f"vineyard.gsa.{ts}"])

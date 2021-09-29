@@ -34,13 +34,13 @@ from graphscope.proto import graph_def_pb2
 from graphscope.proto import types_pb2
 
 
-def is_free_port(port, host="localhost", timeout=1.0):
+def is_free_port(port, host="localhost", timeout=0.2):
     """Check if a port on a given host is in use or not.
 
     Args:
         port (int): Port number to check availability.
         host (str): Hostname to connect to and check port availability.
-        timeout (float): Timeout uswd for socket connection.
+        timeout (float): Timeout used for socket connection.
 
     Returns:
         True if port is available, False otherwise.
