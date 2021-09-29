@@ -720,7 +720,8 @@ class TestGraphCopyOnWrite(_TestGraph):
         self.Graph = nx.Graph
         self.k3nodes = [0, 1, 2]
         self.k3edges = [(0, 1), (0, 2), (1, 2)]
-        self.k3 = k3_graph(os.path.expandvars("${GS_TEST_DIR}"), False)
+        data_dir = os.path.expandvars("${GS_TEST_DIR}/networkx")
+        self.k3 = k3_graph(data_dir, False)
         self.K3 = nx.Graph(self.k3, default_label="vertex")
 
     def test_update(self):
