@@ -256,10 +256,10 @@ mod project {
         Box::into_raw(args) as *const c_void
     }
 
-    /// To add a meta data for the project operator, which is a c-like string to represent an
+    /// To add an argument for the project operator, which is a c-like string to represent an
     /// expression, together with a `NameOrId` parameter that represents an alias.
     #[no_mangle]
-    pub extern "C" fn add_project_meta(
+    pub extern "C" fn add_project_arg(
         ptr_project: *const c_void,
         expr: *const c_char,
         alias: FfiNameOrId,
@@ -339,7 +339,7 @@ mod select {
     /// Note that, we use **add** here to make apis consistent. If multiple adds are conducted,
     /// only the latest one is kept.
     #[no_mangle]
-    pub extern "C" fn add_select_meta(
+    pub extern "C" fn add_select_predicate(
         ptr_select: *const c_void,
         ptr_predicate: *const c_char,
     ) -> ResultCode {
@@ -429,7 +429,7 @@ mod join {
     /// In the join processing, a pair of data will be output if the corresponding fields
     /// regarding left and right keys are **equivalent**.
     #[no_mangle]
-    pub extern "C" fn add_join_meta(
+    pub extern "C" fn add_join_key_pair(
         ptr_join: *const c_void,
         left_key: FfiVariable,
         right_key: FfiVariable,
@@ -572,14 +572,31 @@ mod groupby {
     ) -> FfiAggFn {
         let vars: Box<Vec<FfiVariable>> = Box::new(vec![agg_var]);
         FfiAggFn {
-            vars: unsafe { Box::into_raw(vars) as *const FfiVariable },
+            vars: Box::into_raw(vars) as *const FfiVariable,
             aggregate,
             alias,
         }
     }
 
+    /// Add the key according to which the grouping is conducted
     #[no_mangle]
-    pub extern "C" fn add_agg_fn(ptr_group: *const c_void, agg_fn: FfiAggFn) -> ResultCode {
+    pub extern "C" fn add_groupby_key(ptr_group: *const c_void, key: FfiVariable) -> ResultCode {
+        let mut return_code = ResultCode::Success;
+        let mut group = unsafe { Box::from_raw(ptr_group as *mut pb::GroupBy) };
+        let key_pb: FfiResult<common_pb::Variable> = key.try_into();
+        if key_pb.is_ok() {
+            group.keys.push(key_pb.unwrap());
+        } else {
+            return_code = key_pb.err().unwrap();
+        }
+        std::mem::forget(group);
+
+        return_code
+    }
+
+    /// Add the aggregate function for each group.
+    #[no_mangle]
+    pub extern "C" fn add_groupby_agg_fn(ptr_group: *const c_void, agg_fn: FfiAggFn) -> ResultCode {
         let mut return_code = ResultCode::Success;
         let mut group = unsafe { Box::from_raw(ptr_group as *mut pb::GroupBy) };
         let agg_fn_pb: FfiResult<pb::group_by::AggFunc> = agg_fn.try_into();
@@ -588,21 +605,6 @@ mod groupby {
             group.as_mut().functions.push(agg_fn_pb.unwrap());
         } else {
             return_code = agg_fn_pb.err().unwrap();
-        }
-        std::mem::forget(group);
-
-        return_code
-    }
-
-    #[no_mangle]
-    pub extern "C" fn add_grouping_key(ptr_group: *const c_void, key: FfiVariable) -> ResultCode {
-        let mut return_code = ResultCode::Success;
-        let mut group = unsafe { Box::from_raw(ptr_group as *mut pb::GroupBy) };
-        let key_pb: FfiResult<common_pb::Variable> = key.try_into();
-        if key_pb.is_ok() {
-            group.keys.push(key_pb.unwrap());
-        } else {
-            return_code = key_pb.err().unwrap();
         }
         std::mem::forget(group);
 
