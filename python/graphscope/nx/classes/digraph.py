@@ -426,7 +426,7 @@ class DiGraph(Graph):
 
     @patch_docstring(RefDiGraph.reverse)
     def reverse(self, copy=True):
-        self._try_convert_arrow_to_dynamic()
+        self._convert_arrow_to_dynamic()
 
         if not copy:
             g = self.__class__(create_empty_in_engine=False)

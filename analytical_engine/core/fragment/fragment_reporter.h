@@ -210,7 +210,9 @@ class DynamicFragmentReporter : public grape::Communicator {
           ? edges = fragment->GetIncomingAdjList(v)
           : edges = fragment->GetOutgoingAdjList(v);
       for (auto& e : edges) {
+        // nbrs[0] store the neighbors id array
         nbrs[0].push_back(fragment->GetId(e.neighbor()));
+        // nbrs[1] store the neighbors data array
         nbrs[1].push_back(e.data());
       }
     }
@@ -235,6 +237,10 @@ class DynamicFragmentReporter : public grape::Communicator {
         }
         ++v;
       }
+      // nodes["status"] store this batch_get_nodes operation status, if no node
+      // to fetch, set false;  nodes["batch"] store the nodes.
+      // nodes["next"] store the start vertex location of next batch_get_nodes
+      // operation.
       if (!batch_nodes.empty()) {
         nodes["status"] = true;
         nodes["batch"] = batch_nodes;
@@ -593,6 +599,7 @@ class ArrowFragmentReporter<vineyard::ArrowFragment<OID_T, VID_T>>
         }
         for (auto& e : edges) {
           auto n_label_id = fragment->vertex_label(e.neighbor());
+          // nbrs[0] store the neighbors id array
           if (n_label_id == default_label_id_) {
             nbrs[0].push_back(fragment->GetId(e.neighbor()));
           } else {
@@ -602,6 +609,7 @@ class ArrowFragmentReporter<vineyard::ArrowFragment<OID_T, VID_T>>
           }
           folly::dynamic ob = folly::dynamic::object;
           extractEdgeProperty(edge_data, e.edge_id(), ob);
+          // nbrs[1] store the neighbors data array
           nbrs[1].push_back(ob);
         }
       }
@@ -640,12 +648,15 @@ class ArrowFragmentReporter<vineyard::ArrowFragment<OID_T, VID_T>>
         label_id = 0;
         start = 0;
       }
+      // ob["status"] store this batch_get_nodes operation status, if no node
+      // to fetch, set false;  ob["batch"] store the nodes
       if (batch_nodes.empty()) {
         ob["status"] = false;
       } else {
         ob["status"] = true;
         ob["batch"] = batch_nodes;
       }
+      // the start vertex location of next batch_get_nodes operation.
       ob["next"] = folly::dynamic::array(fid, start, label_id);
     }
     return ob.empty() ? std::string() : folly::toJson(ob);

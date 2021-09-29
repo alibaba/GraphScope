@@ -598,7 +598,7 @@ class Graph(_GraphBase):
         11
 
         """
-        self._try_convert_arrow_to_dynamic()
+        self._convert_arrow_to_dynamic()
         nodes = []
         for n in nodes_for_adding:
             data = dict(attr)
@@ -682,7 +682,7 @@ class Graph(_GraphBase):
         []
 
         """
-        self._try_convert_arrow_to_dynamic()
+        self._convert_arrow_to_dynamic()
         nodes = []
         for n in nodes_for_removing:
             check_node_is_legal(n)
@@ -897,7 +897,7 @@ class Graph(_GraphBase):
         >>> G.add_edges_from([(1, 2), (2, 3)], weight=3)
         >>> G.add_edges_from([(3, 4), (1, 4)], label="WN2898")
         """
-        self._try_convert_arrow_to_dynamic()
+        self._convert_arrow_to_dynamic()
 
         edges = []
         for e in ebunch_to_add:
@@ -999,7 +999,7 @@ class Graph(_GraphBase):
         >>> ebunch = [(1, 2), (2, 3)]
         >>> G.remove_edges_from(ebunch)
         """
-        self._try_convert_arrow_to_dynamic()
+        self._convert_arrow_to_dynamic()
 
         edges = []
         for e in ebunch:
@@ -1042,7 +1042,7 @@ class Graph(_GraphBase):
         """
         check_node_is_legal(u)
         check_node_is_legal(v)
-        self._try_convert_arrow_to_dynamic()
+        self._convert_arrow_to_dynamic()
 
         try:
             edge = [json.dumps((u, v, data))]
@@ -1085,7 +1085,7 @@ class Graph(_GraphBase):
 
         """
         check_node_is_legal(n)
-        self._try_convert_arrow_to_dynamic()
+        self._convert_arrow_to_dynamic()
 
         try:
             node = [json.dumps((n, data))]
@@ -1521,7 +1521,7 @@ class Graph(_GraphBase):
         >>> list(G.edges)
         []
         """
-        self._try_convert_arrow_to_dynamic()
+        self._convert_arrow_to_dynamic()
         op = dag_utils.clear_edges(self)
         op.eval()
 
@@ -1620,7 +1620,7 @@ class Graph(_GraphBase):
             g = generic_graph_view(self)
             g._is_client_view = True
         else:
-            self._try_convert_arrow_to_dynamic()
+            self._convert_arrow_to_dynamic()
             g = self.__class__(create_empty_in_engine=False)
             g.graph = copy.deepcopy(self.graph)
             op = dag_utils.copy_graph(self, "identical")
@@ -1663,7 +1663,7 @@ class Graph(_GraphBase):
         >>> list(G2.edges)
         [(0, 1)]
         """
-        self._try_convert_arrow_to_dynamic()
+        self._convert_arrow_to_dynamic()
 
         if self.is_directed():
             graph_class = self.to_undirected_class()
@@ -1727,7 +1727,7 @@ class Graph(_GraphBase):
         >>> list(H.edges)
         [(0, 1)]
         """
-        self._try_convert_arrow_to_dynamic()
+        self._convert_arrow_to_dynamic()
 
         if self.is_directed():
             return self.copy(as_view=as_view)
@@ -1781,7 +1781,7 @@ class Graph(_GraphBase):
         >>> list(H.edges)
         [(0, 1), (1, 2)]
         """
-        self._try_convert_arrow_to_dynamic()
+        self._convert_arrow_to_dynamic()
 
         induced_nodes = []
         for n in nodes:
@@ -1832,7 +1832,7 @@ class Graph(_GraphBase):
         [(0, 1), (3, 4)]
 
         """
-        self._try_convert_arrow_to_dynamic()
+        self._convert_arrow_to_dynamic()
 
         induced_edges = []
         for e in edges:
@@ -2137,7 +2137,7 @@ class Graph(_GraphBase):
             self._default_label_id = -1
         self._graph_type = graph_def_pb2.ARROW_PROPERTY
 
-    def _try_convert_arrow_to_dynamic(self):
+    def _convert_arrow_to_dynamic(self):
         """Try to convert the hosted graph from arrow_property to dynamic_property.
 
         Notes
