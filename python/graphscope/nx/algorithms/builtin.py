@@ -1187,6 +1187,30 @@ def is_simple_path(G, nodes):
     return graphscope.is_simple_path(G, nodes)
 
 
+def get_all_simple_paths(G, source, target_nodes, cutoff):
+    @project_to_simple
+    def _all_simple_paths(G, source, target_nodes, cutoff):
+        targets_json = json.dumps(target_nodes)
+        return AppAssets(algo="all_simple_paths", context="tensor")(
+            G, source, targets_json, cutoff
+        )
+
+    if not isinstance(target_nodes, list):
+        target_nodes = [target_nodes]
+    if source not in G or len(target_nodes) != len(list(G.nbunch_iter(target_nodes))):
+        raise ValueError("nx.NodeNotFound")
+    if cutoff is None:
+        cutoff = len(G) - 1
+    if cutoff < 1 or source in target_nodes:
+        return []
+    ctx = _all_simple_paths(G, source, list(set(target_nodes)), cutoff)
+    paths = ctx.to_numpy("r", axis=0).tolist()
+    if len(paths) == 1:
+        if not isinstance(paths[0], list):
+            return []
+    return paths
+
+
 def all_simple_paths(G, source, target_nodes, cutoff=None):
     """Generate all simple paths in the graph G from source to target.
     A simple path is a path with no repeated nodes.
@@ -1218,26 +1242,7 @@ def all_simple_paths(G, source, target_nodes, cutoff=None):
 
     """
 
-    @project_to_simple
-    def _all_simple_paths(G, source, target_nodes, cutoff):
-        targets_json = json.dumps(target_nodes)
-        return AppAssets(algo="all_simple_paths", context="tensor")(
-            G, source, targets_json, cutoff
-        )
-
-    if not isinstance(target_nodes, list):
-        target_nodes = [target_nodes]
-    if source not in G or len(target_nodes) != len(list(G.nbunch_iter(target_nodes))):
-        raise ValueError("nx.NodeNotFound")
-    if cutoff is None:
-        cutoff = len(G) - 1
-    if cutoff < 1 or source in target_nodes:
-        return []
-    ctx = _all_simple_paths(G, source, list(set(target_nodes)), cutoff)
-    paths = ctx.to_numpy("r", axis=0).tolist()
-    if len(paths) == 1:
-        if not isinstance(paths[0], list):
-            return []
+    paths = get_all_simple_paths(G, source, target_nodes, cutoff)
     # delte path tail padding
     for path in paths:
         for i in range(len(path) - 1, -1, -1):
@@ -1276,26 +1281,7 @@ def all_simple_edge_paths(G, source, target_nodes, cutoff=None):
 
     """
 
-    @project_to_simple
-    def _all_simple_paths(G, source, target_nodes, cutoff):
-        targets_json = json.dumps(target_nodes)
-        return AppAssets(algo="all_simple_paths", context="tensor")(
-            G, source, targets_json, cutoff
-        )
-
-    if not isinstance(target_nodes, list):
-        target_nodes = [target_nodes]
-    if source not in G or len(target_nodes) != len(list(G.nbunch_iter(target_nodes))):
-        raise ValueError("nx.NodeNotFound")
-    if cutoff is None:
-        cutoff = len(G) - 1
-    if cutoff < 1 or source in target_nodes:
-        return []
-    ctx = _all_simple_paths(G, source, list(set(target_nodes)), cutoff)
-    paths = ctx.to_numpy("r", axis=0).tolist()
-    if len(paths) == 1:
-        if not isinstance(paths[0], list):
-            return []
+    paths = get_all_simple_paths(G, source, target_nodes, cutoff)
     for path in paths:
         a = ""
         b = ""

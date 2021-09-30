@@ -51,11 +51,9 @@ class AllSimplePaths : public AppBase<FRAG_T, AllSimplePathsContext<FRAG_T>>,
 
     frag.Oid2Gid(ctx.source_id, source_gid);
     ctx.soucre_fid = source_gid >> ctx.fid_offset;
-    bool native_source = frag.GetInnerVertex(ctx.source_id, source);
     // If is native_source, resize the edge_map, otherwise send the fragment
     // inner vertex num to source-vertex's fragment.
-    if (native_source) {
-      ctx.native_source = true;
+    if (ctx.native_source) {
       ctx.simple_paths_edge_map.resize(frag.GetTotalVerticesNum());
     } else {
       vid_t inner_num = frag.GetInnerVerticesNum();

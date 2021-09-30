@@ -74,7 +74,7 @@ class AllSimplePathsContext
 
     visited.Init(vertices, false);
     vertex_t source;
-    bool native_source = frag.GetInnerVertex(source_id, source);
+    native_source = frag.GetInnerVertex(source_id, source);
     if (native_source) {
       frag_vertex_num.resize(frag.fnum());
       frag_vertex_num[frag.fid()] = frag.GetInnerVerticesNum();
@@ -84,7 +84,6 @@ class AllSimplePathsContext
   void Output(std::ostream& os) override {
     auto& frag = this->fragment();
     vertex_t source;
-    bool native_source = frag.GetInnerVertex(source_id, source);
     std::vector<vid_t> path;
     if (native_source) {
       std::set<vid_t> vertex_visit;
