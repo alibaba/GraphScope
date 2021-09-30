@@ -86,6 +86,7 @@ class AllSimplePaths : public AppBase<FRAG_T, AllSimplePathsContext<FRAG_T>>,
         init_counter++;
         ctx.frag_vertex_num[fid] = inner_num;
         if (init_counter == static_cast<int>(frag.fnum()) - 1) {
+          reloadFragVertexNum(ctx.frag_vertex_num);
           vertex_t source;
           frag.GetInnerVertex(ctx.source_id, source);
           bfs(source, frag, ctx, messages, 0);
@@ -105,8 +106,8 @@ class AllSimplePaths : public AppBase<FRAG_T, AllSimplePathsContext<FRAG_T>>,
       } else if (msg_type == edge_map_msg) {
         vid_t from_gid = std::get<1>(msg);
         vid_t to_gid = std::get<2>(msg);
-        vid_t u_index = ctx.Gid2VertexGlobalIndex(from_gid);
-        vid_t v_index = ctx.Gid2VertexGlobalIndex(to_gid);
+        vid_t u_index = ctx.Gid2GlobalIndex(from_gid);
+        vid_t v_index = ctx.Gid2GlobalIndex(to_gid);
         ctx.simple_paths_edge_map[u_index].push_back(v_index);
       }
     }
@@ -148,8 +149,8 @@ class AllSimplePaths : public AppBase<FRAG_T, AllSimplePathsContext<FRAG_T>>,
           messages.SendToFragment(ctx.soucre_fid, msg);
           ret = true;
         } else {
-          vid_t u_index = ctx.Gid2VertexGlobalIndex(gid);
-          vid_t v_index = ctx.Gid2VertexGlobalIndex(u_gid);
+          vid_t u_index = ctx.Gid2GlobalIndex(gid);
+          vid_t v_index = ctx.Gid2GlobalIndex(u_gid);
           ctx.simple_paths_edge_map[u_index].push_back(v_index);
         }
         if (!frag.IsOuterVertex(u)) {
@@ -171,14 +172,15 @@ class AllSimplePaths : public AppBase<FRAG_T, AllSimplePathsContext<FRAG_T>>,
 
   void writeToCtx(const fragment_t& frag, context_t& ctx) {
     std::vector<typename fragment_t::oid_t> data;
-    std::set<vid_t> vertex_visit;
+    std::vector<bool> vertex_visited;
     std::vector<vid_t> path;
     vid_t source_gid;
+    vertex_visited.resize(frag.GetTotalVerticesNum());
     frag.Oid2Gid(ctx.source_id, source_gid);
-    vertex_visit.insert(source_gid);
+    vid_t source_index = ctx.Gid2GlobalIndex(source_gid);
+    vertex_visited[source_index] = true;
     path.push_back(source_gid);
-    vid_t index = ctx.Gid2VertexGlobalIndex(source_gid);
-    generatePath(index, 0, path, vertex_visit, data, frag, ctx);
+    generatePath(source_index, 0, path, vertex_visited, data, frag, ctx);
     std::vector<size_t> shape{static_cast<size_t>(ctx.path_num),
                               static_cast<size_t>(ctx.cutoff + 1)};
     if (ctx.path_num == 0) {
@@ -202,7 +204,7 @@ class AllSimplePaths : public AppBase<FRAG_T, AllSimplePathsContext<FRAG_T>>,
    * @param ctx
    */
   void generatePath(int from, int depth, std::vector<vid_t>& path,
-                    std::set<vid_t>& vertex_visit,
+                    std::vector<bool>& vertex_visited,
                     std::vector<typename fragment_t::oid_t>& data,
                     const fragment_t& frag, context_t& ctx) {
     // if depth == cutoff-1, just check set::targets.
@@ -210,10 +212,10 @@ class AllSimplePaths : public AppBase<FRAG_T, AllSimplePathsContext<FRAG_T>>,
       typename std::set<vid_t>::iterator it;
       for (it = ctx.targets.begin(); it != ctx.targets.end(); it++) {
         auto t = *it;
-        if (vertex_visit.count(t) == 1) {
+        vid_t to = ctx.Gid2GlobalIndex(t);
+        if (vertex_visited[to]) {
           continue;
         }
-        vid_t to = ctx.Gid2VertexGlobalIndex(t);
         if (std::find(ctx.simple_paths_edge_map[from].begin(),
                       ctx.simple_paths_edge_map[from].end(),
                       to) != ctx.simple_paths_edge_map[from].end()) {
@@ -238,10 +240,10 @@ class AllSimplePaths : public AppBase<FRAG_T, AllSimplePathsContext<FRAG_T>>,
     for (uint64_t t = 0; t < ctx.simple_paths_edge_map[from].size(); t++) {
       vid_t to = ctx.simple_paths_edge_map[from][t];
       vid_t gid = ctx.GlobalIndex2Gid(to);
-      if (vertex_visit.count(gid) == 1) {
+      if (vertex_visited[to]) {
         continue;
       }
-      vertex_visit.insert(gid);
+      vertex_visited[to] = true;
       if (ctx.targets.count(gid)) {
         int len_counter = 0;
         for (auto v : path) {
@@ -258,9 +260,17 @@ class AllSimplePaths : public AppBase<FRAG_T, AllSimplePathsContext<FRAG_T>>,
         ctx.path_num++;
       }
       path.push_back(gid);
-      generatePath(to, depth + 1, path, vertex_visit, data, frag, ctx);
+      generatePath(to, depth + 1, path, vertex_visited, data, frag, ctx);
       path.pop_back();
-      vertex_visit.erase(gid);
+      vertex_visited[to] = false;
+    }
+  }
+
+  void reloadFragVertexNum(std::vector<vid_t>& frag_vertex_num) {
+    vid_t sum = 0;
+    for (vid_t i = 0; i < frag_vertex_num.size(); i++) {
+      sum += frag_vertex_num[i];
+      frag_vertex_num[i] = sum;
     }
   }
 };

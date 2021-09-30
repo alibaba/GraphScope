@@ -86,12 +86,12 @@ class AllSimplePathsContext
     vertex_t source;
     std::vector<vid_t> path;
     if (native_source) {
-      std::set<vid_t> vertex_visit;
+      std::vector<bool> vertex_visited;
       vid_t source_gid = frag.Vertex2Gid(source);
-      vertex_visit.insert(source_gid);
       path.push_back(source_gid);
-      vid_t index = Gid2VertexGlobalIndex(source_gid);
-      printResult(index, 0, path, vertex_visit, os);
+      vid_t source_index = Gid2GlobalIndex(source_gid);
+      vertex_visited[source_index] = true;
+      printResult(source_index, 0, path, vertex_visited, os);
     }
   }
 
@@ -100,14 +100,13 @@ class AllSimplePathsContext
    *
    * @param gid
    */
-  vid_t Gid2VertexGlobalIndex(vid_t gid) {
+  vid_t Gid2GlobalIndex(vid_t gid) {
     vid_t fid = gid >> fid_offset;
     vid_t lid = gid & id_mask;
-    vid_t ret = 0;
-    for (vid_t i = 0; i < fid; i++) {
-      ret += frag_vertex_num[i];
-    }
-    return ret + lid;
+    if (fid == 0)
+      return lid;
+    else
+      return frag_vertex_num[fid - 1] + lid;
   }
 
   /**
@@ -117,18 +116,17 @@ class AllSimplePathsContext
    */
   vid_t GlobalIndex2Gid(vid_t index) {
     vid_t i = 0;
-    vid_t sum = 0;
-    vid_t sum_last = 0;
+    vid_t lid;
     while (true) {
-      sum += frag_vertex_num[i];
-      if (sum > index) {
-        vid_t lid = index - sum_last;
-        vid_t gid = (i << fid_offset) | lid;
-        return gid;
-      }
+      if (index < frag_vertex_num[i])
+        break;
       i++;
-      sum_last = sum;
     }
+    if (i == 0)
+      lid = index;
+    else
+      lid = index - frag_vertex_num[i - 1];
+    return (i << fid_offset) | lid;
   }
 
   oid_t source_id;
@@ -147,16 +145,16 @@ class AllSimplePathsContext
 
  private:
   void printResult(int from, int depth, std::vector<vid_t>& path,
-                   std::set<vid_t>& vertex_visit, std::ostream& os) {
+                   std::vector<bool>& vertex_visited, std::ostream& os) {
     auto& frag = this->fragment();
     if (depth == (this->cutoff - 1)) {
       typename std::set<vid_t>::iterator it;
       for (it = targets.begin(); it != targets.end(); it++) {
         auto t = *it;
-        if (vertex_visit.count(t) == 1) {
+        vid_t to = Gid2GlobalIndex(t);
+        if (vertex_visited[to]) {
           continue;
         }
-        vid_t to = Gid2VertexGlobalIndex(t);
         if (std::find(simple_paths_edge_map[from].begin(),
                       simple_paths_edge_map[from].end(),
                       to) != simple_paths_edge_map[from].end()) {
@@ -172,10 +170,10 @@ class AllSimplePathsContext
     for (uint64_t t = 0; t < simple_paths_edge_map[from].size(); t++) {
       vid_t to = simple_paths_edge_map[from][t];
       vid_t gid = GlobalIndex2Gid(to);
-      if (vertex_visit.count(gid) == 1) {
+      if (vertex_visited[to]) {
         continue;
       }
-      vertex_visit.insert(gid);
+      vertex_visited[to] = true;
       if (targets.count(gid)) {
         for (auto v : path) {
           os << frag.Gid2Oid(v) << " ";
@@ -183,9 +181,9 @@ class AllSimplePathsContext
         os << frag.Gid2Oid(gid) << " " << std::endl;
       }
       path.push_back(gid);
-      printResult(to, depth + 1, path, vertex_visit, os);
+      printResult(to, depth + 1, path, vertex_visited, os);
       path.pop_back();
-      vertex_visit.erase(gid);
+      vertex_visited[to] = false;
     }
   }
 };
