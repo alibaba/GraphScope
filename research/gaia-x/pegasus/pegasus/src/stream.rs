@@ -33,7 +33,7 @@ use crate::macros::route::*;
 use crate::operator::{NotifiableOperator, OperatorCore};
 use crate::{Data, JobConf};
 
-#[must_use = "this `Stream` may be consumed"]
+#[must_use = "this `Stream` must be consumed"]
 pub struct Stream<D: Data> {
     port: OutputBuilderImpl<D>,
     ch: Channel<D>,

@@ -102,7 +102,8 @@ impl<D: Data> OutputBuilderImpl<D> {
 
     pub fn copy_data(&self) -> Self {
         self.shared.borrow_mut().push(None);
-        OutputBuilderImpl { meta: self.meta.clone(), cursor: self.cursor + 1, shared: self.shared.clone() }
+        let cursor = self.shared.borrow().len() - 1;
+        OutputBuilderImpl { meta: self.meta.clone(), cursor, shared: self.shared.clone() }
     }
 }
 

@@ -1,5 +1,5 @@
 use pegasus::JobConf;
-use pegasus::api::{Sink, Map, Dedup, Count};
+use pegasus::api::{Sink, Map, Dedup};
 
 #[test]
 fn map_dedup_flatmap_test() {
