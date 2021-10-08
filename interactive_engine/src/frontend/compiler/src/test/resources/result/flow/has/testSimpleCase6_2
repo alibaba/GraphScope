@@ -17,7 +17,7 @@ source_op {
       value {
         int_value: 2
       }
-      type: VT_INTEGER
+      type: VT_INT
     }
     after_requirement {
       req_argument {
@@ -55,7 +55,7 @@ unary_op {
       value {
         int_value: 2
       }
-      type: VT_INTEGER
+      type: VT_INT
     }
   }
   input_operator_id: 4

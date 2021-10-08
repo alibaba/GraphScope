@@ -32,10 +32,10 @@ query_plan {
         compare: LIST_CONTAINS
         value {
           int_value: 123
-          value_type: VT_INTEGER
+          value_type: VT_INT
           bool_flag: true
         }
-        type: VT_INTEGER
+        type: VT_INT
       }
     }
     input_operator_id: 3
