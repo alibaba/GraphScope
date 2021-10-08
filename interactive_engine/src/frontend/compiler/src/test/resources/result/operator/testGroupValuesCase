@@ -26,7 +26,7 @@ query_plan {
       operator_type: CONSTANT
       argument {
         int_value: 1
-        value_type: VT_INTEGER
+        value_type: VT_INT
       }
       after_requirement {
         req_argument {

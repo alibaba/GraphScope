@@ -95,7 +95,7 @@ query_plan {
       operator_type: CONSTANT
       argument {
         int_value: 1
-        value_type: VT_INTEGER
+        value_type: VT_INT
       }
     }
     input_operator_id: 11
@@ -114,7 +114,7 @@ query_plan {
       operator_type: CONSTANT
       argument {
         int_value: 2
-        value_type: VT_INTEGER
+        value_type: VT_INT
       }
     }
     input_operator_id: 14
@@ -133,7 +133,7 @@ query_plan {
       operator_type: CONSTANT
       argument {
         int_value: 3
-        value_type: VT_INTEGER
+        value_type: VT_INT
       }
     }
     input_operator_id: 18
@@ -144,7 +144,7 @@ query_plan {
       operator_type: CONSTANT
       argument {
         int_value: 4
-        value_type: VT_INTEGER
+        value_type: VT_INT
       }
     }
     input_operator_id: 9

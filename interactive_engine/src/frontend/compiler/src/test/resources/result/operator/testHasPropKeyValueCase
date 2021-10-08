@@ -66,9 +66,9 @@ query_plan {
         prop_id: -4
         value {
           int_value: 30
-          value_type: VT_INTEGER
+          value_type: VT_INT
         }
-        type: VT_INTEGER
+        type: VT_INT
       }
     }
     input_operator_id: 5

@@ -20,9 +20,9 @@ query_plan {
         compare: EQ
         value {
           int_value: 12
-          value_type: VT_INTEGER
+          value_type: VT_INT
         }
-        type: VT_INTEGER
+        type: VT_INT
       }
       logical_compare {
         column_name: "prob"
@@ -106,9 +106,9 @@ query_plan {
         compare: LIST_CONTAINS
         value {
           int_value: 5
-          value_type: VT_INTEGER
+          value_type: VT_INT
         }
-        type: VT_INTEGER
+        type: VT_INT
       }
     }
     input_operator_id: 5

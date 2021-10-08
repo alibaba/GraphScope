@@ -33,9 +33,9 @@ query_plan {
       logical_compare {
         value {
           int_value: 29
-          value_type: VT_INTEGER
+          value_type: VT_INT
         }
-        type: VT_INTEGER
+        type: VT_INT
       }
     }
     input_operator_id: 2
@@ -46,7 +46,7 @@ query_plan {
       operator_type: CONSTANT
       argument {
         int_value: 1
-        value_type: VT_INTEGER
+        value_type: VT_INT
       }
     }
     input_operator_id: 3
@@ -60,9 +60,9 @@ query_plan {
         compare: EQ
         value {
           int_value: 29
-          value_type: VT_INTEGER
+          value_type: VT_INT
         }
-        type: VT_INTEGER
+        type: VT_INT
       }
     }
     input_operator_id: 2
@@ -73,7 +73,7 @@ query_plan {
       operator_type: CONSTANT
       argument {
         int_value: 2
-        value_type: VT_INTEGER
+        value_type: VT_INT
       }
     }
     input_operator_id: 5
@@ -87,9 +87,9 @@ query_plan {
         compare: LT
         value {
           int_value: 29
-          value_type: VT_INTEGER
+          value_type: VT_INT
         }
-        type: VT_INTEGER
+        type: VT_INT
       }
     }
     input_operator_id: 2
@@ -100,7 +100,7 @@ query_plan {
       operator_type: CONSTANT
       argument {
         int_value: 3
-        value_type: VT_INTEGER
+        value_type: VT_INT
       }
     }
     input_operator_id: 8
