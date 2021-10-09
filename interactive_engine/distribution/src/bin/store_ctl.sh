@@ -21,7 +21,6 @@ cat <<END
     max_node_gaia                       start max_node of gaia
     max_node_maxgraph                   start max_node of maxgraph
     maxgraph                            start maxgraph with v2
-    admin_tools                         start admin_tools of v2
     load_tools                          start load_tools of maxgraph
 END
 }
@@ -78,37 +77,13 @@ max_node() {
   type=$1; shift
   _setup_maxgraph_env
 
-  if [[ "${type}" == "gaia" ]]; then
-    java -server \
-         -Dlogback.configurationFile="${MAXGRAPH_LOGBACK_FILE}" \
-         -Dconfig.file="${MAXGRAPH_CONF_FILE}" \
-         -Dlog.dir="${LOG_DIR}" \
-         -Dlog.name="${LOG_NAME}" \
-         -cp "${libpath}" com.alibaba.graphscope.gaia.MaxNode \
-         "$@" > >(tee -a "${LOG_DIR}/${LOG_NAME}.out") 2> >(tee -a "${LOG_DIR}/${LOG_NAME}.err" >&2)
-  else
-    java -server \
-         -Dlogback.configurationFile="${MAXGRAPH_LOGBACK_FILE}" \
-         -Dconfig.file="${MAXGRAPH_CONF_FILE}" \
-         -Dlog.dir="${LOG_DIR}" \
-         -Dlog.name="${LOG_NAME}" \
-         -cp "${libpath}" com.alibaba.maxgraph.v2.MaxNode \
-         "$@" > >(tee -a "${LOG_DIR}/${LOG_NAME}.out") 2> >(tee -a "${LOG_DIR}/${LOG_NAME}.err" >&2)
-  fi
-}
-
-# start admin_tools of v2
-admin_tools() {
-  _setup_maxgraph_env
-
-  java_opt="-server ${MAXGRAPH_JAVA_OPTS}"
-  java ${java_opt} \
-      -Dlogback.configurationFile="${MAXGRAPH_LOGBACK_FILE}" \
-      -Dconfig.file="${MAXGRAPH_CONF_FILE}" \
-      -Dlog.dir="${LOG_DIR}" \
-      -Dlog.name="${LOG_NAME}" \
-      -cp "${libpath}" com.alibaba.maxgraph.v2.AdminTools \
-      "$@" > >(tee -a "${LOG_DIR}/${LOG_NAME}.out") 2> >(tee -a "${LOG_DIR}/${LOG_NAME}.err" >&2)
+  java -server \
+       -Dlogback.configurationFile="${MAXGRAPH_LOGBACK_FILE}" \
+       -Dconfig.file="${MAXGRAPH_CONF_FILE}" \
+       -Dlog.dir="${LOG_DIR}" \
+       -Dlog.name="${LOG_NAME}" \
+       -cp "${libpath}" com.alibaba.maxgraph.servers.MaxNode \
+       "$@" > >(tee -a "${LOG_DIR}/${LOG_NAME}.out") 2> >(tee -a "${LOG_DIR}/${LOG_NAME}.err" >&2)
 }
 
 load_tools() {
@@ -159,7 +134,6 @@ while test $# -ne 0; do
     max_node_gaia) max_node "gaia" "$@"; exit;;
     max_node_maxgraph) max_node "maxgraph" "$@"; exit;;
     maxgraph) maxgraph "$@"; exit;;
-    admin_tools) admin_tools "$@"; exit;;
     load_tools) load_tools "$@"; exit;;
     *)
       echo "unrecognized option or command '${arg}'"
