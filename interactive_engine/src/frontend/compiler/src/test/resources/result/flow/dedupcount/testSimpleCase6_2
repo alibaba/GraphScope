@@ -21,7 +21,7 @@ unary_op {
       value {
         int_value: 8
       }
-      type: VT_INTEGER
+      type: VT_INT
     }
     logical_compare {
       prop_id: 1
@@ -56,7 +56,7 @@ unary_op {
       value {
         int_value: 2
       }
-      type: VT_INTEGER
+      type: VT_INT
     }
   }
   input_operator_id: 3
@@ -120,7 +120,7 @@ unary_op {
       value {
         int_value: 2
       }
-      type: VT_INTEGER
+      type: VT_INT
     }
   }
   input_operator_id: 11

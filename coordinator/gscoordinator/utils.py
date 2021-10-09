@@ -28,7 +28,6 @@ import logging
 import numbers
 import os
 import pickle
-import random
 import shutil
 import socket
 import subprocess
@@ -119,19 +118,6 @@ if not os.path.isfile(INTERACTIVE_ENGINE_SCRIPT):
     INTERACTIVE_ENGINE_SCRIPT = os.path.join(
         GRAPHSCOPE_HOME, "interactive_engine", "bin", "giectl"
     )
-
-
-def is_port_in_use(host, port):
-    """Check whether a port is in use.
-
-    Args:
-        port (int): A port.
-
-    Returns:
-        bool: True if the port in use.
-    """
-    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-        return s.connect_ex((host, port)) == 0
 
 
 def get_timestamp():
