@@ -1,16 +1,18 @@
 #![allow(non_snake_case)]
+
 use std::os::raw::{c_char, c_void};
 use std::ffi::CStr;
 use std::str;
 use maxgraph_store::db::api::{GraphConfigBuilder, SnapshotId, GraphResult, GraphStorage, TypeDef, EdgeId, EdgeKind, DataLoadTarget};
 use maxgraph_store::db::api::PropertyMap;
-use maxgraph_store::db::proto::model::{OpTypePb, OperationBatchPb, OperationPb, DataOperationPb, VertexIdPb, LabelIdPb, EdgeIdPb, EdgeKindPb, TypeDefPb, DdlOperationPb, ConfigPb, CreateVertexTypePb, AddEdgeKindPb, PrepareDataLoadPb, CommitDataLoadPb, EdgeLocationPb};
+use maxgraph_store::db::proto::model::{OpTypePb, OperationBatchPb, OperationPb, DataOperationPb, VertexIdPb, LabelIdPb, EdgeIdPb, EdgeKindPb, TypeDefPb, DdlOperationPb, ConfigPb, CreateVertexTypePb, AddEdgeKindPb, EdgeLocationPb};
 use maxgraph_store::db::graph::store::GraphStore;
 use maxgraph_store::db::common::bytes::util::parse_pb;
 use std::sync::{Once, Arc};
 use crate::store::jna_response::JnaResponse;
 use maxgraph_store::v2::wrapper::graph_storage::GraphStorageWrapper;
 use maxgraph_store::v2::wrapper::wrapper_partition_graph::WrapperPartitionGraph;
+use maxgraph_store::db::proto::common::{CommitDataLoadPb, PrepareDataLoadPb};
 
 pub type GraphHandle = *const c_void;
 pub type PartitionGraphHandle = *const c_void;
@@ -80,11 +82,11 @@ pub extern fn getGraphDefBlob(ptr: GraphHandle) -> Box<JnaResponse> {
                     response.err_msg(&msg);
                 }
                 response
-            },
+            }
             Err(e) => {
                 let msg = format!("{:?}", e);
                 JnaResponse::new_error(&msg)
-            },
+            }
         }
     }
 }
@@ -93,16 +95,16 @@ pub extern fn getGraphDefBlob(ptr: GraphHandle) -> Box<JnaResponse> {
 pub extern fn ingestData(ptr: GraphHandle, path: *const c_char) -> Box<JnaResponse> {
     unsafe {
         let graph_store_ptr = &*(ptr as *const GraphStore);
-        let slice =  CStr::from_ptr(path).to_bytes();
+        let slice = CStr::from_ptr(path).to_bytes();
         let path_str = str::from_utf8(slice).unwrap();
         match graph_store_ptr.ingest(path_str) {
             Ok(_) => {
                 JnaResponse::new_success()
-            },
+            }
             Err(e) => {
                 let msg = format!("{:?}", e);
                 JnaResponse::new_error(&msg)
-            },
+            }
         }
     }
 }
@@ -117,7 +119,7 @@ pub extern fn writeBatch(ptr: GraphHandle, snapshot_id: i64, data: *const u8, le
                 let mut response = JnaResponse::new_success();
                 response.has_ddl(has_ddl);
                 response
-            },
+            }
             Err(e) => {
                 let err_msg = format!("{:?}", e);
                 JnaResponse::new_error(&err_msg)
@@ -136,7 +138,7 @@ fn do_write_batch<G: GraphStorage>(graph: &G, snapshot_id: SnapshotId, buf: &[u8
     }
     for op in operations {
         match op.get_opType() {
-            OpTypePb::MARKER => {},
+            OpTypePb::MARKER => {}
             // Data
             OpTypePb::OVERWRITE_VERTEX => overwrite_vertex(graph, snapshot_id, op)?,
             OpTypePb::UPDATE_VERTEX => update_vertex(graph, snapshot_id, op)?,
@@ -149,32 +151,32 @@ fn do_write_batch<G: GraphStorage>(graph: &G, snapshot_id: SnapshotId, buf: &[u8
                 if create_vertex_type(graph, snapshot_id, op)? {
                     has_ddl = true;
                 }
-            },
+            }
             OpTypePb::CREATE_EDGE_TYPE => {
                 if create_edge_type(graph, snapshot_id, op)? {
                     has_ddl = true;
                 }
-            },
+            }
             OpTypePb::ADD_EDGE_KIND => {
                 if add_edge_kind(graph, snapshot_id, op)? {
                     has_ddl = true;
                 }
-            },
+            }
             OpTypePb::DROP_VERTEX_TYPE => {
                 if drop_vertex_type(graph, snapshot_id, op)? {
                     has_ddl = true;
                 }
-            },
+            }
             OpTypePb::DROP_EDGE_TYPE => {
                 if drop_edge_type(graph, snapshot_id, op)? {
                     has_ddl = true;
                 }
-            },
+            }
             OpTypePb::REMOVE_EDGE_KIND => {
                 if remove_edge_kind(graph, snapshot_id, op)? {
                     has_ddl = true;
                 }
-            },
+            }
             OpTypePb::PREPARE_DATA_LOAD => {
                 if prepare_data_load(graph, snapshot_id, op)? {
                     has_ddl = true;
