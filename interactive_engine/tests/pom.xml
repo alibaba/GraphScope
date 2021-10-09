@@ -17,16 +17,6 @@
 
   <dependencies>
     <dependency>
-      <groupId>com.alibaba.maxgraph</groupId>
-      <artifactId>sdk</artifactId>
-      <version>${project.parent.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>com.alibaba.maxgraph</groupId>
-      <artifactId>maxgraph-compiler</artifactId>
-      <version>${project.parent.version}</version>
-    </dependency>
-    <dependency>
       <groupId>org.apache.logging.log4j</groupId>
       <artifactId>log4j-api</artifactId>
       <version>${log4j2.version}</version>
@@ -95,22 +85,22 @@
     </dependency>
   </dependencies>
 
-    <build>
-        <plugins>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-surefire-plugin</artifactId>
-                <version>${maven.surefire.version}</version>
-                <configuration>
-                    <systemPropertyVariables>
-                        <testng.dtd.http>true</testng.dtd.http>
-                    </systemPropertyVariables>
-                    <suiteXmlFiles>
-                        <suiteXmlFile>testng.xml</suiteXmlFile>
-                    </suiteXmlFiles>
-                </configuration>
-            </plugin>
-        </plugins>
-    </build>
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-surefire-plugin</artifactId>
+        <version>${maven.surefire.version}</version>
+        <configuration>
+          <systemPropertyVariables>
+            <testng.dtd.http>true</testng.dtd.http>
+          </systemPropertyVariables>
+          <suiteXmlFiles>
+            <suiteXmlFile>testng.xml</suiteXmlFile>
+          </suiteXmlFiles>
+        </configuration>
+      </plugin>
+    </plugins>
+  </build>
 
 </project>

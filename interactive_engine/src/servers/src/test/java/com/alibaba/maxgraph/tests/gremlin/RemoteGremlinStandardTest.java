@@ -11,7 +11,7 @@
  * express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.alibaba.maxgraph.function.test.gremlin;
+package com.alibaba.maxgraph.tests.gremlin;
 
 import org.apache.tinkerpop.gremlin.GraphProviderClass;
 import org.junit.runner.RunWith;

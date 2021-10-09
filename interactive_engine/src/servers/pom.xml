@@ -19,6 +19,11 @@
   <dependencies>
     <dependency>
       <groupId>com.alibaba.maxgraph</groupId>
+      <artifactId>sdk</artifactId>
+      <version>${project.parent.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>com.alibaba.maxgraph</groupId>
       <artifactId>maxgraph-frontendservice</artifactId>
       <version>${project.parent.version}</version>
       <exclusions>
