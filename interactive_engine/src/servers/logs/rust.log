@@ -1,0 +1,305 @@
+2021-10-11 15:59:59.958492000 INFO  (ffi/src/store/graph.rs:53) [unnamed] log4rs inited, config file: /Users/tianli/code/GraphScope/interactive_engine/src/servers/target/test-classes/log4rs.yml
+2021-10-11 16:00:00.597060000 INFO  (ffi/src/executor/pegasus/executor_server.rs:41) [unnamed] store config created StoreConfig { worker_id: 0, alive_id: 1313145512, worker_num: 1, zk_url: "", graph_name: "maxgraph", partition_num: 8, zk_timeout_ms: 6000, zk_auth_enable: false, zk_auth_user: "test", zk_auth_password: "test", hb_interval_ms: 5000, insert_thread_count: 1, download_thread_count: 4, hadoop_home: "./", local_data_root: "./", load_thread_count: 4, rpc_thread_count: 16, rpc_port: 0, graph_port: 0, query_port: 0, engine_port: 0, gaia_engine_port: 0, timely_worker_per_process: 2, monitor_interval_ms: 2000, total_memory_mb: 4096, hdfs_default_fs: "hdfs://", timely_prepare_dir: "prepare_query_info", replica_count: 1, realtime_write_buffer_size: 1024, realtime_write_ingest_count: 1, realtime_write_buffer_mb: 16, realtime_write_queue_count: 128, realtime_precommit_buffer_size: 8388608, instance_id: "INSTANCE_ID", engine_name: "timely", pegasus_thread_pool_size: 24, graph_type: "vineyard", vineyard_graph_id: 0, lambda_enabled: false }
+2021-10-11 16:00:00.723486000 INFO  (ffi/src/executor/pegasus/executor_server.rs:106) [unnamed] async maxgraph service and control service bind to port: 60681
+2021-10-11 16:00:01.062830000 INFO  (ffi/src/executor/pegasus/executor_server.rs:156) [unnamed] engine server connect to ["127.0.0.1:60679"] success
+2021-10-11 16:15:18.050349000 INFO  (ffi/src/store/graph.rs:53) [unnamed] log4rs inited, config file: /Users/tianli/code/GraphScope/interactive_engine/src/servers/target/test-classes/log4rs.yml
+2021-10-11 16:15:32.741140000 INFO  (ffi/src/executor/pegasus/executor_server.rs:41) [unnamed] store config created StoreConfig { worker_id: 0, alive_id: 1313145512, worker_num: 1, zk_url: "", graph_name: "maxgraph", partition_num: 8, zk_timeout_ms: 6000, zk_auth_enable: false, zk_auth_user: "test", zk_auth_password: "test", hb_interval_ms: 5000, insert_thread_count: 1, download_thread_count: 4, hadoop_home: "./", local_data_root: "./", load_thread_count: 4, rpc_thread_count: 16, rpc_port: 0, graph_port: 0, query_port: 0, engine_port: 0, gaia_engine_port: 0, timely_worker_per_process: 2, monitor_interval_ms: 2000, total_memory_mb: 4096, hdfs_default_fs: "hdfs://", timely_prepare_dir: "prepare_query_info", replica_count: 1, realtime_write_buffer_size: 1024, realtime_write_ingest_count: 1, realtime_write_buffer_mb: 16, realtime_write_queue_count: 128, realtime_precommit_buffer_size: 8388608, instance_id: "INSTANCE_ID", engine_name: "timely", pegasus_thread_pool_size: 24, graph_type: "vineyard", vineyard_graph_id: 0, lambda_enabled: false }
+2021-10-11 16:15:32.858895000 INFO  (ffi/src/executor/pegasus/executor_server.rs:106) [unnamed] async maxgraph service and control service bind to port: 61481
+2021-10-11 16:15:33.161575000 INFO  (ffi/src/executor/pegasus/executor_server.rs:156) [unnamed] engine server connect to ["127.0.0.1:61479"] success
+2021-10-11 16:25:29.649908000 INFO  (ffi/src/store/graph.rs:53) [unnamed] log4rs inited, config file: /Users/tianli/code/GraphScope/interactive_engine/src/servers/target/test-classes/log4rs.yml
+2021-10-11 16:25:30.349344000 INFO  (ffi/src/executor/pegasus/executor_server.rs:41) [unnamed] store config created StoreConfig { worker_id: 0, alive_id: 1313145512, worker_num: 1, zk_url: "", graph_name: "maxgraph", partition_num: 8, zk_timeout_ms: 6000, zk_auth_enable: false, zk_auth_user: "test", zk_auth_password: "test", hb_interval_ms: 5000, insert_thread_count: 1, download_thread_count: 4, hadoop_home: "./", local_data_root: "./", load_thread_count: 4, rpc_thread_count: 16, rpc_port: 0, graph_port: 0, query_port: 0, engine_port: 0, gaia_engine_port: 0, timely_worker_per_process: 2, monitor_interval_ms: 2000, total_memory_mb: 4096, hdfs_default_fs: "hdfs://", timely_prepare_dir: "prepare_query_info", replica_count: 1, realtime_write_buffer_size: 1024, realtime_write_ingest_count: 1, realtime_write_buffer_mb: 16, realtime_write_queue_count: 128, realtime_precommit_buffer_size: 8388608, instance_id: "INSTANCE_ID", engine_name: "timely", pegasus_thread_pool_size: 24, graph_type: "vineyard", vineyard_graph_id: 0, lambda_enabled: false }
+2021-10-11 16:25:30.481429000 INFO  (ffi/src/executor/pegasus/executor_server.rs:106) [unnamed] async maxgraph service and control service bind to port: 62098
+2021-10-11 16:25:30.907788000 INFO  (ffi/src/executor/pegasus/executor_server.rs:156) [unnamed] engine server connect to ["127.0.0.1:62096"] success
+2021-10-11 16:25:43.056472000 INFO  (server/src/service/gremlin.rs:381) [grpc-poll-0] 1 Long(3)
+2021-10-11 16:25:43.056591000 INFO  (server/src/service/gremlin.rs:381) [grpc-poll-0] 3 String("java")
+2021-10-11 16:25:43.056682000 INFO  (server/src/service/gremlin.rs:381) [grpc-poll-0] 2 String("lop")
+2021-10-11 16:25:43.056790000 INFO  (server/src/service/gremlin.rs:381) [grpc-poll-0] 3 String("java")
+2021-10-11 16:25:43.056854000 INFO  (server/src/service/gremlin.rs:381) [grpc-poll-0] 1 Long(5)
+2021-10-11 16:25:43.056913000 INFO  (server/src/service/gremlin.rs:381) [grpc-poll-0] 2 String("ripple")
+2021-10-11 16:25:43.056985000 INFO  (server/src/service/gremlin.rs:381) [grpc-poll-0] 2 String("peter")
+2021-10-11 16:25:43.057048000 INFO  (server/src/service/gremlin.rs:381) [grpc-poll-0] 1 Long(6)
+2021-10-11 16:25:43.057106000 INFO  (server/src/service/gremlin.rs:381) [grpc-poll-0] 5 Int(35)
+2021-10-11 16:25:43.057175000 INFO  (server/src/service/gremlin.rs:381) [grpc-poll-0] 1 Long(2)
+2021-10-11 16:25:43.057234000 INFO  (server/src/service/gremlin.rs:381) [grpc-poll-0] 2 String("vadas")
+2021-10-11 16:25:43.057295000 INFO  (server/src/service/gremlin.rs:381) [grpc-poll-0] 5 Int(27)
+2021-10-11 16:25:43.057362000 INFO  (server/src/service/gremlin.rs:381) [grpc-poll-0] 2 String("josh")
+2021-10-11 16:25:43.057423000 INFO  (server/src/service/gremlin.rs:381) [grpc-poll-0] 5 Int(32)
+2021-10-11 16:25:43.057480000 INFO  (server/src/service/gremlin.rs:381) [grpc-poll-0] 1 Long(4)
+2021-10-11 16:25:43.057550000 INFO  (server/src/service/gremlin.rs:381) [grpc-poll-0] 5 Int(29)
+2021-10-11 16:25:43.057609000 INFO  (server/src/service/gremlin.rs:381) [grpc-poll-0] 1 Long(1)
+2021-10-11 16:25:43.057667000 INFO  (server/src/service/gremlin.rs:381) [grpc-poll-0] 2 String("marko")
+2021-10-11 16:25:44.227364000 INFO  (/Users/tianli/code/GraphScope/interactive_engine/src/common/rust/common/src/util/log.rs:149) [grpc-poll-0] 1633940744227maxgraphEXECUTOR0-682797039304584822EXECUTEEXECUTOR_RECEIVED
+2021-10-11 16:25:44.227572000 INFO  (runtime/src/rpc/rpc_pegasus/mod.rs:28) [grpc-poll-0] frontend query id: -682797039304584822, self query id: 682797039304584822
+2021-10-11 16:25:44.228067000 INFO  (runtime/src/rpc/rpc_pegasus/async_maxgraph_service.rs:211) [grpc-poll-0] worker 0 manager partition ids [0, 2, 6, 4]
+2021-10-11 16:25:44.229800000 INFO  (Pegasus/src/dataflow.rs:181) [grpc-poll-0] ============ Build Dataflow ==============
+2021-10-11 16:25:44.229892000 INFO  (Pegasus/src/dataflow.rs:182) [grpc-poll-0] Operators: 
+2021-10-11 16:25:44.229960000 INFO  (Pegasus/src/dataflow.rs:189) [grpc-poll-0] 	0	source
+2021-10-11 16:25:44.230014000 INFO  (Pegasus/src/dataflow.rs:189) [grpc-poll-0] 	1	lazy_unary_notify
+2021-10-11 16:25:44.230071000 INFO  (Pegasus/src/dataflow.rs:189) [grpc-poll-0] 	2	map
+2021-10-11 16:25:44.230122000 INFO  (Pegasus/src/dataflow.rs:189) [grpc-poll-0] 	3	sink
+2021-10-11 16:25:44.230184000 INFO  (Pegasus/src/dataflow.rs:203) [grpc-poll-0] Edges: 
+2021-10-11 16:25:44.230235000 INFO  (Pegasus/src/dataflow.rs:205) [grpc-poll-0] 	[1: (0.0) -> (1.0)](false)
+2021-10-11 16:25:44.230291000 INFO  (Pegasus/src/dataflow.rs:205) [grpc-poll-0] 	[2: (1.0) -> (2.0)](true)
+2021-10-11 16:25:44.230351000 INFO  (Pegasus/src/dataflow.rs:205) [grpc-poll-0] 	[3: (2.0) -> (3.0)](true)
+2021-10-11 16:25:44.230404000 INFO  (Pegasus/src/dataflow.rs:208) [grpc-poll-0] ==========================================
+2021-10-11 16:25:44.230598000 INFO  (runtime/src/rpc/rpc_pegasus/async_maxgraph_service.rs:211) [grpc-poll-0] worker 1 manager partition ids [7, 5, 3, 1]
+2021-10-11 16:25:44.266085000 INFO  (Pegasus/src/worker.rs:405) [pool-15] Worker[WorkerId(682797039304584822, 0)] task -682797039304584822 finish, running time 34.397 ms, total cost 38.154 ms.
+2021-10-11 16:25:44.266573000 INFO  (/Users/tianli/code/GraphScope/interactive_engine/src/common/rust/common/src/util/log.rs:144) [gremlin-grpc-pool-4] 1633940744266maxgraphEXECUTOR0-682797039304584822EXECUTEEXECUTOR_FINISH392193961true
+2021-10-11 16:25:44.286247000 INFO  (Pegasus/src/worker.rs:405) [pool-4] Worker[WorkerId(682797039304584822, 1)] task -682797039304584822 finish, running time 54.493 ms, total cost 55.659 ms.
+2021-10-11 16:25:44.301240000 INFO  (/Users/tianli/code/GraphScope/interactive_engine/src/common/rust/common/src/util/log.rs:149) [grpc-poll-0] 1633940744301maxgraphEXECUTOR08129556091685152100EXECUTEEXECUTOR_RECEIVED
+2021-10-11 16:25:44.301390000 INFO  (runtime/src/rpc/rpc_pegasus/mod.rs:28) [grpc-poll-0] frontend query id: 8129556091685152100, self query id: 8129556091685152100
+2021-10-11 16:25:44.301689000 INFO  (runtime/src/rpc/rpc_pegasus/async_maxgraph_service.rs:211) [grpc-poll-0] worker 0 manager partition ids [0, 2, 6, 4]
+2021-10-11 16:25:44.302888000 INFO  (Pegasus/src/dataflow.rs:181) [grpc-poll-0] ============ Build Dataflow ==============
+2021-10-11 16:25:44.302966000 INFO  (Pegasus/src/dataflow.rs:182) [grpc-poll-0] Operators: 
+2021-10-11 16:25:44.303021000 INFO  (Pegasus/src/dataflow.rs:189) [grpc-poll-0] 	0	source
+2021-10-11 16:25:44.303074000 INFO  (Pegasus/src/dataflow.rs:189) [grpc-poll-0] 	1	lazy_unary_notify
+2021-10-11 16:25:44.303126000 INFO  (Pegasus/src/dataflow.rs:189) [grpc-poll-0] 	2	map
+2021-10-11 16:25:44.303178000 INFO  (Pegasus/src/dataflow.rs:189) [grpc-poll-0] 	3	sink
+2021-10-11 16:25:44.303233000 INFO  (Pegasus/src/dataflow.rs:203) [grpc-poll-0] Edges: 
+2021-10-11 16:25:44.303286000 INFO  (Pegasus/src/dataflow.rs:205) [grpc-poll-0] 	[1: (0.0) -> (1.0)](true)
+2021-10-11 16:25:44.303340000 INFO  (Pegasus/src/dataflow.rs:205) [grpc-poll-0] 	[2: (1.0) -> (2.0)](true)
+2021-10-11 16:25:44.303395000 INFO  (Pegasus/src/dataflow.rs:205) [grpc-poll-0] 	[3: (2.0) -> (3.0)](true)
+2021-10-11 16:25:44.303447000 INFO  (Pegasus/src/dataflow.rs:208) [grpc-poll-0] ==========================================
+2021-10-11 16:25:44.303601000 INFO  (runtime/src/rpc/rpc_pegasus/async_maxgraph_service.rs:211) [grpc-poll-0] worker 1 manager partition ids [7, 5, 3, 1]
+2021-10-11 16:25:44.321410000 INFO  (Pegasus/src/worker.rs:405) [pool-8] Worker[WorkerId(8129556091685152100, 0)] task 8129556091685152100 finish, running time 16.585 ms, total cost 19.772 ms.
+2021-10-11 16:25:44.322660000 INFO  (/Users/tianli/code/GraphScope/interactive_engine/src/common/rust/common/src/util/log.rs:144) [gremlin-grpc-pool-10] 1633940744322maxgraphEXECUTOR08129556091685152100EXECUTEEXECUTOR_FINISH214296961true
+2021-10-11 16:25:44.340700000 INFO  (Pegasus/src/worker.rs:405) [pool-10] Worker[WorkerId(8129556091685152100, 1)] task 8129556091685152100 finish, running time 35.855 ms, total cost 37.125 ms.
+2021-10-11 16:25:44.372218000 INFO  (/Users/tianli/code/GraphScope/interactive_engine/src/common/rust/common/src/util/log.rs:149) [grpc-poll-0] 1633940744372maxgraphEXECUTOR0-7354538890577969178EXECUTEEXECUTOR_RECEIVED
+2021-10-11 16:25:44.372367000 INFO  (runtime/src/rpc/rpc_pegasus/mod.rs:28) [grpc-poll-0] frontend query id: -7354538890577969178, self query id: 7354538890577969178
+2021-10-11 16:25:44.372673000 INFO  (runtime/src/rpc/rpc_pegasus/async_maxgraph_service.rs:211) [grpc-poll-0] worker 0 manager partition ids [0, 2, 6, 4]
+2021-10-11 16:25:44.373978000 INFO  (Pegasus/src/dataflow.rs:181) [grpc-poll-0] ============ Build Dataflow ==============
+2021-10-11 16:25:44.374057000 INFO  (Pegasus/src/dataflow.rs:182) [grpc-poll-0] Operators: 
+2021-10-11 16:25:44.374111000 INFO  (Pegasus/src/dataflow.rs:189) [grpc-poll-0] 	0	source
+2021-10-11 16:25:44.374165000 INFO  (Pegasus/src/dataflow.rs:189) [grpc-poll-0] 	1	enter-2
+2021-10-11 16:25:44.374242000 INFO  (Pegasus/src/dataflow.rs:189) [grpc-poll-0] 	2	loop_ctrl_more
+2021-10-11 16:25:44.374296000 INFO  (Pegasus/src/dataflow.rs:189) [grpc-poll-0] 	3	lazy_unary_notify
+2021-10-11 16:25:44.374348000 INFO  (Pegasus/src/dataflow.rs:189) [grpc-poll-0] 	4	emit
+2021-10-11 16:25:44.374399000 INFO  (Pegasus/src/dataflow.rs:189) [grpc-poll-0] 	5	leave_merge
+2021-10-11 16:25:44.374451000 INFO  (Pegasus/src/dataflow.rs:189) [grpc-poll-0] 	6	leave-2
+2021-10-11 16:25:44.374503000 INFO  (Pegasus/src/dataflow.rs:189) [grpc-poll-0] 	7	lazy_unary_notify
+2021-10-11 16:25:44.374554000 INFO  (Pegasus/src/dataflow.rs:189) [grpc-poll-0] 	8	map
+2021-10-11 16:25:44.374606000 INFO  (Pegasus/src/dataflow.rs:189) [grpc-poll-0] 	9	sink
+2021-10-11 16:25:44.374661000 INFO  (Pegasus/src/dataflow.rs:203) [grpc-poll-0] Edges: 
+2021-10-11 16:25:44.374714000 INFO  (Pegasus/src/dataflow.rs:205) [grpc-poll-0] 	[1: (0.0) -> (1.0)](true)
+2021-10-11 16:25:44.374768000 INFO  (Pegasus/src/dataflow.rs:205) [grpc-poll-0] 	[2: (1.0) -> (2.0)](true)
+2021-10-11 16:25:44.374821000 INFO  (Pegasus/src/dataflow.rs:205) [grpc-poll-0] 	[3: (2.1) -> (3.0)](false)
+2021-10-11 16:25:44.374874000 INFO  (Pegasus/src/dataflow.rs:205) [grpc-poll-0] 	[4: (3.0) -> (4.0)](true)
+2021-10-11 16:25:44.374927000 INFO  (Pegasus/src/dataflow.rs:205) [grpc-poll-0] 	[5: (4.0) -> (2.1)](true)
+2021-10-11 16:25:44.374989000 INFO  (Pegasus/src/dataflow.rs:205) [grpc-poll-0] 	[6: (2.0) -> (5.0)](true)
+2021-10-11 16:25:44.375044000 INFO  (Pegasus/src/dataflow.rs:205) [grpc-poll-0] 	[7: (3.0) -> (5.0)](true)
+2021-10-11 16:25:44.375100000 INFO  (Pegasus/src/dataflow.rs:205) [grpc-poll-0] 	[8: (5.0) -> (6.0)](true)
+2021-10-11 16:25:44.375153000 INFO  (Pegasus/src/dataflow.rs:205) [grpc-poll-0] 	[9: (6.0) -> (7.0)](true)
+2021-10-11 16:25:44.375205000 INFO  (Pegasus/src/dataflow.rs:205) [grpc-poll-0] 	[10: (7.0) -> (8.0)](true)
+2021-10-11 16:25:44.375258000 INFO  (Pegasus/src/dataflow.rs:205) [grpc-poll-0] 	[11: (8.0) -> (9.0)](true)
+2021-10-11 16:25:44.375311000 INFO  (Pegasus/src/dataflow.rs:208) [grpc-poll-0] ==========================================
+2021-10-11 16:25:44.375527000 INFO  (runtime/src/rpc/rpc_pegasus/async_maxgraph_service.rs:211) [grpc-poll-0] worker 1 manager partition ids [7, 5, 3, 1]
+2021-10-11 16:25:44.482827000 INFO  (/Users/tianli/code/GraphScope/interactive_engine/src/common/rust/common/src/util/log.rs:144) [gremlin-grpc-pool-1] 1633940744482maxgraphEXECUTOR0-7354538890577969178EXECUTEEXECUTOR_FINISH1105953121true
+2021-10-11 16:25:44.498886000 INFO  (Pegasus/src/worker.rs:405) [pool-10] Worker[WorkerId(7354538890577969178, 0)] task -7354538890577969178 finish, running time 121.916 ms, total cost 126.263 ms.
+2021-10-11 16:25:44.499067000 INFO  (Pegasus/src/worker.rs:405) [pool-13] Worker[WorkerId(7354538890577969178, 1)] task -7354538890577969178 finish, running time 121.936 ms, total cost 123.404 ms.
+2021-10-11 16:25:44.500240000 INFO  (server/src/service/gremlin.rs:381) [grpc-poll-1] 5 Int(32)
+2021-10-11 16:25:44.500327000 INFO  (server/src/service/gremlin.rs:381) [grpc-poll-1] 2 String("josh")
+2021-10-11 16:25:44.500400000 INFO  (server/src/service/gremlin.rs:381) [grpc-poll-1] 1 Long(4)
+2021-10-11 16:25:44.504980000 INFO  (server/src/service/gremlin.rs:381) [grpc-poll-1] 3 String("java")
+2021-10-11 16:25:44.505117000 INFO  (server/src/service/gremlin.rs:381) [grpc-poll-1] 1 Long(5)
+2021-10-11 16:25:44.505184000 INFO  (server/src/service/gremlin.rs:381) [grpc-poll-1] 2 String("ripple")
+2021-10-11 16:25:44.510009000 INFO  (server/src/service/gremlin.rs:381) [grpc-poll-1] 2 String("lop")
+2021-10-11 16:25:44.510125000 INFO  (server/src/service/gremlin.rs:381) [grpc-poll-1] 3 String("java")
+2021-10-11 16:25:44.510186000 INFO  (server/src/service/gremlin.rs:381) [grpc-poll-1] 1 Long(3)
+2021-10-11 16:25:44.512853000 INFO  (server/src/service/gremlin.rs:381) [grpc-poll-1] 1 Long(6)
+2021-10-11 16:25:44.512973000 INFO  (server/src/service/gremlin.rs:381) [grpc-poll-1] 5 Int(35)
+2021-10-11 16:25:44.513033000 INFO  (server/src/service/gremlin.rs:381) [grpc-poll-1] 2 String("peter")
+2021-10-11 16:25:44.515544000 INFO  (server/src/service/gremlin.rs:381) [grpc-poll-1] 2 String("marko")
+2021-10-11 16:25:44.515661000 INFO  (server/src/service/gremlin.rs:381) [grpc-poll-1] 5 Int(29)
+2021-10-11 16:25:44.515721000 INFO  (server/src/service/gremlin.rs:381) [grpc-poll-1] 1 Long(1)
+2021-10-11 16:25:44.517998000 INFO  (server/src/service/gremlin.rs:381) [grpc-poll-1] 1 Long(2)
+2021-10-11 16:25:44.518119000 INFO  (server/src/service/gremlin.rs:381) [grpc-poll-1] 5 Int(27)
+2021-10-11 16:25:44.518187000 INFO  (server/src/service/gremlin.rs:381) [grpc-poll-1] 2 String("vadas")
+2021-10-11 16:25:48.126356000 INFO  (server/src/service/gremlin.rs:381) [grpc-poll-0] 12 Long(4)
+2021-10-11 16:25:48.126483000 INFO  (server/src/service/gremlin.rs:381) [grpc-poll-0] 16 Int(32)
+2021-10-11 16:25:48.126550000 INFO  (server/src/service/gremlin.rs:381) [grpc-poll-0] 13 String("josh")
+2021-10-11 16:25:48.126632000 INFO  (server/src/service/gremlin.rs:381) [grpc-poll-0] 12 Long(1)
+2021-10-11 16:25:48.126697000 INFO  (server/src/service/gremlin.rs:381) [grpc-poll-0] 16 Int(29)
+2021-10-11 16:25:48.126759000 INFO  (server/src/service/gremlin.rs:381) [grpc-poll-0] 13 String("marko")
+2021-10-11 16:25:48.126837000 INFO  (server/src/service/gremlin.rs:381) [grpc-poll-0] 16 Int(27)
+2021-10-11 16:25:48.126900000 INFO  (server/src/service/gremlin.rs:381) [grpc-poll-0] 13 String("vadas")
+2021-10-11 16:25:48.126965000 INFO  (server/src/service/gremlin.rs:381) [grpc-poll-0] 12 Long(2)
+2021-10-11 16:25:48.127039000 INFO  (server/src/service/gremlin.rs:381) [grpc-poll-0] 12 Long(3)
+2021-10-11 16:25:48.127103000 INFO  (server/src/service/gremlin.rs:381) [grpc-poll-0] 13 String("lop")
+2021-10-11 16:25:48.127168000 INFO  (server/src/service/gremlin.rs:381) [grpc-poll-0] 14 String("java")
+2021-10-11 16:25:48.127245000 INFO  (server/src/service/gremlin.rs:381) [grpc-poll-0] 12 Long(6)
+2021-10-11 16:25:48.127309000 INFO  (server/src/service/gremlin.rs:381) [grpc-poll-0] 16 Int(35)
+2021-10-11 16:25:48.127370000 INFO  (server/src/service/gremlin.rs:381) [grpc-poll-0] 13 String("peter")
+2021-10-11 16:25:48.127447000 INFO  (server/src/service/gremlin.rs:381) [grpc-poll-0] 12 Long(5)
+2021-10-11 16:25:48.127512000 INFO  (server/src/service/gremlin.rs:381) [grpc-poll-0] 14 String("java")
+2021-10-11 16:25:48.127577000 INFO  (server/src/service/gremlin.rs:381) [grpc-poll-0] 13 String("ripple")
+2021-10-11 16:25:49.140880000 INFO  (/Users/tianli/code/GraphScope/interactive_engine/src/common/rust/common/src/util/log.rs:149) [grpc-poll-0] 1633940749140maxgraphEXECUTOR0-123959100004137650EXECUTEEXECUTOR_RECEIVED
+2021-10-11 16:25:49.141038000 INFO  (runtime/src/rpc/rpc_pegasus/mod.rs:28) [grpc-poll-0] frontend query id: -123959100004137650, self query id: 123959100004137650
+2021-10-11 16:25:49.141344000 INFO  (runtime/src/rpc/rpc_pegasus/async_maxgraph_service.rs:211) [grpc-poll-0] worker 0 manager partition ids [0, 2, 6, 4]
+2021-10-11 16:25:49.142318000 INFO  (Pegasus/src/dataflow.rs:181) [grpc-poll-0] ============ Build Dataflow ==============
+2021-10-11 16:25:49.142398000 INFO  (Pegasus/src/dataflow.rs:182) [grpc-poll-0] Operators: 
+2021-10-11 16:25:49.142454000 INFO  (Pegasus/src/dataflow.rs:189) [grpc-poll-0] 	0	source
+2021-10-11 16:25:49.142507000 INFO  (Pegasus/src/dataflow.rs:189) [grpc-poll-0] 	1	lazy_unary_notify
+2021-10-11 16:25:49.142560000 INFO  (Pegasus/src/dataflow.rs:189) [grpc-poll-0] 	2	map
+2021-10-11 16:25:49.142612000 INFO  (Pegasus/src/dataflow.rs:189) [grpc-poll-0] 	3	sink
+2021-10-11 16:25:49.142668000 INFO  (Pegasus/src/dataflow.rs:203) [grpc-poll-0] Edges: 
+2021-10-11 16:25:49.142721000 INFO  (Pegasus/src/dataflow.rs:205) [grpc-poll-0] 	[1: (0.0) -> (1.0)](false)
+2021-10-11 16:25:49.142776000 INFO  (Pegasus/src/dataflow.rs:205) [grpc-poll-0] 	[2: (1.0) -> (2.0)](true)
+2021-10-11 16:25:49.142829000 INFO  (Pegasus/src/dataflow.rs:205) [grpc-poll-0] 	[3: (2.0) -> (3.0)](true)
+2021-10-11 16:25:49.142882000 INFO  (Pegasus/src/dataflow.rs:208) [grpc-poll-0] ==========================================
+2021-10-11 16:25:49.143069000 INFO  (runtime/src/rpc/rpc_pegasus/async_maxgraph_service.rs:211) [grpc-poll-0] worker 1 manager partition ids [7, 5, 3, 1]
+2021-10-11 16:25:49.182753000 INFO  (Pegasus/src/worker.rs:405) [pool-9] Worker[WorkerId(123959100004137650, 1)] task -123959100004137650 finish, running time 38.565 ms, total cost 39.717 ms.
+2021-10-11 16:25:49.183333000 INFO  (/Users/tianli/code/GraphScope/interactive_engine/src/common/rust/common/src/util/log.rs:144) [gremlin-grpc-pool-7] 1633940749183maxgraphEXECUTOR0-123959100004137650EXECUTEEXECUTOR_FINISH424560951true
+2021-10-11 16:25:49.199166000 INFO  (Pegasus/src/worker.rs:405) [pool-16] Worker[WorkerId(123959100004137650, 0)] task -123959100004137650 finish, running time 54.947 ms, total cost 57.854 ms.
+2021-10-11 16:25:49.208001000 INFO  (/Users/tianli/code/GraphScope/interactive_engine/src/common/rust/common/src/util/log.rs:149) [grpc-poll-0] 1633940749207maxgraphEXECUTOR0-9070974952255571286EXECUTEEXECUTOR_RECEIVED
+2021-10-11 16:25:49.208148000 INFO  (runtime/src/rpc/rpc_pegasus/mod.rs:28) [grpc-poll-0] frontend query id: -9070974952255571286, self query id: 9070974952255571286
+2021-10-11 16:25:49.208461000 INFO  (runtime/src/rpc/rpc_pegasus/async_maxgraph_service.rs:211) [grpc-poll-0] worker 0 manager partition ids [0, 2, 6, 4]
+2021-10-11 16:25:49.209771000 INFO  (Pegasus/src/dataflow.rs:181) [grpc-poll-0] ============ Build Dataflow ==============
+2021-10-11 16:25:49.209855000 INFO  (Pegasus/src/dataflow.rs:182) [grpc-poll-0] Operators: 
+2021-10-11 16:25:49.209910000 INFO  (Pegasus/src/dataflow.rs:189) [grpc-poll-0] 	0	source
+2021-10-11 16:25:49.209962000 INFO  (Pegasus/src/dataflow.rs:189) [grpc-poll-0] 	1	lazy_unary_notify
+2021-10-11 16:25:49.210013000 INFO  (Pegasus/src/dataflow.rs:189) [grpc-poll-0] 	2	map
+2021-10-11 16:25:49.210063000 INFO  (Pegasus/src/dataflow.rs:189) [grpc-poll-0] 	3	sink
+2021-10-11 16:25:49.210116000 INFO  (Pegasus/src/dataflow.rs:203) [grpc-poll-0] Edges: 
+2021-10-11 16:25:49.210167000 INFO  (Pegasus/src/dataflow.rs:205) [grpc-poll-0] 	[1: (0.0) -> (1.0)](true)
+2021-10-11 16:25:49.210219000 INFO  (Pegasus/src/dataflow.rs:205) [grpc-poll-0] 	[2: (1.0) -> (2.0)](true)
+2021-10-11 16:25:49.210271000 INFO  (Pegasus/src/dataflow.rs:205) [grpc-poll-0] 	[3: (2.0) -> (3.0)](true)
+2021-10-11 16:25:49.210321000 INFO  (Pegasus/src/dataflow.rs:208) [grpc-poll-0] ==========================================
+2021-10-11 16:25:49.210487000 INFO  (runtime/src/rpc/rpc_pegasus/async_maxgraph_service.rs:211) [grpc-poll-0] worker 1 manager partition ids [7, 5, 3, 1]
+2021-10-11 16:25:49.232474000 INFO  (/Users/tianli/code/GraphScope/interactive_engine/src/common/rust/common/src/util/log.rs:144) [gremlin-grpc-pool-13] 1633940749232maxgraphEXECUTOR0-9070974952255571286EXECUTEEXECUTOR_FINISH244585111true
+2021-10-11 16:25:49.249042000 INFO  (Pegasus/src/worker.rs:405) [pool-3] Worker[WorkerId(9070974952255571286, 1)] task -9070974952255571286 finish, running time 37.203 ms, total cost 38.583 ms.
+2021-10-11 16:25:49.249209000 INFO  (Pegasus/src/worker.rs:405) [pool-19] Worker[WorkerId(9070974952255571286, 0)] task -9070974952255571286 finish, running time 37.203 ms, total cost 40.629 ms.
+2021-10-11 16:25:49.270641000 INFO  (/Users/tianli/code/GraphScope/interactive_engine/src/common/rust/common/src/util/log.rs:149) [grpc-poll-0] 1633940749270maxgraphEXECUTOR01926044708157029303EXECUTEEXECUTOR_RECEIVED
+2021-10-11 16:25:49.270810000 INFO  (runtime/src/rpc/rpc_pegasus/mod.rs:28) [grpc-poll-0] frontend query id: 1926044708157029303, self query id: 1926044708157029303
+2021-10-11 16:25:49.271140000 INFO  (runtime/src/rpc/rpc_pegasus/async_maxgraph_service.rs:211) [grpc-poll-0] worker 0 manager partition ids [0, 2, 6, 4]
+2021-10-11 16:25:49.272714000 INFO  (Pegasus/src/dataflow.rs:181) [grpc-poll-0] ============ Build Dataflow ==============
+2021-10-11 16:25:49.272867000 INFO  (Pegasus/src/dataflow.rs:182) [grpc-poll-0] Operators: 
+2021-10-11 16:25:49.272954000 INFO  (Pegasus/src/dataflow.rs:189) [grpc-poll-0] 	0	source
+2021-10-11 16:25:49.273036000 INFO  (Pegasus/src/dataflow.rs:189) [grpc-poll-0] 	1	enter-2
+2021-10-11 16:25:49.273093000 INFO  (Pegasus/src/dataflow.rs:189) [grpc-poll-0] 	2	loop_ctrl_more
+2021-10-11 16:25:49.273146000 INFO  (Pegasus/src/dataflow.rs:189) [grpc-poll-0] 	3	lazy_unary_notify
+2021-10-11 16:25:49.273199000 INFO  (Pegasus/src/dataflow.rs:189) [grpc-poll-0] 	4	emit
+2021-10-11 16:25:49.273252000 INFO  (Pegasus/src/dataflow.rs:189) [grpc-poll-0] 	5	leave_merge
+2021-10-11 16:25:49.273312000 INFO  (Pegasus/src/dataflow.rs:189) [grpc-poll-0] 	6	leave-2
+2021-10-11 16:25:49.273372000 INFO  (Pegasus/src/dataflow.rs:189) [grpc-poll-0] 	7	binary
+2021-10-11 16:25:49.273429000 INFO  (Pegasus/src/dataflow.rs:189) [grpc-poll-0] 	8	lazy_unary_notify
+2021-10-11 16:25:49.273481000 INFO  (Pegasus/src/dataflow.rs:189) [grpc-poll-0] 	9	map
+2021-10-11 16:25:49.273534000 INFO  (Pegasus/src/dataflow.rs:189) [grpc-poll-0] 	10	sink
+2021-10-11 16:25:49.273592000 INFO  (Pegasus/src/dataflow.rs:203) [grpc-poll-0] Edges: 
+2021-10-11 16:25:49.273647000 INFO  (Pegasus/src/dataflow.rs:205) [grpc-poll-0] 	[1: (0.0) -> (1.0)](true)
+2021-10-11 16:25:49.273702000 INFO  (Pegasus/src/dataflow.rs:205) [grpc-poll-0] 	[2: (1.0) -> (2.0)](true)
+2021-10-11 16:25:49.273757000 INFO  (Pegasus/src/dataflow.rs:205) [grpc-poll-0] 	[3: (2.1) -> (3.0)](false)
+2021-10-11 16:25:49.273810000 INFO  (Pegasus/src/dataflow.rs:205) [grpc-poll-0] 	[4: (3.0) -> (4.0)](true)
+2021-10-11 16:25:49.273864000 INFO  (Pegasus/src/dataflow.rs:205) [grpc-poll-0] 	[5: (4.0) -> (2.1)](true)
+2021-10-11 16:25:49.273918000 INFO  (Pegasus/src/dataflow.rs:205) [grpc-poll-0] 	[6: (2.0) -> (5.0)](true)
+2021-10-11 16:25:49.273972000 INFO  (Pegasus/src/dataflow.rs:205) [grpc-poll-0] 	[7: (3.0) -> (5.0)](true)
+2021-10-11 16:25:49.274026000 INFO  (Pegasus/src/dataflow.rs:205) [grpc-poll-0] 	[8: (5.0) -> (6.0)](true)
+2021-10-11 16:25:49.274079000 INFO  (Pegasus/src/dataflow.rs:205) [grpc-poll-0] 	[9: (0.0) -> (7.0)](true)
+2021-10-11 16:25:49.274134000 INFO  (Pegasus/src/dataflow.rs:205) [grpc-poll-0] 	[10: (6.0) -> (7.0)](true)
+2021-10-11 16:25:49.274187000 INFO  (Pegasus/src/dataflow.rs:205) [grpc-poll-0] 	[11: (7.0) -> (8.0)](true)
+2021-10-11 16:25:49.274241000 INFO  (Pegasus/src/dataflow.rs:205) [grpc-poll-0] 	[12: (8.0) -> (9.0)](true)
+2021-10-11 16:25:49.274295000 INFO  (Pegasus/src/dataflow.rs:205) [grpc-poll-0] 	[13: (9.0) -> (10.0)](true)
+2021-10-11 16:25:49.274349000 INFO  (Pegasus/src/dataflow.rs:208) [grpc-poll-0] ==========================================
+2021-10-11 16:25:49.274616000 INFO  (runtime/src/rpc/rpc_pegasus/async_maxgraph_service.rs:211) [grpc-poll-0] worker 1 manager partition ids [7, 5, 3, 1]
+2021-10-11 16:25:49.387237000 INFO  (/Users/tianli/code/GraphScope/interactive_engine/src/common/rust/common/src/util/log.rs:144) [gremlin-grpc-pool-7] 1633940749387maxgraphEXECUTOR01926044708157029303EXECUTEEXECUTOR_FINISH1165982541true
+2021-10-11 16:25:49.388948000 INFO  (server/src/service/gremlin.rs:381) [grpc-poll-1] 14 String("java")
+2021-10-11 16:25:49.389049000 INFO  (server/src/service/gremlin.rs:381) [grpc-poll-1] 12 Long(5)
+2021-10-11 16:25:49.389099000 INFO  (server/src/service/gremlin.rs:381) [grpc-poll-1] 13 String("ripple")
+2021-10-11 16:25:49.391273000 INFO  (server/src/service/gremlin.rs:381) [grpc-poll-1] 12 Long(4)
+2021-10-11 16:25:49.391352000 INFO  (server/src/service/gremlin.rs:381) [grpc-poll-1] 16 Int(32)
+2021-10-11 16:25:49.391402000 INFO  (server/src/service/gremlin.rs:381) [grpc-poll-1] 13 String("josh")
+2021-10-11 16:25:49.393467000 INFO  (server/src/service/gremlin.rs:381) [grpc-poll-1] 13 String("vadas")
+2021-10-11 16:25:49.393552000 INFO  (server/src/service/gremlin.rs:381) [grpc-poll-1] 12 Long(2)
+2021-10-11 16:25:49.393614000 INFO  (server/src/service/gremlin.rs:381) [grpc-poll-1] 16 Int(27)
+2021-10-11 16:25:49.395715000 INFO  (server/src/service/gremlin.rs:381) [grpc-poll-1] 13 String("lop")
+2021-10-11 16:25:49.395803000 INFO  (server/src/service/gremlin.rs:381) [grpc-poll-1] 12 Long(3)
+2021-10-11 16:25:49.395861000 INFO  (server/src/service/gremlin.rs:381) [grpc-poll-1] 14 String("java")
+2021-10-11 16:25:49.398096000 INFO  (server/src/service/gremlin.rs:381) [grpc-poll-1] 12 Long(6)
+2021-10-11 16:25:49.398184000 INFO  (server/src/service/gremlin.rs:381) [grpc-poll-1] 13 String("peter")
+2021-10-11 16:25:49.398245000 INFO  (server/src/service/gremlin.rs:381) [grpc-poll-1] 16 Int(35)
+2021-10-11 16:25:49.400696000 INFO  (server/src/service/gremlin.rs:381) [grpc-poll-1] 16 Int(29)
+2021-10-11 16:25:49.400815000 INFO  (server/src/service/gremlin.rs:381) [grpc-poll-1] 12 Long(1)
+2021-10-11 16:25:49.400875000 INFO  (server/src/service/gremlin.rs:381) [grpc-poll-1] 13 String("marko")
+2021-10-11 16:25:49.406913000 INFO  (Pegasus/src/worker.rs:405) [pool-19] Worker[WorkerId(1926044708157029303, 0)] task 1926044708157029303 finish, running time 130.456 ms, total cost 135.827 ms.
+2021-10-11 16:25:49.407059000 INFO  (Pegasus/src/worker.rs:405) [pool-3] Worker[WorkerId(1926044708157029303, 1)] task 1926044708157029303 finish, running time 130.465 ms, total cost 132.364 ms.
+2021-10-11 16:25:53.235116000 INFO  (server/src/service/gremlin.rs:381) [grpc-poll-0] 23 Long(3)
+2021-10-11 16:25:53.235243000 INFO  (server/src/service/gremlin.rs:381) [grpc-poll-0] 24 String("lop")
+2021-10-11 16:25:53.235323000 INFO  (server/src/service/gremlin.rs:381) [grpc-poll-0] 25 String("java")
+2021-10-11 16:25:53.235401000 INFO  (server/src/service/gremlin.rs:381) [grpc-poll-0] 24 String("vadas")
+2021-10-11 16:25:53.235467000 INFO  (server/src/service/gremlin.rs:381) [grpc-poll-0] 23 Long(2)
+2021-10-11 16:25:53.235527000 INFO  (server/src/service/gremlin.rs:381) [grpc-poll-0] 27 Int(27)
+2021-10-11 16:25:53.235597000 INFO  (server/src/service/gremlin.rs:381) [grpc-poll-0] 24 String("peter")
+2021-10-11 16:25:53.235661000 INFO  (server/src/service/gremlin.rs:381) [grpc-poll-0] 23 Long(6)
+2021-10-11 16:25:53.235721000 INFO  (server/src/service/gremlin.rs:381) [grpc-poll-0] 27 Int(35)
+2021-10-11 16:25:53.235790000 INFO  (server/src/service/gremlin.rs:381) [grpc-poll-0] 27 Int(29)
+2021-10-11 16:25:53.235850000 INFO  (server/src/service/gremlin.rs:381) [grpc-poll-0] 24 String("marko")
+2021-10-11 16:25:53.235912000 INFO  (server/src/service/gremlin.rs:381) [grpc-poll-0] 23 Long(1)
+2021-10-11 16:25:53.235983000 INFO  (server/src/service/gremlin.rs:381) [grpc-poll-0] 23 Long(4)
+2021-10-11 16:25:53.236043000 INFO  (server/src/service/gremlin.rs:381) [grpc-poll-0] 27 Int(32)
+2021-10-11 16:25:53.236102000 INFO  (server/src/service/gremlin.rs:381) [grpc-poll-0] 24 String("josh")
+2021-10-11 16:25:53.236173000 INFO  (server/src/service/gremlin.rs:381) [grpc-poll-0] 23 Long(5)
+2021-10-11 16:25:53.236235000 INFO  (server/src/service/gremlin.rs:381) [grpc-poll-0] 24 String("ripple")
+2021-10-11 16:25:53.236297000 INFO  (server/src/service/gremlin.rs:381) [grpc-poll-0] 25 String("java")
+2021-10-11 16:25:54.286444000 INFO  (/Users/tianli/code/GraphScope/interactive_engine/src/common/rust/common/src/util/log.rs:149) [grpc-poll-0] 1633940754286maxgraphEXECUTOR0-3875108228660034798EXECUTEEXECUTOR_RECEIVED
+2021-10-11 16:25:54.286593000 INFO  (runtime/src/rpc/rpc_pegasus/mod.rs:28) [grpc-poll-0] frontend query id: -3875108228660034798, self query id: 3875108228660034798
+2021-10-11 16:25:54.286907000 INFO  (runtime/src/rpc/rpc_pegasus/async_maxgraph_service.rs:211) [grpc-poll-0] worker 0 manager partition ids [0, 2, 6, 4]
+2021-10-11 16:25:54.287914000 INFO  (Pegasus/src/dataflow.rs:181) [grpc-poll-0] ============ Build Dataflow ==============
+2021-10-11 16:25:54.287983000 INFO  (Pegasus/src/dataflow.rs:182) [grpc-poll-0] Operators: 
+2021-10-11 16:25:54.288038000 INFO  (Pegasus/src/dataflow.rs:189) [grpc-poll-0] 	0	source
+2021-10-11 16:25:54.288093000 INFO  (Pegasus/src/dataflow.rs:189) [grpc-poll-0] 	1	lazy_unary_notify
+2021-10-11 16:25:54.288147000 INFO  (Pegasus/src/dataflow.rs:189) [grpc-poll-0] 	2	map
+2021-10-11 16:25:54.288200000 INFO  (Pegasus/src/dataflow.rs:189) [grpc-poll-0] 	3	sink
+2021-10-11 16:25:54.288256000 INFO  (Pegasus/src/dataflow.rs:203) [grpc-poll-0] Edges: 
+2021-10-11 16:25:54.288309000 INFO  (Pegasus/src/dataflow.rs:205) [grpc-poll-0] 	[1: (0.0) -> (1.0)](false)
+2021-10-11 16:25:54.288384000 INFO  (Pegasus/src/dataflow.rs:205) [grpc-poll-0] 	[2: (1.0) -> (2.0)](true)
+2021-10-11 16:25:54.288440000 INFO  (Pegasus/src/dataflow.rs:205) [grpc-poll-0] 	[3: (2.0) -> (3.0)](true)
+2021-10-11 16:25:54.288494000 INFO  (Pegasus/src/dataflow.rs:208) [grpc-poll-0] ==========================================
+2021-10-11 16:25:54.288650000 INFO  (runtime/src/rpc/rpc_pegasus/async_maxgraph_service.rs:211) [grpc-poll-0] worker 1 manager partition ids [7, 5, 3, 1]
+2021-10-11 16:25:54.310180000 INFO  (/Users/tianli/code/GraphScope/interactive_engine/src/common/rust/common/src/util/log.rs:144) [gremlin-grpc-pool-14] 1633940754310maxgraphEXECUTOR0-3875108228660034798EXECUTEEXECUTOR_FINISH237298561true
+2021-10-11 16:25:54.326513000 INFO  (Pegasus/src/worker.rs:405) [pool-14] Worker[WorkerId(3875108228660034798, 1)] task -3875108228660034798 finish, running time 36.81 ms, total cost 37.88 ms.
+2021-10-11 16:25:54.326649000 INFO  (Pegasus/src/worker.rs:405) [pool-20] Worker[WorkerId(3875108228660034798, 0)] task -3875108228660034798 finish, running time 36.859 ms, total cost 39.65 ms.
+2021-10-11 16:25:54.332470000 INFO  (/Users/tianli/code/GraphScope/interactive_engine/src/common/rust/common/src/util/log.rs:149) [grpc-poll-0] 1633940754332maxgraphEXECUTOR01508844002388107082EXECUTEEXECUTOR_RECEIVED
+2021-10-11 16:25:54.332620000 INFO  (runtime/src/rpc/rpc_pegasus/mod.rs:28) [grpc-poll-0] frontend query id: 1508844002388107082, self query id: 1508844002388107082
+2021-10-11 16:25:54.332916000 INFO  (runtime/src/rpc/rpc_pegasus/async_maxgraph_service.rs:211) [grpc-poll-0] worker 0 manager partition ids [0, 2, 6, 4]
+2021-10-11 16:25:54.334164000 INFO  (Pegasus/src/dataflow.rs:181) [grpc-poll-0] ============ Build Dataflow ==============
+2021-10-11 16:25:54.334250000 INFO  (Pegasus/src/dataflow.rs:182) [grpc-poll-0] Operators: 
+2021-10-11 16:25:54.334306000 INFO  (Pegasus/src/dataflow.rs:189) [grpc-poll-0] 	0	source
+2021-10-11 16:25:54.334360000 INFO  (Pegasus/src/dataflow.rs:189) [grpc-poll-0] 	1	lazy_unary_notify
+2021-10-11 16:25:54.334412000 INFO  (Pegasus/src/dataflow.rs:189) [grpc-poll-0] 	2	map
+2021-10-11 16:25:54.334464000 INFO  (Pegasus/src/dataflow.rs:189) [grpc-poll-0] 	3	sink
+2021-10-11 16:25:54.334598000 INFO  (Pegasus/src/dataflow.rs:203) [grpc-poll-0] Edges: 
+2021-10-11 16:25:54.334656000 INFO  (Pegasus/src/dataflow.rs:205) [grpc-poll-0] 	[1: (0.0) -> (1.0)](true)
+2021-10-11 16:25:54.334713000 INFO  (Pegasus/src/dataflow.rs:205) [grpc-poll-0] 	[2: (1.0) -> (2.0)](true)
+2021-10-11 16:25:54.334768000 INFO  (Pegasus/src/dataflow.rs:205) [grpc-poll-0] 	[3: (2.0) -> (3.0)](true)
+2021-10-11 16:25:54.334822000 INFO  (Pegasus/src/dataflow.rs:208) [grpc-poll-0] ==========================================
+2021-10-11 16:25:54.334997000 INFO  (runtime/src/rpc/rpc_pegasus/async_maxgraph_service.rs:211) [grpc-poll-0] worker 1 manager partition ids [7, 5, 3, 1]
+2021-10-11 16:25:54.352891000 INFO  (Pegasus/src/worker.rs:405) [pool-18] Worker[WorkerId(1508844002388107082, 1)] task 1508844002388107082 finish, running time 16.439 ms, total cost 17.935 ms.
+2021-10-11 16:25:54.354388000 INFO  (/Users/tianli/code/GraphScope/interactive_engine/src/common/rust/common/src/util/log.rs:144) [gremlin-grpc-pool-5] 1633940754354maxgraphEXECUTOR01508844002388107082EXECUTEEXECUTOR_FINISH219251261true
+2021-10-11 16:25:54.374213000 INFO  (Pegasus/src/worker.rs:405) [pool-16] Worker[WorkerId(1508844002388107082, 0)] task 1508844002388107082 finish, running time 37.769 ms, total cost 41.344 ms.
+2021-10-11 16:25:54.385781000 INFO  (/Users/tianli/code/GraphScope/interactive_engine/src/common/rust/common/src/util/log.rs:149) [grpc-poll-0] 1633940754385maxgraphEXECUTOR02487841393494532529EXECUTEEXECUTOR_RECEIVED
+2021-10-11 16:25:54.385923000 INFO  (runtime/src/rpc/rpc_pegasus/mod.rs:28) [grpc-poll-0] frontend query id: 2487841393494532529, self query id: 2487841393494532529
+2021-10-11 16:25:54.386219000 INFO  (runtime/src/rpc/rpc_pegasus/async_maxgraph_service.rs:211) [grpc-poll-0] worker 0 manager partition ids [0, 2, 6, 4]
+2021-10-11 16:25:54.387255000 INFO  (Pegasus/src/dataflow.rs:181) [grpc-poll-0] ============ Build Dataflow ==============
+2021-10-11 16:25:54.387318000 INFO  (Pegasus/src/dataflow.rs:182) [grpc-poll-0] Operators: 
+2021-10-11 16:25:54.387368000 INFO  (Pegasus/src/dataflow.rs:189) [grpc-poll-0] 	0	source
+2021-10-11 16:25:54.387416000 INFO  (Pegasus/src/dataflow.rs:189) [grpc-poll-0] 	1	lazy_unary_notify
+2021-10-11 16:25:54.387464000 INFO  (Pegasus/src/dataflow.rs:189) [grpc-poll-0] 	2	lazy_unary_notify
+2021-10-11 16:25:54.387511000 INFO  (Pegasus/src/dataflow.rs:189) [grpc-poll-0] 	3	lazy_unary_notify
+2021-10-11 16:25:54.387558000 INFO  (Pegasus/src/dataflow.rs:189) [grpc-poll-0] 	4	map
+2021-10-11 16:25:54.387605000 INFO  (Pegasus/src/dataflow.rs:189) [grpc-poll-0] 	5	sink
+2021-10-11 16:25:54.387655000 INFO  (Pegasus/src/dataflow.rs:203) [grpc-poll-0] Edges: 
+2021-10-11 16:25:54.387702000 INFO  (Pegasus/src/dataflow.rs:205) [grpc-poll-0] 	[1: (0.0) -> (1.0)](true)
+2021-10-11 16:25:54.387752000 INFO  (Pegasus/src/dataflow.rs:205) [grpc-poll-0] 	[2: (1.0) -> (2.0)](false)
+2021-10-11 16:25:54.387800000 INFO  (Pegasus/src/dataflow.rs:205) [grpc-poll-0] 	[3: (2.0) -> (3.0)](true)
+2021-10-11 16:25:54.387848000 INFO  (Pegasus/src/dataflow.rs:205) [grpc-poll-0] 	[4: (3.0) -> (4.0)](true)
+2021-10-11 16:25:54.387896000 INFO  (Pegasus/src/dataflow.rs:205) [grpc-poll-0] 	[5: (4.0) -> (5.0)](true)
+2021-10-11 16:25:54.387945000 INFO  (Pegasus/src/dataflow.rs:208) [grpc-poll-0] ==========================================
+2021-10-11 16:25:54.388113000 INFO  (runtime/src/rpc/rpc_pegasus/async_maxgraph_service.rs:211) [grpc-poll-0] worker 1 manager partition ids [7, 5, 3, 1]
+2021-10-11 16:25:54.443714000 INFO  (/Users/tianli/code/GraphScope/interactive_engine/src/common/rust/common/src/util/log.rs:144) [gremlin-grpc-pool-8] 1633940754443maxgraphEXECUTOR02487841393494532529EXECUTEEXECUTOR_FINISH579270271true
+2021-10-11 16:25:54.446469000 INFO  (server/src/service/gremlin.rs:381) [grpc-poll-1] 24 String("ripple")
+2021-10-11 16:25:54.446561000 INFO  (server/src/service/gremlin.rs:381) [grpc-poll-1] 23 Long(5)
+2021-10-11 16:25:54.446609000 INFO  (server/src/service/gremlin.rs:381) [grpc-poll-1] 25 String("java")
+2021-10-11 16:25:54.446668000 INFO  (server/src/service/gremlin.rs:381) [grpc-poll-1] 23 Long(3)
+2021-10-11 16:25:54.446714000 INFO  (server/src/service/gremlin.rs:381) [grpc-poll-1] 25 String("java")
+2021-10-11 16:25:54.446767000 INFO  (server/src/service/gremlin.rs:381) [grpc-poll-1] 24 String("lop")
+2021-10-11 16:25:54.459691000 INFO  (Pegasus/src/worker.rs:405) [pool-11] Worker[WorkerId(2487841393494532529, 1)] task 2487841393494532529 finish, running time 70.461 ms, total cost 71.613 ms.
+2021-10-11 16:25:54.460870000 INFO  (Pegasus/src/worker.rs:405) [pool-0] Worker[WorkerId(2487841393494532529, 0)] task 2487841393494532529 finish, running time 71.675 ms, total cost 74.71 ms.
