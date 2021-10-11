@@ -29,12 +29,17 @@ message Project {
     common.SuffixExpr expr = 1;
     // The name/name identifier of the aliased attribute
     common.NameOrId alias = 2;
+    // An alias may be given by the query or by the compiler/optimizer for functional/optimization purpose.
+    // This indicator is used to differentiate the two cases.
+    bool is_query_given = 3;
   }
   // A list of [expression -> alias] to be projected from the graph relation.
   // e.g., project_{a.birthday / 100 % 100 as birth_month }
-  repeated ExprAlias attributes = 1;
+  repeated ExprAlias mappings = 1;
+  // An indicator to tell the runtime whether the projected value is appending to or replacing
+  // existing relation.
+  bool is_append = 2;
 }
-
 
 // To filter a relation based on a given predicate
 message Select {
@@ -132,14 +137,28 @@ message Unfold {
   common.NameOrId alias = 2;
 }
 
-// The operation of fetching a source from the (graph) database
-message Source {
-  // A location to tell where to fetch the source data
-  string location = 1;
+// The operation of scanning required data from certain schema
+message Scan {
+  // A name of the schema from which the data is fetched
+  string schema_name = 1;
   // The predicate that defines conditions these data shall satisfy
   common.SuffixExpr predicate = 2;
-  // The alias for the data
+  // The alias for the projected data field
   repeated common.NameOrId alias = 3;
+}
+
+// In addition to `Scan`, this operator allow runtime to leverage certain optimization strategy while the predicates
+// involve some primary keys that are indexed.
+message PrimaryScan {
+  // A condition of some primary keys of a schema is **equal** to some given constant values.
+  message KVPair {
+    repeated common.Variable keys = 1;
+    repeated common.Const values = 2;
+  }
+  Scan scan = 1;
+  // An array of KVPair forms a logical **OR** connection, for example, an array of
+  // [(k1, v1), (k2, v2), ...] means the predicate of k1 == v1 OR k2 == v2 OR ...
+  repeated KVPair primary_predicate = 2;
 }
 
 // To expand satisfied edges from a tag of the graph relation that refers to a vertex attribute
@@ -225,6 +244,9 @@ message Apply {
     // An alias for the result of the subtask. In order for Apply to be semantically intact,
     // the subtask must return a scalar value.
     common.NameOrId alias = 3;
+    // An alias may be given by the query or by the compiler/optimizer for functional/optimization purpose.
+    // This indicator is used to differentiate the two cases.
+    bool is_query_given = 4;
   }
   // Define how to join the result of the subtask back to the original relation
   Join.JoinKind join_kind = 1;
@@ -256,8 +278,9 @@ message LogicalPlan {
       Unfold unfold = 8;
       Apply apply = 9;
       SegmentApply seg_apply = 10;
+      Scan scan = 11;
+      PrimaryScan primary_scan = 12;
       // Saving the room for relational operators
-      Source source = 20;
       EdgeExpand edge = 21;
       PathExpand path = 22;
       ShortestPathExpand shortest_path = 23;

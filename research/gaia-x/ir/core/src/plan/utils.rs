@@ -95,10 +95,18 @@ impl From<pb::SegmentApply> for pb::logical_plan::Operator {
     }
 }
 
-impl From<pb::Source> for pb::logical_plan::Operator {
-    fn from(opr: pb::Source) -> Self {
+impl From<pb::Scan> for pb::logical_plan::Operator {
+    fn from(opr: pb::Scan) -> Self {
         pb::logical_plan::Operator {
-            opr: Some(pb::logical_plan::operator::Opr::Source(opr)),
+            opr: Some(pb::logical_plan::operator::Opr::Scan(opr)),
+        }
+    }
+}
+
+impl From<pb::PrimaryScan> for pb::logical_plan::Operator {
+    fn from(opr: pb::PrimaryScan) -> Self {
+        pb::logical_plan::Operator {
+            opr: Some(pb::logical_plan::operator::Opr::PrimaryScan(opr)),
         }
     }
 }

@@ -167,21 +167,48 @@ impl TryFrom<FfiVariable> for common_pb::Variable {
 
 /// Transform a c-like string into `NameOrId`
 #[no_mangle]
-pub extern "C" fn as_name(name: *const c_char) -> FfiNameOrId {
+pub extern "C" fn cstr_as_name_or_id(cstr: *const c_char) -> FfiNameOrId {
     FfiNameOrId {
         opt: FfiNameIdOpt::Name,
-        name,
+        name: cstr,
         name_id: 0,
     }
 }
 
 /// Transform an integer into `NameOrId`.
 #[no_mangle]
-pub extern "C" fn as_id(name_id: i32) -> FfiNameOrId {
+pub extern "C" fn int_as_name_or_id(integer: i32) -> FfiNameOrId {
     FfiNameOrId {
         opt: FfiNameIdOpt::Id,
         name: std::ptr::null(),
-        name_id,
+        name_id: integer,
+    }
+}
+
+/// Build an id property
+#[no_mangle]
+pub extern "C" fn as_id_key() -> FfiProperty {
+    FfiProperty {
+        opt: FfiPropertyOpt::Id,
+        key: FfiNameOrId::default(),
+    }
+}
+
+/// Build an label property
+#[no_mangle]
+pub extern "C" fn as_label_key() -> FfiProperty {
+    FfiProperty {
+        opt: FfiPropertyOpt::Label,
+        key: FfiNameOrId::default(),
+    }
+}
+
+/// Build an keyed property from a given key
+#[no_mangle]
+pub extern "C" fn as_property_key(key: FfiNameOrId) -> FfiProperty {
+    FfiProperty {
+        opt: FfiPropertyOpt::Key,
+        key,
     }
 }
 
@@ -251,21 +278,25 @@ mod project {
     use super::*;
     /// To initialize a project operator.
     #[no_mangle]
-    pub extern "C" fn init_project_operator() -> *const c_void {
-        let args = Box::new(Vec::<pb::project::ExprAlias>::new());
-        Box::into_raw(args) as *const c_void
+    pub extern "C" fn init_project_operator(is_append: bool) -> *const c_void {
+        let project = Box::new(pb::Project {
+            mappings: vec![],
+            is_append,
+        });
+        Box::into_raw(project) as *const c_void
     }
 
-    /// To add an argument for the project operator, which is a c-like string to represent an
-    /// expression, together with a `NameOrId` parameter that represents an alias.
+    /// To add a mapping for the project operator, which maps a c-like string to represent an
+    /// expression, to a `NameOrId` parameter that represents an alias.
     #[no_mangle]
-    pub extern "C" fn add_project_arg(
+    pub extern "C" fn add_project_mapping(
         ptr_project: *const c_void,
         expr: *const c_char,
         alias: FfiNameOrId,
+        is_query_given: bool,
     ) -> ResultCode {
         let mut return_code = ResultCode::Success;
-        let mut args = unsafe { Box::from_raw(ptr_project as *mut Vec<pb::project::ExprAlias>) };
+        let mut project = unsafe { Box::from_raw(ptr_project as *mut pb::Project) };
         let expr_str = cstr_to_string(expr);
         let alias_pb = common_pb::NameOrId::try_from(alias);
 
@@ -274,17 +305,18 @@ mod project {
         } else {
             let expr_rst = common_pb::SuffixExpr::try_from(expr_str.unwrap());
             if expr_rst.is_ok() {
-                let arg = pb::project::ExprAlias {
+                let attribute = pb::project::ExprAlias {
                     expr: expr_rst.ok(),
                     alias: alias_pb.ok(),
+                    is_query_given,
                 };
-                args.push(arg);
+                project.mappings.push(attribute);
             } else {
                 return_code = expr_rst.err().unwrap()
             }
         }
+        std::mem::forget(project);
 
-        std::mem::forget(args);
         return_code
     }
 
@@ -310,18 +342,13 @@ mod project {
         parent_id: i32,
         id: *mut i32,
     ) -> ResultCode {
-        if parent_id >= 0 {
-            let expr_alias_vec =
-                unsafe { Box::from_raw(ptr_project as *mut Vec<pb::project::ExprAlias>) };
-            let mut attributes: Vec<pb::project::ExprAlias> = Vec::new();
-            for expr_alias in expr_alias_vec.into_iter() {
-                attributes.push(expr_alias);
-            }
-            let project_pb = pb::Project { attributes };
-            append_operator(ptr_plan, project_pb.into(), vec![parent_id], id)
-        } else {
-            ResultCode::NegativeIndexError
-        }
+        let project = unsafe { Box::from_raw(ptr_project as *mut pb::Project) };
+        append_operator(
+            ptr_plan,
+            project.as_ref().clone().into(),
+            vec![parent_id],
+            id,
+        )
     }
 }
 
@@ -357,6 +384,7 @@ mod select {
                 return_code = ResultCode::ParseExprError
             }
         }
+
         return_code
     }
 
@@ -368,17 +396,13 @@ mod select {
         parent_id: i32,
         id: *mut i32,
     ) -> ResultCode {
-        if parent_id >= 0 {
-            let select = unsafe { Box::from_raw(ptr_select as *mut pb::Select) };
-            append_operator(
-                ptr_plan,
-                select.as_ref().clone().into(),
-                vec![parent_id],
-                id,
-            )
-        } else {
-            ResultCode::NegativeIndexError
-        }
+        let select = unsafe { Box::from_raw(ptr_select as *mut pb::Select) };
+        append_operator(
+            ptr_plan,
+            select.as_ref().clone().into(),
+            vec![parent_id],
+            id,
+        )
     }
 }
 
@@ -460,17 +484,13 @@ mod join {
         parent_right: i32,
         id: *mut i32,
     ) -> ResultCode {
-        if parent_left >= 0 && parent_right >= 0 {
-            let join = unsafe { Box::from_raw(ptr_join as *mut pb::Join) };
-            append_operator(
-                ptr_plan,
-                join.as_ref().clone().into(),
-                vec![parent_left, parent_right],
-                id,
-            )
-        } else {
-            ResultCode::NegativeIndexError
-        }
+        let join = unsafe { Box::from_raw(ptr_join as *mut pb::Join) };
+        append_operator(
+            ptr_plan,
+            join.as_ref().clone().into(),
+            vec![parent_left, parent_right],
+            id,
+        )
     }
 }
 
@@ -493,24 +513,20 @@ mod union {
         parent_right: i32,
         id: *mut i32,
     ) -> ResultCode {
-        if parent_left >= 0 && parent_right >= 0 {
-            let union = unsafe { Box::from_raw(ptr_union as *mut pb::Union) };
-            append_operator(
-                ptr_plan,
-                union.as_ref().clone().into(),
-                vec![parent_left, parent_right],
-                id,
-            )
-        } else {
-            ResultCode::NegativeIndexError
-        }
+        let union = unsafe { Box::from_raw(ptr_union as *mut pb::Union) };
+        append_operator(
+            ptr_plan,
+            union.as_ref().clone().into(),
+            vec![parent_left, parent_right],
+            id,
+        )
     }
 }
 
 mod groupby {
     use super::*;
 
-    /// To initialize a union operator
+    /// To initialize a groupby operator
     #[no_mangle]
     pub extern "C" fn init_groupby_operator() -> *const c_void {
         let group = Box::new(pb::GroupBy {
@@ -580,9 +596,9 @@ mod groupby {
 
     /// Add the key according to which the grouping is conducted
     #[no_mangle]
-    pub extern "C" fn add_groupby_key(ptr_group: *const c_void, key: FfiVariable) -> ResultCode {
+    pub extern "C" fn add_groupby_key(ptr_groupby: *const c_void, key: FfiVariable) -> ResultCode {
         let mut return_code = ResultCode::Success;
-        let mut group = unsafe { Box::from_raw(ptr_group as *mut pb::GroupBy) };
+        let mut group = unsafe { Box::from_raw(ptr_groupby as *mut pb::GroupBy) };
         let key_pb: FfiResult<common_pb::Variable> = key.try_into();
         if key_pb.is_ok() {
             group.keys.push(key_pb.unwrap());
@@ -596,9 +612,12 @@ mod groupby {
 
     /// Add the aggregate function for each group.
     #[no_mangle]
-    pub extern "C" fn add_groupby_agg_fn(ptr_group: *const c_void, agg_fn: FfiAggFn) -> ResultCode {
+    pub extern "C" fn add_groupby_agg_fn(
+        ptr_groupby: *const c_void,
+        agg_fn: FfiAggFn,
+    ) -> ResultCode {
         let mut return_code = ResultCode::Success;
-        let mut group = unsafe { Box::from_raw(ptr_group as *mut pb::GroupBy) };
+        let mut group = unsafe { Box::from_raw(ptr_groupby as *mut pb::GroupBy) };
         let agg_fn_pb: FfiResult<pb::group_by::AggFunc> = agg_fn.try_into();
 
         if agg_fn_pb.is_ok() {
@@ -611,19 +630,167 @@ mod groupby {
         return_code
     }
 
-    /// Append a union operator to the logical plan
+    /// Append a groupby operator to the logical plan
     #[no_mangle]
     pub extern "C" fn append_groupby_operator(
         ptr_plan: *const c_void,
-        ptr_group: *const c_void,
+        ptr_groupby: *const c_void,
         parent: i32,
         id: *mut i32,
     ) -> ResultCode {
-        if parent >= 0 {
-            let group = unsafe { Box::from_raw(ptr_group as *mut pb::GroupBy) };
-            append_operator(ptr_plan, group.as_ref().clone().into(), vec![parent], id)
+        let group = unsafe { Box::from_raw(ptr_groupby as *mut pb::GroupBy) };
+        append_operator(ptr_plan, group.as_ref().clone().into(), vec![parent], id)
+    }
+}
+
+mod orderby {
+    use super::*;
+
+    #[allow(dead_code)]
+    #[repr(i32)]
+    #[derive(Clone, Copy)]
+    pub enum FfiOrderOpt {
+        Shuffle = 0,
+        Asc = 1,
+        Desc = 2,
+    }
+
+    /// To initialize an orderby operator
+    #[no_mangle]
+    pub extern "C" fn init_orderby_operator() -> *const c_void {
+        let order = Box::new(pb::OrderBy { pairs: vec![] });
+        Box::into_raw(order) as *const c_void
+    }
+
+    /// Add the pair for conducting ordering.
+    #[no_mangle]
+    pub extern "C" fn add_orderby_pair(
+        ptr_orderby: *const c_void,
+        var: FfiVariable,
+        order_opt: FfiOrderOpt,
+    ) -> ResultCode {
+        let mut return_code = ResultCode::Success;
+        let mut orderby = unsafe { Box::from_raw(ptr_orderby as *mut pb::OrderBy) };
+        let key_result: FfiResult<common_pb::Variable> = var.try_into();
+        if key_result.is_ok() {
+            let order = match order_opt {
+                FfiOrderOpt::Shuffle => 0,
+                FfiOrderOpt::Asc => 1,
+                FfiOrderOpt::Desc => 2,
+            };
+            orderby.pairs.push(pb::order_by::OrderingPair {
+                key: key_result.ok(),
+                order,
+            });
         } else {
-            ResultCode::NegativeIndexError
+            return_code = key_result.err().unwrap();
         }
+        std::mem::forget(orderby);
+
+        return_code
+    }
+
+    /// Append an orderby operator to the logical plan
+    #[no_mangle]
+    pub extern "C" fn append_orderby_operator(
+        ptr_plan: *const c_void,
+        ptr_orderby: *const c_void,
+        parent: i32,
+        id: *mut i32,
+    ) -> ResultCode {
+        let orderby = unsafe { Box::from_raw(ptr_orderby as *mut pb::OrderBy) };
+        append_operator(ptr_plan, orderby.as_ref().clone().into(), vec![parent], id)
+    }
+}
+
+mod dedup {
+    use super::*;
+
+    /// To initialize a dedup operator
+    #[no_mangle]
+    pub extern "C" fn init_dedup_operator() -> *const c_void {
+        let dedup = Box::new(pb::Dedup { keys: vec![] });
+        Box::into_raw(dedup) as *const c_void
+    }
+
+    /// Add a key for de-duplicating.
+    #[no_mangle]
+    pub extern "C" fn add_dedup_key(ptr_dedup: *const c_void, var: FfiVariable) -> ResultCode {
+        let mut return_code = ResultCode::Success;
+        let mut dedup = unsafe { Box::from_raw(ptr_dedup as *mut pb::Dedup) };
+        let key_result: FfiResult<common_pb::Variable> = var.try_into();
+        if key_result.is_ok() {
+            dedup.keys.push(key_result.unwrap());
+        } else {
+            return_code = key_result.err().unwrap();
+        }
+        std::mem::forget(dedup);
+
+        return_code
+    }
+
+    /// Append a dedup operator to the logical plan
+    #[no_mangle]
+    pub extern "C" fn append_dedup_operator(
+        ptr_plan: *const c_void,
+        ptr_dedup: *const c_void,
+        parent: i32,
+        id: *mut i32,
+    ) -> ResultCode {
+        let dedup = unsafe { Box::from_raw(ptr_dedup as *mut pb::Dedup) };
+        append_operator(ptr_plan, dedup.as_ref().clone().into(), vec![parent], id)
+    }
+}
+
+mod unfold {
+    use super::*;
+
+    /// To initialize an unfold operator
+    #[no_mangle]
+    pub extern "C" fn init_unfold_operator() -> *const c_void {
+        let unfold = Box::new(pb::Unfold {
+            tag: None,
+            alias: None,
+        });
+        Box::into_raw(unfold) as *const c_void
+    }
+
+    /// Add (Set) the tag that points to a collection-type data field for unfolding.
+    #[no_mangle]
+    pub extern "C" fn add_unfold_tag(
+        ptr_unfold: *const c_void,
+        tag: FfiNameOrId,
+        alias: FfiNameOrId,
+    ) -> ResultCode {
+        let mut return_code = ResultCode::Success;
+        let mut unfold = unsafe { Box::from_raw(ptr_unfold as *mut pb::Unfold) };
+        let tag_result: FfiResult<common_pb::NameOrId> = tag.try_into();
+        let alias_result: FfiResult<common_pb::NameOrId> = alias.try_into();
+
+        if tag_result.is_ok() && alias_result.is_ok() {
+            unfold.tag = tag_result.ok();
+            unfold.alias = alias_result.ok();
+        } else {
+            return_code = if tag_result.is_err() {
+                tag_result.err().unwrap()
+            } else {
+                alias_result.err().unwrap()
+            };
+        }
+        std::mem::forget(unfold);
+
+        return_code
+    }
+
+    /// Append an unfold operator to the logical plan
+    #[no_mangle]
+    pub extern "C" fn append_unfold_operator(
+        ptr_plan: *const c_void,
+        ptr_unfold: *const c_void,
+        parent: i32,
+        id: *mut i32,
+    ) -> ResultCode {
+        let unfold = unsafe { Box::from_raw(ptr_unfold as *mut pb::Unfold) };
+        append_operator(ptr_plan, unfold.as_ref().clone().into(), vec![parent], id)
     }
 }
