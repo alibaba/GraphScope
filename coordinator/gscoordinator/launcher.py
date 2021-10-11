@@ -293,11 +293,11 @@ class LocalLauncher(Launcher):
             "--listen-client-urls",
             "http://0.0.0.0:{0}".format(str(self._etcd_client_port)),
             "--advertise-client-urls",
-            "http://localhost:{0}".format(str(self._etcd_client_port)),
+            "http://127.0.0.1:{0}".format(str(self._etcd_client_port)),
             "--initial-cluster",
-            "default=http://localhost:{0}".format(str(self._etcd_peer_port)),
+            "default=http://127.0.0.1:{0}".format(str(self._etcd_peer_port)),
             "--initial-advertise-peer-urls",
-            "http://localhost:{0}".format(str(self._etcd_peer_port)),
+            "http://127.0.0.1:{0}".format(str(self._etcd_peer_port)),
         ]
         logger.info("Launch etcd with command: %s", " ".join(cmd))
 

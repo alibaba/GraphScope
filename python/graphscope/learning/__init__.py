@@ -32,7 +32,7 @@ try:
 
     import vineyard
 
-    with vineyard.envvars('VINEYARD_USE_LOCAL_REGISTRY', 'TRUE'):
+    with vineyard.envvars("VINEYARD_USE_LOCAL_REGISTRY", "TRUE"):
         import graphlearn
 
     try:

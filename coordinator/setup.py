@@ -42,11 +42,13 @@ def _get_extra_data():
     #   2) headers of arrow/glog/gflags/google/openmpi/vineyard
     #   3) openmpi daemon process `orted`
     #   4) zetcd
+    #   5) /tmp/gs/builtin
     # into site-packages/graphscope.runtime
     RUNTIME_ROOT = "graphscope.runtime"
     return {
         "/opt/graphscope/": os.path.join(RUNTIME_ROOT),
         "/opt/vineyard/include/": os.path.join(RUNTIME_ROOT, "include"),
+        "/tmp/gs/builtin/": os.path.join(RUNTIME_ROOT, "cache"),
         "/usr/local/include/arrow": os.path.join(RUNTIME_ROOT, "include"),
         "/usr/local/include/boost": os.path.join(RUNTIME_ROOT, "include"),
         "/usr/local/include/glog": os.path.join(RUNTIME_ROOT, "include"),
