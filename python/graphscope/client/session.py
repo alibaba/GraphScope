@@ -1341,6 +1341,7 @@ class _DefaultSessionStack(object):
 
     def get_default(self):
         if not self.stack:
+            logger.info("Creating default session ...")
             sess = session(cluster_type="hosts", num_workers=1)
             sess.as_default()
         return self.stack[-1]
