@@ -13,6 +13,10 @@
  */
 package com.alibaba.maxgraph.servers;
 
+import com.alibaba.graphscope.groot.discovery.FileDiscovery;
+import com.alibaba.graphscope.groot.discovery.LocalNodeProvider;
+import com.alibaba.graphscope.groot.discovery.NodeDiscovery;
+import com.alibaba.graphscope.groot.discovery.ZkDiscovery;
 import com.alibaba.graphscope.groot.frontend.BatchDdlClient;
 import com.alibaba.graphscope.groot.frontend.ClientDdlService;
 import com.alibaba.graphscope.groot.frontend.ClientService;
@@ -26,17 +30,11 @@ import com.alibaba.graphscope.groot.frontend.StoreIngestClient;
 import com.alibaba.graphscope.groot.frontend.StoreIngestClients;
 import com.alibaba.graphscope.groot.frontend.StoreIngestor;
 import com.alibaba.graphscope.groot.frontend.WriteSessionGenerator;
-import com.alibaba.maxgraph.common.RoleType;
-import com.alibaba.maxgraph.common.cluster.InstanceConfig;
-import com.alibaba.maxgraph.compiler.dfs.DefaultGraphDfs;
-import com.alibaba.maxgraph.servers.maxgraph.MaxGraphImpl;
-import com.alibaba.maxgraph.structure.graph.TinkerMaxGraph;
+import com.alibaba.graphscope.groot.frontend.write.DefaultEdgeIdGenerator;
+import com.alibaba.graphscope.groot.frontend.write.EdgeIdGenerator;
+import com.alibaba.graphscope.groot.frontend.write.GraphWriter;
 import com.alibaba.graphscope.groot.meta.DefaultMetaService;
 import com.alibaba.graphscope.groot.meta.MetaService;
-import com.alibaba.maxgraph.common.config.CommonConfig;
-import com.alibaba.maxgraph.common.config.Configs;
-import com.alibaba.graphscope.groot.discovery.*;
-import com.alibaba.maxgraph.compiler.api.exception.MaxGraphException;
 import com.alibaba.graphscope.groot.metrics.MetricsAggregator;
 import com.alibaba.graphscope.groot.metrics.MetricsCollectClient;
 import com.alibaba.graphscope.groot.metrics.MetricsCollectService;
@@ -46,15 +44,15 @@ import com.alibaba.graphscope.groot.rpc.MaxGraphNameResolverFactory;
 import com.alibaba.graphscope.groot.rpc.RoleClients;
 import com.alibaba.graphscope.groot.rpc.RpcServer;
 import com.alibaba.graphscope.groot.schema.ddl.DdlExecutors;
+import com.alibaba.maxgraph.common.RoleType;
+import com.alibaba.maxgraph.common.config.CommonConfig;
+import com.alibaba.maxgraph.common.config.Configs;
 import com.alibaba.maxgraph.common.util.CuratorUtils;
-import com.alibaba.graphscope.groot.frontend.write.DefaultEdgeIdGenerator;
-import com.alibaba.graphscope.groot.frontend.write.EdgeIdGenerator;
-import com.alibaba.graphscope.groot.frontend.write.GraphWriter;
+import com.alibaba.maxgraph.compiler.api.exception.MaxGraphException;
 import com.google.common.annotations.VisibleForTesting;
 import io.grpc.NameResolver;
-import org.apache.curator.framework.CuratorFramework;
-
 import java.io.IOException;
+import org.apache.curator.framework.CuratorFramework;
 
 public class Frontend extends NodeBase {
 
@@ -63,8 +61,8 @@ public class Frontend extends NodeBase {
     private ChannelManager channelManager;
     private MetaService metaService;
     private RpcServer rpcServer;
-    private GraphServer graphServer;
     private ClientService clientService;
+    private AbstractService graphService;
 
     public Frontend(Configs configs) {
         super(configs);
@@ -128,26 +126,18 @@ public class Frontend extends NodeBase {
                         metricsCollectService,
                         clientDdlService,
                         clientWriteService);
+
         WrappedSchemaFetcher wrappedSchemaFetcher =
                 new WrappedSchemaFetcher(snapshotCache, metaService);
-        MaxGraphImpl maxGraphImpl =
-                new MaxGraphImpl(
-                        this.discovery,
+        ComputeServiceProducer serviceProducer = ServiceProducerFactory.getProducer(configs);
+        this.graphService =
+                serviceProducer.makeGraphService(
                         wrappedSchemaFetcher,
+                        channelManager,
+                        discovery,
                         graphWriter,
                         writeSessionGenerator,
                         metaService);
-        TinkerMaxGraph graph =
-                new TinkerMaxGraph(
-                        new InstanceConfig(configs.getInnerProperties()),
-                        maxGraphImpl,
-                        new DefaultGraphDfs());
-        //        this.graphServer =
-        //                new ReadOnlyGraphServer(
-        //                        configs,
-        //                        graph,
-        //                        wrappedSchemaFetcher,
-        //                        new DiscoveryAddressFetcher(this.discovery));
     }
 
     @Override
@@ -163,7 +153,7 @@ public class Frontend extends NodeBase {
         }
         this.discovery.start();
         this.channelManager.start();
-        this.graphServer.start();
+        this.graphService.start();
     }
 
     @Override
@@ -175,7 +165,7 @@ public class Frontend extends NodeBase {
         if (this.curator != null) {
             this.curator.close();
         }
-        this.graphServer.stop();
+        this.graphService.stop();
     }
 
     public static void main(String[] args) throws IOException {
