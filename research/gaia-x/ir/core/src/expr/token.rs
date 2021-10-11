@@ -50,6 +50,7 @@ pub enum Token {
 }
 
 impl Token {
+    #[inline]
     pub fn is_operand(&self) -> bool {
         use crate::expr::token::Token::*;
         match self {
@@ -58,14 +59,17 @@ impl Token {
         }
     }
 
+    #[inline]
     pub fn is_left_brace(&self) -> bool {
         self == &Token::LBrace
     }
 
+    #[inline]
     pub fn is_right_brace(&self) -> bool {
         self == &Token::RBrace
     }
 
+    #[inline]
     /// Returns the precedence of the operator.
     /// A high precedence means that the operator has larger priority to get operated
     pub fn precedence(&self) -> i32 {
@@ -111,7 +115,7 @@ pub enum PartialToken {
     VerticalBar,
 }
 
-// Make this a const fn as soon as is_whitespace and to_string get stable (issue #57563)
+#[inline]
 fn char_to_partial_token(c: char) -> PartialToken {
     match c {
         '=' => PartialToken::Eq,

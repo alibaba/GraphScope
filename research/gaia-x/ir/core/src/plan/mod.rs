@@ -27,6 +27,7 @@ use std::cell::RefCell;
 use std::collections::{BTreeSet, HashMap};
 use std::convert::TryFrom;
 use std::ffi::CStr;
+use std::fmt;
 use std::iter::FromIterator;
 use std::os::raw::c_char;
 use std::rc::Rc;
@@ -42,8 +43,6 @@ pub enum ResultCode {
     NotExistError = 2,
     /// The error while transforming from C-like string, aka char*
     CStringError = 3,
-    /// Negative index
-    NegativeIndexError = 4,
 }
 
 impl std::fmt::Display for ResultCode {
@@ -53,7 +52,6 @@ impl std::fmt::Display for ResultCode {
             ResultCode::ParseExprError => write!(f, "parse expression error"),
             ResultCode::NotExistError => write!(f, "access to non-existed element"),
             ResultCode::CStringError => write!(f, "convert from c-like string error"),
-            ResultCode::NegativeIndexError => write!(f, "try passing a negative index"),
         }
     }
 }
@@ -98,12 +96,20 @@ type NodeType = Rc<RefCell<Node>>;
 /// An internal representation of the pb-[`LogicalPlan`].
 ///
 /// [`Node`]: crate::generated::algebra::LogicalPlan
-#[derive(Default, Debug)]
+#[derive(Default)]
 pub(crate) struct LogicalPlan {
     pub nodes: VecMap<NodeType>,
     /// To record the total number of operators ever created in the logical plan,
     /// **ignorant of the removed nodes**
     pub total_size: usize,
+}
+
+impl fmt::Debug for LogicalPlan {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_list()
+            .entries(self.nodes.iter().map(|(_, node)| node.borrow()))
+            .finish()
+    }
 }
 
 fn parse_pb_node(
