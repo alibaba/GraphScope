@@ -83,7 +83,6 @@ graphscope-manylinux2014-py2-py3:
 				mkdir -p build && cd build && \
 				cmake .. -DCMAKE_PREFIX_PATH=/opt/vineyard \
 					-DCMAKE_INSTALL_PREFIX=/opt/vineyard \
-					-DBUILD_VINEYARD_PYPI_PACKAGES=ON \
 					-DBUILD_SHARED_LIBS=ON \
 					-DBUILD_VINEYARD_IO_OSS=ON && \
 				make install vineyard_client_python -j && \
@@ -103,6 +102,7 @@ graphscope-manylinux2014-py2-py3:
 				rm -fr /tmp/libvineyard /tmp/libgrape-lite && \
 				cd /work && \
 				make install && \
+				python3 /work/k8s/precompile.py && \
 				export WITH_EXTRA_DATA=ON && \
 				cd /work/coordinator && \
 				rm -fr build dist/*.whl && \
@@ -128,7 +128,6 @@ graphscope-client-manylinux2014-py3:
 				mkdir -p build && cd build && \
 				cmake .. -DCMAKE_PREFIX_PATH=/opt/vineyard \
 					-DCMAKE_INSTALL_PREFIX=/opt/vineyard \
-					-DBUILD_VINEYARD_PYPI_PACKAGES=ON \
 					-DBUILD_SHARED_LIBS=OFF \
 					-DBUILD_VINEYARD_IO_OSS=ON \
 					-DBUILD_VINEYARD_MIGRATION=OFF && \

@@ -48,7 +48,7 @@ def _get_extra_data():
     return {
         "/opt/graphscope/": os.path.join(RUNTIME_ROOT),
         "/opt/vineyard/include/": os.path.join(RUNTIME_ROOT, "include"),
-        "/tmp/gs/builtin/": os.path.join(RUNTIME_ROOT, "cache"),
+        "/tmp/gs/builtin/": os.path.join(RUNTIME_ROOT, "precompiled"),
         "/usr/local/include/arrow": os.path.join(RUNTIME_ROOT, "include"),
         "/usr/local/include/boost": os.path.join(RUNTIME_ROOT, "include"),
         "/usr/local/include/glog": os.path.join(RUNTIME_ROOT, "include"),

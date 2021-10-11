@@ -8,7 +8,7 @@ INSTALL_PREFIX              ?= /opt/graphscope
 BUILD_TYPE                  ?= release
 
 # GAE build options
-NETWORKX                    ?= OFF
+NETWORKX                    ?= ON
 
 # client build options
 WITH_LEARNING_ENGINE        ?= ON

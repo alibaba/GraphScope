@@ -24,7 +24,7 @@ import pytest
 import graphscope
 from graphscope.dataset.ogbn_mag import load_ogbn_mag
 
-if sys.platform == "linux2":
+if sys.platform == "linux":
     from graphscope.learning.examples import GCN
     from graphscope.learning.graphlearn.python.model.tf import optimizer
     from graphscope.learning.graphlearn.python.model.tf.trainer import LocalTFTrainer
@@ -120,8 +120,6 @@ def demo(sess, ogbn_mag_small, ogbn_small_script):
     # Interactive engine
     interactive = sess.gremlin(graph)
     papers = interactive.execute(ogbn_small_script).one()
-    print("papers: ", papers)
-    return
 
     sub_graph = interactive.subgraph(
         "g.timeout(1000000).V().has('year', inside(2014, 2020)).outE('cites')"

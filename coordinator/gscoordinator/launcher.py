@@ -379,14 +379,14 @@ class LocalLauncher(Launcher):
         if not vineyardd:
             vineyardd = shutil.which("vineyardd")
         if not vineyardd:
-            vineyardd = "vineyardd"
-        return vineyardd
+            vineyardd = [sys.executable, "-m", "vineyard"]
+        return list(vineyardd)
 
     def _create_vineyard(self):
         if not self._vineyard_socket:
             ts = get_timestamp()
             vineyard_socket = f"{self._vineyard_socket_prefix}{ts}"
-            cmd = [self._find_vineyardd()]
+            cmd = self._find_vineyardd()
             cmd.extend(["--socket", vineyard_socket])
             cmd.extend(["--size", self._shared_mem])
             cmd.extend(

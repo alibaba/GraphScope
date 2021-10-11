@@ -122,8 +122,6 @@ class GRPCClient(object):
                 msg = f"code: {e.code().name}, details: {e.details()}"
                 if e.code() == grpc.StatusCode.DEADLINE_EXCEEDED:
                     logger.warning("Heart beat analytical engine failed, %s", msg)
-                else:
-                    logger.warning("Heart beat coordinator failed, %s", msg)
                 if time.time() - begin_time >= timeout_seconds:
                     raise ConnectionError(f"Connect coordinator timeout, {msg}")
                 time.sleep(1)
