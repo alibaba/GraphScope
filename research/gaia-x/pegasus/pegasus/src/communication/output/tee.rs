@@ -38,7 +38,7 @@ impl CancelListener for ChannelCancel {
         let tag = self.inner.cancel(tag, to)?;
         let level = tag.len() as u32;
 
-        if self.delta.scope_level_delta < 0 {
+        if self.delta.scope_level_delta() < 0 {
             // leave: channel send data to parent scope;
             // cancel from parent scope;
             assert!(level < self.before_send.scope_level);
@@ -802,7 +802,7 @@ mod rob {
             if batch.tag.len() == self.delta.origin_scope_level {
                 let tag = self.delta.evolve(&batch.tag);
                 if let Some(end) = batch.take_end() {
-                    if self.delta.scope_level_delta > 0 {
+                    if self.delta.scope_level_delta() > 0 {
                         // enter
                         let end_cp = end.clone();
                         batch.set_end(end);
@@ -811,7 +811,7 @@ mod rob {
                         let mut p = MicroBatch::new(end_cp.tag.clone(), self.src, ReadBuffer::new());
                         p.set_end(end_cp);
                         self.push.push(p)
-                    } else if self.delta.scope_level_delta == 0 {
+                    } else if self.delta.scope_level_delta() == 0 {
                         batch.set_end(end);
                         batch.set_tag(tag);
                         self.push.push(batch)

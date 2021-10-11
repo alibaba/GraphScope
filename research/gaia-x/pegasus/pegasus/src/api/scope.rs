@@ -28,61 +28,51 @@ pub enum ScopeDelta {
     ToParent(u32),
 }
 
+impl Default for ScopeDelta {
+    fn default() -> Self {
+        ScopeDelta::None
+    }
+}
+
 impl ScopeDelta {
+
+    pub fn level_delta(&self) -> i32 {
+        match self {
+            ScopeDelta::None => 0,
+            ScopeDelta::ToSibling(_) => 0,
+            ScopeDelta::ToChild(a) => *a as i32,
+            ScopeDelta::ToParent(a) => 0 - *a as i32
+        }
+    }
+
     pub fn try_merge(&mut self, other: ScopeDelta) -> Option<ScopeDelta> {
-        match *self {
-            ScopeDelta::None => {
-                *self = other;
+        match (*self, other) {
+            (ScopeDelta::None, x) => {
+                *self = x;
                 None
+            },
+            (_, ScopeDelta::None) => None,
+            (ScopeDelta::ToSibling(a), ScopeDelta::ToSibling(b)) => {
+                *self = ScopeDelta::ToSibling(a + b);
+                None
+            },
+            (ScopeDelta::ToSibling(_), other) => {
+                Some(other)
+            },
+            (ScopeDelta::ToChild(a), ScopeDelta::ToChild(b)) => {
+                *self = ScopeDelta::ToChild(a + b);
+                None
+            },
+            (ScopeDelta::ToChild(_), other) => {
+                Some(other)
+            },
+            (ScopeDelta::ToParent(a), ScopeDelta::ToParent(b)) => {
+                *self = ScopeDelta::ToParent( a + b);
+                None
+            },
+            (ScopeDelta::ToParent(_), other) => {
+                Some(other)
             }
-            ScopeDelta::ToSibling(a) => match other {
-                ScopeDelta::None => None,
-                ScopeDelta::ToSibling(b) => {
-                    *self = ScopeDelta::ToSibling(a + b);
-                    None
-                }
-                ScopeDelta::ToChild(_) => Some(other),
-                ScopeDelta::ToParent(d) => {
-                    *self = ScopeDelta::ToParent(d);
-                    None
-                }
-            },
-            ScopeDelta::ToChild(a) => match other {
-                ScopeDelta::None => None,
-                ScopeDelta::ToSibling(_) => Some(other),
-                ScopeDelta::ToChild(b) => {
-                    *self = ScopeDelta::ToChild(a + b);
-                    None
-                }
-                ScopeDelta::ToParent(b) => {
-                    if a > b {
-                        *self = ScopeDelta::ToChild(a - b);
-                    } else if a == b {
-                        *self = ScopeDelta::None;
-                    } else {
-                        *self = ScopeDelta::ToParent(b - a);
-                    }
-                    None
-                }
-            },
-            ScopeDelta::ToParent(a) => match other {
-                ScopeDelta::None => None,
-                ScopeDelta::ToSibling(_) => Some(other),
-                ScopeDelta::ToChild(b) => {
-                    if a > b {
-                        *self = ScopeDelta::ToParent(a - b);
-                    } else if a == b {
-                        *self = ScopeDelta::None;
-                    } else {
-                        *self = ScopeDelta::ToChild(b - a);
-                    }
-                    None
-                }
-                ScopeDelta::ToParent(b) => {
-                    *self = ScopeDelta::ToParent(a + b);
-                    None
-                }
-            },
         }
     }
 
@@ -159,92 +149,38 @@ impl ScopeDelta {
     }
 }
 
-#[derive(Default, Clone)]
+#[derive(Default, Copy, Clone)]
 pub struct MergedScopeDelta {
     pub origin_scope_level: usize,
-    pub scope_level_delta: i32,
-    deltas: Vec<ScopeDelta>,
+    deltas: ScopeDelta,
 }
 
 impl MergedScopeDelta {
     pub fn new(origin_scope_level: usize) -> Self {
-        MergedScopeDelta { origin_scope_level, scope_level_delta: 0, deltas: vec![] }
+        MergedScopeDelta { origin_scope_level, deltas: ScopeDelta::None }
     }
 
     pub fn output_scope_level(&self) -> usize {
-        let x = self.origin_scope_level as i32 + self.scope_level_delta;
+        let x = self.origin_scope_level as i32 + self.deltas.level_delta();
         assert!(x >= 0);
         x as usize
     }
 
-    pub fn add_delta(&mut self, delta: ScopeDelta) {
-        match delta {
-            ScopeDelta::None => (),
-            ScopeDelta::ToSibling(t) => {
-                if self.deltas.is_empty() {
-                    self.deltas.push(ScopeDelta::ToSibling(t));
-                } else {
-                    let len = self.deltas.len();
-                    if let Some(d) = self.deltas[len - 1].try_merge(ScopeDelta::ToSibling(t)) {
-                        self.deltas.push(d);
-                    }
-                }
-            }
-            ScopeDelta::ToChild(t) => {
-                let d = t as i32;
-                self.scope_level_delta += d;
-                if self.deltas.is_empty() {
-                    self.deltas.push(ScopeDelta::ToChild(t));
-                } else {
-                    let len = self.deltas.len();
-                    if let Some(d) = self.deltas[len - 1].try_merge(ScopeDelta::ToChild(t)) {
-                        self.deltas.push(d);
-                    }
-                }
-            }
-            ScopeDelta::ToParent(t) => {
-                let d = t as i32;
-                self.scope_level_delta -= d;
-                if self.deltas.is_empty() {
-                    self.deltas.push(ScopeDelta::ToParent(t));
-                } else {
-                    let len = self.deltas.len();
-                    if let Some(d) = self.deltas[len - 1].try_merge(ScopeDelta::ToParent(t)) {
-                        self.deltas.push(d);
-                    }
-                }
-            }
-        }
+    pub fn scope_level_delta(&self) -> i32 {
+        self.deltas.level_delta()
+    }
+
+    pub fn add_delta(&mut self, delta: ScopeDelta) -> Option<ScopeDelta> {
+        self.deltas.try_merge(delta)
     }
 
     #[inline]
     pub fn evolve(&self, tag: &Tag) -> Tag {
-        if self.deltas.is_empty() {
-            tag.clone()
-        } else {
-            let mut e = self.deltas[0].evolve(tag);
-            if self.deltas.len() > 1 {
-                for d in &self.deltas[1..] {
-                    e = d.evolve(&e);
-                }
-            }
-            e
-        }
+        self.deltas.evolve(tag)
     }
 
     #[inline]
     pub fn evolve_back(&self, tag: &Tag) -> Tag {
-        if self.deltas.is_empty() {
-            tag.clone()
-        } else {
-            let len = self.deltas.len();
-            let mut e = self.deltas[len - 1].evolve_back(tag);
-            if len > 1 {
-                for i in (0..len - 1).rev() {
-                    e = self.deltas[i].evolve_back(&e);
-                }
-            }
-            e
-        }
+        self.deltas.evolve_back(tag)
     }
 }

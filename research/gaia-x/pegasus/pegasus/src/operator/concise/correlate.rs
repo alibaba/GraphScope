@@ -62,32 +62,28 @@ fn new_batch<D>(tag: Tag, worker: u32, buf: Buffer<D>) -> MicroBatch<D> {
 }
 
 struct ForkProgress<D> {
-    next_seq: u32,
-    current_input_seq: Option<u64>,
-    buf: BufferPool<D, MemBufAlloc<D>>
+    pushed_parent: u32,
+    forked_child: u32,
+    init: u32,
+    interval: u32,
+    buf: BufferPool<D, MemBufAlloc<D>>,
 }
 
 impl<D> ForkProgress<D> {
-    fn new(next_seq: u32, capacity: usize) -> Self {
+    fn new(init: u32, interval: u32, capacity: usize) -> Self {
         ForkProgress {
-            next_seq,
-            current_input_seq: None,
-            buf: BufferPool::new(1, capacity, MemBufAlloc::new())
+            pushed_parent: 0,
+            forked_child: 0,
+            init,
+            interval,
+            buf: BufferPool::new(1, capacity, MemBufAlloc::new()),
         }
     }
 
-    fn update_input_seq(&mut self, seq: u64) -> bool {
-        if let Some(ref mut pre) = self.current_input_seq {
-            if *pre < seq {
-                *pre = seq;
-                true
-            } else {
-                false
-            }
-        } else {
-            self.current_input_seq = Some(seq);
-            true
-        }
+    fn next_seq(&mut self) -> u32 {
+        let forked = self.forked_child;
+        self.forked_child += 1;
+        forked * self.interval + self.init
     }
 }
 
@@ -113,9 +109,10 @@ impl<D> ForkSubtaskOperator<D> {
 
     fn get_buf_mut(&mut self, tag: &Tag) -> &mut ForkProgress<D> {
         let init = self.worker_index + self.peers;
+        let interval = self.peers;
         let capacity = self.scope_capacity as usize;
         self.tumbling_scope
-            .get_mut_or_else(tag, || ForkProgress::new(init, capacity))
+            .get_mut_or_else(tag, || ForkProgress::new(init, interval, capacity))
     }
 }
 
@@ -130,24 +127,22 @@ impl<D: Data> OperatorCore for ForkSubtaskOperator<D> {
             let len = batch.len();
             if len > 0 {
                 let p = batch.tag().to_parent_uncheck();
-                let offset = self.peers;
                 let worker = self.worker_index;
-
                 let fp = self.get_buf_mut(&p);
-                if fp.update_input_seq(batch.get_seq()) {
+                if fp.pushed_parent <= fp.forked_child {
                     let batch_cp = batch.share();
                     output1.push_batch(batch_cp)?;
+                    fp.pushed_parent += batch.len() as u32;
                 }
+
                 batch.take_end();
                 for _ in 0..len {
                     if let Some(mut buf) = fp.buf.fetch() {
                         if let Some(next) = batch.next() {
                             buf.push(next);
-                            let cur = fp.next_seq;
+                            let cur = fp.next_seq();
                             let tag = Tag::inherit(&p, cur);
-                            fp.next_seq += offset;
-                            let i = (cur - worker) / offset;
-                            trace_worker!("fork {}th scope {:?}", i, tag);
+                            trace_worker!("fork {}th scope {:?}", fp.forked_child, tag);
                             let mut sub_batch = new_batch(tag.clone(), worker, buf);
                             let end = EndByScope::new(tag, Weight::single(worker), 1);
                             sub_batch.set_end(end);
@@ -157,10 +152,9 @@ impl<D: Data> OperatorCore for ForkSubtaskOperator<D> {
                             break;
                         }
                     } else {
-                        let i = (fp.next_seq - worker) / offset - 1;
                         trace_worker!(
                             "suspend fork new scope as capacity blocked, already forked {} scopes;",
-                            i
+                            fp.forked_child
                         );
                         would_block!("no buffer available for new scope;")?
                     }
@@ -182,8 +176,8 @@ impl<D: Data> Notifiable for ForkSubtaskOperator<D> {
         let end = n.take();
         if level + 1 == self.scope_level {
             if let Some(fp) = self.tumbling_scope.remove(&end.tag) {
-                let cnt = (fp.next_seq - self.worker_index) / self.peers;
-                trace_worker!("totally fork {} scope for {:?}", cnt - 1, &end.tag);
+                let cnt = fp.forked_child;
+                trace_worker!("totally fork {} scope for {:?}", cnt, &end.tag);
             }
             outputs[1].notify_end(end.clone())?;
         } else if end.tag.is_root() {
@@ -282,7 +276,7 @@ impl<P: Data, S: Data> OperatorCore for ZipSubtaskOperator<P, S> {
                             )))?;
                         }
                         Err(TakeErr::NotExist) => {
-                            Err(JobExecError::panic(format!("req data of {}th task not found;", offset)))?;
+                            Err(JobExecError::panic(format!("parent data of {}th subtask not found;", offset)))?;
                         }
                     }
 
@@ -416,10 +410,17 @@ struct ZipSubtaskBuf<D> {
 
 impl<D> ZipSubtaskBuf<D> {
     fn new() -> Self {
-        ZipSubtaskBuf { reqs: VecDeque::new(), head: 0, len: 0, is_canceled: false, cur_end: None, end: None }
+        ZipSubtaskBuf {
+            reqs: VecDeque::new(),
+            head: 0,
+            len: 0,
+            is_canceled: false,
+            cur_end: None,
+            end: None,
+        }
     }
 
-    fn cur_end(&mut self, end:EndByScope) {
+    fn cur_end(&mut self, end: EndByScope) {
         self.cur_end = Some(end);
     }
 

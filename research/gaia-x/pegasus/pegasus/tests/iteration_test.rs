@@ -83,6 +83,36 @@ fn ping_pong_test_02() {
 }
 
 #[test]
+fn iterate_x_map_x_iterate_x_map_x_test() {
+    let mut conf = JobConf::new("iterate_x_map_x_iterate_x_map_x_test");
+    conf.set_workers(2);
+    let mut res = pegasus::run(conf, || {
+        let index = pegasus::get_current_worker().index;
+        let src = (index * 1000)..(index * 1000 + 1000);
+        move |input, output| {
+            input.input_from(src)?
+                .iterate(10, |start| {
+                    start.repartition(|x| Ok(*x as u64))
+                        .map(|x| Ok(x + 1))
+                })?
+                .iterate(10, |start| {
+                    start.repartition(|x| Ok(*x as u64))
+                        .map(|x| Ok(x + 1))
+                })?
+                .sink_into(output)
+        }
+    }).expect("submit job failure");
+
+    let mut vec = vec![];
+    while let Some(Ok(r)) = res.next() {
+        vec.push(r);
+    }
+    assert_eq!(vec.len(), 2000);
+    vec.sort();
+    assert_eq!(vec, (20..2020).into_iter().collect::<Vec<u32>>());
+}
+
+#[test]
 fn iterate_x_map_reduce_unfold_x_test() {
     let mut conf = JobConf::new("iterate_x_map_reduce_unfold_x_test");
     conf.set_workers(2);
