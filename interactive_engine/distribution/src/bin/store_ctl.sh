@@ -122,7 +122,7 @@ maxgraph() {
       -Dconfig.file="${MAXGRAPH_CONF_FILE}" \
       -Dlog.dir="${LOG_DIR}" \
       -Dlog.name="${LOG_NAME}" \
-      -cp "${libpath}" com.alibaba.maxgraph.groot.MaxGraph \
+      -cp "${libpath}" com.alibaba.maxgraph.servers.MaxGraph \
       "$@" > >(tee -a "${LOG_DIR}/${LOG_NAME}.out") 2> >(tee -a "${LOG_DIR}/${LOG_NAME}.err" >&2)
 }
 
