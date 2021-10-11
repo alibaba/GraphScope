@@ -21,6 +21,12 @@
       <groupId>com.alibaba.maxgraph</groupId>
       <artifactId>sdk</artifactId>
       <version>${project.parent.version}</version>
+      <exclusions>
+        <exclusion>
+          <groupId>org.apache.logging.log4j</groupId>
+          <artifactId>log4j-slf4j-impl</artifactId>
+        </exclusion>
+      </exclusions>
     </dependency>
     <dependency>
       <groupId>com.alibaba.maxgraph</groupId>
@@ -53,6 +59,12 @@
       <groupId>com.alibaba.maxgraph</groupId>
       <artifactId>groot</artifactId>
       <version>${project.parent.version}</version>
+      <exclusions>
+        <exclusion>
+          <groupId>org.apache.logging.log4j</groupId>
+          <artifactId>log4j-slf4j-impl</artifactId>
+        </exclusion>
+      </exclusions>
     </dependency>
     <dependency>
       <groupId>com.alibaba.maxgraph</groupId>
