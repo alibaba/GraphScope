@@ -29,7 +29,7 @@
     <module>lgraph</module>
     <module>groot</module>
     <module>sdk</module>
-    <module>servers</module>
+    <module>groot-server</module>
   </modules>
 
   <profiles>

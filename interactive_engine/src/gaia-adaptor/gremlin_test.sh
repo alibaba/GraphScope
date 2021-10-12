@@ -12,7 +12,7 @@ sed -e "s@LOG4RS_CONFIG@${maxgraph_dir}/conf/log4rs.yml@g" \
 LOG_NAME=maxnode MAXGRAPH_CONF_FILE=/tmp/max_node_gaia.config ./bin/store_ctl.sh max_node_gaia &
 sleep 20
 # load data
-cd ${base_dir}/../v2 && mvn -Dtest=com.alibaba.maxgraph.tests.sdk.DataLoadingTest test
+cd ${base_dir}/../sdk && mvn -Dtest=com.alibaba.maxgraph.tests.sdk.DataLoadingTest test
 echo "localhost:12312" > ${base_dir}/src/test/resources/graph.endpoint
 cd ${base_dir} && mvn test
 exit_code=$?
