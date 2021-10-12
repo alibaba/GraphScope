@@ -271,8 +271,8 @@ impl LogicalPlan {
     }
 }
 
-pub(crate) fn cstr_to_string(c_str: *const c_char) -> FfiResult<String> {
-    let str_result = unsafe { CStr::from_ptr(c_str) }.to_str();
+pub(crate) fn cstr_to_string(cstr: *const c_char) -> FfiResult<String> {
+    let str_result = unsafe { CStr::from_ptr(cstr) }.to_str();
     if let Ok(str) = str_result {
         Ok(str.to_string())
     } else {
@@ -291,6 +291,15 @@ impl TryFrom<String> for common_pb::SuffixExpr {
             }
         }
         Err(ResultCode::ParseExprError)
+    }
+}
+
+pub(crate) fn cstr_to_suffix_expr_pb(cstr: *const c_char) -> FfiResult<common_pb::SuffixExpr> {
+    let str = cstr_to_string(cstr);
+    if str.is_err() {
+        Err(str.err().unwrap())
+    } else {
+        common_pb::SuffixExpr::try_from(str.unwrap())
     }
 }
 

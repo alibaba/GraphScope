@@ -137,28 +137,38 @@ message Unfold {
   common.NameOrId alias = 2;
 }
 
-// The operation of scanning required data from certain schema
+// The operation of scanning required data from certain data source
+// In fact, Scan is an operator that transform the source data format (defined by the database)
+// into internal data format (defined by runtime)
 message Scan {
+  // A mapping from the original data field to some internal alias
+  message AliasMapping {
+    // The name of the data field
+    string field = 1;
+    // The alias
+    common.NameOrId alias = 2;
+  }
   // A name of the schema from which the data is fetched
   string schema_name = 1;
-  // The predicate that defines conditions these data shall satisfy
-  common.SuffixExpr predicate = 2;
-  // The alias for the projected data field
-  repeated common.NameOrId alias = 3;
+  // The alias for the projected data fields
+  repeated AliasMapping mappings = 2;
 }
 
 // In addition to `Scan`, this operator allow runtime to leverage certain optimization strategy while the predicates
-// involve some primary keys that are indexed.
-message PrimaryScan {
-  // A condition of some primary keys of a schema is **equal** to some given constant values.
-  message KVPair {
-    repeated common.Variable keys = 1;
-    repeated common.Const values = 2;
+// involve some equivalence conditions of the primary keys that are indexed.
+message IndexedScan {
+  // A pair defines that a key must equate a given constant value.
+  message KVEquiPair {
+    common.Variable _key = 1;
+    common.Const value = 2;
+  }
+  // A collection of KVEquiPair which forms a logical **AND** connection.
+  message IndexedPredicate {
+    repeated KVEquiPair pairs = 1;
   }
   Scan scan = 1;
-  // An array of KVPair forms a logical **OR** connection, for example, an array of
-  // [(k1, v1), (k2, v2), ...] means the predicate of k1 == v1 OR k2 == v2 OR ...
-  repeated KVPair primary_predicate = 2;
+  // A collection of IndexedPredicate forms a logical **OR** connection
+  repeated IndexedPredicate primary_predicate = 2;
 }
 
 // To expand satisfied edges from a tag of the graph relation that refers to a vertex attribute
@@ -279,7 +289,7 @@ message LogicalPlan {
       Apply apply = 9;
       SegmentApply seg_apply = 10;
       Scan scan = 11;
-      PrimaryScan primary_scan = 12;
+      IndexedScan indexed_scan = 12;
       // Saving the room for relational operators
       EdgeExpand edge = 21;
       PathExpand path = 22;
