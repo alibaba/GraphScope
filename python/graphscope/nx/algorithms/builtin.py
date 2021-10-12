@@ -1184,12 +1184,116 @@ def is_simple_path(G, nodes):
     False
 
     """
-    if isinstance(nodes, list):
-        n1json = json.dumps(nodes)
-        ctx = AppAssets(algo="is_simple_path", context="tensor")(G, n1json)
-        return ctx.to_numpy("r", axis=0)[0]
-    else:
-        raise ValueError("input nodes is not a list object!")
+    return graphscope.is_simple_path(G, nodes)
+
+
+def get_all_simple_paths(G, source, target_nodes, cutoff):
+    @project_to_simple
+    def _all_simple_paths(G, source, target_nodes, cutoff):
+        targets_json = json.dumps(target_nodes)
+        return AppAssets(algo="all_simple_paths", context="tensor")(
+            G, source, targets_json, cutoff
+        )
+
+    if not isinstance(target_nodes, list):
+        target_nodes = [target_nodes]
+    if source not in G or len(target_nodes) != len(list(G.nbunch_iter(target_nodes))):
+        raise ValueError("nx.NodeNotFound")
+    if cutoff is None:
+        cutoff = len(G) - 1
+    if cutoff < 1 or source in target_nodes:
+        return []
+    ctx = _all_simple_paths(G, source, list(set(target_nodes)), cutoff)
+    paths = ctx.to_numpy("r", axis=0).tolist()
+    if len(paths) == 1:
+        if not isinstance(paths[0], list):
+            return []
+    return paths
+
+
+def all_simple_paths(G, source, target_nodes, cutoff=None):
+    """Generate all simple paths in the graph G from source to target.
+    A simple path is a path with no repeated nodes.
+    Parameters
+    ----------
+    G : NetworkX graph
+    source : node
+       Starting node for path
+    target : nodes
+       Single node or iterable of nodes at which to end path
+    cutoff : integer, optional
+        Depth to stop the search. Only paths of length <= cutoff are returned.
+    Returns
+    -------
+    paths: list
+       A list that produces lists of simple paths.  If there are no paths
+       between the source and target within the given cutoff the list
+       is empty.
+    Examples
+    --------
+        >>> G = nx.complete_graph(4)
+        >>> print(nx.builtin.all_simple_paths(G, 0, 3))
+        ...
+        [0, 1, 2, 3]
+        [0, 1, 3]
+        [0, 2, 1, 3]
+        [0, 2, 3]
+        [0, 3]
+
+    """
+
+    paths = get_all_simple_paths(G, source, target_nodes, cutoff)
+    # delte path tail padding
+    for path in paths:
+        for i in range(len(path) - 1, -1, -1):
+            if path[i] == -1:
+                path.pop(i)
+            else:
+                break
+    return paths
+
+
+def all_simple_edge_paths(G, source, target_nodes, cutoff=None):
+    """Generate lists of edges for all simple paths in G from source to target.
+    A simple path is a path with no repeated nodes.
+    Parameters
+    ----------
+    G : NetworkX graph
+    source : node
+       Starting node for path
+    target : nodes
+       Single node or iterable of nodes at which to end path
+    cutoff : integer, optional
+        Depth to stop the search. Only paths of length <= cutoff are returned.
+    Returns
+    -------
+    paths: list
+       A list that produces lists of simple edge paths.  If there are no paths
+       between the source and target within the given cutoff the list
+       is empty.
+    Examples
+    --------
+    Print the simple path edges of a Graph::
+        >>> g = nx.Graph([(1, 2), (2, 4), (1, 3), (3, 4)])
+        >>> print(nx.builtin.all_simple_paths(G, 1, 4))
+        [(1, 2), (2, 4)]
+        [(1, 3), (3, 4)]
+
+    """
+
+    paths = get_all_simple_paths(G, source, target_nodes, cutoff)
+    for path in paths:
+        a = ""
+        b = ""
+        for i in range(len(path) - 1, -1, -1):
+            if path[i] == -1:
+                a = path.pop(i)
+            else:
+                b = path.pop(i)
+                if a != -1 and a != "":
+                    path.insert(i, (b, a))
+                a = b
+    return paths
 
 
 @project_to_simple

@@ -350,6 +350,23 @@ def data_type_to_cpp(t):
     raise ValueError("Not support type {}".format(t))
 
 
+def data_type_to_python(t):
+    if t in (
+        graph_def_pb2.INT,
+        graph_def_pb2.LONG,
+        graph_def_pb2.UINT,
+        graph_def_pb2.ULONG,
+    ):
+        return int
+    elif t in (graph_def_pb2.FLOAT, graph_def_pb2.DOUBLE):
+        return float
+    elif t in (graph_def_pb2.STRING):
+        return str
+    elif t in (None, t == graph_def_pb2.NULLVALUE):
+        return None
+    raise ValueError("Not support type {}".format(t))
+
+
 def normalize_data_type_str(data_type):
     data_type = data_type.lower()
     if data_type in ("int8", "int8_t"):

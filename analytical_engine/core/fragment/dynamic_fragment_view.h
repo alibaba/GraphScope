@@ -262,11 +262,7 @@ class DynamicFragmentView : public DynamicFragment {
     return fragment_->HasEdge(u, v);
   }
 
-  inline bool GetVertexData(const oid_t& oid, std::string& ret) const {
-    return fragment_->GetVertexData(oid, ret);
-  }
-
-  inline bool GetEdgeData(const oid_t& u, const oid_t& v, std::string& ret) {
+  inline bool GetEdgeData(const oid_t& u, const oid_t& v, edata_t& ret) {
     if (view_type_ == FragmentViewType::REVERSED) {
       return fragment_->GetEdgeData(v, u, ret);
     }

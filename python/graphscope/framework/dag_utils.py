@@ -256,7 +256,7 @@ def dynamic_to_arrow(graph):
     return op
 
 
-def arrow_to_dynamic(graph, default_label):
+def arrow_to_dynamic(graph):
     """Transform a :class:`Graph` object to :class:`nx.Graph`.
 
     Args:
@@ -278,7 +278,7 @@ def arrow_to_dynamic(graph, default_label):
         types_pb2.VID_TYPE: utils.s_to_attr(
             utils.data_type_to_cpp(graph.schema.vid_type)
         ),
-        types_pb2.DEFAULT_LABEL: utils.s_to_attr(default_label),
+        types_pb2.DEFAULT_LABEL_ID: utils.i_to_attr(graph._default_label_id),
     }
     op = Operation(
         graph.session_id,
@@ -340,7 +340,14 @@ def modify_vertices(graph, modify_type, vertices):
 
 
 def report_graph(
-    graph, report_type, node=None, edge=None, fid=None, lid=None, key=None
+    graph,
+    report_type,
+    node=None,
+    edge=None,
+    fid=None,
+    lid=None,
+    key=None,
+    label_id=None,
 ):
     """Create report operation for nx graph.
 
@@ -382,6 +389,9 @@ def report_graph(
         types_pb2.GRAPH_NAME: utils.s_to_attr(graph.key),
         types_pb2.REPORT_TYPE: utils.report_type_to_attr(report_type),
     }
+    if graph.graph_type == graph_def_pb2.ARROW_PROPERTY:
+        config[types_pb2.DEFAULT_LABEL_ID] = utils.i_to_attr(graph._default_label_id)
+
     if node is not None:
         config[types_pb2.NODE] = utils.s_to_attr(node)
     if edge is not None:
@@ -390,6 +400,8 @@ def report_graph(
         config[types_pb2.FID] = utils.i_to_attr(fid)
     if lid is not None:
         config[types_pb2.LID] = utils.i_to_attr(lid)
+    if label_id is not None:
+        config[types_pb2.V_LABEL_ID] = utils.i_to_attr(label_id)
 
     config[types_pb2.EDGE_KEY] = utils.s_to_attr(str(key) if key is not None else "")
     op = Operation(

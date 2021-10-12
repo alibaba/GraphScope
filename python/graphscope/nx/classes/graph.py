@@ -29,6 +29,7 @@ from networkx.classes.graphviews import generic_graph_view
 from networkx.classes.reportviews import DegreeView
 from networkx.classes.reportviews import EdgeView
 from networkx.classes.reportviews import NodeView
+from networkx.generators.degree_seq import expected_degree_graph
 
 from graphscope import nx
 from graphscope.client.session import get_default_session
@@ -40,7 +41,6 @@ from graphscope.framework.graph_schema import GraphSchema
 from graphscope.nx import NetworkXError
 from graphscope.nx.classes.dicts import AdjDict
 from graphscope.nx.classes.dicts import NodeDict
-from graphscope.nx.convert import from_gs_graph
 from graphscope.nx.convert import to_nx_graph
 from graphscope.nx.utils.compat import patch_docstring
 from graphscope.nx.utils.misc import check_node_is_legal
@@ -213,7 +213,7 @@ class Graph(_GraphBase):
     graph_attr_dict_factory = dict
     _graph_type = graph_def_pb2.DYNAMIC_PROPERTY
 
-    def __init__(self, incoming_graph_data=None, default_label="_", **attr):
+    def __init__(self, incoming_graph_data=None, default_label=None, **attr):
         """Initialize a graph with edges, name, or graph attributes
 
         Parameters
@@ -294,11 +294,7 @@ class Graph(_GraphBase):
         # attempt to load graph with data
         if incoming_graph_data is not None:
             if self._is_gs_graph(incoming_graph_data):
-                graph_def = from_gs_graph(
-                    incoming_graph_data, self, self._default_label
-                )
-                self._key = graph_def.key
-                self._schema.init_nx_schema(incoming_graph_data.schema)
+                self._init_with_arrow_property_graph(incoming_graph_data)
             else:
                 g = to_nx_graph(incoming_graph_data, create_using=self)
                 check_argument(isinstance(g, Graph))
@@ -323,7 +319,7 @@ class Graph(_GraphBase):
             )
         if not session.eager():
             raise RuntimeError(
-                "Networkx module need session to be eager mode. "
+                "NetworkX module need session to be eager mode. "
                 "The default session is lazy mode."
             )
         self._session = session
@@ -395,6 +391,12 @@ class Graph(_GraphBase):
             vdata_type = utils.data_type_to_cpp(self._schema.vdata_type)
             edata_type = utils.data_type_to_cpp(self._schema.edata_type)
             return f"gs::DynamicProjectedFragment<{vdata_type},{edata_type}>"
+        elif self._graph_type == graph_def_pb2.ARROW_PROPERTY:
+            oid_type = utils.normalize_data_type_str(
+                utils.data_type_to_cpp(self._schema.oid_type)
+            )
+            vid_type = self._schema.vid_type
+            return f"vineyard::ArrowFragment<{oid_type},{vid_type}>"
         else:
             raise ValueError(f"Unsupported graph type: {self._graph_type}")
 
@@ -596,6 +598,7 @@ class Graph(_GraphBase):
         11
 
         """
+        self._convert_arrow_to_dynamic()
         nodes = []
         for n in nodes_for_adding:
             data = dict(attr)
@@ -679,6 +682,7 @@ class Graph(_GraphBase):
         []
 
         """
+        self._convert_arrow_to_dynamic()
         nodes = []
         for n in nodes_for_removing:
             check_node_is_legal(n)
@@ -727,6 +731,8 @@ class Graph(_GraphBase):
 
         """
         check_node_is_legal(n)
+        if self.graph_type == graph_def_pb2.ARROW_PROPERTY:
+            n = self._convert_to_label_id_tuple(n)
         op = dag_utils.report_graph(self, types_pb2.NODE_DATA, node=json.dumps([n]))
         return op.eval()
 
@@ -794,9 +800,11 @@ class Graph(_GraphBase):
         """
         try:
             check_node_is_legal(n)
+            if self.graph_type == graph_def_pb2.ARROW_PROPERTY:
+                n = self._convert_to_label_id_tuple(n)
             op = dag_utils.report_graph(self, types_pb2.HAS_NODE, node=json.dumps([n]))
             return int(op.eval())
-        except (TypeError, NetworkXError):
+        except (TypeError, NetworkXError, KeyError):
             return False
 
     def add_edge(self, u_of_edge, v_of_edge, **attr):
@@ -889,6 +897,8 @@ class Graph(_GraphBase):
         >>> G.add_edges_from([(1, 2), (2, 3)], weight=3)
         >>> G.add_edges_from([(3, 4), (1, 4)], label="WN2898")
         """
+        self._convert_arrow_to_dynamic()
+
         edges = []
         for e in ebunch_to_add:
             ne = len(e)
@@ -989,6 +999,8 @@ class Graph(_GraphBase):
         >>> ebunch = [(1, 2), (2, 3)]
         >>> G.remove_edges_from(ebunch)
         """
+        self._convert_arrow_to_dynamic()
+
         edges = []
         for e in ebunch:
             ne = len(e)
@@ -1030,6 +1042,8 @@ class Graph(_GraphBase):
         """
         check_node_is_legal(u)
         check_node_is_legal(v)
+        self._convert_arrow_to_dynamic()
+
         try:
             edge = [json.dumps((u, v, data))]
         except TypeError as e:
@@ -1071,6 +1085,8 @@ class Graph(_GraphBase):
 
         """
         check_node_is_legal(n)
+        self._convert_arrow_to_dynamic()
+
         try:
             node = [json.dumps((n, data))]
         except TypeError as e:
@@ -1388,6 +1404,9 @@ class Graph(_GraphBase):
         0
         """
         if self.has_edge(u, v):
+            if self.graph_type == graph_def_pb2.ARROW_PROPERTY:
+                u = self._convert_to_label_id_tuple(u)
+                v = self._convert_to_label_id_tuple(v)
             op = dag_utils.report_graph(
                 self, types_pb2.EDGE_DATA, edge=json.dumps((u, v)), key=""
             )
@@ -1475,11 +1494,20 @@ class Graph(_GraphBase):
         []
 
         """
+        if self._graph_type == graph_def_pb2.ARROW_PROPERTY:
+            # create an empty graph, no need to convert arrow to dynamic
+            self._graph_type = graph_def_pb2.DYNAMIC_PROPERTY
+            graph_def = empty_graph_in_engine(
+                self, self.is_directed(), self._distributed
+            )
+            self._key = graph_def.key
+        else:
+            op = dag_utils.clear_graph(self)
+            op.eval()
+
         self.graph.clear()
         self.schema.clear()
         self.schema.init_nx_schema()
-        op = dag_utils.clear_graph(self)
-        op.eval()
 
     def clear_edges(self):
         """Remove all edges from the graph without altering nodes.
@@ -1493,6 +1521,7 @@ class Graph(_GraphBase):
         >>> list(G.edges)
         []
         """
+        self._convert_arrow_to_dynamic()
         op = dag_utils.clear_edges(self)
         op.eval()
 
@@ -1591,6 +1620,7 @@ class Graph(_GraphBase):
             g = generic_graph_view(self)
             g._is_client_view = True
         else:
+            self._convert_arrow_to_dynamic()
             g = self.__class__(create_empty_in_engine=False)
             g.graph = copy.deepcopy(self.graph)
             op = dag_utils.copy_graph(self, "identical")
@@ -1633,6 +1663,8 @@ class Graph(_GraphBase):
         >>> list(G2.edges)
         [(0, 1)]
         """
+        self._convert_arrow_to_dynamic()
+
         if self.is_directed():
             graph_class = self.to_undirected_class()
             if as_view:
@@ -1695,6 +1727,8 @@ class Graph(_GraphBase):
         >>> list(H.edges)
         [(0, 1)]
         """
+        self._convert_arrow_to_dynamic()
+
         if self.is_directed():
             return self.copy(as_view=as_view)
         else:
@@ -1747,6 +1781,8 @@ class Graph(_GraphBase):
         >>> list(H.edges)
         [(0, 1), (1, 2)]
         """
+        self._convert_arrow_to_dynamic()
+
         induced_nodes = []
         for n in nodes:
             check_node_is_legal(n)
@@ -1796,6 +1832,8 @@ class Graph(_GraphBase):
         [(0, 1), (3, 4)]
 
         """
+        self._convert_arrow_to_dynamic()
+
         induced_edges = []
         for e in edges:
             u, v = e
@@ -1845,9 +1883,18 @@ class Graph(_GraphBase):
         >>> g._batch_get_node((0, 0))  # start from frag-0, lid-0, mpirun np=1
         {'status': True, 'next': [1, 0], 'batch': [1, 2, 3]}
         """
-        op = dag_utils.report_graph(
-            self, types_pb2.NODES_BY_LOC, fid=location[0], lid=location[1]
-        )
+        if len(location) == 2:
+            op = dag_utils.report_graph(
+                self, types_pb2.NODES_BY_LOC, fid=location[0], lid=location[1]
+            )
+        else:
+            op = dag_utils.report_graph(
+                self,
+                types_pb2.NODES_BY_LOC,
+                fid=location[0],
+                lid=location[1],
+                label_id=location[2],
+            )
         return op.eval()
 
     @parse_ret_as_dict
@@ -1881,6 +1928,8 @@ class Graph(_GraphBase):
         """
         if n not in self:
             raise NetworkXError("The node %s is not in the graph." % (n,))
+        if self.graph_type == graph_def_pb2.ARROW_PROPERTY:
+            n = self._convert_to_label_id_tuple(n)
         op = dag_utils.report_graph(self, report_type, node=json.dumps([n]))
         ret = op.eval()
         return ret
@@ -2058,3 +2107,74 @@ class Graph(_GraphBase):
         graph._op = op
         graph._is_client_view = False
         return graph
+
+    def _init_with_arrow_property_graph(self, arrow_property_graph):
+        """Init graph with arrow property graph"""
+        # check session and direction compatible
+        if arrow_property_graph.session_id != self.session_id:
+            raise NetworkXError(
+                "Try to init with another session's arrow_property graph."
+                + "Graphs must be the same session."
+            )
+        if arrow_property_graph.is_directed() != self.is_directed():
+            raise NetworkXError(
+                "Try to init with another direction type's arrow_property graph."
+                + "Graphs must have the same direction type."
+            )
+        self._key = arrow_property_graph.key
+        self._schema = arrow_property_graph.schema
+        if self._default_label is not None:
+            try:
+                self._default_label_id = self._schema.get_vertex_label_id(
+                    self._default_label
+                )
+            except KeyError:
+                raise NetworkXError(
+                    "default label {} not existed in graph." % self._default_label
+                )
+        else:
+            # default_label is None
+            self._default_label_id = -1
+        self._graph_type = graph_def_pb2.ARROW_PROPERTY
+
+    def _convert_arrow_to_dynamic(self):
+        """Try to convert the hosted graph from arrow_property to dynamic_property.
+
+        Notes
+        -------
+            the method is implicit called by modification and graph view methods.
+        """
+        if self.graph_type == graph_def_pb2.ARROW_PROPERTY:
+            op = dag_utils.arrow_to_dynamic(self)
+            graph_def = op.eval()
+            self._key = graph_def.key
+            schema = GraphSchema()
+            schema.init_nx_schema(self._schema)
+            self._schema = schema
+            self._graph_type = graph_def_pb2.DYNAMIC_PROPERTY
+
+    def _convert_to_label_id_tuple(self, n):
+        """Convert the node to (label_id, id) format.
+        The input node may be id or (label, id), convert the node
+        to tuple (label_id, id) format.
+
+        Notes
+        -------
+            the method is implicit called by report methods and the hosted graph is
+        arrow_property graph.
+        """
+        if isinstance(n, tuple):
+            id = n[1]
+            new_n = (self._schema.get_vertex_label_id(n[0]), n[1])
+            if new_n[0] == self._default_label_id:
+                raise KeyError("default label's node must be non-tuple format.")
+        elif self._default_label_id == -1:
+            # the n is non-tuple, but default id is -1
+            raise KeyError("default label id is -1.")
+        else:
+            id = n
+            new_n = (self._default_label_id, n)
+        if not isinstance(id, utils.data_type_to_python(self._schema.oid_type)):
+            # id is not oid type
+            raise KeyError("the node type is not arrow_property oid_type.")
+        return new_n

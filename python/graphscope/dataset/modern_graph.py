@@ -18,19 +18,21 @@
 
 import os
 
+from graphscope.client.session import get_default_session
 from graphscope.dataset import DATA_SITE
 from graphscope.dataset.io_utils import download_file
 from graphscope.framework.graph import Graph
 from graphscope.framework.loader import Loader
 
 
-def load_modern_graph(sess, prefix=None, directed=True):
+def load_modern_graph(sess=None, prefix=None, directed=True):
     """Load modern graph.
     Modern graph consist 6 vertices and 6 edges, useful to test the basic
     functionalities.
 
     Args:
         sess (:class:`graphscope.Session`): Load graph within the session.
+            Default session will be used when setting to None. Defaults to None.
         prefix (str): `PathLike` object that represents a path.
             With standalone mode, set prefix None will try to download from
             source URL. Defaults to None.
@@ -67,6 +69,9 @@ def load_modern_graph(sess, prefix=None, directed=True):
         )
         # assumed dirname is modern_graph after extracting from modern_graph.tar.gz
         prefix = fpath[0:-7]
+
+    if sess is None:
+        sess = get_default_session()
 
     graph = sess.g(directed=directed)
     graph = (
