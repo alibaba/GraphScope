@@ -395,7 +395,7 @@ class LocalLauncher(Launcher):
                     "http://localhost:{0}".format(self._etcd_client_port),
                 ]
             )
-            cmd.extend(["--etcd_prefix", f"vineyard.gsa.{ts}"])
+            cmd.extend(["-etcd_prefix", f"vineyard.gsa.{ts}"])
             env = os.environ.copy()
             env["GLOG_v"] = str(self._glog_level)
 
@@ -533,7 +533,7 @@ class LocalLauncher(Launcher):
         self._stop_subprocess(self._zetcd_process)
 
     def _stop_analytical_engine(self):
-        self._stop_subprocess(self._analytical_engine_process)
+        self._stop_subprocess(self._analytical_engine_process, kill=True)
         self._analytical_engine_endpoint = None
 
     def _stop_subprocess(self, proc, kill=False):

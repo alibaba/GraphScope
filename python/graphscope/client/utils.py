@@ -18,6 +18,7 @@
 
 import inspect
 import logging
+import signal
 import sys
 from functools import wraps
 
@@ -109,6 +110,35 @@ class CaptureKeyboardInterrupt(object):
                 except:  # noqa: E722
                     pass
             return False
+
+
+class SignalIgnore(object):
+    """Context Manager for signal ignore
+
+    Args:
+        signals (list of `signal.signal`):
+            A list of signal you want to ignore.
+
+    Examples:
+
+        >>> with SignalIgnore(signal.SIGINT):
+        >>>     func_call()
+
+        >>> with SignalIgnore([signal.SIGINT, signal.SIGTERM]):
+        >>>     func_call()
+    """
+
+    def __init__(self, signal):
+        self._signal = list(signal)
+
+    def __enter__(self):
+        self._original_handler = [
+            signal.signal(s, signal.SIG_IGN) for s in self._signal
+        ]
+
+    def __exit__(self, exc_type, exc_value, exc_tb):
+        for s, h in zip(self._signal, self._original_handler):
+            signal.signal(s, h)
 
 
 def set_defaults(defaults):

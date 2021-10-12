@@ -27,6 +27,7 @@ import json
 import logging
 import os
 import pickle
+import signal
 import sys
 import threading
 import time
@@ -44,6 +45,7 @@ import graphscope
 from graphscope.client.rpc import GRPCClient
 from graphscope.client.utils import CaptureKeyboardInterrupt
 from graphscope.client.utils import GSLogger
+from graphscope.client.utils import SignalIgnore
 from graphscope.client.utils import set_defaults
 from graphscope.config import GSConfig as gs_config
 from graphscope.deploy.hosts.cluster import HostsClusterLauncher
@@ -774,9 +776,16 @@ class Session(object):
         """Closes this session.
 
         This method frees all resources associated with the session.
+
+        Note that closing will ignore SIGINT and SIGTERM signal and recover later.
         """
+        with SignalIgnore([signal.SIGINT, signal.SIGTERM]):
+            self._close()
+
+    def _close(self):
         if self._closed:
             return
+        time.sleep(5)
         self._closed = True
         self._coordinator_endpoint = None
 
@@ -1416,7 +1425,7 @@ def gremlin(graph, engine_params=None):
     return get_default_session().gremlin(graph, engine_params)
 
 
-def learning(self, graph, nodes=None, edges=None, gen_labels=None):
+def learning(graph, nodes=None, edges=None, gen_labels=None):
     """Create a graph learning engine.
 
     See params detail in :meth:`graphscope.Session.learning`

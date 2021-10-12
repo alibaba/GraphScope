@@ -146,6 +146,7 @@ graphscope-client-manylinux2014-py3:
 				for py in cp36-cp36m cp37-cp37m cp38-cp38 cp39-cp39 cp310-cp310; do \
 					cd /work/python; \
 					export PATH=/opt/python/$$py/bin:$$PATH; \
+					pip3 install numpy==1.18.5; \
 					rm -rf build; \
 					rm -rf dist/*.whl; \
 					python3 setup.py bdist_wheel; \
