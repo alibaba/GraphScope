@@ -15,7 +15,7 @@
   <dependencies>
     <dependency>
       <groupId>com.alibaba.maxgraph</groupId>
-      <artifactId>servers</artifactId>
+      <artifactId>groot-server</artifactId>
       <version>${project.parent.version}</version>
     </dependency>
     <dependency>
@@ -28,11 +28,6 @@
       <artifactId>data_load_tools</artifactId>
       <version>${project.parent.version}</version>
     </dependency>
-    <!--<dependency>-->
-    <!--<groupId>com.alibaba.maxgraph</groupId>-->
-    <!--<artifactId>gaia-adaptor</artifactId>-->
-    <!--<version>${project.parent.version}</version>-->
-    <!--</dependency>-->
   </dependencies>
 
   <build>
