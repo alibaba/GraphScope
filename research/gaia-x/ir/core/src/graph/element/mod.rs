@@ -16,7 +16,8 @@
 pub use edge::Edge;
 pub use vertex::Vertex;
 
-use crate::graph::property::{DynDetails, Label, ID};
+use crate::graph::property::{DynDetails, ID};
+use crate::NameOrId;
 use dyn_type::{BorrowObject, Object};
 use pegasus_common::codec::{Decode, Encode, ReadExt, WriteExt};
 use std::fmt::Debug;
@@ -28,7 +29,7 @@ pub trait Element {
         None
     }
 
-    fn label(&self) -> Option<&Label> {
+    fn label(&self) -> Option<&NameOrId> {
         None
     }
 
@@ -86,7 +87,7 @@ impl Element for VertexOrEdge {
         }
     }
 
-    fn label(&self) -> Option<&Label> {
+    fn label(&self) -> Option<&NameOrId> {
         match self {
             VertexOrEdge::V(v) => v.label(),
             VertexOrEdge::E(e) => e.label(),

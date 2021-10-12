@@ -14,7 +14,8 @@
 //! limitations under the License.
 
 use crate::graph::element::Element;
-use crate::graph::property::{Details, DynDetails, Label, ID};
+use crate::graph::property::{Details, DynDetails, ID};
+use crate::NameOrId;
 use dyn_type::BorrowObject;
 use pegasus_common::codec::{Decode, Encode, ReadExt, WriteExt};
 use std::io;
@@ -23,8 +24,8 @@ use std::io;
 pub struct Edge {
     pub src_id: ID,
     pub dst_id: ID,
-    src_label: Option<Label>,
-    dst_label: Option<Label>,
+    src_label: Option<NameOrId>,
+    dst_label: Option<NameOrId>,
     details: DynDetails,
 }
 
@@ -33,7 +34,7 @@ impl Element for Edge {
         Some(self.details.get_id())
     }
 
-    fn label(&self) -> Option<&Label> {
+    fn label(&self) -> Option<&NameOrId> {
         Some(self.details.get_label())
     }
 
@@ -57,11 +58,11 @@ impl Edge {
         }
     }
 
-    pub fn set_src_label(&mut self, label: Label) {
+    pub fn set_src_label(&mut self, label: NameOrId) {
         self.src_label = Some(label);
     }
 
-    pub fn set_dst_label(&mut self, label: Label) {
+    pub fn set_dst_label(&mut self, label: NameOrId) {
         self.dst_label = Some(label);
     }
 }
@@ -81,8 +82,8 @@ impl Decode for Edge {
     fn read_from<R: ReadExt>(reader: &mut R) -> io::Result<Self> {
         let src_id = reader.read_u128()?;
         let dst_id = reader.read_u128()?;
-        let src_label = <Option<Label>>::read_from(reader)?;
-        let dst_label = <Option<Label>>::read_from(reader)?;
+        let src_label = <Option<NameOrId>>::read_from(reader)?;
+        let dst_label = <Option<NameOrId>>::read_from(reader)?;
         let details = <DynDetails>::read_from(reader)?;
         Ok(Edge {
             src_id,

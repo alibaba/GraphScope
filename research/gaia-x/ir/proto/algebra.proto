@@ -131,44 +131,47 @@ message Dedup {
 }
 
 message Unfold {
-  // The tag of a graph relation that **must** have a type of collection
+  // The tag of a graph relation that **must** refer to a data of collection type
   common.NameOrId tag = 1;
   // The alias tag for the elements that are unfolded from the collection
   common.NameOrId alias = 2;
 }
 
-// The operation of scanning required data from certain data source
-// In fact, Scan is an operator that transform the source data format (defined by the database)
-// into internal data format (defined by runtime)
+// Scan is an operator that transforms the source data format (defined by the database)
+// into internal data format (defined/used by runtime)
 message Scan {
-  // A mapping from the original data field to some internal alias
-  message AliasMapping {
-    // The name of the data field
-    string field = 1;
-    // The alias
-    common.NameOrId alias = 2;
+  enum ScanOpt {
+    // Scanning the vertices
+    VERTEX = 0;
+    // Scanning the edges
+    EDGE = 1;
+    // Scanning a relational table
+    TABLE = 2;
   }
-  // A name of the schema from which the data is fetched
-  string schema_name = 1;
-  // The alias for the projected data fields
-  repeated AliasMapping mappings = 2;
+  ScanOpt scan_opt = 1;
+  // The name of the schema
+  string schema_name = 2;
+  // The required data fields for the scan
+  repeated common.NameOrId fields = 3;
 }
 
 // In addition to `Scan`, this operator allow runtime to leverage certain optimization strategy while the predicates
 // involve some equivalence conditions of the primary keys that are indexed.
 message IndexedScan {
-  // A pair defines that a key must equate a given constant value.
-  message KVEquiPair {
-    common.Variable _key = 1;
+  // A pair defines that a key must be **equal** to a given constant value.
+  // TODO(longbin) More comparators (gt, ge, lt, le, ne) other than equivalence (eq) may be required
+  message KVEquivPair {
+    common.Property key = 1;
     common.Const value = 2;
   }
-  // A collection of KVEquiPair which forms a logical **AND** connection.
-  message IndexedPredicate {
-    repeated KVEquiPair pairs = 1;
+  // A collection of KVEquiPair that must hold at the same time, i.e., it defines a logical **AND**
+  // of all KVEquiPairs.
+  message KVEquivPairs {
+    repeated KVEquivPair pairs = 1;
   }
   Scan scan = 1;
-  // A collection of IndexedPredicate forms a logical **OR** connection
-  repeated IndexedPredicate primary_predicate = 2;
+  // A collection of KVEquivPairs that is connected by logical **OR**.
+  repeated KVEquivPairs orKvEquivPairs = 2;
 }
 
 // To expand satisfied edges from a tag of the graph relation that refers to a vertex attribute

@@ -61,7 +61,7 @@ use std::ffi::c_void;
 use std::os::raw::c_char;
 
 #[repr(i32)]
-#[derive(Copy, Clone, Debug)]
+#[derive(Copy, Clone, Debug, PartialEq)]
 pub enum FfiNameIdOpt {
     None = 0,
     Name = 1,
@@ -101,7 +101,7 @@ impl TryFrom<FfiNameOrId> for common_pb::NameOrId {
                 item: Some(common_pb::name_or_id::Item::Name(cstr_to_string(ffi.name)?)),
             }),
             FfiNameIdOpt::Id => Ok(common_pb::NameOrId {
-                item: Some(common_pb::name_or_id::Item::NameId(ffi.name_id)),
+                item: Some(common_pb::name_or_id::Item::Id(ffi.name_id)),
             }),
         }
     }
@@ -831,12 +831,22 @@ mod unfold {
 mod scan {
     use super::*;
 
+    #[allow(dead_code)]
+    #[derive(Copy, Clone, Debug, PartialEq)]
+    #[repr(i32)]
+    pub enum FfiScanOpt {
+        Vertex = 0,
+        Edge = 1,
+        Table = 2,
+    }
+
     /// To initialize a scan operator
     #[no_mangle]
-    pub extern "C" fn init_scan_operator() -> *const c_void {
+    pub extern "C" fn init_scan_operator(scan_opt: FfiScanOpt) -> *const c_void {
         let scan = Box::new(pb::Scan {
+            scan_opt: unsafe { std::mem::transmute::<FfiScanOpt, i32>(scan_opt) },
             schema_name: "".to_string(),
-            mappings: vec![],
+            fields: vec![],
         });
         Box::into_raw(scan) as *const c_void
     }
@@ -844,10 +854,10 @@ mod scan {
     #[no_mangle]
     pub extern "C" fn set_scan_schema_name(
         ptr_scan: *const c_void,
-        cstr_name: *const c_char,
+        cstr: *const c_char,
     ) -> ResultCode {
         let mut return_code = ResultCode::Success;
-        let schema_name = cstr_to_string(cstr_name);
+        let schema_name = cstr_to_string(cstr);
         if schema_name.is_err() {
             return_code = schema_name.err().unwrap()
         } else {
@@ -859,7 +869,26 @@ mod scan {
         return_code
     }
 
-    /// Append an unfold operator to the logical plan
+    /// Add a mapping from the original data field name to an alias
+    #[no_mangle]
+    pub extern "C" fn add_scan_data_field(
+        ptr_scan: *const c_void,
+        field_name: FfiNameOrId,
+    ) -> ResultCode {
+        let mut return_code = ResultCode::Success;
+        let field_name_pb: FfiResult<common_pb::NameOrId> = field_name.try_into();
+        if field_name_pb.is_err() {
+            return_code = field_name_pb.err().unwrap()
+        } else {
+            let mut scan = unsafe { Box::from_raw(ptr_scan as *mut pb::Scan) };
+            scan.fields.push(field_name_pb.unwrap());
+            std::mem::forget(scan);
+        }
+
+        return_code
+    }
+
+    /// Append a scan operator to the logical plan
     #[no_mangle]
     pub extern "C" fn append_scan_operator(
         ptr_plan: *const c_void,
@@ -874,5 +903,192 @@ mod scan {
     #[no_mangle]
     pub extern "C" fn destroy_scan_operator(ptr: *const c_void) {
         destroy_ptr::<pb::Scan>(ptr)
+    }
+}
+
+mod idxscan {
+    use super::*;
+    use crate::generated::algebra::indexed_scan::{KvEquivPair, KvEquivPairs};
+
+    /// To initialize an indexed-scan operator from a scan operator
+    #[no_mangle]
+    pub extern "C" fn init_idxscan_operator(ptr_scan: *const c_void) -> *const c_void {
+        let scan = unsafe { Box::from_raw(ptr_scan as *mut pb::Scan) };
+        let indexed_scan = Box::new(pb::IndexedScan {
+            scan: Some(scan.as_ref().clone()),
+            or_kv_equiv_pairs: vec![],
+        });
+        Box::into_raw(indexed_scan) as *const c_void
+    }
+
+    #[derive(Clone, Copy)]
+    #[repr(i32)]
+    pub enum FfiDataType {
+        Unknown = 0,
+        Boolean = 1,
+        I32 = 2,
+        I64 = 3,
+        F64 = 4,
+        Str = 5,
+        // TODO(longbin) More data type will be defined
+    }
+
+    #[derive(Clone)]
+    #[repr(C)]
+    pub struct FfiConst {
+        data_type: FfiDataType,
+        boolean: bool,
+        int32: i32,
+        int64: i64,
+        float64: f64,
+        cstr: *const c_char,
+    }
+
+    impl Default for FfiConst {
+        fn default() -> Self {
+            FfiConst {
+                data_type: FfiDataType::Unknown,
+                boolean: false,
+                int32: 0,
+                int64: 0,
+                float64: 0.0,
+                cstr: std::ptr::null() as *const c_char,
+            }
+        }
+    }
+
+    impl TryFrom<FfiConst> for common_pb::Const {
+        type Error = ResultCode;
+
+        fn try_from(ffi: FfiConst) -> Result<Self, Self::Error> {
+            match &ffi.data_type {
+                FfiDataType::Unknown => Err(ResultCode::UnknownTypeError),
+                FfiDataType::Boolean => Ok(common_pb::Const {
+                    value: Some(common_pb::Value::from(ffi.boolean)),
+                }),
+                FfiDataType::I32 => Ok(common_pb::Const {
+                    value: Some(common_pb::Value::from(ffi.int32)),
+                }),
+                FfiDataType::I64 => Ok(common_pb::Const {
+                    value: Some(common_pb::Value::from(ffi.int64)),
+                }),
+                FfiDataType::F64 => Ok(common_pb::Const {
+                    value: Some(common_pb::Value::from(ffi.float64)),
+                }),
+                FfiDataType::Str => {
+                    let str = cstr_to_string(ffi.cstr);
+                    if str.is_ok() {
+                        Ok(common_pb::Const {
+                            value: str.ok().map(|s| common_pb::Value::from(s)),
+                        })
+                    } else {
+                        Err(str.err().unwrap())
+                    }
+                }
+            }
+        }
+    }
+
+    #[no_mangle]
+    pub extern "C" fn boolean_as_const(boolean: bool) -> FfiConst {
+        let mut ffi = FfiConst::default();
+        ffi.data_type = FfiDataType::Boolean;
+        ffi.boolean = boolean;
+        ffi
+    }
+
+    #[no_mangle]
+    pub extern "C" fn int32_as_const(int32: i32) -> FfiConst {
+        let mut ffi = FfiConst::default();
+        ffi.data_type = FfiDataType::I32;
+        ffi.int32 = int32;
+        ffi
+    }
+
+    #[no_mangle]
+    pub extern "C" fn int64_as_const(int64: i64) -> FfiConst {
+        let mut ffi = FfiConst::default();
+        ffi.data_type = FfiDataType::I64;
+        ffi.int64 = int64;
+        ffi
+    }
+
+    #[no_mangle]
+    pub extern "C" fn f64_as_const(float64: f64) -> FfiConst {
+        let mut ffi = FfiConst::default();
+        ffi.data_type = FfiDataType::F64;
+        ffi.float64 = float64;
+        ffi
+    }
+
+    #[no_mangle]
+    pub extern "C" fn cstr_as_const(cstr: *const c_char) -> FfiConst {
+        let mut ffi = FfiConst::default();
+        ffi.data_type = FfiDataType::Str;
+        ffi.cstr = cstr;
+        ffi
+    }
+
+    #[no_mangle]
+    pub extern "C" fn build_kv_equiv_pairs() -> *const c_void {
+        let pairs: Box<Vec<KvEquivPair>> = Box::new(vec![]);
+        Box::into_raw(pairs) as *const c_void
+    }
+
+    #[no_mangle]
+    pub extern "C" fn and_kv_equiv_pair(
+        ptr_pairs: *const c_void,
+        key: FfiProperty,
+        value: FfiConst,
+    ) -> ResultCode {
+        let mut return_code = ResultCode::Success;
+        let key_pb: FfiResult<Option<common_pb::Property>> = key.try_into();
+        let value_pb: FfiResult<common_pb::Const> = value.try_into();
+        if key_pb.is_err() {
+            return_code = key_pb.err().unwrap();
+        } else if value_pb.is_err() {
+            return_code = value_pb.err().unwrap();
+        } else {
+            let mut kv_equiv_pairs = unsafe { Box::from_raw(ptr_pairs as *mut Vec<KvEquivPair>) };
+            kv_equiv_pairs.push(KvEquivPair {
+                key: key_pb.unwrap(),
+                value: value_pb.ok(),
+            });
+            std::mem::forget(kv_equiv_pairs)
+        }
+
+        return_code
+    }
+
+    #[no_mangle]
+    pub extern "C" fn add_idxscan_kv_equiv_pairs(
+        ptr_idxscan: *const c_void,
+        ptr_pairs: *const c_void,
+    ) -> ResultCode {
+        let mut idxscan = unsafe { Box::from_raw(ptr_idxscan as *mut pb::IndexedScan) };
+        let kv_equiv_pairs = unsafe { Box::from_raw(ptr_pairs as *mut Vec<KvEquivPair>) };
+        idxscan.or_kv_equiv_pairs.push(KvEquivPairs {
+            pairs: kv_equiv_pairs.as_ref().clone(),
+        });
+        std::mem::forget(idxscan);
+
+        ResultCode::Success
+    }
+
+    /// Append an indexed scan operator to the logical plan
+    #[no_mangle]
+    pub extern "C" fn append_idxscan_operator(
+        ptr_plan: *const c_void,
+        ptr_idxscan: *const c_void,
+        parent: i32,
+        id: *mut i32,
+    ) -> ResultCode {
+        let idxscan = unsafe { Box::from_raw(ptr_idxscan as *mut pb::IndexedScan) };
+        append_operator(ptr_plan, idxscan.as_ref().clone().into(), vec![parent], id)
+    }
+
+    #[no_mangle]
+    pub extern "C" fn destroy_idxscan_operator(ptr: *const c_void) {
+        destroy_ptr::<pb::IndexedScan>(ptr)
     }
 }

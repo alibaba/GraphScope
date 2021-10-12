@@ -30,7 +30,7 @@ message LabelKey {}
 message NameOrId {
   oneof item {
     string name = 1;
-    int32 name_id = 2;
+    int32 id = 2;
   }
 }
 
