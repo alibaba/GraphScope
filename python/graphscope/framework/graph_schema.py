@@ -317,8 +317,18 @@ class GraphSchema:
         """Schema for `nx.Graph`
 
         Args:
-            gs_schema (`GraphSchema`, optional): schema of a graphscope `Graph`. Defaults to None.
+            gs_schema (`GraphSchema`, optional): schema of a graphscope `Graph`. Defaults to None,
+        create an empty networkx graph schema.
         """
+        # init empty schema
+        self._vertex_labels = [VertexLabel("_")]
+        self._v_label_index["_"] = 0
+        self._edge_labels = [EdgeLabel("_")]
+        self._e_label_index["_"] = 0
+        self._edge_labels[0].source("_").destination("_")
+        self._valid_vertices = [1]
+        self._valid_edges = [1]
+
         if gs_schema is not None:
             for entry in gs_schema._valid_vertex_labels():
                 for props in entry.properties:
@@ -328,14 +338,6 @@ class GraphSchema:
                 for props in entry.properties:
                     if props.name not in self._edge_labels[0]._prop_index:
                         self._edge_labels[0].add_property(props.name, props.type)
-        else:
-            self._vertex_labels.append(VertexLabel("_"))
-            self._v_label_index["_"] = 0
-            self._edge_labels.append(EdgeLabel("_"))
-            self._e_label_index["_"] = 0
-            self._edge_labels[0].source("_").destination("_")
-            self._valid_vertices = [1]
-            self._valid_edges = [1]
 
     def __repr__(self):
         s = f"oid_type: {self._oid_type}\nvid_type: {self._vid_type}\n"
