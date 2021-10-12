@@ -583,7 +583,7 @@ jobs:
 
     - name: gremlin-test
       run: |
-        cd interactive_engine/src/servers
+        cd interactive_engine/src/groot-server
         mvn test -Pgremlin-test
 
     - uses: actions/upload-artifact@v2
