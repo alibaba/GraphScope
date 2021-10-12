@@ -16,7 +16,7 @@ RUN sudo mkdir -p /opt/vineyard && \
     make -j`nproc` && \
     make install && \
     cd /tmp && \
-    git clone -b v0.2.12 https://github.com/alibaba/libvineyard.git --depth=1 && \
+    git clone -b v0.3.1 https://github.com/alibaba/libvineyard.git --depth=1 && \
     cd libvineyard && \
     git submodule update --init && \
     mkdir -p /tmp/libvineyard/build && \

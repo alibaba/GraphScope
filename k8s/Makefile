@@ -77,7 +77,7 @@ graphscope-manylinux2014-py2-py3:
 				cmake .. -DCMAKE_INSTALL_PREFIX=/opt/vineyard && \
 				make -j install && \
 				cd /tmp && \
-				git clone https://github.com/alibaba/libvineyard.git --depth=1 && \
+				git clone -b v0.3.1 https://github.com/alibaba/libvineyard.git --depth=1 && \
 				cd libvineyard && \
 				git submodule update --init && \
 				mkdir -p build && cd build && \
@@ -98,7 +98,7 @@ graphscope-manylinux2014-py2-py3:
 				cp -f dist/* /opt/vineyard/dist && \
 				pip3 install dist/* && \
 				cp -rf /opt/vineyard/* /usr/local/ && \
-				cd /tmp && 
+				cd /tmp && \
 				rm -fr /tmp/libvineyard /tmp/libgrape-lite && \
 				cd /work && \
 				make install && \
@@ -122,7 +122,7 @@ graphscope-client-manylinux2014-py3:
 				cmake .. -DCMAKE_INSTALL_PREFIX=/opt/vineyard && \
 				make -j install && \
 				cd /tmp && \
-				git clone https://github.com/alibaba/libvineyard.git --depth=1 && \
+				git clone -b v0.3.1 https://github.com/alibaba/libvineyard.git --depth=1 && \
 				cd libvineyard && \
 				git submodule update --init && \
 				mkdir -p build && cd build && \

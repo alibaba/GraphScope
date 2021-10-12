@@ -1129,6 +1129,16 @@ class Session(object):
     def learning(self, graph, nodes=None, edges=None, gen_labels=None):
         """Start a graph learning engine.
 
+        Note that this method has been deprecated, using `graphlearn` replace.
+        """
+        warnings.warn(
+            "The method 'learning' has been deprecated, using graphlearn replace."
+        )
+        return self.graphlearn(graph, nodes, edges, gen_labels)
+
+    def graphlearn(self, graph, nodes=None, edges=None, gen_labels=None):
+        """Start a graph learning engine.
+
         Args:
             nodes (list): The node types that will be used for gnn training.
             edges (list): The edge types that will be used for gnn training.
@@ -1425,7 +1435,7 @@ def gremlin(graph, engine_params=None):
     return get_default_session().gremlin(graph, engine_params)
 
 
-def learning(graph, nodes=None, edges=None, gen_labels=None):
+def graphlearn(graph, nodes=None, edges=None, gen_labels=None):
     """Create a graph learning engine.
 
     See params detail in :meth:`graphscope.Session.learning`
@@ -1444,4 +1454,4 @@ def learning(graph, nodes=None, edges=None, gen_labels=None):
     """
     if _default_session_stack.is_cleared():
         raise RuntimeError("No de fault session found.")
-    return get_default_session().learning(graph, nodes, edges, gen_labels)
+    return get_default_session().graphlearn(graph, nodes, edges, gen_labels)

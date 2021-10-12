@@ -56,7 +56,7 @@ jobs:
 
         # package
         cd ${GITHUB_WORKSPACE}
-        tar -zcf client.tar.gz python/dist/wheelhouse/*.whl 
+        tar -zcf client.tar.gz python/dist/wheelhouse/*.whl
         tar -zcf graphscope.tar.gz coordinator/dist/wheelhouse/*.whl
 
     - name: Upload Artifact

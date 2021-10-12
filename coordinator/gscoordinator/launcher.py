@@ -380,7 +380,9 @@ class LocalLauncher(Launcher):
             vineyardd = shutil.which("vineyardd")
         if not vineyardd:
             vineyardd = [sys.executable, "-m", "vineyard"]
-        return list(vineyardd)
+        if not isinstance(vineyardd, list):
+            vineyardd = [vineyardd]
+        return vineyardd
 
     def _create_vineyard(self):
         if not self._vineyard_socket:
