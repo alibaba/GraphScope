@@ -892,6 +892,10 @@ bl::result<void> GrapeInstance::registerGraphType(const rpc::GSParams& params) {
     auto projector = std::make_shared<Projector>(type_sig, lib_path);
     BOOST_LEAF_CHECK(projector->Init());
     return object_manager_.PutObject(projector);
+  } else if (graph_type == rpc::graph::ARROW_LABEL_PROJECTED) {
+    auto projector = std::make_shared<Projector>(type_sig, lib_path);
+    BOOST_LEAF_CHECK(projector->Init());
+    return object_manager_.PutObject(projector);
   } else {
     RETURN_GS_ERROR(
         vineyard::ErrorCode::kInvalidValueError,

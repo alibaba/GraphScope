@@ -27,11 +27,8 @@ import graphscope
 import graphscope.nx as nx
 from graphscope.client.session import g
 from graphscope.client.session import get_default_session
-from graphscope.framework.errors import AnalyticalEngineInternalError
 from graphscope.framework.errors import InvalidArgumentError
 from graphscope.framework.loader import Loader
-from graphscope.nx.tests.classes.test_digraph import TestDiGraph as _TestDiGraph
-from graphscope.nx.tests.classes.test_graph import TestGraph as _TestGraph
 from graphscope.proto import graph_def_pb2
 from graphscope.proto.types_pb2 import SRC_LABEL
 
@@ -712,104 +709,3 @@ class TestImportNetworkxModuleWithSession(object):
         ):
             nx = self.session_lazy.nx()
         self.session_lazy.close()
-
-
-@pytest.mark.usefixtures("graphscope_session")
-class TestGraphCopyOnWrite(_TestGraph):
-    def setup_method(self):
-        self.Graph = nx.Graph
-        self.k3nodes = [0, 1, 2]
-        self.k3edges = [(0, 1), (0, 2), (1, 2)]
-        data_dir = os.path.expandvars("${GS_TEST_DIR}/networkx")
-        self.k3 = k3_graph(data_dir, False)
-        self.K3 = nx.Graph(self.k3, default_label="vertex")
-
-    def test_update(self):
-        # specify both edgees and nodes
-        G = self.K3.copy()
-        G.update(nodes=[3, (4, {"size": 2})], edges=[(4, 5), (6, 7, {"weight": 2})])
-        nlist = [
-            (0, {}),
-            (1, {}),
-            (2, {}),
-            (3, {}),
-            (4, {"size": 2}),
-            (5, {}),
-            (6, {}),
-            (7, {}),
-        ]
-        assert sorted(G.nodes.data()) == nlist
-        if G.is_directed():
-            elist = [
-                (0, 1, {}),
-                (0, 2, {}),
-                (1, 0, {}),
-                (1, 2, {}),
-                (2, 0, {}),
-                (2, 1, {}),
-                (4, 5, {}),
-                (6, 7, {"weight": 2}),
-            ]
-        else:
-            elist = [
-                (0, 1, {}),
-                (2, 0, {}),  # N.B: diff with _TestGraph, update the order of id
-                (2, 1, {}),
-                (4, 5, {}),
-                (6, 7, {"weight": 2}),
-            ]
-        assert sorted(G.edges.data()) == elist
-        assert G.graph == {}
-
-        # no keywords -- order is edges, nodes
-        G = self.K3.copy()
-        G.update([(4, 5), (6, 7, {"weight": 2})], [3, (4, {"size": 2})])
-        assert sorted(G.nodes.data()) == nlist
-        assert sorted(G.edges.data()) == elist
-        assert G.graph == {}
-
-        # update using only a graph
-        G = self.Graph()
-        G.graph["foo"] = "bar"
-        G.add_node(2, data=4)
-        G.add_edge(0, 1, weight=0.5)
-        GG = G.copy()
-        H = self.Graph()
-        GG.update(H)
-        assert_graphs_equal(G, GG)
-        H.update(G)
-        assert_graphs_equal(H, G)
-
-        # update nodes only
-        H = self.Graph()
-        H.update(nodes=[3, 4])
-        assert H.nodes ^ {3, 4} == set()
-        assert H.size() == 0
-
-        # update edges only
-        H = self.Graph()
-        H.update(edges=[(3, 4)])
-        if H.is_directed():
-            assert sorted(H.edges.data()) == [(3, 4, {})]
-        else:
-            assert sorted(H.edges.data()) == [(4, 3, {})]
-        assert H.size() == 1
-
-        # No inputs -> exception
-        with pytest.raises(nx.NetworkXError):
-            nx.Graph().update()
-
-
-@pytest.mark.usefixtures("graphscope_session")
-class TestDiGraphCopyOnWrite(_TestDiGraph):
-    def setup_method(self):
-        self.Graph = nx.DiGraph
-        # build K3
-        self.k3edges = [(0, 1), (0, 2), (1, 2)]
-        self.k3nodes = [0, 1, 2]
-        data_dir = os.path.expandvars("${GS_TEST_DIR}/networkx")
-        self.k3 = k3_graph(data_dir, True)
-        self.K3 = nx.DiGraph(self.k3, default_label="vertex")
-
-        self.p3 = p3_graph(data_dir, True)
-        self.P3 = nx.DiGraph(self.p3, default_label="vertex")

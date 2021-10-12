@@ -397,6 +397,14 @@ class Graph(_GraphBase):
             )
             vid_type = self._schema.vid_type
             return f"vineyard::ArrowFragment<{oid_type},{vid_type}>"
+        elif self._graph_type == graph_def_pb2.ARROW_LABEL_PROJECTED:
+            oid_type = utils.normalize_data_type_str(
+                utils.data_type_to_cpp(self._schema.oid_type)
+            )
+            vid_type = self._schema.vid_type
+            vdata_type = utils.data_type_to_cpp(self._schema.vdata_type)
+            edata_type = utils.data_type_to_cpp(self._schema.edata_type)
+            return f"gs::ArrowLabelProjectedFragment<{oid_type},{vid_type},{vdata_type},{edata_type}>"
         else:
             raise ValueError(f"Unsupported graph type: {self._graph_type}")
 
@@ -2037,9 +2045,9 @@ class Graph(_GraphBase):
         return op.eval()
 
     def _project_to_simple(self, v_prop=None, e_prop=None):
-        """Project nx graph to a simple graph to run builtin alogorithms.
+        """Project nx graph to a simple graph to run builtin algorithms.
 
-        A simple graph is a accesser wrapper of property graph that only single edge
+        A simple graph is a wrapper of property graph that only single edge
         attribute and single node attribute are available.
 
         Parameters
@@ -2065,6 +2073,7 @@ class Graph(_GraphBase):
 
         if v_prop is None:
             v_prop = str(v_prop)
+            v_prop_id = -1
             v_prop_type = graph_def_pb2.NULLVALUE
         else:
             check_argument(isinstance(v_prop, str))
@@ -2081,6 +2090,7 @@ class Graph(_GraphBase):
 
         if e_prop is None:
             e_prop = str(e_prop)
+            e_prop_id = -1
             e_prop_type = graph_def_pb2.NULLVALUE
         else:
             check_argument(isinstance(e_prop, str))
@@ -2092,18 +2102,30 @@ class Graph(_GraphBase):
                 raise InvalidArgumentError(
                     "graph not contains the edge property {}".format(e_prop)
                 )
-        op = dag_utils.project_dynamic_property_graph(
-            self, v_prop, e_prop, v_prop_type, e_prop_type
-        )
-        graph_def = op.eval(leaf=False)
         graph = self.__class__(create_empty_in_engine=False)
         graph = nx.freeze(graph)
-        graph._graph_type = graph_def_pb2.DYNAMIC_PROJECTED
+        if self.graph_type == graph_def_pb2.DYNAMIC_PROPERTY:
+            op = dag_utils.project_dynamic_property_graph(
+                self, v_prop, e_prop, v_prop_type, e_prop_type
+            )
+            graph._graph_type = graph_def_pb2.DYNAMIC_PROJECTED
+        else:
+            op = dag_utils.project_property_graph(
+                self,
+                v_prop_id,
+                e_prop_id,
+                v_prop_type,
+                e_prop_type,
+                self.schema.oid_type,
+                self.schema.vid_type,
+            )
+            graph._graph_type = graph_def_pb2.ARROW_LABEL_PROJECTED
+        graph_def = op.eval(leaf=False)
         graph._key = graph_def.key
         graph._session = self._session
         graph.schema.from_graph_def(graph_def)
         graph._saved_signature = self._saved_signature
-        graph._graph = self  # projected graph also can report nodes.
+        # graph._graph = self  # projected graph also can report nodes.
         graph._op = op
         graph._is_client_view = False
         return graph

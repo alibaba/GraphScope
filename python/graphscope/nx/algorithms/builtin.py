@@ -37,9 +37,13 @@ def project_to_simple(func):
     @functools.wraps(func)
     def wrapper(*args, **kwargs):
         graph = args[0]
+        print("G type 2", graph.graph_type)
         if not hasattr(graph, "graph_type"):
             raise InvalidArgumentError("Missing graph_type attribute in graph object.")
-        elif graph.graph_type == graph_def_pb2.DYNAMIC_PROPERTY:
+        elif graph.graph_type in (
+            graph_def_pb2.DYNAMIC_PROPERTY,
+            graph_def_pb2.ARROW_PROPERTY,
+        ):
             if (
                 "weight" in inspect.getfullargspec(func)[0]
             ):  # func has 'weight' argument
@@ -897,6 +901,7 @@ def weakly_connected_components(G):
         1 if the vertex satisfies k-core, otherwise 0.
 
     """
+    print("G type 1", G.graph_type)
     return AppAssets(algo="wcc_projected", context="vertex_data")(G)
 
 
@@ -953,7 +958,7 @@ def degree_assortativity_coefficient(G, x="out", y="in", weight=None):
     return graphscope.degree_assortativity_coefficient(G, x, y, weight)
 
 
-@project_to_simple
+# @project_to_simple
 def node_boundary(G, nbunch1, nbunch2=None):
     """Returns the node boundary of `nbunch1`.
 
@@ -991,12 +996,13 @@ def node_boundary(G, nbunch1, nbunch2=None):
     the interest of speed and generality, that is not required here.
 
     """
+    G2 = G._project_to_simple()
     n1json = json.dumps(list(nbunch1))
     if nbunch2:
         n2json = json.dumps(list(nbunch2))
     else:
         n2json = ""
-    ctx = AppAssets(algo="node_boundary", context="tensor")(G, n1json, n2json)
+    ctx = AppAssets(algo="node_boundary", context="tensor")(G2, n1json, n2json)
     return ctx.to_numpy("r", axis=0).tolist()
 
 

@@ -23,6 +23,7 @@ limitations under the License.
 #include "grape/grape.h"
 
 #include "apps/boundary/node_boundary_context.h"
+#include "apps/boundary/utils.h"
 #include "core/app/app_base.h"
 
 namespace gs {
@@ -47,17 +48,21 @@ class NodeBoundary : public AppBase<FRAG_T, NodeBoundaryContext<FRAG_T>>,
              message_manager_t& messages) {
     // parse input node array from json
     folly::dynamic node_array_1 = folly::parseJson(ctx.nbunch1);
+    std::vector<oid_t> oid_array_1;
+    ExtractOidArrayFromDynamic(node_array_1, oid_array_1);
     std::set<vid_t> node_gid_set, node_gid_set_2;
     vid_t gid;
     vertex_t v;
-    for (const auto& oid : node_array_1) {
+    for (const auto& oid : oid_array_1) {
       if (frag.Oid2Gid(oid, gid)) {
         node_gid_set.insert(gid);
       }
     }
     if (!ctx.nbunch2.empty()) {
       auto node_array_2 = folly::parseJson(ctx.nbunch2);
-      for (const auto& oid : node_array_2) {
+      std::vector<oid_t> oid_array_2;
+      ExtractOidArrayFromDynamic(node_array_2, oid_array_2);
+      for (const auto& oid : oid_array_2) {
         if (frag.Oid2Gid(oid, gid)) {
           node_gid_set_2.insert(gid);
         }

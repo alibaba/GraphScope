@@ -29,7 +29,7 @@ class TestRunGenericPath:
         nx.builtin.average_shortest_path_length(self.G, weight="weight")
 
     def test_run_has_path(self):
-        nx.builtin.has_path(self.G, source=0, target=3)
+        assert nx.builtin.has_path(self.G, source=0, target=3)
 
     def test_shortest_path_length_on_reverse_view(self):
         ret1 = nx.builtin.single_source_dijkstra_path_length(
