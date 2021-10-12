@@ -43,6 +43,8 @@ pub enum ResultCode {
     NotExistError = 2,
     /// The error while transforming from C-like string, aka char*
     CStringError = 3,
+    /// The provided data type is unknown
+    UnknownTypeError = 4,
 }
 
 impl std::fmt::Display for ResultCode {
@@ -52,6 +54,7 @@ impl std::fmt::Display for ResultCode {
             ResultCode::ParseExprError => write!(f, "parse expression error"),
             ResultCode::NotExistError => write!(f, "access to non-existed element"),
             ResultCode::CStringError => write!(f, "convert from c-like string error"),
+            ResultCode::UnknownTypeError => write!(f, "unknown data type"),
         }
     }
 }

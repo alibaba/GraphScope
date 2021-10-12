@@ -74,6 +74,14 @@ impl From<f64> for pb::Value {
     }
 }
 
+impl From<i32> for pb::Value {
+    fn from(i: i32) -> Self {
+        pb::Value {
+            item: Some(pb::value::Item::I32(i)),
+        }
+    }
+}
+
 impl From<i64> for pb::Value {
     fn from(i: i64) -> Self {
         pb::Value {
@@ -94,7 +102,7 @@ impl From<String> for pb::NameOrId {
     fn from(str: String) -> Self {
         if let Ok(id) = str.parse::<i32>() {
             pb::NameOrId {
-                item: Some(pb::name_or_id::Item::NameId(id)),
+                item: Some(pb::name_or_id::Item::Id(id)),
             }
         } else {
             pb::NameOrId {

@@ -19,6 +19,7 @@ pub use crate::plan::ffi::*;
 
 use crate::error::{ParsePbError, ParsePbResult};
 use crate::generated::common as pb;
+use dyn_type::{BorrowObject, Object};
 use pegasus_common::codec::{Decode, Encode, ReadExt, WriteExt};
 use std::convert::TryFrom;
 use std::io;
@@ -54,6 +55,22 @@ pub type KeyId = i32;
 pub enum NameOrId {
     Str(String),
     Id(KeyId),
+}
+
+impl NameOrId {
+    pub fn as_object(&self) -> Object {
+        match self {
+            NameOrId::Str(s) => s.to_string().into(),
+            NameOrId::Id(id) => (*id as i32).into(),
+        }
+    }
+
+    pub fn as_borrow_object(&self) -> BorrowObject {
+        match self {
+            NameOrId::Str(s) => BorrowObject::String(s.as_str()),
+            NameOrId::Id(id) => (*id as i32).into(),
+        }
+    }
 }
 
 impl From<KeyId> for NameOrId {
@@ -113,7 +130,7 @@ impl TryFrom<pb::NameOrId> for NameOrId {
         if let Some(item) = t.item {
             match item {
                 Item::Name(name) => Ok(NameOrId::Str(name)),
-                Item::NameId(id) => {
+                Item::Id(id) => {
                     if id < 0 {
                         Err(ParsePbError::from("key id must be positive number"))
                     } else {

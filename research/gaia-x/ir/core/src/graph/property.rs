@@ -27,77 +27,6 @@ use std::sync::Arc;
 
 pub type ID = u128;
 
-/// The type of LabelId defined in Runtime
-pub type LabelId = u8;
-
-/// A label is either a
-#[derive(Clone, Debug, PartialOrd, Ord, PartialEq, Eq, Hash)]
-pub enum Label {
-    Str(String),
-    Id(LabelId),
-}
-
-impl From<LabelId> for Label {
-    fn from(id: LabelId) -> Self {
-        Self::Id(id)
-    }
-}
-
-impl From<String> for Label {
-    fn from(str: String) -> Self {
-        Self::Str(str)
-    }
-}
-
-impl Label {
-    pub fn as_object(&self) -> Object {
-        match self {
-            Label::Str(s) => s.to_string().into(),
-            Label::Id(id) => (*id as i32).into(),
-        }
-    }
-
-    pub fn as_borrow_object(&self) -> BorrowObject {
-        match self {
-            Label::Str(s) => BorrowObject::String(s.as_str()),
-            Label::Id(id) => (*id as i32).into(),
-        }
-    }
-}
-
-impl Encode for Label {
-    fn write_to<W: WriteExt>(&self, writer: &mut W) -> io::Result<()> {
-        match self {
-            Label::Id(id) => {
-                writer.write_u8(0)?;
-                writer.write_u8(*id)?;
-            }
-            Label::Str(str) => {
-                writer.write_u8(1)?;
-                str.write_to(writer)?;
-            }
-        }
-        Ok(())
-    }
-}
-
-impl Decode for Label {
-    fn read_from<R: ReadExt>(reader: &mut R) -> io::Result<Self> {
-        let e = reader.read_u8()?;
-        match e {
-            0 => {
-                let label_id = reader.read_u8()?;
-                Ok(Label::Id(label_id))
-            }
-            1 => {
-                let str = <String>::read_from(reader)?;
-                Ok(Label::Str(str))
-            }
-            _ => Err(io::Error::new(io::ErrorKind::Other, "unreachable")),
-        }
-    }
-}
-
 /// The three types of property to get
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub enum PropKey {
@@ -131,7 +60,7 @@ pub trait Details: Send + Sync + AsAny {
 
     fn get_id(&self) -> ID;
 
-    fn get_label(&self) -> &Label;
+    fn get_label(&self) -> &NameOrId;
 
     fn get(&self, prop_key: &PropKey) -> Option<BorrowObject> {
         match prop_key {
@@ -164,7 +93,7 @@ impl Details for DynDetails {
         self.inner.get_id()
     }
 
-    fn get_label(&self) -> &Label {
+    fn get_label(&self) -> &NameOrId {
         self.inner.get_label()
     }
 }
@@ -193,7 +122,7 @@ impl Decode for DynDetails {
         } else {
             // TODO(yyy): handle other kinds of details
             // safety: fake never be used
-            let fake = DefaultDetails::new(0, Label::Id(0));
+            let fake = DefaultDetails::new(0, NameOrId::Id(0));
             Ok(DynDetails::new(fake))
         }
     }
@@ -202,13 +131,13 @@ impl Decode for DynDetails {
 #[allow(dead_code)]
 pub struct DefaultDetails {
     id: ID,
-    label: Label,
+    label: NameOrId,
     inner: HashMap<NameOrId, Object>,
 }
 
 #[allow(dead_code)]
 impl DefaultDetails {
-    pub fn new(id: ID, label: Label) -> Self {
+    pub fn new(id: ID, label: NameOrId) -> Self {
         DefaultDetails {
             id,
             label,
@@ -216,7 +145,7 @@ impl DefaultDetails {
         }
     }
 
-    pub fn with_property(id: ID, label: Label, properties: HashMap<NameOrId, Object>) -> Self {
+    pub fn with_property(id: ID, label: NameOrId, properties: HashMap<NameOrId, Object>) -> Self {
         DefaultDetails {
             id,
             label,
@@ -250,7 +179,7 @@ impl Details for DefaultDetails {
         self.id
     }
 
-    fn get_label(&self) -> &Label {
+    fn get_label(&self) -> &NameOrId {
         &self.label
     }
 }
@@ -271,7 +200,7 @@ impl Encode for DefaultDetails {
 impl Decode for DefaultDetails {
     fn read_from<R: ReadExt>(reader: &mut R) -> io::Result<Self> {
         let id = reader.read_u128()?;
-        let label = <Label>::read_from(reader)?;
+        let label = <NameOrId>::read_from(reader)?;
         let len = reader.read_u64()?;
         let mut map = HashMap::with_capacity(len as usize);
         for _i in 0..len {

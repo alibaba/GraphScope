@@ -14,7 +14,8 @@
 //! limitations under the License.
 
 use crate::graph::element::Element;
-use crate::graph::property::{Details, DynDetails, Label, ID};
+use crate::graph::property::{Details, DynDetails, ID};
+use crate::NameOrId;
 use dyn_type::BorrowObject;
 use pegasus_common::codec::{Decode, Encode, ReadExt, WriteExt};
 use std::io;
@@ -35,7 +36,7 @@ impl Element for Vertex {
         Some(self.details.get_id())
     }
 
-    fn label(&self) -> Option<&Label> {
+    fn label(&self) -> Option<&NameOrId> {
         Some(self.details.get_label())
     }
 
