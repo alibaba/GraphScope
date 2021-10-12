@@ -28,18 +28,21 @@
 //! Copy it to `/path/to/c-caller`.
 //!
 //! Thirdly, write the C-code for building the ir plan, as:
+//!
+//! # Example
+//!
 //! # #include<ir_core.h>
 //! # using namespace std;
 //! # int main(int argc, char** argv) {
-//! #    `const void* ptr_plan = init_logical_plan();
+//! #    const void* ptr_plan = init_logical_plan();
 //! #    const void* ptr_project = init_project_operator();
-//! #    add_project_meta(ptr_project, "@name", as_tag_id(0));
+//! #    add_project_mapping(ptr_project, "@name", int_as_name_or_id(0));
 //! #    int opr_id = 0;
 //! #    append_project_operator(ptr_plan, ptr_project, 0, &opr_id);
 //! #    cout << "the id is: " << opr_id << endl;
 //!
 //! #    const void* ptr_select = init_select_operator();
-//! #    set_select_meta(ptr_select, "@age > 20 && @name == \"John\"");
+//! #    set_select_predicate(ptr_select, "@age > 20 && @name == \"John\"");
 //! #    append_select_operator(ptr_plan, ptr_select, opr_id, &opr_id);
 //! #    cout << "the id is: " << opr_id << endl;
 //!
@@ -52,7 +55,7 @@
 
 use crate::generated::algebra as pb;
 use crate::generated::common as common_pb;
-use crate::plan::{cstr_to_string, FfiResult, LogicalPlan, ResultCode};
+use crate::plan::{cstr_to_string, cstr_to_suffix_expr_pb, FfiResult, LogicalPlan, ResultCode};
 use std::convert::{TryFrom, TryInto};
 use std::ffi::c_void;
 use std::os::raw::c_char;
@@ -194,7 +197,7 @@ pub extern "C" fn as_id_key() -> FfiProperty {
     }
 }
 
-/// Build an label property
+/// Build a label property
 #[no_mangle]
 pub extern "C" fn as_label_key() -> FfiProperty {
     FfiProperty {
@@ -203,7 +206,7 @@ pub extern "C" fn as_label_key() -> FfiProperty {
     }
 }
 
-/// Build an keyed property from a given key
+/// Build a keyed property from a given key
 #[no_mangle]
 pub extern "C" fn as_property_key(key: FfiNameOrId) -> FfiProperty {
     FfiProperty {
@@ -227,6 +230,12 @@ pub extern "C" fn as_var_ppt(tag: FfiNameOrId, property: FfiProperty) -> FfiVari
     FfiVariable { tag, property }
 }
 
+fn destroy_ptr<M>(ptr: *const c_void) {
+    unsafe {
+        let _ = Box::from_raw(ptr as *mut M);
+    }
+}
+
 /// Initialize a logical plan, which expose a pointer for c-like program to access the
 /// entry of the logical plan. This pointer, however, is owned by Rust, and the caller
 /// **must not** process any operation, which includes but not limited to deallocate it.
@@ -240,10 +249,7 @@ pub extern "C" fn init_logical_plan() -> *const c_void {
 /// To destroy a logical plan.
 #[no_mangle]
 pub extern "C" fn destroy_logical_plan(ptr_plan: *const c_void) {
-    unsafe {
-        let ptr = Box::from_raw(ptr_plan as *mut LogicalPlan);
-        drop(ptr);
-    }
+    destroy_ptr::<LogicalPlan>(ptr_plan)
 }
 
 fn append_operator(
@@ -291,29 +297,24 @@ mod project {
     #[no_mangle]
     pub extern "C" fn add_project_mapping(
         ptr_project: *const c_void,
-        expr: *const c_char,
+        cstr_expr: *const c_char,
         alias: FfiNameOrId,
         is_query_given: bool,
     ) -> ResultCode {
         let mut return_code = ResultCode::Success;
         let mut project = unsafe { Box::from_raw(ptr_project as *mut pb::Project) };
-        let expr_str = cstr_to_string(expr);
+        let expr_pb = cstr_to_suffix_expr_pb(cstr_expr);
         let alias_pb = common_pb::NameOrId::try_from(alias);
 
-        if !expr_str.is_ok() || !alias_pb.is_ok() {
-            return_code = ResultCode::CStringError;
+        if !expr_pb.is_ok() || !alias_pb.is_ok() {
+            return_code = expr_pb.err().unwrap();
         } else {
-            let expr_rst = common_pb::SuffixExpr::try_from(expr_str.unwrap());
-            if expr_rst.is_ok() {
-                let attribute = pb::project::ExprAlias {
-                    expr: expr_rst.ok(),
-                    alias: alias_pb.ok(),
-                    is_query_given,
-                };
-                project.mappings.push(attribute);
-            } else {
-                return_code = expr_rst.err().unwrap()
-            }
+            let attribute = pb::project::ExprAlias {
+                expr: expr_pb.ok(),
+                alias: alias_pb.ok(),
+                is_query_given,
+            };
+            project.mappings.push(attribute);
         }
         std::mem::forget(project);
 
@@ -326,9 +327,11 @@ mod project {
     /// * `parent_id`: The unique parent operator's index in the logical plan.
     /// * `id`: An index pointer that gonna hold the index for this operator.
     ///
-    /// After successfully appending to the logical plan, the `ptr_project` shall be released by
-    /// by the rust program. Therefore, the caller needs not to deallocate the pointer, and must
-    /// **not** use it thereafter.
+    /// If it is successful to be appended to the logical plan, the `ptr_project` will be
+    /// automatically released by by the rust program. Therefore, the caller needs not to deallocate
+    /// the pointer, and must **not** use it thereafter.
+    ///
+    /// Otherwise, user can manually call [`destroy_project_operator()`] to release the pointer.
     ///
     /// # Return
     /// * Returning [`ResultCode`] to capture any error.
@@ -350,6 +353,11 @@ mod project {
             id,
         )
     }
+
+    #[no_mangle]
+    pub extern "C" fn destroy_project_operator(ptr: *const c_void) {
+        destroy_ptr::<pb::Project>(ptr)
+    }
 }
 
 mod select {
@@ -362,27 +370,20 @@ mod select {
         Box::into_raw(select) as *const c_void
     }
 
-    /// To add a select operator's metadata, which is a predicate represented as a c-string.
-    /// Note that, we use **add** here to make apis consistent. If multiple adds are conducted,
-    /// only the latest one is kept.
+    /// To set a select operator's metadata, which is a predicate represented as a c-string.
     #[no_mangle]
     pub extern "C" fn add_select_predicate(
         ptr_select: *const c_void,
-        ptr_predicate: *const c_char,
+        cstr_predicate: *const c_char,
     ) -> ResultCode {
         let mut return_code = ResultCode::Success;
-        let predicate_str = cstr_to_string(ptr_predicate);
-        if predicate_str.is_err() {
-            return_code = predicate_str.err().unwrap()
+        let predicate_pb = cstr_to_suffix_expr_pb(cstr_predicate);
+        if predicate_pb.is_err() {
+            return_code = predicate_pb.err().unwrap()
         } else {
-            let predicate_pb = common_pb::SuffixExpr::try_from(predicate_str.unwrap());
-            if predicate_pb.is_ok() {
-                let mut select = unsafe { Box::from_raw(ptr_select as *mut pb::Select) };
-                select.predicate = predicate_pb.ok();
-                std::mem::forget(select);
-            } else {
-                return_code = ResultCode::ParseExprError
-            }
+            let mut select = unsafe { Box::from_raw(ptr_select as *mut pb::Select) };
+            select.predicate = predicate_pb.ok();
+            std::mem::forget(select);
         }
 
         return_code
@@ -403,6 +404,11 @@ mod select {
             vec![parent_id],
             id,
         )
+    }
+
+    #[no_mangle]
+    pub extern "C" fn destroy_select_operator(ptr: *const c_void) {
+        destroy_ptr::<pb::Select>(ptr)
     }
 }
 
@@ -491,6 +497,11 @@ mod join {
             vec![parent_left, parent_right],
             id,
         )
+    }
+
+    #[no_mangle]
+    pub extern "C" fn destroy_join_operator(ptr: *const c_void) {
+        destroy_ptr::<pb::Join>(ptr)
     }
 }
 
@@ -641,6 +652,11 @@ mod groupby {
         let group = unsafe { Box::from_raw(ptr_groupby as *mut pb::GroupBy) };
         append_operator(ptr_plan, group.as_ref().clone().into(), vec![parent], id)
     }
+
+    #[no_mangle]
+    pub extern "C" fn destroy_groupby_operator(ptr: *const c_void) {
+        destroy_ptr::<pb::GroupBy>(ptr)
+    }
 }
 
 mod orderby {
@@ -701,6 +717,11 @@ mod orderby {
         let orderby = unsafe { Box::from_raw(ptr_orderby as *mut pb::OrderBy) };
         append_operator(ptr_plan, orderby.as_ref().clone().into(), vec![parent], id)
     }
+
+    #[no_mangle]
+    pub extern "C" fn destroy_orderby_operator(ptr: *const c_void) {
+        destroy_ptr::<pb::OrderBy>(ptr)
+    }
 }
 
 mod dedup {
@@ -740,6 +761,11 @@ mod dedup {
         let dedup = unsafe { Box::from_raw(ptr_dedup as *mut pb::Dedup) };
         append_operator(ptr_plan, dedup.as_ref().clone().into(), vec![parent], id)
     }
+
+    #[no_mangle]
+    pub extern "C" fn destroy_dedup_operator(ptr: *const c_void) {
+        destroy_ptr::<pb::Dedup>(ptr)
+    }
 }
 
 mod unfold {
@@ -755,9 +781,11 @@ mod unfold {
         Box::into_raw(unfold) as *const c_void
     }
 
-    /// Add (Set) the tag that points to a collection-type data field for unfolding.
+    /// Set the arguments for unfold, which are:
+    /// * a tag points to a collection-type data field for unfolding,
+    /// * an alias for referencing to each element of the collection.
     #[no_mangle]
-    pub extern "C" fn add_unfold_tag(
+    pub extern "C" fn set_unfold_args(
         ptr_unfold: *const c_void,
         tag: FfiNameOrId,
         alias: FfiNameOrId,
@@ -792,5 +820,59 @@ mod unfold {
     ) -> ResultCode {
         let unfold = unsafe { Box::from_raw(ptr_unfold as *mut pb::Unfold) };
         append_operator(ptr_plan, unfold.as_ref().clone().into(), vec![parent], id)
+    }
+
+    #[no_mangle]
+    pub extern "C" fn destroy_unfold_operator(ptr: *const c_void) {
+        destroy_ptr::<pb::Unfold>(ptr)
+    }
+}
+
+mod scan {
+    use super::*;
+
+    /// To initialize a scan operator
+    #[no_mangle]
+    pub extern "C" fn init_scan_operator() -> *const c_void {
+        let scan = Box::new(pb::Scan {
+            schema_name: "".to_string(),
+            mappings: vec![],
+        });
+        Box::into_raw(scan) as *const c_void
+    }
+
+    #[no_mangle]
+    pub extern "C" fn set_scan_schema_name(
+        ptr_scan: *const c_void,
+        cstr_name: *const c_char,
+    ) -> ResultCode {
+        let mut return_code = ResultCode::Success;
+        let schema_name = cstr_to_string(cstr_name);
+        if schema_name.is_err() {
+            return_code = schema_name.err().unwrap()
+        } else {
+            let mut scan = unsafe { Box::from_raw(ptr_scan as *mut pb::Scan) };
+            scan.schema_name = schema_name.unwrap();
+            std::mem::forget(scan);
+        }
+
+        return_code
+    }
+
+    /// Append an unfold operator to the logical plan
+    #[no_mangle]
+    pub extern "C" fn append_scan_operator(
+        ptr_plan: *const c_void,
+        ptr_scan: *const c_void,
+        parent: i32,
+        id: *mut i32,
+    ) -> ResultCode {
+        let scan = unsafe { Box::from_raw(ptr_scan as *mut pb::Scan) };
+        append_operator(ptr_plan, scan.as_ref().clone().into(), vec![parent], id)
+    }
+
+    #[no_mangle]
+    pub extern "C" fn destroy_scan_operator(ptr: *const c_void) {
+        destroy_ptr::<pb::Scan>(ptr)
     }
 }

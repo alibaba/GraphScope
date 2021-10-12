@@ -44,6 +44,19 @@ pub enum Primitives {
     Float(f64),
 }
 
+impl ToString for Primitives {
+    fn to_string(&self) -> String {
+        use Primitives::*;
+        match self {
+            Byte(i) => i.to_string(),
+            Integer(i) => i.to_string(),
+            Long(i) => i.to_string(),
+            ULLong(i) => i.to_string(),
+            Float(i) => i.to_string(),
+        }
+    }
+}
+
 lazy_static! {
     static ref I8: TypeId = TypeId::of::<i8>();
     static ref U8: TypeId = TypeId::of::<u8>();
@@ -474,6 +487,18 @@ pub enum Object {
     DynOwned(Box<dyn DynType>),
 }
 
+impl ToString for Object {
+    fn to_string(&self) -> String {
+        use Object::*;
+        match self {
+            Primitive(p) => p.to_string(),
+            String(s) => s.to_string(),
+            Blob(_) => unimplemented!(),
+            DynOwned(_) => unimplemented!(),
+        }
+    }
+}
+
 /// Try to borrow an immutable reference of [crate::Object].
 #[derive(Debug, Clone, Copy)]
 pub enum BorrowObject<'a> {
@@ -482,6 +507,18 @@ pub enum BorrowObject<'a> {
     Blob(&'a [u8]),
     /// To borrow from `Object::DynOwned`, and it can be cloned back to `Object::DynOwned`
     DynRef(&'a Box<dyn DynType>),
+}
+
+impl<'a> ToString for BorrowObject<'a> {
+    fn to_string(&self) -> String {
+        use BorrowObject::*;
+        match self {
+            Primitive(p) => p.to_string(),
+            String(s) => s.to_string(),
+            Blob(_) => unimplemented!(),
+            DynRef(_) => unimplemented!(),
+        }
+    }
 }
 
 impl Object {

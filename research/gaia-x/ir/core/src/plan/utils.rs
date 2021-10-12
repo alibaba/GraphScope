@@ -103,10 +103,10 @@ impl From<pb::Scan> for pb::logical_plan::Operator {
     }
 }
 
-impl From<pb::PrimaryScan> for pb::logical_plan::Operator {
-    fn from(opr: pb::PrimaryScan) -> Self {
+impl From<pb::IndexedScan> for pb::logical_plan::Operator {
+    fn from(opr: pb::IndexedScan) -> Self {
         pb::logical_plan::Operator {
-            opr: Some(pb::logical_plan::operator::Opr::PrimaryScan(opr)),
+            opr: Some(pb::logical_plan::operator::Opr::IndexedScan(opr)),
         }
     }
 }
