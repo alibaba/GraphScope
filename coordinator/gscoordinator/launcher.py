@@ -23,6 +23,7 @@ import os
 import shutil
 import subprocess
 import sys
+import tempfile
 import time
 from abc import ABCMeta
 from abc import abstractmethod
@@ -90,7 +91,7 @@ class LocalLauncher(Launcher):
     Launch engine localy with serveral hosts.
     """
 
-    _vineyard_socket_prefix = "/tmp/vineyard.sock."
+    _vineyard_socket_prefix = os.path.join(tempfile.gettempdir(), "vineyard.sock.")
     # set `GRAPHSCOPE_HOME/bin` to ${PATH}
     os.environ["PATH"] += os.pathsep + os.path.join(GRAPHSCOPE_HOME, "bin")
 

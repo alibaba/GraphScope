@@ -22,6 +22,7 @@ import itertools
 import os
 import shutil
 import subprocess
+import tempfile
 from distutils.cmd import Command
 
 from setuptools import find_packages
@@ -48,7 +49,9 @@ def _get_extra_data():
     return {
         "/opt/graphscope/": os.path.join(RUNTIME_ROOT),
         "/opt/vineyard/include/": os.path.join(RUNTIME_ROOT, "include"),
-        "/tmp/gs/builtin/": os.path.join(RUNTIME_ROOT, "precompiled"),
+        os.path.join(tempfile.gettempdir(), "gs", "builtin"): os.path.join(
+            RUNTIME_ROOT, "precompiled"
+        ),
         "/usr/local/include/arrow": os.path.join(RUNTIME_ROOT, "include"),
         "/usr/local/include/boost": os.path.join(RUNTIME_ROOT, "include"),
         "/usr/local/include/glog": os.path.join(RUNTIME_ROOT, "include"),

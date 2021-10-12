@@ -28,7 +28,7 @@ jobs:
     runs-on: ubuntu-20.04
     defaults:
       run:
-        shell: scl enable devtoolset-7 -- bash --noprofile --norc -eo pipefail {0}
+        shell: bash --noprofile --norc -eo pipefail {0}
     container:
       image: registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-vineyard:v0.3.1
       options:
@@ -133,7 +133,7 @@ jobs:
     runs-on: ubuntu-20.04
     defaults:
       run:
-        shell: scl enable devtoolset-7 -- bash --noprofile --norc -eo pipefail {0}
+        shell: bash --noprofile --norc -eo pipefail {0}
     container:
       image: registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-vineyard:v0.3.1
     steps:
@@ -174,7 +174,7 @@ jobs:
     runs-on: ubuntu-20.04
     defaults:
       run:
-        shell: scl enable devtoolset-7 -- bash --noprofile --norc -eo pipefail {0}
+        shell: bash --noprofile --norc -eo pipefail {0}
     container:
       image: registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-vineyard:v0.3.1
     steps:
@@ -189,7 +189,6 @@ jobs:
         sudo mkdir -p /opt/graphscope
         sudo chown -R $(id -u):$(id -g) /opt/graphscope
 
-        export PATH=${PATH}:/opt/rh/devtoolset-7/root/usr/bin
         cd learning_engine/graph-learn
         git submodule update --init third_party/pybind11
         mkdir cmake-build
@@ -201,8 +200,6 @@ jobs:
 
     - name: build wheel
       run: |
-        sudo sed -i 's/p.error/logger.warning/g' /usr/local/lib/python3.6/site-packages/auditwheel/main_repair.py
-
         export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/opt/graphscope/lib:/opt/graphscope/lib64
         export WITH_LEARNING_ENGINE=ON
         pushd python
@@ -213,6 +210,7 @@ jobs:
         auditwheel repair --plat=manylinux2014_x86_64 ./*.whl
         mkdir -p /opt/graphscope/dist
         cp ./wheelhouse/* /opt/graphscope/dist/
+        pip3 install ./wheelhouse/*.whl
         popd
         popd
         pushd coordinator
@@ -235,9 +233,9 @@ jobs:
       profile: release
     defaults:
       run:
-        shell: scl enable devtoolset-7 -- bash --noprofile --norc -eo pipefail {0}
+        shell: bash --noprofile --norc -eo pipefail {0}
     container:
-      image: registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-runtime:latest
+      image: registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-runtime:debug
     steps:
     - uses: actions/checkout@v2.3.2
 
@@ -259,9 +257,9 @@ jobs:
     needs: [build-gae, build-gle]
     defaults:
       run:
-        shell: scl enable devtoolset-7 -- bash --noprofile --norc -eo pipefail {0}
+        shell: bash --noprofile --norc -eo pipefail {0}
     container:
-      image: registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-runtime:latest
+      image: registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-runtime:debug
       options:
         --shm-size 4096m
     strategy:
@@ -388,7 +386,7 @@ jobs:
         tar -xf ./gle-${{ github.sha }}/gle.tar
         tar -xf ./gie-${{ github.sha }}/gie.tar
         tar -xf ./manager-${{ github.sha }}/manager.tar
-        sudo docker pull registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-runtime:latest
+        sudo docker pull registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-runtime:debug
         sudo docker build -t registry.cn-hongkong.aliyuncs.com/graphscope/graphscope:${{ github.sha }} \
                           --network=host \
                           -f ./graphscope.Dockerfile .
@@ -511,7 +509,7 @@ jobs:
         tar -xf ./gle-${{ github.sha }}/gle.tar
         tar -xf ./gie-${{ github.sha }}/gie.tar
         tar -xf ./manager-${{ github.sha }}/manager.tar
-        sudo docker pull registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-runtime:latest
+        sudo docker pull registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-runtime:debug
         sudo docker build -t registry.cn-hongkong.aliyuncs.com/graphscope/graphscope:${{ github.sha }} \
                           --network=host \
                           -f ./graphscope.Dockerfile .
@@ -539,7 +537,7 @@ jobs:
     runs-on: self-hosted
     defaults:
       run:
-        shell: scl enable devtoolset-7 -- bash --noprofile --norc -eo pipefail {0}
+        shell: bash --noprofile --norc -eo pipefail {0}
     container:
       image: registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-vineyard:v0.3.1
     steps:
@@ -634,7 +632,7 @@ jobs:
         tar -zxf ./gss-${{ github.sha }}/vineyard.tar.gz
         tar -zxf ./gss-${{ github.sha }}/maxgraph.tar.gz
 
-        sudo docker pull registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-runtime:latest
+        sudo docker pull registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-runtime:debug
         sudo docker build -t registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-store:${{ github.sha }} \
                           --network=host \
                           -f ./graphscope-store.Dockerfile .

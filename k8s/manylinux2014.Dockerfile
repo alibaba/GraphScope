@@ -234,7 +234,19 @@ RUN yum install -y perl java-1.8.0-openjdk-devel && \
     yum clean all && \
     rm -fr /var/cache/yum
 
+# install hadoop
+RUN cd /tmp && \
+    wget https://archive.apache.org/dist/hadoop/core/hadoop-2.8.4/hadoop-2.8.4.tar.gz && \
+    tar zxf hadoop-2.8.4.tar.gz -C /usr/local && \
+    rm -rf hadoop-2.8.4.tar.gz
+
 ENV JAVA_HOME /usr/lib/jvm/java
+ENV HADOOP_HOME /usr/local/hadoop-2.8.4
+ENV HADOOP_CONF_DIR $HADOOP_HOME/etc/hadoop
+ENV HADOOP_COMMON_LIB_NATIVE_DIR $HADOOP_HOME/lib/native
+ENV PATH $PATH:$HADOOP_HOME/bin
+
+RUN bash -l -c 'echo export CLASSPATH="$($HADOOP_HOME/bin/hdfs classpath --glob)" >> /etc/bashrc'
 
 # Prepare and set workspace
 RUN mkdir -p /tmp/maven /usr/share/maven/ref \
@@ -264,9 +276,50 @@ RUN cd /tmp && \
     make install -j && \
     rm -rf patchelf/
 
-# install python deps for all
-RUN for py in cp36-cp36m cp37-cp37m cp38-cp38 cp39-cp39 cp310-cp310; \
-    do \
-        echo "Installing deps for $py"; \
-        /opt/python/$py/bin/pip3 install -U pip auditwheel grpcio grpcio_tools numpy wheel; \
-    done
+# kubectl v1.19.2
+RUN cd /tmp && export KUBE_VER=v1.19.2 && \
+    curl -LO https://storage.googleapis.com/kubernetes-release/release/${KUBE_VER}/bin/linux/amd64/kubectl && \
+    chmod +x ./kubectl && \
+    cd /tmp && \
+    mv ./kubectl /usr/local/bin/kubectl
+
+# install python3.9 deps for all
+RUN /opt/python/cp39-cp39/bin/pip3 install -U pip && \
+    /opt/python/cp39-cp39/bin/pip3 --no-cache-dir install auditwheel daemons grpcio-tools gremlinpython \
+        hdfs3 fsspec oss2 s3fs ipython kubernetes libclang networkx==2.4 numpy pandas parsec pycryptodome \
+        pyorc pytest scipy scikit_learn wheel && \
+    /opt/python/cp39-cp39/bin/pip3 --no-cache-dir install Cython --pre -U
+
+# etcd v3.4.13
+RUN cd /tmp && \
+    mkdir -p /tmp/etcd-download-test && \
+    export ETCD_VER=v3.4.13 && \
+    export DOWNLOAD_URL=https://github.com/etcd-io/etcd/releases/download && \
+    curl -L ${DOWNLOAD_URL}/${ETCD_VER}/etcd-${ETCD_VER}-linux-amd64.tar.gz -o /tmp/etcd-${ETCD_VER}-linux-amd64.tar.gz && \
+    tar xzvf /tmp/etcd-${ETCD_VER}-linux-amd64.tar.gz -C /tmp/etcd-download-test --strip-components=1 && \
+    mv /tmp/etcd-download-test/etcd /usr/local/bin/ && \
+    mv /tmp/etcd-download-test/etcdctl /usr/local/bin/ && \
+    cd /tmp && \
+    rm -fr /tmp/etcd-${ETCD_VER}-linux-amd64.tar.gz /tmp/etcd-download-test
+
+# shanghai zoneinfo
+ENV TZ=Asia/Shanghai
+RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && \
+    echo '$TZ' > /etc/timezone
+
+# for programming output
+RUN localedef -c -f UTF-8 -i en_US en_US.UTF-8
+ENV LANG='en_US.UTF-8' LANGUAGE='en_US:en' LC_ALL='en_US.UTF-8'
+
+ENV PATH=${PATH}:/usr/local/go/bin:/opt/python/cp39-cp39/bin
+ENV RUST_BACKTRACE=1
+
+# change user: graphscope
+RUN useradd -m graphscope -u 1001 \
+    && echo 'graphscope ALL=(ALL) NOPASSWD:ALL' >> /etc/sudoers \
+    && cp -r ~/.cargo /home/graphscope/.cargo \
+    && chown -R graphscope:graphscope /home/graphscope/.cargo \
+    && echo "source ~/.cargo/env" >> /home/graphscope/.bashrc
+
+USER graphscope
+WORKDIR /home/graphscope

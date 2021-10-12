@@ -847,7 +847,7 @@ install_graphscope() {
   pushd ${SOURCE_DIR}
 
   if [[ "${PLATFORM}" == *"Darwin"* ]]; then
-    make install WITH_LEARNING_ENGINE=OFF INSTALL_PREFIX=${INSTALL_PREFIX} BUILD_TYPE=${BUILD_TYPE}
+    make install WITH_LEARNING_ENGINE=OFF INSTALL_PREFIX=${INSTALL_PREFIX} NETWORKX=OFF BUILD_TYPE=${BUILD_TYPE}
   else
     make install WITH_LEARNING_ENGINE=ON INSTALL_PREFIX=${INSTALL_PREFIX} BUILD_TYPE=${BUILD_TYPE}
   fi
@@ -920,7 +920,7 @@ build_and_deploy() {
     case ${arg} in
       --help)        build_and_deploy_usage; exit ;;
       --verbose)     VERBOSE=true; readonly VERBOSE; ;;
-      --build_type)  BUILD_TYPE=$1; readonly BUILD_TYPE; ;;
+      --build_type)  BUILD_TYPE=$1; readonly BUILD_TYPE; shift ;;
       --prefix)
         if [ $# -eq 0 ]; then
           echo "there should be given a path for prefix option."
@@ -983,7 +983,7 @@ while test $# -ne 0; do
     build_and_deploy) build_and_deploy "$@"; exit;;
     *)
       echo "unrecognized option or command '${arg}'"
-      usage; exit;;
+      usage; exit 1;;
   esac
 done
 if test  $# -eq 0; then

@@ -7,8 +7,6 @@
 ARG BASE_VERSION=v0.3.1
 FROM registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-vineyard:$BASE_VERSION as builder
 
-SHELL ["/usr/bin/scl", "enable", "devtoolset-7"]
-
 ARG CI=true
 ENV CI=$CI
 
@@ -101,7 +99,7 @@ RUN cd ${HOME}/gs/interactive_engine \
 
 # # # # # # # # # # # # # # # # # # # # # #
 # generate final runtime image
-FROM registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-runtime:latest
+FROM registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-runtime:debug
 
 ARG profile=release
 

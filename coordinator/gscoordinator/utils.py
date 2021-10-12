@@ -1508,10 +1508,19 @@ def check_argument(condition, message=None):
         raise ValueError(f"Check failed: {message}")
 
 
-def get_java_version():
-    java_exec = shutil.which("java")
+def find_java():
+    java_exec = ""
+    if "JAVA_HOME" in os.environ:
+        java_exec = os.path.expandvars("$JAVA_HOME/bin/java")
+    if not java_exec:
+        java_exec = shutil.which("java")
     if not java_exec:
         raise RuntimeError("java command not found.")
+    return java_exec
+
+
+def get_java_version():
+    java_exec = find_java()
     pattern = r'"(\d+\.\d+\.\d+).*"'
     version = subprocess.check_output([java_exec, "-version"], stderr=subprocess.STDOUT)
     return re.search(pattern, version.decode("utf-8")).groups()[0]

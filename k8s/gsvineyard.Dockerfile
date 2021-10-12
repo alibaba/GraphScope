@@ -23,7 +23,6 @@ RUN sudo mkdir -p /opt/vineyard && \
     cd /tmp/libvineyard/build && \
     cmake .. -DCMAKE_PREFIX_PATH=/opt/vineyard \
              -DCMAKE_INSTALL_PREFIX=/opt/vineyard \
-             -DBUILD_VINEYARD_PYPI_PACKAGES=ON \
              -DBUILD_SHARED_LIBS=ON \
              -DBUILD_VINEYARD_IO_OSS=ON && \
     make install vineyard_client_python -j && \

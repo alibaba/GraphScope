@@ -18,7 +18,7 @@ ifeq ($(UNAME_S),Linux)
     XARGS_EMPTY_FLAG := --no-run-if-empty
 endif
 
-VERSION ?= latest
+VERSION ?= debug
 PROFILE ?= release
 
 BUILD_PROGRESS  	= auto
@@ -29,7 +29,8 @@ submodule:
 gsruntime:
 	docker build --progress=$(BUILD_PROGRESS) \
 				 -t ${REGISTRY}/$(DOCKER_ORG)/graphscope-runtime:${VERSION} \
-				 -f $(WORKING_DIR)/gsruntime.Dockerfile .
+				 --network=host \
+				 -f $(WORKING_DIR)/manylinux2014.Dockerfile .
 
 gsvineyard:
 	docker build --progress=$(BUILD_PROGRESS) \
@@ -51,31 +52,22 @@ graphscope-store:
                  --network=host \
                  -f $(WORKING_DIR)/graphscope-store.Dockerfile ..
 
-graphscope-manylinux2014:
-	docker build --progress=$(BUILD_PROGRESS) \
-				 -t ${REGISTRY}/$(DOCKER_ORG)/graphscope-manylinux2014:${VERSION} \
-				 --network=host \
-				 -f $(WORKING_DIR)/manylinux2014.Dockerfile .
-
 graphscope-jupyter-manylinux2014-py2-py3:
 	docker run --rm -it -v $(WORKING_DIR)/..:/work \
-		   ${REGISTRY}/$(DOCKER_ORG)/graphscope-manylinux2014:${VERSION} \
-		   /usr/bin/scl enable devtoolset-8 'sh -c "export PATH=$$PATH:/opt/python/cp36-cp36m/bin && \
-					pip3 install graphscope -U && \
+		   ${REGISTRY}/$(DOCKER_ORG)/graphscope-runtime:${VERSION} \
+		   bash -c 'pip3 install graphscope-client -U && \
 					cd /work/python/jupyter/graphscope && \
-					python3 setup.py bdist_wheel"'
+					python3 setup.py bdist_wheel'
 
 graphscope-manylinux2014-py2-py3:
-	docker run --rm -it -v $(WORKING_DIR)/..:/work \
-			${REGISTRY}/$(DOCKER_ORG)/graphscope-manylinux2014:${VERSION} \
-			bash -c 'export PATH=$$PATH:/opt/python/cp39-cp39/bin && \
-				pip3 install libclang parsec && \
-				mkdir -p /opt/vineyard && \
+	docker run --rm -v $(WORKING_DIR)/..:/work \
+			${REGISTRY}/$(DOCKER_ORG)/graphscope-runtime:${VERSION} \
+			bash -c 'sudo mkdir -p /opt/vineyard && \
 				cd /tmp && \
 				git clone https://github.com/alibaba/libgrape-lite.git --depth=1 && \
 				cd libgrape-lite && mkdir build && cd build && \
 				cmake .. -DCMAKE_INSTALL_PREFIX=/opt/vineyard && \
-				make -j install && \
+				sudo make -j install && \
 				cd /tmp && \
 				git clone -b v0.3.1 https://github.com/alibaba/libvineyard.git --depth=1 && \
 				cd libvineyard && \
@@ -85,21 +77,21 @@ graphscope-manylinux2014-py2-py3:
 					-DCMAKE_INSTALL_PREFIX=/opt/vineyard \
 					-DBUILD_SHARED_LIBS=ON \
 					-DBUILD_VINEYARD_IO_OSS=ON && \
-				make install vineyard_client_python -j && \
+				sudo make install vineyard_client_python -j && \
 				cd /tmp/libvineyard && \
 				python3 setup.py bdist_wheel && \
 				cd dist && \
 				auditwheel repair --plat=manylinux2014_x86_64 ./*.whl && \
-				mkdir -p /opt/vineyard/dist && \
-				cp -f wheelhouse/* /opt/vineyard/dist && \
+				sudo mkdir -p /opt/vineyard/dist && \
+				sudo cp -f wheelhouse/* /opt/vineyard/dist && \
 				pip3 install wheelhouse/*.whl && \
 				cd /tmp/libvineyard/modules/io && \
 				python3 setup.py bdist_wheel && \
-				cp -f dist/* /opt/vineyard/dist && \
+				sudo cp -f dist/* /opt/vineyard/dist && \
 				pip3 install dist/* && \
-				cp -rf /opt/vineyard/* /usr/local/ && \
+				sudo cp -rf /opt/vineyard/* /usr/local/ && \
 				cd /tmp && \
-				rm -fr /tmp/libvineyard /tmp/libgrape-lite && \
+				sudo rm -fr /tmp/libvineyard /tmp/libgrape-lite && \
 				cd /work && \
 				make install && \
 				python3 /work/k8s/precompile.py && \
@@ -111,16 +103,14 @@ graphscope-manylinux2014-py2-py3:
 				auditwheel repair ./*.whl --plat=manylinux2014_x86_64'
 
 graphscope-client-manylinux2014-py3:
-	docker run --rm -it -v $(WORKING_DIR)/..:/work \
-			${REGISTRY}/$(DOCKER_ORG)/graphscope-manylinux2014:${VERSION} \
-			bash -c 'export PATH=/opt/python/cp39-cp39/bin:$$PATH && \
-				pip3 install libclang parsec && \
-				mkdir -p /opt/vineyard && \
+	docker run --rm -v $(WORKING_DIR)/..:/work \
+			${REGISTRY}/$(DOCKER_ORG)/graphscope-runtime:${VERSION} \
+			bash -c 'sudo mkdir -p /opt/vineyard && \
 				cd /tmp && \
 				git clone https://github.com/alibaba/libgrape-lite.git --depth=1 && \
 				cd libgrape-lite && mkdir build && cd build && \
 				cmake .. -DCMAKE_INSTALL_PREFIX=/opt/vineyard && \
-				make -j install && \
+				sudo make -j install && \
 				cd /tmp && \
 				git clone -b v0.3.1 https://github.com/alibaba/libvineyard.git --depth=1 && \
 				cd libvineyard && \
@@ -131,9 +121,9 @@ graphscope-client-manylinux2014-py3:
 					-DBUILD_SHARED_LIBS=OFF \
 					-DBUILD_VINEYARD_IO_OSS=ON \
 					-DBUILD_VINEYARD_MIGRATION=OFF && \
-				make install vineyard_client_python -j && \
-				cp -rf /opt/vineyard/* /usr/local/ && \
-				rm -fr /tmp/libvineyard /tmp/libgrape-lite && \
+				sudo make install vineyard_client_python -j && \
+				sudo cp -rf /opt/vineyard/* /usr/local/ && \
+				sudo rm -fr /tmp/libvineyard /tmp/libgrape-lite && \
 				cd /work/learning_engine/graph-learn && \
 				git submodule update --init third_party/pybind11 && \
 				rm -rf cmake-build && \
@@ -143,10 +133,10 @@ graphscope-client-manylinux2014-py3:
 				make graphlearn_shared -j && \
 				export LD_LIBRARY_PATH=/work/learning_engine/graph-learn/built/lib:$$LD_LIBRARY_PATH && \
 				export WITH_LEARNING_ENGINE=ON && \
-				for py in cp36-cp36m cp37-cp37m cp38-cp38 cp39-cp39 cp310-cp310; do \
+				for py in cp36-cp36m cp37-cp37m cp38-cp38 cp39-cp39 ; do \
 					cd /work/python; \
 					export PATH=/opt/python/$$py/bin:$$PATH; \
-					pip3 install numpy==1.18.5; \
+					pip3 install -U pip numpy==1.18.5 auditwheel grpcio grpcio_tools wheel ; \
 					rm -rf build; \
 					rm -rf dist/*.whl; \
 					python3 setup.py bdist_wheel; \
