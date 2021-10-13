@@ -28,7 +28,6 @@ import logging
 import numbers
 import os
 import pickle
-import random
 import shutil
 import socket
 import subprocess
@@ -119,19 +118,6 @@ if not os.path.isfile(INTERACTIVE_ENGINE_SCRIPT):
     INTERACTIVE_ENGINE_SCRIPT = os.path.join(
         GRAPHSCOPE_HOME, "interactive_engine", "bin", "giectl"
     )
-
-
-def is_port_in_use(host, port):
-    """Check whether a port is in use.
-
-    Args:
-        port (int): A port.
-
-    Returns:
-        bool: True if the port in use.
-    """
-    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-        return s.connect_ex((host, port)) == 0
 
 
 def get_timestamp():
@@ -387,7 +373,6 @@ def compile_graph_frame(workspace: str, library_name, attr: dict, engine_config:
 
 def op_pre_process(op, op_result_pool, key_to_op, **kwargs):  # noqa: C901
     if op.op == types_pb2.REPORT_GRAPH:
-        # do nothing for nx report graph
         return
     if op.op == types_pb2.CREATE_GRAPH:
         _pre_process_for_create_graph_op(op, op_result_pool, key_to_op, **kwargs)

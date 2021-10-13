@@ -29,6 +29,7 @@ from graphscope import clustering
 from graphscope import degree_centrality
 from graphscope import eigenvector_centrality
 from graphscope import hits
+from graphscope import is_simple_path
 from graphscope import k_core
 from graphscope import k_shell
 from graphscope import katz_centrality
@@ -173,6 +174,10 @@ def test_run_app_on_directed_graph(
     assert np.all(
         sorted(ctx5.to_numpy("r", vertex_range={"begin": 1, "end": 4})) == [5, 5, 6]
     )
+
+    # simple_path
+    ctx6 = is_simple_path(p2p_project_directed_graph, [1, 10])
+    assert ctx6
 
     with pytest.raises(
         InvalidArgumentError, match="Louvain not support directed graph."
@@ -340,6 +345,10 @@ def test_app_on_undirected_graph(
 
     # louvain
     ctx10 = louvain(p2p_project_undirected_graph, min_progress=50, progress_tries=2)
+
+    # simple_path
+    ctx11 = is_simple_path(p2p_project_undirected_graph, [1, 10])
+    assert ctx11
 
 
 def test_run_app_on_string_oid_graph(p2p_project_directed_graph_string):

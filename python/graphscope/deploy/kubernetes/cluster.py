@@ -68,7 +68,6 @@ class KubernetesClusterLauncher(Launcher):
     _cluster_role_name_prefix = "gs-cluster-reader-"
     _cluster_role_binding_name_prefix = "gs-cluster-reader-binding-"
 
-    _random_coordinator_placeholder_port = random.randint(58001, 59000)
     _random_coordinator_service_port = random.randint(59001, 60000)
 
     _url_pattern = r"(?i)\b((?:https?://|www\d{0,3}[.]|[a-z0-9.\-]+[.][a-z]{2,4}/)(?:[^\s()<>]+|\(([^\s()<>]+|(\([^\s()<>]+\)))*\))+(?:\(([^\s()<>]+|(\([^\s()<>]+\)))*\)|[^\s`!()\[\]{};:'\".,<>?«»“”‘’]))"  # noqa: E501
@@ -359,7 +358,6 @@ class KubernetesClusterLauncher(Launcher):
             preemptive=self._saved_locals["preemptive"],
             ports=[
                 self._random_coordinator_service_port,
-                self._random_coordinator_placeholder_port,
             ],
         )
 

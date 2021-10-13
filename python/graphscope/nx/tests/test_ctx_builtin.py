@@ -312,3 +312,9 @@ class TestBuiltInApp:
         }
         ans = nx.builtin.average_degree_connectivity(self.p2p_undirected)
         assert gt == ans
+
+    def test_all_simple_paths(self):
+        ans = nx.builtin.all_simple_paths(self.p2p, 1, 4, cutoff=10)
+        assert len(ans) == 1022
+        ans = nx.builtin.all_simple_paths(self.p2p_undirected, 1, [4, 6], cutoff=5)
+        assert len(ans) == 1675

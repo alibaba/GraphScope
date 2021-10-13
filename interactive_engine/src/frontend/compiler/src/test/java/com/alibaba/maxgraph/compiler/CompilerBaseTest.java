@@ -16,6 +16,7 @@
 package com.alibaba.maxgraph.compiler;
 
 import com.alibaba.maxgraph.compiler.api.schema.GraphSchema;
+import com.alibaba.maxgraph.compiler.cost.statistics.CostDataStatistics;
 import com.alibaba.maxgraph.compiler.schema.DefaultGraphSchema;
 import com.alibaba.maxgraph.compiler.dfs.DfsTraversal;
 import com.alibaba.maxgraph.compiler.optimizer.LogicalPlanOptimizer;
@@ -23,6 +24,7 @@ import com.alibaba.maxgraph.compiler.optimizer.OptimizeConfig;
 import com.alibaba.maxgraph.compiler.optimizer.QueryFlowBuilder;
 import com.alibaba.maxgraph.compiler.graph.DefaultMaxGraph;
 import com.alibaba.maxgraph.compiler.optimizer.QueryFlowManager;
+import com.alibaba.maxgraph.compiler.schema.DefaultSchemaFetcher;
 import com.google.protobuf.TextFormat;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -65,6 +67,7 @@ public class CompilerBaseTest {
     private void initLdbcGraph() throws Exception {
         String schemaValue = IOUtils.toString(Thread.currentThread().getContextClassLoader().getResourceAsStream("ldbc.schema"), "utf-8");
         schema = DefaultGraphSchema.buildSchemaFromJson(schemaValue);
+        CostDataStatistics.initialize(new DefaultSchemaFetcher(schema));
         ldbcGraph = new DefaultMaxGraph();
     }
 
