@@ -122,13 +122,8 @@ endif()
 
 # find Python-------------------------------------------------------------------
 if (${CYTHON_PREGEL_APP} OR ${CYTHON_PIE_APP})
-  if(CMAKE_VERSION VERSION_LESS "3.18")
-    find_package(PythonLibs REQUIRED)
-    include_directories(SYSTEM ${PYTHON_INCLUDE_DIRS})
-  else()
-    find_package(Python3 COMPONENTS Interpreter Development.Module REQUIRED)
-    include_directories(SYSTEM ${Python3_INCLUDE_DIRS})
-  endif ()
+  find_package(PythonLibs REQUIRED)
+  include_directories(SYSTEM ${PYTHON_INCLUDE_DIRS})
 endif ()
 
 # include Analytical Engine-----------------------------------------------------
