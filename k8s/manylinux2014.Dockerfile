@@ -318,8 +318,11 @@ ENV RUST_BACKTRACE=1
 RUN useradd -m graphscope -u 1001 \
     && echo 'graphscope ALL=(ALL) NOPASSWD:ALL' >> /etc/sudoers \
     && cp -r ~/.cargo /home/graphscope/.cargo \
-    && chown -R graphscope:graphscope /home/graphscope/.cargo \
-    && echo "source ~/.cargo/env" >> /home/graphscope/.bashrc
+    && chown -R graphscope:graphscope /home/graphscope/.cargo
 
 USER graphscope
 WORKDIR /home/graphscope
+
+RUN source /home/graphscope/.cargo/env && \
+    rustup install stable && rustup default stable && rustup component add rustfmt && \
+    echo "source ~/.cargo/env" >> ~/.bashrc

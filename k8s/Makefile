@@ -62,12 +62,12 @@ graphscope-jupyter-manylinux2014-py2-py3:
 graphscope-manylinux2014-py2-py3:
 	docker run --rm -v $(WORKING_DIR)/..:/work \
 			${REGISTRY}/$(DOCKER_ORG)/graphscope-runtime:${VERSION} \
-			bash -c 'sudo mkdir -p /opt/vineyard && \
+			bash -c 'source ~/.bashrc && sudo mkdir -p /opt/vineyard && \
 				cd /tmp && \
 				git clone https://github.com/alibaba/libgrape-lite.git --depth=1 && \
 				cd libgrape-lite && mkdir build && cd build && \
 				cmake .. -DCMAKE_INSTALL_PREFIX=/opt/vineyard && \
-				sudo make -j install && \
+				sudo make -j`nproc` install && \
 				cd /tmp && \
 				git clone -b v0.3.1 https://github.com/alibaba/libvineyard.git --depth=1 && \
 				cd libvineyard && \
@@ -77,7 +77,7 @@ graphscope-manylinux2014-py2-py3:
 					-DCMAKE_INSTALL_PREFIX=/opt/vineyard \
 					-DBUILD_SHARED_LIBS=ON \
 					-DBUILD_VINEYARD_IO_OSS=ON && \
-				sudo make install vineyard_client_python -j && \
+				sudo make install vineyard_client_python -j`nproc` && \
 				cd /tmp/libvineyard && \
 				python3 setup.py bdist_wheel && \
 				cd dist && \
@@ -110,7 +110,7 @@ graphscope-client-manylinux2014-py3:
 				git clone https://github.com/alibaba/libgrape-lite.git --depth=1 && \
 				cd libgrape-lite && mkdir build && cd build && \
 				cmake .. -DCMAKE_INSTALL_PREFIX=/opt/vineyard && \
-				sudo make -j install && \
+				sudo make -j`nproc` install && \
 				cd /tmp && \
 				git clone -b v0.3.1 https://github.com/alibaba/libvineyard.git --depth=1 && \
 				cd libvineyard && \
@@ -121,7 +121,7 @@ graphscope-client-manylinux2014-py3:
 					-DBUILD_SHARED_LIBS=OFF \
 					-DBUILD_VINEYARD_IO_OSS=ON \
 					-DBUILD_VINEYARD_MIGRATION=OFF && \
-				sudo make install vineyard_client_python -j && \
+				sudo make install vineyard_client_python -j`nproc` && \
 				sudo cp -rf /opt/vineyard/* /usr/local/ && \
 				sudo rm -fr /tmp/libvineyard /tmp/libgrape-lite && \
 				cd /work/learning_engine/graph-learn && \
@@ -130,7 +130,7 @@ graphscope-client-manylinux2014-py3:
 				mkdir -p cmake-build && \
 				cd cmake-build && \
 				cmake -DWITH_VINEYARD=ON .. && \
-				make graphlearn_shared -j && \
+				make graphlearn_shared -j`nproc` && \
 				export LD_LIBRARY_PATH=/work/learning_engine/graph-learn/built/lib:$$LD_LIBRARY_PATH && \
 				export WITH_LEARNING_ENGINE=ON && \
 				for py in cp36-cp36m cp37-cp37m cp38-cp38 cp39-cp39 ; do \
