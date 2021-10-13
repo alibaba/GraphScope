@@ -37,11 +37,15 @@ class AverageDegreeConnectivityContext : public TensorContext<FRAG_T, double> {
       : TensorContext<FRAG_T, double>(fragment) {}
 
   using edata_t = typename FRAG_T::edata_t;
-  void Init(grape::DefaultMessageManager& messages,
+  void Init(grape::ParallelMessageManager& messages,
             std::string source_degree_type = "in+out",
-            std::string target_degree_type = "in+out", bool directed = false) {
+            std::string target_degree_type = "in+out") {
     merge_stage = false;
-    this->directed = directed;
+    auto& frag = this->fragment();
+    // this->directed = frag.directed();
+    this->directed = false;
+    auto vertices = frag.Vertices();
+    vertex_array.Init(vertices, std::make_tuple(0, 0.0, 0.0));
     if (source_degree_type == "in") {
       source_degree_type_ = DegreeType::IN;
     } else if (source_degree_type == "out") {
@@ -82,8 +86,12 @@ class AverageDegreeConnectivityContext : public TensorContext<FRAG_T, double> {
   bool weighted;
   DegreeType source_degree_type_;
   DegreeType target_degree_type_;
-  // <degree, <sum of neighbor's, weighted degree> pair
+  // <degree, <sum of neighbor's degree, weighted degree> pair
   std::unordered_map<int, std::pair<double, double>> degree_connectivity_map;
+  // vertex_array[v] is:
+  // <v's degree, sum of neighbor's degree, weighted degree of v>
+  typename FRAG_T::template vertex_array_t<std::tuple<int, double, double>>
+      vertex_array;
 };
 }  // namespace gs
 
