@@ -120,6 +120,17 @@ if(LIBUNWIND_FOUND)
     add_definitions(-DWITH_LIBUNWIND)
 endif()
 
+# find folly--------------------------------------------------------------------
+if (NETWORKX)
+    if(GRAPHSCOPE_ANALYTICAL_HOME)
+        include("${ANALYTICAL_ENGINE_HOME}/${CMAKE_INSTALL_LIBDIR}/cmake/graphscope-analytical/cmake/FindFolly.cmake")
+        include("${ANALYTICAL_ENGINE_HOME}/${CMAKE_INSTALL_LIBDIR}/cmake/graphscope-analytical/cmake/FindDoubleConversion.cmake")
+    else()
+        include("${ANALYTICAL_ENGINE_HOME}/cmake/FindFolly.cmake")
+        include("${ANALYTICAL_ENGINE_HOME}/cmake/FindDoubleConversion.cmake")
+    endif()
+endif ()
+
 # find Python-------------------------------------------------------------------
 if (${CYTHON_PREGEL_APP} OR ${CYTHON_PIE_APP})
   find_package(PythonLibs REQUIRED)

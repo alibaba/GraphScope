@@ -54,6 +54,8 @@ def _get_extra_data():
         ),
         "/usr/local/include/arrow": os.path.join(RUNTIME_ROOT, "include"),
         "/usr/local/include/boost": os.path.join(RUNTIME_ROOT, "include"),
+        "/usr/local/include/double-conversion": os.path.join(RUNTIME_ROOT, "include"),
+        "/usr/local/include/folly": os.path.join(RUNTIME_ROOT, "include"),
         "/usr/local/include/glog": os.path.join(RUNTIME_ROOT, "include"),
         "/usr/local/include/gflags": os.path.join(RUNTIME_ROOT, "include"),
         "/usr/local/include/google": os.path.join(RUNTIME_ROOT, "include"),
