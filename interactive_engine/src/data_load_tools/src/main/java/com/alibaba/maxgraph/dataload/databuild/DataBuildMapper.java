@@ -17,7 +17,7 @@ package com.alibaba.maxgraph.dataload.databuild;
 
 import com.alibaba.maxgraph.compiler.api.exception.PropertyDefNotFoundException;
 import com.alibaba.maxgraph.compiler.api.schema.*;
-import com.alibaba.maxgraph.groot.common.schema.*;
+import com.alibaba.graphscope.groot.schema.*;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.hadoop.conf.Configuration;

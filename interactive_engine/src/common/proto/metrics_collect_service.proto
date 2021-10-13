@@ -15,16 +15,16 @@
  */
 syntax = "proto3";
 
-option java_package = "com.alibaba.maxgraph.proto.v2";
+option java_package = "com.alibaba.maxgraph.proto.groot";
 option java_multiple_files = true;
 
 service MetricsCollect {
-    rpc collectMetrics(CollectMetricsRequest) returns(CollectMetricsResponse);
+  rpc collectMetrics(CollectMetricsRequest) returns(CollectMetricsResponse);
 }
 
 message CollectMetricsRequest {
 }
 
 message CollectMetricsResponse {
-    map<string, string> metrics = 1;
+  map<string, string> metrics = 1;
 }

@@ -1,11 +1,11 @@
 package com.alibaba.maxgraph.dataload;
 
+import com.alibaba.graphscope.groot.sdk.Client;
 import com.alibaba.maxgraph.compiler.api.schema.GraphEdge;
 import com.alibaba.maxgraph.compiler.api.schema.GraphElement;
 import com.alibaba.maxgraph.dataload.databuild.ColumnMappingInfo;
-import com.alibaba.maxgraph.groot.sdk.Client;
-import com.alibaba.maxgraph.groot.sdk.DataLoadTarget;
 
+import com.alibaba.maxgraph.sdkcommon.common.DataLoadTarget;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
@@ -27,8 +27,10 @@ public class CommitDataCommand extends DataCommand {
             DataLoadTarget.Builder builder = DataLoadTarget.newBuilder();
             builder.setLabel(label);
             if (graphElement instanceof GraphEdge) {
-                builder.setSrcLabel(schema.getElement(columnMappingInfo.getSrcLabelId()).getLabel());
-                builder.setDstLabel(schema.getElement(columnMappingInfo.getDstLabelId()).getLabel());
+                builder.setSrcLabel(
+                        schema.getElement(columnMappingInfo.getSrcLabelId()).getLabel());
+                builder.setDstLabel(
+                        schema.getElement(columnMappingInfo.getDstLabelId()).getLabel());
             }
             tableToTarget.put(tableId, builder.build());
         }

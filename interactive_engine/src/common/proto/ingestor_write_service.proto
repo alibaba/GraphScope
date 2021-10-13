@@ -17,19 +17,19 @@ syntax = "proto3";
 
 import "model.proto";
 
-option java_package = "com.alibaba.maxgraph.proto.v2";
+option java_package = "com.alibaba.maxgraph.proto.groot";
 option java_multiple_files = true;
 
 service IngestorWrite {
-    rpc writeIngestor(WriteIngestorRequest) returns (WriteIngestorResponse);
+  rpc writeIngestor(WriteIngestorRequest) returns (WriteIngestorResponse);
 }
 
 message WriteIngestorRequest {
-    string requestId = 1;
-    int32 queueId = 2;
-    OperationBatchPb operationBatch = 3;
+  string requestId = 1;
+  int32 queueId = 2;
+  OperationBatchPb operationBatch = 3;
 }
 
 message WriteIngestorResponse {
-    int64 snapshotId = 1;
+  int64 snapshotId = 1;
 }
