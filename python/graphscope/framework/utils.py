@@ -19,6 +19,7 @@
 import json
 import os
 import random
+import socket
 import string
 
 import numpy as np
@@ -31,6 +32,44 @@ from graphscope.proto import attr_value_pb2
 from graphscope.proto import data_types_pb2
 from graphscope.proto import graph_def_pb2
 from graphscope.proto import types_pb2
+
+
+def is_free_port(port, host="localhost", timeout=0.2):
+    """Check if a port on a given host is in use or not.
+
+    Args:
+        port (int): Port number to check availability.
+        host (str): Hostname to connect to and check port availability.
+        timeout (float): Timeout used for socket connection.
+
+    Returns:
+        True if port is available, False otherwise.
+    """
+    sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    try:
+        sock.settimeout(timeout)
+        sock.connect((host, int(port)))
+        sock.close()
+    except socket.error:
+        return True
+    else:
+        return False
+
+
+def get_free_port(host="localhost", port_range=(32768, 64999)):
+    """Get a free port on a given host.
+
+    Args:
+        host (str): Hostname you want to get the free port.
+        port_range (tuple): Try to get free port within this range.
+
+    Returns:
+        A free port on given host.
+    """
+    while True:
+        port = random.randint(port_range[0], port_range[1])
+        if is_free_port(port, host=host):
+            return port
 
 
 def random_string(nlen):
@@ -308,6 +347,23 @@ def data_type_to_cpp(t):
         return "folly::dynamic"
     elif t == graph_def_pb2.UNKNOWN:
         return ""
+    raise ValueError("Not support type {}".format(t))
+
+
+def data_type_to_python(t):
+    if t in (
+        graph_def_pb2.INT,
+        graph_def_pb2.LONG,
+        graph_def_pb2.UINT,
+        graph_def_pb2.ULONG,
+    ):
+        return int
+    elif t in (graph_def_pb2.FLOAT, graph_def_pb2.DOUBLE):
+        return float
+    elif t in (graph_def_pb2.STRING):
+        return str
+    elif t in (None, t == graph_def_pb2.NULLVALUE):
+        return None
     raise ValueError("Not support type {}".format(t))
 
 

@@ -1,12 +1,11 @@
 pub mod manager;
 
 use grpcio::{ChannelBuilder, Environment, ServerBuilder};
-use maxgraph_common::proto::debug_grpc;
 use maxgraph_common::proto::gremlin_query_grpc;
 use maxgraph_common::proto::hb::*;
 use maxgraph_common::util::get_local_ip;
 use maxgraph_server::heartbeat::Heartbeat;
-use maxgraph_server::service::{DebugService, GremlinRpcService};
+use maxgraph_server::service::GremlinRpcService;
 use maxgraph_server::{Store, StoreContext};
 use maxgraph_store::api::prelude::*;
 use maxgraph_store::config::StoreConfig;
@@ -56,14 +55,10 @@ where
     let (tx, rx) = channel();
     thread::spawn(move || {
         let config = store.get_config();
-        let debug_service = debug_grpc::create_debug_service_api(DebugService::new(store.clone()));
-        // let store_api_service = store_api_grpc::create_store_service(StoreApiServer::new(store.get_graph()));
         let gremlin_service = gremlin_query_grpc::create_gremlin_service(gremlin_server);
-        // let graph_store_service = store_node_grpc::create_graph_store_service(GraphStoreServer::new(store.get_graph()));
         let env = Arc::new(Environment::new(config.rpc_thread_count as usize));
         let server_builder = ServerBuilder::new(env.clone())
             .channel_args(ChannelBuilder::new(env).reuse_port(false).build_args())
-            .register_service(debug_service)
             .register_service(gremlin_service)
             .bind("0.0.0.0", config.rpc_port as u16);
         let mut server = server_builder.build().expect("Error when build rpc server");

@@ -15,10 +15,10 @@
  */
 package com.alibaba.maxgraph.dataload.databuild;
 
-import com.alibaba.maxgraph.v2.common.frontend.api.schema.GraphProperty;
-import com.alibaba.maxgraph.v2.common.frontend.api.schema.SchemaElement;
-import com.alibaba.maxgraph.v2.common.schema.DataType;
-import com.alibaba.maxgraph.v2.common.schema.PropertyValue;
+import com.alibaba.maxgraph.compiler.api.schema.DataType;
+import com.alibaba.maxgraph.compiler.api.schema.GraphElement;
+import com.alibaba.maxgraph.compiler.api.schema.GraphProperty;
+import com.alibaba.maxgraph.groot.common.schema.PropertyValue;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -36,10 +36,10 @@ public class Codec {
     private byte[] nullBytesHolder;
     private int fixedPropertiesCount;
 
-    public Codec(SchemaElement schemaElement) {
-        this.version = schemaElement.getVersionId();
+    public Codec(GraphElement graphElement) {
+        this.version = graphElement.getVersionId();
 
-        List<GraphProperty> propertyList = schemaElement.getPropertyList();
+        List<GraphProperty> propertyList = graphElement.getPropertyList();
         propertyList.sort((p1, p2) -> {
             boolean p1Fix = p1.getDataType().isFixedLength();
             boolean p2Fix = p2.getDataType().isFixedLength();

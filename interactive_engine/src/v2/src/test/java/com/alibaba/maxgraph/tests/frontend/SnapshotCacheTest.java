@@ -15,9 +15,9 @@
  */
 package com.alibaba.maxgraph.tests.frontend;
 
-import com.alibaba.maxgraph.v2.common.SnapshotListener;
-import com.alibaba.maxgraph.v2.common.schema.GraphDef;
-import com.alibaba.maxgraph.v2.frontend.SnapshotCache;
+import com.alibaba.maxgraph.groot.common.SnapshotListener;
+import com.alibaba.maxgraph.groot.common.schema.GraphDef;
+import com.alibaba.maxgraph.groot.frontend.SnapshotCache;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;

@@ -1546,7 +1546,7 @@ impl ValuePayload {
             VariantType::VT_SHORT => {
                 return ValuePayload::Short(i16::parse_bytes(value_proto.get_payload()));
             }
-            VariantType::VT_INTEGER => {
+            VariantType::VT_INT => {
                 return ValuePayload::Int(i32::parse_bytes(value_proto.get_payload()));
             }
             VariantType::VT_LONG => {
@@ -1632,7 +1632,7 @@ impl ValuePayload {
                 value_proto.set_payload(v.into_bytes());
             }
             ValuePayload::Int(v) => {
-                value_proto.set_value_type(VariantType::VT_INTEGER);
+                value_proto.set_value_type(VariantType::VT_INT);
                 value_proto.set_payload(v.into_bytes());
             }
             ValuePayload::Long(v) => {

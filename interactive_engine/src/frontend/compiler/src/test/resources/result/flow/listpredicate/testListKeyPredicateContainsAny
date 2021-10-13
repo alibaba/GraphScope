@@ -33,9 +33,9 @@ query_plan {
         value {
           int_value_list: 123
           int_value_list: 321
-          value_type: VT_INTEGER_LIST
+          value_type: VT_INT_LIST
         }
-        type: VT_INTEGER_LIST
+        type: VT_INT_LIST
       }
     }
     input_operator_id: 3

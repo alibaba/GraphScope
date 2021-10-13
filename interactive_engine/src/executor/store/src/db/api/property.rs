@@ -7,10 +7,11 @@ use crate::db::common::bytes::transform;
 use crate::db::common::bytes::util::{UnsafeBytesWriter, UnsafeBytesReader};
 use crate::db::common::numeric::*;
 use crate::db::api::PropId;
-use crate::db::proto::common::{PropertyValuePb, DataTypePb};
 use super::GraphResult;
 use super::error::*;
 use protobuf::ProtobufEnum;
+use crate::db::proto::model::PropertyValuePb;
+use crate::db::proto::common::DataTypePb;
 
 pub trait PropertyMap {
     fn get(&self, prop_id: PropId) -> Option<ValueRef>;

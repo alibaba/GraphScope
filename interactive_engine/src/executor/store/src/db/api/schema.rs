@@ -6,7 +6,7 @@ use crate::db::api::property::Value;
 use super::{GraphResult, PropId};
 use super::property::ValueType;
 use super::error::*;
-use crate::db::proto::common::{TypeDefPb, PropertyDefPb, GraphDefPb, TypeEnumPb, VertexTableIdEntry, EdgeTableIdEntry};
+use crate::db::proto::model::{TypeDefPb, PropertyDefPb, GraphDefPb, TypeEnumPb, VertexTableIdEntry, EdgeTableIdEntry};
 use protobuf::{ProtobufEnum, Message};
 use crate::db::api::{LabelId, EdgeKind};
 

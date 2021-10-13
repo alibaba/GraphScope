@@ -14,7 +14,7 @@ source_op {
         value {
           int_value: 2
         }
-        type: VT_INTEGER
+        type: VT_INT
       }
       compare_list {
         prop_id: 7

@@ -216,7 +216,7 @@ query_plan {
       operator_type: CONSTANT
       argument {
         int_value: 4
-        value_type: VT_INTEGER
+        value_type: VT_INT
       }
     }
     input_operator_id: 28
@@ -235,7 +235,7 @@ query_plan {
       operator_type: CONSTANT
       argument {
         int_value: 3
-        value_type: VT_INTEGER
+        value_type: VT_INT
       }
     }
     input_operator_id: 25
@@ -254,7 +254,7 @@ query_plan {
       operator_type: CONSTANT
       argument {
         int_value: 2
-        value_type: VT_INTEGER
+        value_type: VT_INT
       }
     }
     input_operator_id: 21
@@ -272,7 +272,7 @@ query_plan {
       operator_type: CONSTANT
       argument {
         int_value: 1
-        value_type: VT_INTEGER
+        value_type: VT_INT
       }
     }
     input_operator_id: 18
@@ -283,7 +283,7 @@ query_plan {
       operator_type: SUM_BY_KEY
       argument {
         int_value_list: -1000
-        value_type: VT_INTEGER
+        value_type: VT_INT
       }
       after_requirement {
         req_type: LABEL_DEL

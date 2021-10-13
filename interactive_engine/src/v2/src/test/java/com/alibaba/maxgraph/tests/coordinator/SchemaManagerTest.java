@@ -15,23 +15,23 @@
  */
 package com.alibaba.maxgraph.tests.coordinator;
 
-import com.alibaba.maxgraph.v2.common.BatchId;
-import com.alibaba.maxgraph.v2.common.CompletionCallback;
-import com.alibaba.maxgraph.v2.common.MetaService;
-import com.alibaba.maxgraph.v2.common.SnapshotListener;
-import com.alibaba.maxgraph.v2.common.schema.DataType;
-import com.alibaba.maxgraph.v2.common.schema.GraphDef;
-import com.alibaba.maxgraph.v2.common.schema.PropertyDef;
-import com.alibaba.maxgraph.v2.common.schema.PropertyValue;
-import com.alibaba.maxgraph.v2.common.schema.TypeDef;
-import com.alibaba.maxgraph.v2.common.schema.TypeEnum;
-import com.alibaba.maxgraph.v2.common.schema.request.CreateVertexTypeRequest;
-import com.alibaba.maxgraph.v2.common.schema.request.DdlRequestBatch;
-import com.alibaba.maxgraph.v2.common.schema.ddl.DdlExecutors;
-import com.alibaba.maxgraph.v2.coordinator.DdlWriter;
-import com.alibaba.maxgraph.v2.coordinator.GraphDefFetcher;
-import com.alibaba.maxgraph.v2.coordinator.SchemaManager;
-import com.alibaba.maxgraph.v2.coordinator.SnapshotManager;
+import com.alibaba.maxgraph.compiler.api.schema.DataType;
+import com.alibaba.maxgraph.groot.common.BatchId;
+import com.alibaba.maxgraph.groot.common.CompletionCallback;
+import com.alibaba.maxgraph.groot.common.MetaService;
+import com.alibaba.maxgraph.groot.common.SnapshotListener;
+import com.alibaba.maxgraph.groot.common.schema.GraphDef;
+import com.alibaba.maxgraph.groot.common.schema.PropertyDef;
+import com.alibaba.maxgraph.groot.common.schema.PropertyValue;
+import com.alibaba.maxgraph.groot.common.schema.TypeDef;
+import com.alibaba.maxgraph.groot.common.schema.TypeEnum;
+import com.alibaba.maxgraph.groot.common.schema.request.CreateVertexTypeRequest;
+import com.alibaba.maxgraph.groot.common.schema.request.DdlRequestBatch;
+import com.alibaba.maxgraph.groot.common.schema.ddl.DdlExecutors;
+import com.alibaba.maxgraph.groot.coordinator.DdlWriter;
+import com.alibaba.maxgraph.groot.coordinator.GraphDefFetcher;
+import com.alibaba.maxgraph.groot.coordinator.SchemaManager;
+import com.alibaba.maxgraph.groot.coordinator.SnapshotManager;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;

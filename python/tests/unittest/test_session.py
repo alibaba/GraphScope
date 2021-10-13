@@ -18,16 +18,11 @@
 
 import json
 import os
-import shutil
-import subprocess
-import sys
 import tempfile
-import time
 
 import pytest
 
 import graphscope
-from graphscope.client.session import DEFAULT_CONFIG_FILE
 
 COORDINATOR_HOME = os.path.join(os.path.dirname(__file__), "../", "../coordinator")
 new_data_dir = os.path.expandvars("${GS_TEST_DIR}/new_property/v2_e2")
@@ -126,10 +121,19 @@ def load_graph(session):
 
 def test_default_session():
     s = graphscope.session(cluster_type="hosts")
-
     info = s.info
     assert info["status"] == "active"
     s.close()
+
+    default_sess = graphscope.get_default_session()
+    assert default_sess.info["status"] == "active"
+    default_sess.close()
+    assert default_sess.info["status"] == "closed"
+
+    default_sess2 = graphscope.get_default_session()
+    assert default_sess2.info["status"] == "active"
+    default_sess2.close()
+    assert default_sess2.info["status"] == "closed"
 
 
 def test_launch_cluster_on_local(local_config_file):
@@ -190,13 +194,6 @@ def test_error_on_used_after_close():
     with pytest.raises(RuntimeError, match="Attempted to use a closed Session."):
         g = load_graph(s1)
 
-    with pytest.raises(RuntimeError, match="No default session found."):
-        g = graphscope.load_from(
-            edges={
-                "e0": "twitter_property_e_0#header_row=true",
-            }
-        )
-
     # close after close
     s2 = graphscope.session(cluster_type="hosts")
 
@@ -221,12 +218,6 @@ def test_border_cases():
     s2 = graphscope.session(cluster_type="hosts")
     s3 = graphscope.session(cluster_type="hosts")
 
-    with pytest.raises(RuntimeError, match="No default session found."):
-        g = graphscope.load_from(
-            edges={
-                "e0": "twitter_property_e_0#header_row=true",
-            }
-        )
     s1.as_default()
     assert graphscope.get_default_session() == s1
 
@@ -248,13 +239,6 @@ def test_border_cases():
     assert graphscope.get_default_session() == s3
     sssp = graphscope.property_sssp(g3, src=4)  # ok, g3 belong to s3
     s3.close()
-
-    with pytest.raises(RuntimeError, match="No default session found."):
-        g = graphscope.load_from(
-            edges={
-                "e0": "twitter_property_e_0#header_row=true",
-            }
-        )
 
 
 def test_with():

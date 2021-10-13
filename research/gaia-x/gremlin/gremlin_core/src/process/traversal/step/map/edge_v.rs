@@ -16,9 +16,10 @@
 use crate::generated::gremlin as pb;
 use crate::process::traversal::step::map::MapFuncGen;
 use crate::process::traversal::traverser::Traverser;
-use crate::structure::{EndPointOpt, QueryParams, Vertex, VertexOrEdge};
+use crate::structure::{DefaultDetails, EndPointOpt, Label, QueryParams, Vertex, VertexOrEdge};
 use crate::{str_to_dyn_error, DynResult, FromPb};
 use bit_set::BitSet;
+use graph_store::common::INVALID_LABEL_ID;
 use pegasus::api::function::{FnResult, MapFunction};
 
 struct EdgeVertexFunc {
@@ -36,14 +37,23 @@ impl MapFunction<Traverser, Traverser> for EdgeVertexFunc {
                     let id = if self.get_src { e.src_id } else { e.dst_id };
                     let graph = crate::get_graph().ok_or(str_to_dyn_error("Graph is None"))?;
                     let mut r = graph.get_vertex(&[id], &self.params)?;
-                    if let Some(v) = r.next() {
-                        input.split(v, &self.tags);
-                        input.remove_tags(&self.remove_tags);
-
-                        Ok(input)
+                    // get vertex from store, or generate a local vertex with id only.
+                    // TODO(bingqing): check with compiler if it will optimize when store supports get property locally;
+                    let v = if let Some(v) = r.next() {
+                        v
                     } else {
-                        Err(str_to_dyn_error(&format!("Vertex with id {} not found", id)))
-                    }
+                        let label =
+                            if self.get_src { e.get_src_label() } else { e.get_dst_label() }
+                                .map(|l| l.clone());
+                        Vertex::new(
+                            id,
+                            label.clone(),
+                            DefaultDetails::new(id, label.unwrap_or(Label::Id(INVALID_LABEL_ID))),
+                        )
+                    };
+                    input.split(v, &self.tags);
+                    input.remove_tags(&self.remove_tags);
+                    Ok(input)
                 }
                 _ => Err(str_to_dyn_error("Should not call `EdgeVertexStep` on a vertex")),
             }

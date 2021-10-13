@@ -67,7 +67,7 @@ void VineyardServer::Start() {
     vineyardd_path = boost::process::search_path("vineyardd").string();
   }
   if (vineyardd_path.empty()) {
-    vineyardd_path = "vineyardd";
+    vineyardd_path = "/usr/bin/env python3 -m vineyard";
   }
   std::string cmd = vineyardd_path + " --socket " + vineyard_socket_ +
                     " --size " + "2048000000" + " --etcd_endpoint " +

@@ -17,6 +17,7 @@ package com.alibaba.maxgraph.compiler.schema;
 
 import com.alibaba.maxgraph.compiler.api.schema.GraphProperty;
 import com.alibaba.maxgraph.compiler.api.schema.GraphVertex;
+import com.alibaba.maxgraph.compiler.api.schema.PrimaryKeyConstraint;
 import com.google.common.base.MoreObjects;
 import org.apache.commons.lang3.StringUtils;
 
@@ -38,6 +39,16 @@ public class DefaultGraphVertex implements GraphVertex {
     @Override
     public List<GraphProperty> getPrimaryKeyList() {
         return primaryKeyList;
+    }
+
+    @Override
+    public List<Integer> getPkPropertyIndices() {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public PrimaryKeyConstraint getPrimaryKeyConstraint() {
+        return null;
     }
 
     @Override
@@ -76,6 +87,11 @@ public class DefaultGraphVertex implements GraphVertex {
     }
 
     @Override
+    public int getVersionId() {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
     public String toString() {
         return MoreObjects.toStringHelper(this)
                 .add("labelId", labelId)
@@ -83,5 +99,10 @@ public class DefaultGraphVertex implements GraphVertex {
                 .add("propertyList", propertyList)
                 .add("primaryKeyList", primaryKeyList)
                 .toString();
+    }
+
+    @Override
+    public long getTableId() {
+        throw new UnsupportedOperationException();
     }
 }

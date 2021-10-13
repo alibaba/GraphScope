@@ -18,6 +18,7 @@ package com.alibaba.maxgraph.compiler.schema;
 import com.alibaba.maxgraph.compiler.api.schema.EdgeRelation;
 import com.alibaba.maxgraph.compiler.api.schema.GraphEdge;
 import com.alibaba.maxgraph.compiler.api.schema.GraphProperty;
+import com.alibaba.maxgraph.compiler.api.schema.PrimaryKeyConstraint;
 import com.google.common.base.MoreObjects;
 import org.apache.commons.lang3.StringUtils;
 
@@ -76,6 +77,26 @@ public class DefaultGraphEdge implements GraphEdge {
         }
 
         throw new IllegalArgumentException("Invalid property name " + propName);
+    }
+
+    @Override
+    public int getVersionId() {
+        return 0;
+    }
+
+    @Override
+    public List<GraphProperty> getPrimaryKeyList() {
+        return null;
+    }
+
+    @Override
+    public List<Integer> getPkPropertyIndices() {
+        return null;
+    }
+
+    @Override
+    public PrimaryKeyConstraint getPrimaryKeyConstraint() {
+        return null;
     }
 
     @Override

@@ -15,18 +15,18 @@
  */
 package com.alibaba.maxgraph.tests.ingestor;
 
-import com.alibaba.maxgraph.v2.common.CompletionCallback;
-import com.alibaba.maxgraph.v2.common.MetaService;
-import com.alibaba.maxgraph.v2.common.OperationBatch;
-import com.alibaba.maxgraph.v2.common.OperationBlob;
-import com.alibaba.maxgraph.v2.common.StoreDataBatch;
-import com.alibaba.maxgraph.v2.common.config.CommonConfig;
-import com.alibaba.maxgraph.v2.common.config.Configs;
-import com.alibaba.maxgraph.v2.common.operation.LabelId;
-import com.alibaba.maxgraph.v2.common.operation.dml.OverwriteVertexOperation;
-import com.alibaba.maxgraph.v2.common.operation.VertexId;
-import com.alibaba.maxgraph.v2.ingestor.BatchSender;
-import com.alibaba.maxgraph.v2.ingestor.StoreWriter;
+import com.alibaba.maxgraph.groot.common.CompletionCallback;
+import com.alibaba.maxgraph.groot.common.MetaService;
+import com.alibaba.maxgraph.groot.common.OperationBatch;
+import com.alibaba.maxgraph.groot.common.OperationBlob;
+import com.alibaba.maxgraph.groot.common.StoreDataBatch;
+import com.alibaba.maxgraph.common.config.CommonConfig;
+import com.alibaba.maxgraph.common.config.Configs;
+import com.alibaba.maxgraph.groot.common.operation.LabelId;
+import com.alibaba.maxgraph.groot.common.operation.dml.OverwriteVertexOperation;
+import com.alibaba.maxgraph.groot.common.operation.VertexId;
+import com.alibaba.maxgraph.groot.ingestor.BatchSender;
+import com.alibaba.maxgraph.groot.ingestor.StoreWriter;
 import org.junit.jupiter.api.Test;
 
 import java.util.Collections;

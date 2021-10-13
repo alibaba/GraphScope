@@ -152,7 +152,7 @@ impl FilterManager {
             }
             CompareType::WITHIN | CompareType::WITHOUT => {
                 match value.get_value_type() {
-                    VariantType::VT_INTEGER_LIST => {
+                    VariantType::VT_INT_LIST => {
                         if let Some(val) = get_vertex_int_prop_value(prop_id, v) {
                             let flag = value.get_int_value_list().contains(&val);
                             if compare == CompareType::WITHIN {
@@ -243,7 +243,7 @@ impl FilterManager {
                         }
                     }
                     VariantType::VT_SHORT |
-                    VariantType::VT_INTEGER => {
+                    VariantType::VT_INT => {
                         if let Some(v) = get_vertex_long_prop_value(prop_id, v) {
                             return filter_value(&compare, &v, &(value.get_int_value() as i64));
                         }
@@ -351,7 +351,7 @@ impl FilterManager {
             }
             CompareType::WITHIN | CompareType::WITHOUT => {
                 match value.get_value_type() {
-                    VariantType::VT_INTEGER_LIST => {
+                    VariantType::VT_INT_LIST => {
                         if let Some(val) = get_edge_int_prop_value(prop_id, v) {
                             let flag = value.get_int_value_list().contains(&val);
                             if compare == CompareType::WITHIN {
@@ -442,7 +442,7 @@ impl FilterManager {
                         }
                     }
                     VariantType::VT_SHORT |
-                    VariantType::VT_INTEGER => {
+                    VariantType::VT_INT => {
                         if let Some(v) = get_edge_long_prop_value(prop_id, v) {
                             return filter_value(&compare, &v, &(value.get_int_value() as i64));
                         }
@@ -641,7 +641,7 @@ fn filter_string_list(vallist: &Vec<String>, compare: &CompareType, value: &Valu
 #[inline]
 fn filter_list_native_prop(compare: &CompareType, prop: Property, value: &Value) -> bool {
     match value.get_value_type() {
-        VariantType::VT_INTEGER_LIST | VariantType::VT_INTEGER => {
+        VariantType::VT_INT_LIST | VariantType::VT_INT => {
             if let Ok(vallist) = prop.get_list() {
                 return filter_int_list(vallist, compare, value);
             }

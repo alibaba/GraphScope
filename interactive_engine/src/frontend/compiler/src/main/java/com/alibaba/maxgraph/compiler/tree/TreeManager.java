@@ -217,7 +217,7 @@ public class TreeManager {
                     }
                     String orderLabel = orderGlobalTreeNode.enableOrderFlag(labelManager);
                     SelectOneTreeNode selectOneTreeNode = new SelectOneTreeNode(new SourceDelegateNode(inputUnaryTreeNode, schema), orderLabel, Pop.last, Lists.newArrayList(), schema);
-                    selectOneTreeNode.setConstantValueType(new ValueValueType(Message.VariantType.VT_INTEGER));
+                    selectOneTreeNode.setConstantValueType(new ValueValueType(Message.VariantType.VT_INT));
                     OrderGlobalTreeNode addOrderTreeNode = new OrderGlobalTreeNode(inputUnaryTreeNode, schema,
                             Lists.newArrayList(Pair.of(selectOneTreeNode, Order.incr)));
                     UnaryTreeNode.class.cast(aggTreeNode).setInputNode(addOrderTreeNode);
@@ -253,7 +253,7 @@ public class TreeManager {
                 }
                 String orderLabel = orderGlobalTreeNode.enableOrderFlag(labelManager);
                 SelectOneTreeNode selectOneTreeNode = new SelectOneTreeNode(new SourceDelegateNode(treeLeaf, schema), orderLabel, Pop.last, Lists.newArrayList(), schema);
-                selectOneTreeNode.setConstantValueType(new ValueValueType(Message.VariantType.VT_INTEGER));
+                selectOneTreeNode.setConstantValueType(new ValueValueType(Message.VariantType.VT_INT));
                 treeLeaf = new OrderGlobalTreeNode(treeLeaf, schema,
                         Lists.newArrayList(Pair.of(selectOneTreeNode, Order.incr)));
             }

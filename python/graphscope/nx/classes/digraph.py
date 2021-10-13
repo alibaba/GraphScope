@@ -36,11 +36,11 @@ from graphscope.framework.errors import check_argument
 from graphscope.framework.graph_schema import GraphSchema
 from graphscope.nx import NetworkXError
 from graphscope.nx.classes.graph import Graph
-from graphscope.nx.convert import from_gs_graph
 from graphscope.nx.convert import to_nx_graph
 from graphscope.nx.utils.compat import patch_docstring
 from graphscope.nx.utils.misc import check_node_is_legal
 from graphscope.nx.utils.misc import empty_graph_in_engine
+from graphscope.proto import graph_def_pb2
 from graphscope.proto import types_pb2
 
 
@@ -195,7 +195,7 @@ class DiGraph(Graph):
     """
 
     @patch_docstring(Graph.__init__)
-    def __init__(self, incoming_graph_data=None, default_label="_", **attr):
+    def __init__(self, incoming_graph_data=None, default_label=None, **attr):
         if self._session is None:
             self._try_to_get_default_session()
 
@@ -234,11 +234,7 @@ class DiGraph(Graph):
         # attempt to load graph with data
         if incoming_graph_data is not None:
             if self._is_gs_graph(incoming_graph_data):
-                graph_def = from_gs_graph(
-                    incoming_graph_data, self, self._default_label
-                )
-                self._key = graph_def.key
-                self._schema.init_nx_schema(incoming_graph_data.schema)
+                self._init_with_arrow_property_graph(incoming_graph_data)
             else:
                 g = to_nx_graph(incoming_graph_data, create_using=self)
                 check_argument(isinstance(g, Graph))
@@ -430,6 +426,8 @@ class DiGraph(Graph):
 
     @patch_docstring(RefDiGraph.reverse)
     def reverse(self, copy=True):
+        self._convert_arrow_to_dynamic()
+
         if not copy:
             g = self.__class__(create_empty_in_engine=False)
             g.graph.update(self.graph)

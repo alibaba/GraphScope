@@ -15,8 +15,7 @@
  */
 package com.alibaba.maxgraph.compiler.utils;
 
-import com.alibaba.maxgraph.compiler.api.schema.PropDataType;
-import com.alibaba.maxgraph.sdkcommon.meta.DataType;
+import com.alibaba.maxgraph.compiler.api.schema.DataType;
 import com.alibaba.maxgraph.sdkcommon.meta.InternalDataType;
 import org.apache.commons.lang3.StringUtils;
 import org.junit.Assert;
@@ -25,27 +24,27 @@ import org.junit.Test;
 public class CompilerUtilsTest {
     @Test
     public void testParseDataTypeFromPropDataType() {
-        DataType boolType = CompilerUtils.parseDataTypeFromPropDataType(PropDataType.BOOL);
-        Assert.assertEquals(boolType, DataType.BOOL);
-        DataType shortType = CompilerUtils.parseDataTypeFromPropDataType(PropDataType.SHORT);
-        Assert.assertEquals(shortType, DataType.SHORT);
-        DataType intType = CompilerUtils.parseDataTypeFromPropDataType(PropDataType.INTEGER);
-        Assert.assertEquals(intType, DataType.INT);
-        DataType longType = CompilerUtils.parseDataTypeFromPropDataType(PropDataType.LONG);
-        Assert.assertEquals(longType, DataType.LONG);
-        DataType stringType = CompilerUtils.parseDataTypeFromPropDataType(PropDataType.STRING);
-        Assert.assertEquals(stringType, DataType.STRING);
-        DataType floatType = CompilerUtils.parseDataTypeFromPropDataType(PropDataType.FLOAT);
-        Assert.assertEquals(floatType, DataType.FLOAT);
-        DataType doubleType = CompilerUtils.parseDataTypeFromPropDataType(PropDataType.DOUBLE);
-        Assert.assertEquals(doubleType, DataType.DOUBLE);
-        DataType intListType = CompilerUtils.parseDataTypeFromPropDataType(PropDataType.INTEGER_LIST);
+        com.alibaba.maxgraph.sdkcommon.meta.DataType boolType = CompilerUtils.parseDataTypeFromPropDataType(DataType.BOOL);
+        Assert.assertEquals(boolType, com.alibaba.maxgraph.sdkcommon.meta.DataType.BOOL);
+        com.alibaba.maxgraph.sdkcommon.meta.DataType shortType = CompilerUtils.parseDataTypeFromPropDataType(DataType.SHORT);
+        Assert.assertEquals(shortType, com.alibaba.maxgraph.sdkcommon.meta.DataType.SHORT);
+        com.alibaba.maxgraph.sdkcommon.meta.DataType intType = CompilerUtils.parseDataTypeFromPropDataType(DataType.INT);
+        Assert.assertEquals(intType, com.alibaba.maxgraph.sdkcommon.meta.DataType.INT);
+        com.alibaba.maxgraph.sdkcommon.meta.DataType longType = CompilerUtils.parseDataTypeFromPropDataType(DataType.LONG);
+        Assert.assertEquals(longType, com.alibaba.maxgraph.sdkcommon.meta.DataType.LONG);
+        com.alibaba.maxgraph.sdkcommon.meta.DataType stringType = CompilerUtils.parseDataTypeFromPropDataType(DataType.STRING);
+        Assert.assertEquals(stringType, com.alibaba.maxgraph.sdkcommon.meta.DataType.STRING);
+        com.alibaba.maxgraph.sdkcommon.meta.DataType floatType = CompilerUtils.parseDataTypeFromPropDataType(DataType.FLOAT);
+        Assert.assertEquals(floatType, com.alibaba.maxgraph.sdkcommon.meta.DataType.FLOAT);
+        com.alibaba.maxgraph.sdkcommon.meta.DataType doubleType = CompilerUtils.parseDataTypeFromPropDataType(DataType.DOUBLE);
+        Assert.assertEquals(doubleType, com.alibaba.maxgraph.sdkcommon.meta.DataType.DOUBLE);
+        com.alibaba.maxgraph.sdkcommon.meta.DataType intListType = CompilerUtils.parseDataTypeFromPropDataType(DataType.INT_LIST);
         Assert.assertEquals(intListType.getType(), InternalDataType.LIST);
         Assert.assertEquals(StringUtils.lowerCase(intListType.getExpression()), "int");
-        DataType longListType = CompilerUtils.parseDataTypeFromPropDataType(PropDataType.LONG_LIST);
+        com.alibaba.maxgraph.sdkcommon.meta.DataType longListType = CompilerUtils.parseDataTypeFromPropDataType(DataType.LONG_LIST);
         Assert.assertEquals(longListType.getType(), InternalDataType.LIST);
         Assert.assertEquals(StringUtils.lowerCase(longListType.getExpression()), "long");
-        DataType stringListType = CompilerUtils.parseDataTypeFromPropDataType(PropDataType.STRING_LIST);
+        com.alibaba.maxgraph.sdkcommon.meta.DataType stringListType = CompilerUtils.parseDataTypeFromPropDataType(DataType.STRING_LIST);
         Assert.assertEquals(stringListType.getType(), InternalDataType.LIST);
         Assert.assertEquals(StringUtils.lowerCase(stringListType.getExpression()), "string");
     }

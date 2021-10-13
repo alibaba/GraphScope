@@ -1440,36 +1440,8 @@ class DynamicFragment {
     return false;
   }
 
-  inline virtual bool GetVertexData(const oid_t& oid, std::string& ret) const {
-    vertex_t v;
-    if (GetInnerVertex(oid, v) && IsAliveInnerVertex(v)) {
-      ret = folly::toJson(GetData(v));
-      return true;
-    }
-    return false;
-  }
-
   inline virtual bool GetEdgeData(const oid_t& u, const oid_t& v,
-                                  std::string& ret) {
-    vid_t uid, vid;
-    if (Oid2Gid(u, uid) && Oid2Gid(v, vid)) {
-      vid_t ulid, vlid;
-      if ((uid >> fid_offset_) == fid_ && Gid2Lid(uid, ulid) &&
-          Gid2Lid(vid, vlid) && isAlive(ulid)) {
-        auto pos = inner_oe_pos_[ulid];
-        if (pos != -1) {
-          auto& oe = edge_space_[pos];
-          if (oe.find(vlid) != oe.end()) {
-            ret = folly::toJson(oe[vlid].data());
-            return true;
-          }
-        }
-      }
-    }
-    return false;
-  }
-
-  inline bool GetEdgeData(const oid_t& u, const oid_t& v, edata_t& data) {
+                                  edata_t& data) {
     vid_t uid, vid;
     if (Oid2Gid(u, uid) && Oid2Gid(v, vid)) {
       vid_t ulid, vlid;
