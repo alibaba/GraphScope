@@ -1056,7 +1056,7 @@ class ArrowProjectedFragment
     }
     oe_ptr_ = reinterpret_cast<const nbr_unit_t*>(oe_->GetValue(0));
   }
-
+  inline bool directed() const { return fragment_->directed(); }
   vertex_range_t inner_vertices_;
   vertex_range_t outer_vertices_;
   vertex_range_t vertices_;
