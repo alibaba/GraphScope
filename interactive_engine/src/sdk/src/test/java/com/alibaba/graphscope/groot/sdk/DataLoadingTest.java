@@ -14,7 +14,7 @@ import org.junit.jupiter.api.Test;
 
 public class DataLoadingTest {
     String host = "localhost";
-    int port = 55555;
+    int port = 55556;
     Client client = new Client(host, port);
 
     @Test
