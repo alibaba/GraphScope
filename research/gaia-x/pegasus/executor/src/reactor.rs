@@ -13,6 +13,7 @@
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 
+use std::cell::RefCell;
 use std::panic::AssertUnwindSafe;
 use std::sync::atomic::{AtomicUsize, Ordering};
 use std::sync::{Arc, Mutex};
@@ -25,7 +26,6 @@ use pegasus_common::queue::*;
 use pending::PendingPool;
 
 use super::*;
-use std::cell::RefCell;
 
 struct SelectTask {
     pub last: Instant,
@@ -447,15 +447,12 @@ pub fn init_executor() -> (Mutex<Option<ExecutorRuntime>>, ExecutorProxy) {
 
 struct ExecutorGuard {
     seq: usize,
-    guard: Arc<AtomicUsize>
+    guard: Arc<AtomicUsize>,
 }
 
 impl ExecutorGuard {
     fn new() -> Self {
-        ExecutorGuard {
-            seq: 0,
-            guard: Arc::new(AtomicUsize::new(0))
-        }
+        ExecutorGuard { seq: 0, guard: Arc::new(AtomicUsize::new(0)) }
     }
 
     fn size(&self) -> usize {
@@ -466,9 +463,7 @@ impl ExecutorGuard {
 impl Clone for ExecutorGuard {
     fn clone(&self) -> Self {
         let seq = self.guard.fetch_add(1, Ordering::SeqCst) + 1;
-        ExecutorGuard {
-           seq, guard: self.guard.clone()
-        }
+        ExecutorGuard { seq, guard: self.guard.clone() }
     }
 }
 
@@ -476,9 +471,7 @@ impl Drop for ExecutorGuard {
     fn drop(&mut self) {
         if self.seq > 0 {
             let seq = self.guard.fetch_sub(1, Ordering::SeqCst);
-            if seq == 1 {
-
-            }
+            if seq == 1 {}
         }
     }
 }

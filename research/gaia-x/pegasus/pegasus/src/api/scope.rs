@@ -35,13 +35,12 @@ impl Default for ScopeDelta {
 }
 
 impl ScopeDelta {
-
     pub fn level_delta(&self) -> i32 {
         match self {
             ScopeDelta::None => 0,
             ScopeDelta::ToSibling(_) => 0,
             ScopeDelta::ToChild(a) => *a as i32,
-            ScopeDelta::ToParent(a) => 0 - *a as i32
+            ScopeDelta::ToParent(a) => 0 - *a as i32,
         }
     }
 
@@ -50,29 +49,23 @@ impl ScopeDelta {
             (ScopeDelta::None, x) => {
                 *self = x;
                 None
-            },
+            }
             (_, ScopeDelta::None) => None,
             (ScopeDelta::ToSibling(a), ScopeDelta::ToSibling(b)) => {
                 *self = ScopeDelta::ToSibling(a + b);
                 None
-            },
-            (ScopeDelta::ToSibling(_), other) => {
-                Some(other)
-            },
+            }
+            (ScopeDelta::ToSibling(_), other) => Some(other),
             (ScopeDelta::ToChild(a), ScopeDelta::ToChild(b)) => {
                 *self = ScopeDelta::ToChild(a + b);
                 None
-            },
-            (ScopeDelta::ToChild(_), other) => {
-                Some(other)
-            },
-            (ScopeDelta::ToParent(a), ScopeDelta::ToParent(b)) => {
-                *self = ScopeDelta::ToParent( a + b);
-                None
-            },
-            (ScopeDelta::ToParent(_), other) => {
-                Some(other)
             }
+            (ScopeDelta::ToChild(_), other) => Some(other),
+            (ScopeDelta::ToParent(a), ScopeDelta::ToParent(b)) => {
+                *self = ScopeDelta::ToParent(a + b);
+                None
+            }
+            (ScopeDelta::ToParent(_), other) => Some(other),
         }
     }
 

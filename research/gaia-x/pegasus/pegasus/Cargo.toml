@@ -29,8 +29,7 @@ dyn-clonable = "0.9.0"
 
 [features]
 mem = ["pegasus_memory/mem"]
-rob = ["pegasus_common/rob"]
-default = ["rob"]
+default = []
 
 [dev-dependencies]
 time = "0.1"

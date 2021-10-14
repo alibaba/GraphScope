@@ -90,18 +90,22 @@ fn iterate_x_map_x_iterate_x_map_x_test() {
         let index = pegasus::get_current_worker().index;
         let src = (index * 1000)..(index * 1000 + 1000);
         move |input, output| {
-            input.input_from(src)?
+            input
+                .input_from(src)?
                 .iterate(10, |start| {
-                    start.repartition(|x| Ok(*x as u64))
+                    start
+                        .repartition(|x| Ok(*x as u64))
                         .map(|x| Ok(x + 1))
                 })?
                 .iterate(10, |start| {
-                    start.repartition(|x| Ok(*x as u64))
+                    start
+                        .repartition(|x| Ok(*x as u64))
                         .map(|x| Ok(x + 1))
                 })?
                 .sink_into(output)
         }
-    }).expect("submit job failure");
+    })
+    .expect("submit job failure");
 
     let mut vec = vec![];
     while let Some(Ok(r)) = res.next() {

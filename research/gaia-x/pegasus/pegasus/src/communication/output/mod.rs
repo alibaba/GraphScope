@@ -133,16 +133,10 @@ impl<D: Data> RefWrapOutput<D> {
         self.output.borrow_mut().push_batch_mut(batch)
     }
 
-    #[cfg(feature = "rob")]
     pub fn push_iter<I: Iterator<Item = D> + Send + 'static>(&self, tag: &Tag, iter: I) -> IOResult<()> {
         let mut output = self.output.borrow_mut();
         output.pin(tag);
         output.push_iter(tag, iter)
-    }
-
-    #[cfg(not(feature = "rob"))]
-    pub fn push_iter<I: Iterator<Item = D> + Send + 'static>(&self, tag: &Tag, iter: I) -> IOResult<()> {
-        self.output.borrow_mut().push_iter(tag, iter)
     }
 }
 
