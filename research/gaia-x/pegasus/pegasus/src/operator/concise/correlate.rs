@@ -51,12 +51,6 @@ impl<D: Data> CorrelatedSubTask<D> for Stream<D> {
     }
 }
 
-#[cfg(not(feature = "rob"))]
-fn new_batch<D>(tag: Tag, worker: u32, buf: Buffer<D>) -> MicroBatch<D> {
-    MicroBatch::new(tag.clone(), worker, 0, buf)
-}
-
-#[cfg(feature = "rob")]
 fn new_batch<D>(tag: Tag, worker: u32, buf: Buffer<D>) -> MicroBatch<D> {
     MicroBatch::new(tag.clone(), worker, buf.into_read_only())
 }
@@ -276,7 +270,10 @@ impl<P: Data, S: Data> OperatorCore for ZipSubtaskOperator<P, S> {
                             )))?;
                         }
                         Err(TakeErr::NotExist) => {
-                            Err(JobExecError::panic(format!("parent data of {}th subtask not found;", offset)))?;
+                            Err(JobExecError::panic(format!(
+                                "parent data of {}th subtask not found;",
+                                offset
+                            )))?;
                         }
                     }
 
