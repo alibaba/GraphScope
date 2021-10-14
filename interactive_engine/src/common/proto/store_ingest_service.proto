@@ -17,15 +17,15 @@ syntax = "proto3";
 
 import "model.proto";
 
-option java_package = "com.alibaba.maxgraph.proto.v2";
+option java_package = "com.alibaba.maxgraph.proto.groot";
 option java_multiple_files = true;
 
 service StoreIngest {
-    rpc storeIngest(StoreIngestRequest) returns(StoreIngestResponse);
+  rpc storeIngest(StoreIngestRequest) returns(StoreIngestResponse);
 }
 
 message StoreIngestRequest {
-    string dataPath = 1;
+  string dataPath = 1;
 }
 
 message StoreIngestResponse {

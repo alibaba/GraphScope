@@ -1,4 +1,5 @@
 #![allow(dead_code)]
+
 #[macro_use]
 pub mod error;
 pub mod property;
@@ -15,7 +16,8 @@ pub use self::config::*;
 pub use self::graph::*;
 pub use self::property::*;
 pub use self::schema::*;
-use crate::db::proto::model::{EdgeKindPb, EdgeIdPb, DataLoadTargetPb};
+use crate::db::proto::model::{EdgeKindPb, EdgeIdPb};
+use crate::db::proto::common::DataLoadTargetPb;
 
 pub type SnapshotId = i64;
 pub type VertexId = i64;
@@ -108,7 +110,7 @@ impl DataLoadTarget {
     pub fn from_proto(proto: &DataLoadTargetPb) -> Self {
         Self::new(proto.get_labelId(),
                   proto.get_srcLabelId(),
-                  proto.get_dstLabelId(),)
+                  proto.get_dstLabelId(), )
     }
 
     pub fn to_proto(&self) -> DataLoadTargetPb {

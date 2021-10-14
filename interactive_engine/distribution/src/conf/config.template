@@ -10,7 +10,7 @@ ingestor.node.count=2
 coordinator.node.count=1
 ingestor.queue.count=2
 partition.count=8
-engine.type=pegasus
+engine.type=maxgraph
 discovery.mode=zookeeper
 
 ## Ingestor Config
@@ -34,7 +34,6 @@ kafka.servers=graph_env:9092
 kafka.topic=graph_test
 
 ## Frontend Config
-graph.store.type=maxgraph
 gremlin.server.port=12312
 
 executor.worker.per.process=2

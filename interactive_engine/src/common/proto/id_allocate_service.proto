@@ -15,17 +15,17 @@
  */
 syntax = "proto3";
 
-option java_package = "com.alibaba.maxgraph.proto.v2";
+option java_package = "com.alibaba.maxgraph.proto.groot";
 option java_multiple_files = true;
 
 service IdAllocate {
-    rpc allocateId(AllocateIdRequest) returns(AllocateIdResponse);
+  rpc allocateId(AllocateIdRequest) returns(AllocateIdResponse);
 }
 
 message AllocateIdRequest {
-    int32 allocate_size = 1;
+  int32 allocate_size = 1;
 }
 
 message AllocateIdResponse {
-    int64 start_id = 1;
+  int64 start_id = 1;
 }

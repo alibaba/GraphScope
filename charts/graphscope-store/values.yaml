@@ -49,7 +49,7 @@ maxgraphLogbackFile: ""
 
 rpcMaxBytesMb: 4
 
-engineType: "pegasus"
+engineType: "maxgraph"
 
 discoveryMode: "file"
 
