@@ -94,6 +94,10 @@ include_directories(SYSTEM ${Boost_INCLUDE_DIRS})
 # eliminate a lot of warnings for newer version of boost library.
 add_compile_options(-DBOOST_BIND_GLOBAL_PLACEHOLDERS)
 
+# check the gcc abi
+include("cmake/CheckGCCABICompatibility.cmake")
+check_gcc_compatible()
+
 include("cmake/FindGFlags.cmake")
 if (GFLAGS_FOUND)
     include_directories(SYSTEM ${GFLAGS_INCLUDE_DIRS})

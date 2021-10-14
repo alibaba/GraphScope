@@ -30,8 +30,6 @@ endif ()
 include(CheckCXXCompilerFlag)
 include(GNUInstallDirs)
 
-add_definitions(-D_GLIBCXX_USE_CXX11_ABI=0)
-
 set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -O0 -g")
@@ -88,6 +86,14 @@ if(GRAPHSCOPE_ANALYTICAL_HOME)
     set(ANALYTICAL_ENGINE_HOME ${GRAPHSCOPE_ANALYTICAL_HOME})
 else()
     set(ANALYTICAL_ENGINE_HOME $_analytical_engine_home)
+endif()
+
+# force load the config make if it exists
+include("${ANALYTICAL_ENGINE_HOME}/${CMAKE_INSTALL_LIBDIR}/cmake/graphscope-analytical/graphscope-analytical-config.cmake" OPTIONAL)
+if("${GRAPHSCOPE_GCC_ABI_BACKWARDS_COMPATIBLE}" STREQUAL "0")
+    add_definitions(-D_GLIBCXX_USE_CXX11_ABI=0)
+elseif("${GRAPHSCOPE_GCC_ABI_BACKWARDS_COMPATIBLE}" STREQUAL "1")
+    add_definitions(-D_GLIBCXX_USE_CXX11_ABI=1)
 endif()
 
 set(FRAME_NAME $_frame_name)
