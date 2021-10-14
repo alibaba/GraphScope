@@ -137,6 +137,17 @@ message Unfold {
   common.NameOrId alias = 2;
 }
 
+message Limit {
+  message Range {
+    int32 lower = 1;
+    int32 upper = 2;
+  }
+  // The limit range
+  Range range = 1;
+  // If this limit operator is used right after an order-by, it can be recognized as a topk.
+  bool is_topk = 2;
+}
+
 // Scan is an operator that transforms the source data format (defined by the database)
 // into internal data format (defined/used by runtime)
 message Scan {
@@ -153,6 +164,8 @@ message Scan {
   string schema_name = 2;
   // The required data fields for the scan
   repeated common.NameOrId fields = 3;
+  // The size limit
+  Limit.Range limit = 4;
 }
 
 // In addition to `Scan`, this operator allow runtime to leverage certain optimization strategy while the predicates
@@ -174,6 +187,19 @@ message IndexedScan {
   repeated KVEquivPairs orKvEquivPairs = 2;
 }
 
+message GQueryParams {
+  // The required labels.
+  repeated common.NameOrId labels = 1;
+  // The required properties of this edge expansion
+  repeated common.NameOrId properties = 2;
+  // The size limit
+  Limit.Range limit = 3;
+  // The optional predicate for the graph element
+  common.SuffixExpr predicate = 4;
+  // Extra requirements for general-purpose usage
+  repeated string requirements = 5;
+}
+
 // To expand satisfied edges from a tag of the graph relation that refers to a vertex attribute
 message ExpandBase {
   enum Direction {
@@ -182,40 +208,39 @@ message ExpandBase {
     BOTH = 2;
   }
   // The tag that refers to the starting vertex
-  common.NameOrId start_v_tag = 1;
+  common.NameOrId v_tag = 1;
   // The direction of the expanded edge
   Direction direction = 2;
-  // The optional predicate for the edge
-  common.SuffixExpr edge_predicate = 5;
-  // The optional predicate for the vertex
-  common.SuffixExpr vertex_predicate = 6;
+  // The query parameters define the condition that the edge must satisfy
+  GQueryParams params = 3;
+}
+
+// It is typical to use the operator together with EdgeExpand or PathExpand, with the functionality of
+// obtaining some properties of the end vertex after the expansion.
+message GetV {
+  // The tag that refers to the edge/path where the end vertex will be retrieved
+  common.NameOrId tag = 1;
+  // The query parameters define the condition that the vertex must satisfy
+  GQueryParams params = 2;
+  // The alias of this vertex
+  common.NameOrId alias = 3;
 }
 
 message EdgeExpand {
   // The base expansion
   ExpandBase base = 1;
   // An optional alias for the expanded edge
-  common.NameOrId edge_alias = 2;
-  // An optional alias for the other end vertex of the edge.
-  common.NameOrId end_v_alias = 3;
+  common.NameOrId alias = 2;
 }
 
 message PathExpand {
-  message Range {
-    // The lower bound of the range, inclusive
-    int32 lower = 2;
-    // The upper bound of the range, exclusive
-    int32 upper = 1;
-  }
   // A path expansion has a base of edge expansion
-  ExpandBase edge_expansion = 1;
+  ExpandBase base = 1;
   // An optional alias for the expanded path
-  common.NameOrId path_alias = 2;
-  // An optional alias for the other end vertex of the path.
-  common.NameOrId end_v_alias = 3;
+  common.NameOrId alias = 2;
   // The range that defines the minimum and maximum number of hops of the path expansion.
   // This is optional, if not set, the minimum number is 1, and the maximum is INT_MAX
-  Range range = 4;
+  Limit.Range hop_range = 3;
 }
 
 message ShortestPathExpand {
@@ -293,7 +318,9 @@ message LogicalPlan {
       SegmentApply seg_apply = 10;
       Scan scan = 11;
       IndexedScan indexed_scan = 12;
+      Limit limit = 13;
       // Saving the room for relational operators
+      GetV vertex = 20;
       EdgeExpand edge = 21;
       PathExpand path = 22;
       ShortestPathExpand shortest_path = 23;
