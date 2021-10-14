@@ -29,7 +29,7 @@ RUN sudo chown -R $(id -u):$(id -g) /home/graphscope/gs /home/graphscope/.m2 && 
            echo "debug mode" && mvn clean package -Pv2 -DskipTests -Drust.compile.mode=debug ; \
        fi
 
-FROM registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-runtime:debug
+FROM registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-runtime:latest
 
 COPY --from=builder /opt/vineyard/ /usr/local/
 
