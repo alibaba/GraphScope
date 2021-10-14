@@ -26,7 +26,6 @@ mod any;
 mod collect;
 mod correlate;
 mod count;
-mod dedup;
 mod filter;
 mod fold;
 mod join;

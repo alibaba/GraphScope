@@ -147,7 +147,6 @@ impl Decode for () {
     }
 }
 
-
 impl Encode for bool {
     fn write_to<W: WriteExt>(&self, writer: &mut W) -> io::Result<()> {
         if *self {
