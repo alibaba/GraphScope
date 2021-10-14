@@ -91,7 +91,7 @@ class StdStreamWrapper(object):
 
     def _filter_progress(self, line):
         # print('show_progress: ', len(line), ", ", line)
-        if not "PROGRESS--" in line:
+        if "PROGRESS--" not in line:
             return line
         else:
             self._show_progress(line)
