@@ -1,5 +1,6 @@
-use ::rocksdb::{DB, ReadOptions, SeekKey, Writable, IngestExternalFileOptions, DBIterator, DBOptions};
+use ::rocksdb::{DB, Options, ReadOptions, DBRawIterator, IngestExternalFileOptions};
 use std::collections::HashMap;
+use std::path::Path;
 
 use crate::db::api::*;
 use super::{StorageIter, StorageRes, ExternalStorage};
@@ -11,8 +12,8 @@ pub struct RocksDB {
 impl RocksDB {
     pub fn open(options: &HashMap<String, String>, path: &str) -> GraphResult<Self> {
         let opts = init_options(options);
-        let db = DB::open(opts, path).map_err(|e| {
-            let msg = format!("open rocksdb at {} failed, because {}", path, e);
+        let db = DB::open(&opts, path).map_err(|e| {
+            let msg = format!("open rocksdb at {} failed, because {}", path, e.into_string());
             gen_graph_err!(GraphErrorCode::ExternalStorageError, msg, open, options, path)
         })?;
         let ret = RocksDB {
@@ -28,7 +29,7 @@ impl ExternalStorage for RocksDB {
             Ok(Some(v)) => Ok(Some(StorageRes::RocksDB(v))),
             Ok(None) => Ok(None),
             Err(e) => {
-                let msg = format!("rocksdb.get failed because {}", e);
+                let msg = format!("rocksdb.get failed because {}", e.into_string());
                 let err = gen_graph_err!(GraphErrorCode::ExternalStorageError, msg);
                 Err(err)
             }
@@ -37,14 +38,14 @@ impl ExternalStorage for RocksDB {
 
     fn put(&self, key: &[u8], val: &[u8]) -> GraphResult<()> {
         self.db.put(key, val).map_err(|e| {
-            let msg = format!("rocksdb.put failed because {}", e);
+            let msg = format!("rocksdb.put failed because {}", e.into_string());
             gen_graph_err!(GraphErrorCode::ExternalStorageError, msg)
         })
     }
 
     fn delete(&self, key: &[u8]) -> GraphResult<()> {
         self.db.delete(key).map_err(|e| {
-            let msg = format!("rocksdb.delete failed because {}", e);
+            let msg = format!("rocksdb.delete failed because {}", e.into_string());
             gen_graph_err!(GraphErrorCode::ExternalStorageError, msg)
         })
     }
@@ -52,78 +53,81 @@ impl ExternalStorage for RocksDB {
     fn scan_prefix(&self, prefix: &[u8]) -> GraphResult<StorageIter> {
         let mut iter = match bytes_upper_bound(prefix) {
             Some(upper) => {
-                let mut option = ReadOptions::new();
+                let mut option = ReadOptions::default();
                 option.set_iterate_upper_bound(upper);
-                self.db.iter_opt(option)
+                self.db.raw_iterator_opt(option)
             }
-            None => self.db.iter(),
+            None => self.db.raw_iterator(),
         };
-        iter.seek(SeekKey::Key(prefix));
+        iter.seek(prefix);
         Ok(StorageIter::RocksDB(RocksDBIter::new(iter)))
     }
 
     fn scan_from(&self, start: &[u8]) -> GraphResult<StorageIter> {
-        let mut iter = self.db.iter();
-        iter.seek(SeekKey::Key(start));
+        let mut iter = self.db.raw_iterator();
+        iter.seek(start);
         Ok(StorageIter::RocksDB(RocksDBIter::new(iter)))
     }
 
     fn scan_range(&self, start: &[u8], end: &[u8]) -> GraphResult<StorageIter> {
-        let mut option = ReadOptions::new();
+        let mut option = ReadOptions::default();
         option.set_iterate_upper_bound(end.to_vec());
-        let mut iter = self.db.iter_opt(option);
-        iter.seek(SeekKey::Key(start));
+        let mut iter = self.db.raw_iterator_opt(option);
+        iter.seek(start);
         Ok(StorageIter::RocksDB(RocksDBIter::new(iter)))
     }
 
     fn delete_range(&self, start: &[u8], end: &[u8]) -> GraphResult<()> {
-        self.db.delete_range(start, end).map_err(|e| {
-            let msg = format!("rocksdb.delete_range failed because {}", e);
+        let handle = self.db.cf_handle("default").unwrap();
+        self.db.delete_range_cf(handle, start, end).map_err(|e| {
+            let msg = format!("rocksdb.delete_range failed because {}", e.into_string());
             gen_graph_err!(GraphErrorCode::ExternalStorageError, msg)
         })
     }
 
     fn load(&self, files: &[&str]) -> GraphResult<()> {
-        let mut options = IngestExternalFileOptions::new();
-        options.move_files(true);
-        self.db.ingest_external_file(&options, files).map_err(|e| {
-            let msg = format!("rocksdb.ingest_sst failed because {}", e);
+        let mut options = IngestExternalFileOptions::default();
+        options.set_move_files(true);
+        let paths : Vec<&Path> = files.to_vec().into_iter().map(|f| Path::new(f)).collect();
+        self.db.ingest_external_file_opts(&options, paths).map_err(|e| {
+            let msg = format!("rocksdb.ingest_sst failed because {}", e.into_string());
             gen_graph_err!(GraphErrorCode::ExternalStorageError, msg)
         })
     }
 }
 
 #[allow(unused_variables)]
-fn init_options(options: &HashMap<String, String>) -> DBOptions {
-    let mut ret = DBOptions::new();
+fn init_options(options: &HashMap<String, String>) -> Options {
+    let mut ret = Options::default();
     ret.create_if_missing(true);
+    // TODO: Add other customized db options.
     ret
 }
 
 
 pub struct RocksDBIter<'a> {
-    first_item: bool,
-    inner: DBIterator<&'a DB>,
+    inner: DBRawIterator<'a>,
+    just_seeked: bool,
 }
 
 impl<'a> RocksDBIter<'a> {
-    fn new(iter: DBIterator<&'a DB>) -> Self {
+    fn new(iter: DBRawIterator<'a>) -> Self {
         RocksDBIter {
-            first_item: true,
             inner: iter,
+            just_seeked: true,
         }
     }
 
     pub fn next(&mut self) -> Option<(&[u8], &[u8])> {
-        if !self.first_item {
-            if self.inner.next() {
-                return Some((self.inner.key(), self.inner.value()));
-            }
-        } else if self.inner.valid() {
-            self.first_item = false;
-            return Some((self.inner.key(), self.inner.value()))
+        if !self.inner.valid() {
+            return None;
         }
-        None
+        if self.just_seeked {
+            self.just_seeked = false;
+        } else {
+            self.inner.next();
+        }
+        Some((self.inner.key().unwrap(), self.inner.value().unwrap()))
     }
 }
 

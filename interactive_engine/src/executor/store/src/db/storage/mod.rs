@@ -1,4 +1,3 @@
-use ::rocksdb::{DBVector};
 use crate::db::api::GraphResult;
 
 pub mod rocksdb;
@@ -17,13 +16,13 @@ pub trait ExternalStorage {
 }
 
 pub enum StorageRes {
-    RocksDB(DBVector),
+    RocksDB(Vec<u8>),
 }
 
 impl StorageRes {
     pub fn as_bytes(&self) -> &[u8] {
-        match *self {
-            StorageRes::RocksDB(ref v) => v.as_ref(),
+        match self {
+            StorageRes::RocksDB(v) => v,
         }
     }
 }
