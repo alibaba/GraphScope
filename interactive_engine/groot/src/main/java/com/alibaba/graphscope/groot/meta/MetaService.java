@@ -33,4 +33,8 @@ public interface MetaService {
     int getIngestorIdForQueue(int queueId);
 
     int getStoreCount();
+
+    String getLoggerServers();
+
+    String getLoggerTopicName();
 }

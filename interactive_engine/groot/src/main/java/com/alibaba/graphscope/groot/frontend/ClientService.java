@@ -310,6 +310,17 @@ public class ClientService extends ClientGrpc.ClientImplBase {
     }
 
     @Override
+    public void getLoggerInfo(GetLoggerInfoRequest request, StreamObserver<GetLoggerInfoResponse> observer) {
+        GetLoggerInfoResponse response = GetLoggerInfoResponse.newBuilder()
+                .setLoggerServers(metaService.getLoggerServers())
+                .setLoggerTopic(metaService.getLoggerTopicName())
+                .setLoggerQueueCount(metaService.getQueueCount())
+                .build();
+        observer.onNext(response);
+        observer.onCompleted();
+    }
+
+    @Override
     public void ingestData(
             IngestDataRequest request, StreamObserver<IngestDataResponse> responseObserver) {
         String dataPath = request.getDataPath();

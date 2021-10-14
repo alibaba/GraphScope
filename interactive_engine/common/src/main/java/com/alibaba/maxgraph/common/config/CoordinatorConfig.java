@@ -27,4 +27,10 @@ public class CoordinatorConfig {
 
     public static final Config<String> FILE_META_STORE_PATH =
             Config.stringConfig("file.meta.store.path", "./meta");
+
+    public static final Config<Boolean> BACKUP_AUTOCOMMIT =
+            Config.boolConfig("backup.autocommit", false);
+
+    public static final Config<Integer> BACKUP_AUTOCOMMIT_INTERVAL_HOURS =
+            Config.intConfig("backup.autocommit.interval.hours", 24);
 }

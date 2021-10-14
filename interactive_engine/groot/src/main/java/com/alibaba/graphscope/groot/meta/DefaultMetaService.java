@@ -15,6 +15,7 @@ package com.alibaba.graphscope.groot.meta;
 
 import com.alibaba.maxgraph.common.config.CommonConfig;
 import com.alibaba.maxgraph.common.config.Configs;
+import com.alibaba.maxgraph.common.config.KafkaConfig;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -30,12 +31,16 @@ public class DefaultMetaService implements MetaService {
     private Map<Integer, List<Integer>> storeToPartitionIds;
     private Map<Integer, Integer> partitionToStore;
     private int storeCount;
+    private String kafkaServers;
+    private String kafkaTopicName;
 
     public DefaultMetaService(Configs configs) {
         this.configs = configs;
         this.partitionCount = CommonConfig.PARTITION_COUNT.get(configs);
         this.queueCount = CommonConfig.INGESTOR_QUEUE_COUNT.get(configs);
         this.storeCount = CommonConfig.STORE_NODE_COUNT.get(configs);
+        this.kafkaServers = KafkaConfig.KAFKA_SERVERS.get(configs);
+        this.kafkaTopicName = KafkaConfig.KAKFA_TOPIC.get(configs);
     }
 
     @Override
@@ -107,5 +112,15 @@ public class DefaultMetaService implements MetaService {
     @Override
     public int getStoreCount() {
         return this.storeCount;
+    }
+
+    @Override
+    public String getLoggerServers() {
+        return this.kafkaServers;
+    }
+
+    @Override
+    public String getLoggerTopicName() {
+        return this.kafkaTopicName;
     }
 }

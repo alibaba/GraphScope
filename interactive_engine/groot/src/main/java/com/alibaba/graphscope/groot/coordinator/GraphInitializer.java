@@ -19,13 +19,17 @@ import com.alibaba.maxgraph.common.config.Configs;
 import com.alibaba.maxgraph.common.config.ZkConfig;
 import com.alibaba.maxgraph.compiler.api.exception.MaxGraphException;
 import com.alibaba.graphscope.groot.wal.LogService;
+import com.alibaba.maxgraph.groot.backup.BackupInfo;
+import com.alibaba.maxgraph.groot.wal.LogService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.zookeeper.data.Stat;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class GraphInitializer {
 
@@ -94,6 +98,15 @@ public class GraphInitializer {
         if (!this.metaStore.exists(IdAllocator.ID_ALLOCATE_INFO_PATH)) {
             byte[] b = this.objectMapper.writeValueAsBytes(0L);
             this.metaStore.write(IdAllocator.ID_ALLOCATE_INFO_PATH, b);
+        }
+        if (!this.metaStore.exists(BackupManager.GLOBAL_BACKUP_ID_PATH)) {
+            byte[] b = this.objectMapper.writeValueAsBytes(1);
+            this.metaStore.write(BackupManager.GLOBAL_BACKUP_ID_PATH, b);
+        }
+        if (!this.metaStore.exists(BackupManager.BACKUP_INFO_PATH)) {
+            Map<Integer, BackupInfo> readyBackups = new HashMap<>();
+            byte[] b = this.objectMapper.writeValueAsBytes(readyBackups);
+            this.metaStore.write(BackupManager.BACKUP_INFO_PATH, b);
         }
     }
 }
