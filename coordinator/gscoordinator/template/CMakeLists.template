@@ -91,9 +91,9 @@ endif()
 # force load the config make if it exists
 include("${ANALYTICAL_ENGINE_HOME}/${CMAKE_INSTALL_LIBDIR}/cmake/graphscope-analytical/graphscope-analytical-config.cmake" OPTIONAL)
 if("${GRAPHSCOPE_GCC_ABI_BACKWARDS_COMPATIBLE}" STREQUAL "0")
-    add_definitions(-D_GLIBCXX_USE_CXX11_ABI=0)
-elseif("${GRAPHSCOPE_GCC_ABI_BACKWARDS_COMPATIBLE}" STREQUAL "1")
     add_definitions(-D_GLIBCXX_USE_CXX11_ABI=1)
+elseif("${GRAPHSCOPE_GCC_ABI_BACKWARDS_COMPATIBLE}" STREQUAL "1")
+    add_definitions(-D_GLIBCXX_USE_CXX11_ABI=0)
 endif()
 
 set(FRAME_NAME $_frame_name)

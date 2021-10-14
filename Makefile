@@ -73,7 +73,7 @@ ifneq ($(INSTALL_PREFIX), /usr/local)
 	if [ -d "${INSTALL_PREFIX}/lib64/cmake/graphscope-analytical" ]; then \
 		sudo ln -sfn ${INSTALL_PREFIX}/lib64/cmake/graphscope-analytical /usr/local/lib64/cmake/graphscope-analytical; \
 		sudo mkdir -p ${INSTALL_PREFIX}/lib/cmake; \
-		sudo cp -r ${INSTALL_PREFIX}/lib64/cmake/graphscope-analytical ${INSTALL_PREFIX}/lib/cmake/graphscope-analytical; \
+		sudo cp -r ${INSTALL_PREFIX}/lib64/cmake/* ${INSTALL_PREFIX}/lib/cmake/; \
 	else \
 		sudo ln -sfn ${INSTALL_PREFIX}/lib/cmake/graphscope-analytical /usr/local/lib/cmake/graphscope-analytical; \
 	fi
