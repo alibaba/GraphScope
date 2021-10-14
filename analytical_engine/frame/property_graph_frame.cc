@@ -111,7 +111,8 @@ void LoadGraph(
           BOOST_LEAF_AUTO(frag_group_id, loader.LoadFragmentAsFragmentGroup());
           MPI_Barrier(comm_spec.comm());
 
-          LOG_IF(INFO, comm_spec_.worker_id() == 0) << "PROGRESS--GRAPH-LOADING-SEAL-100";
+          LOG_IF(INFO, comm_spec.worker_id() == 0)
+              << "PROGRESS--GRAPH-LOADING-SEAL-100";
 
           MPI_Barrier(comm_spec.comm());
           {
@@ -287,7 +288,8 @@ void AddLabelsToGraph(
                         loader.AddLabelsToGraphAsFragmentGroup(frag_id));
         MPI_Barrier(comm_spec.comm());
 
-        LOG_IF(INFO, comm_spec_.worker_id() == 0) << "PROGRESS--GRAPH-LOADING-SEAL-100";
+        LOG_IF(INFO, comm_spec.worker_id() == 0)
+            << "PROGRESS--GRAPH-LOADING-SEAL-100";
 
         auto fg = std::dynamic_pointer_cast<vineyard::ArrowFragmentGroup>(
             client.GetObject(frag_group_id));

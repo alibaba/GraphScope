@@ -18,24 +18,27 @@
 
 import threading
 from queue import Queue
+
 from tqdm import tqdm
+
 
 class LoadingProgressTracker:
     progbar = None
     cur_stub = 0
 
     stubs = [
-        'PROGRESS--GRAPH-LOADING-READ-VERTEX-0',
-        'PROGRESS--GRAPH-LOADING-READ-VERTEX-100',
-        'PROGRESS--GRAPH-LOADING-READ-EDGE-0',
-        'PROGRESS--GRAPH-LOADING-READ-EDGE-100',
-        'PROGRESS--GRAPH-LOADING-CONSTRUCT-VERTEX-0',
-        'PROGRESS--GRAPH-LOADING-CONSTRUCT-VERTEX-100',
-        'PROGRESS--GRAPH-LOADING-CONSTRUCT-EDGE-0',
-        'PROGRESS--GRAPH-LOADING-CONSTRUCT-EDGE-100',
-        'PROGRESS--GRAPH-LOADING-SEAL-0',
-        'PROGRESS--GRAPH-LOADING-SEAL-100',
+        "PROGRESS--GRAPH-LOADING-READ-VERTEX-0",
+        "PROGRESS--GRAPH-LOADING-READ-VERTEX-100",
+        "PROGRESS--GRAPH-LOADING-READ-EDGE-0",
+        "PROGRESS--GRAPH-LOADING-READ-EDGE-100",
+        "PROGRESS--GRAPH-LOADING-CONSTRUCT-VERTEX-0",
+        "PROGRESS--GRAPH-LOADING-CONSTRUCT-VERTEX-100",
+        "PROGRESS--GRAPH-LOADING-CONSTRUCT-EDGE-0",
+        "PROGRESS--GRAPH-LOADING-CONSTRUCT-EDGE-100",
+        "PROGRESS--GRAPH-LOADING-SEAL-0",
+        "PROGRESS--GRAPH-LOADING-SEAL-100",
     ]
+
 
 class StdStreamWrapper(object):
     def __init__(self, std_stream, queue=None, drop=True):
@@ -75,23 +78,24 @@ class StdStreamWrapper(object):
     def _show_progress(self, line):
         total = len(LoadingProgressTracker.stubs)
         if LoadingProgressTracker.progbar is None:
-            LoadingProgressTracker.progbar = tqdm(desc='Loading', total=total, file=self._stream_backup)
+            LoadingProgressTracker.progbar = tqdm(
+                desc="Loading", total=total, file=self._stream_backup
+            )
         LoadingProgressTracker.progbar.update(1)
         LoadingProgressTracker.cur_stub += 1
         if LoadingProgressTracker.cur_stub == total:
             LoadingProgressTracker.cur_stub = 0
             LoadingProgressTracker.progbar.close()
             LoadingProgressTracker.progbar = None
-            self._stream_backup.write('\n')
+            self._stream_backup.write("\n")
 
     def _filter_progress(self, line):
         # print('show_progress: ', len(line), ", ", line)
-        if not 'PROGRESS--' in line:
+        if not "PROGRESS--" in line:
             return line
         else:
             self._show_progress(line)
             return None
-
 
 
 class PipeWatcher(object):
@@ -126,4 +130,3 @@ class PipeWatcher(object):
 
     def drop(self, drop=True):
         self._drop = drop
-
