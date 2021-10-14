@@ -123,6 +123,7 @@ def test_minimize_udf_app():
         @staticmethod
         def Init(v, context):
             pass
+
         @staticmethod
         def Compute(messages, v, context):
             v.vote_to_halt()
