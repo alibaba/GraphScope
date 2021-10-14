@@ -15,7 +15,7 @@
 
 use std::fmt::{Debug, Formatter};
 
-use pegasus_common::buffer::ReadBuffer;
+use pegasus_common::buffer::{ReadBuffer, Buffer};
 use pegasus_common::codec::{Decode, Encode};
 use pegasus_common::io::{ReadExt, WriteExt};
 
@@ -26,49 +26,54 @@ pub trait Data: Clone + Send + Sync + Debug + Encode + Decode + 'static {}
 impl<T: Clone + Send + Sync + Debug + Encode + Decode + 'static> Data for T {}
 
 #[derive(Clone)]
-pub struct EndByScope {
+pub struct EndOfScope {
     pub(crate) tag: Tag,
     pub(crate) source: Weight,
-    pub(crate) count: u64,
+    pub(crate) total_send: u64,
 }
 
-impl EndByScope {
+impl EndOfScope {
     pub(crate) fn new(tag: Tag, source: Weight, count: u64) -> Self {
-        EndByScope { tag, source, count }
+        EndOfScope { tag, source, total_send: count }
     }
 
-    pub(crate) fn merge(&mut self, other: EndByScope) {
+    pub(crate) fn merge(&mut self, other: EndOfScope) {
         assert_eq!(self.tag, other.tag);
         self.source.merge(other.source);
-        self.count += other.count;
+        self.total_send += other.total_send;
     }
 
     pub(crate) fn contains_source(&self, src: u32) -> bool {
-        self.count != 0 || self.source.contains_source(src)
+        self.total_send != 0 || self.source.contains_source(src)
     }
 }
 
-impl Debug for EndByScope {
+impl Debug for EndOfScope {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        write!(f, "end({:?}_{})", self.tag, self.count)
+        write!(f, "end({:?}_{})", self.tag, self.total_send)
     }
 }
 
-impl Encode for EndByScope {
-    fn write_to<W: WriteExt>(&self, _writer: &mut W) -> std::io::Result<()> {
-        todo!()
+impl Encode for EndOfScope {
+    fn write_to<W: WriteExt>(&self, writer: &mut W) -> std::io::Result<()> {
+        self.tag.write_to(writer)?;
+        self.source.write_to(writer)?;
+        writer.write_u64(self.total_send)
     }
 }
 
-impl Decode for EndByScope {
-    fn read_from<R: ReadExt>(_reader: &mut R) -> std::io::Result<Self> {
-        todo!()
+impl Decode for EndOfScope {
+    fn read_from<R: ReadExt>(reader: &mut R) -> std::io::Result<Self> {
+        let tag = Tag::read_from(reader)?;
+        let source = Weight::read_from(reader)?;
+        let total_send = reader.read_u64()?;
+        Ok(EndOfScope { tag, source, total_send })
     }
 }
 
 pub enum MarkedData<D> {
     Data(D),
-    Marked(Option<D>, EndByScope),
+    Marked(Option<D>, EndOfScope),
 }
 
 pub struct MicroBatch<T> {
@@ -79,7 +84,7 @@ pub struct MicroBatch<T> {
     /// sequence of the data batch;
     seq: u64,
     /// if this is the last batch of a scope;
-    end: Option<EndByScope>,
+    end: Option<EndOfScope>,
     /// read only data details;
     data: ReadBuffer<T>,
 
@@ -104,7 +109,7 @@ impl<D> MicroBatch<D> {
         MicroBatch { tag, src, seq: 0, end: None, data, is_discarded: false }
     }
 
-    pub fn last(src: u32, end: EndByScope) -> Self {
+    pub fn last(src: u32, end: EndOfScope) -> Self {
         MicroBatch {
             tag: end.tag.clone(),
             src,
@@ -115,7 +120,7 @@ impl<D> MicroBatch<D> {
         }
     }
 
-    pub fn set_end(&mut self, end: EndByScope) {
+    pub fn set_end(&mut self, end: EndOfScope) {
         self.end = Some(end);
     }
 
@@ -138,11 +143,11 @@ impl<D> MicroBatch<D> {
         self.end.is_some()
     }
 
-    pub fn get_end(&self) -> Option<&EndByScope> {
+    pub fn get_end(&self) -> Option<&EndOfScope> {
         self.end.as_ref()
     }
 
-    pub fn get_end_mut(&mut self) -> Option<&mut EndByScope> {
+    pub fn get_end_mut(&mut self) -> Option<&mut EndOfScope> {
         self.end.as_mut()
     }
 
@@ -150,7 +155,7 @@ impl<D> MicroBatch<D> {
         self.data.len() == 0
     }
 
-    pub fn take_end(&mut self) -> Option<EndByScope> {
+    pub fn take_end(&mut self) -> Option<EndOfScope> {
         self.end.take()
     }
 
@@ -239,31 +244,36 @@ impl<D: Data> Encode for MicroBatch<D> {
         self.tag.write_to(writer)?;
         writer.write_u64(self.seq)?;
         writer.write_u32(self.src)?;
-        self.end.write_to(writer)?;
         let len = self.data.len() as u64;
         writer.write_u64(len)?;
         for data in self.data.iter() {
             data.write_to(writer)?;
         }
+        self.end.write_to(writer)?;
         Ok(())
     }
 }
 
 impl<D: Data> Decode for MicroBatch<D> {
-    fn read_from<R: ReadExt>(_reader: &mut R) -> std::io::Result<Self> {
-        // let tag = Tag::read_from(reader)?;
-        // let seq = reader.read_u64()?;
-        // let src = reader.read_u32()?;
-        // let end = Option::<EndSignal>::read_from(reader)?;
-        // let len = reader.read_u64()?;
-        todo!("buffer reuse")
+    fn read_from<R: ReadExt>(reader: &mut R) -> std::io::Result<Self> {
+        let tag = Tag::read_from(reader)?;
+        let seq = reader.read_u64()?;
+        let src = reader.read_u32()?;
+        let len = reader.read_u64()? as usize;
+        let mut buf = Buffer::with_capacity(len);
+        for _ in 0..len {
+           buf.push(D::read_from(reader)?);
+        }
+        let data = buf.into_read_only();
+        let end = Option::<EndOfScope>::read_from(reader)?;
+        Ok(MicroBatch { tag, src, seq, end, data, is_discarded: false })
     }
 }
 
 struct DrainEndIter<'a, D: Clone> {
     len: usize,
     data: &'a mut ReadBuffer<D>,
-    end: &'a mut Option<EndByScope>,
+    end: &'a mut Option<EndOfScope>,
     cur: usize,
 }
 

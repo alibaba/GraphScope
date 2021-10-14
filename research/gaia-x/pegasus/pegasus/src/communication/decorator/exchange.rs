@@ -24,7 +24,7 @@ use crate::communication::cancel::{CancelHandle, DynSingleConsCancelPtr, MultiCo
 use crate::communication::decorator::evented::EventEmitPush;
 use crate::communication::decorator::BlockPush;
 use crate::communication::{IOResult, Magic};
-use crate::data::{EndByScope, MicroBatch};
+use crate::data::{EndOfScope, MicroBatch};
 use crate::data_plane::Push;
 use crate::errors::IOError;
 use crate::graph::Port;
@@ -176,7 +176,7 @@ impl<D: Data> ExchangeMicroBatchPush<D> {
         Ok(())
     }
 
-    fn update_end(&mut self, target: Option<usize>, end: &EndByScope) -> Vec<EndSignal> {
+    fn update_end(&mut self, target: Option<usize>, end: &EndOfScope) -> Vec<EndSignal> {
         let mut push_stat = vec![];
         for (index, p) in self.pushes.iter().enumerate() {
             let mut pushes = p.get_push_count(&end.tag).unwrap_or(0);
@@ -210,7 +210,7 @@ impl<D: Data> ExchangeMicroBatchPush<D> {
         let mut result = vec![];
         for p in push_stat.into_iter() {
             let mut end = end.clone();
-            end.count = p as u64;
+            end.total_send = p as u64;
             result.push(EndSignal::new(end, weight.clone()));
         }
 
@@ -280,7 +280,7 @@ impl<D: Data> ExchangeMicroBatchPush<D> {
                     assert!(self.scope_level > 0);
                     for (i, e) in result.into_iter().enumerate() {
                         let end = e.into_end();
-                        if end.count > 0 {
+                        if end.total_send > 0 {
                             let batch = MicroBatch::last(self.src, end);
                             self.pushes[i].push(batch)?;
                         }
@@ -336,7 +336,7 @@ impl<D: Data> Push<MicroBatch<D>> for ExchangeMicroBatchPush<D> {
                             trace_worker!("output[{:?}] empty scope {:?};", self.port, batch.tag());
                             let tag_cur = end.tag.current_uncheck() as u64;
                             let owner = self.route.magic.exec(tag_cur) as usize;
-                            end.count = 0;
+                            end.total_send = 0;
                             end.source = Weight::single(self.src);
                             self.pushes[owner].push(MicroBatch::last(self.src, end))?;
                         } else {
@@ -349,8 +349,8 @@ impl<D: Data> Push<MicroBatch<D>> for ExchangeMicroBatchPush<D> {
                                 .enumerate()
                             {
                                 let end = sig.into_end();
-                                if end.count > 0 {
-                                    total_pushed += end.count;
+                                if end.total_send > 0 {
+                                    total_pushed += end.total_send;
                                     let last = MicroBatch::last(self.src, end);
                                     self.pushes[i].push(last)?;
                                 }
@@ -358,7 +358,7 @@ impl<D: Data> Push<MicroBatch<D>> for ExchangeMicroBatchPush<D> {
                             if total_pushed == 0 {
                                 let tag_cur = end.tag.current_uncheck() as u64;
                                 let owner = self.route.magic.exec(tag_cur) as usize;
-                                end.count = 0;
+                                end.total_send = 0;
                                 end.source = Weight::single(self.src);
                                 self.pushes[owner].push(MicroBatch::last(self.src, end))?;
                             }
@@ -438,7 +438,7 @@ impl<D: Data> Push<MicroBatch<D>> for ExchangeMicroBatchPush<D> {
                                 self.pushes[i].push(batch)?;
                             } else {
                                 let end = e.into_end();
-                                if end.count > 0 {
+                                if end.total_send > 0 {
                                     empty.set_end(end);
                                     self.pushes[i].push(empty)?;
                                 }

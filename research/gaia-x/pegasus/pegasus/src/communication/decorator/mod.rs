@@ -18,7 +18,7 @@ use crate::communication::decorator::aggregate::AggregateBatchPush;
 use crate::communication::decorator::broadcast::BroadcastBatchPush;
 use crate::communication::decorator::exchange::{ExchangeByScopePush, ExchangeMicroBatchPush};
 use crate::communication::IOResult;
-use crate::data::EndByScope;
+use crate::data::EndOfScope;
 use crate::data::MicroBatch;
 use crate::data_plane::intra_thread::ThreadPush;
 use crate::data_plane::Push;
@@ -40,7 +40,7 @@ pub trait ScopeStreamPush<T: Data> {
 
     fn push(&mut self, tag: &Tag, msg: T) -> IOResult<()>;
 
-    fn push_last(&mut self, msg: T, end: EndByScope) -> IOResult<()>;
+    fn push_last(&mut self, msg: T, end: EndOfScope) -> IOResult<()>;
 
     fn try_push_iter<I: Iterator<Item = T>>(&mut self, tag: &Tag, iter: &mut I) -> IOResult<()> {
         for x in iter {
@@ -49,7 +49,7 @@ pub trait ScopeStreamPush<T: Data> {
         Ok(())
     }
 
-    fn notify_end(&mut self, end: EndByScope) -> IOResult<()>;
+    fn notify_end(&mut self, end: EndOfScope) -> IOResult<()>;
 
     fn flush(&mut self) -> IOResult<()>;
 
@@ -127,7 +127,7 @@ impl<T: Data> Push<MicroBatch<T>> for LocalMicroBatchPush<T> {
                     c.1
                 );
             }
-            end.count = c.1 as u64;
+            end.total_send = c.1 as u64;
 
             if self.global_state {
                 let worker = self.worker_index;

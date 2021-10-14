@@ -24,7 +24,7 @@ pub(crate) use tee::ChannelPush;
 
 use crate::communication::decorator::ScopeStreamPush;
 use crate::communication::output::output::OutputHandle;
-use crate::data::{EndByScope, MicroBatch};
+use crate::data::{EndOfScope, MicroBatch};
 use crate::errors::IOResult;
 use crate::schedule::state::outbound::OutputCancelState;
 use crate::{Data, Tag};
@@ -71,7 +71,7 @@ pub trait OutputProxy: AsAny + Send {
 
     /// Notify this output that the scope with tag was closed, no more data of this scope will be send
     /// on this output;
-    fn notify_end(&self, end: EndByScope) -> IOResult<()>;
+    fn notify_end(&self, end: EndOfScope) -> IOResult<()>;
 
     /// Stop to output data of scope with this tag in output port from now on;
     fn cancel(&self, tag: &Tag) -> IOResult<()>;
@@ -157,7 +157,7 @@ impl<D: Data> OutputProxy for RefWrapOutput<D> {
     }
 
     #[inline]
-    fn notify_end(&self, end: EndByScope) -> IOResult<()> {
+    fn notify_end(&self, end: EndOfScope) -> IOResult<()> {
         self.output.borrow_mut().notify_end(end)
     }
 

@@ -1,5 +1,5 @@
 use crate::communication::IOResult;
-use crate::data::{EndByScope, MicroBatch};
+use crate::data::{EndOfScope, MicroBatch};
 use crate::data_plane::{GeneralPush, Push};
 use crate::graph::Port;
 use crate::progress::{EndSignal, Weight};
@@ -26,18 +26,18 @@ impl ScopeEndPanel {
             source: end.source,
             children,
             merged,
-            count: end.count,
+            count: end.total_send,
             is_exhaust: false,
         }
     }
 
-    fn merge(&mut self, src: u32, end: EndSignal) -> Option<EndByScope> {
+    fn merge(&mut self, src: u32, end: EndSignal) -> Option<EndOfScope> {
         let (end, children) = end.take();
         assert_eq!(end.tag, self.tag);
         assert_eq!(end.source, self.source);
         self.merged.add_source(src);
         self.children.merge(children);
-        self.count += end.count;
+        self.count += end.total_send;
 
         if self.merged == self.source {
             self.is_exhaust = true;
@@ -50,12 +50,12 @@ impl ScopeEndPanel {
                 let owner = self.tag.current_uncheck() % worker_id.total_peers();
                 if owner == worker_id.index {
                     src = Weight::single(owner);
-                    Some(EndByScope::new(self.tag.clone(), src, self.count))
+                    Some(EndOfScope::new(self.tag.clone(), src, self.count))
                 } else {
                     None
                 }
             } else {
-                Some(EndByScope::new(self.tag.clone(), src, self.count))
+                Some(EndOfScope::new(self.tag.clone(), src, self.count))
             }
         } else {
             None
@@ -64,11 +64,11 @@ impl ScopeEndPanel {
 }
 
 pub trait InputEndNotify: Send + 'static {
-    fn notify(&mut self, end: EndByScope) -> IOResult<()>;
+    fn notify(&mut self, end: EndOfScope) -> IOResult<()>;
 }
 
 impl<T: Data> InputEndNotify for GeneralPush<MicroBatch<T>> {
-    fn notify(&mut self, end: EndByScope) -> IOResult<()> {
+    fn notify(&mut self, end: EndOfScope) -> IOResult<()> {
         let last = MicroBatch::last(0, end);
         if last.tag().is_root() {
             self.push(last)?;

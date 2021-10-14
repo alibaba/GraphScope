@@ -24,7 +24,7 @@ use crate::api::notification::{Cancel, End};
 use crate::channel_id::ChannelInfo;
 use crate::communication::input::{new_input, InputProxy};
 use crate::communication::output::{OutputBuilder, OutputBuilderImpl, OutputProxy};
-use crate::data::{EndByScope, MicroBatch};
+use crate::data::{EndOfScope, MicroBatch};
 use crate::data_plane::{GeneralPull, GeneralPush};
 use crate::errors::{IOResult, JobExecError};
 use crate::event::emitter::EventEmitter;
@@ -52,7 +52,7 @@ impl<T: ?Sized + Notifiable> Notifiable for Box<T> {
 
 struct MultiInputsMerge {
     input_size: usize,
-    end_merge: Vec<TidyTagMap<(EndByScope, IntSet<u64>)>>,
+    end_merge: Vec<TidyTagMap<(EndOfScope, IntSet<u64>)>>,
 }
 
 impl MultiInputsMerge {
@@ -64,7 +64,7 @@ impl MultiInputsMerge {
         MultiInputsMerge { input_size, end_merge }
     }
 
-    fn merge_end(&mut self, n: End) -> Vec<EndByScope> {
+    fn merge_end(&mut self, n: End) -> Vec<EndOfScope> {
         let idx = n.tag().len();
         assert!(idx < self.end_merge.len());
         let mut ends = vec![];
@@ -173,7 +173,7 @@ impl DefaultNotify {
         }
     }
 
-    fn merge_end(&mut self, end: End) -> Vec<EndByScope> {
+    fn merge_end(&mut self, end: End) -> Vec<EndOfScope> {
         match self {
             DefaultNotify::SISO | DefaultNotify::SIMO(_) => vec![end.take()],
             DefaultNotify::MISO(mim) => mim.merge_end(end),
@@ -220,7 +220,7 @@ impl<T: Send + 'static> Notifiable for DefaultNotifyOperator<T> {
                             self.op_index,
                             end.tag,
                             end.source,
-                            end.count
+                            end.total_send
                         );
                         continue;
                     }

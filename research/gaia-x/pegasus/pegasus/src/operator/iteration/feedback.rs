@@ -42,12 +42,12 @@ impl<D: Data> OperatorCore for FeedbackOperator<D> {
             }
 
             if let Some(mut end) = end {
-                if end.count == 0 {
+                if end.total_send == 0 {
                     trace_worker!("no data of {:?} feedback into next iteration;", batch.tag);
                     end.tag = end.tag.advance_to(self.max_iters - 1);
                 }
                 if len == 0 && end.source.contains_source(self.worker_index) {
-                    end.count = 0;
+                    end.total_send = 0;
                 }
                 output.notify_end(end)?;
             }

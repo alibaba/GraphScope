@@ -95,7 +95,7 @@ impl<D: Data> Push<MicroBatch<D>> for EventEmitPush<D> {
                 .remove(&batch.tag)
                 .unwrap_or((0, 0, 0));
             total += len;
-            end.count = total as u64;
+            end.total_send = total as u64;
             batch.set_end(end);
             batch.set_seq(seq as u64);
             trace_worker!(
