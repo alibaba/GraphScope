@@ -1,7 +1,7 @@
 # the graphscope-manylinux2010 image is based on manylinux2010, including all necessary
 # dependencies for graphscope's wheel package.
 
-FROM registry.cn-hongkong.aliyuncs.com/graphscope/manylinux2014:2021-10-13-14ac00e
+FROM registry.cn-hongkong.aliyuncs.com/graphscope/manylinux2014:2021-10-14-14ac00e
 
 # yum install dependencies
 RUN yum install -y autoconf m4 git krb5-devel \
