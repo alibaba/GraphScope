@@ -162,7 +162,7 @@ jobs:
         cd ${GITHUB_WORKSPACE}
         tar -cf gie.tar interactive_engine/executor/target/release/executor \
                         interactive_engine/executor/target/release/gaia_executor \
-                        interactive_engine/bin/zetcd
+                        interactive_engine/zetcd
 
     - uses: actions/upload-artifact@v2
       with:

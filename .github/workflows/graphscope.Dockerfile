@@ -4,10 +4,10 @@ ARG profile=release
 
 COPY ./opt/vineyard/ /usr/local/
 COPY ./opt/graphscope /opt/graphscope
-COPY ./interactive_engine/bin/zetcd /opt/graphscope/bin/zetcd
-COPY ./interactive_engine/src/executor/target/release/executor /opt/graphscope/bin/executor
-COPY ./interactive_engine/src/executor/target/release/gaia_executor /opt/graphscope/bin/gaia_executor
-COPY ./interactive_engine/src/assembly/target/maxgraph-assembly-0.0.1-SNAPSHOT.tar.gz /opt/graphscope/maxgraph-assembly-0.0.1-SNAPSHOT.tar.gz
+COPY ./interactive_engine/zetcd /opt/graphscope/bin/zetcd
+COPY ./interactive_engine/executor/target/release/executor /opt/graphscope/bin/executor
+COPY ./interactive_engine/executor/target/release/gaia_executor /opt/graphscope/bin/gaia_executor
+COPY ./interactive_engine/assembly/target/maxgraph-assembly-0.0.1-SNAPSHOT.tar.gz /opt/graphscope/maxgraph-assembly-0.0.1-SNAPSHOT.tar.gz
 
 # install mars
 RUN pip3 install git+https://github.com/mars-project/mars.git@d09e1e4c3e32ceb05f42d0b5b79775b1ebd299fb#egg=pymars
