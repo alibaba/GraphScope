@@ -533,7 +533,7 @@ class CoordinatorServiceServicer(
     def _maybe_compile_app(self, op):
         app_sig = get_app_sha256(op.attr)
         # try to get compiled file from GRAPHSCOPE_HOME/precompiled
-        space = os.path.join(GRAPHSCOPE_HOME, "precompiled")
+        space = os.path.join(GRAPHSCOPE_HOME, "precompiled", "builtin")
         app_lib_path = get_lib_path(os.path.join(space, app_sig), app_sig)
         if not os.path.isfile(app_lib_path):
             space = self._builtin_workspace
@@ -558,7 +558,7 @@ class CoordinatorServiceServicer(
     def _maybe_register_graph(self, op, session_id):
         graph_sig = get_graph_sha256(op.attr)
         # try to get compiled file from GRAPHSCOPE_HOME/precompiled
-        space = os.path.join(GRAPHSCOPE_HOME, "precompiled")
+        space = os.path.join(GRAPHSCOPE_HOME, "precompiled", "builtin")
         graph_lib_path = get_lib_path(os.path.join(space, graph_sig), graph_sig)
         if not os.path.isfile(graph_lib_path):
             space = self._builtin_workspace

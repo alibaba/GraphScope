@@ -22,7 +22,9 @@ import sys
 import pytest
 
 import graphscope
+from graphscope.analytical.udf.decorators import pregel
 from graphscope.dataset.ogbn_mag import load_ogbn_mag
+from graphscope.framework.app import AppAssets
 
 if sys.platform == "linux":
     from graphscope.learning.examples import GCN
@@ -113,6 +115,31 @@ def simple_flow(sess, ogbn_small_script):
     }
 
     train(config, lg)
+
+
+def test_minimize_udf_app():
+    @pregel(vd_type="string", md_type="string")
+    class DummyClass(AppAssets):
+        @staticmethod
+        def Init(v, context):
+            pass
+        @staticmethod
+        def Compute(messages, v, context):
+            v.vote_to_halt()
+
+    s = graphscope.session(cluster_type="hosts", num_workers=1)
+    g = load_ogbn_mag(s)
+    a = DummyClass()
+    r = a(g)
+    s.close()
+
+
+def test_minimize_networkx():
+    s = graphscope.session(cluster_type="hosts", num_workers=1)
+    nx_g = s.nx().Graph(dist=True)
+    nx_g.add_nodes_from(range(100), type="node")
+    gs_g = s.g(nx_g)
+    s.close()
 
 
 def test_multiple_session(ogbn_small_script):

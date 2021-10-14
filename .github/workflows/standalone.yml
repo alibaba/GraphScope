@@ -90,13 +90,17 @@ jobs:
         PYTHON: ${{ matrix.python-version }}
       shell: bash
       run: |
-        # install
         pushd artifacts
+        # install graphscope-client
         tar -zxf ./wheel-${{ github.sha }}/client.tar.gz
+        pushd python/dist/wheelhouse
         for f in * ; do pip3 install $f || true; done
-        rm -fr ./*.whl || true
+        popd
+        # install graphscope
         tar -zxf ./wheel-${{ github.sha }}/graphscope.tar.gz
+        pushd coordinator/dist/wheelhouse
         pip3 install ./*.whl
+        popd
         popd
 
         # run test
