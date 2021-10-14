@@ -23,7 +23,7 @@ use crate::api::notification::{Cancel, End};
 use crate::api::CorrelatedSubTask;
 use crate::communication::input::{new_input_session, InputProxy};
 use crate::communication::output::{new_output, OutputProxy};
-use crate::data::{EndByScope, MicroBatch};
+use crate::data::{EndOfScope, MicroBatch};
 use crate::errors::{IOError, JobExecError};
 use crate::operator::{Notifiable, OperatorCore};
 use crate::progress::Weight;
@@ -138,7 +138,7 @@ impl<D: Data> OperatorCore for ForkSubtaskOperator<D> {
                             let tag = Tag::inherit(&p, cur);
                             trace_worker!("fork {}th scope {:?}", fp.forked_child, tag);
                             let mut sub_batch = new_batch(tag.clone(), worker, buf);
-                            let end = EndByScope::new(tag, Weight::single(worker), 1);
+                            let end = EndOfScope::new(tag, Weight::single(worker), 1);
                             sub_batch.set_end(end);
                             output2.push_batch(sub_batch)?;
                         } else {
@@ -204,7 +204,7 @@ struct ZipSubtaskOperator<P, S> {
     peers: u32,
     scope_level: u32,
     parent: TidyTagMap<ZipSubtaskBuf<P>>,
-    parent_parent_ends: Vec<Vec<EndByScope>>,
+    parent_parent_ends: Vec<Vec<EndOfScope>>,
     _ph: std::marker::PhantomData<S>,
 }
 
@@ -401,8 +401,8 @@ struct ZipSubtaskBuf<D> {
     head: usize,
     len: usize,
     is_canceled: bool,
-    cur_end: Option<EndByScope>,
-    end: Option<EndByScope>,
+    cur_end: Option<EndOfScope>,
+    end: Option<EndOfScope>,
 }
 
 impl<D> ZipSubtaskBuf<D> {
@@ -417,11 +417,11 @@ impl<D> ZipSubtaskBuf<D> {
         }
     }
 
-    fn cur_end(&mut self, end: EndByScope) {
+    fn cur_end(&mut self, end: EndOfScope) {
         self.cur_end = Some(end);
     }
 
-    fn end(&mut self, end: EndByScope) {
+    fn end(&mut self, end: EndOfScope) {
         self.end = Some(end);
     }
 

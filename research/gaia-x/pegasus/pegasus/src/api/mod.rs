@@ -23,13 +23,13 @@ pub use primitive::unary::Unary;
 
 pub mod notification {
 
-    use crate::data::EndByScope;
+    use crate::data::EndOfScope;
     use crate::Tag;
 
     #[derive(Debug, Clone)]
     pub struct End {
         pub(crate) port: usize,
-        pub(crate) end: EndByScope,
+        pub(crate) end: EndOfScope,
     }
 
     #[derive(Debug, Clone)]
@@ -47,7 +47,7 @@ pub mod notification {
             self.port
         }
 
-        pub fn take(self) -> EndByScope {
+        pub fn take(self) -> EndOfScope {
             self.end
         }
     }

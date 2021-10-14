@@ -7,7 +7,7 @@ use nohash_hasher::IntSet;
 use pegasus_common::codec::Encode;
 
 use crate::codec::{Decode, ReadExt, WriteExt};
-use crate::data::EndByScope;
+use crate::data::EndOfScope;
 use crate::Tag;
 
 #[derive(Clone, Debug)]
@@ -278,12 +278,12 @@ impl Decode for Weight {
 
 #[derive(Clone, Debug)]
 pub struct EndSignal {
-    end: EndByScope,
+    end: EndOfScope,
     children: Weight,
 }
 
 impl EndSignal {
-    pub fn new(end: EndByScope, children: Weight) -> Self {
+    pub fn new(end: EndOfScope, children: Weight) -> Self {
         EndSignal { end, children }
     }
 
@@ -292,11 +292,11 @@ impl EndSignal {
     }
 
     pub fn set_push_count(&mut self, count: u64) {
-        self.end.count = count;
+        self.end.total_send = count;
     }
 
     pub fn push_count(&self) -> u64 {
-        self.end.count
+        self.end.total_send
     }
 
     pub fn sources(&self) -> usize {
@@ -307,13 +307,13 @@ impl EndSignal {
         &self.end.tag
     }
 
-    pub fn into_end(mut self) -> EndByScope {
+    pub fn into_end(mut self) -> EndOfScope {
         let child = std::mem::replace(&mut self.children, Weight::partial_empty());
         self.end.source = child;
         self.end
     }
 
-    pub fn take(self) -> (EndByScope, Weight) {
+    pub fn take(self) -> (EndOfScope, Weight) {
         (self.end, self.children)
     }
 }
