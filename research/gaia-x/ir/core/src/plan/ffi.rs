@@ -280,6 +280,51 @@ pub extern "C" fn debug_plan(ptr_plan: *const c_void) {
     std::mem::forget(plan);
 }
 
+enum RangeOpr {
+    Scan = 0,
+    GetV = 1,
+    ExpandBase = 2,
+    PathExpand = 3,
+    Limit = 4,
+}
+
+/// Set the size range limitation for certain operators
+fn set_range(ptr: *const c_void, lower: i32, upper: i32, opr: RangeOpr) -> ResultCode {
+    if lower < 0 || upper < 0 || upper < lower {
+        ResultCode::InvalidRangeError
+    } else {
+        match opr {
+            RangeOpr::GetV => {
+                let mut getv = unsafe { Box::from_raw(ptr as *mut pb::GetV) };
+                getv.params.as_mut().unwrap().limit = Some(pb::limit::Range { lower, upper });
+                std::mem::forget(getv);
+            }
+            RangeOpr::ExpandBase => {
+                let mut base = unsafe { Box::from_raw(ptr as *mut pb::ExpandBase) };
+                base.params.as_mut().unwrap().limit = Some(pb::limit::Range { lower, upper });
+                std::mem::forget(base);
+            }
+            RangeOpr::PathExpand => {
+                let mut pathxpd = unsafe { Box::from_raw(ptr as *mut pb::PathExpand) };
+                pathxpd.hop_range = Some(pb::limit::Range { lower, upper });
+                std::mem::forget(pathxpd);
+            }
+            RangeOpr::Scan => {
+                let mut scan = unsafe { Box::from_raw(ptr as *mut pb::Scan) };
+                scan.limit = Some(pb::limit::Range { lower, upper });
+                std::mem::forget(scan);
+            }
+            RangeOpr::Limit => {
+                let mut limit = unsafe { Box::from_raw(ptr as *mut pb::Limit) };
+                limit.range = Some(pb::limit::Range { lower, upper });
+                std::mem::forget(limit);
+            }
+        }
+
+        ResultCode::Success
+    }
+}
+
 mod project {
     use super::*;
     /// To initialize a project operator.
@@ -781,11 +826,11 @@ mod unfold {
         Box::into_raw(unfold) as *const c_void
     }
 
-    /// Set the arguments for unfold, which are:
+    /// Set the argument pair for unfold, which are:
     /// * a tag points to a collection-type data field for unfolding,
     /// * an alias for referencing to each element of the collection.
     #[no_mangle]
-    pub extern "C" fn set_unfold_args(
+    pub extern "C" fn set_unfold_pair(
         ptr_unfold: *const c_void,
         tag: FfiNameOrId,
         alias: FfiNameOrId,
@@ -847,8 +892,18 @@ mod scan {
             scan_opt: unsafe { std::mem::transmute::<FfiScanOpt, i32>(scan_opt) },
             schema_name: "".to_string(),
             fields: vec![],
+            limit: None,
         });
         Box::into_raw(scan) as *const c_void
+    }
+
+    #[no_mangle]
+    pub extern "C" fn set_scan_limit(
+        ptr_scan: *const c_void,
+        lower: i32,
+        upper: i32,
+    ) -> ResultCode {
+        set_range(ptr_scan, lower, upper, RangeOpr::Scan)
     }
 
     #[no_mangle]
@@ -942,6 +997,7 @@ mod idxscan {
         int64: i64,
         float64: f64,
         cstr: *const c_char,
+        raw: *const c_void,
     }
 
     impl Default for FfiConst {
@@ -952,7 +1008,8 @@ mod idxscan {
                 int32: 0,
                 int64: 0,
                 float64: 0.0,
-                cstr: std::ptr::null() as *const c_char,
+                cstr: std::ptr::null::<c_char>(),
+                raw: std::ptr::null::<c_void>(),
             }
         }
     }
@@ -1030,7 +1087,7 @@ mod idxscan {
     }
 
     #[no_mangle]
-    pub extern "C" fn build_kv_equiv_pairs() -> *const c_void {
+    pub extern "C" fn init_kv_equiv_pairs() -> *const c_void {
         let pairs: Box<Vec<KvEquivPair>> = Box::new(vec![]);
         Box::into_raw(pairs) as *const c_void
     }
@@ -1090,5 +1147,359 @@ mod idxscan {
     #[no_mangle]
     pub extern "C" fn destroy_idxscan_operator(ptr: *const c_void) {
         destroy_ptr::<pb::IndexedScan>(ptr)
+    }
+}
+
+mod limit {
+    use super::*;
+
+    #[no_mangle]
+    pub extern "C" fn init_limit_operator(is_topk: bool) -> *const c_void {
+        let limit: Box<pb::Limit> = Box::new(pb::Limit {
+            range: None,
+            is_topk,
+        });
+        Box::into_raw(limit) as *const c_void
+    }
+
+    #[no_mangle]
+    pub extern "C" fn set_limit_range(
+        ptr_limit: *const c_void,
+        lower: i32,
+        upper: i32,
+    ) -> ResultCode {
+        set_range(ptr_limit, lower, upper, RangeOpr::Limit)
+    }
+
+    /// Append an indexed scan operator to the logical plan
+    #[no_mangle]
+    pub extern "C" fn append_limit_operator(
+        ptr_plan: *const c_void,
+        ptr_limit: *const c_void,
+        parent: i32,
+        id: *mut i32,
+    ) -> ResultCode {
+        let limit = unsafe { Box::from_raw(ptr_limit as *mut pb::Limit) };
+        append_operator(ptr_plan, limit.as_ref().clone().into(), vec![parent], id)
+    }
+
+    #[no_mangle]
+    pub extern "C" fn destroy_limit_operator(ptr: *const c_void) {
+        destroy_ptr::<pb::Limit>(ptr)
+    }
+}
+
+mod graph {
+    use super::*;
+
+    #[allow(dead_code)]
+    #[derive(Copy, Clone)]
+    #[repr(i32)]
+    pub enum FfiDirection {
+        Out = 0,
+        In = 1,
+        Both = 2,
+    }
+
+    /// To initialize an expansion base
+    #[no_mangle]
+    pub extern "C" fn init_expand_base(direction: FfiDirection) -> *const c_void {
+        let expand = Box::new(pb::ExpandBase {
+            v_tag: None,
+            direction: unsafe { std::mem::transmute::<FfiDirection, i32>(direction) },
+            params: Some(pb::GQueryParams {
+                labels: vec![],
+                properties: vec![],
+                limit: None,
+                predicate: None,
+                requirements: vec![],
+            }),
+        });
+        Box::into_raw(expand) as *const c_void
+    }
+
+    #[derive(PartialEq)]
+    enum ParamsOpt {
+        Tag,
+        Label,
+        Property,
+    }
+
+    fn process_params(
+        ptr: *const c_void,
+        tag: FfiNameOrId,
+        opt: ParamsOpt,
+        is_edge: bool,
+    ) -> ResultCode {
+        let mut return_code = ResultCode::Success;
+        let pb: FfiResult<common_pb::NameOrId> = tag.try_into();
+        if pb.is_ok() {
+            if is_edge {
+                let mut expand = unsafe { Box::from_raw(ptr as *mut pb::ExpandBase) };
+                match opt {
+                    ParamsOpt::Tag => expand.v_tag = pb.ok(),
+                    ParamsOpt::Label => expand.params.as_mut().unwrap().labels.push(pb.unwrap()),
+                    ParamsOpt::Property => {
+                        expand.params.as_mut().unwrap().properties.push(pb.unwrap())
+                    }
+                }
+                std::mem::forget(expand);
+            } else {
+                let mut getv = unsafe { Box::from_raw(ptr as *mut pb::GetV) };
+                match opt {
+                    ParamsOpt::Tag => getv.tag = pb.ok(),
+                    ParamsOpt::Label => getv.params.as_mut().unwrap().labels.push(pb.unwrap()),
+                    ParamsOpt::Property => {
+                        getv.params.as_mut().unwrap().properties.push(pb.unwrap())
+                    }
+                }
+                std::mem::forget(getv);
+            }
+        } else {
+            return_code = pb.err().unwrap();
+        }
+
+        return_code
+    }
+
+    /// Set the start-vertex's tag to conduct this expansion
+    #[no_mangle]
+    pub extern "C" fn set_expand_vtag(ptr_expand: *const c_void, v_tag: FfiNameOrId) -> ResultCode {
+        process_params(ptr_expand, v_tag, ParamsOpt::Tag, true)
+    }
+
+    /// Add a label of the edge that this expansion must satisfy
+    #[no_mangle]
+    pub extern "C" fn add_expand_label(
+        ptr_expand: *const c_void,
+        label: FfiNameOrId,
+    ) -> ResultCode {
+        process_params(ptr_expand, label, ParamsOpt::Label, true)
+    }
+
+    /// Add a property that this edge expansion must carry
+    #[no_mangle]
+    pub extern "C" fn add_expand_property(
+        ptr_expand: *const c_void,
+        property: FfiNameOrId,
+    ) -> ResultCode {
+        process_params(ptr_expand, property, ParamsOpt::Property, true)
+    }
+
+    /// Set the size range limitation of this expansion
+    #[no_mangle]
+    pub extern "C" fn set_expand_limit(
+        ptr_expand: *const c_void,
+        lower: i32,
+        upper: i32,
+    ) -> ResultCode {
+        set_range(ptr_expand, lower, upper, RangeOpr::ExpandBase)
+    }
+
+    /// Set the edge predicate of this expansion
+    #[no_mangle]
+    pub extern "C" fn set_expand_predicate(
+        ptr_expand: *const c_void,
+        cstr_predicate: *const c_char,
+    ) -> ResultCode {
+        let mut return_code = ResultCode::Success;
+        let predicate_pb = cstr_to_suffix_expr_pb(cstr_predicate);
+        if predicate_pb.is_ok() {
+            let mut expand = unsafe { Box::from_raw(ptr_expand as *mut pb::ExpandBase) };
+            expand.params.as_mut().unwrap().predicate = predicate_pb.ok();
+            std::mem::forget(expand);
+        } else {
+            return_code = predicate_pb.err().unwrap();
+        }
+
+        return_code
+    }
+
+    /// To initialize an edge expand operator from an expand base
+    #[no_mangle]
+    pub extern "C" fn init_edgexpd_operator(ptr_expand: *const c_void) -> *const c_void {
+        let expand = unsafe { Box::from_raw(ptr_expand as *mut pb::ExpandBase) };
+        let edgexpd = Box::new(pb::EdgeExpand {
+            base: Some(expand.as_ref().clone()),
+            alias: None,
+        });
+
+        Box::into_raw(edgexpd) as *const c_void
+    }
+
+    /// Set edge alias of this edge expansion
+    #[no_mangle]
+    pub extern "C" fn set_edgexpd_alias(
+        ptr_edgexpd: *const c_void,
+        alias: FfiNameOrId,
+    ) -> ResultCode {
+        let mut return_code = ResultCode::Success;
+        let alias_pb: FfiResult<common_pb::NameOrId> = alias.try_into();
+        if alias_pb.is_ok() {
+            let mut edgexpd = unsafe { Box::from_raw(ptr_edgexpd as *mut pb::EdgeExpand) };
+            edgexpd.alias = alias_pb.ok();
+            std::mem::forget(edgexpd);
+        } else {
+            return_code = alias_pb.err().unwrap();
+        }
+
+        return_code
+    }
+
+    /// Append an edge expand operator to the logical plan
+    #[no_mangle]
+    pub extern "C" fn append_edgexpd_operator(
+        ptr_plan: *const c_void,
+        ptr_edgexpd: *const c_void,
+        parent: i32,
+        id: *mut i32,
+    ) -> ResultCode {
+        let edgexpd = unsafe { Box::from_raw(ptr_edgexpd as *mut pb::EdgeExpand) };
+        append_operator(ptr_plan, edgexpd.as_ref().clone().into(), vec![parent], id)
+    }
+
+    #[no_mangle]
+    pub extern "C" fn destroy_edgexpd_operator(ptr: *const c_void) {
+        destroy_ptr::<pb::EdgeExpand>(ptr)
+    }
+
+    /// To initialize an expansion base
+    #[no_mangle]
+    pub extern "C" fn init_getv_operator() -> *const c_void {
+        let getv = Box::new(pb::GetV {
+            tag: None,
+            params: Some(pb::GQueryParams {
+                labels: vec![],
+                properties: vec![],
+                limit: None,
+                predicate: None,
+                requirements: vec![],
+            }),
+            alias: None,
+        });
+        Box::into_raw(getv) as *const c_void
+    }
+
+    /// Set the tag of edge/path to get its end vertex
+    #[no_mangle]
+    pub extern "C" fn set_getv_tag(ptr_getv: *const c_void, tag: FfiNameOrId) -> ResultCode {
+        process_params(ptr_getv, tag, ParamsOpt::Tag, false)
+    }
+
+    /// Set vertex alias of this getting vertex
+    #[no_mangle]
+    pub extern "C" fn set_getv_alias(ptr_getv: *const c_void, alias: FfiNameOrId) -> ResultCode {
+        let mut return_code = ResultCode::Success;
+        let alias_pb: FfiResult<common_pb::NameOrId> = alias.try_into();
+        if alias_pb.is_ok() {
+            let mut getv = unsafe { Box::from_raw(ptr_getv as *mut pb::GetV) };
+            getv.alias = alias_pb.ok();
+            std::mem::forget(getv);
+        } else {
+            return_code = alias_pb.err().unwrap();
+        }
+
+        return_code
+    }
+
+    /// Add a label of the vertex that this getv must satisfy
+    #[no_mangle]
+    pub extern "C" fn add_getv_label(ptr_getv: *const c_void, label: FfiNameOrId) -> ResultCode {
+        process_params(ptr_getv, label, ParamsOpt::Label, false)
+    }
+
+    /// Add a property that this vertex must carry
+    #[no_mangle]
+    pub extern "C" fn add_getv_property(
+        ptr_getv: *const c_void,
+        property: FfiNameOrId,
+    ) -> ResultCode {
+        process_params(ptr_getv, property, ParamsOpt::Property, false)
+    }
+
+    /// Set the size range limitation of getting vertices
+    #[no_mangle]
+    pub extern "C" fn set_getv_limit(
+        ptr_getv: *const c_void,
+        lower: i32,
+        upper: i32,
+    ) -> ResultCode {
+        set_range(ptr_getv, lower, upper, RangeOpr::GetV)
+    }
+
+    /// Append an edge expand operator to the logical plan
+    #[no_mangle]
+    pub extern "C" fn append_getv_operator(
+        ptr_plan: *const c_void,
+        ptr_getv: *const c_void,
+        parent: i32,
+        id: *mut i32,
+    ) -> ResultCode {
+        let getv = unsafe { Box::from_raw(ptr_getv as *mut pb::GetV) };
+        append_operator(ptr_plan, getv.as_ref().clone().into(), vec![parent], id)
+    }
+
+    #[no_mangle]
+    pub extern "C" fn destroy_getv_operator(ptr: *const c_void) {
+        destroy_ptr::<pb::GetV>(ptr)
+    }
+
+    /// To initialize an path expand operator from an expand base
+    #[no_mangle]
+    pub extern "C" fn init_pathxpd_operator(ptr_expand: *const c_void) -> *const c_void {
+        let expand = unsafe { Box::from_raw(ptr_expand as *mut pb::ExpandBase) };
+        let edgexpd = Box::new(pb::PathExpand {
+            base: Some(expand.as_ref().clone()),
+            alias: None,
+            hop_range: None,
+        });
+
+        Box::into_raw(edgexpd) as *const c_void
+    }
+
+    /// Set path alias of this path expansion
+    #[no_mangle]
+    pub extern "C" fn set_pathxpd_alias(
+        ptr_edgexpd: *const c_void,
+        alias: FfiNameOrId,
+    ) -> ResultCode {
+        let mut return_code = ResultCode::Success;
+        let alias_pb: FfiResult<common_pb::NameOrId> = alias.try_into();
+        if alias_pb.is_ok() {
+            let mut pathxpd = unsafe { Box::from_raw(ptr_edgexpd as *mut pb::PathExpand) };
+            pathxpd.alias = alias_pb.ok();
+            std::mem::forget(pathxpd);
+        } else {
+            return_code = alias_pb.err().unwrap();
+        }
+
+        return_code
+    }
+
+    /// Set the hop-range limitation of expanding path
+    #[no_mangle]
+    pub extern "C" fn set_pathxpd_hops(
+        ptr_pathxpd: *const c_void,
+        lower: i32,
+        upper: i32,
+    ) -> ResultCode {
+        set_range(ptr_pathxpd, lower, upper, RangeOpr::PathExpand)
+    }
+
+    /// Append an path-expand operator to the logical plan
+    #[no_mangle]
+    pub extern "C" fn append_pathxpd_operator(
+        ptr_plan: *const c_void,
+        ptr_pathxpd: *const c_void,
+        parent: i32,
+        id: *mut i32,
+    ) -> ResultCode {
+        let pathxpd = unsafe { Box::from_raw(ptr_pathxpd as *mut pb::PathExpand) };
+        append_operator(ptr_plan, pathxpd.as_ref().clone().into(), vec![parent], id)
+    }
+
+    #[no_mangle]
+    pub extern "C" fn destroy_pathxpd_operator(ptr: *const c_void) {
+        destroy_ptr::<pb::PathExpand>(ptr)
     }
 }

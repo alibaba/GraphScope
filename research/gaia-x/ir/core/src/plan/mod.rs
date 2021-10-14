@@ -45,6 +45,8 @@ pub enum ResultCode {
     CStringError = 3,
     /// The provided data type is unknown
     UnknownTypeError = 4,
+    /// The provided range is invalid
+    InvalidRangeError = 5,
 }
 
 impl std::fmt::Display for ResultCode {
@@ -55,6 +57,7 @@ impl std::fmt::Display for ResultCode {
             ResultCode::NotExistError => write!(f, "access to non-existed element"),
             ResultCode::CStringError => write!(f, "convert from c-like string error"),
             ResultCode::UnknownTypeError => write!(f, "unknown data type"),
+            ResultCode::InvalidRangeError => write!(f, "the range is invalid"),
         }
     }
 }
