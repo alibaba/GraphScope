@@ -259,7 +259,13 @@ fn append_operator(
     id: *mut i32,
 ) -> ResultCode {
     let mut plan = unsafe { Box::from_raw(ptr_plan as *mut LogicalPlan) };
-    let result = plan.append_node(operator, parent_ids.into_iter().map(|x| x as u32).collect());
+    let result = plan.append_node(
+        operator,
+        parent_ids
+            .into_iter()
+            .filter_map(|x| if x >= 0 { Some(x as u32) } else { None })
+            .collect(),
+    );
     // Do not let rust drop the pointer before explicitly calling `destroy_logical_plan`
     std::mem::forget(plan);
     if let Ok(opr_id) = result {
@@ -356,8 +362,10 @@ mod project {
         } else {
             let attribute = pb::project::ExprAlias {
                 expr: expr_pb.ok(),
-                alias: alias_pb.ok(),
-                is_query_given,
+                alias: Some(pb::project::Alias {
+                    alias: alias_pb.ok(),
+                    is_query_given,
+                }),
             };
             project.mappings.push(attribute);
         }
@@ -369,11 +377,12 @@ mod project {
     /// Append a project operator to the logical plan. To do so, one specifies the following arguments:
     /// * `ptr_plan`: A rust-owned pointer created by `init_logical_plan()`.
     /// * `ptr_project`: A rust-owned pointer created by `init_project_operator()`.
-    /// * `parent_id`: The unique parent operator's index in the logical plan.
-    /// * `id`: An index pointer that gonna hold the index for this operator.
+    /// * `parent_id`: The unique parent operator's index in the logical plan, which must be present
+    /// except when a negative id is provided to bypass the setting of parent operator.
+    /// * `id`: An index pointer that gonna hold the index of this operator.
     ///
     /// If it is successful to be appended to the logical plan, the `ptr_project` will be
-    /// automatically released by by the rust program. Therefore, the caller needs not to deallocate
+    /// automatically released by the rust program. Therefore, the caller needs not to deallocate
     /// the pointer, and must **not** use it thereafter.
     ///
     /// Otherwise, user can manually call [`destroy_project_operator()`] to release the pointer.
@@ -526,7 +535,8 @@ mod join {
         return_code
     }
 
-    /// Append a join operator to the logical plan
+    /// Append a join operator to the logical plan. Note that both left and right parent ids
+    /// for join must be non-negative, and they must refer some nodes in the logical plan
     #[no_mangle]
     pub extern "C" fn append_join_operator(
         ptr_plan: *const c_void,
@@ -535,13 +545,17 @@ mod join {
         parent_right: i32,
         id: *mut i32,
     ) -> ResultCode {
-        let join = unsafe { Box::from_raw(ptr_join as *mut pb::Join) };
-        append_operator(
-            ptr_plan,
-            join.as_ref().clone().into(),
-            vec![parent_left, parent_right],
-            id,
-        )
+        if parent_left < 0 || parent_right < 0 {
+            ResultCode::NegativeIndexError
+        } else {
+            let join = unsafe { Box::from_raw(ptr_join as *mut pb::Join) };
+            append_operator(
+                ptr_plan,
+                join.as_ref().clone().into(),
+                vec![parent_left, parent_right],
+                id,
+            )
+        }
     }
 
     #[no_mangle]
@@ -1501,5 +1515,139 @@ mod graph {
     #[no_mangle]
     pub extern "C" fn destroy_pathxpd_operator(ptr: *const c_void) {
         destroy_ptr::<pb::PathExpand>(ptr)
+    }
+}
+
+mod subtask {
+    use super::*;
+    use crate::plan::ffi::join::FfiJoinKind;
+
+    /// To initialize an apply operator from a root node (id) of the subtask. Before initializing
+    /// the subtask, one need to first prepare the subtask and append the operators within to the
+    /// logical plan.
+    #[no_mangle]
+    pub extern "C" fn init_apply_operator(
+        subtask_root: i32,
+        join_kind: FfiJoinKind,
+    ) -> *const c_void {
+        let apply = Box::new(pb::Apply {
+            join_kind: unsafe { std::mem::transmute::<FfiJoinKind, i32>(join_kind) },
+            subtask: Some(pb::apply::Subtask {
+                tags: vec![],
+                subtask: subtask_root,
+                alias: None,
+            }),
+        });
+
+        Box::into_raw(apply) as *const c_void
+    }
+
+    #[no_mangle]
+    pub extern "C" fn add_apply_tag(ptr_apply: *const c_void, tag: FfiNameOrId) -> ResultCode {
+        let mut return_code = ResultCode::Success;
+        let tag_pb: FfiResult<common_pb::NameOrId> = tag.try_into();
+        if tag_pb.is_ok() {
+            let mut apply = unsafe { Box::from_raw(ptr_apply as *mut pb::Apply) };
+            apply.subtask.as_mut().unwrap().tags.push(tag_pb.unwrap());
+            std::mem::forget(apply);
+        } else {
+            return_code = tag_pb.err().unwrap();
+        }
+
+        return_code
+    }
+
+    #[no_mangle]
+    pub extern "C" fn set_apply_alias(
+        ptr_apply: *const c_void,
+        alias: FfiNameOrId,
+        is_query_given: bool,
+    ) -> ResultCode {
+        let mut return_code = ResultCode::Success;
+        let alias_pb: FfiResult<common_pb::NameOrId> = alias.try_into();
+        if alias_pb.is_ok() {
+            let mut apply = unsafe { Box::from_raw(ptr_apply as *mut pb::Apply) };
+            apply.subtask.as_mut().unwrap().alias = Some(pb::project::Alias {
+                alias: alias_pb.ok(),
+                is_query_given,
+            });
+            std::mem::forget(apply);
+        } else {
+            return_code = alias_pb.err().unwrap();
+        }
+
+        return_code
+    }
+
+    /// Append an apply operator to the logical plan.
+    /// If the apply is used alone (other than segment apply), the parent node must set and present
+    /// in the logical plan.
+    #[no_mangle]
+    pub extern "C" fn append_apply_operator(
+        ptr_plan: *const c_void,
+        ptr_apply: *const c_void,
+        parent: i32,
+        id: *mut i32,
+    ) -> ResultCode {
+        let apply = unsafe { Box::from_raw(ptr_apply as *mut pb::Apply) };
+        append_operator(ptr_plan, apply.as_ref().clone().into(), vec![parent], id)
+    }
+
+    #[no_mangle]
+    pub extern "C" fn destroy_apply_operator(ptr: *const c_void) {
+        destroy_ptr::<pb::Apply>(ptr)
+    }
+
+    /// To initialize a segment apply operator from an apply operator.
+    #[no_mangle]
+    pub extern "C" fn init_segapply_operator(ptr_apply: *const c_void) -> *const c_void {
+        let apply = unsafe { Box::from_raw(ptr_apply as *mut pb::Apply) };
+        let segapply = Box::new(pb::SegmentApply {
+            keys: vec![],
+            apply_subtask: Some(apply.as_ref().clone()),
+        });
+
+        Box::into_raw(segapply) as *const c_void
+    }
+
+    /// To add the key for grouping on which the segment apply can be conducted.
+    #[no_mangle]
+    pub extern "C" fn add_segapply_key(
+        ptr_segapply: *const c_void,
+        key: FfiNameOrId,
+    ) -> ResultCode {
+        let mut return_code = ResultCode::Success;
+        let key_pb: FfiResult<common_pb::NameOrId> = key.try_into();
+        if key_pb.is_ok() {
+            let mut segapply = unsafe { Box::from_raw(ptr_segapply as *mut pb::SegmentApply) };
+            segapply.keys.push(key_pb.unwrap());
+            std::mem::forget(segapply);
+        } else {
+            return_code = key_pb.err().unwrap();
+        }
+
+        return_code
+    }
+
+    /// Append an apply operator to the logical plan. The parent node id for appending a segment apply operator
+    /// must not be negative and must present in the logical plan.
+    #[no_mangle]
+    pub extern "C" fn append_segapply_operator(
+        ptr_plan: *const c_void,
+        ptr_segapply: *const c_void,
+        parent: i32,
+        id: *mut i32,
+    ) -> ResultCode {
+        if parent < 0 {
+            ResultCode::NegativeIndexError
+        } else {
+            let segapply = unsafe { Box::from_raw(ptr_segapply as *mut pb::SegmentApply) };
+            append_operator(ptr_plan, segapply.as_ref().clone().into(), vec![parent], id)
+        }
+    }
+
+    #[no_mangle]
+    pub extern "C" fn destroy_segapply_operator(ptr: *const c_void) {
+        destroy_ptr::<pb::SegmentApply>(ptr)
     }
 }

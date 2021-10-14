@@ -47,6 +47,8 @@ pub enum ResultCode {
     UnknownTypeError = 4,
     /// The provided range is invalid
     InvalidRangeError = 5,
+    /// The given index is negative
+    NegativeIndexError = 6,
 }
 
 impl std::fmt::Display for ResultCode {
@@ -58,6 +60,7 @@ impl std::fmt::Display for ResultCode {
             ResultCode::CStringError => write!(f, "convert from c-like string error"),
             ResultCode::UnknownTypeError => write!(f, "unknown data type"),
             ResultCode::InvalidRangeError => write!(f, "the range is invalid"),
+            ResultCode::NegativeIndexError => write!(f, "the given index is negative"),
         }
     }
 }
@@ -220,7 +223,7 @@ impl LogicalPlan {
     ) -> FfiResult<u32> {
         let id = self.total_size as u32;
         let mut node = Node::new(id, opr);
-        if !self.is_empty() {
+        if !self.is_empty() && !parent_ids.is_empty() {
             let mut parent_nodes = vec![];
             for parent_id in parent_ids {
                 if let Some(parent_node) = self.get_node(parent_id) {
