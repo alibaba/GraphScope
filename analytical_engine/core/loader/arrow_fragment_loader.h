@@ -99,7 +99,7 @@ class ArrowFragmentLoader {
 
   boost::leaf::result<std::vector<std::shared_ptr<arrow::Table>>>
   LoadVertexTables() {
-    LOG(INFO) << "PROGRESS--GRAPH-LOADING-VERTEX-READ-0";
+    LOG_IF(INFO, comm_spec_.worker_id() == 0) << "PROGRESS--GRAPH-LOADING-VERTEX-READ-0";
     std::vector<std::shared_ptr<arrow::Table>> v_tables;
     if (!vfiles_.empty()) {
       auto load_v_procedure = [&]() {
@@ -118,13 +118,13 @@ class ArrowFragmentLoader {
                       vineyard::sync_gs_error(comm_spec_, load_v_procedure));
       v_tables = tmp_v;
     }
-    LOG(INFO) << "PROGRESS--GRAPH-LOADING-VERTEX-READ-100";
+    LOG_IF(INFO, comm_spec_.worker_id() == 0) << "PROGRESS--GRAPH-LOADING-VERTEX-READ-100";
     return v_tables;
   }
 
   boost::leaf::result<std::vector<std::vector<std::shared_ptr<arrow::Table>>>>
   LoadEdgeTables() {
-    LOG(INFO) << "PROGRESS--GRAPH-LOADING-EDGE-READ-0";
+    LOG_IF(INFO, comm_spec_.worker_id() == 0) << "PROGRESS--GRAPH-LOADING-EDGE-READ-0";
     std::vector<std::vector<std::shared_ptr<arrow::Table>>> e_tables;
     if (!efiles_.empty()) {
       auto load_e_procedure = [&]() {
@@ -143,7 +143,7 @@ class ArrowFragmentLoader {
                       vineyard::sync_gs_error(comm_spec_, load_e_procedure));
       e_tables = tmp_e;
     }
-    LOG(INFO) << "PROGRESS--GRAPH-LOADING-EDGE-READ-100";
+    LOG_IF(INFO, comm_spec_.worker_id() == 0) << "PROGRESS--GRAPH-LOADING-EDGE-READ-100";
     return e_tables;
   }
 
