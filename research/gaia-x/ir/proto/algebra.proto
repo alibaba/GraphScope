@@ -24,14 +24,18 @@ import "expr.proto";
 
 // To project a relation on certain attributes or further their properties
 message Project {
+  message Alias {
+    // The name/name identifier of the aliased attribute
+    common.NameOrId alias = 1;
+    // An alias may be given by the query or by the compiler/optimizer for functional/optimization purpose.
+    // This indicator is used to differentiate the two cases.
+    bool is_query_given = 2;
+  }
   message ExprAlias {
     // The expression to be aliased
     common.SuffixExpr expr = 1;
-    // The name/name identifier of the aliased attribute
-    common.NameOrId alias = 2;
-    // An alias may be given by the query or by the compiler/optimizer for functional/optimization purpose.
-    // This indicator is used to differentiate the two cases.
-    bool is_query_given = 3;
+    // The alias that is either given by the query or by the system
+    Alias alias = 2;
   }
   // A list of [expression -> alias] to be projected from the graph relation.
   // e.g., project_{a.birthday / 100 % 100 as birth_month }
@@ -281,10 +285,7 @@ message Apply {
     int32 subtask = 2;
     // An alias for the result of the subtask. In order for Apply to be semantically intact,
     // the subtask must return a scalar value.
-    common.NameOrId alias = 3;
-    // An alias may be given by the query or by the compiler/optimizer for functional/optimization purpose.
-    // This indicator is used to differentiate the two cases.
-    bool is_query_given = 4;
+    Project.Alias alias = 3;
   }
   // Define how to join the result of the subtask back to the original relation
   Join.JoinKind join_kind = 1;
