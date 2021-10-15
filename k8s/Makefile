@@ -18,7 +18,7 @@ ifeq ($(UNAME_S),Linux)
     XARGS_EMPTY_FLAG := --no-run-if-empty
 endif
 
-VERSION ?= latest
+VERSION ?= debug
 PROFILE ?= release
 
 BUILD_PROGRESS  	= auto
@@ -29,7 +29,8 @@ submodule:
 gsruntime:
 	docker build --progress=$(BUILD_PROGRESS) \
 				 -t ${REGISTRY}/$(DOCKER_ORG)/graphscope-runtime:${VERSION} \
-				 -f $(WORKING_DIR)/gsruntime.Dockerfile .
+				 --network=host \
+				 -f $(WORKING_DIR)/manylinux2014.Dockerfile .
 
 gsvineyard:
 	docker build --progress=$(BUILD_PROGRESS) \
@@ -51,99 +52,97 @@ graphscope-store:
                  --network=host \
                  -f $(WORKING_DIR)/graphscope-store.Dockerfile ..
 
-graphscope-manylinux2010:
-	docker build --progress=$(BUILD_PROGRESS) \
-				 -t ${REGISTRY}/$(DOCKER_ORG)/graphscope-manylinux2010:${VERSION} \
-				 --network=host \
-				 -f $(WORKING_DIR)/manylinux2010.Dockerfile .
-
-graphscope-jupyter-manylinux2010-py2-py3:
+graphscope-jupyter-manylinux2014-py2-py3:
 	docker run --rm -it -v $(WORKING_DIR)/..:/work \
-		   ${REGISTRY}/$(DOCKER_ORG)/graphscope-manylinux2010:${VERSION} \
-		   /usr/bin/scl enable devtoolset-8 'sh -c "export PATH=$$PATH:/opt/python/cp36-cp36m/bin && \
-					pip3 install graphscope -U && \
+		   ${REGISTRY}/$(DOCKER_ORG)/graphscope-runtime:${VERSION} \
+		   bash -c 'pip3 install graphscope-client -U && \
 					cd /work/python/jupyter/graphscope && \
-					python3 setup.py bdist_wheel"'
+					python3 setup.py bdist_wheel'
 
-graphscope-manylinux2010-py36:
-	docker run --rm -it -v $(WORKING_DIR)/..:/work \
-		   ${REGISTRY}/$(DOCKER_ORG)/graphscope-manylinux2010:${VERSION} \
-		   /usr/bin/scl enable devtoolset-8 'sh -c "export PATH=$$PATH:/opt/python/cp36-cp36m/bin && \
-          cd /work/learning_engine/graph-learn && \
-					git submodule update --init third_party/pybind11 && \
-				  rm -rf cmake-build-py36 && \
-				  mkdir -p cmake-build-py36 && \
-				  cd cmake-build-py36 && \
-				  cmake .. && \
-				  make graphlearn_shared -j && \
-				  export LD_LIBRARY_PATH=/work/learning_engine/graph-learn/built/lib:$$LD_LIBRARY_PATH && \
-				  export WITH_LEARNING_ENGINE=ON && \
-				  cd /work/python && \
-				  rm -rf build && \
-				  rm -rf dist/*.whl && \
-				  python3 setup.py bdist_wheel && \
-				  cd dist && \
-				  auditwheel repair ./*.whl"'
+graphscope-manylinux2014-py2-py3:
+	docker run --rm -v $(WORKING_DIR)/..:/work \
+			${REGISTRY}/$(DOCKER_ORG)/graphscope-runtime:${VERSION} \
+			bash -c 'source ~/.bashrc && sudo mkdir -p /opt/vineyard && \
+				cd /tmp && \
+				git clone https://github.com/alibaba/libgrape-lite.git --depth=1 && \
+				cd libgrape-lite && mkdir build && cd build && \
+				cmake .. -DCMAKE_INSTALL_PREFIX=/opt/vineyard && \
+				sudo make -j`nproc` install && \
+				cd /tmp && \
+				git clone -b v0.3.1 https://github.com/alibaba/libvineyard.git --depth=1 && \
+				cd libvineyard && \
+				git submodule update --init && \
+				mkdir -p build && cd build && \
+				cmake .. -DCMAKE_PREFIX_PATH=/opt/vineyard \
+					-DCMAKE_INSTALL_PREFIX=/opt/vineyard \
+					-DBUILD_SHARED_LIBS=ON \
+					-DBUILD_VINEYARD_IO_OSS=ON && \
+				sudo make install vineyard_client_python -j`nproc` && \
+				cd /tmp/libvineyard && \
+				python3 setup.py bdist_wheel && \
+				cd dist && \
+				auditwheel repair --plat=manylinux2014_x86_64 ./*.whl && \
+				sudo mkdir -p /opt/vineyard/dist && \
+				sudo cp -f wheelhouse/* /opt/vineyard/dist && \
+				pip3 install wheelhouse/*.whl && \
+				cd /tmp/libvineyard/modules/io && \
+				python3 setup.py bdist_wheel && \
+				sudo cp -f dist/* /opt/vineyard/dist && \
+				pip3 install dist/* && \
+				sudo cp -rf /opt/vineyard/* /usr/local/ && \
+				cd /tmp && \
+				sudo rm -fr /tmp/libvineyard /tmp/libgrape-lite && \
+				cd /work && \
+				make install && \
+				python3 /work/k8s/precompile.py && \
+				export WITH_EXTRA_DATA=ON && \
+				cd /work/coordinator && \
+				rm -fr build dist/*.whl && \
+				python3 setup.py bdist_wheel && \
+				cd dist && \
+				auditwheel repair ./*.whl --plat=manylinux2014_x86_64'
 
-graphscope-manylinux2010-py37:
-	docker run --rm -it -v $(WORKING_DIR)/..:/work \
-		   ${REGISTRY}/$(DOCKER_ORG)/graphscope-manylinux2010:${VERSION} \
-		   /usr/bin/scl enable devtoolset-8 'sh -c "export PATH=$$PATH:/opt/python/cp37-cp37m/bin && \
-          cd /work/learning_engine/graph-learn && \
-					git submodule update --init third_party/pybind11 && \
-				  rm -rf cmake-build-py36 && \
-				  mkdir -p cmake-build-py36 && \
-				  cd cmake-build-py36 && \
-				  cmake .. && \
-				  make graphlearn_shared -j && \
-				  export LD_LIBRARY_PATH=/work/learning_engine/graph-learn/built/lib:$$LD_LIBRARY_PATH && \
-				  export WITH_LEARNING_ENGINE=ON && \
-				  cd /work/python && \
-				  rm -rf build && \
-				  rm -rf dist/*.whl && \
-				  python3 setup.py bdist_wheel && \
-				  cd dist && \
-				  auditwheel repair ./*.whl"'
-
-graphscope-manylinux2010-py38:
-	docker run --rm -it -v $(WORKING_DIR)/..:/work \
-		   ${REGISTRY}/$(DOCKER_ORG)/graphscope-manylinux2010:${VERSION} \
-		   /usr/bin/scl enable devtoolset-8 'sh -c "export PATH=$$PATH:/opt/python/cp38-cp38/bin && \
-          cd /work/learning_engine/graph-learn && \
-					git submodule update --init third_party/pybind11 && \
-				  rm -rf cmake-build-py36 && \
-				  mkdir -p cmake-build-py36 && \
-				  cd cmake-build-py36 && \
-				  cmake .. && \
-				  make graphlearn_shared -j && \
-				  export LD_LIBRARY_PATH=/work/learning_engine/graph-learn/built/lib:$$LD_LIBRARY_PATH && \
-				  export WITH_LEARNING_ENGINE=ON && \
-				  cd /work/python && \
-				  rm -rf build && \
-				  rm -rf dist/*.whl && \
-				  python3 setup.py bdist_wheel && \
-				  cd dist && \
-				  auditwheel repair ./*.whl"'
-
-graphscope-manylinux2010-py39:
-	docker run --rm -it -v $(WORKING_DIR)/..:/work \
-		   ${REGISTRY}/$(DOCKER_ORG)/graphscope-manylinux2010:${VERSION} \
-		   /usr/bin/scl enable devtoolset-8 'sh -c "export PATH=$$PATH:/opt/python/cp39-cp39/bin && \
-          cd /work/learning_engine/graph-learn && \
-					git submodule update --init third_party/pybind11 && \
-				  rm -rf cmake-build-py36 && \
-				  mkdir -p cmake-build-py36 && \
-				  cd cmake-build-py36 && \
-				  cmake .. && \
-				  make graphlearn_shared -j && \
-				  export LD_LIBRARY_PATH=/work/learning_engine/graph-learn/built/lib:$$LD_LIBRARY_PATH && \
-				  export WITH_LEARNING_ENGINE=ON && \
-				  cd /work/python && \
-				  rm -rf build && \
-				  rm -rf dist/*.whl && \
-				  python3 setup.py bdist_wheel && \
-				  cd dist && \
-				  auditwheel repair ./*.whl"'
+graphscope-client-manylinux2014-py3:
+	docker run --rm -v $(WORKING_DIR)/..:/work \
+			${REGISTRY}/$(DOCKER_ORG)/graphscope-runtime:${VERSION} \
+			bash -c 'sudo mkdir -p /opt/vineyard && \
+				cd /tmp && \
+				git clone https://github.com/alibaba/libgrape-lite.git --depth=1 && \
+				cd libgrape-lite && mkdir build && cd build && \
+				cmake .. -DCMAKE_INSTALL_PREFIX=/opt/vineyard && \
+				sudo make -j`nproc` install && \
+				cd /tmp && \
+				git clone -b v0.3.1 https://github.com/alibaba/libvineyard.git --depth=1 && \
+				cd libvineyard && \
+				git submodule update --init && \
+				mkdir -p build && cd build && \
+				cmake .. -DCMAKE_PREFIX_PATH=/opt/vineyard \
+					-DCMAKE_INSTALL_PREFIX=/opt/vineyard \
+					-DBUILD_SHARED_LIBS=OFF \
+					-DBUILD_VINEYARD_IO_OSS=ON \
+					-DBUILD_VINEYARD_MIGRATION=OFF && \
+				sudo make install vineyard_client_python -j`nproc` && \
+				sudo cp -rf /opt/vineyard/* /usr/local/ && \
+				sudo rm -fr /tmp/libvineyard /tmp/libgrape-lite && \
+				cd /work/learning_engine/graph-learn && \
+				git submodule update --init third_party/pybind11 && \
+				rm -rf cmake-build && \
+				mkdir -p cmake-build && \
+				cd cmake-build && \
+				cmake -DWITH_VINEYARD=ON .. && \
+				make graphlearn_shared -j`nproc` && \
+				export LD_LIBRARY_PATH=/work/learning_engine/graph-learn/built/lib:$$LD_LIBRARY_PATH && \
+				export WITH_LEARNING_ENGINE=ON && \
+				for py in cp36-cp36m cp37-cp37m cp38-cp38 cp39-cp39 ; do \
+					cd /work/python; \
+					export PATH=/opt/python/$$py/bin:$$PATH; \
+					pip3 install -U pip numpy==1.18.5 auditwheel grpcio grpcio_tools wheel ; \
+					rm -rf build; \
+					rm -rf dist/*.whl; \
+					python3 setup.py bdist_wheel; \
+					cd dist; \
+					auditwheel repair ./*.whl; \
+				done'
 
 push:
 	docker push ${REGISTRY}/$(DOCKER_ORG)/graphscope-runtime:${VERSION}

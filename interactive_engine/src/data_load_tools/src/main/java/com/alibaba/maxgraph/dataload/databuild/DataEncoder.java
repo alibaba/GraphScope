@@ -20,7 +20,7 @@ import com.alibaba.maxgraph.compiler.api.schema.GraphEdge;
 import com.alibaba.maxgraph.compiler.api.schema.GraphElement;
 import com.alibaba.maxgraph.compiler.api.schema.GraphSchema;
 import com.alibaba.maxgraph.compiler.api.schema.GraphVertex;
-import com.alibaba.maxgraph.groot.common.schema.PropertyValue;
+import com.alibaba.graphscope.groot.schema.PropertyValue;
 import com.alibaba.maxgraph.common.util.PkHashUtils;
 import com.alibaba.maxgraph.common.util.SchemaUtils;
 

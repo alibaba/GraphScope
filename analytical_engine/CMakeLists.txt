@@ -94,6 +94,10 @@ include_directories(SYSTEM ${Boost_INCLUDE_DIRS})
 # eliminate a lot of warnings for newer version of boost library.
 add_compile_options(-DBOOST_BIND_GLOBAL_PLACEHOLDERS)
 
+# check the gcc abi
+include("cmake/CheckGCCABICompatibility.cmake")
+check_gcc_compatible()
+
 include("cmake/FindGFlags.cmake")
 if (GFLAGS_FOUND)
     include_directories(SYSTEM ${GFLAGS_INCLUDE_DIRS})
@@ -119,7 +123,7 @@ endif ()
 find_package(libgrapelite REQUIRED)
 include_directories(${LIBGRAPELITE_INCLUDE_DIRS})
 
-find_package(vineyard 0.2.12 REQUIRED)
+find_package(vineyard 0.3.1 REQUIRED)
 include_directories(${VINEYARD_INCLUDE_DIRS})
 add_compile_options(-DENABLE_SELECTOR)
 

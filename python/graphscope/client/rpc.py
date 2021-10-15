@@ -87,7 +87,7 @@ def suppress_grpc_error(fn):
 
 
 class GRPCClient(object):
-    def __init__(self, launcher, reconnect=False):
+    def __init__(self, launcher, endpoint, reconnect=False):
         """Connect to GRAPE engine at the given :code:`endpoint`."""
         # create the gRPC stub
         options = [
@@ -96,9 +96,7 @@ class GRPCClient(object):
             ("grpc.max_metadata_size", 2147483647),
         ]
         self._launcher = launcher
-        self._channel = grpc.insecure_channel(
-            launcher.coordinator_endpoint, options=options
-        )
+        self._channel = grpc.insecure_channel(endpoint, options=options)
         self._stub = coordinator_service_pb2_grpc.CoordinatorServiceStub(self._channel)
         self._session_id = None
         self._logs_fetching_thread = None
@@ -108,9 +106,12 @@ class GRPCClient(object):
         begin_time = time.time()
         request = message_pb2.HeartBeatRequest()
         while True:
-            code = self._launcher.poll()
-            if code is not None and code != 0:
-                raise RuntimeError(f"Start coordinator failed with exit code {code}")
+            if self._launcher:
+                code = self._launcher.poll()
+                if code is not None and code != 0:
+                    raise RuntimeError(
+                        f"Start coordinator failed with exit code {code}"
+                    )
             try:
                 self._stub.HeartBeat(request)
                 logger.info("GraphScope coordinator service connected.")
@@ -121,8 +122,6 @@ class GRPCClient(object):
                 msg = f"code: {e.code().name}, details: {e.details()}"
                 if e.code() == grpc.StatusCode.DEADLINE_EXCEEDED:
                     logger.warning("Heart beat analytical engine failed, %s", msg)
-                else:
-                    logger.warning("Heart beat coordinator failed, %s", msg)
                 if time.time() - begin_time >= timeout_seconds:
                     raise ConnectionError(f"Connect coordinator timeout, {msg}")
                 time.sleep(1)

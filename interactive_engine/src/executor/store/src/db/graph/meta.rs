@@ -11,8 +11,9 @@ use protobuf::Message;
 use crate::db::api::GraphErrorCode::InvalidData;
 use crate::db::util::lock::GraphMutexLock;
 use crate::db::common::bytes::util::parse_pb;
-use crate::db::proto::model::{EdgeKindPb, DataLoadTargetPb};
+use crate::db::proto::model::EdgeKindPb;
 use std::collections::{HashMap, HashSet};
+use crate::db::proto::common::DataLoadTargetPb;
 
 const META_TABLE_ID: TableId = i64::min_value();
 
@@ -80,7 +81,7 @@ impl Meta {
                     let label_id = x.type_def.get_label_id();
                     let mut graph_def = self.graph_def_lock.lock()?;
                     let current_label_idx = graph_def.get_label_idx();
-                    if  current_label_idx >= label_id {
+                    if current_label_idx >= label_id {
                         let msg = format!("current label idx {}, create label id {}", current_label_idx, label_id);
                         return Err(GraphError::new(GraphErrorCode::InvalidOperation, msg));
                     }
@@ -93,7 +94,7 @@ impl Meta {
                     vertex_manager_builder.get_info(x.si, x.label_id).and_then(|info| {
                         info.online_table(Table::new(x.si, x.table_id))
                     })?;
-                },
+                }
                 MetaItem::DropVertexType(x) => {
                     vertex_manager_builder.drop(x.si, x.label_id)?;
                     let mut graph_def = self.graph_def_lock.lock()?;
@@ -104,7 +105,7 @@ impl Meta {
                     let label_id = x.type_def.get_label_id();
                     let mut graph_def = self.graph_def_lock.lock()?;
                     let current_label_idx = graph_def.get_label_idx();
-                    if  current_label_idx >= label_id {
+                    if current_label_idx >= label_id {
                         let msg = format!("current label idx {}, create label id {}", current_label_idx, label_id);
                         return Err(GraphError::new(GraphErrorCode::InvalidOperation, msg));
                     }
@@ -213,12 +214,12 @@ impl Meta {
 
     pub fn create_vertex_type(&self, si: SnapshotId, schema_version: i64, label_id: LabelId, type_def: &TypeDef, table_id: i64) -> GraphResult<Table> {
         self.check_version(schema_version)?;
-        let item = CreateVertexTypeItem::new(si, schema_version, label_id,  table_id, type_def.clone());
+        let item = CreateVertexTypeItem::new(si, schema_version, label_id, table_id, type_def.clone());
         self.write_item(item)?;
         {
             let mut graph_def = self.graph_def_lock.lock()?;
             let current_label_idx = graph_def.get_label_idx();
-            if  current_label_idx >= label_id {
+            if current_label_idx >= label_id {
                 let msg = format!("current label idx {}, create label id {}", current_label_idx, label_id);
                 return Err(GraphError::new(GraphErrorCode::InvalidOperation, msg));
             }
@@ -250,7 +251,7 @@ impl Meta {
         {
             let mut graph_def = self.graph_def_lock.lock()?;
             let current_label_idx = graph_def.get_label_idx();
-            if  current_label_idx >= label_id {
+            if current_label_idx >= label_id {
                 let msg = format!("current label idx {}, create label id {}", current_label_idx, label_id);
                 return Err(GraphError::new(GraphErrorCode::InvalidOperation, msg));
             }
@@ -359,7 +360,6 @@ enum MetaItem {
 }
 
 impl MetaItem {
-
     fn get_schema_version(&self) -> i64 {
         match *self {
             MetaItem::CreateVertexType(ref item) => item.schema_version,
@@ -650,7 +650,7 @@ impl ItemCommon for AddEdgeKindItem {
     fn to_kv(&self) -> GraphResult<(Vec<u8>, Vec<u8>)> {
         let key = format!("{}#{}#{}#{}", Self::prefix(), self.si, self.schema_version, self.table_id);
         let bytes = self.edge_kind.to_proto().write_to_bytes()
-            .map_err(|e|GraphError::new(InvalidData, format!("{:?}", e)))?;
+            .map_err(|e| GraphError::new(InvalidData, format!("{:?}", e)))?;
         Ok((meta_key(&key), bytes))
     }
 }
@@ -809,7 +809,7 @@ mod tests {
             let mut label_to_edge_table = HashMap::new();
             for label in 11..=20 {
                 let type_def = types::create_test_type_def(label);
-                meta.create_edge_type(10, schema_version,label, &type_def).unwrap();
+                meta.create_edge_type(10, schema_version, label, &type_def).unwrap();
                 schema_version += 1;
                 for edge_kind in gen_edge_kinds(label) {
                     let table = meta.add_edge_kind(10, schema_version, &edge_kind).unwrap();
@@ -874,5 +874,4 @@ mod tests {
         }
         assert!(set.is_empty());
     }
-
 }
