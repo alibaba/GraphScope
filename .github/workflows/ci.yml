@@ -155,7 +155,7 @@ jobs:
 
         # install zetcd
         go get github.com/etcd-io/zetcd/cmd/zetcd
-        cp $(go env GOPATH)/bin/zetcd interactive_engine/bin/
+        cp $(go env GOPATH)/bin/zetcd interactive_engine/
 
         cd interactive_engine/executor
         ./exec.sh cargo build --all --release
@@ -246,7 +246,7 @@ jobs:
         cd interactive_engine
         for i in {1..3}; do mvn clean package -DskipTests -Pjava-release --quiet && break || sleep 60; done
         cd ${GITHUB_WORKSPACE}
-        tar -cf manager.tar interactive_engine/src/assembly/target/maxgraph-assembly-0.0.1-SNAPSHOT.tar.gz
+        tar -cf manager.tar interactive_engine/assembly/target/maxgraph-assembly-0.0.1-SNAPSHOT.tar.gz
 
     - uses: actions/upload-artifact@v2
       with:
@@ -583,7 +583,7 @@ jobs:
 
     - name: gremlin-test
       run: |
-        cd interactive_engine/src/groot-server
+        cd interactive_engine/groot-server
         mvn test -Pgremlin-test
 
     - uses: actions/upload-artifact@v2
