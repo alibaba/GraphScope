@@ -85,7 +85,7 @@ jobs:
         rm -fr /tmp/default.etcd || true
 
     - name: DEBUG
-      if: false
+      if: true
       uses: mxschmitt/action-tmate@v2
 
     - name: Run Gaia on Vineyard Store Test
