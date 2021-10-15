@@ -139,6 +139,8 @@ jobs:
     steps:
     - name: Install Dependencies
       run: |
+        sudo yum install clang-devel
+
         wget --no-verbose https://golang.org/dl/go1.15.5.linux-amd64.tar.gz
         sudo tar -C /usr/local -xzf go1.15.5.linux-amd64.tar.gz
         curl -sf -L https://static.rust-lang.org/rustup.sh | sh -s -- -y --profile minimal --default-toolchain 1.54.0
@@ -152,8 +154,6 @@ jobs:
       run: |
         export PATH=${PATH}:/usr/local/go/bin
         source ~/.bashrc
-
-        export LIBCLANG_PATH=$(dirname $(python3 -c "import clang; print(clang.__file__)"))/native
 
         # install zetcd
         go get github.com/etcd-io/zetcd/cmd/zetcd
@@ -556,6 +556,8 @@ jobs:
 
     - name: Install Dependencies
       run: |
+        sudo yum install clang-devel
+
         sudo chown -R $(id -u):$(id -g) ${HOME}
         sudo chmod -R a+wrx ${HOME} ${GITHUB_WORKSPACE}
         wget --no-verbose https://golang.org/dl/go1.15.5.linux-amd64.tar.gz
@@ -574,7 +576,6 @@ jobs:
         export PATH=${PATH}:/usr/local/go/bin
         source ~/.bashrc
 
-        export LIBCLANG_PATH=$(dirname $(python3 -c "import clang; print(clang.__file__)"))/native
         cd interactive_engine
         for i in {1..3}; do mvn clean install -Pv2 -Drust.compile.mode=debug -DskipTests --quiet  && break || sleep 60; done
         cd ${GITHUB_WORKSPACE}
