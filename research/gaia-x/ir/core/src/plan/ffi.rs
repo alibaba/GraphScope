@@ -53,9 +53,9 @@
 //! Save the codes as </path/to/c-caller/test.cc>, and build like:
 //! `g++ -o test test.cc -std=c++11 -L. -lir_core`
 
-use crate::generated::algebra as pb;
-use crate::generated::common as common_pb;
 use crate::plan::{cstr_to_string, cstr_to_suffix_expr_pb, FfiResult, LogicalPlan, ResultCode};
+use ir_common::generated::algebra as pb;
+use ir_common::generated::common as common_pb;
 use std::convert::{TryFrom, TryInto};
 use std::ffi::c_void;
 use std::os::raw::c_char;
@@ -977,7 +977,7 @@ mod scan {
 
 mod idxscan {
     use super::*;
-    use crate::generated::algebra::indexed_scan::{KvEquivPair, KvEquivPairs};
+    use ir_common::generated::algebra::indexed_scan::{KvEquivPair, KvEquivPairs};
 
     /// To initialize an indexed-scan operator from a scan operator
     #[no_mangle]
