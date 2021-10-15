@@ -862,6 +862,7 @@ class ArrowProjectedFragment
     assert(offset < static_cast<int64_t>(ivnum_));
     return grape::DestList(iodoffset_[offset], iodoffset_[offset + 1]);
   }
+  inline bool directed() const { return directed_; }
 
  private:
   inline static std::pair<int64_t, int64_t> getRangeOfLabel(
@@ -1056,7 +1057,7 @@ class ArrowProjectedFragment
     }
     oe_ptr_ = reinterpret_cast<const nbr_unit_t*>(oe_->GetValue(0));
   }
-  inline bool directed() const { return fragment_->directed(); }
+
   vertex_range_t inner_vertices_;
   vertex_range_t outer_vertices_;
   vertex_range_t vertices_;
