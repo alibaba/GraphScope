@@ -24,7 +24,7 @@ use crate::communication::output::builder::OutputMeta;
 use crate::communication::output::tee::Tee;
 use crate::communication::output::BlockScope;
 use crate::communication::IOResult;
-use crate::data::{EndByScope, MicroBatch};
+use crate::data::{EndOfScope, MicroBatch};
 use crate::data_plane::Push;
 use crate::errors::IOError;
 use crate::graph::Port;
@@ -33,7 +33,7 @@ use crate::{Data, Tag};
 
 enum BlockEntry<D: Data> {
     Single(D),
-    LastSingle(D, EndByScope),
+    LastSingle(D, EndOfScope),
     DynIter(Option<D>, Box<dyn Iterator<Item = D> + Send + 'static>),
 }
 
@@ -430,7 +430,7 @@ impl<'a, D: Data> OutputSession<'a, D> {
         }
     }
 
-    pub fn give_last(&mut self, msg: D, end: EndByScope) -> IOResult<()> {
+    pub fn give_last(&mut self, msg: D, end: EndOfScope) -> IOResult<()> {
         if self.skip {
             self.output.notify_end(end)
         } else {
@@ -450,7 +450,7 @@ impl<'a, D: Data> OutputSession<'a, D> {
         }
     }
 
-    pub fn notify_end(&mut self, end: EndByScope) -> IOResult<()> {
+    pub fn notify_end(&mut self, end: EndOfScope) -> IOResult<()> {
         assert_eq!(self.tag, end.tag);
         self.output.notify_end(end)
     }
@@ -486,7 +486,7 @@ impl<D: Data> ScopeStreamPush<D> for OutputHandle<D> {
         }
     }
 
-    fn push_last(&mut self, msg: D, end: EndByScope) -> IOResult<()> {
+    fn push_last(&mut self, msg: D, end: EndOfScope) -> IOResult<()> {
         match self.buf_pool.push(&end.tag, msg) {
             Ok(Some(buf)) => {
                 let mut batch = MicroBatch::new(end.tag.clone(), self.src, buf);
@@ -522,7 +522,7 @@ impl<D: Data> ScopeStreamPush<D> for OutputHandle<D> {
         unimplemented!("use push iter;");
     }
 
-    fn notify_end(&mut self, end: EndByScope) -> IOResult<()> {
+    fn notify_end(&mut self, end: EndOfScope) -> IOResult<()> {
         let level = end.tag.len() as u32;
         if level == self.scope_level {
             let mut batch = if let Some(buf) = self.buf_pool.take_buf(&end.tag, true) {

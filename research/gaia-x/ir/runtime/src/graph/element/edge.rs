@@ -15,8 +15,8 @@
 
 use crate::graph::element::Element;
 use crate::graph::property::{Details, DynDetails, ID};
-use crate::NameOrId;
 use dyn_type::BorrowObject;
+use ir_common::NameOrId;
 use pegasus_common::codec::{Decode, Encode, ReadExt, WriteExt};
 use std::io;
 

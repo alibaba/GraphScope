@@ -13,10 +13,10 @@
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 
-use crate::error::{ParsePbError, ParsePbResult};
-use crate::generated::common as pb;
-use crate::NameOrId;
 use dyn_type::{BorrowObject, Object};
+use ir_common::error::{ParsePbError, ParsePbResult};
+use ir_common::generated::common as pb;
+use ir_common::NameOrId;
 use pegasus_common::codec::{Decode, Encode, ReadExt, WriteExt};
 use pegasus_common::downcast::*;
 use std::collections::HashMap;

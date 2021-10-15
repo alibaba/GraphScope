@@ -2,7 +2,7 @@ use crate::api::notification::{Cancel, End};
 use crate::api::IterCondition;
 use crate::communication::input::{new_input_session, InputProxy};
 use crate::communication::output::{new_output, OutputProxy};
-use crate::data::EndByScope;
+use crate::data::EndOfScope;
 use crate::errors::JobExecError;
 use crate::operator::{Notifiable, OperatorCore};
 use crate::tag::tools::map::TidyTagMap;
@@ -10,7 +10,7 @@ use crate::Data;
 
 struct IterateState {
     iterating: bool,
-    src_end: Option<EndByScope>,
+    src_end: Option<EndOfScope>,
 }
 
 impl IterateState {
@@ -18,11 +18,11 @@ impl IterateState {
         IterateState { iterating: true, src_end: None }
     }
 
-    fn set_end(&mut self, end: EndByScope) {
+    fn set_end(&mut self, end: EndOfScope) {
         self.src_end = Some(end);
     }
 
-    fn take_end(&mut self) -> Option<EndByScope> {
+    fn take_end(&mut self) -> Option<EndOfScope> {
         self.src_end.take()
     }
 
@@ -42,7 +42,7 @@ pub(crate) struct SwitchOperator<D> {
     //  [1] -> [(end of 1), (end of root)]
     //
     iterate_states: TidyTagMap<IterateState>,
-    parent_parent_scope_ends: Vec<Vec<EndByScope>>,
+    parent_parent_scope_ends: Vec<Vec<EndOfScope>>,
     has_synchronized: bool,
 }
 

@@ -1,16 +1,12 @@
 [package]
-name = "ir_core"
+name = "runtime"
 version = "0.1.0"
 edition = "2018"
-
-[lib]
-crate-type = ["rlib", "cdylib"]
 
 [dependencies]
 dyn_type = {path = "../dyn_type"}
 ir_common = {path = "../common", features = ["proto_inplace"]}
-runtime = {path = "../runtime"}
-vec_map = "0.8.2"
+pegasus_common = { path = "../../pegasus/common" }
 
 [profile.release]
 lto = true

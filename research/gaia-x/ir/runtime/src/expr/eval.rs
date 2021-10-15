@@ -14,14 +14,14 @@
 //! limitations under the License.
 //!
 
-use crate::error::{ParsePbError, ParsePbResult};
 use crate::expr::error::{ExprError, ExprResult};
-use crate::generated::common as pb;
 use crate::graph::element::Element;
 use crate::graph::property::{Details, PropKey};
-use crate::NameOrId;
 use dyn_type::arith::Exp;
 use dyn_type::{BorrowObject, Object};
+use ir_common::error::{ParsePbError, ParsePbResult};
+use ir_common::generated::common as pb;
+use ir_common::NameOrId;
 use std::cell::RefCell;
 use std::convert::TryFrom;
 
@@ -240,15 +240,15 @@ impl<'a> Evaluator<'a> {
     /// # Examples
     ///
     /// ```
-    /// # use ir_core::graph::element::Vertex;
-    /// # use ir_core::expr::eval::{Context, Evaluator};
-    /// # use ir_core::NameOrId;
-    /// # use ir_core::graph::property::{DefaultDetails, DynDetails, Label};
+    /// # use runtime::graph::element::Vertex;
+    /// # use runtime::expr::eval::{Context, Evaluator};
+    /// # use ir_common::NameOrId;
+    /// # use runtime::graph::property::{DefaultDetails, DynDetails};
     /// # use std::collections::HashMap;
     /// # use dyn_type::Object;
-    /// # use ir_core::expr::token::tokenize;
-    /// # use ir_core::expr::to_suffix_expr_pb;
-    /// use std::convert::TryFrom;
+    /// # use runtime::expr::token::tokenize;
+    /// # use runtime::expr::to_suffix_expr_pb;
+    /// # use std::convert::TryFrom;
     ///
     /// struct Vertices {
     ///     vec: Vec<Vertex>,
@@ -274,12 +274,12 @@ impl<'a> Evaluator<'a> {
     ///         vec: vec![
     ///             Vertex::new(DynDetails::new(DefaultDetails::with_property(
     ///                 1,
-    ///                 Label::from(1),
+    ///                 NameOrId::from(1),
     ///                 map.clone(),
     ///             ))),
     ///             Vertex::new(DynDetails::new(DefaultDetails::with_property(
     ///                 2,
-    ///                 Label::from(2),
+    ///                 NameOrId::from(2),
     ///                 map.clone(),
     ///             ))),
     ///         ],
@@ -422,37 +422,13 @@ impl InnerOpr {
     }
 }
 
-impl pb::Const {
-    pub fn into_object(self) -> ParsePbResult<Option<Object>> {
-        use pb::value::Item::*;
-        if let Some(val) = &self.value {
-            if let Some(item) = val.item.as_ref() {
-                return match item {
-                    Boolean(b) => Ok(Some((*b).into())),
-                    I32(i) => Ok(Some((*i).into())),
-                    I64(i) => Ok(Some((*i).into())),
-                    F64(f) => Ok(Some((*f).into())),
-                    Str(s) => Ok(Some(s.clone().into())),
-                    Blob(blob) => Ok(Some(blob.clone().into())),
-                    None(_) => Ok(Option::None),
-                    I32Array(_) | I64Array(_) | F64Array(_) | StrArray(_) => {
-                        Err(ParsePbError::from("the const values of `I32Array`, `I64Array`, `F64Array`, `StrArray` are unsupported"))
-                    }
-                };
-            }
-        }
-
-        Err(ParsePbError::from("empty value provided"))
-    }
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
     use crate::expr::to_suffix_expr_pb;
     use crate::expr::token::tokenize;
     use crate::graph::element::Vertex;
-    use crate::graph::property::{DefaultDetails, DynDetails, Label};
+    use crate::graph::property::{DefaultDetails, DynDetails};
     use std::collections::HashMap;
 
     struct Vertices {
@@ -492,12 +468,12 @@ mod tests {
             vec: vec![
                 Vertex::new(DynDetails::new(DefaultDetails::with_property(
                     1,
-                    Label::from(9),
+                    NameOrId::from(9),
                     map1,
                 ))),
                 Vertex::new(DynDetails::new(DefaultDetails::with_property(
                     2,
-                    Label::from(11),
+                    NameOrId::from(11),
                     map2,
                 ))),
             ],

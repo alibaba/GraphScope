@@ -164,13 +164,30 @@ impl<A: Debug, B: Debug> Debug for Either<A, B> {
 }
 
 impl<A: Encode, B: Encode> Encode for Either<A, B> {
-    fn write_to<W: WriteExt>(&self, _writer: &mut W) -> std::io::Result<()> {
-        todo!()
+    fn write_to<W: WriteExt>(&self, writer: &mut W) -> std::io::Result<()> {
+        match self {
+            Either::A(a) => {
+                writer.write_u8(0)?;
+                a.write_to(writer)
+            }
+            Either::B(b) => {
+                writer.write_u8(1)?;
+                b.write_to(writer)
+            }
+        }
     }
 }
 
 impl<A: Decode, B: Decode> Decode for Either<A, B> {
-    fn read_from<R: ReadExt>(_reader: &mut R) -> std::io::Result<Self> {
-        todo!()
+    fn read_from<R: ReadExt>(reader: &mut R) -> std::io::Result<Self> {
+        let m = reader.read_u8()?;
+        let e = if m == 0 {
+            let a = A::read_from(reader)?;
+            Either::A(a)
+        } else {
+            let b = B::read_from(reader)?;
+            Either::B(b)
+        };
+        Ok(e)
     }
 }

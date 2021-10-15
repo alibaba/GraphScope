@@ -24,7 +24,7 @@ use pegasus_executor::{Task, TaskState};
 use crate::api::primitive::source::Source;
 use crate::channel_id::ChannelId;
 use crate::communication::output::{OutputBuilder, OutputBuilderImpl};
-use crate::data::EndByScope;
+use crate::data::EndOfScope;
 use crate::data_plane::Push;
 use crate::dataflow::{Dataflow, DataflowBuilder};
 use crate::errors::{BuildJobError, JobExecError};
@@ -102,7 +102,7 @@ impl<D: Data, T: Debug + Send + 'static> Worker<D, T> {
         let root = Box::new(root_builder)
             .build()
             .expect("no output;");
-        let end = EndByScope::new(Tag::Root, Weight::all(), 0);
+        let end = EndOfScope::new(Tag::Root, Weight::all(), 0);
         root.notify_end(end).ok();
         root.close().ok();
         Ok(())

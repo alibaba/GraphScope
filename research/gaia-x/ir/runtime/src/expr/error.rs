@@ -14,10 +14,10 @@
 //! limitations under the License.
 //!
 
-use crate::error::ParsePbError;
 use crate::expr::eval::OperatorDesc;
 use crate::expr::token::PartialToken;
 use dyn_type::CastError;
+use ir_common::error::ParsePbError;
 use std::fmt::Display;
 
 pub type ExprResult<T> = Result<T, ExprError>;
@@ -43,8 +43,6 @@ pub enum ExprError {
     CastError(CastError),
     /// Missing context for the certain variable,
     MissingContext(OperatorDesc),
-    /// The error caused by parsing invalid protobuf
-    ParsePbError(ParsePbError),
     /// The error of missing required operands in an arithmetic or logical expression.
     /// e.g., the plus expression requires two operands, and it is an error if less than two provided.
     MissingOperands(OperatorDesc),
@@ -54,6 +52,8 @@ pub enum ExprError {
     NoneOperand(OperatorDesc),
     /// Meant to evaluate a certain operator, but obtain a different one
     UnmatchedOperator(OperatorDesc),
+    /// The error caused by parsing invalid protobuf
+    ParsePbError(ParsePbError),
     /// Other unknown errors that is converted from a error description
     OtherErr(String),
 }
@@ -70,7 +70,7 @@ impl Display for ExprError {
             } => write!(f, "partial token {:?} cannot be completed by {:?}", s1, s2),
             CastError(e) => write!(f, "casting error {:?}", e),
             MissingContext(var) => write!(f, "missing context for {:?}", var),
-            ParsePbError(err) => write!(f, "parse protobuf error {:?}", err),
+            ParsePbError(err) => write!(f, "parse protobuf error: {:?}", err),
             MissingOperands(opr) => write!(f, "missing operands for {:?}", opr),
             EmptyExpression => write!(f, "try to evaluate an empty expression"),
             NoneOperand(opr) => write!(f, "try to evaluate {:?} but obtain `None` value", opr),
@@ -92,15 +92,15 @@ impl ExprError {
     }
 }
 
-impl From<CastError> for ExprError {
-    fn from(error: CastError) -> Self {
-        Self::CastError(error)
+impl From<ParsePbError> for ExprError {
+    fn from(error: ParsePbError) -> Self {
+        Self::ParsePbError(error)
     }
 }
 
-impl From<ParsePbError> for ExprError {
-    fn from(err: ParsePbError) -> Self {
-        Self::ParsePbError(err)
+impl From<CastError> for ExprError {
+    fn from(error: CastError) -> Self {
+        Self::CastError(error)
     }
 }
 

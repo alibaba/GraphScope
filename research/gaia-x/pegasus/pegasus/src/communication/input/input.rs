@@ -24,7 +24,7 @@ use pegasus_common::downcast::*;
 
 use crate::channel_id::ChannelInfo;
 use crate::communication::input::{InputProxy, InputSession};
-use crate::data::{EndByScope, MicroBatch};
+use crate::data::{EndOfScope, MicroBatch};
 use crate::data_plane::{GeneralPull, Pull};
 use crate::errors::IOResult;
 use crate::event::emitter::EventEmitter;
@@ -47,8 +47,8 @@ pub struct InputHandle<D: Data> {
     pub ch_info: ChannelInfo,
     pull: GeneralPull<MicroBatch<D>>,
     stash_index: TidyTagMap<StashedQueue<D>>,
-    current_end: VecDeque<EndByScope>,
-    parent_ends: VecDeque<EndByScope>,
+    current_end: VecDeque<EndOfScope>,
+    parent_ends: VecDeque<EndOfScope>,
     data_exhaust: bool,
     event_emitter: EventEmitter,
     // scope skip manager:
@@ -200,7 +200,7 @@ impl<D: Data> InputHandle<D> {
         }
     }
 
-    pub(crate) fn end_on(&mut self, end: EndByScope) {
+    pub(crate) fn end_on(&mut self, end: EndOfScope) {
         self.stash_index.remove(&end.tag);
         self.current_end.push_back(end);
     }
@@ -213,7 +213,7 @@ impl<D: Data> InputHandle<D> {
                 .all(|(_, s)| s.is_empty())
     }
 
-    pub(crate) fn extract_end(&mut self) -> Option<EndByScope> {
+    pub(crate) fn extract_end(&mut self) -> Option<EndOfScope> {
         if !self.current_end.is_empty() {
             self.current_end.pop_front()
         } else {
@@ -437,7 +437,7 @@ impl<D: Data> InputProxy for RefWrapInput<D> {
         self.inbound.borrow_mut().block(tag)
     }
 
-    fn extract_end(&self) -> Option<EndByScope> {
+    fn extract_end(&self) -> Option<EndOfScope> {
         self.inbound.borrow_mut().extract_end()
     }
 

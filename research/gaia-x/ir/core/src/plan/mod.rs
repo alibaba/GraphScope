@@ -13,16 +13,13 @@
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 
-extern crate vec_map;
-
 pub mod ffi;
-mod utils;
 
-use crate::error::{ParsePbError, ParsePbResult};
-use crate::expr::to_suffix_expr_pb;
-use crate::expr::token::tokenize;
-use crate::generated::algebra as pb;
-use crate::generated::common as common_pb;
+use ir_common::error::{ParsePbError, ParsePbResult};
+use ir_common::generated::algebra as pb;
+use ir_common::generated::common as common_pb;
+use runtime::expr::to_suffix_expr_pb;
+use runtime::expr::token::tokenize;
 use std::cell::RefCell;
 use std::collections::{BTreeSet, HashMap};
 use std::convert::TryFrom;
@@ -289,18 +286,14 @@ pub(crate) fn cstr_to_string(cstr: *const c_char) -> FfiResult<String> {
     }
 }
 
-impl TryFrom<String> for common_pb::SuffixExpr {
-    type Error = ResultCode;
-
-    fn try_from(expr_str: String) -> FfiResult<Self> {
-        let tokens_result = tokenize(&expr_str);
-        if let Ok(tokens) = tokens_result {
-            if let Ok(expr) = to_suffix_expr_pb(tokens) {
-                return Ok(expr);
-            }
+pub(crate) fn str_to_expr(expr_str: String) -> FfiResult<common_pb::SuffixExpr> {
+    let tokens_result = tokenize(&expr_str);
+    if let Ok(tokens) = tokens_result {
+        if let Ok(expr) = to_suffix_expr_pb(tokens) {
+            return Ok(expr);
         }
-        Err(ResultCode::ParseExprError)
     }
+    Err(ResultCode::ParseExprError)
 }
 
 pub(crate) fn cstr_to_suffix_expr_pb(cstr: *const c_char) -> FfiResult<common_pb::SuffixExpr> {
@@ -308,7 +301,7 @@ pub(crate) fn cstr_to_suffix_expr_pb(cstr: *const c_char) -> FfiResult<common_pb
     if str.is_err() {
         Err(str.err().unwrap())
     } else {
-        common_pb::SuffixExpr::try_from(str.unwrap())
+        str_to_expr(str.unwrap())
     }
 }
 
