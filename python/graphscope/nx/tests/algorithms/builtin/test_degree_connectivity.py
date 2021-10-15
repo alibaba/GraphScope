@@ -177,7 +177,7 @@ class TestNeighborConnectivity:
             nx.average_degree_connectivity(G, target="bogus")
 
     def test_single_node(self):
-        # TODO Is this really the intended behavior for providing a
+        # Is this really the intended behavior for providing a
         # single node as the argument `nodes`? Shouldn't the function
         # just return the connectivity value itself?
         G = nx.trivial_graph()
