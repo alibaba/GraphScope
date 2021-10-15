@@ -153,6 +153,8 @@ jobs:
         export PATH=${PATH}:/usr/local/go/bin
         source ~/.bashrc
 
+        export LIBCLANG_PATH=$(dirname $(python -c "import clang; print(clang.__file__)"))/native
+
         # install zetcd
         go get github.com/etcd-io/zetcd/cmd/zetcd
         cp $(go env GOPATH)/bin/zetcd interactive_engine/bin/
@@ -572,6 +574,7 @@ jobs:
         export PATH=${PATH}:/usr/local/go/bin
         source ~/.bashrc
 
+        export LIBCLANG_PATH=$(dirname $(python -c "import clang; print(clang.__file__)"))/native
         cd interactive_engine
         for i in {1..3}; do mvn clean install -Pv2 -Drust.compile.mode=debug -DskipTests --quiet  && break || sleep 60; done
         cd ${GITHUB_WORKSPACE}
