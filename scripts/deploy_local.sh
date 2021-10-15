@@ -187,6 +187,7 @@ init_basic_packages() {
       lsb-release
       libbrotli-dev
       libbz2-dev
+      libclang-dev
       libcurl4-openssl-dev
       libdouble-conversion-dev
       protobuf-compiler-grpc
@@ -221,6 +222,7 @@ init_basic_packages() {
     BASIC_PACKGES_TO_INSTALL=(
       autoconf
       automake
+      clang-devel
       double-conversion-devel
       git
       zlib-devel

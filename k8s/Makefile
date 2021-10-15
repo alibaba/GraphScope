@@ -93,6 +93,7 @@ graphscope-manylinux2014-py2-py3:
 				cd /tmp && \
 				sudo rm -fr /tmp/libvineyard /tmp/libgrape-lite && \
 				cd /work && \
+				sudo yum install -y clang-devel && \
 				make install && \
 				python3 /work/k8s/precompile.py && \
 				export WITH_EXTRA_DATA=ON && \
