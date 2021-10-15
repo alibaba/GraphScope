@@ -15,8 +15,8 @@ limitations under the License.
 Author: Ning Xin
 */
 
-#ifndef ANALYTICAL_ENGINE_APPS_ASSORTATIVITY_DEGREE_DEGREE_ASSORTATIVITY_COEFFICIENT_H_
-#define ANALYTICAL_ENGINE_APPS_ASSORTATIVITY_DEGREE_DEGREE_ASSORTATIVITY_COEFFICIENT_H_
+#ifndef ANALYTICAL_ENGINE_APPS_ASSORTATIVITY_DEGREE_ASSORTATIVITY_COEFFICIENT_H_
+#define ANALYTICAL_ENGINE_APPS_ASSORTATIVITY_DEGREE_ASSORTATIVITY_COEFFICIENT_H_
 
 #include <numeric>
 #include <unordered_map>
@@ -25,7 +25,7 @@ Author: Ning Xin
 
 #include "grape/grape.h"
 
-#include "apps/assortativity/degree/degree_assortativity_coefficient_context.h"
+#include "apps/assortativity/degree_assortativity_coefficient_context.h"
 #include "apps/assortativity/utils.h"
 #include "core/app/app_base.h"
 #include "core/utils/app_utils.h"
@@ -256,4 +256,4 @@ class DegreeAssortativity
 };
 }  // namespace gs
 
-#endif  // ANALYTICAL_ENGINE_APPS_ASSORTATIVITY_DEGREE_DEGREE_ASSORTATIVITY_COEFFICIENT_H_
+#endif  // ANALYTICAL_ENGINE_APPS_ASSORTATIVITY_DEGREE_ASSORTATIVITY_COEFFICIENT_H_

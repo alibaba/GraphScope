@@ -15,8 +15,8 @@ limitations under the License.
 Author: Ning Xin
 */
 
-#ifndef ANALYTICAL_ENGINE_APPS_ASSORTATIVITY_AVERAGE_DEGREE_CONNECTIVITY_AVERAGE_DEGREE_CONNECTIVITY_H_
-#define ANALYTICAL_ENGINE_APPS_ASSORTATIVITY_AVERAGE_DEGREE_CONNECTIVITY_AVERAGE_DEGREE_CONNECTIVITY_H_
+#ifndef ANALYTICAL_ENGINE_APPS_ASSORTATIVITY_AVERAGE_DEGREE_CONNECTIVITY_H_
+#define ANALYTICAL_ENGINE_APPS_ASSORTATIVITY_AVERAGE_DEGREE_CONNECTIVITY_H_
 
 #include <tuple>
 #include <unordered_map>
@@ -25,7 +25,7 @@ Author: Ning Xin
 
 #include "grape/grape.h"
 
-#include "apps/assortativity/average_degree_connectivity/average_degree_connectivity_context.h"
+#include "apps/assortativity/average_degree_connectivity_context.h"
 #include "core/app/app_base.h"
 #include "core/utils/app_utils.h"
 #include "core/worker/default_worker.h"
@@ -247,4 +247,4 @@ class AverageDegreeConnectivity
 };
 }  // namespace gs
 
-#endif  // ANALYTICAL_ENGINE_APPS_ASSORTATIVITY_AVERAGE_DEGREE_CONNECTIVITY_AVERAGE_DEGREE_CONNECTIVITY_H_
+#endif  // ANALYTICAL_ENGINE_APPS_ASSORTATIVITY_AVERAGE_DEGREE_CONNECTIVITY_H_
