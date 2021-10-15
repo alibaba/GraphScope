@@ -1,7 +1,6 @@
 [workspace]
 members = [
     "common",
-    "config",
     "memory",
     "network",
     "executor",

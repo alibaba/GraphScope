@@ -961,14 +961,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "pegasus_config"
-version = "0.1.0"
-dependencies = [
- "lazy_static",
- "structopt 0.3.22",
-]
-
-[[package]]
 name = "pegasus_executor"
 version = "0.1.0"
 dependencies = [

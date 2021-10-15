@@ -11,7 +11,7 @@ use structopt::StructOpt;
 /// and then count j-hop neighbors for each vertex using apply method (specified by `j`).
 /// A correlated subtask will be applied for each vertex;
 #[derive(Debug, StructOpt)]
-#[structopt(name = "correlated k-hop ", about = "Search k-hop neighbors on parallel dataflow")]
+#[structopt(name = "correlated khop ", about = "Search khop neighbors on parallel dataflow")]
 struct Config {
     /// the number of hops before subtask
     #[structopt(short = "i", default_value = "2")]
@@ -103,7 +103,7 @@ fn main() {
     for x in res {
         let (id, cnt, elp) = x.unwrap();
         if n > 0 {
-            println!("{}\tfind k-hop\t{}\tneighbors, use {:?}us;", id, cnt, elp);
+            println!("{}\tfind khop\t{}\tneighbors, use {:?}us;", id, cnt, elp);
         }
         n -= 1;
         cnt_list.push(cnt);
@@ -116,21 +116,21 @@ fn main() {
 
     cnt_list.sort();
     let len = cnt_list.len();
-    println!("{} k-hop counts range from: [{} .. {}]", len, cnt_list[0], cnt_list[len - 1]);
+    println!("{} khop counts range from: [{} .. {}]", len, cnt_list[0], cnt_list[len - 1]);
     let len = len as f64;
     let mut i = (len * 0.99) as usize;
-    println!("99% k-hop count <= {}", cnt_list[i]);
+    println!("99% khop count <= {}", cnt_list[i]);
     i = (len * 0.90) as usize;
-    println!("90% k-hop count <= {}", cnt_list[i]);
+    println!("90% khop count <= {}", cnt_list[i]);
     i = (len * 0.5) as usize;
-    println!("50% k-hop count <= {}", cnt_list[i]);
+    println!("50% khop count <= {}", cnt_list[i]);
     let total: u64 = cnt_list.iter().sum();
-    println!("avg k-hop count {}/{} {}", total, len, total as f64 / len);
+    println!("avg khop count {}/{} {}", total, len, total as f64 / len);
 
     println!("==========================================================");
     elp_list.sort();
     let len = elp_list.len();
-    println!("{} k-hop elapses range from: [{} .. {}]", len, elp_list[0], elp_list[len - 1]);
+    println!("{} khop elapses range from: [{} .. {}]", len, elp_list[0], elp_list[len - 1]);
     let len = len as f64;
     let mut i = (len * 0.99) as usize;
     println!("99% elapse <= {} ms", elp_list[i]);
