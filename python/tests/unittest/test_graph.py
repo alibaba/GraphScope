@@ -638,4 +638,3 @@ def test_add_column(ldbc_graph, arrow_modern_graph):
     # g6 = sub_graph_5.add_column(ret, selector={"cc": "r"})
     # with pytest.raises(AnalyticalEngineInternalError):
     #     print(g6.schema)
-

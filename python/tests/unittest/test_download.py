@@ -22,6 +22,7 @@ from graphscope.dataset.ldbc import load_ldbc
 from graphscope.dataset.modern_graph import load_modern_graph
 from graphscope.dataset.ogbn_mag import load_ogbn_mag
 
+
 def test_download_dataset(graphscope_session):
     g1 = load_modern_graph(graphscope_session)
     g1.unload()
