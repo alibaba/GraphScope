@@ -641,7 +641,7 @@ close_gremlin_instance_on_local() {
     while read -r pid; do pids+=("$pid"); done <<<"${str}"
 
     for pid in "${pids[@]}"; do
-        sudo kill ${pid} || true
+        kill ${pid} || true
     done
   done
 }
@@ -675,7 +675,7 @@ close_gremlin_instance_on_k8s() {
     while read -r pid; do pids+=("$pid"); done <<<"${str}"
 
     for pid in "${pids[@]}"; do
-        sudo kill ${pid} || true
+        kill ${pid} || true
     done
   done
 

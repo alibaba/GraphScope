@@ -23,6 +23,7 @@ import os
 import shutil
 import subprocess
 import sys
+import tempfile
 import time
 from abc import ABCMeta
 from abc import abstractmethod
@@ -37,6 +38,7 @@ from gscoordinator.utils import GRAPHSCOPE_HOME
 from gscoordinator.utils import INTERACTIVE_ENGINE_SCRIPT
 from gscoordinator.utils import WORKSPACE
 from gscoordinator.utils import ResolveMPICmdPrefix
+from gscoordinator.utils import get_java_version
 from gscoordinator.utils import get_timestamp
 from gscoordinator.utils import parse_as_glog_level
 
@@ -89,7 +91,9 @@ class LocalLauncher(Launcher):
     Launch engine localy with serveral hosts.
     """
 
-    _vineyard_socket_prefix = "/tmp/vineyard.sock."
+    _vineyard_socket_prefix = os.path.join(tempfile.gettempdir(), "vineyard.sock.")
+    # set `GRAPHSCOPE_HOME/bin` to ${PATH}
+    os.environ["PATH"] += os.pathsep + os.path.join(GRAPHSCOPE_HOME, "bin")
 
     def __init__(
         self,
@@ -200,6 +204,10 @@ class LocalLauncher(Launcher):
         Args:
             config (dict): dict of op_def_pb2.OpDef.attr.
         """
+        # check java version
+        java_version = get_java_version()
+        logger.info("Java version: %s", java_version)
+
         object_id = config[types_pb2.VINEYARD_ID].i
         schema_path = config[types_pb2.SCHEMA_PATH].s.decode()
         # engine params format:
@@ -286,11 +294,11 @@ class LocalLauncher(Launcher):
             "--listen-client-urls",
             "http://0.0.0.0:{0}".format(str(self._etcd_client_port)),
             "--advertise-client-urls",
-            "http://localhost:{0}".format(str(self._etcd_client_port)),
+            "http://127.0.0.1:{0}".format(str(self._etcd_client_port)),
             "--initial-cluster",
-            "default=http://localhost:{0}".format(str(self._etcd_peer_port)),
+            "default=http://127.0.0.1:{0}".format(str(self._etcd_peer_port)),
             "--initial-advertise-peer-urls",
-            "http://localhost:{0}".format(str(self._etcd_peer_port)),
+            "http://127.0.0.1:{0}".format(str(self._etcd_peer_port)),
         ]
         logger.info("Launch etcd with command: %s", " ".join(cmd))
 
@@ -372,14 +380,16 @@ class LocalLauncher(Launcher):
         if not vineyardd:
             vineyardd = shutil.which("vineyardd")
         if not vineyardd:
-            vineyardd = "vineyardd"
+            vineyardd = [sys.executable, "-m", "vineyard"]
+        if not isinstance(vineyardd, list):
+            vineyardd = [vineyardd]
         return vineyardd
 
     def _create_vineyard(self):
         if not self._vineyard_socket:
             ts = get_timestamp()
             vineyard_socket = f"{self._vineyard_socket_prefix}{ts}"
-            cmd = [self._find_vineyardd()]
+            cmd = self._find_vineyardd()
             cmd.extend(["--socket", vineyard_socket])
             cmd.extend(["--size", self._shared_mem])
             cmd.extend(
@@ -388,7 +398,7 @@ class LocalLauncher(Launcher):
                     "http://localhost:{0}".format(self._etcd_client_port),
                 ]
             )
-            cmd.extend(["--etcd_prefix", f"vineyard.gsa.{ts}"])
+            cmd.extend(["-etcd_prefix", f"vineyard.gsa.{ts}"])
             env = os.environ.copy()
             env["GLOG_v"] = str(self._glog_level)
 
@@ -448,6 +458,9 @@ class LocalLauncher(Launcher):
 
         env = os.environ.copy()
         env.update(mpi_env)
+        # open MPI system need open ORTED daemon
+        if os.path.isfile(os.path.join(GRAPHSCOPE_HOME, "bin", "orted")):
+            env.update({"OPAL_BINDIR": os.path.join(GRAPHSCOPE_HOME, "bin")})
 
         logger.info("Launch analytical engine with command: %s", " ".join(cmd))
 
@@ -523,7 +536,7 @@ class LocalLauncher(Launcher):
         self._stop_subprocess(self._zetcd_process)
 
     def _stop_analytical_engine(self):
-        self._stop_subprocess(self._analytical_engine_process)
+        self._stop_subprocess(self._analytical_engine_process, kill=True)
         self._analytical_engine_endpoint = None
 
     def _stop_subprocess(self, proc, kill=False):

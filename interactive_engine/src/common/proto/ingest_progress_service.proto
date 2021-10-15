@@ -15,17 +15,17 @@
  */
 syntax = "proto3";
 
-option java_package = "com.alibaba.maxgraph.proto.v2";
+option java_package = "com.alibaba.maxgraph.proto.groot";
 option java_multiple_files = true;
 
 service IngestProgress {
-    rpc getTailOffsets(GetTailOffsetsRequest) returns(GetTailOffsetsResponse);
+  rpc getTailOffsets(GetTailOffsetsRequest) returns(GetTailOffsetsResponse);
 }
 
 message GetTailOffsetsRequest {
-    repeated int32 queueId = 1;
+  repeated int32 queueId = 1;
 }
 
 message GetTailOffsetsResponse {
-    repeated int64 offsets = 1;
+  repeated int64 offsets = 1;
 }
