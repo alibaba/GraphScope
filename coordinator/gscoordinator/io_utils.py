@@ -75,7 +75,7 @@ class StdStreamWrapper(object):
     def poll(self, block=True, timeout=None):
         return self._lines.get(block=block, timeout=timeout)
 
-    def _show_progress(self, line):
+    def _show_progress(self):
         total = len(LoadingProgressTracker.stubs)
         if LoadingProgressTracker.progbar is None:
             LoadingProgressTracker.progbar = tqdm(
