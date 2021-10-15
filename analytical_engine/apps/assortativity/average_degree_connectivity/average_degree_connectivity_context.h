@@ -39,9 +39,9 @@ class AverageDegreeConnectivityContext : public TensorContext<FRAG_T, double> {
   using edata_t = typename FRAG_T::edata_t;
   void Init(grape::DefaultMessageManager& messages,
             std::string source_degree_type = "in+out",
-            std::string target_degree_type = "in+out", bool directed = false) {
+            std::string target_degree_type = "in+out") {
     merge_stage = false;
-    this->directed = directed;
+    this->directed = this->fragment().directed();
     if (source_degree_type == "in") {
       source_degree_type_ = DegreeType::IN;
     } else if (source_degree_type == "out") {

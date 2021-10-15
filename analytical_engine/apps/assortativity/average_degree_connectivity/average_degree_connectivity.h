@@ -65,7 +65,7 @@ class AverageDegreeConnectivity
     }
     auto inner_vertices = frag.InnerVertices();
     for (auto& v : inner_vertices) {
-      traverseVertex(v, frag, ctx, messages);
+      processVertex(v, frag, ctx, messages);
     }
     messages.ForceContinue();
   }
@@ -132,23 +132,25 @@ class AverageDegreeConnectivity
 
  private:
   /**
-   * @brief traverse the neighbors of vertex v
+   * @brief process vertex v ang traverse its neighbors
    *
    * @param v
    * @param frag
    * @param ctx
    * @param messages
    */
-  void traverseVertex(vertex_t v, const fragment_t& frag, context_t& ctx,
-                      message_manager_t& messages) {
+  void processVertex(vertex_t v, const fragment_t& frag, context_t& ctx,
+                     message_manager_t& messages) {
     int source_degree =
         getDegreeByType(frag, v, ctx.source_degree_type_, ctx.directed);
+    // s_i
     double norm = getWeightedDegree(v, frag, ctx);
     if (ctx.degree_connectivity_map.count(source_degree) == 0) {
       ctx.degree_connectivity_map[source_degree].second = norm;
     } else {
       ctx.degree_connectivity_map[source_degree].second += norm;
     }
+    // w_ij * k_j
     // process incoming neighbours
     if (ctx.directed && ctx.source_degree_type_ == DegreeType::IN) {
       auto oes = frag.GetIncomingAdjList(v);

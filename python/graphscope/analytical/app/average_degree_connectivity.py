@@ -92,7 +92,7 @@ def average_degree_connectivity(G, source="in+out", target="in+out", weight=None
         if target not in ("in", "out", "in+out"):
             raise ValueError('target must be one of "in", "out", or "in+out"')
     ctx = AppAssets(algo="average_degree_connectivity", context="tensor")(
-        G, source, target, G.is_directed()
+        G, source, target
     )
     res_list = ctx.to_numpy("r", axis=0).tolist()
     res_list = [i for item in res_list for i in item]
