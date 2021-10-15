@@ -93,9 +93,8 @@ class StdStreamWrapper(object):
         # print('show_progress: ', len(line), ", ", line)
         if "PROGRESS--" not in line:
             return line
-        else:
-            self._show_progress(line)
-            return None
+        self._show_progress(line)
+        return None
 
 
 class PipeWatcher(object):
