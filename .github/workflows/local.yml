@@ -56,7 +56,7 @@ jobs:
 
     - name: Build GraphScope
       run: |
-        /bin/bash ${GITHUB_WORKSPACE}/scripts/deploy_local.sh build_and_deploy --verbose
+        /bin/bash ${GITHUB_WORKSPACE}/scripts/deploy_local.sh build_and_deploy --verbose --build_type debug
 
     - name: Run Local Test
       env:

@@ -108,7 +108,7 @@ class HostsClusterLauncher(Launcher):
         if self._vineyard_socket is not None:
             cmd.extend(["--vineyard_socket", "{}".format(self._vineyard_socket)])
 
-        logger.info("Initializing coordinator.")
+        logger.info("Initializing coordinator with command: %s", " ".join(cmd))
 
         env = os.environ.copy()
         env["PYTHONUNBUFFERED"] = "TRUE"

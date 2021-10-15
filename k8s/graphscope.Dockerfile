@@ -4,10 +4,8 @@
 # the result image includes all runtime stuffs of graphscope, with analytical engine,
 # learning engine and interactive engine installed.
 
-ARG BASE_VERSION=v0.2.12
+ARG BASE_VERSION=v0.3.1
 FROM registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-vineyard:$BASE_VERSION as builder
-
-SHELL ["/usr/bin/scl", "enable", "devtoolset-7"]
 
 ARG CI=true
 ENV CI=$CI

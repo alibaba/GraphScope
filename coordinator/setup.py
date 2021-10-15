@@ -17,9 +17,12 @@
 #
 
 import contextlib
+import glob
+import itertools
 import os
 import shutil
 import subprocess
+import tempfile
 from distutils.cmd import Command
 
 from setuptools import find_packages
@@ -29,6 +32,38 @@ from setuptools.command.develop import develop
 from setuptools.command.sdist import sdist
 
 repo_root = os.path.dirname(os.path.abspath(__file__))
+
+
+# copy any files contains in /opt/graphscope into site-packages/graphscope.runtime
+
+
+def _get_extra_data():
+    # copy
+    #   1) /opt/graphscope
+    #   2) headers of arrow/glog/gflags/google/openmpi/vineyard
+    #   3) openmpi daemon process `orted`
+    #   4) zetcd
+    #   5) /tmp/gs/builtin
+    # into site-packages/graphscope.runtime
+    RUNTIME_ROOT = "graphscope.runtime"
+    return {
+        "/opt/graphscope/": os.path.join(RUNTIME_ROOT),
+        "/opt/vineyard/include/": os.path.join(RUNTIME_ROOT, "include"),
+        os.path.join(tempfile.gettempdir(), "gs", "builtin"): os.path.join(
+            RUNTIME_ROOT, "precompiled"
+        ),
+        "/usr/local/include/arrow": os.path.join(RUNTIME_ROOT, "include"),
+        "/usr/local/include/boost": os.path.join(RUNTIME_ROOT, "include"),
+        "/usr/local/include/double-conversion": os.path.join(RUNTIME_ROOT, "include"),
+        "/usr/local/include/folly": os.path.join(RUNTIME_ROOT, "include"),
+        "/usr/local/include/glog": os.path.join(RUNTIME_ROOT, "include"),
+        "/usr/local/include/gflags": os.path.join(RUNTIME_ROOT, "include"),
+        "/usr/local/include/google": os.path.join(RUNTIME_ROOT, "include"),
+        "/usr/local/include/mpi*.h": os.path.join(RUNTIME_ROOT, "include"),
+        "/usr/local/include/openmpi": os.path.join(RUNTIME_ROOT, "include"),
+        "/usr/local/bin/orted": os.path.join(RUNTIME_ROOT, "bin"),
+        "/usr/local/bin/zetcd": os.path.join(RUNTIME_ROOT, "bin"),
+    }
 
 
 class BuildBuiltin(Command):
@@ -92,6 +127,26 @@ class FormatAndLint(Command):
 
 
 class CustomBuildPy(build_py):
+    def _get_data_files(self):
+        """Add custom out-of-tree package data files."""
+        rs = super()._get_data_files()
+
+        if os.environ.get("WITH_EXTRA_DATA") != "ON":
+            return rs
+
+        for sources, package in _get_extra_data().items():
+            src_dir = os.path.dirname(sources)
+            build_dir = os.path.join(*([self.build_lib] + package.split(os.sep)))
+            filenames = []
+            for file in itertools.chain(
+                glob.glob(sources + "/**/*", recursive=True),
+                glob.glob(sources, recursive=False),
+            ):
+                if os.path.isfile(file) or os.path.islink(file):
+                    filenames.append(os.path.relpath(file, src_dir))
+            rs.append((package, src_dir, build_dir, filenames))
+        return rs
+
     def run(self):
         self.run_command("build_builtin")
         build_py.run(self)
@@ -180,7 +235,7 @@ del version_file_path
 
 
 setup(
-    name="gscoordinator",
+    name="graphscope",
     description="",
     include_package_data=True,
     long_description=long_description,
@@ -219,7 +274,7 @@ setup(
             "builtin/app/builtin_app.gar",
             "builtin/app/*.yaml",
             "template/*.template",
-        ]
+        ],
     },
     cmdclass={
         "build_builtin": BuildBuiltin,
