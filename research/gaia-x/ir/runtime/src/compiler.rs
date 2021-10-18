@@ -14,6 +14,7 @@
 //! limitations under the License.
 
 use crate::graph::partitioner::Partitioner;
+use crate::process::operator::sink::RecordSinkEncoder;
 use crate::process::operator::source::source_op_from;
 use crate::process::record::Record;
 use ir_common::error::str_to_dyn_error;
@@ -100,8 +101,8 @@ impl FnGenerator {
         todo!()
     }
 
-    fn gen_sink(&self) -> Result<RecordEncode, BuildJobError> {
-        todo!()
+    fn gen_sink(&self, _res: &BinaryResource) -> Result<RecordEncode, BuildJobError> {
+        Ok(Box::new(RecordSinkEncoder::default()))
     }
 }
 
@@ -259,21 +260,24 @@ impl JobParser<Record, result_pb::Result> for IRJobCompiler {
         input: &mut Source<Record>,
         output: ResultSink<result_pb::Result>,
     ) -> Result<(), BuildJobError> {
-        todo!()
-        // if let Some(source) = plan.source.as_ref() {
-        //     let source = input.input_from(self.udf_gen.gen_source(source.resource.as_ref())?)?;
-        //     let stream = if let Some(task) = plan.plan.as_ref() {
-        //         self.install(source, &task.plan)?
-        //     } else {
-        //         source
-        //     };
-        //     let ec = self.udf_gen.gen_sink()?;
-        //     stream
-        //         .map(move |record| ec.encode(record))?
-        //         .sink_into(output)
-        // } else {
-        //     Err("source of job not found".into())
-        // }
+        if let Some(source) = plan.source.as_ref() {
+            let source = input.input_from(self.udf_gen.gen_source(source.resource.as_ref())?)?;
+            let stream = if let Some(task) = plan.plan.as_ref() {
+                self.install(source, &task.plan)?
+            } else {
+                source
+            };
+            if let Some(_sinker) = plan.sink.as_ref() {
+                // TODO: specify the columns to sink in _sinker
+                let ec = self.udf_gen.gen_sink(&vec![])?;
+                stream.map(move |record| ec.exec(record))?.sink_into(output)
+            } else {
+                // TODO: if sink is none, just sink all?
+                Err("sink of job not found".into())
+            }
+        } else {
+            Err("source of job not found".into())
+        }
     }
 }
 

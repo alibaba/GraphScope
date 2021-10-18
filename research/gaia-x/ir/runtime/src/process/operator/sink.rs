@@ -13,45 +13,19 @@
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 
-use crate::functions::EncodeFunction;
-use crate::generated::protobuf as result_pb;
 use crate::process::record::Record;
-use pegasus::api::function::FnResult;
-use pegasus::codec::{Decode, Encode, ReadExt, WriteExt};
-use prost::Message;
+use ir_common::generated::result as result_pb;
+use ir_common::NameOrId;
+use pegasus::api::function::{FnResult, MapFunction};
 
-pub struct RecordSinkEncoder;
-
-impl Encode for result_pb::Result {
-    fn write_to<W: WriteExt>(&self, writer: &mut W) -> std::io::Result<()> {
-        let mut bytes = vec![];
-        self.encode_raw(&mut bytes);
-        writer.write_u32(bytes.len() as u32)?;
-        writer.write_all(bytes.as_slice())?;
-        Ok(())
-    }
+// TODO: refine sinker_pb in server_pb
+#[derive(Default)]
+pub struct RecordSinkEncoder {
+    sink_keys: Vec<NameOrId>,
 }
 
-impl Decode for result_pb::Result {
-    fn read_from<R: ReadExt>(reader: &mut R) -> std::io::Result<Self> {
-        let len = reader.read_u32()? as usize;
-        let mut buffer = Vec::with_capacity(len);
-        reader.read_exact(&mut buffer)?;
-        result_pb::Result::decode(buffer.as_slice()).map_err(|_e| {
-            std::io::Error::new(std::io::ErrorKind::Other, "decoding result_pb failed!")
-        })
-    }
-}
-
-impl EncodeFunction<Record, result_pb::Result> for RecordSinkEncoder {
-    fn encode(&self, _data: Record) -> FnResult<result_pb::Result> {
-        let fake_result = result_pb::Result { inner: None };
-        Ok(fake_result)
-    }
-}
-
-impl From<Record> for result_pb::Result {
-    fn from(_: Record) -> Self {
+impl MapFunction<Record, result_pb::Result> for RecordSinkEncoder {
+    fn exec(&self, _input: Record) -> FnResult<result_pb::Result> {
         todo!()
     }
 }

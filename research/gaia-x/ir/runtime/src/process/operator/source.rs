@@ -149,6 +149,7 @@ pub fn source_op_from(
 ) -> Result<SourceOperator<'static>, ParsePbError> {
     if let Some(opr) = source_pb.opr.take() {
         match opr {
+            // TODO: no alias field in scan?
             algebra_pb::logical_plan::operator::Opr::Scan(scan) => {
                 let mut source_op = SourceOperator::with(scan);
                 source_op.set_partitions(job_workers, worker_index, partitioner);
