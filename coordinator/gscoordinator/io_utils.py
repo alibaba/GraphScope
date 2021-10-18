@@ -16,6 +16,7 @@
 # limitations under the License.
 #
 
+import sys
 import threading
 from queue import Queue
 
@@ -79,7 +80,7 @@ class StdStreamWrapper(object):
         total = len(LoadingProgressTracker.stubs)
         if LoadingProgressTracker.progbar is None:
             LoadingProgressTracker.progbar = tqdm(
-                desc="Loading", total=total, file=self._stream_backup
+                desc="Loading Graph", total=total, file=sys.stderr
             )
         LoadingProgressTracker.progbar.update(1)
         LoadingProgressTracker.cur_stub += 1
@@ -87,11 +88,12 @@ class StdStreamWrapper(object):
             LoadingProgressTracker.cur_stub = 0
             LoadingProgressTracker.progbar.close()
             LoadingProgressTracker.progbar = None
-            self._stream_backup.write("\n")
+            sys.stderr.write("\n")
+            sys.stderr.flush()
 
     def _filter_progress(self, line):
         # print('show_progress: ', len(line), ", ", line)
-        if "PROGRESS--" not in line:
+        if "PROGRESS--GRAPH" not in line:
             return line
         self._show_progress(line)
         return None
