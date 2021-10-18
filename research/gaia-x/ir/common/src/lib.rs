@@ -18,6 +18,7 @@ use crate::generated::algebra as pb;
 use crate::generated::common as common_pb;
 use dyn_type::{BorrowObject, Object};
 use pegasus_common::codec::{Decode, Encode, ReadExt, WriteExt};
+use prost::Message;
 use std::convert::TryFrom;
 use std::io;
 
@@ -41,7 +42,7 @@ mod generated {
     pub mod algebra {
         tonic::include_proto!("algebra");
     }
-    pub mod algebra {
+    pub mod result {
         tonic::include_proto!("result");
     }
 }
@@ -440,5 +441,26 @@ impl From<pb::GetV> for pb::logical_plan::Operator {
         pb::logical_plan::Operator {
             opr: Some(pb::logical_plan::operator::Opr::Vertex(opr)),
         }
+    }
+}
+
+impl Encode for generated::result::Result {
+    fn write_to<W: WriteExt>(&self, writer: &mut W) -> io::Result<()> {
+        let mut bytes = vec![];
+        self.encode_raw(&mut bytes);
+        writer.write_u32(bytes.len() as u32)?;
+        writer.write_all(bytes.as_slice())?;
+        Ok(())
+    }
+}
+
+impl Decode for generated::result::Result {
+    fn read_from<R: ReadExt>(reader: &mut R) -> io::Result<Self> {
+        let len = reader.read_u32()? as usize;
+        let mut buffer = Vec::with_capacity(len);
+        reader.read_exact(&mut buffer)?;
+        generated::result::Result::decode(buffer.as_slice()).map_err(|_e| {
+            std::io::Error::new(std::io::ErrorKind::Other, "decoding result_pb failed!")
+        })
     }
 }
