@@ -40,6 +40,13 @@ pub type DynError = Box<dyn std::error::Error + Send>;
 pub type DynResult<T> = Result<T, Box<dyn std::error::Error + Send>>;
 pub type DynIter<T> = Box<dyn Iterator<Item = T> + Send>;
 
+impl From<ParsePbError> for DynError {
+    fn from(e: ParsePbError) -> Self {
+        let err: Box<dyn std::error::Error + Send + Sync> = e.into();
+        err
+    }
+}
+
 /// A tricky bypassing of Rust's compiler. It is useful to simplify throwing a `DynError`
 /// from a `&str` as `Err(str_to_dyn_err('some str'))`
 pub fn str_to_dyn_error(str: &str) -> DynError {
