@@ -76,6 +76,8 @@ RUN wget --no-verbose https://golang.org/dl/go1.15.5.linux-amd64.tar.gz && \
     cp $(go env GOPATH)/bin/zetcd /tmp/zetcd
 
 RUN source ~/.bashrc \
+    && sudo yum install -y clang-devel \
+    && export LIBCLANG_PATH=$(dirname $(python3 -c "import clang; print(clang.__file__)"))/native \
     && rustup component add rustfmt \
     && echo "build with profile: $profile" \
     && cd ${HOME}/gs/interactive_engine/src/executor \
