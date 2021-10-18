@@ -128,7 +128,7 @@ fn parse_pb_node(
             if let Some(child_node) = nodes.get(*child_id as usize) {
                 child_node.borrow_mut().add_parent(node.borrow().id as u32);
             } else {
-                return Err(ParsePbError::InvalidPb(
+                return Err(ParsePbError::from(
                     "the child id is out of index".to_string(),
                 ));
             }
@@ -152,9 +152,7 @@ impl TryFrom<pb::LogicalPlan> for LogicalPlan {
                     opr.to_owned().clone(),
                 ))));
             } else {
-                return Err(ParsePbError::InvalidPb(
-                    "do not specify operator in a node".to_string(),
-                ));
+                return Err(ParsePbError::from("do not specify operator in a node"));
             }
         }
 

@@ -240,14 +240,14 @@ impl<'a> Evaluator<'a> {
     /// # Examples
     ///
     /// ```
-    /// # use runtime::graph::element::Vertex;
-    /// # use runtime::expr::eval::{Context, Evaluator};
-    /// # use ir_common::NameOrId;
-    /// # use runtime::graph::property::{DefaultDetails, DynDetails};
-    /// # use std::collections::HashMap;
     /// # use dyn_type::Object;
+    /// # use ir_common::NameOrId;
+    /// # use runtime::expr::eval::{Context, Evaluator};
     /// # use runtime::expr::token::tokenize;
     /// # use runtime::expr::to_suffix_expr_pb;
+    /// # use runtime::graph::element::Vertex;
+    /// # use runtime::graph::property::{DefaultDetails, DynDetails};
+    /// # use std::collections::HashMap;
     /// # use std::convert::TryFrom;
     ///
     /// struct Vertices {

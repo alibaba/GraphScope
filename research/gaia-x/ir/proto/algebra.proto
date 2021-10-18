@@ -166,10 +166,12 @@ message Scan {
   ScanOpt scan_opt = 1;
   // The name of the schema
   string schema_name = 2;
-  // The required data fields for the scan
-  repeated common.NameOrId fields = 3;
+  // The alias of the item if it is a vertex or edge
+  common.NameOrId alias = 3;
+  // The required data fields (properties) for the scan
+  repeated common.NameOrId fields = 4;
   // The size limit
-  Limit.Range limit = 4;
+  Limit.Range limit = 5;
 }
 
 // In addition to `Scan`, this operator allow runtime to leverage certain optimization strategy while the predicates
