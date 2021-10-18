@@ -25,7 +25,6 @@ message Exchange {
 }
 
 message Broadcast {
-  bytes resource = 1;
 }
 
 message Aggregate {
@@ -57,11 +56,7 @@ message Filter {
 }
 
 message Sink {
-  oneof sinker {
-    bytes resource = 1;
-    Fold fold      = 2;
-    GroupBy group  = 3;
-  }
+  bytes resource = 1;
 }
 
 message LeftJoin {
@@ -93,13 +88,11 @@ enum AccumKind {
 message Fold {
   AccumKind accum = 1;
   bytes resource  = 2;
-  FlatMap unfold  = 3;
 }
 
 message GroupBy {
   AccumKind accum = 1;
   bytes resource = 2;
-  FlatMap unfold  = 3;
 }
 
 message Union {

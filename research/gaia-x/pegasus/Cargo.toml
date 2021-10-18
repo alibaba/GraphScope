@@ -7,7 +7,8 @@ members = [
     "executor",
     "graph",
     "pegasus",
-    "server"
+    "server",
+    "clients/rust/client"
 ]
 
 [profile.dev]
