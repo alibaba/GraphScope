@@ -13,16 +13,4 @@
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 
-use crate::graph::ID;
-use ir_common::error::DynResult;
-
-pub trait Partitioner: Send + Sync + 'static {
-    fn get_partition(&self, id: &ID, job_workers: usize) -> DynResult<u64>;
-    /// Given job_workers (number of worker per server) and worker_id (worker index),
-    /// return the partition list that the worker is going to process
-    fn get_worker_partitions(
-        &self,
-        job_workers: usize,
-        worker_id: u32,
-    ) -> DynResult<Option<Vec<u64>>>;
-}
+pub(crate) mod source;

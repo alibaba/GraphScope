@@ -18,6 +18,8 @@ pub mod graph;
 pub mod partitioner;
 pub mod property;
 
+pub type ID = u128;
+
 #[derive(Copy, Clone, Eq, PartialEq)]
 pub enum Direction {
     Out = 0,

@@ -14,7 +14,8 @@
 //! limitations under the License.
 
 use crate::graph::element::Element;
-use crate::graph::property::{Details, DynDetails, ID};
+use crate::graph::property::{Details, DynDetails};
+use crate::graph::ID;
 use dyn_type::BorrowObject;
 use ir_common::NameOrId;
 use pegasus_common::codec::{Decode, Encode, ReadExt, WriteExt};

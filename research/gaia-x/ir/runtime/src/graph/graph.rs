@@ -15,8 +15,8 @@
 
 use crate::expr::eval::Evaluator;
 use crate::graph::element::{Edge, Vertex};
-use crate::graph::property::ID;
 use crate::graph::Direction;
+use crate::graph::ID;
 use ir_common::error::{DynIter, DynResult, ParsePbError};
 use ir_common::generated::algebra as algebra_pb;
 use ir_common::generated::common as common_pb;

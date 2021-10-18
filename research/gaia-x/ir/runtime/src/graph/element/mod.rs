@@ -16,7 +16,8 @@
 pub use edge::Edge;
 pub use vertex::Vertex;
 
-use crate::graph::property::{DynDetails, ID};
+use crate::graph::property::DynDetails;
+use crate::graph::ID;
 use dyn_type::{BorrowObject, Object};
 use ir_common::NameOrId;
 use pegasus_common::codec::{Decode, Encode, ReadExt, WriteExt};

@@ -22,3 +22,7 @@ mod process;
 extern crate pegasus_common;
 #[macro_use]
 extern crate lazy_static;
+#[macro_use]
+extern crate log;
+
+pub use crate::graph::graph::{get_graph, register_graph};

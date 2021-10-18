@@ -14,12 +14,7 @@
 //! limitations under the License.
 
 use crate::graph::partitioner::Partitioner;
-// use crate::process::operator::group::accumulator::Accumulator;
-// use crate::process::operator::group::RecordAccumulator;
-// use crate::process::operator::shuffle::Router;
-// use crate::process::operator::sink::RecordSinkEncoder;
-// use crate::process::operator::source::source_op_from;
-// use crate::process::operator::*;
+use crate::process::operator::source::source_op_from;
 use crate::process::record::Record;
 use ir_common::error::str_to_dyn_error;
 use ir_common::generated::algebra as algebra_pb;
@@ -64,16 +59,16 @@ impl FnGenerator {
     }
 
     fn gen_source(&self, res: &BinaryResource) -> Result<DynIter<Record>, BuildJobError> {
-        todo!()
-        // let mut step = decode::<algebra_pb::logical_plan::Operator>(res)?;
-        // let worker_id = pegasus::get_current_worker();
-        // let step = source_op_from(
-        //     &mut step,
-        //     worker_id.local_peers as usize,
-        //     worker_id.index,
-        //     self.partitioner.clone(),
-        // )?;
-        // Ok(step.gen_source(worker_id.index as usize)?)
+        let mut step = decode::<algebra_pb::logical_plan::Operator>(res)?;
+        let worker_id = pegasus::get_current_worker();
+        let step = source_op_from(
+            &mut step,
+            worker_id.local_peers as usize,
+            worker_id.index,
+            self.partitioner.clone(),
+        )
+        .map_err(|e| format!("{}", e))?;
+        Ok(step.gen_source(worker_id.index as usize)?)
     }
 
     fn gen_shuffle(&self) -> Result<RecordShuffle, BuildJobError> {
