@@ -21,12 +21,9 @@ rust-ini = "0.13"
 libc = "0.2"
 log4rs = "0.8.0"
 grpcio = "=0.4.1"
+rocksdb = "0.17.0"
 
 maxgraph-common = { path = "../../common/rust/common" }
-
-[dependencies.rocksdb]
-git = "https://github.com/pingcap/rust-rocksdb.git"
-rev = "23a604459899f4f7a4c8967f16b6fa623474f27b"
 
 [build-dependencies]
 protoc-grpcio = "0.3.0"
