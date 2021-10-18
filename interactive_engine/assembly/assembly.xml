@@ -39,26 +39,26 @@
         <include>*</include>
       </includes>
     </fileSet>
-    <!--        <fileSet>-->
-    <!--            <directory>${project.basedir}/../coordinator/target</directory>-->
-    <!--            <outputDirectory>/</outputDirectory>-->
-    <!--            <includes>-->
-    <!--                <include>maxgraph*.jar</include>-->
-    <!--            </includes>-->
-    <!--        </fileSet>-->
-    <!--        <fileSet>-->
-    <!--            <directory>${project.basedir}/../frontend/frontendservice/target</directory>-->
-    <!--            <outputDirectory>/</outputDirectory>-->
-    <!--            <includes>-->
-    <!--                <include>maxgraph*.jar</include>-->
-    <!--            </includes>-->
-    <!--        </fileSet>-->
-    <!--        <fileSet>-->
-    <!--            <directory>${project.basedir}/../gaia-adaptor/target</directory>-->
-    <!--            <outputDirectory>/</outputDirectory>-->
-    <!--            <includes>-->
-    <!--                <include>gaia*.jar</include>-->
-    <!--            </includes>-->
-    <!--        </fileSet>-->
+    <fileSet>
+      <directory>${project.basedir}/../coordinator/target</directory>
+      <outputDirectory>/</outputDirectory>
+      <includes>
+        <include>maxgraph*.jar</include>
+      </includes>
+    </fileSet>
+    <fileSet>
+      <directory>${project.basedir}/../frontend/frontendservice/target</directory>
+      <outputDirectory>/</outputDirectory>
+      <includes>
+        <include>maxgraph*.jar</include>
+      </includes>
+    </fileSet>
+    <fileSet>
+      <directory>${project.basedir}/../gaia-adaptor/target</directory>
+      <outputDirectory>/</outputDirectory>
+      <includes>
+        <include>gaia*.jar</include>
+      </includes>
+    </fileSet>
   </fileSets>
 </assembly>
