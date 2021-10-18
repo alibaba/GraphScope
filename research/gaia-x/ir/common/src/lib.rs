@@ -29,6 +29,8 @@ pub mod generated {
     pub mod algebra;
     #[path = "common.rs"]
     pub mod common;
+    #[path = "result.rs"]
+    pub mod result;
 }
 
 #[cfg(not(feature = "proto_inplace"))]
@@ -38,6 +40,9 @@ mod generated {
     }
     pub mod algebra {
         tonic::include_proto!("algebra");
+    }
+    pub mod algebra {
+        tonic::include_proto!("result");
     }
 }
 
