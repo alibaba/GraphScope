@@ -122,12 +122,22 @@ impl<'a> RocksDBIter<'a> {
         if !self.inner.valid() {
             return None;
         }
+
         if self.just_seeked {
             self.just_seeked = false;
         } else {
             self.inner.next();
         }
-        Some((self.inner.key().unwrap(), self.inner.value().unwrap()))
+
+        if self.inner.valid() {
+            Some((
+                self.inner.key().unwrap(),
+                self.inner.value().unwrap()
+            ))
+        } else {
+            None
+        }
+
     }
 }
 
