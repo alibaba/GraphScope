@@ -47,7 +47,7 @@
       </includes>
     </fileSet>
     <fileSet>
-      <directory>${project.basedir}/../frontend/frontendservice/target</directory>
+      <directory>${project.basedir}/../frontendservice/target</directory>
       <outputDirectory>/</outputDirectory>
       <includes>
         <include>maxgraph*.jar</include>
