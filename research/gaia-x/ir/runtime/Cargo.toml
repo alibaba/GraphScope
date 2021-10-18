@@ -8,7 +8,9 @@ dyn_type = {path = "../dyn_type"}
 ir_common = {path = "../common", features = ["proto_inplace"]}
 pegasus_common = { path = "../../pegasus/common" }
 pegasus = { path = "../../pegasus/pegasus" }
+pegasus_server = { path = "../../pegasus/server" }
 lazy_static = "1.3.0"
+prost = "0.8"
 
 [profile.release]
 lto = true

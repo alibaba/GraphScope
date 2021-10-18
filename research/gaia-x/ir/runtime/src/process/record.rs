@@ -19,6 +19,7 @@ use dyn_type::Object;
 use ir_common::error::DynIter;
 use ir_common::NameOrId;
 use pegasus::codec::{Decode, Encode, ReadExt, WriteExt};
+use std::cmp::Ordering;
 use std::collections::HashMap;
 use std::hash::{Hash, Hasher};
 
@@ -56,7 +57,6 @@ pub struct Record {
     // TODO: optimized as VecMap<Entry>
     columns: HashMap<NameOrId, Entry>,
     // The tags that refer to keys, while the values (of keys) are saved in columns
-    // TODO: this field may not be necessary
     keys: Vec<NameOrId>,
 }
 
@@ -177,6 +177,20 @@ impl Eq for Record {}
 impl Hash for Record {
     fn hash<H: Hasher>(&self, _state: &mut H) {
         // TODO: hash by key if exists
+        todo!()
+    }
+}
+
+impl PartialOrd for Record {
+    fn partial_cmp(&self, _other: &Self) -> Option<Ordering> {
+        // TODO: order by key if exists
+        todo!()
+    }
+}
+
+impl Ord for Record {
+    fn cmp(&self, _other: &Self) -> Ordering {
+        // TODO: order by key if exists
         todo!()
     }
 }

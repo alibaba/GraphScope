@@ -15,10 +15,6 @@
 
 pub type ParsePbResult<T> = Result<T, ParsePbError>;
 
-pub type DynError = Box<dyn std::error::Error + Send>;
-pub type DynResult<T> = Result<T, Box<dyn std::error::Error + Send>>;
-pub type DynIter<T> = Box<dyn Iterator<Item = T> + Send>;
-
 #[derive(Debug, PartialEq)]
 pub enum ParsePbError {
     InvalidPb(String),
@@ -38,4 +34,15 @@ impl From<&str> for ParsePbError {
     fn from(e: &str) -> Self {
         ParsePbError::InvalidPb(e.into())
     }
+}
+
+pub type DynError = Box<dyn std::error::Error + Send>;
+pub type DynResult<T> = Result<T, Box<dyn std::error::Error + Send>>;
+pub type DynIter<T> = Box<dyn Iterator<Item = T> + Send>;
+
+/// A tricky bypassing of Rust's compiler. It is useful to simplify throwing a `DynError`
+/// from a `&str` as `Err(str_to_dyn_err('some str'))`
+pub fn str_to_dyn_error(str: &str) -> DynError {
+    let err: Box<dyn std::error::Error + Send + Sync> = str.into();
+    err
 }
