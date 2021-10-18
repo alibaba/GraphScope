@@ -1,5 +1,5 @@
 //
-//! Copyright 2020 Alibaba Group Holding Limited.
+//! Copyright 2021 Alibaba Group Holding Limited.
 //!
 //! Licensed under the Apache License, Version 2.0 (the "License");
 //! you may not use this file except in compliance with the License.
@@ -13,10 +13,16 @@
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 
-pub mod expr;
-pub mod graph;
+use crate::graph::property::ID;
+use ir_common::error::DynResult;
 
-#[macro_use]
-extern crate pegasus_common;
-#[macro_use]
-extern crate lazy_static;
+pub trait Partitioner: Send + Sync + 'static {
+    fn get_partition(&self, id: &ID, job_workers: usize) -> DynResult<u64>;
+    /// Given job_workers (number of worker per server) and worker_id (worker index),
+    /// return the partition list that the worker is going to process
+    fn get_worker_partitions(
+        &self,
+        job_workers: usize,
+        worker_id: u32,
+    ) -> DynResult<Option<Vec<u64>>>;
+}

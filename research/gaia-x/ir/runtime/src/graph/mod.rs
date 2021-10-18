@@ -14,4 +14,27 @@
 //! limitations under the License.
 
 pub mod element;
+pub mod graph;
+pub mod partitioner;
 pub mod property;
+
+#[derive(Copy, Clone, Eq, PartialEq)]
+pub enum Direction {
+    Out = 0,
+    In = 1,
+    Both = 2,
+}
+
+use ir_common::generated::algebra as algebra_pb;
+impl From<algebra_pb::expand_base::Direction> for Direction {
+    fn from(direction: algebra_pb::expand_base::Direction) -> Self
+    where
+        Self: Sized,
+    {
+        match direction {
+            algebra_pb::expand_base::Direction::Out => Direction::Out,
+            algebra_pb::expand_base::Direction::In => Direction::In,
+            algebra_pb::expand_base::Direction::Both => Direction::Both,
+        }
+    }
+}

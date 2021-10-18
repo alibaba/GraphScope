@@ -15,6 +15,10 @@
 
 pub type ParsePbResult<T> = Result<T, ParsePbError>;
 
+pub type DynError = Box<dyn std::error::Error + Send>;
+pub type DynResult<T> = Result<T, Box<dyn std::error::Error + Send>>;
+pub type DynIter<T> = Box<dyn Iterator<Item = T> + Send>;
+
 #[derive(Debug, PartialEq)]
 pub enum ParsePbError {
     InvalidPb(String),
