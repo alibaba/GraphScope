@@ -17,6 +17,9 @@ import com.alibaba.maxgraph.structure.graph.TinkerMaxGraph;
 import com.alibaba.maxgraph.tinkerpop.Utils;
 
 import io.netty.channel.Channel;
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+import java.util.stream.Collectors;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.tinkerpop.gremlin.groovy.engine.GremlinExecutor;
@@ -90,6 +93,16 @@ public class MaxGraphServer {
             for (Settings.SerializerSettings serializerSettings : this.settings.serializers) {
                 serializerSettings.config.put("custom", customSerializerList);
             }
+            String logString =
+                    new BufferedReader(
+                                    new InputStreamReader(
+                                            this.getClass()
+                                                    .getClassLoader()
+                                                    .getResourceAsStream("conf/server.yaml")))
+                            .lines()
+                            .collect(Collectors.joining("\n"));
+            LOG.info("hx test " + logString);
+
         } catch (Throwable e) {
             LOG.error("get error : ", e);
             throw new RuntimeException(e);
