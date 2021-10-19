@@ -127,6 +127,8 @@ message OrderBy {
     Order order = 2;
   }
   repeated OrderingPair pairs = 2;
+  // A size limit. `OrderBy.Limit` is equivalent to the `Topk` operation
+  Limit.Range limit = 3;
 }
 
 message Dedup {
@@ -235,18 +237,26 @@ message GetV {
 message EdgeExpand {
   // The base expansion
   ExpandBase base = 1;
-  // An optional alias for the expanded edge
-  common.NameOrId alias = 2;
+  oneof alias {
+      // An optional alias for the expanded edge
+      common.NameOrId edge_alias = 2;
+      // An optional alias for the end vertex of the expanded edge
+      common.NameOrId vertex_alias = 3;
+  }
 }
 
 message PathExpand {
   // A path expansion has a base of edge expansion
   ExpandBase base = 1;
-  // An optional alias for the expanded path
-  common.NameOrId alias = 2;
+  oneof alias {
+    // An optional alias for the expanded path
+    common.NameOrId path_alias = 2;
+    // An optional alias for the end vertex of the expanded path
+    common.NameOrId vertex_alias = 3;
+  }
   // The range that defines the minimum and maximum number of hops of the path expansion.
   // This is optional, if not set, the minimum number is 1, and the maximum is INT_MAX
-  Limit.Range hop_range = 3;
+  Limit.Range hop_range = 4;
 }
 
 message ShortestPathExpand {

@@ -299,14 +299,19 @@ pub extern "C" fn debug_plan(ptr_plan: *const c_void) {
     std::mem::forget(plan);
 }
 
+#[allow(dead_code)]
+#[derive(PartialEq)]
 enum Opr {
     Select,
     Scan,
     GetV,
     ExpandBase,
     EdgeExpand,
+    EdgeExpandWithV,
     PathExpand,
+    PathExpandWithV,
     Limit,
+    OrderBy,
     Apply,
 }
 
@@ -341,6 +346,11 @@ fn set_range(ptr: *const c_void, lower: i32, upper: i32, opr: Opr) -> ResultCode
                 limit.range = Some(pb::limit::Range { lower, upper });
                 std::mem::forget(limit);
             }
+            Opr::OrderBy => {
+                let mut orderby = unsafe { Box::from_raw(ptr as *mut pb::OrderBy) };
+                orderby.limit = Some(pb::limit::Range { lower, upper });
+                std::mem::forget(orderby);
+            }
             _ => unreachable!(),
         }
 
@@ -354,20 +364,36 @@ fn set_alias(ptr: *const c_void, alias: FfiNameOrId, is_query_given: bool, opr: 
     if alias_pb.is_err() {
         return_code = alias_pb.err().unwrap()
     } else {
-        match opr {
+        match &opr {
             Opr::Scan => {
                 let mut scan = unsafe { Box::from_raw(ptr as *mut pb::Scan) };
                 scan.alias = alias_pb.unwrap();
                 std::mem::forget(scan);
             }
-            Opr::EdgeExpand => {
+            Opr::EdgeExpand | Opr::EdgeExpandWithV => {
                 let mut edgexpd = unsafe { Box::from_raw(ptr as *mut pb::EdgeExpand) };
-                edgexpd.alias = alias_pb.unwrap();
+                if opr == Opr::EdgeExpand {
+                    edgexpd.alias = alias_pb
+                        .unwrap()
+                        .map(|alias| pb::edge_expand::Alias::EdgeAlias(alias))
+                } else {
+                    edgexpd.alias = alias_pb
+                        .unwrap()
+                        .map(|alias| pb::edge_expand::Alias::VertexAlias(alias))
+                }
                 std::mem::forget(edgexpd);
             }
-            Opr::PathExpand => {
+            Opr::PathExpand | Opr::PathExpandWithV => {
                 let mut pathxpd = unsafe { Box::from_raw(ptr as *mut pb::PathExpand) };
-                pathxpd.alias = alias_pb.unwrap();
+                if opr == Opr::PathExpand {
+                    pathxpd.alias = alias_pb
+                        .unwrap()
+                        .map(|alias| pb::path_expand::Alias::PathAlias(alias))
+                } else {
+                    pathxpd.alias = alias_pb
+                        .unwrap()
+                        .map(|alias| pb::path_expand::Alias::VertexAlias(alias))
+                }
                 std::mem::forget(pathxpd);
             }
             Opr::GetV => {
@@ -812,7 +838,10 @@ mod orderby {
     /// To initialize an orderby operator
     #[no_mangle]
     pub extern "C" fn init_orderby_operator() -> *const c_void {
-        let order = Box::new(pb::OrderBy { pairs: vec![] });
+        let order = Box::new(pb::OrderBy {
+            pairs: vec![],
+            limit: None,
+        });
         Box::into_raw(order) as *const c_void
     }
 
@@ -842,6 +871,16 @@ mod orderby {
         std::mem::forget(orderby);
 
         return_code
+    }
+
+    /// Set the size limit of the orderby operator, which will turn it into topk
+    #[no_mangle]
+    pub extern "C" fn set_orderby_limit(
+        ptr_orderby: *const c_void,
+        lower: i32,
+        upper: i32,
+    ) -> ResultCode {
+        set_range(ptr_orderby, lower, upper, Opr::OrderBy)
     }
 
     /// Append an orderby operator to the logical plan
@@ -1436,8 +1475,18 @@ mod graph {
     pub extern "C" fn set_edgexpd_alias(
         ptr_edgexpd: *const c_void,
         alias: FfiNameOrId,
+        is_edge: bool,
     ) -> ResultCode {
-        set_alias(ptr_edgexpd, alias, true, Opr::EdgeExpand)
+        set_alias(
+            ptr_edgexpd,
+            alias,
+            true,
+            if is_edge {
+                Opr::EdgeExpand
+            } else {
+                Opr::EdgeExpandWithV
+            },
+        )
     }
 
     /// Append an edge expand operator to the logical plan
@@ -1555,8 +1604,18 @@ mod graph {
     pub extern "C" fn set_pathxpd_alias(
         ptr_pathxpd: *const c_void,
         alias: FfiNameOrId,
+        is_path: bool,
     ) -> ResultCode {
-        set_alias(ptr_pathxpd, alias, true, Opr::PathExpand)
+        set_alias(
+            ptr_pathxpd,
+            alias,
+            true,
+            if is_path {
+                Opr::PathExpand
+            } else {
+                Opr::EdgeExpandWithV
+            },
+        )
     }
 
     /// Set the hop-range limitation of expanding path
