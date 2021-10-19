@@ -25,28 +25,16 @@ use std::convert::{TryFrom, TryInto};
 use std::sync::atomic::{AtomicPtr, Ordering};
 use std::sync::Arc;
 
-//#[derive(Clone)]
-pub struct QueryParams<'a> {
+#[derive(Default)]
+pub struct QueryParams {
     pub labels: Vec<NameOrId>,
     pub limit: Option<usize>,
     pub props: Option<Vec<NameOrId>>,
     pub partitions: Option<Vec<u64>>,
-    pub filter: Option<Evaluator<'a>>,
+    pub filter: Option<Evaluator>,
 }
 
-impl Default for QueryParams<'_> {
-    fn default() -> Self {
-        QueryParams {
-            labels: vec![],
-            limit: None,
-            props: None,
-            partitions: None,
-            filter: None,
-        }
-    }
-}
-
-impl<'a> TryFrom<Option<algebra_pb::GQueryParams>> for QueryParams<'a> {
+impl TryFrom<Option<algebra_pb::GQueryParams>> for QueryParams {
     type Error = ParsePbError;
 
     fn try_from(query_params_pb: Option<algebra_pb::GQueryParams>) -> Result<Self, Self::Error> {
@@ -61,7 +49,7 @@ impl<'a> TryFrom<Option<algebra_pb::GQueryParams>> for QueryParams<'a> {
     }
 }
 
-impl<'a> QueryParams<'a> {
+impl QueryParams {
     fn with_labels(mut self, labels_pb: Vec<common_pb::NameOrId>) -> Result<Self, ParsePbError> {
         self.labels = labels_pb
             .into_iter()

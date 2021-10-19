@@ -34,14 +34,14 @@ pub enum SourceType {
 }
 
 /// Source Operator, fetching a source from the (graph) database
-pub struct SourceOperator<'a> {
-    params: QueryParams<'a>,
+pub struct SourceOperator {
+    params: QueryParams,
     src: Option<HashMap<u64, Vec<ID>>>,
     tag: Option<NameOrId>,
     source_type: SourceType,
 }
 
-impl<'a> SourceOperator<'a> {
+impl SourceOperator {
     fn with(scan: algebra_pb::Scan) -> Self {
         let scan_opt: algebra_pb::scan::ScanOpt = unsafe { ::std::mem::transmute(scan.scan_opt) };
         let source_type = match scan_opt {
@@ -95,7 +95,7 @@ impl<'a> SourceOperator<'a> {
     }
 }
 
-impl<'a> SourceOperator<'a> {
+impl SourceOperator {
     pub fn gen_source(
         self,
         worker_index: usize,
@@ -146,7 +146,7 @@ pub fn source_op_from(
     job_workers: usize,
     worker_index: u32,
     partitioner: Arc<dyn Partitioner>,
-) -> Result<SourceOperator<'static>, ParsePbError> {
+) -> Result<SourceOperator, ParsePbError> {
     if let Some(opr) = source_pb.opr.take() {
         match opr {
             // TODO: no alias field in scan?

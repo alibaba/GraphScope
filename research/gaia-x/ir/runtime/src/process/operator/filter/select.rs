@@ -14,39 +14,35 @@
 //! limitations under the License.
 
 use crate::expr::eval::Evaluator;
+use crate::process::operator::filter::FilterFuncGen;
 use crate::process::record::Record;
-use ir_common::error::{str_to_dyn_error, ParsePbError};
+use ir_common::error::{str_to_dyn_error, DynResult, ParsePbError};
 use ir_common::generated::algebra as algebra_pb;
 use pegasus::api::function::{FilterFunction, FnResult};
 use std::convert::{TryFrom, TryInto};
 
-impl FilterFunction<Record> for algebra_pb::Select {
+struct SelectOperator {
+    pub filter: Evaluator,
+}
+
+impl FilterFunction<Record> for SelectOperator {
     fn test(&self, input: &Record) -> FnResult<bool> {
-        if let Some(predicate) = self.predicate.clone() {
-            // TODO: gen SelectOperator for evaluating
-            let eval = Evaluator::try_from(predicate)?;
-            eval.eval_bool(Some(input))
-                .map_err(|e| str_to_dyn_error(&format!("{}", e)))
-        } else {
-            Err(str_to_dyn_error("empty content provided"))
-        }
+        // TODO: do we need a stack here?
+        let mut stack = vec![];
+        self.filter
+            .eval_bool(Some(input), &mut stack)
+            .map_err(|e| str_to_dyn_error(&format!("{}", e)))
     }
 }
 
-struct SelectOperator<'a> {
-    pub filter: Evaluator<'a>,
-}
-
-impl TryFrom<algebra_pb::Select> for SelectOperator<'static> {
-    type Error = ParsePbError;
-
-    fn try_from(select_pb: algebra_pb::Select) -> Result<Self, Self::Error> {
-        if let Some(predicate) = select_pb.predicate {
-            Ok(SelectOperator {
+impl FilterFuncGen for algebra_pb::Select {
+    fn gen_filter(self) -> DynResult<Box<dyn FilterFunction<Record>>> {
+        if let Some(predicate) = self.predicate {
+            Ok(Box::new(SelectOperator {
                 filter: predicate.try_into()?,
-            })
+            }))
         } else {
-            Err(ParsePbError::from("empty content provided"))
+            Err(str_to_dyn_error("empty content provided"))
         }
     }
 }

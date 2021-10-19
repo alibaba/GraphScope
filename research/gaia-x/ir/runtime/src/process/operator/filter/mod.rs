@@ -27,7 +27,7 @@ impl FilterFuncGen for algebra_pb::logical_plan::Operator {
     fn gen_filter(self) -> DynResult<Box<dyn FilterFunction<Record>>> {
         if let Some(opr) = self.opr {
             match opr {
-                algebra_pb::logical_plan::operator::Opr::Select(select) => Ok(Box::new(select)),
+                algebra_pb::logical_plan::operator::Opr::Select(select) => select.gen_filter(),
                 _ => Err(str_to_dyn_error("algebra_pb op is not a filter")),
             }
         } else {

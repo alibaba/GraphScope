@@ -76,13 +76,13 @@ impl FlatMapFuncGen for algebra_pb::EdgeExpand {
     }
 }
 
-pub struct ExpandBase<'a> {
+pub struct ExpandBase {
     v_tag: Option<NameOrId>,
     direction: Direction,
-    query_params: QueryParams<'a>,
+    query_params: QueryParams,
 }
 
-impl<'a> TryFrom<Option<algebra_pb::ExpandBase>> for ExpandBase<'a> {
+impl TryFrom<Option<algebra_pb::ExpandBase>> for ExpandBase {
     type Error = ParsePbError;
 
     fn try_from(expand_base: Option<algebra_pb::ExpandBase>) -> Result<Self, Self::Error> {
