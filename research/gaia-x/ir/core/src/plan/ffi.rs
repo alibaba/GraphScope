@@ -307,9 +307,7 @@ enum Opr {
     GetV,
     ExpandBase,
     EdgeExpand,
-    EdgeExpandWithV,
     PathExpand,
-    PathExpandWithV,
     Limit,
     OrderBy,
     Apply,
@@ -370,30 +368,14 @@ fn set_alias(ptr: *const c_void, alias: FfiNameOrId, is_query_given: bool, opr: 
                 scan.alias = alias_pb.unwrap();
                 std::mem::forget(scan);
             }
-            Opr::EdgeExpand | Opr::EdgeExpandWithV => {
+            Opr::EdgeExpand => {
                 let mut edgexpd = unsafe { Box::from_raw(ptr as *mut pb::EdgeExpand) };
-                if opr == Opr::EdgeExpand {
-                    edgexpd.alias = alias_pb
-                        .unwrap()
-                        .map(|alias| pb::edge_expand::Alias::EdgeAlias(alias))
-                } else {
-                    edgexpd.alias = alias_pb
-                        .unwrap()
-                        .map(|alias| pb::edge_expand::Alias::VertexAlias(alias))
-                }
+                edgexpd.alias = alias_pb.unwrap();
                 std::mem::forget(edgexpd);
             }
-            Opr::PathExpand | Opr::PathExpandWithV => {
+            Opr::PathExpand => {
                 let mut pathxpd = unsafe { Box::from_raw(ptr as *mut pb::PathExpand) };
-                if opr == Opr::PathExpand {
-                    pathxpd.alias = alias_pb
-                        .unwrap()
-                        .map(|alias| pb::path_expand::Alias::PathAlias(alias))
-                } else {
-                    pathxpd.alias = alias_pb
-                        .unwrap()
-                        .map(|alias| pb::path_expand::Alias::VertexAlias(alias))
-                }
+                pathxpd.alias = alias_pb.unwrap();
                 std::mem::forget(pathxpd);
             }
             Opr::GetV => {
@@ -1460,10 +1442,14 @@ mod graph {
 
     /// To initialize an edge expand operator from an expand base
     #[no_mangle]
-    pub extern "C" fn init_edgexpd_operator(ptr_expand: *const c_void) -> *const c_void {
+    pub extern "C" fn init_edgexpd_operator(
+        ptr_expand: *const c_void,
+        is_edge: bool,
+    ) -> *const c_void {
         let expand = unsafe { Box::from_raw(ptr_expand as *mut pb::ExpandBase) };
         let edgexpd = Box::new(pb::EdgeExpand {
             base: Some(expand.as_ref().clone()),
+            is_edge,
             alias: None,
         });
 
@@ -1475,18 +1461,8 @@ mod graph {
     pub extern "C" fn set_edgexpd_alias(
         ptr_edgexpd: *const c_void,
         alias: FfiNameOrId,
-        is_edge: bool,
     ) -> ResultCode {
-        set_alias(
-            ptr_edgexpd,
-            alias,
-            true,
-            if is_edge {
-                Opr::EdgeExpand
-            } else {
-                Opr::EdgeExpandWithV
-            },
-        )
+        set_alias(ptr_edgexpd, alias, true, Opr::EdgeExpand)
     }
 
     /// Append an edge expand operator to the logical plan
@@ -1588,10 +1564,14 @@ mod graph {
 
     /// To initialize an path expand operator from an expand base
     #[no_mangle]
-    pub extern "C" fn init_pathxpd_operator(ptr_expand: *const c_void) -> *const c_void {
+    pub extern "C" fn init_pathxpd_operator(
+        ptr_expand: *const c_void,
+        is_path: bool,
+    ) -> *const c_void {
         let expand = unsafe { Box::from_raw(ptr_expand as *mut pb::ExpandBase) };
         let edgexpd = Box::new(pb::PathExpand {
             base: Some(expand.as_ref().clone()),
+            is_path,
             alias: None,
             hop_range: None,
         });
@@ -1604,18 +1584,8 @@ mod graph {
     pub extern "C" fn set_pathxpd_alias(
         ptr_pathxpd: *const c_void,
         alias: FfiNameOrId,
-        is_path: bool,
     ) -> ResultCode {
-        set_alias(
-            ptr_pathxpd,
-            alias,
-            true,
-            if is_path {
-                Opr::PathExpand
-            } else {
-                Opr::EdgeExpandWithV
-            },
-        )
+        set_alias(ptr_pathxpd, alias, true, Opr::PathExpand)
     }
 
     /// Set the hop-range limitation of expanding path

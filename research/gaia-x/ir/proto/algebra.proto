@@ -237,23 +237,19 @@ message GetV {
 message EdgeExpand {
   // The base expansion
   ExpandBase base = 1;
-  oneof alias {
-      // An optional alias for the expanded edge
-      common.NameOrId edge_alias = 2;
-      // An optional alias for the end vertex of the expanded edge
-      common.NameOrId vertex_alias = 3;
-  }
+  // Whether to take edge (true) or end vertex (false) for this expansion
+  bool is_edge = 2;
+  // An optional alias for the object of the expansion
+  common.NameOrId alias = 3;
 }
 
 message PathExpand {
   // A path expansion has a base of edge expansion
   ExpandBase base = 1;
-  oneof alias {
-    // An optional alias for the expanded path
-    common.NameOrId path_alias = 2;
-    // An optional alias for the end vertex of the expanded path
-    common.NameOrId vertex_alias = 3;
-  }
+  // Whether to take path (true) or end vertex (false) for this expansion
+  bool is_path = 2;
+  // An optional alias for the object of the expansion
+  common.NameOrId alias = 3;
   // The range that defines the minimum and maximum number of hops of the path expansion.
   // This is optional, if not set, the minimum number is 1, and the maximum is INT_MAX
   Limit.Range hop_range = 4;
