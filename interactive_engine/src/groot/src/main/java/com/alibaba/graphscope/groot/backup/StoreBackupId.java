@@ -15,38 +15,48 @@
  */
 package com.alibaba.graphscope.groot.backup;
 
-import com.alibaba.maxgraph.proto.v2.StoreBackupIdPb;
+import com.alibaba.maxgraph.proto.groot.StoreBackupIdPb;
 
-import java.util.List;
+import java.util.HashMap;
+import java.util.Map;
 
 public class StoreBackupId {
 
     private int globalBackupId;
-    private List<Integer> partitionBackupIds;
+    private Map<Integer, Integer> partitionToBackupId;
 
-    public StoreBackupId(int globalBackupId, List<Integer> partitionBackupIds) {
+    public StoreBackupId(int globalBackupId) {
         this.globalBackupId = globalBackupId;
-        this.partitionBackupIds = partitionBackupIds;
+        this.partitionToBackupId = new HashMap<>();
+    }
+
+    public StoreBackupId(int globalBackupId, Map<Integer, Integer> partitionToBackupId) {
+        this.globalBackupId = globalBackupId;
+        this.partitionToBackupId = partitionToBackupId;
     }
 
     public int getGlobalBackupId() {
         return globalBackupId;
     }
 
-    public List<Integer> getPartitionBackupIds() {
-        return partitionBackupIds;
+    public Map<Integer, Integer> getPartitionToBackupId() {
+        return partitionToBackupId;
+    }
+
+    public void addPartitionBackupId(int partitionId, int partitionBackupId) {
+        this.partitionToBackupId.put(partitionId, partitionBackupId);
     }
 
     public static StoreBackupId parseProto(StoreBackupIdPb proto) {
         int globalBackupId = proto.getGlobalBackupId();
-        List<Integer> partitionBackupIds = proto.getPartitionBackupIdsList();
-        return new StoreBackupId(globalBackupId, partitionBackupIds);
+        Map<Integer, Integer> partitionToBackupId = proto.getPartitionToBackupIdMap();
+        return new StoreBackupId(globalBackupId, partitionToBackupId);
     }
 
     public StoreBackupIdPb toProto() {
         return StoreBackupIdPb.newBuilder()
                 .setGlobalBackupId(globalBackupId)
-                .addAllPartitionBackupIds(partitionBackupIds)
+                .putAllPartitionToBackupId(partitionToBackupId)
                 .build();
     }
 }

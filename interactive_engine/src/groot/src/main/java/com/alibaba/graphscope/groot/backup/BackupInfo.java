@@ -15,24 +15,25 @@
  */
 package com.alibaba.graphscope.groot.backup;
 
-import com.alibaba.maxgraph.proto.v2.BackupInfoPb;
+import com.alibaba.maxgraph.proto.groot.BackupInfoPb;
 
 import java.util.List;
+import java.util.Map;
 
 public class BackupInfo {
 
     private int globalBackupId;
     private long snapshotId;
     private long ddlSnapshotId;
-    private List<Integer> partitionBackupIds;
+    private Map<Integer, Integer> partitionToBackupId;
     private List<Long> walOffsets;
 
     public BackupInfo(int globalBackupId, long snapshotId, long ddlSnapshotId,
-                      List<Integer> partitionBackupIds, List<Long> walOffsets) {
+                      Map<Integer, Integer> partitionToBackupId, List<Long> walOffsets) {
         this.globalBackupId = globalBackupId;
         this.snapshotId = snapshotId;
         this.ddlSnapshotId = ddlSnapshotId;
-        this.partitionBackupIds = partitionBackupIds;
+        this.partitionToBackupId = partitionToBackupId;
         this.walOffsets = walOffsets;
     }
 
@@ -48,8 +49,8 @@ public class BackupInfo {
         return ddlSnapshotId;
     }
 
-    public List<Integer> getPartitionBackupIds() {
-        return partitionBackupIds;
+    public Map<Integer, Integer> getPartitionToBackupId() {
+        return partitionToBackupId;
     }
 
     public List<Long> getWalOffsets() {
@@ -60,9 +61,9 @@ public class BackupInfo {
         int globalBackupId = proto.getGlobalBackupId();
         long snapshotId = proto.getSnapshotId();
         long ddlSnapshotId = proto.getDdlSnapshotId();
-        List<Integer> partitionBackupIds = proto.getPartitionBackupIdsList();
+        Map<Integer, Integer> partitionToBackupId = proto.getPartitionToBackupIdMap();
         List<Long> walOffsets = proto.getWalOffsetsList();
-        return new BackupInfo(globalBackupId, snapshotId, ddlSnapshotId, partitionBackupIds, walOffsets);
+        return new BackupInfo(globalBackupId, snapshotId, ddlSnapshotId, partitionToBackupId, walOffsets);
     }
 
     public BackupInfoPb toProto() {
@@ -70,7 +71,7 @@ public class BackupInfo {
                 .setGlobalBackupId(globalBackupId)
                 .setSnapshotId(snapshotId)
                 .setDdlSnapshotId(ddlSnapshotId)
-                .addAllPartitionBackupIds(partitionBackupIds)
+                .putAllPartitionToBackupId(partitionToBackupId)
                 .addAllWalOffsets(walOffsets)
                 .build();
     }

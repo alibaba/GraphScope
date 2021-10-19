@@ -20,14 +20,13 @@ option java_multiple_files = true;
 
 service StoreBackup {
     rpc createStoreBackup(CreateStoreBackupRequest) returns (CreateStoreBackupResponse);
-    rpc deleteStoreBackup(DeleteStoreBackupRequest) returns (DeleteStoreBackupResponse);
     rpc clearUnavailableBackups(ClearUnavailableBackupsRequest) returns (ClearUnavailableBackupsResponse);
     rpc restoreFromLatestStoreBackup(RestoreFromLatestStoreBackupRequest) returns (RestoreFromLatestStoreBackupResponse);
 }
 
 message StoreBackupIdPb {
     int32 globalBackupId = 1;
-    repeated int32 partitionBackupIds = 2;
+    map<int32, int32> partitionToBackupId = 2;
 }
 
 message CreateStoreBackupRequest {
@@ -36,13 +35,6 @@ message CreateStoreBackupRequest {
 
 message CreateStoreBackupResponse {
     StoreBackupIdPb storeBackupId = 1;
-}
-
-message DeleteStoreBackupRequest {
-    StoreBackupIdPb storeBackupId = 1;
-}
-
-message DeleteStoreBackupResponse {
 }
 
 message PartitionBackupIdListPb {

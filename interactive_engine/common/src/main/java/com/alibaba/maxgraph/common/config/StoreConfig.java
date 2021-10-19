@@ -34,9 +34,6 @@ public class StoreConfig {
     public static final Config<String> STORE_BACKUP_PATH =
             Config.stringConfig("store.backup.path", "/maxgraph_backup");
 
-    public static final Config<Integer> STORE_BACKUP_GC_INTERVAL_HOURS =
-            Config.intConfig("store.backup.gc.interval.hours", 12);
-
     public static final Config<Integer> EXECUTOR_GRAPH_PORT =
             Config.intConfig("executor.graph.port", 0);
 

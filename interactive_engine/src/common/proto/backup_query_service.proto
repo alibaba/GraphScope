@@ -27,7 +27,7 @@ message BackupInfoPb {
   int32 globalBackupId = 1;
   int64 snapshotId = 2;
   int64 ddlSnapshotId = 3;
-  repeated int32 partitionBackupIds = 4;
+  map<int32, int32> partitionToBackupId = 4;
   repeated int64 walOffsets = 5;
 }
 

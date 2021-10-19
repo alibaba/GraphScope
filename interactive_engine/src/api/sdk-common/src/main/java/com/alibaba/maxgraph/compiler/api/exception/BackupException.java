@@ -13,9 +13,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.alibaba.graphscope.groot.backup;
+package com.alibaba.maxgraph.compiler.api.exception;
 
-import com.alibaba.maxgraph.proto.groot.StoreBackupGrpc;
-
-public class StoreBackupService extends StoreBackupGrpc.StoreBackupImplBase {
+public class BackupException extends MaxGraphException {
+    public BackupException(String msg) {
+        super(msg);
+    }
 }

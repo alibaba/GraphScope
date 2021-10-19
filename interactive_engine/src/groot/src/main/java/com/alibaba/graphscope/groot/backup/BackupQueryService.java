@@ -15,7 +15,7 @@
  */
 package com.alibaba.graphscope.groot.backup;
 
-import com.alibaba.maxgraph.proto.v2.BackupGrpc;
+import com.alibaba.maxgraph.proto.groot.BackupGrpc;
 
 public class BackupQueryService extends BackupGrpc.BackupImplBase {
 }

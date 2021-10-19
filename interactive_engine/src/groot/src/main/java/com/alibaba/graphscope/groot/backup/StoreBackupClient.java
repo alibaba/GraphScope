@@ -15,15 +15,15 @@
  */
 package com.alibaba.graphscope.groot.backup;
 
-import com.alibaba.maxgraph.groot.common.CompletionCallback;
-import com.alibaba.maxgraph.groot.common.backup.StoreBackupId;
-import com.alibaba.maxgraph.groot.common.rpc.RpcClient;
-import com.alibaba.maxgraph.proto.v2.CreateStoreBackupRequest;
-import com.alibaba.maxgraph.proto.v2.CreateStoreBackupResponse;
-import com.alibaba.maxgraph.proto.v2.StoreBackupGrpc;
-import com.alibaba.maxgraph.proto.v2.StoreBackupIdPb;
+import com.alibaba.graphscope.groot.CompletionCallback;
+import com.alibaba.graphscope.groot.rpc.RpcClient;
+import com.alibaba.maxgraph.proto.groot.*;
 import io.grpc.ManagedChannel;
 import io.grpc.stub.StreamObserver;
+
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 public class StoreBackupClient extends RpcClient {
     private StoreBackupGrpc.StoreBackupStub stub;
@@ -47,6 +47,58 @@ public class StoreBackupClient extends RpcClient {
             public void onNext(CreateStoreBackupResponse response) {
                 StoreBackupIdPb finishedStoreBackupIdPb = response.getStoreBackupId();
                 callback.onCompleted(StoreBackupId.parseProto(finishedStoreBackupIdPb));
+            }
+
+            @Override
+            public void onError(Throwable throwable) {
+                callback.onError(throwable);
+            }
+
+            @Override
+            public void onCompleted() {
+            }
+        });
+    }
+
+    public void clearUnavailableBackups(Map<Integer, List<Integer>> readyPartitionBackupIdsList,
+                                        CompletionCallback<Void> callback) {
+        Map<Integer, PartitionBackupIdListPb> partitionToBackupIdListPb =
+                new HashMap<>(readyPartitionBackupIdsList.size());
+        for (Map.Entry<Integer, List<Integer>> entry : readyPartitionBackupIdsList.entrySet()) {
+            partitionToBackupIdListPb.put(
+                    entry.getKey(),
+                    PartitionBackupIdListPb.newBuilder().addAllReadyPartitionBackupIds(entry.getValue()).build());
+        }
+        ClearUnavailableBackupsRequest req = ClearUnavailableBackupsRequest.newBuilder()
+                .putAllPartitionToReadyBackupIds(partitionToBackupIdListPb)
+                .build();
+        stub.clearUnavailableBackups(req, new StreamObserver<ClearUnavailableBackupsResponse>() {
+            @Override
+            public void onNext(ClearUnavailableBackupsResponse clearUnavailableBackupsResponse) {
+                callback.onCompleted(null);
+            }
+
+            @Override
+            public void onError(Throwable throwable) {
+                callback.onError(throwable);
+            }
+
+            @Override
+            public void onCompleted() {
+            }
+        });
+    }
+
+    public void restoreFromLatestStoreBackup(StoreBackupId storeBackupId, String restorePath,
+                                             CompletionCallback<Void> callback) {
+        RestoreFromLatestStoreBackupRequest req = RestoreFromLatestStoreBackupRequest.newBuilder()
+                .setStoreBackupId(storeBackupId.toProto())
+                .setRestorePath(restorePath)
+                .build();
+        stub.restoreFromLatestStoreBackup(req, new StreamObserver<RestoreFromLatestStoreBackupResponse>() {
+            @Override
+            public void onNext(RestoreFromLatestStoreBackupResponse restoreFromLatestStoreBackupResponse) {
+                callback.onCompleted(null);
             }
 
             @Override

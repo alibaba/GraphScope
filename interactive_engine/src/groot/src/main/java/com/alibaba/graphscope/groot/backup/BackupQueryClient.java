@@ -13,9 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.alibaba.graphscope.groot.frontend;
+package com.alibaba.graphscope.groot.backup;
 
-import com.alibaba.maxgraph.groot.common.rpc.RpcClient;
+import com.alibaba.graphscope.groot.rpc.RpcClient;
 import io.grpc.ManagedChannel;
 
 public class BackupQueryClient extends RpcClient {
