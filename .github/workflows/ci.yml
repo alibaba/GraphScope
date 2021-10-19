@@ -530,7 +530,7 @@ jobs:
         ./function_test.sh 8111 1 registry.cn-hongkong.aliyuncs.com/graphscope/graphscope:${{ github.sha }}
         ./function_test.sh 8112 2 registry.cn-hongkong.aliyuncs.com/graphscope/graphscope:${{ github.sha }}
     - name: Clean
-      if: true
+      if: always()
       run: |
         sudo docker rmi -f registry.cn-hongkong.aliyuncs.com/graphscope/graphscope:${{ github.sha }} || true
 

@@ -1,5 +1,4 @@
 #!/bin/bash
-set -e
 set -x
 base_dir=$(cd `dirname $0`; pwd)
 ps -ef | grep "com.alibaba.maxgraph.servers.MaxNode" | grep -v grep | awk '{print $2}' | xargs kill -9
