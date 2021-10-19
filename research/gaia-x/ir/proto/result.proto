@@ -21,16 +21,55 @@ option java_outer_classname = "IrResult";
 import "common.proto";
 import "expr.proto";
 
+message Property {
+  common.NameOrId key = 1;
+  common.Value value = 2;
+}
+
+message Vertex {
+  int64 id = 1;
+  common.NameOrId label = 2;
+  repeated Property properties = 3;
+}
+
+message Edge {
+  int64 id = 1;
+  common.NameOrId label = 2;
+  int64 src_id = 3;
+  common.NameOrId src_label = 4;
+  int64 dst_id = 5;
+  common.NameOrId dst_label = 6;
+  repeated Property properties = 7;
+}
+
+message Element {
+  oneof inner {
+    Vertex vertex = 1;
+    Edge edge = 2;
+    common.Value object = 3;
+  }
+}
+
+message Collection {
+  repeated Element collection = 1;
+}
+
+message Entry {
+  oneof inner {
+      Element element = 1;
+      Collection collection = 2;
+  }
+}
+
 message Column {
   common.NameOrId name_or_id = 1;
-  common.Value value = 2;
+  Entry entry = 2;
 }
 
 message Record {
   repeated Column columns = 1;
 }
 
-// TODO: more result kind?
 message Result {
   oneof inner {
     Record record = 1;
