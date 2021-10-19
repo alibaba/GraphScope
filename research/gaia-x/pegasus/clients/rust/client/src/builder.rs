@@ -124,7 +124,7 @@ impl Plan {
         self
     }
 
-    pub fn repeat<F>(&mut self, times: u32, mut func: F) -> &mut Self
+    pub fn iterate<F>(&mut self, times: u32, mut func: F) -> &mut Self
     where
         F: FnMut(&mut Plan),
     {
@@ -140,7 +140,7 @@ impl Plan {
         self
     }
 
-    pub fn repeat_until<F>(&mut self, times: u32, until: BinaryResource, mut func: F) -> &mut Self
+    pub fn iterate_until<F>(&mut self, times: u32, until: BinaryResource, mut func: F) -> &mut Self
     where
         F: FnMut(&mut Plan),
     {
@@ -157,19 +157,19 @@ impl Plan {
         self
     }
 
-    pub fn fork<F>(&mut self, mut subtask: F) -> &mut Self
+    pub fn apply<F>(&mut self, mut subtask: F) -> &mut Self
     where
         F: FnMut(&mut Plan),
     {
         let mut sub_plan = Plan::default();
         subtask(&mut sub_plan);
-        let subtask = pb::Subtask { join: None, task: Some(pb::TaskPlan { plan: sub_plan.take() }) };
-        let op = pb::OperatorDef { op_kind: Some(pb::operator_def::OpKind::Subtask(subtask)) };
+        let subtask = pb::Apply { join: None, task: Some(pb::TaskPlan { plan: sub_plan.take() }) };
+        let op = pb::OperatorDef { op_kind: Some(pb::operator_def::OpKind::Apply(subtask)) };
         self.plan.push(op);
         self
     }
 
-    pub fn fork_join<F>(&mut self, joiner: BinaryResource, mut subtask: F) -> &mut Self
+    pub fn apply_join<F>(&mut self, joiner: BinaryResource, mut subtask: F) -> &mut Self
     where
         F: FnMut(&mut Plan),
     {
@@ -177,33 +177,72 @@ impl Plan {
         subtask(&mut sub_plan);
         let left_join = pb::LeftJoin { resource: joiner };
         let subtask =
-            pb::Subtask { join: Some(left_join), task: Some(pb::TaskPlan { plan: sub_plan.take() }) };
-        let op = pb::OperatorDef { op_kind: Some(pb::operator_def::OpKind::Subtask(subtask)) };
+            pb::Apply { join: Some(left_join), task: Some(pb::TaskPlan { plan: sub_plan.take() }) };
+        let op = pb::OperatorDef { op_kind: Some(pb::operator_def::OpKind::Apply(subtask)) };
         self.plan.push(op);
         self
     }
 
-    pub fn union(&mut self, mut sub_plans: Vec<Plan>) -> &mut Self {
-        let mut branches = vec![];
-        for plan in sub_plans.drain(..) {
-            branches.push(pb::TaskPlan { plan: plan.take() });
-        }
-        let union = pb::Union { branches };
-        let op = pb::OperatorDef { op_kind: Some(pb::operator_def::OpKind::Union(union)) };
+    pub fn segment_apply<F>(&mut self, mut subtask: F) -> &mut Self
+    where
+        F: FnMut(&mut Plan),
+    {
+        let mut sub_plan = Plan::default();
+        subtask(&mut sub_plan);
+        let subtask = pb::SegmentApply { join: None, task: Some(pb::TaskPlan { plan: sub_plan.take() }) };
+        let op = pb::OperatorDef { op_kind: Some(pb::operator_def::OpKind::SegApply(subtask)) };
+        self.plan.push(op);
+        self
+    }
+
+    pub fn segment_apply_join<F>(&mut self, joiner: BinaryResource, mut subtask: F) -> &mut Self
+    where
+        F: FnMut(&mut Plan),
+    {
+        let mut sub_plan = Plan::default();
+        subtask(&mut sub_plan);
+        let left_join = pb::LeftJoin { resource: joiner };
+        let subtask =
+            pb::SegmentApply { join: Some(left_join), task: Some(pb::TaskPlan { plan: sub_plan.take() }) };
+        let op = pb::OperatorDef { op_kind: Some(pb::operator_def::OpKind::SegApply(subtask)) };
+        self.plan.push(op);
+        self
+    }
+
+    pub fn merge<F>(&mut self, mut subtask: F) -> &mut Self
+    where
+        F: FnMut(&mut Plan),
+    {
+        let mut sub_plan = Plan::default();
+        subtask(&mut sub_plan);
+        let merge = pb::Merge { task: Some(pb::TaskPlan { plan: sub_plan.take() }) };
+        let op = pb::OperatorDef { op_kind: Some(pb::operator_def::OpKind::Merge(merge)) };
+        self.plan.push(op);
+        self
+    }
+
+    pub fn join<F>(&mut self, join_kind: pb::join::JoinKind, mut subtask: F) -> &mut Self
+    where
+        F: FnMut(&mut Plan),
+    {
+        let mut join_plan = Plan::default();
+        subtask(&mut join_plan);
+        let join = pb::Join { kind: join_kind as i32, task: Some(pb::TaskPlan { plan: join_plan.take() }) };
+        let op = pb::OperatorDef { op_kind: Some(pb::operator_def::OpKind::Join(join)) };
         self.plan.push(op);
         self
     }
 
     pub fn sort_by(&mut self, cmp: BinaryResource) -> &mut Self {
-        let order = pb::OrderBy { limit: -1, compare: cmp };
-        let op = pb::OperatorDef { op_kind: Some(pb::operator_def::OpKind::Order(order)) };
+        let sort = pb::SortBy { limit: -1, compare: cmp };
+        let op = pb::OperatorDef { op_kind: Some(pb::operator_def::OpKind::Sort(sort)) };
         self.plan.push(op);
         self
     }
 
-    pub fn top_by(&mut self, n: i64, cmp: BinaryResource) -> &mut Self {
-        let order = pb::OrderBy { limit: n, compare: cmp };
-        let op = pb::OperatorDef { op_kind: Some(pb::operator_def::OpKind::Order(order)) };
+    pub fn sort_limit_by(&mut self, n: i64, cmp: BinaryResource) -> &mut Self {
+        let sort = pb::SortBy { limit: n, compare: cmp };
+        let op = pb::OperatorDef { op_kind: Some(pb::operator_def::OpKind::Sort(sort)) };
         self.plan.push(op);
         self
     }
@@ -277,40 +316,67 @@ impl JobBuilder {
         self
     }
 
-    pub fn repeat<F>(&mut self, times: u32, func: F) -> &mut Self
+    pub fn iterate<F>(&mut self, times: u32, func: F) -> &mut Self
     where
         F: FnMut(&mut Plan),
     {
-        self.plan.repeat(times, func);
+        self.plan.iterate(times, func);
         self
     }
 
-    pub fn repeat_until<F>(&mut self, times: u32, until: BinaryResource, func: F) -> &mut Self
+    pub fn iterate_until<F>(&mut self, times: u32, until: BinaryResource, func: F) -> &mut Self
     where
         F: FnMut(&mut Plan),
     {
-        self.plan.repeat_until(times, until, func);
+        self.plan.iterate_until(times, until, func);
         self
     }
 
-    pub fn fork<F>(&mut self, subtask: F) -> &mut Self
+    pub fn apply<F>(&mut self, subtask: F) -> &mut Self
     where
         F: FnMut(&mut Plan),
     {
-        self.plan.fork(subtask);
+        self.plan.apply(subtask);
         self
     }
 
-    pub fn fork_join<F>(&mut self, subtask: F, joiner: BinaryResource) -> &mut Self
+    pub fn apply_join<F>(&mut self, subtask: F, joiner: BinaryResource) -> &mut Self
     where
         F: FnMut(&mut Plan),
     {
-        self.plan.fork_join(joiner, subtask);
+        self.plan.apply_join(joiner, subtask);
         self
     }
 
-    pub fn union(&mut self, sub_plans: Vec<Plan>) -> &mut Self {
-        self.plan.union(sub_plans);
+    pub fn segment_apply<F>(&mut self, subtask: F) -> &mut Self
+    where
+        F: FnMut(&mut Plan),
+    {
+        self.plan.segment_apply(subtask);
+        self
+    }
+
+    pub fn segment_apply_join<F>(&mut self, subtask: F, joiner: BinaryResource) -> &mut Self
+    where
+        F: FnMut(&mut Plan),
+    {
+        self.plan.segment_apply_join(joiner, subtask);
+        self
+    }
+
+    pub fn merge<F>(&mut self, subtask: F) -> &mut Self
+    where
+        F: FnMut(&mut Plan),
+    {
+        self.plan.merge(subtask);
+        self
+    }
+
+    pub fn join<F>(&mut self, join_kind: pb::join::JoinKind, subtask: F) -> &mut Self
+    where
+        F: FnMut(&mut Plan),
+    {
+        self.plan.join(join_kind, subtask);
         self
     }
 
@@ -319,8 +385,8 @@ impl JobBuilder {
         self
     }
 
-    pub fn top_by(&mut self, n: i64, cmp: BinaryResource) -> &mut Self {
-        self.plan.top_by(n, cmp);
+    pub fn sort_limit_by(&mut self, n: i64, cmp: BinaryResource) -> &mut Self {
+        self.plan.sort_limit_by(n, cmp);
         self
     }
 
@@ -390,7 +456,7 @@ mod test {
             .exchange(vec![2u8; 32])
             .map(vec![3u8; 32])
             .limit(1)
-            .repeat(3, |start| {
+            .iterate(3, |start| {
                 start.exchange(vec![4u8; 32]).map(vec![5u8; 32]);
             })
             .sink(vec![6u8; 32]);
