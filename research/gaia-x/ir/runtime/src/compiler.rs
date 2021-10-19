@@ -14,6 +14,8 @@
 //! limitations under the License.
 
 use crate::graph::partitioner::Partitioner;
+use crate::process::operator::filter::FilterFuncGen;
+use crate::process::operator::flatmap::FlatMapFuncGen;
 use crate::process::operator::sink::RecordSinkEncoder;
 use crate::process::operator::source::source_op_from;
 use crate::process::record::Record;
@@ -85,16 +87,14 @@ impl FnGenerator {
         // Ok(step.gen_map()?)
     }
 
-    fn gen_flat_map(&self, _res: &BinaryResource) -> Result<RecordFlatMap, BuildJobError> {
-        todo!()
-        // let step = decode::<algebra_pb::logical_plan::Operator>(res)?;
-        // Ok(step.gen_flat_map()?)
+    fn gen_flat_map(&self, res: &BinaryResource) -> Result<RecordFlatMap, BuildJobError> {
+        let step = decode::<algebra_pb::logical_plan::Operator>(res)?;
+        Ok(step.gen_flat_map()?)
     }
 
-    fn gen_filter(&self, _res: &BinaryResource) -> Result<RecordFilter, BuildJobError> {
-        todo!()
-        // let step = decode::<algebra_pb::logical_plan::Operator>(res)?;
-        // Ok(step.gen_filter()?)
+    fn gen_filter(&self, res: &BinaryResource) -> Result<RecordFilter, BuildJobError> {
+        let step = decode::<algebra_pb::logical_plan::Operator>(res)?;
+        Ok(step.gen_filter()?)
     }
 
     fn gen_subtask(&self, _res: &BinaryResource) -> Result<RecordLeftJoin, BuildJobError> {
