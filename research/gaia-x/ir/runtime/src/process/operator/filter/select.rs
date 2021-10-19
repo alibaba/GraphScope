@@ -27,7 +27,7 @@ struct SelectOperator {
 
 impl FilterFunction<Record> for SelectOperator {
     fn test(&self, input: &Record) -> FnResult<bool> {
-        // TODO: do we need a stack here?
+        // TODO: Optimize stack, which should be better defined in SelectOperator or somewhere, that only need to be initialized once.
         let mut stack = vec![];
         self.filter
             .eval_bool(Some(input), &mut stack)

@@ -16,6 +16,7 @@
 use crate::graph::partitioner::Partitioner;
 use crate::process::operator::filter::FilterFuncGen;
 use crate::process::operator::flatmap::FlatMapFuncGen;
+use crate::process::operator::map::MapFuncGen;
 use crate::process::operator::sink::RecordSinkEncoder;
 use crate::process::operator::source::source_op_from;
 use crate::process::record::Record;
@@ -81,10 +82,9 @@ impl FnGenerator {
         // Ok(Box::new(Router { p, num_workers }))
     }
 
-    fn gen_map(&self, _res: &BinaryResource) -> Result<RecordMap, BuildJobError> {
-        todo!()
-        // let step = decode::<algebra_pb::logical_plan::Operator>(res)?;
-        // Ok(step.gen_map()?)
+    fn gen_map(&self, res: &BinaryResource) -> Result<RecordMap, BuildJobError> {
+        let step = decode::<algebra_pb::logical_plan::Operator>(res)?;
+        Ok(step.gen_map()?)
     }
 
     fn gen_flat_map(&self, res: &BinaryResource) -> Result<RecordFlatMap, BuildJobError> {
