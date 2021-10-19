@@ -22,15 +22,11 @@ use dyn_type::{BorrowObject, Object};
 use ir_common::error::{ParsePbError, ParsePbResult};
 use ir_common::generated::common as pb;
 use ir_common::NameOrId;
-use std::cell::RefCell;
 use std::convert::TryFrom;
 
-pub struct Evaluator<'a> {
+pub struct Evaluator {
     /// A suffix-tree-based expression for evaluating
     suffix_tree: Vec<InnerOpr>,
-    /// A stack for evaluating the suffix-tree-based expression
-    /// Wrap it in a `RefCell` to avoid conflict mutable reference
-    stack: RefCell<Vec<BorrowObject<'a>>>,
 }
 
 /// An inner representation of `pb::ExprOpr` for one-shot translation of `pb::ExprOpr`.
@@ -90,7 +86,7 @@ pub struct NoneContext {}
 
 impl Context<()> for NoneContext {}
 
-impl<'a> TryFrom<pb::SuffixExpr> for Evaluator<'a> {
+impl TryFrom<pb::SuffixExpr> for Evaluator {
     type Error = ParsePbError;
 
     fn try_from(suffix_tree: pb::SuffixExpr) -> ParsePbResult<Self>
@@ -103,7 +99,6 @@ impl<'a> TryFrom<pb::SuffixExpr> for Evaluator<'a> {
         }
         Ok(Self {
             suffix_tree: inner_tree,
-            stack: RefCell::new(vec![]),
         })
     }
 }
@@ -169,11 +164,11 @@ fn apply_logical<'a>(
 }
 
 // Private api
-impl<'a> Evaluator<'a> {
+impl Evaluator {
     /// Evaluate simple expression that contains less than three operators
     /// without using the stack.
     fn eval_without_stack<E: Element, C: Context<E>>(
-        &'a self,
+        &self,
         context: Option<&C>,
     ) -> ExprResult<Object> {
         assert!(self.suffix_tree.len() <= 3);
@@ -227,12 +222,7 @@ impl<'a> Evaluator<'a> {
     }
 }
 
-impl<'a> Evaluator<'a> {
-    /// Reset the status of the evaluator for further evaluation
-    pub fn reset(&self) {
-        self.stack.borrow_mut().clear();
-    }
-
+impl Evaluator {
     /// Evaluate an expression with an optional context. The context must implement the
     /// provided trait `[Context]`, that can get an `[crate::graph::element::Element]`
     /// using a given key.
@@ -240,14 +230,14 @@ impl<'a> Evaluator<'a> {
     /// # Examples
     ///
     /// ```
-    /// # use runtime::graph::element::Vertex;
-    /// # use runtime::expr::eval::{Context, Evaluator};
-    /// # use ir_common::NameOrId;
-    /// # use runtime::graph::property::{DefaultDetails, DynDetails};
-    /// # use std::collections::HashMap;
     /// # use dyn_type::Object;
+    /// # use ir_common::NameOrId;
+    /// # use runtime::expr::eval::{Context, Evaluator};
     /// # use runtime::expr::token::tokenize;
     /// # use runtime::expr::to_suffix_expr_pb;
+    /// # use runtime::graph::element::Vertex;
+    /// # use runtime::graph::property::{DefaultDetails, DynDetails};
+    /// # use std::collections::HashMap;
     /// # use std::convert::TryFrom;
     ///
     /// struct Vertices {
@@ -288,14 +278,14 @@ impl<'a> Evaluator<'a> {
     /// let tokens = tokenize("@0.age == @1.age").unwrap();
     /// let suffix_tree = to_suffix_expr_pb(tokens).unwrap();
     /// let eval = Evaluator::try_from(suffix_tree).unwrap();
-    ///
-    /// assert!(eval.eval::<_, _>(Some(&ctxt)).unwrap().as_bool().unwrap())
+    /// let mut stack = vec![];
+    /// assert!(eval.eval::<_, _>(Some(&ctxt), &mut stack).unwrap().as_bool().unwrap())
     /// ```
-    pub fn eval<E: Element + 'a, C: Context<E> + 'a>(
+    pub fn eval<'a, E: Element + 'a, C: Context<E> + 'a>(
         &'a self,
         context: Option<&'a C>,
+        stack: &mut Vec<BorrowObject<'a>>,
     ) -> ExprResult<Object> {
-        let mut stack = self.stack.borrow_mut();
         if self.suffix_tree.len() <= 3 {
             return self.eval_without_stack(context);
         }
@@ -334,11 +324,12 @@ impl<'a> Evaluator<'a> {
         }
     }
 
-    pub fn eval_bool<E: Element + 'a, C: Context<E> + 'a>(
+    pub fn eval_bool<'a, E: Element + 'a, C: Context<E> + 'a>(
         &'a self,
         context: Option<&'a C>,
+        stack: &mut Vec<BorrowObject<'a>>,
     ) -> ExprResult<bool> {
-        Ok(self.eval(context)?.as_bool()?)
+        Ok(self.eval(context, stack)?.as_bool()?)
     }
 }
 
@@ -541,9 +532,13 @@ mod tests {
         ];
 
         for (case, expected) in cases.into_iter().zip(expected.into_iter()) {
+            let mut stack = vec![];
             let eval =
                 Evaluator::try_from(to_suffix_expr_pb(tokenize(case).unwrap()).unwrap()).unwrap();
-            assert_eq!(eval.eval::<(), NoneContext>(None).unwrap(), expected);
+            assert_eq!(
+                eval.eval::<(), NoneContext>(None, &mut stack).unwrap(),
+                expected
+            );
         }
     }
 
@@ -587,7 +582,11 @@ mod tests {
         for (case, expected) in cases.into_iter().zip(expected.into_iter()) {
             let eval =
                 Evaluator::try_from(to_suffix_expr_pb(tokenize(case).unwrap()).unwrap()).unwrap();
-            assert_eq!(eval.eval::<(), NoneContext>(None).unwrap(), expected);
+            let mut stack = vec![];
+            assert_eq!(
+                eval.eval::<(), NoneContext>(None, &mut stack).unwrap(),
+                expected
+            );
         }
     }
 
@@ -624,7 +623,11 @@ mod tests {
         for (case, expected) in cases.into_iter().zip(expected.into_iter()) {
             let eval =
                 Evaluator::try_from(to_suffix_expr_pb(tokenize(case).unwrap()).unwrap()).unwrap();
-            assert_eq!(eval.eval::<_, Vertices>(Some(&ctxt)).unwrap(), expected);
+            let mut stack = vec![];
+            assert_eq!(
+                eval.eval::<_, Vertices>(Some(&ctxt), &mut stack).unwrap(),
+                expected
+            );
         }
     }
 
@@ -681,11 +684,14 @@ mod tests {
         for (case, expected) in cases.into_iter().zip(expected.into_iter()) {
             let eval =
                 Evaluator::try_from(to_suffix_expr_pb(tokenize(case).unwrap()).unwrap()).unwrap();
+            let mut stack = vec![];
             assert_eq!(
                 if is_context {
-                    eval.eval::<_, Vertices>(Some(&ctxt)).err().unwrap()
+                    eval.eval::<_, Vertices>(Some(&ctxt), &mut stack)
+                        .err()
+                        .unwrap()
                 } else {
-                    eval.eval::<_, NoneContext>(None).err().unwrap()
+                    eval.eval::<_, NoneContext>(None, &mut stack).err().unwrap()
                 },
                 expected
             );

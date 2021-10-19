@@ -91,18 +91,18 @@ impl Default for FfiNameOrId {
     }
 }
 
-impl TryFrom<FfiNameOrId> for common_pb::NameOrId {
+impl TryFrom<FfiNameOrId> for Option<common_pb::NameOrId> {
     type Error = ResultCode;
 
     fn try_from(ffi: FfiNameOrId) -> FfiResult<Self> {
         match &ffi.opt {
-            FfiNameIdOpt::None => Err(ResultCode::NotExistError),
-            FfiNameIdOpt::Name => Ok(common_pb::NameOrId {
+            FfiNameIdOpt::None => Ok(None),
+            FfiNameIdOpt::Name => Ok(Some(common_pb::NameOrId {
                 item: Some(common_pb::name_or_id::Item::Name(cstr_to_string(ffi.name)?)),
-            }),
-            FfiNameIdOpt::Id => Ok(common_pb::NameOrId {
+            })),
+            FfiNameIdOpt::Id => Ok(Some(common_pb::NameOrId {
                 item: Some(common_pb::name_or_id::Item::Id(ffi.name_id)),
-            }),
+            })),
         }
     }
 }
@@ -141,9 +141,15 @@ impl TryFrom<FfiProperty> for Option<common_pb::Property> {
             FfiPropertyOpt::Label => Some(common_pb::Property {
                 item: Some(common_pb::property::Item::Label(common_pb::LabelKey {})),
             }),
-            FfiPropertyOpt::Key => Some(common_pb::Property {
-                item: Some(common_pb::property::Item::Key(ffi.key.try_into()?)),
-            }),
+            FfiPropertyOpt::Key => {
+                if let Some(key) = ffi.key.try_into()? {
+                    Some(common_pb::Property {
+                        item: Some(common_pb::property::Item::Key(key)),
+                    })
+                } else {
+                    None
+                }
+            }
         };
 
         Ok(result)
@@ -161,10 +167,17 @@ impl TryFrom<FfiVariable> for common_pb::Variable {
 
     fn try_from(ffi: FfiVariable) -> Result<Self, Self::Error> {
         let (tag, property) = (ffi.tag.try_into()?, ffi.property.try_into()?);
-        Ok(Self {
-            tag: Some(tag),
-            property,
-        })
+        Ok(Self { tag, property })
+    }
+}
+
+/// Build a none-`NameOrId`
+#[no_mangle]
+pub extern "C" fn none_name_or_id() -> FfiNameOrId {
+    FfiNameOrId {
+        opt: FfiNameIdOpt::None,
+        name: std::ptr::null(),
+        name_id: 0,
     }
 }
 
@@ -286,49 +299,125 @@ pub extern "C" fn debug_plan(ptr_plan: *const c_void) {
     std::mem::forget(plan);
 }
 
-enum RangeOpr {
-    Scan = 0,
-    GetV = 1,
-    ExpandBase = 2,
-    PathExpand = 3,
-    Limit = 4,
+enum Opr {
+    Select,
+    Scan,
+    GetV,
+    ExpandBase,
+    EdgeExpand,
+    PathExpand,
+    Limit,
+    Apply,
 }
 
 /// Set the size range limitation for certain operators
-fn set_range(ptr: *const c_void, lower: i32, upper: i32, opr: RangeOpr) -> ResultCode {
+fn set_range(ptr: *const c_void, lower: i32, upper: i32, opr: Opr) -> ResultCode {
     if lower < 0 || upper < 0 || upper < lower {
         ResultCode::InvalidRangeError
     } else {
         match opr {
-            RangeOpr::GetV => {
+            Opr::GetV => {
                 let mut getv = unsafe { Box::from_raw(ptr as *mut pb::GetV) };
                 getv.params.as_mut().unwrap().limit = Some(pb::limit::Range { lower, upper });
                 std::mem::forget(getv);
             }
-            RangeOpr::ExpandBase => {
+            Opr::ExpandBase => {
                 let mut base = unsafe { Box::from_raw(ptr as *mut pb::ExpandBase) };
                 base.params.as_mut().unwrap().limit = Some(pb::limit::Range { lower, upper });
                 std::mem::forget(base);
             }
-            RangeOpr::PathExpand => {
+            Opr::PathExpand => {
                 let mut pathxpd = unsafe { Box::from_raw(ptr as *mut pb::PathExpand) };
                 pathxpd.hop_range = Some(pb::limit::Range { lower, upper });
                 std::mem::forget(pathxpd);
             }
-            RangeOpr::Scan => {
+            Opr::Scan => {
                 let mut scan = unsafe { Box::from_raw(ptr as *mut pb::Scan) };
                 scan.limit = Some(pb::limit::Range { lower, upper });
                 std::mem::forget(scan);
             }
-            RangeOpr::Limit => {
+            Opr::Limit => {
                 let mut limit = unsafe { Box::from_raw(ptr as *mut pb::Limit) };
                 limit.range = Some(pb::limit::Range { lower, upper });
                 std::mem::forget(limit);
             }
+            _ => unreachable!(),
         }
 
         ResultCode::Success
     }
+}
+
+fn set_alias(ptr: *const c_void, alias: FfiNameOrId, is_query_given: bool, opr: Opr) -> ResultCode {
+    let mut return_code = ResultCode::Success;
+    let alias_pb: FfiResult<Option<common_pb::NameOrId>> = alias.try_into();
+    if alias_pb.is_err() {
+        return_code = alias_pb.err().unwrap()
+    } else {
+        match opr {
+            Opr::Scan => {
+                let mut scan = unsafe { Box::from_raw(ptr as *mut pb::Scan) };
+                scan.alias = alias_pb.unwrap();
+                std::mem::forget(scan);
+            }
+            Opr::EdgeExpand => {
+                let mut edgexpd = unsafe { Box::from_raw(ptr as *mut pb::EdgeExpand) };
+                edgexpd.alias = alias_pb.unwrap();
+                std::mem::forget(edgexpd);
+            }
+            Opr::PathExpand => {
+                let mut pathxpd = unsafe { Box::from_raw(ptr as *mut pb::PathExpand) };
+                pathxpd.alias = alias_pb.unwrap();
+                std::mem::forget(pathxpd);
+            }
+            Opr::GetV => {
+                let mut getv = unsafe { Box::from_raw(ptr as *mut pb::GetV) };
+                getv.alias = alias_pb.unwrap();
+                std::mem::forget(getv);
+            }
+            Opr::Apply => {
+                let mut apply = unsafe { Box::from_raw(ptr as *mut pb::Apply) };
+                apply.subtask.as_mut().unwrap().alias = Some(pb::project::Alias {
+                    alias: alias_pb.unwrap(),
+                    is_query_given,
+                });
+                std::mem::forget(apply);
+            }
+            _ => unreachable!(),
+        }
+    }
+
+    return_code
+}
+
+/// To set an operator's predicate.
+fn set_predicate(ptr: *const c_void, cstr_predicate: *const c_char, opr: Opr) -> ResultCode {
+    let mut return_code = ResultCode::Success;
+    let predicate_pb = cstr_to_suffix_expr_pb(cstr_predicate);
+    if predicate_pb.is_err() {
+        return_code = predicate_pb.err().unwrap()
+    } else {
+        match opr {
+            Opr::Select => {
+                let mut select = unsafe { Box::from_raw(ptr as *mut pb::Select) };
+                select.predicate = predicate_pb.ok();
+                std::mem::forget(select);
+            }
+            Opr::GetV => {
+                let mut getv = unsafe { Box::from_raw(ptr as *mut pb::GetV) };
+                getv.params.as_mut().unwrap().predicate = predicate_pb.ok();
+                std::mem::forget(getv);
+            }
+            Opr::ExpandBase => {
+                let mut expand = unsafe { Box::from_raw(ptr as *mut pb::ExpandBase) };
+                expand.params.as_mut().unwrap().predicate = predicate_pb.ok();
+                std::mem::forget(expand);
+            }
+            _ => unreachable!(),
+        }
+    }
+
+    return_code
 }
 
 mod project {
@@ -355,7 +444,7 @@ mod project {
         let mut return_code = ResultCode::Success;
         let mut project = unsafe { Box::from_raw(ptr_project as *mut pb::Project) };
         let expr_pb = cstr_to_suffix_expr_pb(cstr_expr);
-        let alias_pb = common_pb::NameOrId::try_from(alias);
+        let alias_pb = Option::<common_pb::NameOrId>::try_from(alias);
 
         if !expr_pb.is_ok() || !alias_pb.is_ok() {
             return_code = expr_pb.err().unwrap();
@@ -363,7 +452,7 @@ mod project {
             let attribute = pb::project::ExprAlias {
                 expr: expr_pb.ok(),
                 alias: Some(pb::project::Alias {
-                    alias: alias_pb.ok(),
+                    alias: alias_pb.unwrap(),
                     is_query_given,
                 }),
             };
@@ -426,21 +515,11 @@ mod select {
 
     /// To set a select operator's metadata, which is a predicate represented as a c-string.
     #[no_mangle]
-    pub extern "C" fn add_select_predicate(
+    pub extern "C" fn set_select_predicate(
         ptr_select: *const c_void,
         cstr_predicate: *const c_char,
     ) -> ResultCode {
-        let mut return_code = ResultCode::Success;
-        let predicate_pb = cstr_to_suffix_expr_pb(cstr_predicate);
-        if predicate_pb.is_err() {
-            return_code = predicate_pb.err().unwrap()
-        } else {
-            let mut select = unsafe { Box::from_raw(ptr_select as *mut pb::Select) };
-            select.predicate = predicate_pb.ok();
-            std::mem::forget(select);
-        }
-
-        return_code
+        set_predicate(ptr_select, cstr_predicate, Opr::Select)
     }
 
     /// Append a select operator to the logical plan
@@ -641,7 +720,7 @@ mod groupby {
             for var in vars.into_iter() {
                 agg_fn_pb.vars.push(var.try_into()?)
             }
-            agg_fn_pb.alias = Some(alias.try_into()?);
+            agg_fn_pb.alias = alias.try_into()?;
 
             Ok(agg_fn_pb)
         }
@@ -851,12 +930,12 @@ mod unfold {
     ) -> ResultCode {
         let mut return_code = ResultCode::Success;
         let mut unfold = unsafe { Box::from_raw(ptr_unfold as *mut pb::Unfold) };
-        let tag_result: FfiResult<common_pb::NameOrId> = tag.try_into();
-        let alias_result: FfiResult<common_pb::NameOrId> = alias.try_into();
+        let tag_result: FfiResult<Option<common_pb::NameOrId>> = tag.try_into();
+        let alias_result: FfiResult<Option<common_pb::NameOrId>> = alias.try_into();
 
         if tag_result.is_ok() && alias_result.is_ok() {
-            unfold.tag = tag_result.ok();
-            unfold.alias = alias_result.ok();
+            unfold.tag = tag_result.unwrap();
+            unfold.alias = alias_result.unwrap();
         } else {
             return_code = if tag_result.is_err() {
                 tag_result.err().unwrap()
@@ -905,6 +984,7 @@ mod scan {
         let scan = Box::new(pb::Scan {
             scan_opt: unsafe { std::mem::transmute::<FfiScanOpt, i32>(scan_opt) },
             schema_name: "".to_string(),
+            alias: None,
             fields: vec![],
             limit: None,
         });
@@ -917,7 +997,7 @@ mod scan {
         lower: i32,
         upper: i32,
     ) -> ResultCode {
-        set_range(ptr_scan, lower, upper, RangeOpr::Scan)
+        set_range(ptr_scan, lower, upper, Opr::Scan)
     }
 
     #[no_mangle]
@@ -938,23 +1018,31 @@ mod scan {
         return_code
     }
 
-    /// Add a mapping from the original data field name to an alias
+    /// Add a data field to be scanned from the data source (vertex, edge, or a relational table)
     #[no_mangle]
     pub extern "C" fn add_scan_data_field(
         ptr_scan: *const c_void,
         field_name: FfiNameOrId,
     ) -> ResultCode {
         let mut return_code = ResultCode::Success;
-        let field_name_pb: FfiResult<common_pb::NameOrId> = field_name.try_into();
+        let field_name_pb: FfiResult<Option<common_pb::NameOrId>> = field_name.try_into();
         if field_name_pb.is_err() {
             return_code = field_name_pb.err().unwrap()
         } else {
-            let mut scan = unsafe { Box::from_raw(ptr_scan as *mut pb::Scan) };
-            scan.fields.push(field_name_pb.unwrap());
-            std::mem::forget(scan);
+            if let Some(field) = field_name_pb.unwrap() {
+                let mut scan = unsafe { Box::from_raw(ptr_scan as *mut pb::Scan) };
+                scan.fields.push(field);
+                std::mem::forget(scan);
+            }
         }
 
         return_code
+    }
+
+    /// Set an alias for the data if it is a vertex/edge
+    #[no_mangle]
+    pub extern "C" fn set_scan_alias(ptr_scan: *const c_void, alias: FfiNameOrId) -> ResultCode {
+        set_alias(ptr_scan, alias, true, Opr::Scan)
     }
 
     /// Append a scan operator to the logical plan
@@ -1182,7 +1270,7 @@ mod limit {
         lower: i32,
         upper: i32,
     ) -> ResultCode {
-        set_range(ptr_limit, lower, upper, RangeOpr::Limit)
+        set_range(ptr_limit, lower, upper, Opr::Limit)
     }
 
     /// Append an indexed scan operator to the logical plan
@@ -1246,25 +1334,37 @@ mod graph {
         is_edge: bool,
     ) -> ResultCode {
         let mut return_code = ResultCode::Success;
-        let pb: FfiResult<common_pb::NameOrId> = tag.try_into();
+        let pb: FfiResult<Option<common_pb::NameOrId>> = tag.try_into();
         if pb.is_ok() {
             if is_edge {
                 let mut expand = unsafe { Box::from_raw(ptr as *mut pb::ExpandBase) };
                 match opt {
-                    ParamsOpt::Tag => expand.v_tag = pb.ok(),
-                    ParamsOpt::Label => expand.params.as_mut().unwrap().labels.push(pb.unwrap()),
+                    ParamsOpt::Tag => expand.v_tag = pb.unwrap(),
+                    ParamsOpt::Label => {
+                        if let Some(label) = pb.unwrap() {
+                            expand.params.as_mut().unwrap().labels.push(label)
+                        }
+                    }
                     ParamsOpt::Property => {
-                        expand.params.as_mut().unwrap().properties.push(pb.unwrap())
+                        if let Some(ppt) = pb.unwrap() {
+                            expand.params.as_mut().unwrap().properties.push(ppt)
+                        }
                     }
                 }
                 std::mem::forget(expand);
             } else {
                 let mut getv = unsafe { Box::from_raw(ptr as *mut pb::GetV) };
                 match opt {
-                    ParamsOpt::Tag => getv.tag = pb.ok(),
-                    ParamsOpt::Label => getv.params.as_mut().unwrap().labels.push(pb.unwrap()),
+                    ParamsOpt::Tag => getv.tag = pb.unwrap(),
+                    ParamsOpt::Label => {
+                        if let Some(label) = pb.unwrap() {
+                            getv.params.as_mut().unwrap().labels.push(label)
+                        }
+                    }
                     ParamsOpt::Property => {
-                        getv.params.as_mut().unwrap().properties.push(pb.unwrap())
+                        if let Some(ppt) = pb.unwrap() {
+                            getv.params.as_mut().unwrap().properties.push(ppt)
+                        }
                     }
                 }
                 std::mem::forget(getv);
@@ -1307,7 +1407,7 @@ mod graph {
         lower: i32,
         upper: i32,
     ) -> ResultCode {
-        set_range(ptr_expand, lower, upper, RangeOpr::ExpandBase)
+        set_range(ptr_expand, lower, upper, Opr::ExpandBase)
     }
 
     /// Set the edge predicate of this expansion
@@ -1316,17 +1416,7 @@ mod graph {
         ptr_expand: *const c_void,
         cstr_predicate: *const c_char,
     ) -> ResultCode {
-        let mut return_code = ResultCode::Success;
-        let predicate_pb = cstr_to_suffix_expr_pb(cstr_predicate);
-        if predicate_pb.is_ok() {
-            let mut expand = unsafe { Box::from_raw(ptr_expand as *mut pb::ExpandBase) };
-            expand.params.as_mut().unwrap().predicate = predicate_pb.ok();
-            std::mem::forget(expand);
-        } else {
-            return_code = predicate_pb.err().unwrap();
-        }
-
-        return_code
+        set_predicate(ptr_expand, cstr_predicate, Opr::ExpandBase)
     }
 
     /// To initialize an edge expand operator from an expand base
@@ -1347,17 +1437,7 @@ mod graph {
         ptr_edgexpd: *const c_void,
         alias: FfiNameOrId,
     ) -> ResultCode {
-        let mut return_code = ResultCode::Success;
-        let alias_pb: FfiResult<common_pb::NameOrId> = alias.try_into();
-        if alias_pb.is_ok() {
-            let mut edgexpd = unsafe { Box::from_raw(ptr_edgexpd as *mut pb::EdgeExpand) };
-            edgexpd.alias = alias_pb.ok();
-            std::mem::forget(edgexpd);
-        } else {
-            return_code = alias_pb.err().unwrap();
-        }
-
-        return_code
+        set_alias(ptr_edgexpd, alias, true, Opr::EdgeExpand)
     }
 
     /// Append an edge expand operator to the logical plan
@@ -1403,17 +1483,7 @@ mod graph {
     /// Set vertex alias of this getting vertex
     #[no_mangle]
     pub extern "C" fn set_getv_alias(ptr_getv: *const c_void, alias: FfiNameOrId) -> ResultCode {
-        let mut return_code = ResultCode::Success;
-        let alias_pb: FfiResult<common_pb::NameOrId> = alias.try_into();
-        if alias_pb.is_ok() {
-            let mut getv = unsafe { Box::from_raw(ptr_getv as *mut pb::GetV) };
-            getv.alias = alias_pb.ok();
-            std::mem::forget(getv);
-        } else {
-            return_code = alias_pb.err().unwrap();
-        }
-
-        return_code
+        set_alias(ptr_getv, alias, true, Opr::GetV)
     }
 
     /// Add a label of the vertex that this getv must satisfy
@@ -1438,7 +1508,16 @@ mod graph {
         lower: i32,
         upper: i32,
     ) -> ResultCode {
-        set_range(ptr_getv, lower, upper, RangeOpr::GetV)
+        set_range(ptr_getv, lower, upper, Opr::GetV)
+    }
+
+    /// Set the predicate of getting vertices
+    #[no_mangle]
+    pub extern "C" fn set_getv_predicate(
+        ptr_getv: *const c_void,
+        cstr_predicate: *const c_char,
+    ) -> ResultCode {
+        set_predicate(ptr_getv, cstr_predicate, Opr::GetV)
     }
 
     /// Append an edge expand operator to the logical plan
@@ -1474,20 +1553,10 @@ mod graph {
     /// Set path alias of this path expansion
     #[no_mangle]
     pub extern "C" fn set_pathxpd_alias(
-        ptr_edgexpd: *const c_void,
+        ptr_pathxpd: *const c_void,
         alias: FfiNameOrId,
     ) -> ResultCode {
-        let mut return_code = ResultCode::Success;
-        let alias_pb: FfiResult<common_pb::NameOrId> = alias.try_into();
-        if alias_pb.is_ok() {
-            let mut pathxpd = unsafe { Box::from_raw(ptr_edgexpd as *mut pb::PathExpand) };
-            pathxpd.alias = alias_pb.ok();
-            std::mem::forget(pathxpd);
-        } else {
-            return_code = alias_pb.err().unwrap();
-        }
-
-        return_code
+        set_alias(ptr_pathxpd, alias, true, Opr::PathExpand)
     }
 
     /// Set the hop-range limitation of expanding path
@@ -1497,7 +1566,7 @@ mod graph {
         lower: i32,
         upper: i32,
     ) -> ResultCode {
-        set_range(ptr_pathxpd, lower, upper, RangeOpr::PathExpand)
+        set_range(ptr_pathxpd, lower, upper, Opr::PathExpand)
     }
 
     /// Append an path-expand operator to the logical plan
@@ -1543,13 +1612,15 @@ mod subtask {
     }
 
     #[no_mangle]
-    pub extern "C" fn add_apply_tag(ptr_apply: *const c_void, tag: FfiNameOrId) -> ResultCode {
+    pub extern "C" fn add_apply_tag(ptr_apply: *const c_void, ffi_tag: FfiNameOrId) -> ResultCode {
         let mut return_code = ResultCode::Success;
-        let tag_pb: FfiResult<common_pb::NameOrId> = tag.try_into();
+        let tag_pb: FfiResult<Option<common_pb::NameOrId>> = ffi_tag.try_into();
         if tag_pb.is_ok() {
-            let mut apply = unsafe { Box::from_raw(ptr_apply as *mut pb::Apply) };
-            apply.subtask.as_mut().unwrap().tags.push(tag_pb.unwrap());
-            std::mem::forget(apply);
+            if let Some(tag) = tag_pb.unwrap() {
+                let mut apply = unsafe { Box::from_raw(ptr_apply as *mut pb::Apply) };
+                apply.subtask.as_mut().unwrap().tags.push(tag);
+                std::mem::forget(apply);
+            }
         } else {
             return_code = tag_pb.err().unwrap();
         }
@@ -1563,20 +1634,7 @@ mod subtask {
         alias: FfiNameOrId,
         is_query_given: bool,
     ) -> ResultCode {
-        let mut return_code = ResultCode::Success;
-        let alias_pb: FfiResult<common_pb::NameOrId> = alias.try_into();
-        if alias_pb.is_ok() {
-            let mut apply = unsafe { Box::from_raw(ptr_apply as *mut pb::Apply) };
-            apply.subtask.as_mut().unwrap().alias = Some(pb::project::Alias {
-                alias: alias_pb.ok(),
-                is_query_given,
-            });
-            std::mem::forget(apply);
-        } else {
-            return_code = alias_pb.err().unwrap();
-        }
-
-        return_code
+        set_alias(ptr_apply, alias, is_query_given, Opr::Apply)
     }
 
     /// Append an apply operator to the logical plan.
@@ -1614,14 +1672,16 @@ mod subtask {
     #[no_mangle]
     pub extern "C" fn add_segapply_key(
         ptr_segapply: *const c_void,
-        key: FfiNameOrId,
+        ffi_key: FfiNameOrId,
     ) -> ResultCode {
         let mut return_code = ResultCode::Success;
-        let key_pb: FfiResult<common_pb::NameOrId> = key.try_into();
+        let key_pb: FfiResult<Option<common_pb::NameOrId>> = ffi_key.try_into();
         if key_pb.is_ok() {
-            let mut segapply = unsafe { Box::from_raw(ptr_segapply as *mut pb::SegmentApply) };
-            segapply.keys.push(key_pb.unwrap());
-            std::mem::forget(segapply);
+            if let Some(key) = key_pb.unwrap() {
+                let mut segapply = unsafe { Box::from_raw(ptr_segapply as *mut pb::SegmentApply) };
+                segapply.keys.push(key);
+                std::mem::forget(segapply);
+            }
         } else {
             return_code = key_pb.err().unwrap();
         }

@@ -16,23 +16,27 @@
 pub type ParsePbResult<T> = Result<T, ParsePbError>;
 
 #[derive(Debug, PartialEq)]
-pub enum ParsePbError {
-    InvalidPb(String),
+pub struct ParsePbError {
+    desc: String,
 }
 
 impl std::fmt::Display for ParsePbError {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
-        match self {
-            ParsePbError::InvalidPb(s) => write!(f, "invalid protobuf: {}", s),
-        }
+        write!(f, "invalid protobuf: {}", self.desc)
     }
 }
 
 impl std::error::Error for ParsePbError {}
 
+impl From<String> for ParsePbError {
+    fn from(desc: String) -> Self {
+        ParsePbError { desc }
+    }
+}
+
 impl From<&str> for ParsePbError {
-    fn from(e: &str) -> Self {
-        ParsePbError::InvalidPb(e.into())
+    fn from(desc: &str) -> Self {
+        desc.to_string().into()
     }
 }
 
