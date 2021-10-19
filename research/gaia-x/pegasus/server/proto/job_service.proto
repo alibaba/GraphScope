@@ -136,6 +136,10 @@ message Join {
   TaskPlan task = 2;
 }
 
+message KeyBy {
+  bytes key_selector  = 2;
+}
+
 message OperatorDef {
   oneof op_kind {
     Communicate comm = 1;
@@ -152,6 +156,7 @@ message OperatorDef {
     SegmentApply seg_apply = 13;
     Dedup dedup = 14;
     Join join = 15;
+    KeyBy key_by = 16;
   }
 }
 

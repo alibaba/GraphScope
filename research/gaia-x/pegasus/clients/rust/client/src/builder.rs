@@ -254,6 +254,13 @@ impl Plan {
         self
     }
 
+    pub fn key_by(&mut self, key_selector: BinaryResource) -> &mut Self {
+        let key_by = pb::KeyBy { key_selector };
+        let op = pb::OperatorDef { op_kind: Some(pb::operator_def::OpKind::KeyBy(key_by)) };
+        self.plan.push(op);
+        self
+    }
+
     pub fn take(self) -> Vec<pb::OperatorDef> {
         self.plan
     }
@@ -402,6 +409,11 @@ impl JobBuilder {
 
     pub fn fold_custom(&mut self, accum_kind: pb::AccumKind, func: BinaryResource) -> &mut Self {
         self.plan.fold_custom(accum_kind, func);
+        self
+    }
+
+    pub fn key_by(&mut self, key_selector: BinaryResource) -> &mut Self {
+        self.plan.key_by(key_selector);
         self
     }
 
