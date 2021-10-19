@@ -13,7 +13,6 @@
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 
-use crate::expr::eval::Evaluator;
 use crate::graph::element::{Element, VertexOrEdge};
 use crate::graph::graph::{QueryParams, Statement};
 use crate::graph::{Direction, ID};

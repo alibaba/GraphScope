@@ -46,9 +46,8 @@ impl MapFunction<Record, Record> for algebra_pb::Project {
             let expr = expr_alias.expr.clone().unwrap();
             let evaluator =
                 Evaluator::try_from(expr).map_err(|e| str_to_dyn_error(&format!("{}", e)))?;
-            let mut stack = vec![];
             let projected_result = evaluator
-                .eval(Some(&input), &mut stack)
+                .eval(Some(&input))
                 .map_err(|e| str_to_dyn_error(&format!("{}", e)))?;
             input.append(ObjectElement::Prop(projected_result), tag.clone());
             if tag_opt {

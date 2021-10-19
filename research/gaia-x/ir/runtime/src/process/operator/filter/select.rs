@@ -16,10 +16,10 @@
 use crate::expr::eval::Evaluator;
 use crate::process::operator::filter::FilterFuncGen;
 use crate::process::record::Record;
-use ir_common::error::{str_to_dyn_error, DynResult, ParsePbError};
+use ir_common::error::{str_to_dyn_error, DynResult};
 use ir_common::generated::algebra as algebra_pb;
 use pegasus::api::function::{FilterFunction, FnResult};
-use std::convert::{TryFrom, TryInto};
+use std::convert::TryInto;
 
 struct SelectOperator {
     pub filter: Evaluator,
@@ -27,10 +27,8 @@ struct SelectOperator {
 
 impl FilterFunction<Record> for SelectOperator {
     fn test(&self, input: &Record) -> FnResult<bool> {
-        // TODO: Optimize stack, which should be better defined in SelectOperator or somewhere, that only need to be initialized once.
-        let mut stack = vec![];
         self.filter
-            .eval_bool(Some(input), &mut stack)
+            .eval_bool(Some(input))
             .map_err(|e| str_to_dyn_error(&format!("{}", e)))
     }
 }
