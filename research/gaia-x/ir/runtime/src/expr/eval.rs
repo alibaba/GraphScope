@@ -22,11 +22,15 @@ use dyn_type::{BorrowObject, Object};
 use ir_common::error::{ParsePbError, ParsePbResult};
 use ir_common::generated::common as pb;
 use ir_common::NameOrId;
+use std::cell::RefCell;
 use std::convert::TryFrom;
 
 pub struct Evaluator {
     /// A suffix-tree-based expression for evaluating
     suffix_tree: Vec<InnerOpr>,
+    /// A stack for evaluating the suffix-tree-based expression
+    /// Wrap it in a `RefCell` to avoid conflict mutable reference
+    stack: RefCell<Vec<Object>>,
 }
 
 /// An inner representation of `pb::ExprOpr` for one-shot translation of `pb::ExprOpr`.
@@ -99,6 +103,7 @@ impl TryFrom<pb::SuffixExpr> for Evaluator {
         }
         Ok(Self {
             suffix_tree: inner_tree,
+            stack: RefCell::new(vec![]),
         })
     }
 }
@@ -107,18 +112,18 @@ fn apply_arith<'a>(
     arith: &pb::Arithmetic,
     first: Option<BorrowObject<'a>>,
     second: Option<BorrowObject<'a>>,
-) -> ExprResult<BorrowObject<'a>> {
+) -> ExprResult<Object> {
     use pb::Arithmetic::*;
     if first.is_some() && second.is_some() {
         let a = first.unwrap();
         let b = second.unwrap();
         Ok(match arith {
-            Add => BorrowObject::Primitive(a.as_primitive()? + b.as_primitive()?),
-            Sub => BorrowObject::Primitive(a.as_primitive()? - b.as_primitive()?),
-            Mul => BorrowObject::Primitive(a.as_primitive()? * b.as_primitive()?),
-            Div => BorrowObject::Primitive(a.as_primitive()? / b.as_primitive()?),
-            Mod => BorrowObject::Primitive(a.as_primitive()? % b.as_primitive()?),
-            Exp => BorrowObject::Primitive(a.as_primitive()?.exp(b.as_primitive()?)),
+            Add => Object::Primitive(a.as_primitive()? + b.as_primitive()?),
+            Sub => Object::Primitive(a.as_primitive()? - b.as_primitive()?),
+            Mul => Object::Primitive(a.as_primitive()? * b.as_primitive()?),
+            Div => Object::Primitive(a.as_primitive()? / b.as_primitive()?),
+            Mod => Object::Primitive(a.as_primitive()? % b.as_primitive()?),
+            Exp => Object::Primitive(a.as_primitive()?.exp(b.as_primitive()?)),
         })
     } else {
         Err(ExprError::MissingOperands(InnerOpr::Arith(*arith).into()))
@@ -129,7 +134,7 @@ fn apply_logical<'a>(
     logical: &pb::Logical,
     first: Option<BorrowObject<'a>>,
     second: Option<BorrowObject<'a>>,
-) -> ExprResult<BorrowObject<'a>> {
+) -> ExprResult<Object> {
     use pb::Logical::*;
     if logical == &Not {
         if let Some(a) = first {
@@ -188,7 +193,7 @@ impl Evaluator {
             let second = _second.unwrap();
             // must be not
             if let InnerOpr::Logical(logical) = second {
-                Ok(apply_logical(logical, first.eval_as_borrow_object(context)?, None)?.into())
+                apply_logical(logical, first.eval_as_borrow_object(context)?, None)
             } else {
                 if !second.is_operand() {
                     Err(ExprError::MissingOperands(second.into()))
@@ -202,19 +207,17 @@ impl Evaluator {
             let third = _third.unwrap();
 
             if let InnerOpr::Logical(logical) = third {
-                Ok(apply_logical(
+                apply_logical(
                     logical,
                     first.eval_as_borrow_object(context)?,
                     second.eval_as_borrow_object(context)?,
-                )?
-                .into())
+                )
             } else if let InnerOpr::Arith(arith) = third {
-                Ok(apply_arith(
+                apply_arith(
                     arith,
                     first.eval_as_borrow_object(context)?,
                     second.eval_as_borrow_object(context)?,
-                )?
-                .into())
+                )
             } else {
                 Err(ExprError::OtherErr("invalid expression".to_string()))
             }
@@ -223,6 +226,11 @@ impl Evaluator {
 }
 
 impl Evaluator {
+    /// Reset the status of the evaluator for further evaluation
+    pub fn reset(&self) {
+        self.stack.borrow_mut().clear();
+    }
+
     /// Evaluate an expression with an optional context. The context must implement the
     /// provided trait `[Context]`, that can get an `[crate::graph::element::Element]`
     /// using a given key.
@@ -278,14 +286,11 @@ impl Evaluator {
     /// let tokens = tokenize("@0.age == @1.age").unwrap();
     /// let suffix_tree = to_suffix_expr_pb(tokens).unwrap();
     /// let eval = Evaluator::try_from(suffix_tree).unwrap();
-    /// let mut stack = vec![];
-    /// assert!(eval.eval::<_, _>(Some(&ctxt), &mut stack).unwrap().as_bool().unwrap())
+    ///
+    /// assert!(eval.eval::<_, _>(Some(&ctxt)).unwrap().as_bool().unwrap())
     /// ```
-    pub fn eval<'a, E: Element + 'a, C: Context<E> + 'a>(
-        &'a self,
-        context: Option<&'a C>,
-        stack: &mut Vec<BorrowObject<'a>>,
-    ) -> ExprResult<Object> {
+    pub fn eval<E: Element, C: Context<E>>(&self, context: Option<&C>) -> ExprResult<Object> {
+        let mut stack = self.stack.borrow_mut();
         if self.suffix_tree.len() <= 3 {
             return self.eval_without_stack(context);
         }
@@ -293,43 +298,43 @@ impl Evaluator {
         for opr in &self.suffix_tree {
             if opr.is_operand() {
                 if let Some(obj) = opr.eval_as_borrow_object(context)? {
-                    stack.push(obj);
+                    stack.push(obj.into());
                 } else {
                     return Err(ExprError::NoneOperand(opr.into()));
                 }
             } else {
                 let first = stack.pop();
-                match opr {
+                let first_borrow = first.as_ref().map(|obj| obj.as_borrow());
+                let rst = match opr {
                     InnerOpr::Logical(logical) => {
-                        let rst = if logical == &pb::Logical::Not {
-                            apply_logical(logical, first, None)?
+                        if logical == &pb::Logical::Not {
+                            apply_logical(logical, first_borrow, None)?
                         } else {
-                            apply_logical(logical, stack.pop(), first)?
-                        };
-                        stack.push(rst);
+                            let second = stack.pop();
+                            let second_borrow = second.as_ref().map(|obj| obj.as_borrow());
+                            apply_logical(logical, second_borrow, first_borrow)?
+                        }
                     }
                     InnerOpr::Arith(arith) => {
-                        let rst = apply_arith(arith, stack.pop(), first)?;
-                        stack.push(rst);
+                        let second = stack.pop();
+                        let second_borrow = second.as_ref().map(|obj| obj.as_borrow());
+                        apply_arith(arith, second_borrow, first_borrow)?
                     }
                     _ => unreachable!(),
-                }
+                };
+                stack.push(rst.into());
             }
         }
 
         if stack.len() == 1 {
-            Ok(stack.pop().unwrap().into())
+            Ok(stack.pop().unwrap())
         } else {
             Err("invalid expression".into())
         }
     }
 
-    pub fn eval_bool<'a, E: Element + 'a, C: Context<E> + 'a>(
-        &'a self,
-        context: Option<&'a C>,
-        stack: &mut Vec<BorrowObject<'a>>,
-    ) -> ExprResult<bool> {
-        Ok(self.eval(context, stack)?.as_bool()?)
+    pub fn eval_bool<E: Element, C: Context<E>>(&self, context: Option<&C>) -> ExprResult<bool> {
+        Ok(self.eval(context)?.as_bool()?)
     }
 }
 
@@ -532,13 +537,9 @@ mod tests {
         ];
 
         for (case, expected) in cases.into_iter().zip(expected.into_iter()) {
-            let mut stack = vec![];
             let eval =
                 Evaluator::try_from(to_suffix_expr_pb(tokenize(case).unwrap()).unwrap()).unwrap();
-            assert_eq!(
-                eval.eval::<(), NoneContext>(None, &mut stack).unwrap(),
-                expected
-            );
+            assert_eq!(eval.eval::<(), NoneContext>(None).unwrap(), expected);
         }
     }
 
@@ -582,11 +583,7 @@ mod tests {
         for (case, expected) in cases.into_iter().zip(expected.into_iter()) {
             let eval =
                 Evaluator::try_from(to_suffix_expr_pb(tokenize(case).unwrap()).unwrap()).unwrap();
-            let mut stack = vec![];
-            assert_eq!(
-                eval.eval::<(), NoneContext>(None, &mut stack).unwrap(),
-                expected
-            );
+            assert_eq!(eval.eval::<(), NoneContext>(None).unwrap(), expected);
         }
     }
 
@@ -623,11 +620,7 @@ mod tests {
         for (case, expected) in cases.into_iter().zip(expected.into_iter()) {
             let eval =
                 Evaluator::try_from(to_suffix_expr_pb(tokenize(case).unwrap()).unwrap()).unwrap();
-            let mut stack = vec![];
-            assert_eq!(
-                eval.eval::<_, Vertices>(Some(&ctxt), &mut stack).unwrap(),
-                expected
-            );
+            assert_eq!(eval.eval::<_, Vertices>(Some(&ctxt)).unwrap(), expected);
         }
     }
 
@@ -684,14 +677,11 @@ mod tests {
         for (case, expected) in cases.into_iter().zip(expected.into_iter()) {
             let eval =
                 Evaluator::try_from(to_suffix_expr_pb(tokenize(case).unwrap()).unwrap()).unwrap();
-            let mut stack = vec![];
             assert_eq!(
                 if is_context {
-                    eval.eval::<_, Vertices>(Some(&ctxt), &mut stack)
-                        .err()
-                        .unwrap()
+                    eval.eval::<_, Vertices>(Some(&ctxt)).err().unwrap()
                 } else {
-                    eval.eval::<_, NoneContext>(None, &mut stack).err().unwrap()
+                    eval.eval::<_, NoneContext>(None).err().unwrap()
                 },
                 expected
             );
