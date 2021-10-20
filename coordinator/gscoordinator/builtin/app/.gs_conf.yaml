@@ -192,7 +192,7 @@ app:
   - algo: degree_assortativity_coefficient
     type: cpp_pie
     class_name: gs::DegreeAssortativity
-    src: apps/assortativity/degree/degree_assortativity_coefficient.h
+    src: apps/assortativity/degree_assortativity_coefficient.h
     compatible_graph:
       - grape::ImmutableEdgecutFragment
       - gs::ArrowProjectedFragment
@@ -209,10 +209,18 @@ app:
     src: apps/boundary/edge_boundary.h
     compatible_graph:
       - gs::DynamicProjectedFragment
+  - algo: average_degree_connectivity
+    type: cpp_pie
+    class_name: gs::AverageDegreeConnectivity
+    src: apps/assortativity/average_degree_connectivity.h
+    compatible_graph:
+      - grape::ImmutableEdgecutFragment
+      - gs::ArrowProjectedFragment
+      - gs::DynamicProjectedFragment
   - algo: attribute_assortativity_coefficient
     type: cpp_pie
     class_name: gs::AttributeAssortativity
-    src: apps/assortativity/attribute/attribute_assortativity.h
+    src: apps/assortativity/attribute_assortativity.h
     compatible_graph:
       - grape::ImmutableEdgecutFragment
       - gs::ArrowProjectedFragment

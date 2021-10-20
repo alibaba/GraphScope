@@ -15,8 +15,8 @@ limitations under the License.
 Author: Ning Xin
 */
 
-#ifndef ANALYTICAL_ENGINE_APPS_ASSORTATIVITY_ATTRIBUTE_ATTRIBUTE_ASSORTATIVITY_H_
-#define ANALYTICAL_ENGINE_APPS_ASSORTATIVITY_ATTRIBUTE_ATTRIBUTE_ASSORTATIVITY_H_
+#ifndef ANALYTICAL_ENGINE_APPS_ASSORTATIVITY_ATTRIBUTE_ASSORTATIVITY_H_
+#define ANALYTICAL_ENGINE_APPS_ASSORTATIVITY_ATTRIBUTE_ASSORTATIVITY_H_
 
 #include <unordered_map>
 #include <utility>
@@ -24,7 +24,7 @@ Author: Ning Xin
 
 #include "grape/grape.h"
 
-#include "apps/assortativity/attribute/attribute_assortativity_context.h"
+#include "apps/assortativity/attribute_assortativity_context.h"
 #include "apps/assortativity/utils.h"
 #include "core/app/app_base.h"
 #include "core/utils/app_utils.h"
@@ -320,4 +320,4 @@ class AttributeAssortativity
 };
 }  // namespace gs
 
-#endif  // ANALYTICAL_ENGINE_APPS_ASSORTATIVITY_ATTRIBUTE_ATTRIBUTE_ASSORTATIVITY_H_
+#endif  // ANALYTICAL_ENGINE_APPS_ASSORTATIVITY_ATTRIBUTE_ASSORTATIVITY_H_
