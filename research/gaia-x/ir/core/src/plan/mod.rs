@@ -14,7 +14,6 @@
 //! limitations under the License.
 
 pub mod ffi;
-pub mod physical;
 
 use ir_common::error::{ParsePbError, ParsePbResult};
 use ir_common::generated::algebra as pb;
