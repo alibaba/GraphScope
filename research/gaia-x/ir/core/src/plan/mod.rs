@@ -14,9 +14,11 @@
 //! limitations under the License.
 
 pub mod ffi;
+pub mod physical;
 
 use ir_common::error::{ParsePbError, ParsePbResult};
 use ir_common::generated::algebra as pb;
+use ir_common::generated::algebra::logical_plan::operator::Opr;
 use ir_common::generated::common as common_pb;
 use runtime::expr::to_suffix_expr_pb;
 use runtime::expr::token::tokenize;
@@ -272,6 +274,24 @@ impl LogicalPlan {
 
     pub fn is_empty(&self) -> bool {
         self.nodes.is_empty()
+    }
+
+    /// Determine whether the logical plan is valid while checking the follows:
+    /// * The root [0-th] operator must be a Scan operator
+    pub fn sanity_check(&self) -> bool {
+        if self.is_empty() {
+            return false;
+        }
+        let root = self.get_node(0).unwrap();
+        let root_ref = root.borrow();
+        if let Some(root_opr) = &root_ref.opr.opr {
+            match root_opr {
+                Opr::Scan(_) => true,
+                _ => false,
+            }
+        } else {
+            false
+        }
     }
 }
 

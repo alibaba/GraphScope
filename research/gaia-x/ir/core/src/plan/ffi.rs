@@ -13,8 +13,6 @@
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 //!
-//!
-//!
 //! The ffi module gives the C-like apis for the Gaia client to build the plan from the
 //! query semantics, and to connect with the distributed service of Gaia.
 //!
@@ -321,32 +319,32 @@ fn set_range(ptr: *const c_void, lower: i32, upper: i32, opr: Opr) -> ResultCode
         match opr {
             Opr::GetV => {
                 let mut getv = unsafe { Box::from_raw(ptr as *mut pb::GetV) };
-                getv.params.as_mut().unwrap().limit = Some(pb::limit::Range { lower, upper });
+                getv.params.as_mut().unwrap().limit = Some(pb::Range { lower, upper });
                 std::mem::forget(getv);
             }
             Opr::ExpandBase => {
                 let mut base = unsafe { Box::from_raw(ptr as *mut pb::ExpandBase) };
-                base.params.as_mut().unwrap().limit = Some(pb::limit::Range { lower, upper });
+                base.params.as_mut().unwrap().limit = Some(pb::Range { lower, upper });
                 std::mem::forget(base);
             }
             Opr::PathExpand => {
                 let mut pathxpd = unsafe { Box::from_raw(ptr as *mut pb::PathExpand) };
-                pathxpd.hop_range = Some(pb::limit::Range { lower, upper });
+                pathxpd.hop_range = Some(pb::Range { lower, upper });
                 std::mem::forget(pathxpd);
             }
             Opr::Scan => {
                 let mut scan = unsafe { Box::from_raw(ptr as *mut pb::Scan) };
-                scan.limit = Some(pb::limit::Range { lower, upper });
+                scan.params.as_mut().unwrap().limit = Some(pb::Range { lower, upper });
                 std::mem::forget(scan);
             }
             Opr::Limit => {
                 let mut limit = unsafe { Box::from_raw(ptr as *mut pb::Limit) };
-                limit.range = Some(pb::limit::Range { lower, upper });
+                limit.range = Some(pb::Range { lower, upper });
                 std::mem::forget(limit);
             }
             Opr::OrderBy => {
                 let mut orderby = unsafe { Box::from_raw(ptr as *mut pb::OrderBy) };
-                orderby.limit = Some(pb::limit::Range { lower, upper });
+                orderby.limit = Some(pb::Range { lower, upper });
                 std::mem::forget(orderby);
             }
             _ => unreachable!(),
@@ -421,8 +419,85 @@ fn set_predicate(ptr: *const c_void, cstr_predicate: *const c_char, opr: Opr) ->
                 expand.params.as_mut().unwrap().predicate = predicate_pb.ok();
                 std::mem::forget(expand);
             }
+            Opr::Scan => {
+                let mut scan = unsafe { Box::from_raw(ptr as *mut pb::Scan) };
+                scan.params.as_mut().unwrap().predicate = predicate_pb.ok();
+                std::mem::forget(scan);
+            }
             _ => unreachable!(),
         }
+    }
+
+    return_code
+}
+
+#[derive(PartialEq)]
+enum ParamsKey {
+    Tag,
+    Table,
+    Column,
+}
+
+fn process_params(ptr: *const c_void, key: ParamsKey, val: FfiNameOrId, opr: Opr) -> ResultCode {
+    let mut return_code = ResultCode::Success;
+    let pb: FfiResult<Option<common_pb::NameOrId>> = val.try_into();
+    if pb.is_ok() {
+        match opr {
+            Opr::ExpandBase => {
+                let mut expand = unsafe { Box::from_raw(ptr as *mut pb::ExpandBase) };
+                match key {
+                    ParamsKey::Tag => expand.v_tag = pb.unwrap(),
+                    ParamsKey::Table => {
+                        if let Some(label) = pb.unwrap() {
+                            expand.params.as_mut().unwrap().table_names.push(label)
+                        }
+                    }
+                    ParamsKey::Column => {
+                        if let Some(ppt) = pb.unwrap() {
+                            expand.params.as_mut().unwrap().columns.push(ppt)
+                        }
+                    }
+                }
+                std::mem::forget(expand);
+            }
+            Opr::GetV => {
+                let mut getv = unsafe { Box::from_raw(ptr as *mut pb::GetV) };
+                match key {
+                    ParamsKey::Tag => getv.tag = pb.unwrap(),
+                    ParamsKey::Table => {
+                        if let Some(label) = pb.unwrap() {
+                            getv.params.as_mut().unwrap().table_names.push(label)
+                        }
+                    }
+                    ParamsKey::Column => {
+                        if let Some(ppt) = pb.unwrap() {
+                            getv.params.as_mut().unwrap().columns.push(ppt)
+                        }
+                    }
+                }
+                std::mem::forget(getv);
+            }
+            Opr::Scan => {
+                let mut scan = unsafe { Box::from_raw(ptr as *mut pb::Scan) };
+                match key {
+                    ParamsKey::Table => {
+                        if let Some(table) = pb.unwrap() {
+                            scan.params.as_mut().unwrap().table_names.push(table)
+                        }
+                    }
+                    ParamsKey::Column => {
+                        if let Some(col) = pb.unwrap() {
+                            scan.params.as_mut().unwrap().columns.push(col)
+                        }
+                    }
+                    _ => unreachable!(),
+                }
+                std::mem::forget(scan);
+            }
+            _ => unreachable!(),
+        }
+    } else {
+        return_code = pb.err().unwrap();
     }
 
     return_code
@@ -1004,10 +1079,14 @@ mod scan {
     pub extern "C" fn init_scan_operator(scan_opt: FfiScanOpt) -> *const c_void {
         let scan = Box::new(pb::Scan {
             scan_opt: unsafe { std::mem::transmute::<FfiScanOpt, i32>(scan_opt) },
-            schema_name: "".to_string(),
             alias: None,
-            fields: vec![],
-            limit: None,
+            params: Some(pb::QueryParams {
+                table_names: vec![],
+                columns: vec![],
+                limit: None,
+                predicate: None,
+                requirements: vec![],
+            }),
         });
         Box::into_raw(scan) as *const c_void
     }
@@ -1022,42 +1101,17 @@ mod scan {
     }
 
     #[no_mangle]
-    pub extern "C" fn set_scan_schema_name(
+    pub extern "C" fn add_scan_table_name(
         ptr_scan: *const c_void,
-        cstr: *const c_char,
+        table_name: FfiNameOrId,
     ) -> ResultCode {
-        let mut return_code = ResultCode::Success;
-        let schema_name = cstr_to_string(cstr);
-        if schema_name.is_err() {
-            return_code = schema_name.err().unwrap()
-        } else {
-            let mut scan = unsafe { Box::from_raw(ptr_scan as *mut pb::Scan) };
-            scan.schema_name = schema_name.unwrap();
-            std::mem::forget(scan);
-        }
-
-        return_code
+        process_params(ptr_scan, ParamsKey::Table, table_name, Opr::Scan)
     }
 
     /// Add a data field to be scanned from the data source (vertex, edge, or a relational table)
     #[no_mangle]
-    pub extern "C" fn add_scan_data_field(
-        ptr_scan: *const c_void,
-        field_name: FfiNameOrId,
-    ) -> ResultCode {
-        let mut return_code = ResultCode::Success;
-        let field_name_pb: FfiResult<Option<common_pb::NameOrId>> = field_name.try_into();
-        if field_name_pb.is_err() {
-            return_code = field_name_pb.err().unwrap()
-        } else {
-            if let Some(field) = field_name_pb.unwrap() {
-                let mut scan = unsafe { Box::from_raw(ptr_scan as *mut pb::Scan) };
-                scan.fields.push(field);
-                std::mem::forget(scan);
-            }
-        }
-
-        return_code
+    pub extern "C" fn add_scan_column(ptr_scan: *const c_void, column: FfiNameOrId) -> ResultCode {
+        process_params(ptr_scan, ParamsKey::Column, column, Opr::Scan)
     }
 
     /// Set an alias for the data if it is a vertex/edge
@@ -1277,11 +1331,8 @@ mod limit {
     use super::*;
 
     #[no_mangle]
-    pub extern "C" fn init_limit_operator(is_topk: bool) -> *const c_void {
-        let limit: Box<pb::Limit> = Box::new(pb::Limit {
-            range: None,
-            is_topk,
-        });
+    pub extern "C" fn init_limit_operator() -> *const c_void {
+        let limit: Box<pb::Limit> = Box::new(pb::Limit { range: None });
         Box::into_raw(limit) as *const c_void
     }
 
@@ -1330,9 +1381,9 @@ mod graph {
         let expand = Box::new(pb::ExpandBase {
             v_tag: None,
             direction: unsafe { std::mem::transmute::<FfiDirection, i32>(direction) },
-            params: Some(pb::GQueryParams {
-                labels: vec![],
-                properties: vec![],
+            params: Some(pb::QueryParams {
+                table_names: vec![],
+                columns: vec![],
                 limit: None,
                 predicate: None,
                 requirements: vec![],
@@ -1341,66 +1392,10 @@ mod graph {
         Box::into_raw(expand) as *const c_void
     }
 
-    #[derive(PartialEq)]
-    enum ParamsOpt {
-        Tag,
-        Label,
-        Property,
-    }
-
-    fn process_params(
-        ptr: *const c_void,
-        tag: FfiNameOrId,
-        opt: ParamsOpt,
-        is_edge: bool,
-    ) -> ResultCode {
-        let mut return_code = ResultCode::Success;
-        let pb: FfiResult<Option<common_pb::NameOrId>> = tag.try_into();
-        if pb.is_ok() {
-            if is_edge {
-                let mut expand = unsafe { Box::from_raw(ptr as *mut pb::ExpandBase) };
-                match opt {
-                    ParamsOpt::Tag => expand.v_tag = pb.unwrap(),
-                    ParamsOpt::Label => {
-                        if let Some(label) = pb.unwrap() {
-                            expand.params.as_mut().unwrap().labels.push(label)
-                        }
-                    }
-                    ParamsOpt::Property => {
-                        if let Some(ppt) = pb.unwrap() {
-                            expand.params.as_mut().unwrap().properties.push(ppt)
-                        }
-                    }
-                }
-                std::mem::forget(expand);
-            } else {
-                let mut getv = unsafe { Box::from_raw(ptr as *mut pb::GetV) };
-                match opt {
-                    ParamsOpt::Tag => getv.tag = pb.unwrap(),
-                    ParamsOpt::Label => {
-                        if let Some(label) = pb.unwrap() {
-                            getv.params.as_mut().unwrap().labels.push(label)
-                        }
-                    }
-                    ParamsOpt::Property => {
-                        if let Some(ppt) = pb.unwrap() {
-                            getv.params.as_mut().unwrap().properties.push(ppt)
-                        }
-                    }
-                }
-                std::mem::forget(getv);
-            }
-        } else {
-            return_code = pb.err().unwrap();
-        }
-
-        return_code
-    }
-
     /// Set the start-vertex's tag to conduct this expansion
     #[no_mangle]
     pub extern "C" fn set_expand_vtag(ptr_expand: *const c_void, v_tag: FfiNameOrId) -> ResultCode {
-        process_params(ptr_expand, v_tag, ParamsOpt::Tag, true)
+        process_params(ptr_expand, ParamsKey::Tag, v_tag, Opr::ExpandBase)
     }
 
     /// Add a label of the edge that this expansion must satisfy
@@ -1409,7 +1404,7 @@ mod graph {
         ptr_expand: *const c_void,
         label: FfiNameOrId,
     ) -> ResultCode {
-        process_params(ptr_expand, label, ParamsOpt::Label, true)
+        process_params(ptr_expand, ParamsKey::Table, label, Opr::ExpandBase)
     }
 
     /// Add a property that this edge expansion must carry
@@ -1418,7 +1413,7 @@ mod graph {
         ptr_expand: *const c_void,
         property: FfiNameOrId,
     ) -> ResultCode {
-        process_params(ptr_expand, property, ParamsOpt::Property, true)
+        process_params(ptr_expand, ParamsKey::Column, property, Opr::ExpandBase)
     }
 
     /// Set the size range limitation of this expansion
@@ -1497,9 +1492,9 @@ mod graph {
         let getv = Box::new(pb::GetV {
             tag: None,
             opt: unsafe { std::mem::transmute::<FfiVOpt, i32>(opt) },
-            params: Some(pb::GQueryParams {
-                labels: vec![],
-                properties: vec![],
+            params: Some(pb::QueryParams {
+                table_names: vec![],
+                columns: vec![],
                 limit: None,
                 predicate: None,
                 requirements: vec![],
@@ -1512,7 +1507,7 @@ mod graph {
     /// Set the tag of edge/path to get its end vertex
     #[no_mangle]
     pub extern "C" fn set_getv_tag(ptr_getv: *const c_void, tag: FfiNameOrId) -> ResultCode {
-        process_params(ptr_getv, tag, ParamsOpt::Tag, false)
+        process_params(ptr_getv, ParamsKey::Tag, tag, Opr::GetV)
     }
 
     /// Set vertex alias of this getting vertex
@@ -1524,7 +1519,7 @@ mod graph {
     /// Add a label of the vertex that this getv must satisfy
     #[no_mangle]
     pub extern "C" fn add_getv_label(ptr_getv: *const c_void, label: FfiNameOrId) -> ResultCode {
-        process_params(ptr_getv, label, ParamsOpt::Label, false)
+        process_params(ptr_getv, ParamsKey::Table, label, Opr::GetV)
     }
 
     /// Add a property that this vertex must carry
@@ -1533,7 +1528,7 @@ mod graph {
         ptr_getv: *const c_void,
         property: FfiNameOrId,
     ) -> ResultCode {
-        process_params(ptr_getv, property, ParamsOpt::Property, false)
+        process_params(ptr_getv, ParamsKey::Column, property, Opr::GetV)
     }
 
     /// Set the size range limitation of getting vertices

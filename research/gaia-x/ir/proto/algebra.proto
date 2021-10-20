@@ -128,7 +128,7 @@ message OrderBy {
   }
   repeated OrderingPair pairs = 2;
   // A size limit. `OrderBy.Limit` is equivalent to the `Topk` operation
-  Limit.Range limit = 3;
+  Range limit = 3;
 }
 
 message Dedup {
@@ -143,15 +143,28 @@ message Unfold {
   common.NameOrId alias = 2;
 }
 
+message Range {
+  int32 lower = 1;
+  int32 upper = 2;
+}
+
 message Limit {
-  message Range {
-    int32 lower = 1;
-    int32 upper = 2;
-  }
   // The limit range
   Range range = 1;
-  // If this limit operator is used right after an order-by, it can be recognized as a topk.
-  bool is_topk = 2;
+}
+
+message QueryParams {
+  // The tables to fetch data from. While this may sound arbitrary, but in graph db, we often use
+  // label to refer to a table. But in terms of semantics, they are exactly the same.
+  repeated common.NameOrId table_names = 1;
+  // The required columns of the table.
+  repeated common.NameOrId columns = 2;
+  // The size limit
+  Range limit = 3;
+  // The optional predicate for the data tuple
+  common.SuffixExpr predicate = 4;
+  // Extra requirements for general-purpose usage
+  repeated string requirements = 5;
 }
 
 // Scan is an operator that transforms the source data format (defined by the database)
@@ -166,14 +179,10 @@ message Scan {
     TABLE = 2;
   }
   ScanOpt scan_opt = 1;
-  // The name of the schema
-  string schema_name = 2;
   // The alias of the item if it is a vertex or edge
-  common.NameOrId alias = 3;
-  // The required data fields (properties) for the scan
-  repeated common.NameOrId fields = 4;
-  // The size limit
-  Limit.Range limit = 5;
+  common.NameOrId alias = 2;
+  // The required parameters for the scan
+  QueryParams params = 3;
 }
 
 // In addition to `Scan`, this operator allow runtime to leverage certain optimization strategy while the predicates
@@ -195,19 +204,6 @@ message IndexedScan {
   repeated KVEquivPairs orKvEquivPairs = 2;
 }
 
-message GQueryParams {
-  // The required labels.
-  repeated common.NameOrId labels = 1;
-  // The required properties of this edge expansion
-  repeated common.NameOrId properties = 2;
-  // The size limit
-  Limit.Range limit = 3;
-  // The optional predicate for the graph element
-  common.SuffixExpr predicate = 4;
-  // Extra requirements for general-purpose usage
-  repeated string requirements = 5;
-}
-
 // To expand satisfied edges from a tag of the graph relation that refers to a vertex attribute
 message ExpandBase {
   enum Direction {
@@ -220,7 +216,7 @@ message ExpandBase {
   // The direction of the expanded edge
   Direction direction = 2;
   // The query parameters define the condition that the edge must satisfy
-  GQueryParams params = 3;
+  QueryParams params = 3;
 }
 
 // It is typical to use the operator together with EdgeExpand or PathExpand, with the functionality of
@@ -242,7 +238,7 @@ message GetV {
   // Determine what vertex to get from the tagged object
   VOpt opt = 2;
   // The query parameters define the condition that the vertex must satisfy
-  GQueryParams params = 3;
+  QueryParams params = 3;
   // The alias of this vertex
   common.NameOrId alias = 4;
 }
@@ -265,7 +261,7 @@ message PathExpand {
   common.NameOrId alias = 3;
   // The range that defines the minimum and maximum number of hops of the path expansion.
   // This is optional, if not set, the minimum number is 1, and the maximum is INT_MAX
-  Limit.Range hop_range = 4;
+  Range hop_range = 4;
 }
 
 message ShortestPathExpand {
