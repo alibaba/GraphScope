@@ -14,8 +14,8 @@ readonly GREEN="\033[0;32m"
 readonly NC="\033[0m" # No Color
 
 readonly GRAPE_BRANCH="master" # libgrape-lite branch
-readonly V6D_VERSION="0.3.0"  # vineyard version
-readonly V6D_BRANCH="v0.3.0" # vineyard branch
+readonly V6D_VERSION="0.3.1"  # vineyard version
+readonly V6D_BRANCH="v0.3.1" # vineyard branch
 readonly LLVM_VERSION=9  # llvm version we use in Darwin platform
 
 readonly SOURCE_DIR="$( cd "$(dirname $0)/.." >/dev/null 2>&1 ; pwd -P )"
@@ -28,6 +28,7 @@ BASIC_PACKGES_TO_INSTALL=
 PLATFORM=
 OS_VERSION=
 VERBOSE=false
+BUILD_TYPE=release
 packages_to_install=()
 install_folly=false
 
@@ -95,6 +96,7 @@ cat <<END
   Options:
     --help              Print usage information
     --verbose           Print the debug logging information
+    --build_type        release or debug
     --prefix <path>     Install prefix of GraphScope, default is /opt/graphscope
 END
 }
@@ -185,6 +187,7 @@ init_basic_packages() {
       lsb-release
       libbrotli-dev
       libbz2-dev
+      libclang-dev
       libcurl4-openssl-dev
       libdouble-conversion-dev
       protobuf-compiler-grpc
@@ -219,6 +222,7 @@ init_basic_packages() {
     BASIC_PACKGES_TO_INSTALL=(
       autoconf
       automake
+      clang-devel
       double-conversion-devel
       git
       zlib-devel
@@ -845,9 +849,9 @@ install_graphscope() {
   pushd ${SOURCE_DIR}
 
   if [[ "${PLATFORM}" == *"Darwin"* ]]; then
-    make install WITH_LEARNING_ENGINE=OFF INSTALL_PREFIX=${INSTALL_PREFIX}
+    make install WITH_LEARNING_ENGINE=OFF INSTALL_PREFIX=${INSTALL_PREFIX} NETWORKX=OFF BUILD_TYPE=${BUILD_TYPE}
   else
-    make install WITH_LEARNING_ENGINE=ON INSTALL_PREFIX=${INSTALL_PREFIX}
+    make install WITH_LEARNING_ENGINE=ON INSTALL_PREFIX=${INSTALL_PREFIX} BUILD_TYPE=${BUILD_TYPE}
   fi
 
   popd
@@ -903,6 +907,7 @@ install_deps() {
 # Main function for build_and_deploy command.
 # Globals:
 #   VERBOSE
+#   BUILD_TYPE
 #   INSTALL_PREFIX
 # Arguments:
 #   None
@@ -915,8 +920,9 @@ build_and_deploy() {
   while test $# -ne 0; do
     arg=$1; shift
     case ${arg} in
-      --help)     build_and_deploy_usage; exit ;;
-      --verbose)  VERBOSE=true; readonly VERBOSE; ;;
+      --help)        build_and_deploy_usage; exit ;;
+      --verbose)     VERBOSE=true; readonly VERBOSE; ;;
+      --build_type)  BUILD_TYPE=$1; readonly BUILD_TYPE; shift ;;
       --prefix)
         if [ $# -eq 0 ]; then
           echo "there should be given a path for prefix option."
@@ -979,7 +985,7 @@ while test $# -ne 0; do
     build_and_deploy) build_and_deploy "$@"; exit;;
     *)
       echo "unrecognized option or command '${arg}'"
-      usage; exit;;
+      usage; exit 1;;
   esac
 done
 if test  $# -eq 0; then

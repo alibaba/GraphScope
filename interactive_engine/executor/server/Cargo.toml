@@ -1,0 +1,24 @@
+[package]
+name = "maxgraph-server"
+version = "0.1.0"
+authors = ["勤远 <wubin.cwb@alibaba-inc.com>"]
+edition = "2018"
+
+[dependencies]
+maxgraph-store = { path = "../store" }
+maxgraph-common = { path = "../../rust-common" }
+
+byteorder = "1"
+crossbeam-channel = "0.4.4"
+futures = "0.1"
+psutil = "=1.1.1"
+grpcio = "=0.4.1"
+quote = "=1.0.1"
+libc = "0.2"
+regex = "1"
+log = "0.3"
+protobuf = { version = "~2.0", features = ["with-bytes"] }
+serde = "1.0.72"
+serde_derive = "1.0.72"
+serde_json = "1.0"
+threadpool = "1.0"

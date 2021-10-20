@@ -5,7 +5,6 @@
 ARG BASE_VERSION=latest
 FROM registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-runtime:$BASE_VERSION
 
-# TODO: adapt to the latest API of libgrape-lite
 RUN sudo mkdir -p /opt/vineyard && \
     sudo chown -R $(id -u):$(id -g) /opt/vineyard && \
     cd /tmp && \
@@ -17,14 +16,13 @@ RUN sudo mkdir -p /opt/vineyard && \
     make -j`nproc` && \
     make install && \
     cd /tmp && \
-    git clone -b v0.2.12 https://github.com/alibaba/libvineyard.git --depth=1 && \
+    git clone -b v0.3.1 https://github.com/alibaba/libvineyard.git --depth=1 && \
     cd libvineyard && \
     git submodule update --init && \
     mkdir -p /tmp/libvineyard/build && \
     cd /tmp/libvineyard/build && \
     cmake .. -DCMAKE_PREFIX_PATH=/opt/vineyard \
              -DCMAKE_INSTALL_PREFIX=/opt/vineyard \
-             -DBUILD_VINEYARD_PYPI_PACKAGES=ON \
              -DBUILD_SHARED_LIBS=ON \
              -DBUILD_VINEYARD_IO_OSS=ON && \
     make install vineyard_client_python -j && \
