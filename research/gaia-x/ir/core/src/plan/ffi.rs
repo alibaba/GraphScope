@@ -299,6 +299,8 @@ pub extern "C" fn debug_plan(ptr_plan: *const c_void) {
     std::mem::forget(plan);
 }
 
+#[allow(dead_code)]
+#[derive(PartialEq)]
 enum Opr {
     Select,
     Scan,
@@ -307,6 +309,7 @@ enum Opr {
     EdgeExpand,
     PathExpand,
     Limit,
+    OrderBy,
     Apply,
 }
 
@@ -341,6 +344,11 @@ fn set_range(ptr: *const c_void, lower: i32, upper: i32, opr: Opr) -> ResultCode
                 limit.range = Some(pb::limit::Range { lower, upper });
                 std::mem::forget(limit);
             }
+            Opr::OrderBy => {
+                let mut orderby = unsafe { Box::from_raw(ptr as *mut pb::OrderBy) };
+                orderby.limit = Some(pb::limit::Range { lower, upper });
+                std::mem::forget(orderby);
+            }
             _ => unreachable!(),
         }
 
@@ -354,7 +362,7 @@ fn set_alias(ptr: *const c_void, alias: FfiNameOrId, is_query_given: bool, opr: 
     if alias_pb.is_err() {
         return_code = alias_pb.err().unwrap()
     } else {
-        match opr {
+        match &opr {
             Opr::Scan => {
                 let mut scan = unsafe { Box::from_raw(ptr as *mut pb::Scan) };
                 scan.alias = alias_pb.unwrap();
@@ -812,7 +820,10 @@ mod orderby {
     /// To initialize an orderby operator
     #[no_mangle]
     pub extern "C" fn init_orderby_operator() -> *const c_void {
-        let order = Box::new(pb::OrderBy { pairs: vec![] });
+        let order = Box::new(pb::OrderBy {
+            pairs: vec![],
+            limit: None,
+        });
         Box::into_raw(order) as *const c_void
     }
 
@@ -842,6 +853,16 @@ mod orderby {
         std::mem::forget(orderby);
 
         return_code
+    }
+
+    /// Set the size limit of the orderby operator, which will turn it into topk
+    #[no_mangle]
+    pub extern "C" fn set_orderby_limit(
+        ptr_orderby: *const c_void,
+        lower: i32,
+        upper: i32,
+    ) -> ResultCode {
+        set_range(ptr_orderby, lower, upper, Opr::OrderBy)
     }
 
     /// Append an orderby operator to the logical plan
@@ -1421,10 +1442,14 @@ mod graph {
 
     /// To initialize an edge expand operator from an expand base
     #[no_mangle]
-    pub extern "C" fn init_edgexpd_operator(ptr_expand: *const c_void) -> *const c_void {
+    pub extern "C" fn init_edgexpd_operator(
+        ptr_expand: *const c_void,
+        is_edge: bool,
+    ) -> *const c_void {
         let expand = unsafe { Box::from_raw(ptr_expand as *mut pb::ExpandBase) };
         let edgexpd = Box::new(pb::EdgeExpand {
             base: Some(expand.as_ref().clone()),
+            is_edge,
             alias: None,
         });
 
@@ -1457,11 +1482,21 @@ mod graph {
         destroy_ptr::<pb::EdgeExpand>(ptr)
     }
 
+    #[allow(dead_code)]
+    #[repr(i32)]
+    pub enum FfiVOpt {
+        Start = 0,
+        End = 1,
+        Other = 2,
+        This = 3,
+    }
+
     /// To initialize an expansion base
     #[no_mangle]
-    pub extern "C" fn init_getv_operator() -> *const c_void {
+    pub extern "C" fn init_getv_operator(opt: FfiVOpt) -> *const c_void {
         let getv = Box::new(pb::GetV {
             tag: None,
+            opt: unsafe { std::mem::transmute::<FfiVOpt, i32>(opt) },
             params: Some(pb::GQueryParams {
                 labels: vec![],
                 properties: vec![],
@@ -1539,10 +1574,14 @@ mod graph {
 
     /// To initialize an path expand operator from an expand base
     #[no_mangle]
-    pub extern "C" fn init_pathxpd_operator(ptr_expand: *const c_void) -> *const c_void {
+    pub extern "C" fn init_pathxpd_operator(
+        ptr_expand: *const c_void,
+        is_path: bool,
+    ) -> *const c_void {
         let expand = unsafe { Box::from_raw(ptr_expand as *mut pb::ExpandBase) };
         let edgexpd = Box::new(pb::PathExpand {
             base: Some(expand.as_ref().clone()),
+            is_path,
             alias: None,
             hop_range: None,
         });
