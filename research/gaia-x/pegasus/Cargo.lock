@@ -979,6 +979,7 @@ name = "pegasus_graph"
 version = "0.1.0"
 dependencies = [
  "byteorder",
+ "lazy_static",
  "memmap",
  "nohash-hasher",
  "rand 0.8.4",
