@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.1)
+cmake_minimum_required(VERSION 3.14)
 project(gloabl_store_api C CXX)
 
 if(POLICY CMP0025)
@@ -48,7 +48,8 @@ find_package(Threads REQUIRED)
 #  we need edge src/dst ids in etable.
 add_definitions(-DENDPOINT_LISTS)
 
-find_package(vineyard 0.2.12 REQUIRED)
+#find_package(vineyard 0.2.12 REQUIRED)
+find_package(vineyard 0.2.9 REQUIRED)
 add_library(native_store global_store_ffi.cc
                          htap_ds_impl.cc
                          graph_builder_ffi.cc
@@ -61,6 +62,24 @@ if(BUILD_SHARED_LIBS)
     install_vineyard_target(native_store)
 endif()
 
+option(BUILD_NATIVE_STORE_TEST "Build native store unittest" ON)
 
+if (BUILD_NATIVE_STORE_TEST)
+    include(FetchContent)
+    FetchContent_Declare(
+            googletest
+            GIT_REPOSITORY https://github.com/google/googletest.git
+            GIT_TAG        703bd9caab50b139428cea1aaff9974ebee5742e # release-1.10.0
+    )
+    FetchContent_MakeAvailable(googletest)
+    enable_testing()
+    find_package(Boost REQUIRED COMPONENTS system filesystem)
+
+    add_executable(vineyard_store_test test/vineyard_store_test_main.cc test/vineyard_store_test_main.cc test/vineyard_store_test_env.h test/vineyard_store_test_env.cc test/global_store_ffi_test.cc test/graph_schema_test.cc)
+    target_include_directories(vineyard_store_test
+            PUBLIC ${Boost_INCLUDE_DIRS}
+            PRIVATE ${VINEYARD_INCLUDE_DIRS})
+    target_link_libraries(vineyard_store_test gtest gmock native_store Boost::system Boost::filesystem ${VINEYARD_LIBRARIES})
+endif()
 
 

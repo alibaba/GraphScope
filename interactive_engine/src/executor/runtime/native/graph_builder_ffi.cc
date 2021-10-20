@@ -292,9 +292,6 @@ int get_label_name(Schema schema, LabelId label, const char **out) {
   auto ptr = static_cast<vineyard::MGPropertyGraphSchema *>(schema);
   std::string name = ptr->GetLabelName(label);
   if (name.empty()) {
-    name = ptr->GetLabelName(label);
-  }
-  if (name.empty()) {
     *out = NULL;
     return -1;
   } else {

@@ -30,6 +30,7 @@ void get_graph_handle(ObjectId id, PartitionId channel_num,
 #ifndef NDEBUG
   LOG(INFO) << "enter " << __FUNCTION__;
 #endif
+  //BUGBUG: this point to the static default, potentially singleton client, and later on delete
   handle->client = &vineyard::Client::Default();
   LOG(INFO) << "Initialize vineyard client";
   std::shared_ptr<vineyard::ArrowFragmentGroup> fg =
@@ -146,9 +147,9 @@ void free_graph_handle(GraphHandleImpl* handle) {
     delete[] handle->local_fragments;
     handle->local_fragments = NULL;
   }
-  handle->client->Disconnect();
-  delete handle->client;
-  handle->client = NULL;
+  //handle->client->Disconnect();
+  //delete handle->client;
+  //handle->client = NULL;
 #ifndef NDEBUG
   LOG(INFO) << "finish " << __FUNCTION__;
 #endif
@@ -163,6 +164,7 @@ static int get_property_from_table(arrow::Table* table, int64_t row_id,
   std::shared_ptr<arrow::Array> array = table->column(col_id)->chunk(0);
   p_out->id = col_id;
   PodProperties pp;
+  pp.long_value = 0;
   if (dt == arrow::boolean()) {
     p_out->type = BOOL;
     pp.bool_value =
@@ -929,6 +931,10 @@ int get_property_as_float(Property* property, float* out) {
   if (property->type != FLOAT) {
     return -1;
   }
+  // in principle, the following is undefined behavior per standard
+  // however, gcc (our toolchain) guarantees it to work as gcc extension
+  // (https://gcc.gnu.org/bugs/#nonbugs)
+  // TODO: fix it to be more compliant
   PodProperties pp;
   pp.long_value = property->len;
   *out = pp.float_value;
