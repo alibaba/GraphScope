@@ -44,9 +44,6 @@ RUN cd ${HOME}/gs/analytical_engine && \
     rm -fr CMake* && \
     echo "Build and install analytical_engine done."
 
-# patch auditwheel
-RUN sudo sed -i 's/p.error/logger.warning/g' /usr/local/lib/python3.6/site-packages/auditwheel/main_repair.py
-
 # build python bdist_wheel
 RUN export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/opt/graphscope/lib:/opt/graphscope/lib64 && \
     export WITH_LEARNING_ENGINE=ON && \
@@ -57,6 +54,7 @@ RUN export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/opt/graphscope/lib:/opt/graphscope/
     cd ./dist && \
     auditwheel repair --plat=manylinux2014_x86_64 ./*.whl || true && \
     mkdir -p /opt/graphscope/dist && cp ./wheelhouse/* /opt/graphscope/dist/ && \
+    pip3 install ./wheelhouse/*.whl || true && \
     cd ${HOME}/gs/coordinator && \
     pip3 install -r requirements.txt -r requirements-dev.txt && \
     python3 setup.py bdist_wheel && \
