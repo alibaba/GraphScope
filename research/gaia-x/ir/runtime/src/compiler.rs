@@ -20,23 +20,22 @@ use crate::process::operator::map::MapFuncGen;
 use crate::process::operator::sink::RecordSinkEncoder;
 use crate::process::operator::source::source_op_from;
 use crate::process::record::Record;
-use ir_common::error::str_to_dyn_error;
 use ir_common::generated::algebra as algebra_pb;
 use ir_common::generated::result as result_pb;
 use pegasus::api::function::*;
 use pegasus::api::{
-    Collect, CorrelatedSubTask, Dedup, Filter, Fold, FoldByKey, IterCondition, Iteration, KeyBy,
-    Limit, Map, Merge, Sink, SortBy, SortLimitBy, Source,
+    Collect, CorrelatedSubTask, Filter, IterCondition, Iteration, Limit, Map, Sink, SortBy,
+    SortLimitBy, Source,
 };
 use pegasus::result::ResultSink;
 use pegasus::stream::Stream;
 use pegasus::BuildJobError;
 use pegasus_server::pb as server_pb;
+use pegasus_server::pb::operator_def::OpKind;
 use pegasus_server::pb::OperatorDef;
 use pegasus_server::service::JobParser;
 use pegasus_server::JobRequest;
 use prost::Message;
-use std::collections::HashMap;
 use std::sync::Arc;
 
 type RecordMap = Box<dyn MapFunction<Record, Record>>;
@@ -164,45 +163,26 @@ impl IRJobCompiler {
                     server_pb::operator_def::OpKind::Limit(n) => {
                         stream = stream.limit(n.limit)?;
                     }
-                    server_pb::operator_def::OpKind::Order(order) => {
-                        if order.limit > 0 {
+                    server_pb::operator_def::OpKind::Sort(sort) => {
+                        if sort.limit > 0 {
                             stream =
-                                stream.sort_limit_by(order.limit as u32, move |a, b| a.cmp(&b))?;
+                                stream.sort_limit_by(sort.limit as u32, move |a, b| a.cmp(&b))?;
                         } else {
                             stream = stream.sort_by(move |a, b| a.cmp(&b))?;
                         }
                     }
-                    server_pb::operator_def::OpKind::Fold(fold) => {
+                    server_pb::operator_def::OpKind::Fold(_fold) => {
                         todo!()
                     }
-                    server_pb::operator_def::OpKind::Group(group) => {
+                    server_pb::operator_def::OpKind::Group(_group) => {
                         todo!()
                     }
 
                     server_pb::operator_def::OpKind::Dedup(_) => {
                         todo!()
                     }
-                    server_pb::operator_def::OpKind::Union(union) => {
-                        if union.branches.len() < 2 {
-                            Err("invalid branch sizes in union")?;
-                        }
-                        // // TODO: engine bug here
-                        // let (mut ori_stream, sub_stream) = stream.copied()?;
-                        // stream = self.install(sub_stream, &union.branches[0].plan[..])?;
-                        // for subtask in &union.branches[1..] {
-                        //     let copied = ori_stream.copied()?;
-                        //     ori_stream = copied.0;
-                        //     stream = self.install(copied.1, &subtask.plan[..])?.merge(stream)?;
-                        // }
-                        // TODO(bingqing): remove the condition when merge is ready
-                        if union.branches.len() != 2 {
-                            Err("Only support union 2 branches for now")?;
-                        }
-                        let (ori_stream, sub_stream) = stream.copied()?;
-                        stream = self.install(ori_stream, &union.branches[0].plan[..])?;
-                        stream = self
-                            .install(sub_stream, &union.branches[1].plan[..])?
-                            .merge(stream)?;
+                    server_pb::operator_def::OpKind::Merge(_merge) => {
+                        todo!()
                     }
                     server_pb::operator_def::OpKind::Iterate(iter) => {
                         let until = if let Some(condition) =
@@ -224,7 +204,7 @@ impl IRJobCompiler {
                             Err("iteration body can't be empty;")?
                         }
                     }
-                    server_pb::operator_def::OpKind::Subtask(sub) => {
+                    server_pb::operator_def::OpKind::Apply(sub) => {
                         let join_func = self.udf_gen.gen_subtask(
                             sub.join
                                 .as_ref()
@@ -243,6 +223,15 @@ impl IRJobCompiler {
                                 })?
                                 .filter_map(move |(parent, sub)| join_func.exec(parent, sub))?;
                         }
+                    }
+                    OpKind::SegApply(_) => {
+                        todo!()
+                    }
+                    OpKind::Join(_) => {
+                        todo!()
+                    }
+                    OpKind::KeyBy(_) => {
+                        todo!()
                     }
                 }
             } else {
