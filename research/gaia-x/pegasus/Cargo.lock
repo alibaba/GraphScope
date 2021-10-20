@@ -939,6 +939,18 @@ dependencies = [
 ]
 
 [[package]]
+name = "pegasus_client"
+version = "0.1.0"
+dependencies = [
+ "pegasus",
+ "pegasus_server",
+ "prost",
+ "tokio",
+ "tokio-stream",
+ "tonic",
+]
+
+[[package]]
 name = "pegasus_common"
 version = "0.1.0"
 dependencies = [
