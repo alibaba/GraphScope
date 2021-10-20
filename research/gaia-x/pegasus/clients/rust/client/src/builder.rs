@@ -209,25 +209,40 @@ impl Plan {
         self
     }
 
-    pub fn merge<F>(&mut self, mut subtask: F) -> &mut Self
+    pub fn merge<FL, FR>(&mut self, mut left_task: FL, mut right_task: FR) -> &mut Self
     where
-        F: FnMut(&mut Plan),
+        FL: FnMut(&mut Plan),
+        FR: FnMut(&mut Plan),
     {
-        let mut sub_plan = Plan::default();
-        subtask(&mut sub_plan);
-        let merge = pb::Merge { task: Some(pb::TaskPlan { plan: sub_plan.take() }) };
+        let mut left_plan = Plan::default();
+        left_task(&mut left_plan);
+        let mut right_plan = Plan::default();
+        right_task(&mut right_plan);
+        let merge = pb::Merge {
+            left_task: Some(pb::TaskPlan { plan: left_plan.take() }),
+            right_task: Some(pb::TaskPlan { plan: right_plan.take() }),
+        };
         let op = pb::OperatorDef { op_kind: Some(pb::operator_def::OpKind::Merge(merge)) };
         self.plan.push(op);
         self
     }
 
-    pub fn join<F>(&mut self, join_kind: pb::join::JoinKind, mut subtask: F) -> &mut Self
+    pub fn join<FL, FR>(
+        &mut self, join_kind: pb::join::JoinKind, mut left_task: FL, mut right_task: FR,
+    ) -> &mut Self
     where
-        F: FnMut(&mut Plan),
+        FL: FnMut(&mut Plan),
+        FR: FnMut(&mut Plan),
     {
-        let mut join_plan = Plan::default();
-        subtask(&mut join_plan);
-        let join = pb::Join { kind: join_kind as i32, task: Some(pb::TaskPlan { plan: join_plan.take() }) };
+        let mut left_plan = Plan::default();
+        left_task(&mut left_plan);
+        let mut right_plan = Plan::default();
+        right_task(&mut right_plan);
+        let join = pb::Join {
+            kind: join_kind as i32,
+            left_task: Some(pb::TaskPlan { plan: left_plan.take() }),
+            right_task: Some(pb::TaskPlan { plan: right_plan.take() }),
+        };
         let op = pb::OperatorDef { op_kind: Some(pb::operator_def::OpKind::Join(join)) };
         self.plan.push(op);
         self
@@ -371,19 +386,23 @@ impl JobBuilder {
         self
     }
 
-    pub fn merge<F>(&mut self, subtask: F) -> &mut Self
+    pub fn merge<FL, FR>(&mut self, left_task: FL, right_task: FR) -> &mut Self
     where
-        F: FnMut(&mut Plan),
+        FL: FnMut(&mut Plan),
+        FR: FnMut(&mut Plan),
     {
-        self.plan.merge(subtask);
+        self.plan.merge(left_task, right_task);
         self
     }
 
-    pub fn join<F>(&mut self, join_kind: pb::join::JoinKind, subtask: F) -> &mut Self
+    pub fn join<FL, FR>(
+        &mut self, join_kind: pb::join::JoinKind, left_task: FL, right_task: FR,
+    ) -> &mut Self
     where
-        F: FnMut(&mut Plan),
+        FL: FnMut(&mut Plan),
+        FR: FnMut(&mut Plan),
     {
-        self.plan.join(join_kind, subtask);
+        self.plan.join(join_kind, left_task, right_task);
         self
     }
 
@@ -460,8 +479,8 @@ mod test {
     use super::*;
 
     #[test]
-    fn test_job_build() {
-        let mut builder = JobBuilder::new(JobConf::new("test_build"));
+    fn test_job_build_00() {
+        let mut builder = JobBuilder::new(JobConf::new("test_build_00"));
         builder
             .add_source(vec![0u8; 32])
             .map(vec![1u8; 32])
@@ -476,5 +495,42 @@ mod test {
         assert_eq!(&job_req.source.unwrap().resource, &vec![0u8; 32]);
         assert_eq!(&job_req.sink.unwrap().resource, &vec![6u8; 32]);
         assert_eq!(&job_req.plan.unwrap().plan.len(), &5);
+    }
+
+    #[test]
+    fn test_job_build_01() {
+        let mut builder = JobBuilder::new(JobConf::new("test_build_01"));
+        builder
+            .add_source(vec![0u8; 32])
+            .join(
+                pb::join::JoinKind::Inner,
+                |src1| {
+                    src1.map(vec![]).join(
+                        pb::join::JoinKind::Inner,
+                        |src1_1| {
+                            src1_1.map(vec![]);
+                        },
+                        |src1_2| {
+                            src1_2.map(vec![]);
+                        },
+                    );
+                },
+                |src2| {
+                    src2.map(vec![]).join(
+                        pb::join::JoinKind::Inner,
+                        |src2_1| {
+                            src2_1.map(vec![]);
+                        },
+                        |src2_2| {
+                            src2_2.map(vec![]);
+                        },
+                    );
+                },
+            )
+            .sink(vec![6u8; 32]);
+        let job_req = builder.build().unwrap();
+        assert_eq!(&job_req.source.unwrap().resource, &vec![0u8; 32]);
+        assert_eq!(&job_req.sink.unwrap().resource, &vec![6u8; 32]);
+        assert_eq!(&job_req.plan.unwrap().plan.len(), &1);
     }
 }
