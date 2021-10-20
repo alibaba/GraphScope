@@ -1482,11 +1482,21 @@ mod graph {
         destroy_ptr::<pb::EdgeExpand>(ptr)
     }
 
+    #[allow(dead_code)]
+    #[repr(i32)]
+    pub enum FfiVOpt {
+        Start = 0,
+        End = 1,
+        Other = 2,
+        This = 3,
+    }
+
     /// To initialize an expansion base
     #[no_mangle]
-    pub extern "C" fn init_getv_operator() -> *const c_void {
+    pub extern "C" fn init_getv_operator(opt: FfiVOpt) -> *const c_void {
         let getv = Box::new(pb::GetV {
             tag: None,
+            opt: unsafe { std::mem::transmute::<FfiVOpt, i32>(opt) },
             params: Some(pb::GQueryParams {
                 labels: vec![],
                 properties: vec![],
