@@ -27,6 +27,7 @@ use std::sync::Arc;
 
 #[derive(Default)]
 pub struct QueryParams {
+    // TODO: rename labels as table_names, props as columns;
     pub labels: Vec<NameOrId>,
     pub limit: Option<usize>,
     pub props: Option<Vec<NameOrId>>,
@@ -34,16 +35,16 @@ pub struct QueryParams {
     pub filter: Option<Evaluator>,
 }
 
-impl TryFrom<Option<algebra_pb::GQueryParams>> for QueryParams {
+impl TryFrom<Option<algebra_pb::QueryParams>> for QueryParams {
     type Error = ParsePbError;
 
-    fn try_from(query_params_pb: Option<algebra_pb::GQueryParams>) -> Result<Self, Self::Error> {
+    fn try_from(query_params_pb: Option<algebra_pb::QueryParams>) -> Result<Self, Self::Error> {
         query_params_pb.map_or(Ok(QueryParams::default()), |query_params_pb| {
             QueryParams::default()
-                .with_labels(query_params_pb.labels)?
+                .with_labels(query_params_pb.table_names)?
                 .with_filter(query_params_pb.predicate)?
                 .with_limit(query_params_pb.limit)?
-                .with_required_properties(query_params_pb.properties)?
+                .with_required_properties(query_params_pb.columns)?
                 .with_extra_params(query_params_pb.requirements)
         })
     }
@@ -68,10 +69,7 @@ impl QueryParams {
         Ok(self)
     }
 
-    fn with_limit(
-        mut self,
-        limit_pb: Option<algebra_pb::limit::Range>,
-    ) -> Result<Self, ParsePbError> {
+    fn with_limit(mut self, limit_pb: Option<algebra_pb::Range>) -> Result<Self, ParsePbError> {
         if let Some(range) = limit_pb {
             self.limit = Some(range.upper as usize);
         }

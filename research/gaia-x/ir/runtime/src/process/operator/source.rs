@@ -25,6 +25,7 @@ use ir_common::generated::common::value;
 use ir_common::NameOrId;
 use pegasus::api::function::FnResult;
 use std::collections::HashMap;
+use std::convert::TryFrom;
 use std::sync::Arc;
 
 pub enum SourceType {
@@ -35,33 +36,13 @@ pub enum SourceType {
 
 /// Source Operator, fetching a source from the (graph) database
 pub struct SourceOperator {
-    params: QueryParams,
+    query_params: QueryParams,
     src: Option<HashMap<u64, Vec<ID>>>,
-    tag: Option<NameOrId>,
+    alias: Option<NameOrId>,
     source_type: SourceType,
 }
 
 impl SourceOperator {
-    fn with(scan: algebra_pb::Scan) -> Self {
-        let scan_opt: algebra_pb::scan::ScanOpt = unsafe { ::std::mem::transmute(scan.scan_opt) };
-        let source_type = match scan_opt {
-            algebra_pb::scan::ScanOpt::Vertex => SourceType::Vertex,
-            algebra_pb::scan::ScanOpt::Edge => SourceType::Edge,
-            algebra_pb::scan::ScanOpt::Table => SourceType::Table,
-        };
-        // TODO: check tag is none?
-        SourceOperator {
-            params: QueryParams::default(),
-            src: None,
-            tag: None,
-            source_type,
-        }
-    }
-
-    fn set_tag(&mut self, tag: NameOrId) {
-        self.tag = Some(tag);
-    }
-
     /// Assign source vertex ids for each worker to call get_vertex
     fn set_src(&mut self, ids: Vec<ID>, job_workers: usize, partitioner: Arc<dyn Partitioner>) {
         let mut partitions = HashMap::new();
@@ -88,7 +69,7 @@ impl SourceOperator {
                 "Assign worker {:?} to scan partition list: {:?}",
                 worker_index, partition_list
             );
-            self.params.partitions = partition_list;
+            self.query_params.partitions = partition_list;
         } else {
             debug!("get partition list failed in graph_partition_manager in source op");
         }
@@ -108,15 +89,16 @@ impl SourceOperator {
                 if let Some(ref seeds) = self.src {
                     if let Some(src) = seeds.get(&(worker_index as u64)) {
                         if !src.is_empty() {
-                            v_source = graph.get_vertex(src, &self.params)?;
+                            v_source = graph.get_vertex(src, &self.query_params)?;
                         }
                     }
                 } else {
                     // parallel scan, and each worker should scan the partitions assigned to it in self.v_params.partitions
-                    v_source = graph.scan_vertex(&self.params)?;
+                    v_source = graph.scan_vertex(&self.query_params)?;
                 };
-                let tag = self.tag;
-                Ok(Box::new(v_source.map(move |v| Record::new(v, tag.clone()))))
+                Ok(Box::new(
+                    v_source.map(move |v| Record::new(v, self.alias.clone())),
+                ))
             }
             SourceType::Edge => {
                 let mut e_source =
@@ -124,15 +106,16 @@ impl SourceOperator {
                 if let Some(ref seeds) = self.src {
                     if let Some(src) = seeds.get(&(worker_index as u64)) {
                         if !src.is_empty() {
-                            e_source = graph.get_edge(src, &self.params)?;
+                            e_source = graph.get_edge(src, &self.query_params)?;
                         }
                     }
                 } else {
                     // parallel scan, and each worker should scan the partitions assigned to it in self.e_params.partitions
-                    e_source = graph.scan_edge(&self.params)?;
+                    e_source = graph.scan_edge(&self.query_params)?;
                 }
-                let tag = self.tag;
-                Ok(Box::new(e_source.map(move |e| Record::new(e, tag.clone()))))
+                Ok(Box::new(
+                    e_source.map(move |e| Record::new(e, self.alias.clone())),
+                ))
             }
             SourceType::Table => Err(str_to_dyn_error(
                 "Source type of Table is not supported yet",
@@ -149,15 +132,14 @@ pub fn source_op_from(
 ) -> Result<SourceOperator, ParsePbError> {
     if let Some(opr) = source_pb.opr.take() {
         match opr {
-            // TODO: no alias field in scan?
             algebra_pb::logical_plan::operator::Opr::Scan(scan) => {
-                let mut source_op = SourceOperator::with(scan);
+                let mut source_op = SourceOperator::try_from(scan)?;
                 source_op.set_partitions(job_workers, worker_index, partitioner);
                 Ok(source_op)
             }
             algebra_pb::logical_plan::operator::Opr::IndexedScan(indexed_scan) => {
                 let scan = indexed_scan.scan.ok_or("scan is missing in indexed_scan")?;
-                let mut source_op = SourceOperator::with(scan);
+                let mut source_op = SourceOperator::try_from(scan)?;
                 let global_ids = source_ids_from(indexed_scan.or_kv_equiv_pairs)?;
                 source_op.set_src(global_ids, job_workers, partitioner);
                 Ok(source_op)
@@ -166,6 +148,33 @@ pub fn source_op_from(
         }
     } else {
         Err("Empty source op in pb_request")?
+    }
+}
+
+impl TryFrom<algebra_pb::Scan> for SourceOperator {
+    type Error = ParsePbError;
+
+    fn try_from(scan_pb: algebra_pb::Scan) -> Result<Self, Self::Error> {
+        let scan_opt: algebra_pb::scan::ScanOpt =
+            unsafe { ::std::mem::transmute(scan_pb.scan_opt) };
+        let source_type = match scan_opt {
+            algebra_pb::scan::ScanOpt::Vertex => SourceType::Vertex,
+            algebra_pb::scan::ScanOpt::Edge => SourceType::Edge,
+            algebra_pb::scan::ScanOpt::Table => SourceType::Table,
+        };
+        let alias = scan_pb
+            .alias
+            .map(|alias| NameOrId::try_from(alias))
+            .transpose()?;
+
+        let query_params = QueryParams::try_from(scan_pb.params)?;
+
+        Ok(SourceOperator {
+            query_params,
+            src: None,
+            alias,
+            source_type,
+        })
     }
 }
 
