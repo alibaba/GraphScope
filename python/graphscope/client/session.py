@@ -27,6 +27,7 @@ import json
 import logging
 import os
 import pickle
+import signal
 import sys
 import threading
 import time
@@ -44,6 +45,7 @@ import graphscope
 from graphscope.client.rpc import GRPCClient
 from graphscope.client.utils import CaptureKeyboardInterrupt
 from graphscope.client.utils import GSLogger
+from graphscope.client.utils import SignalIgnore
 from graphscope.client.utils import set_defaults
 from graphscope.config import GSConfig as gs_config
 from graphscope.deploy.hosts.cluster import HostsClusterLauncher
@@ -774,9 +776,16 @@ class Session(object):
         """Closes this session.
 
         This method frees all resources associated with the session.
+
+        Note that closing will ignore SIGINT and SIGTERM signal and recover later.
         """
+        with SignalIgnore([signal.SIGINT, signal.SIGTERM]):
+            self._close()
+
+    def _close(self):
         if self._closed:
             return
+        time.sleep(5)
         self._closed = True
         self._coordinator_endpoint = None
 
@@ -973,7 +982,9 @@ class Session(object):
             self._coordinator_endpoint = self._launcher.coordinator_endpoint
 
         # waiting service ready
-        self._grpc_client = GRPCClient(self._launcher, self._config_params["reconnect"])
+        self._grpc_client = GRPCClient(
+            self._launcher, self._coordinator_endpoint, self._config_params["reconnect"]
+        )
         self._grpc_client.waiting_service_ready(
             timeout_seconds=self._config_params["timeout_seconds"],
         )
@@ -1116,6 +1127,16 @@ class Session(object):
         return _wrapper
 
     def learning(self, graph, nodes=None, edges=None, gen_labels=None):
+        """Start a graph learning engine.
+
+        Note that this method has been deprecated, using `graphlearn` replace.
+        """
+        warnings.warn(
+            "The method 'learning' has been deprecated, using graphlearn replace."
+        )
+        return self.graphlearn(graph, nodes, edges, gen_labels)
+
+    def graphlearn(self, graph, nodes=None, edges=None, gen_labels=None):
         """Start a graph learning engine.
 
         Args:
@@ -1414,7 +1435,7 @@ def gremlin(graph, engine_params=None):
     return get_default_session().gremlin(graph, engine_params)
 
 
-def learning(self, graph, nodes=None, edges=None, gen_labels=None):
+def graphlearn(graph, nodes=None, edges=None, gen_labels=None):
     """Create a graph learning engine.
 
     See params detail in :meth:`graphscope.Session.learning`
@@ -1433,4 +1454,4 @@ def learning(self, graph, nodes=None, edges=None, gen_labels=None):
     """
     if _default_session_stack.is_cleared():
         raise RuntimeError("No de fault session found.")
-    return get_default_session().learning(graph, nodes, edges, gen_labels)
+    return get_default_session().graphlearn(graph, nodes, edges, gen_labels)

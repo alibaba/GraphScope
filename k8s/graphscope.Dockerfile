@@ -4,10 +4,8 @@
 # the result image includes all runtime stuffs of graphscope, with analytical engine,
 # learning engine and interactive engine installed.
 
-ARG BASE_VERSION=v0.2.12
+ARG BASE_VERSION=v0.3.1
 FROM registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-vineyard:$BASE_VERSION as builder
-
-SHELL ["/usr/bin/scl", "enable", "devtoolset-7"]
 
 ARG CI=true
 ENV CI=$CI
@@ -78,9 +76,11 @@ RUN wget --no-verbose https://golang.org/dl/go1.15.5.linux-amd64.tar.gz && \
     cp $(go env GOPATH)/bin/zetcd /tmp/zetcd
 
 RUN source ~/.bashrc \
+    && sudo yum install -y clang-devel \
+    && export LIBCLANG_PATH=$(dirname $(python3 -c "import clang; print(clang.__file__)"))/native \
     && rustup component add rustfmt \
     && echo "build with profile: $profile" \
-    && cd ${HOME}/gs/interactive_engine/src/executor \
+    && cd ${HOME}/gs/interactive_engine/executor \
     && export CMAKE_PREFIX_PATH=/opt/graphscope \
     && export LIBRARY_PATH=$LIBRARY_PATH:/opt/graphscope/lib \
     && export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/opt/graphscope/lib \
@@ -112,9 +112,9 @@ COPY --from=builder /tmp/zetcd /opt/graphscope/bin/zetcd
 COPY --from=builder /home/graphscope/gs/k8s/precompile.py /tmp/precompile.py
 COPY --from=builder /home/graphscope/gs/k8s/kube_ssh /opt/graphscope/bin/kube_ssh
 COPY --from=builder /home/graphscope/gs/k8s/pre_stop.py /opt/graphscope/bin/pre_stop.py
-COPY --from=builder /home/graphscope/gs/interactive_engine/src/executor/target/$profile/executor /opt/graphscope/bin/executor
-COPY --from=builder /home/graphscope/gs/interactive_engine/src/executor/target/$profile/gaia_executor /opt/graphscope/bin/gaia_executor
-COPY --from=builder /home/graphscope/gs/interactive_engine/src/assembly/target/maxgraph-assembly-0.0.1-SNAPSHOT.tar.gz /opt/graphscope/maxgraph-assembly-0.0.1-SNAPSHOT.tar.gz
+COPY --from=builder /home/graphscope/gs/interactive_engine/executor/target/$profile/executor /opt/graphscope/bin/executor
+COPY --from=builder /home/graphscope/gs/interactive_engine/executor/target/$profile/gaia_executor /opt/graphscope/bin/gaia_executor
+COPY --from=builder /home/graphscope/gs/interactive_engine/assembly/target/maxgraph-assembly-0.0.1-SNAPSHOT.tar.gz /opt/graphscope/maxgraph-assembly-0.0.1-SNAPSHOT.tar.gz
 
 # install mars
 RUN pip3 install git+https://github.com/mars-project/mars.git@d09e1e4c3e32ceb05f42d0b5b79775b1ebd299fb#egg=pymars

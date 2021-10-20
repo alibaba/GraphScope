@@ -12,8 +12,6 @@ option(PROJECT_FRAME "Whether to build project frame" False)
 option(ENABLE_PREGEL_COMBINE "Whether enable combinator in pregel app." False)
 option(NETWORKX "networkx on?" ON)
 
-include(GNUInstallDirs)
-
 set(DEFAULT_BUILD_TYPE "RelWithDebInfo")
 if (NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
     message(STATUS "Setting build type to '${DEFAULT_BUILD_TYPE}' as none was specified.")
@@ -29,6 +27,9 @@ if (ENABLE_PREGEL_COMBINE)
     add_definitions(-D_ENABLE_COMBINE)
 endif ()
 
+include(CheckCXXCompilerFlag)
+include(GNUInstallDirs)
+
 set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -O0 -g")
@@ -39,13 +40,30 @@ else ()
 endif ()
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fopenmp")
 
+check_cxx_compiler_flag(-Wno-deprecated-declarations W_NO_DEPRECATED_DECLARATIONS)
+check_cxx_compiler_flag(-Wno-attributes W_NO_ATTRIBUTES)
+check_cxx_compiler_flag(-Wno-sign-compare W_NO_SIGN_COMPARE)
+check_cxx_compiler_flag(-Wno-class-memaccess W_NO_CLASS_MEMACCESS)
+if(W_NO_CLASS_MEMACCESS)
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-class-memaccess")
+endif()
+if (W_NO_DEPRECATED_DECLARATIONS)
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-deprecated-declarations")
+endif()
+if (W_NO_ATTRIBUTES)
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-attributes")
+endif()
+if (W_NO_SIGN_COMPARE)
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-sign-compare")
+endif()
+
 include_directories(${CMAKE_SOURCE_DIR})
 
 # eliminate a lot of warnings for newer version of boost library.
 add_compile_options(-DBOOST_BIND_GLOBAL_PLACEHOLDERS)
 
 # find MPI----------------------------------------------------------------------
-find_package(MPI REQUIRED)
+find_package(MPI QUIET)
 include_directories(SYSTEM ${MPI_CXX_INCLUDE_PATH})
 
 # find Threads------------------------------------------------------------------
@@ -53,12 +71,12 @@ set(CMAKE_THREAD_PREFER_PTHREAD ON)
 find_package(Threads REQUIRED)
 
 # find vineyard-----------------------------------------------------------------
-find_package(vineyard 0.2.12 REQUIRED)
+find_package(vineyard 0.3.1 QUIET)
 include_directories(${VINEYARD_INCLUDE_DIRS})
 add_compile_options(-DENABLE_SELECTOR)
 
 # find libgrape-lite------------------------------------------------------------
-find_package(libgrapelite REQUIRED)
+find_package(libgrapelite QUIET)
 include_directories(${LIBGRAPELITE_INCLUDE_DIRS})
 include_directories("${LIBGRAPELITE_INCLUDE_DIRS}/grape/analytical_apps")
 
@@ -68,6 +86,14 @@ if(GRAPHSCOPE_ANALYTICAL_HOME)
     set(ANALYTICAL_ENGINE_HOME ${GRAPHSCOPE_ANALYTICAL_HOME})
 else()
     set(ANALYTICAL_ENGINE_HOME $_analytical_engine_home)
+endif()
+
+# force load the config make if it exists
+include("${ANALYTICAL_ENGINE_HOME}/${CMAKE_INSTALL_LIBDIR}/cmake/graphscope-analytical/graphscope-analytical-config.cmake" OPTIONAL)
+if("${GRAPHSCOPE_GCC_ABI_BACKWARDS_COMPATIBLE}" STREQUAL "0")
+    add_definitions(-D_GLIBCXX_USE_CXX11_ABI=1)
+elseif("${GRAPHSCOPE_GCC_ABI_BACKWARDS_COMPATIBLE}" STREQUAL "1")
+    add_definitions(-D_GLIBCXX_USE_CXX11_ABI=0)
 endif()
 
 set(FRAME_NAME $_frame_name)
@@ -100,6 +126,17 @@ if(LIBUNWIND_FOUND)
     add_definitions(-DWITH_LIBUNWIND)
 endif()
 
+# find folly--------------------------------------------------------------------
+if (NETWORKX)
+    if(GRAPHSCOPE_ANALYTICAL_HOME)
+        include("${ANALYTICAL_ENGINE_HOME}/${CMAKE_INSTALL_LIBDIR}/cmake/graphscope-analytical/cmake/FindFolly.cmake")
+        include("${ANALYTICAL_ENGINE_HOME}/${CMAKE_INSTALL_LIBDIR}/cmake/graphscope-analytical/cmake/FindDoubleConversion.cmake")
+    else()
+        include("${ANALYTICAL_ENGINE_HOME}/cmake/FindFolly.cmake")
+        include("${ANALYTICAL_ENGINE_HOME}/cmake/FindDoubleConversion.cmake")
+    endif()
+endif ()
+
 # find Python-------------------------------------------------------------------
 if (${CYTHON_PREGEL_APP} OR ${CYTHON_PIE_APP})
   find_package(PythonLibs REQUIRED)
@@ -110,6 +147,8 @@ endif ()
 if(GRAPHSCOPE_ANALYTICAL_HOME)
     include_directories("${GRAPHSCOPE_ANALYTICAL_INCLUDE_DIRS}")
     include_directories("${GRAPHSCOPE_ANALYTICAL_HOME}/include/graphscope/apps")
+    # include vineyard----------------------------------------------------------
+    include_directories("${GRAPHSCOPE_ANALYTICAL_HOME}/include/vineyard")
 else()
     include_directories("${ANALYTICAL_ENGINE_HOME}")
     include_directories("${ANALYTICAL_ENGINE_HOME}/apps")
