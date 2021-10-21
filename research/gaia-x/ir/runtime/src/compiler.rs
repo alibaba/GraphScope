@@ -17,10 +17,12 @@ use crate::graph::partitioner::Partitioner;
 use crate::process::operator::filter::FilterFuncGen;
 use crate::process::operator::flatmap::FlatMapFuncGen;
 use crate::process::operator::map::MapFuncGen;
+use crate::process::operator::shuffle::RecordRouter;
 use crate::process::operator::sink::RecordSinkEncoder;
 use crate::process::operator::source::source_op_from;
 use crate::process::record::Record;
 use ir_common::generated::algebra as algebra_pb;
+use ir_common::generated::common as common_pb;
 use ir_common::generated::result as result_pb;
 use pegasus::api::function::*;
 use pegasus::api::{
@@ -36,6 +38,7 @@ use pegasus_server::pb::OperatorDef;
 use pegasus_server::service::JobParser;
 use pegasus_server::JobRequest;
 use prost::Message;
+use std::convert::TryInto;
 use std::sync::Arc;
 
 type RecordMap = Box<dyn MapFunction<Record, Record>>;
@@ -74,11 +77,18 @@ impl FnGenerator {
         Ok(step.gen_source(worker_id.index as usize)?)
     }
 
-    fn gen_shuffle(&self) -> Result<RecordShuffle, BuildJobError> {
-        todo!()
-        // let p = self.partitioner.clone();
-        // let num_workers = pegasus::get_current_worker().local_peers as usize;
-        // Ok(Box::new(Router { p, num_workers }))
+    fn gen_shuffle(&self, res: &BinaryResource) -> Result<RecordShuffle, BuildJobError> {
+        let p = self.partitioner.clone();
+        let num_workers = pegasus::get_current_worker().local_peers as usize;
+        // TODO: None shuffle_key
+        let shuffle_key = decode::<common_pb::NameOrId>(res)?
+            .try_into()
+            .map_err(|e| format!("{}", e))?;
+        Ok(Box::new(RecordRouter {
+            p,
+            num_workers,
+            shuffle_key: Some(shuffle_key),
+        }))
     }
 
     fn gen_map(&self, res: &BinaryResource) -> Result<RecordMap, BuildJobError> {
@@ -135,9 +145,8 @@ impl IRJobCompiler {
             if let Some(ref op_kind) = op.op_kind {
                 match op_kind {
                     server_pb::operator_def::OpKind::Comm(comm) => match &comm.ch_kind {
-                        Some(server_pb::communicate::ChKind::ToAnother(_)) => {
-                            // TODO: shuffle by key
-                            let router = self.udf_gen.gen_shuffle()?;
+                        Some(server_pb::communicate::ChKind::ToAnother(exchange)) => {
+                            let router = self.udf_gen.gen_shuffle(&exchange.resource)?;
                             stream = stream.repartition(move |t| router.route(t));
                         }
                         Some(server_pb::communicate::ChKind::ToOne(_)) => {

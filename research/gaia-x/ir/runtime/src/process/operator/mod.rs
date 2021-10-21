@@ -16,5 +16,6 @@
 pub(crate) mod filter;
 pub(crate) mod flatmap;
 pub(crate) mod map;
+pub(crate) mod shuffle;
 pub(crate) mod sink;
 pub(crate) mod source;
