@@ -19,6 +19,8 @@ option java_package = "com.alibaba.pegasus.service.protocol";
 option java_outer_classname = "PegasusClient";
 
 
+message Empty { }
+
 message BinaryResource {
   bytes resource = 1;
 }
@@ -110,28 +112,37 @@ message ExecutionPlan {
   repeated Operator plan = 1;
 }
 
+message ServerList {
+  repeated uint64 servers  = 1;
+}
+
 message JobConfig {
   uint64 job_id             = 1;
   string job_name           = 2;
   uint32 workers            = 3;
   uint64 time_limit         = 4;
   uint32 batch_size         = 5;
-  uint32 output_capacity    = 6;
-  uint32 memory_limit       = 7;
-  bool plan_print           = 8;
-  repeated uint64 servers   = 9;
+  uint32 batch_capacity     = 6;
+  uint32 scope_capacity     = 7;
+  uint32 memory_limit       = 8;
+  bool plan_print           = 9;
+  oneof servers {
+    Empty local             = 10;
+    ServerList part         = 11;
+    Empty all               = 12;
+  }
 }
 
 message JobRequest {
-  JobConfig conf                = 1;
-  Inputs source                  = 2;
-  ExecutionPlan plan     = 3;
+  JobConfig conf          = 1;
+  BinaryResource source   = 2;
+  BinaryResource plan     = 3;
   BinaryResource resource = 4;
 }
 
 message JobResponse {
-  uint64 job_id           = 1;
-  bytes data = 2;
+  uint64 job_id       = 1;
+  BinaryResource res  = 2;
 }
 
 service JobService {

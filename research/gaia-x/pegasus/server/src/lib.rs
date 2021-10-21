@@ -38,7 +38,6 @@ pub trait AnyData: Data + Eq {}
 
 // pub mod client;
 pub mod config;
-mod materialize;
 pub mod rpc;
 pub mod service;
 

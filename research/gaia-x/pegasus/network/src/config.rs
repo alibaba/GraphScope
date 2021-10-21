@@ -135,8 +135,6 @@ impl ConnectionParams {
 #[derive(Debug, Deserialize)]
 pub struct NetworkConfig {
     pub server_id: u64,
-    ip: String,
-    port: u16,
     nonblocking: Option<bool>,
     read_timeout_ms: Option<u32>,
     write_timeout_ms: Option<u32>,
@@ -144,12 +142,11 @@ pub struct NetworkConfig {
     no_delay: Option<bool>,
     send_buffer: Option<u32>,
     heartbeat_sec: Option<u32>,
-    peers: Option<Vec<PeerConfig>>,
+    servers: Option<Vec<ServerConfig>>,
 }
 
 #[derive(Debug, Deserialize)]
-pub struct PeerConfig {
-    server_id: u64,
+pub struct ServerConfig {
     ip: String,
     port: u16,
 }
@@ -165,8 +162,12 @@ impl NetworkConfig {
     }
 
     pub fn local_addr(&self) -> Result<SocketAddr, NetError> {
-        let ip = self.ip.parse()?;
-        Ok(SocketAddr::new(ip, self.port))
+        let index = self.server_id as usize;
+        if let Some(server) = self.servers.as_ref().and_then(|s| s.get(index)) {
+            Ok(SocketAddr::new(server.ip.parse()?, server.port))
+        } else {
+            Ok(SocketAddr::new("0.0.0.0".parse()?, 0))
+        }
     }
 
     pub fn get_connection_param(&self) -> ConnectionParams {
@@ -210,13 +211,13 @@ impl NetworkConfig {
         params
     }
 
-    pub fn get_peers(&self) -> Result<Option<Vec<Server>>, NetError> {
-        if let Some(ref peers) = self.peers {
-            let mut servers = Vec::with_capacity(peers.len());
-            for p in peers {
+    pub fn get_servers(&self) -> Result<Option<Vec<Server>>, NetError> {
+        if let Some(ref server_configs) = self.servers {
+            let mut servers = Vec::with_capacity(server_configs.len());
+            for (id, p) in server_configs.iter().enumerate() {
                 let ip = p.ip.parse()?;
                 let addr = SocketAddr::new(ip, p.port);
-                let server = Server { id: p.server_id, addr };
+                let server = Server { id: id as u64, addr };
                 servers.push(server);
             }
             Ok(Some(servers))
@@ -235,19 +236,15 @@ mod test {
     fn toml_config_test() {
         let content = r#"
             server_id = 0
-            ip = '127.0.0.1'
-            port = 80
             nonblocking = false
             read_timeout_ms = 8
             write_timeout_ms = 8
 
             [[peers]]
-            server_id = 0
             ip = '127.0.0.1'
             port = 8080
 
             [[peers]]
-            server_id = 1
             ip = '127.0.0.1'
             port = 8081
         "#;
@@ -266,7 +263,7 @@ mod test {
         assert_eq!(wp.nodelay, false);
         assert_eq!(wp.buffer, DEFAULT_SEND_BUFFER_SIZE);
         assert_eq!(wp.heartbeat, DEFAULT_HEARTBEAT_INTERVAL_SEC);
-        let peers = config.get_peers().unwrap().unwrap();
+        let peers = config.get_servers().unwrap().unwrap();
         assert_eq!(peers.len(), 2);
         assert_eq!(peers[0].id, 0);
         assert_eq!(peers[0].addr, "127.0.0.1:8080".parse().unwrap());

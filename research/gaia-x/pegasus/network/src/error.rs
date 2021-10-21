@@ -19,6 +19,7 @@ use std::net::{AddrParseError, SocketAddr};
 
 #[derive(Debug)]
 pub enum NetError {
+    InvalidConfig,
     ReadConfigError(toml::de::Error),
     IllegalChannelId,
     NotConnected(u64),
@@ -35,6 +36,9 @@ pub enum NetError {
 impl Display for NetError {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
         match self {
+            NetError::InvalidConfig => {
+                write!(f, "invalid config;")
+            }
             NetError::ReadConfigError(e) => {
                 write!(f, "parse configuration failure: {};", e)
             }

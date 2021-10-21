@@ -149,7 +149,7 @@ pub fn startup(conf: Configuration) -> Result<(), StartupError> {
         return Err(StartupError::AlreadyStarted(id));
     }
     if let Some(net_conf) = conf.network_config() {
-        if let Some(peers) = net_conf.get_peers()? {
+        if let Some(peers) = net_conf.get_servers()? {
             let addr = net_conf.local_addr()?;
             let conn_conf = net_conf.get_connection_param();
             for p in peers.iter() {

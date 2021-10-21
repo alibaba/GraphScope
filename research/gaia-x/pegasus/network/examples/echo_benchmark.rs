@@ -75,7 +75,7 @@ fn main() {
     let addr = config.local_addr().unwrap();
     let params = config.get_connection_param();
     println!("connection parameters: {:?}", params);
-    let peers = config.get_peers().unwrap();
+    let peers = config.get_servers().unwrap();
     if peers.is_none() {
         eprintln!("no network peers found;");
         return;

@@ -20,12 +20,12 @@ use std::fmt::Debug;
 use std::path::Path;
 
 use pegasus::{Configuration, StartupError};
-use pegasus_network::config::{NetworkConfig, PeerConfig};
+use pegasus_network::config::{NetworkConfig, ServerConfig};
 use serde::Deserialize;
 
 #[derive(Debug, Deserialize)]
 pub struct HostsConfig {
-    pub peers: Vec<PeerConfig>,
+    pub peers: Vec<ServerConfig>,
 }
 
 impl HostsConfig {
@@ -101,4 +101,9 @@ pub fn combine_config(
     //     }
     // }
     unimplemented!()
+}
+
+pub struct RpcServerConfig {
+    host: String,
+    port: u16,
 }
