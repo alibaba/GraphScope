@@ -13,6 +13,7 @@
  */
 package com.alibaba.maxgraph.tests.ingestor;
 
+import com.alibaba.graphscope.groot.metrics.MetricsCollector;
 import com.alibaba.graphscope.groot.operation.OperationBatch;
 import com.alibaba.maxgraph.common.config.Configs;
 import com.alibaba.graphscope.groot.wal.LogReader;
@@ -60,7 +61,12 @@ public class IngestProcessorTest {
 
         IngestProcessor ingestProcessor =
                 new IngestProcessor(
-                        configs, mockLogService, mockBatchSender, queueId, ingestSnapshotId, null);
+                        configs,
+                        mockLogService,
+                        mockBatchSender,
+                        queueId,
+                        ingestSnapshotId,
+                        new MetricsCollector(configs));
         ingestProcessor.setTailOffset(tailOffset);
         ingestProcessor.start();
 

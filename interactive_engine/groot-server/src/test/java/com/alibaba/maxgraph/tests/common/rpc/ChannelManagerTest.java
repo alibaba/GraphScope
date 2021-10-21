@@ -26,7 +26,10 @@ public class ChannelManagerTest {
     @Test
     void testChannelManager() {
         Configs configs =
-                Configs.newBuilder().put(CommonConfig.STORE_NODE_COUNT.getKey(), "1").build();
+                Configs.newBuilder()
+                        .put(CommonConfig.STORE_NODE_COUNT.getKey(), "1")
+                        .put(CommonConfig.DISCOVERY_MODE.getKey(), "zookeeper")
+                        .build();
         ChannelManager channelManager = new ChannelManager(configs, new MockFactory());
         channelManager.registerRole(RoleType.STORE);
         channelManager.start();

@@ -31,7 +31,10 @@ public class RoleClientsTest {
     @Test
     void testRoleClients() {
         Configs configs =
-                Configs.newBuilder().put(CommonConfig.STORE_NODE_COUNT.getKey(), "1").build();
+                Configs.newBuilder()
+                        .put(CommonConfig.STORE_NODE_COUNT.getKey(), "1")
+                        .put(CommonConfig.DISCOVERY_MODE.getKey(), "zookeeper")
+                        .build();
         ChannelManager channelManager = new ChannelManager(configs, new MockFactory());
         RoleClients<MockRoleClient> clients =
                 new RoleClients<>(channelManager, RoleType.STORE, MockRoleClient::new);
