@@ -154,10 +154,6 @@ impl From<LogicalPlan> for pb::LogicalPlan {
 
 #[allow(dead_code)]
 impl LogicalPlan {
-    pub fn root(&self) -> Option<NodeType> {
-        self.nodes.get(0).cloned()
-    }
-
     pub fn get_node(&self, id: u32) -> Option<NodeType> {
         self.nodes.get(id as usize).cloned()
     }

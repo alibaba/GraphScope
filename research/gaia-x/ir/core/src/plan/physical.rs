@@ -25,7 +25,7 @@ use prost::{EncodeError, Message};
 use std::fmt;
 use crate::plan::logical::LogicalPlan;
 
-/// Record any error that transform the ir to a pegasus physical plan
+/// Record any error while transforming ir to a pegasus physical plan
 #[derive(Debug, Clone)]
 pub enum PhysicalError {
     PbEncodeError(EncodeError),
