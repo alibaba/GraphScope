@@ -16,14 +16,32 @@
 use crate::graph::element::Element;
 use crate::graph::partitioner::Partitioner;
 use crate::process::record::{Entry, Record, RecordElement};
+use ir_common::error::ParsePbError;
+use ir_common::generated::common as common_pb;
 use ir_common::NameOrId;
 use pegasus::api::function::{FnResult, RouteFunction};
+use std::convert::TryInto;
 use std::sync::Arc;
 
 pub struct RecordRouter {
-    pub p: Arc<dyn Partitioner>,
-    pub num_workers: usize,
-    pub shuffle_key: Option<NameOrId>,
+    p: Arc<dyn Partitioner>,
+    num_workers: usize,
+    shuffle_key: Option<NameOrId>,
+}
+
+impl RecordRouter {
+    pub fn new(
+        p: Arc<dyn Partitioner>,
+        num_workers: usize,
+        shuffle_key: Option<common_pb::NameOrId>,
+    ) -> Result<Self, ParsePbError> {
+        let shuffle_key = shuffle_key.map(|e| e.try_into()).transpose()?;
+        Ok(RecordRouter {
+            p,
+            num_workers,
+            shuffle_key,
+        })
+    }
 }
 
 impl RouteFunction<Record> for RecordRouter {

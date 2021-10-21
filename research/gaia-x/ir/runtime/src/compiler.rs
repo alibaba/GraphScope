@@ -38,7 +38,6 @@ use pegasus_server::pb::OperatorDef;
 use pegasus_server::service::JobParser;
 use pegasus_server::JobRequest;
 use prost::Message;
-use std::convert::TryInto;
 use std::sync::Arc;
 
 type RecordMap = Box<dyn MapFunction<Record, Record>>;
@@ -51,8 +50,6 @@ type BinaryResource = Vec<u8>;
 
 pub struct IRJobCompiler {
     udf_gen: FnGenerator,
-    num_servers: usize,
-    server_index: u64,
 }
 
 struct FnGenerator {
@@ -81,14 +78,10 @@ impl FnGenerator {
         let p = self.partitioner.clone();
         let num_workers = pegasus::get_current_worker().local_peers as usize;
         // TODO: None shuffle_key
-        let shuffle_key = decode::<common_pb::NameOrId>(res)?
-            .try_into()
-            .map_err(|e| format!("{}", e))?;
-        Ok(Box::new(RecordRouter {
-            p,
-            num_workers,
-            shuffle_key: Some(shuffle_key),
-        }))
+        let shuffle_key = decode::<common_pb::NameOrId>(res)?;
+        let record_router =
+            RecordRouter::new(p, num_workers, Some(shuffle_key)).map_err(|e| format!("{}", e))?;
+        Ok(Box::new(record_router))
     }
 
     fn gen_map(&self, res: &BinaryResource) -> Result<RecordMap, BuildJobError> {
@@ -116,27 +109,13 @@ impl FnGenerator {
 }
 
 impl IRJobCompiler {
-    pub fn new<D: Partitioner>(partitioner: D, num_servers: usize, server_index: u64) -> Self {
+    pub fn new<D: Partitioner>(partitioner: D) -> Self {
         IRJobCompiler {
             udf_gen: FnGenerator::new(Arc::new(partitioner)),
-            num_servers,
-            server_index,
         }
     }
 
-    pub fn get_num_servers(&self) -> usize {
-        self.num_servers
-    }
-
-    pub fn get_server_index(&self) -> u64 {
-        self.server_index
-    }
-
-    pub fn get_partitioner(&self) -> Arc<dyn Partitioner> {
-        self.udf_gen.partitioner.clone()
-    }
-
-    pub fn install(
+    fn install(
         &self,
         mut stream: Stream<Record>,
         plan: &[OperatorDef],
