@@ -3,8 +3,8 @@ use std::collections::HashMap;
 use std::sync::Arc;
 use std::sync::atomic::{AtomicIsize, Ordering};
 use crate::db::api::*;
-use crate::db::storage::ExternalStorage;
-use crate::db::storage::rocksdb::RocksDB;
+use crate::db::storage::{ExternalStorage, ExternalStorageBackup};
+use crate::db::storage::rocksdb::{RocksDB};
 use crate::db::util::lock::GraphMutexLock;
 use super::vertex::*;
 use super::edge::*;
@@ -26,6 +26,10 @@ pub struct GraphStore {
     // ensure all modification to graph is in ascending order of snapshot_id
     si_guard: AtomicIsize,
     lock: GraphMutexLock<()>,
+}
+
+pub struct GraphBackupEngine {
+    engine: Box<dyn ExternalStorageBackup>,
 }
 
 impl GraphStorage for GraphStore {
@@ -327,6 +331,44 @@ impl GraphStorage for GraphStore {
             info!("online vertex. labelId {}, tableId {}, si {}", target.label_id, table_id, si);
         }
         Ok(true)
+    }
+
+    fn open_backup_engine(&self, backup_path: &str) -> GraphResult<Box<dyn GraphBackup>> {
+        let engine = res_unwrap!(self.storage.open_backup_engine(backup_path), open_backup_engine, backup_path)?;
+        let ret = GraphBackupEngine {
+            engine
+        };
+        Ok(Box::from(ret))
+    }
+}
+
+impl GraphBackup for GraphBackupEngine {
+    fn create_new_backup(&mut self) -> GraphResult<BackupId> {
+        self.engine.create_new_backup()
+    }
+
+    fn delete_backup(&mut self, backup_id: BackupId) -> GraphResult<()> {
+        self.engine.delete_backup(backup_id)
+    }
+
+    fn purge_old_backups(&mut self, num_backups_to_keep: usize) -> GraphResult<()> {
+        self.engine.purge_old_backups(num_backups_to_keep)
+    }
+
+    fn restore_from_backup(&mut self, restore_path: &str, backup_id: BackupId) -> GraphResult<()> {
+        self.engine.restore_from_backup(restore_path, backup_id)
+    }
+
+    fn restore_from_latest_backup(&mut self, restore_path: &str) -> GraphResult<()> {
+        self.engine.restore_from_latest_backup(restore_path)
+    }
+
+    fn verify_backup(&self, backup_id: BackupId) -> GraphResult<()> {
+        self.engine.verify_backup(backup_id)
+    }
+
+    fn get_backup_list(&self) -> Vec<BackupId> {
+        self.engine.get_backup_list()
     }
 }
 
@@ -632,6 +674,16 @@ mod tests {
     fn test_si_guard() {
         let path = "test_si_guard";
         do_test(path, |graph| tests::graph::test_si_guard(graph));
+    }
+
+    #[test]
+    fn test_backup_engine() {
+        let test_dir = "test_backup_engine";
+        fs::rmr(&test_dir).unwrap();
+        let store_path = format!("store_test/{}/store", test_dir);
+        let graph = create_empty_graph(&store_path);
+        tests::backup::test_backup_engine(graph, test_dir);
+        fs::rmr(&test_dir).unwrap();
     }
 
     fn do_test<F: Fn(GraphStore)>(path: &str, func: F) {
