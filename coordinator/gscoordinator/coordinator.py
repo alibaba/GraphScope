@@ -532,17 +532,24 @@ class CoordinatorServiceServicer(
 
     def _maybe_compile_app(self, op):
         app_sig = get_app_sha256(op.attr)
-        space = self._builtin_workspace
-        if types_pb2.GAR in op.attr:
-            space = self._udf_app_workspace
+        # try to get compiled file from GRAPHSCOPE_HOME/precompiled
+        space = os.path.join(GRAPHSCOPE_HOME, "precompiled", "builtin")
         app_lib_path = get_lib_path(os.path.join(space, app_sig), app_sig)
         if not os.path.isfile(app_lib_path):
-            compiled_path = self._compile_lib_and_distribute(compile_app, app_sig, op)
-            if app_lib_path != compiled_path:
-                raise RuntimeError(
-                    f"Computed application library path not equal to compiled path, {app_lib_path} versus {compiled_path}"
+            space = self._builtin_workspace
+            if types_pb2.GAR in op.attr:
+                space = self._udf_app_workspace
+            # try to get compiled file from workspace
+            app_lib_path = get_lib_path(os.path.join(space, app_sig), app_sig)
+            if not os.path.isfile(app_lib_path):
+                # compile and distribute
+                compiled_path = self._compile_lib_and_distribute(
+                    compile_app, app_sig, op
                 )
-
+                if app_lib_path != compiled_path:
+                    raise RuntimeError(
+                        f"Computed application library path not equal to compiled path, {app_lib_path} versus {compiled_path}"
+                    )
         op.attr[types_pb2.APP_LIBRARY_PATH].CopyFrom(
             attr_value_pb2.AttrValue(s=app_lib_path.encode("utf-8"))
         )
@@ -550,16 +557,22 @@ class CoordinatorServiceServicer(
 
     def _maybe_register_graph(self, op, session_id):
         graph_sig = get_graph_sha256(op.attr)
-        space = self._builtin_workspace
+        # try to get compiled file from GRAPHSCOPE_HOME/precompiled
+        space = os.path.join(GRAPHSCOPE_HOME, "precompiled", "builtin")
         graph_lib_path = get_lib_path(os.path.join(space, graph_sig), graph_sig)
         if not os.path.isfile(graph_lib_path):
-            compiled_path = self._compile_lib_and_distribute(
-                compile_graph_frame, graph_sig, op
-            )
-            if graph_lib_path != compiled_path:
-                raise RuntimeError(
-                    f"Computed graph library path not equal to compiled path, {graph_lib_path} versus {compiled_path}"
+            space = self._builtin_workspace
+            # try to get compiled file from workspace
+            graph_lib_path = get_lib_path(os.path.join(space, graph_sig), graph_sig)
+            if not os.path.isfile(graph_lib_path):
+                # compile and distribute
+                compiled_path = self._compile_lib_and_distribute(
+                    compile_graph_frame, graph_sig, op
                 )
+                if graph_lib_path != compiled_path:
+                    raise RuntimeError(
+                        f"Computed graph library path not equal to compiled path, {graph_lib_path} versus {compiled_path}"
+                    )
         if graph_sig not in self._object_manager:
             # register graph
             op_def = op_def_pb2.OpDef(op=types_pb2.REGISTER_GRAPH_TYPE)

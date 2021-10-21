@@ -22,6 +22,8 @@ from graphscope.analytical.app.attribute_assortativity import \
     attribute_assortativity_coefficient
 from graphscope.analytical.app.attribute_assortativity import \
     numeric_assortativity_coefficient
+from graphscope.analytical.app.average_degree_connectivity import \
+    average_degree_connectivity
 
 # fmt: on
 from graphscope.analytical.app.bfs import bfs
@@ -37,6 +39,7 @@ from graphscope.analytical.app.degree_assortativity_coefficient import \
 from graphscope.analytical.app.degree_centrality import degree_centrality
 from graphscope.analytical.app.eigenvector_centrality import eigenvector_centrality
 from graphscope.analytical.app.hits import hits
+from graphscope.analytical.app.is_simple_path import is_simple_path
 from graphscope.analytical.app.k_core import k_core
 from graphscope.analytical.app.k_shell import k_shell
 from graphscope.analytical.app.katz_centrality import katz_centrality

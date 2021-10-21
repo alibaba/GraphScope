@@ -1,0 +1,111 @@
+source_op {
+  base {
+    id: 1
+    operator_type: SOURCE_CHAIN
+    chained_function {
+      argument {
+      }
+    }
+    chained_function {
+      function_type: HAS
+      compare_list {
+        prop_id: -2
+        compare: EQ
+        value {
+          int_value: 8
+        }
+        type: VT_INT
+      }
+      compare_list {
+        prop_id: 7
+        compare: EQ
+        value {
+          long_value: 10995117410848
+        }
+      }
+      after_requirement {
+        req_argument {
+          int_value_list: -11
+        }
+      }
+    }
+    chained_function {
+      function_type: IN
+      argument {
+        int_value_list: 14
+      }
+      after_requirement {
+        req_argument {
+          int_value_list: -12
+        }
+      }
+    }
+  }
+}
+unary_op {
+  base {
+    id: 4
+    operator_type: UNARY_CHAIN
+    chained_function {
+      function_type: PROP_MAP_VALUE
+      argument {
+        int_value: 1
+      }
+      after_requirement {
+        req_argument {
+          int_value_list: -13
+        }
+      }
+    }
+    chained_function {
+      function_type: SELECT_ONE
+      argument {
+        bool_value: true
+        int_value_list: -12
+      }
+    }
+  }
+  input_operator_id: 1
+}
+unary_op {
+  base {
+    id: 6
+    operator_type: OUT
+    argument {
+      int_value_list: 20
+    }
+  }
+  input_operator_id: 4
+}
+unary_op {
+  base {
+    id: 7
+    operator_type: UNARY_CHAIN
+    chained_function {
+      function_type: PROP_MAP_VALUE
+      argument {
+        int_value: 1
+      }
+      after_requirement {
+        req_argument {
+          int_value_list: -14
+        }
+      }
+    }
+    chained_function {
+      function_type: SELECT
+      argument {
+        bool_value: true
+        int_value_list: -13
+        int_value_list: -14
+        int_value_list: -13
+        int_value_list: -14
+      }
+    }
+  }
+  input_operator_id: 6
+}
+operator_id_list: 1
+operator_id_list: 4
+operator_id_list: 6
+operator_id_list: 7

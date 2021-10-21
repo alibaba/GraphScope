@@ -16,8 +16,29 @@
 # limitations under the License.
 #
 
+import sys
 import threading
 from queue import Queue
+
+from tqdm import tqdm
+
+
+class LoadingProgressTracker:
+    progbar = None
+    cur_stub = 0
+
+    stubs = [
+        "PROGRESS--GRAPH-LOADING-READ-VERTEX-0",
+        "PROGRESS--GRAPH-LOADING-READ-VERTEX-100",
+        "PROGRESS--GRAPH-LOADING-READ-EDGE-0",
+        "PROGRESS--GRAPH-LOADING-READ-EDGE-100",
+        "PROGRESS--GRAPH-LOADING-CONSTRUCT-VERTEX-0",
+        "PROGRESS--GRAPH-LOADING-CONSTRUCT-VERTEX-100",
+        "PROGRESS--GRAPH-LOADING-CONSTRUCT-EDGE-0",
+        "PROGRESS--GRAPH-LOADING-CONSTRUCT-EDGE-100",
+        "PROGRESS--GRAPH-LOADING-SEAL-0",
+        "PROGRESS--GRAPH-LOADING-SEAL-100",
+    ]
 
 
 class StdStreamWrapper(object):
@@ -41,6 +62,9 @@ class StdStreamWrapper(object):
         self._drop = drop
 
     def write(self, line):
+        line = self._filter_progress(line)
+        if line is None:
+            return
         line = line.encode("ascii", "ignore").decode("ascii")
         self._stream_backup.write(line)
         if not self._drop:
@@ -51,6 +75,28 @@ class StdStreamWrapper(object):
 
     def poll(self, block=True, timeout=None):
         return self._lines.get(block=block, timeout=timeout)
+
+    def _show_progress(self):
+        total = len(LoadingProgressTracker.stubs)
+        if LoadingProgressTracker.progbar is None:
+            LoadingProgressTracker.progbar = tqdm(
+                desc="Loading Graph", total=total, file=sys.stderr
+            )
+        LoadingProgressTracker.progbar.update(1)
+        LoadingProgressTracker.cur_stub += 1
+        if LoadingProgressTracker.cur_stub == total:
+            LoadingProgressTracker.cur_stub = 0
+            LoadingProgressTracker.progbar.close()
+            LoadingProgressTracker.progbar = None
+            sys.stderr.write("\n")
+            sys.stderr.flush()
+
+    def _filter_progress(self, line):
+        # print('show_progress: ', len(line), ", ", line)
+        if "PROGRESS--GRAPH" not in line:
+            return line
+        self._show_progress(line)
+        return None
 
 
 class PipeWatcher(object):

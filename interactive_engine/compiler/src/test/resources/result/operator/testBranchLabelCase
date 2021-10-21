@@ -1,0 +1,81 @@
+query_plan {
+  source_op {
+    base {
+      id: 1
+      argument {
+      }
+    }
+  }
+  unary_op {
+    base {
+      id: 2
+      operator_type: FILTER
+      argument {
+        bool_value: true
+      }
+      logical_compare {
+        prop_id: -2
+        compare: EQ
+        value {
+          int_value: 1
+          value_type: VT_INT
+        }
+        type: VT_INT
+      }
+    }
+    input_operator_id: 1
+  }
+  unary_op {
+    base {
+      id: 3
+      operator_type: PROP_VALUE
+      argument {
+        int_value_list: 9999
+      }
+    }
+    input_operator_id: 2
+    shuffle_type: SHUFFLE_BY_KEY_TYPE
+  }
+  unary_op {
+    base {
+      id: 4
+      operator_type: FILTER
+      argument {
+        bool_value: true
+      }
+      logical_compare {
+        prop_id: -2
+        compare: EQ
+        value {
+          int_value: 5
+          value_type: VT_INT
+        }
+        type: VT_INT
+      }
+    }
+    input_operator_id: 1
+  }
+  unary_op {
+    base {
+      id: 5
+      operator_type: OUT
+      argument {
+      }
+    }
+    input_operator_id: 4
+  }
+  binary_op {
+    base {
+      id: 6
+      operator_type: UNION
+    }
+    left_input_operator_id: 3
+    right_input_operator_id: 5
+  }
+  operator_id_list: 1
+  operator_id_list: 2
+  operator_id_list: 3
+  operator_id_list: 4
+  operator_id_list: 5
+  operator_id_list: 6
+}

@@ -22,7 +22,6 @@
 #include "core/context/vertex_data_context.h"
 #include "core/context/vertex_property_context.h"
 #include "core/fragment/dynamic_fragment.h"
-#include "core/fragment/dynamic_fragment_reporter.h"
 #include "core/grape_instance.h"
 #include "core/io/property_parser.h"
 #include "core/launcher.h"
@@ -242,28 +241,10 @@ bl::result<void> GrapeInstance::unloadContext(const rpc::GSParams& params) {
 
 bl::result<std::string> GrapeInstance::reportGraph(
     const rpc::GSParams& params) {
-#ifdef NETWORKX
   BOOST_LEAF_AUTO(graph_name, params.Get<std::string>(rpc::GRAPH_NAME));
   BOOST_LEAF_AUTO(wrapper,
                   object_manager_.GetObject<IFragmentWrapper>(graph_name));
-  auto graph_type = wrapper->graph_def().graph_type();
-
-  if (graph_type != rpc::graph::DYNAMIC_PROPERTY) {
-    RETURN_GS_ERROR(
-        vineyard::ErrorCode::kInvalidValueError,
-        "GraphType must be DYNAMIC_PROPERTY, the origin graph type is:  " +
-            rpc::graph::GraphTypePb_Name(graph_type) +
-            ", graph id: " + graph_name);
-  }
-  auto fragment =
-      std::static_pointer_cast<DynamicFragment>(wrapper->fragment());
-  DynamicGraphReporter reporter(comm_spec_);
-  return reporter.Report(fragment, params);
-#else
-  RETURN_GS_ERROR(vineyard::ErrorCode::kUnimplementedMethod,
-                  "GraphScope is built with NETWORKX=OFF, please recompile it "
-                  "with NETWORKX=ON");
-#endif  // NETWORKX
+  return wrapper->ReportGraph(comm_spec_, params);
 }
 
 bl::result<void> GrapeInstance::modifyVertices(
@@ -622,10 +603,11 @@ bl::result<rpc::graph::GraphDefPb> GrapeInstance::convertGraph(
 
   if (src_graph_type == rpc::graph::ARROW_PROPERTY &&
       dst_graph_type == rpc::graph::DYNAMIC_PROPERTY) {
-    BOOST_LEAF_AUTO(default_label, params.Get<std::string>(rpc::DEFAULT_LABEL));
-    BOOST_LEAF_AUTO(dst_graph_wrapper,
-                    g_utils->ToDynamicFragment(comm_spec_, src_frag_wrapper,
-                                               dst_graph_name, default_label));
+    BOOST_LEAF_AUTO(default_label_id,
+                    params.Get<int64_t>(rpc::DEFAULT_LABEL_ID));
+    BOOST_LEAF_AUTO(dst_graph_wrapper, g_utils->ToDynamicFragment(
+                                           comm_spec_, src_frag_wrapper,
+                                           dst_graph_name, default_label_id));
     BOOST_LEAF_CHECK(object_manager_.PutObject(dst_graph_wrapper));
     return dst_graph_wrapper->graph_def();
   } else if (src_graph_type == rpc::graph::DYNAMIC_PROPERTY &&

@@ -28,6 +28,7 @@ import logging
 import numbers
 import os
 import pickle
+import re
 import shutil
 import socket
 import subprocess
@@ -80,6 +81,7 @@ BUILTIN_APP_RESOURCE_PATH = os.path.join(
 )
 # default config file in gar resource
 DEFAULT_GS_CONFIG_FILE = ".gs_conf.yaml"
+DEFAULT_GRAPHSCOPE_HOME = "/opt/graphscope"
 
 # GRAPHSCOPE_HOME
 #   1) get from environment variable `GRAPHSCOPE_HOME`, if not exist,
@@ -91,10 +93,10 @@ if GRAPHSCOPE_HOME is None:
     if os.path.isdir(os.path.join(COORDINATOR_HOME, "graphscope.runtime")):
         GRAPHSCOPE_HOME = os.path.join(COORDINATOR_HOME, "graphscope.runtime")
 
-# resolve from egg installed package
+# find from DEFAULT_GRAPHSCOPE_HOME
 if GRAPHSCOPE_HOME is None:
-    if os.path.isdir(os.path.join(COORDINATOR_HOME, "..", "graphscope.runtime")):
-        GRAPHSCOPE_HOME = os.path.join(COORDINATOR_HOME, "..", "graphscope.runtime")
+    if os.path.isdir(DEFAULT_GRAPHSCOPE_HOME):
+        GRAPHSCOPE_HOME = DEFAULT_GRAPHSCOPE_HOME
 
 # resolve from develop source tree
 if GRAPHSCOPE_HOME is None:
@@ -210,7 +212,8 @@ def compile_app(workspace: str, library_name, attr, engine_config: dict):
         "cmake",
         ".",
         f"-DNETWORKX={engine_config['networkx']}",
-        "-DCMAKE_PREFIX_PATH={GRAPHSCOPE_HOME}",
+        f"-DCMAKE_PREFIX_PATH={GRAPHSCOPE_HOME}",
+        "-DPYTHON_EXECUTABLE={0}".format(sys.executable),
     ]
     if app_type != "cpp_pie":
         if app_type == "cython_pregel":
@@ -373,7 +376,6 @@ def compile_graph_frame(workspace: str, library_name, attr: dict, engine_config:
 
 def op_pre_process(op, op_result_pool, key_to_op, **kwargs):  # noqa: C901
     if op.op == types_pb2.REPORT_GRAPH:
-        # do nothing for nx report graph
         return
     if op.op == types_pb2.CREATE_GRAPH:
         _pre_process_for_create_graph_op(op, op_result_pool, key_to_op, **kwargs)
@@ -1265,6 +1267,14 @@ class ResolveMPICmdPrefix(object):
         ['mpirun', '-n', '4', '-host', 'h1:2,h2:1,h3:1']
         >>> env
         {} # always empty
+
+        >>> # run without mpi on localhost when setting `num_workers` to 1
+        >>> rmcp = ResolveMPICmdPrefix()
+        >>> (cmd, env) = rmcp.resolve(1, 'localhost')
+        >>> cmd
+        []
+        >>> env
+        {}
     """
 
     _OPENMPI_RSH_AGENT = "OMPI_MCA_plm_rsh_agent"
@@ -1308,6 +1318,10 @@ class ResolveMPICmdPrefix(object):
     def resolve(self, num_workers, hosts):
         cmd = []
         env = {}
+
+        if num_workers == 1 and (hosts == "localhost" or hosts == "127.0.0.1"):
+            # run without mpi on localhost if workers num is 1
+            return cmd, env
 
         if self.openmpi():
             env["OMPI_MCA_btl_vader_single_copy_mechanism"] = "none"
@@ -1493,6 +1507,24 @@ def check_argument(condition, message=None):
         if message is None:
             message = "in '%s'" % inspect.stack()[1].code_context[0]
         raise ValueError(f"Check failed: {message}")
+
+
+def find_java():
+    java_exec = ""
+    if "JAVA_HOME" in os.environ:
+        java_exec = os.path.expandvars("$JAVA_HOME/bin/java")
+    if not java_exec:
+        java_exec = shutil.which("java")
+    if not java_exec:
+        raise RuntimeError("java command not found.")
+    return java_exec
+
+
+def get_java_version():
+    java_exec = find_java()
+    pattern = r'"(\d+\.\d+\.\d+).*"'
+    version = subprocess.check_output([java_exec, "-version"], stderr=subprocess.STDOUT)
+    return re.search(pattern, version.decode("utf-8")).groups()[0]
 
 
 def check_gremlin_server_ready(endpoint):

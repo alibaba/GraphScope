@@ -111,8 +111,8 @@ void LoadGraph(
           BOOST_LEAF_AUTO(frag_group_id, loader.LoadFragmentAsFragmentGroup());
           MPI_Barrier(comm_spec.comm());
 
-          LOG(INFO) << "[worker-" << comm_spec.worker_id()
-                    << "] loaded graph to vineyard ...";
+          LOG_IF(INFO, comm_spec.worker_id() == 0)
+              << "PROGRESS--GRAPH-LOADING-SEAL-100";
 
           MPI_Barrier(comm_spec.comm());
           {
@@ -222,7 +222,7 @@ void ToArrowFragment(
 void ToDynamicFragment(
     const grape::CommSpec& comm_spec,
     std::shared_ptr<gs::IFragmentWrapper>& wrapper_in,
-    const std::string& dst_graph_name, const std::string& default_label,
+    const std::string& dst_graph_name, int default_label_id,
     gs::bl::result<std::shared_ptr<gs::IFragmentWrapper>>& wrapper_out) {
   wrapper_out = gs::bl::try_handle_some([&]() -> gs::bl::result<std::shared_ptr<
                                                   gs::IFragmentWrapper>> {
@@ -235,7 +235,7 @@ void ToDynamicFragment(
     auto arrow_frag =
         std::static_pointer_cast<_GRAPH_TYPE>(wrapper_in->fragment());
     gs::ArrowToDynamicConverter<_GRAPH_TYPE> converter(comm_spec,
-                                                       default_label);
+                                                       default_label_id);
 
     BOOST_LEAF_AUTO(dynamic_frag, converter.Convert(arrow_frag));
 
@@ -288,8 +288,8 @@ void AddLabelsToGraph(
                         loader.AddLabelsToGraphAsFragmentGroup(frag_id));
         MPI_Barrier(comm_spec.comm());
 
-        LOG(INFO) << "[worker-" << comm_spec.worker_id()
-                  << "] Add labels to graph and loaded to vineyard ...";
+        LOG_IF(INFO, comm_spec.worker_id() == 0)
+            << "PROGRESS--GRAPH-LOADING-SEAL-100";
 
         auto fg = std::dynamic_pointer_cast<vineyard::ArrowFragmentGroup>(
             client.GetObject(frag_group_id));

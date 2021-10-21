@@ -1,0 +1,104 @@
+query_plan {
+  source_op {
+    base {
+      id: 1
+      argument {
+        int_value_list: 1
+        long_value_list: -7745484721563723264
+      }
+    }
+  }
+  unary_op {
+    base {
+      id: 2
+      operator_type: IN
+      argument {
+        int_value_list: 15
+      }
+      before_requirement {
+        req_argument {
+          int_value_list: -10
+        }
+      }
+    }
+    input_operator_id: 1
+    shuffle_type: SHUFFLE_BY_KEY_TYPE
+  }
+  unary_op {
+    base {
+      id: 3
+      operator_type: HAS
+      logical_compare {
+        prop_id: -2
+        compare: EQ
+        value {
+          int_value: 4
+          value_type: VT_INT
+        }
+        type: VT_INT
+      }
+    }
+    input_operator_id: 2
+  }
+  unary_op {
+    base {
+      id: 4
+      operator_type: IN_E
+      argument {
+        int_value_list: 16
+      }
+    }
+    input_operator_id: 3
+    shuffle_type: SHUFFLE_BY_KEY_TYPE
+  }
+  unary_op {
+    base {
+      id: 5
+      operator_type: OUT_V
+      before_requirement {
+        req_argument {
+          int_value_list: -12
+        }
+      }
+    }
+    input_operator_id: 4
+    shuffle_type: SHUFFLE_BY_KEY_TYPE
+  }
+  unary_op {
+    base {
+      id: 6
+      operator_type: SELECT
+      argument {
+        int_value: 1
+        bool_value: true
+        int_value_list: -10
+        int_value_list: -12
+        int_value_list: -13
+        str_value_list: "root"
+        str_value_list: "like"
+        str_value_list: "liker"
+      }
+      before_requirement {
+        req_argument {
+          int_value_list: -13
+        }
+      }
+      after_requirement {
+        req_type: LABEL_DEL
+        req_argument {
+          int_value_list: -10
+          int_value_list: -12
+          int_value_list: -13
+        }
+      }
+    }
+    input_operator_id: 5
+    shuffle_type: SHUFFLE_BY_KEY_TYPE
+  }
+  operator_id_list: 1
+  operator_id_list: 2
+  operator_id_list: 3
+  operator_id_list: 4
+  operator_id_list: 5
+  operator_id_list: 6
+}

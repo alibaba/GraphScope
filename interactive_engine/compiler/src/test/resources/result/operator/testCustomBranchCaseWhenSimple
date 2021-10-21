@@ -1,0 +1,221 @@
+query_plan {
+  source_op {
+    base {
+      id: 1
+      argument {
+      }
+    }
+  }
+  unary_op {
+    base {
+      id: 2
+      operator_type: FOLD
+      argument {
+      }
+      after_requirement {
+        req_argument {
+          int_value_list: -1000
+        }
+      }
+    }
+    input_operator_id: 1
+    shuffle_type: SHUFFLE_BY_CONST_TYPE
+  }
+  unary_op {
+    base {
+      id: 3
+      operator_type: DEDUP
+    }
+    input_operator_id: 2
+    shuffle_type: SHUFFLE_BY_KEY_TYPE
+  }
+  unary_op {
+    base {
+      id: 4
+      operator_type: UNFOLD
+    }
+    input_operator_id: 3
+  }
+  unary_op {
+    base {
+      id: 5
+      operator_type: PROP_VALUE
+      argument {
+        int_value_list: 13
+      }
+    }
+    input_operator_id: 4
+    shuffle_type: SHUFFLE_BY_KEY_TYPE
+  }
+  unary_op {
+    base {
+      id: 6
+      operator_type: FOLD_BY_KEY
+      argument {
+        int_value_list: -1000
+      }
+      after_requirement {
+        req_type: LABEL_DEL
+        req_argument {
+          int_value_list: -1000
+        }
+      }
+    }
+    input_operator_id: 5
+    shuffle_type: SHUFFLE_BY_KEY_TYPE
+  }
+  unary_op {
+    base {
+      id: 8
+      operator_type: SELECT_ONE
+      argument {
+        int_value: 1
+        bool_value: true
+        int_value_list: -1001
+      }
+      after_requirement {
+        req_type: LABEL_DEL
+        req_argument {
+          int_value_list: -1001
+        }
+      }
+    }
+    input_operator_id: 7
+  }
+  unary_op {
+    base {
+      id: 11
+      operator_type: UNFOLD
+    }
+    input_operator_id: 9
+  }
+  unary_op {
+    base {
+      id: 12
+      operator_type: CONSTANT
+      argument {
+        int_value: 1
+        value_type: VT_INT
+      }
+    }
+    input_operator_id: 11
+  }
+  unary_op {
+    base {
+      id: 14
+      operator_type: UNFOLD
+    }
+    input_operator_id: 9
+    input_stream_index: 1
+  }
+  unary_op {
+    base {
+      id: 15
+      operator_type: CONSTANT
+      argument {
+        int_value: 2
+        value_type: VT_INT
+      }
+    }
+    input_operator_id: 14
+  }
+  unary_op {
+    base {
+      id: 18
+      operator_type: UNFOLD
+    }
+    input_operator_id: 9
+    input_stream_index: 2
+  }
+  unary_op {
+    base {
+      id: 19
+      operator_type: CONSTANT
+      argument {
+        int_value: 3
+        value_type: VT_INT
+      }
+    }
+    input_operator_id: 18
+  }
+  unary_op {
+    base {
+      id: 21
+      operator_type: CONSTANT
+      argument {
+        int_value: 4
+        value_type: VT_INT
+      }
+    }
+    input_operator_id: 9
+    input_stream_index: 3
+  }
+  binary_op {
+    base {
+      id: 7
+      operator_type: JOIN_LABEL
+      argument {
+        int_value: -1001
+      }
+    }
+    left_input_operator_id: 2
+    right_input_operator_id: 6
+    left_shuffle_type: SHUFFLE_BY_KEY_TYPE
+  }
+  binary_op {
+    base {
+      id: 9
+      operator_type: JOIN_CASE_WHEN
+      argument {
+        payload: "\n\020\n\016\020\f\032\b:\004josh`\b \b\n\021\n\017\020\f\032\t:\005marko`\b \b\n\021\n\017\020\f\032\t:\005peter`\b \b\020\001"
+      }
+    }
+    left_input_operator_id: 2
+    right_input_operator_id: 8
+    left_shuffle_type: SHUFFLE_BY_KEY_TYPE
+    right_shuffle_type: SHUFFLE_BY_KEY_TYPE
+  }
+  binary_op {
+    base {
+      id: 16
+      operator_type: UNION
+    }
+    left_input_operator_id: 12
+    right_input_operator_id: 15
+  }
+  binary_op {
+    base {
+      id: 20
+      operator_type: UNION
+    }
+    left_input_operator_id: 16
+    right_input_operator_id: 19
+  }
+  binary_op {
+    base {
+      id: 22
+      operator_type: UNION
+    }
+    left_input_operator_id: 20
+    right_input_operator_id: 21
+  }
+  operator_id_list: 1
+  operator_id_list: 2
+  operator_id_list: 3
+  operator_id_list: 4
+  operator_id_list: 5
+  operator_id_list: 6
+  operator_id_list: 7
+  operator_id_list: 8
+  operator_id_list: 9
+  operator_id_list: 11
+  operator_id_list: 12
+  operator_id_list: 14
+  operator_id_list: 15
+  operator_id_list: 16
+  operator_id_list: 18
+  operator_id_list: 19
+  operator_id_list: 20
+  operator_id_list: 21
+  operator_id_list: 22
+}

@@ -28,9 +28,9 @@ jobs:
     runs-on: ubuntu-20.04
     defaults:
       run:
-        shell: scl enable devtoolset-7 -- bash --noprofile --norc -eo pipefail {0}
+        shell: bash --noprofile --norc -eo pipefail {0}
     container:
-      image: registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-vineyard:v0.2.12
+      image: registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-vineyard:v0.3.1
       options:
         --shm-size 4096m
     strategy:
@@ -133,9 +133,9 @@ jobs:
     runs-on: ubuntu-20.04
     defaults:
       run:
-        shell: scl enable devtoolset-7 -- bash --noprofile --norc -eo pipefail {0}
+        shell: bash --noprofile --norc -eo pipefail {0}
     container:
-      image: registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-vineyard:v0.2.12
+      image: registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-vineyard:v0.3.1
     steps:
     - name: Install Dependencies
       run: |
@@ -146,6 +146,8 @@ jobs:
         source ~/.bashrc
         rustup component add rustfmt
 
+        sudo yum install -y clang-devel
+
     - uses: actions/checkout@v2.3.2
 
     - name: Build
@@ -153,16 +155,18 @@ jobs:
         export PATH=${PATH}:/usr/local/go/bin
         source ~/.bashrc
 
+        export LIBCLANG_PATH=$(dirname $(python3 -c "import clang; print(clang.__file__)"))/native
+
         # install zetcd
         go get github.com/etcd-io/zetcd/cmd/zetcd
-        cp $(go env GOPATH)/bin/zetcd interactive_engine/bin/
+        cp $(go env GOPATH)/bin/zetcd interactive_engine/
 
-        cd interactive_engine/src/executor
+        cd interactive_engine/executor
         ./exec.sh cargo build --all --release
         cd ${GITHUB_WORKSPACE}
-        tar -cf gie.tar interactive_engine/src/executor/target/release/executor \
-                        interactive_engine/src/executor/target/release/gaia_executor \
-                        interactive_engine/bin/zetcd
+        tar -cf gie.tar interactive_engine/executor/target/release/executor \
+                        interactive_engine/executor/target/release/gaia_executor \
+                        interactive_engine/zetcd
 
     - uses: actions/upload-artifact@v2
       with:
@@ -174,9 +178,9 @@ jobs:
     runs-on: ubuntu-20.04
     defaults:
       run:
-        shell: scl enable devtoolset-7 -- bash --noprofile --norc -eo pipefail {0}
+        shell: bash --noprofile --norc -eo pipefail {0}
     container:
-      image: registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-vineyard:v0.2.12
+      image: registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-vineyard:v0.3.1
     steps:
     - uses: actions/checkout@v2.3.2
       with:
@@ -189,7 +193,6 @@ jobs:
         sudo mkdir -p /opt/graphscope
         sudo chown -R $(id -u):$(id -g) /opt/graphscope
 
-        export PATH=${PATH}:/opt/rh/devtoolset-7/root/usr/bin
         cd learning_engine/graph-learn
         git submodule update --init third_party/pybind11
         mkdir cmake-build
@@ -201,8 +204,6 @@ jobs:
 
     - name: build wheel
       run: |
-        sudo sed -i 's/p.error/logger.warning/g' /usr/local/lib/python3.6/site-packages/auditwheel/main_repair.py
-
         export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/opt/graphscope/lib:/opt/graphscope/lib64
         export WITH_LEARNING_ENGINE=ON
         pushd python
@@ -213,6 +214,7 @@ jobs:
         auditwheel repair --plat=manylinux2014_x86_64 ./*.whl
         mkdir -p /opt/graphscope/dist
         cp ./wheelhouse/* /opt/graphscope/dist/
+        pip3 install ./wheelhouse/*.whl
         popd
         popd
         pushd coordinator
@@ -235,7 +237,7 @@ jobs:
       profile: release
     defaults:
       run:
-        shell: scl enable devtoolset-7 -- bash --noprofile --norc -eo pipefail {0}
+        shell: bash --noprofile --norc -eo pipefail {0}
     container:
       image: registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-runtime:latest
     steps:
@@ -246,7 +248,7 @@ jobs:
         cd interactive_engine
         for i in {1..3}; do mvn clean package -DskipTests -Pjava-release --quiet && break || sleep 60; done
         cd ${GITHUB_WORKSPACE}
-        tar -cf manager.tar interactive_engine/src/assembly/target/maxgraph-assembly-0.0.1-SNAPSHOT.tar.gz
+        tar -cf manager.tar interactive_engine/assembly/target/maxgraph-assembly-0.0.1-SNAPSHOT.tar.gz
 
     - uses: actions/upload-artifact@v2
       with:
@@ -259,7 +261,7 @@ jobs:
     needs: [build-gae, build-gle]
     defaults:
       run:
-        shell: scl enable devtoolset-7 -- bash --noprofile --norc -eo pipefail {0}
+        shell: bash --noprofile --norc -eo pipefail {0}
     container:
       image: registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-runtime:latest
       options:
@@ -539,9 +541,9 @@ jobs:
     runs-on: self-hosted
     defaults:
       run:
-        shell: scl enable devtoolset-7 -- bash --noprofile --norc -eo pipefail {0}
+        shell: bash --noprofile --norc -eo pipefail {0}
     container:
-      image: registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-vineyard:v0.2.12
+      image: registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-vineyard:v0.3.1
     steps:
 
     #- name: "Debug: Package dependancies for tmate"
@@ -565,6 +567,8 @@ jobs:
         source ~/.bashrc
         rustup component add rustfmt
 
+        sudo yum install -y clang-devel
+
     - uses: actions/checkout@v2.3.2
 
     - name: Build
@@ -574,16 +578,18 @@ jobs:
         export PATH=${PATH}:/usr/local/go/bin
         source ~/.bashrc
 
+        export LIBCLANG_PATH=$(dirname $(python3 -c "import clang; print(clang.__file__)"))/native
+
         cd interactive_engine
         for i in {1..3}; do mvn clean install -Pv2 -Drust.compile.mode=debug -DskipTests --quiet  && break || sleep 60; done
         cd ${GITHUB_WORKSPACE}
         mv interactive_engine/distribution/target/maxgraph.tar.gz ./
-        mv interactive_engine/src/data_load_tools/target/data_load.tar.gz ./graphscope_store_data_load.tar.gz
+        mv interactive_engine/data_load_tools/target/data_load.tar.gz ./graphscope_store_data_load.tar.gz
         tar -zcf vineyard.tar.gz /opt/vineyard
 
     - name: gremlin-test
       run: |
-        cd interactive_engine/src/v2
+        cd interactive_engine/groot-server
         mvn test -Pgremlin-test
 
     - uses: actions/upload-artifact@v2
@@ -693,7 +699,7 @@ jobs:
         export NODE_IP=$(kubectl get nodes --namespace default -o jsonpath="{.items[0].status.addresses[0].address}")
         helm test ci --timeout 5m0s
         cd ${GITHUB_WORKSPACE}/python
-        sleep 30
+        sleep 120
         python3 -m pytest -s -vvv tests/kubernetes/test_store_service.py -k test_demo_after_restart
 
     - name: Clean

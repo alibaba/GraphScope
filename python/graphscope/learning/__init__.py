@@ -30,7 +30,10 @@ if os.environ.get("WITH_LEARNING_ENGINE") == "ON" and (
 try:
     sys.path.insert(0, os.path.dirname(__file__))
 
-    import graphlearn
+    import vineyard
+
+    with vineyard.envvars("VINEYARD_USE_LOCAL_REGISTRY", "TRUE"):
+        import graphlearn
 
     try:
         import examples

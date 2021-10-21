@@ -1,0 +1,77 @@
+query_plan {
+  source_op {
+    base {
+      id: 1
+      argument {
+        int_value_list: 1
+      }
+      logical_compare {
+        prop_id: 2
+        compare: EQ
+        value {
+          str_value: "Jon"
+          value_type: VT_STRING
+        }
+        type: VT_STRING
+      }
+      logical_compare {
+        prop_id: 8
+        compare: EQ
+        value {
+          str_value: "Hans"
+          value_type: VT_STRING
+        }
+        type: VT_STRING
+      }
+    }
+  }
+  unary_op {
+    base {
+      id: 2
+      operator_type: IN_E
+      argument {
+        bool_value: true
+        dedup_local_flag: true
+      }
+    }
+    input_operator_id: 1
+    shuffle_type: SHUFFLE_BY_KEY_TYPE
+  }
+  unary_op {
+    base {
+      id: 3
+      operator_type: OUT_V
+    }
+    input_operator_id: 2
+    shuffle_type: SHUFFLE_BY_KEY_TYPE
+  }
+  unary_op {
+    base {
+      id: 4
+      operator_type: HAS
+      logical_compare {
+        prop_id: -2
+        compare: EQ
+        value {
+          int_value: 1
+          value_type: VT_INT
+        }
+        type: VT_INT
+      }
+    }
+    input_operator_id: 3
+  }
+  unary_op {
+    base {
+      id: 5
+      operator_type: DEDUP
+    }
+    input_operator_id: 4
+    shuffle_type: SHUFFLE_BY_KEY_TYPE
+  }
+  operator_id_list: 1
+  operator_id_list: 2
+  operator_id_list: 3
+  operator_id_list: 4
+  operator_id_list: 5
+}

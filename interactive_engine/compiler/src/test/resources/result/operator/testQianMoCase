@@ -1,0 +1,280 @@
+query_plan {
+  source_op {
+    base {
+      id: 1
+      argument {
+        int_value_list: 1
+      }
+      after_requirement {
+        req_argument {
+          int_value_list: -1000
+        }
+      }
+    }
+    odps_input {
+      table_name: "concept"
+      endpoint: "http://"
+      pk_name_list: "cid"
+      logical_compare {
+        column_name: "channel"
+        compare: EQ
+        value {
+          int_value: 12
+          value_type: VT_INT
+        }
+        type: VT_INT
+      }
+      logical_compare {
+        column_name: "prob"
+        value {
+          double_value: 0.6
+          value_type: VT_DOUBLE
+        }
+        type: VT_DOUBLE
+      }
+    }
+    source_type: ODPS
+  }
+  unary_op {
+    base {
+      id: 2
+      operator_type: OUT_COUNT
+      argument {
+        int_value_list: 9
+      }
+      range_limit {
+        range_end: 4
+      }
+    }
+    input_operator_id: 1
+  }
+  unary_op {
+    base {
+      id: 3
+      operator_type: FILTER
+      logical_compare {
+        value {
+          long_value: 3
+          value_type: VT_LONG
+        }
+        type: VT_LONG
+      }
+    }
+    input_operator_id: 2
+  }
+  unary_op {
+    base {
+      id: 4
+      operator_type: SELECT_ONE
+      argument {
+        int_value: 1
+        bool_value: true
+        str_value: "mx_input_1"
+        int_value_list: -1000
+      }
+      after_requirement {
+        req_type: LABEL_DEL
+        req_argument {
+          int_value_list: -1000
+        }
+      }
+    }
+    input_operator_id: 3
+    shuffle_type: SHUFFLE_BY_KEY_TYPE
+  }
+  unary_op {
+    base {
+      id: 5
+      operator_type: OUT
+      argument {
+      }
+      before_requirement {
+        req_argument {
+          int_value_list: -10
+        }
+      }
+    }
+    input_operator_id: 4
+    shuffle_type: SHUFFLE_BY_KEY_TYPE
+  }
+  unary_op {
+    base {
+      id: 6
+      operator_type: HAS
+      logical_compare {
+        prop_id: 9999
+        compare: LIST_CONTAINS
+        value {
+          int_value: 5
+          value_type: VT_INT
+        }
+        type: VT_INT
+      }
+    }
+    input_operator_id: 5
+  }
+  unary_op {
+    base {
+      id: 7
+      operator_type: ENTER_KEY
+      argument {
+      }
+    }
+    input_operator_id: 6
+    shuffle_type: SHUFFLE_BY_KEY_TYPE
+  }
+  unary_op {
+    base {
+      id: 8
+      operator_type: SELECT_ONE
+      argument {
+        int_value: 1
+        bool_value: true
+        str_value: "a"
+        int_value_list: -10
+      }
+      after_requirement {
+        req_type: LABEL_DEL
+        req_argument {
+          int_value_list: -10
+        }
+      }
+    }
+    input_operator_id: 7
+    shuffle_type: SHUFFLE_BY_KEY_TYPE
+  }
+  unary_op {
+    base {
+      id: 9
+      operator_type: COUNT_BY_KEY
+      argument {
+      }
+    }
+    input_operator_id: 8
+    shuffle_type: SHUFFLE_BY_KEY_TYPE
+  }
+  unary_op {
+    base {
+      id: 11
+      operator_type: BYKEY_ENTRY
+    }
+    input_operator_id: 10
+    shuffle_type: SHUFFLE_BY_KEY_TYPE
+  }
+  unary_op {
+    base {
+      id: 14
+      operator_type: COLUMN
+      argument {
+        int_value: 1
+        int_value_list: -10
+        str_value_list: "a"
+        str_value_list: "~label"
+        str_value_list: "mx_input_1"
+        str_value_list: "keys"
+        str_value_list: "values"
+        str_value_list: "~id"
+        str_value_list: "~key"
+        str_value_list: "~value"
+      }
+      before_requirement {
+        req_argument {
+          int_value_list: -1001
+        }
+      }
+    }
+    input_operator_id: 11
+    shuffle_type: SHUFFLE_BY_KEY_TYPE
+  }
+  unary_op {
+    base {
+      id: 15
+      operator_type: COUNT_LOCAL
+    }
+    input_operator_id: 14
+    shuffle_type: SHUFFLE_BY_KEY_TYPE
+  }
+  unary_op {
+    base {
+      id: 16
+      operator_type: FILTER
+      logical_compare {
+        value {
+          long_value: 200
+          value_type: VT_LONG
+        }
+        type: VT_LONG
+      }
+    }
+    input_operator_id: 15
+  }
+  unary_op {
+    base {
+      id: 17
+      operator_type: SELECT_ONE
+      argument {
+        int_value: 1
+        bool_value: true
+        str_value: "mx_input_2"
+        int_value_list: -1001
+      }
+      after_requirement {
+        req_type: LABEL_DEL
+        req_argument {
+          int_value_list: -1001
+        }
+      }
+    }
+    input_operator_id: 16
+    shuffle_type: SHUFFLE_BY_KEY_TYPE
+  }
+  unary_op {
+    base {
+      id: 18
+      operator_type: WRITE_ODPS
+      argument {
+        payload: "\022\fconcept2item\032\ahttp://"
+      }
+    }
+    input_operator_id: 17
+    shuffle_type: SHUFFLE_BY_KEY_TYPE
+  }
+  unary_op {
+    base {
+      id: 19
+      operator_type: SUM
+      argument {
+        value_type: VT_LONG
+      }
+    }
+    input_operator_id: 18
+    shuffle_type: SHUFFLE_BY_CONST_TYPE
+  }
+  binary_op {
+    base {
+      id: 10
+      operator_type: JOIN_RIGHT_ZERO_JOIN
+    }
+    left_input_operator_id: 7
+    right_input_operator_id: 9
+    left_shuffle_type: SHUFFLE_BY_KEY_TYPE
+    right_shuffle_type: SHUFFLE_BY_KEY_TYPE
+  }
+  operator_id_list: 1
+  operator_id_list: 2
+  operator_id_list: 3
+  operator_id_list: 4
+  operator_id_list: 5
+  operator_id_list: 6
+  operator_id_list: 7
+  operator_id_list: 8
+  operator_id_list: 9
+  operator_id_list: 10
+  operator_id_list: 11
+  operator_id_list: 14
+  operator_id_list: 15
+  operator_id_list: 16
+  operator_id_list: 17
+  operator_id_list: 18
+  operator_id_list: 19
+}

@@ -7,7 +7,7 @@ edition = "2018"
 
 [dependencies]
 log = "0.4"
-maxgraph-store = {path = "../../../../interactive_engine/src/executor/store"}
+maxgraph-store = {path = "../../../../interactive_engine/executor/store"}
 gremlin_core = {path="../gremlin_core"}
 dyn_type = { path = "../../dyn_type" }
 structopt = "0.2"

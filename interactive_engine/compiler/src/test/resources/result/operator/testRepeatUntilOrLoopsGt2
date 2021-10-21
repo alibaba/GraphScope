@@ -1,0 +1,75 @@
+query_plan {
+  source_op {
+    base {
+      id: 1
+      argument {
+        int_value_list: 1
+        payload: "\n\005\b\006\022\0011\n\005\b\a\022\0011\n\005\b\002\022\0011\n\005\b\001\022\0011\n\005\b\003\022\0011\n\005\b\b\022\0011\n\005\b\004\022\0011\n\005\b\005\022\0011"
+      }
+      logical_compare {
+        prop_id: 7
+        compare: EQ
+        value {
+          long_value: 1
+          value_type: VT_LONG
+        }
+        type: VT_LONG
+      }
+    }
+  }
+  unary_op {
+    base {
+      id: 2
+      operator_type: REPEAT
+      argument {
+        payload: "\b\t\020\b\030\003*\247\001\022\025\n\017\b\003\020\005\032\003B\001\tR\004\b\003\022\000\020\001 \001\022\020\n\n\b\004\0200R\004\b\003\022\000\020\003 \001\022\016\n\b\b\005\020 \032\0020\001\020\004 \001\022\020\n\n\b\006\020V\032\004Z\002 \001\020\005 \001\022/\n)\b\a\020\024:\025\b\376\377\377\377\377\377\377\377\377\001\020\004\032\004\020\001`\003 \003:\f\b\a\020\004\032\004\030\001`\004 \004\020\006 \001\022\f\n\b\b\t\020YZ\002\b\004\020\a\032\022\n\b\b\b\020FZ\002\b\004\020\006\030\a(\0018\001\"\a\003\004\005\006\a\b\t"
+      }
+    }
+    input_operator_id: 1
+  }
+  unary_op {
+    base {
+      id: 10
+      operator_type: HAS
+      logical_compare {
+        prop_id: -2
+        compare: EQ
+        value {
+          int_value: 1
+          value_type: VT_INT
+        }
+        type: VT_INT
+      }
+      logical_compare {
+        prop_id: 7
+        compare: EQ
+        value {
+          long_value: 1
+          value_type: VT_LONG
+        }
+        type: VT_LONG
+      }
+    }
+    input_operator_id: 2
+    shuffle_type: SHUFFLE_BY_KEY_TYPE
+  }
+  unary_op {
+    base {
+      id: 11
+      operator_type: PATH_OUT
+      argument {
+        bool_value: true
+      }
+      before_requirement {
+        req_type: PATH_ADD
+        req_argument {
+        }
+      }
+    }
+    input_operator_id: 10
+  }
+  operator_id_list: 1
+  operator_id_list: 2
+  operator_id_list: 10
+  operator_id_list: 11
+}

@@ -1,0 +1,47 @@
+query_plan {
+  source_op {
+    base {
+      id: 1
+      operator_type: SOURCE_CHAIN
+      argument {
+      }
+      chained_function {
+        operator_type: OUT
+        argument {
+        }
+      }
+    }
+  }
+  unary_op {
+    base {
+      id: 3
+      operator_type: BARRIER
+      argument {
+        int_value: 2500
+      }
+    }
+    input_operator_id: 1
+    shuffle_type: SHUFFLE_BY_KEY_TYPE
+  }
+  unary_op {
+    base {
+      id: 4
+      operator_type: HAS
+      logical_compare {
+        prop_id: 18
+        compare: LIST_CONTAINS_ANY
+        value {
+          int_value_list: 123
+          int_value_list: 321
+          value_type: VT_INT_LIST
+        }
+        type: VT_INT_LIST
+      }
+    }
+    input_operator_id: 3
+    shuffle_type: SHUFFLE_BY_KEY_TYPE
+  }
+  operator_id_list: 1
+  operator_id_list: 3
+  operator_id_list: 4
+}
