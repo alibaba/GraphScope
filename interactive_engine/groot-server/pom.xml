@@ -268,6 +268,7 @@
         <configuration>
           <excludes>
             <exclude>**/RemoteGremlinStandardTest.java</exclude>
+            <exclude>**/FfiTest.java</exclude>
           </excludes>
           <argLine>
             -Djna.library.path=${project.parent.basedir}/executor/target:/usr/local/lib:${project.parent.basedir}/lgraph/build
