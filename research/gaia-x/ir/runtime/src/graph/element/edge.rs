@@ -66,6 +66,14 @@ impl Edge {
     pub fn set_dst_label(&mut self, label: NameOrId) {
         self.dst_label = Some(label);
     }
+
+    pub fn get_src_label(&self) -> Option<&NameOrId> {
+        self.src_label.as_ref()
+    }
+
+    pub fn get_dst_label(&self) -> Option<&NameOrId> {
+        self.dst_label.as_ref()
+    }
 }
 
 impl Encode for Edge {

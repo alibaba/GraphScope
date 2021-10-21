@@ -145,6 +145,18 @@ impl TryFrom<common_pb::NameOrId> for NameOrId {
     }
 }
 
+impl From<NameOrId> for common_pb::NameOrId {
+    fn from(tag: NameOrId) -> Self {
+        let name_or_id = match tag {
+            NameOrId::Str(name) => common_pb::name_or_id::Item::Name(name),
+            NameOrId::Id(id) => common_pb::name_or_id::Item::Id(id),
+        };
+        common_pb::NameOrId {
+            item: Some(name_or_id),
+        }
+    }
+}
+
 impl From<common_pb::Arithmetic> for common_pb::ExprOpr {
     fn from(arith: common_pb::Arithmetic) -> Self {
         common_pb::ExprOpr {
