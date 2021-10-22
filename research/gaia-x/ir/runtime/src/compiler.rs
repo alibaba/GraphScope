@@ -77,10 +77,9 @@ impl FnGenerator {
     fn gen_shuffle(&self, res: &BinaryResource) -> Result<RecordShuffle, BuildJobError> {
         let p = self.partitioner.clone();
         let num_workers = pegasus::get_current_worker().local_peers as usize;
-        // TODO: None shuffle_key
-        let shuffle_key = decode::<common_pb::NameOrId>(res)?;
+        let shuffle_key = decode::<common_pb::NameOrIdKey>(res)?;
         let record_router =
-            RecordRouter::new(p, num_workers, Some(shuffle_key)).map_err(|e| format!("{}", e))?;
+            RecordRouter::new(p, num_workers, shuffle_key).map_err(|e| format!("{}", e))?;
         Ok(Box::new(record_router))
     }
 

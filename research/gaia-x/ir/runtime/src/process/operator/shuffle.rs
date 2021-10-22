@@ -33,9 +33,9 @@ impl RecordRouter {
     pub fn new(
         p: Arc<dyn Partitioner>,
         num_workers: usize,
-        shuffle_key: Option<common_pb::NameOrId>,
+        shuffle_key: common_pb::NameOrIdKey,
     ) -> Result<Self, ParsePbError> {
-        let shuffle_key = shuffle_key.map(|e| e.try_into()).transpose()?;
+        let shuffle_key = shuffle_key.key.map(|e| e.try_into()).transpose()?;
         Ok(RecordRouter {
             p,
             num_workers,
