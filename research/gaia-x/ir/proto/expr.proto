@@ -34,6 +34,11 @@ message NameOrId {
   }
 }
 
+// Use `NameOrId` as key item, which is the same as `Option<NameOrId>`
+message NameOrIdKey {
+  NameOrId key = 1;
+}
+
 message Property {
   oneof item {
     // Get id from the entity

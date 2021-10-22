@@ -20,10 +20,11 @@
 //!
 
 use ir_common::generated::algebra as pb;
+use ir_common::generated::common as common_pb;
 use pegasus_client::builder::*;
 use prost::{EncodeError, Message};
 use std::fmt;
-use crate::plan::logical::LogicalPlan;
+use crate::plan::logical::{LogicalPlan, NodeType};
 
 /// Record any error while transforming ir to a pegasus physical plan
 #[derive(Debug, Clone)]
@@ -150,14 +151,44 @@ impl AsPhysical for pb::logical_plan::Operator {
 
 impl AsPhysical for LogicalPlan {
     fn add_job_builder(&self, builder: &mut JobBuilder) -> PhysicalResult<()> {
-        // TODO(longbin) At the first stage, we first assume that the plan has a chain shape.
+        use pb::logical_plan::operator::Opr::*;
+        let needs_shuffle = builder.conf.servers().len() > 1 && builder.conf.workers > 1;
+        let mut prev_node: Option<NodeType> = None;
         for (_, node) in &self.nodes {
             let node_ref = node.borrow();
+            // TODO(longbin) At the first stage, we first assume that the plan has a chain shape.
             if node_ref.children.len() > 1 {
                 return Err(PhysicalError::Unsupported);
             }
+            if needs_shuffle {
+                if let Some(prev) = &prev_node {
+                    let prev_ref = prev.borrow();
+                    match (&prev_ref.opr.opr, &node_ref.opr.opr) {
+                        (Some(Edge(_)), Some(Edge(edgexpd))) => {
+                            let key_pb = common_pb::NameOrIdKey {
+                                key: edgexpd.base.as_ref().unwrap().v_tag.clone()
+                            };
+                            let mut bytes = vec![];
+                            key_pb.encode(&mut bytes)?;
+                            builder.exchange(bytes);
+                        }
+                        (Some(Edge(_)), Some(Vertex(getv))) => {
+                            let key_pb = common_pb::NameOrIdKey {
+                                key: getv.tag.clone()
+                            };
+                            let mut bytes = vec![];
+                            key_pb.encode(&mut bytes)?;
+                            builder.exchange(bytes);
+                        }
+                        _ => {}
+                    }
+                }
+            }
             node_ref.opr.add_job_builder(builder)?;
+            prev_node = Some(node.clone());
         }
+        // TODO(longbin) Shall consider the option of sinking the results.
+        builder.sink(vec![]);
 
         Ok(())
     }

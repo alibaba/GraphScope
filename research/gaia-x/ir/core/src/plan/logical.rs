@@ -55,7 +55,7 @@ impl Node {
     }
 }
 
-type NodeType = Rc<RefCell<Node>>;
+pub(crate) type NodeType = Rc<RefCell<Node>>;
 
 /// An internal representation of the pb-[`LogicalPlan`].
 ///
