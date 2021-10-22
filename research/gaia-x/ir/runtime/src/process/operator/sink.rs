@@ -21,10 +21,17 @@ use ir_common::generated::result as result_pb;
 use ir_common::NameOrId;
 use pegasus::api::function::{FnResult, MapFunction};
 
-// TODO: gen RecordSinkEncoder, and do we allow empty sink_keys indicating sink all？
-#[derive(Default)]
 pub struct RecordSinkEncoder {
     sink_keys: Vec<Option<NameOrId>>,
+}
+
+// TODO: We sink current entry in record by default for now.
+impl Default for RecordSinkEncoder {
+    fn default() -> Self {
+        RecordSinkEncoder {
+            sink_keys: vec![None],
+        }
+    }
 }
 
 impl MapFunction<Record, result_pb::Result> for RecordSinkEncoder {
