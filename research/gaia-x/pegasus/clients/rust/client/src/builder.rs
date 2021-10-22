@@ -282,7 +282,7 @@ impl Plan {
 }
 
 pub struct JobBuilder {
-    conf: JobConf,
+    pub conf: JobConf,
     source: BinaryResource,
     plan: Plan,
     sink: BinaryResource,
