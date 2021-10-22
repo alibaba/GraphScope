@@ -51,4 +51,9 @@ public class PrimaryKeyConstraint {
         PrimaryKeyConstraint that = (PrimaryKeyConstraint) o;
         return Objects.equals(primaryKeyList, that.primaryKeyList);
     }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(primaryKeyList);
+    }
 }

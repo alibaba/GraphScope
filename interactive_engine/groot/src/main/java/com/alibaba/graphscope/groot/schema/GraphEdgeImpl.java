@@ -107,4 +107,9 @@ public class GraphEdgeImpl implements GraphEdge {
                 && Objects.equals(edgeRelations, graphEdge.edgeRelations)
                 && Objects.equals(primaryKeyConstraint, graphEdge.primaryKeyConstraint);
     }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(typeDef, edgeRelations, primaryKeyConstraint);
+    }
 }

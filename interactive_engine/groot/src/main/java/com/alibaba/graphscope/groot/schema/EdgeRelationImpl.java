@@ -44,4 +44,9 @@ public class EdgeRelationImpl implements EdgeRelation {
                 && Objects.equals(srcVertex, that.srcVertex)
                 && Objects.equals(dstVertex, that.dstVertex);
     }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(tableId, srcVertex, dstVertex);
+    }
 }

@@ -103,4 +103,9 @@ public class GraphVertexImpl implements GraphVertex {
                 && Objects.equals(typeDef, that.typeDef)
                 && Objects.equals(primaryKeyConstraint, that.primaryKeyConstraint);
     }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(typeDef, primaryKeyConstraint, tableId);
+    }
 }
