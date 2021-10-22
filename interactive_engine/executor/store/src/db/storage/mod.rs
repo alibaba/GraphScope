@@ -1,4 +1,4 @@
-use crate::db::api::GraphResult;
+use crate::db::api::{GraphResult, BackupId};
 
 pub mod rocksdb;
 use self::rocksdb::RocksDBIter;
@@ -17,13 +17,13 @@ pub trait ExternalStorage {
 }
 
 pub trait ExternalStorageBackup {
-    fn create_new_backup(&mut self) -> GraphResult<i32>;
-    fn delete_backup(&mut self, backup_id: i32) -> GraphResult<()>;
+    fn create_new_backup(&mut self) -> GraphResult<BackupId>;
+    fn delete_backup(&mut self, backup_id: BackupId) -> GraphResult<()>;
     fn purge_old_backups(&mut self, num_backups_to_keep: usize) -> GraphResult<()>;
-    fn restore_from_backup(&mut self, restore_path: &str, backup_id: i32) -> GraphResult<()>;
+    fn restore_from_backup(&mut self, restore_path: &str, backup_id: BackupId) -> GraphResult<()>;
     fn restore_from_latest_backup(&mut self, restore_path: &str) -> GraphResult<()>;
-    fn verify_backup(&self, backup_id: i32) -> GraphResult<()>;
-    fn get_backup_list(&self) -> Vec<i32>;
+    fn verify_backup(&self, backup_id: BackupId) -> GraphResult<()>;
+    fn get_backup_list(&self) -> Vec<BackupId>;
 }
 
 pub enum StorageRes {

@@ -116,7 +116,7 @@ impl ExternalStorage for RocksDB {
 
 impl ExternalStorageBackup for RocksDBBackupEngine {
     /// Optimize this method after a new rust-rocksdb version.
-    fn create_new_backup(&mut self) -> GraphResult<i32> {
+    fn create_new_backup(&mut self) -> GraphResult<BackupId> {
         let before = self.get_backup_list();
         self.backup_engine.create_new_backup(&self.db).map_err(|e| {
             let msg = format!("create new rocksdb backup failed, because {}", e.into_string());
@@ -134,7 +134,7 @@ impl ExternalStorageBackup for RocksDBBackupEngine {
     /// Do nothing now.
     /// Implement this method after a new rust-rocksdb version.
     #[allow(unused_variables)]
-    fn delete_backup(&mut self, backup_id: i32) -> GraphResult<()> {
+    fn delete_backup(&mut self, backup_id: BackupId) -> GraphResult<()> {
         Ok(())
     }
 
@@ -146,7 +146,7 @@ impl ExternalStorageBackup for RocksDBBackupEngine {
         Ok(())
     }
 
-    fn restore_from_backup(&mut self, restore_path: &str, backup_id: i32) -> GraphResult<()> {
+    fn restore_from_backup(&mut self, restore_path: &str, backup_id: BackupId) -> GraphResult<()> {
         let mut restore_option = RestoreOptions::default();
         restore_option.set_keep_log_files(false);
         self.backup_engine.restore_from_backup(restore_path, restore_path, &restore_option, backup_id as u32).map_err(|e| {
@@ -166,7 +166,7 @@ impl ExternalStorageBackup for RocksDBBackupEngine {
         Ok(())
     }
 
-    fn verify_backup(&self, backup_id: i32) -> GraphResult<()> {
+    fn verify_backup(&self, backup_id: BackupId) -> GraphResult<()> {
         self.backup_engine.verify_backup(backup_id as u32).map_err(|e| {
             let msg = format!("rocksdb backup {} verify failed, because {}", backup_id, e.into_string());
             gen_graph_err!(GraphErrorCode::ExternalStorageError, msg)
@@ -174,8 +174,8 @@ impl ExternalStorageBackup for RocksDBBackupEngine {
         Ok(())
     }
 
-    fn get_backup_list(&self) -> Vec<i32> {
-        self.backup_engine.get_backup_info().into_iter().map(|info| info.backup_id as i32).collect()
+    fn get_backup_list(&self) -> Vec<BackupId> {
+        self.backup_engine.get_backup_info().into_iter().map(|info| info.backup_id as BackupId).collect()
     }
 }
 
