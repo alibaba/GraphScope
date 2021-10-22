@@ -81,7 +81,7 @@ impl SourceOperator {
         self,
         worker_index: usize,
     ) -> FnResult<Box<dyn Iterator<Item = Record> + Send>> {
-        let graph = crate::get_graph().unwrap();
+        let graph = crate::get_graph().ok_or(str_to_dyn_error("Graph is None"))?;
         match self.source_type {
             SourceType::Vertex => {
                 let mut v_source =

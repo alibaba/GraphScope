@@ -12,6 +12,7 @@
 //! WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
+mod get_v;
 mod project;
 
 use crate::process::record::Record;
@@ -28,6 +29,7 @@ impl MapFuncGen for algebra_pb::logical_plan::Operator {
         if let Some(opr) = self.opr {
             match opr {
                 algebra_pb::logical_plan::operator::Opr::Project(project) => project.gen_map(),
+                algebra_pb::logical_plan::operator::Opr::Vertex(get_vertex) => get_vertex.gen_map(),
                 algebra_pb::logical_plan::operator::Opr::Path(_path) => todo!(),
                 algebra_pb::logical_plan::operator::Opr::ShortestPath(_shortest_path) => todo!(),
                 _ => Err(str_to_dyn_error("algebra_pb op is not a map")),
