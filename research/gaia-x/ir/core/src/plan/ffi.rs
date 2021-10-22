@@ -51,12 +51,78 @@
 //! Save the codes as </path/to/c-caller/test.cc>, and build like:
 //! `g++ -o test test.cc -std=c++11 -L. -lir_core`
 
-use crate::plan::{cstr_to_string, cstr_to_suffix_expr_pb, FfiResult, LogicalPlan, ResultCode};
+use crate::plan::logical::LogicalPlan;
 use ir_common::generated::algebra as pb;
 use ir_common::generated::common as common_pb;
 use std::convert::{TryFrom, TryInto};
-use std::ffi::c_void;
+use std::ffi::{c_void, CStr};
 use std::os::raw::c_char;
+use runtime::expr::token::tokenize;
+use runtime::expr::to_suffix_expr_pb;
+
+#[repr(i32)]
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub enum ResultCode {
+    Success = 0,
+    /// Parse an expression error
+    ParseExprError = 1,
+    /// Query an object that does not exist
+    NotExistError = 2,
+    /// The error while transforming from C-like string, aka char*
+    CStringError = 3,
+    /// The provided data type is unknown
+    UnknownTypeError = 4,
+    /// The provided range is invalid
+    InvalidRangeError = 5,
+    /// The given index is negative
+    NegativeIndexError = 6,
+}
+
+impl std::fmt::Display for ResultCode {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        match self {
+            ResultCode::Success => write!(f, "success"),
+            ResultCode::ParseExprError => write!(f, "parse expression error"),
+            ResultCode::NotExistError => write!(f, "access to non-existed element"),
+            ResultCode::CStringError => write!(f, "convert from c-like string error"),
+            ResultCode::UnknownTypeError => write!(f, "unknown data type"),
+            ResultCode::InvalidRangeError => write!(f, "the range is invalid"),
+            ResultCode::NegativeIndexError => write!(f, "the given index is negative"),
+        }
+    }
+}
+
+impl std::error::Error for ResultCode {}
+
+pub(crate) type FfiResult<T> = Result<T, ResultCode>;
+
+pub(crate) fn cstr_to_string(cstr: *const c_char) -> FfiResult<String> {
+    let str_result = unsafe { CStr::from_ptr(cstr) }.to_str();
+    if let Ok(str) = str_result {
+        Ok(str.to_string())
+    } else {
+        Err(ResultCode::CStringError)
+    }
+}
+
+pub(crate) fn str_to_expr(expr_str: String) -> FfiResult<common_pb::SuffixExpr> {
+    let tokens_result = tokenize(&expr_str);
+    if let Ok(tokens) = tokens_result {
+        if let Ok(expr) = to_suffix_expr_pb(tokens) {
+            return Ok(expr);
+        }
+    }
+    Err(ResultCode::ParseExprError)
+}
+
+pub(crate) fn cstr_to_suffix_expr_pb(cstr: *const c_char) -> FfiResult<common_pb::SuffixExpr> {
+    let str = cstr_to_string(cstr);
+    if str.is_err() {
+        Err(str.err().unwrap())
+    } else {
+        str_to_expr(str.unwrap())
+    }
+}
 
 #[repr(i32)]
 #[derive(Copy, Clone, Debug, PartialEq)]
@@ -270,7 +336,7 @@ fn append_operator(
     id: *mut i32,
 ) -> ResultCode {
     let mut plan = unsafe { Box::from_raw(ptr_plan as *mut LogicalPlan) };
-    let result = plan.append_node(
+    let opr_id = plan.append_node(
         operator,
         parent_ids
             .into_iter()
@@ -279,13 +345,14 @@ fn append_operator(
     );
     // Do not let rust drop the pointer before explicitly calling `destroy_logical_plan`
     std::mem::forget(plan);
-    if let Ok(opr_id) = result {
+    if opr_id >= 0 {
         unsafe {
-            *id = opr_id as i32;
+            *id = opr_id;
         }
         ResultCode::Success
     } else {
-        result.err().unwrap()
+        // This must due to the query parent does not present
+        ResultCode::NotExistError
     }
 }
 
