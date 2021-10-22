@@ -105,9 +105,8 @@ impl Decode for Edge {
     }
 }
 
-// TODO(bingqing): confirm how to use context?
 impl Context<Edge> for Edge {
     fn get(&self, _tag: &NameOrId) -> Option<&Edge> {
-        todo!()
+        Some(&self)
     }
 }

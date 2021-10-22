@@ -14,8 +14,9 @@
 //! limitations under the License.
 
 use crate::expr::eval::Context;
-use crate::graph::element::{Edge, Vertex, VertexOrEdge};
-use dyn_type::Object;
+use crate::graph::element::{Edge, Element, Vertex, VertexOrEdge};
+use crate::graph::property::DynDetails;
+use dyn_type::{BorrowObject, Object};
 use ir_common::error::DynIter;
 use ir_common::NameOrId;
 use pegasus::codec::{Decode, Encode, ReadExt, WriteExt};
@@ -226,9 +227,49 @@ impl Into<Entry> for RecordElement {
     }
 }
 
-impl Context<VertexOrEdge> for Record {
-    fn get(&self, _tag: &NameOrId) -> Option<&VertexOrEdge> {
-        todo!()
+impl Context<RecordElement> for Record {
+    fn get(&self, tag: &NameOrId) -> Option<&RecordElement> {
+        let entry = self.get(Some(tag));
+        entry
+            .map(|entry| match entry {
+                Entry::Element(element) => Some(element),
+                Entry::Collection(_) => None,
+            })
+            .unwrap_or(None)
+    }
+}
+
+impl Element for RecordElement {
+    fn id(&self) -> Option<u128> {
+        match self {
+            RecordElement::OnGraph(vertex_or_edge) => vertex_or_edge.id(),
+            RecordElement::OutGraph(_) => None,
+        }
+    }
+
+    fn label(&self) -> Option<&NameOrId> {
+        match self {
+            RecordElement::OnGraph(vertex_or_edge) => vertex_or_edge.label(),
+            RecordElement::OutGraph(_) => None,
+        }
+    }
+
+    fn details(&self) -> Option<&DynDetails> {
+        match self {
+            RecordElement::OnGraph(vertex_or_edge) => vertex_or_edge.details(),
+            RecordElement::OutGraph(_) => None,
+        }
+    }
+
+    fn as_borrow_object(&self) -> BorrowObject {
+        match self {
+            RecordElement::OnGraph(vertex_or_edge) => vertex_or_edge.as_borrow_object(),
+            RecordElement::OutGraph(obj_element) => match obj_element {
+                ObjectElement::None => BorrowObject::String(""),
+                ObjectElement::Prop(obj) | ObjectElement::Agg(obj) => obj.as_borrow(),
+                ObjectElement::Count(cnt) => (*cnt).into(),
+            },
+        }
     }
 }
 
