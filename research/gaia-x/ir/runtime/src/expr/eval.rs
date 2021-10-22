@@ -25,6 +25,8 @@ use ir_common::NameOrId;
 use std::cell::RefCell;
 use std::convert::TryFrom;
 
+unsafe impl Sync for Evaluator {}
+
 pub struct Evaluator {
     /// A suffix-tree-based expression for evaluating
     suffix_tree: Vec<InnerOpr>,
