@@ -20,6 +20,9 @@ pub mod property;
 
 pub type ID = u128;
 
+/// The number of bits in an `ID`
+pub const ID_BITS: usize = std::mem::size_of::<ID>() * 8;
+
 #[derive(Copy, Clone, Eq, PartialEq)]
 pub enum Direction {
     Out = 0,

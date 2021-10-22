@@ -47,6 +47,7 @@ pub enum Entry {
     Collection(Vec<RecordElement>),
 }
 
+// TODO
 pub trait Columns {
     fn get(tag: &NameOrId) -> Option<&Entry>;
 }

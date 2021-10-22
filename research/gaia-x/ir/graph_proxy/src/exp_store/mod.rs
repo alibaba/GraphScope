@@ -1,5 +1,5 @@
 //
-//! Copyright 2020 Alibaba Group Holding Limited.
+//! Copyright 2021 Alibaba Group Holding Limited.
 //!
 //! Licensed under the Apache License, Version 2.0 (the "License");
 //! you may not use this file except in compliance with the License.
@@ -13,17 +13,7 @@
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 
-mod compiler;
-pub mod expr;
-pub mod graph;
-mod process;
+mod graph_partition;
+mod graph_query;
 
-#[macro_use]
-extern crate pegasus_common;
-#[macro_use]
-extern crate lazy_static;
-#[macro_use]
-extern crate log;
-
-pub use crate::graph::graph::{get_graph, register_graph};
-pub use compiler::IRJobCompiler;
+pub use graph_query::{create_demo_graph, encode_store_e_id, ID_MASK};

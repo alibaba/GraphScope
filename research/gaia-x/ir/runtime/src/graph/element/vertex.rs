@@ -13,6 +13,7 @@
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 
+use crate::expr::eval::Context;
 use crate::graph::element::Element;
 use crate::graph::property::{Details, DynDetails};
 use crate::graph::ID;
@@ -61,5 +62,12 @@ impl Decode for Vertex {
     fn read_from<R: ReadExt>(reader: &mut R) -> io::Result<Self> {
         let details = <DynDetails>::read_from(reader)?;
         Ok(Vertex { details })
+    }
+}
+
+// TODO(bingqing): confirm Context
+impl Context<Vertex> for Vertex {
+    fn get(&self, _tag: &NameOrId) -> Option<&Vertex> {
+        todo!()
     }
 }

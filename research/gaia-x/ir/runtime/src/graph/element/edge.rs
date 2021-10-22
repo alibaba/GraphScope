@@ -13,6 +13,7 @@
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 
+use crate::expr::eval::Context;
 use crate::graph::element::Element;
 use crate::graph::property::{Details, DynDetails};
 use crate::graph::ID;
@@ -101,5 +102,12 @@ impl Decode for Edge {
             dst_label,
             details,
         })
+    }
+}
+
+// TODO(bingqing): confirm how to use context?
+impl Context<Edge> for Edge {
+    fn get(&self, _tag: &NameOrId) -> Option<&Edge> {
+        todo!()
     }
 }

@@ -32,7 +32,7 @@ pub struct QueryParams {
     pub limit: Option<usize>,
     pub props: Option<Vec<NameOrId>>,
     pub partitions: Option<Vec<u64>>,
-    pub filter: Option<Evaluator>,
+    pub filter: Option<Arc<Evaluator>>,
 }
 
 impl TryFrom<Option<algebra_pb::QueryParams>> for QueryParams {
@@ -64,7 +64,7 @@ impl QueryParams {
         filter_chain_pb: Option<common_pb::SuffixExpr>,
     ) -> Result<Self, ParsePbError> {
         if let Some(filter_chain_pb) = filter_chain_pb {
-            self.filter = Some(filter_chain_pb.try_into()?);
+            self.filter = Some(Arc::new(filter_chain_pb.try_into()?));
         }
         Ok(self)
     }
