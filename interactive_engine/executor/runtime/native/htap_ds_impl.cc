@@ -30,12 +30,12 @@ void get_graph_handle(ObjectId id, PartitionId channel_num,
 #ifndef NDEBUG
   LOG(INFO) << "enter " << __FUNCTION__;
 #endif
-  //BUGBUG: this point to the static default, potentially singleton client, and later on delete
-  handle->client = &vineyard::Client::Default();
+  auto client = std::make_unique<vineyard::Client>();
+  VINEYARD_CHECK_OK(client->Connect());
   LOG(INFO) << "Initialize vineyard client";
   std::shared_ptr<vineyard::ArrowFragmentGroup> fg =
       std::dynamic_pointer_cast<vineyard::ArrowFragmentGroup>(
-          handle->client->GetObject(id));
+          client->GetObject(id));
   LOG(INFO) << "Get vineyard object ok: " << fg;
   vineyard::fid_t total_frag_num = fg->total_frag_num();
   LabelId vertex_label_num = fg->vertex_label_num();
@@ -52,13 +52,13 @@ void get_graph_handle(ObjectId id, PartitionId channel_num,
   handle->edge_label_num = edge_label_num;
 
   handle->local_fnum = 0;
-  uint64_t native_instance_id = handle->client->instance_id();
+  uint64_t native_instance_id = client->instance_id();
   for (const auto& pair : fg->FragmentLocations()) {
     if (pair.second == native_instance_id) {
       ++handle->local_fnum;
     }
   }
-
+  // FIXME: make the following exception free
   if (handle->local_fnum == 0) {
     handle->local_fragments = NULL;
   } else {
@@ -80,11 +80,11 @@ void get_graph_handle(ObjectId id, PartitionId channel_num,
   for (const auto& pair : fg->Fragments()) {
     FRAG_ID_TYPE fid = pair.first;
     LOG(INFO) << "fid = " << fid
-              << ", instance_id = " << handle->client->instance_id()
+              << ", instance_id = " << client->instance_id()
               << ", location = " << fg->FragmentLocations().at(fid);
-    if (fg->FragmentLocations().at(fid) == handle->client->instance_id()) {
+    if (fg->FragmentLocations().at(fid) == client->instance_id()) {
       vineyard::ObjectMeta meta;
-      VINEYARD_CHECK_OK(handle->client->GetMetaData(pair.second, meta));
+      VINEYARD_CHECK_OK(client->GetMetaData(pair.second, meta));
 #ifndef NDEBUG
       LOG(INFO) << "begin construct fragment: " << pair.second << ", "
                 << meta.GetTypeName();
@@ -96,7 +96,7 @@ void get_graph_handle(ObjectId id, PartitionId channel_num,
         vineyard::ObjectMeta vm_meta;
         LOG(INFO) << "begin get vertex map: "
                   << handle->fragments[fid].vertex_map_id();
-        VINEYARD_CHECK_OK(handle->client->GetMetaData(
+        VINEYARD_CHECK_OK(client->GetMetaData(
             handle->fragments[fid].vertex_map_id(), vm_meta));
 #ifndef NDEBUG
         LOG(INFO) << "begin construct vertex map: "
@@ -129,7 +129,7 @@ void get_graph_handle(ObjectId id, PartitionId channel_num,
           (ivnum + channel_num - 1) / channel_num;
     }
   }
-
+  handle->client = client.release();
   LOG(INFO) << "finish get graph handle: " << id << ", handle = " << handle;
 }
 
@@ -137,6 +137,9 @@ void free_graph_handle(GraphHandleImpl* handle) {
 #ifndef NDEBUG
   LOG(INFO) << "enter " << __FUNCTION__;
 #endif
+  if (handle == nullptr) {
+    return;
+  }
   for (FRAG_ID_TYPE i = 0; i < handle->fnum; ++i) {
     free(handle->vertex_chunk_sizes[i]);
   }
@@ -147,9 +150,8 @@ void free_graph_handle(GraphHandleImpl* handle) {
     delete[] handle->local_fragments;
     handle->local_fragments = NULL;
   }
-  //handle->client->Disconnect();
-  //delete handle->client;
-  //handle->client = NULL;
+  delete handle->client;
+  handle->client = NULL;
 #ifndef NDEBUG
   LOG(INFO) << "finish " << __FUNCTION__;
 #endif

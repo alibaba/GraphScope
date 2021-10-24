@@ -16,17 +16,20 @@
 #include "global_store_ffi.h"
 #include "htap_ds_impl.h"
 
-#include <string>
+#include <cstring>
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
 GraphHandle get_graph_handle(ObjectId object_id, PartitionId channel_num) {
-  GraphHandle ret = malloc(sizeof(htap_impl::GraphHandleImpl));
-  htap_impl::get_graph_handle(object_id, channel_num,
-                              (htap_impl::GraphHandleImpl*)ret);
-  return ret;
+  // FIXME: handle exception here
+  GraphHandle handle = malloc(sizeof(htap_impl::GraphHandleImpl));
+  if (handle) {
+    std::memset(handle, 0, sizeof(htap_impl::GraphHandleImpl));
+    htap_impl::get_graph_handle(object_id, channel_num, (htap_impl::GraphHandleImpl*)handle);
+  }
+  return handle;
 }
 
 void free_graph_handle(GraphHandle handle) {
