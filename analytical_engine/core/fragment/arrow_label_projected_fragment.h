@@ -13,11 +13,13 @@
  * limitations under the License.
  */
 
-#ifndef ANALYTICAL_ENGINE_CORE_FRAGMENT_LABEL_ARROW_PROJECTED_FRAGMENT_H_
-#define ANALYTICAL_ENGINE_CORE_FRAGMENT_LABEL_ARROW_PROJECTED_FRAGMENT_H_
+#ifndef ANALYTICAL_ENGINE_CORE_FRAGMENT_ARROW_LABEL_PROJECTED_FRAGMENT_H_
+#define ANALYTICAL_ENGINE_CORE_FRAGMENT_ARROW_LABEL_PROJECTED_FRAGMENT_H_
 
 #include <memory>
+#include <set>
 #include <string>
+#include <utility>
 #include <vector>
 
 #include "vineyard/graph/fragment/arrow_fragment.h"
@@ -621,4 +623,4 @@ class ArrowLabelProjectedFragment {
 };
 
 }  // namespace gs
-#endif  // ANALYTICAL_ENGINE_CORE_FRAGMENT_LABEL_ARROW_PROJECTED_FRAGMENT_H_
+#endif  // ANALYTICAL_ENGINE_CORE_FRAGMENT_ARROW_LABEL_PROJECTED_FRAGMENT_H_

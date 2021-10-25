@@ -726,7 +726,10 @@ def _pre_process_for_output_graph_op(op, op_result_pool, key_to_op, **kwargs):
 
 def _pre_process_for_project_to_simple_op(op, op_result_pool, key_to_op, **kwargs):
     # for nx graph
-    if op.attr[types_pb2.GRAPH_TYPE].graph_type in (graph_def_pb2.DYNAMIC_PROJECTED, graph_def_pb2.ARROW_LABEL_PROJECTED):
+    if op.attr[types_pb2.GRAPH_TYPE].graph_type in (
+        graph_def_pb2.DYNAMIC_PROJECTED,
+        graph_def_pb2.ARROW_LABEL_PROJECTED,
+    ):
         return
     assert len(op.parents) == 1
     # get parent graph schema
@@ -1118,7 +1121,7 @@ GRAPH_HEADER_MAP = {
     ),
     graph_def_pb2.ARROW_LABEL_PROJECTED: (
         "gs::ArrowLabelProjectedFragment",
-        "core/fragment/arrow_label_projected_fragment.h"
+        "core/fragment/arrow_label_projected_fragment.h",
     ),
 }
 
