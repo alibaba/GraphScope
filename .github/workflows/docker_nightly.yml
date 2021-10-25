@@ -14,6 +14,16 @@ jobs:
     runs-on: self-hosted
 
     steps:
+    - name: Pre Clean
+      run: |
+        echo "CI is running on host $(curl -s 'https://api.ipify.org')"
+        sudo chmod -R a+wrx ${GITHUB_WORKSPACE}
+        sudo rm -rf ./* || true
+        find ./ -name "*.egg-info" | xargs sudo rm -rf || true
+        find ./ -name "*.whl" | xargs sudo rm -rf || true
+        find ./ -name "*_pb2.py" | xargs sudo rm -rf || true
+        find ./ -name "*_pb2_grpc.py" | xargs sudo rm -rf || true
+
     - uses: actions/checkout@v2.3.2
 
     - name: Build graphscope image
