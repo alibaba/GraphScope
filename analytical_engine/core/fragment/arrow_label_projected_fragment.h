@@ -104,15 +104,99 @@ class UnionVertexRange {
   std::vector<grape::VertexRange<T>> vertex_ranges_;
 };
 
-template <typename VID_T, typename EID_T>
+template <typename VID_T, typename EID_T, typename EDATA_T>
+struct NbrDefault {
+  using nbr_t = vineyard::property_graph_utils::Nbr<VID_T, EID_T>;
+  using nbr_unit_t = vineyard::property_graph_utils::NbrUnit<VID_T, EID_T>;
+  using prop_id_t = vineyard::property_graph_types::PROP_ID_TYPE;
+
+ public:
+  explicit NbrDefault(prop_id_t default_prop_id) : default_prop_id_(default_prop_id) {}
+  NbrDefault(const nbr_t& nbr, prop_id_t default_prop_id)
+      : nbr_(nbr), default_prop_id_(default_prop_id) {}
+  NbrDefault(NbrDefault&& rhs)
+      : nbr_(rhs.nbr_), default_prop_id_(rhs.default_prop_id_) {}
+
+  NbrDefault& operator=(const NbrDefault& rhs) {
+    nbr_ = rhs.nbr_;
+    default_prop_id_ = rhs.default_prop_id_;
+    return *this;
+  }
+
+  NbrDefault& operator=(NbrDefault&& rhs) {
+    nbr_ = std::move(rhs.nbr_);
+    default_prop_id_ = rhs.default_prop_id_;
+    return *this;
+  }
+
+  grape::Vertex<VID_T> neighbor() const { return nbr_.neighbor(); }
+
+  grape::Vertex<VID_T> get_neighbor() const { return nbr_.get_neighbor(); }
+
+  EID_T edge_id() const { return nbr_.edge_id(); }
+
+  EDATA_T get_data() const {
+    return nbr_.template get_data<EDATA_T>(default_prop_id_);
+  }
+
+  std::string get_str() const { return nbr_.get_str(default_prop_id_); }
+
+  double get_double() const { return nbr_.get_double(default_prop_id_); }
+
+  int64_t get_int() const { return nbr_.get_int(default_prop_id_); }
+
+  inline const NbrDefault& operator++() const {
+    ++nbr_;
+    return *this;
+  }
+
+  inline NbrDefault operator++(int) const {
+    NbrDefault ret(nbr_, default_prop_id_);
+    ++ret;
+    return ret;
+  }
+
+  inline const NbrDefault& operator--() const {
+    --nbr_;
+    return *this;
+  }
+
+  inline NbrDefault operator--(int) const {
+    NbrDefault ret(nbr_, default_prop_id_);
+    --ret;
+    return ret;
+  }
+
+  inline void SetNbr(const nbr_t& nbr) { nbr_ = nbr; }
+
+  inline bool operator==(const NbrDefault& rhs) const {
+    return nbr_ == rhs.nbr_;
+  }
+  inline bool operator!=(const NbrDefault& rhs) const {
+    return nbr_ != rhs.nbr_;
+  }
+
+  inline bool operator==(const nbr_t& rhs) const { return nbr_ == rhs; }
+  inline bool operator!=(const nbr_t& rhs) const { return nbr_ != rhs; }
+
+  inline const NbrDefault& operator*() const { return *this; }
+
+ private:
+  nbr_t nbr_;
+  prop_id_t default_prop_id_;
+};
+
+template <typename VID_T, typename EID_T, typename EDATA_T>
 class UnionAdjList {
  public:
-  using nbr_t = vineyard::property_graph_utils::Nbr<VID_T, EID_T>;
+  using nbr_t = NbrDefault<VID_T, EID_T, EDATA_T>;
   using adj_list_t = vineyard::property_graph_utils::AdjList<VID_T, EID_T>;
+  using prop_id_t = vineyard::property_graph_types::PROP_ID_TYPE;
 
   UnionAdjList() {}
-  explicit UnionAdjList(const std::vector<adj_list_t>& adj_lists)
-      : adj_lists_(adj_lists) {}
+  explicit UnionAdjList(const std::vector<adj_list_t>& adj_lists,
+                        prop_id_t default_prop_id)
+      : adj_lists_(adj_lists), default_prop_id_(default_prop_id) {}
 
   class iterator {
     using pointer_type = nbr_t*;
@@ -121,16 +205,16 @@ class UnionAdjList {
    public:
     iterator() = default;
     explicit iterator(const std::vector<adj_list_t>& adj_lists,
-                      bool is_end = false)
-        : adj_lists_(adj_lists) {
+                      prop_id_t default_prop_id, bool is_end = false)
+        : curr_nbr_(default_prop_id), adj_lists_(adj_lists) {
       if (is_end) {
         if (!adj_lists.empty()) {
-          curr_nbr_ = adj_lists_.get().back().end();
+          curr_nbr_.SetNbr(adj_lists_.get().back().end());
           curr_list_index_ = adj_lists_.get().size();
         }
       } else {
         if (!adj_lists.empty()) {
-          curr_nbr_ = adj_lists_.get().front().begin();
+          curr_nbr_.SetNbr(adj_lists_.get().front().begin());
           curr_list_index_ = 0;
         }
       }
@@ -144,7 +228,7 @@ class UnionAdjList {
       if (++curr_nbr_ == adj_lists_.get()[curr_list_index_].end()) {
         ++curr_list_index_;
         if (curr_list_index_ < adj_lists_.get().size()) {
-          curr_nbr_ = adj_lists_.get()[curr_list_index_].begin();
+          curr_nbr_.SetNbr(adj_lists_.get()[curr_list_index_].begin());
         }
       }
       return *this;
@@ -154,7 +238,7 @@ class UnionAdjList {
       if (++curr_list_index_ == adj_lists_.get()[curr_list_index_].end()) {
         ++curr_list_index_;
         if (curr_list_index_ < adj_lists_.get().size()) {
-          curr_nbr_ = adj_lists_.get()[curr_list_index_].begin();
+          curr_nbr_.SetNbr(adj_lists_.get()[curr_list_index_].begin());
         }
       }
       return *this;
@@ -174,9 +258,9 @@ class UnionAdjList {
     std::reference_wrapper<const std::vector<adj_list_t>> adj_lists_;
   };
 
-  iterator begin() { return iterator(adj_lists_); }
+  iterator begin() { return iterator(adj_lists_, default_prop_id_); }
 
-  iterator end() { return iterator(adj_lists_, true); }
+  iterator end() { return iterator(adj_lists_, default_prop_id_, true); }
 
   inline bool Empty() const { return adj_lists_.empty(); }
 
@@ -192,6 +276,7 @@ class UnionAdjList {
 
  private:
   std::vector<adj_list_t> adj_lists_;
+  prop_id_t default_prop_id_;
 };
 
 template <typename T, typename VID_T>
@@ -329,7 +414,7 @@ class ArrowLabelProjectedFragment {
   using vertex_array_t =
       arrow_label_projected_fragment_impl::UnionVertexArray<DATA_T, vid_t>;
   using adj_list_t =
-      arrow_label_projected_fragment_impl::UnionAdjList<vid_t, eid_t>;
+      arrow_label_projected_fragment_impl::UnionAdjList<vid_t, eid_t, edata_t>;
   using label_id_t = typename fragment_t::label_id_t;
   using dest_list_t = arrow_label_projected_fragment_impl::UnionDestList;
 
@@ -550,7 +635,7 @@ class ArrowLabelProjectedFragment {
         adj_lists.push_back(adj_list);
       }
     }
-    return adj_list_t(adj_lists);
+    return adj_list_t(adj_lists, e_prop_id_);
   }
 
   inline adj_list_t GetIncomingAdjList(const vertex_t& v) const {
@@ -563,7 +648,7 @@ class ArrowLabelProjectedFragment {
         adj_lists.push_back(adj_list);
       }
     }
-    return adj_list_t(adj_lists);
+    return adj_list_t(adj_lists, e_prop_id_);
   }
 
   inline int GetLocalOutDegree(const vertex_t& v) const {

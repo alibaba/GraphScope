@@ -173,7 +173,6 @@ class TestBuiltinCopyOnWrite:
         self.p3 = p3_graph(data_dir, True)
         self.P3 = nx.DiGraph(self.p3, default_label="vertex")
 
-    @pytest.mark.skip(reason="edge get data")
     def test_single_source_dijkstra_path_length(self):
         ret = nx.builtin.single_source_dijkstra_path_length(
             self.P3, source=0, weight="weight"
@@ -252,7 +251,7 @@ class TestBuiltinCopyOnWrite:
         ret = nx.builtin.attribute_assortativity_coefficient(self.K3)
         print(ret)
 
-    @pytest.mark.skip(reason="edge get data")
+    @pytest.mark.skip(reason="vertex get data")
     def test_numeric_assortativity_coefficient(self):
         ret = nx.builtin.numeric_assortativity_coefficient(self.K3)
         print(ret)
