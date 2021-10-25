@@ -152,7 +152,7 @@ impl AsPhysical for pb::logical_plan::Operator {
 impl AsPhysical for LogicalPlan {
     fn add_job_builder(&self, builder: &mut JobBuilder) -> PhysicalResult<()> {
         use pb::logical_plan::operator::Opr::*;
-        let needs_shuffle = builder.conf.servers().len() > 1 && builder.conf.workers > 1;
+        let peers = builder.conf.servers().len() *  builder.conf.workers;
         let mut prev_node: Option<NodeType> = None;
         for (_, node) in &self.nodes {
             let node_ref = node.borrow();
@@ -160,7 +160,7 @@ impl AsPhysical for LogicalPlan {
             if node_ref.children.len() > 1 {
                 return Err(PhysicalError::Unsupported);
             }
-            if needs_shuffle {
+            if peers > 1 {
                 if let Some(prev) = &prev_node {
                     let prev_ref = prev.borrow();
                     match (&prev_ref.opr.opr, &node_ref.opr.opr) {
