@@ -121,6 +121,6 @@ public class IngestorRpcTest {
                 .when(stub)
                 .writeStore(any(), any());
         client.writeStore(StoreDataBatch.newBuilder().requestId("test_req").build(), callback);
-        verify(callback).onCompleted(null);
+        verify(callback).onCompleted(10);
     }
 }

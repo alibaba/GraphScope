@@ -36,6 +36,7 @@ public class LocalNodeProviderTest {
                 Configs.newBuilder()
                         .put("role.name", role.getName())
                         .put("node.idx", String.valueOf(idx))
+                        .put("discovery.mode", "zookeeper")
                         .build();
         LocalNodeProvider localNodeProvider = new LocalNodeProvider(configs);
         MaxGraphNode node = localNodeProvider.apply(port);

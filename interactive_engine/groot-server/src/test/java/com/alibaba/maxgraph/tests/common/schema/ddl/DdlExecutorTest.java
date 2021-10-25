@@ -110,21 +110,24 @@ public class DdlExecutorTest {
                         .setPropertyIdx(1)
                         .putPropertyNameToId("p1", 1)
                         .addTypeDef(vertexTypeWithId)
+                        .putVertexTableId(vertexTypeWithId.getTypeLabelId(), 1L)
                         .addTypeDef(edgeTypeWithId)
                         .addEdgeKind(edgeKindWithId)
+                        .putEdgeTableId(edgeKindWithId, 2L)
+                        .setTableIdx(2L)
                         .build();
         assertEquals(graphDef, ddlResult.getGraphDef());
         List<Operation> ddlOperations = ddlResult.getDdlOperations();
         assertEquals(ddlOperations.size(), 3);
         assertEquals(
                 ddlOperations.get(0).toBlob().toProto(),
-                new CreateVertexTypeOperation(0, 1L, vertexTypeWithId, -1L).toBlob().toProto());
+                new CreateVertexTypeOperation(0, 1L, vertexTypeWithId, 1L).toBlob().toProto());
         assertEquals(
                 ddlOperations.get(1).toBlob().toProto(),
                 new CreateEdgeTypeOperation(0, 2L, edgeTypeWithId).toBlob().toProto());
         assertEquals(
                 ddlOperations.get(2).toBlob().toProto(),
-                new AddEdgeKindOperation(0, 3L, edgeKindWithId, -1L).toBlob().toProto());
+                new AddEdgeKindOperation(0, 3L, edgeKindWithId, 2L).toBlob().toProto());
 
         assertEquals(
                 GraphDef.parseProto(GraphDefPb.parseFrom(graphDef.toProto().toByteString())),

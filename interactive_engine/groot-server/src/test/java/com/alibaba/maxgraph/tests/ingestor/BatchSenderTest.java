@@ -15,6 +15,7 @@ package com.alibaba.maxgraph.tests.ingestor;
 
 import com.alibaba.graphscope.groot.CompletionCallback;
 import com.alibaba.graphscope.groot.meta.MetaService;
+import com.alibaba.graphscope.groot.metrics.MetricsCollector;
 import com.alibaba.graphscope.groot.operation.OperationBatch;
 import com.alibaba.graphscope.groot.operation.OperationBlob;
 import com.alibaba.graphscope.groot.operation.StoreDataBatch;
@@ -92,14 +93,16 @@ public class BatchSenderTest {
                             assertEquals(
                                     dataBatch.get(1).get(-1).getOperationBlob(0),
                                     OperationBlob.MARKER_OPERATION_BLOB);
-                            callback.onCompleted(null);
+                            callback.onCompleted(0);
                             latch.countDown();
                             return null;
                         })
                 .when(mockStoreWriter)
                 .write(anyInt(), any(), any());
 
-        BatchSender batchSender = new BatchSender(configs, mockMetaService, mockStoreWriter, null);
+        BatchSender batchSender =
+                new BatchSender(
+                        configs, mockMetaService, mockStoreWriter, new MetricsCollector(configs));
         batchSender.start();
 
         batchSender.asyncSendWithRetry(requestId, queueId, snapshotId, offset, batch);

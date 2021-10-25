@@ -94,28 +94,11 @@ public class GraphDef implements GraphSchema {
             for (EdgeKind edgeKind : edgeKindSet) {
                 GraphVertex srcGraphVertex = this.vertexTypes.get(edgeKind.getSrcVertexLabelId());
                 GraphVertex dstGraphVertex = this.vertexTypes.get(edgeKind.getDstVertexLabelId());
-                edgeRelations.add(
-                        new EdgeRelation() {
-                            @Override
-                            public long getTableId() {
-                                Long tableId = edgeTableIds.get(edgeKind);
-                                if (tableId == null) {
-                                    throw new InvalidSchemaException(
-                                            "no valid table id for [" + edgeKind + "]");
-                                }
-                                return tableId;
-                            }
-
-                            @Override
-                            public GraphVertex getSource() {
-                                return srcGraphVertex;
-                            }
-
-                            @Override
-                            public GraphVertex getTarget() {
-                                return dstGraphVertex;
-                            }
-                        });
+                Long tableId = edgeTableIds.get(edgeKind);
+                if (tableId == null) {
+                    throw new InvalidSchemaException("no valid table id for [" + edgeKind + "]");
+                }
+                edgeRelations.add(new EdgeRelationImpl(tableId, srcGraphVertex, dstGraphVertex));
             }
         }
         return new GraphEdgeImpl(typeDef, edgeRelations);

@@ -199,11 +199,6 @@
       <artifactId>commons-io</artifactId>
     </dependency>
     <dependency>
-      <groupId>junit</groupId>
-      <artifactId>junit</artifactId>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
       <groupId>org.apache.tinkerpop</groupId>
       <artifactId>gremlin-test</artifactId>
       <scope>test</scope>
@@ -266,15 +261,16 @@
         <artifactId>maven-surefire-plugin</artifactId>
         <version>${maven.surefire.version}</version>
         <configuration>
+          <excludes>
+            <exclude>**/RemoteGremlinStandardTest.java</exclude>
+            <exclude>**/FfiTest.java</exclude>
+          </excludes>
           <argLine>
-            -Djna.library.path=${project.parent.basedir}/executor/target/debug:/usr/loca/lib:${project.parent.basedir}/lgraph/build
+            -Djna.library.path=${project.parent.basedir}/executor/target:/usr/local/lib:${project.parent.basedir}/lgraph/build
           </argLine>
           <environmentVariables>
             <RUST_BACKTRACE>1</RUST_BACKTRACE>
           </environmentVariables>
-          <excludes>
-            <exclude>**/RemoteGremlinStandardTest.java</exclude>
-          </excludes>
         </configuration>
       </plugin>
     </plugins>
