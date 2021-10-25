@@ -16,4 +16,27 @@
 mod graph_partition;
 mod graph_query;
 
+use crate::exp_store::graph_partition::SinglePartition;
+use crate::InitializeJobCompiler;
 pub use graph_query::{create_demo_graph, encode_store_e_id, ID_MASK};
+use runtime::IRJobCompiler;
+
+pub struct QueryExpGraph {
+    num_servers: usize,
+}
+
+impl QueryExpGraph {
+    pub fn new(num_servers: usize) -> Self {
+        QueryExpGraph { num_servers }
+    }
+}
+
+impl InitializeJobCompiler for QueryExpGraph {
+    fn initialize_job_compiler(&self) -> IRJobCompiler {
+        create_demo_graph();
+        let partitioner = SinglePartition {
+            num_servers: self.num_servers.clone(),
+        };
+        IRJobCompiler::new(partitioner)
+    }
+}
