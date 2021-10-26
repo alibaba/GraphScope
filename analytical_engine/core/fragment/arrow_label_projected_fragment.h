@@ -80,8 +80,6 @@ class UnionVertexRange {
       return ret;
     }
 
-    // TODO: add operator--
-
     bool operator==(const iterator& rhs) noexcept {
       return curr_vertex_ == rhs.curr_vertex_;
     }
@@ -272,8 +270,6 @@ class UnionAdjList {
       ++(*this);
       return ret;
     }
-
-    // TODO: add operator--
 
     bool operator==(const iterator& rhs) noexcept {
       return curr_nbr_ == rhs.curr_nbr_;
