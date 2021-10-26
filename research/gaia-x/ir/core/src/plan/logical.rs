@@ -154,8 +154,25 @@ impl From<LogicalPlan> for pb::LogicalPlan {
 
 #[allow(dead_code)]
 impl LogicalPlan {
+    /// Create a new logical plan from some root.
+    pub fn with_root(node: Node) -> Self {
+        let mut nodes = VecMap::new();
+        nodes.insert(node.id as usize, Rc::new(RefCell::new(node)));
+        Self {
+            nodes,
+            total_size: 1
+        }
+    }
+
+    /// Get a node reference from the logical plan
     pub fn get_node(&self, id: u32) -> Option<NodeType> {
         self.nodes.get(id as usize).cloned()
+    }
+
+    /// Clone a node out of the logical plan.
+    pub fn clone_node(&self, id: u32) -> Option<Node> {
+        self.get_node(id)
+            .map(|node_ref| (*node_ref.borrow()).clone())
     }
 
     /// Append an operator into the logical plan, as a new node, with specified `parent_ids`

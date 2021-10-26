@@ -152,7 +152,7 @@ impl AsPhysical for pb::logical_plan::Operator {
 impl AsPhysical for LogicalPlan {
     fn add_job_builder(&self, builder: &mut JobBuilder) -> PhysicalResult<()> {
         use pb::logical_plan::operator::Opr::*;
-        let peers = builder.conf.servers().len() *  builder.conf.workers;
+        let peers = builder.conf.servers().len() *  (builder.conf.workers as usize);
         let mut prev_node: Option<NodeType> = None;
         for (_, node) in &self.nodes {
             let node_ref = node.borrow();
