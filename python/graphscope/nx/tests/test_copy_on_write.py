@@ -175,9 +175,9 @@ class TestBuiltinCopyOnWrite:
 
     def test_single_source_dijkstra_path_length(self):
         ret = nx.builtin.single_source_dijkstra_path_length(
-            self.P3, source=0, weight="weight"
+            self.K3, source=0, weight="weight"
         )
-        assert dict(ret.values) == {0.0: 0.0, 1.0: 1.0, 2.0: 2.0}
+        assert dict(ret.values) == {0.0: 0.0, 1.0: 1.0, 2.0: 1.0}
 
     def test_wcc(self):
         ret = nx.builtin.weakly_connected_components(self.K3)
@@ -201,7 +201,7 @@ class TestBuiltinCopyOnWrite:
         print(ret)
 
     def test_has_path(self):
-        assert nx.builtin.has_path(self.P3, source=0, target=2)
+        assert nx.builtin.has_path(self.K3, source=0, target=2)
 
     @pytest.mark.skip(reason="grape::VertexDenseSet")
     def test_average_shortest_path_length(self):
