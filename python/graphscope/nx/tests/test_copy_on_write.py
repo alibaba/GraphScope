@@ -203,7 +203,7 @@ class TestBuiltinCopyOnWrite:
     def test_has_path(self):
         assert nx.builtin.has_path(self.P3, source=0, target=2)
 
-    @pytest.mark.skip(reason="edge get data")
+    @pytest.mark.skip(reason="grape::VertexDenseSet")
     def test_average_shortest_path_length(self):
         ret = nx.builtin.average_shortest_path_length(self.K3)
         print(ret)
@@ -246,12 +246,12 @@ class TestBuiltinCopyOnWrite:
         ret = nx.builtin.edge_boundary(self.K3, [0, 1])
         print(ret)
 
-    @pytest.mark.skip(reason="vertex get data")
     def test_attribute_assortativity_coefficient(self):
-        ret = nx.builtin.attribute_assortativity_coefficient(self.K3)
+        ret = nx.builtin.attribute_assortativity_coefficient(
+            self.K3, attribute="weight"
+        )
         print(ret)
 
-    @pytest.mark.skip(reason="vertex get data")
     def test_numeric_assortativity_coefficient(self):
-        ret = nx.builtin.numeric_assortativity_coefficient(self.K3)
+        ret = nx.builtin.numeric_assortativity_coefficient(self.K3, attribute="weight")
         print(ret)

@@ -91,9 +91,13 @@ class SSSPProjected : public AppBase<FRAG_T, SSSPProjectedContext<FRAG_T>> {
       }
       ctx.modified[u] = true;
 
+      LOG(INFO) << "processing vertex-" << frag.GetId(u);
       auto es = frag.GetOutgoingAdjList(u);
+      LOG(INFO) << "adjlist size=" << es.Size();
       for (auto& e : es) {
         v = e.neighbor();
+
+        LOG(INFO) << "processing neighbor-" << frag.GetId(v);
         distv = ctx.partial_result[v];
         double edata = 1.0;
         static_if<!std::is_same<edata_t, grape::EmptyType>{}>(

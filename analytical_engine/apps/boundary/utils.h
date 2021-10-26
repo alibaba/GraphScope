@@ -28,7 +28,7 @@ template <>
 void ExtractOidArrayFromDynamic<int64_t>(folly::dynamic node_array,
                                          std::vector<int64_t>& oid_array) {
   for (const auto& val : node_array) {
-    oid_array.insert(val.asInt());
+    oid_array.push_back(val.asInt());
   }
 }
 
@@ -36,7 +36,7 @@ template <>
 void ExtractOidArrayFromDynamic<std::string>(
     folly::dynamic node_array, std::vector<std::string>& oid_array) {
   for (const auto& val : node_array) {
-    oid_array.insert(val.asString());
+    oid_array.push_back(val.asString());
   }
 }
 
@@ -44,7 +44,7 @@ template <>
 void ExtractOidArrayFromDynamic<folly::dynamic>(
     folly::dynamic node_array, std::vector<folly::dynamic>& oid_array) {
   for (const auto& val : node_array) {
-    oid_array.insert(val);
+    oid_array.push_back(val);
   }
 }
 }  // namespace gs

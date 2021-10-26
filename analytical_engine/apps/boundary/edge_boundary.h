@@ -72,7 +72,7 @@ class EdgeBoundary : public AppBase<FRAG_T, EdgeBoundaryContext<FRAG_T>>,
     // get the boundary
     for (auto& gid : node_gid_set) {
       if (frag.InnerVertexGid2Vertex(gid, u)) {
-        for (auto e : frag.GetOutgoingAdjList(u)) {
+        for (auto& e : frag.GetOutgoingAdjList(u)) {
           vid_t vgid = frag.Vertex2Gid(e.get_neighbor());
           if (node_gid_set_2.empty()) {
             if (node_gid_set.find(vgid) == node_gid_set.end()) {

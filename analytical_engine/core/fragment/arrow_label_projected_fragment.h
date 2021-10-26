@@ -27,6 +27,13 @@
 namespace gs {
 
 namespace arrow_label_projected_fragment_impl {
+
+/**
+ * @brief  A union collection of continuous vertex ranges. The vertex ranges
+ * must be non-empty to construct the UnionVertexRange.
+ *
+ * @tparam T Vertex ID type.
+ */
 template <typename T>
 class UnionVertexRange {
  public:
@@ -39,19 +46,19 @@ class UnionVertexRange {
     using pointer_type = grape::Vertex<T>*;
     using reference_type = grape::Vertex<T>&;
 
+   private:
+    std::reference_wrapper<const std::vector<grape::VertexRange<T>>>
+        vertex_ranges_;
+    grape::Vertex<T> curr_vertex_;
+    size_t curr_range_index_;
+
    public:
     iterator() = default;
     explicit iterator(const std::vector<grape::VertexRange<T>>& vertex_ranges,
-                      bool is_end = false)
-        : vertex_ranges_(vertex_ranges) {
-      if (is_end) {
-        curr_vertex_ = vertex_ranges_.get().back().end();
-        curr_range_index_ = vertex_ranges_.get().size();
-      } else {
-        curr_vertex_ = vertex_ranges_.get().front().begin();
-        curr_range_index_ = 0;
-      }
-    }
+                      const grape::Vertex<T>& c, size_t range_index)
+        : vertex_ranges_(vertex_ranges),
+          curr_vertex_(c),
+          curr_range_index_(range_index) {}
 
     reference_type operator*() noexcept { return curr_vertex_; }
 
@@ -67,15 +74,13 @@ class UnionVertexRange {
       return *this;
     }
 
-    iterator& operator++(int) {
-      if (++curr_vertex_ >= vertex_ranges_.get()[curr_range_index_].end()) {
-        ++curr_range_index_;
-        if (curr_range_index_ < vertex_ranges_.get().size()) {
-          curr_vertex_ = vertex_ranges_.get()[curr_range_index_].begin();
-        }
-      }
-      return *this;
+    iterator operator++(int) {
+      iterator ret(vertex_ranges_.get(), curr_vertex_, curr_range_index_);
+      ++(*this);
+      return ret;
     }
+
+    // TODO: add operator--
 
     bool operator==(const iterator& rhs) noexcept {
       return curr_vertex_ == rhs.curr_vertex_;
@@ -84,17 +89,15 @@ class UnionVertexRange {
     bool operator!=(const iterator& rhs) noexcept {
       return curr_vertex_ != rhs.curr_vertex_;
     }
-
-   private:
-    grape::Vertex<T> curr_vertex_;
-    int curr_range_index_;
-    std::reference_wrapper<const std::vector<grape::VertexRange<T>>>
-        vertex_ranges_;
   };
 
-  iterator begin() const { return iterator(vertex_ranges_); }
-
-  iterator end() const { return iterator(vertex_ranges_, true); }
+  iterator begin() const {
+    return iterator(vertex_ranges_, vertex_ranges_.front().begin(), 0);
+  }
+  iterator end() const {
+    return iterator(vertex_ranges_, vertex_ranges_.back().end(),
+                    vertex_ranges_.size());
+  }
 
   const std::vector<grape::VertexRange<T>>& GetVertexRanges() const {
     return vertex_ranges_;
@@ -104,6 +107,11 @@ class UnionVertexRange {
   std::vector<grape::VertexRange<T>> vertex_ranges_;
 };
 
+/**
+ * @brief  A wrapper of vineyard::property_graph_utils::Nbr with default
+ * property id to access data.
+ *
+ */
 template <typename VID_T, typename EID_T, typename EDATA_T>
 struct NbrDefault {
   using nbr_t = vineyard::property_graph_utils::Nbr<VID_T, EID_T>;
@@ -111,9 +119,12 @@ struct NbrDefault {
   using prop_id_t = vineyard::property_graph_types::PROP_ID_TYPE;
 
  public:
-  explicit NbrDefault(prop_id_t default_prop_id) : default_prop_id_(default_prop_id) {}
-  NbrDefault(const nbr_t& nbr, prop_id_t default_prop_id)
+  explicit NbrDefault(const prop_id_t& default_prop_id)
+      : default_prop_id_(default_prop_id) {}
+  NbrDefault(const nbr_t& nbr, const prop_id_t& default_prop_id)
       : nbr_(nbr), default_prop_id_(default_prop_id) {}
+  NbrDefault(const NbrDefault& rhs)
+      : nbr_(rhs.nbr_), default_prop_id_(rhs.default_prop_id_) {}
   NbrDefault(NbrDefault&& rhs)
       : nbr_(rhs.nbr_), default_prop_id_(rhs.default_prop_id_) {}
 
@@ -126,6 +137,16 @@ struct NbrDefault {
   NbrDefault& operator=(NbrDefault&& rhs) {
     nbr_ = std::move(rhs.nbr_);
     default_prop_id_ = rhs.default_prop_id_;
+    return *this;
+  }
+
+  NbrDefault& operator=(const nbr_t& nbr) {
+    nbr_ = nbr;
+    return *this;
+  }
+
+  NbrDefault& operator=(nbr_t&& nbr) {
+    nbr_ = std::move(nbr);
     return *this;
   }
 
@@ -152,7 +173,7 @@ struct NbrDefault {
 
   inline NbrDefault operator++(int) const {
     NbrDefault ret(nbr_, default_prop_id_);
-    ++ret;
+    ++(*this);
     return ret;
   }
 
@@ -163,11 +184,9 @@ struct NbrDefault {
 
   inline NbrDefault operator--(int) const {
     NbrDefault ret(nbr_, default_prop_id_);
-    --ret;
+    --(*this);
     return ret;
   }
-
-  inline void SetNbr(const nbr_t& nbr) { nbr_ = nbr; }
 
   inline bool operator==(const NbrDefault& rhs) const {
     return nbr_ == rhs.nbr_;
@@ -175,9 +194,11 @@ struct NbrDefault {
   inline bool operator!=(const NbrDefault& rhs) const {
     return nbr_ != rhs.nbr_;
   }
+  inline bool operator<(const NbrDefault& rhs) const { return nbr_ < rhs.nbr_; }
 
-  inline bool operator==(const nbr_t& rhs) const { return nbr_ == rhs; }
-  inline bool operator!=(const nbr_t& rhs) const { return nbr_ != rhs; }
+  inline bool operator==(const nbr_t& nbr) const { return nbr_ == nbr; }
+  inline bool operator!=(const nbr_t& nbr) const { return nbr_ != nbr; }
+  inline bool operator<(const nbr_t& nbr) const { return nbr_ < nbr; }
 
   inline const NbrDefault& operator*() const { return *this; }
 
@@ -186,17 +207,33 @@ struct NbrDefault {
   prop_id_t default_prop_id_;
 };
 
+/**
+ * @brief Union of a set of iteratable adjencent list of a vertex. The union
+ * list contains all neighbors in format of Nbr, which contains the other Node
+ * and the data on the Edge. The adj lists must be non-empty to construct the
+ * UnionAdjList.
+ *
+ * @tparam VID_T
+ * @tparam EID_T
+ * @tparam EDATA_T
+ */
 template <typename VID_T, typename EID_T, typename EDATA_T>
 class UnionAdjList {
  public:
   using nbr_t = NbrDefault<VID_T, EID_T, EDATA_T>;
+  using nbr_unit_t = vineyard::property_graph_utils::Nbr<VID_T, EID_T>;
   using adj_list_t = vineyard::property_graph_utils::AdjList<VID_T, EID_T>;
   using prop_id_t = vineyard::property_graph_types::PROP_ID_TYPE;
 
-  UnionAdjList() {}
+  UnionAdjList() : size_(0) {}
   explicit UnionAdjList(const std::vector<adj_list_t>& adj_lists,
-                        prop_id_t default_prop_id)
-      : adj_lists_(adj_lists), default_prop_id_(default_prop_id) {}
+                        const prop_id_t& default_prop_id)
+      : adj_lists_(adj_lists), default_prop_id_(default_prop_id) {
+    size_ = 0;
+    for (auto& adj_list : adj_lists) {
+      size_ += adj_list.Size();
+    }
+  }
 
   class iterator {
     using pointer_type = nbr_t*;
@@ -205,20 +242,16 @@ class UnionAdjList {
    public:
     iterator() = default;
     explicit iterator(const std::vector<adj_list_t>& adj_lists,
-                      prop_id_t default_prop_id, bool is_end = false)
-        : curr_nbr_(default_prop_id), adj_lists_(adj_lists) {
-      if (is_end) {
-        if (!adj_lists.empty()) {
-          curr_nbr_.SetNbr(adj_lists_.get().back().end());
-          curr_list_index_ = adj_lists_.get().size();
-        }
-      } else {
-        if (!adj_lists.empty()) {
-          curr_nbr_.SetNbr(adj_lists_.get().front().begin());
-          curr_list_index_ = 0;
-        }
-      }
+                      const nbr_unit_t& nbr, const prop_id_t& default_prop_id,
+                      size_t index)
+        : adj_lists_(adj_lists),
+          curr_nbr_(default_prop_id),
+          curr_list_index_(index) {
+      curr_nbr_ = nbr;
     }
+    explicit iterator(const std::vector<adj_list_t>& adj_lists,
+                      const nbr_t& nbr, size_t list_index)
+        : adj_lists_(adj_lists), curr_nbr_(nbr), curr_list_index_(list_index) {}
 
     reference_type operator*() noexcept { return curr_nbr_; }
 
@@ -228,21 +261,19 @@ class UnionAdjList {
       if (++curr_nbr_ == adj_lists_.get()[curr_list_index_].end()) {
         ++curr_list_index_;
         if (curr_list_index_ < adj_lists_.get().size()) {
-          curr_nbr_.SetNbr(adj_lists_.get()[curr_list_index_].begin());
+          curr_nbr_ = adj_lists_.get()[curr_list_index_].begin();
         }
       }
       return *this;
     }
 
-    iterator& operator++(int) {
-      if (++curr_list_index_ == adj_lists_.get()[curr_list_index_].end()) {
-        ++curr_list_index_;
-        if (curr_list_index_ < adj_lists_.get().size()) {
-          curr_nbr_.SetNbr(adj_lists_.get()[curr_list_index_].begin());
-        }
-      }
-      return *this;
+    iterator operator++(int) {
+      iterator ret(adj_lists_.get(), curr_nbr_, curr_list_index_);
+      ++(*this);
+      return ret;
     }
+
+    // TODO: add operator--
 
     bool operator==(const iterator& rhs) noexcept {
       return curr_nbr_ == rhs.curr_nbr_;
@@ -253,36 +284,54 @@ class UnionAdjList {
     }
 
    private:
-    nbr_t curr_nbr_;
-    int curr_list_index_;
     std::reference_wrapper<const std::vector<adj_list_t>> adj_lists_;
+    nbr_t curr_nbr_;
+    size_t curr_list_index_;
   };
 
-  iterator begin() { return iterator(adj_lists_, default_prop_id_); }
+  iterator begin() {
+    if (size_ == 0) {
+      nbr_unit_t nbr;
+      return iterator(adj_lists_, nbr, default_prop_id_, 0);
+    } else {
+      return iterator(adj_lists_, adj_lists_.front().begin(), default_prop_id_,
+                      0);
+    }
+  }
 
-  iterator end() { return iterator(adj_lists_, default_prop_id_, true); }
+  iterator end() {
+    if (size_ == 0) {
+      nbr_unit_t nbr;
+      return iterator(adj_lists_, nbr, default_prop_id_, 0);
+    } else {
+      return iterator(adj_lists_, adj_lists_.back().end(), default_prop_id_,
+                      adj_lists_.size());
+    }
+  }
 
   inline bool Empty() const { return adj_lists_.empty(); }
 
   inline bool NotEmpty() const { return !Empty(); }
 
-  inline size_t Size() const {
-    size_t size = 0;
-    for (auto& adj_list : adj_lists_) {
-      size += adj_list.Size();
-    }
-    return size;
-  }
+  inline size_t Size() const { return size_; }
 
  private:
   std::vector<adj_list_t> adj_lists_;
   prop_id_t default_prop_id_;
+  size_t size_;
 };
 
+/**
+ * @brief Union of a set of VertexArray. UnionVertexArray is construct with
+ * UnionVertexRange.
+ *
+ * @tparam T
+ * @tparam VID_T
+ */
 template <typename T, typename VID_T>
 class UnionVertexArray {
  public:
-  UnionVertexArray() {}
+  UnionVertexArray() = default;
   explicit UnionVertexArray(const UnionVertexRange<VID_T>& vertices) {
     Init(vertices);
   }
@@ -296,7 +345,7 @@ class UnionVertexArray {
   void Init(const UnionVertexRange<VID_T>& vertices) {
     ranges_ = vertices.GetVertexRanges();
     vertex_arrays_.resize(ranges_.size());
-    for (size_t i = 0; i < ranges_.size(); i++) {
+    for (size_t i = 0; i < ranges_.size(); ++i) {
       vertex_arrays_[i].Init(ranges_[i]);
     }
   }
@@ -304,7 +353,7 @@ class UnionVertexArray {
   void Init(const UnionVertexRange<VID_T>& vertices, const T& value) {
     ranges_ = vertices.GetVertexRanges();
     vertex_arrays_.resize(ranges_.size());
-    for (size_t i = 0; i < ranges_.size(); i++) {
+    for (size_t i = 0; i < ranges_.size(); ++i) {
       vertex_arrays_[i].Init(ranges_[i], value);
     }
   }
@@ -312,14 +361,14 @@ class UnionVertexArray {
   void SetValue(const UnionVertexRange<VID_T>& vertices, const T& value) {
     ranges_ = vertices.GetVertexRanges();
     vertex_arrays_.resize(ranges_.size());
-    for (size_t i = 0; i < ranges_.size(); i++) {
+    for (size_t i = 0; i < ranges_.size(); ++i) {
       vertex_arrays_[i].SetValue(ranges_[i], value);
     }
   }
 
   void SetValue(const T& value) {
-    for (size_t i = 0; i < vertex_arrays_.size(); i++) {
-      vertex_arrays_[i].SetValue(value);
+    for (auto& array : vertex_arrays_) {
+      array.SetValue(value);
     }
   }
 
@@ -351,9 +400,6 @@ class UnionVertexArray {
   size_t getRangeIndex(const grape::Vertex<VID_T>& loc) const {
     const auto& value = loc.GetValue();
     for (size_t i = 0; i < ranges_.size(); ++i) {
-      // LOG(INFO) << "range-" << i << ": begin=" <<
-      // ranges_[i].begin().GetValue() << ", end=" <<
-      // ranges_[i].end().GetValue();
       if (value >= ranges_[i].begin().GetValue() &&
           value < ranges_[i].end().GetValue()) {
         return i;
@@ -367,7 +413,6 @@ class UnionVertexArray {
 };
 
 class UnionDestList {
-  // FIXME: tricky solution.
  public:
   explicit UnionDestList(const std::vector<grape::DestList>& dest_lists) {
     std::set<grape::fid_t> dstset;
@@ -396,6 +441,10 @@ class UnionDestList {
 /**
  * @brief A label projected wrapper of arrow property fragment.
  *
+ * @tparam OID_T
+ * @tparam VID_T
+ * @tparam VDATA_T
+ * @tparam EDATA_T
  */
 template <typename OID_T, typename VID_T, typename VDATA_T, typename EDATA_T>
 class ArrowLabelProjectedFragment {
@@ -408,6 +457,8 @@ class ArrowLabelProjectedFragment {
   using edata_t = EDATA_T;
   using vertex_t = typename fragment_t::vertex_t;
   using fid_t = grape::fid_t;
+  using label_id_t = typename fragment_t::label_id_t;
+  using prop_id_t = vineyard::property_graph_types::PROP_ID_TYPE;
   using vertex_range_t =
       arrow_label_projected_fragment_impl::UnionVertexRange<vid_t>;
   template <typename DATA_T>
@@ -415,7 +466,6 @@ class ArrowLabelProjectedFragment {
       arrow_label_projected_fragment_impl::UnionVertexArray<DATA_T, vid_t>;
   using adj_list_t =
       arrow_label_projected_fragment_impl::UnionAdjList<vid_t, eid_t, edata_t>;
-  using label_id_t = typename fragment_t::label_id_t;
   using dest_list_t = arrow_label_projected_fragment_impl::UnionDestList;
 
   // This member is used by grape::check_load_strategy_compatible()
@@ -424,16 +474,15 @@ class ArrowLabelProjectedFragment {
 
   ArrowLabelProjectedFragment() = default;
 
-  explicit ArrowLabelProjectedFragment(fragment_t* frag,
-                                       rpc::graph::GraphTypePb host_graph_type,
-                                       const std::string& v_prop,
-                                       const std::string& e_prop)
-      : fragment_(frag),
-        v_prop_key_(std::move(v_prop)),
-        e_prop_key_(std::move(e_prop)) {
-    if (host_graph_type == rpc::graph::ARROW_PROPERTY) {
-      v_prop_id_ = boost::lexical_cast<int>(v_prop_key_);
-      e_prop_id_ = boost::lexical_cast<int>(e_prop_key_);
+  explicit ArrowLabelProjectedFragment(fragment_t* frag, prop_id_t v_prop_id,
+                                       prop_id_t e_prop_id)
+      : fragment_(frag), v_prop_id_(v_prop_id), e_prop_id_(e_prop_id) {
+    ivnum_ = ovnum_ = tvnum_ = 0;
+    for (label_id_t v_label = 0; v_label < fragment_->vertex_label_num();
+         v_label++) {
+      ivnum_ += fragment_->GetInnerVerticesNum(v_label);
+      ovnum_ += fragment_->GetOuterVerticesNum(v_label);
+      tvnum_ += fragment_->GetVerticesNum(v_label);
     }
   }
 
@@ -441,11 +490,12 @@ class ArrowLabelProjectedFragment {
 
   static std::shared_ptr<
       ArrowLabelProjectedFragment<OID_T, VID_T, VDATA_T, EDATA_T>>
-  Project(const std::shared_ptr<fragment_t>& frag,
-          rpc::graph::GraphTypePb host_graph_type, const std::string& v_prop,
+  Project(const std::shared_ptr<fragment_t>& frag, const std::string& v_prop,
           const std::string& e_prop) {
-    return std::make_shared<ArrowLabelProjectedFragment>(
-        frag.get(), host_graph_type, v_prop, e_prop);
+    prop_id_t v_prop_id = boost::lexical_cast<int>(v_prop);
+    prop_id_t e_prop_id = boost::lexical_cast<int>(e_prop);
+    return std::make_shared<ArrowLabelProjectedFragment>(frag.get(), v_prop_id,
+                                                         e_prop_id);
   }
 
   void PrepareToRunApp(grape::MessageStrategy strategy, bool need_split_edges) {
@@ -460,27 +510,39 @@ class ArrowLabelProjectedFragment {
 
   inline vertex_range_t Vertices() const {
     std::vector<grape::VertexRange<vid_t>> vertex_ranges;
+    vertex_ranges.reserve(fragment_->vertex_label_num());
     for (label_id_t v_label = 0; v_label < fragment_->vertex_label_num();
          v_label++) {
-      vertex_ranges.push_back(fragment_->Vertices(v_label));
+      auto range = fragment_->Vertices(v_label);
+      if (range.size() != 0) {
+        vertex_ranges.push_back(range);
+      }
     }
     return vertex_range_t(vertex_ranges);
   }
 
   inline vertex_range_t InnerVertices() const {
     std::vector<grape::VertexRange<vid_t>> vertex_ranges;
+    vertex_ranges.reserve(fragment_->vertex_label_num());
     for (label_id_t v_label = 0; v_label < fragment_->vertex_label_num();
          v_label++) {
-      vertex_ranges.push_back(fragment_->InnerVertices(v_label));
+      auto range = fragment_->InnerVertices(v_label);
+      if (range.size() != 0) {
+        vertex_ranges.push_back(range);
+      }
     }
     return vertex_range_t(vertex_ranges);
   }
 
   inline vertex_range_t OuterVertices() const {
     std::vector<grape::VertexRange<vid_t>> vertex_ranges;
+    vertex_ranges.reserve(fragment_->vertex_label_num());
     for (label_id_t v_label = 0; v_label < fragment_->vertex_label_num();
          v_label++) {
-      vertex_ranges.push_back(fragment_->OuterVertices(v_label));
+      auto range = fragment_->OuterVertices(v_label);
+      if (range.size() != 0) {
+        vertex_ranges.push_back(range);
+      }
     }
     return vertex_range_t(vertex_ranges);
   }
@@ -488,16 +550,6 @@ class ArrowLabelProjectedFragment {
   inline label_id_t vertex_label(const vertex_t& v) const {
     return fragment_->vertex_label(v);
   }
-
-  // FIXME
-  // inline const std::vector<vertex_t>& MirrorVertices(fid_t fid) const {
-  //   return fragment->MirrorVertices(fid);
-  // }
-
-  // FIXME
-  // inline const vid_t* GetOuterVerticesGid() const {
-  //   return fragment_->GetOuterVerticesGid();
-  // }
 
   inline bool GetVertex(const oid_t& oid, vertex_t& v) const {
     for (label_id_t v_label = 0; v_label < fragment_->vertex_label_num();
@@ -527,32 +579,11 @@ class ArrowLabelProjectedFragment {
     return fragment_->template GetData<vdata_t>(v, v_prop_id_);
   }
 
-  inline vid_t GetInnerVerticesNum() const {
-    vid_t ivnum = 0;
-    for (label_id_t v_label = 0; v_label < fragment_->vertex_label_num();
-         v_label++) {
-      ivnum += fragment_->GetInnerVerticesNum(v_label);
-    }
-    return ivnum;
-  }
+  inline vid_t GetInnerVerticesNum() const { return ivnum_; }
 
-  inline vid_t GetOuterVerticesNum() const {
-    vid_t ovnum = 0;
-    for (label_id_t v_label = 0; v_label < fragment_->vertex_label_num();
-         v_label++) {
-      ovnum += fragment_->GetOuterVerticesNum(v_label);
-    }
-    return ovnum;
-  }
+  inline vid_t GetOuterVerticesNum() const { return ovnum_; }
 
-  inline vid_t GetVerticesNum() const {
-    vid_t tvnum = 0;
-    for (label_id_t v_label = 0; v_label < fragment_->vertex_label_num();
-         v_label++) {
-      tvnum += fragment_->GetVerticesNum(v_label);
-    }
-    return tvnum;
-  }
+  inline vid_t GetVerticesNum() const { return tvnum_; }
 
   inline size_t GetTotalVerticesNum() const {
     return fragment_->GetTotalVerticesNum();
@@ -628,6 +659,7 @@ class ArrowLabelProjectedFragment {
   inline adj_list_t GetOutgoingAdjList(const vertex_t& v) const {
     std::vector<vineyard::property_graph_utils::AdjList<vid_t, eid_t>>
         adj_lists;
+    adj_lists.reserve(fragment_->edge_label_num());
     for (label_id_t e_label = 0; e_label < fragment_->edge_label_num();
          e_label++) {
       auto adj_list = fragment_->GetOutgoingAdjList(v, e_label);
@@ -641,9 +673,10 @@ class ArrowLabelProjectedFragment {
   inline adj_list_t GetIncomingAdjList(const vertex_t& v) const {
     std::vector<vineyard::property_graph_utils::AdjList<vid_t, eid_t>>
         adj_lists;
+    adj_lists.reserve(fragment_->edge_label_num());
     for (label_id_t e_label = 0; e_label < fragment_->edge_label_num();
          e_label++) {
-      auto adj_list = fragment_->GetOutgoingAdjList(v, e_label);
+      auto adj_list = fragment_->GetIncomingAdjList(v, e_label);
       if (adj_list.NotEmpty()) {
         adj_lists.push_back(adj_list);
       }
@@ -701,10 +734,11 @@ class ArrowLabelProjectedFragment {
 
  private:
   fragment_t* fragment_;
-  int v_prop_id_;
-  int e_prop_id_;
-  std::string v_prop_key_;
-  std::string e_prop_key_;
+  prop_id_t v_prop_id_;
+  prop_id_t e_prop_id_;
+  vid_t ivnum_;
+  vid_t ovnum_;
+  vid_t tvnum_;
 };
 
 }  // namespace gs

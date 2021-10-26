@@ -37,7 +37,6 @@ def project_to_simple(func):
     @functools.wraps(func)
     def wrapper(*args, **kwargs):
         graph = args[0]
-        print("G type 2", graph.graph_type)
         if not hasattr(graph, "graph_type"):
             raise InvalidArgumentError("Missing graph_type attribute in graph object.")
         elif graph.graph_type in (
@@ -465,7 +464,7 @@ def single_source_dijkstra_path_length(G, source, weight=None):
     Distances are calculated as sums of weighted edges traversed.
 
     """
-    ctx = graphscope.sssp(G, source)
+    ctx = AppAssets(algo="sssp_projected", context="vertex_data")(G, source)
     return ctx.to_dataframe({"node": "v.id", "result": "r"})
 
 

@@ -57,7 +57,6 @@ def bind_app(graph, app_assets):
         An :class:`Operation` with configuration that instruct
         analytical engine how to build the app.
     """
-    print("Graph Type", graph.graph_type)
     inputs = [graph.op, app_assets.op]
     op = Operation(
         graph.session_id,
