@@ -105,10 +105,7 @@ impl TryFrom<pb::LogicalPlan> for LogicalPlan {
 
         for (id, node) in nodes_pb.iter().enumerate() {
             if let Some(opr) = &node.opr {
-                nodes.push(Rc::new(RefCell::new(Node::new(
-                    id as u32,
-                    opr.clone(),
-                ))));
+                nodes.push(Rc::new(RefCell::new(Node::new(id as u32, opr.clone()))));
             } else {
                 return Err(ParsePbError::from("do not specify operator in a node"));
             }
@@ -160,7 +157,7 @@ impl LogicalPlan {
         nodes.insert(node.id as usize, Rc::new(RefCell::new(node)));
         Self {
             nodes,
-            total_size: 1
+            total_size: 1,
         }
     }
 
@@ -182,11 +179,7 @@ impl LogicalPlan {
     /// # Return
     ///   * If succeed, the id of the newly added node
     ///   * Otherwise, -1
-    pub fn append_node(
-        &mut self,
-        opr: pb::logical_plan::Operator,
-        parent_ids: Vec<u32>,
-    ) -> i32 {
+    pub fn append_node(&mut self, opr: pb::logical_plan::Operator, parent_ids: Vec<u32>) -> i32 {
         let id = self.total_size as u32;
         let mut node = Node::new(id, opr);
         if !self.is_empty() && !parent_ids.is_empty() {

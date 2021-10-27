@@ -19,12 +19,12 @@
 //! protobuf structure.
 //!
 
+use crate::plan::logical::{LogicalPlan, NodeType};
 use ir_common::generated::algebra as pb;
 use ir_common::generated::common as common_pb;
 use pegasus_client::builder::*;
 use prost::{EncodeError, Message};
 use std::fmt;
-use crate::plan::logical::{LogicalPlan, NodeType};
 
 /// Record any error while transforming ir to a pegasus physical plan
 #[derive(Debug, Clone)]
@@ -63,7 +63,7 @@ enum PegasusOpr {
     Source,
     Map,
     Flatmap,
-    Filter
+    Filter,
 }
 
 fn simple_add_job_builder<M: Message>(
@@ -141,7 +141,7 @@ impl AsPhysical for pb::logical_plan::Operator {
                 Scan(scan) => scan.add_job_builder(builder),
                 IndexedScan(idxscan) => idxscan.add_job_builder(builder),
                 Limit(limit) => limit.add_job_builder(builder),
-                _ => Err(PhysicalError::Unsupported)
+                _ => Err(PhysicalError::Unsupported),
             }
         } else {
             Err(PhysicalError::MissingDataError)
@@ -152,7 +152,7 @@ impl AsPhysical for pb::logical_plan::Operator {
 impl AsPhysical for LogicalPlan {
     fn add_job_builder(&self, builder: &mut JobBuilder) -> PhysicalResult<()> {
         use pb::logical_plan::operator::Opr::*;
-        let peers = builder.conf.servers().len() *  (builder.conf.workers as usize);
+        let peers = builder.conf.servers().len() * (builder.conf.workers as usize);
         let mut prev_node: Option<NodeType> = None;
         for (_, node) in &self.nodes {
             let node_ref = node.borrow();
@@ -166,7 +166,7 @@ impl AsPhysical for LogicalPlan {
                     match (&prev_ref.opr.opr, &node_ref.opr.opr) {
                         (Some(Edge(_)), Some(Edge(edgexpd))) => {
                             let key_pb = common_pb::NameOrIdKey {
-                                key: edgexpd.base.as_ref().unwrap().v_tag.clone()
+                                key: edgexpd.base.as_ref().unwrap().v_tag.clone(),
                             };
                             let mut bytes = vec![];
                             key_pb.encode(&mut bytes)?;
@@ -174,7 +174,7 @@ impl AsPhysical for LogicalPlan {
                         }
                         (Some(Edge(_)), Some(Vertex(getv))) => {
                             let key_pb = common_pb::NameOrIdKey {
-                                key: getv.tag.clone()
+                                key: getv.tag.clone(),
                             };
                             let mut bytes = vec![];
                             key_pb.encode(&mut bytes)?;
