@@ -1,6 +1,5 @@
-FROM registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-runtime:latest
+FROM registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-vineyard:v0.3.1
 
-COPY ./opt/vineyard/ /usr/local/
 COPY ./maxgraph /usr/local/maxgraph
 COPY ./ready_probe.sh /tmp/ready_probe.sh
 

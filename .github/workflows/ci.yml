@@ -377,7 +377,6 @@ jobs:
       with:
         path: |
           ~/.cache/pip
-          /home/graphscope/.cache/pip
         key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
         restore-keys: |
           ${{ runner.os }}-pip-
@@ -570,10 +569,6 @@ jobs:
         export LIBCLANG_PATH=$(dirname $(python3 -c "import clang; print(clang.__file__)"))/native
         cd interactive_engine
         for i in {1..3}; do mvn clean install -Pv2 -Drust.compile.mode=debug -DskipTests --quiet  && break || sleep 60; done
-        cd ${GITHUB_WORKSPACE}
-        mv interactive_engine/distribution/target/maxgraph.tar.gz ./
-        mv interactive_engine/data_load_tools/target/data_load.tar.gz ./graphscope_store_data_load.tar.gz
-        tar -zcf vineyard.tar.gz /opt/vineyard
     - name: gremlin-test
       run: |
         cd interactive_engine/groot-server
@@ -581,16 +576,13 @@ jobs:
     - uses: actions/upload-artifact@v2
       with:
         name: gss-${{ github.sha }}
-        path: |
-          maxgraph.tar.gz
-          vineyard.tar.gz
+        path: interactive_engine/distribution/target/maxgraph.tar.gz
         retention-days: 5
 
     - uses: actions/upload-artifact@v2
       with:
         name: data_load-${{ github.sha }}
-        path: |
-          graphscope_store_data_load.tar.gz
+        path: interactive_engine/data_load_tools/target/data_load.tar.gz
         retention-days: 5
 
   gss-test:
@@ -615,6 +607,7 @@ jobs:
 
     - uses: actions/download-artifact@v2
       with:
+        name: gss-${{ github.sha }}
         path: artifacts
 
     - name: Prepare Image
@@ -622,11 +615,8 @@ jobs:
         cp k8s/ready_probe.sh artifacts/
         cp .github/workflows/graphscope-store.Dockerfile artifacts/
         pushd artifacts
-        tar -zxf ./gss-${{ github.sha }}/vineyard.tar.gz
-        tar -zxf ./gss-${{ github.sha }}/maxgraph.tar.gz
-        sudo docker pull registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-runtime:latest
+        tar -zxf ./maxgraph.tar.gz
         sudo docker build -t registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-store:${{ github.sha }} \
-                          --network=host \
                           -f ./graphscope-store.Dockerfile .
         popd
         python3 -m pip install -r python/requirements.txt
@@ -637,9 +627,7 @@ jobs:
       run: |
         cd charts/graphscope-store
         helm dependency update
-        cd ..
-        helm install ci --set image.tag=${{ github.sha }},executor=${{ matrix.executor }} \
-                                      ./graphscope-store
+        helm install ci --set image.tag=${{ github.sha }},executor=${{ matrix.executor }} .
         helm test ci --timeout 5m0s
     - name: Python test
       run: |
@@ -668,9 +656,8 @@ jobs:
         python3 -m pytest -s -vvv tests/kubernetes/test_store_service.py -k test_demo_fresh
         # helm restart ci release and run demo with the PersistentVolume
         helm uninstall ci
-        cd ${GITHUB_WORKSPACE}/charts
-        helm install ci --set image.tag=${{ github.sha }},executor=${{ matrix.executor }} \
-                                      ./graphscope-store
+        cd ${GITHUB_WORKSPACE}/charts/graphscope-store
+        helm install ci --set image.tag=${{ github.sha }},executor=${{ matrix.executor }} .
         export GRPC_PORT=$(kubectl get --namespace default -o jsonpath="{.spec.ports[0].nodePort}" services ci-graphscope-store-frontend)
         export GREMLIN_PORT=$(kubectl get --namespace default -o jsonpath="{.spec.ports[1].nodePort}" services ci-graphscope-store-frontend)
         export NODE_IP=$(kubectl get nodes --namespace default -o jsonpath="{.items[0].status.addresses[0].address}")
