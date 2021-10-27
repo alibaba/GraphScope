@@ -21,12 +21,13 @@ use crate::process::operator::shuffle::RecordRouter;
 use crate::process::operator::sink::RecordSinkEncoder;
 use crate::process::operator::source::source_op_from;
 use crate::process::record::Record;
+use ir_common::error::str_to_dyn_error;
 use ir_common::generated::algebra as algebra_pb;
 use ir_common::generated::common as common_pb;
 use ir_common::generated::result as result_pb;
 use pegasus::api::function::*;
 use pegasus::api::{
-    Collect, CorrelatedSubTask, Filter, IterCondition, Iteration, Limit, Map, Sink, SortBy,
+    Collect, CorrelatedSubTask, Filter, IterCondition, Iteration, Limit, Map, Merge, Sink, SortBy,
     SortLimitBy, Source,
 };
 use pegasus::result::ResultSink;
@@ -168,8 +169,20 @@ impl IRJobCompiler {
                     server_pb::operator_def::OpKind::Dedup(_) => {
                         todo!()
                     }
-                    server_pb::operator_def::OpKind::Merge(_merge) => {
-                        todo!()
+                    server_pb::operator_def::OpKind::Merge(merge) => {
+                        let left_task = merge
+                            .left_task
+                            .as_ref()
+                            .ok_or(str_to_dyn_error("left_task is missing in merge"))?;
+                        let right_task = merge
+                            .right_task
+                            .as_ref()
+                            .ok_or(str_to_dyn_error("right_task is missing in merge"))?;
+                        let (ori_stream, sub_stream) = stream.copied()?;
+                        stream = self.install(ori_stream, &left_task.plan[..])?;
+                        stream = self
+                            .install(sub_stream, &right_task.plan[..])?
+                            .merge(stream)?;
                     }
                     server_pb::operator_def::OpKind::Iterate(iter) => {
                         let until = if let Some(condition) =
