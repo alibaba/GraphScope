@@ -14,7 +14,7 @@
 //! limitations under the License.
 
 use crate::v2::api::{PropertyId, VertexId, LabelId, EdgeId};
-use crate::v2::Result;
+use crate::v2::GraphResult;
 
 #[repr(C)]
 #[allow(dead_code)]
@@ -61,7 +61,7 @@ pub trait Property {
 
 pub trait PropertyReader {
     type P: Property;
-    type PropertyIterator: Iterator<Item=Result<Self::P>>;
+    type PropertyIterator: Iterator<Item=GraphResult<Self::P>>;
 
     fn get_property(&self, property_id: PropertyId) -> Option<Self::P>;
     fn get_property_iterator(&self) -> Self::PropertyIterator;
@@ -101,6 +101,6 @@ impl EdgeRelation {
 }
 
 pub trait Edge: PropertyReader {
-    fn get_edge_id(&self) -> EdgeId;
-    fn get_edge_relation(&self) -> EdgeRelation;
+    fn get_edge_id(&self) -> &EdgeId;
+    fn get_edge_relation(&self) -> &EdgeRelation;
 }

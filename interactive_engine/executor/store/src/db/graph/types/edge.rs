@@ -109,6 +109,14 @@ impl EdgeInfo {
     fn is_alive_at(&self, si: SnapshotId) -> bool {
         self.lifetime.is_alive_at(si)
     }
+
+    pub fn get_kinds(&self, si: SnapshotId) -> impl Iterator<Item=Arc<EdgeKindInfo>> + '_ {
+        self.kinds.iter().filter_map(move |edge_kind| if edge_kind.is_alive_at(si) {
+            Some(edge_kind.clone())
+        } else {
+            None
+        })
+    }
 }
 
 pub struct EdgeInfoRef {
@@ -151,6 +159,15 @@ impl EdgeInfoIter {
             let info = self.inner.next()?.as_ref();
             if info.is_alive_at(self.si) {
                 return Some(EdgeInfoRef::new(self.si, info, epoch::pin()));
+            }
+        }
+    }
+
+    pub fn next_info(&mut self) -> Option<Arc<EdgeInfo>> {
+        loop {
+            let info = self.inner.next()?;
+            if info.is_alive_at(self.si) {
+                return Some(info.clone());
             }
         }
     }
@@ -213,6 +230,13 @@ impl EdgeTypeManager {
         let inner = self.get_inner(&guard);
         let info = res_unwrap!(inner.get_edge(si, label), get_edge, si, label)?;
         let ret = EdgeInfoRef::new(si, info, guard);
+        Ok(ret)
+    }
+
+    pub fn get_edge_info(&self, si: SnapshotId, label: LabelId) -> GraphResult<Arc<EdgeInfo>> {
+        let guard = epoch::pin();
+        let inner = self.get_inner(&guard);
+        let ret = res_unwrap!(inner.get_edge_info(si, label), get_edge, si, label)?;
         Ok(ret)
     }
 
@@ -360,6 +384,20 @@ impl EdgeManagerInner {
         if let Some(info) = self.info_map.get(&label) {
             if info.lifetime.is_alive_at(si) {
                 return Ok(info.as_ref());
+            }
+            let msg = format!("edge#{} is not alive at {}", label, si);
+            let err = gen_graph_err!(GraphErrorCode::TypeNotFound, msg, get_edge, si, label);
+            return Err(err);
+        }
+        let msg = format!("edge#{} not found", label);
+        let err = gen_graph_err!(GraphErrorCode::TypeNotFound, msg, get_edge, si, label);
+        Err(err)
+    }
+
+    fn get_edge_info(&self, si: SnapshotId, label: LabelId) -> GraphResult<Arc<EdgeInfo>> {
+        if let Some(info) = self.info_map.get(&label) {
+            if info.lifetime.is_alive_at(si) {
+                return Ok(info.clone());
             }
             let msg = format!("edge#{} is not alive at {}", label, si);
             let err = gen_graph_err!(GraphErrorCode::TypeNotFound, msg, get_edge, si, label);

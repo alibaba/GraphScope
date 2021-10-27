@@ -14,7 +14,7 @@
 
 use crate::v2::api::partition_graph::PartitionGraph;
 use crate::v2::api::{SnapshotId, PartitionSnapshot, VertexId, LabelId, PropertyId, EdgeId, EdgeRelation, Condition, Records, SerialId};
-use crate::v2::Result;
+use crate::v2::GraphResult;
 use std::sync::Arc;
 use crate::v2::multi_version_graph::MultiVersionGraph;
 
@@ -55,7 +55,7 @@ impl<G: MultiVersionGraph> PartitionSnapshot for WrapperPartitionSnapshot<G> {
                   vertex_id: VertexId,
                   label_id: Option<LabelId>,
                   property_ids: Option<&Vec<PropertyId>>
-    ) -> Result<Option<Self::V>> {
+    ) -> GraphResult<Option<Self::V>> {
         self.multi_version_graph.get_vertex(
             self.snapshot_id,
             vertex_id,
@@ -68,7 +68,7 @@ impl<G: MultiVersionGraph> PartitionSnapshot for WrapperPartitionSnapshot<G> {
                 edge_id: EdgeId,
                 edge_relation: Option<&EdgeRelation>,
                 property_ids: Option<&Vec<PropertyId>>
-    ) -> Result<Option<Self::E>> {
+    ) -> GraphResult<Option<Self::E>> {
         self.multi_version_graph.get_edge(
             self.snapshot_id,
             edge_id,
@@ -81,7 +81,7 @@ impl<G: MultiVersionGraph> PartitionSnapshot for WrapperPartitionSnapshot<G> {
                    label_id: Option<LabelId>,
                    condition: Option<&Condition>,
                    property_ids: Option<&Vec<PropertyId>>
-    ) -> Result<Records<Self::V>> {
+    ) -> GraphResult<Records<Self::V>> {
         self.multi_version_graph.scan_vertex(
             self.snapshot_id,
             label_id,
@@ -91,13 +91,13 @@ impl<G: MultiVersionGraph> PartitionSnapshot for WrapperPartitionSnapshot<G> {
     }
 
     fn scan_edge(&self,
-                 edge_relation: Option<&EdgeRelation>,
+                 label_id: Option<LabelId>,
                  condition: Option<&Condition>,
                  property_ids: Option<&Vec<PropertyId>>
-    ) -> Result<Records<Self::E>> {
+    ) -> GraphResult<Records<Self::E>> {
         self.multi_version_graph.scan_edge(
             self.snapshot_id,
-            edge_relation,
+            label_id,
             condition,
             property_ids
         )
@@ -108,7 +108,7 @@ impl<G: MultiVersionGraph> PartitionSnapshot for WrapperPartitionSnapshot<G> {
                      label_id: Option<LabelId>,
                      condition: Option<&Condition>,
                      property_ids: Option<&Vec<PropertyId>>
-    ) -> Result<Records<Self::E>> {
+    ) -> GraphResult<Records<Self::E>> {
         self.multi_version_graph.get_out_edges(
             self.snapshot_id,
             vertex_id,
@@ -123,7 +123,7 @@ impl<G: MultiVersionGraph> PartitionSnapshot for WrapperPartitionSnapshot<G> {
                     label_id: Option<LabelId>,
                     condition: Option<&Condition>,
                     property_ids: Option<&Vec<PropertyId>>
-    ) -> Result<Records<Self::E>> {
+    ) -> GraphResult<Records<Self::E>> {
         self.multi_version_graph.get_in_edges(
             self.snapshot_id,
             vertex_id,
@@ -136,7 +136,7 @@ impl<G: MultiVersionGraph> PartitionSnapshot for WrapperPartitionSnapshot<G> {
     fn get_out_degree(&self,
                       vertex_id: VertexId,
                       edge_relation: &EdgeRelation
-    ) -> Result<usize> {
+    ) -> GraphResult<usize> {
         self.multi_version_graph.get_out_degree(
             self.snapshot_id,
             vertex_id,
@@ -147,7 +147,7 @@ impl<G: MultiVersionGraph> PartitionSnapshot for WrapperPartitionSnapshot<G> {
     fn get_in_degree(&self,
                      vertex_id: VertexId,
                      edge_relation: &EdgeRelation
-    ) -> Result<usize> {
+    ) -> GraphResult<usize> {
         self.multi_version_graph.get_in_degree(
             self.snapshot_id,
             vertex_id,
@@ -160,7 +160,7 @@ impl<G: MultiVersionGraph> PartitionSnapshot for WrapperPartitionSnapshot<G> {
                         edge_relation: &EdgeRelation,
                         k: SerialId,
                         property_ids: Option<&Vec<PropertyId>>
-    ) -> Result<Option<Self::E>> {
+    ) -> GraphResult<Option<Self::E>> {
         self.multi_version_graph.get_kth_out_edge(
             self.snapshot_id,
             vertex_id,
@@ -175,7 +175,7 @@ impl<G: MultiVersionGraph> PartitionSnapshot for WrapperPartitionSnapshot<G> {
                        edge_relation: &EdgeRelation,
                        k: SerialId,
                        property_ids: Option<&Vec<PropertyId>>
-    ) -> Result<Option<Self::E>> {
+    ) -> GraphResult<Option<Self::E>> {
         self.multi_version_graph.get_kth_in_edge(
             self.snapshot_id,
             vertex_id,

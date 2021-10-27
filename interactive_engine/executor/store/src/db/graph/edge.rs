@@ -230,8 +230,8 @@ impl<'a> EdgeResultIter for SingleTypeEdgeIter<'a> {
                 // it's a tombstone
                 continue;
             }
-            let version = get_codec_version(val);
-            return match self.info.get_decoder(self.si, version) {
+            let codec_version = get_codec_version(val);
+            return match self.info.get_decoder(self.si, codec_version) {
                 Ok(decoder) => {
                     if let Some(ref condition) = self.condition {
                         if !query::check_condition(&decoder, val, condition.as_ref()) {

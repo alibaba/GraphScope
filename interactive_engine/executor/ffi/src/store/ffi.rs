@@ -15,13 +15,13 @@
 use std::os::raw::c_void;
 
 use maxgraph_store::v2::api::*;
-use maxgraph_store::v2::errors::Error;
+use maxgraph_store::v2::errors::GraphError;
 use crate::store::graph::{PartitionGraphHandle, FfiPartitionGraph};
 use maxgraph_store::v2::wrapper::wrapper_partition_graph::WrapperPartitionSnapshot;
 use maxgraph_store::v2::wrapper::graph_storage::{GraphStorageWrapper, WrapperVertex, WrapperEdge, WrapperProperty};
 use maxgraph_store::db::graph::store::GraphStore;
 use maxgraph_store::v2::api::partition_graph::PartitionGraph;
-use maxgraph_store::v2::Result;
+use maxgraph_store::v2::GraphResult;
 use std::vec::IntoIter;
 
 pub type PartitionSnapshotHandle = *const c_void;
@@ -37,10 +37,10 @@ pub type PropertyIteratorHandle = *const c_void;
 pub type FfiSnapshot = WrapperPartitionSnapshot<GraphStorageWrapper<GraphStore>>;
 pub type FfiVertex = WrapperVertex;
 pub type FfiEdge = WrapperEdge;
-pub type FfiVertexIterator = IntoIter<Result<FfiVertex>>;
-pub type FfiEdgeIterator = IntoIter<Result<FfiEdge>>;
+pub type FfiVertexIterator = IntoIter<GraphResult<FfiVertex>>;
+pub type FfiEdgeIterator = IntoIter<GraphResult<FfiEdge>>;
 pub type FfiProperty = WrapperProperty;
-pub type FfiPropertyIterator = IntoIter<Result<FfiProperty>>;
+pub type FfiPropertyIterator = IntoIter<GraphResult<FfiProperty>>;
 
 #[repr(C)]
 pub struct StringSlice {
@@ -144,7 +144,7 @@ pub extern fn ScanEdge(partition_snapshot: PartitionSnapshotHandle,
                        -> EdgeIteratorHandle {
     unsafe {
         let handler = &*(partition_snapshot as *const FfiSnapshot);
-        match handler.scan_edge(edge_relation_option(edge_relation), None, None) {
+        match handler.scan_edge(edge_relation_option(edge_relation).map(|r| r.get_edge_label_id()), None, None) {
             Ok(data) => {
                 Box::into_raw(data) as EdgeIteratorHandle
             }
@@ -382,7 +382,7 @@ pub extern fn EdgeIteratorNext(edge_iterator_handle: EdgeIteratorHandle,
 pub extern fn GetEdgeId(edge_handle: EdgeHandle) -> EdgeId {
     unsafe {
         let handler = &*(edge_handle as *const FfiEdge);
-        handler.get_edge_id()
+        handler.get_edge_id().clone()
     }
 }
 
@@ -390,7 +390,7 @@ pub extern fn GetEdgeId(edge_handle: EdgeHandle) -> EdgeId {
 pub extern fn GetEdgeRelation(edge_handle: EdgeHandle) -> EdgeRelation {
     unsafe {
         let handler = &*(edge_handle as *const FfiEdge);
-        handler.get_edge_relation()
+        handler.get_edge_relation().clone()
     }
 }
 
@@ -459,12 +459,12 @@ pub extern fn GetPropertyAsInt32(property_handle: PropertyHandle, error: *mut Er
                 *data
             }
             PropertyValue::Null => {
-                let error_hdl = Box::new(Error::Internal("None Record!".parse().unwrap()));
+                let error_hdl = Box::new(GraphError::Internal("None Record!".parse().unwrap()));
                 *error = Box::into_raw(error_hdl) as ErrorHandle;
                 i32::MAX
             }
             _ => {
-                let error_hdl = Box::new(Error::Internal("Wrong Record Type Int32!".parse().unwrap()));
+                let error_hdl = Box::new(GraphError::Internal("Wrong Record Type Int32!".parse().unwrap()));
                 *error = Box::into_raw(error_hdl) as ErrorHandle;
                 i32::MAX
             }
@@ -481,12 +481,12 @@ pub extern fn GetPropertyAsInt64(property_handle: PropertyHandle, error: *mut Er
                 *data
             }
             PropertyValue::Null => {
-                let error_hdl = Box::new(Error::Internal("None Record!".parse().unwrap()));
+                let error_hdl = Box::new(GraphError::Internal("None Record!".parse().unwrap()));
                 *error = Box::into_raw(error_hdl) as ErrorHandle;
                 i64::MAX
             }
             _ => {
-                let error_hdl = Box::new(Error::Internal("Wrong Record Type Int64!".parse().unwrap()));
+                let error_hdl = Box::new(GraphError::Internal("Wrong Record Type Int64!".parse().unwrap()));
                 *error = Box::into_raw(error_hdl) as ErrorHandle;
                 i64::MAX
             }
@@ -503,12 +503,12 @@ pub extern fn GetPropertyAsFloat(property_handle: PropertyHandle, error: *mut Er
                 *data
             }
             PropertyValue::Null => {
-                let error_hdl = Box::new(Error::Internal("None Record!".parse().unwrap()));
+                let error_hdl = Box::new(GraphError::Internal("None Record!".parse().unwrap()));
                 *error = Box::into_raw(error_hdl) as ErrorHandle;
                 f32::MAX
             }
             _ => {
-                let error_hdl = Box::new(Error::Internal("Wrong Record Type Float!".parse().unwrap()));
+                let error_hdl = Box::new(GraphError::Internal("Wrong Record Type Float!".parse().unwrap()));
                 *error = Box::into_raw(error_hdl) as ErrorHandle;
                 f32::MAX
             }
@@ -525,12 +525,12 @@ pub extern fn GetPropertyAsDouble(property_handle: PropertyHandle, error: *mut E
                 *data
             }
             PropertyValue::Null => {
-                let error_hdl = Box::new(Error::Internal("None Record!".parse().unwrap()));
+                let error_hdl = Box::new(GraphError::Internal("None Record!".parse().unwrap()));
                 *error = Box::into_raw(error_hdl) as ErrorHandle;
                 f64::MAX
             }
             _ => {
-                let error_hdl = Box::new(Error::Internal("Wrong Record Type Double!".parse().unwrap()));
+                let error_hdl = Box::new(GraphError::Internal("Wrong Record Type Double!".parse().unwrap()));
                 *error = Box::into_raw(error_hdl) as ErrorHandle;
                 f64::MAX
             }
@@ -547,12 +547,12 @@ pub extern fn GetPropertyAsString(property_handle: PropertyHandle, error: *mut E
                 StringSlice::new(data.as_ptr(), data.len())
             }
             PropertyValue::Null => {
-                let error_hdl = Box::new(Error::Internal("None Record!".parse().unwrap()));
+                let error_hdl = Box::new(GraphError::Internal("None Record!".parse().unwrap()));
                 *error = Box::into_raw(error_hdl) as ErrorHandle;
                 StringSlice::null()
             }
             _ => {
-                let error_hdl = Box::new(Error::Internal("Wrong Record Type Double!".parse().unwrap()));
+                let error_hdl = Box::new(GraphError::Internal("Wrong Record Type Double!".parse().unwrap()));
                 *error = Box::into_raw(error_hdl) as ErrorHandle;
                 StringSlice::null()
             }
@@ -565,7 +565,7 @@ pub extern fn GetPropertyAsString(property_handle: PropertyHandle, error: *mut E
 #[no_mangle]
 pub extern fn GetErrorInfo(error_handle: ErrorHandle) -> StringSlice {
     unsafe {
-        let handler = &*(error_handle as *const Error);
+        let handler = &*(error_handle as *const GraphError);
         let info = handler.what();
         StringSlice::new(info.as_ptr(), info.len())
     }
@@ -583,7 +583,7 @@ pub extern fn ReleasePartitionSnapshotHandle(ptr: PartitionSnapshotHandle) {
 
 #[no_mangle]
 pub extern fn ReleaseErrorHandle(ptr: ErrorHandle) {
-    let handler = ptr as *mut Error;
+    let handler = ptr as *mut GraphError;
     unsafe {
         Box::from_raw(handler);
     }

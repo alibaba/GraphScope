@@ -13,7 +13,7 @@
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 
-use crate::v2::Result;
+use crate::v2::GraphResult;
 
 pub mod partition_snapshot;
 pub mod types;
@@ -31,7 +31,7 @@ pub type VertexId = u64;
 pub type EdgeInnerId = u64;
 pub type SerialId = u32;
 
-pub type Records<T> = Box<dyn Iterator<Item=Result<T>> + Send>;
+pub type Records<T> = Box<dyn Iterator<Item=GraphResult<T>> + Send>;
 
 #[repr(C)]
 #[derive(Clone)]
@@ -63,5 +63,13 @@ impl EdgeId {
     }
 }
 
-
+impl From<crate::db::api::EdgeId> for EdgeId {
+    fn from(from_edge_id: crate::db::api::EdgeId) -> Self {
+        EdgeId::new(
+            from_edge_id.inner_id as EdgeInnerId,
+            from_edge_id.src_id as VertexId,
+            from_edge_id.dst_id as VertexId,
+        )
+    }
+}
 
