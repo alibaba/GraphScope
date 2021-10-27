@@ -307,7 +307,7 @@ class TestBuiltinCopyOnWrite:
             assert almost_equal(ret[n], self.SG.katz[n], places=12)
 
     def test_has_path(self):
-        assert nx.builtin.has_path(self.SG, source=0, target=6)
+        assert nx.builtin.has_path(self.SG, source=1, target=6)
 
     def test_average_shortest_path_length(self):
         # average_shortest_path_length implementation contain grape::VertexDenseSet which

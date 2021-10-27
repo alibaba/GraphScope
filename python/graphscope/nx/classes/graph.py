@@ -2125,7 +2125,7 @@ class Graph(_GraphBase):
         graph._session = self._session
         graph.schema.from_graph_def(graph_def)
         graph._saved_signature = self._saved_signature
-        # graph._graph = self  # projected graph also can report nodes.
+        graph._graph = self  # projected graph also can report nodes.
         graph._op = op
         graph._is_client_view = False
         return graph

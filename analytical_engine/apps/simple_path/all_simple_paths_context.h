@@ -27,7 +27,7 @@ Author: Ma JingYuan<nn9902@qq.com>
 #include <utility>
 #include <vector>
 
-#include "apps/simple_path/utils.h"
+#include "apps/node_boundary/utils.h"
 #include "folly/dynamic.h"
 #include "folly/json.h"
 #include "grape/grape.h"
@@ -64,11 +64,9 @@ class AllSimplePathsContext
 
     // init targets.
     vid_t gid;
-    std::vector<oid_t> target_oid_array;
-    folly::dynamic target_nodes_id_array = folly::parseJson(targets_json);
-    ExtractOidArrayFromDynamic(target_nodes_id_array, target_oid_array);
-    for (const auto& oid : target_oid_array) {
-      frag.Oid2Gid(oid, gid);
+    folly::dynamic target_nodes_array = folly::parseJson(targets_json);
+    for (const auto& node : target_nodes_array) {
+      frag.Oid2Gid(dynamic_to_oid<oid_t>(node), gid);
       targets.insert(gid);
     }
 

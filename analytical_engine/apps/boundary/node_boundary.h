@@ -47,37 +47,33 @@ class NodeBoundary : public AppBase<FRAG_T, NodeBoundaryContext<FRAG_T>>,
   void PEval(const fragment_t& frag, context_t& ctx,
              message_manager_t& messages) {
     // parse input node array from json
-    folly::dynamic node_array_1 = folly::parseJson(ctx.nbunch1);
-    std::vector<oid_t> oid_array_1;
-    ExtractOidArrayFromDynamic(node_array_1, oid_array_1);
-    std::set<vid_t> node_gid_set, node_gid_set_2;
+    folly::dynamic source_array = folly::parseJson(ctx.nbunch1);
+    std::set<vid_t> source_gid_set, target_gid_set;
     vid_t gid;
     vertex_t v;
-    for (const auto& oid : oid_array_1) {
-      if (frag.Oid2Gid(oid, gid)) {
-        node_gid_set.insert(gid);
+    for (const auto& node : source_array) {
+      if (frag.Oid2Gid(dynamic_to_oid<oid_t>(node), gid)) {
+        source_gid_set.insert(gid);
       }
     }
     if (!ctx.nbunch2.empty()) {
-      auto node_array_2 = folly::parseJson(ctx.nbunch2);
-      std::vector<oid_t> oid_array_2;
-      ExtractOidArrayFromDynamic(node_array_2, oid_array_2);
-      for (const auto& oid : oid_array_2) {
-        if (frag.Oid2Gid(oid, gid)) {
-          node_gid_set_2.insert(gid);
+      auto target_array = folly::parseJson(ctx.nbunch2);
+      for (const auto& node : target_array) {
+        if (frag.Oid2Gid(dynamic_to_oid<oid_t>(node), gid)) {
+          target_gid_set.insert(gid);
         }
       }
     }
 
     // get the boundary
-    for (auto& gid : node_gid_set) {
+    for (auto& gid : source_gid_set) {
       if (frag.InnerVertexGid2Vertex(gid, v)) {
-        for (auto e : frag.GetOutgoingAdjList(v)) {
-          vid_t gid = frag.Vertex2Gid(e.get_neighbor());
-          if (node_gid_set.find(gid) == node_gid_set.end() &&
-              (node_gid_set_2.empty() ||
-               node_gid_set_2.find(gid) != node_gid_set_2.end())) {
-            ctx.boundary.insert(gid);
+        for (auto& e : frag.GetOutgoingAdjList(v)) {
+          vid_t v_gid = frag.Vertex2Gid(e.get_neighbor());
+          if (source_gid_set.find(v_gid) == source_gid_set.end() &&
+              (target_gid_set.empty() ||
+               target_gid_set.find(v_gid) != target_gid_set.end())) {
+            ctx.boundary.insert(v_gid);
           }
         }
       }
