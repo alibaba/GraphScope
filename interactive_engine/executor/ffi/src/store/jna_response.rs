@@ -3,6 +3,7 @@ use std::ffi::CString;
 use maxgraph_store::db::api::{GraphResult, GraphError, GraphErrorCode};
 use std::fmt;
 use std::fmt::Formatter;
+use core::mem;
 
 #[repr(C)]
 #[allow(non_snake_case)]
@@ -12,6 +13,7 @@ pub struct JnaResponse {
     errMsg: *const c_char,
     data: *const c_void,
     len: i32,
+    byteLen: i32,
 }
 
 impl JnaResponse {
@@ -22,6 +24,7 @@ impl JnaResponse {
             errMsg: ::std::ptr::null(),
             data: ::std::ptr::null(),
             len: 0,
+            byteLen: 0,
         }
     }
 
@@ -54,13 +57,26 @@ impl JnaResponse {
         ::std::mem::forget(msg);
     }
 
-    pub fn data(&mut self, data: Vec<u8>) -> GraphResult<()> {
+    pub fn byte_data(&mut self, data: Vec<u8>) -> GraphResult<()> {
         if data.len() != data.capacity() {
             let msg = format!("data len {} must eq capacity {}", data.len(), data.capacity());
             return Err(GraphError::new(GraphErrorCode::InvalidData, msg));
         }
         self.data = data.as_ptr() as *const c_void;
         self.len = data.len() as i32;
+        self.byteLen = data.len() as i32;
+        ::std::mem::forget(data);
+        Ok(())
+    }
+
+    pub fn i32_data(&mut self, data: Vec<i32>) -> GraphResult<()> {
+        if data.len() != data.capacity() {
+            let msg = format!("data len {} must eq capacity {}", data.len(), data.capacity());
+            return Err(GraphError::new(GraphErrorCode::InvalidData, msg));
+        }
+        self.data = data.as_ptr() as *const c_void;
+        self.len = data.len() as i32;
+        self.byteLen = (data.len() * mem::size_of::<i32>()) as i32;
         ::std::mem::forget(data);
         Ok(())
     }
@@ -79,7 +95,7 @@ impl Drop for JnaResponse {
                 CString::from_raw(self.errMsg as *mut c_char);
             }
             if self.len > 0 {
-                Vec::from_raw_parts(self.data as *mut u8, self.len as usize, self.len as usize);
+                Vec::from_raw_parts(self.data as *mut u8, self.byteLen as usize, self.byteLen as usize);
             }
         }
     }

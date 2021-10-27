@@ -76,7 +76,7 @@ pub extern fn getGraphDefBlob(ptr: GraphHandle) -> Box<JnaResponse> {
         match graph_store_ptr.get_graph_def_blob() {
             Ok(blob) => {
                 let mut response = JnaResponse::new_success();
-                if let Err(e) = response.data(blob) {
+                if let Err(e) = response.byte_data(blob) {
                     response.success(false);
                     let msg = format!("{:?}", e);
                     response.err_msg(&msg);

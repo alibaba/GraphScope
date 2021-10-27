@@ -13,66 +13,50 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.alibaba.graphscope.groot.backup;
+package com.alibaba.graphscope.groot.store;
 
-import com.alibaba.maxgraph.proto.groot.BackupInfoPb;
+import com.alibaba.maxgraph.proto.groot.StoreBackupIdPb;
 
-import java.util.List;
+import java.util.HashMap;
 import java.util.Map;
 
-public class BackupInfo {
+public class StoreBackupId {
 
     private int globalBackupId;
-    private long snapshotId;
-    private long ddlSnapshotId;
     private Map<Integer, Integer> partitionToBackupId;
-    private List<Long> walOffsets;
 
-    public BackupInfo(int globalBackupId, long snapshotId, long ddlSnapshotId,
-                      Map<Integer, Integer> partitionToBackupId, List<Long> walOffsets) {
+    public StoreBackupId(int globalBackupId) {
         this.globalBackupId = globalBackupId;
-        this.snapshotId = snapshotId;
-        this.ddlSnapshotId = ddlSnapshotId;
+        this.partitionToBackupId = new HashMap<>();
+    }
+
+    public StoreBackupId(int globalBackupId, Map<Integer, Integer> partitionToBackupId) {
+        this.globalBackupId = globalBackupId;
         this.partitionToBackupId = partitionToBackupId;
-        this.walOffsets = walOffsets;
     }
 
     public int getGlobalBackupId() {
         return globalBackupId;
     }
 
-    public long getSnapshotId() {
-        return snapshotId;
-    }
-
-    public long getDdlSnapshotId() {
-        return ddlSnapshotId;
-    }
-
     public Map<Integer, Integer> getPartitionToBackupId() {
         return partitionToBackupId;
     }
 
-    public List<Long> getWalOffsets() {
-        return walOffsets;
+    public void addPartitionBackupId(int partitionId, int partitionBackupId) {
+        this.partitionToBackupId.put(partitionId, partitionBackupId);
     }
 
-    public static BackupInfo parseProto(BackupInfoPb proto) {
+    public static StoreBackupId parseProto(StoreBackupIdPb proto) {
         int globalBackupId = proto.getGlobalBackupId();
-        long snapshotId = proto.getSnapshotId();
-        long ddlSnapshotId = proto.getDdlSnapshotId();
         Map<Integer, Integer> partitionToBackupId = proto.getPartitionToBackupIdMap();
-        List<Long> walOffsets = proto.getWalOffsetsList();
-        return new BackupInfo(globalBackupId, snapshotId, ddlSnapshotId, partitionToBackupId, walOffsets);
+        return new StoreBackupId(globalBackupId, partitionToBackupId);
     }
 
-    public BackupInfoPb toProto() {
-        return BackupInfoPb.newBuilder()
+    public StoreBackupIdPb toProto() {
+        return StoreBackupIdPb.newBuilder()
                 .setGlobalBackupId(globalBackupId)
-                .setSnapshotId(snapshotId)
-                .setDdlSnapshotId(ddlSnapshotId)
                 .putAllPartitionToBackupId(partitionToBackupId)
-                .addAllWalOffsets(walOffsets)
                 .build();
     }
 }

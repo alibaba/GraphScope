@@ -13,10 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.alibaba.graphscope.groot.backup;
+package com.alibaba.graphscope.groot.coordinator;
 
 import com.alibaba.graphscope.groot.CompletionCallback;
 import com.alibaba.graphscope.groot.rpc.RpcClient;
+import com.alibaba.graphscope.groot.store.StoreBackupId;
 import com.alibaba.maxgraph.proto.groot.*;
 import io.grpc.ManagedChannel;
 import io.grpc.stub.StreamObserver;
@@ -31,11 +32,6 @@ public class StoreBackupClient extends RpcClient {
     public StoreBackupClient(ManagedChannel channel) {
         super(channel);
         this.stub = StoreBackupGrpc.newStub(channel);
-    }
-
-    public StoreBackupClient(StoreBackupGrpc.StoreBackupStub stub) {
-        super((ManagedChannel) stub.getChannel());
-        this.stub = stub;
     }
 
     public void createStoreBackup(int globalBackupId, CompletionCallback<StoreBackupId> callback) {
@@ -69,12 +65,12 @@ public class StoreBackupClient extends RpcClient {
                     entry.getKey(),
                     PartitionBackupIdListPb.newBuilder().addAllReadyPartitionBackupIds(entry.getValue()).build());
         }
-        ClearUnavailableBackupsRequest req = ClearUnavailableBackupsRequest.newBuilder()
+        ClearUnavailableStoreBackupsRequest req = ClearUnavailableStoreBackupsRequest.newBuilder()
                 .putAllPartitionToReadyBackupIds(partitionToBackupIdListPb)
                 .build();
-        stub.clearUnavailableBackups(req, new StreamObserver<ClearUnavailableBackupsResponse>() {
+        stub.clearUnavailableStoreBackups(req, new StreamObserver<ClearUnavailableStoreBackupsResponse>() {
             @Override
-            public void onNext(ClearUnavailableBackupsResponse clearUnavailableBackupsResponse) {
+            public void onNext(ClearUnavailableStoreBackupsResponse clearUnavailableStoreBackupsResponse) {
                 callback.onCompleted(null);
             }
 
@@ -89,15 +85,15 @@ public class StoreBackupClient extends RpcClient {
         });
     }
 
-    public void restoreFromLatestStoreBackup(StoreBackupId storeBackupId, String restorePath,
-                                             CompletionCallback<Void> callback) {
-        RestoreFromLatestStoreBackupRequest req = RestoreFromLatestStoreBackupRequest.newBuilder()
+    public void restoreFromStoreBackup(StoreBackupId storeBackupId, String restoreRootPath,
+                                       CompletionCallback<Void> callback) {
+        RestoreFromStoreBackupRequest req = RestoreFromStoreBackupRequest.newBuilder()
                 .setStoreBackupId(storeBackupId.toProto())
-                .setRestorePath(restorePath)
+                .setRestoreRootPath(restoreRootPath)
                 .build();
-        stub.restoreFromLatestStoreBackup(req, new StreamObserver<RestoreFromLatestStoreBackupResponse>() {
+        stub.restoreFromStoreBackup(req, new StreamObserver<RestoreFromStoreBackupResponse>() {
             @Override
-            public void onNext(RestoreFromLatestStoreBackupResponse restoreFromLatestStoreBackupResponse) {
+            public void onNext(RestoreFromStoreBackupResponse restoreFromStoreBackupResponse) {
                 callback.onCompleted(null);
             }
 
@@ -108,6 +104,28 @@ public class StoreBackupClient extends RpcClient {
 
             @Override
             public void onCompleted() {
+            }
+        });
+    }
+
+    public void verifyStoreBackup(StoreBackupId storeBackupId, CompletionCallback<Void> callback) {
+        VerifyStoreBackupRequest req = VerifyStoreBackupRequest.newBuilder()
+                .setStoreBackupId(storeBackupId.toProto())
+                .build();
+        stub.verifyStoreBackup(req, new StreamObserver<VerifyStoreBackupResponse>() {
+            @Override
+            public void onNext(VerifyStoreBackupResponse verifyStoreBackupResponse) {
+                callback.onCompleted(null);
+            }
+
+            @Override
+            public void onError(Throwable throwable) {
+                callback.onError(throwable);
+            }
+
+            @Override
+            public void onCompleted() {
+
             }
         });
     }

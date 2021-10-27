@@ -13,8 +13,6 @@
  */
 package com.alibaba.graphscope.groot.coordinator;
 
-import com.alibaba.graphscope.groot.backup.BackupInfo;
-import com.alibaba.graphscope.groot.backup.BackupManager;
 import com.alibaba.graphscope.groot.meta.MetaStore;
 import com.alibaba.graphscope.groot.wal.LogService;
 import com.alibaba.maxgraph.common.config.CommonConfig;
@@ -27,9 +25,7 @@ import org.apache.zookeeper.data.Stat;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 public class GraphInitializer {
 

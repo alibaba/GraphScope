@@ -19,7 +19,7 @@ import com.sun.jna.Structure;
 import java.io.Closeable;
 import java.io.IOException;
 
-@Structure.FieldOrder({"success", "hasDdl", "errMsg", "data", "len"})
+@Structure.FieldOrder({"success", "hasDdl", "errMsg", "data", "len", "byteLen"})
 public class JnaResponse extends Structure implements Closeable {
 
     public int success;
@@ -27,6 +27,7 @@ public class JnaResponse extends Structure implements Closeable {
     public String errMsg;
     public Pointer data;
     public int len;
+    public int byteLen;
 
     public boolean success() {
         return success == 1;
@@ -40,9 +41,17 @@ public class JnaResponse extends Structure implements Closeable {
         return errMsg;
     }
 
-    public byte[] getData() {
+    public byte[] getByteData() {
         if (this.data != null) {
             return this.data.getByteArray(0, this.len);
+        } else {
+            return null;
+        }
+    }
+
+    public int[] getIntData() {
+        if (this.data != null) {
+            return this.data.getIntArray(0, this.len);
         } else {
             return null;
         }

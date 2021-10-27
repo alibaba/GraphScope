@@ -20,8 +20,9 @@ option java_multiple_files = true;
 
 service StoreBackup {
     rpc createStoreBackup(CreateStoreBackupRequest) returns (CreateStoreBackupResponse);
-    rpc clearUnavailableBackups(ClearUnavailableBackupsRequest) returns (ClearUnavailableBackupsResponse);
-    rpc restoreFromLatestStoreBackup(RestoreFromLatestStoreBackupRequest) returns (RestoreFromLatestStoreBackupResponse);
+    rpc verifyStoreBackup(VerifyStoreBackupRequest) returns (VerifyStoreBackupResponse);
+    rpc clearUnavailableStoreBackups(ClearUnavailableStoreBackupsRequest) returns (ClearUnavailableStoreBackupsResponse);
+    rpc restoreFromStoreBackup(RestoreFromStoreBackupRequest) returns (RestoreFromStoreBackupResponse);
 }
 
 message StoreBackupIdPb {
@@ -33,6 +34,13 @@ message CreateStoreBackupRequest {
     int32 globalBackupId = 1;
 }
 
+message VerifyStoreBackupRequest {
+    StoreBackupIdPb storeBackupId = 1;
+}
+
+message VerifyStoreBackupResponse {
+}
+
 message CreateStoreBackupResponse {
     StoreBackupIdPb storeBackupId = 1;
 }
@@ -41,17 +49,17 @@ message PartitionBackupIdListPb {
     repeated int32 readyPartitionBackupIds = 1;
 }
 
-message ClearUnavailableBackupsRequest {
+message ClearUnavailableStoreBackupsRequest {
     map<int32, PartitionBackupIdListPb> partitionToReadyBackupIds = 1;
 }
 
-message ClearUnavailableBackupsResponse {
+message ClearUnavailableStoreBackupsResponse {
 }
 
-message RestoreFromLatestStoreBackupRequest {
+message RestoreFromStoreBackupRequest {
     StoreBackupIdPb storeBackupId = 1;
-    string restore_path = 2;
+    string restore_root_path = 2;
 }
 
-message RestoreFromLatestStoreBackupResponse {
+message RestoreFromStoreBackupResponse {
 }

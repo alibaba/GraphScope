@@ -15,19 +15,13 @@ package com.alibaba.maxgraph.servers;
 
 import com.alibaba.graphscope.groot.meta.DefaultMetaService;
 import com.alibaba.graphscope.groot.meta.MetaService;
+import com.alibaba.graphscope.groot.store.*;
 import com.alibaba.maxgraph.common.config.Configs;
 import com.alibaba.graphscope.groot.discovery.*;
 import com.alibaba.maxgraph.compiler.api.exception.MaxGraphException;
 import com.alibaba.graphscope.groot.rpc.ChannelManager;
 import com.alibaba.graphscope.groot.rpc.MaxGraphNameResolverFactory;
 import com.alibaba.graphscope.groot.rpc.RpcServer;
-import com.alibaba.graphscope.groot.store.DefaultSnapshotCommitter;
-import com.alibaba.graphscope.groot.store.SnapshotCommitter;
-import com.alibaba.graphscope.groot.store.StoreIngestService;
-import com.alibaba.graphscope.groot.store.StoreSchemaService;
-import com.alibaba.graphscope.groot.store.StoreService;
-import com.alibaba.graphscope.groot.store.StoreWriteService;
-import com.alibaba.graphscope.groot.store.WriterAgent;
 import com.google.common.annotations.VisibleForTesting;
 import io.grpc.NameResolver;
 
@@ -40,6 +34,7 @@ public class Store extends NodeBase {
     private MetaService metaService;
     private StoreService storeService;
     private WriterAgent writerAgent;
+    private BackupAgent backupAgent;
     private RpcServer rpcServer;
     private AbstractService executorService;
 
@@ -58,6 +53,8 @@ public class Store extends NodeBase {
         this.writerAgent =
                 new WriterAgent(configs, this.storeService, this.metaService, snapshotCommitter);
         StoreWriteService storeWriteService = new StoreWriteService(this.writerAgent);
+        this.backupAgent = new BackupAgent(configs, this.storeService);
+        StoreBackupService storeBackupService = new StoreBackupService(this.backupAgent);
         StoreSchemaService storeSchemaService = new StoreSchemaService(this.storeService);
         StoreIngestService storeIngestService = new StoreIngestService(this.storeService);
         this.rpcServer =
@@ -65,6 +62,7 @@ public class Store extends NodeBase {
                         configs,
                         localNodeProvider,
                         storeWriteService,
+                        storeBackupService,
                         storeSchemaService,
                         storeIngestService);
         ComputeServiceProducer serviceProducer = ServiceProducerFactory.getProducer(configs);
@@ -88,6 +86,7 @@ public class Store extends NodeBase {
         }
         this.writerAgent.init(availSnapshotId);
         this.writerAgent.start();
+        this.backupAgent.start();
         try {
             this.rpcServer.start();
         } catch (IOException e) {
@@ -102,6 +101,7 @@ public class Store extends NodeBase {
     public void close() throws IOException {
         this.executorService.stop();
         this.rpcServer.stop();
+        this.backupAgent.stop();
         this.writerAgent.stop();
         this.storeService.stop();
         this.metaService.stop();
