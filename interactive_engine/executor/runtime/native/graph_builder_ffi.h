@@ -136,6 +136,7 @@ void destroy(GraphBuilder builder);
 Schema get_schema(GraphHandle graph);
 
 // 释放schema对象
+//TODO: rename to destroy_schema(Schema schema) to be  more consistent
 void free_schema(Schema schema);
 
 // 根据property name获取property

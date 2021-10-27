@@ -119,6 +119,9 @@ VertexId get_vertex_id(GraphHandle graph, Vertex v);
 
 OuterId get_outer_id(GraphHandle graph, Vertex v);
 
+int get_vertex_by_outer_id(GraphHandle graph, LabelId label_id,
+                           OuterId outer_id, Vertex* v);
+
 OuterId get_outer_id_by_vertex_id(GraphHandle graph, VertexId v);
 
 // 获取点的label
