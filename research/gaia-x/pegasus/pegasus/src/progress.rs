@@ -319,14 +319,20 @@ impl EndSignal {
 }
 
 impl Encode for EndSignal {
-    fn write_to<W: WriteExt>(&self, _writer: &mut W) -> std::io::Result<()> {
-        todo!()
+    fn write_to<W: WriteExt>(&self, writer: &mut W) -> std::io::Result<()> {
+        self.end.write_to(writer)?;
+        self.children.write_to(writer)
     }
 }
 
 impl Decode for EndSignal {
-    fn read_from<R: ReadExt>(_reader: &mut R) -> std::io::Result<Self> {
-        todo!()
+    fn read_from<R: ReadExt>(reader: &mut R) -> std::io::Result<Self> {
+        let end = EndOfScope::read_from(reader)?;
+        let children = Weight::read_from(reader)?;
+        Ok(EndSignal {
+            end,
+            children
+        })
     }
 }
 

@@ -15,7 +15,7 @@ use nohash_hasher::{BuildNoHashHasher, IntMap};
 
 use crate::graph::IdGraph;
 
-mod graph;
+pub mod graph;
 
 pub type Graph = IdGraph<NeighborsBackend>;
 
@@ -24,6 +24,10 @@ pub fn extract_partition<P: AsRef<Path>>(
 ) -> std::io::Result<()> {
     let p = partitions as u64;
     encode(path, move |id| id % p == partition)
+}
+
+pub fn partition<P: AsRef<Path>>(_path: P, _partitions: usize) -> std::io::Result<Vec<Graph>> {
+    todo!()
 }
 
 pub fn load<P: AsRef<Path>>(path: P) -> std::io::Result<IdGraph<NeighborsBackend>> {

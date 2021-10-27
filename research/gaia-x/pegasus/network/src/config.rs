@@ -240,11 +240,11 @@ mod test {
             read_timeout_ms = 8
             write_timeout_ms = 8
 
-            [[peers]]
+            [[servers]]
             ip = '127.0.0.1'
             port = 8080
 
-            [[peers]]
+            [[servers]]
             ip = '127.0.0.1'
             port = 8081
         "#;
