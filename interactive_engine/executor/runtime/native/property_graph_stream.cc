@@ -56,6 +56,7 @@ std::shared_ptr<arrow::DataType> PropertyTypeToDataType(
     case arrow::Type::DOUBLE:
       return DOUBLE;
     case arrow::Type::STRING:
+    case arrow::Type::LARGE_STRING:
       return STRING;
     case arrow::Type::BINARY:
       return BYTES;
@@ -306,7 +307,8 @@ void PropertyGraphOutStream::initialTables() {
 
     VINEYARD_ASSERT(entry.type == "VERTEX");
 
-    std::string field_name = "id";
+    std::string field_name = "__vertex_id__";
+
     if (!entry.primary_keys.empty()) {
       field_name = entry.primary_keys[0];
     }
@@ -355,14 +357,14 @@ void PropertyGraphOutStream::initialTables() {
     VINEYARD_ASSERT(entry.type == "EDGE");
 #if defined(ARROW_VERSION) && ARROW_VERSION < 17000
     CHECK_ARROW_ERROR(
-        schema->AddField(0, arrow::field("src_id", vertex_id_type), &schema));
+        schema->AddField(0, arrow::field("__src_id__", vertex_id_type), &schema));
     CHECK_ARROW_ERROR(
-        schema->AddField(1, arrow::field("dst_id", vertex_id_type), &schema));
+        schema->AddField(1, arrow::field("__dst_id__", vertex_id_type), &schema));
 #else
     CHECK_ARROW_ERROR_AND_ASSIGN(schema,
-        schema->AddField(0, arrow::field("src_id", vertex_id_type)));
+        schema->AddField(0, arrow::field("__src_id__", vertex_id_type)));
     CHECK_ARROW_ERROR_AND_ASSIGN(schema,
-        schema->AddField(1, arrow::field("dst_id", vertex_id_type)));
+        schema->AddField(1, arrow::field("__dst_id__", vertex_id_type)));
 #endif
     for (size_t idx = 0; idx < entry.props_.size(); ++idx) {
 #ifndef NDEBUG
@@ -453,6 +455,9 @@ void PropertyGraphOutStream::FinishAllVertices() {
     buildTableChunk(batch, vertex_stream_, vertex_writer_, 1,
                     vertex_property_id_mapping_[vertices.first]);
   }
+  if (!vertex_writer_) {
+    VINEYARD_CHECK_OK(Open(vertex_stream_, vertex_writer_));
+  }
   VINEYARD_CHECK_OK(vertex_writer_->Finish());
   vertex_finished_ = true;
 }
@@ -474,6 +479,9 @@ void PropertyGraphOutStream::FinishAllEdges() {
       buildTableChunk(batch, edge_stream_, edge_writer_, 2,
                       edge_property_id_mapping_[edges.first]);
     }
+  }
+  if (!edge_writer_) {
+    VINEYARD_CHECK_OK(Open(edge_stream_, edge_writer_));
   }
   VINEYARD_CHECK_OK(edge_writer_->Finish());
   edge_finished_ = true;
