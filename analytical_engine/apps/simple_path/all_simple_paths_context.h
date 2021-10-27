@@ -27,11 +27,11 @@ Author: Ma JingYuan<nn9902@qq.com>
 #include <utility>
 #include <vector>
 
-#include "apps/node_boundary/utils.h"
 #include "folly/dynamic.h"
 #include "folly/json.h"
 #include "grape/grape.h"
 
+#include "apps/boundary/utils.h"
 #include "core/context/tensor_context.h"
 
 namespace gs {
