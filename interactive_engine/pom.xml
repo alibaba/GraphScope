@@ -615,6 +615,8 @@
             <excludes>
               <exclude>com/alibaba/maxgraph/client/gremlin/additional/*</exclude>
               <exclude>**/GaiaAdaptor*.java</exclude>
+              <exclude>**/ClientTest.java</exclude>
+              <exclude>**/DataLoadingTest.java</exclude>
             </excludes>
           </configuration>
         </plugin>
