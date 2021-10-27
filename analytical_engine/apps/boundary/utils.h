@@ -35,7 +35,7 @@ std::string dynamic_to_oid<std::string>(const folly::dynamic& node) {
 }
 
 template <>
-folly : dynamic dynamic_to_oid<folly::dynamic>(const folly::dynamic& node) {
+folly::dynamic dynamic_to_oid<folly::dynamic>(const folly::dynamic& node) {
   return node;
 }
 }  // namespace gs
