@@ -54,11 +54,11 @@
 use crate::plan::logical::LogicalPlan;
 use ir_common::generated::algebra as pb;
 use ir_common::generated::common as common_pb;
+use runtime::expr::to_suffix_expr_pb;
+use runtime::expr::token::tokenize;
 use std::convert::{TryFrom, TryInto};
 use std::ffi::{c_void, CStr};
 use std::os::raw::c_char;
-use runtime::expr::token::tokenize;
-use runtime::expr::to_suffix_expr_pb;
 
 #[repr(i32)]
 #[derive(Clone, Copy, Debug, PartialEq)]
@@ -336,7 +336,7 @@ fn append_operator(
     id: *mut i32,
 ) -> ResultCode {
     let mut plan = unsafe { Box::from_raw(ptr_plan as *mut LogicalPlan) };
-    let opr_id = plan.append_node(
+    let opr_id = plan.append_operator_as_node(
         operator,
         parent_ids
             .into_iter()

@@ -14,5 +14,5 @@
 //! limitations under the License.
 
 pub mod ffi;
-pub mod physical;
 pub mod logical;
+pub mod physical;
