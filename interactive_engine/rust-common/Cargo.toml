@@ -18,6 +18,7 @@ regex = "1"
 byteorder = "1"
 futures = "0.1.20"
 grpcio = "=0.4.1"
+grpcio-sys = { version = "0.4.7", features = ["openssl-vendored"] }
 zookeeper = { git = "https://github.com/bonifaido/rust-zookeeper.git", rev = "fd222dd" }
 
 [target.'cfg(target_os = "linux")'.dependencies]
