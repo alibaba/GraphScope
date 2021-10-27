@@ -260,6 +260,7 @@ init_basic_packages() {
       protobuf
       glog
       gflags
+      grpc
       zstd
       snappy
       lz4
@@ -362,7 +363,7 @@ check_dependencies() {
   # check go < 1.16 (vertion 1.16 can't install zetcd)
   # FIXME(weibin): version check is not universed.
   if $(! command -v go &> /dev/null) || \
-     [[ "$(go version 2>&1 | awk -F '.' '{print $2}')" -ge "16" ]]; then
+     [[ "$(go version 2>&1 | awk -F '.' '{print $2}' | awk -F ' ' '{print $1}')" -ge "16" ]]; then
     if [[ "${PLATFORM}" == *"CentOS"* ]]; then
       packages_to_install+=(golang)
     else
@@ -385,9 +386,7 @@ check_dependencies() {
   fi
 
   # check folly
-  # FIXME: if the brew already install folly, what should we do.
-  # TODO(@weibin): remove the ci check after GraphScope support clang 12.
-  if [[ -z "${CI}" ]] || ( [[ "${CI}" == "true" ]] && [[ "${PLATFORM}" != *"Darwin"* ]] ); then
+  if [[ "${PLATFORM}" != *"Darwin"* ]] ); then
     if [[ ! -f "/usr/local/include/folly/dynamic.h" ]]; then
       packages_to_install+=(folly)
     fi
@@ -695,12 +694,6 @@ install_dependencies() {
       packages_to_install=("${packages_to_install[@]/rust}")
     fi
 
-    if [[ "${packages_to_install[@]}" =~ "folly" ]]; then
-      install_folly=true  # set folly install flag
-      packages_to_install=("${packages_to_install[@]/folly}")
-      packages_to_install+=(fmt)
-    fi
-
     log "Installing packages ${packages_to_install[*]}"
     brew install ${packages_to_install[*]}
 
@@ -807,7 +800,7 @@ install_vineyard() {
   mkdir -p build && pushd build
   if [[ "${PLATFORM}" == *"Darwin"* ]]; then
     cmake .. -DCMAKE_BUILD_TYPE=RelWithDebInfo \
-             -DBUILD_VINEYARD_PYTHON_BINDINGS=ON -DBUILD_SHARED_LIBS=ON \
+             -DBUILD_SHARED_LIBS=ON \
              -DBUILD_VINEYARD_IO_OSS=ON -DBUILD_VINEYARD_TESTS=OFF
   else
     cmake .. -DBUILD_SHARED_LIBS=ON \
