@@ -133,8 +133,6 @@ def test_demo(gs_session, data_dir):
     sub_graph.add_column(pr_result, {"Ranking": "r"})
     sub_graph.add_column(tc_result, {"TC": "r"})
 
-    # GNN engine
-
 
 @pytest.mark.skipif("HDFS_TEST_DIR" not in os.environ, reason="the test case need HDFS")
 def test_demo_on_hdfs(gs_session_distributed):

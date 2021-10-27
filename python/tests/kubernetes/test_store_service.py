@@ -19,11 +19,9 @@
 import logging
 import os
 
-import numpy as np
 import pytest
 
 import graphscope
-from graphscope.client.connection import Graph
 from graphscope.framework.record import EdgeRecordKey
 from graphscope.framework.record import VertexRecordKey
 

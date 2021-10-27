@@ -31,15 +31,55 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-20.04, macOS-latest]
-
+        include:
+          - os: ubuntu-20.04
+            sccache-path: /home/runner/.cache/sccache
+          - os: macos-latest
+            sccache-path: /Users/runner/Library/Caches/Mozilla.sccache
+    env:
+      RUST_BACKTRACE: full
+      RUSTC_WRAPPER: sccache
+      SCCACHE_DIR: ${{ matrix.sccache-path }}
+      # SCCACHE_RECACHE: 1 # Uncomment this to clear cache, then comment it back out
     steps:
+    - uses: actions/checkout@v2
+    - name: Install sccache (ubuntu-20.04)
+      if: matrix.os == 'ubuntu-20.04'
+      run: |
+        curl -L https://github.91chifun.workers.dev/https://github.com//mozilla/sccache/releases/download/v0.2.15/sccache-v0.2.15-x86_64-unknown-linux-musl.tar.gz | tar xz
+        sudo mv sccache-v0.2.15-x86_64-unknown-linux-musl/sccache /usr/local/bin/
+        sudo chmod +x /usr/local/bin/sccache
+    - name: Install sccache (macos-latest)
+      if: matrix.os == 'macos-latest'
+      run: |
+        brew update
+        brew install sccache
+    - uses: actions/cache@v2
+      with:
+        path: |
+          ~/.cargo/registry
+          ~/.cargo/git
+        key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+        restore-keys: |
+          ${{ runner.os }}-cargo-
+    - uses: actions/cache@v2
+      with:
+        path: ${{ matrix.sccache-path }}
+        key: ${{ runner.os }}-sccache-${{ hashFiles('**/Cargo.lock') }}
+        restore-keys: |
+          ${{ runner.os }}-sccache-
+    - uses: actions/cache@v2
+      with:
+        path: ~/.m2/repository
+        key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
+        restore-keys: |
+          ${{ runner.os }}-maven-
     - uses: actions/checkout@v2
       with:
         submodules: true
 
-    - name: Setup tmate session
-      if: false
-      uses: mxschmitt/action-tmate@v2
+    - name: Start sccache server
+      run: sccache --start-server
 
     - name: Install Dependencies of GraphScope
       run: |
@@ -50,13 +90,14 @@ jobs:
         if [ -z "${r}" ];then export hn=$(hostname); sudo -E bash -c 'echo "127.0.0.1 ${hn}" >> /etc/hosts'; fi
         cat /etc/hosts
 
-    - name: Setup tmate session
-      if: false
-      uses: mxschmitt/action-tmate@v2
-
     - name: Build GraphScope
       run: |
         /bin/bash ${GITHUB_WORKSPACE}/scripts/deploy_local.sh build_and_deploy --verbose --build_type debug
+
+    - name: Stop sccache
+      run: |
+        sccache --show-stats
+        sccache --stop-server || true
 
     - name: Run Local Test
       env:
@@ -78,15 +119,8 @@ jobs:
         git clone -b master --single-branch --depth=1 https://github.com/7br/gstest.git ${GS_TEST_DIR}
         # Copy test_run_locally.py out of graphscope to enable import graph-learn from system path
         cp ${GITHUB_WORKSPACE}/python/tests/local/test_run_locally.py /tmp/test_run_locally.py
-        rm -rf ~/.ccache ~/.m2 ~/.cargo || true
+        rm -rf ~/.m2 ~/.cargo || true
         python3 -m pytest -s -v /tmp/test_run_locally.py
-
-        # delete etcd dir
-        rm -fr /tmp/default.etcd || true
-
-    - name: DEBUG
-      if: false
-      uses: mxschmitt/action-tmate@v2
 
     - name: Run Gaia on Vineyard Store Test
       if: matrix.os == 'ubuntu-20.04'
@@ -110,7 +144,3 @@ jobs:
       with:
         name: gie-log
         path: /tmp/gs/
-
-    - name: Setup tmate session debug
-      if: false
-      uses: mxschmitt/action-tmate@v2
