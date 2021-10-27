@@ -25,7 +25,7 @@ __all__ = ["triangles"]
 
 
 @project_to_simple
-@not_compatible_for("arrow_property", "dynamic_property")
+@not_compatible_for("arrow_property", "dynamic_property", "arrow_label_projected")
 def triangles(graph):
     """Evaluate triangle counting of the graph G.
 

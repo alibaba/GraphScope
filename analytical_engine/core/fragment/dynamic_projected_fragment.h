@@ -569,6 +569,8 @@ class DynamicProjectedFragment {
     return fragment_->GetOuterVerticesNum();
   }
 
+  inline vid_t GetVerticesNum() const { return fragment_->GetVerticesNum(); }
+
   size_t GetTotalVerticesNum() const {
     return fragment_->GetTotalVerticesNum();
   }

@@ -94,6 +94,8 @@ def not_compatible_for(*graph_types):
                 "arrow_projected": graph.graph_type == graph_def_pb2.ARROW_PROJECTED,
                 "dynamic_projected": graph.graph_type
                 == graph_def_pb2.DYNAMIC_PROJECTED,
+                "arrow_label_projected": graph.graph_type
+                == graph_def_pb2.ARROW_LABEL_PROJECTED,
             }
             match = False
             try:

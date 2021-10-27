@@ -26,6 +26,7 @@ from networkx.utils.decorators import not_implemented_for
 import graphscope
 from graphscope import nx
 from graphscope.framework.app import AppAssets
+from graphscope.framework.app import not_compatible_for
 from graphscope.framework.errors import InvalidArgumentError
 from graphscope.nx.utils.compat import patch_docstring
 from graphscope.proto import graph_def_pb2
@@ -469,6 +470,7 @@ def single_source_dijkstra_path_length(G, source, weight=None):
 
 
 @project_to_simple
+@not_compatible_for("arrow_property", "dynamic_property", "arrow_label_projected")
 def average_shortest_path_length(G, weight=None):
     """Returns the average shortest path length.
 
@@ -957,7 +959,7 @@ def degree_assortativity_coefficient(G, x="out", y="in", weight=None):
     return graphscope.degree_assortativity_coefficient(G, x, y, weight)
 
 
-# @project_to_simple
+@project_to_simple
 def node_boundary(G, nbunch1, nbunch2=None):
     """Returns the node boundary of `nbunch1`.
 
@@ -995,13 +997,12 @@ def node_boundary(G, nbunch1, nbunch2=None):
     the interest of speed and generality, that is not required here.
 
     """
-    G2 = G._project_to_simple()
     n1json = json.dumps(list(nbunch1))
     if nbunch2:
         n2json = json.dumps(list(nbunch2))
     else:
         n2json = ""
-    ctx = AppAssets(algo="node_boundary", context="tensor")(G2, n1json, n2json)
+    ctx = AppAssets(algo="node_boundary", context="tensor")(G, n1json, n2json)
     return ctx.to_numpy("r", axis=0).tolist()
 
 
