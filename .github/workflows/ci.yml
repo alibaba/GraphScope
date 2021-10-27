@@ -114,9 +114,7 @@ jobs:
       run: |
         export GS_TEST_DIR=${GITHUB_WORKSPACE}/gstest
         export PATH=${PATH}:/opt/graphscope/bin/
-        # FIXME: test ci
-        # git clone -b master --single-branch --depth=1 https://github.com/7br/gstest.git ${GS_TEST_DIR}
-        git clone -b acezen/simple_labeled_graph --single-branch --depth=1 https://github.com/acezen/gstest.git ${GS_TEST_DIR}
+        git clone -b master --single-branch --depth=1 https://github.com/7br/gstest.git ${GS_TEST_DIR}
 
         cd analytical_engine/build
         ../test/app_tests.sh --test_dir ${GITHUB_WORKSPACE}/gstest
@@ -279,7 +277,8 @@ jobs:
     - name: Prepare environment for dataset
       run: |
         export GS_TEST_DIR='/home/graphscope/gstest'
-        git clone -b master --single-branch --depth=1 https://github.com/7br/gstest.git ${GS_TEST_DIR}
+        # git clone -b master --single-branch --depth=1 https://github.com/7br/gstest.git ${GS_TEST_DIR}
+        git clone -b acezen/simple_labeled_graph --single-branch --depth=1 https://github.com/acezen/gstest.git ${GS_TEST_DIR}
 
     - name: Prepare environment for deps
       run: |
