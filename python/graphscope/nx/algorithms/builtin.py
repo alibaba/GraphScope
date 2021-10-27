@@ -48,6 +48,7 @@ def project_to_simple(func):
                 "weight" in inspect.getfullargspec(func)[0]
             ):  # func has 'weight' argument
                 weight = kwargs.get("weight", None)
+                print("got weight", weight)
                 graph = graph._project_to_simple(e_prop=weight)
             elif "attribute" in inspect.getfullargspec(func)[0]:
                 attribute = kwargs.get("attribute", None)
@@ -446,7 +447,8 @@ def has_path(G, source, target):
     target : node
        Ending node for path
     """
-    return AppAssets(algo="sssp_has_path", context="tensor")(G, source, target)
+    ctx = AppAssets(algo="sssp_has_path", context="tensor")(G, source, target)
+    return ctx.to_numpy("r", axis=0)[0]
 
 
 @project_to_simple
@@ -499,7 +501,6 @@ def single_source_dijkstra_path_length(G, source, weight=None):
 
 
 @project_to_simple
-@not_compatible_for("arrow_property", "dynamic_property", "arrow_label_projected")
 def average_shortest_path_length(G, weight=None):
     """Returns the average shortest path length.
 
@@ -529,8 +530,7 @@ def average_shortest_path_length(G, weight=None):
     2.0
 
     """
-    ctx = AppAssets(algo="sssp_average_length", context="tensor")(G)
-    return ctx.to_numpy("r", axis=0)[0]
+    return graphscope.average_shortest_path_length(G)
 
 
 @project_to_simple
@@ -689,7 +689,11 @@ def closeness_centrality(G, weight=None, wf_improved=True):
        Cambridge University Press.
     """
     ctx = AppAssets(algo="closeness_centrality", context="vertex_data")(G, wf_improved)
-    return ctx.to_dataframe({"node": "v.id", "result": "r"}).set_index("node").to_dict()
+    return (
+        ctx.to_dataframe({"id": "v.id", "value": "r"})
+        .set_index("id")["value"]
+        .to_dict()
+    )
 
 
 @patch_docstring(nxa.bfs_tree)
@@ -860,7 +864,11 @@ def triangles(G, nodes=None):
     """
     # FIXME: nodes not support.
     ctx = graphscope.triangles(G)
-    return ctx.to_dataframe({"node": "v.id", "result": "r"}).set_index("node").to_dict()
+    return (
+        ctx.to_dataframe({"id": "v.id", "value": "r"})
+        .set_index("id")["value"]
+        .to_dict()
+    )
 
 
 @project_to_simple
@@ -1515,4 +1523,8 @@ def betweenness_centrality(
     ctx = AppAssets(algo=algorithm, context="vertex_data")(
         G, normalized=normalized, endpoints=endpoints
     )
-    return dict(zip(ctx.to_numpy("v.id"), ctx.to_numpy("r")))
+    return (
+        ctx.to_dataframe({"id": "v.id", "value": "r"})
+        .set_index("id")["value"]
+        .to_dict()
+    )

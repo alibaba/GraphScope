@@ -30,37 +30,6 @@ from graphscope.client.session import get_default_session
 from graphscope.framework.errors import InvalidArgumentError
 from graphscope.framework.loader import Loader
 from graphscope.proto import graph_def_pb2
-from graphscope.proto.types_pb2 import SRC_LABEL
-
-
-def k3_graph(prefix, directed):
-    graph = graphscope.g(directed=directed, generate_eid=False)
-    graph = graph.add_vertices(
-        Loader(os.path.join(prefix, "3v.csv"), delimiter="|"), "vertex"
-    )
-    if directed:
-        graph = graph.add_edges(
-            Loader(os.path.join(prefix, "k3_directed.csv"), delimiter="|"),
-            "edge",
-        )
-    else:
-        graph = graph.add_edges(
-            Loader(os.path.join(prefix, "k3_undirected.csv"), delimiter="|"),
-            "edge",
-        )
-    return graph
-
-
-def p3_graph(prefix, directed):
-    graph = graphscope.g(directed=directed, generate_eid=False)
-    graph = graph.add_vertices(
-        Loader(os.path.join(prefix, "3v.csv"), delimiter="|"), "vertex"
-    )
-    graph = graph.add_edges(
-        Loader(os.path.join(prefix, "p3_directed.csv"), delimiter="|"),
-        "edge",
-    )
-    return graph
 
 
 def ldbc_sample_single_label(prefix, directed):
@@ -471,7 +440,7 @@ class TestGraphTransformation(object):
         ret2 = nx.builtin.single_source_dijkstra_path_length(
             self.p2p_nx, 6, weight="weight"
         )
-        assert dict(ret.values) == dict(ret2.values)
+        assert ret == ret2
 
     def test_error_on_wrong_nx_type(self):
         g = self.single_label_g

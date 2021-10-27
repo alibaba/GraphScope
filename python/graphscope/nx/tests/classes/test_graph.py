@@ -1,4 +1,3 @@
-#
 # This file is referred and derived from project NetworkX
 #
 # which has the following license:
@@ -19,6 +18,7 @@ import numpy as np
 import pytest
 from networkx.classes.tests.test_graph import TestEdgeSubgraph as _TestEdgeSubgraph
 from networkx.classes.tests.test_graph import TestGraph as _TestGraph
+from networkx.testing.utils import almost_equal
 from networkx.testing.utils import assert_graphs_equal
 
 from graphscope import nx
@@ -243,132 +243,102 @@ class TestGraph(_TestGraph):
 
     def test_duplicated_modification(self):
         G = nx.complete_graph(5, create_using=self.Graph)
-        ret_frame = nx.builtin.closeness_centrality(G)
-        assert np.allclose(
-            ret_frame.sort_values(by=["node"]).to_numpy(),
-            [[0.0, 1.000], [1.0, 1.000], [2.0, 1.000], [3.0, 1.000], [4.0, 1.000]],
-        )
+        ret = nx.builtin.closeness_centrality(G)
+        assert ret == {0: 1.0, 1: 1.0, 2: 1.0, 3: 1.0, 4: 1.0}
 
         # test add node
         G.add_node(5)
-        ret_frame2 = nx.builtin.closeness_centrality(G)
-        assert np.allclose(
-            ret_frame2.sort_values(by=["node"]).to_numpy(),
-            [[0.0, 0.8], [1.0, 0.8], [2.0, 0.8], [3.0, 0.8], [4.0, 0.8], [5.0, 0.0]],
-        )
+        ret = nx.builtin.closeness_centrality(G)
+        assert ret == {0: 0.8, 1: 0.8, 2: 0.8, 3: 0.8, 4: 0.8, 5: 0.0}
+
         # test add edge
         G.add_edge(4, 5)
-        ret_frame3 = nx.builtin.closeness_centrality(G)
-        expect1 = [
-            [0.0, 0.8],
-            [1.0, 0.8],
-            [2.0, 0.8],
-            [3.0, 0.8],
-            [4.0, 0.8],
-            [5.0, 0.555556],
-        ]
-        expect2 = [
-            [0.0, 0.833333],
-            [1.0, 0.833333],
-            [2.0, 0.833333],
-            [3.0, 0.833333],
-            [4.0, 1.0],
-            [5.0, 0.555556],
-        ]
+        ret = nx.builtin.closeness_centrality(G)
+        expect1 = {
+            0: 0.8,
+            1: 0.8,
+            2: 0.8,
+            3: 0.8,
+            4: 0.8,
+            5: 0.555556,
+        }
+        expect2 = {
+            0: 0.833333,
+            1: 0.833333,
+            2: 0.833333,
+            3: 0.833333,
+            4: 1.0,
+            5: 0.555556,
+        }
         if G.is_directed():
-            assert np.allclose(
-                ret_frame3.sort_values(by=["node"]).to_numpy(),
-                expect1,
-            )
+            for n in ret:
+                assert almost_equal(ret[n], expect1[n], places=4)
         else:
-            assert np.allclose(
-                ret_frame3.sort_values(by=["node"]).to_numpy(),
-                expect2,
-            )
+            for n in ret:
+                assert almost_equal(ret[n], expect2[n], places=4)
+
         # test remove edge
         G.remove_edge(4, 5)
-        ret_frame4 = nx.builtin.closeness_centrality(G)
-        assert np.allclose(
-            ret_frame4.sort_values(by=["node"]).to_numpy(),
-            [[0.0, 0.8], [1.0, 0.8], [2.0, 0.8], [3.0, 0.8], [4.0, 0.8], [5.0, 0.0]],
-        )
+        ret = nx.builtin.closeness_centrality(G)
+        assert ret == {0: 0.8, 1: 0.8, 2: 0.8, 3: 0.8, 4: 0.8, 5: 0.0}
+
         # test remove node
         G.remove_node(5)
-        ret_frame5 = nx.builtin.closeness_centrality(G)
-        assert np.allclose(
-            ret_frame5.sort_values(by=["node"]).to_numpy(),
-            [[0.0, 1.000], [1.0, 1.000], [2.0, 1.000], [3.0, 1.000], [4.0, 1.000]],
-        )
+        ret = nx.builtin.closeness_centrality(G)
+        assert ret == {0: 1.0, 1: 1.0, 2: 1.0, 3: 1.0, 4: 1.0}
+
         # test update
         for e in G.edges:
             G.edges[e]["weight"] = 2
-        ret_frame6 = nx.builtin.closeness_centrality(G, weight="weight")
-        assert np.allclose(
-            ret_frame6.sort_values(by=["node"]).to_numpy(),
-            [[0.0, 0.5], [1.0, 0.5], [2.0, 0.5], [3.0, 0.5], [4.0, 0.5]],
-        )
+        ret = nx.builtin.closeness_centrality(G, weight="weight")
+        assert ret == {0: 0.5, 1: 0.5, 2: 0.5, 3: 0.5, 4: 0.5}
+
         # test copy
         G2 = G.copy()
-        ret_frame7 = nx.builtin.closeness_centrality(G2)
-        assert np.allclose(
-            ret_frame7.sort_values(by=["node"]).to_numpy(),
-            [[0.0, 1.000], [1.0, 1.000], [2.0, 1.000], [3.0, 1.000], [4.0, 1.000]],
-        )
+        ret = nx.builtin.closeness_centrality(G2)
+        assert ret == {0: 1.0, 1: 1.0, 2: 1.0, 3: 1.0, 4: 1.0}
+
         # test reverse
         if G.is_directed():
             rG = G.reverse()
-            ret_frame8 = nx.builtin.closeness_centrality(rG)
-            assert np.allclose(
-                ret_frame8.sort_values(by=["node"]).to_numpy(),
-                [[0.0, 1.000], [1.0, 1.000], [2.0, 1.000], [3.0, 1.000], [4.0, 1.000]],
-            )
+            ret = nx.builtin.closeness_centrality(rG)
+            assert ret == {0: 1.0, 1: 1.0, 2: 1.0, 3: 1.0, 4: 1.0}
+
         # to_directed/to_undirected
         if G.is_directed():
             udG = G.to_undirected()
-            ret_frame9 = nx.builtin.closeness_centrality(udG)
-            assert np.allclose(
-                ret_frame9.sort_values(by=["node"]).to_numpy(),
-                [[0.0, 1.000], [1.0, 1.000], [2.0, 1.000], [3.0, 1.000], [4.0, 1.000]],
-            )
+            ret = nx.builtin.closeness_centrality(udG)
+            assert ret == {0: 1.0, 1: 1.0, 2: 1.0, 3: 1.0, 4: 1.0}
         else:
             dG = G.to_directed()
-            ret_frame10 = nx.builtin.closeness_centrality(dG)
-            assert np.allclose(
-                ret_frame10.sort_values(by=["node"]).to_numpy(),
-                [[0.0, 1.000], [1.0, 1.000], [2.0, 1.000], [3.0, 1.000], [4.0, 1.000]],
-            )
+            ret = nx.builtin.closeness_centrality(dG)
+            assert ret == {0: 1.0, 1: 1.0, 2: 1.0, 3: 1.0, 4: 1.0}
+
         # sub_graph
         sG = G.subgraph([0, 1, 2])
-        ret_frame11 = nx.builtin.closeness_centrality(sG)
-        assert np.allclose(
-            ret_frame11.sort_values(by=["node"]).to_numpy(),
-            [[0.0, 1.000], [1.0, 1.000], [2.0, 1.000]],
-        )
+        ret = nx.builtin.closeness_centrality(sG)
+        assert ret == {0: 1.0, 1: 1.0, 2: 1.0}
 
         esG = G.edge_subgraph([(0, 1), (1, 2), (2, 3)])
-        ret_frame12 = nx.builtin.closeness_centrality(esG)
-        expect1 = [
-            [0.0, 0.000],
-            [1.0, 0.333333],
-            [2.0, 0.444444],
-            [3.0, 0.500],
-        ]
-        expect2 = [
-            [0.0, 0.5],
-            [1.0, 0.75],
-            [2.0, 0.75],
-            [3.0, 0.5],
-        ]
+        ret = nx.builtin.closeness_centrality(esG)
+        expect1 = {
+            0: 0.000,
+            1: 0.333333,
+            2: 0.444444,
+            3: 0.500,
+        }
+        expect2 = {
+            0: 0.5,
+            1: 0.75,
+            2: 0.75,
+            3: 0.5,
+        }
         if G.is_directed():
-            assert np.allclose(
-                ret_frame12.sort_values(by=["node"]).to_numpy(),
-                expect1,
-            )
+            for n in ret:
+                assert almost_equal(ret[n], expect1[n], places=4)
         else:
-            assert np.allclose(
-                ret_frame12.sort_values(by=["node"]).to_numpy(),
-                expect2,
-            )
+            for n in ret:
+                assert almost_equal(ret[n], expect2[n], places=4)
 
 
 @pytest.mark.usefixtures("graphscope_session")

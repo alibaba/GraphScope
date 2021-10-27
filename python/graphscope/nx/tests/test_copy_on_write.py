@@ -18,6 +18,7 @@
 
 import os
 
+import pandas as pd
 import pytest
 from networkx.testing.utils import assert_graphs_equal
 
@@ -28,6 +29,7 @@ from graphscope.framework.loader import Loader
 from graphscope.nx.tests.classes.test_digraph import TestDiGraph as _TestDiGraph
 from graphscope.nx.tests.classes.test_graph import TestGraph as _TestGraph
 from graphscope.nx.tests.utils import almost_equal
+from graphscope.nx.tests.utils import replace_with_inf
 
 
 def k3_graph(prefix, directed):
@@ -81,6 +83,18 @@ def simple_label_graph(prefix, directed):
         "e-2",
         src_label="v-1",
         dst_label="v-1",
+    )
+    return graph
+
+
+def p2p_31_graph(prefix, directed):
+    graph = graphscope.g(directed=directed, generate_eid=False)
+    graph = graph.add_vertices(
+        Loader(os.path.join(prefix, "p2p-31_property_v_0")), "vertex"
+    )
+    graph = graph.add_edges(
+        Loader(os.path.join(prefix, "p2p-31_property_e_0")),
+        "edge",
     )
     return graph
 
@@ -190,6 +204,8 @@ class TestDiGraphCopyOnWrite(_TestDiGraph):
 class TestBuiltinCopyOnWrite:
     def setup_method(self):
         data_dir = os.path.expandvars("${GS_TEST_DIR}/networkx")
+        p2p_dir = os.path.expandvars("${GS_TEST_DIR}/property")
+
         self.simple = simple_label_graph(data_dir, True)
         self.SG = nx.DiGraph(self.simple, default_label="v-0")
         self.SG.pagerank = {
@@ -233,11 +249,26 @@ class TestBuiltinCopyOnWrite:
             6: 0.4255225997990211,
         }
 
+        self.p2p_31 = p2p_31_graph(p2p_dir, False)
+        self.P2P = nx.Graph(self.p2p_31, default_label="vertex")
+        self.P2P.sssp = dict(
+            pd.read_csv(
+                "{}/p2p-31-sssp".format(os.path.expandvars("${GS_TEST_DIR}")),
+                sep=" ",
+                header=None,
+                prefix="",
+            ).values
+        )
+
     def test_single_source_dijkstra_path_length(self):
         ret = nx.builtin.single_source_dijkstra_path_length(
             self.SG, source=1, weight="weight"
         )
         assert ret == {1: 0.0, 2: 1.0, 3: 1.0, 4: 3.0, 5: 2.0, 6: 3.0}
+        p2p_ans = nx.builtin.single_source_dijkstra_path_length(
+            self.P2P, source=6, weight="dist"
+        )
+        assert replace_with_inf(p2p_ans) == self.P2P.sssp
 
     def test_wcc(self):
         ret = nx.builtin.weakly_connected_components(self.SG)
