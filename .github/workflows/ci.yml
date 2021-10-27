@@ -45,7 +45,6 @@ jobs:
         # install clang-format
         sudo curl -L https://github.com/muttleyxd/clang-tools-static-binaries/releases/download/master-22538c65/clang-format-8_linux-amd64 --output /usr/bin/clang-format
         sudo chmod +x /usr/bin/clang-format
-
         # run clang-format
         cd analytical_engine/
         find ./apps ./benchmarks ./core ./frame ./misc ./test  -name "*.h" | xargs clang-format -i --style=file
@@ -73,7 +72,6 @@ jobs:
             exit -1
         fi
         python3 ./misc/cpplint.py --recursive ./apps ./benchmarks ./core ./frame ./test
-
     - name: Python Format and Lint Check
       run: |
         echo "Checking formatting for $GITHUB_REPOSITORY"
@@ -89,36 +87,28 @@ jobs:
         python3 -m isort --check --diff .
         python3 -m black --check --diff .
         python3 -m flake8 .
-
     - name: Build
       run: |
         strip /opt/vineyard/lib/* || true
         strip /opt/vineyard/lib64/* || true
         tar -cf vineyard.tar /opt/vineyard
-
         sudo mkdir -p /opt/graphscope
         sudo chown -R $(id -u):$(id -g) /opt/graphscope
-
-        mkdir analytical_engine/build
-        cd analytical_engine/build
+        cd analytical_engine && mkdir build && cd build
         cmake .. -DCMAKE_INSTALL_PREFIX=/opt/graphscope \
                  -DNETWORKX=${{ matrix.networkx }}
-        make -j`nproc`
-        make install
+        make install -j`nproc`
         cd ${GITHUB_WORKSPACE}
         cp k8s/kube_ssh /opt/graphscope/bin/kube_ssh
         cp k8s/pre_stop.py /opt/graphscope/bin/pre_stop.py
         tar -cf gae.tar /opt/graphscope
-
     - name: Run GAE Tests
       run: |
         export GS_TEST_DIR=${GITHUB_WORKSPACE}/gstest
         export PATH=${PATH}:/opt/graphscope/bin/
         git clone -b master --single-branch --depth=1 https://github.com/7br/gstest.git ${GS_TEST_DIR}
-
         cd analytical_engine/build
         ../test/app_tests.sh --test_dir ${GITHUB_WORKSPACE}/gstest
-
     - name: Upload Artifact
       if: matrix.networkx == 'ON'
       uses: actions/upload-artifact@v2
@@ -131,43 +121,80 @@ jobs:
 
   build-gie:
     runs-on: ubuntu-20.04
-    defaults:
-      run:
-        shell: bash --noprofile --norc -eo pipefail {0}
-    container:
-      image: registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-vineyard:v0.3.1
+    env:
+      RUST_BACKTRACE: full
+      RUSTC_WRAPPER: sccache
+      # SCCACHE_RECACHE: 1 # Uncomment this to clear cache, then comment it back out
     steps:
+    - uses: actions/checkout@v2.3.2
+    - uses: actions/cache@v2
+      with:
+        path: |
+          ~/.cargo/bin/
+          ~/.cargo/registry/index/
+          ~/.cargo/registry/cache/
+          ~/.cargo/git/db/
+        key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+        restore-keys: |
+          ${{ runner.os }}-cargo-
+    - uses: actions/cache@v2
+      with:
+        path: ~/.cache/sccache
+        key: ${{ runner.os }}-sccache-${{ hashFiles('**/Cargo.lock') }}
+        restore-keys: |
+          ${{ runner.os }}-sccache-
     - name: Install Dependencies
       run: |
-        wget --no-verbose https://golang.org/dl/go1.15.5.linux-amd64.tar.gz
-        sudo tar -C /usr/local -xzf go1.15.5.linux-amd64.tar.gz
-        curl -sf -L https://static.rust-lang.org/rustup.sh | sh -s -- -y --profile minimal --default-toolchain 1.54.0
-        echo "source ~/.cargo/env" >> ~/.bashrc
-        source ~/.bashrc
-        rustup component add rustfmt
-
-        sudo yum install -y clang-devel
-
-    - uses: actions/checkout@v2.3.2
-
+        wget https://apache.jfrog.io/artifactory/arrow/$(lsb_release --id --short | tr 'A-Z' 'a-z')/apache-arrow-apt-source-latest-$(lsb_release --codename --short).deb
+        sudo apt install -y -V ./apache-arrow-apt-source-latest-$(lsb_release --codename --short).deb
+        curl -L https://github.91chifun.workers.dev/https://github.com//mozilla/sccache/releases/download/v0.2.15/sccache-v0.2.15-x86_64-unknown-linux-musl.tar.gz | tar xz
+        sudo mv sccache-v0.2.15-x86_64-unknown-linux-musl/sccache /usr/local/bin/
+        sudo chmod +x /usr/local/bin/sccache
+        sudo apt update
+        sudo apt install -y libmpich-dev \
+                            libgoogle-glog-dev \
+                            libboost-all-dev \
+                            libprotobuf-dev \
+                            libgrpc-dev \
+                            libgrpc++-dev \
+                            protobuf-compiler-grpc \
+                            libarrow-dev=3.0.0-1 \
+                            libarrow-python-dev=3.0.0-1
+        sudo pip3 install libclang parsec
+    - name: Install libgrape-lite
+      run: |
+        git clone https://github.com/alibaba/libgrape-lite.git
+        cd libgrape-lite
+        cmake .
+        sudo make install -j`nproc`
+    - name: Install Vineyard
+      run: |
+        git clone -b v0.3.1 https://github.com/v6d-io/v6d
+        cd v6d
+        git submodule update --init
+        cmake . -DCMAKE_BUILD_TYPE=Debug \
+                -DWITH_ALLOCATOR=dlmalloc \
+                -DBUILD_VINEYARD_SERVER=OFF \
+                -DBUILD_VINEYARD_PYTHON_BINDINGS=OFF \
+                -DBUILD_VINEYARD_BASIC=OFF \
+                -DBUILD_VINEYARD_IO=OFF \
+                -DBUILD_VINEYARD_MIGRATION=OFF \
+                -DBUILD_VINEYARD_TESTS=OFF
+        sudo make install -j`nproc`
     - name: Build
       run: |
-        export PATH=${PATH}:/usr/local/go/bin
-        source ~/.bashrc
-
-        export LIBCLANG_PATH=$(dirname $(python3 -c "import clang; print(clang.__file__)"))/native
-
         # install zetcd
         go get github.com/etcd-io/zetcd/cmd/zetcd
         cp $(go env GOPATH)/bin/zetcd interactive_engine/
-
         cd interactive_engine/executor
+        sccache --start-server
         ./exec.sh cargo build --all --release
+        sccache --show-stats
+        sccache --stop-server || true
         cd ${GITHUB_WORKSPACE}
         tar -cf gie.tar interactive_engine/executor/target/release/executor \
                         interactive_engine/executor/target/release/gaia_executor \
                         interactive_engine/zetcd
-
     - uses: actions/upload-artifact@v2
       with:
         name: gie-${{ github.sha }}
@@ -189,19 +216,15 @@ jobs:
       run: |
         strip /opt/vineyard/lib/* || true
         strip /opt/vineyard/lib64/* || true
-
         sudo mkdir -p /opt/graphscope
         sudo chown -R $(id -u):$(id -g) /opt/graphscope
-
         cd learning_engine/graph-learn
         git submodule update --init third_party/pybind11
-        mkdir cmake-build
-        cd cmake-build
-        cmake -DCMAKE_INSTALL_PREFIX=/opt/graphscope \
-              -DWITH_VINEYARD=ON \
-              -DTESTING=OFF ..
+        mkdir cmake-build && cd cmake-build
+        cmake .. -DCMAKE_INSTALL_PREFIX=/opt/graphscope \
+                 -DWITH_VINEYARD=ON \
+                 -DTESTING=OFF
         make graphlearn_shared install -j
-
     - name: build wheel
       run: |
         export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/opt/graphscope/lib:/opt/graphscope/lib64
@@ -215,16 +238,13 @@ jobs:
         mkdir -p /opt/graphscope/dist
         cp ./wheelhouse/* /opt/graphscope/dist/
         pip3 install ./wheelhouse/*.whl
-        popd
-        popd
+        popd && popd
         pushd coordinator
         pip3 install -r requirements.txt -r requirements-dev.txt
         python3 setup.py bdist_wheel
         cp ./dist/* /opt/graphscope/dist/
-
         cd ${GITHUB_WORKSPACE}
         tar -cf gle.tar /opt/graphscope
-
     - uses: actions/upload-artifact@v2
       with:
         name: gle-${{ github.sha }}
@@ -233,23 +253,21 @@ jobs:
 
   build-manager:
     runs-on: ubuntu-20.04
-    env:
-      profile: release
-    defaults:
-      run:
-        shell: bash --noprofile --norc -eo pipefail {0}
-    container:
-      image: registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-runtime:latest
     steps:
+    - uses: actions/cache@v2
+      with:
+        path: ~/.m2/repository
+        key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
+        restore-keys: |
+          ${{ runner.os }}-maven-
     - uses: actions/checkout@v2.3.2
 
     - name: Build
       run: |
         cd interactive_engine
-        for i in {1..3}; do mvn clean package -DskipTests -Pjava-release --quiet && break || sleep 60; done
+        mvn clean package -DskipTests -Pjava-release --quiet
         cd ${GITHUB_WORKSPACE}
         tar -cf manager.tar interactive_engine/assembly/target/maxgraph-assembly-0.0.1-SNAPSHOT.tar.gz
-
     - uses: actions/upload-artifact@v2
       with:
         name: manager-${{ github.sha }}
@@ -278,7 +296,6 @@ jobs:
       run: |
         export GS_TEST_DIR='/home/graphscope/gstest'
         git clone -b master --single-branch --depth=1 https://github.com/7br/gstest.git ${GS_TEST_DIR}
-
     - name: Prepare environment for deps
       run: |
         # install zetcd
@@ -286,15 +303,12 @@ jobs:
         sudo tar -C /usr/local -xzf go1.15.5.linux-amd64.tar.gz
         go get github.com/etcd-io/zetcd/cmd/zetcd
         sudo cp $(go env GOPATH)/bin/zetcd /usr/local/bin/
-
         python3 -m pip install pytest-cov
         tar -xf ./gae-${{ github.sha }}/vineyard.tar
         tar -xf ./gae-${{ github.sha }}/gae.tar
         tar -xf ./gle-${{ github.sha }}/gle.tar
-
         # install vineyard into /usr/local
         sudo cp -r -n opt/vineyard/* /usr/local/
-
         # Install to /opt/graphscope and link them to /usr/local
         sudo mkdir -p /opt/graphscope
         sudo chown -R $(id -u):$(id -g) /opt/graphscope
@@ -304,14 +318,12 @@ jobs:
         sudo ln -sf /opt/graphscope/lib/*so* /usr/local/lib
         sudo ln -sf /opt/graphscope/lib64/*so* /usr/local/lib64
         sudo ln -sfn /opt/graphscope/lib64/cmake/graphscope-analytical /usr/local/lib64/cmake/graphscope-analytical
-
         pushd /usr/local/dist/ && pip3 install ./*.whl && popd
         pushd /opt/graphscope/dist/ && pip3 install ./*.whl && popd
         python3 -m pip install -r python/requirements.txt
         python3 -m pip install -r python/requirements-dev.txt
         pushd python && python3 setup.py build_proto && popd
         pushd coordinator && python3 setup.py build_builtin && popd
-
     - name: Setup tmate session debug
       if: false
       uses: mxschmitt/action-tmate@v2
@@ -321,15 +333,12 @@ jobs:
       run: |
         # prelaunch the etcd
         /usr/local/bin/etcd --data-dir=/tmp/default.etcd &
-
         export GRAPHSCOPE_HOME='/opt/graphscope'
         export GS_TEST_DIR='/home/graphscope/gstest'
         cd python
         python3 -m pytest --cov=graphscope --cov-config=.coveragerc \
                           --cov-report=xml --cov-report=term --exitfirst -s -v tests/unittest/
-
         pkill -TERM etcd || true
-
     - name: Upload Coverage
       if: matrix.networkx == 'OFF'
       uses: codecov/codecov-action@v1.0.5
@@ -342,14 +351,11 @@ jobs:
       run: |
         # prelaunch the etcd
         /usr/local/bin/etcd --data-dir=/tmp/default.etcd &
-
         export GRAPHSCOPE_HOME='/opt/graphscope'
         export GS_TEST_DIR='/home/graphscope/gstest'
         python3 -m pytest --exitfirst -s -v python/graphscope/nx/tests \
                           --ignore=python/graphscope/nx/tests/algorithms/forward
-
         pkill -TERM etcd || true
-
   k8s-test:
     runs-on: self-hosted
     needs: [build-gae, build-gie, build-gle, build-manager]
@@ -365,7 +371,6 @@ jobs:
         find ./ -name "*.whl" | xargs sudo rm -rf || true
         find ./ -name "*_pb2.py" | xargs sudo rm -rf || true
         find ./ -name "*_pb2_grpc.py" | xargs sudo rm -rf || true
-
     - uses: actions/checkout@v2.3.2
 
     - uses: actions/cache@v2
@@ -376,7 +381,6 @@ jobs:
         key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
         restore-keys: |
           ${{ runner.os }}-pip-
-
     - uses: actions/download-artifact@v2
       with:
         path: artifacts
@@ -400,7 +404,6 @@ jobs:
         python3 -m pip install pytest-cov --user
         pushd python && sudo -E python3 setup.py develop && popd
         python3 -m pip install git+https://github.com/mars-project/mars.git@d09e1e4c3e32ceb05f42d0b5b79775b1ebd299fb#egg=pymars
-
     - name: Kubernetes test
       env:
         CHANGE_MINIKUBE_NONE_USER: true
@@ -413,7 +416,6 @@ jobs:
                           --cov=graphscope --cov-config=.coveragerc --cov-report=xml \
                           --cov-report=term --exitfirst -s -vvv --log-cli-level=INFO \
                           ./tests/kubernetes
-
     - name: HDFS test
       env:
         CHANGE_MINIKUBE_NONE_USER: true
@@ -423,7 +425,6 @@ jobs:
         wget -q https://mirror.cogentco.com/pub/apache/hadoop/common/hadoop-2.10.1/hadoop-2.10.1.tar.gz
         tar -zxf hadoop-2.10.1.tar.gz
         export JAVA_HOME=/usr/lib/jvm/default-java/
-
         cd ${GITHUB_WORKSPACE}/.github/workflows/hadoop_scripts
         ./prepare_hadoop.sh /tmp/hadoop-2.10.1
         export PATH=${PATH}:/tmp/hadoop-2.10.1/bin
@@ -434,12 +435,10 @@ jobs:
         hadoop fs -put ${GS_TEST_DIR}/ldbc_sample/person_knows_person_0_0.csv /ldbc_sample/person_knows_person_0_0.csv
         export HDFS_TEST_DIR=hdfs:///ldbc_sample
         export HDFS_HOST=$(hostname -I | awk '{print $1}')
-
         cd ${GITHUB_WORKSPACE}/python
         python3 -m pytest -s ./tests/kubernetes/test_demo_script.py -k test_demo_on_hdfs
         # Check the result file have successfully written to the given location
         hdfs dfs -test -e /ldbc_sample/res.csv_0 && hdfs dfs -test -e /ldbc_sample/res.csv_1
-
     - name: Helm test
       run: |
         curl https://raw.githubusercontent.com/helm/helm/master/scripts/get-helm-3 | bash
@@ -450,7 +449,6 @@ jobs:
                                 --set imagePullPolicy=IfNotPresent \
                                 ./graphscope
         helm test graphscope --timeout 5m0s
-
     - name: Upload Coverage
       uses: codecov/codecov-action@v1.0.5
       with:
@@ -466,7 +464,6 @@ jobs:
         sudo docker rmi -f registry.cn-hongkong.aliyuncs.com/graphscope/graphscope:${{ github.sha }} || true
         helm uninstall graphscope || true
         kubectl delete pod graphscope-test-rpc-service --wait=false || true
-
   gie-test:
     runs-on: self-hosted
     needs: [build-gae, build-gie, build-gle, build-manager]
@@ -483,7 +480,6 @@ jobs:
         find ./ -name "*.whl" | xargs sudo rm -rf || true
         find ./ -name "*_pb2.py" | xargs sudo rm -rf || true
         find ./ -name "*_pb2_grpc.py" | xargs sudo rm -rf || true
-
     - uses: actions/checkout@v2.3.2
 
     - uses: actions/cache@v2
@@ -494,7 +490,6 @@ jobs:
         key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
         restore-keys: |
           ${{ runner.os }}-pip-
-
     - uses: actions/cache@v2
       with:
         path: ~/.m2/repository
@@ -522,7 +517,6 @@ jobs:
         python3 -m pip install -r python/requirements-dev.txt
         python3 -m pip install pytest-cov
         pushd python && sudo -E python3 setup.py develop && popd
-
     - name: Run function test
       run: |
         export PYTHONPATH=${GITHUB_WORKSPACE}/python
@@ -533,7 +527,6 @@ jobs:
       if: always()
       run: |
         sudo docker rmi -f registry.cn-hongkong.aliyuncs.com/graphscope/graphscope:${{ github.sha }} || true
-
   build-gss:
     # Note that this step is running in a container, and github will start the container by `docker run balabala`,
     # so it requires the host is able to run docker without sudo, which may need to be configured manually when a new
@@ -545,7 +538,6 @@ jobs:
     container:
       image: registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-vineyard:v0.3.1
     steps:
-
     #- name: "Debug: Package dependancies for tmate"
       #run: |
         #sudo yum update -y
@@ -566,9 +558,7 @@ jobs:
         echo "source ~/.cargo/env" >> ~/.bashrc
         source ~/.bashrc
         rustup component add rustfmt
-
         sudo yum install -y clang-devel
-
     - uses: actions/checkout@v2.3.2
 
     - name: Build
@@ -577,21 +567,17 @@ jobs:
         sudo chown -R $(id -u):$(id -g) /opt/graphscope
         export PATH=${PATH}:/usr/local/go/bin
         source ~/.bashrc
-
         export LIBCLANG_PATH=$(dirname $(python3 -c "import clang; print(clang.__file__)"))/native
-
         cd interactive_engine
         for i in {1..3}; do mvn clean install -Pv2 -Drust.compile.mode=debug -DskipTests --quiet  && break || sleep 60; done
         cd ${GITHUB_WORKSPACE}
         mv interactive_engine/distribution/target/maxgraph.tar.gz ./
         mv interactive_engine/data_load_tools/target/data_load.tar.gz ./graphscope_store_data_load.tar.gz
         tar -zcf vineyard.tar.gz /opt/vineyard
-
     - name: gremlin-test
       run: |
         cd interactive_engine/groot-server
         mvn test -Pgremlin-test
-
     - uses: actions/upload-artifact@v2
       with:
         name: gss-${{ github.sha }}
@@ -625,7 +611,6 @@ jobs:
         find ./ -name "*.whl" | xargs sudo rm -rf || true
         find ./ -name "*_pb2.py" | xargs sudo rm -rf || true
         find ./ -name "*_pb2_grpc.py" | xargs sudo rm -rf || true
-
     - uses: actions/checkout@v2.3.2
 
     - uses: actions/download-artifact@v2
@@ -639,7 +624,6 @@ jobs:
         pushd artifacts
         tar -zxf ./gss-${{ github.sha }}/vineyard.tar.gz
         tar -zxf ./gss-${{ github.sha }}/maxgraph.tar.gz
-
         sudo docker pull registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-runtime:latest
         sudo docker build -t registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-store:${{ github.sha }} \
                           --network=host \
@@ -649,7 +633,6 @@ jobs:
         python3 -m pip install -r python/requirements-dev.txt
         python3 -m pip install pytest-cov
         pushd python && sudo -E python3 setup.py develop && popd
-
     - name: Helm test
       run: |
         cd charts/graphscope-store
@@ -658,7 +641,6 @@ jobs:
         helm install ci --set image.tag=${{ github.sha }},executor=${{ matrix.executor }} \
                                       ./graphscope-store
         helm test ci --timeout 5m0s
-
     - name: Python test
       run: |
         echo ${GITHUB_WORKSPACE}
@@ -666,18 +648,15 @@ jobs:
         export GREMLIN_PORT=$(kubectl get --namespace default -o jsonpath="{.spec.ports[1].nodePort}" services ci-graphscope-store-frontend)
         export NODE_IP=$(kubectl get nodes --namespace default -o jsonpath="{.items[0].status.addresses[0].address}")
         export JAVA_HOME=/usr/lib/jvm/default-java/
-
         cd /tmp
         wget -q https://mirror.cogentco.com/pub/apache/hadoop/common/hadoop-2.10.1/hadoop-2.10.1.tar.gz
         tar -zxf hadoop-2.10.1.tar.gz
-
         cd ${GITHUB_WORKSPACE}/.github/workflows/hadoop_scripts
         REPLACE_STR=${GITHUB_WORKSPACE}/artifacts/maxgraph
         sed s/MAXGRAPH_HOME/${REPLACE_STR//\//\\/}/ offline_load.sh.template > offline_load.sh
         chmod +x offline_load.sh
         export LOAD_DATA_SCRIPT=${GITHUB_WORKSPACE}/.github/workflows/hadoop_scripts/offline_load.sh
         sed s/GRAPH_ENDPOINT/$NODE_IP:$GRPC_PORT/ databuild.config.template > databuild.config
-
         ./prepare_hadoop.sh /tmp/hadoop-2.10.1
         export PATH=${PATH}:/tmp/hadoop-2.10.1/bin
         export GS_TEST_DIR=${GITHUB_WORKSPACE}/gstest
@@ -685,10 +664,8 @@ jobs:
         hadoop fs -mkdir /ldbc_sample || true
         hadoop fs -put ${GS_TEST_DIR}/ldbc_sample/person_0_0.csv /ldbc_sample/person_0_0.csv
         hadoop fs -put ${GS_TEST_DIR}/ldbc_sample/person_knows_person_0_0.csv /ldbc_sample/person_knows_person_0_0.csv
-
         cd ${GITHUB_WORKSPACE}/python
         python3 -m pytest -s -vvv tests/kubernetes/test_store_service.py -k test_demo_fresh
-
         # helm restart ci release and run demo with the PersistentVolume
         helm uninstall ci
         cd ${GITHUB_WORKSPACE}/charts
@@ -701,7 +678,6 @@ jobs:
         cd ${GITHUB_WORKSPACE}/python
         sleep 120
         python3 -m pytest -s -vvv tests/kubernetes/test_store_service.py -k test_demo_after_restart
-
     - name: Clean
       if: always()
       run: |
@@ -712,8 +688,6 @@ jobs:
         kubectl delete pvc -l app.kubernetes.io/instance=ci --wait=false || true
         kubectl delete pod ci-graphscope-store-frontend-test-rpc-service --wait=false || true
         sudo docker rmi -f registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-store:${{ github.sha }} || true
-
-
   release-image:
     runs-on: ubuntu-20.04
     if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
@@ -729,21 +703,18 @@ jobs:
         cp .github/workflows/*.Dockerfile artifacts/
         cp k8s/ready_probe.sh artifacts/
         pushd artifacts
-
         tar -xf ./gae-${{ github.sha }}/vineyard.tar
         tar -xf ./gae-${{ github.sha }}/gae.tar
         tar -xf ./gle-${{ github.sha }}/gle.tar
         tar -xf ./gie-${{ github.sha }}/gie.tar
         tar -xf ./manager-${{ github.sha }}/manager.tar
         tar -zxf ./gss-${{ github.sha }}/maxgraph.tar.gz
-
         sudo docker build -t registry.cn-hongkong.aliyuncs.com/graphscope/graphscope:${{ github.sha }} \
                           --network=host \
                           -f ./graphscope.Dockerfile .
         sudo docker build -t registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-store:${{ github.sha }} \
                           --network=host \
                           -f ./graphscope-store.Dockerfile .
-
     - name: Release images
       run: |
         echo ${{ secrets.ALIYUN_TOKEN }} | sudo docker login --username=grape_dev registry.cn-hongkong.aliyuncs.com --password-stdin
@@ -751,12 +722,10 @@ jobs:
                         registry.cn-hongkong.aliyuncs.com/graphscope/graphscope:latest
         sudo docker push registry.cn-hongkong.aliyuncs.com/graphscope/graphscope:${{ github.sha }}
         sudo docker push registry.cn-hongkong.aliyuncs.com/graphscope/graphscope:latest
-
         sudo docker tag registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-store:${{ github.sha }} \
                         registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-store:latest
         sudo docker push registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-store:${{ github.sha }}
         sudo docker push registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-store:latest
-
     - name: Clean
       if: always()
       run: |
