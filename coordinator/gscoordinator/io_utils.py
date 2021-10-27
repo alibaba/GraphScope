@@ -95,7 +95,7 @@ class StdStreamWrapper(object):
         # print('show_progress: ', len(line), ", ", line)
         if "PROGRESS--GRAPH" not in line:
             return line
-        self._show_progress(line)
+        self._show_progress()
         return None
 
 
