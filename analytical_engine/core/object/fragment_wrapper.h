@@ -583,7 +583,7 @@ class FragmentWrapper<vineyard::ArrowFragment<OID_T, VID_T>>
                     "Cannot convert to the directed ArrowFragment");
   }
 
-  bl::result<std::shared_ptr<IFragmentWrapper>> ToUnDirected(
+  bl::result<std::shared_ptr<IFragmentWrapper>> ToUndirected(
       const grape::CommSpec& comm_spec,
       const std::string& dst_graph_name) override {
     RETURN_GS_ERROR(vineyard::ErrorCode::kInvalidOperationError,
@@ -649,7 +649,7 @@ class FragmentWrapper<ArrowProjectedFragment<OID_T, VID_T, VDATA_T, EDATA_T>>
                     "Cannot convert to the directed DynamicProjectedFragment");
   }
 
-  bl::result<std::shared_ptr<IFragmentWrapper>> ToUnDirected(
+  bl::result<std::shared_ptr<IFragmentWrapper>> ToUndirected(
       const grape::CommSpec& comm_spec,
       const std::string& dst_graph_name) override {
     RETURN_GS_ERROR(
@@ -779,7 +779,7 @@ class FragmentWrapper<DynamicFragment> : public IFragmentWrapper {
     return std::dynamic_pointer_cast<IFragmentWrapper>(wrapper);
   }
 
-  bl::result<std::shared_ptr<IFragmentWrapper>> ToUnDirected(
+  bl::result<std::shared_ptr<IFragmentWrapper>> ToUndirected(
       const grape::CommSpec& comm_spec,
       const std::string& dst_graph_name) override {
     // copy vertex map
@@ -808,7 +808,7 @@ class FragmentWrapper<DynamicFragment> : public IFragmentWrapper {
     // copy fragment
     auto dst_frag = std::make_shared<fragment_t>(new_vm_ptr);
 
-    dst_frag->ToUnDirectedFrom(fragment_);
+    dst_frag->ToUndirectedFrom(fragment_);
 
     auto dst_graph_def = graph_def_;
     dst_graph_def.set_key(dst_graph_name);
@@ -882,7 +882,7 @@ class FragmentWrapper<DynamicProjectedFragment<VDATA_T, EDATA_T>>
                     "Cannot convert to the directed DynamicProjectedFragment");
   }
 
-  bl::result<std::shared_ptr<IFragmentWrapper>> ToUnDirected(
+  bl::result<std::shared_ptr<IFragmentWrapper>> ToUndirected(
       const grape::CommSpec& comm_spec,
       const std::string& dst_graph_name) override {
     RETURN_GS_ERROR(
@@ -950,7 +950,7 @@ class FragmentWrapper<
         "Cannot convert to the directed ArrowLabelProjectedFragment");
   }
 
-  bl::result<std::shared_ptr<IFragmentWrapper>> ToUnDirected(
+  bl::result<std::shared_ptr<IFragmentWrapper>> ToUndirected(
       const grape::CommSpec& comm_spec,
       const std::string& dst_graph_name) override {
     RETURN_GS_ERROR(

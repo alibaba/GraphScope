@@ -670,7 +670,7 @@ bl::result<rpc::graph::GraphDefPb> GrapeInstance::toUnDirected(
   std::string dst_graph_name = "graph_" + generateId();
 
   BOOST_LEAF_AUTO(dst_wrapper,
-                  src_wrapper->ToUnDirected(comm_spec_, dst_graph_name));
+                  src_wrapper->ToUndirected(comm_spec_, dst_graph_name));
   BOOST_LEAF_CHECK(object_manager_.PutObject(dst_wrapper));
   return dst_wrapper->graph_def();
 #else
