@@ -34,8 +34,10 @@ jobs:
         include:
           - os: ubuntu-20.04
             sccache-path: /home/runner/.cache/sccache
+            sccache-file: sccache-v0.2.15-x86_64-unknown-linux-musl
           - os: macos-latest
             sccache-path: /Users/runner/Library/Caches/Mozilla.sccache
+            sscache-file: sccache-v0.2.15-x86_64-apple-darwin
     env:
       RUST_BACKTRACE: full
       RUSTC_WRAPPER: sccache
@@ -43,17 +45,12 @@ jobs:
       # SCCACHE_RECACHE: 1 # Uncomment this to clear cache, then comment it back out
     steps:
     - uses: actions/checkout@v2
-    - name: Install sccache (ubuntu-20.04)
-      if: matrix.os == 'ubuntu-20.04'
+    - name: Install sccache
       run: |
-        curl -L https://github.91chifun.workers.dev/https://github.com//mozilla/sccache/releases/download/v0.2.15/sccache-v0.2.15-x86_64-unknown-linux-musl.tar.gz | tar xz
-        sudo mv sccache-v0.2.15-x86_64-unknown-linux-musl/sccache /usr/local/bin/
+        curl -L https://github.com/mozilla/sccache/releases/download/v0.2.15/${{ matrix.sccache-file }}.tar.gz | tar xz
+        sudo mv ${{ matrix.sccache-file }}/sccache /usr/local/bin/
         sudo chmod +x /usr/local/bin/sccache
-    - name: Install sccache (macos-latest)
-      if: matrix.os == 'macos-latest'
-      run: |
-        brew update
-        brew install sccache
+
     - uses: actions/cache@v2
       with:
         path: |
@@ -78,9 +75,6 @@ jobs:
       with:
         submodules: true
 
-    - name: Start sccache server
-      run: sccache --start-server
-
     - name: Install Dependencies of GraphScope
       run: |
         /bin/bash ${GITHUB_WORKSPACE}/scripts/deploy_local.sh install_deps --verbose
@@ -92,10 +86,8 @@ jobs:
 
     - name: Build GraphScope
       run: |
+        sccache --start-server
         /bin/bash ${GITHUB_WORKSPACE}/scripts/deploy_local.sh build_and_deploy --verbose --build_type debug
-
-    - name: Stop sccache
-      run: |
         sccache --show-stats
         sccache --stop-server || true
 
