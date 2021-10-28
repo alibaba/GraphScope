@@ -37,7 +37,7 @@ jobs:
             sccache-file: sccache-v0.2.15-x86_64-unknown-linux-musl
           - os: macos-latest
             sccache-path: /Users/runner/Library/Caches/Mozilla.sccache
-            sscache-file: sccache-v0.2.15-x86_64-apple-darwin
+            sccache-file: sccache-v0.2.15-x86_64-apple-darwin
     env:
       RUST_BACKTRACE: full
       RUSTC_WRAPPER: sccache

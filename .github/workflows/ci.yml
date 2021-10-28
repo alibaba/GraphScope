@@ -558,16 +558,15 @@ jobs:
       run: |
         sudo chown -R $(id -u):$(id -g) ${HOME}
         sudo chmod -R a+wrx ${HOME} ${GITHUB_WORKSPACE}
-        if ! command -v go &> /dev/null
-        then
+        if ! command -v go &> /dev/null; then
           wget --no-verbose https://golang.org/dl/go1.15.5.linux-amd64.tar.gz
           sudo tar -C /usr/local -xzf go1.15.5.linux-amd64.tar.gz
         fi
-        if ! command -v cargo &> /dev/null
+        if ! command -v cargo &> /dev/null; then
           curl -sf -L https://static.rust-lang.org/rustup.sh | sh -s -- -y --profile minimal --default-toolchain 1.54.0
           source ~/.cargo/env
         fi
-        if ! command -v sccache &> /dev/null
+        if ! command -v sccache &> /dev/null; then
           curl -L https://github.com//mozilla/sccache/releases/download/v0.2.15/sccache-v0.2.15-x86_64-unknown-linux-musl.tar.gz | tar xz
           sudo mv sccache-v0.2.15-x86_64-unknown-linux-musl/sccache /usr/local/bin/
           sudo chmod +x /usr/local/bin/sccache
