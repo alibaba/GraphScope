@@ -48,7 +48,6 @@ def project_to_simple(func):
                 "weight" in inspect.getfullargspec(func)[0]
             ):  # func has 'weight' argument
                 weight = kwargs.get("weight", None)
-                print("got weight", weight)
                 graph = graph._project_to_simple(e_prop=weight)
             elif "attribute" in inspect.getfullargspec(func)[0]:
                 attribute = kwargs.get("attribute", None)

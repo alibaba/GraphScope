@@ -75,7 +75,7 @@ class UnionVertexRange {
       return ret;
     }
 
-    const iterator operator+(size_t offset) const {
+    iterator operator+(size_t offset) const {
       grape::Vertex<T> new_vertex(curr_vertex_);
       size_t new_range_index = curr_range_index_;
       while (offset) {
