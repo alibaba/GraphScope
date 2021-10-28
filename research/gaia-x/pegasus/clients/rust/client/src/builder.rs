@@ -44,9 +44,17 @@ impl DerefMut for Plan {
 pub type BinaryResource = Vec<u8>;
 
 impl Plan {
-    pub fn exchange(&mut self, route: BinaryResource) -> &mut Self {
-        let exchange = pb::Exchange { resource: route };
-        let comm = pb::Communicate { ch_kind: Some(pb::communicate::ChKind::ToAnother(exchange)) };
+    pub fn repartition(&mut self, route: BinaryResource) -> &mut Self {
+        let repartition = pb::Repartition { resource: route };
+        let comm = pb::Communicate { ch_kind: Some(pb::communicate::ChKind::ToAnother(repartition)) };
+        let op = pb::OperatorDef { op_kind: Some(pb::operator_def::OpKind::Comm(comm)) };
+        self.plan.push(op);
+        self
+    }
+
+    pub fn repartition_by_key(&mut self) -> &mut Self {
+        let repartition = pb::RepartitionByKey {};
+        let comm = pb::Communicate { ch_kind: Some(pb::communicate::ChKind::ToKey(repartition)) };
         let op = pb::OperatorDef { op_kind: Some(pb::operator_def::OpKind::Comm(comm)) };
         self.plan.push(op);
         self
@@ -209,19 +217,12 @@ impl Plan {
         self
     }
 
-    pub fn merge<FL, FR>(&mut self, mut left_task: FL, mut right_task: FR) -> &mut Self
-    where
-        FL: FnMut(&mut Plan),
-        FR: FnMut(&mut Plan),
-    {
-        let mut left_plan = Plan::default();
-        left_task(&mut left_plan);
-        let mut right_plan = Plan::default();
-        right_task(&mut right_plan);
-        let merge = pb::Merge {
-            left_task: Some(pb::TaskPlan { plan: left_plan.take() }),
-            right_task: Some(pb::TaskPlan { plan: right_plan.take() }),
-        };
+    pub fn merge(&mut self, mut plans: Vec<Plan>) -> &mut Self {
+        let mut tasks = vec![];
+        for plan in plans.drain(..) {
+            tasks.push(pb::TaskPlan { plan: plan.take() });
+        }
+        let merge = pb::Merge { tasks };
         let op = pb::OperatorDef { op_kind: Some(pb::operator_def::OpKind::Merge(merge)) };
         self.plan.push(op);
         self
@@ -298,8 +299,13 @@ impl JobBuilder {
         self
     }
 
-    pub fn exchange(&mut self, route: BinaryResource) -> &mut Self {
-        self.plan.exchange(route);
+    pub fn repartition(&mut self, route: BinaryResource) -> &mut Self {
+        self.plan.repartition(route);
+        self
+    }
+
+    pub fn repartition_by_key(&mut self) -> &mut Self {
+        self.plan.repartition_by_key();
         self
     }
 
@@ -386,12 +392,8 @@ impl JobBuilder {
         self
     }
 
-    pub fn merge<FL, FR>(&mut self, left_task: FL, right_task: FR) -> &mut Self
-    where
-        FL: FnMut(&mut Plan),
-        FR: FnMut(&mut Plan),
-    {
-        self.plan.merge(left_task, right_task);
+    pub fn merge(&mut self, plans: Vec<Plan>) -> &mut Self {
+        self.plan.merge(plans);
         self
     }
 
