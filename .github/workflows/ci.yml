@@ -583,7 +583,8 @@ jobs:
                             libgrpc++-dev \
                             protobuf-compiler-grpc \
                             libarrow-dev=3.0.0-1 \
-                            libarrow-python-dev=3.0.0-1
+                            libarrow-python-dev=3.0.0-1 \
+                            clang
         sudo pip3 install libclang parsec
     - uses: actions/checkout@v2.3.2
     - name: Install libgrape-lite
