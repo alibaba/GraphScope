@@ -606,13 +606,12 @@ jobs:
                 -DBUILD_VINEYARD_MIGRATION=OFF \
                 -DBUILD_VINEYARD_TESTS=OFF
         sudo make install -j`nproc`
-
     - name: Build
       run: |
         sudo mkdir -p /opt/graphscope
         sudo chown -R $(id -u):$(id -g) /opt/graphscope
         export PATH=${PATH}:/usr/local/go/bin
-        source ~/.bashrc
+        source ~/.cargo/env
         export LIBCLANG_PATH=$(dirname $(python3 -c "import clang; print(clang.__file__)"))/native
         cd interactive_engine
         sccache --start-server
