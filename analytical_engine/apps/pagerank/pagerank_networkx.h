@@ -62,14 +62,16 @@ class PageRankNetworkX
     double p = 1.0 / graph_vnum;
 
     // assign initial ranks
-    ForEach(inner_vertices, [&ctx, &frag, p, &messages](int tid, vertex_t u) {
-      ctx.result[u] = p;
-      ctx.degree[u] = static_cast<double>(frag.GetOutgoingAdjList(u).Size());
-      if (ctx.degree[u] != 0.0) {
-        messages.SendMsgThroughOEdges<fragment_t, double>(
-            frag, u, ctx.result[u] / ctx.degree[u], tid);
-      }
-    });
+    ForEach(inner_vertices.begin(), inner_vertices.end(),
+            [&ctx, &frag, p, &messages](int tid, vertex_t u) {
+              ctx.result[u] = p;
+              ctx.degree[u] =
+                  static_cast<double>(frag.GetOutgoingAdjList(u).Size());
+              if (ctx.degree[u] != 0.0) {
+                messages.SendMsgThroughOEdges<fragment_t, double>(
+                    frag, u, ctx.result[u] / ctx.degree[u], tid);
+              }
+            });
 
     for (auto u : inner_vertices) {
       if (ctx.degree[u] == 0.0) {

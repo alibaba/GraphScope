@@ -48,12 +48,13 @@ class AvgClustering
 
     messages.InitChannels(thread_num());
     ctx.stage = 0;
-    ForEach(inner_vertices, [&messages, &frag, &ctx](int tid, vertex_t v) {
-      ctx.global_degree[v] =
-          frag.GetLocalOutDegree(v) + frag.GetLocalInDegree(v);
-      messages.SendMsgThroughEdges<fragment_t, int>(frag, v,
-                                                    ctx.global_degree[v], tid);
-    });
+    ForEach(inner_vertices.begin(), inner_vertices.end(),
+            [&messages, &frag, &ctx](int tid, vertex_t v) {
+              ctx.global_degree[v] =
+                  frag.GetLocalOutDegree(v) + frag.GetLocalInDegree(v);
+              messages.SendMsgThroughEdges<fragment_t, int>(
+                  frag, v, ctx.global_degree[v], tid);
+            });
     messages.ForceContinue();
   }
 

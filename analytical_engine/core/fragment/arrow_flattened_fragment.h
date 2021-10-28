@@ -43,9 +43,6 @@ class UnionVertexRange {
       : vertex_ranges_(std::move(vertex_ranges)) {}
 
   class iterator {
-    using pointer_type = grape::Vertex<T>*;
-    using reference_type = grape::Vertex<T>&;
-
    private:
     std::reference_wrapper<const std::vector<grape::VertexRange<T>>>
         vertex_ranges_;
@@ -60,9 +57,7 @@ class UnionVertexRange {
           curr_vertex_(c),
           curr_range_index_(range_index) {}
 
-    reference_type operator*() noexcept { return curr_vertex_; }
-
-    pointer_type operator->() noexcept { return &curr_vertex_; }
+    const grape::Vertex<T>& operator*() const { return curr_vertex_; }
 
     iterator& operator++() {
       if (++curr_vertex_ == vertex_ranges_.get()[curr_range_index_].end()) {
@@ -80,12 +75,35 @@ class UnionVertexRange {
       return ret;
     }
 
-    bool operator==(const iterator& rhs) noexcept {
+    const iterator operator+(size_t offset) const {
+      grape::Vertex<T> new_vertex(curr_vertex_);
+      size_t new_range_index = curr_range_index_;
+      while (offset) {
+        if (new_vertex + offset < vertex_ranges_.get()[new_range_index].end()) {
+          new_vertex.SetValue(new_vertex.GetValue() + offset);
+          break;
+        } else if (new_range_index == vertex_ranges_.get().size() - 1) {
+          new_vertex = vertex_ranges_.get()[new_range_index].end();
+          break;
+        } else {
+          offset -= (vertex_ranges_.get()[new_range_index].end().GetValue() -
+                     new_vertex.GetValue());
+          new_vertex = vertex_ranges_.get()[++new_range_index].begin();
+        }
+      }
+      return iterator(vertex_ranges_.get(), new_vertex, new_range_index);
+    }
+
+    inline bool operator==(const iterator& rhs) const {
       return curr_vertex_ == rhs.curr_vertex_;
     }
 
-    bool operator!=(const iterator& rhs) noexcept {
+    inline bool operator!=(const iterator& rhs) const {
       return curr_vertex_ != rhs.curr_vertex_;
+    }
+
+    inline bool operator<(const iterator& rhs) const {
+      return curr_vertex_ < rhs.curr_vertex_;
     }
   };
 
