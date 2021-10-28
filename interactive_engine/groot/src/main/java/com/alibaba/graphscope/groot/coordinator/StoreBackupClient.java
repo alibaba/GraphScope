@@ -34,6 +34,11 @@ public class StoreBackupClient extends RpcClient {
         this.stub = StoreBackupGrpc.newStub(channel);
     }
 
+    public StoreBackupClient(StoreBackupGrpc.StoreBackupStub stub) {
+        super((ManagedChannel) stub.getChannel());
+        this.stub = stub;
+    }
+
     public void createStoreBackup(int globalBackupId, CompletionCallback<StoreBackupId> callback) {
         CreateStoreBackupRequest req = CreateStoreBackupRequest.newBuilder()
                 .setGlobalBackupId(globalBackupId)

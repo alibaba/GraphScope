@@ -106,8 +106,9 @@ public class Coordinator extends NodeBase {
         SchemaService schemaService = new SchemaService(this.schemaManager);
         RoleClients<StoreBackupClient> storeBackupClients =
                 new RoleClients<>(this.channelManager, RoleType.STORE, StoreBackupClient::new);
+        StoreBackupTaskSender storeBackupTaskSender = new StoreBackupTaskSender(storeBackupClients);
         this.backupManager =
-                new BackupManager(configs, this.metaService, metaStore, this.snapshotManager, storeBackupClients);
+                new BackupManager(configs, this.metaService, metaStore, this.snapshotManager, storeBackupTaskSender);
         BackupService backupService = new BackupService(this.backupManager);
         this.idAllocator = new IdAllocator(metaStore);
         IdAllocateService idAllocateService = new IdAllocateService(this.idAllocator);

@@ -19,6 +19,7 @@ import com.alibaba.maxgraph.proto.groot.StoreBackupIdPb;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 
 public class StoreBackupId {
 
@@ -58,5 +59,20 @@ public class StoreBackupId {
                 .setGlobalBackupId(globalBackupId)
                 .putAllPartitionToBackupId(partitionToBackupId)
                 .build();
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+        StoreBackupId storeBackupId = (StoreBackupId) o;
+        if (!Objects.equals(partitionToBackupId, storeBackupId.partitionToBackupId)) {
+            return false;
+        }
+        return (globalBackupId == storeBackupId.globalBackupId);
     }
 }

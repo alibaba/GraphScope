@@ -53,7 +53,7 @@ public class BackupManager {
 
     private int storeNodeCount;
     private int graphPartitionCount;
-    private RoleClients<StoreBackupClient> storeBackupClients;
+    private StoreBackupTaskSender storeBackupTaskSender;
 
     private int backupCreationBufferMaxSize;
     private BlockingQueue<Integer> backupCreationBuffer;
@@ -72,7 +72,7 @@ public class BackupManager {
     private Lock globalBackupIdToInfoLock = new ReentrantLock();
 
     public BackupManager(Configs configs, MetaService metaService, MetaStore metaStore, SnapshotManager snapshotManager,
-                         RoleClients<StoreBackupClient> storeBackupClients) {
+                         StoreBackupTaskSender storeBackupTaskSender) {
         this.metaService = metaService;
         this.metaStore = metaStore;
         this.snapshotManager = snapshotManager;
@@ -80,7 +80,7 @@ public class BackupManager {
 
         this.storeNodeCount = CommonConfig.STORE_NODE_COUNT.get(configs);
         this.graphPartitionCount = this.metaService.getPartitionCount();
-        this.storeBackupClients = storeBackupClients;
+        this.storeBackupTaskSender = storeBackupTaskSender;
 
         this.backupCreationBufferMaxSize = CoordinatorConfig.BACKUP_CREATION_BUFFER_MAX_COUNT.get(configs);
         this.backupGcIntervalHours = CoordinatorConfig.BACKUP_GC_INTERVAL_HOURS.get(configs);
@@ -188,7 +188,7 @@ public class BackupManager {
         AtomicBoolean finished = new AtomicBoolean(false);
         CompletableFuture<Void> future = new CompletableFuture<>();
         for (int sId = 0; sId < storeNodeCount; sId++) {
-            storeBackupClients.getClient(sId).restoreFromStoreBackup(storeBackupIds.get(sId), restoreRootPath,
+            storeBackupTaskSender.restoreFromStoreBackup(sId, storeBackupIds.get(sId), restoreRootPath,
                     new CompletionCallback<Void>() {
                         @Override
                         public void onCompleted(Void res) {
@@ -220,7 +220,7 @@ public class BackupManager {
         AtomicBoolean finished = new AtomicBoolean(false);
         CompletableFuture<Void> future = new CompletableFuture<>();
         for (int sId = 0; sId < storeNodeCount; sId++) {
-            storeBackupClients.getClient(sId).verifyStoreBackup(storeBackupIds.get(sId), new CompletionCallback<Void>(){
+            storeBackupTaskSender.verifyStoreBackup(sId, storeBackupIds.get(sId), new CompletionCallback<Void>() {
                 @Override
                 public void onCompleted(Void res) {
                     if (!finished.get() && counter.decrementAndGet() == 0) {
@@ -291,7 +291,7 @@ public class BackupManager {
         AtomicBoolean finished = new AtomicBoolean(false);
         CompletableFuture<Void> future = new CompletableFuture<>();
         for (int sId = 0; sId < storeNodeCount; sId++) {
-            storeBackupClients.getClient(sId).createStoreBackup(newGlobalBackupId, new CompletionCallback<StoreBackupId>() {
+            storeBackupTaskSender.createStoreBackup(sId, newGlobalBackupId, new CompletionCallback<StoreBackupId>() {
                 @Override
                 public void onCompleted(StoreBackupId storeBackupId) {
                     if (finished.get()) {
@@ -341,7 +341,7 @@ public class BackupManager {
         AtomicBoolean finished = new AtomicBoolean(false);
         CompletableFuture<Void> future = new CompletableFuture<>();
         for (int sId = 0; sId < storeNodeCount; sId++) {
-            storeBackupClients.getClient(sId).clearUnavailableBackups(readyPartitionBackupIdsByStore.get(sId),
+            storeBackupTaskSender.clearUnavailableBackups(sId, readyPartitionBackupIdsByStore.get(sId),
                     new CompletionCallback<Void>() {
                         @Override
                         public void onCompleted(Void res) {

@@ -29,6 +29,11 @@ public class BackupClient extends RpcClient {
         this.stub = BackupGrpc.newBlockingStub(channel);
     }
 
+    public BackupClient(BackupGrpc.BackupBlockingStub stub) {
+        super((ManagedChannel) stub.getChannel());
+        this.stub = stub;
+    }
+
     public int createNewBackup() {
         CreateNewBackupRequest request = CreateNewBackupRequest.newBuilder().build();
         CreateNewBackupResponse response =  this.stub.createNewBackup(request);

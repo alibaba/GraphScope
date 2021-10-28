@@ -19,6 +19,7 @@ import com.alibaba.maxgraph.proto.groot.BackupInfoPb;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 public class BackupInfo {
 
@@ -74,5 +75,25 @@ public class BackupInfo {
                 .putAllPartitionToBackupId(partitionToBackupId)
                 .addAllWalOffsets(walOffsets)
                 .build();
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+        BackupInfo backupInfo = (BackupInfo) o;
+        if (!Objects.equals(partitionToBackupId, backupInfo.partitionToBackupId)) {
+            return false;
+        }
+        if (!Objects.equals(walOffsets, backupInfo.walOffsets)) {
+            return false;
+        }
+        return (globalBackupId == backupInfo.globalBackupId) &&
+                (snapshotId == backupInfo.snapshotId) &&
+                (ddlSnapshotId == backupInfo.ddlSnapshotId);
     }
 }

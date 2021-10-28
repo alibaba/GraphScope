@@ -79,8 +79,7 @@ public class JnaGraphBackupEngine implements GraphPartitionBackup {
         }
     }
 
-    @Override
-    public void PartitionBackupGc(List<Integer> readyPartitionBackupIds) throws IOException {
+    public void partitionBackupGc(List<Integer> readyPartitionBackupIds) throws IOException {
         if (readyPartitionBackupIds.isEmpty()) {
             return;
         }

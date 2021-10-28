@@ -25,7 +25,7 @@ public interface GraphPartitionBackup extends Closeable {
 
     void verifyPartitionBackup(int partitionBackupId) throws IOException;
 
-    void PartitionBackupGc(List<Integer> readyPartitionBackupIds) throws IOException;
+    void partitionBackupGc(List<Integer> readyPartitionBackupIds) throws IOException;
 
     int getId();
 }

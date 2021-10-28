@@ -170,7 +170,7 @@ public class BackupAgent {
                 }
                 try {
                     int partitionId = entry.getKey();
-                    entry.getValue().PartitionBackupGc(readyPartitionBackupIds.get(partitionId));
+                    entry.getValue().partitionBackupGc(readyPartitionBackupIds.get(partitionId));
                     if (counter.decrementAndGet() == 0) {
                         callback.onCompleted(null);
                     }

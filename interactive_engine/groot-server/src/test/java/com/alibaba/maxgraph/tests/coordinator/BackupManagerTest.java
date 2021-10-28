@@ -1,0 +1,212 @@
+/**
+ * Copyright 2020 Alibaba Group Holding Limited.
+ *
+ * <p>Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of the License at
+ *
+ * <p>http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * <p>Unless required by applicable law or agreed to in writing, software distributed under the
+ * License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
+ * express or implied. See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+package com.alibaba.maxgraph.tests.coordinator;
+
+import com.alibaba.graphscope.groot.CompletionCallback;
+import com.alibaba.graphscope.groot.coordinator.*;
+import com.alibaba.graphscope.groot.meta.MetaService;
+import com.alibaba.graphscope.groot.meta.MetaStore;
+import com.alibaba.graphscope.groot.store.StoreBackupId;
+import com.alibaba.maxgraph.common.config.CommonConfig;
+import com.alibaba.maxgraph.common.config.Configs;
+import com.alibaba.maxgraph.common.config.CoordinatorConfig;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import org.junit.jupiter.api.Test;
+
+import java.io.IOException;
+import java.util.*;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
+
+import static com.alibaba.graphscope.groot.coordinator.BackupManager.*;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.*;
+
+public class BackupManagerTest {
+
+    @Test
+    void testBackupManager() throws IOException, InterruptedException {
+        // init config
+        Configs configs = Configs.newBuilder()
+                .put(CommonConfig.STORE_NODE_COUNT.getKey(), "2")
+                .put(CoordinatorConfig.BACKUP_CREATION_BUFFER_MAX_COUNT.getKey(), "4")
+                .put(CoordinatorConfig.BACKUP_GC_INTERVAL_HOURS.getKey(), "24")
+                .put(CoordinatorConfig.BACKUP_AUTO_SUBMIT.getKey(), "false")
+                .put(CoordinatorConfig.BACKUP_AUTO_SUBMIT_INTERVAL_HOURS.getKey(), "24")
+                .build();
+
+        // init data
+        SnapshotInfo snapshotInfo = new SnapshotInfo(10L, 10L);
+        List<Long> queueOffsets = new ArrayList<>();
+        Map<Integer, Integer> partitionToBackupId1 = new HashMap<>();
+        partitionToBackupId1.put(0, 1);
+        partitionToBackupId1.put(1, 1);
+        Map<Integer, Integer> partitionToBackupId2 = new HashMap<>();
+        partitionToBackupId1.put(0, 2);
+        partitionToBackupId1.put(1, 2);
+        BackupInfo backupInfo1 = new BackupInfo(1, 10L, 10L, partitionToBackupId1, queueOffsets);
+        BackupInfo backupInfo2 = new BackupInfo(2, 10L, 10L, partitionToBackupId2, queueOffsets);
+
+        // mock MetaStore behaviours
+        ObjectMapper objectMapper = new ObjectMapper();
+        MetaStore mockMetaStore = mock(MetaStore.class);
+        when(mockMetaStore.exists(anyString())).thenReturn(true);
+        when(mockMetaStore.read(GLOBAL_BACKUP_ID_PATH)).thenReturn(
+                objectMapper.writeValueAsBytes(0));
+        when(mockMetaStore.read(BACKUP_INFO_PATH)).thenReturn(
+                objectMapper.writeValueAsBytes(new ArrayList<BackupInfo>()));
+
+        // mock MetaService behaviours
+        MetaService mockMetaService = mock(MetaService.class);
+        when(mockMetaService.getPartitionCount()).thenReturn(2);
+        when(mockMetaService.getStoreIdByPartition(0)).thenReturn(0);
+        when(mockMetaService.getStoreIdByPartition(1)).thenReturn(1);
+
+        // mock SnapshotManager behaviours
+        SnapshotManager mockSnapshotManager = mock(SnapshotManager.class);
+        when(mockSnapshotManager.getQuerySnapshotInfo()).thenReturn(snapshotInfo);
+        when(mockSnapshotManager.getQueueOffsets()).thenReturn(queueOffsets);
+
+        // mock StoreBackupTaskSender behaviours
+        StoreBackupTaskSender mockStoreBackupTaskSender = mock(StoreBackupTaskSender.class);
+        doAnswer(
+                        invocation -> {
+                            int partitionOrStoreId = invocation.getArgument(0);
+                            int globalBackupId = invocation.getArgument(1);
+                            CompletionCallback<StoreBackupId> callback = invocation.getArgument(2);
+                            StoreBackupId storeBackupId = new StoreBackupId(globalBackupId);
+                            storeBackupId.addPartitionBackupId(partitionOrStoreId, globalBackupId);
+                            callback.onCompleted(storeBackupId);
+                            return null;
+                        })
+                .when(mockStoreBackupTaskSender)
+                .createStoreBackup(anyInt(), anyInt(), any());
+        doAnswer(
+                        invocation -> {
+                            CompletionCallback<Void> callback = invocation.getArgument(3);
+                            callback.onCompleted(null);
+                            return null;
+                        })
+                .when(mockStoreBackupTaskSender)
+                .restoreFromStoreBackup(anyInt(), any(), anyString(), any());
+        doAnswer(
+                        invocation -> {
+                            CompletionCallback<Void> callback = invocation.getArgument(2);
+                            callback.onCompleted(null);
+                            return null;
+                        })
+                .when(mockStoreBackupTaskSender)
+                .verifyStoreBackup(anyInt(), any(), any());
+
+        BackupManager backupManager = new BackupManager(
+                configs, mockMetaService, mockMetaStore, mockSnapshotManager, mockStoreBackupTaskSender);
+        backupManager.start();
+
+        // create the first backup
+        CountDownLatch updateBackupIdLatch1 = new CountDownLatch(1);
+        CountDownLatch updateBackupInfoByCreation1Latch = new CountDownLatch(1);
+        doAnswer(
+                        invocation -> {
+                            updateBackupIdLatch1.countDown();
+                            return null;
+                        })
+                .when(mockMetaStore)
+                .write(GLOBAL_BACKUP_ID_PATH, objectMapper.writeValueAsBytes(1));
+        doAnswer(
+                        invocation -> {
+                            updateBackupInfoByCreation1Latch.countDown();
+                            return null;
+                        })
+                .when(mockMetaStore)
+                .write(BACKUP_INFO_PATH, objectMapper.writeValueAsBytes(Collections.singletonList(backupInfo1)));
+        int backupId1 = backupManager.createNewBackup();
+        assertEquals(backupId1, 1);
+        assertTrue(updateBackupIdLatch1.await(5L, TimeUnit.SECONDS));
+        assertTrue(updateBackupInfoByCreation1Latch.await(5L, TimeUnit.SECONDS));
+
+        // create the second backup
+        CountDownLatch updateBackupIdLatch2 = new CountDownLatch(1);
+        CountDownLatch updateBackupInfoByCreation2Latch = new CountDownLatch(1);
+        doAnswer(
+                        invocation -> {
+                            updateBackupIdLatch2.countDown();
+                            return null;
+                        })
+                .when(mockMetaStore)
+                .write(GLOBAL_BACKUP_ID_PATH, objectMapper.writeValueAsBytes(2));
+        doAnswer(
+                        invocation -> {
+                            updateBackupInfoByCreation2Latch.countDown();
+                            return null;
+                        })
+                .when(mockMetaStore)
+                .write(BACKUP_INFO_PATH, objectMapper.writeValueAsBytes(Arrays.asList(backupInfo1, backupInfo2)));
+        int backupId2 = backupManager.createNewBackup();
+        assertEquals(backupId2, 2);
+        assertTrue(updateBackupIdLatch2.await(5L, TimeUnit.SECONDS));
+        assertTrue(updateBackupInfoByCreation2Latch.await(5L, TimeUnit.SECONDS));
+
+        // get backup info list and check
+        assertEquals(backupManager.getBackupInfoList().size(), 2);
+
+        // verify backups
+        try {
+            backupManager.verifyBackup(1);
+            backupManager.verifyBackup(2);
+        } catch (Exception e) {
+            fail("should not have thrown any exception during backup verification");
+        }
+
+        // restore from the second backup
+        try {
+            backupManager.restoreFromLatest("/tmp/restore");
+        } catch (Exception e) {
+            fail("should not have thrown any exception during backup restoring");
+        }
+
+        // purge 1 old backup
+        CountDownLatch updateBackupInfoByPurgingLatch = new CountDownLatch(1);
+        doAnswer(
+                        invocation -> {
+                            updateBackupInfoByPurgingLatch.countDown();
+                            return null;
+                        })
+                .when(mockMetaStore)
+                .write(BACKUP_INFO_PATH, objectMapper.writeValueAsBytes(Collections.singletonList(backupInfo2)));
+        backupManager.purgeOldBackups(1);
+        assertTrue(updateBackupInfoByPurgingLatch.await(5L, TimeUnit.SECONDS));
+
+        // get backup info list and check
+        assertEquals(backupManager.getBackupInfoList().size(), 1);
+        assertEquals(backupManager.getBackupInfoList().get(0).getGlobalBackupId(), 2);
+
+        // delete the remaining backup '2'
+        CountDownLatch updateBackupInfoByDeletionLatch = new CountDownLatch(1);
+        doAnswer(
+                        invocation -> {
+                            updateBackupInfoByDeletionLatch.countDown();
+                            return null;
+                        })
+                .when(mockMetaStore)
+                .write(BACKUP_INFO_PATH, objectMapper.writeValueAsBytes(new ArrayList<BackupInfo>()));
+        backupManager.deleteBackup(2);
+        assertTrue(updateBackupInfoByDeletionLatch.await(5L, TimeUnit.SECONDS));
+
+        // get backup info list and check
+        assertTrue(backupManager.getBackupInfoList().isEmpty());
+
+        backupManager.stop();
+    }
+}
