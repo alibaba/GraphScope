@@ -52,14 +52,6 @@ impl Plan {
         self
     }
 
-    pub fn repartition_by_key(&mut self) -> &mut Self {
-        let repartition = pb::RepartitionByKey {};
-        let comm = pb::Communicate { ch_kind: Some(pb::communicate::ChKind::ToKey(repartition)) };
-        let op = pb::OperatorDef { op_kind: Some(pb::operator_def::OpKind::Comm(comm)) };
-        self.plan.push(op);
-        self
-    }
-
     pub fn broadcast(&mut self) -> &mut Self {
         let broadcast = pb::Broadcast {};
         let comm = pb::Communicate { ch_kind: Some(pb::communicate::ChKind::ToOthers(broadcast)) };
@@ -125,8 +117,8 @@ impl Plan {
         self
     }
 
-    pub fn dedup(&mut self) -> &mut Self {
-        let dedup = pb::Dedup {};
+    pub fn dedup(&mut self, res: BinaryResource) -> &mut Self {
+        let dedup = pb::Dedup { resource: res };
         let op = pb::OperatorDef { op_kind: Some(pb::operator_def::OpKind::Dedup(dedup)) };
         self.plan.push(op);
         self
@@ -230,6 +222,7 @@ impl Plan {
 
     pub fn join<FL, FR>(
         &mut self, join_kind: pb::join::JoinKind, mut left_task: FL, mut right_task: FR,
+        res: BinaryResource,
     ) -> &mut Self
     where
         FL: FnMut(&mut Plan),
@@ -241,6 +234,7 @@ impl Plan {
         right_task(&mut right_plan);
         let join = pb::Join {
             kind: join_kind as i32,
+            resource: res,
             left_task: Some(pb::TaskPlan { plan: left_plan.take() }),
             right_task: Some(pb::TaskPlan { plan: right_plan.take() }),
         };
@@ -304,11 +298,6 @@ impl JobBuilder {
         self
     }
 
-    pub fn repartition_by_key(&mut self) -> &mut Self {
-        self.plan.repartition_by_key();
-        self
-    }
-
     pub fn broadcast(&mut self) -> &mut Self {
         self.plan.broadcast();
         self
@@ -339,8 +328,8 @@ impl JobBuilder {
         self
     }
 
-    pub fn dedup(&mut self) -> &mut Self {
-        self.plan.dedup();
+    pub fn dedup(&mut self, res: BinaryResource) -> &mut Self {
+        self.plan.dedup(res);
         self
     }
 
@@ -398,13 +387,14 @@ impl JobBuilder {
     }
 
     pub fn join<FL, FR>(
-        &mut self, join_kind: pb::join::JoinKind, left_task: FL, right_task: FR,
+        &mut self, join_kind: pb::join::JoinKind, left_task: FL, right_task: FR, res: BinaryResource,
     ) -> &mut Self
     where
         FL: FnMut(&mut Plan),
         FR: FnMut(&mut Plan),
     {
-        self.plan.join(join_kind, left_task, right_task);
+        self.plan
+            .join(join_kind, left_task, right_task, res);
         self
     }
 
@@ -486,11 +476,13 @@ mod test {
         builder
             .add_source(vec![0u8; 32])
             .map(vec![1u8; 32])
-            .exchange(vec![2u8; 32])
+            .repartition(vec![2u8; 32])
             .map(vec![3u8; 32])
             .limit(1)
             .iterate(3, |start| {
-                start.exchange(vec![4u8; 32]).map(vec![5u8; 32]);
+                start
+                    .repartition(vec![4u8; 32])
+                    .map(vec![5u8; 32]);
             })
             .sink(vec![6u8; 32]);
         let job_req = builder.build().unwrap();
@@ -515,6 +507,7 @@ mod test {
                         |src1_2| {
                             src1_2.map(vec![]);
                         },
+                        vec![],
                     );
                 },
                 |src2| {
@@ -526,8 +519,10 @@ mod test {
                         |src2_2| {
                             src2_2.map(vec![]);
                         },
+                        vec![],
                     );
                 },
+                vec![],
             )
             .sink(vec![6u8; 32]);
         let job_req = builder.build().unwrap();
