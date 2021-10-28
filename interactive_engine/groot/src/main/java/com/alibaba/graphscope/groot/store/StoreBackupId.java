@@ -70,7 +70,7 @@ public class StoreBackupId {
             return false;
         }
         StoreBackupId storeBackupId = (StoreBackupId) o;
-        if (!Objects.equals(partitionToBackupId, storeBackupId.partitionToBackupId)) {
+        if (!partitionToBackupId.equals(storeBackupId.partitionToBackupId)) {
             return false;
         }
         return (globalBackupId == storeBackupId.globalBackupId);

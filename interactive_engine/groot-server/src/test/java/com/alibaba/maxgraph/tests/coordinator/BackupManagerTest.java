@@ -21,6 +21,7 @@ import com.alibaba.graphscope.groot.store.StoreBackupId;
 import com.alibaba.maxgraph.common.config.CommonConfig;
 import com.alibaba.maxgraph.common.config.Configs;
 import com.alibaba.maxgraph.common.config.CoordinatorConfig;
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
 
@@ -54,8 +55,8 @@ public class BackupManagerTest {
         partitionToBackupId1.put(0, 1);
         partitionToBackupId1.put(1, 1);
         Map<Integer, Integer> partitionToBackupId2 = new HashMap<>();
-        partitionToBackupId1.put(0, 2);
-        partitionToBackupId1.put(1, 2);
+        partitionToBackupId2.put(0, 2);
+        partitionToBackupId2.put(1, 2);
         BackupInfo backupInfo1 = new BackupInfo(1, 10L, 10L, partitionToBackupId1, queueOffsets);
         BackupInfo backupInfo2 = new BackupInfo(2, 10L, 10L, partitionToBackupId2, queueOffsets);
 
@@ -126,6 +127,11 @@ public class BackupManagerTest {
                 .write(GLOBAL_BACKUP_ID_PATH, objectMapper.writeValueAsBytes(1));
         doAnswer(
                         invocation -> {
+                            byte[] backupInfoBytes = invocation.getArgument(1);
+                            List<BackupInfo> backupInfoList = objectMapper.readValue(backupInfoBytes,
+                                    new TypeReference<List<BackupInfo>>() {});
+                            assertEquals(backupInfoList.size(), 1);
+                            assertEquals(backupInfoList.get(0), backupInfo1);
                             updateBackupInfoByCreation1Latch.countDown();
                             return null;
                         })
@@ -148,6 +154,18 @@ public class BackupManagerTest {
                 .write(GLOBAL_BACKUP_ID_PATH, objectMapper.writeValueAsBytes(2));
         doAnswer(
                         invocation -> {
+                            byte[] backupInfoBytes = invocation.getArgument(1);
+                            List<BackupInfo> backupInfoList = objectMapper.readValue(backupInfoBytes,
+                                    new TypeReference<List<BackupInfo>>() {});
+                            backupInfoList.sort(new Comparator<BackupInfo>() {
+                                @Override
+                                public int compare(BackupInfo o1, BackupInfo o2) {
+                                    return o1.getGlobalBackupId() - o2.getGlobalBackupId();
+                                }
+                            });
+                            assertEquals(backupInfoList.size(), 2);
+                            assertEquals(backupInfoList.get(0), backupInfo1);
+                            assertEquals(backupInfoList.get(1), backupInfo2);
                             updateBackupInfoByCreation2Latch.countDown();
                             return null;
                         })
@@ -180,6 +198,11 @@ public class BackupManagerTest {
         CountDownLatch updateBackupInfoByPurgingLatch = new CountDownLatch(1);
         doAnswer(
                         invocation -> {
+                            byte[] backupInfoBytes = invocation.getArgument(1);
+                            List<BackupInfo> backupInfoList = objectMapper.readValue(backupInfoBytes,
+                                    new TypeReference<List<BackupInfo>>() {});
+                            assertEquals(backupInfoList.size(), 1);
+                            assertEquals(backupInfoList.get(0), backupInfo2);
                             updateBackupInfoByPurgingLatch.countDown();
                             return null;
                         })
@@ -190,12 +213,15 @@ public class BackupManagerTest {
 
         // get backup info list and check
         assertEquals(backupManager.getBackupInfoList().size(), 1);
-        assertEquals(backupManager.getBackupInfoList().get(0).getGlobalBackupId(), 2);
 
         // delete the remaining backup '2'
         CountDownLatch updateBackupInfoByDeletionLatch = new CountDownLatch(1);
         doAnswer(
                         invocation -> {
+                            byte[] backupInfoBytes = invocation.getArgument(1);
+                            List<BackupInfo> backupInfoList = objectMapper.readValue(backupInfoBytes,
+                                    new TypeReference<List<BackupInfo>>() {});
+                            assertTrue(backupInfoList.isEmpty());
                             updateBackupInfoByDeletionLatch.countDown();
                             return null;
                         })

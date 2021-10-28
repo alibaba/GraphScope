@@ -69,27 +69,27 @@ public class BackupAgentTest {
         when(mockJnaBackupEngine1.createNewPartitionBackup()).thenReturn(6);
         CompletionCallback<StoreBackupId> createCallback = mock(CompletionCallback.class);
         backupAgent.createNewStoreBackup(5, createCallback);
-        verify(createCallback).onCompleted(storeBackupId);
+        verify(createCallback, timeout(5000L)).onCompleted(storeBackupId);
 
         CompletionCallback<Void> verifyCallback = mock(CompletionCallback.class);
         backupAgent.verifyStoreBackup(storeBackupId, verifyCallback);
-        verify(mockJnaBackupEngine0).verifyPartitionBackup(7);
-        verify(mockJnaBackupEngine1).verifyPartitionBackup(6);
-        verify(verifyCallback).onCompleted(null);
+        verify(mockJnaBackupEngine0, timeout(5000L)).verifyPartitionBackup(7);
+        verify(mockJnaBackupEngine1, timeout(5000L)).verifyPartitionBackup(6);
+        verify(verifyCallback, timeout(5000L)).onCompleted(null);
 
         CompletionCallback<Void> clearCallback = mock(CompletionCallback.class);
         backupAgent.clearUnavailableStoreBackups(readyPartitionBackupIds, clearCallback);
-        verify(mockJnaBackupEngine0).partitionBackupGc(Arrays.asList(2, 4, 6));
-        verify(mockJnaBackupEngine1).partitionBackupGc(Arrays.asList(3, 5, 7));
-        verify(clearCallback).onCompleted(null);
+        verify(mockJnaBackupEngine0, timeout(5000L)).partitionBackupGc(Arrays.asList(2, 4, 6));
+        verify(mockJnaBackupEngine1, timeout(5000L)).partitionBackupGc(Arrays.asList(3, 5, 7));
+        verify(clearCallback, timeout(5000L)).onCompleted(null);
 
         CompletionCallback<Void> restoreCallback = mock(CompletionCallback.class);
         backupAgent.restoreFromStoreBackup(storeBackupId, "restore_root", restoreCallback);
-        verify(mockJnaBackupEngine0).restoreFromPartitionBackup(
+        verify(mockJnaBackupEngine0, timeout(5000L)).restoreFromPartitionBackup(
                 7, Paths.get("restore_root", "0").toString());
-        verify(mockJnaBackupEngine1).restoreFromPartitionBackup(
+        verify(mockJnaBackupEngine1, timeout(5000L)).restoreFromPartitionBackup(
                 6, Paths.get("restore_root", "1").toString());
-        verify(restoreCallback).onCompleted(null);
+        verify(restoreCallback, timeout(5000L)).onCompleted(null);
 
         backupAgent.stop();
     }

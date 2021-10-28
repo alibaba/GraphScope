@@ -16,10 +16,11 @@
 package com.alibaba.graphscope.groot.coordinator;
 
 import com.alibaba.maxgraph.proto.groot.BackupInfoPb;
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 
 public class BackupInfo {
 
@@ -29,8 +30,13 @@ public class BackupInfo {
     private Map<Integer, Integer> partitionToBackupId;
     private List<Long> walOffsets;
 
-    public BackupInfo(int globalBackupId, long snapshotId, long ddlSnapshotId,
-                      Map<Integer, Integer> partitionToBackupId, List<Long> walOffsets) {
+    @JsonCreator
+    public BackupInfo(
+            @JsonProperty("globalBackupId") int globalBackupId,
+            @JsonProperty("snapshotId") long snapshotId,
+            @JsonProperty("ddlSnapshotId") long ddlSnapshotId,
+            @JsonProperty("partitionToBackupId") Map<Integer, Integer> partitionToBackupId,
+            @JsonProperty("walOffsets") List<Long> walOffsets) {
         this.globalBackupId = globalBackupId;
         this.snapshotId = snapshotId;
         this.ddlSnapshotId = ddlSnapshotId;
@@ -86,10 +92,10 @@ public class BackupInfo {
             return false;
         }
         BackupInfo backupInfo = (BackupInfo) o;
-        if (!Objects.equals(partitionToBackupId, backupInfo.partitionToBackupId)) {
+        if (!partitionToBackupId.equals(backupInfo.partitionToBackupId)) {
             return false;
         }
-        if (!Objects.equals(walOffsets, backupInfo.walOffsets)) {
+        if (!walOffsets.equals(backupInfo.walOffsets)) {
             return false;
         }
         return (globalBackupId == backupInfo.globalBackupId) &&
