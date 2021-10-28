@@ -105,23 +105,25 @@ class PageRankNetworkX
           });
     }
 
-    ForEach(inner_vertices, [&ctx](int tid, vertex_t u) {
-      if (ctx.degree[u] > 0.0) {
-        ctx.pre_result[u] = ctx.result[u] / ctx.degree[u];
-      } else {
-        ctx.pre_result[u] = ctx.result[u];
-      }
-    });
+    ForEach(inner_vertices.begin(), inner_vertices.end(),
+            [&ctx](int tid, vertex_t u) {
+              if (ctx.degree[u] > 0.0) {
+                ctx.pre_result[u] = ctx.result[u] / ctx.degree[u];
+              } else {
+                ctx.pre_result[u] = ctx.result[u];
+              }
+            });
 
     double base = (1.0 - ctx.alpha) / graph_vnum + dangling_sum / graph_vnum;
-    ForEach(inner_vertices, [&ctx, base, &frag](int tid, vertex_t u) {
-      double cur = 0;
-      auto es = frag.GetIncomingAdjList(u);
-      for (auto& e : es) {
-        cur += ctx.pre_result[e.get_neighbor()];
-      }
-      ctx.result[u] = cur * ctx.alpha + base;
-    });
+    ForEach(inner_vertices.begin(), inner_vertices.end(),
+            [&ctx, base, &frag](int tid, vertex_t u) {
+              double cur = 0;
+              auto es = frag.GetIncomingAdjList(u);
+              for (auto& e : es) {
+                cur += ctx.pre_result[e.get_neighbor()];
+              }
+              ctx.result[u] = cur * ctx.alpha + base;
+            });
 
     double eps = 0.0;
     ctx.dangling_sum = 0.0;
@@ -139,12 +141,13 @@ class PageRankNetworkX
       return;
     }
 
-    ForEach(inner_vertices, [&ctx, &frag, &messages](int tid, vertex_t u) {
-      if (ctx.degree[u] > 0) {
-        messages.SendMsgThroughOEdges<fragment_t, double>(
-            frag, u, ctx.result[u] / ctx.degree[u], tid);
-      }
-    });
+    ForEach(inner_vertices.begin(), inner_vertices.end(),
+            [&ctx, &frag, &messages](int tid, vertex_t u) {
+              if (ctx.degree[u] > 0) {
+                messages.SendMsgThroughOEdges<fragment_t, double>(
+                    frag, u, ctx.result[u] / ctx.degree[u], tid);
+              }
+            });
 
     double new_dangling = ctx.alpha * static_cast<double>(ctx.dangling_sum);
     Sum(new_dangling, ctx.dangling_sum);

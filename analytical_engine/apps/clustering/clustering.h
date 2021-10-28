@@ -197,12 +197,13 @@ class Clustering
         }
       }
 
-      ForEach(outer_vertices, [&messages, &frag, &ctx](int tid, vertex_t v) {
-        if (ctx.tricnt[v] != 0) {
-          messages.SyncStateOnOuterVertex<fragment_t, int>(frag, v,
-                                                           ctx.tricnt[v], tid);
-        }
-      });
+      ForEach(outer_vertices.begin(), outer_vertices.end(),
+              [&messages, &frag, &ctx](int tid, vertex_t v) {
+                if (ctx.tricnt[v] != 0) {
+                  messages.SyncStateOnOuterVertex<fragment_t, int>(
+                      frag, v, ctx.tricnt[v], tid);
+                }
+              });
       messages.ForceContinue();
     } else if (ctx.stage == 2) {
       ctx.stage = 3;
