@@ -24,9 +24,6 @@ message Repartition {
   bytes resource  = 1;
 }
 
-message RepartitionByKey{
-}
-
 message Broadcast {
 }
 
@@ -37,9 +34,8 @@ message Aggregate {
 message Communicate {
   oneof ch_kind {
     Repartition to_another  = 1;
-    RepartitionByKey to_key = 2;
-    Broadcast to_others  = 3;
-    Aggregate to_one     = 4;
+    Broadcast to_others  = 2;
+    Aggregate to_one     = 3;
   }
 }
 
@@ -72,6 +68,7 @@ message Limit {
 }
 
 message Dedup {
+  bytes resource = 1;
 }
 
 message SortBy {
@@ -137,8 +134,9 @@ message Join {
     TIMES = 6;
   }
   JoinKind kind = 1;
-  TaskPlan left_task = 2;
-  TaskPlan right_task = 3;
+  bytes resource = 2;
+  TaskPlan left_task = 3;
+  TaskPlan right_task = 4;
 }
 
 message KeyBy {
