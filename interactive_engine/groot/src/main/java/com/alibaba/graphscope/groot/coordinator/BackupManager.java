@@ -18,7 +18,6 @@ package com.alibaba.graphscope.groot.coordinator;
 import com.alibaba.graphscope.groot.CompletionCallback;
 import com.alibaba.graphscope.groot.meta.MetaService;
 import com.alibaba.graphscope.groot.meta.MetaStore;
-import com.alibaba.graphscope.groot.rpc.RoleClients;
 import com.alibaba.graphscope.groot.store.StoreBackupId;
 import com.alibaba.maxgraph.common.config.CommonConfig;
 import com.alibaba.maxgraph.common.config.Configs;

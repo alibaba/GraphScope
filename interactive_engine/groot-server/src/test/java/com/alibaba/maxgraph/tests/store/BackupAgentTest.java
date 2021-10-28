@@ -35,6 +35,7 @@ import java.util.Map;
 import static org.mockito.Mockito.*;
 
 public class BackupAgentTest {
+
     @Test
     void testBackupAgent() throws IOException {
         Configs configs =
@@ -92,6 +93,4 @@ public class BackupAgentTest {
 
         backupAgent.stop();
     }
-
-
 }

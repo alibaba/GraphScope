@@ -15,7 +15,6 @@
  */
 package com.alibaba.graphscope.groot.coordinator;
 
-import com.alibaba.maxgraph.compiler.api.exception.BackupException;
 import com.alibaba.maxgraph.proto.groot.*;
 import io.grpc.stub.StreamObserver;
 
