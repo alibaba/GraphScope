@@ -220,7 +220,7 @@ impl Plan {
         self
     }
 
-    pub fn join<FL, FR>(
+    pub fn join_func<FL, FR>(
         &mut self, join_kind: pb::join::JoinKind, mut left_task: FL, mut right_task: FR,
         res: BinaryResource,
     ) -> &mut Self
@@ -232,6 +232,20 @@ impl Plan {
         left_task(&mut left_plan);
         let mut right_plan = Plan::default();
         right_task(&mut right_plan);
+        let join = pb::Join {
+            kind: join_kind as i32,
+            resource: res,
+            left_task: Some(pb::TaskPlan { plan: left_plan.take() }),
+            right_task: Some(pb::TaskPlan { plan: right_plan.take() }),
+        };
+        let op = pb::OperatorDef { op_kind: Some(pb::operator_def::OpKind::Join(join)) };
+        self.plan.push(op);
+        self
+    }
+
+    pub fn join_plan(
+        &mut self, join_kind: pb::join::JoinKind, left_plan: Plan, right_plan: Plan, res: BinaryResource,
+    ) -> &mut Self {
         let join = pb::Join {
             kind: join_kind as i32,
             resource: res,
@@ -386,7 +400,7 @@ impl JobBuilder {
         self
     }
 
-    pub fn join<FL, FR>(
+    pub fn join_func<FL, FR>(
         &mut self, join_kind: pb::join::JoinKind, left_task: FL, right_task: FR, res: BinaryResource,
     ) -> &mut Self
     where
@@ -394,7 +408,15 @@ impl JobBuilder {
         FR: FnMut(&mut Plan),
     {
         self.plan
-            .join(join_kind, left_task, right_task, res);
+            .join_func(join_kind, left_task, right_task, res);
+        self
+    }
+
+    pub fn join_plan(
+        &mut self, join_kind: pb::join::JoinKind, left_plan: Plan, right_plan: Plan, res: BinaryResource,
+    ) -> &mut Self {
+        self.plan
+            .join_plan(join_kind, left_plan, right_plan, res);
         self
     }
 
@@ -496,10 +518,10 @@ mod test {
         let mut builder = JobBuilder::new(JobConf::new("test_build_01"));
         builder
             .add_source(vec![0u8; 32])
-            .join(
+            .join_func(
                 pb::join::JoinKind::Inner,
                 |src1| {
-                    src1.map(vec![]).join(
+                    src1.map(vec![]).join_func(
                         pb::join::JoinKind::Inner,
                         |src1_1| {
                             src1_1.map(vec![]);
@@ -511,7 +533,7 @@ mod test {
                     );
                 },
                 |src2| {
-                    src2.map(vec![]).join(
+                    src2.map(vec![]).join_func(
                         pb::join::JoinKind::Inner,
                         |src2_1| {
                             src2_1.map(vec![]);
