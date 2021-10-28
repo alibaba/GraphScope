@@ -28,7 +28,6 @@ mod correlate;
 mod count;
 mod filter;
 mod fold;
-mod join;
 mod keyed;
 mod limit;
 mod map;

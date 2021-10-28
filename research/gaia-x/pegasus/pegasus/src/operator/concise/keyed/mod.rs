@@ -66,6 +66,7 @@ impl<D: Data + HasKey, H: BuildHasher + Send + 'static> RouteFunction<D> for Key
 mod dedup;
 mod fold;
 mod reduce;
+mod join;
 
 #[cfg(test)]
 mod test {

@@ -20,6 +20,7 @@ use std::hash::Hash;
 pub use apply::*;
 pub use dedup::*;
 pub use fold::*;
+pub use join::*;
 pub use reduce::*;
 
 use crate::api::function::FnResult;
@@ -145,4 +146,5 @@ pub trait PartitionByKey<D: Data + HasKey> {
 mod apply;
 mod dedup;
 mod fold;
+mod join;
 mod reduce;

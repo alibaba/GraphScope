@@ -58,7 +58,6 @@ use crate::Data;
 ///             let (src1,src2) = src1.copied()?;
 ///             let src2=src2.map(|x| Ok(x + 1))?; // stream {2,3,4}
 ///             src1.key_by(|x| Ok((x, x)))? // use item value as key
-///                 .partition_by_key()
 ///                 .inner_join(src2.key_by(|x| Ok((x, x)))?.partition_by_key())? // inner_join two streams
 ///                 .map(|d| Ok(((d.0.key, d.0.value), (d.1.key, d.1.value))))?
 ///                 .collect::<Vec<((u32, u32), (u32, u32))>>()?
@@ -66,7 +65,7 @@ use crate::Data;
 ///             }
 ///         })
 ///         .expect("run job failure;");
-///     
+///
 ///     let mut expected = results.next().unwrap().unwrap();
 ///     expected.sort();
 ///     assert_eq!(expected, [((2, 2), (2, 2)),((3, 3), (3, 3))]);
