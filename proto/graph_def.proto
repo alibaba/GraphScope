@@ -29,7 +29,7 @@ enum GraphTypePb {
     ARROW_PROPERTY = 4;
     ARROW_PROJECTED = 5;
     PERSISTENT_STORE = 6;
-    ARROW_LABEL_PROJECTED = 7;
+    ARROW_FLATTENED = 7;
 }
 
 message MaxGraphInfoPb {

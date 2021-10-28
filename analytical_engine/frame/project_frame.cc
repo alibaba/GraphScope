@@ -177,10 +177,10 @@ class ProjectSimpleFrame<gs::DynamicProjectedFragment<VDATA_T, EDATA_T>> {
 
 template <typename OID_T, typename VID_T, typename VDATA_T, typename EDATA_T>
 class ProjectSimpleFrame<
-    gs::ArrowLabelProjectedFragment<OID_T, VID_T, VDATA_T, EDATA_T>> {
+    gs::ArrowFlattenedFragment<OID_T, VID_T, VDATA_T, EDATA_T>> {
   using fragment_t = vineyard::ArrowFragment<OID_T, VID_T>;
   using projected_fragment_t =
-      gs::ArrowLabelProjectedFragment<OID_T, VID_T, VDATA_T, EDATA_T>;
+      gs::ArrowFlattenedFragment<OID_T, VID_T, VDATA_T, EDATA_T>;
 
  public:
   static bl::result<std::shared_ptr<IFragmentWrapper>> Project(
@@ -203,7 +203,7 @@ class ProjectSimpleFrame<
     rpc::graph::GraphDefPb graph_def;
 
     graph_def.set_key(projected_graph_name);
-    graph_def.set_graph_type(rpc::graph::ARROW_LABEL_PROJECTED);
+    graph_def.set_graph_type(rpc::graph::ARROW_FLATTENED);
     gs::rpc::graph::VineyardInfoPb vy_info;
     if (graph_def.has_extension()) {
       graph_def.extension().UnpackTo(&vy_info);

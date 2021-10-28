@@ -311,7 +311,7 @@ class TestBuiltinCopyOnWrite:
 
     def test_average_shortest_path_length(self):
         # average_shortest_path_length implementation contain grape::VertexDenseSet which
-        # can not use with ArrowLabelProjectedFragment
+        # can not use with ArrowFlattenedFragment
         with pytest.raises(InvalidArgumentError):
             nx.builtin.average_shortest_path_length(self.SG)
 
@@ -325,7 +325,7 @@ class TestBuiltinCopyOnWrite:
 
     def test_k_core(self):
         # k_core implementation contain grape::VertexDenseSet which
-        # can not use with ArrowLabelProjectedFragment
+        # can not use with ArrowFlattenedFragment
         with pytest.raises(InvalidArgumentError):
             nx.builtin.k_core(self.SG, k=1)
 
@@ -335,7 +335,7 @@ class TestBuiltinCopyOnWrite:
 
     def test_triangles(self):
         # triangles implementation contain grape::VertexDenseSet which
-        # can not use with ArrowLabelProjectedFragment
+        # can not use with ArrowFlattenedFragment
         with pytest.raises(InvalidArgumentError):
             nx.builtin.triangles(self.SG)
 

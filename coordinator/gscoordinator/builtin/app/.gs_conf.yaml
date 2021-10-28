@@ -87,7 +87,7 @@ app:
     src: apps/centrality/degree/degree_centrality.h
     compatible_graph:
       - gs::DynamicFragment
-      - gs::ArrowLabelProjectedFragment
+      - gs::ArrowFlattenedFragment
   - algo: eigenvector_centrality
     type: cpp_pie
     class_name: gs::EigenvectorCentrality

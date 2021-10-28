@@ -502,26 +502,26 @@ def project_dynamic_property_graph(graph, v_prop, e_prop, v_prop_type, e_prop_ty
     return op
 
 
-def project_property_graph(
+def flatten_arrow_property_graph(
     graph, v_prop, e_prop, v_prop_type, e_prop_type, oid_type=None, vid_type=None
 ):
-    """Create project graph operation for nx graph.
+    """Create a flatten graph from arrow property graph operation.
 
     Args:
-        graph (:class:`nx.Graph`): A nx graph.
-        v_prop (str): The node attribute key to project.
-        e_prop (str): The edge attribute key to project.
+        graph (:class:`nx.Graph`): A nx graph hosts an arrow property graph.
+        v_prop (str): The vertex property id.
+        e_prop (str): The edge property id.
         v_prop_type (str): Type of the node attribute.
         e_prop_type (str): Type of the edge attribute.
+        oid_type (str): Type of oid.
+        vid_type (str): Type of vid.
 
     Returns:
-        Operation to project a dynamic property graph. Results in a simple graph.
+        Operation to flatten a arrow property graph. Results in a flatten arrow graph.
     """
     config = {
         types_pb2.GRAPH_NAME: utils.s_to_attr(graph.key),
-        types_pb2.GRAPH_TYPE: utils.graph_type_to_attr(
-            graph_def_pb2.ARROW_LABEL_PROJECTED
-        ),
+        types_pb2.GRAPH_TYPE: utils.graph_type_to_attr(graph_def_pb2.ARROW_FLATTENED),
         types_pb2.DST_GRAPH_TYPE: utils.graph_type_to_attr(graph.graph_type),
         types_pb2.V_DATA_TYPE: utils.s_to_attr(utils.data_type_to_cpp(v_prop_type)),
         types_pb2.E_DATA_TYPE: utils.s_to_attr(utils.data_type_to_cpp(e_prop_type)),

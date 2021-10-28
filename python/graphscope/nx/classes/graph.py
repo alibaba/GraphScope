@@ -397,14 +397,14 @@ class Graph(_GraphBase):
             )
             vid_type = self._schema.vid_type
             return f"vineyard::ArrowFragment<{oid_type},{vid_type}>"
-        elif self._graph_type == graph_def_pb2.ARROW_LABEL_PROJECTED:
+        elif self._graph_type == graph_def_pb2.ARROW_FLATTENED:
             oid_type = utils.normalize_data_type_str(
                 utils.data_type_to_cpp(self._schema.oid_type)
             )
             vid_type = self._schema.vid_type
             vdata_type = utils.data_type_to_cpp(self._schema.vdata_type)
             edata_type = utils.data_type_to_cpp(self._schema.edata_type)
-            return f"gs::ArrowLabelProjectedFragment<{oid_type},{vid_type},{vdata_type},{edata_type}>"
+            return f"gs::ArrowFlattenedFragment<{oid_type},{vid_type},{vdata_type},{edata_type}>"
         else:
             raise ValueError(f"Unsupported graph type: {self._graph_type}")
 
@@ -2110,7 +2110,7 @@ class Graph(_GraphBase):
             )
             graph._graph_type = graph_def_pb2.DYNAMIC_PROJECTED
         else:
-            op = dag_utils.project_property_graph(
+            op = dag_utils.flatten_arrow_property_graph(
                 self,
                 v_prop_id,
                 e_prop_id,
@@ -2119,7 +2119,7 @@ class Graph(_GraphBase):
                 self.schema.oid_type,
                 self.schema.vid_type,
             )
-            graph._graph_type = graph_def_pb2.ARROW_LABEL_PROJECTED
+            graph._graph_type = graph_def_pb2.ARROW_FLATTENED
         graph_def = op.eval(leaf=False)
         graph._key = graph_def.key
         graph._session = self._session

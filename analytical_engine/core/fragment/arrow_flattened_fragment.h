@@ -13,8 +13,8 @@
  * limitations under the License.
  */
 
-#ifndef ANALYTICAL_ENGINE_CORE_FRAGMENT_ARROW_LABEL_PROJECTED_FRAGMENT_H_
-#define ANALYTICAL_ENGINE_CORE_FRAGMENT_ARROW_LABEL_PROJECTED_FRAGMENT_H_
+#ifndef ANALYTICAL_ENGINE_CORE_FRAGMENT_ARROW_FLATTENED_FRAGMENT_H_
+#define ANALYTICAL_ENGINE_CORE_FRAGMENT_ARROW_FLATTENED_FRAGMENT_H_
 
 #include <memory>
 #include <set>
@@ -26,7 +26,7 @@
 
 namespace gs {
 
-namespace arrow_label_projected_fragment_impl {
+namespace arrow_flattened_fragment_impl {
 
 /**
  * @brief  A union collection of continuous vertex ranges. The vertex ranges
@@ -109,6 +109,9 @@ class UnionVertexRange {
  * @brief  A wrapper of vineyard::property_graph_utils::Nbr with default
  * property id to access data.
  *
+ * @tparam VID_T.
+ * @tparam EID_T.
+ * @tparam EDATA_T.
  */
 template <typename VID_T, typename EID_T, typename EDATA_T>
 struct NbrDefault {
@@ -432,10 +435,18 @@ class UnionDestList {
  private:
   std::vector<grape::fid_t> fid_list_;
 };
-}  // namespace arrow_label_projected_fragment_impl
+}  // namespace arrow_flattened_fragment_impl
 
 /**
- * @brief A label projected wrapper of arrow property fragment.
+ * @brief This class represents the fragment flattened from ArrowFragment.
+ * Different from ArrowProjectedFragment, an ArrowFlattenedFragment derives from
+ * an ArrowFragment, but flattens all the labels to one type, result in a graph
+ * with a single type of vertices and a single type of edges. Optionally,
+ * a common property across labels of vertices(reps., edges) in the
+ * ArrowFragment will be reserved as vdata(resp, edata).
+ * ArrowFlattenedFragment usually used as a wrapper for ArrowFragment to run the
+ * applications/algorithms defined in NetworkX or Analytical engine,
+ * since these algorithms need the topology of the whole (property) graph.
  *
  * @tparam OID_T
  * @tparam VID_T
@@ -443,7 +454,7 @@ class UnionDestList {
  * @tparam EDATA_T
  */
 template <typename OID_T, typename VID_T, typename VDATA_T, typename EDATA_T>
-class ArrowLabelProjectedFragment {
+class ArrowFlattenedFragment {
  public:
   using fragment_t = vineyard::ArrowFragment<OID_T, VID_T>;
   using oid_t = OID_T;
@@ -455,23 +466,22 @@ class ArrowLabelProjectedFragment {
   using fid_t = grape::fid_t;
   using label_id_t = typename fragment_t::label_id_t;
   using prop_id_t = vineyard::property_graph_types::PROP_ID_TYPE;
-  using vertex_range_t =
-      arrow_label_projected_fragment_impl::UnionVertexRange<vid_t>;
+  using vertex_range_t = arrow_flattened_fragment_impl::UnionVertexRange<vid_t>;
   template <typename DATA_T>
   using vertex_array_t =
-      arrow_label_projected_fragment_impl::UnionVertexArray<DATA_T, vid_t>;
+      arrow_flattened_fragment_impl::UnionVertexArray<DATA_T, vid_t>;
   using adj_list_t =
-      arrow_label_projected_fragment_impl::UnionAdjList<vid_t, eid_t, edata_t>;
-  using dest_list_t = arrow_label_projected_fragment_impl::UnionDestList;
+      arrow_flattened_fragment_impl::UnionAdjList<vid_t, eid_t, edata_t>;
+  using dest_list_t = arrow_flattened_fragment_impl::UnionDestList;
 
   // This member is used by grape::check_load_strategy_compatible()
   static constexpr grape::LoadStrategy load_strategy =
       grape::LoadStrategy::kBothOutIn;
 
-  ArrowLabelProjectedFragment() = default;
+  ArrowFlattenedFragment() = default;
 
-  explicit ArrowLabelProjectedFragment(fragment_t* frag, prop_id_t v_prop_id,
-                                       prop_id_t e_prop_id)
+  explicit ArrowFlattenedFragment(fragment_t* frag, prop_id_t v_prop_id,
+                                  prop_id_t e_prop_id)
       : fragment_(frag), v_prop_id_(v_prop_id), e_prop_id_(e_prop_id) {
     ivnum_ = ovnum_ = tvnum_ = 0;
     for (label_id_t v_label = 0; v_label < fragment_->vertex_label_num();
@@ -482,16 +492,15 @@ class ArrowLabelProjectedFragment {
     }
   }
 
-  virtual ~ArrowLabelProjectedFragment() = default;
+  virtual ~ArrowFlattenedFragment() = default;
 
-  static std::shared_ptr<
-      ArrowLabelProjectedFragment<OID_T, VID_T, VDATA_T, EDATA_T>>
+  static std::shared_ptr<ArrowFlattenedFragment<OID_T, VID_T, VDATA_T, EDATA_T>>
   Project(const std::shared_ptr<fragment_t>& frag, const std::string& v_prop,
           const std::string& e_prop) {
     prop_id_t v_prop_id = boost::lexical_cast<int>(v_prop);
     prop_id_t e_prop_id = boost::lexical_cast<int>(e_prop);
-    return std::make_shared<ArrowLabelProjectedFragment>(frag.get(), v_prop_id,
-                                                         e_prop_id);
+    return std::make_shared<ArrowFlattenedFragment>(frag.get(), v_prop_id,
+                                                    e_prop_id);
   }
 
   void PrepareToRunApp(grape::MessageStrategy strategy, bool need_split_edges) {
@@ -738,4 +747,4 @@ class ArrowLabelProjectedFragment {
 };
 
 }  // namespace gs
-#endif  // ANALYTICAL_ENGINE_CORE_FRAGMENT_ARROW_LABEL_PROJECTED_FRAGMENT_H_
+#endif  // ANALYTICAL_ENGINE_CORE_FRAGMENT_ARROW_FLATTENED_FRAGMENT_H_

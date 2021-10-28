@@ -30,7 +30,7 @@
 #include "core/context/vertex_data_context.h"
 #include "core/context/vertex_property_context.h"
 #include "core/error.h"
-#include "core/fragment/arrow_label_projected_fragment.h"
+#include "core/fragment/arrow_flattened_fragment.h"
 #include "core/fragment/dynamic_fragment_view.h"
 #include "core/fragment/dynamic_projected_fragment.h"
 #include "core/fragment/fragment_reporter.h"
@@ -903,14 +903,12 @@ class FragmentWrapper<DynamicProjectedFragment<VDATA_T, EDATA_T>>
 };
 
 /**
- * @brief A specialized FragmentWrapper for ArrowLabelProjectedFragment.
+ * @brief A specialized FragmentWrapper for ArrowFlattenedFragment.
  */
 template <typename OID_T, typename VID_T, typename VDATA_T, typename EDATA_T>
-class FragmentWrapper<
-    ArrowLabelProjectedFragment<OID_T, VID_T, VDATA_T, EDATA_T>>
+class FragmentWrapper<ArrowFlattenedFragment<OID_T, VID_T, VDATA_T, EDATA_T>>
     : public IFragmentWrapper {
-  using fragment_t =
-      ArrowLabelProjectedFragment<OID_T, VID_T, VDATA_T, EDATA_T>;
+  using fragment_t = ArrowFlattenedFragment<OID_T, VID_T, VDATA_T, EDATA_T>;
 
  public:
   FragmentWrapper(const std::string& id, rpc::graph::GraphDefPb graph_def,
@@ -918,7 +916,7 @@ class FragmentWrapper<
       : IFragmentWrapper(id),
         graph_def_(std::move(graph_def)),
         fragment_(std::move(fragment)) {
-    CHECK_EQ(graph_def_.graph_type(), rpc::graph::ARROW_LABEL_PROJECTED);
+    CHECK_EQ(graph_def_.graph_type(), rpc::graph::ARROW_FLATTENED);
   }
 
   std::shared_ptr<void> fragment() const override {
@@ -939,23 +937,21 @@ class FragmentWrapper<
       const grape::CommSpec& comm_spec, const std::string& dst_graph_name,
       const std::string& copy_type) override {
     RETURN_GS_ERROR(vineyard::ErrorCode::kInvalidOperationError,
-                    "Cannot copy the ArrowLabelProjectedFragment");
+                    "Cannot copy the ArrowFlattenedFragment");
   }
 
   bl::result<std::shared_ptr<IFragmentWrapper>> ToDirected(
       const grape::CommSpec& comm_spec,
       const std::string& dst_graph_name) override {
-    RETURN_GS_ERROR(
-        vineyard::ErrorCode::kInvalidOperationError,
-        "Cannot convert to the directed ArrowLabelProjectedFragment");
+    RETURN_GS_ERROR(vineyard::ErrorCode::kInvalidOperationError,
+                    "Cannot convert to the directed ArrowFlattenedFragment");
   }
 
   bl::result<std::shared_ptr<IFragmentWrapper>> ToUndirected(
       const grape::CommSpec& comm_spec,
       const std::string& dst_graph_name) override {
-    RETURN_GS_ERROR(
-        vineyard::ErrorCode::kInvalidOperationError,
-        "Cannot convert to the undirected ArrowLabelProjectedFragment");
+    RETURN_GS_ERROR(vineyard::ErrorCode::kInvalidOperationError,
+                    "Cannot convert to the undirected ArrowFlattenedFragment");
   }
 
   bl::result<std::shared_ptr<IFragmentWrapper>> CreateGraphView(
@@ -963,7 +959,7 @@ class FragmentWrapper<
       const std::string& copy_type) override {
     RETURN_GS_ERROR(
         vineyard::ErrorCode::kInvalidOperationError,
-        "Cannot generate a graph view over the ArrowLabelProjectedFragment.");
+        "Cannot generate a graph view over the ArrowFlattenedFragment.");
   }
 
  private:
