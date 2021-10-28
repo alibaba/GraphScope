@@ -158,8 +158,8 @@ jobs:
                             libgrpc-dev \
                             libgrpc++-dev \
                             protobuf-compiler-grpc \
-                            libarrow-dev=3.0.0-1 \
-                            libarrow-python-dev=3.0.0-1
+                            libarrow100 \
+                            libarrow-python100 \
         sudo pip3 install libclang parsec
     - name: Install libgrape-lite
       run: |
@@ -461,7 +461,7 @@ jobs:
         export JAVA_HOME=/usr/lib/jvm/default-java/
         HADOOP_SSH_OPTS="-o StrictHostKeyChecking=no" /tmp/hadoop-2.10.1/sbin/stop-dfs.sh || true
         rm -rf /tmp/hadoop* || true
-        # sudo docker rmi -f registry.cn-hongkong.aliyuncs.com/graphscope/graphscope:${{ github.sha }} || true
+        sudo docker rmi -f registry.cn-hongkong.aliyuncs.com/graphscope/graphscope:${{ github.sha }} || true
         helm uninstall graphscope || true
         kubectl delete pod graphscope-test-rpc-service --wait=false || true
   gie-test:
@@ -582,8 +582,8 @@ jobs:
                             libgrpc-dev \
                             libgrpc++-dev \
                             protobuf-compiler-grpc \
-                            libarrow-dev=3.0.0-1 \
-                            libarrow-python-dev=3.0.0-1 \
+                            libarrow100 \
+                            libarrow-python100 \
                             clang
         sudo pip3 install libclang parsec
     - uses: actions/checkout@v2.3.2
