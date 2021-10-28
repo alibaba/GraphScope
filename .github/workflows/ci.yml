@@ -356,6 +356,7 @@ jobs:
         python3 -m pytest --exitfirst -s -v python/graphscope/nx/tests \
                           --ignore=python/graphscope/nx/tests/algorithms/forward
         pkill -TERM etcd || true
+
   k8s-test:
     runs-on: self-hosted
     needs: [build-gae, build-gie, build-gle, build-manager]
@@ -460,7 +461,7 @@ jobs:
         export JAVA_HOME=/usr/lib/jvm/default-java/
         HADOOP_SSH_OPTS="-o StrictHostKeyChecking=no" /tmp/hadoop-2.10.1/sbin/stop-dfs.sh || true
         rm -rf /tmp/hadoop* || true
-        sudo docker rmi -f registry.cn-hongkong.aliyuncs.com/graphscope/graphscope:${{ github.sha }} || true
+        # sudo docker rmi -f registry.cn-hongkong.aliyuncs.com/graphscope/graphscope:${{ github.sha }} || true
         helm uninstall graphscope || true
         kubectl delete pod graphscope-test-rpc-service --wait=false || true
   gie-test:
