@@ -86,22 +86,14 @@ fn main() {
     let worker_num = store_config.timely_worker_per_process;
     let store_config = Arc::new(store_config);
     if store_config.graph_type.to_lowercase().eq(VINEYARD_GRAPH) {
-        if cfg!(target_os = "linux") {
-            info!(
-                "Start executor with vineyard graph object id {:?}",
-                store_config.vineyard_graph_id
-            );
-            use maxgraph_runtime::store::ffi::FFIGraphStore;
-            let ffi_store = FFIGraphStore::new(store_config.vineyard_graph_id, worker_num as i32);
-            let partition_manager = ffi_store.get_partition_manager();
-            run_main(
-                store_config,
-                Arc::new(ffi_store),
-                Arc::new(partition_manager),
-            );
-        } else {
-            unimplemented!("Mac not support vineyard graph")
-        }
+        info!(
+            "Start executor with vineyard graph object id {:?}",
+            store_config.vineyard_graph_id
+        );
+        use maxgraph_runtime::store::ffi::FFIGraphStore;
+        let ffi_store = FFIGraphStore::new(store_config.vineyard_graph_id, worker_num as i32);
+        let partition_manager = ffi_store.get_partition_manager();
+        run_main(store_config, Arc::new(ffi_store), Arc::new(partition_manager));
     } else {
         unimplemented!("only start vineyard graph from executor")
     }
