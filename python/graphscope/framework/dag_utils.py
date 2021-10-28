@@ -677,12 +677,12 @@ def create_subgraph(graph, nodes=None, edges=None):
     return op
 
 
-def create_unload_op(session_id, op_type, op):
+def create_unload_op(session_id, op_type, inputs):
     """Uility method to create a unload `Operation` based on op type and op."""
     op = Operation(
         session_id,
         op_type,
-        inputs=[op],
+        inputs=inputs,
         output_types=types_pb2.NULL_OUTPUT,
     )
     return op
@@ -697,7 +697,7 @@ def unload_app(app):
     Returns:
         An op to unload the `app`.
     """
-    return create_unload_op(app.session_id, types_pb2.UNLOAD_APP, app.op)
+    return create_unload_op(app.session_id, types_pb2.UNLOAD_APP, [app.op])
 
 
 def unload_graph(graph):
@@ -709,11 +709,11 @@ def unload_graph(graph):
     Returns:
         An op to unload the `graph`.
     """
-    return create_unload_op(graph.session_id, types_pb2.UNLOAD_GRAPH, graph.op)
+    return create_unload_op(graph.session_id, types_pb2.UNLOAD_GRAPH, [graph.op])
 
 
 def unload_context(context):
-    return create_unload_op(context.session_id, types_pb2.UNLOAD_CONTEXT, context.op)
+    return create_unload_op(context.session_id, types_pb2.UNLOAD_CONTEXT, [context.op])
 
 
 def context_to_numpy(context, selector=None, vertex_range=None, axis=0):
