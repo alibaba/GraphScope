@@ -159,7 +159,7 @@ jobs:
                             libgrpc++-dev \
                             protobuf-compiler-grpc \
                             libarrow100 \
-                            libarrow-python100 \
+                            libarrow-python100
         sudo pip3 install libclang parsec
     - name: Install libgrape-lite
       run: |
