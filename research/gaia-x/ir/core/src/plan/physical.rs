@@ -263,12 +263,13 @@ impl AsPhysical for LogicalPlan {
 mod test {
     use super::*;
     use crate::plan::logical::Node;
+    use crate::str_to_expr;
     use ir_common::generated::algebra as pb;
     use ir_common::generated::common as common_pb;
 
     #[test]
     fn test_poc_plan() {
-        // g.V().hasLabel("Person").out("Knows").limit(10)
+        // g.V().hasLabel("Person").has("id", 10).out("Knows").limit(10)
         let source_opr = pb::Scan {
             scan_opt: 0,
             alias: None,
@@ -279,6 +280,9 @@ mod test {
                 predicate: None,
                 requirements: vec![],
             }),
+        };
+        let select_opr = pb::Select {
+            predicate: Some(str_to_expr("@HEAD.id == 10".to_string()).unwrap()),
         };
         let expand_opr = pb::EdgeExpand {
             base: Some(pb::ExpandBase {
@@ -302,18 +306,25 @@ mod test {
             }),
         };
         let source_opr_bytes = source_opr.encode_to_vec();
+        let select_opr_bytes = select_opr.encode_to_vec();
         let expand_opr_bytes = expand_opr.encode_to_vec();
 
         let mut logical_plan =
             LogicalPlan::with_root(Node::new(0, pb::logical_plan::Operator::from(source_opr)));
         logical_plan.append_operator_as_node(
-            pb::logical_plan::Operator::from(expand_opr.clone()),
+            pb::logical_plan::Operator::from(select_opr.clone()),
             vec![0],
         ); // node 1
+        logical_plan.append_operator_as_node(
+            pb::logical_plan::Operator::from(expand_opr.clone()),
+            vec![1],
+        ); // node 2
+
         logical_plan
-            .append_operator_as_node(pb::logical_plan::Operator::from(limit_opr.clone()), vec![1]); // node 2
+            .append_operator_as_node(pb::logical_plan::Operator::from(limit_opr.clone()), vec![2]); // node 3
         let mut expected_builder = JobBuilder::default();
         expected_builder.add_source(source_opr_bytes.clone());
+        expected_builder.filter(select_opr_bytes);
         expected_builder.flat_map(expand_opr_bytes.clone());
         expected_builder.limit(10);
         expected_builder.sink(vec![]);
