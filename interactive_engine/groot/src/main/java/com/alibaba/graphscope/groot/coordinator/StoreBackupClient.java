@@ -90,11 +90,11 @@ public class StoreBackupClient extends RpcClient {
         });
     }
 
-    public void restoreFromStoreBackup(StoreBackupId storeBackupId, String restoreRootPath,
+    public void restoreFromStoreBackup(StoreBackupId storeBackupId, String storeRestoreRootPath,
                                        CompletionCallback<Void> callback) {
         RestoreFromStoreBackupRequest req = RestoreFromStoreBackupRequest.newBuilder()
                 .setStoreBackupId(storeBackupId.toProto())
-                .setRestoreRootPath(restoreRootPath)
+                .setRestoreRootPath(storeRestoreRootPath)
                 .build();
         stub.restoreFromStoreBackup(req, new StreamObserver<RestoreFromStoreBackupResponse>() {
             @Override

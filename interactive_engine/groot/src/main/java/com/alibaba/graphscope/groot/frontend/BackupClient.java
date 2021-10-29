@@ -50,8 +50,11 @@ public class BackupClient extends RpcClient {
         this.stub.purgeOldBackups(request);
     }
 
-    public void restoreFromLatest(String restoreRootPath) {
-        RestoreFromLatestRequest request = RestoreFromLatestRequest.newBuilder().setRestoreRootPath(restoreRootPath).build();
+    public void restoreFromLatest(String metaRestorePath, String storeRestorePath) {
+        RestoreFromLatestRequest request = RestoreFromLatestRequest.newBuilder()
+                .setMetaRestorePath(metaRestorePath)
+                .setStoreRestorePath(storeRestorePath)
+                .build();
         this.stub.restoreFromLatest(request);
     }
 

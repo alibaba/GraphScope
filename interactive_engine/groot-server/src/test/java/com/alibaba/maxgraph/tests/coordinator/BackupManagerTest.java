@@ -18,13 +18,15 @@ import com.alibaba.graphscope.groot.coordinator.*;
 import com.alibaba.graphscope.groot.meta.MetaService;
 import com.alibaba.graphscope.groot.meta.MetaStore;
 import com.alibaba.graphscope.groot.store.StoreBackupId;
+import com.alibaba.maxgraph.common.config.BackupConfig;
 import com.alibaba.maxgraph.common.config.CommonConfig;
 import com.alibaba.maxgraph.common.config.Configs;
-import com.alibaba.maxgraph.common.config.CoordinatorConfig;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.apache.commons.io.FileUtils;
 import org.junit.jupiter.api.Test;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.CountDownLatch;
@@ -42,14 +44,19 @@ public class BackupManagerTest {
         // init config
         Configs configs = Configs.newBuilder()
                 .put(CommonConfig.STORE_NODE_COUNT.getKey(), "2")
-                .put(CoordinatorConfig.BACKUP_CREATION_BUFFER_MAX_COUNT.getKey(), "4")
-                .put(CoordinatorConfig.BACKUP_GC_INTERVAL_HOURS.getKey(), "24")
-                .put(CoordinatorConfig.BACKUP_AUTO_SUBMIT.getKey(), "false")
-                .put(CoordinatorConfig.BACKUP_AUTO_SUBMIT_INTERVAL_HOURS.getKey(), "24")
+                .put(BackupConfig.BACKUP_ENABLE.getKey(), "true")
+                .put(BackupConfig.BACKUP_CREATION_BUFFER_MAX_COUNT.getKey(), "4")
+                .put(BackupConfig.BACKUP_GC_INTERVAL_HOURS.getKey(), "24")
+                .put(BackupConfig.BACKUP_AUTO_SUBMIT.getKey(), "false")
+                .put(BackupConfig.BACKUP_AUTO_SUBMIT_INTERVAL_HOURS.getKey(), "24")
                 .build();
 
         // init data
-        SnapshotInfo snapshotInfo = new SnapshotInfo(10L, 10L);
+        long querySnapshotId = 10L;
+        long queryDdlSnapshotId = 10L;
+        SnapshotInfo snapshotInfo = new SnapshotInfo(querySnapshotId, queryDdlSnapshotId);
+        long writeSnapshotId = 12L;
+        long allocatedTailId = 10000L;
         List<Long> queueOffsets = new ArrayList<>();
         Map<Integer, Integer> partitionToBackupId1 = new HashMap<>();
         partitionToBackupId1.put(0, 1);
@@ -57,8 +64,12 @@ public class BackupManagerTest {
         Map<Integer, Integer> partitionToBackupId2 = new HashMap<>();
         partitionToBackupId2.put(0, 2);
         partitionToBackupId2.put(1, 2);
-        BackupInfo backupInfo1 = new BackupInfo(1, 10L, 10L, partitionToBackupId1, queueOffsets);
-        BackupInfo backupInfo2 = new BackupInfo(2, 10L, 10L, partitionToBackupId2, queueOffsets);
+        BackupInfo backupInfo1 = new BackupInfo(
+                1, querySnapshotId, queryDdlSnapshotId, writeSnapshotId,
+                allocatedTailId, queueOffsets, partitionToBackupId1);
+        BackupInfo backupInfo2 = new BackupInfo(
+                2, querySnapshotId, queryDdlSnapshotId, writeSnapshotId,
+                allocatedTailId, queueOffsets, partitionToBackupId2);
 
         // mock MetaStore behaviours
         ObjectMapper objectMapper = new ObjectMapper();
@@ -78,7 +89,12 @@ public class BackupManagerTest {
         // mock SnapshotManager behaviours
         SnapshotManager mockSnapshotManager = mock(SnapshotManager.class);
         when(mockSnapshotManager.getQuerySnapshotInfo()).thenReturn(snapshotInfo);
+        when(mockSnapshotManager.getCurrentWriteSnapshotId()).thenReturn(writeSnapshotId);
         when(mockSnapshotManager.getQueueOffsets()).thenReturn(queueOffsets);
+
+        // mock IdAllocator class
+        IdAllocator mockIdAllocator = mock(IdAllocator.class);
+        when(mockIdAllocator.getCurrentTailId()).thenReturn(allocatedTailId);
 
         // mock StoreBackupTaskSender behaviours
         StoreBackupTaskSender mockStoreBackupTaskSender = mock(StoreBackupTaskSender.class);
@@ -112,7 +128,8 @@ public class BackupManagerTest {
                 .verifyStoreBackup(anyInt(), any(), any());
 
         BackupManager backupManager = new BackupManager(
-                configs, mockMetaService, mockMetaStore, mockSnapshotManager, mockStoreBackupTaskSender);
+                configs, mockMetaService, mockMetaStore, mockSnapshotManager,
+                mockIdAllocator, mockStoreBackupTaskSender);
         backupManager.start();
 
         // create the first backup
@@ -189,9 +206,11 @@ public class BackupManagerTest {
 
         // restore from the second backup
         try {
-            backupManager.restoreFromLatest("/tmp/restore");
+            backupManager.restoreFromLatest("restore_meta", "restore_store");
         } catch (Exception e) {
             fail("should not have thrown any exception during backup restoring");
+        } finally {
+            FileUtils.deleteDirectory(new File("restore_meta"));
         }
 
         // purge 1 old backup

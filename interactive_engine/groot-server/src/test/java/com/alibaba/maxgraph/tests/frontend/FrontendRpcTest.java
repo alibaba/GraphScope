@@ -116,7 +116,7 @@ public class FrontendRpcTest {
         when(stub.restoreFromLatest(any())).thenReturn(RestoreFromLatestResponse.newBuilder().build());
         when(stub.verifyBackup(any())).thenReturn(VerifyBackupResponse.newBuilder().build());
         BackupInfo backupInfo =
-                new BackupInfo(1, 10, 10, new HashMap<>(), new ArrayList<>());
+                new BackupInfo(1, 10L, 10L, 12L, 10000L, new ArrayList<>(), new HashMap<>());
         when(stub.getBackupInfo(any())).thenReturn(
                 GetBackupInfoResponse.newBuilder().addBackupInfoList(backupInfo.toProto()).build());
         BackupClient backupClient = new BackupClient(stub);
@@ -124,10 +124,10 @@ public class FrontendRpcTest {
         assertEquals(newBackupId, 1);
         assertDoesNotThrow(() -> backupClient.deleteBackup(1));
         assertDoesNotThrow(() -> backupClient.purgeOldBackups(1));
-        assertDoesNotThrow(() -> backupClient.restoreFromLatest("restore_path"));
+        assertDoesNotThrow(() -> backupClient.restoreFromLatest("restore_meta", "restore_store"));
         assertDoesNotThrow(() -> backupClient.verifyBackup(1));
-        List<BackupInfoPb> infoList = backupClient.getBackupInfo();
-        assertEquals(infoList.size(), 1);
-        assertEquals(infoList.get(0).getGlobalBackupId(), 1);
+        List<BackupInfoPb> infoPbList = backupClient.getBackupInfo();
+        assertEquals(infoPbList.size(), 1);
+        assertEquals(BackupInfo.parseProto(infoPbList.get(0)), backupInfo);
     }
 }

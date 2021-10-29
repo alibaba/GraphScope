@@ -52,4 +52,8 @@ public class IdAllocator {
         byte[] b = this.objectMapper.writeValueAsBytes(tailId);
         this.metaStore.write(ID_ALLOCATE_INFO_PATH, b);
     }
+
+    public long getCurrentTailId() {
+        return tailId;
+    }
 }

@@ -65,7 +65,7 @@ public class BackupService extends BackupGrpc.BackupImplBase {
     @Override
     public void restoreFromLatest(RestoreFromLatestRequest request, StreamObserver<RestoreFromLatestResponse> responseObserver) {
         try {
-            this.backupManager.restoreFromLatest(request.getRestoreRootPath());
+            this.backupManager.restoreFromLatest(request.getMetaRestorePath(), request.getStoreRestorePath());
             responseObserver.onNext(RestoreFromLatestResponse.newBuilder().build());
             responseObserver.onCompleted();
         } catch (Exception e) {
@@ -86,11 +86,15 @@ public class BackupService extends BackupGrpc.BackupImplBase {
 
     @Override
     public void getBackupInfo(GetBackupInfoRequest request, StreamObserver<GetBackupInfoResponse> responseObserver) {
-        List<BackupInfoPb> infoList = this.backupManager.getBackupInfoList()
-                .stream()
-                .map(BackupInfo::toProto)
-                .collect(Collectors.toList());
-        responseObserver.onNext(GetBackupInfoResponse.newBuilder().addAllBackupInfoList(infoList).build());
-        responseObserver.onCompleted();
+        try {
+            List<BackupInfoPb> infoList = this.backupManager.getBackupInfoList()
+                    .stream()
+                    .map(BackupInfo::toProto)
+                    .collect(Collectors.toList());
+            responseObserver.onNext(GetBackupInfoResponse.newBuilder().addAllBackupInfoList(infoList).build());
+            responseObserver.onCompleted();
+        } catch (Exception e) {
+            responseObserver.onError(e);
+        }
     }
 }

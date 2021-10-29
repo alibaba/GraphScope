@@ -19,12 +19,14 @@ import com.alibaba.graphscope.groot.CompletionCallback;
 import com.alibaba.graphscope.groot.meta.MetaService;
 import com.alibaba.graphscope.groot.meta.MetaStore;
 import com.alibaba.graphscope.groot.store.StoreBackupId;
+import com.alibaba.maxgraph.common.config.BackupConfig;
 import com.alibaba.maxgraph.common.config.CommonConfig;
 import com.alibaba.maxgraph.common.config.Configs;
 import com.alibaba.maxgraph.common.config.CoordinatorConfig;
 import com.alibaba.maxgraph.common.util.ThreadFactoryUtils;
 import com.alibaba.maxgraph.compiler.api.exception.BackupException;
 import com.alibaba.maxgraph.compiler.api.exception.MaxGraphException;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.slf4j.Logger;
@@ -48,12 +50,14 @@ public class BackupManager {
     private MetaService metaService;
     private MetaStore metaStore;
     private SnapshotManager snapshotManager;
+    private IdAllocator idAllocator;
     private ObjectMapper objectMapper;
 
     private int storeNodeCount;
     private int graphPartitionCount;
     private StoreBackupTaskSender storeBackupTaskSender;
 
+    private boolean backupEnable;
     private int backupCreationBufferMaxSize;
     private BlockingQueue<Integer> backupCreationBuffer;
     private int backupGcIntervalHours;
@@ -70,24 +74,31 @@ public class BackupManager {
     private Lock globalBackupIdLock = new ReentrantLock();
     private Lock globalBackupIdToInfoLock = new ReentrantLock();
 
-    public BackupManager(Configs configs, MetaService metaService, MetaStore metaStore, SnapshotManager snapshotManager,
+    public BackupManager(Configs configs, MetaService metaService, MetaStore metaStore,
+                         SnapshotManager snapshotManager, IdAllocator idAllocator,
                          StoreBackupTaskSender storeBackupTaskSender) {
         this.metaService = metaService;
         this.metaStore = metaStore;
         this.snapshotManager = snapshotManager;
+        this.idAllocator = idAllocator;
         this.objectMapper = new ObjectMapper();
 
         this.storeNodeCount = CommonConfig.STORE_NODE_COUNT.get(configs);
         this.graphPartitionCount = this.metaService.getPartitionCount();
         this.storeBackupTaskSender = storeBackupTaskSender;
 
-        this.backupCreationBufferMaxSize = CoordinatorConfig.BACKUP_CREATION_BUFFER_MAX_COUNT.get(configs);
-        this.backupGcIntervalHours = CoordinatorConfig.BACKUP_GC_INTERVAL_HOURS.get(configs);
-        this.autoSubmit = CoordinatorConfig.BACKUP_AUTO_SUBMIT.get(configs);
-        this.autoSubmitIntervalHours = CoordinatorConfig.BACKUP_AUTO_SUBMIT_INTERVAL_HOURS.get(configs);
+        this.backupEnable = BackupConfig.BACKUP_ENABLE.get(configs);
+        this.backupCreationBufferMaxSize = BackupConfig.BACKUP_CREATION_BUFFER_MAX_COUNT.get(configs);
+        this.backupGcIntervalHours = BackupConfig.BACKUP_GC_INTERVAL_HOURS.get(configs);
+        this.autoSubmit = BackupConfig.BACKUP_AUTO_SUBMIT.get(configs);
+        this.autoSubmitIntervalHours = BackupConfig.BACKUP_AUTO_SUBMIT_INTERVAL_HOURS.get(configs);
     }
 
     public void start() {
+        if (!this.backupEnable) {
+            logger.info("backup manager is disable");
+            return;
+        }
         try {
             recover();
         } catch (IOException e) {
@@ -147,7 +158,8 @@ public class BackupManager {
         }
     }
 
-    public int createNewBackup() throws IOException {
+    public int createNewBackup() throws BackupException, IOException {
+        checkEnable();
         int newGlobalBackupId = increaseGlobalBackupId();
         boolean suc = this.backupCreationBuffer.offer(newGlobalBackupId);
         if (!suc) {
@@ -158,7 +170,8 @@ public class BackupManager {
         return newGlobalBackupId;
     }
 
-    public void deleteBackup(int globalBackupId) throws IOException {
+    public void deleteBackup(int globalBackupId) throws BackupException, IOException {
+        checkEnable();
         if (!this.globalBackupIdToInfo.containsKey(globalBackupId)) {
             logger.warn("try to delete unavailable backup #[" + globalBackupId + "], ignore");
             return;
@@ -167,7 +180,8 @@ public class BackupManager {
         logger.info("backup #[" + globalBackupId + "] deleted");
     }
 
-    public void purgeOldBackups(int keepAliveNum) throws IOException {
+    public void purgeOldBackups(int keepAliveNum) throws BackupException, IOException {
+        checkEnable();
         if (keepAliveNum <= 0) {
             throw new IllegalArgumentException("the input keepAliveNum should > 0, got " + keepAliveNum);
         } else if (keepAliveNum >= this.globalBackupIdToInfo.size()) {
@@ -177,40 +191,20 @@ public class BackupManager {
         logger.info(numPurged + " old backups purged");
     }
 
-    public void restoreFromLatest(String restoreRootPath) throws BackupException, ExecutionException, InterruptedException {
+    public void restoreFromLatest(String metaRestorePath, String storeRestorePath) throws BackupException, IOException {
+        checkEnable();
         int latestGlobalBackupId = getLatestGlobalBackupId();
         if (latestGlobalBackupId == -1) {
             throw new BackupException("no available backups to restore");
         }
-        List<StoreBackupId> storeBackupIds = getStoreBackupIds(latestGlobalBackupId);
-        AtomicInteger counter = new AtomicInteger(storeNodeCount);
-        AtomicBoolean finished = new AtomicBoolean(false);
-        CompletableFuture<Void> future = new CompletableFuture<>();
-        for (int sId = 0; sId < storeNodeCount; sId++) {
-            storeBackupTaskSender.restoreFromStoreBackup(sId, storeBackupIds.get(sId), restoreRootPath,
-                    new CompletionCallback<Void>() {
-                        @Override
-                        public void onCompleted(Void res) {
-                            if (!finished.get() && counter.decrementAndGet() == 0) {
-                                future.complete(null);
-                            }
-                        }
-
-                        @Override
-                        public void onError(Throwable t) {
-                            if (finished.getAndSet(true)) {
-                                return;
-                            }
-                            future.completeExceptionally(t);
-                        }
-                    }
-            );
-        }
-        future.get();
-        logger.info("graph store restored from backup #[" + latestGlobalBackupId + "] at dir " + restoreRootPath + "");
+        restoreGraphMeta(latestGlobalBackupId, metaRestorePath);
+        restoreGraphStore(latestGlobalBackupId, storeRestorePath);
+        logger.info("graph store restored from backup #[" + latestGlobalBackupId + "], meta restore dir ["
+                + metaRestorePath + "], store restore dir [" + storeRestorePath + "]");
     }
 
-    public void verifyBackup(int globalBackupId) throws BackupException, ExecutionException, InterruptedException {
+    public void verifyBackup(int globalBackupId) throws BackupException {
+        checkEnable();
         if (!this.globalBackupIdToInfo.containsKey(globalBackupId)) {
             throw new BackupException("backup #[" + globalBackupId + "] not ready/existed");
         }
@@ -236,11 +230,22 @@ public class BackupManager {
                 }
             });
         }
-        future.get();
+        try {
+            future.get();
+        } catch (Exception e) {
+            throw new BackupException(e.getMessage());
+        }
     }
 
-    public List<BackupInfo> getBackupInfoList() {
+    public List<BackupInfo> getBackupInfoList() throws BackupException {
+        checkEnable();
         return new ArrayList<>(this.globalBackupIdToInfo.values());
+    }
+
+    private void checkEnable() throws BackupException {
+        if (!this.backupEnable) {
+            throw new BackupException("global backup manager is disable now");
+        }
     }
 
     private void checkMetaPath(String path) throws FileNotFoundException {
@@ -283,8 +288,10 @@ public class BackupManager {
     }
 
     private void doBackupCreation(int newGlobalBackupId) {
-        SnapshotInfo snapshotInfo = snapshotManager.getQuerySnapshotInfo();
+        SnapshotInfo querySnapshotInfo = snapshotManager.getQuerySnapshotInfo();
+        long writeSnapshotId = snapshotManager.getCurrentWriteSnapshotId();
         List<Long> walOffsets = snapshotManager.getQueueOffsets();
+        long allocatedTailId = idAllocator.getCurrentTailId();
         Map<Integer, Integer> partitionToBackupId = new ConcurrentHashMap<>(graphPartitionCount);
         AtomicInteger counter = new AtomicInteger(storeNodeCount);
         AtomicBoolean finished = new AtomicBoolean(false);
@@ -300,9 +307,14 @@ public class BackupManager {
                     if (counter.decrementAndGet() == 0) {
                         if (partitionToBackupId.size() == graphPartitionCount) {
                             try {
-                                addNewBackupInfo(new BackupInfo(newGlobalBackupId,
-                                        snapshotInfo.getSnapshotId(), snapshotInfo.getDdlSnapshotId(),
-                                        partitionToBackupId, walOffsets));
+                                addNewBackupInfo(new BackupInfo(
+                                        newGlobalBackupId,
+                                        querySnapshotInfo.getSnapshotId(),
+                                        querySnapshotInfo.getDdlSnapshotId(),
+                                        writeSnapshotId,
+                                        allocatedTailId,
+                                        walOffsets,
+                                        partitionToBackupId));
                                 future.complete(null);
                             } catch (Exception e) {
                                 future.completeExceptionally(new BackupException(
@@ -316,7 +328,6 @@ public class BackupManager {
                         }
                     }
                 }
-
                 @Override
                 public void onError(Throwable t) {
                     if (finished.getAndSet(true)) {
@@ -351,7 +362,6 @@ public class BackupManager {
                                 future.complete(null);
                             }
                         }
-
                         @Override
                         public void onError(Throwable t) {
                             if (finished.getAndSet(true)) {
@@ -367,6 +377,62 @@ public class BackupManager {
             logger.info("backup auto-gc task finished");
         } catch (Exception e) {
             logger.error("backup auto-gc task failed， ignore", e);
+        }
+    }
+
+    private void restoreGraphMeta(int globalBackupId, String metaRestorePath) throws IOException {
+        BackupInfo restoredBackupInfo = this.globalBackupIdToInfo.get(globalBackupId);
+        Configs.Builder builder = Configs.newBuilder();
+        builder.put("file.meta.store.path", metaRestorePath);
+        MetaStore restoredMetaStore = new FileMetaStore(builder.build());
+
+        SnapshotInfo restoredQuerySnapshotInfo =
+                new SnapshotInfo(restoredBackupInfo.getQuerySnapshotId(), restoredBackupInfo.getQueryDdlSnapshotId());
+        restoredMetaStore.write(
+                SnapshotManager.QUERY_SNAPSHOT_INFO_PATH,
+                this.objectMapper.writeValueAsBytes(restoredQuerySnapshotInfo));
+        long restoredWriteSnapshotId = restoredBackupInfo.getWriteSnapshotId();
+        restoredMetaStore.write(
+                SnapshotManager.WRITE_SNAPSHOT_ID_PATH,
+                this.objectMapper.writeValueAsBytes(restoredWriteSnapshotId));
+        List<Long> restoredWalOffsets = restoredBackupInfo.getWalOffsets();
+        restoredMetaStore.write(
+                SnapshotManager.QUEUE_OFFSETS_PATH,
+                this.objectMapper.writeValueAsBytes(restoredWalOffsets));
+        long restoredAllocatedTailId = restoredBackupInfo.getAllocatedTailId();
+        restoredMetaStore.write(
+                IdAllocator.ID_ALLOCATE_INFO_PATH,
+                this.objectMapper.writeValueAsBytes(restoredAllocatedTailId));
+    }
+
+    private void restoreGraphStore(int globalBackupId, String storeRestorePath) throws BackupException {
+        List<StoreBackupId> storeBackupIds = getStoreBackupIds(globalBackupId);
+        AtomicInteger counter = new AtomicInteger(storeNodeCount);
+        AtomicBoolean finished = new AtomicBoolean(false);
+        CompletableFuture<Void> future = new CompletableFuture<>();
+        for (int sId = 0; sId < storeNodeCount; sId++) {
+            storeBackupTaskSender.restoreFromStoreBackup(sId, storeBackupIds.get(sId), storeRestorePath,
+                    new CompletionCallback<Void>() {
+                        @Override
+                        public void onCompleted(Void res) {
+                            if (!finished.get() && counter.decrementAndGet() == 0) {
+                                future.complete(null);
+                            }
+                        }
+                        @Override
+                        public void onError(Throwable t) {
+                            if (finished.getAndSet(true)) {
+                                return;
+                            }
+                            future.completeExceptionally(t);
+                        }
+                    }
+            );
+        }
+        try {
+            future.get();
+        } catch (Exception e) {
+            throw new BackupException(e.getMessage());
         }
     }
 

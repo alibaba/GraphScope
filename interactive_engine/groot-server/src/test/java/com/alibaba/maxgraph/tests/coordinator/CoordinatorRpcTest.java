@@ -179,7 +179,7 @@ public class CoordinatorRpcTest {
     }
 
     @Test
-    void testBackupService() throws IOException, ExecutionException, InterruptedException {
+    void testBackupService() throws IOException {
         BackupManager mockBackupManger = mock(BackupManager.class);
         BackupService backupService = new BackupService(mockBackupManger);
 
@@ -203,8 +203,12 @@ public class CoordinatorRpcTest {
 
         StreamObserver<RestoreFromLatestResponse> mockRestoreObserver = mock(StreamObserver.class);
         backupService.restoreFromLatest(
-                RestoreFromLatestRequest.newBuilder().setRestoreRootPath("restore_path").build(), mockRestoreObserver);
-        verify(mockBackupManger).restoreFromLatest("restore_path");
+                RestoreFromLatestRequest.newBuilder()
+                        .setMetaRestorePath("restore_meta")
+                        .setStoreRestorePath("restore_store")
+                        .build(),
+                mockRestoreObserver);
+        verify(mockBackupManger).restoreFromLatest("restore_meta", "restore_store");
         verify(mockRestoreObserver).onNext(RestoreFromLatestResponse.newBuilder().build());
         verify(mockRestoreObserver).onCompleted();
 
@@ -214,8 +218,8 @@ public class CoordinatorRpcTest {
         verify(mockVerifyObserver).onNext(VerifyBackupResponse.newBuilder().build());
         verify(mockVerifyObserver).onCompleted();
 
-        BackupInfo backupInfo1 = new BackupInfo(1, 10L, 10L, new HashMap<>(), new ArrayList<>());
-        BackupInfo backupInfo2 = new BackupInfo(2, 10L, 10L, new HashMap<>(), new ArrayList<>());
+        BackupInfo backupInfo1 = new BackupInfo(1, 10L, 10L, 12L, 10000L, new ArrayList<>(), new HashMap<>());
+        BackupInfo backupInfo2 = new BackupInfo(2, 10L, 10L, 12L, 10000L, new ArrayList<>(), new HashMap<>());
         when(mockBackupManger.getBackupInfoList()).thenReturn(Arrays.asList(backupInfo1, backupInfo2));
         StreamObserver<GetBackupInfoResponse> mockGetInfoObserver = mock(StreamObserver.class);
         backupService.getBackupInfo(GetBackupInfoRequest.newBuilder().build(), mockGetInfoObserver);

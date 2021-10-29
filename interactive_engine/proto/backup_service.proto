@@ -49,7 +49,8 @@ message PurgeOldBackupsResponse {
 }
 
 message RestoreFromLatestRequest {
-    string restore_root_path = 1;
+    string meta_restore_path = 1;
+    string store_restore_path = 2;
 }
 
 message RestoreFromLatestResponse {
@@ -57,10 +58,12 @@ message RestoreFromLatestResponse {
 
 message BackupInfoPb {
     int32 globalBackupId = 1;
-    int64 snapshotId = 2;
-    int64 ddlSnapshotId = 3;
-    map<int32, int32> partitionToBackupId = 4;
-    repeated int64 walOffsets = 5;
+    int64 querySnapshotId = 2;
+    int64 queryDdlSnapshotId = 3;
+    int64 writeSnapshotId = 4;
+    int64 allocatedTailId = 5;
+    repeated int64 walOffsets = 6;
+    map<int32, int32> partitionToBackupId = 7;
 }
 
 message VerifyBackupRequest {

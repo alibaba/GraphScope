@@ -20,6 +20,7 @@ import com.alibaba.graphscope.groot.store.StoreBackupId;
 import com.alibaba.graphscope.groot.store.StoreService;
 import com.alibaba.graphscope.groot.store.jna.JnaGraphBackupEngine;
 import com.alibaba.graphscope.groot.store.jna.JnaGraphStore;
+import com.alibaba.maxgraph.common.config.BackupConfig;
 import com.alibaba.maxgraph.common.config.CommonConfig;
 import com.alibaba.maxgraph.common.config.Configs;
 import com.alibaba.maxgraph.common.config.StoreConfig;
@@ -41,7 +42,8 @@ public class BackupAgentTest {
         Configs configs =
                 Configs.newBuilder()
                         .put(CommonConfig.NODE_IDX.getKey(), "0")
-                        .put(StoreConfig.STORE_BACKUP_THREAD_COUNT.getKey(), "2")
+                        .put(BackupConfig.BACKUP_ENABLE.getKey(), "true")
+                        .put(BackupConfig.STORE_BACKUP_THREAD_COUNT.getKey(), "2")
                         .build();
         StoreService mockStoreService = mock(StoreService.class);
         JnaGraphStore mockJnaStore0 = mock(JnaGraphStore.class);

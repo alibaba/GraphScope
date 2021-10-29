@@ -14,6 +14,7 @@
 package com.alibaba.graphscope.groot.store.jna;
 
 import com.alibaba.graphscope.groot.store.GraphPartitionBackup;
+import com.alibaba.maxgraph.common.config.BackupConfig;
 import com.alibaba.maxgraph.proto.groot.GraphDefPb;
 import com.alibaba.graphscope.groot.operation.OperationBatch;
 import com.alibaba.maxgraph.common.config.Configs;
@@ -41,7 +42,7 @@ public class JnaGraphStore implements GraphPartition {
         String dataRoot = StoreConfig.STORE_DATA_PATH.get(configs);
         Path partitionPath = Paths.get(dataRoot, "" + partitionId);
         this.downloadPath = Paths.get(dataRoot, "download");
-        String backupRoot = StoreConfig.STORE_BACKUP_PATH.get(configs);
+        String backupRoot = BackupConfig.STORE_BACKUP_PATH.get(configs);
         this.backupPath = Paths.get(backupRoot, "" + partitionId);
         if (!Files.isDirectory(partitionPath)) {
             Files.createDirectories(partitionPath);

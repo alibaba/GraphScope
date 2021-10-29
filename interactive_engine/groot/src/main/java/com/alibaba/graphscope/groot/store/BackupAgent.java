@@ -14,6 +14,7 @@
 package com.alibaba.graphscope.groot.store;
 
 import com.alibaba.graphscope.groot.CompletionCallback;
+import com.alibaba.maxgraph.common.config.BackupConfig;
 import com.alibaba.maxgraph.common.config.CommonConfig;
 import com.alibaba.maxgraph.common.config.Configs;
 import com.alibaba.maxgraph.common.config.StoreConfig;
@@ -36,6 +37,7 @@ public class BackupAgent {
     private static final Logger logger = LoggerFactory.getLogger(BackupAgent.class);
 
     private int storeId;
+    private boolean backupEnable;
     private int backupThreadCount;
     private StoreService storeService;
     private Map<Integer, GraphPartitionBackup> idToPartitionBackup;
@@ -43,11 +45,16 @@ public class BackupAgent {
 
     public BackupAgent(Configs configs, StoreService storeService) {
         this.storeId = CommonConfig.NODE_IDX.get(configs);
-        this.backupThreadCount = StoreConfig.STORE_BACKUP_THREAD_COUNT.get(configs);
+        this.backupEnable = BackupConfig.BACKUP_ENABLE.get(configs);
+        this.backupThreadCount = BackupConfig.STORE_BACKUP_THREAD_COUNT.get(configs);
         this.storeService = storeService;
     }
 
     public void start() {
+        if (!this.backupEnable) {
+            logger.info("store backup agent is disable, storeId [" + this.storeId + "]");
+            return;
+        }
         this.backupExecutor = new ThreadPoolExecutor(
                 this.backupThreadCount,
                 this.backupThreadCount,
@@ -100,6 +107,12 @@ public class BackupAgent {
     }
 
     public void createNewStoreBackup(int globalBackupId, CompletionCallback<StoreBackupId> callback) {
+        try {
+            checkEnable();
+        } catch (BackupException e) {
+            callback.onError(e);
+            return;
+        }
         StoreBackupId storeBackupId = new StoreBackupId(globalBackupId);
         AtomicInteger counter = new AtomicInteger(this.idToPartitionBackup.size());
         AtomicBoolean finished = new AtomicBoolean(false);
@@ -126,6 +139,12 @@ public class BackupAgent {
     }
 
     public void verifyStoreBackup(StoreBackupId storeBackupId, CompletionCallback<Void> callback) {
+        try {
+            checkEnable();
+        } catch (BackupException e) {
+            callback.onError(e);
+            return;
+        }
         if (storeBackupId.getPartitionToBackupId().size() != this.idToPartitionBackup.size()) {
             callback.onError(new BackupException(
                     "verifying from incorrect store backup id, globalBackupId #[" + storeBackupId.getGlobalBackupId() +
@@ -157,6 +176,12 @@ public class BackupAgent {
 
     public void clearUnavailableStoreBackups(Map<Integer, List<Integer>> readyPartitionBackupIds,
                                              CompletionCallback<Void> callback) {
+        try {
+            checkEnable();
+        } catch (BackupException e) {
+            callback.onError(e);
+            return;
+        }
         if (readyPartitionBackupIds.size() != this.idToPartitionBackup.size()) {
             callback.onError(new BackupException("doing store backup up gc with incorrect ready partitionBackupId lists"));
             return;
@@ -186,6 +211,12 @@ public class BackupAgent {
 
     public void restoreFromStoreBackup(StoreBackupId storeBackupId, String restoreRootPath,
                                        CompletionCallback<Void> callback) {
+        try {
+            checkEnable();
+        } catch (BackupException e) {
+            callback.onError(e);
+            return;
+        }
         if (storeBackupId.getPartitionToBackupId().size() != this.idToPartitionBackup.size()) {
             callback.onError(new BackupException(
                     "restoring from incorrect store backup id, globalBackupId #[" + storeBackupId.getGlobalBackupId() +
@@ -214,6 +245,12 @@ public class BackupAgent {
                     callback.onError(e);
                 }
             });
+        }
+    }
+
+    private void checkEnable() throws BackupException {
+        if (!this.backupEnable) {
+            throw new BackupException("store backup agent is disable now, storeId [" + this.storeId + "]");
         }
     }
 }

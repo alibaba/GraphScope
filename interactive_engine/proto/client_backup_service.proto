@@ -52,7 +52,8 @@ message PurgeOldGraphBackupsResponse {
 }
 
 message RestoreGraphFromLatestRequest {
-  string restore_root_path = 1;
+  string meta_restore_path = 1;
+  string store_restore_path = 2;
 }
 
 message RestoreGraphFromLatestResponse {
