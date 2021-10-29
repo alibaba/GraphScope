@@ -170,19 +170,16 @@ impl IRJobCompiler {
                         todo!()
                     }
                     server_pb::operator_def::OpKind::Merge(merge) => {
-                        let left_task = merge
-                            .left_task
-                            .as_ref()
-                            .ok_or(str_to_dyn_error("left_task is missing in merge"))?;
-                        let right_task = merge
-                            .right_task
-                            .as_ref()
-                            .ok_or(str_to_dyn_error("right_task is missing in merge"))?;
-                        let (ori_stream, sub_stream) = stream.copied()?;
-                        stream = self.install(ori_stream, &left_task.plan[..])?;
-                        stream = self
-                            .install(sub_stream, &right_task.plan[..])?
-                            .merge(stream)?;
+                        if merge.tasks.len() < 2 {
+                            Err("invalid branch sizes in merge")?;
+                        }
+                        let (mut ori_stream, sub_stream) = stream.copied()?;
+                        stream = self.install(sub_stream, &merge.tasks[0].plan[..])?;
+                        for subtask in &merge.tasks[1..] {
+                            let copied = ori_stream.copied()?;
+                            ori_stream = copied.0;
+                            stream = self.install(copied.1, &subtask.plan[..])?.merge(stream)?;
+                        }
                     }
                     server_pb::operator_def::OpKind::Iterate(iter) => {
                         let until = if let Some(condition) =
