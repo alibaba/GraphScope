@@ -10,6 +10,7 @@ crate-type = ["rlib", "cdylib"]
 dyn_type = {path = "../dyn_type"}
 ir_common = {path = "../common", features = ["proto_inplace"]}
 pegasus_client = {path = "../../pegasus/clients/rust/client"}
+pegasus_server = {path = "../../pegasus/server"}
 prost = "0.8"
 runtime = {path = "../runtime"}
 vec_map = "0.8.2"

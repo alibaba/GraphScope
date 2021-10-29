@@ -44,82 +44,124 @@ impl DerefMut for Plan {
 pub type BinaryResource = Vec<u8>;
 
 impl Plan {
+    pub fn extend(&mut self, plan: &Vec<pb::OperatorDef>) -> &mut Self {
+        self.plan.extend(plan.iter().map(|opr| opr.clone()));
+        self
+    }
+
     pub fn exchange(&mut self, route: BinaryResource) -> &mut Self {
         let exchange = pb::Exchange { resource: route };
-        let comm = pb::Communicate { ch_kind: Some(pb::communicate::ChKind::ToAnother(exchange)) };
-        let op = pb::OperatorDef { op_kind: Some(pb::operator_def::OpKind::Comm(comm)) };
+        let comm = pb::Communicate {
+            ch_kind: Some(pb::communicate::ChKind::ToAnother(exchange)),
+        };
+        let op = pb::OperatorDef {
+            op_kind: Some(pb::operator_def::OpKind::Comm(comm)),
+        };
         self.plan.push(op);
         self
     }
 
     pub fn broadcast(&mut self) -> &mut Self {
         let broadcast = pb::Broadcast {};
-        let comm = pb::Communicate { ch_kind: Some(pb::communicate::ChKind::ToOthers(broadcast)) };
-        let op = pb::OperatorDef { op_kind: Some(pb::operator_def::OpKind::Comm(comm)) };
+        let comm = pb::Communicate {
+            ch_kind: Some(pb::communicate::ChKind::ToOthers(broadcast)),
+        };
+        let op = pb::OperatorDef {
+            op_kind: Some(pb::operator_def::OpKind::Comm(comm)),
+        };
         self.plan.push(op);
         self
     }
 
     pub fn aggregate(&mut self, target: u32) -> &mut Self {
         let aggregate = pb::Aggregate { target };
-        let comm = pb::Communicate { ch_kind: Some(pb::communicate::ChKind::ToOne(aggregate)) };
-        let op = pb::OperatorDef { op_kind: Some(pb::operator_def::OpKind::Comm(comm)) };
+        let comm = pb::Communicate {
+            ch_kind: Some(pb::communicate::ChKind::ToOne(aggregate)),
+        };
+        let op = pb::OperatorDef {
+            op_kind: Some(pb::operator_def::OpKind::Comm(comm)),
+        };
         self.plan.push(op);
         self
     }
 
     pub fn map(&mut self, func: BinaryResource) -> &mut Self {
         let map = pb::Map { resource: func };
-        let op = pb::OperatorDef { op_kind: Some(pb::operator_def::OpKind::Map(map)) };
+        let op = pb::OperatorDef {
+            op_kind: Some(pb::operator_def::OpKind::Map(map)),
+        };
         self.plan.push(op);
         self
     }
 
     pub fn flat_map(&mut self, func: BinaryResource) -> &mut Self {
         let flat_map = pb::FlatMap { resource: func };
-        let op = pb::OperatorDef { op_kind: Some(pb::operator_def::OpKind::FlatMap(flat_map)) };
+        let op = pb::OperatorDef {
+            op_kind: Some(pb::operator_def::OpKind::FlatMap(flat_map)),
+        };
         self.plan.push(op);
         self
     }
 
     pub fn filter(&mut self, func: BinaryResource) -> &mut Self {
         let filter = pb::Filter { resource: func };
-        let op = pb::OperatorDef { op_kind: Some(pb::operator_def::OpKind::Filter(filter)) };
+        let op = pb::OperatorDef {
+            op_kind: Some(pb::operator_def::OpKind::Filter(filter)),
+        };
         self.plan.push(op);
         self
     }
 
     pub fn limit(&mut self, size: u32) -> &mut Self {
         let limit = pb::Limit { limit: size };
-        let op = pb::OperatorDef { op_kind: Some(pb::operator_def::OpKind::Limit(limit)) };
+        let op = pb::OperatorDef {
+            op_kind: Some(pb::operator_def::OpKind::Limit(limit)),
+        };
         self.plan.push(op);
         self
     }
 
     pub fn count(&mut self) -> &mut Self {
-        let fold = pb::Fold { accum: pb::AccumKind::Cnt as i32, resource: vec![] };
-        let op = pb::OperatorDef { op_kind: Some(pb::operator_def::OpKind::Fold(fold)) };
+        let fold = pb::Fold {
+            accum: pb::AccumKind::Cnt as i32,
+            resource: vec![],
+        };
+        let op = pb::OperatorDef {
+            op_kind: Some(pb::operator_def::OpKind::Fold(fold)),
+        };
         self.plan.push(op);
         self
     }
 
     pub fn fold(&mut self, accum_kind: pb::AccumKind) -> &mut Self {
-        let fold = pb::Fold { accum: accum_kind as i32, resource: vec![] };
-        let op = pb::OperatorDef { op_kind: Some(pb::operator_def::OpKind::Fold(fold)) };
+        let fold = pb::Fold {
+            accum: accum_kind as i32,
+            resource: vec![],
+        };
+        let op = pb::OperatorDef {
+            op_kind: Some(pb::operator_def::OpKind::Fold(fold)),
+        };
         self.plan.push(op);
         self
     }
 
     pub fn fold_custom(&mut self, accum_kind: pb::AccumKind, func: BinaryResource) -> &mut Self {
-        let fold = pb::Fold { accum: accum_kind as i32, resource: func };
-        let op = pb::OperatorDef { op_kind: Some(pb::operator_def::OpKind::Fold(fold)) };
+        let fold = pb::Fold {
+            accum: accum_kind as i32,
+            resource: func,
+        };
+        let op = pb::OperatorDef {
+            op_kind: Some(pb::operator_def::OpKind::Fold(fold)),
+        };
         self.plan.push(op);
         self
     }
 
     pub fn dedup(&mut self) -> &mut Self {
         let dedup = pb::Dedup {};
-        let op = pb::OperatorDef { op_kind: Some(pb::operator_def::OpKind::Dedup(dedup)) };
+        let op = pb::OperatorDef {
+            op_kind: Some(pb::operator_def::OpKind::Dedup(dedup)),
+        };
         self.plan.push(op);
         self
     }
@@ -133,9 +175,13 @@ impl Plan {
         let iteration = pb::Iteration {
             max_iters: times,
             until: None,
-            body: Some(pb::TaskPlan { plan: sub_plan.take() }),
+            body: Some(pb::TaskPlan {
+                plan: sub_plan.take(),
+            }),
         };
-        let op = pb::OperatorDef { op_kind: Some(pb::operator_def::OpKind::Iterate(iteration)) };
+        let op = pb::OperatorDef {
+            op_kind: Some(pb::operator_def::OpKind::Iterate(iteration)),
+        };
         self.plan.push(op);
         self
     }
@@ -150,9 +196,13 @@ impl Plan {
         let iteration = pb::Iteration {
             max_iters: times,
             until: Some(filter),
-            body: Some(pb::TaskPlan { plan: sub_plan.take() }),
+            body: Some(pb::TaskPlan {
+                plan: sub_plan.take(),
+            }),
         };
-        let op = pb::OperatorDef { op_kind: Some(pb::operator_def::OpKind::Iterate(iteration)) };
+        let op = pb::OperatorDef {
+            op_kind: Some(pb::operator_def::OpKind::Iterate(iteration)),
+        };
         self.plan.push(op);
         self
     }
@@ -163,8 +213,15 @@ impl Plan {
     {
         let mut sub_plan = Plan::default();
         subtask(&mut sub_plan);
-        let subtask = pb::Apply { join: None, task: Some(pb::TaskPlan { plan: sub_plan.take() }) };
-        let op = pb::OperatorDef { op_kind: Some(pb::operator_def::OpKind::Apply(subtask)) };
+        let subtask = pb::Apply {
+            join: None,
+            task: Some(pb::TaskPlan {
+                plan: sub_plan.take(),
+            }),
+        };
+        let op = pb::OperatorDef {
+            op_kind: Some(pb::operator_def::OpKind::Apply(subtask)),
+        };
         self.plan.push(op);
         self
     }
@@ -176,9 +233,15 @@ impl Plan {
         let mut sub_plan = Plan::default();
         subtask(&mut sub_plan);
         let left_join = pb::LeftJoin { resource: joiner };
-        let subtask =
-            pb::Apply { join: Some(left_join), task: Some(pb::TaskPlan { plan: sub_plan.take() }) };
-        let op = pb::OperatorDef { op_kind: Some(pb::operator_def::OpKind::Apply(subtask)) };
+        let subtask = pb::Apply {
+            join: Some(left_join),
+            task: Some(pb::TaskPlan {
+                plan: sub_plan.take(),
+            }),
+        };
+        let op = pb::OperatorDef {
+            op_kind: Some(pb::operator_def::OpKind::Apply(subtask)),
+        };
         self.plan.push(op);
         self
     }
@@ -189,8 +252,15 @@ impl Plan {
     {
         let mut sub_plan = Plan::default();
         subtask(&mut sub_plan);
-        let subtask = pb::SegmentApply { join: None, task: Some(pb::TaskPlan { plan: sub_plan.take() }) };
-        let op = pb::OperatorDef { op_kind: Some(pb::operator_def::OpKind::SegApply(subtask)) };
+        let subtask = pb::SegmentApply {
+            join: None,
+            task: Some(pb::TaskPlan {
+                plan: sub_plan.take(),
+            }),
+        };
+        let op = pb::OperatorDef {
+            op_kind: Some(pb::operator_def::OpKind::SegApply(subtask)),
+        };
         self.plan.push(op);
         self
     }
@@ -202,9 +272,15 @@ impl Plan {
         let mut sub_plan = Plan::default();
         subtask(&mut sub_plan);
         let left_join = pb::LeftJoin { resource: joiner };
-        let subtask =
-            pb::SegmentApply { join: Some(left_join), task: Some(pb::TaskPlan { plan: sub_plan.take() }) };
-        let op = pb::OperatorDef { op_kind: Some(pb::operator_def::OpKind::SegApply(subtask)) };
+        let subtask = pb::SegmentApply {
+            join: Some(left_join),
+            task: Some(pb::TaskPlan {
+                plan: sub_plan.take(),
+            }),
+        };
+        let op = pb::OperatorDef {
+            op_kind: Some(pb::operator_def::OpKind::SegApply(subtask)),
+        };
         self.plan.push(op);
         self
     }
@@ -219,16 +295,25 @@ impl Plan {
         let mut right_plan = Plan::default();
         right_task(&mut right_plan);
         let merge = pb::Merge {
-            left_task: Some(pb::TaskPlan { plan: left_plan.take() }),
-            right_task: Some(pb::TaskPlan { plan: right_plan.take() }),
+            left_task: Some(pb::TaskPlan {
+                plan: left_plan.take(),
+            }),
+            right_task: Some(pb::TaskPlan {
+                plan: right_plan.take(),
+            }),
         };
-        let op = pb::OperatorDef { op_kind: Some(pb::operator_def::OpKind::Merge(merge)) };
+        let op = pb::OperatorDef {
+            op_kind: Some(pb::operator_def::OpKind::Merge(merge)),
+        };
         self.plan.push(op);
         self
     }
 
     pub fn join<FL, FR>(
-        &mut self, join_kind: pb::join::JoinKind, mut left_task: FL, mut right_task: FR,
+        &mut self,
+        join_kind: pb::join::JoinKind,
+        mut left_task: FL,
+        mut right_task: FR,
     ) -> &mut Self
     where
         FL: FnMut(&mut Plan),
@@ -240,44 +325,75 @@ impl Plan {
         right_task(&mut right_plan);
         let join = pb::Join {
             kind: join_kind as i32,
-            left_task: Some(pb::TaskPlan { plan: left_plan.take() }),
-            right_task: Some(pb::TaskPlan { plan: right_plan.take() }),
+            left_task: Some(pb::TaskPlan {
+                plan: left_plan.take(),
+            }),
+            right_task: Some(pb::TaskPlan {
+                plan: right_plan.take(),
+            }),
         };
-        let op = pb::OperatorDef { op_kind: Some(pb::operator_def::OpKind::Join(join)) };
+        let op = pb::OperatorDef {
+            op_kind: Some(pb::operator_def::OpKind::Join(join)),
+        };
         self.plan.push(op);
         self
     }
 
     pub fn sort_by(&mut self, cmp: BinaryResource) -> &mut Self {
-        let sort = pb::SortBy { limit: -1, compare: cmp };
-        let op = pb::OperatorDef { op_kind: Some(pb::operator_def::OpKind::Sort(sort)) };
+        let sort = pb::SortBy {
+            limit: -1,
+            compare: cmp,
+        };
+        let op = pb::OperatorDef {
+            op_kind: Some(pb::operator_def::OpKind::Sort(sort)),
+        };
         self.plan.push(op);
         self
     }
 
     pub fn sort_limit_by(&mut self, n: i64, cmp: BinaryResource) -> &mut Self {
-        let sort = pb::SortBy { limit: n, compare: cmp };
-        let op = pb::OperatorDef { op_kind: Some(pb::operator_def::OpKind::Sort(sort)) };
+        let sort = pb::SortBy {
+            limit: n,
+            compare: cmp,
+        };
+        let op = pb::OperatorDef {
+            op_kind: Some(pb::operator_def::OpKind::Sort(sort)),
+        };
         self.plan.push(op);
         self
     }
 
-    pub fn group_by(&mut self, accum_kind: pb::AccumKind, key_selector: BinaryResource) -> &mut Self {
-        let group = pb::GroupBy { accum: accum_kind as i32, resource: key_selector };
-        let op = pb::OperatorDef { op_kind: Some(pb::operator_def::OpKind::Group(group)) };
+    pub fn group_by(
+        &mut self,
+        accum_kind: pb::AccumKind,
+        key_selector: BinaryResource,
+    ) -> &mut Self {
+        let group = pb::GroupBy {
+            accum: accum_kind as i32,
+            resource: key_selector,
+        };
+        let op = pb::OperatorDef {
+            op_kind: Some(pb::operator_def::OpKind::Group(group)),
+        };
         self.plan.push(op);
         self
     }
 
     pub fn key_by(&mut self, key_selector: BinaryResource) -> &mut Self {
         let key_by = pb::KeyBy { key_selector };
-        let op = pb::OperatorDef { op_kind: Some(pb::operator_def::OpKind::KeyBy(key_by)) };
+        let op = pb::OperatorDef {
+            op_kind: Some(pb::operator_def::OpKind::KeyBy(key_by)),
+        };
         self.plan.push(op);
         self
     }
 
     pub fn take(self) -> Vec<pb::OperatorDef> {
         self.plan
+    }
+
+    pub fn get_plan(&self) -> &Vec<pb::OperatorDef> {
+        &self.plan
     }
 }
 
@@ -290,7 +406,12 @@ pub struct JobBuilder {
 
 impl JobBuilder {
     pub fn new(conf: JobConf) -> Self {
-        JobBuilder { conf, source: vec![], plan: Default::default(), sink: vec![] }
+        JobBuilder {
+            conf,
+            source: vec![],
+            plan: Default::default(),
+            sink: vec![],
+        }
     }
 
     pub fn add_source(&mut self, src: BinaryResource) -> &mut Self {
@@ -396,7 +517,10 @@ impl JobBuilder {
     }
 
     pub fn join<FL, FR>(
-        &mut self, join_kind: pb::join::JoinKind, left_task: FL, right_task: FR,
+        &mut self,
+        join_kind: pb::join::JoinKind,
+        left_task: FL,
+        right_task: FR,
     ) -> &mut Self
     where
         FL: FnMut(&mut Plan),
@@ -452,11 +576,22 @@ impl JobBuilder {
             plan_print: self.conf.plan_print,
             servers: self.conf.servers().get_servers(),
         };
-        let source = pb::Source { resource: self.source };
-        let plan = pb::TaskPlan { plan: self.plan.take() };
-        let sink = pb::Sink { resource: self.sink };
+        let source = pb::Source {
+            resource: self.source,
+        };
+        let plan = pb::TaskPlan {
+            plan: self.plan.take(),
+        };
+        let sink = pb::Sink {
+            resource: self.sink,
+        };
 
-        Ok(pb::JobRequest { conf: Some(conf), source: Some(source), plan: Some(plan), sink: Some(sink) })
+        Ok(pb::JobRequest {
+            conf: Some(conf),
+            source: Some(source),
+            plan: Some(plan),
+            sink: Some(sink),
+        })
     }
 }
 

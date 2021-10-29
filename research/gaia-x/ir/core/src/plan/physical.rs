@@ -21,8 +21,10 @@
 
 use crate::plan::logical::{LogicalPlan, NodeType};
 use ir_common::generated::algebra as pb;
+use ir_common::generated::algebra::join::JoinKind;
 use ir_common::generated::common as common_pb;
 use pegasus_client::builder::*;
+use pegasus_server::pb as server_pb;
 use prost::{EncodeError, Message};
 use std::fmt;
 
@@ -153,39 +155,111 @@ impl AsPhysical for LogicalPlan {
     fn add_job_builder(&self, builder: &mut JobBuilder) -> PhysicalResult<()> {
         use pb::logical_plan::operator::Opr::*;
         let peers = builder.conf.servers().len() * (builder.conf.workers as usize);
-        let mut prev_node: Option<NodeType> = None;
-        for (_, node) in &self.nodes {
-            let node_ref = node.borrow();
-            // TODO(longbin) At the first stage, we first assume that the plan has a chain shape.
-            if node_ref.children.len() > 1 {
-                return Err(PhysicalError::Unsupported);
-            }
-            if peers > 1 {
-                if let Some(prev) = &prev_node {
-                    let prev_ref = prev.borrow();
-                    match (&prev_ref.opr.opr, &node_ref.opr.opr) {
-                        (Some(Edge(_)), Some(Edge(edgexpd))) => {
-                            let key_pb = common_pb::NameOrIdKey {
-                                key: edgexpd.base.as_ref().unwrap().v_tag.clone(),
-                            };
-                            let mut bytes = vec![];
-                            key_pb.encode(&mut bytes)?;
-                            builder.exchange(bytes);
+        let mut prev_node_opt: Option<NodeType> = None;
+        let mut curr_node_opt = self.root();
+
+        while curr_node_opt.is_some() {
+            let curr_node = curr_node_opt.as_ref().unwrap();
+            if curr_node.borrow().children.len() <= 2 {
+                if peers > 1 {
+                    if let Some(prev) = &prev_node_opt {
+                        let prev_ref = prev.borrow();
+                        let node_ref = curr_node.borrow();
+                        match (&prev_ref.opr.opr, &node_ref.opr.opr) {
+                            (Some(Edge(_)), Some(Edge(edgexpd))) => {
+                                let key_pb = common_pb::NameOrIdKey {
+                                    key: edgexpd.base.as_ref().unwrap().v_tag.clone(),
+                                };
+                                let mut bytes = vec![];
+                                key_pb.encode(&mut bytes)?;
+                                builder.exchange(bytes);
+                            }
+                            (Some(Edge(_)), Some(Vertex(getv))) => {
+                                let key_pb = common_pb::NameOrIdKey {
+                                    key: getv.tag.clone(),
+                                };
+                                let mut bytes = vec![];
+                                key_pb.encode(&mut bytes)?;
+                                builder.exchange(bytes);
+                            }
+                            _ => {}
                         }
-                        (Some(Edge(_)), Some(Vertex(getv))) => {
-                            let key_pb = common_pb::NameOrIdKey {
-                                key: getv.tag.clone(),
-                            };
-                            let mut bytes = vec![];
-                            key_pb.encode(&mut bytes)?;
-                            builder.exchange(bytes);
-                        }
-                        _ => {}
                     }
                 }
+                curr_node.borrow().opr.add_job_builder(builder)?;
+                prev_node_opt = curr_node_opt.clone();
+
+                if curr_node.borrow().children.len() == 1 {
+                    let next_node_id = curr_node.borrow().get_first_child().unwrap();
+                    curr_node_opt = self.get_node(next_node_id);
+                } else if curr_node.borrow().children.len() == 2 {
+                    let (merge_node_opt, subplans) = self.get_branch_plans(curr_node.clone());
+                    assert_eq!(subplans.len(), 2);
+
+                    let mut builder0 = JobBuilder::new(builder.conf.clone());
+                    subplans.get(0).unwrap().add_job_builder(&mut builder0)?;
+
+                    let mut builder1 = JobBuilder::new(builder.conf.clone());
+                    subplans.get(1).unwrap().add_job_builder(&mut builder1)?;
+
+                    if let Some(merge_node) = merge_node_opt.clone() {
+                        match &merge_node.borrow().opr.opr {
+                            Some(Union(_)) => {
+                                builder.merge(
+                                    |src0| {
+                                        src0.extend(builder0.get_plan());
+                                    },
+                                    |src1| {
+                                        src1.extend(builder1.get_plan());
+                                    },
+                                );
+                            }
+                            Some(Join(join_opr)) => {
+                                let join_kind = unsafe {
+                                    std::mem::transmute::<i32, pb::join::JoinKind>(join_opr.kind)
+                                };
+                                let pegasus_join_kind = match join_kind {
+                                    JoinKind::Inner => server_pb::join::JoinKind::Inner,
+                                    JoinKind::LeftOuter => server_pb::join::JoinKind::LeftOuter,
+                                    JoinKind::RightOuter => server_pb::join::JoinKind::RightOuter,
+                                    JoinKind::FullOuter => server_pb::join::JoinKind::FullOuter,
+                                    JoinKind::Semi => server_pb::join::JoinKind::Semi,
+                                    JoinKind::Anti => server_pb::join::JoinKind::Anti,
+                                    JoinKind::Times => server_pb::join::JoinKind::Times,
+                                };
+                                let mut left_key_bytes = vec![];
+                                let mut right_key_bytes = vec![];
+                                common_pb::VariableKeys {
+                                    keys: join_opr.left_keys.clone(),
+                                }
+                                .encode(&mut left_key_bytes)?;
+
+                                common_pb::VariableKeys {
+                                    keys: join_opr.right_keys.clone(),
+                                }
+                                .encode(&mut right_key_bytes)?;
+
+                                builder.join(
+                                    pegasus_join_kind,
+                                    |src0| {
+                                        src0.extend(builder0.get_plan())
+                                            .key_by(left_key_bytes.clone());
+                                    },
+                                    |src1| {
+                                        src1.extend(builder1.get_plan())
+                                            .key_by(right_key_bytes.clone());
+                                    },
+                                );
+                            }
+                            _ => return Err(PhysicalError::Unsupported),
+                        }
+                    }
+
+                    curr_node_opt = merge_node_opt;
+                }
+            } else {
+                return Err(PhysicalError::Unsupported);
             }
-            node_ref.opr.add_job_builder(builder)?;
-            prev_node = Some(node.clone());
         }
         // TODO(longbin) Shall consider the option of sinking the results.
         builder.sink(vec![]);
