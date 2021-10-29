@@ -20,7 +20,7 @@ option java_outer_classname = "PegasusClient";
 
 
 
-message Exchange {
+message Repartition {
   bytes resource  = 1;
 }
 
@@ -33,7 +33,7 @@ message Aggregate {
 
 message Communicate {
   oneof ch_kind {
-    Exchange to_another  = 1;
+    Repartition to_another  = 1;
     Broadcast to_others  = 2;
     Aggregate to_one     = 3;
   }
@@ -68,6 +68,7 @@ message Limit {
 }
 
 message Dedup {
+  bytes resource = 1;
 }
 
 message SortBy {
@@ -96,8 +97,7 @@ message GroupBy {
 }
 
 message Merge {
-  TaskPlan left_task = 1;
-  TaskPlan right_task = 2;
+  repeated TaskPlan tasks = 1;
 }
 
 message Iteration {
@@ -134,8 +134,9 @@ message Join {
     TIMES = 6;
   }
   JoinKind kind = 1;
-  TaskPlan left_task = 2;
-  TaskPlan right_task = 3;
+  bytes resource = 2;
+  TaskPlan left_task = 3;
+  TaskPlan right_task = 4;
 }
 
 message KeyBy {
