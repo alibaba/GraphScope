@@ -264,17 +264,17 @@ mod test {
     use super::*;
     use crate::plan::logical::Node;
     use ir_common::generated::algebra as pb;
-    use pegasus::JobConf;
+    use ir_common::generated::common as common_pb;
 
     #[test]
     fn test_poc_plan() {
-        // g.V().out().out().limit(10)
+        // g.V().hasLabel("Person").out("Knows").limit(10)
         let source_opr = pb::Scan {
             scan_opt: 0,
             alias: None,
             params: Some(pb::QueryParams {
                 table_names: vec![],
-                columns: vec![],
+                columns: vec![common_pb::NameOrId::from("Person".to_string())],
                 limit: None,
                 predicate: None,
                 requirements: vec![],
@@ -284,7 +284,13 @@ mod test {
             base: Some(pb::ExpandBase {
                 v_tag: None,
                 direction: 0,
-                params: None,
+                params: Some(pb::QueryParams {
+                    table_names: vec![],
+                    columns: vec![common_pb::NameOrId::from("Knows".to_string())],
+                    limit: None,
+                    predicate: None,
+                    requirements: vec![],
+                }),
             }),
             is_edge: false,
             alias: None,
@@ -304,38 +310,15 @@ mod test {
             pb::logical_plan::Operator::from(expand_opr.clone()),
             vec![0],
         ); // node 1
-        logical_plan.append_operator_as_node(
-            pb::logical_plan::Operator::from(expand_opr.clone()),
-            vec![1],
-        ); // node 2
         logical_plan
-            .append_operator_as_node(pb::logical_plan::Operator::from(limit_opr.clone()), vec![2]); // node 3
+            .append_operator_as_node(pb::logical_plan::Operator::from(limit_opr.clone()), vec![1]); // node 2
         let mut expected_builder = JobBuilder::default();
         expected_builder.add_source(source_opr_bytes.clone());
-        expected_builder.flat_map(expand_opr_bytes.clone());
-        // expected_builder.repartition(vec![]);
         expected_builder.flat_map(expand_opr_bytes.clone());
         expected_builder.limit(10);
         expected_builder.sink(vec![]);
 
         let mut builder = JobBuilder::default();
-        let _ = logical_plan.add_job_builder(&mut builder);
-
-        assert_eq!(builder, expected_builder);
-
-        // Testing whether partition is enabled.
-        let mut config = JobConf::default();
-        config.set_workers(2); // to enable partition
-
-        let mut expected_builder = JobBuilder::new(config.clone());
-        expected_builder.add_source(source_opr_bytes);
-        expected_builder.flat_map(expand_opr_bytes.clone());
-        expected_builder.repartition(vec![]);
-        expected_builder.flat_map(expand_opr_bytes.clone());
-        expected_builder.limit(10);
-        expected_builder.sink(vec![]);
-
-        let mut builder = JobBuilder::new(config);
         let _ = logical_plan.add_job_builder(&mut builder);
 
         assert_eq!(builder, expected_builder);
