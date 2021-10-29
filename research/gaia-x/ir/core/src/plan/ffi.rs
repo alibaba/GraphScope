@@ -54,11 +54,11 @@
 use crate::plan::logical::LogicalPlan;
 use ir_common::generated::algebra as pb;
 use ir_common::generated::common as common_pb;
+use runtime::expr::to_suffix_expr_pb;
+use runtime::expr::token::tokenize;
 use std::convert::{TryFrom, TryInto};
 use std::ffi::{c_void, CStr};
 use std::os::raw::c_char;
-use runtime::expr::token::tokenize;
-use runtime::expr::to_suffix_expr_pb;
 
 #[repr(i32)]
 #[derive(Clone, Copy, Debug, PartialEq)]

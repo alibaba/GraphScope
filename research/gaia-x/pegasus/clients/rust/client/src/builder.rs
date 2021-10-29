@@ -44,9 +44,9 @@ impl DerefMut for Plan {
 pub type BinaryResource = Vec<u8>;
 
 impl Plan {
-    pub fn exchange(&mut self, route: BinaryResource) -> &mut Self {
-        let exchange = pb::Exchange { resource: route };
-        let comm = pb::Communicate { ch_kind: Some(pb::communicate::ChKind::ToAnother(exchange)) };
+    pub fn repartition(&mut self, route: BinaryResource) -> &mut Self {
+        let repartition = pb::Repartition { resource: route };
+        let comm = pb::Communicate { ch_kind: Some(pb::communicate::ChKind::ToAnother(repartition)) };
         let op = pb::OperatorDef { op_kind: Some(pb::operator_def::OpKind::Comm(comm)) };
         self.plan.push(op);
         self
@@ -117,8 +117,8 @@ impl Plan {
         self
     }
 
-    pub fn dedup(&mut self) -> &mut Self {
-        let dedup = pb::Dedup {};
+    pub fn dedup(&mut self, res: BinaryResource) -> &mut Self {
+        let dedup = pb::Dedup { resource: res };
         let op = pb::OperatorDef { op_kind: Some(pb::operator_def::OpKind::Dedup(dedup)) };
         self.plan.push(op);
         self
@@ -209,26 +209,20 @@ impl Plan {
         self
     }
 
-    pub fn merge<FL, FR>(&mut self, mut left_task: FL, mut right_task: FR) -> &mut Self
-    where
-        FL: FnMut(&mut Plan),
-        FR: FnMut(&mut Plan),
-    {
-        let mut left_plan = Plan::default();
-        left_task(&mut left_plan);
-        let mut right_plan = Plan::default();
-        right_task(&mut right_plan);
-        let merge = pb::Merge {
-            left_task: Some(pb::TaskPlan { plan: left_plan.take() }),
-            right_task: Some(pb::TaskPlan { plan: right_plan.take() }),
-        };
+    pub fn merge(&mut self, mut plans: Vec<Plan>) -> &mut Self {
+        let mut tasks = vec![];
+        for plan in plans.drain(..) {
+            tasks.push(pb::TaskPlan { plan: plan.take() });
+        }
+        let merge = pb::Merge { tasks };
         let op = pb::OperatorDef { op_kind: Some(pb::operator_def::OpKind::Merge(merge)) };
         self.plan.push(op);
         self
     }
 
-    pub fn join<FL, FR>(
+    pub fn join_func<FL, FR>(
         &mut self, join_kind: pb::join::JoinKind, mut left_task: FL, mut right_task: FR,
+        res: BinaryResource,
     ) -> &mut Self
     where
         FL: FnMut(&mut Plan),
@@ -240,6 +234,21 @@ impl Plan {
         right_task(&mut right_plan);
         let join = pb::Join {
             kind: join_kind as i32,
+            resource: res,
+            left_task: Some(pb::TaskPlan { plan: left_plan.take() }),
+            right_task: Some(pb::TaskPlan { plan: right_plan.take() }),
+        };
+        let op = pb::OperatorDef { op_kind: Some(pb::operator_def::OpKind::Join(join)) };
+        self.plan.push(op);
+        self
+    }
+
+    pub fn join_plan(
+        &mut self, join_kind: pb::join::JoinKind, left_plan: Plan, right_plan: Plan, res: BinaryResource,
+    ) -> &mut Self {
+        let join = pb::Join {
+            kind: join_kind as i32,
+            resource: res,
             left_task: Some(pb::TaskPlan { plan: left_plan.take() }),
             right_task: Some(pb::TaskPlan { plan: right_plan.take() }),
         };
@@ -298,8 +307,8 @@ impl JobBuilder {
         self
     }
 
-    pub fn exchange(&mut self, route: BinaryResource) -> &mut Self {
-        self.plan.exchange(route);
+    pub fn repartition(&mut self, route: BinaryResource) -> &mut Self {
+        self.plan.repartition(route);
         self
     }
 
@@ -333,8 +342,8 @@ impl JobBuilder {
         self
     }
 
-    pub fn dedup(&mut self) -> &mut Self {
-        self.plan.dedup();
+    pub fn dedup(&mut self, res: BinaryResource) -> &mut Self {
+        self.plan.dedup(res);
         self
     }
 
@@ -386,23 +395,28 @@ impl JobBuilder {
         self
     }
 
-    pub fn merge<FL, FR>(&mut self, left_task: FL, right_task: FR) -> &mut Self
-    where
-        FL: FnMut(&mut Plan),
-        FR: FnMut(&mut Plan),
-    {
-        self.plan.merge(left_task, right_task);
+    pub fn merge(&mut self, plans: Vec<Plan>) -> &mut Self {
+        self.plan.merge(plans);
         self
     }
 
-    pub fn join<FL, FR>(
-        &mut self, join_kind: pb::join::JoinKind, left_task: FL, right_task: FR,
+    pub fn join_func<FL, FR>(
+        &mut self, join_kind: pb::join::JoinKind, left_task: FL, right_task: FR, res: BinaryResource,
     ) -> &mut Self
     where
         FL: FnMut(&mut Plan),
         FR: FnMut(&mut Plan),
     {
-        self.plan.join(join_kind, left_task, right_task);
+        self.plan
+            .join_func(join_kind, left_task, right_task, res);
+        self
+    }
+
+    pub fn join_plan(
+        &mut self, join_kind: pb::join::JoinKind, left_plan: Plan, right_plan: Plan, res: BinaryResource,
+    ) -> &mut Self {
+        self.plan
+            .join_plan(join_kind, left_plan, right_plan, res);
         self
     }
 
@@ -484,11 +498,13 @@ mod test {
         builder
             .add_source(vec![0u8; 32])
             .map(vec![1u8; 32])
-            .exchange(vec![2u8; 32])
+            .repartition(vec![2u8; 32])
             .map(vec![3u8; 32])
             .limit(1)
             .iterate(3, |start| {
-                start.exchange(vec![4u8; 32]).map(vec![5u8; 32]);
+                start
+                    .repartition(vec![4u8; 32])
+                    .map(vec![5u8; 32]);
             })
             .sink(vec![6u8; 32]);
         let job_req = builder.build().unwrap();
@@ -502,10 +518,10 @@ mod test {
         let mut builder = JobBuilder::new(JobConf::new("test_build_01"));
         builder
             .add_source(vec![0u8; 32])
-            .join(
+            .join_func(
                 pb::join::JoinKind::Inner,
                 |src1| {
-                    src1.map(vec![]).join(
+                    src1.map(vec![]).join_func(
                         pb::join::JoinKind::Inner,
                         |src1_1| {
                             src1_1.map(vec![]);
@@ -513,10 +529,11 @@ mod test {
                         |src1_2| {
                             src1_2.map(vec![]);
                         },
+                        vec![],
                     );
                 },
                 |src2| {
-                    src2.map(vec![]).join(
+                    src2.map(vec![]).join_func(
                         pb::join::JoinKind::Inner,
                         |src2_1| {
                             src2_1.map(vec![]);
@@ -524,8 +541,10 @@ mod test {
                         |src2_2| {
                             src2_2.map(vec![]);
                         },
+                        vec![],
                     );
                 },
+                vec![],
             )
             .sink(vec![6u8; 32]);
         let job_req = builder.build().unwrap();
