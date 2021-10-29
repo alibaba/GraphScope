@@ -277,7 +277,6 @@ public class BackupManager {
                 newGlobalBackupId = this.backupCreationBuffer.poll(1L, TimeUnit.SECONDS);
             } catch (InterruptedException e) {
                 logger.warn("polling backup creation buffer interrupted", e);
-                // TODO: consider change to 'return'
                 continue;
             }
             if (newGlobalBackupId == null) {

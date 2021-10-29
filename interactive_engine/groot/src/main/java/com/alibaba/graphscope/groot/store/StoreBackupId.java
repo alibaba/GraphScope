@@ -75,4 +75,9 @@ public class StoreBackupId {
         }
         return (globalBackupId == storeBackupId.globalBackupId);
     }
+
+    @Override
+    public int hashCode() {
+        return globalBackupId;
+    }
 }

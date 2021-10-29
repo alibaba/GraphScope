@@ -124,4 +124,9 @@ public class BackupInfo {
                 (writeSnapshotId == backupInfo.writeSnapshotId) &&
                 (allocatedTailId == backupInfo.allocatedTailId);
     }
+
+    @Override
+    public int hashCode() {
+        return globalBackupId;
+    }
 }
