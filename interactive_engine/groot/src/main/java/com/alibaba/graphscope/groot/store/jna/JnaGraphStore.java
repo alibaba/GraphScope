@@ -50,9 +50,6 @@ public class JnaGraphStore implements GraphPartition {
         if (!Files.isDirectory(downloadPath)) {
             Files.createDirectories(downloadPath);
         }
-        if (!Files.isDirectory(backupPath)) {
-            Files.createDirectories(backupPath);
-        }
         Configs storeConfigs =
                 Configs.newBuilder(configs)
                         .put("store.data.path", partitionPath.toString())
