@@ -769,7 +769,7 @@ install_libgrape-lite() {
 
   check_and_remove_dir "/tmp/libgrape-lite"
   git clone -b ${GRAPE_BRANCH} --single-branch --depth=1 \
-     https://github.com/alibaba/libgrape-lite.git /tmp/libgrape-lite
+      https://github.com/alibaba/libgrape-lite.git /tmp/libgrape-lite
   pushd /tmp/libgrape-lite
   mkdir -p build && cd build
   cmake ..
