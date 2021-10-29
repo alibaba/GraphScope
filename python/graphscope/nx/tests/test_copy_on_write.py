@@ -90,10 +90,11 @@ def simple_label_graph(prefix, directed):
 def p2p_31_graph(prefix, directed):
     graph = graphscope.g(directed=directed, generate_eid=False)
     graph = graph.add_vertices(
-        Loader(os.path.join(prefix, "p2p-31_property_v_0")), "vertex"
+        Loader(os.path.join(prefix, "p2p-31.v"), delimiter=" ", header_row=False),
+        "vertex",
     )
     graph = graph.add_edges(
-        Loader(os.path.join(prefix, "p2p-31_property_e_0")),
+        Loader(os.path.join(prefix, "p2p-31.e"), delimiter=" ", header_row=False),
         "edge",
     )
     return graph
@@ -204,7 +205,7 @@ class TestDiGraphCopyOnWrite(_TestDiGraph):
 class TestBuiltinCopyOnWrite:
     def setup_method(self):
         data_dir = os.path.expandvars("${GS_TEST_DIR}/networkx")
-        p2p_dir = os.path.expandvars("${GS_TEST_DIR}/property")
+        p2p_dir = os.path.expandvars("${GS_TEST_DIR}")
 
         self.simple = simple_label_graph(data_dir, True)
         self.SG = nx.DiGraph(self.simple, default_label="v-0")
@@ -266,7 +267,7 @@ class TestBuiltinCopyOnWrite:
         )
         assert ret == {1: 0.0, 2: 1.0, 3: 1.0, 4: 3.0, 5: 2.0, 6: 3.0}
         p2p_ans = nx.builtin.single_source_dijkstra_path_length(
-            self.P2P, source=6, weight="dist"
+            self.P2P, source=6, weight="f2"
         )
         assert replace_with_inf(p2p_ans) == self.P2P.sssp
 
