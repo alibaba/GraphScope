@@ -505,7 +505,7 @@ def project_dynamic_property_graph(graph, v_prop, e_prop, v_prop_type, e_prop_ty
 def flatten_arrow_property_graph(
     graph, v_prop, e_prop, v_prop_type, e_prop_type, oid_type=None, vid_type=None
 ):
-    """Create a flatten graph from arrow property graph operation.
+    """Flatten arrow property graph.
 
     Args:
         graph (:class:`nx.Graph`): A nx graph hosts an arrow property graph.
@@ -517,7 +517,7 @@ def flatten_arrow_property_graph(
         vid_type (str): Type of vid.
 
     Returns:
-        Operation to flatten a arrow property graph. Results in a flatten arrow graph.
+        Operation to flatten an arrow property graph. Results in a arrow flattened graph.
     """
     config = {
         types_pb2.GRAPH_NAME: utils.s_to_attr(graph.key),
