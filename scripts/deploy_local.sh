@@ -385,7 +385,7 @@ check_dependencies() {
   fi
 
   # check folly
-  if [[ "${PLATFORM}" != *"Darwin"* ]] ); then
+  if [[ "${PLATFORM}" != *"Darwin"* ]] ; then
     if [[ ! -f "/usr/local/include/folly/dynamic.h" ]]; then
       packages_to_install+=(folly)
     fi
