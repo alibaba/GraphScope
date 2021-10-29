@@ -77,7 +77,7 @@ class UnionVertexRange {
 
     iterator operator+(size_t offset) const {
       if (vertex_ranges_.get().empty()) {
-        return iterator(vertex_ranges_.get(), vertex_ranges_.get().back().end,
+        return iterator(vertex_ranges_.get(), vertex_ranges_.get().back().end(),
                         0);
       }
 
