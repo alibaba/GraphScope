@@ -16,6 +16,7 @@
 # limitations under the License.
 #
 import os
+import subprocess
 
 import pytest
 
@@ -30,5 +31,7 @@ def graphscope_session():
     sess = graphscope.session(cluster_type="hosts")
 
     sess.as_default()
+    subprocess.check_call(["free", "-h"])
     yield sess
+    subprocess.check_call(["free", "-h"])
     sess.close()
