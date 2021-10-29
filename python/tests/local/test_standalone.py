@@ -161,6 +161,10 @@ def test_multiple_session(ogbn_small_script):
     s2.close()
 
 
+@pytest.mark.skipif(
+    sys.platform == "darwin",
+    reason="Adapt GAIA frontend under higher version JDK, sess issue #917",
+)
 def test_gaia(ogbn_small_script):
     s1 = graphscope.session(cluster_type="hosts", num_workers=1, enable_gaia=True)
     assert s1.info["status"] == "active"

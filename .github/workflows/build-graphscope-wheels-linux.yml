@@ -1,16 +1,32 @@
-name: GraphScope standalone CI with pip package
+name: Build GraphScope Wheels on Linux
 
 on:
-  workflow_dispatch:
-  schedule:
-    # The notifications for scheduled workflows are sent to the user who
-    # last modified the cron syntax in the workflow file.
-    # Trigger the workflow at 03:00(CST) every day.
-    - cron:  '00 19 * * *'
+  # Trigger the workflow on push or pull request, but only for the main branch
+  push:
+    branches:
+      - main
+    paths-ignore:
+      - 'gnn_engine/**'
+      - '**.md'
+      - '**.rst'
+      - 'docs/**'
+      - 'scripts/**'
+      - '!scripts/deploy_local.sh'
+      - 'tutorials/**'
+  pull_request:
+    branches:
+      - main
+    paths-ignore:
+      - 'gnn_engine/**'
+      - '**.md'
+      - '**.rst'
+      - 'docs/**'
+      - 'scripts/**'
+      - '!scripts/deploy_local.sh'
+      - 'tutorials/**'
 
 jobs:
   build:
-    if: ${{ github.ref == 'refs/heads/main' && github.repository == 'alibaba/GraphScope' }}
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
@@ -34,9 +50,9 @@ jobs:
 
         cd k8s
         # graphscope
-        sudo make graphscope-manylinux2014-py2-py3
+        sudo make graphscope-py3-package
         # graphscope client
-        sudo make graphscope-client-manylinux2014-py3
+        sudo make graphscope-client-py3-package
 
         # package
         cd ${GITHUB_WORKSPACE}
@@ -46,14 +62,13 @@ jobs:
     - name: Upload Artifact
       uses: actions/upload-artifact@v2
       with:
-        name: wheel-${{ github.sha }}
+        name: wheel-linux-${{ github.sha }}
         path: |
           client.tar.gz
           graphscope.tar.gz
         retention-days: 5
 
   test:
-    if: ${{ github.ref == 'refs/heads/main' && github.repository == 'alibaba/GraphScope' }}
     runs-on: ${{ matrix.os }}
     needs: [build]
     strategy:
@@ -70,19 +85,19 @@ jobs:
       with:
         path: artifacts
 
-    - name: Run Test on  ${{ matrix.python-version }}
+    - name: Run Test on ${{ matrix.python-version }}
       env:
         PYTHON: ${{ matrix.python-version }}
       shell: bash
       run: |
         pushd artifacts
         # install graphscope-client
-        tar -zxf ./wheel-${{ github.sha }}/client.tar.gz
+        tar -zxf ./wheel-linux-${{ github.sha }}/client.tar.gz
         pushd python/dist/wheelhouse
         for f in * ; do pip3 install $f || true; done
         popd
         # install graphscope
-        tar -zxf ./wheel-${{ github.sha }}/graphscope.tar.gz
+        tar -zxf ./wheel-linux-${{ github.sha }}/graphscope.tar.gz
         pushd coordinator/dist/wheelhouse
         pip3 install ./*.whl
         popd

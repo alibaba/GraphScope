@@ -142,7 +142,9 @@ class CustomBuildPy(build_py):
                 glob.glob(sources + "/**/*", recursive=True),
                 glob.glob(sources, recursive=False),
             ):
-                if os.path.isfile(file) or os.path.islink(file):
+                if os.path.isfile(file) or (
+                    os.path.islink(file) and not os.path.isdir(file)
+                ):
                     filenames.append(os.path.relpath(file, src_dir))
             rs.append((package, src_dir, build_dir, filenames))
         return rs

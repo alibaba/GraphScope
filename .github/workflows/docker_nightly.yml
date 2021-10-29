@@ -14,6 +14,16 @@ jobs:
     runs-on: self-hosted
 
     steps:
+    - name: Pre Clean
+      run: |
+        echo "CI is running on host $(curl -s 'https://api.ipify.org')"
+        sudo chmod -R a+wrx ${GITHUB_WORKSPACE}
+        sudo rm -rf ./* || true
+        find ./ -name "*.egg-info" | xargs sudo rm -rf || true
+        find ./ -name "*.whl" | xargs sudo rm -rf || true
+        find ./ -name "*_pb2.py" | xargs sudo rm -rf || true
+        find ./ -name "*_pb2_grpc.py" | xargs sudo rm -rf || true
+
     - uses: actions/checkout@v2.3.2
 
     - name: Build graphscope image
@@ -40,7 +50,7 @@ jobs:
         if [ ! -d "${GS_TEST_DIR}" ]; then
             git clone -b master --single-branch --depth=1 https://github.com/7br/gstest.git ${GS_TEST_DIR}
         fi
-        cd python
+        cd python && python3 setup.py build_proto
         python3 -m pytest --ignore=./tests/kubernetes/test_store_service.py \
                           --cov=graphscope --cov-config=.coveragerc --cov-report=xml \
                           --cov-report=term --exitfirst -s -vvv --log-cli-level=INFO \

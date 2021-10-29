@@ -16,7 +16,6 @@ readonly NC="\033[0m" # No Color
 readonly GRAPE_BRANCH="master" # libgrape-lite branch
 readonly V6D_VERSION="0.3.1"  # vineyard version
 readonly V6D_BRANCH="v0.3.1" # vineyard branch
-readonly LLVM_VERSION=9  # llvm version we use in Darwin platform
 
 readonly SOURCE_DIR="$( cd "$(dirname $0)/.." >/dev/null 2>&1 ; pwd -P )"
 readonly NUM_PROC=$( $(command -v nproc &> /dev/null) && echo $(nproc) || echo $(sysctl -n hw.physicalcpu) )
@@ -400,11 +399,7 @@ check_dependencies() {
 
   # check c++ compiler
   if [[ "${PLATFORM}" == *"Darwin"* ]]; then
-    if ! command -v clang &> /dev/null || \
-       [[ "$(clang -v 2>&1 | head -n 1 | sed 's/.* \([0-9]*\)\..*/\1/')" -lt "8" ]] || \
-       [[ "$(clang -v 2>&1 | head -n 1 | sed 's/.* \([0-9]*\)\..*/\1/')" -gt "10" ]]; then
-      packages_to_install+=("llvm@${LLVM_VERSION}")
-    fi
+    packages_to_install+=("llvm")
   else
     if ! command -v g++ &> /dev/null; then
       if [[ "${PLATFORM}" == *"Ubuntu"* ]]; then
@@ -421,7 +416,6 @@ check_dependencies() {
 # Globals:
 #   PLATFORM
 #   SOURCE_DIR
-#   LLVM_VERSION
 # Arguments:
 #   None
 # Outputs:
@@ -436,14 +430,12 @@ write_envs_config() {
   if [[ "${PLATFORM}" == *"Darwin"* ]]; then
     {
       # FIXME: graphscope_env not correct when the script run mutiple times.
-      if [[ "${packages_to_install[@]}" =~ "llvm@${LLVM_VERSION}" ]]; then
-        # packages_to_install contains llvm
-        echo "export CC=/usr/local/opt/llvm@${LLVM_VERSION}/bin/clang"
-        echo "export CXX=/usr/local/opt/llvm@${LLVM_VERSION}/bin/clang++"
-        echo "export LDFLAGS=-L/usr/local/opt/llvm@${LLVM_VERSION}/lib"
-        echo "export CPPFLAGS=-I/usr/local/opt/llvm@${LLVM_VERSION}/include"
-        echo "export PATH=/usr/local/opt/llvm@${LLVM_VERSION}/bin:\$PATH"
-      fi
+      # packages_to_install contains llvm
+      echo "export CC=/usr/local/opt/llvm/bin/clang"
+      echo "export CXX=/usr/local/opt/llvm/bin/clang++"
+      echo "export LDFLAGS=-L/usr/local/opt/llvm/lib"
+      echo "export CPPFLAGS=-I/usr/local/opt/llvm/include"
+      echo "export PATH=/usr/local/opt/llvm/bin:\$PATH"
       if [ -z "${JAVA_HOME}" ]; then
         echo "export JAVA_HOME=\$(/usr/libexec/java_home -v11)"
       fi
@@ -700,12 +692,10 @@ install_dependencies() {
     export OPENSSL_ROOT_DIR=/usr/local/opt/openssl
     export OPENSSL_LIBRARIES=/usr/local/opt/openssl/lib
     export OPENSSL_SSL_LIBRARY=/usr/local/opt/openssl/lib/libssl.dylib
-    if [[ "${packages_to_install[@]}" =~ "llvm@${LLVM_VERSION}" ]]; then
-      export CC=/usr/local/opt/llvm@${LLVM_VERSION}/bin/clang
-      export CXX=/usr/local/opt/llvm@${LLVM_VERSION}/bin/clang++
-      export LDFLAGS=-L/usr/local/opt/llvm@${LLVM_VERSION}/lib
-      export CPPFLAGS=-I/usr/local/opt/llvm@${LLVM_VERSION}/include
-    fi
+    export CC=/usr/local/opt/llvm/bin/clang
+    export CXX=/usr/local/opt/llvm/bin/clang++
+    export LDFLAGS=-L/usr/local/opt/llvm/lib
+    export CPPFLAGS=-I/usr/local/opt/llvm/include
   fi
 
   if [[ ${install_folly} == true ]]; then
