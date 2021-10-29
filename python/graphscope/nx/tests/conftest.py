@@ -28,10 +28,8 @@ def graphscope_session():
     graphscope.set_option(show_log=True)
     graphscope.set_option(initializing_interactive_engine=False)
 
-    subprocess.check_call(["free", "-h"])
     sess = graphscope.session(cluster_type="hosts")
 
     sess.as_default()
     yield sess
-    subprocess.check_call(["free", "-h"])
     sess.close()
