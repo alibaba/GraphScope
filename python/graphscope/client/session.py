@@ -22,7 +22,6 @@
 import atexit
 import base64
 import contextlib
-import copy
 import json
 import logging
 import os
@@ -31,8 +30,8 @@ import signal
 import sys
 import threading
 import time
+import uuid
 import warnings
-from queue import Empty as EmptyQueue
 
 try:
     from kubernetes import client as kube_client
@@ -51,13 +50,10 @@ from graphscope.config import GSConfig as gs_config
 from graphscope.deploy.hosts.cluster import HostsClusterLauncher
 from graphscope.deploy.kubernetes.cluster import KubernetesClusterLauncher
 from graphscope.framework.dag import Dag
-from graphscope.framework.errors import ConnectionError
 from graphscope.framework.errors import FatalError
-from graphscope.framework.errors import GRPCError
 from graphscope.framework.errors import InteractiveEngineInternalError
 from graphscope.framework.errors import InvalidArgumentError
 from graphscope.framework.errors import K8sError
-from graphscope.framework.errors import check_argument
 from graphscope.framework.graph import Graph
 from graphscope.framework.graph import GraphDAGNode
 from graphscope.framework.operation import Operation
@@ -187,7 +183,7 @@ class _FetchHandler(object):
         result_set_dag_node = self._fetches[seq]
         return ResultSet(result_set_dag_node)
 
-    def wrapper_results(self, response: message_pb2.RunStepResponse):
+    def wrap_results(self, response: message_pb2.RunStepResponse):
         rets = list()
         for seq, op in enumerate(self._ops):
             for op_result in response.results:
@@ -234,6 +230,26 @@ class _FetchHandler(object):
                         rets.append(None)
                     break
         return rets[0] if self._unpack else rets
+
+    def get_dag_for_unload(self):
+        """Unload operations (graph, app, context) in dag which are not
+        existed in fetches.
+        """
+        unload_dag = op_def_pb2.DagDef()
+        keys_of_fetches = set([op.key for op in self._ops])
+        mapping = {
+            types_pb2.CREATE_GRAPH: types_pb2.UNLOAD_GRAPH,
+            types_pb2.CREATE_APP: types_pb2.UNLOAD_APP,
+            types_pb2.RUN_APP: types_pb2.UNLOAD_CONTEXT,
+        }
+        for op_def in self._sub_dag.op:
+            if op_def.op in mapping and op_def.key not in keys_of_fetches:
+                unload_op_def = op_def_pb2.OpDef(
+                    op=mapping[op_def.op], key=uuid.uuid4().hex
+                )
+                unload_op_def.parents.extend([op_def.key])
+                unload_dag.op.extend([unload_op_def])
+        return unload_dag
 
 
 class Session(object):
@@ -936,7 +952,15 @@ class Session(object):
         except FatalError:
             self.close()
             raise
-        return fetch_handler.wrapper_results(response)
+        if not self.eager():
+            # Unload operations that cannot be touched anymore
+            dag_to_unload = fetch_handler.get_dag_for_unload()
+            try:
+                self._grpc_client.run(dag_to_unload)
+            except FatalError:
+                self.close()
+                raise
+        return fetch_handler.wrap_results(response)
 
     def _connect(self):
         if self._config_params["addr"] is not None:
