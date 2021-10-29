@@ -26,7 +26,7 @@ __all__ = ["average_shortest_path_length"]
 
 
 @project_to_simple
-@not_compatible_for("arrow_property", "dynamic_property", "arrow_label_projected")
+@not_compatible_for("arrow_property", "dynamic_property", "arrow_flattened")
 def average_shortest_path_length(G):
     r"""Returns the average shortest path length.
 
