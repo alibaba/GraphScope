@@ -17,6 +17,7 @@
 #
 
 import pytest
+import subprocess
 
 import graphscope
 
@@ -27,7 +28,9 @@ def graphscope_session():
     graphscope.set_option(initializing_interactive_engine=False)
 
     sess = graphscope.session(cluster_type="hosts")
+    subprocess.check_call(["free", "-h"])
 
     sess.as_default()
     yield sess
+    subprocess.check_call(["free", "-h"])
     sess.close()
