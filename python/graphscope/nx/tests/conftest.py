@@ -16,8 +16,9 @@
 # limitations under the License.
 #
 
-import pytest
 import subprocess
+
+import pytest
 
 import graphscope
 
