@@ -120,3 +120,13 @@ spec:
         - "False"
         - "--k8s_delete_namespace"
         - "False"
+    {{- if .Values.withJupyter }}
+    - name: jupyter
+      image: "{{ .Values.jupyter.image.name }}:{{ .Values.jupyter.image.tag }}"
+      imagePullPolicy: {{ .Values.imagePullPolicy }}
+      resources:
+{{ toYaml .Values.jupyter.resources | indent 8 }}
+      ports:
+        - containerPort: 8888
+          name: jupyter
+    {{- end }}

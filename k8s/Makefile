@@ -146,6 +146,12 @@ graphscope-client-manylinux2014-py3:
 					auditwheel repair ./*.whl; \
 				done'
 
+jupyter:
+	docker build --progress=$(BUILD_PROGRESS) \
+				 -t ${REGISTRY}/$(DOCKER_ORG)/jupyter:${VERSION} \
+				 --network=host \
+				 -f $(WORKING_DIR)/jupyter.Dockerfile .
+
 push:
 	docker push ${REGISTRY}/$(DOCKER_ORG)/graphscope-runtime:${VERSION}
 	docker push ${REGISTRY}/$(DOCKER_ORG)/graphscope-vineyard:${VERSION}
