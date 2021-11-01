@@ -101,7 +101,7 @@ graphscope-darwin-py3:
 	sudo rm -fr /tmp/libvineyard /tmp/libgrape-lite
 	# build graphscope
 	cd $(WORKING_DIR)/../ && \
-		make install && \
+		make install WITH_LEARNING_ENGINE=OFF && \
 		python3 $(WORKING_DIR)/precompile.py
 	# build and delocate wheel
 	cd $(WORKING_DIR)/../coordinator && \

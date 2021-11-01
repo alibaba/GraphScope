@@ -91,7 +91,7 @@ if (${CYTHON_PREGEL_APP} OR ${CYTHON_PIE_APP})
 endif ()
 
 # find vineyard-----------------------------------------
-find_package(vineyard 0.3.1 QUIET)
+find_package(vineyard 0.3.3 QUIET)
 include_directories(${VINEYARD_INCLUDE_DIRS})
 add_compile_options(-DENABLE_SELECTOR)
 
