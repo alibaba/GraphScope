@@ -20,7 +20,6 @@ use dyn_type::{BorrowObject, Object};
 use ir_common::error::DynIter;
 use ir_common::NameOrId;
 use pegasus::codec::{Decode, Encode, ReadExt, WriteExt};
-use std::cmp::Ordering;
 use std::collections::HashMap;
 use std::hash::{Hash, Hasher};
 
@@ -168,35 +167,6 @@ impl Decode for Record {
     }
 }
 
-impl PartialEq for Record {
-    fn eq(&self, _other: &Self) -> bool {
-        todo!()
-    }
-}
-
-impl Eq for Record {}
-
-impl Hash for Record {
-    fn hash<H: Hasher>(&self, _state: &mut H) {
-        // TODO: hash by key if exists
-        todo!()
-    }
-}
-
-impl PartialOrd for Record {
-    fn partial_cmp(&self, _other: &Self) -> Option<Ordering> {
-        // TODO: order by key if exists
-        todo!()
-    }
-}
-
-impl Ord for Record {
-    fn cmp(&self, _other: &Self) -> Ordering {
-        // TODO: order by key if exists
-        todo!()
-    }
-}
-
 impl Into<Entry> for Vertex {
     fn into(self) -> Entry {
         Entry::Element(RecordElement::OnGraph(self.into()))
@@ -270,6 +240,44 @@ impl Element for RecordElement {
                 ObjectElement::Count(cnt) => (*cnt).into(),
             },
         }
+    }
+}
+
+/// RecordKey is the key fields of a Record, with each key corresponding to a request column_tag
+#[derive(Clone, Debug)]
+pub struct RecordKey {
+    key_fields: Vec<RecordElement>,
+}
+
+impl RecordKey {
+    pub fn new(key_fields: Vec<RecordElement>) -> Self {
+        RecordKey { key_fields }
+    }
+}
+
+impl Hash for RecordKey {
+    fn hash<H: Hasher>(&self, _state: &mut H) {
+        todo!()
+    }
+}
+
+impl PartialEq for RecordKey {
+    fn eq(&self, _other: &Self) -> bool {
+        todo!()
+    }
+}
+
+impl Eq for RecordKey {}
+
+impl Encode for RecordKey {
+    fn write_to<W: WriteExt>(&self, _writer: &mut W) -> std::io::Result<()> {
+        todo!()
+    }
+}
+
+impl Decode for RecordKey {
+    fn read_from<R: ReadExt>(_reader: &mut R) -> std::io::Result<Self> {
+        todo!()
     }
 }
 
