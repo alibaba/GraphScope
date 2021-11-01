@@ -274,8 +274,8 @@ mod test {
             scan_opt: 0,
             alias: None,
             params: Some(pb::QueryParams {
-                table_names: vec![],
-                columns: vec![common_pb::NameOrId::from("Person".to_string())],
+                table_names: vec![common_pb::NameOrId::from("Person".to_string())],
+                columns: vec![],
                 limit: None,
                 predicate: None,
                 requirements: vec![],
@@ -289,8 +289,8 @@ mod test {
                 v_tag: None,
                 direction: 0,
                 params: Some(pb::QueryParams {
-                    table_names: vec![],
-                    columns: vec![common_pb::NameOrId::from("Knows".to_string())],
+                    table_names: vec![common_pb::NameOrId::from("Knows".to_string())],
+                    columns: vec![],
                     limit: None,
                     predicate: None,
                     requirements: vec![],
