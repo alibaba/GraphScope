@@ -670,7 +670,7 @@ bl::result<rpc::graph::GraphDefPb> GrapeInstance::toUnDirected(
   std::string dst_graph_name = "graph_" + generateId();
 
   BOOST_LEAF_AUTO(dst_wrapper,
-                  src_wrapper->ToUnDirected(comm_spec_, dst_graph_name));
+                  src_wrapper->ToUndirected(comm_spec_, dst_graph_name));
   BOOST_LEAF_CHECK(object_manager_.PutObject(dst_wrapper));
   return dst_wrapper->graph_def();
 #else
@@ -888,7 +888,8 @@ bl::result<void> GrapeInstance::registerGraphType(const rpc::GSParams& params) {
     BOOST_LEAF_CHECK(utils->Init());
     return object_manager_.PutObject(utils);
   } else if (graph_type == rpc::graph::ARROW_PROJECTED ||
-             graph_type == rpc::graph::DYNAMIC_PROJECTED) {
+             graph_type == rpc::graph::DYNAMIC_PROJECTED ||
+             graph_type == rpc::graph::ARROW_FLATTENED) {
     auto projector = std::make_shared<Projector>(type_sig, lib_path);
     BOOST_LEAF_CHECK(projector->Init());
     return object_manager_.PutObject(projector);

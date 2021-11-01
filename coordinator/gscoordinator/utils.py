@@ -322,9 +322,10 @@ def compile_graph_frame(workspace: str, library_name, attr: dict, engine_config:
     ]
     if graph_type == graph_def_pb2.ARROW_PROPERTY:
         cmake_commands += ["-DPROPERTY_GRAPH_FRAME=True"]
-    elif (
-        graph_type == graph_def_pb2.ARROW_PROJECTED
-        or graph_type == graph_def_pb2.DYNAMIC_PROJECTED
+    elif graph_type in (
+        graph_def_pb2.ARROW_PROJECTED,
+        graph_def_pb2.DYNAMIC_PROJECTED,
+        graph_def_pb2.ARROW_FLATTENED,
     ):
         cmake_commands += ["-DPROJECT_FRAME=True"]
     else:
@@ -725,7 +726,10 @@ def _pre_process_for_output_graph_op(op, op_result_pool, key_to_op, **kwargs):
 
 def _pre_process_for_project_to_simple_op(op, op_result_pool, key_to_op, **kwargs):
     # for nx graph
-    if op.attr[types_pb2.GRAPH_TYPE].graph_type == graph_def_pb2.DYNAMIC_PROJECTED:
+    if op.attr[types_pb2.GRAPH_TYPE].graph_type in (
+        graph_def_pb2.DYNAMIC_PROJECTED,
+        graph_def_pb2.ARROW_FLATTENED,
+    ):
         return
     assert len(op.parents) == 1
     # get parent graph schema
@@ -1115,6 +1119,10 @@ GRAPH_HEADER_MAP = {
         "gs::DynamicFragment",
         "core/fragment/dynamic_fragment.h",
     ),
+    graph_def_pb2.ARROW_FLATTENED: (
+        "gs::ArrowFlattenedFragment",
+        "core/fragment/arrow_flattened_fragment.h",
+    ),
 }
 
 
@@ -1135,6 +1143,14 @@ def _codegen_graph_info(attr):
     ):
         # in a format of gs::ArrowProjectedFragment<int64_t, uint32_t, double, double>
         # or grape::ImmutableEdgecutFragment<int64_t, uint32_t, double, double>
+        graph_fqn = "{}<{},{},{},{}>".format(
+            graph_class,
+            attr[types_pb2.OID_TYPE].s.decode("utf-8"),
+            attr[types_pb2.VID_TYPE].s.decode("utf-8"),
+            attr[types_pb2.V_DATA_TYPE].s.decode("utf-8"),
+            attr[types_pb2.E_DATA_TYPE].s.decode("utf-8"),
+        )
+    elif graph_class == "gs::ArrowFlattenedFragment":
         graph_fqn = "{}<{},{},{},{}>".format(
             graph_class,
             attr[types_pb2.OID_TYPE].s.decode("utf-8"),

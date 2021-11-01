@@ -15,41 +15,35 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
+#
 
 
 from graphscope.framework.app import AppAssets
 from graphscope.framework.app import not_compatible_for
 from graphscope.framework.app import project_to_simple
 
-__all__ = ["k_core"]
+__all__ = ["average_shortest_path_length"]
 
 
 @project_to_simple
 @not_compatible_for("arrow_property", "dynamic_property", "arrow_flattened")
-def k_core(graph, k: int):
-    """K-cores of the graph are connected components that are left after
-    all vertices of degree less than `k` have been removed.
+def average_shortest_path_length(G):
+    r"""Returns the average shortest path length.
 
-    Args:
-        graph (:class:`Graph`): A projected simple graph.
-        k (int): The `k` for k-core.
+    The average shortest path length is
 
-    Returns:
-        :class:`graphscope.framework.context.VertexDataContextDAGNode`:
-            A context with each vertex assigned with a boolean:
-                1 if the vertex satisfies k-core, otherwise 0.
-            Evaluated in eager mode.
+    .. math::
 
-    Examples:
+       a =\sum_{s,t \in V} \frac{d(s, t)}{n(n-1)}
 
-    .. code:: python
+    where `V` is the set of nodes in `G`,
+    `d(s, t)` is the shortest path from `s` to `t`,
+    and `n` is the number of nodes in `G`.
 
-        import graphscope as gs
-        sess = gs.session()
-        g = sess.g()
-        pg = g.project(vertices={"vlabel": []}, edges={"elabel": []})
-        r = gs.k_core(pg)
-        s.close()
+    Parameters
+    ----------
+    G :  graph
 
     """
-    return AppAssets(algo="kcore", context="vertex_data")(graph, k=k)
+    ctx = AppAssets(algo="sssp_average_length", context="tensor")(G)
+    return ctx.to_numpy("r", axis=0)[0]

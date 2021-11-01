@@ -502,6 +502,149 @@ class DynamicProjectedFragment {
                                                       e_prop);
   }
 
+  void PrepareToRunApp(grape::MessageStrategy strategy, bool need_split_edges) {
+    fragment_->PrepareToRunApp(strategy, need_split_edges);
+  }
+
+  inline fid_t fid() const { return fragment_->fid_; }
+
+  inline fid_t fnum() const { return fragment_->fnum_; }
+
+  inline vid_t id_mask() const { return fragment_->id_mask_; }
+
+  inline int fid_offset() const { return fragment_->fid_offset_; }
+
+  inline bool directed() const { return fragment_->directed(); }
+
+  inline vertex_range_t Vertices() const { return fragment_->Vertices(); }
+
+  inline vertex_range_t InnerVertices() const {
+    return fragment_->InnerVertices();
+  }
+
+  inline vertex_range_t OuterVertices() const {
+    return fragment_->OuterVertices();
+  }
+
+  inline bool GetVertex(const oid_t& oid, vertex_t& v) const {
+    return fragment_->GetVertex(oid, v);
+  }
+
+  inline const vid_t* GetOuterVerticesGid() const {
+    return fragment_->GetOuterVerticesGid();
+  }
+
+  inline oid_t GetId(const vertex_t& v) const { return fragment_->GetId(v); }
+
+  inline fid_t GetFragId(const vertex_t& u) const {
+    return fragment_->GetFragId(u);
+  }
+
+  inline bool Gid2Vertex(const vid_t& gid, vertex_t& v) const {
+    return fragment_->Gid2Vertex(gid, v);
+  }
+
+  inline vid_t Vertex2Gid(const vertex_t& v) const {
+    return fragment_->Vertex2Gid(v);
+  }
+
+  inline vdata_t GetData(const vertex_t& v) const {
+    assert(fragment_->IsInnerVertex(v));
+    auto data = fragment_->vdata()[v.GetValue()];
+    return dynamic_projected_fragment_impl::unpack_dynamic<vdata_t>(
+        data, v_prop_key_);
+  }
+
+  inline void SetData(const vertex_t& v, const vdata_t& val) {
+    assert(fragment_->IsInnerVertex(v));
+    dynamic_projected_fragment_impl::pack_dynamic(
+        fragment_->vdata()[v.GetValue()][v_prop_key_], val);
+  }
+
+  inline vid_t GetInnerVerticesNum() const {
+    return fragment_->GetInnerVerticesNum();
+  }
+
+  inline vid_t GetOuterVerticesNum() const {
+    return fragment_->GetOuterVerticesNum();
+  }
+
+  inline vid_t GetVerticesNum() const { return fragment_->GetVerticesNum(); }
+
+  size_t GetTotalVerticesNum() const {
+    return fragment_->GetTotalVerticesNum();
+  }
+
+  inline size_t GetEdgeNum() const { return fragment_->GetEdgeNum(); }
+
+  inline bool IsInnerVertex(const vertex_t& v) const {
+    return fragment_->IsInnerVertex(v);
+  }
+
+  inline bool IsOuterVertex(const vertex_t& v) const {
+    return fragment_->IsOuterVertex(v);
+  }
+
+  inline bool GetInnerVertex(const oid_t& oid, vertex_t& v) const {
+    return fragment_->GetInnerVertex(oid, v);
+  }
+
+  inline bool GetOuterVertex(const oid_t& oid, vertex_t& v) const {
+    return fragment_->GetOuterVertex(oid, v);
+  }
+
+  inline oid_t GetInnerVertexId(const vertex_t& v) const {
+    return fragment_->GetInnerVertexId(v);
+  }
+
+  inline oid_t GetOuterVertexId(const vertex_t& v) const {
+    return fragment_->GetOuterVertexId(v);
+  }
+
+  inline oid_t Gid2Oid(const vid_t& gid) const {
+    return fragment_->Gid2Oid(gid);
+  }
+
+  inline bool Oid2Gid(const oid_t& oid, vid_t& gid) const {
+    return fragment_->Oid2Gid(oid, gid);
+  }
+
+  inline bool InnerVertexGid2Vertex(const vid_t& gid, vertex_t& v) const {
+    return fragment_->InnerVertexGid2Vertex(gid, v);
+  }
+
+  inline bool OuterVertexGid2Vertex(const vid_t& gid, vertex_t& v) const {
+    return fragment_->OuterVertexGid2Vertex(gid, v);
+  }
+
+  inline vid_t GetOuterVertexGid(const vertex_t& v) const {
+    return fragment_->GetOuterVertexGid(v);
+  }
+
+  inline vid_t GetInnerVertexGid(const vertex_t& v) const {
+    return fragment_->GetInnerVertexGid(v);
+  }
+
+  inline bool IsAliveVertex(const vertex_t& v) const {
+    return fragment_->IsAliveVertex(v);
+  }
+
+  inline bool IsAliveInnerVertex(const vertex_t& v) const {
+    return fragment_->IsAliveInnerVertex(v);
+  }
+
+  inline bool IsAliveOuterVertex(const vertex_t& v) const {
+    return fragment_->IsAliveOuterVertex(v);
+  }
+
+  inline bool HasChild(const vertex_t& v) const {
+    return fragment_->HasChild(v);
+  }
+
+  inline bool HasParent(const vertex_t& v) const {
+    return fragment_->HasParent(v);
+  }
+
   inline projected_adj_linked_list_t GetIncomingAdjList(const vertex_t& v) {
     int32_t ie_pos;
     if (fragment_->duplicated() && fragment_->IsOuterVertex(v)) {
@@ -664,151 +807,12 @@ class DynamicProjectedFragment {
         fragment_->inner_edge_space().OuterNbr(oe_pos).cend());
   }
 
-  inline fid_t fid() const { return fragment_->fid_; }
-
-  inline fid_t fnum() const { return fragment_->fnum_; }
-
-  inline vid_t id_mask() const { return fragment_->id_mask_; }
-
-  inline int fid_offset() const { return fragment_->fid_offset_; }
-
-  inline bool directed() const { return fragment_->directed(); }
-
-  inline const vid_t* GetOuterVerticesGid() const {
-    return fragment_->GetOuterVerticesGid();
-  }
-
-  inline size_t GetEdgeNum() const { return fragment_->GetEdgeNum(); }
-
-  inline vid_t GetVerticesNum() const { return fragment_->GetVerticesNum(); }
-
-  size_t GetTotalVerticesNum() const {
-    return fragment_->GetTotalVerticesNum();
-  }
-
-  inline vertex_range_t Vertices() const { return fragment_->Vertices(); }
-
-  inline vertex_range_t InnerVertices() const {
-    return fragment_->InnerVertices();
-  }
-
-  inline vertex_range_t OuterVertices() const {
-    return fragment_->OuterVertices();
-  }
-
-  inline bool GetVertex(const oid_t& oid, vertex_t& v) const {
-    return fragment_->GetVertex(oid, v);
-  }
-
-  inline oid_t GetId(const vertex_t& v) const { return fragment_->GetId(v); }
-
-  inline fid_t GetFragId(const vertex_t& u) const {
-    return fragment_->GetFragId(u);
-  }
-
-  inline vdata_t GetData(const vertex_t& v) const {
-    assert(fragment_->IsInnerVertex(v));
-    auto data = fragment_->vdata()[v.GetValue()];
-    return dynamic_projected_fragment_impl::unpack_dynamic<vdata_t>(
-        data, v_prop_key_);
-  }
-
-  inline void SetData(const vertex_t& v, const vdata_t& val) {
-    assert(fragment_->IsInnerVertex(v));
-    dynamic_projected_fragment_impl::pack_dynamic(
-        fragment_->vdata()[v.GetValue()][v_prop_key_], val);
-  }
-
-  inline bool HasChild(const vertex_t& v) const {
-    return fragment_->HasChild(v);
-  }
-
-  inline bool HasParent(const vertex_t& v) const {
-    return fragment_->HasParent(v);
-  }
-
   inline int GetLocalOutDegree(const vertex_t& v) const {
     return fragment_->GetLocalOutDegree(v);
   }
 
   inline int GetLocalInDegree(const vertex_t& v) const {
     return fragment_->GetLocalInDegree(v);
-  }
-
-  inline bool Gid2Vertex(const vid_t& gid, vertex_t& v) const {
-    return fragment_->Gid2Vertex(gid, v);
-  }
-
-  inline vid_t Vertex2Gid(const vertex_t& v) const {
-    return fragment_->Vertex2Gid(v);
-  }
-
-  inline vid_t GetInnerVerticesNum() const {
-    return fragment_->GetInnerVerticesNum();
-  }
-
-  inline vid_t GetOuterVerticesNum() const {
-    return fragment_->GetOuterVerticesNum();
-  }
-
-  inline bool IsInnerVertex(const vertex_t& v) const {
-    return fragment_->IsInnerVertex(v);
-  }
-
-  inline bool IsOuterVertex(const vertex_t& v) const {
-    return fragment_->IsOuterVertex(v);
-  }
-
-  inline bool GetInnerVertex(const oid_t& oid, vertex_t& v) const {
-    return fragment_->GetInnerVertex(oid, v);
-  }
-
-  inline bool GetOuterVertex(const oid_t& oid, vertex_t& v) const {
-    return fragment_->GetOuterVertex(oid, v);
-  }
-
-  inline oid_t GetInnerVertexId(const vertex_t& v) const {
-    return fragment_->GetInnerVertexId(v);
-  }
-
-  inline oid_t GetOuterVertexId(const vertex_t& v) const {
-    return fragment_->GetOuterVertexId(v);
-  }
-
-  inline oid_t Gid2Oid(const vid_t& gid) const {
-    return fragment_->Gid2Oid(gid);
-  }
-
-  inline bool Oid2Gid(const oid_t& oid, vid_t& gid) const {
-    return fragment_->Oid2Gid(oid, gid);
-  }
-
-  inline bool InnerVertexGid2Vertex(const vid_t& gid, vertex_t& v) const {
-    return fragment_->InnerVertexGid2Vertex(gid, v);
-  }
-
-  inline bool OuterVertexGid2Vertex(const vid_t& gid, vertex_t& v) const {
-    return fragment_->OuterVertexGid2Vertex(gid, v);
-  }
-
-  inline vid_t GetOuterVertexGid(const vertex_t& v) const {
-    return fragment_->GetOuterVertexGid(v);
-  }
-
-  inline vid_t GetInnerVertexGid(const vertex_t& v) const {
-    return fragment_->GetInnerVertexGid(v);
-  }
-
-  inline bool IsAliveVertex(const vertex_t& v) const {
-    return fragment_->IsAliveVertex(v);
-  }
-
-  inline bool IsAliveInnerVertex(const vertex_t& v) const {
-    return fragment_->IsAliveInnerVertex(v);
-  }
-
-  inline bool IsAliveOuterVertex(const vertex_t& v) const {
-    return fragment_->IsAliveOuterVertex(v);
   }
 
   inline grape::DestList IEDests(const vertex_t& v) const {
@@ -825,10 +829,6 @@ class DynamicProjectedFragment {
 
   inline const std::vector<vertex_t>& MirrorVertices(fid_t fid) const {
     return fragment_->MirrorVertices(fid);
-  }
-
-  void PrepareToRunApp(grape::MessageStrategy strategy, bool need_split_edges) {
-    fragment_->PrepareToRunApp(strategy, need_split_edges);
   }
 
   bl::result<folly::dynamic::Type> GetOidType(
