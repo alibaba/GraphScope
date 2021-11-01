@@ -62,6 +62,7 @@ message GraphDefPb {
     //   - MaxGraphInfoPb
     //   - VineyardInfoPb
     google.protobuf.Any extension = 8;
+    bool is_multigraph = 9;
 }
 
 message TypeDefPb {
