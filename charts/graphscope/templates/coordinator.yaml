@@ -8,19 +8,16 @@ spec:
   {{- include "graphscope.imagePullSecrets" . | indent 2 }}
   restartPolicy: Never
   containers:
-    - name: jupyter-lab
-      image: jupyter:3
+    {{- if .Values.withJupyter }}
+    - name: jupyter
+      image: "{{ .Values.jupyter.image.name }}:{{ .Values.jupyter.image.tag }}"
       imagePullPolicy: {{ .Values.imagePullPolicy }}
       resources:
-        requests:
-          cpu: 1.0
-          memory: 4Gi
-        limits:
-          cpu: 1.0
-          memory: 4Gi
+{{ toYaml .Values.jupyter.resources | indent 8 }}
       port:
         - containerPort: 8888
           name: jupyter
+    {{- end }}
     - name: coordinator-container
       {{- if .Values.coordinator.image.tag }}
       image: "{{ .Values.coordinator.image.name }}:{{ .Values.coordinator.image.tag }}"
