@@ -250,7 +250,7 @@ class TestBuiltinCopyOnWrite:
             6: 0.4255225997990211,
         }
 
-        # FIXME(acezen): p2p_31_graph loading fail in ci, open when fixed the problem.
+        # FIXME(acezen): p2p_31_graph loading fail in ci, open when fixed the problem. (fixme)
         # self.p2p_31 = p2p_31_graph(p2p_dir, False)
         # self.P2P = nx.Graph(self.p2p_31, default_label="vertex")
         # self.P2P.sssp = dict(
