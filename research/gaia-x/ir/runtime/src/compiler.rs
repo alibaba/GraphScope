@@ -14,23 +14,25 @@
 //! limitations under the License.
 
 use crate::graph::partitioner::Partitioner;
-use crate::process::functions::CompareFunction;
+use crate::process::functions::{CompareFunction, JoinFunction};
 use crate::process::operator::filter::FilterFuncGen;
 use crate::process::operator::flatmap::FlatMapFuncGen;
+use crate::process::operator::join::JoinFunctionGen;
 use crate::process::operator::map::MapFuncGen;
 use crate::process::operator::shuffle::RecordRouter;
 use crate::process::operator::sink::RecordSinkEncoder;
 use crate::process::operator::sort::CompareFunctionGen;
 use crate::process::operator::source::source_op_from;
-use crate::process::record::Record;
+use crate::process::record::{Record, RecordKey};
 use ir_common::error::str_to_dyn_error;
 use ir_common::generated::algebra as algebra_pb;
+use ir_common::generated::algebra::join::JoinKind;
 use ir_common::generated::common as common_pb;
 use ir_common::generated::result as result_pb;
 use pegasus::api::function::*;
 use pegasus::api::{
-    Collect, CorrelatedSubTask, Filter, IterCondition, Iteration, Limit, Map, Merge, Sink, SortBy,
-    SortLimitBy, Source,
+    Collect, CorrelatedSubTask, Filter, IterCondition, Iteration, Join, KeyBy, Limit, Map, Merge,
+    PartitionByKey, Sink, SortBy, SortLimitBy, Source,
 };
 use pegasus::result::ResultSink;
 use pegasus::stream::Stream;
@@ -50,6 +52,7 @@ type RecordLeftJoin = Box<dyn BinaryFunction<Record, Vec<Record>, Option<Record>
 type RecordEncode = Box<dyn MapFunction<Record, result_pb::Result>>;
 type RecordShuffle = Box<dyn RouteFunction<Record>>;
 type RecordCompare = Box<dyn CompareFunction<Record>>;
+type RecordJoin = Box<dyn JoinFunction<Record, RecordKey, Record>>;
 type BinaryResource = Vec<u8>;
 
 pub struct IRJobCompiler {
@@ -109,6 +112,11 @@ impl FnGenerator {
 
     fn gen_subtask(&self, _res: &BinaryResource) -> Result<RecordLeftJoin, BuildJobError> {
         todo!()
+    }
+
+    fn gen_join(&self, res: &BinaryResource) -> Result<RecordJoin, BuildJobError> {
+        let step = decode::<algebra_pb::logical_plan::Operator>(res)?;
+        Ok(step.gen_join()?)
     }
 
     fn gen_sink(&self, _res: &BinaryResource) -> Result<RecordEncode, BuildJobError> {
@@ -233,8 +241,72 @@ impl IRJobCompiler {
                     OpKind::SegApply(_) => {
                         todo!()
                     }
-                    OpKind::Join(_) => {
-                        todo!()
+                    OpKind::Join(join) => {
+                        let joiner = self.udf_gen.gen_join(&join.resource)?;
+                        let left_key_selector = joiner.left_key()?;
+                        let right_key_selector = joiner.right_key()?;
+                        let join_kind = joiner.get_join_kind();
+                        let left_task = join
+                            .left_task
+                            .as_ref()
+                            .ok_or(str_to_dyn_error("left_task is missing in merge"))?;
+                        let right_task = join
+                            .right_task
+                            .as_ref()
+                            .ok_or(str_to_dyn_error("right_task is missing in merge"))?;
+                        let (left_stream, right_stream) = stream.copied()?;
+                        let left_stream = self
+                            .install(left_stream, &left_task.plan[..])?
+                            .key_by(move |record| left_key_selector.select_key(record))?
+                            .partition_by_key();
+                        let right_stream = self
+                            .install(right_stream, &right_task.plan[..])?
+                            .key_by(move |record| right_key_selector.select_key(record))?
+                            .partition_by_key();
+                        stream = match join_kind {
+                            JoinKind::Inner => left_stream
+                                .inner_join(right_stream)?
+                                .map(|(left, right)| Ok(left.value.join(right.value)))?,
+                            JoinKind::LeftOuter => left_stream.left_outer_join(right_stream)?.map(
+                                |(left, right)| {
+                                    let left =
+                                        left.expect("left cannot be None in left outer join");
+                                    if let Some(right) = right {
+                                        Ok(left.value.join(right.value))
+                                    } else {
+                                        Ok(left.value)
+                                    }
+                                },
+                            )?,
+                            JoinKind::RightOuter => left_stream
+                                .right_outer_join(right_stream)?
+                                .map(|(left, right)| {
+                                    let right =
+                                        right.expect("right cannot be None in right outer join");
+                                    if let Some(left) = left {
+                                        Ok(left.value.join(right.value))
+                                    } else {
+                                        Ok(right.value)
+                                    }
+                                })?,
+                            JoinKind::FullOuter => left_stream.full_outer_join(right_stream)?.map(
+                                |(left, right)| match (left, right) {
+                                    (Some(left), Some(right)) => Ok(left.value.join(right.value)),
+                                    (Some(left), None) => Ok(left.value),
+                                    (None, Some(right)) => Ok(right.value),
+                                    (None, None) => {
+                                        todo!()
+                                    }
+                                },
+                            )?,
+                            JoinKind::Semi => left_stream
+                                .semi_join(right_stream)?
+                                .map(|left| Ok(left.value))?,
+                            JoinKind::Anti => left_stream
+                                .anti_join(right_stream)?
+                                .map(|left| Ok(left.value))?,
+                            JoinKind::Times => todo!(),
+                        }
                     }
                     OpKind::KeyBy(_) => {
                         todo!()
