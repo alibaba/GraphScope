@@ -26,6 +26,7 @@ from networkx.utils.decorators import not_implemented_for
 import graphscope
 from graphscope import nx
 from graphscope.framework.app import AppAssets
+from graphscope.framework.app import not_compatible_for
 from graphscope.framework.errors import InvalidArgumentError
 from graphscope.nx.utils.compat import patch_docstring
 from graphscope.proto import graph_def_pb2
@@ -39,7 +40,10 @@ def project_to_simple(func):
         graph = args[0]
         if not hasattr(graph, "graph_type"):
             raise InvalidArgumentError("Missing graph_type attribute in graph object.")
-        elif graph.graph_type == graph_def_pb2.DYNAMIC_PROPERTY:
+        elif graph.graph_type in (
+            graph_def_pb2.DYNAMIC_PROPERTY,
+            graph_def_pb2.ARROW_PROPERTY,
+        ):
             if (
                 "weight" in inspect.getfullargspec(func)[0]
             ):  # func has 'weight' argument
@@ -109,7 +113,11 @@ def pagerank(G, alpha=0.85, max_iter=100, tol=1.0e-6):
 
     """
     ctx = graphscope.pagerank_nx(G, alpha, max_iter, tol)
-    return ctx.to_dataframe({"node": "v.id", "result": "r"})
+    return (
+        ctx.to_dataframe({"id": "v.id", "value": "r"})
+        .set_index("id")["value"]
+        .to_dict()
+    )
 
 
 @project_to_simple
@@ -158,7 +166,8 @@ def hits(G, max_iter=100, tol=1.0e-8, normalized=True):
        http://www.cs.cornell.edu/home/kleinber/auth.pdf.
     """
     ctx = graphscope.hits(G, tolerance=tol, max_round=max_iter, normalized=normalized)
-    return ctx.to_dataframe({"node": "v.id", "auth": "r.auth", "hub": "r.hub"})
+    df = ctx.to_dataframe({"id": "v.id", "auth": "r.auth", "hub": "r.hub"})
+    return (df.set_index("id")["hub"].to_dict(), df.set_index("id")["auth"].to_dict())
 
 
 @project_to_simple
@@ -188,7 +197,11 @@ def degree_centrality(G):
     possible degree in a simple graph n-1 where n is the number of nodes in G.
     """
     ctx = graphscope.degree_centrality(G, centrality_type="both")
-    return ctx.to_dataframe({"node": "v.id", "result": "r"})
+    return (
+        ctx.to_dataframe({"id": "v.id", "value": "r"})
+        .set_index("id")["value"]
+        .to_dict()
+    )
 
 
 @not_implemented_for("undirected")
@@ -224,7 +237,11 @@ def in_degree_centrality(G):
     possible degree in a simple graph n-1 where n is the number of nodes in G.
     """
     ctx = graphscope.degree_centrality(G, centrality_type="in")
-    return ctx.to_dataframe({"node": "v.id", "result": "r"})
+    return (
+        ctx.to_dataframe({"id": "v.id", "value": "r"})
+        .set_index("id")["value"]
+        .to_dict()
+    )
 
 
 @not_implemented_for("undirected")
@@ -260,7 +277,11 @@ def out_degree_centrality(G):
     possible degree in a simple graph n-1 where n is the number of nodes in G.
     """
     ctx = graphscope.degree_centrality(G, centrality_type="out")
-    return ctx.to_dataframe({"node": "v.id", "result": "r"})
+    return (
+        ctx.to_dataframe({"id": "v.id", "value": "r"})
+        .set_index("id")["value"]
+        .to_dict()
+    )
 
 
 @project_to_simple
@@ -311,7 +332,11 @@ def eigenvector_centrality(G, max_iter=100, tol=1e-06, weight=None):
     hits
     """
     ctx = graphscope.eigenvector_centrality(G, tolerance=tol, max_round=max_iter)
-    return ctx.to_dataframe({"node": "v.id", "result": "r"})
+    return (
+        ctx.to_dataframe({"id": "v.id", "value": "r"})
+        .set_index("id")["value"]
+        .to_dict()
+    )
 
 
 @project_to_simple
@@ -400,7 +425,11 @@ def katz_centrality(
         max_round=max_iter,
         normalized=normalized,
     )
-    return ctx.to_dataframe({"node": "v.id", "result": "r"})
+    return (
+        ctx.to_dataframe({"id": "v.id", "value": "r"})
+        .set_index("id")["value"]
+        .to_dict()
+    )
 
 
 @project_to_simple
@@ -417,7 +446,8 @@ def has_path(G, source, target):
     target : node
        Ending node for path
     """
-    return AppAssets(algo="sssp_has_path", context="tensor")(G, source, target)
+    ctx = AppAssets(algo="sssp_has_path", context="tensor")(G, source, target)
+    return ctx.to_numpy("r", axis=0)[0]
 
 
 @project_to_simple
@@ -461,8 +491,12 @@ def single_source_dijkstra_path_length(G, source, weight=None):
     Distances are calculated as sums of weighted edges traversed.
 
     """
-    ctx = graphscope.sssp(G, source)
-    return ctx.to_dataframe({"node": "v.id", "result": "r"})
+    ctx = AppAssets(algo="sssp_projected", context="vertex_data")(G, source)
+    return (
+        ctx.to_dataframe({"id": "v.id", "value": "r"})
+        .set_index("id")["value"]
+        .to_dict()
+    )
 
 
 @project_to_simple
@@ -495,8 +529,7 @@ def average_shortest_path_length(G, weight=None):
     2.0
 
     """
-    ctx = AppAssets(algo="sssp_average_length", context="tensor")(G)
-    return ctx.to_numpy("r", axis=0)[0]
+    return graphscope.average_shortest_path_length(G)
 
 
 @project_to_simple
@@ -655,7 +688,11 @@ def closeness_centrality(G, weight=None, wf_improved=True):
        Cambridge University Press.
     """
     ctx = AppAssets(algo="closeness_centrality", context="vertex_data")(G, wf_improved)
-    return ctx.to_dataframe({"node": "v.id", "result": "r"})
+    return (
+        ctx.to_dataframe({"id": "v.id", "value": "r"})
+        .set_index("id")["value"]
+        .to_dict()
+    )
 
 
 @patch_docstring(nxa.bfs_tree)
@@ -795,7 +832,11 @@ def clustering(G):
     # FIXME(weibin): clustering now only correct in directed graph.
     # FIXME: nodes and weight not support.
     ctx = graphscope.clustering(G)
-    return ctx.to_dataframe({"node": "v.id", "result": "r"})
+    return (
+        ctx.to_dataframe({"id": "v.id", "value": "r"})
+        .set_index("id")["value"]
+        .to_dict()
+    )
 
 
 @project_to_simple
@@ -822,7 +863,11 @@ def triangles(G, nodes=None):
     """
     # FIXME: nodes not support.
     ctx = graphscope.triangles(G)
-    return ctx.to_dataframe({"node": "v.id", "result": "r"})
+    return (
+        ctx.to_dataframe({"id": "v.id", "value": "r"})
+        .set_index("id")["value"]
+        .to_dict()
+    )
 
 
 @project_to_simple
@@ -897,7 +942,12 @@ def weakly_connected_components(G):
         1 if the vertex satisfies k-core, otherwise 0.
 
     """
-    return AppAssets(algo="wcc_projected", context="vertex_data")(G)
+    ctx = AppAssets(algo="wcc_projected", context="vertex_data")(G)
+    return (
+        ctx.to_dataframe({"id": "v.id", "component": "r"})
+        .set_index("id")["component"]
+        .to_dict()
+    )
 
 
 @project_to_simple
@@ -1472,4 +1522,8 @@ def betweenness_centrality(
     ctx = AppAssets(algo=algorithm, context="vertex_data")(
         G, normalized=normalized, endpoints=endpoints
     )
-    return dict(zip(ctx.to_numpy("v.id"), ctx.to_numpy("r")))
+    return (
+        ctx.to_dataframe({"id": "v.id", "value": "r"})
+        .set_index("id")["value"]
+        .to_dict()
+    )

@@ -34,6 +34,7 @@
 #include "core/context/i_context.h"
 #include "core/context/tensor_dataframe_builder.h"
 #include "core/error.h"
+#include "core/fragment/arrow_flattened_fragment.h"
 #include "core/fragment/arrow_projected_fragment.h"
 #include "core/fragment/dynamic_projected_fragment.h"
 #include "core/object/i_fragment_wrapper.h"

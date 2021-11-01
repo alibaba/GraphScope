@@ -83,15 +83,16 @@ class HITS : public grape::ParallelAppBase<FRAG_T, HitsContext<FRAG_T>>,
     if (ctx.stage == AuthIteration) {
       hub_last.Swap(hub);
 
-      ForEach(inner_vertices, [&auth, &hub_last, &frag, &messages](int tid,
-                                                                   vertex_t u) {
-        auth[u] = 0.0;
-        for (auto& nbr : frag.GetIncomingAdjList(u)) {
-          auth[u] += hub_last[nbr.get_neighbor()];
-        }
-        messages.Channels()[tid].SendMsgThroughEdges<fragment_t, double>(
-            frag, u, auth[u]);
-      });
+      ForEach(
+          inner_vertices.begin(), inner_vertices.end(),
+          [&auth, &hub_last, &frag, &messages](int tid, vertex_t u) {
+            auth[u] = 0.0;
+            for (auto& nbr : frag.GetIncomingAdjList(u)) {
+              auth[u] += hub_last[nbr.get_neighbor()];
+            }
+            messages.Channels()[tid].SendMsgThroughEdges<fragment_t, double>(
+                frag, u, auth[u]);
+          });
 
       ctx.stage = HubIteration;
       if (frag.fnum() == 1) {
@@ -104,7 +105,8 @@ class HITS : public grape::ParallelAppBase<FRAG_T, HitsContext<FRAG_T>>,
           });
 
       ForEach(
-          inner_vertices, [&hub, &auth, &frag, &messages](int tid, vertex_t u) {
+          inner_vertices.begin(), inner_vertices.end(),
+          [&hub, &auth, &frag, &messages](int tid, vertex_t u) {
             hub[u] = 0.0;
             for (auto& nbr : frag.GetOutgoingAdjList(u)) {
               hub[u] += auth[nbr.get_neighbor()];

@@ -94,6 +94,7 @@ def not_compatible_for(*graph_types):
                 "arrow_projected": graph.graph_type == graph_def_pb2.ARROW_PROJECTED,
                 "dynamic_projected": graph.graph_type
                 == graph_def_pb2.DYNAMIC_PROJECTED,
+                "arrow_flattened": graph.graph_type == graph_def_pb2.ARROW_FLATTENED,
             }
             match = False
             try:
@@ -101,7 +102,7 @@ def not_compatible_for(*graph_types):
                     match = match or terms[t]
             except KeyError:
                 raise InvalidArgumentError(
-                    "Use one or more of arrow_property,dynamic_property,arrow_projected,dynamic_projected",
+                    "Use one or more of arrow_property,dynamic_property,arrow_projected,dynamic_projected,arrow_flattened",
                 )
             if match:
                 raise InvalidArgumentError(

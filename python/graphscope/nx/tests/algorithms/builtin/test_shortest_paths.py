@@ -29,13 +29,13 @@ class TestRunGenericPath:
         nx.builtin.average_shortest_path_length(self.G, weight="weight")
 
     def test_run_has_path(self):
-        nx.builtin.has_path(self.G, source=0, target=3)
+        assert nx.builtin.has_path(self.G, source=0, target=3)
 
     def test_shortest_path_length_on_reverse_view(self):
         ret1 = nx.builtin.single_source_dijkstra_path_length(
             self.DG, source=2, weight="weight"
         )
-        assert replace_with_inf(dict(ret1.values)) == {
+        assert replace_with_inf(ret1) == {
             0.0: float("inf"),
             1.0: float("inf"),
             2.0: 0.0,
@@ -46,7 +46,7 @@ class TestRunGenericPath:
         ret2 = nx.builtin.single_source_dijkstra_path_length(
             RDG, source=2, weight="weight"
         )
-        assert replace_with_inf(dict(ret2.values)) == {
+        assert replace_with_inf(ret2) == {
             0.0: 1.0,
             1.0: 1.0,
             2.0: 0.0,
@@ -58,12 +58,12 @@ class TestRunGenericPath:
         ret1 = nx.builtin.single_source_dijkstra_path_length(
             self.G, source=2, weight="weight"
         )
-        assert dict(ret1.values) == {0.0: 1.0, 1.0: 1.0, 2.0: 0.0, 3.0: 1.0, 4.0: 2.0}
+        assert ret1 == {0.0: 1.0, 1.0: 1.0, 2.0: 0.0, 3.0: 1.0, 4.0: 2.0}
         DG = self.G.to_directed(as_view=True)
         ret2 = nx.builtin.single_source_dijkstra_path_length(
             DG, source=2, weight="weight"
         )
-        assert dict(ret2.values) == {0.0: 1.0, 1.0: 1.0, 2.0: 0.0, 3.0: 1.0, 4.0: 2.0}
+        assert ret2 == {0.0: 1.0, 1.0: 1.0, 2.0: 0.0, 3.0: 1.0, 4.0: 2.0}
 
     def test_all_pairs_shortest_path_length(self):
         cycle = nx.cycle_graph(7)

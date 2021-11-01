@@ -1,4 +1,5 @@
 import os
+from posixpath import expanduser
 
 import numpy as np
 import pandas as pd
@@ -154,14 +155,12 @@ class TestBuiltInApp:
         ret = nx.builtin.single_source_dijkstra_path_length(
             self.grid, 1, weight="weight"
         )
-        ans = dict(ret.astype(np.int64).values)
-        assert ans == self.grid_ans
+        assert ret == self.grid_ans
 
         ret = nx.builtin.single_source_dijkstra_path_length(
             self.p2p_undirected, 6, weight="weight"
         )
-        ans = dict(ret.values)
-        assert replace_with_inf(ans) == self.p2p_length_ans
+        assert replace_with_inf(ret) == self.p2p_length_ans
 
     def test_subgraph_single_source_dijkstra_path_length(self):
         # test subgraph and edge_subgraph with p2p_subgraph_undirected
@@ -170,10 +169,10 @@ class TestBuiltInApp:
         )
         SG = self.p2p_undirected.subgraph(self.p2p_subgraph_undirected.nodes)
         ret_sg = nx.builtin.single_source_dijkstra_path_length(SG, 6, weight="weight")
-        assert dict(ret.values) == dict(ret_sg.values)
+        assert ret == ret_sg
         ESG = self.p2p_undirected.edge_subgraph(self.p2p_subgraph_undirected.edges)
         ret_esg = nx.builtin.single_source_dijkstra_path_length(ESG, 6, weight="weight")
-        assert dict(ret.values) == dict(ret_esg.values)
+        assert ret == ret_esg
 
         # test subgraph and edge_subgraph with p2p directed
         ret2 = nx.builtin.single_source_dijkstra_path_length(
@@ -181,12 +180,12 @@ class TestBuiltInApp:
         )
         SDG = self.p2p.subgraph(self.p2p_subgraph.nodes)
         ret_sdg = nx.builtin.single_source_dijkstra_path_length(SDG, 6, weight="weight")
-        assert dict(ret2.values) == dict(ret_sdg.values)
+        assert ret2 == ret_sdg
         ESDG = self.p2p.edge_subgraph(self.p2p_subgraph.edges)
         ret_esdg = nx.builtin.single_source_dijkstra_path_length(
             ESDG, 6, weight="weight"
         )
-        assert dict(ret2.values) == dict(ret_esdg.values)
+        assert ret2 == ret_esdg
 
     def test_shortest_path(self):
         ctx1 = nx.builtin.shortest_path(self.grid, source=1, weight="weight")
@@ -194,23 +193,20 @@ class TestBuiltInApp:
         assert ret1 == self.grid_path_ans
 
     def test_has_path(self):
-        ctx = nx.builtin.has_path(self.grid, source=1, target=6)
-        assert ctx.to_numpy("r", axis=0)[0]
-        ctx = nx.builtin.has_path(self.p2p, source=6, target=3728)
-        assert not ctx.to_numpy("r", axis=0)[0]
-        ctx = nx.builtin.has_path(self.p2p, source=6, target=3723)
-        assert ctx.to_numpy("r", axis=0)[0]
+        assert nx.builtin.has_path(self.grid, source=1, target=6)
+        assert not nx.builtin.has_path(self.p2p, source=6, target=3728)
+        assert nx.builtin.has_path(self.p2p, source=6, target=3723)
 
     def test_average_shortest_path_length(self):
         ret = nx.builtin.average_shortest_path_length(self.grid, weight="weight")
         assert ret == 2.6666666666666665
 
     def test_degree_centrality(self):
-        ans = dict(nx.builtin.degree_centrality(self.p2p).values)
+        ans = nx.builtin.degree_centrality(self.p2p)
         self.assert_result_almost_equal(ans, self.p2p_dc_ans)
 
     def test_eigenvector_centrality(self):
-        ans = dict(nx.builtin.eigenvector_centrality(self.p2p, weight="weight").values)
+        ans = nx.builtin.eigenvector_centrality(self.p2p, weight="weight")
         self.assert_result_almost_equal(ans, self.p2p_ev_ans)
 
     @pytest.mark.skip(
@@ -221,20 +217,28 @@ class TestBuiltInApp:
         self.assert_result_almost_equal(ans, self.p2p_kz_ans)
 
     def test_hits(self):
-        expected_hub = self.p2p_hits_ans[1].to_numpy(dtype=float)
-        expected_auth = self.p2p_hits_ans[2].to_numpy(dtype=float)
-        df = nx.builtin.hits(self.p2p, tol=0.001).sort_values(by=["node"])
-        auth = df["auth"].to_numpy(dtype=float)
-        hub = df["hub"].to_numpy(dtype=float)
-        np.allclose(auth, expected_auth)
-        np.allclose(hub, expected_hub)
+        expected_hub = dict(
+            zip(
+                self.p2p_hits_ans[0].to_numpy(dtype=int),
+                self.p2p_hits_ans[1].to_numpy(dtype=float),
+            )
+        )
+        expected_auth = dict(
+            zip(
+                self.p2p_hits_ans[0].to_numpy(dtype=int),
+                self.p2p_hits_ans[2].to_numpy(dtype=float),
+            )
+        )
+        hub, auth = nx.builtin.hits(self.p2p, tol=0.001)
+        self.assert_result_almost_equal(hub, expected_hub)
+        self.assert_result_almost_equal(auth, expected_auth)
 
     def test_clustering(self):
-        ans = dict(nx.builtin.clustering(self.p2p).values)
+        ans = nx.builtin.clustering(self.p2p)
         self.assert_result_almost_equal(ans, self.p2p_clus_ans)
 
     def test_triangles(self):
-        ans = dict(nx.builtin.triangles(self.p2p_undirected).values)
+        ans = nx.builtin.triangles(self.p2p_undirected)
         self.assert_result_almost_equal(ans, self.p2p_triangles_ans)
 
     def test_average_clustering(self):
@@ -244,7 +248,7 @@ class TestBuiltInApp:
         ret = nx.builtin.weakly_connected_components(self.p2p_undirected)
 
     def test_pagerank(self):
-        ans = dict(nx.builtin.pagerank(self.p2p).values)
+        ans = nx.builtin.pagerank(self.p2p)
         self.assert_result_almost_equal(ans, self.p2p_pagerank_ans)
 
     def test_degree_assortativity_coefficient(self):

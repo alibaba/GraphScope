@@ -43,26 +43,27 @@ class DegreeCentrality
     auto inner_vertices = frag.InnerVertices();
     double max_degree = static_cast<double>(frag.GetTotalVerticesNum() - 1);
 
-    ForEach(inner_vertices, [&frag, &ctx, max_degree](int tid, vertex_t v) {
-      switch (ctx.degree_centrality_type) {
-      case DegreeCentralityType::IN: {
-        ctx.centrality[v] =
-            static_cast<double>(frag.GetLocalInDegree(v)) / max_degree;
-        break;
-      }
-      case DegreeCentralityType::OUT: {
-        ctx.centrality[v] =
-            static_cast<double>(frag.GetLocalOutDegree(v)) / max_degree;
-        break;
-      }
-      case DegreeCentralityType::BOTH: {
-        double degree = static_cast<double>(frag.GetLocalInDegree(v) +
-                                            frag.GetLocalOutDegree(v));
-        ctx.centrality[v] = degree / max_degree;
-        break;
-      }
-      }
-    });
+    ForEach(inner_vertices.begin(), inner_vertices.end(),
+            [&frag, &ctx, max_degree](int tid, vertex_t v) {
+              switch (ctx.degree_centrality_type) {
+              case DegreeCentralityType::IN: {
+                ctx.centrality[v] =
+                    static_cast<double>(frag.GetLocalInDegree(v)) / max_degree;
+                break;
+              }
+              case DegreeCentralityType::OUT: {
+                ctx.centrality[v] =
+                    static_cast<double>(frag.GetLocalOutDegree(v)) / max_degree;
+                break;
+              }
+              case DegreeCentralityType::BOTH: {
+                double degree = static_cast<double>(frag.GetLocalInDegree(v) +
+                                                    frag.GetLocalOutDegree(v));
+                ctx.centrality[v] = degree / max_degree;
+                break;
+              }
+              }
+            });
   }
 
   void IncEval(const fragment_t& frag, context_t& ctx,
