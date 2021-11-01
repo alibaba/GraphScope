@@ -49,7 +49,7 @@ def _get_extra_data():
     return {
         "/opt/graphscope/": os.path.join(RUNTIME_ROOT),
         "/opt/vineyard/include/": os.path.join(RUNTIME_ROOT, "include"),
-        os.path.join(tempfile.gettempdir(), "gs", "builtin"): os.path.join(
+        os.path.join("/", tempfile.gettempprefix(), "gs", "builtin"): os.path.join(
             RUNTIME_ROOT, "precompiled"
         ),
         "/usr/local/include/arrow": os.path.join(RUNTIME_ROOT, "include"),

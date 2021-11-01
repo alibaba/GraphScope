@@ -399,7 +399,10 @@ check_dependencies() {
 
   # check c++ compiler
   if [[ "${PLATFORM}" == *"Darwin"* ]]; then
-    packages_to_install+=("llvm")
+    if ! command brew --prefix llvm &> /dev/null || \
+        ! command ls $(brew --prefix llvm) &> /dev/null; then
+        packages_to_install+=("llvm")
+    fi
   else
     if ! command -v g++ &> /dev/null; then
       if [[ "${PLATFORM}" == *"Ubuntu"* ]]; then

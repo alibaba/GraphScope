@@ -29,7 +29,7 @@ else
 	TARGET_SERVER_PACKAGE := graphscope-darwin-py3
 endif
 
-VERSION ?= debug
+VERSION ?= latest
 PROFILE ?= release
 
 BUILD_PROGRESS  	= auto
