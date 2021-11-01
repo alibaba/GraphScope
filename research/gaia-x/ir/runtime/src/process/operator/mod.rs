@@ -18,6 +18,7 @@ pub(crate) mod flatmap;
 pub(crate) mod map;
 pub(crate) mod shuffle;
 pub(crate) mod sink;
+pub(crate) mod sort;
 pub(crate) mod source;
 
 use crate::graph::element::Element;
