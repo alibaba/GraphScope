@@ -52,6 +52,9 @@ jobs:
 
     - name: Build Wheel Package
       run: |
+        # source environment variable
+        source ~/.graphscope_env
+
         cd k8s
         # graphscope
         sudo make graphscope-py3-package
@@ -95,12 +98,12 @@ jobs:
         # install graphscope-client
         tar -zxf ./wheel-macos-${{ github.sha }}/client.tar.gz
         pushd python/dist
-        for f in * ; do pip3 install $f || true; done
+        for f in * ; do pip3 install $f --user || true; done
         popd
         # install graphscope
         tar -zxf ./wheel-macos-${{ github.sha }}/graphscope.tar.gz
         pushd coordinator/dist/wheelhouse
-        pip3 install ./*.whl
+        pip3 install ./*.whl --user
         popd
         popd
 

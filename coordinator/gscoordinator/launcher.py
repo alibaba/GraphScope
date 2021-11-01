@@ -424,6 +424,18 @@ class LocalLauncher(Launcher):
             self._vineyard_socket = vineyard_socket
             self._vineyardd_process = process
 
+            start_time = time.time()
+            while not os.path.exists(self._vineyard_socket):
+                time.sleep(1)
+                if (
+                    self._timeout_seconds
+                    and self._timeout_seconds + start_time < time.time()
+                ):
+                    raise RuntimeError("Launch vineyardd failed due to timeout.")
+            logger.info(
+                "Vineyardd is ready, ipc socket is {0}".format(self._vineyard_socket)
+            )
+
     def _create_services(self):
         # create etcd
         self._launch_etcd()
@@ -460,7 +472,12 @@ class LocalLauncher(Launcher):
         env.update(mpi_env)
         # open MPI system need open ORTED daemon
         if os.path.isfile(os.path.join(GRAPHSCOPE_HOME, "bin", "orted")):
-            env.update({"OPAL_BINDIR": os.path.join(GRAPHSCOPE_HOME, "bin")})
+            env.update(
+                {
+                    "OPAL_PREFIX": os.path.join(GRAPHSCOPE_HOME),
+                    "OPAL_BINDIR": os.path.join(GRAPHSCOPE_HOME, "bin"),
+                }
+            )
 
         logger.info("Launch analytical engine with command: %s", " ".join(cmd))
 

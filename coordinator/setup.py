@@ -20,6 +20,7 @@ import contextlib
 import glob
 import itertools
 import os
+import platform
 import shutil
 import subprocess
 import tempfile
@@ -35,8 +36,6 @@ repo_root = os.path.dirname(os.path.abspath(__file__))
 
 
 # copy any files contains in /opt/graphscope into site-packages/graphscope.runtime
-
-
 def _get_extra_data():
     # copy
     #   1) /opt/graphscope
@@ -46,7 +45,7 @@ def _get_extra_data():
     #   5) /tmp/gs/builtin
     # into site-packages/graphscope.runtime
     RUNTIME_ROOT = "graphscope.runtime"
-    return {
+    data = {
         "/opt/graphscope/": os.path.join(RUNTIME_ROOT),
         "/opt/vineyard/include/": os.path.join(RUNTIME_ROOT, "include"),
         os.path.join("/", tempfile.gettempprefix(), "gs", "builtin"): os.path.join(
@@ -64,6 +63,10 @@ def _get_extra_data():
         "/usr/local/bin/orted": os.path.join(RUNTIME_ROOT, "bin"),
         "/usr/local/bin/zetcd": os.path.join(RUNTIME_ROOT, "bin"),
     }
+    # MacOS: Some openmpi libs need to be dlopen
+    if platform.system() == "Darwin":
+        data.update({"/usr/local/lib/openmpi": os.path.join(RUNTIME_ROOT, "lib")})
+    return data
 
 
 class BuildBuiltin(Command):

@@ -158,7 +158,8 @@ graphscope-manylinux2014-py3:
 graphscope-client-darwin-py3:
 	cd $(WORKING_DIR)/../python && \
 		rm -fr build dist/*.whl || true && \
-		python3 setup.py bdist_wheel
+		export MACOSX_DEPLOYMENT_TARGET=10.9 && \
+		python3 setup.py bdist_wheel --plat=macosx_10_9_x86_64
 
 graphscope-client-manylinux2014-py3:
 	docker run --rm -v $(WORKING_DIR)/..:/work \

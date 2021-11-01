@@ -734,6 +734,8 @@ install_dependencies() {
 
   log "Output environments config file ${OUTPUT_ENV_FILE}"
   write_envs_config
+  log "Cat ${OUTPUT_ENV_FILE}"
+  cat ${OUTPUT_ENV_FILE}
 }
 
 ##########################
