@@ -14,3 +14,7 @@ spec:
       targetPort: 59001
       protocol: TCP
       name: rpc
+    - port: 8888
+      nodePort: 30080
+      type: NodePort
+      name: http
