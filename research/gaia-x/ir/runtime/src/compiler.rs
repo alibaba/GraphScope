@@ -14,11 +14,13 @@
 //! limitations under the License.
 
 use crate::graph::partitioner::Partitioner;
+use crate::process::functions::CompareFunction;
 use crate::process::operator::filter::FilterFuncGen;
 use crate::process::operator::flatmap::FlatMapFuncGen;
 use crate::process::operator::map::MapFuncGen;
 use crate::process::operator::shuffle::RecordRouter;
 use crate::process::operator::sink::RecordSinkEncoder;
+use crate::process::operator::sort::CompareFunctionGen;
 use crate::process::operator::source::source_op_from;
 use crate::process::record::Record;
 use ir_common::error::str_to_dyn_error;
@@ -47,6 +49,7 @@ type RecordFilter = Box<dyn FilterFunction<Record>>;
 type RecordLeftJoin = Box<dyn BinaryFunction<Record, Vec<Record>, Option<Record>>>;
 type RecordEncode = Box<dyn MapFunction<Record, result_pb::Result>>;
 type RecordShuffle = Box<dyn RouteFunction<Record>>;
+type RecordCompare = Box<dyn CompareFunction<Record>>;
 type BinaryResource = Vec<u8>;
 
 pub struct IRJobCompiler {
@@ -97,6 +100,11 @@ impl FnGenerator {
     fn gen_filter(&self, res: &BinaryResource) -> Result<RecordFilter, BuildJobError> {
         let step = decode::<algebra_pb::logical_plan::Operator>(res)?;
         Ok(step.gen_filter()?)
+    }
+
+    fn gen_cmp(&self, res: &BinaryResource) -> Result<RecordCompare, BuildJobError> {
+        let step = decode::<algebra_pb::logical_plan::Operator>(res)?;
+        Ok(step.gen_cmp()?)
     }
 
     fn gen_subtask(&self, _res: &BinaryResource) -> Result<RecordLeftJoin, BuildJobError> {
@@ -152,11 +160,12 @@ impl IRJobCompiler {
                         stream = stream.limit(n.limit)?;
                     }
                     server_pb::operator_def::OpKind::Sort(sort) => {
+                        let cmp = self.udf_gen.gen_cmp(&sort.compare)?;
                         if sort.limit > 0 {
-                            stream =
-                                stream.sort_limit_by(sort.limit as u32, move |a, b| a.cmp(&b))?;
+                            stream = stream
+                                .sort_limit_by(sort.limit as u32, move |a, b| cmp.compare(a, b))?;
                         } else {
-                            stream = stream.sort_by(move |a, b| a.cmp(&b))?;
+                            stream = stream.sort_by(move |a, b| cmp.compare(a, b))?;
                         }
                     }
                     server_pb::operator_def::OpKind::Fold(_fold) => {
