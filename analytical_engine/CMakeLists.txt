@@ -153,7 +153,7 @@ if (NETWORKX)
           folly::f14::detail::F14LinkCheck<folly::f14::detail::getF14IntrinsicsMode()>::check();
         }
         " FOLLY_COMPILE_SUCCESS)
-        if (NOT ${FOLLY_COMPILE_SUCCESS})
+        if (NOT FOLLY_COMPILE_SUCCESS)
           set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -msse -msse2 -msse3 -msse4")
         endif()
     else ()

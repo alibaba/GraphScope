@@ -127,7 +127,7 @@ graphscope-manylinux2014-py3:
 			mkdir -p build && cd build && \
 			cmake .. -DCMAKE_PREFIX_PATH=/opt/vineyard \
 				-DCMAKE_INSTALL_PREFIX=/opt/vineyard \
-				-DBUILD_SHARED_LIBS=ON \
+				-DBUILD_SHARED_LIBS=ON && \
 			sudo make install -j`nproc` && \
 			cd /tmp/libvineyard && \
 			python3 setup.py bdist_wheel && \
