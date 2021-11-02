@@ -99,7 +99,7 @@ def simple_label_multigraph(prefix, directed):
         dst_label="v-0",
     )
     graph = graph.add_edges(
-        Loader(os.path.join(prefix, "simple_e_1_multi.csv")),
+        Loader(os.path.join(prefix, "simple_e_1_multiple.csv")),
         "e-1",
         src_label="v-0",
         dst_label="v-1",
