@@ -24,7 +24,7 @@ service ClientBackup {
   rpc createNewGraphBackup(CreateNewGraphBackupRequest) returns (CreateNewGraphBackupResponse);
   rpc deleteGraphBackup(DeleteGraphBackupRequest) returns (DeleteGraphBackupResponse);
   rpc purgeOldGraphBackups(PurgeOldGraphBackupsRequest) returns (PurgeOldGraphBackupsResponse);
-  rpc restoreGraphFromLatest(RestoreGraphFromLatestRequest) returns (RestoreGraphFromLatestResponse);
+  rpc restoreFromGraphBackup(RestoreFromGraphBackupRequest) returns (RestoreFromGraphBackupResponse);
   rpc verifyGraphBackup(VerifyGraphBackupRequest) returns (VerifyGraphBackupResponse);
   rpc getGraphBackupInfo(GetGraphBackupInfoRequest) returns (GetGraphBackupInfoResponse);
 }
@@ -51,12 +51,13 @@ message PurgeOldGraphBackupsRequest {
 message PurgeOldGraphBackupsResponse {
 }
 
-message RestoreGraphFromLatestRequest {
-  string meta_restore_path = 1;
-  string store_restore_path = 2;
+message RestoreFromGraphBackupRequest {
+  int32 backupId = 1;
+  string meta_restore_path = 2;
+  string store_restore_path = 3;
 }
 
-message RestoreGraphFromLatestResponse {
+message RestoreFromGraphBackupResponse {
 }
 
 message VerifyGraphBackupRequest {

@@ -63,10 +63,13 @@ public class BackupService extends BackupGrpc.BackupImplBase {
     }
 
     @Override
-    public void restoreFromLatest(RestoreFromLatestRequest request, StreamObserver<RestoreFromLatestResponse> responseObserver) {
+    public void restoreFromBackup(RestoreFromBackupRequest request, StreamObserver<RestoreFromBackupResponse> responseObserver) {
         try {
-            this.backupManager.restoreFromLatest(request.getMetaRestorePath(), request.getStoreRestorePath());
-            responseObserver.onNext(RestoreFromLatestResponse.newBuilder().build());
+            this.backupManager.restoreFromBackup(
+                    request.getGlobalBackupId(),
+                    request.getMetaRestorePath(),
+                    request.getStoreRestorePath());
+            responseObserver.onNext(RestoreFromBackupResponse.newBuilder().build());
             responseObserver.onCompleted();
         } catch (Exception e) {
             responseObserver.onError(e);

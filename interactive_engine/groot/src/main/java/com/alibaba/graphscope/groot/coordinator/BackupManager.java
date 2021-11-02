@@ -191,15 +191,15 @@ public class BackupManager {
         logger.info(numPurged + " old backups purged");
     }
 
-    public void restoreFromLatest(String metaRestorePath, String storeRestorePath) throws BackupException, IOException {
+    public void restoreFromBackup(int globalBackupId, String metaRestorePath, String storeRestorePath)
+            throws BackupException, IOException {
         checkEnable();
-        int latestGlobalBackupId = getLatestGlobalBackupId();
-        if (latestGlobalBackupId == -1) {
-            throw new BackupException("no available backups to restore");
+        if (!this.globalBackupIdToInfo.containsKey(globalBackupId)) {
+            throw new BackupException("backup [" + globalBackupId + "] to restore is unavailable");
         }
-        restoreGraphMeta(latestGlobalBackupId, metaRestorePath);
-        restoreGraphStore(latestGlobalBackupId, storeRestorePath);
-        logger.info("graph store restored from backup #[" + latestGlobalBackupId + "], meta restore dir ["
+        restoreGraphMeta(globalBackupId, metaRestorePath);
+        restoreGraphStore(globalBackupId, storeRestorePath);
+        logger.info("graph store restored from backup #[" + globalBackupId + "], meta restore dir ["
                 + metaRestorePath + "], store restore dir [" + storeRestorePath + "]");
     }
 
@@ -457,13 +457,6 @@ public class BackupManager {
             }
         }
         return ret;
-    }
-
-    private int getLatestGlobalBackupId() {
-        if (this.globalBackupIdToInfo.isEmpty()) {
-            return -1;
-        }
-        return Collections.max(this.globalBackupIdToInfo.keySet());
     }
 
     private List<StoreBackupId> getStoreBackupIds(int globalBackupId) {

@@ -201,15 +201,16 @@ public class CoordinatorRpcTest {
         verify(mockPurgeObserver).onNext(PurgeOldBackupsResponse.newBuilder().build());
         verify(mockPurgeObserver).onCompleted();
 
-        StreamObserver<RestoreFromLatestResponse> mockRestoreObserver = mock(StreamObserver.class);
-        backupService.restoreFromLatest(
-                RestoreFromLatestRequest.newBuilder()
+        StreamObserver<RestoreFromBackupResponse> mockRestoreObserver = mock(StreamObserver.class);
+        backupService.restoreFromBackup(
+                RestoreFromBackupRequest.newBuilder()
+                        .setGlobalBackupId(9)
                         .setMetaRestorePath("restore_meta")
                         .setStoreRestorePath("restore_store")
                         .build(),
                 mockRestoreObserver);
-        verify(mockBackupManger).restoreFromLatest("restore_meta", "restore_store");
-        verify(mockRestoreObserver).onNext(RestoreFromLatestResponse.newBuilder().build());
+        verify(mockBackupManger).restoreFromBackup(9, "restore_meta", "restore_store");
+        verify(mockRestoreObserver).onNext(RestoreFromBackupResponse.newBuilder().build());
         verify(mockRestoreObserver).onCompleted();
 
         StreamObserver<VerifyBackupResponse> mockVerifyObserver = mock(StreamObserver.class);

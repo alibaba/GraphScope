@@ -113,7 +113,7 @@ public class FrontendRpcTest {
         when(stub.createNewBackup(any())).thenReturn(CreateNewBackupResponse.newBuilder().setGlobalBackupId(1).build());
         when(stub.deleteBackup(any())).thenReturn(DeleteBackupResponse.newBuilder().build());
         when(stub.purgeOldBackups(any())).thenReturn(PurgeOldBackupsResponse.newBuilder().build());
-        when(stub.restoreFromLatest(any())).thenReturn(RestoreFromLatestResponse.newBuilder().build());
+        when(stub.restoreFromBackup(any())).thenReturn(RestoreFromBackupResponse.newBuilder().build());
         when(stub.verifyBackup(any())).thenReturn(VerifyBackupResponse.newBuilder().build());
         BackupInfo backupInfo =
                 new BackupInfo(1, 10L, 10L, 12L, 10000L, new ArrayList<>(), new HashMap<>());
@@ -124,7 +124,7 @@ public class FrontendRpcTest {
         assertEquals(newBackupId, 1);
         assertDoesNotThrow(() -> backupClient.deleteBackup(1));
         assertDoesNotThrow(() -> backupClient.purgeOldBackups(1));
-        assertDoesNotThrow(() -> backupClient.restoreFromLatest("restore_meta", "restore_store"));
+        assertDoesNotThrow(() -> backupClient.restoreFromBackup(1, "restore_meta", "restore_store"));
         assertDoesNotThrow(() -> backupClient.verifyBackup(1));
         List<BackupInfoPb> infoPbList = backupClient.getBackupInfo();
         assertEquals(infoPbList.size(), 1);

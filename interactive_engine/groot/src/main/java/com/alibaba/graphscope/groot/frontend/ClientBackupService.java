@@ -75,17 +75,18 @@ public class ClientBackupService extends ClientBackupGrpc.ClientBackupImplBase {
     }
 
     @Override
-    public void restoreGraphFromLatest(RestoreGraphFromLatestRequest request,
-                                       StreamObserver<RestoreGraphFromLatestResponse> responseObserver) {
+    public void restoreFromGraphBackup(RestoreFromGraphBackupRequest request,
+                                       StreamObserver<RestoreFromGraphBackupResponse> responseObserver) {
+        int backupId = request.getBackupId();
         String metaRestorePath = request.getMetaRestorePath();
         String storeRestorePath = request.getStoreRestorePath();
         try {
-            backupClients.getClient(0).restoreFromLatest(metaRestorePath, storeRestorePath);
-            responseObserver.onNext(RestoreGraphFromLatestResponse.newBuilder().build());
+            backupClients.getClient(0).restoreFromBackup(backupId, metaRestorePath, storeRestorePath);
+            responseObserver.onNext(RestoreFromGraphBackupResponse.newBuilder().build());
             responseObserver.onCompleted();
         } catch (Exception e) {
-            logger.error("restore from latest graph backup failed, meta restore path [" + metaRestorePath
-                    + "], store restore path [" + storeRestorePath + "]", e);
+            logger.error("restore from graph backup [" + backupId + "] failed, meta restore path ["
+                    + metaRestorePath + "], store restore path [" + storeRestorePath + "]", e);
             responseObserver.onError(Status.INTERNAL.withDescription(e.getMessage()).asRuntimeException());
         }
     }

@@ -198,15 +198,15 @@ public class BackupManagerTest {
 
         // verify backups
         try {
-            backupManager.verifyBackup(1);
-            backupManager.verifyBackup(2);
+            backupManager.verifyBackup(backupId1);
+            backupManager.verifyBackup(backupId2);
         } catch (Exception e) {
             fail("should not have thrown any exception during backup verification");
         }
 
         // restore from the second backup
         try {
-            backupManager.restoreFromLatest("restore_meta", "restore_store");
+            backupManager.restoreFromBackup(backupId2, "restore_meta", "restore_store");
         } catch (Exception e) {
             fail("should not have thrown any exception during backup restoring");
         } finally {
