@@ -325,8 +325,9 @@ class AdjList<VID_T, EID_T, grape::EmptyType> {
 }  // namespace arrow_projected_fragment_impl
 
 /**
- * @brief This class represents the fragment projected from ArrowFragment. The
- * fragment has no label and property.
+ * @brief This class represents the fragment projected from ArrowFragment which
+ * contains only one vertex label and edge label. The fragment has no label and
+ * property.
  *
  * @tparam OID_T OID type
  * @tparam VID_T VID type
@@ -862,6 +863,7 @@ class ArrowProjectedFragment
     assert(offset < static_cast<int64_t>(ivnum_));
     return grape::DestList(iodoffset_[offset], iodoffset_[offset + 1]);
   }
+  inline bool directed() const { return directed_; }
 
  private:
   inline static std::pair<int64_t, int64_t> getRangeOfLabel(

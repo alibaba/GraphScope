@@ -14,6 +14,7 @@
 package com.alibaba.maxgraph.tests.ingestor;
 
 import com.alibaba.graphscope.groot.meta.MetaService;
+import com.alibaba.graphscope.groot.metrics.MetricsCollector;
 import com.alibaba.maxgraph.common.config.CommonConfig;
 import com.alibaba.maxgraph.common.config.Configs;
 import com.alibaba.maxgraph.common.config.IngestorConfig;
@@ -66,7 +67,7 @@ public class IngestServiceTest {
                                 mockLogService,
                                 mockIngestProgressFetcher,
                                 mockStoreWriter,
-                                null));
+                                new MetricsCollector(configs)));
 
         IngestProcessor mockIngestProcessor = mock(IngestProcessor.class);
         doReturn(mockIngestProcessor)

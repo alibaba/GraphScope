@@ -23,6 +23,7 @@ pub type SnapshotId = i64;
 pub type VertexId = i64;
 pub type LabelId = i32;
 pub type PropId = i32;
+pub type BackupId = i32;
 pub type GraphResult<T> = Result<T, GraphError>;
 
 pub const MAX_SI: SnapshotId = SnapshotId::max_value() - 1;

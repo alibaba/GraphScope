@@ -22,6 +22,10 @@ from graphscope.analytical.app.attribute_assortativity import \
     attribute_assortativity_coefficient
 from graphscope.analytical.app.attribute_assortativity import \
     numeric_assortativity_coefficient
+from graphscope.analytical.app.average_degree_connectivity import \
+    average_degree_connectivity
+from graphscope.analytical.app.average_shortest_path_length import \
+    average_shortest_path_length
 
 # fmt: on
 from graphscope.analytical.app.bfs import bfs

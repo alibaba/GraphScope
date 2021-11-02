@@ -16,17 +16,20 @@
 #include "global_store_ffi.h"
 #include "htap_ds_impl.h"
 
-#include <string>
+#include <cstring>
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
 GraphHandle get_graph_handle(ObjectId object_id, PartitionId channel_num) {
-  GraphHandle ret = malloc(sizeof(htap_impl::GraphHandleImpl));
-  htap_impl::get_graph_handle(object_id, channel_num,
-                              (htap_impl::GraphHandleImpl*)ret);
-  return ret;
+  // FIXME: handle exception here
+  GraphHandle handle = malloc(sizeof(htap_impl::GraphHandleImpl));
+  if (handle) {
+    std::memset(handle, 0, sizeof(htap_impl::GraphHandleImpl));
+    htap_impl::get_graph_handle(object_id, channel_num, (htap_impl::GraphHandleImpl*)handle);
+  }
+  return handle;
 }
 
 void free_graph_handle(GraphHandle handle) {
@@ -101,6 +104,20 @@ OuterId get_outer_id(GraphHandle graph, Vertex v) {
     return ret;
   }
   return OuterId();
+}
+
+int get_vertex_by_outer_id(GraphHandle graph, LabelId label_id,
+                           OuterId outer_id, Vertex* v) {
+  if (label_id < 0 || v == nullptr) {
+    return -1;
+  }
+  auto casted_graph = static_cast<htap_impl::GraphHandleImpl*>(graph);
+  htap_impl::VID_TYPE gid;
+  if (casted_graph->vertex_map->GetGid(label_id, outer_id, gid)) {
+    *v = gid;
+    return 0;
+  }
+  return -1;
 }
 
 OuterId get_outer_id_by_vertex_id(GraphHandle graph, VertexId v) {

@@ -800,7 +800,7 @@ class DynamicFragment {
   }
 
   // generate undirected graph from original directed graph.
-  void ToUnDirectedFrom(std::shared_ptr<DynamicFragment> origin) {
+  void ToUndirectedFrom(std::shared_ptr<DynamicFragment> origin) {
     // original graph must be directed.
     assert(origin->directed());
 

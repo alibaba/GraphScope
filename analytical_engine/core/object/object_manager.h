@@ -47,11 +47,9 @@ class ObjectManager {
   }
 
   bl::result<void> RemoveObject(const std::string& id) {
-    if (objects.find(id) == objects.end()) {
-      RETURN_GS_ERROR(vineyard::ErrorCode::kInvalidOperationError,
-                      "Object " + id + " does not exist");
+    if (objects.find(id) != objects.end()) {
+      objects.erase(id);
     }
-    objects.erase(id);
     return {};
   }
 

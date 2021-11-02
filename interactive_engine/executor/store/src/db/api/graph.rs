@@ -1,7 +1,7 @@
 use std::sync::Arc;
 use std::marker::PhantomData;
 use super::schema::*;
-use super::{VertexId, SnapshotId, LabelId, GraphResult, EdgeId,
+use super::{VertexId, SnapshotId, LabelId, BackupId, GraphResult, EdgeId,
             Vertex, Edge, EdgeKind, PropId, PropertyMap, Condition,
             PropertiesRef, ValueRef};
 use crate::db::api::DataLoadTarget;
@@ -163,6 +163,53 @@ pub trait GraphStorage {
     fn prepare_data_load(&self, si: SnapshotId, schema_version: i64, target: &DataLoadTarget, table_id: i64) -> GraphResult<bool>;
 
     fn commit_data_load(&self, si: SnapshotId, schema_version: i64, target: &DataLoadTarget, table_id: i64) -> GraphResult<bool>;
+
+    /// Open a backup engine of graph storage that implements GraphBackup trait.
+    fn open_backup_engine(&self, backup_path: &str) -> GraphResult<Box<dyn GraphBackup>>;
+}
+
+pub trait GraphBackup {
+    /// Create a new backup of graph store. This interface is thread safe.
+    ///
+    /// Returns the new created backup id if successful, `GraphError` otherwise.
+    fn create_new_backup(&mut self) -> GraphResult<BackupId>;
+
+    /// Delete a backup of `backup_id`. This interface is thread safe.
+    ///
+    /// If `backup_id` is not available, something error when deleting or other errors,
+    /// `GraphError` will be returned.
+    fn delete_backup(&mut self, backup_id: BackupId) -> GraphResult<()>;
+
+    /// Purge old backups from all existed backups, keep latest `num_backups_to_keep` backups.
+    /// This interface is thread safe.
+    ///
+    /// If `num_backups_to_keep` is illegal, something error when purging or other errors,
+    /// `GraphError` will be returned.
+    fn purge_old_backups(&mut self, num_backups_to_keep: usize) -> GraphResult<()>;
+
+    /// Restore the graph store from `backup_id` at `restore_path`. This interface is thread safe.
+    ///
+    /// If `restore_path` is not available，`backup_id` is not available, something error when
+    /// restoring or other errors, `GraphError` will be returned.
+    fn restore_from_backup(&mut self, restore_path: &str, backup_id: BackupId) -> GraphResult<()>;
+
+    /// Restore the graph store from the latest backup at `restore_path`.
+    /// This interface is thread safe.
+    ///
+    /// If `restore_path` is not available，no backup available, something error when restoring or
+    /// other errors, `GraphError` will be returned.
+    fn restore_from_latest_backup(&mut self, restore_path: &str) -> GraphResult<()>;
+
+    /// Verify the backup of `backup_id`. This interface is thread safe.
+    ///
+    /// If `backup_id` is not available, backup files are broken, backup checksum mismatch or
+    /// other errors, `GraphError` will be returned.
+    fn verify_backup(&self, backup_id: BackupId) -> GraphResult<()>;
+
+    /// Get the current available backup id list. This interface is thread safe.
+    ///
+    /// Returns the available backup id vector(may be empty)。
+    fn get_backup_list(&self) -> Vec<BackupId>;
 }
 
 pub trait VertexResultIter {

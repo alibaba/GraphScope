@@ -14,3 +14,8 @@ spec:
       targetPort: 59001
       protocol: TCP
       name: rpc
+    {{- if .Values.withJupyter }}
+    - port: 8888
+      nodePort: {{ .Values.jupyter.port }}
+      name: http
+    {{- end }}

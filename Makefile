@@ -66,11 +66,13 @@ gae:
 	make -j$(NUM_PROC) && \
 	sudo make install
 ifneq ($(INSTALL_PREFIX), /usr/local)
+	sudo rm -fr /usr/local/include/graphscope && \
 	sudo ln -sf $(INSTALL_PREFIX)/bin/* /usr/local/bin/ && \
 	sudo ln -sfn $(INSTALL_PREFIX)/include/graphscope /usr/local/include/graphscope && \
 	sudo ln -sf ${INSTALL_PREFIX}/lib/*so* /usr/local/lib && \
 	sudo ln -sf ${INSTALL_PREFIX}/lib/*dylib* /usr/local/lib && \
 	if [ -d "${INSTALL_PREFIX}/lib64/cmake/graphscope-analytical" ]; then \
+		sudo rm -fr /usr/local/lib64/cmake/graphscope-analytical; \
 		sudo ln -sfn ${INSTALL_PREFIX}/lib64/cmake/graphscope-analytical /usr/local/lib64/cmake/graphscope-analytical; \
 		sudo mkdir -p ${INSTALL_PREFIX}/lib/cmake; \
 		sudo cp -r ${INSTALL_PREFIX}/lib64/cmake/* ${INSTALL_PREFIX}/lib/cmake/; \
