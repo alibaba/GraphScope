@@ -52,8 +52,12 @@
 //! `g++ -o test test.cc -std=c++11 -L. -lir_core`
 
 use crate::plan::logical::LogicalPlan;
+use crate::plan::physical::{AsPhysical, PhysicalError};
 use ir_common::generated::algebra as pb;
 use ir_common::generated::common as common_pb;
+use pegasus::BuildJobError;
+use pegasus_client::builder::JobBuilder;
+use prost::Message;
 use runtime::expr::to_suffix_expr_pb;
 use runtime::expr::token::tokenize;
 use std::convert::{TryFrom, TryInto};
@@ -76,6 +80,8 @@ pub enum ResultCode {
     InvalidRangeError = 5,
     /// The given index is negative
     NegativeIndexError = 6,
+    /// Build Physical Plan Error
+    BuildJobError = 7,
 }
 
 impl std::fmt::Display for ResultCode {
@@ -88,6 +94,7 @@ impl std::fmt::Display for ResultCode {
             ResultCode::UnknownTypeError => write!(f, "unknown data type"),
             ResultCode::InvalidRangeError => write!(f, "the range is invalid"),
             ResultCode::NegativeIndexError => write!(f, "the given index is negative"),
+            ResultCode::BuildJobError => write!(f, "build physical plan error"),
         }
     }
 }
@@ -327,6 +334,59 @@ pub extern "C" fn init_logical_plan() -> *const c_void {
 #[no_mangle]
 pub extern "C" fn destroy_logical_plan(ptr_plan: *const c_void) {
     destroy_ptr::<LogicalPlan>(ptr_plan)
+}
+
+#[repr(C)]
+pub struct FfiJobBuffer {
+    ptr: *mut u8,
+    len: usize,
+    result: ResultCode,
+}
+
+impl From<PhysicalError> for FfiJobBuffer {
+    fn from(_: PhysicalError) -> Self {
+        FfiJobBuffer {
+            ptr: std::ptr::null_mut(),
+            len: 0,
+            result: ResultCode::BuildJobError,
+        }
+    }
+}
+
+impl From<BuildJobError> for FfiJobBuffer {
+    fn from(_: BuildJobError) -> Self {
+        FfiJobBuffer {
+            ptr: std::ptr::null_mut(),
+            len: 0,
+            result: ResultCode::BuildJobError,
+        }
+    }
+}
+
+/// To build a physical plan from the logical plan. After calling this function, the
+/// logical plan will be consumed and released.
+pub extern "C" fn build_physical_plan(ptr_plan: *const c_void) -> FfiJobBuffer {
+    let plan = unsafe { Box::from_raw(ptr_plan as *mut LogicalPlan) };
+    let mut builder = JobBuilder::default();
+    let build_result = plan.add_job_builder(&mut builder);
+    if build_result.is_ok() {
+        let req_result = builder.build();
+        if let Ok(req) = req_result {
+            let mut req_bytes = req.encode_to_vec().into_boxed_slice();
+            let buffer = FfiJobBuffer {
+                ptr: req_bytes.as_mut_ptr(),
+                len: req_bytes.len(),
+                result: ResultCode::Success,
+            };
+            std::mem::forget(req_bytes);
+
+            buffer
+        } else {
+            req_result.err().unwrap().into()
+        }
+    } else {
+        build_result.err().unwrap().into()
+    }
 }
 
 fn append_operator(
