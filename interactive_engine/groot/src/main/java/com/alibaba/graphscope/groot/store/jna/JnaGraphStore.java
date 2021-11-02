@@ -95,7 +95,7 @@ public class JnaGraphStore implements GraphPartition {
                 String errMsg = jnaResponse.getErrMsg();
                 throw new IOException(errMsg);
             }
-            return GraphDefPb.parseFrom(jnaResponse.getByteData());
+            return GraphDefPb.parseFrom(jnaResponse.getData());
         }
     }
 

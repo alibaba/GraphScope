@@ -53,10 +53,7 @@ public class BackupManagerTest {
 
         // init data
         long querySnapshotId = 10L;
-        long queryDdlSnapshotId = 10L;
-        SnapshotInfo snapshotInfo = new SnapshotInfo(querySnapshotId, queryDdlSnapshotId);
-        long writeSnapshotId = 12L;
-        long allocatedTailId = 10000L;
+        SnapshotInfo snapshotInfo = new SnapshotInfo(querySnapshotId, 1L);
         List<Long> queueOffsets = new ArrayList<>();
         Map<Integer, Integer> partitionToBackupId1 = new HashMap<>();
         partitionToBackupId1.put(0, 1);
@@ -65,11 +62,9 @@ public class BackupManagerTest {
         partitionToBackupId2.put(0, 2);
         partitionToBackupId2.put(1, 2);
         BackupInfo backupInfo1 = new BackupInfo(
-                1, querySnapshotId, queryDdlSnapshotId, writeSnapshotId,
-                allocatedTailId, queueOffsets, partitionToBackupId1);
+                1, querySnapshotId, queueOffsets, partitionToBackupId1);
         BackupInfo backupInfo2 = new BackupInfo(
-                2, querySnapshotId, queryDdlSnapshotId, writeSnapshotId,
-                allocatedTailId, queueOffsets, partitionToBackupId2);
+                2, querySnapshotId, queueOffsets, partitionToBackupId2);
 
         // mock MetaStore behaviours
         ObjectMapper objectMapper = new ObjectMapper();
@@ -89,12 +84,7 @@ public class BackupManagerTest {
         // mock SnapshotManager behaviours
         SnapshotManager mockSnapshotManager = mock(SnapshotManager.class);
         when(mockSnapshotManager.getQuerySnapshotInfo()).thenReturn(snapshotInfo);
-        when(mockSnapshotManager.getCurrentWriteSnapshotId()).thenReturn(writeSnapshotId);
         when(mockSnapshotManager.getQueueOffsets()).thenReturn(queueOffsets);
-
-        // mock IdAllocator class
-        IdAllocator mockIdAllocator = mock(IdAllocator.class);
-        when(mockIdAllocator.getCurrentTailId()).thenReturn(allocatedTailId);
 
         // mock StoreBackupTaskSender behaviours
         StoreBackupTaskSender mockStoreBackupTaskSender = mock(StoreBackupTaskSender.class);
@@ -128,8 +118,7 @@ public class BackupManagerTest {
                 .verifyStoreBackup(anyInt(), any(), any());
 
         BackupManager backupManager = new BackupManager(
-                configs, mockMetaService, mockMetaStore, mockSnapshotManager,
-                mockIdAllocator, mockStoreBackupTaskSender);
+                configs, mockMetaService, mockMetaStore, mockSnapshotManager, mockStoreBackupTaskSender);
         backupManager.start();
 
         // create the first backup

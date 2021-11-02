@@ -19,6 +19,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
+import java.nio.IntBuffer;
 import java.util.List;
 
 public class JnaGraphBackupEngine implements GraphPartitionBackup {
@@ -47,11 +50,14 @@ public class JnaGraphBackupEngine implements GraphPartitionBackup {
                 String errMsg = jnaResponse.getErrMsg();
                 throw new IOException(errMsg);
             }
-            int[] data = jnaResponse.getIntData();
-            if (data != null && data.length == 1) {
-                return data[0];
+            byte[] data = jnaResponse.getData();
+            if (data == null || data.length != Integer.BYTES) {
+                throw new IOException("fail to get new created backup id from jna response, partition [" + this.partitionId + "]");
             }
-            throw new IOException("fail to get new created backup id from jna response, partition [" + this.partitionId + "]");
+            IntBuffer intBuf = ByteBuffer.wrap(data).order(ByteOrder.nativeOrder()).asIntBuffer();
+            int[] intData = new int[intBuf.remaining()];
+            intBuf.get(intData);
+            return intData[0];
         }
     }
 
@@ -89,10 +95,13 @@ public class JnaGraphBackupEngine implements GraphPartitionBackup {
                 String errMsg = jnaResponse.getErrMsg();
                 throw new IOException(errMsg);
             }
-            partitionBackupIds = jnaResponse.getIntData();
-            if (partitionBackupIds == null) {
-                throw new IOException("cannot get backup id list from jna response, partition [" + this.partitionId + "]");
+            byte[] data = jnaResponse.getData();
+            if (data == null) {
+                return;
             }
+            IntBuffer intBuf = ByteBuffer.wrap(data).order(ByteOrder.nativeOrder()).asIntBuffer();
+            partitionBackupIds = new int[intBuf.remaining()];
+            intBuf.get(partitionBackupIds);
         }
         for (int bId : partitionBackupIds) {
             if (!readyPartitionBackupIds.contains(bId)) {

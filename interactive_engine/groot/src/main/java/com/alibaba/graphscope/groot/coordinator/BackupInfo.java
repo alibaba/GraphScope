@@ -25,27 +25,18 @@ import java.util.Map;
 public class BackupInfo {
 
     private int globalBackupId;
-    private long querySnapshotId;
-    private long queryDdlSnapshotId;
-    private long writeSnapshotId;
-    private long allocatedTailId;
+    private long snapshotId;
     private List<Long> walOffsets;
     private Map<Integer, Integer> partitionToBackupId;
 
     @JsonCreator
     public BackupInfo(
             @JsonProperty("globalBackupId") int globalBackupId,
-            @JsonProperty("querySnapshotId") long querySnapshotId,
-            @JsonProperty("queryDdlSnapshotId") long queryDdlSnapshotId,
-            @JsonProperty("writeSnapshotId") long writeSnapshotId,
-            @JsonProperty("allocatedTailId") long allocatedTailId,
+            @JsonProperty("snapshotId") long snapshotId,
             @JsonProperty("walOffsets") List<Long> walOffsets,
             @JsonProperty("partitionToBackupId") Map<Integer, Integer> partitionToBackupId) {
         this.globalBackupId = globalBackupId;
-        this.querySnapshotId = querySnapshotId;
-        this.queryDdlSnapshotId = queryDdlSnapshotId;
-        this.writeSnapshotId = writeSnapshotId;
-        this.allocatedTailId = allocatedTailId;
+        this.snapshotId = snapshotId;
         this.walOffsets = walOffsets;
         this.partitionToBackupId = partitionToBackupId;
     }
@@ -54,20 +45,8 @@ public class BackupInfo {
         return globalBackupId;
     }
 
-    public long getQuerySnapshotId() {
-        return querySnapshotId;
-    }
-
-    public long getQueryDdlSnapshotId() {
-        return queryDdlSnapshotId;
-    }
-
-    public long getWriteSnapshotId() {
-        return writeSnapshotId;
-    }
-
-    public long getAllocatedTailId() {
-        return allocatedTailId;
+    public long getSnapshotId() {
+        return snapshotId;
     }
 
     public List<Long> getWalOffsets() {
@@ -80,24 +59,16 @@ public class BackupInfo {
 
     public static BackupInfo parseProto(BackupInfoPb proto) {
         int globalBackupId = proto.getGlobalBackupId();
-        long querySnapshotId = proto.getQuerySnapshotId();
-        long queryDdlSnapshotId = proto.getQueryDdlSnapshotId();
-        long writeSnapshotId = proto.getWriteSnapshotId();
-        long allocatedTailId = proto.getAllocatedTailId();
+        long snapshotId = proto.getSnapshotId();
         List<Long> walOffsets = proto.getWalOffsetsList();
         Map<Integer, Integer> partitionToBackupId = proto.getPartitionToBackupIdMap();
-        return new BackupInfo(
-                globalBackupId, querySnapshotId, queryDdlSnapshotId,
-                writeSnapshotId, allocatedTailId, walOffsets, partitionToBackupId);
+        return new BackupInfo(globalBackupId, snapshotId, walOffsets, partitionToBackupId);
     }
 
     public BackupInfoPb toProto() {
         return BackupInfoPb.newBuilder()
                 .setGlobalBackupId(globalBackupId)
-                .setQuerySnapshotId(querySnapshotId)
-                .setQueryDdlSnapshotId(queryDdlSnapshotId)
-                .setWriteSnapshotId(writeSnapshotId)
-                .setAllocatedTailId(allocatedTailId)
+                .setSnapshotId(snapshotId)
                 .addAllWalOffsets(walOffsets)
                 .putAllPartitionToBackupId(partitionToBackupId)
                 .build();
@@ -119,10 +90,7 @@ public class BackupInfo {
             return false;
         }
         return (globalBackupId == backupInfo.globalBackupId) &&
-                (querySnapshotId == backupInfo.querySnapshotId) &&
-                (queryDdlSnapshotId == backupInfo.queryDdlSnapshotId) &&
-                (writeSnapshotId == backupInfo.writeSnapshotId) &&
-                (allocatedTailId == backupInfo.allocatedTailId);
+                (snapshotId == backupInfo.snapshotId);
     }
 
     @Override

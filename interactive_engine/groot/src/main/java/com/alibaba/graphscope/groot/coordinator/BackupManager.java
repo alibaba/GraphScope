@@ -50,7 +50,6 @@ public class BackupManager {
     private MetaService metaService;
     private MetaStore metaStore;
     private SnapshotManager snapshotManager;
-    private IdAllocator idAllocator;
     private ObjectMapper objectMapper;
 
     private int storeNodeCount;
@@ -64,7 +63,7 @@ public class BackupManager {
     private Boolean autoSubmit;
     private int autoSubmitIntervalHours;
 
-    private ScheduledExecutorService backupCreationScheduler;
+    private ExecutorService backupCreationExecutor;
     private ScheduledExecutorService backupGcScheduler;
     private ScheduledExecutorService autoCommitScheduler;
 
@@ -75,12 +74,10 @@ public class BackupManager {
     private Lock globalBackupIdToInfoLock = new ReentrantLock();
 
     public BackupManager(Configs configs, MetaService metaService, MetaStore metaStore,
-                         SnapshotManager snapshotManager, IdAllocator idAllocator,
-                         StoreBackupTaskSender storeBackupTaskSender) {
+                         SnapshotManager snapshotManager, StoreBackupTaskSender storeBackupTaskSender) {
         this.metaService = metaService;
         this.metaStore = metaStore;
         this.snapshotManager = snapshotManager;
-        this.idAllocator = idAllocator;
         this.objectMapper = new ObjectMapper();
 
         this.storeNodeCount = CommonConfig.STORE_NODE_COUNT.get(configs);
@@ -106,8 +103,13 @@ public class BackupManager {
         }
 
         this.backupCreationBuffer = new ArrayBlockingQueue<>(backupCreationBufferMaxSize);
-        this.backupCreationScheduler = Executors.newSingleThreadScheduledExecutor(
-                ThreadFactoryUtils.daemonThreadFactoryWithLogExceptionHandler("backup-creation-scheduler", logger));
+        this.backupCreationExecutor = new ThreadPoolExecutor(
+                1,
+                1,
+                0L,
+                TimeUnit.MILLISECONDS,
+                new LinkedBlockingQueue<>(),
+                ThreadFactoryUtils.daemonThreadFactoryWithLogExceptionHandler("backup-creation-executor", logger));
 
         this.backupGcScheduler = Executors.newSingleThreadScheduledExecutor(
                 ThreadFactoryUtils.daemonThreadFactoryWithLogExceptionHandler("backup-gc-scheduler", logger));
@@ -129,14 +131,14 @@ public class BackupManager {
     }
 
     public void stop() {
-        if (this.backupCreationScheduler != null) {
-            this.backupCreationScheduler.shutdown();
+        if (this.backupCreationExecutor != null) {
+            this.backupCreationExecutor.shutdown();
             try {
-                this.backupCreationScheduler.awaitTermination(3000L, TimeUnit.MILLISECONDS);
+                this.backupCreationExecutor.awaitTermination(3000, TimeUnit.MILLISECONDS);
             } catch (InterruptedException e) {
-                // Ignore
+                // Do nothing
             }
-            this.backupCreationScheduler = null;
+            this.backupCreationExecutor = null;
         }
         if (this.backupGcScheduler != null) {
             this.backupGcScheduler.shutdown();
@@ -165,7 +167,7 @@ public class BackupManager {
         if (!suc) {
             throw new BackupException("add backup creation task to buffer failed, new global backupId: " + newGlobalBackupId);
         }
-        this.backupCreationScheduler.schedule(this::processBackupCreationTasks, 0L, TimeUnit.SECONDS);
+        this.backupCreationExecutor.execute(this::processBackupCreationTasks);
         logger.info("submit new backup creation task with backupId #[" + newGlobalBackupId + "]");
         return newGlobalBackupId;
     }
@@ -287,10 +289,8 @@ public class BackupManager {
     }
 
     private void doBackupCreation(int newGlobalBackupId) {
-        SnapshotInfo querySnapshotInfo = snapshotManager.getQuerySnapshotInfo();
-        long writeSnapshotId = snapshotManager.getCurrentWriteSnapshotId();
+        long snapshotId = snapshotManager.getQuerySnapshotInfo().getSnapshotId();
         List<Long> walOffsets = snapshotManager.getQueueOffsets();
-        long allocatedTailId = idAllocator.getCurrentTailId();
         Map<Integer, Integer> partitionToBackupId = new ConcurrentHashMap<>(graphPartitionCount);
         AtomicInteger counter = new AtomicInteger(storeNodeCount);
         AtomicBoolean finished = new AtomicBoolean(false);
@@ -308,10 +308,7 @@ public class BackupManager {
                             try {
                                 addNewBackupInfo(new BackupInfo(
                                         newGlobalBackupId,
-                                        querySnapshotInfo.getSnapshotId(),
-                                        querySnapshotInfo.getDdlSnapshotId(),
-                                        writeSnapshotId,
-                                        allocatedTailId,
+                                        snapshotId,
                                         walOffsets,
                                         partitionToBackupId));
                                 future.complete(null);
@@ -385,23 +382,17 @@ public class BackupManager {
         builder.put("file.meta.store.path", metaRestorePath);
         MetaStore restoredMetaStore = new FileMetaStore(builder.build());
 
-        SnapshotInfo restoredQuerySnapshotInfo =
-                new SnapshotInfo(restoredBackupInfo.getQuerySnapshotId(), restoredBackupInfo.getQueryDdlSnapshotId());
+        long restoredSnapshotId = restoredBackupInfo.getSnapshotId();
         restoredMetaStore.write(
-                SnapshotManager.QUERY_SNAPSHOT_INFO_PATH,
-                this.objectMapper.writeValueAsBytes(restoredQuerySnapshotInfo));
-        long restoredWriteSnapshotId = restoredBackupInfo.getWriteSnapshotId();
-        restoredMetaStore.write(
-                SnapshotManager.WRITE_SNAPSHOT_ID_PATH,
-                this.objectMapper.writeValueAsBytes(restoredWriteSnapshotId));
+                "query_snapshot_id",
+                this.objectMapper.writeValueAsBytes(restoredSnapshotId));
         List<Long> restoredWalOffsets = restoredBackupInfo.getWalOffsets();
         restoredMetaStore.write(
-                SnapshotManager.QUEUE_OFFSETS_PATH,
+                "queue_offsets",
                 this.objectMapper.writeValueAsBytes(restoredWalOffsets));
-        long restoredAllocatedTailId = restoredBackupInfo.getAllocatedTailId();
-        restoredMetaStore.write(
-                IdAllocator.ID_ALLOCATE_INFO_PATH,
-                this.objectMapper.writeValueAsBytes(restoredAllocatedTailId));
+
+        // Restore all graph meta restore in the future.
+        // To be implemented.
     }
 
     private void restoreGraphStore(int globalBackupId, String storeRestorePath) throws BackupException {

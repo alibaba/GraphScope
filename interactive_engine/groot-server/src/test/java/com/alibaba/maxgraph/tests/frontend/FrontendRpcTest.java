@@ -116,7 +116,7 @@ public class FrontendRpcTest {
         when(stub.restoreFromBackup(any())).thenReturn(RestoreFromBackupResponse.newBuilder().build());
         when(stub.verifyBackup(any())).thenReturn(VerifyBackupResponse.newBuilder().build());
         BackupInfo backupInfo =
-                new BackupInfo(1, 10L, 10L, 12L, 10000L, new ArrayList<>(), new HashMap<>());
+                new BackupInfo(1, 10L, new ArrayList<>(), new HashMap<>());
         when(stub.getBackupInfo(any())).thenReturn(
                 GetBackupInfoResponse.newBuilder().addBackupInfoList(backupInfo.toProto()).build());
         BackupClient backupClient = new BackupClient(stub);

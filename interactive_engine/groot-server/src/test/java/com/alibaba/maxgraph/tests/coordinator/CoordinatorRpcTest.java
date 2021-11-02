@@ -219,8 +219,8 @@ public class CoordinatorRpcTest {
         verify(mockVerifyObserver).onNext(VerifyBackupResponse.newBuilder().build());
         verify(mockVerifyObserver).onCompleted();
 
-        BackupInfo backupInfo1 = new BackupInfo(1, 10L, 10L, 12L, 10000L, new ArrayList<>(), new HashMap<>());
-        BackupInfo backupInfo2 = new BackupInfo(2, 10L, 10L, 12L, 10000L, new ArrayList<>(), new HashMap<>());
+        BackupInfo backupInfo1 = new BackupInfo(1, 10L, new ArrayList<>(), new HashMap<>());
+        BackupInfo backupInfo2 = new BackupInfo(2, 10L, new ArrayList<>(), new HashMap<>());
         when(mockBackupManger.getBackupInfoList()).thenReturn(Arrays.asList(backupInfo1, backupInfo2));
         StreamObserver<GetBackupInfoResponse> mockGetInfoObserver = mock(StreamObserver.class);
         backupService.getBackupInfo(GetBackupInfoRequest.newBuilder().build(), mockGetInfoObserver);

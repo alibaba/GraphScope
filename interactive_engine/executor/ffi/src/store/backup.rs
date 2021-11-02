@@ -16,7 +16,7 @@
 
 use std::ffi::CStr;
 use std::os::raw::{c_char, c_void};
-use std::str;
+use std::{str, mem};
 use maxgraph_store::db::api::{GraphBackup, GraphStorage};
 use maxgraph_store::db::graph::store::{GraphStore, GraphBackupEngine};
 use crate::store::graph::GraphHandle;
@@ -50,7 +50,7 @@ pub extern fn createNewBackup(handle: GraphBackupHandle) -> Box<JnaResponse> {
         match graph_be.create_new_backup() {
             Ok(id) => {
                 let mut response = JnaResponse::new_success();
-                if let Err(e) = response.i32_data(vec![id]) {
+                if let Err(e) = response.data(id.to_ne_bytes().to_vec()) {
                     response.success(false);
                     let msg = format!("{:?}", e);
                     response.err_msg(&msg);
@@ -119,9 +119,14 @@ pub extern fn verifyBackup(handle: GraphBackupHandle, backup_id: i32) -> Box<Jna
 pub extern fn getBackupList(handle: GraphBackupHandle) -> Box<JnaResponse> {
     unsafe {
         let graph_be = &*(handle as *const GraphBackupEngine);
-        let backup_id_list = graph_be.get_backup_list();
+        let mut backup_id_list = graph_be.get_backup_list();
+        let ratio = mem::size_of::<u32>() / mem::size_of::<u8>();
+        let length = backup_id_list.len() * ratio;
+        let capacity = backup_id_list.capacity() * ratio;
+        let ptr = backup_id_list.as_mut_ptr() as *mut u8;
+        mem::forget(backup_id_list);
         let mut response = JnaResponse::new_success();
-        if let Err(e) = response.i32_data(backup_id_list) {
+        if let Err(e) = response.data(Vec::from_raw_parts(ptr, length, capacity)) {
             response.success(false);
             let msg = format!("{:?}", e);
             response.err_msg(&msg);
