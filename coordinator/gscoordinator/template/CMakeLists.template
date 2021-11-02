@@ -81,8 +81,9 @@ endif()
 # eliminate a lot of warnings for newer version of boost library.
 add_compile_options(-DBOOST_BIND_GLOBAL_PLACEHOLDERS)
 
-# Threads------------------------------------------------------------------
+# find Threads------------------------------------------------------------------
 set(CMAKE_THREAD_PREFER_PTHREAD ON)
+find_package(Threads REQUIRED)
 
 # find Python-------------------------------------------------------------------
 if (${CYTHON_PREGEL_APP} OR ${CYTHON_PIE_APP})
