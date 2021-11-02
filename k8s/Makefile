@@ -45,7 +45,6 @@ gsruntime-image:
 
 gsvineyard-image:
 	docker build --progress=$(BUILD_PROGRESS) \
-			     --no-cache \
 				 -t ${REGISTRY}/$(DOCKER_ORG)/graphscope-vineyard:${VERSION} \
 				 -f $(WORKING_DIR)/gsvineyard.Dockerfile .
 
@@ -102,6 +101,8 @@ graphscope-darwin-py3:
 	# build graphscope
 	cd $(WORKING_DIR)/../ && \
 		make install WITH_LEARNING_ENGINE=OFF && \
+		sudo install_name_tool -add_rpath /usr/local/lib /opt/graphscope/bin/executor && \
+		sudo install_name_tool -add_rpath /usr/local/lib /opt/graphscope/bin/gaia_executor && \
 		python3 $(WORKING_DIR)/precompile.py
 	# build and delocate wheel
 	cd $(WORKING_DIR)/../coordinator && \
