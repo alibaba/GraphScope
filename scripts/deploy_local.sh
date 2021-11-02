@@ -525,7 +525,7 @@ install_dependencies() {
       log "Installing zetcd."
       export PATH=${PATH}:/usr/local/go/bin
       go get github.com/etcd-io/zetcd/cmd/zetcd
-      sudo cp /usr/local/go/bin/zetcd /usr/local/bin/zetcd
+      sudo cp ${HOME}/go/bin/zetcd /usr/local/bin/zetcd
       # remove zetcd from packages_to_install
       packages_to_install=("${packages_to_install[@]/zetcd}")
     fi
@@ -570,7 +570,7 @@ install_dependencies() {
       log "Installing zetcd."
       export PATH=${PATH}:/usr/local/go/bin
       go get github.com/etcd-io/zetcd/cmd/zetcd
-      sudo cp /usr/local/go/bin/zetcd /usr/local/bin/zetcd
+      sudo cp ${HOME}/go/bin/zetcd /usr/local/bin/zetcd
       # remove zetcd from packages_to_install
       packages_to_install=("${packages_to_install[@]/zetcd}")
     fi
@@ -678,7 +678,7 @@ install_dependencies() {
       log "Installing zetcd."
       export PATH=/usr/local/go/bin:${PATH}
       go get github.com/etcd-io/zetcd/cmd/zetcd
-      sudo cp /usr/local/go/bin/zetcd /usr/local/bin/zetcd
+      sudo cp ${HOME}/go/bin/zetcd /usr/local/bin/zetcd
       # remove zetcd from packages_to_install
       packages_to_install=("${packages_to_install[@]/zetcd}")
     fi
