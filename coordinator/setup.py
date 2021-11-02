@@ -65,7 +65,7 @@ def _get_extra_data():
     }
     # MacOS: Some openmpi libs need to be dlopen
     if platform.system() == "Darwin":
-        data.update({"/usr/local/lib/openmpi": os.path.join(RUNTIME_ROOT, "lib")})
+        data.update({"/usr/local/opt/open-mpi/lib/": os.path.join(RUNTIME_ROOT, "lib")})
     return data
 
 

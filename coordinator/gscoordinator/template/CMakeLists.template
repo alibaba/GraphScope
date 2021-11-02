@@ -90,6 +90,15 @@ if (${CYTHON_PREGEL_APP} OR ${CYTHON_PIE_APP})
   include_directories(SYSTEM ${PYTHON_INCLUDE_DIRS})
 endif ()
 
+# find MPI----------------------------------------------------------------------
+find_package(MPI QUIET)
+include_directories(SYSTEM ${MPI_CXX_INCLUDE_PATH})
+
+# find libgrape-lite------------------------------------------------------------
+find_package(libgrapelite QUIET)
+include_directories(${LIBGRAPELITE_INCLUDE_DIRS})
+include_directories("${LIBGRAPELITE_INCLUDE_DIRS}/grape/analytical_apps")
+
 # find vineyard-----------------------------------------
 find_package(vineyard 0.3.3 QUIET)
 include_directories(${VINEYARD_INCLUDE_DIRS})
@@ -97,6 +106,10 @@ add_compile_options(-DENABLE_SELECTOR)
 
 # set analytical engine home-----------------------------------------------
 set(ANALYTICAL_ENGINE_HOME $_analytical_engine_home)
+
+# find Glog---------------------------------------------------------------------
+include("${ANALYTICAL_ENGINE_HOME}/${CMAKE_INSTALL_LIBDIR}/cmake/graphscope-analytical/cmake/FindGlog.cmake")
+include_directories(SYSTEM ${GLOG_INCLUDE_DIRS})
 
 # force load the config make if it exists
 include("${ANALYTICAL_ENGINE_HOME}/${CMAKE_INSTALL_LIBDIR}/cmake/graphscope-analytical/graphscope-analytical-config.cmake" OPTIONAL)
@@ -112,6 +125,7 @@ include_directories("${ANALYTICAL_ENGINE_HOME}/include")
 include_directories("${ANALYTICAL_ENGINE_HOME}/include/vineyard")
 include_directories("${ANALYTICAL_ENGINE_HOME}/include/graphscope")
 include_directories("${ANALYTICAL_ENGINE_HOME}/include/graphscope/apps")
+include_directories("${ANALYTICAL_ENGINE_HOME}/include/grape/analytical_apps")
 
 # set frame dir--------------------------------------------------------------
 set(ANALYTICAL_ENGINE_FRAME_DIR "${ANALYTICAL_ENGINE_HOME}/include/graphscope/frame")

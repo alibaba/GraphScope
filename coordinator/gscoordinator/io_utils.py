@@ -88,7 +88,6 @@ class StdStreamWrapper(object):
             LoadingProgressTracker.cur_stub = 0
             LoadingProgressTracker.progbar.close()
             LoadingProgressTracker.progbar = None
-            sys.stderr.write("\n")
             sys.stderr.flush()
 
     def _filter_progress(self, line):
