@@ -1,0 +1,12 @@
+name: Cancel Stale Runs
+
+on: [push, pull_request_target]
+
+jobs:
+  cancel:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: styfle/cancel-workflow-action@0.9.1
+        with:
+          access_token: ${{ github.token }}
+
