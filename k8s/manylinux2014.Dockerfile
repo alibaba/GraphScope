@@ -19,9 +19,31 @@ RUN yum install -y autoconf m4 git krb5-devel \
 ENV LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:/usr/local/lib:/usr/local/lib64
 ENV PATH=${PATH}:/usr/local/bin
 
+# install clang-11 with gold optimizer plugin, depends on header include/plugin-api.h
+RUN ln -s /opt/rh/devtoolset-10/root/lib/gcc/x86_64-redhat-linux/10 /usr/lib/gcc/x86_64-redhat-linux/10 && \
+    cd /tmp && \
+    mkdir -p binutils/include && \
+    cd binutils/include && \
+    wget -q https://raw.githubusercontent.com/bminor/binutils-gdb/binutils-2_37-branch/include/plugin-api.h && \
+    cd /tmp && \
+    wget -q https://github.com/llvm/llvm-project/archive/refs/tags/llvmorg-11.1.0.tar.gz && \
+    tar zxf /tmp/llvmorg-11.1.0.tar.gz -C /tmp/ && \
+    cd llvm-project-llvmorg-11.1.0/ && \
+    mkdir build && cd build && \
+    cmake -G "Unix Makefiles" -DLLVM_ENABLE_PROJECTS='clang;lld' \
+                              -DCMAKE_INSTALL_PREFIX=/opt/llvm11 \
+                              -DCMAKE_BUILD_TYPE=Release \
+                              -DLLVM_TARGETS_TO_BUILD=X86 \
+                              -DLLVM_BINUTILS_INCDIR=/tmp/binutils/include \
+                              ../llvm && \
+    make install -j`nproc` && \
+    rm -rf /tmp/llvm-project-llvmorg-11.1.0 /tmp/llvmorg-11.1.0.tar.gz /tmp/binutils
+
+ENV LLVM11_HOME=/opt/llvm11
+
 # openssl 1.1.1
 RUN cd /tmp && \
-    wget https://github.com/openssl/openssl/archive/OpenSSL_1_1_1h.tar.gz && \
+    wget -q https://github.com/openssl/openssl/archive/OpenSSL_1_1_1h.tar.gz && \
     tar zxvf OpenSSL_1_1_1h.tar.gz && \
     cd openssl-OpenSSL_1_1_1h && \
     ./config -fPIC -shared && \
@@ -32,7 +54,7 @@ RUN cd /tmp && \
 
 # apache arrow v1.0.1
 RUN cd /tmp && \
-    wget https://github.com/apache/arrow/archive/apache-arrow-1.0.1.tar.gz && \
+    wget -q https://github.com/apache/arrow/archive/apache-arrow-1.0.1.tar.gz && \
     tar zxvf apache-arrow-1.0.1.tar.gz && \
     cd arrow-apache-arrow-1.0.1 && \
     mkdir build && \
@@ -83,7 +105,7 @@ RUN cd /tmp && \
 
 # boost v1.73.0
 RUN cd /tmp && \
-    wget https://boostorg.jfrog.io/artifactory/main/release/1.73.0/source/boost_1_73_0.tar.gz && \
+    wget -q https://boostorg.jfrog.io/artifactory/main/release/1.73.0/source/boost_1_73_0.tar.gz && \
     tar zxf boost_1_73_0.tar.gz && \
     cd boost_1_73_0 && \
     ./bootstrap.sh && \
@@ -93,7 +115,7 @@ RUN cd /tmp && \
 
 # gflags v2.2.2
 RUN cd /tmp && \
-    wget https://github.com/gflags/gflags/archive/v2.2.2.tar.gz && \
+    wget -q https://github.com/gflags/gflags/archive/v2.2.2.tar.gz && \
     tar zxvf v2.2.2.tar.gz && \
     cd gflags-2.2.2 && \
     mkdir build && \
@@ -106,7 +128,7 @@ RUN cd /tmp && \
 
 # zlib v1.2.11
 RUN cd /tmp && \
-    wget https://github.com/madler/zlib/archive/v1.2.11.tar.gz && \
+    wget -q https://github.com/madler/zlib/archive/v1.2.11.tar.gz && \
     tar zxvf v1.2.11.tar.gz && \
     cd zlib-1.2.11 && \
     mkdir build && \
@@ -119,7 +141,7 @@ RUN cd /tmp && \
 
 # glog v0.4.0
 RUN cd /tmp && \
-    wget https://github.com/google/glog/archive/v0.4.0.tar.gz && \
+    wget -q https://github.com/google/glog/archive/v0.4.0.tar.gz && \
     tar zxvf v0.4.0.tar.gz && \
     cd glog-0.4.0 && \
     mkdir build && \
@@ -132,7 +154,7 @@ RUN cd /tmp && \
 
 # protobuf v.3.13.0
 RUN cd /tmp && \
-    wget https://github.com/protocolbuffers/protobuf/releases/download/v3.13.0/protobuf-all-3.13.0.tar.gz && \
+    wget -q https://github.com/protocolbuffers/protobuf/releases/download/v3.13.0/protobuf-all-3.13.0.tar.gz && \
     tar zxvf protobuf-all-3.13.0.tar.gz && \
     cd protobuf-3.13.0 && \
     ./configure --enable-shared --disable-static && \
@@ -172,19 +194,19 @@ RUN cd /tmp && \
 
 # fmt v7.0.3, required by folly
 RUN cd /tmp && \
-    wget https://github.com/fmtlib/fmt/archive/7.0.3.tar.gz && \
+    wget -q https://github.com/fmtlib/fmt/archive/7.0.3.tar.gz && \
     tar zxvf 7.0.3.tar.gz && \
     cd fmt-7.0.3/ && \
     mkdir build && \
     cd build && \
-    cmake .. -DBUILD_SHARED_LIBS=ON && \
+    cmake .. -DBUILD_SHARED_LIBS=ON -DFMT_TEST=OFF && \
     make install -j && \
     cd /tmp && \
     rm -fr /tmp/7.0.3.tar.gz /tmp/fmt-7.0.3
 
 # double conversion v3.1.5, required by folly
 RUN cd /tmp && \
-  wget https://github.com/google/double-conversion/archive/refs/tags/v3.1.5.tar.gz && \
+  wget -q https://github.com/google/double-conversion/archive/refs/tags/v3.1.5.tar.gz && \
   tar zxvf v3.1.5.tar.gz && \
   cd double-conversion-3.1.5 && \
   mkdir build && \
@@ -195,7 +217,7 @@ RUN cd /tmp && \
 
 # folly v2020.10.19.00
 RUN cd /tmp && \
-    wget https://github.com/facebook/folly/archive/v2020.10.19.00.tar.gz && \
+    wget -q https://github.com/facebook/folly/archive/v2020.10.19.00.tar.gz && \
     tar zxvf v2020.10.19.00.tar.gz && \
     cd folly-2020.10.19.00 && mkdir _build && \
     cd _build && \
@@ -206,7 +228,7 @@ RUN cd /tmp && \
 
 # openmpi v4.0.5
 RUN cd /tmp && \
-    wget https://download.open-mpi.org/release/open-mpi/v4.0/openmpi-4.0.5.tar.gz && \
+    wget -q https://download.open-mpi.org/release/open-mpi/v4.0/openmpi-4.0.5.tar.gz && \
     tar zxvf openmpi-4.0.5.tar.gz && \
     cd openmpi-4.0.5 && \
     ./configure --enable-mpi-cxx --disable-dlopen && \
@@ -236,7 +258,7 @@ RUN yum install -y perl java-1.8.0-openjdk-devel && \
 
 # install hadoop
 RUN cd /tmp && \
-    wget https://archive.apache.org/dist/hadoop/core/hadoop-2.8.4/hadoop-2.8.4.tar.gz && \
+    wget -q https://archive.apache.org/dist/hadoop/core/hadoop-2.8.4/hadoop-2.8.4.tar.gz && \
     tar zxf hadoop-2.8.4.tar.gz -C /usr/local && \
     rm -rf hadoop-2.8.4.tar.gz
 
@@ -260,9 +282,6 @@ RUN mkdir -p /tmp/maven /usr/share/maven/ref \
 RUN cd /tmp && \
     wget --no-verbose https://golang.org/dl/go1.15.5.linux-amd64.tar.gz && \
     tar -C /usr/local -xzf go1.15.5.linux-amd64.tar.gz && \
-    curl -sf -L https://static.rust-lang.org/rustup.sh | \
-        sh -s -- -y --profile minimal --default-toolchain 1.54.0 && \
-    echo "source ~/.cargo/env" >> ~/.bashrc && \
     export PATH=${PATH}::/usr/local/go/bin && \
     go get github.com/etcd-io/zetcd/cmd/zetcd && \
     cp $(go env GOPATH)/bin/zetcd /usr/local/bin/zetcd
@@ -285,22 +304,10 @@ RUN cd /tmp && export KUBE_VER=v1.19.2 && \
 
 # install python3.9 deps for all
 RUN /opt/python/cp39-cp39/bin/pip3 install -U pip && \
-    /opt/python/cp39-cp39/bin/pip3 --no-cache-dir install auditwheel daemons grpcio-tools gremlinpython \
+    /opt/python/cp39-cp39/bin/pip3 --no-cache-dir install auditwheel daemons etcd-distro grpcio-tools gremlinpython \
         hdfs3 fsspec oss2 s3fs ipython kubernetes libclang networkx==2.4 numpy pandas parsec pycryptodome \
         pyorc pytest scipy scikit_learn wheel && \
     /opt/python/cp39-cp39/bin/pip3 --no-cache-dir install Cython --pre -U
-
-# etcd v3.4.13
-RUN cd /tmp && \
-    mkdir -p /tmp/etcd-download-test && \
-    export ETCD_VER=v3.4.13 && \
-    export DOWNLOAD_URL=https://github.com/etcd-io/etcd/releases/download && \
-    curl -L ${DOWNLOAD_URL}/${ETCD_VER}/etcd-${ETCD_VER}-linux-amd64.tar.gz -o /tmp/etcd-${ETCD_VER}-linux-amd64.tar.gz && \
-    tar xzvf /tmp/etcd-${ETCD_VER}-linux-amd64.tar.gz -C /tmp/etcd-download-test --strip-components=1 && \
-    mv /tmp/etcd-download-test/etcd /usr/local/bin/ && \
-    mv /tmp/etcd-download-test/etcdctl /usr/local/bin/ && \
-    cd /tmp && \
-    rm -fr /tmp/etcd-${ETCD_VER}-linux-amd64.tar.gz /tmp/etcd-download-test
 
 # shanghai zoneinfo
 ENV TZ=Asia/Shanghai
@@ -316,13 +323,15 @@ ENV RUST_BACKTRACE=1
 
 # change user: graphscope
 RUN useradd -m graphscope -u 1001 \
-    && echo 'graphscope ALL=(ALL) NOPASSWD:ALL' >> /etc/sudoers \
-    && cp -r ~/.cargo /home/graphscope/.cargo \
-    && chown -R graphscope:graphscope /home/graphscope/.cargo
+    && echo 'graphscope ALL=(ALL) NOPASSWD:ALL' >> /etc/sudoers
 
 USER graphscope
 WORKDIR /home/graphscope
+ENV PATH=${PATH}:/home/graphscope/.local/bin
 
-RUN source /home/graphscope/.cargo/env && \
-    rustup install stable && rustup default stable && rustup component add rustfmt && \
-    echo "source ~/.cargo/env" >> ~/.bashrc
+RUN curl -sf -L https://static.rust-lang.org/rustup.sh | \
+        sh -s -- -y --profile minimal --default-toolchain stable && \
+    echo "source ~/.cargo/env" >> ~/.bashrc && \
+    source /home/graphscope/.cargo/env && \
+    rustup component add rustfmt
+
