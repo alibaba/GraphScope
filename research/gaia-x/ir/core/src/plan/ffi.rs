@@ -365,6 +365,7 @@ impl From<BuildJobError> for FfiJobBuffer {
 
 /// To build a physical plan from the logical plan. After calling this function, the
 /// logical plan will be consumed and released.
+#[no_mangle]
 pub extern "C" fn build_physical_plan(ptr_plan: *const c_void) -> FfiJobBuffer {
     let plan = unsafe { Box::from_raw(ptr_plan as *mut LogicalPlan) };
     let mut builder = JobBuilder::default();
