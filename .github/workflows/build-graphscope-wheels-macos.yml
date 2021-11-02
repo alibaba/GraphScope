@@ -1,4 +1,4 @@
-name: Build GraphScope Wheels on Linux
+name: Build GraphScope Wheels on MacOS
 
 on:
   # Trigger the workflow on push or pull request, but only for the main branch
@@ -58,9 +58,9 @@ jobs:
 
         cd k8s
         # graphscope
-        sudo make graphscope-py3-package
+        sudo -E make graphscope-py3-package
         # graphscope client
-        sudo make graphscope-client-py3-package
+        sudo -E make graphscope-client-py3-package
 
         # package
         cd ${GITHUB_WORKSPACE}
