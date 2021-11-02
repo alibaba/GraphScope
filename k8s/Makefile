@@ -82,7 +82,7 @@ graphscope-darwin-py3:
 		cmake .. -DCMAKE_INSTALL_PREFIX=/opt/vineyard && \
 		sudo make -j`nproc` install
 	# install vineyard
-	cd /tmp && git clone https://github.com/alibaba/libvineyard.git --depth=1 && \
+	cd /tmp && git clone -b v0.3.3 https://github.com/alibaba/libvineyard.git --depth=1 && \
 		cd libvineyard && git submodule update --init && \
 		mkdir -p build && cd build && \
 		cmake .. -DCMAKE_PREFIX_PATH=/opt/vineyard \

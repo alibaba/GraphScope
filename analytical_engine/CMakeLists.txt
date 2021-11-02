@@ -42,6 +42,7 @@ endif (ccache_EXECUTABLE)
 
 include(CheckCXXCompilerFlag)
 include(CheckLibraryExists)
+include(CheckCXXSourceRuns)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 include_directories(${PROJECT_SOURCE_DIR})
 
@@ -50,9 +51,6 @@ set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall")
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -std=c99")
-if (NOT IS_ARM)
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -msse -msse2 -msse3 -msse4")
-endif ()
 if (APPLE)
     set(CMAKE_MACOSX_RPATH ON)
 else ()
@@ -60,11 +58,15 @@ else ()
 endif ()
 check_cxx_compiler_flag(-Wno-class-memaccess W_NO_CLASS_MEMACCESS)
 check_cxx_compiler_flag(-Wno-redundant-move W_NO_REDUNDANT_MOVE)
+check_cxx_compiler_flag(-Wno-undef-prefix W_NO_UNDEF_PREFIX)
 if(W_NO_CLASS_MEMACCESS)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-class-memaccess")
 endif()
 if(W_NO_REDUNDANT_MOVE)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-redundant-move")
+endif()
+if (W_NO_UNDEF_PREFIX)
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-undef-prefix")
 endif()
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fopenmp")
 set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -O0 -g")
@@ -141,6 +143,19 @@ if (NETWORKX)
     include("cmake/FindDoubleConversion.cmake")
     if (FOLLY_FOUND)
         include_directories(${FOLLY_ROOT_DIR}/include)
+
+        set(CMAKE_REQUIRED_LIBRARIES "${CMAKE_REQUIRED_LIBRARIES} ${FOLLY_LIBRARIES}")
+        check_cxx_source_runs("
+        #include <iostream>
+        #include \"folly/container/detail/F14Table.h\"
+
+        int main() {
+          folly::f14::detail::F14LinkCheck<folly::f14::detail::getF14IntrinsicsMode()>::check();
+        }
+        " FOLLY_COMPILE_SUCCESS)
+        if (NOT ${FOLLY_COMPILE_SUCCESS})
+          set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -msse -msse2 -msse3 -msse4")
+        endif()
     else ()
         message(FATAL_ERROR "folly not found")
     endif ()

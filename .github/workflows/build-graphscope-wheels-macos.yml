@@ -54,6 +54,7 @@ jobs:
       run: |
         # source environment variable
         source ~/.graphscope_env
+        echo ${CC}
 
         cd k8s
         # graphscope
