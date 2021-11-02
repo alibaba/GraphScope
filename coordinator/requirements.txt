@@ -1,10 +1,10 @@
 cmake>=3.21.2
 daemons
-etcd-distro
+etcd-distro>=3.5.1
 graphscope-client
 grpcio
 kubernetes
 protobuf
 PyYAML
-vineyard>=0.3.1
-vineyard-io>=0.3.1
+vineyard>=0.3.3
+vineyard-io>=0.3.3

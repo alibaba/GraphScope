@@ -30,7 +30,7 @@ jobs:
       run:
         shell: bash --noprofile --norc -eo pipefail {0}
     container:
-      image: registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-vineyard:v0.3.1
+      image: registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-vineyard:v0.3.3
       options:
         --shm-size 4096m
     strategy:
@@ -135,7 +135,7 @@ jobs:
       run:
         shell: bash --noprofile --norc -eo pipefail {0}
     container:
-      image: registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-vineyard:v0.3.1
+      image: registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-vineyard:v0.3.3
     steps:
     - name: Install Dependencies
       run: |
@@ -180,7 +180,7 @@ jobs:
       run:
         shell: bash --noprofile --norc -eo pipefail {0}
     container:
-      image: registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-vineyard:v0.3.1
+      image: registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-vineyard:v0.3.3
     steps:
     - uses: actions/checkout@v2.3.2
       with:
@@ -319,16 +319,11 @@ jobs:
     - name: App Test with Expr Off
       if: matrix.networkx == 'OFF'
       run: |
-        # prelaunch the etcd
-        /usr/local/bin/etcd --data-dir=/tmp/default.etcd &
-
         export GRAPHSCOPE_HOME='/opt/graphscope'
         export GS_TEST_DIR='/home/graphscope/gstest'
         cd python
         python3 -m pytest --cov=graphscope --cov-config=.coveragerc \
                           --cov-report=xml --cov-report=term --exitfirst -s -v tests/unittest/
-
-        pkill -TERM etcd || true
 
     - name: Upload Coverage
       if: matrix.networkx == 'OFF'
@@ -340,15 +335,10 @@ jobs:
     - name: App Test with Expr On
       if: matrix.networkx == 'ON'
       run: |
-        # prelaunch the etcd
-        /usr/local/bin/etcd --data-dir=/tmp/default.etcd &
-
         export GRAPHSCOPE_HOME='/opt/graphscope'
         export GS_TEST_DIR='/home/graphscope/gstest'
         python3 -m pytest --exitfirst -s -v python/graphscope/nx/tests \
                           --ignore=python/graphscope/nx/tests/algorithms/forward
-
-        pkill -TERM etcd || true
 
   k8s-test:
     runs-on: self-hosted
@@ -543,7 +533,7 @@ jobs:
       run:
         shell: bash --noprofile --norc -eo pipefail {0}
     container:
-      image: registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-vineyard:v0.3.1
+      image: registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-vineyard:v0.3.3
     steps:
 
     #- name: "Debug: Package dependancies for tmate"

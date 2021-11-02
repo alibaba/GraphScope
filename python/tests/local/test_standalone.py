@@ -77,6 +77,10 @@ def simple_flow(sess, ogbn_small_script):
     interactive = sess.gremlin(graph)
     papers = interactive.execute(ogbn_small_script).one()
 
+    # MacOS skip the GLE test
+    if sys.platform == "darwin":
+        return
+
     # GLE on ogbn_mag_small graph
     paper_features = []
     for i in range(128):
@@ -194,6 +198,10 @@ def test_default_session(ogbn_small_script):
 
     sub_graph = sub_graph.add_column(ret1, {"kcore": "r"})
     sub_graph = sub_graph.add_column(ret2, {"tc": "r"})
+
+    # MacOS skip the GLE test
+    if sys.platform == "darwin":
+        return
 
     # GLE on ogbn_mag_small graph
     paper_features = []

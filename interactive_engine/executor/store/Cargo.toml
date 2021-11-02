@@ -21,6 +21,7 @@ rust-ini = "0.13"
 libc = "0.2"
 log4rs = "0.8.0"
 grpcio = "=0.4.1"
+grpcio-sys = { version = "0.4.7", features = ["openssl-vendored"] }
 #rocksdb = "0.17.0"
 
 maxgraph-common = { path = "../../rust-common" }

@@ -274,19 +274,23 @@ class LocalLauncher(Launcher):
         )
         return process
 
-    def _launch_etcd(self):
-        etcd_exec = shutil.which("etcd")
-        if not etcd_exec:
-            raise RuntimeError("etcd command not found.")
+    def _find_etcd(self):
+        etcd = shutil.which("etcd")
+        if not etcd:
+            etcd = [sys.executable, "-m", "etcd_distro.etcd"]
+        if not isinstance(etcd, list):
+            etcd = [etcd]
+        return etcd
 
+    def _launch_etcd(self):
+        etcd_exec = self._find_etcd()
         self._etcd_peer_port = 2380 if is_free_port(2380) else get_free_port()
         self._etcd_client_port = 2379 if is_free_port(2379) else get_free_port()
 
         env = os.environ.copy()
         env.update({"ETCD_MAX_TXN_OPS": "102400"})
 
-        cmd = [
-            etcd_exec,
+        cmd = etcd_exec + [
             "--data-dir",
             str(self._instance_workspace),
             "--listen-peer-urls",
@@ -424,6 +428,18 @@ class LocalLauncher(Launcher):
             self._vineyard_socket = vineyard_socket
             self._vineyardd_process = process
 
+            start_time = time.time()
+            while not os.path.exists(self._vineyard_socket):
+                time.sleep(1)
+                if (
+                    self._timeout_seconds
+                    and self._timeout_seconds + start_time < time.time()
+                ):
+                    raise RuntimeError("Launch vineyardd failed due to timeout.")
+            logger.info(
+                "Vineyardd is ready, ipc socket is {0}".format(self._vineyard_socket)
+            )
+
     def _create_services(self):
         # create etcd
         self._launch_etcd()
@@ -460,7 +476,12 @@ class LocalLauncher(Launcher):
         env.update(mpi_env)
         # open MPI system need open ORTED daemon
         if os.path.isfile(os.path.join(GRAPHSCOPE_HOME, "bin", "orted")):
-            env.update({"OPAL_BINDIR": os.path.join(GRAPHSCOPE_HOME, "bin")})
+            env.update(
+                {
+                    "OPAL_PREFIX": os.path.join(GRAPHSCOPE_HOME),
+                    "OPAL_BINDIR": os.path.join(GRAPHSCOPE_HOME, "bin"),
+                }
+            )
 
         logger.info("Launch analytical engine with command: %s", " ".join(cmd))
 
@@ -484,6 +505,21 @@ class LocalLauncher(Launcher):
         setattr(process, "stderr_watcher", stderr_watcher)
 
         self._analytical_engine_process = process
+
+        start_time = time.time()
+
+        while is_free_port(rpc_port):
+            time.sleep(1)
+            if (
+                self._timeout_seconds
+                and self._timeout_seconds + start_time < time.time()
+            ):
+                raise RuntimeError("Launch analytical engine failed due to timeout.")
+        logger.info(
+            "Analytical engine is ready, endpoint is {0}".format(
+                self._analytical_engine_endpoint
+            )
+        )
 
     def create_learning_instance(self, object_id, handle, config):
         # prepare argument
