@@ -798,6 +798,7 @@ install_vineyard() {
   if [[ "${PLATFORM}" == *"Darwin"* ]]; then
     cmake .. -DCMAKE_BUILD_TYPE=RelWithDebInfo \
              -DBUILD_SHARED_LIBS=ON \
+             -DBUILD_VINEYARD_SERVER=OFF \
              -DBUILD_VINEYARD_IO_OSS=ON -DBUILD_VINEYARD_TESTS=OFF
   else
     cmake .. -DBUILD_SHARED_LIBS=ON \
