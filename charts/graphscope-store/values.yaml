@@ -330,7 +330,7 @@ frontend:
   ## ref: https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle/#container-probes
   ##
   livenessProbe:
-    enabled: false
+    enabled: true
     initialDelaySeconds: 120
     periodSeconds: 10
     timeoutSeconds: 1

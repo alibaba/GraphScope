@@ -129,6 +129,16 @@ spec:
               containerPort: 60000
             - name: gaia-engine
               containerPort: 60001
+          {{- if .Values.frontend.livenessProbe.enabled }}
+          livenessProbe:
+            tcpSocket:
+              port: port
+            initialDelaySeconds: {{ .Values.frontend.livenessProbe.initialDelaySeconds }}
+            timeoutSeconds: {{ .Values.frontend.livenessProbe.timeoutSeconds }}
+            failureThreshold: {{ .Values.frontend.livenessProbe.failureThreshold }}
+            periodSeconds: {{ .Values.frontend.livenessProbe.periodSeconds }}
+            successThreshold: {{ .Values.frontend.livenessProbe.successThreshold }}
+          {{- end }}
           {{- if .Values.frontend.resources }}
           resources: {{- toYaml .Values.frontend.resources | nindent 12 }}
           {{- end }}
