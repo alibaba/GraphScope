@@ -19,25 +19,24 @@ BUILD_TEST                  ?= OFF
 .PHONY: all
 all: graphscope
 
-.PHONY: gsruntime
-gsruntime:
-	$(MAKE) -C $(WORKING_DIR)/k8s/ gsruntime VERSION=$(VERSION)
-
-.PHONY: gsvineyard
-gsvineyard:
-	$(MAKE) -C $(WORKING_DIR)/k8s/ gsvineyard VERSION=$(VERSION)
-
 .PHONY: graphscope
-graphscope:
-	$(MAKE) -C $(WORKING_DIR)/k8s/ graphscope VERSION=$(VERSION)
+graphscope: install
 
-.PHONY: interactive_manager
-interactive_manager:
-	$(MAKE) -C $(WORKING_DIR)/k8s/ manager VERSION=$(VERSION)
+.PHONY: gsruntime-image
+gsruntime:
+	$(MAKE) -C $(WORKING_DIR)/k8s/ gsruntime-image VERSION=$(VERSION)
 
-.PHONY: graphscope-store
-graphscope-store:
-	$(MAKE) -C $(WORKING_DIR)/k8s/ graphscope-store VERSION=$(VERSION)
+.PHONY: gsvineyard-image
+gsvineyard:
+	$(MAKE) -C $(WORKING_DIR)/k8s/ gsvineyard-image VERSION=$(VERSION)
+
+.PHONY: graphscope-image
+graphscope-image:
+	$(MAKE) -C $(WORKING_DIR)/k8s/ graphscope-image VERSION=$(VERSION)
+
+.PHONY: graphscope-store-image
+graphscope-store-image:
+	$(MAKE) -C $(WORKING_DIR)/k8s/ graphscope-store-image VERSION=$(VERSION)
 
 .PHONY: push
 push:

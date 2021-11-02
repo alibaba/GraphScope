@@ -4,7 +4,7 @@
 FROM registry.cn-hongkong.aliyuncs.com/graphscope/manylinux2014:2021-10-14-14ac00e
 
 # yum install dependencies
-RUN yum install -y autoconf m4 git krb5-devel \
+RUN yum install -y autoconf m4 git krb5-devel perl-IPC-Cmd \
         libcurl-devel libevent-devel libgsasl-devel libunwind-devel.x86_64 \
         libuuid-devel libxml2-devel libzip libzip-devel minizip minizip-devel \
         make net-tools rsync telnet unzip vim wget which zip bind-utils sudo && \
@@ -334,4 +334,3 @@ RUN curl -sf -L https://static.rust-lang.org/rustup.sh | \
     echo "source ~/.cargo/env" >> ~/.bashrc && \
     source /home/graphscope/.cargo/env && \
     rustup component add rustfmt
-

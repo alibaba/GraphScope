@@ -14,9 +14,8 @@ readonly GREEN="\033[0;32m"
 readonly NC="\033[0m" # No Color
 
 readonly GRAPE_BRANCH="master" # libgrape-lite branch
-readonly V6D_VERSION="0.3.1"  # vineyard version
-readonly V6D_BRANCH="v0.3.1" # vineyard branch
-readonly LLVM_VERSION=9  # llvm version we use in Darwin platform
+readonly V6D_VERSION="0.3.3"  # vineyard version
+readonly V6D_BRANCH="v0.3.3" # vineyard branch
 
 readonly SOURCE_DIR="$( cd "$(dirname $0)/.." >/dev/null 2>&1 ; pwd -P )"
 readonly NUM_PROC=$( $(command -v nproc &> /dev/null) && echo $(nproc) || echo $(sysctl -n hw.physicalcpu) )
@@ -260,6 +259,7 @@ init_basic_packages() {
       protobuf
       glog
       gflags
+      grpc
       zstd
       snappy
       lz4
@@ -362,7 +362,7 @@ check_dependencies() {
   # check go < 1.16 (vertion 1.16 can't install zetcd)
   # FIXME(weibin): version check is not universed.
   if $(! command -v go &> /dev/null) || \
-     [[ "$(go version 2>&1 | awk -F '.' '{print $2}')" -ge "16" ]]; then
+     [[ "$(go version 2>&1 | awk -F '.' '{print $2}' | awk -F ' ' '{print $1}')" -ge "16" ]]; then
     if [[ "${PLATFORM}" == *"CentOS"* ]]; then
       packages_to_install+=(golang)
     else
@@ -385,12 +385,8 @@ check_dependencies() {
   fi
 
   # check folly
-  # FIXME: if the brew already install folly, what should we do.
-  # TODO(@weibin): remove the ci check after GraphScope support clang 12.
-  if [[ -z "${CI}" ]] || ( [[ "${CI}" == "true" ]] && [[ "${PLATFORM}" != *"Darwin"* ]] ); then
-    if [[ ! -f "/usr/local/include/folly/dynamic.h" ]]; then
-      packages_to_install+=(folly)
-    fi
+  if [[ ! -f "/usr/local/include/folly/dynamic.h" ]]; then
+    packages_to_install+=(folly)
   fi
 
   # check zetcd
@@ -401,10 +397,9 @@ check_dependencies() {
 
   # check c++ compiler
   if [[ "${PLATFORM}" == *"Darwin"* ]]; then
-    if ! command -v clang &> /dev/null || \
-       [[ "$(clang -v 2>&1 | head -n 1 | sed 's/.* \([0-9]*\)\..*/\1/')" -lt "8" ]] || \
-       [[ "$(clang -v 2>&1 | head -n 1 | sed 's/.* \([0-9]*\)\..*/\1/')" -gt "10" ]]; then
-      packages_to_install+=("llvm@${LLVM_VERSION}")
+    if ! command brew --prefix llvm &> /dev/null || \
+        ! command ls $(brew --prefix llvm) &> /dev/null; then
+        packages_to_install+=("llvm")
     fi
   else
     if ! command -v g++ &> /dev/null; then
@@ -422,7 +417,6 @@ check_dependencies() {
 # Globals:
 #   PLATFORM
 #   SOURCE_DIR
-#   LLVM_VERSION
 # Arguments:
 #   None
 # Outputs:
@@ -437,14 +431,12 @@ write_envs_config() {
   if [[ "${PLATFORM}" == *"Darwin"* ]]; then
     {
       # FIXME: graphscope_env not correct when the script run mutiple times.
-      if [[ "${packages_to_install[@]}" =~ "llvm@${LLVM_VERSION}" ]]; then
-        # packages_to_install contains llvm
-        echo "export CC=/usr/local/opt/llvm@${LLVM_VERSION}/bin/clang"
-        echo "export CXX=/usr/local/opt/llvm@${LLVM_VERSION}/bin/clang++"
-        echo "export LDFLAGS=-L/usr/local/opt/llvm@${LLVM_VERSION}/lib"
-        echo "export CPPFLAGS=-I/usr/local/opt/llvm@${LLVM_VERSION}/include"
-        echo "export PATH=/usr/local/opt/llvm@${LLVM_VERSION}/bin:\$PATH"
-      fi
+      # packages_to_install contains llvm
+      echo "export CC=/usr/local/opt/llvm/bin/clang"
+      echo "export CXX=/usr/local/opt/llvm/bin/clang++"
+      echo "export LDFLAGS=-L/usr/local/opt/llvm/lib"
+      echo "export CPPFLAGS=-I/usr/local/opt/llvm/include"
+      echo "export PATH=/usr/local/opt/llvm/bin:\$PATH"
       if [ -z "${JAVA_HOME}" ]; then
         echo "export JAVA_HOME=\$(/usr/libexec/java_home -v11)"
       fi
@@ -533,6 +525,7 @@ install_dependencies() {
       log "Installing zetcd."
       export PATH=${PATH}:/usr/local/go/bin
       go get github.com/etcd-io/zetcd/cmd/zetcd
+      sudo cp ${HOME}/go/bin/zetcd /usr/local/bin/zetcd
       # remove zetcd from packages_to_install
       packages_to_install=("${packages_to_install[@]/zetcd}")
     fi
@@ -575,7 +568,9 @@ install_dependencies() {
 
     if [[ "${packages_to_install[@]}" =~ "zetcd" ]]; then
       log "Installing zetcd."
+      export PATH=${PATH}:/usr/local/go/bin
       go get github.com/etcd-io/zetcd/cmd/zetcd
+      sudo cp ${HOME}/go/bin/zetcd /usr/local/bin/zetcd
       # remove zetcd from packages_to_install
       packages_to_install=("${packages_to_install[@]/zetcd}")
     fi
@@ -683,6 +678,7 @@ install_dependencies() {
       log "Installing zetcd."
       export PATH=/usr/local/go/bin:${PATH}
       go get github.com/etcd-io/zetcd/cmd/zetcd
+      sudo cp ${HOME}/go/bin/zetcd /usr/local/bin/zetcd
       # remove zetcd from packages_to_install
       packages_to_install=("${packages_to_install[@]/zetcd}")
     fi
@@ -695,24 +691,16 @@ install_dependencies() {
       packages_to_install=("${packages_to_install[@]/rust}")
     fi
 
-    if [[ "${packages_to_install[@]}" =~ "folly" ]]; then
-      install_folly=true  # set folly install flag
-      packages_to_install=("${packages_to_install[@]/folly}")
-      packages_to_install+=(fmt)
-    fi
-
     log "Installing packages ${packages_to_install[*]}"
     brew install ${packages_to_install[*]}
 
     export OPENSSL_ROOT_DIR=/usr/local/opt/openssl
     export OPENSSL_LIBRARIES=/usr/local/opt/openssl/lib
     export OPENSSL_SSL_LIBRARY=/usr/local/opt/openssl/lib/libssl.dylib
-    if [[ "${packages_to_install[@]}" =~ "llvm@${LLVM_VERSION}" ]]; then
-      export CC=/usr/local/opt/llvm@${LLVM_VERSION}/bin/clang
-      export CXX=/usr/local/opt/llvm@${LLVM_VERSION}/bin/clang++
-      export LDFLAGS=-L/usr/local/opt/llvm@${LLVM_VERSION}/lib
-      export CPPFLAGS=-I/usr/local/opt/llvm@${LLVM_VERSION}/include
-    fi
+    export CC=/usr/local/opt/llvm/bin/clang
+    export CXX=/usr/local/opt/llvm/bin/clang++
+    export LDFLAGS=-L/usr/local/opt/llvm/lib
+    export CPPFLAGS=-I/usr/local/opt/llvm/include
   fi
 
   if [[ ${install_folly} == true ]]; then
@@ -748,6 +736,8 @@ install_dependencies() {
 
   log "Output environments config file ${OUTPUT_ENV_FILE}"
   write_envs_config
+  log "Cat ${OUTPUT_ENV_FILE}"
+  cat ${OUTPUT_ENV_FILE}
 }
 
 ##########################
@@ -807,7 +797,8 @@ install_vineyard() {
   mkdir -p build && pushd build
   if [[ "${PLATFORM}" == *"Darwin"* ]]; then
     cmake .. -DCMAKE_BUILD_TYPE=RelWithDebInfo \
-             -DBUILD_VINEYARD_PYTHON_BINDINGS=ON -DBUILD_SHARED_LIBS=ON \
+             -DBUILD_SHARED_LIBS=ON \
+             -DBUILD_VINEYARD_SERVER=OFF \
              -DBUILD_VINEYARD_IO_OSS=ON -DBUILD_VINEYARD_TESTS=OFF
   else
     cmake .. -DBUILD_SHARED_LIBS=ON \

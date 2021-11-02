@@ -1611,17 +1611,17 @@ class DynamicFragment {
 
     for (auto v : inner_vertices) {
       if (IsAliveInnerVertex(v)) {
-        auto data = ivdata_[v.GetValue()];
+        auto& data = ivdata_[v.GetValue()];
 
         CHECK(data.isObject());
-        for (auto& k : data.keys()) {
-          auto s_k = k.asString();
+        for (auto& item : data.items()) {
+          auto s_k = item.first.asString();
 
           if (prop_keys.find(s_k) == prop_keys.end()) {
-            prop_keys[s_k] = data[k].type();
+            prop_keys[s_k] = item.second.type();
           } else {
             auto seen_type = prop_keys[s_k];
-            auto curr_type = data[k].type();
+            auto curr_type = item.second.type();
 
             if (seen_type != curr_type) {
               std::stringstream ss;
@@ -1650,17 +1650,17 @@ class DynamicFragment {
 
       for (auto& e : adj_list) {
         auto& nbr = e.second;
-        auto data = nbr.data();
+        auto& data = nbr.data();
 
         CHECK(data.isObject());
-        for (auto& k : data.keys()) {
-          auto s_k = k.asString();
+        for (auto& item : data.items()) {
+          auto s_k = item.first.asString();
 
           if (prop_keys.find(s_k) == prop_keys.end()) {
-            prop_keys[s_k] = data[k].type();
+            prop_keys[s_k] = item.second.type();
           } else {
             auto seen_type = prop_keys[s_k];
-            auto curr_type = data[k].type();
+            auto curr_type = item.second.type();
 
             if (seen_type != curr_type) {
               std::stringstream ss;

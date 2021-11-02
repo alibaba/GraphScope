@@ -521,9 +521,9 @@ class DynamicToArrowConverter {
     BOOST_LEAF_AUTO(prop_keys, src_frag->CollectPropertyKeysOnVertices());
 
     // build schema and array
-    for (const auto& e : prop_keys) {
-      auto key = e.first;
-      auto type = e.second;
+    for (const auto& p : prop_keys) {
+      auto key = p.first;
+      auto type = p.second;
 
       switch (type) {
       case folly::dynamic::Type::INT64: {

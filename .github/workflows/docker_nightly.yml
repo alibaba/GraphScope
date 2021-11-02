@@ -29,12 +29,12 @@ jobs:
     - name: Build graphscope image
       run: |
         cd ${GITHUB_WORKSPACE}
-        sudo make graphscope
+        sudo make graphscope-image
 
     - name: Build graphscope-store image
       run: |
         cd ${GITHUB_WORKSPACE}
-        sudo make graphscope-store
+        sudo make graphscope-store-image
 
     - name: Add envs to GITHUB_ENV
       run: |
