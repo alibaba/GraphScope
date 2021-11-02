@@ -101,6 +101,10 @@ message Variable {
   Property property = 2;
 }
 
+message VariableKeys {
+  repeated Variable keys = 1;
+}
+
 // An operator of expression is one of Logical, Arithmetic, Const and Variable.
 message ExprOpr {
   oneof item {

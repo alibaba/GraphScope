@@ -336,7 +336,7 @@ fn append_operator(
     id: *mut i32,
 ) -> ResultCode {
     let mut plan = unsafe { Box::from_raw(ptr_plan as *mut LogicalPlan) };
-    let opr_id = plan.append_node(
+    let opr_id = plan.append_operator_as_node(
         operator,
         parent_ids
             .into_iter()

@@ -144,7 +144,9 @@ message Unfold {
 }
 
 message Range {
+  // The lower bound of the range, included
   int32 lower = 1;
+  // The upper bound of the range, **excluded**
   int32 upper = 2;
 }
 
