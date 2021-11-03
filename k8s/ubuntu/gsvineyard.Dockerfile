@@ -20,8 +20,7 @@ RUN cd /tmp && \
     mkdir -p /tmp/libvineyard/build && \
     cd /tmp/libvineyard/build && \
     cmake .. -DBUILD_VINEYARD_PYPI_PACKAGES=ON \
-             -DBUILD_SHARED_LIBS=ON \
-             -DBUILD_VINEYARD_IO_OSS=ON && \
+             -DBUILD_SHARED_LIBS=ON && \
     make install vineyard_client_python -j && \
     cd /tmp/libvineyard && \
     python3 setup.py bdist_wheel && \

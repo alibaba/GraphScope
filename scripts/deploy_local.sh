@@ -434,7 +434,6 @@ write_envs_config() {
       # packages_to_install contains llvm
       echo "export CC=/usr/local/opt/llvm/bin/clang"
       echo "export CXX=/usr/local/opt/llvm/bin/clang++"
-      echo "export LDFLAGS=-L/usr/local/opt/llvm/lib"
       echo "export CPPFLAGS=-I/usr/local/opt/llvm/include"
       echo "export PATH=/usr/local/opt/llvm/bin:\$PATH"
       if [ -z "${JAVA_HOME}" ]; then
@@ -699,7 +698,6 @@ install_dependencies() {
     export OPENSSL_SSL_LIBRARY=/usr/local/opt/openssl/lib/libssl.dylib
     export CC=/usr/local/opt/llvm/bin/clang
     export CXX=/usr/local/opt/llvm/bin/clang++
-    export LDFLAGS=-L/usr/local/opt/llvm/lib
     export CPPFLAGS=-I/usr/local/opt/llvm/include
   fi
 
@@ -798,11 +796,10 @@ install_vineyard() {
   if [[ "${PLATFORM}" == *"Darwin"* ]]; then
     cmake .. -DCMAKE_BUILD_TYPE=RelWithDebInfo \
              -DBUILD_SHARED_LIBS=ON \
-             -DBUILD_VINEYARD_SERVER=OFF \
-             -DBUILD_VINEYARD_IO_OSS=ON -DBUILD_VINEYARD_TESTS=OFF
+             -DBUILD_VINEYARD_TESTS=OFF
   else
     cmake .. -DBUILD_SHARED_LIBS=ON \
-             -DBUILD_VINEYARD_IO_OSS=ON -DBUILD_VINEYARD_TESTS=OFF
+             -DBUILD_VINEYARD_TESTS=OFF
   fi
   make -j${NUM_PROC}
   make vineyard_client_python -j${NUM_PROC}
