@@ -180,25 +180,11 @@ pub trait GraphBackup {
     /// `GraphError` will be returned.
     fn delete_backup(&mut self, backup_id: BackupId) -> GraphResult<()>;
 
-    /// Purge old backups from all existed backups, keep latest `num_backups_to_keep` backups.
-    /// This interface is thread safe.
-    ///
-    /// If `num_backups_to_keep` is illegal, something error when purging or other errors,
-    /// `GraphError` will be returned.
-    fn purge_old_backups(&mut self, num_backups_to_keep: usize) -> GraphResult<()>;
-
     /// Restore the graph store from `backup_id` at `restore_path`. This interface is thread safe.
     ///
     /// If `restore_path` is not available，`backup_id` is not available, something error when
     /// restoring or other errors, `GraphError` will be returned.
     fn restore_from_backup(&mut self, restore_path: &str, backup_id: BackupId) -> GraphResult<()>;
-
-    /// Restore the graph store from the latest backup at `restore_path`.
-    /// This interface is thread safe.
-    ///
-    /// If `restore_path` is not available，no backup available, something error when restoring or
-    /// other errors, `GraphError` will be returned.
-    fn restore_from_latest_backup(&mut self, restore_path: &str) -> GraphResult<()>;
 
     /// Verify the backup of `backup_id`. This interface is thread safe.
     ///

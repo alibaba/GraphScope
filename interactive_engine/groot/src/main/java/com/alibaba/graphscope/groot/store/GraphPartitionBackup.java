@@ -13,31 +13,19 @@
  */
 package com.alibaba.graphscope.groot.store;
 
-import com.alibaba.maxgraph.proto.groot.GraphDefPb;
-import com.alibaba.graphscope.groot.operation.OperationBatch;
-import org.apache.hadoop.fs.FileSystem;
-import org.apache.hadoop.fs.Path;
-
 import java.io.Closeable;
 import java.io.IOException;
+import java.util.List;
 
-public interface GraphPartition extends Closeable {
+public interface GraphPartitionBackup extends Closeable {
 
-    /**
-     * @param snapshotId
-     * @param operationBatch
-     * @return True if batch has DDL operation
-     * @throws IOException
-     */
-    boolean writeBatch(long snapshotId, OperationBatch operationBatch) throws IOException;
+    int createNewPartitionBackup() throws IOException;
 
-    long recover();
+    void restoreFromPartitionBackup(int partitionBackupId, String PartitionRestorePath) throws IOException;
 
-    GraphDefPb getGraphDefBlob() throws IOException;
+    void verifyPartitionBackup(int partitionBackupId) throws IOException;
 
-    void ingestHdfsFile(FileSystem fs, Path filePath) throws IOException;
-
-    GraphPartitionBackup openBackupEngine();
+    void partitionBackupGc(List<Integer> readyPartitionBackupIds) throws IOException;
 
     int getId();
 }

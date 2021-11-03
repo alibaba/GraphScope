@@ -13,6 +13,7 @@
  */
 package com.alibaba.maxgraph.servers;
 
+import com.alibaba.graphscope.groot.coordinator.*;
 import com.alibaba.graphscope.groot.meta.MetaStore;
 import com.alibaba.maxgraph.common.RoleType;
 import com.alibaba.graphscope.groot.meta.DefaultMetaService;
@@ -29,25 +30,6 @@ import com.alibaba.maxgraph.common.util.CuratorUtils;
 import com.alibaba.graphscope.groot.wal.LogService;
 import com.alibaba.graphscope.groot.wal.kafka.KafkaLogService;
 import com.alibaba.graphscope.groot.schema.ddl.DdlExecutors;
-import com.alibaba.graphscope.groot.coordinator.DdlWriter;
-import com.alibaba.graphscope.groot.coordinator.FileMetaStore;
-import com.alibaba.graphscope.groot.coordinator.FrontendSnapshotClient;
-import com.alibaba.graphscope.groot.coordinator.GraphDefFetcher;
-import com.alibaba.graphscope.groot.coordinator.GraphInitializer;
-import com.alibaba.graphscope.groot.coordinator.IdAllocateService;
-import com.alibaba.graphscope.groot.coordinator.IdAllocator;
-import com.alibaba.graphscope.groot.coordinator.IngestProgressService;
-import com.alibaba.graphscope.groot.coordinator.IngestorSnapshotClient;
-import com.alibaba.graphscope.groot.coordinator.IngestorWriteSnapshotIdNotifier;
-import com.alibaba.graphscope.groot.coordinator.LogRecycler;
-import com.alibaba.graphscope.groot.coordinator.SchemaManager;
-import com.alibaba.graphscope.groot.coordinator.SchemaService;
-import com.alibaba.graphscope.groot.coordinator.SnapshotCommitService;
-import com.alibaba.graphscope.groot.coordinator.SnapshotManager;
-import com.alibaba.graphscope.groot.coordinator.SnapshotNotifier;
-import com.alibaba.graphscope.groot.coordinator.StoreSchemaClient;
-import com.alibaba.graphscope.groot.coordinator.WriteSnapshotIdNotifier;
-import com.alibaba.graphscope.groot.coordinator.ZkMetaStore;
 import com.alibaba.graphscope.groot.frontend.IngestorWriteClient;
 import io.grpc.NameResolver;
 import org.apache.curator.framework.CuratorFramework;
@@ -67,6 +49,7 @@ public class Coordinator extends NodeBase {
     private LogRecycler logRecycler;
     private GraphInitializer graphInitializer;
     private IdAllocator idAllocator;
+    private BackupManager backupManager;
 
     public Coordinator(Configs configs) {
         super(configs);
@@ -121,8 +104,14 @@ public class Coordinator extends NodeBase {
         SnapshotCommitService snapshotCommitService =
                 new SnapshotCommitService(this.snapshotManager);
         SchemaService schemaService = new SchemaService(this.schemaManager);
+        RoleClients<StoreBackupClient> storeBackupClients =
+                new RoleClients<>(this.channelManager, RoleType.STORE, StoreBackupClient::new);
+        StoreBackupTaskSender storeBackupTaskSender = new StoreBackupTaskSender(storeBackupClients);
         this.idAllocator = new IdAllocator(metaStore);
         IdAllocateService idAllocateService = new IdAllocateService(this.idAllocator);
+        this.backupManager =
+                new BackupManager(configs, this.metaService, metaStore, this.snapshotManager, storeBackupTaskSender);
+        BackupService backupService = new BackupService(this.backupManager);
         this.rpcServer =
                 new RpcServer(
                         configs,
@@ -130,7 +119,8 @@ public class Coordinator extends NodeBase {
                         ingestProgressService,
                         snapshotCommitService,
                         schemaService,
-                        idAllocateService);
+                        idAllocateService,
+                        backupService);
         this.logRecycler = new LogRecycler(configs, logService, this.snapshotManager);
         this.graphInitializer = new GraphInitializer(configs, this.curator, metaStore, logService);
     }
@@ -154,10 +144,12 @@ public class Coordinator extends NodeBase {
         this.snapshotNotifier.start();
         this.schemaManager.start();
         this.logRecycler.start();
+        this.backupManager.start();
     }
 
     @Override
     public void close() throws IOException {
+        this.backupManager.stop();
         this.logRecycler.stop();
         this.rpcServer.stop();
         this.idAllocator.stop();
