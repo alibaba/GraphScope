@@ -122,7 +122,11 @@ spec:
         - "False"
     {{- if .Values.withJupyter }}
     - name: jupyter
+      {{- if .Values.jupyter.image.tag }}
       image: "{{ .Values.jupyter.image.name }}:{{ .Values.jupyter.image.tag }}"
+      {{- else }}
+      image: "{{ .Values.jupyter.image.name }}:{{ .Chart.AppVersion }}"
+      {{- end }}
       imagePullPolicy: {{ .Values.imagePullPolicy }}
       resources:
 {{ toYaml .Values.jupyter.resources | indent 8 }}
