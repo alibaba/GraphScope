@@ -226,15 +226,12 @@ class Graph(_GraphBase):
             or 2d ndarray, Pandas DataFrame, SciPy sparse matrix, or a graphscope
             Graph.
 
-            If incomming_garph_data is graphscope.Graph, the directed of graphscope.Graph
-            must match graphscope.nx Graph. Since graphscope.Graph support
-            label of node and edge, the node id must be unique in all labels nodes and
-            not allow parallel edge in different edge label, otherwise would raise
-            AnalyticalEngineInternalError in transformation. finally, the labels
-            of nodes and edges would be cleaned in nx.Graph.
+            If incomming_garph_data is graphscope.Graph, the direction of input graph
+            has to be consistent with networkx graph type you used and the input graph
+            can't not be multigraph, otherwise it would raise `NetworkXError`.
 
-        default_label : default label of graph (optional, default: "_")
-            default label to use in transforms from graphscope graph. The nodes of
+        default_label : default node label of graph (optional, default: "_")
+            default label to use in transformation from graphscope graph. The nodes of
             default label can access without the label.
 
         attr : keyword arguments, optional (default= no attributes)

@@ -6,11 +6,15 @@ Graph transformation
 In GraphScope, `nx.Graph` or `nx.DiGraph` can be created from immutable graphscope graph.
 We implement a copy-on-write transformation strategy for creating from graphscope
 graph. That is, when init `nx.Graph` or `nx.DiGraph` with `gs.Graph`, we do not convert
-arrow property graph to dynamic property graph immediately，but host arrow property graph
-object in the `nx.Graph` or `nx.DiGraph` object. When the Graph comes to modification
+arrow property graph to dynamic property graph immediately，but host the arrow property graph
+in the `nx.Graph` or `nx.DiGraph` object. When the graph comes to modification
 operation, the arrow property graph would convert to dynamic property graph, that is
-we call `copy-on-write` transformation strategy. Here is an example to show the
+the `copy-on-write` transformation strategy. Here is an example to show the
 `copy-on-write` transformation.
+
+Note: `nx.Graph` and `nx.DiGraph` not support to be created from a graphscope multigraph
+(which contains parallel edge). If input graph is multigraph, it would raise a
+`NetworkXError`.
 
 .. code:: python
 
