@@ -712,6 +712,7 @@ class Graph(GraphInterface):
         )
         self._key = graph_def.key
         self._directed = graph_def.directed
+        self._is_multigraph = graph_def.is_multigraph
         vy_info = graph_def_pb2.VineyardInfoPb()
         graph_def.extension.Unpack(vy_info)
         self._vineyard_id = vy_info.vineyard_id
@@ -905,6 +906,9 @@ class Graph(GraphInterface):
 
     def is_directed(self):
         return self._directed
+
+    def is_multigraph(self):
+        return self._is_multigraph
 
     def _check_unmodified(self):
         check_argument(
