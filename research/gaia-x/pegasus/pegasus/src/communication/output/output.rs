@@ -494,13 +494,13 @@ impl<D: Data> ScopeStreamPush<D> for OutputHandle<D> {
                 self.send_batch(batch)
             }
             Ok(None) => {
-                let buf = self
-                    .buf_pool
-                    .take_buf(&end.tag, true)
-                    .expect("buf can't be none");
-                let mut batch = MicroBatch::new(end.tag.clone(), self.src, buf.into_read_only());
-                batch.set_end(end);
-                self.send_batch(batch)
+                if let Some(buf) = self.buf_pool.take_buf(&end.tag, true) {
+                    let mut batch = MicroBatch::new(end.tag.clone(), self.src, buf.into_read_only());
+                    batch.set_end(end);
+                    self.send_batch(batch)
+                } else {
+                    Ok(())
+                }
             }
             Err(e) => {
                 trace_worker!("output[{:?}]: block on pushing last data of {:?};", self.port, &end.tag);

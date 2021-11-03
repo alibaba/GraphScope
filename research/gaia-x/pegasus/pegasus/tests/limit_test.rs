@@ -117,37 +117,6 @@ fn iterate_x_flatmap_limit_x_test() {
     assert_eq!(count, 10);
 }
 
-#[test]
-fn apply_x_flatmap_any_x_test() {
-    let mut conf = JobConf::new("apply_x_flatmap_any_x_test");
-    conf.batch_capacity = 2;
-    conf.scope_capacity = 10;
-    conf.plan_print = true;
-    conf.set_workers(2);
-    let mut result = pegasus::run(conf, || {
-        |input, output| {
-            input
-                .input_from(0..100u32)?
-                .apply(|sub| {
-                    sub.repartition(|x| Ok(*x as u64))
-                        .flat_map(|i| Ok(std::iter::repeat(i)))?
-                        .any()
-                })?
-                .sink_into(output)
-        }
-    })
-    .expect("build job failure");
-
-    let mut count = 0;
-    while let Some(Ok(d)) = result.next() {
-        assert!(d.0 < 1000);
-        assert!(d.1);
-        count += 1;
-    }
-
-    assert_eq!(count, 200);
-}
-
 // early-stop with subtask, triggered OUTSIDE subtask
 #[test]
 fn apply_x_flatmap_any_x_limit_test() {
