@@ -1,7 +1,7 @@
 annotations:
   category: Database
 apiVersion: v2
-appVersion: 0.7.0
+appVersion: 0.8.0
 description: Chart to create a GraphScope Store cluster
 home: https://graphscope.io
 keywords:
@@ -11,7 +11,7 @@ keywords:
 name: graphscope-store
 sources:
   - https://github.com/alibaba/GraphScope/tree/main/interactive_engine/src/v2/src/main
-version: 0.7.0
+version: 0.8.0
 
 dependencies:
   - condition: kafka.enabled
