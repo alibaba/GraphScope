@@ -40,7 +40,7 @@ impl<D: Data> Source<D> {
     {
         let output = self.output.copy_data();
         let output = std::mem::replace(&mut self.output, output);
-        let stream = Stream::create(output, &self.dfb);
+        let stream = Stream::new(output, &self.dfb);
         source.into_dataflow(stream)
     }
 }

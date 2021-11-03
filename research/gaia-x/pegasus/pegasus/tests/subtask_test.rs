@@ -152,7 +152,6 @@ fn apply_x_flatmap_flatmap_agg_map_count_x_test() {
 #[test]
 fn apply_x_flatmap_any_x_test() {
     let mut conf = JobConf::new("apply_x_flatmap_any_x_test");
-    conf.plan_print = true;
     conf.set_workers(2);
     let mut result = pegasus::run(conf, || {
         |input, output| {

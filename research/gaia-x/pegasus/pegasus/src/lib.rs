@@ -266,7 +266,7 @@ where
         return Ok(());
     }
 
-    info!("spawn job {} {} with {} workers;", conf.job_name, conf.job_id, workers.len());
+    info!("spawn job_{}({}) with {} workers;", conf.job_name, conf.job_id, workers.len());
     match pegasus_executor::spawn_batch(workers) {
         Ok(_) => Ok(()),
         Err(e) => {

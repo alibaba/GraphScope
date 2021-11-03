@@ -38,12 +38,14 @@ impl<D: Data> CorrelatedSubTask<D> for Stream<D> {
         F: FnOnce(Stream<D>) -> Result<SingleItem<T>, BuildJobError>,
     {
         let entered = self.enter()?;
-        let scope_capacity = entered.get_scope_capacity();
-        let (main, sub): (Stream<D>, Stream<D>) = entered.binary_branch_notify("fork_subtask", |info| {
+        let scope_capacity = entered.get_local_scope_capacity();
+        let (main, mut sub): (Stream<D>, Stream<D>) = entered.binary_branch_notify("fork_subtask", |info| {
             ForkSubtaskOperator::<D>::new(scope_capacity, info.scope_level)
         })?;
-
-        let SingleItem { inner } = func(sub)?;
+        sub.set_upstream_batch_capacity(1)
+            .set_upstream_batch_size(1);
+        let SingleItem { mut inner } = func(sub)?;
+        inner.set_upstream_batch_capacity(1).set_upstream_batch_size(1);
         main.union_transform_notify("zip_subtasks", inner, |info| {
             ZipSubtaskOperator::<D, T>::new(info.scope_level)
         })?

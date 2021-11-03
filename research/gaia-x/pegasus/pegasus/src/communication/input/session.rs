@@ -171,7 +171,10 @@ impl<'a, D: Data> InputSession<'a, D> {
             }
             false
         } else {
-            assert!(batch.is_empty(), "batch of {:?} not consumed; ", batch.tag);
+            if !batch.is_empty() {
+                warn_worker!("ch[{:?}]: {} data in batch of {:?} not consumed", self.input.ch_info.id, batch.len(), batch.tag);
+                batch.clear();
+            }
             if let Some(end) = batch.take_end() {
                 self.input.end_on(end);
             }

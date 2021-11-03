@@ -35,7 +35,7 @@ impl<D: Data> Iteration<D> for Stream<D> {
         let (leave, enter) = self
             .enter()?
             .binary_branch_notify("switch", |info| SwitchOperator::<D>::new(info.scope_level, until))?;
-        let index = enter.port().index;
+        let index = enter.get_upstream_port().index;
         let after_body = func(enter)?;
         let feedback: Stream<D> = after_body
             .sync_state()?

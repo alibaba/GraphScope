@@ -64,24 +64,45 @@ impl<D: Data> OutputBuilderImpl<D> {
         }
     }
 
-    pub fn get_batch_size(&self) -> usize {
-        self.meta.borrow().batch_size
+    pub fn get_port(&self) -> Port {
+        self.meta.borrow().port
     }
 
-    pub fn get_scope_level(&self) -> u32 {
-        self.meta.borrow().scope_level
+    pub fn get_batch_size(&self) -> usize {
+        self.meta.borrow().batch_size
     }
 
     pub fn get_batch_capacity(&self) -> u32 {
         self.meta.borrow().batch_capacity
     }
 
+    pub fn get_scope_level(&self) -> u32 {
+        self.meta.borrow().scope_level
+    }
+
     pub fn get_scope_capacity(&self) -> u32 {
         self.meta.borrow().scope_capacity
     }
 
-    pub fn get_port(&self) -> Port {
-        self.meta.borrow().port
+    pub fn set_batch_size(&self, size: usize) {
+        if self.cursor != 0 {
+            warn!("detect reset batch size after stream copy, copy after set batch size would be better;")
+        }
+        self.meta.borrow_mut().batch_size = size;
+    }
+
+    pub fn set_batch_capacity(&self, cap: u32) {
+        if self.cursor != 0 {
+            warn!("detect reset batch capacity after stream copy, copy after set batch capacity would be better;")
+        }
+        self.meta.borrow_mut().batch_capacity = cap;
+    }
+
+    pub fn set_scope_capacity(&self, cap: u32) {
+        if self.cursor != 0 {
+            warn!("detect reset scope capacity after stream copy, copy after set scope capacity would be better;")
+        }
+        self.meta.borrow_mut().scope_capacity = cap;
     }
 
     #[inline]

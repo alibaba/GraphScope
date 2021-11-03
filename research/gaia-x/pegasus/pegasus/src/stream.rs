@@ -14,7 +14,6 @@
 //! limitations under the License.
 
 use std::fmt::{Debug, Formatter};
-use std::ops::{Deref, DerefMut};
 use std::sync::Arc;
 
 use pegasus_common::codec::ShadeCodec;
@@ -35,56 +34,92 @@ use crate::{Data, JobConf};
 
 #[must_use = "this `Stream` must be consumed"]
 pub struct Stream<D: Data> {
-    port: OutputBuilderImpl<D>,
+    /// the upstream this stream flowed;
+    upstream: OutputBuilderImpl<D>,
+    /// adapter to its upstream output
     ch: Channel<D>,
-    dfb: DataflowBuilder,
+    /// builder of dataflow plan;
+    builder: DataflowBuilder,
 }
 
-impl<D: Data> Deref for Stream<D> {
-    type Target = Channel<D>;
-
-    fn deref(&self) -> &Self::Target {
-        &self.ch
-    }
-}
-
-impl<D: Data> DerefMut for Stream<D> {
-    fn deref_mut(&mut self) -> &mut Self::Target {
-        &mut self.ch
+impl<D: Data> Stream<D> {
+    pub(crate) fn new(upstream: OutputBuilderImpl<D>, dfb: &DataflowBuilder) -> Self {
+        let ch = Channel::bind(&upstream);
+        Stream { upstream, ch, builder: dfb.clone() }
     }
 }
 
 impl<D: Data> Stream<D> {
-    pub(crate) fn create(port: OutputBuilderImpl<D>, dfb: &DataflowBuilder) -> Self {
-        let ch = Channel::mount_to(&port);
-        Stream { port, ch, dfb: dfb.clone() }
+    pub fn get_job_conf(&self) -> Arc<JobConf> {
+        self.builder.config.clone()
     }
 
-    pub fn get_conf(&self) -> Arc<JobConf> {
-        self.dfb.config.clone()
+    pub fn get_upstream_port(&self) -> Port {
+        self.upstream.get_port()
     }
 
-    pub fn port(&self) -> Port {
-        self.port.get_port()
+    pub fn get_local_batch_size(&self) -> usize {
+        self.ch.get_batch_size()
     }
 
-    pub fn copied(self) -> Result<(Stream<D>, Stream<D>), BuildJobError> {
-        if self.ch.is_pipeline() {
-            let copy = Stream { port: self.port.copy_data(), ch: self.ch.clone(), dfb: self.dfb.clone() };
-            Ok((self, copy))
-        } else {
-            let shuffled = self.forward("shuffle_clone")?;
-            let copy = Stream {
-                port: shuffled.port.copy_data(),
-                ch: shuffled.ch.clone(),
-                dfb: shuffled.dfb.clone(),
-            };
-            Ok((shuffled, copy))
-        }
+    pub fn get_local_batch_capacity(&self) -> u32 {
+        self.ch.get_batch_capacity()
     }
 
+    pub fn get_local_scope_capacity(&self) -> u32 {
+        self.ch.get_scope_capacity()
+    }
+
+    pub fn get_scope_level(&self) -> u32 {
+        self.ch.get_scope_level()
+    }
+
+    pub fn set_local_batch_size(&mut self, size: usize) -> &mut Self {
+        self.ch.set_batch_size(size);
+        self
+    }
+
+    pub fn set_local_batch_capacity(&mut self, cap: u32) -> &mut Self {
+        self.ch.set_batch_capacity(cap);
+        self
+    }
+
+    pub fn set_local_scope_capacity(&mut self, cap: u32) -> &mut Self {
+        self.ch.set_scope_capacity(cap);
+        self
+    }
+
+    pub fn get_upstream_batch_size(&self) -> usize {
+        self.upstream.get_batch_size()
+    }
+
+    pub fn get_upstream_batch_capacity(&self) -> u32 {
+        self.upstream.get_batch_capacity()
+    }
+
+    pub fn get_upstream_scope_capacity(&self) -> u32 {
+        self.upstream.get_scope_capacity()
+    }
+
+    pub fn set_upstream_batch_size(&mut self, size: usize) -> &mut Self {
+        self.upstream.set_batch_size(size);
+        self
+    }
+
+    pub fn set_upstream_batch_capacity(&mut self, cap: u32) -> &mut Self {
+        self.upstream.set_batch_capacity(cap);
+        self
+    }
+
+    pub fn set_upstream_scope_capacity(&mut self, cap: u32) -> &mut Self {
+        self.upstream.set_scope_capacity(cap);
+        self
+    }
+}
+
+impl<D: Data> Stream<D> {
     pub fn aggregate(mut self) -> Stream<D> {
-        if self.port.get_scope_level() == 0 {
+        if self.upstream.get_scope_level() == 0 {
             self.ch
                 .set_channel_kind(ChannelKind::Aggregate(0));
         } else {
@@ -95,8 +130,8 @@ impl<D: Data> Stream<D> {
     }
 
     pub fn repartition<F>(mut self, route: F) -> Stream<D>
-    where
-        F: Fn(&D) -> FnResult<u64> + Send + 'static,
+        where
+            F: Fn(&D) -> FnResult<u64> + Send + 'static,
     {
         self.ch
             .set_channel_kind(ChannelKind::Shuffle(box_route!(route)));
@@ -106,6 +141,26 @@ impl<D: Data> Stream<D> {
     pub fn broadcast(mut self) -> Stream<D> {
         self.ch.set_channel_kind(ChannelKind::Broadcast);
         self
+    }
+}
+
+impl<D: Data> Stream<D> {
+    pub fn copied(self) -> Result<(Stream<D>, Stream<D>), BuildJobError> {
+        if self.ch.is_pipeline() {
+            let copy = Stream { upstream: self.upstream.copy_data(), ch: self.ch.clone(), builder: self.builder.clone() };
+            Ok((self, copy))
+        } else {
+            // stream.repartition(..).copied()
+            // stream.aggregate().copied()
+            // stream.broadcast().copied()
+            let shuffled = self.forward("shuffle_clone")?;
+            let copy = Stream {
+                upstream: shuffled.upstream.copy_data(),
+                ch: shuffled.ch.clone(),
+                builder: shuffled.builder.clone(),
+            };
+            Ok((shuffled, copy))
+        }
     }
 
     pub(crate) fn sync_state(mut self) -> Result<Stream<D>, BuildJobError> {
@@ -130,23 +185,19 @@ impl<D: Data> Stream<D> {
         }
     }
 
-    pub fn set_batch_size(&mut self, batch_size: usize) {
-        self.ch.set_batch_size(batch_size);
-    }
-
     pub fn transform<F, O, T>(mut self, name: &str, op_builder: F) -> Result<Stream<O>, BuildJobError>
     where
         O: Data,
         T: OperatorCore,
         F: FnOnce(&OperatorInfo) -> T,
     {
-        let dfb = self.dfb.clone();
+        let dfb = self.builder.clone();
         let op = self.add_operator(name, op_builder)?;
 
         let port = op.new_output::<O>();
-        let ch = Channel::mount_to(&port);
+        let ch = Channel::bind(&port);
 
-        Ok(Stream { port, ch, dfb })
+        Ok(Stream { upstream: port, ch, builder: dfb })
     }
 
     pub fn transform_notify<F, O, T>(
@@ -157,13 +208,13 @@ impl<D: Data> Stream<D> {
         T: NotifiableOperator,
         F: FnOnce(&OperatorInfo) -> T,
     {
-        let dfb = self.dfb.clone();
+        let dfb = self.builder.clone();
         let op = self.add_notify_operator(name, op_builder)?;
 
         let port = op.new_output::<O>();
-        let ch = Channel::mount_to(&port);
+        let ch = Channel::bind(&port);
 
-        Ok(Stream { port, ch, dfb })
+        Ok(Stream { upstream: port, ch, builder: dfb })
     }
 
     pub fn union_transform<R, O, F, T>(
@@ -183,12 +234,12 @@ impl<D: Data> Stream<D> {
         } else {
             let mut op = self.add_operator(name, op_builder)?;
             let edge = other.connect(&mut op)?;
-            self.dfb.add_edge(edge);
-            let dfb = self.dfb.clone();
+            self.builder.add_edge(edge);
+            let dfb = self.builder.clone();
             let port = op.new_output::<O>();
 
-            let ch = Channel::mount_to(&port);
-            Ok(Stream { port, ch, dfb })
+            let ch = Channel::bind(&port);
+            Ok(Stream { upstream: port, ch, builder: dfb })
         }
     }
 
@@ -209,11 +260,11 @@ impl<D: Data> Stream<D> {
         } else {
             let mut op = self.add_notify_operator(name, op_builder)?;
             let edge = other.connect(&mut op)?;
-            self.dfb.add_edge(edge);
-            let dfb = self.dfb.clone();
+            self.builder.add_edge(edge);
+            let dfb = self.builder.clone();
             let output = op.new_output::<O>();
-            let ch = Channel::mount_to(&output);
-            Ok(Stream { ch, port: output, dfb })
+            let ch = Channel::bind(&output);
+            Ok(Stream { ch, upstream: output, builder: dfb })
         }
     }
 
@@ -229,11 +280,11 @@ impl<D: Data> Stream<D> {
         let op = self.add_operator(name, op_builder)?;
         let left = op.new_output::<L>();
         let right = op.new_output::<R>();
-        let dfb = self.dfb.clone();
-        let ch = Channel::mount_to(&left);
-        let left = Stream { port: left, ch, dfb: dfb.clone() };
-        let ch = Channel::mount_to(&right);
-        let right = Stream { port: right, ch, dfb };
+        let dfb = self.builder.clone();
+        let ch = Channel::bind(&left);
+        let left = Stream { upstream: left, ch, builder: dfb.clone() };
+        let ch = Channel::bind(&right);
+        let right = Stream { upstream: right, ch, builder: dfb };
         Ok((left, right))
     }
 
@@ -249,11 +300,11 @@ impl<D: Data> Stream<D> {
         let op = self.add_notify_operator(name, op_builder)?;
         let left = op.new_output::<L>();
         let right = op.new_output::<R>();
-        let dfb = self.dfb.clone();
-        let ch = Channel::mount_to(&left);
-        let left = Stream { port: left, ch, dfb: dfb.clone() };
-        let ch = Channel::mount_to(&right);
-        let right = Stream { port: right, ch, dfb };
+        let dfb = self.builder.clone();
+        let ch = Channel::bind(&left);
+        let left = Stream { upstream: left, ch, builder: dfb.clone() };
+        let ch = Channel::bind(&right);
+        let right = Stream { upstream: right, ch, builder: dfb };
         Ok((left, right))
     }
 
@@ -263,7 +314,7 @@ impl<D: Data> Stream<D> {
         F: FnOnce(&OperatorInfo) -> T,
     {
         let op_ref = self.add_operator(name, op_builder)?;
-        self.dfb.add_sink(op_ref.get_index());
+        self.builder.add_sink(op_ref.get_index());
         Ok(())
     }
 
@@ -272,9 +323,9 @@ impl<D: Data> Stream<D> {
             Err("can't create feedback stream on root scope;")?;
         }
         self.ch.add_delta(ScopeDelta::ToSibling(1));
-        let mut op = self.dfb.get_operator(op_index);
+        let mut op = self.builder.get_operator(op_index);
         let edge = self.connect(&mut op)?;
-        self.dfb.add_edge(edge);
+        self.builder.add_edge(edge);
         Ok(())
     }
 
@@ -302,10 +353,10 @@ impl<D: Data> Stream<D> {
         F: FnOnce(&OperatorInfo) -> O,
     {
         let mut op = self
-            .dfb
+            .builder
             .add_operator(name, self.get_scope_level(), builder);
         let edge = self.connect(&mut op)?;
-        self.dfb.add_edge(edge);
+        self.builder.add_edge(edge);
         Ok(op)
     }
 
@@ -317,21 +368,21 @@ impl<D: Data> Stream<D> {
         F: FnOnce(&OperatorInfo) -> O,
     {
         let mut op = self
-            .dfb
+            .builder
             .add_notify_operator(name, self.get_scope_level(), builder);
         let edge = self.connect(&mut op)?;
-        self.dfb.add_edge(edge);
+        self.builder.add_edge(edge);
         Ok(op)
     }
 
     fn connect(&mut self, op: &OperatorRef) -> Result<Edge, BuildJobError> {
         let target = op.next_input_port();
         let ch = std::mem::replace(&mut self.ch, Channel::default());
-        let channel = ch.connect_to(target, &self.dfb)?;
+        let channel = ch.connect_to(target, &self.builder)?;
         let (push, pull, notify) = channel.take();
         let ch_info = push.ch_info;
-        self.port.set_push(push);
-        op.add_input(ch_info, pull, notify, &self.dfb.event_emitter);
+        self.upstream.set_push(push);
+        op.add_input(ch_info, pull, notify, &self.builder.event_emitter);
         let edge = Edge::new(ch_info);
         Ok(edge)
     }
@@ -382,11 +433,13 @@ impl<D: Debug + Send + Sync + 'static> SingleItem<D> {
         self.inner.flat_map(move |single| f(single.0))
     }
 
-    pub fn map<T, F>(self, f: F) -> Result<SingleItem<T>, BuildJobError>
+    pub fn map<T, F>(mut self, f: F) -> Result<SingleItem<T>, BuildJobError>
     where
         T: Debug + Send + Sync + 'static,
         F: Fn(D) -> FnResult<T> + Send + 'static,
     {
+        self.inner.set_upstream_batch_size(1);
+        self.inner.set_upstream_batch_capacity(1);
         let stream = self
             .inner
             .map(move |single| f(single.0).map(|o| Single(o)))?;

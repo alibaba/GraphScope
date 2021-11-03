@@ -56,6 +56,7 @@ impl<D: Data> OutputHandle<D> {
         let batch_capacity = meta.batch_capacity as usize;
         let scope_capacity = meta.scope_capacity as usize;
         let scope_level = meta.scope_level;
+        debug_worker!("init output[{:?}] with batch_size={}, batch_capacity={}, scope_capacity={}", meta.port, meta.batch_size, batch_capacity, scope_capacity);
         let buf_pool = ScopeBufferPool::new(meta.batch_size, batch_capacity, scope_capacity, scope_level);
         let src = crate::worker_id::get_current_worker().index;
         let parent_level = if scope_level == 0 { 0 } else { scope_level - 1 };
@@ -487,20 +488,14 @@ impl<D: Data> ScopeStreamPush<D> for OutputHandle<D> {
     }
 
     fn push_last(&mut self, msg: D, end: EndOfScope) -> IOResult<()> {
-        match self.buf_pool.push(&end.tag, msg) {
+        match self.buf_pool.push_last(&end.tag, msg) {
             Ok(Some(buf)) => {
                 let mut batch = MicroBatch::new(end.tag.clone(), self.src, buf);
                 batch.set_end(end);
                 self.send_batch(batch)
             }
             Ok(None) => {
-                if let Some(buf) = self.buf_pool.take_buf(&end.tag, true) {
-                    let mut batch = MicroBatch::new(end.tag.clone(), self.src, buf.into_read_only());
-                    batch.set_end(end);
-                    self.send_batch(batch)
-                } else {
-                    Ok(())
-                }
+                Ok(())
             }
             Err(e) => {
                 trace_worker!("output[{:?}]: block on pushing last data of {:?};", self.port, &end.tag);

@@ -54,20 +54,23 @@ pub struct WouldBlock<D>(pub Option<D>);
 pub(crate) struct BufSlot<D> {
     batch_size: usize,
     discard: bool,
+    exhaust: bool,
     buf: Option<Buffer<D>>,
     pool: BufferPool<D, MemoryBufferPool<D>>,
 }
 
 impl<D> BufSlot<D> {
     fn new(batch_size: usize, buf: Option<Buffer<D>>, pool: BufferPool<D, MemoryBufferPool<D>>) -> Self {
-        BufSlot { batch_size, discard: false, buf, pool }
+        BufSlot { batch_size, discard: false, exhaust: false, buf, pool }
     }
 
     pub(crate) fn push(&mut self, entry: D) -> Result<Option<ReadBuffer<D>>, WouldBlock<D>> {
+        assert!(!self.exhaust, "still push after set exhaust");
         if self.discard {
             // trace_worker!("discard data");
             return Ok(None);
         }
+
         if self.batch_size == 1 {
             return if let Some(mut b) = self.pool.fetch() {
                 b.push(entry);
@@ -95,8 +98,44 @@ impl<D> BufSlot<D> {
         }
     }
 
+    pub(crate) fn push_last(&mut self, entry: D) -> Result<Option<ReadBuffer<D>>, WouldBlock<D>> {
+        assert!(!self.exhaust, "still push after set exhaust");
+        self.exhaust = true;
+        if self.discard {
+            // trace_worker!("discard data");
+            return Ok(None);
+        }
+
+        if self.batch_size == 1 {
+            return if let Some(mut b) = self.pool.fetch() {
+                b.push(entry);
+                Ok(Some(b.into_read_only()))
+            } else {
+                Err(WouldBlock(Some(entry)))
+            };
+        }
+
+        if let Some(mut buf) = self.buf.take() {
+            buf.push(entry);
+            Ok(Some(buf.into_read_only()))
+        } else {
+            if let Some(mut b) = self.pool.fetch() {
+                b.push(entry);
+                Ok(Some(b.into_read_only()))
+            } else {
+                Err(WouldBlock(Some(entry)))
+            }
+        }
+
+    }
+
+    fn reuse(&mut self) {
+        self.exhaust = false;
+        self.discard = false;
+    }
+
     fn is_idle(&self) -> bool {
-        self.discard && self.pool.is_idle()
+        (self.exhaust || self.discard) && self.pool.is_idle()
     }
 }
 
@@ -218,6 +257,20 @@ impl<D: Data> ScopeBufferPool<D> {
         }
     }
 
+    pub fn push_last(&mut self, tag: &Tag, item: D) -> Result<Option<ReadBuffer<D>>, WouldBlock<D>> {
+        if let Some((p, buf)) = self.pinned.as_mut() {
+            if p == tag {
+                return buf.push_last(item);
+            }
+        }
+
+        if let Some(mut slot) = self.get_slot_mut(tag) {
+            slot.push_last(item)
+        } else {
+            Err(WouldBlock(Some(item)))
+        }
+    }
+
     pub fn push_iter(
         &mut self, tag: &Tag, iter: &mut impl Iterator<Item = D>,
     ) -> Result<Option<ReadBuffer<D>>, WouldBlock<D>> {
@@ -317,9 +370,9 @@ impl<D: Data> ScopeBufferPool<D> {
                 }
 
                 if let Some(f) = find {
-                    trace_worker!("reuse idle buffer slot for scope {:?};", tag);
                     let mut slot = self.buf_slots.remove(&f).expect("find lost");
-                    slot.discard = false;
+                    trace_worker!("reuse idle buffer slot for scope {:?};", tag);
+                    slot.reuse();
                     assert!(slot.buf.is_none());
                     self.buf_slots.insert(tag.clone(), slot.clone());
                     Some(slot)

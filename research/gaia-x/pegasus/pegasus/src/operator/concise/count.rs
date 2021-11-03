@@ -5,7 +5,7 @@ use crate::{BuildJobError, Data};
 
 impl<D: Data> Count<D> for Stream<D> {
     fn count(self) -> Result<SingleItem<u64>, BuildJobError> {
-        let stream = self
+        let mut stream = self
             .unary("count_local", |info| {
                 let mut table = TidyTagMap::<u64>::new(info.scope_level);
                 move |input, output| {
@@ -23,8 +23,9 @@ impl<D: Data> Count<D> for Stream<D> {
                         Ok(())
                     })
                 }
-            })?
-            .aggregate()
+            })?;
+        stream.set_upstream_batch_size(1).set_upstream_batch_capacity(1);
+        let x = stream.aggregate()
             .unary("count_global", |info| {
                 let mut table = TidyTagMap::<u64>::new(info.scope_level);
                 move |input, output| {
@@ -59,6 +60,6 @@ impl<D: Data> Count<D> for Stream<D> {
                 }
             })?;
 
-        Ok(SingleItem::new(stream))
+        Ok(SingleItem::new(x))
     }
 }

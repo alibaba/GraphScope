@@ -50,12 +50,17 @@ impl<T: Data> ChannelKind<T> {
 }
 
 pub struct Channel<T: Data> {
-    batch_size: usize,
-    batch_capacity: u32,
-    scope_capacity: u32,
-    inbound_scope_level: u32,
+    /// the output port of an operator this channel bind to;
     source: Port,
+    /// the hint of size of each batch this channel expect to deliver;
+    batch_size: usize,
+    /// the hint of size indicates how much batches of a scope can be delivered at same time;
+    batch_capacity: u32,
+    /// the hit of size indicates how much scopes can be delivered at same time;
+    scope_capacity: u32,
+    /// describe changes of data's scope(before vs after) through this channel;
     scope_delta: MergedScopeDelta,
+    ///
     kind: ChannelKind<T>,
 }
 
@@ -65,7 +70,6 @@ impl<T: Data> Clone for Channel<T> {
             batch_size: self.batch_size,
             batch_capacity: self.batch_capacity,
             scope_capacity: self.scope_capacity,
-            inbound_scope_level: self.inbound_scope_level,
             source: self.source,
             scope_delta: self.scope_delta.clone(),
             kind: ChannelKind::Pipeline(false),
@@ -79,7 +83,6 @@ impl<T: Data> Default for Channel<T> {
             batch_size: 1024,
             batch_capacity: 64,
             scope_capacity: 64,
-            inbound_scope_level: 0,
             source: Port::new(0, 0),
             scope_delta: MergedScopeDelta::new(0),
             kind: ChannelKind::Pipeline(false),
@@ -100,12 +103,11 @@ impl<T: Data> MaterializedChannel<T> {
 }
 
 impl<T: Data> Channel<T> {
-    pub fn mount_to(port: &OutputBuilderImpl<T>) -> Self {
+    pub fn bind(port: &OutputBuilderImpl<T>) -> Self {
         let scope_level = port.get_scope_level();
         Channel {
             batch_size: port.get_batch_size(),
             batch_capacity: port.get_batch_capacity(),
-            inbound_scope_level: scope_level,
             scope_capacity: port.get_scope_capacity(),
             source: port.get_port(),
             scope_delta: MergedScopeDelta::new(scope_level as usize),
