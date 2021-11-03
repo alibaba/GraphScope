@@ -108,7 +108,7 @@ graphscope-darwin-py3:
 	cd $(WORKING_DIR)/../coordinator && \
 		export WITH_EXTRA_DATA=ON && \
 		rm -fr build dist/*.whl || true && \
-		python3 setup.py bdist_wheel && \
+		python3 setup.py bdist_wheel --plat=macosx_10_9_x86_64 && \
 		pip3 install delocate && \
 		for wheel in `ls dist/*.whl`; do delocate-wheel -w dist/wheelhouse -v $$wheel; done
 
