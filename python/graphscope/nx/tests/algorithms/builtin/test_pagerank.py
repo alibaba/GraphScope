@@ -127,7 +127,9 @@ class TestPageRank(object):
     def test_zero_personalization_vector(self):
         G = nx.complete_graph(4)
         personalize = {0: 0, 1: 0, 2: 0, 3: 0}
-        pytest.raises(ZeroDivisionError, nx.builtin.pagerank, G, personalization=personalize)
+        pytest.raises(
+            ZeroDivisionError, nx.builtin.pagerank, G, personalization=personalize
+        )
 
     @pytest.mark.skip(reason="pagerank not support personalization yet.")
     def test_one_nonzero_personalization_value(self):
