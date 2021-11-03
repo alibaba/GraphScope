@@ -11,7 +11,7 @@ on:
       - '**.rst'
       - 'docs/**'
       - 'scripts/**'
-      - '!scripts/deploy_local.sh'
+      - '!scripts/install_deps.sh'
       - 'tutorials/**'
   pull_request:
     branches:
@@ -22,7 +22,7 @@ on:
       - '**.rst'
       - 'docs/**'
       - 'scripts/**'
-      - '!scripts/deploy_local.sh'
+      - '!scripts/install_deps.sh'
       - 'tutorials/**'
 
 jobs:

@@ -81,17 +81,16 @@ You can use the script as follows or use `./script/launch_cluster.py --help` to 
 
 Deployment on local
 ----------------------
-We provide script to install dependencies and deploy GraphScope locally on
+We provide script to install dependencies of GraphScope on
 Ubuntu 20.04+ or MacOS.
 
-* install independencies of GraphScope
+* install development independencies of GraphScope
 .. code:: shell
 
-    ./scripts/deploy_local.sh install_deps
+    ./scripts/install_deps.sh --dev
+
+* then you can build and deploy GraphScope locally
+.. code:: shell
+
     source ~/.graphscope_env
-
-* build and deploy GraphScope locally
-.. code:: shell
-
-    ./scripts/deploy_local.sh build_and_deploy
-    export GRAPHSCOPE_HOME=/opt/graphscope
+    make graphscope

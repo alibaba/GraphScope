@@ -51,6 +51,7 @@ def _get_extra_data():
         os.path.join("/", tempfile.gettempprefix(), "gs", "builtin"): os.path.join(
             RUNTIME_ROOT, "precompiled"
         ),
+        "/usr/local/include/grape": os.path.join(RUNTIME_ROOT, "include"),
         "/usr/local/include/arrow": os.path.join(RUNTIME_ROOT, "include"),
         "/usr/local/include/boost": os.path.join(RUNTIME_ROOT, "include"),
         "/usr/local/include/double-conversion": os.path.join(RUNTIME_ROOT, "include"),
