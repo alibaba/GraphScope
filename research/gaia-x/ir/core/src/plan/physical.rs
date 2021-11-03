@@ -126,7 +126,7 @@ impl AsPhysical for pb::GetV {
 impl AsPhysical for pb::Limit {
     fn add_job_builder(&self, builder: &mut JobBuilder) -> PhysicalResult<()> {
         if let Some(range) = &self.range {
-            if range.upper <= range.lower || range.upper == 0 {
+            if range.upper <= range.lower || range.lower < 0 || range.upper <= 0 {
                 Err(PhysicalError::InvalidRangeError(range.lower, range.upper))
             } else {
                 builder.limit((range.upper - 1) as u32);
@@ -173,7 +173,6 @@ impl AsPhysical for LogicalPlan {
                     let node_ref = curr_node.borrow();
                     match (&prev_ref.opr.opr, &node_ref.opr.opr) {
                         (Some(Edge(_)), Some(Edge(edgexpd))) => {
-                            println!("add repartition");
                             let key_pb = common_pb::NameOrIdKey {
                                 key: edgexpd.base.as_ref().unwrap().v_tag.clone(),
                             };
