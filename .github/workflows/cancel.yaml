@@ -1,6 +1,6 @@
 name: Cancel Stale Runs
 
-on: [push, pull_request_target]
+on: [pull_request_target]
 
 jobs:
   cancel:
