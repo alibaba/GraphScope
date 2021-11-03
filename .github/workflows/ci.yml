@@ -536,7 +536,7 @@ jobs:
       image: registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-vineyard:v0.3.4
     steps:
 
-    #- name: "Debug: Package dependancies for tmate"
+    #- name: "Debug: Package dependencies for tmate"
       #run: |
         #sudo yum update -y
         #sudo yum install -y xz
@@ -689,7 +689,6 @@ jobs:
         export NODE_IP=$(kubectl get nodes --namespace default -o jsonpath="{.items[0].status.addresses[0].address}")
         helm test ci --timeout 5m0s
         cd ${GITHUB_WORKSPACE}/python
-        sleep 120
         python3 -m pytest -s -vvv tests/kubernetes/test_store_service.py -k test_demo_after_restart
 
     - name: Clean
