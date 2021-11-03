@@ -26,6 +26,7 @@ import graphscope
 import graphscope.nx as nx
 from graphscope.framework.errors import InvalidArgumentError
 from graphscope.framework.loader import Loader
+from graphscope.nx import NetworkXError
 from graphscope.nx.tests.classes.test_digraph import TestDiGraph as _TestDiGraph
 from graphscope.nx.tests.classes.test_graph import TestGraph as _TestGraph
 from graphscope.nx.tests.utils import almost_equal
@@ -74,6 +75,31 @@ def simple_label_graph(prefix, directed):
     )
     graph = graph.add_edges(
         Loader(os.path.join(prefix, "simple_e_1.csv")),
+        "e-1",
+        src_label="v-0",
+        dst_label="v-1",
+    )
+    graph = graph.add_edges(
+        Loader(os.path.join(prefix, "simple_e_2.csv")),
+        "e-2",
+        src_label="v-1",
+        dst_label="v-1",
+    )
+    return graph
+
+
+def simple_label_multigraph(prefix, directed):
+    graph = graphscope.g(directed=directed, generate_eid=False)
+    graph = graph.add_vertices(Loader(os.path.join(prefix, "simple_v_0.csv")), "v-0")
+    graph = graph.add_vertices(Loader(os.path.join(prefix, "simple_v_1.csv")), "v-1")
+    graph = graph.add_edges(
+        Loader(os.path.join(prefix, "simple_e_0.csv")),
+        "e-0",
+        src_label="v-0",
+        dst_label="v-0",
+    )
+    graph = graph.add_edges(
+        Loader(os.path.join(prefix, "simple_e_1_multiple.csv")),
         "e-1",
         src_label="v-0",
         dst_label="v-1",
@@ -208,6 +234,7 @@ class TestBuiltinCopyOnWrite:
         p2p_dir = os.path.expandvars("${GS_TEST_DIR}")
 
         self.simple = simple_label_graph(data_dir, True)
+        self.multi_simple = simple_label_multigraph(data_dir, True)
         self.SG = nx.DiGraph(self.simple, default_label="v-0")
         self.SG.pagerank = {
             1: 0.03721197,
@@ -261,6 +288,13 @@ class TestBuiltinCopyOnWrite:
         #         prefix="",
         #     ).values
         # )
+
+    def test_error_with_multigraph(self):
+        with pytest.raises(
+            NetworkXError,
+            match="Graph is multigraph, cannot be converted to networkx graph",
+        ):
+            MSG = nx.DiGraph(self.multi_simple)
 
     def test_single_source_dijkstra_path_length(self):
         ret = nx.builtin.single_source_dijkstra_path_length(

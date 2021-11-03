@@ -170,6 +170,9 @@ inline void set_graph_def(
   const auto& schema = fragment->schema();
   graph_def.set_graph_type(rpc::graph::ARROW_PROPERTY);
   graph_def.set_directed(static_cast<bool>(meta.GetKeyValue<int>("directed")));
+  graph_def.set_is_multigraph(
+      static_cast<bool>(meta.GetKeyValue<int>("is_multigraph")));
+
   auto v_entries = schema.vertex_entries();
   auto e_entries = schema.edge_entries();
   for (const auto& entry : v_entries) {

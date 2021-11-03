@@ -2143,6 +2143,10 @@ class Graph(_GraphBase):
                 "Try to init with another direction type's arrow_property graph."
                 + "Graphs must have the same direction type."
             )
+        if arrow_property_graph._is_multigraph:
+            raise NetworkXError(
+                "Graph is multigraph, cannot be converted to networkx graph."
+            )
         self._key = arrow_property_graph.key
         self._schema = arrow_property_graph.schema
         if self._default_label is not None:
