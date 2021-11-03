@@ -33,7 +33,6 @@ from graphscope.nx.tests.utils import almost_equal
 
 
 @pytest.mark.usefixtures("graphscope_session")
-@pytest.mark.skip(reason="not runnable in nx.")
 class TestPageRank(object):
     @classmethod
     def setup_class(cls):
@@ -77,19 +76,22 @@ class TestPageRank(object):
 
     def test_pagerank(self):
         G = self.G
-        p = nx.pagerank(G, alpha=0.9, tol=1.0e-08)
+        p = nx.builtin.pagerank(G, alpha=0.9, tol=1.0e-08)
         for n in G:
             assert almost_equal(p[n], G.pagerank[n], places=4)
 
-        nstart = dict((n, random.random()) for n in G)
-        p = nx.pagerank(G, alpha=0.9, tol=1.0e-08, nstart=nstart)
-        for n in G:
-            assert almost_equal(p[n], G.pagerank[n], places=4)
+        # (TODO): open the comment if nstart implemented.
+        # nstart = dict((n, random.random()) for n in G)
+        # p = nx.builtin.pagerank(G, alpha=0.9, tol=1.0e-08, nstart=nstart)
+        # for n in G:
+        #     assert almost_equal(p[n], G.pagerank[n], places=4)
 
+    @pytest.mark.skip(reason="Not support raise PowerIterationFailedConvergence yet.")
     def test_pagerank_max_iter(self):
         with pytest.raises(nx.PowerIterationFailedConvergence):
-            nx.pagerank(self.G, max_iter=0)
+            nx.builtin.pagerank(self.G, max_iter=0)
 
+    @pytest.mark.skip(reason="pagerank_numpy not implemented yet.")
     def test_numpy_pagerank(self):
         G = self.G
         p = nx.pagerank_numpy(G, alpha=0.9)
@@ -98,6 +100,7 @@ class TestPageRank(object):
         personalize = dict((n, random.random()) for n in G)
         p = nx.pagerank_numpy(G, alpha=0.9, personalization=personalize)
 
+    @pytest.mark.skip(reason="google_matrix not implemented yet.")
     def test_google_matrix(self):
         G = self.G
         M = nx.google_matrix(G, alpha=0.9, nodelist=sorted(G))
@@ -106,6 +109,7 @@ class TestPageRank(object):
         for (a, b) in zip(p, self.G.pagerank.values()):
             assert almost_equal(a, b)
 
+    @pytest.mark.skip(reason="pagerank not support personalization yet.")
     def test_personalization(self):
         G = nx.complete_graph(4)
         personalize = {0: 1, 1: 1, 2: 4, 3: 4}
@@ -115,15 +119,17 @@ class TestPageRank(object):
             2: 0.267532673843324,
             3: 0.2675326738433241,
         }
-        p = nx.pagerank(G, alpha=0.85, personalization=personalize)
+        p = nx.builtin.pagerank(G, alpha=0.85, personalization=personalize)
         for n in G:
             assert almost_equal(p[n], answer[n], places=4)
 
+    @pytest.mark.skip(reason="pagerank not support personalization yet.")
     def test_zero_personalization_vector(self):
         G = nx.complete_graph(4)
         personalize = {0: 0, 1: 0, 2: 0, 3: 0}
-        pytest.raises(ZeroDivisionError, nx.pagerank, G, personalization=personalize)
+        pytest.raises(ZeroDivisionError, nx.builtin.pagerank, G, personalization=personalize)
 
+    @pytest.mark.skip(reason="pagerank not support personalization yet.")
     def test_one_nonzero_personalization_value(self):
         G = nx.complete_graph(4)
         personalize = {0: 0, 1: 0, 2: 0, 3: 1}
@@ -133,10 +139,11 @@ class TestPageRank(object):
             2: 0.22077931820379187,
             3: 0.3376620453886241,
         }
-        p = nx.pagerank(G, alpha=0.85, personalization=personalize)
+        p = nx.builtin.pagerank(G, alpha=0.85, personalization=personalize)
         for n in G:
             assert almost_equal(p[n], answer[n], places=4)
 
+    @pytest.mark.skip(reason="pagerank not support personalization yet.")
     def test_incomplete_personalization(self):
         G = nx.complete_graph(4)
         personalize = {3: 1}
@@ -146,10 +153,11 @@ class TestPageRank(object):
             2: 0.22077931820379187,
             3: 0.3376620453886241,
         }
-        p = nx.pagerank(G, alpha=0.85, personalization=personalize)
+        p = nx.builtin.pagerank(G, alpha=0.85, personalization=personalize)
         for n in G:
             assert almost_equal(p[n], answer[n], places=4)
 
+    @pytest.mark.skip(reason="google_matrix not implemented yet.")
     def test_dangling_matrix(self):
         """
         Tests that the google_matrix doesn't change except for the dangling
@@ -169,16 +177,19 @@ class TestPageRank(object):
                 else:
                     assert almost_equal(M2[i, j], M1[i, j], places=4)
 
+    @pytest.mark.skip(reason="pagerank not support dangling yet.")
     def test_dangling_pagerank(self):
-        pr = nx.pagerank(self.G, dangling=self.dangling_edges)
+        pr = nx.builtin.pagerank(self.G, dangling=self.dangling_edges)
         for n in self.G:
             assert almost_equal(pr[n], self.G.dangling_pagerank[n], places=4)
 
+    @pytest.mark.skip(reason="pagerank_numpy not implemented yet.")
     def test_dangling_numpy_pagerank(self):
         pr = nx.pagerank_numpy(self.G, dangling=self.dangling_edges)
         for n in self.G:
             assert almost_equal(pr[n], self.G.dangling_pagerank[n], places=4)
 
+    @pytest.mark.skip(reason="pagerank_numpy not implemented yet.")
     def test_empty(self):
         G = nx.Graph()
         assert nx.pagerank(G) == {}

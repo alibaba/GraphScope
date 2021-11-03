@@ -49,7 +49,6 @@ class TestHITS:
         G = self.G
         nx.builtin.hits(G, tol=1.0e-08)
 
-    @pytest.mark.skip(reason="output not already.")
     def test_hits(self):
         G = self.G
         h, a = nx.hits(G, tol=1.0e-08)
@@ -58,13 +57,13 @@ class TestHITS:
         for n in G:
             assert almost_equal(a[n], G.a[n], places=4)
 
-    @pytest.mark.skip(reason="output not already.")
+    @pytest.mark.skip(reason="nstart not support.")
     def test_hits_nstart(self):
         G = self.G
         nstart = dict([(i, 1.0 / 2) for i in G])
         h, a = nx.hits(G, nstart=nstart)
 
-    @pytest.mark.skip(reason="output not already.")
+    @pytest.mark.skip(reason="hits_numpy not implemented.")
     def test_hits_numpy(self):
         numpy = pytest.importorskip("numpy")
         G = self.G
@@ -74,7 +73,7 @@ class TestHITS:
         for n in G:
             assert almost_equal(a[n], G.a[n], places=4)
 
-    @pytest.mark.skip(reason="output not already.")
+    @pytest.mark.skip(reason="hits_scipy not implemented.")
     def test_hits_scipy(self):
         sp = pytest.importorskip("scipy")
         G = self.G
@@ -84,7 +83,7 @@ class TestHITS:
         for n in G:
             assert almost_equal(a[n], G.a[n], places=4)
 
-    @pytest.mark.skip(reason="output not already.")
+    @pytest.mark.skip(reason="hits_numpy not implemented.")
     def test_empty(self):
         numpy = pytest.importorskip("numpy")
         G = nx.Graph()
@@ -93,13 +92,13 @@ class TestHITS:
         assert nx.authority_matrix(G).shape == (0, 0)
         assert nx.hub_matrix(G).shape == (0, 0)
 
-    @pytest.mark.skip(reason="output not already.")
+    @pytest.mark.skip(reason="hits_scipy not implemented.")
     def test_empty_scipy(self):
         scipy = pytest.importorskip("scipy")
         G = nx.Graph()
         assert nx.hits_scipy(G) == ({}, {})
 
-    @pytest.mark.skip(reason="output not already.")
+    @pytest.mark.skip(reason="Not support raise PowerIterationFailedConvergence yet.")
     def test_hits_not_convergent(self):
         with pytest.raises(nx.PowerIterationFailedConvergence):
             G = self.G
