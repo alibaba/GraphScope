@@ -33,6 +33,7 @@ service Client {
   rpc prepareDataLoad(PrepareDataLoadRequest) returns(PrepareDataLoadResponse);
   rpc commitDataLoad(CommitDataLoadRequest) returns(CommitDataLoadResponse);
   rpc getPartitionNum(GetPartitionNumRequest) returns(GetPartitionNumResponse);
+  rpc getLoggerInfo(GetLoggerInfoRequest) returns(GetLoggerInfoResponse);
 }
 
 message VertexDataPb {
@@ -136,4 +137,14 @@ message GetPartitionNumRequest {
 
 message GetPartitionNumResponse {
   int32 partitionNum = 1;
+}
+
+message GetLoggerInfoRequest {
+
+}
+
+message GetLoggerInfoResponse {
+  string loggerServers = 1;
+  string loggerTopic = 2;
+  int32 loggerQueueCount = 3;
 }

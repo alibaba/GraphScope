@@ -14,11 +14,11 @@
 package com.alibaba.graphscope.groot.coordinator;
 
 import com.alibaba.graphscope.groot.meta.MetaStore;
+import com.alibaba.graphscope.groot.wal.LogService;
 import com.alibaba.maxgraph.common.config.CommonConfig;
 import com.alibaba.maxgraph.common.config.Configs;
 import com.alibaba.maxgraph.common.config.ZkConfig;
 import com.alibaba.maxgraph.compiler.api.exception.MaxGraphException;
-import com.alibaba.graphscope.groot.wal.LogService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.zookeeper.data.Stat;
@@ -94,6 +94,15 @@ public class GraphInitializer {
         if (!this.metaStore.exists(IdAllocator.ID_ALLOCATE_INFO_PATH)) {
             byte[] b = this.objectMapper.writeValueAsBytes(0L);
             this.metaStore.write(IdAllocator.ID_ALLOCATE_INFO_PATH, b);
+        }
+        if (!this.metaStore.exists(BackupManager.GLOBAL_BACKUP_ID_PATH)) {
+            byte[] b = this.objectMapper.writeValueAsBytes(0);
+            this.metaStore.write(BackupManager.GLOBAL_BACKUP_ID_PATH, b);
+        }
+        if (!this.metaStore.exists(BackupManager.BACKUP_INFO_PATH)) {
+            List<BackupInfo> backupInfoList = new ArrayList<>();
+            byte[] b = this.objectMapper.writeValueAsBytes(backupInfoList);
+            this.metaStore.write(BackupManager.BACKUP_INFO_PATH, b);
         }
     }
 }

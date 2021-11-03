@@ -13,38 +13,25 @@
  */
 package com.alibaba.maxgraph.tests.coordinator;
 
-import com.alibaba.maxgraph.proto.groot.AdvanceIngestSnapshotIdRequest;
-import com.alibaba.maxgraph.proto.groot.AdvanceIngestSnapshotIdResponse;
-import com.alibaba.maxgraph.proto.groot.AdvanceQuerySnapshotRequest;
-import com.alibaba.maxgraph.proto.groot.AdvanceQuerySnapshotResponse;
-import com.alibaba.maxgraph.proto.groot.CommitSnapshotIdRequest;
-import com.alibaba.maxgraph.proto.groot.CommitSnapshotIdResponse;
-import com.alibaba.maxgraph.proto.groot.FetchSchemaResponse;
-import com.alibaba.maxgraph.proto.groot.FrontendSnapshotGrpc;
-import com.alibaba.maxgraph.proto.groot.IngestorSnapshotGrpc;
-import com.alibaba.maxgraph.proto.groot.StoreSchemaGrpc;
-import com.alibaba.maxgraph.proto.groot.SubmitBatchDdlRequest;
-import com.alibaba.maxgraph.proto.groot.SubmitBatchDdlResponse;
+import com.alibaba.graphscope.groot.coordinator.*;
+import com.alibaba.graphscope.groot.coordinator.BackupService;
+import com.alibaba.graphscope.groot.coordinator.SchemaService;
+import com.alibaba.graphscope.groot.coordinator.SnapshotCommitService;
+import com.alibaba.graphscope.groot.store.StoreBackupId;
+import com.alibaba.maxgraph.proto.groot.*;
 import com.alibaba.graphscope.groot.CompletionCallback;
 import com.alibaba.graphscope.groot.rpc.RoleClients;
 import com.alibaba.graphscope.groot.schema.GraphDef;
 import com.alibaba.graphscope.groot.schema.request.DdlException;
-import com.alibaba.graphscope.groot.coordinator.DdlWriter;
-import com.alibaba.graphscope.groot.coordinator.FrontendSnapshotClient;
-import com.alibaba.graphscope.groot.coordinator.GraphDefFetcher;
-import com.alibaba.graphscope.groot.coordinator.IngestorSnapshotClient;
-import com.alibaba.graphscope.groot.coordinator.SchemaManager;
-import com.alibaba.graphscope.groot.coordinator.SchemaService;
-import com.alibaba.graphscope.groot.coordinator.SnapshotCommitService;
-import com.alibaba.graphscope.groot.coordinator.SnapshotManager;
-import com.alibaba.graphscope.groot.coordinator.StoreSchemaClient;
 import com.alibaba.graphscope.groot.frontend.IngestorWriteClient;
 import io.grpc.stub.StreamObserver;
 import org.junit.jupiter.api.Test;
 
-import java.util.Arrays;
+import java.io.IOException;
+import java.util.*;
+import java.util.concurrent.ExecutionException;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 public class CoordinatorRpcTest {
@@ -189,5 +176,133 @@ public class CoordinatorRpcTest {
         verify(snapshotManager).commitSnapshotId(10, 20, 15, Arrays.asList(1L, 2L, 3L));
         verify(streamObserver).onNext(CommitSnapshotIdResponse.newBuilder().build());
         verify(streamObserver).onCompleted();
+    }
+
+    @Test
+    void testBackupService() throws IOException {
+        BackupManager mockBackupManger = mock(BackupManager.class);
+        BackupService backupService = new BackupService(mockBackupManger);
+
+        when(mockBackupManger.createNewBackup()).thenReturn(6);
+        StreamObserver<CreateNewBackupResponse> mockCreateObserver = mock(StreamObserver.class);
+        backupService.createNewBackup(CreateNewBackupRequest.newBuilder().build(), mockCreateObserver);
+        verify(mockCreateObserver).onNext(CreateNewBackupResponse.newBuilder().setGlobalBackupId(6).build());
+        verify(mockCreateObserver).onCompleted();
+
+        StreamObserver<DeleteBackupResponse> mockDeleteObserver = mock(StreamObserver.class);
+        backupService.deleteBackup(DeleteBackupRequest.newBuilder().setGlobalBackupId(8).build(), mockDeleteObserver);
+        verify(mockBackupManger).deleteBackup(8);
+        verify(mockDeleteObserver).onNext(DeleteBackupResponse.newBuilder().build());
+        verify(mockDeleteObserver).onCompleted();
+
+        StreamObserver<PurgeOldBackupsResponse> mockPurgeObserver = mock(StreamObserver.class);
+        backupService.purgeOldBackups(PurgeOldBackupsRequest.newBuilder().setKeepAliveNumber(5).build(), mockPurgeObserver);
+        verify(mockBackupManger).purgeOldBackups(5);
+        verify(mockPurgeObserver).onNext(PurgeOldBackupsResponse.newBuilder().build());
+        verify(mockPurgeObserver).onCompleted();
+
+        StreamObserver<RestoreFromBackupResponse> mockRestoreObserver = mock(StreamObserver.class);
+        backupService.restoreFromBackup(
+                RestoreFromBackupRequest.newBuilder()
+                        .setGlobalBackupId(9)
+                        .setMetaRestorePath("restore_meta")
+                        .setStoreRestorePath("restore_store")
+                        .build(),
+                mockRestoreObserver);
+        verify(mockBackupManger).restoreFromBackup(9, "restore_meta", "restore_store");
+        verify(mockRestoreObserver).onNext(RestoreFromBackupResponse.newBuilder().build());
+        verify(mockRestoreObserver).onCompleted();
+
+        StreamObserver<VerifyBackupResponse> mockVerifyObserver = mock(StreamObserver.class);
+        backupService.verifyBackup(VerifyBackupRequest.newBuilder().setGlobalBackupId(7).build(), mockVerifyObserver);
+        verify(mockBackupManger).verifyBackup(7);
+        verify(mockVerifyObserver).onNext(VerifyBackupResponse.newBuilder().build());
+        verify(mockVerifyObserver).onCompleted();
+
+        BackupInfo backupInfo1 = new BackupInfo(1, 10L, new ArrayList<>(), new HashMap<>());
+        BackupInfo backupInfo2 = new BackupInfo(2, 10L, new ArrayList<>(), new HashMap<>());
+        when(mockBackupManger.getBackupInfoList()).thenReturn(Arrays.asList(backupInfo1, backupInfo2));
+        StreamObserver<GetBackupInfoResponse> mockGetInfoObserver = mock(StreamObserver.class);
+        backupService.getBackupInfo(GetBackupInfoRequest.newBuilder().build(), mockGetInfoObserver);
+        verify(mockGetInfoObserver).onNext(
+                GetBackupInfoResponse.newBuilder()
+                        .addBackupInfoList(backupInfo1.toProto())
+                        .addBackupInfoList(backupInfo2.toProto())
+                        .build());
+        verify(mockGetInfoObserver).onCompleted();
+    }
+
+    @Test
+    void testStoreBackupClient() {
+        StoreBackupGrpc.StoreBackupStub stub = mock(StoreBackupGrpc.StoreBackupStub.class);
+        StoreBackupClient client = new StoreBackupClient(stub);
+
+        StoreBackupId storeBackupId = new StoreBackupId(3);
+        storeBackupId.addPartitionBackupId(0, 3);
+        storeBackupId.addPartitionBackupId(1, 3);
+        Map<Integer, List<Integer>> readyPartitionBackupIds = new HashMap<>();
+        readyPartitionBackupIds.put(6, new ArrayList<>());
+        String storeRestoreRootPath = "store_restore_path";
+
+        doAnswer(
+                        invocation -> {
+                            CreateStoreBackupRequest request = invocation.getArgument(0);
+                            assertEquals(request.getGlobalBackupId(), 3);
+                            StreamObserver<CreateStoreBackupResponse> observer = invocation.getArgument(1);
+                            observer.onNext(
+                                    CreateStoreBackupResponse.newBuilder()
+                                            .setStoreBackupId(storeBackupId.toProto())
+                                            .build());
+                            observer.onError(null);
+                            return null;
+                        })
+                .when(stub)
+                .createStoreBackup(any(), any());
+        doAnswer(
+                        invocation -> {
+                            ClearUnavailableStoreBackupsRequest request = invocation.getArgument(0);
+                            assertEquals(request.getPartitionToReadyBackupIdsCount(), 1);
+                            assertTrue(request.getPartitionToReadyBackupIdsMap().containsKey(6));
+                            StreamObserver<ClearUnavailableStoreBackupsResponse> observer = invocation.getArgument(1);
+                            observer.onNext(ClearUnavailableStoreBackupsResponse.newBuilder().build());
+                            observer.onError(null);
+                            return null;
+                        })
+                .when(stub)
+                .clearUnavailableStoreBackups(any(), any());
+        doAnswer(
+                        invocation -> {
+                            RestoreFromStoreBackupRequest request = invocation.getArgument(0);
+                            assertEquals(StoreBackupId.parseProto(request.getStoreBackupId()), storeBackupId);
+                            assertEquals(request.getRestoreRootPath(), storeRestoreRootPath);
+                            StreamObserver<RestoreFromStoreBackupResponse> observer = invocation.getArgument(1);
+                            observer.onNext(RestoreFromStoreBackupResponse.newBuilder().build());
+                            observer.onError(null);
+                            return null;
+                        })
+                .when(stub)
+                .restoreFromStoreBackup(any(), any());
+        doAnswer(
+                        invocation -> {
+                            VerifyStoreBackupRequest request = invocation.getArgument(0);
+                            assertEquals(StoreBackupId.parseProto(request.getStoreBackupId()), storeBackupId);
+                            StreamObserver<VerifyStoreBackupResponse> observer = invocation.getArgument(1);
+                            observer.onNext(VerifyStoreBackupResponse.newBuilder().build());
+                            observer.onError(null);
+                            return null;
+                        })
+                .when(stub)
+                .verifyStoreBackup(any(), any());
+
+        CompletionCallback creationCallback = mock(CompletionCallback.class);
+        client.createStoreBackup(3, creationCallback);
+        verify(creationCallback).onCompleted(storeBackupId);
+        verify(creationCallback).onError(null);
+        CompletionCallback voidCallback = mock(CompletionCallback.class);
+        client.clearUnavailableBackups(readyPartitionBackupIds, voidCallback);
+        client.restoreFromStoreBackup(storeBackupId, storeRestoreRootPath, voidCallback);
+        client.verifyStoreBackup(storeBackupId, voidCallback);
+        verify(voidCallback, times(3)).onCompleted(null);
+        verify(voidCallback, times(3)).onError(null);
     }
 }

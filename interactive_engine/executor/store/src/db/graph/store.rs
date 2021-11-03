@@ -351,16 +351,8 @@ impl GraphBackup for GraphBackupEngine {
         self.engine.delete_backup(backup_id)
     }
 
-    fn purge_old_backups(&mut self, num_backups_to_keep: usize) -> GraphResult<()> {
-        self.engine.purge_old_backups(num_backups_to_keep)
-    }
-
     fn restore_from_backup(&mut self, restore_path: &str, backup_id: BackupId) -> GraphResult<()> {
         self.engine.restore_from_backup(restore_path, backup_id)
-    }
-
-    fn restore_from_latest_backup(&mut self, restore_path: &str) -> GraphResult<()> {
-        self.engine.restore_from_latest_backup(restore_path)
     }
 
     fn verify_backup(&self, backup_id: BackupId) -> GraphResult<()> {

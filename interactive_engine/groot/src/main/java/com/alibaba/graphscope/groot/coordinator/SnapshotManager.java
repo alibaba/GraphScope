@@ -480,6 +480,12 @@ public class SnapshotManager {
         this.metaStore.write(QUEUE_OFFSETS_PATH, bytes);
     }
 
+    public SnapshotInfo getQuerySnapshotInfo() {
+        synchronized (this.querySnapshotLock) {
+            return querySnapshotInfo;
+        }
+    }
+
     /**
      * Get offset list according to the input queueId list. This is for IngestNode to get the
      * correct start offset for replay.

@@ -22,13 +22,27 @@ public interface GraphLibrary extends Library {
 
     Pointer openGraphStore(byte[] config, int len);
 
-    boolean closeGraphStore(Pointer pointer);
+    boolean closeGraphStore(Pointer storePointer);
 
-    JnaResponse writeBatch(Pointer pointer, long snapshotId, byte[] data, int len);
+    JnaResponse writeBatch(Pointer storePointer, long snapshotId, byte[] data, int len);
 
-    JnaResponse getGraphDefBlob(Pointer pointer);
+    JnaResponse getGraphDefBlob(Pointer storePointer);
 
-    JnaResponse ingestData(Pointer pointer, String dataPath);
+    JnaResponse ingestData(Pointer storePointer, String dataPath);
+
+    Pointer openGraphBackupEngine(Pointer storePointer, String backupPath);
+
+    void closeGraphBackupEngine(Pointer bePointer);
+
+    JnaResponse createNewBackup(Pointer bePointer);
+
+    JnaResponse deleteBackup(Pointer bePointer, int backupId);
+
+    JnaResponse restoreFromBackup(Pointer bePointer, String restorePath, int backupId);
+
+    JnaResponse verifyBackup(Pointer bePointer, int backupId);
+
+    JnaResponse getBackupList(Pointer bePointer);
 
     void dropJnaResponse(JnaResponse jnaResponse);
 
