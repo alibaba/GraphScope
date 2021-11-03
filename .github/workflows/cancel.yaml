@@ -8,6 +8,6 @@ jobs:
     steps:
       - uses: styfle/cancel-workflow-action@0.9.1
         with:
-          workflow_id: local.yml,ci.yml,gaia.yml,package.yml
+          workflow_id: local.yml,ci.yml,build-graphscope-wheels-linux.yml,build-graphscope-wheels-macos.yml,gaia.yml
           access_token: ${{ github.token }}
 
