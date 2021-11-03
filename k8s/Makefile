@@ -100,7 +100,9 @@ graphscope-darwin-py3:
 	sudo rm -fr /tmp/libvineyard /tmp/libgrape-lite
 	# build graphscope
 	cd $(WORKING_DIR)/../ && \
+		export LDFLAGS=-L/usr/local/opt/llvm/lib && \
 		make install WITH_LEARNING_ENGINE=OFF && \
+		unset LDFLAGS && \
 		sudo install_name_tool -add_rpath /usr/local/lib /opt/graphscope/bin/executor && \
 		sudo install_name_tool -add_rpath /usr/local/lib /opt/graphscope/bin/gaia_executor && \
 		python3 $(WORKING_DIR)/precompile.py
