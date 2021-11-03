@@ -29,7 +29,7 @@ import java.util.Map;
 public class ClientTest {
 
     String host = "localhost";
-    int port = 55555;
+    int port = 55556;
     Client client = new Client(host, port);
 
     @Test

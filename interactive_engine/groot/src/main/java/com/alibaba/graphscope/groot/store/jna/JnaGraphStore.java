@@ -42,13 +42,15 @@ public class JnaGraphStore implements GraphPartition {
         String dataRoot = StoreConfig.STORE_DATA_PATH.get(configs);
         Path partitionPath = Paths.get(dataRoot, "" + partitionId);
         this.downloadPath = Paths.get(dataRoot, "download");
-        String backupRoot = BackupConfig.STORE_BACKUP_PATH.get(configs);
-        this.backupPath = Paths.get(backupRoot, "" + partitionId);
+        this.backupPath = Paths.get(dataRoot, "backups", "" + partitionId);
         if (!Files.isDirectory(partitionPath)) {
             Files.createDirectories(partitionPath);
         }
         if (!Files.isDirectory(downloadPath)) {
             Files.createDirectories(downloadPath);
+        }
+        if (!Files.isDirectory(backupPath)) {
+            Files.createDirectories(backupPath);
         }
         Configs storeConfigs =
                 Configs.newBuilder(configs)

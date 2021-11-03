@@ -13,6 +13,7 @@
  */
 package com.alibaba.graphscope.groot.sdk;
 
+import com.alibaba.graphscope.groot.coordinator.BackupInfo;
 import com.alibaba.graphscope.proto.write.*;
 import com.alibaba.maxgraph.compiler.api.schema.GraphSchema;
 import com.alibaba.maxgraph.proto.groot.*;
@@ -37,12 +38,14 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 public class Client implements Closeable {
     private static final Logger logger = LoggerFactory.getLogger(Client.class);
 
     private ClientGrpc.ClientBlockingStub stub;
     private ClientWriteGrpc.ClientWriteBlockingStub writeStub;
+    private ClientBackupGrpc.ClientBackupBlockingStub backupStub;
     private ManagedChannel channel;
     private String name = "";
 
@@ -65,6 +68,7 @@ public class Client implements Closeable {
         this.channel = channel;
         this.stub = ClientGrpc.newBlockingStub(this.channel);
         this.writeStub = ClientWriteGrpc.newBlockingStub(this.channel);
+        this.backupStub = ClientBackupGrpc.newBlockingStub(this.channel);
         this.init();
     }
 
@@ -76,6 +80,7 @@ public class Client implements Closeable {
         this.channel = channel;
         this.stub = ClientGrpc.newBlockingStub(this.channel);
         this.writeStub = ClientWriteGrpc.newBlockingStub(this.channel);
+        this.backupStub = ClientBackupGrpc.newBlockingStub(this.channel);
         this.init();
     }
 
@@ -186,6 +191,46 @@ public class Client implements Closeable {
         GetPartitionNumResponse response =
                 this.stub.getPartitionNum(GetPartitionNumRequest.newBuilder().build());
         return response.getPartitionNum();
+    }
+
+    public int createNewGraphBackup() {
+        CreateNewGraphBackupResponse response =
+                this.backupStub.createNewGraphBackup(CreateNewGraphBackupRequest.newBuilder().build());
+        return response.getBackupId();
+    }
+
+    public void deleteGraphBackup(int backupId) {
+        this.backupStub.deleteGraphBackup(
+                DeleteGraphBackupRequest.newBuilder().setBackupId(backupId).build());
+    }
+
+    public void purgeOldGraphBackups(int keepAliveNumber) {
+        this.backupStub.purgeOldGraphBackups(
+                PurgeOldGraphBackupsRequest.newBuilder().setKeepAliveNumber(keepAliveNumber).build());
+    }
+
+    public void restoreFromGraphBackup(int backupId, String metaRestorePath, String storeRestorePath) {
+        this.backupStub.restoreFromGraphBackup(RestoreFromGraphBackupRequest.newBuilder()
+                .setBackupId(backupId)
+                .setMetaRestorePath(metaRestorePath)
+                .setStoreRestorePath(storeRestorePath)
+                .build());
+    }
+
+    public boolean verifyGraphBackup(int backupId) {
+        VerifyGraphBackupResponse response =
+                this.backupStub.verifyGraphBackup(VerifyGraphBackupRequest.newBuilder().setBackupId(backupId).build());
+        boolean suc = response.getIsOk();
+        if (!suc) {
+            logger.info("verify backup [" + backupId + "] failed, " + response.getErrMsg());
+        }
+        return suc;
+    }
+
+    public List<BackupInfo> getGraphBackupInfo() {
+        GetGraphBackupInfoResponse response =
+                this.backupStub.getGraphBackupInfo(GetGraphBackupInfoRequest.newBuilder().build());
+        return response.getBackupInfoListList().stream().map(BackupInfo::parseProto).collect(Collectors.toList());
     }
 
     @Override

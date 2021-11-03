@@ -29,9 +29,6 @@ public class BackupConfig {
     public static final Config<Integer> BACKUP_AUTO_SUBMIT_INTERVAL_HOURS =
             Config.intConfig("backup.auto.submit.interval.hours", 24);
 
-    public static final Config<String> STORE_BACKUP_PATH =
-            Config.stringConfig("store.backup.path", "./maxgraph_backup");
-
     public static final Config<Integer> STORE_BACKUP_THREAD_COUNT =
             Config.intConfig("store.backup.thread.count", 1);
 }

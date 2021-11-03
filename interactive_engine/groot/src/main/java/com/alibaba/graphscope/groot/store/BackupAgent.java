@@ -24,6 +24,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.HashMap;
@@ -233,6 +234,9 @@ public class BackupAgent {
                 try {
                     int partitionId = entry.getKey();
                     Path partitionRestorePath = Paths.get(restoreRootPath, "" + partitionId);
+                    if (!Files.isDirectory(partitionRestorePath)) {
+                        Files.createDirectories(partitionRestorePath);
+                    }
                     entry.getValue().restoreFromPartitionBackup(
                             storeBackupId.getPartitionToBackupId().get(partitionId), partitionRestorePath.toString());
                     if (counter.decrementAndGet() == 0) {
