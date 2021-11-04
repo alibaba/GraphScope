@@ -1,6 +1,5 @@
 MKFILE_PATH 			:= $(abspath $(lastword $(MAKEFILE_LIST)))
 WORKING_DIR 			:= $(dir $(MKFILE_PATH))
-NUM_PROC                := $( $(command -v nproc &> /dev/null) && echo $(nproc) || echo $(sysctl -n hw.physicalcpu) )
 
 VERSION                     ?= 0.1.0
 INSTALL_PREFIX              ?= /opt/graphscope
@@ -62,7 +61,7 @@ gae:
 	mkdir -p $(WORKING_DIR)/analytical_engine/build
 	cd $(WORKING_DIR)/analytical_engine/build && \
 	cmake -DCMAKE_INSTALL_PREFIX=$(INSTALL_PREFIX) -DNETWORKX=$(NETWORKX) -DBUILD_TESTS=${BUILD_TEST} .. && \
-	make -j$(NUM_PROC) && \
+	make -j`nproc` && \
 	sudo make install
 ifneq ($(INSTALL_PREFIX), /usr/local)
 	sudo rm -fr /usr/local/include/graphscope && \
@@ -110,7 +109,7 @@ ifeq ($(WITH_LEARNING_ENGINE), ON)
 	git submodule update --init third_party/pybind11 && \
 	mkdir -p cmake-build && cd cmake-build && \
 	cmake -DCMAKE_INSTALL_PREFIX=$(INSTALL_PREFIX) -DWITH_VINEYARD=ON -DTESTING=${BUILD_TEST} .. && \
-	make -j$(NUM_PROC) && \
+	make -j`nproc` && \
 	sudo make install
 ifneq ($(INSTALL_PREFIX), /usr/local)
 	sudo ln -sf ${INSTALL_PREFIX}/lib/*so* /usr/local/lib

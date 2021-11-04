@@ -18,7 +18,6 @@ readonly V6D_VERSION="0.3.4"  # vineyard version
 readonly V6D_BRANCH="v0.3.4" # vineyard branch
 
 readonly SOURCE_DIR="$( cd "$(dirname $0)/.." >/dev/null 2>&1 ; pwd -P )"
-readonly NUM_PROC=$( $(command -v nproc &> /dev/null) && echo $(nproc) || echo $(sysctl -n hw.physicalcpu) )
 readonly OUTPUT_ENV_FILE="${HOME}/.graphscope_env"
 IS_IN_WSL=false && [[ ! -z "${IS_WSL}" || ! -z "${WSL_DISTRO_NAME}" ]] && IS_IN_WSL=true
 readonly IS_IN_WSL
@@ -255,6 +254,7 @@ init_basic_packages() {
     )
   else
     BASIC_PACKGES_TO_INSTALL=(
+      coreutils
       double-conversion
       protobuf
       glog
@@ -558,7 +558,7 @@ install_dependencies() {
       check_and_remove_dir "/tmp/openmpi-4.0.5"
       tar zxvf /tmp/openmpi-4.0.5.tar.gz -C /tmp
       pushd /tmp/openmpi-4.0.5 && ./configure --enable-mpi-cxx
-      make -j${NUM_PROC}
+      make -j$(nproc)
       sudo make install
       popd
       rm -fr /tmp/openmpi-4.0.5 /tmp/openmpi-4.0.5.tar.gz
@@ -615,7 +615,7 @@ install_dependencies() {
     tar zxvf /tmp/protobuf-all-3.13.0.tar.gz -C /tmp/
     pushd /tmp/protobuf-3.13.0
     ./configure --enable-shared --disable-static
-    make -j${NUM_PROC}
+    make -j$(nproc)
     sudo make install && ldconfig
     popd
     rm -fr /tmp/protobuf-all-3.13.0.tar.gz /tmp/protobuf-3.13.0
@@ -642,7 +642,7 @@ install_dependencies() {
         -DgRPC_PROTOBUF_PROVIDER=package \
         -DgRPC_ZLIB_PROVIDER=package \
         -DgRPC_SSL_PROVIDER=package
-    make -j${NUM_PROC}
+    make -j$(nproc)
     sudo make install
     popd
     rm -fr /tmp/grpc
@@ -710,7 +710,7 @@ install_dependencies() {
       pushd /tmp/fmt-7.0.3
       mkdir -p build && cd build
       cmake .. -DBUILD_SHARED_LIBS=ON
-      make -j${NUM_PROC}
+      make -j$(nproc)
       sudo make install
       popd
       rm -fr /tmp/7.0.3.tar.gz /tmp/fmt-7.0.3
@@ -722,7 +722,7 @@ install_dependencies() {
     pushd /tmp/folly-2020.10.19.00
     mkdir -p _build && cd _build
     cmake -DBUILD_SHARED_LIBS=ON -DCMAKE_POSITION_INDEPENDENT_CODE=ON ..
-    make -j${NUM_PROC}
+    make -j$(nproc)
     sudo make install
     popd
     rm -fr /tmp/v2020.10.19.00.tar.gz /tmp/folly-2020.10.19.00
@@ -740,8 +740,6 @@ install_dependencies() {
 
 ##########################
 # Install libgrape-lite.
-# Globals:
-#   NUM_PROC
 # Arguments:
 #   None
 # Outputs:
@@ -761,7 +759,7 @@ install_libgrape-lite() {
   pushd /tmp/libgrape-lite
   mkdir -p build && cd build
   cmake ..
-  make -j${NUM_PROC}
+  make -j$(nproc)
   sudo make install
   popd
   rm -fr /tmp/libgrape-lite
@@ -771,7 +769,6 @@ install_libgrape-lite() {
 # Install vineyard.
 # Globals:
 #   PLATFORM
-#   NUM_PROC
 # Arguments:
 #   None
 # Outputs:
@@ -801,8 +798,8 @@ install_vineyard() {
     cmake .. -DBUILD_SHARED_LIBS=ON \
              -DBUILD_VINEYARD_TESTS=OFF
   fi
-  make -j${NUM_PROC}
-  make vineyard_client_python -j${NUM_PROC}
+  make -j$(nproc)
+  make vineyard_client_python -j$(nproc)
   sudo make install
   popd
 
@@ -826,7 +823,6 @@ install_vineyard() {
 # Globals:
 #   SOURCE_DIR
 #   INSTALL_PREFIX
-#   NUM_PROC
 # Arguments:
 #   None
 # Outputs:
