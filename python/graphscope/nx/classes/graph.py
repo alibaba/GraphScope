@@ -29,7 +29,6 @@ from networkx.classes.graphviews import generic_graph_view
 from networkx.classes.reportviews import DegreeView
 from networkx.classes.reportviews import EdgeView
 from networkx.classes.reportviews import NodeView
-from networkx.generators.degree_seq import expected_degree_graph
 
 from graphscope import nx
 from graphscope.client.session import get_default_session
@@ -49,6 +48,8 @@ from graphscope.nx.utils.misc import parse_ret_as_dict
 from graphscope.proto import graph_def_pb2
 from graphscope.proto import types_pb2
 
+__all__ = ["Graph"]
+
 
 class _GraphBase(object):
     """
@@ -61,23 +62,44 @@ class _GraphBase(object):
 
 class Graph(_GraphBase):
     """
-    Base class for undirected graphs in graphscope.nx.
+    Base class for undirected graphs.
 
-    A Graph that hold the metadata of a graph, and provide NetworkX-like Graph APIs.
+    A Graph that holds the metadata of a graph, and provides NetworkX-like Graph APIs.
 
     It is worth noticing that the graph is actually stored by the Analytical Engine backend.
-    In other words, the graph object holds nothing but metadata of a graph
+    In other words, the Graph object holds nothing but metadata of a graph.
 
     Graph support nodes and edges with optional data, or attributes.
 
     Graphs support undirected edges. Self loops are allowed but multiple
     (parallel) edges are not.
 
-    Nodes can be many hashable objects including int/str/float/tuple/bool object
-    with optional key/value attributes.
+    Nodes can be arbitrary int/str/float/bool objects with optional
+    key/value attributes.
 
     Edges are represented as links between nodes with optional
-    key/value attributes
+    key/value attributes.
+
+    Graph support node label if its created from a GraphScope graph object.
+    nodes are identified by `(label, id)` tuple.
+
+    Parameters
+    ----------
+    incoming_graph_data : input graph (optional, default: None)
+        Data to initialize graph. If None (default) an empty
+        graph is created.  The data can be any format that is supported
+        by the to_nx_graph() function, currently including edge list,
+        dict of dicts, dict of lists, NetworkX graph, NumPy matrix
+        or 2d ndarray, Pandas DataFrame, SciPy sparse matrix, or a GraphScope
+        graph object.
+
+    default_label : default node label (optional, default: "_")
+        if incoming_graph_data is a GraphScope graph object, default label means
+        the nodes of the label can be accessed by id directly, other label nodes
+        need to use `(label, id)` to access.
+
+    attr : keyword arguments, optional (default= no attributes)
+        Attributes to add to graph as key=value pairs.
 
     See Also
     --------
@@ -106,9 +128,11 @@ class Graph(_GraphBase):
     >>> H = nx.path_graph(10)
     >>> G.add_nodes_from(H)
 
-    In addition integers, strings can represent a node.
+    In addition to integers, strings/floats/bool can represent a node too.
 
     >>> G.add_node('a node')
+    >>> G.add_node(3.14)
+    >>> G.add_node(True)
 
     **Edges:**
 
@@ -194,6 +218,8 @@ class Graph(_GraphBase):
     ...         # Do something useful with the edges
     ...         pass
 
+    **Transformation**
+
     **Reporting:**
 
     Simple graph information is obtained using object-attributes and methods.
@@ -213,8 +239,16 @@ class Graph(_GraphBase):
     graph_attr_dict_factory = dict
     _graph_type = graph_def_pb2.DYNAMIC_PROPERTY
 
+    @patch_docstring(RefGraph.to_directed_class)
+    def to_directed_class(self):
+        return nx.DiGraph
+
+    @patch_docstring(RefGraph.to_undirected_class)
+    def to_undirected_class(self):
+        return Graph
+
     def __init__(self, incoming_graph_data=None, default_label=None, **attr):
-        """Initialize a graph with edges, name, or graph attributes
+        """Initialize a graph with graph, edges, name, or graph attributes
 
         Parameters
         ----------
@@ -223,16 +257,13 @@ class Graph(_GraphBase):
             graph is created.  The data can be any format that is supported
             by the to_nx_graph() function, currently including edge list,
             dict of dicts, dict of lists, NetworkX graph, NumPy matrix
-            or 2d ndarray, Pandas DataFrame, SciPy sparse matrix, or a graphscope
-            Graph.
+            or 2d ndarray, Pandas DataFrame, SciPy sparse matrix, or a GraphScope
+            graph object.
 
-            If incomming_garph_data is graphscope.Graph, the direction of input graph
-            has to be consistent with networkx graph type you used and the input graph
-            can't not be multigraph, otherwise it would raise `NetworkXError`.
-
-        default_label : default node label of graph (optional, default: "_")
-            default label to use in transformation from graphscope graph. The nodes of
-            default label can access without the label.
+        default_label : default node label (optional, default: "_")
+            if incoming_graph_data is a GraphScope graph object, default label means
+            the nodes of the label can be accessed by id directly, other label nodes
+            need to use `(label, id)` to access.
 
         attr : keyword arguments, optional (default= no attributes)
             Attributes to add to graph as key=value pairs.
@@ -251,7 +282,7 @@ class Graph(_GraphBase):
         >>> G.graph
         {'day': 'Friday'}
 
-        graphscope graph can convert to nx.Graph throught incomming_graph_data.
+        Created from a GraphScope graph object
 
         >>> g = graphscope.g(directed=False)  # if transform to DiGraph, directed=True
         >>> g.add_vertices(...).add_edges(...)
@@ -320,14 +351,6 @@ class Graph(_GraphBase):
                 "The default session is lazy mode."
             )
         self._session = session
-
-    @patch_docstring(RefGraph.to_directed_class)
-    def to_directed_class(self):
-        return nx.DiGraph
-
-    @patch_docstring(RefGraph.to_undirected_class)
-    def to_undirected_class(self):
-        return Graph
 
     @property
     def op(self):
