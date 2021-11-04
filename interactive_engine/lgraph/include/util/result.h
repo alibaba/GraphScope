@@ -15,7 +15,7 @@
 #include <functional>
 #include <type_traits>
 
-#include "db/common/namespace.h"
+#include "common/namespace.h"
 
 namespace DB_NAMESPACE {
 

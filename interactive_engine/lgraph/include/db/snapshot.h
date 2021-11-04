@@ -16,8 +16,8 @@
 
 #pragma once
 
-#include "db/graph/vertex.h"
-#include "db/graph/edge.h"
+#include "db/vertex.h"
+#include "db/edge.h"
 
 namespace DB_NAMESPACE {
 

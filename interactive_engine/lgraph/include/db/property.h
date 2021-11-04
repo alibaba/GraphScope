@@ -16,8 +16,8 @@
 
 #pragma once
 
-#include "db/graph/error.h"
-#include "db/util/result.h"
+#include "db/error.h"
+#include "util/result.h"
 
 namespace DB_NAMESPACE {
 

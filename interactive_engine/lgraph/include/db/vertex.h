@@ -16,7 +16,7 @@
 
 #pragma once
 
-#include "db/graph/property.h"
+#include "db/property.h"
 
 namespace DB_NAMESPACE {
 

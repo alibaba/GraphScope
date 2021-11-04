@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-#include "db/graph/property.h"
+#include "db/property.h"
 #include "store_ffi/store_ffi.h"
 
 namespace DB_NAMESPACE {

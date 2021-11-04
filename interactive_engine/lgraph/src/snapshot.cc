@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-#include "db/graph/snapshot.h"
+#include "db/snapshot.h"
 #include "store_ffi/store_ffi.h"
 
 namespace DB_NAMESPACE {

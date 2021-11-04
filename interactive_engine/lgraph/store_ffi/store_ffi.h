@@ -18,8 +18,8 @@
 
 #include <cstdint>
 
-#include "db/common/namespace.h"
-#include "db/common/types.h"
+#include "common/namespace.h"
+#include "common/types.h"
 
 namespace DB_NAMESPACE {
 
@@ -27,6 +27,7 @@ namespace ffi {
 
 extern "C" {
   /// Snapshot FFIs
+  PartitionGraphHandle OpenPartitionGraph(const char* store_path, const char* log4rs_config_file);
   PartitionSnapshotHandle GetSnapshot(PartitionGraphHandle graph, SnapshotId snapshot_id);
   VertexHandle GetVertex(PartitionSnapshotHandle snapshot, VertexId vertex_id, LabelId label_id, ErrorHandle* error);
   EdgeHandle GetEdge(PartitionSnapshotHandle snapshot, EdgeId edge_id, const EdgeRelation& edge_relation, ErrorHandle* error);
@@ -67,6 +68,7 @@ extern "C" {
   StringSlice GetErrorInfo(ErrorHandle error_hdl);
 
   /// Release FFIs
+  void ReleasePartitionGraphHandle(PartitionGraphHandle ptr);
   void ReleasePartitionSnapshotHandle(PartitionSnapshotHandle ptr);
   void ReleaseErrorHandle(ErrorHandle ptr);
   void ReleaseVertexHandle(VertexHandle ptr);

@@ -19,8 +19,8 @@
 #include <algorithm>
 #include <string>
 
-#include "db/common/namespace.h"
-#include "db/common/types.h"
+#include "common/namespace.h"
+#include "common/types.h"
 
 namespace DB_NAMESPACE {
 

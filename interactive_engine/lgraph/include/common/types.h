@@ -20,7 +20,7 @@
 #include <cstdint>
 #include <limits>
 
-#include "db/common/namespace.h"
+#include "common/namespace.h"
 
 namespace DB_NAMESPACE {
 
@@ -49,6 +49,15 @@ struct EdgeRelation {
   LabelId edge_label_id;
   LabelId src_vertex_label_id;
   LabelId dst_vertex_label_id;
+
+  EdgeRelation() = default;
+  EdgeRelation(LabelId e_label_id, LabelId src_label_id, LabelId dst_label_id)
+    : edge_label_id(e_label_id), src_vertex_label_id(src_label_id), dst_vertex_label_id(dst_label_id) {}
+
+  EdgeRelation(const EdgeRelation&) = default;
+  EdgeRelation(EdgeRelation&& rhs) = default;
+  EdgeRelation& operator=(const EdgeRelation&) = default;
+  EdgeRelation& operator=(EdgeRelation&& rhs) = default;
 
   static EdgeRelation From(LabelId e_label_id, LabelId src_label_id, LabelId dst_label_id) {
     EdgeRelation er{};
