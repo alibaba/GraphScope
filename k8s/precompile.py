@@ -128,7 +128,7 @@ def compile_graph():
 
     oid_types = ["int64_t", "std::string"]
     vid_types = ["uint64_t"]
-    vdata_types = ["int64_t", "grape::EmptyType"]
+    vdata_types = ["grape::EmptyType"]
     edata_types = ["grape::EmptyType", "int64_t", "double"]
     graph_classes = []
 
