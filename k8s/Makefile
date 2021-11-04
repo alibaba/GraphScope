@@ -154,6 +154,8 @@ graphscope-manylinux2014-py3:
 			export WITH_EXTRA_DATA=ON && \
 			cd /work/coordinator && \
 			rm -fr build dist/*.whl && \
+			strip /opt/graphscope/bin/executor && \
+			strip /opt/graphscope/bin/gaia_executor && \
 			python3 setup.py bdist_wheel && \
 			cd dist && \
 			auditwheel repair ./*.whl --plat=manylinux2014_x86_64'
