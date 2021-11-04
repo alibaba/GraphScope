@@ -13,6 +13,7 @@
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 
+use crate::exp_store::{ID_MASK, ID_SHIFT_BITS};
 use crate::from_fn;
 use crate::{filter_limit, limit_n};
 use dyn_type::{object, BorrowObject, Object};
@@ -31,7 +32,7 @@ use pegasus_common::impl_as_any;
 use runtime::graph::element::{Edge, Vertex};
 use runtime::graph::graph::{register_graph, GraphProxy, QueryParams, Statement};
 use runtime::graph::property::{DefaultDetails, Details, DynDetails};
-use runtime::graph::{Direction, ID, ID_BITS};
+use runtime::graph::{Direction, ID};
 use std::collections::HashMap;
 use std::path::Path;
 use std::sync::atomic::{AtomicPtr, Ordering};
@@ -479,13 +480,6 @@ impl Drop for LazyVertexDetails {
 fn encode_runtime_v_id(v: &LocalVertex<DefaultId>) -> ID {
     v.get_id() as ID
 }
-
-pub const ID_SHIFT_BITS: usize = ID_BITS >> 1;
-
-/// Given the encoding of an edge, the `ID_MASK` is used to get the lower half part of an edge, which is
-/// the src_id. As an edge is indiced by its src_id, one can use edge_id & ID_MASK to route to the
-/// machine of the edge.
-pub const ID_MASK: ID = ((1 as ID) << (ID_SHIFT_BITS as ID)) - (1 as ID);
 
 /// Edge's ID is encoded by the source vertex's `ID`, and its internal index
 fn encode_runtime_e_id(e: &LocalEdge<DefaultId, InternalId>) -> ID {

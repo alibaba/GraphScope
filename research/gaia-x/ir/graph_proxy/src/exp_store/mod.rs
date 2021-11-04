@@ -18,8 +18,16 @@ mod graph_query;
 
 use crate::exp_store::graph_partition::SinglePartition;
 use crate::InitializeJobCompiler;
-pub use graph_query::{create_demo_graph, encode_store_e_id, ID_MASK};
+use graph_query::create_demo_graph;
+use runtime::graph::{ID, ID_BITS};
 use runtime::IRJobCompiler;
+
+pub const ID_SHIFT_BITS: usize = ID_BITS >> 1;
+
+/// Given the encoding of an edge, the `ID_MASK` is used to get the lower half part of an edge, which is
+/// the src_id. As an edge is indiced by its src_id, one can use edge_id & ID_MASK to route to the
+/// machine of the edge.
+pub const ID_MASK: ID = ((1 as ID) << (ID_SHIFT_BITS as ID)) - (1 as ID);
 
 pub struct QueryExpGraph {
     num_servers: usize,

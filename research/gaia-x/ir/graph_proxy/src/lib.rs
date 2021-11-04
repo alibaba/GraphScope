@@ -21,6 +21,8 @@ extern crate lazy_static;
 mod exp_store;
 mod graphscope_store;
 
+pub use exp_store::QueryExpGraph;
+
 pub trait InitializeJobCompiler {
     fn initialize_job_compiler(&self) -> IRJobCompiler;
 }
