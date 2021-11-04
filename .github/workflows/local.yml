@@ -89,21 +89,27 @@ jobs:
         export GRAPHSCOPE_HOME=/opt/graphscope
         export GS_TEST_DIR=${GITHUB_WORKSPACE}/gstest
         # run test
-        cd interactive_engine/gaia-adaptor && ./gaia_on_vineyard_test.sh
+        cd ${GITHUB_WORKSPACE}/interactive_engine/gaia-adaptor && ./gaia_on_vineyard_test.sh
+
+    - name: Build Maxgraph Store
+      if: matrix.os == 'ubuntu-20.04'
+      run: |
+        source ~/.graphscope_env
+        cd ${GITHUB_WORKSPACE}/interactive_engine && mvn clean install -DskipTests -Pv2
 
     - name: Run Gaia on Maxgraph Store Test
       if: matrix.os == 'ubuntu-20.04'
       run: |
         source ~/.graphscope_env
         # run test
-        cd interactive_engine/gaia-adaptor && ./gremlin_test.sh
+        cd ${GITHUB_WORKSPACE}/interactive_engine/gaia-adaptor && ./gremlin_test.sh
 
     - name: Run Backup Test on Maxgraph Store
       if: matrix.os == 'ubuntu-20.04'
       run: |
         source ~/.graphscope_env
         # run test
-        cd interactive_engine/sdk && ./backup_test.sh
+        cd ${GITHUB_WORKSPACE}/interactive_engine/sdk && ./backup_test.sh
 
     - name: Upload GIE Log
       if: always()
