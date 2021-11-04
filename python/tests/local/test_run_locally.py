@@ -344,10 +344,6 @@ def test_multiple_session(ogbn_mag_small, ogbn_small_script):
     sess2.close()
 
 
-@pytest.mark.skipif(
-    sys.platform == "linux" or sys.platform == "darwin",
-    reason="Test case for macOS, need to double check runnable of vineyardd",
-)
 def test_on_macOS(sess, ogbn_mag_small):
     graph = load_ogbn_mag(sess, ogbn_mag_small)
     interactive = sess.gremlin(graph)

@@ -22,6 +22,7 @@ import sys
 import pytest
 
 import graphscope
+import graphscope.nx as nx
 from graphscope.analytical.udf.decorators import pregel
 from graphscope.dataset.ogbn_mag import load_ogbn_mag
 from graphscope.framework.app import AppAssets
@@ -141,7 +142,12 @@ def test_minimize_udf_app():
 
 def test_minimize_networkx():
     s = graphscope.session(cluster_type="hosts", num_workers=1)
-    nx_g = s.nx().Graph(dist=True)
+    s.as_default()
+    # case-1 run app
+    G = nx.path_graph(10)
+    nx.builtin.pagerank(G)
+    # case-2 transfer nx graph to gs graph
+    nx_g = nx().Graph(dist=True)
     nx_g.add_nodes_from(range(100), type="node")
     gs_g = s.g(nx_g)
     s.close()
