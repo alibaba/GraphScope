@@ -104,7 +104,7 @@ jobs:
         popd
 
         # run test
-        pip3 install pytest tensorflow --user;
+        pip3 install pytest tensorflow==2.6.0 --user;
         sudo apt update -y && sudo apt install openjdk-11-jdk -y
         cp ${GITHUB_WORKSPACE}/python/tests/local/test_standalone.py /tmp/test_standalone.py
         python3 -m pytest -s -v /tmp/test_standalone.py
