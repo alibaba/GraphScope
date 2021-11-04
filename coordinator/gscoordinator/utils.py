@@ -1337,6 +1337,9 @@ class ResolveMPICmdPrefix(object):
 
         if num_workers == 1 and (hosts == "localhost" or hosts == "127.0.0.1"):
             # run without mpi on localhost if workers num is 1
+            if shutil.which("ssh") is None:
+                # also need a fake ssh agent
+                env[self._OPENMPI_RSH_AGENT] = sys.executable
             return cmd, env
 
         if self.openmpi():
