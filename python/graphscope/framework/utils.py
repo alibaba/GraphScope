@@ -24,6 +24,7 @@ import string
 
 import numpy as np
 import pandas as pd
+import psutil
 from google.protobuf.any_pb2 import Any
 
 from graphscope.client.archive import OutArchive
@@ -45,6 +46,15 @@ def is_free_port(port, host="localhost", timeout=0.2):
     Returns:
         True if port is available, False otherwise.
     """
+    if host == "localhost" or host == "127.0.0.1":
+        try:
+            return int(port) not in [
+                conn.laddr.port for conn in psutil.net_connections()
+            ]
+        except psutil.AccessDenied:
+            # back to the socket.connect
+            pass
+
     sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     try:
         sock.settimeout(timeout)

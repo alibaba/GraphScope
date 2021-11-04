@@ -110,7 +110,7 @@ jobs:
 
         # run test
         # waiting for graphlearn supported on macos
-        # pip3 install pytest tensorflow --user;
+        # pip3 install pytest "tensorflow<=2.5.2" --user;
         pip3 install pytest --user
         export PATH=/Users/runner/Library/Python/3.9/bin:${PATH}
         cp ${GITHUB_WORKSPACE}/python/tests/local/test_standalone.py /tmp/test_standalone.py
