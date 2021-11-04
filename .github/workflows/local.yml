@@ -68,7 +68,7 @@ jobs:
         # install tensorflow for graphlearn if os is ubuntu20.04
         if [ "${OS}" == "ubuntu-20.04" ];
         then
-            pip3 install pytest tensorflow<=2.5.2 --user;
+            pip3 install pytest "tensorflow<=2.5.2" --user;
         fi
 
         export GS_TEST_DIR=${GITHUB_WORKSPACE}/gstest
