@@ -98,6 +98,13 @@ jobs:
         # run test
         cd interactive_engine/gaia-adaptor && ./gremlin_test.sh
 
+    - name: Run Backup Test on Maxgraph Store
+      if: matrix.os == 'ubuntu-20.04'
+      run: |
+        source ~/.graphscope_env
+        # run test
+        cd interactive_engine/sdk && ./backup_test.sh
+
     - name: Upload GIE Log
       if: always()
       uses: actions/upload-artifact@v2
