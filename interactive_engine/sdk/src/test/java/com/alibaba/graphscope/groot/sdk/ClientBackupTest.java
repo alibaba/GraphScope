@@ -17,6 +17,10 @@ import com.alibaba.graphscope.groot.coordinator.BackupInfo;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
+import java.io.IOException;
+import java.net.URISyntaxException;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -28,12 +32,23 @@ public class ClientBackupTest {
     Client client = new Client(host, port);
 
     @Test
-    public void testBackup() throws InterruptedException {
+    public void testBackup() throws InterruptedException, IOException, URISyntaxException {
+        Thread.sleep(10000L);
+        Path path =
+                Paths.get(
+                        Thread.currentThread()
+                                .getContextClassLoader()
+                                .getResource("modern.schema")
+                                .toURI());
+        String jsonSchemaRes = client.loadJsonSchema(path);
+        System.out.println(jsonSchemaRes);
+
         Map<String, String> properties;
         for (int i = 0; i < 10; i++) {
             properties = new HashMap<>();
-            properties.put("firstName", "test" + i);
             properties.put("id", "" + i);
+            properties.put("name", "young_" + i);
+            properties.put("age", "18");
             client.addVertex("person", properties);
         }
         client.commit();
@@ -47,11 +62,12 @@ public class ClientBackupTest {
         Assertions.assertEquals(backupInfoList.size(), 1);
         Assertions.assertEquals(backupInfoList.get(0).getGlobalBackupId(), backupId1);
 
-        for (int i = 10; i < 20; i++) {
+        for (int i = 0; i < 10; i++) {
             properties = new HashMap<>();
-            properties.put("firstName", "test" + i);
             properties.put("id", "" + i);
-            client.addVertex("person", properties);
+            properties.put("name", "lop_" + i);
+            properties.put("lang", "java");
+            client.addVertex("software", properties);
         }
         client.commit();
         Thread.sleep(3000L);
