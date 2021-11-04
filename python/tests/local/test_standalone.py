@@ -147,7 +147,7 @@ def test_minimize_networkx():
     G = nx.path_graph(10)
     nx.builtin.pagerank(G)
     # case-2 transfer nx graph to gs graph
-    nx_g = nx().Graph(dist=True)
+    nx_g = nx.Graph(dist=True)
     nx_g.add_nodes_from(range(100), type="node")
     gs_g = s.g(nx_g)
     s.close()

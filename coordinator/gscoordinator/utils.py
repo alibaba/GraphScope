@@ -213,6 +213,7 @@ def compile_app(workspace: str, library_name, attr, engine_config: dict):
         ".",
         f"-DNETWORKX={engine_config['networkx']}",
         f"-DCMAKE_PREFIX_PATH={GRAPHSCOPE_HOME}",
+        "-DPYTHON_EXECUTABLE={0}".format(sys.executable),
     ]
     if app_type != "cpp_pie":
         if app_type == "cython_pregel":

@@ -344,6 +344,7 @@ def test_multiple_session(ogbn_mag_small, ogbn_small_script):
     sess2.close()
 
 
+@pytest.mark.skipif(sys.platform == "linux", reason="Linux no need to run this test.")
 def test_on_macOS(sess, ogbn_mag_small):
     graph = load_ogbn_mag(sess, ogbn_mag_small)
     interactive = sess.gremlin(graph)
