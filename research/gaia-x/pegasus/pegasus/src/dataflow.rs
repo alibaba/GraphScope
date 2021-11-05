@@ -143,7 +143,7 @@ impl DataflowBuilder {
             let op = op_b.build();
             op_names.push(op.info.name.clone());
             if report {
-                writeln!(plan_desc, "\t{}\t{}", op.info.index, op.info.name).ok();
+                writeln!(plan_desc, "\t{}\t{}({})", op.info.index, op.info.name, op.info.index).ok();
             }
             operators.push(Some(op));
         }

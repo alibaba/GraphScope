@@ -13,7 +13,7 @@
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 
-use pegasus::api::{CorrelatedSubTask, Count, Map, Sink, HasAny};
+use pegasus::api::{CorrelatedSubTask, Count, Map, Sink, HasAny, Limit};
 use pegasus::JobConf;
 
 #[test]
@@ -176,3 +176,34 @@ fn apply_x_flatmap_any_x_test() {
 
     assert_eq!(count, 2000);
 }
+
+//#[test]
+// fn apply_x_flatmap_flatmap_any_x_test() {
+//     let mut conf = JobConf::new("apply_x_flatmap_flatmap_any_x_test");
+//     conf.set_workers(2);
+//     conf.batch_capacity = 8;
+//     let mut result = pegasus::run(conf, || {
+//         |input, output| {
+//             input
+//                 .input_from(0..100u32)?
+//                 .apply(|sub| {
+//                     sub.repartition(|x| Ok(*x as u64))
+//                         .flat_map(|i| Ok((0..i + 2).cycle()))?
+//                         .repartition(|x| Ok(*x as u64))
+//                         .flat_map(|i| Ok(std::iter::repeat(i)))?
+//                         .any()
+//                 })?
+//                 .sink_into(output)
+//         }
+//     })
+//         .expect("build job failure");
+//
+//     let mut count = 0;
+//     while let Some(Ok(d)) = result.next() {
+//         assert!(d.0 < 100);
+//         assert!(d.1);
+//         count += 1;
+//     }
+//
+//     assert_eq!(count, 200);
+// }

@@ -17,7 +17,7 @@ use crate::api::{Limit, Unary};
 use crate::stream::Stream;
 use crate::tag::tools::map::TidyTagMap;
 use crate::{BuildJobError, Data};
-
+// TODO : optimize limit into channel;
 impl<D: Data> Limit<D> for Stream<D> {
     fn limit(self, size: u32) -> Result<Stream<D>, BuildJobError> {
         self.limit_partition(size)?
@@ -25,26 +25,30 @@ impl<D: Data> Limit<D> for Stream<D> {
             .limit_partition(size)
     }
 
-    fn limit_partition(self, size: u32) -> Result<Stream<D>, BuildJobError> {
+    fn limit_partition(mut self, size: u32) -> Result<Stream<D>, BuildJobError> {
+        self.set_upstream_batch_size(size as usize);
+        self.set_upstream_batch_capacity(1);
         self.unary("limit_partition", |info| {
             let mut table = TidyTagMap::new(info.scope_level);
             move |input, output| {
-                input.for_each_batch(|dataset| {
-                    if !dataset.is_empty() {
-                        let mut session = output.new_session(&dataset.tag)?;
-                        let count = table.get_mut_or_else(&dataset.tag, || 0u32);
+                input.for_each_batch(|batch| {
+                    if !batch.is_empty() {
+                        let mut session = output.new_session(&batch.tag)?;
+                        let count = table.get_mut_or_else(&batch.tag, || 0u32);
                         if *count < size {
-                            for d in dataset.drain() {
-                                session.give(d)?;
+                            for d in batch.drain() {
                                 *count += 1;
+                                session.give(d)?;
                                 if *count >= size {
                                     break;
                                 }
                             }
                             if *count >= size {
                                 // trigger early-stop
-                                dataset.discard();
+                                batch.discard();
                             }
+                        } else {
+                            batch.discard();
                         }
                     }
                     Ok(())

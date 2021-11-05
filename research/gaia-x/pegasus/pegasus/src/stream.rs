@@ -118,6 +118,9 @@ impl<D: Data> Stream<D> {
 }
 
 impl<D: Data> Stream<D> {
+    // Special case:
+    // aggregate().enter() :
+    // aggregate().leave() :
     pub fn aggregate(mut self) -> Stream<D> {
         if self.upstream.get_scope_level() == 0 {
             self.ch

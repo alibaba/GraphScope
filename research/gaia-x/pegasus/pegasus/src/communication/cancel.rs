@@ -114,6 +114,7 @@ impl CancelListener for MultiConsCancel {
                     .current_level
                     .get_mut_or_else(tag, || vec![false; targets]);
                 x[to] = true;
+                trace_worker!("cancel output data of {:?} to {};", tag, to);
                 if x.iter().all(|f| *f) {
                     Some(tag.clone())
                 } else {

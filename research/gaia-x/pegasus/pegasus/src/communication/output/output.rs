@@ -152,7 +152,15 @@ impl<D: Data> OutputHandle<D> {
                         if let Some(iter) = self.block_entries.remove(bk.tag()) {
                             match iter {
                                 BlockEntry::Single(x) => {
-                                    self.push(bk.tag(), x)?;
+                                    if let Err(e) = self.push(bk.tag(), x) {
+                                        if e.is_would_block() {
+                                            let b = self.blocks.pop_back().expect("can't be none");
+                                            assert_eq!(b.tag, bk.tag);
+                                            self.blocks.push_back(bk);
+                                        } else {
+                                            return Err(e);
+                                        }
+                                    }
                                 }
                                 BlockEntry::LastSingle(x, e) => {
                                     self.push_last(x, e)?;
