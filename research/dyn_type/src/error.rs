@@ -16,7 +16,7 @@
 use crate::object::RawType;
 use std::fmt;
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 pub struct CastError {
     pub kind: RawType,
     target: &'static str,
