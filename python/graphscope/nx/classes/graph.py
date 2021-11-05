@@ -93,10 +93,10 @@ class Graph(_GraphBase):
         or 2d ndarray, Pandas DataFrame, SciPy sparse matrix, or a GraphScope
         graph object.
 
-    default_label : default node label (optional, default: "_")
+    default_label : default node label (optional, default: None)
         if incoming_graph_data is a GraphScope graph object, default label means
-        the nodes of the label can be accessed by id directly, other label nodes
-        need to use `(label, id)` to access.
+        the nodes of the label can be identified by id directly, other label nodes
+        need to use `(label, id)` to identify.
 
     attr : keyword arguments, optional (default= no attributes)
         Attributes to add to graph as key=value pairs.
