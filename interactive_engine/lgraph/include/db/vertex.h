@@ -21,7 +21,6 @@
 namespace LGRAPH_NAMESPACE {
 
 class Snapshot;
-
 class VertexIterator;
 
 class Vertex {

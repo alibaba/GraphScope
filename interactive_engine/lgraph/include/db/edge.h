@@ -21,7 +21,6 @@
 namespace LGRAPH_NAMESPACE {
 
 class Snapshot;
-
 class EdgeIterator;
 
 class Edge {
@@ -38,11 +37,8 @@ public:
   bool Valid() const { return handle_ != nullptr; }
 
   EdgeId GetEdgeId();
-
   EdgeRelation GetEdgeRelation();
-
   Property GetPropertyBy(PropertyId prop_id);
-
   PropertyIterator GetPropertyIterator();
 
 private:
@@ -50,11 +46,9 @@ private:
 
   // Hide constructors from users.
   Edge();
-
   explicit Edge(EdgeHandle handle);
 
   friend class Snapshot;
-
   friend class EdgeIterator;
 };
 
@@ -78,7 +72,6 @@ private:
 
   // Hide constructors from users.
   EdgeIterator();
-
   explicit EdgeIterator(EdgeIterHandle handle);
 
   friend class Snapshot;
