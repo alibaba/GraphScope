@@ -104,6 +104,8 @@ pub trait MultiVersionGraph {
         property_ids: Option<&Vec<PropertyId>>,
     ) -> Result<Option<Self::E>>;
 
+    fn get_graph_def_blob(&self) -> Result<Vec<u8>>;
+
 }
 
 

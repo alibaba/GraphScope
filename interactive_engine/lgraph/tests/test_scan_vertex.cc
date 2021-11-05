@@ -15,22 +15,50 @@
  */
 
 #include <iostream>
+#include <string>
 #include "db/readonly_db.h"
 
-void PrintVertexInfo(lgraph::Vertex* v) {
-  std::string v_id = std::to_string(v->GetVertexId());
+std::string GetPropValueAsStr(lgraph::Property *p, const lgraph::Schema &schema) {
+  auto &prop_def = schema.GetPropDef(p->GetPropertyId());
+  switch (prop_def.GetDataType()) {
+    case lgraph::INT:
+      return std::to_string(p->GetAsInt32().unwrap());
+    case lgraph::LONG:
+      return std::to_string(p->GetAsInt64().unwrap());
+    case lgraph::FLOAT:
+      return std::to_string(p->GetAsFloat().unwrap());
+    case lgraph::DOUBLE:
+      return std::to_string(p->GetAsDouble().unwrap());
+    case lgraph::STRING: {
+      auto slice = p->GetAsStr().unwrap();
+      return {static_cast<const char *>(slice.data), slice.len};
+    }
+    default:
+      return "";
+  }
+}
 
+void PrintVertexInfo(lgraph::Vertex *v, const lgraph::Schema &schema) {
+  std::string v_id = std::to_string(v->GetVertexId());
   std::string info = "[INFO] ";
   info += "<VertexID: " + v_id + "> ";
-  info += "<LabelId: " + std::to_string(v->GetLabelId()) + "> \n";
+  info += "<LabelId: " + schema.GetTypeDef(v->GetLabelId()).GetLabelName() + ">";
+  auto pi = v->GetPropertyIterator();
+  assert(pi.Valid());
+  while (true) {
+    auto p = pi.Next().unwrap();
+    if (!p.Valid()) { break; }
+    info += "<" + schema.GetPropDef(p.GetPropertyId()).GetPropName() + ": " + GetPropValueAsStr(&p, schema) + "> ";
+  }
   std::cout << info << std::endl;
 }
 
 int main(int argc, char *argv[]) {
   assert(argc == 2 || argc == 3);
-  const char* store_path = argv[1];
-  const char* log4rs_config_file = (argc == 3)? argv[2] : nullptr;
+  const char *store_path = argv[1];
+  const char *log4rs_config_file = (argc == 3) ? argv[2] : nullptr;
   lgraph::ReadonlyDB rg = lgraph::ReadonlyDB::Open(store_path, log4rs_config_file);
+  lgraph::Schema schema = rg.GetGraphSchema();
   lgraph::Snapshot ss = rg.GetSnapshot(std::numeric_limits<uint32_t>::max());
   auto iter = ss.ScanVertex().unwrap();
   assert(iter.Valid());
@@ -39,6 +67,6 @@ int main(int argc, char *argv[]) {
     auto v = iter.Next().unwrap();
     if (!v.Valid()) { break; }
     v_cnt++;
-    PrintVertexInfo(&v);
+    PrintVertexInfo(&v, schema);
   }
 }

@@ -22,6 +22,7 @@ use crate::db::api::{GraphStorage, EdgeKind, PropIter, ValueRef, PropertiesRef, 
 use std::collections::{HashMap, HashSet};
 use std::iter::FromIterator;
 use std::vec::IntoIter;
+use crate::v2::errors::Error;
 
 pub struct GraphStorageWrapper<G: GraphStorage> {
     storage: Arc<G>,
@@ -278,6 +279,10 @@ impl<G: GraphStorage> MultiVersionGraph for GraphStorageWrapper<G> {
         let mut edges_iter = self.get_in_edges(snapshot_id, vertex_id, Some(edge_relation.get_edge_label_id()), None,
                                                 property_ids)?;
         edges_iter.nth(k as usize).transpose()
+    }
+
+    fn get_graph_def_blob(&self) -> Result<Vec<u8>> {
+        self.storage.get_graph_def_blob().map_err(|e| { Error::from(e) })
     }
 }
 

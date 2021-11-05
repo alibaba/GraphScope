@@ -293,7 +293,7 @@ bool TestGetEdge(Snapshot* ss, std::stringstream& logger) {
   // Get edge: <EdgeID: (0, 16401677891599130309, 10454779632061085998)>
   //           <EdgeRelation: (created, person, software)>
   //           <id: 12> <weight: 0.200000>
-  EdgeId query_edge_id = EdgeId::From(0, 16401677891599130309U, 10454779632061085998U);
+  EdgeId query_edge_id{0, 16401677891599130309U, 10454779632061085998U};
   EdgeRelation query_edge_rel{created_EdgeLabelId, person_LabelId, software_LabelId};
   int64_t expect_id_prop = 12L;
   double expect_weight_prop = 0.200000;

@@ -15,6 +15,7 @@
  */
 
 #pragma once
+#pragma GCC diagnostic ignored "-Wreturn-type-c-linkage"
 
 #include <cstddef>
 #include <cstdint>
@@ -59,13 +60,8 @@ struct EdgeId {
   VertexId src_vertex_id;
   VertexId dst_vertex_id;
 
-  static EdgeId From(EdgeInnerId inner_id, VertexId src_id, VertexId dst_id) {
-    EdgeId e_id{};
-    e_id.edge_inner_id = inner_id;
-    e_id.src_vertex_id = src_id;
-    e_id.dst_vertex_id = dst_id;
-    return e_id;
-  }
+  EdgeId(EdgeInnerId inner_id, VertexId src_id, VertexId dst_id)
+      : edge_inner_id(inner_id), src_vertex_id(src_id), dst_vertex_id(dst_id) {}
 };
 
 struct EdgeRelation {
@@ -73,27 +69,21 @@ struct EdgeRelation {
   LabelId src_vertex_label_id;
   LabelId dst_vertex_label_id;
 
-  EdgeRelation() = default;
-
   EdgeRelation(LabelId e_label_id, LabelId src_label_id, LabelId dst_label_id)
       : edge_label_id(e_label_id), src_vertex_label_id(src_label_id), dst_vertex_label_id(dst_label_id) {}
-
-  EdgeRelation(const EdgeRelation &) = default;
-  EdgeRelation(EdgeRelation &&rhs) = default;
-  EdgeRelation &operator=(const EdgeRelation &) = default;
-  EdgeRelation &operator=(EdgeRelation &&rhs) = default;
 };
 
 struct StringSlice {
   void *data;
   size_t len;
+};
 
-  static StringSlice From(void *data_ptr, size_t length) {
-    StringSlice ss{};
-    ss.data = data_ptr;
-    ss.len = length;
-    return ss;
-  }
+struct FfiResponse {
+  int32_t success;
+  int32_t hasDDl;
+  const char *errMsg;
+  const void *data;
+  int32_t len;
 };
 
 const LabelId none_label_id = std::numeric_limits<LabelId>::max();

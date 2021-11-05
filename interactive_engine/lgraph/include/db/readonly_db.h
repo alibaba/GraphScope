@@ -16,7 +16,7 @@
 
 #pragma once
 
-#include "common/namespace.h"
+#include "common/schema.h"
 #include "db/snapshot.h"
 
 namespace LGRAPH_NAMESPACE {
@@ -35,6 +35,8 @@ public:
   ~ReadonlyDB();
 
   Snapshot GetSnapshot(SnapshotId snapshot_id);
+
+  Schema GetGraphSchema();
 
 private:
   PartitionGraphHandle handle_;

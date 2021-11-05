@@ -27,6 +27,7 @@ use maxgraph_store::db::graph::store::GraphStore;
 use maxgraph_store::v2::api::partition_graph::PartitionGraph;
 use maxgraph_store::v2::Result;
 use maxgraph_store::db::api::GraphConfigBuilder;
+use crate::store::jna_response::JnaResponse;
 
 pub type PartitionSnapshotHandle = *const c_void;
 pub type ErrorHandle = *const c_void;
@@ -73,7 +74,7 @@ impl StringSlice {
 #[no_mangle]
 pub extern fn OpenPartitionGraph(store_path: *const c_char, log4rs_config_file: *const c_char) -> PartitionGraphHandle {
     unsafe {
-        if log4rs_config_file != ::std::ptr::null() {
+        if !log4rs_config_file.is_null() {
             let log_config_slice = CStr::from_ptr(log4rs_config_file).to_bytes();
             let log_config_str = str::from_utf8(log_config_slice).unwrap();
             log4rs::init_file(log_config_str, Default::default()).expect("init log4rs failed");
@@ -99,6 +100,26 @@ pub extern fn GetSnapshot(handle: PartitionGraphHandle, snapshot_id: SnapshotId)
     let graph_store_ptr = unsafe { &*(handle as *const FfiPartitionGraph) };
     let snapshot = graph_store_ptr.get_snapshot(snapshot_id);
     Box::into_raw(Box::new(snapshot)) as PartitionSnapshotHandle
+}
+
+#[no_mangle]
+pub extern fn GetGraphDef(handle: PartitionGraphHandle) -> JnaResponse {
+    let graph_store_ptr = unsafe { &*(handle as *const FfiPartitionGraph) };
+    let mut response = JnaResponse::default();
+    match graph_store_ptr.get_graph_def_blob() {
+        Ok(blob) => {
+            if let Err(e) = response.data(blob) {
+                response.success(false);
+                let msg = format!("{:?}", e);
+                response.err_msg(&msg);
+            }
+        }
+        Err(e) => {
+            response.success(false);
+            response.err_msg(e.what());
+        }
+    }
+    response
 }
 
 #[no_mangle]
@@ -671,6 +692,11 @@ pub extern fn ReleasePropertyIteratorHandle(ptr: PropertyIteratorHandle) {
     unsafe {
         Box::from_raw(handler);
     }
+}
+
+#[no_mangle]
+pub extern fn DropFfiResponse(response: JnaResponse) {
+    drop(response);
 }
 
 /// Internal functions
