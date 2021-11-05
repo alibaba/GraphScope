@@ -268,6 +268,7 @@ init_basic_packages() {
       autoconf
       gnu-sed
       wget
+      libomp
     )
   fi
   readonly BASIC_PACKGES_TO_INSTALL
