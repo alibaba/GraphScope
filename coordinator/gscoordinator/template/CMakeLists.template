@@ -145,7 +145,13 @@ endif()
 
 # we still need openmp, as we use it in ParallelMessageManager from libgrape-lite. But we just need
 # the preprocessor options
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fopenmp")
+if (APPLE)
+    if (POLICY CMP0056)
+        cmake_policy(SET CMP0056 NEW)
+    endif ()
+    set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -L/usr/local/lib")
+endif ()
+find_package(OpenMP REQUIRED)
 
 # set frame dir--------------------------------------------------------------
 set(ANALYTICAL_ENGINE_FRAME_DIR "${ANALYTICAL_ENGINE_HOME}/include/graphscope/frame")
@@ -198,4 +204,8 @@ else ()
     target_include_directories(${FRAME_NAME} PRIVATE utils apps)
     target_link_libraries(${FRAME_NAME})
     set_target_properties(${FRAME_NAME} PROPERTIES COMPILE_FLAGS "-fPIC")
+endif ()
+
+if (OpenMP_FOUND)
+    target_link_libraries(${FRAME_NAME} PRIVATE OpenMP::OpenMP_CXX)
 endif ()
