@@ -72,18 +72,10 @@ impl StringSlice {
 /// Partition Snapshot FFIs
 
 #[no_mangle]
-pub extern fn OpenPartitionGraph(store_path: *const c_char, log4rs_config_file: *const c_char) -> PartitionGraphHandle {
+pub extern fn OpenPartitionGraph(store_path: *const c_char) -> PartitionGraphHandle {
     unsafe {
-        if !log4rs_config_file.is_null() {
-            let log_config_slice = CStr::from_ptr(log4rs_config_file).to_bytes();
-            let log_config_str = str::from_utf8(log_config_slice).unwrap();
-            log4rs::init_file(log_config_str, Default::default()).expect("init log4rs failed");
-            info!("log4rs inited, config file: {}", log_config_str);
-        } else {
-            println!("No valid log4rs.config, rust won't print logs");
-        }
-        let store_slice = CStr::from_ptr(store_path).to_bytes();
-        let store_path_str = str::from_utf8(store_slice).unwrap();
+        let slice = CStr::from_ptr(store_path).to_bytes();
+        let store_path_str = str::from_utf8(slice).unwrap();
         let mut config_builder = GraphConfigBuilder::new();
         config_builder.set_storage_engine("rocksdb");
         let config = config_builder.build();

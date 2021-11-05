@@ -42,7 +42,7 @@ void PrintVertexInfo(lgraph::Vertex *v, const lgraph::Schema &schema) {
   std::string v_id = std::to_string(v->GetVertexId());
   std::string info = "[INFO] ";
   info += "<VertexID: " + v_id + "> ";
-  info += "<LabelId: " + schema.GetTypeDef(v->GetLabelId()).GetLabelName() + ">";
+  info += "<Label: " + schema.GetTypeDef(v->GetLabelId()).GetLabelName() + ">";
   auto pi = v->GetPropertyIterator();
   assert(pi.Valid());
   while (true) {
@@ -54,10 +54,9 @@ void PrintVertexInfo(lgraph::Vertex *v, const lgraph::Schema &schema) {
 }
 
 int main(int argc, char *argv[]) {
-  assert(argc == 2 || argc == 3);
+  assert(argc == 2);
   const char *store_path = argv[1];
-  const char *log4rs_config_file = (argc == 3) ? argv[2] : nullptr;
-  lgraph::ReadonlyDB rg = lgraph::ReadonlyDB::Open(store_path, log4rs_config_file);
+  lgraph::ReadonlyDB rg = lgraph::ReadonlyDB::Open(store_path);
   lgraph::Schema schema = rg.GetGraphSchema();
   lgraph::Snapshot ss = rg.GetSnapshot(std::numeric_limits<uint32_t>::max());
   auto iter = ss.ScanVertex().unwrap();

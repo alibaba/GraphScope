@@ -23,7 +23,7 @@ namespace LGRAPH_NAMESPACE {
 
 class ReadonlyDB {
 public:
-  static ReadonlyDB Open(const char *store_path, const char *log4rs_config_file);
+  static ReadonlyDB Open(const char *store_path);
 
   // Move Only!
   // Avoid copy construction and assignment.
@@ -42,11 +42,11 @@ private:
   PartitionGraphHandle handle_;
 
   ReadonlyDB();
-  ReadonlyDB(const char *store_path, const char *log4rs_config_file);
+  explicit ReadonlyDB(const char *store_path);
 };
 
-inline ReadonlyDB ReadonlyDB::Open(const char *store_path, const char *log4rs_config_file) {
-  return ReadonlyDB{store_path, log4rs_config_file};
+inline ReadonlyDB ReadonlyDB::Open(const char *store_path) {
+  return ReadonlyDB{store_path};
 }
 
 inline ReadonlyDB::ReadonlyDB() : handle_(nullptr) {}

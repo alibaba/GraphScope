@@ -19,8 +19,8 @@
 
 namespace LGRAPH_NAMESPACE {
 
-ReadonlyDB::ReadonlyDB(const char *store_path, const char *log4rs_config_file)
-    : handle_(ffi::OpenPartitionGraph(store_path, log4rs_config_file)) {}
+ReadonlyDB::ReadonlyDB(const char *store_path)
+    : handle_(ffi::OpenPartitionGraph(store_path)) {}
 
 ReadonlyDB::~ReadonlyDB() {
   if (handle_ != nullptr) {
