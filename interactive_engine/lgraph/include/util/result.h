@@ -17,7 +17,7 @@
 
 #include "common/namespace.h"
 
-namespace DB_NAMESPACE {
+namespace LGRAPH_NAMESPACE {
 
 namespace types {
   template<typename T>
@@ -967,4 +967,4 @@ bool operator==(const Result<T, E> &lhs, types::Err<E> err) {
         res.storage().get<T>();                                    \
     })
 
-}  // namespace DB_NAMESPACE
+}

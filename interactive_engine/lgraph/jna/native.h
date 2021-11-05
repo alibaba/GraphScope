@@ -24,10 +24,10 @@
 #   define DLL_EXPORT
 #endif
 
-namespace DB_NAMESPACE {
+namespace LGRAPH_NAMESPACE {
 
 extern thread_local PartitionGraphHandle local_graph_handle_;
 
 extern "C" DLL_EXPORT void setPartitionGraph(PartitionGraphHandle handle);
 
-}  // namespace DB_NAMESPACE
+}

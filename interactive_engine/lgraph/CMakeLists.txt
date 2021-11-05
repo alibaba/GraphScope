@@ -54,7 +54,9 @@ endif()
 
 # Add library
 set(HEADER_FILES
+    include/common/check.h
     include/common/namespace.h
+    include/common/schema.h
     include/common/types.h
     include/db/edge.h
     include/db/error.h
@@ -69,6 +71,7 @@ set(HEADER_FILES
 set(SOURCE_FILES
     src/jna/native.cc
     src/jna/ffi_test.cc
+    src/check.cc
     src/edge.cc
     src/error.cc
     src/property.cc

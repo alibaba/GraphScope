@@ -17,7 +17,7 @@
 #include "db/snapshot.h"
 #include "store_ffi/store_ffi.h"
 
-namespace DB_NAMESPACE {
+namespace LGRAPH_NAMESPACE {
 
 Snapshot::Snapshot(PartitionSnapshotHandle handle) : handle_(handle) {}
 
@@ -36,7 +36,7 @@ Result<Vertex, Error> Snapshot::GetVertex(VertexId vertex_id, LabelId label_id) 
   return Result<Vertex, Error>(Err(Error(err_hdl)));
 }
 
-Result<Edge, Error> Snapshot::GetEdge(EdgeId edge_id, const EdgeRelation& edge_relation) {
+Result<Edge, Error> Snapshot::GetEdge(EdgeId edge_id, const EdgeRelation &edge_relation) {
   ErrorHandle err_hdl = nullptr;
   EdgeHandle edge_hdl = ffi::GetEdge(handle_, edge_id, edge_relation, &err_hdl);
   if (err_hdl == nullptr) {
@@ -54,7 +54,7 @@ Result<VertexIterator, Error> Snapshot::ScanVertex(LabelId label_id) {
   return Result<VertexIterator, Error>(Err(Error(err_hdl)));
 }
 
-Result<EdgeIterator, Error> Snapshot::ScanEdge(const EdgeRelation& edge_relation) {
+Result<EdgeIterator, Error> Snapshot::ScanEdge(const EdgeRelation &edge_relation) {
   ErrorHandle err_hdl = nullptr;
   EdgeIterHandle edge_iter_hdl = ffi::ScanEdge(handle_, edge_relation, &err_hdl);
   if (err_hdl == nullptr) {
@@ -81,7 +81,7 @@ Result<EdgeIterator, Error> Snapshot::GetInEdges(VertexId vertex_id, LabelId edg
   return Result<EdgeIterator, Error>(Err(Error(err_hdl)));
 }
 
-Result<size_t, Error> Snapshot::GetOutDegree(VertexId vertex_id, const EdgeRelation& edge_relation) {
+Result<size_t, Error> Snapshot::GetOutDegree(VertexId vertex_id, const EdgeRelation &edge_relation) {
   ErrorHandle err_hdl = nullptr;
   size_t degree = ffi::GetOutDegree(handle_, vertex_id, edge_relation, &err_hdl);
   if (err_hdl == nullptr) {
@@ -90,7 +90,7 @@ Result<size_t, Error> Snapshot::GetOutDegree(VertexId vertex_id, const EdgeRelat
   return Result<size_t, Error>(Err(Error(err_hdl)));
 }
 
-Result<size_t, Error> Snapshot::GetInDegree(VertexId vertex_id, const EdgeRelation& edge_relation) {
+Result<size_t, Error> Snapshot::GetInDegree(VertexId vertex_id, const EdgeRelation &edge_relation) {
   ErrorHandle err_hdl = nullptr;
   size_t degree = ffi::GetInDegree(handle_, vertex_id, edge_relation, &err_hdl);
   if (err_hdl == nullptr) {
@@ -99,7 +99,7 @@ Result<size_t, Error> Snapshot::GetInDegree(VertexId vertex_id, const EdgeRelati
   return Result<size_t, Error>(Err(Error(err_hdl)));
 }
 
-Result<Edge, Error> Snapshot::GetKthOutEdge(VertexId vertex_id, const EdgeRelation& edge_relation, SerialId k) {
+Result<Edge, Error> Snapshot::GetKthOutEdge(VertexId vertex_id, const EdgeRelation &edge_relation, SerialId k) {
   ErrorHandle err_hdl = nullptr;
   EdgeHandle edge_hdl = ffi::GetKthOutEdge(handle_, vertex_id, edge_relation, k, &err_hdl);
   if (err_hdl == nullptr) {
@@ -108,7 +108,7 @@ Result<Edge, Error> Snapshot::GetKthOutEdge(VertexId vertex_id, const EdgeRelati
   return Result<Edge, Error>(Err(Error(err_hdl)));
 }
 
-Result<Edge, Error> Snapshot::GetKthInEdge(VertexId vertex_id, const EdgeRelation& edge_relation, SerialId k) {
+Result<Edge, Error> Snapshot::GetKthInEdge(VertexId vertex_id, const EdgeRelation &edge_relation, SerialId k) {
   ErrorHandle err_hdl = nullptr;
   EdgeHandle edge_hdl = ffi::GetKthInEdge(handle_, vertex_id, edge_relation, k, &err_hdl);
   if (err_hdl == nullptr) {
@@ -121,4 +121,4 @@ SnapshotId Snapshot::GetSnapshotId() {
   return ffi::GetSnapshotId(handle_);
 }
 
-}  // namespace DB_NAMESPACE
+}

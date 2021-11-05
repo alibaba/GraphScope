@@ -18,9 +18,10 @@
 
 #include "db/property.h"
 
-namespace DB_NAMESPACE {
+namespace LGRAPH_NAMESPACE {
 
 class Snapshot;
+
 class VertexIterator;
 
 class Vertex {
@@ -29,10 +30,10 @@ public:
 
   // Move Only!
   // Avoid copy construction and assignment.
-  Vertex(const Vertex&) = delete;
-  Vertex& operator=(const Vertex&) = delete;
-  Vertex(Vertex&& v) noexcept;
-  Vertex& operator=(Vertex&& v) noexcept;
+  Vertex(const Vertex &) = delete;
+  Vertex &operator=(const Vertex &) = delete;
+  Vertex(Vertex &&v) noexcept;
+  Vertex &operator=(Vertex &&v) noexcept;
 
   bool Valid() const { return handle_ != nullptr; }
 
@@ -58,10 +59,10 @@ public:
 
   // Move Only!
   // Avoid copy construction and assignment.
-  VertexIterator(const VertexIterator&) = delete;
-  VertexIterator& operator=(const VertexIterator&) = delete;
-  VertexIterator(VertexIterator&& vi) noexcept;
-  VertexIterator& operator=(VertexIterator&& vi) noexcept;
+  VertexIterator(const VertexIterator &) = delete;
+  VertexIterator &operator=(const VertexIterator &) = delete;
+  VertexIterator(VertexIterator &&vi) noexcept;
+  VertexIterator &operator=(VertexIterator &&vi) noexcept;
 
   bool Valid() const { return handle_ != nullptr; }
 
@@ -81,11 +82,11 @@ inline Vertex::Vertex() : handle_(nullptr) {}
 
 inline Vertex::Vertex(VertexHandle handle) : handle_(handle) {}
 
-inline Vertex::Vertex(Vertex&& v) noexcept : Vertex() {
+inline Vertex::Vertex(Vertex &&v) noexcept: Vertex() {
   *this = std::move(v);
 }
 
-inline Vertex& Vertex::operator=(Vertex&& v) noexcept {
+inline Vertex &Vertex::operator=(Vertex &&v) noexcept {
   if (this != &v) {
     this->~Vertex();
     handle_ = v.handle_;
@@ -98,11 +99,11 @@ inline VertexIterator::VertexIterator() : handle_(nullptr) {}
 
 inline VertexIterator::VertexIterator(VertexIterHandle handle) : handle_(handle) {}
 
-inline VertexIterator::VertexIterator(VertexIterator&& vi) noexcept : VertexIterator() {
+inline VertexIterator::VertexIterator(VertexIterator &&vi) noexcept: VertexIterator() {
   *this = std::move(vi);
 }
 
-inline VertexIterator& VertexIterator::operator=(VertexIterator&& vi) noexcept {
+inline VertexIterator &VertexIterator::operator=(VertexIterator &&vi) noexcept {
   if (this != &vi) {
     this->~VertexIterator();
     handle_ = vi.handle_;
@@ -111,4 +112,4 @@ inline VertexIterator& VertexIterator::operator=(VertexIterator&& vi) noexcept {
   return *this;
 }
 
-}  // namespace DB_NAMESPACE
+}

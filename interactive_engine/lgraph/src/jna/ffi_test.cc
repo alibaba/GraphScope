@@ -20,7 +20,7 @@
 #include "jna/ffi_test.h"
 #include "store_ffi/store_ffi.h"
 
-namespace DB_NAMESPACE {
+namespace LGRAPH_NAMESPACE {
 
 /// Modern Graph Schema
 
@@ -294,7 +294,7 @@ bool TestGetEdge(Snapshot* ss, std::stringstream& logger) {
   //           <EdgeRelation: (created, person, software)>
   //           <id: 12> <weight: 0.200000>
   EdgeId query_edge_id = EdgeId::From(0, 16401677891599130309U, 10454779632061085998U);
-  EdgeRelation query_edge_rel = EdgeRelation::From(created_EdgeLabelId, person_LabelId, software_LabelId);
+  EdgeRelation query_edge_rel{created_EdgeLabelId, person_LabelId, software_LabelId};
   int64_t expect_id_prop = 12L;
   double expect_weight_prop = 0.200000;
 
@@ -463,7 +463,7 @@ bool TestGetInEdges(Snapshot* ss, std::stringstream& logger) {
 bool TestGetOutDegree(Snapshot* ss, std::stringstream& logger) {
   // Query src vertex: <VertexID: 12334515728491031937> <Label: person> <name: josh> <id: 4> <age: 32>
   VertexId query_vid = 12334515728491031937U;
-  EdgeRelation query_edge_rel = EdgeRelation::From(created_EdgeLabelId, person_LabelId, software_LabelId);
+  EdgeRelation query_edge_rel{created_EdgeLabelId, person_LabelId, software_LabelId};
   size_t expect_created_degree = 2;
 
   auto r = ss->GetOutDegree(query_vid, query_edge_rel);
@@ -485,7 +485,7 @@ bool TestGetOutDegree(Snapshot* ss, std::stringstream& logger) {
 bool TestGetInDegree(Snapshot* ss, std::stringstream& logger) {
   // Query src vertex: <VertexID: 10454779632061085998> <Label: software> <id: 3> <name: lop> <lang: java>
   VertexId query_vid = 10454779632061085998U;
-  EdgeRelation query_edge_rel = EdgeRelation::From(created_EdgeLabelId, person_LabelId, software_LabelId);
+  EdgeRelation query_edge_rel{created_EdgeLabelId, person_LabelId, software_LabelId};
   size_t expect_created_degree = 3;
 
   auto r = ss->GetInDegree(query_vid, query_edge_rel);
@@ -507,7 +507,7 @@ bool TestGetInDegree(Snapshot* ss, std::stringstream& logger) {
 bool TestGetKthOutEdge(Snapshot* ss, std::stringstream& logger) {
   // Query src vertex: <VertexID: 10714315738933730127> <Label: person> <age: 29> <id: 1> <name: marko>
   VertexId query_vid = 10714315738933730127U;
-  EdgeRelation query_edge_rel = EdgeRelation::From(knows_EdgeLabelId, person_LabelId, person_LabelId);
+  EdgeRelation query_edge_rel{knows_EdgeLabelId, person_LabelId, person_LabelId};
   SerialId k1 = 1;
   VertexId expect_k1_nbr_vid = 12334515728491031937U;
   SerialId k2 = 5;
@@ -550,7 +550,7 @@ bool TestGetKthOutEdge(Snapshot* ss, std::stringstream& logger) {
 bool TestGetKthInEdge(Snapshot* ss, std::stringstream& logger) {
   // Query src vertex: <VertexID: 10454779632061085998> <Label: software> <id: 3> <name: lop> <lang: java>
   VertexId query_vid = 10454779632061085998U;
-  EdgeRelation query_edge_rel = EdgeRelation::From(created_EdgeLabelId, person_LabelId, software_LabelId);
+  EdgeRelation query_edge_rel{created_EdgeLabelId, person_LabelId, software_LabelId};
   SerialId k1 = 2;
   VertexId expect_k1_nbr_vid = 16401677891599130309U;
   SerialId k2 = 5;
@@ -662,4 +662,4 @@ void freeTestResult(TestResult* r) {
   delete r;
 }
 
-}  // namespace DB_NAMESPACE
+}

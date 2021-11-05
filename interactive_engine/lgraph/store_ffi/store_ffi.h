@@ -21,7 +21,7 @@
 #include "common/namespace.h"
 #include "common/types.h"
 
-namespace DB_NAMESPACE {
+namespace LGRAPH_NAMESPACE {
 
 namespace ffi {
 
@@ -79,6 +79,5 @@ extern "C" {
   void ReleasePropertyIteratorHandle(PropertyIterHandle ptr);
 }
 
-}  // namespace ffi
-
-}  // namespace DB_NAMESPACE
+}
+}

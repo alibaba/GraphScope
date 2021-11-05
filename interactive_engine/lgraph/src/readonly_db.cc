@@ -17,10 +17,10 @@
 #include "db/readonly_db.h"
 #include "store_ffi/store_ffi.h"
 
-namespace DB_NAMESPACE {
+namespace LGRAPH_NAMESPACE {
 
 ReadonlyDB::ReadonlyDB(const char *store_path, const char *log4rs_config_file)
-  : handle_(ffi::OpenPartitionGraph(store_path, log4rs_config_file)) {}
+    : handle_(ffi::OpenPartitionGraph(store_path, log4rs_config_file)) {}
 
 ReadonlyDB::~ReadonlyDB() {
   if (handle_ != nullptr) {
@@ -33,4 +33,4 @@ Snapshot ReadonlyDB::GetSnapshot(SnapshotId snapshot_id) {
   return Snapshot{snapshot_handle};
 }
 
-}  // namespace DB_NAMESPACE
+}

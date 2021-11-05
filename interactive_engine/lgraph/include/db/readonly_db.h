@@ -19,19 +19,20 @@
 #include "common/namespace.h"
 #include "db/snapshot.h"
 
-namespace DB_NAMESPACE {
+namespace LGRAPH_NAMESPACE {
 
 class ReadonlyDB {
 public:
-  static ReadonlyDB Open(const char* store_path, const char* log4rs_config_file);
-  ~ReadonlyDB();
+  static ReadonlyDB Open(const char *store_path, const char *log4rs_config_file);
 
   // Move Only!
   // Avoid copy construction and assignment.
-  ReadonlyDB(const ReadonlyDB&) = delete;
-  ReadonlyDB& operator=(const ReadonlyDB&) = delete;
-  ReadonlyDB(ReadonlyDB&& rd) noexcept;
-  ReadonlyDB& operator=(ReadonlyDB&& rd) noexcept;
+  ReadonlyDB(const ReadonlyDB &) = delete;
+  ReadonlyDB &operator=(const ReadonlyDB &) = delete;
+  ReadonlyDB(ReadonlyDB &&rd) noexcept;
+  ReadonlyDB &operator=(ReadonlyDB &&rd) noexcept;
+
+  ~ReadonlyDB();
 
   Snapshot GetSnapshot(SnapshotId snapshot_id);
 
@@ -39,20 +40,20 @@ private:
   PartitionGraphHandle handle_;
 
   ReadonlyDB();
-  ReadonlyDB(const char* store_path, const char* log4rs_config_file);
+  ReadonlyDB(const char *store_path, const char *log4rs_config_file);
 };
 
-inline ReadonlyDB ReadonlyDB::Open(const char* store_path, const char* log4rs_config_file) {
+inline ReadonlyDB ReadonlyDB::Open(const char *store_path, const char *log4rs_config_file) {
   return ReadonlyDB{store_path, log4rs_config_file};
 }
 
 inline ReadonlyDB::ReadonlyDB() : handle_(nullptr) {}
 
-inline ReadonlyDB::ReadonlyDB(ReadonlyDB&& rd) noexcept : ReadonlyDB() {
+inline ReadonlyDB::ReadonlyDB(ReadonlyDB &&rd) noexcept: ReadonlyDB() {
   *this = std::move(rd);
 }
 
-inline ReadonlyDB& ReadonlyDB::operator=(ReadonlyDB&& rd) noexcept {
+inline ReadonlyDB &ReadonlyDB::operator=(ReadonlyDB &&rd) noexcept {
   if (this != &rd) {
     this->~ReadonlyDB();
     handle_ = rd.handle_;
@@ -61,4 +62,4 @@ inline ReadonlyDB& ReadonlyDB::operator=(ReadonlyDB&& rd) noexcept {
   return *this;
 }
 
-}  // namespace DB_NAMESPACE
+}

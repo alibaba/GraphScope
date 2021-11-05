@@ -17,7 +17,7 @@
 #include "db/vertex.h"
 #include "store_ffi/store_ffi.h"
 
-namespace DB_NAMESPACE {
+namespace LGRAPH_NAMESPACE {
 
 Vertex::~Vertex() {
   if (handle_ != nullptr) {
@@ -56,4 +56,4 @@ Result<Vertex, Error> VertexIterator::Next() {
   return Result<Vertex, Error>(Err(Error(err_hdl)));
 }
 
-}  // namespace DB_NAMESPACE
+}

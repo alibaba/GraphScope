@@ -19,7 +19,7 @@
 #include "db/error.h"
 #include "util/result.h"
 
-namespace DB_NAMESPACE {
+namespace LGRAPH_NAMESPACE {
 
 class Vertex;
 class Edge;
@@ -31,10 +31,10 @@ public:
 
   // Move Only!
   // Avoid copy construction and assignment.
-  Property(const Property&) = delete;
-  Property& operator=(const Property&) = delete;
-  Property(Property&& p) noexcept;
-  Property& operator=(Property&& p) noexcept;
+  Property(const Property &) = delete;
+  Property &operator=(const Property &) = delete;
+  Property(Property &&p) noexcept;
+  Property &operator=(Property &&p) noexcept;
 
   bool Valid() const { return handle_ != nullptr; }
 
@@ -63,10 +63,10 @@ public:
 
   // Move Only!
   // Avoid copy construction and assignment.
-  PropertyIterator(const PropertyIterator&) = delete;
-  PropertyIterator& operator=(const PropertyIterator&) = delete;
-  PropertyIterator(PropertyIterator&& pi) noexcept;
-  PropertyIterator& operator=(PropertyIterator&& pi) noexcept;
+  PropertyIterator(const PropertyIterator &) = delete;
+  PropertyIterator &operator=(const PropertyIterator &) = delete;
+  PropertyIterator(PropertyIterator &&pi) noexcept;
+  PropertyIterator &operator=(PropertyIterator &&pi) noexcept;
 
   bool Valid() const { return handle_ != nullptr; }
 
@@ -87,11 +87,11 @@ inline Property::Property() : handle_(nullptr) {}
 
 inline Property::Property(PropertyHandle handle) : handle_(handle) {}
 
-inline Property::Property(Property&& p) noexcept : Property() {
+inline Property::Property(Property &&p) noexcept: Property() {
   *this = std::move(p);
 }
 
-inline Property& Property::operator=(Property&& p) noexcept {
+inline Property &Property::operator=(Property &&p) noexcept {
   if (this != &p) {
     this->~Property();
     handle_ = p.handle_;
@@ -104,11 +104,11 @@ inline PropertyIterator::PropertyIterator() : handle_(nullptr) {}
 
 inline PropertyIterator::PropertyIterator(PropertyIterHandle handle) : handle_(handle) {}
 
-inline PropertyIterator::PropertyIterator(PropertyIterator&& pi) noexcept : PropertyIterator() {
+inline PropertyIterator::PropertyIterator(PropertyIterator &&pi) noexcept: PropertyIterator() {
   *this = std::move(pi);
 }
 
-inline PropertyIterator& PropertyIterator::operator=(PropertyIterator&& pi) noexcept {
+inline PropertyIterator &PropertyIterator::operator=(PropertyIterator &&pi) noexcept {
   if (this != &pi) {
     this->~PropertyIterator();
     handle_ = pi.handle_;
@@ -117,4 +117,4 @@ inline PropertyIterator& PropertyIterator::operator=(PropertyIterator&& pi) noex
   return *this;
 }
 
-}  // namespace DB_NAMESPACE
+}

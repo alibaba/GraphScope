@@ -18,9 +18,10 @@
 
 #include "db/property.h"
 
-namespace DB_NAMESPACE {
+namespace LGRAPH_NAMESPACE {
 
 class Snapshot;
+
 class EdgeIterator;
 
 class Edge {
@@ -29,16 +30,19 @@ public:
 
   // Move Only!
   // Avoid copy construction and assignment.
-  Edge(const Edge&) = delete;
-  Edge& operator=(const Edge&) = delete;
-  Edge(Edge&& e) noexcept;
-  Edge& operator=(Edge&& e) noexcept;
+  Edge(const Edge &) = delete;
+  Edge &operator=(const Edge &) = delete;
+  Edge(Edge &&e) noexcept;
+  Edge &operator=(Edge &&e) noexcept;
 
   bool Valid() const { return handle_ != nullptr; }
 
   EdgeId GetEdgeId();
+
   EdgeRelation GetEdgeRelation();
+
   Property GetPropertyBy(PropertyId prop_id);
+
   PropertyIterator GetPropertyIterator();
 
 private:
@@ -46,9 +50,11 @@ private:
 
   // Hide constructors from users.
   Edge();
+
   explicit Edge(EdgeHandle handle);
 
   friend class Snapshot;
+
   friend class EdgeIterator;
 };
 
@@ -58,10 +64,10 @@ public:
 
   // Move Only!
   // Avoid copy construction and assignment.
-  EdgeIterator(const EdgeIterator&) = delete;
-  EdgeIterator& operator=(const EdgeIterator&) = delete;
-  EdgeIterator(EdgeIterator&& ei) noexcept;
-  EdgeIterator& operator=(EdgeIterator&& ei) noexcept;
+  EdgeIterator(const EdgeIterator &) = delete;
+  EdgeIterator &operator=(const EdgeIterator &) = delete;
+  EdgeIterator(EdgeIterator &&ei) noexcept;
+  EdgeIterator &operator=(EdgeIterator &&ei) noexcept;
 
   bool Valid() const { return handle_ != nullptr; }
 
@@ -72,6 +78,7 @@ private:
 
   // Hide constructors from users.
   EdgeIterator();
+
   explicit EdgeIterator(EdgeIterHandle handle);
 
   friend class Snapshot;
@@ -81,11 +88,11 @@ inline Edge::Edge() : handle_(nullptr) {}
 
 inline Edge::Edge(EdgeHandle handle) : handle_(handle) {}
 
-inline Edge::Edge(Edge&& e) noexcept : Edge() {
+inline Edge::Edge(Edge &&e) noexcept: Edge() {
   *this = std::move(e);
 }
 
-inline Edge& Edge::operator=(Edge&& e) noexcept {
+inline Edge &Edge::operator=(Edge &&e) noexcept {
   if (this != &e) {
     this->~Edge();
     handle_ = e.handle_;
@@ -98,11 +105,11 @@ inline EdgeIterator::EdgeIterator() : handle_(nullptr) {}
 
 inline EdgeIterator::EdgeIterator(EdgeIterHandle handle) : handle_(handle) {}
 
-inline EdgeIterator::EdgeIterator(EdgeIterator&& ei) noexcept : EdgeIterator() {
+inline EdgeIterator::EdgeIterator(EdgeIterator &&ei) noexcept: EdgeIterator() {
   *this = std::move(ei);
 }
 
-inline EdgeIterator& EdgeIterator::operator=(EdgeIterator&& ei) noexcept {
+inline EdgeIterator &EdgeIterator::operator=(EdgeIterator &&ei) noexcept {
   if (this != &ei) {
     this->~EdgeIterator();
     handle_ = ei.handle_;
@@ -111,4 +118,4 @@ inline EdgeIterator& EdgeIterator::operator=(EdgeIterator&& ei) noexcept {
   return *this;
 }
 
-}  // namespace DB_NAMESPACE
+}

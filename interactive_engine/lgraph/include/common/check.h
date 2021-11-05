@@ -14,14 +14,12 @@
  * limitations under the License.
  */
 
-#include "jna/native.h"
+#pragma once
+
+#include "namespace.h"
 
 namespace LGRAPH_NAMESPACE {
 
-thread_local PartitionGraphHandle local_graph_handle_ = nullptr;
-
-void setPartitionGraph(PartitionGraphHandle handle) {
-  local_graph_handle_ = handle;
-}
+void Check(bool result, const char *err_msg);
 
 }

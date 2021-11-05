@@ -16,6 +16,6 @@
 
 #pragma once
 
-#ifndef DB_NAMESPACE
-#define DB_NAMESPACE lgraph
+#ifndef LGRAPH_NAMESPACE
+#define LGRAPH_NAMESPACE lgraph
 #endif
