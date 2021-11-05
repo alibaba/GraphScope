@@ -95,10 +95,13 @@ std::shared_ptr<DispatchResult> Dispatcher::processCmd(
   return r;
 }
 
+void preprocessCmd(CommandDetail& cmd) {}
+
 void Dispatcher::publisherLoop() {
   CHECK_EQ(comm_spec_.worker_id(), grape::kCoordinatorRank);
   while (running_) {
     auto cmd = cmd_queue_.Pop();
+
     // process local event
     grape::BcastSend(cmd, MPI_COMM_WORLD);
 

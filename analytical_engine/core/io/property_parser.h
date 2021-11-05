@@ -57,13 +57,10 @@ struct Vertex {
   std::string vid;  // when vid is single digit, it means column index of vertex
   // id. Otherwise, it represents column name
   std::string protocol;  // file/oss/numpy/pandas/vineyard
-  std::string values;    // from location
+  std::string values;    // from location, vineyard or pandas
 
   // The following fields are only needed when protocol is numpy/pandas
   std::vector<std::pair<std::string, DataType>> properties;
-  std::vector<std::string> data;
-  size_t row_num;
-  size_t column_num;
 
   std::string SerializeToString() const {
     std::stringstream ss;
@@ -87,9 +84,6 @@ class Edge {
     std::string load_strategy;
     std::string protocol;
     std::string values;
-    std::vector<std::string> data;  // from numpy, properties
-    size_t row_num;
-    size_t column_num;
     std::vector<std::pair<std::string, DataType>> properties;
 
     std::string SerializeToString() const {
@@ -140,21 +134,9 @@ struct Graph {
 }  // namespace detail
 
 inline void ParseLoader(std::string& protocol, std::string& values,
-                        std::vector<std::string>& data, size_t& row_num,
-                        size_t& column_num, const AttrMap& attrs) {
+                        const AttrMap& attrs) {
   protocol = attrs.at(rpc::PROTOCOL).s();
-
-  if (protocol == "numpy" || protocol == "pandas") {
-    row_num = attrs.at(rpc::ROW_NUM).i();
-    column_num = attrs.at(rpc::COLUMN_NUM).i();
-    // Use key start from 10000 + col_index to store raw bytes.
-    // see ref python/graphscope/framework/loader.py
-    for (size_t i = 0; i < column_num; ++i) {
-      data.push_back(attrs.at(10000 + i).s());
-    }
-  } else {
-    values = attrs.at(rpc::VALUES).s();
-  }
+  values = attrs.at(rpc::VALUES).s();
 }
 
 inline void ParseProperties(std::vector<std::pair<std::string, DataType>>& m,
@@ -174,8 +156,7 @@ inline detail::Edge::SubLabel ParseSubLabel(const AttrMap& attrs) {
   sub_label.dst_vid = attrs.at(rpc::DST_VID).s();
   sub_label.load_strategy = attrs.at(rpc::LOAD_STRATEGY).s();
 
-  ParseLoader(sub_label.protocol, sub_label.values, sub_label.data,
-              sub_label.row_num, sub_label.column_num,
+  ParseLoader(sub_label.protocol, sub_label.values,
               attrs.at(rpc::LOADER).func().attr());
   // The param PROPERTIES is only required when protocol is numpy or pandas.
   if (attrs.find(rpc::PROPERTIES) != attrs.end()) {
@@ -193,8 +174,8 @@ inline std::shared_ptr<detail::Vertex> ParseVertex(const AttrMap& attrs) {
   if (attrs.find(rpc::PROPERTIES) != attrs.end()) {
     ParseProperties(vertex->properties, attrs.at(rpc::PROPERTIES));
   }
-  ParseLoader(vertex->protocol, vertex->values, vertex->data, vertex->row_num,
-              vertex->column_num, attrs.at(rpc::LOADER).func().attr());
+  ParseLoader(vertex->protocol, vertex->values,
+              attrs.at(rpc::LOADER).func().attr());
   return vertex;
 }
 
