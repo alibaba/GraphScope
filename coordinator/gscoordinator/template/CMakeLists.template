@@ -120,21 +120,29 @@ endif ()
 
 # find MPI----------------------------------------------------------------------
 find_package(MPI QUIET)
-include_directories(AFTER SYSTEM ${MPI_CXX_INCLUDE_PATH})
+if (MPI_FOUND)
+  include_directories(AFTER SYSTEM ${MPI_CXX_INCLUDE_PATH})
+endif()
 
 # find libgrape-lite------------------------------------------------------------
 find_package(libgrapelite QUIET)
-include_directories(AFTER SYSTEM "${LIBGRAPELITE_INCLUDE_DIRS}")
-include_directories(AFTER SYSTEM "${LIBGRAPELITE_INCLUDE_DIRS}/grape/analytical_apps")
+if (libgrapelite_FOUND)
+  include_directories(AFTER SYSTEM "${LIBGRAPELITE_INCLUDE_DIRS}")
+  include_directories(AFTER SYSTEM "${LIBGRAPELITE_INCLUDE_DIRS}/grape/analytical_apps")
+endif()
 
 # find vineyard-----------------------------------------
 find_package(vineyard 0.3.3 QUIET)
-include_directories(AFTER SYSTEM ${VINEYARD_INCLUDE_DIRS})
+if (vineyard_FOUND)
+  include_directories(AFTER SYSTEM ${VINEYARD_INCLUDE_DIRS})
+endif()
 add_compile_options(-DENABLE_SELECTOR)
 
 # find Glog---------------------------------------------------------------------
 include("${ANALYTICAL_ENGINE_HOME}/${CMAKE_INSTALL_LIBDIR}/cmake/graphscope-analytical/cmake/FindGlog.cmake")
-include_directories(AFTER SYSTEM ${GLOG_INCLUDE_DIRS})
+if (GLOG_FOUND)
+  include_directories(AFTER SYSTEM ${GLOG_INCLUDE_DIRS})
+endif()
 
 # set frame dir--------------------------------------------------------------
 set(ANALYTICAL_ENGINE_FRAME_DIR "${ANALYTICAL_ENGINE_HOME}/include/graphscope/frame")

@@ -18,6 +18,8 @@
 #include <utility>
 #include <vector>
 
+#include "vineyard/io/io/io_factory.h"
+
 #include "core/context/tensor_context.h"
 #include "core/context/vertex_data_context.h"
 #include "core/context/vertex_property_context.h"
@@ -38,6 +40,8 @@ GrapeInstance::GrapeInstance(const grape::CommSpec& comm_spec)
     : comm_spec_(comm_spec) {}
 
 void GrapeInstance::Init(const std::string& vineyard_socket) {
+  // force link vineyard_io library for graph/app compilation
+  vineyard::IOFactory::Init();
   EnsureClient(client_, vineyard_socket);
   if (comm_spec_.worker_id() == grape::kCoordinatorRank) {
     VLOG(1) << "Workers of grape-engine initialized.";
