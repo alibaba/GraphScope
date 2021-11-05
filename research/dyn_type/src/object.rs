@@ -23,7 +23,7 @@ use std::fmt::Debug;
 use std::hash::{Hash, Hasher};
 use std::ops::Deref;
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, PartialEq)]
 pub enum RawType {
     Byte,
     Integer,
@@ -42,6 +42,19 @@ pub enum Primitives {
     Long(i64),
     ULLong(u128),
     Float(f64),
+}
+
+impl ToString for Primitives {
+    fn to_string(&self) -> String {
+        use Primitives::*;
+        match self {
+            Byte(i) => i.to_string(),
+            Integer(i) => i.to_string(),
+            Long(i) => i.to_string(),
+            ULLong(i) => i.to_string(),
+            Float(i) => i.to_string(),
+        }
+    }
 }
 
 lazy_static! {
@@ -474,14 +487,38 @@ pub enum Object {
     DynOwned(Box<dyn DynType>),
 }
 
+impl ToString for Object {
+    fn to_string(&self) -> String {
+        use Object::*;
+        match self {
+            Primitive(p) => p.to_string(),
+            String(s) => s.to_string(),
+            Blob(_) => unimplemented!(),
+            DynOwned(_) => unimplemented!(),
+        }
+    }
+}
+
 /// Try to borrow an immutable reference of [crate::Object].
-#[derive(Debug)]
+#[derive(Debug, Clone, Copy)]
 pub enum BorrowObject<'a> {
     Primitive(Primitives),
     String(&'a str),
     Blob(&'a [u8]),
     /// To borrow from `Object::DynOwned`, and it can be cloned back to `Object::DynOwned`
     DynRef(&'a Box<dyn DynType>),
+}
+
+impl<'a> ToString for BorrowObject<'a> {
+    fn to_string(&self) -> String {
+        use BorrowObject::*;
+        match self {
+            Primitive(p) => p.to_string(),
+            String(s) => s.to_string(),
+            Blob(_) => unimplemented!(),
+            DynRef(_) => unimplemented!(),
+        }
+    }
 }
 
 impl Object {
@@ -836,11 +873,18 @@ impl Eq for Object {}
 impl PartialOrd for Object {
     fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
         match self {
-            Object::Primitive(p) => other.as_primitive().map(|o| p.partial_cmp(&o)).unwrap_or(None),
-            Object::Blob(v) => other.as_bytes().map(|o| v.as_ref().partial_cmp(o)).unwrap_or(None),
-            Object::String(v) => {
-                other.as_str().map(|o| v.as_str().partial_cmp(o.as_ref())).unwrap_or(None)
-            }
+            Object::Primitive(p) => other
+                .as_primitive()
+                .map(|o| p.partial_cmp(&o))
+                .unwrap_or(None),
+            Object::Blob(v) => other
+                .as_bytes()
+                .map(|o| v.as_ref().partial_cmp(o))
+                .unwrap_or(None),
+            Object::String(v) => other
+                .as_str()
+                .map(|o| v.as_str().partial_cmp(o.as_ref()))
+                .unwrap_or(None),
             // TODO(longbin) Should be able to compare a DynType
             Object::DynOwned(_) => None,
         }
@@ -862,13 +906,18 @@ impl<'a> PartialEq for BorrowObject<'a> {
 impl<'a> PartialOrd for BorrowObject<'a> {
     fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
         match self {
-            BorrowObject::Primitive(p) => {
-                other.as_primitive().map(|o| p.partial_cmp(&o)).unwrap_or(None)
-            }
-            BorrowObject::String(v) => {
-                other.as_str().map(|o| (*v).partial_cmp(o.as_ref())).unwrap_or(None)
-            }
-            BorrowObject::Blob(v) => other.as_bytes().map(|o| (*v).partial_cmp(o)).unwrap_or(None),
+            BorrowObject::Primitive(p) => other
+                .as_primitive()
+                .map(|o| p.partial_cmp(&o))
+                .unwrap_or(None),
+            BorrowObject::String(v) => other
+                .as_str()
+                .map(|o| (*v).partial_cmp(o.as_ref()))
+                .unwrap_or(None),
+            BorrowObject::Blob(v) => other
+                .as_bytes()
+                .map(|o| (*v).partial_cmp(o))
+                .unwrap_or(None),
             // TODO(longbin) Should be able to compare a DynType
             BorrowObject::DynRef(_) => None,
         }
@@ -1005,15 +1054,41 @@ impl From<u64> for Object {
     }
 }
 
+impl<'a> From<u64> for BorrowObject<'a> {
+    fn from(i: u64) -> Self {
+        if i <= (i64::MAX as u64) {
+            BorrowObject::Primitive(Primitives::Long(i as i64))
+        } else {
+            BorrowObject::Primitive(Primitives::ULLong(i as u128))
+        }
+    }
+}
+
 impl From<usize> for Object {
     fn from(i: usize) -> Self {
         Object::from(i as u64)
     }
 }
 
+impl<'a> From<usize> for BorrowObject<'a> {
+    fn from(i: usize) -> Self {
+        if i <= (i64::MAX as usize) {
+            BorrowObject::Primitive(Primitives::Long(i as i64))
+        } else {
+            BorrowObject::Primitive(Primitives::ULLong(i as u128))
+        }
+    }
+}
+
 impl From<u128> for Object {
     fn from(u: u128) -> Self {
         Object::Primitive(Primitives::ULLong(u))
+    }
+}
+
+impl<'a> From<u128> for BorrowObject<'a> {
+    fn from(i: u128) -> Self {
+        BorrowObject::Primitive(Primitives::ULLong(i as u128))
     }
 }
 
@@ -1029,15 +1104,38 @@ impl From<Box<[u8]>> for Object {
     }
 }
 
+impl<'a> From<&'a [u8]> for BorrowObject<'a> {
+    fn from(blob: &'a [u8]) -> Self {
+        BorrowObject::Blob(blob)
+    }
+}
+
 impl From<&str> for Object {
     fn from(s: &str) -> Self {
         Object::String(s.to_owned())
     }
 }
 
+impl<'a> From<&'a str> for BorrowObject<'a> {
+    fn from(s: &'a str) -> Self {
+        BorrowObject::String(s)
+    }
+}
+
 impl From<String> for Object {
     fn from(s: String) -> Self {
         Object::String(s)
+    }
+}
+
+impl<'a> From<BorrowObject<'a>> for Object {
+    fn from(s: BorrowObject<'a>) -> Self {
+        match s {
+            BorrowObject::Primitive(p) => Object::Primitive(p),
+            BorrowObject::Blob(blob) => Object::Blob(blob.to_vec().into_boxed_slice()),
+            BorrowObject::String(s) => Object::String(s.to_string()),
+            _ => unimplemented!(),
+        }
     }
 }
 
