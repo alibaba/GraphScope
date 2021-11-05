@@ -835,9 +835,7 @@ install_graphscope() {
 
   if [[ "${PLATFORM}" == *"Darwin"* ]]; then
     # need libomp.dylib to find MPI_CXX
-    export LDFLAGS=-L/usr/local/opt/llvm/lib
     make install WITH_LEARNING_ENGINE=OFF INSTALL_PREFIX=${INSTALL_PREFIX} NETWORKX=OFF BUILD_TYPE=${BUILD_TYPE}
-    unset LDFLAGS
   else
     make install WITH_LEARNING_ENGINE=ON INSTALL_PREFIX=${INSTALL_PREFIX} BUILD_TYPE=${BUILD_TYPE}
   fi
