@@ -13,5 +13,5 @@ psutil
 PyYAML
 scipy
 tqdm
-vineyard>=0.3.3; sys_platform != "win32" and platform_machine == 'x86_64'
-vineyard-io>=0.3.3; sys_platform != "win32" and platform_machine == 'x86_64'
+vineyard>=0.3.6; sys_platform != "win32" and platform_machine == 'x86_64'
+vineyard-io>=0.3.6; sys_platform != "win32" and platform_machine == 'x86_64'

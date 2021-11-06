@@ -81,7 +81,7 @@ graphscope-darwin-py3:
 		cmake .. -DCMAKE_INSTALL_PREFIX=/opt/vineyard && \
 		sudo make -j`nproc` install
 	# install vineyard
-	cd /tmp && git clone -b v0.3.4 https://github.com/alibaba/libvineyard.git --depth=1 && \
+	cd /tmp && git clone -b v0.3.6 https://github.com/alibaba/libvineyard.git --depth=1 && \
 		cd libvineyard && git submodule update --init && \
 		mkdir -p build && cd build && \
 		cmake .. -DCMAKE_PREFIX_PATH=/opt/vineyard \
@@ -100,9 +100,7 @@ graphscope-darwin-py3:
 	sudo rm -fr /tmp/libvineyard /tmp/libgrape-lite
 	# build graphscope
 	cd $(WORKING_DIR)/../ && \
-		export LDFLAGS=-L/usr/local/opt/llvm/lib && \
 		make install WITH_LEARNING_ENGINE=OFF && \
-		unset LDFLAGS && \
 		sudo install_name_tool -add_rpath /usr/local/lib /opt/graphscope/bin/executor && \
 		sudo install_name_tool -add_rpath /usr/local/lib /opt/graphscope/bin/gaia_executor && \
 		python3 $(WORKING_DIR)/precompile.py
@@ -112,7 +110,10 @@ graphscope-darwin-py3:
 		rm -fr build dist/*.whl || true && \
 		python3 setup.py bdist_wheel --plat=macosx_10_9_x86_64 && \
 		pip3 install delocate && \
-		for wheel in `ls dist/*.whl`; do delocate-wheel -w dist/wheelhouse -v $$wheel; done
+		for wheel in `ls dist/*.whl`; do \
+			delocate-listdeps -a -d $$wheel; \
+			delocate-wheel -w dist/wheelhouse -v $$wheel; \
+		done
 
 graphscope-manylinux2014-py3:
 	docker run --rm -v $(WORKING_DIR)/..:/work \
@@ -124,7 +125,7 @@ graphscope-manylinux2014-py3:
 			cmake .. -DCMAKE_INSTALL_PREFIX=/opt/vineyard && \
 			sudo make -j`nproc` install && \
 			cd /tmp && \
-			git clone -b v0.3.4 https://github.com/alibaba/libvineyard.git --depth=1 && \
+			git clone -b v0.3.6 https://github.com/alibaba/libvineyard.git --depth=1 && \
 			cd libvineyard && \
 			git submodule update --init && \
 			mkdir -p build && cd build && \
@@ -176,7 +177,7 @@ graphscope-client-manylinux2014-py3:
 			cmake .. -DCMAKE_INSTALL_PREFIX=/opt/vineyard && \
 			sudo make -j`nproc` install && \
 			cd /tmp && \
-			git clone -b v0.3.4 https://github.com/alibaba/libvineyard.git --depth=1 && \
+			git clone -b v0.3.6 https://github.com/alibaba/libvineyard.git --depth=1 && \
 			cd libvineyard && \
 			git submodule update --init && \
 			mkdir -p build && cd build && \

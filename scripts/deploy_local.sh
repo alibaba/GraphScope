@@ -14,8 +14,8 @@ readonly GREEN="\033[0;32m"
 readonly NC="\033[0m" # No Color
 
 readonly GRAPE_BRANCH="master" # libgrape-lite branch
-readonly V6D_VERSION="0.3.4"  # vineyard version
-readonly V6D_BRANCH="v0.3.4" # vineyard branch
+readonly V6D_VERSION="0.3.6"  # vineyard version
+readonly V6D_BRANCH="v0.3.6" # vineyard branch
 
 readonly SOURCE_DIR="$( cd "$(dirname $0)/.." >/dev/null 2>&1 ; pwd -P )"
 readonly OUTPUT_ENV_FILE="${HOME}/.graphscope_env"
@@ -268,6 +268,7 @@ init_basic_packages() {
       autoconf
       gnu-sed
       wget
+      libomp
     )
   fi
   readonly BASIC_PACKGES_TO_INSTALL
@@ -834,9 +835,7 @@ install_graphscope() {
 
   if [[ "${PLATFORM}" == *"Darwin"* ]]; then
     # need libomp.dylib to find MPI_CXX
-    export LDFLAGS=-L/usr/local/opt/llvm/lib
     make install WITH_LEARNING_ENGINE=OFF INSTALL_PREFIX=${INSTALL_PREFIX} NETWORKX=OFF BUILD_TYPE=${BUILD_TYPE}
-    unset LDFLAGS
   else
     make install WITH_LEARNING_ENGINE=ON INSTALL_PREFIX=${INSTALL_PREFIX} BUILD_TYPE=${BUILD_TYPE}
   fi
