@@ -171,7 +171,7 @@ def demo(sess, ogbn_mag_small, ogbn_small_script):
         "learning_algo": "adam",
         "learning_rate": 0.01,
         "weight_decay": 0.0005,
-        "epoch": 5,
+        "epoch": 2,
         "node_type": "paper",
         "edge_type": "cites",
     }
@@ -222,7 +222,7 @@ def simple_flow(sess, ogbn_mag_small, ogbn_small_script):
         "learning_algo": "adam",
         "learning_rate": 0.01,
         "weight_decay": 0.0005,
-        "epoch": 5,
+        "epoch": 2,
         "node_type": "paper",
         "edge_type": "cites",
     }
@@ -304,7 +304,7 @@ def test_demo_lazy_mode(sess_lazy, ogbn_mag_small, ogbn_small_script):
         "learning_algo": "adam",
         "learning_rate": 0.01,
         "weight_decay": 0.0005,
-        "epoch": 5,
+        "epoch": 2,
         "node_type": "paper",
         "edge_type": "cites",
     }
