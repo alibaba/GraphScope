@@ -68,7 +68,6 @@ endif()
 if (W_NO_UNDEF_PREFIX)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-undef-prefix")
 endif()
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fopenmp")
 set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -O0 -g")
 set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -O3 -g")
 if (NOT APPLE)
@@ -91,6 +90,15 @@ endif ()
 find_package(Threads REQUIRED)
 find_package(MPI REQUIRED)
 include_directories(SYSTEM ${MPI_CXX_INCLUDE_PATH})
+
+# put `-fopenmp` after `find_package(MPI)` as `MPI_CXX_COMPILER` cannot find it correctly
+if (APPLE)
+    if (POLICY CMP0056)
+        cmake_policy(SET CMP0056 NEW)
+    endif ()
+    set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -L/usr/local/lib")
+endif ()
+find_package(OpenMP REQUIRED)
 
 find_package(Boost REQUIRED COMPONENTS system filesystem
              # required by folly
@@ -128,7 +136,7 @@ endif ()
 find_package(libgrapelite REQUIRED)
 include_directories(${LIBGRAPELITE_INCLUDE_DIRS})
 
-find_package(vineyard 0.3.3 REQUIRED)
+find_package(vineyard 0.3.6 REQUIRED)
 include_directories(${VINEYARD_INCLUDE_DIRS})
 add_compile_options(-DENABLE_SELECTOR)
 
@@ -142,8 +150,9 @@ if (NETWORKX)
     include("cmake/FindFolly.cmake")
     include("cmake/FindDoubleConversion.cmake")
     if (FOLLY_FOUND)
-        include_directories(${FOLLY_ROOT_DIR}/include)
+        include_directories(${FOLLY_INCLUDE_DIRS})
 
+        set(CMAKE_REQUIRED_INCLUDES "${FOLLY_INCLUDE_DIRS}")
         set(CMAKE_REQUIRED_LIBRARIES "${CMAKE_REQUIRED_LIBRARIES} ${FOLLY_LIBRARIES}")
         check_cxx_source_runs("
         #include <iostream>
@@ -190,13 +199,14 @@ target_link_libraries(grape_engine PRIVATE gs_proto
         ${Boost_LIBRARIES}
         ${VINEYARD_LIBRARIES}
         )
+target_link_libraries(grape_engine PRIVATE OpenMP::OpenMP_CXX)
 
 if (${LIBUNWIND_FOUND})
     target_link_libraries(grape_engine PRIVATE ${LIBUNWIND_LIBRARIES})
 endif ()
 
 if (NETWORKX)
-    target_include_directories(grape_engine PUBLIC ${FOLLY_ROOT_DIR}/include)
+    target_include_directories(grape_engine PUBLIC ${FOLLY_INCLUDE_DIRS})
     target_link_libraries(grape_engine PRIVATE ${FOLLY_LIBRARIES} ${DOUBLE_CONVERSION_LIBRARY})
 endif ()
 
@@ -206,9 +216,10 @@ if (BUILD_TESTS)
     target_include_directories(run_app PRIVATE ${LIBGRAPELITE_INCLUDE_DIRS}/grape/analytical_apps utils apps)
     target_link_libraries(run_app ${LIBGRAPELITE_LIBRARIES} ${GFLAGS_LIBRARIES} ${CMAKE_DL_LIBS} ${Boost_LIBRARIES} ${VINEYARD_LIBRARIES})
     if (NETWORKX)
-        target_include_directories(run_app PUBLIC ${FOLLY_ROOT_DIR}/include)
+        target_include_directories(run_app PUBLIC ${FOLLY_INCLUDE_DIRS})
         target_link_libraries(run_app ${FOLLY_LIBRARIES} ${DOUBLE_CONVERSION_LIBRARY})
     endif ()
+    target_link_libraries(run_app OpenMP::OpenMP_CXX)
 
     macro(add_vineyard_app target)
         set(options)
@@ -221,6 +232,7 @@ if (BUILD_TESTS)
         if (${LIBUNWIND_FOUND})
             target_link_libraries(${target} ${LIBUNWIND_LIBRARIES})
         endif ()
+        target_link_libraries(${target} OpenMP::OpenMP_CXX)
     endmacro()
 
     add_vineyard_app(run_vy_app SRCS test/run_vy_app.cc)
@@ -260,10 +272,10 @@ if (BUILD_TESTS)
 
     if (NETWORKX)
         add_vineyard_app(test_convert SRCS test/test_convert.cc)
-        target_include_directories(test_convert PRIVATE ${FOLLY_ROOT_DIR}/include)
+        target_include_directories(test_convert PRIVATE ${FOLLY_INCLUDE_DIRS})
         target_link_libraries(test_convert ${FOLLY_LIBRARIES} ${DOUBLE_CONVERSION_LIBRARY})
 
-        target_include_directories(run_ctx PUBLIC ${FOLLY_ROOT_DIR}/include)
+        target_include_directories(run_ctx PUBLIC ${FOLLY_INCLUDE_DIRS})
         target_link_libraries(run_ctx ${FOLLY_LIBRARIES} ${DOUBLE_CONVERSION_LIBRARY})
     endif ()
 endif ()

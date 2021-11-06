@@ -978,9 +978,15 @@ class Session(object):
             ):
                 api_client = self._config_params["k8s_client_config"]
             else:
-                api_client = kube_config.new_client_from_config(
-                    **self._config_params["k8s_client_config"]
-                )
+                try:
+                    api_client = kube_config.new_client_from_config(
+                        **self._config_params["k8s_client_config"]
+                    )
+                except kube_config.ConfigException as e:
+                    raise RuntimeError(
+                        "Kubernetes environment not found, you may want to"
+                        ' launch session locally with param cluster_type="hosts"'
+                    ) from e
             self._launcher = KubernetesClusterLauncher(
                 api_client=api_client,
                 **self._config_params,

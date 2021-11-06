@@ -171,7 +171,7 @@ def demo(sess, ogbn_mag_small, ogbn_small_script):
         "learning_algo": "adam",
         "learning_rate": 0.01,
         "weight_decay": 0.0005,
-        "epoch": 5,
+        "epoch": 2,
         "node_type": "paper",
         "edge_type": "cites",
     }
@@ -222,7 +222,7 @@ def simple_flow(sess, ogbn_mag_small, ogbn_small_script):
         "learning_algo": "adam",
         "learning_rate": 0.01,
         "weight_decay": 0.0005,
-        "epoch": 5,
+        "epoch": 2,
         "node_type": "paper",
         "edge_type": "cites",
     }
@@ -304,7 +304,7 @@ def test_demo_lazy_mode(sess_lazy, ogbn_mag_small, ogbn_small_script):
         "learning_algo": "adam",
         "learning_rate": 0.01,
         "weight_decay": 0.0005,
-        "epoch": 5,
+        "epoch": 2,
         "node_type": "paper",
         "edge_type": "cites",
     }
@@ -344,10 +344,7 @@ def test_multiple_session(ogbn_mag_small, ogbn_small_script):
     sess2.close()
 
 
-@pytest.mark.skipif(
-    sys.platform == "linux" or sys.platform == "darwin",
-    reason="Test case for macOS, need to double check runnable of vineyardd",
-)
+@pytest.mark.skipif(sys.platform == "linux", reason="Linux no need to run this test.")
 def test_on_macOS(sess, ogbn_mag_small):
     graph = load_ogbn_mag(sess, ogbn_mag_small)
     interactive = sess.gremlin(graph)
