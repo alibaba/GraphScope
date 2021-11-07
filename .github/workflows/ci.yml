@@ -340,8 +340,7 @@ jobs:
         fail_ci_if_error: true
 
     - name: App Test with Expr On
-      if: steps.filter.outputs.networkx == 'true'
-      if: matrix.networkx == 'ON'
+      if: ${{ matrix.networkx == 'ON' && steps.filter.outputs.networkx == 'true' }}
       run: |
         export GRAPHSCOPE_HOME='/opt/graphscope'
         export GS_TEST_DIR='/home/graphscope/gstest'
