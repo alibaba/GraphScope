@@ -276,6 +276,9 @@ jobs:
       with:
         filters: |
           networkx:
+            - 'analytical_engine/apps/**'
+            - 'analytical_engine/frame/**'
+            - 'analytical_engine/core/**'
             - 'python/graphscope/nx/**'
 
 
