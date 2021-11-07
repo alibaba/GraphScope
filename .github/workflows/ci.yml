@@ -274,7 +274,7 @@ jobs:
 
     - uses: actions/download-artifact@v2
 
-    - users: dorny/paths-filter@v2
+    - uses: dorny/paths-filter@v2
       id: filter
       with:
         filters: |
