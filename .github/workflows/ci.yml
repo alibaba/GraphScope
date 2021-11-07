@@ -274,6 +274,13 @@ jobs:
 
     - uses: actions/download-artifact@v2
 
+    - users: dorny/paths-filter@v2
+      id: filter
+      with:
+        filters: |
+          networkx:
+            - "python/graphscope/nx/**"
+
     - name: Prepare environment for dataset
       run: |
         export GS_TEST_DIR='/home/graphscope/gstest'
@@ -333,6 +340,7 @@ jobs:
         fail_ci_if_error: true
 
     - name: App Test with Expr On
+      if: steps.filter.outputs.networkx == 'true'
       if: matrix.networkx == 'ON'
       run: |
         export GRAPHSCOPE_HOME='/opt/graphscope'
