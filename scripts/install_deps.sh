@@ -296,7 +296,9 @@ check_dependencies() {
   if [[ ( ! -f "/usr/include/boost/version.hpp" || \
         "$(grep "#define BOOST_VERSION" /usr/include/boost/version.hpp | cut -d' ' -f3)" -lt "106600" ) && \
      ( ! -f "/usr/local/include/boost/version.hpp" || \
-       "$(grep "#define BOOST_VERSION" /usr/local/include/boost/version.hpp | cut -d' ' -f3)" -lt "106600" ) ]]; then
+       "$(grep "#define BOOST_VERSION" /usr/local/include/boost/version.hpp | cut -d' ' -f3)" -lt "106600" ) && \
+     ( ! -f "/opt/homebrew/include/boost/version.hpp" || \
+       "$(grep "#define BOOST_VERSION" /opt/homebrew/include/boost/version.hpp | cut -d' ' -f3)" -lt "106600" ) ]]; then
     case "${PLATFORM}" in
       *"Ubuntu"*)
         packages_to_install+=(libboost-all-dev)
@@ -311,7 +313,8 @@ check_dependencies() {
   fi
 
   # check apache-arrow
-  if [[ ! -f "/usr/local/include/arrow/api.h" && ! -f "/usr/include/arrow/api.h" ]]; then
+  if [[ ! -f "/usr/local/include/arrow/api.h" && ! -f "/usr/include/arrow/api.h" &&
+        ! -f "/opt/homebrew/include/arrow/api.h" ]]; then
     packages_to_install+=(apache-arrow)
   fi
 
@@ -324,7 +327,7 @@ check_dependencies() {
   if ( ! command -v rustup &> /dev/null || \
     [[ "$(rustc --V | awk -F ' ' '{print $2}')" < "1.52.0" ]] ) && \
      ( ! command -v ${HOME}/.cargo/bin/rustup &> /dev/null || \
-    [[ "$(rustc --V | awk -F ' ' '{print $2}')" < "1.52.0" ]] ); then
+    [[ "$(${HOME}/.cargo/bin/rustc --V | awk -F ' ' '{print $2}')" < "1.52.0" ]] ); then
     packages_to_install+=(rust)
   fi
 
@@ -353,7 +356,7 @@ check_dependencies() {
   fi
 
   # check folly
-  if [[ ! -f "/usr/local/include/folly/dynamic.h" ]]; then
+  if [[ ! -f "/usr/local/include/folly/dynamic.h" && ! -f "/opt/homebrew/include/folly/dynamic.h" ]]; then
     packages_to_install+=(folly)
   fi
 
@@ -395,22 +398,27 @@ write_envs_config() {
   fi
 
   if [[ "${PLATFORM}" == *"Darwin"* ]]; then
+    if [[ "$(uname -m)" == *"x86_64"* ]]; then
+      declare -r homebrew_prefix=/usr/local
+    else
+      # Apple Silicon: packages are installed under /opt/homebrew by default
+      declare -r homebrew_prefix=/opt/homebrew
+    fi
     {
-      # FIXME: graphscope_env not correct when the script run mutiple times.
-      # packages_to_install contains llvm
-      echo "export CC=/usr/local/opt/llvm/bin/clang"
-      echo "export CXX=/usr/local/opt/llvm/bin/clang++"
-      echo "export CPPFLAGS=-I/usr/local/opt/llvm/include"
-      echo "export PATH=/usr/local/opt/llvm/bin:\$PATH"
+      echo "export CC=${homebrew_prefix}/opt/llvm/bin/clang"
+      echo "export CXX=${homebrew_prefix}/opt/llvm/bin/clang++"
+      echo "export CPPFLAGS=-I${homebrew_prefix}/opt/llvm/include"
+      echo "export PATH=${homebrew_prefix}/opt/llvm/bin:\$PATH"
       if [ -z "${JAVA_HOME}" ]; then
         echo "export JAVA_HOME=\$(/usr/libexec/java_home -v11)"
       fi
       echo "export PATH=\$HOME/.cargo/bin:\${JAVA_HOME}/bin:/usr/local/go/bin:\$PATH"
       echo "export PATH=\$(go env GOPATH)/bin:\$PATH"
-      echo "export OPENSSL_ROOT_DIR=/usr/local/opt/openssl"
-      echo "export OPENSSL_LIBRARIES=/usr/local/opt/openssl/lib"
-      echo "export OPENSSL_SSL_LIBRARY=/usr/local/opt/openssl/lib/libssl.dylib"
+      echo "export OPENSSL_ROOT_DIR=${homebrew_prefix}/opt/openssl"
+      echo "export OPENSSL_LIBRARIES=${homebrew_prefix}/opt/openssl/lib"
+      echo "export OPENSSL_SSL_LIBRARY=${homebrew_prefix}/opt/openssl/lib/libssl.dylib"
     } >> ${OUTPUT_ENV_FILE}
+
   elif [[ "${PLATFORM}" == *"Ubuntu"* ]]; then
     {
       echo "export LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:/usr/local/lib:/usr/local/lib64"
@@ -473,7 +481,6 @@ install_libgrape-lite() {
 ##########################
 install_vineyard() {
   log "Building and installing vineyard."
-  # TODO: check vineyard version with vineyadd --version
   if command -v /usr/local/bin/vineyardd &> /dev/null && \
      [[ "$(/usr/local/bin/vineyardd --version 2>&1 | awk -F ' ' '{print $3}')" == "${V6D_VERSION}" ]]; then
     log "vineyard ${V6D_VERSION} already installed, skip."
@@ -486,29 +493,12 @@ install_vineyard() {
   pushd /tmp/libvineyard
   git submodule update --init
   mkdir -p build && pushd build
-  if [[ "${PLATFORM}" == *"Darwin"* ]]; then
-    cmake .. -DCMAKE_INSTALL_PREFIX=${DEPS_PREFIX} \
-             -DBUILD_SHARED_LIBS=ON \
-             -DBUILD_VINEYARD_TESTS=OFF
-  else
-    cmake .. -DCMAKE_INSTALL_PREFIX=${DEPS_PREFIX} \
-             -DBUILD_SHARED_LIBS=ON \
-             -DBUILD_VINEYARD_TESTS=OFF
-  fi
+  cmake .. -DCMAKE_INSTALL_PREFIX=${DEPS_PREFIX} \
+           -DBUILD_SHARED_LIBS=ON \
+           -DBUILD_VINEYARD_TESTS=OFF
   make -j$(nproc)
   sudo make install && popd
   popd
-
-  # install vineyard-python
-  # python3 setup.py bdist_wheel
-  # pip3 install -U ./dist/*.whl --user
-
-  # install vineyard-io
-  # pushd modules/io
-  # rm -rf build/lib.* build/bdist.*
-  # python3 setup.py bdist_wheel
-  # pip3 install -U ./dist/*.whl --user
-  # popd
 
   rm -fr /tmp/libvineyard
 }
@@ -746,17 +736,31 @@ install_dependencies() {
       packages_to_install=("${packages_to_install[@]/rust}")
     fi
 
+    if [[ "${packages_to_install[*]}" =~ "maven" ]]; then
+      # install maven ignore openjdk dependencies
+      brew install --ignore-dependencies maven
+      packages_to_install=("${packages_to_install[@]/maven}")
+    fi
+
+
     if [[ ! -z "${packages_to_install}" ]]; then
       log "Installing packages ${packages_to_install[*]}"
       brew install ${packages_to_install[*]}
     fi
 
-    export OPENSSL_ROOT_DIR=/usr/local/opt/openssl
-    export OPENSSL_LIBRARIES=/usr/local/opt/openssl/lib
-    export OPENSSL_SSL_LIBRARY=/usr/local/opt/openssl/lib/libssl.dylib
-    export CC=/usr/local/opt/llvm/bin/clang
-    export CXX=/usr/local/opt/llvm/bin/clang++
-    export CPPFLAGS=-I/usr/local/opt/llvm/include
+
+
+    if [[ "$(uname -m)" == "x86_64" ]]; then
+      declare -r homebrew_prefix="/usr/local"
+    else
+      declare -r homebrew_prefix="/opt/homebrew"
+    fi
+    export OPENSSL_ROOT_DIR=${homebrew_prefix}/opt/openssl
+    export OPENSSL_LIBRARIES=${homebrew_prefix}/opt/openssl/lib
+    export OPENSSL_SSL_LIBRARY=${homebrew_prefix}/opt/openssl/lib/libssl.dylib
+    export CC=${homebrew_prefix}/opt/llvm/bin/clang
+    export CXX=${homebrew_prefix}/opt/llvm/bin/clang++
+    export CPPFLAGS=-I${homebrew_prefix}/opt/llvm/include
   fi
 
   if [[ ${install_folly} == true ]]; then
