@@ -15,6 +15,7 @@
 
 use crate::v2::api::{PropertyId, VertexId, LabelId, EdgeId};
 use crate::v2::GraphResult;
+use crate::db::api::EdgeKind;
 
 #[repr(C)]
 #[allow(dead_code)]
@@ -97,6 +98,16 @@ impl EdgeRelation {
     }
     pub fn get_dst_vertex_label_id(&self) -> LabelId {
         self.dst_vertex_label_id
+    }
+}
+
+impl From<&EdgeKind> for EdgeRelation {
+    fn from(edge_kind: &EdgeKind) -> Self {
+        EdgeRelation::new(
+            edge_kind.edge_label_id as LabelId,
+            edge_kind.src_vertex_label_id as LabelId,
+            edge_kind.dst_vertex_label_id as LabelId,
+        )
     }
 }
 

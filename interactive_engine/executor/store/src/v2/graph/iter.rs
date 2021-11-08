@@ -4,7 +4,7 @@ use crate::db::graph::types::{VertexTypeInfo, VertexTypeManager, EdgeInfo, EdgeK
 use crate::v2::GraphResult;
 use crate::v2::graph::entity::{VertexImpl, EdgeImpl};
 use crate::v2::api::{SnapshotId, VertexId, LabelId, Records, EdgeRelation};
-use crate::db::graph::bin::{vertex_table_prefix_key, parse_vertex_key, edge_table_prefix_key, parse_edge_key};
+use crate::db::graph::bin::{vertex_table_prefix_key, parse_vertex_key, edge_table_prefix_key, parse_edge_key, edge_prefix};
 use crate::db::graph::codec::{get_codec_version, Decoder};
 use crate::v2::errors::GraphError;
 use crate::db::api::EdgeDirection;
@@ -79,11 +79,18 @@ pub struct EdgeTypeScan {
     storage: Arc<dyn ExternalStorage>,
     snapshot_id: SnapshotId,
     edge_info: Arc<EdgeInfo>,
+    vertex_id: Option<VertexId>,
+    direction: EdgeDirection,
 }
 
 impl EdgeTypeScan {
-    pub fn new(storage: Arc<dyn ExternalStorage>, snapshot_id: SnapshotId, edge_info: Arc<EdgeInfo>) -> Self {
-        EdgeTypeScan { storage, snapshot_id, edge_info }
+    pub fn new(storage: Arc<dyn ExternalStorage>,
+               snapshot_id: SnapshotId,
+               edge_info: Arc<EdgeInfo>,
+               vertex_id: Option<VertexId>,
+               direction: EdgeDirection
+    ) -> Self {
+            EdgeTypeScan { storage, snapshot_id, edge_info, vertex_id, direction }
     }
 }
 
@@ -95,7 +102,7 @@ impl IntoIterator for EdgeTypeScan {
         let mut edge_kind_iter = self.edge_info.get_kinds(self.snapshot_id as i64);
         let mut res: Records<EdgeImpl> = Box::new(::std::iter::empty());
         while let Some(edge_kind) = edge_kind_iter.next() {
-            let iter = EdgeKindScan::new(self.storage.clone(), self.snapshot_id, edge_kind.clone()).into_iter();
+            let iter = EdgeKindScan::new(self.storage.clone(), self.snapshot_id, edge_kind.clone(), self.vertex_id, self.direction).into_iter();
             res = Box::new(res.chain(iter));
         }
         res
@@ -106,11 +113,18 @@ pub struct EdgeKindScan {
     storage: Arc<dyn ExternalStorage>,
     snapshot_id: SnapshotId,
     edge_kind_info: Arc<EdgeKindInfo>,
+    vertex_id: Option<VertexId>,
+    direction: EdgeDirection,
 }
 
 impl EdgeKindScan {
-    pub fn new(storage: Arc<dyn ExternalStorage>, snapshot_id: SnapshotId, edge_kind_info: Arc<EdgeKindInfo>) -> Self {
-        EdgeKindScan { storage, snapshot_id, edge_kind_info }
+    pub fn new(storage: Arc<dyn ExternalStorage>,
+               snapshot_id: SnapshotId,
+               edge_kind_info: Arc<EdgeKindInfo>,
+               vertex_id: Option<VertexId>,
+               direction: EdgeDirection
+    ) -> Self {
+        EdgeKindScan { storage, snapshot_id, edge_kind_info, vertex_id, direction }
     }
 }
 
@@ -122,9 +136,18 @@ impl IntoIterator for EdgeKindScan {
         let snapshot_id = self.snapshot_id as i64;
         if let Some(table) = self.edge_kind_info.get_table(snapshot_id) {
             let data_ts = snapshot_id - table.start_si;
-            let prefix = edge_table_prefix_key(table.id, EdgeDirection::Out);
+            let scan_iter = match self.direction {
+                EdgeDirection::In | EdgeDirection::Out => {
+                    let prefix = edge_prefix(table.id, self.vertex_id.unwrap() as i64, self.direction);
+                    self.storage.new_scan(&prefix)
+                },
+                EdgeDirection::Both => {
+                    let prefix = edge_table_prefix_key(table.id, EdgeDirection::Out);
+                    self.storage.new_scan(&prefix)
+                },
+            };
             let mut previous_edge = None;
-            let e_iter = self.storage.new_scan(&prefix).unwrap().filter_map(move |(raw_key, raw_val)| {
+            let e_iter = scan_iter.unwrap().filter_map(move |(raw_key, raw_val)| {
                 let key = unsafe { raw_key.to_slice() };
                 let val = unsafe { raw_val.to_slice() };
                 let (edge_id, ts) = parse_edge_key(key);
