@@ -28,4 +28,4 @@ extern crate log;
 
 pub use crate::graph::graph::{get_graph, register_graph};
 pub use compiler::IRJobCompiler;
-pub use exp_store::{create_demo_graph, SinglePartition};
+pub use exp_store::create_demo_graph;
