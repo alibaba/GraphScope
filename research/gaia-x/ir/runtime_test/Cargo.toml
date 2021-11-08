@@ -1,0 +1,17 @@
+[package]
+name = "runtime_test"
+version = "0.1.0"
+edition = "2018"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+crossbeam-channel = "0.3.6"
+prost = "0.8"
+lazy_static = "1.3.0"
+pegasus = { path = "../../pegasus/pegasus" }
+pegasus_client = {path = "../../pegasus/clients/rust/client"}
+pegasus_server = { path = "../../pegasus/server" }
+ir_common = {path = "../common", features = ["proto_inplace"]}
+runtime = {path="../runtime"}
+graph_proxy = {path = "../graph_proxy"}

@@ -19,6 +19,8 @@
 #[allow(dead_code)]
 #[allow(unused_imports)]
 pub mod test {
+    use graph_proxy::{InitializeJobCompiler, QueryExpGraph};
+    use ir_common::generated::common as common_pb;
     use ir_common::generated::result::Result;
     use lazy_static::lazy_static;
     use pegasus::result::{ResultSink, ResultStream};
@@ -27,7 +29,7 @@ pub mod test {
     use pegasus_server::JobRequest;
     use runtime::expr::to_suffix_expr_pb;
     use runtime::expr::token::tokenize;
-    use runtime::{create_demo_graph, IRJobCompiler, SinglePartition};
+    use runtime::IRJobCompiler;
     use std::sync::Once;
 
     static INIT: Once = Once::new();
@@ -42,10 +44,9 @@ pub mod test {
         });
     }
 
-    pub fn start_pegasus() {
+    fn start_pegasus() {
         match pegasus::startup(Configuration::singleton()) {
             Ok(_) => {
-                create_demo_graph();
                 lazy_static::initialize(&FACTORY);
             }
             Err(err) => match err {
@@ -53,6 +54,11 @@ pub mod test {
                 _ => panic!("start pegasus failed"),
             },
         }
+    }
+
+    fn initialize_job_compiler() -> IRJobCompiler {
+        let query_exp_graph = QueryExpGraph::new(1);
+        query_exp_graph.initialize_job_compiler()
     }
 
     pub fn submit_query(job_req: JobRequest, num_workers: u32) -> ResultStream<Result> {
@@ -70,12 +76,6 @@ pub mod test {
         results
     }
 
-    fn initialize_job_compiler() -> IRJobCompiler {
-        let partitioner = SinglePartition { num_servers: 1 };
-        IRJobCompiler::new(partitioner)
-    }
-
-    use ir_common::generated::common as common_pb;
     pub fn str_to_expr(expr_str: String) -> Option<common_pb::SuffixExpr> {
         let tokens_result = tokenize(&expr_str);
         if let Ok(tokens) = tokens_result {
