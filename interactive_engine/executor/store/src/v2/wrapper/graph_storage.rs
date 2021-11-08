@@ -22,7 +22,6 @@ use crate::db::api::{GraphStorage, EdgeKind, PropIter, ValueRef, PropertiesRef, 
 use std::collections::{HashMap, HashSet};
 use std::iter::FromIterator;
 use std::vec::IntoIter;
-use crate::v2::errors::Error;
 
 pub struct GraphStorageWrapper<G: GraphStorage> {
     storage: Arc<G>,

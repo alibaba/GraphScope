@@ -20,16 +20,13 @@ import com.alibaba.graphscope.groot.SnapshotCache;
 import com.alibaba.graphscope.groot.SnapshotWithSchema;
 import com.alibaba.graphscope.groot.meta.MetaService;
 import com.alibaba.graphscope.groot.meta.MetaStore;
-import com.alibaba.graphscope.groot.schema.GraphDef;
 import com.alibaba.graphscope.groot.store.StoreBackupId;
 import com.alibaba.maxgraph.common.config.BackupConfig;
 import com.alibaba.maxgraph.common.config.CommonConfig;
 import com.alibaba.maxgraph.common.config.Configs;
-import com.alibaba.maxgraph.common.config.CoordinatorConfig;
 import com.alibaba.maxgraph.common.util.ThreadFactoryUtils;
 import com.alibaba.maxgraph.compiler.api.exception.BackupException;
 import com.alibaba.maxgraph.compiler.api.exception.MaxGraphException;
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.slf4j.Logger;
@@ -315,7 +312,7 @@ public class BackupManager {
                                 addNewBackupInfo(new BackupInfo(
                                         newGlobalBackupId,
                                         snapshotWithSchema.getSnapshotId(),
-                                        snapshotWithSchema.getGraphDef(),
+                                        snapshotWithSchema.getGraphDef().toProto().toByteArray(),
                                         walOffsets,
                                         partitionToBackupId));
                                 future.complete(null);
@@ -393,10 +390,9 @@ public class BackupManager {
         restoredMetaStore.write(
                 "query_snapshot_id",
                 this.objectMapper.writeValueAsBytes(restoredSnapshotId));
-        GraphDef graphDef = restoredBackupInfo.getGraphDef();
         restoredMetaStore.write(
                 "graph_def_proto_bytes",
-                graphDef.toProto().toByteArray());
+                restoredBackupInfo.getGraphDefBytes());
         List<Long> restoredWalOffsets = restoredBackupInfo.getWalOffsets();
         restoredMetaStore.write(
                 "queue_offsets",

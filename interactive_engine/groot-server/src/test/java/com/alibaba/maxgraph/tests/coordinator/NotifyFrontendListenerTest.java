@@ -32,7 +32,8 @@ public class NotifyFrontendListenerTest {
         SnapshotCache snapshotCache = mock(SnapshotCache.class);
         GraphDef graphDef = GraphDef.newBuilder().setVersion(3L).build();
         when(schemaManager.getGraphDef()).thenReturn(graphDef);
-        when(snapshotCache.advanceQuerySnapshotId(any(), any())).thenReturn(-1L).thenReturn(10L);
+        when(snapshotCache.advanceQuerySnapshotId(eq(10L), eq(graphDef))).thenReturn(-1L);
+        when(snapshotCache.advanceQuerySnapshotId(eq(20L), isNull())).thenReturn(10L);
         doAnswer(
                         invocationOnMock -> {
                             long snapshotId = invocationOnMock.getArgument(0);

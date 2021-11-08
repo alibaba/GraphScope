@@ -27,7 +27,6 @@ use maxgraph_store::db::graph::store::GraphStore;
 use maxgraph_store::v2::api::partition_graph::PartitionGraph;
 use maxgraph_store::v2::Result;
 use maxgraph_store::db::api::GraphConfigBuilder;
-use crate::store::jna_response::JnaResponse;
 
 pub type PartitionSnapshotHandle = *const c_void;
 pub type ErrorHandle = *const c_void;

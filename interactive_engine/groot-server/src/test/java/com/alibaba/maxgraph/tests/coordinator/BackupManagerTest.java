@@ -69,9 +69,9 @@ public class BackupManagerTest {
         partitionToBackupId2.put(0, 2);
         partitionToBackupId2.put(1, 2);
         BackupInfo backupInfo1 = new BackupInfo(
-                1, querySnapshotId, graphDef, queueOffsets, partitionToBackupId1);
+                1, querySnapshotId, graphDef.toProto().toByteArray(), queueOffsets, partitionToBackupId1);
         BackupInfo backupInfo2 = new BackupInfo(
-                2, querySnapshotId, graphDef, queueOffsets, partitionToBackupId2);
+                2, querySnapshotId, graphDef.toProto().toByteArray(), queueOffsets, partitionToBackupId2);
 
         // mock MetaStore behaviours
         ObjectMapper objectMapper = new ObjectMapper();

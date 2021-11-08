@@ -13,7 +13,6 @@
 // limitations under the License.
 
 use crate::v2::api::{SnapshotId, PartitionSnapshot};
-use crate::v2::Result;
 
 pub trait PartitionGraph {
     type S: PartitionSnapshot;
