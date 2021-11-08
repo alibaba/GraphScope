@@ -86,7 +86,6 @@ impl Record {
         if let Some(tag) = tag {
             self.columns.insert(tag, entry.into());
         } else {
-            // TODO(bingqing): confirm
             self.curr = Some(entry.into());
         }
     }

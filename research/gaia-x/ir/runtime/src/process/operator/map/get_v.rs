@@ -14,7 +14,7 @@
 //! limitations under the License.
 
 use crate::graph::element::{Element, VertexOrEdge};
-use crate::graph::graph::{GraphProxy, QueryParams};
+use crate::graph::graph::QueryParams;
 use crate::process::operator::map::MapFuncGen;
 use crate::process::record::Record;
 use ir_common::error::{str_to_dyn_error, DynResult};
@@ -23,14 +23,12 @@ use ir_common::generated::algebra::get_v::VOpt;
 use ir_common::NameOrId;
 use pegasus::api::function::{FnResult, MapFunction};
 use std::convert::TryInto;
-use std::sync::Arc;
 
 struct GetVertexOperator {
     start_tag: Option<NameOrId>,
     opt: VOpt,
     query_params: QueryParams,
     alias: Option<NameOrId>,
-    graph: Arc<dyn GraphProxy>,
 }
 
 impl MapFunction<Record, Record> for GetVertexOperator {
@@ -38,26 +36,22 @@ impl MapFunction<Record, Record> for GetVertexOperator {
         let entry = input
             .get_graph_entry(self.start_tag.as_ref())
             .ok_or(str_to_dyn_error("get tag failed in GetVertexOperator"))?;
-        let id = if let VOpt::This = self.opt {
-            match entry {
-                VertexOrEdge::V(v) => v.id().expect("id of Vertex cannot be None"),
-                VertexOrEdge::E(_) => return Err(str_to_dyn_error("Should be vertex entry")),
-            }
-        } else {
-            let edge = match entry {
-                VertexOrEdge::V(_) => return Err(str_to_dyn_error("Should be edge entry")),
-                VertexOrEdge::E(e) => e,
-            };
-            match self.opt {
-                VOpt::Start => edge.src_id,
-                VOpt::End => edge.dst_id,
+        let id = match entry {
+            VertexOrEdge::V(v) => match self.opt {
+                VOpt::This => v.id().expect("id of Vertex cannot be None"),
+                _ => return Err(str_to_dyn_error("Should be vertex entry")),
+            },
+            VertexOrEdge::E(e) => match self.opt {
+                VOpt::Start => e.src_id,
+                VOpt::End => e.dst_id,
                 VOpt::Other => {
                     todo!()
                 }
-                VOpt::This => unreachable!(),
-            }
+                VOpt::This => return Err(str_to_dyn_error("Should be edge entry")),
+            },
         };
-        let mut result_iter = self.graph.get_vertex(&[id], &self.query_params)?;
+        let graph = crate::get_graph().ok_or(str_to_dyn_error("Graph is None"))?;
+        let mut result_iter = graph.get_vertex(&[id], &self.query_params)?;
         if let Some(vertex) = result_iter.next() {
             input.append(vertex, self.alias.clone());
             Ok(input)
@@ -82,13 +76,11 @@ impl MapFuncGen for algebra_pb::GetV {
             .alias
             .map(|name_or_id| name_or_id.try_into())
             .transpose()?;
-        let graph = crate::get_graph().ok_or(str_to_dyn_error("Graph is None"))?;
         Ok(Box::new(GetVertexOperator {
             start_tag,
             opt,
             query_params,
             alias,
-            graph,
         }))
     }
 }
