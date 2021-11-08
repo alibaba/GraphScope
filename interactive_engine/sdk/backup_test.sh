@@ -20,7 +20,7 @@ exit_code=$?
 ps -ef | grep "com.alibaba.maxgraph.servers.MaxNode" | grep -v grep | awk '{print $2}' | xargs kill -9
 # clean data
 rm -fr ${maxgraph_dir}/data || true
-#rm -fr ${maxgraph_dir}/restore || true
+rm -fr ${maxgraph_dir}/restore || true
 if [ $exit_code -ne 0 ]; then
     echo "gaia_on_maxgraph_store gremlin test fail"
     exit 1
