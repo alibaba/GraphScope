@@ -64,7 +64,7 @@ cat <<END
     --verbose            Print the debug logging information
     --k8s                Install the dependencies for running GraphScope on k8s locally
     --dev                Install the dependencies for build GraphScope on local
-    --cn                 Use chinese mirror when install dependencies.
+    --cn                 Use tsinghua mirror for brew when install dependencies on macOS
 END
 }
 
@@ -489,7 +489,6 @@ install_vineyard() {
   if [[ "${PLATFORM}" == *"Darwin"* ]]; then
     cmake .. -DCMAKE_INSTALL_PREFIX=${DEPS_PREFIX} \
              -DBUILD_SHARED_LIBS=ON \
-             -DBUILD_VINEYARD_SERVER=OFF \
              -DBUILD_VINEYARD_TESTS=OFF
   else
     cmake .. -DCMAKE_INSTALL_PREFIX=${DEPS_PREFIX} \
@@ -707,6 +706,17 @@ install_dependencies() {
     fi
     log "Installing packages ${BASIC_PACKGES_TO_INSTALL[*]}"
     brew install ${BASIC_PACKGES_TO_INSTALL[*]}
+
+    if [[ ${CN_MIRROR} == true && "${packages_to_install[*]}" =~ "openjdk@11" ]]; then
+      # packages_to_install contains jdk
+      log "Installing openjdk11."
+      wget -c https://graphscope.oss-cn-beijing.aliyuncs.com/dependencies/OpenJDK11U-jdk_x64_mac_hotspot_11.0.13_8.tar.gz \
+        -P /tmp
+      sudo tar xf /tmp/OpenJDK11U-jdk_x64_mac_hotspot_11.0.13_8.tar.gz -C /Library/Java/JavaVirtualMachines/
+      rm -fr /tmp/OpenJDK11U-jdk_x64_mac_hotspot_11.0.13_8.tar.gz
+      # remove jdk from packages_to_install
+      packages_to_install=("${packages_to_install[@]/openjdk@11}")
+    fi
 
     if [[ "${packages_to_install[*]}" =~ "go" ]]; then
       # packages_to_install contains go
