@@ -14,7 +14,6 @@
 //! limitations under the License.
 
 mod compiler;
-mod exp_store;
 pub mod expr;
 pub mod graph;
 mod process;
@@ -28,4 +27,3 @@ extern crate log;
 
 pub use crate::graph::graph::{get_graph, register_graph};
 pub use compiler::IRJobCompiler;
-pub use exp_store::create_demo_graph;

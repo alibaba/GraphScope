@@ -9,8 +9,6 @@ ir_common = {path = "../common", features = ["proto_inplace"]}
 pegasus_common = { path = "../../pegasus/common" }
 pegasus = { path = "../../pegasus/pegasus" }
 pegasus_server = { path = "../../pegasus/server" }
-pegasus_client = {path = "../../pegasus/clients/rust/client"}
-graph_store = {path = "../../../graph_store"}
 lazy_static = "1.3.0"
 prost = "0.8"
 log = "0.4"
