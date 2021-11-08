@@ -97,7 +97,7 @@ std::shared_ptr<DispatchResult> Dispatcher::processCmd(
 
 void preprocessCmd(CommandDetail& cmd) {
   if (cmd.type == rpc::CREATE_GRAPH) {
-    rpc::GSParams params(cmd.params);
+    // TODO
   }
 }
 

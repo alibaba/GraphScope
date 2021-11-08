@@ -176,10 +176,9 @@ std::shared_ptr<detail::Edge> ParseEdge(const AttrMap& attrs) {
 }
 
 // The input string is the serialized bytes of an arrow::Table, this function
-// split the table to several small tables. Note it takes ownership of the input
-// string.
-std::vector<std::string> SplitTable(std::string* data, int num) {
-  std::shared_ptr<arrow::Buffer> buffer = arrow::Buffer::FromString(*data);
+// split the table to several small tables.
+std::vector<std::string> SplitTable(const std::string& data, int num) {
+  std::shared_ptr<arrow::Buffer> buffer = arrow::Buffer::Wrap(data.data(), data.size());
   std::shared_ptr<arrow::Table> table;
   vineyard::DeserializeTable(buffer, &table);
   std::vector<std::shared_ptr<arrow::Table>> sliced_tables(num);
@@ -203,9 +202,9 @@ std::vector<std::string> SplitTable(std::string* data, int num) {
   return sliced_bytes;
 }
 
-std::vector<AttrMap> DistributeLoader(AttrMap* attrs, int num) {
+std::vector<AttrMap> DistributeLoader(const AttrMap& attrs, int num) {
   std::vector<AttrMap> distributed_attrs(num);
-  std::string* data = (*attrs)[rpc::VALUES].release_s();
+  const std::string& data = attrs.at(rpc::VALUES).s();
   auto sliced_bytes = SplitTable(data, num);
   std::string protocol = attrs.at(rpc::PROTOCOL).s();
   for (int i = 0; i < num; ++i) {
@@ -215,8 +214,8 @@ std::vector<AttrMap> DistributeLoader(AttrMap* attrs, int num) {
   return distributed_attrs;
 }
 
-std::vector<AttrMap> DistributeVertex(AttrMap* attrs, int num) {
-  auto loader_attr = (*attrs)[rpc::LOADER].mutable_func()->mutable_attr();
+std::vector<AttrMap> DistributeVertex(const AttrMap& attrs, int num) {
+  auto loader_attr = attrs.at(rpc::LOADER).func().attr();
   auto sliced_attrs = DistributedLoader(loader_attr, num);
 
   std::string label = attrs.at(rpc::LABEL).s();
@@ -225,7 +224,7 @@ std::vector<AttrMap> DistributeVertex(AttrMap* attrs, int num) {
   for (int i = 0; i < num; ++i) {
     distributed_attrs[i][rpc::LABEL].set_s(label);
     distributed_attrs[i][rpc::VID].set_s(vid);
-    rpc::NameAttrList* list = rpc::NameAttrList::New();
+    rpc::NameAttrList* list = new rpc::NameAttrList();
     list->mutable_attr()->swap(sliced_attrs[i]);
     distributed_attrs[i][rpc::LOADER].set_allocated_func(list);
   }
@@ -233,7 +232,7 @@ std::vector<AttrMap> DistributeVertex(AttrMap* attrs, int num) {
   return distributed_attrs;
 }
 
-void DistributeEdge(AttrMap* attrs, int num) {
+std::vector<AttrMap> DistributeEdge(const AttrMap& attrs, int num) {
   std::vector<AttrMap> distributed_attrs(num);
 
   // auto edge = std::make_shared<detail::Edge>();
@@ -253,13 +252,15 @@ void DistributeEdge(AttrMap* attrs, int num) {
 // in order to reduce the communication overhead.
 void distributeRawbytes(const gs::rpc::GSParams& params, int num) {
   std::vector<std::map<int, AttrValue>> output;
+  BOOST_LEAF_AUTO(list, params.Get<rpc::AttrValue_ListValue>(
+                            rpc::ARROW_PROPERTY_DEFINITION));
   auto items = list.func();
   for (const auto& item : items) {
     if (item.name() == "vertex") {
-      auto attrs = DistributeVertex(item.mutable_attr(), num);
+      auto attrs = DistributeVertex(item.attr(), num);
 
     } else if (item.name() == "edge") {
-      auto attrs = DistributeEdge(item.mutable_attr(), num);
+      auto attrs = DistributeEdge(item.attr(), num);
     }
   }
 }
