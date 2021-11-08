@@ -95,7 +95,11 @@ std::shared_ptr<DispatchResult> Dispatcher::processCmd(
   return r;
 }
 
-void preprocessCmd(CommandDetail& cmd) {}
+void preprocessCmd(CommandDetail& cmd) {
+  if (cmd.type == rpc::CREATE_GRAPH) {
+    rpc::GSParams params(cmd.params);
+  }
+}
 
 void Dispatcher::publisherLoop() {
   CHECK_EQ(comm_spec_.worker_id(), grape::kCoordinatorRank);

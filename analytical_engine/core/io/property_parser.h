@@ -30,8 +30,7 @@
 #include "arrow/io/api.h"
 #include "boost/algorithm/string.hpp"
 #include "google/protobuf/util/json_util.h"
-
-#include "vineyard/io/io/local_io_adaptor.h"
+#include "vineyard/basic/ds/arrow_utils.h"
 
 #include "core/server/rpc_utils.h"
 #include "proto/attr_value.pb.h"
@@ -41,10 +40,11 @@
 template <typename Key, typename Value>
 using ProtobufMap = ::google::protobuf::Map<Key, Value>;
 
-using AttrMap = ProtobufMap<int, gs::rpc::AttrValue>;
-
+using gs::rpc::AttrValue;
 using gs::rpc::DataType;
 using gs::rpc::OpDef;
+
+using AttrMap = ProtobufMap<int, AttrValue>;
 
 namespace gs {
 namespace detail {
@@ -133,22 +133,13 @@ struct Graph {
 };
 }  // namespace detail
 
-inline void ParseLoader(std::string& protocol, std::string& values,
-                        const AttrMap& attrs) {
+void ParseLoader(std::string& protocol, std::string& values,
+                 const AttrMap& attrs) {
   protocol = attrs.at(rpc::PROTOCOL).s();
   values = attrs.at(rpc::VALUES).s();
 }
 
-inline void ParseProperties(std::vector<std::pair<std::string, DataType>>& m,
-                            const rpc::AttrValue& attr) {
-  const auto& props = attr.list().func();
-  for (const auto& prop : props) {
-    CHECK_EQ(prop.attr().size(), 1);
-    m.emplace_back(prop.name(), prop.attr().begin()->second.type());
-  }
-}
-
-inline detail::Edge::SubLabel ParseSubLabel(const AttrMap& attrs) {
+detail::Edge::SubLabel ParseSubLabel(const AttrMap& attrs) {
   detail::Edge::SubLabel sub_label;
   sub_label.src_label = attrs.at(rpc::SRC_LABEL).s();
   sub_label.dst_label = attrs.at(rpc::DST_LABEL).s();
@@ -158,28 +149,21 @@ inline detail::Edge::SubLabel ParseSubLabel(const AttrMap& attrs) {
 
   ParseLoader(sub_label.protocol, sub_label.values,
               attrs.at(rpc::LOADER).func().attr());
-  // The param PROPERTIES is only required when protocol is numpy or pandas.
-  if (attrs.find(rpc::PROPERTIES) != attrs.end()) {
-    ParseProperties(sub_label.properties, attrs.at(rpc::PROPERTIES));
-  }
 
   return sub_label;
 }
 
-inline std::shared_ptr<detail::Vertex> ParseVertex(const AttrMap& attrs) {
+std::shared_ptr<detail::Vertex> ParseVertex(const AttrMap& attrs) {
   auto vertex = std::make_shared<detail::Vertex>();
   vertex->label = attrs.at(rpc::LABEL).s();
   vertex->vid = attrs.at(rpc::VID).s();
 
-  if (attrs.find(rpc::PROPERTIES) != attrs.end()) {
-    ParseProperties(vertex->properties, attrs.at(rpc::PROPERTIES));
-  }
   ParseLoader(vertex->protocol, vertex->values,
               attrs.at(rpc::LOADER).func().attr());
   return vertex;
 }
 
-inline std::shared_ptr<detail::Edge> ParseEdge(const AttrMap& attrs) {
+std::shared_ptr<detail::Edge> ParseEdge(const AttrMap& attrs) {
   auto edge = std::make_shared<detail::Edge>();
   edge->label = attrs.at(rpc::LABEL).s();
 
@@ -191,7 +175,96 @@ inline std::shared_ptr<detail::Edge> ParseEdge(const AttrMap& attrs) {
   return edge;
 }
 
-inline bl::result<std::shared_ptr<detail::Graph>> ParseCreatePropertyGraph(
+// The input string is the serialized bytes of an arrow::Table, this function
+// split the table to several small tables. Note it takes ownership of the input
+// string.
+std::vector<std::string> SplitTable(std::string* data, int num) {
+  std::shared_ptr<arrow::Buffer> buffer = arrow::Buffer::FromString(*data);
+  std::shared_ptr<arrow::Table> table;
+  vineyard::DeserializeTable(buffer, &table);
+  std::vector<std::shared_ptr<arrow::Table>> sliced_tables(num);
+  int num_rows = table->num_rows();
+  int offset = num_rows / num;
+  int remainder = num_rows % num;
+  int cur = 0;
+  sliced_tables[0] = table->Slice(cur, offset + remainder);
+  cur = offset + remainder;
+  for (int i = 1; i < num; ++i) {
+    auto sliced = table->Slice(cur, offset);
+    sliced_tables[i] = sliced;
+    cur += offset;
+  }
+  std::vector<std::string> sliced_bytes(num);
+  for (int i = 0; i < num; ++i) {
+    std::shared_ptr<arrow::Buffer> out_buf;
+    vineyard::SerializeTable(sliced_tables[i], &out_buf);
+    sliced_bytes[i] = out_buf->ToString();
+  }
+  return sliced_bytes;
+}
+
+std::vector<AttrMap> DistributeLoader(AttrMap* attrs, int num) {
+  std::vector<AttrMap> distributed_attrs(num);
+  std::string* data = (*attrs)[rpc::VALUES].release_s();
+  auto sliced_bytes = SplitTable(data, num);
+  std::string protocol = attrs.at(rpc::PROTOCOL).s();
+  for (int i = 0; i < num; ++i) {
+    distributed_attrs[i][rpc::PROTOCOL].set_s(protocol);
+    distributed_attrs[i][rpc::VALUES].set_s(std::move(sliced_bytes[i]));
+  }
+  return distributed_attrs;
+}
+
+std::vector<AttrMap> DistributeVertex(AttrMap* attrs, int num) {
+  auto loader_attr = (*attrs)[rpc::LOADER].mutable_func()->mutable_attr();
+  auto sliced_attrs = DistributedLoader(loader_attr, num);
+
+  std::string label = attrs.at(rpc::LABEL).s();
+  std::string vid = attrs.at(rpc::VID).s();
+  std::vector<AttrMap> distributed_attrs(num);
+  for (int i = 0; i < num; ++i) {
+    distributed_attrs[i][rpc::LABEL].set_s(label);
+    distributed_attrs[i][rpc::VID].set_s(vid);
+    rpc::NameAttrList* list = rpc::NameAttrList::New();
+    list->mutable_attr()->swap(sliced_attrs[i]);
+    distributed_attrs[i][rpc::LOADER].set_allocated_func(list);
+  }
+
+  return distributed_attrs;
+}
+
+void DistributeEdge(AttrMap* attrs, int num) {
+  std::vector<AttrMap> distributed_attrs(num);
+
+  // auto edge = std::make_shared<detail::Edge>();
+  // edge->label = attrs.at(rpc::LABEL).s();
+
+  // auto sub_label_defs = attrs.at(rpc::SUB_LABEL).list().func();
+  // for (const auto& sub_label_def : sub_label_defs) {
+  //   edge->sub_labels.push_back(ParseSubLabel(sub_label_def.attr()));
+  // }
+
+  // return edge;
+  return distributed_attrs;
+}
+
+// If contains contents from numpy or pandas, then we should distribute those
+// raw bytes evenly across all workers, each worker would only receive a slice,
+// in order to reduce the communication overhead.
+void distributeRawbytes(const gs::rpc::GSParams& params, int num) {
+  std::vector<std::map<int, AttrValue>> output;
+  auto items = list.func();
+  for (const auto& item : items) {
+    if (item.name() == "vertex") {
+      auto attrs = DistributeVertex(item.mutable_attr(), num);
+
+    } else if (item.name() == "edge") {
+      auto attrs = DistributeEdge(item.mutable_attr(), num);
+    }
+  }
+}
+
+bl::result<std::shared_ptr<detail::Graph>> ParseCreatePropertyGraph(
     const gs::rpc::GSParams& params) {
   BOOST_LEAF_AUTO(list, params.Get<rpc::AttrValue_ListValue>(
                             rpc::ARROW_PROPERTY_DEFINITION));
@@ -214,7 +287,7 @@ inline bl::result<std::shared_ptr<detail::Graph>> ParseCreatePropertyGraph(
   return graph;
 }
 
-inline bl::result<std::vector<std::map<int, std::vector<int>>>>
+bl::result<std::vector<std::map<int, std::vector<int>>>>
 ParseProjectPropertyGraph(const gs::rpc::GSParams& params) {
   BOOST_LEAF_AUTO(list, params.Get<rpc::AttrValue_ListValue>(
                             rpc::ARROW_PROPERTY_DEFINITION));
