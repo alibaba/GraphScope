@@ -18,6 +18,7 @@ mod graph_query;
 
 use crate::graph::graph::Statement;
 use crate::graph::{ID, ID_BITS};
+pub use graph_partition::SinglePartition;
 pub use graph_query::create_demo_graph;
 use ir_common::error::DynResult;
 use pegasus::api::function::DynIter;

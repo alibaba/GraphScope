@@ -96,8 +96,11 @@ impl QueryParams {
     }
 
     // Extra query params for different storages
-    fn with_extra_params(self, _extra_params: Vec<String>) -> Result<Self, ParsePbError> {
-        todo!()
+    fn with_extra_params(self, extra_params: Vec<String>) -> Result<Self, ParsePbError> {
+        if !extra_params.is_empty() {
+            todo!()
+        }
+        Ok(self)
     }
 }
 
