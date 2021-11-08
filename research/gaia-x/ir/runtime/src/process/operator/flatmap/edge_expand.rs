@@ -53,22 +53,20 @@ impl FlatMapFuncGen for algebra_pb::EdgeExpand {
     ) -> DynResult<Box<dyn FlatMapFunction<Record, Record, Target = DynIter<Record>>>> {
         let graph = crate::get_graph().ok_or(str_to_dyn_error("Graph is None"))?;
         let expand_base = ExpandBase::try_from(self.base)?;
-        if let Some(edge_tag) = self.alias {
+        if self.is_edge {
             let stmt =
                 graph.prepare_explore_edge(expand_base.direction, &expand_base.query_params)?;
             Ok(Box::new(EdgeExpandOperator {
                 start_v_tag: expand_base.v_tag.clone(),
-                edge_or_end_v_tag: Some(edge_tag.try_into()?),
+                edge_or_end_v_tag: self.alias.map(|e_tag| e_tag.try_into()).transpose()?,
                 stmt,
             }))
         } else {
-            // If edge_tag doesn't exist, we assume to append target vertex (id-only).
-            // TODO: confirm whether target vertex alias is necessary in some cases?
             let stmt =
                 graph.prepare_explore_vertex(expand_base.direction, &expand_base.query_params)?;
             Ok(Box::new(EdgeExpandOperator {
                 start_v_tag: expand_base.v_tag,
-                edge_or_end_v_tag: None,
+                edge_or_end_v_tag: self.alias.map(|v_tag| v_tag.try_into()).transpose()?,
                 stmt,
             }))
         }
