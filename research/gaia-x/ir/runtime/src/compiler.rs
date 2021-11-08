@@ -187,9 +187,6 @@ impl IRJobCompiler {
                         todo!()
                     }
                     server_pb::operator_def::OpKind::Merge(merge) => {
-                        if merge.tasks.len() < 2 {
-                            Err("invalid branch sizes in merge")?;
-                        }
                         let (mut ori_stream, sub_stream) = stream.copied()?;
                         stream = self.install(sub_stream, &merge.tasks[0].plan[..])?;
                         for subtask in &merge.tasks[1..] {
