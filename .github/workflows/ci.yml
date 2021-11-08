@@ -93,11 +93,9 @@ jobs:
         strip /opt/vineyard/lib64/* || true
         tar -cf vineyard.tar /opt/vineyard
 
-        sudo mkdir -p /opt/graphscope
-        sudo chown -R $(id -u):$(id -g) /opt/graphscope
-
         pushd ${GITHUB_WORKSPACE}
         make gae
+        sudo chown -R $(id -u):$(id -g) /opt/graphscope
         cp k8s/kube_ssh /opt/graphscope/bin/kube_ssh
         cp k8s/pre_stop.py /opt/graphscope/bin/pre_stop.py
         tar -cf gae.tar /opt/graphscope
