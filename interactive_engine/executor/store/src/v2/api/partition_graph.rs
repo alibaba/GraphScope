@@ -19,6 +19,4 @@ pub trait PartitionGraph {
     type S: PartitionSnapshot;
 
     fn get_snapshot(&self, snapshot_id: SnapshotId) -> Self::S;
-
-    fn get_graph_def_blob(&self) -> Result<Vec<u8>>;
 }

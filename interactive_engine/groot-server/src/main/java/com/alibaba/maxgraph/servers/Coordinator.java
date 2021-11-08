@@ -13,6 +13,7 @@
  */
 package com.alibaba.maxgraph.servers;
 
+import com.alibaba.graphscope.groot.SnapshotCache;
 import com.alibaba.graphscope.groot.coordinator.*;
 import com.alibaba.graphscope.groot.meta.MetaStore;
 import com.alibaba.maxgraph.common.RoleType;
@@ -86,6 +87,7 @@ public class Coordinator extends NodeBase {
         RoleClients<StoreSchemaClient> storeSchemaClients =
                 new RoleClients<>(this.channelManager, RoleType.STORE, StoreSchemaClient::new);
         GraphDefFetcher graphDefFetcher = new GraphDefFetcher(storeSchemaClients);
+        SnapshotCache snapshotCache = new SnapshotCache();
         this.schemaManager =
                 new SchemaManager(
                         this.snapshotManager,
@@ -98,6 +100,7 @@ public class Coordinator extends NodeBase {
                         this.discovery,
                         this.snapshotManager,
                         this.schemaManager,
+                        snapshotCache,
                         frontendSnapshotClients);
         IngestProgressService ingestProgressService =
                 new IngestProgressService(this.snapshotManager);
@@ -110,7 +113,9 @@ public class Coordinator extends NodeBase {
         this.idAllocator = new IdAllocator(metaStore);
         IdAllocateService idAllocateService = new IdAllocateService(this.idAllocator);
         this.backupManager =
-                new BackupManager(configs, this.metaService, metaStore, this.snapshotManager, storeBackupTaskSender);
+                new BackupManager(
+                        configs, this.metaService, metaStore, this.snapshotManager, snapshotCache,
+                        storeBackupTaskSender);
         BackupService backupService = new BackupService(this.backupManager);
         this.rpcServer =
                 new RpcServer(

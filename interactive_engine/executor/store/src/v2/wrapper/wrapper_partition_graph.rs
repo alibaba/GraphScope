@@ -40,10 +40,6 @@ impl<G: MultiVersionGraph> PartitionGraph for WrapperPartitionGraph<G> {
             snapshot_id,
         }
     }
-
-    fn get_graph_def_blob(&self) -> Result<Vec<u8>> {
-        self.multi_version_graph.get_graph_def_blob()
-    }
 }
 
 pub struct WrapperPartitionSnapshot<G: MultiVersionGraph> {

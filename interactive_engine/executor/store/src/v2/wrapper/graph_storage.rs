@@ -280,10 +280,6 @@ impl<G: GraphStorage> MultiVersionGraph for GraphStorageWrapper<G> {
                                                 property_ids)?;
         edges_iter.nth(k as usize).transpose()
     }
-
-    fn get_graph_def_blob(&self) -> Result<Vec<u8>> {
-        self.storage.get_graph_def_blob().map_err(|e| { Error::from(e) })
-    }
 }
 
 #[derive(Clone)]

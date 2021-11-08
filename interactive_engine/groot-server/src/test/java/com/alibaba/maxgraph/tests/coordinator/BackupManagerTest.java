@@ -14,9 +14,12 @@
 package com.alibaba.maxgraph.tests.coordinator;
 
 import com.alibaba.graphscope.groot.CompletionCallback;
+import com.alibaba.graphscope.groot.SnapshotCache;
+import com.alibaba.graphscope.groot.SnapshotWithSchema;
 import com.alibaba.graphscope.groot.coordinator.*;
 import com.alibaba.graphscope.groot.meta.MetaService;
 import com.alibaba.graphscope.groot.meta.MetaStore;
+import com.alibaba.graphscope.groot.schema.GraphDef;
 import com.alibaba.graphscope.groot.store.StoreBackupId;
 import com.alibaba.maxgraph.common.config.BackupConfig;
 import com.alibaba.maxgraph.common.config.CommonConfig;
@@ -28,6 +31,9 @@ import org.junit.jupiter.api.Test;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.*;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
@@ -53,7 +59,8 @@ public class BackupManagerTest {
 
         // init data
         long querySnapshotId = 10L;
-        SnapshotInfo snapshotInfo = new SnapshotInfo(querySnapshotId, 1L);
+        GraphDef graphDef = GraphDef.newBuilder().setVersion(10L).build();
+        SnapshotWithSchema snapshotWithSchema = new SnapshotWithSchema(querySnapshotId, graphDef);
         List<Long> queueOffsets = new ArrayList<>();
         Map<Integer, Integer> partitionToBackupId1 = new HashMap<>();
         partitionToBackupId1.put(0, 1);
@@ -62,9 +69,9 @@ public class BackupManagerTest {
         partitionToBackupId2.put(0, 2);
         partitionToBackupId2.put(1, 2);
         BackupInfo backupInfo1 = new BackupInfo(
-                1, querySnapshotId, queueOffsets, partitionToBackupId1);
+                1, querySnapshotId, graphDef, queueOffsets, partitionToBackupId1);
         BackupInfo backupInfo2 = new BackupInfo(
-                2, querySnapshotId, queueOffsets, partitionToBackupId2);
+                2, querySnapshotId, graphDef, queueOffsets, partitionToBackupId2);
 
         // mock MetaStore behaviours
         ObjectMapper objectMapper = new ObjectMapper();
@@ -83,8 +90,11 @@ public class BackupManagerTest {
 
         // mock SnapshotManager behaviours
         SnapshotManager mockSnapshotManager = mock(SnapshotManager.class);
-        when(mockSnapshotManager.getQuerySnapshotInfo()).thenReturn(snapshotInfo);
         when(mockSnapshotManager.getQueueOffsets()).thenReturn(queueOffsets);
+
+        // mock SnapshotCache
+        SnapshotCache mockSnapshotCache = mock(SnapshotCache.class);
+        when(mockSnapshotCache.getSnapshotWithSchema()).thenReturn(snapshotWithSchema);
 
         // mock StoreBackupTaskSender behaviours
         StoreBackupTaskSender mockStoreBackupTaskSender = mock(StoreBackupTaskSender.class);
@@ -118,7 +128,8 @@ public class BackupManagerTest {
                 .verifyStoreBackup(anyInt(), any(), any());
 
         BackupManager backupManager = new BackupManager(
-                configs, mockMetaService, mockMetaStore, mockSnapshotManager, mockStoreBackupTaskSender);
+                configs, mockMetaService, mockMetaStore, mockSnapshotManager, mockSnapshotCache,
+                mockStoreBackupTaskSender);
         backupManager.start();
 
         // create the first backup
@@ -196,6 +207,9 @@ public class BackupManagerTest {
         // restore from the second backup
         try {
             backupManager.restoreFromBackup(backupId2, "restore_meta", "restore_store");
+            assertTrue(Files.exists(Paths.get("restore_meta", "query_snapshot_id")));
+            assertTrue(Files.exists(Paths.get("restore_meta", "graph_def_proto_bytes")));
+            assertTrue(Files.exists(Paths.get("restore_meta", "queue_offsets")));
         } catch (Exception e) {
             fail("should not have thrown any exception during backup restoring");
         } finally {

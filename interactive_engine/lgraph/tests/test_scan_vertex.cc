@@ -54,10 +54,11 @@ void PrintVertexInfo(lgraph::Vertex *v, const lgraph::Schema &schema) {
 }
 
 int main(int argc, char *argv[]) {
-  assert(argc == 2);
+  assert(argc == 3);
   const char *store_path = argv[1];
+  const char *schema_path = argv[2];
   lgraph::ReadonlyDB rg = lgraph::ReadonlyDB::Open(store_path);
-  lgraph::Schema schema = rg.GetGraphSchema();
+  lgraph::Schema schema = lgraph::ReadonlyDB::LoadSchema(schema_path);
   lgraph::Snapshot ss = rg.GetSnapshot(std::numeric_limits<uint32_t>::max());
   auto iter = ss.ScanVertex().unwrap();
   assert(iter.Valid());

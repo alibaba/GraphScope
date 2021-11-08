@@ -14,6 +14,7 @@
 package com.alibaba.maxgraph.tests.coordinator;
 
 import com.alibaba.graphscope.groot.CompletionCallback;
+import com.alibaba.graphscope.groot.SnapshotCache;
 import com.alibaba.graphscope.groot.schema.GraphDef;
 import com.alibaba.graphscope.groot.coordinator.FrontendSnapshotClient;
 import com.alibaba.graphscope.groot.coordinator.NotifyFrontendListener;
@@ -28,8 +29,10 @@ public class NotifyFrontendListenerTest {
     void testListener() {
         FrontendSnapshotClient frontendSnapshotClient = mock(FrontendSnapshotClient.class);
         SchemaManager schemaManager = mock(SchemaManager.class);
+        SnapshotCache snapshotCache = mock(SnapshotCache.class);
         GraphDef graphDef = GraphDef.newBuilder().setVersion(3L).build();
         when(schemaManager.getGraphDef()).thenReturn(graphDef);
+        when(snapshotCache.advanceQuerySnapshotId(any(), any())).thenReturn(-1L).thenReturn(10L);
         doAnswer(
                         invocationOnMock -> {
                             long snapshotId = invocationOnMock.getArgument(0);
@@ -41,7 +44,7 @@ public class NotifyFrontendListenerTest {
                 .advanceQuerySnapshot(anyLong(), any(), any());
 
         NotifyFrontendListener listener =
-                new NotifyFrontendListener(0, frontendSnapshotClient, schemaManager);
+                new NotifyFrontendListener(0, frontendSnapshotClient, schemaManager, snapshotCache);
         listener.snapshotAdvanced(10L, 10L);
         verify(frontendSnapshotClient).advanceQuerySnapshot(eq(10L), eq(graphDef), any());
 

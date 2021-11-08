@@ -33,13 +33,4 @@ Snapshot ReadonlyDB::GetSnapshot(SnapshotId snapshot_id) {
   return Snapshot{snapshot_handle};
 }
 
-Schema ReadonlyDB::GetGraphSchema() {
-  auto response = ffi::GetGraphDef(handle_);
-  Check(response.success, "Get graph schema failed!");
-  GraphDefPb proto;
-  Check(proto.ParseFromArray(response.data, response.len), "Parse graph schema failed!");
-  ffi::DropFfiResponse(response);
-  return Schema::FromProto(proto);
-}
-
 }

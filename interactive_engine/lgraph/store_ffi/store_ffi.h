@@ -28,7 +28,6 @@ namespace ffi {
 extern "C" {
   /// Snapshot FFIs
   PartitionGraphHandle OpenPartitionGraph(const char* store_path);
-  FfiResponse GetGraphDef(PartitionGraphHandle graph);
   PartitionSnapshotHandle GetSnapshot(PartitionGraphHandle graph, SnapshotId snapshot_id);
   VertexHandle GetVertex(PartitionSnapshotHandle snapshot, VertexId vertex_id, LabelId label_id, ErrorHandle* error);
   EdgeHandle GetEdge(PartitionSnapshotHandle snapshot, EdgeId edge_id, const EdgeRelation& edge_relation, ErrorHandle* error);
@@ -78,7 +77,6 @@ extern "C" {
   void ReleaseEdgeIteratorHandle(EdgeIterHandle ptr);
   void ReleasePropertyHandle(PropertyHandle ptr);
   void ReleasePropertyIteratorHandle(PropertyIterHandle ptr);
-  void DropFfiResponse(FfiResponse response);
 }
 
 }

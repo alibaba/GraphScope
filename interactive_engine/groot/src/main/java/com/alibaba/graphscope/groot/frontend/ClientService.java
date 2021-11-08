@@ -13,6 +13,7 @@
  */
 package com.alibaba.graphscope.groot.frontend;
 
+import com.alibaba.graphscope.groot.SnapshotCache;
 import com.alibaba.graphscope.groot.schema.EdgeKind;
 import com.alibaba.graphscope.groot.schema.GraphDef;
 import com.alibaba.graphscope.groot.schema.GraphSchemaMapper;

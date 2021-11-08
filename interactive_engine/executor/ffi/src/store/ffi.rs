@@ -95,26 +95,6 @@ pub extern fn GetSnapshot(handle: PartitionGraphHandle, snapshot_id: SnapshotId)
 }
 
 #[no_mangle]
-pub extern fn GetGraphDef(handle: PartitionGraphHandle) -> JnaResponse {
-    let graph_store_ptr = unsafe { &*(handle as *const FfiPartitionGraph) };
-    let mut response = JnaResponse::default();
-    match graph_store_ptr.get_graph_def_blob() {
-        Ok(blob) => {
-            if let Err(e) = response.data(blob) {
-                response.success(false);
-                let msg = format!("{:?}", e);
-                response.err_msg(&msg);
-            }
-        }
-        Err(e) => {
-            response.success(false);
-            response.err_msg(e.what());
-        }
-    }
-    response
-}
-
-#[no_mangle]
 pub extern fn GetVertex(partition_snapshot: PartitionSnapshotHandle,
                         vertex_id: VertexId, label_id: LabelId,
                         error: *mut ErrorHandle)
@@ -684,11 +664,6 @@ pub extern fn ReleasePropertyIteratorHandle(ptr: PropertyIteratorHandle) {
     unsafe {
         Box::from_raw(handler);
     }
-}
-
-#[no_mangle]
-pub extern fn DropFfiResponse(response: JnaResponse) {
-    drop(response);
 }
 
 /// Internal functions

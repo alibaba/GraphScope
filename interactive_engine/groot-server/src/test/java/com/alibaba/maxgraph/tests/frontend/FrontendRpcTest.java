@@ -13,6 +13,7 @@
  */
 package com.alibaba.maxgraph.tests.frontend;
 
+import com.alibaba.graphscope.groot.SnapshotCache;
 import com.alibaba.graphscope.groot.coordinator.BackupInfo;
 import com.alibaba.graphscope.groot.frontend.*;
 import com.alibaba.graphscope.groot.frontend.FrontendSnapshotService;
@@ -116,7 +117,8 @@ public class FrontendRpcTest {
         when(stub.restoreFromBackup(any())).thenReturn(RestoreFromBackupResponse.newBuilder().build());
         when(stub.verifyBackup(any())).thenReturn(VerifyBackupResponse.newBuilder().build());
         BackupInfo backupInfo =
-                new BackupInfo(1, 10L, new ArrayList<>(), new HashMap<>());
+                new BackupInfo(
+                        1, 10L, GraphDef.newBuilder().setVersion(10L).build(), new ArrayList<>(), new HashMap<>());
         when(stub.getBackupInfo(any())).thenReturn(
                 GetBackupInfoResponse.newBuilder().addBackupInfoList(backupInfo.toProto()).build());
         BackupClient backupClient = new BackupClient(stub);

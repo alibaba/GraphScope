@@ -193,6 +193,7 @@ message ConfigPb {
 message BackupInfoPb {
   int32 globalBackupId = 1;
   int64 snapshotId = 2;
-  repeated int64 walOffsets = 3;
-  map<int32, int32> partitionToBackupId = 4;
+  GraphDefPb graphDef = 3;
+  repeated int64 walOffsets = 4;
+  map<int32, int32> partitionToBackupId = 5;
 }

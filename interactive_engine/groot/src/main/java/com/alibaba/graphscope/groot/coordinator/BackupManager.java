@@ -16,8 +16,11 @@
 package com.alibaba.graphscope.groot.coordinator;
 
 import com.alibaba.graphscope.groot.CompletionCallback;
+import com.alibaba.graphscope.groot.SnapshotCache;
+import com.alibaba.graphscope.groot.SnapshotWithSchema;
 import com.alibaba.graphscope.groot.meta.MetaService;
 import com.alibaba.graphscope.groot.meta.MetaStore;
+import com.alibaba.graphscope.groot.schema.GraphDef;
 import com.alibaba.graphscope.groot.store.StoreBackupId;
 import com.alibaba.maxgraph.common.config.BackupConfig;
 import com.alibaba.maxgraph.common.config.CommonConfig;
@@ -50,6 +53,7 @@ public class BackupManager {
     private MetaService metaService;
     private MetaStore metaStore;
     private SnapshotManager snapshotManager;
+    private SnapshotCache snapshotCache;
     private ObjectMapper objectMapper;
 
     private int storeNodeCount;
@@ -74,10 +78,12 @@ public class BackupManager {
     private Lock globalBackupIdToInfoLock = new ReentrantLock();
 
     public BackupManager(Configs configs, MetaService metaService, MetaStore metaStore,
-                         SnapshotManager snapshotManager, StoreBackupTaskSender storeBackupTaskSender) {
+                         SnapshotManager snapshotManager, SnapshotCache snapshotCache,
+                         StoreBackupTaskSender storeBackupTaskSender) {
         this.metaService = metaService;
         this.metaStore = metaStore;
         this.snapshotManager = snapshotManager;
+        this.snapshotCache = snapshotCache;
         this.objectMapper = new ObjectMapper();
 
         this.storeNodeCount = CommonConfig.STORE_NODE_COUNT.get(configs);
@@ -289,8 +295,8 @@ public class BackupManager {
     }
 
     private void doBackupCreation(int newGlobalBackupId) {
-        long snapshotId = snapshotManager.getQuerySnapshotInfo().getSnapshotId();
         List<Long> walOffsets = snapshotManager.getQueueOffsets();
+        SnapshotWithSchema snapshotWithSchema = snapshotCache.getSnapshotWithSchema();
         Map<Integer, Integer> partitionToBackupId = new ConcurrentHashMap<>(graphPartitionCount);
         AtomicInteger counter = new AtomicInteger(storeNodeCount);
         AtomicBoolean finished = new AtomicBoolean(false);
@@ -308,7 +314,8 @@ public class BackupManager {
                             try {
                                 addNewBackupInfo(new BackupInfo(
                                         newGlobalBackupId,
-                                        snapshotId,
+                                        snapshotWithSchema.getSnapshotId(),
+                                        snapshotWithSchema.getGraphDef(),
                                         walOffsets,
                                         partitionToBackupId));
                                 future.complete(null);
@@ -386,6 +393,10 @@ public class BackupManager {
         restoredMetaStore.write(
                 "query_snapshot_id",
                 this.objectMapper.writeValueAsBytes(restoredSnapshotId));
+        GraphDef graphDef = restoredBackupInfo.getGraphDef();
+        restoredMetaStore.write(
+                "graph_def_proto_bytes",
+                graphDef.toProto().toByteArray());
         List<Long> restoredWalOffsets = restoredBackupInfo.getWalOffsets();
         restoredMetaStore.write(
                 "queue_offsets",

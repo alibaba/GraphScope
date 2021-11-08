@@ -38,7 +38,7 @@ public class SnapshotNotifierTest {
         SnapshotManager snapshotManager = mock(SnapshotManager.class);
         RoleClients<FrontendSnapshotClient> roleClients = mock(RoleClients.class);
         SnapshotNotifier snapshotNotifier =
-                new SnapshotNotifier(discovery, snapshotManager, null, roleClients);
+                new SnapshotNotifier(discovery, snapshotManager, null, null, roleClients);
         snapshotNotifier.start();
 
         MaxGraphNode localNode =
