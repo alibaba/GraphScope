@@ -33,9 +33,6 @@ jobs:
       image: registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-vineyard:v0.3.6
       options:
         --shm-size 4096m
-    strategy:
-      matrix:
-        networkx: [ON, OFF]
 
     steps:
     - uses: actions/checkout@v2.3.2
@@ -99,16 +96,12 @@ jobs:
         sudo mkdir -p /opt/graphscope
         sudo chown -R $(id -u):$(id -g) /opt/graphscope
 
-        mkdir analytical_engine/build
-        cd analytical_engine/build
-        cmake .. -DCMAKE_INSTALL_PREFIX=/opt/graphscope \
-                 -DNETWORKX=${{ matrix.networkx }}
-        make -j`nproc`
-        make install
-        cd ${GITHUB_WORKSPACE}
+        pushd ${GITHUB_WORKSPACE}
+        make gae
         cp k8s/kube_ssh /opt/graphscope/bin/kube_ssh
         cp k8s/pre_stop.py /opt/graphscope/bin/pre_stop.py
         tar -cf gae.tar /opt/graphscope
+        popd
 
     - name: Run GAE Tests
       run: |
@@ -120,7 +113,6 @@ jobs:
         ../test/app_tests.sh --test_dir ${GITHUB_WORKSPACE}/gstest
 
     - name: Upload Artifact
-      if: matrix.networkx == 'ON'
       uses: actions/upload-artifact@v2
       with:
         name: gae-${{ github.sha }}
@@ -266,9 +258,6 @@ jobs:
       image: registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-runtime:latest
       options:
         --shm-size 4096m
-    strategy:
-      matrix:
-        networkx: [ON, OFF]
     steps:
     - uses: actions/checkout@v2.3.2
     - uses: dorny/paths-filter@v2
@@ -326,8 +315,7 @@ jobs:
       if: false
       uses: mxschmitt/action-tmate@v2
 
-    - name: App Test with Expr Off
-      if: matrix.networkx == 'OFF'
+    - name: GraphScope python unittest
       run: |
         export GRAPHSCOPE_HOME='/opt/graphscope'
         export GS_TEST_DIR='/home/graphscope/gstest'
@@ -336,14 +324,13 @@ jobs:
                           --cov-report=xml --cov-report=term --exitfirst -s -v tests/unittest/
 
     - name: Upload Coverage
-      if: matrix.networkx == 'OFF'
       uses: codecov/codecov-action@v1.0.5
       with:
         file: ./python/coverage.xml
         fail_ci_if_error: true
 
-    - name: App Test with Expr On
-      if: ${{ matrix.networkx == 'ON' && steps.filter.outputs.networkx == 'true' }}
+    - name: GraphScope NetworkX test
+      if: steps.filter.outputs.networkx == 'true'
       run: |
         export GRAPHSCOPE_HOME='/opt/graphscope'
         export GS_TEST_DIR='/home/graphscope/gstest'
