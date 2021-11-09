@@ -50,6 +50,7 @@ public class Coordinator extends NodeBase {
     private LogRecycler logRecycler;
     private GraphInitializer graphInitializer;
     private IdAllocator idAllocator;
+    private LocalSnapshotListener localSnapshotListener;
     private BackupManager backupManager;
 
     public Coordinator(Configs configs) {
@@ -87,7 +88,6 @@ public class Coordinator extends NodeBase {
         RoleClients<StoreSchemaClient> storeSchemaClients =
                 new RoleClients<>(this.channelManager, RoleType.STORE, StoreSchemaClient::new);
         GraphDefFetcher graphDefFetcher = new GraphDefFetcher(storeSchemaClients);
-        SnapshotCache snapshotCache = new SnapshotCache();
         this.schemaManager =
                 new SchemaManager(
                         this.snapshotManager,
@@ -100,21 +100,23 @@ public class Coordinator extends NodeBase {
                         this.discovery,
                         this.snapshotManager,
                         this.schemaManager,
-                        snapshotCache,
                         frontendSnapshotClients);
         IngestProgressService ingestProgressService =
                 new IngestProgressService(this.snapshotManager);
         SnapshotCommitService snapshotCommitService =
                 new SnapshotCommitService(this.snapshotManager);
         SchemaService schemaService = new SchemaService(this.schemaManager);
+        this.idAllocator = new IdAllocator(metaStore);
+        IdAllocateService idAllocateService = new IdAllocateService(this.idAllocator);
         RoleClients<StoreBackupClient> storeBackupClients =
                 new RoleClients<>(this.channelManager, RoleType.STORE, StoreBackupClient::new);
         StoreBackupTaskSender storeBackupTaskSender = new StoreBackupTaskSender(storeBackupClients);
-        this.idAllocator = new IdAllocator(metaStore);
-        IdAllocateService idAllocateService = new IdAllocateService(this.idAllocator);
+        SnapshotCache localSnapshotCache = new SnapshotCache();
+        this.localSnapshotListener = new LocalSnapshotListener(this.schemaManager, localSnapshotCache);
+        this.snapshotManager.addListener(this.localSnapshotListener);
         this.backupManager =
                 new BackupManager(
-                        configs, this.metaService, metaStore, this.snapshotManager, snapshotCache,
+                        configs, this.metaService, metaStore, this.snapshotManager, localSnapshotCache,
                         storeBackupTaskSender);
         BackupService backupService = new BackupService(this.backupManager);
         this.rpcServer =

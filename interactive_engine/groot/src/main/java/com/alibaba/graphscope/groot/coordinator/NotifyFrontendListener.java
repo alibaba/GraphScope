@@ -14,7 +14,6 @@
 package com.alibaba.graphscope.groot.coordinator;
 
 import com.alibaba.graphscope.groot.CompletionCallback;
-import com.alibaba.graphscope.groot.SnapshotCache;
 import com.alibaba.graphscope.groot.schema.GraphDef;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -27,19 +26,16 @@ public class NotifyFrontendListener implements QuerySnapshotListener {
     private int frontendId;
     private FrontendSnapshotClient frontendSnapshotClient;
     private SchemaManager schemaManager;
-    private SnapshotCache snapshotCache;
 
     private AtomicLong lastDdlSnapshotId;
 
     public NotifyFrontendListener(
             int frontendId,
             FrontendSnapshotClient frontendSnapshotClient,
-            SchemaManager schemaManager,
-            SnapshotCache snapshotCache) {
+            SchemaManager schemaManager) {
         this.frontendId = frontendId;
         this.frontendSnapshotClient = frontendSnapshotClient;
         this.schemaManager = schemaManager;
-        this.snapshotCache = snapshotCache;
 
         this.lastDdlSnapshotId = new AtomicLong(-1L);
     }
@@ -56,7 +52,6 @@ public class NotifyFrontendListener implements QuerySnapshotListener {
         if (ddlSnapshotId > this.lastDdlSnapshotId.get()) {
             graphDef = this.schemaManager.getGraphDef();
         }
-        this.snapshotCache.advanceQuerySnapshotId(snapshotId, graphDef);
         this.frontendSnapshotClient.advanceQuerySnapshot(
                 snapshotId,
                 graphDef,

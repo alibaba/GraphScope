@@ -13,7 +13,6 @@
  */
 package com.alibaba.graphscope.groot.coordinator;
 
-import com.alibaba.graphscope.groot.SnapshotCache;
 import com.alibaba.graphscope.groot.discovery.MaxGraphNode;
 import com.alibaba.graphscope.groot.discovery.NodeDiscovery;
 import com.alibaba.maxgraph.common.RoleType;
@@ -27,7 +26,6 @@ public class SnapshotNotifier implements NodeDiscovery.Listener {
     private NodeDiscovery nodeDiscovery;
     private SnapshotManager snapshotManager;
     private SchemaManager schemaManager;
-    private SnapshotCache snapshotCache;
     private RoleClients<FrontendSnapshotClient> frontendSnapshotClients;
 
     private Map<Integer, QuerySnapshotListener> listeners;
@@ -36,12 +34,10 @@ public class SnapshotNotifier implements NodeDiscovery.Listener {
             NodeDiscovery nodeDiscovery,
             SnapshotManager snapshotManager,
             SchemaManager schemaManager,
-            SnapshotCache snapshotCache,
             RoleClients<FrontendSnapshotClient> frontendSnapshotClients) {
         this.nodeDiscovery = nodeDiscovery;
         this.snapshotManager = snapshotManager;
         this.schemaManager = schemaManager;
-        this.snapshotCache = snapshotCache;
         this.frontendSnapshotClients = frontendSnapshotClients;
     }
 
@@ -63,7 +59,7 @@ public class SnapshotNotifier implements NodeDiscovery.Listener {
                 (id, node) -> {
                     QuerySnapshotListener notifyFrontendListener =
                             new NotifyFrontendListener(
-                                    id, frontendSnapshotClients.getClient(id), this.schemaManager, this.snapshotCache);
+                                    id, frontendSnapshotClients.getClient(id), this.schemaManager);
                     this.snapshotManager.addListener(notifyFrontendListener);
                     this.listeners.put(id, notifyFrontendListener);
                 });
