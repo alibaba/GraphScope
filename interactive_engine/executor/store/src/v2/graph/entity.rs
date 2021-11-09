@@ -1,7 +1,6 @@
-use crate::v2::api::{Vertex, VertexId, LabelId, PropertyReader, PropertyId, Property, PropertyValue, Records, Edge, EdgeId, EdgeRelation};
+use crate::v2::api::{Vertex, VertexId, LabelId, PropertyReader, PropertyId, Property, PropertyValue, Edge, EdgeId, EdgeRelation};
 use crate::db::graph::codec::{Decoder, IterDecoder};
 use crate::db::storage::RawBytes;
-use crate::db::api::{ValueRef, ValueType};
 use crate::v2::{parse_property_value, GraphResult};
 
 pub struct PropertyImpl {

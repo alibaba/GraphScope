@@ -4,10 +4,8 @@ use crate::v2::multi_version_graph::MultiVersionGraph;
 use crate::v2::api::{SnapshotId, VertexId, LabelId, PropertyId, EdgeId, EdgeRelation, Condition, Records, SerialId};
 use crate::db::graph::types::{VertexTypeManager, EdgeTypeManager};
 use crate::v2::GraphResult;
-use crate::db::graph::bin::{vertex_table_prefix_key, parse_vertex_key, vertex_key, edge_key};
+use crate::db::graph::bin::{vertex_key, edge_key};
 use crate::db::graph::codec::get_codec_version;
-use std::collections::HashMap;
-use crate::v2::errors::GraphError;
 use crate::v2::graph::entity::{VertexImpl, EdgeImpl};
 use crate::v2::graph::iter::{VertexTypeScan, EdgeTypeScan};
 use crate::db::api::EdgeDirection;
@@ -19,6 +17,7 @@ pub struct RocksGraph {
 }
 
 impl RocksGraph {
+    #[allow(dead_code)]
     pub fn new(vertex_manager: VertexTypeManager, edge_manager: EdgeTypeManager, storage: Arc<dyn ExternalStorage>) -> Self {
         RocksGraph { vertex_manager, edge_manager, storage }
     }
@@ -74,8 +73,8 @@ impl RocksGraph {
                    vertex_id: Option<VertexId>,
                    direction: EdgeDirection,
                    label_id: Option<LabelId>,
-                   condition: Option<&Condition>,
-                   property_ids: Option<&Vec<PropertyId>>,
+                   _condition: Option<&Condition>,
+                   _property_ids: Option<&Vec<PropertyId>>,
     ) -> GraphResult<Records<EdgeImpl>> {
         if let Some(label_id) = label_id {
             let edge_info = self.edge_manager.get_edge_info(snapshot_id as i64, label_id as i32)?;

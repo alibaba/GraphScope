@@ -6,7 +6,6 @@ use std::sync::Arc;
 use crate::db::api::*;
 use super::{StorageIter, StorageRes, ExternalStorage, ExternalStorageBackup};
 use crate::db::storage::{KvPair, RawBytes};
-use rocksdb::DBRawIteratorWithThreadMode;
 
 pub struct RocksDB {
     db: Arc<DB>,

@@ -18,7 +18,7 @@ use crate::v2::api::types::{EdgeRelation, Vertex, PropertyReader, PropertyValue,
 use crate::v2::api::condition::Condition;
 use crate::v2::{GraphResult, parse_property_value};
 use std::sync::Arc;
-use crate::db::api::{GraphStorage, EdgeKind, PropIter, ValueRef, PropertiesRef, ValueType};
+use crate::db::api::{GraphStorage, EdgeKind, PropIter, PropertiesRef};
 use std::collections::{HashMap, HashSet};
 use std::iter::FromIterator;
 use std::vec::IntoIter;

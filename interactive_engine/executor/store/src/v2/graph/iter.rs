@@ -1,12 +1,11 @@
 use crate::db::storage::ExternalStorage;
 use std::sync::Arc;
-use crate::db::graph::types::{VertexTypeInfo, VertexTypeManager, EdgeInfo, EdgeKindInfo};
+use crate::db::graph::types::{VertexTypeInfo, EdgeInfo, EdgeKindInfo};
 use crate::v2::GraphResult;
 use crate::v2::graph::entity::{VertexImpl, EdgeImpl};
 use crate::v2::api::{SnapshotId, VertexId, LabelId, Records, EdgeRelation};
 use crate::db::graph::bin::{vertex_table_prefix_key, parse_vertex_key, edge_table_prefix_key, parse_edge_key, edge_prefix};
-use crate::db::graph::codec::{get_codec_version, Decoder};
-use crate::v2::errors::GraphError;
+use crate::db::graph::codec::{get_codec_version};
 use crate::db::api::EdgeDirection;
 
 pub struct VertexTypeScan {
