@@ -100,10 +100,8 @@ jobs:
         pushd ${GITHUB_WORKSPACE}
         make gae ENABLE_JAVA_SDK=${{ matrix.javasdk }} NETWORKX=${{ matrix.networkx }} BUILD_TEST=ON INSTALL_PREFIX=/opt/graphscope
         sudo chown -R $(id -u):$(id -g) /opt/graphscope
-        make gae ENABLE_JAVA_SDK=${{ matrix.javasdk }} NETWORKX=${{ matrix.networkx }} BUILD_TEST=ON INSTALL_PREFIX=/opt/graphscope
-        cd ${GITHUB_WORKSPACE}
-        sudo cp k8s/kube_ssh /opt/graphscope/bin/kube_ssh
-        sudo cp k8s/pre_stop.py /opt/graphscope/bin/pre_stop.py
+        cp k8s/kube_ssh /opt/graphscope/bin/kube_ssh
+        cp k8s/pre_stop.py /opt/graphscope/bin/pre_stop.py
         tar -cf gae.tar /opt/graphscope
         popd
 
