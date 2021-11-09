@@ -46,23 +46,41 @@ from graphscope.proto import types_pb2
 
 class DiGraph(Graph):
     """
-    Base class for directed graphs in graphscope.nx.
+    Base class for directed graphs.
 
     A DiGraph that hold the metadata of a graph, and provide NetworkX-like DiGraph APIs.
 
     It is worth noticing that the graph is actually stored by the Analytical Engine backend.
-    In other words, the graph object holds nothing but metadata of a graph
+    In other words, the Graph object holds nothing but metadata of a graph
 
     DiGraph support nodes and edges with optional data, or attributes.
 
     DiGraphs support directed edges.  Self loops are allowed but multiple
     (parallel) edges are not.
 
-    Nodes can be some hashable objects including int/str/float/tuple/bool object
+    Nodes can be some hashable objects including int/str/float/bool object
     with optional key/value attributes.
 
     Edges are represented as links between nodes with optional
     key/value attributes.
+
+    Parameters
+    ----------
+    incoming_graph_data : input graph (optional, default: None)
+        Data to initialize graph. If None (default) an empty
+        graph is created.  The data can be any format that is supported
+        by the to_nx_graph() function, currently including edge list,
+        dict of dicts, dict of lists, NetworkX graph, NumPy matrix
+        or 2d ndarray, Pandas DataFrame, SciPy sparse matrix, or a GraphScope
+        graph object.
+
+    default_label : default node label (optional, default: None)
+        if incoming_graph_data is a GraphScope graph object, default label means
+        the nodes of the label can be identified by id directly, other label nodes
+        need to use `(label, id)` to identify.
+
+    attr : keyword arguments, optional (default= no attributes)
+        Attributes to add to graph as key=value pairs.
 
     See Also
     --------
@@ -179,6 +197,31 @@ class DiGraph(Graph):
     ...     if weight is not None:
     ...         # Do something useful with the edges
     ...         pass
+
+    **Transformation**
+
+    Create a graph with GraphScope graph object. First we init a GraphScope graph
+    with two node labels: person and comment`
+
+    >>> g = graphscope.g(directed=True).add_vertice("persion.csv", label="person").add_vertice("comment.csv", label="comment")
+
+    create a graph with g, set default_label to 'person'
+
+    >>> G = nx.DiGraph(g, default_label="person")
+
+    `person` label nodes can be identified by id directly, for `comment` label,
+    we has to use tuple `("comment", id)` identify. Like, add a person label
+    node and a comment label node
+
+    >>> G.add_node(0, type="person")
+    >>> G.add_node(("comment", 0), type="comment")
+
+    print property of two nodes
+
+    >>> G.nodes[0]
+    {"type", "person"}
+    >>> G.nodes[("comment", 0)]
+    {"type", "comment"}
 
     **Reporting:**
 

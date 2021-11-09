@@ -80,7 +80,7 @@ class Graph(_GraphBase):
     Edges are represented as links between nodes with optional
     key/value attributes.
 
-    Graph support node label if its created from a GraphScope graph object.
+    Graph support node label if it's created from a GraphScope graph object.
     nodes are identified by `(label, id)` tuple.
 
     Parameters
@@ -220,6 +220,29 @@ class Graph(_GraphBase):
 
     **Transformation**
 
+    Create a graph with GraphScope graph object. First we init a GraphScope graph
+    with two node labels: person and comment`
+
+    >>> g = graphscope.g(directed=False).add_vertice("persion.csv", label="person").add_vertice("comment.csv", label="comment")
+
+    create a graph with g, set default_label to 'person'
+
+    >>> G = nx.Graph(g, default_label="person")
+
+    `person` label nodes can be identified by id directly, for `comment` label,
+    we has to use tuple `("comment", id)` identify. Like, add a person label
+    node and a comment label node
+
+    >>> G.add_node(0, type="person")
+    >>> G.add_node(("comment", 0), type="comment")
+
+    print property of two nodes
+
+    >>> G.nodes[0]
+    {"type", "person"}
+    >>> G.nodes[("comment", 0)]
+    {"type", "comment"}
+
     **Reporting:**
 
     Simple graph information is obtained using object-attributes and methods.
@@ -285,8 +308,8 @@ class Graph(_GraphBase):
         Created from a GraphScope graph object
 
         >>> g = graphscope.g(directed=False)  # if transform to DiGraph, directed=True
-        >>> g.add_vertices(...).add_edges(...)
-        >>> G = nx.Graph(g) # or DiGraph
+        >>> g.add_vertices("person.csv", label="person").add_vertices("comment.csv", label="comment").add_edges(...)
+        >>> G = nx.Graph(g, default_label="person") # or DiGraph
 
         """
         if self._session is None:
@@ -359,7 +382,7 @@ class Graph(_GraphBase):
 
     @property
     def session(self):
-        """Get the currrent session.
+        """Get the session of graph.
 
         Returns:
             Return session that the graph belongs to.
@@ -372,7 +395,7 @@ class Graph(_GraphBase):
 
     @property
     def session_id(self):
-        """Get the currrent session_id.
+        """Get session's id of graph.
 
         Returns:
             str: Return session id that the graph belongs to.
@@ -385,11 +408,16 @@ class Graph(_GraphBase):
 
     @property
     def key(self):
-        """String key of the coresponding engine graph."""
+        """Key of the coresponding engine graph."""
         if hasattr(self, "_graph") and self._is_client_view:
             return (
                 self._graph.key
             )  # this graph is a client side graph view, use host graph key
+        return self._key
+
+    @property
+    def signature(self):
+        """Generate a signature of the current graph"""
         return self._key
 
     @property
@@ -542,11 +570,6 @@ class Graph(_GraphBase):
         AtlasView({1: {}})
         """
         return self.adj[n]
-
-    @property
-    def signature(self):
-        """Generate a signature of the current graph"""
-        return self._key
 
     def add_node(self, node_for_adding, **attr):
         """Add a single node `node_for_adding` and update node attributes.
@@ -861,7 +884,7 @@ class Graph(_GraphBase):
         -----
         Adding an edge that already exists updates the edge data.
 
-        Many netwrokx algorithms designed for weighted graphs use
+        Many networkx algorithms designed for weighted graphs use
         an edge attribute (by default `weight`) to hold a numerical value.
 
         Examples
