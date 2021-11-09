@@ -122,7 +122,7 @@ void SetupEnv(const int local_num) {
 
   char* jvm_opts = getenv("GRAPE_JVM_OPTS");
   // char* jvm_opts = jvm_option.c_str();
-  char setStr[32010];
+  char setStr[32016];
   if (jvm_opts == NULL || *jvm_opts == '\0') {
     snprintf(setStr, sizeof(setStr), "GRAPE_JVM_OPTS=%s", kvPair);
     putenv(setStr);
