@@ -40,9 +40,9 @@
 template <typename Key, typename Value>
 using ProtobufMap = ::google::protobuf::Map<Key, Value>;
 
-using gs::rpc::GSParams;
 using gs::rpc::AttrValue;
 using gs::rpc::DataType;
+using gs::rpc::GSParams;
 using gs::rpc::OpDef;
 
 using AttrMap = ProtobufMap<int, AttrValue>;
@@ -135,7 +135,7 @@ struct Graph {
 }  // namespace detail
 
 inline void ParseLoader(std::string& protocol, std::string& values,
-                 const AttrMap& attrs) {
+                        const AttrMap& attrs) {
   protocol = attrs.at(rpc::PROTOCOL).s();
   values = attrs.at(rpc::VALUES).s();
 }
@@ -290,7 +290,8 @@ inline std::vector<AttrMap> DistributeEdge(const AttrMap& attrs, int num) {
 // If contains contents from numpy or pandas, then we should distribute those
 // raw bytes evenly across all workers, each worker would only receive a slice,
 // in order to reduce the communication overhead.
-inline std::vector<std::map<int, rpc::AttrValue>> DistributeGraph(const std::map<int, rpc::AttrValue>& params, int num) {
+inline std::vector<std::map<int, rpc::AttrValue>> DistributeGraph(
+    const std::map<int, rpc::AttrValue>& params, int num) {
   std::vector<std::map<int, rpc::AttrValue>> distributed_graph;
 
   auto items = params.at(rpc::ARROW_PROPERTY_DEFINITION).list().func();
