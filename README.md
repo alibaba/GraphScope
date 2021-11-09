@@ -39,8 +39,8 @@ dependencies and prepare the environment.
 On Windows, you may want to install [Ubuntu](https://ubuntu.com/blog/ubuntu-on-wsl-2-is-generally-available) on [WSL2](https://docs.microsoft.com/zh-cn/windows/wsl/install-win10) to use the script.
 
 ```bash
-# run the environment preparing script.
-./scripts/prepare_env.sh
+# run the k8s environment preparing script.
+./scripts/install_deps.sh --k8s
 ```
 
 ### Installation

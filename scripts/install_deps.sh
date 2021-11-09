@@ -17,16 +17,15 @@ readonly GRAPE_BRANCH="master" # libgrape-lite branch
 readonly V6D_VERSION="0.3.6"  # vineyard version
 readonly V6D_BRANCH="v0.3.6" # vineyard branch
 
-readonly SOURCE_DIR="$( cd "$(dirname $0)/.." >/dev/null 2>&1 ; pwd -P )"
 readonly OUTPUT_ENV_FILE="${HOME}/.graphscope_env"
 IS_IN_WSL=false && [[ ! -z "${IS_WSL}" || ! -z "${WSL_DISTRO_NAME}" ]] && IS_IN_WSL=true
 readonly IS_IN_WSL
-INSTALL_PREFIX=/opt/graphscope
+DEPS_PREFIX="/usr/local"
 BASIC_PACKGES_TO_INSTALL=
 PLATFORM=
 OS_VERSION=
 VERBOSE=false
-BUILD_TYPE=release
+CN_MIRROR=false
 packages_to_install=()
 install_folly=false
 
@@ -56,46 +55,16 @@ succ() {
 usage() {
 cat <<END
 
-  A script to install dependencies of GraphScope or deploy GraphScope locally.
+  A script to install dependencies of GraphScope.
 
-  Usage: deploy_local [options] [command]
+  Usage: install_deps [options]
 
   Options:
     -h, --help           Print help information
-
-  Commands:
-    install_deps         Install the dependencies of GraphScope
-    build_and_deploy     Build and deploy GraphScope locally
-
-  Run 'deploy_local COMMAND --help' for more information on a command.
-END
-}
-
-install_deps_usage() {
-cat <<END
-
-  Install dependencies of GraphScope.
-
-  Usage: deploy_local install_deps [option]
-
-  Options:
-    --help              Print usage information
-    --verbose           Print the debug logging information
-END
-}
-
-build_and_deploy_usage() {
-cat <<END
-
-  Build and deploy GraphScope locally
-
-  Usage: deploy_local build_and_deploy [option]
-
-  Options:
-    --help              Print usage information
-    --verbose           Print the debug logging information
-    --build_type        release or debug
-    --prefix <path>     Install prefix of GraphScope, default is /opt/graphscope
+    --verbose            Print the debug logging information
+    --k8s                Install the dependencies for running GraphScope on k8s locally
+    --dev                Install the dependencies for build GraphScope on local
+    --cn                 Use tsinghua mirror for brew when install dependencies on macOS
 END
 }
 
@@ -139,7 +108,7 @@ get_os_version() {
   elif [ -f /etc/centos-release ]; then
     # Older Red Hat, CentOS, etc.
     PLATFORM=CentOS
-    OS_VERSION=$(cat /etc/centos-release | sed 's/.* \([0-9]\).*/\1/')
+    OS_VERSION=$(sed 's/.* \([0-9]\).*/\1/' < /etc/centos-release)
   else
     # Fall back to uname, e.g. "Linux <version>", also works for BSD, Darwin, etc.
     PLATFORM=$(uname -s)
@@ -266,7 +235,6 @@ init_basic_packages() {
       openssl
       libevent
       autoconf
-      gnu-sed
       wget
       libomp
     )
@@ -305,12 +273,12 @@ check_dependencies() {
         warning "Found the java version is ${java_version}, do not meet the requirement of GraphScope."
         warning "Would install jdk 11 instead and reset the JAVA_HOME"
         JAVA_HOME=""  # reset JAVA_HOME to jdk11
-        packages_to_install+=(jdk)
+        packages_to_install+=(openjdk@11)
       fi
     else
       if [[ ! -f "/usr/libexec/java_home" ]] || \
          ! /usr/libexec/java_home -v11 &> /dev/null; then
-        packages_to_install+=(jdk)
+        packages_to_install+=(openjdk@11)
       fi
     fi
   else
@@ -328,7 +296,9 @@ check_dependencies() {
   if [[ ( ! -f "/usr/include/boost/version.hpp" || \
         "$(grep "#define BOOST_VERSION" /usr/include/boost/version.hpp | cut -d' ' -f3)" -lt "106600" ) && \
      ( ! -f "/usr/local/include/boost/version.hpp" || \
-       "$(grep "#define BOOST_VERSION" /usr/local/include/boost/version.hpp | cut -d' ' -f3)" -lt "106600" ) ]]; then
+       "$(grep "#define BOOST_VERSION" /usr/local/include/boost/version.hpp | cut -d' ' -f3)" -lt "106600" ) && \
+     ( ! -f "/opt/homebrew/include/boost/version.hpp" || \
+       "$(grep "#define BOOST_VERSION" /opt/homebrew/include/boost/version.hpp | cut -d' ' -f3)" -lt "106600" ) ]]; then
     case "${PLATFORM}" in
       *"Ubuntu"*)
         packages_to_install+=(libboost-all-dev)
@@ -343,7 +313,8 @@ check_dependencies() {
   fi
 
   # check apache-arrow
-  if [[ ! -f "/usr/local/include/arrow/api.h" && ! -f "/usr/include/arrow/api.h" ]]; then
+  if [[ ! -f "/usr/local/include/arrow/api.h" && ! -f "/usr/include/arrow/api.h" &&
+        ! -f "/opt/homebrew/include/arrow/api.h" ]]; then
     packages_to_install+=(apache-arrow)
   fi
 
@@ -356,12 +327,11 @@ check_dependencies() {
   if ( ! command -v rustup &> /dev/null || \
     [[ "$(rustc --V | awk -F ' ' '{print $2}')" < "1.52.0" ]] ) && \
      ( ! command -v ${HOME}/.cargo/bin/rustup &> /dev/null || \
-    [[ "$(rustc --V | awk -F ' ' '{print $2}')" < "1.52.0" ]] ); then
+    [[ "$(${HOME}/.cargo/bin/rustc --V | awk -F ' ' '{print $2}')" < "1.52.0" ]] ); then
     packages_to_install+=(rust)
   fi
 
-  # check go < 1.16 (vertion 1.16 can't install zetcd)
-  # FIXME(weibin): version check is not universed.
+  # check go < 1.16 (reason: vertion 1.16 can't install zetcd)
   if $(! command -v go &> /dev/null) || \
      [[ "$(go version 2>&1 | awk -F '.' '{print $2}' | awk -F ' ' '{print $1}')" -ge "16" ]]; then
     if [[ "${PLATFORM}" == *"CentOS"* ]]; then
@@ -386,7 +356,7 @@ check_dependencies() {
   fi
 
   # check folly
-  if [[ ! -f "/usr/local/include/folly/dynamic.h" ]]; then
+  if [[ ! -f "/usr/local/include/folly/dynamic.h" && ! -f "/opt/homebrew/include/folly/dynamic.h" ]]; then
     packages_to_install+=(folly)
   fi
 
@@ -398,8 +368,7 @@ check_dependencies() {
 
   # check c++ compiler
   if [[ "${PLATFORM}" == *"Darwin"* ]]; then
-    if ! command brew --prefix llvm &> /dev/null || \
-        ! command ls $(brew --prefix llvm) &> /dev/null; then
+    if [[ ! -z "$(brew info llvm 2>&1 | grep 'Not installed')" ]];then
         packages_to_install+=("llvm")
     fi
   else
@@ -417,7 +386,6 @@ check_dependencies() {
 # Write out the related environment export statements to file.
 # Globals:
 #   PLATFORM
-#   SOURCE_DIR
 # Arguments:
 #   None
 # Outputs:
@@ -430,22 +398,27 @@ write_envs_config() {
   fi
 
   if [[ "${PLATFORM}" == *"Darwin"* ]]; then
+    if [[ "$(uname -m)" == *"x86_64"* ]]; then
+      declare -r homebrew_prefix=/usr/local
+    else
+      # Apple Silicon: packages are installed under /opt/homebrew by default
+      declare -r homebrew_prefix=/opt/homebrew
+    fi
     {
-      # FIXME: graphscope_env not correct when the script run mutiple times.
-      # packages_to_install contains llvm
-      echo "export CC=/usr/local/opt/llvm/bin/clang"
-      echo "export CXX=/usr/local/opt/llvm/bin/clang++"
-      echo "export CPPFLAGS=-I/usr/local/opt/llvm/include"
-      echo "export PATH=/usr/local/opt/llvm/bin:\$PATH"
+      echo "export CC=${homebrew_prefix}/opt/llvm/bin/clang"
+      echo "export CXX=${homebrew_prefix}/opt/llvm/bin/clang++"
+      echo "export CPPFLAGS=-I${homebrew_prefix}/opt/llvm/include"
+      echo "export PATH=${homebrew_prefix}/opt/llvm/bin:\$PATH"
       if [ -z "${JAVA_HOME}" ]; then
         echo "export JAVA_HOME=\$(/usr/libexec/java_home -v11)"
       fi
       echo "export PATH=\$HOME/.cargo/bin:\${JAVA_HOME}/bin:/usr/local/go/bin:\$PATH"
       echo "export PATH=\$(go env GOPATH)/bin:\$PATH"
-      echo "export OPENSSL_ROOT_DIR=/usr/local/opt/openssl"
-      echo "export OPENSSL_LIBRARIES=/usr/local/opt/openssl/lib"
-      echo "export OPENSSL_SSL_LIBRARY=/usr/local/opt/openssl/lib/libssl.dylib"
+      echo "export OPENSSL_ROOT_DIR=${homebrew_prefix}/opt/openssl"
+      echo "export OPENSSL_LIBRARIES=${homebrew_prefix}/opt/openssl/lib"
+      echo "export OPENSSL_SSL_LIBRARY=${homebrew_prefix}/opt/openssl/lib/libssl.dylib"
     } >> ${OUTPUT_ENV_FILE}
+
   elif [[ "${PLATFORM}" == *"Ubuntu"* ]]; then
     {
       echo "export LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:/usr/local/lib:/usr/local/lib64"
@@ -468,10 +441,72 @@ write_envs_config() {
 }
 
 ##########################
+# Install libgrape-lite.
+# Globals:
+#   NUM_PROC
+# Arguments:
+#   None
+# Outputs:
+#   output log to stdout, output error to stderr.
+##########################
+install_libgrape-lite() {
+  log "Building and installing libgrape-lite."
+
+  if [[ -f "/usr/local/include/grape/grape.h" ]]; then
+    log "libgrape-lite already installed, skip."
+    return 0
+  fi
+
+  check_and_remove_dir "/tmp/libgrape-lite"
+  git clone -b ${GRAPE_BRANCH} --single-branch --depth=1 \
+      https://github.com/alibaba/libgrape-lite.git /tmp/libgrape-lite
+  pushd /tmp/libgrape-lite
+  mkdir -p build && cd build
+  cmake ..
+  make -j$(nproc)
+  sudo make install
+  popd
+  rm -fr /tmp/libgrape-lite
+}
+
+##########################
+# Install vineyard.
+# Globals:
+#   PLATFORM
+#   NUM_PROC
+# Arguments:
+#   None
+# Outputs:
+#   output log to stdout, output error to stderr.
+##########################
+install_vineyard() {
+  log "Building and installing vineyard."
+  if command -v /usr/local/bin/vineyardd &> /dev/null && \
+     [[ "$(/usr/local/bin/vineyardd --version 2>&1 | awk -F ' ' '{print $3}')" == "${V6D_VERSION}" ]]; then
+    log "vineyard ${V6D_VERSION} already installed, skip."
+    return 0
+  fi
+
+  check_and_remove_dir "/tmp/libvineyard"
+  git clone -b ${V6D_BRANCH} --single-branch --depth=1 \
+      https://github.com/alibaba/libvineyard.git /tmp/libvineyard
+  pushd /tmp/libvineyard
+  git submodule update --init
+  mkdir -p build && pushd build
+  cmake .. -DCMAKE_INSTALL_PREFIX=${DEPS_PREFIX} \
+           -DBUILD_SHARED_LIBS=ON \
+           -DBUILD_VINEYARD_TESTS=OFF
+  make -j$(nproc)
+  sudo make install && popd
+  popd
+
+  rm -fr /tmp/libvineyard
+}
+
+##########################
 # Install denpendencies of GraphScope.
 # Globals:
 #   PLATFORM
-#   SOURCE_DIR
 # Arguments:
 #   None
 # Outputs:
@@ -486,7 +521,7 @@ install_dependencies() {
     log "Installing packages ${BASIC_PACKGES_TO_INSTALL[*]}"
     sudo apt-get install -y ${BASIC_PACKGES_TO_INSTALL[*]}
 
-    if [[ "${packages_to_install[@]}" =~ "go" ]]; then
+    if [[ "${packages_to_install[*]}" =~ "go" ]]; then
       # packages_to_install contains go
       log "Installing Go."
       wget -c https://golang.org/dl/go1.15.5.linux-amd64.tar.gz -P /tmp
@@ -496,7 +531,7 @@ install_dependencies() {
       # remove go from packages_to_install
       packages_to_install=("${packages_to_install[@]/go}")
     fi
-    if [[ "${packages_to_install[@]}" =~ "rust" ]]; then
+    if [[ "${packages_to_install[*]}" =~ "rust" ]]; then
       # packages_to_install contains rust
       log "Installing rust."
       curl -sf -L https://static.rust-lang.org/rustup.sh | sh -s -- -y --profile minimal --default-toolchain 1.54.0
@@ -504,7 +539,7 @@ install_dependencies() {
       packages_to_install=("${packages_to_install[@]/rust}")
     fi
 
-    if [[ "${packages_to_install[@]}" =~ "apache-arrow" ]]; then
+    if [[ "${packages_to_install[*]}" =~ "apache-arrow" ]]; then
       log "Installing apache-arrow."
       wget -c https://apache.jfrog.io/artifactory/arrow/$(lsb_release --id --short | tr 'A-Z' 'a-z')/apache-arrow-apt-source-latest-$(lsb_release --codename --short).deb \
         -P /tmp/
@@ -515,13 +550,13 @@ install_dependencies() {
       packages_to_install=("${packages_to_install[@]/apache-arrow}")
     fi
 
-    if [[ "${packages_to_install[@]}" =~ "folly" ]]; then
+    if [[ "${packages_to_install[*]}" =~ "folly" ]]; then
       install_folly=true  # set folly install flag
       # remove folly from packages_to_install
       packages_to_install=("${packages_to_install[@]/folly}")
     fi
 
-    if [[ "${packages_to_install[@]}" =~ "zetcd" ]]; then
+    if [[ "${packages_to_install[*]}" =~ "zetcd" ]]; then
       log "Installing zetcd."
       export PATH=${PATH}:/usr/local/go/bin
       go get github.com/etcd-io/zetcd/cmd/zetcd
@@ -530,8 +565,10 @@ install_dependencies() {
       packages_to_install=("${packages_to_install[@]/zetcd}")
     fi
 
-    log "Installing packages ${packages_to_install[*]}"
-    sudo apt install -y ${packages_to_install[*]}
+    if [[ ! -z "${packages_to_install}" ]]; then
+      log "Installing packages ${packages_to_install[*]}"
+      sudo apt install -y ${packages_to_install[*]}
+    fi
 
   elif [[ "${PLATFORM}" == *"CentOS"* ]]; then
     sudo dnf install -y dnf-plugins-core \
@@ -543,7 +580,7 @@ install_dependencies() {
     log "Instralling packages ${BASIC_PACKGES_TO_INSTALL[*]}"
     sudo dnf install -y ${BASIC_PACKGES_TO_INSTALL[*]}
 
-    if [[ "${packages_to_install[@]}" =~ "apache-arrow" ]]; then
+    if [[ "${packages_to_install[*]}" =~ "apache-arrow" ]]; then
       log "Installing apache-arrow."
       sudo dnf install -y epel-release || sudo dnf install -y \
         https://dl.fedoraproject.org/pub/epel/epel-release-latest-$(cut -d: -f5 /etc/system-release-cpe | cut -d. -f1).noarch.rpm
@@ -553,7 +590,7 @@ install_dependencies() {
       packages_to_install=("${packages_to_install[@]/apache-arrow}")
     fi
 
-    if [[ "${packages_to_install[@]}" =~ "openmpi" ]]; then
+    if [[ "${packages_to_install[*]}" =~ "openmpi" ]]; then
       log "Installing openmpi v4.0.5"
       wget -c https://download.open-mpi.org/release/open-mpi/v4.0/openmpi-4.0.5.tar.gz -P /tmp
       check_and_remove_dir "/tmp/openmpi-4.0.5"
@@ -566,7 +603,7 @@ install_dependencies() {
       packages_to_install=("${packages_to_install[@]/openmpi}")
     fi
 
-    if [[ "${packages_to_install[@]}" =~ "zetcd" ]]; then
+    if [[ "${packages_to_install[*]}" =~ "zetcd" ]]; then
       log "Installing zetcd."
       export PATH=${PATH}:/usr/local/go/bin
       go get github.com/etcd-io/zetcd/cmd/zetcd
@@ -575,7 +612,7 @@ install_dependencies() {
       packages_to_install=("${packages_to_install[@]/zetcd}")
     fi
 
-    if [[ "${packages_to_install[@]}" =~ "etcd" ]]; then
+    if [[ "${packages_to_install[*]}" =~ "etcd" ]]; then
       log "Installing etcd v3.4.13"
       check_and_remove_dir "/tmp/etcd-download-test"
       mkdir -p /tmp/etcd-download-test
@@ -591,7 +628,7 @@ install_dependencies() {
       packages_to_install=("${packages_to_install[@]/etcd}")
     fi
 
-    if [[ "${packages_to_install[@]}" =~ "folly" ]]; then
+    if [[ "${packages_to_install[*]}" =~ "folly" ]]; then
       install_folly=true  # set folly install flag
       # remove folly from packages_to_install
       packages_to_install=("${packages_to_install[@]/folly}")
@@ -599,7 +636,7 @@ install_dependencies() {
       packages_to_install+=(fmt-devel)
     fi
 
-    if [[ "${packages_to_install[@]}" =~ "rust" ]]; then
+    if [[ "${packages_to_install[*]}" =~ "rust" ]]; then
       # packages_to_install contains rust
       log "Installing rust."
       curl -sf -L https://static.rust-lang.org/rustup.sh | sh -s -- -y --profile minimal --default-toolchain 1.54.0
@@ -607,8 +644,10 @@ install_dependencies() {
       packages_to_install=("${packages_to_install[@]/rust}")
     fi
 
-    log "Installing packages ${packages_to_install[*]}"
-    sudo dnf -y install  ${packages_to_install[*]}
+    if [[ ! -z "${packages_to_install}" ]]; then
+      log "Installing packages ${packages_to_install[*]}"
+      sudo dnf -y install  ${packages_to_install[*]}
+    fi
 
     log "Installing protobuf v.3.13.0"
     wget -c https://github.com/protocolbuffers/protobuf/releases/download/v3.13.0/protobuf-all-3.13.0.tar.gz -P /tmp
@@ -649,21 +688,27 @@ install_dependencies() {
     rm -fr /tmp/grpc
 
   elif [[ "${PLATFORM}" == *"Darwin"* ]]; then
+    if [[ ${CN_MIRROR} == true ]]; then
+      # set brew to tsinghua mirror
+      export HOMEBREW_BREW_GIT_REMOTE="https://mirrors.tuna.tsinghua.edu.cn/git/homebrew/brew.git"
+      export HOMEBREW_CORE_GIT_REMOTE="https://mirrors.tuna.tsinghua.edu.cn/git/homebrew/homebrew-core.git"
+      export HOMEBREW_BOTTLE_DOMAIN="https://mirrors.tuna.tsinghua.edu.cn/homebrew-bottles"
+    fi
     log "Installing packages ${BASIC_PACKGES_TO_INSTALL[*]}"
     brew install ${BASIC_PACKGES_TO_INSTALL[*]}
 
-    if [[ "${packages_to_install[@]}" =~ "jdk" ]]; then
-      # packages_to_install contains jdk8
-      log "Installing adoptopenjdk11."
-      wget -c https://github.com/adoptium/temurin11-binaries/releases/download/jdk-11.0.12%2B7/OpenJDK11U-jdk_x64_mac_hotspot_11.0.12_7.pkg \
+    if [[ ${CN_MIRROR} == true && "${packages_to_install[*]}" =~ "openjdk@11" ]]; then
+      # packages_to_install contains jdk
+      log "Installing openjdk11."
+      wget -c https://graphscope.oss-cn-beijing.aliyuncs.com/dependencies/OpenJDK11U-jdk_x64_mac_hotspot_11.0.13_8.tar.gz \
         -P /tmp
-      sudo installer -pkg /tmp/OpenJDK11U-jdk_x64_mac_hotspot_11.0.12_7.pkg -target /
-      rm -fr /tmp/OpenJDK11U-jdk_x64_mac_hotspot_11.0.12_7.pkg
-      # remove jdk8 from packages_to_install
-      packages_to_install=("${packages_to_install[@]/jdk}")
+      sudo tar xf /tmp/OpenJDK11U-jdk_x64_mac_hotspot_11.0.13_8.tar.gz -C /Library/Java/JavaVirtualMachines/
+      rm -fr /tmp/OpenJDK11U-jdk_x64_mac_hotspot_11.0.13_8.tar.gz
+      # remove jdk from packages_to_install
+      packages_to_install=("${packages_to_install[@]/openjdk@11}")
     fi
 
-    if [[ "${packages_to_install[@]}" =~ "go" ]]; then
+    if [[ "${packages_to_install[*]}" =~ "go" ]]; then
       # packages_to_install contains go
       log "Installing Go."
       wget -c https://dl.google.com/go/go1.15.15.darwin-amd64.pkg -P /tmp
@@ -674,7 +719,7 @@ install_dependencies() {
       packages_to_install=("${packages_to_install[@]/go}")
     fi
 
-    if [[ "${packages_to_install[@]}" =~ "zetcd" ]]; then
+    if [[ "${packages_to_install[*]}" =~ "zetcd" ]]; then
       log "Installing zetcd."
       export PATH=/usr/local/go/bin:${PATH}
       go get github.com/etcd-io/zetcd/cmd/zetcd
@@ -683,7 +728,7 @@ install_dependencies() {
       packages_to_install=("${packages_to_install[@]/zetcd}")
     fi
 
-    if [[ "${packages_to_install[@]}" =~ "rust" ]]; then
+    if [[ "${packages_to_install[*]}" =~ "rust" ]]; then
       # packages_to_install contains rust
       log "Installing rust."
       curl -sf -L https://static.rust-lang.org/rustup.sh | sh -s -- -y --profile minimal --default-toolchain 1.54.0
@@ -691,15 +736,31 @@ install_dependencies() {
       packages_to_install=("${packages_to_install[@]/rust}")
     fi
 
-    log "Installing packages ${packages_to_install[*]}"
-    brew install ${packages_to_install[*]}
+    if [[ "${packages_to_install[*]}" =~ "maven" ]]; then
+      # install maven ignore openjdk dependencies
+      brew install --ignore-dependencies maven
+      packages_to_install=("${packages_to_install[@]/maven}")
+    fi
 
-    export OPENSSL_ROOT_DIR=/usr/local/opt/openssl
-    export OPENSSL_LIBRARIES=/usr/local/opt/openssl/lib
-    export OPENSSL_SSL_LIBRARY=/usr/local/opt/openssl/lib/libssl.dylib
-    export CC=/usr/local/opt/llvm/bin/clang
-    export CXX=/usr/local/opt/llvm/bin/clang++
-    export CPPFLAGS=-I/usr/local/opt/llvm/include
+
+    if [[ ! -z "${packages_to_install}" ]]; then
+      log "Installing packages ${packages_to_install[*]}"
+      brew install ${packages_to_install[*]}
+    fi
+
+
+
+    if [[ "$(uname -m)" == "x86_64" ]]; then
+      declare -r homebrew_prefix="/usr/local"
+    else
+      declare -r homebrew_prefix="/opt/homebrew"
+    fi
+    export OPENSSL_ROOT_DIR=${homebrew_prefix}/opt/openssl
+    export OPENSSL_LIBRARIES=${homebrew_prefix}/opt/openssl/lib
+    export OPENSSL_SSL_LIBRARY=${homebrew_prefix}/opt/openssl/lib/libssl.dylib
+    export CC=${homebrew_prefix}/opt/llvm/bin/clang
+    export CXX=${homebrew_prefix}/opt/llvm/bin/clang++
+    export CPPFLAGS=-I${homebrew_prefix}/opt/llvm/include
   fi
 
   if [[ ${install_folly} == true ]]; then
@@ -733,143 +794,182 @@ install_dependencies() {
   pip3 install -U pip --user
   pip3 install grpcio-tools libclang parsec setuptools wheel twine --user
 
+  install_libgrape-lite
+
+  install_vineyard
+
   log "Output environments config file ${OUTPUT_ENV_FILE}"
   write_envs_config
-  log "Cat ${OUTPUT_ENV_FILE}"
-  cat ${OUTPUT_ENV_FILE}
 }
 
-##########################
-# Install libgrape-lite.
-# Arguments:
-#   None
-# Outputs:
-#   output log to stdout, output error to stderr.
-##########################
-install_libgrape-lite() {
-  log "Building and installing libgrape-lite."
 
-  if [[ -f "/usr/local/include/grape/grape.h" ]]; then
-    log "libgrape-lite already installed, skip."
-    return 0
+# Functions to install dependencies of k8s evironment.
+check_os_compatibility_k8s() {
+  if [[ "${IS_IN_WSL}" == true && -z "${WSL_INTEROP}" ]]; then
+    err "The platform is WSL1. GraphScope not support to run on WSL1, please use WSL2."
+    exit 1
   fi
 
-  check_and_remove_dir "/tmp/libgrape-lite"
-  git clone -b ${GRAPE_BRANCH} --single-branch --depth=1 \
-      https://github.com/alibaba/libgrape-lite.git /tmp/libgrape-lite
-  pushd /tmp/libgrape-lite
-  mkdir -p build && cd build
-  cmake ..
-  make -j$(nproc)
-  sudo make install
-  popd
-  rm -fr /tmp/libgrape-lite
+  if [[ "${PLATFORM}" != *"Ubuntu"* && "${PLATFORM}" != *"CentOS"* ]]; then
+    err "The platform is not Ubuntu or CentOs. This script is only available on Ubuntu/CentOS"
+    exit 1
+  fi
+
+  if [[ "${PLATFORM}" == *"Ubuntu"* && "$(echo ${OS_VERSION} | sed 's/\([0-9]\)\([0-9]\).*/\1\2/')" -lt "18" ]]; then
+    err "The version of Ubuntu is ${OS_VERSION}. this script requires Ubuntu 18 or greater."
+    exit 1
+  fi
+
+  if [[ "${PLATFORM}" == *"CentOS"* && "${OS_VERSION}" -lt "7" ]]; then
+    err "The version of CentOS is ${OS_VERSION}. this script requires CentOS 7 or greater."
+    exit 1
+  fi
+
+  log "Preparing environment on ${PLATFORM} ${OS_VERSION}"
+}
+
+check_dependencies_version_k8s() {
+  # python
+  if ! hash python3; then
+    err "Python3 is not installed"
+    exit 1
+  fi
+  ver=$(python3 -V 2>&1 | sed 's/.* \([0-9]\).\([0-9]\).*/\1\2/')
+  if [ "$ver" -lt "36" ]; then
+    err "GraphScope requires python 3.6 or greater. Current version is ${python3 -V}"
+    exit 1
+  fi
+}
+
+install_dependencies_k8s() {
+  log "Install dependencies."
+  if [[ "${PLATFORM}" == *"Ubuntu"* ]]; then
+    sudo apt-get update -y
+    sudo apt-get install -y git
+    sudo apt-get install -y docker.io
+    sudo apt-get install -y conntrack curl lsof
+    sudo apt-get install -y python3-pip
+    sudo apt-get clean
+  elif [[ "${PLATFORM}" == *"CentOS"* ]]; then
+    sudo yum install -y git
+    sudo yum install -y python3-pip
+    sudo yum install -y yum-utils curl conntrack-tools lsof
+    sudo yum-config-manager --add-repo https://download.docker.com/linux/centos/docker-ce.repo
+    sudo yum install -y docker-ce docker-ce-cli containerd.io
+    sudo yum clean all
+  fi
+
+  check_dependencies_version_k8s
+
+  pip3 install -U pip --user
+  pip3 install graphscope-client wheel --user
+
+  log "Install kubectl."
+  K8S_VERSION=$(curl -s https://storage.googleapis.com/kubernetes-release/release/stable.txt)
+
+  curl -Lo kubectl https://storage.googleapis.com/kubernetes-release/release/"${K8S_VERSION}"/bin/linux/amd64/kubectl && \
+  chmod +x kubectl && sudo mv kubectl /usr/local/bin/ && sudo ln /usr/local/bin/kubectl /usr/bin/kubectl || true
+
+  log "Install kind."
+  curl -Lo ./kind https://github.com/kubernetes-sigs/kind/releases/download/v0.10.0/kind-linux-amd64
+  chmod +x kind && sudo mv kind /usr/local/bin/ && sudo ln /usr/local/bin/kind /usr/bin/kind || true
 }
 
 ##########################
-# Install vineyard.
+# Start docker daemon.
 # Globals:
-#   PLATFORM
+#   None
 # Arguments:
 #   None
-# Outputs:
-#   output log to stdout, output error to stderr.
+# Returns:
+#   0 if start successfully, non-zero on error.
 ##########################
-install_vineyard() {
-  log "Building and installing vineyard."
-  # TODO: check vineyard version with vineyadd --version
-  if command -v /usr/local/bin/vineyardd &> /dev/null && \
-     [[ "$(head -n 1 /usr/local/lib/cmake/vineyard/vineyard-config-version.cmake | \
-        awk -F '"' '{print $2}')" == "${V6D_VERSION}" ]]; then
-    log "vineyard ${V6D_VERSION} already installed, skip."
-    return 0
+start_docker() {
+  log "Starting doker daemon."
+  # start docker daemon if docker not running.
+  if ! sudo docker info >/dev/null 2>&1; then
+    if [[ "${IS_IN_WSL}" = false ]]; then
+      sudo systemctl start docker
+    else
+      sudo dockerd > /dev/null&
+    fi
   fi
-
-  check_and_remove_dir "/tmp/libvineyard"
-  git clone -b ${V6D_BRANCH} --single-branch --depth=1 \
-      https://github.com/alibaba/libvineyard.git /tmp/libvineyard
-  pushd /tmp/libvineyard
-  git submodule update --init
-  mkdir -p build && pushd build
-  if [[ "${PLATFORM}" == *"Darwin"* ]]; then
-    cmake .. -DCMAKE_BUILD_TYPE=RelWithDebInfo \
-             -DBUILD_SHARED_LIBS=ON \
-             -DBUILD_VINEYARD_TESTS=OFF
-  else
-    cmake .. -DBUILD_SHARED_LIBS=ON \
-             -DBUILD_VINEYARD_TESTS=OFF
-  fi
-  make -j$(nproc)
-  make vineyard_client_python -j$(nproc)
-  sudo make install
-  popd
-
-  # install vineyard-python
-  python3 setup.py bdist_wheel
-  pip3 install -U ./dist/*.whl --user
-
-  # install vineyard-io
-  pushd modules/io
-  rm -rf build/lib.* build/bdist.*
-  python3 setup.py bdist_wheel
-  pip3 install -U ./dist/*.whl --user
-  popd
-
-  popd
-  rm -fr /tmp/libvineyard
+  log "Docker started successfully."
 }
 
 ##########################
-# Install GraphScope.
+# Launch kubenetes cluster with kind.
 # Globals:
-#   SOURCE_DIR
-#   INSTALL_PREFIX
+#   None
 # Arguments:
 #   None
-# Outputs:
-#   output log to stdout, output error to stderr.
+# Returns:
+#   0 if launched successfully, non-zero on error.
 ##########################
-install_graphscope() {
-  log "Build GraphScope."
-  pushd ${SOURCE_DIR}
-
-  if [[ "${PLATFORM}" == *"Darwin"* ]]; then
-    # need libomp.dylib to find MPI_CXX
-    make install WITH_LEARNING_ENGINE=OFF INSTALL_PREFIX=${INSTALL_PREFIX} NETWORKX=OFF BUILD_TYPE=${BUILD_TYPE}
-  else
-    make install WITH_LEARNING_ENGINE=ON INSTALL_PREFIX=${INSTALL_PREFIX} BUILD_TYPE=${BUILD_TYPE}
-  fi
-
-  popd
+launch_k8s_cluster() {
+  log "Launching k8s cluster"
+  curl -Lo config-with-mounts.yaml https://kind.sigs.k8s.io/examples/config-with-mounts.yaml
+  # mount $HOME dir to cluster container, which is kind-control-plane
+  sed -i 's@/path/to/my/files/@'"${HOME}"'@g; s@/files@'"${HOME}"'@g' ./config-with-mounts.yaml  || true
+  sudo kind create cluster --config config-with-mounts.yaml
+  sudo chown -R "$(id -u)":"$(id -g)" "${HOME}"/.kube || true
+  log "Cluster is launched successfully."
 }
 
 ##########################
-# Main function for install_deps command.
+# Pull and load the GraphScope images to kind cluster.
+# Globals:
+#   None
+# Arguments:
+#   None
+# Returns:
+#   0 if successful, non-zero on error.
+##########################
+pull_images() {
+  log "Pulling GraphScope images."
+  image_tag=
+  # image_tag need to consistent with graphscope client version
+  if [ -z "${image_tag}" ]; then
+    image_tag=$(python3 -c "import graphscope; print(graphscope.__version__)")
+  fi
+  readonly image_tag
+  sudo docker pull registry.cn-hongkong.aliyuncs.com/graphscope/graphscope:${image_tag} || true
+  sudo docker pull quay.io/coreos/etcd:v3.4.13 || true
+  log "GraphScope images pulled successfully."
+
+  log "Loading images into kind cluster."
+  sudo kind load docker-image registry.cn-hongkong.aliyuncs.com/graphscope/graphscope:${image_tag} || true
+  sudo kind load docker-image quay.io/coreos/etcd:v3.4.13 || true
+  log "GraphScope images loaded into kind cluster successfully."
+}
+
+##########################
+# Main function for installing dependencies of development.
 # Globals:
 #   VERBOSE
-#   SOURCE_DIR
 # Arguments:
 #   None
 # Outputs:
 #   output log to stdout, output error to stderr.
 ##########################
-install_deps() {
-
-  # parse args for install_deps command
+install_deps_dev() {
+  # parse args for install_deps_dev
   while test $# -ne 0; do
     arg=$1; shift
     case ${arg} in
-      --help) install_deps_usage; exit ;;
-      --verbose) VERBOSE=true; readonly VERBOSE; ;;
+      --verbose)         VERBOSE=true; readonly VERBOSE; ;;
+      --cn)              CN_MIRROR=true; readonly CN_MIRROR; ;;
+      --vineyard_prefix) DEPS_PREFIX=$1; readonly DEPS_PREFIX; shift ;;
       *)
         echo "unrecognized option '${arg}'"
-        install_deps_usage; exit;;
+        usage; exit;;
     esac
   done
 
   if [[ ${VERBOSE} == true ]]; then
     set -x
   fi
+
   get_os_version
 
   check_os_compatibility
@@ -880,44 +980,32 @@ install_deps() {
 
   install_dependencies
 
-  succ_msg="Install dependencies successfully. The script had output the related
-  environments to ${OUTPUT_ENV_FILE}.\n
-  Please run 'source ${OUTPUT_ENV_FILE}' before run GraphScope."
-  succ ${succ_msg}
-  if [[ ${VERBOSE} == true ]]; then
-    set +x
-  fi
+  succ_msg="The script has installed all dependencies for builing GraphScope, use commands:\n
+  $ export ${OUTPUT_ENV_FILE}
+  $ make graphscope\n
+  to build and develop GraphScope."
+  succ "${succ_msg}"
 }
 
 ##########################
-# Main function for build_and_deploy command.
+# Main function for installing dependencies of k8s environment.
 # Globals:
 #   VERBOSE
-#   BUILD_TYPE
-#   INSTALL_PREFIX
 # Arguments:
 #   None
 # Outputs:
 #   output log to stdout, output error to stderr.
 ##########################
-build_and_deploy() {
-
-  # parse args for install_deps command
+install_deps_k8s() {
+  OVERWRITE=false
   while test $# -ne 0; do
     arg=$1; shift
     case ${arg} in
-      --help)        build_and_deploy_usage; exit ;;
-      --verbose)     VERBOSE=true; readonly VERBOSE; ;;
-      --build_type)  BUILD_TYPE=$1; readonly BUILD_TYPE; shift ;;
-      --prefix)
-        if [ $# -eq 0 ]; then
-          echo "there should be given a path for prefix option."
-          build_and_deploy_usage; exit;
-        fi
-        INSTALL_PREFIX=$1; readonly INSTALL_PREFIX; shift ;;
+      --verbose) VERBOSE=true; readonly VERBOSE; ;;
+      --overwrite) OVERWRITE=true; readonly OVERWRITE; ;;
       *)
         echo "unrecognized option '${arg}'"
-        build_and_deploy_usage; exit;;
+        usage; exit;;
     esac
   done
 
@@ -925,58 +1013,48 @@ build_and_deploy() {
     set -x
   fi
 
+  if [[ ${OVERWRITE} = false && -f "${HOME}/.kube/config" ]]; then
+    warning_msg="We found existing kubernetes config, seems that you already
+    have a ready kubernetes cluster. If you do want to reset the kubernetes
+    environment, please retry with '--overwrite' option."
+    warning "${warning_msg}"
+    exit 0
+  fi
+
   get_os_version
 
-  check_os_compatibility
+  check_os_compatibility_k8s
 
-  # if .graphscope_env already exists, source it
-  if [ -f "${OUTPUT_ENV_FILE}" ]; then
-    log "Found env file ${OUTPUT_ENV_FILE} exists, source the env file."
-    source ${OUTPUT_ENV_FILE}
-  fi
+  install_dependencies_k8s
 
-  check_dependencies
+  start_docker
 
-  if [ ${#packages_to_install[@]} -ne 0 ]; then
-    err "The dependences of GraphScope are not satisfied."
-    err "These packages: [${packages_to_install[*]}] are not installed or their version are not compatible."
-    exit 1
-  fi
+  launch_k8s_cluster
 
-  install_libgrape-lite
+  pull_images
 
-  install_vineyard
-
-  install_graphscope
-
-  succ "GraphScope has been built successfully and installed on ${INSTALL_PREFIX}."
-  succ "Please manually run:"
-  succ "export GRAPHSCOPE_HOME=${INSTALL_PREFIX}"
-  succ "before using GraphScope via Python client, enjoy!"
-  if [[ ${VERBOSE} == true ]]; then
-    set +x
-  fi
+  succ_msg="The script has prepared a local k8s cluster with kind to run GraphScope in distributed mode,
+  Now you are ready to have fun with GraphScope."
+  succ ${succ_msg}
 }
 
 set -e
 set -o pipefail
 
 # parse argv
-# TODO(acezen): now the option need to specify before command, that's not user-friendly.
 while test $# -ne 0; do
   arg=$1; shift
   case ${arg} in
     -h|--help)        usage; exit ;;
-    install_deps)     install_deps "$@"; exit;;
-    build_and_deploy) build_and_deploy "$@"; exit;;
+    --verbose)        VERBOSE=true; readonly VERBOSE; ;;
+    --cn)             CN_MIRROR=true; readonly CN_MIRROR; ;;
+    --dev) install_deps_dev "$@"; exit;;
+    --k8s) install_deps_k8s "$@"; exit;;
     *)
-      echo "unrecognized option or command '${arg}'"
+      echo "unrecognized option '${arg}'"
       usage; exit 1;;
   esac
 done
-if test  $# -eq 0; then
-  usage
-fi
 
 set +e
 set +o pipefail

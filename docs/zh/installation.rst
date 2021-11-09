@@ -18,7 +18,7 @@ GraphScope 被设计为运行在 Kubernetes 管理的群集上。
 .. code:: bash
 
     # run the environment preparing script.
-    ./scripts/prepare_env.sh
+    ./scripts/install_deps.sh --k8s
 
 接下来，通过 `pip <https://pip.pypa.io/en/stable/>`_ 安装 GraphScope 客户端：
 

@@ -73,27 +73,13 @@ graphscope-py3-package: $(TARGET_SERVER_PACKAGE)
 graphscope-client-py3-package: $(TARGET_CLIENT_PACKAGE)
 
 graphscope-darwin-py3:
-	sudo rm -fr /tmp/libgrape-lite /tmp/libvineyard
-	sudo mkdir -p /opt/vineyard
-	# install libgrape-lite
-	cd /tmp && git clone https://github.com/alibaba/libgrape-lite.git --depth=1 && \
-		cd libgrape-lite && mkdir build && cd build && \
-		cmake .. -DCMAKE_INSTALL_PREFIX=/opt/vineyard && \
-		sudo make -j`nproc` install
-	# install vineyard
-	cd /tmp && git clone -b v0.3.6 https://github.com/alibaba/libvineyard.git --depth=1 && \
-		cd libvineyard && git submodule update --init && \
-		mkdir -p build && cd build && \
-		cmake .. -DCMAKE_PREFIX_PATH=/opt/vineyard \
-			-DCMAKE_INSTALL_PREFIX=/opt/vineyard \
-			-DBUILD_VINEYARD_SERVER=OFF \
-			-DBUILD_SHARED_LIBS=ON && \
-		sudo make install -j`nproc` && \
 	sudo cp -rf /opt/vineyard/* /usr/local/
 	# Avoid copy vineyard library with the same basename by:
 	# 	1) reinstall vineyard to /usr/local and
 	# 	2) rm /opt/vineyard/lib
-	cd /tmp/libvineyard/build && \
+	cd /tmp && git clone -b v0.3.6 https://github.com/alibaba/libvineyard.git --depth=1 && \
+		cd libvineyard && git submodule update --init && \
+		mkdir -p build && cd build && \
 		cmake .. -DCMAKE_INSTALL_PREFIX=/usr/local && \
 		sudo make install -j`nproc` && \
 		sudo rm -fr /opt/vineyard/lib
@@ -122,16 +108,15 @@ graphscope-manylinux2014-py3:
 			cd /tmp && \
 			git clone https://github.com/alibaba/libgrape-lite.git --depth=1 && \
 			cd libgrape-lite && mkdir build && cd build && \
-			cmake .. -DCMAKE_INSTALL_PREFIX=/opt/vineyard && \
+			cmake .. && \
 			sudo make -j`nproc` install && \
 			cd /tmp && \
 			git clone -b v0.3.6 https://github.com/alibaba/libvineyard.git --depth=1 && \
 			cd libvineyard && \
 			git submodule update --init && \
 			mkdir -p build && cd build && \
-			cmake .. -DCMAKE_PREFIX_PATH=/opt/vineyard \
-				-DCMAKE_INSTALL_PREFIX=/opt/vineyard \
-				-DBUILD_SHARED_LIBS=ON && \
+			cmake .. -DCMAKE_INSTALL_PREFIX=/opt/vineyard \
+				     -DBUILD_SHARED_LIBS=ON && \
 			sudo make install -j`nproc` && \
 			cd /tmp/libvineyard && \
 			python3 setup.py bdist_wheel && \

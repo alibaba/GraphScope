@@ -41,11 +41,11 @@ GraphScope 的 Python 客户端不包含在该镜像中，构建也与引擎有�
 .. code:: python
 
     import graphscope
-    
+
     sess = graphscope.session(k8s_gs_image='graphscope/graphscope:SHORTSHA')
-    
+
     # ...
-    
+
 
 或者使用测试脚本来通过所有的测试用例。
 
@@ -74,7 +74,6 @@ GraphScope 的 Python 客户端不包含在该镜像中，构建也与引擎有�
     git clone https://github.com/alibaba/GraphScope.git
     git clone https://github.com/GraphScope/gstest.git
     # 编译
-    export WITH_LEARNING_ENGINE=ON
     export GRAPHSCOPE_HOME=/opt/graphscope
     cd GraphScope && make INSTALL_PREFIX=/opt/graphscope install
     # 测试：
@@ -134,7 +133,7 @@ macOS
 代码风格
 -----------
 
-GraphScope 遵循 `Google C++ 代码风格 <https://google.github.io/styleguide/cppguide.html>`_ 
+GraphScope 遵循 `Google C++ 代码风格 <https://google.github.io/styleguide/cppguide.html>`_
 和 `black Python 风格 <https://github.com/psf/black#the-black-code-style>`_ 。
 
 如果你的代码没有通过CI的风格检查，你可以使用 ``clang-format`` 或 ``black`` 格式化你的代码。
