@@ -19,6 +19,23 @@ project(analytical_engine LANGUAGES C CXX VERSION ${GRAPHSCOPE_ANALYTICAL_VERSIO
 
 option(NETWORKX "networkx on?" ON)
 option(BUILD_TESTS "Build unit test" ON)
+option(ENABLE_JAVA_SDK "Build with support for java sdk" OFF)
+
+if (APPLE AND ENABLE_JAVA_SDK)
+    message(FATAL_ERROR "Java SDK is currently not supported on macos.")
+endif()
+
+if (ENABLE_JAVA_SDK)
+    #check whether we are using clang.
+    if (CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+        message(STATUS "Using Clang compiler: ${CMAKE_CXX_COMPILER}")
+        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -flto -fforce-emit-vtables")
+    else()
+        message(WARNING "Compiling with ENABLE_JAVA_SDK ON expects a minimum Clang-11 compiler," 
+                        "your compiler is ${CMAKE_CXX_COMPILER}. Continue building," 
+                        "BUT llvm4jni-based acceleration will be unavailable for generated libs.")
+    endif()
+endif()
 
 if (NETWORKX)
     add_definitions(-DNETWORKX)
@@ -143,6 +160,13 @@ add_compile_options(-DENABLE_SELECTOR)
 find_package(Protobuf REQUIRED)
 include_directories(${Protobuf_INCLUDE_DIRS})
 
+if (ENABLE_JAVA_SDK)
+# find jni---------------------------------------------------------------------
+    find_package(JNI REQUIRED)
+    include_directories(SYSTEM ${JAVA_INCLUDE_PATH})
+    include_directories(SYSTEM ${JAVA_INCLUDE_PATH2})
+endif()
+
 include("cmake/FindGRPC.cmake")
 include_directories(${GRPC_INCLUDE_DIR})
 
@@ -180,7 +204,7 @@ execute_process(COMMAND python3 proto/proto_generator.py "${PROJECT_SOURCE_DIR}/
         WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/..)
 
 file(GLOB PROTO_CPP_FILES "proto/*.cc")
-file(GLOB CORE_GS_FILES "core/*.cc")
+file(GLOB CORE_GS_FILES "core/*.cc" "core/java/javasdk.cc")
 file(GLOB CORE_RPC_SRC_FILES "core/server/*.cc")
 
 # Add targets
@@ -192,13 +216,27 @@ target_link_libraries(gs_proto ${Protobuf_LIBRARIES} ${GRPC_LIBRARY}
 
 add_executable(grape_engine ${CORE_GS_FILES} ${CORE_RPC_SRC_FILES})
 target_include_directories(grape_engine PRIVATE proto utils)
-target_link_libraries(grape_engine PRIVATE gs_proto
+
+if (ENABLE_JAVA_SDK)
+    target_compile_definitions(grape_engine PUBLIC ENABLE_JAVA_SDK)
+    target_link_libraries(grape_engine PRIVATE gs_proto
+        ${LIBGRAPELITE_LIBRARIES}
+        ${GFLAGS_LIBRARIES}
+        ${CMAKE_DL_LIBS}
+        ${Boost_LIBRARIES}
+        ${VINEYARD_LIBRARIES}
+        ${JAVA_JVM_LIBRARY}
+        ${JNI_LIBRARIES}
+        )
+else()
+    target_link_libraries(grape_engine PRIVATE gs_proto
         ${LIBGRAPELITE_LIBRARIES}
         ${GFLAGS_LIBRARIES}
         ${CMAKE_DL_LIBS}
         ${Boost_LIBRARIES}
         ${VINEYARD_LIBRARIES}
         )
+endif()
 target_link_libraries(grape_engine PRIVATE OpenMP::OpenMP_CXX)
 
 if (${LIBUNWIND_FOUND})
@@ -221,6 +259,21 @@ if (BUILD_TESTS)
     endif ()
     target_link_libraries(run_app OpenMP::OpenMP_CXX)
 
+    if (ENABLE_JAVA_SDK)
+        add_executable(run_java_app test/run_java_app.cc core/java/javasdk.cc)
+        target_include_directories(run_java_app PRIVATE core utils apps)
+        target_compile_definitions(run_java_app PUBLIC ENABLE_JAVA_SDK)
+        target_link_libraries(run_java_app gs_proto ${GFLAGS_LIBRARIES} ${MPI_CXX_LIBRARIES} ${JNI_LIBRARIES} ${Boost_LIBRARIES}
+                                        ${CMAKE_DL_LIBS} ${GLOG_LIBRARIES} ${VINEYARD_LIBRARIES})
+        if (${LIBUNWIND_FOUND})
+            target_link_libraries(run_java_app ${LIBUNWIND_LIBRARIES})
+        endif ()
+        if (NETWORKX)
+            target_include_directories(run_java_app PUBLIC ${FOLLY_ROOT_DIR}/include)
+            target_link_libraries(run_java_app ${FOLLY_LIBRARIES} ${DOUBLE_CONVERSION_LIBRARY})
+        endif()
+    endif()
+    
     macro(add_vineyard_app target)
         set(options)
         set(oneValueArgs)
