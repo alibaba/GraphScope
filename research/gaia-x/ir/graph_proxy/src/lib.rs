@@ -27,8 +27,8 @@ pub trait InitializeJobCompiler {
     fn initialize_job_compiler(&self) -> IRJobCompiler;
 }
 
-use ir_common::error::{DynIter, DynResult};
-use runtime::graph::graph::Statement;
+use runtime::error::{DynIter, DynResult};
+use runtime::graph::Statement;
 use runtime::IRJobCompiler;
 
 pub fn from_fn<I, O, F>(func: F) -> Box<dyn Statement<I, O>>

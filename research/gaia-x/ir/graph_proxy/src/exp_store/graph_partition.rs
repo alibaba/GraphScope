@@ -14,7 +14,7 @@
 //! limitations under the License.
 
 use crate::exp_store::ID_MASK;
-use ir_common::error::DynResult;
+use runtime::error::DynResult;
 use runtime::graph::partitioner::Partitioner;
 use runtime::graph::ID;
 

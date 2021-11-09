@@ -15,8 +15,8 @@
 
 use crate::error::{str_to_dyn_error, FnGenResult};
 use crate::graph::element::{Edge, Vertex};
-use crate::graph::graph::QueryParams;
 use crate::graph::partitioner::Partitioner;
+use crate::graph::QueryParams;
 use crate::graph::ID;
 use crate::process::record::Record;
 use ir_common::error::{ParsePbError, ParsePbResult};

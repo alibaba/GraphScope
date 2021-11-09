@@ -15,7 +15,7 @@
 
 use crate::error::{str_to_dyn_error, FnGenResult};
 use crate::graph::element::{Element, VertexOrEdge};
-use crate::graph::graph::QueryParams;
+use crate::graph::QueryParams;
 use crate::process::operator::map::MapFuncGen;
 use crate::process::record::Record;
 use ir_common::generated::algebra as algebra_pb;

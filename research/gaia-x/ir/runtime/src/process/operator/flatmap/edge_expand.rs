@@ -15,8 +15,7 @@
 
 use crate::error::{str_to_dyn_error, FnGenResult};
 use crate::graph::element::{Element, VertexOrEdge};
-use crate::graph::graph::{QueryParams, Statement};
-use crate::graph::{Direction, ID};
+use crate::graph::{Direction, QueryParams, Statement, ID};
 use crate::process::operator::flatmap::FlatMapFuncGen;
 use crate::process::record::{Record, RecordExpandIter};
 use ir_common::error::ParsePbError;

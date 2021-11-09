@@ -24,15 +24,14 @@ use graph_store::prelude::{
     DefaultId, EdgeId, GlobalStoreTrait, GlobalStoreUpdate, GraphDBConfig, InternalId,
     LDBCGraphSchema, LargeGraphDB, LocalEdge, LocalVertex, MutableGraphDB, Row, INVALID_LABEL_ID,
 };
-use ir_common::error::DynResult;
 use ir_common::{KeyId, NameOrId};
 use pegasus::configure_with_default;
 use pegasus_common::downcast::*;
 use pegasus_common::impl_as_any;
+use runtime::error::DynResult;
 use runtime::graph::element::{Edge, Vertex};
-use runtime::graph::graph::{register_graph, GraphProxy, QueryParams, Statement};
 use runtime::graph::property::{DefaultDetails, Details, DynDetails};
-use runtime::graph::{Direction, ID};
+use runtime::graph::{register_graph, Direction, GraphProxy, QueryParams, Statement, ID};
 use std::collections::HashMap;
 use std::path::Path;
 use std::sync::atomic::{AtomicPtr, Ordering};

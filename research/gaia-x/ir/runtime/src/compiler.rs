@@ -13,7 +13,7 @@
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 
-use crate::error::FnGenResult;
+use crate::error::{str_to_dyn_error, FnGenResult};
 use crate::graph::partitioner::Partitioner;
 use crate::process::functions::{CompareFunction, JoinKeyGen};
 use crate::process::operator::filter::FilterFuncGen;
@@ -175,14 +175,20 @@ impl IRJobCompiler {
                         }
                     }
                     server_pb::operator_def::OpKind::Fold(_fold) => {
-                        todo!()
+                        return Err(BuildJobError::Unsupported(
+                            "Fold is not supported yet".to_string(),
+                        ))
                     }
                     server_pb::operator_def::OpKind::Group(_group) => {
-                        todo!()
+                        return Err(BuildJobError::Unsupported(
+                            "Group is not supported yet".to_string(),
+                        ))
                     }
 
                     server_pb::operator_def::OpKind::Dedup(_) => {
-                        todo!()
+                        return Err(BuildJobError::Unsupported(
+                            "Dedup is not supported yet".to_string(),
+                        ))
                     }
                     server_pb::operator_def::OpKind::Merge(merge) => {
                         let (mut ori_stream, sub_stream) = stream.copied()?;
@@ -217,7 +223,7 @@ impl IRJobCompiler {
                         let join_func = self.udf_gen.gen_subtask(
                             sub.join
                                 .as_ref()
-                                .expect("should have subtask_kind")
+                                .ok_or("should have subtask_kind")?
                                 .resource
                                 .as_ref(),
                         )?;
@@ -234,7 +240,9 @@ impl IRJobCompiler {
                         }
                     }
                     OpKind::SegApply(_) => {
-                        todo!()
+                        return Err(BuildJobError::Unsupported(
+                            "SegApply is not supported yet".to_string(),
+                        ))
                     }
                     OpKind::Join(join) => {
                         let joiner = self.udf_gen.gen_join(&join.resource)?;
@@ -253,10 +261,12 @@ impl IRJobCompiler {
                         let left_stream = self
                             .install(left_stream, &left_task.plan[..])?
                             .key_by(move |record| left_key_selector.select_key(record))?
+                            // TODO(bingqing): remove this when new keyed-join in gaia-x is ready;
                             .partition_by_key();
                         let right_stream = self
                             .install(right_stream, &right_task.plan[..])?
                             .key_by(move |record| right_key_selector.select_key(record))?
+                            // TODO(bingqing): remove this when new keyed-join in gaia-x is ready;
                             .partition_by_key();
                         stream = match join_kind {
                             JoinKind::Inner => left_stream
@@ -264,8 +274,9 @@ impl IRJobCompiler {
                                 .map(|(left, right)| Ok(left.value.join(right.value)))?,
                             JoinKind::LeftOuter => left_stream.left_outer_join(right_stream)?.map(
                                 |(left, right)| {
-                                    let left =
-                                        left.expect("left cannot be None in left outer join");
+                                    let left = left.ok_or(str_to_dyn_error(
+                                        "left cannot be None in left outer join",
+                                    ))?;
                                     if let Some(right) = right {
                                         Ok(left.value.join(right.value))
                                     } else {
@@ -276,8 +287,9 @@ impl IRJobCompiler {
                             JoinKind::RightOuter => left_stream
                                 .right_outer_join(right_stream)?
                                 .map(|(left, right)| {
-                                    let right =
-                                        right.expect("right cannot be None in right outer join");
+                                    let right = right.ok_or(str_to_dyn_error(
+                                        "right cannot be None in right outer join",
+                                    ))?;
                                     if let Some(left) = left {
                                         Ok(left.value.join(right.value))
                                     } else {
@@ -290,7 +302,7 @@ impl IRJobCompiler {
                                     (Some(left), None) => Ok(left.value),
                                     (None, Some(right)) => Ok(right.value),
                                     (None, None) => {
-                                        todo!()
+                                        unreachable!()
                                     }
                                 },
                             )?,
@@ -300,11 +312,17 @@ impl IRJobCompiler {
                             JoinKind::Anti => left_stream
                                 .anti_join(right_stream)?
                                 .map(|left| Ok(left.value))?,
-                            JoinKind::Times => todo!(),
+                            JoinKind::Times => {
+                                return Err(BuildJobError::Unsupported(
+                                    "JoinKind of Times is not supported yet".to_string(),
+                                ))
+                            }
                         }
                     }
                     OpKind::KeyBy(_) => {
-                        todo!()
+                        return Err(BuildJobError::Unsupported(
+                            "KeyBy is not supported yet".to_string(),
+                        ))
                     }
                 }
             } else {
