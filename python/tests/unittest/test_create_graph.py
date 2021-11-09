@@ -25,7 +25,6 @@ import vineyard
 
 import graphscope
 from graphscope.framework.errors import AnalyticalEngineInternalError
-from graphscope.framework.graph import Graph
 from graphscope.framework.loader import Loader
 from graphscope.proto import graph_def_pb2
 
@@ -86,7 +85,9 @@ def student_group_e_df(data_dir=os.path.expandvars("${GS_TEST_DIR}/property_grap
 
 @pytest.fixture
 def student_group_e_array(student_group_e_df):
-    array = student_group_e_df[col].values
+    array = [
+        student_group_e_df[col].values for col in student_group_e_df.columns.values
+    ]
     return array
 
 
@@ -101,7 +102,7 @@ def student_v_df(data_dir=os.path.expandvars("${GS_TEST_DIR}/property_graph")):
 
 @pytest.fixture
 def student_v_array(student_v_df):
-    return student_v_df[col].values
+    return [student_v_df[col].values for col in student_v_df.columns.values]
 
 
 @pytest.fixture
