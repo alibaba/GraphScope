@@ -67,7 +67,7 @@ def load_ogbn_arxiv(sess=None, prefix=None):
             fname,
             origin=origin,
             extract=True,
-            file_hash="e84da6c7fb036fa234138f6f060853e7869cda76c46e01e450f557499aa3079c",
+            file_hash="d920922681e8369da5dc8e0f28fffae2eb0db056dc626097f4159351d4ea4389",
         )
         # assumed dirname is ogbn_arxiv after extracting from ogbn_arxiv.tar.gz
         prefix = fpath[0:-7]
