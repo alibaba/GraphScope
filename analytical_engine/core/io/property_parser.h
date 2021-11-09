@@ -197,21 +197,29 @@ inline std::vector<std::string> SplitTable(const std::string& data, int num) {
   }
   std::vector<std::string> sliced_bytes(num);
   for (int i = 0; i < num; ++i) {
-    std::shared_ptr<arrow::Buffer> out_buf;
-    vineyard::SerializeTable(sliced_tables[i], &out_buf);
-    sliced_bytes[i] = out_buf->ToString();
+    if (sliced_tables[i]->num_rows() > 0) {
+      std::shared_ptr<arrow::Buffer> out_buf;
+      vineyard::SerializeTable(sliced_tables[i], &out_buf);
+      sliced_bytes[i] = out_buf->ToString();
+    }
   }
   return sliced_bytes;
 }
 
 inline std::vector<AttrMap> DistributeLoader(const AttrMap& attrs, int num) {
   std::vector<AttrMap> distributed_attrs(num);
-  const std::string& data = attrs.at(rpc::VALUES).s();
-  auto sliced_bytes = SplitTable(data, num);
+
   std::string protocol = attrs.at(rpc::PROTOCOL).s();
+  std::vector<std::string> distributed_values;
+  const std::string& data = attrs.at(rpc::VALUES).s();
+  if (protocol == "pandas") {
+    distributed_values = SplitTable(data, num);
+  } else {
+    distributed_values.resize(num, data);
+  }
   for (int i = 0; i < num; ++i) {
     distributed_attrs[i][rpc::PROTOCOL].set_s(protocol);
-    distributed_attrs[i][rpc::VALUES].set_s(std::move(sliced_bytes[i]));
+    distributed_attrs[i][rpc::VALUES].set_s(std::move(distributed_values[i]));
   }
   return distributed_attrs;
 }
@@ -221,16 +229,19 @@ inline std::vector<AttrMap> DistributeVertex(const AttrMap& attrs, int num) {
   auto loader_attr = attrs.at(rpc::LOADER).func().attr();
   auto sliced_attrs = DistributeLoader(loader_attr, num);
 
-  std::string label = attrs.at(rpc::LABEL).s();
-  std::string vid = attrs.at(rpc::VID).s();
   std::vector<AttrMap> distributed_attrs(num);
   for (int i = 0; i < num; ++i) {
-    distributed_attrs[i][rpc::LABEL].set_s(label);
-    distributed_attrs[i][rpc::VID].set_s(vid);
     rpc::NameAttrList* list = new rpc::NameAttrList();
     list->set_name(loader_name);
     list->mutable_attr()->swap(sliced_attrs[i]);
     distributed_attrs[i][rpc::LOADER].set_allocated_func(list);
+  }
+  for (auto& pair : attrs) {
+    if (pair.first != rpc::LOADER) {
+      for (int i = 0; i < num; ++i) {
+        distributed_attrs[i][pair.first].CopyFrom(pair.second);
+      }
+    }
   }
 
   return distributed_attrs;
@@ -241,23 +252,19 @@ inline std::vector<AttrMap> DistributeSubLabel(const AttrMap& attrs, int num) {
   auto loader_attr = attrs.at(rpc::LOADER).func().attr();
   auto sliced_attrs = DistributeLoader(loader_attr, num);
 
-  std::string src_label = attrs.at(rpc::SRC_LABEL).s();
-  std::string dst_label = attrs.at(rpc::DST_LABEL).s();
-  std::string src_vid = attrs.at(rpc::SRC_VID).s();
-  std::string dst_vid = attrs.at(rpc::DST_VID).s();
-  std::string load_strategy = attrs.at(rpc::LOAD_STRATEGY).s();
-
   std::vector<AttrMap> distributed_attrs(num);
   for (int i = 0; i < num; ++i) {
-    distributed_attrs[i][rpc::SRC_LABEL].set_s(src_label);
-    distributed_attrs[i][rpc::DST_LABEL].set_s(dst_label);
-    distributed_attrs[i][rpc::SRC_VID].set_s(src_vid);
-    distributed_attrs[i][rpc::DST_VID].set_s(dst_vid);
-    distributed_attrs[i][rpc::LOAD_STRATEGY].set_s(load_strategy);
     rpc::NameAttrList* list = new rpc::NameAttrList();
     list->set_name(loader_name);
     list->mutable_attr()->swap(sliced_attrs[i]);
     distributed_attrs[i][rpc::LOADER].set_allocated_func(list);
+  }
+  for (auto& pair : attrs) {
+    if (pair.first != rpc::LOADER) {
+      for (int i = 0; i < num; ++i) {
+        distributed_attrs[i][pair.first].CopyFrom(pair.second);
+      }
+    }
   }
 
   return distributed_attrs;
@@ -274,14 +281,19 @@ inline std::vector<AttrMap> DistributeEdge(const AttrMap& attrs, int num) {
                                               std::move(sub_label_attrs));
   }
 
-  std::string label = attrs.at(rpc::LABEL).s();
   for (int i = 0; i < num; ++i) {
-    distributed_attrs[i][rpc::LABEL].set_s(label);
     for (auto& pair : named_distributed_sub_labels) {
       rpc::NameAttrList* func =
           distributed_attrs[i][rpc::SUB_LABEL].mutable_list()->add_func();
       func->set_name(pair.first);
       func->mutable_attr()->swap(pair.second[i]);
+    }
+  }
+  for (auto& pair : attrs) {
+    if (pair.first != rpc::SUB_LABEL) {
+      for (int i = 0; i < num; ++i) {
+        distributed_attrs[i][pair.first].CopyFrom(pair.second);
+      }
     }
   }
   return distributed_attrs;
@@ -292,27 +304,22 @@ inline std::vector<AttrMap> DistributeEdge(const AttrMap& attrs, int num) {
 // in order to reduce the communication overhead.
 inline std::vector<std::map<int, rpc::AttrValue>> DistributeGraph(
     const std::map<int, rpc::AttrValue>& params, int num) {
-  std::vector<std::map<int, rpc::AttrValue>> distributed_graph;
+  std::vector<std::map<int, rpc::AttrValue>> distributed_graph(num);
 
   auto items = params.at(rpc::ARROW_PROPERTY_DEFINITION).list().func();
-  bool directed = params.at(rpc::DIRECTED).b();
-  bool generate_eid = params.at(rpc::GENERATE_EID).b();
-
   std::vector<std::pair<std::string, std::vector<AttrMap>>> named_items;
 
   for (const auto& item : items) {
     std::vector<AttrMap> vec;
     if (item.name() == "vertex") {
       vec = std::move(DistributeVertex(item.attr(), num));
-
     } else if (item.name() == "edge") {
       vec = std::move(DistributeEdge(item.attr(), num));
     }
     named_items.emplace_back(item.name(), std::move(vec));
   }
   for (int i = 0; i < num; ++i) {
-    distributed_graph[i][rpc::DIRECTED].set_b(directed);
-    distributed_graph[i][rpc::GENERATE_EID].set_b(generate_eid);
+    distributed_graph[i][rpc::ARROW_PROPERTY_DEFINITION] = rpc::AttrValue();
     for (auto& pair : named_items) {
       rpc::NameAttrList* func =
           distributed_graph[i][rpc::ARROW_PROPERTY_DEFINITION]
@@ -320,6 +327,13 @@ inline std::vector<std::map<int, rpc::AttrValue>> DistributeGraph(
               ->add_func();
       func->set_name(pair.first);
       func->mutable_attr()->swap(pair.second[i]);
+    }
+  }
+  for (auto& pair : params) {
+    if (pair.first != rpc::ARROW_PROPERTY_DEFINITION) {
+      for (int i = 0; i < num; ++i) {
+        distributed_graph[i][pair.first].CopyFrom(pair.second);
+      }
     }
   }
   return distributed_graph;

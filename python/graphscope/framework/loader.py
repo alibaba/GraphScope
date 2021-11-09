@@ -210,7 +210,7 @@ class Loader(object):
         buf = sink.getvalue()
 
         self.deduced_properties = list(zip(col_names, col_types))
-        self.source = buf.to_pybytes()
+        self.source = bytes(memoryview(buf))
 
     def process_vy_object(self, source):
         self.protocol = "vineyard"
@@ -245,9 +245,7 @@ class Loader(object):
                 utils.bytes_to_attr(source.encode("utf-8"))
             )
         elif self.protocol == "pandas":
-            attr.func.attr[types_pb2.VALUES].CopyFrom(
-                utils.bytes_to_attr(self.property_bytes)
-            )
+            attr.func.attr[types_pb2.VALUES].CopyFrom(utils.bytes_to_attr(self.source))
         else:  # Let vineyard handle other data source.
             attr.func.attr[types_pb2.VALUES].CopyFrom(
                 utils.bytes_to_attr(self.source.encode("utf-8"))

@@ -80,18 +80,13 @@ def student_group_e_df(data_dir=os.path.expandvars("${GS_TEST_DIR}/property_grap
     df = pd.read_csv(
         os.path.join(data_dir, "group.e"),
         sep=",",
-        usecols=["leader_student_id", "member_student_id", "member_size"],
     )
     return df
 
 
 @pytest.fixture
 def student_group_e_array(student_group_e_df):
-    array = [
-        student_group_e_df[col].values
-        for col in ["leader_student_id", "member_student_id", "member_size"]
-    ]
-    array[2] = array[2].astype("double")
+    array = student_group_e_df[col].values
     return array
 
 
@@ -100,16 +95,13 @@ def student_v_df(data_dir=os.path.expandvars("${GS_TEST_DIR}/property_graph")):
     df = pd.read_csv(
         os.path.join(data_dir, "student.v"),
         sep=",",
-        usecols=["student_id", "lesson_nums", "avg_score"],
     )
     return df
 
 
 @pytest.fixture
 def student_v_array(student_v_df):
-    return [
-        student_v_df[col].values for col in ["student_id", "lesson_nums", "avg_score"]
-    ]
+    return student_v_df[col].values
 
 
 @pytest.fixture
@@ -358,6 +350,13 @@ def test_load_from_pandas(graphscope_session, student_group_e_df, student_v_df):
     graph = graphscope_session.g()
     graph = graph.add_vertices(student_v_df)
     graph = graph.add_edges(student_group_e_df)
+    assert graph.loaded()
+
+
+def test_load_from_oneline_pandas(graphscope_session, student_group_e_df):
+    e_oneline = student_group_e_df[:1]
+    graph = graphscope_session.g()
+    graph = graph.add_edges(e_oneline)
     assert graph.loaded()
 
 

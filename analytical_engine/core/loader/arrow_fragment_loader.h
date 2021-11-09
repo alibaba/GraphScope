@@ -392,10 +392,12 @@ class ArrowFragmentLoader {
  private:
   boost::leaf::result<std::shared_ptr<arrow::Table>> readTableFromPandas(
       const std::string& data) {
-    std::shared_ptr<arrow::Buffer> buffer =
-        arrow::Buffer::Wrap(data.data(), data.size());
     std::shared_ptr<arrow::Table> table;
-    VY_OK_OR_RAISE(vineyard::DeserializeTable(buffer, &table));
+    if (!data.empty()) {
+      std::shared_ptr<arrow::Buffer> buffer =
+          arrow::Buffer::Wrap(data.data(), data.size());
+      VY_OK_OR_RAISE(vineyard::DeserializeTable(buffer, &table));
+    }
     return table;
   }
 
@@ -714,8 +716,7 @@ class ArrowFragmentLoader {
         auto load_procedure =
             [&]() -> boost::leaf::result<std::shared_ptr<arrow::Table>> {
           std::shared_ptr<arrow::Table> table;
-          if (sub_labels[j].protocol == "numpy" ||
-              sub_labels[j].protocol == "pandas") {
+          if (sub_labels[j].protocol == "pandas") {
             BOOST_LEAF_ASSIGN(table, readTableFromPandas(sub_labels[j].values));
           } else if (sub_labels[j].protocol == "vineyard") {
             LOG(INFO) << "read edge table from vineyard: "
