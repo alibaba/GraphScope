@@ -48,7 +48,7 @@ class DiGraph(Graph):
     """
     Base class for directed graphs.
 
-    A DiGraph that hold the metadata of a graph, and provide NetworkX-like DiGraph APIs.
+    A DiGraph that holds the metadata of a graph, and provides NetworkX-like DiGraph APIs.
 
     It is worth noticing that the graph is actually stored by the Analytical Engine backend.
     In other words, the Graph object holds nothing but metadata of a graph
@@ -58,11 +58,14 @@ class DiGraph(Graph):
     DiGraphs support directed edges.  Self loops are allowed but multiple
     (parallel) edges are not.
 
-    Nodes can be some hashable objects including int/str/float/bool object
-    with optional key/value attributes.
+    Nodes can be arbitrary int/str/float/bool objects with optional
+    key/value attributes.
 
     Edges are represented as links between nodes with optional
     key/value attributes.
+
+    DiGraph support node label if it's created from a GraphScope graph object.
+    nodes are identified by `(label, id)` tuple.
 
     Parameters
     ----------
