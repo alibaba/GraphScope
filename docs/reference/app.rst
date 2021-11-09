@@ -12,6 +12,15 @@ AppAssets
    :members:
    :exclude-members: __call__, __repr__
 
+JavaApp
+----------
+
+.. currentmodule:: graphscope
+.. autoclass:: graphscope.analytical.app.JavaApp
+   :special-members:
+   :members:
+   :exclude-members: __repr__
+
 
 App object
 ----------

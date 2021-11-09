@@ -38,15 +38,18 @@ import time
 import uuid
 import zipfile
 from io import BytesIO
+from pathlib import Path
 from queue import Empty as EmptyQueue
 from queue import Queue
 from string import Template
 
 import yaml
+from google.protobuf.any_pb2 import Any
 from graphscope.framework import utils
 from graphscope.framework.errors import CompilationError
 from graphscope.framework.graph_schema import GraphSchema
 from graphscope.proto import attr_value_pb2
+from graphscope.proto import data_types_pb2
 from graphscope.proto import graph_def_pb2
 from graphscope.proto import op_def_pb2
 from graphscope.proto import types_pb2
@@ -121,6 +124,15 @@ if not os.path.isfile(INTERACTIVE_ENGINE_SCRIPT):
         GRAPHSCOPE_HOME, "interactive_engine", "bin", "giectl"
     )
 
+# JAVA SDK related CONSTANTS
+LLVM4JNI_HOME = os.environ.get("LLVM4JNI_HOME", None)
+LLVM4JNI_USER_OUT_DIR_BASE = "user-llvm4jni-output"
+PROCESSOR_MAIN_CLASS = "com.alibaba.graphscope.annotation.Main"
+JAVA_CODEGNE_OUTPUT_PREFIX = "gs-ffi"
+GRAPE_PROCESSOR_JAR = os.path.join(
+    GRAPHSCOPE_HOME, "lib", "grape-runtime-0.1-shaded.jar"
+)
+
 
 def get_timestamp():
     now = datetime.datetime.now()
@@ -146,6 +158,8 @@ def get_app_sha256(attr):
         vd_type,
         md_type,
         pregel_combine,
+        java_jar_path,
+        java_app_class,
     ) = _codegen_app_info(attr, DEFAULT_GS_CONFIG_FILE)
     graph_header, graph_type = _codegen_graph_info(attr)
     logger.info("Codegened graph type: %s, Graph header: %s", graph_type, graph_header)
@@ -153,6 +167,14 @@ def get_app_sha256(attr):
         return hashlib.sha256(
             f"{app_type}.{app_class}.{graph_type}".encode("utf-8")
         ).hexdigest()
+    elif app_type == "java_pie":
+        s = hashlib.sha256()
+        # CAUTION!!!!!
+        # We believe jar_path.java_app_class can uniquely define one java app
+        s.update(f"{app_type}.{java_jar_path}.{java_app_class}".encode("utf-8"))
+        if types_pb2.GAR in attr:
+            s.update(attr[types_pb2.GAR].s)
+        return s.hexdigest()
     else:
         s = hashlib.sha256()
         s.update(f"{app_type}.{app_class}.{graph_type}".encode("utf-8"))
@@ -177,6 +199,9 @@ def compile_app(workspace: str, library_name, attr, engine_config: dict):
 
     Returns:
         str: Path of the built library.
+        str: Java jar path. For c++/python app, return None.
+        str: Directory containing generated java and jni code. For c++/python app, return None.
+        str: App type.
     """
     app_dir = os.path.join(workspace, library_name)
     os.makedirs(app_dir, exist_ok=True)
@@ -191,15 +216,20 @@ def compile_app(workspace: str, library_name, attr, engine_config: dict):
         vd_type,
         md_type,
         pregel_combine,
+        java_jar_path,
+        java_app_class,
     ) = _codegen_app_info(attr, DEFAULT_GS_CONFIG_FILE)
     logger.info(
-        "Codegened application type: %s, app header: %s, app_class: %s, vd_type: %s, md_type: %s, pregel_combine: %s",
+        "Codegened application type: %s, app header: %s, app_class: %s, vd_type: %s, md_type: %s, pregel_combine: %s, \
+            java_jar_path: %s, java_app_class: %s",
         app_type,
         app_header,
         app_class,
         str(vd_type),
         str(md_type),
         str(pregel_combine),
+        str(java_jar_path),
+        str(java_app_class),
     )
 
     graph_header, graph_type = _codegen_graph_info(attr)
@@ -208,6 +238,8 @@ def compile_app(workspace: str, library_name, attr, engine_config: dict):
     os.chdir(app_dir)
 
     module_name = ""
+    # Output directory for java codegen
+    java_codegen_out_dir = ""
     cmake_commands = [
         "cmake",
         ".",
@@ -215,7 +247,37 @@ def compile_app(workspace: str, library_name, attr, engine_config: dict):
         f"-DCMAKE_PREFIX_PATH={GRAPHSCOPE_HOME}",
         "-DPYTHON_EXECUTABLE={0}".format(sys.executable),
     ]
-    if app_type != "cpp_pie":
+    if app_type == "java_pie":
+        if not os.path.isfile(GRAPE_PROCESSOR_JAR):
+            raise RuntimeError("Grape runtime jar not found")
+        # for java need to run preprocess
+        java_codegen_out_dir = os.path.join(
+            workspace, "{}-{}".format(JAVA_CODEGNE_OUTPUT_PREFIX, library_name)
+        )
+        cmake_commands += [
+            "-DENABLE_JAVA_SDK=ON",
+            "-DJAVA_PIE_APP=ON",
+            "-DPRE_CP={}:{}".format(GRAPE_PROCESSOR_JAR, java_jar_path),
+            "-DPROCESSOR_MAIN_CLASS={}".format(PROCESSOR_MAIN_CLASS),
+            "-DJAR_PATH={}".format(java_jar_path),
+            "-DOUTPUT_DIR={}".format(java_codegen_out_dir),
+        ]
+        # if run llvm4jni.sh not found, we just go ahead,since it is optional.
+        if LLVM4JNI_HOME and os.path.isfile(os.path.join(LLVM4JNI_HOME, "run.sh")):
+            llvm4jni_user_out_dir = os.path.join(
+                workspace, "{}-{}".format(LLVM4JNI_USER_OUT_DIR_BASE, library_name)
+            )
+            cmake_commands += [
+                "-DRUN_LLVM4JNI_SH={}".format(os.path.join(LLVM4JNI_HOME, "run.sh")),
+                "-DLLVM4JNI_OUTPUT={}".format(llvm4jni_user_out_dir),
+                "-DLIB_PATH={}".format(get_lib_path(app_dir, library_name)),
+            ]
+        else:
+            logger.info(
+                "Skip running llvm4jni since env var LLVM4JNI_HOME not found or run.sh not found under LLVM4JNI_HOME"
+            )
+        logger.info(" ".join(cmake_commands))
+    elif app_type != "cpp_pie":
         if app_type == "cython_pregel":
             pxd_name = "pregel"
             cmake_commands += ["-DCYTHON_PREGEL_APP=True"]
@@ -284,7 +346,7 @@ def compile_app(workspace: str, library_name, attr, engine_config: dict):
     lib_path = get_lib_path(app_dir, library_name)
     if not os.path.isfile(lib_path):
         raise CompilationError(f"Failed to compile app {app_class}")
-    return lib_path
+    return lib_path, java_jar_path, java_codegen_out_dir, app_type
 
 
 def compile_graph_frame(workspace: str, library_name, attr: dict, engine_config: dict):
@@ -301,6 +363,9 @@ def compile_graph_frame(workspace: str, library_name, attr: dict, engine_config:
 
     Returns:
         str: Path of the built graph library.
+        None: For consistency with compiler_app.
+        None: For consistency with compile_app.
+        None: for consistency with compile_app.
     """
 
     _, graph_class = _codegen_graph_info(attr)
@@ -371,8 +436,7 @@ def compile_graph_frame(workspace: str, library_name, attr: dict, engine_config:
     lib_path = get_lib_path(library_dir, library_name)
     if not os.path.isfile(lib_path):
         raise CompilationError(f"Failed to compile graph {graph_class}")
-
-    return lib_path
+    return lib_path, None, None, None
 
 
 def op_pre_process(op, op_result_pool, key_to_op, **kwargs):  # noqa: C901
@@ -582,6 +646,15 @@ def _pre_process_for_run_app_op(op, op_result_pool, key_to_op, **kwargs):
     op.attr[types_pb2.APP_NAME].CopyFrom(
         attr_value_pb2.AttrValue(s=result.result.decode("utf-8").encode("utf-8"))
     )
+
+    app_type = parent_op.attr[types_pb2.APP_ALGO].s.decode("utf-8")
+    if app_type == "java_app":
+        # For java app, we need lib path as an explicit arg.
+        param = Any()
+        lib_path = parent_op.attr[types_pb2.APP_LIBRARY_PATH].s.decode("utf-8")
+        param.Pack(data_types_pb2.StringValue(value=lib_path))
+        op.query_args.args.extend([param])
+        logger.info("Lib path {}".format(lib_path))
 
 
 def _pre_process_for_unload_graph_op(op, op_result_pool, key_to_op, **kwargs):
@@ -1073,12 +1146,14 @@ def _codegen_app_info(attr, meta_file: str):
     algo = attr[types_pb2.APP_ALGO].s.decode("utf-8")
     for app in config_yaml["app"]:
         if app["algo"] == algo:
-            app_type = app["type"]  # cpp_pie or cython_pregel or cython_pie
+            app_type = app["type"]  # cpp_pie or cython_pregel or cython_pie, java_pie
             if app_type == "cpp_pie":
                 return (
                     app_type,
                     app["src"],
                     f"{app['class_name']}<_GRAPH_TYPE>",
+                    None,
+                    None,
                     None,
                     None,
                     None,
@@ -1092,6 +1167,19 @@ def _codegen_app_info(attr, meta_file: str):
                     app["vd_type"],
                     app["md_type"],
                     app["pregel_combine"],
+                    None,
+                    None,
+                )
+            if app_type == "java_pie":
+                return (
+                    app_type,
+                    app["driver_header"],  # cxx header
+                    "{}<_GRAPH_TYPE>".format(app["class_name"]),  # cxx class name
+                    None,  # vd_type,
+                    None,  # md_type
+                    None,  # pregel combine
+                    app["java_jar_path"],
+                    app["java_app_class"],  # the running java app class
                 )
 
     raise KeyError("Algorithm does not exist in the gar resource.")

@@ -1,0 +1,16 @@
+inline com.alibaba.fastffi.CXXValueScope$Buffer::*
+inline com.alibaba.fastffi.CXXValueScope::*
+inline java.lang.ThreadLocal::get
+inline com.alibaba.llvm4jni.runtime.JavaRuntime::*
+inline com.alibaba.fastffi.FFIPointer::*
+inline *::native*
+inline Library_*::*
+#inline *::checkPersonPrimitive
+#inline *::checkPersonFull
+inline com.alibaba.fastffi.FFIProtobufExampleBenchmark::checkPersonFullReuseBuffer
+inline com.alibaba.fastffi.FFIProtobufExampleBenchmark::checkPersonFullReuseBufferAll
+inline com.alibaba.fastffi.FFIProtobufExampleBenchmark::checkPersonFullReuseBufferAllCache
+inline com.alibaba.fastffi.ProtobufExampleBenchmark::checkPersonFull
+inline com.alibaba.fastffi.ProtobufExampleBenchmark::checkPersonFullAll
+#print *::Exec
+inline java.lang.String::split

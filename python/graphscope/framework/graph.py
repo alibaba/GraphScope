@@ -776,7 +776,7 @@ class Graph(GraphInterface):
     def template_str(self):
         # transform str/string to std::string
         oid_type = utils.normalize_data_type_str(self._oid_type)
-        vid_type = self._schema.vid_type
+        vid_type = utils.data_type_to_cpp(self._schema._vid_type)
         vdata_type = utils.data_type_to_cpp(self._schema.vdata_type)
         edata_type = utils.data_type_to_cpp(self._schema.edata_type)
         if self._graph_type == graph_def_pb2.ARROW_PROPERTY:
