@@ -13,11 +13,11 @@
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 
+use crate::error::{str_to_dyn_error, FnGenResult};
 use crate::graph::element::{Element, VertexOrEdge};
 use crate::graph::graph::QueryParams;
 use crate::process::operator::map::MapFuncGen;
 use crate::process::record::Record;
-use ir_common::error::{str_to_dyn_error, DynResult};
 use ir_common::generated::algebra as algebra_pb;
 use ir_common::generated::algebra::get_v::VOpt;
 use ir_common::NameOrId;
@@ -65,7 +65,7 @@ impl MapFunction<Record, Record> for GetVertexOperator {
 }
 
 impl MapFuncGen for algebra_pb::GetV {
-    fn gen_map(self) -> DynResult<Box<dyn MapFunction<Record, Record>>> {
+    fn gen_map(self) -> FnGenResult<Box<dyn MapFunction<Record, Record>>> {
         let start_tag = self
             .tag
             .map(|name_or_id| name_or_id.try_into())

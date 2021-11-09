@@ -13,11 +13,12 @@
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 
+use crate::error::FnGenResult;
 use crate::process::functions::CompareFunction;
 use crate::process::operator::sort::CompareFunctionGen;
 use crate::process::operator::TagKey;
 use crate::process::record::Record;
-use ir_common::error::{DynResult, ParsePbError};
+use ir_common::error::ParsePbError;
 use ir_common::generated::algebra as algebra_pb;
 use ir_common::generated::algebra::order_by::ordering_pair::Order;
 use std::cmp::Ordering;
@@ -51,7 +52,7 @@ impl CompareFunction<Record> for RecordCompare {
 }
 
 impl CompareFunctionGen for algebra_pb::OrderBy {
-    fn gen_cmp(self) -> DynResult<Box<dyn CompareFunction<Record>>> {
+    fn gen_cmp(self) -> FnGenResult<Box<dyn CompareFunction<Record>>> {
         let record_compare = RecordCompare::try_from(self)?;
         Ok(Box::new(record_compare))
     }

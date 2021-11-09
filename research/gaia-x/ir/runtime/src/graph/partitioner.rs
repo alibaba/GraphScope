@@ -13,8 +13,8 @@
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 
+use crate::error::DynResult;
 use crate::graph::ID;
-use ir_common::error::DynResult;
 
 pub trait Partitioner: Send + Sync + 'static {
     fn get_partition(&self, id: &ID, job_workers: usize) -> DynResult<u64>;

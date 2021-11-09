@@ -15,27 +15,28 @@
 mod get_v;
 mod project;
 
+use crate::error::FnGenResult;
 use crate::process::record::Record;
-use ir_common::error::{str_to_dyn_error, DynResult};
+use ir_common::error::ParsePbError;
 use ir_common::generated::algebra as algebra_pb;
 use pegasus::api::function::MapFunction;
 
 pub trait MapFuncGen {
-    fn gen_map(self) -> DynResult<Box<dyn MapFunction<Record, Record>>>;
+    fn gen_map(self) -> FnGenResult<Box<dyn MapFunction<Record, Record>>>;
 }
 
 impl MapFuncGen for algebra_pb::logical_plan::Operator {
-    fn gen_map(self) -> DynResult<Box<dyn MapFunction<Record, Record>>> {
+    fn gen_map(self) -> FnGenResult<Box<dyn MapFunction<Record, Record>>> {
         if let Some(opr) = self.opr {
             match opr {
                 algebra_pb::logical_plan::operator::Opr::Project(project) => project.gen_map(),
                 algebra_pb::logical_plan::operator::Opr::Vertex(get_vertex) => get_vertex.gen_map(),
                 algebra_pb::logical_plan::operator::Opr::Path(_path) => todo!(),
                 algebra_pb::logical_plan::operator::Opr::ShortestPath(_shortest_path) => todo!(),
-                _ => Err(str_to_dyn_error("algebra_pb op is not a map")),
+                _ => Err(ParsePbError::from("algebra_pb op is not a map").into()),
             }
         } else {
-            Err(str_to_dyn_error("algebra op is empty"))
+            Err(ParsePbError::from("algebra op is empty").into())
         }
     }
 }

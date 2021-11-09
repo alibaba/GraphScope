@@ -17,26 +17,27 @@ mod keyed;
 
 pub use keyed::KeySelector;
 
+use crate::error::FnGenResult;
 use crate::process::functions::KeyFunction;
 use crate::process::record::{Record, RecordKey};
-use ir_common::error::{str_to_dyn_error, DynResult};
+use ir_common::error::ParsePbError;
 use ir_common::generated::algebra as algebra_pb;
 
 pub trait KeyFunctionGen {
-    fn gen_key(self) -> DynResult<Box<dyn KeyFunction<Record, RecordKey, Record>>>;
+    fn gen_key(self) -> FnGenResult<Box<dyn KeyFunction<Record, RecordKey, Record>>>;
 }
 
 impl KeyFunctionGen for algebra_pb::logical_plan::Operator {
-    fn gen_key(self) -> DynResult<Box<dyn KeyFunction<Record, RecordKey, Record>>> {
+    fn gen_key(self) -> FnGenResult<Box<dyn KeyFunction<Record, RecordKey, Record>>> {
         if let Some(opr) = self.opr {
             match opr {
                 algebra_pb::logical_plan::operator::Opr::GroupBy(group) => group.gen_key(),
                 algebra_pb::logical_plan::operator::Opr::Dedup(dedup) => dedup.gen_key(),
                 algebra_pb::logical_plan::operator::Opr::SegApply(_seg_apply) => todo!(),
-                _ => Err(str_to_dyn_error("algebra_pb op is not a keyed op")),
+                _ => Err(ParsePbError::from("algebra_pb op is not a keyed op").into()),
             }
         } else {
-            Err(str_to_dyn_error("algebra op is empty"))
+            Err(ParsePbError::from("algebra op is empty").into())
         }
     }
 }

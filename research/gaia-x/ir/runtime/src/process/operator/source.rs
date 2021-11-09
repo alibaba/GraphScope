@@ -13,17 +13,17 @@
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 
+use crate::error::{str_to_dyn_error, FnGenResult};
 use crate::graph::element::{Edge, Vertex};
 use crate::graph::graph::QueryParams;
 use crate::graph::partitioner::Partitioner;
 use crate::graph::ID;
 use crate::process::record::Record;
-use ir_common::error::{str_to_dyn_error, ParsePbError};
+use ir_common::error::{ParsePbError, ParsePbResult};
 use ir_common::generated::algebra as algebra_pb;
 use ir_common::generated::common::property;
 use ir_common::generated::common::value;
 use ir_common::NameOrId;
-use pegasus::api::function::FnResult;
 use std::collections::HashMap;
 use std::convert::TryFrom;
 use std::sync::Arc;
@@ -80,7 +80,7 @@ impl SourceOperator {
     pub fn gen_source(
         self,
         worker_index: usize,
-    ) -> FnResult<Box<dyn Iterator<Item = Record> + Send>> {
+    ) -> FnGenResult<Box<dyn Iterator<Item = Record> + Send>> {
         let graph = crate::get_graph().ok_or(str_to_dyn_error("Graph is None"))?;
         match self.source_type {
             SourceType::Vertex => {
@@ -119,7 +119,7 @@ impl SourceOperator {
             }
             SourceType::Table => Err(str_to_dyn_error(
                 "Source type of Table is not supported yet",
-            )),
+            ))?,
         }
     }
 }
@@ -129,7 +129,7 @@ pub fn source_op_from(
     job_workers: usize,
     worker_index: u32,
     partitioner: Arc<dyn Partitioner>,
-) -> Result<SourceOperator, ParsePbError> {
+) -> ParsePbResult<SourceOperator> {
     if let Some(opr) = source_pb.opr.take() {
         match opr {
             algebra_pb::logical_plan::operator::Opr::Scan(scan) => {
@@ -181,7 +181,7 @@ impl TryFrom<algebra_pb::Scan> for SourceOperator {
 // TODO: we only support global-ids as index for now;
 fn source_ids_from(
     or_kv_equiv_pairs: Vec<algebra_pb::indexed_scan::KvEquivPairs>,
-) -> Result<Vec<ID>, ParsePbError> {
+) -> ParsePbResult<Vec<ID>> {
     let mut global_ids = vec![];
     for or_kv_pair in or_kv_equiv_pairs {
         let kv_pair = or_kv_pair
@@ -200,7 +200,7 @@ fn source_ids_from(
             if let Some(value::Item::I64(v)) = value.item {
                 global_ids.push(v as ID);
             } else {
-                warn!("Parse source_id from indexed_scan failed");
+                return Err("Parse source_id from indexed_scan failed")?;
             }
         } else {
             return Err("Only support IdKey as indexed field in scan for now")?;

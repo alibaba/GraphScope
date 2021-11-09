@@ -13,12 +13,13 @@
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 
+use crate::error::{str_to_dyn_error, FnGenResult};
 use crate::graph::element::{Element, VertexOrEdge};
 use crate::graph::graph::{QueryParams, Statement};
 use crate::graph::{Direction, ID};
 use crate::process::operator::flatmap::FlatMapFuncGen;
 use crate::process::record::{Record, RecordExpandIter};
-use ir_common::error::{str_to_dyn_error, DynResult, ParsePbError};
+use ir_common::error::ParsePbError;
 use ir_common::generated::algebra as algebra_pb;
 use ir_common::NameOrId;
 use pegasus::api::function::{DynIter, FlatMapFunction, FnResult};
@@ -50,7 +51,7 @@ impl<E: Into<VertexOrEdge> + 'static> FlatMapFunction<Record, Record> for EdgeEx
 impl FlatMapFuncGen for algebra_pb::EdgeExpand {
     fn gen_flat_map(
         self,
-    ) -> DynResult<Box<dyn FlatMapFunction<Record, Record, Target = DynIter<Record>>>> {
+    ) -> FnGenResult<Box<dyn FlatMapFunction<Record, Record, Target = DynIter<Record>>>> {
         let graph = crate::get_graph().ok_or(str_to_dyn_error("Graph is None"))?;
         let expand_base = ExpandBase::try_from(self.base)?;
         if self.is_edge {

@@ -14,24 +14,25 @@
 //! limitations under the License.
 mod sort;
 
+use crate::error::FnGenResult;
 use crate::process::functions::CompareFunction;
 use crate::process::record::Record;
-use ir_common::error::{str_to_dyn_error, DynResult};
+use ir_common::error::ParsePbError;
 use ir_common::generated::algebra as algebra_pb;
 
 pub trait CompareFunctionGen {
-    fn gen_cmp(self) -> DynResult<Box<dyn CompareFunction<Record>>>;
+    fn gen_cmp(self) -> FnGenResult<Box<dyn CompareFunction<Record>>>;
 }
 
 impl CompareFunctionGen for algebra_pb::logical_plan::Operator {
-    fn gen_cmp(self) -> DynResult<Box<dyn CompareFunction<Record>>> {
+    fn gen_cmp(self) -> FnGenResult<Box<dyn CompareFunction<Record>>> {
         if let Some(opr) = self.opr {
             match opr {
                 algebra_pb::logical_plan::operator::Opr::OrderBy(order) => order.gen_cmp(),
-                _ => Err(str_to_dyn_error("algebra_pb op is not a order")),
+                _ => Err(ParsePbError::from("algebra_pb op is not a order").into()),
             }
         } else {
-            Err(str_to_dyn_error("algebra op is empty"))
+            Err(ParsePbError::from("algebra op is empty").into())
         }
     }
 }

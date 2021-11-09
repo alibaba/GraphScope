@@ -13,11 +13,12 @@
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 
+use crate::error::{str_to_dyn_error, FnGenResult};
 use crate::process::functions::KeyFunction;
 use crate::process::operator::keyed::KeyFunctionGen;
 use crate::process::operator::TagKey;
 use crate::process::record::{Entry, Record, RecordKey};
-use ir_common::error::{str_to_dyn_error, DynResult, ParsePbError};
+use ir_common::error::ParsePbError;
 use ir_common::generated::algebra as algebra_pb;
 use ir_common::generated::common as common_pb;
 use pegasus::api::function::FnResult;
@@ -59,13 +60,13 @@ impl KeyFunction<Record, RecordKey, Record> for KeySelector {
 }
 
 impl KeyFunctionGen for algebra_pb::GroupBy {
-    fn gen_key(self) -> DynResult<Box<dyn KeyFunction<Record, RecordKey, Record>>> {
+    fn gen_key(self) -> FnGenResult<Box<dyn KeyFunction<Record, RecordKey, Record>>> {
         Ok(Box::new(KeySelector::with(self.keys)?))
     }
 }
 
 impl KeyFunctionGen for algebra_pb::Dedup {
-    fn gen_key(self) -> DynResult<Box<dyn KeyFunction<Record, RecordKey, Record>>> {
+    fn gen_key(self) -> FnGenResult<Box<dyn KeyFunction<Record, RecordKey, Record>>> {
         Ok(Box::new(KeySelector::with(self.keys)?))
     }
 }

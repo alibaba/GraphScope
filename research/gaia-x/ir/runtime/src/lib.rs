@@ -13,7 +13,11 @@
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 
+pub use crate::graph::graph::{get_graph, register_graph};
+pub use compiler::IRJobCompiler;
+
 mod compiler;
+mod error;
 pub mod expr;
 pub mod graph;
 mod process;
@@ -24,6 +28,3 @@ extern crate pegasus_common;
 extern crate lazy_static;
 #[macro_use]
 extern crate log;
-
-pub use crate::graph::graph::{get_graph, register_graph};
-pub use compiler::IRJobCompiler;

@@ -13,11 +13,12 @@
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 
+use crate::error::{DynIter, DynResult};
 use crate::expr::eval::Evaluator;
 use crate::graph::element::{Edge, Vertex};
 use crate::graph::Direction;
 use crate::graph::ID;
-use ir_common::error::{DynIter, DynResult, ParsePbError};
+use ir_common::error::ParsePbError;
 use ir_common::generated::algebra as algebra_pb;
 use ir_common::generated::common as common_pb;
 use ir_common::NameOrId;

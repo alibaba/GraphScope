@@ -14,24 +14,25 @@
 //! limitations under the License.
 mod select;
 
+use crate::error::FnGenResult;
 use crate::process::record::Record;
-use ir_common::error::{str_to_dyn_error, DynResult};
+use ir_common::error::ParsePbError;
 use ir_common::generated::algebra as algebra_pb;
 use pegasus::api::function::FilterFunction;
 
 pub trait FilterFuncGen {
-    fn gen_filter(self) -> DynResult<Box<dyn FilterFunction<Record>>>;
+    fn gen_filter(self) -> FnGenResult<Box<dyn FilterFunction<Record>>>;
 }
 
 impl FilterFuncGen for algebra_pb::logical_plan::Operator {
-    fn gen_filter(self) -> DynResult<Box<dyn FilterFunction<Record>>> {
+    fn gen_filter(self) -> FnGenResult<Box<dyn FilterFunction<Record>>> {
         if let Some(opr) = self.opr {
             match opr {
                 algebra_pb::logical_plan::operator::Opr::Select(select) => select.gen_filter(),
-                _ => Err(str_to_dyn_error("algebra_pb op is not a filter")),
+                _ => Err(ParsePbError::from("algebra_pb op is not a filter").into()),
             }
         } else {
-            Err(str_to_dyn_error("algebra op is empty"))
+            Err(ParsePbError::from("algebra op is empty").into())
         }
     }
 }

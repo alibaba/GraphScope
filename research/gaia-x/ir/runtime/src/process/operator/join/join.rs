@@ -13,19 +13,19 @@
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 
-use crate::process::functions::{JoinFunction, KeyFunction};
+use crate::error::FnGenResult;
+use crate::process::functions::{JoinKeyGen, KeyFunction};
 use crate::process::operator::keyed::KeySelector;
 use crate::process::record::{Record, RecordKey};
 use ir_common::generated::algebra as algebra_pb;
 use ir_common::generated::algebra::join::JoinKind;
-use pegasus::api::function::FnResult;
 
-impl JoinFunction<Record, RecordKey, Record> for algebra_pb::Join {
-    fn left_key(&self) -> FnResult<Box<dyn KeyFunction<Record, RecordKey, Record>>> {
+impl JoinKeyGen<Record, RecordKey, Record> for algebra_pb::Join {
+    fn gen_left_key(&self) -> FnGenResult<Box<dyn KeyFunction<Record, RecordKey, Record>>> {
         Ok(Box::new(KeySelector::with(self.left_keys.clone())?))
     }
 
-    fn right_key(&self) -> FnResult<Box<dyn KeyFunction<Record, RecordKey, Record>>> {
+    fn gen_right_key(&self) -> FnGenResult<Box<dyn KeyFunction<Record, RecordKey, Record>>> {
         Ok(Box::new(KeySelector::with(self.right_keys.clone())?))
     }
 

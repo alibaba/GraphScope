@@ -16,6 +16,7 @@
 use crate::error::{ParsePbError, ParsePbResult};
 use crate::generated::algebra as pb;
 use crate::generated::common as common_pb;
+use crate::generated::result as result_pb;
 use dyn_type::{BorrowObject, Object};
 use pegasus_common::codec::{Decode, Encode, ReadExt, WriteExt};
 use prost::Message;
@@ -456,7 +457,7 @@ impl From<pb::GetV> for pb::logical_plan::Operator {
     }
 }
 
-impl Encode for generated::result::Result {
+impl Encode for result_pb::Result {
     fn write_to<W: WriteExt>(&self, writer: &mut W) -> io::Result<()> {
         let mut bytes = vec![];
         self.encode_raw(&mut bytes);
@@ -466,12 +467,12 @@ impl Encode for generated::result::Result {
     }
 }
 
-impl Decode for generated::result::Result {
+impl Decode for result_pb::Result {
     fn read_from<R: ReadExt>(reader: &mut R) -> io::Result<Self> {
         let len = reader.read_u32()? as usize;
         let mut buffer = Vec::with_capacity(len);
         reader.read_exact(&mut buffer)?;
-        generated::result::Result::decode(buffer.as_slice()).map_err(|_e| {
+        result_pb::Result::decode(buffer.as_slice()).map_err(|_e| {
             std::io::Error::new(std::io::ErrorKind::Other, "decoding result_pb failed!")
         })
     }

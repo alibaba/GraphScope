@@ -13,8 +13,9 @@
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 
+use crate::error::FnGenResult;
 use crate::graph::partitioner::Partitioner;
-use crate::process::functions::{CompareFunction, JoinFunction};
+use crate::process::functions::{CompareFunction, JoinKeyGen};
 use crate::process::operator::filter::FilterFuncGen;
 use crate::process::operator::flatmap::FlatMapFuncGen;
 use crate::process::operator::join::JoinFunctionGen;
@@ -24,7 +25,6 @@ use crate::process::operator::sink::RecordSinkEncoder;
 use crate::process::operator::sort::CompareFunctionGen;
 use crate::process::operator::source::source_op_from;
 use crate::process::record::{Record, RecordKey};
-use ir_common::error::str_to_dyn_error;
 use ir_common::generated::algebra as algebra_pb;
 use ir_common::generated::algebra::join::JoinKind;
 use ir_common::generated::common as common_pb;
@@ -52,7 +52,7 @@ type RecordLeftJoin = Box<dyn BinaryFunction<Record, Vec<Record>, Option<Record>
 type RecordEncode = Box<dyn MapFunction<Record, result_pb::Result>>;
 type RecordShuffle = Box<dyn RouteFunction<Record>>;
 type RecordCompare = Box<dyn CompareFunction<Record>>;
-type RecordJoin = Box<dyn JoinFunction<Record, RecordKey, Record>>;
+type RecordJoin = Box<dyn JoinKeyGen<Record, RecordKey, Record>>;
 type BinaryResource = Vec<u8>;
 
 pub struct IRJobCompiler {
@@ -68,7 +68,7 @@ impl FnGenerator {
         FnGenerator { partitioner }
     }
 
-    fn gen_source(&self, res: &BinaryResource) -> Result<DynIter<Record>, BuildJobError> {
+    fn gen_source(&self, res: &BinaryResource) -> FnGenResult<DynIter<Record>> {
         let mut step = decode::<algebra_pb::logical_plan::Operator>(res)?;
         let worker_id = pegasus::get_current_worker();
         let step = source_op_from(
@@ -76,50 +76,48 @@ impl FnGenerator {
             worker_id.local_peers as usize,
             worker_id.index,
             self.partitioner.clone(),
-        )
-        .map_err(|e| format!("{}", e))?;
+        )?;
         Ok(step.gen_source(worker_id.index as usize)?)
     }
 
-    fn gen_shuffle(&self, res: &BinaryResource) -> Result<RecordShuffle, BuildJobError> {
+    fn gen_shuffle(&self, res: &BinaryResource) -> FnGenResult<RecordShuffle> {
         let p = self.partitioner.clone();
         let num_workers = pegasus::get_current_worker().local_peers as usize;
         let shuffle_key = decode::<common_pb::NameOrIdKey>(res)?;
-        let record_router =
-            RecordRouter::new(p, num_workers, shuffle_key).map_err(|e| format!("{}", e))?;
+        let record_router = RecordRouter::new(p, num_workers, shuffle_key)?;
         Ok(Box::new(record_router))
     }
 
-    fn gen_map(&self, res: &BinaryResource) -> Result<RecordMap, BuildJobError> {
+    fn gen_map(&self, res: &BinaryResource) -> FnGenResult<RecordMap> {
         let step = decode::<algebra_pb::logical_plan::Operator>(res)?;
         Ok(step.gen_map()?)
     }
 
-    fn gen_flat_map(&self, res: &BinaryResource) -> Result<RecordFlatMap, BuildJobError> {
+    fn gen_flat_map(&self, res: &BinaryResource) -> FnGenResult<RecordFlatMap> {
         let step = decode::<algebra_pb::logical_plan::Operator>(res)?;
         Ok(step.gen_flat_map()?)
     }
 
-    fn gen_filter(&self, res: &BinaryResource) -> Result<RecordFilter, BuildJobError> {
+    fn gen_filter(&self, res: &BinaryResource) -> FnGenResult<RecordFilter> {
         let step = decode::<algebra_pb::logical_plan::Operator>(res)?;
         Ok(step.gen_filter()?)
     }
 
-    fn gen_cmp(&self, res: &BinaryResource) -> Result<RecordCompare, BuildJobError> {
+    fn gen_cmp(&self, res: &BinaryResource) -> FnGenResult<RecordCompare> {
         let step = decode::<algebra_pb::logical_plan::Operator>(res)?;
         Ok(step.gen_cmp()?)
     }
 
-    fn gen_subtask(&self, _res: &BinaryResource) -> Result<RecordLeftJoin, BuildJobError> {
+    fn gen_subtask(&self, _res: &BinaryResource) -> FnGenResult<RecordLeftJoin> {
         todo!()
     }
 
-    fn gen_join(&self, res: &BinaryResource) -> Result<RecordJoin, BuildJobError> {
+    fn gen_join(&self, res: &BinaryResource) -> FnGenResult<RecordJoin> {
         let step = decode::<algebra_pb::logical_plan::Operator>(res)?;
         Ok(step.gen_join()?)
     }
 
-    fn gen_sink(&self, _res: &BinaryResource) -> Result<RecordEncode, BuildJobError> {
+    fn gen_sink(&self, _res: &BinaryResource) -> FnGenResult<RecordEncode> {
         Ok(Box::new(RecordSinkEncoder::default()))
     }
 }
@@ -240,17 +238,17 @@ impl IRJobCompiler {
                     }
                     OpKind::Join(join) => {
                         let joiner = self.udf_gen.gen_join(&join.resource)?;
-                        let left_key_selector = joiner.left_key()?;
-                        let right_key_selector = joiner.right_key()?;
+                        let left_key_selector = joiner.gen_left_key()?;
+                        let right_key_selector = joiner.gen_right_key()?;
                         let join_kind = joiner.get_join_kind();
                         let left_task = join
                             .left_task
                             .as_ref()
-                            .ok_or(str_to_dyn_error("left_task is missing in merge"))?;
+                            .ok_or("left_task is missing in merge")?;
                         let right_task = join
                             .right_task
                             .as_ref()
-                            .ok_or(str_to_dyn_error("right_task is missing in merge"))?;
+                            .ok_or("right_task is missing in merge")?;
                         let (left_stream, right_stream) = stream.copied()?;
                         let left_stream = self
                             .install(left_stream, &left_task.plan[..])?
@@ -346,6 +344,6 @@ impl JobParser<Record, result_pb::Result> for IRJobCompiler {
 }
 
 #[inline]
-fn decode<T: Message + Default>(binary: &[u8]) -> Result<T, BuildJobError> {
-    Ok(T::decode(binary).map_err(|e| format!("protobuf decode failure: {}", e))?)
+fn decode<T: Message + Default>(binary: &[u8]) -> FnGenResult<T> {
+    Ok(T::decode(binary)?)
 }

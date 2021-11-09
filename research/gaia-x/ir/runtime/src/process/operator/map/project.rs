@@ -13,10 +13,11 @@
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 
+use crate::error::{str_to_dyn_error, FnGenResult};
 use crate::expr::eval::Evaluator;
 use crate::process::operator::map::MapFuncGen;
 use crate::process::record::{ObjectElement, Record};
-use ir_common::error::{str_to_dyn_error, DynResult};
+use ir_common::error::ParsePbError;
 use ir_common::generated::algebra as algebra_pb;
 use ir_common::NameOrId;
 use pegasus::api::function::{FnResult, MapFunction};
@@ -43,20 +44,20 @@ impl MapFunction<Record, Record> for ProjectOperator {
 }
 
 impl MapFuncGen for algebra_pb::Project {
-    fn gen_map(self) -> DynResult<Box<dyn MapFunction<Record, Record>>> {
+    fn gen_map(self) -> FnGenResult<Box<dyn MapFunction<Record, Record>>> {
         let mut projected_columns = Vec::with_capacity(self.mappings.len());
         for expr_alias in self.mappings.into_iter() {
             // TODO: the tag_option of is_query_given may not necessary
             let (alias_pb, _is_given_tag) = {
                 let expr_alias = expr_alias
                     .alias
-                    .ok_or(str_to_dyn_error("expr_alias is missing"))?;
+                    .ok_or(ParsePbError::from("expr alias is missing in project"))?;
                 (expr_alias.alias, expr_alias.is_query_given)
             };
             let alias = alias_pb.map(|alias| alias.try_into()).transpose()?;
             let expr = expr_alias
                 .expr
-                .ok_or(str_to_dyn_error("expr eval is missing"))?;
+                .ok_or(ParsePbError::from("expr eval is missing in project"))?;
             let evaluator = Evaluator::try_from(expr)?;
             projected_columns.push((evaluator, alias));
         }

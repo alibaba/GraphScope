@@ -13,6 +13,7 @@
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 
+use crate::error::FnGenResult;
 use ir_common::generated::algebra::join::JoinKind;
 use pegasus::api::function::FnResult;
 use std::cmp::Ordering;
@@ -25,10 +26,10 @@ pub trait KeyFunction<D, K, V>: Send + 'static {
     fn select_key(&self, input: D) -> FnResult<(K, V)>;
 }
 
-pub trait JoinFunction<D, K, V>: Send + 'static {
-    fn left_key(&self) -> FnResult<Box<dyn KeyFunction<D, K, V>>>;
+pub trait JoinKeyGen<D, K, V>: Send + 'static {
+    fn gen_left_key(&self) -> FnGenResult<Box<dyn KeyFunction<D, K, V>>>;
 
-    fn right_key(&self) -> FnResult<Box<dyn KeyFunction<D, K, V>>>;
+    fn gen_right_key(&self) -> FnGenResult<Box<dyn KeyFunction<D, K, V>>>;
 
     fn get_join_kind(&self) -> JoinKind;
 }
@@ -51,13 +52,13 @@ mod box_impl {
         }
     }
 
-    impl<D, K, V, F: JoinFunction<D, K, V> + ?Sized> JoinFunction<D, K, V> for Box<F> {
-        fn left_key(&self) -> FnResult<Box<dyn KeyFunction<D, K, V>>> {
-            (**self).left_key()
+    impl<D, K, V, F: JoinKeyGen<D, K, V> + ?Sized> JoinKeyGen<D, K, V> for Box<F> {
+        fn gen_left_key(&self) -> FnGenResult<Box<dyn KeyFunction<D, K, V>>> {
+            (**self).gen_left_key()
         }
 
-        fn right_key(&self) -> FnResult<Box<dyn KeyFunction<D, K, V>>> {
-            (**self).right_key()
+        fn gen_right_key(&self) -> FnGenResult<Box<dyn KeyFunction<D, K, V>>> {
+            (**self).gen_right_key()
         }
 
         fn get_join_kind(&self) -> JoinKind {
