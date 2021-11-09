@@ -45,3 +45,36 @@ impl FilterFuncGen for algebra_pb::Select {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use crate::process::operator::filter::FilterFuncGen;
+    use crate::process::operator::tests::{source_gen, str_to_expr};
+    use ir_common::generated::algebra as pb;
+    use pegasus::api::{Filter, Sink};
+    use pegasus::JobConf;
+
+    #[test]
+    fn select_test() {
+        let conf = JobConf::new("select_test");
+        let mut result = pegasus::run(conf, || {
+            |input, output| {
+                let mut stream = input.input_from(source_gen())?;
+                let select_opr_pb = pb::Select {
+                    predicate: str_to_expr("@HEAD.id == 1".to_string()),
+                };
+                let select_func = select_opr_pb.gen_filter().unwrap();
+                stream = stream.filter(move |i| select_func.test(i))?;
+                stream.sink_into(output)
+            }
+        })
+        .expect("build job failure");
+
+        let mut count = 0;
+        while let Some(Ok(_)) = result.next() {
+            count += 1;
+        }
+
+        assert_eq!(count, 1);
+    }
+}

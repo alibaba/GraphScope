@@ -165,8 +165,10 @@ impl TryFrom<common_pb::Variable> for TagKey {
 }
 
 #[cfg(test)]
-mod tests {
+pub(crate) mod tests {
     use super::*;
+    use crate::expr::to_suffix_expr_pb;
+    use crate::expr::token::tokenize;
     use crate::graph::element::Vertex;
     use crate::graph::property::{DefaultDetails, DynDetails};
     use dyn_type::Object;
@@ -174,11 +176,11 @@ mod tests {
 
     fn init_vertex1() -> Vertex {
         let map1: HashMap<NameOrId, Object> = vec![
-            (NameOrId::from("age".to_string()), 31.into()),
-            (NameOrId::from("birthday".to_string()), 19900416.into()),
+            (NameOrId::from("id".to_string()), 1.into()),
+            (NameOrId::from("age".to_string()), 29.into()),
             (
                 NameOrId::from("name".to_string()),
-                "John".to_string().into(),
+                "marko".to_string().into(),
             ),
         ]
         .into_iter()
@@ -186,26 +188,26 @@ mod tests {
 
         Vertex::new(DynDetails::new(DefaultDetails::with_property(
             1,
-            NameOrId::from(9),
+            NameOrId::from("person".to_string()),
             map1,
         )))
     }
 
     fn init_vertex2() -> Vertex {
         let map2: HashMap<NameOrId, Object> = vec![
-            (NameOrId::from("age".to_string()), 26.into()),
-            (NameOrId::from("birthday".to_string()), 19950816.into()),
+            (NameOrId::from("id".to_string()), 2.into()),
+            (NameOrId::from("age".to_string()), 27.into()),
             (
                 NameOrId::from("name".to_string()),
-                "Nancy".to_string().into(),
+                "vadas".to_string().into(),
             ),
         ]
         .into_iter()
         .collect();
 
         Vertex::new(DynDetails::new(DefaultDetails::with_property(
-            1,
-            NameOrId::from(9),
+            2,
+            NameOrId::from("person".to_string()),
             map2,
         )))
     }
@@ -219,6 +221,25 @@ mod tests {
         record.append(vertex2, Some(NameOrId::Id(0)));
         record.append(object3, Some(NameOrId::Id(1)));
         record
+    }
+
+    pub fn source_gen() -> Box<dyn Iterator<Item = Record> + Send> {
+        let v1 = init_vertex1();
+        let v2 = init_vertex2();
+        let r1 = Record::new(v1, None);
+        let r2 = Record::new(v2, None);
+        Box::new(vec![r1, r2].into_iter())
+    }
+
+    // TODO(): define this func in expr
+    pub fn str_to_expr(expr_str: String) -> Option<common_pb::SuffixExpr> {
+        let tokens_result = tokenize(&expr_str);
+        if let Ok(tokens) = tokens_result {
+            if let Ok(expr) = to_suffix_expr_pb(tokens) {
+                return Some(expr);
+            }
+        }
+        None
     }
 
     #[test]
@@ -289,7 +310,7 @@ mod tests {
             tag: Some(NameOrId::Id(0)),
             key: Some(PropKey::Key(NameOrId::Str("age".to_string()))),
         };
-        let expected = 26;
+        let expected = 27;
         let record = init_record();
         let entry = tag_key.get_entry(&record).unwrap();
         match entry {
@@ -308,7 +329,7 @@ mod tests {
             tag: Some(NameOrId::Id(0)),
             key: Some(PropKey::Key(NameOrId::Str("name".to_string()))),
         };
-        let expected = "Nancy";
+        let expected = "vadas";
         let record = init_record();
         let obj = tag_key.get_obj(&record).unwrap();
         assert_eq!(obj, expected.into())
