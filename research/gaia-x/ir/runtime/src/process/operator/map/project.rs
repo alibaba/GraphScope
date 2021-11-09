@@ -76,16 +76,16 @@ impl MapFuncGen for algebra_pb::Project {
 
 #[cfg(test)]
 mod tests {
+    use crate::expr::str_to_expr_pb;
     use crate::process::operator::map::MapFuncGen;
-    use crate::process::operator::tests::{source_gen, str_to_expr};
+    use crate::process::operator::tests::source_gen;
     use crate::process::record::{Entry, ObjectElement, RecordElement};
     use ir_common::generated::algebra as pb;
-    use ir_common::generated::common as common_pb;
     use ir_common::NameOrId;
-    use pegasus::api::{Filter, Map, Sink};
+    use pegasus::api::{Map, Sink};
     use pegasus::JobConf;
 
-    // g.V().select("id")
+    // g.V().project("id")
     #[test]
     fn project_test_01() {
         let conf = JobConf::new("project_test_01");
@@ -94,7 +94,7 @@ mod tests {
                 let mut stream = input.input_from(source_gen())?;
                 let project_opr_pb = pb::Project {
                     mappings: vec![pb::project::ExprAlias {
-                        expr: str_to_expr("@HEAD.id".to_string()),
+                        expr: Some(str_to_expr_pb("@HEAD.id".to_string()).unwrap()),
                         alias: Some(pb::project::Alias {
                             alias: None,
                             is_query_given: false,
@@ -112,7 +112,6 @@ mod tests {
         let mut object_result = vec![];
         while let Some(Ok(res)) = result.next() {
             match res.get(None).unwrap() {
-                //    match res.get(Some(&NameOrId::Str("a".to_string()))).unwrap() {
                 Entry::Element(RecordElement::OutGraph(ObjectElement::Prop(val))) => {
                     object_result.push(val.clone());
                 }
@@ -123,7 +122,7 @@ mod tests {
         assert_eq!(object_result, expected_result);
     }
 
-    // g.V().select("name").as("a")
+    // g.V().project("name").as("a")
     #[test]
     fn project_test_02() {
         let conf = JobConf::new("project_test_02");
@@ -132,7 +131,7 @@ mod tests {
                 let mut stream = input.input_from(source_gen())?;
                 let project_opr_pb = pb::Project {
                     mappings: vec![pb::project::ExprAlias {
-                        expr: str_to_expr("@HEAD.name".to_string()),
+                        expr: Some(str_to_expr_pb("@HEAD.name".to_string()).unwrap()),
                         alias: Some(pb::project::Alias {
                             alias: Some(NameOrId::Str("a".to_string()).into()),
                             is_query_given: false,

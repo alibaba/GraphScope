@@ -167,8 +167,6 @@ impl TryFrom<common_pb::Variable> for TagKey {
 #[cfg(test)]
 pub(crate) mod tests {
     use super::*;
-    use crate::expr::to_suffix_expr_pb;
-    use crate::expr::token::tokenize;
     use crate::graph::element::Vertex;
     use crate::graph::property::{DefaultDetails, DynDetails};
     use dyn_type::Object;
@@ -229,17 +227,6 @@ pub(crate) mod tests {
         let r1 = Record::new(v1, None);
         let r2 = Record::new(v2, None);
         Box::new(vec![r1, r2].into_iter())
-    }
-
-    // TODO(): define this func in expr
-    pub fn str_to_expr(expr_str: String) -> Option<common_pb::SuffixExpr> {
-        let tokens_result = tokenize(&expr_str);
-        if let Ok(tokens) = tokens_result {
-            if let Ok(expr) = to_suffix_expr_pb(tokens) {
-                return Some(expr);
-            }
-        }
-        None
     }
 
     #[test]

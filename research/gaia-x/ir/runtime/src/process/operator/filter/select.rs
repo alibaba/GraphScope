@@ -48,8 +48,9 @@ impl FilterFuncGen for algebra_pb::Select {
 
 #[cfg(test)]
 mod tests {
+    use crate::expr::str_to_expr_pb;
     use crate::process::operator::filter::FilterFuncGen;
-    use crate::process::operator::tests::{source_gen, str_to_expr};
+    use crate::process::operator::tests::source_gen;
     use ir_common::generated::algebra as pb;
     use pegasus::api::{Filter, Sink};
     use pegasus::JobConf;
@@ -61,7 +62,7 @@ mod tests {
             |input, output| {
                 let mut stream = input.input_from(source_gen())?;
                 let select_opr_pb = pb::Select {
-                    predicate: str_to_expr("@HEAD.id == 1".to_string()),
+                    predicate: Some(str_to_expr_pb("@HEAD.id == 1".to_string()).unwrap()),
                 };
                 let select_func = select_opr_pb.gen_filter().unwrap();
                 stream = stream.filter(move |i| select_func.test(i))?;

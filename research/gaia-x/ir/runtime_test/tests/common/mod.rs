@@ -75,14 +75,4 @@ pub mod test {
 
         results
     }
-
-    pub fn str_to_expr(expr_str: String) -> Option<common_pb::SuffixExpr> {
-        let tokens_result = tokenize(&expr_str);
-        if let Ok(tokens) = tokens_result {
-            if let Ok(expr) = to_suffix_expr_pb(tokens) {
-                return Some(expr);
-            }
-        }
-        None
-    }
 }

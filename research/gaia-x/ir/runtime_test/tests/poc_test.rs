@@ -25,6 +25,7 @@ mod test {
     use pegasus_client::builder::*;
     use pegasus_server::JobRequest;
     use prost::Message;
+    use runtime::expr::str_to_expr_pb;
 
     fn init_poc_request() -> JobRequest {
         // g.V().hasLabel("person").has("id", 1).out("knows").limit(10)
@@ -40,7 +41,7 @@ mod test {
             }),
         };
         let select_opr = pb::Select {
-            predicate: str_to_expr("@HEAD.id == 1".to_string()),
+            predicate: Some(str_to_expr_pb("@HEAD.id == 1".to_string()).unwrap()),
         };
         let expand_opr = pb::EdgeExpand {
             base: Some(pb::ExpandBase {

@@ -263,9 +263,9 @@ impl AsPhysical for LogicalPlan {
 mod test {
     use super::*;
     use crate::plan::logical::Node;
-    use crate::str_to_expr;
     use ir_common::generated::algebra as pb;
     use ir_common::generated::common as common_pb;
+    use runtime::expr::str_to_expr_pb;
 
     #[test]
     fn test_poc_plan() {
@@ -282,7 +282,7 @@ mod test {
             }),
         };
         let select_opr = pb::Select {
-            predicate: Some(str_to_expr("@HEAD.id == 10".to_string()).unwrap()),
+            predicate: Some(str_to_expr_pb("@HEAD.id == 10".to_string()).unwrap()),
         };
         let expand_opr = pb::EdgeExpand {
             base: Some(pb::ExpandBase {
