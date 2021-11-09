@@ -86,7 +86,8 @@ def student_group_e_df(data_dir=os.path.expandvars("${GS_TEST_DIR}/property_grap
 @pytest.fixture
 def student_group_e_array(student_group_e_df):
     array = [
-        student_group_e_df[col].values for col in student_group_e_df.columns.values
+        student_group_e_df[col].values
+        for col in ["leader_student_id", "member_student_id"]
     ]
     return array
 
