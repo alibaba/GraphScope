@@ -96,16 +96,16 @@ std::shared_ptr<DispatchResult> Dispatcher::processCmd(
   return r;
 }
 
-void publisherPreprocessCmd(CommandDetail& cmd) {
+void Dispatcher::publisherPreprocessCmd(CommandDetail& cmd) {
   if (cmd.type == rpc::CREATE_GRAPH) {
     // Distribute raw bytes if there are some data from pandas
     auto params_vec = DistributeGraph(cmd.params, comm_spec_.worker_num());
     CHECK_EQ(static_cast<int>(params_vec.size()), comm_spec_.worker_num());
-    for (int i = 1; i < num; ++i) {
-      InArchive ia;
+    for (int i = 1; i < comm_spec_.worker_num(); ++i) {
+      grape::InArchive ia;
       cmd.params = params_vec[i];
       ia << cmd;
-      SendArchive(ia, i, MPI_COMM_WORLD);
+      grape::SendArchive(ia, i, MPI_COMM_WORLD);
     }
     cmd.params = params_vec[0];
   } else {
@@ -113,10 +113,11 @@ void publisherPreprocessCmd(CommandDetail& cmd) {
   }
 }
 
-void subscriberPreprocessCmd(rpc::OperationType type, CommandDetail& cmd) {
+void Dispatcher::subscriberPreprocessCmd(rpc::OperationType type,
+                                         CommandDetail& cmd) {
   if (type == rpc::CREATE_GRAPH) {
-    OutArchive oa;
-    RecvArchive(oa, grape::kCoordinatorRank, MPI_COMM_WORLD);
+    grape::OutArchive oa;
+    grape::RecvArchive(oa, grape::kCoordinatorRank, MPI_COMM_WORLD);
     oa >> cmd;
   } else {
     grape::BcastRecv(cmd, MPI_COMM_WORLD, grape::kCoordinatorRank);
@@ -146,7 +147,7 @@ void Dispatcher::subscriberLoop() {
     rpc::OperationType type;
     grape::BcastRecv(type, MPI_COMM_WORLD, grape::kCoordinatorRank);
     CommandDetail cmd;
-    subscriberPreprocess(type, cmd);
+    subscriberPreprocessCmd(type, cmd);
     auto r = processCmd(cmd);
 
     vineyard::_GatherL(*r, grape::kCoordinatorRank, comm_spec_.comm());

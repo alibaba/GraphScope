@@ -157,6 +157,10 @@ class Dispatcher {
 
   void subscriberLoop();
 
+  void publisherPreprocessCmd(CommandDetail& cmd);
+
+  void subscriberPreprocessCmd(rpc::OperationType type, CommandDetail& cmd);
+
  private:
   bool running_;
   grape::CommSpec comm_spec_;
