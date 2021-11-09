@@ -11,7 +11,6 @@ on:
       - '**.rst'
       - 'docs/**'
       - 'scripts/**'
-      - '!scripts/deploy_local.sh'
       - 'tutorials/**'
   pull_request:
     branches:
@@ -22,7 +21,6 @@ on:
       - '**.rst'
       - 'docs/**'
       - 'scripts/**'
-      - '!scripts/deploy_local.sh'
       - 'tutorials/**'
 
 jobs:
@@ -43,7 +41,7 @@ jobs:
 
     - name: Install Dependencies
       run: |
-        /bin/bash ${GITHUB_WORKSPACE}/scripts/deploy_local.sh install_deps --verbose
+        /bin/bash ${GITHUB_WORKSPACE}/scripts/install_deps.sh --dev --vineyard_prefix /opt/vineyard --verbose
 
         # avoid access node by DNS hostnames
         r=`cat /etc/hosts | grep $(hostname) || true`
