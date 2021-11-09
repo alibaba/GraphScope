@@ -50,7 +50,9 @@ public class BackupManager {
     private MetaService metaService;
     private MetaStore metaStore;
     private SnapshotManager snapshotManager;
-    private SnapshotCache snapshotCache;
+    private SchemaManager schemaManager;
+    private SnapshotCache localSnapshotCache;
+    private QuerySnapshotListener localListener;
     private ObjectMapper objectMapper;
 
     private int storeNodeCount;
@@ -75,12 +77,13 @@ public class BackupManager {
     private Lock globalBackupIdToInfoLock = new ReentrantLock();
 
     public BackupManager(Configs configs, MetaService metaService, MetaStore metaStore,
-                         SnapshotManager snapshotManager, SnapshotCache snapshotCache,
-                         StoreBackupTaskSender storeBackupTaskSender) {
+                         SnapshotManager snapshotManager, SchemaManager schemaManager,
+                         SnapshotCache localSnapshotCache, StoreBackupTaskSender storeBackupTaskSender) {
         this.metaService = metaService;
         this.metaStore = metaStore;
         this.snapshotManager = snapshotManager;
-        this.snapshotCache = snapshotCache;
+        this.schemaManager = schemaManager;
+        this.localSnapshotCache = localSnapshotCache;
         this.objectMapper = new ObjectMapper();
 
         this.storeNodeCount = CommonConfig.STORE_NODE_COUNT.get(configs);
@@ -99,11 +102,15 @@ public class BackupManager {
             logger.info("backup manager is disable");
             return;
         }
+
         try {
             recover();
         } catch (IOException e) {
             throw new MaxGraphException(e);
         }
+
+        this.localListener = new LocalSnapshotListener(this.schemaManager, this.localSnapshotCache);
+        this.snapshotManager.addListener(this.localListener);
 
         this.backupCreationBuffer = new ArrayBlockingQueue<>(backupCreationBufferMaxSize);
         this.backupCreationExecutor = new ThreadPoolExecutor(
@@ -134,6 +141,15 @@ public class BackupManager {
     }
 
     public void stop() {
+        if (this.autoCommitScheduler != null) {
+            this.autoCommitScheduler.shutdown();
+            try {
+                this.autoCommitScheduler.awaitTermination(3000L, TimeUnit.MILLISECONDS);
+            } catch (InterruptedException e) {
+                // Ignore
+            }
+            this.autoCommitScheduler = null;
+        }
         if (this.backupCreationExecutor != null) {
             this.backupCreationExecutor.shutdown();
             try {
@@ -152,14 +168,8 @@ public class BackupManager {
             }
             this.backupGcScheduler = null;
         }
-        if (this.autoCommitScheduler != null) {
-            this.autoCommitScheduler.shutdown();
-            try {
-                this.autoCommitScheduler.awaitTermination(3000L, TimeUnit.MILLISECONDS);
-            } catch (InterruptedException e) {
-                // Ignore
-            }
-            this.autoCommitScheduler = null;
+        if (this.localListener != null) {
+            this.snapshotManager.removeListener(this.localListener);
         }
     }
 
@@ -293,7 +303,7 @@ public class BackupManager {
 
     private void doBackupCreation(int newGlobalBackupId) {
         List<Long> walOffsets = snapshotManager.getQueueOffsets();
-        SnapshotWithSchema snapshotWithSchema = snapshotCache.getSnapshotWithSchema();
+        SnapshotWithSchema snapshotWithSchema = localSnapshotCache.getSnapshotWithSchema();
         Map<Integer, Integer> partitionToBackupId = new ConcurrentHashMap<>(graphPartitionCount);
         AtomicInteger counter = new AtomicInteger(storeNodeCount);
         AtomicBoolean finished = new AtomicBoolean(false);

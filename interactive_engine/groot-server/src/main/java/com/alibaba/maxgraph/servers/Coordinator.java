@@ -50,7 +50,6 @@ public class Coordinator extends NodeBase {
     private LogRecycler logRecycler;
     private GraphInitializer graphInitializer;
     private IdAllocator idAllocator;
-    private LocalSnapshotListener localSnapshotListener;
     private BackupManager backupManager;
 
     public Coordinator(Configs configs) {
@@ -112,12 +111,10 @@ public class Coordinator extends NodeBase {
                 new RoleClients<>(this.channelManager, RoleType.STORE, StoreBackupClient::new);
         StoreBackupTaskSender storeBackupTaskSender = new StoreBackupTaskSender(storeBackupClients);
         SnapshotCache localSnapshotCache = new SnapshotCache();
-        this.localSnapshotListener = new LocalSnapshotListener(this.schemaManager, localSnapshotCache);
-        this.snapshotManager.addListener(this.localSnapshotListener);
         this.backupManager =
                 new BackupManager(
-                        configs, this.metaService, metaStore, this.snapshotManager, localSnapshotCache,
-                        storeBackupTaskSender);
+                        configs, this.metaService, metaStore, this.snapshotManager, this.schemaManager,
+                        localSnapshotCache, storeBackupTaskSender);
         BackupService backupService = new BackupService(this.backupManager);
         this.rpcServer =
                 new RpcServer(

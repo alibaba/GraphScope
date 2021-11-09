@@ -92,6 +92,10 @@ public class BackupManagerTest {
         SnapshotManager mockSnapshotManager = mock(SnapshotManager.class);
         when(mockSnapshotManager.getQueueOffsets()).thenReturn(queueOffsets);
 
+        // mock SchemaManager
+        SchemaManager mockSchemaManager = mock(SchemaManager.class);
+        when(mockSchemaManager.getGraphDef()).thenReturn(graphDef);
+
         // mock SnapshotCache
         SnapshotCache mockSnapshotCache = mock(SnapshotCache.class);
         when(mockSnapshotCache.getSnapshotWithSchema()).thenReturn(snapshotWithSchema);
@@ -128,9 +132,10 @@ public class BackupManagerTest {
                 .verifyStoreBackup(anyInt(), any(), any());
 
         BackupManager backupManager = new BackupManager(
-                configs, mockMetaService, mockMetaStore, mockSnapshotManager, mockSnapshotCache,
+                configs, mockMetaService, mockMetaStore, mockSnapshotManager, mockSchemaManager, mockSnapshotCache,
                 mockStoreBackupTaskSender);
         backupManager.start();
+        verify(mockSnapshotManager).addListener(any());
 
         // create the first backup
         CountDownLatch updateBackupIdLatch1 = new CountDownLatch(1);
@@ -256,5 +261,6 @@ public class BackupManagerTest {
         assertTrue(backupManager.getBackupInfoList().isEmpty());
 
         backupManager.stop();
+        verify(mockSnapshotManager).removeListener(any());
     }
 }
