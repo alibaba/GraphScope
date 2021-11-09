@@ -94,6 +94,11 @@ graphscope-darwin-py3:
 	cd $(WORKING_DIR)/../coordinator && \
 		export WITH_EXTRA_DATA=ON && \
 		rm -fr build dist/*.whl || true && \
+		sudo strip /opt/graphscope/bin/grape_engine && \
+		sudo strip /opt/graphscope/bin/executor && \
+		sudo strip /opt/graphscope/bin/gaia_executor && \
+		sudo strip /opt/graphscope/lib/*.dylib && \
+		strip /tmp/gs/builtin/*/*.dylib && \
 		python3 setup.py bdist_wheel --plat=macosx_10_9_x86_64 && \
 		pip3 install delocate && \
 		for wheel in `ls dist/*.whl`; do \
@@ -140,11 +145,24 @@ graphscope-manylinux2014-py3:
 			export WITH_EXTRA_DATA=ON && \
 			cd /work/coordinator && \
 			rm -fr build dist/*.whl && \
+			sudo strip /opt/graphscope/bin/grape_engine && \
 			sudo strip /opt/graphscope/bin/executor && \
 			sudo strip /opt/graphscope/bin/gaia_executor && \
-			python3 setup.py bdist_wheel && \
+			sudo strip /opt/graphscope/lib/*.so && \
+			strip /tmp/gs/builtin/*/*.so && \
+			package_name=gs-lib python3 setup.py bdist_wheel && \
+			rm -fr build && \
+			package_name=gs-engine python3 setup.py bdist_wheel && \
+			rm -fr build && \
+			package_name=gs-jython python3 setup.py bdist_wheel && \
+			rm -fr build && \
+			package_name=gscoordinator python3 setup.py bdist_wheel && \
+			rm -fr build && \
+			package_name=graphscope python3 setup.py bdist_wheel && \
 			cd dist && \
-			auditwheel repair ./*.whl --plat=manylinux2014_x86_64'
+			for wheel in `ls ./*.whl`; do \
+				auditwheel repair $$wheel --plat=manylinux2014_x86_64 --strip && rm $$wheel; \
+			done
 
 graphscope-client-darwin-py3:
 	cd $(WORKING_DIR)/../python && \
