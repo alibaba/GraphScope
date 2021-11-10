@@ -30,8 +30,7 @@
 #include "arrow/io/api.h"
 #include "boost/algorithm/string.hpp"
 #include "google/protobuf/util/json_util.h"
-
-#include "vineyard/io/io/local_io_adaptor.h"
+#include "vineyard/basic/ds/arrow_utils.h"
 
 #include "core/server/rpc_utils.h"
 #include "proto/attr_value.pb.h"
@@ -41,10 +40,12 @@
 template <typename Key, typename Value>
 using ProtobufMap = ::google::protobuf::Map<Key, Value>;
 
-using AttrMap = ProtobufMap<int, gs::rpc::AttrValue>;
-
+using gs::rpc::AttrValue;
 using gs::rpc::DataType;
+using gs::rpc::GSParams;
 using gs::rpc::OpDef;
+
+using AttrMap = ProtobufMap<int, AttrValue>;
 
 namespace gs {
 namespace detail {
@@ -57,13 +58,10 @@ struct Vertex {
   std::string vid;  // when vid is single digit, it means column index of vertex
   // id. Otherwise, it represents column name
   std::string protocol;  // file/oss/numpy/pandas/vineyard
-  std::string values;    // from location
+  std::string values;    // from location, vineyard or pandas
 
   // The following fields are only needed when protocol is numpy/pandas
   std::vector<std::pair<std::string, DataType>> properties;
-  std::vector<std::string> data;
-  size_t row_num;
-  size_t column_num;
 
   std::string SerializeToString() const {
     std::stringstream ss;
@@ -87,9 +85,6 @@ class Edge {
     std::string load_strategy;
     std::string protocol;
     std::string values;
-    std::vector<std::string> data;  // from numpy, properties
-    size_t row_num;
-    size_t column_num;
     std::vector<std::pair<std::string, DataType>> properties;
 
     std::string SerializeToString() const {
@@ -140,30 +135,9 @@ struct Graph {
 }  // namespace detail
 
 inline void ParseLoader(std::string& protocol, std::string& values,
-                        std::vector<std::string>& data, size_t& row_num,
-                        size_t& column_num, const AttrMap& attrs) {
+                        const AttrMap& attrs) {
   protocol = attrs.at(rpc::PROTOCOL).s();
-
-  if (protocol == "numpy" || protocol == "pandas") {
-    row_num = attrs.at(rpc::ROW_NUM).i();
-    column_num = attrs.at(rpc::COLUMN_NUM).i();
-    // Use key start from 10000 + col_index to store raw bytes.
-    // see ref python/graphscope/framework/loader.py
-    for (size_t i = 0; i < column_num; ++i) {
-      data.push_back(attrs.at(10000 + i).s());
-    }
-  } else {
-    values = attrs.at(rpc::VALUES).s();
-  }
-}
-
-inline void ParseProperties(std::vector<std::pair<std::string, DataType>>& m,
-                            const rpc::AttrValue& attr) {
-  const auto& props = attr.list().func();
-  for (const auto& prop : props) {
-    CHECK_EQ(prop.attr().size(), 1);
-    m.emplace_back(prop.name(), prop.attr().begin()->second.type());
-  }
+  values = attrs.at(rpc::VALUES).s();
 }
 
 inline detail::Edge::SubLabel ParseSubLabel(const AttrMap& attrs) {
@@ -174,13 +148,8 @@ inline detail::Edge::SubLabel ParseSubLabel(const AttrMap& attrs) {
   sub_label.dst_vid = attrs.at(rpc::DST_VID).s();
   sub_label.load_strategy = attrs.at(rpc::LOAD_STRATEGY).s();
 
-  ParseLoader(sub_label.protocol, sub_label.values, sub_label.data,
-              sub_label.row_num, sub_label.column_num,
+  ParseLoader(sub_label.protocol, sub_label.values,
               attrs.at(rpc::LOADER).func().attr());
-  // The param PROPERTIES is only required when protocol is numpy or pandas.
-  if (attrs.find(rpc::PROPERTIES) != attrs.end()) {
-    ParseProperties(sub_label.properties, attrs.at(rpc::PROPERTIES));
-  }
 
   return sub_label;
 }
@@ -190,11 +159,8 @@ inline std::shared_ptr<detail::Vertex> ParseVertex(const AttrMap& attrs) {
   vertex->label = attrs.at(rpc::LABEL).s();
   vertex->vid = attrs.at(rpc::VID).s();
 
-  if (attrs.find(rpc::PROPERTIES) != attrs.end()) {
-    ParseProperties(vertex->properties, attrs.at(rpc::PROPERTIES));
-  }
-  ParseLoader(vertex->protocol, vertex->values, vertex->data, vertex->row_num,
-              vertex->column_num, attrs.at(rpc::LOADER).func().attr());
+  ParseLoader(vertex->protocol, vertex->values,
+              attrs.at(rpc::LOADER).func().attr());
   return vertex;
 }
 
@@ -210,8 +176,176 @@ inline std::shared_ptr<detail::Edge> ParseEdge(const AttrMap& attrs) {
   return edge;
 }
 
+// The input string is the serialized bytes of an arrow::Table, this function
+// split the table to several small tables.
+inline std::vector<std::string> SplitTable(const std::string& data, int num) {
+  std::shared_ptr<arrow::Buffer> buffer =
+      arrow::Buffer::Wrap(data.data(), data.size());
+  std::shared_ptr<arrow::Table> table;
+  vineyard::DeserializeTable(buffer, &table);
+  std::vector<std::shared_ptr<arrow::Table>> sliced_tables(num);
+  int num_rows = table->num_rows();
+  int offset = num_rows / num;
+  int remainder = num_rows % num;
+  int cur = 0;
+  sliced_tables[0] = table->Slice(cur, offset + remainder);
+  cur = offset + remainder;
+  for (int i = 1; i < num; ++i) {
+    auto sliced = table->Slice(cur, offset);
+    sliced_tables[i] = sliced;
+    cur += offset;
+  }
+  std::vector<std::string> sliced_bytes(num);
+  for (int i = 0; i < num; ++i) {
+    if (sliced_tables[i]->num_rows() > 0) {
+      std::shared_ptr<arrow::Buffer> out_buf;
+      vineyard::SerializeTable(sliced_tables[i], &out_buf);
+      sliced_bytes[i] = out_buf->ToString();
+    }
+  }
+  return sliced_bytes;
+}
+
+inline std::vector<AttrMap> DistributeLoader(const AttrMap& attrs, int num) {
+  std::vector<AttrMap> distributed_attrs(num);
+
+  std::string protocol = attrs.at(rpc::PROTOCOL).s();
+  std::vector<std::string> distributed_values;
+  const std::string& data = attrs.at(rpc::VALUES).s();
+  if (protocol == "pandas") {
+    distributed_values = SplitTable(data, num);
+  } else {
+    distributed_values.resize(num, data);
+  }
+  for (int i = 0; i < num; ++i) {
+    distributed_attrs[i][rpc::PROTOCOL].set_s(protocol);
+    distributed_attrs[i][rpc::VALUES].set_s(std::move(distributed_values[i]));
+  }
+  return distributed_attrs;
+}
+
+inline std::vector<AttrMap> DistributeVertex(const AttrMap& attrs, int num) {
+  auto loader_name = attrs.at(rpc::LOADER).func().name();
+  auto loader_attr = attrs.at(rpc::LOADER).func().attr();
+  auto sliced_attrs = DistributeLoader(loader_attr, num);
+
+  std::vector<AttrMap> distributed_attrs(num);
+  for (int i = 0; i < num; ++i) {
+    rpc::NameAttrList* list = new rpc::NameAttrList();
+    list->set_name(loader_name);
+    list->mutable_attr()->swap(sliced_attrs[i]);
+    distributed_attrs[i][rpc::LOADER].set_allocated_func(list);
+  }
+  for (auto& pair : attrs) {
+    if (pair.first != rpc::LOADER) {
+      for (int i = 0; i < num; ++i) {
+        distributed_attrs[i][pair.first].CopyFrom(pair.second);
+      }
+    }
+  }
+
+  return distributed_attrs;
+}
+
+inline std::vector<AttrMap> DistributeSubLabel(const AttrMap& attrs, int num) {
+  auto loader_name = attrs.at(rpc::LOADER).func().name();
+  auto loader_attr = attrs.at(rpc::LOADER).func().attr();
+  auto sliced_attrs = DistributeLoader(loader_attr, num);
+
+  std::vector<AttrMap> distributed_attrs(num);
+  for (int i = 0; i < num; ++i) {
+    rpc::NameAttrList* list = new rpc::NameAttrList();
+    list->set_name(loader_name);
+    list->mutable_attr()->swap(sliced_attrs[i]);
+    distributed_attrs[i][rpc::LOADER].set_allocated_func(list);
+  }
+  for (auto& pair : attrs) {
+    if (pair.first != rpc::LOADER) {
+      for (int i = 0; i < num; ++i) {
+        distributed_attrs[i][pair.first].CopyFrom(pair.second);
+      }
+    }
+  }
+
+  return distributed_attrs;
+}
+
+inline std::vector<AttrMap> DistributeEdge(const AttrMap& attrs, int num) {
+  std::vector<AttrMap> distributed_attrs(num);
+  std::vector<std::pair<std::string, std::vector<AttrMap>>>
+      named_distributed_sub_labels;
+  auto sub_label_defs = attrs.at(rpc::SUB_LABEL).list().func();
+  for (const auto& sub_label_def : sub_label_defs) {
+    auto sub_label_attrs = DistributeSubLabel(sub_label_def.attr(), num);
+    named_distributed_sub_labels.emplace_back(sub_label_def.name(),
+                                              std::move(sub_label_attrs));
+  }
+
+  for (int i = 0; i < num; ++i) {
+    for (auto& pair : named_distributed_sub_labels) {
+      rpc::NameAttrList* func =
+          distributed_attrs[i][rpc::SUB_LABEL].mutable_list()->add_func();
+      func->set_name(pair.first);
+      func->mutable_attr()->swap(pair.second[i]);
+    }
+  }
+  for (auto& pair : attrs) {
+    if (pair.first != rpc::SUB_LABEL) {
+      for (int i = 0; i < num; ++i) {
+        distributed_attrs[i][pair.first].CopyFrom(pair.second);
+      }
+    }
+  }
+  return distributed_attrs;
+}
+
+// If contains contents from numpy or pandas, then we should distribute those
+// raw bytes evenly across all workers, each worker would only receive a slice,
+// in order to reduce the communication overhead.
+inline std::vector<std::map<int, rpc::AttrValue>> DistributeGraph(
+    const std::map<int, rpc::AttrValue>& params, int num) {
+  std::vector<std::map<int, rpc::AttrValue>> distributed_graph(num);
+  // Initialize empty property definition, maybe filled afterwards.
+  for (int i = 0; i < num; ++i) {
+    distributed_graph[i][rpc::ARROW_PROPERTY_DEFINITION] = rpc::AttrValue();
+  }
+
+  if (params.find(rpc::ARROW_PROPERTY_DEFINITION) != params.end()) {
+    auto items = params.at(rpc::ARROW_PROPERTY_DEFINITION).list().func();
+    std::vector<std::pair<std::string, std::vector<AttrMap>>> named_items;
+
+    for (const auto& item : items) {
+      std::vector<AttrMap> vec;
+      if (item.name() == "vertex") {
+        vec = std::move(DistributeVertex(item.attr(), num));
+      } else if (item.name() == "edge") {
+        vec = std::move(DistributeEdge(item.attr(), num));
+      }
+      named_items.emplace_back(item.name(), std::move(vec));
+    }
+    for (int i = 0; i < num; ++i) {
+      for (auto& pair : named_items) {
+        rpc::NameAttrList* func =
+            distributed_graph[i][rpc::ARROW_PROPERTY_DEFINITION]
+                .mutable_list()
+                ->add_func();
+        func->set_name(pair.first);
+        func->mutable_attr()->swap(pair.second[i]);
+      }
+    }
+  }
+  for (auto& pair : params) {
+    if (pair.first != rpc::ARROW_PROPERTY_DEFINITION) {
+      for (int i = 0; i < num; ++i) {
+        distributed_graph[i][pair.first].CopyFrom(pair.second);
+      }
+    }
+  }
+  return distributed_graph;
+}
+
 inline bl::result<std::shared_ptr<detail::Graph>> ParseCreatePropertyGraph(
-    const gs::rpc::GSParams& params) {
+    const GSParams& params) {
   BOOST_LEAF_AUTO(list, params.Get<rpc::AttrValue_ListValue>(
                             rpc::ARROW_PROPERTY_DEFINITION));
   BOOST_LEAF_AUTO(directed, params.Get<bool>(rpc::DIRECTED));
@@ -234,7 +368,7 @@ inline bl::result<std::shared_ptr<detail::Graph>> ParseCreatePropertyGraph(
 }
 
 inline bl::result<std::vector<std::map<int, std::vector<int>>>>
-ParseProjectPropertyGraph(const gs::rpc::GSParams& params) {
+ParseProjectPropertyGraph(const GSParams& params) {
   BOOST_LEAF_AUTO(list, params.Get<rpc::AttrValue_ListValue>(
                             rpc::ARROW_PROPERTY_DEFINITION));
   auto& items = list.func();
