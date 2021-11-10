@@ -70,6 +70,7 @@ enum PegasusOpr {
     Map,
     Flatmap,
     Filter,
+    SortBy,
 }
 
 fn simple_add_job_builder<M: Message>(
@@ -83,6 +84,7 @@ fn simple_add_job_builder<M: Message>(
         PegasusOpr::Map => builder.map(bytes),
         PegasusOpr::Flatmap => builder.flat_map(bytes),
         PegasusOpr::Filter => builder.filter(bytes),
+        PegasusOpr::SortBy => builder.sort_by(bytes),
     };
     Ok(())
 }
@@ -162,6 +164,24 @@ impl AsPhysical for pb::Limit {
     }
 }
 
+impl AsPhysical for pb::OrderBy {
+    fn add_job_builder(&self, builder: &mut JobBuilder) -> PhysicalResult<()> {
+        let opr = pb::logical_plan::Operator::from(self.clone());
+        if self.limit.is_none() {
+            simple_add_job_builder(builder, &opr, PegasusOpr::SortBy)
+        } else {
+            let range = self.limit.clone().unwrap();
+            if range.upper <= range.lower || range.lower < 0 || range.upper <= 0 {
+                Err(PhysicalError::InvalidRangeError(range.lower, range.upper))
+            } else {
+                let bytes = opr.encode_to_vec();
+                builder.sort_limit_by((range.upper - 1) as i64, bytes);
+                Ok(())
+            }
+        }
+    }
+}
+
 impl AsPhysical for pb::logical_plan::Operator {
     fn add_job_builder(&self, builder: &mut JobBuilder) -> PhysicalResult<()> {
         use pb::logical_plan::operator::Opr::*;
@@ -174,6 +194,7 @@ impl AsPhysical for pb::logical_plan::Operator {
                 Scan(scan) => scan.add_job_builder(builder),
                 IndexedScan(idxscan) => idxscan.add_job_builder(builder),
                 Limit(limit) => limit.add_job_builder(builder),
+                OrderBy(orderby) => orderby.add_job_builder(builder),
                 _ => Err(PhysicalError::Unsupported),
             }
         } else {
@@ -336,8 +357,10 @@ mod test {
         let mut logical_plan = LogicalPlan::with_root(Node::new(0, source_opr));
         logical_plan.append_operator_as_node(select_opr.clone(), vec![0]); // node 1
         logical_plan.append_operator_as_node(expand_opr.clone(), vec![1]); // node 2
-
         logical_plan.append_operator_as_node(limit_opr.clone(), vec![2]); // node 3
+        let mut builder = JobBuilder::default();
+        let _ = logical_plan.add_job_builder(&mut builder);
+
         let mut expected_builder = JobBuilder::default();
         expected_builder.add_source(source_opr_bytes.clone());
         expected_builder.filter(select_opr_bytes);
@@ -345,8 +368,50 @@ mod test {
         expected_builder.limit(10);
         expected_builder.sink(vec![]);
 
+        assert_eq!(builder, expected_builder);
+    }
+
+    #[test]
+    fn test_orderby() {
+        let source_opr = pb::logical_plan::Operator::from(pb::Scan {
+            scan_opt: 0,
+            alias: None,
+            params: Some(pb::QueryParams {
+                table_names: vec![],
+                columns: vec![],
+                limit: None,
+                predicate: None,
+                requirements: vec![],
+            }),
+        });
+
+        let orderby_opr = pb::logical_plan::Operator::from(pb::OrderBy {
+            pairs: vec![],
+            limit: None,
+        });
+
+        let topby_opr = pb::logical_plan::Operator::from(pb::OrderBy {
+            pairs: vec![],
+            limit: Some(pb::Range {
+                lower: 10,
+                upper: 11,
+            }),
+        });
+
+        let source_opr_bytes = source_opr.encode_to_vec();
+        let orderby_opr_bytes = orderby_opr.encode_to_vec();
+        let topby_opr_bytes = topby_opr.encode_to_vec();
+
+        let mut logical_plan = LogicalPlan::with_root(Node::new(0, source_opr));
+        logical_plan.append_operator_as_node(orderby_opr.clone(), vec![0]); // node 1
+        logical_plan.append_operator_as_node(topby_opr.clone(), vec![1]); // node 2
         let mut builder = JobBuilder::default();
         let _ = logical_plan.add_job_builder(&mut builder);
+
+        let mut expected_builder = JobBuilder::default();
+        expected_builder.add_source(source_opr_bytes);
+        expected_builder.sort_by(orderby_opr_bytes);
+        expected_builder.sort_limit_by(10, topby_opr_bytes);
 
         assert_eq!(builder, expected_builder);
     }
@@ -396,6 +461,8 @@ mod test {
         logical_plan.append_operator_as_node(join_opr.clone(), vec![1, 3]); // node 4
         logical_plan
             .append_operator_as_node(pb::logical_plan::Operator::from(limit_opr.clone()), vec![4]); // node 5
+        let mut builder = JobBuilder::default();
+        let _ = logical_plan.add_job_builder(&mut builder);
 
         let mut expected_builder = JobBuilder::default();
         expected_builder.add_source(source_opr_bytes);
@@ -411,9 +478,6 @@ mod test {
             join_opr_bytes,
         );
         expected_builder.limit(10);
-
-        let mut builder = JobBuilder::default();
-        let _ = logical_plan.add_job_builder(&mut builder);
 
         assert_eq!(builder, expected_builder);
     }
