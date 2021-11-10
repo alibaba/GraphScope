@@ -97,7 +97,6 @@ graphscope-darwin-py3:
 		sudo strip /opt/graphscope/bin/grape_engine && \
 		sudo strip /opt/graphscope/bin/executor && \
 		sudo strip /opt/graphscope/bin/gaia_executor && \
-		strip /tmp/gs/builtin/*/*.dylib || true && \
 		package_name=gs-lib python3 setup.py bdist_wheel --plat=macosx_10_9_x86_64 && \
 		rm -fr build && \
 		package_name=gs-engine python3 setup.py bdist_wheel --plat=macosx_10_9_x86_64 && \
