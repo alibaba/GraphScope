@@ -106,7 +106,7 @@ impl Decode for Edge {
 }
 
 impl Context<Edge> for Edge {
-    fn get(&self, _tag: &NameOrId) -> Option<&Edge> {
+    fn get(&self, _tag: Option<&NameOrId>) -> Option<&Edge> {
         Some(&self)
     }
 }

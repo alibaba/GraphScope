@@ -23,9 +23,6 @@ use pegasus::codec::{Decode, Encode, ReadExt, WriteExt};
 use std::collections::HashMap;
 use std::hash::{Hash, Hasher};
 
-/// The specific tag for head
-pub const HEAD_TAG: &str = "HEAD";
-
 #[derive(Debug, Clone)]
 pub enum ObjectElement {
     // TODO: common-used object elements
@@ -208,13 +205,8 @@ impl Into<Entry> for RecordElement {
 }
 
 impl Context<RecordElement> for Record {
-    fn get(&self, tag: &NameOrId) -> Option<&RecordElement> {
-        let entry = if tag.eq(&NameOrId::Str(HEAD_TAG.to_string())) {
-            self.get(None)
-        } else {
-            self.get(Some(tag))
-        };
-        entry
+    fn get(&self, tag: Option<&NameOrId>) -> Option<&RecordElement> {
+        self.get(tag)
             .map(|entry| match entry {
                 Entry::Element(element) => Some(element),
                 Entry::Collection(_) => None,
