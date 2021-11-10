@@ -16,6 +16,7 @@
 
 #pragma once
 
+#include <fstream>
 #include "common/check.h"
 #include "common/types.h"
 #include "model.pb.h"

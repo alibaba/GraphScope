@@ -14,11 +14,39 @@
  * limitations under the License.
  */
 
+#include <fstream>
 #include "client/graph_client.h"
 #include "common/check.h"
 
 namespace LGRAPH_NAMESPACE {
 namespace client {
+
+Schema GraphClient::GetGraphSchema() {
+  GetSchemaRequest request;
+  GetSchemaResponse response;
+  grpc::Status s = client_stub_->getSchema(&ctx_, request, &response);
+  Check(s.ok(), "Get graph schema failed!");
+  return Schema::FromProto(response.graphdef());
+}
+
+Schema GraphClient::LoadJsonSchema(const char *json_schema_file) {
+  std::ifstream infile(json_schema_file);
+  std::vector<char> buffer;
+  infile.seekg(0, infile.end);
+  long length = infile.tellg();
+  Check(length > 0, "Loading empty json schema file!");
+  buffer.resize(length);
+  infile.seekg(0, infile.beg);
+  infile.read(&buffer[0], length);
+  infile.close();
+
+  LoadJsonSchemaRequest request;
+  request.set_schemajson(std::string{&buffer[0], static_cast<size_t>(length)});
+  LoadJsonSchemaResponse response;
+  grpc::Status s = client_stub_->loadJsonSchema(&ctx_, request, &response);
+  Check(s.ok(), "Load graph schema from json file " + std::string{json_schema_file} + " failed!");
+  return Schema::FromProto(response.graphdef());
+}
 
 LoggerInfo GraphClient::GetLoggerInfo() {
   GetLoggerInfoRequest request;
@@ -26,6 +54,14 @@ LoggerInfo GraphClient::GetLoggerInfo() {
   grpc::Status s = client_stub_->getLoggerInfo(&ctx_, request, &response);
   Check(s.ok(), "Get logger info failed!");
   return LoggerInfo{response.loggerservers(), response.loggertopic(), response.loggerqueuecount()};
+}
+
+int32_t GraphClient::GetPartitionNum() {
+  GetPartitionNumRequest request;
+  GetPartitionNumResponse response;
+  grpc::Status s = client_stub_->getPartitionNum(&ctx_, request, &response);
+  Check(s.ok(), "Get partition number failed!");
+  return response.partitionnum();
 }
 
 BackupId GraphClient::CreateNewBackup() {

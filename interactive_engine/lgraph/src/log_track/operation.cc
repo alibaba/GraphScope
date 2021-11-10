@@ -30,7 +30,7 @@ std::unordered_map<PropertyId, PropertyInfo> ExtractPropMap(DataOperationPb* dat
   return prop_map;
 }
 
-VertexInsertInfo Operation::GetInfoAsVertexInsertOp() {
+VertexInsertInfo Operation::GetInfoAsVertexInsertOp() const {
   OpType op_type = GetOpType();
   assert(op_type == OpType::OVERWRITE_VERTEX || op_type == OpType::UPDATE_VERTEX);
 
@@ -47,7 +47,7 @@ VertexInsertInfo Operation::GetInfoAsVertexInsertOp() {
   return {static_cast<VertexId>(vertex_id_proto.id()), static_cast<LabelId>(label_id_proto.id()), std::move(prop_map)};
 }
 
-EdgeInsertInfo Operation::GetInfoAsEdgeInsertOp() {
+EdgeInsertInfo Operation::GetInfoAsEdgeInsertOp() const {
   OpType op_type = GetOpType();
   assert(op_type == OpType::OVERWRITE_EDGE || op_type == OpType::UPDATE_EDGE);
 

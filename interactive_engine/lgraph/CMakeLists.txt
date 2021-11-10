@@ -124,3 +124,7 @@ target_link_libraries(lgraph
 add_executable(vertex_scan_test
         tests/test_scan_vertex.cc)
 target_link_libraries(vertex_scan_test PUBLIC lgraph)
+
+add_executable(log_track_test
+        tests/test_log_track.cc)
+target_link_libraries(log_track_test PUBLIC lgraph)

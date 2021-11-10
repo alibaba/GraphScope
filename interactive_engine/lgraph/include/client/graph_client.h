@@ -26,15 +26,17 @@ namespace LGRAPH_NAMESPACE {
 namespace client {
 
 class GraphClient {
-private:
+public:
   explicit GraphClient(const std::string &target)
       : GraphClient(grpc::CreateChannel(target, grpc::InsecureChannelCredentials())) {}
   explicit GraphClient(const std::shared_ptr<grpc::Channel> &channel)
       : client_stub_(Client::NewStub(channel)), client_backup_stub_(ClientBackup::NewStub(channel)), ctx_() {}
   ~GraphClient() = default;
 
+  Schema GetGraphSchema();
+  Schema LoadJsonSchema(const char *json_schema_file);
   LoggerInfo GetLoggerInfo();
-
+  int32_t GetPartitionNum();
   BackupId CreateNewBackup();
   void DeleteBackup(BackupId backup_id);
   void PurgeOldBackups(int32_t keep_alive_num);

@@ -37,12 +37,36 @@ public:
     return data_type_;
   }
 
-  const std::string& GetValueBytes() const {
+  const std::string &GetValueBytes() const {
     return value_bytes_;
   }
 
   std::string *GetMutValueBytes() {
     return &value_bytes_;
+  }
+
+  int32_t GetAsInt32() const {
+    Check(value_bytes_.size() == sizeof(int32_t), "Get int32 with wrong value bytes size!");
+    return *reinterpret_cast<const int32_t *>(value_bytes_.data());
+  }
+
+  int64_t GetAsInt64() const {
+    Check(value_bytes_.size() == sizeof(int64_t), "Get int64 with wrong value bytes size!");
+    return *reinterpret_cast<const int64_t *>(value_bytes_.data());
+  }
+
+  float GetAsFloat() const {
+    Check(value_bytes_.size() == sizeof(float), "Get float with wrong value bytes size!");
+    return *reinterpret_cast<const float *>(value_bytes_.data());
+  }
+
+  double GetAsDouble() const {
+    Check(value_bytes_.size() == sizeof(double), "Get double with wrong value bytes size!");
+    return *reinterpret_cast<const double *>(value_bytes_.data());
+  }
+
+  const std::string &GetAsStr() const {
+    return value_bytes_;
   }
 
 private:
@@ -152,8 +176,8 @@ public:
     return static_cast<OpType>(op_proto_->optype());
   }
 
-  VertexInsertInfo GetInfoAsVertexInsertOp();
-  EdgeInsertInfo GetInfoAsEdgeInsertOp();
+  VertexInsertInfo GetInfoAsVertexInsertOp() const;
+  EdgeInsertInfo GetInfoAsEdgeInsertOp() const;
 
 private:
   OperationPb *op_proto_;
