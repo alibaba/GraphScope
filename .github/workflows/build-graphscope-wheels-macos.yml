@@ -24,7 +24,7 @@ on:
       - 'tutorials/**'
 
 jobs:
-  build:
+  build-wheels:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
@@ -43,26 +43,18 @@ jobs:
       run: |
         /bin/bash ${GITHUB_WORKSPACE}/scripts/install_deps.sh --dev --vineyard_prefix /opt/vineyard --verbose
 
-        # avoid access node by DNS hostnames
-        r=`cat /etc/hosts | grep $(hostname) || true`
-        if [ -z "${r}" ];then export hn=$(hostname); sudo -E bash -c 'echo "127.0.0.1 ${hn}" >> /etc/hosts'; fi
-        cat /etc/hosts
-
-    - name: Build Wheel Package
+    - name: Build Server Wheel
       run: |
         # source environment variable
         source ~/.graphscope_env
         echo ${CC}
 
-        cd k8s
-        # graphscope
+        # build graphscope server wheel
+        cd ${GITHUB_WORKSPACE}/k8s
         sudo -E make graphscope-py3-package
-        # graphscope client
-        sudo -E make graphscope-client-py3-package
 
         # package
         cd ${GITHUB_WORKSPACE}
-        tar -zcf client.tar.gz python/dist/*.whl
         tar -zcf graphscope.tar.gz coordinator/dist/wheelhouse/*.whl
 
     - name: Upload Artifact
@@ -70,46 +62,56 @@ jobs:
       with:
         name: wheel-macos-${{ github.sha }}
         path: |
-          client.tar.gz
           graphscope.tar.gz
         retention-days: 5
 
-  test:
+  build-and-test-client-wheels:
     runs-on: ${{ matrix.os }}
-    needs: [build]
+    needs: [build-wheels]
     strategy:
       matrix:
         os: [macos-10.15]
+        python-version: ['3.6', '3.7', '3.8', '3.9']
 
     steps:
     - uses: actions/checkout@v2.3.2
       with:
         submodules: true
 
+    - name: Set up Python
+      uses: actions/setup-python@v2
+      with:
+        python-version: ${{ matrix.python-version }}
+
     - uses: actions/download-artifact@v2
       with:
         path: artifacts
 
-    - name: Run Test
+    - name: Build Client Wheel with ${{ matrix.python-version }}
       shell: bash
       run: |
-        pushd artifacts
-        # install graphscope-client
-        tar -zxf ./wheel-macos-${{ github.sha }}/client.tar.gz
-        pushd python/dist
+        # build graphscope client wheel
+        cd ${GITHUB_WORKSPACE}/k8s
+        sudo -E make graphscope-client-py3-package
+
+    - name: Run Test with ${{ matrix.python-version }}
+      shell: bash
+      run: |
+        # install client
+        cd ${GITHUB_WORKSPACE}/python/dist
         for f in * ; do pip3 install $f --user || true; done
-        popd
+
         # install graphscope
+        cd ${GITHUB_WORKSPACE}/artifacts
         tar -zxf ./wheel-macos-${{ github.sha }}/graphscope.tar.gz
         pushd coordinator/dist/wheelhouse
         pip3 install ./*.whl --user
-        popd
         popd
 
         # run test
         # waiting for graphlearn supported on macos
         # pip3 install pytest "tensorflow<=2.5.2" --user;
         pip3 install pytest --user
-        export PATH=/Users/runner/Library/Python/3.9/bin:${PATH}
+        # export PATH=/Users/runner/Library/Python/3.9/bin:${PATH}
         cp ${GITHUB_WORKSPACE}/python/tests/local/test_standalone.py /tmp/test_standalone.py
         python3 -m pytest -s -v /tmp/test_standalone.py
