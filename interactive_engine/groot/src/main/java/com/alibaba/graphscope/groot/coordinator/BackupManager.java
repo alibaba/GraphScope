@@ -16,17 +16,17 @@
 package com.alibaba.graphscope.groot.coordinator;
 
 import com.alibaba.graphscope.groot.CompletionCallback;
+import com.alibaba.graphscope.groot.SnapshotCache;
+import com.alibaba.graphscope.groot.SnapshotWithSchema;
 import com.alibaba.graphscope.groot.meta.MetaService;
 import com.alibaba.graphscope.groot.meta.MetaStore;
 import com.alibaba.graphscope.groot.store.StoreBackupId;
 import com.alibaba.maxgraph.common.config.BackupConfig;
 import com.alibaba.maxgraph.common.config.CommonConfig;
 import com.alibaba.maxgraph.common.config.Configs;
-import com.alibaba.maxgraph.common.config.CoordinatorConfig;
 import com.alibaba.maxgraph.common.util.ThreadFactoryUtils;
 import com.alibaba.maxgraph.compiler.api.exception.BackupException;
 import com.alibaba.maxgraph.compiler.api.exception.MaxGraphException;
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.slf4j.Logger;
@@ -50,6 +50,9 @@ public class BackupManager {
     private MetaService metaService;
     private MetaStore metaStore;
     private SnapshotManager snapshotManager;
+    private SchemaManager schemaManager;
+    private SnapshotCache localSnapshotCache;
+    private QuerySnapshotListener localListener;
     private ObjectMapper objectMapper;
 
     private int storeNodeCount;
@@ -74,10 +77,13 @@ public class BackupManager {
     private Lock globalBackupIdToInfoLock = new ReentrantLock();
 
     public BackupManager(Configs configs, MetaService metaService, MetaStore metaStore,
-                         SnapshotManager snapshotManager, StoreBackupTaskSender storeBackupTaskSender) {
+                         SnapshotManager snapshotManager, SchemaManager schemaManager,
+                         SnapshotCache localSnapshotCache, StoreBackupTaskSender storeBackupTaskSender) {
         this.metaService = metaService;
         this.metaStore = metaStore;
         this.snapshotManager = snapshotManager;
+        this.schemaManager = schemaManager;
+        this.localSnapshotCache = localSnapshotCache;
         this.objectMapper = new ObjectMapper();
 
         this.storeNodeCount = CommonConfig.STORE_NODE_COUNT.get(configs);
@@ -96,11 +102,15 @@ public class BackupManager {
             logger.info("backup manager is disable");
             return;
         }
+
         try {
             recover();
         } catch (IOException e) {
             throw new MaxGraphException(e);
         }
+
+        this.localListener = new LocalSnapshotListener(this.schemaManager, this.localSnapshotCache);
+        this.snapshotManager.addListener(this.localListener);
 
         this.backupCreationBuffer = new ArrayBlockingQueue<>(backupCreationBufferMaxSize);
         this.backupCreationExecutor = new ThreadPoolExecutor(
@@ -131,6 +141,15 @@ public class BackupManager {
     }
 
     public void stop() {
+        if (this.autoCommitScheduler != null) {
+            this.autoCommitScheduler.shutdown();
+            try {
+                this.autoCommitScheduler.awaitTermination(3000L, TimeUnit.MILLISECONDS);
+            } catch (InterruptedException e) {
+                // Ignore
+            }
+            this.autoCommitScheduler = null;
+        }
         if (this.backupCreationExecutor != null) {
             this.backupCreationExecutor.shutdown();
             try {
@@ -149,14 +168,8 @@ public class BackupManager {
             }
             this.backupGcScheduler = null;
         }
-        if (this.autoCommitScheduler != null) {
-            this.autoCommitScheduler.shutdown();
-            try {
-                this.autoCommitScheduler.awaitTermination(3000L, TimeUnit.MILLISECONDS);
-            } catch (InterruptedException e) {
-                // Ignore
-            }
-            this.autoCommitScheduler = null;
+        if (this.localListener != null) {
+            this.snapshotManager.removeListener(this.localListener);
         }
     }
 
@@ -289,8 +302,8 @@ public class BackupManager {
     }
 
     private void doBackupCreation(int newGlobalBackupId) {
-        long snapshotId = snapshotManager.getQuerySnapshotInfo().getSnapshotId();
         List<Long> walOffsets = snapshotManager.getQueueOffsets();
+        SnapshotWithSchema snapshotWithSchema = localSnapshotCache.getSnapshotWithSchema();
         Map<Integer, Integer> partitionToBackupId = new ConcurrentHashMap<>(graphPartitionCount);
         AtomicInteger counter = new AtomicInteger(storeNodeCount);
         AtomicBoolean finished = new AtomicBoolean(false);
@@ -308,7 +321,8 @@ public class BackupManager {
                             try {
                                 addNewBackupInfo(new BackupInfo(
                                         newGlobalBackupId,
-                                        snapshotId,
+                                        snapshotWithSchema.getSnapshotId(),
+                                        snapshotWithSchema.getGraphDef().toProto().toByteArray(),
                                         walOffsets,
                                         partitionToBackupId));
                                 future.complete(null);
@@ -386,6 +400,9 @@ public class BackupManager {
         restoredMetaStore.write(
                 "query_snapshot_id",
                 this.objectMapper.writeValueAsBytes(restoredSnapshotId));
+        restoredMetaStore.write(
+                "graph_def_proto_bytes",
+                restoredBackupInfo.getGraphDefBytes());
         List<Long> restoredWalOffsets = restoredBackupInfo.getWalOffsets();
         restoredMetaStore.write(
                 "queue_offsets",

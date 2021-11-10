@@ -16,9 +16,12 @@
 package com.alibaba.graphscope.groot.coordinator;
 
 import com.alibaba.maxgraph.proto.groot.BackupInfoPb;
+import com.alibaba.maxgraph.proto.groot.GraphDefPb;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
+import java.io.IOException;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
@@ -26,6 +29,7 @@ public class BackupInfo {
 
     private int globalBackupId;
     private long snapshotId;
+    private byte[] graphDefBytes;
     private List<Long> walOffsets;
     private Map<Integer, Integer> partitionToBackupId;
 
@@ -33,10 +37,12 @@ public class BackupInfo {
     public BackupInfo(
             @JsonProperty("globalBackupId") int globalBackupId,
             @JsonProperty("snapshotId") long snapshotId,
+            @JsonProperty("graphDefBytes") byte[] graphDefBytes,
             @JsonProperty("walOffsets") List<Long> walOffsets,
             @JsonProperty("partitionToBackupId") Map<Integer, Integer> partitionToBackupId) {
         this.globalBackupId = globalBackupId;
         this.snapshotId = snapshotId;
+        this.graphDefBytes = graphDefBytes;
         this.walOffsets = walOffsets;
         this.partitionToBackupId = partitionToBackupId;
     }
@@ -47,6 +53,10 @@ public class BackupInfo {
 
     public long getSnapshotId() {
         return snapshotId;
+    }
+
+    public byte[] getGraphDefBytes() {
+        return graphDefBytes;
     }
 
     public List<Long> getWalOffsets() {
@@ -62,13 +72,15 @@ public class BackupInfo {
         long snapshotId = proto.getSnapshotId();
         List<Long> walOffsets = proto.getWalOffsetsList();
         Map<Integer, Integer> partitionToBackupId = proto.getPartitionToBackupIdMap();
-        return new BackupInfo(globalBackupId, snapshotId, walOffsets, partitionToBackupId);
+        return new BackupInfo(
+                globalBackupId, snapshotId, proto.getGraphDef().toByteArray(), walOffsets, partitionToBackupId);
     }
 
-    public BackupInfoPb toProto() {
+    public BackupInfoPb toProto() throws IOException {
         return BackupInfoPb.newBuilder()
                 .setGlobalBackupId(globalBackupId)
                 .setSnapshotId(snapshotId)
+                .setGraphDef(GraphDefPb.parseFrom(graphDefBytes))
                 .addAllWalOffsets(walOffsets)
                 .putAllPartitionToBackupId(partitionToBackupId)
                 .build();
@@ -83,6 +95,9 @@ public class BackupInfo {
             return false;
         }
         BackupInfo backupInfo = (BackupInfo) o;
+        if (!Arrays.equals(graphDefBytes, backupInfo.graphDefBytes)) {
+            return false;
+        }
         if (!walOffsets.equals(backupInfo.walOffsets)) {
             return false;
         }

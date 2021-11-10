@@ -189,3 +189,11 @@ message StorePropertyListPb {
 message ConfigPb {
   map<string, string> configs = 1;
 }
+
+message BackupInfoPb {
+  int32 globalBackupId = 1;
+  int64 snapshotId = 2;
+  GraphDefPb graphDef = 3;
+  repeated int64 walOffsets = 4;
+  map<int32, int32> partitionToBackupId = 5;
+}

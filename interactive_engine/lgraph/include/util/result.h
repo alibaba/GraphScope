@@ -1,12 +1,16 @@
 /**
- * This header provides a Result type that can be used to replace exceptions in code
- * that has to handle error.
+ * Copyright {2016} {Mathieu Stefani}
  *
- * Result<T, E> can be used to return and propagate an error to the caller. Result<T, E> is an algebraic
- * data type that can either Ok(T) to represent success or Err(E) to represent an error.
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
- * Author: Mathieu Stefani
- * Github repository: https://github.com/oktal/result.git
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 #pragma once
@@ -15,9 +19,9 @@
 #include <functional>
 #include <type_traits>
 
-#include "db/common/namespace.h"
+#include "common/namespace.h"
 
-namespace DB_NAMESPACE {
+namespace LGRAPH_NAMESPACE {
 
 namespace types {
   template<typename T>
@@ -139,13 +143,11 @@ namespace details {
 // General implementation
       template<typename Ret, typename Arg>
       struct Map<Ret(Arg)> {
-
         static_assert(!IsResult<Ret>::value,
                       "Can not map a callback returning a Result, use andThen instead");
 
         template<typename T, typename E, typename Func>
         static Result<Ret, E> map(const Result<T, E> &result, Func func) {
-
           static_assert(
               std::is_same<T, Arg>::value ||
               std::is_convertible<T, Arg>::value,
@@ -163,10 +165,8 @@ namespace details {
 // Specialization for callback returning void
       template<typename Arg>
       struct Map<void(Arg)> {
-
         template<typename T, typename E, typename Func>
         static Result<void, E> map(const Result<T, E> &result, Func func) {
-
           if (result.isOk()) {
             func(result.storage().template get<T>());
             return types::Ok<void>();
@@ -179,7 +179,6 @@ namespace details {
 // Specialization for a void Result
       template<typename Ret>
       struct Map<Ret(void)> {
-
         template<typename T, typename E, typename Func>
         static Result<Ret, E> map(const Result<T, E> &result, Func func) {
           static_assert(std::is_same<T, void>::value,
@@ -197,7 +196,6 @@ namespace details {
 // Specialization for callback returning void on a void Result
       template<>
       struct Map<void(void)> {
-
         template<typename T, typename E, typename Func>
         static Result<void, E> map(const Result<T, E> &result, Func func) {
           static_assert(std::is_same<T, void>::value,
@@ -215,7 +213,6 @@ namespace details {
 // General specialization for a callback returning a Result
       template<typename U, typename E, typename Arg>
       struct Map<Result<U, E>(Arg)> {
-
         template<typename T, typename Func>
         static Result<U, E> map(const Result<T, E> &result, Func func) {
           static_assert(
@@ -235,7 +232,6 @@ namespace details {
 // Specialization for a void callback returning a Result
       template<typename U, typename E>
       struct Map<Result<U, E>(void)> {
-
         template<typename T, typename Func>
         static Result<U, E> map(const Result<T, E> &result, Func func) {
           static_assert(std::is_same<T, void>::value, "Can not call a void-callback on a non-void Result");
@@ -247,7 +243,6 @@ namespace details {
 
           return types::Err<E>(result.storage().template get<E>());
         }
-
       };
 
     } // namespace impl
@@ -284,7 +279,6 @@ namespace details {
 
       template<typename Ret, typename Cls, typename Arg>
       struct Map<Ret (Cls::*)(Arg) const> {
-
         static_assert(!IsResult<Ret>::value,
                       "Can not map a callback returning a Result, use orElse instead");
 
@@ -307,8 +301,6 @@ namespace details {
 
           return types::Ok<void>();
         }
-
-
       };
 
     } // namespace impl
@@ -411,7 +403,6 @@ namespace details {
 
       template<typename T, typename F, typename Arg>
       struct Else<Result<T, F>(Arg)> {
-
         template<typename E, typename Func>
         static Result<T, F> orElse(const Result<T, E> &result, Func func) {
           static_assert(
@@ -436,12 +427,10 @@ namespace details {
 
           return types::Ok<void>();
         }
-
       };
 
       template<typename T, typename F>
       struct Else<Result<T, F>(void)> {
-
         template<typename E, typename Func>
         static Result<T, F> orElse(const Result<T, E> &result, Func func) {
           static_assert(std::is_same<T, void>::value,
@@ -464,7 +453,6 @@ namespace details {
 
           return types::Ok<void>();
         }
-
       };
 
     } // namespace impl
@@ -508,7 +496,6 @@ namespace details {
 
       template<typename Ret, typename Arg>
       struct Wise<Ret(Arg)> {
-
         template<typename T, typename E, typename Func>
         static Result<T, E> otherwise(const Result<T, E> &result, Func func) {
           static_assert(
@@ -524,7 +511,6 @@ namespace details {
           }
           return result;
         }
-
       };
 
     } // namespace impl
@@ -700,7 +686,6 @@ namespace details {
 
   template<typename T, typename E>
   struct Constructor {
-
     static void move(Storage<T, E> &&src, Storage<T, E> &dst, ok_tag) {
       dst.rawConstruct(std::move(src.template get<T>()));
       src.destroy(ok_tag());
@@ -761,7 +746,6 @@ struct EqualityComparable<T,
 
 template<typename T, typename E>
 struct Result {
-
   static_assert(!std::is_same<E, void>::value, "void error type is not allowed");
 
   typedef details::Storage<T, E> storage_type;
@@ -967,4 +951,4 @@ bool operator==(const Result<T, E> &lhs, types::Err<E> err) {
         res.storage().get<T>();                                    \
     })
 
-}  // namespace DB_NAMESPACE
+}
