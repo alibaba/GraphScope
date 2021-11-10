@@ -61,8 +61,7 @@ jobs:
       uses: actions/upload-artifact@v2
       with:
         name: wheel-macos-${{ github.sha }}
-        path: |
-          graphscope.tar.gz
+        path: graphscope.tar.gz
         retention-days: 5
 
   build-and-test-client-wheels:
@@ -93,6 +92,17 @@ jobs:
         # build graphscope client wheel
         cd ${GITHUB_WORKSPACE}/k8s
         sudo -E make graphscope-client-py3-package
+
+        # package
+        cd ${GITHUB_WORKSPACE}
+        tar -zcf client.tar.gz python/dist/*.whl
+
+    - name: Upload Artifact
+      uses: actions/upload-artifact@v2
+      with:
+        name: wheel-macos-${{ github.sha }}-${{ matrix.python-version }}
+        path: client.tar.gz
+        retention-days: 5
 
     - name: Run Test with ${{ matrix.python-version }}
       shell: bash
