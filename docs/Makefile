@@ -1,5 +1,6 @@
 # Minimal makefile for Sphinx documentation
 #
+MKFILE_PATH 			:= $(abspath $(lastword $(MAKEFILE_LIST)))
 WORKING_DIR 			:= $(dir $(MKFILE_PATH))
 
 # You can set these variables from the command line, and also
@@ -33,12 +34,13 @@ clean:
 %: Makefile doxygen
 	@echo "Tag is:" $(TAG)
 	@$(SPHINXBUILD) -M $@ "$(SOURCEDIR)" "$(BUILDDIR)/$(TAG)" $(SPHINXOPTS) $(O)
-	@echo "Build Java doc"
-	@$(JAVADOC) -locale en_US -d  "$(BUILDDIR)/gae_javadoc" -classpath && \
-	$(WORKING_DIR)/analytical_engine/java/grape-runtime/target/grape-runtime-0.1-shaded.jar && \
-	-sourcepath && \
-	$(WORKING_DIR)analytical_engine/java/grape-jdk/src/main/java/ && \
-	com.alibaba -subpackages com.alibaba.graphscope
+
+	@echo "Building Java doc to $(BUILDDIR)/${TAG}/$@/reference/gae_java"
+	javadoc -locale en_US -d $(BUILDDIR)/${TAG}/$@/reference/gae_java -classpath \
+	$(WORKING_DIR)/../analytical_engine/java/grape-runtime/target/grape-runtime-0.1-shaded.jar \
+	-sourcepath \
+	$(WORKING_DIR)/../analytical_engine/java/grape-jdk/src/main/java/ \
+	com.alibaba -subpackages com.alibaba.graphscope 
 
 doxygen:
 	@mkdir -p _build
