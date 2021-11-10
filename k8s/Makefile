@@ -105,6 +105,7 @@ graphscope-darwin-py3:
 		rm -fr build && \
 		package_name=gs-coordinator python3 setup.py bdist_wheel --plat=macosx_10_9_x86_64 && \
 		rm -fr build && \
+		package_name=graphscope python3 setup.py bdist_wheel --plat=macosx_10_9_x86_64 && \
 		pip3 install delocate && \
 		for wheel in `ls dist/*.whl`; do \
 			delocate-listdeps -a -d $$wheel; \
