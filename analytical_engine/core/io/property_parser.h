@@ -305,6 +305,11 @@ inline std::vector<AttrMap> DistributeEdge(const AttrMap& attrs, int num) {
 inline std::vector<std::map<int, rpc::AttrValue>> DistributeGraph(
     const std::map<int, rpc::AttrValue>& params, int num) {
   std::vector<std::map<int, rpc::AttrValue>> distributed_graph(num);
+  // Initialize empty property definition, maybe filled afterwards.
+  for (int i = 0; i < num; ++i) {
+    distributed_graph[i][rpc::ARROW_PROPERTY_DEFINITION] = rpc::AttrValue();
+  }
+
   if (params.find(rpc::ARROW_PROPERTY_DEFINITION) != params.end()) {
     auto items = params.at(rpc::ARROW_PROPERTY_DEFINITION).list().func();
     std::vector<std::pair<std::string, std::vector<AttrMap>>> named_items;
@@ -319,7 +324,6 @@ inline std::vector<std::map<int, rpc::AttrValue>> DistributeGraph(
       named_items.emplace_back(item.name(), std::move(vec));
     }
     for (int i = 0; i < num; ++i) {
-      distributed_graph[i][rpc::ARROW_PROPERTY_DEFINITION] = rpc::AttrValue();
       for (auto& pair : named_items) {
         rpc::NameAttrList* func =
             distributed_graph[i][rpc::ARROW_PROPERTY_DEFINITION]

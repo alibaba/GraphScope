@@ -99,11 +99,6 @@ std::shared_ptr<DispatchResult> Dispatcher::processCmd(
 void Dispatcher::publisherPreprocessCmd(CommandDetail& cmd) {
   if (cmd.type == rpc::CREATE_GRAPH || cmd.type == rpc::ADD_LABELS) {
     // Distribute raw bytes if there are some data from pandas
-    for (auto& items : cmd.params) {
-      LOG(INFO) << "Publisher commands: "
-                << rpc::ParamKey_Name(static_cast<rpc::ParamKey>(items.first))
-                << ": " << items.second.DebugString();
-    }
     auto params_vec = DistributeGraph(cmd.params, comm_spec_.worker_num());
     CHECK_EQ(static_cast<int>(params_vec.size()), comm_spec_.worker_num());
     for (int i = 1; i < comm_spec_.worker_num(); ++i) {
@@ -124,11 +119,6 @@ void Dispatcher::subscriberPreprocessCmd(rpc::OperationType type,
     grape::OutArchive oa;
     grape::RecvArchive(oa, grape::kCoordinatorRank, MPI_COMM_WORLD);
     oa >> cmd;
-    for (auto& items : cmd.params) {
-      LOG(INFO) << "Subscriber commands: "
-                << rpc::ParamKey_Name(static_cast<rpc::ParamKey>(items.first))
-                << ": " << items.second.DebugString();
-    }
   } else {
     grape::BcastRecv(cmd, MPI_COMM_WORLD, grape::kCoordinatorRank);
   }
