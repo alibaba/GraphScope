@@ -86,7 +86,7 @@ jobs:
       with:
         path: artifacts
 
-    - name: Build Client Wheel with ${{ matrix.python-version }}
+    - name: Test Client Wheel with ${{ matrix.python-version }}
       shell: bash
       run: |
         # build graphscope client wheel
@@ -97,16 +97,6 @@ jobs:
         cd ${GITHUB_WORKSPACE}
         tar -zcf client.tar.gz python/dist/*.whl
 
-    - name: Upload Artifact
-      uses: actions/upload-artifact@v2
-      with:
-        name: wheel-macos-${{ github.sha }}-${{ matrix.python-version }}
-        path: client.tar.gz
-        retention-days: 5
-
-    - name: Run Test with ${{ matrix.python-version }}
-      shell: bash
-      run: |
         # install client
         cd ${GITHUB_WORKSPACE}/python/dist
         for f in ./*.whl ; do pip3 install $f --user || true; done
@@ -125,3 +115,11 @@ jobs:
         # export PATH=/Users/runner/Library/Python/3.9/bin:${PATH}
         cp ${GITHUB_WORKSPACE}/python/tests/local/test_standalone.py /tmp/test_standalone.py
         python3 -m pytest -s -v /tmp/test_standalone.py
+
+    - name: Upload Artifact
+      if: always()
+      uses: actions/upload-artifact@v2
+      with:
+        name: wheel-macos-${{ github.sha }}-${{ matrix.python-version }}
+        path: client.tar.gz
+        retention-days: 5
