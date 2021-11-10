@@ -92,7 +92,6 @@ graphscope-darwin-py3:
 	cd $(WORKING_DIR)/../coordinator && \
 		export WITH_EXTRA_DATA=ON && \
 		rm -fr build dist/*.whl || true && \
-		sudo strip /opt/graphscope/bin/grape_engine && \
 		sudo strip /opt/graphscope/bin/executor && \
 		sudo strip /opt/graphscope/bin/gaia_executor && \
 		sudo install_name_tool -add_rpath /usr/local/lib /opt/graphscope/bin/executor && \
@@ -151,7 +150,6 @@ graphscope-manylinux2014-py3:
 			export WITH_EXTRA_DATA=ON && \
 			cd /work/coordinator && \
 			rm -fr build dist/*.whl && \
-			sudo strip /opt/graphscope/bin/grape_engine && \
 			sudo strip /opt/graphscope/bin/executor && \
 			sudo strip /opt/graphscope/bin/gaia_executor && \
 			sudo strip /opt/graphscope/lib/*.so && \
@@ -167,7 +165,7 @@ graphscope-manylinux2014-py3:
 			package_name=graphscope python3 setup.py bdist_wheel && \
 			cd dist && \
 			for wheel in `ls ./*.whl`; do \
-				auditwheel repair $$wheel --plat=manylinux2014_x86_64 --strip && rm $$wheel; \
+				auditwheel repair $$wheel --plat=manylinux2014_x86_64 && rm $$wheel; \
 			done'
 
 graphscope-client-darwin-py3:

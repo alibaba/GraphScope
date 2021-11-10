@@ -64,7 +64,7 @@ jobs:
         path: graphscope.tar.gz
         retention-days: 5
 
-  build-and-test-client-wheels:
+  test:
     runs-on: ${{ matrix.os }}
     needs: [build-wheels]
     strategy:
@@ -109,7 +109,7 @@ jobs:
       run: |
         # install client
         cd ${GITHUB_WORKSPACE}/python/dist
-        for f in * ; do pip3 install $f --user || true; done
+        for f in ./*.whl ; do pip3 install $f --user || true; done
 
         # install graphscope
         cd ${GITHUB_WORKSPACE}/artifacts
