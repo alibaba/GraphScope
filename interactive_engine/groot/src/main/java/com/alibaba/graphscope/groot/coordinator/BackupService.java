@@ -19,6 +19,7 @@ import com.alibaba.maxgraph.proto.groot.*;
 import io.grpc.stub.StreamObserver;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -90,11 +91,12 @@ public class BackupService extends BackupGrpc.BackupImplBase {
     @Override
     public void getBackupInfo(GetBackupInfoRequest request, StreamObserver<GetBackupInfoResponse> responseObserver) {
         try {
-            List<BackupInfoPb> infoList = this.backupManager.getBackupInfoList()
-                    .stream()
-                    .map(BackupInfo::toProto)
-                    .collect(Collectors.toList());
-            responseObserver.onNext(GetBackupInfoResponse.newBuilder().addAllBackupInfoList(infoList).build());
+            List<BackupInfo> infoList = this.backupManager.getBackupInfoList();
+            List<BackupInfoPb> infoPbList = new ArrayList<>(infoList.size());
+            for (BackupInfo info : this.backupManager.getBackupInfoList()) {
+                infoPbList.add(info.toProto());
+            }
+            responseObserver.onNext(GetBackupInfoResponse.newBuilder().addAllBackupInfoList(infoPbList).build());
             responseObserver.onCompleted();
         } catch (Exception e) {
             responseObserver.onError(e);

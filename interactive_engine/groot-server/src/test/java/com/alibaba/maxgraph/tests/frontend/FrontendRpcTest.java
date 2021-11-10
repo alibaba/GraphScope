@@ -13,6 +13,7 @@
  */
 package com.alibaba.maxgraph.tests.frontend;
 
+import com.alibaba.graphscope.groot.SnapshotCache;
 import com.alibaba.graphscope.groot.coordinator.BackupInfo;
 import com.alibaba.graphscope.groot.frontend.*;
 import com.alibaba.graphscope.groot.frontend.FrontendSnapshotService;
@@ -26,6 +27,7 @@ import com.alibaba.graphscope.groot.schema.request.DdlRequestBatch;
 import io.grpc.stub.StreamObserver;
 import org.junit.jupiter.api.Test;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -108,7 +110,7 @@ public class FrontendRpcTest {
     }
 
     @Test
-    void testBackupClient() {
+    void testBackupClient() throws IOException {
         BackupGrpc.BackupBlockingStub stub = mock(BackupGrpc.BackupBlockingStub.class);
         when(stub.createNewBackup(any())).thenReturn(CreateNewBackupResponse.newBuilder().setGlobalBackupId(1).build());
         when(stub.deleteBackup(any())).thenReturn(DeleteBackupResponse.newBuilder().build());
@@ -116,7 +118,9 @@ public class FrontendRpcTest {
         when(stub.restoreFromBackup(any())).thenReturn(RestoreFromBackupResponse.newBuilder().build());
         when(stub.verifyBackup(any())).thenReturn(VerifyBackupResponse.newBuilder().build());
         BackupInfo backupInfo =
-                new BackupInfo(1, 10L, new ArrayList<>(), new HashMap<>());
+                new BackupInfo(
+                        1, 10L, GraphDef.newBuilder().setVersion(10L).build().toProto().toByteArray(),
+                        new ArrayList<>(), new HashMap<>());
         when(stub.getBackupInfo(any())).thenReturn(
                 GetBackupInfoResponse.newBuilder().addBackupInfoList(backupInfo.toProto()).build());
         BackupClient backupClient = new BackupClient(stub);

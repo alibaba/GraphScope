@@ -11,10 +11,8 @@
  * express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.alibaba.graphscope.groot.frontend;
+package com.alibaba.graphscope.groot;
 
-import com.alibaba.graphscope.groot.SnapshotListener;
-import com.alibaba.graphscope.groot.SnapshotWithSchema;
 import com.alibaba.graphscope.groot.schema.GraphDef;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

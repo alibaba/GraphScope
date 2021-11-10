@@ -19,10 +19,10 @@
 #include <algorithm>
 #include <string>
 
-#include "db/common/namespace.h"
-#include "db/common/types.h"
+#include "common/namespace.h"
+#include "common/types.h"
 
-namespace DB_NAMESPACE {
+namespace LGRAPH_NAMESPACE {
 
 class Snapshot;
 class Property;
@@ -36,10 +36,10 @@ public:
 
   // Move Only!
   // Avoid copy construction and assignment.
-  Error(const Error&) = delete;
-  Error& operator=(const Error&) = delete;
-  Error(Error&& e) noexcept;
-  Error& operator=(Error&& e) noexcept;
+  Error(const Error &) = delete;
+  Error &operator=(const Error &) = delete;
+  Error(Error &&e) noexcept;
+  Error &operator=(Error &&e) noexcept;
 
   std::string GetInfo();
 
@@ -61,11 +61,11 @@ inline Error::Error() : handle_(nullptr) {}
 
 inline Error::Error(ErrorHandle handle) : handle_(handle) {}
 
-inline Error::Error(Error&& e) noexcept : Error() {
+inline Error::Error(Error &&e) noexcept: Error() {
   *this = std::move(e);
 }
 
-inline Error& Error::operator=(Error&& e) noexcept {
+inline Error &Error::operator=(Error &&e) noexcept {
   if (this != &e) {
     this->~Error();
     handle_ = e.handle_;
@@ -74,4 +74,4 @@ inline Error& Error::operator=(Error&& e) noexcept {
   return *this;
 }
 
-}  // namespace DB_NAMESPACE
+}

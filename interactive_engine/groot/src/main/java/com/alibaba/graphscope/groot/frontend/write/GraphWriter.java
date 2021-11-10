@@ -18,7 +18,7 @@ import com.alibaba.graphscope.groot.schema.EdgeKind;
 import com.alibaba.graphscope.groot.schema.PropertyValue;
 import com.alibaba.maxgraph.common.util.PkHashUtils;
 import com.alibaba.graphscope.groot.frontend.IngestorWriteClient;
-import com.alibaba.graphscope.groot.frontend.SnapshotCache;
+import com.alibaba.graphscope.groot.SnapshotCache;
 import com.alibaba.maxgraph.common.util.WriteSessionUtil;
 
 import java.util.ArrayList;

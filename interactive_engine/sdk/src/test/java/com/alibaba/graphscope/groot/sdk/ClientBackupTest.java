@@ -83,8 +83,8 @@ public class ClientBackupTest {
         Assertions.assertTrue(client.verifyGraphBackup(backupId1));
         Assertions.assertTrue(client.verifyGraphBackup(backupId2));
 
-        client.restoreFromGraphBackup(backupId1, "./restored_meta_1", "./restored_data_1");
-        client.restoreFromGraphBackup(backupId2, "./restored_meta_2", "./restored_data_2");
+        client.restoreFromGraphBackup(backupId1, "./restore/meta_1", "./restore/data_1");
+        client.restoreFromGraphBackup(backupId2, "./restore/meta_2", "./restore/data_2");
 
         client.purgeOldGraphBackups(1);
         backupInfoList = client.getGraphBackupInfo();

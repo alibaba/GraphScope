@@ -14,14 +14,23 @@
  * limitations under the License.
  */
 
-#include "jna/native.h"
+#include "db/readonly_db.h"
+#include "store_ffi/store_ffi.h"
 
 namespace LGRAPH_NAMESPACE {
 
-thread_local PartitionGraphHandle local_graph_handle_ = nullptr;
+ReadonlyDB::ReadonlyDB(const char *store_path)
+    : handle_(ffi::OpenPartitionGraph(store_path)) {}
 
-void setPartitionGraph(PartitionGraphHandle handle) {
-  local_graph_handle_ = handle;
+ReadonlyDB::~ReadonlyDB() {
+  if (handle_ != nullptr) {
+    ffi::ReleasePartitionGraphHandle(handle_);
+  }
+}
+
+Snapshot ReadonlyDB::GetSnapshot(SnapshotId snapshot_id) {
+  auto snapshot_handle = ffi::GetSnapshot(handle_, snapshot_id);
+  return Snapshot{snapshot_handle};
 }
 
 }

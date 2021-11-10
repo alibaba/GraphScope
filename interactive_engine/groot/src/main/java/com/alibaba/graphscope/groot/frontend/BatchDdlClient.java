@@ -1,5 +1,6 @@
 package com.alibaba.graphscope.groot.frontend;
 
+import com.alibaba.graphscope.groot.SnapshotCache;
 import com.alibaba.maxgraph.common.util.UuidUtils;
 import com.alibaba.graphscope.groot.schema.GraphDef;
 import com.alibaba.graphscope.groot.schema.ddl.DdlExecutors;
