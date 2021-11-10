@@ -74,3 +74,167 @@ impl TryFrom<algebra_pb::OrderBy> for RecordCompare {
         Ok(RecordCompare { tag_key_order })
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use crate::graph::element::Element;
+    use crate::graph::property::Details;
+    use crate::process::operator::sort::CompareFunctionGen;
+    use crate::process::operator::tests::{source_gen, source_gen_with_tag};
+    use crate::process::record::{Entry, RecordElement};
+    use ir_common::generated::algebra as pb;
+    use ir_common::generated::common as common_pb;
+    use ir_common::NameOrId;
+    use pegasus::api::{Sink, SortBy};
+    use pegasus::JobConf;
+
+    // g.V().order()
+    #[test]
+    fn sort_test_01() {
+        let conf = JobConf::new("sort_test_01");
+        let mut result = pegasus::run(conf, || {
+            |input, output| {
+                let mut stream = input.input_from(source_gen())?;
+                let sort_opr = pb::OrderBy {
+                    pairs: vec![pb::order_by::OrderingPair {
+                        key: Some(common_pb::Variable {
+                            tag: None,
+                            property: None,
+                        }),
+                        order: 1, // ascending
+                    }],
+                    limit: None,
+                };
+                let sort_func = sort_opr.gen_cmp().unwrap();
+                stream = stream.sort_by(move |a, b| sort_func.compare(a, b))?;
+                stream.sink_into(output)
+            }
+        })
+        .expect("build job failure");
+
+        let mut result_ids = vec![];
+        while let Some(Ok(res)) = result.next() {
+            match res.get(None).unwrap() {
+                Entry::Element(RecordElement::OnGraph(vertex)) => {
+                    result_ids.push(vertex.id().unwrap());
+                }
+                _ => {}
+            }
+        }
+        let expected_ids = vec![1, 2];
+        assert_eq!(result_ids, expected_ids);
+    }
+
+    // g.V().order().by(desc)
+    #[test]
+    fn sort_test_02() {
+        let conf = JobConf::new("sort_test_02");
+        let mut result = pegasus::run(conf, || {
+            |input, output| {
+                let mut stream = input.input_from(source_gen())?;
+                let sort_opr = pb::OrderBy {
+                    pairs: vec![pb::order_by::OrderingPair {
+                        key: Some(common_pb::Variable {
+                            tag: None,
+                            property: None,
+                        }),
+                        order: 2, // descending
+                    }],
+                    limit: None,
+                };
+                let sort_func = sort_opr.gen_cmp().unwrap();
+                stream = stream.sort_by(move |a, b| sort_func.compare(a, b))?;
+                stream.sink_into(output)
+            }
+        })
+        .expect("build job failure");
+
+        let mut result_ids = vec![];
+        while let Some(Ok(res)) = result.next() {
+            match res.get(None).unwrap() {
+                Entry::Element(RecordElement::OnGraph(vertex)) => {
+                    result_ids.push(vertex.id().unwrap());
+                }
+                _ => {}
+            }
+        }
+        let expected_ids = vec![2, 1];
+        assert_eq!(result_ids, expected_ids);
+    }
+
+    // g.V().order().by('name',desc)
+    #[test]
+    fn sort_test_03() {
+        let conf = JobConf::new("sort_test_03");
+        let mut result = pegasus::run(conf, || {
+            |input, output| {
+                let mut stream = input.input_from(source_gen())?;
+                let sort_opr = pb::OrderBy {
+                    pairs: vec![pb::order_by::OrderingPair {
+                        key: Some(common_pb::Variable::from("@.name".to_string())),
+                        order: 2, // descending
+                    }],
+                    limit: None,
+                };
+                let sort_func = sort_opr.gen_cmp().unwrap();
+                stream = stream.sort_by(move |a, b| sort_func.compare(a, b))?;
+                stream.sink_into(output)
+            }
+        })
+        .expect("build job failure");
+
+        let mut result_name = vec![];
+        while let Some(Ok(res)) = result.next() {
+            match res.get(None).unwrap() {
+                Entry::Element(RecordElement::OnGraph(vertex)) => {
+                    result_name.push(
+                        vertex
+                            .details()
+                            .unwrap()
+                            .get_property(&NameOrId::Str("name".to_string()))
+                            .unwrap()
+                            .try_to_owned()
+                            .unwrap(),
+                    );
+                }
+                _ => {}
+            }
+        }
+        let expected_names = vec!["vadas".to_string().into(), "marko".to_string().into()];
+        assert_eq!(result_name, expected_names);
+    }
+
+    // g.V().as("a").order().by(select('a'))
+    #[test]
+    fn sort_test_04() {
+        let conf = JobConf::new("sort_test_04");
+        let mut result = pegasus::run(conf, || {
+            |input, output| {
+                let mut stream = input.input_from(source_gen_with_tag())?;
+                let sort_opr = pb::OrderBy {
+                    pairs: vec![pb::order_by::OrderingPair {
+                        key: Some(common_pb::Variable::from("@a".to_string())),
+                        order: 2, // descending
+                    }],
+                    limit: None,
+                };
+                let sort_func = sort_opr.gen_cmp().unwrap();
+                stream = stream.sort_by(move |a, b| sort_func.compare(a, b))?;
+                stream.sink_into(output)
+            }
+        })
+        .expect("build job failure");
+
+        let mut result_ids = vec![];
+        while let Some(Ok(res)) = result.next() {
+            match res.get(Some(&NameOrId::Str("a".to_string()))).unwrap() {
+                Entry::Element(RecordElement::OnGraph(vertex)) => {
+                    result_ids.push(vertex.id().unwrap());
+                }
+                _ => {}
+            }
+        }
+        let expected_ids = vec![2, 1];
+        assert_eq!(result_ids, expected_ids);
+    }
+}

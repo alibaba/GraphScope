@@ -105,6 +105,7 @@ impl<'a> TagKey {
             }
         } else {
             match entry {
+                // TODO(bingqing): In gremlin, it regards OnGraph element as not Comparable. For now we compare its id by default.
                 Entry::Element(RecordElement::OnGraph(element)) => Ok(element.as_borrow_object()),
                 Entry::Element(RecordElement::OutGraph(object)) => match object {
                     ObjectElement::None => Err(KeyedError::from(
@@ -226,6 +227,14 @@ pub(crate) mod tests {
         let v2 = init_vertex2();
         let r1 = Record::new(v1, None);
         let r2 = Record::new(v2, None);
+        Box::new(vec![r1, r2].into_iter())
+    }
+
+    pub fn source_gen_with_tag() -> Box<dyn Iterator<Item = Record> + Send> {
+        let v1 = init_vertex1();
+        let v2 = init_vertex2();
+        let r1 = Record::new(v1, Some(NameOrId::from("a".to_string())));
+        let r2 = Record::new(v2, Some(NameOrId::from("a".to_string())));
         Box::new(vec![r1, r2].into_iter())
     }
 
