@@ -87,8 +87,6 @@ graphscope-darwin-py3:
 	# build graphscope
 	cd $(WORKING_DIR)/../ && \
 		make install WITH_LEARNING_ENGINE=OFF && \
-		sudo install_name_tool -add_rpath /usr/local/lib /opt/graphscope/bin/executor && \
-		sudo install_name_tool -add_rpath /usr/local/lib /opt/graphscope/bin/gaia_executor && \
 		python3 $(WORKING_DIR)/precompile.py
 	# build and delocate wheel
 	cd $(WORKING_DIR)/../coordinator && \
@@ -97,13 +95,15 @@ graphscope-darwin-py3:
 		sudo strip /opt/graphscope/bin/grape_engine && \
 		sudo strip /opt/graphscope/bin/executor && \
 		sudo strip /opt/graphscope/bin/gaia_executor && \
+		sudo install_name_tool -add_rpath /usr/local/lib /opt/graphscope/bin/executor && \
+		sudo install_name_tool -add_rpath /usr/local/lib /opt/graphscope/bin/gaia_executor && \
 		package_name=gs-lib python3 setup.py bdist_wheel --plat=macosx_10_9_x86_64 && \
 		rm -fr build && \
 		package_name=gs-engine python3 setup.py bdist_wheel --plat=macosx_10_9_x86_64 && \
 		rm -fr build && \
 		package_name=gs-jython python3 setup.py bdist_wheel --plat=macosx_10_9_x86_64 && \
 		rm -fr build && \
-		package_name=gscoordinator python3 setup.py bdist_wheel --plat=macosx_10_9_x86_64 && \
+		package_name=gs-coordinator python3 setup.py bdist_wheel --plat=macosx_10_9_x86_64 && \
 		rm -fr build && \
 		pip3 install delocate && \
 		for wheel in `ls dist/*.whl`; do \
@@ -161,7 +161,7 @@ graphscope-manylinux2014-py3:
 			rm -fr build && \
 			package_name=gs-jython python3 setup.py bdist_wheel && \
 			rm -fr build && \
-			package_name=gscoordinator python3 setup.py bdist_wheel && \
+			package_name=gs-coordinator python3 setup.py bdist_wheel && \
 			rm -fr build && \
 			package_name=graphscope python3 setup.py bdist_wheel && \
 			cd dist && \
@@ -171,7 +171,9 @@ graphscope-manylinux2014-py3:
 
 graphscope-client-darwin-py3:
 	cd $(WORKING_DIR)/../python && \
-		rm -fr build dist/*.whl || true && \
+		rm -fr build || true && \
+		python3 -m pip install -r requirements.txt --user && \
+		python3 -m pip install -r requirements-dev.txt --user && \
 		export MACOSX_DEPLOYMENT_TARGET=10.9 && \
 		python3 setup.py bdist_wheel --plat=macosx_10_9_x86_64
 

@@ -49,7 +49,7 @@ version = get_version(os.path.join(repo_root, "..", "VERSION"))
 
 
 GRAPHSCOPE_REQUIRED_PACKAGES = [
-    f"gscoordinator >= {version}",
+    f"gs-coordinator >= {version}",
     f"gs-jython >= {version}",
     f"gs-lib >= {version}",
     f"gs-engine >= {version}",
@@ -67,12 +67,12 @@ def _get_extra_data():
     # into site-packages/graphscope.runtime
     #
     #  For shrink the package size less than "100M", we split graphscope into
-    #   1) gscoordinator: include python releated code of gscoordinator
+    #   1) gs-coordinator: include python releated code of gscoordinator
     #   2) gs-lib: lib dir exclude jython-standalone-**.jar
     #   3) gs-jython: only jython-standalone-**.jar, cause this jar is 40M
     #   4) gs-engine: other runtime info such as 'bin', 'conf', and 'include'
 
-    name = os.environ.get("package_name", "gscoordinator")
+    name = os.environ.get("package_name", "gs-coordinator")
     RUNTIME_ROOT = "graphscope.runtime"
 
     # data format:
@@ -94,12 +94,13 @@ def _get_extra_data():
         }
     elif name == "gs-engine":
         data = {
-            "/opt/graphscope/bin": os.path.join(RUNTIME_ROOT, "bin"),
-            "/opt/graphscope/conf": os.path.join(RUNTIME_ROOT, "conf"),
+            "/opt/graphscope/bin/": os.path.join(RUNTIME_ROOT, "bin"),
+            "/opt/graphscope/conf/": os.path.join(RUNTIME_ROOT, "conf"),
             "/opt/graphscope/include": os.path.join(RUNTIME_ROOT, "include"),
             "/usr/local/include/grape": os.path.join(RUNTIME_ROOT, "include"),
-            "/opt/graphscope/lib64": os.path.join(RUNTIME_ROOT, "lib64"),
+            "/opt/graphscope/lib64/": os.path.join(RUNTIME_ROOT, "lib64"),
             "/opt/vineyard/include/": os.path.join(RUNTIME_ROOT, "include"),
+            "/opt/graphscope/*.jar": os.path.join(RUNTIME_ROOT),
             os.path.join("/", tempfile.gettempprefix(), "gs", "builtin"): os.path.join(
                 RUNTIME_ROOT, "precompiled"
             ),
@@ -241,22 +242,22 @@ with open(
 
 
 def parsed_package_dir():
-    name = os.environ.get("package_name", "gscoordinator")
-    if name == "gscoordinator":
+    name = os.environ.get("package_name", "gs-coordinator")
+    if name == "gs-coordinator":
         return {".": "."}
     return {}
 
 
 def parsed_packages():
-    name = os.environ.get("package_name", "gscoordinator")
-    if name == "gscoordinator":
+    name = os.environ.get("package_name", "gs-coordinator")
+    if name == "gs-coordinator":
         return find_packages(".")
     return ["foo"]
 
 
 def parsed_packge_data():
-    name = os.environ.get("package_name", "gscoordinator")
-    if name == "gscoordinator":
+    name = os.environ.get("package_name", "gs-coordinator")
+    if name == "gs-coordinator":
         return {
             "gscoordinator": [
                 "builtin/app/builtin_app.gar",
@@ -268,8 +269,8 @@ def parsed_packge_data():
 
 
 def parsed_reqs():
-    name = os.environ.get("package_name", "gscoordinator")
-    if name == "gscoordinator":
+    name = os.environ.get("package_name", "gs-coordinator")
+    if name == "gs-coordinator":
         with open(
             os.path.join(repo_root, "requirements.txt"), "r", encoding="utf-8"
         ) as fp:
@@ -281,8 +282,8 @@ def parsed_reqs():
 
 
 def parsed_dev_reqs():
-    name = os.environ.get("package_name", "gscoordinator")
-    if name == "gscoordinator":
+    name = os.environ.get("package_name", "gs-coordinator")
+    if name == "gs-coordinator":
         with open(
             os.path.join(repo_root, "requirements-dev.txt"), "r", encoding="utf-8"
         ) as fp:
@@ -341,7 +342,7 @@ del version_file_path
 
 
 setup(
-    name=os.environ.get("package_name", "gscoordinator"),
+    name=os.environ.get("package_name", "gs-coordinator"),
     description="",
     include_package_data=True,
     long_description=long_description,

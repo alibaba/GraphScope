@@ -104,9 +104,6 @@ jobs:
         pushd coordinator/dist/wheelhouse
         pip3 install ./*.whl --user
         popd
-        pushd coordinator/dist
-        pip3 install ./*.whl --user
-        popd
         popd
 
         # run test

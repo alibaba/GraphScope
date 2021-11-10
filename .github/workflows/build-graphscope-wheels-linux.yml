@@ -24,7 +24,7 @@ on:
       - 'tutorials/**'
 
 jobs:
-  build:
+  build-wheels:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
@@ -46,10 +46,11 @@ jobs:
         if [ -z "${r}" ];then export hn=$(hostname); sudo -E bash -c 'echo "127.0.0.1 ${hn}" >> /etc/hosts'; fi
         cat /etc/hosts
 
-        cd k8s
-        # graphscope
+        cd ${GITHUB_WORKSPACE}/k8s
+        # build graphscope wheels
         sudo make graphscope-py3-package
-        # graphscope client
+
+        # build client wheels
         sudo make graphscope-client-py3-package
 
         # package
