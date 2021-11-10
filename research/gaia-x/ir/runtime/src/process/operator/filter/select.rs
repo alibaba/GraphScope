@@ -55,6 +55,7 @@ mod tests {
     use pegasus::api::{Filter, Sink};
     use pegasus::JobConf;
 
+    // g.V().has("id",1)
     #[test]
     fn select_test() {
         let conf = JobConf::new("select_test");
@@ -62,7 +63,7 @@ mod tests {
             |input, output| {
                 let mut stream = input.input_from(source_gen())?;
                 let select_opr_pb = pb::Select {
-                    predicate: Some(str_to_expr_pb("@HEAD.id == 1".to_string()).unwrap()),
+                    predicate: Some(str_to_expr_pb("@.id == 1".to_string()).unwrap()),
                 };
                 let select_func = select_opr_pb.gen_filter().unwrap();
                 stream = stream.filter(move |i| select_func.test(i))?;

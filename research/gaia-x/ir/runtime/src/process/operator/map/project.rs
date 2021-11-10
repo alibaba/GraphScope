@@ -94,7 +94,7 @@ mod tests {
                 let mut stream = input.input_from(source_gen())?;
                 let project_opr_pb = pb::Project {
                     mappings: vec![pb::project::ExprAlias {
-                        expr: Some(str_to_expr_pb("@HEAD.id".to_string()).unwrap()),
+                        expr: Some(str_to_expr_pb("@.id".to_string()).unwrap()),
                         alias: Some(pb::project::Alias {
                             alias: None,
                             is_query_given: false,
@@ -131,7 +131,7 @@ mod tests {
                 let mut stream = input.input_from(source_gen())?;
                 let project_opr_pb = pb::Project {
                     mappings: vec![pb::project::ExprAlias {
-                        expr: Some(str_to_expr_pb("@HEAD.name".to_string()).unwrap()),
+                        expr: Some(str_to_expr_pb("@.name".to_string()).unwrap()),
                         alias: Some(pb::project::Alias {
                             alias: Some(NameOrId::Str("a".to_string()).into()),
                             is_query_given: false,
