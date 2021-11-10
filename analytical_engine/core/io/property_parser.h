@@ -305,28 +305,29 @@ inline std::vector<AttrMap> DistributeEdge(const AttrMap& attrs, int num) {
 inline std::vector<std::map<int, rpc::AttrValue>> DistributeGraph(
     const std::map<int, rpc::AttrValue>& params, int num) {
   std::vector<std::map<int, rpc::AttrValue>> distributed_graph(num);
+  if (params.find(rpc::ARROW_PROPERTY_DEFINITION) != params.end()) {
+    auto items = params.at(rpc::ARROW_PROPERTY_DEFINITION).list().func();
+    std::vector<std::pair<std::string, std::vector<AttrMap>>> named_items;
 
-  auto items = params.at(rpc::ARROW_PROPERTY_DEFINITION).list().func();
-  std::vector<std::pair<std::string, std::vector<AttrMap>>> named_items;
-
-  for (const auto& item : items) {
-    std::vector<AttrMap> vec;
-    if (item.name() == "vertex") {
-      vec = std::move(DistributeVertex(item.attr(), num));
-    } else if (item.name() == "edge") {
-      vec = std::move(DistributeEdge(item.attr(), num));
+    for (const auto& item : items) {
+      std::vector<AttrMap> vec;
+      if (item.name() == "vertex") {
+        vec = std::move(DistributeVertex(item.attr(), num));
+      } else if (item.name() == "edge") {
+        vec = std::move(DistributeEdge(item.attr(), num));
+      }
+      named_items.emplace_back(item.name(), std::move(vec));
     }
-    named_items.emplace_back(item.name(), std::move(vec));
-  }
-  for (int i = 0; i < num; ++i) {
-    distributed_graph[i][rpc::ARROW_PROPERTY_DEFINITION] = rpc::AttrValue();
-    for (auto& pair : named_items) {
-      rpc::NameAttrList* func =
-          distributed_graph[i][rpc::ARROW_PROPERTY_DEFINITION]
-              .mutable_list()
-              ->add_func();
-      func->set_name(pair.first);
-      func->mutable_attr()->swap(pair.second[i]);
+    for (int i = 0; i < num; ++i) {
+      distributed_graph[i][rpc::ARROW_PROPERTY_DEFINITION] = rpc::AttrValue();
+      for (auto& pair : named_items) {
+        rpc::NameAttrList* func =
+            distributed_graph[i][rpc::ARROW_PROPERTY_DEFINITION]
+                .mutable_list()
+                ->add_func();
+        func->set_name(pair.first);
+        func->mutable_attr()->swap(pair.second[i]);
+      }
     }
   }
   for (auto& pair : params) {
