@@ -1,5 +1,6 @@
 # Minimal makefile for Sphinx documentation
 #
+WORKING_DIR 			:= $(dir $(MKFILE_PATH))
 
 # You can set these variables from the command line, and also
 # from the environment for the first two.
@@ -7,6 +8,7 @@ SPHINXOPTS    ?=
 SPHINXBUILD   ?= python3 -m sphinx
 SOURCEDIR     = .
 BUILDDIR      = _build
+JAVADOC       = javadoc
 
 TAG 		  ?= $(TAG_VER)
 ifeq ($(strip $(TAG)),)
@@ -31,7 +33,18 @@ clean:
 %: Makefile doxygen
 	@echo "Tag is:" $(TAG)
 	@$(SPHINXBUILD) -M $@ "$(SOURCEDIR)" "$(BUILDDIR)/$(TAG)" $(SPHINXOPTS) $(O)
+	@echo "Build Java doc"
+	@$(JAVADOC) -locale en_US -d  "$(BUILDDIR)/gae_javadoc" -classpath && \
+	$(WORKING_DIR)/analytical_engine/java/grape-runtime/target/grape-runtime-0.1-shaded.jar && \
+	-sourcepath && \
+	$(WORKING_DIR)analytical_engine/java/grape-jdk/src/main/java/ && \
+	com.alibaba -subpackages com.alibaba.graphscope
 
 doxygen:
 	@mkdir -p _build
 	@doxygen Doxyfile
+gae-java-runtime:
+	# Java doc need the classpath to find dependencies, we build a shaded jar which 
+	# contains the neccessary dependencies to generate javadoc.
+	cd $(WORKING_DIR)/analytical_engine/java && \
+	mvn clean package -DskipTests -Dmaven.antrun.skip=true
