@@ -26,7 +26,6 @@ use maxgraph_store::v2::wrapper::graph_storage::{GraphStorageWrapper, WrapperVer
 use maxgraph_store::db::graph::store::GraphStore;
 use maxgraph_store::v2::api::partition_graph::PartitionGraph;
 use maxgraph_store::v2::GraphResult;
-use std::vec::IntoIter;
 use maxgraph_store::db::api::GraphConfigBuilder;
 
 pub type PartitionSnapshotHandle = *const c_void;
