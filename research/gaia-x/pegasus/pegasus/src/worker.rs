@@ -91,7 +91,6 @@ impl<D: Data, T: Debug + Send + 'static> Worker<D, T> {
             0,
             self.conf.batch_size as usize,
             self.conf.batch_capacity,
-            self.conf.scope_capacity,
         );
         let mut input = Source::new(root_builder.copy_data(), &dfb);
         let output = self.sink.clone();

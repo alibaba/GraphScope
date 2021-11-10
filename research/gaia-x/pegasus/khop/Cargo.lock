@@ -518,6 +518,7 @@ dependencies = [
  "crossbeam-utils 0.7.2",
  "env_logger",
  "log",
+ "rand",
  "smallvec",
  "time",
 ]

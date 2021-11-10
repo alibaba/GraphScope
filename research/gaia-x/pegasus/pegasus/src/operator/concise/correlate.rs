@@ -14,10 +14,12 @@
 //! limitations under the License.
 //
 
+use std::cell::RefCell;
 use std::collections::VecDeque;
 use std::fmt::Debug;
 
 use pegasus_common::buffer::{Buffer, BufferPool, MemBufAlloc};
+use pegasus_common::rc::UnsafeRcPtr;
 
 use crate::api::notification::{Cancel, End};
 use crate::api::CorrelatedSubTask;
@@ -37,17 +39,30 @@ impl<D: Data> CorrelatedSubTask<D> for Stream<D> {
         T: Data,
         F: FnOnce(Stream<D>) -> Result<SingleItem<T>, BuildJobError>,
     {
+        self.apply_parallel(64, func)
+    }
+
+    fn apply_parallel<T, F>(self, max_parallel: u32, func: F) -> Result<Stream<(D, T)>, BuildJobError>
+    where
+        T: Data,
+        F: FnOnce(Stream<D>) -> Result<SingleItem<T>, BuildJobError>,
+    {
         let entered = self.enter()?;
-        let scope_capacity = entered.get_local_scope_capacity();
-        let (main, mut sub): (Stream<D>, Stream<D>) = entered.binary_branch_notify("fork_subtask", |info| {
-            ForkSubtaskOperator::<D>::new(scope_capacity, info.scope_level)
-        })?;
+        let scope_level = entered.get_scope_level();
+        let fork_guard = UnsafeRcPtr::new(RefCell::new(TidyTagMap::new(scope_level - 1)));
+        let join_guard = fork_guard.clone();
+        let (main, mut sub): (Stream<D>, Stream<D>) = entered
+            .binary_branch_notify("fork_subtask", |info| {
+                ForkSubtaskOperator::<D>::new(info.scope_level, max_parallel, fork_guard)
+            })?;
         sub.set_upstream_batch_capacity(1)
             .set_upstream_batch_size(1);
         let SingleItem { mut inner } = func(sub)?;
-        inner.set_upstream_batch_capacity(1).set_upstream_batch_size(1);
-        main.union_transform_notify("zip_subtasks", inner, |info| {
-            ZipSubtaskOperator::<D, T>::new(info.scope_level)
+        inner
+            .set_upstream_batch_capacity(1)
+            .set_upstream_batch_size(1);
+        main.union_transform_notify("zip_subtasks", inner, move |info| {
+            ZipSubtaskOperator::<D, T>::new(info.scope_level, join_guard)
         })?
         .leave()
     }
@@ -81,34 +96,34 @@ impl<D> ForkProgress<D> {
         self.forked_child += 1;
         forked * self.interval + self.init
     }
+
+    fn fetch_buf(&mut self) -> Buffer<D> {
+        self.buf
+            .fetch()
+            .unwrap_or(Buffer::with_capacity(1))
+    }
 }
 
 struct ForkSubtaskOperator<D> {
     worker_index: u32,
     peers: u32,
-    scope_capacity: u32,
+    max_parallel: u32,
     scope_level: u32,
+    fork_guard: UnsafeRcPtr<RefCell<TidyTagMap<u32>>>,
     tumbling_scope: TidyTagMap<ForkProgress<D>>,
 }
 
 impl<D> ForkSubtaskOperator<D> {
-    fn new(scope_capacity: u32, scope_level: u32) -> Self {
+    fn new(scope_level: u32, max_parallel: u32, fork_guard: UnsafeRcPtr<RefCell<TidyTagMap<u32>>>) -> Self {
         let id = crate::worker_id::get_current_worker();
         ForkSubtaskOperator {
             worker_index: id.index,
             peers: id.total_peers(),
-            scope_capacity,
+            max_parallel,
             scope_level,
+            fork_guard,
             tumbling_scope: TidyTagMap::new(scope_level - 1),
         }
-    }
-
-    fn get_buf_mut(&mut self, tag: &Tag) -> &mut ForkProgress<D> {
-        let init = self.worker_index + self.peers;
-        let interval = self.peers;
-        let capacity = self.scope_capacity as usize;
-        self.tumbling_scope
-            .get_mut_or_else(tag, || ForkProgress::new(init, interval, capacity))
     }
 }
 
@@ -124,7 +139,13 @@ impl<D: Data> OperatorCore for ForkSubtaskOperator<D> {
             if len > 0 {
                 let p = batch.tag().to_parent_uncheck();
                 let worker = self.worker_index;
-                let fp = self.get_buf_mut(&p);
+                let init = self.worker_index + self.peers;
+                let interval = self.peers;
+                let capacity = self.max_parallel as usize;
+                let fp = self
+                    .tumbling_scope
+                    .get_mut_or_else(&p, || ForkProgress::new(init, interval, capacity));
+                //let fp = self.get_buf_mut(&p);
                 if fp.pushed_parent <= fp.forked_child {
                     let batch_cp = batch.share();
                     output1.push_batch(batch_cp)?;
@@ -132,28 +153,31 @@ impl<D: Data> OperatorCore for ForkSubtaskOperator<D> {
                 }
 
                 batch.take_end();
-                for _ in 0..len {
-                    if let Some(mut buf) = fp.buf.fetch() {
-                        if let Some(next) = batch.next() {
-                            buf.push(next);
-                            let cur = fp.next_seq();
-                            let tag = Tag::inherit(&p, cur);
-                            trace_worker!("fork {}th scope {:?}", fp.forked_child, tag);
-                            let mut sub_batch = new_batch(tag.clone(), worker, buf);
-                            let end = EndOfScope::new(tag, Weight::single(worker), 1);
-                            sub_batch.set_end(end);
-                            output2.push_batch(sub_batch)?;
-                        } else {
-                            //
-                            break;
-                        }
+                let mut fork_guard = self.fork_guard.borrow_mut();
+                let in_progress = fork_guard.get_mut_or_insert(&p);
+                while *in_progress < self.max_parallel {
+                    if let Some(next) = batch.next() {
+                        let mut buf = fp.fetch_buf();
+                        buf.push(next);
+                        let cur = fp.next_seq();
+                        let tag = Tag::inherit(&p, cur);
+                        trace_worker!("fork {}th scope {:?}", fp.forked_child, tag);
+                        let mut sub_batch = new_batch(tag.clone(), worker, buf);
+                        let end = EndOfScope::new(tag, Weight::single(worker), 1);
+                        sub_batch.set_end(end);
+                        output2.push_batch(sub_batch)?;
+                        *in_progress += 1;
                     } else {
-                        trace_worker!(
-                            "suspend fork new scope as capacity blocked, already forked {} scopes;",
-                            fp.forked_child
-                        );
-                        would_block!("no buffer available for new scope;")?
+                        break;
                     }
+                }
+
+                if *in_progress == self.max_parallel {
+                    trace_worker!(
+                        "suspend fork new scope as capacity blocked, already forked {} scopes;",
+                        fp.forked_child
+                    );
+                    would_block!("fork max scope bound")?
                 }
             } else {
                 if let Some(end) = batch.take_end() {
@@ -207,11 +231,12 @@ struct ZipSubtaskOperator<P, S> {
     scope_level: u32,
     parent: TidyTagMap<ZipSubtaskBuf<P>>,
     parent_parent_ends: Vec<Vec<EndOfScope>>,
+    zip_guard: UnsafeRcPtr<RefCell<TidyTagMap<u32>>>,
     _ph: std::marker::PhantomData<S>,
 }
 
 impl<P: Data, S: Send> ZipSubtaskOperator<P, S> {
-    fn new(scope_level: u32) -> Self {
+    fn new(scope_level: u32, zip_guard: UnsafeRcPtr<RefCell<TidyTagMap<u32>>>) -> Self {
         let peers = crate::worker_id::get_current_worker().total_peers();
         let mut parent_parent_ends = Vec::with_capacity(scope_level as usize - 1);
         for _ in 0..scope_level - 1 {
@@ -222,6 +247,7 @@ impl<P: Data, S: Send> ZipSubtaskOperator<P, S> {
             scope_level,
             parent: TidyTagMap::new(scope_level - 1),
             parent_parent_ends,
+            zip_guard,
             _ph: std::marker::PhantomData,
         }
     }
@@ -254,6 +280,9 @@ impl<P: Data, S: Data> OperatorCore for ZipSubtaskOperator<P, S> {
                 let p_tag = batch.tag.to_parent_uncheck();
                 let peers = self.peers;
                 if let Some(parent) = self.parent.get_mut(&p_tag) {
+                    let mut zip_guard = self.zip_guard.borrow_mut();
+                    let in_progress = zip_guard.get_mut_or_insert(&p_tag);
+                    assert!(*in_progress > 0);
                     let tag = Tag::inherit(&p_tag, 0);
                     let mut session = output.new_session(&tag)?;
                     let seq = batch.tag.current_uncheck();
@@ -263,6 +292,7 @@ impl<P: Data, S: Data> OperatorCore for ZipSubtaskOperator<P, S> {
                     match parent.take(offset) {
                         Ok(req) => {
                             trace_worker!("join result of {}th subtask {:?}", offset, batch.tag);
+                            *in_progress -= 1;
                             session.give((req, res.0))?;
                         }
                         Err(TakeErr::AlreadyTake) => {

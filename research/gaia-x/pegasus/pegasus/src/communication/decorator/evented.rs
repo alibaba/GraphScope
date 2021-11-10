@@ -121,16 +121,16 @@ impl<D: Data> Push<MicroBatch<D>> for EventEmitPush<D> {
     fn flush(&mut self) -> IOResult<()> {
         let index = self.ch_info.index();
         let target = self.target_worker;
-        trace_worker!(
-            "output[{:?}] try to flush channel[{}] to worker {};",
-            self.ch_info.source_port,
-            self.ch_info.index(),
-            target
-        );
+        // trace_worker!(
+        //     "output[{:?}] try to flush channel[{}] to worker {};",
+        //     self.ch_info.source_port,
+        //     self.ch_info.index(),
+        //     target
+        // );
         for (t, (_, b, _)) in self.push_monitor.iter_mut() {
             if *b > 0 {
                 trace_worker!(
-                    "output[{:?}] flush {} data of {:?} to channel[{}] to worker {} ;",
+                    "output[{:?}] flushed {} data of {:?} to channel[{}] to worker {} ;",
                     self.ch_info.source_port,
                     *b,
                     t,

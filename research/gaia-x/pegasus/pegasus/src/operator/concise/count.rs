@@ -5,27 +5,29 @@ use crate::{BuildJobError, Data};
 
 impl<D: Data> Count<D> for Stream<D> {
     fn count(self) -> Result<SingleItem<u64>, BuildJobError> {
-        let mut stream = self
-            .unary("count_local", |info| {
-                let mut table = TidyTagMap::<u64>::new(info.scope_level);
-                move |input, output| {
-                    input.for_each_batch(|dataset| {
-                        let mut cnt = table.remove(&dataset.tag).unwrap_or(0);
-                        cnt += dataset.len() as u64;
-                        dataset.clear();
-                        if let Some(end) = dataset.take_end() {
-                            let mut session = output.new_session(&dataset.tag)?;
-                            trace_worker!("local count {} of {:?}", cnt, dataset.tag);
-                            session.give_last(cnt, end)?;
-                        } else {
-                            table.insert(dataset.tag.clone(), cnt);
-                        }
-                        Ok(())
-                    })
-                }
-            })?;
-        stream.set_upstream_batch_size(1).set_upstream_batch_capacity(1);
-        let x = stream.aggregate()
+        let mut stream = self.unary("count_local", |info| {
+            let mut table = TidyTagMap::<u64>::new(info.scope_level);
+            move |input, output| {
+                input.for_each_batch(|dataset| {
+                    let mut cnt = table.remove(&dataset.tag).unwrap_or(0);
+                    cnt += dataset.len() as u64;
+                    dataset.clear();
+                    if let Some(end) = dataset.take_end() {
+                        let mut session = output.new_session(&dataset.tag)?;
+                        trace_worker!("local count {} of {:?}", cnt, dataset.tag);
+                        session.give_last(cnt, end)?;
+                    } else {
+                        table.insert(dataset.tag.clone(), cnt);
+                    }
+                    Ok(())
+                })
+            }
+        })?;
+        stream
+            .set_upstream_batch_size(1)
+            .set_upstream_batch_capacity(1);
+        let x = stream
+            .aggregate()
             .unary("count_global", |info| {
                 let mut table = TidyTagMap::<u64>::new(info.scope_level);
                 move |input, output| {

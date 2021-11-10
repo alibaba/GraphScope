@@ -456,11 +456,10 @@ impl OperatorBuilder {
     }
 
     pub(crate) fn new_output_port<D: Data>(
-        &mut self, batch_size: usize, scope_capacity: u32, batch_capacity: u32,
+        &mut self, batch_size: usize, batch_capacity: u32,
     ) -> OutputBuilderImpl<D> {
         let port = Port::new(self.info.index, self.outputs.len());
-        let output =
-            OutputBuilderImpl::new(port, self.info.scope_level, batch_size, batch_capacity, scope_capacity);
+        let output = OutputBuilderImpl::new(port, self.info.scope_level, batch_size, batch_capacity);
         self.outputs.push(Box::new(output.clone()));
         output
     }

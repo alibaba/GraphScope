@@ -34,7 +34,6 @@ pub struct OutputMeta {
     pub scope_level: u32,
     pub batch_size: usize,
     pub batch_capacity: u32,
-    pub scope_capacity: u32,
 }
 
 pub struct OutputBuilderImpl<D: Data> {
@@ -47,18 +46,10 @@ pub struct OutputBuilderImpl<D: Data> {
 }
 
 impl<D: Data> OutputBuilderImpl<D> {
-    pub fn new(
-        port: Port, scope_level: u32, batch_size: usize, batch_capacity: u32, scope_capacity: u32,
-    ) -> Self {
+    pub fn new(port: Port, scope_level: u32, batch_size: usize, batch_capacity: u32) -> Self {
         let shared = vec![None];
         OutputBuilderImpl {
-            meta: Rc::new(RefCell::new(OutputMeta {
-                port,
-                scope_level,
-                batch_size,
-                batch_capacity,
-                scope_capacity,
-            })),
+            meta: Rc::new(RefCell::new(OutputMeta { port, scope_level, batch_size, batch_capacity })),
             cursor: 0,
             shared: Rc::new(RefCell::new(shared)),
         }
@@ -80,10 +71,6 @@ impl<D: Data> OutputBuilderImpl<D> {
         self.meta.borrow().scope_level
     }
 
-    pub fn get_scope_capacity(&self) -> u32 {
-        self.meta.borrow().scope_capacity
-    }
-
     pub fn set_batch_size(&self, size: usize) {
         if self.cursor != 0 {
             warn!("detect reset batch size after stream copy, copy after set batch size would be better;")
@@ -96,13 +83,6 @@ impl<D: Data> OutputBuilderImpl<D> {
             warn!("detect reset batch capacity after stream copy, copy after set batch capacity would be better;")
         }
         self.meta.borrow_mut().batch_capacity = cap;
-    }
-
-    pub fn set_scope_capacity(&self, cap: u32) {
-        if self.cursor != 0 {
-            warn!("detect reset scope capacity after stream copy, copy after set scope capacity would be better;")
-        }
-        self.meta.borrow_mut().scope_capacity = cap;
     }
 
     #[inline]

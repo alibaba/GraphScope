@@ -66,10 +66,6 @@ impl<D: Data> Stream<D> {
         self.ch.get_batch_capacity()
     }
 
-    pub fn get_local_scope_capacity(&self) -> u32 {
-        self.ch.get_scope_capacity()
-    }
-
     pub fn get_scope_level(&self) -> u32 {
         self.ch.get_scope_level()
     }
@@ -84,21 +80,12 @@ impl<D: Data> Stream<D> {
         self
     }
 
-    pub fn set_local_scope_capacity(&mut self, cap: u32) -> &mut Self {
-        self.ch.set_scope_capacity(cap);
-        self
-    }
-
     pub fn get_upstream_batch_size(&self) -> usize {
         self.upstream.get_batch_size()
     }
 
     pub fn get_upstream_batch_capacity(&self) -> u32 {
         self.upstream.get_batch_capacity()
-    }
-
-    pub fn get_upstream_scope_capacity(&self) -> u32 {
-        self.upstream.get_scope_capacity()
     }
 
     pub fn set_upstream_batch_size(&mut self, size: usize) -> &mut Self {
@@ -108,11 +95,6 @@ impl<D: Data> Stream<D> {
 
     pub fn set_upstream_batch_capacity(&mut self, cap: u32) -> &mut Self {
         self.upstream.set_batch_capacity(cap);
-        self
-    }
-
-    pub fn set_upstream_scope_capacity(&mut self, cap: u32) -> &mut Self {
-        self.upstream.set_scope_capacity(cap);
         self
     }
 }
@@ -133,8 +115,8 @@ impl<D: Data> Stream<D> {
     }
 
     pub fn repartition<F>(mut self, route: F) -> Stream<D>
-        where
-            F: Fn(&D) -> FnResult<u64> + Send + 'static,
+    where
+        F: Fn(&D) -> FnResult<u64> + Send + 'static,
     {
         self.ch
             .set_channel_kind(ChannelKind::Shuffle(box_route!(route)));
@@ -150,7 +132,11 @@ impl<D: Data> Stream<D> {
 impl<D: Data> Stream<D> {
     pub fn copied(self) -> Result<(Stream<D>, Stream<D>), BuildJobError> {
         if self.ch.is_pipeline() {
-            let copy = Stream { upstream: self.upstream.copy_data(), ch: self.ch.clone(), builder: self.builder.clone() };
+            let copy = Stream {
+                upstream: self.upstream.copy_data(),
+                ch: self.ch.clone(),
+                builder: self.builder.clone(),
+            };
             Ok((self, copy))
         } else {
             // stream.repartition(..).copied()

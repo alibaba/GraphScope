@@ -122,14 +122,13 @@ fn iterate_x_flatmap_limit_x_test() {
 fn apply_x_flatmap_any_x_limit_test() {
     let mut conf = JobConf::new("apply_x_flatmap_any_x_limit_test");
     conf.batch_capacity = 2;
-    conf.scope_capacity = 10;
     conf.plan_print = true;
     conf.set_workers(2);
     let mut result = pegasus::run(conf, || {
         |input, output| {
             input
                 .input_from((0..1000u32).cycle())?
-                .apply(|sub| {
+                .apply_parallel(10, |sub| {
                     sub.repartition(|x: &u32| Ok(*x as u64))
                         .flat_map(|i| Ok(std::iter::repeat(i)))?
                         .any()
@@ -187,7 +186,6 @@ fn iterate_x_apply_x_flatmap_any_x_flatmap_x_test() {
 fn iterate_x_flatmap_apply_x_flatmap_any_x_limit_map_x_test() {
     let mut conf = JobConf::new("iterate_x_flatmap_apply_x_flatmap_any_x_limit_map_x_test");
     conf.batch_capacity = 2;
-    conf.scope_capacity = 4;
     conf.set_workers(2);
     let mut result = pegasus::run(conf, || {
         |input, output| {
@@ -196,7 +194,7 @@ fn iterate_x_flatmap_apply_x_flatmap_any_x_limit_map_x_test() {
                 .iterate(2, |start| {
                     start
                         .flat_map(|i| Ok(std::iter::repeat(i)))?
-                        .apply(|sub| {
+                        .apply_parallel(4, |sub| {
                             sub.repartition(|x: &u32| Ok(*x as u64))
                                 .flat_map(|i| Ok(std::iter::repeat(i)))?
                                 .any()

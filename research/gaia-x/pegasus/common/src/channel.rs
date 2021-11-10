@@ -20,6 +20,7 @@ use std::sync::Arc;
 use std::time::Duration;
 
 use crossbeam_channel::{Receiver, RecvTimeoutError, SendError, Sender, TryRecvError};
+use rand::Rng;
 
 /// The send abstraction of a communication_old used for intra-process communication_old;
 pub trait MPMCSender<T>: Send + Clone {
@@ -76,6 +77,7 @@ const EXHAUSTED: usize = 0b00000001;
 /// - if it didn't been closed until it will be dropped, it will notify all the receivers this abnormal
 /// behavior.
 pub struct MessageSender<T: Send> {
+    id : u64,
     inner: Sender<Message<T>>,
     peers: Arc<AtomicUsize>,
     state: Arc<AtomicUsize>,
@@ -102,7 +104,10 @@ pub struct MessageReceiver<T> {
 
 impl<T: Send> MessageSender<T> {
     fn new(tx: Sender<Message<T>>, state: &Arc<AtomicUsize>) -> Self {
+        let id: u64 = rand::thread_rng().gen();
+        trace!("create sender with id {}", id);
         MessageSender {
+            id,
             inner: tx,
             peers: Arc::new(AtomicUsize::new(1)),
             state: state.clone(),
@@ -119,6 +124,7 @@ impl<T: Send> Clone for MessageSender<T> {
     fn clone(&self) -> Self {
         self.peers.fetch_add(1, Ordering::Relaxed);
         MessageSender {
+            id: self.id,
             inner: self.inner.clone(),
             peers: self.peers.clone(),
             state: self.state.clone(),
@@ -130,7 +136,7 @@ impl<T: Send> Clone for MessageSender<T> {
 impl<T: Send> Drop for MessageSender<T> {
     fn drop(&mut self) {
         if !self.is_closed.get() {
-            warn!("dropping an unclosed 'MessageSender'");
+            warn!("dropping an unclosed 'MessageSender' id = {}", self.id);
             self.poison();
             self.close();
         }

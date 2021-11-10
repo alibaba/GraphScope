@@ -22,4 +22,9 @@ pub trait CorrelatedSubTask<D: Data> {
     where
         T: Data,
         F: FnOnce(Stream<D>) -> Result<SingleItem<T>, BuildJobError>;
+
+    fn apply_parallel<T, F>(self, max_parallel: u32, func: F) -> Result<Stream<(D, T)>, BuildJobError>
+    where
+        T: Data,
+        F: FnOnce(Stream<D>) -> Result<SingleItem<T>, BuildJobError>;
 }

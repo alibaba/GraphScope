@@ -222,9 +222,8 @@ impl OperatorRef {
     pub fn new_output<D: Data>(&self) -> OutputBuilderImpl<D> {
         let mut b = self.borrow.borrow_mut();
         let batch_size = self.conf.batch_size as usize;
-        let scope_capacity = self.conf.scope_capacity;
         let batch_capacity = self.conf.batch_capacity;
-        b[self.index - 1].new_output_port(batch_size, scope_capacity, batch_capacity)
+        b[self.index - 1].new_output_port(batch_size, batch_capacity)
     }
 }
 

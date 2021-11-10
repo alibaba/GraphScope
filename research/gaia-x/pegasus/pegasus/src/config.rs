@@ -113,8 +113,6 @@ pub struct JobConf {
     pub batch_size: u32,
     /// the size used to limit each operator's output size per-schedule;
     pub batch_capacity: u32,
-    ///
-    pub scope_capacity: u32,
     /// the most memory(MB) this job can use in each server;
     pub memory_limit: u32,
     /// set to print runtime dataflow plan before running;
@@ -178,7 +176,6 @@ impl Default for JobConf {
             time_limit: !0,
             batch_size: 1024,
             batch_capacity: 64,
-            scope_capacity: 128,
             memory_limit: !0u32,
             plan_print,
             servers: ServerConf::Local,

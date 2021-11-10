@@ -945,6 +945,7 @@ dependencies = [
  "log",
  "log4rs",
  "rand 0.7.3",
+ "rand 0.8.4",
  "serde",
  "smallvec",
  "time",
@@ -1001,7 +1002,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "pegasus_server"
+name = "pegasus_server_v1"
 version = "0.1.0"
 dependencies = [
  "crossbeam-utils 0.6.6",

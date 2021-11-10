@@ -50,7 +50,6 @@ fn main() {
     // config job;
     let mut conf = JobConf::new("correlated_k_hop");
     conf.set_workers(config.partitions);
-    conf.scope_capacity = config.concurrent;
     conf.batch_capacity = config.batch_width;
 
     if config.servers.is_some() {
@@ -65,6 +64,7 @@ fn main() {
     pegasus::wait_servers_ready(conf.servers());
 
     let start = Instant::now();
+    let parallel = config.concurrent;
     let res = pegasus::run(conf.clone(), || {
         let index = pegasus::get_current_worker().index;
         let src = if index == 0 { src.clone() } else { vec![] };
@@ -79,7 +79,7 @@ fn main() {
             }
             stream
                 .repartition(|id| Ok(*id))
-                .apply(|sub| {
+                .apply_parallel(parallel, |sub| {
                     let mut stream = sub;
 
                     for _j in 0..inner_hop {

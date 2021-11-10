@@ -329,10 +329,7 @@ impl Decode for EndSignal {
     fn read_from<R: ReadExt>(reader: &mut R) -> std::io::Result<Self> {
         let end = EndOfScope::read_from(reader)?;
         let children = Weight::read_from(reader)?;
-        Ok(EndSignal {
-            end,
-            children
-        })
+        Ok(EndSignal { end, children })
     }
 }
 

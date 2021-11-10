@@ -15,7 +15,7 @@
 
 use std::fmt::{Debug, Formatter};
 
-use pegasus_common::buffer::{ReadBuffer, Buffer};
+use pegasus_common::buffer::{Buffer, ReadBuffer};
 use pegasus_common::codec::{Decode, Encode};
 use pegasus_common::io::{ReadExt, WriteExt};
 
@@ -262,7 +262,7 @@ impl<D: Data> Decode for MicroBatch<D> {
         let len = reader.read_u64()? as usize;
         let mut buf = Buffer::with_capacity(len);
         for _ in 0..len {
-           buf.push(D::read_from(reader)?);
+            buf.push(D::read_from(reader)?);
         }
         let data = buf.into_read_only();
         let end = Option::<EndOfScope>::read_from(reader)?;

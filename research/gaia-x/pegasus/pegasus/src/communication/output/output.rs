@@ -54,10 +54,14 @@ pub struct OutputHandle<D: Data> {
 impl<D: Data> OutputHandle<D> {
     pub(crate) fn new(meta: OutputMeta, output: Tee<D>) -> Self {
         let batch_capacity = meta.batch_capacity as usize;
-        let scope_capacity = meta.scope_capacity as usize;
         let scope_level = meta.scope_level;
-        debug_worker!("init output[{:?}] with batch_size={}, batch_capacity={}, scope_capacity={}", meta.port, meta.batch_size, batch_capacity, scope_capacity);
-        let buf_pool = ScopeBufferPool::new(meta.batch_size, batch_capacity, scope_capacity, scope_level);
+        debug_worker!(
+            "init output[{:?}] with batch_size={}, batch_capacity={}",
+            meta.port,
+            meta.batch_size,
+            batch_capacity
+        );
+        let buf_pool = ScopeBufferPool::new(meta.batch_size, batch_capacity, scope_level);
         let src = crate::worker_id::get_current_worker().index;
         let parent_level = if scope_level == 0 { 0 } else { scope_level - 1 };
         OutputHandle {
@@ -138,8 +142,8 @@ impl<D: Data> OutputHandle<D> {
         self.is_closed
     }
 
-    pub(crate) fn pin(&mut self, tag: &Tag) -> bool {
-        self.buf_pool.pin(tag)
+    pub(crate) fn pin(&mut self, tag: &Tag) {
+        self.buf_pool.pin(tag);
     }
 
     pub(crate) fn try_unblock(&mut self) -> IOResult<()> {
@@ -502,9 +506,7 @@ impl<D: Data> ScopeStreamPush<D> for OutputHandle<D> {
                 batch.set_end(end);
                 self.send_batch(batch)
             }
-            Ok(None) => {
-                Ok(())
-            }
+            Ok(None) => Ok(()),
             Err(e) => {
                 trace_worker!("output[{:?}]: block on pushing last data of {:?};", self.port, &end.tag);
                 if let Some(item) = e.0 {

@@ -65,6 +65,8 @@ impl ScopeEndPanel {
 
 pub trait InputEndNotify: Send + 'static {
     fn notify(&mut self, end: EndOfScope) -> IOResult<()>;
+
+    fn close_notify(&mut self);
 }
 
 impl<T: Data> InputEndNotify for GeneralPush<MicroBatch<T>> {
@@ -77,6 +79,10 @@ impl<T: Data> InputEndNotify for GeneralPush<MicroBatch<T>> {
             self.push(last)?;
         }
         Ok(())
+    }
+
+    fn close_notify(&mut self) {
+        self.close().ok();
     }
 }
 
@@ -140,5 +146,11 @@ impl InboundStreamState {
             self.notify_guards[idx].insert(tag, p);
         }
         Ok(())
+    }
+}
+
+impl Drop for InboundStreamState {
+    fn drop(&mut self) {
+        self.notify.close_notify();
     }
 }

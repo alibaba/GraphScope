@@ -56,8 +56,6 @@ pub struct Channel<T: Data> {
     batch_size: usize,
     /// the hint of size indicates how much batches of a scope can be delivered at same time;
     batch_capacity: u32,
-    /// the hit of size indicates how much scopes can be delivered at same time;
-    scope_capacity: u32,
     /// describe changes of data's scope(before vs after) through this channel;
     scope_delta: MergedScopeDelta,
     ///
@@ -69,7 +67,6 @@ impl<T: Data> Clone for Channel<T> {
         Channel {
             batch_size: self.batch_size,
             batch_capacity: self.batch_capacity,
-            scope_capacity: self.scope_capacity,
             source: self.source,
             scope_delta: self.scope_delta.clone(),
             kind: ChannelKind::Pipeline(false),
@@ -82,7 +79,6 @@ impl<T: Data> Default for Channel<T> {
         Channel {
             batch_size: 1024,
             batch_capacity: 64,
-            scope_capacity: 64,
             source: Port::new(0, 0),
             scope_delta: MergedScopeDelta::new(0),
             kind: ChannelKind::Pipeline(false),
@@ -108,7 +104,6 @@ impl<T: Data> Channel<T> {
         Channel {
             batch_size: port.get_batch_size(),
             batch_capacity: port.get_batch_capacity(),
-            scope_capacity: port.get_scope_capacity(),
             source: port.get_port(),
             scope_delta: MergedScopeDelta::new(scope_level as usize),
             kind: ChannelKind::Pipeline(false),
@@ -131,15 +126,6 @@ impl<T: Data> Channel<T> {
 
     pub fn get_batch_capacity(&self) -> u32 {
         self.batch_capacity
-    }
-
-    pub fn set_scope_capacity(&mut self, capacity: u32) -> &mut Self {
-        self.scope_capacity = capacity;
-        self
-    }
-
-    pub fn get_scope_capacity(&self) -> u32 {
-        self.scope_capacity
     }
 
     pub fn set_channel_kind(&mut self, kind: ChannelKind<T>) -> &mut Self {
@@ -209,7 +195,6 @@ impl<T: Data> Channel<T> {
         let id = ChannelId { job_seq: dfb.config.job_id as u64, index };
         let batch_size = self.batch_size;
         let scope_level = self.get_scope_level();
-        let scope_capacity = self.scope_capacity as usize;
         let batch_capacity = self.batch_capacity as usize;
 
         if index > 1 {
@@ -237,7 +222,7 @@ impl<T: Data> Channel<T> {
                 let (info, pushes, pull, notify) = self.build_remote(scope_level, target, id, dfb)?;
                 let mut buffers = Vec::with_capacity(pushes.len());
                 for _ in 0..pushes.len() {
-                    let b = ScopeBufferPool::new(batch_size, batch_capacity, scope_capacity, scope_level);
+                    let b = ScopeBufferPool::new(batch_size, batch_capacity, scope_level);
                     buffers.push(b);
                 }
                 let push = ExchangeMicroBatchPush::new(info, r, buffers, pushes);

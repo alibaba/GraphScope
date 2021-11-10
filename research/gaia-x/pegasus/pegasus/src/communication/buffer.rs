@@ -1,53 +1,10 @@
 use std::ops::{Deref, DerefMut};
 use std::ptr::NonNull;
 
-use pegasus_common::buffer::{Buffer, BufferFactory, BufferPool, MemBufAlloc, ReadBuffer};
+use pegasus_common::buffer::{Buffer, BufferPool, MemBufAlloc, ReadBuffer};
 
 use crate::tag::tools::map::TidyTagMap;
 use crate::{Data, Tag};
-
-struct MemoryBufferPool<D> {
-    pool: NonNull<BufferPool<D, MemBufAlloc<D>>>,
-    need_drop: bool,
-}
-
-impl<D> MemoryBufferPool<D> {
-    fn new(pool: BufferPool<D, MemBufAlloc<D>>) -> Self {
-        let ptr = Box::new(pool);
-        let pool = unsafe { NonNull::new_unchecked(Box::into_raw(ptr)) };
-        MemoryBufferPool { pool, need_drop: true }
-    }
-
-    fn destroy(&mut self) {
-        if self.need_drop {
-            unsafe {
-                debug!("drop memory buffer pool");
-                let ptr = self.pool;
-                Box::from_raw(ptr.as_ptr());
-            }
-        }
-    }
-}
-
-impl<D> Clone for MemoryBufferPool<D> {
-    fn clone(&self) -> Self {
-        MemoryBufferPool { pool: self.pool, need_drop: self.need_drop }
-    }
-}
-
-impl<D> BufferFactory<D> for MemoryBufferPool<D> {
-    fn create(&mut self, batch_size: usize) -> Option<Buffer<D>> {
-        unsafe { self.pool.as_mut().create(batch_size) }
-    }
-
-    fn try_reuse(&mut self) -> Option<Buffer<D>> {
-        unsafe { self.pool.as_mut().try_reuse() }
-    }
-
-    fn release(&mut self, _buf: Buffer<D>) {
-        //
-    }
-}
 
 pub struct WouldBlock<D>(pub Option<D>);
 
@@ -56,11 +13,11 @@ pub(crate) struct BufSlot<D> {
     discard: bool,
     exhaust: bool,
     buf: Option<Buffer<D>>,
-    pool: BufferPool<D, MemoryBufferPool<D>>,
+    pool: BufferPool<D, MemBufAlloc<D>>,
 }
 
 impl<D> BufSlot<D> {
-    fn new(batch_size: usize, buf: Option<Buffer<D>>, pool: BufferPool<D, MemoryBufferPool<D>>) -> Self {
+    fn new(batch_size: usize, buf: Option<Buffer<D>>, pool: BufferPool<D, MemBufAlloc<D>>) -> Self {
         BufSlot { batch_size, discard: false, exhaust: false, buf, pool }
     }
 
@@ -126,7 +83,6 @@ impl<D> BufSlot<D> {
                 Err(WouldBlock(Some(entry)))
             }
         }
-
     }
 
     fn reuse(&mut self) {
@@ -139,26 +95,20 @@ impl<D> BufSlot<D> {
     }
 }
 
-struct NonNullBufSlotPtr<D> {
+#[derive(Clone)]
+struct BufSlotPtr<D: Data> {
     ptr: NonNull<BufSlot<D>>,
 }
 
-impl<D> NonNullBufSlotPtr<D> {
+impl<D: Data> BufSlotPtr<D> {
     fn new(slot: BufSlot<D>) -> Self {
         let ptr = Box::new(slot);
         let ptr = unsafe { NonNull::new_unchecked(Box::into_raw(ptr)) };
-        NonNullBufSlotPtr { ptr }
-    }
-
-    fn destroy(&mut self) {
-        unsafe {
-            let ptr = self.ptr;
-            Box::from_raw(ptr.as_ptr());
-        }
+        BufSlotPtr { ptr }
     }
 }
 
-impl<D> Deref for NonNullBufSlotPtr<D> {
+impl<D: Data> Deref for BufSlotPtr<D> {
     type Target = BufSlot<D>;
 
     fn deref(&self) -> &Self::Target {
@@ -166,81 +116,45 @@ impl<D> Deref for NonNullBufSlotPtr<D> {
     }
 }
 
-impl<D> DerefMut for NonNullBufSlotPtr<D> {
+impl<D: Data> DerefMut for BufSlotPtr<D> {
     fn deref_mut(&mut self) -> &mut Self::Target {
         unsafe { self.ptr.as_mut() }
-    }
-}
-
-impl<D> Clone for NonNullBufSlotPtr<D> {
-    fn clone(&self) -> Self {
-        NonNullBufSlotPtr { ptr: self.ptr }
     }
 }
 
 pub(crate) struct ScopeBufferPool<D: Data> {
     batch_size: usize,
     batch_capacity: usize,
-    scope_capacity: usize,
-    global_pool: MemoryBufferPool<D>,
-    buf_slots: TidyTagMap<NonNullBufSlotPtr<D>>,
-    pinned: Option<(Tag, NonNullBufSlotPtr<D>)>,
+    buf_slots: TidyTagMap<BufSlotPtr<D>>,
+    pinned: Option<(Tag, BufSlotPtr<D>)>,
 }
 
 unsafe impl<D: Data> Send for ScopeBufferPool<D> {}
 
-#[allow(dead_code)]
 impl<D: Data> ScopeBufferPool<D> {
-    pub(crate) fn new(
-        batch_size: usize, batch_capacity: usize, scope_capacity: usize, scope_level: u32,
-    ) -> Self {
-        let global_batch_capacity = scope_capacity * batch_capacity;
-        let pool = BufferPool::new(batch_size, global_batch_capacity, MemBufAlloc::new());
-        let global_pool = MemoryBufferPool::new(pool);
-        // let enable = std::env::var("BATCH_POOL_METRIC")
-        //     .map(|v| v.parse::<bool>().unwrap_or(false))
-        //     .unwrap_or(false);
-        //let exe_metric = if enable { Some(ExecuteTimeMetric::new()) } else { None };
+    pub(crate) fn new(batch_size: usize, batch_capacity: usize, scope_level: u32) -> Self {
         ScopeBufferPool {
             batch_size,
             batch_capacity,
-            scope_capacity,
-            global_pool,
             buf_slots: TidyTagMap::new(scope_level),
             pinned: None,
         }
     }
 
+    #[allow(dead_code)]
     pub fn unpin(&mut self) {
         self.pinned.take();
     }
 
-    pub fn pin(&mut self, tag: &Tag) -> bool {
-        if let Some((p, buf)) = self.pinned.take() {
-            if &p == tag {
-                self.pinned = Some((p, buf));
-                true
-            } else {
-                // self.buf_slots.insert(p, buf);
-                if let Some(buf) = self.buf_slots.get(tag) {
-                    trace_worker!("update pinned buffers to scope {:?};", tag);
-                    self.pinned = Some((tag.clone(), buf.clone()));
-                    true
-                } else {
-                    // trace_worker!("can't pin buffer for scope {:?} as slot not created;", tag);
-                    false
-                }
-            }
-        } else {
-            if let Some(buf) = self.buf_slots.get(tag) {
-                trace_worker!("pinned buffers to scope {:?};", tag);
-                self.pinned = Some((tag.clone(), buf.clone()));
-                true
-            } else {
-                // trace_worker!("can't pin buffer for scope {:?} as slot not created;", tag);
-                false
+    pub fn pin(&mut self, tag: &Tag) {
+        if let Some((pin, _)) = self.pinned.as_mut() {
+            if pin == tag {
+                return;
             }
         }
+
+        let ptr = self.get_slot_ptr(tag);
+        self.pinned = Some((tag.clone(), ptr));
     }
 
     pub fn push(&mut self, tag: &Tag, item: D) -> Result<Option<ReadBuffer<D>>, WouldBlock<D>> {
@@ -250,11 +164,7 @@ impl<D: Data> ScopeBufferPool<D> {
             }
         }
 
-        if let Some(mut slot) = self.get_slot_mut(tag) {
-            slot.push(item)
-        } else {
-            Err(WouldBlock(Some(item)))
-        }
+        self.get_slot_ptr(tag).push(item)
     }
 
     pub fn push_last(&mut self, tag: &Tag, item: D) -> Result<Option<ReadBuffer<D>>, WouldBlock<D>> {
@@ -264,44 +174,35 @@ impl<D: Data> ScopeBufferPool<D> {
             }
         }
 
-        if let Some(mut slot) = self.get_slot_mut(tag) {
-            slot.push_last(item)
-        } else {
-            Err(WouldBlock(Some(item)))
-        }
+        self.get_slot_ptr(tag).push(item)
     }
 
     pub fn push_iter(
         &mut self, tag: &Tag, iter: &mut impl Iterator<Item = D>,
     ) -> Result<Option<ReadBuffer<D>>, WouldBlock<D>> {
-        if let Some((p, buf)) = self.pinned.as_mut() {
-            if p == tag {
-                while let Some(next) = iter.next() {
-                    if let Some(batch) = buf.push(next)? {
-                        return Ok(Some(batch));
-                    }
-                }
-                return Ok(None);
+        let mut slot = if let Some((pin, slot)) = self.pinned.as_mut() {
+            if pin == tag {
+                slot.clone()
+            } else {
+                self.get_slot_ptr(tag)
             }
-        }
-
-        if let Some(mut buf) = self.get_slot_mut(tag) {
-            while let Some(next) = iter.next() {
-                if let Some(batch) = buf.push(next)? {
-                    return Ok(Some(batch));
-                }
-            }
-            Ok(None)
         } else {
-            Err(WouldBlock(None))
+            self.get_slot_ptr(tag)
+        };
+
+        while let Some(next) = iter.next() {
+            if let Some(batch) = slot.push(next)? {
+                return Ok(Some(batch));
+            }
         }
+        Ok(None)
     }
 
     pub fn take_buf(&mut self, tag: &Tag, is_last: bool) -> Option<Buffer<D>> {
         let b = self.buf_slots.get_mut(tag)?;
-        if !b.discard {
-            trace_worker!("discard buffer of {:?} because of last;", tag);
-        }
+        // if !b.discard {
+        //     trace_worker!("discard buffer of {:?} because of last;", tag);
+        // }
         b.discard = is_last;
         b.buf.take()
     }
@@ -346,18 +247,12 @@ impl<D: Data> ScopeBufferPool<D> {
             })
     }
 
-    fn get_slot_mut(&mut self, tag: &Tag) -> Option<NonNullBufSlotPtr<D>> {
+    fn get_slot_ptr(&mut self, tag: &Tag) -> BufSlotPtr<D> {
         if let Some(slot) = self.buf_slots.get(tag) {
-            Some(slot.clone())
+            slot.clone()
         } else {
-            if self.buf_slots.len() < self.scope_capacity {
-                let pool = BufferPool::new(self.batch_size, self.batch_capacity, self.global_pool.clone());
-                let buf = BufSlot::new(self.batch_size, None, pool);
-                let buf_slot = NonNullBufSlotPtr::new(buf);
-                trace_worker!("create new buffer slot for scope {:?};", tag);
-                self.buf_slots
-                    .insert(tag.clone(), buf_slot.clone());
-                Some(buf_slot)
+            if self.buf_slots.len() == 0 {
+                self.create_new_buffer_slot(tag)
             } else {
                 let mut find = None;
                 for (t, b) in self.buf_slots.iter() {
@@ -374,37 +269,28 @@ impl<D: Data> ScopeBufferPool<D> {
                     trace_worker!("reuse idle buffer slot for scope {:?};", tag);
                     slot.reuse();
                     assert!(slot.buf.is_none());
-                    self.buf_slots.insert(tag.clone(), slot.clone());
-                    Some(slot)
+                    let ptr = slot.clone();
+                    self.buf_slots.insert(tag.clone(), slot);
+                    ptr
                 } else {
-                    trace_worker!("no buffer slot available for scope {:?};", tag);
-                    None
+                    self.create_new_buffer_slot(tag)
                 }
             }
         }
+    }
+
+    fn create_new_buffer_slot(&mut self, tag: &Tag) -> BufSlotPtr<D> {
+        let pool = BufferPool::new(self.batch_size, self.batch_capacity, MemBufAlloc::new());
+        let slot = BufSlotPtr::new(BufSlot::new(self.batch_size, None, pool));
+        let ptr = slot.clone();
+        // trace_worker!("create new buffer slot for scope {:?};", tag);
+        self.buf_slots.insert(tag.clone(), slot);
+        ptr
     }
 }
 
 impl<D: Data> Default for ScopeBufferPool<D> {
     fn default() -> Self {
-        let global_pool = MemoryBufferPool { pool: NonNull::dangling(), need_drop: false };
-        ScopeBufferPool {
-            batch_size: 1,
-            batch_capacity: 1,
-            scope_capacity: 1,
-            global_pool,
-            buf_slots: Default::default(),
-            pinned: None,
-        }
-    }
-}
-
-impl<D: Data> Drop for ScopeBufferPool<D> {
-    fn drop(&mut self) {
-        self.pinned.take();
-        for (_, x) in self.buf_slots.iter_mut() {
-            x.destroy();
-        }
-        self.global_pool.destroy();
+        ScopeBufferPool { batch_size: 1, batch_capacity: 1, buf_slots: Default::default(), pinned: None }
     }
 }
