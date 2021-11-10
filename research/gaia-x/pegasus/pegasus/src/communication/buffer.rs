@@ -106,6 +106,13 @@ impl<D: Data> BufSlotPtr<D> {
         let ptr = unsafe { NonNull::new_unchecked(Box::into_raw(ptr)) };
         BufSlotPtr { ptr }
     }
+
+    fn destroy(&mut self) {
+        unsafe {
+            let ptr = self.ptr;
+            Box::from_raw(ptr.as_ptr());
+        }
+    }
 }
 
 impl<D: Data> Deref for BufSlotPtr<D> {
@@ -153,7 +160,7 @@ impl<D: Data> ScopeBufferPool<D> {
             }
         }
 
-        let ptr = self.get_slot_ptr(tag);
+        let ptr = self.fetch_slot_ptr(tag);
         self.pinned = Some((tag.clone(), ptr));
     }
 
@@ -164,7 +171,7 @@ impl<D: Data> ScopeBufferPool<D> {
             }
         }
 
-        self.get_slot_ptr(tag).push(item)
+        self.fetch_slot_ptr(tag).push(item)
     }
 
     pub fn push_last(&mut self, tag: &Tag, item: D) -> Result<Option<ReadBuffer<D>>, WouldBlock<D>> {
@@ -174,7 +181,7 @@ impl<D: Data> ScopeBufferPool<D> {
             }
         }
 
-        self.get_slot_ptr(tag).push(item)
+        self.fetch_slot_ptr(tag).push(item)
     }
 
     pub fn push_iter(
@@ -184,10 +191,10 @@ impl<D: Data> ScopeBufferPool<D> {
             if pin == tag {
                 slot.clone()
             } else {
-                self.get_slot_ptr(tag)
+                self.fetch_slot_ptr(tag)
             }
         } else {
-            self.get_slot_ptr(tag)
+            self.fetch_slot_ptr(tag)
         };
 
         while let Some(next) = iter.next() {
@@ -247,7 +254,7 @@ impl<D: Data> ScopeBufferPool<D> {
             })
     }
 
-    fn get_slot_ptr(&mut self, tag: &Tag) -> BufSlotPtr<D> {
+    fn fetch_slot_ptr(&mut self, tag: &Tag) -> BufSlotPtr<D> {
         if let Some(slot) = self.buf_slots.get(tag) {
             slot.clone()
         } else {
@@ -292,5 +299,14 @@ impl<D: Data> ScopeBufferPool<D> {
 impl<D: Data> Default for ScopeBufferPool<D> {
     fn default() -> Self {
         ScopeBufferPool { batch_size: 1, batch_capacity: 1, buf_slots: Default::default(), pinned: None }
+    }
+}
+
+impl<D: Data> Drop for ScopeBufferPool<D> {
+    fn drop(&mut self) {
+        self.pinned.take();
+        for (_, x) in self.buf_slots.iter_mut() {
+            x.destroy();
+        }
     }
 }

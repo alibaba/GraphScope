@@ -13,7 +13,7 @@
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 
-use pegasus::api::{CorrelatedSubTask, Count, Map, Sink, HasAny, Limit};
+use pegasus::api::{CorrelatedSubTask, Count, HasAny, Limit, Map, Sink};
 use pegasus::JobConf;
 
 #[test]
@@ -165,7 +165,7 @@ fn apply_x_flatmap_any_x_test() {
                 .sink_into(output)
         }
     })
-        .expect("build job failure");
+    .expect("build job failure");
 
     let mut count = 0;
     while let Some(Ok(d)) = result.next() {
