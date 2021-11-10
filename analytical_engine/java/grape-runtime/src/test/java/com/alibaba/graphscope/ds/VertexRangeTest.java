@@ -14,11 +14,9 @@
  * limitations under the License.
  */
 
-package com.alibaba.grape.ds;
+package com.alibaba.graphscope.ds;
 
 import com.alibaba.fastffi.FFITypeFactory;
-import com.alibaba.graphscope.ds.Vertex;
-import com.alibaba.graphscope.ds.VertexRange;
 import com.alibaba.graphscope.ds.VertexRange.Factory;
 import java.util.concurrent.atomic.AtomicInteger;
 import org.junit.Assert;

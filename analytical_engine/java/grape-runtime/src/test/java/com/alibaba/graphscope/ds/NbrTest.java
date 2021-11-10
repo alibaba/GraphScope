@@ -14,10 +14,9 @@
  * limitations under the License.
  */
 
-package com.alibaba.grape.ds;
+package com.alibaba.graphscope.ds;
 
 import com.alibaba.fastffi.FFITypeFactory;
-import com.alibaba.graphscope.ds.Nbr;
 import com.alibaba.graphscope.ds.Nbr.Factory;
 import org.junit.Assert;
 import org.junit.Test;

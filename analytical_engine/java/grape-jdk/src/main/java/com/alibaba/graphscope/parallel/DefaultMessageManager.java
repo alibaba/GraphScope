@@ -61,17 +61,19 @@ public interface DefaultMessageManager extends MessageManagerBase {
      * @return true if really got a message.
      */
     // @CXXTemplate(
-    //            cxx = {GRAPE_IMMUTABLE_FRAGMENT + "<jlong,uint64_t,jlong,jdouble>", DOUBLE_MSG},
-    //            java = {
-    //                "com.alibaba.grape.fragment.ImmutableEdgecutFragment<Long,Long,Long,Double>",
-    //                "com.alibaba.grape.parallel.message.DoubleMsg"
-    //            })
+    // cxx = {GRAPE_IMMUTABLE_FRAGMENT + "<jlong,uint64_t,jlong,jdouble>",
+    // DOUBLE_MSG},
+    // java = {
+    // "com.alibaba.graphscope.fragment.ImmutableEdgecutFragment<Long,Long,Long,Double>",
+    // "com.alibaba.graphscope.parallel.message.DoubleMsg"
+    // })
     // @CXXTemplate(
-    //            cxx = {GRAPE_IMMUTABLE_FRAGMENT + "<jlong,uint64_t,jlong,jdouble>", LONG_MSG},
-    //            java = {
-    //                "com.alibaba.grape.fragment.ImmutableEdgecutFragment<Long,Long,Long,Double>",
-    //                "com.alibaba.grape.parallel.message.LongMsg"
-    //            })
+    // cxx = {GRAPE_IMMUTABLE_FRAGMENT + "<jlong,uint64_t,jlong,jdouble>",
+    // LONG_MSG},
+    // java = {
+    // "com.alibaba.graphscope.fragment.ImmutableEdgecutFragment<Long,Long,Long,Double>",
+    // "com.alibaba.graphscope.parallel.message.LongMsg"
+    // })
     @FFINameAlias("GetMessage")
     <FRAG_T extends ImmutableEdgecutFragment, MSG_T> boolean getMessage(
             @CXXReference FRAG_T frag,
@@ -89,20 +91,21 @@ public interface DefaultMessageManager extends MessageManagerBase {
      * @return true if really got a message.
      */
     // @CXXTemplate(
-    //            cxx = {ARROW_PROJECTED_FRAGMENT + "<int64_t,uint64_t,double,int64_t>",
+    // cxx = {ARROW_PROJECTED_FRAGMENT + "<int64_t,uint64_t,double,int64_t>",
     // DOUBLE_MSG},
-    //            java = {
+    // java = {
     //
     // "com.alibaba.graphscope.fragment.ArrowProjectedFragment<Long,Long,Double,Long>",
-    //                "com.alibaba.grape.parallel.message.DoubleMsg"
-    //            })
+    // "com.alibaba.graphscope.parallel.message.DoubleMsg"
+    // })
     // @CXXTemplate(
-    //            cxx = {ARROW_PROJECTED_FRAGMENT + "<int64_t,uint64_t,double,int64_t>", LONG_MSG},
-    //            java = {
+    // cxx = {ARROW_PROJECTED_FRAGMENT + "<int64_t,uint64_t,double,int64_t>",
+    // LONG_MSG},
+    // java = {
     //
     // "com.alibaba.graphscope.fragment.ArrowProjectedFragment<Long,Long,Double,Long>",
-    //                "com.alibaba.grape.parallel.message.LongMsg"
-    //            })
+    // "com.alibaba.graphscope.parallel.message.LongMsg"
+    // })
     @FFINameAlias("GetMessage")
     <FRAG_T extends ArrowProjectedFragment, MSG_T> boolean getMessage(
             @CXXReference FRAG_T frag,
@@ -119,17 +122,19 @@ public interface DefaultMessageManager extends MessageManagerBase {
      * @param <MSG_T> message type.
      */
     // @CXXTemplate(
-    //            cxx = {GRAPE_IMMUTABLE_FRAGMENT + "<jlong,uint64_t,jlong,jdouble>", DOUBLE_MSG},
-    //            java = {
-    //                "com.alibaba.grape.fragment.ImmutableEdgecutFragment<Long,Long,Long,Double>",
-    //                "com.alibaba.grape.parallel.message.DoubleMsg"
-    //            })
+    // cxx = {GRAPE_IMMUTABLE_FRAGMENT + "<jlong,uint64_t,jlong,jdouble>",
+    // DOUBLE_MSG},
+    // java = {
+    // "com.alibaba.graphscope.fragment.ImmutableEdgecutFragment<Long,Long,Long,Double>",
+    // "com.alibaba.graphscope.parallel.message.DoubleMsg"
+    // })
     // @CXXTemplate(
-    //            cxx = {GRAPE_IMMUTABLE_FRAGMENT + "<jlong,uint64_t,jlong,jdouble>", LONG_MSG},
-    //            java = {
-    //                "com.alibaba.grape.fragment.ImmutableEdgecutFragment<Long,Long,Long,Double>",
-    //                "com.alibaba.grape.parallel.message.LongMsg"
-    //            })
+    // cxx = {GRAPE_IMMUTABLE_FRAGMENT + "<jlong,uint64_t,jlong,jdouble>",
+    // LONG_MSG},
+    // java = {
+    // "com.alibaba.graphscope.fragment.ImmutableEdgecutFragment<Long,Long,Long,Double>",
+    // "com.alibaba.graphscope.parallel.message.LongMsg"
+    // })
     @FFINameAlias("SyncStateOnOuterVertex")
     <FRAG_T extends ImmutableEdgecutFragment, MSG_T> void syncStateOnOuterVertex(
             @CXXReference FRAG_T frag,
@@ -146,20 +151,21 @@ public interface DefaultMessageManager extends MessageManagerBase {
      * @param <MSG_T> message type.
      */
     // @CXXTemplate(
-    //            cxx = {ARROW_PROJECTED_FRAGMENT + "<int64_t,uint64_t,double,int64_t>",
+    // cxx = {ARROW_PROJECTED_FRAGMENT + "<int64_t,uint64_t,double,int64_t>",
     // DOUBLE_MSG},
-    //            java = {
+    // java = {
     //
     // "com.alibaba.graphscope.fragment.ArrowProjectedFragment<Long,Long,Double,Long>",
-    //                "com.alibaba.grape.parallel.message.DoubleMsg"
-    //            })
+    // "com.alibaba.graphscope.parallel.message.DoubleMsg"
+    // })
     // @CXXTemplate(
-    //            cxx = {ARROW_PROJECTED_FRAGMENT + "<int64_t,uint64_t,double,int64_t>", LONG_MSG},
-    //            java = {
+    // cxx = {ARROW_PROJECTED_FRAGMENT + "<int64_t,uint64_t,double,int64_t>",
+    // LONG_MSG},
+    // java = {
     //
     // "com.alibaba.graphscope.fragment.ArrowProjectedFragment<Long,Long,Double,Long>",
-    //                "com.alibaba.grape.parallel.message.LongMsg"
-    //            })
+    // "com.alibaba.graphscope.parallel.message.LongMsg"
+    // })
     @FFINameAlias("SyncStateOnOuterVertex")
     <FRAG_T extends ArrowProjectedFragment, MSG_T> void syncStateOnOuterVertex(
             @CXXReference FRAG_T frag,
@@ -176,17 +182,19 @@ public interface DefaultMessageManager extends MessageManagerBase {
      * @param <MSG_T>
      */
     // @CXXTemplate(
-    //            cxx = {GRAPE_IMMUTABLE_FRAGMENT + "<jlong,uint64_t,jlong,jdouble>", DOUBLE_MSG},
-    //            java = {
-    //                "com.alibaba.grape.fragment.ImmutableEdgecutFragment<Long,Long,Long,Double>",
-    //                "com.alibaba.grape.parallel.message.DoubleMsg"
-    //            })
+    // cxx = {GRAPE_IMMUTABLE_FRAGMENT + "<jlong,uint64_t,jlong,jdouble>",
+    // DOUBLE_MSG},
+    // java = {
+    // "com.alibaba.graphscope.fragment.ImmutableEdgecutFragment<Long,Long,Long,Double>",
+    // "com.alibaba.graphscope.parallel.message.DoubleMsg"
+    // })
     // @CXXTemplate(
-    //            cxx = {GRAPE_IMMUTABLE_FRAGMENT + "<jlong,uint64_t,jlong,jdouble>", LONG_MSG},
-    //            java = {
-    //                "com.alibaba.grape.fragment.ImmutableEdgecutFragment<Long,Long,Long,Double>",
-    //                "com.alibaba.grape.parallel.message.LongMsg"
-    //            })
+    // cxx = {GRAPE_IMMUTABLE_FRAGMENT + "<jlong,uint64_t,jlong,jdouble>",
+    // LONG_MSG},
+    // java = {
+    // "com.alibaba.graphscope.fragment.ImmutableEdgecutFragment<Long,Long,Long,Double>",
+    // "com.alibaba.graphscope.parallel.message.LongMsg"
+    // })
     @FFINameAlias("SendMsgThroughOEdges")
     <FRAG_T extends ImmutableEdgecutFragment, MSG_T> void sendMsgThroughOEdges(
             @CXXReference FRAG_T frag,
@@ -194,20 +202,21 @@ public interface DefaultMessageManager extends MessageManagerBase {
             @CXXReference MSG_T msg);
 
     // @CXXTemplate(
-    //            cxx = {ARROW_PROJECTED_FRAGMENT + "<int64_t,uint64_t,double,int64_t>",
+    // cxx = {ARROW_PROJECTED_FRAGMENT + "<int64_t,uint64_t,double,int64_t>",
     // DOUBLE_MSG},
-    //            java = {
+    // java = {
     //
     // "com.alibaba.graphscope.fragment.ArrowProjectedFragment<Long,Long,Double,Long>",
-    //                "com.alibaba.grape.parallel.message.DoubleMsg"
-    //            })
+    // "com.alibaba.graphscope.parallel.message.DoubleMsg"
+    // })
     // @CXXTemplate(
-    //            cxx = {ARROW_PROJECTED_FRAGMENT + "<int64_t,uint64_t,double,int64_t>", LONG_MSG},
-    //            java = {
+    // cxx = {ARROW_PROJECTED_FRAGMENT + "<int64_t,uint64_t,double,int64_t>",
+    // LONG_MSG},
+    // java = {
     //
     // "com.alibaba.graphscope.fragment.ArrowProjectedFragment<Long,Long,Double,Long>",
-    //                "com.alibaba.grape.parallel.message.LongMsg"
-    //            })
+    // "com.alibaba.graphscope.parallel.message.LongMsg"
+    // })
     @FFINameAlias("SendMsgThroughOEdges")
     <FRAG_T extends ArrowProjectedFragment, MSG_T> void sendMsgThroughOEdges(
             @CXXReference FRAG_T frag,
@@ -215,17 +224,19 @@ public interface DefaultMessageManager extends MessageManagerBase {
             @CXXReference MSG_T msg);
 
     // @CXXTemplate(
-    //            cxx = {GRAPE_IMMUTABLE_FRAGMENT + "<jlong,uint64_t,jlong,jdouble>", DOUBLE_MSG},
-    //            java = {
-    //                "com.alibaba.grape.fragment.ImmutableEdgecutFragment<Long,Long,Long,Double>",
-    //                "com.alibaba.grape.parallel.message.DoubleMsg"
-    //            })
+    // cxx = {GRAPE_IMMUTABLE_FRAGMENT + "<jlong,uint64_t,jlong,jdouble>",
+    // DOUBLE_MSG},
+    // java = {
+    // "com.alibaba.graphscope.fragment.ImmutableEdgecutFragment<Long,Long,Long,Double>",
+    // "com.alibaba.graphscope.parallel.message.DoubleMsg"
+    // })
     // @CXXTemplate(
-    //            cxx = {GRAPE_IMMUTABLE_FRAGMENT + "<jlong,uint64_t,jlong,jdouble>", LONG_MSG},
-    //            java = {
-    //                "com.alibaba.grape.fragment.ImmutableEdgecutFragment<Long,Long,Long,Double>",
-    //                "com.alibaba.grape.parallel.message.LongMsg"
-    //            })
+    // cxx = {GRAPE_IMMUTABLE_FRAGMENT + "<jlong,uint64_t,jlong,jdouble>",
+    // LONG_MSG},
+    // java = {
+    // "com.alibaba.graphscope.fragment.ImmutableEdgecutFragment<Long,Long,Long,Double>",
+    // "com.alibaba.graphscope.parallel.message.LongMsg"
+    // })
     @FFINameAlias("SendMsgThroughIEdges")
     <FRAG_T extends ImmutableEdgecutFragment, MSG_T> void sendMsgThroughIEdges(
             @CXXReference FRAG_T frag,
@@ -233,20 +244,21 @@ public interface DefaultMessageManager extends MessageManagerBase {
             @CXXReference MSG_T msg);
 
     // @CXXTemplate(
-    //            cxx = {ARROW_PROJECTED_FRAGMENT + "<int64_t,uint64_t,double,int64_t>",
+    // cxx = {ARROW_PROJECTED_FRAGMENT + "<int64_t,uint64_t,double,int64_t>",
     // DOUBLE_MSG},
-    //            java = {
+    // java = {
     //
     // "com.alibaba.graphscope.fragment.ArrowProjectedFragment<Long,Long,Double,Long>",
-    //                "com.alibaba.grape.parallel.message.DoubleMsg"
-    //            })
+    // "com.alibaba.graphscope.parallel.message.DoubleMsg"
+    // })
     // @CXXTemplate(
-    //            cxx = {ARROW_PROJECTED_FRAGMENT + "<int64_t,uint64_t,double,int64_t>", LONG_MSG},
-    //            java = {
+    // cxx = {ARROW_PROJECTED_FRAGMENT + "<int64_t,uint64_t,double,int64_t>",
+    // LONG_MSG},
+    // java = {
     //
     // "com.alibaba.graphscope.fragment.ArrowProjectedFragment<Long,Long,Double,Long>",
-    //                "com.alibaba.grape.parallel.message.LongMsg"
-    //            })
+    // "com.alibaba.graphscope.parallel.message.LongMsg"
+    // })
     @FFINameAlias("SendMsgThroughIEdges")
     <FRAG_T extends ArrowProjectedFragment, MSG_T> void sendMsgThroughIEdges(
             @CXXReference FRAG_T frag,
@@ -254,17 +266,19 @@ public interface DefaultMessageManager extends MessageManagerBase {
             @CXXReference MSG_T msg);
 
     // @CXXTemplate(
-    //            cxx = {GRAPE_IMMUTABLE_FRAGMENT + "<jlong,uint64_t,jlong,jdouble>", DOUBLE_MSG},
-    //            java = {
-    //                "com.alibaba.grape.fragment.ImmutableEdgecutFragment<Long,Long,Long,Double>",
-    //                "com.alibaba.grape.parallel.message.DoubleMsg"
-    //            })
+    // cxx = {GRAPE_IMMUTABLE_FRAGMENT + "<jlong,uint64_t,jlong,jdouble>",
+    // DOUBLE_MSG},
+    // java = {
+    // "com.alibaba.graphscope.fragment.ImmutableEdgecutFragment<Long,Long,Long,Double>",
+    // "com.alibaba.graphscope.parallel.message.DoubleMsg"
+    // })
     // @CXXTemplate(
-    //            cxx = {GRAPE_IMMUTABLE_FRAGMENT + "<jlong,uint64_t,jlong,jdouble>", LONG_MSG},
-    //            java = {
-    //                "com.alibaba.grape.fragment.ImmutableEdgecutFragment<Long,Long,Long,Double>",
-    //                "com.alibaba.grape.parallel.message.LongMsg"
-    //            })
+    // cxx = {GRAPE_IMMUTABLE_FRAGMENT + "<jlong,uint64_t,jlong,jdouble>",
+    // LONG_MSG},
+    // java = {
+    // "com.alibaba.graphscope.fragment.ImmutableEdgecutFragment<Long,Long,Long,Double>",
+    // "com.alibaba.graphscope.parallel.message.LongMsg"
+    // })
     @FFINameAlias("SendMsgThroughEdges")
     <FRAG_T extends ImmutableEdgecutFragment, MSG_T> void sendMsgThroughEdges(
             @CXXReference FRAG_T frag,
@@ -272,20 +286,21 @@ public interface DefaultMessageManager extends MessageManagerBase {
             @CXXReference MSG_T msg);
 
     // @CXXTemplate(
-    //            cxx = {ARROW_PROJECTED_FRAGMENT + "<int64_t,uint64_t,double,int64_t>",
+    // cxx = {ARROW_PROJECTED_FRAGMENT + "<int64_t,uint64_t,double,int64_t>",
     // DOUBLE_MSG},
-    //            java = {
+    // java = {
     //
     // "com.alibaba.graphscope.fragment.ArrowProjectedFragment<Long,Long,Double,Long>",
-    //                "com.alibaba.grape.parallel.message.DoubleMsg"
-    //            })
+    // "com.alibaba.graphscope.parallel.message.DoubleMsg"
+    // })
     // @CXXTemplate(
-    //            cxx = {ARROW_PROJECTED_FRAGMENT + "<int64_t,uint64_t,double,int64_t>", LONG_MSG},
-    //            java = {
+    // cxx = {ARROW_PROJECTED_FRAGMENT + "<int64_t,uint64_t,double,int64_t>",
+    // LONG_MSG},
+    // java = {
     //
     // "com.alibaba.graphscope.fragment.ArrowProjectedFragment<Long,Long,Double,Long>",
-    //                "com.alibaba.grape.parallel.message.LongMsg"
-    //            })
+    // "com.alibaba.graphscope.parallel.message.LongMsg"
+    // })
     @FFINameAlias("SendMsgThroughEdges")
     <FRAG_T extends ArrowProjectedFragment, MSG_T> void sendMsgThroughEdges(
             @CXXReference FRAG_T frag,

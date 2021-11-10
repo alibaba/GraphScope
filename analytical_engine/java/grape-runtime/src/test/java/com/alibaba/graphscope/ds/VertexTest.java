@@ -14,9 +14,8 @@
  * limitations under the License.
  */
 
-package com.alibaba.grape.ds;
+package com.alibaba.graphscope.ds;
 
-import com.alibaba.graphscope.ds.Vertex;
 import com.alibaba.graphscope.utils.FFITypeFactoryhelper;
 import org.junit.Assert;
 import org.junit.Test;
