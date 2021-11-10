@@ -40,7 +40,7 @@ pub(crate) enum InnerOpr {
     Arith(pb::Arithmetic),
     Const(Option<Object>),
     Var {
-        tag: NameOrId,
+        tag: Option<NameOrId>,
         prop_key: Option<PropKey>,
     },
 }
@@ -81,7 +81,7 @@ impl From<&InnerOpr> for OperatorDesc {
 /// A `Context` gives the behavior of obtaining a certain tag from the runtime
 /// for evaluating variables in an expression.
 pub trait Context<E: Element> {
-    fn get(&self, _tag: &NameOrId) -> Option<&E> {
+    fn get(&self, _tag: Option<&NameOrId>) -> Option<&E> {
         None
     }
 }
@@ -253,10 +253,10 @@ impl Evaluator {
     /// }
     ///
     /// impl Context<Vertex> for Vertices {
-    ///     fn get(&self, key: &NameOrId) -> Option<&Vertex> {
+    ///     fn get(&self, key: Option<&NameOrId>) -> Option<&Vertex> {
     ///        match key {
-    ///             NameOrId::Str(_) => None,
-    ///             NameOrId::Id(i) => self.vec.get(*i as usize),
+    ///             Some(NameOrId::Id(i)) => self.vec.get(*i as usize),
+    ///             _ => None
     ///         }
     ///     }
     /// }
@@ -356,8 +356,13 @@ impl TryFrom<pb::ExprOpr> for InnerOpr {
                 }
                 Const(c) => Self::Const(c.into_object()?),
                 Var(var) => {
-                    let tag = NameOrId::try_from(var.tag.unwrap())?;
-                    if let Some(property) = var.property {
+                    let (_tag, _property) = (var.tag, var.property);
+                    let tag = if let Some(tag) = _tag {
+                        Some(NameOrId::try_from(tag)?)
+                    } else {
+                        None
+                    };
+                    if let Some(property) = _property {
                         Self::Var {
                             tag,
                             prop_key: Some(PropKey::try_from(property)?),
@@ -391,7 +396,7 @@ impl InnerOpr {
             Self::Var { tag, prop_key } => {
                 if let Some(ctxt) = context {
                     let mut result = Ok(None);
-                    if let Some(element) = ctxt.get(tag) {
+                    if let Some(element) = ctxt.get(tag.as_ref()) {
                         if let Some(property) = prop_key {
                             if let Some(details) = element.details() {
                                 result = Ok(details.get(property))
@@ -431,10 +436,10 @@ mod tests {
         vec: Vec<Vertex>,
     }
     impl Context<Vertex> for Vertices {
-        fn get(&self, key: &NameOrId) -> Option<&Vertex> {
+        fn get(&self, key: Option<&NameOrId>) -> Option<&Vertex> {
             match key {
-                NameOrId::Str(_) => None,
-                NameOrId::Id(i) => self.vec.get(*i as usize),
+                Some(NameOrId::Id(i)) => self.vec.get(*i as usize),
+                _ => None,
             }
         }
     }
@@ -643,7 +648,7 @@ mod tests {
             // Evaluate variable without providing the context
             ExprError::MissingContext(
                 InnerOpr::Var {
-                    tag: 2.into(),
+                    tag: Some(2.into()),
                     prop_key: None,
                 }
                 .into(),
@@ -651,7 +656,7 @@ mod tests {
             // obtain non-value from the context
             ExprError::NoneOperand(
                 InnerOpr::Var {
-                    tag: 2.into(),
+                    tag: Some(2.into()),
                     prop_key: None,
                 }
                 .into(),
@@ -659,7 +664,7 @@ mod tests {
             // obtain non-value from the context
             ExprError::NoneOperand(
                 InnerOpr::Var {
-                    tag: 1.into(),
+                    tag: Some(1.into()),
                     prop_key: Some(PropKey::Key("nonexistent".to_string().into())),
                 }
                 .into(),
