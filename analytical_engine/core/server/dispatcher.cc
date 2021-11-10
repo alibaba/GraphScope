@@ -100,7 +100,8 @@ void Dispatcher::publisherPreprocessCmd(CommandDetail& cmd) {
   if (cmd.type == rpc::CREATE_GRAPH || cmd.type == rpc::ADD_LABELS) {
     // Distribute raw bytes if there are some data from pandas
     for (auto& items : cmd.params) {
-      LOG(INFO) << "Publisher commands: " << rpc::ParamKey_Name(items.first)
+      LOG(INFO) << "Publisher commands: "
+                << rpc::ParamKey_Name(static_cast<rpc::ParamKey>(items.first))
                 << ": " << items.second.DebugString();
     }
     auto params_vec = DistributeGraph(cmd.params, comm_spec_.worker_num());
@@ -124,7 +125,8 @@ void Dispatcher::subscriberPreprocessCmd(rpc::OperationType type,
     grape::RecvArchive(oa, grape::kCoordinatorRank, MPI_COMM_WORLD);
     oa >> cmd;
     for (auto& items : cmd.params) {
-      LOG(INFO) << "Subscriber commands: " << rpc::ParamKey_Name(items.first)
+      LOG(INFO) << "Subscriber commands: "
+                << rpc::ParamKey_Name(static_cast<rpc::ParamKey>(items.first))
                 << ": " << items.second.DebugString();
     }
   } else {
