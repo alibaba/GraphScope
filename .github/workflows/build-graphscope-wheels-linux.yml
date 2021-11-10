@@ -92,24 +92,26 @@ jobs:
     - name: Run Test on ${{ matrix.python-version }}
       shell: bash
       run: |
+        python3 -c "import sys; print(sys.version)"
+
         pushd artifacts
         # install graphscope-client
         tar -zxf ./wheel-linux-${{ github.sha }}/client.tar.gz
         pushd python/dist/wheelhouse
-        for f in * ; do pip3 install $f || true; done
+        for f in * ; do python3 -m pip install $f || true; done
         popd
         # install graphscope
         tar -zxf ./wheel-linux-${{ github.sha }}/graphscope.tar.gz
         pushd coordinator/dist/wheelhouse
-        pip3 install ./*.whl
+        python3 -m pip install ./*.whl
         popd
         pushd coordinator/dist
-        pip3 install ./*.whl
+        python3 -m pip install ./*.whl
         popd
         popd
 
         # run test
-        pip3 install pytest "tensorflow<=2.5.2" --user;
+        python3 -m pip install pytest "tensorflow<=2.5.2" --user;
         sudo apt update -y && sudo apt install openjdk-11-jdk -y
         cp ${GITHUB_WORKSPACE}/python/tests/local/test_standalone.py /tmp/test_standalone.py
         python3 -m pytest -s -v /tmp/test_standalone.py

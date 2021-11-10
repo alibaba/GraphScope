@@ -96,7 +96,7 @@ def _get_extra_data():
         data = {
             "/opt/graphscope/bin/": os.path.join(RUNTIME_ROOT, "bin"),
             "/opt/graphscope/conf/": os.path.join(RUNTIME_ROOT, "conf"),
-            "/opt/graphscope/include": os.path.join(RUNTIME_ROOT, "include"),
+            "/opt/graphscope/include/": os.path.join(RUNTIME_ROOT, "include"),
             "/usr/local/include/grape": os.path.join(RUNTIME_ROOT, "include"),
             "/opt/graphscope/lib64/": os.path.join(RUNTIME_ROOT, "lib64"),
             "/opt/vineyard/include/": os.path.join(RUNTIME_ROOT, "include"),

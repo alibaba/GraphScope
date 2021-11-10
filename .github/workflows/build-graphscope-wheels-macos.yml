@@ -77,21 +77,22 @@ jobs:
       with:
         submodules: true
 
+    - uses: actions/download-artifact@v2
+      with:
+        path: artifacts
+
     - name: Set up Python
       uses: actions/setup-python@v2
       with:
         python-version: ${{ matrix.python-version }}
 
-    - uses: actions/download-artifact@v2
-      with:
-        path: artifacts
-
     - name: Test Client Wheel with ${{ matrix.python-version }}
-      shell: bash
       run: |
+        python3 -c "import sys; print(sys.version)"
+
         # build graphscope client wheel
         cd ${GITHUB_WORKSPACE}/k8s
-        sudo -E make graphscope-client-py3-package
+        make graphscope-client-py3-package
 
         # package
         cd ${GITHUB_WORKSPACE}
@@ -99,19 +100,19 @@ jobs:
 
         # install client
         cd ${GITHUB_WORKSPACE}/python/dist
-        for f in ./*.whl ; do pip3 install $f --user || true; done
+        for f in ./*.whl ; do python3 -m pip install $f --user || true; done
 
         # install graphscope
         cd ${GITHUB_WORKSPACE}/artifacts
         tar -zxf ./wheel-macos-${{ github.sha }}/graphscope.tar.gz
         pushd coordinator/dist/wheelhouse
-        pip3 install ./*.whl --user
+        python3 -m pip install ./*.whl --user
         popd
 
         # run test
         # waiting for graphlearn supported on macos
         # pip3 install pytest "tensorflow<=2.5.2" --user;
-        pip3 install pytest --user
+        python3 -m pip install pytest --user
         # export PATH=/Users/runner/Library/Python/3.9/bin:${PATH}
         cp ${GITHUB_WORKSPACE}/python/tests/local/test_standalone.py /tmp/test_standalone.py
         python3 -m pytest -s -v /tmp/test_standalone.py
