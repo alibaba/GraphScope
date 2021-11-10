@@ -215,16 +215,18 @@ impl From<String> for common_pb::Value {
     }
 }
 
+impl From<i32> for common_pb::NameOrId {
+    fn from(i: i32) -> Self {
+        common_pb::NameOrId {
+            item: Some(common_pb::name_or_id::Item::Id(i)),
+        }
+    }
+}
+
 impl From<String> for common_pb::NameOrId {
     fn from(str: String) -> Self {
-        if let Ok(id) = str.parse::<i32>() {
-            common_pb::NameOrId {
-                item: Some(common_pb::name_or_id::Item::Id(id)),
-            }
-        } else {
-            common_pb::NameOrId {
-                item: Some(common_pb::name_or_id::Item::Name(str)),
-            }
+        common_pb::NameOrId {
+            item: Some(common_pb::name_or_id::Item::Name(str)),
         }
     }
 }
@@ -257,13 +259,27 @@ impl From<String> for common_pb::Variable {
         let str: String = str.chars().skip(1).collect();
         if !str.contains(SPLITTER) {
             common_pb::Variable {
-                tag: Some(str.into()),
+                // If the tag is represented as an integer
+                tag: Some(if let Ok(str_int) = str.parse::<i32>() {
+                    str_int.into()
+                } else {
+                    str.into()
+                }),
                 property: None,
             }
         } else {
             let mut splitter = str.split(SPLITTER);
             let tag: Option<common_pb::NameOrId> = if let Some(first) = splitter.next() {
-                Some(first.to_string().into())
+                if !first.is_empty() {
+                    if let Ok(str_int) = first.parse::<i32>() {
+                        Some(str_int.into())
+                    } else {
+                        Some(first.to_string().into())
+                    }
+                } else {
+                    // empty string is interpreted as `None`
+                    None
+                }
             } else {
                 None
             };
@@ -435,5 +451,75 @@ impl From<pb::GetV> for pb::logical_plan::Operator {
         pb::logical_plan::Operator {
             opr: Some(pb::logical_plan::operator::Opr::Vertex(opr)),
         }
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use super::*;
+
+    #[test]
+    fn test_str_to_variable() {
+        let case1 = "@1";
+        assert_eq!(
+            common_pb::Variable {
+                tag: Some(common_pb::NameOrId::from(1)),
+                property: None
+            },
+            common_pb::Variable::from(case1.to_string())
+        );
+
+        let case2 = "@a";
+        assert_eq!(
+            common_pb::Variable {
+                tag: Some(common_pb::NameOrId::from("a".to_string())),
+                property: None
+            },
+            common_pb::Variable::from(case2.to_string())
+        );
+
+        let case3 = "@1.ID";
+        assert_eq!(
+            common_pb::Variable {
+                tag: Some(common_pb::NameOrId::from(1)),
+                property: Some(common_pb::Property {
+                    item: Some(common_pb::property::Item::Id(common_pb::IdKey {}))
+                })
+            },
+            common_pb::Variable::from(case3.to_string())
+        );
+
+        let case4 = "@1.LABEL";
+        assert_eq!(
+            common_pb::Variable {
+                tag: Some(common_pb::NameOrId::from(1)),
+                property: Some(common_pb::Property {
+                    item: Some(common_pb::property::Item::Label(common_pb::LabelKey {}))
+                })
+            },
+            common_pb::Variable::from(case4.to_string())
+        );
+
+        let case5 = "@1.name";
+        assert_eq!(
+            common_pb::Variable {
+                tag: Some(common_pb::NameOrId::from(1)),
+                property: Some(common_pb::Property {
+                    item: Some(common_pb::property::Item::Key("name".to_string().into()))
+                })
+            },
+            common_pb::Variable::from(case5.to_string())
+        );
+
+        let case6 = "@.name";
+        assert_eq!(
+            common_pb::Variable {
+                tag: None,
+                property: Some(common_pb::Property {
+                    item: Some(common_pb::property::Item::Key("name".to_string().into()))
+                })
+            },
+            common_pb::Variable::from(case6.to_string())
+        );
     }
 }
