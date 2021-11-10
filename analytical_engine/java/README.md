@@ -36,9 +36,9 @@ SDK enables Java Programmers to acquire the following abilities
   used to load user jars.
   Annotation processor design for graphscope sdk, responsible for java and jni
   code generation, will be invoked by grape-engine, when ```ENABLE_JAVA_SDK```set to true.
-- **grape-sdk**
+- **grape-jdk**
 
-  The core sdk defines graph computing interfaces.
+  The core java sdk defines graph computing interfaces.
 
 # How to use
 

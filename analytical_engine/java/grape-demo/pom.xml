@@ -44,7 +44,6 @@
       <artifactId>grape-jdk</artifactId>
       <version>0.1</version>
       <classifier>shaded</classifier>
-      <scope>compile</scope>
     </dependency>
     <dependency>
       <groupId>com.alibaba.fastffi</groupId>

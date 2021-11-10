@@ -33,31 +33,6 @@ import com.alibaba.graphscope.utils.CppHeaderName;
 @CXXHead(CppHeaderName.VERTEX_DATA_CONTEXT_H)
 @CXXHead(ARROW_PROJECTED_FRAGMENT_H)
 @FFITypeAlias(VERTEX_DATA_CONTEXT)
-// @CXXTemplate(
-// cxx = {
-// ARROW_PROJECTED_FRAGMENT + "<int64_t,uint64_t," + GRAPE_EMPTY_TYPE +
-// ",int64_t>",
-// "double"
-// },
-// java = {
-//
-// "com.alibaba.graphscope.fragment.ArrowProjectedFragment<Long,Long,com.alibaba.graphscope.ds.EmptyType,Long>",
-// "java.lang.Double"
-// })
-// @CXXTemplate(
-// cxx = {ARROW_PROJECTED_FRAGMENT + "<int64_t,uint64_t,double,int64_t>",
-// "double"},
-// java = {
-// "com.alibaba.graphscope.fragment.ArrowProjectedFragment<Long,Long,Double,Long>",
-// "java.lang.Double"
-// })
-// @CXXTemplate(
-// cxx = {ARROW_PROJECTED_FRAGMENT + "<int64_t,uint64_t,double,int64_t>",
-// "int64_t"},
-// java = {
-// "com.alibaba.graphscope.fragment.ArrowProjectedFragment<Long,Long,Double,Long>",
-// "java.lang.Long"
-// })
 public interface FFIVertexDataContext<FRAG_T, DATA_T> extends FFIPointer {
 
     @CXXReference

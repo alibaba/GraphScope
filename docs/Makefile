@@ -31,7 +31,7 @@ clean:
 
 # Catch-all target: route all unknown targets to Sphinx using the new
 # "make mode" option.  $(O) is meant as a shortcut for $(SPHINXOPTS).
-%: Makefile doxygen
+%: Makefile doxygen gae-java-sdk
 	@echo "Tag is:" $(TAG)
 	@$(SPHINXBUILD) -M $@ "$(SOURCEDIR)" "$(BUILDDIR)/$(TAG)" $(SPHINXOPTS) $(O)
 
@@ -45,8 +45,9 @@ clean:
 doxygen:
 	@mkdir -p _build
 	@doxygen Doxyfile
-gae-java-runtime:
+
+gae-java-sdk:
 	# Java doc need the classpath to find dependencies, we build a shaded jar which 
 	# contains the neccessary dependencies to generate javadoc.
-	cd $(WORKING_DIR)/analytical_engine/java && \
-	mvn clean package -DskipTests -Dmaven.antrun.skip=true
+	cd $(WORKING_DIR)/../analytical_engine/java && \
+	mvn clean package -DskipTests -Dmaven.antrun.skip=true -U

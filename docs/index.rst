@@ -39,7 +39,7 @@ and the vineyard store that offers efficient in-memory data transfers.
 
    reference/python_index
    reference/analytical_engine_index
-   reference/analytical_engine_java_index
+   Analytical Engine Java API Reference <reference/gae_java/index>
 
 .. toctree::
    :maxdepth: 2

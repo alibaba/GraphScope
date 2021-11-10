@@ -33,8 +33,8 @@ import com.alibaba.fastffi.FFIPointer;
 import com.alibaba.fastffi.FFITypeAlias;
 
 /**
- * Java Wrapper for <a
- * href="https://github.com/alibaba/libgrape-lite/blob/master/grape/utils/vertex_array.h#L40">grape::Vertex</a>.
+ * Java Wrapper for <a href=
+ * "https://github.com/alibaba/libgrape-lite/blob/master/grape/utils/vertex_array.h#L40">grape::Vertex</a>.
  *
  * @param <VID_T> vertex id type. Long recommended.
  */

@@ -28,42 +28,6 @@ import com.alibaba.graphscope.utils.JNILibraryName;
 @CXXHead(CppHeaderName.ARROW_FRAGMENT_H)
 @CXXHead(CppHeaderName.CORE_JAVA_TYPE_ALIAS_H)
 @FFITypeAlias("std::shared_ptr")
-// @CXXTemplate(
-// cxx = "gs::DoubleColumn<gs::ArrowFragmentDefault<int64_t>>",
-// java =
-//
-// "com.alibaba.graphscope.column.DoubleColumn<com.alibaba.graphscope.fragment.ArrowFragment<java.lang.Long>>")
-// @CXXTemplate(
-// cxx = "gs::IntColumn<gs::ArrowFragmentDefault<int64_t>>",
-// java =
-//
-// "com.alibaba.graphscope.column.IntColumn<com.alibaba.graphscope.fragment.ArrowFragment<java.lang.Long>>")
-// @CXXTemplate(
-// cxx = "gs::LongColumn<gs::ArrowFragmentDefault<int64_t>>",
-// java =
-//
-// "com.alibaba.graphscope.column.LongColumn<com.alibaba.graphscope.fragment.ArrowFragment<java.lang.Long>>")
-// @CXXTemplate(
-// cxx =
-//
-// "gs::DoubleColumn<gs::ArrowProjectedFragment<int64_t,uint64_t,grape::EmptyType,int64_t>>",
-// java =
-//
-// "com.alibaba.graphscope.column.DoubleColumn<com.alibaba.graphscope.fragment.ArrowProjectedFragment<java.lang.Long,java.lang.Long,com.alibaba.graphscope.ds.EmptyType,java.lang.Long>>")
-// @CXXTemplate(
-// cxx =
-//
-// "gs::IntColumn<gs::ArrowProjectedFragment<int64_t,uint64_t,grape::EmptyType,int64_t>>",
-// java =
-//
-// "com.alibaba.graphscope.column.IntColumn<com.alibaba.graphscope.fragment.ArrowProjectedFragment<java.lang.Long,java.lang.Long,com.alibaba.graphscope.ds.EmptyType,java.lang.Long>>")
-// @CXXTemplate(
-// cxx =
-//
-// "gs::LongColumn<gs::ArrowProjectedFragment<int64_t,uint64_t,grape::EmptyType,int64_t>>",
-// java =
-//
-// "com.alibaba.graphscope.column.LongColumn<com.alibaba.graphscope.fragment.ArrowProjectedFragment<java.lang.Long,java.lang.Long,com.alibaba.graphscope.ds.EmptyType,java.lang.Long>>")
 public interface StdSharedPtr<T extends FFIPointer> extends FFIPointer {
     // & will return the pointer of T.
     // shall be cxxvalue?
