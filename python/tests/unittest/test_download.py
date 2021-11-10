@@ -20,6 +20,7 @@ import pytest
 
 from graphscope.dataset.ldbc import load_ldbc
 from graphscope.dataset.modern_graph import load_modern_graph
+from graphscope.dataset.ogbn_arxiv import load_ogbn_arxiv
 from graphscope.dataset.ogbn_mag import load_ogbn_mag
 
 
@@ -30,3 +31,5 @@ def test_download_dataset(graphscope_session):
     g2.unload()
     g3 = load_ogbn_mag(graphscope_session)
     g3.unload()
+    g4 = load_ogbn_arxiv(graphscope_session)
+    g4.unload()
