@@ -252,6 +252,18 @@ impl From<String> for common_pb::Property {
     }
 }
 
+fn str_as_tag(str: String) -> Option<common_pb::NameOrId> {
+    if !str.is_empty() {
+        Some(if let Ok(str_int) = str.parse::<i32>() {
+            str_int.into()
+        } else {
+            str.into()
+        })
+    } else {
+        None
+    }
+}
+
 impl From<String> for common_pb::Variable {
     fn from(str: String) -> Self {
         assert!(str.starts_with(VAR_PREFIX));
@@ -260,26 +272,13 @@ impl From<String> for common_pb::Variable {
         if !str.contains(SPLITTER) {
             common_pb::Variable {
                 // If the tag is represented as an integer
-                tag: Some(if let Ok(str_int) = str.parse::<i32>() {
-                    str_int.into()
-                } else {
-                    str.into()
-                }),
+                tag: str_as_tag(str),
                 property: None,
             }
         } else {
             let mut splitter = str.split(SPLITTER);
             let tag: Option<common_pb::NameOrId> = if let Some(first) = splitter.next() {
-                if !first.is_empty() {
-                    if let Ok(str_int) = first.parse::<i32>() {
-                        Some(str_int.into())
-                    } else {
-                        Some(first.to_string().into())
-                    }
-                } else {
-                    // empty string is interpreted as `None`
-                    None
-                }
+                str_as_tag(first.to_string())
             } else {
                 None
             };
@@ -520,6 +519,15 @@ mod test {
                 })
             },
             common_pb::Variable::from(case6.to_string())
+        );
+
+        let case7 = "@";
+        assert_eq!(
+            common_pb::Variable {
+                tag: None,
+                property: None
+            },
+            common_pb::Variable::from(case7.to_string())
         );
     }
 }
