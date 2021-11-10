@@ -1191,11 +1191,6 @@ class Session(object):
         ):
             return self._learning_instance_dict[graph.vineyard_id]
 
-        if sys.platform != "linux" and sys.platform != "linux2":
-            raise RuntimeError(
-                f"The learning engine currently only supports running on Linux, got {sys.platform}"
-            )
-
         if not graph.graph_type == graph_def_pb2.ARROW_PROPERTY:
             raise InvalidArgumentError("The graph should be a property graph.")
 

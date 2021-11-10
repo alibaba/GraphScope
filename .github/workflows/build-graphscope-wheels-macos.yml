@@ -73,9 +73,14 @@ jobs:
       with:
         python-version: ${{ matrix.python-version }}
 
+    - name: Install Dependencies
+      run: |
+        /bin/bash ${GITHUB_WORKSPACE}/scripts/install_deps.sh --dev --verbose
+
     - name: Test Client Wheel with ${{ matrix.python-version }}
       run: |
         python3 -c "import sys; print(sys.version)"
+        source ~/.graphscope_env
 
         # build graphscope client wheel
         cd ${GITHUB_WORKSPACE}/k8s
@@ -97,9 +102,7 @@ jobs:
         popd
 
         # run test
-        # waiting for graphlearn supported on macos
-        # pip3 install pytest "tensorflow<=2.5.2" --user;
-        python3 -m pip install pytest --user
+        pip3 install pytest "tensorflow<=2.5.2" --user;
         export PATH=${HOME}/.local/bin:${PATH}
         cp ${GITHUB_WORKSPACE}/python/tests/local/test_standalone.py /tmp/test_standalone.py
         python3 -m pytest -s -v /tmp/test_standalone.py

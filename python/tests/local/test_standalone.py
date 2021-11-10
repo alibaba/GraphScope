@@ -26,11 +26,9 @@ import graphscope.nx as nx
 from graphscope.analytical.udf.decorators import pregel
 from graphscope.dataset.ogbn_mag import load_ogbn_mag
 from graphscope.framework.app import AppAssets
-
-if sys.platform == "linux":
-    from graphscope.learning.examples import GCN
-    from graphscope.learning.graphlearn.python.model.tf import optimizer
-    from graphscope.learning.graphlearn.python.model.tf.trainer import LocalTFTrainer
+from graphscope.learning.examples import GCN
+from graphscope.learning.graphlearn.python.model.tf import optimizer
+from graphscope.learning.graphlearn.python.model.tf.trainer import LocalTFTrainer
 
 graphscope.set_option(show_log=True)
 graphscope.set_option(initializing_interactive_engine=False)
@@ -77,10 +75,6 @@ def simple_flow(sess, ogbn_small_script):
     # Interactive engine
     interactive = sess.gremlin(graph)
     papers = interactive.execute(ogbn_small_script).one()
-
-    # MacOS skip the GLE test
-    if sys.platform == "darwin":
-        return
 
     # GLE on ogbn_mag_small graph
     paper_features = []
@@ -204,10 +198,6 @@ def test_default_session(ogbn_small_script):
 
     sub_graph = sub_graph.add_column(ret1, {"kcore": "r"})
     sub_graph = sub_graph.add_column(ret2, {"tc": "r"})
-
-    # MacOS skip the GLE test
-    if sys.platform == "darwin":
-        return
 
     # GLE on ogbn_mag_small graph
     paper_features = []

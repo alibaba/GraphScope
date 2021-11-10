@@ -327,7 +327,7 @@ a `runtime-base` image. To build images with latest version of GraphScope, go to
 # for the first time, run this script to install make, doxygen for docs and java env for testing.
 # ./scripts/prepare_dev.sh
 
-make graphscope
+make graphscope-image
 # by default, the built image is tagged as graphscope/graphscope:SHORTSHA
 ```
 

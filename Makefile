@@ -1,7 +1,6 @@
 
 MKFILE_PATH 			:= $(abspath $(lastword $(MAKEFILE_LIST)))
 WORKING_DIR 			:= $(dir $(MKFILE_PATH))
-OS                      := $(shell uname -s)
 
 VERSION                     ?= 0.1.0
 INSTALL_PREFIX              ?= /opt/graphscope
@@ -118,7 +117,6 @@ gie:
 .PHONY: gle
 gle:
 ifeq ($(WITH_LEARNING_ENGINE), ON)
-ifeq ($(OS), Linux)
 	cd ${WORKING_DIR} && \
 	git submodule update --init && \
 	cd $(WORKING_DIR)/learning_engine/graph-learn && \
@@ -129,7 +127,6 @@ ifeq ($(OS), Linux)
 	sudo make install
 ifneq ($(INSTALL_PREFIX), /usr/local)
 	sudo ln -sf ${INSTALL_PREFIX}/lib/*so* /usr/local/lib
-endif
 endif
 endif
 

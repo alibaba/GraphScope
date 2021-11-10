@@ -86,7 +86,7 @@ graphscope-darwin-py3:
 	sudo rm -fr /tmp/libvineyard /tmp/libgrape-lite
 	# build graphscope
 	cd $(WORKING_DIR)/../ && \
-		make install WITH_LEARNING_ENGINE=OFF && \
+		make install && \
 		python3 $(WORKING_DIR)/precompile.py
 	# build and delocate wheel
 	cd $(WORKING_DIR)/../coordinator && \
@@ -175,18 +175,28 @@ graphscope-manylinux2014-py3:
 			done'
 
 graphscope-client-darwin-py3:
-	cd $(WORKING_DIR)/../python && \
-		rm -fr build || true && \
-		python3 -m pip install -r requirements.txt --user && \
-		python3 -m pip install -r requirements-dev.txt --user && \
+	cd $(WORKING_DIR)/../learning_engine/graph-learn && \
+		git submodule update --init third_party/pybind11 && \
+		rm -rf cmake-build && \
+		mkdir -p cmake-build && \
+		cd cmake-build && \
+		cmake -DWITH_VINEYARD=ON -DTESTING=OFF .. && \
+		make graphlearn_shared -j`nproc` && \
+		export DYLD_LIBRARY_PATH=$(WORKING_DIR)/../learning_engine/graph-learn/built/lib:$$DYLD_LIBRARY_PATH && \
+		export WITH_LEARNING_ENGINE=ON && \
+		cd $(WORKING_DIR)/../python && \
+		pip3 install -U pip numpy==1.18.5 delocate grpcio grpcio_tools wheel && \
+		rm -fr build dist/*.whl || true && \
 		export MACOSX_DEPLOYMENT_TARGET=10.9 && \
-		python3 setup.py bdist_wheel --plat=macosx_10_9_x86_64
+		python3 setup.py bdist_wheel --plat=macosx_10_9_x86_64 && \
+		for wheel in `ls dist/*.whl`; do \
+			delocate-wheel -w dist/wheelhouse -v $$wheel && rm $$wheel; \
+		done
 
 graphscope-client-manylinux2014-py3:
 	docker run --rm -v $(WORKING_DIR)/..:/work \
 		${REGISTRY}/$(DOCKER_ORG)/graphscope-runtime:${VERSION} \
-		bash -c 'sudo mkdir -p /opt/vineyard && \
-			cd /tmp && \
+		bash -c 'cd /tmp && \
 			git clone https://github.com/alibaba/libgrape-lite.git --depth=1 && \
 			cd libgrape-lite && mkdir build && cd build && \
 			cmake .. -DCMAKE_INSTALL_PREFIX=/opt/vineyard && \

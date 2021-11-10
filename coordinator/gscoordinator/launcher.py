@@ -96,14 +96,18 @@ class LocalLauncher(Launcher):
     os.environ["PATH"] += os.pathsep + os.path.join(GRAPHSCOPE_HOME, "bin")
     # add '${GRAPHSCOPE_HOME}/lib' to ${LD_LIBRARY_PATH} to find libvineyard_internal_registry.so(dylib)
     if "LD_LIBRARY_PATH" in os.environ:
-        os.environ["LD_LIBRARY_PATH"] += os.pathsep + os.path.join(
-            GRAPHSCOPE_HOME, "lib"
+        os.environ["LD_LIBRARY_PATH"] = (
+            os.path.join(GRAPHSCOPE_HOME, "lib")
+            + os.pathsep
+            + os.environ["LD_LIBRARY_PATH"]
         )
     else:
         os.environ["LD_LIBRARY_PATH"] = os.path.join(GRAPHSCOPE_HOME, "lib")
     if "DYLD_LIBRARY_PATH" in os.environ:
-        os.environ["DYLD_LIBRARY_PATH"] += os.pathsep + os.path.join(
-            GRAPHSCOPE_HOME, "lib"
+        os.environ["DYLD_LIBRARY_PATH"] = (
+            os.path.join(GRAPHSCOPE_HOME, "lib")
+            + os.pathsep
+            + os.environ["DYLD_LIBRARY_PATH"]
         )
     else:
         os.environ["DYLD_LIBRARY_PATH"] = os.path.join(GRAPHSCOPE_HOME, "lib")
