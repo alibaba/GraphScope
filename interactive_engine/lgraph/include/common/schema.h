@@ -108,18 +108,8 @@ public:
   Schema(Schema &&) = default;
   Schema &operator=(Schema &&) = default;
 
-  static Schema FromProto(const void *proto_data, size_t size) {
-    GraphDefPb pb;
-    Check(pb.ParseFromArray(proto_data, static_cast<int>(size)), "Parse GraphDefPb Failed!");
-    return Schema::FromProto(pb);
-  }
-
-  static Schema FromProto(const std::string &proto_data_bytes) {
-    GraphDefPb pb;
-    Check(pb.ParseFromString(proto_data_bytes), "Parse GraphDefPb Failed!");
-    return Schema::FromProto(pb);
-  }
-
+  static Schema FromProtoFile(const char *schema_proto_bytes_file);
+  static Schema FromProtoBytes(const void *proto_data, size_t size);
   static Schema FromProto(const GraphDefPb &proto);
 
   const TypeDef &GetTypeDef(LabelId label_id) const {
@@ -150,16 +140,16 @@ private:
   static void AddPropertyDefs(const TypeDefPb &proto, std::unordered_map<PropertyId, PropertyDef> *property_defs);
 };
 
-PropertyDef::PropertyDef(PropertyId prop_id, const std::string &prop_name, DataType data_type,
-                         const std::string &default_value_bytes, const std::string &comment)
+inline PropertyDef::PropertyDef(PropertyId prop_id, const std::string &prop_name, DataType data_type,
+                                const std::string &default_value_bytes, const std::string &comment)
     : prop_id_(prop_id), prop_name_(prop_name), data_type_(data_type), default_value_bytes_(default_value_bytes),
       comment_(comment) {}
 
-TypeDef::TypeDef(LabelId label_id, const std::string &label_name, EntityType entity_type,
-                 std::vector<PropertyId> &&property_ids)
+inline TypeDef::TypeDef(LabelId label_id, const std::string &label_name, EntityType entity_type,
+                        std::vector<PropertyId> &&property_ids)
     : label_id_(label_id), label_name_(label_name), entity_type_(entity_type), property_ids_(std::move(property_ids)) {}
 
-TypeDef TypeDef::FromProto(const TypeDefPb &proto) {
+inline TypeDef TypeDef::FromProto(const TypeDefPb &proto) {
   std::vector<PropertyId> property_ids;
   auto &pb_prop_defs = proto.props();
   property_ids.reserve(pb_prop_defs.size());
@@ -170,13 +160,31 @@ TypeDef TypeDef::FromProto(const TypeDefPb &proto) {
           static_cast<EntityType>(proto.typeenum()), std::move(property_ids)};
 }
 
-Schema::Schema(std::unordered_map<LabelId, TypeDef> &&label_to_typedefs,
+inline Schema::Schema(std::unordered_map<LabelId, TypeDef> &&label_to_typedefs,
                std::vector<EdgeRelation> &&edge_relations,
                std::unordered_map<PropertyId, PropertyDef> &&property_defs)
     : label_to_typedefs_(std::move(label_to_typedefs)), edge_relations_(std::move(edge_relations)),
       property_defs_(property_defs) {}
 
-Schema Schema::FromProto(const GraphDefPb &proto) {
+inline Schema Schema::FromProtoFile(const char *schema_proto_bytes_file) {
+  std::ifstream infile(schema_proto_bytes_file);
+  std::vector<char> buffer;
+  infile.seekg(0, infile.end);
+  long length = infile.tellg();
+  Check(length > 0, "Loading empty schema file!");
+  buffer.resize(length);
+  infile.seekg(0, infile.beg);
+  infile.read(&buffer[0], length);
+  infile.close();
+  return Schema::FromProtoBytes(buffer.data(), buffer.size());
+}
+inline Schema Schema::FromProtoBytes(const void *proto_data, size_t size) {
+  GraphDefPb pb;
+  Check(pb.ParseFromArray(proto_data, static_cast<int>(size)), "Parse GraphDefPb Failed!");
+  return Schema::FromProto(pb);
+}
+
+inline Schema Schema::FromProto(const GraphDefPb &proto) {
   std::unordered_map<LabelId, TypeDef> label_to_typedefs;
   std::vector<EdgeRelation> edge_relations;
   std::unordered_map<PropertyId, PropertyDef> property_defs;
@@ -198,7 +206,7 @@ Schema Schema::FromProto(const GraphDefPb &proto) {
   return {std::move(label_to_typedefs), std::move(edge_relations), std::move(property_defs)};
 }
 
-void Schema::AddPropertyDefs(const TypeDefPb &proto, std::unordered_map<PropertyId, PropertyDef> *property_defs) {
+inline void Schema::AddPropertyDefs(const TypeDefPb &proto, std::unordered_map<PropertyId, PropertyDef> *property_defs) {
   for (auto &prop_def : proto.props()) {
     auto prop_id = static_cast<PropertyId>(prop_def.id());
     if (property_defs->count(prop_id) == 0) {

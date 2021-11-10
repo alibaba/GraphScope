@@ -8,12 +8,12 @@ rm -fr generated
 if [ "$MODE" = "debug" ]; then
     mkdir -p build/debug
     cd build/debug
-    cmake -DCMAKE_BUILD_TYPE=Debug ../.. && make
+    cmake -DCMAKE_BUILD_TYPE=Debug ../.. && make -j
     cd ../..
 elif [ "$MODE" = "release" ]; then
     mkdir -p build/release
     cd build/release
-    cmake -DCMAKE_BUILD_TYPE=Release ../.. && make
+    cmake -DCMAKE_BUILD_TYPE=Release ../.. && make -j
     cd ../..
 else
     exit 1

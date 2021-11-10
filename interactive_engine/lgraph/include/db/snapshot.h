@@ -20,6 +20,7 @@
 #include "db/edge.h"
 
 namespace LGRAPH_NAMESPACE {
+namespace db {
 
 class Snapshot {
 public:
@@ -91,4 +92,5 @@ inline Snapshot &Snapshot::operator=(Snapshot &&ss) noexcept {
   return *this;
 }
 
+}
 }

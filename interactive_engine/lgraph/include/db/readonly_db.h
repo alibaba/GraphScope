@@ -21,6 +21,7 @@
 #include "db/snapshot.h"
 
 namespace LGRAPH_NAMESPACE {
+namespace db {
 
 class ReadonlyDB {
 public:
@@ -36,8 +37,6 @@ public:
   ~ReadonlyDB();
 
   Snapshot GetSnapshot(SnapshotId snapshot_id);
-
-  static Schema LoadSchema(const char *schema_proto_bytes_file);
 
 private:
   PartitionGraphHandle handle_;
@@ -65,17 +64,5 @@ inline ReadonlyDB &ReadonlyDB::operator=(ReadonlyDB &&rd) noexcept {
   return *this;
 }
 
-Schema ReadonlyDB::LoadSchema(const char *schema_proto_bytes_file) {
-  std::ifstream infile(schema_proto_bytes_file);
-  std::vector<char> buffer;
-  infile.seekg(0, infile.end);
-  long length = infile.tellg();
-  Check(length > 0, "Loading empty schema file!");
-  buffer.resize(length);
-  infile.seekg(0, infile.beg);
-  infile.read(&buffer[0], length);
-  infile.close();
-  return Schema::FromProto(buffer.data(), buffer.size());
 }
-
 }

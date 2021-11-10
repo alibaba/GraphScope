@@ -16,10 +16,12 @@
 
 #pragma once
 
+#include <string>
 #include "namespace.h"
 
 namespace LGRAPH_NAMESPACE {
 
 void Check(bool result, const char *err_msg);
+void Check(bool result, std::string err_msg);
 
 }

@@ -18,6 +18,7 @@
 #include "store_ffi/store_ffi.h"
 
 namespace LGRAPH_NAMESPACE {
+namespace db {
 
 Snapshot::Snapshot(PartitionSnapshotHandle handle) : handle_(handle) {}
 
@@ -121,4 +122,5 @@ SnapshotId Snapshot::GetSnapshotId() {
   return ffi::GetSnapshotId(handle_);
 }
 
+}
 }

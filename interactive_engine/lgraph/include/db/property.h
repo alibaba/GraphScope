@@ -20,6 +20,7 @@
 #include "util/result.h"
 
 namespace LGRAPH_NAMESPACE {
+namespace db {
 
 class Vertex;
 class Edge;
@@ -117,4 +118,5 @@ inline PropertyIterator &PropertyIterator::operator=(PropertyIterator &&pi) noex
   return *this;
 }
 
+}
 }

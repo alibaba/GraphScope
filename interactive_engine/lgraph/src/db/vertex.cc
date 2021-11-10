@@ -14,46 +14,48 @@
  * limitations under the License.
  */
 
-#include "db/edge.h"
+#include "db/vertex.h"
 #include "store_ffi/store_ffi.h"
 
 namespace LGRAPH_NAMESPACE {
+namespace db {
 
-Edge::~Edge() {
+Vertex::~Vertex() {
   if (handle_ != nullptr) {
-    ffi::ReleaseEdgeHandle(handle_);
+    ffi::ReleaseVertexHandle(handle_);
   }
 }
 
-EdgeId Edge::GetEdgeId() {
-  return ffi::GetEdgeId(handle_);
+VertexId Vertex::GetVertexId() {
+  return ffi::GetVertexId(handle_);
 }
 
-EdgeRelation Edge::GetEdgeRelation() {
-  return ffi::GetEdgeRelation(handle_);
+LabelId Vertex::GetLabelId() {
+  return ffi::GetVertexLabelId(handle_);
 }
 
-Property Edge::GetPropertyBy(PropertyId prop_id) {
-  return Property(ffi::GetEdgeProperty(handle_, prop_id));
+Property Vertex::GetPropertyBy(PropertyId prop_id) {
+  return Property(ffi::GetVertexProperty(handle_, prop_id));
 }
 
-PropertyIterator Edge::GetPropertyIterator() {
-  return PropertyIterator(ffi::GetEdgePropertyIterator(handle_));
+PropertyIterator Vertex::GetPropertyIterator() {
+  return PropertyIterator(ffi::GetVertexPropertyIterator(handle_));
 }
 
-EdgeIterator::~EdgeIterator() {
+VertexIterator::~VertexIterator() {
   if (handle_ != nullptr) {
-    ffi::ReleaseEdgeIteratorHandle(handle_);
+    ffi::ReleaseVertexIteratorHandle(handle_);
   }
 }
 
-Result<Edge, Error> EdgeIterator::Next() {
+Result<Vertex, Error> VertexIterator::Next() {
   ErrorHandle err_hdl = nullptr;
-  EdgeHandle edge_hdl = ffi::EdgeIteratorNext(handle_, &err_hdl);
+  VertexHandle vertex_hdl = ffi::VertexIteratorNext(handle_, &err_hdl);
   if (err_hdl == nullptr) {
-    return Result<Edge, Error>(Ok(Edge(edge_hdl)));
+    return Result<Vertex, Error>(Ok(Vertex(vertex_hdl)));
   }
-  return Result<Edge, Error>(Err(Error(err_hdl)));
+  return Result<Vertex, Error>(Err(Error(err_hdl)));
 }
 
+}
 }

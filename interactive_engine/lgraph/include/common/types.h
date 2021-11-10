@@ -31,6 +31,7 @@ typedef uint64_t VertexId;
 typedef uint64_t EdgeInnerId;
 typedef uint32_t PropertyId;
 typedef uint32_t SerialId;
+typedef int32_t BackupId;
 
 enum EntityType : int32_t {
   VERTEX = 0,
@@ -55,6 +56,28 @@ enum DataType : int32_t {
   STRING_LIST = 14,
 };
 
+enum OpType : int32_t {
+  MARKER = 0,
+
+  OVERWRITE_VERTEX = 1,
+  UPDATE_VERTEX = 2,
+  DELETE_VERTEX = 3,
+  OVERWRITE_EDGE = 4,
+  UPDATE_EDGE = 5,
+  DELETE_EDGE = 6,
+
+  CREATE_VERTEX_TYPE = 7,
+  CREATE_EDGE_TYPE = 8,
+  ADD_EDGE_KIND = 9,
+
+  DROP_VERTEX_TYPE = 10,
+  DROP_EDGE_TYPE = 11,
+  REMOVE_EDGE_KIND = 12,
+
+  PREPARE_DATA_LOAD = 13,
+  COMMIT_DATA_LOAD = 14,
+  };
+
 struct EdgeId {
   EdgeInnerId edge_inner_id;
   VertexId src_vertex_id;
@@ -62,6 +85,10 @@ struct EdgeId {
 
   EdgeId(EdgeInnerId inner_id, VertexId src_id, VertexId dst_id)
       : edge_inner_id(inner_id), src_vertex_id(src_id), dst_vertex_id(dst_id) {}
+  EdgeId(const EdgeId &) = default;
+  EdgeId(EdgeId &&) = default;
+  EdgeId &operator=(const EdgeId &) = default;
+  EdgeId &operator=(EdgeId &&) = default;
 };
 
 struct EdgeRelation {
@@ -71,19 +98,15 @@ struct EdgeRelation {
 
   EdgeRelation(LabelId e_label_id, LabelId src_label_id, LabelId dst_label_id)
       : edge_label_id(e_label_id), src_vertex_label_id(src_label_id), dst_vertex_label_id(dst_label_id) {}
+  EdgeRelation(const EdgeRelation &) = default;
+  EdgeRelation(EdgeRelation &&) = default;
+  EdgeRelation &operator=(const EdgeRelation &) = default;
+  EdgeRelation &operator=(EdgeRelation &&) = default;
 };
 
 struct StringSlice {
   void *data;
   size_t len;
-};
-
-struct FfiResponse {
-  int32_t success;
-  int32_t hasDDl;
-  const char *errMsg;
-  const void *data;
-  int32_t len;
 };
 
 const LabelId none_label_id = std::numeric_limits<LabelId>::max();

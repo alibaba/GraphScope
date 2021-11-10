@@ -18,6 +18,7 @@
 #include "store_ffi/store_ffi.h"
 
 namespace LGRAPH_NAMESPACE {
+namespace db {
 
 Error::~Error() {
   if (handle_ != nullptr) {
@@ -30,4 +31,5 @@ std::string Error::GetInfo() {
   return std::string{static_cast<const char *>(str_slice.data), str_slice.len};
 }
 
+}
 }

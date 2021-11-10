@@ -18,6 +18,7 @@
 #include "store_ffi/store_ffi.h"
 
 namespace LGRAPH_NAMESPACE {
+namespace db {
 
 Property::~Property() {
   if (handle_ != nullptr) {
@@ -90,4 +91,5 @@ Result<Property, Error> PropertyIterator::Next() {
   return Result<Property, Error>(Err(Error(err_hdl)));
 }
 
+}
 }

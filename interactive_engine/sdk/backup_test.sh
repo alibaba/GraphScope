@@ -13,9 +13,9 @@ sed -e "s@LOG4RS_CONFIG@${maxgraph_dir}/conf/log4rs.yml@g" \
     -e "s@log.recycle.enable=true@log.recycle.enable=false@g" \
     conf/config.template > /tmp/max_node_backup_test.config
 LOG_NAME=maxnode MAXGRAPH_CONF_FILE=/tmp/max_node_backup_test.config ./bin/store_ctl.sh max_node_maxgraph &
-sleep 20
+sleep 30
 # load data
-cd ${base_dir} && mvn -Dtest=com.alibaba.graphscope.groot.sdk.ClientBackupTest test
+cd ${base_dir} && mvn clean -Dtest=com.alibaba.graphscope.groot.sdk.ClientBackupTest test
 exit_code=$?
 ps -ef | grep "com.alibaba.maxgraph.servers.MaxNode" | grep -v grep | awk '{print $2}' | xargs kill -9
 # clean data

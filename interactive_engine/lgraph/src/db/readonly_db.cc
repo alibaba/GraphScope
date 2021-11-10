@@ -14,20 +14,25 @@
  * limitations under the License.
  */
 
-#include "common/check.h"
-#include <iostream>
+#include "db/readonly_db.h"
+#include "store_ffi/store_ffi.h"
 
 namespace LGRAPH_NAMESPACE {
+namespace db {
 
-void Check(bool result, const char *err_msg) {
-  if (!result) {
-    std::cerr << err_msg << std::endl;
-    abort();
+ReadonlyDB::ReadonlyDB(const char *store_path)
+    : handle_(ffi::OpenPartitionGraph(store_path)) {}
+
+ReadonlyDB::~ReadonlyDB() {
+  if (handle_ != nullptr) {
+    ffi::ReleasePartitionGraphHandle(handle_);
   }
 }
 
-void Check(bool result, std::string err_msg) {
-  Check(result, err_msg.c_str());
+Snapshot ReadonlyDB::GetSnapshot(SnapshotId snapshot_id) {
+  auto snapshot_handle = ffi::GetSnapshot(handle_, snapshot_id);
+  return Snapshot{snapshot_handle};
 }
 
+}
 }

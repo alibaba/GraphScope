@@ -19,6 +19,7 @@
 #include "db/property.h"
 
 namespace LGRAPH_NAMESPACE {
+namespace db {
 
 class Snapshot;
 class VertexIterator;
@@ -111,4 +112,5 @@ inline VertexIterator &VertexIterator::operator=(VertexIterator &&vi) noexcept {
   return *this;
 }
 
+}
 }

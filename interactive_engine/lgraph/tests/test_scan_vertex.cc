@@ -18,7 +18,7 @@
 #include <string>
 #include "db/readonly_db.h"
 
-std::string GetPropValueAsStr(lgraph::Property *p, const lgraph::Schema &schema) {
+std::string GetPropValueAsStr(lgraph::db::Property *p, const lgraph::Schema &schema) {
   auto &prop_def = schema.GetPropDef(p->GetPropertyId());
   switch (prop_def.GetDataType()) {
     case lgraph::INT:
@@ -38,7 +38,7 @@ std::string GetPropValueAsStr(lgraph::Property *p, const lgraph::Schema &schema)
   }
 }
 
-void PrintVertexInfo(lgraph::Vertex *v, const lgraph::Schema &schema) {
+void PrintVertexInfo(lgraph::db::Vertex *v, const lgraph::Schema &schema) {
   std::string v_id = std::to_string(v->GetVertexId());
   std::string info = "[INFO] ";
   info += "<VertexID: " + v_id + "> ";
@@ -57,9 +57,9 @@ int main(int argc, char *argv[]) {
   assert(argc == 3);
   const char *store_path = argv[1];
   const char *schema_path = argv[2];
-  lgraph::ReadonlyDB rg = lgraph::ReadonlyDB::Open(store_path);
-  lgraph::Schema schema = lgraph::ReadonlyDB::LoadSchema(schema_path);
-  lgraph::Snapshot ss = rg.GetSnapshot(std::numeric_limits<uint32_t>::max());
+  lgraph::Schema schema = lgraph::Schema::FromProtoFile(schema_path);
+  lgraph::db::ReadonlyDB rg = lgraph::db::ReadonlyDB::Open(store_path);
+  lgraph::db::Snapshot ss = rg.GetSnapshot(std::numeric_limits<uint32_t>::max());
   auto iter = ss.ScanVertex().unwrap();
   assert(iter.Valid());
   unsigned v_cnt = 0;

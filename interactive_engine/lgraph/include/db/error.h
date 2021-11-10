@@ -23,6 +23,7 @@
 #include "common/types.h"
 
 namespace LGRAPH_NAMESPACE {
+namespace db {
 
 class Snapshot;
 class Property;
@@ -74,4 +75,5 @@ inline Error &Error::operator=(Error &&e) noexcept {
   return *this;
 }
 
+}
 }

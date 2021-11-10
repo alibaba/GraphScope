@@ -19,6 +19,7 @@
 #include "db/property.h"
 
 namespace LGRAPH_NAMESPACE {
+namespace db {
 
 class Snapshot;
 class EdgeIterator;
@@ -111,4 +112,5 @@ inline EdgeIterator &EdgeIterator::operator=(EdgeIterator &&ei) noexcept {
   return *this;
 }
 
+}
 }

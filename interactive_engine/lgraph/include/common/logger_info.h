@@ -14,23 +14,23 @@
  * limitations under the License.
  */
 
-#include "db/readonly_db.h"
-#include "store_ffi/store_ffi.h"
+#pragma once
+
+#include "common/namespace.h"
 
 namespace LGRAPH_NAMESPACE {
 
-ReadonlyDB::ReadonlyDB(const char *store_path)
-    : handle_(ffi::OpenPartitionGraph(store_path)) {}
+struct LoggerInfo {
+  std::string kafka_servers;
+  std::string topic;
+  int32_t queue_number;
 
-ReadonlyDB::~ReadonlyDB() {
-  if (handle_ != nullptr) {
-    ffi::ReleasePartitionGraphHandle(handle_);
-  }
-}
-
-Snapshot ReadonlyDB::GetSnapshot(SnapshotId snapshot_id) {
-  auto snapshot_handle = ffi::GetSnapshot(handle_, snapshot_id);
-  return Snapshot{snapshot_handle};
-}
+  LoggerInfo(const std::string &servers, const std::string &topic, int32_t queue_number)
+      : kafka_servers(servers), topic(topic), queue_number(queue_number) {}
+  LoggerInfo(const LoggerInfo &) = default;
+  LoggerInfo(LoggerInfo &&) = default;
+  LoggerInfo &operator=(const LoggerInfo &) = default;
+  LoggerInfo &operator=(LoggerInfo &&) = default;
+};
 
 }
