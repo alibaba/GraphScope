@@ -31,23 +31,15 @@ clean:
 
 # Catch-all target: route all unknown targets to Sphinx using the new
 # "make mode" option.  $(O) is meant as a shortcut for $(SPHINXOPTS).
-%: Makefile doxygen gae-java-sdk
+%: Makefile doxygen # gae-java-sdk
 	@echo "Tag is:" $(TAG)
 	@$(SPHINXBUILD) -M $@ "$(SOURCEDIR)" "$(BUILDDIR)/$(TAG)" $(SPHINXOPTS) $(O)
 
 	@echo "Building Java doc to $(BUILDDIR)/${TAG}/$@/reference/gae_java"
-	javadoc -locale en_US -d $(BUILDDIR)/${TAG}/$@/reference/gae_java -classpath \
-	$(WORKING_DIR)/../analytical_engine/java/grape-runtime/target/grape-runtime-0.1-shaded.jar \
-	-sourcepath \
-	$(WORKING_DIR)/../analytical_engine/java/grape-jdk/src/main/java/ \
-	com.alibaba -subpackages com.alibaba.graphscope 
+
+	cd ${WORKING_DIR}/../analytical_engine/java/grape-jdk && \
+	mvn javadoc::javadoc -Djavadoc.output.directory=${WORKING_DIR}/$(BUILDDIR)/${TAG}/$@/reference -Djavadoc.output.destDir=gae_java
 
 doxygen:
 	@mkdir -p _build
 	@doxygen Doxyfile
-
-gae-java-sdk:
-	# Java doc need the classpath to find dependencies, we build a shaded jar which 
-	# contains the neccessary dependencies to generate javadoc.
-	cd $(WORKING_DIR)/../analytical_engine/java && \
-	mvn clean package -DskipTests -Dmaven.antrun.skip=true -U
