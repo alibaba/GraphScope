@@ -16,7 +16,7 @@ package com.alibaba.maxgraph.servers;
 import com.alibaba.maxgraph.compiler.api.schema.*;
 import com.alibaba.graphscope.groot.meta.MetaService;
 import com.alibaba.graphscope.groot.SnapshotWithSchema;
-import com.alibaba.graphscope.groot.frontend.SnapshotCache;
+import com.alibaba.graphscope.groot.SnapshotCache;
 import org.apache.commons.lang3.tuple.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

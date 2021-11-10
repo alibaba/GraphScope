@@ -14,10 +14,10 @@
  * limitations under the License.
  */
 
-#include "db/graph/error.h"
+#include "db/error.h"
 #include "store_ffi/store_ffi.h"
 
-namespace DB_NAMESPACE {
+namespace LGRAPH_NAMESPACE {
 
 Error::~Error() {
   if (handle_ != nullptr) {
@@ -27,7 +27,7 @@ Error::~Error() {
 
 std::string Error::GetInfo() {
   auto str_slice = ffi::GetErrorInfo(handle_);
-  return std::string{static_cast<const char*>(str_slice.data), str_slice.len};
+  return std::string{static_cast<const char *>(str_slice.data), str_slice.len};
 }
 
-}  // namespace DB_NAMESPACE
+}

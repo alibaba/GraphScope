@@ -13,6 +13,7 @@
  */
 package com.alibaba.maxgraph.servers;
 
+import com.alibaba.graphscope.groot.SnapshotCache;
 import com.alibaba.graphscope.groot.coordinator.*;
 import com.alibaba.graphscope.groot.meta.MetaStore;
 import com.alibaba.maxgraph.common.RoleType;
@@ -104,13 +105,16 @@ public class Coordinator extends NodeBase {
         SnapshotCommitService snapshotCommitService =
                 new SnapshotCommitService(this.snapshotManager);
         SchemaService schemaService = new SchemaService(this.schemaManager);
+        this.idAllocator = new IdAllocator(metaStore);
+        IdAllocateService idAllocateService = new IdAllocateService(this.idAllocator);
         RoleClients<StoreBackupClient> storeBackupClients =
                 new RoleClients<>(this.channelManager, RoleType.STORE, StoreBackupClient::new);
         StoreBackupTaskSender storeBackupTaskSender = new StoreBackupTaskSender(storeBackupClients);
-        this.idAllocator = new IdAllocator(metaStore);
-        IdAllocateService idAllocateService = new IdAllocateService(this.idAllocator);
+        SnapshotCache localSnapshotCache = new SnapshotCache();
         this.backupManager =
-                new BackupManager(configs, this.metaService, metaStore, this.snapshotManager, storeBackupTaskSender);
+                new BackupManager(
+                        configs, this.metaService, metaStore, this.snapshotManager, this.schemaManager,
+                        localSnapshotCache, storeBackupTaskSender);
         BackupService backupService = new BackupService(this.backupManager);
         this.rpcServer =
                 new RpcServer(

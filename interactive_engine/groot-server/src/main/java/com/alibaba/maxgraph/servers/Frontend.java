@@ -27,7 +27,7 @@ import com.alibaba.graphscope.groot.frontend.FrontendSnapshotService;
 import com.alibaba.graphscope.groot.frontend.IngestorWriteClient;
 import com.alibaba.graphscope.groot.frontend.SchemaClient;
 import com.alibaba.graphscope.groot.frontend.SchemaWriter;
-import com.alibaba.graphscope.groot.frontend.SnapshotCache;
+import com.alibaba.graphscope.groot.SnapshotCache;
 import com.alibaba.graphscope.groot.frontend.StoreIngestClient;
 import com.alibaba.graphscope.groot.frontend.StoreIngestClients;
 import com.alibaba.graphscope.groot.frontend.StoreIngestor;

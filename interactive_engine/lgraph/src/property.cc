@@ -14,10 +14,10 @@
  * limitations under the License.
  */
 
-#include "db/graph/property.h"
+#include "db/property.h"
 #include "store_ffi/store_ffi.h"
 
-namespace DB_NAMESPACE {
+namespace LGRAPH_NAMESPACE {
 
 Property::~Property() {
   if (handle_ != nullptr) {
@@ -90,4 +90,4 @@ Result<Property, Error> PropertyIterator::Next() {
   return Result<Property, Error>(Err(Error(err_hdl)));
 }
 
-}  // namespace DB_NAMESPACE
+}
