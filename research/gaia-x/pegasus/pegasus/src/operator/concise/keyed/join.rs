@@ -15,7 +15,7 @@
 
 use ahash::AHashMap;
 
-use crate::api::{Binary, Join, HasKey, PartitionByKey};
+use crate::api::{Binary, HasKey, Join, PartitionByKey};
 use crate::communication::output::OutputSession;
 use crate::communication::Output;
 use crate::errors::{BuildJobError, JobExecError};
@@ -64,8 +64,10 @@ impl<L: Data + HasKey, R: Data + HasKey> Helper<L, R> {
         Helper { left_map: TidyTagMap::new(scope_level), right_map: TidyTagMap::new(scope_level) }
     }
 
-    fn get_maps_mut(&mut self, tag: &Tag) -> (&mut JoinMap<L>, &mut JoinMap<R>) {
-        (&mut self.left_map.get_mut_or_insert(tag).data, &mut self.right_map.get_mut_or_insert(tag).data)
+    fn get_maps_mut(&mut self, tag: &Tag) -> (&mut JoinMap<L>, &mut JoinMap<R>, bool, bool) {
+        let left_map = self.left_map.get_mut_or_insert(tag);
+        let right_map = self.right_map.get_mut_or_insert(tag);
+        (&mut left_map.data, &mut right_map.data, !left_map.indicator, !right_map.indicator)
     }
 
     /// The indicator here means the join participant in the given scope (by `tag`) has completed.
@@ -179,25 +181,31 @@ fn internal_inner_join<L: Data + HasKey, R: Data + HasKey<Target = L::Target>>(
             move |left, right, output| {
                 left.for_each_batch(|dataset| {
                     let mut session = output.new_session(&dataset.tag)?;
-                    let (mut l_map, mut r_map) = helper.get_maps_mut(&dataset.tag);
+                    let (mut l_map, mut r_map, _, need_insert) = helper.get_maps_mut(&dataset.tag);
                     for l in dataset.drain() {
-                        if let Some(arr) = insert_and_query(&mut l_map, &mut r_map, &l, true) {
+                        if let Some(arr) = insert_and_query(&mut l_map, &mut r_map, &l, need_insert) {
                             for r in arr {
                                 session.give((l.clone(), r.clone()))?;
                             }
                         }
                     }
+                    if dataset.is_last() {
+                        helper.set_left_end(&dataset.tag);
+                    }
                     Ok(())
                 })?;
                 right.for_each_batch(|dataset| {
                     let mut session = output.new_session(&dataset.tag)?;
-                    let (mut l_map, mut r_map) = helper.get_maps_mut(&dataset.tag);
+                    let (mut l_map, mut r_map, need_insert, _) = helper.get_maps_mut(&dataset.tag);
                     for r in dataset.drain() {
-                        if let Some(arr) = insert_and_query(&mut r_map, &mut l_map, &r, true) {
+                        if let Some(arr) = insert_and_query(&mut r_map, &mut l_map, &r, need_insert) {
                             for l in arr {
                                 session.give((l.clone(), r.clone()))?;
                             }
                         }
+                    }
+                    if dataset.is_last() {
+                        helper.set_right_end(&dataset.tag);
                     }
                     Ok(())
                 })
@@ -217,44 +225,61 @@ fn internal_outer_join<L: Data + HasKey, R: Data + HasKey<Target = L::Target>>(
         JoinType::FullOuter => (true, true),
         _ => return Err(BuildJobError::from("wrong join type".to_string())),
     };
-    this.partition_by_key().binary(format!("{:?}", join_type).as_str(), other, |info| {
-        let mut helper = Helper::<L, R>::new(info.scope_level);
-        move |left, right, output| {
-            left.for_each_batch(|dataset| {
-                let mut session = output.new_session(&dataset.tag)?;
-                let (mut l_map, mut r_map) = helper.get_maps_mut(&dataset.tag);
-                for l in dataset.drain() {
-                    if let Some(arr) = insert_and_query(&mut l_map, &mut r_map, &l, true) {
-                        for r in arr {
-                            session.give((Some(l.clone()), Some(r.clone())))?;
+    this.partition_by_key()
+        .binary(format!("{:?}", join_type).as_str(), other, |info| {
+            let mut helper = Helper::<L, R>::new(info.scope_level);
+            move |left, right, output| {
+                left.for_each_batch(|dataset| {
+                    let mut session = output.new_session(&dataset.tag)?;
+                    let (mut l_map, mut r_map, _, need_insert) = helper.get_maps_mut(&dataset.tag);
+                    for l in dataset.drain() {
+                        if let Some(arr) =
+                        insert_and_query(&mut l_map, &mut r_map, &l, output_left || need_insert)
+                        {
+                            for r in arr {
+                                session.give((Some(l.clone()), Some(r.clone())))?;
+                            }
                         }
                     }
-                }
-                if dataset.is_last() {
-                    helper.set_left_end(&dataset.tag);
-                    try_outer_join_output(&mut helper, session, output_left, output_right, &dataset.tag)?;
-                }
-                Ok(())
-            })?;
-            right.for_each_batch(|dataset| {
-                let mut session = output.new_session(&dataset.tag)?;
-                let (mut l_map, mut r_map) = helper.get_maps_mut(&dataset.tag);
-                for r in dataset.drain() {
-                    if let Some(arr) = insert_and_query(&mut r_map, &mut l_map, &r, true) {
-                        for l in arr {
-                            session.give((Some(l.clone()), Some(r.clone())))?;
+                    if dataset.is_last() {
+                        helper.set_left_end(&dataset.tag);
+                        try_outer_join_output(
+                            &mut helper,
+                            session,
+                            output_left,
+                            output_right,
+                            &dataset.tag,
+                        )?;
+                    }
+                    Ok(())
+                })?;
+                right.for_each_batch(|dataset| {
+                    let mut session = output.new_session(&dataset.tag)?;
+                    let (mut l_map, mut r_map, need_insert, _) = helper.get_maps_mut(&dataset.tag);
+                    for r in dataset.drain() {
+                        if let Some(arr) =
+                        insert_and_query(&mut r_map, &mut l_map, &r, output_right || need_insert)
+                        {
+                            for l in arr {
+                                session.give((Some(l.clone()), Some(r.clone())))?;
+                            }
                         }
                     }
-                }
-                if dataset.is_last() {
-                    helper.set_right_end(&dataset.tag);
-                    try_outer_join_output(&mut helper, session, output_left, output_right, &dataset.tag)?;
-                }
+                    if dataset.is_last() {
+                        helper.set_right_end(&dataset.tag);
+                        try_outer_join_output(
+                            &mut helper,
+                            session,
+                            output_left,
+                            output_right,
+                            &dataset.tag,
+                        )?;
+                    }
+                    Ok(())
+                })?;
                 Ok(())
-            })?;
-            Ok(())
-        }
-    })
+            }
+        })
 }
 
 fn internal_semi_join<L: Data + HasKey, R: Data + HasKey<Target = L::Target>>(
@@ -268,34 +293,35 @@ fn internal_semi_join<L: Data + HasKey, R: Data + HasKey<Target = L::Target>>(
         JoinType::Anti => true,
         _ => return Err(BuildJobError::from("wrong join type".to_string())),
     };
-    this.partition_by_key().binary(format!("{:?}", join_type).as_str(), other, |info| {
-        let mut helper = Helper::<L, R>::new(info.scope_level);
-        move |left, right, output| {
-            left.for_each_batch(|dataset| {
-                let (mut l_map, mut r_map) = helper.get_maps_mut(&dataset.tag);
-                for l in dataset.drain() {
-                    insert_and_query(&mut l_map, &mut r_map, &l, true);
-                }
-                if dataset.is_last() {
-                    helper.set_left_end(&dataset.tag);
-                    try_semi_join_output(&mut helper, output, is_anti, &dataset.tag)?;
-                }
+    this.partition_by_key()
+        .binary(format!("{:?}", join_type).as_str(), other, |info| {
+            let mut helper = Helper::<L, R>::new(info.scope_level);
+            move |left, right, output| {
+                left.for_each_batch(|dataset| {
+                    let (mut l_map, mut r_map, _, _) = helper.get_maps_mut(&dataset.tag);
+                    for l in dataset.drain() {
+                        insert_and_query(&mut l_map, &mut r_map, &l, true);
+                    }
+                    if dataset.is_last() {
+                        helper.set_left_end(&dataset.tag);
+                        try_semi_join_output(&mut helper, output, is_anti, &dataset.tag)?;
+                    }
+                    Ok(())
+                })?;
+                right.for_each_batch(|dataset| {
+                    let (mut l_map, mut r_map, _, _) = helper.get_maps_mut(&dataset.tag);
+                    for r in dataset.drain() {
+                        insert_and_query(&mut r_map, &mut l_map, &r, false);
+                    }
+                    if dataset.is_last() {
+                        helper.set_right_end(&dataset.tag);
+                        try_semi_join_output(&mut helper, output, is_anti, &dataset.tag)?;
+                    }
+                    Ok(())
+                })?;
                 Ok(())
-            })?;
-            right.for_each_batch(|dataset| {
-                let (mut l_map, mut r_map) = helper.get_maps_mut(&dataset.tag);
-                for r in dataset.drain() {
-                    insert_and_query(&mut r_map, &mut l_map, &r, false);
-                }
-                if dataset.is_last() {
-                    helper.set_right_end(&dataset.tag);
-                    try_semi_join_output(&mut helper, output, is_anti, &dataset.tag)?;
-                }
-                Ok(())
-            })?;
-            Ok(())
-        }
-    })
+            }
+        })
 }
 
 impl<L: Data + HasKey, R: Data + HasKey<Target = L::Target>> Join<L, R> for Stream<L> {
