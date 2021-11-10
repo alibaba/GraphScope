@@ -26,6 +26,7 @@
 #include <vector>
 
 #include "grape/worker/comm_spec.h"
+#include "vineyard/basic/ds/arrow_utils.h"
 #include "vineyard/basic/stream/byte_stream.h"
 #include "vineyard/basic/stream/dataframe_stream.h"
 #include "vineyard/basic/stream/parallel_stream.h"
@@ -389,46 +390,14 @@ class ArrowFragmentLoader {
   }
 
  private:
-  boost::leaf::result<std::shared_ptr<arrow::Table>> readTableFromNumpy(
-      std::vector<std::string>& data, size_t row_num, size_t col_num, int index,
-      int total_parts,
-      std::vector<std::pair<std::string, rpc::DataType>> properties) {
-    int chunk_start = index * (row_num / total_parts);
-    int chunk_size = row_num / total_parts;
-    if (index == total_parts - 1) {
-      chunk_size += row_num % total_parts;
+  boost::leaf::result<std::shared_ptr<arrow::Table>> readTableFromPandas(
+      const std::string& data) {
+    std::shared_ptr<arrow::Table> table;
+    if (!data.empty()) {
+      std::shared_ptr<arrow::Buffer> buffer =
+          arrow::Buffer::Wrap(data.data(), data.size());
+      VY_OK_OR_RAISE(vineyard::DeserializeTable(buffer, &table));
     }
-    std::vector<std::shared_ptr<arrow::Array>> arrays;
-    std::vector<std::shared_ptr<arrow::Field>> schemas;
-    CHECK_EQ(properties.size(), col_num);
-    for (size_t i = 0; i < col_num; ++i) {
-      std::shared_ptr<arrow::Array> array;
-      const char* bytes = data[i].data();
-      auto& prop = properties[i];
-      if (prop.second == rpc::INT64 || prop.second == rpc::LONG) {
-        schemas.push_back(arrow::field(prop.first, arrow::int64()));
-        arrow::Int64Builder builder;
-        ARROW_OK_OR_RAISE(builder.AppendValues(
-            reinterpret_cast<const int64_t*>(bytes +
-                                             chunk_start * sizeof(int64_t)),
-            chunk_size));
-        ARROW_OK_OR_RAISE(builder.Finish(&array));
-      } else if (prop.second == rpc::DOUBLE) {
-        schemas.push_back(arrow::field(prop.first, arrow::float64()));
-        arrow::DoubleBuilder builder;
-        ARROW_OK_OR_RAISE(builder.AppendValues(
-            reinterpret_cast<const double*>(bytes +
-                                            chunk_start * sizeof(double)),
-            chunk_size));
-        ARROW_OK_OR_RAISE(builder.Finish(&array));
-      } else {
-        CHECK(0);
-      }
-      arrays.push_back(array);
-    }
-    auto schema = std::make_shared<arrow::Schema>(schemas);
-    auto table = arrow::Table::Make(schema, arrays);
-    ARROW_OK_OR_RAISE(table->Validate());
     return table;
   }
 
@@ -551,10 +520,7 @@ class ArrowFragmentLoader {
         std::shared_ptr<arrow::Table> table;
         if (vertices[i]->protocol == "numpy" ||
             vertices[i]->protocol == "pandas") {
-          BOOST_LEAF_AUTO(
-              tmp, readTableFromNumpy(vertices[i]->data, vertices[i]->row_num,
-                                      vertices[i]->column_num, index,
-                                      total_parts, vertices[i]->properties));
+          BOOST_LEAF_AUTO(tmp, readTableFromPandas(vertices[i]->values));
           table = tmp;
         } else if (vertices[i]->protocol == "vineyard") {
           VLOG(2) << "read vertex table from vineyard: " << vertices[i]->values;
@@ -750,13 +716,8 @@ class ArrowFragmentLoader {
         auto load_procedure =
             [&]() -> boost::leaf::result<std::shared_ptr<arrow::Table>> {
           std::shared_ptr<arrow::Table> table;
-          if (sub_labels[j].protocol == "numpy" ||
-              sub_labels[j].protocol == "pandas") {
-            BOOST_LEAF_ASSIGN(
-                table,
-                readTableFromNumpy(sub_labels[j].data, sub_labels[j].row_num,
-                                   sub_labels[j].column_num, index, total_parts,
-                                   sub_labels[j].properties));
+          if (sub_labels[j].protocol == "pandas") {
+            BOOST_LEAF_ASSIGN(table, readTableFromPandas(sub_labels[j].values));
           } else if (sub_labels[j].protocol == "vineyard") {
             LOG(INFO) << "read edge table from vineyard: "
                       << sub_labels[j].values;
