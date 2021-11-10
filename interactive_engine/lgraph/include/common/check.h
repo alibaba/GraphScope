@@ -16,6 +16,10 @@
 
 #pragma once
 
-#ifndef DB_NAMESPACE
-#define DB_NAMESPACE lgraph
-#endif
+#include "namespace.h"
+
+namespace LGRAPH_NAMESPACE {
+
+void Check(bool result, const char *err_msg);
+
+}

@@ -16,7 +16,7 @@
 
 #include <memory>
 
-#include "db/graph/snapshot.h"
+#include "db/snapshot.h"
 
 #ifdef _WIN32
 #   define DLL_EXPORT __declspec(dllexport)
@@ -24,10 +24,10 @@
 #   define DLL_EXPORT
 #endif
 
-namespace DB_NAMESPACE {
+namespace LGRAPH_NAMESPACE {
 
 extern thread_local PartitionGraphHandle local_graph_handle_;
 
 extern "C" DLL_EXPORT void setPartitionGraph(PartitionGraphHandle handle);
 
-}  // namespace DB_NAMESPACE
+}

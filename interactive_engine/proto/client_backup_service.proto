@@ -15,7 +15,7 @@
  */
 syntax = "proto3";
 
-import "backup_service.proto";
+import "model.proto";
 
 option java_package = "com.alibaba.maxgraph.proto.groot";
 option java_multiple_files = true;

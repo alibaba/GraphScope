@@ -18,15 +18,16 @@
 
 #include <cstdint>
 
-#include "db/common/namespace.h"
-#include "db/common/types.h"
+#include "common/namespace.h"
+#include "common/types.h"
 
-namespace DB_NAMESPACE {
+namespace LGRAPH_NAMESPACE {
 
 namespace ffi {
 
 extern "C" {
   /// Snapshot FFIs
+  PartitionGraphHandle OpenPartitionGraph(const char* store_path);
   PartitionSnapshotHandle GetSnapshot(PartitionGraphHandle graph, SnapshotId snapshot_id);
   VertexHandle GetVertex(PartitionSnapshotHandle snapshot, VertexId vertex_id, LabelId label_id, ErrorHandle* error);
   EdgeHandle GetEdge(PartitionSnapshotHandle snapshot, EdgeId edge_id, const EdgeRelation& edge_relation, ErrorHandle* error);
@@ -67,6 +68,7 @@ extern "C" {
   StringSlice GetErrorInfo(ErrorHandle error_hdl);
 
   /// Release FFIs
+  void ReleasePartitionGraphHandle(PartitionGraphHandle ptr);
   void ReleasePartitionSnapshotHandle(PartitionSnapshotHandle ptr);
   void ReleaseErrorHandle(ErrorHandle ptr);
   void ReleaseVertexHandle(VertexHandle ptr);
@@ -77,6 +79,5 @@ extern "C" {
   void ReleasePropertyIteratorHandle(PropertyIterHandle ptr);
 }
 
-}  // namespace ffi
-
-}  // namespace DB_NAMESPACE
+}
+}

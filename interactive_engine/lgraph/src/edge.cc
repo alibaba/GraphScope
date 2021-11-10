@@ -14,10 +14,10 @@
  * limitations under the License.
  */
 
-#include "db/graph/edge.h"
+#include "db/edge.h"
 #include "store_ffi/store_ffi.h"
 
-namespace DB_NAMESPACE {
+namespace LGRAPH_NAMESPACE {
 
 Edge::~Edge() {
   if (handle_ != nullptr) {
@@ -56,4 +56,4 @@ Result<Edge, Error> EdgeIterator::Next() {
   return Result<Edge, Error>(Err(Error(err_hdl)));
 }
 
-}  // namespace DB_NAMESPACE
+}

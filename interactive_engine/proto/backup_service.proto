@@ -15,6 +15,8 @@
  */
 syntax = "proto3";
 
+import "model.proto";
+
 option java_package = "com.alibaba.maxgraph.proto.groot";
 option java_multiple_files = true;
 
@@ -55,13 +57,6 @@ message RestoreFromBackupRequest {
 }
 
 message RestoreFromBackupResponse {
-}
-
-message BackupInfoPb {
-    int32 globalBackupId = 1;
-    int64 snapshotId = 2;
-    repeated int64 walOffsets = 3;
-    map<int32, int32> partitionToBackupId = 4;
 }
 
 message VerifyBackupRequest {

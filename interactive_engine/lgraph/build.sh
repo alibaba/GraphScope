@@ -3,6 +3,7 @@ set -e
 MODE=$1
 
 mkdir -p build
+rm -fr generated
 
 if [ "$MODE" = "debug" ]; then
     mkdir -p build/debug
