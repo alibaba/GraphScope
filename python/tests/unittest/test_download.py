@@ -20,8 +20,11 @@ import pytest
 
 from graphscope.dataset.ldbc import load_ldbc
 from graphscope.dataset.modern_graph import load_modern_graph
+from graphscope.dataset.ogbl_collab import load_ogbl_collab
+from graphscope.dataset.ogbl_ddi import load_ogbl_ddi
 from graphscope.dataset.ogbn_arxiv import load_ogbn_arxiv
 from graphscope.dataset.ogbn_mag import load_ogbn_mag
+from graphscope.dataset.ogbn_proteins import load_ogbn_proteins
 
 
 def test_download_dataset(graphscope_session):
@@ -33,3 +36,10 @@ def test_download_dataset(graphscope_session):
     g3.unload()
     g4 = load_ogbn_arxiv(graphscope_session)
     g4.unload()
+    # Unable to fit in the memory of the CI environment
+    # g5 = load_ogbn_proteins(graphscope_session)
+    # g5.unload()
+    g6 = load_ogbl_collab(graphscope_session)
+    g6.unload()
+    g7 = load_ogbl_ddi(graphscope_session)
+    g7.unload()
