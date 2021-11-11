@@ -77,7 +77,7 @@ graphscope-darwin-py3:
 	# Avoid copy vineyard library with the same basename by:
 	# 	1) reinstall vineyard to /usr/local and
 	# 	2) rm /opt/vineyard/lib
-	cd /tmp && git clone -b v0.3.6 https://github.com/alibaba/libvineyard.git --depth=1 && \
+	cd /tmp && git clone -b v0.3.8 https://github.com/alibaba/libvineyard.git --depth=1 && \
 		cd libvineyard && git submodule update --init && \
 		mkdir -p build && cd build && \
 		cmake .. -DCMAKE_INSTALL_PREFIX=/usr/local && \
@@ -124,7 +124,7 @@ graphscope-manylinux2014-py3:
 			cmake .. && \
 			sudo make -j`nproc` install && \
 			cd /tmp && \
-			git clone -b v0.3.6 https://github.com/alibaba/libvineyard.git --depth=1 && \
+			git clone -b v0.3.8 https://github.com/alibaba/libvineyard.git --depth=1 && \
 			cd libvineyard && \
 			git submodule update --init && \
 			mkdir -p build && cd build && \
@@ -192,7 +192,7 @@ graphscope-client-manylinux2014-py3:
 			cmake .. -DCMAKE_INSTALL_PREFIX=/opt/vineyard && \
 			sudo make -j`nproc` install && \
 			cd /tmp && \
-			git clone -b v0.3.6 https://github.com/alibaba/libvineyard.git --depth=1 && \
+			git clone -b v0.3.8 https://github.com/alibaba/libvineyard.git --depth=1 && \
 			cd libvineyard && \
 			git submodule update --init && \
 			mkdir -p build && cd build && \
