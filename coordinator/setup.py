@@ -109,7 +109,7 @@ def _get_extra_data():
                     "conscrypt",
                 ],
             ),
-            "/opt/vineyard/lib/libvineyard_internal_registry.{0}".format(
+            "/usr/local/lib/libvineyard_internal_registry.{0}".format(
                 get_lib_suffix()
             ): os.path.join(RUNTIME_ROOT, "lib"),
         }
