@@ -401,7 +401,7 @@ impl<D: Data> Push<MicroBatch<D>> for ExchangeMicroBatchPush<D> {
         } else if len == 1 {
             // only one data, not need re-batching;
             assert_eq!(level, self.scope_level);
-            if let Some(end) = batch.take_end() {
+            if let Some(mut end) = batch.take_end() {
                 let x = batch
                     .get(0)
                     .expect("expect at least one entry as len = 1");
@@ -411,6 +411,7 @@ impl<D: Data> Push<MicroBatch<D>> for ExchangeMicroBatchPush<D> {
                     // only one data scope;
                     if end.source.value() == 1 {
                         assert!(level > 0);
+                        end.source = Weight::single(target as u32);
                         batch.set_end(end);
                         self.pushes[target].push(batch)?;
                     } else {

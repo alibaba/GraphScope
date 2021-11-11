@@ -161,7 +161,7 @@ impl<D: Data> OperatorCore for ForkSubtaskOperator<D> {
                         buf.push(next);
                         let cur = fp.next_seq();
                         let tag = Tag::inherit(&p, cur);
-                        trace_worker!("fork {}th scope {:?}", fp.forked_child, tag);
+                        trace_worker!("fork scope {}th subtask {:?}", fp.forked_child, tag);
                         let mut sub_batch = new_batch(tag.clone(), worker, buf);
                         let end = EndOfScope::new(tag, Weight::single(worker), 1);
                         sub_batch.set_end(end);

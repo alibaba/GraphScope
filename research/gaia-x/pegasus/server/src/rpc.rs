@@ -262,10 +262,6 @@ fn parse_conf_req(mut req: pb::JobConfig) -> JobConf {
         conf.batch_capacity = req.batch_capacity;
     }
 
-    if req.scope_capacity != 0 {
-        conf.scope_capacity = req.scope_capacity;
-    }
-
     if req.plan_print {
         conf.plan_print = true;
     }
