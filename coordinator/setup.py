@@ -44,6 +44,14 @@ def get_version(file):
     return __version__
 
 
+def get_lib_suffix():
+    if platform.system() == "Linux":
+        return "so"
+    elif platform.system() == "Darwin":
+        return "dylib"
+    raise RuntimeError("Get library suffix failed on {0}".format(platform.system()))
+
+
 repo_root = os.path.dirname(os.path.abspath(__file__))
 version = get_version(os.path.join(repo_root, "..", "VERSION"))
 
@@ -53,6 +61,7 @@ GRAPHSCOPE_REQUIRED_PACKAGES = [
     f"gs-jython >= {version}",
     f"gs-lib >= {version}",
     f"gs-engine >= {version}",
+    f"gs-include >= {version}",
 ]
 
 
@@ -68,12 +77,15 @@ def _get_extra_data():
     #
     #  For shrink the package size less than "100M", we split graphscope into
     #   1) gs-coordinator: include python releated code of gscoordinator
-    #   2) gs-lib: lib dir exclude jython-standalone-**.jar
-    #   3) gs-jython: only jython-standalone-**.jar, cause this jar is 40M
-    #   4) gs-engine: other runtime info such as 'bin', 'conf', and 'include'
+    #   2) gs-lib: libs exclude jython-standalone/groovy/grpc/curator/hadoop/gremlin/conscrypt**.jar
+    #   3) gs-jython: other libs not included in gs-lib
+    #   5) gs-include: header files
+    #   4) gs-engine: other runtime info such as 'bin', 'conf'
 
     name = os.environ.get("package_name", "gs-coordinator")
     RUNTIME_ROOT = "graphscope.runtime"
+
+    data = {}
 
     # data format:
     #   {"source_dir": "package_dir"} or
@@ -83,27 +95,55 @@ def _get_extra_data():
         data = {
             "/opt/graphscope/lib/": (
                 os.path.join(RUNTIME_ROOT, "lib"),
-                ["jython-standalone"],
-            )
+                # exclude lists
+                [
+                    "jython-standalone",
+                    "groovy",
+                    "grpc",
+                    "curator",
+                    "hadoop",
+                    "gremlin",
+                    "conscrypt",
+                ],
+            ),
+            "/opt/vineyard/lib/libvineyard_internal_registry.{0}".format(
+                get_lib_suffix()
+            ): os.path.join(RUNTIME_ROOT, "lib"),
         }
+        # MacOS: Some openmpi libs need to be dlopen
+        if platform.system() == "Darwin":
+            data.update(
+                {"/usr/local/opt/open-mpi/lib/": os.path.join(RUNTIME_ROOT, "lib")}
+            )
     elif name == "gs-jython":
         data = {
             "/opt/graphscope/lib/jython-standalone*.jar": os.path.join(
                 RUNTIME_ROOT, "lib"
             ),
+            "/opt/graphscope/lib/groovy*.jar": os.path.join(RUNTIME_ROOT, "lib"),
+            "/opt/graphscope/lib/grpc*.jar": os.path.join(RUNTIME_ROOT, "lib"),
+            "/opt/graphscope/lib/curator*.jar": os.path.join(RUNTIME_ROOT, "lib"),
+            "/opt/graphscope/lib/hadoop*.jar": os.path.join(RUNTIME_ROOT, "lib"),
+            "/opt/graphscope/lib/gremlin*.jar": os.path.join(RUNTIME_ROOT, "lib"),
+            "/opt/graphscope/lib/conscrypt*.jar": os.path.join(RUNTIME_ROOT, "lib"),
         }
     elif name == "gs-engine":
         data = {
             "/opt/graphscope/bin/": os.path.join(RUNTIME_ROOT, "bin"),
             "/opt/graphscope/conf/": os.path.join(RUNTIME_ROOT, "conf"),
-            "/opt/graphscope/include/": os.path.join(RUNTIME_ROOT, "include"),
-            "/usr/local/include/grape": os.path.join(RUNTIME_ROOT, "include"),
             "/opt/graphscope/lib64/": os.path.join(RUNTIME_ROOT, "lib64"),
-            "/opt/vineyard/include/": os.path.join(RUNTIME_ROOT, "include"),
             "/opt/graphscope/*.jar": os.path.join(RUNTIME_ROOT),
             os.path.join("/", tempfile.gettempprefix(), "gs", "builtin"): os.path.join(
                 RUNTIME_ROOT, "precompiled"
             ),
+            "/usr/local/bin/orted": os.path.join(RUNTIME_ROOT, "bin"),
+            "/usr/local/bin/zetcd": os.path.join(RUNTIME_ROOT, "bin"),
+        }
+    elif name == "gs-include":
+        data = {
+            "/opt/graphscope/include/": os.path.join(RUNTIME_ROOT, "include"),
+            "/usr/local/include/grape": os.path.join(RUNTIME_ROOT, "include"),
+            "/opt/vineyard/include/": os.path.join(RUNTIME_ROOT, "include"),
             "/usr/local/include/arrow": os.path.join(RUNTIME_ROOT, "include"),
             "/usr/local/include/boost": os.path.join(RUNTIME_ROOT, "include"),
             "/usr/local/include/double-conversion": os.path.join(
@@ -115,16 +155,7 @@ def _get_extra_data():
             "/usr/local/include/google": os.path.join(RUNTIME_ROOT, "include"),
             "/usr/local/include/mpi*.h": os.path.join(RUNTIME_ROOT, "include"),
             "/usr/local/include/openmpi": os.path.join(RUNTIME_ROOT, "include"),
-            "/usr/local/bin/orted": os.path.join(RUNTIME_ROOT, "bin"),
-            "/usr/local/bin/zetcd": os.path.join(RUNTIME_ROOT, "bin"),
         }
-        # MacOS: Some openmpi libs need to be dlopen
-        if platform.system() == "Darwin":
-            data.update(
-                {"/usr/local/opt/open-mpi/lib/": os.path.join(RUNTIME_ROOT, "lib")}
-            )
-    else:
-        data = {}
     return data
 
 
@@ -234,7 +265,7 @@ class CustomSDist(sdist):
 
 
 with open(
-    os.path.join(os.path.abspath(os.path.dirname(__file__)), "README.md"),
+    os.path.join(os.path.abspath(os.path.dirname(__file__)), "..", "README.md"),
     encoding="utf-8",
     mode="r",
 ) as fp:
