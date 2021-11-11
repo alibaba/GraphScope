@@ -470,7 +470,7 @@ mod common {
         }
 
         pub fn check_query_vertices_err(&self, si: SnapshotId, label: LabelId) {
-            self.helper.check_query_vertices_err(si, label);
+            self.helper.check_query_vertices_empty(si, label);
         }
 
         pub fn check_query_vertices_none(&self, si: SnapshotId, label: Option<LabelId>) {
