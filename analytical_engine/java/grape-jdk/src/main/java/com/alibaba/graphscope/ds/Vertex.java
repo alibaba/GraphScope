@@ -24,6 +24,7 @@ import com.alibaba.fastffi.CXXHead;
 import com.alibaba.fastffi.CXXOperator;
 import com.alibaba.fastffi.CXXPointer;
 import com.alibaba.fastffi.CXXReference;
+import com.alibaba.fastffi.CXXTemplate;
 import com.alibaba.fastffi.CXXValue;
 import com.alibaba.fastffi.CXXValueRangeElement;
 import com.alibaba.fastffi.FFIFactory;
@@ -32,20 +33,17 @@ import com.alibaba.fastffi.FFIPointer;
 import com.alibaba.fastffi.FFITypeAlias;
 
 /**
- * Java Wrapper for <a
- * href="https://github.com/alibaba/libgrape-lite/blob/master/grape/utils/vertex_array.h#L40">grape::Vertex</a>.
+ * Java Wrapper for <a href=
+ * "https://github.com/alibaba/libgrape-lite/blob/master/grape/utils/vertex_array.h#L40">grape::Vertex</a>.
  *
- * @param <VID_T>
+ * @param <VID_T> vertex id type. Long recommended.
  */
 @FFIGen(library = JNI_LIBRARY_NAME)
 @CXXHead(GRAPE_VERTEX_ARRAY_H)
 @FFITypeAlias(GRAPE_VERTEX)
-// @CXXTemplate(
-//        cxx = {"uint32_t"},
-//        java = {"Integer"})
-// @CXXTemplate(
-//        cxx = {"uint64_t"},
-//        java = {"Long"})
+@CXXTemplate(
+        cxx = {"uint64_t"},
+        java = {"Long"})
 public interface Vertex<VID_T> extends FFIPointer, CXXPointer, CXXValueRangeElement<Vertex<VID_T>> {
 
     /**

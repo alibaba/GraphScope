@@ -33,7 +33,7 @@ namespace gs {
 
 /**
  * @brief This is a driver app for Java app. The driven java app should be
- * inherited from com.alibaba.grape.app.ParallelAppBase.
+ * inherited from com.alibaba.graphscope.app.ParallelAppBase.
  *
  * @tparam FRAG_T Should be grape::ImmutableEdgecutFragment<...>
  */

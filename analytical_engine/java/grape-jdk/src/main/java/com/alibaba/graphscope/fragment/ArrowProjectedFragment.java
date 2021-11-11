@@ -33,8 +33,8 @@ import com.alibaba.graphscope.ds.Vertex;
 import com.alibaba.graphscope.ds.VertexRange;
 
 /**
- * Java wrapper for <a
- * href="https://github.com/alibaba/GraphScope/blob/main/analytical_engine/core/fragment/arrow_projected_fragment.h#L338">ArrowProjectedFragment</a>
+ * Java wrapper for <a href=
+ * "https://github.com/alibaba/GraphScope/blob/main/analytical_engine/core/fragment/arrow_projected_fragment.h#L338">ArrowProjectedFragment</a>
  *
  * @param <OID_T> original id type
  * @param <VID_T> vertex id type
@@ -47,11 +47,11 @@ import com.alibaba.graphscope.ds.VertexRange;
 @CXXHead(system = "stdint.h")
 @FFITypeAlias(ARROW_PROJECTED_FRAGMENT)
 // @CXXTemplate(
-//        cxx = {"int64_t", "uint64_t", GRAPE_EMPTY_TYPE, "int64_t"},
-//        java = {"Long", "Long", "com.alibaba.grape.ds.EmptyType", "Long"})
+// cxx = {"int64_t", "uint64_t", GRAPE_EMPTY_TYPE, "int64_t"},
+// java = {"Long", "Long", "com.alibaba.graphscope.ds.EmptyType", "Long"})
 // @CXXTemplate(
-//        cxx = {"int64_t", "uint64_t", "double", "int64_t"},
-//        java = {"Long", "Long", "Double", "Long"})
+// cxx = {"int64_t", "uint64_t", "double", "int64_t"},
+// java = {"Long", "Long", "Double", "Long"})
 public interface ArrowProjectedFragment<OID_T, VID_T, VDATA_T, EDATA_T> extends FFIPointer {
     int fid();
 

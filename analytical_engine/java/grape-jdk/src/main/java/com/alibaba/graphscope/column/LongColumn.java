@@ -40,15 +40,6 @@ import com.alibaba.graphscope.ds.Vertex;
 @CXXHead(ARROW_FRAGMENT_H)
 @CXXHead(ARROW_PROJECTED_FRAGMENT_H)
 @FFITypeAlias(LONG_COLUMN)
-// @CXXTemplate(
-//        cxx = {ARROW_FRAGMENT + "<int64_t>"},
-//        java = {"com.alibaba.graphscope.fragment.ArrowFragment<java.lang.Long>"})
-// @CXXTemplate(
-//        cxx = {ARROW_PROJECTED_FRAGMENT + "<int64_t,uint64_t,grape::EmptyType,int64_t>"},
-//        java = {
-//
-// "com.alibaba.graphscope.fragment.ArrowProjectedFragment<Long,Long,com.alibaba.grape.ds.EmptyType,Long>"
-//        })
 public interface LongColumn<FRAG_T> extends FFIPointer {
     double at(@CXXReference @FFITypeAlias(GRAPE_LONG_VERTEX) Vertex<Long> vertex);
 

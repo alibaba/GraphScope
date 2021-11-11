@@ -38,7 +38,8 @@ public abstract class VertexDataContext<FRAG_T extends ArrowProjectedFragment, D
      * @param includeOuter whether to include outer vertices or not.
      */
     protected void createFFIContext(FRAG_T fragment, Class<?> dataClass, boolean includeOuter) {
-        // String fragmentTemplateStr = FFITypeFactory.getFFITypeName(fragment.getClass(), true);
+        // String fragmentTemplateStr =
+        // FFITypeFactory.getFFITypeName(fragment.getClass(), true);
         String fragmentTemplateStr = FFITypeFactoryhelper.getForeignName(fragment);
         System.out.println("fragment: " + fragmentTemplateStr);
         String contextName =

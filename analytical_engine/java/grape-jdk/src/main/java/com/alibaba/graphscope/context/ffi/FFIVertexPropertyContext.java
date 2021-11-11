@@ -44,12 +44,6 @@ import com.alibaba.graphscope.utils.CppHeaderName;
 @CXXHead(ARROW_PROJECTED_FRAGMENT_H)
 @CXXHead(GRAPE_TYPES_H)
 @FFITypeAlias(VERTEX_PROPERTY_CONTEXT)
-// @CXXTemplate(
-//        cxx = {ARROW_PROJECTED_FRAGMENT + "<int64_t,uint64_t,grape::EmptyType,int64_t>"},
-//        java = {
-//
-// "com.alibaba.graphscope.fragment.ArrowProjectedFragment<java.lang.Long,java.lang.Long,com.alibaba.grape.ds.EmptyType,java.lang.Long>"
-//        })
 public interface FFIVertexPropertyContext<FRAG_T> extends FFIPointer {
     @FFINameAlias("add_column")
     long addColumn(@CXXReference FFIByteString name, @CXXValue ContextDataType contextDataType);

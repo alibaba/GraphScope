@@ -110,7 +110,7 @@ jobs:
         git clone -b master --single-branch --depth=1 https://github.com/7br/gstest.git ${GS_TEST_DIR}
 
         cd ${GITHUB_WORKSPACE}/analytical_engine/java
-        mvn test -Dmaven.antrun.skip=true
+        mvn test -Dmaven.antrun.skip=true --quiet
 
         source ${GRAPHSCOPE_HOME}/conf/grape_jvm_opts
         export USER_JAR_PATH=${GITHUB_WORKSPACE}/analytical_engine/java/grape-demo/target/grape-demo-0.1-shaded.jar
@@ -321,7 +321,7 @@ jobs:
         cd fastFFI
         git checkout a166c6287f2efb938c27fb01b3d499932d484f9c
         export PATH=${PATH}:${LLVM11_HOME}/bin
-        mvn clean install -DskipTests
+        mvn clean install -DskipTests -Dmaven.antrun.skip=true --quiet
 
     - name: Setup tmate session debug
       if: false
@@ -334,7 +334,7 @@ jobs:
         export RUN_JAVA_TESTS=ON
 
         cd ${GITHUB_WORKSPACE}/analytical_engine/java/
-        mvn clean install -DskipTests -Dmaven.antrun.skip=true
+        mvn clean install -DskipTests -Dmaven.antrun.skip=true --quiet
 
         export USER_JAR_PATH=${GITHUB_WORKSPACE}/analytical_engine/java/grape-demo/target/grape-demo-0.1-shaded.jar
         source ${GRAPHSCOPE_HOME}/conf/grape_jvm_opts

@@ -33,33 +33,35 @@ import com.alibaba.graphscope.parallel.ParallelMessageManager;
  *
  * <p>For example, you can implement your app like this.
  *
- * <pre>{@code
- * class MyContext implements ParallelContextBase<Long, Long, Long, Double>{
- *      public void Init(ImmutableEdgecutFragment<Long, Long, Long, Double>
- * frag, ParallelMessageManager messageManager, StdVector<FFIByteString> args) {
+ * <pre>
+ * {
+ *         class MyContext implements ParallelContextBase&lt;Long, Long, Long, Double&gt; {
+ *                 public void Init(ImmutableEdgecutFragment&lt;Long, Long, Long, Double&gt; frag,
+ *                                 ParallelMessageManager messageManager, StdVector&lt;FFIByteString&gt; args) {
  *
- *      }
+ *                 }
  *
- *      public void Output(ImmutableEdgecutFragment<Long, Long, Long, Double>
- * frag) {
+ *                 public void Output(ImmutableEdgecutFragment&lt;Long, Long, Long, Double&gt; frag) {
  *
- *      }
- *  }
- *  class MyApp implements ParallelAppBase<Long,Long,Long,Double, MyContext>{
- *      public void PEval(ImmutableEdgecutFragment<Long, Long, Long, Double>
- * graph, ParallelContextBase<Long,Long,Long,Double> context,
- * ParallelMessageManager messageManager) {
+ *                 }
+ *         }
+ *         class MyApp implements ParallelAppBase&lt;Long, Long, Long, Double, MyContext&gt; {
+ *                 public void PEval(ImmutableEdgecutFragment&lt;Long, Long, Long, Double&gt; graph,
+ *                                 ParallelContextBase&lt;Long, Long, Long, Double&gt; context,
+ *                                 ParallelMessageManager messageManager) {
  *
- *      }
- *      public void IncEval(ImmutableEdgecutFragment<Long, Long, Long, Double>
- * graph, ParallelContextBase<Long,Long,Long,Double> context,
- * ParallelMessageManager messageManager) {
+ *                 }
  *
- *      }
- *  }
- * }</pre>
+ *                 public void IncEval(ImmutableEdgecutFragment&lt;Long, Long, Long, Double&gt; graph,
+ *                                 ParallelContextBase&lt;Long, Long, Long, Double&gt; context,
+ *                                 ParallelMessageManager messageManager) {
  *
- * For more examples, please refer to module com.alibaba.grape.graphscope-demo
+ *                 }
+ *         }
+ * }
+ * </pre>
+ *
+ * For more examples, please refer to module com.alibaba.graphscope.graphscope-demo
  *
  * @param <OID_T> original id type
  * @param <VID_T> vertex id type
@@ -89,6 +91,7 @@ public interface ParallelAppBase<
             ImmutableEdgecutFragment<OID_T, VID_T, VDATA_T, EDATA_T> graph,
             ParallelContextBase<OID_T, VID_T, VDATA_T, EDATA_T> context,
             ParallelMessageManager messageManager);
+
     /**
      * Incremental Evaluation to implement.
      *

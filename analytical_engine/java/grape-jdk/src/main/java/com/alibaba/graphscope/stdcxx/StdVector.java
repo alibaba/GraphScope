@@ -44,19 +44,20 @@ import com.alibaba.fastffi.FFITypeAlias;
 // @CXXTemplate(cxx = "char", java = "java.lang.Byte")
 // @CXXTemplate(cxx = "std::string", java = "com.alibaba.fastffi.FFIByteString")
 // @CXXTemplate(cxx = "std::vector<char>", java =
-// "com.alibaba.grape.stdcxx.StdVector<java.lang.Byte>")
+// "com.alibaba.graphscope.stdcxx.StdVector<java.lang.Byte>")
 // @CXXTemplate(
-//        cxx = "std::vector<int64_t>",
-//        java = "com.alibaba.grape.stdcxx.StdVector<java.lang.Long>")
+// cxx = "std::vector<int64_t>",
+// java = "com.alibaba.graphscope.stdcxx.StdVector<java.lang.Long>")
 //// @CXXTemplate(
-//        cxx = "std::vector<jint>",
-//        java = "com.alibaba.grape.stdcxx.StdVector<java.lang.Integer>")
+// cxx = "std::vector<jint>",
+// java = "com.alibaba.graphscope.stdcxx.StdVector<java.lang.Integer>")
 //// @CXXTemplate(
-//        cxx = "std::vector<std::string>",
-//        java = "com.alibaba.grape.stdcxx.StdVector<com.alibaba.fastffi.FFIByteString>")
+// cxx = "std::vector<std::string>",
+// java =
+// "com.alibaba.graphscope.stdcxx.StdVector<com.alibaba.fastffi.FFIByteString>")
 //// @CXXTemplate(
-//        cxx = GS_VERTEX_ARRAY + "<double>",
-//        java = "com.alibaba.grape.ds.GSVertexArray<java.lang.Double>")
+// cxx = GS_VERTEX_ARRAY + "<double>",
+// java = "com.alibaba.graphscope.ds.GSVertexArray<java.lang.Double>")
 public interface StdVector<E> extends CXXPointer {
     long size();
 

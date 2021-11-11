@@ -30,7 +30,7 @@
     <echo level="info" message="Native Library Name: ${jni.library.name}"/>
 
     <exec dir="${project.build.directory}/native" executable="cmake" failonerror="true" os="Linux">
-      <arg line="-DCMAKE_PREFIX_PATH=/opt/graphscope ${basedir}"/>
+      <arg line="-DCMAKE_PREFIX_PATH=/opt/graphscope;${env.GRAPHSCOPE_HOME} ${basedir}"/>
     </exec>
 
     <exec dir="${project.build.directory}/native" executable="cmake" failonerror="true"

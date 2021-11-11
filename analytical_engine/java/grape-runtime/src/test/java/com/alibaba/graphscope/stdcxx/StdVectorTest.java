@@ -14,12 +14,10 @@
  * limitations under the License.
  */
 
-package com.alibaba.grape.stdcxx;
+package com.alibaba.graphscope.stdcxx;
 
 import com.alibaba.fastffi.FFIByteString;
 import com.alibaba.fastffi.FFITypeFactory;
-import com.alibaba.graphscope.stdcxx.StdString;
-import com.alibaba.graphscope.stdcxx.StdVector;
 import com.alibaba.graphscope.stdcxx.StdVector.Factory;
 import org.junit.Assert;
 import org.junit.Test;

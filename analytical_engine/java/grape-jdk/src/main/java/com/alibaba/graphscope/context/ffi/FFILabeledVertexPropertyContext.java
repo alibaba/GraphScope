@@ -40,9 +40,6 @@ import com.alibaba.graphscope.utils.JNILibraryName;
 @CXXHead(CppHeaderName.LABELED_VERTEX_PROPERTY_CONTEXT_H)
 @CXXHead(CppHeaderName.ARROW_FRAGMENT_H)
 @FFITypeAlias(LABELED_VERTEX_PROPERTY_CONTEXT)
-// @CXXTemplate(
-//        cxx = {ARROW_FRAGMENT + "<int64_t>"},
-//        java = {"com.alibaba.graphscope.fragment.ArrowFragment<java.lang.Long>"})
 public interface FFILabeledVertexPropertyContext<FRAG_T> extends FFIPointer {
     @FFINameAlias("add_column")
     long addColumn(

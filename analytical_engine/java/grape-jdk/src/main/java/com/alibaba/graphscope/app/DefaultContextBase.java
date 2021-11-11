@@ -27,7 +27,8 @@ import com.alibaba.graphscope.stdcxx.StdVector;
  * manages data through the whole computation. The data won't be cleared during supersteps.
  *
  * <p>Apart from data structures provided by {@link java.lang}, you can also use java wrappers for
- * grape data structures provided {@link com.alibaba.grape.ds} and {@link com.alibaba.grape.stdcxx}.
+ * grape data structures provided {@link com.alibaba.graphscope.ds} and {@link
+ * com.alibaba.graphscope.stdcxx}.
  *
  * @param <OID_T> Original vertex id type
  * @param <VID_T> inner vertex id type
