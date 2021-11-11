@@ -45,11 +45,14 @@ def get_version(file):
 
 
 def get_lib_suffix():
+    suffix = ""
     if platform.system() == "Linux":
-        return "so"
+        suffix = "so"
     elif platform.system() == "Darwin":
-        return "dylib"
-    raise RuntimeError("Get library suffix failed on {0}".format(platform.system()))
+        suffix = "dylib"
+    else:
+        raise RuntimeError("Get library suffix failed on {0}".format(platform.system()))
+    return suffix
 
 
 repo_root = os.path.dirname(os.path.abspath(__file__))
