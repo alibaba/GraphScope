@@ -801,7 +801,7 @@ mod tests {
             let mut label_to_vertex_table = HashMap::new();
             for label in 1..=10 {
                 let type_def = types::create_test_type_def(label);
-                let table = meta.create_vertex_type(10, schema_version, label, &type_def).unwrap();
+                let table = meta.create_vertex_type(10, schema_version, label, &type_def, schema_version).unwrap();
                 label_to_vertex_table.insert(label, table);
                 schema_version += 1;
             }
@@ -812,7 +812,7 @@ mod tests {
                 meta.create_edge_type(10, schema_version, label, &type_def).unwrap();
                 schema_version += 1;
                 for edge_kind in gen_edge_kinds(label) {
-                    let table = meta.add_edge_kind(10, schema_version, &edge_kind).unwrap();
+                    let table = meta.add_edge_kind(10, schema_version, &edge_kind, schema_version).unwrap();
                     label_to_edge_table.insert(edge_kind, table);
                     schema_version += 1;
                 }

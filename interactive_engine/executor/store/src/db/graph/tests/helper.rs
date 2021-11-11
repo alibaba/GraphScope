@@ -92,7 +92,7 @@ impl<'a, G: GraphStorage> GraphTestHelper<'a, G> {
 
     pub fn create_vertex_type(&mut self, si: SnapshotId, schema_version: i64, label: LabelId, type_def: TypeDef) -> GraphResult<()> {
         self.check_and_update_si(si)?;
-        self.graph.create_vertex_type(si, schema_version, label, &type_def)?;
+        self.graph.create_vertex_type(si, schema_version, label, &type_def, schema_version)?;
         self.vertex_type_manager.create(si, label, type_def.clone());
         Ok(())
     }
@@ -122,7 +122,7 @@ impl<'a, G: GraphStorage> GraphTestHelper<'a, G> {
 
     pub fn add_edge_kind(&mut self, si: SnapshotId, schema_version: i64, edge_kind: &EdgeKind) -> GraphResult<()> {
         self.check_and_update_si(si)?;
-        self.graph.add_edge_kind(si, schema_version, edge_kind)?;
+        self.graph.add_edge_kind(si, schema_version, edge_kind, schema_version)?;
         self.edge_type_manager.add_edge_kind(si, edge_kind);
         Ok(())
     }
@@ -172,8 +172,8 @@ impl<'a, G: GraphStorage> GraphTestHelper<'a, G> {
         assert!(ans.is_empty(), "some id in helper is not found in data");
     }
 
-    pub fn check_query_vertices_err(&self, si: SnapshotId, label: LabelId) {
-        assert!(self.graph.query_vertices(si, Some(label), None).is_err());
+    pub fn check_query_vertices_empty(&self, si: SnapshotId, label: LabelId) {
+        assert!(self.graph.query_vertices(si, Some(label), None).unwrap().next().is_none());
     }
 
     pub fn check_get_edge<'b, I: Iterator<Item=&'b EdgeId>>(&self, si: SnapshotId, edge_kind: &EdgeKind, ids: I) {
