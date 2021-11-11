@@ -18,6 +18,7 @@ pub use self::property::*;
 pub use self::schema::*;
 use crate::db::proto::model::{EdgeKindPb, EdgeIdPb};
 use crate::db::proto::common::DataLoadTargetPb;
+use crate::v2::api::EdgeRelation;
 
 pub type SnapshotId = i64;
 pub type VertexId = i64;
@@ -50,6 +51,16 @@ impl EdgeId {
     }
 }
 
+impl From<crate::v2::api::EdgeId> for EdgeId {
+    fn from(from_edge_id: crate::v2::api::EdgeId) -> Self {
+        EdgeId::new(
+            from_edge_id.get_edge_inner_id() as i64,
+            from_edge_id.get_src_vertex_id() as VertexId,
+            from_edge_id.get_dst_vertex_id() as VertexId,
+        )
+    }
+}
+
 #[derive(Clone, PartialEq, Eq, Hash)]
 pub struct EdgeKind {
     pub edge_label_id: LabelId,
@@ -76,6 +87,12 @@ impl EdgeKind {
         pb.mut_srcVertexLabelId().set_id(self.src_vertex_label_id);
         pb.mut_dstVertexLabelId().set_id(self.dst_vertex_label_id);
         pb
+    }
+}
+
+impl From<&EdgeRelation> for EdgeKind {
+    fn from(relation: &EdgeRelation) -> Self {
+        EdgeKind::new(relation.get_edge_label_id() as LabelId, relation.get_src_vertex_label_id() as LabelId, relation.get_dst_vertex_label_id() as LabelId)
     }
 }
 

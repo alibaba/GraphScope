@@ -5,6 +5,7 @@ use std::sync::Arc;
 
 use crate::db::api::*;
 use super::{StorageIter, StorageRes, ExternalStorage, ExternalStorageBackup};
+use crate::db::storage::{KvPair, RawBytes};
 
 pub struct RocksDB {
     db: Arc<DB>,
@@ -112,7 +113,41 @@ impl ExternalStorage for RocksDB {
         };
         Ok(Box::from(ret))
     }
+
+    fn new_scan(&self, prefix: &[u8]) -> GraphResult<Box<dyn Iterator<Item=KvPair> + Send>> {
+        let mut iter = match bytes_upper_bound(prefix) {
+            Some(upper) => {
+                let mut option = ReadOptions::default();
+                option.set_iterate_upper_bound(upper);
+                self.db.raw_iterator_opt(option)
+            }
+            None => self.db.raw_iterator(),
+        };
+        iter.seek(prefix);
+        Ok(Box::new(Scan::new(iter)))
+    }
 }
+
+pub struct Scan {
+    inner_iter: RocksDBIter<'static>,
+}
+
+impl Scan {
+    pub fn new(iter: DBRawIterator) -> Self {
+        Scan {
+            inner_iter: unsafe { std::mem::transmute(RocksDBIter::new(iter)) },
+        }
+    }
+}
+
+impl Iterator for Scan {
+    type Item = KvPair;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        self.inner_iter.next().map(|(k, v)| (RawBytes::new(k), RawBytes::new(v)))
+    }
+}
+
 
 impl ExternalStorageBackup for RocksDBBackupEngine {
     /// Optimize this method after a new rust-rocksdb version.

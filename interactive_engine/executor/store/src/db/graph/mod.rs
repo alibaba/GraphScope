@@ -1,4 +1,4 @@
-mod codec;
+pub mod codec;
 mod table_manager;
 mod version;
 pub mod types;
