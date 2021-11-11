@@ -416,8 +416,8 @@ def _from_numpy_dtype(dtype):
         np.dtype(np.uint64): types_pb2.UINT64,
         np.dtype(np.intc): types_pb2.INT,
         np.dtype(np.long): types_pb2.LONG,
-        np.dtype(np.bool): types_pb2.BOOLEAN,
-        np.dtype(np.float): types_pb2.FLOAT,
+        np.dtype(bool): types_pb2.BOOLEAN,
+        np.dtype(float): types_pb2.FLOAT,
         np.dtype(np.double): types_pb2.DOUBLE,
         np.dtype(np.object): types_pb2.STRING,
     }
