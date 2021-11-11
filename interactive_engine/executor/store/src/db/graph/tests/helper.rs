@@ -53,6 +53,7 @@ impl<'a, G: GraphStorage> GraphTestHelper<'a, G> {
         for id in list {
             let properties = data::gen_edge_properties(si, edge_kind, &id, type_def);
             self.graph.insert_overwrite_edge(si, id, edge_kind, true, &properties)?;
+            self.graph.insert_overwrite_edge(si, id, edge_kind, false, &properties)?;
             self.edge_data.insert(si, id, edge_kind, properties);
         }
         Ok(())
@@ -65,6 +66,7 @@ impl<'a, G: GraphStorage> GraphTestHelper<'a, G> {
         for id in list {
             let properties = data::gen_edge_update_properties(si, edge_kind, &id, &type_def);
             self.graph.insert_update_edge(si, id, edge_kind,  true, &properties)?;
+            self.graph.insert_update_edge(si, id, edge_kind,  false, &properties)?;
             self.edge_data.update(si, id, edge_kind, properties);
         }
         Ok(())
@@ -86,6 +88,7 @@ impl<'a, G: GraphStorage> GraphTestHelper<'a, G> {
         for id in list {
             self.edge_data.delete(si, id, edge_kind);
             self.graph.delete_edge(si, id, edge_kind, true)?;
+            self.graph.delete_edge(si, id, edge_kind, false)?;
         }
         Ok(())
     }
@@ -208,8 +211,8 @@ impl<'a, G: GraphStorage> GraphTestHelper<'a, G> {
         check_edge_iter(iter.as_mut(), ans, ids);
     }
 
-    pub fn check_query_edges_err(&self, si: SnapshotId, label: Option<LabelId>) {
-        assert!(self.graph.query_edges(si, label, None).is_err());
+    pub fn check_query_edges_empty(&self, si: SnapshotId, label: Option<LabelId>) {
+        assert!(self.graph.query_edges(si, label, None).unwrap().next().is_none());
     }
 
     pub fn check_get_out_edges(&self, si: SnapshotId, src_id: VertexId, label: Option<LabelId>, ids: HashSet<EdgeId>) {
@@ -218,8 +221,8 @@ impl<'a, G: GraphStorage> GraphTestHelper<'a, G> {
         check_edge_iter(iter.as_mut(), ans, ids);
     }
 
-    pub fn check_get_out_edges_err(&self, si: SnapshotId, src_id: VertexId, label: Option<LabelId>) {
-        assert!(self.graph.get_out_edges(si, src_id, label, None).is_err());
+    pub fn check_get_out_edges_empty(&self, si: SnapshotId, src_id: VertexId, label: Option<LabelId>) {
+        assert!(self.graph.get_out_edges(si, src_id, label, None).unwrap().next().is_none());
     }
 
     pub fn check_get_in_edges(&self, si: SnapshotId, dst_id: VertexId, label: Option<LabelId>, ids: HashSet<EdgeId>) {
@@ -228,8 +231,8 @@ impl<'a, G: GraphStorage> GraphTestHelper<'a, G> {
         check_edge_iter(iter.as_mut(), ans, ids);
     }
 
-    pub fn check_get_in_edges_err(&self, si: SnapshotId, dst_id: VertexId, label: Option<LabelId>) {
-        assert!(self.graph.get_in_edges(si, dst_id, label, None).is_err());
+    pub fn check_get_in_edges_empty(&self, si: SnapshotId, dst_id: VertexId, label: Option<LabelId>) {
+        assert!(self.graph.get_in_edges(si, dst_id, label, None).unwrap().next().is_none());
     }
 
     fn check_and_update_si(&mut self, si: SnapshotId) -> GraphResult<()> {
