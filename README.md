@@ -23,43 +23,22 @@ Visit our website at [graphscope.io](https://graphscope.io) to learn more.
 
 We provide a [Playground](https://try.graphscope.app) with a managed JupyterLab. [Try GraphScope](https://try.graphscope.app) straight away in your browser!
 
-GraphScope can run on clusters managed by [Kubernetes](https://kubernetes.io/) within containers. For quickly getting started, we can set up a *local* Kubernetes cluster and take advantage of pre-built Docker images as follows.
+GraphScope supports run in standalone mode or on clusters managed by [Kubernetes](https://kubernetes.io/) within containers. For quickly getting started, 
+Let's begin with the standalone mode.
 
-### Prerequisites
 
-To run GraphScope on your local computer, the following dependencies or tools are required.
+### Installation for Standalone mode
 
-- Docker
-- Python >= 3.6 (with pip)
-- Local Kubernetes cluster set-up tool (e.g. [Kind](https://kind.sigs.k8s.io))
-
-On macOS, you can follow the official guides to install them and enable Kubernetes in Docker.
-For Ubuntu/CentOS Linux distributions, we provide a script to install the above
-dependencies and prepare the environment.
-On Windows, you may want to install [Ubuntu](https://ubuntu.com/blog/ubuntu-on-wsl-2-is-generally-available) on [WSL2](https://docs.microsoft.com/zh-cn/windows/wsl/install-win10) to use the script.
-
-```bash
-# run the k8s environment preparing script.
-./scripts/install_deps.sh --k8s
-```
-
-### Installation
-
-GraphScope client is distributed as a python package and can be easily installed with pip.
+GraphScope pre-compiled package is distributed as a python package with and can be easily installed with pip.
 
 ```bash
 pip3 install graphscope
 ```
 
-Note that graphscope requires `pip>=19.0`, if you meet error like _"ERROR: Could not find a version that satisfies the requirement graphscope"_ please upgrade your pip with
-
-```bash
-pip3 install -U pip
-```
+Note that `graphscope` requires `Python` >= 3.6 and `pip` >= 19.0.     
+The package is built for and tested on the most popular Linux (Ubuntu18.04+/CentOS 7+) and macOS (version 10.15+) distributions. For Windows, you may want to install Ubuntu on WSL2 to use this package.
 
 Next, we will walk you through a concrete example to illustrate how GraphScope can be used by data scientists to effectively analyze large graphs.
-
-Please note that we have not hardened this release for production use and it lacks important security features such as authentication and encryption, and therefore **it is NOT recommended for production use (yet)!**
 
 
 ## Demo: Node Classification on Citation Network
@@ -67,55 +46,6 @@ Please note that we have not hardened this release for production use and it lac
 [`ogbn-mag`](https://ogb.stanford.edu/docs/nodeprop/#ogbn-mag) is a heterogeneous network composed of a subset of the Microsoft Academic Graph. It contains 4 types of entities(i.e., papers, authors, institutions, and fields of study), as well as four types of directed relations connecting two entities.
 
 Given the heterogeneous `ogbn-mag` data, the task is to predict the class of each paper. Node classification can identify papers in multiple venues, which represent different groups of scientific work on different topics. We apply both the attribute and structural information to classify papers. In the graph, each paper node contains a 128-dimensional word2vec vector representing its content, which is obtained by averaging the embeddings of words in its title and abstract. The embeddings of individual words are pre-trained. The structural information is computed on-the-fly.
-
-<div align="center">
-    <img src="https://graphscope.io/docs/_images/how-it-works.png" width="600" alt="how-it-works" />
-</div>
-
-The figure shows the flow of execution when a client Python program is executed.
-
-- *Step 1*. Create a session or workspace in GraphScope.
-- *Step 2*. Define schema and load the graph.
-- *Step 3*. Query graph data.
-- *Step 4*. Run graph algorithms.
-- *Step 5*. Run graph-based machine learning tasks.
-- *Step 6*. Close the session.
-
-### Creating a session
-
-To use GraphScope, we need to establish a session in a python interpreter.
-
-```python
-import os
-import graphscope
-
-# assume we mount `~/test_data` to `/testingdata` in pods.
-k8s_volumes = {
-    "data": {
-        "type": "hostPath",
-        "field": {
-            "path": os.path.expanduser("~/test_data/"),
-            "type": "Directory"
-        },
-        "mounts": {
-            "mountPath": "/testingdata"
-        }
-    }
-}
-
-sess = graphscope.session(k8s_volumes=k8s_volumes)
-```
-
-For macOS, the session needs to establish with the LoadBalancer service type (which is NodePort by default).
-
-```python
-sess = graphscope.session(k8s_volumes=k8s_volumes, k8s_service_type="LoadBalancer")
-```
-
-A session tries to launch a `coordinator`, which is the entry for the back-end engines.
-The coordinator manages a cluster of resources (k8s pods),
-and the interactive/analytical/learning engines ran on them.
-For each pod in the cluster, there is a vineyard instance at service for distributed data in memory.
 
 ### Loading a graph
 
@@ -128,42 +58,21 @@ Taking `ogbn-mag` as example, the figure below shows the model of the property g
 
 This graph has four kinds of vertices, labeled as `paper`, `author`, `institution` and `field_of_study`. There are four kinds of edges connecting them, each kind of edges has a label and specifies the vertex labels for its two ends. For example, `cites` edges connect two vertices labeled `paper`. Another example is `writes`, it requires the source vertex is labeled `author` and the destination is a `paper` vertex. All the vertices and edges may have properties. e.g., `paper`  vertices have properties like features, publish year, subject label, etc.
 
-To load this graph to GraphScope, one may use the code below with the [data files](https://graphscope.oss-accelerate.aliyuncs.com/ogbn_mag_small.tar.gz). Please download and extract it to the mounted dir on local(in this case, `~/test_data`).
-
-
-```python
-g = sess.g()
-g = g.add_vertices("/testingdata/ogbn_mag_small/paper.csv", label="paper")
-g = g.add_vertices("/testingdata/ogbn_mag_small/author.csv", label="author")
-g = g.add_vertices("/testingdata/ogbn_mag_small/institution.csv", label="institution")
-g = g.add_vertices("/testingdata/ogbn_mag_small/field_of_study.csv", label="field_of_study")
-g = g.add_edges(
-    "/testingdata/ogbn_mag_small/author_affiliated_with_institution.csv",
-    label="affiliated", src_label="author", dst_label="institution",
-)
-g = g.add_edges(
-    "/testingdata/ogbn_mag_small/paper_has_topic_field_of_study.csv",
-    label="hasTopic", src_label="paper", dst_label="field_of_study",
-)
-g = g.add_edges(
-    "/testingdata/ogbn_mag_small/paper_cites_paper.csv",
-    label="cites", src_label="paper", dst_label="paper",
-)
-g = g.add_edges(
-    "/testingdata/ogbn_mag_small/author_writes_paper.csv",
-    label="writes", src_label="author", dst_label="paper",
-)
-```
-
-Alternatively, we provide a function to load this graph for convenience.
+To load this graph to GraphScope with our retrieval module, please use these code:
 
 ```python
+
+import graphscope
 from graphscope.dataset.ogbn_mag import load_ogbn_mag
 
-g = load_ogbn_mag(sess, "/testingdata/ogbn_mag_small/")
+g = load_ogbn_mag()
 ```
 
-Here, the `g` is loaded in parallel via vineyard and stored in vineyard instances in the cluster managed by the session.
+We provide a set of functions to load graph datasets from [ogb](#) and [snap](#) for convenience. Please find all the available graphs [here](https://github.com/alibaba/GraphScope/tree/docs/python/graphscope/dataset).    
+If you want to use your own graph data, please refer [this doc](#) to load vertices and edges by labels.
+
+
+
 
 ### Interactive query
 
@@ -300,8 +209,36 @@ config = {
 train(config, lg)
 ```
 
-See more details in [node_classification_on_citation.ipynb](demo/node_classification_on_citation.ipynb), with the running results.
-Please note that learning feature of GraphScope is not support on macOS yet.
+A ipython with the entire process is availabe [here](#), you may try it step by step yourself. 
+
+
+### Processing Large Graph on a k8s Cluster
+
+
+Please note that we have not hardened this release for production use and it lacks important security features such as authentication and encryption, and therefore **it is NOT recommended for production use (yet)!**
+
+
+
+<div align="center">
+    <img src="https://graphscope.io/docs/_images/how-it-works.png" width="600" alt="how-it-works" />
+</div>
+
+The figure shows the flow of execution when a client Python program is executed.
+
+- *Step 1*. Create a session or workspace in GraphScope.
+- *Step 2*. Define schema and load the graph.
+- *Step 3*. Query graph data.
+- *Step 4*. Run graph algorithms.
+- *Step 5*. Run graph-based machine learning tasks.
+- *Step 6*. Close the session.
+
+
+
+
+
+### load graph
+Here, the `g` is loaded in parallel via vineyard and stored in vineyard instances in the cluster managed by the session.
+
 
 ### Closing the session
 
@@ -314,7 +251,6 @@ sess.close()
 This operation will notify the backend engines and vineyard
 to safely unload graphs and their applications,
 Then, the coordinator will dealloc all the applied resources in the k8s cluster.
-
 
 ## Development
 
