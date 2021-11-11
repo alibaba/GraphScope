@@ -36,8 +36,9 @@ def test_download_dataset(graphscope_session):
     g3.unload()
     g4 = load_ogbn_arxiv(graphscope_session)
     g4.unload()
-    g5 = load_ogbn_proteins(graphscope_session)
-    g5.unload()
+    # Unable to fit in the memory of the CI environment
+    # g5 = load_ogbn_proteins(graphscope_session)
+    # g5.unload()
     g6 = load_ogbl_collab(graphscope_session)
     g6.unload()
     g7 = load_ogbl_ddi(graphscope_session)
