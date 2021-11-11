@@ -123,12 +123,12 @@ def _get_extra_data():
             "/opt/graphscope/lib/jython-standalone*.jar": os.path.join(
                 RUNTIME_ROOT, "lib"
             ),
-            "/opt/graphscope/lib/groovy*.jar": os.path.join(RUNTIME_ROOT, "lib"),
-            "/opt/graphscope/lib/grpc*.jar": os.path.join(RUNTIME_ROOT, "lib"),
-            "/opt/graphscope/lib/curator*.jar": os.path.join(RUNTIME_ROOT, "lib"),
-            "/opt/graphscope/lib/hadoop*.jar": os.path.join(RUNTIME_ROOT, "lib"),
-            "/opt/graphscope/lib/gremlin*.jar": os.path.join(RUNTIME_ROOT, "lib"),
-            "/opt/graphscope/lib/conscrypt*.jar": os.path.join(RUNTIME_ROOT, "lib"),
+            "/opt/graphscope/lib/*groovy*.jar": os.path.join(RUNTIME_ROOT, "lib"),
+            "/opt/graphscope/lib/*grpc*.jar": os.path.join(RUNTIME_ROOT, "lib"),
+            "/opt/graphscope/lib/*curator*.jar": os.path.join(RUNTIME_ROOT, "lib"),
+            "/opt/graphscope/lib/*hadoop*.jar": os.path.join(RUNTIME_ROOT, "lib"),
+            "/opt/graphscope/lib/*gremlin*.jar": os.path.join(RUNTIME_ROOT, "lib"),
+            "/opt/graphscope/lib/*conscrypt*.jar": os.path.join(RUNTIME_ROOT, "lib"),
         }
     elif name == "gs-engine":
         data = {
