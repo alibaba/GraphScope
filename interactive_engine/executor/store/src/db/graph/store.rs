@@ -407,7 +407,7 @@ impl GraphStore {
             let key = vertex_key(table.id, id, si - table.start_si);
             let mut iter = self.storage.scan_from(&key)?;
             if let Some((k, v)) = iter.next() {
-                if k[0..16] == key[0..16] && v.len() >= 4 {
+                if k.len() == key.len() && k[0..16] == key[0..16] && v.len() >= 4 {
                     let ret = unsafe { std::mem::transmute(v) };
                     return Ok(Some(ret));
                 }
@@ -476,7 +476,7 @@ impl GraphStore {
             let key = edge_key(table.id, id, direction, ts);
             let mut iter = self.storage.scan_from(&key)?;
             if let Some((k, v)) = iter.next() {
-                if k[0..32] == key[0..32] && v.len() >= 4 {
+                if k.len() == key.len() && k[0..32] == key[0..32] && v.len() >= 4 {
                     let ret = unsafe { std::mem::transmute(v) };
                     return Ok(Some(ret));
                 }
