@@ -670,9 +670,9 @@ mod tests {
 
     #[test]
     fn test_backup_engine() {
-        let test_dir = "test_backup_engine";
+        let test_dir = "store_test/test_backup_engine";
         fs::rmr(&test_dir).unwrap();
-        let store_path = format!("store_test/{}/store", test_dir);
+        let store_path = format!("{}/store", test_dir);
         let graph = create_empty_graph(&store_path);
         tests::backup::test_backup_engine(graph, test_dir);
         fs::rmr(&test_dir).unwrap();
