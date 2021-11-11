@@ -60,7 +60,7 @@ endif()
 
 # Add library
 set(HEADER_FILES
-    include/client/graph_client.h
+    include/lgraph/client/graph_client.h
     include/common/backup_info.h
     include/common/check.h
     include/common/logger_info.h
