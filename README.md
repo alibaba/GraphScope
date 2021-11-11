@@ -27,7 +27,7 @@ GraphScope supports run in standalone mode or on clusters managed by [Kubernetes
 Let's begin with the standalone mode.
 
 
-### Installation for Standalone mode
+### Installation for Standalone Mode
 
 GraphScope pre-compiled package is distributed as a python package with and can be easily installed with pip.
 
@@ -209,21 +209,37 @@ config = {
 train(config, lg)
 ```
 
-A ipython with the entire process is availabe [here](#), you may try it step by step yourself. 
+A python script with the entire process is availabe [here](#), you may try it out by yourself. 
 
 
-### Processing Large Graph on a k8s Cluster
+### Processing Large Graph on Kubernetes Cluster
 
+GraphScope is designed for processing large graphs, which are usually hard to fit in the memory of a single machine. 
+With [vineyard](https://github.com/v6d-io/v6d) as the distributed in-memory data manager, GraphScope supports run on a cluster managed by Kubernetes(k8s). 
 
-Please note that we have not hardened this release for production use and it lacks important security features such as authentication and encryption, and therefore **it is NOT recommended for production use (yet)!**
+To continue this tutorial, please ensure that you have a k8s managed cluster and know the credentials for the cluster. 
+(e.g., address of k8s API server, usually stored a `~/.kube/config` file.) 
 
+Alternatively, you can set up a local k8s cluster for testing with [Kind](https://kind.sigs.k8s.io/). We provide a script for setup this environment. 
 
+```bash
+# for usage, type --h
+./script/install-deps.sh --k8s
+```
+
+If you did not install the `graphscope` package in the above step, you can install a subset of the whole package with client functions only.
+
+```bash 
+pip install graphscope-client
+```
+
+Next, let's revisit the example by running on a cluster instead. 
 
 <div align="center">
     <img src="https://graphscope.io/docs/_images/how-it-works.png" width="600" alt="how-it-works" />
 </div>
 
-The figure shows the flow of execution when a client Python program is executed.
+The figure shows the flow of execution in the cluster mode. When users run code in the python client, it will:
 
 - *Step 1*. Create a session or workspace in GraphScope.
 - *Step 2*. Define schema and load the graph.
@@ -231,9 +247,6 @@ The figure shows the flow of execution when a client Python program is executed.
 - *Step 4*. Run graph algorithms.
 - *Step 5*. Run graph-based machine learning tasks.
 - *Step 6*. Close the session.
-
-
-
 
 
 ### load graph
@@ -251,6 +264,9 @@ sess.close()
 This operation will notify the backend engines and vineyard
 to safely unload graphs and their applications,
 Then, the coordinator will dealloc all the applied resources in the k8s cluster.
+
+
+Please note that we have not hardened this release for production use and it lacks important security features such as authentication and encryption, and therefore **it is NOT recommended for production use (yet)!**
 
 ## Development
 
