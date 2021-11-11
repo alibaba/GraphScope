@@ -294,11 +294,13 @@ Take SSSP as example, the algorithm in Pregel model looks like this.
 
 Writing Your Own Algorithms In Java
 ----------------------------------------------
+
 If you are a ``Java`` programmer, then you may want to implement your graph algorithm in ``Java``, and 
 run it on GraphScope analytical engine.
 
 Step 0: Get grape-jdk
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
 First, you will need ``grape-jdk`` installed on your developing environment. We will support downloading/installing ``grape-jdk``
 from maven central repositories in the future, however, currently you need to build from source. 
 Please follow :ref:`gae_java_sdk_about` for building grape-jdk from source.
@@ -384,7 +386,7 @@ used maven plugin `maven-shade-pluging`.
     <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-shade-plugin</artifactId>
-      </plugin>
+    </plugin>
 
 
 You will need ``python client`` to run a java app. A simple jar can contains serveral app implementation,

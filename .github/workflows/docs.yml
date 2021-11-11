@@ -74,7 +74,7 @@ jobs:
         cd fastFFI
         git checkout a166c6287f2efb938c27fb01b3d499932d484f9c
         export PATH=${PATH}:${LLVM11_HOME}/bin
-        mvn clean install -DskipTests -Dmaven.antrun.skip=true
+        mvn clean install -DskipTests -Dmaven.antrun.skip=true --quiet
 
         # generate a taged version
         cd ${GITHUB_WORKSPACE}

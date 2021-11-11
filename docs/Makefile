@@ -9,7 +9,6 @@ SPHINXOPTS    ?=
 SPHINXBUILD   ?= python3 -m sphinx
 SOURCEDIR     = .
 BUILDDIR      = _build
-JAVADOC       = javadoc
 
 TAG 		  ?= $(TAG_VER)
 ifeq ($(strip $(TAG)),)
@@ -31,14 +30,14 @@ clean:
 
 # Catch-all target: route all unknown targets to Sphinx using the new
 # "make mode" option.  $(O) is meant as a shortcut for $(SPHINXOPTS).
-%: Makefile doxygen # gae-java-sdk
+%: Makefile doxygen
 	@echo "Tag is:" $(TAG)
 	@$(SPHINXBUILD) -M $@ "$(SOURCEDIR)" "$(BUILDDIR)/$(TAG)" $(SPHINXOPTS) $(O)
 
 	@echo "Building Java doc to $(BUILDDIR)/${TAG}/$@/reference/gae_java"
 
 	cd ${WORKING_DIR}/../analytical_engine/java/grape-jdk && \
-	mvn javadoc::javadoc -Djavadoc.output.directory=${WORKING_DIR}/$(BUILDDIR)/${TAG}/$@/reference -Djavadoc.output.destDir=gae_java
+	mvn javadoc::javadoc -Djavadoc.output.directory=${WORKING_DIR}/$(BUILDDIR)/${TAG}/$@/reference -Djavadoc.output.destDir=gae_java --quiet
 
 doxygen:
 	@mkdir -p _build
