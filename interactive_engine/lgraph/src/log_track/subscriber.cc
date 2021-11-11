@@ -23,6 +23,8 @@ LogSubscriber::LogSubscriber(const std::string &kafka_servers, const std::string
                              int32_t partition_id, int64_t start_offset)
     : consumer_(cppkafka::Configuration{
       {"metadata.broker.list", kafka_servers},
+      {"broker.address.family", "v4"},
+      {"group.id","lgraph-log-subscribers"},
       {"enable.auto.commit",   false}})
     , current_offset_(start_offset) {
   consumer_.assign({cppkafka::TopicPartition{topic, partition_id, start_offset}});
@@ -34,7 +36,7 @@ LogSubscriber::~LogSubscriber() {
 
 LogMessage LogSubscriber::Poll(size_t timeout_ms) {
   auto kafka_msg = consumer_.poll(std::chrono::milliseconds(timeout_ms));
-  if (!kafka_msg.get_error()) {
+  if (kafka_msg && !kafka_msg.get_error()) {
     current_offset_ = kafka_msg.get_offset();
   }
   return LogMessage{std::move(kafka_msg)};
@@ -45,7 +47,7 @@ std::vector<LogMessage> LogSubscriber::PollBatch(size_t max_batch_size, size_t t
   std::vector<LogMessage> msg_batch;
   msg_batch.reserve(kafka_msg_batch.size());
   for (cppkafka::Message &kafka_msg : kafka_msg_batch) {
-    if (!kafka_msg.get_error()) {
+    if (kafka_msg && !kafka_msg.get_error()) {
       current_offset_ = kafka_msg.get_offset();
     }
     msg_batch.emplace_back(std::move(kafka_msg));

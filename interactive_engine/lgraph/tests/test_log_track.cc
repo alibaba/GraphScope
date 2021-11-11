@@ -57,22 +57,23 @@ std::string GetEdgeInsertInfo(const lgraph::log_track::Operation &op, const lgra
   info += "<EdgeID: " + std::to_string(edge_id.edge_inner_id) + ">";
   info += "<SrcID: " + std::to_string(edge_id.src_vertex_id) + ">";
   info += "<DstID: " + std::to_string(edge_id.dst_vertex_id) + ">";
-  info += "<EdgeLabel: " + schema.GetPropDef(edge_rel.edge_label_id).GetPropName() + ">";
-  info += "<SrcLabel: " + schema.GetPropDef(edge_rel.src_vertex_label_id).GetPropName() + ">";
-  info += "<DstLabel: " + schema.GetPropDef(edge_rel.dst_vertex_label_id).GetPropName() + ">";
+  info += "<EdgeLabel: " + schema.GetTypeDef(edge_rel.edge_label_id).GetLabelName() + ">";
+  info += "<SrcLabel: " + schema.GetTypeDef(edge_rel.src_vertex_label_id).GetLabelName() + ">";
+  info += "<DstLabel: " + schema.GetTypeDef(edge_rel.dst_vertex_label_id).GetLabelName() + ">";
+  info += "<Direction: " + std::string(edge_info.IsForward()? "forward" : "reverse") + ">";
   for (auto &entry : edge_info.GetPropMap()) {
     info += "<" + schema.GetPropDef(entry.first).GetPropName() + ": " + GetPropValueAsStr(entry.first, entry.second, schema) + ">";
   }
   return info;
 }
 
-void PrintLogMsg(const lgraph::log_track::LogMessage& msg, const lgraph::Schema &schema) {
+void PrintLogMsg(int subscriber_id, const lgraph::log_track::LogMessage& msg, const lgraph::Schema &schema) {
   if (msg.IsError()) {
     std::cout << "Got Error log Message: " + msg.GetErrorMsg() + "\n";
     return;
   }
   auto parser = msg.GetParser();
-  std::string info = "---------- Log Entry Polled With Snapshot Id ["
+  std::string info = "---------- [Subscriber " + std::to_string(subscriber_id) + "] Log Entry Polled With Snapshot Id ["
       + std::to_string(parser.GetSnapshotId()) + "] ----------\n";
   auto operations = parser.GetOperations();
   for (auto &op : operations) {
@@ -93,25 +94,28 @@ void PrintLogMsg(const lgraph::log_track::LogMessage& msg, const lgraph::Schema 
       info += "[Unconcerned Op] Ignore\n";
     }
   }
+  std::cout << info;
 }
 
-void PollLogBatch(lgraph::log_track::LogSubscriber* subscriber, const lgraph::Schema &schema) {
+void PollLogBatch(int subscriber_id, lgraph::log_track::LogSubscriber* subscriber, const lgraph::Schema &schema) {
   int count = 0;
   while (true) {
     auto msg = subscriber->Poll(500);
-    PrintLogMsg(msg, schema);
-    if (++count >= 20) {
-      break;
+    if (msg) {
+      PrintLogMsg(subscriber_id, msg, schema);
+      if (++count >= 150) {
+        break;
+      }
     }
   }
 }
 
-int main(int argc, char *argv[]) {
-  assert(argc == 2);
-  std::string client_target{argv[1]};
-  lgraph::client::GraphClient graph_client(client_target);
+int main() {
+  lgraph::client::GraphClient graph_client("localhost:55556");
   lgraph::Schema schema = graph_client.GetGraphSchema();
   lgraph::LoggerInfo logger_info = graph_client.GetLoggerInfo();
+  std::cout << "*** Client: got the logger info: [kafka_servers: " + logger_info.kafka_servers + "], [topic: "
+    + logger_info.topic + "], [queue_num: " + std::to_string(logger_info.queue_number) + "]\n";
   std::vector<lgraph::log_track::LogSubscriber*> subscribers;
   std::vector<std::thread> threads;
   subscribers.reserve(logger_info.queue_number);
@@ -121,7 +125,7 @@ int main(int argc, char *argv[]) {
   }
   threads.reserve(logger_info.queue_number);
   for (int i = 0; i < logger_info.queue_number; i++) {
-    threads.emplace_back(std::thread{PollLogBatch, subscribers[i], schema});
+    threads.emplace_back(std::thread{PollLogBatch, i, subscribers[i], schema});
   }
   for (auto &t : threads) {
     t.join();

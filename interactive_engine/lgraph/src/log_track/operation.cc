@@ -15,9 +15,34 @@
  */
 
 #include "log_track/operation.h"
+#include "util/endian.h"
 
 namespace LGRAPH_NAMESPACE {
 namespace log_track {
+
+int32_t PropertyInfo::GetAsInt32() const {
+  Check(value_bytes_.size() == sizeof(int32_t), "Get int32 with wrong value bytes size!");
+  return Endian::ToBigEndian(*reinterpret_cast<const int32_t *>(value_bytes_.data()));
+}
+
+int64_t PropertyInfo::GetAsInt64() const {
+  Check(value_bytes_.size() == sizeof(int64_t), "Get int64 with wrong value bytes size!");
+  return Endian::ToBigEndian(*reinterpret_cast<const int64_t *>(value_bytes_.data()));
+}
+
+float PropertyInfo::GetAsFloat() const {
+  Check(value_bytes_.size() == sizeof(float), "Get float with wrong value bytes size!");
+  return Endian::ToBigEndian(*reinterpret_cast<const float *>(value_bytes_.data()));
+}
+
+double PropertyInfo::GetAsDouble() const {
+  Check(value_bytes_.size() == sizeof(double), "Get double with wrong value bytes size!");
+  return Endian::ToBigEndian(*reinterpret_cast<const double *>(value_bytes_.data()));
+}
+
+const std::string &PropertyInfo::GetAsStr() const {
+  return value_bytes_;
+}
 
 std::unordered_map<PropertyId, PropertyInfo> ExtractPropMap(DataOperationPb* data_op_proto) {
   std::unordered_map<PropertyId, PropertyInfo> prop_map;
@@ -61,6 +86,7 @@ EdgeInsertInfo Operation::GetInfoAsEdgeInsertOp() const {
   EdgeLocationPb edge_location_proto;
   Check(edge_location_proto.ParseFromString(data_op_proto.locationblob()), "Parse EdgeLocationPb Failed!");
   auto &edge_kind_proto = edge_location_proto.edgekind();
+  bool forward = edge_location_proto.forward();
   auto prop_map = ExtractPropMap(&data_op_proto);
   return {
     static_cast<EdgeInnerId>(edge_id_proto.id()),
@@ -69,7 +95,7 @@ EdgeInsertInfo Operation::GetInfoAsEdgeInsertOp() const {
     static_cast<LabelId>(edge_kind_proto.edgelabelid().id()),
     static_cast<LabelId>(edge_kind_proto.srcvertexlabelid().id()),
     static_cast<LabelId>(edge_kind_proto.dstvertexlabelid().id()),
-    std::move(prop_map)
+    forward, std::move(prop_map)
   };
 }
 

@@ -59,6 +59,10 @@ public:
   LogMessage(LogMessage &&rhs) noexcept = default;
   LogMessage &operator=(LogMessage &&rhs) noexcept = default;
 
+  explicit operator bool() const {
+    return (kafka_msg_ && true);
+  }
+
   bool IsError() const {
     return (kafka_msg_.get_error() && true);
   }

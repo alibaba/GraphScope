@@ -30,7 +30,7 @@ public:
   explicit GraphClient(const std::string &target)
       : GraphClient(grpc::CreateChannel(target, grpc::InsecureChannelCredentials())) {}
   explicit GraphClient(const std::shared_ptr<grpc::Channel> &channel)
-      : client_stub_(Client::NewStub(channel)), client_backup_stub_(ClientBackup::NewStub(channel)), ctx_() {}
+      : client_stub_(Client::NewStub(channel)), client_backup_stub_(ClientBackup::NewStub(channel)) {}
   ~GraphClient() = default;
 
   Schema GetGraphSchema();
@@ -47,7 +47,6 @@ public:
 private:
   std::unique_ptr<Client::Stub> client_stub_;
   std::unique_ptr<ClientBackup::Stub> client_backup_stub_;
-  grpc::ClientContext ctx_;
 };
 
 }

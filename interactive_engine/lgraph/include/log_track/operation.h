@@ -45,29 +45,11 @@ public:
     return &value_bytes_;
   }
 
-  int32_t GetAsInt32() const {
-    Check(value_bytes_.size() == sizeof(int32_t), "Get int32 with wrong value bytes size!");
-    return *reinterpret_cast<const int32_t *>(value_bytes_.data());
-  }
-
-  int64_t GetAsInt64() const {
-    Check(value_bytes_.size() == sizeof(int64_t), "Get int64 with wrong value bytes size!");
-    return *reinterpret_cast<const int64_t *>(value_bytes_.data());
-  }
-
-  float GetAsFloat() const {
-    Check(value_bytes_.size() == sizeof(float), "Get float with wrong value bytes size!");
-    return *reinterpret_cast<const float *>(value_bytes_.data());
-  }
-
-  double GetAsDouble() const {
-    Check(value_bytes_.size() == sizeof(double), "Get double with wrong value bytes size!");
-    return *reinterpret_cast<const double *>(value_bytes_.data());
-  }
-
-  const std::string &GetAsStr() const {
-    return value_bytes_;
-  }
+  int32_t GetAsInt32() const;
+  int64_t GetAsInt64() const;
+  float GetAsFloat() const;
+  double GetAsDouble() const;
+  const std::string &GetAsStr() const;
 
 private:
   DataType data_type_;
@@ -119,10 +101,10 @@ class EdgeInsertInfo {
 public:
   EdgeInsertInfo(EdgeInnerId edge_inner_id, VertexId src_id, VertexId dst_id,
                  LabelId edge_label_id, LabelId src_label_id, LabelId dst_label_id,
-                 std::unordered_map<PropertyId, PropertyInfo> &&prop_map)
+                 bool forward, std::unordered_map<PropertyId, PropertyInfo> &&prop_map)
       : edge_id_(edge_inner_id, src_id, dst_id)
       , edge_relation_(edge_label_id, src_label_id, dst_label_id)
-      , prop_map_(std::move(prop_map)) {}
+      , forward_(forward), prop_map_(std::move(prop_map)) {}
   ~EdgeInsertInfo() = default;
 
   EdgeInsertInfo(const EdgeInsertInfo &) = default;
@@ -136,6 +118,10 @@ public:
 
   const EdgeRelation &GetEdgeRelation() const {
     return edge_relation_;
+  }
+
+  bool IsForward() const {
+    return forward_;
   }
 
   const std::unordered_map<PropertyId, PropertyInfo> &GetPropMap() const {
@@ -157,6 +143,7 @@ public:
 private:
   EdgeId edge_id_;
   EdgeRelation edge_relation_;
+  bool forward_;
   std::unordered_map<PropertyId, PropertyInfo> prop_map_;
 };
 

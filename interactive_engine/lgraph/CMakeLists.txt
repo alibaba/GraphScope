@@ -76,6 +76,7 @@ set(HEADER_FILES
     include/log_track/message.h
     include/log_track/operation.h
     include/log_track/subscriber.h
+    include/util/endian.h
     include/util/result.h
     jna/native.h
     jna/ffi_test.h
