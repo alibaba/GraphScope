@@ -261,15 +261,64 @@ impl RecordKey {
     }
 }
 
+impl Hash for RecordElement {
+    fn hash<H: Hasher>(&self, mut state: &mut H) {
+        match self {
+            RecordElement::OnGraph(v) => v
+                .id()
+                .expect("id of VertexOrEdge cannot be None")
+                .hash(&mut state),
+            RecordElement::OutGraph(o) => match o {
+                ObjectElement::None => "".hash(&mut state),
+                ObjectElement::Prop(o) => o.hash(&mut state),
+                ObjectElement::Count(o) => o.hash(&mut state),
+                ObjectElement::Agg(o) => o.hash(&mut state),
+            },
+        }
+    }
+}
+
 impl Hash for RecordKey {
-    fn hash<H: Hasher>(&self, _state: &mut H) {
-        todo!()
+    fn hash<H: Hasher>(&self, mut state: &mut H) {
+        self.key_fields.hash(&mut state)
+    }
+}
+
+impl PartialEq for RecordElement {
+    fn eq(&self, other: &Self) -> bool {
+        match (self, other) {
+            (
+                RecordElement::OnGraph(VertexOrEdge::V(v1)),
+                RecordElement::OnGraph(VertexOrEdge::V(v2)),
+            ) => v1.id() == v2.id(),
+            (
+                RecordElement::OnGraph(VertexOrEdge::E(e1)),
+                RecordElement::OnGraph(VertexOrEdge::E(e2)),
+            ) => e1.id() == e2.id(),
+            (
+                RecordElement::OutGraph(ObjectElement::Prop(o1)),
+                RecordElement::OutGraph(ObjectElement::Prop(o2)),
+            ) => o1 == o2,
+            (
+                RecordElement::OutGraph(ObjectElement::Count(o1)),
+                RecordElement::OutGraph(ObjectElement::Count(o2)),
+            ) => o1 == o2,
+            (
+                RecordElement::OutGraph(ObjectElement::Agg(o1)),
+                RecordElement::OutGraph(ObjectElement::Agg(o2)),
+            ) => o1 == o2,
+            (
+                RecordElement::OutGraph(ObjectElement::None),
+                RecordElement::OutGraph(ObjectElement::None),
+            ) => true,
+            _ => false,
+        }
     }
 }
 
 impl PartialEq for RecordKey {
-    fn eq(&self, _other: &Self) -> bool {
-        todo!()
+    fn eq(&self, other: &Self) -> bool {
+        self.key_fields == other.key_fields
     }
 }
 
