@@ -18,7 +18,11 @@
       <includes>
         <include>liblgraph*</include>
       </includes>
-      <outputDirectory>native</outputDirectory>
+      <outputDirectory>native/lgraph</outputDirectory>
+    </fileSet>
+    <fileSet>
+      <directory>${project.parent.basedir}/lgraph/include</directory>
+      <outputDirectory>native/lgraph/include</outputDirectory>
     </fileSet>
     <fileSet>
       <directory>${project.basedir}/src/bin</directory>
