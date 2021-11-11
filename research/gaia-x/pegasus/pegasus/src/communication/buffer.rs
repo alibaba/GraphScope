@@ -181,7 +181,7 @@ impl<D: Data> ScopeBufferPool<D> {
             }
         }
 
-        self.fetch_slot_ptr(tag).push(item)
+        self.fetch_slot_ptr(tag).push_last(item)
     }
 
     pub fn push_iter(

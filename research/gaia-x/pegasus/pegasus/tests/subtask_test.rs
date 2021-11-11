@@ -13,7 +13,7 @@
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 
-use pegasus::api::{CorrelatedSubTask, Count, HasAny, Limit, Map, Sink};
+use pegasus::api::{CorrelatedSubTask, Count, HasAny, Map, Sink};
 use pegasus::JobConf;
 
 #[test]

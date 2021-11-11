@@ -45,6 +45,7 @@ impl<D: Data> Count<D> for Stream<D> {
                             } else {
                                 table.insert(dataset.tag.clone(), sum);
                             }
+                            return Ok(());
                         }
 
                         if dataset.is_last() {
