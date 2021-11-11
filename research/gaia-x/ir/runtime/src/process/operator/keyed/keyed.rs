@@ -70,3 +70,95 @@ impl KeyFunctionGen for algebra_pb::Dedup {
         Ok(Box::new(KeySelector::with(self.keys)?))
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use crate::graph::element::{Element, Vertex};
+    use crate::graph::property::{DefaultDetails, DynDetails};
+    use crate::process::operator::keyed::KeyFunctionGen;
+    use crate::process::record::{Entry, Record, RecordElement};
+    use dyn_type::Object;
+    use ir_common::generated::algebra as pb;
+    use ir_common::generated::common as common_pb;
+    use ir_common::NameOrId;
+    use pegasus::api::{Dedup, KeyBy, Map, Sink};
+    use pegasus::JobConf;
+    use std::collections::HashMap;
+
+    fn source_gen() -> Box<dyn Iterator<Item = Record> + Send> {
+        let p1: HashMap<NameOrId, Object> = vec![(NameOrId::from("age".to_string()), 27.into())]
+            .into_iter()
+            .collect();
+        let p2: HashMap<NameOrId, Object> = vec![(NameOrId::from("age".to_string()), 29.into())]
+            .into_iter()
+            .collect();
+
+        let v1 = Vertex::new(DynDetails::new(DefaultDetails::with_property(
+            1,
+            NameOrId::from("person".to_string()),
+            p1,
+        )));
+        let v2 = Vertex::new(DynDetails::new(DefaultDetails::with_property(
+            1,
+            NameOrId::from("person".to_string()),
+            p2.clone(),
+        )));
+        let v3 = Vertex::new(DynDetails::new(DefaultDetails::with_property(
+            3,
+            NameOrId::from("person".to_string()),
+            p2,
+        )));
+        let r1 = Record::new(v1, None);
+        let r2 = Record::new(v2, None);
+        let r3 = Record::new(v3, None);
+        Box::new(vec![r1, r2, r3].into_iter())
+    }
+
+    fn dedup_test(key_str: String, expected_ids: Vec<u128>) {
+        let conf = JobConf::new("dedup_test");
+        let mut result = pegasus::run(conf, || {
+            let key_str = key_str.clone();
+            move |input, output| {
+                let mut stream = input.input_from(source_gen())?;
+                let dedup_opr_pb = pb::Dedup {
+                    keys: vec![common_pb::Variable::from(key_str.clone())],
+                };
+                let selector = dedup_opr_pb.clone().gen_key().unwrap();
+                stream = stream
+                    .key_by(move |record| selector.select_key(record))?
+                    .dedup()?
+                    .map(|pair| Ok(pair.value))?;
+                stream.sink_into(output)
+            }
+        })
+        .expect("build job failure");
+
+        let mut result_ids = vec![];
+        while let Some(Ok(res)) = result.next() {
+            match res.get(None).unwrap() {
+                Entry::Element(RecordElement::OnGraph(v)) => {
+                    result_ids.push(v.id().unwrap());
+                }
+                _ => {}
+            }
+        }
+        result_ids.sort();
+        assert_eq!(result_ids, expected_ids);
+    }
+
+    // g.V().dedup()
+    #[test]
+    fn dedup_test_01() {
+        let key_str = "@".to_string();
+        let expected_result = vec![1, 3];
+        dedup_test(key_str, expected_result)
+    }
+
+    // g.V().dedup().by('age')
+    #[test]
+    fn dedup_test_02() {
+        let key_str = "@.age".to_string();
+        let expected_result = vec![1, 1];
+        dedup_test(key_str, expected_result)
+    }
+}
