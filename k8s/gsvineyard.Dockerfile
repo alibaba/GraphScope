@@ -47,7 +47,7 @@ RUN cd /opt/ && \
     cd fastFFI && \
     git checkout a166c6287f2efb938c27fb01b3d499932d484f9c && \
     export PATH=${PATH}:${LLVM11_HOME}/bin && \
-    mvn clean install
+    mvn clean install -DskipTests
 
 ENV LLVM4JNI_HOME=/opt/fastFFI/llvm4jni
 
