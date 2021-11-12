@@ -283,7 +283,7 @@ A session tries to launch a `coordinator`, which is the entry for the back-end e
 
 Similar to the standalone mode, we can still use the functions to load a graph easily. 
 
-```
+```python
 from graphscope.dataset.ogbn_mag import load_ogbn_mag
 
 # TODO(yuansi): data preparation?
