@@ -1,5 +1,5 @@
 use crate::db::api::*;
-use super::super::table_manager::{Table, TableId};
+use super::super::table_manager::{Table};
 use super::super::types::*;
 
 pub trait TableInfoTest {
