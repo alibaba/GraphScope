@@ -322,13 +322,15 @@ To build graphscope python package and the engine bineries, you want to install 
 ```
 
 Then you can build GraphScope with pre-configured `make` commands.
+
 ```bash
 # to make graphscope whole package, including python package + engine binaries.
 make graphscope
 
-
-
-
+# or make the engine components
+# make gie
+# make gae
+# make gle
 ```
 
 ### Building Docker images
@@ -337,11 +339,8 @@ GraphScope ships with a [Dockerfile](k8s/graphscope.Dockerfile) that can build d
 a `runtime-base` image. To build images with latest version of GraphScope, go to the root directory and run this command.
 
 ```bash
-# for the first time, run this script to install make, doxygen for docs and java env for testing.
-# ./scripts/prepare_dev.sh
-
-make graphscope-image
 # by default, the built image is tagged as graphscope/graphscope:SHORTSHA
+make graphscope-image
 ```
 
 ### Building client library
