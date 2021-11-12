@@ -1,0 +1,5 @@
+add_executable(scan_vertex_demo scan_vertex_demo.cc)
+target_link_libraries(scan_vertex_demo PUBLIC lgraph)
+
+add_executable(log_track_demo log_track_demo.cc)
+target_link_libraries(log_track_demo PUBLIC lgraph)

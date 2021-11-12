@@ -19,8 +19,8 @@
 #include <algorithm>
 #include <string>
 
-#include "common/namespace.h"
-#include "common/types.h"
+#include "lgraph/common/namespace.h"
+#include "lgraph/common/types.h"
 
 namespace LGRAPH_NAMESPACE {
 namespace db {

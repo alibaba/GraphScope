@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-#include "db/snapshot.h"
-#include "store_ffi/store_ffi.h"
+#include "lgraph/db/snapshot.h"
+#include "lgraph/db/store_ffi/store_ffi.h"
 
 namespace LGRAPH_NAMESPACE {
 namespace db {

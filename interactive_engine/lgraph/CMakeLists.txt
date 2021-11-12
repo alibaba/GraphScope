@@ -1,48 +1,53 @@
 cmake_minimum_required(VERSION 3.10)
-project(lgraph)
+project(Lgraph)
 
 set(CMAKE_CXX_STANDARD 14)
-set(CMAKE_BUILD_TYPE
-    "${CMAKE_BUILD_TYPE}"
-    CACHE
-    STRING
-    "Choose the type of build."
-    FORCE)
-if (NOT CMAKE_BUILD_TYPE)
-    set (CMAKE_BUILD_TYPE "Release")
-endif ()
+set(CMAKE_CXX_FLAGS_RELEASE "-O2")
 
-set(ROOT ${PROJECT_SOURCE_DIR})
-if (CMAKE_BUILD_TYPE STREQUAL "Debug")
-    set(BUILD_DIR ${ROOT}/build/debug)
-else ()
-    set(BUILD_DIR ${ROOT}/build/release)
-    set(CMAKE_CXX_FLAGS_RELEASE "-O2")
-endif()
-set(LIBRARY_OUTPUT_PATH ${BUILD_DIR})
-
-include_directories(${ROOT})
+set (Lgraph_SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR})
+set (Lgraph_BINARY_DIR ${CMAKE_CURRENT_BINARY_DIR})
 
 # Cmake find modules
-list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/cmake")
+list(APPEND CMAKE_MODULE_PATH "${Lgraph_SOURCE_DIR}/cmake")
 find_package(Protobuf REQUIRED)
 find_package(gRPC REQUIRED)
 find_package(CppKafka REQUIRED)
-include_directories(${CppKafka_INSTALL_INCLUDE_DIR})
 
-# proto file generating
-set(PROTO_SRC_DIR ${ROOT}/../proto)
-set(PROTOS
-    ${PROTO_SRC_DIR}/client.proto
-    ${PROTO_SRC_DIR}/client_backup_service.proto
-    ${PROTO_SRC_DIR}/model.proto
-    ${PROTO_SRC_DIR}/sdk/common.proto
+# Proto file generating
+set(PROTO_FILE_DIR ${Lgraph_SOURCE_DIR}/../proto)
+set(GRPC_FILES
+    ${PROTO_FILE_DIR}/client.proto
+    ${PROTO_FILE_DIR}/client_backup_service.proto)
+set(PROTO_FILES
+    ${GRPC_FILES}
+    ${PROTO_FILE_DIR}/model.proto
+    ${PROTO_FILE_DIR}/sdk/common.proto
 )
-set(PROTO_GEN_DIR ${CMAKE_CURRENT_SOURCE_DIR}/generated)
-file(MAKE_DIRECTORY ${PROTO_GEN_DIR})
-protobuf_generate_cpp(PROTO_SRCS PROTO_HDRS ${PROTO_SRC_DIR} ${PROTO_GEN_DIR} ${PROTOS})
-grpc_generate_cpp(GRPC_SRCS GRPC_HDRS ${PROTO_SRC_DIR} ${PROTO_GEN_DIR} ${PROTOS})
-include_directories(${PROTO_GEN_DIR})
+set(PROTO_BUILD_DIR ${Lgraph_BINARY_DIR}/generated)
+set(PROTO_SRCS_DEST_DIR ${Lgraph_SOURCE_DIR}/src/proto)
+set(PROTO_HDRS_DEST_DIR ${Lgraph_SOURCE_DIR}/include/lgraph/proto)
+file(MAKE_DIRECTORY ${PROTO_BUILD_DIR})
+file(MAKE_DIRECTORY ${PROTO_SRCS_DEST_DIR}/sdk)
+file(MAKE_DIRECTORY ${PROTO_HDRS_DEST_DIR}/sdk)
+protobuf_generate_cpp(
+    PROTO_SRCS
+    PROTO_HDRS
+    ${PROTO_FILE_DIR}
+    ${PROTO_BUILD_DIR}
+    ${PROTO_GEN_DIR}
+    ${PROTO_SRCS_DEST_DIR}
+    ${PROTO_HDRS_DEST_DIR}
+    ${PROTO_FILES})
+grpc_generate_cpp(
+    GRPC_SRCS
+    GRPC_HDRS
+    ${PROTO_FILE_DIR}
+    ${PROTO_BUILD_DIR}
+    ${PROTO_GEN_DIR}
+    ${PROTO_SRCS_DEST_DIR}
+    ${PROTO_HDRS_DEST_DIR}
+    ${GRPC_FILES})
+include_directories(${PROTO_HDRS_DEST_DIR})
 
 # Maxgraph Ffi Dependency
 if (CMAKE_SYSTEM_NAME STREQUAL "Darwin")
@@ -51,37 +56,32 @@ else ()
     set(DYLIB_SUFFIX "so")
 endif()
 
-set(EXECUTOR_DIR ${ROOT}/../executor)
-if (CMAKE_BUILD_TYPE STREQUAL "Debug")
-    set(MAXGRAPH_FFI_LIB_DIR ${EXECUTOR_DIR}/target/debug)
-else ()
-    set(MAXGRAPH_FFI_LIB_DIR ${EXECUTOR_DIR}/target/release)
-endif()
+set(Maxgraph_FFI_LIB_DIR ${Lgraph_SOURCE_DIR}/../executor/target)
+set(Maxgraph_FFI_LIB ${Maxgraph_FFI_LIB_DIR}/libmaxgraph_ffi.${DYLIB_SUFFIX})
 
 # Add library
-set(HEADER_FILES
+set(Lgraph_PROJECT_FILES
     include/lgraph/client/graph_client.h
-    include/common/backup_info.h
-    include/common/check.h
-    include/common/logger_info.h
-    include/common/namespace.h
-    include/common/schema.h
-    include/common/types.h
-    include/db/edge.h
-    include/db/error.h
-    include/db/property.h
-    include/db/readonly_db.h
-    include/db/snapshot.h
-    include/db/vertex.h
-    include/log_track/message.h
-    include/log_track/operation.h
-    include/log_track/subscriber.h
-    include/util/endian.h
-    include/util/result.h
-    jna/native.h
-    jna/ffi_test.h
-    store_ffi/store_ffi.h)
-set(SOURCE_FILES
+    include/lgraph/common/backup_info.h
+    include/lgraph/common/check.h
+    include/lgraph/common/logger_info.h
+    include/lgraph/common/namespace.h
+    include/lgraph/common/schema.h
+    include/lgraph/common/types.h
+    include/lgraph/db/store_ffi/store_ffi.h
+    include/lgraph/db/edge.h
+    include/lgraph/db/error.h
+    include/lgraph/db/property.h
+    include/lgraph/db/readonly_db.h
+    include/lgraph/db/snapshot.h
+    include/lgraph/db/vertex.h
+    include/lgraph/log_track/message.h
+    include/lgraph/log_track/operation.h
+    include/lgraph/log_track/subscriber.h
+    include/lgraph/util/endian.h
+    include/lgraph/util/result.h
+    include/lgraph/jna/native.h
+    include/lgraph/jna/ffi_test.h
     src/client/graph_client.cc
     src/db/edge.cc
     src/db/error.cc
@@ -96,36 +96,24 @@ set(SOURCE_FILES
     src/check.cc)
 
 add_library(lgraph SHARED
-    ${HEADER_FILES}
-    ${SOURCE_FILES}
+    ${Lgraph_PROJECT_FILES}
     ${PROTO_SRCS}
     ${PROTO_HDRS}
     ${GRPC_SRCS}
     ${GRPC_HDRS})
 set_target_properties(lgraph PROPERTIES CLEAN_DIRECT_OUTPUT 1)
-
 target_include_directories(lgraph
     PUBLIC
-        ${ROOT}/include
-        ${ROOT}/jna
+        $<INSTALL_INTERFACE:include>
+        $<BUILD_INTERFACE:${Lgraph_SOURCE_DIR}/include>
     PRIVATE
-        ${ROOT}/src
-        ${ROOT}/store_ffi
-        ${PROTO_SRC_DIR}
-        ${CppKafka_INSTALL_INCLUDE_DIR})
-
+        ${Lgraph_SOURCE_DIR}/src)
 target_link_libraries(lgraph
     PUBLIC
-        ${MAXGRAPH_FFI_LIB_DIR}/libmaxgraph_ffi.${DYLIB_SUFFIX}
+        ${Maxgraph_FFI_LIB}
         gRPC::grpc++_reflection
         protobuf::libprotobuf
         CppKafka::cppkafka)
 
 # Tests
-add_executable(vertex_scan_test
-        tests/test_scan_vertex.cc)
-target_link_libraries(vertex_scan_test PUBLIC lgraph)
-
-add_executable(log_track_test
-        tests/test_log_track.cc)
-target_link_libraries(log_track_test PUBLIC lgraph)
+add_subdirectory(examples)

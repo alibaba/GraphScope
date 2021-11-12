@@ -15,8 +15,8 @@
  */
 
 #include <fstream>
-#include "client/graph_client.h"
-#include "common/check.h"
+#include "lgraph/client/graph_client.h"
+#include "lgraph/common/check.h"
 
 namespace LGRAPH_NAMESPACE {
 namespace client {

@@ -16,9 +16,9 @@
 
 #pragma once
 
-#include "common/check.h"
-#include "common/types.h"
-#include "model.pb.h"
+#include "lgraph/common/check.h"
+#include "lgraph/common/types.h"
+#include "lgraph/proto/model.pb.h"
 
 namespace LGRAPH_NAMESPACE {
 namespace log_track {

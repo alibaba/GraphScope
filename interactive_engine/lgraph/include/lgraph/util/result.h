@@ -19,7 +19,7 @@
 #include <functional>
 #include <type_traits>
 
-#include "common/namespace.h"
+#include "lgraph/common/namespace.h"
 
 namespace LGRAPH_NAMESPACE {
 

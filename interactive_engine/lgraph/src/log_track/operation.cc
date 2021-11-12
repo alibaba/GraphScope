@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-#include "log_track/operation.h"
-#include "util/endian.h"
+#include "lgraph/log_track/operation.h"
+#include "lgraph/util/endian.h"
 
 namespace LGRAPH_NAMESPACE {
 namespace log_track {

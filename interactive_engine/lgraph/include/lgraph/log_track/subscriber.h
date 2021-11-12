@@ -17,7 +17,7 @@
 #pragma once
 
 #include <cppkafka/consumer.h>
-#include "log_track/message.h"
+#include "lgraph/log_track/message.h"
 
 namespace LGRAPH_NAMESPACE {
 namespace log_track {

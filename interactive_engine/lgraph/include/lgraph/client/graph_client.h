@@ -17,10 +17,10 @@
 #pragma once
 
 #include <grpc++/grpc++.h>
-#include "common/backup_info.h"
-#include "common/logger_info.h"
-#include "client.grpc.pb.h"
-#include "client_backup_service.grpc.pb.h"
+#include "lgraph/common/backup_info.h"
+#include "lgraph/common/logger_info.h"
+#include "lgraph/proto/client.grpc.pb.h"
+#include "lgraph/proto/client_backup_service.grpc.pb.h"
 
 namespace LGRAPH_NAMESPACE {
 namespace client {

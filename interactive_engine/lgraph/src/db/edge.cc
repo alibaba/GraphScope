@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-#include "db/edge.h"
-#include "store_ffi/store_ffi.h"
+#include "lgraph/db/edge.h"
+#include "lgraph/db/store_ffi/store_ffi.h"
 
 namespace LGRAPH_NAMESPACE {
 namespace db {

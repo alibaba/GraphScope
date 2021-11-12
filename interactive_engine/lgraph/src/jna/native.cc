@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-#include "jna/native.h"
+#include "lgraph/jna/native.h"
 
 namespace LGRAPH_NAMESPACE {
 

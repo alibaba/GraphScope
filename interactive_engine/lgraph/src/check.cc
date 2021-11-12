@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-#include "common/check.h"
 #include <iostream>
+#include "lgraph/common/check.h"
 
 namespace LGRAPH_NAMESPACE {
 

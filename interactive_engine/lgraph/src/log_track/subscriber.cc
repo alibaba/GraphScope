@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-#include "log_track/subscriber.h"
+#include "lgraph/log_track/subscriber.h"
 
 namespace LGRAPH_NAMESPACE {
 namespace log_track {

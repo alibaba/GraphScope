@@ -17,8 +17,8 @@
 #include <cassert>
 #include <sstream>
 
-#include "jna/ffi_test.h"
-#include "store_ffi/store_ffi.h"
+#include "lgraph/jna/ffi_test.h"
+#include "lgraph/db/store_ffi/store_ffi.h"
 
 namespace LGRAPH_NAMESPACE {
 

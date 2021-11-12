@@ -16,8 +16,8 @@
 
 #pragma once
 
-#include "db/error.h"
-#include "util/result.h"
+#include "lgraph/db/error.h"
+#include "lgraph/util/result.h"
 
 namespace LGRAPH_NAMESPACE {
 namespace db {

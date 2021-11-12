@@ -18,7 +18,7 @@
 
 #include <algorithm>
 #include <array>
-#include "common/namespace.h"
+#include "lgraph/common/namespace.h"
 
 namespace LGRAPH_NAMESPACE {
 

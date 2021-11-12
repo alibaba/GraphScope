@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-#include "db/readonly_db.h"
-#include "store_ffi/store_ffi.h"
+#include "lgraph/db/readonly_db.h"
+#include "lgraph/db/store_ffi/store_ffi.h"
 
 namespace LGRAPH_NAMESPACE {
 namespace db {

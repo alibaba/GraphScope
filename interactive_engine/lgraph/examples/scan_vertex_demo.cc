@@ -16,7 +16,7 @@
 
 #include <iostream>
 #include <string>
-#include "db/readonly_db.h"
+#include "lgraph/db/readonly_db.h"
 
 std::string GetPropValueAsStr(lgraph::db::Property *p, const lgraph::Schema &schema) {
   auto &prop_def = schema.GetPropDef(p->GetPropertyId());

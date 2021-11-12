@@ -16,7 +16,7 @@
 
 #pragma once
 
-#include "db/property.h"
+#include "lgraph/db/property.h"
 
 namespace LGRAPH_NAMESPACE {
 namespace db {

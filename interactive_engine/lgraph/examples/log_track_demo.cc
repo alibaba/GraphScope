@@ -15,8 +15,8 @@
  */
 
 #include <thread>
-#include "client/graph_client.h"
-#include "log_track/subscriber.h"
+#include "lgraph/client/graph_client.h"
+#include "lgraph/log_track/subscriber.h"
 
 std::string GetPropValueAsStr(lgraph::PropertyId pid, const lgraph::log_track::PropertyInfo &p, const lgraph::Schema &schema) {
   auto &prop_def = schema.GetPropDef(pid);

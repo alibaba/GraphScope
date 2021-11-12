@@ -21,7 +21,7 @@
 #include <cstdint>
 #include <limits>
 
-#include "common/namespace.h"
+#include "lgraph/common/namespace.h"
 
 namespace LGRAPH_NAMESPACE {
 

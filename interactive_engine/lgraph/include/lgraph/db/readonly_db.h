@@ -17,8 +17,8 @@
 #pragma once
 
 #include <fstream>
-#include "common/schema.h"
-#include "db/snapshot.h"
+#include "lgraph/common/schema.h"
+#include "lgraph/db/snapshot.h"
 
 namespace LGRAPH_NAMESPACE {
 namespace db {

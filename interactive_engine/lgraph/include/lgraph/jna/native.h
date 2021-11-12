@@ -14,27 +14,20 @@
  * limitations under the License.
  */
 
-#include "jna/native.h"
+#include <memory>
+
+#include "lgraph/db/snapshot.h"
+
+#ifdef _WIN32
+#   define DLL_EXPORT __declspec(dllexport)
+#else
+#   define DLL_EXPORT
+#endif
 
 namespace LGRAPH_NAMESPACE {
 
-class TestResult {
-public:
-  TestResult(bool successful, const std::stringstream &logger)
-      : successful_(successful), info_(std::move(logger.str())) {}
-  ~TestResult() = default;
+extern thread_local PartitionGraphHandle local_graph_handle_;
 
-  bool GetResult() const { return successful_; }
-  const char *GetInfo() const { return info_.c_str(); }
-
-private:
-  bool successful_;
-  std::string info_;
-};
-
-extern "C" DLL_EXPORT TestResult *runLocalTests();
-extern "C" DLL_EXPORT bool getTestResultFlag(const TestResult *r);
-extern "C" DLL_EXPORT const char *getTestResultInfo(const TestResult *r);
-extern "C" DLL_EXPORT void freeTestResult(TestResult *r);
+extern "C" DLL_EXPORT void setPartitionGraph(PartitionGraphHandle handle);
 
 }

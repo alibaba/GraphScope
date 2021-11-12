@@ -16,8 +16,8 @@
 
 #pragma once
 
-#include "db/vertex.h"
-#include "db/edge.h"
+#include "lgraph/db/vertex.h"
+#include "lgraph/db/edge.h"
 
 namespace LGRAPH_NAMESPACE {
 namespace db {

@@ -17,7 +17,7 @@
 #pragma once
 
 #include <string>
-#include "common/namespace.h"
+#include "lgraph/common/namespace.h"
 
 namespace LGRAPH_NAMESPACE {
 

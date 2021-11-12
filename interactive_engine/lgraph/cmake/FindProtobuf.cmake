@@ -19,7 +19,7 @@
 #  DEST - directory where the source files will be created
 #  ARGN - .proto files
 #
-function(PROTOBUF_GENERATE_CPP SRCS HDRS PROTO_ROOT DEST)
+function(PROTOBUF_GENERATE_CPP SRCS HDRS PROTO_ROOT BUILD_DIR SRCS_DEST HDRS_DEST)
     if(NOT ARGN)
         message(SEND_ERROR "Error: PROTOBUF_GENERATE_CPP() called without any proto files")
         return()
@@ -57,16 +57,17 @@ function(PROTOBUF_GENERATE_CPP SRCS HDRS PROTO_ROOT DEST)
         get_filename_component(FIL_WE ${FIL} NAME_WE)
         file(RELATIVE_PATH REL ${PROTO_ROOT} ${ABS_PATH})
 
-        list(APPEND ${SRCS} "${DEST}/${REL}/${FIL_WE}.pb.cc")
-        list(APPEND ${HDRS} "${DEST}/${REL}/${FIL_WE}.pb.h")
-
         add_custom_command(
-                OUTPUT "${DEST}/${REL}/${FIL_WE}.pb.cc" "${DEST}/${REL}/${FIL_WE}.pb.h"
-                COMMAND protobuf::protoc
-                ARGS --cpp_out ${DEST} ${_protobuf_include_path} ${ABS_FIL}
+                OUTPUT "${SRCS_DEST}/${REL}/${FIL_WE}.pb.cc" "${HDRS_DEST}/${REL}/${FIL_WE}.pb.h"
                 DEPENDS ${ABS_FIL} protobuf::protoc
+                COMMAND protobuf::protoc --cpp_out ${BUILD_DIR} ${_protobuf_include_path} ${ABS_FIL}
+                COMMAND cp ${BUILD_DIR}/${REL}/${FIL_WE}.pb.cc ${SRCS_DEST}/${REL}/
+                COMMAND cp ${BUILD_DIR}/${REL}/${FIL_WE}.pb.h ${HDRS_DEST}/${REL}/
                 COMMENT "Running C++ protocol buffer compiler on ${FIL}"
                 VERBATIM)
+
+        list(APPEND ${SRCS} "${SRCS_DEST}/${REL}/${FIL_WE}.pb.cc")
+        list(APPEND ${HDRS} "${HDRS_DEST}/${REL}/${FIL_WE}.pb.h")
     endforeach()
 
     set_source_files_properties(${${SRCS}} ${${HDRS}} PROPERTIES GENERATED TRUE)
