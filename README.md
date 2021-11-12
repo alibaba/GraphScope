@@ -313,7 +313,14 @@ Please note that we have not hardened this release for production use and it lac
 
 ### Building on local
 
-TBF
+To build graphscope python package and the engine bineries, you want to install some dependencies and build tools. 
+
+```bash
+./scripts/install-deps.sh --dev
+
+# With argument --cn to speed up the download if you are in China.
+./scripts/install-deps.sh --dev --cn 
+```
 
 ### Building Docker images
 
