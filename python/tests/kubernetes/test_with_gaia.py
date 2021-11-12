@@ -23,7 +23,7 @@ import pytest
 
 import graphscope
 from graphscope.config import GSConfig as gs_config
-from graphscope.dataset.modern_graph import load_modern_graph
+from graphscope.dataset import load_modern_graph
 
 graphscope.set_option(show_log=True)
 logger = logging.getLogger("graphscope")

@@ -51,14 +51,14 @@ def load_ogbl_collab(sess=None, prefix=None):
 
         >>> # lazy mode
         >>> import graphscope
-        >>> from graphscope.dataset.ogbl_collab import load_ogbn_arsiv
+        >>> from graphscope.dataset import load_ogbn_arsiv
         >>> sess = graphscope.session(mode="lazy")
         >>> g = load_ogbl_collab(sess, "/path/to/dataset")
         >>> g1 = sess.run(g)
 
         >>> # eager mode
         >>> import graphscope
-        >>> from graphscope.dataset.ogbl_collab import load_ogbl_collab
+        >>> from graphscope.dataset import load_ogbl_collab
         >>> sess = graphscope.session(mode="eager")
         >>> g = load_ogbl_collab(sess, "/path/to/dataset")
     """

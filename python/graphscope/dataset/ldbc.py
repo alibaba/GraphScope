@@ -293,14 +293,14 @@ def load_ldbc(sess=None, prefix=None, directed=True):
 
         >>> # lazy mode
         >>> import graphscope
-        >>> from graphscope.dataset.ldbc import load_ldbc
+        >>> from graphscope.dataset import load_ldbc
         >>> sess = graphscope.session(mode="lazy")
         >>> g = load_ldbc(sess, "/path/to/dataset", True)
         >>> g1 = sess.run(g)
 
         >>> # eager mode
         >>> import graphscope
-        >>> from graphscope.dataset.ldbc import load_ldbc
+        >>> from graphscope.dataset import load_ldbc
         >>> sess = graphscope.session(mode="eager")
         >>> g = load_ldbc(sess, "/path/to/dataset", True)
 

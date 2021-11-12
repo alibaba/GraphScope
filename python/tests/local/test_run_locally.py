@@ -22,7 +22,7 @@ import sys
 import pytest
 
 import graphscope
-from graphscope.dataset.ogbn_mag import load_ogbn_mag
+from graphscope.dataset import load_ogbn_mag
 
 if sys.platform == "linux":
     from graphscope.learning.examples import GCN
