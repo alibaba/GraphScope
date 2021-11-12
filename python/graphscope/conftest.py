@@ -16,14 +16,17 @@
 # limitations under the License.
 #
 
-import networkx.classes.coreviews
-import networkx.classes.graphviews
-import networkx.classes.reportviews
+import pytest
 
-from graphscope.nx.classes.digraph import DiGraph
-from graphscope.nx.classes.function import *
-from graphscope.nx.classes.graph import Graph
+import graphscope
 
-# graphscope.nx not implement MultiGraph and MultiDiGraph
-from networkx.classes import MultiGraph
-from networkx.classes import MultiDiGraph
+
+@pytest.fixture(scope="module")
+def graphscope_session():
+    graphscope.set_option(show_log=True)
+    graphscope.set_option(initializing_interactive_engine=False)
+
+    sess = graphscope.session(cluster_type="hosts")
+    sess.as_default()
+    yield sess
+    sess.close()

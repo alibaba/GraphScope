@@ -104,7 +104,7 @@ def replace_module_context(  # noqa: C901
     decorators=None,
 ):
     """
-    Patching all calls of `nx.xxx` inside the given method with grape.nx.xxx, and register
+    Patching all calls of `nx.xxx` inside the given method with graphscope.nx.xxx, and register
     the **copied** method in the caller's module.
 
     Note that this patch method won't affect the original module, i.e., the :code:`nx` module.
@@ -119,7 +119,7 @@ def replace_module_context(  # noqa: C901
 
     such statements will import **ALL** variables in module :code:`relabel`, both public
     ones (exposed in :code:`__all__`) and private ones, to current module (i.e.,
-    :code:`grape.nx.modx`).
+    :code:`graphscope.nx.modx`).
 
     This patch method can also been used on per method, for fine-grained control,
 
