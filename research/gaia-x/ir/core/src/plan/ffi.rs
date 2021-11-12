@@ -363,14 +363,13 @@ impl From<BuildJobError> for FfiJobBuffer {
     }
 }
 
-/// To build a physical plan from the logical plan. After calling this function, the
-/// logical plan will be consumed and released.
+/// To build a physical plan from the logical plan.
 #[no_mangle]
 pub extern "C" fn build_physical_plan(ptr_plan: *const c_void) -> FfiJobBuffer {
     let plan = unsafe { Box::from_raw(ptr_plan as *mut LogicalPlan) };
     let mut builder = JobBuilder::default();
     let build_result = plan.add_job_builder(&mut builder);
-    if build_result.is_ok() {
+    let result = if build_result.is_ok() {
         let req_result = builder.build();
         if let Ok(req) = req_result {
             let mut req_bytes = req.encode_to_vec().into_boxed_slice();
@@ -387,7 +386,11 @@ pub extern "C" fn build_physical_plan(ptr_plan: *const c_void) -> FfiJobBuffer {
         }
     } else {
         build_result.err().unwrap().into()
-    }
+    };
+
+    std::mem::forget(plan);
+
+    result
 }
 
 fn append_operator(
