@@ -78,7 +78,6 @@ inline BackupInfo BackupInfo::FromProto(const BackupInfoPb &proto) {
   }
   return BackupInfo{proto.globalbackupid(), static_cast<SnapshotId>(proto.snapshotid()),
                     std::move(schema), std::move(partition_backup_id_map), std::move(wal_offsets)};
-
 }
 
 }
