@@ -91,7 +91,7 @@ papers = interactive.execute("g.V().has('author', 'id', 2).out('writes').where(_
 ### Graph analytics
 
 Graph analytics is widely used in real world. Many algorithms, like community detection, paths and connectivity, centrality are proven to be very useful in various businesses.
-GraphScope ships with a set of built-in algorithms, enables users easily analysis their graph data.
+GraphScope ships with a set of [built-in algorithms](#), enables users easily analysis their graph data.
 
 Continuing our example, below we first derive a subgraph by extracting publications in specific time out of the entire graph (using Gremlin!), and then run k-core decomposition and triangle counting to generate the structural features of each paper node.
 
@@ -223,7 +223,7 @@ Alternatively, you can set up a local k8s cluster for testing with [Kind](https:
 
 ```bash
 # for usage, type --h
-./script/install-deps.sh --k8s
+./scripts/install-deps.sh --k8s
 ```
 
 If you did not install the `graphscope` package in the above step, you can install a subset of the whole package with client functions only.
@@ -241,14 +241,41 @@ Next, let's revisit the example by running on a cluster instead.
 The figure shows the flow of execution in the cluster mode. When users run code in the python client, it will:
 
 - *Step 1*. Create a session or workspace in GraphScope.
-- *Step 2*. Define schema and load the graph.
-- *Step 3*. Query graph data.
-- *Step 4*. Run graph algorithms.
-- *Step 5*. Run graph-based machine learning tasks.
+- *Step 2 - Step 5*. Load a graph, query, analysis and run learning task on this graph via Python interface. These steps are the same to local mode, thus users process huge graphs in a distributed setting just like analysis a small graph on a single machine.
 - *Step 6*. Close the session.
 
 
-### load graph
+### Creating a session
+
+To use GraphScope in a distributed setting, we need to establish a session in a python interpreter. 
+
+```python
+import os
+import graphscope
+
+# assume we mount `~/test_data` to `/testingdata` in pods.
+k8s_volumes = {
+    "data": {
+        "type": "hostPath",
+        "field": {
+            "path": os.path.expanduser("~/test_data/"),
+            "type": "Directory"
+        },
+        "mounts": {
+            "mountPath": "/testingdata"
+        }
+    }
+}
+
+sess = graphscope.session(k8s_volumes=k8s_volumes)
+```
+
+
+
+
+
+
+
 Here, the `g` is loaded in parallel via vineyard and stored in vineyard instances in the cluster managed by the session.
 
 
