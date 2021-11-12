@@ -8,7 +8,6 @@ Unit tests for various classic graph generators in generators/classic.py
 import networkx.generators.tests.test_classic
 import pytest
 
-import graphscope.nx as nx
 from graphscope.nx.utils.compat import import_as_graphscope_nx
 from graphscope.nx.utils.compat import with_graphscope_nx_context
 

@@ -16,6 +16,7 @@
 # limitations under the License.
 #
 
+from graphscope.framework.errors import UnimplementedError
 from graphscope.nx.generators.classic import (
     empty_graph,
     cycle_graph,
@@ -57,7 +58,7 @@ from graphscope.nx.generators.classic import (
     path_graph,
     complete_graph,
 )
-from networkx.exception import NetworkXError
+from graphscope.nx import NetworkXError
 
 
 def make_small_undirected_graph(graph_description, create_using=None):
@@ -321,18 +322,7 @@ def heawood_graph(create_using=None):
 
 def hoffman_singleton_graph():
     """Return the Hoffman-Singleton Graph."""
-    G = nx.Graph()
-    for i in range(5):
-        for j in range(5):
-            G.add_edge(("pentagon", i, j), ("pentagon", i, (j - 1) % 5))
-            G.add_edge(("pentagon", i, j), ("pentagon", i, (j + 1) % 5))
-            G.add_edge(("pentagram", i, j), ("pentagram", i, (j - 2) % 5))
-            G.add_edge(("pentagram", i, j), ("pentagram", i, (j + 2) % 5))
-            for k in range(5):
-                G.add_edge(("pentagon", i, j), ("pentagram", k, (i * k + j) % 5))
-    G = nx.convert_node_labels_to_integers(G)
-    G.name = "Hoffman-Singleton Graph"
-    return G
+    raise UnimplementedError("hoffman_singleton_graph not support in graphscope.nx")
 
 
 def house_graph(create_using=None):
