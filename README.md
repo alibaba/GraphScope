@@ -269,19 +269,34 @@ k8s_volumes = {
 
 sess = graphscope.session(k8s_volumes=k8s_volumes)
 ```
+For macOS, the session needs to establish with the LoadBalancer service type (which is NodePort by default).
+
+```python
+sess = graphscope.session(k8s_volumes=k8s_volumes, k8s_service_type="LoadBalancer")
+```
+
+A session tries to launch a `coordinator`, which is the entry for the back-end engines. The coordinator manages a cluster of resources (k8s pods), and the interactive/analytical/learning engines ran on them. For each pod in the cluster, there is a vineyard instance at service for distributed data in memory.
 
 
+### Load a graph and processing computation tasks
 
+Similar to the standalone mode, we can still use the functions to load a graph easily. 
 
+```
+from graphscope.dataset.ogbn_mag import load_ogbn_mag
 
-
+# TODO(yuansi): data preparation?
+g = load_ogbn_mag(sess, "/testingdata/ogbn_mag_small/")
+```
 
 Here, the `g` is loaded in parallel via vineyard and stored in vineyard instances in the cluster managed by the session.
 
+Next, we can conduct graph queries with Gremlin, invoke various graph algorithms, or run graph-based neureul network tasks like we did in the standalone mode.
+We do not repeat code here, but a `.ipynb` processing the classification task on citation network is available [here](#).
 
 ### Closing the session
 
-At last, we close the session after processing all graph tasks.
+Another additional step in the distribution is session close. We close the session after processing all graph tasks.
 
 ```python
 sess.close()
@@ -291,10 +306,13 @@ This operation will notify the backend engines and vineyard
 to safely unload graphs and their applications,
 Then, the coordinator will dealloc all the applied resources in the k8s cluster.
 
-
 Please note that we have not hardened this release for production use and it lacks important security features such as authentication and encryption, and therefore **it is NOT recommended for production use (yet)!**
 
 ## Development
+
+### Building on local
+
+TBF
 
 ### Building Docker images
 
