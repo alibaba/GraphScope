@@ -322,6 +322,16 @@ To build graphscope python package and the engine bineries, you want to install 
 ./scripts/install-deps.sh --dev --cn 
 ```
 
+Then you can build GraphScope with pre-configured `make` commands.
+```bash
+# to make graphscope whole package, including python package + engine binaries.
+make graphscope
+
+
+
+
+```
+
 ### Building Docker images
 
 GraphScope ships with a [Dockerfile](k8s/graphscope.Dockerfile) that can build docker images for releasing. The images are built on a `builder` image with all dependencies installed and copied to
