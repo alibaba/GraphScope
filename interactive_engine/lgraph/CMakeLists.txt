@@ -7,6 +7,17 @@ set(CMAKE_CXX_FLAGS_RELEASE "-O2")
 set (Lgraph_SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR})
 set (Lgraph_BINARY_DIR ${CMAKE_CURRENT_BINARY_DIR})
 
+option(Lgraph_BUILD_SHARED "Build lgraph as a shared library." ON)
+if(Lgraph_BUILD_SHARED)
+    message(STATUS "Build will generate a shared library. "
+            "Use Lgraph_BUILD_SHARED=0 to perform a static build")
+    set(Lgraph_LIBRARY_TYPE SHARED)
+else()
+    message(STATUS "Build will generate a static library.")
+    set(Lgraph_LIBRARY_TYPE STATIC)
+    set(CMAKE_POSITION_INDEPENDENT_CODE ON)
+endif()
+
 # Cmake find modules
 list(APPEND CMAKE_MODULE_PATH "${Lgraph_SOURCE_DIR}/cmake")
 find_package(Protobuf REQUIRED)
@@ -95,7 +106,7 @@ set(Lgraph_PROJECT_FILES
     src/log_track/subscriber.cc
     src/check.cc)
 
-add_library(lgraph SHARED
+add_library(lgraph ${Lgraph_LIBRARY_TYPE}
     ${Lgraph_PROJECT_FILES}
     ${PROTO_SRCS}
     ${PROTO_HDRS}
