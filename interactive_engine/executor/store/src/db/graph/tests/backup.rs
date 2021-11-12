@@ -8,7 +8,7 @@ pub fn test_backup_engine<G: GraphStorage>(graph: G, test_dir: &str) {
     let mut backup_engine = graph.open_backup_engine(&backup_path).unwrap();
 
     // insert data
-    let mut schema_version = 1;
+    let schema_version = 1;
     graph.create_vertex_type(10, schema_version, 1, &types::create_test_type_def(1), schema_version).unwrap();
     let properties: HashMap<PropId, Value> = HashMap::new();
     graph.insert_overwrite_vertex(11, 1, 1, &properties).unwrap();

@@ -697,9 +697,9 @@ mod tests {
     #[test]
     fn test_property_transform() {
         let val = 123;
-        let properties = vec![Property::Int(val), Property::Double(val as f64), Property::Float(val as f32),
+        let _properties = vec![Property::Int(val), Property::Double(val as f64), Property::Float(val as f32),
                               Property::Short(val as i16), Property::Long(val as i64), Property::Char(val as u8)];
-        let target = vec![(DataType::Float, Property::Float(val as f32)),
+        let _target = vec![(DataType::Float, Property::Float(val as f32)),
                           (DataType::Double, Property::Double(val as f64)), (DataType::Int, Property::Int(val)),
                           (DataType::Long, Property::Long(val as i64)), (DataType::Short, Property::Short(val as i16)),
                           (DataType::Char, Property::Char(val as u8)), (DataType::Bool, Property::Bool(val != 0))];
