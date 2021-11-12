@@ -101,6 +101,12 @@ class LocalLauncher(Launcher):
         )
     else:
         os.environ["LD_LIBRARY_PATH"] = os.path.join(GRAPHSCOPE_HOME, "lib")
+    if "DYLD_LIBRARY_PATH" in os.environ:
+        os.environ["DYLD_LIBRARY_PATH"] += os.pathsep + os.path.join(
+            GRAPHSCOPE_HOME, "lib"
+        )
+    else:
+        os.environ["DYLD_LIBRARY_PATH"] = os.path.join(GRAPHSCOPE_HOME, "lib")
 
     def __init__(
         self,
