@@ -6,5 +6,5 @@ grpcio
 kubernetes
 protobuf
 PyYAML
-vineyard>=0.3.6
-vineyard-io>=0.3.6
+vineyard>=0.3.8
+vineyard-io>=0.3.8

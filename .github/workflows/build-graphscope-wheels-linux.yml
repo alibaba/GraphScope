@@ -24,7 +24,7 @@ on:
       - 'tutorials/**'
 
 jobs:
-  build:
+  build-wheels:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
@@ -46,16 +46,17 @@ jobs:
         if [ -z "${r}" ];then export hn=$(hostname); sudo -E bash -c 'echo "127.0.0.1 ${hn}" >> /etc/hosts'; fi
         cat /etc/hosts
 
-        cd k8s
-        # graphscope
+        cd ${GITHUB_WORKSPACE}/k8s
+        # build graphscope wheels
         sudo make graphscope-py3-package
-        # graphscope client
+
+        # build client wheels
         sudo make graphscope-client-py3-package
 
         # package
         cd ${GITHUB_WORKSPACE}
         tar -zcf client.tar.gz python/dist/wheelhouse/*.whl
-        tar -zcf graphscope.tar.gz coordinator/dist/wheelhouse/*.whl
+        tar -zcf graphscope.tar.gz coordinator/dist/
 
     - name: Upload Artifact
       uses: actions/upload-artifact@v2
@@ -68,41 +69,49 @@ jobs:
 
   test:
     runs-on: ${{ matrix.os }}
-    needs: [build]
+    needs: [build-wheels]
     strategy:
       matrix:
         os: [ubuntu-20.04]
-        python-version: [3.6, 3.7, 3.8, 3.9]
+        python-version: ['3.6', '3.7', '3.8', '3.9']
 
     steps:
     - uses: actions/checkout@v2.3.2
       with:
         submodules: true
 
+    - name: Set up Python
+      uses: actions/setup-python@v2
+      with:
+        python-version: ${{ matrix.python-version }}
+
     - uses: actions/download-artifact@v2
       with:
         path: artifacts
 
     - name: Run Test on ${{ matrix.python-version }}
-      env:
-        PYTHON: ${{ matrix.python-version }}
       shell: bash
       run: |
+        python3 -c "import sys; print(sys.version)"
+
         pushd artifacts
         # install graphscope-client
         tar -zxf ./wheel-linux-${{ github.sha }}/client.tar.gz
         pushd python/dist/wheelhouse
-        for f in * ; do pip3 install $f || true; done
+        for f in * ; do python3 -m pip install $f || true; done
         popd
         # install graphscope
         tar -zxf ./wheel-linux-${{ github.sha }}/graphscope.tar.gz
         pushd coordinator/dist/wheelhouse
-        pip3 install ./*.whl
+        python3 -m pip install ./*.whl
+        popd
+        pushd coordinator/dist
+        python3 -m pip install ./*.whl
         popd
         popd
 
         # run test
-        pip3 install pytest "tensorflow<=2.5.2" --user;
+        python3 -m pip install pytest "tensorflow<=2.5.2" --user;
         sudo apt update -y && sudo apt install openjdk-11-jdk -y
         cp ${GITHUB_WORKSPACE}/python/tests/local/test_standalone.py /tmp/test_standalone.py
         python3 -m pytest -s -v /tmp/test_standalone.py

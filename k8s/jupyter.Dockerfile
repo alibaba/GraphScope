@@ -18,6 +18,6 @@ WORKDIR /home/graphscope
 ENV PATH=${PATH}:/home/graphscope/.local/bin
 
 RUN python3 -m pip install --upgrade pip --user
-RUN python3 -m pip install jupyterlab graphscope --user
+RUN python3 -m pip install jupyterlab graphscope-client==0.8.0 --user
 
 CMD ["jupyter", "lab", "--port=8888", "--no-browser", "--ip=0.0.0.0"]
