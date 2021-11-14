@@ -323,10 +323,6 @@ jobs:
         export PATH=${PATH}:${LLVM11_HOME}/bin
         mvn clean install -DskipTests -Dmaven.antrun.skip=true --quiet
 
-    - name: Setup tmate session debug
-      if: false
-      uses: mxschmitt/action-tmate@v2
-
     - name: GraphScope python unittest
       run: |
         export GRAPHSCOPE_HOME='/opt/graphscope'
@@ -355,6 +351,7 @@ jobs:
         export GS_TEST_DIR='/home/graphscope/gstest'
         python3 -m pytest --exitfirst -s -v python/graphscope/nx/tests \
                           --ignore=python/graphscope/nx/tests/algorithms/forward
+        python3 -m pytest -s -v python/graphscope/nx/generators/tests
 
   k8s-test:
     runs-on: self-hosted
