@@ -15,21 +15,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
+"""Provides explicit constructions of expander graphs.
 
-# forward
-import networkx.exception as exception
-import networkx.testing as testing
-from networkx.exception import *
+"""
 
-from graphscope.nx.algorithms import *
-from graphscope.nx.classes import *
-from graphscope.nx.convert import *
-from graphscope.nx.convert_matrix import *
-from graphscope.nx.generators import *
-from graphscope.nx.readwrite import *
-from graphscope.nx.relabel import *
-from graphscope.nx.utils import *
+import networkx.generators.ego
 
-# set session attribute to Graph and DiGraph, forward NetworkX to pass tests
-setattr(Graph, "_session", None)
-setattr(DiGraph, "_session", None)
+from graphscope.nx.utils.compat import import_as_graphscope_nx
+
+import_as_graphscope_nx(networkx.generators.ego)

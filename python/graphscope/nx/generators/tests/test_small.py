@@ -5,19 +5,12 @@ Some small graphs
 """
 
 
-import networkx.generators.tests.test_small
 import pytest
+from networkx.generators.tests.test_small import TestGeneratorsSmall
 
 from graphscope.framework.errors import UnimplementedError
-from graphscope.nx.utils.compat import import_as_graphscope_nx
 from graphscope.nx.utils.compat import with_graphscope_nx_context
 
-import_as_graphscope_nx(
-    networkx.generators.tests.test_small,
-    decorators=pytest.mark.usefixtures("graphscope_session"),
-)
-
-from networkx.generators.tests.test_small import TestGeneratorsSmall
 
 @pytest.mark.usefixtures("graphscope_session")
 @with_graphscope_nx_context(TestGeneratorsSmall)

@@ -1,16 +1,18 @@
-"""Unit tests for the :mod:`networkx.generators.expanders` module.
+"""Unit tests for the :mod:`graphscope.nx.generators.expanders` module.
 
 """
 
-import networkx as nx
 import pytest
 from networkx import adjacency_matrix
-from networkx import number_of_nodes
-from networkx.generators.expanders import chordal_cycle_graph
-from networkx.generators.expanders import margulis_gabber_galil_graph
-from networkx.generators.expanders import paley_graph
+
+import graphscope.nx as nx
+from graphscope.nx import number_of_nodes
+from graphscope.nx.generators.expanders import chordal_cycle_graph
+from graphscope.nx.generators.expanders import margulis_gabber_galil_graph
+from graphscope.nx.generators.expanders import paley_graph
 
 
+@pytest.mark.usefixtures("graphscope_session")
 def test_margulis_gabber_galil_graph():
     for n in 2, 3, 5, 6, 10:
         g = margulis_gabber_galil_graph(n)
@@ -30,6 +32,7 @@ def test_margulis_gabber_galil_graph():
     assert w[-2] < 5 * np.sqrt(2)
 
 
+@pytest.mark.usefixtures("graphscope_session")
 def test_chordal_cycle_graph():
     """Test for the :func:`networkx.chordal_cycle_graph` function."""
     primes = [3, 5, 7, 11]
@@ -44,6 +47,7 @@ def test_chordal_cycle_graph():
         #
 
 
+@pytest.mark.usefixtures("graphscope_session")
 def test_paley_graph():
     """Test for the :func:`networkx.paley_graph` function."""
     primes = [3, 5, 7, 11, 13]
@@ -64,6 +68,7 @@ def test_paley_graph():
                 assert (v, u) in G.edges
 
 
+@pytest.mark.usefixtures("graphscope_session")
 def test_margulis_gabber_galil_graph_badinput():
     pytest.raises(nx.NetworkXError, margulis_gabber_galil_graph, 3, nx.DiGraph())
     pytest.raises(nx.NetworkXError, margulis_gabber_galil_graph, 3, nx.Graph())

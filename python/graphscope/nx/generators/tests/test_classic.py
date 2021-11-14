@@ -5,18 +5,11 @@ Generators - Classic
 
 Unit tests for various classic graph generators in generators/classic.py
 """
-import networkx.generators.tests.test_classic
 import pytest
+from networkx.generators.tests.test_classic import TestGeneratorClassic
 
-from graphscope.nx.utils.compat import import_as_graphscope_nx
 from graphscope.nx.utils.compat import with_graphscope_nx_context
 
-import_as_graphscope_nx(
-    networkx.generators.tests.test_classic,
-    decorators=pytest.mark.usefixtures("graphscope_session"),
-)
-
-from networkx.generators.tests.test_classic import TestGeneratorClassic
 
 @pytest.mark.usefixtures("graphscope_session")
 @with_graphscope_nx_context(TestGeneratorClassic)

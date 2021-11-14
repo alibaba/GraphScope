@@ -20,10 +20,10 @@ import networkx.classes.coreviews
 import networkx.classes.graphviews
 import networkx.classes.reportviews
 
+# graphscope.nx not implement MultiGraph and MultiDiGraph
+from networkx.classes import MultiDiGraph
+from networkx.classes import MultiGraph
+
 from graphscope.nx.classes.digraph import DiGraph
 from graphscope.nx.classes.function import *
 from graphscope.nx.classes.graph import Graph
-
-# graphscope.nx not implement MultiGraph and MultiDiGraph
-from networkx.classes import MultiGraph
-from networkx.classes import MultiDiGraph

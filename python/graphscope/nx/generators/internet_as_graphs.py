@@ -15,21 +15,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
+"""Generates graphs resembling the Internet Autonomous System network"""
 
-# forward
-import networkx.exception as exception
-import networkx.testing as testing
-from networkx.exception import *
+import networkx.generators.internet_as_graphs
 
-from graphscope.nx.algorithms import *
-from graphscope.nx.classes import *
-from graphscope.nx.convert import *
-from graphscope.nx.convert_matrix import *
-from graphscope.nx.generators import *
-from graphscope.nx.readwrite import *
-from graphscope.nx.relabel import *
-from graphscope.nx.utils import *
+from graphscope.nx.utils.compat import import_as_graphscope_nx
 
-# set session attribute to Graph and DiGraph, forward NetworkX to pass tests
-setattr(Graph, "_session", None)
-setattr(DiGraph, "_session", None)
+import_as_graphscope_nx(networkx.generators.internet_as_graphs)

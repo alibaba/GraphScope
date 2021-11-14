@@ -45,6 +45,8 @@ __all__ = [
     "non_neighbors",
     "non_edges",
     "common_neighbors",
+    "set_node_attributes",
+    "get_node_attributes",
     "is_weighted",
     "is_negatively_weighted",
     "is_empty",
@@ -135,4 +137,92 @@ def number_of_selfloops(G):
     >>> nx.number_of_selfloops(G)
     1
     """
+    if G.is_multigraph():
+        # we forward the MultiGraph nd MultiDiGraph
+        return sum(1 for _ in selfloop_edges(G))
     return G.number_of_selfloops()
+
+
+def set_node_attributes(G, values, name=None):
+    """Sets node attributes from a given value or dictionary of values.
+
+    .. Warning:: The call order of arguments `values` and `name`
+        switched between v1.x & v2.x.
+
+    Parameters
+    ----------
+    G : NetworkX Graph
+
+    values : scalar value, dict-like
+        What the node attribute should be set to.  If `values` is
+        not a dictionary, then it is treated as a single attribute value
+        that is then applied to every node in `G`.  This means that if
+        you provide a mutable object, like a list, updates to that object
+        will be reflected in the node attribute for every node.
+        The attribute name will be `name`.
+
+        If `values` is a dict or a dict of dict, it should be keyed
+        by node to either an attribute value or a dict of attribute key/value
+        pairs used to update the node's attributes.
+
+    name : string (optional, default=None)
+        Name of the node attribute to set if values is a scalar.
+
+    Examples
+    --------
+    After computing some property of the nodes of a graph, you may want
+    to assign a node attribute to store the value of that property for
+    each node::
+
+        >>> G = nx.path_graph(3)
+        >>> bb = nx.betweenness_centrality(G)
+        >>> isinstance(bb, dict)
+        True
+        >>> nx.set_node_attributes(G, bb, "betweenness")
+        >>> G.nodes[1]["betweenness"]
+        1.0
+
+    If you provide a list as the second argument, updates to the list
+    will be reflected in the node attribute for each node::
+
+        >>> G = nx.path_graph(3)
+        >>> labels = []
+        >>> nx.set_node_attributes(G, labels, "labels")
+        >>> labels.append("foo")
+        >>> G.nodes[0]["labels"]
+        ['foo']
+        >>> G.nodes[1]["labels"]
+        ['foo']
+        >>> G.nodes[2]["labels"]
+        ['foo']
+
+    If you provide a dictionary of dictionaries as the second argument,
+    the outer dictionary is assumed to be keyed by node to an inner
+    dictionary of node attributes for that node::
+
+        >>> G = nx.path_graph(3)
+        >>> attrs = {0: {"attr1": 20, "attr2": "nothing"}, 1: {"attr2": 3}}
+        >>> nx.set_node_attributes(G, attrs)
+        >>> G.nodes[0]["attr1"]
+        20
+        >>> G.nodes[0]["attr2"]
+        'nothing'
+        >>> G.nodes[1]["attr2"]
+        3
+        >>> G.nodes[2]
+        {}
+
+    """
+    # Set node attributes based on type of `values`
+    if name is not None:  # `values` must not be a dict of dict
+        try:  # `values` is a dict
+            for n, v in values.items():
+                if n in G:
+                    G.set_node_data(n, {name: values[n]})
+        except AttributeError:  # `values` is a constant
+            for n in G:
+                G.set_node_data(n, {name: values})
+    else:  # `values` must be dict of dict
+        for n, d in values.items():
+            if n in G:
+                G.set_node_data(n, d)

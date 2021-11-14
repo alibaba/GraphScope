@@ -16,13 +16,13 @@
 # limitations under the License.
 #
 
+import graphscope.nx as nx
 from graphscope.framework.errors import UnimplementedError
-from graphscope.nx.generators.classic import (
-    empty_graph,
-    cycle_graph,
-    path_graph,
-    complete_graph,
-)
+from graphscope.nx import NetworkXError
+from graphscope.nx.generators.classic import complete_graph
+from graphscope.nx.generators.classic import cycle_graph
+from graphscope.nx.generators.classic import empty_graph
+from graphscope.nx.generators.classic import path_graph
 
 __all__ = [
     "make_small_graph",
@@ -50,15 +50,6 @@ __all__ = [
     "truncated_tetrahedron_graph",
     "tutte_graph",
 ]
-
-import graphscope.nx as nx
-from graphscope.nx.generators.classic import (
-    empty_graph,
-    cycle_graph,
-    path_graph,
-    complete_graph,
-)
-from graphscope.nx import NetworkXError
 
 
 def make_small_undirected_graph(graph_description, create_using=None):

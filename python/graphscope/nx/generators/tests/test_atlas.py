@@ -1,11 +1,20 @@
-import networkx.generators.tests.test_atlas
 import pytest
+from networkx.generators.tests.test_atlas import TestAtlasGraph
+from networkx.generators.tests.test_atlas import TestAtlasGraphG
 
-
-from graphscope.nx.utils.compat import import_as_graphscope_nx
+import graphscope.nx as nx
+from graphscope.nx import graph_atlas
+from graphscope.nx import graph_atlas_g
 from graphscope.nx.utils.compat import with_graphscope_nx_context
 
-import_as_graphscope_nx(
-    networkx.generators.tests.test_atlas,
-    decorators=pytest.mark.usefixtures("graphscope_session"),
-)
+
+@pytest.mark.usefixtures("graphscope_session")
+@with_graphscope_nx_context(TestAtlasGraph)
+class TestAtlasGraph:
+    pass
+
+
+@pytest.mark.usefixtures("graphscope_session")
+@with_graphscope_nx_context(TestAtlasGraphG)
+class TestAtlasGraphG:
+    pass
