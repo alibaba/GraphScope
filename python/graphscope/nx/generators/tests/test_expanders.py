@@ -39,12 +39,6 @@ def test_chordal_cycle_graph():
     for p in primes:
         G = chordal_cycle_graph(p)
         assert len(G) == p
-        # TODO The second largest eigenvalue should be smaller than a constant,
-        # independent of the number of nodes in the graph:
-        #
-        #     eigs = sorted(sp.linalg.eigvalsh(adjacency_matrix(G).A))
-        #     assert_less(eigs[-2], ...)
-        #
 
 
 @pytest.mark.usefixtures("graphscope_session")

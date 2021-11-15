@@ -24,6 +24,24 @@ on:
       - 'tutorials/**'
 
 jobs:
+  # JOB to run change detection
+  changes:
+    runs-on: ubuntu-20.04
+    # Set job outputs to values from filter step
+    outputs:
+      networkx: ${{ steps.filter.outputs.networkx }}
+    steps:
+    # For pull requests it's not necessary to checkout the code
+    - uses: dorny/paths-filter@v2
+      id: filter
+      with:
+        filters: |
+          networkx:
+            - 'analytical_engine/apps/**'
+            - 'analytical_engine/frame/**'
+            - 'analytical_engine/core/**'
+            - 'python/graphscope/nx/**'
+
   build-gae:
     runs-on: ubuntu-20.04
     defaults:
@@ -253,9 +271,10 @@ jobs:
         path: manager.tar
         retention-days: 5
 
-  python-test:
+  python-unittest:
     runs-on: ubuntu-20.04
     needs: [build-gae, build-gle]
+    if: ${{ needs.changes.outputs.networkx == 'true' }}
     defaults:
       run:
         shell: bash --noprofile --norc -eo pipefail {0}
@@ -265,16 +284,6 @@ jobs:
         --shm-size 4096m
     steps:
     - uses: actions/checkout@v2.3.2
-    - uses: dorny/paths-filter@v2
-      id: filter
-      with:
-        filters: |
-          networkx:
-            - 'analytical_engine/apps/**'
-            - 'analytical_engine/frame/**'
-            - 'analytical_engine/core/**'
-            - 'python/graphscope/nx/**'
-
 
     - uses: actions/download-artifact@v2
 
@@ -343,6 +352,67 @@ jobs:
       with:
         file: ./python/coverage.xml
         fail_ci_if_error: true
+
+  networkx-python-test:
+    runs-on: ubuntu-20.04
+    needs: [build-gae, build-gle, changes]
+    if: ${{ needs.changes.outputs.networkx == 'true' }}
+    defaults:
+      run:
+        shell: bash --noprofile --norc -eo pipefail {0}
+    container:
+      image: registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-runtime:latest
+      options:
+        --shm-size 4096m
+    steps:
+    - uses: actions/checkout@v2.3.2
+
+    - uses: actions/download-artifact@v2
+
+    - name: Prepare environment for dataset
+      run: |
+        export GS_TEST_DIR='/home/graphscope/gstest'
+        git clone -b master --single-branch --depth=1 https://github.com/7br/gstest.git ${GS_TEST_DIR}
+
+    - name: Prepare environment for deps
+      run: |
+        # install zetcd
+        wget --no-verbose https://golang.org/dl/go1.15.5.linux-amd64.tar.gz
+        sudo tar -C /usr/local -xzf go1.15.5.linux-amd64.tar.gz
+        go get github.com/etcd-io/zetcd/cmd/zetcd
+        sudo cp $(go env GOPATH)/bin/zetcd /usr/local/bin/
+
+        python3 -m pip install pytest-cov
+        tar -xf ./gae-${{ github.sha }}/vineyard.tar
+        tar -xf ./gae-${{ github.sha }}/gae.tar
+        tar -xf ./gle-${{ github.sha }}/gle.tar
+
+        # install vineyard into /usr/local
+        sudo cp -r -n opt/vineyard/* /usr/local/
+
+        # Install to /opt/graphscope and link them to /usr/local
+        sudo mkdir -p /opt/graphscope
+        sudo chown -R $(id -u):$(id -g) /opt/graphscope
+        cp -r opt/graphscope/* /opt/graphscope/
+        sudo ln -sf /opt/graphscope/bin/* /usr/local/bin/
+        sudo ln -sfn /opt/graphscope/include/graphscope /usr/local/include/graphscope
+        sudo ln -sf /opt/graphscope/lib/*so* /usr/local/lib
+        sudo ln -sf /opt/graphscope/lib64/*so* /usr/local/lib64
+        sudo ln -sfn /opt/graphscope/lib64/cmake/graphscope-analytical /usr/local/lib64/cmake/graphscope-analytical
+
+        pushd /usr/local/dist/ && pip3 install ./*.whl && popd
+        pushd /opt/graphscope/dist/ && pip3 install ./*.whl && popd
+        python3 -m pip install -r python/requirements.txt
+        python3 -m pip install -r python/requirements-dev.txt
+        pushd python && python3 setup.py build_proto && popd
+        pushd coordinator && python3 setup.py build_builtin && popd
+
+        cd /tmp/
+        git clone https://github.com/alibaba/fastFFI.git
+        cd fastFFI
+        git checkout a166c6287f2efb938c27fb01b3d499932d484f9c
+        export PATH=${PATH}:${LLVM11_HOME}/bin
+        mvn clean install -DskipTests -Dmaven.antrun.skip=true --quiet
 
     - name: GraphScope NetworkX test
       if: steps.filter.outputs.networkx == 'true'

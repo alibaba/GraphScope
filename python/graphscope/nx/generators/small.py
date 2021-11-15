@@ -121,8 +121,7 @@ def make_small_graph(graph_description, create_using=None):
             v2 = e[1] - 1
             if v1 < 0 or v1 > n - 1 or v2 < 0 or v2 > n - 1:
                 raise NetworkXError("invalid graph_description")
-            else:
-                G.add_edge(v1, v2)
+            G.add_edge(v1, v2)
     G.name = name
     return G
 
