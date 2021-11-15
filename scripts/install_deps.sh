@@ -524,8 +524,10 @@ install_cppkafka() {
     return 0
   fi
 
-  export LDFLAGS="-L/usr/local/opt/openssl@3/lib"
-  export CPPFLAGS="-I/usr/local/opt/openssl@3/include"
+  if [[ "${PLATFORM}" == *"Darwin"* ]]; then
+    export LDFLAGS="-L/usr/local/opt/openssl@3/lib"
+    export CPPFLAGS="-I/usr/local/opt/openssl@3/include"
+  fi
 
   check_and_remove_dir "/tmp/cppkafka"
   git clone -b 0.4.0 --single-branch --depth=1 \

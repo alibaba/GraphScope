@@ -93,8 +93,7 @@ private:
 
 inline MessageParser::MessageParser(const void* data, size_t size) : snapshot_id_(0), op_batch_proto_() {
   LogEntryPb log_entry_proto;
-  google::protobuf::io::ArrayInputStream input_stream(data, static_cast<int>(size));
-  Check(log_entry_proto.ParseFromZeroCopyStream(&input_stream), "Parse LogEntryPb Failed!");
+  Check(log_entry_proto.ParsePartialFromArray(data, static_cast<int>(size)), "Parse LogEntryPb Failed!");
   snapshot_id_ = static_cast<SnapshotId>(log_entry_proto.snapshotid());
   op_batch_proto_.reset(log_entry_proto.release_operations());
 }

@@ -61,8 +61,8 @@ VertexInsertInfo Operation::GetInfoAsVertexInsertOp() const {
 
   auto &data_op_bytes = op_proto_->databytes();
   DataOperationPb data_op_proto;
-  google::protobuf::io::ArrayInputStream input_stream(data_op_bytes.data(), static_cast<int>(data_op_bytes.size()));
-  Check(data_op_proto.ParseFromZeroCopyStream(&input_stream), "Parse DataOperationPb Failed!");
+  Check(data_op_proto.ParseFromArray(data_op_bytes.data(), static_cast<int>(data_op_bytes.size())),
+        "Parse DataOperationPb Failed!");
 
   VertexIdPb vertex_id_proto;
   Check(vertex_id_proto.ParseFromString(data_op_proto.keyblob()), "Parse VertexIdPb Failed!");
@@ -78,8 +78,8 @@ EdgeInsertInfo Operation::GetInfoAsEdgeInsertOp() const {
 
   auto &data_op_bytes = op_proto_->databytes();
   DataOperationPb data_op_proto;
-  google::protobuf::io::ArrayInputStream input_stream(data_op_bytes.data(), static_cast<int>(data_op_bytes.size()));
-  Check(data_op_proto.ParseFromZeroCopyStream(&input_stream), "Parse DataOperationPb Failed!");
+  Check(data_op_proto.ParseFromArray(data_op_bytes.data(), static_cast<int>(data_op_bytes.size())),
+        "Parse DataOperationPb Failed!");
 
   EdgeIdPb edge_id_proto;
   Check(edge_id_proto.ParseFromString(data_op_proto.keyblob()), "Parse EdgeIdPb Failed!");
