@@ -23,11 +23,9 @@ import pytest
 
 import graphscope
 from graphscope.dataset import load_ogbn_mag
-
-if sys.platform == "linux":
-    from graphscope.learning.examples import GCN
-    from graphscope.learning.graphlearn.python.model.tf import optimizer
-    from graphscope.learning.graphlearn.python.model.tf.trainer import LocalTFTrainer
+from graphscope.learning.examples import GCN
+from graphscope.learning.graphlearn.python.model.tf import optimizer
+from graphscope.learning.graphlearn.python.model.tf.trainer import LocalTFTrainer
 
 graphscope.set_option(show_log=True)
 graphscope.set_option(initializing_interactive_engine=False)
@@ -133,10 +131,6 @@ def demo(sess, ogbn_mag_small, ogbn_small_script):
     sub_graph = sub_graph.add_column(ret1, {"kcore": "r"})
     sub_graph = sub_graph.add_column(ret2, {"tc": "r"})
 
-    # MacOS skip the GLE test
-    if sys.platform == "darwin":
-        return
-
     # GLE on ogbn_mag_small graph
     paper_features = []
     for i in range(128):
@@ -186,10 +180,6 @@ def simple_flow(sess, ogbn_mag_small, ogbn_small_script):
     interactive = sess.gremlin(graph)
     papers = interactive.execute(ogbn_small_script).one()
 
-    # MacOS skip the GLE test
-    if sys.platform == "darwin":
-        return
-
     # GLE on ogbn_mag_small graph
     paper_features = []
     for i in range(128):
@@ -230,10 +220,6 @@ def simple_flow(sess, ogbn_mag_small, ogbn_small_script):
     train(config, lg)
 
 
-@pytest.mark.skipif(
-    sys.platform == "darwin",
-    reason="TODO: pass on local, open the test case after macOS runner is normal. see issue 781",
-)
 def test_demo(sess, ogbn_mag_small, ogbn_small_script):
     demo(sess, ogbn_mag_small, ogbn_small_script)
 

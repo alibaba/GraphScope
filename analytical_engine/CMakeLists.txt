@@ -31,8 +31,8 @@ if (ENABLE_JAVA_SDK)
         message(STATUS "Using Clang compiler: ${CMAKE_CXX_COMPILER}")
         set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -flto -fforce-emit-vtables")
     else()
-        message(WARNING "Compiling with ENABLE_JAVA_SDK ON expects a minimum Clang-11 compiler," 
-                        "your compiler is ${CMAKE_CXX_COMPILER}. Continue building," 
+        message(WARNING "Compiling with ENABLE_JAVA_SDK ON expects a minimum Clang-11 compiler,"
+                        "your compiler is ${CMAKE_CXX_COMPILER}. Continue building,"
                         "BUT llvm4jni-based acceleration will be unavailable for generated libs.")
     endif()
 endif()
@@ -273,7 +273,7 @@ if (BUILD_TESTS)
             target_link_libraries(run_java_app ${FOLLY_LIBRARIES} ${DOUBLE_CONVERSION_LIBRARY})
         endif()
     endif()
-    
+
     macro(add_vineyard_app target)
         set(options)
         set(oneValueArgs)

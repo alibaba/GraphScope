@@ -321,7 +321,7 @@ GraphScope 包含一个 [Dockerfile](k8s/graphscope.Dockerfile)，可以构建 D
 # for the first time, run this script to install make, doxygen for docs and java env for testing.
 # ./scripts/prepare_dev.sh
 
-make graphscope
+make graphscope-image
 # by default, the built image is tagged as graphscope/graphscope:SHORTSHA
 ```
 

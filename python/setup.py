@@ -109,7 +109,10 @@ class CustomBDistWheel(bdist_wheel):
 
     def run(self):
         if learning_engine_enabled():
-            graphlearn_shared_lib = "libgraphlearn_shared.so"
+            if sys.platform == "darwin":
+                graphlearn_shared_lib = "libgraphlearn_shared.dylib"
+            else:
+                graphlearn_shared_lib = "libgraphlearn_shared.so"
             if not os.path.isfile(
                 os.path.join(
                     repo_root,
@@ -132,9 +135,6 @@ with open(os.path.join(repo_root, "..", "README.md"), "r", encoding="utf-8") as 
 
 def learning_engine_enabled():
     if os.environ.get("WITH_LEARNING_ENGINE") != "ON":
-        return False
-
-    if sys.platform != "linux" and sys.platform != "linux2":
         return False
 
     return True
