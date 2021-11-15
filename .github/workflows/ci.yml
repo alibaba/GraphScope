@@ -439,7 +439,7 @@ jobs:
         mvn clean install -DskipTests -Dmaven.antrun.skip=true --quiet
 
     - name: Basic test
-      if: false
+      if: steps.nx-filter.output.basic == 'true'
       run: |
         export GRAPHSCOPE_HOME='/opt/graphscope'
         export GS_TEST_DIR='/home/graphscope/gstest'
@@ -447,7 +447,7 @@ jobs:
                           --ignore=python/graphscope/nx/tests/algorithms
 
     - name: Algorithm test
-      if: false
+      if: steps.nx-filter.output.basic == 'true' || steps.nx-filter.output.algorithm == 'true'
       run: |
         export GRAPHSCOPE_HOME='/opt/graphscope'
         export GS_TEST_DIR='/home/graphscope/gstest'
@@ -457,6 +457,7 @@ jobs:
       if: steps.nx-filter.output.basic == 'true' || steps.nx-filter.output.generator == 'true'
       run: |
         export GRAPHSCOPE_HOME='/opt/graphscope'
+        export GS_TEST_DIR='/home/graphscope/gstest'
         python3 -m pytest -s -v python/graphscope/nx/generators/tests
 
   k8s-test:

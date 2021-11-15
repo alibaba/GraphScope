@@ -18,6 +18,7 @@
 
 from graphscope.nx.generators.atlas import *
 from graphscope.nx.generators.classic import *
+from graphscope.nx.generators.cograph import *
 from graphscope.nx.generators.community import *
 from graphscope.nx.generators.degree_seq import *
 from graphscope.nx.generators.directed import *

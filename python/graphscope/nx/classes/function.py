@@ -247,11 +247,17 @@ def set_node_attributes(G, values, name=None):
         try:  # `values` is a dict
             for n, v in values.items():
                 if n in G:
-                    G.set_node_data(n, {name: values[n]})
+                    dd = G.get_node_data(n)
+                    dd[name] = values[n]
+                    G.set_node_data(n, dd)
         except AttributeError:  # `values` is a constant
             for n in G:
-                G.set_node_data(n, {name: values})
+                dd = G.get_node_data(n)
+                dd[name] = values
+                G.set_node_data(n, dd)
     else:  # `values` must be dict of dict
         for n, d in values.items():
             if n in G:
-                G.set_node_data(n, d)
+                dd = G.get_node_data(n)
+                dd.update(d)
+                G.set_node_data(n, dd)

@@ -401,7 +401,7 @@ def with_module_map(  # noqa: C901
 def with_graphscope_nx_context(source_method_or_class, patch_docstring=True):
     import networkx
 
-    from graphscope import nx as gs_nx
+    import graphscope.nx as gs_nx
 
     return with_module_map(
         source_method_or_class, networkx, gs_nx, patch_docstring=patch_docstring

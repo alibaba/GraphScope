@@ -7,3 +7,7 @@ import_as_graphscope_nx(
     networkx.generators.tests.test_community,
     decorators=pytest.mark.usefixtures("graphscope_session"),
 )
+
+
+def test_generator():
+    pass
