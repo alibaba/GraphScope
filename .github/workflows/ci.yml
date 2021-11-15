@@ -40,7 +40,7 @@ jobs:
           gae-python:
             - 'analytical_engine/**'
             - 'python/**'
-            - !'python/graphscope/nx/**'
+            - '!python/graphscope/nx/**'
           networkx:
             - 'analytical_engine/apps/**'
             - 'analytical_engine/frame/**'
