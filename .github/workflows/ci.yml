@@ -29,6 +29,7 @@ jobs:
     runs-on: ubuntu-20.04
     # Set job outputs to values from filter step
     outputs:
+      gae-python: ${{ steps.filter.outputs.gae-python }}
       networkx: ${{ steps.filter.outputs.networkx }}
     steps:
     # For pull requests it's not necessary to checkout the code
@@ -36,6 +37,10 @@ jobs:
       id: filter
       with:
         filters: |
+          gae-python:
+            - 'analytical_engine/**'
+            - 'python/**'
+            - !'python/graphscope/nx/**'
           networkx:
             - 'analytical_engine/apps/**'
             - 'analytical_engine/frame/**'
@@ -273,8 +278,8 @@ jobs:
 
   python-unittest:
     runs-on: ubuntu-20.04
-    needs: [build-gae, build-gle]
-    if: ${{ needs.changes.outputs.networkx == 'true' }}
+    needs: [build-gae, build-gle, changes]
+    if: ${{ needs.changes.outputs.gae-python == 'true' }}
     defaults:
       run:
         shell: bash --noprofile --norc -eo pipefail {0}
@@ -415,7 +420,6 @@ jobs:
         mvn clean install -DskipTests -Dmaven.antrun.skip=true --quiet
 
     - name: GraphScope NetworkX test
-      if: steps.filter.outputs.networkx == 'true'
       run: |
         export GRAPHSCOPE_HOME='/opt/graphscope'
         export GS_TEST_DIR='/home/graphscope/gstest'
