@@ -36,20 +36,20 @@ impl<'a> Iterator for PropertiesIter<'a> {
     }
 }
 
-pub struct VertexImpl {
+pub struct RocksVertex {
     vertex_id: VertexId,
     label_id: LabelId,
     decoder: Decoder,
     raw_bytes: RawBytes,
 }
 
-impl VertexImpl {
+impl RocksVertex {
     pub fn new(vertex_id: VertexId, label_id: LabelId, decoder: Decoder, raw_bytes: RawBytes) -> Self {
-        VertexImpl { vertex_id, label_id, decoder, raw_bytes }
+        RocksVertex { vertex_id, label_id, decoder, raw_bytes }
     }
 }
 
-impl PropertyReader for VertexImpl {
+impl PropertyReader for RocksVertex {
     type P = PropertyImpl;
     type PropertyIterator = PropertiesIter<'static>;
 
@@ -74,7 +74,7 @@ impl PropertyReader for VertexImpl {
     }
 }
 
-impl Vertex for VertexImpl {
+impl Vertex for RocksVertex {
     fn get_vertex_id(&self) -> VertexId {
         self.vertex_id
     }
@@ -84,20 +84,20 @@ impl Vertex for VertexImpl {
     }
 }
 
-pub struct EdgeImpl {
+pub struct RocksEdge {
     edge_id: EdgeId,
     edge_relation: EdgeRelation,
     decoder: Decoder,
     raw_bytes: RawBytes,
 }
 
-impl EdgeImpl {
+impl RocksEdge {
     pub fn new(edge_id: EdgeId, edge_relation: EdgeRelation, decoder: Decoder, raw_bytes: RawBytes) -> Self {
-        EdgeImpl { edge_id, edge_relation, decoder, raw_bytes }
+        RocksEdge { edge_id, edge_relation, decoder, raw_bytes }
     }
 }
 
-impl PropertyReader for EdgeImpl {
+impl PropertyReader for RocksEdge {
     type P = PropertyImpl;
     type PropertyIterator = PropertiesIter<'static>;
 
@@ -122,7 +122,7 @@ impl PropertyReader for EdgeImpl {
     }
 }
 
-impl Edge for EdgeImpl {
+impl Edge for RocksEdge {
     fn get_edge_id(&self) -> &EdgeId {
         &self.edge_id
     }

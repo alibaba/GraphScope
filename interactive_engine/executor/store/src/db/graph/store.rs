@@ -550,6 +550,8 @@ impl GraphStore {
         let graph_def = self.meta.get_graph_def().lock()?;
         Ok((&*graph_def).clone())
     }
+
+
 }
 
 fn merge_updates<'a>(old: &mut HashMap<PropId, ValueRef<'a>>, updates: &'a dyn PropertyMap) {

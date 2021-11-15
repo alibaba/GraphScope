@@ -6,7 +6,7 @@ use crate::db::graph::types::{VertexTypeManager, EdgeTypeManager};
 use crate::v2::GraphResult;
 use crate::db::graph::bin::{vertex_key, edge_key};
 use crate::db::graph::codec::get_codec_version;
-use crate::v2::graph::entity::{VertexImpl, EdgeImpl};
+use crate::v2::graph::entity::{RocksVertex, RocksEdge};
 use crate::v2::graph::iter::{VertexTypeScan, EdgeTypeScan};
 use crate::db::api::EdgeDirection;
 
@@ -27,7 +27,7 @@ impl RocksGraph {
                              vertex_id: VertexId,
                              label_id: LabelId,
                              _property_ids: Option<&Vec<PropertyId>>
-    ) -> GraphResult<Option<VertexImpl>> {
+    ) -> GraphResult<Option<RocksVertex>> {
         let snapshot_id = snapshot_id as i64;
         let vertex_type_info = self.vertex_manager.get_type_info(snapshot_id, label_id as i32)?;
         if let Some(table) = vertex_type_info.get_table(snapshot_id) {
@@ -37,7 +37,7 @@ impl RocksGraph {
                 if k[0..16] == key[0..16] && v.len() > 4 {
                     let codec_version = get_codec_version(v);
                     let decoder = vertex_type_info.get_decoder(snapshot_id, codec_version)?;
-                    let vertex = VertexImpl::new(vertex_id, vertex_type_info.get_label() as LabelId, decoder, RawBytes::new(v));
+                    let vertex = RocksVertex::new(vertex_id, vertex_type_info.get_label() as LabelId, decoder, RawBytes::new(v));
                     return Ok(Some(vertex));
                 }
             }
@@ -50,7 +50,7 @@ impl RocksGraph {
                               edge_id: EdgeId,
                               edge_relation: &EdgeRelation,
                               _property_ids: Option<&Vec<PropertyId>>
-    ) -> GraphResult<Option<EdgeImpl>> {
+    ) -> GraphResult<Option<RocksEdge>> {
         let snapshot_id = snapshot_id as i64;
         let info = self.edge_manager.get_edge_kind(snapshot_id, &edge_relation.into())?;
         if let Some(table) = info.get_table(snapshot_id) {
@@ -60,7 +60,7 @@ impl RocksGraph {
                 if k[0..32] == key[0..32] && v.len() >= 4 {
                     let codec_version = get_codec_version(v);
                     let decoder = info.get_decoder(snapshot_id, codec_version)?;
-                    let edge = EdgeImpl::new(edge_id, info.get_type().into(), decoder, RawBytes::new(v));
+                    let edge = RocksEdge::new(edge_id, info.get_type().into(), decoder, RawBytes::new(v));
                     return Ok(Some(edge));
                 }
             }
@@ -75,14 +75,14 @@ impl RocksGraph {
                    label_id: Option<LabelId>,
                    _condition: Option<&Condition>,
                    _property_ids: Option<&Vec<PropertyId>>,
-    ) -> GraphResult<Records<EdgeImpl>> {
+    ) -> GraphResult<Records<RocksEdge>> {
         if let Some(label_id) = label_id {
             let edge_info = self.edge_manager.get_edge_info(snapshot_id as i64, label_id as i32)?;
             let scan = EdgeTypeScan::new(self.storage.clone(), snapshot_id, edge_info, vertex_id, direction);
             Ok(scan.into_iter())
         } else {
             let mut edge_info_iter = self.edge_manager.get_all_edges(snapshot_id as i64);
-            let mut res: Records<EdgeImpl> = Box::new(::std::iter::empty());
+            let mut res: Records<RocksEdge> = Box::new(::std::iter::empty());
             while let Some(info) = edge_info_iter.next_info() {
                 let label_iter = EdgeTypeScan::new(self.storage.clone(), snapshot_id, info, vertex_id, direction).into_iter();
                 res = Box::new(res.chain(label_iter));
@@ -93,8 +93,8 @@ impl RocksGraph {
 }
 
 impl MultiVersionGraph for RocksGraph {
-    type V = VertexImpl;
-    type E = EdgeImpl;
+    type V = RocksVertex;
+    type E = RocksEdge;
 
     fn get_vertex(&self,
                   snapshot_id: SnapshotId,
