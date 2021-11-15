@@ -24,7 +24,7 @@ import pytest
 import graphscope
 import graphscope.nx as nx
 from graphscope.analytical.udf.decorators import pregel
-from graphscope.dataset.ogbn_mag import load_ogbn_mag
+from graphscope.dataset import load_ogbn_mag
 from graphscope.framework.app import AppAssets
 from graphscope.learning.examples import GCN
 from graphscope.learning.graphlearn.python.model.tf import optimizer

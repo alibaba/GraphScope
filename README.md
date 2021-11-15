@@ -158,7 +158,7 @@ g = g.add_edges(
 Alternatively, we provide a function to load this graph for convenience.
 
 ```python
-from graphscope.dataset.ogbn_mag import load_ogbn_mag
+from graphscope.dataset import load_ogbn_mag
 
 g = load_ogbn_mag(sess, "/testingdata/ogbn_mag_small/")
 ```
