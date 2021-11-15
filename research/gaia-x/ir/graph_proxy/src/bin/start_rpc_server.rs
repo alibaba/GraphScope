@@ -96,7 +96,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let factory = query_exp_graph.initialize_job_compiler();
     let service = Service::new(factory);
     let rpc_service = RpcService::new(service, server_config.report);
-    start_rpc_server(addr.parse().unwrap(), rpc_service, server_config.report).await?;
+    start_rpc_server(addr.parse().unwrap(), rpc_service, true).await?;
 
     Ok(())
 }
