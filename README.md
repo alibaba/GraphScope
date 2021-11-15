@@ -63,15 +63,12 @@ To load this graph to GraphScope with our retrieval module, please use these cod
 ```python
 
 import graphscope
-from graphscope.dataset.ogbn_mag import load_ogbn_mag
+from graphscope.dataset import load_ogbn_mag
 
 g = load_ogbn_mag()
 ```
 
-We provide a set of functions to load graph datasets from [ogb](#) and [snap](#) for convenience. Please find all the available graphs [here](https://github.com/alibaba/GraphScope/tree/docs/python/graphscope/dataset).    
-If you want to use your own graph data, please refer [this doc](#) to load vertices and edges by labels.
-
-
+We provide a set of functions to load graph datasets from [ogb](https://ogb.stanford.edu/docs/dataset_overview/) and [snap](https://snap.stanford.edu/data/index.html) for convenience. Please find all the available graphs [here](https://github.com/alibaba/GraphScope/tree/docs/python/graphscope/dataset). If you want to use your own graph data, please refer [this doc](https://graphscope.io/docs/loading_graph.html) to load vertices and edges by labels.
 
 
 ### Interactive query
