@@ -83,7 +83,7 @@ In this example, we use graph traversal to count the number of papers two given 
 
 ```python
 # get the endpoint for submitting Gremlin queries on graph g.
-interactive = sess.gremlin(g)
+interactive = graphscope.gremlin(g)
 
 # count the number of papers two authors (with id 2 and 4307) have co-authored
 papers = interactive.execute("g.V().has('author', 'id', 2).out('writes').where(__.in('writes').has('id', 4307)).count()").one()
@@ -137,7 +137,7 @@ paper_features.append("kcore")
 paper_features.append("tc")
 
 # launch a learning engine.
-lg = sess.learning(sub_graph, nodes=[("paper", paper_features)],
+lg = graphscope.learning(sub_graph, nodes=[("paper", paper_features)],
                   edges=[("paper", "cites", "paper")],
                   gen_labels=[
                       ("train", "paper", 100, (0, 75)),
@@ -341,7 +341,7 @@ a `runtime-base` image. To build images with latest version of GraphScope, go to
 
 ```bash
 # by default, the built image is tagged as graphscope/graphscope:SHORTSHA
-make graphscope-images
+make graphscope-image
 ```
 
 ### Building client library
