@@ -39,7 +39,7 @@ jobs:
         filters: |
           gae-python:
             - 'analytical_engine/**'
-            - 'python/**'
+            - 'python/graphscope/**'
             - '!python/graphscope/nx/**'
           networkx:
             - 'analytical_engine/apps/**'

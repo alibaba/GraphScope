@@ -56,7 +56,36 @@ __all__ = [
 ]
 
 
-from networkx.classes.function import *
+# forward the NetworkX functions
+from networkx.classes.function import add_cycle
+from networkx.classes.function import add_path
+from networkx.classes.function import add_star
+from networkx.classes.function import all_neighbors
+from networkx.classes.function import common_neighbors
+from networkx.classes.function import create_empty_copy
+from networkx.classes.function import degree
+from networkx.classes.function import degree_histogram
+from networkx.classes.function import density
+from networkx.classes.function import edges
+from networkx.classes.function import freeze
+from networkx.classes.function import get_node_attributes
+from networkx.classes.function import info
+from networkx.classes.function import is_directed
+from networkx.classes.function import is_empty
+from networkx.classes.function import is_frozen
+from networkx.classes.function import is_negatively_weighted
+from networkx.classes.function import is_weighted
+from networkx.classes.function import neighbors
+from networkx.classes.function import nodes
+from networkx.classes.function import nodes_with_selfloops
+from networkx.classes.function import non_edges
+from networkx.classes.function import non_neighbors
+from networkx.classes.function import number_of_edges
+from networkx.classes.function import number_of_nodes
+from networkx.classes.function import selfloop_edges
+from networkx.classes.function import subgraph
+from networkx.classes.function import to_directed
+from networkx.classes.function import to_undirected
 
 
 def induced_subgraph(G, nbunch):
