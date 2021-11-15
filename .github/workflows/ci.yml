@@ -202,7 +202,6 @@ jobs:
     - name: build wheel
       run: |
         export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/opt/graphscope/lib:/opt/graphscope/lib64
-        export WITH_LEARNING_ENGINE=ON
         pushd python
         pip3 install -U setuptools
         pip3 install -r requirements.txt -r requirements-dev.txt

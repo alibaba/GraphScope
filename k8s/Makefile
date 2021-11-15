@@ -183,7 +183,6 @@ graphscope-client-darwin-py3:
 		cmake -DWITH_VINEYARD=ON -DTESTING=OFF .. && \
 		make graphlearn_shared -j`nproc` && \
 		export DYLD_LIBRARY_PATH=$(WORKING_DIR)/../learning_engine/graph-learn/built/lib:$$DYLD_LIBRARY_PATH && \
-		export WITH_LEARNING_ENGINE=ON && \
 		cd $(WORKING_DIR)/../python && \
 		pip3 install -U pip numpy==1.18.5 delocate grpcio grpcio_tools wheel && \
 		rm -fr build dist/*.whl || true && \
@@ -221,7 +220,6 @@ graphscope-client-manylinux2014-py3:
 			cmake -DWITH_VINEYARD=ON .. && \
 			make graphlearn_shared -j`nproc` && \
 			export LD_LIBRARY_PATH=/work/learning_engine/graph-learn/built/lib:$$LD_LIBRARY_PATH && \
-			export WITH_LEARNING_ENGINE=ON && \
 			for py in cp36-cp36m cp37-cp37m cp38-cp38 cp39-cp39 ; do \
 				cd /work/python; \
 				export PATH=/opt/python/$$py/bin:$$PATH; \

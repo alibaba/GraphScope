@@ -46,7 +46,6 @@ RUN cd ${HOME}/gs/analytical_engine && \
 
 # build python bdist_wheel
 RUN export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/opt/graphscope/lib:/opt/graphscope/lib64 && \
-    export WITH_LEARNING_ENGINE=ON && \
     cd ${HOME}/gs/python && \
     pip3 install -U setuptools && \
     pip3 install -r requirements.txt -r requirements-dev.txt && \
