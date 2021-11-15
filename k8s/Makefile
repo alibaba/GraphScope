@@ -95,8 +95,7 @@ graphscope-darwin-py3:
 		sudo strip /opt/graphscope/bin/grape_engine && \
 		sudo strip /opt/graphscope/bin/executor && \
 		sudo strip /opt/graphscope/bin/gaia_executor && \
-		sudo install_name_tool -add_rpath /usr/local/lib /opt/graphscope/bin/executor && \
-		sudo install_name_tool -add_rpath /usr/local/lib /opt/graphscope/bin/gaia_executor && \
+		export DYLD_LIBRARY_PATH=/usr/local/lib:$$DYLD_LIBRARY_PATH && \
 		package_name=gs-lib python3 setup.py bdist_wheel --plat=macosx_10_9_x86_64 && \
 		rm -fr build && \
 		package_name=gs-include python3 setup.py bdist_wheel --plat=macosx_10_9_x86_64 && \
@@ -109,6 +108,8 @@ graphscope-darwin-py3:
 		rm -fr build && \
 		package_name=graphscope python3 setup.py bdist_wheel --plat=macosx_10_9_x86_64 && \
 		pip3 install delocate && \
+		sed -i '' 's/return location/return realpath(location)/' \
+			$$(python -c "import delocate.libsana; print(delocate.libsana.__file__)") && \
 		for wheel in `ls dist/*.whl`; do \
 			delocate-listdeps -a -d $$wheel; \
 			delocate-wheel -w dist/wheelhouse -v $$wheel && rm $$wheel; \
@@ -182,7 +183,7 @@ graphscope-client-darwin-py3:
 		cd cmake-build && \
 		cmake -DWITH_VINEYARD=ON -DTESTING=OFF .. && \
 		make graphlearn_shared -j`nproc` && \
-		export DYLD_LIBRARY_PATH=$(WORKING_DIR)/../learning_engine/graph-learn/built/lib:$$DYLD_LIBRARY_PATH && \
+		export DYLD_LIBRARY_PATH=$(WORKING_DIR)/../learning_engine/graph-learn/built/lib:/usr/local/lib:$$DYLD_LIBRARY_PATH && \
 		cd $(WORKING_DIR)/../python && \
 		pip3 install -U pip numpy==1.18.5 delocate grpcio grpcio_tools wheel && \
 		rm -fr build dist/*.whl || true && \

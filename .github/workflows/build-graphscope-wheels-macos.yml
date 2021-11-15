@@ -1,16 +1,30 @@
 name: Build GraphScope Wheels on MacOS
 
 on:
-  workflow_dispatch:
-  schedule:
-    # The notifications for scheduled workflows are sent to the user who
-    # last modified the cron syntax in the workflow file.
-    # Trigger the workflow at 03:00(CST) every day.
-    - cron:  '00 19 * * *'
+  # Trigger the workflow on push or pull request, but only for the main branch
+  push:
+    branches:
+      - main
+    paths-ignore:
+      - 'gnn_engine/**'
+      - '**.md'
+      - '**.rst'
+      - 'docs/**'
+      - 'scripts/**'
+      - 'tutorials/**'
+  pull_request:
+    branches:
+      - main
+    paths-ignore:
+      - 'gnn_engine/**'
+      - '**.md'
+      - '**.rst'
+      - 'docs/**'
+      - 'scripts/**'
+      - 'tutorials/**'
 
 jobs:
   build-wheels:
-    if: ${{ github.ref == 'refs/heads/main' && github.repository == 'alibaba/GraphScope' }}
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
@@ -28,6 +42,7 @@ jobs:
     - name: Install Dependencies
       run: |
         /bin/bash ${GITHUB_WORKSPACE}/scripts/install_deps.sh --dev --vineyard_prefix /opt/vineyard --verbose
+
 
     - name: Build Server Wheel
       run: |
@@ -51,7 +66,6 @@ jobs:
         retention-days: 5
 
   test:
-    if: ${{ github.ref == 'refs/heads/main' && github.repository == 'alibaba/GraphScope' }}
     runs-on: ${{ matrix.os }}
     needs: [build-wheels]
     strategy:
