@@ -57,8 +57,6 @@ pub struct Record {
     curr: Option<Entry>,
     // TODO: optimized as VecMap<Entry>
     columns: HashMap<NameOrId, Entry>,
-    // The tags that refer to keys, while the values (of keys) are saved in columns
-    keys: Vec<NameOrId>,
 }
 
 impl Record {
@@ -69,7 +67,6 @@ impl Record {
             Record {
                 curr: None,
                 columns,
-                keys: vec![],
             }
         } else {
             Record {
@@ -117,14 +114,6 @@ impl Record {
             Some(Entry::Element(RecordElement::OnGraph(element))) => Some(element),
             _ => None,
         }
-    }
-
-    pub fn set_keys(&mut self, keys: Vec<NameOrId>) {
-        self.keys = keys;
-    }
-
-    pub fn insert_key(&mut self, tag: NameOrId) {
-        self.keys.push(tag)
     }
 
     pub fn join(mut self, mut other: Record) -> Record {
