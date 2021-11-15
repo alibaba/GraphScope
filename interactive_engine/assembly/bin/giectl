@@ -244,6 +244,8 @@ start_executor() {
   mkdir -p ${log_dir} ${config_dir} ${pid_dir}
   # log4rs needs LOG_DIRS env
   export LOG_DIRS=${log_dir}
+  export LD_LIBRARY_PATH=${GRAPHSCOPE_HOME}/lib:${LD_LIBRARY_PATH}
+  export DYLD_LIBRARY_PATH=${GRAPHSCOPE_HOME}/lib:${DYLD_LIBRARY_PATH}
 
   # set executor config file
   sed -e "s@GRAPH_NAME@${object_id}@g" \

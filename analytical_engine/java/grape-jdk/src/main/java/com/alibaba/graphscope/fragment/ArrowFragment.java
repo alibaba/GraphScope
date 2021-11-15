@@ -40,8 +40,8 @@ import com.alibaba.graphscope.utils.CppHeaderName;
 import com.alibaba.graphscope.utils.JNILibraryName;
 
 /**
- * ArrowFragment is the java wrapper for <a
- * href="https://github.com/v6d-io/v6d/blob/main/modules/graph/fragment/arrow_fragment.h#L177">vineyard::ArrowFragment</a>.
+ * ArrowFragment is the java wrapper for <a href=
+ * "https://github.com/v6d-io/v6d/blob/main/modules/graph/fragment/arrow_fragment.h#L177">vineyard::ArrowFragment</a>.
  *
  * <p>LABEL_ID_TYPE=int,PROP_ID_TYPE=int EID_TYPE=uint64_t
  *
@@ -52,9 +52,6 @@ import com.alibaba.graphscope.utils.JNILibraryName;
 @CXXHead(CppHeaderName.CORE_JAVA_TYPE_ALIAS_H)
 @CXXHead(system = "stdint.h")
 @FFITypeAlias(CppClassName.ARROW_FRAGMENT)
-// @CXXTemplate(
-//        cxx = {"int64_t"},
-//        java = {"java.lang.Long"})
 public interface ArrowFragment<OID_T> extends FFIPointer {
     int fid();
 
@@ -84,10 +81,12 @@ public interface ArrowFragment<OID_T> extends FFIPointer {
     // @FFINameAlias("edge_property_type")
 
     // @FFINameAlias("vertex_property_type")
-    // @CXXValue SharedPtr<ArrowDataType> vertexPropertyType(int labelId, int propertyId);
+    // @CXXValue SharedPtr<ArrowDataType> vertexPropertyType(int labelId, int
+    // propertyId);
 
     // @FFINameAlias("edge_property_type")
-    // @CXXValue SharedPtr<ArrowDataType> edgePropertyType(int labelId, int propertyId);
+    // @CXXValue SharedPtr<ArrowDataType> edgePropertyType(int labelId, int
+    // propertyId);
 
     // @FFINameAlias("vertex_data_table")
     // @CXXValue SharedPtr<ArrowTable> vertexDataTable(int labelId);
@@ -206,51 +205,34 @@ public interface ArrowFragment<OID_T> extends FFIPointer {
             int edgeLabelId);
 
     // @FFINameAlias("edge_data_column<uint64_t>")
-    // @CXXValue EdgeDataColumnLong<PropertyNbrUnit<Long>> edgeDataColumnLong(int edgeLabelId, int
+    // @CXXValue EdgeDataColumnLong<PropertyNbrUnit<Long>> edgeDataColumnLong(int
+    // edgeLabelId, int
     // propertyId);
     //
     // @FFINameAlias("edge_data_column<double>")
-    // @CXXValue EdgeDataColumnDouble<PropertyNbrUnit<Long>> edgeDataColumnDouble(int edgeLabelId,
+    // @CXXValue EdgeDataColumnDouble<PropertyNbrUnit<Long>>
+    // edgeDataColumnDouble(int edgeLabelId,
     // int propertyId);
     //
     // @FFINameAlias("edge_data_column<uint32_t>")
-    // @CXXValue EdgeDataColumnInt<PropertyNbrUnit<Long>> edgeDataColumnInt(int edgeLabelId, int
+    // @CXXValue EdgeDataColumnInt<PropertyNbrUnit<Long>> edgeDataColumnInt(int
+    // edgeLabelId, int
     // propertyId);
 
-    // @CXXTemplate(
-    //            cxx = {"uint64_t"},
-    //            java = {"Long"})
-    // @CXXTemplate(
-    //            cxx = {"double"},
-    //            java = {"Double"})
-    // @CXXTemplate(
-    //            cxx = {"uint32_t"},
-    //            java = {"Integer"})
     @FFINameAlias("edge_data_column")
     @CXXValue
     <DATA_T> EdgeDataColumn<DATA_T> edgeDataColumn(
             int vertexLabelId, int propertyId, @FFISkip DATA_T unused);
 
-    // @CXXTemplate(
-    //            cxx = {"uint64_t"},
-    //            java = {"Long"})
-    // @CXXTemplate(
-    //            cxx = {"double"},
-    //            java = {"Double"})
-    // @CXXTemplate(
-    //            cxx = {"uint32_t"},
-    //            java = {"Integer"})
     @FFINameAlias("vertex_data_column")
     @CXXValue
     <DATA_T> VertexDataColumn<DATA_T> vertexDataColumn(
             int vertexLabelId, int propertyId, @FFISkip DATA_T unused);
 
-    // // @CXXTemplate(cxx = {"uint64_t"}, java = {"Long"})
-    // // @CXXTemplate(cxx = {"double"}, java = {"Double"})
-    // // @CXXTemplate(cxx = {"uint32_t"}, java = {"Integer"})
     // @FFINameAlias("GetData")
     // @CXXValue <DATA_T>
-    // DATA_T getData(@FFITypeAlias(GRAPE_VERTEX + "<uint64_t>") @CXXReference Vertex<Long> vertex,
+    // DATA_T getData(@FFITypeAlias(GRAPE_VERTEX + "<uint64_t>") @CXXReference
+    // Vertex<Long> vertex,
     // int propertyId,
     // @FFISkip DATA_T unused);
 
@@ -327,7 +309,8 @@ public interface ArrowFragment<OID_T> extends FFIPointer {
     @FFINameAlias("Gid2Oid")
     OID_T gid2Oid(Long gid);
 
-    // Oid2Gid can not be made in java, since java pass primitives, even long in value.
+    // Oid2Gid can not be made in java, since java pass primitives, even long in
+    // value.
     // @FFINameAlias("Oid2Gid")
     // boolean oid2Gid(int vertexLabelId, OID_T oid, Long gid);
     @FFINameAlias("Oid2Gid")

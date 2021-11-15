@@ -10,7 +10,7 @@ sleep 5s
 curl -XPOST http://localhost:${_port} -d 'import graphscope'
 curl -XPOST http://localhost:${_port} -d 'graphscope.set_option(show_log=True)'
 curl -XPOST http://localhost:${_port} -d 'from graphscope.framework.loader import Loader'
-curl -XPOST http://localhost:${_port} -d 'from graphscope.dataset.modern_graph import load_modern_graph'
+curl -XPOST http://localhost:${_port} -d 'from graphscope.dataset import load_modern_graph'
 curl -XPOST http://localhost:${_port} -d 'session=graphscope.session(cluster_type="hosts", num_workers=2, enable_gaia=True)'
 curl_sess="curl -XPOST http://localhost:${_port} -d 'graph = load_modern_graph(session, \"${GITHUB_WORKSPACE}/interactive_engine/tests/src/main/resources/modern_graph\")'"
 sh -c "$curl_sess"

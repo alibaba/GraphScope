@@ -27,18 +27,24 @@ import com.alibaba.graphscope.parallel.PropertyMessageManager;
 
 public class PropertyTraverseVertexData
         implements PropertyDefaultAppBase<Long, PropertyTraverseVertexDataContext> {
+    private static int propertyId = 0;
+
     @Override
     public void PEval(
             ArrowFragment<Long> fragment,
             PropertyDefaultContextBase<Long> context,
             PropertyMessageManager messageManager) {
         PropertyTraverseVertexDataContext ctx = (PropertyTraverseVertexDataContext) context;
-        VertexRange<Long> innerVertices = fragment.innerVertices(0);
-        for (Vertex<Long> vertex : innerVertices.locals()) {
-            PropertyAdjList<Long> adjList = fragment.getOutgoingAdjList(vertex, 0);
-            for (PropertyNbr<Long> cur : adjList.iterator()) {
-                ctx.fake_edata = cur.getDouble(0);
-                ctx.fake_vid = cur.neighbor().GetValue();
+        for (int i = 0; i < fragment.vertexLabelNum(); ++i) {
+            VertexRange<Long> innerVertices = fragment.innerVertices(i);
+            for (Vertex<Long> vertex : innerVertices.locals()) {
+                for (int j = 0; j < fragment.edgeLabelNum(); ++j) {
+                    PropertyAdjList<Long> adjList = fragment.getOutgoingAdjList(vertex, j);
+                    for (PropertyNbr<Long> nbr : adjList.iterator()) {
+                        ctx.fake_vid = nbr.neighbor().GetValue();
+                        ctx.fake_edata = nbr.getDouble(propertyId);
+                    }
+                }
             }
         }
     }
@@ -52,12 +58,16 @@ public class PropertyTraverseVertexData
         if (ctx.step >= ctx.maxStep) {
             return;
         }
-        VertexRange<Long> innerVertices = fragment.innerVertices(0);
-        for (Vertex<Long> vertex : innerVertices.locals()) {
-            PropertyAdjList<Long> adjList = fragment.getOutgoingAdjList(vertex, 0);
-            for (PropertyNbr<Long> cur : adjList.iterator()) {
-                ctx.fake_edata = cur.getDouble(0);
-                ctx.fake_vid = cur.neighbor().GetValue();
+        for (int i = 0; i < fragment.vertexLabelNum(); ++i) {
+            VertexRange<Long> innerVertices = fragment.innerVertices(i);
+            for (Vertex<Long> vertex : innerVertices.locals()) {
+                for (int j = 0; j < fragment.edgeLabelNum(); ++j) {
+                    PropertyAdjList<Long> adjList = fragment.getOutgoingAdjList(vertex, j);
+                    for (PropertyNbr<Long> nbr : adjList.iterator()) {
+                        ctx.fake_vid = nbr.neighbor().GetValue();
+                        ctx.fake_edata = nbr.getDouble(propertyId);
+                    }
+                }
             }
         }
         messageManager.ForceContinue();

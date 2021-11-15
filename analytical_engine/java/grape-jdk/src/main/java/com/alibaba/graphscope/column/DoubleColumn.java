@@ -39,9 +39,6 @@ import com.alibaba.graphscope.ds.Vertex;
 @CXXHead(ARROW_FRAGMENT_H)
 @CXXHead(ARROW_PROJECTED_FRAGMENT_H)
 @FFITypeAlias(DOUBLE_COLUMN)
-// @CXXTemplate(
-//        cxx = {ARROW_FRAGMENT + "<int64_t>"},
-//        java = {"com.alibaba.graphscope.fragment.ArrowFragment<java.lang.Long>"})
 public interface DoubleColumn<FRAG_T> extends IColumn {
 
     double at(@CXXReference @FFITypeAlias(GRAPE_LONG_VERTEX) Vertex<Long> vertex);

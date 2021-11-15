@@ -38,10 +38,6 @@ import com.alibaba.graphscope.utils.JNILibraryName;
 @CXXHead(CppHeaderName.ARROW_FRAGMENT_H)
 @CXXHead(CppHeaderName.CORE_JAVA_TYPE_ALIAS_H)
 @FFITypeAlias(LABELED_VERTEX_DATA_CONTEXT)
-// @CXXTemplate(
-//        cxx = {ARROW_FRAGMENT + "<int64_t>", "double"},
-//        java = {"com.alibaba.graphscope.fragment.ArrowFragment<java.lang.Long>",
-// "java.lang.Double"})
 public interface FFILabeledVertexDataContext<FRAG_T, DATA_T> extends FFIPointer {
     @FFINameAlias("GetValue")
     @CXXValue

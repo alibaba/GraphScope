@@ -16,9 +16,9 @@ use crate::v2::multi_version_graph::MultiVersionGraph;
 use crate::v2::api::{SnapshotId, VertexId, LabelId, PropertyId, EdgeId, Records, SerialId, EdgeInnerId};
 use crate::v2::api::types::{EdgeRelation, Vertex, PropertyReader, PropertyValue, Property, Edge};
 use crate::v2::api::condition::Condition;
-use crate::v2::Result;
+use crate::v2::{GraphResult, parse_property_value};
 use std::sync::Arc;
-use crate::db::api::{GraphStorage, EdgeKind, PropIter, ValueRef, PropertiesRef, ValueType};
+use crate::db::api::{GraphStorage, EdgeKind, PropIter, PropertiesRef};
 use std::collections::{HashMap, HashSet};
 use std::iter::FromIterator;
 use std::vec::IntoIter;
@@ -46,26 +46,6 @@ impl<G: GraphStorage> GraphStorageWrapper<G> {
         vertex_id as i64
     }
 
-    fn parse_property_value(value_ref: ValueRef) -> PropertyValue {
-        match value_ref.get_type() {
-            ValueType::Bool => PropertyValue::Boolean(value_ref.get_bool().unwrap()),
-            ValueType::Char => PropertyValue::Char(char::from(value_ref.get_char().unwrap())),
-            ValueType::Short => PropertyValue::Short(value_ref.get_short().unwrap()),
-            ValueType::Int => PropertyValue::Int(value_ref.get_int().unwrap()),
-            ValueType::Long => PropertyValue::Long(value_ref.get_long().unwrap()),
-            ValueType::Float => PropertyValue::Float(value_ref.get_float().unwrap()),
-            ValueType::Double => PropertyValue::Double(value_ref.get_double().unwrap()),
-            ValueType::String => PropertyValue::String(String::from(value_ref.get_str().unwrap())),
-            ValueType::Bytes => PropertyValue::Bytes(Vec::from(value_ref.get_bytes().unwrap())),
-            ValueType::IntList => PropertyValue::IntList(value_ref.get_int_list().unwrap().iter().collect()),
-            ValueType::LongList => PropertyValue::LongList(value_ref.get_long_list().unwrap().iter().collect()),
-            ValueType::FloatList => PropertyValue::FloatList(value_ref.get_float_list().unwrap().iter().collect()),
-            ValueType::DoubleList => PropertyValue::DoubleList(value_ref.get_double_list().unwrap().iter().collect()),
-            ValueType::StringList => PropertyValue::StringList(value_ref.get_str_list().unwrap().iter()
-                .map(String::from).collect()),
-        }
-    }
-
     fn parse_vertex<V: crate::db::api::Vertex>(from_vertex: V, property_ids: Option<&Vec<PropertyId>>)
         -> WrapperVertex {
         let vertex_id = from_vertex.get_id() as VertexId;
@@ -85,7 +65,7 @@ impl<G: GraphStorage> GraphStorageWrapper<G> {
                     continue;
                 }
             }
-            let property_value = Self::parse_property_value(value_ref);
+            let property_value = parse_property_value(value_ref);
             let property = WrapperProperty {
                 property_id,
                 property_value,
@@ -143,7 +123,7 @@ impl<G: GraphStorage> MultiVersionGraph for GraphStorageWrapper<G> {
                   vertex_id: VertexId,
                   label_id: Option<LabelId>,
                   property_ids: Option<&Vec<PropertyId>>
-    ) -> Result<Option<Self::V>> {
+    ) -> GraphResult<Option<Self::V>> {
         let snapshot_id = Self::parse_snapshot_id(snapshot_id);
         let vertex_id = Self::parse_vertex_id(vertex_id);
         let label_id = Self::parse_label_id(label_id);
@@ -156,7 +136,7 @@ impl<G: GraphStorage> MultiVersionGraph for GraphStorageWrapper<G> {
                 edge_id: EdgeId,
                 edge_relation: Option<&EdgeRelation>,
                 property_ids: Option<&Vec<PropertyId>>
-    ) -> Result<Option<Self::E>> {
+    ) -> GraphResult<Option<Self::E>> {
         let snapshot_id = Self::parse_snapshot_id(snapshot_id);
         let edge_id = Self::parse_edge_id(edge_id);
         let edge_kind = edge_relation.map(|relation| Self::parse_edge_kind(relation));
@@ -169,7 +149,7 @@ impl<G: GraphStorage> MultiVersionGraph for GraphStorageWrapper<G> {
                    label_id: Option<LabelId>,
                    condition: Option<&Condition>,
                    property_ids: Option<&Vec<PropertyId>>
-    ) -> Result<Records<Self::V>> {
+    ) -> GraphResult<Records<Self::V>> {
         let snapshot_id = Self::parse_snapshot_id(snapshot_id);
         let label_id = Self::parse_label_id(label_id);
         let condition = Self::parse_condition(condition);
@@ -183,14 +163,13 @@ impl<G: GraphStorage> MultiVersionGraph for GraphStorageWrapper<G> {
 
     fn scan_edge(&self,
                  snapshot_id: SnapshotId,
-                 edge_relation: Option<&EdgeRelation>,
+                 label_id: Option<LabelId>,
                  condition: Option<&Condition>,
                  property_ids: Option<&Vec<PropertyId>>
-    ) -> Result<Records<Self::E>> {
+    ) -> GraphResult<Records<Self::E>> {
         let snapshot_id = Self::parse_snapshot_id(snapshot_id);
-        let edge_kind = edge_relation.map(|relation| Self::parse_edge_kind(relation));
         let condition = Self::parse_condition(condition);
-        let mut raw_iter = self.storage.query_edges(snapshot_id, edge_kind.map(|k| k.edge_label_id), condition)?;
+        let mut raw_iter = self.storage.query_edges(snapshot_id, label_id.map(|l| l as i32), condition)?;
         let mut res = vec![];
         while let Some(e) = raw_iter.next() {
             res.push(Ok(Self::parse_edge(e, property_ids)));
@@ -204,7 +183,7 @@ impl<G: GraphStorage> MultiVersionGraph for GraphStorageWrapper<G> {
                      label_id: Option<LabelId>,
                      condition: Option<&Condition>,
                      property_ids: Option<&Vec<PropertyId>>
-    ) -> Result<Records<Self::E>> {
+    ) -> GraphResult<Records<Self::E>> {
         let snapshot_id = Self::parse_snapshot_id(snapshot_id);
         let vertex_id = Self::parse_vertex_id(vertex_id);
         let label_id = Self::parse_label_id(label_id);
@@ -223,7 +202,7 @@ impl<G: GraphStorage> MultiVersionGraph for GraphStorageWrapper<G> {
                     label_id: Option<LabelId>,
                     condition: Option<&Condition>,
                     property_ids: Option<&Vec<PropertyId>>
-    ) -> Result<Records<Self::E>> {
+    ) -> GraphResult<Records<Self::E>> {
         let snapshot_id = Self::parse_snapshot_id(snapshot_id);
         let vertex_id = Self::parse_vertex_id(vertex_id);
         let label_id = Self::parse_label_id(label_id);
@@ -240,7 +219,7 @@ impl<G: GraphStorage> MultiVersionGraph for GraphStorageWrapper<G> {
                       snapshot_id: SnapshotId,
                       vertex_id: VertexId,
                       edge_relation: &EdgeRelation
-    ) -> Result<usize> {
+    ) -> GraphResult<usize> {
         let edges_iter = self.get_out_edges(snapshot_id, vertex_id, Some(edge_relation.get_edge_label_id()), None,
                                             Some(vec![]).as_ref())?;
         Ok(edges_iter.count())
@@ -250,7 +229,7 @@ impl<G: GraphStorage> MultiVersionGraph for GraphStorageWrapper<G> {
                      snapshot_id: SnapshotId,
                      vertex_id: VertexId,
                      edge_relation: &EdgeRelation
-    ) -> Result<usize> {
+    ) -> GraphResult<usize> {
         let edges_iter = self.get_in_edges(snapshot_id, vertex_id, Some(edge_relation.get_edge_label_id()), None,
                                             Some(vec![]).as_ref())?;
         Ok(edges_iter.count())
@@ -262,7 +241,7 @@ impl<G: GraphStorage> MultiVersionGraph for GraphStorageWrapper<G> {
                         edge_relation: &EdgeRelation,
                         k: SerialId,
                         property_ids: Option<&Vec<PropertyId>>
-    ) -> Result<Option<Self::E>> {
+    ) -> GraphResult<Option<Self::E>> {
         let mut edges_iter = self.get_out_edges(snapshot_id, vertex_id, Some(edge_relation.get_edge_label_id()), None,
                                                 property_ids)?;
         edges_iter.nth(k as usize).transpose()
@@ -274,7 +253,7 @@ impl<G: GraphStorage> MultiVersionGraph for GraphStorageWrapper<G> {
                        edge_relation: &EdgeRelation,
                        k: SerialId,
                        property_ids: Option<&Vec<PropertyId>>
-    ) -> Result<Option<Self::E>> {
+    ) -> GraphResult<Option<Self::E>> {
         let mut edges_iter = self.get_in_edges(snapshot_id, vertex_id, Some(edge_relation.get_edge_label_id()), None,
                                                 property_ids)?;
         edges_iter.nth(k as usize).transpose()
@@ -326,7 +305,7 @@ impl Vertex for WrapperVertex {
 
 impl PropertyReader for WrapperVertex {
     type P = WrapperProperty;
-    type PropertyIterator = IntoIter<Result<Self::P>>;
+    type PropertyIterator = IntoIter<GraphResult<Self::P>>;
 
     fn get_property(&self, property_id: PropertyId) -> Option<Self::P> {
         self.properties.get(&property_id).cloned()
@@ -335,7 +314,7 @@ impl PropertyReader for WrapperVertex {
     fn get_property_iterator(&self) -> Self::PropertyIterator {
         self.properties.clone().into_iter()
             .map(|(_, p)| Ok(p))
-            .collect::<Vec<Result<WrapperProperty>>>()
+            .collect::<Vec<GraphResult<WrapperProperty>>>()
             .into_iter()
     }
 }
@@ -358,18 +337,18 @@ impl WrapperEdge {
 }
 
 impl Edge for WrapperEdge {
-    fn get_edge_id(&self) -> EdgeId {
-        self.edge_id.clone()
+    fn get_edge_id(&self) -> &EdgeId {
+        &self.edge_id
     }
 
-    fn get_edge_relation(&self) -> EdgeRelation {
-        self.edge_relation.clone()
+    fn get_edge_relation(&self) -> &EdgeRelation {
+        &self.edge_relation
     }
 }
 
 impl PropertyReader for WrapperEdge {
     type P = WrapperProperty;
-    type PropertyIterator = IntoIter<Result<Self::P>>;
+    type PropertyIterator = IntoIter<GraphResult<Self::P>>;
 
     fn get_property(&self, property_id: PropertyId) -> Option<Self::P> {
         self.properties.get(&property_id).cloned()
@@ -378,7 +357,7 @@ impl PropertyReader for WrapperEdge {
     fn get_property_iterator(&self) -> Self::PropertyIterator {
         self.properties.clone().into_iter()
             .map(|(_, p)| Ok(p))
-            .collect::<Vec<Result<WrapperProperty>>>()
+            .collect::<Vec<GraphResult<WrapperProperty>>>()
             .into_iter()
     }
 }

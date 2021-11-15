@@ -77,7 +77,7 @@ graphscope-darwin-py3:
 	# Avoid copy vineyard library with the same basename by:
 	# 	1) reinstall vineyard to /usr/local and
 	# 	2) rm /opt/vineyard/lib
-	cd /tmp && git clone -b v0.3.6 https://github.com/alibaba/libvineyard.git --depth=1 && \
+	cd /tmp && git clone -b v0.3.9 https://github.com/alibaba/libvineyard.git --depth=1 && \
 		cd libvineyard && git submodule update --init && \
 		mkdir -p build && cd build && \
 		cmake .. -DCMAKE_INSTALL_PREFIX=/usr/local && \
@@ -87,18 +87,31 @@ graphscope-darwin-py3:
 	# build graphscope
 	cd $(WORKING_DIR)/../ && \
 		make install WITH_LEARNING_ENGINE=OFF && \
-		sudo install_name_tool -add_rpath /usr/local/lib /opt/graphscope/bin/executor && \
-		sudo install_name_tool -add_rpath /usr/local/lib /opt/graphscope/bin/gaia_executor && \
 		python3 $(WORKING_DIR)/precompile.py
 	# build and delocate wheel
 	cd $(WORKING_DIR)/../coordinator && \
 		export WITH_EXTRA_DATA=ON && \
 		rm -fr build dist/*.whl || true && \
-		python3 setup.py bdist_wheel --plat=macosx_10_9_x86_64 && \
+		sudo strip /opt/graphscope/bin/grape_engine && \
+		sudo strip /opt/graphscope/bin/executor && \
+		sudo strip /opt/graphscope/bin/gaia_executor && \
+		sudo install_name_tool -add_rpath /usr/local/lib /opt/graphscope/bin/executor && \
+		sudo install_name_tool -add_rpath /usr/local/lib /opt/graphscope/bin/gaia_executor && \
+		package_name=gs-lib python3 setup.py bdist_wheel --plat=macosx_10_9_x86_64 && \
+		rm -fr build && \
+		package_name=gs-include python3 setup.py bdist_wheel --plat=macosx_10_9_x86_64 && \
+		rm -fr build && \
+		package_name=gs-engine python3 setup.py bdist_wheel --plat=macosx_10_9_x86_64 && \
+		rm -fr build && \
+		package_name=gs-jython python3 setup.py bdist_wheel --plat=macosx_10_9_x86_64 && \
+		rm -fr build && \
+		package_name=gs-coordinator python3 setup.py bdist_wheel --plat=macosx_10_9_x86_64 && \
+		rm -fr build && \
+		package_name=graphscope python3 setup.py bdist_wheel --plat=macosx_10_9_x86_64 && \
 		pip3 install delocate && \
 		for wheel in `ls dist/*.whl`; do \
 			delocate-listdeps -a -d $$wheel; \
-			delocate-wheel -w dist/wheelhouse -v $$wheel; \
+			delocate-wheel -w dist/wheelhouse -v $$wheel && rm $$wheel; \
 		done
 
 graphscope-manylinux2014-py3:
@@ -111,7 +124,7 @@ graphscope-manylinux2014-py3:
 			cmake .. && \
 			sudo make -j`nproc` install && \
 			cd /tmp && \
-			git clone -b v0.3.6 https://github.com/alibaba/libvineyard.git --depth=1 && \
+			git clone -b v0.3.9 https://github.com/alibaba/libvineyard.git --depth=1 && \
 			cd libvineyard && \
 			git submodule update --init && \
 			mkdir -p build && cd build && \
@@ -140,15 +153,32 @@ graphscope-manylinux2014-py3:
 			export WITH_EXTRA_DATA=ON && \
 			cd /work/coordinator && \
 			rm -fr build dist/*.whl && \
+			sudo strip /opt/graphscope/bin/grape_engine && \
 			sudo strip /opt/graphscope/bin/executor && \
 			sudo strip /opt/graphscope/bin/gaia_executor && \
-			python3 setup.py bdist_wheel && \
+			sudo strip /opt/graphscope/lib/*.so && \
+			strip /tmp/gs/builtin/*/*.so && \
+			package_name=gs-lib python3 setup.py bdist_wheel && \
+			rm -fr build && \
+			package_name=gs-include python3 setup.py bdist_wheel && \
+			rm -fr build && \
+			package_name=gs-engine python3 setup.py bdist_wheel && \
+			rm -fr build && \
+			package_name=gs-jython python3 setup.py bdist_wheel && \
+			rm -fr build && \
+			package_name=gs-coordinator python3 setup.py bdist_wheel && \
+			rm -fr build && \
+			package_name=graphscope python3 setup.py bdist_wheel && \
 			cd dist && \
-			auditwheel repair ./*.whl --plat=manylinux2014_x86_64'
+			for wheel in `ls ./*.whl`; do \
+				auditwheel repair $$wheel --plat=manylinux2014_x86_64 && rm $$wheel; \
+			done'
 
 graphscope-client-darwin-py3:
 	cd $(WORKING_DIR)/../python && \
-		rm -fr build dist/*.whl || true && \
+		rm -fr build || true && \
+		python3 -m pip install -r requirements.txt --user && \
+		python3 -m pip install -r requirements-dev.txt --user && \
 		export MACOSX_DEPLOYMENT_TARGET=10.9 && \
 		python3 setup.py bdist_wheel --plat=macosx_10_9_x86_64
 
@@ -162,7 +192,7 @@ graphscope-client-manylinux2014-py3:
 			cmake .. -DCMAKE_INSTALL_PREFIX=/opt/vineyard && \
 			sudo make -j`nproc` install && \
 			cd /tmp && \
-			git clone -b v0.3.6 https://github.com/alibaba/libvineyard.git --depth=1 && \
+			git clone -b v0.3.9 https://github.com/alibaba/libvineyard.git --depth=1 && \
 			cd libvineyard && \
 			git submodule update --init && \
 			mkdir -p build && cd build && \

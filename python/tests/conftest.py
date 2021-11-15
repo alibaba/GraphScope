@@ -26,8 +26,8 @@ import graphscope.nx as nx
 from graphscope import property_sssp
 from graphscope import sssp
 from graphscope.client.session import default_session
-from graphscope.dataset.ldbc import load_ldbc
-from graphscope.dataset.modern_graph import load_modern_graph
+from graphscope.dataset import load_ldbc
+from graphscope.dataset import load_modern_graph
 from graphscope.framework.graph import Graph
 from graphscope.framework.loader import Loader
 

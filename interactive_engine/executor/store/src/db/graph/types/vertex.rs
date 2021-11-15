@@ -112,6 +112,15 @@ impl VertexTypeInfoIter {
         }
     }
 
+    pub fn next_info(&mut self) -> Option<Arc<VertexTypeInfo>> {
+        loop {
+            let info = self.inner.next()?;
+            if info.lifetime.is_alive_at(self.si) {
+                return Some(info.clone());
+            }
+        }
+    }
+
     fn new(si: SnapshotId, values: Values<'static, LabelId, Arc<VertexTypeInfo>>, guard: Guard) -> Self {
         VertexTypeInfoIter {
             si,
@@ -168,6 +177,23 @@ impl VertexTypeManager {
         if let Some(info) = map.get(&label) {
             if info.is_alive_at(si) {
                 let ret = VertexTypeInfoRef::new(info.as_ref(), guard);
+                return Ok(ret);
+            }
+            let msg = format!("vertex#{} is not visible at {}", label, si);
+            let err = gen_graph_err!(GraphErrorCode::TypeNotFound, msg, get, si, label);
+            return Err(err);
+        }
+        let msg = format!("vertex#{} not found", label);
+        let err = gen_graph_err!(GraphErrorCode::TypeNotFound, msg, get, si, label);
+        Err(err)
+    }
+
+    pub fn get_type_info(&self, si: SnapshotId, label: LabelId) -> GraphResult<Arc<VertexTypeInfo>> {
+        let guard = epoch::pin();
+        let map = self.get_map(&guard);
+        if let Some(info) = map.get(&label) {
+            if info.is_alive_at(si) {
+                let ret = info.clone();
                 return Ok(ret);
             }
             let msg = format!("vertex#{} is not visible at {}", label, si);

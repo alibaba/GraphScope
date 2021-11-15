@@ -39,6 +39,10 @@ import java.util.concurrent.ExecutorService;
 import java.util.function.BiConsumer;
 import java.util.function.Supplier;
 
+/**
+ * The parallel message manager, used in serial apps {@link
+ * com.alibaba.graphscope.app.ParallelAppBase}.
+ */
 @FFIGen(library = JNI_LIBRARY_NAME)
 @FFITypeAlias(GRAPE_PARALLEL_MESSAGE_MANAGER)
 @CXXHead({
@@ -49,21 +53,26 @@ import java.util.function.Supplier;
     CORE_JAVA_JAVA_MESSAGES_H
 })
 public interface ParallelMessageManager extends MessageManagerBase {
+    /**
+     * Init the message manager which number of possible channels. Each channel will swap messages
+     * in parallel.
+     *
+     * @param channel_num number of channels.
+     */
     @FFINameAlias("InitChannels")
     void initChannels(int channel_num);
 
-    // @CXXTemplate(
-    //            cxx = {GRAPE_IMMUTABLE_FRAGMENT + "<jlong,uint64_t,jlong,jdouble>", DOUBLE_MSG},
-    //            java = {
-    //                "com.alibaba.grape.fragment.ImmutableEdgecutFragment<Long,Long,Long,Double>",
-    //                "com.alibaba.grape.parallel.message.DoubleMsg"
-    //            })
-    // @CXXTemplate(
-    //            cxx = {GRAPE_IMMUTABLE_FRAGMENT + "<jlong,uint64_t,jlong,jdouble>", LONG_MSG},
-    //            java = {
-    //                "com.alibaba.grape.fragment.ImmutableEdgecutFragment<Long,Long,Long,Double>",
-    //                "com.alibaba.grape.parallel.message.LongMsg"
-    //            })
+    /**
+     * Send a msg to the fragment where the querying outer vertex is an inner vertexin another
+     * fragment.
+     *
+     * @param frag ImmutableEdgeCutFragment.
+     * @param vertex querying vertex.
+     * @param msg msg to send.
+     * @param channel_id channel id.
+     * @param <FRAG_T> fragment type.
+     * @param <MSG_T> message type.
+     */
     @FFINameAlias("SyncStateOnOuterVertex")
     <FRAG_T extends ImmutableEdgecutFragment, MSG_T> void syncStateOnOuterVertex(
             @CXXReference FRAG_T frag,
@@ -71,21 +80,17 @@ public interface ParallelMessageManager extends MessageManagerBase {
             @CXXReference MSG_T msg,
             int channel_id);
 
-    // @CXXTemplate(
-    //            cxx = {ARROW_PROJECTED_FRAGMENT + "<int64_t,uint64_t,double,int64_t>",
-    // DOUBLE_MSG},
-    //            java = {
-    //
-    // "com.alibaba.graphscope.fragment.ArrowProjectedFragment<Long,Long,Double,Long>",
-    //                "com.alibaba.grape.parallel.message.DoubleMsg"
-    //            })
-    // @CXXTemplate(
-    //            cxx = {ARROW_PROJECTED_FRAGMENT + "<int64_t,uint64_t,double,int64_t>", LONG_MSG},
-    //            java = {
-    //
-    // "com.alibaba.graphscope.fragment.ArrowProjectedFragment<Long,Long,Double,Long>",
-    //                "com.alibaba.grape.parallel.message.LongMsg"
-    //            })
+    /**
+     * Send a msg to the fragment where the querying outer vertex is an inner vertexin another
+     * fragment.
+     *
+     * @param frag ArrowProjectedFragment.
+     * @param vertex querying vertex.
+     * @param msg msg to send.
+     * @param channel_id channel id.
+     * @param <FRAG_T> fragment type.
+     * @param <MSG_T> message type.
+     */
     @FFINameAlias("SyncStateOnOuterVertex")
     <FRAG_T extends ArrowProjectedFragment, MSG_T> void syncStateOnOuterVertex(
             @CXXReference FRAG_T frag,
@@ -101,35 +106,45 @@ public interface ParallelMessageManager extends MessageManagerBase {
      * @param channel_id message channel id.
      * @param <FRAG_T> fragment type.
      */
-    // @CXXTemplate(
-    //            cxx = {GRAPE_IMMUTABLE_FRAGMENT + "<jlong,uint64_t,jlong,jdouble>"},
-    //            java =
-    // {"com.alibaba.grape.fragment.ImmutableEdgecutFragment<Long,Long,Long,Double>"})
-    // @CXXTemplate(
-    //            cxx = {ARROW_PROJECTED_FRAGMENT + "<int64_t,uint64_t,double,int64_t>"},
-    //            java =
-    // {"com.alibaba.graphscope.fragment.ArrowProjectedFragment<Long,Long,Double,Long>"})
     @FFINameAlias("SyncStateOnOuterVertex")
-    <FRAG_T> void syncStateOnOuterVertex(
+    <FRAG_T extends ImmutableEdgecutFragment> void syncStateOnOuterVertex(
             @CXXReference FRAG_T frag,
             @CXXReference @FFITypeAlias(GRAPE_LONG_VERTEX) Vertex<Long> vertex,
             int channel_id);
 
+    /**
+     * SyncState on outer vertex without message, used in bfs etc.
+     *
+     * @param frag fragment.
+     * @param vertex query vertex.
+     * @param channel_id message channel id.
+     * @param <FRAG_T> fragment type.
+     */
+    @FFINameAlias("SyncStateOnOuterVertex")
+    <FRAG_T extends ArrowProjectedFragment> void syncStateOnOuterVertex(
+            @CXXReference FRAG_T frag,
+            @CXXReference @FFITypeAlias(GRAPE_LONG_VERTEX) Vertex<Long> vertex,
+            int channel_id);
+
+    /**
+     * Retrive a message archive.
+     *
+     * @param buf place to store the archive.
+     * @return true if got one.
+     */
     @FFINameAlias("GetMessageInBuffer")
     boolean getMessageInBuffer(@CXXReference MessageInBuffer buf);
 
-    // @CXXTemplate(
-    //            cxx = {GRAPE_IMMUTABLE_FRAGMENT + "<jlong,uint64_t,jlong,jdouble>", DOUBLE_MSG},
-    //            java = {
-    //                "com.alibaba.grape.fragment.ImmutableEdgecutFragment<Long,Long,Long,Double>",
-    //                "com.alibaba.grape.parallel.message.DoubleMsg"
-    //            })
-    // @CXXTemplate(
-    //            cxx = {GRAPE_IMMUTABLE_FRAGMENT + "<jlong,uint64_t,jlong,jdouble>", LONG_MSG},
-    //            java = {
-    //                "com.alibaba.grape.fragment.ImmutableEdgecutFragment<Long,Long,Long,Double>",
-    //                "com.alibaba.grape.parallel.message.LongMsg"
-    //            })
+    /**
+     * Send the a vertex's data to other fragment througn outgoing edges.
+     *
+     * @param frag ImmutableEdgeCutFragment.
+     * @param vertex querying vertex.
+     * @param msg msg to send.
+     * @param channel_id channel_id
+     * @param <FRAG_T> fragment type.
+     * @param <MSG_T> message type.
+     */
     @FFINameAlias("SendMsgThroughOEdges")
     <FRAG_T extends ImmutableEdgecutFragment, MSG_T> void sendMsgThroughOEdges(
             @CXXReference FRAG_T frag,
@@ -137,21 +152,16 @@ public interface ParallelMessageManager extends MessageManagerBase {
             @CXXReference MSG_T msg,
             int channel_id);
 
-    // @CXXTemplate(
-    //            cxx = {ARROW_PROJECTED_FRAGMENT + "<int64_t,uint64_t,double,int64_t>",
-    // DOUBLE_MSG},
-    //            java = {
-    //
-    // "com.alibaba.graphscope.fragment.ArrowProjectedFragment<Long,Long,Double,Long>",
-    //                "com.alibaba.grape.parallel.message.DoubleMsg"
-    //            })
-    // @CXXTemplate(
-    //            cxx = {ARROW_PROJECTED_FRAGMENT + "<int64_t,uint64_t,double,int64_t>", LONG_MSG},
-    //            java = {
-    //
-    // "com.alibaba.graphscope.fragment.ArrowProjectedFragment<Long,Long,Double,Long>",
-    //                "com.alibaba.grape.parallel.message.LongMsg"
-    //            })
+    /**
+     * Send the a vertex's data to other fragment througn outgoing edges.
+     *
+     * @param frag ArrowProjectedFragment.
+     * @param vertex querying vertex.
+     * @param msg msg to send.
+     * @param channel_id channel_id.
+     * @param <FRAG_T> fragment type.
+     * @param <MSG_T> message type.
+     */
     @FFINameAlias("SendMsgThroughOEdges")
     <FRAG_T extends ArrowProjectedFragment, MSG_T> void sendMsgThroughOEdges(
             @CXXReference FRAG_T frag,
@@ -159,18 +169,16 @@ public interface ParallelMessageManager extends MessageManagerBase {
             @CXXReference MSG_T msg,
             int channel_id);
 
-    // @CXXTemplate(
-    //            cxx = {GRAPE_IMMUTABLE_FRAGMENT + "<jlong,uint64_t,jlong,jdouble>", DOUBLE_MSG},
-    //            java = {
-    //                "com.alibaba.grape.fragment.ImmutableEdgecutFragment<Long,Long,Long,Double>",
-    //                "com.alibaba.grape.parallel.message.DoubleMsg"
-    //            })
-    // @CXXTemplate(
-    //            cxx = {GRAPE_IMMUTABLE_FRAGMENT + "<jlong,uint64_t,jlong,jdouble>", LONG_MSG},
-    //            java = {
-    //                "com.alibaba.grape.fragment.ImmutableEdgecutFragment<Long,Long,Long,Double>",
-    //                "com.alibaba.grape.parallel.message.LongMsg"
-    //            })
+    /**
+     * Send the a vertex's data to other fragment througn incoming edges.
+     *
+     * @param frag ImmutableEdgecutFragment.
+     * @param vertex querying vertex.
+     * @param msg msg to send.
+     * @param channel_id channel_id.
+     * @param <FRAG_T> fragment type.
+     * @param <MSG_T> message type.
+     */
     @FFINameAlias("SendMsgThroughIEdges")
     <FRAG_T extends ImmutableEdgecutFragment, MSG_T> void sendMsgThroughIEdges(
             @CXXReference FRAG_T frag,
@@ -178,21 +186,16 @@ public interface ParallelMessageManager extends MessageManagerBase {
             @CXXReference MSG_T msg,
             int channel_id);
 
-    // @CXXTemplate(
-    //            cxx = {ARROW_PROJECTED_FRAGMENT + "<int64_t,uint64_t,double,int64_t>",
-    // DOUBLE_MSG},
-    //            java = {
-    //
-    // "com.alibaba.graphscope.fragment.ArrowProjectedFragment<Long,Long,Double,Long>",
-    //                "com.alibaba.grape.parallel.message.DoubleMsg"
-    //            })
-    // @CXXTemplate(
-    //            cxx = {ARROW_PROJECTED_FRAGMENT + "<int64_t,uint64_t,double,int64_t>", LONG_MSG},
-    //            java = {
-    //
-    // "com.alibaba.graphscope.fragment.ArrowProjectedFragment<Long,Long,Double,Long>",
-    //                "com.alibaba.grape.parallel.message.LongMsg"
-    //            })
+    /**
+     * Send the a vertex's data to other fragment througn incoming edges.
+     *
+     * @param <FRAG_T> fragment type.
+     * @param <MSG_T> message type.
+     * @param frag ArrowProjectedFragment.
+     * @param vertex querying vertex.
+     * @param msg msg to send.
+     * @param channel_id channel_id.
+     */
     @FFINameAlias("SendMsgThroughIEdges")
     <FRAG_T extends ArrowProjectedFragment, MSG_T> void sendMsgThroughIEdges(
             @CXXReference FRAG_T frag,
@@ -200,18 +203,16 @@ public interface ParallelMessageManager extends MessageManagerBase {
             @CXXReference MSG_T msg,
             int channel_id);
 
-    // @CXXTemplate(
-    //            cxx = {GRAPE_IMMUTABLE_FRAGMENT + "<jlong,uint64_t,jlong,jdouble>", DOUBLE_MSG},
-    //            java = {
-    //                "com.alibaba.grape.fragment.ImmutableEdgecutFragment<Long,Long,Long,Double>",
-    //                "com.alibaba.grape.parallel.message.DoubleMsg"
-    //            })
-    // @CXXTemplate(
-    //            cxx = {GRAPE_IMMUTABLE_FRAGMENT + "<jlong,uint64_t,jlong,jdouble>", LONG_MSG},
-    //            java = {
-    //                "com.alibaba.grape.fragment.ImmutableEdgecutFragment<Long,Long,Long,Double>",
-    //                "com.alibaba.grape.parallel.message.LongMsg"
-    //            })
+    /**
+     * Send the a vertex's data to other fragment through incoming and outgoing edges.
+     *
+     * @param frag ImmutableEdgecutFragment.
+     * @param vertex querying vertex.
+     * @param msg msg to send.
+     * @param channel_id channel_id.
+     * @param <FRAG_T> fragment type.
+     * @param <MSG_T> message type.
+     */
     @FFINameAlias("SendMsgThroughEdges")
     <FRAG_T extends ImmutableEdgecutFragment, MSG_T> void SendMsgThroughEdges(
             @CXXReference FRAG_T frag,
@@ -219,21 +220,16 @@ public interface ParallelMessageManager extends MessageManagerBase {
             @CXXReference MSG_T msg,
             int channel_id);
 
-    // @CXXTemplate(
-    //            cxx = {ARROW_PROJECTED_FRAGMENT + "<int64_t,uint64_t,double,int64_t>",
-    // DOUBLE_MSG},
-    //            java = {
-    //
-    // "com.alibaba.graphscope.fragment.ArrowProjectedFragment<Long,Long,Double,Long>",
-    //                "com.alibaba.grape.parallel.message.DoubleMsg"
-    //            })
-    // @CXXTemplate(
-    //            cxx = {ARROW_PROJECTED_FRAGMENT + "<int64_t,uint64_t,double,int64_t>", LONG_MSG},
-    //            java = {
-    //
-    // "com.alibaba.graphscope.fragment.ArrowProjectedFragment<Long,Long,Double,Long>",
-    //                "com.alibaba.grape.parallel.message.LongMsg"
-    //            })
+    /**
+     * Send the a vertex's data to other fragment through incoming and outgoing edges.
+     *
+     * @param frag ArrowProjectedFragment.
+     * @param vertex querying vertex.
+     * @param msg msg to send.
+     * @param channel_id channel_id.
+     * @param <FRAG_T> fragment type.
+     * @param <MSG_T> message type.
+     */
     @FFINameAlias("SendMsgThroughEdges")
     <FRAG_T extends ArrowProjectedFragment, MSG_T> void SendMsgThroughEdges(
             @CXXReference FRAG_T frag,
@@ -241,6 +237,18 @@ public interface ParallelMessageManager extends MessageManagerBase {
             @CXXReference MSG_T msg,
             int channel_id);
 
+    /**
+     * Parallel processing the messages received from last super step. The user just need to provide
+     * a lamba consumer.
+     *
+     * @param <FRAG_T> fragment type.
+     * @param <MSG_T> message type.
+     * @param frag fragment.
+     * @param threadNum number of threads to use.
+     * @param executor thread pool executor.
+     * @param msgSupplier a producer function creating a msg instance.
+     * @param consumer lambda function.
+     */
     default <FRAG_T, MSG_T> void parallelProcess(
             FRAG_T frag,
             int threadNum,
@@ -283,47 +291,4 @@ public interface ParallelMessageManager extends MessageManagerBase {
             executor.shutdown();
         }
     }
-
-    // default <FRAG_T, MSG_T, MSG_FACTORY_T> void parallelSyncStateOnOuterVertex(FRAG_T frag,
-    // VertexRange<Long>
-    // vertices, VertexSet vertexSet, int threadNum,
-    // ExecutorService executor, Class<MSG_T> msgTClass, Class<MSG_FACTORY_T> msgFactoryTClass) {
-    // MSG_FACTORY_T factory = msgFactoryTClass.cast(FFITypeFactory.getFactory(msgTClass));
-    //
-    //
-    // CountDownLatch countDownLatch = new CountDownLatch(threadNum);
-    // int originBegin = vertices.begin().GetValue().intValue();
-    // int originEnd = vertices.end().GetValue().intValue();
-    // AtomicInteger cur = new AtomicInteger(originBegin);
-    // int chunkSize = 1024;
-    // for (int tid = 0; tid < threadNum; ++tid) {
-    // final int finalTid = tid;
-    // executor.execute(() -> {
-    // Vertex<Long> vertex = FFITypeFactoryhelper.newVertexLong();
-    // LongMsg msg = LongMsg.factory.create();
-    // int curBegin = 0, curEnd = 0;
-    // while (true) {
-    // curBegin = Math.min(cur.getAndAdd(chunkSize), originEnd);
-    // curEnd = Math.min(curBegin + chunkSize, originEnd);
-    // if (curBegin >= curEnd) {
-    // break;
-    // }
-    // for (int i = curBegin; i < curEnd; ++i) {
-    // if (vertexSet.get(i)) {
-    // vertex.SetValue((long) i);
-    // //filler.accept(vertex, msg);
-    // syncStateOnOuterVertex(frag, vertex, msg, finalTid);
-    // }
-    // }
-    // }
-    // countDownLatch.countDown();
-    // });
-    // }
-    // try {
-    // countDownLatch.await();
-    // } catch (Exception e) {
-    // e.printStackTrace();
-    // executor.shutdown();
-    // }
-    // }
 }

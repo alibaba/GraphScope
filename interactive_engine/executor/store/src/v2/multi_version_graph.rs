@@ -16,7 +16,7 @@
 use crate::v2::api::{SnapshotId, VertexId, LabelId, PropertyId, EdgeId, Records, SerialId};
 use crate::v2::api::types::{Vertex, Edge, EdgeRelation};
 use crate::v2::api::condition::Condition;
-use crate::v2::Result;
+use crate::v2::GraphResult;
 
 pub trait MultiVersionGraph {
     type V: Vertex;
@@ -28,7 +28,7 @@ pub trait MultiVersionGraph {
         vertex_id: VertexId,
         label_id: Option<LabelId>,
         property_ids: Option<&Vec<PropertyId>>,
-    ) -> Result<Option<Self::V>>;
+    ) -> GraphResult<Option<Self::V>>;
 
     fn get_edge(
         &self,
@@ -36,7 +36,7 @@ pub trait MultiVersionGraph {
         edge_id: EdgeId,
         edge_relation: Option<&EdgeRelation>,
         property_ids: Option<&Vec<PropertyId>>,
-    ) -> Result<Option<Self::E>>;
+    ) -> GraphResult<Option<Self::E>>;
 
     fn scan_vertex(
         &self,
@@ -44,15 +44,15 @@ pub trait MultiVersionGraph {
         label_id: Option<LabelId>,
         condition: Option<&Condition>,
         property_ids: Option<&Vec<PropertyId>>,
-    ) -> Result<Records<Self::V>>;
+    ) -> GraphResult<Records<Self::V>>;
 
     fn scan_edge(
         &self,
         snapshot_id: SnapshotId,
-        edge_relation: Option<&EdgeRelation>,
+        label_id: Option<LabelId>,
         condition: Option<&Condition>,
         property_ids: Option<&Vec<PropertyId>>,
-    ) -> Result<Records<Self::E>>;
+    ) -> GraphResult<Records<Self::E>>;
 
     fn get_out_edges(
         &self,
@@ -61,7 +61,7 @@ pub trait MultiVersionGraph {
         label_id: Option<LabelId>,
         condition: Option<&Condition>,
         property_ids: Option<&Vec<PropertyId>>,
-    ) -> Result<Records<Self::E>>;
+    ) -> GraphResult<Records<Self::E>>;
 
     fn get_in_edges(
         &self,
@@ -70,21 +70,21 @@ pub trait MultiVersionGraph {
         label_id: Option<LabelId>,
         condition: Option<&Condition>,
         property_ids: Option<&Vec<PropertyId>>,
-    ) -> Result<Records<Self::E>>;
+    ) -> GraphResult<Records<Self::E>>;
 
     fn get_out_degree(
         &self,
         snapshot_id: SnapshotId,
         vertex_id: VertexId,
         edge_relation: &EdgeRelation,
-    ) -> Result<usize>;
+    ) -> GraphResult<usize>;
 
     fn get_in_degree(
         &self,
         snapshot_id: SnapshotId,
         vertex_id: VertexId,
         edge_relation: &EdgeRelation,
-    ) -> Result<usize>;
+    ) -> GraphResult<usize>;
 
     fn get_kth_out_edge(
         &self,
@@ -93,7 +93,7 @@ pub trait MultiVersionGraph {
         edge_relation: &EdgeRelation,
         k: SerialId,
         property_ids: Option<&Vec<PropertyId>>,
-    ) -> Result<Option<Self::E>>;
+    ) -> GraphResult<Option<Self::E>>;
 
     fn get_kth_in_edge(
         &self,
@@ -102,7 +102,7 @@ pub trait MultiVersionGraph {
         edge_relation: &EdgeRelation,
         k: SerialId,
         property_ids: Option<&Vec<PropertyId>>,
-    ) -> Result<Option<Self::E>>;
+    ) -> GraphResult<Option<Self::E>>;
 
 }
 

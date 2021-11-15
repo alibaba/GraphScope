@@ -13,24 +13,45 @@
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 
-use crate::db::api::GraphError;
+use std::fmt::{Display, Formatter};
 
-pub enum Error {
+#[derive(Debug)]
+pub enum GraphError {
     Internal(String),
+    Rocksdb(String),
+    InvalidArgument(String),
+    TooManyVersions(usize),
 }
 
-impl Error {
+impl Display for GraphError {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        match self {
+            GraphError::Internal(s) | GraphError::Rocksdb(s) | GraphError::InvalidArgument(s) => {
+                write!(f, "{}", s)
+            }
+            GraphError::TooManyVersions(limit) => write!(f, "version count exceed limit {}", limit)
+        }
+    }
+}
+
+impl std::error::Error for GraphError {}
+
+impl GraphError {
     pub fn what(&self) -> &String {
         return match &self {
-            Error::Internal(msg) => {
+            GraphError::Internal(msg) => {
                 msg
+            }
+            _ => {
+                // should use Display trait
+                unimplemented!()
             }
         }
     }
 }
 
-impl From<GraphError> for Error {
-    fn from(err: GraphError) -> Self {
-        Error::Internal(format!("{:?}", err))
+impl From<crate::db::api::GraphError> for GraphError {
+    fn from(err: crate::db::api::GraphError) -> Self {
+        GraphError::Internal(format!("{:?}", err))
     }
 }

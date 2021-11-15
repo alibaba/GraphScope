@@ -33,30 +33,33 @@ import com.alibaba.graphscope.parallel.DefaultMessageManager;
  *
  * <p>For example, you can implement your app like this.
  *
- * <pre>{@code
- * class MyContext implements DefaultContextBase<Long, Long, Long, Double>{
- *      public void Init(ImmutableEdgecutFragment<Long, Long, Long, Double> frag,
- *          DefaultMessageManager messageManager, StdVector<FFIByteString> args) {
+ * <pre>
+ * {
+ *         class MyContext implements DefaultContextBase&lt;Long, Long, Long, Double&gt; {
+ *                 public void Init(ImmutableEdgecutFragment&lt;Long, Long, Long, Double&gt; frag,
+ *                                 DefaultMessageManager messageManager, StdVector&lt;FFIByteString&gt; args) {
  *
- *      }
+ *                 }
  *
- *      public void Output(ImmutableEdgecutFragment<Long, Long, Long, Double> frag) {
+ *                 public void Output(ImmutableEdgecutFragment&lt;Long, Long, Long, Double&gt; frag) {
  *
- *      }
- *  }
- *  class MyApp implements DefaultAppBase<Long,Long,Long,Double, MyContext>{
- *      public void PEval(ImmutableEdgecutFragment<Long, Long, Long, Double> graph,
- *          DefaultContextBase context, DefaultMessageManager messageManager) {
+ *                 }
+ *         }
+ *         class MyApp implements DefaultAppBase&lt;Long, Long, Long, Double, MyContext&gt; {
+ *                 public void PEval(ImmutableEdgecutFragment&lt;Long, Long, Long, Double&gt; graph,
+ *                                 DefaultContextBase context, DefaultMessageManager messageManager) {
  *
- *      }
- *      public void IncEval(ImmutableEdgecutFragment<Long, Long, Long, Double> graph,
- *          DefaultContextBase context, DefaultMessageManager messageManager) {
+ *                 }
  *
- *      }
- *  }
- * }</pre>
+ *                 public void IncEval(ImmutableEdgecutFragment&lt;Long, Long, Long, Double&gt; graph,
+ *                                 DefaultContextBase context, DefaultMessageManager messageManager) {
  *
- * For more examples, please refer to module com.alibaba.grape.grape-demo
+ *                 }
+ *         }
+ * }
+ * </pre>
+ *
+ * For more examples, please refer to module com.alibaba.graphscope.grape-demo
  *
  * @param <OID_T> original id type
  * @param <VID_T> vertex id type

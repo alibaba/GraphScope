@@ -30,6 +30,7 @@ from tqdm import tqdm
 
 logger = logging.getLogger("graphscope")
 
+DATA_SITE = "https://graphscope.oss-cn-beijing.aliyuncs.com/dataset"
 
 if sys.version_info >= (3, 6):
 

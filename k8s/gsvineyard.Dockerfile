@@ -16,7 +16,7 @@ RUN sudo mkdir -p /opt/vineyard && \
     make -j`nproc` && \
     make install && \
     cd /tmp && \
-    git clone -b v0.3.6 https://github.com/alibaba/libvineyard.git --depth=1 && \
+    git clone -b v0.3.9 https://github.com/alibaba/libvineyard.git --depth=1 && \
     cd libvineyard && \
     git submodule update --init && \
     mkdir -p /tmp/libvineyard/build && \
@@ -47,7 +47,7 @@ RUN cd /opt/ && \
     cd fastFFI && \
     git checkout a166c6287f2efb938c27fb01b3d499932d484f9c && \
     export PATH=${PATH}:${LLVM11_HOME}/bin && \
-    mvn clean install
+    mvn clean install -DskipTests
 
 ENV LLVM4JNI_HOME=/opt/fastFFI/llvm4jni
 
