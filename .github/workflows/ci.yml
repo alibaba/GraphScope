@@ -375,6 +375,21 @@ jobs:
         --shm-size 4096m
     steps:
     - uses: actions/checkout@v2.3.2
+    - uses: dorny/paths-filter@v2
+      id: nx-filter
+      with:
+        filters: |
+          basic:
+            - 'analytical_engine/apps/**'
+            - 'analytical_engine/frame/**'
+            - 'analytical_engine/core/**'
+            - 'python/graphscope/nx/__init__.py'
+            - 'python/graphscope/nx/classes/**'
+            - 'python/graphscope/nx/utils/**'
+          algorithm:
+            - 'python/graphscope/nx/algorithms/**'
+          generator:
+            - 'python/graphscope/nx/generators/**'
 
     - uses: actions/download-artifact@v2
 
@@ -423,12 +438,25 @@ jobs:
         export PATH=${PATH}:${LLVM11_HOME}/bin
         mvn clean install -DskipTests -Dmaven.antrun.skip=true --quiet
 
-    - name: GraphScope NetworkX test
+    - name: Basic test
+      if: steps.nx-filter.output.basic == 'true'
       run: |
         export GRAPHSCOPE_HOME='/opt/graphscope'
         export GS_TEST_DIR='/home/graphscope/gstest'
         python3 -m pytest --exitfirst -s -v python/graphscope/nx/tests \
-                          --ignore=python/graphscope/nx/tests/algorithms/forward
+                          --ignore=python/graphscope/nx/tests/algorithms
+
+    - name: Algorithm test
+      if: steps.nx-filter.output.basic == 'true' || steps.nx-filter.output.algorithm == 'true'
+      run: |
+        export GRAPHSCOPE_HOME='/opt/graphscope'
+        export GS_TEST_DIR='/home/graphscope/gstest'
+        python3 -m pytest --exitfirst -s -v python/graphscope/nx/tests/algorithms/builtin
+
+    - name: Generator test
+      if: steps.nx-filter.output.basic == 'true' || steps.nx-filter.output.generator == 'true'
+      run: |
+        export GRAPHSCOPE_HOME='/opt/graphscope'
         python3 -m pytest -s -v python/graphscope/nx/generators/tests
 
   k8s-test:

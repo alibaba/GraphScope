@@ -20,7 +20,7 @@ import networkx.classes.coreviews
 import networkx.classes.graphviews
 import networkx.classes.reportviews
 
-# graphscope.nx not implement MultiGraph and MultiDiGraph
+# graphscope.nx not implement MultiGraph and MultiDiGraph, forward NetworkX to pass tests
 from networkx.classes import MultiDiGraph
 from networkx.classes import MultiGraph
 

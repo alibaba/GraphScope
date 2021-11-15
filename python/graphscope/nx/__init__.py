@@ -30,6 +30,6 @@ from graphscope.nx.readwrite import *
 from graphscope.nx.relabel import *
 from graphscope.nx.utils import *
 
-# set session attribute to Graph and DiGraph, forward NetworkX to pass tests
+# set session attribute to Graph and DiGraph
 setattr(Graph, "_session", None)
 setattr(DiGraph, "_session", None)
