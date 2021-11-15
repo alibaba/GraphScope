@@ -164,7 +164,7 @@ g = g.add_edges(
 同时，我们也提供了一个函数，以方便的载入该图。
 
 ```python
-from graphscope.dataset.ogbn_mag import load_ogbn_mag
+from graphscope.dataset import load_ogbn_mag
 
 g = load_ogbn_mag(sess, "/testingdata/ogbn_mag_small/")
 ```

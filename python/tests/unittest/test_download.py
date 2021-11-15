@@ -18,13 +18,13 @@
 
 import pytest
 
-from graphscope.dataset.ldbc import load_ldbc
-from graphscope.dataset.modern_graph import load_modern_graph
-from graphscope.dataset.ogbl_collab import load_ogbl_collab
-from graphscope.dataset.ogbl_ddi import load_ogbl_ddi
-from graphscope.dataset.ogbn_arxiv import load_ogbn_arxiv
-from graphscope.dataset.ogbn_mag import load_ogbn_mag
-from graphscope.dataset.ogbn_proteins import load_ogbn_proteins
+from graphscope.dataset import load_ldbc
+from graphscope.dataset import load_modern_graph
+from graphscope.dataset import load_ogbl_collab
+from graphscope.dataset import load_ogbl_ddi
+from graphscope.dataset import load_ogbn_arxiv
+from graphscope.dataset import load_ogbn_mag
+from graphscope.dataset import load_ogbn_proteins
 
 
 def test_download_dataset(graphscope_session):

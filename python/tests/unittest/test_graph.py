@@ -26,9 +26,9 @@ import vineyard
 import graphscope
 from graphscope import property_sssp
 from graphscope import sssp
-from graphscope.dataset.ldbc import load_ldbc
-from graphscope.dataset.modern_graph import load_modern_graph
-from graphscope.dataset.ogbn_mag import load_ogbn_mag
+from graphscope.dataset import load_ldbc
+from graphscope.dataset import load_modern_graph
+from graphscope.dataset import load_ogbn_mag
 from graphscope.framework.errors import AnalyticalEngineInternalError
 from graphscope.framework.errors import GRPCError
 from graphscope.framework.errors import InvalidArgumentError

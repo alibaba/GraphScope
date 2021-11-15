@@ -22,7 +22,7 @@ import numpy as np
 
 import graphscope
 from graphscope import sssp
-from graphscope.dataset.ldbc import load_ldbc
+from graphscope.dataset import load_ldbc
 from graphscope.framework.loader import Loader
 
 

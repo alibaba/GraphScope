@@ -16,4 +16,10 @@
 # limitations under the License.
 #
 
-DATA_SITE = "https://graphscope.oss-cn-beijing.aliyuncs.com/dataset"
+from graphscope.dataset.ldbc import load_ldbc
+from graphscope.dataset.modern_graph import load_modern_graph
+from graphscope.dataset.ogbl_collab import load_ogbl_collab
+from graphscope.dataset.ogbl_ddi import load_ogbl_ddi
+from graphscope.dataset.ogbn_arxiv import load_ogbn_arxiv
+from graphscope.dataset.ogbn_mag import load_ogbn_mag
+from graphscope.dataset.ogbn_proteins import load_ogbn_proteins
