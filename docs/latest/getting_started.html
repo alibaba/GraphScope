@@ -1,45 +1,21 @@
-
-
 <!DOCTYPE html>
 <html class="writer-html5" lang="en" >
 <head>
   <meta charset="utf-8" />
-  
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  
   <title>Getting Started &mdash; GraphScope  documentation</title>
-  
-
-  
-  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
-  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
-  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
-  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
-  <link rel="stylesheet" href="_static/css/custom.css" type="text/css" />
-
-  
-  
-
-  
-  
-
-  
-
-  
+      <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="_static/css/custom.css" type="text/css" />
   <!--[if lt IE 9]>
     <script src="_static/js/html5shiv.min.js"></script>
   <![endif]-->
   
-    
-      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
         <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
         <script src="_static/jquery.js"></script>
         <script src="_static/underscore.js"></script>
         <script src="_static/doctools.js"></script>
-    
-    <script type="text/javascript" src="_static/js/theme.js"></script>
-
-    
+    <script src="_static/js/theme.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="Tutorials" href="tutorials.html" />
@@ -60,33 +36,16 @@
 
 </head>
 
-<body class="wy-body-for-nav">
-
-   
+<body class="wy-body-for-nav"> 
   <div class="wy-grid-for-nav">
-    
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
         <div class="wy-side-nav-search" >
-          
-
-          
             <a href="index.html" class="icon icon-home"> GraphScope
-          
-
-          
           </a>
-
-          
-            
-            
               <div class="version">
                 latest
               </div>
-            
-          
-
-          
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
     <input type="text" name="q" placeholder="Search docs" />
@@ -94,11 +53,7 @@
     <input type="hidden" name="area" value="default" />
   </form>
 </div>
-
-          
         </div>
-
-        
   <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
     
       
@@ -136,6 +91,7 @@
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="reference/python_index.html">Python API Reference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="reference/analytical_engine_index.html">Analytical Engine API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="reference/gae_java/index.html">Analytical Engine Java API Reference</a></li>
 </ul>
 
       
@@ -145,66 +101,28 @@
       </div>
     </nav>
 
-    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
-
-      
-      <nav class="wy-nav-top" aria-label="top navigation">
-        
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
           <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
           <a href="index.html">GraphScope</a>
-        
       </nav>
 
-
       <div class="wy-nav-content">
-        
         <div class="rst-content">
-        
-          
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-<div role="navigation" aria-label="breadcrumbs navigation">
-
+          <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
-    
       <li><a href="index.html" class="icon icon-home"></a> &raquo;</li>
-        
       <li>Getting Started</li>
-    
-    
       <li class="wy-breadcrumbs-aside">
-        
-          
             <a href="_sources/getting_started.rst.txt" rel="nofollow"> View page source</a>
-          
-        
       </li>
-    
   </ul>
-
-  
   <hr/>
 </div>
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
-            
+             
   <div class="section" id="getting-started">
-<h1>Getting Started<a class="headerlink" href="#getting-started" title="Permalink to this headline">¶</a></h1>
+<h1>Getting Started<a class="headerlink" href="#getting-started" title="Permalink to this headline"></a></h1>
 <p><cite>graphscope</cite> is the Python client for GraphScope,
 a one-stop graph computation system to process interactive queries,
 analytical jobs and graph learning. It featured with ease-of-use, high-performance and
@@ -213,7 +131,7 @@ the scalability to evaluate graph computations over extremely large graphs.</p>
 We use a concrete example to illustrate how GraphScope
 can be used by data scientists to effectively analyze large graphs.</p>
 <div class="section" id="example-node-clustering-on-citation-network">
-<h2>Example: Node clustering on Citation Network<a class="headerlink" href="#example-node-clustering-on-citation-network" title="Permalink to this headline">¶</a></h2>
+<h2>Example: Node clustering on Citation Network<a class="headerlink" href="#example-node-clustering-on-citation-network" title="Permalink to this headline"></a></h2>
 <p><a class="reference external" href="https://ogb.stanford.edu/docs/nodeprop/#ogbn-mag">ogbn-mag</a> is a
 heterogeneous network composed of a subset of the Microsoft
 Academic Graph. It contains 4 types of entities(i.e., papers, authors, institutions, and fields of study),
@@ -238,7 +156,7 @@ Step 5. Run graph-based machine learing tasks.
 Step 6. Close the session.</p>
 </div>
 <div class="section" id="launching-session">
-<h2>Launching Session<a class="headerlink" href="#launching-session" title="Permalink to this headline">¶</a></h2>
+<h2>Launching Session<a class="headerlink" href="#launching-session" title="Permalink to this headline"></a></h2>
 <p>To use GraphScope, we need to establish a <a class="reference internal" href="reference/session.html#session"><span class="std std-ref">Session</span></a> in a python interpreter.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">os</span>
 <span class="kn">import</span> <span class="nn">graphscope</span>
@@ -274,7 +192,7 @@ For each pod in the cluster,
 there is a vineyard instance at service for distributed data in memory.</p>
 </div>
 <div class="section" id="loading-graph">
-<h2>Loading Graph<a class="headerlink" href="#loading-graph" title="Permalink to this headline">¶</a></h2>
+<h2>Loading Graph<a class="headerlink" href="#loading-graph" title="Permalink to this headline"></a></h2>
 <p>GraphScope models graph data as property graph,
 in which the edges/vertices are labeled and have many properties.
 Taking ogbn-mag as example, the figure below shows the model of the property graph.</p>
@@ -323,7 +241,7 @@ Paper vertices have properties like features, publish year, subject label, etc.<
 </pre></div>
 </div>
 <p>Alternatively, we provide a function to load this graph for convenience.</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">graphscope.dataset.ogbn_mag</span> <span class="kn">import</span> <span class="n">load_ogbn_mag</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">graphscope.dataset</span> <span class="kn">import</span> <span class="n">load_ogbn_mag</span>
 
 <span class="n">g</span> <span class="o">=</span> <span class="n">load_ogbn_mag</span><span class="p">(</span><span class="n">sess</span><span class="p">,</span> <span class="s2">&quot;/testingdata/ogbn_mag_small/&quot;</span><span class="p">)</span>
 </pre></div>
@@ -333,7 +251,7 @@ in vineyard instances in the cluster managed by the session.
 See more details in <a class="reference internal" href="loading_graph.html#loading-graphs"><span class="std std-ref">Loading Graphs</span></a></p>
 </div>
 <div class="section" id="interactive-query">
-<h2>Interactive Query<a class="headerlink" href="#interactive-query" title="Permalink to this headline">¶</a></h2>
+<h2>Interactive Query<a class="headerlink" href="#interactive-query" title="Permalink to this headline"></a></h2>
 <p>Understanding diverse graph data is an essential prerequisite to effective analysis,
 and therefore it is very common for users to directly explore,
 examine, and present graph data in an interactive environment
@@ -357,7 +275,7 @@ extracting publications in specific time out of the entire graph.</p>
 </div>
 </div>
 <div class="section" id="graph-analytics">
-<h2>Graph Analytics<a class="headerlink" href="#graph-analytics" title="Permalink to this headline">¶</a></h2>
+<h2>Graph Analytics<a class="headerlink" href="#graph-analytics" title="Permalink to this headline"></a></h2>
 <p>Graph analytics is widely used in real world. Many algorithms,
 like community detection, paths and connectivity, centrality are proven to be
 very useful in various businesses. GraphScope ships
@@ -386,7 +304,7 @@ Currently, GraphScope support users to write their own algorithms in
 PIE model and Pregel model.</p>
 </div>
 <div class="section" id="graph-neural-networks-gnns">
-<h2>Graph Neural Networks (GNNs)<a class="headerlink" href="#graph-neural-networks-gnns" title="Permalink to this headline">¶</a></h2>
+<h2>Graph Neural Networks (GNNs)<a class="headerlink" href="#graph-neural-networks-gnns" title="Permalink to this headline"></a></h2>
 <p>Graph neural networks (GNNs) combines superiority of
 both graph analytics and machine learning.
 GNN algorithms can compress both structural and attribute information
@@ -469,7 +387,7 @@ a graph with features following the last step.</p>
 </div>
 </div>
 <div class="section" id="closing-session">
-<h2>Closing Session<a class="headerlink" href="#closing-session" title="Permalink to this headline">¶</a></h2>
+<h2>Closing Session<a class="headerlink" href="#closing-session" title="Permalink to this headline"></a></h2>
 <p>At last, we close the session after processing all graph tasks.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">sess</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
 </pre></div>
@@ -482,50 +400,33 @@ Then, the coordinator will dealloc all the applied resources in the k8s cluster.
 
 
            </div>
-           
           </div>
-          <footer>
-    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
-        <a href="tutorials.html" class="btn btn-neutral float-right" title="Tutorials" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
         <a href="installation.html" class="btn btn-neutral float-left" title="Installation" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="tutorials.html" class="btn btn-neutral float-right" title="Tutorials" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>
 
   <div role="contentinfo">
-    <p>
-        &#169; Copyright 2020-2023, Damo Academy, Alibaba Inc..
-
-    </p>
+    <p>&#169; Copyright 2020-2023, Damo Academy, Alibaba Inc..</p>
   </div>
-    
-    
-    
-    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
-    
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
     <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
-    
-    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
 
 </footer>
         </div>
       </div>
-
     </section>
-
   </div>
-  
-
-  <script type="text/javascript">
+  <script>
       jQuery(function () {
           SphinxRtdTheme.Navigation.enable(true);
       });
   </script>
-
-  
-  
-    
-  
   
 
   <div class="rst-versions" data-toggle="rst-versions" role="note" aria-label="versions">
@@ -562,6 +463,16 @@ Then, the coordinator will dealloc all the applied resources in the k8s cluster.
 
             
               
+                <dd><a href="../v0.8.0/index.html">v0.8.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
                 <dd><a href="../v0.7.0/index.html">v0.7.0</a></dd>
               
             
@@ -572,7 +483,7 @@ Then, the coordinator will dealloc all the applied resources in the k8s cluster.
 
             
               
-                <dd><a href="../v0.6.0-rev1/index.html">v0.6.0-rev1</a></dd>
+                <dd><a href="../v0.6.1/index.html">v0.6.1</a></dd>
               
             
 

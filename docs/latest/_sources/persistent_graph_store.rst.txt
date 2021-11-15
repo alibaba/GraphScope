@@ -41,7 +41,7 @@ To install the chart with the release name `my-release`:
     $ helm repo add graphscope https://graphscope.oss-cn-beijing.aliyuncs.com/store/charts/
     $ helm install my-release graphscope/graphscope-store
 
-These commands deploy GraphScope Store on the Kubernetes cluster in the default configuration. The `Parameters<#parameters>`_ section lists the parameters that can be configured during installation.
+These commands deploy GraphScope Store on the Kubernetes cluster in the default configuration. The :ref:`Parameters` section lists the parameters that can be configured during installation.
 
 Tip: List all releases using `helm list`
 
@@ -82,6 +82,82 @@ Note: The PersistentVolume remains even after the release was uninstalled. To de
 .. code:: bash
 
     $ kubectl delete pvc -l app.kubernetes.io/instance=my-release
+
+
+Parameters
+~~~~~~~~~~
+
+Here we give a list of most frequently used parameters.
+
+Common parameters
+"""""""""""""""""
+
++-------------------+--------------------------------------------+-----------------------------------+
+|      Name         |    Description                             |            Value                  |
++===================+============================================+===================================+
+| image.registry    | Docker image registry                      | registry.cn-hongkong.aliyuncs.com |
++-------------------+--------------------------------------------+-----------------------------------+
+| image.repository  | Docker image repository                    | graphscope/graphscope-store       |
++-------------------+--------------------------------------------+-----------------------------------+
+| image.tag         | Docker image tag                           |            ""                     |
++-------------------+--------------------------------------------+-----------------------------------+
+| image.pullPolicy  | Docker image pull policy                   | IfNotPresent                      |
++-------------------+--------------------------------------------+-----------------------------------+
+| image.pullSecrets | Docker-registry secrets                    | []                                |
++-------------------+--------------------------------------------+-----------------------------------+
+| clusterDomain     | Default Kubernetes cluster domain          | cluster.local                     |
++-------------------+--------------------------------------------+-----------------------------------+
+| commonLabels      | Labels to add to all deployed objects      | {}                                |
++-------------------+--------------------------------------------+-----------------------------------+
+| commonAnnotations | Annotations to add to all deployed objects | {}                                |
++-------------------+--------------------------------------------+-----------------------------------+
+| executor          | Executor type, "maxgraph" or "gaia"        | maxgraph                          |
++-------------------+--------------------------------------------+-----------------------------------+
+| javaOpts          | Java options                               | ""                                |
++-------------------+--------------------------------------------+-----------------------------------+
+
+
+
+Statefulset parameters
+""""""""""""""""""""""
+
++-----------------------------+--------------------------------------+-----------------------------------+
+| Name                        | Description                          | Value                             |
++=============================+======================================+===================================+
+| image.registry              | Docker image registry                | registry.cn-hongkong.aliyuncs.com |
++-----------------------------+--------------------------------------+-----------------------------------+
+| store.replicaCount          | Number of nodes                      |  2                                |
++-----------------------------+--------------------------------------+-----------------------------------+
+| store.updateStrategy        | Update strategy for the store        |  RollingUpdate                    |
++-----------------------------+--------------------------------------+-----------------------------------+
+| frontend.replicaCount       | Number of nodes                      |  1                                |
++-----------------------------+--------------------------------------+-----------------------------------+
+| frontend.updateStrategy     | Update strategy for the frontend     |  RollingUpdate                    |
++-----------------------------+--------------------------------------+-----------------------------------+
+| frontend.service.type       | Kubernetes service type              |  NodePort                         |
++-----------------------------+--------------------------------------+-----------------------------------+
+| ingestor.replicaCount       | Number of nodes                      |  1                                |
++-----------------------------+--------------------------------------+-----------------------------------+
+| ingestor.updateStrategy     | Update strategy for the ingestor     |  RollingUpdate                    |
++-----------------------------+--------------------------------------+-----------------------------------+
+| coordinator.replicaCount    | Number of nodes                      |  1                                |
++-----------------------------+--------------------------------------+-----------------------------------+
+| coordinator.updateStrategy  | Update strategy for the coordinator  | RollingUpdate                     |
++-----------------------------+--------------------------------------+-----------------------------------+
+
+Kafka chart parameters
+""""""""""""""""""""""
+
++------------------------+---------------------------------------------------+-------+
+| Name                   | Description                                       | Value |
++========================+===================================================+=======+
+| kafka.enabled          | Switch to enable or disable the Kafka helm chart  | true  |
++------------------------+---------------------------------------------------+-------+
+| kafka.replicaCount     | Number of Kafka nodes                             | 1     |
++------------------------+---------------------------------------------------+-------+
+| externalKafka.servers  | Server or list of external Kafka servers to use   | []    |
++------------------------+---------------------------------------------------+-------+
+
 
 
 Configuration
@@ -384,7 +460,7 @@ Prequisities
 Get Binary
 ~~~~~~~~~~
 
-You can download the data-loading utility from here: `data_load.tar.gz <https://github.com/alibaba/GraphScope/releases/download/latest/data_load.tar.gz>`_. Decompress it, and you can find the executable here: `./data_load/bin/load_tool.sh`.
+You can download the data-loading utility from here: `data_load.tar.gz <https://github.com/alibaba/GraphScope/releases/latest/download/graphscope_store_data_load.tar.gz>`_. Decompress it, and you can find the executable here: `./data_load/bin/load_tool.sh`.
 
 
 Data Format
@@ -500,7 +576,7 @@ NOTE: You need to make sure that the HDFS endpoint that can be accessed from the
 
 .. code:: bash
 
-    $ ./data_laod/bin/load_tool.sh -c ingest -d hdfs://1.2.3.4:9000/tmp/data_output
+    $ ./data_load/bin/load_tool.sh -c ingest -d hdfs://1.2.3.4:9000/tmp/data_output
 
 
 The offline built data can be ingested successfully only once, otherwise errors will occur.

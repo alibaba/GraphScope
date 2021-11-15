@@ -7,6 +7,7 @@ NetworkX-style API
     :maxdepth: 2
 
     graphs
+    transformation
     builtin
     functions
     generators

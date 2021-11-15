@@ -1,0 +1,464 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>常见问题 &mdash; GraphScope  documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/css/custom.css" type="text/css" />
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="开发者指南" href="developer_guide.html" />
+    <link rel="prev" title="图学习引擎" href="learning_engine.html" />
+
+ 
+
+<!-- Global site tag (gtag.js) - Google Analytics -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-4TMYCGJ0X2"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-4TMYCGJ0X2');
+</script>
+
+
+
+  
+  <script src="../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../index.html" class="icon icon-home"> GraphScope
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                v0.6.1
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+      
+      
+        
+          
+        
+      
+      
+        <p class="caption"><span class="caption-text">目录</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="installation.html">安装</a></li>
+<li class="toctree-l1"><a class="reference internal" href="getting_started.html">快速上手</a></li>
+<li class="toctree-l1"><a class="reference internal" href="deployment.html">部署</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tutorials.html">入门教程</a></li>
+<li class="toctree-l1"><a class="reference internal" href="loading_graph.html">载图</a></li>
+<li class="toctree-l1"><a class="reference internal" href="graph_transformation.html">图的变换操作</a></li>
+<li class="toctree-l1"><a class="reference internal" href="analytics_engine.html">图分析引擎</a></li>
+<li class="toctree-l1"><a class="reference internal" href="interactive_engine.html">图交互式分析引擎</a></li>
+<li class="toctree-l1"><a class="reference internal" href="learning_engine.html">图学习引擎</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">常见问题</a></li>
+<li class="toctree-l1"><a class="reference internal" href="developer_guide.html">开发者指南</a></li>
+</ul>
+<p class="caption"><span class="caption-text">API 参考</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference external" href="https://graphscope.io/docs/reference/python_index.html">Python API 参考</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://graphscope.io/docs/reference/analytical_engine_index.html">图分析引擎 API 参考</a></li>
+</ul>
+
+      
+    
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">GraphScope</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="index.html">GraphScope: 一站式图计算系统</a> &raquo;</li>
+        
+      <li>常见问题</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="../_sources/zh/frequently_asked_questions.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="id1">
+<h1>常见问题<a class="headerlink" href="#id1" title="Permalink to this headline">¶</a></h1>
+<p>我们收集了用户使用GraphScope过程中的常见问题，如果在下面的列表中仍然无法找到您遇到的问题的答案，可通过 <a class="reference external" href="https://github.com/alibaba/GraphScope/issues/new/choose">issue的方式</a> 或 <a class="reference external" href="https://github.com/alibaba/GraphScope/discussions">在讨论区</a> 与我们联系。</p>
+<p><em>1. 运行GraphScope系统需要的最小资源是多少？</em></p>
+<blockquote>
+<div><p>在通过Python客户端使用GraphScope过程中，需要的最低Python版本是3.6+，最低pip版本是19.0+，GraphScope系统支持单机和分布式的方式部署，单机情况下，要求CPU至少4核，内存至少8G；
+同时，GraphScope系统支持CentOS7+、Ubuntu18+、以及Kubernetes v1.12.0+</p>
+</div></blockquote>
+<p><em>2. GraphScope是否强依赖Kubernetes?</em></p>
+<blockquote>
+<div><p>GraphScope不强依赖Kubernetes，同时也支持在 <a class="reference external" href="https://graphscope.io/docs/deployment.html#deployment-on-local">本地环境环境下部署</a>
+然而，由于Graphscope依赖众多第三方的库和项目，为了节省你的时间，我们建议基于我们提供的镜像构建并运行GraphScope，如果你没有一个运行的Kubernetes集群，可以使用官方提供的 <a class="reference external" href="https://kind.sigs.k8s.io/">kind</a> 在本地快速搭建一个虚拟集群。</p>
+</div></blockquote>
+<p><em>3. 如何如查看GraphScope的运行时信息？</em></p>
+<blockquote>
+<div><p>默认情况下，GraphScope运行不打印任何日志信息，你可以通过`show_log`参数开启日志输出。</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">graphscope</span><span class="o">.</span><span class="n">set_option</span><span class="p">(</span><span class="n">show_log</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>如果您的GraphScope运行在k8s集群上，可以使用 <a class="reference external" href="https://kubernetes.io/docs/reference/generated/kubectl/kubectl-commands">kubectl describe/logs</a> 来查看系统的当前状态，同时如果你挂载可本地磁盘，也可在 <cite>/tmp/graphscope/runtime/logs</cite> 目录下查看运行时日志。</p>
+</div></blockquote>
+<p><em>4. 为什么在使用 `kubectl get pod`命令时，发现了一些多余的pod?</em></p>
+<blockquote>
+<div><p>对于其中一些失败的pod，只能通过手动命令如 <cite>kubectl delete pod &lt;pod_name&gt;</cite> 进行删除。
+通常情况下，该问题出现在使用Helm部署GraphScope时，目前，GraphScope依赖一些权限来删除运行时的资源，详细细节可以查看 <a class="reference external" href="https://artifacthub.io/packages/helm/graphscope/graphscope">Helm Support</a></p>
+</div></blockquote>
+<p><em>5. GraphScope是图数据库吗？</em></p>
+<blockquote>
+<div><p>GraphScope并不是一个图数据库，其无法提供图上的一些事物性操作。GraphScope 将图分布式地载入内存作为不可变数据，来支持对该图的查询和分析操作。</p>
+</div></blockquote>
+<p><em>6. GraphScope在Gremlin上的兼容性如何？</em></p>
+<blockquote>
+<div><p>目前，GraphScope支持Gremlin语言中的大部分查询算子，可通过 <a class="reference external" href="https://graphscope.io/docs/interactive_engine.html#unsupported-features">该文档</a> 查看详细的支持信息。</p>
+</div></blockquote>
+<p><em>7. GraphScope运行过程中常见的卡住原因</em></p>
+<blockquote>
+<div><ul class="simple">
+<li><p>在session拉起阶段，如果当前网络下载镜像过慢，或当前集群资源无法满足pod的拉起时，会造成一定的卡住现象。</p></li>
+<li><p>载图阶段，可能会由于数据量过大造成短暂的卡住现象。</p></li>
+<li><p>在执行图算法分析阶段，如果当前系统资源紧张，编译构建app时会花费一些时间。</p></li>
+</ul>
+</div></blockquote>
+<p><em>8. 其他问题</em></p>
+<blockquote>
+<div><p>您可以通过 <a class="reference external" href="https://github.com/alibaba/GraphScope/issues/new/choose">issue的方式</a> 或 <a class="reference external" href="https://github.com/alibaba/GraphScope/discussions">在讨论区</a> 提出你的问题，同时，您也可以使用 <a class="reference external" href="http://slack.graphscope.io">Slack</a> 或 <a class="reference external" href="https://h5.dingtalk.com/circle/healthCheckin.html?dtaction=os&amp;corpId=ding82073ee2a22b2f86748126f6422b5d02&amp;109d1=d3892&amp;cbdbhh=qwertyuiop">DingTalk</a> 与我们联系。</p>
+</div></blockquote>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="developer_guide.html" class="btn btn-neutral float-right" title="开发者指南" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="learning_engine.html" class="btn btn-neutral" title="图学习引擎" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2020-2023, Damo Academy, Alibaba Inc.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
+        <script src="../_static/language_data.js"></script>
+    
+
+  
+
+  <script type="text/javascript" src="../_static/js/theme.js"></script>
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+  
+
+  <div class="rst-versions" data-toggle="rst-versions" role="note" aria-label="versions">
+    <span class="rst-current-version" data-toggle="rst-current-version">
+      <span class="fa fa-book"> Read the Docs</span>
+      v: v0.6.1
+      <span class="fa fa-caret-down"></span>
+    </span>
+    <div class="rst-other-versions">
+      <dl>
+        <dt>Versions</dt>
+        
+          
+
+            
+              
+                <dd><a href="../../latest/zh/index.html">latest</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../zh/index.html">stable</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../v0.6.1/zh/index.html">v0.6.1</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../v0.6.0/zh/index.html">v0.6.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../v0.5.0/zh/index.html">v0.5.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../v0.4.1/zh/index.html">v0.4.1</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../v0.4.0/zh/index.html">v0.4.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../v0.3.0/zh/index.html">v0.3.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../v0.2.1/zh/index.html">v0.2.1</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../v0.2.0/zh/index.html">v0.2.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../v0.1.3/zh/index.html">v0.1.3</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../v0.1.2/zh/index.html">v0.1.2</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../v0.1.1/zh/index.html">v0.1.1</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../v0.1.0/zh/index.html">v0.1.0</a></dd>
+              
+            
+
+          
+        
+      </dl>
+    </div>
+  </div>
+
+  <div class="rst-languages shift-up" role="note" aria-label="languages">
+    <div class="rst-other-languages">
+      <dl>
+        <dt>Languages</dt>
+        <dd><a href="../index.html">en</a></dd>
+        <dd><a href="index.html">zh_CN</a></dd>
+      </dl>
+
+      <hr />
+      <small>
+        <span>Hosted by <a href="https://pages.github.com/">Github Pages</a>.</span>
+      </small>
+    </div>
+  </div>
+
+
+</body>
+</html>

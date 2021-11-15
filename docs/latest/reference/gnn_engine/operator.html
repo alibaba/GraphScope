@@ -1,45 +1,21 @@
-
-
 <!DOCTYPE html>
 <html class="writer-html5" lang="en" >
 <head>
   <meta charset="utf-8" />
-  
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  
   <title>Defining Your Own Operator &mdash; GraphScope  documentation</title>
-  
-
-  
-  <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
-  <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
-  <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
-  <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
-  <link rel="stylesheet" href="../../_static/css/custom.css" type="text/css" />
-
-  
-  
-
-  
-  
-
-  
-
-  
+      <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="../../_static/css/custom.css" type="text/css" />
   <!--[if lt IE 9]>
     <script src="../../_static/js/html5shiv.min.js"></script>
   <![endif]-->
   
-    
-      <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
         <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
         <script src="../../_static/jquery.js"></script>
         <script src="../../_static/underscore.js"></script>
         <script src="../../_static/doctools.js"></script>
-    
-    <script type="text/javascript" src="../../_static/js/theme.js"></script>
-
-    
+    <script src="../../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
 
@@ -58,33 +34,16 @@
 
 </head>
 
-<body class="wy-body-for-nav">
-
-   
+<body class="wy-body-for-nav"> 
   <div class="wy-grid-for-nav">
-    
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
         <div class="wy-side-nav-search" >
-          
-
-          
             <a href="../../index.html" class="icon icon-home"> GraphScope
-          
-
-          
           </a>
-
-          
-            
-            
               <div class="version">
                 latest
               </div>
-            
-          
-
-          
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
     <input type="text" name="q" placeholder="Search docs" />
@@ -92,11 +51,7 @@
     <input type="hidden" name="area" value="default" />
   </form>
 </div>
-
-          
         </div>
-
-        
   <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
     
       
@@ -125,6 +80,7 @@
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../python_index.html">Python API Reference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../analytical_engine_index.html">Analytical Engine API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../gae_java/index.html">Analytical Engine Java API Reference</a></li>
 </ul>
 
       
@@ -134,66 +90,28 @@
       </div>
     </nav>
 
-    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
-
-      
-      <nav class="wy-nav-top" aria-label="top navigation">
-        
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
           <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
           <a href="../../index.html">GraphScope</a>
-        
       </nav>
 
-
       <div class="wy-nav-content">
-        
         <div class="rst-content">
-        
-          
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-<div role="navigation" aria-label="breadcrumbs navigation">
-
+          <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
-    
       <li><a href="../../index.html" class="icon icon-home"></a> &raquo;</li>
-        
       <li>Defining Your Own Operator</li>
-    
-    
       <li class="wy-breadcrumbs-aside">
-        
-          
             <a href="../../_sources/reference/gnn_engine/operator.rst.txt" rel="nofollow"> View page source</a>
-          
-        
       </li>
-    
   </ul>
-
-  
   <hr/>
 </div>
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
-            
+             
   <div class="section" id="defining-your-own-operator">
-<h1>Defining Your Own Operator<a class="headerlink" href="#defining-your-own-operator" title="Permalink to this headline">¶</a></h1>
+<h1>Defining Your Own Operator<a class="headerlink" href="#defining-your-own-operator" title="Permalink to this headline"></a></h1>
 <p>In <strong>GL</strong>, an <strong>operator</strong> is a basic executable unit. The system
 function is represented by the operators. For example, a graph sampler
 is a kind of operator. Operators can be <strong>extended</strong> according to
@@ -202,7 +120,7 @@ customizing an operator. The system framework will help run it
 distributedly.</p>
 </div>
 <div class="section" id="programming-interface">
-<h1>Programming Interface<a class="headerlink" href="#programming-interface" title="Permalink to this headline">¶</a></h1>
+<h1>Programming Interface<a class="headerlink" href="#programming-interface" title="Permalink to this headline"></a></h1>
 <p>To customize an <strong>operator</strong>, class
 <a class="reference external" href="../graphlearn/core/operator/operator.h">Operator</a> should be
 inherited. And then override the following virtual function.</p>
@@ -233,7 +151,7 @@ operators. You can just use the
 cases.</p>
 </div>
 <div class="section" id="distributed-runtime-design">
-<h1>Distributed Runtime Design<a class="headerlink" href="#distributed-runtime-design" title="Permalink to this headline">¶</a></h1>
+<h1>Distributed Runtime Design<a class="headerlink" href="#distributed-runtime-design" title="Permalink to this headline"></a></h1>
 <p><strong>GL</strong> follows the principle that the <strong>computation happens where the
 data is placed</strong>. In distributed mode, all severs can communicate with
 each other and know the distribution of the partitioned data. When an
@@ -246,13 +164,13 @@ operators. Developers just need care about the next three functions
 <strong>Partition()</strong>, <strong>Process()</strong>, <strong>Stitch()</strong>.</p>
 <div class="figure align-default" id="id1">
 <img alt="op" src="reference/gnn_engine/images/operator_runtime.png" />
-<p class="caption"><span class="caption-text">op</span><a class="headerlink" href="#id1" title="Permalink to this image">¶</a></p>
+<p class="caption"><span class="caption-text">op</span><a class="headerlink" href="#id1" title="Permalink to this image"></a></p>
 </div>
 </div>
 <div class="section" id="implement-a-new-operator">
-<h1>Implement a New Operator<a class="headerlink" href="#implement-a-new-operator" title="Permalink to this headline">¶</a></h1>
+<h1>Implement a New Operator<a class="headerlink" href="#implement-a-new-operator" title="Permalink to this headline"></a></h1>
 <div class="section" id="clone-source-code">
-<h2>Clone source code<a class="headerlink" href="#clone-source-code" title="Permalink to this headline">¶</a></h2>
+<h2>Clone source code<a class="headerlink" href="#clone-source-code" title="Permalink to this headline"></a></h2>
 <p>To <strong>implement</strong> an operator, you should clone the source code first.</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>git clone https://github.com/alibaba/graph-learn.git
 git submodule update --init
@@ -262,7 +180,7 @@ git submodule update --init
 build pass.</p>
 </div>
 <div class="section" id="implement-your-operator-class">
-<h2>Implement your operator class<a class="headerlink" href="#implement-your-operator-class" title="Permalink to this headline">¶</a></h2>
+<h2>Implement your operator class<a class="headerlink" href="#implement-your-operator-class" title="Permalink to this headline"></a></h2>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">MyOperator</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="k">public</span><span class="w"> </span><span class="n">Operator</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
 <span class="k">public</span><span class="o">:</span><span class="w"></span>
 <span class="w">  </span><span class="n">Status</span><span class="w"> </span><span class="n">Process</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">OpRequest</span><span class="o">*</span><span class="w"> </span><span class="n">req</span><span class="p">,</span><span class="w"> </span><span class="n">OpResponse</span><span class="o">*</span><span class="w"> </span><span class="n">res</span><span class="p">)</span><span class="w"> </span><span class="k">override</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
@@ -276,7 +194,7 @@ customize request and response class, which inherits from <strong>OpRequest</str
 and <strong>OpResponse</strong>.</p>
 </div>
 <div class="section" id="register-operator">
-<h2>Register Operator<a class="headerlink" href="#register-operator" title="Permalink to this headline">¶</a></h2>
+<h2>Register Operator<a class="headerlink" href="#register-operator" title="Permalink to this headline"></a></h2>
 <p>Each operator has a <strong>unique name</strong>. Register the operator with its name
 and class name.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">REGISTER_OPERATOR</span><span class="p">(</span><span class="s">&quot;OpName&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">MyOperator</span><span class="p">);</span><span class="w"></span>
@@ -288,7 +206,7 @@ and class name.</p>
 for details.</p>
 </div>
 <div class="section" id="compile">
-<h2>Compile<a class="headerlink" href="#compile" title="Permalink to this headline">¶</a></h2>
+<h2>Compile<a class="headerlink" href="#compile" title="Permalink to this headline"></a></h2>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">cd</span> <span class="n">graph</span><span class="o">-</span><span class="n">learn</span>
 <span class="n">make</span> <span class="n">clean</span>
 <span class="n">make</span> <span class="n">test</span>
@@ -303,7 +221,7 @@ that, you can make the python package and install it.</p>
 </div>
 </div>
 <div class="section" id="how-to-use-an-operator">
-<h1>How to Use an Operator<a class="headerlink" href="#how-to-use-an-operator" title="Permalink to this headline">¶</a></h1>
+<h1>How to Use an Operator<a class="headerlink" href="#how-to-use-an-operator" title="Permalink to this headline"></a></h1>
 <p>For example, if a new sampler named <strong>xxxSampler</strong>, you can call it like
 this:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">g</span><span class="o">.</span><span class="n">sample</span><span class="p">(</span><span class="n">count</span><span class="p">)</span><span class="o">.</span><span class="n">by</span><span class="p">(</span><span class="s2">&quot;xxx&quot;</span><span class="p">)</span><span class="o">...</span>
@@ -315,46 +233,30 @@ this:</p>
 
 
            </div>
-           
           </div>
           <footer>
 
   <hr/>
 
   <div role="contentinfo">
-    <p>
-        &#169; Copyright 2020-2023, Damo Academy, Alibaba Inc..
-
-    </p>
+    <p>&#169; Copyright 2020-2023, Damo Academy, Alibaba Inc..</p>
   </div>
-    
-    
-    
-    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
-    
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
     <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
-    
-    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
 
 </footer>
         </div>
       </div>
-
     </section>
-
   </div>
-  
-
-  <script type="text/javascript">
+  <script>
       jQuery(function () {
           SphinxRtdTheme.Navigation.enable(true);
       });
   </script>
-
-  
-  
-    
-  
   
 
   <div class="rst-versions" data-toggle="rst-versions" role="note" aria-label="versions">
@@ -391,6 +293,16 @@ this:</p>
 
             
               
+                <dd><a href="../../../v0.8.0/index.html">v0.8.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
                 <dd><a href="../../../v0.7.0/index.html">v0.7.0</a></dd>
               
             
@@ -401,7 +313,7 @@ this:</p>
 
             
               
-                <dd><a href="../../../v0.6.0-rev1/index.html">v0.6.0-rev1</a></dd>
+                <dd><a href="../../../v0.6.1/index.html">v0.6.1</a></dd>
               
             
 

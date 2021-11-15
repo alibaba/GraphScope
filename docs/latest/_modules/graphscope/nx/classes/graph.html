@@ -1,45 +1,21 @@
-
-
 <!DOCTYPE html>
 <html class="writer-html5" lang="en" >
 <head>
   <meta charset="utf-8" />
-  
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  
   <title>graphscope.nx.classes.graph &mdash; GraphScope  documentation</title>
-  
-
-  
-  <link rel="stylesheet" href="../../../../_static/css/theme.css" type="text/css" />
-  <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
-  <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
-  <link rel="stylesheet" href="../../../../_static/css/theme.css" type="text/css" />
-  <link rel="stylesheet" href="../../../../_static/css/custom.css" type="text/css" />
-
-  
-  
-
-  
-  
-
-  
-
-  
+      <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../../../_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="../../../../_static/css/custom.css" type="text/css" />
   <!--[if lt IE 9]>
     <script src="../../../../_static/js/html5shiv.min.js"></script>
   <![endif]-->
   
-    
-      <script type="text/javascript" id="documentation_options" data-url_root="../../../../" src="../../../../_static/documentation_options.js"></script>
         <script data-url_root="../../../../" id="documentation_options" src="../../../../_static/documentation_options.js"></script>
         <script src="../../../../_static/jquery.js"></script>
         <script src="../../../../_static/underscore.js"></script>
         <script src="../../../../_static/doctools.js"></script>
-    
-    <script type="text/javascript" src="../../../../_static/js/theme.js"></script>
-
-    
+    <script src="../../../../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../../../../genindex.html" />
     <link rel="search" title="Search" href="../../../../search.html" />
 
@@ -58,33 +34,16 @@
 
 </head>
 
-<body class="wy-body-for-nav">
-
-   
+<body class="wy-body-for-nav"> 
   <div class="wy-grid-for-nav">
-    
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
         <div class="wy-side-nav-search" >
-          
-
-          
             <a href="../../../../index.html" class="icon icon-home"> GraphScope
-          
-
-          
           </a>
-
-          
-            
-            
               <div class="version">
                 latest
               </div>
-            
-          
-
-          
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../../../../search.html" method="get">
     <input type="text" name="q" placeholder="Search docs" />
@@ -92,11 +51,7 @@
     <input type="hidden" name="area" value="default" />
   </form>
 </div>
-
-          
         </div>
-
-        
   <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
     
       
@@ -125,6 +80,7 @@
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../../../../reference/python_index.html">Python API Reference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../reference/analytical_engine_index.html">Analytical Engine API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../reference/gae_java/index.html">Analytical Engine Java API Reference</a></li>
 </ul>
 
       
@@ -134,62 +90,26 @@
       </div>
     </nav>
 
-    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
-
-      
-      <nav class="wy-nav-top" aria-label="top navigation">
-        
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
           <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
           <a href="../../../../index.html">GraphScope</a>
-        
       </nav>
 
-
       <div class="wy-nav-content">
-        
         <div class="rst-content">
-        
-          
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-<div role="navigation" aria-label="breadcrumbs navigation">
-
+          <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
-    
       <li><a href="../../../../index.html" class="icon icon-home"></a> &raquo;</li>
-        
           <li><a href="../../../index.html">Module code</a> &raquo;</li>
-        
       <li>graphscope.nx.classes.graph</li>
-    
-    
       <li class="wy-breadcrumbs-aside">
-        
       </li>
-    
   </ul>
-
-  
   <hr/>
 </div>
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
-            
+             
   <h1>Source code for graphscope.nx.classes.graph</h1><div class="highlight"><pre>
 <span></span><span class="ch">#!/usr/bin/env python3</span>
 <span class="c1"># -*- coding: utf-8 -*-</span>
@@ -233,13 +153,15 @@
 <span class="kn">from</span> <span class="nn">graphscope.nx</span> <span class="kn">import</span> <span class="n">NetworkXError</span>
 <span class="kn">from</span> <span class="nn">graphscope.nx.classes.dicts</span> <span class="kn">import</span> <span class="n">AdjDict</span>
 <span class="kn">from</span> <span class="nn">graphscope.nx.classes.dicts</span> <span class="kn">import</span> <span class="n">NodeDict</span>
-<span class="kn">from</span> <span class="nn">graphscope.nx.convert</span> <span class="kn">import</span> <span class="n">from_gs_graph</span>
 <span class="kn">from</span> <span class="nn">graphscope.nx.convert</span> <span class="kn">import</span> <span class="n">to_nx_graph</span>
 <span class="kn">from</span> <span class="nn">graphscope.nx.utils.compat</span> <span class="kn">import</span> <span class="n">patch_docstring</span>
-<span class="kn">from</span> <span class="nn">graphscope.nx.utils.other</span> <span class="kn">import</span> <span class="n">empty_graph_in_engine</span>
-<span class="kn">from</span> <span class="nn">graphscope.nx.utils.other</span> <span class="kn">import</span> <span class="n">parse_ret_as_dict</span>
+<span class="kn">from</span> <span class="nn">graphscope.nx.utils.misc</span> <span class="kn">import</span> <span class="n">check_node_is_legal</span>
+<span class="kn">from</span> <span class="nn">graphscope.nx.utils.misc</span> <span class="kn">import</span> <span class="n">empty_graph_in_engine</span>
+<span class="kn">from</span> <span class="nn">graphscope.nx.utils.misc</span> <span class="kn">import</span> <span class="n">parse_ret_as_dict</span>
 <span class="kn">from</span> <span class="nn">graphscope.proto</span> <span class="kn">import</span> <span class="n">graph_def_pb2</span>
 <span class="kn">from</span> <span class="nn">graphscope.proto</span> <span class="kn">import</span> <span class="n">types_pb2</span>
+
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;Graph&quot;</span><span class="p">]</span>
 
 
 <span class="k">class</span> <span class="nc">_GraphBase</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
@@ -253,23 +175,44 @@
 
 <div class="viewcode-block" id="Graph"><a class="viewcode-back" href="../../../../reference/networkx/graphs.html#graphscope.nx.Graph">[docs]</a><span class="k">class</span> <span class="nc">Graph</span><span class="p">(</span><span class="n">_GraphBase</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Base class for undirected graphs in graphscope.nx.</span>
+<span class="sd">    Base class for undirected graphs.</span>
 
-<span class="sd">    A Graph that hold the metadata of a graph, and provide NetworkX-like Graph APIs.</span>
+<span class="sd">    A Graph that holds the metadata of a graph, and provides NetworkX-like Graph APIs.</span>
 
 <span class="sd">    It is worth noticing that the graph is actually stored by the Analytical Engine backend.</span>
-<span class="sd">    In other words, the graph object holds nothing but metadata of a graph</span>
+<span class="sd">    In other words, the Graph object holds nothing but metadata of a graph.</span>
 
 <span class="sd">    Graph support nodes and edges with optional data, or attributes.</span>
 
 <span class="sd">    Graphs support undirected edges. Self loops are allowed but multiple</span>
 <span class="sd">    (parallel) edges are not.</span>
 
-<span class="sd">    Nodes can be many hashable objects including int/str/float/tuple/bool object</span>
-<span class="sd">    with optional key/value attributes.</span>
+<span class="sd">    Nodes can be arbitrary int/str/float/bool objects with optional</span>
+<span class="sd">    key/value attributes.</span>
 
 <span class="sd">    Edges are represented as links between nodes with optional</span>
-<span class="sd">    key/value attributes</span>
+<span class="sd">    key/value attributes.</span>
+
+<span class="sd">    Graph support node label if it&#39;s created from a GraphScope graph object.</span>
+<span class="sd">    nodes are identified by `(label, id)` tuple.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    incoming_graph_data : input graph (optional, default: None)</span>
+<span class="sd">        Data to initialize graph. If None (default) an empty</span>
+<span class="sd">        graph is created.  The data can be any format that is supported</span>
+<span class="sd">        by the to_nx_graph() function, currently including edge list,</span>
+<span class="sd">        dict of dicts, dict of lists, NetworkX graph, NumPy matrix</span>
+<span class="sd">        or 2d ndarray, Pandas DataFrame, SciPy sparse matrix, or a GraphScope</span>
+<span class="sd">        graph object.</span>
+
+<span class="sd">    default_label : default node label (optional, default: None)</span>
+<span class="sd">        if incoming_graph_data is a GraphScope graph object, default label means</span>
+<span class="sd">        the nodes of the label can be identified by id directly, other label nodes</span>
+<span class="sd">        need to use `(label, id)` to identify.</span>
+
+<span class="sd">    attr : keyword arguments, optional (default= no attributes)</span>
+<span class="sd">        Attributes to add to graph as key=value pairs.</span>
 
 <span class="sd">    See Also</span>
 <span class="sd">    --------</span>
@@ -298,9 +241,11 @@
 <span class="sd">    &gt;&gt;&gt; H = nx.path_graph(10)</span>
 <span class="sd">    &gt;&gt;&gt; G.add_nodes_from(H)</span>
 
-<span class="sd">    In addition integers, strings can represent a node.</span>
+<span class="sd">    In addition to integers, strings/floats/bool can represent a node too.</span>
 
 <span class="sd">    &gt;&gt;&gt; G.add_node(&#39;a node&#39;)</span>
+<span class="sd">    &gt;&gt;&gt; G.add_node(3.14)</span>
+<span class="sd">    &gt;&gt;&gt; G.add_node(True)</span>
 
 <span class="sd">    **Edges:**</span>
 
@@ -386,6 +331,31 @@
 <span class="sd">    ...         # Do something useful with the edges</span>
 <span class="sd">    ...         pass</span>
 
+<span class="sd">    **Transformation**</span>
+
+<span class="sd">    Create a graph with GraphScope graph object. First we init a GraphScope graph</span>
+<span class="sd">    with two node labels: person and comment`</span>
+
+<span class="sd">    &gt;&gt;&gt; g = graphscope.g(directed=False).add_vertice(&quot;persion.csv&quot;, label=&quot;person&quot;).add_vertice(&quot;comment.csv&quot;, label=&quot;comment&quot;)</span>
+
+<span class="sd">    create a graph with g, set default_label to &#39;person&#39;</span>
+
+<span class="sd">    &gt;&gt;&gt; G = nx.Graph(g, default_label=&quot;person&quot;)</span>
+
+<span class="sd">    `person` label nodes can be identified by id directly, for `comment` label,</span>
+<span class="sd">    we has to use tuple `(&quot;comment&quot;, id)` identify. Like, add a person label</span>
+<span class="sd">    node and a comment label node</span>
+
+<span class="sd">    &gt;&gt;&gt; G.add_node(0, type=&quot;person&quot;)</span>
+<span class="sd">    &gt;&gt;&gt; G.add_node((&quot;comment&quot;, 0), type=&quot;comment&quot;)</span>
+
+<span class="sd">    print property of two nodes</span>
+
+<span class="sd">    &gt;&gt;&gt; G.nodes[0]</span>
+<span class="sd">    {&quot;type&quot;, &quot;person&quot;}</span>
+<span class="sd">    &gt;&gt;&gt; G.nodes[(&quot;comment&quot;, 0)]</span>
+<span class="sd">    {&quot;type&quot;, &quot;comment&quot;}</span>
+
 <span class="sd">    **Reporting:**</span>
 
 <span class="sd">    Simple graph information is obtained using object-attributes and methods.</span>
@@ -405,8 +375,16 @@
     <span class="n">graph_attr_dict_factory</span> <span class="o">=</span> <span class="nb">dict</span>
     <span class="n">_graph_type</span> <span class="o">=</span> <span class="n">graph_def_pb2</span><span class="o">.</span><span class="n">DYNAMIC_PROPERTY</span>
 
-<div class="viewcode-block" id="Graph.__init__"><a class="viewcode-back" href="../../../../reference/networkx/graphs.html#graphscope.nx.Graph.__init__">[docs]</a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">incoming_graph_data</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">attr</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Initialize a graph with edges, name, or graph attributes</span>
+<div class="viewcode-block" id="Graph.to_directed_class"><a class="viewcode-back" href="../../../../reference/networkx/graphs.html#graphscope.nx.Graph.to_directed_class">[docs]</a>    <span class="nd">@patch_docstring</span><span class="p">(</span><span class="n">RefGraph</span><span class="o">.</span><span class="n">to_directed_class</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">to_directed_class</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">nx</span><span class="o">.</span><span class="n">DiGraph</span></div>
+
+<div class="viewcode-block" id="Graph.to_undirected_class"><a class="viewcode-back" href="../../../../reference/networkx/graphs.html#graphscope.nx.Graph.to_undirected_class">[docs]</a>    <span class="nd">@patch_docstring</span><span class="p">(</span><span class="n">RefGraph</span><span class="o">.</span><span class="n">to_undirected_class</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">to_undirected_class</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">Graph</span></div>
+
+<div class="viewcode-block" id="Graph.__init__"><a class="viewcode-back" href="../../../../reference/networkx/graphs.html#graphscope.nx.Graph.__init__">[docs]</a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">incoming_graph_data</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">default_label</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">attr</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Initialize a graph with graph, edges, name, or graph attributes</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
@@ -415,15 +393,13 @@
 <span class="sd">            graph is created.  The data can be any format that is supported</span>
 <span class="sd">            by the to_nx_graph() function, currently including edge list,</span>
 <span class="sd">            dict of dicts, dict of lists, NetworkX graph, NumPy matrix</span>
-<span class="sd">            or 2d ndarray, Pandas DataFrame, SciPy sparse matrix, or a graphscope</span>
-<span class="sd">            Graph.</span>
+<span class="sd">            or 2d ndarray, Pandas DataFrame, SciPy sparse matrix, or a GraphScope</span>
+<span class="sd">            graph object.</span>
 
-<span class="sd">            If incomming_garph_data is graphscope.Graph, the directed of graphscope.Graph</span>
-<span class="sd">            must match graphscope.nx Graph. Since graphscope.Graph support</span>
-<span class="sd">            label of node and edge, the node id must be unique in all labels nodes and</span>
-<span class="sd">            not allow parallel edge in different edge label, otherwise would raise</span>
-<span class="sd">            AnalyticalEngineInternalError in transformation. finally, the labels</span>
-<span class="sd">            of nodes and edges would be cleaned in nx.Graph.</span>
+<span class="sd">        default_label : default node label (optional, default: &quot;_&quot;)</span>
+<span class="sd">            if incoming_graph_data is a GraphScope graph object, default label means</span>
+<span class="sd">            the nodes of the label can be accessed by id directly, other label nodes</span>
+<span class="sd">            need to use `(label, id)` to access.</span>
 
 <span class="sd">        attr : keyword arguments, optional (default= no attributes)</span>
 <span class="sd">            Attributes to add to graph as key=value pairs.</span>
@@ -442,11 +418,11 @@
 <span class="sd">        &gt;&gt;&gt; G.graph</span>
 <span class="sd">        {&#39;day&#39;: &#39;Friday&#39;}</span>
 
-<span class="sd">        graphscope graph can convert to nx.Graph throught incomming_graph_data.</span>
+<span class="sd">        Created from a GraphScope graph object</span>
 
 <span class="sd">        &gt;&gt;&gt; g = graphscope.g(directed=False)  # if transform to DiGraph, directed=True</span>
-<span class="sd">        &gt;&gt;&gt; g.add_vertices(...).add_edges(...)</span>
-<span class="sd">        &gt;&gt;&gt; G = nx.Graph(g) # or DiGraph</span>
+<span class="sd">        &gt;&gt;&gt; g.add_vertices(&quot;person.csv&quot;, label=&quot;person&quot;).add_vertices(&quot;comment.csv&quot;, label=&quot;comment&quot;).add_edges(...)</span>
+<span class="sd">        &gt;&gt;&gt; G = nx.Graph(g, default_label=&quot;person&quot;) # or DiGraph</span>
 
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_session</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
@@ -468,6 +444,11 @@
             <span class="s2">&quot;create_empty_in_engine&quot;</span><span class="p">,</span> <span class="kc">True</span>
         <span class="p">)</span>  <span class="c1"># a hidden parameter</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_distributed</span> <span class="o">=</span> <span class="n">attr</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;dist&quot;</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">incoming_graph_data</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">_is_gs_graph</span><span class="p">(</span><span class="n">incoming_graph_data</span><span class="p">):</span>
+            <span class="c1"># convert from gs graph always use distributed mode</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_distributed</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_default_label</span> <span class="o">=</span> <span class="n">default_label</span>
+
         <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_is_gs_graph</span><span class="p">(</span><span class="n">incoming_graph_data</span><span class="p">)</span> <span class="ow">and</span> <span class="n">create_empty_in_engine</span><span class="p">:</span>
             <span class="n">graph_def</span> <span class="o">=</span> <span class="n">empty_graph_in_engine</span><span class="p">(</span>
                 <span class="bp">self</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_directed</span><span class="p">(),</span> <span class="bp">self</span><span class="o">.</span><span class="n">_distributed</span>
@@ -477,9 +458,7 @@
         <span class="c1"># attempt to load graph with data</span>
         <span class="k">if</span> <span class="n">incoming_graph_data</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_is_gs_graph</span><span class="p">(</span><span class="n">incoming_graph_data</span><span class="p">):</span>
-                <span class="n">graph_def</span> <span class="o">=</span> <span class="n">from_gs_graph</span><span class="p">(</span><span class="n">incoming_graph_data</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">_key</span> <span class="o">=</span> <span class="n">graph_def</span><span class="o">.</span><span class="n">key</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">_schema</span><span class="o">.</span><span class="n">init_nx_schema</span><span class="p">(</span><span class="n">incoming_graph_data</span><span class="o">.</span><span class="n">schema</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_init_with_arrow_property_graph</span><span class="p">(</span><span class="n">incoming_graph_data</span><span class="p">)</span>
             <span class="k">else</span><span class="p">:</span>
                 <span class="n">g</span> <span class="o">=</span> <span class="n">to_nx_graph</span><span class="p">(</span><span class="n">incoming_graph_data</span><span class="p">,</span> <span class="n">create_using</span><span class="o">=</span><span class="bp">self</span><span class="p">)</span>
                 <span class="n">check_argument</span><span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">g</span><span class="p">,</span> <span class="n">Graph</span><span class="p">))</span>
@@ -504,18 +483,10 @@
             <span class="p">)</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="n">session</span><span class="o">.</span><span class="n">eager</span><span class="p">():</span>
             <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
-                <span class="s2">&quot;Networkx module need session to be eager mode. &quot;</span>
+                <span class="s2">&quot;NetworkX module need session to be eager mode. &quot;</span>
                 <span class="s2">&quot;The default session is lazy mode.&quot;</span>
             <span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_session</span> <span class="o">=</span> <span class="n">session</span>
-
-<div class="viewcode-block" id="Graph.to_directed_class"><a class="viewcode-back" href="../../../../reference/networkx/graphs.html#graphscope.nx.Graph.to_directed_class">[docs]</a>    <span class="nd">@patch_docstring</span><span class="p">(</span><span class="n">RefGraph</span><span class="o">.</span><span class="n">to_directed_class</span><span class="p">)</span>
-    <span class="k">def</span> <span class="nf">to_directed_class</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="k">return</span> <span class="n">nx</span><span class="o">.</span><span class="n">DiGraph</span></div>
-
-<div class="viewcode-block" id="Graph.to_undirected_class"><a class="viewcode-back" href="../../../../reference/networkx/graphs.html#graphscope.nx.Graph.to_undirected_class">[docs]</a>    <span class="nd">@patch_docstring</span><span class="p">(</span><span class="n">RefGraph</span><span class="o">.</span><span class="n">to_undirected_class</span><span class="p">)</span>
-    <span class="k">def</span> <span class="nf">to_undirected_class</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="k">return</span> <span class="n">Graph</span></div>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">op</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
@@ -524,7 +495,7 @@
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">session</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Get the currrent session.</span>
+        <span class="sd">&quot;&quot;&quot;Get the session of graph.</span>
 
 <span class="sd">        Returns:</span>
 <span class="sd">            Return session that the graph belongs to.</span>
@@ -537,7 +508,7 @@
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">session_id</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Get the currrent session_id.</span>
+        <span class="sd">&quot;&quot;&quot;Get session&#39;s id of graph.</span>
 
 <span class="sd">        Returns:</span>
 <span class="sd">            str: Return session id that the graph belongs to.</span>
@@ -550,11 +521,16 @@
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">key</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;String key of the coresponding engine graph.&quot;&quot;&quot;</span>
+        <span class="sd">&quot;&quot;&quot;Key of the coresponding engine graph.&quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">&quot;_graph&quot;</span><span class="p">)</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">_is_client_view</span><span class="p">:</span>
             <span class="k">return</span> <span class="p">(</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">_graph</span><span class="o">.</span><span class="n">key</span>
             <span class="p">)</span>  <span class="c1"># this graph is a client side graph view, use host graph key</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_key</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">signature</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Generate a signature of the current graph&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_key</span>
 
     <span class="nd">@property</span>
@@ -576,6 +552,20 @@
             <span class="n">vdata_type</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">data_type_to_cpp</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_schema</span><span class="o">.</span><span class="n">vdata_type</span><span class="p">)</span>
             <span class="n">edata_type</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">data_type_to_cpp</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_schema</span><span class="o">.</span><span class="n">edata_type</span><span class="p">)</span>
             <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;gs::DynamicProjectedFragment&lt;</span><span class="si">{</span><span class="n">vdata_type</span><span class="si">}</span><span class="s2">,</span><span class="si">{</span><span class="n">edata_type</span><span class="si">}</span><span class="s2">&gt;&quot;</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">_graph_type</span> <span class="o">==</span> <span class="n">graph_def_pb2</span><span class="o">.</span><span class="n">ARROW_PROPERTY</span><span class="p">:</span>
+            <span class="n">oid_type</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">normalize_data_type_str</span><span class="p">(</span>
+                <span class="n">utils</span><span class="o">.</span><span class="n">data_type_to_cpp</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_schema</span><span class="o">.</span><span class="n">oid_type</span><span class="p">)</span>
+            <span class="p">)</span>
+            <span class="n">vid_type</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_schema</span><span class="o">.</span><span class="n">vid_type</span>
+            <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;vineyard::ArrowFragment&lt;</span><span class="si">{</span><span class="n">oid_type</span><span class="si">}</span><span class="s2">,</span><span class="si">{</span><span class="n">vid_type</span><span class="si">}</span><span class="s2">&gt;&quot;</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">_graph_type</span> <span class="o">==</span> <span class="n">graph_def_pb2</span><span class="o">.</span><span class="n">ARROW_FLATTENED</span><span class="p">:</span>
+            <span class="n">oid_type</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">normalize_data_type_str</span><span class="p">(</span>
+                <span class="n">utils</span><span class="o">.</span><span class="n">data_type_to_cpp</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_schema</span><span class="o">.</span><span class="n">oid_type</span><span class="p">)</span>
+            <span class="p">)</span>
+            <span class="n">vid_type</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_schema</span><span class="o">.</span><span class="n">vid_type</span>
+            <span class="n">vdata_type</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">data_type_to_cpp</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_schema</span><span class="o">.</span><span class="n">vdata_type</span><span class="p">)</span>
+            <span class="n">edata_type</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">data_type_to_cpp</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_schema</span><span class="o">.</span><span class="n">edata_type</span><span class="p">)</span>
+            <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;gs::ArrowFlattenedFragment&lt;</span><span class="si">{</span><span class="n">oid_type</span><span class="si">}</span><span class="s2">,</span><span class="si">{</span><span class="n">vid_type</span><span class="si">}</span><span class="s2">,</span><span class="si">{</span><span class="n">vdata_type</span><span class="si">}</span><span class="s2">,</span><span class="si">{</span><span class="n">edata_type</span><span class="si">}</span><span class="s2">&gt;&quot;</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Unsupported graph type: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_graph_type</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
 
@@ -694,11 +684,6 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">adj</span><span class="p">[</span><span class="n">n</span><span class="p">]</span></div>
 
-    <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">signature</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Generate a signature of the current graph&quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_key</span>
-
 <div class="viewcode-block" id="Graph.add_node"><a class="viewcode-back" href="../../../../reference/networkx/graphs.html#graphscope.nx.Graph.add_node">[docs]</a>    <span class="k">def</span> <span class="nf">add_node</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node_for_adding</span><span class="p">,</span> <span class="o">**</span><span class="n">attr</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Add a single node `node_for_adding` and update node attributes.</span>
 
@@ -777,6 +762,7 @@
 <span class="sd">        11</span>
 
 <span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_convert_arrow_to_dynamic</span><span class="p">()</span>
         <span class="n">nodes</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">nodes_for_adding</span><span class="p">:</span>
             <span class="n">data</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">attr</span><span class="p">)</span>
@@ -784,10 +770,19 @@
                 <span class="n">nn</span><span class="p">,</span> <span class="n">dd</span> <span class="o">=</span> <span class="n">n</span>
                 <span class="n">data</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">dd</span><span class="p">)</span>
                 <span class="n">node</span> <span class="o">=</span> <span class="p">[</span><span class="n">nn</span><span class="p">,</span> <span class="n">data</span><span class="p">]</span>
+                <span class="n">n</span> <span class="o">=</span> <span class="n">nn</span>
             <span class="k">except</span> <span class="p">(</span><span class="ne">TypeError</span><span class="p">,</span> <span class="ne">ValueError</span><span class="p">):</span>
                 <span class="n">node</span> <span class="o">=</span> <span class="p">[</span><span class="n">n</span><span class="p">,</span> <span class="n">data</span><span class="p">]</span>
+            <span class="n">check_node_is_legal</span><span class="p">(</span><span class="n">n</span><span class="p">)</span>
             <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_schema</span><span class="o">.</span><span class="n">add_nx_vertex_properties</span><span class="p">(</span><span class="n">data</span><span class="p">):</span>
-                <span class="n">nodes</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">node</span><span class="p">))</span>
+                <span class="k">try</span><span class="p">:</span>
+                    <span class="n">nodes</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">node</span><span class="p">))</span>
+                <span class="k">except</span> <span class="ne">TypeError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+                    <span class="k">raise</span> <span class="n">NetworkXError</span><span class="p">(</span>
+                        <span class="s2">&quot;The node and its </span><span class="si">{}</span><span class="s2"> data failed to be serialized by json.&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                            <span class="n">node</span>
+                        <span class="p">)</span>
+                    <span class="p">)</span> <span class="kn">from</span> <span class="nn">e</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_op</span> <span class="o">=</span> <span class="n">dag_utils</span><span class="o">.</span><span class="n">modify_vertices</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">types_pb2</span><span class="o">.</span><span class="n">NX_ADD_NODES</span><span class="p">,</span> <span class="n">nodes</span><span class="p">)</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_op</span><span class="o">.</span><span class="n">eval</span><span class="p">()</span></div>
 
@@ -851,8 +846,10 @@
 <span class="sd">        []</span>
 
 <span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_convert_arrow_to_dynamic</span><span class="p">()</span>
         <span class="n">nodes</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">nodes_for_removing</span><span class="p">:</span>
+            <span class="n">check_node_is_legal</span><span class="p">(</span><span class="n">n</span><span class="p">)</span>
             <span class="n">nodes</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">([</span><span class="n">n</span><span class="p">]))</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_op</span> <span class="o">=</span> <span class="n">dag_utils</span><span class="o">.</span><span class="n">modify_vertices</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">types_pb2</span><span class="o">.</span><span class="n">NX_DEL_NODES</span><span class="p">,</span> <span class="n">nodes</span><span class="p">)</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_op</span><span class="o">.</span><span class="n">eval</span><span class="p">()</span></div>
@@ -897,6 +894,9 @@
 <span class="sd">        {}</span>
 
 <span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">check_node_is_legal</span><span class="p">(</span><span class="n">n</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">graph_type</span> <span class="o">==</span> <span class="n">graph_def_pb2</span><span class="o">.</span><span class="n">ARROW_PROPERTY</span><span class="p">:</span>
+            <span class="n">n</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_convert_to_label_id_tuple</span><span class="p">(</span><span class="n">n</span><span class="p">)</span>
         <span class="n">op</span> <span class="o">=</span> <span class="n">dag_utils</span><span class="o">.</span><span class="n">report_graph</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">types_pb2</span><span class="o">.</span><span class="n">NODE_DATA</span><span class="p">,</span> <span class="n">node</span><span class="o">=</span><span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">([</span><span class="n">n</span><span class="p">]))</span>
         <span class="k">return</span> <span class="n">op</span><span class="o">.</span><span class="n">eval</span><span class="p">()</span>
 
@@ -963,9 +963,12 @@
 
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">try</span><span class="p">:</span>
+            <span class="n">check_node_is_legal</span><span class="p">(</span><span class="n">n</span><span class="p">)</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">graph_type</span> <span class="o">==</span> <span class="n">graph_def_pb2</span><span class="o">.</span><span class="n">ARROW_PROPERTY</span><span class="p">:</span>
+                <span class="n">n</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_convert_to_label_id_tuple</span><span class="p">(</span><span class="n">n</span><span class="p">)</span>
             <span class="n">op</span> <span class="o">=</span> <span class="n">dag_utils</span><span class="o">.</span><span class="n">report_graph</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">types_pb2</span><span class="o">.</span><span class="n">HAS_NODE</span><span class="p">,</span> <span class="n">node</span><span class="o">=</span><span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">([</span><span class="n">n</span><span class="p">]))</span>
             <span class="k">return</span> <span class="nb">int</span><span class="p">(</span><span class="n">op</span><span class="o">.</span><span class="n">eval</span><span class="p">())</span>
-        <span class="k">except</span> <span class="ne">TypeError</span><span class="p">:</span>
+        <span class="k">except</span> <span class="p">(</span><span class="ne">TypeError</span><span class="p">,</span> <span class="n">NetworkXError</span><span class="p">,</span> <span class="ne">KeyError</span><span class="p">):</span>
             <span class="k">return</span> <span class="kc">False</span></div>
 
 <div class="viewcode-block" id="Graph.add_edge"><a class="viewcode-back" href="../../../../reference/networkx/graphs.html#graphscope.nx.Graph.add_edge">[docs]</a>    <span class="k">def</span> <span class="nf">add_edge</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">u_of_edge</span><span class="p">,</span> <span class="n">v_of_edge</span><span class="p">,</span> <span class="o">**</span><span class="n">attr</span><span class="p">):</span>
@@ -994,7 +997,7 @@
 <span class="sd">        -----</span>
 <span class="sd">        Adding an edge that already exists updates the edge data.</span>
 
-<span class="sd">        Many netwrokx algorithms designed for weighted graphs use</span>
+<span class="sd">        Many networkx algorithms designed for weighted graphs use</span>
 <span class="sd">        an edge attribute (by default `weight`) to hold a numerical value.</span>
 
 <span class="sd">        Examples</span>
@@ -1058,6 +1061,8 @@
 <span class="sd">        &gt;&gt;&gt; G.add_edges_from([(1, 2), (2, 3)], weight=3)</span>
 <span class="sd">        &gt;&gt;&gt; G.add_edges_from([(3, 4), (1, 4)], label=&quot;WN2898&quot;)</span>
 <span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_convert_arrow_to_dynamic</span><span class="p">()</span>
+
         <span class="n">edges</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="k">for</span> <span class="n">e</span> <span class="ow">in</span> <span class="n">ebunch_to_add</span><span class="p">:</span>
             <span class="n">ne</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
@@ -1073,9 +1078,18 @@
                     <span class="s2">&quot;Edge tuple </span><span class="si">%s</span><span class="s2"> must be a 2-tuple or 3-tuple.&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">e</span><span class="p">,)</span>
                 <span class="p">)</span>
             <span class="c1"># FIXME: support dynamic data type in same property</span>
+            <span class="n">check_node_is_legal</span><span class="p">(</span><span class="n">u</span><span class="p">)</span>
+            <span class="n">check_node_is_legal</span><span class="p">(</span><span class="n">v</span><span class="p">)</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_schema</span><span class="o">.</span><span class="n">add_nx_edge_properties</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
             <span class="n">edge</span> <span class="o">=</span> <span class="p">[</span><span class="n">u</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="n">data</span><span class="p">]</span>
-            <span class="n">edges</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">edge</span><span class="p">))</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">edges</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">edge</span><span class="p">))</span>
+            <span class="k">except</span> <span class="ne">TypeError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="n">NetworkXError</span><span class="p">(</span>
+                    <span class="s2">&quot;The edge and its data </span><span class="si">{}</span><span class="s2"> failed to be serialized by json.&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                        <span class="n">edge</span>
+                    <span class="p">)</span>
+                <span class="p">)</span> <span class="kn">from</span> <span class="nn">e</span>
             <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">edges</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">10000</span><span class="p">:</span>  <span class="c1"># make sure messages size not larger than rpc max</span>
                 <span class="n">op</span> <span class="o">=</span> <span class="n">dag_utils</span><span class="o">.</span><span class="n">modify_edges</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">types_pb2</span><span class="o">.</span><span class="n">NX_ADD_EDGES</span><span class="p">,</span> <span class="n">edges</span><span class="p">)</span>
                 <span class="n">op</span><span class="o">.</span><span class="n">eval</span><span class="p">()</span>
@@ -1149,11 +1163,15 @@
 <span class="sd">        &gt;&gt;&gt; ebunch = [(1, 2), (2, 3)]</span>
 <span class="sd">        &gt;&gt;&gt; G.remove_edges_from(ebunch)</span>
 <span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_convert_arrow_to_dynamic</span><span class="p">()</span>
+
         <span class="n">edges</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="k">for</span> <span class="n">e</span> <span class="ow">in</span> <span class="n">ebunch</span><span class="p">:</span>
             <span class="n">ne</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
             <span class="k">if</span> <span class="n">ne</span> <span class="o">&lt;</span> <span class="mi">2</span><span class="p">:</span>
                 <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Edge tuple </span><span class="si">%s</span><span class="s2"> must be a 2-tuple or 3-tuple.&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">e</span><span class="p">,))</span>
+            <span class="n">check_node_is_legal</span><span class="p">(</span><span class="n">e</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+            <span class="n">check_node_is_legal</span><span class="p">(</span><span class="n">e</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
             <span class="n">edges</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">e</span><span class="p">[:</span><span class="mi">2</span><span class="p">]))</span>  <span class="c1"># ignore edge data if present</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_op</span> <span class="o">=</span> <span class="n">dag_utils</span><span class="o">.</span><span class="n">modify_edges</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">types_pb2</span><span class="o">.</span><span class="n">NX_DEL_EDGES</span><span class="p">,</span> <span class="n">edges</span><span class="p">)</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_op</span><span class="o">.</span><span class="n">eval</span><span class="p">()</span></div>
@@ -1186,8 +1204,19 @@
 <span class="sd">        {&#39;foo&#39;: &#39;bar&#39;}</span>
 
 <span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">check_node_is_legal</span><span class="p">(</span><span class="n">u</span><span class="p">)</span>
+        <span class="n">check_node_is_legal</span><span class="p">(</span><span class="n">v</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_convert_arrow_to_dynamic</span><span class="p">()</span>
+
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">edge</span> <span class="o">=</span> <span class="p">[</span><span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">((</span><span class="n">u</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="n">data</span><span class="p">))]</span>
+        <span class="k">except</span> <span class="ne">TypeError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span>
+                <span class="s2">&quot;The edge and its data </span><span class="si">{}</span><span class="s2"> failed to be serialized by json.&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                    <span class="p">(</span><span class="n">u</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="n">data</span><span class="p">)</span>
+                <span class="p">)</span>
+            <span class="p">)</span> <span class="kn">from</span> <span class="nn">e</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_schema</span><span class="o">.</span><span class="n">add_nx_edge_properties</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
-        <span class="n">edge</span> <span class="o">=</span> <span class="p">[</span><span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">((</span><span class="n">u</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="n">data</span><span class="p">))]</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_op</span> <span class="o">=</span> <span class="n">dag_utils</span><span class="o">.</span><span class="n">modify_edges</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">types_pb2</span><span class="o">.</span><span class="n">NX_UPDATE_EDGES</span><span class="p">,</span> <span class="n">edge</span><span class="p">)</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_op</span><span class="o">.</span><span class="n">eval</span><span class="p">()</span></div>
 
@@ -1219,7 +1248,17 @@
 <span class="sd">        {&#39;weight&#39;: 3}</span>
 
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">node</span> <span class="o">=</span> <span class="p">[</span><span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">((</span><span class="n">n</span><span class="p">,</span> <span class="n">data</span><span class="p">))]</span>
+        <span class="n">check_node_is_legal</span><span class="p">(</span><span class="n">n</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_convert_arrow_to_dynamic</span><span class="p">()</span>
+
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">node</span> <span class="o">=</span> <span class="p">[</span><span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">((</span><span class="n">n</span><span class="p">,</span> <span class="n">data</span><span class="p">))]</span>
+        <span class="k">except</span> <span class="ne">TypeError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">NetworkXError</span><span class="p">(</span>
+                <span class="s2">&quot;The node and its data </span><span class="si">{}</span><span class="s2"> failed to be serialized by json.&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                    <span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">data</span><span class="p">)</span>
+                <span class="p">)</span>
+            <span class="p">)</span> <span class="kn">from</span> <span class="nn">e</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_op</span> <span class="o">=</span> <span class="n">dag_utils</span><span class="o">.</span><span class="n">modify_vertices</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">types_pb2</span><span class="o">.</span><span class="n">NX_UPDATE_NODES</span><span class="p">,</span> <span class="n">node</span><span class="p">)</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_op</span><span class="o">.</span><span class="n">eval</span><span class="p">()</span></div>
 
@@ -1379,6 +1418,8 @@
 <span class="sd">        True</span>
 
 <span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">check_node_is_legal</span><span class="p">(</span><span class="n">u</span><span class="p">)</span>
+        <span class="n">check_node_is_legal</span><span class="p">(</span><span class="n">v</span><span class="p">)</span>
         <span class="k">try</span><span class="p">:</span>
             <span class="k">return</span> <span class="n">v</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_adj</span><span class="p">[</span><span class="n">u</span><span class="p">]</span>
         <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
@@ -1422,6 +1463,7 @@
 <span class="sd">        &gt;&gt;&gt; [n for n in G[0]]</span>
 <span class="sd">        [1]</span>
 <span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">check_node_is_legal</span><span class="p">(</span><span class="n">n</span><span class="p">)</span>
         <span class="k">try</span><span class="p">:</span>
             <span class="k">return</span> <span class="nb">iter</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_adj</span><span class="p">[</span><span class="n">n</span><span class="p">])</span>
         <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
@@ -1526,6 +1568,9 @@
 <span class="sd">        0</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">has_edge</span><span class="p">(</span><span class="n">u</span><span class="p">,</span> <span class="n">v</span><span class="p">):</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">graph_type</span> <span class="o">==</span> <span class="n">graph_def_pb2</span><span class="o">.</span><span class="n">ARROW_PROPERTY</span><span class="p">:</span>
+                <span class="n">u</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_convert_to_label_id_tuple</span><span class="p">(</span><span class="n">u</span><span class="p">)</span>
+                <span class="n">v</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_convert_to_label_id_tuple</span><span class="p">(</span><span class="n">v</span><span class="p">)</span>
             <span class="n">op</span> <span class="o">=</span> <span class="n">dag_utils</span><span class="o">.</span><span class="n">report_graph</span><span class="p">(</span>
                 <span class="bp">self</span><span class="p">,</span> <span class="n">types_pb2</span><span class="o">.</span><span class="n">EDGE_DATA</span><span class="p">,</span> <span class="n">edge</span><span class="o">=</span><span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">((</span><span class="n">u</span><span class="p">,</span> <span class="n">v</span><span class="p">)),</span> <span class="n">key</span><span class="o">=</span><span class="s2">&quot;&quot;</span>
             <span class="p">)</span>
@@ -1613,11 +1658,20 @@
 <span class="sd">        []</span>
 
 <span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_graph_type</span> <span class="o">==</span> <span class="n">graph_def_pb2</span><span class="o">.</span><span class="n">ARROW_PROPERTY</span><span class="p">:</span>
+            <span class="c1"># create an empty graph, no need to convert arrow to dynamic</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_graph_type</span> <span class="o">=</span> <span class="n">graph_def_pb2</span><span class="o">.</span><span class="n">DYNAMIC_PROPERTY</span>
+            <span class="n">graph_def</span> <span class="o">=</span> <span class="n">empty_graph_in_engine</span><span class="p">(</span>
+                <span class="bp">self</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_directed</span><span class="p">(),</span> <span class="bp">self</span><span class="o">.</span><span class="n">_distributed</span>
+            <span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_key</span> <span class="o">=</span> <span class="n">graph_def</span><span class="o">.</span><span class="n">key</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">op</span> <span class="o">=</span> <span class="n">dag_utils</span><span class="o">.</span><span class="n">clear_graph</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+            <span class="n">op</span><span class="o">.</span><span class="n">eval</span><span class="p">()</span>
+
         <span class="bp">self</span><span class="o">.</span><span class="n">graph</span><span class="o">.</span><span class="n">clear</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">schema</span><span class="o">.</span><span class="n">clear</span><span class="p">()</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">schema</span><span class="o">.</span><span class="n">init_nx_schema</span><span class="p">()</span>
-        <span class="n">op</span> <span class="o">=</span> <span class="n">dag_utils</span><span class="o">.</span><span class="n">clear_graph</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
-        <span class="n">op</span><span class="o">.</span><span class="n">eval</span><span class="p">()</span></div>
+        <span class="bp">self</span><span class="o">.</span><span class="n">schema</span><span class="o">.</span><span class="n">init_nx_schema</span><span class="p">()</span></div>
 
 <div class="viewcode-block" id="Graph.clear_edges"><a class="viewcode-back" href="../../../../reference/networkx/graphs.html#graphscope.nx.Graph.clear_edges">[docs]</a>    <span class="k">def</span> <span class="nf">clear_edges</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Remove all edges from the graph without altering nodes.</span>
@@ -1631,6 +1685,7 @@
 <span class="sd">        &gt;&gt;&gt; list(G.edges)</span>
 <span class="sd">        []</span>
 <span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_convert_arrow_to_dynamic</span><span class="p">()</span>
         <span class="n">op</span> <span class="o">=</span> <span class="n">dag_utils</span><span class="o">.</span><span class="n">clear_edges</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
         <span class="n">op</span><span class="o">.</span><span class="n">eval</span><span class="p">()</span></div>
 
@@ -1653,6 +1708,7 @@
             <span class="k">def</span> <span class="nf">bunch_iter</span><span class="p">(</span><span class="n">nlist</span><span class="p">,</span> <span class="n">adj</span><span class="p">):</span>
                 <span class="k">try</span><span class="p">:</span>
                     <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">nlist</span><span class="p">:</span>
+                        <span class="n">check_node_is_legal</span><span class="p">(</span><span class="n">n</span><span class="p">)</span>
                         <span class="k">if</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">adj</span><span class="p">:</span>
                             <span class="k">yield</span> <span class="n">n</span>
                 <span class="k">except</span> <span class="ne">TypeError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
@@ -1728,6 +1784,7 @@
             <span class="n">g</span> <span class="o">=</span> <span class="n">generic_graph_view</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
             <span class="n">g</span><span class="o">.</span><span class="n">_is_client_view</span> <span class="o">=</span> <span class="kc">True</span>
         <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_convert_arrow_to_dynamic</span><span class="p">()</span>
             <span class="n">g</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="p">(</span><span class="n">create_empty_in_engine</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
             <span class="n">g</span><span class="o">.</span><span class="n">graph</span> <span class="o">=</span> <span class="n">copy</span><span class="o">.</span><span class="n">deepcopy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">graph</span><span class="p">)</span>
             <span class="n">op</span> <span class="o">=</span> <span class="n">dag_utils</span><span class="o">.</span><span class="n">copy_graph</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">&quot;identical&quot;</span><span class="p">)</span>
@@ -1770,6 +1827,8 @@
 <span class="sd">        &gt;&gt;&gt; list(G2.edges)</span>
 <span class="sd">        [(0, 1)]</span>
 <span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_convert_arrow_to_dynamic</span><span class="p">()</span>
+
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_directed</span><span class="p">():</span>
             <span class="n">graph_class</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">to_undirected_class</span><span class="p">()</span>
             <span class="k">if</span> <span class="n">as_view</span><span class="p">:</span>
@@ -1832,6 +1891,8 @@
 <span class="sd">        &gt;&gt;&gt; list(H.edges)</span>
 <span class="sd">        [(0, 1)]</span>
 <span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_convert_arrow_to_dynamic</span><span class="p">()</span>
+
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_directed</span><span class="p">():</span>
             <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="n">as_view</span><span class="o">=</span><span class="n">as_view</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
@@ -1884,9 +1945,17 @@
 <span class="sd">        &gt;&gt;&gt; list(H.edges)</span>
 <span class="sd">        [(0, 1), (1, 2)]</span>
 <span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_convert_arrow_to_dynamic</span><span class="p">()</span>
+
         <span class="n">induced_nodes</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">nodes</span><span class="p">:</span>
-            <span class="n">induced_nodes</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">([</span><span class="n">n</span><span class="p">]))</span>
+            <span class="n">check_node_is_legal</span><span class="p">(</span><span class="n">n</span><span class="p">)</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">induced_nodes</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">([</span><span class="n">n</span><span class="p">]))</span>
+            <span class="k">except</span> <span class="ne">TypeError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span>
+                    <span class="s2">&quot;The node </span><span class="si">{}</span><span class="s2"> failed to be serialized by json.&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">n</span><span class="p">)</span>
+                <span class="p">)</span> <span class="kn">from</span> <span class="nn">e</span>
         <span class="n">g</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="p">(</span><span class="n">create_empty_in_engine</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
         <span class="n">g</span><span class="o">.</span><span class="n">graph</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">graph</span><span class="p">)</span>
         <span class="n">op</span> <span class="o">=</span> <span class="n">dag_utils</span><span class="o">.</span><span class="n">create_subgraph</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">nodes</span><span class="o">=</span><span class="n">induced_nodes</span><span class="p">)</span>
@@ -1927,10 +1996,19 @@
 <span class="sd">        [(0, 1), (3, 4)]</span>
 
 <span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_convert_arrow_to_dynamic</span><span class="p">()</span>
+
         <span class="n">induced_edges</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="k">for</span> <span class="n">e</span> <span class="ow">in</span> <span class="n">edges</span><span class="p">:</span>
             <span class="n">u</span><span class="p">,</span> <span class="n">v</span> <span class="o">=</span> <span class="n">e</span>
-            <span class="n">induced_edges</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">([</span><span class="n">u</span><span class="p">,</span> <span class="n">v</span><span class="p">]))</span>
+            <span class="n">check_node_is_legal</span><span class="p">(</span><span class="n">u</span><span class="p">)</span>
+            <span class="n">check_node_is_legal</span><span class="p">(</span><span class="n">v</span><span class="p">)</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">induced_edges</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">((</span><span class="n">u</span><span class="p">,</span> <span class="n">v</span><span class="p">)))</span>
+            <span class="k">except</span> <span class="ne">TypeError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="n">NetworkXError</span><span class="p">(</span>
+                    <span class="s2">&quot;The edge </span><span class="si">{}</span><span class="s2"> failed to be serialized by json.&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">((</span><span class="n">u</span><span class="p">,</span> <span class="n">v</span><span class="p">))</span>
+                <span class="p">)</span> <span class="kn">from</span> <span class="nn">e</span>
         <span class="n">g</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="p">(</span><span class="n">create_empty_in_engine</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
         <span class="n">g</span><span class="o">.</span><span class="n">graph</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">graph</span><span class="p">)</span>
         <span class="n">op</span> <span class="o">=</span> <span class="n">dag_utils</span><span class="o">.</span><span class="n">create_subgraph</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">edges</span><span class="o">=</span><span class="n">induced_edges</span><span class="p">)</span>
@@ -1969,9 +2047,18 @@
 <span class="sd">        &gt;&gt;&gt; g._batch_get_node((0, 0))  # start from frag-0, lid-0, mpirun np=1</span>
 <span class="sd">        {&#39;status&#39;: True, &#39;next&#39;: [1, 0], &#39;batch&#39;: [1, 2, 3]}</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">op</span> <span class="o">=</span> <span class="n">dag_utils</span><span class="o">.</span><span class="n">report_graph</span><span class="p">(</span>
-            <span class="bp">self</span><span class="p">,</span> <span class="n">types_pb2</span><span class="o">.</span><span class="n">NODES_BY_LOC</span><span class="p">,</span> <span class="n">fid</span><span class="o">=</span><span class="n">location</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">lid</span><span class="o">=</span><span class="n">location</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
-        <span class="p">)</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">location</span><span class="p">)</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+            <span class="n">op</span> <span class="o">=</span> <span class="n">dag_utils</span><span class="o">.</span><span class="n">report_graph</span><span class="p">(</span>
+                <span class="bp">self</span><span class="p">,</span> <span class="n">types_pb2</span><span class="o">.</span><span class="n">NODES_BY_LOC</span><span class="p">,</span> <span class="n">fid</span><span class="o">=</span><span class="n">location</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">lid</span><span class="o">=</span><span class="n">location</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+            <span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">op</span> <span class="o">=</span> <span class="n">dag_utils</span><span class="o">.</span><span class="n">report_graph</span><span class="p">(</span>
+                <span class="bp">self</span><span class="p">,</span>
+                <span class="n">types_pb2</span><span class="o">.</span><span class="n">NODES_BY_LOC</span><span class="p">,</span>
+                <span class="n">fid</span><span class="o">=</span><span class="n">location</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
+                <span class="n">lid</span><span class="o">=</span><span class="n">location</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span>
+                <span class="n">label_id</span><span class="o">=</span><span class="n">location</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span>
+            <span class="p">)</span>
         <span class="k">return</span> <span class="n">op</span><span class="o">.</span><span class="n">eval</span><span class="p">()</span>
 
     <span class="nd">@parse_ret_as_dict</span>
@@ -2005,6 +2092,8 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="n">n</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="p">:</span>
             <span class="k">raise</span> <span class="n">NetworkXError</span><span class="p">(</span><span class="s2">&quot;The node </span><span class="si">%s</span><span class="s2"> is not in the graph.&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">n</span><span class="p">,))</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">graph_type</span> <span class="o">==</span> <span class="n">graph_def_pb2</span><span class="o">.</span><span class="n">ARROW_PROPERTY</span><span class="p">:</span>
+            <span class="n">n</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_convert_to_label_id_tuple</span><span class="p">(</span><span class="n">n</span><span class="p">)</span>
         <span class="n">op</span> <span class="o">=</span> <span class="n">dag_utils</span><span class="o">.</span><span class="n">report_graph</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">report_type</span><span class="p">,</span> <span class="n">node</span><span class="o">=</span><span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">([</span><span class="n">n</span><span class="p">]))</span>
         <span class="n">ret</span> <span class="o">=</span> <span class="n">op</span><span class="o">.</span><span class="n">eval</span><span class="p">()</span>
         <span class="k">return</span> <span class="n">ret</span>
@@ -2064,6 +2153,7 @@
 <span class="sd">        -----</span>
 <span class="sd">        Raise NetworkxError if node not in graph.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">check_node_is_legal</span><span class="p">(</span><span class="n">n</span><span class="p">)</span>
         <span class="n">op</span> <span class="o">=</span> <span class="n">dag_utils</span><span class="o">.</span><span class="n">report_graph</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">report_type</span><span class="p">,</span> <span class="n">node</span><span class="o">=</span><span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">([</span><span class="n">n</span><span class="p">]),</span> <span class="n">key</span><span class="o">=</span><span class="n">weight</span><span class="p">)</span>
         <span class="n">degree</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">op</span><span class="o">.</span><span class="n">eval</span><span class="p">())</span>
         <span class="k">return</span> <span class="n">degree</span> <span class="k">if</span> <span class="n">weight</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="nb">int</span><span class="p">(</span><span class="n">degree</span><span class="p">)</span>
@@ -2111,9 +2201,9 @@
         <span class="k">return</span> <span class="n">op</span><span class="o">.</span><span class="n">eval</span><span class="p">()</span>
 
     <span class="k">def</span> <span class="nf">_project_to_simple</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">v_prop</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">e_prop</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Project nx graph to a simple graph to run builtin alogorithms.</span>
+        <span class="sd">&quot;&quot;&quot;Project nx graph to a simple graph to run builtin algorithms.</span>
 
-<span class="sd">        A simple graph is a accesser wrapper of property graph that only single edge</span>
+<span class="sd">        A simple graph is a wrapper of property graph that only single edge</span>
 <span class="sd">        attribute and single node attribute are available.</span>
 
 <span class="sd">        Parameters</span>
@@ -2139,6 +2229,7 @@
 
         <span class="k">if</span> <span class="n">v_prop</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">v_prop</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">v_prop</span><span class="p">)</span>
+            <span class="n">v_prop_id</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span>
             <span class="n">v_prop_type</span> <span class="o">=</span> <span class="n">graph_def_pb2</span><span class="o">.</span><span class="n">NULLVALUE</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="n">check_argument</span><span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">v_prop</span><span class="p">,</span> <span class="nb">str</span><span class="p">))</span>
@@ -2155,6 +2246,7 @@
 
         <span class="k">if</span> <span class="n">e_prop</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">e_prop</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">e_prop</span><span class="p">)</span>
+            <span class="n">e_prop_id</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span>
             <span class="n">e_prop_type</span> <span class="o">=</span> <span class="n">graph_def_pb2</span><span class="o">.</span><span class="n">NULLVALUE</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="n">check_argument</span><span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">e_prop</span><span class="p">,</span> <span class="nb">str</span><span class="p">))</span>
@@ -2166,13 +2258,25 @@
                 <span class="k">raise</span> <span class="n">InvalidArgumentError</span><span class="p">(</span>
                     <span class="s2">&quot;graph not contains the edge property </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">e_prop</span><span class="p">)</span>
                 <span class="p">)</span>
-        <span class="n">op</span> <span class="o">=</span> <span class="n">dag_utils</span><span class="o">.</span><span class="n">project_dynamic_property_graph</span><span class="p">(</span>
-            <span class="bp">self</span><span class="p">,</span> <span class="n">v_prop</span><span class="p">,</span> <span class="n">e_prop</span><span class="p">,</span> <span class="n">v_prop_type</span><span class="p">,</span> <span class="n">e_prop_type</span>
-        <span class="p">)</span>
-        <span class="n">graph_def</span> <span class="o">=</span> <span class="n">op</span><span class="o">.</span><span class="n">eval</span><span class="p">(</span><span class="n">leaf</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
         <span class="n">graph</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="p">(</span><span class="n">create_empty_in_engine</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
         <span class="n">graph</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">freeze</span><span class="p">(</span><span class="n">graph</span><span class="p">)</span>
-        <span class="n">graph</span><span class="o">.</span><span class="n">_graph_type</span> <span class="o">=</span> <span class="n">graph_def_pb2</span><span class="o">.</span><span class="n">DYNAMIC_PROJECTED</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">graph_type</span> <span class="o">==</span> <span class="n">graph_def_pb2</span><span class="o">.</span><span class="n">DYNAMIC_PROPERTY</span><span class="p">:</span>
+            <span class="n">op</span> <span class="o">=</span> <span class="n">dag_utils</span><span class="o">.</span><span class="n">project_dynamic_property_graph</span><span class="p">(</span>
+                <span class="bp">self</span><span class="p">,</span> <span class="n">v_prop</span><span class="p">,</span> <span class="n">e_prop</span><span class="p">,</span> <span class="n">v_prop_type</span><span class="p">,</span> <span class="n">e_prop_type</span>
+            <span class="p">)</span>
+            <span class="n">graph</span><span class="o">.</span><span class="n">_graph_type</span> <span class="o">=</span> <span class="n">graph_def_pb2</span><span class="o">.</span><span class="n">DYNAMIC_PROJECTED</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">op</span> <span class="o">=</span> <span class="n">dag_utils</span><span class="o">.</span><span class="n">flatten_arrow_property_graph</span><span class="p">(</span>
+                <span class="bp">self</span><span class="p">,</span>
+                <span class="n">v_prop_id</span><span class="p">,</span>
+                <span class="n">e_prop_id</span><span class="p">,</span>
+                <span class="n">v_prop_type</span><span class="p">,</span>
+                <span class="n">e_prop_type</span><span class="p">,</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">schema</span><span class="o">.</span><span class="n">oid_type</span><span class="p">,</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">schema</span><span class="o">.</span><span class="n">vid_type</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="n">graph</span><span class="o">.</span><span class="n">_graph_type</span> <span class="o">=</span> <span class="n">graph_def_pb2</span><span class="o">.</span><span class="n">ARROW_FLATTENED</span>
+        <span class="n">graph_def</span> <span class="o">=</span> <span class="n">op</span><span class="o">.</span><span class="n">eval</span><span class="p">(</span><span class="n">leaf</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
         <span class="n">graph</span><span class="o">.</span><span class="n">_key</span> <span class="o">=</span> <span class="n">graph_def</span><span class="o">.</span><span class="n">key</span>
         <span class="n">graph</span><span class="o">.</span><span class="n">_session</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_session</span>
         <span class="n">graph</span><span class="o">.</span><span class="n">schema</span><span class="o">.</span><span class="n">from_graph_def</span><span class="p">(</span><span class="n">graph_def</span><span class="p">)</span>
@@ -2180,50 +2284,109 @@
         <span class="n">graph</span><span class="o">.</span><span class="n">_graph</span> <span class="o">=</span> <span class="bp">self</span>  <span class="c1"># projected graph also can report nodes.</span>
         <span class="n">graph</span><span class="o">.</span><span class="n">_op</span> <span class="o">=</span> <span class="n">op</span>
         <span class="n">graph</span><span class="o">.</span><span class="n">_is_client_view</span> <span class="o">=</span> <span class="kc">False</span>
-        <span class="k">return</span> <span class="n">graph</span></div>
+        <span class="k">return</span> <span class="n">graph</span>
+
+    <span class="k">def</span> <span class="nf">_init_with_arrow_property_graph</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">arrow_property_graph</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Init graph with arrow property graph&quot;&quot;&quot;</span>
+        <span class="c1"># check session and direction compatible</span>
+        <span class="k">if</span> <span class="n">arrow_property_graph</span><span class="o">.</span><span class="n">session_id</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">session_id</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">NetworkXError</span><span class="p">(</span>
+                <span class="s2">&quot;Try to init with another session&#39;s arrow_property graph.&quot;</span>
+                <span class="o">+</span> <span class="s2">&quot;Graphs must be the same session.&quot;</span>
+            <span class="p">)</span>
+        <span class="k">if</span> <span class="n">arrow_property_graph</span><span class="o">.</span><span class="n">is_directed</span><span class="p">()</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_directed</span><span class="p">():</span>
+            <span class="k">raise</span> <span class="n">NetworkXError</span><span class="p">(</span>
+                <span class="s2">&quot;Try to init with another direction type&#39;s arrow_property graph.&quot;</span>
+                <span class="o">+</span> <span class="s2">&quot;Graphs must have the same direction type.&quot;</span>
+            <span class="p">)</span>
+        <span class="k">if</span> <span class="n">arrow_property_graph</span><span class="o">.</span><span class="n">_is_multigraph</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">NetworkXError</span><span class="p">(</span>
+                <span class="s2">&quot;Graph is multigraph, cannot be converted to networkx graph.&quot;</span>
+            <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_key</span> <span class="o">=</span> <span class="n">arrow_property_graph</span><span class="o">.</span><span class="n">key</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_schema</span> <span class="o">=</span> <span class="n">arrow_property_graph</span><span class="o">.</span><span class="n">schema</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_default_label</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_default_label_id</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_schema</span><span class="o">.</span><span class="n">get_vertex_label_id</span><span class="p">(</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_default_label</span>
+                <span class="p">)</span>
+            <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="n">NetworkXError</span><span class="p">(</span>
+                    <span class="s2">&quot;default label </span><span class="si">{}</span><span class="s2"> not existed in graph.&quot;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">_default_label</span>
+                <span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># default_label is None</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_default_label_id</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_graph_type</span> <span class="o">=</span> <span class="n">graph_def_pb2</span><span class="o">.</span><span class="n">ARROW_PROPERTY</span>
+
+    <span class="k">def</span> <span class="nf">_convert_arrow_to_dynamic</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Try to convert the hosted graph from arrow_property to dynamic_property.</span>
+
+<span class="sd">        Notes</span>
+<span class="sd">        -------</span>
+<span class="sd">            the method is implicit called by modification and graph view methods.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">graph_type</span> <span class="o">==</span> <span class="n">graph_def_pb2</span><span class="o">.</span><span class="n">ARROW_PROPERTY</span><span class="p">:</span>
+            <span class="n">op</span> <span class="o">=</span> <span class="n">dag_utils</span><span class="o">.</span><span class="n">arrow_to_dynamic</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+            <span class="n">graph_def</span> <span class="o">=</span> <span class="n">op</span><span class="o">.</span><span class="n">eval</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_key</span> <span class="o">=</span> <span class="n">graph_def</span><span class="o">.</span><span class="n">key</span>
+            <span class="n">schema</span> <span class="o">=</span> <span class="n">GraphSchema</span><span class="p">()</span>
+            <span class="n">schema</span><span class="o">.</span><span class="n">init_nx_schema</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_schema</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_schema</span> <span class="o">=</span> <span class="n">schema</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_graph_type</span> <span class="o">=</span> <span class="n">graph_def_pb2</span><span class="o">.</span><span class="n">DYNAMIC_PROPERTY</span>
+
+    <span class="k">def</span> <span class="nf">_convert_to_label_id_tuple</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">n</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Convert the node to (label_id, id) format.</span>
+<span class="sd">        The input node may be id or (label, id), convert the node</span>
+<span class="sd">        to tuple (label_id, id) format.</span>
+
+<span class="sd">        Notes</span>
+<span class="sd">        -------</span>
+<span class="sd">            the method is implicit called by report methods and the hosted graph is</span>
+<span class="sd">        arrow_property graph.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">):</span>
+            <span class="nb">id</span> <span class="o">=</span> <span class="n">n</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+            <span class="n">new_n</span> <span class="o">=</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_schema</span><span class="o">.</span><span class="n">get_vertex_label_id</span><span class="p">(</span><span class="n">n</span><span class="p">[</span><span class="mi">0</span><span class="p">]),</span> <span class="n">n</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+            <span class="k">if</span> <span class="n">new_n</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">_default_label_id</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span><span class="s2">&quot;default label&#39;s node must be non-tuple format.&quot;</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">_default_label_id</span> <span class="o">==</span> <span class="o">-</span><span class="mi">1</span><span class="p">:</span>
+            <span class="c1"># the n is non-tuple, but default id is -1</span>
+            <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span><span class="s2">&quot;default label id is -1.&quot;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="nb">id</span> <span class="o">=</span> <span class="n">n</span>
+            <span class="n">new_n</span> <span class="o">=</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_default_label_id</span><span class="p">,</span> <span class="n">n</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="nb">id</span><span class="p">,</span> <span class="n">utils</span><span class="o">.</span><span class="n">data_type_to_python</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_schema</span><span class="o">.</span><span class="n">oid_type</span><span class="p">)):</span>
+            <span class="c1"># id is not oid type</span>
+            <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span><span class="s2">&quot;the node type is not arrow_property oid_type.&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">new_n</span></div>
 </pre></div>
 
            </div>
-           
           </div>
           <footer>
 
   <hr/>
 
   <div role="contentinfo">
-    <p>
-        &#169; Copyright 2020-2023, Damo Academy, Alibaba Inc..
-
-    </p>
+    <p>&#169; Copyright 2020-2023, Damo Academy, Alibaba Inc..</p>
   </div>
-    
-    
-    
-    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
-    
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
     <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
-    
-    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
 
 </footer>
         </div>
       </div>
-
     </section>
-
   </div>
-  
-
-  <script type="text/javascript">
+  <script>
       jQuery(function () {
           SphinxRtdTheme.Navigation.enable(true);
       });
   </script>
-
-  
-  
-    
-  
   
 
   <div class="rst-versions" data-toggle="rst-versions" role="note" aria-label="versions">
@@ -2260,6 +2423,16 @@
 
             
               
+                <dd><a href="../../../../../v0.8.0/index.html">v0.8.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
                 <dd><a href="../../../../../v0.7.0/index.html">v0.7.0</a></dd>
               
             
@@ -2270,7 +2443,7 @@
 
             
               
-                <dd><a href="../../../../../v0.6.0-rev1/index.html">v0.6.0-rev1</a></dd>
+                <dd><a href="../../../../../v0.6.1/index.html">v0.6.1</a></dd>
               
             
 

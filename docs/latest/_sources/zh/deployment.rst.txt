@@ -74,18 +74,17 @@ Coordinator 作为 GraphScope 后端服务的入口，通过 grpc 接收来自 P
 
 本地部署GraphScope
 ----------------------
-我们提供了一个可在本地安装GraphScope相关依赖以及部署GraphScope的脚本，这一脚本可以运行在
-Ubuntu 20.04+或MacOS平台上, 主要的用法如下。你可以通过 `./scripts/deploy_local.sh -h`
+我们提供了一个可在本地安装GraphScope相关依赖的脚本，这一脚本可以运行在
+Ubuntu 20.04+或MacOS平台上, 主要的用法如下。你可以通过 `./scripts/install_deps.sh -h`
 获取更详细的帮助信息。
 
-* 使用`deploy_local.sh`安装GraphScope相关依赖
+* 使用`install_deps.sh`安装GraphScope开发相关依赖
 .. code:: shell
 
-    ./scripts/deploy_local.sh install_deps
+    ./scripts/install_deps.sh --dev
+
+* 本地部署GraphScope
+.. code:: shell
+
     source ~/.graphscope_env
-
-* 使用`deploy_local.sh`本地部署GraphScope
-.. code:: shell
-
-    ./scripts/deploy_local.sh build_and_deploy
-    export GRAPHSCOPE_HOME=/opt/graphscope
+    make graphscope

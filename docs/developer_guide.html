@@ -1,45 +1,21 @@
-
-
 <!DOCTYPE html>
 <html class="writer-html5" lang="en" >
 <head>
   <meta charset="utf-8" />
-  
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  
   <title>Developer Guide &mdash; GraphScope  documentation</title>
-  
-
-  
-  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
-  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
-  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
-  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
-  <link rel="stylesheet" href="_static/css/custom.css" type="text/css" />
-
-  
-  
-
-  
-  
-
-  
-
-  
+      <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="_static/css/custom.css" type="text/css" />
   <!--[if lt IE 9]>
     <script src="_static/js/html5shiv.min.js"></script>
   <![endif]-->
   
-    
-      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
         <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
         <script src="_static/jquery.js"></script>
         <script src="_static/underscore.js"></script>
         <script src="_static/doctools.js"></script>
-    
-    <script type="text/javascript" src="_static/js/theme.js"></script>
-
-    
+    <script src="_static/js/theme.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="Python API Reference" href="reference/python_index.html" />
@@ -60,33 +36,16 @@
 
 </head>
 
-<body class="wy-body-for-nav">
-
-   
+<body class="wy-body-for-nav"> 
   <div class="wy-grid-for-nav">
-    
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
         <div class="wy-side-nav-search" >
-          
-
-          
             <a href="index.html" class="icon icon-home"> GraphScope
-          
-
-          
           </a>
-
-          
-            
-            
               <div class="version">
                 stable
               </div>
-            
-          
-
-          
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
     <input type="text" name="q" placeholder="Search docs" />
@@ -94,11 +53,7 @@
     <input type="hidden" name="area" value="default" />
   </form>
 </div>
-
-          
         </div>
-
-        
   <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
     
       
@@ -137,6 +92,7 @@
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="reference/python_index.html">Python API Reference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="reference/analytical_engine_index.html">Analytical Engine API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="reference/gae_java/index.html">Analytical Engine Java API Reference</a></li>
 </ul>
 
       
@@ -146,71 +102,33 @@
       </div>
     </nav>
 
-    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
-
-      
-      <nav class="wy-nav-top" aria-label="top navigation">
-        
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
           <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
           <a href="index.html">GraphScope</a>
-        
       </nav>
 
-
       <div class="wy-nav-content">
-        
         <div class="rst-content">
-        
-          
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-<div role="navigation" aria-label="breadcrumbs navigation">
-
+          <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
-    
       <li><a href="index.html" class="icon icon-home"></a> &raquo;</li>
-        
       <li>Developer Guide</li>
-    
-    
       <li class="wy-breadcrumbs-aside">
-        
-          
             <a href="_sources/developer_guide.rst.txt" rel="nofollow"> View page source</a>
-          
-        
       </li>
-    
   </ul>
-
-  
   <hr/>
 </div>
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
-            
+             
   <div class="section" id="developer-guide">
-<h1>Developer Guide<a class="headerlink" href="#developer-guide" title="Permalink to this headline">¶</a></h1>
+<h1>Developer Guide<a class="headerlink" href="#developer-guide" title="Permalink to this headline"></a></h1>
 <p>GraphScope has been developed by an active team of software engineers and researchers.
 Any contributions from the open-source community to improve this project are greatly appreciated!</p>
 <p>GraphScope is licensed under Apache License 2.0.</p>
 <div class="section" id="building-and-testing">
-<h2>Building and Testing<a class="headerlink" href="#building-and-testing" title="Permalink to this headline">¶</a></h2>
+<h2>Building and Testing<a class="headerlink" href="#building-and-testing" title="Permalink to this headline"></a></h2>
 <p>GraphScope has many dependencies.</p>
 <p>To make life easier, we provide two docker images with all required dependencies
 installed.</p>
@@ -252,7 +170,7 @@ python3 setup.py install
 </div>
 </div>
 <div class="section" id="building-and-testing-graphscope-locally-with-docker">
-<h2>Building and Testing GraphScope Locally with Docker<a class="headerlink" href="#building-and-testing-graphscope-locally-with-docker" title="Permalink to this headline">¶</a></h2>
+<h2>Building and Testing GraphScope Locally with Docker<a class="headerlink" href="#building-and-testing-graphscope-locally-with-docker" title="Permalink to this headline"></a></h2>
 <p>We provide a docker images based on ubuntu:20.04 with all required dependencies
 installed.</p>
 <blockquote>
@@ -270,7 +188,6 @@ docker run --shm-size 10240m -it registry.cn-hongkong.aliyuncs.com/graphscope/gr
 git clone https://github.com/alibaba/GraphScope.git
 git clone https://github.com/GraphScope/gstest.git
 <span class="c1"># building</span>
-<span class="nb">export</span> <span class="nv">WITH_LEARNING_ENGINE</span><span class="o">=</span>ON
 <span class="nb">export</span> <span class="nv">GRAPHSCOPE_HOME</span><span class="o">=</span>/opt/graphscope
 <span class="nb">cd</span> GraphScope <span class="o">&amp;&amp;</span> make <span class="nv">INSTALL_PREFIX</span><span class="o">=</span>/opt/graphscope install
 <span class="c1"># testing:</span>
@@ -280,12 +197,12 @@ git clone https://github.com/GraphScope/gstest.git
 </div>
 </div>
 <div class="section" id="build-python-wheels">
-<h2>Build Python Wheels<a class="headerlink" href="#build-python-wheels" title="Permalink to this headline">¶</a></h2>
+<h2>Build Python Wheels<a class="headerlink" href="#build-python-wheels" title="Permalink to this headline"></a></h2>
 <p>GraphScope’s python client can run on Linux and MacOS, which can be installed from wheel packages we
 distributed on <a class="reference external" href="https://pypi.org/project/graphscope">pypi</a>. For developers, the wheel packages could
 be built via the following procedure:</p>
 <div class="section" id="linux">
-<h3>Linux<a class="headerlink" href="#linux" title="Permalink to this headline">¶</a></h3>
+<h3>Linux<a class="headerlink" href="#linux" title="Permalink to this headline"></a></h3>
 <p>The wheel packages for Linux is built inside the manylinux2010 environment. The pre-built docker image
 is available via</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>docker pull registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-manylinux2010:latest
@@ -305,7 +222,7 @@ make graphscope-manylinux2010-py<span class="o">{</span><span class="m">36</span
 </div>
 </div>
 <div class="section" id="macos">
-<h3>MacOS<a class="headerlink" href="#macos" title="Permalink to this headline">¶</a></h3>
+<h3>MacOS<a class="headerlink" href="#macos" title="Permalink to this headline"></a></h3>
 <p>The wheel packages for MacOS could be built directly on Mac. Assuming you are in the root directory of
 GraphScope repository:</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python3 setup.py bdist_wheel
@@ -320,11 +237,11 @@ version of Python using <cite>conda</cite> or <cite>pyenv</cite>.</p>
 <p>The GraphScope analytical engine and interactive engine could be built locally on mac with script.</p>
 <p>If GraphScope’s dependencies are not satisfied，you could use the to install
 dependencies of GraphScope.</p>
-<p>Deploy the GraphScope with the script</p>
+<p>Deploy the GraphScope with make command</p>
 </div>
 </div>
 <div class="section" id="code-format">
-<h2>Code Format<a class="headerlink" href="#code-format" title="Permalink to this headline">¶</a></h2>
+<h2>Code Format<a class="headerlink" href="#code-format" title="Permalink to this headline"></a></h2>
 <p>GraphScope follows the <a class="reference external" href="https://google.github.io/styleguide/cppguide.html">Google Style Guide</a>
 for C++ and <a class="reference external" href="https://github.com/psf/black#the-black-code-style">black</a> for python.</p>
 <p>Please reformat your code with <code class="docutils literal notranslate"><span class="pre">clang-format</span></code> and <code class="docutils literal notranslate"><span class="pre">black</span></code> if your Pull Request violates the CI.</p>
@@ -333,50 +250,33 @@ for C++ and <a class="reference external" href="https://github.com/psf/black#the
 
 
            </div>
-           
           </div>
-          <footer>
-    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
-        <a href="reference/python_index.html" class="btn btn-neutral float-right" title="Python API Reference" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
         <a href="frequently_asked_questions.html" class="btn btn-neutral float-left" title="Frequently Asked Questions" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="reference/python_index.html" class="btn btn-neutral float-right" title="Python API Reference" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>
 
   <div role="contentinfo">
-    <p>
-        &#169; Copyright 2020-2023, Damo Academy, Alibaba Inc..
-
-    </p>
+    <p>&#169; Copyright 2020-2023, Damo Academy, Alibaba Inc..</p>
   </div>
-    
-    
-    
-    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
-    
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
     <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
-    
-    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
 
 </footer>
         </div>
       </div>
-
     </section>
-
   </div>
-  
-
-  <script type="text/javascript">
+  <script>
       jQuery(function () {
           SphinxRtdTheme.Navigation.enable(true);
       });
   </script>
-
-  
-  
-    
-  
   
 
   <div class="rst-versions" data-toggle="rst-versions" role="note" aria-label="versions">
@@ -413,6 +313,16 @@ for C++ and <a class="reference external" href="https://github.com/psf/black#the
 
             
               
+                <dd><a href="v0.8.0/index.html">v0.8.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
                 <dd><a href="v0.7.0/index.html">v0.7.0</a></dd>
               
             
@@ -423,7 +333,7 @@ for C++ and <a class="reference external" href="https://github.com/psf/black#the
 
             
               
-                <dd><a href="v0.6.0-rev1/index.html">v0.6.0-rev1</a></dd>
+                <dd><a href="v0.6.1/index.html">v0.6.1</a></dd>
               
             
 

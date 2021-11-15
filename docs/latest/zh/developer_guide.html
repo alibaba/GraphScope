@@ -1,45 +1,21 @@
-
-
 <!DOCTYPE html>
 <html class="writer-html5" lang="en" >
 <head>
   <meta charset="utf-8" />
-  
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  
   <title>开发者指南 &mdash; GraphScope  documentation</title>
-  
-
-  
-  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
-  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
-  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
-  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
-  <link rel="stylesheet" href="../_static/css/custom.css" type="text/css" />
-
-  
-  
-
-  
-  
-
-  
-
-  
+      <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/css/custom.css" type="text/css" />
   <!--[if lt IE 9]>
     <script src="../_static/js/html5shiv.min.js"></script>
   <![endif]-->
   
-    
-      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
         <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
         <script src="../_static/jquery.js"></script>
         <script src="../_static/underscore.js"></script>
         <script src="../_static/doctools.js"></script>
-    
-    <script type="text/javascript" src="../_static/js/theme.js"></script>
-
-    
+    <script src="../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
     <link rel="prev" title="常见问题" href="frequently_asked_questions.html" />
@@ -59,33 +35,16 @@
 
 </head>
 
-<body class="wy-body-for-nav">
-
-   
+<body class="wy-body-for-nav"> 
   <div class="wy-grid-for-nav">
-    
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
         <div class="wy-side-nav-search" >
-          
-
-          
             <a href="../index.html" class="icon icon-home"> GraphScope
-          
-
-          
           </a>
-
-          
-            
-            
               <div class="version">
                 latest
               </div>
-            
-          
-
-          
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
     <input type="text" name="q" placeholder="Search docs" />
@@ -93,11 +52,7 @@
     <input type="hidden" name="area" value="default" />
   </form>
 </div>
-
-          
         </div>
-
-        
   <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
     
       
@@ -144,73 +99,34 @@
       </div>
     </nav>
 
-    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
-
-      
-      <nav class="wy-nav-top" aria-label="top navigation">
-        
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
           <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
           <a href="../index.html">GraphScope</a>
-        
       </nav>
 
-
       <div class="wy-nav-content">
-        
         <div class="rst-content">
-        
-          
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-<div role="navigation" aria-label="breadcrumbs navigation">
-
+          <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
-    
       <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
-        
           <li><a href="index.html">GraphScope: 一站式图计算系统</a> &raquo;</li>
-        
       <li>开发者指南</li>
-    
-    
       <li class="wy-breadcrumbs-aside">
-        
-          
             <a href="../_sources/zh/developer_guide.rst.txt" rel="nofollow"> View page source</a>
-          
-        
       </li>
-    
   </ul>
-
-  
   <hr/>
 </div>
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
-            
+             
   <div class="section" id="id1">
-<h1>开发者指南<a class="headerlink" href="#id1" title="Permalink to this headline">¶</a></h1>
+<h1>开发者指南<a class="headerlink" href="#id1" title="Permalink to this headline"></a></h1>
 <p>GraphScope 的背后有一群活跃的工程人员和研究人员团队来推进日常的开发和维护。
 我们热忱欢迎来自开源社区的、为改善该项目所做的任何贡献！</p>
 <p>GraphScope 遵循 Apache License 2.0 的开源协议。</p>
 <div class="section" id="id2">
-<h2>构建和测试<a class="headerlink" href="#id2" title="Permalink to this headline">¶</a></h2>
+<h2>构建和测试<a class="headerlink" href="#id2" title="Permalink to this headline"></a></h2>
 <p>构建 GraphScope 需要一些第三方的工具和依赖。为了让开发者更容易上手，我们提供了两个安装了所需依赖的 docker 镜像。</p>
 <blockquote>
 <div><ul class="simple">
@@ -249,7 +165,7 @@ python3 setup.py install
 </div>
 </div>
 <div class="section" id="docker-graphscope">
-<h2>基于 Docker 镜像在本地构建并测试 GraphScope<a class="headerlink" href="#docker-graphscope" title="Permalink to this headline">¶</a></h2>
+<h2>基于 Docker 镜像在本地构建并测试 GraphScope<a class="headerlink" href="#docker-graphscope" title="Permalink to this headline"></a></h2>
 <p>基于 ubuntu:20.04，我们提供了一个具备 GraphScope 所需依赖的 docker 镜像</p>
 <blockquote>
 <div><ul class="simple">
@@ -265,7 +181,6 @@ docker run --shm-size 10240m -it registry.cn-hongkong.aliyuncs.com/graphscope/gr
 git clone https://github.com/alibaba/GraphScope.git
 git clone https://github.com/GraphScope/gstest.git
 <span class="c1"># 编译</span>
-<span class="nb">export</span> <span class="nv">WITH_LEARNING_ENGINE</span><span class="o">=</span>ON
 <span class="nb">export</span> <span class="nv">GRAPHSCOPE_HOME</span><span class="o">=</span>/opt/graphscope
 <span class="nb">cd</span> GraphScope <span class="o">&amp;&amp;</span> make <span class="nv">INSTALL_PREFIX</span><span class="o">=</span>/opt/graphscope install
 <span class="c1"># 测试：</span>
@@ -275,12 +190,12 @@ git clone https://github.com/GraphScope/gstest.git
 </div>
 </div>
 <div class="section" id="python-wheels">
-<h2>构建 Python Wheels<a class="headerlink" href="#python-wheels" title="Permalink to this headline">¶</a></h2>
+<h2>构建 Python Wheels<a class="headerlink" href="#python-wheels" title="Permalink to this headline"></a></h2>
 <p>GraphScope 的 Python 客户端可以在 Linux 和 macOS 上运行，Python Wheel 包通过
 在 <a class="reference external" href="https://pypi.org/project/graphscope">pypi</a> 分发。 对于开发人员而言，Wheel 包也可以
 通过以下过程构建：</p>
 <div class="section" id="linux">
-<h3>Linux<a class="headerlink" href="#linux" title="Permalink to this headline">¶</a></h3>
+<h3>Linux<a class="headerlink" href="#linux" title="Permalink to this headline"></a></h3>
 <p>Linux 下的 Wheel 分发包在 manylinux2010 的环境下构建，该编译环境的镜像地址可以这样获得：</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>docker pull registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-manylinux2010:latest
 </pre></div>
@@ -298,7 +213,7 @@ make graphscope-manylinux2010-py<span class="o">{</span><span class="m">36</span
 </div>
 </div>
 <div class="section" id="macos">
-<h3>macOS<a class="headerlink" href="#macos" title="Permalink to this headline">¶</a></h3>
+<h3>macOS<a class="headerlink" href="#macos" title="Permalink to this headline"></a></h3>
 <p>为 macOS 准备的 Wheel 分发包可以直接在 macOS 下构建。在代码根目录运行如下命令：</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python3 setup.py bdist_wheel
 </pre></div>
@@ -311,7 +226,7 @@ make graphscope-manylinux2010-py<span class="o">{</span><span class="m">36</span
 </div>
 </div>
 <div class="section" id="id4">
-<h2>代码风格<a class="headerlink" href="#id4" title="Permalink to this headline">¶</a></h2>
+<h2>代码风格<a class="headerlink" href="#id4" title="Permalink to this headline"></a></h2>
 <p>GraphScope 遵循 <a class="reference external" href="https://google.github.io/styleguide/cppguide.html">Google C++ 代码风格</a>
 和 <a class="reference external" href="https://github.com/psf/black#the-black-code-style">black Python 风格</a> 。</p>
 <p>如果你的代码没有通过CI的风格检查，你可以使用 <code class="docutils literal notranslate"><span class="pre">clang-format</span></code> 或 <code class="docutils literal notranslate"><span class="pre">black</span></code> 格式化你的代码。</p>
@@ -320,49 +235,32 @@ make graphscope-manylinux2010-py<span class="o">{</span><span class="m">36</span
 
 
            </div>
-           
           </div>
-          <footer>
-    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
         <a href="frequently_asked_questions.html" class="btn btn-neutral float-left" title="常见问题" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
     </div>
 
   <hr/>
 
   <div role="contentinfo">
-    <p>
-        &#169; Copyright 2020-2023, Damo Academy, Alibaba Inc..
-
-    </p>
+    <p>&#169; Copyright 2020-2023, Damo Academy, Alibaba Inc..</p>
   </div>
-    
-    
-    
-    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
-    
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
     <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
-    
-    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
 
 </footer>
         </div>
       </div>
-
     </section>
-
   </div>
-  
-
-  <script type="text/javascript">
+  <script>
       jQuery(function () {
           SphinxRtdTheme.Navigation.enable(true);
       });
   </script>
-
-  
-  
-    
-  
   
 
   <div class="rst-versions" data-toggle="rst-versions" role="note" aria-label="versions">
@@ -399,6 +297,16 @@ make graphscope-manylinux2010-py<span class="o">{</span><span class="m">36</span
 
             
               
+                <dd><a href="../../v0.8.0/zh/index.html">v0.8.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
                 <dd><a href="../../v0.7.0/zh/index.html">v0.7.0</a></dd>
               
             
@@ -409,7 +317,7 @@ make graphscope-manylinux2010-py<span class="o">{</span><span class="m">36</span
 
             
               
-                <dd><a href="../../v0.6.0-rev1/zh/index.html">v0.6.0-rev1</a></dd>
+                <dd><a href="../../v0.6.1/zh/index.html">v0.6.1</a></dd>
               
             
 

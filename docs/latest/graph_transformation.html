@@ -1,45 +1,21 @@
-
-
 <!DOCTYPE html>
 <html class="writer-html5" lang="en" >
 <head>
   <meta charset="utf-8" />
-  
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  
   <title>Graph Transformations &mdash; GraphScope  documentation</title>
-  
-
-  
-  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
-  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
-  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
-  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
-  <link rel="stylesheet" href="_static/css/custom.css" type="text/css" />
-
-  
-  
-
-  
-  
-
-  
-
-  
+      <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="_static/css/custom.css" type="text/css" />
   <!--[if lt IE 9]>
     <script src="_static/js/html5shiv.min.js"></script>
   <![endif]-->
   
-    
-      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
         <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
         <script src="_static/jquery.js"></script>
         <script src="_static/underscore.js"></script>
         <script src="_static/doctools.js"></script>
-    
-    <script type="text/javascript" src="_static/js/theme.js"></script>
-
-    
+    <script src="_static/js/theme.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="GraphScope Analytical Engine" href="analytics_engine.html" />
@@ -60,33 +36,16 @@
 
 </head>
 
-<body class="wy-body-for-nav">
-
-   
+<body class="wy-body-for-nav"> 
   <div class="wy-grid-for-nav">
-    
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
         <div class="wy-side-nav-search" >
-          
-
-          
             <a href="index.html" class="icon icon-home"> GraphScope
-          
-
-          
           </a>
-
-          
-            
-            
               <div class="version">
                 latest
               </div>
-            
-          
-
-          
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
     <input type="text" name="q" placeholder="Search docs" />
@@ -94,11 +53,7 @@
     <input type="hidden" name="area" value="default" />
   </form>
 </div>
-
-          
         </div>
-
-        
   <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
     
       
@@ -133,6 +88,7 @@
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="reference/python_index.html">Python API Reference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="reference/analytical_engine_index.html">Analytical Engine API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="reference/gae_java/index.html">Analytical Engine Java API Reference</a></li>
 </ul>
 
       
@@ -142,66 +98,28 @@
       </div>
     </nav>
 
-    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
-
-      
-      <nav class="wy-nav-top" aria-label="top navigation">
-        
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
           <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
           <a href="index.html">GraphScope</a>
-        
       </nav>
 
-
       <div class="wy-nav-content">
-        
         <div class="rst-content">
-        
-          
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-<div role="navigation" aria-label="breadcrumbs navigation">
-
+          <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
-    
       <li><a href="index.html" class="icon icon-home"></a> &raquo;</li>
-        
       <li>Graph Transformations</li>
-    
-    
       <li class="wy-breadcrumbs-aside">
-        
-          
             <a href="_sources/graph_transformation.rst.txt" rel="nofollow"> View page source</a>
-          
-        
       </li>
-    
   </ul>
-
-  
   <hr/>
 </div>
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
-            
+             
   <div class="section" id="graph-transformations">
-<span id="graph-transformation"></span><h1>Graph Transformations<a class="headerlink" href="#graph-transformations" title="Permalink to this headline">¶</a></h1>
+<span id="graph-transformation"></span><h1>Graph Transformations<a class="headerlink" href="#graph-transformations" title="Permalink to this headline"></a></h1>
 <p>We introduce a series of method that can append more labels to a existed grpah, and
 do projection over existed graph. We will also show how to make a complex property graph
 compatible with algorithms that can only run on simple graph. Finally, we show how to add
@@ -224,7 +142,7 @@ to build a graph iteratively.</p>
 But this won’t modify the source graph, instead, it will return a new graph, which is based
 on the source graph.</p>
 <div class="section" id="attach-new-labels">
-<h2>Attach new labels<a class="headerlink" href="#attach-new-labels" title="Permalink to this headline">¶</a></h2>
+<h2>Attach new labels<a class="headerlink" href="#attach-new-labels" title="Permalink to this headline"></a></h2>
 <p>Take LDBC-SNB Property Graph as an example，We now load a subset of labels, as the source graph.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">graphscope</span>
 <span class="kn">from</span> <span class="nn">pathlib</span> <span class="kn">import</span> <span class="n">Path</span>
@@ -261,7 +179,7 @@ In implementation detail, their common labels will share the common memory, so i
 copy the source graph.</p>
 </div>
 <div class="section" id="projection">
-<h2>Projection<a class="headerlink" href="#projection" title="Permalink to this headline">¶</a></h2>
+<h2>Projection<a class="headerlink" href="#projection" title="Permalink to this headline"></a></h2>
 <p>In some scenario, we need to extract a subgraph from a complex graph. We do that by <cite>project</cite>.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">project</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
@@ -287,7 +205,7 @@ copy the source graph.</p>
 </div>
 </div>
 <div class="section" id="transform-to-simple-graph-implicitly">
-<h2>Transform to simple graph implicitly<a class="headerlink" href="#transform-to-simple-graph-implicitly" title="Permalink to this headline">¶</a></h2>
+<h2>Transform to simple graph implicitly<a class="headerlink" href="#transform-to-simple-graph-implicitly" title="Permalink to this headline"></a></h2>
 <p>When an algorithm that only works on simple graph query a property graph, the property graph will
 be converted to a simple graph implicitly. If such transformation cannot be performed (the vertex label num and
 edge label num is not one, or has more than 1 property on vertex/edge), an exception will be raised.</p>
@@ -301,7 +219,7 @@ edge label num is not one, or has more than 1 property on vertex/edge), an excep
 </div>
 </div>
 <div class="section" id="add-results-back-to-graph-as-a-property">
-<h2>Add results back to graph as a property<a class="headerlink" href="#add-results-back-to-graph-as-a-property" title="Permalink to this headline">¶</a></h2>
+<h2>Add results back to graph as a property<a class="headerlink" href="#add-results-back-to-graph-as-a-property" title="Permalink to this headline"></a></h2>
 <p>The result <cite>ret</cite> produced in previous step can be add to a graph as a property of vertex.</p>
 <p>Note the result can not only be added to the graph it directly queried on, but also the graph which produced
 the queried graph by <cite>project</cite>, as long as the vertex label that will be mutated is the same between the two graphs.</p>
@@ -317,50 +235,33 @@ the queried graph by <cite>project</cite>, as long as the vertex label that will
 
 
            </div>
-           
           </div>
-          <footer>
-    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
-        <a href="analytics_engine.html" class="btn btn-neutral float-right" title="GraphScope Analytical Engine" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
         <a href="loading_graph.html" class="btn btn-neutral float-left" title="Loading Graphs" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="analytics_engine.html" class="btn btn-neutral float-right" title="GraphScope Analytical Engine" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>
 
   <div role="contentinfo">
-    <p>
-        &#169; Copyright 2020-2023, Damo Academy, Alibaba Inc..
-
-    </p>
+    <p>&#169; Copyright 2020-2023, Damo Academy, Alibaba Inc..</p>
   </div>
-    
-    
-    
-    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
-    
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
     <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
-    
-    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
 
 </footer>
         </div>
       </div>
-
     </section>
-
   </div>
-  
-
-  <script type="text/javascript">
+  <script>
       jQuery(function () {
           SphinxRtdTheme.Navigation.enable(true);
       });
   </script>
-
-  
-  
-    
-  
   
 
   <div class="rst-versions" data-toggle="rst-versions" role="note" aria-label="versions">
@@ -397,6 +298,16 @@ the queried graph by <cite>project</cite>, as long as the vertex label that will
 
             
               
+                <dd><a href="../v0.8.0/index.html">v0.8.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
                 <dd><a href="../v0.7.0/index.html">v0.7.0</a></dd>
               
             
@@ -407,7 +318,7 @@ the queried graph by <cite>project</cite>, as long as the vertex label that will
 
             
               
-                <dd><a href="../v0.6.0-rev1/index.html">v0.6.0-rev1</a></dd>
+                <dd><a href="../v0.6.1/index.html">v0.6.1</a></dd>
               
             
 

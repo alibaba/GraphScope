@@ -81,7 +81,6 @@ make their changes to the code and build with command:
     git clone https://github.com/alibaba/GraphScope.git
     git clone https://github.com/GraphScope/gstest.git
     # building
-    export WITH_LEARNING_ENGINE=ON
     export GRAPHSCOPE_HOME=/opt/graphscope
     cd GraphScope && make INSTALL_PREFIX=/opt/graphscope install
     # testing:
@@ -148,14 +147,14 @@ dependencies of GraphScope.
 
 .. code::shell
 
-    ./scripts/deploy_local.sh install_deps
-    source ~/.graphscope_env
+    ./scripts/install_deps.sh --dev
 
-Deploy the GraphScope with the script
+Deploy the GraphScope with make command
 
 .. code::shell
 
-    ./scripts/deploy_local.sh build_and_deploy
+    source ~/.graphscope_env
+    make graphscope
 
 
 Code Format

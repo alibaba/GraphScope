@@ -18,7 +18,7 @@ GraphScope makes it easy to connect to a loaded graph within Python as shown bel
 .. code:: python
 
     import graphscope
-    from graphscope.dataset.ldbc import load_ldbc
+    from graphscope.dataset import load_ldbc
 
     # create a new session, load LDBC graph (as an example),
     # and get the Gremlin entry point

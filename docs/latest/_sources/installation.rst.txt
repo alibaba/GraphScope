@@ -20,8 +20,8 @@ Alternatively, you may want to install `WSL2 <https://docs.microsoft.com/en-us/w
 
 .. code:: bash
 
-    # run the environment preparing script.
-    ./scripts/prepare_env.sh
+    # run the k8s environment preparing script.
+    ./scripts/install_deps.sh --k8s
 
 Then the package can be easily installed using `pip <https://pip.pypa.io/en/stable/>`_:
 

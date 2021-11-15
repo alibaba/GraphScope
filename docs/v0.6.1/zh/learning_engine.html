@@ -1,0 +1,655 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>图学习引擎 &mdash; GraphScope  documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/css/custom.css" type="text/css" />
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="常见问题" href="frequently_asked_questions.html" />
+    <link rel="prev" title="图交互式分析引擎" href="interactive_engine.html" />
+
+ 
+
+<!-- Global site tag (gtag.js) - Google Analytics -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-4TMYCGJ0X2"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-4TMYCGJ0X2');
+</script>
+
+
+
+  
+  <script src="../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../index.html" class="icon icon-home"> GraphScope
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                v0.6.1
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+      
+      
+        
+          
+        
+      
+      
+        <p class="caption"><span class="caption-text">目录</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="installation.html">安装</a></li>
+<li class="toctree-l1"><a class="reference internal" href="getting_started.html">快速上手</a></li>
+<li class="toctree-l1"><a class="reference internal" href="deployment.html">部署</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tutorials.html">入门教程</a></li>
+<li class="toctree-l1"><a class="reference internal" href="loading_graph.html">载图</a></li>
+<li class="toctree-l1"><a class="reference internal" href="graph_transformation.html">图的变换操作</a></li>
+<li class="toctree-l1"><a class="reference internal" href="analytics_engine.html">图分析引擎</a></li>
+<li class="toctree-l1"><a class="reference internal" href="interactive_engine.html">图交互式分析引擎</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">图学习引擎</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#id2">图学习模型</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#id3">数据模型</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id4">编码器</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#id5">自定义算法</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#id6">采样</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id7">图数据流</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id8">模型</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id9">损失函数和训练过程</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="frequently_asked_questions.html">常见问题</a></li>
+<li class="toctree-l1"><a class="reference internal" href="developer_guide.html">开发者指南</a></li>
+</ul>
+<p class="caption"><span class="caption-text">API 参考</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference external" href="https://graphscope.io/docs/reference/python_index.html">Python API 参考</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://graphscope.io/docs/reference/analytical_engine_index.html">图分析引擎 API 参考</a></li>
+</ul>
+
+      
+    
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">GraphScope</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="index.html">GraphScope: 一站式图计算系统</a> &raquo;</li>
+        
+      <li>图学习引擎</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="../_sources/zh/learning_engine.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="id1">
+<h1>图学习引擎<a class="headerlink" href="#id1" title="Permalink to this headline">¶</a></h1>
+<p>GraphScope中的图学习引擎 (<strong>GLE</strong>) 是面向大规模图神经网络的研发和应用而设计的一款分布式框架。
+它从实际问题出发，提炼和抽象了一套适合于当下图神经网络模型的编程范式， 并已经成功应用在阿里巴巴
+内部的诸如搜索推荐、网络安全、知识图谱等众多场景。
+GL注重可移植和可扩展，对于开发者更为友好，为了应对GNN在工业场景中的多样性和快速发展的需求。
+基于GL，开发者可以实现一种GNN算法，或者面向实际场景定制化一种图算子，例如图采样。</p>
+<p>接下来，我们通过一个入门教程介绍如何使用 <strong>GLE</strong> 来构建用户自己的CNN模型。</p>
+<div class="section" id="id2">
+<h2>图学习模型<a class="headerlink" href="#id2" title="Permalink to this headline">¶</a></h2>
+<p>图学习算法的实现目前主要有两种方式。第一种是直接以全图为计算对象，
+原始的GCN，GAT等算法都是这种实现思路，一般会直接用邻接矩阵进行计算。
+然而这种方法在大规模图上会消耗大量内存，导致无法高效训练甚至无法训练。
+第二种思路是将全图分成若干子图，用深度学习里常用的批次训练方法进行训练，
+每次训练一个子图，代表方法是GraphSAGE，FastGCN, GraphSAINT等。</p>
+<p><strong>GLE</strong> 主要面向超大规模图神经网络的开发。它由底层的一个图引擎和上层的
+算法模型构成。图引擎分布式存储图的拓扑和属性信息并提供高效的图采样查询
+接口，算法模型通过调用图采样和查询接口获取子图并进行计算。</p>
+<p><strong>GLE</strong> 提供了一个图学习算法的统一编程框架，支持常见图学习算法的开发，包括
+GNNs, 知识图谱模型，图嵌入算法等，并且和主流的深度学习算法兼容，包括TensorFlow
+和PyTorch。目前我们实现了基于TensorFlow的模型，基于PyTorch的模型正在开发中。</p>
+<img alt="../_images/learning_model1.png" class="align-center" src="../_images/learning_model1.png" />
+<div class="section" id="id3">
+<h3>数据模型<a class="headerlink" href="#id3" title="Permalink to this headline">¶</a></h3>
+<p><strong>GLE</strong> 采用采样子图再计算的方式构建和训练模型。我们首先介绍一下基本的数据模型。</p>
+<p><code class="docutils literal notranslate"><span class="pre">EgoGraph</span></code> 是图学习算法编程的基本数据对象。它由一个batch的种子点或者边(称为’ego’)
+以及他们的’感受野’(多跳邻居)组成。<code class="docutils literal notranslate"><span class="pre">EgoGraph</span></code> 由图采样和查询到的数据组成，我们实现
+了常见的邻居采样、图遍历和负采样方法。</p>
+<p>采样的数据组织成numpy格式的 <code class="docutils literal notranslate"><span class="pre">EgoGraph</span></code> 后根据不同的深度学习引擎转换成对应的tensor格式
+<code class="docutils literal notranslate"><span class="pre">EgoTensor</span></code>，然后用``EgoFlow`` 管理 <code class="docutils literal notranslate"><span class="pre">EgoGraph</span></code> 到 <code class="docutils literal notranslate"><span class="pre">EgoTensor</span></code> 的转换，提供训练所需要的数据。</p>
+<img alt="../_images/egograph1.png" class="align-center" src="../_images/egograph1.png" />
+</div>
+<div class="section" id="id4">
+<h3>编码器<a class="headerlink" href="#id4" title="Permalink to this headline">¶</a></h3>
+<p>所有的图学习模型可以抽象为使用编码器将 <code class="docutils literal notranslate"><span class="pre">EgoTensor</span></code> 编码成最终的点、边或者子图的
+向量。<strong>GLE</strong> 首先利用特征编码器来编码原始的点和边上的特征，然后将特征编码器编码后的
+原始向量用不同的图编码器进行编码，得到最终的输出。对于大多数GNN模型，图编码器
+提供了如何聚合邻居信息到自身节点或者边的抽象，用不同的图卷积层实现。</p>
+<img alt="../_images/egotensor1.png" class="align-center" src="../_images/egotensor1.png" />
+<p>基于上面介绍的数据模型和编码器，我们可以简单快速地实现不同的图学习算法。在接下来一章里，
+我们详细介绍了如何开发一个GNN模型。</p>
+</div>
+</div>
+<div class="section" id="id5">
+<h2>自定义算法<a class="headerlink" href="#id5" title="Permalink to this headline">¶</a></h2>
+<p>这篇文档我们将介绍如何用 <strong>GLE</strong> 提供的基本API配合深度学习引擎(如TensorFlow)来构建图学习算法。
+我们以图神经网络里最流行的GCN模型做为示例来说明。</p>
+<p>通常来说，实现一个算法需要下面四个步骤：</p>
+<ul>
+<li><p>指定采样模式：用图采样、查询方法采样子图并组织成 <code class="docutils literal notranslate"><span class="pre">EgoGraph</span></code>。</p>
+<p>我们抽象了4个基本的函数，<code class="docutils literal notranslate"><span class="pre">sample_seed</span></code>, <code class="docutils literal notranslate"><span class="pre">positive_sample</span></code>,
+<code class="docutils literal notranslate"><span class="pre">negative_sample</span></code> 和 <code class="docutils literal notranslate"><span class="pre">receptive_fn</span></code>。 <code class="docutils literal notranslate"><span class="pre">sample_seed</span></code> 用来遍历图数据产生 <code class="docutils literal notranslate"><span class="pre">Nodes</span></code> 或者
+<code class="docutils literal notranslate"><span class="pre">Edges</span></code>, 然后 <code class="docutils literal notranslate"><span class="pre">positve_sample</span></code> 以这些 <code class="docutils literal notranslate"><span class="pre">Nodes</span></code> 或者 <code class="docutils literal notranslate"><span class="pre">Edges</span></code> 为输入产生
+训练的正样本。对于无监督学习 <code class="docutils literal notranslate"><span class="pre">negative_sample</span></code> 产生负样本。
+GNNs需要聚合邻居信息, 我们抽象了 <code class="docutils literal notranslate"><span class="pre">receptive_fn</span></code> 来采样邻居。
+最后将 <code class="docutils literal notranslate"><span class="pre">sample_seed</span></code> 产生的 <code class="docutils literal notranslate"><span class="pre">Nodes</span></code>、<code class="docutils literal notranslate"><span class="pre">Edges</span></code> 以及采样出的邻居组成 <code class="docutils literal notranslate"><span class="pre">EgoGraph</span></code>。</p>
+</li>
+<li><p>构建图数据流：使用 <code class="docutils literal notranslate"><span class="pre">EgoFlow</span></code> 将 <code class="docutils literal notranslate"><span class="pre">EgoGraph</span></code> 转换为 <code class="docutils literal notranslate"><span class="pre">EgoTensor</span></code>。</p>
+<p><strong>GLE</strong> 算法模型基于类似TensorFlow的深度学习引擎构建。所以采样出的 <code class="docutils literal notranslate"><span class="pre">EgoGraph``s</span>
+<span class="pre">需要先转换成tensor格式</span> <span class="pre">``EgoTensor</span></code> 才能使用。我们抽象了 <code class="docutils literal notranslate"><span class="pre">EgoFlow</span></code> 来封装这一转换过程。
+<code class="docutils literal notranslate"><span class="pre">EgoFlow</span></code> 可以产生一个迭代器来进行批次训练。</p>
+</li>
+<li><p>定义编码器：使用 <code class="docutils literal notranslate"><span class="pre">EgoGraph</span></code> 编码器和特征编码器来编码 <code class="docutils literal notranslate"><span class="pre">EgoTensor</span></code>。
+得到 <code class="docutils literal notranslate"><span class="pre">EgoTensor</span></code> 后，我们首先将原始的点、边特征用一些常见特征编码器编码成原始向量，
+做为GNNs模型的特征输入。然后用图编码器处理 <code class="docutils literal notranslate"><span class="pre">EgoTensor</span></code>，将邻居节点特征进行汇聚并
+和自身特征进行组合，得到最后的点或者边的向量。</p></li>
+<li><p>编写损失函数和训练过程：选择适当的损失函数，并编写训练过程。</p>
+<p><strong>GLE</strong> 内置了一些常见的损失函数和优化器，并对训练过程进行了封装，同时支持单机和分布式训练。
+你也可以自定义损失函数、优化器和训练过程。</p>
+</li>
+</ul>
+<p>下面我们按照上面介绍的4个步骤来介绍如何实现一个GCN模型。</p>
+<div class="section" id="id6">
+<h3>采样<a class="headerlink" href="#id6" title="Permalink to this headline">¶</a></h3>
+<p>我们使用Cora数据集以点分类任务做为示例。我们提供了一个简单的数据转换脚本 <code class="docutils literal notranslate"><span class="pre">cora.py</span></code> 来
+将原始Cora转换成 <strong>GLE</strong> 需要的格式。运行完这个脚本后你可以得到下面5个文件
+node_table, edge_table_with_self_loop, train_table, val_table and test_table。
+分别是点表、边表以及用来区分训练、验证和测试集的点表。</p>
+<p>然后可以用下面代码来构建图：</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">graphlearn</span> <span class="k">as</span> <span class="nn">gle</span>
+<span class="n">g</span> <span class="o">=</span> <span class="n">gle</span><span class="o">.</span><span class="n">Graph</span><span class="p">()</span>\
+      <span class="o">.</span><span class="n">node</span><span class="p">(</span><span class="n">dataset_folder</span> <span class="o">+</span> <span class="s2">&quot;node_table&quot;</span><span class="p">,</span> <span class="n">node_type</span><span class="o">=</span><span class="n">node_type</span><span class="p">,</span>
+            <span class="n">decoder</span><span class="o">=</span><span class="n">gle</span><span class="o">.</span><span class="n">Decoder</span><span class="p">(</span><span class="n">labeled</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                               <span class="n">attr_types</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;float&quot;</span><span class="p">]</span> <span class="o">*</span> <span class="mi">1433</span><span class="p">,</span>
+                               <span class="n">attr_delimiter</span><span class="o">=</span><span class="s2">&quot;:&quot;</span><span class="p">))</span>\
+      <span class="o">.</span><span class="n">edge</span><span class="p">(</span><span class="n">dataset_folder</span> <span class="o">+</span> <span class="s2">&quot;edge_table_with_self_loop&quot;</span><span class="p">,</span>
+            <span class="n">edge_type</span><span class="o">=</span><span class="p">(</span><span class="n">node_type</span><span class="p">,</span> <span class="n">node_type</span><span class="p">,</span> <span class="n">edge_type</span><span class="p">),</span>
+            <span class="n">decoder</span><span class="o">=</span><span class="n">gle</span><span class="o">.</span><span class="n">Decoder</span><span class="p">(</span><span class="n">weighted</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span> <span class="n">directed</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>\
+      <span class="o">.</span><span class="n">node</span><span class="p">(</span><span class="n">dataset_folder</span> <span class="o">+</span> <span class="s2">&quot;train_table&quot;</span><span class="p">,</span> <span class="n">node_type</span><span class="o">=</span><span class="s2">&quot;train&quot;</span><span class="p">,</span>
+            <span class="n">decoder</span><span class="o">=</span><span class="n">gle</span><span class="o">.</span><span class="n">Decoder</span><span class="p">(</span><span class="n">weighted</span><span class="o">=</span><span class="kc">True</span><span class="p">))</span>\
+      <span class="o">.</span><span class="n">node</span><span class="p">(</span><span class="n">dataset_folder</span> <span class="o">+</span> <span class="s2">&quot;val_table&quot;</span><span class="p">,</span> <span class="n">node_type</span><span class="o">=</span><span class="s2">&quot;val&quot;</span><span class="p">,</span>
+            <span class="n">decoder</span><span class="o">=</span><span class="n">gle</span><span class="o">.</span><span class="n">Decoder</span><span class="p">(</span><span class="n">weighted</span><span class="o">=</span><span class="kc">True</span><span class="p">))</span>\
+      <span class="o">.</span><span class="n">node</span><span class="p">(</span><span class="n">dataset_folder</span> <span class="o">+</span> <span class="s2">&quot;test_table&quot;</span><span class="p">,</span> <span class="n">node_type</span><span class="o">=</span><span class="s2">&quot;test&quot;</span><span class="p">,</span>
+            <span class="n">decoder</span><span class="o">=</span><span class="n">gle</span><span class="o">.</span><span class="n">Decoder</span><span class="p">(</span><span class="n">weighted</span><span class="o">=</span><span class="kc">True</span><span class="p">))</span>
+</pre></div>
+</div>
+<p>使用 <code class="docutils literal notranslate"><span class="pre">g.init()</span></code> 后这段代码会将图加载进内存：</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">GCN</span><span class="p">(</span><span class="n">gle</span><span class="o">.</span><span class="n">LearningBasedModel</span><span class="p">):</span>
+  <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+               <span class="n">graph</span><span class="p">,</span>
+               <span class="n">output_dim</span><span class="p">,</span>
+               <span class="n">features_num</span><span class="p">,</span>
+               <span class="n">batch_size</span><span class="p">,</span>
+               <span class="n">categorical_attrs_desc</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">,</span>
+               <span class="n">hidden_dim</span><span class="o">=</span><span class="mi">16</span><span class="p">,</span>
+               <span class="n">hops_num</span><span class="o">=</span><span class="mi">2</span><span class="p">,):</span>
+  <span class="bp">self</span><span class="o">.</span><span class="n">graph</span> <span class="o">=</span> <span class="n">graph</span>
+  <span class="bp">self</span><span class="o">.</span><span class="n">batch_size</span> <span class="o">=</span> <span class="n">batch_size</span>
+</pre></div>
+</div>
+<p>GCN模型继承自基本的学习模型类 <code class="docutils literal notranslate"><span class="pre">LearningBasedModel</span></code>，只需要重写基类的采样，
+模型构建等方法就可以完成GCN的构建。</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">GCN</span><span class="p">(</span><span class="n">gle</span><span class="o">.</span><span class="n">LearningBasedModel</span><span class="p">):</span>
+  <span class="c1"># ...</span>
+  <span class="k">def</span> <span class="nf">_sample_seed</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+      <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">graph</span><span class="o">.</span><span class="n">V</span><span class="p">(</span><span class="s1">&#39;train&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">batch</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">batch_size</span><span class="p">)</span><span class="o">.</span><span class="n">values</span><span class="p">()</span>
+
+  <span class="k">def</span> <span class="nf">_positive_sample</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">t</span><span class="p">):</span>
+      <span class="k">return</span> <span class="n">gle</span><span class="o">.</span><span class="n">Edges</span><span class="p">(</span><span class="n">t</span><span class="o">.</span><span class="n">ids</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">node_type</span><span class="p">,</span>
+                      <span class="n">t</span><span class="o">.</span><span class="n">ids</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">node_type</span><span class="p">,</span>
+                      <span class="bp">self</span><span class="o">.</span><span class="n">edge_type</span><span class="p">,</span> <span class="n">graph</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">graph</span><span class="p">)</span>
+
+  <span class="k">def</span> <span class="nf">_receptive_fn</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">nodes</span><span class="p">):</span>
+      <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">graph</span><span class="o">.</span><span class="n">V</span><span class="p">(</span><span class="n">nodes</span><span class="o">.</span><span class="n">type</span><span class="p">,</span> <span class="n">feed</span><span class="o">=</span><span class="n">nodes</span><span class="p">)</span><span class="o">.</span><span class="n">alias</span><span class="p">(</span><span class="s1">&#39;v&#39;</span><span class="p">)</span> \
+        <span class="o">.</span><span class="n">outV</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">edge_type</span><span class="p">)</span><span class="o">.</span><span class="n">sample</span><span class="p">()</span><span class="o">.</span><span class="n">by</span><span class="p">(</span><span class="s1">&#39;full&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">alias</span><span class="p">(</span><span class="s1">&#39;v1&#39;</span><span class="p">)</span> \
+        <span class="o">.</span><span class="n">outV</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">edge_type</span><span class="p">)</span><span class="o">.</span><span class="n">sample</span><span class="p">()</span><span class="o">.</span><span class="n">by</span><span class="p">(</span><span class="s1">&#39;full&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">alias</span><span class="p">(</span><span class="s1">&#39;v2&#39;</span><span class="p">)</span> \
+        <span class="o">.</span><span class="n">emit</span><span class="p">(</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">gle</span><span class="o">.</span><span class="n">EgoGraph</span><span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="s1">&#39;v&#39;</span><span class="p">],</span> <span class="p">[</span><span class="n">ag</span><span class="o">.</span><span class="n">Layer</span><span class="p">(</span><span class="n">nodes</span><span class="o">=</span><span class="n">x</span><span class="p">[</span><span class="s1">&#39;v1&#39;</span><span class="p">]),</span> <span class="n">ag</span><span class="o">.</span><span class="n">Layer</span><span class="p">(</span><span class="n">nodes</span><span class="o">=</span><span class="n">x</span><span class="p">[</span><span class="s1">&#39;v2&#39;</span><span class="p">])]))</span>
+</pre></div>
+</div>
+<p>前两个函数用来采样种子节点和正样本，<code class="docutils literal notranslate"><span class="pre">_receptive_fn</span></code> 采样邻居并组织 <code class="docutils literal notranslate"><span class="pre">EgoGraph</span></code>,
+<code class="docutils literal notranslate"><span class="pre">outV</span></code> 回一跳邻居，因此上面代码是采样二跳邻居。这里可以选择不同的邻居采样方法，
+对于原始GCN来说因为要获得每个点的所有邻居，因此选择 <code class="docutils literal notranslate"><span class="pre">'full'</span></code>。采样完后将结果组织
+成 <code class="docutils literal notranslate"><span class="pre">EgoGraph</span></code> 返回。</p>
+</div>
+<div class="section" id="id7">
+<h3>图数据流<a class="headerlink" href="#id7" title="Permalink to this headline">¶</a></h3>
+<p>在 <code class="docutils literal notranslate"><span class="pre">build</span></code> 函数里我们使用封装的 <code class="docutils literal notranslate"><span class="pre">EgoFlow</span></code> 来把 <code class="docutils literal notranslate"><span class="pre">EgoGraph</span></code> 转换成对应的 <code class="docutils literal notranslate"><span class="pre">EgoTensor</span></code>,
+<code class="docutils literal notranslate"><span class="pre">EgoFlow</span></code> 包含一个数据流迭代器和若干 <code class="docutils literal notranslate"><span class="pre">EgoTensor</span></code>。</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">GCN</span><span class="p">(</span><span class="n">gle</span><span class="o">.</span><span class="n">LearningBasedModel</span><span class="p">):</span>
+ <span class="k">def</span> <span class="nf">build</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+   <span class="n">ego_flow</span> <span class="o">=</span> <span class="n">gle</span><span class="o">.</span><span class="n">EgoFlow</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_sample_seed</span><span class="p">,</span>
+                         <span class="bp">self</span><span class="o">.</span><span class="n">_positive_sample</span><span class="p">,</span>
+                         <span class="bp">self</span><span class="o">.</span><span class="n">_receptive_fn</span><span class="p">,</span>
+                         <span class="bp">self</span><span class="o">.</span><span class="n">src_ego_spec</span><span class="p">)</span>
+   <span class="n">iterator</span> <span class="o">=</span> <span class="n">ego_flow</span><span class="o">.</span><span class="n">iterator</span>
+   <span class="n">pos_src_ego_tensor</span> <span class="o">=</span> <span class="n">ego_flow</span><span class="o">.</span><span class="n">pos_src_ego_tensor</span>
+   <span class="c1"># ...</span>
+</pre></div>
+</div>
+<p>你可以从 <code class="docutils literal notranslate"><span class="pre">EgoFlow</span></code> 获取和前面 <code class="docutils literal notranslate"><span class="pre">EgoGraph</span></code> 对应的 <code class="docutils literal notranslate"><span class="pre">EgoTensor</span></code>。</p>
+</div>
+<div class="section" id="id8">
+<h3>模型<a class="headerlink" href="#id8" title="Permalink to this headline">¶</a></h3>
+<p>接下来，首先使用特征编码器来编码原始特征。这里我们使用 <code class="docutils literal notranslate"><span class="pre">IdentityEncoder</span></code>，即返回自身即可，因为
+Cora的特征已经是处理过的向量格式了。对于既有离散特征由于连续特征的情况，可以使用 <code class="docutils literal notranslate"><span class="pre">WideNDeepEncoder</span></code>。
+更多encoder请参考 <a class="reference external" href="https://github.com/alibaba/graph-learn/blob/master/graphlearn/python/model/tf/encoders/feature_encoder.py">feature encoder</a>。
+然后用 <code class="docutils literal notranslate"><span class="pre">GCNConv</span></code> 层构建图编码器，GCN每个节点采样全部邻居，邻居以稀疏格式组织，所以这里使用
+<code class="docutils literal notranslate"><span class="pre">SparseEgoGraphEncoder</span></code>, 邻居对齐的模型可以参考GraphSAGE的实现。</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">GCN</span><span class="p">(</span><span class="n">gle</span><span class="o">.</span><span class="n">LearningBasedModel</span><span class="p">):</span>
+  <span class="k">def</span> <span class="nf">_encoders</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="n">depth</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">hops_num</span>
+    <span class="n">feature_encoders</span> <span class="o">=</span> <span class="p">[</span><span class="n">gle</span><span class="o">.</span><span class="n">encoders</span><span class="o">.</span><span class="n">IdentityEncoder</span><span class="p">()]</span> <span class="o">*</span> <span class="p">(</span><span class="n">depth</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
+    <span class="n">conv_layers</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="c1"># for input layer</span>
+    <span class="n">conv_layers</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">gle</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">GCNConv</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">hidden_dim</span><span class="p">))</span>
+    <span class="c1"># for hidden layer</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">depth</span> <span class="o">-</span> <span class="mi">1</span><span class="p">):</span>
+      <span class="n">conv_layers</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">gle</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">GCNConv</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">hidden_dim</span><span class="p">))</span>
+    <span class="c1"># for output layer</span>
+    <span class="n">conv_layers</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">gle</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">GCNConv</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">output_dim</span><span class="p">,</span> <span class="n">act</span><span class="o">=</span><span class="kc">None</span><span class="p">))</span>
+    <span class="n">encoder</span> <span class="o">=</span> <span class="n">gle</span><span class="o">.</span><span class="n">encoders</span><span class="o">.</span><span class="n">SparseEgoGraphEncoder</span><span class="p">(</span><span class="n">feature_encoders</span><span class="p">,</span>
+                                                  <span class="n">conv_layers</span><span class="p">)</span>
+    <span class="k">return</span> <span class="p">{</span><span class="s2">&quot;src&quot;</span><span class="p">:</span> <span class="n">encoder</span><span class="p">,</span> <span class="s2">&quot;edge&quot;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span> <span class="s2">&quot;dst&quot;</span><span class="p">:</span> <span class="kc">None</span><span class="p">}</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="id9">
+<h3>损失函数和训练过程<a class="headerlink" href="#id9" title="Permalink to this headline">¶</a></h3>
+<p>对于Cora点分类模型，我们选择对应的TensorFlow里的分类损失函数即可。
+然后在 <code class="docutils literal notranslate"><span class="pre">build</span></code> 函数里将编码器和损失函数组织起来，最终返回一个数据迭代器和损失函数。</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">GCN</span><span class="p">(</span><span class="n">gle</span><span class="o">.</span><span class="n">LearningBasedModel</span><span class="p">):</span>
+  <span class="c1"># ...</span>
+  <span class="k">def</span> <span class="nf">_supervised_loss</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">emb</span><span class="p">,</span> <span class="n">label</span><span class="p">):</span>
+    <span class="k">return</span> <span class="n">tf</span><span class="o">.</span><span class="n">reduce_mean</span><span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">sparse_softmax_cross_entropy_with_logits</span><span class="p">(</span><span class="n">emb</span><span class="p">,</span> <span class="n">label</span><span class="p">))</span>
+
+  <span class="k">def</span> <span class="nf">build</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="n">ego_flow</span> <span class="o">=</span> <span class="n">gle</span><span class="o">.</span><span class="n">EgoFlow</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_sample_seed</span><span class="p">,</span>
+                          <span class="bp">self</span><span class="o">.</span><span class="n">_positive_sample</span><span class="p">,</span>
+                          <span class="bp">self</span><span class="o">.</span><span class="n">_receptive_fn</span><span class="p">,</span>
+                          <span class="bp">self</span><span class="o">.</span><span class="n">src_ego_spec</span><span class="p">,</span>
+                          <span class="n">full_graph_mode</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">full_graph_mode</span><span class="p">)</span>
+    <span class="n">iterator</span> <span class="o">=</span> <span class="n">ego_flow</span><span class="o">.</span><span class="n">iterator</span>
+    <span class="n">pos_src_ego_tensor</span> <span class="o">=</span> <span class="n">ego_flow</span><span class="o">.</span><span class="n">pos_src_ego_tensor</span>
+    <span class="n">src_emb</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">encoders</span><span class="p">[</span><span class="s1">&#39;src&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="n">pos_src_ego_tensor</span><span class="p">)</span>
+    <span class="n">labels</span> <span class="o">=</span> <span class="n">pos_src_ego_tensor</span><span class="o">.</span><span class="n">src</span><span class="o">.</span><span class="n">labels</span>
+    <span class="n">loss</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_supervised_loss</span><span class="p">(</span><span class="n">src_emb</span><span class="p">,</span> <span class="n">labels</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">loss</span><span class="p">,</span> <span class="n">iterator</span>
+</pre></div>
+</div>
+<p>接着使用封装的单机训练过程 <code class="docutils literal notranslate"><span class="pre">LocalTFTrainer</span></code> 来进行训练。</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">train</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">graph</span><span class="p">)</span>
+  <span class="k">def</span> <span class="nf">model_fn</span><span class="p">():</span>
+    <span class="k">return</span> <span class="n">GCN</span><span class="p">(</span><span class="n">graph</span><span class="p">,</span>
+               <span class="n">config</span><span class="p">[</span><span class="s1">&#39;class_num&#39;</span><span class="p">],</span>
+               <span class="n">config</span><span class="p">[</span><span class="s1">&#39;features_num&#39;</span><span class="p">],</span>
+               <span class="n">config</span><span class="p">[</span><span class="s1">&#39;batch_szie&#39;</span><span class="p">],</span>
+               <span class="o">...</span><span class="p">)</span>
+  <span class="n">trainer</span> <span class="o">=</span> <span class="n">gle</span><span class="o">.</span><span class="n">LocalTFTrainer</span><span class="p">(</span><span class="n">model_fn</span><span class="p">,</span> <span class="n">epoch</span><span class="o">=</span><span class="mi">200</span><span class="p">)</span>
+  <span class="n">trainer</span><span class="o">.</span><span class="n">train</span><span class="p">()</span>
+
+<span class="k">def</span> <span class="nf">main</span><span class="p">():</span>
+    <span class="n">config</span> <span class="o">=</span> <span class="p">{</span><span class="o">...</span><span class="p">}</span>
+    <span class="n">g</span> <span class="o">=</span> <span class="n">load_graph</span><span class="p">(</span><span class="n">config</span><span class="p">)</span>
+    <span class="n">g</span><span class="o">.</span><span class="n">init</span><span class="p">(</span><span class="n">server_id</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">server_count</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">tracker</span><span class="o">=</span><span class="s1">&#39;../../data/&#39;</span><span class="p">)</span>
+    <span class="n">train</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">g</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>这样就完成了一个GCN模型的编写。完整代码请参考 <a class="reference external" href="https://github.com/alibaba/graph-learn/tree/master/examples/tf/gcn">GCN example</a> 目录。</p>
+<p>我们实现了GCN, GAT, GraphSage, DeepWalk, LINE, TransE, Bipartite GraphSage,
+sample-based GCN and GAT等模型，你可以参考相似的模型代码做为开始。</p>
+</div>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="frequently_asked_questions.html" class="btn btn-neutral float-right" title="常见问题" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="interactive_engine.html" class="btn btn-neutral" title="图交互式分析引擎" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2020-2023, Damo Academy, Alibaba Inc.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
+        <script src="../_static/language_data.js"></script>
+    
+
+  
+
+  <script type="text/javascript" src="../_static/js/theme.js"></script>
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+  
+
+  <div class="rst-versions" data-toggle="rst-versions" role="note" aria-label="versions">
+    <span class="rst-current-version" data-toggle="rst-current-version">
+      <span class="fa fa-book"> Read the Docs</span>
+      v: v0.6.1
+      <span class="fa fa-caret-down"></span>
+    </span>
+    <div class="rst-other-versions">
+      <dl>
+        <dt>Versions</dt>
+        
+          
+
+            
+              
+                <dd><a href="../../latest/zh/index.html">latest</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../zh/index.html">stable</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../v0.6.1/zh/index.html">v0.6.1</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../v0.6.0/zh/index.html">v0.6.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../v0.5.0/zh/index.html">v0.5.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../v0.4.1/zh/index.html">v0.4.1</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../v0.4.0/zh/index.html">v0.4.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../v0.3.0/zh/index.html">v0.3.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../v0.2.1/zh/index.html">v0.2.1</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../v0.2.0/zh/index.html">v0.2.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../v0.1.3/zh/index.html">v0.1.3</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../v0.1.2/zh/index.html">v0.1.2</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../v0.1.1/zh/index.html">v0.1.1</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../v0.1.0/zh/index.html">v0.1.0</a></dd>
+              
+            
+
+          
+        
+      </dl>
+    </div>
+  </div>
+
+  <div class="rst-languages shift-up" role="note" aria-label="languages">
+    <div class="rst-other-languages">
+      <dl>
+        <dt>Languages</dt>
+        <dd><a href="../index.html">en</a></dd>
+        <dd><a href="index.html">zh_CN</a></dd>
+      </dl>
+
+      <hr />
+      <small>
+        <span>Hosted by <a href="https://pages.github.com/">Github Pages</a>.</span>
+      </small>
+    </div>
+  </div>
+
+
+</body>
+</html>

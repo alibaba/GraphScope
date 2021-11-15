@@ -1,45 +1,21 @@
-
-
 <!DOCTYPE html>
 <html class="writer-html5" lang="en" >
 <head>
   <meta charset="utf-8" />
-  
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  
   <title>GraphScope Interactive Engine &mdash; GraphScope  documentation</title>
-  
-
-  
-  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
-  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
-  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
-  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
-  <link rel="stylesheet" href="_static/css/custom.css" type="text/css" />
-
-  
-  
-
-  
-  
-
-  
-
-  
+      <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="_static/css/custom.css" type="text/css" />
   <!--[if lt IE 9]>
     <script src="_static/js/html5shiv.min.js"></script>
   <![endif]-->
   
-    
-      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
         <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
         <script src="_static/jquery.js"></script>
         <script src="_static/underscore.js"></script>
         <script src="_static/doctools.js"></script>
-    
-    <script type="text/javascript" src="_static/js/theme.js"></script>
-
-    
+    <script src="_static/js/theme.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="GraphScope Learning Engine" href="learning_engine.html" />
@@ -60,33 +36,16 @@
 
 </head>
 
-<body class="wy-body-for-nav">
-
-   
+<body class="wy-body-for-nav"> 
   <div class="wy-grid-for-nav">
-    
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
         <div class="wy-side-nav-search" >
-          
-
-          
             <a href="index.html" class="icon icon-home"> GraphScope
-          
-
-          
           </a>
-
-          
-            
-            
               <div class="version">
                 latest
               </div>
-            
-          
-
-          
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
     <input type="text" name="q" placeholder="Search docs" />
@@ -94,11 +53,7 @@
     <input type="hidden" name="area" value="default" />
   </form>
 </div>
-
-          
         </div>
-
-        
   <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
     
       
@@ -146,6 +101,7 @@
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="reference/python_index.html">Python API Reference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="reference/analytical_engine_index.html">Analytical Engine API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="reference/gae_java/index.html">Analytical Engine Java API Reference</a></li>
 </ul>
 
       
@@ -155,76 +111,38 @@
       </div>
     </nav>
 
-    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
-
-      
-      <nav class="wy-nav-top" aria-label="top navigation">
-        
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
           <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
           <a href="index.html">GraphScope</a>
-        
       </nav>
 
-
       <div class="wy-nav-content">
-        
         <div class="rst-content">
-        
-          
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-<div role="navigation" aria-label="breadcrumbs navigation">
-
+          <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
-    
       <li><a href="index.html" class="icon icon-home"></a> &raquo;</li>
-        
       <li>GraphScope Interactive Engine</li>
-    
-    
       <li class="wy-breadcrumbs-aside">
-        
-          
             <a href="_sources/interactive_engine.rst.txt" rel="nofollow"> View page source</a>
-          
-        
       </li>
-    
   </ul>
-
-  
   <hr/>
 </div>
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
-            
+             
   <div class="section" id="graphscope-interactive-engine">
-<h1>GraphScope Interactive Engine<a class="headerlink" href="#graphscope-interactive-engine" title="Permalink to this headline">¶</a></h1>
+<h1>GraphScope Interactive Engine<a class="headerlink" href="#graphscope-interactive-engine" title="Permalink to this headline"></a></h1>
 <p>GraphScope Interactive Engine (GIE) is a distributed system designed specifically to make it easy for a variety of users to analyze large and complex graph structures in an <em>exploratory</em> manner.  It exploits <a class="reference external" href="http://tinkerpop.apache.org/">Gremlin</a> to provide a high-level language for interactive graph queries, and provides automatic parallel execution.</p>
 <div class="section" id="apache-tinkerpop">
-<h2>Apache TinkerPop<a class="headerlink" href="#apache-tinkerpop" title="Permalink to this headline">¶</a></h2>
+<h2>Apache TinkerPop<a class="headerlink" href="#apache-tinkerpop" title="Permalink to this headline"></a></h2>
 <p><a class="reference external" href="http://tinkerpop.apache.org/">Apache TinkerPop</a> is an open framework for developing interactive graph applications using the Gremlin query language.  GIE implements TinkerPop’s <a class="reference external" href="https://tinkerpop.apache.org/docs/current/reference/#gremlin-server">Gremlin Server</a> interface so that the system can seamlessly interact with the TinkerPop ecosystem, including development tools such as <a class="reference external" href="https://tinkerpop.apache.org/docs/current/reference/#gremlin-console">Gremlin Console</a> and language wrappers such as Java and Python.</p>
 </div>
 <div class="section" id="connecting-gremlin-within-python">
-<h2>Connecting Gremlin within Python<a class="headerlink" href="#connecting-gremlin-within-python" title="Permalink to this headline">¶</a></h2>
+<h2>Connecting Gremlin within Python<a class="headerlink" href="#connecting-gremlin-within-python" title="Permalink to this headline"></a></h2>
 <p>GraphScope makes it easy to connect to a loaded graph within Python as shown below:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">graphscope</span>
-<span class="kn">from</span> <span class="nn">graphscope.dataset.ldbc</span> <span class="kn">import</span> <span class="n">load_ldbc</span>
+<span class="kn">from</span> <span class="nn">graphscope.dataset</span> <span class="kn">import</span> <span class="n">load_ldbc</span>
 
 <span class="c1"># create a new session, load LDBC graph (as an example),</span>
 <span class="c1"># and get the Gremlin entry point</span>
@@ -249,11 +167,11 @@
 <p>With that information, we can directly query a graph using Gremlin-Python as described at <a class="reference external" href="https://tinkerpop.apache.org/docs/current/reference/#gremlin-python">here</a>.</p>
 </div>
 <div class="section" id="connecting-gremlin-within-java">
-<h2>Connecting Gremlin within Java<a class="headerlink" href="#connecting-gremlin-within-java" title="Permalink to this headline">¶</a></h2>
+<h2>Connecting Gremlin within Java<a class="headerlink" href="#connecting-gremlin-within-java" title="Permalink to this headline"></a></h2>
 <p>See <a class="reference external" href="https://tinkerpop.apache.org/docs/current/reference/#gremlin-java">Gremlin-Java</a> for connecting Gremlin within the Java language.</p>
 </div>
 <div class="section" id="id2">
-<h2>Gremlin Console<a class="headerlink" href="#id2" title="Permalink to this headline">¶</a></h2>
+<h2>Gremlin Console<a class="headerlink" href="#id2" title="Permalink to this headline"></a></h2>
 <p>The <a class="reference external" href="https://tinkerpop.apache.org/docs/current/tutorials/the-gremlin-console/">Gremlin Console</a> allows you to experiment with GraphScope graphs and queries in an interactive environment.  With the same Gremlin endpoint (or URL), we can set up the Gremlin console to connect to a (remote) graph as the following:</p>
 <p>1.Install Java [8, 12) required by Gremlin Console.</p>
 <p>2.Download the appropriate version of the Gremlin console from <a class="reference external" href="https://tinkerpop.apache.org/downloads.html">Apache TinkerPop</a>.</p>
@@ -289,23 +207,23 @@
 </div>
 </div>
 <div class="section" id="programming-with-gremlin-101">
-<h2>Programming with Gremlin–101<a class="headerlink" href="#programming-with-gremlin-101" title="Permalink to this headline">¶</a></h2>
+<h2>Programming with Gremlin–101<a class="headerlink" href="#programming-with-gremlin-101" title="Permalink to this headline"></a></h2>
 <p>GIE is designed to faithfully preserve the programming model of Gremlin, and as a result it can be used to scale existing Gremlin applications to large compute clusters with minimum modification.  In this section, we provide a high-level view of the programming model, highlighting the key concepts including the data model and query language.  For a complete reference on Gremlin, see <a class="reference external" href="https://tinkerpop.apache.org/docs/current/reference/">TinkerPop reference</a>.</p>
 <div class="section" id="data-model">
-<h3>Data model<a class="headerlink" href="#data-model" title="Permalink to this headline">¶</a></h3>
+<h3>Data model<a class="headerlink" href="#data-model" title="Permalink to this headline"></a></h3>
 <p>Gremlin enables users to define ad-hoc traversals on property graphs. A property graph is a directed graph in which vertices and edges can have a set of properties. Every entity (vertex or edge) is identified by a unique identifier (<code class="docutils literal notranslate"><span class="pre">ID</span></code>), and has a (<code class="docutils literal notranslate"><span class="pre">label</span></code>) indicating its type or role. Each property is a key-value pair with combination of entity <code class="docutils literal notranslate"><span class="pre">ID</span></code> and property name as the key.</p>
 <a class="reference internal image-reference" href="_images/property_graph.png"><img alt="An example e-commerce property graph." class="align-center" src="_images/property_graph.png" style="width: 400px;" /></a>
 <p>The above figure shows an example property graph. It contains <code class="docutils literal notranslate"><span class="pre">user</span></code>, <code class="docutils literal notranslate"><span class="pre">product</span></code>, and <code class="docutils literal notranslate"><span class="pre">address</span></code> vertices connected by <code class="docutils literal notranslate"><span class="pre">order</span></code>, <code class="docutils literal notranslate"><span class="pre">deliver</span></code>, <code class="docutils literal notranslate"><span class="pre">belongs_to</span></code>, and <code class="docutils literal notranslate"><span class="pre">home_of</span></code> edges. A path following vertices 1–&gt;2–&gt;3, shown as the dotted line, indicates that a buyer “Tom” ordered a product “gift” offered by a seller “Jack”, with a price of “$99”.</p>
 </div>
 <div class="section" id="query-language">
-<h3>Query language<a class="headerlink" href="#query-language" title="Permalink to this headline">¶</a></h3>
+<h3>Query language<a class="headerlink" href="#query-language" title="Permalink to this headline"></a></h3>
 <p>In a Gremlin traversal, a set of <em>traversers</em> walk a graph according to particular user-provided instructions, and the result of the traversal is the collection of all halted traversers. A traverser is the basic unit of data processed by a Gremlin engine. Each traverser maintains a location that is a reference to the current vertex, edge or property being visited, and (optionally) the path history with application state.</p>
 <p>The flexibility of Gremlin mainly stems from <em>nested traversal</em>, which allows a traversal to be embedded within another operator, and used as a function to be invoked by the enclosing operator for processing input. The role and signature of the function are determined by the type of the enclosing operator.</p>
 <p>For example, a nested traversal within the <code class="docutils literal notranslate"><span class="pre">where</span></code> operator acts as a predicate function for conditional filters, while that within the <code class="docutils literal notranslate"><span class="pre">select</span></code> or <code class="docutils literal notranslate"><span class="pre">order</span></code> operator maps each traverser to the output or ordering key for sorting the output, respectively.</p>
 <p>Nested traversal is also critical to the support for loops, which are expressed using a pair of the <code class="docutils literal notranslate"><span class="pre">repeat</span></code> and <code class="docutils literal notranslate"><span class="pre">until/times</span></code> operators. A nested traversal within the <code class="docutils literal notranslate"><span class="pre">repeat</span></code> operator will be looped over until the given break predicate is satisfied. The predicate (or termination condition) is defined within the <code class="docutils literal notranslate"><span class="pre">until</span></code> operator, applied to each output traverser separately from each iteration. The <code class="docutils literal notranslate"><span class="pre">times</span></code> operator can also terminate a loop after a fix number of <code class="docutils literal notranslate"><span class="pre">k</span></code> iterations.</p>
 </div>
 <div class="section" id="an-example">
-<h3>An example<a class="headerlink" href="#an-example" title="Permalink to this headline">¶</a></h3>
+<h3>An example<a class="headerlink" href="#an-example" title="Permalink to this headline"></a></h3>
 <p>Below shows a Gremlin query for cycle detection, which tries to find cyclic paths of length <code class="docutils literal notranslate"><span class="pre">k</span></code> starting from a given account.</p>
 <div class="highlight-java notranslate"><div class="highlight"><pre><span></span>g.V(&#39;account&#39;).has(&#39;id&#39;,&#39;2&#39;).as(&#39;s&#39;)
  .repeat(out(&#39;transfer&#39;).simplePath())
@@ -318,10 +236,10 @@
 </div>
 </div>
 <div class="section" id="compatibility-with-tinkerpop">
-<h2>Compatibility with TinkerPop<a class="headerlink" href="#compatibility-with-tinkerpop" title="Permalink to this headline">¶</a></h2>
+<h2>Compatibility with TinkerPop<a class="headerlink" href="#compatibility-with-tinkerpop" title="Permalink to this headline"></a></h2>
 <p>GIE supports the property graph model and Gremlin traversal language defined by Apache TinkerPop, and provides a Gremlin <em>Websockets</em> server that supports TinkerPop version 3.3 and 3.4.  In this section, we provide an overview of the key differences between our implementation of Gremlin and the Apache TinkerPop specification.</p>
 <div class="section" id="property-graph-constraints">
-<h3>Property graph constraints<a class="headerlink" href="#property-graph-constraints" title="Permalink to this headline">¶</a></h3>
+<h3>Property graph constraints<a class="headerlink" href="#property-graph-constraints" title="Permalink to this headline"></a></h3>
 <p>The current release (MaxGraph) leverages <a class="reference external" href="https://github.com/alibaba/libvineyard">Vineyard</a> to supply an in-memory store for <em>immutable</em> graph data that can be partitioned across multiple servers.  By design, it introduces the following constraints:</p>
 <ul class="simple">
 <li><p>Each graph has a schema comprised of the edge labels, property keys, and vertex labels used therein.</p></li>
@@ -330,7 +248,7 @@
 </ul>
 </div>
 <div class="section" id="unsupported-features">
-<h3>Unsupported features<a class="headerlink" href="#unsupported-features" title="Permalink to this headline">¶</a></h3>
+<h3>Unsupported features<a class="headerlink" href="#unsupported-features" title="Permalink to this headline"></a></h3>
 <p>Because of the distributed nature of the system, the following features are not supported in this release:</p>
 <ul class="simple">
 <li><p>Graph mutations.</p></li>
@@ -341,7 +259,7 @@
 </ul>
 </div>
 <div class="section" id="gremlin-steps">
-<h3>Gremlin steps<a class="headerlink" href="#gremlin-steps" title="Permalink to this headline">¶</a></h3>
+<h3>Gremlin steps<a class="headerlink" href="#gremlin-steps" title="Permalink to this headline"></a></h3>
 <p>Currently GIE supports the following Gremlin steps:</p>
 <ul class="simple">
 <li><p>Source steps, e.g.,</p></li>
@@ -513,7 +431,7 @@ g.V().group().by().by(values(&quot;name&quot;)).select(values).unfold()
 </ul>
 </div>
 <div class="section" id="known-limitations">
-<h3>Known limitations<a class="headerlink" href="#known-limitations" title="Permalink to this headline">¶</a></h3>
+<h3>Known limitations<a class="headerlink" href="#known-limitations" title="Permalink to this headline"></a></h3>
 <p>The following steps are not currently available.</p>
 <ul class="simple">
 <li><p>Match</p></li>
@@ -531,50 +449,33 @@ g.V().group().by().by(values(&quot;name&quot;)).select(values).unfold()
 
 
            </div>
-           
           </div>
-          <footer>
-    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
-        <a href="learning_engine.html" class="btn btn-neutral float-right" title="GraphScope Learning Engine" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
         <a href="analytics_engine.html" class="btn btn-neutral float-left" title="GraphScope Analytical Engine" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="learning_engine.html" class="btn btn-neutral float-right" title="GraphScope Learning Engine" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>
 
   <div role="contentinfo">
-    <p>
-        &#169; Copyright 2020-2023, Damo Academy, Alibaba Inc..
-
-    </p>
+    <p>&#169; Copyright 2020-2023, Damo Academy, Alibaba Inc..</p>
   </div>
-    
-    
-    
-    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
-    
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
     <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
-    
-    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
 
 </footer>
         </div>
       </div>
-
     </section>
-
   </div>
-  
-
-  <script type="text/javascript">
+  <script>
       jQuery(function () {
           SphinxRtdTheme.Navigation.enable(true);
       });
   </script>
-
-  
-  
-    
-  
   
 
   <div class="rst-versions" data-toggle="rst-versions" role="note" aria-label="versions">
@@ -611,6 +512,16 @@ g.V().group().by().by(values(&quot;name&quot;)).select(values).unfold()
 
             
               
+                <dd><a href="../v0.8.0/index.html">v0.8.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
                 <dd><a href="../v0.7.0/index.html">v0.7.0</a></dd>
               
             
@@ -621,7 +532,7 @@ g.V().group().by().by(values(&quot;name&quot;)).select(values).unfold()
 
             
               
-                <dd><a href="../v0.6.0-rev1/index.html">v0.6.0-rev1</a></dd>
+                <dd><a href="../v0.6.1/index.html">v0.6.1</a></dd>
               
             
 

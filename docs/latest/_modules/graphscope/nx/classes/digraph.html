@@ -1,45 +1,21 @@
-
-
 <!DOCTYPE html>
 <html class="writer-html5" lang="en" >
 <head>
   <meta charset="utf-8" />
-  
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  
   <title>graphscope.nx.classes.digraph &mdash; GraphScope  documentation</title>
-  
-
-  
-  <link rel="stylesheet" href="../../../../_static/css/theme.css" type="text/css" />
-  <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
-  <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
-  <link rel="stylesheet" href="../../../../_static/css/theme.css" type="text/css" />
-  <link rel="stylesheet" href="../../../../_static/css/custom.css" type="text/css" />
-
-  
-  
-
-  
-  
-
-  
-
-  
+      <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../../../_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="../../../../_static/css/custom.css" type="text/css" />
   <!--[if lt IE 9]>
     <script src="../../../../_static/js/html5shiv.min.js"></script>
   <![endif]-->
   
-    
-      <script type="text/javascript" id="documentation_options" data-url_root="../../../../" src="../../../../_static/documentation_options.js"></script>
         <script data-url_root="../../../../" id="documentation_options" src="../../../../_static/documentation_options.js"></script>
         <script src="../../../../_static/jquery.js"></script>
         <script src="../../../../_static/underscore.js"></script>
         <script src="../../../../_static/doctools.js"></script>
-    
-    <script type="text/javascript" src="../../../../_static/js/theme.js"></script>
-
-    
+    <script src="../../../../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../../../../genindex.html" />
     <link rel="search" title="Search" href="../../../../search.html" />
 
@@ -58,33 +34,16 @@
 
 </head>
 
-<body class="wy-body-for-nav">
-
-   
+<body class="wy-body-for-nav"> 
   <div class="wy-grid-for-nav">
-    
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
         <div class="wy-side-nav-search" >
-          
-
-          
             <a href="../../../../index.html" class="icon icon-home"> GraphScope
-          
-
-          
           </a>
-
-          
-            
-            
               <div class="version">
                 latest
               </div>
-            
-          
-
-          
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../../../../search.html" method="get">
     <input type="text" name="q" placeholder="Search docs" />
@@ -92,11 +51,7 @@
     <input type="hidden" name="area" value="default" />
   </form>
 </div>
-
-          
         </div>
-
-        
   <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
     
       
@@ -125,6 +80,7 @@
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../../../../reference/python_index.html">Python API Reference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../reference/analytical_engine_index.html">Analytical Engine API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../reference/gae_java/index.html">Analytical Engine Java API Reference</a></li>
 </ul>
 
       
@@ -134,62 +90,26 @@
       </div>
     </nav>
 
-    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
-
-      
-      <nav class="wy-nav-top" aria-label="top navigation">
-        
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
           <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
           <a href="../../../../index.html">GraphScope</a>
-        
       </nav>
 
-
       <div class="wy-nav-content">
-        
         <div class="rst-content">
-        
-          
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-<div role="navigation" aria-label="breadcrumbs navigation">
-
+          <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
-    
       <li><a href="../../../../index.html" class="icon icon-home"></a> &raquo;</li>
-        
           <li><a href="../../../index.html">Module code</a> &raquo;</li>
-        
       <li>graphscope.nx.classes.digraph</li>
-    
-    
       <li class="wy-breadcrumbs-aside">
-        
       </li>
-    
   </ul>
-
-  
   <hr/>
 </div>
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
-            
+             
   <h1>Source code for graphscope.nx.classes.digraph</h1><div class="highlight"><pre>
 <span></span><span class="ch">#!/usr/bin/env python3</span>
 <span class="c1"># -*- coding: utf-8 -*-</span>
@@ -223,38 +143,60 @@
 <span class="kn">from</span> <span class="nn">networkx.classes.reportviews</span> <span class="kn">import</span> <span class="n">OutDegreeView</span>
 <span class="kn">from</span> <span class="nn">networkx.classes.reportviews</span> <span class="kn">import</span> <span class="n">OutEdgeView</span>
 
-<span class="kn">from</span> <span class="nn">graphscope.client.session</span> <span class="kn">import</span> <span class="n">get_default_session</span>
 <span class="kn">from</span> <span class="nn">graphscope.framework</span> <span class="kn">import</span> <span class="n">dag_utils</span>
 <span class="kn">from</span> <span class="nn">graphscope.framework.dag_utils</span> <span class="kn">import</span> <span class="n">copy_graph</span>
+<span class="kn">from</span> <span class="nn">graphscope.framework.errors</span> <span class="kn">import</span> <span class="n">check_argument</span>
 <span class="kn">from</span> <span class="nn">graphscope.framework.graph_schema</span> <span class="kn">import</span> <span class="n">GraphSchema</span>
 <span class="kn">from</span> <span class="nn">graphscope.nx</span> <span class="kn">import</span> <span class="n">NetworkXError</span>
 <span class="kn">from</span> <span class="nn">graphscope.nx.classes.graph</span> <span class="kn">import</span> <span class="n">Graph</span>
-<span class="kn">from</span> <span class="nn">graphscope.nx.convert</span> <span class="kn">import</span> <span class="n">from_gs_graph</span>
 <span class="kn">from</span> <span class="nn">graphscope.nx.convert</span> <span class="kn">import</span> <span class="n">to_nx_graph</span>
 <span class="kn">from</span> <span class="nn">graphscope.nx.utils.compat</span> <span class="kn">import</span> <span class="n">patch_docstring</span>
-<span class="kn">from</span> <span class="nn">graphscope.nx.utils.other</span> <span class="kn">import</span> <span class="n">empty_graph_in_engine</span>
+<span class="kn">from</span> <span class="nn">graphscope.nx.utils.misc</span> <span class="kn">import</span> <span class="n">check_node_is_legal</span>
+<span class="kn">from</span> <span class="nn">graphscope.nx.utils.misc</span> <span class="kn">import</span> <span class="n">empty_graph_in_engine</span>
+<span class="kn">from</span> <span class="nn">graphscope.proto</span> <span class="kn">import</span> <span class="n">graph_def_pb2</span>
 <span class="kn">from</span> <span class="nn">graphscope.proto</span> <span class="kn">import</span> <span class="n">types_pb2</span>
 
 
 <div class="viewcode-block" id="DiGraph"><a class="viewcode-back" href="../../../../reference/networkx/graphs.html#graphscope.nx.DiGraph">[docs]</a><span class="k">class</span> <span class="nc">DiGraph</span><span class="p">(</span><span class="n">Graph</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Base class for directed graphs in graphscope.nx.</span>
+<span class="sd">    Base class for directed graphs.</span>
 
-<span class="sd">    A DiGraph that hold the metadata of a graph, and provide NetworkX-like DiGraph APIs.</span>
+<span class="sd">    A DiGraph that holds the metadata of a graph, and provides NetworkX-like DiGraph APIs.</span>
 
 <span class="sd">    It is worth noticing that the graph is actually stored by the Analytical Engine backend.</span>
-<span class="sd">    In other words, the graph object holds nothing but metadata of a graph</span>
+<span class="sd">    In other words, the Graph object holds nothing but metadata of a graph</span>
 
 <span class="sd">    DiGraph support nodes and edges with optional data, or attributes.</span>
 
 <span class="sd">    DiGraphs support directed edges.  Self loops are allowed but multiple</span>
 <span class="sd">    (parallel) edges are not.</span>
 
-<span class="sd">    Nodes can be some hashable objects including int/str/float/tuple/bool object</span>
-<span class="sd">    with optional key/value attributes.</span>
+<span class="sd">    Nodes can be arbitrary int/str/float/bool objects with optional</span>
+<span class="sd">    key/value attributes.</span>
 
 <span class="sd">    Edges are represented as links between nodes with optional</span>
 <span class="sd">    key/value attributes.</span>
+
+<span class="sd">    DiGraph support node label if it&#39;s created from a GraphScope graph object.</span>
+<span class="sd">    nodes are identified by `(label, id)` tuple.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    incoming_graph_data : input graph (optional, default: None)</span>
+<span class="sd">        Data to initialize graph. If None (default) an empty</span>
+<span class="sd">        graph is created.  The data can be any format that is supported</span>
+<span class="sd">        by the to_nx_graph() function, currently including edge list,</span>
+<span class="sd">        dict of dicts, dict of lists, NetworkX graph, NumPy matrix</span>
+<span class="sd">        or 2d ndarray, Pandas DataFrame, SciPy sparse matrix, or a GraphScope</span>
+<span class="sd">        graph object.</span>
+
+<span class="sd">    default_label : default node label (optional, default: None)</span>
+<span class="sd">        if incoming_graph_data is a GraphScope graph object, default label means</span>
+<span class="sd">        the nodes of the label can be identified by id directly, other label nodes</span>
+<span class="sd">        need to use `(label, id)` to identify.</span>
+
+<span class="sd">    attr : keyword arguments, optional (default= no attributes)</span>
+<span class="sd">        Attributes to add to graph as key=value pairs.</span>
 
 <span class="sd">    See Also</span>
 <span class="sd">    --------</span>
@@ -372,6 +314,31 @@
 <span class="sd">    ...         # Do something useful with the edges</span>
 <span class="sd">    ...         pass</span>
 
+<span class="sd">    **Transformation**</span>
+
+<span class="sd">    Create a graph with GraphScope graph object. First we init a GraphScope graph</span>
+<span class="sd">    with two node labels: person and comment`</span>
+
+<span class="sd">    &gt;&gt;&gt; g = graphscope.g(directed=True).add_vertice(&quot;persion.csv&quot;, label=&quot;person&quot;).add_vertice(&quot;comment.csv&quot;, label=&quot;comment&quot;)</span>
+
+<span class="sd">    create a graph with g, set default_label to &#39;person&#39;</span>
+
+<span class="sd">    &gt;&gt;&gt; G = nx.DiGraph(g, default_label=&quot;person&quot;)</span>
+
+<span class="sd">    `person` label nodes can be identified by id directly, for `comment` label,</span>
+<span class="sd">    we has to use tuple `(&quot;comment&quot;, id)` identify. Like, add a person label</span>
+<span class="sd">    node and a comment label node</span>
+
+<span class="sd">    &gt;&gt;&gt; G.add_node(0, type=&quot;person&quot;)</span>
+<span class="sd">    &gt;&gt;&gt; G.add_node((&quot;comment&quot;, 0), type=&quot;comment&quot;)</span>
+
+<span class="sd">    print property of two nodes</span>
+
+<span class="sd">    &gt;&gt;&gt; G.nodes[0]</span>
+<span class="sd">    {&quot;type&quot;, &quot;person&quot;}</span>
+<span class="sd">    &gt;&gt;&gt; G.nodes[(&quot;comment&quot;, 0)]</span>
+<span class="sd">    {&quot;type&quot;, &quot;comment&quot;}</span>
+
 <span class="sd">    **Reporting:**</span>
 
 <span class="sd">    Simple graph information is obtained using object-attributes and methods.</span>
@@ -387,7 +354,7 @@
 <span class="sd">    &quot;&quot;&quot;</span>
 
 <div class="viewcode-block" id="DiGraph.__init__"><a class="viewcode-back" href="../../../../reference/networkx/graphs.html#graphscope.nx.DiGraph.__init__">[docs]</a>    <span class="nd">@patch_docstring</span><span class="p">(</span><span class="n">Graph</span><span class="o">.</span><span class="fm">__init__</span><span class="p">)</span>
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">incoming_graph_data</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">attr</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">incoming_graph_data</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">default_label</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">attr</span><span class="p">):</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_session</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_try_to_get_default_session</span><span class="p">()</span>
 
@@ -412,6 +379,10 @@
             <span class="s2">&quot;create_empty_in_engine&quot;</span><span class="p">,</span> <span class="kc">True</span>
         <span class="p">)</span>  <span class="c1"># a hidden parameter</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_distributed</span> <span class="o">=</span> <span class="n">attr</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;dist&quot;</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">incoming_graph_data</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">_is_gs_graph</span><span class="p">(</span><span class="n">incoming_graph_data</span><span class="p">):</span>
+            <span class="c1"># convert from gs graph always use distributed mode</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_distributed</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_default_label</span> <span class="o">=</span> <span class="n">default_label</span>
 
         <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_is_gs_graph</span><span class="p">(</span><span class="n">incoming_graph_data</span><span class="p">)</span> <span class="ow">and</span> <span class="n">create_empty_in_engine</span><span class="p">:</span>
             <span class="n">graph_def</span> <span class="o">=</span> <span class="n">empty_graph_in_engine</span><span class="p">(</span>
@@ -422,11 +393,10 @@
         <span class="c1"># attempt to load graph with data</span>
         <span class="k">if</span> <span class="n">incoming_graph_data</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_is_gs_graph</span><span class="p">(</span><span class="n">incoming_graph_data</span><span class="p">):</span>
-                <span class="n">graph_def</span> <span class="o">=</span> <span class="n">from_gs_graph</span><span class="p">(</span><span class="n">incoming_graph_data</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">_key</span> <span class="o">=</span> <span class="n">graph_def</span><span class="o">.</span><span class="n">key</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">_schema</span><span class="o">.</span><span class="n">init_nx_schema</span><span class="p">(</span><span class="n">incoming_graph_data</span><span class="o">.</span><span class="n">schema</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_init_with_arrow_property_graph</span><span class="p">(</span><span class="n">incoming_graph_data</span><span class="p">)</span>
             <span class="k">else</span><span class="p">:</span>
-                <span class="n">to_nx_graph</span><span class="p">(</span><span class="n">incoming_graph_data</span><span class="p">,</span> <span class="n">create_using</span><span class="o">=</span><span class="bp">self</span><span class="p">)</span>
+                <span class="n">g</span> <span class="o">=</span> <span class="n">to_nx_graph</span><span class="p">(</span><span class="n">incoming_graph_data</span><span class="p">,</span> <span class="n">create_using</span><span class="o">=</span><span class="bp">self</span><span class="p">)</span>
+                <span class="n">check_argument</span><span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">g</span><span class="p">,</span> <span class="n">Graph</span><span class="p">))</span>
 
         <span class="c1"># load graph attributes (must be after to_nx_graph)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">graph</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">attr</span><span class="p">)</span>
@@ -460,6 +430,7 @@
 
 <div class="viewcode-block" id="DiGraph.successors"><a class="viewcode-back" href="../../../../reference/networkx/graphs.html#graphscope.nx.DiGraph.successors">[docs]</a>    <span class="nd">@patch_docstring</span><span class="p">(</span><span class="n">RefDiGraph</span><span class="o">.</span><span class="n">successors</span><span class="p">)</span>
     <span class="k">def</span> <span class="nf">successors</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">n</span><span class="p">):</span>
+        <span class="n">check_node_is_legal</span><span class="p">(</span><span class="n">n</span><span class="p">)</span>
         <span class="k">try</span><span class="p">:</span>
             <span class="k">return</span> <span class="nb">iter</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_succ</span><span class="p">[</span><span class="n">n</span><span class="p">])</span>
         <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
@@ -470,6 +441,7 @@
 
 <div class="viewcode-block" id="DiGraph.predecessors"><a class="viewcode-back" href="../../../../reference/networkx/graphs.html#graphscope.nx.DiGraph.predecessors">[docs]</a>    <span class="nd">@patch_docstring</span><span class="p">(</span><span class="n">RefDiGraph</span><span class="o">.</span><span class="n">predecessors</span><span class="p">)</span>
     <span class="k">def</span> <span class="nf">predecessors</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">n</span><span class="p">):</span>
+        <span class="n">check_node_is_legal</span><span class="p">(</span><span class="n">n</span><span class="p">)</span>
         <span class="k">try</span><span class="p">:</span>
             <span class="k">return</span> <span class="nb">iter</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_pred</span><span class="p">[</span><span class="n">n</span><span class="p">])</span>
         <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
@@ -613,6 +585,8 @@
 
 <div class="viewcode-block" id="DiGraph.reverse"><a class="viewcode-back" href="../../../../reference/networkx/graphs.html#graphscope.nx.DiGraph.reverse">[docs]</a>    <span class="nd">@patch_docstring</span><span class="p">(</span><span class="n">RefDiGraph</span><span class="o">.</span><span class="n">reverse</span><span class="p">)</span>
     <span class="k">def</span> <span class="nf">reverse</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">copy</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_convert_arrow_to_dynamic</span><span class="p">()</span>
+
         <span class="k">if</span> <span class="ow">not</span> <span class="n">copy</span><span class="p">:</span>
             <span class="n">g</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="p">(</span><span class="n">create_empty_in_engine</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
             <span class="n">g</span><span class="o">.</span><span class="n">graph</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">graph</span><span class="p">)</span>
@@ -637,46 +611,30 @@
 </pre></div>
 
            </div>
-           
           </div>
           <footer>
 
   <hr/>
 
   <div role="contentinfo">
-    <p>
-        &#169; Copyright 2020-2023, Damo Academy, Alibaba Inc..
-
-    </p>
+    <p>&#169; Copyright 2020-2023, Damo Academy, Alibaba Inc..</p>
   </div>
-    
-    
-    
-    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
-    
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
     <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
-    
-    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
 
 </footer>
         </div>
       </div>
-
     </section>
-
   </div>
-  
-
-  <script type="text/javascript">
+  <script>
       jQuery(function () {
           SphinxRtdTheme.Navigation.enable(true);
       });
   </script>
-
-  
-  
-    
-  
   
 
   <div class="rst-versions" data-toggle="rst-versions" role="note" aria-label="versions">
@@ -713,6 +671,16 @@
 
             
               
+                <dd><a href="../../../../../v0.8.0/index.html">v0.8.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
                 <dd><a href="../../../../../v0.7.0/index.html">v0.7.0</a></dd>
               
             
@@ -723,7 +691,7 @@
 
             
               
-                <dd><a href="../../../../../v0.6.0-rev1/index.html">v0.6.0-rev1</a></dd>
+                <dd><a href="../../../../../v0.6.1/index.html">v0.6.1</a></dd>
               
             
 
