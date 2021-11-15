@@ -439,7 +439,7 @@ jobs:
         mvn clean install -DskipTests -Dmaven.antrun.skip=true --quiet
 
     - name: Basic test
-      if: steps.nx-filter.output.basic == 'true'
+      if: false
       run: |
         export GRAPHSCOPE_HOME='/opt/graphscope'
         export GS_TEST_DIR='/home/graphscope/gstest'
@@ -447,7 +447,7 @@ jobs:
                           --ignore=python/graphscope/nx/tests/algorithms
 
     - name: Algorithm test
-      if: steps.nx-filter.output.basic == 'true' || steps.nx-filter.output.algorithm == 'true'
+      if: false
       run: |
         export GRAPHSCOPE_HOME='/opt/graphscope'
         export GS_TEST_DIR='/home/graphscope/gstest'
