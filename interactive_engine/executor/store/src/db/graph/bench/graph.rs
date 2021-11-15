@@ -45,7 +45,7 @@ mod benchmark {
             // length from 128B to 4KB
             for value_len in 7..=12 {
                 let label = value_len as LabelId;
-                self.graph.create_vertex_type(1, schema_version, label, &type_def).unwrap();
+                self.graph.create_vertex_type(1, schema_version, label, &type_def, schema_version).unwrap();
                 schema_version += 1;
                 let len = 1<<value_len;
                 let properties = data::gen_one_string_properties(&type_def, len);
@@ -65,7 +65,7 @@ mod benchmark {
             for r#type in vec![ValueType::Int, ValueType::Long, ValueType::Float, ValueType::Double] {
                 label += 1;
                 let type_def = types::create_one_property_type_def(r#type);
-                self.graph.create_vertex_type(1, schema_version, label, &type_def).unwrap();
+                self.graph.create_vertex_type(1, schema_version, label, &type_def, schema_version).unwrap();
                 schema_version += 1;
                 let properties = data::gen_properties(&type_def);
 
@@ -84,7 +84,7 @@ mod benchmark {
             for count in vec![5, 10, 20, 50, 100, 200] {
                 label += 1;
                 let type_def = types::multi_numeric_properties_type_def(count);
-                self.graph.create_vertex_type(1, schema_version, label, &type_def).unwrap();
+                self.graph.create_vertex_type(1, schema_version, label, &type_def, schema_version).unwrap();
                 schema_version += 1;
                 let properties = data::gen_properties(&type_def);
 
@@ -103,7 +103,7 @@ mod benchmark {
             for count in vec![5, 10, 20, 50, 100, 200] {
                 label += 1;
                 let type_def = types::multi_string_properties_type_def(count);
-                self.graph.create_vertex_type(1, schema_version, label, &type_def).unwrap();
+                self.graph.create_vertex_type(1, schema_version, label, &type_def, schema_version).unwrap();
                 schema_version += 1;
                 let properties = data::gen_properties(&type_def);
 
@@ -160,7 +160,7 @@ mod benchmark {
                 let edge_type = EdgeKind::new(label, label+1, label+2);
                 self.graph.create_edge_type(1, schema_version, label, &type_def).unwrap();
                 schema_version += 1;
-                self.graph.add_edge_kind(1, schema_version, &edge_type).unwrap();
+                self.graph.add_edge_kind(1, schema_version, &edge_type, schema_version).unwrap();
                 schema_version += 1;
 
                 let len = 1<<value_len;
@@ -184,7 +184,7 @@ mod benchmark {
                 let edge_type = EdgeKind::new(label, label+1, label+2);
                 self.graph.create_edge_type(1, schema_version, label, &type_def).unwrap();
                 schema_version += 1;
-                self.graph.add_edge_kind(1, schema_version, &edge_type).unwrap();
+                self.graph.add_edge_kind(1, schema_version, &edge_type, schema_version).unwrap();
                 schema_version += 1;
                 let properties = data::gen_properties(&type_def);
 
@@ -206,7 +206,7 @@ mod benchmark {
                 let edge_type = EdgeKind::new(label, label+1, label+2);
                 self.graph.create_edge_type(1, schema_version, label, &type_def).unwrap();
                 schema_version += 1;
-                self.graph.add_edge_kind(1, schema_version, &edge_type).unwrap();
+                self.graph.add_edge_kind(1, schema_version, &edge_type, schema_version).unwrap();
                 schema_version += 1;
                 let properties = data::gen_properties(&type_def);
 
@@ -228,7 +228,7 @@ mod benchmark {
                 let edge_type = EdgeKind::new(label, label+1, label+2);
                 self.graph.create_edge_type(1,  schema_version, label, &type_def).unwrap();
                 schema_version += 1;
-                self.graph.add_edge_kind(1, schema_version,  &edge_type).unwrap();
+                self.graph.add_edge_kind(1, schema_version,  &edge_type, schema_version).unwrap();
                 schema_version += 1;
                 let properties = data::gen_properties(&type_def);
 

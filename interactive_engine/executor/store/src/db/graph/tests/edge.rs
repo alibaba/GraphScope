@@ -80,13 +80,13 @@ mod tester {
             let check_helper = EdgeCheckHelper::new(&helper, &data_gen);
             for si in (1..10).step_by(3) {
                 check_helper.check_query_edges(si, None, &vec![]);
-                check_helper.check_query_edges_err(si, Some(label1));
-                check_helper.check_query_edges_err(si, Some(label2));
+                check_helper.check_query_edges_empty(si, Some(label1));
+                check_helper.check_query_edges_empty(si, Some(label2));
                 println!("check si#{} success", si);
             }
             for si in 10..35 {
                 if si < 20 {
-                    check_helper.check_query_edges_err(si, Some(label2));
+                    check_helper.check_query_edges_empty(si, Some(label2));
                     if si < 13 {
                         check_helper.check_query_edges(si, None, &vec![]);
                         check_helper.check_query_edges(si, Some(label1), &vec![]);
@@ -165,10 +165,10 @@ mod tester {
 
             let check_helper =  EdgeCheckHelper::new(&helper, &data_gen);
             for si in (1..10).step_by(3) {
-                check_helper.check_get_out_edges_err(si, Some(label1));
-                check_helper.check_get_in_edges_err(si, Some(label1));
-                check_helper.check_get_out_edges_err(si, Some(label2));
-                check_helper.check_get_in_edges_err(si, Some(label2));
+                check_helper.check_get_out_edges_empty(si, Some(label1));
+                check_helper.check_get_in_edges_empty(si, Some(label1));
+                check_helper.check_get_out_edges_empty(si, Some(label2));
+                check_helper.check_get_in_edges_empty(si, Some(label2));
                 let mut edge_kinds = Vec::new();
                 edge_kinds.extend_from_slice(&label1_edge_kinds);
                 edge_kinds.extend_from_slice(&label2_edge_kinds);
@@ -179,8 +179,8 @@ mod tester {
 
             for si in 10..35 {
                 if si < 20 {
-                    check_helper.check_get_out_edges_err(si, Some(label2));
-                    check_helper.check_get_in_edges_err(si, Some(label2));
+                    check_helper.check_get_out_edges_empty(si, Some(label2));
+                    check_helper.check_get_in_edges_empty(si, Some(label2));
                     if si < 13 {
                         check_helper.check_get_out_edges_none(si, Some(label1), &label1_edge_kinds);
                         check_helper.check_get_in_edges_none(si, Some(label1), &label1_edge_kinds);
@@ -819,9 +819,9 @@ mod common {
 
         pub fn check_all_data_err_of_labels(&self, si: SnapshotId, labels: Vec<LabelId>) {
             for label in labels.clone() {
-                self.check_get_out_edges_err(si, Some(label));
-                self.check_get_in_edges_err(si, Some(label));
-                self.check_query_edges_err(si, Some(label));
+                self.check_get_out_edges_empty(si, Some(label));
+                self.check_get_in_edges_empty(si, Some(label));
+                self.check_query_edges_empty(si, Some(label));
             }
             self.check_get_edge_err_of_labels(si, labels);
         }
@@ -942,9 +942,9 @@ mod common {
             }
         }
 
-        pub fn check_get_out_edges_err(&self, si: SnapshotId, label: Option<LabelId>) {
+        pub fn check_get_out_edges_empty(&self, si: SnapshotId, label: Option<LabelId>) {
             for (src_id, _) in self.data_gen.all_out_edges(vec![label.unwrap()]) {
-                self.helper.check_get_out_edges_err(si, src_id, label);
+                self.helper.check_get_out_edges_empty(si, src_id, label);
             }
         }
 
@@ -968,9 +968,9 @@ mod common {
             }
         }
 
-        pub fn check_get_in_edges_err(&self, si: SnapshotId, label: Option<LabelId>) {
+        pub fn check_get_in_edges_empty(&self, si: SnapshotId, label: Option<LabelId>) {
             for (dst_id, _) in self.data_gen.all_in_edges(vec![label.unwrap()]) {
-                self.helper.check_get_in_edges_err(si, dst_id, label);
+                self.helper.check_get_in_edges_empty(si, dst_id, label);
             }
         }
 
@@ -990,8 +990,8 @@ mod common {
             self.helper.check_query_edges(si, label, ids);
         }
 
-        pub fn check_query_edges_err(&self, si: SnapshotId, label: Option<LabelId>) {
-            self.helper.check_query_edges_err(si, label);
+        pub fn check_query_edges_empty(&self, si: SnapshotId, label: Option<LabelId>) {
+            self.helper.check_query_edges_empty(si, label);
         }
 
         fn check_all_data(&self, si: SnapshotId, map: HashMap<LabelId, Vec<EdgeKind>>) {
