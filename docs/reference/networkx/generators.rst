@@ -70,7 +70,6 @@ Small
    dodecahedral_graph
    frucht_graph
    heawood_graph
-   hoffman_singleton_graph
    house_graph
    house_x_graph
    icosahedral_graph
@@ -146,6 +145,23 @@ Ego Graph
 
    ego_graph
 
+Stochastic
+----------
+.. automodule:: networkx.generators.stochastic
+.. autosummary::
+   :toctree: generated/
+
+   stochastic_graph
+
+
+AS graph
+--------
+.. automodule:: networkx.generators.internet_as_graphs
+.. autosummary::
+   :toctree: generated/
+
+   random_internet_as_graph
+
 
 Intersection
 ------------
@@ -168,3 +184,98 @@ Social Networks
    davis_southern_women_graph
    florentine_families_graph
    les_miserables_graph
+
+Community
+---------
+.. automodule:: graphscope.nx.generators.community
+.. autosummary::
+   :toctree: generated/
+
+   caveman_graph
+   connected_caveman_graph
+   gaussian_random_partition_graph
+   LFR_benchmark_graph
+   planted_partition_graph
+   random_partition_graph
+   relaxed_caveman_graph
+   ring_of_cliques
+   stochastic_block_model
+   windmill_graph
+
+
+Spectral
+--------
+.. automodule:: graphscope.nx.generators.spectral_graph_forge
+.. autosummary::
+   :toctree: generated/
+
+   spectral_graph_forge
+
+
+Trees
+-----
+.. automodule:: graphscope.nx.generators.trees
+.. autosummary::
+   :toctree: generated/
+
+   random_tree
+   prefix_tree
+
+
+Non Isomorphic Trees
+--------------------
+.. automodule:: graphscope.nx.generators.nonisomorphic_trees
+.. autosummary::
+   :toctree: generated/
+
+   nonisomorphic_trees
+   number_of_nonisomorphic_trees
+
+
+Triads
+------
+.. automodule:: graphscope.nx.generators.triads
+.. autosummary::
+   :toctree: generated/
+
+   triad_graph
+
+
+Joint Degree Sequence
+---------------------
+.. automodule:: graphscope.nx.generators.joint_degree_seq
+.. autosummary::
+   :toctree: generated/
+
+   is_valid_joint_degree
+   joint_degree_graph
+   is_valid_directed_joint_degree
+   directed_joint_degree_graph
+
+
+Mycielski
+---------
+.. automodule:: graphscope.nx.generators.mycielski
+.. autosummary::
+   :toctree: generated/
+
+   mycielskian
+   mycielski_graph
+
+
+Harary Graph
+------------
+.. automodule:: graphscope.nx.generators.harary_graph
+.. autosummary::
+   :toctree: generated/
+
+   hnm_harary_graph
+   hkn_harary_graph
+
+Sudoku
+------
+.. automodule:: graphscope.nx.generators.sudoku
+.. autosummary::
+   :toctree: generated/
+
+   sudoku_graph

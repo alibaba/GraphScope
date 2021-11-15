@@ -16,8 +16,8 @@
 # limitations under the License.
 #
 
-import networkx.generators.expanders
+import networkx.generators.sudoku
 
 from graphscope.nx.utils.compat import import_as_graphscope_nx
 
-import_as_graphscope_nx(networkx.generators.expanders)
+import_as_graphscope_nx(networkx.generators.sudoku)

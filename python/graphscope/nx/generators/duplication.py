@@ -15,11 +15,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-"""
-Generators for some directed graphs, including growing network (GN) graphs and
-scale-free graphs.
-
-"""
 
 import networkx.generators.duplication
 

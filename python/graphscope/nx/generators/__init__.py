@@ -28,9 +28,14 @@ from graphscope.nx.generators.geometric import *
 from graphscope.nx.generators.internet_as_graphs import *
 from graphscope.nx.generators.intersection import *
 from graphscope.nx.generators.joint_degree_seq import *
-from graphscope.nx.generators.lattice import *
-from graphscope.nx.generators.line import *
+from graphscope.nx.generators.mycielski import *
+from graphscope.nx.generators.nonisomorphic_trees import *
+from graphscope.nx.generators.random_clustered import *
 from graphscope.nx.generators.random_graphs import *
 from graphscope.nx.generators.small import *
 from graphscope.nx.generators.social import *
+from graphscope.nx.generators.spectral_graph_forge import *
+from graphscope.nx.generators.stochastic import *
+from graphscope.nx.generators.sudoku import *
 from graphscope.nx.generators.trees import *
+from graphscope.nx.generators.triads import *

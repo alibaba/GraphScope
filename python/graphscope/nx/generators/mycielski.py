@@ -16,8 +16,9 @@
 # limitations under the License.
 #
 
-import networkx.generators.lattice
+
+import networkx.generators.mycielski
 
 from graphscope.nx.utils.compat import import_as_graphscope_nx
 
-import_as_graphscope_nx(networkx.generators.lattice)
+import_as_graphscope_nx(networkx.generators.mycielski)

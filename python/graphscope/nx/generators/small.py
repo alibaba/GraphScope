@@ -35,7 +35,6 @@ __all__ = [
     "dodecahedral_graph",
     "frucht_graph",
     "heawood_graph",
-    "hoffman_singleton_graph",
     "house_graph",
     "house_x_graph",
     "icosahedral_graph",

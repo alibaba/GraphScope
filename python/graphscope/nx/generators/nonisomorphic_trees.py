@@ -16,8 +16,11 @@
 # limitations under the License.
 #
 
-import networkx.generators.expanders
+import sys
+
+import networkx.generators.nonisomorphic_trees
 
 from graphscope.nx.utils.compat import import_as_graphscope_nx
 
-import_as_graphscope_nx(networkx.generators.expanders)
+nonisomorphic_trees_module = sys.modules["networkx.generators.nonisomorphic_trees"]
+import_as_graphscope_nx(nonisomorphic_trees_module)
