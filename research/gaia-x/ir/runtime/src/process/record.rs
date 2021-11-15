@@ -125,18 +125,6 @@ impl Record {
     }
 }
 
-impl Encode for Entry {
-    fn write_to<W: WriteExt>(&self, _writer: &mut W) -> std::io::Result<()> {
-        todo!()
-    }
-}
-
-impl Decode for Entry {
-    fn read_from<R: ReadExt>(_reader: &mut R) -> std::io::Result<Self> {
-        todo!()
-    }
-}
-
 impl PartialEq for Entry {
     fn eq(&self, _other: &Self) -> bool {
         todo!()
@@ -147,18 +135,6 @@ impl Eq for Entry {}
 
 impl Hash for Entry {
     fn hash<H: Hasher>(&self, _state: &mut H) {
-        todo!()
-    }
-}
-
-impl Encode for Record {
-    fn write_to<W: WriteExt>(&self, _writer: &mut W) -> std::io::Result<()> {
-        todo!()
-    }
-}
-
-impl Decode for Record {
-    fn read_from<R: ReadExt>(_reader: &mut R) -> std::io::Result<Self> {
         todo!()
     }
 }
@@ -313,18 +289,6 @@ impl PartialEq for RecordKey {
 
 impl Eq for RecordKey {}
 
-impl Encode for RecordKey {
-    fn write_to<W: WriteExt>(&self, _writer: &mut W) -> std::io::Result<()> {
-        todo!()
-    }
-}
-
-impl Decode for RecordKey {
-    fn read_from<R: ReadExt>(_reader: &mut R) -> std::io::Result<Self> {
-        todo!()
-    }
-}
-
 pub struct RecordExpandIter<E> {
     tag: Option<NameOrId>,
     origin: Record,
@@ -353,5 +317,177 @@ impl<E: Into<VertexOrEdge>> Iterator for RecordExpandIter<E> {
             }
             None => None,
         }
+    }
+}
+
+impl Encode for ObjectElement {
+    fn write_to<W: WriteExt>(&self, writer: &mut W) -> std::io::Result<()> {
+        match self {
+            ObjectElement::None => {
+                writer.write_u8(0)?;
+            }
+            ObjectElement::Prop(prop) => {
+                writer.write_u8(1)?;
+                prop.write_to(writer)?;
+            }
+            ObjectElement::Count(cnt) => {
+                writer.write_u8(2)?;
+                writer.write_u64(*cnt)?;
+            }
+            ObjectElement::Agg(agg) => {
+                writer.write_u8(3)?;
+                agg.write_to(writer)?;
+            }
+        }
+        Ok(())
+    }
+}
+
+impl Decode for ObjectElement {
+    fn read_from<R: ReadExt>(reader: &mut R) -> std::io::Result<Self> {
+        let opt = reader.read_u8()?;
+        match opt {
+            0 => Ok(ObjectElement::None),
+            1 => {
+                let object = <Object>::read_from(reader)?;
+                Ok(ObjectElement::Prop(object))
+            }
+            2 => {
+                let cnt = <u64>::read_from(reader)?;
+                Ok(ObjectElement::Count(cnt))
+            }
+            3 => {
+                let object = <Object>::read_from(reader)?;
+                Ok(ObjectElement::Agg(object))
+            }
+            _ => Err(std::io::Error::new(
+                std::io::ErrorKind::Other,
+                "unreachable",
+            )),
+        }
+    }
+}
+
+impl Encode for RecordElement {
+    fn write_to<W: WriteExt>(&self, writer: &mut W) -> std::io::Result<()> {
+        match self {
+            RecordElement::OnGraph(vertex_or_edge) => {
+                writer.write_u8(0)?;
+                vertex_or_edge.write_to(writer)?;
+            }
+            RecordElement::OutGraph(object_element) => {
+                writer.write_u8(1)?;
+                object_element.write_to(writer)?;
+            }
+        }
+        Ok(())
+    }
+}
+
+impl Decode for RecordElement {
+    fn read_from<R: ReadExt>(reader: &mut R) -> std::io::Result<Self> {
+        let opt = reader.read_u8()?;
+        match opt {
+            0 => {
+                let vertex_or_edge = <VertexOrEdge>::read_from(reader)?;
+                Ok(RecordElement::OnGraph(vertex_or_edge))
+            }
+            1 => {
+                let object_element = <ObjectElement>::read_from(reader)?;
+                Ok(RecordElement::OutGraph(object_element))
+            }
+            _ => Err(std::io::Error::new(
+                std::io::ErrorKind::Other,
+                "unreachable",
+            )),
+        }
+    }
+}
+
+impl Encode for Entry {
+    fn write_to<W: WriteExt>(&self, writer: &mut W) -> std::io::Result<()> {
+        match self {
+            Entry::Element(element) => {
+                writer.write_u8(0)?;
+                element.write_to(writer)?
+            }
+            Entry::Collection(collection) => {
+                writer.write_u8(1)?;
+                collection.write_to(writer)?
+            }
+        }
+        Ok(())
+    }
+}
+
+impl Decode for Entry {
+    fn read_from<R: ReadExt>(reader: &mut R) -> std::io::Result<Self> {
+        let opt = reader.read_u8()?;
+        match opt {
+            0 => {
+                let record = <RecordElement>::read_from(reader)?;
+                Ok(Entry::Element(record))
+            }
+            1 => {
+                let collection = <Vec<RecordElement>>::read_from(reader)?;
+                Ok(Entry::Collection(collection))
+            }
+            _ => Err(std::io::Error::new(
+                std::io::ErrorKind::Other,
+                "unreachable",
+            )),
+        }
+    }
+}
+
+impl Encode for Record {
+    fn write_to<W: WriteExt>(&self, writer: &mut W) -> std::io::Result<()> {
+        match &self.curr {
+            None => {
+                writer.write_u8(0)?;
+            }
+            Some(entry) => {
+                writer.write_u8(1)?;
+                entry.write_to(writer)?;
+            }
+        }
+        writer.write_u64(self.columns.len() as u64)?;
+        for (k, v) in self.columns.iter() {
+            k.write_to(writer)?;
+            v.write_to(writer)?;
+        }
+        Ok(())
+    }
+}
+
+impl Decode for Record {
+    fn read_from<R: ReadExt>(reader: &mut R) -> std::io::Result<Self> {
+        let opt = reader.read_u8()?;
+        let curr = if opt == 0 {
+            None
+        } else {
+            Some(<Entry>::read_from(reader)?)
+        };
+        let size = <u64>::read_from(reader)? as usize;
+        let mut columns = HashMap::with_capacity(size);
+        for _i in 0..size {
+            let k = <NameOrId>::read_from(reader)?;
+            let v = <Entry>::read_from(reader)?;
+            columns.insert(k, v);
+        }
+        Ok(Record { curr, columns })
+    }
+}
+
+impl Encode for RecordKey {
+    fn write_to<W: WriteExt>(&self, writer: &mut W) -> std::io::Result<()> {
+        Ok(self.key_fields.write_to(writer)?)
+    }
+}
+
+impl Decode for RecordKey {
+    fn read_from<R: ReadExt>(reader: &mut R) -> std::io::Result<Self> {
+        let key_fields = <Vec<RecordElement>>::read_from(reader)?;
+        Ok(RecordKey { key_fields })
     }
 }
