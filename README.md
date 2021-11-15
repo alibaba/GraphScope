@@ -368,15 +368,14 @@ You may run the whole test suite with commands:
 # for the first time, run this script to install make, doxygen for docs and java env for testing.
 # ./scripts/prepare_dev.sh
 
-# run all test cases
-./scripts/test.sh --all
+# run gae related test cases
+cd python && python3 -m pytest -s -v ./tests/unittest
+# or run the selected cases on a certain module e.g.,
+cd python && python3 -m pytest -s -v ./tests/unittest/test_udf_app.py [-k test_create_cython_app]
 
-# run all test cases on your built image
-./scripts/test.sh --all --gs_image graphscope/graphscope:SHORTSHA
-
-# or run the selected cases on a certain module. e.g.,
-./scripts/test.sh --python
-./scripts/test.sh --gie
+# run gie gaia or gle related test cases
+cp python/tests/local/test_run_locally.py /tmp/test_run_locally.py
+cd tmp && python3 -m pytest -s -v ./test_run_locally.py [-k test_enable_gaia]
 ```
 
 
