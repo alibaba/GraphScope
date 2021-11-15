@@ -403,7 +403,7 @@ jobs:
         python3 -m pip install -r python/requirements.txt --user
         python3 -m pip install -r python/requirements-dev.txt --user
         python3 -m pip install pytest-cov --user
-        pushd python && sudo -E python3 setup.py develop && popd
+        pushd python && sudo -E python3 setup.py build_proto && popd
         python3 -m pip install git+https://github.com/mars-project/mars.git@d09e1e4c3e32ceb05f42d0b5b79775b1ebd299fb#egg=pymars
 
     - name: Kubernetes test
@@ -526,7 +526,7 @@ jobs:
         python3 -m pip install -r python/requirements.txt
         python3 -m pip install -r python/requirements-dev.txt
         python3 -m pip install pytest-cov
-        pushd python && sudo -E python3 setup.py develop && popd
+        pushd python && sudo -E python3 setup.py build_proto && popd
 
     - name: Run function test
       run: |
@@ -653,7 +653,7 @@ jobs:
         python3 -m pip install -r python/requirements.txt
         python3 -m pip install -r python/requirements-dev.txt
         python3 -m pip install pytest-cov
-        pushd python && sudo -E python3 setup.py develop && popd
+        pushd python && sudo -E python3 setup.py build_proto && popd
 
     - name: Helm test
       run: |
