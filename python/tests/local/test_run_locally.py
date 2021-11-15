@@ -22,7 +22,6 @@ import sys
 import pytest
 
 import graphscope
-
 from graphscope.dataset import load_ogbn_mag
 from graphscope.learning.examples import GCN
 from graphscope.learning.graphlearn.python.model.tf import optimizer
