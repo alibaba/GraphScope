@@ -14,13 +14,13 @@
  * limitations under the License.
  */
 
-#include "lgraph/log_track/subscriber.h"
+#include "lgraph/log_subscription/subscriber.h"
 
 namespace LGRAPH_NAMESPACE {
-namespace log_track {
+namespace log_subscription {
 
-LogSubscriber::LogSubscriber(const std::string &kafka_servers, const std::string &topic,
-                             int32_t partition_id, int64_t start_offset)
+Subscriber::Subscriber(const std::string &kafka_servers, const std::string &topic,
+                       int32_t partition_id, int64_t start_offset)
     : consumer_(cppkafka::Configuration{
       {"metadata.broker.list", kafka_servers},
       {"broker.address.family", "v4"},
@@ -30,11 +30,11 @@ LogSubscriber::LogSubscriber(const std::string &kafka_servers, const std::string
   consumer_.assign({cppkafka::TopicPartition{topic, partition_id, start_offset}});
 }
 
-LogSubscriber::~LogSubscriber() {
+Subscriber::~Subscriber() {
   consumer_.unassign();
 }
 
-LogMessage LogSubscriber::Poll(size_t timeout_ms) {
+LogMessage Subscriber::Poll(size_t timeout_ms) {
   auto kafka_msg = consumer_.poll(std::chrono::milliseconds(timeout_ms));
   if (kafka_msg && !kafka_msg.get_error()) {
     current_offset_ = kafka_msg.get_offset();
@@ -42,7 +42,7 @@ LogMessage LogSubscriber::Poll(size_t timeout_ms) {
   return LogMessage{std::move(kafka_msg)};
 }
 
-std::vector<LogMessage> LogSubscriber::PollBatch(size_t max_batch_size, size_t timeout_ms) {
+std::vector<LogMessage> Subscriber::PollBatch(size_t max_batch_size, size_t timeout_ms) {
   auto kafka_msg_batch = consumer_.poll_batch(max_batch_size, std::chrono::milliseconds(timeout_ms));
   std::vector<LogMessage> msg_batch;
   msg_batch.reserve(kafka_msg_batch.size());

@@ -14,11 +14,11 @@
  * limitations under the License.
  */
 
-#include "lgraph/log_track/operation.h"
+#include "lgraph/log_subscription/operation.h"
 #include "lgraph/util/endian.h"
 
 namespace LGRAPH_NAMESPACE {
-namespace log_track {
+namespace log_subscription {
 
 int32_t PropertyInfo::GetAsInt32() const {
   Check(value_bytes_.size() == sizeof(int32_t), "Get int32 with wrong value bytes size!");

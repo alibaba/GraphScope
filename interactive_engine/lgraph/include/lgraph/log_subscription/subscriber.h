@@ -17,20 +17,20 @@
 #pragma once
 
 #include <cppkafka/consumer.h>
-#include "lgraph/log_track/message.h"
+#include "lgraph/log_subscription/message.h"
 
 namespace LGRAPH_NAMESPACE {
-namespace log_track {
+namespace log_subscription {
 
-class LogSubscriber {
+class Subscriber {
 public:
-  LogSubscriber(const std::string &kafka_servers, const std::string &topic, int32_t partition_id, int64_t start_offset);
-  ~LogSubscriber();
+  Subscriber(const std::string &kafka_servers, const std::string &topic, int32_t partition_id, int64_t start_offset);
+  ~Subscriber();
 
-  LogSubscriber(const LogSubscriber &) = delete;
-  LogSubscriber &operator=(const LogSubscriber &) = delete;
-  LogSubscriber(LogSubscriber &&) = delete;
-  LogSubscriber &operator=(LogSubscriber &&) = delete;
+  Subscriber(const Subscriber &) = delete;
+  Subscriber &operator=(const Subscriber &) = delete;
+  Subscriber(Subscriber &&) = delete;
+  Subscriber &operator=(Subscriber &&) = delete;
 
   LogMessage Poll(size_t timeout_ms);
   std::vector<LogMessage> PollBatch(size_t max_batch_size, size_t timeout_ms);

@@ -86,9 +86,9 @@ set(Lgraph_PROJECT_FILES
     include/lgraph/db/readonly_db.h
     include/lgraph/db/snapshot.h
     include/lgraph/db/vertex.h
-    include/lgraph/log_track/message.h
-    include/lgraph/log_track/operation.h
-    include/lgraph/log_track/subscriber.h
+    include/lgraph/log_subscription/message.h
+    include/lgraph/log_subscription/operation.h
+    include/lgraph/log_subscription/subscriber.h
     include/lgraph/util/endian.h
     include/lgraph/util/result.h
     include/lgraph/jna/native.h
@@ -102,8 +102,8 @@ set(Lgraph_PROJECT_FILES
     src/db/vertex.cc
     src/jna/native.cc
     src/jna/ffi_test.cc
-    src/log_track/operation.cc
-    src/log_track/subscriber.cc
+    src/log_subscription/operation.cc
+    src/log_subscription/subscriber.cc
     src/check.cc)
 
 add_library(lgraph ${Lgraph_LIBRARY_TYPE}

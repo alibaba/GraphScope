@@ -21,7 +21,7 @@
 #include "lgraph/proto/model.pb.h"
 
 namespace LGRAPH_NAMESPACE {
-namespace log_track {
+namespace log_subscription {
 
 class PropertyInfo {
 public:

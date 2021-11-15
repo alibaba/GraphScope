@@ -16,9 +16,9 @@
 
 #include <thread>
 #include "lgraph/client/graph_client.h"
-#include "lgraph/log_track/subscriber.h"
+#include "lgraph/log_subscription/subscriber.h"
 
-std::string GetPropValueAsStr(lgraph::PropertyId pid, const lgraph::log_track::PropertyInfo &p, const lgraph::Schema &schema) {
+std::string GetPropValueAsStr(lgraph::PropertyId pid, const lgraph::log_subscription::PropertyInfo &p, const lgraph::Schema &schema) {
   auto &prop_def = schema.GetPropDef(pid);
   switch (prop_def.GetDataType()) {
   case lgraph::INT:
@@ -37,7 +37,7 @@ std::string GetPropValueAsStr(lgraph::PropertyId pid, const lgraph::log_track::P
   }
 }
 
-std::string GetVertexInsertInfo(const lgraph::log_track::Operation &op, const lgraph::Schema &schema) {
+std::string GetVertexInsertInfo(const lgraph::log_subscription::Operation &op, const lgraph::Schema &schema) {
   auto vertex_info = op.GetInfoAsVertexInsertOp();
   std::string v_id = std::to_string(vertex_info.GetVertexId());
   std::string info;
@@ -49,7 +49,7 @@ std::string GetVertexInsertInfo(const lgraph::log_track::Operation &op, const lg
   return info;
 }
 
-std::string GetEdgeInsertInfo(const lgraph::log_track::Operation &op, const lgraph::Schema &schema) {
+std::string GetEdgeInsertInfo(const lgraph::log_subscription::Operation &op, const lgraph::Schema &schema) {
   auto edge_info = op.GetInfoAsEdgeInsertOp();
   auto &edge_id = edge_info.GetEdgeId();
   auto &edge_rel = edge_info.GetEdgeRelation();
@@ -67,7 +67,7 @@ std::string GetEdgeInsertInfo(const lgraph::log_track::Operation &op, const lgra
   return info;
 }
 
-void PrintLogMsg(int subscriber_id, const lgraph::log_track::LogMessage& msg, const lgraph::Schema &schema) {
+void PrintLogMsg(int subscriber_id, const lgraph::log_subscription::LogMessage& msg, const lgraph::Schema &schema) {
   if (msg.IsError()) {
     std::cout << "Got Error log Message: " + msg.GetErrorMsg() + "\n";
     return;
@@ -97,7 +97,7 @@ void PrintLogMsg(int subscriber_id, const lgraph::log_track::LogMessage& msg, co
   std::cout << info;
 }
 
-void PollLogBatch(int subscriber_id, lgraph::log_track::LogSubscriber* subscriber, const lgraph::Schema &schema) {
+void PollLogBatch(int subscriber_id, lgraph::log_subscription::Subscriber* subscriber, const lgraph::Schema &schema) {
   int count = 0;
   while (true) {
     auto msg = subscriber->Poll(500);
@@ -116,12 +116,12 @@ int main() {
   lgraph::LoggerInfo logger_info = graph_client.GetLoggerInfo();
   std::cout << "*** Client: got the logger info: [kafka_servers: " + logger_info.kafka_servers + "], [topic: "
     + logger_info.topic + "], [queue_num: " + std::to_string(logger_info.queue_number) + "]\n";
-  std::vector<lgraph::log_track::LogSubscriber*> subscribers;
+  std::vector<lgraph::log_subscription::Subscriber*> subscribers;
   std::vector<std::thread> threads;
   subscribers.reserve(logger_info.queue_number);
   for (int i = 0; i < logger_info.queue_number; i++) {
     subscribers.push_back(
-        new lgraph::log_track::LogSubscriber(logger_info.kafka_servers, logger_info.topic, i, 0));
+        new lgraph::log_subscription::Subscriber(logger_info.kafka_servers, logger_info.topic, i, 0));
   }
   threads.reserve(logger_info.queue_number);
   for (int i = 0; i < logger_info.queue_number; i++) {

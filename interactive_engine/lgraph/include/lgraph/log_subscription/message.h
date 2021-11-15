@@ -17,10 +17,10 @@
 #pragma once
 
 #include <cppkafka/consumer.h>
-#include "lgraph/log_track/operation.h"
+#include "lgraph/log_subscription/operation.h"
 
 namespace LGRAPH_NAMESPACE {
-namespace log_track {
+namespace log_subscription {
 
 class MessageParser {
 public:
