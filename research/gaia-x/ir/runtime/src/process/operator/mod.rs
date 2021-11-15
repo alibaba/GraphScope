@@ -30,6 +30,7 @@ use dyn_type::BorrowObject;
 use ir_common::error::ParsePbError;
 use ir_common::generated::common as common_pb;
 use ir_common::NameOrId;
+use pegasus::codec::{Decode, Encode, ReadExt, WriteExt};
 use std::convert::TryFrom;
 
 #[derive(Debug)]
@@ -162,6 +163,68 @@ impl TryFrom<common_pb::Variable> for TagKey {
             None
         };
         Ok(TagKey { tag, key: prop })
+    }
+}
+
+impl Encode for TagKey {
+    fn write_to<W: WriteExt>(&self, writer: &mut W) -> std::io::Result<()> {
+        match (&self.tag, &self.key) {
+            (Some(tag), Some(key)) => {
+                writer.write_u8(0)?;
+                tag.write_to(writer)?;
+                key.write_to(writer)?;
+            }
+            (Some(tag), None) => {
+                writer.write_u8(1)?;
+                tag.write_to(writer)?;
+            }
+            (None, Some(key)) => {
+                writer.write_u8(2)?;
+                key.write_to(writer)?;
+            }
+            (None, None) => {
+                writer.write_u8(3)?;
+            }
+        }
+        Ok(())
+    }
+}
+
+impl Decode for TagKey {
+    fn read_from<R: ReadExt>(reader: &mut R) -> std::io::Result<Self> {
+        let opt = reader.read_u8()?;
+        match opt {
+            0 => {
+                let tag = <NameOrId>::read_from(reader)?;
+                let key = <PropKey>::read_from(reader)?;
+                Ok(TagKey {
+                    tag: Some(tag),
+                    key: Some(key),
+                })
+            }
+            1 => {
+                let tag = <NameOrId>::read_from(reader)?;
+                Ok(TagKey {
+                    tag: Some(tag),
+                    key: None,
+                })
+            }
+            2 => {
+                let key = <PropKey>::read_from(reader)?;
+                Ok(TagKey {
+                    tag: None,
+                    key: Some(key),
+                })
+            }
+            3 => Ok(TagKey {
+                tag: None,
+                key: None,
+            }),
+            _ => Err(std::io::Error::new(
+                std::io::ErrorKind::Other,
+                "unreachable",
+            )),
+        }
     }
 }
 

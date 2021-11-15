@@ -54,6 +54,42 @@ impl TryFrom<pb::Property> for PropKey {
     }
 }
 
+impl Encode for PropKey {
+    fn write_to<W: WriteExt>(&self, writer: &mut W) -> std::io::Result<()> {
+        match self {
+            PropKey::Id => {
+                writer.write_u8(0)?;
+            }
+            PropKey::Label => {
+                writer.write_u8(1)?;
+            }
+            PropKey::Key(key) => {
+                writer.write_u8(2)?;
+                key.write_to(writer)?;
+            }
+        }
+        Ok(())
+    }
+}
+
+impl Decode for PropKey {
+    fn read_from<R: ReadExt>(reader: &mut R) -> std::io::Result<Self> {
+        let opt = reader.read_u8()?;
+        match opt {
+            0 => Ok(PropKey::Id),
+            1 => Ok(PropKey::Label),
+            2 => {
+                let key = <NameOrId>::read_from(reader)?;
+                Ok(PropKey::Key(key))
+            }
+            _ => Err(std::io::Error::new(
+                std::io::ErrorKind::Other,
+                "unreachable",
+            )),
+        }
+    }
+}
+
 pub trait Details: Send + Sync + AsAny {
     fn get_property(&self, key: &NameOrId) -> Option<BorrowObject>;
 
