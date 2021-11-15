@@ -1,45 +1,21 @@
-
-
 <!DOCTYPE html>
 <html class="writer-html5" lang="en" >
 <head>
   <meta charset="utf-8" />
-  
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  
   <title>Persistent Graph Store &mdash; GraphScope  documentation</title>
-  
-
-  
-  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
-  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
-  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
-  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
-  <link rel="stylesheet" href="_static/css/custom.css" type="text/css" />
-
-  
-  
-
-  
-  
-
-  
-
-  
+      <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="_static/css/custom.css" type="text/css" />
   <!--[if lt IE 9]>
     <script src="_static/js/html5shiv.min.js"></script>
   <![endif]-->
   
-    
-      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
         <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
         <script src="_static/jquery.js"></script>
         <script src="_static/underscore.js"></script>
         <script src="_static/doctools.js"></script>
-    
-    <script type="text/javascript" src="_static/js/theme.js"></script>
-
-    
+    <script src="_static/js/theme.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="Frequently Asked Questions" href="frequently_asked_questions.html" />
@@ -60,33 +36,16 @@
 
 </head>
 
-<body class="wy-body-for-nav">
-
-   
+<body class="wy-body-for-nav"> 
   <div class="wy-grid-for-nav">
-    
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
         <div class="wy-side-nav-search" >
-          
-
-          
             <a href="index.html" class="icon icon-home"> GraphScope
-          
-
-          
           </a>
-
-          
-            
-            
               <div class="version">
                 stable
               </div>
-            
-          
-
-          
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
     <input type="text" name="q" placeholder="Search docs" />
@@ -94,11 +53,7 @@
     <input type="hidden" name="area" value="default" />
   </form>
 </div>
-
-          
         </div>
-
-        
   <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
     
       
@@ -129,6 +84,12 @@
 <li class="toctree-l3"><a class="reference internal" href="#installing-the-chart">Installing the Chart</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#get-graphscope-store-endpoint">Get GraphScope Store Endpoint</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#uninstalling-the-chart">Uninstalling the Chart</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#parameters">Parameters</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#common-parameters">Common parameters</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#statefulset-parameters">Statefulset parameters</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#kafka-chart-parameters">Kafka chart parameters</a></li>
+</ul>
+</li>
 <li class="toctree-l3"><a class="reference internal" href="#configuration">Configuration</a></li>
 </ul>
 </li>
@@ -156,6 +117,7 @@
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="reference/python_index.html">Python API Reference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="reference/analytical_engine_index.html">Analytical Engine API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="reference/gae_java/index.html">Analytical Engine Java API Reference</a></li>
 </ul>
 
       
@@ -165,72 +127,34 @@
       </div>
     </nav>
 
-    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
-
-      
-      <nav class="wy-nav-top" aria-label="top navigation">
-        
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
           <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
           <a href="index.html">GraphScope</a>
-        
       </nav>
 
-
       <div class="wy-nav-content">
-        
         <div class="rst-content">
-        
-          
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-<div role="navigation" aria-label="breadcrumbs navigation">
-
+          <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
-    
       <li><a href="index.html" class="icon icon-home"></a> &raquo;</li>
-        
       <li>Persistent Graph Store</li>
-    
-    
       <li class="wy-breadcrumbs-aside">
-        
-          
             <a href="_sources/persistent_graph_store.rst.txt" rel="nofollow"> View page source</a>
-          
-        
       </li>
-    
   </ul>
-
-  
   <hr/>
 </div>
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
-            
+             
   <div class="section" id="persistent-graph-store">
-<h1>Persistent Graph Store<a class="headerlink" href="#persistent-graph-store" title="Permalink to this headline">¶</a></h1>
+<h1>Persistent Graph Store<a class="headerlink" href="#persistent-graph-store" title="Permalink to this headline"></a></h1>
 <div class="section" id="overview">
-<h2>Overview<a class="headerlink" href="#overview" title="Permalink to this headline">¶</a></h2>
+<h2>Overview<a class="headerlink" href="#overview" title="Permalink to this headline"></a></h2>
 <p>In addition to Vineyard, the in-memory columnar graph store currently supported in GraphScope, we introduced a new disk-based row-oriented multi-versioned persistent graph store, from the version v0.5. While Vineyard focuses on great support for in-memory whole graph analytics workload, the new persistent graph store is geared towards better supporting for running continuous graph data management service that frequently updates the graph and answers traversal queries.</p>
 <p>The store is a distributed graph store built on top of the popular RocksDB key value store. It adopts row-oriented design to support frequent small updates to the graph. Each row is tagged with a snapshot ID as its version. A query reads most recent version of rows relative to the snapshot ID when it starts and hence not blocked by writes. For writes we take a compromise between consistency and higher throughput. In our design writes in the same session can be grouped and executed atomically as a unit and the persistent store assigns a snapshot ID (which is a low-resolution timestamp of current time) to each group and executes groups of writes by the order of their snapshot IDs and by a deterministic (though arbitrary) order for groups of writes that occur in the same snapshot ID. It provides high write throughput while still with some degree of order and isolation though it provides less consistency than strict snapshot isolation common in database. We hope our design choice provides an interesting trade-off for practical usage.</p>
 <div class="section" id="known-limitation">
-<h3>Known Limitation<a class="headerlink" href="#known-limitation" title="Permalink to this headline">¶</a></h3>
+<h3>Known Limitation<a class="headerlink" href="#known-limitation" title="Permalink to this headline"></a></h3>
 <ul class="simple">
 <li><p>Initially, the new persistent store is provided as a separate option from Vineyard, and it can accept Gremlin queries for data access. Going foward we hope to evole them into an integrated hybrid graph store suitable for all kinds of workloads.</p></li>
 <li><p>In the v0.5 release, data can only be loaded into the store in a bulk fashion. APIs for real-time updates (inserts and deletes of individual vertices and egdes) were added in the v0.7 release.</p></li>
@@ -238,10 +162,10 @@
 </div>
 </div>
 <div class="section" id="deploying-store-service">
-<h2>Deploying Store Service<a class="headerlink" href="#deploying-store-service" title="Permalink to this headline">¶</a></h2>
+<h2>Deploying Store Service<a class="headerlink" href="#deploying-store-service" title="Permalink to this headline"></a></h2>
 <p>This chart bootstraps a <a class="reference external" href="https://github.com/alibaba/GraphScope/tree/main/interactive_engine/src/v2/src/main">GraphScope Store</a> cluster deployment on a <a class="reference external" href="http://kubernetes.io">Kubernetes</a> cluster using the <a class="reference external" href="https://helm.sh">Helm</a> package manager.</p>
 <div class="section" id="prerequisites">
-<h3>Prerequisites<a class="headerlink" href="#prerequisites" title="Permalink to this headline">¶</a></h3>
+<h3>Prerequisites<a class="headerlink" href="#prerequisites" title="Permalink to this headline"></a></h3>
 <ul class="simple">
 <li><p>Kubernetes 1.12+</p></li>
 <li><p>Helm 3.1.0</p></li>
@@ -249,17 +173,17 @@
 </ul>
 </div>
 <div class="section" id="installing-the-chart">
-<h3>Installing the Chart<a class="headerlink" href="#installing-the-chart" title="Permalink to this headline">¶</a></h3>
+<h3>Installing the Chart<a class="headerlink" href="#installing-the-chart" title="Permalink to this headline"></a></h3>
 <p>To install the chart with the release name <cite>my-release</cite>:</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$ helm repo add graphscope https://graphscope.oss-cn-beijing.aliyuncs.com/store/charts/
 $ helm install my-release graphscope/graphscope-store
 </pre></div>
 </div>
-<p>These commands deploy GraphScope Store on the Kubernetes cluster in the default configuration. The <a href="#id1"><span class="problematic" id="id2">`Parameters&lt;#parameters&gt;`_</span></a> section lists the parameters that can be configured during installation.</p>
+<p>These commands deploy GraphScope Store on the Kubernetes cluster in the default configuration. The <a class="reference internal" href="#parameters"><span class="std std-ref">Parameters</span></a> section lists the parameters that can be configured during installation.</p>
 <p>Tip: List all releases using <cite>helm list</cite></p>
 </div>
 <div class="section" id="get-graphscope-store-endpoint">
-<h3>Get GraphScope Store Endpoint<a class="headerlink" href="#get-graphscope-store-endpoint" title="Permalink to this headline">¶</a></h3>
+<h3>Get GraphScope Store Endpoint<a class="headerlink" href="#get-graphscope-store-endpoint" title="Permalink to this headline"></a></h3>
 <p>Note that it may take a few minutes for pulling image at first time, you can watch the status by running <cite>helm test</cite> many times.</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="c1"># After installation, you can check service availability by:</span>
 $ helm <span class="nb">test</span> my-release
@@ -274,7 +198,7 @@ $ <span class="nb">echo</span> <span class="s2">&quot;GREMLIN endpoint is: </spa
 </div>
 </div>
 <div class="section" id="uninstalling-the-chart">
-<h3>Uninstalling the Chart<a class="headerlink" href="#uninstalling-the-chart" title="Permalink to this headline">¶</a></h3>
+<h3>Uninstalling the Chart<a class="headerlink" href="#uninstalling-the-chart" title="Permalink to this headline"></a></h3>
 <p>To uninstall/delete the <cite>my-release</cite> deployment:</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$ helm delete my-release
 </pre></div>
@@ -285,8 +209,158 @@ $ <span class="nb">echo</span> <span class="s2">&quot;GREMLIN endpoint is: </spa
 </pre></div>
 </div>
 </div>
+<div class="section" id="parameters">
+<h3>Parameters<a class="headerlink" href="#parameters" title="Permalink to this headline"></a></h3>
+<p>Here we give a list of most frequently used parameters.</p>
+<div class="section" id="common-parameters">
+<h4>Common parameters<a class="headerlink" href="#common-parameters" title="Permalink to this headline"></a></h4>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 19%" />
+<col style="width: 45%" />
+<col style="width: 36%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Name</p></th>
+<th class="head"><p>Description</p></th>
+<th class="head"><p>Value</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>image.registry</p></td>
+<td><p>Docker image registry</p></td>
+<td><p>registry.cn-hongkong.aliyuncs.com</p></td>
+</tr>
+<tr class="row-odd"><td><p>image.repository</p></td>
+<td><p>Docker image repository</p></td>
+<td><p>graphscope/graphscope-store</p></td>
+</tr>
+<tr class="row-even"><td><p>image.tag</p></td>
+<td><p>Docker image tag</p></td>
+<td><p>“”</p></td>
+</tr>
+<tr class="row-odd"><td><p>image.pullPolicy</p></td>
+<td><p>Docker image pull policy</p></td>
+<td><p>IfNotPresent</p></td>
+</tr>
+<tr class="row-even"><td><p>image.pullSecrets</p></td>
+<td><p>Docker-registry secrets</p></td>
+<td><p>[]</p></td>
+</tr>
+<tr class="row-odd"><td><p>clusterDomain</p></td>
+<td><p>Default Kubernetes cluster domain</p></td>
+<td><p>cluster.local</p></td>
+</tr>
+<tr class="row-even"><td><p>commonLabels</p></td>
+<td><p>Labels to add to all deployed objects</p></td>
+<td><p>{}</p></td>
+</tr>
+<tr class="row-odd"><td><p>commonAnnotations</p></td>
+<td><p>Annotations to add to all deployed objects</p></td>
+<td><p>{}</p></td>
+</tr>
+<tr class="row-even"><td><p>executor</p></td>
+<td><p>Executor type, “maxgraph” or “gaia”</p></td>
+<td><p>maxgraph</p></td>
+</tr>
+<tr class="row-odd"><td><p>javaOpts</p></td>
+<td><p>Java options</p></td>
+<td><p>“”</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="statefulset-parameters">
+<h4>Statefulset parameters<a class="headerlink" href="#statefulset-parameters" title="Permalink to this headline"></a></h4>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 28%" />
+<col style="width: 37%" />
+<col style="width: 34%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Name</p></th>
+<th class="head"><p>Description</p></th>
+<th class="head"><p>Value</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>image.registry</p></td>
+<td><p>Docker image registry</p></td>
+<td><p>registry.cn-hongkong.aliyuncs.com</p></td>
+</tr>
+<tr class="row-odd"><td><p>store.replicaCount</p></td>
+<td><p>Number of nodes</p></td>
+<td><p>2</p></td>
+</tr>
+<tr class="row-even"><td><p>store.updateStrategy</p></td>
+<td><p>Update strategy for the store</p></td>
+<td><p>RollingUpdate</p></td>
+</tr>
+<tr class="row-odd"><td><p>frontend.replicaCount</p></td>
+<td><p>Number of nodes</p></td>
+<td><p>1</p></td>
+</tr>
+<tr class="row-even"><td><p>frontend.updateStrategy</p></td>
+<td><p>Update strategy for the frontend</p></td>
+<td><p>RollingUpdate</p></td>
+</tr>
+<tr class="row-odd"><td><p>frontend.service.type</p></td>
+<td><p>Kubernetes service type</p></td>
+<td><p>NodePort</p></td>
+</tr>
+<tr class="row-even"><td><p>ingestor.replicaCount</p></td>
+<td><p>Number of nodes</p></td>
+<td><p>1</p></td>
+</tr>
+<tr class="row-odd"><td><p>ingestor.updateStrategy</p></td>
+<td><p>Update strategy for the ingestor</p></td>
+<td><p>RollingUpdate</p></td>
+</tr>
+<tr class="row-even"><td><p>coordinator.replicaCount</p></td>
+<td><p>Number of nodes</p></td>
+<td><p>1</p></td>
+</tr>
+<tr class="row-odd"><td><p>coordinator.updateStrategy</p></td>
+<td><p>Update strategy for the coordinator</p></td>
+<td><p>RollingUpdate</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="kafka-chart-parameters">
+<h4>Kafka chart parameters<a class="headerlink" href="#kafka-chart-parameters" title="Permalink to this headline"></a></h4>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 29%" />
+<col style="width: 62%" />
+<col style="width: 9%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Name</p></th>
+<th class="head"><p>Description</p></th>
+<th class="head"><p>Value</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>kafka.enabled</p></td>
+<td><p>Switch to enable or disable the Kafka helm chart</p></td>
+<td><p>true</p></td>
+</tr>
+<tr class="row-odd"><td><p>kafka.replicaCount</p></td>
+<td><p>Number of Kafka nodes</p></td>
+<td><p>1</p></td>
+</tr>
+<tr class="row-even"><td><p>externalKafka.servers</p></td>
+<td><p>Server or list of external Kafka servers to use</p></td>
+<td><p>[]</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 <div class="section" id="configuration">
-<h3>Configuration<a class="headerlink" href="#configuration" title="Permalink to this headline">¶</a></h3>
+<h3>Configuration<a class="headerlink" href="#configuration" title="Permalink to this headline"></a></h3>
 <p>See <a class="reference external" href="https://helm.sh/docs/intro/using_helm/#customizing-the-chart-before-installing">Customizing the Chart Before Installing</a>. To see all configurable options with detailed comments, visit the chart’s <a class="reference external" href="https://github.com/alibaba/GraphScope/blob/main/charts/graphscope-store/values.yaml">values.yaml</a>, or run these configuration commands:</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$ helm show values graphscope/graphscope-store
 </pre></div>
@@ -308,7 +382,7 @@ $ <span class="nb">echo</span> <span class="s2">&quot;GREMLIN endpoint is: </spa
 </div>
 </div>
 <div class="section" id="defining-graph-schema">
-<h2>Defining Graph Schema<a class="headerlink" href="#defining-graph-schema" title="Permalink to this headline">¶</a></h2>
+<h2>Defining Graph Schema<a class="headerlink" href="#defining-graph-schema" title="Permalink to this headline"></a></h2>
 <p>After we deployed a cluster, there is an empty graph inside, we can then use the Python API to get the graph, and define schema over the graph, then we can load data according to that schema.</p>
 <p>In the previous step we have the IP of the cluster, and the GRPC port and GREMLIN port, we can use these to setup a connection like this</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">graphscope</span>
@@ -352,7 +426,7 @@ $ <span class="nb">echo</span> <span class="s2">&quot;GREMLIN endpoint is: </spa
 </div>
 </div>
 <div class="section" id="running-gremlin-queries">
-<h2>Running Gremlin Queries<a class="headerlink" href="#running-gremlin-queries" title="Permalink to this headline">¶</a></h2>
+<h2>Running Gremlin Queries<a class="headerlink" href="#running-gremlin-queries" title="Permalink to this headline"></a></h2>
 <p>As we have the gremlin endpoint avaiable, we can do gremlin queries over the graph.
 It’s simple just use one line to get the traversal source,</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">g</span> <span class="o">=</span> <span class="n">gs_conn</span><span class="o">.</span><span class="n">gremlin</span><span class="p">()</span>
@@ -362,7 +436,7 @@ It’s simple just use one line to get the traversal source,</p>
 <p>The graph is empty for now, so the count should be 0. Let’s write some data.</p>
 </div>
 <div class="section" id="realtime-write">
-<h2>Realtime Write<a class="headerlink" href="#realtime-write" title="Permalink to this headline">¶</a></h2>
+<h2>Realtime Write<a class="headerlink" href="#realtime-write" title="Permalink to this headline"></a></h2>
 <p>Once the graph schema is well defined, we can write vertex/edge records straightly from python client.</p>
 <p>We use two utility class called <cite>VertexRecordKey</cite> and <cite>EdgeRecordKey</cite> to denote the key to uniquely identify a record.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">VertexRecordKey</span><span class="p">:</span>
@@ -524,10 +598,10 @@ It’s simple just use one line to get the traversal source,</p>
 </div>
 </div>
 <div class="section" id="bulk-loading">
-<h2>Bulk Loading<a class="headerlink" href="#bulk-loading" title="Permalink to this headline">¶</a></h2>
+<h2>Bulk Loading<a class="headerlink" href="#bulk-loading" title="Permalink to this headline"></a></h2>
 <p>Apart from real-time write, we provide a data-loading utility for bulk-loading data from external storage (e.g., HDFS) into the store service. Currently the tool supports a specific format of the raw data as described in “Data Format”, and the originial data must be located in an HDFS. To load the data files into GraphScope storage, users can run the data-loading tool from a terminal on a Client machine, and we assume that Client has access to a Hadoop cluster, which can run MapReduce jobs, have read/write access to the HDFS, and connect to a running GraphScope storage service.</p>
 <div class="section" id="prequisities">
-<h3>Prequisities<a class="headerlink" href="#prequisities" title="Permalink to this headline">¶</a></h3>
+<h3>Prequisities<a class="headerlink" href="#prequisities" title="Permalink to this headline"></a></h3>
 <ul class="simple">
 <li><p>Java compilation environment (Maven 3.5+ / JDK1.8), if you need to build the tools from source code</p></li>
 <li><p>Hadoop cluster (version 2.x) that can run map-reduce jobs and has HDFS supported</p></li>
@@ -535,11 +609,11 @@ It’s simple just use one line to get the traversal source,</p>
 </ul>
 </div>
 <div class="section" id="get-binary">
-<h3>Get Binary<a class="headerlink" href="#get-binary" title="Permalink to this headline">¶</a></h3>
-<p>You can download the data-loading utility from here: <a class="reference external" href="https://github.com/alibaba/GraphScope/releases/download/latest/data_load.tar.gz">data_load.tar.gz</a>. Decompress it, and you can find the executable here: <cite>./data_load/bin/load_tool.sh</cite>.</p>
+<h3>Get Binary<a class="headerlink" href="#get-binary" title="Permalink to this headline"></a></h3>
+<p>You can download the data-loading utility from here: <a class="reference external" href="https://github.com/alibaba/GraphScope/releases/latest/download/graphscope_store_data_load.tar.gz">data_load.tar.gz</a>. Decompress it, and you can find the executable here: <cite>./data_load/bin/load_tool.sh</cite>.</p>
 </div>
 <div class="section" id="data-format">
-<h3>Data Format<a class="headerlink" href="#data-format" title="Permalink to this headline">¶</a></h3>
+<h3>Data Format<a class="headerlink" href="#data-format" title="Permalink to this headline"></a></h3>
 <p>The data loading tools assume the original data files are in the HDFS.</p>
 <p>Each file should represents either a vertex type or a relationship of an edge type. Below are the sample data of a vertex type <cite>person</cite> and a relationShip <cite>person-knows-&gt;person</cite> of edge type <cite>knows</cite>:</p>
 <ul class="simple">
@@ -564,13 +638,13 @@ It’s simple just use one line to get the traversal source,</p>
 <p>All the data fields will be parsed according to the data-type defined in the graph schema. If the input data field cannot be parsed correctly, data building process would be failed with corresponding errors.</p>
 </div>
 <div class="section" id="loading-process">
-<h3>Loading Process<a class="headerlink" href="#loading-process" title="Permalink to this headline">¶</a></h3>
+<h3>Loading Process<a class="headerlink" href="#loading-process" title="Permalink to this headline"></a></h3>
 <p>The loading process contains three steps:</p>
 <p>Step 1: A partitioned graph is built from the source files and stored in the same HDFS using a MapReduce job</p>
 <p>Step 2: The graph partitions are loaded into the store servers (in parallel)</p>
 <p>Step 3: Commit to the online service so that data is ready for serving queries</p>
 <div class="section" id="building-a-partitioned-graph">
-<h4>1. Building a partitioned graph<a class="headerlink" href="#building-a-partitioned-graph" title="Permalink to this headline">¶</a></h4>
+<h4>1. Building a partitioned graph<a class="headerlink" href="#building-a-partitioned-graph" title="Permalink to this headline"></a></h4>
 <p>Build data by running the hadoop map-reduce job with following command.</p>
 <p>NOTE: You should make sure <cite>hadoop</cite> can be found in the env <cite>$PATH</cite>.</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$ ./data_load/bin/load_tool.sh hadoop-build &lt;path/to/config/file&gt;
@@ -656,16 +730,16 @@ For an edge type, the mapping info should includes 1) label of the edge type, 2)
 <p>After data building completed, you can find the output files in the <cite>output.path</cite> of HDFS. The output files includes a meta file named <cite>META</cite>, an empty file named <cite>_SUCCESS</cite>, and some data files that one for each partition named in the pattern of <cite>part-r-xxxxx.sst</cite>. The layout of the output directory should look like:</p>
 </div>
 <div class="section" id="loading-graph-partitions">
-<h4>2. Loading graph partitions<a class="headerlink" href="#loading-graph-partitions" title="Permalink to this headline">¶</a></h4>
+<h4>2. Loading graph partitions<a class="headerlink" href="#loading-graph-partitions" title="Permalink to this headline"></a></h4>
 <p>Now ingest the offline built data into the graph storage:</p>
 <p>NOTE: You need to make sure that the HDFS endpoint that can be accessed from the processes of the graph store.</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$ ./data_laod/bin/load_tool.sh -c ingest -d hdfs://1.2.3.4:9000/tmp/data_output
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$ ./data_load/bin/load_tool.sh -c ingest -d hdfs://1.2.3.4:9000/tmp/data_output
 </pre></div>
 </div>
 <p>The offline built data can be ingested successfully only once, otherwise errors will occur.</p>
 </div>
 <div class="section" id="commit-to-store-service">
-<h4>3. Commit to store service<a class="headerlink" href="#commit-to-store-service" title="Permalink to this headline">¶</a></h4>
+<h4>3. Commit to store service<a class="headerlink" href="#commit-to-store-service" title="Permalink to this headline"></a></h4>
 <p>After data ingested into graph storage, you need to commit data loading. The data will not be able to read until committed successfully.</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$ ./data_load/bin/load_tool.sh -c commit -d hdfs://1.2.3.4:9000/tmp/data_output
 </pre></div>
@@ -678,50 +752,33 @@ For an edge type, the mapping info should includes 1) label of the edge type, 2)
 
 
            </div>
-           
           </div>
-          <footer>
-    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
-        <a href="frequently_asked_questions.html" class="btn btn-neutral float-right" title="Frequently Asked Questions" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
         <a href="learning_engine.html" class="btn btn-neutral float-left" title="GraphScope Learning Engine" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="frequently_asked_questions.html" class="btn btn-neutral float-right" title="Frequently Asked Questions" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>
 
   <div role="contentinfo">
-    <p>
-        &#169; Copyright 2020-2023, Damo Academy, Alibaba Inc..
-
-    </p>
+    <p>&#169; Copyright 2020-2023, Damo Academy, Alibaba Inc..</p>
   </div>
-    
-    
-    
-    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
-    
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
     <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
-    
-    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
 
 </footer>
         </div>
       </div>
-
     </section>
-
   </div>
-  
-
-  <script type="text/javascript">
+  <script>
       jQuery(function () {
           SphinxRtdTheme.Navigation.enable(true);
       });
   </script>
-
-  
-  
-    
-  
   
 
   <div class="rst-versions" data-toggle="rst-versions" role="note" aria-label="versions">
@@ -758,6 +815,16 @@ For an edge type, the mapping info should includes 1) label of the edge type, 2)
 
             
               
+                <dd><a href="v0.8.0/index.html">v0.8.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
                 <dd><a href="v0.7.0/index.html">v0.7.0</a></dd>
               
             
@@ -768,7 +835,7 @@ For an edge type, the mapping info should includes 1) label of the edge type, 2)
 
             
               
-                <dd><a href="v0.6.0-rev1/index.html">v0.6.0-rev1</a></dd>
+                <dd><a href="v0.6.1/index.html">v0.6.1</a></dd>
               
             
 

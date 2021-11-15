@@ -18,7 +18,7 @@ Apache TinkerPop
 .. code:: python
 
     import graphscope
-    from graphscope.dataset.ldbc import load_ldbc
+    from graphscope.dataset import load_ldbc
 
     # 创建一个新的交互会话，载入LDBC示例图数据
     # 随后返回一个Gremlin查询提交入口

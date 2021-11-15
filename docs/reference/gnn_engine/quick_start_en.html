@@ -1,45 +1,21 @@
-
-
 <!DOCTYPE html>
 <html class="writer-html5" lang="en" >
 <head>
   <meta charset="utf-8" />
-  
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  
   <title>Quick Start &mdash; GraphScope  documentation</title>
-  
-
-  
-  <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
-  <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
-  <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
-  <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
-  <link rel="stylesheet" href="../../_static/css/custom.css" type="text/css" />
-
-  
-  
-
-  
-  
-
-  
-
-  
+      <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="../../_static/css/custom.css" type="text/css" />
   <!--[if lt IE 9]>
     <script src="../../_static/js/html5shiv.min.js"></script>
   <![endif]-->
   
-    
-      <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
         <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
         <script src="../../_static/jquery.js"></script>
         <script src="../../_static/underscore.js"></script>
         <script src="../../_static/doctools.js"></script>
-    
-    <script type="text/javascript" src="../../_static/js/theme.js"></script>
-
-    
+    <script src="../../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
 
@@ -58,33 +34,16 @@
 
 </head>
 
-<body class="wy-body-for-nav">
-
-   
+<body class="wy-body-for-nav"> 
   <div class="wy-grid-for-nav">
-    
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
         <div class="wy-side-nav-search" >
-          
-
-          
             <a href="../../index.html" class="icon icon-home"> GraphScope
-          
-
-          
           </a>
-
-          
-            
-            
               <div class="version">
                 stable
               </div>
-            
-          
-
-          
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
     <input type="text" name="q" placeholder="Search docs" />
@@ -92,11 +51,7 @@
     <input type="hidden" name="area" value="default" />
   </form>
 </div>
-
-          
         </div>
-
-        
   <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
     
       
@@ -125,6 +80,7 @@
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../python_index.html">Python API Reference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../analytical_engine_index.html">Analytical Engine API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../gae_java/index.html">Analytical Engine Java API Reference</a></li>
 </ul>
 
       
@@ -134,66 +90,28 @@
       </div>
     </nav>
 
-    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
-
-      
-      <nav class="wy-nav-top" aria-label="top navigation">
-        
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
           <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
           <a href="../../index.html">GraphScope</a>
-        
       </nav>
 
-
       <div class="wy-nav-content">
-        
         <div class="rst-content">
-        
-          
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-<div role="navigation" aria-label="breadcrumbs navigation">
-
+          <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
-    
       <li><a href="../../index.html" class="icon icon-home"></a> &raquo;</li>
-        
       <li>Quick Start</li>
-    
-    
       <li class="wy-breadcrumbs-aside">
-        
-          
             <a href="../../_sources/reference/gnn_engine/quick_start_en.rst.txt" rel="nofollow"> View page source</a>
-          
-        
       </li>
-    
   </ul>
-
-  
   <hr/>
 </div>
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
-            
+             
   <div class="section" id="quick-start">
-<h1>Quick Start<a class="headerlink" href="#quick-start" title="Permalink to this headline">¶</a></h1>
+<h1>Quick Start<a class="headerlink" href="#quick-start" title="Permalink to this headline"></a></h1>
 <p>This tutorial has three parts: - How to quickly try out a graph learning
 model using <strong>GL</strong>. - How to import data into <strong>GL</strong>, and use the graph
 data, graph sampling and negative sampling APIs. - How to develop your
@@ -201,7 +119,7 @@ own GNN models using <strong>GL</strong> and Tensorflow using <strong>GraphSAGE<
 example.</p>
 </div>
 <div class="section" id="trying-out-the-built-in-models">
-<h1>1 Trying out the built-in models<a class="headerlink" href="#trying-out-the-built-in-models" title="Permalink to this headline">¶</a></h1>
+<h1>1 Trying out the built-in models<a class="headerlink" href="#trying-out-the-built-in-models" title="Permalink to this headline"></a></h1>
 <p>We have implemented in <strong>GL</strong> a set of popular GNN models, such as
 <strong>GCN</strong>, <strong>GraphSAGE</strong>, and some datasets, such as <strong>cora</strong>, <strong>ppi</strong>. To
 try out <strong>GL</strong>, we can start with the vertex-classification task in
@@ -217,7 +135,7 @@ python train_supervised.py
 </div>
 </div>
 <div class="section" id="how-to-use-the-gl-apis">
-<h1>2 How to use the <strong>GL</strong> APIs<a class="headerlink" href="#how-to-use-the-gl-apis" title="Permalink to this headline">¶</a></h1>
+<h1>2 How to use the <strong>GL</strong> APIs<a class="headerlink" href="#how-to-use-the-gl-apis" title="Permalink to this headline"></a></h1>
 <p><strong>GL</strong> provides a large collection of basic APIs for developing GNN
 models. In this part, we will go through how to use them to (1)
 construct graphs, (2) to query graphs, and (3) to generate samples and
@@ -328,12 +246,12 @@ python <span class="nv">$HERE</span>/test.py <span class="se">\</span>
 </div>
 </div>
 <div class="section" id="developing-a-gnn-model">
-<h1>3 Developing a GNN model<a class="headerlink" href="#developing-a-gnn-model" title="Permalink to this headline">¶</a></h1>
+<h1>3 Developing a GNN model<a class="headerlink" href="#developing-a-gnn-model" title="Permalink to this headline"></a></h1>
 <p>Next we will go through how to develop a supervised <strong>GraphSAGE</strong> model
 using <strong>GL</strong> and <strong>TensorFlow</strong>, and train it on the Cora dataset.
 Please refer to <a class="reference external" href="algo_en.md">Developing Your Own Model</a> for details.</p>
 <div class="section" id="data-preparation">
-<h2>3.1 Data Preparation<a class="headerlink" href="#data-preparation" title="Permalink to this headline">¶</a></h2>
+<h2>3.1 Data Preparation<a class="headerlink" href="#data-preparation" title="Permalink to this headline"></a></h2>
 <p>We use the open-source dataset Cora as an example. The Cora dataset
 contains papers from the machine learning field, and the citation
 relationship between these papers. Each paper has 1433 attributes. These
@@ -380,7 +298,7 @@ data format is described through <code class="docutils literal notranslate"><spa
 </div>
 </div>
 <div class="section" id="graph-construction">
-<h2>3.2 Graph Construction<a class="headerlink" href="#graph-construction" title="Permalink to this headline">¶</a></h2>
+<h2>3.2 Graph Construction<a class="headerlink" href="#graph-construction" title="Permalink to this headline"></a></h2>
 <p>Graph construction is the process of loading the vertex and edge data
 into memory. After construction, the graph can be queries and sampled.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">graphlearn</span> <span class="k">as</span> <span class="nn">gl</span>
@@ -413,7 +331,7 @@ into memory. After construction, the graph can be queries and sampled.</p>
 </div>
 </div>
 <div class="section" id="graph-sampling">
-<h2>3.3 Graph Sampling<a class="headerlink" href="#graph-sampling" title="Permalink to this headline">¶</a></h2>
+<h2>3.3 Graph Sampling<a class="headerlink" href="#graph-sampling" title="Permalink to this headline"></a></h2>
 <p>GraphSAGE requires graph sampling to generate input for the neural
 network. Here, we use the following sampling steps: (1) sample a batch
 of “item” vertices as the seed; (2) sample the 1-hop and 2-hop neighbors
@@ -440,7 +358,7 @@ through graph traversal.</p>
 </div>
 </div>
 <div class="section" id="gnn-model">
-<h2>3.4 GNN Model<a class="headerlink" href="#gnn-model" title="Permalink to this headline">¶</a></h2>
+<h2>3.4 GNN Model<a class="headerlink" href="#gnn-model" title="Permalink to this headline"></a></h2>
 <p>In this part, we use the TensorFlow Estimator as an example to
 demonstrate developing a GNN model on <strong>GL</strong>.</p>
 <ul class="simple">
@@ -543,46 +461,30 @@ demonstrate developing a GNN model on <strong>GL</strong>.</p>
 
 
            </div>
-           
           </div>
           <footer>
 
   <hr/>
 
   <div role="contentinfo">
-    <p>
-        &#169; Copyright 2020-2023, Damo Academy, Alibaba Inc..
-
-    </p>
+    <p>&#169; Copyright 2020-2023, Damo Academy, Alibaba Inc..</p>
   </div>
-    
-    
-    
-    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
-    
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
     <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
-    
-    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
 
 </footer>
         </div>
       </div>
-
     </section>
-
   </div>
-  
-
-  <script type="text/javascript">
+  <script>
       jQuery(function () {
           SphinxRtdTheme.Navigation.enable(true);
       });
   </script>
-
-  
-  
-    
-  
   
 
   <div class="rst-versions" data-toggle="rst-versions" role="note" aria-label="versions">
@@ -619,6 +521,16 @@ demonstrate developing a GNN model on <strong>GL</strong>.</p>
 
             
               
+                <dd><a href="../../v0.8.0/index.html">v0.8.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
                 <dd><a href="../../v0.7.0/index.html">v0.7.0</a></dd>
               
             
@@ -629,7 +541,7 @@ demonstrate developing a GNN model on <strong>GL</strong>.</p>
 
             
               
-                <dd><a href="../../v0.6.0-rev1/index.html">v0.6.0-rev1</a></dd>
+                <dd><a href="../../v0.6.1/index.html">v0.6.1</a></dd>
               
             
 

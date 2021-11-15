@@ -1,0 +1,471 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Frequently Asked Questions &mdash; GraphScope  documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="_static/css/custom.css" type="text/css" />
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Developer Guide" href="developer_guide.html" />
+    <link rel="prev" title="GraphScope Learning Engine" href="learning_engine.html" />
+
+ 
+
+<!-- Global site tag (gtag.js) - Google Analytics -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-4TMYCGJ0X2"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-4TMYCGJ0X2');
+</script>
+
+
+
+  
+  <script src="_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="index.html" class="icon icon-home"> GraphScope
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                v0.6.1
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+      
+      
+        
+          
+        
+      
+      
+        <p class="caption"><span class="caption-text">Contents</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="getting_started.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tutorials.html">Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="deployment.html">Deployment</a></li>
+<li class="toctree-l1"><a class="reference internal" href="loading_graph.html">Loading Graphs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="graph_transformation.html">Graph Transformations</a></li>
+<li class="toctree-l1"><a class="reference internal" href="analytics_engine.html">GraphScope Analytical Engine</a></li>
+<li class="toctree-l1"><a class="reference internal" href="interactive_engine.html">GraphScope Interactive Engine</a></li>
+<li class="toctree-l1"><a class="reference internal" href="learning_engine.html">GraphScope Learning Engine</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Frequently Asked Questions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="developer_guide.html">Developer Guide</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="reference/python_index.html">Python API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="reference/analytical_engine_index.html">Analytical Engine API Reference</a></li>
+</ul>
+
+      
+    
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">GraphScope</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html">Docs</a> &raquo;</li>
+        
+      <li>Frequently Asked Questions</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="_sources/frequently_asked_questions.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="frequently-asked-questions">
+<h1>Frequently Asked Questions<a class="headerlink" href="#frequently-asked-questions" title="Permalink to this headline">¶</a></h1>
+<p>Below are some questions which are frequently by our end users. If the following sections still doesn’t answer your question, feel free to open an <a class="reference external" href="https://github.com/alibaba/GraphScope/issues/new/choose">open an issue</a> or <a class="reference external" href="https://github.com/alibaba/GraphScope/discussions">post it to discussions</a>.</p>
+<p><em>1. What are the minimum resources and system requirements required to run GraphScope?</em></p>
+<blockquote>
+<div><p>To use GraphScope Python interface, <strong>Python &gt;= 3.6</strong> and <strong>pip &gt;= 19.0</strong> is required.
+GraphScope engine can be deployed in standalone mode or distributed mode. For standalone deployment, a physical machine with at least <strong>4 cores CPU</strong> and <strong>8G memory</strong> is required. GraphScope is tested and supported on the following systems:</p>
+<ul class="simple">
+<li><p>CentOS7+</p></li>
+<li><p>Ubuntu18+</p></li>
+</ul>
+<p>For distributed depolyment, a cluster managed by Kubernetes is required. GraphScope has tested on
+k8s <strong>version &gt;= v1.12.0+</strong>.</p>
+</div></blockquote>
+<p><em>2. Is Kubernetes an enssential to run GraphScope?</em></p>
+<blockquote>
+<div><p>No. GraphScope supports <a class="reference external" href="https://graphscope.io/docs/deployment.html#deployment-on-local">build and run on local</a> in a single machine.
+However, GraphScope depends on many third-party libraries and projects. To make our life easier, we suggest you build and run GraphScope on k8s with our provided dev-image and release-image. If you don’t have a kubernetes cluster, you may use tools like <a class="reference external" href="https://kind.sigs.k8s.io/">kind</a> to setup a local cluster to use the images for trying graphscope.</p>
+</div></blockquote>
+<p><em>3. How to debug or get detailed information when run GraphScope?</em></p>
+<blockquote>
+<div><p>By default, GraphScope is usually running in a silent mode following the convention of Python applications.
+To enable verbose logging, turn on it by this:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">graphscope</span><span class="o">.</span><span class="n">set_option</span><span class="p">(</span><span class="n">show_log</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>If you are running GraphScope in k8s, you can use <a class="reference external" href="https://kubernetes.io/docs/reference/generated/kubectl/kubectl-commands">kubectl describe/logs</a> to check the log/status of the cluster. If the disk space is accessible(on local or via pods), you may also find logs in <cite>/tmp/graphscope/runtime/logs</cite>.</p>
+</div></blockquote>
+<p><em>4. Why I find more pods than expected with command `kubectl get pod`?</em></p>
+<blockquote>
+<div><p>For the failed pods, you may need to delete them manually.
+This case is observed when using GraphScope with helm. If users did not correctly set the <cite>role</cite> and <cite>rolebinding</cite>, the command <cite>helm uninstall GraphScope</cite> may not correctly recycle allocated resources. More details please refer to <a class="reference external" href="https://artifacthub.io/packages/helm/graphscope/graphscope">Helm Support</a>.</p>
+</div></blockquote>
+<p><em>5. Is GraphScope a graph database?</em></p>
+<blockquote>
+<div><p>No, GraphScope is not a graph database.  It cannot provide transactions on graph.
+Instead, it provides an efficient “immutable” in-memory store for fast queries and analysis, and a persistent store(service) for updates on graphs. Both are scale very well - you can launch a larger session from your python notebook to handle a bigger graph or run a complex algorithm.</p>
+</div></blockquote>
+<p><em>6. What’s the compatibility of Gremlin in GraphScope?</em></p>
+<blockquote>
+<div><p>GraphScope supports most querying operators in Gremlin. You may check the compatibility in this <a class="reference external" href="https://graphscope.io/docs/interactive_engine.html#unsupported-features">link</a>.</p>
+</div></blockquote>
+<p><em>7. The system seems get stuck, what are the possible reasons?</em></p>
+<blockquote>
+<div><p>If GraphScope seems to get stuck, the possible cause might be:</p>
+<ul class="simple">
+<li><p>In the session launching stage, the most cases are waiting for pods ready. The time consuming may be caused by a poor network connection during pulling image, or caused by the resources cannot meet the need to launch a session.</p></li>
+<li><p>In the graph loading stage, it is time consuming to load and build a large graph.</p></li>
+<li><p>When running a user-defined or built-in analytical algorithm, it takes time to compile/distribute the algorithm over the loaded graph.</p></li>
+</ul>
+</div></blockquote>
+<p><em>I do have many other questions…</em></p>
+<blockquote>
+<div><p>Please feel free to contact us. You may reach us by <a class="reference external" href="https://github.com/alibaba/GraphScope/issues/new/choose">submitting an issue(prefered)</a>, ask questions in <a class="reference external" href="https://github.com/alibaba/GraphScope/discussions">Discussions</a>, or drop a message in <a class="reference external" href="http://slack.graphscope.io">Slack</a> or <a class="reference external" href="https://h5.dingtalk.com/circle/healthCheckin.html?dtaction=os&amp;corpId=ding82073ee2a22b2f86748126f6422b5d02&amp;109d1=d3892&amp;cbdbhh=qwertyuiop">DingTalk</a>. We are happy to answer your questions responsively.</p>
+</div></blockquote>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="developer_guide.html" class="btn btn-neutral float-right" title="Developer Guide" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="learning_engine.html" class="btn btn-neutral" title="GraphScope Learning Engine" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2020-2023, Damo Academy, Alibaba Inc.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script src="_static/language_data.js"></script>
+    
+
+  
+
+  <script type="text/javascript" src="_static/js/theme.js"></script>
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+  
+
+  <div class="rst-versions" data-toggle="rst-versions" role="note" aria-label="versions">
+    <span class="rst-current-version" data-toggle="rst-current-version">
+      <span class="fa fa-book"> Read the Docs</span>
+      v: v0.6.1
+      <span class="fa fa-caret-down"></span>
+    </span>
+    <div class="rst-other-versions">
+      <dl>
+        <dt>Versions</dt>
+        
+          
+
+            
+              
+                <dd><a href="../latest/index.html">latest</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../index.html">stable</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../v0.6.1/index.html">v0.6.1</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../v0.6.0/index.html">v0.6.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../v0.5.0/index.html">v0.5.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../v0.4.1/index.html">v0.4.1</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../v0.4.0/index.html">v0.4.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../v0.3.0/index.html">v0.3.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../v0.2.1/index.html">v0.2.1</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../v0.2.0/index.html">v0.2.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../v0.1.3/index.html">v0.1.3</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../v0.1.2/index.html">v0.1.2</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../v0.1.1/index.html">v0.1.1</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../v0.1.0/index.html">v0.1.0</a></dd>
+              
+            
+
+          
+        
+      </dl>
+    </div>
+  </div>
+
+  <div class="rst-languages shift-up" role="note" aria-label="languages">
+    <div class="rst-other-languages">
+      <dl>
+        <dt>Languages</dt>
+        <dd><a href="index.html">en</a></dd>
+        <dd><a href="zh/index.html">zh_CN</a></dd>
+      </dl>
+
+      <hr />
+      <small>
+        <span>Hosted by <a href="https://pages.github.com/">Github Pages</a>.</span>
+      </small>
+    </div>
+  </div>
+
+
+</body>
+</html>

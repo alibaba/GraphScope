@@ -229,7 +229,6 @@ over a fragment, rather than considering the communication and message passing
 in the distributed setting. In this case, the classic dijkstra algorithm and its
 incremental version works for large graphs partitioned on a cluster.
 
-
 Writing Algorithms in Pregel
 ----------------------------------------------
 
@@ -293,6 +292,156 @@ Take SSSP as example, the algorithm in Pregel model looks like this.
                 ret = min(ret, m)
             return ret
 
+Writing Your Own Algorithms In Java
+----------------------------------------------
+
+If you are a ``Java`` programmer, then you may want to implement your graph algorithm in ``Java``, and 
+run it on GraphScope analytical engine.
+
+Step 0: Get grape-jdk
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+First, you will need ``grape-jdk`` installed on your developing environment. We will support downloading/installing ``grape-jdk``
+from maven central repositories in the future, however, currently you need to build from source. 
+Please follow :ref:`gae_java_sdk_about` for building grape-jdk from source.
+
+
+After installing ``grape-jdk``, you can include it as dependency in your maven project. You shall add classifier *shaded* to use the 
+jar which includes all necessary dependencies.
+
+.. code:: xml
+
+    <dependency>
+      <groupId>com.alibaba.graphscope</groupId>
+      <artifactId>grape-jdk</artifactId>
+      <version>0.1</version>
+      <classifier>shaded</classifier>
+    </dependency>
+
+Step 1: Develop your graph algorithm in Java
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+You shall implement your algorithm in `PIE <https://dl.acm.org/doi/10.1145/3282488>`_  programming model, and your app shall inherit
+ :code:`com.alibaba.graphscope.app.PropertyDefaultAppBase` if it works on a property graph,  
+ or :code:`com.alibaba.graphscope.app.ProjectedDefaultAppBase` in case it works on a projected graph. 
+ 
+ Here we present a simple app which traverse all vertices and edges on a property graph.
+
+ .. code:: java
+
+    public class PropertyTraverseVertexData implements PropertyDefaultAppBase<Long, PropertyTraverseVertexDataContext> {
+        static private int propertyId = 0;
+
+        @Override
+        public void PEval(ArrowFragment<Long> fragment, PropertyDefaultContextBase<Long> context,
+                PropertyMessageManager messageManager) {
+            PropertyTraverseVertexDataContext ctx = (PropertyTraverseVertexDataContext) context;
+            for (int i = 0; i < fragment.vertexLabelNum(); ++i) {
+                VertexRange<Long> innerVertices = fragment.innerVertices(i);
+                for (Vertex<Long> vertex : innerVertices.locals()) {
+                    for (int j = 0; j < fragment.edgeLabelNum(); ++j) {
+                        PropertyAdjList<Long> adjList = fragment.getOutgoingAdjList(vertex, j);
+                        for (PropertyNbr<Long> nbr : adjList.iterator()) {
+                            Vertex<Long> dst = nbr.neighbor();
+                            double edgeData = nbr.getDouble(propertyId);
+                        }
+                    }
+                }
+            }
+        }
+
+        @Override
+        public void IncEval(ArrowFragment<Long> fragment, PropertyDefaultContextBase<Long> context,
+                PropertyMessageManager messageManager) {
+            PropertyTraverseVertexDataContext ctx = (PropertyTraverseVertexDataContext) context;
+            if (ctx.step >= ctx.maxStep) {
+                return;
+            }
+            for (int i = 0; i < fragment.vertexLabelNum(); ++i) {
+                VertexRange<Long> innerVertices = fragment.innerVertices(i);
+                for (Vertex<Long> vertex : innerVertices.locals()) {
+                    for (int j = 0; j < fragment.edgeLabelNum(); ++j) {
+                        PropertyAdjList<Long> adjList = fragment.getOutgoingAdjList(vertex, j);
+                        for (PropertyNbr<Long> nbr : adjList.iterator()) {
+                            Vertex<Long> dst = nbr.neighbor();
+                            double edgeData = nbr.getDouble(propertyId);
+                        }
+                    }
+                }
+            }
+            messageManager.ForceContinue();
+        }
+    }
+
+
+Step 2: Pack to jar and submit to GraphScope
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+To run your algorithms on GraphScope analytical engine, first you need to pack your algorithms in a ``jar``.
+To address the jar dependencies issue, we need you to pack with dependencies included. For example, you can
+used maven plugin `maven-shade-pluging`.
+
+.. code:: xml
+
+    <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-shade-plugin</artifactId>
+    </plugin>
+
+
+You will need ``python client`` to run a java app. A simple jar can contains serveral app implementation,
+and you need to specify the app you want in this run.
+
+.. code:: python
+
+    import graphscope
+    from graphscope import JavaApp
+    graphscope.set_option(show_log=True)
+    """Or lauch session in k8s cluster"""
+    sess = graphscope.session(cluster_type='hosts') 
+
+    graph = sess.g()
+    graph = sess.g(directed=False)
+    graph = graph.add_vertices("gstest/property/p2p-31_property_v_0", label="person")
+    graph = graph.add_edges("gstest/property/p2p-31_property_e_0", label="knows")
+
+    sssp1=JavaApp(
+        full_jar_path="full/path/to/your/packed/jar", 
+        java_app_class="fullly/qualified/class/name/of/your/app", 
+    )
+    ctx2=sssp1(graph,src=6)
+
+    graph = graph.project(vertices={"person": ['id']}, edges={"knows": ["dist"]})
+    sssp3=JavaApp(
+        full_jar_path="full/path/to/your/packed/jar", 
+        java_app_class="app/on/projected/graph", 
+    )
+    ctx3=sssp3(graph,src=6)
+
+    ctx.to_numpy("r:label0.dist_0")
+
+After computation, you can obtain the results stored in context with the help of 
+:ref:`Context`.
+
+Using ``math.h`` Functions in Algorithms
+----------------------------------------
+
+GraphScope supports using C functions from :code:`math.h` in user-defined algorithms,
+via the :code:`context.math` interface. E.g.,
+
+.. code:: python
+
+    @staticmethod
+    def Init(v, context):
+        v.set_value(context.math.sin(1000000000.0 * context.math.M_PI))
+
+will be translated to the following efficient C code
+
+.. code:: c
+
+    ... Init(...)
+
+        v.set_value(sin(1000000000.0 * M_PI));
 
 Run Your Own Algorithms
 -------------------------

@@ -1,45 +1,21 @@
-
-
 <!DOCTYPE html>
 <html class="writer-html5" lang="en" >
 <head>
   <meta charset="utf-8" />
-  
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  
   <title>GraphScope: A One-Stop Large-Scale Graph Computing System from Alibaba &mdash; GraphScope  documentation</title>
-  
-
-  
-  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
-  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
-  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
-  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
-  <link rel="stylesheet" href="_static/css/custom.css" type="text/css" />
-
-  
-  
-
-  
-  
-
-  
-
-  
+      <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="_static/css/custom.css" type="text/css" />
   <!--[if lt IE 9]>
     <script src="_static/js/html5shiv.min.js"></script>
   <![endif]-->
   
-    
-      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
         <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
         <script src="_static/jquery.js"></script>
         <script src="_static/underscore.js"></script>
         <script src="_static/doctools.js"></script>
-    
-    <script type="text/javascript" src="_static/js/theme.js"></script>
-
-    
+    <script src="_static/js/theme.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="Installation" href="installation.html" />
@@ -59,33 +35,16 @@
 
 </head>
 
-<body class="wy-body-for-nav">
-
-   
+<body class="wy-body-for-nav"> 
   <div class="wy-grid-for-nav">
-    
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
         <div class="wy-side-nav-search" >
-          
-
-          
             <a href="#" class="icon icon-home"> GraphScope
-          
-
-          
           </a>
-
-          
-            
-            
               <div class="version">
                 latest
               </div>
-            
-          
-
-          
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
     <input type="text" name="q" placeholder="Search docs" />
@@ -93,11 +52,7 @@
     <input type="hidden" name="area" value="default" />
   </form>
 </div>
-
-          
         </div>
-
-        
   <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
     
       
@@ -126,6 +81,7 @@
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="reference/python_index.html">Python API Reference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="reference/analytical_engine_index.html">Analytical Engine API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="reference/gae_java/index.html">Analytical Engine Java API Reference</a></li>
 </ul>
 
       
@@ -135,66 +91,28 @@
       </div>
     </nav>
 
-    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
-
-      
-      <nav class="wy-nav-top" aria-label="top navigation">
-        
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
           <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
           <a href="#">GraphScope</a>
-        
       </nav>
 
-
       <div class="wy-nav-content">
-        
         <div class="rst-content">
-        
-          
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-<div role="navigation" aria-label="breadcrumbs navigation">
-
+          <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
-    
       <li><a href="#" class="icon icon-home"></a> &raquo;</li>
-        
       <li>GraphScope: A One-Stop Large-Scale Graph Computing System from Alibaba</li>
-    
-    
       <li class="wy-breadcrumbs-aside">
-        
-          
             <a href="_sources/index.rst.txt" rel="nofollow"> View page source</a>
-          
-        
       </li>
-    
   </ul>
-
-  
   <hr/>
 </div>
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
-            
+             
   <div class="section" id="graphscope-a-one-stop-large-scale-graph-computing-system-from-alibaba">
-<h1>GraphScope: A One-Stop Large-Scale Graph Computing System from Alibaba<a class="headerlink" href="#graphscope-a-one-stop-large-scale-graph-computing-system-from-alibaba" title="Permalink to this headline">¶</a></h1>
+<h1>GraphScope: A One-Stop Large-Scale Graph Computing System from Alibaba<a class="headerlink" href="#graphscope-a-one-stop-large-scale-graph-computing-system-from-alibaba" title="Permalink to this headline"></a></h1>
 <p>GraphScope is a unified distributed graph computing platform
 that provides a one-stop environment for performing diverse graph
 operations on a cluster of computers through a user-friendly
@@ -255,6 +173,8 @@ and the vineyard store that offers efficient in-memory data transfers.</p>
 <li class="toctree-l2"><a class="reference internal" href="analytics_engine.html#result-processing">Result Processing</a></li>
 <li class="toctree-l2"><a class="reference internal" href="analytics_engine.html#writing-your-own-algorithms-in-pie">Writing Your Own Algorithms in PIE</a></li>
 <li class="toctree-l2"><a class="reference internal" href="analytics_engine.html#writing-algorithms-in-pregel">Writing Algorithms in Pregel</a></li>
+<li class="toctree-l2"><a class="reference internal" href="analytics_engine.html#writing-your-own-algorithms-in-java">Writing Your Own Algorithms In Java</a></li>
+<li class="toctree-l2"><a class="reference internal" href="analytics_engine.html#using-math-h-functions-in-algorithms">Using <code class="docutils literal notranslate"><span class="pre">math.h</span></code> Functions in Algorithms</a></li>
 <li class="toctree-l2"><a class="reference internal" href="analytics_engine.html#run-your-own-algorithms">Run Your Own Algorithms</a></li>
 <li class="toctree-l2"><a class="reference internal" href="analytics_engine.html#glossory">Glossory</a></li>
 </ul>
@@ -316,13 +236,14 @@ and the vineyard store that offers efficient in-memory data transfers.</p>
 <li class="toctree-l2"><a class="reference internal" href="reference/analytical_engine_index.html#app-s-context">App’s Context</a></li>
 </ul>
 </li>
+<li class="toctree-l1"><a class="reference internal" href="reference/gae_java/index.html">Analytical Engine Java API Reference</a></li>
 </ul>
 </div>
 <div class="toctree-wrapper compound">
 </div>
 </div>
 <div class="section" id="indices-and-tables">
-<h1>Indices and tables<a class="headerlink" href="#indices-and-tables" title="Permalink to this headline">¶</a></h1>
+<h1>Indices and tables<a class="headerlink" href="#indices-and-tables" title="Permalink to this headline"></a></h1>
 <ul class="simple">
 <li><p><a class="reference internal" href="genindex.html"><span class="std std-ref">Index</span></a></p></li>
 <li><p><a class="reference internal" href="py-modindex.html"><span class="std std-ref">Module Index</span></a></p></li>
@@ -332,49 +253,32 @@ and the vineyard store that offers efficient in-memory data transfers.</p>
 
 
            </div>
-           
           </div>
-          <footer>
-    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
         <a href="installation.html" class="btn btn-neutral float-right" title="Installation" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>
 
   <div role="contentinfo">
-    <p>
-        &#169; Copyright 2020-2023, Damo Academy, Alibaba Inc..
-
-    </p>
+    <p>&#169; Copyright 2020-2023, Damo Academy, Alibaba Inc..</p>
   </div>
-    
-    
-    
-    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
-    
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
     <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
-    
-    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
 
 </footer>
         </div>
       </div>
-
     </section>
-
   </div>
-  
-
-  <script type="text/javascript">
+  <script>
       jQuery(function () {
           SphinxRtdTheme.Navigation.enable(true);
       });
   </script>
-
-  
-  
-    
-  
   
 
   <div class="rst-versions" data-toggle="rst-versions" role="note" aria-label="versions">
@@ -411,6 +315,16 @@ and the vineyard store that offers efficient in-memory data transfers.</p>
 
             
               
+                <dd><a href="../v0.8.0/index.html">v0.8.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
                 <dd><a href="../v0.7.0/index.html">v0.7.0</a></dd>
               
             
@@ -421,7 +335,7 @@ and the vineyard store that offers efficient in-memory data transfers.</p>
 
             
               
-                <dd><a href="../v0.6.0-rev1/index.html">v0.6.0-rev1</a></dd>
+                <dd><a href="../v0.6.1/index.html">v0.6.1</a></dd>
               
             
 

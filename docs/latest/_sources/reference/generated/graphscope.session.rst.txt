@@ -19,6 +19,7 @@
       ~session.eager
       ~session.g
       ~session.get_config
+      ~session.graphlearn
       ~session.gremlin
       ~session.learning
       ~session.load_from

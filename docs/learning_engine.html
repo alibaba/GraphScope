@@ -1,45 +1,21 @@
-
-
 <!DOCTYPE html>
 <html class="writer-html5" lang="en" >
 <head>
   <meta charset="utf-8" />
-  
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  
   <title>GraphScope Learning Engine &mdash; GraphScope  documentation</title>
-  
-
-  
-  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
-  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
-  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
-  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
-  <link rel="stylesheet" href="_static/css/custom.css" type="text/css" />
-
-  
-  
-
-  
-  
-
-  
-
-  
+      <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="_static/css/custom.css" type="text/css" />
   <!--[if lt IE 9]>
     <script src="_static/js/html5shiv.min.js"></script>
   <![endif]-->
   
-    
-      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
         <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
         <script src="_static/jquery.js"></script>
         <script src="_static/underscore.js"></script>
         <script src="_static/doctools.js"></script>
-    
-    <script type="text/javascript" src="_static/js/theme.js"></script>
-
-    
+    <script src="_static/js/theme.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="Persistent Graph Store" href="persistent_graph_store.html" />
@@ -60,33 +36,16 @@
 
 </head>
 
-<body class="wy-body-for-nav">
-
-   
+<body class="wy-body-for-nav"> 
   <div class="wy-grid-for-nav">
-    
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
         <div class="wy-side-nav-search" >
-          
-
-          
             <a href="index.html" class="icon icon-home"> GraphScope
-          
-
-          
           </a>
-
-          
-            
-            
               <div class="version">
                 stable
               </div>
-            
-          
-
-          
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
     <input type="text" name="q" placeholder="Search docs" />
@@ -94,11 +53,7 @@
     <input type="hidden" name="area" value="default" />
   </form>
 </div>
-
-          
         </div>
-
-        
   <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
     
       
@@ -141,6 +96,7 @@
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="reference/python_index.html">Python API Reference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="reference/analytical_engine_index.html">Analytical Engine API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="reference/gae_java/index.html">Analytical Engine Java API Reference</a></li>
 </ul>
 
       
@@ -150,66 +106,28 @@
       </div>
     </nav>
 
-    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
-
-      
-      <nav class="wy-nav-top" aria-label="top navigation">
-        
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
           <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
           <a href="index.html">GraphScope</a>
-        
       </nav>
 
-
       <div class="wy-nav-content">
-        
         <div class="rst-content">
-        
-          
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-<div role="navigation" aria-label="breadcrumbs navigation">
-
+          <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
-    
       <li><a href="index.html" class="icon icon-home"></a> &raquo;</li>
-        
       <li>GraphScope Learning Engine</li>
-    
-    
       <li class="wy-breadcrumbs-aside">
-        
-          
             <a href="_sources/learning_engine.rst.txt" rel="nofollow"> View page source</a>
-          
-        
       </li>
-    
   </ul>
-
-  
   <hr/>
 </div>
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
-            
+             
   <div class="section" id="graphscope-learning-engine">
-<h1>GraphScope Learning Engine<a class="headerlink" href="#graphscope-learning-engine" title="Permalink to this headline">¶</a></h1>
+<h1>GraphScope Learning Engine<a class="headerlink" href="#graphscope-learning-engine" title="Permalink to this headline"></a></h1>
 <p>The learning engine in GraphScope (GLE) drives from Graph-Learn,
 a distributed framework designed for development and training
 of large-scale graph neural networks (GNNs).
@@ -220,7 +138,7 @@ such as search recommendation, network security, and knowledge graphs.</p>
 <p>Next, we will walk through a quick-start turtorial on how to build
 a user-defined GNN model using <strong>GLE</strong>.</p>
 <div class="section" id="graph-learning-model">
-<h2>Graph Learning Model<a class="headerlink" href="#graph-learning-model" title="Permalink to this headline">¶</a></h2>
+<h2>Graph Learning Model<a class="headerlink" href="#graph-learning-model" title="Permalink to this headline"></a></h2>
 <p>There are two ways to train a graph learning model. One is to
 compute based on the whole graph directly. The GCN and GAT are originally
 proposed using this approach, directly computing on the entire adjacency matrix.
@@ -239,7 +157,7 @@ It can work with popular tensor engines including TensorFlow and PyTorch.
 In the following, our model implemnetations are based on TensorFlow.</p>
 <img alt="_images/learning_model.png" class="align-center" src="_images/learning_model.png" />
 <div class="section" id="data-model">
-<h3>Data model<a class="headerlink" href="#data-model" title="Permalink to this headline">¶</a></h3>
+<h3>Data model<a class="headerlink" href="#data-model" title="Permalink to this headline"></a></h3>
 <p>To build and train a model, <strong>GLE</strong> usually samples subgraphs as the training data,
 and perform batch training with it. We start with introducing the basic data model.</p>
 <p><code class="docutils literal notranslate"><span class="pre">EgoGraph</span></code> is the underlying data model in <strong>GLE</strong>. It consists of a
@@ -255,7 +173,7 @@ And the <code class="docutils literal notranslate"><span class="pre">EgoTensor</
 <img alt="_images/egograph.png" class="align-center" src="_images/egograph.png" />
 </div>
 <div class="section" id="encoder">
-<h3>Encoder<a class="headerlink" href="#encoder" title="Permalink to this headline">¶</a></h3>
+<h3>Encoder<a class="headerlink" href="#encoder" title="Permalink to this headline"></a></h3>
 <p>A graph learning model can be viewed as using an encoder to
 encode the <code class="docutils literal notranslate"><span class="pre">EgoTensor</span></code> of a node, edge or subgraph into a vector.</p>
 <p><strong>GLE</strong> first uses feature encoders to encode
@@ -274,7 +192,7 @@ a GNN model in the next section.</p>
 </div>
 </div>
 <div class="section" id="developing-your-own-model">
-<h2>Developing Your Own Model<a class="headerlink" href="#developing-your-own-model" title="Permalink to this headline">¶</a></h2>
+<h2>Developing Your Own Model<a class="headerlink" href="#developing-your-own-model" title="Permalink to this headline"></a></h2>
 <p>In this document, we will introduce how to use the basic APIs provided
 by <strong>GLE</strong> to cooperate with deep learning engines, such as TensorFlow,
 to build graph learning algorithms. We demonstrate the GCN model as an
@@ -321,7 +239,7 @@ loss functions, optimizers and training processes.</p>
 </ul>
 <p>Next, we introduce how to implement a GCN model using the above four steps.</p>
 <div class="section" id="sampling">
-<h3>Sampling<a class="headerlink" href="#sampling" title="Permalink to this headline">¶</a></h3>
+<h3>Sampling<a class="headerlink" href="#sampling" title="Permalink to this headline"></a></h3>
 <p>We use the Cora dataset as the node classification example. We provide a
 simple data conversion script <code class="docutils literal notranslate"><span class="pre">cora.py</span></code> to convert the original Cora
 to the format required by <strong>GLE</strong>. The script generates following 5
@@ -389,7 +307,7 @@ are so we use ‘full’ for sampling. We aggregate the sampling results in
 <code class="docutils literal notranslate"><span class="pre">EgoGraph</span></code> which is the return value.</p>
 </div>
 <div class="section" id="graph-data-flow">
-<h3>Graph Data Flow<a class="headerlink" href="#graph-data-flow" title="Permalink to this headline">¶</a></h3>
+<h3>Graph Data Flow<a class="headerlink" href="#graph-data-flow" title="Permalink to this headline"></a></h3>
 <p>In <code class="docutils literal notranslate"><span class="pre">build</span></code> function, we convert <code class="docutils literal notranslate"><span class="pre">EgoGraph</span></code> to <code class="docutils literal notranslate"><span class="pre">EgoTensor</span></code> using
 <code class="docutils literal notranslate"><span class="pre">EgoFlow</span></code>. <code class="docutils literal notranslate"><span class="pre">EgoFlow</span></code> contains an data flow iterator and several
 <code class="docutils literal notranslate"><span class="pre">EgoTensor</span></code>s.</p>
@@ -408,7 +326,7 @@ are so we use ‘full’ for sampling. We aggregate the sampling results in
 from <code class="docutils literal notranslate"><span class="pre">EgoFlow</span></code>.</p>
 </div>
 <div class="section" id="model">
-<h3>Model<a class="headerlink" href="#model" title="Permalink to this headline">¶</a></h3>
+<h3>Model<a class="headerlink" href="#model" title="Permalink to this headline"></a></h3>
 <p>Next, we first use the feature encoder to encode the original features.
 In this example, we use <code class="docutils literal notranslate"><span class="pre">IdentityEncoder</span></code> that returns itself, because
 the features of Cora are already in vector formats. For both the
@@ -439,7 +357,7 @@ model, please refer to the implementation of GraphSAGE.</p>
 </div>
 </div>
 <div class="section" id="loss-function-and-training-process">
-<h3>Loss Function and Training Process<a class="headerlink" href="#loss-function-and-training-process" title="Permalink to this headline">¶</a></h3>
+<h3>Loss Function and Training Process<a class="headerlink" href="#loss-function-and-training-process" title="Permalink to this headline"></a></h3>
 <p>For the Cora node classification model, we can select the corresponding
 classification loss function in TensorFlow. Then, we combine the encoder
 and loss function in the <code class="docutils literal notranslate"><span class="pre">build</span></code> function, and finally return a data
@@ -494,50 +412,33 @@ as a starting point for building a similar model.</p>
 
 
            </div>
-           
           </div>
-          <footer>
-    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
-        <a href="persistent_graph_store.html" class="btn btn-neutral float-right" title="Persistent Graph Store" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
         <a href="interactive_engine.html" class="btn btn-neutral float-left" title="GraphScope Interactive Engine" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="persistent_graph_store.html" class="btn btn-neutral float-right" title="Persistent Graph Store" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>
 
   <div role="contentinfo">
-    <p>
-        &#169; Copyright 2020-2023, Damo Academy, Alibaba Inc..
-
-    </p>
+    <p>&#169; Copyright 2020-2023, Damo Academy, Alibaba Inc..</p>
   </div>
-    
-    
-    
-    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
-    
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
     <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
-    
-    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
 
 </footer>
         </div>
       </div>
-
     </section>
-
   </div>
-  
-
-  <script type="text/javascript">
+  <script>
       jQuery(function () {
           SphinxRtdTheme.Navigation.enable(true);
       });
   </script>
-
-  
-  
-    
-  
   
 
   <div class="rst-versions" data-toggle="rst-versions" role="note" aria-label="versions">
@@ -574,6 +475,16 @@ as a starting point for building a similar model.</p>
 
             
               
+                <dd><a href="v0.8.0/index.html">v0.8.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
                 <dd><a href="v0.7.0/index.html">v0.7.0</a></dd>
               
             
@@ -584,7 +495,7 @@ as a starting point for building a similar model.</p>
 
             
               
-                <dd><a href="v0.6.0-rev1/index.html">v0.6.0-rev1</a></dd>
+                <dd><a href="v0.6.1/index.html">v0.6.1</a></dd>
               
             
 
