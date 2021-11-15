@@ -62,10 +62,6 @@ jobs:
         make BUILD_TYPE=debug
         popd
 
-    - name: Setup tmate session
-      if: matrix.os == 'macos-10.15'
-      uses: mxschmitt/action-tmate@v2
-
     - name: Run Local Test
       env:
         OS : ${{ matrix.os }}
