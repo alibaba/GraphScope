@@ -41,7 +41,7 @@ mod test {
             }),
         };
         let select_opr = pb::Select {
-            predicate: Some(str_to_expr_pb("@HEAD.id == 1".to_string()).unwrap()),
+            predicate: Some(str_to_expr_pb("@.id == 1".to_string()).unwrap()),
         };
         let expand_opr = pb::EdgeExpand {
             base: Some(pb::ExpandBase {
