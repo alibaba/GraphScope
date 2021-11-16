@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-#include "common/check.h"
 #include <iostream>
+#include "lgraph/common/check.h"
 
 namespace LGRAPH_NAMESPACE {
 
@@ -24,6 +24,10 @@ void Check(bool result, const char *err_msg) {
     std::cerr << err_msg << std::endl;
     abort();
   }
+}
+
+void Check(bool result, std::string err_msg) {
+  Check(result, err_msg.c_str());
 }
 
 }

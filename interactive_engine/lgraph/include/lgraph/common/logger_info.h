@@ -14,14 +14,23 @@
  * limitations under the License.
  */
 
-#include "lgraph/jna/native.h"
+#pragma once
+
+#include "lgraph/common/namespace.h"
 
 namespace LGRAPH_NAMESPACE {
 
-thread_local PartitionGraphHandle local_graph_handle_ = nullptr;
+struct LoggerInfo {
+  std::string kafka_servers;
+  std::string topic;
+  int32_t queue_number;
 
-void setPartitionGraph(PartitionGraphHandle handle) {
-  local_graph_handle_ = handle;
-}
+  LoggerInfo(const std::string &servers, const std::string &topic, int32_t queue_number)
+      : kafka_servers(servers), topic(topic), queue_number(queue_number) {}
+  LoggerInfo(const LoggerInfo &) = default;
+  LoggerInfo(LoggerInfo &&) = default;
+  LoggerInfo &operator=(const LoggerInfo &) = default;
+  LoggerInfo &operator=(LoggerInfo &&) = default;
+};
 
 }

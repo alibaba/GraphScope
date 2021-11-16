@@ -169,6 +169,7 @@ init_basic_packages() {
       libkrb5-dev
       liblz4-dev
       libprotobuf-dev
+      librdkafka-dev
       libre2-dev
       libsnappy-dev
       libssl-dev
@@ -196,6 +197,7 @@ init_basic_packages() {
       libcurl-devel
       libevent-devel
       libgsasl-devel
+      librdkafka-devel
       libunwind-devel
       libuuid-devel
       libxml2-devel
@@ -234,6 +236,7 @@ init_basic_packages() {
       lz4
       openssl
       libevent
+      librdkafka
       autoconf
       wget
       libomp
@@ -501,6 +504,42 @@ install_vineyard() {
   popd
 
   rm -fr /tmp/libvineyard
+}
+
+##########################
+# Install cppkafka.
+# Globals:
+#   PLATFORM
+#   NUM_PROC
+# Arguments:
+#   None
+# Outputs:
+#   output log to stdout, output error to stderr.
+##########################
+install_cppkafka() {
+  log "Building and installing cppkafka."
+
+  if [[ -f "/usr/local/include/cppkafka/cppkafka.h" ]]; then
+    log "cppkafka already installed, skip."
+    return 0
+  fi
+
+  if [[ "${PLATFORM}" == *"Darwin"* ]]; then
+    export LDFLAGS="-L/usr/local/opt/openssl@3/lib"
+    export CPPFLAGS="-I/usr/local/opt/openssl@3/include"
+  fi
+
+  check_and_remove_dir "/tmp/cppkafka"
+  git clone -b 0.4.0 --single-branch --depth=1 \
+      https://github.com/mfontanini/cppkafka.git /tmp/cppkafka
+  pushd /tmp/cppkafka
+  git submodule update --init
+  mkdir -p build && pushd build
+  cmake .. && make -j$(nproc)
+  sudo make install && popd
+  popd
+
+  rm -fr /tmp/cppkafka
 }
 
 ##########################
@@ -797,6 +836,8 @@ install_dependencies() {
   install_libgrape-lite
 
   install_vineyard
+
+  install_cppkafka
 
   log "Output environments config file ${OUTPUT_ENV_FILE}"
   write_envs_config

@@ -14,14 +14,22 @@
  * limitations under the License.
  */
 
-#include "lgraph/jna/native.h"
+#include "lgraph/db/error.h"
+#include "lgraph/db/store_ffi/store_ffi.h"
 
 namespace LGRAPH_NAMESPACE {
+namespace db {
 
-thread_local PartitionGraphHandle local_graph_handle_ = nullptr;
-
-void setPartitionGraph(PartitionGraphHandle handle) {
-  local_graph_handle_ = handle;
+Error::~Error() {
+  if (handle_ != nullptr) {
+    ffi::ReleaseErrorHandle(handle_);
+  }
 }
 
+std::string Error::GetInfo() {
+  auto str_slice = ffi::GetErrorInfo(handle_);
+  return std::string{static_cast<const char *>(str_slice.data), str_slice.len};
+}
+
+}
 }

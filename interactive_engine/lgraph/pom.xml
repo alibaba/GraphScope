@@ -48,7 +48,6 @@
               <workingDirectory></workingDirectory>
               <arguments>
                 <argument>build.sh</argument>
-                <argument>${rust.compile.mode}</argument>
               </arguments>
             </configuration>
           </plugin>

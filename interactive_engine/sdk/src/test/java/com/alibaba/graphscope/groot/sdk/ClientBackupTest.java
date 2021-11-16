@@ -33,7 +33,7 @@ public class ClientBackupTest {
 
     @Test
     public void testBackup() throws InterruptedException, IOException, URISyntaxException {
-        Thread.sleep(10000L);
+        Thread.sleep(30000L);
         Path path =
                 Paths.get(
                         Thread.currentThread()

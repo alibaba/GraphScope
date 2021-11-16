@@ -17,8 +17,8 @@
 #include <cassert>
 #include <sstream>
 
-#include "jna/ffi_test.h"
-#include "store_ffi/store_ffi.h"
+#include "lgraph/jna/ffi_test.h"
+#include "lgraph/db/store_ffi/store_ffi.h"
 
 namespace LGRAPH_NAMESPACE {
 
@@ -67,7 +67,7 @@ std::string PropName(PropertyId prop_id) {
   return std::string{};
 }
 
-std::string GetPropValueAsStr(Property* p) {
+std::string GetPropValueAsStr(db::Property* p) {
   if (p->GetPropertyId() == id_PropId) {
     return std::to_string(p->GetAsInt64().unwrap());
   } else if (p->GetPropertyId() == name_PropId || p->GetPropertyId() == lang_PropId) {
@@ -83,7 +83,7 @@ std::string GetPropValueAsStr(Property* p) {
 
 /// Test Functions
 
-bool LogVertexInfo(Vertex* v, std::stringstream& logger) {
+bool LogVertexInfo(db::Vertex* v, std::stringstream& logger) {
   std::string v_id = std::to_string(v->GetVertexId());
 
   std::string info = "[INFO] ";
@@ -109,7 +109,7 @@ bool LogVertexInfo(Vertex* v, std::stringstream& logger) {
   return true;
 }
 
-bool LogEdgeInfo(Edge* e, std::stringstream& logger) {
+bool LogEdgeInfo(db::Edge* e, std::stringstream& logger) {
   auto e_id = e->GetEdgeId();
   std::string e_id_str = "(" + std::to_string(e_id.edge_inner_id) + ", "
                          + std::to_string(e_id.src_vertex_id) + ", " + std::to_string(e_id.dst_vertex_id) + ")";
@@ -140,7 +140,7 @@ bool LogEdgeInfo(Edge* e, std::stringstream& logger) {
   return true;
 }
 
-bool TestScanVertex(Snapshot* ss, std::stringstream& logger) {
+bool TestScanVertex(db::Snapshot* ss, std::stringstream& logger) {
   auto r = ss->ScanVertex();
   if (r.isErr()) {
     logger << "[Error] ScanVertex: " << r.unwrapErr().GetInfo() << "\n";
@@ -174,7 +174,7 @@ bool TestScanVertex(Snapshot* ss, std::stringstream& logger) {
   return true;
 }
 
-bool TestScanEdge(Snapshot* ss, std::stringstream& logger) {
+bool TestScanEdge(db::Snapshot* ss, std::stringstream& logger) {
   auto r = ss->ScanEdge();
   if (r.isErr()) {
     logger << "[Error] ScanEdge: " << r.unwrapErr().GetInfo() << "\n";
@@ -209,7 +209,7 @@ bool TestScanEdge(Snapshot* ss, std::stringstream& logger) {
   return true;
 }
 
-bool TestGetVertex(Snapshot* ss, std::stringstream& logger) {
+bool TestGetVertex(db::Snapshot* ss, std::stringstream& logger) {
   // Get vertex: <VertexID: 2233628339503041259> <Label: software> <id: 5> <lang: java> <name: ripple>
   VertexId query_vid = 2233628339503041259U;
   int64_t expect_id_prop = 5L;
@@ -289,7 +289,7 @@ bool TestGetVertex(Snapshot* ss, std::stringstream& logger) {
   return true;
 }
 
-bool TestGetEdge(Snapshot* ss, std::stringstream& logger) {
+bool TestGetEdge(db::Snapshot* ss, std::stringstream& logger) {
   // Get edge: <EdgeID: (0, 16401677891599130309, 10454779632061085998)>
   //           <EdgeRelation: (created, person, software)>
   //           <id: 12> <weight: 0.200000>
@@ -350,7 +350,7 @@ bool TestGetEdge(Snapshot* ss, std::stringstream& logger) {
   return true;
 }
 
-bool TestGetOutEdges(Snapshot* ss, std::stringstream& logger) {
+bool TestGetOutEdges(db::Snapshot* ss, std::stringstream& logger) {
   // Query src vertex: <VertexID: 10714315738933730127> <Label: person> <age: 29> <name: marko> <id: 1>
   VertexId query_vid = 10714315738933730127U;
   unsigned expect_knows_num = 2;
@@ -421,7 +421,7 @@ bool TestGetOutEdges(Snapshot* ss, std::stringstream& logger) {
   return true;
 }
 
-bool TestGetInEdges(Snapshot* ss, std::stringstream& logger) {
+bool TestGetInEdges(db::Snapshot* ss, std::stringstream& logger) {
   // Query src vertex: <VertexID: 10454779632061085998> <Label: software> <id: 3> <name: lop> <lang: java>
   VertexId query_vid = 10454779632061085998U;
   unsigned expect_nbr_num = 3;
@@ -460,7 +460,7 @@ bool TestGetInEdges(Snapshot* ss, std::stringstream& logger) {
   return true;
 }
 
-bool TestGetOutDegree(Snapshot* ss, std::stringstream& logger) {
+bool TestGetOutDegree(db::Snapshot* ss, std::stringstream& logger) {
   // Query src vertex: <VertexID: 12334515728491031937> <Label: person> <name: josh> <id: 4> <age: 32>
   VertexId query_vid = 12334515728491031937U;
   EdgeRelation query_edge_rel{created_EdgeLabelId, person_LabelId, software_LabelId};
@@ -482,7 +482,7 @@ bool TestGetOutDegree(Snapshot* ss, std::stringstream& logger) {
   return true;
 }
 
-bool TestGetInDegree(Snapshot* ss, std::stringstream& logger) {
+bool TestGetInDegree(db::Snapshot* ss, std::stringstream& logger) {
   // Query src vertex: <VertexID: 10454779632061085998> <Label: software> <id: 3> <name: lop> <lang: java>
   VertexId query_vid = 10454779632061085998U;
   EdgeRelation query_edge_rel{created_EdgeLabelId, person_LabelId, software_LabelId};
@@ -504,7 +504,7 @@ bool TestGetInDegree(Snapshot* ss, std::stringstream& logger) {
   return true;
 }
 
-bool TestGetKthOutEdge(Snapshot* ss, std::stringstream& logger) {
+bool TestGetKthOutEdge(db::Snapshot* ss, std::stringstream& logger) {
   // Query src vertex: <VertexID: 10714315738933730127> <Label: person> <age: 29> <id: 1> <name: marko>
   VertexId query_vid = 10714315738933730127U;
   EdgeRelation query_edge_rel{knows_EdgeLabelId, person_LabelId, person_LabelId};
@@ -547,7 +547,7 @@ bool TestGetKthOutEdge(Snapshot* ss, std::stringstream& logger) {
   return true;
 }
 
-bool TestGetKthInEdge(Snapshot* ss, std::stringstream& logger) {
+bool TestGetKthInEdge(db::Snapshot* ss, std::stringstream& logger) {
   // Query src vertex: <VertexID: 10454779632061085998> <Label: software> <id: 3> <name: lop> <lang: java>
   VertexId query_vid = 10454779632061085998U;
   EdgeRelation query_edge_rel{created_EdgeLabelId, person_LabelId, software_LabelId};
@@ -590,7 +590,7 @@ bool TestGetKthInEdge(Snapshot* ss, std::stringstream& logger) {
   return true;
 }
 
-bool TestGetSnapshotId(Snapshot* ss, std::stringstream& logger) {
+bool TestGetSnapshotId(db::Snapshot* ss, std::stringstream& logger) {
   SnapshotId expect_ss_id = std::numeric_limits<uint32_t>::max();
   auto ss_id = ss->GetSnapshotId();
   if (ss_id != expect_ss_id) {
@@ -605,9 +605,9 @@ bool TestGetSnapshotId(Snapshot* ss, std::stringstream& logger) {
 
 const unsigned test_num = 11;
 
-typedef bool (*TestFunc)(Snapshot* ss, std::stringstream& logger);
+typedef bool (*TestFunc)(db::Snapshot* ss, std::stringstream& logger);
 
-bool RunTest(unsigned id, const std::string& test_name, TestFunc f, Snapshot* ss, std::stringstream& logger) {
+bool RunTest(unsigned id, const std::string& test_name, TestFunc f, db::Snapshot* ss, std::stringstream& logger) {
   logger << "[INFO] ----------------------------------------------\n";
   logger << "[INFO] --- " << test_name << " Test [" << id << "/" << test_num << "]\n";
   logger << "[INFO] ----------------------------------------------\n";
@@ -625,7 +625,7 @@ TestResult* runLocalTests() {
 
   unsigned success_num = 0;
   SnapshotId query_snapshot_id = std::numeric_limits<uint32_t>::max();
-  Snapshot latest_ss(ffi::GetSnapshot(local_graph_handle_, query_snapshot_id));
+  db::Snapshot latest_ss(ffi::GetSnapshot(local_graph_handle_, query_snapshot_id));
   if (latest_ss.Valid()) {
     success_num += RunTest(1, "ScanVertex", TestScanVertex, &latest_ss, logger) ? 1 : 0;
     success_num += RunTest(2, "ScanEdge", TestScanEdge, &latest_ss, logger) ? 1 : 0;

@@ -14,14 +14,20 @@
  * limitations under the License.
  */
 
-#include "lgraph/jna/native.h"
+#include <memory>
+
+#include "lgraph/db/snapshot.h"
+
+#ifdef _WIN32
+#   define DLL_EXPORT __declspec(dllexport)
+#else
+#   define DLL_EXPORT
+#endif
 
 namespace LGRAPH_NAMESPACE {
 
-thread_local PartitionGraphHandle local_graph_handle_ = nullptr;
+extern thread_local PartitionGraphHandle local_graph_handle_;
 
-void setPartitionGraph(PartitionGraphHandle handle) {
-  local_graph_handle_ = handle;
-}
+extern "C" DLL_EXPORT void setPartitionGraph(PartitionGraphHandle handle);
 
 }

@@ -18,10 +18,23 @@
 
 namespace LGRAPH_NAMESPACE {
 
-thread_local PartitionGraphHandle local_graph_handle_ = nullptr;
+class TestResult {
+public:
+  TestResult(bool successful, const std::stringstream &logger)
+      : successful_(successful), info_(std::move(logger.str())) {}
+  ~TestResult() = default;
 
-void setPartitionGraph(PartitionGraphHandle handle) {
-  local_graph_handle_ = handle;
-}
+  bool GetResult() const { return successful_; }
+  const char *GetInfo() const { return info_.c_str(); }
+
+private:
+  bool successful_;
+  std::string info_;
+};
+
+extern "C" DLL_EXPORT TestResult *runLocalTests();
+extern "C" DLL_EXPORT bool getTestResultFlag(const TestResult *r);
+extern "C" DLL_EXPORT const char *getTestResultInfo(const TestResult *r);
+extern "C" DLL_EXPORT void freeTestResult(TestResult *r);
 
 }

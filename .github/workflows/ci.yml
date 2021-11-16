@@ -575,6 +575,15 @@ jobs:
 
         sudo yum install -y clang-devel
 
+        sudo yum install -y librdkafka-devel
+        git clone -b 0.4.0 --single-branch --depth=1 https://github.com/mfontanini/cppkafka.git /tmp/cppkafka
+        pushd /tmp/cppkafka
+        git submodule update --init
+        mkdir -p build && pushd build
+        cmake .. && make -j
+        sudo make install && popd && popd
+        rm -fr /tmp/cppkafka
+
     - uses: actions/checkout@v2.3.2
 
     - name: Build
