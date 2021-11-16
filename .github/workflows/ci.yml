@@ -407,6 +407,7 @@ jobs:
         sudo cp $(go env GOPATH)/bin/zetcd /usr/local/bin/
 
         python3 -m pip install pytest-cov
+        python3 -m pip install -U networkx==2.5
         tar -xf ./gae-${{ github.sha }}/vineyard.tar
         tar -xf ./gae-${{ github.sha }}/gae.tar
         tar -xf ./gle-${{ github.sha }}/gle.tar
