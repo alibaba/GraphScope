@@ -24,8 +24,14 @@ RUN sudo mkdir -p /opt/vineyard && \
     cmake .. -DCMAKE_PREFIX_PATH=/opt/vineyard \
              -DCMAKE_INSTALL_PREFIX=/opt/vineyard \
              -DBUILD_SHARED_LIBS=ON && \
-    make install -j && \
+    make install vineyard_client_python -j && \
+    cd /tmp/libvineyard && \
+    python3 setup.py bdist_wheel && \
+    cd dist && \
+    auditwheel repair --plat=manylinux2014_x86_64 ./*.whl && \
     mkdir -p /opt/vineyard/dist && \
+    cp -f wheelhouse/* /opt/vineyard/dist && \
+    pip3 install wheelhouse/*.whl && \
     cd /tmp/libvineyard/modules/io && \
     python3 setup.py bdist_wheel && \
     cp -f dist/* /opt/vineyard/dist && \
