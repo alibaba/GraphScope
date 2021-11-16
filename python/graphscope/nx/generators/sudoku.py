@@ -16,8 +16,12 @@
 # limitations under the License.
 #
 
-import networkx.generators.sudoku
+try:
+    import networkx.generators.sudoku
 
-from graphscope.nx.utils.compat import import_as_graphscope_nx
+    from graphscope.nx.utils.compat import import_as_graphscope_nx
 
-import_as_graphscope_nx(networkx.generators.sudoku)
+    import_as_graphscope_nx(networkx.generators.sudoku)
+except ModuleNotFoundError:
+    # networkx <= 2.4 not contains sudoku
+    pass
