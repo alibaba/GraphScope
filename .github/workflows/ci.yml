@@ -387,9 +387,9 @@ jobs:
             - 'python/graphscope/nx/classes/**'
             - 'python/graphscope/nx/utils/**'
           algorithm:
-            - 'python/graphscope/nx/classes/**'
-            - 'python/graphscope/nx/utils/**'
-            - 'python/graphscope/nx/algorithms/**'
+            - 'analytical_engine/apps/**'
+            - 'analytical_engine/frame/**'
+            - 'python/graphscope/nx/algorithms/builtin.py'
           generator:
             - 'python/graphscope/nx/classes/**'
             - 'python/graphscope/nx/utils/**'
