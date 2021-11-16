@@ -36,8 +36,8 @@ class GSConfig(object):
 
     # image
     k8s_etcd_image = "quay.io/coreos/etcd:v3.4.13"
-    k8s_gs_image = "registry.cn-hongkong.aliyuncs.com/graphscope/graphscope:{0}".format(
-        __version__
+    k8s_gs_image = (
+        f"registry.cn-hongkong.aliyuncs.com/graphscope/graphscope:{__version__}"
     )
 
     # image pull configuration
@@ -100,3 +100,9 @@ class GSConfig(object):
 
     # Set to true to enable gaia
     enable_gaia = False
+
+    # Demo dataset related
+    with_demo_dataset = False
+    k8s_demo_dataset_image = (
+        f"registry.cn-hongkong.aliyuncs.com/graphscope/demo_dataset:{__version__}"
+    )

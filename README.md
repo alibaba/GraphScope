@@ -36,7 +36,7 @@ pip3 install graphscope
 ```
 
 Note that `graphscope` requires `Python` >= 3.6 and `pip` >= 19.0.     
-The package is built for and tested on the most popular Linux (Ubuntu18.04+/CentOS 7+) and macOS (version 10.15+) distributions. For Windows, you may want to install Ubuntu on WSL2 to use this package.
+The package is built for and tested on the most popular Linux (Ubuntu18.04+ / CentOS 7+) and macOS (version 10.15+) distributions. For Windows users, you may want to install Ubuntu on WSL2 to use this package.
 
 Next, we will walk you through a concrete example to illustrate how GraphScope can be used by data scientists to effectively analyze large graphs.
 
@@ -221,7 +221,7 @@ Alternatively, you can set up a local k8s cluster for testing with [Kind](https:
 
 ```bash
 # for usage, type --h
-./scripts/install-deps.sh --k8s
+./scripts/install_deps.sh --k8s
 ```
 
 If you did not install the `graphscope` package in the above step, you can install a subset of the whole package with client functions only.
@@ -281,7 +281,7 @@ A session tries to launch a `coordinator`, which is the entry for the back-end e
 Similar to the standalone mode, we can still use the functions to load a graph easily. 
 
 ```python
-from graphscope.dataset.ogbn_mag import load_ogbn_mag
+from graphscope.dataset import load_ogbn_mag
 
 # TODO(yuansi): data preparation?
 g = load_ogbn_mag(sess, "/testingdata/ogbn_mag_small/")
