@@ -285,20 +285,20 @@ pub(crate) mod tests {
         record
     }
 
-    pub fn source_gen() -> Box<dyn Iterator<Item = Record> + Send> {
+    pub fn init_source() -> Vec<Record> {
         let v1 = init_vertex1();
         let v2 = init_vertex2();
         let r1 = Record::new(v1, None);
         let r2 = Record::new(v2, None);
-        Box::new(vec![r1, r2].into_iter())
+        vec![r1, r2]
     }
 
-    pub fn source_gen_with_tag() -> Box<dyn Iterator<Item = Record> + Send> {
+    pub fn init_source_with_tag() -> Vec<Record> {
         let v1 = init_vertex1();
         let v2 = init_vertex2();
         let r1 = Record::new(v1, Some(NameOrId::from("a".to_string())));
         let r2 = Record::new(v2, Some(NameOrId::from("a".to_string())));
-        Box::new(vec![r1, r2].into_iter())
+        vec![r1, r2]
     }
 
     #[test]

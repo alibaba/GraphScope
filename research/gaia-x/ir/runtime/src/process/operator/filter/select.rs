@@ -49,22 +49,24 @@ impl FilterFuncGen for algebra_pb::Select {
 #[cfg(test)]
 mod tests {
     use crate::expr::str_to_expr_pb;
+    use crate::graph::element::Element;
+    use crate::graph::property::Details;
     use crate::process::operator::filter::FilterFuncGen;
-    use crate::process::operator::tests::source_gen;
+    use crate::process::operator::tests::init_source;
+    use crate::process::record::{Entry, Record, RecordElement};
     use ir_common::generated::algebra as pb;
+    use ir_common::NameOrId;
     use pegasus::api::{Filter, Sink};
+    use pegasus::result::ResultStream;
     use pegasus::JobConf;
 
-    // g.V().has("id",1)
-    #[test]
-    fn select_test() {
+    fn select_test(source: Vec<Record>, select_opr_pb: pb::Select) -> ResultStream<Record> {
         let conf = JobConf::new("select_test");
-        let mut result = pegasus::run(conf, || {
+        let result = pegasus::run(conf, || {
+            let source = source.clone();
+            let select_opr_pb = select_opr_pb.clone();
             |input, output| {
-                let mut stream = input.input_from(source_gen())?;
-                let select_opr_pb = pb::Select {
-                    predicate: Some(str_to_expr_pb("@.id == 1".to_string()).unwrap()),
-                };
+                let mut stream = input.input_from(source)?;
                 let select_func = select_opr_pb.gen_filter().unwrap();
                 stream = stream.filter(move |i| select_func.test(i))?;
                 stream.sink_into(output)
@@ -72,11 +74,57 @@ mod tests {
         })
         .expect("build job failure");
 
+        result
+    }
+
+    // g.V().has("id",gt(1))
+    #[test]
+    fn select_test_01() {
+        let select_opr_pb = pb::Select {
+            predicate: Some(str_to_expr_pb("@.id > 1".to_string()).unwrap()),
+        };
+        let mut result = select_test(init_source(), select_opr_pb);
         let mut count = 0;
-        while let Some(Ok(_)) = result.next() {
+        while let Some(Ok(record)) = result.next() {
+            match record.get(None).unwrap() {
+                Entry::Element(RecordElement::OnGraph(vertex_or_edge)) => {
+                    assert!(vertex_or_edge.id().unwrap() > 1)
+                }
+                _ => unreachable!(),
+            }
             count += 1;
         }
 
+        assert_eq!(count, 1);
+    }
+
+    // g.V().has("name","marko")
+    #[test]
+    fn select_test_02() {
+        let select_opr_pb = pb::Select {
+            predicate: Some(str_to_expr_pb("@.name == \"marko\"".to_string()).unwrap()),
+        };
+        let mut result = select_test(init_source(), select_opr_pb);
+        let mut count = 0;
+        while let Some(Ok(record)) = result.next() {
+            println!("record {:?}", record);
+            match record.get(None).unwrap() {
+                Entry::Element(RecordElement::OnGraph(vertex_or_edge)) => {
+                    assert_eq!(
+                        vertex_or_edge
+                            .details()
+                            .unwrap()
+                            .get_property(&NameOrId::Str("name".to_string()))
+                            .unwrap()
+                            .try_to_owned()
+                            .unwrap(),
+                        "marko".to_string().into()
+                    );
+                }
+                _ => unreachable!(),
+            }
+            count += 1;
+        }
         assert_eq!(count, 1);
     }
 }

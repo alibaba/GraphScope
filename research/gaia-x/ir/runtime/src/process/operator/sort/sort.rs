@@ -80,38 +80,45 @@ mod tests {
     use crate::graph::element::Element;
     use crate::graph::property::Details;
     use crate::process::operator::sort::CompareFunctionGen;
-    use crate::process::operator::tests::{source_gen, source_gen_with_tag};
-    use crate::process::record::{Entry, RecordElement};
+    use crate::process::operator::tests::{init_source, init_source_with_tag};
+    use crate::process::record::{Entry, Record, RecordElement};
     use ir_common::generated::algebra as pb;
     use ir_common::generated::common as common_pb;
     use ir_common::NameOrId;
     use pegasus::api::{Sink, SortBy};
+    use pegasus::result::ResultStream;
     use pegasus::JobConf;
 
-    // g.V().order()
-    #[test]
-    fn sort_test_01() {
-        let conf = JobConf::new("sort_test_01");
-        let mut result = pegasus::run(conf, || {
+    fn sort_test(source: Vec<Record>, sort_opr: pb::OrderBy) -> ResultStream<Record> {
+        let conf = JobConf::new("sort_test");
+        let result = pegasus::run(conf, || {
+            let source = source.clone();
+            let sort_opr = sort_opr.clone();
             |input, output| {
-                let mut stream = input.input_from(source_gen())?;
-                let sort_opr = pb::OrderBy {
-                    pairs: vec![pb::order_by::OrderingPair {
-                        key: Some(common_pb::Variable {
-                            tag: None,
-                            property: None,
-                        }),
-                        order: 1, // ascending
-                    }],
-                    limit: None,
-                };
+                let mut stream = input.input_from(source.into_iter())?;
                 let sort_func = sort_opr.gen_cmp().unwrap();
                 stream = stream.sort_by(move |a, b| sort_func.compare(a, b))?;
                 stream.sink_into(output)
             }
         })
         .expect("build job failure");
+        result
+    }
 
+    // g.V().order()
+    #[test]
+    fn sort_test_01() {
+        let sort_opr = pb::OrderBy {
+            pairs: vec![pb::order_by::OrderingPair {
+                key: Some(common_pb::Variable {
+                    tag: None,
+                    property: None,
+                }),
+                order: 1, // ascending
+            }],
+            limit: None,
+        };
+        let mut result = sort_test(init_source(), sort_opr);
         let mut result_ids = vec![];
         while let Some(Ok(res)) = result.next() {
             match res.get(None).unwrap() {
@@ -128,27 +135,17 @@ mod tests {
     // g.V().order().by(desc)
     #[test]
     fn sort_test_02() {
-        let conf = JobConf::new("sort_test_02");
-        let mut result = pegasus::run(conf, || {
-            |input, output| {
-                let mut stream = input.input_from(source_gen())?;
-                let sort_opr = pb::OrderBy {
-                    pairs: vec![pb::order_by::OrderingPair {
-                        key: Some(common_pb::Variable {
-                            tag: None,
-                            property: None,
-                        }),
-                        order: 2, // descending
-                    }],
-                    limit: None,
-                };
-                let sort_func = sort_opr.gen_cmp().unwrap();
-                stream = stream.sort_by(move |a, b| sort_func.compare(a, b))?;
-                stream.sink_into(output)
-            }
-        })
-        .expect("build job failure");
-
+        let sort_opr = pb::OrderBy {
+            pairs: vec![pb::order_by::OrderingPair {
+                key: Some(common_pb::Variable {
+                    tag: None,
+                    property: None,
+                }),
+                order: 2, // descending
+            }],
+            limit: None,
+        };
+        let mut result = sort_test(init_source(), sort_opr);
         let mut result_ids = vec![];
         while let Some(Ok(res)) = result.next() {
             match res.get(None).unwrap() {
@@ -165,24 +162,14 @@ mod tests {
     // g.V().order().by('name',desc)
     #[test]
     fn sort_test_03() {
-        let conf = JobConf::new("sort_test_03");
-        let mut result = pegasus::run(conf, || {
-            |input, output| {
-                let mut stream = input.input_from(source_gen())?;
-                let sort_opr = pb::OrderBy {
-                    pairs: vec![pb::order_by::OrderingPair {
-                        key: Some(common_pb::Variable::from("@.name".to_string())),
-                        order: 2, // descending
-                    }],
-                    limit: None,
-                };
-                let sort_func = sort_opr.gen_cmp().unwrap();
-                stream = stream.sort_by(move |a, b| sort_func.compare(a, b))?;
-                stream.sink_into(output)
-            }
-        })
-        .expect("build job failure");
-
+        let sort_opr = pb::OrderBy {
+            pairs: vec![pb::order_by::OrderingPair {
+                key: Some(common_pb::Variable::from("@.name".to_string())),
+                order: 2, // descending
+            }],
+            limit: None,
+        };
+        let mut result = sort_test(init_source(), sort_opr);
         let mut result_name = vec![];
         while let Some(Ok(res)) = result.next() {
             match res.get(None).unwrap() {
@@ -207,24 +194,14 @@ mod tests {
     // g.V().as("a").order().by(select('a'))
     #[test]
     fn sort_test_04() {
-        let conf = JobConf::new("sort_test_04");
-        let mut result = pegasus::run(conf, || {
-            |input, output| {
-                let mut stream = input.input_from(source_gen_with_tag())?;
-                let sort_opr = pb::OrderBy {
-                    pairs: vec![pb::order_by::OrderingPair {
-                        key: Some(common_pb::Variable::from("@a".to_string())),
-                        order: 2, // descending
-                    }],
-                    limit: None,
-                };
-                let sort_func = sort_opr.gen_cmp().unwrap();
-                stream = stream.sort_by(move |a, b| sort_func.compare(a, b))?;
-                stream.sink_into(output)
-            }
-        })
-        .expect("build job failure");
-
+        let sort_opr = pb::OrderBy {
+            pairs: vec![pb::order_by::OrderingPair {
+                key: Some(common_pb::Variable::from("@a".to_string())),
+                order: 2, // descending
+            }],
+            limit: None,
+        };
+        let mut result = sort_test(init_source_with_tag(), sort_opr);
         let mut result_ids = vec![];
         while let Some(Ok(res)) = result.next() {
             match res.get(Some(&NameOrId::Str("a".to_string()))).unwrap() {

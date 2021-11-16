@@ -76,7 +76,7 @@ mod tests {
     }
 
     fn join_test(join_kind: i32, expected_ids: Vec<u128>) {
-        let conf = JobConf::new("inner_join_test");
+        let conf = JobConf::new("join_test");
         let mut result =
             pegasus::run(conf, || {
                 move |input, output| {

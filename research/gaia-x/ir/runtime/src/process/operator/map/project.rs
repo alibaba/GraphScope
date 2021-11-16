@@ -78,30 +78,21 @@ impl MapFuncGen for algebra_pb::Project {
 mod tests {
     use crate::expr::str_to_expr_pb;
     use crate::process::operator::map::MapFuncGen;
-    use crate::process::operator::tests::source_gen;
-    use crate::process::record::{Entry, ObjectElement, RecordElement};
+    use crate::process::operator::tests::{init_source, init_source_with_tag};
+    use crate::process::record::{Entry, ObjectElement, Record, RecordElement};
     use ir_common::generated::algebra as pb;
     use ir_common::NameOrId;
     use pegasus::api::{Map, Sink};
+    use pegasus::result::ResultStream;
     use pegasus::JobConf;
 
-    // g.V().project("id")
-    #[test]
-    fn project_test_01() {
-        let conf = JobConf::new("project_test_01");
-        let mut result = pegasus::run(conf, || {
+    fn project_test(source: Vec<Record>, project_opr_pb: pb::Project) -> ResultStream<Record> {
+        let conf = JobConf::new("project_test");
+        let result = pegasus::run(conf, || {
+            let source = source.clone();
+            let project_opr_pb = project_opr_pb.clone();
             |input, output| {
-                let mut stream = input.input_from(source_gen())?;
-                let project_opr_pb = pb::Project {
-                    mappings: vec![pb::project::ExprAlias {
-                        expr: Some(str_to_expr_pb("@.id".to_string()).unwrap()),
-                        alias: Some(pb::project::Alias {
-                            alias: None,
-                            is_query_given: false,
-                        }),
-                    }],
-                    is_append: false,
-                };
+                let mut stream = input.input_from(source.into_iter())?;
                 let project_func = project_opr_pb.gen_map().unwrap();
                 stream = stream.map(move |i| project_func.exec(i))?;
                 stream.sink_into(output)
@@ -109,6 +100,23 @@ mod tests {
         })
         .expect("build job failure");
 
+        result
+    }
+
+    // g.V().project("id")
+    #[test]
+    fn project_test_01() {
+        let project_opr_pb = pb::Project {
+            mappings: vec![pb::project::ExprAlias {
+                expr: Some(str_to_expr_pb("@.id".to_string()).unwrap()),
+                alias: Some(pb::project::Alias {
+                    alias: None,
+                    is_query_given: false,
+                }),
+            }],
+            is_append: false,
+        };
+        let mut result = project_test(init_source(), project_opr_pb);
         let mut object_result = vec![];
         while let Some(Ok(res)) = result.next() {
             match res.get(None).unwrap() {
@@ -122,33 +130,24 @@ mod tests {
         assert_eq!(object_result, expected_result);
     }
 
-    // g.V().project("name").as("a")
+    // g.V().as("a").select("a").by("name").as("b")
     #[test]
     fn project_test_02() {
-        let conf = JobConf::new("project_test_02");
-        let mut result = pegasus::run(conf, || {
-            |input, output| {
-                let mut stream = input.input_from(source_gen())?;
-                let project_opr_pb = pb::Project {
-                    mappings: vec![pb::project::ExprAlias {
-                        expr: Some(str_to_expr_pb("@.name".to_string()).unwrap()),
-                        alias: Some(pb::project::Alias {
-                            alias: Some(NameOrId::Str("a".to_string()).into()),
-                            is_query_given: false,
-                        }),
-                    }],
-                    is_append: false,
-                };
-                let project_func = project_opr_pb.gen_map().unwrap();
-                stream = stream.map(move |i| project_func.exec(i))?;
-                stream.sink_into(output)
-            }
-        })
-        .expect("build job failure");
+        let project_opr_pb = pb::Project {
+            mappings: vec![pb::project::ExprAlias {
+                expr: Some(str_to_expr_pb("@a.name".to_string()).unwrap()),
+                alias: Some(pb::project::Alias {
+                    alias: Some(NameOrId::Str("b".to_string()).into()),
+                    is_query_given: false,
+                }),
+            }],
+            is_append: false,
+        };
+        let mut result = project_test(init_source_with_tag(), project_opr_pb);
 
         let mut object_result = vec![];
         while let Some(Ok(res)) = result.next() {
-            match res.get(Some(&NameOrId::Str("a".to_string()))).unwrap() {
+            match res.get(Some(&NameOrId::Str("b".to_string()))).unwrap() {
                 Entry::Element(RecordElement::OutGraph(ObjectElement::Prop(val))) => {
                     object_result.push(val.clone());
                 }
