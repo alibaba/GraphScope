@@ -23,3 +23,4 @@ from graphscope.dataset.ogbl_ddi import load_ogbl_ddi
 from graphscope.dataset.ogbn_arxiv import load_ogbn_arxiv
 from graphscope.dataset.ogbn_mag import load_ogbn_mag
 from graphscope.dataset.ogbn_proteins import load_ogbn_proteins
+from graphscope.dataset.p2p_network import load_p2p_network
