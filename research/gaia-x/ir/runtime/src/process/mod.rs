@@ -13,6 +13,6 @@
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 
-pub(crate) mod functions;
-pub(crate) mod operator;
-pub(crate) mod record;
+pub mod functions;
+pub mod operator;
+pub mod record;

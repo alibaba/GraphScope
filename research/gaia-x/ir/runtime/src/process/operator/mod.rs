@@ -13,15 +13,15 @@
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 
-pub(crate) mod filter;
-pub(crate) mod flatmap;
-pub(crate) mod join;
-pub(crate) mod keyed;
-pub(crate) mod map;
-pub(crate) mod shuffle;
-pub(crate) mod sink;
-pub(crate) mod sort;
-pub(crate) mod source;
+pub mod filter;
+pub mod flatmap;
+pub mod join;
+pub mod keyed;
+pub mod map;
+pub mod shuffle;
+pub mod sink;
+pub mod sort;
+pub mod source;
 
 use crate::graph::element::Element;
 use crate::graph::property::{Details, PropKey};

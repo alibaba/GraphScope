@@ -537,8 +537,20 @@ fn encode_storage_edge_label(labels: &Vec<NameOrId>) -> Option<Vec<LabelId>> {
 #[cfg(test)]
 mod tests {
     use super::GRAPH;
+    use crate::exp_store::graph_partition::SinglePartition;
+    use crate::exp_store::graph_query::create_demo_graph;
     use graph_store::ldbc::LDBCVertexParser;
     use graph_store::prelude::{DefaultId, GlobalStoreTrait};
+    use ir_common::generated::algebra as pb;
+    use ir_common::generated::common as common_pb;
+    use pegasus::api::{Map, Sink};
+    use pegasus::result::ResultStream;
+    use pegasus::JobConf;
+    use runtime::graph::element::{Element, VertexOrEdge};
+    use runtime::process::operator::flatmap::FlatMapFuncGen;
+    use runtime::process::operator::source::source_op_from;
+    use runtime::process::record::{Entry, Record, RecordElement};
+    use std::sync::Arc;
 
     #[test]
     fn it_works() {
@@ -549,5 +561,138 @@ mod tests {
         let out_iter = GRAPH.get_out_vertices(v1, Some(&vec![0]));
         let out: Vec<DefaultId> = out_iter.map(|v| v.get_id()).collect();
         assert_eq!(out, vec![v4, v2]);
+    }
+
+    // g.V()
+    fn source_gen() -> Box<dyn Iterator<Item = Record> + Send> {
+        create_demo_graph();
+        let scan_opr_pb = pb::Scan {
+            scan_opt: 0,
+            alias: None,
+            params: None,
+        };
+        let mut source_opr_pb = pb::logical_plan::Operator {
+            opr: Some(pb::logical_plan::operator::Opr::Scan(scan_opr_pb)),
+        };
+        let source = source_op_from(
+            &mut source_opr_pb,
+            1,
+            1,
+            Arc::new(SinglePartition { num_servers: 1 }),
+        )
+        .unwrap();
+        source.gen_source(0).unwrap()
+    }
+
+    // g.V()
+    #[test]
+    fn scan_test() {
+        let source_iter = source_gen();
+        let mut result_ids = vec![];
+        let v1: DefaultId = LDBCVertexParser::to_global_id(1, 0);
+        let v2: DefaultId = LDBCVertexParser::to_global_id(2, 0);
+        let v3: DefaultId = LDBCVertexParser::to_global_id(3, 1);
+        let v4: DefaultId = LDBCVertexParser::to_global_id(4, 0);
+        let v5: DefaultId = LDBCVertexParser::to_global_id(5, 1);
+        let v6: DefaultId = LDBCVertexParser::to_global_id(6, 0);
+        let mut expected_ids = vec![v1, v2, v3, v4, v5, v6];
+        for res in source_iter {
+            match res.get(None).unwrap() {
+                Entry::Element(RecordElement::OnGraph(vertex_or_edge)) => {
+                    result_ids.push(vertex_or_edge.id().unwrap() as usize)
+                }
+                _ => {
+                    unreachable!()
+                }
+            }
+        }
+        assert_eq!(result_ids.sort(), expected_ids.sort())
+    }
+
+    fn expand_test(expand: pb::EdgeExpand) -> ResultStream<Record> {
+        let conf = JobConf::new("expand_test");
+        let result = pegasus::run(conf, || {
+            let expand = expand.clone();
+            |input, output| {
+                let mut stream = input.input_from(source_gen())?;
+                let flatmap_func = expand.gen_flat_map().unwrap();
+                stream = stream.flat_map(move |input| flatmap_func.exec(input))?;
+                stream.sink_into(output)
+            }
+        })
+        .expect("build job failure");
+        result
+    }
+
+    // g.V().out()
+    #[test]
+    fn expand_test_01() {
+        let edge_expand_base = pb::ExpandBase {
+            v_tag: None,
+            direction: 0,
+            params: None,
+        };
+        let expand_opr_pb = pb::EdgeExpand {
+            base: Some(edge_expand_base),
+            is_edge: false,
+            alias: None,
+        };
+        let mut result = expand_test(expand_opr_pb);
+        let mut result_ids = vec![];
+        let v2: DefaultId = LDBCVertexParser::to_global_id(2, 0);
+        let v3: DefaultId = LDBCVertexParser::to_global_id(3, 1);
+        let v4: DefaultId = LDBCVertexParser::to_global_id(4, 0);
+        let v5: DefaultId = LDBCVertexParser::to_global_id(5, 1);
+        let mut expected_ids = vec![v2, v3, v3, v3, v4, v5];
+        while let Some(Ok(res)) = result.next() {
+            match res.get(None).unwrap() {
+                Entry::Element(RecordElement::OnGraph(vertex_or_edge)) => {
+                    result_ids.push(vertex_or_edge.id().unwrap() as usize)
+                }
+                _ => {
+                    unreachable!()
+                }
+            }
+        }
+        assert_eq!(result_ids.sort(), expected_ids.sort())
+    }
+
+    // g.V().outE().hasLabel("knows")
+    #[test]
+    fn expand_test_02() {
+        let query_param = pb::QueryParams {
+            table_names: vec![common_pb::NameOrId::from("knows".to_string())],
+            columns: vec![],
+            limit: None,
+            predicate: None,
+            requirements: vec![],
+        };
+        let edge_expand_base = pb::ExpandBase {
+            v_tag: None,
+            direction: 0,
+            params: Some(query_param),
+        };
+        let expand_opr_pb = pb::EdgeExpand {
+            base: Some(edge_expand_base),
+            is_edge: true,
+            alias: None,
+        };
+        let mut result = expand_test(expand_opr_pb);
+        let mut result_edges = vec![];
+        let v1: DefaultId = LDBCVertexParser::to_global_id(1, 0);
+        let v2: DefaultId = LDBCVertexParser::to_global_id(2, 0);
+        let v4: DefaultId = LDBCVertexParser::to_global_id(4, 0);
+        let expected_edges = vec![(v1, v4), (v1, v2)];
+        while let Some(Ok(res)) = result.next() {
+            match res.get(None).unwrap() {
+                Entry::Element(RecordElement::OnGraph(VertexOrEdge::E(e))) => {
+                    result_edges.push((e.src_id as usize, e.dst_id as usize));
+                }
+                _ => {
+                    unreachable!()
+                }
+            }
+        }
+        assert_eq!(result_edges, expected_edges)
     }
 }

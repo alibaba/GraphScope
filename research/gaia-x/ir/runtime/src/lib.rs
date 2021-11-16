@@ -16,11 +16,11 @@
 pub use crate::graph::{get_graph, register_graph};
 pub use compiler::IRJobCompiler;
 
-mod compiler;
+pub mod compiler;
 pub mod error;
 pub mod expr;
 pub mod graph;
-mod process;
+pub mod process;
 
 #[macro_use]
 extern crate pegasus_common;
