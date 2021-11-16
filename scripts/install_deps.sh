@@ -57,7 +57,7 @@ cat <<END
 
   A script to install dependencies of GraphScope.
 
-  Usage: install_deps [options]
+  Usage: install_deps options
 
   Options:
     -h, --help           Print help information
@@ -1081,6 +1081,10 @@ install_deps_k8s() {
 
 set -e
 set -o pipefail
+
+if test $# -eq 0; then
+  usage; exit 1;
+fi
 
 # parse argv
 while test $# -ne 0; do
