@@ -554,7 +554,6 @@ class LocalLauncher(Launcher):
 
         # launch the server
         env = os.environ.copy()
-        print(env)
 
         self._learning_instance_processes[object_id] = []
         for index in range(self._num_workers):
