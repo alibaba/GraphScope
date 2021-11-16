@@ -299,19 +299,37 @@ pub extern "C" fn as_property_key(key: FfiNameOrId) -> FfiProperty {
     }
 }
 
-/// Build a variable
+/// Build a variable with tag only
 #[no_mangle]
-pub extern "C" fn as_var(tag: FfiNameOrId) -> FfiVariable {
+pub extern "C" fn as_var_tag_only(tag: FfiNameOrId) -> FfiVariable {
     FfiVariable {
         tag,
         property: FfiProperty::default(),
     }
 }
 
-/// Build variable with property
+/// Build a variable with property only
 #[no_mangle]
-pub extern "C" fn as_var_ppt(tag: FfiNameOrId, property: FfiProperty) -> FfiVariable {
+pub extern "C" fn as_var_property_only(property: FfiProperty) -> FfiVariable {
+    FfiVariable {
+        tag: FfiNameOrId::default(),
+        property,
+    }
+}
+
+/// Build a variable with tag and property
+#[no_mangle]
+pub extern "C" fn as_var(tag: FfiNameOrId, property: FfiProperty) -> FfiVariable {
     FfiVariable { tag, property }
+}
+
+/// Build a default variable with `None` tag and property
+#[no_mangle]
+pub extern "C" fn as_none_var() -> FfiVariable {
+    FfiVariable {
+        tag: FfiNameOrId::default(),
+        property: FfiProperty::default(),
+    }
 }
 
 fn destroy_ptr<M>(ptr: *const c_void) {
@@ -340,6 +358,12 @@ pub extern "C" fn destroy_logical_plan(ptr_plan: *const c_void) {
 pub struct FfiJobBuffer {
     ptr: *mut u8,
     len: usize,
+}
+
+/// To release a FfiJobBuffer
+#[no_mangle]
+pub extern "C" fn destroy_job_buffer(buffer: FfiJobBuffer) {
+    let _ = unsafe { Vec::from_raw_parts(buffer.ptr, buffer.len, buffer.len) };
 }
 
 impl From<PhysicalError> for FfiJobBuffer {
