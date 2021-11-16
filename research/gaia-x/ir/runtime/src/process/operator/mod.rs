@@ -65,14 +65,6 @@ pub struct TagKey {
 }
 
 impl<'a> TagKey {
-    /// This is for Accum, which take the key entry the input Record according to the tag_key field
-    pub fn take_entry(&self, input: &mut Record) -> Result<Entry, KeyedError> {
-        let entry = input.take(self.tag.as_ref()).ok_or(KeyedError::from(
-            "Get tag failed since it refers to an empty entry",
-        ))?;
-        self.inner_get_key(entry)
-    }
-
     /// This is for KeySelector, which generate the key of the input Record according to the tag_key field
     pub fn get_entry(&self, input: &Record) -> Result<Entry, KeyedError> {
         let entry = input
@@ -81,10 +73,30 @@ impl<'a> TagKey {
                 "Get tag failed since it refers to an empty entry",
             ))?
             .clone();
-        self.inner_get_key(entry)
+        if let Some(key) = self.key.as_ref() {
+            match entry {
+                Entry::Element(RecordElement::OnGraph(element)) => {
+                    let details = element.details().ok_or(KeyedError::from(
+                        "Get key failed since get prop_key from a graph element failed",
+                    ))?;
+                    let properties = details
+                        .get(key)
+                        .ok_or(KeyedError::from(
+                            "Get key failed since get prop_key from a graph element failed",
+                        ))?
+                        .into();
+                    Ok(ObjectElement::Prop(properties).into())
+                }
+                _ => Err(KeyedError::from(
+                    "Get key failed when attempt to get prop_key from a non-graph element",
+                )),
+            }
+        } else {
+            Ok(entry)
+        }
     }
 
-    /// This is for Order, which generate the comparable field (by ref) of the input Record according to the tag_key field
+    /// This is for Order, which generate the comparable object (by ref) of the input Record according to the tag_key field
     pub fn get_obj(&self, input: &'a Record) -> Result<BorrowObject<'a>, KeyedError> {
         let entry = input.get(self.tag.as_ref()).ok_or(KeyedError::from(
             "Get tag failed since it refers to an empty entry",
@@ -120,30 +132,6 @@ impl<'a> TagKey {
                     "Get key failed since it refers to a Collection type entry",
                 )),
             }
-        }
-    }
-
-    fn inner_get_key(&self, entry: Entry) -> Result<Entry, KeyedError> {
-        if let Some(key) = self.key.as_ref() {
-            match entry {
-                Entry::Element(RecordElement::OnGraph(element)) => {
-                    let details = element.details().ok_or(KeyedError::from(
-                        "Get key failed since get prop_key from a graph element failed",
-                    ))?;
-                    let properties = details
-                        .get(key)
-                        .ok_or(KeyedError::from(
-                            "Get key failed since get prop_key from a graph element failed",
-                        ))?
-                        .into();
-                    Ok(ObjectElement::Prop(properties).into())
-                }
-                _ => Err(KeyedError::from(
-                    "Get key failed when attempt to get prop_key from a non-graph element",
-                )),
-            }
-        } else {
-            Ok(entry)
         }
     }
 }
