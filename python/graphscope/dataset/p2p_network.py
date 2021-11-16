@@ -26,7 +26,7 @@ from graphscope.framework.graph import Graph
 
 def load_p2p_network(sess=None, prefix=None, directed=False):
     """Load p2p graph.
-    A peer-to-peer dataset derived from Gnutella peer-to-peer network, August 31 2002, 
+    A peer-to-peer dataset derived from Gnutella peer-to-peer network, August 31 2002,
     with generated data on vertices and edges. See more details here:
 
         http://snap.stanford.edu/data/p2p-Gnutella31.html
@@ -78,14 +78,13 @@ def load_p2p_network(sess=None, prefix=None, directed=False):
         sess = get_default_session()
 
     graph = sess.g(directed=directed)
-    graph = (
-        graph.add_vertices(os.path.join(prefix, "p2p-31_property_v_0"), "host")
-        .add_edges(
-            os.path.join(prefix, "p2p-31_property_e_0"),
-            "connect",
-            src_label="host",
-            dst_label="host",
-        )
+    graph = graph.add_vertices(
+        os.path.join(prefix, "p2p-31_property_v_0"), "host"
+    ).add_edges(
+        os.path.join(prefix, "p2p-31_property_e_0"),
+        "connect",
+        src_label="host",
+        dst_label="host",
     )
 
     return graph

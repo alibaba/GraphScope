@@ -25,6 +25,7 @@ from graphscope.dataset import load_ogbl_ddi
 from graphscope.dataset import load_ogbn_arxiv
 from graphscope.dataset import load_ogbn_mag
 from graphscope.dataset import load_ogbn_proteins
+from graphscope.dataset import load_p2p_network
 
 
 def test_download_dataset(graphscope_session):
@@ -43,3 +44,5 @@ def test_download_dataset(graphscope_session):
     g6.unload()
     g7 = load_ogbl_ddi(graphscope_session)
     g7.unload()
+    g8 = load_p2p_network(graphscope_session)
+    g8.upload()
