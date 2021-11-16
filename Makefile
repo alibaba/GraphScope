@@ -135,3 +135,9 @@ prepare-client:
 .PHONY: graphscope-docs
 graphscope-docs: prepare-client
 	$(MAKE) -C $(WORKING_DIR)/docs/ html
+
+.PHONY: test
+test:
+	cd $(WORKING_DIR)/python && \
+	pip3 install tensorflow==2.5.2 && \
+	python3 -m pytest -s -v ./tests/unittest/ ./tests/local/

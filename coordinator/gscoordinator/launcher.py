@@ -34,7 +34,6 @@ from graphscope.proto import types_pb2
 
 from gscoordinator.io_utils import PipeWatcher
 from gscoordinator.utils import ANALYTICAL_ENGINE_PATH
-from gscoordinator.utils import COORDINATOR_HOME
 from gscoordinator.utils import GRAPHSCOPE_HOME
 from gscoordinator.utils import INTERACTIVE_ENGINE_SCRIPT
 from gscoordinator.utils import WORKSPACE
@@ -554,19 +553,33 @@ class LocalLauncher(Launcher):
 
         # launch the server
         env = os.environ.copy()
+        # set coordinator dir to PYTHONPATH
+        if "PYTHONPATH" in env:
+            env["PYTHONPATH"] = (
+                os.path.join(os.path.dirname(__file__), "..")
+                + os.pathsep
+                + env["PYTHONPATH"]
+            )
+        else:
+            env["PYTHONPATH"] = os.path.join(os.path.dirname(__file__), "..")
 
         self._learning_instance_processes[object_id] = []
         for index in range(self._num_workers):
             cmd = [
                 sys.executable,
-                "{0}/gscoordinator/learning.py".format(COORDINATOR_HOME),
+                "-m",
+                "gscoordinator.learning",
                 handle,
                 config,
                 str(index),
             ]
             logger.info("launching learning server: %s", " ".join(cmd))
+
             proc = subprocess.Popen(
-                cmd, env=env, stdout=subprocess.PIPE, stderr=subprocess.STDOUT
+                cmd,
+                env=env,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.STDOUT,
             )
             stdout_watcher = PipeWatcher(proc.stdout, sys.stdout)
             setattr(proc, "stdout_watcher", stdout_watcher)
