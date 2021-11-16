@@ -9,6 +9,8 @@ import pytest
 from networkx.generators.tests.test_classic import TestGeneratorClassic
 
 import graphscope.nx as nx
+from graphscope.nx import is_isomorphic
+from graphscope.nx.tests.utils import assert_edges_equal
 from graphscope.nx.utils.compat import with_graphscope_nx_context
 
 
