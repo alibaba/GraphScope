@@ -345,21 +345,29 @@ pub struct FfiJobBuffer {
 
 impl From<PhysicalError> for FfiJobBuffer {
     fn from(_: PhysicalError) -> Self {
-        FfiJobBuffer {
-            ptr: std::ptr::null_mut(),
+        let mut bytes = Vec::<u8>::new().into_boxed_slice();
+        let buffer = FfiJobBuffer {
+            ptr: bytes.as_mut_ptr(),
             len: 0,
             result: ResultCode::BuildJobError,
-        }
+        };
+        std::mem::forget(bytes);
+
+        buffer
     }
 }
 
 impl From<BuildJobError> for FfiJobBuffer {
     fn from(_: BuildJobError) -> Self {
-        FfiJobBuffer {
-            ptr: std::ptr::null_mut(),
+        let mut bytes = Vec::<u8>::new().into_boxed_slice();
+        let buffer = FfiJobBuffer {
+            ptr: bytes.as_mut_ptr(),
             len: 0,
             result: ResultCode::BuildJobError,
-        }
+        };
+        std::mem::forget(bytes);
+
+        buffer
     }
 }
 
