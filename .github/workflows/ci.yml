@@ -407,7 +407,6 @@ jobs:
         sudo cp $(go env GOPATH)/bin/zetcd /usr/local/bin/
 
         python3 -m pip install pytest-cov
-        python3 -m pip install -U networkx==2.5
         tar -xf ./gae-${{ github.sha }}/vineyard.tar
         tar -xf ./gae-${{ github.sha }}/gae.tar
         tar -xf ./gle-${{ github.sha }}/gle.tar
@@ -457,6 +456,7 @@ jobs:
     - name: Generator test
       if: steps.nx-filter.outputs.basic == 'true' || steps.nx-filter.outputs.generator == 'true'
       run: |
+        python3 -m pip install -U networkx==2.5
         export GRAPHSCOPE_HOME='/opt/graphscope'
         export GS_TEST_DIR='/home/graphscope/gstest'
         python3 -m pytest -s -v python/graphscope/nx/generators/tests
