@@ -299,19 +299,37 @@ pub extern "C" fn as_property_key(key: FfiNameOrId) -> FfiProperty {
     }
 }
 
-/// Build a variable
+/// Build a variable with tag only
 #[no_mangle]
-pub extern "C" fn as_var(tag: FfiNameOrId) -> FfiVariable {
+pub extern "C" fn as_var_tag_only(tag: FfiNameOrId) -> FfiVariable {
     FfiVariable {
         tag,
         property: FfiProperty::default(),
     }
 }
 
-/// Build variable with property
+/// Build a variable with property only
 #[no_mangle]
-pub extern "C" fn as_var_ppt(tag: FfiNameOrId, property: FfiProperty) -> FfiVariable {
+pub extern "C" fn as_var_property_only(property: FfiProperty) -> FfiVariable {
+    FfiVariable {
+        tag: FfiNameOrId::default(),
+        property,
+    }
+}
+
+/// Build a variable with tag and property
+#[no_mangle]
+pub extern "C" fn as_var(tag: FfiNameOrId, property: FfiProperty) -> FfiVariable {
     FfiVariable { tag, property }
+}
+
+/// Build a default variable with `None` tag and property
+#[no_mangle]
+pub extern "C" fn as_none_var() -> FfiVariable {
+    FfiVariable {
+        tag: FfiNameOrId::default(),
+        property: FfiProperty::default(),
+    }
 }
 
 fn destroy_ptr<M>(ptr: *const c_void) {
@@ -340,44 +358,53 @@ pub extern "C" fn destroy_logical_plan(ptr_plan: *const c_void) {
 pub struct FfiJobBuffer {
     ptr: *mut u8,
     len: usize,
-    result: ResultCode,
+}
+
+/// To release a FfiJobBuffer
+#[no_mangle]
+pub extern "C" fn destroy_job_buffer(buffer: FfiJobBuffer) {
+    let _ = unsafe { Vec::from_raw_parts(buffer.ptr, buffer.len, buffer.len) };
 }
 
 impl From<PhysicalError> for FfiJobBuffer {
     fn from(_: PhysicalError) -> Self {
-        FfiJobBuffer {
-            ptr: std::ptr::null_mut(),
+        let mut bytes = Vec::<u8>::new().into_boxed_slice();
+        let buffer = FfiJobBuffer {
+            ptr: bytes.as_mut_ptr(),
             len: 0,
-            result: ResultCode::BuildJobError,
-        }
+        };
+        std::mem::forget(bytes);
+
+        buffer
     }
 }
 
 impl From<BuildJobError> for FfiJobBuffer {
     fn from(_: BuildJobError) -> Self {
-        FfiJobBuffer {
-            ptr: std::ptr::null_mut(),
+        let mut bytes = Vec::<u8>::new().into_boxed_slice();
+        let buffer = FfiJobBuffer {
+            ptr: bytes.as_mut_ptr(),
             len: 0,
-            result: ResultCode::BuildJobError,
-        }
+        };
+        std::mem::forget(bytes);
+
+        buffer
     }
 }
 
-/// To build a physical plan from the logical plan. After calling this function, the
-/// logical plan will be consumed and released.
+/// To build a physical plan from the logical plan.
 #[no_mangle]
 pub extern "C" fn build_physical_plan(ptr_plan: *const c_void) -> FfiJobBuffer {
     let plan = unsafe { Box::from_raw(ptr_plan as *mut LogicalPlan) };
     let mut builder = JobBuilder::default();
     let build_result = plan.add_job_builder(&mut builder);
-    if build_result.is_ok() {
+    let result = if build_result.is_ok() {
         let req_result = builder.build();
         if let Ok(req) = req_result {
             let mut req_bytes = req.encode_to_vec().into_boxed_slice();
             let buffer = FfiJobBuffer {
                 ptr: req_bytes.as_mut_ptr(),
                 len: req_bytes.len(),
-                result: ResultCode::Success,
             };
             std::mem::forget(req_bytes);
 
@@ -387,7 +414,11 @@ pub extern "C" fn build_physical_plan(ptr_plan: *const c_void) -> FfiJobBuffer {
         }
     } else {
         build_result.err().unwrap().into()
-    }
+    };
+
+    std::mem::forget(plan);
+
+    result
 }
 
 fn append_operator(
