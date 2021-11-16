@@ -17,19 +17,16 @@
 extern crate log;
 #[macro_use]
 extern crate lazy_static;
+pub use exp_store::QueryExpGraph;
+use runtime::error::{DynIter, DynResult};
+use runtime::graph::Statement;
+use runtime::IRJobCompiler;
 
 mod exp_store;
-mod graphscope_store;
-
-pub use exp_store::QueryExpGraph;
 
 pub trait InitializeJobCompiler {
     fn initialize_job_compiler(&self) -> IRJobCompiler;
 }
-
-use runtime::error::{DynIter, DynResult};
-use runtime::graph::Statement;
-use runtime::IRJobCompiler;
 
 pub fn from_fn<I, O, F>(func: F) -> Box<dyn Statement<I, O>>
 where

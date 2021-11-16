@@ -48,7 +48,7 @@ impl KeyFunction<Record, RecordKey, Record> for KeySelector {
             match key_entry {
                 Entry::Element(key_element) => keys.push(key_element),
                 Entry::Collection(_) => {
-                    // TODO:
+                    // TODO: do we support use a collection as key?
                     return Err(str_to_dyn_error(
                         "Do not support a Collection type of record key for now",
                     ));

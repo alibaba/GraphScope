@@ -200,10 +200,10 @@ fn source_ids_from(
             if let Some(value::Item::I64(v)) = value.item {
                 global_ids.push(v as ID);
             } else {
-                return Err("Parse source_id from indexed_scan failed")?;
+                Err("Parse source_id from indexed_scan failed")?
             }
         } else {
-            return Err("Only support IdKey as indexed field in scan for now")?;
+            Err("Only support IdKey as indexed field in scan for now")?
         }
     }
     Ok(global_ids)

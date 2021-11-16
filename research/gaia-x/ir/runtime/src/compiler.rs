@@ -174,22 +174,16 @@ impl IRJobCompiler {
                             stream = stream.sort_by(move |a, b| cmp.compare(a, b))?;
                         }
                     }
-                    server_pb::operator_def::OpKind::Fold(_fold) => {
-                        return Err(BuildJobError::Unsupported(
-                            "Fold is not supported yet".to_string(),
-                        ))
-                    }
-                    server_pb::operator_def::OpKind::Group(_group) => {
-                        return Err(BuildJobError::Unsupported(
-                            "Group is not supported yet".to_string(),
-                        ))
-                    }
+                    server_pb::operator_def::OpKind::Fold(_fold) => Err(
+                        BuildJobError::Unsupported("Fold is not supported yet".to_string()),
+                    )?,
+                    server_pb::operator_def::OpKind::Group(_group) => Err(
+                        BuildJobError::Unsupported("Group is not supported yet".to_string()),
+                    )?,
 
-                    server_pb::operator_def::OpKind::Dedup(_) => {
-                        return Err(BuildJobError::Unsupported(
-                            "Dedup is not supported yet".to_string(),
-                        ))
-                    }
+                    server_pb::operator_def::OpKind::Dedup(_) => Err(BuildJobError::Unsupported(
+                        "Dedup is not supported yet".to_string(),
+                    ))?,
                     server_pb::operator_def::OpKind::Merge(merge) => {
                         let (mut ori_stream, sub_stream) = stream.copied()?;
                         stream = self.install(sub_stream, &merge.tasks[0].plan[..])?;
@@ -239,11 +233,9 @@ impl IRJobCompiler {
                                 .filter_map(move |(parent, sub)| join_func.exec(parent, sub))?;
                         }
                     }
-                    OpKind::SegApply(_) => {
-                        return Err(BuildJobError::Unsupported(
-                            "SegApply is not supported yet".to_string(),
-                        ))
-                    }
+                    OpKind::SegApply(_) => Err(BuildJobError::Unsupported(
+                        "SegApply is not supported yet".to_string(),
+                    ))?,
                     OpKind::Join(join) => {
                         let joiner = self.udf_gen.gen_join(&join.resource)?;
                         let left_key_selector = joiner.gen_left_key()?;
@@ -312,18 +304,14 @@ impl IRJobCompiler {
                             JoinKind::Anti => left_stream
                                 .anti_join(right_stream)?
                                 .map(|left| Ok(left.value))?,
-                            JoinKind::Times => {
-                                return Err(BuildJobError::Unsupported(
-                                    "JoinKind of Times is not supported yet".to_string(),
-                                ))
-                            }
+                            JoinKind::Times => Err(BuildJobError::Unsupported(
+                                "JoinKind of Times is not supported yet".to_string(),
+                            ))?,
                         }
                     }
-                    OpKind::KeyBy(_) => {
-                        return Err(BuildJobError::Unsupported(
-                            "KeyBy is not supported yet".to_string(),
-                        ))
-                    }
+                    OpKind::KeyBy(_) => Err(BuildJobError::Unsupported(
+                        "KeyBy is not supported yet".to_string(),
+                    ))?,
                 }
             } else {
                 Err("Unknown operator with empty kind;")?;
@@ -352,11 +340,10 @@ impl JobParser<Record, result_pb::Result> for IRJobCompiler {
                 let ec = self.udf_gen.gen_sink(&vec![])?;
                 stream.map(move |record| ec.exec(record))?.sink_into(output)
             } else {
-                // TODO: if sink is none, just sink all?
-                Err("sink of job not found".into())
+                Err("sink of job not found")?
             }
         } else {
-            Err("source of job not found".into())
+            Err("source of job not found")?
         }
     }
 }

@@ -19,8 +19,8 @@ use prost::DecodeError;
 
 pub type FnGenResult<T> = Result<T, FnGenError>;
 
-#[derive(Debug)]
 /// Errors that occur when generating a udf in Runtime
+#[derive(Debug)]
 pub enum FnGenError {
     /// Decode pb structure error
     DecodeOpError(DecodeError),

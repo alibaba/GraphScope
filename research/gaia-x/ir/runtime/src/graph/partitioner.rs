@@ -17,6 +17,8 @@ use crate::error::DynResult;
 use crate::graph::ID;
 
 pub trait Partitioner: Send + Sync + 'static {
+    /// Given the element id and job_workers (number of worker per server),
+    /// return the id of worker that is going to process
     fn get_partition(&self, id: &ID, job_workers: usize) -> DynResult<u64>;
     /// Given job_workers (number of worker per server) and worker_id (worker index),
     /// return the partition list that the worker is going to process

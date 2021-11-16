@@ -55,7 +55,6 @@ impl From<algebra_pb::expand_base::Direction> for Direction {
 
 #[derive(Default)]
 pub struct QueryParams {
-    // TODO: rename labels as table_names, props as columns;
     pub labels: Vec<NameOrId>,
     pub limit: Option<usize>,
     pub props: Option<Vec<NameOrId>>,

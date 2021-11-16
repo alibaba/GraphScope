@@ -38,16 +38,19 @@ impl MapFunction<Record, Record> for GetVertexOperator {
             .ok_or(str_to_dyn_error("get tag failed in GetVertexOperator"))?;
         let id = match entry {
             VertexOrEdge::V(v) => match self.opt {
-                VOpt::This => v.id().expect("id of Vertex cannot be None"),
-                _ => return Err(str_to_dyn_error("Should be vertex entry")),
+                VOpt::This => v
+                    .id()
+                    .ok_or(str_to_dyn_error("id of Vertex cannot be None"))?,
+                _ => Err(str_to_dyn_error("should be vertex entry"))?,
             },
             VertexOrEdge::E(e) => match self.opt {
                 VOpt::Start => e.src_id,
                 VOpt::End => e.dst_id,
                 VOpt::Other => {
-                    todo!()
+                    // TODO(bingqing): support Other
+                    Err(str_to_dyn_error("VOpt ot Other is not supported"))?
                 }
-                VOpt::This => return Err(str_to_dyn_error("Should be edge entry")),
+                VOpt::This => Err(str_to_dyn_error("Should be edge entry"))?,
             },
         };
         let graph = crate::get_graph().ok_or(str_to_dyn_error("Graph is None"))?;

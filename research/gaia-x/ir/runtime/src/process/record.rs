@@ -117,25 +117,11 @@ impl Record {
     }
 
     pub fn join(mut self, mut other: Record) -> Record {
-        // TODO: check if duplicated tag exists? and what about head alias if head is needed?
+        // TODO: check if head is also needed?
         for column in other.columns.drain() {
             self.columns.insert(column.0, column.1);
         }
         self
-    }
-}
-
-impl PartialEq for Entry {
-    fn eq(&self, _other: &Self) -> bool {
-        todo!()
-    }
-}
-
-impl Eq for Entry {}
-
-impl Hash for Entry {
-    fn hash<H: Hasher>(&self, _state: &mut H) {
-        todo!()
     }
 }
 

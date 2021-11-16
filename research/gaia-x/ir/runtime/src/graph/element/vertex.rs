@@ -65,7 +65,6 @@ impl Decode for Vertex {
     }
 }
 
-// TODO(bingqing): confirm Context
 impl Context<Vertex> for Vertex {
     fn get(&self, _tag: Option<&NameOrId>) -> Option<&Vertex> {
         Some(&self)

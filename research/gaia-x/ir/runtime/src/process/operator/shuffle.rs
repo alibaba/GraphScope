@@ -13,6 +13,7 @@
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 
+use crate::error::str_to_dyn_error;
 use crate::graph::element::Element;
 use crate::graph::partitioner::Partitioner;
 use crate::process::record::{Entry, Record, RecordElement};
@@ -50,7 +51,8 @@ impl RouteFunction<Record> for RecordRouter {
             match entry {
                 Entry::Element(element) => match element {
                     RecordElement::OnGraph(e) => self.p.get_partition(
-                        &e.id().expect("id of VertexOrEdge cannot be None"),
+                        &e.id()
+                            .ok_or(str_to_dyn_error("id of VertexOrEdge cannot be None"))?,
                         self.num_workers,
                     ),
                     RecordElement::OutGraph(_) => Ok(0),

@@ -25,7 +25,6 @@ pub struct RecordSinkEncoder {
     sink_keys: Vec<Option<NameOrId>>,
 }
 
-// TODO: We sink current entry in record by default for now.
 impl Default for RecordSinkEncoder {
     fn default() -> Self {
         RecordSinkEncoder {
@@ -139,18 +138,13 @@ impl From<Edge> for result_pb::Edge {
 
 fn object_to_pb_value(value: Object) -> common_pb::Value {
     let item = match value {
-        Object::Primitive(v) => {
-            match v {
-                Primitives::Byte(_) => {
-                    // TODO: check
-                    unimplemented!()
-                }
-                Primitives::Integer(v) => common_pb::value::Item::I32(v),
-                Primitives::Long(v) => common_pb::value::Item::I64(v),
-                Primitives::ULLong(v) => common_pb::value::Item::Blob(v.to_be_bytes().to_vec()),
-                Primitives::Float(v) => common_pb::value::Item::F64(v),
-            }
-        }
+        Object::Primitive(v) => match v {
+            Primitives::Byte(v) => common_pb::value::Item::I32(v as i32),
+            Primitives::Integer(v) => common_pb::value::Item::I32(v),
+            Primitives::Long(v) => common_pb::value::Item::I64(v),
+            Primitives::ULLong(v) => common_pb::value::Item::Blob(v.to_be_bytes().to_vec()),
+            Primitives::Float(v) => common_pb::value::Item::F64(v),
+        },
         Object::String(s) => common_pb::value::Item::Str(s),
         Object::Blob(b) => common_pb::value::Item::Blob(b.to_vec()),
         Object::DynOwned(_u) => {
