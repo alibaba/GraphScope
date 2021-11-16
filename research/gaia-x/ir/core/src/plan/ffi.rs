@@ -340,7 +340,7 @@ pub extern "C" fn destroy_logical_plan(ptr_plan: *const c_void) {
 pub struct FfiJobBuffer {
     ptr: *mut u8,
     len: usize,
-    result: ResultCode,
+    error_code: i32,
 }
 
 impl From<PhysicalError> for FfiJobBuffer {
@@ -349,7 +349,9 @@ impl From<PhysicalError> for FfiJobBuffer {
         let buffer = FfiJobBuffer {
             ptr: bytes.as_mut_ptr(),
             len: 0,
-            result: ResultCode::BuildJobError,
+            error_code: unsafe {
+                std::mem::transmute::<ResultCode, i32>(ResultCode::BuildJobError)
+            },
         };
         std::mem::forget(bytes);
 
@@ -363,7 +365,9 @@ impl From<BuildJobError> for FfiJobBuffer {
         let buffer = FfiJobBuffer {
             ptr: bytes.as_mut_ptr(),
             len: 0,
-            result: ResultCode::BuildJobError,
+            error_code: unsafe {
+                std::mem::transmute::<ResultCode, i32>(ResultCode::BuildJobError)
+            },
         };
         std::mem::forget(bytes);
 
@@ -384,7 +388,7 @@ pub extern "C" fn build_physical_plan(ptr_plan: *const c_void) -> FfiJobBuffer {
             let buffer = FfiJobBuffer {
                 ptr: req_bytes.as_mut_ptr(),
                 len: req_bytes.len(),
-                result: ResultCode::Success,
+                error_code: 0,
             };
             std::mem::forget(req_bytes);
 
