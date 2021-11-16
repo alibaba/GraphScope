@@ -439,7 +439,7 @@ jobs:
         mvn clean install -DskipTests -Dmaven.antrun.skip=true --quiet
 
     - name: Basic test
-      if: steps.nx-filter.outputs.basic == 'true'
+      if: false
       run: |
         export GRAPHSCOPE_HOME='/opt/graphscope'
         export GS_TEST_DIR='/home/graphscope/gstest'
@@ -447,11 +447,15 @@ jobs:
                           --ignore=python/graphscope/nx/tests/algorithms
 
     - name: Algorithm test
-      if: steps.nx-filter.outputs.basic == 'true' || steps.nx-filter.outputs.algorithm == 'true'
+      if: false
       run: |
         export GRAPHSCOPE_HOME='/opt/graphscope'
         export GS_TEST_DIR='/home/graphscope/gstest'
         python3 -m pytest --exitfirst -s -v python/graphscope/nx/tests/algorithms/builtin
+
+    - name: Setup tmate session
+      if: true
+      uses: mxschmitt/action-tmate@v2
 
     - name: Generator test
       if: steps.nx-filter.outputs.basic == 'true' || steps.nx-filter.outputs.generator == 'true'
