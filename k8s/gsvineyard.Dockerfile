@@ -25,6 +25,11 @@ RUN sudo mkdir -p /opt/vineyard && \
              -DCMAKE_INSTALL_PREFIX=/opt/vineyard \
              -DBUILD_SHARED_LIBS=ON && \
     make install -j && \
+    mkdir -p /opt/vineyard/dist && \
+    cd /tmp/libvineyard/modules/io && \
+    python3 setup.py bdist_wheel && \
+    cp -f dist/* /opt/vineyard/dist && \
+    pip3 install dist/* && \
     sudo cp -r /opt/vineyard/* /usr/local/ && \
     cd /tmp && \
     rm -fr /tmp/libvineyard /tmp/libgrape-lite
