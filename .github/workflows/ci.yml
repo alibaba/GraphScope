@@ -32,10 +32,13 @@ jobs:
       gae-python: ${{ steps.filter.outputs.gae-python }}
       networkx: ${{ steps.filter.outputs.networkx }}
     steps:
+    # For push it's necessary to checkout the code
+    - uses: actions/checkout@v2
     # For pull requests it's not necessary to checkout the code
     - uses: dorny/paths-filter@v2
       id: filter
       with:
+        base: main  # Change detection against merge-base with main before push
         filters: |
           gae-python:
             - 'analytical_engine/**'
