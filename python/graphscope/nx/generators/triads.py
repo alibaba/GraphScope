@@ -16,14 +16,24 @@
 # limitations under the License.
 #
 
-import networkx.classes.coreviews
-import networkx.classes.graphviews
-import networkx.classes.reportviews
 
-# graphscope.nx not implement MultiGraph and MultiDiGraph, forward NetworkX to pass tests
-from networkx.classes import MultiDiGraph
-from networkx.classes import MultiGraph
+import networkx as nxa
+from networkx.generators.triads import TRIAD_EDGES
 
-from graphscope.nx.classes.digraph import DiGraph
-from graphscope.nx.classes.function import *
-from graphscope.nx.classes.graph import Graph
+from graphscope.nx import DiGraph
+from graphscope.nx.utils.compat import patch_docstring
+
+__all__ = ["triad_graph"]
+
+
+@patch_docstring(nxa.triad_graph)
+def triad_graph(triad_name):
+    if triad_name not in TRIAD_EDGES:
+        raise ValueError(
+            f'unknown triad name "{triad_name}"; use one of the triad names'
+            " in the TRIAD_NAMES constant"
+        )
+    G = DiGraph()
+    G.add_nodes_from("abc")
+    G.add_edges_from(TRIAD_EDGES[triad_name])
+    return G

@@ -15,15 +15,20 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
+"""
+Generators for some directed graphs, including growing network (GN) graphs and
+scale-free graphs.
 
-import networkx.classes.coreviews
-import networkx.classes.graphviews
-import networkx.classes.reportviews
+"""
 
-# graphscope.nx not implement MultiGraph and MultiDiGraph, forward NetworkX to pass tests
-from networkx.classes import MultiDiGraph
-from networkx.classes import MultiGraph
+import networkx.generators.geometric
 
-from graphscope.nx.classes.digraph import DiGraph
-from graphscope.nx.classes.function import *
-from graphscope.nx.classes.graph import Graph
+from graphscope.framework.errors import UnimplementedError
+from graphscope.nx.utils.compat import import_as_graphscope_nx
+
+import_as_graphscope_nx(networkx.generators.geometric)
+
+
+def navigable_small_world_graph(n, p=1, q=1, r=2, dim=2, seed=None):
+    # graphscope not support graph with tuple node
+    raise UnimplementedError("navigable_small_world_graph not support in graphscope.nx")

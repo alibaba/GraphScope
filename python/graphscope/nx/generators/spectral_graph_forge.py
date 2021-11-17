@@ -16,8 +16,11 @@
 # limitations under the License.
 #
 
-import networkx.generators.line
+import sys
+
+import networkx.generators.spectral_graph_forge
 
 from graphscope.nx.utils.compat import import_as_graphscope_nx
 
-import_as_graphscope_nx(networkx.generators.line)
+spectral_graph_forge_module = sys.modules["networkx.generators.spectral_graph_forge"]
+import_as_graphscope_nx(spectral_graph_forge_module)

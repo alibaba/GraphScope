@@ -16,14 +16,11 @@
 # limitations under the License.
 #
 
-import networkx.classes.coreviews
-import networkx.classes.graphviews
-import networkx.classes.reportviews
+import sys
 
-# graphscope.nx not implement MultiGraph and MultiDiGraph, forward NetworkX to pass tests
-from networkx.classes import MultiDiGraph
-from networkx.classes import MultiGraph
+import networkx.generators.nonisomorphic_trees
 
-from graphscope.nx.classes.digraph import DiGraph
-from graphscope.nx.classes.function import *
-from graphscope.nx.classes.graph import Graph
+from graphscope.nx.utils.compat import import_as_graphscope_nx
+
+nonisomorphic_trees_module = sys.modules["networkx.generators.nonisomorphic_trees"]
+import_as_graphscope_nx(nonisomorphic_trees_module)

@@ -15,9 +15,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
+"""
+Generators for random intersection graphs.
+"""
 
-import networkx.generators.lattice
+import networkx.generators.intersection
 
 from graphscope.nx.utils.compat import import_as_graphscope_nx
 
-import_as_graphscope_nx(networkx.generators.lattice)
+import_as_graphscope_nx(networkx.generators.intersection)

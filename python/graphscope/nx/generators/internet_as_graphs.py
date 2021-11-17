@@ -15,15 +15,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
+"""Generates graphs resembling the Internet Autonomous System network"""
 
-import networkx.classes.coreviews
-import networkx.classes.graphviews
-import networkx.classes.reportviews
+import networkx.generators.internet_as_graphs
 
-# graphscope.nx not implement MultiGraph and MultiDiGraph, forward NetworkX to pass tests
-from networkx.classes import MultiDiGraph
-from networkx.classes import MultiGraph
+from graphscope.nx.utils.compat import import_as_graphscope_nx
 
-from graphscope.nx.classes.digraph import DiGraph
-from graphscope.nx.classes.function import *
-from graphscope.nx.classes.graph import Graph
+import_as_graphscope_nx(networkx.generators.internet_as_graphs)

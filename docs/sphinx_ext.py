@@ -83,7 +83,7 @@ class StandaloneHTMLBuilderExt(StandaloneHTMLBuilder):
         if os.environ.get('TAG_VER', None) == 'stable':
             version = 'stable'
         self.globalcontext['version'] = version
-        self.globalcontext['stable'] = releases[0]
+        # self.globalcontext['stable'] = releases[0]
         self.globalcontext['versions'] = ['latest', 'stable'] + releases
 
         self.globalcontext['concat_path'] = concat_path

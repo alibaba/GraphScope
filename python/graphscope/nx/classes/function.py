@@ -19,6 +19,10 @@
 # information.
 #
 
+import networkx.classes.function as func
+
+from graphscope.nx.utils.compat import patch_docstring
+
 __all__ = [
     "nodes",
     "edges",
@@ -45,6 +49,8 @@ __all__ = [
     "non_neighbors",
     "non_edges",
     "common_neighbors",
+    "set_node_attributes",
+    "get_node_attributes",
     "is_weighted",
     "is_negatively_weighted",
     "is_empty",
@@ -54,7 +60,36 @@ __all__ = [
 ]
 
 
-from networkx.classes.function import *
+# forward the NetworkX functions
+from networkx.classes.function import add_cycle
+from networkx.classes.function import add_path
+from networkx.classes.function import add_star
+from networkx.classes.function import all_neighbors
+from networkx.classes.function import common_neighbors
+from networkx.classes.function import create_empty_copy
+from networkx.classes.function import degree
+from networkx.classes.function import degree_histogram
+from networkx.classes.function import density
+from networkx.classes.function import edges
+from networkx.classes.function import freeze
+from networkx.classes.function import get_node_attributes
+from networkx.classes.function import info
+from networkx.classes.function import is_directed
+from networkx.classes.function import is_empty
+from networkx.classes.function import is_frozen
+from networkx.classes.function import is_negatively_weighted
+from networkx.classes.function import is_weighted
+from networkx.classes.function import neighbors
+from networkx.classes.function import nodes
+from networkx.classes.function import nodes_with_selfloops
+from networkx.classes.function import non_edges
+from networkx.classes.function import non_neighbors
+from networkx.classes.function import number_of_edges
+from networkx.classes.function import number_of_nodes
+from networkx.classes.function import selfloop_edges
+from networkx.classes.function import subgraph
+from networkx.classes.function import to_directed
+from networkx.classes.function import to_undirected
 
 
 def induced_subgraph(G, nbunch):
@@ -113,26 +148,32 @@ def edge_subgraph(G, edges):
     return G.edge_subgraph(edges)
 
 
+@patch_docstring(func.number_of_selfloops)
 def number_of_selfloops(G):
-    """Returns the number of selfloop edges.
-
-    A selfloop edge has the same node at both ends.
-
-    Returns
-    -------
-    nloops : int
-        The number of selfloops.
-
-    See Also
-    --------
-    nodes_with_selfloops, selfloop_edges
-
-    Examples
-    --------
-    >>> G = nx.Graph()  # or DiGraph
-    >>> G.add_edge(1, 1)
-    >>> G.add_edge(1, 2)
-    >>> nx.number_of_selfloops(G)
-    1
-    """
+    if G.is_multigraph():
+        # we forward the MultiGraph nd MultiDiGraph
+        return sum(1 for _ in selfloop_edges(G))
     return G.number_of_selfloops()
+
+
+@patch_docstring(func.set_node_attributes)
+def set_node_attributes(G, values, name=None):
+    # Set node attributes based on type of `values`
+    if name is not None:  # `values` must not be a dict of dict
+        try:  # `values` is a dict
+            for n, v in values.items():
+                if n in G:
+                    dd = G.get_node_data(n)
+                    dd[name] = values[n]
+                    G.set_node_data(n, dd)
+        except AttributeError:  # `values` is a constant
+            for n in G:
+                dd = G.get_node_data(n)
+                dd[name] = values
+                G.set_node_data(n, dd)
+    else:  # `values` must be dict of dict
+        for n, d in values.items():
+            if n in G:
+                dd = G.get_node_data(n)
+                dd.update(d)
+                G.set_node_data(n, dd)

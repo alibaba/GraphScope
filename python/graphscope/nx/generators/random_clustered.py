@@ -16,14 +16,9 @@
 # limitations under the License.
 #
 
-import networkx.classes.coreviews
-import networkx.classes.graphviews
-import networkx.classes.reportviews
 
-# graphscope.nx not implement MultiGraph and MultiDiGraph, forward NetworkX to pass tests
-from networkx.classes import MultiDiGraph
-from networkx.classes import MultiGraph
+import networkx.generators.random_clustered
 
-from graphscope.nx.classes.digraph import DiGraph
-from graphscope.nx.classes.function import *
-from graphscope.nx.classes.graph import Graph
+from graphscope.nx.utils.compat import import_as_graphscope_nx
+
+import_as_graphscope_nx(networkx.generators.random_clustered)
