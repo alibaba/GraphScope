@@ -25,23 +25,20 @@ on:
 
 jobs:
   # JOB to run change detection
-  changes:
+  changes-detection:
     runs-on: ubuntu-20.04
     # Set job outputs to values from filter step
     outputs:
       gae-python: ${{ steps.filter.outputs.gae-python }}
       networkx: ${{ steps.filter.outputs.networkx }}
     steps:
+    # For push it's necessary to checkout the code
     - uses: actions/checkout@v2
-      with:
-        # This may save additional git fetch roundtrip if
-        # merge-base is found within latest 20 commits
-        fetch-depth: 20
     # For pull requests it's not necessary to checkout the code
     - uses: dorny/paths-filter@v2
       id: filter
       with:
-        base: main  # Change detection against merge-base with this branch
+        base: main  # Change detection against merge-base with main before push
         filters: |
           gae-python:
             - 'analytical_engine/**'
