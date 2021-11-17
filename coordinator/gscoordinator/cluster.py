@@ -627,12 +627,14 @@ class KubernetesClusterLauncher(Launcher):
                 {
                     "name": "demo-dataset",
                     "image": self._saved_locals["demo_dataset_image"],
-                    "imagePullPolicy": self._image_pull_policy,
-                    "volumeMounts": {
-                        "name": "demo-dataset",
-                        "mountPath": "/dataset",
-                        "mountPropagation": "Bidirectional",
-                    },
+                    "imagePullPolicy": self._saved_locals["image_pull_policy"],
+                    "volumeMounts": [
+                        {
+                            "name": "demo-dataset",
+                            "mountPath": "/dataset",
+                            "mountPropagation": "Bidirectional",
+                        }
+                    ],
                     "securityContext": {"privileged": True},
                 }
             )

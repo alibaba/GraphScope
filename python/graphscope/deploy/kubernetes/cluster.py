@@ -104,6 +104,8 @@ class KubernetesClusterLauncher(Launcher):
         timeout_seconds=None,
         dangling_timeout_seconds=None,
         k8s_waiting_for_delete=None,
+        with_demo_dataset=False,
+        k8s_demo_dataset_image=None,
         **kwargs
     ):
         self._api_client = api_client
@@ -443,6 +445,10 @@ class KubernetesClusterLauncher(Launcher):
             str(self._saved_locals["k8s_waiting_for_delete"]),
             "--k8s_delete_namespace",
             str(self._delete_namespace),
+            "--with_demo_dataset",
+            str(self._saved_locals["with_demo_dataset"]),
+            "--k8s_demo_dataset_image",
+            str(self._saved_locals["k8s_demo_dataset_image"]),
         ]
         return ["-c", " ".join(cmd)]
 

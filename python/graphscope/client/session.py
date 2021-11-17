@@ -394,7 +394,7 @@ class Session(object):
 
             k8s_etcd_image (str, optional): The image of etcd, which used by vineyard.
 
-            k8s_demo_datase_image(str, optional): The image which mounts aliyun demo dataset bucket to local path.
+            k8s_demo_dataset_image(str, optional): The image which mounts aliyun demo dataset bucket to local path.
 
             k8s_image_pull_policy (str, optional): Kubernetes image pull policy. Defaults to "IfNotPresent".
 

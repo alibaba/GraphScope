@@ -1346,7 +1346,7 @@ def parse_sys_args():
         help="Mount the aliyun demo dataset bucket as a volume by ossfs.",
     )
     parser.add_argument(
-        "--demo_dataset_image",
+        "--k8s_demo_dataset_image",
         type=str,
         default="registry.cn-hongkong.aliyuncs.com/graphscope/demo_dataset:{__version__}",
         help="Docker image to mount the dataset bucket",
@@ -1364,7 +1364,7 @@ def launch_graphscope():
             service_type=args.k8s_service_type,
             gs_image=args.k8s_gs_image,
             etcd_image=args.k8s_etcd_image,
-            demo_dataset_image=args.demo_dataset_image,
+            demo_dataset_image=args.k8s_demo_dataset_image,
             coordinator_name=args.k8s_coordinator_name,
             coordinator_service_name=args.k8s_coordinator_service_name,
             etcd_num_pods=args.k8s_etcd_num_pods,

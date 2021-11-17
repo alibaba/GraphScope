@@ -245,13 +245,32 @@ The figure shows the flow of execution in the cluster mode. When users run code 
 
 ### Creating a session
 
-To use GraphScope in a distributed setting, we need to establish a session in a python interpreter. 
+To use GraphScope in a distributed setting, we need to establish a session in a python interpreter.
+
+For convenience, we provide several demo datasets, and an option `with_demo_dataset` to mount the dataset in the graphscope cluster. The datasets will located in `/dataset`.
+
+```python
+import graphscope
+
+sess = graphscope.session(with_demo_dataset=True)
+```
+
+<details>
+  <summary>Mount a host directory to cluster</summary>
+
+Sometimes users may want to use their own dataset, in this case, we provide options to mount a
+host directory to the cluster.
+
+Assume we want to mount `~/test_data` in the host machine to `/testingdata` in pods, we can define
+a dict as follows, then pass it as `k8s_volumes` in session constructor.
+
+Note that the host path is relative to the kubernetes node, that is, if you have a cluster created by `kind`, then you need to copy that directory to the kind node, or mount that path to kind node.
+See more details [here](https://kind.sigs.k8s.io/docs/user/configuration/#extra-mounts).
 
 ```python
 import os
 import graphscope
 
-# assume we mount `~/test_data` to `/testingdata` in pods.
 k8s_volumes = {
     "data": {
         "type": "hostPath",
@@ -267,10 +286,12 @@ k8s_volumes = {
 
 sess = graphscope.session(k8s_volumes=k8s_volumes)
 ```
+</details>
+
 For macOS, the session needs to establish with the LoadBalancer service type (which is NodePort by default).
 
 ```python
-sess = graphscope.session(k8s_volumes=k8s_volumes, k8s_service_type="LoadBalancer")
+sess = graphscope.session(with_demo_dataset=True, k8s_service_type="LoadBalancer")
 ```
 
 A session tries to launch a `coordinator`, which is the entry for the back-end engines. The coordinator manages a cluster of resources (k8s pods), and the interactive/analytical/learning engines ran on them. For each pod in the cluster, there is a vineyard instance at service for distributed data in memory.
@@ -283,8 +304,10 @@ Similar to the standalone mode, we can still use the functions to load a graph e
 ```python
 from graphscope.dataset import load_ogbn_mag
 
-# TODO(yuansi): data preparation?
-g = load_ogbn_mag(sess, "/testingdata/ogbn_mag_small/")
+# Note we have mount the demo datasets to /dataset,
+# There are several datasets including ogbn_mag,
+# User can attach to the engine container and explore the directory.
+g = load_ogbn_mag(sess, "/dataset/ogbn_mag_small/")
 ```
 
 Here, the `g` is loaded in parallel via vineyard and stored in vineyard instances in the cluster managed by the session.
@@ -313,10 +336,10 @@ Please note that we have not hardened this release for production use and it lac
 To build graphscope python package and the engine bineries, you want to install some dependencies and build tools. 
 
 ```bash
-./scripts/install-deps.sh --dev
+./scripts/install_deps.sh --dev
 
 # With argument --cn to speed up the download if you are in China.
-./scripts/install-deps.sh --dev --cn 
+./scripts/install_deps.sh --dev --cn 
 ```
 
 Then you can build GraphScope with pre-configured `make` commands.
