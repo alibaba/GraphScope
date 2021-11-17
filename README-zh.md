@@ -131,7 +131,7 @@ paper_features.append("kcore")
 paper_features.append("tc")
 
 # launch a learning engine.
-lg = graphscope.learning(sub_graph, nodes=[("paper", paper_features)],
+lg = graphscope.graphlearn(sub_graph, nodes=[("paper", paper_features)],
                   edges=[("paper", "cites", "paper")],
                   gen_labels=[
                       ("train", "paper", 100, (0, 75)),
@@ -214,7 +214,7 @@ GraphScope 是为处理超大图设计，而单机的内存通常不能够容纳
 另外，你也可以使用 [Kind](https://kind.sigs.k8s.io) 部署一个本地的 k8s 集群，我们提供了一个脚本来部署环境。
 
 ```bash
-# for usage, type --h
+# for usage, type -h
 ./scripts/install_deps.sh --k8s
 ```
 
@@ -233,7 +233,7 @@ pip3 install graphscope-client
 上图表示了用户通过 Python 客户端调用 GraphScope 解决该问题的工作流程。
 
 - *步骤 1*. 建立一个会话（session），为 GraphScope 创建一个工作空间；
-- *步骤 2 - 步骤 5*. 载图，查询，分析与执行基于图数据的机器学习任务；这些任务与本机安装的方式相同，因此用户在分布式集群上处理大规模图数据的体验与在单机处理小规模图的体验基本一致。
+- *步骤 2 - 步骤 5*. 载图，查询，分析与执行基于图数据的机器学习任务；这些任务与本机安装的方式相同，因此用户在分布式集群上处理大规模图数据的体验与在单机处理小规模图的体验基本一致。(其中 `graphscope.gremlin` 与 `graphscope.graphlearn` 要分别改为 `sess.gremlin` 与 `sess.graphlearn`，`sess` 为用户创建的 `Session` 的名字)
 - *步骤 6*. 关闭会话。
 
 ### 创建会话

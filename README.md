@@ -135,12 +135,12 @@ paper_features.append("tc")
 
 # launch a learning engine.
 lg = graphscope.graphlearn(sub_graph, nodes=[("paper", paper_features)],
-                           edges=[("paper", "cites", "paper")],
-                           gen_labels=[
-                               ("train", "paper", 100, (0, 75)),
-                               ("val", "paper", 100, (75, 85)),
-                               ("test", "paper", 100, (85, 100))
-                           ])
+                  edges=[("paper", "cites", "paper")],
+                  gen_labels=[
+                      ("train", "paper", 100, (0, 75)),
+                      ("val", "paper", 100, (75, 85)),
+                      ("test", "paper", 100, (85, 100))
+                  ])
 ```
 
 Then we define the training process, and run it.
@@ -220,7 +220,7 @@ To continue this tutorial, please ensure that you have a k8s managed cluster and
 Alternatively, you can set up a local k8s cluster for testing with [Kind](https://kind.sigs.k8s.io/). We provide a script for setup this environment.
 
 ```bash
-# for usage, type --h
+# for usage, type -h
 ./scripts/install_deps.sh --k8s
 ```
 
@@ -239,7 +239,7 @@ Next, let's revisit the example by running on a cluster instead.
 The figure shows the flow of execution in the cluster mode. When users run code in the python client, it will:
 
 - *Step 1*. Create a session or workspace in GraphScope.
-- *Step 2 - Step 5*. Load a graph, query, analysis and run learning task on this graph via Python interface. These steps are the same to local mode, thus users process huge graphs in a distributed setting just like analysis a small graph on a single machine.
+- *Step 2 - Step 5*. Load a graph, query, analysis and run learning task on this graph via Python interface. These steps are the same to local mode, thus users process huge graphs in a distributed setting just like analysis a small graph on a single machine.(Note that `graphscope.gremlin` and `graphscope.graphlearn` need to be changed to `sess.gremlin` and `sess.graphlearn`, respectively. `sess` is the name of the `Session` instance user created.)
 - *Step 6*. Close the session.
 
 
