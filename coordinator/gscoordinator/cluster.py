@@ -166,7 +166,7 @@ class KubernetesClusterLauncher(Launcher):
         service_type=None,
         gs_image=None,
         etcd_image=None,
-        demo_dataset_image=None,
+        dataset_image=None,
         coordinator_name=None,
         coordinator_service_name=None,
         etcd_num_pods=None,
@@ -186,7 +186,7 @@ class KubernetesClusterLauncher(Launcher):
         image_pull_policy=None,
         image_pull_secrets=None,
         volumes=None,
-        with_demo_dataset=False,
+        mount_dataset=None,
         num_workers=None,
         preemptive=None,
         instance_id=None,
@@ -554,12 +554,12 @@ class KubernetesClusterLauncher(Launcher):
         )
 
         # Mount aliyun demo dataset bucket
-        if self._saved_locals["with_demo_dataset"]:
-            self._volumes["demo-dataset"] = {
+        if self._saved_locals["mount_dataset"] is not None:
+            self._volumes["dataset"] = {
                 "type": "emptyDir",
                 "field": {},
                 "mounts": {
-                    "mountPath": "/dataset",
+                    "mountPath": self._saved_locals["mount_dataset"],
                     "readOnly": True,
                     "mountPropagation": "HostToContainer",
                 },
@@ -622,15 +622,15 @@ class KubernetesClusterLauncher(Launcher):
                 % (self._mars_service_name, self._mars_scheduler_port),
             )
 
-        if self._saved_locals["with_demo_dataset"]:
+        if self._saved_locals["mount_dataset"]:
             engine_builder.add_container(
                 {
-                    "name": "demo-dataset",
-                    "image": self._saved_locals["demo_dataset_image"],
+                    "name": "dataset",
+                    "image": self._saved_locals["dataset_image"],
                     "imagePullPolicy": self._saved_locals["image_pull_policy"],
                     "volumeMounts": [
                         {
-                            "name": "demo-dataset",
+                            "name": "dataset",
                             "mountPath": "/dataset",
                             "mountPropagation": "Bidirectional",
                         }

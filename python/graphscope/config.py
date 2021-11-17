@@ -102,7 +102,7 @@ class GSConfig(object):
     enable_gaia = False
 
     # Demo dataset related
-    with_demo_dataset = False
-    k8s_demo_dataset_image = (
-        f"registry.cn-hongkong.aliyuncs.com/graphscope/demo_dataset:{__version__}"
+    mount_dataset = None
+    k8s_dataset_image = (
+        f"registry.cn-hongkong.aliyuncs.com/graphscope/dataset:{__version__}"
     )

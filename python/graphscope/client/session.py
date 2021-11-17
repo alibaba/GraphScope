@@ -325,7 +325,7 @@ class Session(object):
         k8s_service_type=gs_config.k8s_service_type,
         k8s_gs_image=gs_config.k8s_gs_image,
         k8s_etcd_image=gs_config.k8s_etcd_image,
-        k8s_demo_dataset_image=gs_config.k8s_demo_dataset_image,
+        k8s_dataset_image=gs_config.k8s_dataset_image,
         k8s_image_pull_policy=gs_config.k8s_image_pull_policy,
         k8s_image_pull_secrets=gs_config.k8s_image_pull_secrets,
         k8s_coordinator_cpu=gs_config.k8s_coordinator_cpu,
@@ -349,7 +349,7 @@ class Session(object):
         dangling_timeout_seconds=gs_config.dangling_timeout_seconds,
         with_mars=gs_config.with_mars,
         enable_gaia=gs_config.enable_gaia,
-        with_demo_dataset=gs_config.with_demo_dataset,
+        mount_dataset=gs_config.mount_dataset,
         reconnect=False,
         **kw,
     ):
@@ -394,7 +394,7 @@ class Session(object):
 
             k8s_etcd_image (str, optional): The image of etcd, which used by vineyard.
 
-            k8s_demo_dataset_image(str, optional): The image which mounts aliyun demo dataset bucket to local path.
+            k8s_dataset_image(str, optional): The image which mounts aliyun dataset bucket to local path.
 
             k8s_image_pull_policy (str, optional): Kubernetes image pull policy. Defaults to "IfNotPresent".
 
@@ -442,8 +442,8 @@ class Session(object):
             enable_gaia (bool, optional):
                 Launch graphscope with gaia enabled. Defaults to False.
 
-            with_demo_dataset (bool, optional):
-                Create a container and mount aliyun demo dataset bucket to local path.
+            mount_dataset (str, optional):
+                Create a container and mount aliyun demo dataset bucket to the path specified by `mount_dataset`.
 
             k8s_volumes (dict, optional): A dict of k8s volume which represents a directory containing data, accessible to the
                 containers in a pod. Defaults to {}.
@@ -583,8 +583,8 @@ class Session(object):
             "k8s_waiting_for_delete",
             "timeout_seconds",
             "dangling_timeout_seconds",
-            "with_demo_dataset",
-            "k8s_demo_dataset_image",
+            "mount_dataset",
+            "k8s_dataset_image",
         )
         self._deprecated_params = (
             "show_log",
