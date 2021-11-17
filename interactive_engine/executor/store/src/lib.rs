@@ -22,7 +22,6 @@ pub mod config;
 #[allow(unused_variables)]
 pub mod schema;
 pub mod test;
-pub mod v2;
 
 #[macro_use]
 extern crate log;
