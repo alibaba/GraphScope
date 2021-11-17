@@ -2,7 +2,7 @@
 use std::collections::HashMap;
 use crate::db::api::*;
 
-pub fn gen_vertex_properties(si: SnapshotId, label: LabelId, id: VertexId, type_def: &TypeDef) -> HashMap<PropId, Value> {
+pub fn gen_vertex_properties(si: SnapshotId, label: LabelId, id: VertexId, type_def: &TypeDef) -> HashMap<PropertyId, Value> {
     let mut map = HashMap::new();
     for prop_def in type_def.get_prop_defs() {
         let p = vertex_prop(si, label, id, prop_def.r#type);
@@ -11,12 +11,12 @@ pub fn gen_vertex_properties(si: SnapshotId, label: LabelId, id: VertexId, type_
     map
 }
 
-pub fn gen_vertex_update_properties(si: SnapshotId, label: LabelId, id: VertexId, type_def: &TypeDef) -> HashMap<PropId, Value> {
+pub fn gen_vertex_update_properties(si: SnapshotId, label: LabelId, id: VertexId, type_def: &TypeDef) -> HashMap<PropertyId, Value> {
     let mut map = HashMap::new();
     let x = si as i64 + label as i64 + id as i64;
     let count = ValueType::count() as i64;
     for i in x..x+count/2 {
-        let prop_id = (i % count) as PropId + 1;
+        let prop_id = (i % count) as PropertyId + 1;
         let prop_def = type_def.get_prop_def(prop_id).unwrap();
         let v = vertex_prop(si, label, id, prop_def.r#type);
         map.insert(prop_id, v);
@@ -24,7 +24,7 @@ pub fn gen_vertex_update_properties(si: SnapshotId, label: LabelId, id: VertexId
     map
 }
 
-pub fn gen_edge_properties(si: SnapshotId, edge_type: &EdgeKind, id: &EdgeId, type_def: &TypeDef) -> HashMap<PropId, Value> {
+pub fn gen_edge_properties(si: SnapshotId, edge_type: &EdgeKind, id: &EdgeId, type_def: &TypeDef) -> HashMap<PropertyId, Value> {
     let mut map = HashMap::new();
     for prop_def in type_def.get_prop_defs() {
         let p = edge_prop(si, edge_type, id, prop_def.r#type);
@@ -33,12 +33,12 @@ pub fn gen_edge_properties(si: SnapshotId, edge_type: &EdgeKind, id: &EdgeId, ty
     map
 }
 
-pub fn gen_edge_update_properties(si: SnapshotId, edge_type: &EdgeKind, id: &EdgeId, type_def: &TypeDef) -> HashMap<PropId, Value> {
+pub fn gen_edge_update_properties(si: SnapshotId, edge_type: &EdgeKind, id: &EdgeId, type_def: &TypeDef) -> HashMap<PropertyId, Value> {
     let mut map = HashMap::new();
     let x = si as i64 + (edge_type.edge_label_id +edge_type.src_vertex_label_id +edge_type.dst_vertex_label_id) as i64 + (id.src_id+id.dst_id+id.inner_id) as i64;
     let count = ValueType::count() as i64;
     for i in x..x+count/2 {
-        let prop_id = (i % count) as PropId + 1;
+        let prop_id = (i % count) as PropertyId + 1;
         let prop_def = type_def.get_prop_def(prop_id).unwrap();
         let v = edge_prop(si, edge_type, id, prop_def.r#type);
         map.insert(prop_id, v);
@@ -46,7 +46,7 @@ pub fn gen_edge_update_properties(si: SnapshotId, edge_type: &EdgeKind, id: &Edg
     map
 }
 
-pub fn gen_edge_prop_map(si: SnapshotId, edge_type: &EdgeKind, id: &EdgeId, prop_defs: &Vec<&PropDef>) -> HashMap<PropId, Value> {
+pub fn gen_edge_prop_map(si: SnapshotId, edge_type: &EdgeKind, id: &EdgeId, prop_defs: &Vec<&PropDef>) -> HashMap<PropertyId, Value> {
     let mut map = HashMap::new();
     for prop_def in prop_defs {
         let p = edge_prop(si, edge_type, id, prop_def.r#type);
@@ -64,7 +64,7 @@ pub fn check_vertex<V: Vertex>(si: SnapshotId, v: &V, type_def: &TypeDef) {
     check_vertex_with_properties(v, &map);
 }
 
-pub fn check_vertex_with_properties<V: Vertex>(v: &V, properties: &HashMap<PropId, Value>) {
+pub fn check_vertex_with_properties<V: Vertex>(v: &V, properties: &HashMap<PropertyId, Value>) {
     for (prop_id, property) in properties {
         assert_eq!(v.get_property(*prop_id).unwrap(), property.as_ref());
     }
@@ -85,7 +85,7 @@ pub fn check_edge<E: Edge>(si: SnapshotId, e: &E, type_def: &TypeDef) {
     check_edge_with_properties(e, &map);
 }
 
-pub fn check_edge_with_properties<E: Edge>(e: &E, properties: &HashMap<PropId, Value>) {
+pub fn check_edge_with_properties<E: Edge>(e: &E, properties: &HashMap<PropertyId, Value>) {
     for (prop_id, property) in properties {
         assert_eq!(e.get_property(*prop_id).unwrap(), property.as_ref());
     }

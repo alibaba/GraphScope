@@ -15,7 +15,7 @@ pub fn test_si_guard<G: GraphStorage>(graph: G) {
     graph.drop_vertex_type(15, schema_version,1).unwrap();
     schema_version += 1;
     assert!(graph.create_vertex_type(13, schema_version,5, &types::create_test_type_def(5), schema_version).is_err());
-    let properties: HashMap<PropId, Value> = HashMap::new();
+    let properties: HashMap<PropertyId, Value> = HashMap::new();
     graph.insert_overwrite_vertex(15, 1, 2, &properties).unwrap();
     graph.insert_overwrite_vertex(17, 1, 2, &properties).unwrap();
     schema_version += 1;

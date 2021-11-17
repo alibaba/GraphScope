@@ -1,11 +1,11 @@
 use std::marker::PhantomData;
-use super::{VertexId, LabelId, PropId, EdgeId, EdgeKind, ValueRef};
+use super::{VertexId, LabelId, PropertyId, EdgeId, ValueRef, EdgeKind};
 
 pub trait Vertex: std::fmt::Debug {
     type PI: PropIter;
     fn get_id(&self) -> VertexId;
     fn get_label(&self) -> LabelId;
-    fn get_property(&self, prop_id: PropId) -> Option<ValueRef>;
+    fn get_property(&self, prop_id: PropertyId) -> Option<ValueRef>;
     fn get_properties_iter(&self) -> PropertiesRef<Self::PI>;
 }
 
@@ -15,12 +15,12 @@ pub trait Edge: std::fmt::Debug {
     fn get_src_id(&self) -> VertexId;
     fn get_dst_id(&self) -> VertexId;
     fn get_kind(&self) -> &EdgeKind;
-    fn get_property(&self, prop_id: PropId) -> Option<ValueRef>;
+    fn get_property(&self, prop_id: PropertyId) -> Option<ValueRef>;
     fn get_properties_iter(&self) -> PropertiesRef<Self::PI>;
 }
 
 pub trait PropIter: Sized {
-    fn next(&mut self) -> Option<(PropId, ValueRef)>;
+    fn next(&mut self) -> Option<(PropertyId, ValueRef)>;
 }
 
 pub struct PropertiesRef<'a, T> {
@@ -38,7 +38,7 @@ impl<'a, T: PropIter> PropertiesRef<'a, T> {
 }
 
 impl<'a, T: PropIter> PropIter for PropertiesRef<'a, T> {
-    fn next(&mut self) -> Option<(PropId, ValueRef)> {
+    fn next(&mut self) -> Option<(PropertyId, ValueRef)> {
         self.iter.next()
     }
 }

@@ -472,12 +472,12 @@ impl VertexDataManager {
         }
     }
 
-    fn insert(&mut self, si: SnapshotId, id: VertexId, label: LabelId, properties: HashMap<PropId, Value>) {
+    fn insert(&mut self, si: SnapshotId, id: VertexId, label: LabelId, properties: HashMap<PropertyId, Value>) {
         let data = self.map.entry(label).or_insert_with(|| VertexDataMap::new(label));
         data.insert(si, id, properties);
     }
 
-    fn update(&mut self, si: SnapshotId, id: VertexId, label: LabelId, properties: HashMap<PropId, Value>) {
+    fn update(&mut self, si: SnapshotId, id: VertexId, label: LabelId, properties: HashMap<PropertyId, Value>) {
         let data = self.map.entry(label).or_insert_with(|| VertexDataMap::new(label));
         data.update(si, id, properties);
     }
@@ -503,7 +503,7 @@ impl VertexDataManager {
     }
 }
 
-type Props = HashMap<PropId, Value>;
+type Props = HashMap<PropertyId, Value>;
 
 struct VertexDataMap {
     label: LabelId,

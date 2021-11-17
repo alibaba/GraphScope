@@ -65,7 +65,7 @@ impl GlobalGraph {
         }
     }
 
-    fn convert_condition(condition: Option<&Condition>) -> Option<Arc<maxgraph_store::db::api::Condition>> {
+    fn convert_condition(condition: Option<&Condition>) -> Option<Arc<maxgraph_store::db::api::OldCondition>> {
         match condition {
             None => {None},
             Some(_) => {unimplemented!()},

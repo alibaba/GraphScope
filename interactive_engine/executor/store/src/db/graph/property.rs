@@ -47,7 +47,7 @@ impl<'a> PropIter for PropertiesIter<'a> {
     }
 }
 
-impl PropertyMap for HashMap<PropId, Value> {
+impl PropertyMap for HashMap<PropertyId, Value> {
     fn get(&self, prop_id: i32) -> Option<ValueRef> {
         self.get(&prop_id).map(|v| v.as_ref())
     }
@@ -61,7 +61,7 @@ impl PropertyMap for HashMap<PropId, Value> {
     }
 }
 
-impl PropertyMap for HashMap<PropId, ValueRef<'_>> {
+impl PropertyMap for HashMap<PropertyId, ValueRef<'_>> {
     fn get(&self, prop_id: i32) -> Option<ValueRef> {
         self.get(&prop_id).map(|v| *v)
     }

@@ -1,7 +1,7 @@
-use crate::v2::api::{Vertex, VertexId, LabelId, PropertyReader, PropertyId, Property, PropertyValue, Edge, EdgeId, EdgeRelation};
 use crate::db::graph::codec::{Decoder, IterDecoder};
 use crate::db::storage::RawBytes;
-use crate::v2::{parse_property_value, GraphResult};
+use crate::db::api::{GraphResult, VertexId, LabelId, EdgeId, EdgeKind, PropertyId};
+use crate::db::api::types::{PropertyReader, PropertyValue, Property, RocksVertex, RocksEdge};
 
 pub struct PropertyImpl {
     property_id: PropertyId,
@@ -27,29 +27,28 @@ impl<'a> Iterator for PropertiesIter<'a> {
 
     fn next(&mut self) -> Option<Self::Item> {
         self.decode_iter.next().map(|(prop_id, v)| {
-            let property_value = parse_property_value(v);
             Ok(PropertyImpl {
                 property_id: prop_id as PropertyId,
-                property_value,
+                property_value: v.into(),
             })
         })
     }
 }
 
-pub struct RocksVertex {
+pub struct RocksVertexImpl {
     vertex_id: VertexId,
     label_id: LabelId,
     decoder: Decoder,
     raw_bytes: RawBytes,
 }
 
-impl RocksVertex {
+impl RocksVertexImpl {
     pub fn new(vertex_id: VertexId, label_id: LabelId, decoder: Decoder, raw_bytes: RawBytes) -> Self {
-        RocksVertex { vertex_id, label_id, decoder, raw_bytes }
+        RocksVertexImpl { vertex_id, label_id, decoder, raw_bytes }
     }
 }
 
-impl PropertyReader for RocksVertex {
+impl PropertyReader for RocksVertexImpl {
     type P = PropertyImpl;
     type PropertyIterator = PropertiesIter<'static>;
 
@@ -57,10 +56,9 @@ impl PropertyReader for RocksVertex {
         let bytes = unsafe { self.raw_bytes.to_slice() };
         let value_ref = self.decoder.decode_property(bytes, property_id as i32);
         value_ref.map(|v| {
-            let property_value = parse_property_value(v);
             PropertyImpl {
                 property_id,
-                property_value,
+                property_value: v.into(),
             }
         })
     }
@@ -74,7 +72,7 @@ impl PropertyReader for RocksVertex {
     }
 }
 
-impl Vertex for RocksVertex {
+impl RocksVertex for RocksVertexImpl {
     fn get_vertex_id(&self) -> VertexId {
         self.vertex_id
     }
@@ -84,20 +82,20 @@ impl Vertex for RocksVertex {
     }
 }
 
-pub struct RocksEdge {
+pub struct RocksEdgeImpl {
     edge_id: EdgeId,
-    edge_relation: EdgeRelation,
+    edge_relation: EdgeKind,
     decoder: Decoder,
     raw_bytes: RawBytes,
 }
 
-impl RocksEdge {
-    pub fn new(edge_id: EdgeId, edge_relation: EdgeRelation, decoder: Decoder, raw_bytes: RawBytes) -> Self {
-        RocksEdge { edge_id, edge_relation, decoder, raw_bytes }
+impl RocksEdgeImpl {
+    pub fn new(edge_id: EdgeId, edge_relation: EdgeKind, decoder: Decoder, raw_bytes: RawBytes) -> Self {
+        RocksEdgeImpl { edge_id, edge_relation, decoder, raw_bytes }
     }
 }
 
-impl PropertyReader for RocksEdge {
+impl PropertyReader for RocksEdgeImpl {
     type P = PropertyImpl;
     type PropertyIterator = PropertiesIter<'static>;
 
@@ -105,10 +103,9 @@ impl PropertyReader for RocksEdge {
         let bytes = unsafe { self.raw_bytes.to_slice() };
         let value_ref = self.decoder.decode_property(bytes, property_id as i32);
         value_ref.map(|v| {
-            let property_value = parse_property_value(v);
             PropertyImpl {
                 property_id,
-                property_value,
+                property_value: v.into(),
             }
         })
     }
@@ -122,12 +119,12 @@ impl PropertyReader for RocksEdge {
     }
 }
 
-impl Edge for RocksEdge {
+impl RocksEdge for RocksEdgeImpl {
     fn get_edge_id(&self) -> &EdgeId {
         &self.edge_id
     }
 
-    fn get_edge_relation(&self) -> &EdgeRelation {
+    fn get_edge_relation(&self) -> &EdgeKind {
         &self.edge_relation
     }
 }

@@ -29,9 +29,9 @@ pub type CodecVersion = i32;
 #[derive(Clone, Debug)]
 pub struct Codec {
     version: CodecVersion,
-    id_map: HashMap<PropId, usize>,
+    id_map: HashMap<PropertyId, usize>,
     // prop id to idx
-    inner_id_map: HashMap<PropId, usize>,
+    inner_id_map: HashMap<PropertyId, usize>,
     // internal id to idx
     props: Vec<PropInfo>,
     offsets: Vec<usize>,
@@ -131,7 +131,7 @@ impl Decoder {
         IterDecoder::new(self.clone(), data)
     }
 
-    pub fn decode_all<'a>(&self, data: &'a [u8]) -> HashMap<PropId, ValueRef<'a>> {
+    pub fn decode_all<'a>(&self, data: &'a [u8]) -> HashMap<PropertyId, ValueRef<'a>> {
         let mut map = HashMap::new();
         let mut iter = self.decode_properties(data);
         while let Some((prop_id, v)) = iter.next() {
@@ -140,7 +140,7 @@ impl Decoder {
         map
     }
 
-    pub fn decode_property<'a>(&self, data: &'a [u8], prop_id: PropId) -> Option<ValueRef<'a>> {
+    pub fn decode_property<'a>(&self, data: &'a [u8], prop_id: PropertyId) -> Option<ValueRef<'a>> {
         let reader = UnsafeBytesReader::new(data);
         let idx = *self.target.id_map.get(&prop_id)?;
         if self.fast_mode() {
@@ -236,7 +236,7 @@ impl<'a> IterDecoder<'a> {
         }
     }
 
-    pub fn next(&mut self) -> Option<(PropId, ValueRef<'a>)> {
+    pub fn next(&mut self) -> Option<(PropertyId, ValueRef<'a>)> {
         while self.cur < self.decoder.target.props.len() {
             let ret = if self.decoder.fast_mode() {
                 self.fast_path()
@@ -251,13 +251,13 @@ impl<'a> IterDecoder<'a> {
         None
     }
 
-    fn fast_path(&self) -> Option<(PropId, ValueRef<'a>)> {
+    fn fast_path(&self) -> Option<(PropertyId, ValueRef<'a>)> {
         let v = self.decoder.decode_property_at(&self.reader, self.cur)?;
         let prop_id = self.decoder.target.props[self.cur].prop_id;
         Some((prop_id, v))
     }
 
-    fn slow_path(&self) -> Option<(PropId, ValueRef<'a>)> {
+    fn slow_path(&self) -> Option<(PropertyId, ValueRef<'a>)> {
         let info = &self.decoder.target.props[self.cur];
         let prop_id = info.prop_id;
         let internal_id = info.inner_id;
@@ -400,15 +400,15 @@ pub fn get_codec_version(data: &[u8]) -> CodecVersion {
 
 #[derive(Clone, Debug, PartialEq)]
 struct PropInfo {
-    prop_id: PropId,
-    inner_id: PropId,
+    prop_id: PropertyId,
+    inner_id: PropertyId,
     r#type: ValueType,
     default_value: Option<Vec<u8>>,
 }
 
 impl PropInfo {
     #[cfg(test)]
-    fn new(prop_id: PropId, inner_id: PropId, r#type: ValueType, default_value: Option<Value>) -> Self {
+    fn new(prop_id: PropertyId, inner_id: PropertyId, r#type: ValueType, default_value: Option<Value>) -> Self {
         PropInfo {
             prop_id,
             inner_id,
@@ -699,10 +699,10 @@ mod tests {
         let codec = create_default_value_codec();
         let _encoder = create_decoder(&codec);
         let _decoder = create_decoder(&codec);
-        let _data: Vec<(PropId, Value)> = test_data().into_iter().collect();
+        let _data: Vec<(PropertyId, Value)> = test_data().into_iter().collect();
 
         #[allow(dead_code)]
-        fn dfs(prop_list: &Vec<(PropId, Value)>, cur: usize, map: &mut HashMap<PropId, Value>, encoder: &Encoder) {
+        fn dfs(prop_list: &Vec<(PropertyId, Value)>, cur: usize, map: &mut HashMap<PropertyId, Value>, encoder: &Encoder) {
             if cur == prop_list.len() {
 
                 return;
@@ -716,7 +716,7 @@ mod tests {
         }
 
         #[allow(dead_code)]
-        fn check(encoder: &Encoder, _decoder: &Decoder, map: &HashMap<PropId, Value>) {
+        fn check(encoder: &Encoder, _decoder: &Decoder, map: &HashMap<PropertyId, Value>) {
             let mut buf = Vec::new();
             encoder.encode(map, &mut buf).unwrap();
 
@@ -750,7 +750,7 @@ mod tests {
         Decoder::new(codec_ref, codec_ref, epoch::pin())
     }
 
-    fn check_properties(decoder: Decoder, data: &[u8], mut ans: HashMap<PropId, Value>) {
+    fn check_properties(decoder: Decoder, data: &[u8], mut ans: HashMap<PropertyId, Value>) {
         for (prop_id, val) in &ans {
             let v = decoder.decode_property(data, *prop_id).unwrap();
             assert_eq!(v, val.as_ref());
@@ -762,7 +762,7 @@ mod tests {
         assert!(ans.is_empty());
     }
 
-    fn test_prop_list() -> Vec<(PropId, PropId, ValueType)> {
+    fn test_prop_list() -> Vec<(PropertyId, PropertyId, ValueType)> {
         vec![
             (1, 1, ValueType::String),
             (2, 2, ValueType::Bytes),
@@ -781,7 +781,7 @@ mod tests {
         ]
     }
 
-    fn default_value() -> HashMap<PropId, Value> {
+    fn default_value() -> HashMap<PropertyId, Value> {
         let mut map = HashMap::new();
         map.insert(1, Value::string("default-string"));
         map.insert(2, Value::bytes(b"default-bytes"));
@@ -800,7 +800,7 @@ mod tests {
         map
     }
 
-    fn test_data() -> HashMap<PropId, Value> {
+    fn test_data() -> HashMap<PropertyId, Value> {
         let mut map = HashMap::new();
         map.insert(1, Value::from("aababasdasdas"));
         map.insert(2, Value::bytes(b"asdasdasda"));

@@ -13,3 +13,5 @@ mod query;
 mod tests;
 #[cfg(test)]
 mod bench;
+pub mod entity;
+pub mod iter;

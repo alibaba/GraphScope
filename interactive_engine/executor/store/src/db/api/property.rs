@@ -6,7 +6,7 @@ use std::cmp::Ordering;
 use crate::db::common::bytes::transform;
 use crate::db::common::bytes::util::{UnsafeBytesWriter, UnsafeBytesReader};
 use crate::db::common::numeric::*;
-use crate::db::api::PropId;
+use crate::db::api::PropertyId;
 use super::GraphResult;
 use super::error::*;
 use protobuf::ProtobufEnum;
@@ -14,12 +14,12 @@ use crate::db::proto::model::PropertyValuePb;
 use crate::db::proto::common::DataTypePb;
 
 pub trait PropertyMap {
-    fn get(&self, prop_id: PropId) -> Option<ValueRef>;
-    fn as_map(&self) -> HashMap<PropId, ValueRef>;
+    fn get(&self, prop_id: PropertyId) -> Option<ValueRef>;
+    fn as_map(&self) -> HashMap<PropertyId, ValueRef>;
 }
 
 impl dyn PropertyMap {
-    pub fn from_proto(pb: &HashMap<PropId, PropertyValuePb>) -> HashMap<PropId, ValueRef> {
+    pub fn from_proto(pb: &HashMap<PropertyId, PropertyValuePb>) -> HashMap<PropertyId, ValueRef> {
         let mut m = HashMap::new();
         for (id, val_pb) in pb {
             let val_type = ValueType::from_i32(val_pb.get_dataType().value()).unwrap();

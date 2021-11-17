@@ -66,7 +66,7 @@ pub struct SingleLabelVertexIter<'a> {
     ts: SnapshotId, // real si - table.start_si
     last_id: Option<VertexId>,
     type_info: VertexTypeInfoRef,
-    condition: Option<Arc<Condition>>,
+    condition: Option<Arc<OldCondition>>,
     iter: StorageIter<'a>,
     err: Option<GraphError>,
 }
@@ -75,7 +75,7 @@ impl<'a> SingleLabelVertexIter<'a> {
     pub fn create(si: SnapshotId,
                   type_info: VertexTypeInfoRef,
                   storage: &'a dyn ExternalStorage,
-                  condition: Option<Arc<Condition>>)
+                  condition: Option<Arc<OldCondition>>)
         -> GraphResult<Option<SingleLabelVertexIter>> {
         if let Some(table) = type_info.get_table(si) {
             let prefix = vertex_table_prefix_key(table.id);
@@ -86,7 +86,7 @@ impl<'a> SingleLabelVertexIter<'a> {
         Ok(None)
     }
 
-    fn new(si: SnapshotId, ts: SnapshotId, type_info: VertexTypeInfoRef, iter: StorageIter<'a>, condition: Option<Arc<Condition>>) -> Self {
+    fn new(si: SnapshotId, ts: SnapshotId, type_info: VertexTypeInfoRef, iter: StorageIter<'a>, condition: Option<Arc<OldCondition>>) -> Self {
         SingleLabelVertexIter {
             si,
             ts,

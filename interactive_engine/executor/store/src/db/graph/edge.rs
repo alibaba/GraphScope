@@ -78,7 +78,7 @@ impl<'a> SingleLabelEdgeIter<'a> {
                   direction: EdgeDirection,
                   info: EdgeInfoRef,
                   storage: &'a dyn ExternalStorage,
-                  condition: Option<Arc<Condition>>)
+                  condition: Option<Arc<OldCondition>>)
         -> GraphResult<Self> {
         let mut info_iter = info.into_iter();
         let mut iters = Vec::new();
@@ -119,7 +119,7 @@ impl<'a> MultiLabelsEdgeIter<'a> {
                   direction: EdgeDirection,
                   mut info_iter: EdgeInfoIter,
                   storage: &'a dyn ExternalStorage,
-                  condition: Option<Arc<Condition>>) -> GraphResult<Self> {
+                  condition: Option<Arc<OldCondition>>) -> GraphResult<Self> {
         let mut iters = Vec::new();
         while let Some(info) = info_iter.next() {
             let res = SingleLabelEdgeIter::create(si, id, direction, info, storage, condition.clone());
@@ -150,7 +150,7 @@ struct SingleTypeEdgeIter<'a> {
     si: SnapshotId,
     ts: SnapshotId,
     info: EdgeKindInfoRef,
-    condition: Option<Arc<Condition>>,
+    condition: Option<Arc<OldCondition>>,
     iter: StorageIter<'a>,
     last_id: Option<EdgeId>,
     err: Option<GraphError>,
@@ -162,7 +162,7 @@ impl<'a> SingleTypeEdgeIter<'a> {
               direction: EdgeDirection,
               info: EdgeKindInfoRef,
               storage: &'a dyn ExternalStorage,
-              condition: Option<Arc<Condition>>)
+              condition: Option<Arc<OldCondition>>)
               -> GraphResult<Option<Self>> {
         if let Some(table) = info.get_table(si) {
             let ts = si - table.start_si;
@@ -183,7 +183,7 @@ impl<'a> SingleTypeEdgeIter<'a> {
         Ok(None)
     }
 
-    fn new(si: SnapshotId, ts: SnapshotId, info: EdgeKindInfoRef, iter: StorageIter<'a>, condition: Option<Arc<Condition>>) -> Self {
+    fn new(si: SnapshotId, ts: SnapshotId, info: EdgeKindInfoRef, iter: StorageIter<'a>, condition: Option<Arc<OldCondition>>) -> Self {
         SingleTypeEdgeIter {
             si,
             ts,

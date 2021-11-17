@@ -10,22 +10,19 @@ use maxgraph_store::db::graph::store::GraphStore;
 use maxgraph_store::db::common::bytes::util::parse_pb;
 use std::sync::{Once, Arc};
 use crate::store::jna_response::JnaResponse;
-use maxgraph_store::v2::wrapper::graph_storage::GraphStorageWrapper;
-use maxgraph_store::v2::wrapper::wrapper_partition_graph::WrapperPartitionGraph;
+use maxgraph_store::db::wrapper::wrapper_partition_graph::WrapperPartitionGraph;
 use maxgraph_store::db::proto::common::{CommitDataLoadPb, PrepareDataLoadPb};
 
 pub type GraphHandle = *const c_void;
 pub type PartitionGraphHandle = *const c_void;
-pub type FfiPartitionGraph = WrapperPartitionGraph<GraphStorageWrapper<GraphStore>>;
+pub type FfiPartitionGraph = WrapperPartitionGraph<GraphStore>;
 
 static INIT: Once = Once::new();
 
 #[no_mangle]
 pub extern fn createWrapperPartitionGraph(handle: GraphHandle) -> PartitionGraphHandle {
     let graph_store = unsafe { Arc::from_raw(handle as *const GraphStore) };
-    let storage_wrapper = GraphStorageWrapper::new(graph_store);
-    let multi_version_graph = Arc::new(storage_wrapper);
-    let partition_graph = WrapperPartitionGraph::new(multi_version_graph);
+    let partition_graph = WrapperPartitionGraph::new(graph_store);
     Box::into_raw(Box::new(partition_graph)) as PartitionGraphHandle
 }
 

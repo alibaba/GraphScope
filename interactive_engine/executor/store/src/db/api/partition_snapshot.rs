@@ -13,15 +13,14 @@
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 
-use crate::v2::api::{VertexId, LabelId, PropertyId, EdgeId, Records, SerialId, SnapshotId};
-use crate::v2::api::types::{Vertex, Edge, EdgeRelation};
-use crate::v2::api::condition::Condition;
-use crate::v2::GraphResult;
+use crate::db::api::types::{RocksVertex, RocksEdge};
+use crate::db::api::condition::Condition;
+use crate::db::api::{VertexId, LabelId, PropertyId, GraphResult, EdgeId, Records, SerialId, SnapshotId, EdgeKind};
 
 /// Snapshot of a graph partition. All the interfaces should be thread-safe
 pub trait PartitionSnapshot {
-    type V: Vertex;
-    type E: Edge;
+    type V: RocksVertex;
+    type E: RocksEdge;
 
     /// Returns the vertex entity of given `vertex_id`, properties are filtered
     /// by the `property_ids` optionally.
@@ -43,7 +42,7 @@ pub trait PartitionSnapshot {
     fn get_edge(
         &self,
         edge_id: EdgeId,
-        edge_relation: Option<&EdgeRelation>,
+        edge_relation: Option<&EdgeKind>,
         property_ids: Option<&Vec<PropertyId>>,
     ) -> GraphResult<Option<Self::E>>;
 
@@ -99,14 +98,14 @@ pub trait PartitionSnapshot {
     fn get_out_degree(
         &self,
         vertex_id: VertexId,
-        edge_relation: &EdgeRelation,
+        edge_relation: &EdgeKind,
     ) -> GraphResult<usize>;
 
     /// Returns the in-degree of vertex `vertex_id` in `edge_relation`
     fn get_in_degree(
         &self,
         vertex_id: VertexId,
-        edge_relation: &EdgeRelation,
+        edge_relation: &EdgeKind,
     ) -> GraphResult<usize>;
 
     /// Returns the `k`th out edge of vertex `vertex_id` in `edge_relation`.
@@ -115,7 +114,7 @@ pub trait PartitionSnapshot {
     fn get_kth_out_edge(
         &self,
         vertex_id: VertexId,
-        edge_relation: &EdgeRelation,
+        edge_relation: &EdgeKind,
         k: SerialId,
         property_ids: Option<&Vec<PropertyId>>,
     ) -> GraphResult<Option<Self::E>>;
@@ -126,7 +125,7 @@ pub trait PartitionSnapshot {
     fn get_kth_in_edge(
         &self,
         vertex_id: VertexId,
-        edge_relation: &EdgeRelation,
+        edge_relation: &EdgeKind,
         k: SerialId,
         property_ids: Option<&Vec<PropertyId>>,
     ) -> GraphResult<Option<Self::E>>;

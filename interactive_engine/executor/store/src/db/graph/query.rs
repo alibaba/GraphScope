@@ -1,10 +1,10 @@
 use crate::db::api::*;
 use super::codec::*;
 
-pub fn check_condition(decoder: &Decoder, data: &[u8], condition: &Condition) -> bool {
+pub fn check_condition(decoder: &Decoder, data: &[u8], condition: &OldCondition) -> bool {
     match *condition {
-        Condition::Predicate(ref c) => single_predicate_check(c, decoder, data),
-        Condition::And(ref c) => {
+        OldCondition::Predicate(ref c) => single_predicate_check(c, decoder, data),
+        OldCondition::And(ref c) => {
             for cond in &c.sub_conditions {
                 if !check_condition(decoder, data, cond.as_ref()) {
                     return false;
@@ -12,7 +12,7 @@ pub fn check_condition(decoder: &Decoder, data: &[u8], condition: &Condition) ->
             }
             true
         }
-        Condition::Or(ref c) => {
+        OldCondition::Or(ref c) => {
             for cond in &c.sub_conditions {
                 if check_condition(decoder, data, cond.as_ref()) {
                     return true;
@@ -20,7 +20,7 @@ pub fn check_condition(decoder: &Decoder, data: &[u8], condition: &Condition) ->
             }
             false
         }
-        Condition::Not(ref c) => {
+        OldCondition::Not(ref c) => {
             !check_condition(decoder, data, c.sub_condition.as_ref())
         }
     }

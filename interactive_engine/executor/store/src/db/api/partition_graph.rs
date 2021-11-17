@@ -12,7 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use crate::v2::api::{SnapshotId, PartitionSnapshot};
+
+use crate::db::api::partition_snapshot::PartitionSnapshot;
+use crate::db::api::SnapshotId;
 
 pub trait PartitionGraph {
     type S: PartitionSnapshot;
