@@ -13,29 +13,27 @@
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 
-mod join;
+mod accum;
+pub mod accumulator;
 
 use crate::error::FnGenResult;
-use crate::process::functions::JoinKeyGen;
-use crate::process::record::{Record, RecordKey};
+pub use accum::RecordAccumulator;
 use ir_common::error::ParsePbError;
 use ir_common::generated::algebra as algebra_pb;
 
-pub trait JoinFunctionGen {
-    fn gen_join(self) -> FnGenResult<Box<dyn JoinKeyGen<Record, RecordKey, Record>>>;
+pub trait AccumFactoryGen {
+    fn gen_accum(self) -> FnGenResult<RecordAccumulator>;
 }
 
-impl JoinFunctionGen for algebra_pb::logical_plan::Operator {
-    fn gen_join(self) -> FnGenResult<Box<dyn JoinKeyGen<Record, RecordKey, Record>>> {
+impl AccumFactoryGen for algebra_pb::logical_plan::Operator {
+    fn gen_accum(self) -> FnGenResult<RecordAccumulator> {
         if let Some(opr) = self.opr {
             match opr {
-                algebra_pb::logical_plan::operator::Opr::Join(join) => Ok(Box::new(join)),
-                _ => Err(ParsePbError::from("algebra_pb op is not a keyed op"))?,
+                algebra_pb::logical_plan::operator::Opr::GroupBy(group) => group.gen_accum(),
+                _ => Err(ParsePbError::from("algebra_pb op is not a accum op").into()),
             }
         } else {
-            Err(ParsePbError::EmptyFieldError(
-                "algebra op is empty".to_string(),
-            ))?
+            Err(ParsePbError::from("algebra op is empty").into())
         }
     }
 }

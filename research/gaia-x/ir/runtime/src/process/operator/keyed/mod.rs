@@ -17,7 +17,7 @@ mod keyed;
 
 pub use keyed::KeySelector;
 
-use crate::error::FnGenResult;
+use crate::error::{FnGenError, FnGenResult};
 use crate::process::functions::KeyFunction;
 use crate::process::record::{Record, RecordKey};
 use ir_common::error::ParsePbError;
@@ -33,11 +33,15 @@ impl KeyFunctionGen for algebra_pb::logical_plan::Operator {
             match opr {
                 algebra_pb::logical_plan::operator::Opr::GroupBy(group) => group.gen_key(),
                 algebra_pb::logical_plan::operator::Opr::Dedup(dedup) => dedup.gen_key(),
-                algebra_pb::logical_plan::operator::Opr::SegApply(_seg_apply) => todo!(),
-                _ => Err(ParsePbError::from("algebra_pb op is not a keyed op").into()),
+                algebra_pb::logical_plan::operator::Opr::SegApply(_seg_apply) => Err(
+                    FnGenError::UnSupported("SegApply is not supported yet".to_string()),
+                )?,
+                _ => Err(ParsePbError::from("algebra_pb op is not a keyed op"))?,
             }
         } else {
-            Err(ParsePbError::from("algebra op is empty").into())
+            Err(ParsePbError::EmptyFieldError(
+                "algebra op is empty".to_string(),
+            ))?
         }
     }
 }

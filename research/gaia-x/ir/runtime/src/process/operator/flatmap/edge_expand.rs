@@ -13,15 +13,16 @@
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 
-use crate::error::{str_to_dyn_error, FnGenResult};
+use crate::error::{str_to_dyn_error, DynIter, DynResult, FnExecError, FnGenResult};
 use crate::graph::element::{Element, VertexOrEdge};
 use crate::graph::{Direction, QueryParams, Statement, ID};
 use crate::process::operator::flatmap::FlatMapFuncGen;
+use crate::process::operator::KeyedError;
 use crate::process::record::{Record, RecordExpandIter};
 use ir_common::error::ParsePbError;
 use ir_common::generated::algebra as algebra_pb;
 use ir_common::NameOrId;
-use pegasus::api::function::{DynIter, FlatMapFunction, FnResult};
+use pegasus::api::function::FlatMapFunction;
 use std::convert::{TryFrom, TryInto};
 
 pub struct EdgeExpandOperator<E: Into<VertexOrEdge>> {
@@ -33,11 +34,16 @@ pub struct EdgeExpandOperator<E: Into<VertexOrEdge>> {
 impl<E: Into<VertexOrEdge> + 'static> FlatMapFunction<Record, Record> for EdgeExpandOperator<E> {
     type Target = DynIter<Record>;
 
-    fn exec(&self, input: Record) -> FnResult<Self::Target> {
-        let entry = input
-            .get_as_graph_entry(self.start_v_tag.as_ref())
-            .ok_or(str_to_dyn_error("get start_v failed"))?;
-        let id = entry.id().expect("id of VertexOrEdge cannot be None");
+    fn exec(&self, input: Record) -> DynResult<Self::Target> {
+        let entry =
+            input
+                .get_as_graph_entry(self.start_v_tag.as_ref())
+                .ok_or(FnExecError::GetTagError(KeyedError::from(
+                    "get start_v failed",
+                )))?;
+        let id = entry.id().ok_or(FnExecError::QueryStoreError(
+            "id of VertexOrEdge cannot be None".to_string(),
+        ))?;
         let iter = self.stmt.exec(id)?;
         Ok(Box::new(RecordExpandIter::new(
             input,
@@ -98,7 +104,9 @@ impl TryFrom<Option<algebra_pb::ExpandBase>> for ExpandBase {
                 query_params,
             })
         } else {
-            Err(ParsePbError::from("empty value provided"))
+            Err(ParsePbError::EmptyFieldError(
+                "empty expand_base pb".to_string(),
+            ))
         }
     }
 }

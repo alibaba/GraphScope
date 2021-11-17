@@ -12,30 +12,34 @@
 //! WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
-
-mod join;
+mod apply;
 
 use crate::error::FnGenResult;
-use crate::process::functions::JoinKeyGen;
-use crate::process::record::{Record, RecordKey};
+use crate::process::record::Record;
 use ir_common::error::ParsePbError;
 use ir_common::generated::algebra as algebra_pb;
+use pegasus::api::function::BinaryFunction;
 
-pub trait JoinFunctionGen {
-    fn gen_join(self) -> FnGenResult<Box<dyn JoinKeyGen<Record, RecordKey, Record>>>;
+pub trait RecordLeftJoinGen {
+    fn gen_subtask(
+        self,
+    ) -> FnGenResult<Box<dyn BinaryFunction<Record, Vec<Record>, Option<Record>>>>;
 }
 
-impl JoinFunctionGen for algebra_pb::logical_plan::Operator {
-    fn gen_join(self) -> FnGenResult<Box<dyn JoinKeyGen<Record, RecordKey, Record>>> {
+impl RecordLeftJoinGen for algebra_pb::logical_plan::Operator {
+    fn gen_subtask(
+        self,
+    ) -> FnGenResult<Box<dyn BinaryFunction<Record, Vec<Record>, Option<Record>>>> {
         if let Some(opr) = self.opr {
             match opr {
-                algebra_pb::logical_plan::operator::Opr::Join(join) => Ok(Box::new(join)),
-                _ => Err(ParsePbError::from("algebra_pb op is not a keyed op"))?,
+                algebra_pb::logical_plan::operator::Opr::Apply(apply) => apply.gen_subtask(),
+                algebra_pb::logical_plan::operator::Opr::SegApply(_seg_apply) => {
+                    todo!()
+                }
+                _ => Err(ParsePbError::from("algebra_pb op is not a subtask").into()),
             }
         } else {
-            Err(ParsePbError::EmptyFieldError(
-                "algebra op is empty".to_string(),
-            ))?
+            Err(ParsePbError::from("algebra op is empty").into())
         }
     }
 }

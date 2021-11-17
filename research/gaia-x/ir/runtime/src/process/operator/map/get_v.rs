@@ -13,15 +13,16 @@
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 
-use crate::error::{str_to_dyn_error, FnGenResult};
+use crate::error::{DynResult, FnExecError, FnGenResult};
 use crate::graph::element::{Element, VertexOrEdge};
 use crate::graph::QueryParams;
 use crate::process::operator::map::MapFuncGen;
+use crate::process::operator::KeyedError;
 use crate::process::record::Record;
 use ir_common::generated::algebra as algebra_pb;
 use ir_common::generated::algebra::get_v::VOpt;
 use ir_common::NameOrId;
-use pegasus::api::function::{FnResult, MapFunction};
+use pegasus::api::function::MapFunction;
 use std::convert::TryInto;
 
 struct GetVertexOperator {
@@ -32,37 +33,44 @@ struct GetVertexOperator {
 }
 
 impl MapFunction<Record, Record> for GetVertexOperator {
-    fn exec(&self, mut input: Record) -> FnResult<Record> {
-        let entry = input
-            .get_as_graph_entry(self.start_tag.as_ref())
-            .ok_or(str_to_dyn_error("get tag failed in GetVertexOperator"))?;
+    fn exec(&self, mut input: Record) -> DynResult<Record> {
+        let entry =
+            input
+                .get_as_graph_entry(self.start_tag.as_ref())
+                .ok_or(FnExecError::GetTagError(KeyedError::from(
+                    "get tag failed in GetVertexOperator",
+                )))?;
         let id = match entry {
             VertexOrEdge::V(v) => match self.opt {
-                VOpt::This => v
-                    .id()
-                    .ok_or(str_to_dyn_error("id of Vertex cannot be None"))?,
-                _ => Err(str_to_dyn_error("should be vertex entry"))?,
+                VOpt::This => v.id().ok_or(FnExecError::QueryStoreError(
+                    "id of Vertex cannot be None".to_string(),
+                ))?,
+                _ => Err(FnExecError::UnExpectedDataType(
+                    "should be vertex entry".to_string(),
+                ))?,
             },
             VertexOrEdge::E(e) => match self.opt {
                 VOpt::Start => e.src_id,
                 VOpt::End => e.dst_id,
-                VOpt::Other => {
-                    // TODO(bingqing): support Other
-                    Err(str_to_dyn_error("VOpt ot Other is not supported"))?
-                }
-                VOpt::This => Err(str_to_dyn_error("Should be edge entry"))?,
+                VOpt::Other => Err(FnExecError::UnSupported(
+                    "VOpt ot Other is not supported".to_string(),
+                ))?,
+                VOpt::This => Err(FnExecError::UnExpectedDataType(
+                    "should be edge entry".to_string(),
+                ))?,
             },
         };
-        let graph = crate::get_graph().ok_or(str_to_dyn_error("Graph is None"))?;
+        let graph =
+            crate::get_graph().ok_or(FnExecError::QueryStoreError("Graph is None".to_string()))?;
         let mut result_iter = graph.get_vertex(&[id], &self.query_params)?;
         if let Some(vertex) = result_iter.next() {
             input.append(vertex, self.alias.clone());
             Ok(input)
         } else {
-            Err(str_to_dyn_error(&format!(
+            Err(FnExecError::QueryStoreError(format!(
                 "vertex with id {} not found",
                 id
-            )))
+            )))?
         }
     }
 }

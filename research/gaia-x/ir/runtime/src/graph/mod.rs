@@ -102,7 +102,7 @@ impl QueryParams {
             if range.upper > 0 {
                 self.limit = Some((range.upper - 1) as usize);
             } else if range.upper < 0 {
-                Err(ParsePbError::from("Not a legal range"));
+                Err(ParsePbError::from("Not a legal range"))?
             }
         }
         Ok(self)
@@ -130,7 +130,9 @@ impl QueryParams {
     // Extra query params for different storages
     fn with_extra_params(self, extra_params: Vec<String>) -> Result<Self, ParsePbError> {
         if !extra_params.is_empty() {
-            todo!()
+            Err(ParsePbError::NotSupported(
+                "extra_params in QueryParams is not supported yet".to_string(),
+            ))?
         }
         Ok(self)
     }

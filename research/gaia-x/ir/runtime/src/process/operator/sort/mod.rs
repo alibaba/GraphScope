@@ -32,7 +32,9 @@ impl CompareFunctionGen for algebra_pb::logical_plan::Operator {
                 _ => Err(ParsePbError::from("algebra_pb op is not a order").into()),
             }
         } else {
-            Err(ParsePbError::from("algebra op is empty").into())
+            Err(ParsePbError::EmptyFieldError(
+                "algebra op is empty".to_string(),
+            ))?
         }
     }
 }

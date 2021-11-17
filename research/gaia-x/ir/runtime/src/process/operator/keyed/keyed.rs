@@ -13,7 +13,7 @@
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 
-use crate::error::{str_to_dyn_error, FnGenResult};
+use crate::error::{DynResult, FnExecError, FnGenResult};
 use crate::process::functions::KeyFunction;
 use crate::process::operator::keyed::KeyFunctionGen;
 use crate::process::operator::TagKey;
@@ -21,7 +21,6 @@ use crate::process::record::{Entry, Record, RecordKey};
 use ir_common::error::ParsePbError;
 use ir_common::generated::algebra as algebra_pb;
 use ir_common::generated::common as common_pb;
-use pegasus::api::function::FnResult;
 use std::convert::TryFrom;
 
 pub struct KeySelector {
@@ -39,19 +38,19 @@ impl KeySelector {
 }
 
 impl KeyFunction<Record, RecordKey, Record> for KeySelector {
-    fn get_kv(&self, mut input: Record) -> FnResult<(RecordKey, Record)> {
+    fn get_kv(&self, mut input: Record) -> DynResult<(RecordKey, Record)> {
         let mut keys = Vec::with_capacity(self.keys.len());
         for key in self.keys.iter() {
             let key_entry = key
                 .get_entry(&mut input)
-                .map_err(|e| str_to_dyn_error(&format!("{}", e)))?;
+                .map_err(|e| FnExecError::from(e))?;
             match key_entry {
                 Entry::Element(key_element) => keys.push(key_element),
                 Entry::Collection(_) => {
                     // TODO: do we support use a collection as key?
-                    return Err(str_to_dyn_error(
-                        "Do not support a Collection type of record key for now",
-                    ));
+                    Err(FnExecError::UnSupported(
+                        "Do not support a Collection type of record key for now".to_string(),
+                    ))?
                 }
             }
         }

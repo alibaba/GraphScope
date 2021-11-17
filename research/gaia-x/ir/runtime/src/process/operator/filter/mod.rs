@@ -29,10 +29,12 @@ impl FilterFuncGen for algebra_pb::logical_plan::Operator {
         if let Some(opr) = self.opr {
             match opr {
                 algebra_pb::logical_plan::operator::Opr::Select(select) => select.gen_filter(),
-                _ => Err(ParsePbError::from("algebra_pb op is not a filter").into()),
+                _ => Err(ParsePbError::from("algebra_pb op is not a filter"))?,
             }
         } else {
-            Err(ParsePbError::from("algebra op is empty").into())
+            Err(ParsePbError::EmptyFieldError(
+                "algebra op is empty".to_string(),
+            ))?
         }
     }
 }

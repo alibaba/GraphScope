@@ -14,7 +14,7 @@
 //! limitations under the License.
 mod edge_expand;
 
-use crate::error::{DynIter, FnGenResult};
+use crate::error::{DynIter, FnGenError, FnGenResult};
 use crate::process::record::Record;
 use ir_common::error::ParsePbError;
 use ir_common::generated::algebra as algebra_pb;
@@ -34,13 +34,15 @@ impl FlatMapFuncGen for algebra_pb::logical_plan::Operator {
                 algebra_pb::logical_plan::operator::Opr::Edge(edge_expand) => {
                     edge_expand.gen_flat_map()
                 }
-                algebra_pb::logical_plan::operator::Opr::Unfold(_unfold) => {
-                    todo!()
-                }
-                _ => Err(ParsePbError::from("algebra_pb op is not a flatmap").into()),
+                algebra_pb::logical_plan::operator::Opr::Unfold(_unfold) => Err(
+                    FnGenError::UnSupported("unfold is not supported yet".to_string()),
+                ),
+                _ => Err(ParsePbError::from("algebra_pb op is not a flatmap"))?,
             }
         } else {
-            Err(ParsePbError::from("algebra op is empty").into())
+            Err(ParsePbError::EmptyFieldError(
+                "algebra op is empty".to_string(),
+            ))?
         }
     }
 }

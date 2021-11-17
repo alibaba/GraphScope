@@ -13,13 +13,13 @@
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 
-use crate::error::{str_to_dyn_error, FnGenResult};
+use crate::error::{DynResult, FnExecError, FnGenResult};
 use crate::expr::eval::Evaluator;
 use crate::process::operator::filter::FilterFuncGen;
 use crate::process::record::Record;
 use ir_common::error::ParsePbError;
 use ir_common::generated::algebra as algebra_pb;
-use pegasus::api::function::{FilterFunction, FnResult};
+use pegasus::api::function::FilterFunction;
 use std::convert::TryInto;
 
 struct SelectOperator {
@@ -27,10 +27,12 @@ struct SelectOperator {
 }
 
 impl FilterFunction<Record> for SelectOperator {
-    fn test(&self, input: &Record) -> FnResult<bool> {
-        self.filter
+    fn test(&self, input: &Record) -> DynResult<bool> {
+        let res = self
+            .filter
             .eval_bool(Some(input))
-            .map_err(|e| str_to_dyn_error(&format!("{}", e)))
+            .map_err(|e| FnExecError::from(e))?;
+        Ok(res)
     }
 }
 
@@ -41,7 +43,7 @@ impl FilterFuncGen for algebra_pb::Select {
                 filter: predicate.try_into()?,
             }))
         } else {
-            Err(ParsePbError::from("empty content provided in select").into())
+            Err(ParsePbError::EmptyFieldError("empty select pb".to_string()).into())
         }
     }
 }
