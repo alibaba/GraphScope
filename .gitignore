@@ -68,3 +68,6 @@ interactive_engine/executor/Cargo.lock
 
 # java sdk
 java/**/dependency-reduced-pom.xml
+
+# GraphLearn
+coordinator/graphlearn*

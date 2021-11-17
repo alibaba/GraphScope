@@ -71,10 +71,9 @@ jobs:
 
         export GS_TEST_DIR=${GITHUB_WORKSPACE}/gstest
         git clone -b master --single-branch --depth=1 https://github.com/7br/gstest.git ${GS_TEST_DIR}
-        # Copy test_run_locally.py out of graphscope to enable import graph-learn from system path
-        cp ${GITHUB_WORKSPACE}/python/tests/local/test_run_locally.py /tmp/test_run_locally.py
         rm -rf ~/.ccache ~/.m2 ~/.cargo || true
-        python3 -m pytest -s -v /tmp/test_run_locally.py
+        cd ${GITHUB_WORKSPACE}/python
+        python3 -m pytest -s -v ./tests/local/test_run_locally.py
 
     - name: DEBUG
       if: false
@@ -86,6 +85,8 @@ jobs:
         source ~/.graphscope_env
         export GRAPHSCOPE_HOME=/opt/graphscope
         export GS_TEST_DIR=${GITHUB_WORKSPACE}/gstest
+        # PYTHONPATH is needed to find graphscope module
+        export PYTHONPATH=${GITHUB_WORKSPACE}/python
         # run test
         cd ${GITHUB_WORKSPACE}/interactive_engine/gaia-adaptor && ./gaia_on_vineyard_test.sh
 

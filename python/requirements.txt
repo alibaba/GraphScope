@@ -1,5 +1,5 @@
 Cython==3.0a6
-gremlinpython
+gremlinpython>=3.4.9
 grpcio
 grpcio-tools
 kubernetes

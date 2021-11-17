@@ -10,9 +10,6 @@ BUILD_TYPE                  ?= release
 # GAE build options
 NETWORKX                    ?= ON
 
-# client build options
-WITH_LEARNING_ENGINE        ?= ON
-
 # testing build option
 BUILD_TEST                  ?= OFF
 
@@ -52,14 +49,13 @@ install: gle client gae gie coordinator
 client: gle
 	cd $(WORKING_DIR)/python && \
 	pip3 install -r requirements.txt -r requirements-dev.txt --user && \
-	export WITH_LEARNING_ENGINE=$(WITH_LEARNING_ENGINE) && \
-	python3 setup.py install --user --prefix=
+	python3 setup.py build_ext --inplace --user
 
 .PHONY: coordinator
-coordinator: client
+coordinator:
 	cd $(WORKING_DIR)/coordinator && \
 	pip3 install -r requirements.txt -r requirements-dev.txt --user && \
-	python3 setup.py install --user --prefix=
+	python3 setup.py build_builtin
 
 .PHONY: gae
 gae:
@@ -116,7 +112,6 @@ gie:
 
 .PHONY: gle
 gle:
-ifeq ($(WITH_LEARNING_ENGINE), ON)
 	cd ${WORKING_DIR} && \
 	git submodule update --init && \
 	cd $(WORKING_DIR)/learning_engine/graph-learn && \
@@ -126,8 +121,8 @@ ifeq ($(WITH_LEARNING_ENGINE), ON)
 	make -j`nproc` && \
 	sudo make install
 ifneq ($(INSTALL_PREFIX), /usr/local)
-	sudo ln -sf ${INSTALL_PREFIX}/lib/*so* /usr/local/lib
-endif
+	sudo ln -sf ${INSTALL_PREFIX}/lib/*so* /usr/local/lib && \
+	sudo ln -sf ${INSTALL_PREFIX}/lib/*dylib* /usr/local/lib
 endif
 
 .PHONY: prepare-client
@@ -140,3 +135,9 @@ prepare-client:
 .PHONY: graphscope-docs
 graphscope-docs: prepare-client
 	$(MAKE) -C $(WORKING_DIR)/docs/ html
+
+.PHONY: test
+test:
+	cd $(WORKING_DIR)/python && \
+	pip3 install tensorflow==2.5.2 && \
+	python3 -m pytest -s -v ./tests/unittest/ ./tests/local/

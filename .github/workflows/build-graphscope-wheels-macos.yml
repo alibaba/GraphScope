@@ -104,8 +104,8 @@ jobs:
         # run test
         pip3 install pytest "tensorflow<=2.5.2" --user;
         export PATH=${HOME}/.local/bin:${PATH}
-        cp ${GITHUB_WORKSPACE}/python/tests/local/test_standalone.py /tmp/test_standalone.py
-        python3 -m pytest -s -v /tmp/test_standalone.py
+        cd ${GITHUB_WORKSPACE}/python
+        python3 -m pytest -s -v ./tests/local/test_standalone.py
 
     - name: Upload Artifact
       if: always()

@@ -248,7 +248,7 @@ class KubernetesClusterLauncher(Launcher):
             role_builer = RoleBuilder(
                 name=self._role_name,
                 namespace=self._namespace,
-                api_groups="apps,",
+                api_groups="apps,extensions,",
                 resources="configmaps,deployments,deployments/status,endpoints,events,pods,pods/log,pods/exec,pods/status,services,replicasets",  # noqa: E501
                 verbs="create,delete,get,update,watch,list",
             )

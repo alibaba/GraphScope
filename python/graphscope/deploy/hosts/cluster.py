@@ -23,6 +23,7 @@ import signal
 import subprocess
 import sys
 
+import graphscope
 from graphscope.config import GSConfig as gs_config
 from graphscope.deploy.launcher import Launcher
 from graphscope.framework.utils import get_free_port
@@ -112,6 +113,16 @@ class HostsClusterLauncher(Launcher):
 
         env = os.environ.copy()
         env["PYTHONUNBUFFERED"] = "TRUE"
+        # add graphscope module to PYTHONPATH
+        if "PYTHONPATH" in env:
+            env["PYTHONPATH"] = (
+                os.path.join(os.path.dirname(graphscope.__file__), "..")
+                + os.pathsep
+                + env["PYTHONPATH"]
+            )
+        else:
+            env["PYTHONPATH"] = os.path.join(os.path.dirname(graphscope.__file__), "..")
+
         # Param `start_new_session=True` is for putting child process to a new process group
         # so it won't get the signals from parent.
         self._proc = subprocess.Popen(

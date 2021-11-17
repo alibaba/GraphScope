@@ -100,5 +100,5 @@ jobs:
         # run test
         python3 -m pip install pytest "tensorflow<=2.5.2" --user;
         sudo apt update -y && sudo apt install openjdk-11-jdk -y
-        cp ${GITHUB_WORKSPACE}/python/tests/local/test_standalone.py /tmp/test_standalone.py
-        python3 -m pytest -s -v /tmp/test_standalone.py
+        cd ${GITHUB_WORKSPACE}/python
+        python3 -m pytest -s -v ./tests/local/test_standalone.py
