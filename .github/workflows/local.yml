@@ -62,6 +62,10 @@ jobs:
         make BUILD_TYPE=debug
         popd
 
+    - name: DEBUG
+      if: true
+      uses: mxschmitt/action-tmate@v2
+
     - name: Run Local Test
       env:
         OS : ${{ matrix.os }}
