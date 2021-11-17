@@ -25,7 +25,7 @@ on:
 
 jobs:
   # JOB to run change detection
-  changes-detection:
+  changes:
     runs-on: ubuntu-20.04
     # Set job outputs to values from filter step
     outputs:
