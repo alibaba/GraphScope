@@ -18,9 +18,9 @@ use crate::expr::eval::Context;
 use crate::graph::element::{Edge, Element, Vertex, VertexOrEdge};
 use crate::graph::property::DynDetails;
 use dyn_type::{BorrowObject, Object};
+use indexmap::IndexMap;
 use ir_common::NameOrId;
 use pegasus::codec::{Decode, Encode, ReadExt, WriteExt};
-use std::collections::HashMap;
 use std::hash::{Hash, Hasher};
 
 #[derive(Debug, Clone)]
@@ -56,13 +56,13 @@ pub trait Columns {
 pub struct Record {
     curr: Option<Entry>,
     // TODO: optimized as VecMap<Entry>
-    columns: HashMap<NameOrId, Entry>,
+    columns: IndexMap<NameOrId, Entry>,
 }
 
 impl Record {
     pub fn new<E: Into<Entry>>(entry: E, tag: Option<NameOrId>) -> Self {
+        let mut columns = IndexMap::new();
         if let Some(tag) = tag {
-            let mut columns = HashMap::new();
             columns.insert(tag, entry.into());
             Record {
                 curr: None,
@@ -71,12 +71,12 @@ impl Record {
         } else {
             Record {
                 curr: Some(entry.into()),
-                columns: HashMap::new(),
+                columns,
             }
         }
     }
 
-    // TODO: how to maintain the record without any alias, but also needed to be stored;
+    // TODO: consider to maintain the record without any alias, which also needed to be stored;
     pub fn append<E: Into<Entry>>(&mut self, entry: E, tag: Option<NameOrId>) {
         if let Some(tag) = tag {
             self.columns.insert(tag, entry.into());
@@ -119,7 +119,7 @@ impl Record {
 
     pub fn join(mut self, mut other: Record) -> Record {
         // TODO: check if head is also needed?
-        for column in other.columns.drain() {
+        for column in other.columns.drain(..) {
             if !self.columns.contains_key(&column.0) {
                 self.columns.insert(column.0, column.1);
             }
@@ -458,7 +458,7 @@ impl Decode for Record {
             Some(<Entry>::read_from(reader)?)
         };
         let size = <u64>::read_from(reader)? as usize;
-        let mut columns = HashMap::with_capacity(size);
+        let mut columns = IndexMap::with_capacity(size);
         for _i in 0..size {
             let k = <NameOrId>::read_from(reader)?;
             let v = <Entry>::read_from(reader)?;
