@@ -71,11 +71,12 @@ impl Record {
         } else {
             Record {
                 curr: Some(entry.into()),
-                ..Self::default()
+                columns: HashMap::new(),
             }
         }
     }
 
+    // TODO: how to maintain the record without any alias, but also needed to be stored;
     pub fn append<E: Into<Entry>>(&mut self, entry: E, tag: Option<NameOrId>) {
         if let Some(tag) = tag {
             self.columns.insert(tag, entry.into());
@@ -100,7 +101,7 @@ impl Record {
         }
     }
 
-    pub fn take_graph_entry(mut self, tag: Option<&NameOrId>) -> Option<VertexOrEdge> {
+    pub fn take_as_graph_entry(&mut self, tag: Option<&NameOrId>) -> Option<VertexOrEdge> {
         let entry = self.take(tag);
         match entry {
             Some(Entry::Element(RecordElement::OnGraph(element))) => Some(element),
@@ -108,7 +109,7 @@ impl Record {
         }
     }
 
-    pub fn get_graph_entry(&self, tag: Option<&NameOrId>) -> Option<&VertexOrEdge> {
+    pub fn get_as_graph_entry(&self, tag: Option<&NameOrId>) -> Option<&VertexOrEdge> {
         let entry = self.get(tag);
         match entry {
             Some(Entry::Element(RecordElement::OnGraph(element))) => Some(element),
@@ -119,7 +120,9 @@ impl Record {
     pub fn join(mut self, mut other: Record) -> Record {
         // TODO: check if head is also needed?
         for column in other.columns.drain() {
-            self.columns.insert(column.0, column.1);
+            if !self.columns.contains_key(&column.0) {
+                self.columns.insert(column.0, column.1);
+            }
         }
         self
     }
@@ -220,7 +223,7 @@ impl Hash for RecordElement {
                 .expect("id of VertexOrEdge cannot be None")
                 .hash(&mut state),
             RecordElement::OutGraph(o) => match o {
-                ObjectElement::None => "".hash(&mut state),
+                ObjectElement::None => None::<Object>.hash(&mut state),
                 ObjectElement::Prop(o) => o.hash(&mut state),
                 ObjectElement::Count(o) => o.hash(&mut state),
                 ObjectElement::Agg(o) => o.hash(&mut state),

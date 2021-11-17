@@ -21,11 +21,11 @@ use ir_common::generated::algebra as algebra_pb;
 use ir_common::generated::algebra::join::JoinKind;
 
 impl JoinKeyGen<Record, RecordKey, Record> for algebra_pb::Join {
-    fn gen_left_key(&self) -> FnGenResult<Box<dyn KeyFunction<Record, RecordKey, Record>>> {
+    fn gen_left_kv_fn(&self) -> FnGenResult<Box<dyn KeyFunction<Record, RecordKey, Record>>> {
         Ok(Box::new(KeySelector::with(self.left_keys.clone())?))
     }
 
-    fn gen_right_key(&self) -> FnGenResult<Box<dyn KeyFunction<Record, RecordKey, Record>>> {
+    fn gen_right_kv_fn(&self) -> FnGenResult<Box<dyn KeyFunction<Record, RecordKey, Record>>> {
         Ok(Box::new(KeySelector::with(self.right_keys.clone())?))
     }
 
@@ -87,15 +87,15 @@ mod tests {
                         right_keys: vec![common_pb::Variable::from("@.ID".to_string())],
                         kind: join_kind,
                     };
-                    let left_key_selector = join_opr_pb.gen_left_key()?;
-                    let right_key_selector = join_opr_pb.gen_right_key()?;
+                    let left_key_selector = join_opr_pb.gen_left_kv_fn()?;
+                    let right_key_selector = join_opr_pb.gen_right_kv_fn()?;
                     let join_kind = join_opr_pb.get_join_kind();
                     let left_stream = s1
-                        .key_by(move |record| left_key_selector.select_key(record))?
+                        .key_by(move |record| left_key_selector.get_kv(record))?
                         // TODO(bingqing): remove this when new keyed-join in gaia-x is ready;
                         .partition_by_key();
                     let right_stream = s2
-                        .key_by(move |record| right_key_selector.select_key(record))?
+                        .key_by(move |record| right_key_selector.get_kv(record))?
                         // TODO(bingqing): remove this when new keyed-join in gaia-x is ready;
                         .partition_by_key();
 

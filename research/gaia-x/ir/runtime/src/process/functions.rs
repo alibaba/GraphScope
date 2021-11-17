@@ -23,13 +23,13 @@ pub trait CompareFunction<D>: Send + 'static {
 }
 
 pub trait KeyFunction<D, K, V>: Send + 'static {
-    fn select_key(&self, input: D) -> FnResult<(K, V)>;
+    fn get_kv(&self, input: D) -> FnResult<(K, V)>;
 }
 
 pub trait JoinKeyGen<D, K, V>: Send + 'static {
-    fn gen_left_key(&self) -> FnGenResult<Box<dyn KeyFunction<D, K, V>>>;
+    fn gen_left_kv_fn(&self) -> FnGenResult<Box<dyn KeyFunction<D, K, V>>>;
 
-    fn gen_right_key(&self) -> FnGenResult<Box<dyn KeyFunction<D, K, V>>>;
+    fn gen_right_kv_fn(&self) -> FnGenResult<Box<dyn KeyFunction<D, K, V>>>;
 
     fn get_join_kind(&self) -> JoinKind;
 }
@@ -47,18 +47,18 @@ mod box_impl {
     }
 
     impl<D, K, V, F: KeyFunction<D, K, V> + ?Sized> KeyFunction<D, K, V> for Box<F> {
-        fn select_key(&self, input: D) -> FnResult<(K, V)> {
-            (**self).select_key(input)
+        fn get_kv(&self, input: D) -> FnResult<(K, V)> {
+            (**self).get_kv(input)
         }
     }
 
     impl<D, K, V, F: JoinKeyGen<D, K, V> + ?Sized> JoinKeyGen<D, K, V> for Box<F> {
-        fn gen_left_key(&self) -> FnGenResult<Box<dyn KeyFunction<D, K, V>>> {
-            (**self).gen_left_key()
+        fn gen_left_kv_fn(&self) -> FnGenResult<Box<dyn KeyFunction<D, K, V>>> {
+            (**self).gen_left_kv_fn()
         }
 
-        fn gen_right_key(&self) -> FnGenResult<Box<dyn KeyFunction<D, K, V>>> {
-            (**self).gen_right_key()
+        fn gen_right_kv_fn(&self) -> FnGenResult<Box<dyn KeyFunction<D, K, V>>> {
+            (**self).gen_right_kv_fn()
         }
 
         fn get_join_kind(&self) -> JoinKind {

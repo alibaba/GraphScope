@@ -472,6 +472,27 @@ impl From<pb::GetV> for pb::logical_plan::Operator {
     }
 }
 
+impl Encode for result_pb::Result {
+    fn write_to<W: WriteExt>(&self, writer: &mut W) -> io::Result<()> {
+        let mut bytes = vec![];
+        self.encode_raw(&mut bytes);
+        writer.write_u32(bytes.len() as u32)?;
+        writer.write_all(bytes.as_slice())?;
+        Ok(())
+    }
+}
+
+impl Decode for result_pb::Result {
+    fn read_from<R: ReadExt>(reader: &mut R) -> io::Result<Self> {
+        let len = reader.read_u32()? as usize;
+        let mut buffer = Vec::with_capacity(len);
+        reader.read_exact(&mut buffer)?;
+        result_pb::Result::decode(buffer.as_slice()).map_err(|_e| {
+            std::io::Error::new(std::io::ErrorKind::Other, "decoding result_pb failed!")
+        })
+    }
+}
+
 #[cfg(test)]
 mod test {
     use super::*;
@@ -548,26 +569,5 @@ mod test {
             },
             common_pb::Variable::from(case7.to_string())
         );
-    }
-}
-
-impl Encode for result_pb::Result {
-    fn write_to<W: WriteExt>(&self, writer: &mut W) -> io::Result<()> {
-        let mut bytes = vec![];
-        self.encode_raw(&mut bytes);
-        writer.write_u32(bytes.len() as u32)?;
-        writer.write_all(bytes.as_slice())?;
-        Ok(())
-    }
-}
-
-impl Decode for result_pb::Result {
-    fn read_from<R: ReadExt>(reader: &mut R) -> io::Result<Self> {
-        let len = reader.read_u32()? as usize;
-        let mut buffer = Vec::with_capacity(len);
-        reader.read_exact(&mut buffer)?;
-        result_pb::Result::decode(buffer.as_slice()).map_err(|_e| {
-            std::io::Error::new(std::io::ErrorKind::Other, "decoding result_pb failed!")
-        })
     }
 }

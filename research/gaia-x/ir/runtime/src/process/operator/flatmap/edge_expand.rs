@@ -35,7 +35,7 @@ impl<E: Into<VertexOrEdge> + 'static> FlatMapFunction<Record, Record> for EdgeEx
 
     fn exec(&self, input: Record) -> FnResult<Self::Target> {
         let entry = input
-            .get_graph_entry(self.start_v_tag.as_ref())
+            .get_as_graph_entry(self.start_v_tag.as_ref())
             .ok_or(str_to_dyn_error("get start_v failed"))?;
         let id = entry.id().expect("id of VertexOrEdge cannot be None");
         let iter = self.stmt.exec(id)?;

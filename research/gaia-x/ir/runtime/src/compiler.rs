@@ -238,8 +238,8 @@ impl IRJobCompiler {
                     ))?,
                     OpKind::Join(join) => {
                         let joiner = self.udf_gen.gen_join(&join.resource)?;
-                        let left_key_selector = joiner.gen_left_key()?;
-                        let right_key_selector = joiner.gen_right_key()?;
+                        let left_key_selector = joiner.gen_left_kv_fn()?;
+                        let right_key_selector = joiner.gen_right_kv_fn()?;
                         let join_kind = joiner.get_join_kind();
                         let left_task = join
                             .left_task
@@ -252,12 +252,12 @@ impl IRJobCompiler {
                         let (left_stream, right_stream) = stream.copied()?;
                         let left_stream = self
                             .install(left_stream, &left_task.plan[..])?
-                            .key_by(move |record| left_key_selector.select_key(record))?
+                            .key_by(move |record| left_key_selector.get_kv(record))?
                             // TODO(bingqing): remove this when new keyed-join in gaia-x is ready;
                             .partition_by_key();
                         let right_stream = self
                             .install(right_stream, &right_task.plan[..])?
-                            .key_by(move |record| right_key_selector.select_key(record))?
+                            .key_by(move |record| right_key_selector.get_kv(record))?
                             // TODO(bingqing): remove this when new keyed-join in gaia-x is ready;
                             .partition_by_key();
                         stream = match join_kind {

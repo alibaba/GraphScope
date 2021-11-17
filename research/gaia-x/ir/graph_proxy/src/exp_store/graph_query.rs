@@ -543,10 +543,13 @@ mod tests {
     use graph_store::prelude::{DefaultId, GlobalStoreTrait};
     use ir_common::generated::algebra as pb;
     use ir_common::generated::common as common_pb;
+    use ir_common::NameOrId;
     use pegasus::api::{Map, Sink};
     use pegasus::result::ResultStream;
     use pegasus::JobConf;
+    use runtime::expr::str_to_expr_pb;
     use runtime::graph::element::{Element, VertexOrEdge};
+    use runtime::graph::property::Details;
     use runtime::process::operator::flatmap::FlatMapFuncGen;
     use runtime::process::operator::source::source_op_from;
     use runtime::process::record::{Entry, Record, RecordElement};
@@ -564,11 +567,11 @@ mod tests {
     }
 
     // g.V()
-    fn source_gen() -> Box<dyn Iterator<Item = Record> + Send> {
+    fn source_gen(alias: Option<common_pb::NameOrId>) -> Box<dyn Iterator<Item = Record> + Send> {
         create_demo_graph();
         let scan_opr_pb = pb::Scan {
             scan_opt: 0,
-            alias: None,
+            alias,
             params: None,
         };
         let mut source_opr_pb = pb::logical_plan::Operator {
@@ -587,7 +590,7 @@ mod tests {
     // g.V()
     #[test]
     fn scan_test() {
-        let source_iter = source_gen();
+        let source_iter = source_gen(None);
         let mut result_ids = vec![];
         let v1: DefaultId = LDBCVertexParser::to_global_id(1, 0);
         let v2: DefaultId = LDBCVertexParser::to_global_id(2, 0);
@@ -606,7 +609,9 @@ mod tests {
                 }
             }
         }
-        assert_eq!(result_ids.sort(), expected_ids.sort())
+        result_ids.sort();
+        expected_ids.sort();
+        assert_eq!(result_ids, expected_ids)
     }
 
     fn expand_test(expand: pb::EdgeExpand) -> ResultStream<Record> {
@@ -614,7 +619,26 @@ mod tests {
         let result = pegasus::run(conf, || {
             let expand = expand.clone();
             |input, output| {
-                let mut stream = input.input_from(source_gen())?;
+                let mut stream = input.input_from(source_gen(None))?;
+                let flatmap_func = expand.gen_flat_map().unwrap();
+                stream = stream.flat_map(move |input| flatmap_func.exec(input))?;
+                stream.sink_into(output)
+            }
+        })
+        .expect("build job failure");
+        result
+    }
+
+    fn expand_test_with_source_tag(
+        source_tag: common_pb::NameOrId,
+        expand: pb::EdgeExpand,
+    ) -> ResultStream<Record> {
+        let conf = JobConf::new("expand_test");
+        let result = pegasus::run(conf, || {
+            let source_tag = source_tag.clone();
+            let expand = expand.clone();
+            |input, output| {
+                let mut stream = input.input_from(source_gen(Some(source_tag)))?;
                 let flatmap_func = expand.gen_flat_map().unwrap();
                 stream = stream.flat_map(move |input| flatmap_func.exec(input))?;
                 stream.sink_into(output)
@@ -654,7 +678,9 @@ mod tests {
                 }
             }
         }
-        assert_eq!(result_ids.sort(), expected_ids.sort())
+        result_ids.sort();
+        expected_ids.sort();
+        assert_eq!(result_ids, expected_ids)
     }
 
     // g.V().outE().hasLabel("knows")
@@ -694,5 +720,166 @@ mod tests {
             }
         }
         assert_eq!(result_edges, expected_edges)
+    }
+
+    // g.V().in('knows') with required properties
+    #[test]
+    fn expand_test_03() {
+        let query_param = pb::QueryParams {
+            table_names: vec![common_pb::NameOrId::from("knows".to_string())],
+            columns: vec![common_pb::NameOrId::from("name".to_string())],
+            limit: None,
+            predicate: None,
+            requirements: vec![],
+        };
+        let edge_expand_base = pb::ExpandBase {
+            v_tag: None,
+            direction: 1,
+            params: Some(query_param),
+        };
+        let expand_opr_pb = pb::EdgeExpand {
+            base: Some(edge_expand_base),
+            is_edge: false,
+            alias: None,
+        };
+        let mut result = expand_test(expand_opr_pb);
+        let mut result_ids_with_prop = vec![];
+        let v1: DefaultId = LDBCVertexParser::to_global_id(1, 0);
+        let expected_ids_with_prop = vec![
+            (v1, "marko".to_string().into()),
+            (v1, "marko".to_string().into()),
+        ];
+        while let Some(Ok(res)) = result.next() {
+            match res.get(None).unwrap() {
+                Entry::Element(RecordElement::OnGraph(vertex_or_edge)) => result_ids_with_prop
+                    .push((
+                        vertex_or_edge.id().unwrap() as usize,
+                        vertex_or_edge
+                            .details()
+                            .unwrap()
+                            .get_property(&NameOrId::Str("name".to_string()))
+                            .unwrap()
+                            .try_to_owned()
+                            .unwrap(),
+                    )),
+                _ => {
+                    unreachable!()
+                }
+            }
+        }
+
+        assert_eq!(result_ids_with_prop, expected_ids_with_prop)
+    }
+
+    // TODO: check the result
+    // g.V().both().limit(10)
+    #[ignore]
+    #[test]
+    fn expand_test_04() {
+        let query_param = pb::QueryParams {
+            table_names: vec![],
+            columns: vec![],
+            limit: Some(pb::Range {
+                lower: 10,
+                upper: 11,
+            }),
+            predicate: None,
+            requirements: vec![],
+        };
+        let edge_expand_base = pb::ExpandBase {
+            v_tag: None,
+            direction: 2,
+            params: Some(query_param),
+        };
+        let expand_opr_pb = pb::EdgeExpand {
+            base: Some(edge_expand_base),
+            is_edge: false,
+            alias: None,
+        };
+        let mut result = expand_test(expand_opr_pb);
+        let mut cnt = 0;
+        let expected_result_num = 10;
+        while let Some(Ok(_res)) = result.next() {
+            cnt += 1;
+        }
+        assert_eq!(cnt, expected_result_num)
+    }
+
+    // g.V().as('a').out('knows').as('b')
+    #[test]
+    fn expand_test_05() {
+        let query_param = pb::QueryParams {
+            table_names: vec![common_pb::NameOrId::from("knows".to_string())],
+            columns: vec![],
+            limit: None,
+            predicate: None,
+            requirements: vec![],
+        };
+        let edge_expand_base = pb::ExpandBase {
+            v_tag: Some(common_pb::NameOrId::from("a".to_string())),
+            direction: 0,
+            params: Some(query_param),
+        };
+        let expand_opr_pb = pb::EdgeExpand {
+            base: Some(edge_expand_base),
+            is_edge: false,
+            alias: Some(common_pb::NameOrId::from("b".to_string())),
+        };
+        let mut result =
+            expand_test_with_source_tag(common_pb::NameOrId::from("a".to_string()), expand_opr_pb);
+        let mut result_ids = vec![];
+        let v2: DefaultId = LDBCVertexParser::to_global_id(2, 0);
+        let v4: DefaultId = LDBCVertexParser::to_global_id(4, 0);
+        let mut expected_ids = vec![v2, v4];
+        while let Some(Ok(res)) = result.next() {
+            match res.get(Some(&NameOrId::Str("b".to_string()))).unwrap() {
+                Entry::Element(RecordElement::OnGraph(vertex_or_edge)) => {
+                    result_ids.push(vertex_or_edge.id().unwrap() as usize)
+                }
+                _ => {
+                    unreachable!()
+                }
+            }
+        }
+        result_ids.sort();
+        expected_ids.sort();
+        assert_eq!(result_ids, expected_ids)
+    }
+
+    // g.V().out('knows').has('id',2)
+    #[test]
+    fn expand_test_06() {
+        let query_param = pb::QueryParams {
+            table_names: vec![common_pb::NameOrId::from("knows".to_string())],
+            columns: vec![],
+            limit: None,
+            predicate: Some(str_to_expr_pb("@.id == 2".to_string()).unwrap()),
+            requirements: vec![],
+        };
+        let edge_expand_base = pb::ExpandBase {
+            v_tag: None,
+            direction: 0,
+            params: Some(query_param),
+        };
+        let expand_opr_pb = pb::EdgeExpand {
+            base: Some(edge_expand_base),
+            is_edge: false,
+            alias: None,
+        };
+        let mut result = expand_test(expand_opr_pb);
+        let mut result_ids = vec![];
+        let v2: DefaultId = LDBCVertexParser::to_global_id(2, 0);
+        let expected_ids = vec![v2];
+        while let Some(Ok(res)) = result.next() {
+            match res.get(None).unwrap() {
+                Entry::Element(RecordElement::OnGraph(vertex_or_edge)) => {
+                    result_ids.push(vertex_or_edge.id().unwrap() as usize)
+                }
+                _ => {
+                    unreachable!()
+                }
+            }
+        }
+        assert_eq!(result_ids, expected_ids)
     }
 }

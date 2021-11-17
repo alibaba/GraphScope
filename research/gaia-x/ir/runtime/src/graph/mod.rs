@@ -88,17 +88,22 @@ impl QueryParams {
 
     fn with_filter(
         mut self,
-        filter_chain_pb: Option<common_pb::SuffixExpr>,
+        filter_pb: Option<common_pb::SuffixExpr>,
     ) -> Result<Self, ParsePbError> {
-        if let Some(filter_chain_pb) = filter_chain_pb {
-            self.filter = Some(Arc::new(filter_chain_pb.try_into()?));
+        if let Some(filter_pb) = filter_pb {
+            self.filter = Some(Arc::new(filter_pb.try_into()?));
         }
         Ok(self)
     }
 
     fn with_limit(mut self, limit_pb: Option<algebra_pb::Range>) -> Result<Self, ParsePbError> {
         if let Some(range) = limit_pb {
-            self.limit = Some(range.upper as usize);
+            // According to the semantics in gremlin, limit(-1) means no limit.
+            if range.upper > 0 {
+                self.limit = Some((range.upper - 1) as usize);
+            } else if range.upper < 0 {
+                Err(ParsePbError::from("Not a legal range"));
+            }
         }
         Ok(self)
     }
@@ -131,6 +136,7 @@ impl QueryParams {
     }
 }
 
+/// The function for graph query
 pub trait Statement<I, O>: Send + 'static {
     fn exec(&self, next: I) -> DynResult<DynIter<O>>;
 }
@@ -144,6 +150,7 @@ where
     }
 }
 
+/// The interface of graph query in runtime
 pub trait GraphProxy: Send + Sync {
     fn scan_vertex(
         &self,

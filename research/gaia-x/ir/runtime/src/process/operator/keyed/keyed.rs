@@ -39,7 +39,7 @@ impl KeySelector {
 }
 
 impl KeyFunction<Record, RecordKey, Record> for KeySelector {
-    fn select_key(&self, mut input: Record) -> FnResult<(RecordKey, Record)> {
+    fn get_kv(&self, mut input: Record) -> FnResult<(RecordKey, Record)> {
         let mut keys = Vec::with_capacity(self.keys.len());
         for key in self.keys.iter() {
             let key_entry = key
@@ -125,7 +125,7 @@ mod tests {
                 };
                 let selector = dedup_opr_pb.clone().gen_key().unwrap();
                 stream = stream
-                    .key_by(move |record| selector.select_key(record))?
+                    .key_by(move |record| selector.get_kv(record))?
                     .dedup()?
                     .map(|pair| Ok(pair.value))?;
                 stream.sink_into(output)
