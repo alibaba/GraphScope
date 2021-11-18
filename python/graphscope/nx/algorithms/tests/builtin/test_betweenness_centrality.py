@@ -532,7 +532,7 @@ class TestWeightedBetweennessCentrality:
 
         b = nx.builtin.betweenness_centrality(G, weight="weight", normalized=False)
         for n in sorted(G):
-            assert almost_equal(b[n], b_answer[n], 3)
+            assert almost_equal(b[n], b_answer[n], 2)
 
     def test_ladder_graph(self):
         """Weighted betweenness centrality: Ladder graph"""

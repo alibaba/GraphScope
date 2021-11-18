@@ -14,6 +14,8 @@
 # information.
 #
 
+import os
+
 import numpy as np
 import pytest
 from networkx.classes.tests.test_graph import TestEdgeSubgraph as _TestEdgeSubgraph
@@ -193,13 +195,22 @@ class TestGraph(_TestGraph):
                 (6, 7, {"weight": 2}),
             ]
         else:
-            elist = [
-                (0, 1, {}),
-                (0, 2, {}),
-                (2, 1, {}),
-                (4, 5, {}),
-                (6, 7, {"weight": 2}),
-            ]
+            if os.environ.get("DEPLOYMENT", None) == "standalone":
+                elist = [
+                    (0, 1, {}),
+                    (0, 2, {}),
+                    (1, 2, {}),
+                    (4, 5, {}),
+                    (6, 7, {"weight": 2}),
+                ]
+            else:  # num_workers=2
+                elist = [
+                    (0, 1, {}),
+                    (0, 2, {}),
+                    (2, 1, {}),
+                    (4, 5, {}),
+                    (6, 7, {"weight": 2}),
+                ]
         assert sorted(G.edges.data()) == elist
         assert G.graph == {}
 
@@ -234,7 +245,7 @@ class TestGraph(_TestGraph):
         if H.is_directed():
             assert sorted(H.edges.data()) == [(3, 4, {})]
         else:
-            assert sorted(H.edges.data()) == [(4, 3, {})]
+            assert sorted(H.edges.data()) in ([(3, 4, {})], [(4, 3, {})])
         assert H.size() == 1
 
         # No inputs -> exception
@@ -358,7 +369,10 @@ class TestEdgeSubgraph(_TestEdgeSubgraph):
 
     def test_correct_edges(self):
         """Tests that the subgraph has the correct edges."""
-        assert [(0, 1, "edge01"), (4, 3, "edge34")] == sorted(self.H.edges(data="name"))
+        assert sorted(self.H.edges(data="name")) in (
+            [(1, 0, "edge01"), (4, 3, "edge34")],
+            [(0, 1, "edge01"), (4, 3, "edge34")],
+        )
 
     def test_remove_node(self):
         """Tests that removing a node in the original graph does not

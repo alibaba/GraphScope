@@ -66,8 +66,8 @@ class EdgeBoundary : public AppBase<FRAG_T, EdgeBoundaryContext<FRAG_T>>,
     }
 
     // get the boundary
-    for (auto& gid : source_gid_set) {
-      if (frag.InnerVertexGid2Vertex(gid, u)) {
+    for (auto gid : source_gid_set) {
+      if (frag.Gid2Vertex(gid, u) && frag.IsInnerVertex(u)) {
         for (auto& e : frag.GetOutgoingAdjList(u)) {
           vid_t v_gid = frag.Vertex2Gid(e.get_neighbor());
           if (target_gid_set.empty()) {
@@ -83,17 +83,23 @@ class EdgeBoundary : public AppBase<FRAG_T, EdgeBoundaryContext<FRAG_T>>,
       }
     }
 
-    // gather and process boundary on worker-0
-    std::vector<std::set<std::pair<vid_t, vid_t>>> all_boundary;
-    AllGather(ctx.boundary, all_boundary);
-
+    // reduce and process boundary on worker-0
+    std::set<std::pair<vid_t, vid_t>> all_boundary;
+    AllReduce(ctx.boundary, all_boundary,
+              [](std::set<std::pair<vid_t, vid_t>>& out,
+                 const std::set<std::pair<vid_t, vid_t>>& in) {
+                for (auto& e : in) {
+                  out.insert(e);
+                }
+              });
     if (frag.fid() == 0) {
-      for (size_t i = 1; i < all_boundary.size(); ++i) {
-        for (auto& v : all_boundary[i]) {
-          ctx.boundary.insert(v);
-        }
+      std::vector<typename fragment_t::oid_t> data;
+      for (auto& e : all_boundary) {
+        data.push_back(frag.Gid2Oid(e.first));
+        data.push_back(frag.Gid2Oid(e.second));
       }
-      writeToCtx(frag, ctx);
+      std::vector<size_t> shape{data.size() / 2, 2};
+      ctx.assign(data, shape);
     }
   }
 
@@ -102,17 +108,6 @@ class EdgeBoundary : public AppBase<FRAG_T, EdgeBoundaryContext<FRAG_T>>,
     // Yes, there's no any code in IncEval.
     // Refer:
     // https://networkx.org/documentation/stable/_modules/networkx/algorithms/boundary.html#edge_boundary
-  }
-
- private:
-  void writeToCtx(const fragment_t& frag, context_t& ctx) {
-    std::vector<typename fragment_t::oid_t> data;
-    for (auto& e : ctx.boundary) {
-      data.push_back(frag.Gid2Oid(e.first));
-      data.push_back(frag.Gid2Oid(e.second));
-    }
-    std::vector<size_t> shape{data.size() / 2, 2};
-    ctx.assign(data, shape);
   }
 };
 }  // namespace gs

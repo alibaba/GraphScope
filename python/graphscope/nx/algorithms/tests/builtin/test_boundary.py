@@ -18,6 +18,8 @@
 
 """Unit tests for the :mod:`networkx.algorithms.boundary` module."""
 
+import os
+
 import pytest
 from networkx.testing import assert_edges_equal
 
@@ -40,7 +42,10 @@ class TestNodeBoundary:
         assert sorted(nx.builtin.node_boundary(K10, [0, 1, 2])) == [3, 4, 5, 6, 7, 8, 9]
         assert sorted(nx.builtin.node_boundary(K10, [3, 4, 5])) == [0, 1, 2, 6, 7, 8, 9]
         assert sorted(nx.builtin.node_boundary(K10, [2, 3, 4, 5, 6])) == [0, 1, 7, 8, 9]
-        assert nx.builtin.node_boundary(K10, [0, 1, 2], [2, 3, 4]) == [4, 3]
+        if os.environ.get("DEPLOYMENT", None) == "standalone":
+            assert nx.builtin.node_boundary(K10, [0, 1, 2], [2, 3, 4]) == [3, 4]
+        else:  # num_workers=2
+            assert nx.builtin.node_boundary(K10, [0, 1, 2], [2, 3, 4]) == [4, 3]
 
     def test_directed(self):
         """Tests the node boundary of a directed graph."""

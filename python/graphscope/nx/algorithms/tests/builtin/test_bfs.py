@@ -14,6 +14,8 @@
 # NetworkX is distributed under a BSD license; see LICENSE.txt for more
 # information.
 #
+import os
+
 import pytest
 
 from graphscope import nx
@@ -42,12 +44,14 @@ class TestBFS:
     def test_successor(self):
         ctx = nx.builtin.bfs_successors(self.G, source=0, depth_limit=10)
         nd_array = ctx.to_numpy("r", axis=0).tolist()
-        assert sorted(nd_array) == [[0, 1], [1, 2], [1, 3], [2, 4]]
+        assert sorted(nd_array) == [[0, 1], [1, 3], [2, 4]]
         adj_list = (
             ctx.to_dataframe({"r": "r"}).groupby("Col 0")["Col 1"].apply(list).to_dict()
         )
-        adj_list = dict(sorted(adj_list.items()))
-        assert adj_list == {0: [1], 1: [3, 2], 2: [4]}
+        adj_list_sorted = {}
+        for key, value in adj_list.items():
+            adj_list_sorted[key] = sorted(value)
+        assert adj_list_sorted == {0: [1], 1: [2, 3], 2: [4]}
 
     def test_predecessor(self):
         ctx = nx.builtin.bfs_predecessors(self.G, source=0, depth_limit=10)

@@ -395,9 +395,18 @@ class TestGraphTransformation(object):
         assert G.get_edge_data(933, 4398046511628) == {
             "creationDate": "2010-07-30T15:19:53.298+0000",
         }
-        assert list(G.neighbors(933)) == [28587302322537, 8796093023017, 4398046511628]
+        assert sorted(list(G.neighbors(933))) == [
+            4398046511628,
+            8796093023017,
+            28587302322537,
+        ]
         if G.is_directed():
-            assert list(G.predecessors(4398046511628)) == [2199023256530, 318, 933, 987]
+            assert sorted(list(G.predecessors(4398046511628))) == [
+                318,
+                933,
+                987,
+                2199023256530,
+            ]
 
         G.add_node(0)  # modify graph to make copy on write
         assert G.graph_type == graph_def_pb2.DYNAMIC_PROPERTY
@@ -424,9 +433,18 @@ class TestGraphTransformation(object):
         assert G.get_edge_data(933, 4398046511628) == {
             "creationDate": "2010-07-30T15:19:53.298+0000",
         }
-        assert list(G.neighbors(933)) == [28587302322537, 8796093023017, 4398046511628]
+        assert sorted(list(G.neighbors(933))) == [
+            4398046511628,
+            8796093023017,
+            28587302322537,
+        ]
         if G.is_directed():
-            assert list(G.predecessors(4398046511628)) == [2199023256530, 318, 987, 933]
+            assert sorted(list(G.predecessors(4398046511628))) == [
+                318,
+                933,
+                987,
+                2199023256530,
+            ]
 
     def test_str_oid_gs_to_nx(self):
         g = self.str_oid_g
