@@ -28,11 +28,11 @@ import time
 from abc import ABCMeta
 from abc import abstractmethod
 
+from graphscope.framework.utils import PipeWatcher
 from graphscope.framework.utils import get_free_port
 from graphscope.framework.utils import is_free_port
 from graphscope.proto import types_pb2
 
-from gscoordinator.io_utils import PipeWatcher
 from gscoordinator.utils import ANALYTICAL_ENGINE_PATH
 from gscoordinator.utils import GRAPHSCOPE_HOME
 from gscoordinator.utils import INTERACTIVE_ENGINE_SCRIPT

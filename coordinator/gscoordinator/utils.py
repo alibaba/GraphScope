@@ -48,13 +48,12 @@ from google.protobuf.any_pb2 import Any
 from graphscope.framework import utils
 from graphscope.framework.errors import CompilationError
 from graphscope.framework.graph_schema import GraphSchema
+from graphscope.framework.utils import PipeWatcher
 from graphscope.proto import attr_value_pb2
 from graphscope.proto import data_types_pb2
 from graphscope.proto import graph_def_pb2
 from graphscope.proto import op_def_pb2
 from graphscope.proto import types_pb2
-
-from gscoordinator.io_utils import PipeWatcher
 
 logger = logging.getLogger("graphscope")
 
