@@ -333,8 +333,10 @@ pub extern "C" fn as_none_var() -> FfiVariable {
 }
 
 fn destroy_ptr<M>(ptr: *const c_void) {
-    unsafe {
-        let _ = Box::from_raw(ptr as *mut M);
+    if !ptr.is_null() {
+        unsafe {
+            let _ = Box::from_raw(ptr as *mut M);
+        }
     }
 }
 
@@ -363,32 +365,26 @@ pub struct FfiJobBuffer {
 /// To release a FfiJobBuffer
 #[no_mangle]
 pub extern "C" fn destroy_job_buffer(buffer: FfiJobBuffer) {
-    let _ = unsafe { Vec::from_raw_parts(buffer.ptr, buffer.len, buffer.len) };
+    if !buffer.ptr.is_null() {
+        let _ = unsafe { Vec::from_raw_parts(buffer.ptr, buffer.len, buffer.len) };
+    }
 }
 
 impl From<PhysicalError> for FfiJobBuffer {
     fn from(_: PhysicalError) -> Self {
-        let mut bytes = Vec::<u8>::new().into_boxed_slice();
-        let buffer = FfiJobBuffer {
-            ptr: bytes.as_mut_ptr(),
+        FfiJobBuffer {
+            ptr: std::ptr::null_mut(),
             len: 0,
-        };
-        std::mem::forget(bytes);
-
-        buffer
+        }
     }
 }
 
 impl From<BuildJobError> for FfiJobBuffer {
     fn from(_: BuildJobError) -> Self {
-        let mut bytes = Vec::<u8>::new().into_boxed_slice();
-        let buffer = FfiJobBuffer {
-            ptr: bytes.as_mut_ptr(),
+        FfiJobBuffer {
+            ptr: std::ptr::null_mut(),
             len: 0,
-        };
-        std::mem::forget(bytes);
-
-        buffer
+        }
     }
 }
 
