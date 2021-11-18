@@ -43,3 +43,5 @@ def test_download_dataset(graphscope_session):
     g9.unload()
     g10 = load_ppi_graph(graphscope_session)
     g10.unload()
+    g11 = load_u2i_graph(graphscope_session)
+    g11.unload()
