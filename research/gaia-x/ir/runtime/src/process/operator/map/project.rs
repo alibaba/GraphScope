@@ -119,7 +119,7 @@ mod tests {
         let mut result = project_test(init_source(), project_opr_pb);
         let mut object_result = vec![];
         while let Some(Ok(res)) = result.next() {
-            match res.get(None).unwrap() {
+            match res.get(None).unwrap().as_ref() {
                 Entry::Element(RecordElement::OutGraph(ObjectElement::Prop(val))) => {
                     object_result.push(val.clone());
                 }
@@ -147,7 +147,11 @@ mod tests {
 
         let mut object_result = vec![];
         while let Some(Ok(res)) = result.next() {
-            match res.get(Some(&NameOrId::Str("b".to_string()))).unwrap() {
+            match res
+                .get(Some(&NameOrId::Str("b".to_string())))
+                .unwrap()
+                .as_ref()
+            {
                 Entry::Element(RecordElement::OutGraph(ObjectElement::Prop(val))) => {
                     object_result.push(val.clone());
                 }

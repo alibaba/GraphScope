@@ -18,10 +18,12 @@ use crate::expr::eval::Context;
 use crate::graph::element::{Edge, Element, Vertex, VertexOrEdge};
 use crate::graph::property::DynDetails;
 use dyn_type::{BorrowObject, Object};
-use indexmap::IndexMap;
+use indexmap::map::IndexMap;
 use ir_common::NameOrId;
 use pegasus::codec::{Decode, Encode, ReadExt, WriteExt};
+use std::cmp::Ordering;
 use std::hash::{Hash, Hasher};
+use std::sync::Arc;
 
 #[derive(Debug, Clone)]
 pub enum ObjectElement {
@@ -47,45 +49,50 @@ pub enum Entry {
     Collection(Vec<RecordElement>),
 }
 
-// TODO
-pub trait Columns {
-    fn get(tag: &NameOrId) -> Option<&Entry>;
+impl Entry {
+    pub fn as_graph_element(&self) -> Option<&VertexOrEdge> {
+        match self {
+            Entry::Element(RecordElement::OnGraph(vertex_or_edge)) => Some(vertex_or_edge),
+            _ => None,
+        }
+    }
 }
 
 #[derive(Debug, Clone, Default)]
 pub struct Record {
-    curr: Option<Entry>,
+    curr: Option<Arc<Entry>>,
     // TODO: optimized as VecMap<Entry>
-    columns: IndexMap<NameOrId, Entry>,
+    columns: IndexMap<NameOrId, Arc<Entry>>,
 }
 
 impl Record {
     pub fn new<E: Into<Entry>>(entry: E, tag: Option<NameOrId>) -> Self {
         let mut columns = IndexMap::new();
         if let Some(tag) = tag {
-            columns.insert(tag, entry.into());
+            columns.insert(tag, Arc::new(entry.into()));
             Record {
                 curr: None,
                 columns,
             }
         } else {
             Record {
-                curr: Some(entry.into()),
+                curr: Some(Arc::new(entry.into())),
                 columns,
             }
         }
     }
 
     // TODO: consider to maintain the record without any alias, which also needed to be stored;
+    // We may: 1. define a None type in NameOrId; or 2. define different Record types, for the gremlin path requirement
     pub fn append<E: Into<Entry>>(&mut self, entry: E, tag: Option<NameOrId>) {
         if let Some(tag) = tag {
-            self.columns.insert(tag, entry.into());
+            self.columns.insert(tag, Arc::new(entry.into()));
         } else {
-            self.curr = Some(entry.into());
+            self.curr = Some(Arc::new(entry.into()));
         }
     }
 
-    pub fn take(&mut self, tag: Option<&NameOrId>) -> Option<Entry> {
+    pub fn take(&mut self, tag: Option<&NameOrId>) -> Option<Arc<Entry>> {
         if let Some(tag) = tag {
             self.columns.remove(tag)
         } else {
@@ -93,27 +100,11 @@ impl Record {
         }
     }
 
-    pub fn get(&self, tag: Option<&NameOrId>) -> Option<&Entry> {
+    pub fn get(&self, tag: Option<&NameOrId>) -> Option<&Arc<Entry>> {
         if let Some(tag) = tag {
             self.columns.get(tag)
         } else {
             self.curr.as_ref()
-        }
-    }
-
-    pub fn take_as_graph_entry(&mut self, tag: Option<&NameOrId>) -> Option<VertexOrEdge> {
-        let entry = self.take(tag);
-        match entry {
-            Some(Entry::Element(RecordElement::OnGraph(element))) => Some(element),
-            _ => None,
-        }
-    }
-
-    pub fn get_as_graph_entry(&self, tag: Option<&NameOrId>) -> Option<&VertexOrEdge> {
-        let entry = self.get(tag);
-        match entry {
-            Some(Entry::Element(RecordElement::OnGraph(element))) => Some(element),
-            _ => None,
         }
     }
 
@@ -161,7 +152,7 @@ impl Into<Entry> for RecordElement {
 impl Context<RecordElement> for Record {
     fn get(&self, tag: Option<&NameOrId>) -> Option<&RecordElement> {
         self.get(tag)
-            .map(|entry| match entry {
+            .map(|entry| match entry.as_ref() {
                 Entry::Element(element) => Some(element),
                 Entry::Collection(_) => None,
             })
@@ -206,11 +197,11 @@ impl Element for RecordElement {
 /// RecordKey is the key fields of a Record, with each key corresponding to a request column_tag
 #[derive(Clone, Debug)]
 pub struct RecordKey {
-    key_fields: Vec<RecordElement>,
+    key_fields: Vec<Arc<Entry>>,
 }
 
 impl RecordKey {
-    pub fn new(key_fields: Vec<RecordElement>) -> Self {
+    pub fn new(key_fields: Vec<Arc<Entry>>) -> Self {
         RecordKey { key_fields }
     }
 }
@@ -232,39 +223,58 @@ impl Hash for RecordElement {
     }
 }
 
+impl Hash for Entry {
+    fn hash<H: Hasher>(&self, mut state: &mut H) {
+        match self {
+            Entry::Element(e) => e.hash(&mut state),
+            Entry::Collection(c) => c.hash(&mut state),
+        }
+    }
+}
+
 impl Hash for RecordKey {
     fn hash<H: Hasher>(&self, mut state: &mut H) {
         self.key_fields.hash(&mut state)
     }
 }
 
+impl PartialEq for ObjectElement {
+    fn eq(&self, other: &Self) -> bool {
+        match (self, other) {
+            (ObjectElement::Prop(o1), ObjectElement::Prop(o2)) => o1 == o2,
+            (ObjectElement::Count(o1), ObjectElement::Count(o2)) => o1 == o2,
+            (ObjectElement::Agg(o1), ObjectElement::Agg(o2)) => o1 == o2,
+            (ObjectElement::None, ObjectElement::None) => true,
+            _ => false,
+        }
+    }
+}
+
+impl PartialEq for VertexOrEdge {
+    fn eq(&self, other: &Self) -> bool {
+        match (self, other) {
+            (VertexOrEdge::V(v1), VertexOrEdge::V(v2)) => v1.id() == v2.id(),
+            (VertexOrEdge::E(e1), VertexOrEdge::E(e2)) => e1.id() == e2.id(),
+            _ => false,
+        }
+    }
+}
+
 impl PartialEq for RecordElement {
     fn eq(&self, other: &Self) -> bool {
         match (self, other) {
-            (
-                RecordElement::OnGraph(VertexOrEdge::V(v1)),
-                RecordElement::OnGraph(VertexOrEdge::V(v2)),
-            ) => v1.id() == v2.id(),
-            (
-                RecordElement::OnGraph(VertexOrEdge::E(e1)),
-                RecordElement::OnGraph(VertexOrEdge::E(e2)),
-            ) => e1.id() == e2.id(),
-            (
-                RecordElement::OutGraph(ObjectElement::Prop(o1)),
-                RecordElement::OutGraph(ObjectElement::Prop(o2)),
-            ) => o1 == o2,
-            (
-                RecordElement::OutGraph(ObjectElement::Count(o1)),
-                RecordElement::OutGraph(ObjectElement::Count(o2)),
-            ) => o1 == o2,
-            (
-                RecordElement::OutGraph(ObjectElement::Agg(o1)),
-                RecordElement::OutGraph(ObjectElement::Agg(o2)),
-            ) => o1 == o2,
-            (
-                RecordElement::OutGraph(ObjectElement::None),
-                RecordElement::OutGraph(ObjectElement::None),
-            ) => true,
+            (RecordElement::OnGraph(v1), RecordElement::OnGraph(v2)) => v1 == v2,
+            (RecordElement::OutGraph(o1), RecordElement::OutGraph(o2)) => o1 == o2,
+            _ => false,
+        }
+    }
+}
+
+impl PartialEq for Entry {
+    fn eq(&self, other: &Self) -> bool {
+        match (self, other) {
+            (Entry::Element(e1), Entry::Element(e2)) => e1 == e2,
+            (Entry::Collection(c1), Entry::Collection(c2)) => c1 == c2,
             _ => false,
         }
     }
@@ -277,6 +287,46 @@ impl PartialEq for RecordKey {
 }
 
 impl Eq for RecordKey {}
+
+impl PartialOrd for ObjectElement {
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+        match (self, other) {
+            (ObjectElement::Prop(o1), ObjectElement::Prop(o2)) => o1.partial_cmp(o2),
+            (ObjectElement::Count(o1), ObjectElement::Count(o2)) => o1.partial_cmp(o2),
+            (ObjectElement::Agg(o1), ObjectElement::Agg(o2)) => o1.partial_cmp(o2),
+            (ObjectElement::None, ObjectElement::None) => Some(Ordering::Equal),
+            _ => None,
+        }
+    }
+}
+
+impl PartialOrd for VertexOrEdge {
+    // TODO: not sure if it is reasonable. VertexOrEdge seems to be not comparable.
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+        self.as_borrow_object()
+            .partial_cmp(&other.as_borrow_object())
+    }
+}
+
+impl PartialOrd for RecordElement {
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+        match (self, other) {
+            (RecordElement::OnGraph(v1), RecordElement::OnGraph(v2)) => v1.partial_cmp(v2),
+            (RecordElement::OutGraph(o1), RecordElement::OutGraph(o2)) => o1.partial_cmp(o2),
+            _ => None,
+        }
+    }
+}
+
+impl PartialOrd for Entry {
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+        match (self, other) {
+            (Entry::Element(e1), Entry::Element(e2)) => e1.partial_cmp(e2),
+            (Entry::Collection(c1), Entry::Collection(c2)) => c1.partial_cmp(c2),
+            _ => None,
+        }
+    }
+}
 
 pub struct RecordExpandIter<E> {
     tag: Option<NameOrId>,
@@ -455,14 +505,14 @@ impl Decode for Record {
         let curr = if opt == 0 {
             None
         } else {
-            Some(<Entry>::read_from(reader)?)
+            Some(Arc::new(<Entry>::read_from(reader)?))
         };
         let size = <u64>::read_from(reader)? as usize;
         let mut columns = IndexMap::with_capacity(size);
         for _i in 0..size {
             let k = <NameOrId>::read_from(reader)?;
             let v = <Entry>::read_from(reader)?;
-            columns.insert(k, v);
+            columns.insert(k, Arc::new(v));
         }
         Ok(Record { curr, columns })
     }
@@ -470,13 +520,22 @@ impl Decode for Record {
 
 impl Encode for RecordKey {
     fn write_to<W: WriteExt>(&self, writer: &mut W) -> std::io::Result<()> {
-        Ok(self.key_fields.write_to(writer)?)
+        writer.write_u32(self.key_fields.len() as u32)?;
+        for key in self.key_fields.iter() {
+            (&**key).write_to(writer)?
+        }
+        Ok(())
     }
 }
 
 impl Decode for RecordKey {
     fn read_from<R: ReadExt>(reader: &mut R) -> std::io::Result<Self> {
-        let key_fields = <Vec<RecordElement>>::read_from(reader)?;
+        let len = reader.read_u32()?;
+        let mut key_fields = Vec::with_capacity(len as usize);
+        for _i in 0..len {
+            let entry = <Entry>::read_from(reader)?;
+            key_fields.push(Arc::new(entry))
+        }
         Ok(RecordKey { key_fields })
     }
 }

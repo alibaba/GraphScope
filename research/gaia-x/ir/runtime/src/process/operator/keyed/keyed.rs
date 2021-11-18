@@ -17,7 +17,7 @@ use crate::error::{DynResult, FnExecError, FnGenResult};
 use crate::process::functions::KeyFunction;
 use crate::process::operator::keyed::KeyFunctionGen;
 use crate::process::operator::TagKey;
-use crate::process::record::{Entry, Record, RecordKey};
+use crate::process::record::{Record, RecordKey};
 use ir_common::error::ParsePbError;
 use ir_common::generated::algebra as algebra_pb;
 use ir_common::generated::common as common_pb;
@@ -39,21 +39,11 @@ impl KeySelector {
 
 impl KeyFunction<Record, RecordKey, Record> for KeySelector {
     fn get_kv(&self, mut input: Record) -> DynResult<(RecordKey, Record)> {
-        let mut keys = Vec::with_capacity(self.keys.len());
-        for key in self.keys.iter() {
-            let key_entry = key
-                .get_entry(&mut input)
-                .map_err(|e| FnExecError::from(e))?;
-            match key_entry {
-                Entry::Element(key_element) => keys.push(key_element),
-                Entry::Collection(_) => {
-                    // TODO: do we support use a collection as key?
-                    Err(FnExecError::UnSupported(
-                        "Do not support a Collection type of record key for now".to_string(),
-                    ))?
-                }
-            }
-        }
+        let keys = self
+            .keys
+            .iter()
+            .map(|key| key.get_entry(&mut input).map_err(|e| FnExecError::from(e)))
+            .collect::<Result<Vec<_>, _>>()?;
         Ok((RecordKey::new(keys), input))
     }
 }
@@ -75,7 +65,7 @@ mod tests {
     use crate::graph::element::{Element, Vertex};
     use crate::graph::property::{DefaultDetails, DynDetails};
     use crate::process::operator::keyed::KeyFunctionGen;
-    use crate::process::record::{Entry, Record, RecordElement};
+    use crate::process::record::Record;
     use dyn_type::Object;
     use ir_common::generated::algebra as pb;
     use ir_common::generated::common as common_pb;
@@ -133,12 +123,9 @@ mod tests {
         .expect("build job failure");
 
         let mut result_ids = vec![];
-        while let Some(Ok(res)) = result.next() {
-            match res.get(None).unwrap() {
-                Entry::Element(RecordElement::OnGraph(v)) => {
-                    result_ids.push(v.id().unwrap());
-                }
-                _ => {}
+        while let Some(Ok(record)) = result.next() {
+            if let Some(element) = record.get(None).unwrap().as_graph_element() {
+                result_ids.push(element.id().unwrap());
             }
         }
         result_ids.sort();

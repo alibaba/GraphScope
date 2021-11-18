@@ -35,13 +35,17 @@ impl<E: Into<VertexOrEdge> + 'static> FlatMapFunction<Record, Record> for EdgeEx
     type Target = DynIter<Record>;
 
     fn exec(&self, input: Record) -> DynResult<Self::Target> {
-        let entry =
-            input
-                .get_as_graph_entry(self.start_v_tag.as_ref())
-                .ok_or(FnExecError::GetTagError(KeyedError::from(
-                    "get start_v failed",
-                )))?;
-        let id = entry.id().ok_or(FnExecError::QueryStoreError(
+        let entry = input
+            .get(self.start_v_tag.as_ref())
+            .ok_or(FnExecError::GetTagError(KeyedError::from(
+                "get start_v failed",
+            )))?;
+        let vertex_or_edge = entry
+            .as_graph_element()
+            .ok_or(FnExecError::UnExpectedDataType(
+                "start_v does not refer to a graph element".to_string(),
+            ))?;
+        let id = vertex_or_edge.id().ok_or(FnExecError::QueryStoreError(
             "id of VertexOrEdge cannot be None".to_string(),
         ))?;
         let iter = self.stmt.exec(id)?;

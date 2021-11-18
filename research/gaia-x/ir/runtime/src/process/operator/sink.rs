@@ -38,7 +38,7 @@ impl MapFunction<Record, result_pb::Result> for RecordSinkEncoder {
         let mut sink_columns = Vec::with_capacity(self.sink_keys.len());
         for sink_key in self.sink_keys.iter() {
             let entry = input.take(sink_key.as_ref());
-            let entry_pb = entry.map(|entry| result_pb::Entry::from(entry));
+            let entry_pb = entry.map(|entry| result_pb::Entry::from((*entry).clone()));
             let column_pb = result_pb::Column {
                 name_or_id: sink_key.clone().map(|key| key.into()),
                 entry: entry_pb,

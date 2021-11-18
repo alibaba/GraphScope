@@ -48,7 +48,7 @@ impl RecordRouter {
 impl RouteFunction<Record> for RecordRouter {
     fn route(&self, t: &Record) -> FnResult<u64> {
         if let Some(entry) = t.get(self.shuffle_key.as_ref()) {
-            match entry {
+            match entry.as_ref() {
                 Entry::Element(element) => match element {
                     RecordElement::OnGraph(e) => self.p.get_partition(
                         &e.id()

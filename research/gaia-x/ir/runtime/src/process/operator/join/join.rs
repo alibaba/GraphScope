@@ -39,7 +39,7 @@ mod tests {
     use crate::graph::element::{Element, Vertex};
     use crate::graph::property::{DefaultDetails, DynDetails};
     use crate::process::functions::JoinKeyGen;
-    use crate::process::record::{Entry, Record, RecordElement};
+    use crate::process::record::Record;
     use ir_common::generated::algebra as pb;
     use ir_common::generated::algebra::join::JoinKind;
     use ir_common::generated::common as common_pb;
@@ -150,12 +150,9 @@ mod tests {
             .expect("build job failure");
 
         let mut result_ids = vec![];
-        while let Some(Ok(res)) = result.next() {
-            match res.get(None).unwrap() {
-                Entry::Element(RecordElement::OnGraph(vertex)) => {
-                    result_ids.push(vertex.id().unwrap());
-                }
-                _ => {}
+        while let Some(Ok(record)) = result.next() {
+            if let Some(element) = record.get(None).unwrap().as_graph_element() {
+                result_ids.push(element.id().unwrap());
             }
         }
         result_ids.sort();

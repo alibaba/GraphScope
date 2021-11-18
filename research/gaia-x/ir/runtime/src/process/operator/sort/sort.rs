@@ -32,8 +32,8 @@ impl CompareFunction<Record> for RecordCompare {
     fn compare(&self, left: &Record, right: &Record) -> Ordering {
         let mut result = Ordering::Equal;
         for (tag_key, order) in self.tag_key_order.iter() {
-            let left_obj = tag_key.get_obj(left).ok();
-            let right_obj = tag_key.get_obj(right).ok();
+            let left_obj = tag_key.get_entry(left).ok();
+            let right_obj = tag_key.get_entry(right).ok();
             let ordering = left_obj.partial_cmp(&right_obj);
             if let Some(ordering) = ordering {
                 if Ordering::Equal != ordering {
@@ -83,7 +83,7 @@ mod tests {
     use crate::graph::property::Details;
     use crate::process::operator::sort::CompareFunctionGen;
     use crate::process::operator::tests::{init_source, init_source_with_tag};
-    use crate::process::record::{Entry, Record, RecordElement};
+    use crate::process::record::Record;
     use ir_common::generated::algebra as pb;
     use ir_common::generated::common as common_pb;
     use ir_common::NameOrId;
@@ -122,12 +122,9 @@ mod tests {
         };
         let mut result = sort_test(init_source(), sort_opr);
         let mut result_ids = vec![];
-        while let Some(Ok(res)) = result.next() {
-            match res.get(None).unwrap() {
-                Entry::Element(RecordElement::OnGraph(vertex)) => {
-                    result_ids.push(vertex.id().unwrap());
-                }
-                _ => {}
+        while let Some(Ok(record)) = result.next() {
+            if let Some(element) = record.get(None).unwrap().as_graph_element() {
+                result_ids.push(element.id().unwrap());
             }
         }
         let expected_ids = vec![1, 2];
@@ -149,12 +146,9 @@ mod tests {
         };
         let mut result = sort_test(init_source(), sort_opr);
         let mut result_ids = vec![];
-        while let Some(Ok(res)) = result.next() {
-            match res.get(None).unwrap() {
-                Entry::Element(RecordElement::OnGraph(vertex)) => {
-                    result_ids.push(vertex.id().unwrap());
-                }
-                _ => {}
+        while let Some(Ok(record)) = result.next() {
+            if let Some(element) = record.get(None).unwrap().as_graph_element() {
+                result_ids.push(element.id().unwrap());
             }
         }
         let expected_ids = vec![2, 1];
@@ -173,20 +167,17 @@ mod tests {
         };
         let mut result = sort_test(init_source(), sort_opr);
         let mut result_name = vec![];
-        while let Some(Ok(res)) = result.next() {
-            match res.get(None).unwrap() {
-                Entry::Element(RecordElement::OnGraph(vertex)) => {
-                    result_name.push(
-                        vertex
-                            .details()
-                            .unwrap()
-                            .get_property(&NameOrId::Str("name".to_string()))
-                            .unwrap()
-                            .try_to_owned()
-                            .unwrap(),
-                    );
-                }
-                _ => {}
+        while let Some(Ok(record)) = result.next() {
+            if let Some(element) = record.get(None).unwrap().as_graph_element() {
+                result_name.push(
+                    element
+                        .details()
+                        .unwrap()
+                        .get_property(&NameOrId::Str("name".to_string()))
+                        .unwrap()
+                        .try_to_owned()
+                        .unwrap(),
+                );
             }
         }
         let expected_names = vec!["vadas".to_string().into(), "marko".to_string().into()];
@@ -205,12 +196,13 @@ mod tests {
         };
         let mut result = sort_test(init_source_with_tag(), sort_opr);
         let mut result_ids = vec![];
-        while let Some(Ok(res)) = result.next() {
-            match res.get(Some(&NameOrId::Str("a".to_string()))).unwrap() {
-                Entry::Element(RecordElement::OnGraph(vertex)) => {
-                    result_ids.push(vertex.id().unwrap());
-                }
-                _ => {}
+        while let Some(Ok(record)) = result.next() {
+            if let Some(element) = record
+                .get(Some(&NameOrId::Str("a".to_string())))
+                .unwrap()
+                .as_graph_element()
+            {
+                result_ids.push(element.id().unwrap());
             }
         }
         let expected_ids = vec![2, 1];

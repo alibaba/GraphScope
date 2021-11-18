@@ -32,6 +32,7 @@ use ir_common::generated::common as common_pb;
 use ir_common::NameOrId;
 use pegasus::codec::{Decode, Encode, ReadExt, WriteExt};
 use std::convert::TryFrom;
+use std::sync::Arc;
 
 #[derive(Debug)]
 pub struct KeyedError {
@@ -65,8 +66,8 @@ pub struct TagKey {
 }
 
 impl<'a> TagKey {
-    /// This is for KeySelector, which generate the key of the input Record according to the tag_key field
-    pub fn get_entry(&self, input: &Record) -> Result<Entry, KeyedError> {
+    /// This is for key generation, which generate the key of the input Record according to the tag_key field
+    pub fn get_entry(&self, input: &Record) -> Result<Arc<Entry>, KeyedError> {
         let entry = input
             .get(self.tag.as_ref())
             .ok_or(KeyedError::from(
@@ -74,7 +75,7 @@ impl<'a> TagKey {
             ))?
             .clone();
         if let Some(key) = self.key.as_ref() {
-            match entry {
+            match entry.as_ref() {
                 Entry::Element(RecordElement::OnGraph(element)) => {
                     let details = element.details().ok_or(KeyedError::from(
                         "Get key failed since get prop_key from a graph element failed",
@@ -85,7 +86,7 @@ impl<'a> TagKey {
                             "Get key failed since get prop_key from a graph element failed",
                         ))?
                         .into();
-                    Ok(ObjectElement::Prop(properties).into())
+                    Ok(Arc::new(ObjectElement::Prop(properties).into()))
                 }
                 _ => Err(KeyedError::from(
                     "Get key failed when attempt to get prop_key from a non-graph element",
@@ -96,13 +97,13 @@ impl<'a> TagKey {
         }
     }
 
-    /// This is for Order, which generate the comparable object (by ref) of the input Record according to the tag_key field
+    // This is for Order, which generate the comparable object (by ref) of the input Record according to the tag_key field
     pub fn get_obj(&self, input: &'a Record) -> Result<BorrowObject<'a>, KeyedError> {
         let entry = input.get(self.tag.as_ref()).ok_or(KeyedError::from(
             "Get tag failed since it refers to an empty entry",
         ))?;
         if let Some(key) = self.key.as_ref() {
-            match entry {
+            match entry.as_ref() {
                 Entry::Element(RecordElement::OnGraph(element)) => {
                     if let Some(details) = element.details() {
                         Ok(details.get(key).ok_or(KeyedError::from(
@@ -117,7 +118,7 @@ impl<'a> TagKey {
                 )),
             }
         } else {
-            match entry {
+            match entry.as_ref() {
                 // TODO(bingqing): In gremlin, it regards OnGraph element as not Comparable. For now we compare its id by default.
                 Entry::Element(RecordElement::OnGraph(element)) => Ok(element.as_borrow_object()),
                 Entry::Element(RecordElement::OutGraph(object)) => match object {
@@ -298,13 +299,10 @@ pub(crate) mod tests {
         let expected = init_vertex1();
         let record = init_record();
         let entry = tag_key.get_entry(&record).unwrap();
-        match entry {
-            Entry::Element(RecordElement::OnGraph(element)) => {
-                assert_eq!(element.id(), expected.id());
-            }
-            _ => {
-                assert!(false);
-            }
+        if let Some(element) = entry.as_graph_element() {
+            assert_eq!(element.id(), expected.id());
+        } else {
+            assert!(false);
         }
     }
 
@@ -329,13 +327,10 @@ pub(crate) mod tests {
         let expected = init_vertex2();
         let record = init_record();
         let entry = tag_key.get_entry(&record).unwrap();
-        match entry {
-            Entry::Element(RecordElement::OnGraph(element)) => {
-                assert_eq!(element.id(), expected.id());
-            }
-            _ => {
-                assert!(false);
-            }
+        if let Some(element) = entry.as_graph_element() {
+            assert_eq!(element.id(), expected.id());
+        } else {
+            assert!(false);
         }
     }
 
@@ -360,9 +355,9 @@ pub(crate) mod tests {
         let expected = 27;
         let record = init_record();
         let entry = tag_key.get_entry(&record).unwrap();
-        match entry {
+        match entry.as_ref() {
             Entry::Element(RecordElement::OutGraph(ObjectElement::Prop(obj))) => {
-                assert_eq!(obj, expected.into());
+                assert_eq!(obj.clone(), expected.into());
             }
             _ => {
                 assert!(false);

@@ -55,7 +55,7 @@ mod tests {
     use crate::graph::property::Details;
     use crate::process::operator::filter::FilterFuncGen;
     use crate::process::operator::tests::init_source;
-    use crate::process::record::{Entry, Record, RecordElement};
+    use crate::process::record::Record;
     use ir_common::generated::algebra as pb;
     use ir_common::NameOrId;
     use pegasus::api::{Filter, Sink};
@@ -88,11 +88,8 @@ mod tests {
         let mut result = select_test(init_source(), select_opr_pb);
         let mut count = 0;
         while let Some(Ok(record)) = result.next() {
-            match record.get(None).unwrap() {
-                Entry::Element(RecordElement::OnGraph(vertex_or_edge)) => {
-                    assert!(vertex_or_edge.id().unwrap() > 1)
-                }
-                _ => unreachable!(),
+            if let Some(element) = record.get(None).unwrap().as_graph_element() {
+                assert!(element.id().unwrap() > 1)
             }
             count += 1;
         }
@@ -109,11 +106,10 @@ mod tests {
         let mut result = select_test(init_source(), select_opr_pb);
         let mut count = 0;
         while let Some(Ok(record)) = result.next() {
-            println!("record {:?}", record);
-            match record.get(None).unwrap() {
-                Entry::Element(RecordElement::OnGraph(vertex_or_edge)) => {
+            if let Some(element) = record.get(None).unwrap().as_graph_element() {
+                {
                     assert_eq!(
-                        vertex_or_edge
+                        element
                             .details()
                             .unwrap()
                             .get_property(&NameOrId::Str("name".to_string()))
@@ -123,10 +119,9 @@ mod tests {
                         "marko".to_string().into()
                     );
                 }
-                _ => unreachable!(),
+                count += 1;
             }
-            count += 1;
+            assert_eq!(count, 1);
         }
-        assert_eq!(count, 1);
     }
 }

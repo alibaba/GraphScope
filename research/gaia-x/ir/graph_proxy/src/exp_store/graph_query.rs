@@ -552,7 +552,7 @@ mod tests {
     use runtime::graph::property::Details;
     use runtime::process::operator::flatmap::FlatMapFuncGen;
     use runtime::process::operator::source::source_op_from;
-    use runtime::process::record::{Entry, Record, RecordElement};
+    use runtime::process::record::Record;
     use std::sync::Arc;
 
     #[test]
@@ -599,14 +599,9 @@ mod tests {
         let v5: DefaultId = LDBCVertexParser::to_global_id(5, 1);
         let v6: DefaultId = LDBCVertexParser::to_global_id(6, 0);
         let mut expected_ids = vec![v1, v2, v3, v4, v5, v6];
-        for res in source_iter {
-            match res.get(None).unwrap() {
-                Entry::Element(RecordElement::OnGraph(vertex_or_edge)) => {
-                    result_ids.push(vertex_or_edge.id().unwrap() as usize)
-                }
-                _ => {
-                    unreachable!()
-                }
+        for record in source_iter {
+            if let Some(element) = record.get(None).unwrap().as_graph_element() {
+                result_ids.push(element.id().unwrap() as usize)
             }
         }
         result_ids.sort();
@@ -668,14 +663,9 @@ mod tests {
         let v4: DefaultId = LDBCVertexParser::to_global_id(4, 0);
         let v5: DefaultId = LDBCVertexParser::to_global_id(5, 1);
         let mut expected_ids = vec![v2, v3, v3, v3, v4, v5];
-        while let Some(Ok(res)) = result.next() {
-            match res.get(None).unwrap() {
-                Entry::Element(RecordElement::OnGraph(vertex_or_edge)) => {
-                    result_ids.push(vertex_or_edge.id().unwrap() as usize)
-                }
-                _ => {
-                    unreachable!()
-                }
+        while let Some(Ok(record)) = result.next() {
+            if let Some(element) = record.get(None).unwrap().as_graph_element() {
+                result_ids.push(element.id().unwrap() as usize)
             }
         }
         result_ids.sort();
@@ -709,14 +699,9 @@ mod tests {
         let v2: DefaultId = LDBCVertexParser::to_global_id(2, 0);
         let v4: DefaultId = LDBCVertexParser::to_global_id(4, 0);
         let expected_edges = vec![(v1, v4), (v1, v2)];
-        while let Some(Ok(res)) = result.next() {
-            match res.get(None).unwrap() {
-                Entry::Element(RecordElement::OnGraph(VertexOrEdge::E(e))) => {
-                    result_edges.push((e.src_id as usize, e.dst_id as usize));
-                }
-                _ => {
-                    unreachable!()
-                }
+        while let Some(Ok(record)) = result.next() {
+            if let Some(VertexOrEdge::E(e)) = record.get(None).unwrap().as_graph_element() {
+                result_edges.push((e.src_id as usize, e.dst_id as usize));
             }
         }
         assert_eq!(result_edges, expected_edges)
@@ -749,22 +734,18 @@ mod tests {
             (v1, "marko".to_string().into()),
             (v1, "marko".to_string().into()),
         ];
-        while let Some(Ok(res)) = result.next() {
-            match res.get(None).unwrap() {
-                Entry::Element(RecordElement::OnGraph(vertex_or_edge)) => result_ids_with_prop
-                    .push((
-                        vertex_or_edge.id().unwrap() as usize,
-                        vertex_or_edge
-                            .details()
-                            .unwrap()
-                            .get_property(&NameOrId::Str("name".to_string()))
-                            .unwrap()
-                            .try_to_owned()
-                            .unwrap(),
-                    )),
-                _ => {
-                    unreachable!()
-                }
+        while let Some(Ok(record)) = result.next() {
+            if let Some(element) = record.get(None).unwrap().as_graph_element() {
+                result_ids_with_prop.push((
+                    element.id().unwrap() as usize,
+                    element
+                        .details()
+                        .unwrap()
+                        .get_property(&NameOrId::Str("name".to_string()))
+                        .unwrap()
+                        .try_to_owned()
+                        .unwrap(),
+                ))
             }
         }
 
@@ -831,14 +812,13 @@ mod tests {
         let v2: DefaultId = LDBCVertexParser::to_global_id(2, 0);
         let v4: DefaultId = LDBCVertexParser::to_global_id(4, 0);
         let mut expected_ids = vec![v2, v4];
-        while let Some(Ok(res)) = result.next() {
-            match res.get(Some(&NameOrId::Str("b".to_string()))).unwrap() {
-                Entry::Element(RecordElement::OnGraph(vertex_or_edge)) => {
-                    result_ids.push(vertex_or_edge.id().unwrap() as usize)
-                }
-                _ => {
-                    unreachable!()
-                }
+        while let Some(Ok(record)) = result.next() {
+            if let Some(element) = record
+                .get(Some(&NameOrId::Str("b".to_string())))
+                .unwrap()
+                .as_graph_element()
+            {
+                result_ids.push(element.id().unwrap() as usize)
             }
         }
         result_ids.sort();
@@ -870,14 +850,9 @@ mod tests {
         let mut result_ids = vec![];
         let v2: DefaultId = LDBCVertexParser::to_global_id(2, 0);
         let expected_ids = vec![v2];
-        while let Some(Ok(res)) = result.next() {
-            match res.get(None).unwrap() {
-                Entry::Element(RecordElement::OnGraph(vertex_or_edge)) => {
-                    result_ids.push(vertex_or_edge.id().unwrap() as usize)
-                }
-                _ => {
-                    unreachable!()
-                }
+        while let Some(Ok(record)) = result.next() {
+            if let Some(element) = record.get(None).unwrap().as_graph_element() {
+                result_ids.push(element.id().unwrap() as usize)
             }
         }
         assert_eq!(result_ids, expected_ids)

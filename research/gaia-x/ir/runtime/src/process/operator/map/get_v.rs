@@ -34,13 +34,17 @@ struct GetVertexOperator {
 
 impl MapFunction<Record, Record> for GetVertexOperator {
     fn exec(&self, mut input: Record) -> DynResult<Record> {
-        let entry =
-            input
-                .get_as_graph_entry(self.start_tag.as_ref())
-                .ok_or(FnExecError::GetTagError(KeyedError::from(
-                    "get tag failed in GetVertexOperator",
-                )))?;
-        let id = match entry {
+        let entry = input
+            .get(self.start_tag.as_ref())
+            .ok_or(FnExecError::GetTagError(KeyedError::from(
+                "get tag failed in GetVertexOperator",
+            )))?;
+        let vertex_or_edge = entry
+            .as_graph_element()
+            .ok_or(FnExecError::UnExpectedDataType(
+                "tag does not refer to a graph element".to_string(),
+            ))?;
+        let id = match vertex_or_edge {
             VertexOrEdge::V(v) => match self.opt {
                 VOpt::This => v.id().ok_or(FnExecError::QueryStoreError(
                     "id of Vertex cannot be None".to_string(),
