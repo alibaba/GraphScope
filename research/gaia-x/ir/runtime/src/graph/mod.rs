@@ -154,31 +154,39 @@ where
 
 /// The interface of graph query in runtime
 pub trait GraphProxy: Send + Sync {
+    /// Scan all vertices with query parameters, and return an iterator over them.
     fn scan_vertex(
         &self,
         params: &QueryParams,
     ) -> DynResult<Box<dyn Iterator<Item = Vertex> + Send>>;
 
+    /// Scan all edges with query parameters, and return an iterator over them.
     fn scan_edge(&self, params: &QueryParams) -> DynResult<Box<dyn Iterator<Item = Edge> + Send>>;
 
+    /// Get vertices with the given global_ids (defined in runtime) and parameters, and return an iterator over them.
     fn get_vertex(
         &self,
         ids: &[ID],
         params: &QueryParams,
     ) -> DynResult<Box<dyn Iterator<Item = Vertex> + Send>>;
 
+    /// Get edges with the given global_ids (defined in runtime) and parameters, and return an iterator over them.
     fn get_edge(
         &self,
         ids: &[ID],
         params: &QueryParams,
     ) -> DynResult<Box<dyn Iterator<Item = Edge> + Send>>;
 
+    /// Get adjacent vertices of the given direction with parameters, and return the closure of Statement.
+    /// We could further call the returned closure with input vertex and get its adjacent vertices.
     fn prepare_explore_vertex(
         &self,
         direction: Direction,
         params: &QueryParams,
     ) -> DynResult<Box<dyn Statement<ID, Vertex>>>;
 
+    /// Get adjacent edges of the given direction with parameters, and return the closure of Statement.
+    /// We could further call the returned closure with input vertex and get its adjacent edges.
     fn prepare_explore_edge(
         &self,
         direction: Direction,
@@ -187,6 +195,7 @@ pub trait GraphProxy: Send + Sync {
 }
 
 lazy_static! {
+    /// GRAPH_PROXY is a raw pointer which can be safely shared between threads.
     pub static ref GRAPH_PROXY: AtomicPtr<Arc<dyn GraphProxy>> = AtomicPtr::default();
 }
 
