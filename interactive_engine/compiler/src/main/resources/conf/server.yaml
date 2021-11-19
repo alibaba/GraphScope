@@ -1,6 +1,6 @@
 host: 0.0.0.0
 port: 8182
-scriptEvaluationTimeout: 120000
+scriptEvaluationTimeout: 86400000
 threadPoolWorker: 64
 channelizer: org.apache.tinkerpop.gremlin.server.channel.WsAndHttpChannelizer
 graphs: {

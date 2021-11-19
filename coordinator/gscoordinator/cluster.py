@@ -315,7 +315,6 @@ class KubernetesClusterLauncher(Launcher):
 
     def distribute_file(self, path):
         dir = os.path.dirname(path)
-        # TODO(dongze): This command may fail, and it will cause the cluster to stuck. #761
         for pod in self._pod_name_list:
             subprocess.check_call(
                 [
