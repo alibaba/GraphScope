@@ -330,6 +330,15 @@ EdgeTypeBuilder build_edge_type(Schema schema, LabelId label,
   return ptr->CreateEntry("EDGE", label, name);
 }
 
+static bool entry_has_property(vineyard::Entry *entry, std::string const &name) {
+  for (auto const &prop: entry->props_) {
+    if (prop.name == name) {
+      return true;
+    }
+  }
+  return false;
+}
+
 void build_vertex_property(VertexTypeBuilder vertex, PropertyId id,
                            const char *name, PropertyType prop_type) {
 #ifndef NDEBUG
@@ -338,6 +347,11 @@ void build_vertex_property(VertexTypeBuilder vertex, PropertyId id,
 #endif
   using entry_t = vineyard::Entry;
   auto entry_ptr = static_cast<entry_t *>(vertex);
+  if (entry_has_property(entry_ptr, name)) {
+    LOG(WARNING) << "detect duplicate vertex property name, ignored: " << name
+                 << ", id = " << id;
+    return;
+  }
   entry_ptr->AddProperty(/* id, */ name,
                          vineyard::detail::PropertyTypeToDataType(prop_type));
   entry_ptr->props_.rbegin()->id = id;
@@ -351,6 +365,11 @@ void build_edge_property(EdgeTypeBuilder edge, PropertyId id, const char *name,
 #endif
   using entry_t = vineyard::Entry;
   auto entry_ptr = static_cast<entry_t *>(edge);
+  if (entry_has_property(entry_ptr, name)) {
+    LOG(WARNING) << "detect duplicate edge property name, ignored: " << name
+                 << ", id = " << id;
+    return;
+  }
   entry_ptr->AddProperty(/* id, */ name,
                          vineyard::detail::PropertyTypeToDataType(prop_type));
   entry_ptr->props_.rbegin()->id = id;
