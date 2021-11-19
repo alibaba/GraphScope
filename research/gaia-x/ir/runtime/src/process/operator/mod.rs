@@ -25,8 +25,7 @@ pub mod source;
 
 use crate::graph::element::Element;
 use crate::graph::property::{Details, PropKey};
-use crate::process::record::{Entry, ObjectElement, Record, RecordElement};
-use dyn_type::BorrowObject;
+use crate::process::record::{Entry, ObjectElement, Record};
 use ir_common::error::ParsePbError;
 use ir_common::generated::common as common_pb;
 use ir_common::NameOrId;
@@ -75,64 +74,24 @@ impl<'a> TagKey {
             ))?
             .clone();
         if let Some(key) = self.key.as_ref() {
-            match entry.as_ref() {
-                Entry::Element(RecordElement::OnGraph(element)) => {
-                    let details = element.details().ok_or(KeyedError::from(
+            if let Some(element) = entry.as_graph_element() {
+                let details = element.details().ok_or(KeyedError::from(
+                    "Get key failed since get details from a graph element failed",
+                ))?;
+                let properties = details
+                    .get(key)
+                    .ok_or(KeyedError::from(
                         "Get key failed since get prop_key from a graph element failed",
-                    ))?;
-                    let properties = details
-                        .get(key)
-                        .ok_or(KeyedError::from(
-                            "Get key failed since get prop_key from a graph element failed",
-                        ))?
-                        .into();
-                    Ok(Arc::new(ObjectElement::Prop(properties).into()))
-                }
-                _ => Err(KeyedError::from(
+                    ))?
+                    .into();
+                Ok(Arc::new(ObjectElement::Prop(properties).into()))
+            } else {
+                Err(KeyedError::from(
                     "Get key failed when attempt to get prop_key from a non-graph element",
-                )),
+                ))
             }
         } else {
             Ok(entry)
-        }
-    }
-
-    // This is for Order, which generate the comparable object (by ref) of the input Record according to the tag_key field
-    pub fn get_obj(&self, input: &'a Record) -> Result<BorrowObject<'a>, KeyedError> {
-        let entry = input.get(self.tag.as_ref()).ok_or(KeyedError::from(
-            "Get tag failed since it refers to an empty entry",
-        ))?;
-        if let Some(key) = self.key.as_ref() {
-            match entry.as_ref() {
-                Entry::Element(RecordElement::OnGraph(element)) => {
-                    if let Some(details) = element.details() {
-                        Ok(details.get(key).ok_or(KeyedError::from(
-                            "Get key failed since get prop_key from a graph element failed",
-                        ))?)
-                    } else {
-                        Ok(element.as_borrow_object())
-                    }
-                }
-                _ => Err(KeyedError::from(
-                    "Get key failed when attempt to get prop_key from a non-graph element",
-                )),
-            }
-        } else {
-            match entry.as_ref() {
-                // TODO(bingqing): In gremlin, it regards OnGraph element as not Comparable. For now we compare its id by default.
-                Entry::Element(RecordElement::OnGraph(element)) => Ok(element.as_borrow_object()),
-                Entry::Element(RecordElement::OutGraph(object)) => match object {
-                    ObjectElement::None => Err(KeyedError::from(
-                        "Get key failed since it refers to an empty object element",
-                    )),
-                    ObjectElement::Prop(prop) => Ok(prop.as_borrow()),
-                    ObjectElement::Count(cnt) => Ok((*cnt).into()),
-                    ObjectElement::Agg(agg) => Ok(agg.as_borrow()),
-                },
-                Entry::Collection(_) => Err(KeyedError::from(
-                    "Get key failed since it refers to a Collection type entry",
-                )),
-            }
         }
     }
 }
@@ -222,6 +181,7 @@ pub(crate) mod tests {
     use super::*;
     use crate::graph::element::Vertex;
     use crate::graph::property::{DefaultDetails, DynDetails};
+    use crate::process::record::RecordElement;
     use dyn_type::Object;
     use std::collections::HashMap;
 
@@ -307,18 +267,6 @@ pub(crate) mod tests {
     }
 
     #[test]
-    fn test_get_none_tag_obj() {
-        let tag_key = TagKey {
-            tag: None,
-            key: None,
-        };
-        let expected = init_vertex1();
-        let record = init_record();
-        let obj = tag_key.get_obj(&record).unwrap();
-        assert_eq!(obj, expected.as_borrow_object());
-    }
-
-    #[test]
     fn test_get_tag_entry() {
         let tag_key = TagKey {
             tag: Some(NameOrId::Id(0)),
@@ -332,18 +280,6 @@ pub(crate) mod tests {
         } else {
             assert!(false);
         }
-    }
-
-    #[test]
-    fn test_get_tag_obj() {
-        let tag_key = TagKey {
-            tag: Some(NameOrId::Id(1)),
-            key: None,
-        };
-        let expected = 10.into();
-        let record = init_record();
-        let obj = tag_key.get_obj(&record).unwrap();
-        assert_eq!(obj, expected)
     }
 
     #[test]
@@ -363,17 +299,5 @@ pub(crate) mod tests {
                 assert!(false);
             }
         }
-    }
-
-    #[test]
-    fn test_get_tag_key_obj() {
-        let tag_key = TagKey {
-            tag: Some(NameOrId::Id(0)),
-            key: Some(PropKey::Key(NameOrId::Str("name".to_string()))),
-        };
-        let expected = "vadas";
-        let record = init_record();
-        let obj = tag_key.get_obj(&record).unwrap();
-        assert_eq!(obj, expected.into())
     }
 }
