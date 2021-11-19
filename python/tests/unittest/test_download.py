@@ -18,13 +18,7 @@
 
 import pytest
 
-from graphscope.dataset import load_ldbc
-from graphscope.dataset import load_modern_graph
-from graphscope.dataset import load_ogbl_collab
-from graphscope.dataset import load_ogbl_ddi
-from graphscope.dataset import load_ogbn_arxiv
-from graphscope.dataset import load_ogbn_mag
-from graphscope.dataset import load_ogbn_proteins
+from graphscope.dataset import *
 
 
 def test_download_dataset(graphscope_session):
@@ -43,3 +37,11 @@ def test_download_dataset(graphscope_session):
     g6.unload()
     g7 = load_ogbl_ddi(graphscope_session)
     g7.unload()
+    g8 = load_p2p_network(graphscope_session)
+    g8.unload()
+    g9 = load_cora_graph(graphscope_session)
+    g9.unload()
+    g10 = load_ppi_graph(graphscope_session)
+    g10.unload()
+    g11 = load_u2i_graph(graphscope_session)
+    g11.unload()

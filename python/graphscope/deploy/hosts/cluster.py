@@ -26,6 +26,7 @@ import sys
 import graphscope
 from graphscope.config import GSConfig as gs_config
 from graphscope.deploy.launcher import Launcher
+from graphscope.framework.utils import PipeWatcher
 from graphscope.framework.utils import get_free_port
 from graphscope.framework.utils import is_free_port
 from graphscope.framework.utils import random_string
@@ -106,7 +107,7 @@ class HostsClusterLauncher(Launcher):
         if self._vineyard_shared_mem is not None:
             cmd.extend(["--vineyard_shared_mem", self._vineyard_shared_mem])
 
-        if self._vineyard_socket is not None:
+        if self._vineyard_socket:
             cmd.extend(["--vineyard_socket", "{}".format(self._vineyard_socket)])
 
         logger.info("Initializing coordinator with command: %s", " ".join(cmd))
@@ -125,18 +126,23 @@ class HostsClusterLauncher(Launcher):
 
         # Param `start_new_session=True` is for putting child process to a new process group
         # so it won't get the signals from parent.
-        self._proc = subprocess.Popen(
+        process = subprocess.Popen(
             cmd,
             start_new_session=True,
             cwd=COORDINATOR_HOME,
             universal_newlines=True,
             encoding="utf-8",
             stdin=subprocess.DEVNULL,
-            stdout=sys.stdout if gs_config.show_log else subprocess.DEVNULL,
-            stderr=sys.stderr,
+            stdout=subprocess.PIPE if gs_config.show_log else subprocess.DEVNULL,
+            stderr=subprocess.PIPE,
             bufsize=1,
             env=env,
         )
+        stdout_watcher = PipeWatcher(process.stdout, sys.stdout)
+        stderr_watcher = PipeWatcher(process.stderr, sys.stderr)
+        setattr(process, "stdout_watcher", stdout_watcher)
+        setattr(process, "stderr_watcher", stderr_watcher)
+        self._proc = process
 
     def type(self):
         return "hosts"

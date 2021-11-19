@@ -55,10 +55,10 @@ from graphscope.deploy.kubernetes.utils import delete_kubernetes_object
 from graphscope.deploy.kubernetes.utils import get_kubernetes_object_info
 from graphscope.deploy.kubernetes.utils import get_service_endpoints
 from graphscope.deploy.kubernetes.utils import try_to_resolve_api_client
+from graphscope.framework.utils import PipeWatcher
 from graphscope.framework.utils import is_free_port
 from graphscope.proto import types_pb2
 
-from gscoordinator.io_utils import PipeWatcher
 from gscoordinator.launcher import Launcher
 from gscoordinator.utils import GRAPHSCOPE_HOME
 from gscoordinator.utils import INTERACTIVE_ENGINE_SCRIPT

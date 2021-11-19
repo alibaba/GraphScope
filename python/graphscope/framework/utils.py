@@ -21,6 +21,8 @@ import os
 import random
 import socket
 import string
+import threading
+from queue import Queue
 
 import numpy as np
 import pandas as pd
@@ -33,6 +35,40 @@ from graphscope.proto import attr_value_pb2
 from graphscope.proto import data_types_pb2
 from graphscope.proto import graph_def_pb2
 from graphscope.proto import types_pb2
+
+
+class PipeWatcher(object):
+    def __init__(self, pipe, sink, queue=None, drop=True):
+        """Watch a pipe, and buffer its output if drop is False."""
+        self._pipe = pipe
+        self._sink = sink
+        self._drop = drop
+        if queue is None:
+            self._lines = Queue()
+        else:
+            self._lines = queue
+
+        def read_and_poll(self):
+            for line in self._pipe:
+                try:
+                    self._sink.write(line)
+                except:  # noqa: E722
+                    pass
+                try:
+                    if not self._drop:
+                        self._lines.put(line)
+                except:  # noqa: E722
+                    pass
+
+        self._polling_thread = threading.Thread(target=read_and_poll, args=(self,))
+        self._polling_thread.daemon = True
+        self._polling_thread.start()
+
+    def poll(self, block=True, timeout=None):
+        return self._lines.get(block=block, timeout=timeout)
+
+    def drop(self, drop=True):
+        self._drop = drop
 
 
 def is_free_port(port, host="localhost", timeout=0.2):
