@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package com.alibaba.graphscope.example.property.bfs;
 
 import com.alibaba.graphscope.app.ParallelPropertyAppBase;

@@ -155,7 +155,7 @@ public interface ParallelEngine {
         }
     }
 
-        /**
+    /**
      * Apply consumer for each vertex in vertices, in a parallel schema
      *
      * @param vertices VertexRange obj contains querying vertices.
