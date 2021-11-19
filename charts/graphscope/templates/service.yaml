@@ -9,7 +9,7 @@ metadata:
 spec:
   type: {{ .Values.coordinator.service.type }}
   selector:
-    {{- include "graphscope.coordinator.selectorLabels" . | nindent 4 }}
+    {{- include "graphscope.coordinator.labels" . | nindent 4 }}
   ports:
     - port: 59001
       targetPort: 59001
