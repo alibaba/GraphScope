@@ -2,6 +2,7 @@ use crate::db::graph::codec::{Decoder, IterDecoder};
 use crate::db::storage::RawBytes;
 use crate::db::api::{GraphResult, VertexId, LabelId, EdgeId, EdgeKind, PropertyId};
 use crate::db::api::types::{PropertyReader, PropertyValue, Property, RocksVertex, RocksEdge};
+use std::fmt::{Debug, Formatter};
 
 pub struct PropertyImpl {
     property_id: PropertyId,
@@ -72,6 +73,20 @@ impl PropertyReader for RocksVertexImpl {
     }
 }
 
+impl Debug for RocksVertexImpl {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        write!(f, "<id: {}, label: {}, properties: ", self.get_vertex_id(), self.get_label_id())?;
+        let mut iter = self.get_property_iterator();
+        while let Some(p) = iter.next() {
+            let p = p.unwrap();
+            let prop_id = p.get_property_id();
+            let v = p.get_property_value();
+            write!(f, "{{{}: {:?}}}", prop_id, v)?;
+        }
+        write!(f, ">")
+    }
+}
+
 impl RocksVertex for RocksVertexImpl {
     fn get_vertex_id(&self) -> VertexId {
         self.vertex_id
@@ -116,6 +131,20 @@ impl PropertyReader for RocksEdgeImpl {
         PropertiesIter {
             decode_iter
         }
+    }
+}
+
+impl Debug for RocksEdgeImpl {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        write!(f, "<{:?}, {:?}, properties: ", self.get_edge_id(), self.get_edge_relation())?;
+        let mut iter = self.get_property_iterator();
+        while let Some(p) = iter.next() {
+            let p = p.unwrap();
+            let prop_id = p.get_property_id();
+            let v = p.get_property_value();
+            write!(f, "{{{}: {:?}}}", prop_id, v)?;
+        }
+        write!(f, ">")
     }
 }
 

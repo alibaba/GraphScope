@@ -14,6 +14,7 @@
 //! limitations under the License.
 
 use crate::db::api::{GraphResult, VertexId, LabelId, EdgeId, PropertyId, ValueRef, ValueType, EdgeKind};
+use std::fmt::Debug;
 
 #[repr(C)]
 #[allow(dead_code)]
@@ -34,7 +35,7 @@ pub enum DataType {
     StringList,
 }
 
-#[derive(Clone)]
+#[derive(Clone, Debug, PartialEq)]
 pub enum PropertyValue {
     Null,
     Boolean(bool),
@@ -88,12 +89,12 @@ pub trait PropertyReader {
     fn get_property_iterator(&self) -> Self::PropertyIterator;
 }
 
-pub trait RocksVertex: PropertyReader {
+pub trait RocksVertex: PropertyReader + Debug {
     fn get_vertex_id(&self) -> VertexId;
     fn get_label_id(&self) -> LabelId;
 }
 
-pub trait RocksEdge: PropertyReader {
+pub trait RocksEdge: PropertyReader + Debug {
     fn get_edge_id(&self) -> &EdgeId;
     fn get_edge_relation(&self) -> &EdgeKind;
 }

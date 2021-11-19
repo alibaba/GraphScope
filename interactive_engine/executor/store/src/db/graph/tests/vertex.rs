@@ -1,28 +1,29 @@
 use crate::db::api::*;
 use super::types;
 use super::helper::GraphTestHelper;
+use crate::db::api::multi_version_graph::MultiVersionGraph;
 
-pub fn test_get_vertex<G: GraphStorage>(graph: G) {
+pub fn test_get_vertex<G: MultiVersionGraph>(graph: G) {
     let tester = tester::GetVertexTester::new(graph);
     tester.execute();
 }
 
-pub fn test_query_vertices<G: GraphStorage>(graph: G) {
+pub fn test_query_vertices<G: MultiVersionGraph>(graph: G) {
     let tester = tester::QueryVerticesTester::new(graph);
     tester.execute();
 }
 
-pub fn test_update_vertex<G: GraphStorage>(graph: G) {
+pub fn test_update_vertex<G: MultiVersionGraph>(graph: G) {
     let tester = tester::UpdateVertexTester::new(graph);
     tester.execute();
 }
 
-pub fn test_delete_vertex<G: GraphStorage>(graph: G) {
+pub fn test_delete_vertex<G: MultiVersionGraph>(graph: G) {
     let tester = tester::DeleteVertexTester::new(graph);
     tester.execute();
 }
 
-pub fn test_drop_vertex_type<G: GraphStorage>(graph: G) {
+pub fn test_drop_vertex_type<G: MultiVersionGraph>(graph: G) {
     let tester = tester::DropVertexTypeTester::new(graph);
     tester.execute();
 }
@@ -30,12 +31,13 @@ pub fn test_drop_vertex_type<G: GraphStorage>(graph: G) {
 mod tester {
     use super::*;
     use super::common::*;
+    use crate::db::api::multi_version_graph::MultiVersionGraph;
 
-    pub struct GetVertexTester<G: GraphStorage> {
+    pub struct GetVertexTester<G: MultiVersionGraph> {
         graph: G,
     }
 
-    impl<G: GraphStorage> GetVertexTester<G> {
+    impl<G: MultiVersionGraph> GetVertexTester<G> {
         pub fn new(graph: G) -> Self {
             GetVertexTester {
                 graph,
@@ -94,11 +96,11 @@ mod tester {
         }
     }
 
-    pub struct QueryVerticesTester<G: GraphStorage> {
+    pub struct QueryVerticesTester<G: MultiVersionGraph> {
         graph: G,
     }
 
-    impl<G: GraphStorage> QueryVerticesTester<G> {
+    impl<G: MultiVersionGraph> QueryVerticesTester<G> {
         pub fn new(graph: G) -> Self {
             QueryVerticesTester {
                 graph,
@@ -158,11 +160,11 @@ mod tester {
         }
     }
 
-    pub struct UpdateVertexTester<G: GraphStorage> {
+    pub struct UpdateVertexTester<G: MultiVersionGraph> {
         graph: G,
     }
 
-    impl<G: GraphStorage> UpdateVertexTester<G> {
+    impl<G: MultiVersionGraph> UpdateVertexTester<G> {
         pub fn new(graph: G) -> Self {
             UpdateVertexTester {
                 graph,
@@ -254,11 +256,11 @@ mod tester {
         }
     }
 
-    pub struct DeleteVertexTester<G: GraphStorage> {
+    pub struct DeleteVertexTester<G: MultiVersionGraph> {
         graph: G,
     }
 
-    impl<G: GraphStorage> DeleteVertexTester<G> {
+    impl<G: MultiVersionGraph> DeleteVertexTester<G> {
         pub fn new(graph: G) -> Self {
             DeleteVertexTester {
                 graph,
@@ -330,11 +332,11 @@ mod tester {
         }
     }
 
-    pub struct DropVertexTypeTester<G: GraphStorage> {
+    pub struct DropVertexTypeTester<G: MultiVersionGraph> {
         graph: G,
     }
 
-    impl<G: GraphStorage> DropVertexTypeTester<G> {
+    impl<G: MultiVersionGraph> DropVertexTypeTester<G> {
         pub fn new(graph: G) -> Self {
             DropVertexTypeTester {
                 graph,
@@ -437,12 +439,12 @@ mod common {
         }
     }
 
-    pub struct VertexCheckHelper<'a, 'b, G: GraphStorage> {
+    pub struct VertexCheckHelper<'a, 'b, G: MultiVersionGraph> {
         helper: &'a GraphTestHelper<'b, G>,
         data_gen: &'a VertexDataGen,
     }
 
-    impl<'a, 'b, G: GraphStorage> VertexCheckHelper<'a, 'b, G> {
+    impl<'a, 'b, G: MultiVersionGraph> VertexCheckHelper<'a, 'b, G> {
         pub fn new(helper: &'a GraphTestHelper<'b, G>, data_gen: &'a VertexDataGen) -> Self {
             VertexCheckHelper {
                 helper,

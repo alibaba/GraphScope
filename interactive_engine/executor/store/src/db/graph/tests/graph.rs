@@ -1,8 +1,9 @@
 use std::collections::HashMap;
 use crate::db::api::*;
 use super::types;
+use crate::db::api::multi_version_graph::MultiVersionGraph;
 
-pub fn test_si_guard<G: GraphStorage>(graph: G) {
+pub fn test_si_guard<G: MultiVersionGraph>(graph: G) {
     let mut schema_version = 1;
     graph.create_vertex_type(10, schema_version, 1, &types::create_test_type_def(1), schema_version).unwrap();
     schema_version += 1;

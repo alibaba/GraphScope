@@ -110,9 +110,19 @@ impl MultiVersionGraph for GraphStore {
                    _property_ids: Option<&Vec<PropertyId>>
     ) -> GraphResult<Records<Self::V>> {
         if let Some(label_id) = label_id {
-            let vertex_type_info = self.vertex_manager.get_type_info(snapshot_id as i64, label_id as i32)?;
-            let scan = VertexTypeScan::new(self.storage.clone(), snapshot_id, vertex_type_info);
-            Ok(scan.into_iter())
+            match self.vertex_manager.get_type_info(snapshot_id as i64, label_id as i32) {
+                Ok(vertex_type_info) => {
+                    let scan = VertexTypeScan::new(self.storage.clone(), snapshot_id, vertex_type_info);
+                    Ok(scan.into_iter())
+                }
+                Err(e) => {
+                    if let TypeNotFound = e.get_error_code() {
+                        Ok(Box::new(::std::iter::empty()))
+                    } else {
+                        Err(e)
+                    }
+                }
+            }
         } else {
             let mut vertex_type_info_iter = self.vertex_manager.get_all(snapshot_id as i64);
             let mut res: Records<Self::V> = Box::new(::std::iter::empty());
@@ -451,60 +461,6 @@ impl GraphStore {
         Ok(None)
     }
 
-    fn do_get_vertex(&self, si: SnapshotId, id: VertexId, info: &VertexTypeInfoRef) -> GraphResult<Option<VertexWrapper<VertexImpl>>> {
-        let data = self.get_vertex_data(si, id, info)?;
-        if let Some(v) = data {
-            let version = get_codec_version(v);
-            let decoder = res_unwrap!(info.get_decoder(si, version), do_get_vertex)?;
-            let ret = VertexImpl::new(id, info.get_label(), PropData::Owned(v.to_vec()), decoder);
-            return Ok(Some(VertexWrapper::new(ret)));
-        }
-        Ok(None)
-    }
-
-    fn do_query_vertices<'a>(&'a self, si: SnapshotId, label: LabelId, condition: Option<Arc<OldCondition>>) -> GraphResult<Box<dyn VertexResultIter<V=VertexImpl> + 'a>> {
-        let res = self.vertex_manager.get_type(si, label)
-            .and_then(|type_info| SingleLabelVertexIter::create(si, type_info, self.storage.as_ref(), condition));
-        match res_unwrap!(res, do_query_vertices, si, label) {
-            Ok(iter_option) => {
-                match iter_option {
-                    Some(iter) => Ok(Box::new(iter)),
-                    None => Ok(Box::new(EmptyResultIter)),
-                }
-            },
-            Err(e) => {
-                if let TypeNotFound = e.get_error_code()  {
-                    Ok(Box::new(EmptyResultIter))
-                } else {
-                    Err(e)
-                }
-            },
-        }
-    }
-
-    fn do_query_edges<'a>(&'a self, si: SnapshotId, id: VertexId, label: Option<LabelId>, direction: EdgeDirection, condition: Option<Arc<OldCondition>>) -> GraphResult<Box<dyn EdgeResultIter<E=EdgeImpl> + 'a>> {
-        let storage = self.storage.as_ref();
-        if let Some(label) = label {
-            let res = self.edge_manager.get_edge(si, label)
-                .and_then(|info| SingleLabelEdgeIter::create(si, id, direction, info, storage, condition));
-            match res_unwrap!(res, do_query_edges, si, id, label, direction) {
-                Ok(iter) => Ok(Box::new(iter)),
-                Err(e) => {
-                    if let TypeNotFound = e.get_error_code() {
-                        Ok(Box::new(EmptyResultIter))
-                    } else {
-                        Err(e)
-                    }
-                },
-            }
-        } else {
-            let info_iter = self.edge_manager.get_all_edges(si);
-            let res = MultiLabelsEdgeIter::create(si, id, direction, info_iter, storage, condition);
-            let ret = res_unwrap!(res, do_query_edges, si, id, label)?;
-            Ok(Box::new(ret))
-        }
-    }
-
     fn get_edge_data(&self, si: SnapshotId, id: EdgeId, info: &EdgeKindInfoRef, direction: EdgeDirection) -> GraphResult<Option<&[u8]>> {
         if let Some(table) = info.get_table(si) {
             let ts = si - table.start_si;
@@ -516,18 +472,6 @@ impl GraphStore {
                     return Ok(Some(ret));
                 }
             }
-        }
-        Ok(None)
-    }
-
-    fn do_get_edge(&self, si: SnapshotId, id: EdgeId, info: EdgeKindInfoRef, direction: EdgeDirection) -> GraphResult<Option<EdgeWrapper<EdgeImpl>>> {
-        let data = self.get_edge_data(si, id, &info, direction)?;
-        if let Some(v) = data {
-            let version = get_codec_version(v);
-            let decoder = res_unwrap!(info.get_decoder(si, version))?;
-            let edge_kind = info.get_type().clone();
-            let ret = EdgeImpl::new(id, edge_kind, PropData::from(v.to_vec()), decoder);
-            return Ok(Some(EdgeWrapper::new(ret)));
         }
         Ok(None)
     }
@@ -641,9 +585,20 @@ impl GraphStore {
                    _property_ids: Option<&Vec<PropertyId>>,
     ) -> GraphResult<Records<RocksEdgeImpl>> {
         if let Some(label_id) = label_id {
-            let edge_info = self.edge_manager.get_edge_info(snapshot_id as i64, label_id as i32)?;
-            let scan = EdgeTypeScan::new(self.storage.clone(), snapshot_id, edge_info, vertex_id, direction);
-            Ok(scan.into_iter())
+            match self.edge_manager.get_edge_info(snapshot_id as i64, label_id as i32) {
+                Ok(edge_info) => {
+                    let scan = EdgeTypeScan::new(self.storage.clone(), snapshot_id, edge_info, vertex_id, direction);
+                    Ok(scan.into_iter())
+                }
+                Err(e) => {
+                    if let TypeNotFound = e.get_error_code() {
+                        Ok(Box::new(::std::iter::empty()))
+                    } else {
+                        Err(e)
+                    }
+                }
+            }
+
         } else {
             let mut edge_info_iter = self.edge_manager.get_all_edges(snapshot_id as i64);
             let mut res: Records<RocksEdgeImpl> = Box::new(::std::iter::empty());
