@@ -26,7 +26,7 @@ metadata:
   name: grole
   namespace: default
 rules:
-- apiGroups: ["apps", ""]
+- apiGroups: ["apps", "extensions", ""]
   resources: ["configmaps", "deployments", "deployments/status", "endpoints", "events", "pods", "pods/log", "pods/exec", "pods/status", "services", "replicasets"]
   verbs: ["*"]
 ---
