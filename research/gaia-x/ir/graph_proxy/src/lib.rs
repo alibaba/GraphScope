@@ -17,7 +17,7 @@
 extern crate log;
 #[macro_use]
 extern crate lazy_static;
-pub use exp_store::QueryExpGraph;
+pub use exp_store::{create_demo_graph, QueryExpGraph, SinglePartition};
 use runtime::error::{DynIter, DynResult};
 use runtime::graph::Statement;
 use runtime::IRJobCompiler;

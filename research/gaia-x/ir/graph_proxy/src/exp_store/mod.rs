@@ -16,9 +16,9 @@
 mod graph_partition;
 mod graph_query;
 
-use crate::exp_store::graph_partition::SinglePartition;
 use crate::InitializeJobCompiler;
-use graph_query::create_demo_graph;
+pub use graph_partition::SinglePartition;
+pub use graph_query::create_demo_graph;
 use runtime::graph::{ID, ID_BITS};
 use runtime::IRJobCompiler;
 

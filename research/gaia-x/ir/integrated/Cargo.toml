@@ -20,3 +20,4 @@ pegasus_common = { path = "../../pegasus/common" }
 ir_common = {path = "../common", features = ["proto_inplace"]}
 runtime = {path="../runtime"}
 graph_proxy = {path = "../graph_proxy"}
+graph_store = {path = "../../../graph_store"}
