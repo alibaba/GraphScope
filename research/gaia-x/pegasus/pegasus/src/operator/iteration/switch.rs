@@ -2,9 +2,9 @@ use crate::api::notification::{Cancel, End};
 use crate::api::IterCondition;
 use crate::communication::input::{new_input_session, InputProxy};
 use crate::communication::output::{new_output, OutputProxy};
-use crate::data::EndOfScope;
 use crate::errors::JobExecError;
 use crate::operator::{Notifiable, OperatorCore};
+use crate::progress::EndOfScope;
 use crate::tag::tools::map::TidyTagMap;
 use crate::Data;
 
@@ -72,13 +72,15 @@ impl<D: Data> OperatorCore for SwitchOperator<D> {
         let enter = new_output::<D>(&outputs[1]);
         let mut main = new_input_session::<D>(&inputs[0]);
         main.for_each_batch(|batch| {
-            let mut leave = leave.new_session(&batch.tag)?;
-            let mut enter = enter.new_session(&batch.tag)?;
-            for data in batch.drain() {
-                if self.cond.is_converge(&data)? {
-                    leave.give(data)?;
-                } else {
-                    enter.give(data)?;
+            if !batch.is_empty() {
+                let mut leave = leave.new_session(&batch.tag)?;
+                let mut enter = enter.new_session(&batch.tag)?;
+                for data in batch.drain() {
+                    if self.cond.is_converge(&data)? {
+                        leave.give(data)?;
+                    } else {
+                        enter.give(data)?;
+                    }
                 }
             }
 
@@ -107,7 +109,9 @@ impl<D: Data> OperatorCore for SwitchOperator<D> {
                     if let Some(mut state) = self.iterate_states.remove(&p) {
                         state.leave_iteration();
                         if let Some(end) = state.take_end() {
-                            leave.notify_end(end.clone())?;
+                            if !end.tag.is_root() {
+                                leave.notify_end(end.clone())?;
+                            }
                             enter.notify_end(end)?;
                         } else {
                             warn_worker!("{:?} not end while {:?} leave iteration;", p, batch.tag);
@@ -164,9 +168,10 @@ impl<D: Data> Notifiable for SwitchOperator<D> {
         let level = n.tag().len() as u32;
         if n.port == 0 {
             // the main input;
-            trace_worker!("iteration on notify end of {:?};", n.tag());
+            trace_worker!("iteration: switch on notify end of {:?};", n.tag());
             if level == self.scope_level - 1 {
                 if let Some(state) = self.iterate_states.get_mut(n.tag()) {
+                    trace_worker!("iteration: switch stash end of {:?}", n.tag());
                     state.set_end(n.take());
                 } else {
                     panic!("iteration of {:?} not found;", n.tag())

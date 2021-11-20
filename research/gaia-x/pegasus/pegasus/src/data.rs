@@ -13,68 +13,17 @@
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 
-use std::fmt::{Debug, Formatter};
+use std::fmt::Debug;
 
 use pegasus_common::buffer::{Buffer, ReadBuffer};
 use pegasus_common::codec::{Decode, Encode};
 use pegasus_common::io::{ReadExt, WriteExt};
 
-use crate::progress::Weight;
+use crate::progress::EndOfScope;
 use crate::tag::Tag;
 
 pub trait Data: Clone + Send + Sync + Debug + Encode + Decode + 'static {}
 impl<T: Clone + Send + Sync + Debug + Encode + Decode + 'static> Data for T {}
-
-#[derive(Clone)]
-pub struct EndOfScope {
-    pub(crate) tag: Tag,
-    pub(crate) source: Weight,
-    pub(crate) total_send: u64,
-}
-
-impl EndOfScope {
-    pub(crate) fn new(tag: Tag, source: Weight, count: u64) -> Self {
-        EndOfScope { tag, source, total_send: count }
-    }
-
-    pub(crate) fn merge(&mut self, other: EndOfScope) {
-        assert_eq!(self.tag, other.tag);
-        self.source.merge(other.source);
-        self.total_send += other.total_send;
-    }
-
-    pub(crate) fn contains_source(&self, src: u32) -> bool {
-        self.total_send != 0 || self.source.contains_source(src)
-    }
-}
-
-impl Debug for EndOfScope {
-    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        write!(f, "end({:?}_{})", self.tag, self.total_send)
-    }
-}
-
-impl Encode for EndOfScope {
-    fn write_to<W: WriteExt>(&self, writer: &mut W) -> std::io::Result<()> {
-        self.tag.write_to(writer)?;
-        self.source.write_to(writer)?;
-        writer.write_u64(self.total_send)
-    }
-}
-
-impl Decode for EndOfScope {
-    fn read_from<R: ReadExt>(reader: &mut R) -> std::io::Result<Self> {
-        let tag = Tag::read_from(reader)?;
-        let source = Weight::read_from(reader)?;
-        let total_send = reader.read_u64()?;
-        Ok(EndOfScope { tag, source, total_send })
-    }
-}
-
-pub enum MarkedData<D> {
-    Data(D),
-    Marked(Option<D>, EndOfScope),
-}
 
 pub struct MicroBatch<T> {
     /// the tag of scope this data set belongs to;
@@ -188,7 +137,7 @@ impl<D> MicroBatch<D> {
         self.is_discarded = true;
     }
 
-    pub fn is_discarded(&self) -> bool {
+    pub(crate) fn is_discarded(&self) -> bool {
         self.is_discarded
     }
 }
@@ -197,12 +146,6 @@ impl<D: Clone> MicroBatch<D> {
     #[inline]
     pub fn drain(&mut self) -> impl Iterator<Item = D> + '_ {
         &mut self.data
-    }
-
-    #[inline]
-    pub fn drain_to_end(&mut self) -> impl Iterator<Item = MarkedData<D>> + '_ {
-        let len = self.data.len();
-        DrainEndIter { len, data: &mut self.data, end: &mut self.end, cur: 0 }
     }
 }
 
@@ -267,42 +210,5 @@ impl<D: Data> Decode for MicroBatch<D> {
         let data = buf.into_read_only();
         let end = Option::<EndOfScope>::read_from(reader)?;
         Ok(MicroBatch { tag, src, seq, end, data, is_discarded: false })
-    }
-}
-
-struct DrainEndIter<'a, D: Clone> {
-    len: usize,
-    data: &'a mut ReadBuffer<D>,
-    end: &'a mut Option<EndOfScope>,
-    cur: usize,
-}
-
-impl<'a, D: Clone> Iterator for DrainEndIter<'a, D> {
-    type Item = MarkedData<D>;
-
-    fn next(&mut self) -> Option<Self::Item> {
-        if self.len == 0 {
-            if let Some(end) = self.end.take() {
-                Some(MarkedData::Marked(None, end))
-            } else {
-                None
-            }
-        } else {
-            if let Some(data) = self.data.next() {
-                self.cur += 1;
-                if self.cur == self.len {
-                    // this maybe the last;
-                    if let Some(end) = self.end.take() {
-                        Some(MarkedData::Marked(Some(data), end))
-                    } else {
-                        Some(MarkedData::Data(data))
-                    }
-                } else {
-                    Some(MarkedData::Data(data))
-                }
-            } else {
-                None
-            }
-        }
     }
 }

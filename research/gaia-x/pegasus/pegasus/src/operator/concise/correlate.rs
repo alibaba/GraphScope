@@ -25,10 +25,10 @@ use crate::api::notification::{Cancel, End};
 use crate::api::CorrelatedSubTask;
 use crate::communication::input::{new_input_session, InputProxy};
 use crate::communication::output::{new_output, OutputProxy};
-use crate::data::{EndOfScope, MicroBatch};
+use crate::data::MicroBatch;
 use crate::errors::{IOError, JobExecError};
 use crate::operator::{Notifiable, OperatorCore};
-use crate::progress::Weight;
+use crate::progress::{DynPeers, EndOfScope};
 use crate::stream::{Single, SingleItem, Stream};
 use crate::tag::tools::map::TidyTagMap;
 use crate::{BuildJobError, Data, Tag};
@@ -163,7 +163,7 @@ impl<D: Data> OperatorCore for ForkSubtaskOperator<D> {
                         let tag = Tag::inherit(&p, cur);
                         trace_worker!("fork scope {}th subtask {:?}", fp.forked_child, tag);
                         let mut sub_batch = new_batch(tag.clone(), worker, buf);
-                        let end = EndOfScope::new(tag, Weight::single(worker), 1);
+                        let end = EndOfScope::new(tag, DynPeers::single(worker), 1, 1);
                         sub_batch.set_end(end);
                         output2.push_batch(sub_batch)?;
                         *in_progress += 1;
@@ -283,12 +283,12 @@ impl<P: Data, S: Data> OperatorCore for ZipSubtaskOperator<P, S> {
                     let mut zip_guard = self.zip_guard.borrow_mut();
                     let in_progress = zip_guard.get_mut_or_insert(&p_tag);
                     assert!(*in_progress > 0);
-                    let tag = Tag::inherit(&p_tag, 0);
-                    let mut session = output.new_session(&tag)?;
                     let seq = batch.tag.current_uncheck();
                     let res = batch.next().unwrap();
                     assert!(seq > 0, "unrecognized sequence {}", seq);
                     let offset = (seq / peers) as usize - 1;
+                    let tag = Tag::inherit(&p_tag, 0);
+                    let mut session = output.new_session(&tag)?;
                     match parent.take(offset) {
                         Ok(req) => {
                             trace_worker!("join result of {}th subtask {:?}", offset, batch.tag);

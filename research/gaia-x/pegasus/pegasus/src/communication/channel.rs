@@ -13,7 +13,7 @@
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 
-use crate::api::function::RouteFunction;
+use crate::api::function::{BatchRouteFunction, FnResult, RouteFunction};
 use crate::api::scope::{MergedScopeDelta, ScopeDelta};
 use crate::channel_id::{ChannelId, ChannelInfo};
 use crate::communication::buffer::ScopeBufferPool;
@@ -21,29 +21,46 @@ use crate::communication::cancel::{CancelHandle, SingleConsCancel};
 use crate::communication::decorator::aggregate::AggregateBatchPush;
 use crate::communication::decorator::broadcast::BroadcastBatchPush;
 use crate::communication::decorator::evented::EventEmitPush;
-use crate::communication::decorator::exchange::{ExchangeByScopePush, ExchangeMicroBatchPush};
+use crate::communication::decorator::exchange::{ExchangeByBatchPush, ExchangeByDataPush};
 use crate::communication::decorator::{LocalMicroBatchPush, MicroBatchPush};
-use crate::communication::output::{ChannelPush, OutputBuilderImpl};
+use crate::communication::output::{PerChannelPush, OutputBuilderImpl};
 use crate::data::MicroBatch;
 use crate::data_plane::{GeneralPull, GeneralPush};
 use crate::dataflow::DataflowBuilder;
-use crate::event::emitter::EventEmitter;
 use crate::graph::Port;
 use crate::BuildJobError;
 use crate::Data;
 
+
+pub enum BatchRoute<T: Data> {
+    AllToOne(u32),
+    Dyn(Box<dyn BatchRouteFunction<T>>)
+}
+
+
+impl<T: Data> BatchRouteFunction<T> for BatchRoute<T> {
+    fn route(&self, batch: &MicroBatch<T>) -> FnResult<u64> {
+        match self {
+            BatchRoute::AllToOne(t) => { Ok(*t as u64) }
+            BatchRoute::Dyn(f) => {
+                f.route(batch)
+            }
+        }
+    }
+}
+
 pub enum ChannelKind<T: Data> {
-    Pipeline(bool),
+    Pipeline,
     Shuffle(Box<dyn RouteFunction<T>>),
-    ShuffleScope,
+    BatchShuffle(BatchRoute<T>),
     Broadcast,
-    Aggregate(u32),
+    Aggregate,
 }
 
 impl<T: Data> ChannelKind<T> {
     pub fn is_pipeline(&self) -> bool {
         match self {
-            ChannelKind::Pipeline(_local) => true,
+            ChannelKind::Pipeline => true,
             _ => false,
         }
     }
@@ -69,7 +86,7 @@ impl<T: Data> Clone for Channel<T> {
             batch_capacity: self.batch_capacity,
             source: self.source,
             scope_delta: self.scope_delta.clone(),
-            kind: ChannelKind::Pipeline(false),
+            kind: ChannelKind::Pipeline,
         }
     }
 }
@@ -81,19 +98,19 @@ impl<T: Data> Default for Channel<T> {
             batch_capacity: 64,
             source: Port::new(0, 0),
             scope_delta: MergedScopeDelta::new(0),
-            kind: ChannelKind::Pipeline(false),
+            kind: ChannelKind::Pipeline,
         }
     }
 }
 
 pub(crate) struct MaterializedChannel<T: Data> {
-    push: ChannelPush<T>,
+    push: PerChannelPush<T>,
     pull: GeneralPull<MicroBatch<T>>,
     notify: Option<GeneralPush<MicroBatch<T>>>,
 }
 
 impl<T: Data> MaterializedChannel<T> {
-    pub fn take(self) -> (ChannelPush<T>, GeneralPull<MicroBatch<T>>, Option<GeneralPush<MicroBatch<T>>>) {
+    pub fn take(self) -> (PerChannelPush<T>, GeneralPull<MicroBatch<T>>, Option<GeneralPush<MicroBatch<T>>>) {
         (self.push, self.pull, self.notify)
     }
 }
@@ -106,7 +123,7 @@ impl<T: Data> Channel<T> {
             batch_capacity: port.get_batch_capacity(),
             source: port.get_port(),
             scope_delta: MergedScopeDelta::new(scope_level as usize),
-            kind: ChannelKind::Pipeline(false),
+            kind: ChannelKind::Pipeline,
         }
     }
 
@@ -147,26 +164,15 @@ impl<T: Data> Channel<T> {
 }
 
 impl<T: Data> Channel<T> {
-    fn build_pipeline(
-        self, target: Port, id: ChannelId, event_emit: EventEmitter, sync: bool,
-    ) -> MaterializedChannel<T> {
+    fn build_pipeline(self, target: Port, id: ChannelId) -> MaterializedChannel<T> {
         let (tx, rx) = crate::data_plane::pipeline::<MicroBatch<T>>(id);
         let scope_level = self.get_scope_level();
         let ch_info = ChannelInfo::new(id, scope_level, 1, 1, self.source, target);
-        let mut notify = None;
-        let push = if sync {
-            notify = Some(GeneralPush::IntraThread(tx.clone()));
-            let mut push = LocalMicroBatchPush::new(ch_info, tx, event_emit);
-            push.sync_global_state();
-            MicroBatchPush::Local(push)
-        } else {
-            let push = LocalMicroBatchPush::new(ch_info, tx, event_emit);
-            MicroBatchPush::Local(push)
-        };
+        let push = MicroBatchPush::Pipeline(LocalMicroBatchPush::new(ch_info, tx));
         let worker = crate::worker_id::get_current_worker().index;
         let ch = CancelHandle::SC(SingleConsCancel::new(worker));
-        let push = ChannelPush::new(ch_info, self.scope_delta, push, ch);
-        MaterializedChannel { push, pull: rx.into(), notify }
+        let push = PerChannelPush::new(ch_info, self.scope_delta, push, ch);
+        MaterializedChannel { push, pull: rx.into(), notify: None }
     }
 
     fn build_remote(
@@ -208,16 +214,12 @@ impl<T: Data> Channel<T> {
         }
 
         if dfb.worker_id.total_peers() == 1 {
-            let event_emit = dfb.event_emitter.clone();
-            return Ok(self.build_pipeline(target, id, event_emit, false));
+            return Ok(self.build_pipeline(target, id));
         }
 
-        let kind = std::mem::replace(&mut self.kind, ChannelKind::Pipeline(false));
+        let kind = std::mem::replace(&mut self.kind, ChannelKind::Pipeline);
         match kind {
-            ChannelKind::Pipeline(sync) => {
-                let event_emit = dfb.event_emitter.clone();
-                Ok(self.build_pipeline(target, id, event_emit, sync))
-            }
+            ChannelKind::Pipeline => Ok(self.build_pipeline(target, id)),
             ChannelKind::Shuffle(r) => {
                 let (info, pushes, pull, notify) = self.build_remote(scope_level, target, id, dfb)?;
                 let mut buffers = Vec::with_capacity(pushes.len());
@@ -225,34 +227,34 @@ impl<T: Data> Channel<T> {
                     let b = ScopeBufferPool::new(batch_size, batch_capacity, scope_level);
                     buffers.push(b);
                 }
-                let push = ExchangeMicroBatchPush::new(info, r, buffers, pushes);
+                let push = ExchangeByDataPush::new(info, r, buffers, pushes);
                 let ch = push.get_cancel_handle();
-                let push = ChannelPush::new(info, self.scope_delta, MicroBatchPush::Exchange(push), ch);
+                let push = PerChannelPush::new(info, self.scope_delta, MicroBatchPush::Exchange(push), ch);
+                Ok(MaterializedChannel { push, pull: pull.into(), notify: Some(notify) })
+            }
+            ChannelKind::BatchShuffle(route) => {
+                let (info, pushes, pull, notify) = self.build_remote(scope_level, target, id, dfb)?;
+                let push = ExchangeByBatchPush::new(info, route, pushes);
+                let cancel = push.get_cancel_handle();
+                let push =
+                    PerChannelPush::new(info, self.scope_delta, MicroBatchPush::ExchangeByBatch(push), cancel);
                 Ok(MaterializedChannel { push, pull: pull.into(), notify: Some(notify) })
             }
             ChannelKind::Broadcast => {
                 let (info, pushes, pull, notify) = self.build_remote(scope_level, target, id, dfb)?;
                 let push = BroadcastBatchPush::new(info, pushes);
                 let ch = push.get_cancel_handle();
-                let push = ChannelPush::new(info, self.scope_delta, MicroBatchPush::Broadcast(push), ch);
+                let push = PerChannelPush::new(info, self.scope_delta, MicroBatchPush::Broadcast(push), ch);
                 Ok(MaterializedChannel { push, pull: pull.into(), notify: Some(notify) })
             }
-            ChannelKind::Aggregate(worker) => {
+            ChannelKind::Aggregate => {
                 let (mut ch_info, pushes, pull, notify) =
                     self.build_remote(scope_level, target, id, dfb)?;
                 ch_info.target_peers = 1;
-                let push = AggregateBatchPush::new(worker, ch_info, pushes);
-                let cancel = CancelHandle::SC(SingleConsCancel::new(worker));
+                let push = AggregateBatchPush::new(ch_info, pushes);
+                let cancel = push.get_cancel_handle();
                 let push =
-                    ChannelPush::new(ch_info, self.scope_delta, MicroBatchPush::Global(push), cancel);
-                Ok(MaterializedChannel { push, pull: pull.into(), notify: Some(notify) })
-            }
-            ChannelKind::ShuffleScope => {
-                let (ch_info, pushes, pull, notify) = self.build_remote(scope_level, target, id, dfb)?;
-                let push = ExchangeByScopePush::new(ch_info, pushes);
-                let ch = push.get_cancel_handle();
-                let push =
-                    ChannelPush::new(ch_info, self.scope_delta, MicroBatchPush::ScopeGlobal(push), ch);
+                    PerChannelPush::new(ch_info, self.scope_delta, MicroBatchPush::Aggregate(push), cancel);
                 Ok(MaterializedChannel { push, pull: pull.into(), notify: Some(notify) })
             }
         }

@@ -24,10 +24,11 @@ use crate::communication::output::builder::OutputMeta;
 use crate::communication::output::tee::Tee;
 use crate::communication::output::BlockScope;
 use crate::communication::IOResult;
-use crate::data::{EndOfScope, MicroBatch};
+use crate::data::MicroBatch;
 use crate::data_plane::Push;
 use crate::errors::IOError;
 use crate::graph::Port;
+use crate::progress::EndOfScope;
 use crate::tag::tools::map::TidyTagMap;
 use crate::{Data, Tag};
 
@@ -79,9 +80,7 @@ impl<D: Data> OutputHandle<D> {
         }
     }
 
-    pub fn push_iter<I: Iterator<Item = D> + Send + 'static>(
-        &mut self, tag: &Tag, mut iter: I,
-    ) -> IOResult<()> {
+    pub fn push_iter<I: Iterator<Item = D> + Send + 'static>(&mut self, tag: &Tag, mut iter: I) -> IOResult<()> {
         if self.is_skipped(tag) {
             return Ok(());
         }
@@ -326,11 +325,7 @@ impl<D: Data> OutputHandle<D> {
         if batch.is_empty() {
             if batch.is_last() {
                 let seq = self.seq_emit.remove(&batch.tag).unwrap_or(0);
-                if seq > 0 {
-                    batch.set_seq(seq);
-                } else {
-                    batch.set_seq(0);
-                }
+                batch.set_seq(seq);
             } else {
                 return Ok(());
             }
@@ -429,7 +424,7 @@ impl<'a, D: Data> OutputSession<'a, D> {
         if output.is_skipped(&tag) {
             OutputSession { tag, skip: true, output }
         } else {
-            trace_worker!("output[{:?}] try to pin {:?} to create output session; ", output.port, tag);
+            //trace_worker!("output[{:?}] try to pin {:?} to create output session; ", output.port, tag);
             output.buf_pool.pin(&tag);
             OutputSession { tag, skip: false, output }
         }
@@ -530,7 +525,7 @@ impl<D: Data> ScopeStreamPush<D> for OutputHandle<D> {
     fn notify_end(&mut self, end: EndOfScope) -> IOResult<()> {
         let level = end.tag.len() as u32;
         if level == self.scope_level {
-            let mut batch = if let Some(buf) = self.buf_pool.take_buf(&end.tag, true) {
+            let mut batch = if let Some(buf) = self.buf_pool.take_last_buf(&end.tag) {
                 MicroBatch::new(end.tag.clone(), self.src, buf.into_read_only())
             } else {
                 MicroBatch::new(end.tag.clone(), self.src, ReadBuffer::new())

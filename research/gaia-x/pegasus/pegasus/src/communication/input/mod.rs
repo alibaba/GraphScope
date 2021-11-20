@@ -16,10 +16,11 @@
 use pegasus_common::downcast::*;
 
 use crate::channel_id::ChannelInfo;
-use crate::data::{EndOfScope, MicroBatch};
+use crate::data::MicroBatch;
 use crate::data_plane::GeneralPull;
 use crate::errors::IOResult;
 use crate::event::emitter::EventEmitter;
+use crate::progress::EndOfScope;
 use crate::{Data, Tag};
 
 /// Input abstraction without data type;

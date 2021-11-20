@@ -144,21 +144,23 @@ impl ChannelCancelPtr {
 unsafe impl Send for ChannelCancelPtr {}
 
 #[allow(dead_code)]
-pub(crate) struct ChannelPush<D: Data> {
+pub(crate) struct PerChannelPush<D: Data> {
     pub ch_info: ChannelInfo,
     pub src: u32,
     pub(crate) delta: MergedScopeDelta,
     push: MicroBatchPush<D>,
     cancel_handle: ChannelCancelPtr,
+    re_seq: TidyTagMap<u64>,
 }
 
-impl<D: Data> ChannelPush<D> {
+impl<D: Data> PerChannelPush<D> {
     pub(crate) fn new(
         ch_info: ChannelInfo, delta: MergedScopeDelta, push: MicroBatchPush<D>, ch: CancelHandle,
     ) -> Self {
         let src = crate::worker_id::get_current_worker().index;
         let cancel_handle = ChannelCancelPtr::new(ch_info.scope_level, delta.clone(), ch);
-        ChannelPush { ch_info, src, delta, push, cancel_handle }
+        let re_seq = TidyTagMap::new(ch_info.scope_level);
+        PerChannelPush { ch_info, src, delta, push, cancel_handle, re_seq }
     }
 
     pub(crate) fn get_cancel_handle(&self) -> ChannelCancelPtr {
@@ -171,7 +173,7 @@ impl<D: Data> ChannelPush<D> {
     }
 }
 
-impl<D: Data> Push<MicroBatch<D>> for ChannelPush<D> {
+impl<D: Data> Push<MicroBatch<D>> for PerChannelPush<D> {
     fn push(&mut self, mut batch: MicroBatch<D>) -> Result<(), IOError> {
         if self.is_canceled(&batch.tag) {
             if batch.is_last() {
@@ -185,9 +187,10 @@ impl<D: Data> Push<MicroBatch<D>> for ChannelPush<D> {
             let tag = self.delta.evolve(&batch.tag);
             if let Some(end) = batch.take_end() {
                 if self.delta.scope_level_delta() > 0 {
-                    // enter
+                    // enter / to-child
                     let end_cp = end.clone();
                     batch.set_end(end);
+                    trace_worker!("output[{:?}] send end of {:?} to channel[{}]", self.ch_info.source_port, tag, self.ch_info.id.index);
                     batch.set_tag(tag);
                     self.push.push(batch)?;
                     let mut p = MicroBatch::new(end_cp.tag.clone(), self.src, ReadBuffer::new());
@@ -198,9 +201,12 @@ impl<D: Data> Push<MicroBatch<D>> for ChannelPush<D> {
                     batch.set_tag(tag);
                     self.push.push(batch)
                 } else {
-                    // leave:
+                    // leave / to parent
                     if !batch.is_empty() {
+                        let seq = self.re_seq.get_mut_or_insert(&tag);
                         batch.set_tag(tag);
+                        batch.set_seq(*seq);
+                        *seq += 1;
                         self.push.push(batch)
                     } else {
                         Ok(())
@@ -208,6 +214,11 @@ impl<D: Data> Push<MicroBatch<D>> for ChannelPush<D> {
                 }
             } else if !batch.is_empty() {
                 // is not end, is not empty;
+                if self.delta.scope_level_delta() < 0 {
+                    let seq = self.re_seq.get_mut_or_insert(&tag);
+                    batch.set_seq(*seq);
+                    *seq += 1;
+                }
                 batch.set_tag(tag);
                 self.push.push(batch)
             } else {
@@ -218,6 +229,10 @@ impl<D: Data> Push<MicroBatch<D>> for ChannelPush<D> {
             // batch from parent scope;
             assert!(batch.is_empty(), "batch from parent is not empty;");
             assert!(batch.is_last(), "batch from parent is not last;");
+            if batch.tag.len() as u32 == self.ch_info.scope_level {
+                let seq = self.re_seq.remove(&batch.tag).unwrap_or(0);
+                batch.set_seq(seq);
+            }
             self.push.push(batch)
         } else {
             unreachable!("unrecognized batch from child scope {:?}", batch.tag);
@@ -234,7 +249,7 @@ impl<D: Data> Push<MicroBatch<D>> for ChannelPush<D> {
     }
 }
 
-impl<D: Data> BlockPush for ChannelPush<D> {
+impl<D: Data> BlockPush for PerChannelPush<D> {
     fn try_unblock(&mut self, tag: &Tag) -> Result<bool, IOError> {
         self.push.try_unblock(tag)
     }
@@ -248,16 +263,16 @@ impl<D: Data> BlockPush for ChannelPush<D> {
 pub(crate) struct Tee<D: Data> {
     port: Port,
     scope_level: u32,
-    main_push: ChannelPush<D>,
-    other_pushes: Vec<ChannelPush<D>>,
+    main_push: PerChannelPush<D>,
+    other_pushes: Vec<PerChannelPush<D>>,
 }
 
 impl<D: Data> Tee<D> {
-    pub fn new(port: Port, scope_level: u32, push: ChannelPush<D>) -> Self {
+    pub fn new(port: Port, scope_level: u32, push: PerChannelPush<D>) -> Self {
         Tee { port, scope_level, main_push: push, other_pushes: Vec::new() }
     }
 
-    pub fn add_push(&mut self, push: ChannelPush<D>) {
+    pub fn add_push(&mut self, push: PerChannelPush<D>) {
         self.other_pushes.push(push);
     }
 }

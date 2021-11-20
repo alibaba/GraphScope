@@ -20,12 +20,13 @@ use std::collections::VecDeque;
 pub(crate) use builder::OutputBuilderImpl;
 pub use output::OutputSession;
 use pegasus_common::downcast::AsAny;
-pub(crate) use tee::ChannelPush;
+pub(crate) use tee::PerChannelPush;
 
 use crate::communication::decorator::ScopeStreamPush;
 use crate::communication::output::output::OutputHandle;
-use crate::data::{EndOfScope, MicroBatch};
+use crate::data::MicroBatch;
 use crate::errors::IOResult;
+use crate::progress::EndOfScope;
 use crate::schedule::state::outbound::OutputCancelState;
 use crate::{Data, Tag};
 

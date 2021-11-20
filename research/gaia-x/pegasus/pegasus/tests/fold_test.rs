@@ -115,8 +115,8 @@ fn collect_in_apply_test() {
 }
 
 #[test]
-fn collect_in_apply_2_test() {
-    let mut conf = JobConf::new("collect_in_apply_2");
+fn apply_x_flatmap_s_flatmap_a_filter_collect_x_test() {
+    let mut conf = JobConf::new("apply_x_flatmap_s_flatmap_a_filter_collect_x_test");
     conf.set_workers(2);
     let mut result = pegasus::run(conf, || {
         move |input, output| {

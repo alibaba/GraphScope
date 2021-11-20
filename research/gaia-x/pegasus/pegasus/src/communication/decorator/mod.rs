@@ -16,18 +16,14 @@
 use crate::channel_id::ChannelInfo;
 use crate::communication::decorator::aggregate::AggregateBatchPush;
 use crate::communication::decorator::broadcast::BroadcastBatchPush;
-use crate::communication::decorator::exchange::{ExchangeByScopePush, ExchangeMicroBatchPush};
+use crate::communication::decorator::exchange::{ExchangeByBatchPush, ExchangeByDataPush};
 use crate::communication::IOResult;
-use crate::data::EndOfScope;
 use crate::data::MicroBatch;
 use crate::data_plane::intra_thread::ThreadPush;
 use crate::data_plane::Push;
 use crate::errors::IOError;
-use crate::event::emitter::EventEmitter;
-use crate::event::{Event, EventKind};
 use crate::graph::Port;
-use crate::progress::EndSignal;
-use crate::progress::Weight;
+use crate::progress::EndOfScope;
 use crate::tag::tools::map::TidyTagMap;
 use crate::{Data, Tag};
 pub mod aggregate;
@@ -71,100 +67,58 @@ pub trait BlockPush {
     fn clean_block_of(&mut self, tag: &Tag) -> IOResult<()>;
 }
 
-#[allow(dead_code)]
 pub struct LocalMicroBatchPush<T: Data> {
     pub ch_info: ChannelInfo,
-    pub worker_index: u32,
+    pub src: u32,
     inner: ThreadPush<MicroBatch<T>>,
-    event_emit: EventEmitter,
-    global_state: bool,
     push_counts: TidyTagMap<(usize, usize)>,
 }
 
-#[allow(dead_code)]
 impl<T: Data> LocalMicroBatchPush<T> {
-    pub fn new(ch_info: ChannelInfo, push: ThreadPush<MicroBatch<T>>, event_emit: EventEmitter) -> Self {
+    pub fn new(ch_info: ChannelInfo, push: ThreadPush<MicroBatch<T>>) -> Self {
         let push_counts = TidyTagMap::new(ch_info.scope_level);
         let worker_index = crate::worker_id::get_current_worker().index;
-        LocalMicroBatchPush {
-            ch_info,
-            worker_index,
-            inner: push,
-            event_emit,
-            global_state: false,
-            push_counts,
-        }
-    }
-
-    pub fn sync_global_state(&mut self) {
-        self.global_state = true;
+        LocalMicroBatchPush { ch_info, src: worker_index, inner: push, push_counts }
     }
 }
 
 impl<T: Data> Push<MicroBatch<T>> for LocalMicroBatchPush<T> {
     fn push(&mut self, mut batch: MicroBatch<T>) -> IOResult<()> {
-        if let Some(mut end) = batch.take_end() {
-            let mut c = self
-                .push_counts
-                .remove(&batch.tag)
-                .unwrap_or((0, 0));
-            c.1 += batch.len();
-            if batch.is_empty() {
-                trace_worker!(
-                    "output[{:?}] push end of {:?} to channel[{}] to self, total pushed {};",
-                    self.ch_info.source_port,
-                    batch.tag,
-                    self.ch_info.index(),
-                    c.1
-                )
-            } else {
-                trace_worker!(
-                    "output[{:?}] push last batch(len={}) of {:?} to channel[{}] to self, total pushed {};",
-                    self.ch_info.source_port,
-                    batch.len(),
-                    batch.tag,
-                    self.ch_info.id.index,
-                    c.1
-                );
-            }
-            end.total_send = c.1 as u64;
-
-            if self.global_state {
-                let worker = self.worker_index;
-                let port = self.ch_info.target_port;
-
-                if end.source.value() == 1 {
-                    let event = Event::new(
-                        worker,
-                        port,
-                        EventKind::End(EndSignal::new(end.clone(), Weight::partial_current())),
-                    );
-                    for i in 0..self.event_emit.peers() as u32 {
-                        if i != worker {
-                            self.event_emit.send(i, event.clone())?;
-                        }
-                    }
-                    batch.set_end(end);
+        let level = batch.tag().len() as u32;
+        if level == self.ch_info.scope_level {
+            if let Some(mut end) = batch.take_end() {
+                let mut c = self
+                    .push_counts
+                    .remove(&batch.tag)
+                    .unwrap_or((0, 0));
+                c.1 += batch.len();
+                if batch.is_empty() {
+                    trace_worker!(
+                        "output[{:?}] push end of {:?} to channel[{}] to self, total pushed {};",
+                        self.ch_info.source_port,
+                        batch.tag,
+                        self.ch_info.index(),
+                        c.1
+                    )
                 } else {
-                    if !batch.is_empty() {
-                        self.inner.push(batch)?;
-                    }
-                    let event = Event::new(
-                        worker,
-                        port,
-                        EventKind::End(EndSignal::new(end, Weight::partial_current())),
+                    trace_worker!(
+                        "output[{:?}] push last batch(len={}) of {:?} to channel[{}] to self, total pushed {};",
+                        self.ch_info.source_port,
+                        batch.len(),
+                        batch.tag,
+                        self.ch_info.id.index,
+                        c.1
                     );
-                    return self.event_emit.broadcast(event);
                 }
-            } else {
+                end.total_send = c.1 as u64;
+                end.global_total_send = c.1 as u64;
                 batch.set_end(end);
+            } else {
+                let c = self.push_counts.get_mut_or_insert(&batch.tag);
+                c.0 += batch.len();
+                c.1 += batch.len();
             }
-        } else {
-            let c = self.push_counts.get_mut_or_insert(&batch.tag);
-            c.0 += batch.len();
-            c.1 += batch.len();
         }
-
         self.inner.push(batch)
     }
 
@@ -195,43 +149,42 @@ impl<T: Data> Push<MicroBatch<T>> for LocalMicroBatchPush<T> {
     }
 }
 
-#[allow(dead_code)]
 pub(crate) enum MicroBatchPush<T: Data> {
-    Local(LocalMicroBatchPush<T>),
-    Exchange(ExchangeMicroBatchPush<T>),
+    Pipeline(LocalMicroBatchPush<T>),
+    Exchange(ExchangeByDataPush<T>),
+    ExchangeByBatch(ExchangeByBatchPush<T>),
     Broadcast(BroadcastBatchPush<T>),
-    Global(AggregateBatchPush<T>),
-    ScopeGlobal(ExchangeByScopePush<T>),
+    Aggregate(AggregateBatchPush<T>),
 }
 
 impl<T: Data> Push<MicroBatch<T>> for MicroBatchPush<T> {
     fn push(&mut self, batch: MicroBatch<T>) -> Result<(), IOError> {
         match self {
-            MicroBatchPush::Local(p) => p.push(batch),
+            MicroBatchPush::Pipeline(p) => p.push(batch),
             MicroBatchPush::Exchange(p) => p.push(batch),
+            MicroBatchPush::ExchangeByBatch(p) => p.push(batch),
             MicroBatchPush::Broadcast(p) => p.push(batch),
-            MicroBatchPush::Global(p) => p.push(batch),
-            MicroBatchPush::ScopeGlobal(p) => p.push(batch),
+            MicroBatchPush::Aggregate(p) => p.push(batch),
         }
     }
 
     fn flush(&mut self) -> Result<(), IOError> {
         match self {
-            MicroBatchPush::Local(p) => p.flush(),
+            MicroBatchPush::Pipeline(p) => p.flush(),
             MicroBatchPush::Exchange(p) => p.flush(),
+            MicroBatchPush::ExchangeByBatch(p) => p.flush(),
             MicroBatchPush::Broadcast(p) => p.flush(),
-            MicroBatchPush::Global(p) => p.flush(),
-            MicroBatchPush::ScopeGlobal(p) => p.flush(),
+            MicroBatchPush::Aggregate(p) => p.flush(),
         }
     }
 
     fn close(&mut self) -> Result<(), IOError> {
         match self {
-            MicroBatchPush::Local(p) => p.close(),
+            MicroBatchPush::Pipeline(p) => p.close(),
             MicroBatchPush::Exchange(p) => p.close(),
+            MicroBatchPush::ExchangeByBatch(p) => p.close(),
             MicroBatchPush::Broadcast(p) => p.close(),
-            MicroBatchPush::Global(p) => p.close(),
-            MicroBatchPush::ScopeGlobal(p) => p.close(),
+            MicroBatchPush::Aggregate(p) => p.close(),
         }
     }
 }

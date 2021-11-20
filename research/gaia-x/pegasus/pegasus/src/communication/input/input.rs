@@ -24,11 +24,12 @@ use pegasus_common::downcast::*;
 
 use crate::channel_id::ChannelInfo;
 use crate::communication::input::{InputProxy, InputSession};
-use crate::data::{EndOfScope, MicroBatch};
+use crate::data::MicroBatch;
 use crate::data_plane::{GeneralPull, Pull};
 use crate::errors::IOResult;
 use crate::event::emitter::EventEmitter;
 use crate::event::{Event, EventKind};
+use crate::progress::EndOfScope;
 use crate::tag::tools::map::TidyTagMap;
 use crate::{Data, Tag};
 

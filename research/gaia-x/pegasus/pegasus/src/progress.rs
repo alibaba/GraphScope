@@ -1,4 +1,3 @@
-use std::cmp::Ordering;
 use std::collections::HashSet;
 use std::fmt::{Debug, Formatter};
 use std::ops::{Add, AddAssign, Div};
@@ -7,25 +6,29 @@ use nohash_hasher::IntSet;
 use pegasus_common::codec::Encode;
 
 use crate::codec::{Decode, ReadExt, WriteExt};
-use crate::data::EndOfScope;
 use crate::Tag;
 
 #[derive(Clone, Debug)]
-enum Mask {
+enum PeerSet {
+    None,
     Single(u32),
+    // TODO: use bit set instead;
     Partial(HashSet<u32>),
     All(u32),
 }
 
-impl PartialEq for Mask {
+impl PartialEq for PeerSet {
     fn eq(&self, other: &Self) -> bool {
         match (self, other) {
-            (Mask::Single(a), Mask::Single(b)) => a == b,
-            (Mask::Single(a), Mask::Partial(b)) => b.len() == 1 && b.contains(a),
-            (Mask::Single(a), Mask::All(b)) => *a == 0 && *b == 1,
-            (Mask::Partial(a), Mask::Single(b)) => a.len() == 1 && a.contains(b),
-            (Mask::Partial(a), Mask::Partial(b)) => a == b,
-            (Mask::Partial(a), Mask::All(b)) => {
+            (PeerSet::None, PeerSet::None) => true,
+            (PeerSet::None, _) => false,
+            (_, PeerSet::None) => false,
+            (PeerSet::Single(a), PeerSet::Single(b)) => a == b,
+            (PeerSet::Single(a), PeerSet::Partial(b)) => b.len() == 1 && b.contains(a),
+            (PeerSet::Single(a), PeerSet::All(b)) => *a == 0 && *b == 1,
+            (PeerSet::Partial(a), PeerSet::Single(b)) => a.len() == 1 && a.contains(b),
+            (PeerSet::Partial(a), PeerSet::Partial(b)) => a == b,
+            (PeerSet::Partial(a), PeerSet::All(b)) => {
                 if a.len() as u32 == *b {
                     for i in 0..*b {
                         if !a.contains(&i) {
@@ -37,8 +40,8 @@ impl PartialEq for Mask {
                     false
                 }
             }
-            (Mask::All(a), Mask::Single(b)) => *a == 1 && *b == 0,
-            (Mask::All(a), Mask::Partial(b)) => {
+            (PeerSet::All(a), PeerSet::Single(b)) => *a == 1 && *b == 0,
+            (PeerSet::All(a), PeerSet::Partial(b)) => {
                 if b.len() == *a as usize {
                     for i in 0..*a {
                         if !b.contains(&i) {
@@ -50,244 +53,240 @@ impl PartialEq for Mask {
                     false
                 }
             }
-            (Mask::All(a), Mask::All(b)) => *a == *b,
+            (PeerSet::All(a), PeerSet::All(b)) => *a == *b,
         }
     }
 }
 
-impl PartialOrd for Mask {
-    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
-        match (self, other) {
-            (Mask::Single(a), Mask::Single(b)) => {
-                if a == b {
-                    Some(Ordering::Equal)
-                } else {
-                    None
-                }
-            }
-            (Mask::Single(a), Mask::Partial(b)) => {
-                if b.contains(a) {
-                    if b.len() == 1 {
-                        Some(Ordering::Equal)
-                    } else {
-                        Some(Ordering::Less)
-                    }
-                } else {
-                    None
-                }
-            }
-            (Mask::Single(_), Mask::All(_)) => Some(Ordering::Less),
-            (Mask::Partial(a), Mask::Single(b)) => {
-                if a.contains(b) {
-                    if a.len() == 1 {
-                        Some(Ordering::Equal)
-                    } else {
-                        Some(Ordering::Greater)
-                    }
-                } else {
-                    None
-                }
-            }
-            (Mask::Partial(a), Mask::Partial(b)) => {
-                if a == b {
-                    return Some(Ordering::Equal);
-                }
+impl Eq for PeerSet {}
 
-                if a.is_subset(b) {
-                    Some(Ordering::Less)
-                } else if a.is_superset(b) {
-                    Some(Ordering::Greater)
-                } else {
-                    None
-                }
-            }
-            (Mask::Partial(a), Mask::All(b)) => {
-                if a.len() as u32 == *b {
-                    for i in 0..*b {
-                        if !a.contains(&i) {
-                            return None;
-                        }
-                    }
-                    Some(Ordering::Equal)
-                } else if a.len() < *b as usize {
-                    Some(Ordering::Less)
-                } else {
-                    None
-                }
-            }
-            (Mask::All(_), Mask::Single(_)) => Some(Ordering::Greater),
-            (Mask::All(a), Mask::Partial(b)) => {
-                if *a == b.len() as u32 {
-                    for i in 0..*a {
-                        if !b.contains(&i) {
-                            return None;
-                        }
-                    }
-                    Some(Ordering::Equal)
-                } else {
-                    None
-                }
-            }
-            (Mask::All(a), Mask::All(b)) => {
-                if *a == *b {
-                    Some(Ordering::Equal)
-                } else {
-                    None
-                }
-            }
-        }
-    }
+#[derive(Clone, PartialEq, Eq)]
+pub struct DynPeers {
+    mask: PeerSet,
 }
 
-impl Eq for Mask {}
-
-#[derive(Clone, PartialEq, Eq, PartialOrd)]
-pub struct Weight {
-    mask: Mask,
-}
-
-impl Weight {
+impl DynPeers {
     pub fn single(index: u32) -> Self {
-        Weight { mask: Mask::Single(index) }
+        DynPeers { mask: PeerSet::Single(index) }
     }
 
-    pub fn partial_empty() -> Self {
-        Weight { mask: Mask::Partial(Default::default()) }
+    pub fn empty() -> Self {
+        DynPeers { mask: PeerSet::None }
     }
 
     pub fn partial_current() -> Self {
         let mut set: HashSet<u32> = Default::default();
         let idx = crate::worker_id::get_current_worker().index;
         set.insert(idx);
-        Weight { mask: Mask::Partial(set) }
+        DynPeers { mask: PeerSet::Partial(set) }
     }
 
     pub fn all() -> Self {
         let peers = crate::worker_id::get_current_worker().total_peers();
-        Weight { mask: Mask::All(peers) }
+        DynPeers { mask: PeerSet::All(peers) }
     }
 
     pub fn add_source(&mut self, worker: u32) {
-        match self.mask {
-            Mask::Single(_) => unreachable!("single weight can't add source"),
-            Mask::Partial(ref mut set) => {
+        let mask = std::mem::replace(&mut self.mask, PeerSet::None);
+        match mask {
+            PeerSet::None => self.mask = PeerSet::Single(worker),
+            PeerSet::Single(a) => {
+                let mut set = HashSet::with_capacity(2);
+                set.insert(a);
                 set.insert(worker);
+                self.mask = PeerSet::Partial(set)
             }
-            Mask::All(_) => {}
+            PeerSet::Partial(mut set) => {
+                set.insert(worker);
+                self.mask = PeerSet::Partial(set)
+            }
+            PeerSet::All(a) => self.mask = PeerSet::All(a),
         }
     }
 
     pub fn contains_source(&self, worker: u32) -> bool {
         match &self.mask {
-            Mask::Single(id) => *id == worker,
-            Mask::Partial(set) => set.contains(&worker),
-            Mask::All(_) => true,
+            PeerSet::None => false,
+            PeerSet::Single(id) => *id == worker,
+            PeerSet::Partial(set) => set.contains(&worker),
+            PeerSet::All(_) => true,
         }
     }
 
     #[inline]
     pub fn value(&self) -> usize {
         match self.mask {
-            Mask::Single(_) => 1,
-            Mask::Partial(ref set) => set.len(),
-            Mask::All(ref p) => *p as usize,
+            PeerSet::None => 0,
+            PeerSet::Single(_) => 1,
+            PeerSet::Partial(ref set) => set.len(),
+            PeerSet::All(ref p) => *p as usize,
         }
     }
 
-    pub fn merge(&mut self, other: Weight) {
-        match (&mut self.mask, other.mask) {
-            (Mask::Single(a), Mask::Single(b)) => {
-                *a = b;
+    pub fn merge(&mut self, other: DynPeers) {
+        let mask = std::mem::replace(&mut self.mask, PeerSet::None);
+        match (mask, other.mask) {
+            (PeerSet::None, _other) => {
+                self.mask = _other;
             }
-            (Mask::Single(a), Mask::Partial(mut b)) => {
-                b.insert(*a);
-                self.mask = Mask::Partial(b);
+            (my, PeerSet::None) => {
+                self.mask = my;
             }
-            (Mask::Single(_), Mask::All(b)) => {
-                self.mask = Mask::All(b);
+            (PeerSet::Single(a), PeerSet::Single(b)) => {
+                let mut set = HashSet::with_capacity(2);
+                set.insert(a);
+                set.insert(b);
+                self.mask = PeerSet::Partial(set);
             }
-            (Mask::Partial(a), Mask::Single(b)) => {
+            (PeerSet::Single(a), PeerSet::Partial(mut b)) => {
+                b.insert(a);
+                self.mask = PeerSet::Partial(b);
+            }
+            (PeerSet::Partial(mut a), PeerSet::Single(b)) => {
                 a.insert(b);
+                self.mask = PeerSet::Partial(a);
             }
-            (Mask::Partial(a), Mask::Partial(b)) => {
+            (PeerSet::Partial(mut a), PeerSet::Partial(b)) => {
                 a.extend(b);
+                self.mask = PeerSet::Partial(a);
             }
-            (Mask::Partial(_), Mask::All(b)) => {
-                self.mask = Mask::All(b);
+            (_, PeerSet::All(b)) => {
+                self.mask = PeerSet::All(b);
             }
-            _ => (),
+            (PeerSet::All(a), _) => {
+                self.mask = PeerSet::All(a);
+            }
         }
     }
 }
 
-impl Debug for Weight {
+impl Debug for DynPeers {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         match self.mask {
-            Mask::Single(x) => write!(f, "{}", x),
-            Mask::Partial(ref p) => write!(f, "{:?}", p),
-            Mask::All(_) => write!(f, "All"),
+            PeerSet::None => write!(f, "P[]"),
+            PeerSet::Single(x) => write!(f, "P[{}]", x),
+            PeerSet::Partial(ref p) => write!(f, "P[{:?}]", p),
+            PeerSet::All(_) => write!(f, "All"),
         }
     }
 }
 
-impl Encode for Weight {
+impl Encode for DynPeers {
     fn write_to<W: WriteExt>(&self, writer: &mut W) -> std::io::Result<()> {
         match &self.mask {
-            Mask::Single(x) => {
-                writer.write_u32(0)?;
+            PeerSet::None => writer.write_u32(0),
+            PeerSet::Single(x) => {
+                writer.write_u32(1)?;
                 writer.write_u32(*x)
             }
-            Mask::Partial(s) => {
-                writer.write_u32(1)?;
+            PeerSet::Partial(s) => {
+                writer.write_u32(2)?;
                 writer.write_u32(s.len() as u32)?;
                 for x in s.iter() {
                     writer.write_u32(*x)?;
                 }
                 Ok(())
             }
-            Mask::All(a) => {
-                writer.write_u32(2)?;
+            PeerSet::All(a) => {
+                writer.write_u32(3)?;
                 writer.write_u32(*a)
             }
         }
     }
 }
 
-impl Decode for Weight {
+impl Decode for DynPeers {
     fn read_from<R: ReadExt>(reader: &mut R) -> std::io::Result<Self> {
         let mode = reader.read_u32()?;
         if mode == 0 {
-            let x = reader.read_u32()?;
-            Ok(Weight { mask: Mask::Single(x) })
+            Ok(DynPeers { mask: PeerSet::None })
         } else if mode == 1 {
+            let x = reader.read_u32()?;
+            Ok(DynPeers { mask: PeerSet::Single(x) })
+        } else if mode == 2 {
             let len = reader.read_u32()? as usize;
             let mut set = HashSet::with_capacity(len);
             for _ in 0..len {
                 let x = reader.read_u32()?;
                 set.insert(x);
             }
-            Ok(Weight { mask: Mask::Partial(set) })
-        } else if mode == 2 {
+            Ok(DynPeers { mask: PeerSet::Partial(set) })
+        } else if mode == 3 {
             let x = reader.read_u32()?;
-            Ok(Weight { mask: Mask::All(x) })
+            Ok(DynPeers { mask: PeerSet::All(x) })
         } else {
             Err(std::io::ErrorKind::InvalidData)?
         }
     }
 }
 
-#[derive(Clone, Debug)]
-pub struct EndSignal {
-    end: EndOfScope,
-    children: Weight,
+#[derive(Clone)]
+pub struct EndOfScope {
+    /// The tag of scope this end belongs to;
+    pub(crate) tag: Tag,
+    /// The worker peers who also has send data(and end) of this scope;
+    /// It indicates how many the `[EndOfScope]` will be received by consumers;
+    pub(crate) peers: DynPeers,
+    /// Record how many data has send to a consumer;
+    pub(crate) total_send: u64,
+    /// Record how many data has send to all consumers;
+    pub(crate) global_total_send: u64,
 }
 
-impl EndSignal {
-    pub fn new(end: EndOfScope, children: Weight) -> Self {
-        EndSignal { end, children }
+impl EndOfScope {
+    pub(crate) fn new(tag: Tag, source: DynPeers, total_send: u64, global_total_send: u64) -> Self {
+        EndOfScope { tag, peers: source, total_send, global_total_send }
     }
 
-    pub fn merge_children(&mut self, other: Weight) {
+    pub(crate) fn merge(&mut self, other: EndOfScope) {
+        assert_eq!(self.tag, other.tag);
+        self.peers.merge(other.peers);
+        self.total_send += other.total_send;
+        self.global_total_send += other.global_total_send;
+    }
+
+    pub(crate) fn contains_source(&self, src: u32) -> bool {
+        self.peers.value() > 0 && self.peers.contains_source(src)
+    }
+}
+
+impl Debug for EndOfScope {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        write!(f, "end({:?}_{})", self.tag, self.total_send)
+    }
+}
+
+impl Encode for EndOfScope {
+    fn write_to<W: WriteExt>(&self, writer: &mut W) -> std::io::Result<()> {
+        self.tag.write_to(writer)?;
+        self.peers.write_to(writer)?;
+        writer.write_u64(self.total_send)?;
+        writer.write_u64(self.global_total_send)
+    }
+}
+
+impl Decode for EndOfScope {
+    fn read_from<R: ReadExt>(reader: &mut R) -> std::io::Result<Self> {
+        let tag = Tag::read_from(reader)?;
+        let peers = DynPeers::read_from(reader)?;
+        let total_send = reader.read_u64()?;
+        let global_total_send = reader.read_u64()?;
+        Ok(EndOfScope { tag, peers, total_send, global_total_send })
+    }
+}
+
+#[derive(Clone, Debug)]
+pub struct EndSyncSignal {
+    end: EndOfScope,
+    children: DynPeers,
+}
+
+impl EndSyncSignal {
+    pub fn new(end: EndOfScope, children: DynPeers) -> Self {
+        EndSyncSignal { end, children }
+    }
+
+    pub fn merge_children(&mut self, other: DynPeers) {
         self.children.merge(other)
     }
 
@@ -300,7 +299,7 @@ impl EndSignal {
     }
 
     pub fn sources(&self) -> usize {
-        self.end.source.value()
+        self.end.peers.value()
     }
 
     pub fn tag(&self) -> &Tag {
@@ -308,30 +307,32 @@ impl EndSignal {
     }
 
     pub fn into_end(mut self) -> EndOfScope {
-        let child = std::mem::replace(&mut self.children, Weight::partial_empty());
-        self.end.source = child;
+        let child = std::mem::replace(&mut self.children, DynPeers::empty());
+        self.end.peers = child;
         self.end
     }
 
-    pub fn take(self) -> (EndOfScope, Weight) {
+    pub fn take(self) -> (EndOfScope, DynPeers) {
         (self.end, self.children)
     }
 }
 
-impl Encode for EndSignal {
+impl Encode for EndSyncSignal {
     fn write_to<W: WriteExt>(&self, writer: &mut W) -> std::io::Result<()> {
         self.end.write_to(writer)?;
         self.children.write_to(writer)
     }
 }
 
-impl Decode for EndSignal {
+impl Decode for EndSyncSignal {
     fn read_from<R: ReadExt>(reader: &mut R) -> std::io::Result<Self> {
         let end = EndOfScope::read_from(reader)?;
-        let children = Weight::read_from(reader)?;
-        Ok(EndSignal { end, children })
+        let children = DynPeers::read_from(reader)?;
+        Ok(EndSyncSignal { end, children })
     }
 }
+
+/////////////////////////// future use ////////////////////////////////
 
 /// represent as (a / b)
 #[allow(dead_code)]
@@ -481,24 +482,24 @@ mod test {
 
     #[test]
     fn mask_eq_test() {
-        assert_eq!(Mask::Single(0), Mask::Single(0));
-        assert_ne!(Mask::Single(0), Mask::Single(1));
+        assert_eq!(PeerSet::Single(0), PeerSet::Single(0));
+        assert_ne!(PeerSet::Single(0), PeerSet::Single(1));
 
         let mut set = HashSet::new();
         set.insert(1);
-        assert_eq!(Mask::Single(1), Mask::Partial(set));
+        assert_eq!(PeerSet::Single(1), PeerSet::Partial(set));
 
         let mut set = HashSet::new();
         set.insert(1);
         set.insert(2);
-        assert_ne!(Mask::Single(1), Mask::Partial(set));
+        assert_ne!(PeerSet::Single(1), PeerSet::Partial(set));
 
-        assert_eq!(Mask::Single(0), Mask::All(1));
-        assert_ne!(Mask::Single(1), Mask::All(1));
+        assert_eq!(PeerSet::Single(0), PeerSet::All(1));
+        assert_ne!(PeerSet::Single(1), PeerSet::All(1));
 
         let mut set = HashSet::new();
         set.insert(1);
-        assert_eq!(Mask::Partial(set), Mask::Single(1));
+        assert_eq!(PeerSet::Partial(set), PeerSet::Single(1));
 
         let mut set1 = HashSet::new();
         set1.insert(0);
@@ -506,13 +507,13 @@ mod test {
         let mut set2 = HashSet::new();
         set2.insert(0);
         set2.insert(1);
-        assert_eq!(Mask::Partial(set1), Mask::Partial(set2));
+        assert_eq!(PeerSet::Partial(set1), PeerSet::Partial(set2));
 
         let mut set = HashSet::new();
         set.insert(0);
         set.insert(1);
         set.insert(2);
-        assert_eq!(Mask::Partial(set), Mask::All(3));
+        assert_eq!(PeerSet::Partial(set), PeerSet::All(3));
 
         let mut set1 = HashSet::new();
         set1.insert(0);
@@ -521,57 +522,14 @@ mod test {
         set2.insert(0);
         set2.insert(1);
         set2.insert(2);
-        assert_ne!(Mask::Partial(set1), Mask::Partial(set2));
+        assert_ne!(PeerSet::Partial(set1), PeerSet::Partial(set2));
 
-        assert_eq!(Mask::All(1), Mask::Single(0));
-        assert_eq!(Mask::All(3), Mask::All(3));
+        assert_eq!(PeerSet::All(1), PeerSet::Single(0));
+        assert_eq!(PeerSet::All(3), PeerSet::All(3));
         let mut set = HashSet::new();
         set.insert(0);
         set.insert(1);
         set.insert(2);
-        assert_eq!(Mask::All(3), Mask::Partial(set));
-    }
-
-    #[test]
-    fn mask_cmp_test() {
-        let mut set1 = HashSet::new();
-        set1.insert(0);
-        set1.insert(1);
-        let mut set2 = HashSet::new();
-        set2.insert(0);
-        set2.insert(1);
-        set2.insert(2);
-        assert!(Mask::Partial(set1) <= Mask::Partial(set2));
-
-        let mut set1 = HashSet::new();
-        set1.insert(0);
-        set1.insert(1);
-        set1.insert(2);
-        let mut set2 = HashSet::new();
-        set2.insert(0);
-        set2.insert(1);
-        set2.insert(2);
-        let a = Mask::Partial(set1);
-        let b = Mask::Partial(set2);
-        assert!(a <= b);
-        assert!(a >= b);
-        assert_eq!(a, b);
-
-        let mut set2 = HashSet::new();
-        set2.insert(0);
-        set2.insert(1);
-        set2.insert(2);
-        assert!(Mask::Partial(set2) <= Mask::All(4));
-
-        let mut set1 = HashSet::new();
-        set1.insert(0);
-        set1.insert(1);
-        set1.insert(3);
-        let mut set2 = HashSet::new();
-        set2.insert(0);
-        set2.insert(1);
-        set2.insert(2);
-
-        assert!(!(Mask::Partial(set1) <= Mask::Partial(set2)));
+        assert_eq!(PeerSet::All(3), PeerSet::Partial(set));
     }
 }

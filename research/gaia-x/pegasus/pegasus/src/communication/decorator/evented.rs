@@ -18,7 +18,7 @@ use crate::data::MicroBatch;
 use crate::data_plane::{GeneralPush, Push};
 use crate::event::emitter::EventEmitter;
 use crate::event::{Event, EventKind};
-use crate::progress::EndSignal;
+use crate::progress::{DynPeers, EndOfScope, EndSyncSignal};
 use crate::tag::tools::map::TidyTagMap;
 use crate::{Data, Tag};
 
@@ -54,32 +54,75 @@ impl<T: Data> EventEmitPush<T> {
         self.push_monitor.get(tag).map(|(_, _, x)| *x)
     }
 
-    pub fn notify_end(&mut self, mut end: EndSignal) -> IOResult<()> {
-        assert!(end.sources() > 1);
-        if end.tag().len() == self.push_monitor.scope_level as usize {
+    pub fn push_end(&mut self, mut end: EndOfScope, children: DynPeers) -> IOResult<()> {
+        if end.tag.len() == self.push_monitor.scope_level as usize {
+            assert_eq!(
+                end.peers.value(),
+                1,
+                "peers = {} of scope {:?} should be sync;",
+                end.peers.value(),
+                end.tag
+            );
+            if end.peers.contains_source(self.source_worker) {
+                trace_worker!(
+                    "output[{:?}] send end of {:?} to channel[{}] to worker {}, peers {:?} => {:?}",
+                    self.ch_info.source_port,
+                    end.tag,
+                    self.ch_info.id.index,
+                    self.target_worker,
+                    end.peers,
+                    children
+                );
+                end.peers = children;
+                let end_batch = MicroBatch::last(self.source_worker, end);
+                self.push(end_batch)
+            } else {
+                Ok(())
+            }
+        } else {
+            end.peers = children;
+            let end_batch = MicroBatch::last(self.source_worker, end);
+            self.push(end_batch)
+        }
+    }
+
+    pub fn sync_end(&mut self, mut end: EndOfScope, children: DynPeers) -> IOResult<()> {
+        if end.peers.value() == 1 {
+            // need not sync;
+            return self.push_end(end, children);
+        }
+        if end.tag.len() == self.push_monitor.scope_level as usize {
+            assert!(
+                end.peers.contains_source(self.source_worker),
+                "send end of {:?} without allow ",
+                end.tag
+            );
             let size = self
                 .push_monitor
-                .remove(end.tag())
+                .remove(&end.tag)
                 .unwrap_or((0, 0, 0));
-            end.set_push_count(size.2 as u64);
+            end.total_send = size.2 as u64;
             trace_worker!(
-                "output[{:?}]: notify end of {:?} to channel[{}] to worker {}, total pushed {};",
+                "output[{:?}]: send end of {:?} to channel[{}] to worker {}, total pushed {}, peers:{:?}=>{:?};",
                 self.ch_info.source_port,
-                end.tag(),
+                end.tag,
                 self.ch_info.id.index,
                 self.target_worker,
-                size.2
+                size.2,
+                end.peers,
+                children,
             );
         } else {
             trace_worker!(
                 "output[{:?}]: send end event of {:?} of channel[{}] to worker {} to port {:?};",
                 self.ch_info.source_port,
-                end.tag(),
+                &end.tag,
                 self.ch_info.id.index,
                 self.target_worker,
                 self.ch_info.target_port
             );
         }
+        let end = EndSyncSignal::new(end, children);
         let event = Event::new(self.source_worker, self.ch_info.target_port, EventKind::End(end));
         self.event_emitter
             .send(self.target_worker, event)
@@ -96,17 +139,18 @@ impl<D: Data> Push<MicroBatch<D>> for EventEmitPush<D> {
                 .unwrap_or((0, 0, 0));
             total += len;
             end.total_send = total as u64;
-            batch.set_end(end);
-            batch.set_seq(seq as u64);
             trace_worker!(
-                    "output[{:?}] push last batch(len={}) of {:?} to channel[{}] to worker {}, total pushed {} ;",
+                    "output[{:?}] push last batch(len={}) of {:?} to channel[{}] to worker {}, total pushed {} to {:?}",
                     self.ch_info.source_port,
                     len,
                     batch.tag,
                     self.ch_info.id.index,
                     self.target_worker,
-                    total
+                    end.global_total_send,
+                    end.peers,
                 );
+            batch.set_end(end);
+            batch.set_seq(seq as u64);
         } else {
             assert!(len > 0, "push batch size = 0;");
             let (seq, cnt, total) = self.push_monitor.get_mut_or_insert(&batch.tag);

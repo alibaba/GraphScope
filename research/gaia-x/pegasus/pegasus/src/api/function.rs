@@ -13,6 +13,9 @@
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 
+use crate::data::MicroBatch;
+use crate::Data;
+
 ///
 /// Here contains abstractions of all user defined functions;
 ///
@@ -23,6 +26,10 @@ pub type FnResult<T> = Result<T, Box<dyn std::error::Error + Send>>;
 
 pub trait RouteFunction<D>: Send + 'static {
     fn route(&self, data: &D) -> FnResult<u64>;
+}
+
+pub trait BatchRouteFunction<D: Data>: Send + 'static {
+    fn route(&self, batch: &MicroBatch<D>) -> FnResult<u64>;
 }
 
 pub trait MapFunction<I, O>: Send + 'static {
@@ -60,6 +67,12 @@ mod box_impl {
     impl<D, R: RouteFunction<D> + ?Sized> RouteFunction<D> for Box<R> {
         fn route(&self, data: &D) -> FnResult<u64> {
             (**self).route(data)
+        }
+    }
+
+    impl<D: Data, R: BatchRouteFunction<D> + ?Sized> BatchRouteFunction<D> for Box<R> {
+        fn route(&self, batch: &MicroBatch<D>) -> FnResult<u64> {
+            (**self).route(batch)
         }
     }
 

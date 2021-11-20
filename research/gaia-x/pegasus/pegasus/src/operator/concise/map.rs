@@ -12,11 +12,10 @@
 //! WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
+use crate::api::function::FnResult;
 use crate::api::Map;
 use crate::api::Unary;
-use crate::data::MarkedData;
 use crate::errors::BuildJobError;
-use crate::macros::map::*;
 use crate::stream::Stream;
 use crate::Data;
 
@@ -28,28 +27,12 @@ impl<I: Data> Map<I> for Stream<I> {
     {
         self.unary("map", |_info| {
             move |input, output| {
-                input.for_each_batch(|dataset| {
-                    if !dataset.is_last() {
-                        let mut session = output.new_session(&dataset.tag)?;
-                        for item in dataset.drain() {
+                input.for_each_batch(|batch| {
+                    if !batch.is_empty() {
+                        let mut session = output.new_session(&batch.tag)?;
+                        for item in batch.drain() {
                             let r = func(item)?;
                             session.give(r)?;
-                        }
-                    } else if !dataset.is_empty() {
-                        let mut session = output.new_session(&dataset.tag)?;
-                        for item in dataset.drain_to_end() {
-                            match item {
-                                MarkedData::Data(d) => {
-                                    session.give(func(d)?)?;
-                                }
-                                MarkedData::Marked(d, e) => {
-                                    if let Some(d) = d {
-                                        session.give_last(func(d)?, e)?;
-                                    } else {
-                                        session.notify_end(e)?;
-                                    }
-                                }
-                            }
                         }
                     }
                     Ok(())
@@ -65,34 +48,12 @@ impl<I: Data> Map<I> for Stream<I> {
     {
         self.unary("filter_map", |_info| {
             move |input, output| {
-                input.for_each_batch(|dataset| {
-                    if !dataset.is_last() {
-                        let mut session = output.new_session(&dataset.tag)?;
-                        for item in dataset.drain() {
+                input.for_each_batch(|batch| {
+                    if !batch.is_empty() {
+                        let mut session = output.new_session(&batch.tag)?;
+                        for item in batch.drain() {
                             if let Some(r) = func(item)? {
                                 session.give(r)?;
-                            }
-                        }
-                    } else if !dataset.is_empty() {
-                        let mut session = output.new_session(&dataset.tag)?;
-                        for item in dataset.drain_to_end() {
-                            match item {
-                                MarkedData::Data(d) => {
-                                    if let Some(r) = func(d)? {
-                                        session.give(r)?;
-                                    }
-                                }
-                                MarkedData::Marked(d, e) => {
-                                    if let Some(d) = d {
-                                        if let Some(r) = func(d)? {
-                                            session.give_last(r, e)?;
-                                        } else {
-                                            session.notify_end(e)?;
-                                        }
-                                    } else {
-                                        session.notify_end(e)?;
-                                    }
-                                }
                             }
                         }
                     }

@@ -56,6 +56,9 @@ impl Magic {
 
     #[inline(always)]
     pub fn exec(&self, id: u64) -> u64 {
+        if id == 0 {
+            return 0;
+        }
         match self {
             Magic::Modulo(x) => id % *x,
             Magic::And(x) => id & *x,

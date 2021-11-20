@@ -4,7 +4,7 @@ use crate::communication::decorator::evented::EventEmitPush;
 use crate::data::MicroBatch;
 use crate::data_plane::Push;
 use crate::errors::IOError;
-use crate::progress::{EndSignal, Weight};
+use crate::progress::DynPeers;
 use crate::Data;
 
 pub struct BroadcastBatchPush<D: Data> {
@@ -37,16 +37,15 @@ impl<D: Data> BroadcastBatchPush<D> {
         }
 
         if let Some(mut end) = batch.take_end() {
-            if end.source.value() == 1 {
-                end.source = Weight::all();
+            if end.peers.value() == 1 {
+                end.peers = DynPeers::all();
                 batch.set_end(end);
                 self.pushes[target].push(batch)?;
             } else {
                 if !batch.is_empty() {
                     self.pushes[target].push(batch)?;
                 }
-                let end = EndSignal::new(end, Weight::all());
-                self.pushes[target].notify_end(end)?;
+                self.pushes[target].sync_end(end, DynPeers::all())?;
             }
         } else {
             self.pushes[target].push(batch)?;

@@ -23,7 +23,7 @@ pub use primitive::unary::Unary;
 
 pub mod notification {
 
-    use crate::data::EndOfScope;
+    use crate::progress::EndOfScope;
     use crate::Tag;
 
     #[derive(Debug, Clone)]

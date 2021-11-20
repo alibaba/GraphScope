@@ -1,4 +1,5 @@
 use crate::api::{HasAny, Unary};
+use crate::communication::output::OutputProxy;
 use crate::stream::{Single, SingleItem, Stream};
 use crate::tag::tools::map::TidyTagMap;
 use crate::{BuildJobError, Data};
@@ -33,22 +34,31 @@ impl<D: Data> HasAny<D> for Stream<D> {
             let mut any_map = TidyTagMap::<()>::new(info.scope_level);
             move |input, output| {
                 input.for_each_batch(|batch| {
-                    if batch.is_last() {
-                        if !any_map.contains_key(batch.tag()) {
-                            any_map.insert(batch.tag().clone(), ());
-                            output
-                                .new_session(batch.tag())?
-                                .give(Single(!batch.is_empty()))?;
-                        }
-                        batch.clear();
-                        any_map.remove(batch.tag());
-                    } else if !batch.is_empty() {
-                        batch.clear();
+                    if !batch.is_empty() {
                         if !any_map.contains_key(batch.tag()) {
                             any_map.insert(batch.tag().clone(), ());
                             output
                                 .new_session(batch.tag())?
                                 .give(Single(true))?;
+                        }
+                        batch.clear();
+
+                        if batch.is_last() {
+                            any_map.remove(batch.tag());
+                        }
+                        return Ok(());
+                    }
+
+                    if let Some(end) = batch.take_end() {
+                        if any_map.remove(batch.tag()).is_none() {
+                            let worker = crate::worker_id::get_current_worker().index;
+                            if end.peers.contains_source(worker) {
+                                output
+                                    .new_session(batch.tag())?
+                                    .give(Single(false))?;
+                            } else {
+                                output.notify_end(end)?;
+                            }
                         }
                     }
                     Ok(())

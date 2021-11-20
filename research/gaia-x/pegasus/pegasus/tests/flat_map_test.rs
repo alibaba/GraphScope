@@ -70,7 +70,7 @@ fn flat_map_test_3() {
 }
 
 #[test]
-fn flat_map_test_4() {
+fn apply_x_flatmap_flatmap_count_x_test() {
     let mut conf = JobConf::new("flat_map_test_4");
     conf.set_workers(2);
     let mut result = pegasus::run(conf, move || {

@@ -38,7 +38,7 @@ impl<D: Data> Iteration<D> for Stream<D> {
         let index = enter.get_upstream_port().index;
         let after_body = func(enter)?;
         let feedback: Stream<D> = after_body
-            .sync_state()?
+            .sync_state()
             .transform_notify("feedback", move |info| {
                 FeedbackOperator::<D>::new(info.scope_level, max_iters)
             })?;

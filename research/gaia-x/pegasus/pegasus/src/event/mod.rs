@@ -18,13 +18,13 @@ use std::fmt::{Debug, Formatter};
 use pegasus_common::codec::*;
 
 use crate::graph::Port;
-use crate::progress::EndSignal;
+use crate::progress::EndSyncSignal;
 use crate::Tag;
 
 #[derive(Clone)]
 pub enum EventKind {
     /// end signal indicates that no more data of a scope will be produced;
-    End(EndSignal),
+    End(EndSyncSignal),
     /// hint to cancel producing data of scope to channel;
     /// Cancel( (channel index,  scope tag) )
     Cancel((u32, Tag)),
@@ -89,7 +89,7 @@ impl Decode for Event {
         let e = reader.read_u8()?;
         let kind = match e {
             0 => {
-                let end = EndSignal::read_from(reader)?;
+                let end = EndSyncSignal::read_from(reader)?;
                 EventKind::End(end)
             }
             1 => {

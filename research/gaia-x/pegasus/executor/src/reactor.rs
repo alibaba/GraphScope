@@ -14,6 +14,7 @@
 //! limitations under the License.
 
 use std::cell::RefCell;
+#[cfg(not(debug_assertions))]
 use std::panic::AssertUnwindSafe;
 use std::sync::atomic::{AtomicUsize, Ordering};
 use std::sync::{Arc, Mutex};
@@ -81,11 +82,13 @@ pub struct ExecutorRuntime {
 }
 
 #[inline]
+#[cfg(not(debug_assertions))]
 fn do_user_task(
     mut task: GeneralTask, not_readies: &Arc<SegQueue<GeneralTask>>, re_active: &WorkStealQueue<RunTask>,
 ) {
     // 1. execute task;
     // 2. check task state:
+
     let result = std::panic::catch_unwind(AssertUnwindSafe(|| {
         match task.execute() {
             // if finished or failed, sink result;
@@ -97,6 +100,22 @@ fn do_user_task(
     }));
     if result.is_err() {
         error!("Task execute failure;")
+    }
+}
+
+#[inline]
+#[cfg(debug_assertions)]
+fn do_user_task(
+    mut task: GeneralTask, not_readies: &Arc<SegQueue<GeneralTask>>, re_active: &WorkStealQueue<RunTask>,
+) {
+    // 1. execute task;
+    // 2. check task state:
+    match task.execute() {
+        // if finished or failed, sink result;
+        TaskState::Finished => (),
+        // otherwise push to not-ready queue;
+        TaskState::NotReady => not_readies.push(task),
+        TaskState::Ready => re_active.push(RunTask::Users(task)),
     }
 }
 

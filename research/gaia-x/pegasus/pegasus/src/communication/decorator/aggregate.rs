@@ -1,70 +1,62 @@
+use std::marker::PhantomData;
+
+use crate::api::function::{BatchRouteFunction, FnResult};
 use crate::channel_id::ChannelInfo;
+use crate::communication::cancel::{CancelHandle, DynSingleConsCancelPtr};
+use crate::communication::channel::BatchRoute;
 use crate::communication::decorator::evented::EventEmitPush;
+use crate::communication::decorator::exchange::ExchangeByBatchPush;
 use crate::data::MicroBatch;
 use crate::data_plane::Push;
 use crate::errors::IOError;
-use crate::progress::{EndSignal, Weight};
 use crate::Data;
 
+struct ScopedAggregate<D: Data>(PhantomData<D>);
+
+impl<D: Data> ScopedAggregate<D> {
+    fn new() -> Self {
+        ScopedAggregate(std::marker::PhantomData)
+    }
+}
+
+impl<D: Data> BatchRouteFunction<D> for ScopedAggregate<D> {
+    fn route(&self, batch: &MicroBatch<D>) -> FnResult<u64> {
+        Ok(batch.tag.current_uncheck() as u64)
+    }
+}
+
 pub struct AggregateBatchPush<D: Data> {
-    pub ch_info: ChannelInfo,
-    data_push: EventEmitPush<D>,
-    event_push: Option<EventEmitPush<D>>,
+    push: ExchangeByBatchPush<D>,
 }
 
 impl<D: Data> AggregateBatchPush<D> {
-    pub fn new(target: u32, info: ChannelInfo, pushes: Vec<EventEmitPush<D>>) -> Self {
-        assert_eq!(info.scope_level, 0);
-        let source = crate::worker_id::get_current_worker().index;
-        let mut vec = vec![];
-        for mut p in pushes {
-            if p.target_worker == source || p.target_worker == target {
-                vec.push(Some(p));
-            } else {
-                p.close().ok();
-                vec.push(None);
-            }
+    pub fn new(info: ChannelInfo, pushes: Vec<EventEmitPush<D>>) -> Self {
+        if info.scope_level == 0 {
+            let push = ExchangeByBatchPush::new(info, BatchRoute::AllToOne(0), pushes);
+            AggregateBatchPush { push }
+        } else {
+            let chancel_handle = DynSingleConsCancelPtr::new(info.scope_level, pushes.len());
+            let mut push = ExchangeByBatchPush::new(info, BatchRoute::Dyn(Box::new(ScopedAggregate::new())), pushes);
+            push.update_cancel_handle(CancelHandle::DSC(chancel_handle));
+            AggregateBatchPush { push }
         }
-        let data_push = vec[target as usize]
-            .take()
-            .expect("data push lost");
-        let event_push = vec[source as usize].take();
-        AggregateBatchPush { ch_info: info, data_push, event_push }
+    }
+
+    pub(crate) fn get_cancel_handle(&self) -> CancelHandle {
+        self.push.get_cancel_handle()
     }
 }
 
 impl<D: Data> Push<MicroBatch<D>> for AggregateBatchPush<D> {
-    fn push(&mut self, mut batch: MicroBatch<D>) -> Result<(), IOError> {
-        let end = batch.take_end();
-        let src = batch.src;
-        if !batch.is_empty() {
-            self.data_push.push(batch)?;
-        }
-
-        if let Some(end) = end {
-            if let Some(ref mut p) = self.event_push {
-                p.push(MicroBatch::last(src, end.clone()))?;
-            }
-            let end = EndSignal::new(end, Weight::all());
-            self.data_push.notify_end(end)
-        } else {
-            Ok(())
-        }
+    fn push(&mut self, batch: MicroBatch<D>) -> Result<(), IOError> {
+        self.push.push(batch)
     }
 
     fn flush(&mut self) -> Result<(), IOError> {
-        self.data_push.flush()?;
-        if let Some(ref mut p) = self.event_push {
-            p.flush()?;
-        }
-        Ok(())
+        self.push.flush()
     }
 
     fn close(&mut self) -> Result<(), IOError> {
-        self.data_push.close()?;
-        if let Some(ref mut p) = self.event_push {
-            p.close()?;
-        }
-        Ok(())
+        self.push.close()
     }
 }

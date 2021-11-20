@@ -21,7 +21,7 @@ use pegasus_common::downcast::*;
 use crate::api::scope::ScopeDelta;
 use crate::communication::cancel::CancelListener;
 use crate::communication::output::output::OutputHandle;
-use crate::communication::output::tee::{ChannelPush, Tee};
+use crate::communication::output::tee::{PerChannelPush, Tee};
 use crate::communication::output::{OutputBuilder, OutputProxy, RefWrapOutput};
 use crate::graph::Port;
 use crate::schedule::state::outbound::OutputCancelState;
@@ -42,7 +42,7 @@ pub struct OutputBuilderImpl<D: Data> {
     ///
     cursor: usize,
     ///
-    shared: Rc<RefCell<Vec<Option<ChannelPush<D>>>>>,
+    shared: Rc<RefCell<Vec<Option<PerChannelPush<D>>>>>,
 }
 
 impl<D: Data> OutputBuilderImpl<D> {
@@ -86,7 +86,7 @@ impl<D: Data> OutputBuilderImpl<D> {
     }
 
     #[inline]
-    pub(crate) fn set_push(&self, push: ChannelPush<D>) {
+    pub(crate) fn set_push(&self, push: PerChannelPush<D>) {
         self.shared.borrow_mut()[self.cursor] = Some(push);
     }
 

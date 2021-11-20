@@ -8,21 +8,21 @@ use crate::Data;
 
 #[allow(dead_code)]
 pub(crate) struct FeedbackOperator<D: Data> {
-    pub _scope_level: u32,
+    pub scope_level: u32,
     worker_index: u32,
     max_iters: u32,
-    observer: TidyTagMap<()>,
+    observer: TidyTagMap<u32>,
     _ph: std::marker::PhantomData<D>,
 }
 
 impl<D: Data> FeedbackOperator<D> {
-    pub fn new(_scope_level: u32, max_iters: u32) -> Self {
+    pub fn new(scope_level: u32, max_iters: u32) -> Self {
         let worker_index = crate::worker_id::get_current_worker().index;
         FeedbackOperator {
-            _scope_level,
+            scope_level,
             worker_index,
             max_iters,
-            observer: TidyTagMap::new(_scope_level - 1),
+            observer: TidyTagMap::new(scope_level - 1),
             _ph: std::marker::PhantomData,
         }
     }
@@ -42,14 +42,19 @@ impl<D: Data> OperatorCore for FeedbackOperator<D> {
             }
 
             if let Some(mut end) = end {
-                if end.total_send == 0 {
+                if end.global_total_send == 0 {
                     trace_worker!("no data of {:?} feedback into next iteration;", batch.tag);
                     end.tag = end.tag.advance_to(self.max_iters - 1);
                 }
-                if len == 0 && end.source.contains_source(self.worker_index) {
-                    end.total_send = 0;
+                let p = end.tag.to_parent_uncheck();
+                let nth = self.observer.get_mut_or_insert(&p);
+                let cur = end.tag.current_uncheck() + 1;
+                if *nth < cur {
+                    *nth = cur;
+                    output.notify_end(end)?;
+                } else {
+                    // ignore;
                 }
-                output.notify_end(end)?;
             }
 
             Ok(())

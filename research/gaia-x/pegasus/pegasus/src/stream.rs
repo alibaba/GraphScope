@@ -22,7 +22,7 @@ use crate::api::function::FnResult;
 use crate::api::meta::OperatorInfo;
 use crate::api::scope::ScopeDelta;
 use crate::api::{Map, Unary};
-use crate::communication::channel::ChannelKind;
+use crate::communication::channel::{BatchRoute, ChannelKind};
 use crate::communication::output::OutputBuilderImpl;
 use crate::communication::Channel;
 use crate::dataflow::{DataflowBuilder, OperatorRef};
@@ -104,13 +104,7 @@ impl<D: Data> Stream<D> {
     // aggregate().enter() :
     // aggregate().leave() :
     pub fn aggregate(mut self) -> Stream<D> {
-        if self.upstream.get_scope_level() == 0 {
-            self.ch
-                .set_channel_kind(ChannelKind::Aggregate(0));
-        } else {
-            self.ch
-                .set_channel_kind(ChannelKind::ShuffleScope);
-        }
+        self.ch.set_channel_kind(ChannelKind::Aggregate);
         self
     }
 
@@ -152,26 +146,13 @@ impl<D: Data> Stream<D> {
         }
     }
 
-    pub(crate) fn sync_state(mut self) -> Result<Stream<D>, BuildJobError> {
+    pub(crate) fn sync_state(mut self) -> Stream<D> {
         if self.ch.is_pipeline() {
+            let target = self.builder.worker_id.index;
             self.ch
-                .set_channel_kind(ChannelKind::Pipeline(true));
-            Ok(self)
-        } else {
-            let mut shuffled = self.unary("shuffle", |_| {
-                |input, output| {
-                    input.for_each_batch(|dataset| {
-                        output.push_batch_mut(dataset)?;
-                        Ok(())
-                    })
-                }
-            })?;
-
-            shuffled
-                .ch
-                .set_channel_kind(ChannelKind::Pipeline(true));
-            Ok(shuffled)
+                .set_channel_kind(ChannelKind::BatchShuffle(BatchRoute::AllToOne(target)));
         }
+        self
     }
 
     pub fn transform<F, O, T>(mut self, name: &str, op_builder: F) -> Result<Stream<O>, BuildJobError>
@@ -311,26 +292,37 @@ impl<D: Data> Stream<D> {
         if self.get_scope_level() == 0 {
             Err("can't create feedback stream on root scope;")?;
         }
-        self.ch.add_delta(ScopeDelta::ToSibling(1));
+        let r = self.ch.add_delta(ScopeDelta::ToSibling(1));
+        assert!(r.is_none());
         let mut op = self.builder.get_operator(op_index);
         let edge = self.connect(&mut op)?;
         self.builder.add_edge(edge);
         Ok(())
     }
 
-    pub fn enter(mut self) -> Result<Self, BuildJobError> {
-        if let Some(_delta) = self.ch.add_delta(ScopeDelta::ToChild(1)) {
-            let forward = self.forward("forward_enter")?;
-            forward.enter()
+    pub fn enter(self) -> Result<Self, BuildJobError> {
+        let mut synced = self.sync_state();
+        if synced
+            .ch
+            .add_delta(ScopeDelta::ToChild(1))
+            .is_some()
+        {
+            let mut adapter = synced.forward("enter_adapter")?;
+            adapter.ch.add_delta(ScopeDelta::ToChild(1));
+            Ok(adapter)
         } else {
-            Ok(self)
+            Ok(synced)
         }
     }
 
     pub fn leave(mut self) -> Result<Self, BuildJobError> {
-        if let Some(_) = self.ch.add_delta(ScopeDelta::ToParent(1)) {
-            let forward = self.forward("forward_leave")?;
-            forward.leave()
+        if !self.ch.is_pipeline()
+            || self
+                .ch
+                .add_delta(ScopeDelta::ToParent(1))
+                .is_some()
+        {
+            self.forward("leave_adapter")?.leave()
         } else {
             Ok(self)
         }

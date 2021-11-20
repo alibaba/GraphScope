@@ -16,6 +16,9 @@ macro_rules! throw_error {
 #[macro_use]
 pub mod route {
     use super::*;
+    use crate::data::MicroBatch;
+    use crate::Data;
+
     pub struct RouteClosure<D, F: Fn(&D) -> FnResult<u64>> {
         func: F,
         _ph: std::marker::PhantomData<D>,
@@ -48,6 +51,41 @@ pub mod route {
     macro_rules! box_route {
         ($func: expr) => {
             Box::new(RouteClosure::new($func))
+        };
+    }
+
+    pub struct BatchRouteClosure<D: Data, F: Fn(&MicroBatch<D>) -> FnResult<u64>> {
+        func: F,
+        _ph: std::marker::PhantomData<D>,
+    }
+
+    impl<D: Data, F: Fn(&MicroBatch<D>) -> FnResult<u64>> BatchRouteClosure<D, F> {
+        pub fn new(func: F) -> Self {
+            BatchRouteClosure { func, _ph: std::marker::PhantomData }
+        }
+    }
+
+    impl<F, D> BatchRouteFunction<D> for BatchRouteClosure<D, F>
+    where
+        D: Data,
+        F: Fn(&MicroBatch<D>) -> FnResult<u64> + Send + 'static,
+    {
+        fn route(&self, batch: &MicroBatch<D>) -> FnResult<u64> {
+            (self.func)(batch)
+        }
+    }
+
+    #[macro_export]
+    macro_rules! batch_route {
+        ($func: expr) => {
+            BatchRouteClosure::new($func)
+        };
+    }
+
+    #[macro_export]
+    macro_rules! box_batch_route {
+        ($func: expr) => {
+            Box::new(BatchRouteClosure::new($func))
         };
     }
 }

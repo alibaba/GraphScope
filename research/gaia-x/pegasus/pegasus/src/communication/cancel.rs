@@ -270,10 +270,21 @@ impl DynSingleConsCancelPtr {
     }
 }
 
+#[derive(Clone)]
 pub(crate) enum CancelHandle {
     SC(SingleConsCancel),
     MC(MultiConsCancelPtr),
     DSC(DynSingleConsCancelPtr),
+}
+
+impl CancelHandle {
+    pub(crate) fn is_canceled(&self, tag: &Tag, to: usize) -> bool {
+        match self {
+            CancelHandle::SC(_) => false,
+            CancelHandle::MC(x) => x.is_canceled(tag, to),
+            CancelHandle::DSC(x) => x.is_canceled(tag, to),
+        }
+    }
 }
 
 impl CancelListener for CancelHandle {
