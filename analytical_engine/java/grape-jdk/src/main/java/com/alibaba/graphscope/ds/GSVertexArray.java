@@ -35,8 +35,8 @@ import com.alibaba.fastffi.FFIPointer;
 import com.alibaba.fastffi.FFITypeAlias;
 
 /**
- * A java wrapper for gs template class <a
- * href="https://github.com/alibaba/libgrape-lite/blob/master/grape/utils/vertex_array.h#L203">grape::VertexArray</a>.
+ * A java wrapper for gs template class <a href=
+ * "https://github.com/alibaba/libgrape-lite/blob/master/grape/utils/vertex_array.h#L203">grape::VertexArray</a>.
  *
  * <p>Here the VID_T is set to long(int64_t).
  *
@@ -119,6 +119,9 @@ public interface GSVertexArray<T> extends FFIPointer, CXXPointer {
     @CXXReference
     @FFITypeAlias(GRAPE_VERTEX_RANGE + "<uint64_t>")
     VertexRange<Long> GetVertexRange();
+
+    @FFINameAlias("Swap")
+    void swap(@CXXReference GSVertexArray<T> vertexArray);
 
     /**
      * Factory GSVertexArray.

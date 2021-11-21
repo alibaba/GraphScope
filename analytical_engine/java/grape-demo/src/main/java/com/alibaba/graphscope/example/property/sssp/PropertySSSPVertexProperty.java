@@ -16,7 +16,7 @@
 
 package com.alibaba.graphscope.example.property.sssp;
 
-import com.alibaba.graphscope.app.PropertyDefaultAppBase;
+import com.alibaba.graphscope.app.DefaultPropertyAppBase;
 import com.alibaba.graphscope.column.DoubleColumn;
 import com.alibaba.graphscope.context.PropertyDefaultContextBase;
 import com.alibaba.graphscope.ds.PropertyAdjList;
@@ -36,11 +36,11 @@ import org.slf4j.LoggerFactory;
  * {@link PropertySSSPVertexPropertyContext}, which is an implementation of {@link
  * com.alibaba.graphscope.context.LabeledVertexPropertyContext}.
  *
- * @see com.alibaba.graphscope.app.PropertyDefaultAppBase
- * @see PropertySSSPVertexData
+ * @see DefaultPropertyAppBase
+ * @see SSSPVertexDataProperty
  */
 public class PropertySSSPVertexProperty
-        implements PropertyDefaultAppBase<Long, PropertySSSPVertexPropertyContext> {
+        implements DefaultPropertyAppBase<Long, PropertySSSPVertexPropertyContext> {
     private static Logger logger =
             LoggerFactory.getLogger(PropertySSSPVertexProperty.class.getName());
 
@@ -70,13 +70,6 @@ public class PropertySSSPVertexProperty
 
         for (int j = 0; j < edgeLabelNum; ++j) {
             PropertyAdjList<Long> adjList = fragment.getOutgoingAdjList(source, j);
-            logger.info(
-                    "outgoing adjlist "
-                            + adjList.begin().neighbor().GetValue()
-                            + ", "
-                            + adjList.end().neighbor().GetValue()
-                            + ", size "
-                            + adjList.size());
             for (PropertyNbr<Long> nbr : adjList.iterator()) {
                 Vertex<Long> vertex = nbr.neighbor();
                 double curDist = nbr.getInt(0);
@@ -172,7 +165,7 @@ public class PropertySSSPVertexProperty
                 }
             }
         }
-        logger.info("IncEval " + data_sum);
+
         // sync out vertices
 
         DoubleMsg msg = DoubleMsg.factory.create();

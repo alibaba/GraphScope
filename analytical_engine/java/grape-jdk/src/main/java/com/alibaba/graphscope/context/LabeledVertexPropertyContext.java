@@ -29,8 +29,7 @@ import java.util.Objects;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public abstract class LabeledVertexPropertyContext<OID_T>
-        implements PropertyDefaultContextBase<OID_T> {
+public abstract class LabeledVertexPropertyContext<OID_T> {
     private static Logger logger =
             LoggerFactory.getLogger(LabeledVertexPropertyContext.class.getName());
     private long ffiContextAddress;

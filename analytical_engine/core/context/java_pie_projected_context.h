@@ -13,8 +13,8 @@
  * limitations under the License.
  */
 
-#ifndef ANALYTICAL_ENGINE_CORE_CONTEXT_JAVA_PIE_PROJECTED_DEFAULT_CONTEXT_H_
-#define ANALYTICAL_ENGINE_CORE_CONTEXT_JAVA_PIE_PROJECTED_DEFAULT_CONTEXT_H_
+#ifndef ANALYTICAL_ENGINE_CORE_CONTEXT_JAVA_PIE_PROJECTED_CONTEXT_H_
+#define ANALYTICAL_ENGINE_CORE_CONTEXT_JAVA_PIE_PROJECTED_CONTEXT_H_
 
 #ifdef ENABLE_JAVA_SDK
 
@@ -41,12 +41,14 @@
 #include "core/java/javasdk.h"
 #include "core/object/i_fragment_wrapper.h"
 
-#define CONTEXT_TYPE_JAVA_PIE_PROJECTED_DEFAULT "java_pie_projected_default"
+#define CONTEXT_TYPE_JAVA_PIE_PROJECTED "java_pie_projected"
 
 namespace gs {
 
 static constexpr const char* _java_projected_message_manager_name =
     "grape::DefaultMessageManager";
+static constexpr const char* _java_projected_parallel_message_manager_name =
+    "grape::ParallelMessageManager";
 
 /**
  * @brief Context for the java pie app, used by java sdk.
@@ -54,18 +56,40 @@ static constexpr const char* _java_projected_message_manager_name =
  * @tparam FRAG_T
  */
 template <typename FRAG_T>
-class JavaPIEProjectedDefaultContext : public JavaContextBase<FRAG_T> {
+class JavaPIEProjectedContext : public JavaContextBase<FRAG_T> {
  public:
-  explicit JavaPIEProjectedDefaultContext(const FRAG_T& fragment)
+  explicit JavaPIEProjectedContext(const FRAG_T& fragment)
       : JavaContextBase<FRAG_T>(fragment) {}
-  virtual ~JavaPIEProjectedDefaultContext() {}
 
-  void Init(grape::DefaultMessageManager& messages, const std::string& params,
-            const std::string& lib_path) {
-    VLOG(1) << "lib path: " << lib_path;
-    JavaContextBase<FRAG_T>::init(reinterpret_cast<jlong>(&messages),
-                                  _java_projected_message_manager_name, params,
-                                  lib_path);
+  virtual ~JavaPIEProjectedContext() {}
+  void init(jlong messages_addr, const char* java_message_manager_name,
+            const std::string& params, const std::string& lib_path) {
+    JavaContextBase<FRAG_T>::init(messages_addr, java_message_manager_name,
+                                  params, lib_path);
+  }
+
+  void Output(std::ostream& os) override {
+    JNIEnvMark m;
+    if (m.env()) {
+      JNIEnv* env = m.env();
+
+      jclass context_class = env->GetObjectClass(this->context_object());
+      CHECK_NOTNULL(context_class);
+
+      const char* descriptor =
+          "(Lcom/alibaba/graphscope/fragment/ArrowProjectedFragment;)V";
+      jmethodID output_methodID =
+          env->GetMethodID(context_class, "Output", descriptor);
+      if (output_methodID) {
+        VLOG(1) << "Found output method in java context.";
+        env->CallVoidMethod(this->context_object(), output_methodID,
+                            this->fragment_object());
+      } else {
+        VLOG(1) << "Output method not found, skip.";
+      }
+    } else {
+      LOG(ERROR) << "JNI env not available.";
+    }
   }
 
   std::shared_ptr<gs::IContextWrapper> CreateInnerCtxWrapper(
@@ -137,11 +161,7 @@ class JavaPIEProjectedDefaultContext : public JavaContextBase<FRAG_T> {
   }
 
  protected:
-  const char* evalDescriptor() override {
-    return "(Lcom/alibaba/graphscope/fragment/ArrowProjectedFragment;"
-           "Lcom/alibaba/grape/parallel/DefaultMessageManager;"
-           "Lcom/alibaba/fastjson/JSONObject;)V";
-  }
+  virtual const char* getPropertyCtxObjBaseClazNameDesc() = 0;
 
  private:
   std::string getJavaCtxTypeName(const jobject& ctx_object) {
@@ -153,8 +173,8 @@ class JavaPIEProjectedDefaultContext : public JavaContextBase<FRAG_T> {
       CHECK_NOTNULL(context_utils_class);
       jmethodID ctx_base_class_name_get_method = m.env()->GetStaticMethodID(
           context_utils_class, "getProjectedCtxObjBaseClzName",
-          "(Lcom/alibaba/graphscope/context/ProjectedDefaultContextBase;)"
-          "Ljava/lang/String;");
+          getPropertyCtxObjBaseClazNameDesc());
+
       CHECK_NOTNULL(ctx_base_class_name_get_method);
       jstring ctx_base_clz_name = (jstring) m.env()->CallStaticObjectMethod(
           context_utils_class, ctx_base_class_name_get_method, ctx_object);
@@ -186,23 +206,76 @@ class JavaPIEProjectedDefaultContext : public JavaContextBase<FRAG_T> {
   }
 };
 
+template <typename FRAG_T>
+class JavaPIEProjectedDefaultContext : public JavaPIEProjectedContext<FRAG_T> {
+ public:
+  explicit JavaPIEProjectedDefaultContext(const FRAG_T& fragment)
+      : JavaPIEProjectedContext<FRAG_T>(fragment) {}
+  virtual ~JavaPIEProjectedDefaultContext() {}
+
+  void Init(grape::DefaultMessageManager& messages, const std::string& params,
+            const std::string& lib_path) {
+    VLOG(1) << "lib path: " << lib_path;
+    JavaPIEProjectedContext<FRAG_T>::init(reinterpret_cast<jlong>(&messages),
+                                          _java_projected_message_manager_name,
+                                          params, lib_path);
+  }
+
+ protected:
+  const char* evalDescriptor() override {
+    return "(Lcom/alibaba/graphscope/fragment/ArrowProjectedFragment;"
+           "Lcom/alibaba/graphscope/parallel/DefaultMessageManager;"
+           "Lcom/alibaba/fastjson/JSONObject;)V";
+  }
+  const char* getPropertyCtxObjBaseClazNameDesc() override {
+    return "(Lcom/alibaba/graphscope/context/ProjectedDefaultContextBase;)"
+           "Ljava/lang/String;";
+  }
+};
+
+template <typename FRAG_T>
+class JavaPIEProjectedParallelContext : public JavaPIEProjectedContext<FRAG_T> {
+ public:
+  explicit JavaPIEProjectedParallelContext(const FRAG_T& fragment)
+      : JavaPIEProjectedContext<FRAG_T>(fragment) {}
+  virtual ~JavaPIEProjectedParallelContext() {}
+
+  void Init(grape::ParallelMessageManager& messages, const std::string& params,
+            const std::string& lib_path) {
+    VLOG(1) << "lib path: " << lib_path;
+    JavaPIEProjectedContext<FRAG_T>::init(
+        reinterpret_cast<jlong>(&messages),
+        _java_projected_parallel_message_manager_name, params, lib_path);
+  }
+
+ protected:
+  const char* evalDescriptor() override {
+    return "(Lcom/alibaba/graphscope/fragment/ArrowProjectedFragment;"
+           "Lcom/alibaba/graphscope/parallel/ParallelMessageManager;"
+           "Lcom/alibaba/fastjson/JSONObject;)V";
+  }
+  const char* getPropertyCtxObjBaseClazNameDesc() override {
+    return "(Lcom/alibaba/graphscope/context/ProjectedParallelContextBase;)"
+           "Ljava/lang/String;";
+  }
+};
+
 // shall not be invoked
 template <typename FRAG_T>
-class JavaPIEProjectedDefaultContextWrapper
-    : public IJavaPIEProjectedDefaultContextWrapper {
+class JavaPIEProjectedContextWrapper : public IJavaPIEProjectedContextWrapper {
   using fragment_t = FRAG_T;
   using label_id_t = typename fragment_t::label_id_t;
   using prop_id_t = typename fragment_t::prop_id_t;
   using oid_t = typename fragment_t::oid_t;
-  using context_t = JavaPIEProjectedDefaultContext<fragment_t>;
+  using context_t = JavaPIEProjectedContext<fragment_t>;
 
  public:
-  JavaPIEProjectedDefaultContextWrapper(
-      const std::string& id, std::shared_ptr<IFragmentWrapper> frag_wrapper,
-      std::shared_ptr<context_t> context) {}
+  JavaPIEProjectedContextWrapper(const std::string& id,
+                                 std::shared_ptr<IFragmentWrapper> frag_wrapper,
+                                 std::shared_ptr<context_t> context) {}
 
   std::string context_type() override {
-    return std::string(CONTEXT_TYPE_JAVA_PIE_PROJECTED_DEFAULT);
+    return std::string(CONTEXT_TYPE_JAVA_PIE_PROJECTED);
   }
 
   std::shared_ptr<IFragmentWrapper> fragment_wrapper() override {
@@ -251,4 +324,4 @@ class JavaPIEProjectedDefaultContextWrapper
 
 }  // namespace gs
 #endif
-#endif  // ANALYTICAL_ENGINE_CORE_CONTEXT_JAVA_PIE_PROJECTED_DEFAULT_CONTEXT_H_
+#endif  // ANALYTICAL_ENGINE_CORE_CONTEXT_JAVA_PIE_PROJECTED_CONTEXT_H_

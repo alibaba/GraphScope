@@ -42,21 +42,6 @@ import com.alibaba.fastffi.FFITypeAlias;
 @FFIGen(library = JNI_LIBRARY_NAME)
 @CXXHead(GRAPE_VERTEX_ARRAY_H)
 @FFITypeAlias(GRAPE_VERTEX_ARRAY)
-// @CXXTemplate(
-//        cxx = {"jboolean", "uint32_t"},
-//        java = {"java.lang.Boolean", "java.lang.Integer"})
-// @CXXTemplate(
-//        cxx = {"jdouble", "uint32_t"},
-//        java = {"java.lang.Double", "java.lang.Integer"})
-// @CXXTemplate(
-//        cxx = {"jdouble", "uint64_t"},
-//        java = {"java.lang.Double", "java.lang.Long"})
-// @CXXTemplate(
-//        cxx = {"double", "uint64_t"},
-//        java = {"java.lang.Double", "java.lang.Long"})
-// @CXXTemplate(
-//        cxx = {"jlong", "uint64_t"},
-//        java = {"java.lang.Long", "java.lang.Long"})
 public interface VertexArray<T, VID> extends FFIPointer, CXXPointer {
 
     /**
