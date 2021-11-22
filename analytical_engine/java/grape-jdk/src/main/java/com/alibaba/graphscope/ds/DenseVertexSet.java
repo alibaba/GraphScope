@@ -39,6 +39,12 @@ import com.alibaba.fastffi.FFITypeAlias;
 @FFIGen(library = JNI_LIBRARY_NAME)
 @CXXHead(value = {GRAPE_WORKER_COMM_SPEC_H, GRAPE_DENSE_VERTEX_SET_H})
 @FFITypeAlias(GRAPE_DENSE_VERTEX_SET)
+// @CXXTemplate(
+//        cxx = {"uint32_t"},
+//        java = {"java.lang.Integer"})
+// @CXXTemplate(
+//        cxx = {"uint64_t"},
+//        java = {"java.lang.Long"})
 public interface DenseVertexSet<VID_T> extends FFIPointer, CXXPointer {
 
     /**

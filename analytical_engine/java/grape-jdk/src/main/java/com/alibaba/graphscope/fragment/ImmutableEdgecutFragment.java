@@ -70,6 +70,13 @@ import com.alibaba.fastffi.FFITypeAlias;
 @FFIGen(library = JNI_LIBRARY_NAME)
 @CXXHead(GRAPE_FRAGMENT_IMMUTABLE_EDGECUT_FRAGMENT_H)
 @FFITypeAlias(GRAPE_IMMUTABLE_FRAGMENT)
+// @CXXTemplate(
+//        cxx = {"uint64_t", "uint64_t", "uint64_t", "double"},
+//        cxxFull = "uint64_t,uint64_t,uint64_t,double",
+//        java = {"Long", "Long", "Long", "Double"})
+// @CXXTemplate(
+//        cxx = {"jlong", "uint64_t", "jlong", "jdouble"},
+//        java = {"Long", "Long", "Long", "Double"})
 public interface ImmutableEdgecutFragment<OID_T, VID_T, VDATA_T, EDATA_T>
         extends EdgecutFragment<OID_T, VID_T, VDATA_T, EDATA_T> {
 

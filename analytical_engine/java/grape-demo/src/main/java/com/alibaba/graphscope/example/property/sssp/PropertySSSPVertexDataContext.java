@@ -18,7 +18,6 @@ package com.alibaba.graphscope.example.property.sssp;
 
 import com.alibaba.fastjson.JSONObject;
 import com.alibaba.graphscope.context.LabeledVertexDataContext;
-import com.alibaba.graphscope.context.PropertyDefaultContextBase;
 import com.alibaba.graphscope.ds.GSVertexArray;
 import com.alibaba.graphscope.ds.VertexRange;
 import com.alibaba.graphscope.ds.VertexSet;
@@ -32,8 +31,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /** An implementation of {@link com.alibaba.graphscope.context.LabeledVertexDataContext}. */
-public class PropertySSSPVertexDataContext extends LabeledVertexDataContext<Long, Double>
-        implements PropertyDefaultContextBase<Long> {
+public class PropertySSSPVertexDataContext extends LabeledVertexDataContext<Long, Double> {
     private static Logger logger =
             LoggerFactory.getLogger(PropertySSSPVertexDataContext.class.getName());
     public List<VertexSet> curModified;

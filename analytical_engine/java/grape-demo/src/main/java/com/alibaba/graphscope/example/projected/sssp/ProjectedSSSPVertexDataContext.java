@@ -17,7 +17,6 @@
 package com.alibaba.graphscope.example.projected.sssp;
 
 import com.alibaba.fastjson.JSONObject;
-import com.alibaba.graphscope.context.ProjectedDefaultContextBase;
 import com.alibaba.graphscope.context.VertexDataContext;
 import com.alibaba.graphscope.ds.GSVertexArray;
 import com.alibaba.graphscope.ds.VertexRange;
@@ -28,8 +27,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class ProjectedSSSPVertexDataContext
-        extends VertexDataContext<ArrowProjectedFragment<Long, Long, Double, Long>, Long>
-        implements ProjectedDefaultContextBase<ArrowProjectedFragment<Long, Long, Double, Long>> {
+        extends VertexDataContext<ArrowProjectedFragment<Long, Long, Double, Long>, Long> {
     private static Logger logger =
             LoggerFactory.getLogger(ProjectedSSSPVertexDataContext.class.getName());
     public long sourceOid = -1;

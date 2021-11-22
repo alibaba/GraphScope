@@ -33,7 +33,7 @@ namespace gs {
 
 /**
  * @brief This is a driver app for Java app. The driven java app should be
- * inherited from com.alibaba.grape.app.ParallelAppBase.
+ * inherited from com.alibaba.graphscope.app.ParallelAppBase.
  *
  * @tparam FRAG_T Should be grape::ImmutableEdgecutFragment<...>
  */
@@ -59,17 +59,16 @@ class JavaPIEParallelApp
       JNIEnv* env = m.env();
 
       jobject app_object = ctx.app_object();
-      auto communicator = static_cast<grape::Communicator*>(this);
       InitJavaCommunicator(env, ctx.url_class_loader_object(), app_object,
-                           reinterpret_cast<jlong>(communicator));
+                           reinterpret_cast<jlong>(this));
 
       jclass app_class = env->GetObjectClass(app_object);
       CHECK_NOTNULL(app_class);
 
       const char* descriptor =
-          "(Lcom/alibaba/graphscope/fragment/ImmutableEdgecutFragment;"
-          "Lcom/alibaba/graphscope/app/ParallelContextBase;"
-          "Lcom/alibaba/graphscope/parallel/ParallelMessageManager;)V";
+          "(Lcom/alibaba/grape/fragment/ImmutableEdgecutFragment;"
+          "Lcom/alibaba/grape/app/ParallelContextBase;"
+          "Lcom/alibaba/grape/parallel/ParallelMessageManager;)V";
       jmethodID pEval_methodID =
           env->GetMethodID(app_class, "PEval", descriptor);
       CHECK_NOTNULL(pEval_methodID);
@@ -103,9 +102,9 @@ class JavaPIEParallelApp
       CHECK_NOTNULL(app_class);
 
       const char* descriptor =
-          "(Lcom/alibaba/graphscope/fragment/ImmutableEdgecutFragment;"
-          "Lcom/alibaba/graphscope/app/ParallelContextBase;"
-          "Lcom/alibaba/graphscope/parallel/ParallelMessageManager;)V";
+          "(Lcom/alibaba/grape/fragment/ImmutableEdgecutFragment;"
+          "Lcom/alibaba/grape/app/ParallelContextBase;"
+          "Lcom/alibaba/grape/parallel/ParallelMessageManager;)V";
       jmethodID incEval_methodID =
           env->GetMethodID(app_class, "IncEval", descriptor);
       CHECK_NOTNULL(incEval_methodID);

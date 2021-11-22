@@ -46,6 +46,6 @@ public interface IntColumn<FRAG_T> extends FFIPointer {
     void set(@CXXReference @FFITypeAlias(GRAPE_LONG_VERTEX) Vertex<Long> vertex, int value);
 
     @CXXReference
-    @FFITypeAlias(GS_VERTEX_ARRAY + "<int32_t>")
+    @FFITypeAlias(GS_VERTEX_ARRAY + "<uint32_t>")
     GSVertexArray<Integer> data();
 }

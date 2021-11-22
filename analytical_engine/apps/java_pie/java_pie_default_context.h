@@ -111,9 +111,9 @@ class JavaPIEDefaultContext : public grape::ContextBase<FRAG_T> {
                                              reinterpret_cast<jlong>(&args));
 
       const char* descriptor =
-          "(Lcom/alibaba/graphscope/fragment/ImmutableEdgecutFragment;"
-          "Lcom/alibaba/graphscope/parallel/DefaultMessageManager;"
-          "Lcom/alibaba/graphscope/stdcxx/StdVector;)V";
+          "(Lcom/alibaba/grape/fragment/ImmutableEdgecutFragment;"
+          "Lcom/alibaba/grape/parallel/DefaultMessageManager;"
+          "Lcom/alibaba/grape/stdcxx/StdVector;)V";
       jmethodID init_methodID =
           env->GetMethodID(context_class, "Init", descriptor);
       CHECK_NOTNULL(init_methodID);
@@ -134,7 +134,7 @@ class JavaPIEDefaultContext : public grape::ContextBase<FRAG_T> {
       CHECK_NOTNULL(context_class);
 
       const char* descriptor =
-          "(Lcom/alibaba/graphscope/fragment/ImmutableEdgecutFragment;)V";
+          "(Lcom/alibaba/grape/fragment/ImmutableEdgecutFragment;)V";
       jmethodID output_methodID =
           env->GetMethodID(context_class, "Output", descriptor);
       CHECK_NOTNULL(output_methodID);

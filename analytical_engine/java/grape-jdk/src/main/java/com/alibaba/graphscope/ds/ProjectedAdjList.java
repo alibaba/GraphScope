@@ -41,6 +41,21 @@ import java.util.Iterator;
 @CXXHead(ARROW_PROJECTED_FRAGMENT_H)
 @CXXHead(CORE_JAVA_TYPE_ALIAS_H)
 @FFITypeAlias(PROJECTED_ADJ_LIST)
+// @CXXTemplate(
+//        cxx = {"uint64_t", "int64_t"},
+//        java = {"java.lang.Long", "java.lang.Long"})
+// @CXXTemplate(
+//        cxx = {"uint64_t", "int32_t"},
+//        java = {"java.lang.Long", "java.lang.Integer"})
+// @CXXTemplate(
+//        cxx = {"uint64_t", "double"},
+//        java = {"java.lang.Long", "java.lang.Double"})
+// @CXXTemplate(
+//        cxx = {"uint64_t", "uint64_t"},
+//        java = {"java.lang.Long", "java.lang.Long"})
+// @CXXTemplate(
+//        cxx = {"uint64_t", "uint32_t"},
+//        java = {"java.lang.Long", "java.lang.Integer"})
 public interface ProjectedAdjList<VID_T, EDATA_T> extends FFIPointer {
 
     /**

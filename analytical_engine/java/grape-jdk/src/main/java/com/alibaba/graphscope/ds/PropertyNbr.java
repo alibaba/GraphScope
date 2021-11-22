@@ -34,6 +34,9 @@ import com.alibaba.graphscope.utils.JNILibraryName;
 @FFIGen(library = JNILibraryName.JNI_LIBRARY_NAME)
 @CXXHead(CppHeaderName.CORE_JAVA_TYPE_ALIAS_H)
 @FFITypeAlias(CppClassName.PROPERTY_NBR)
+// @CXXTemplate(
+//        cxx = {"uint64_t"},
+//        java = {"java.lang.Long"})
 public interface PropertyNbr<VID_T> extends FFIPointer, CXXPointerRangeElement<PropertyNbr<VID_T>> {
     @FFINameAlias("neighbor")
     @CXXValue

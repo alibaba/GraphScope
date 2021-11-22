@@ -17,7 +17,7 @@
 package com.alibaba.graphscope.utils;
 
 import com.alibaba.fastjson.JSONObject;
-import com.alibaba.graphscope.app.DefaultPropertyAppBase;
+import com.alibaba.graphscope.app.PropertyDefaultAppBase;
 import com.alibaba.graphscope.context.LabeledVertexDataContext;
 import com.alibaba.graphscope.context.PropertyDefaultContextBase;
 import com.alibaba.graphscope.ds.Vertex;
@@ -29,8 +29,8 @@ import org.junit.Test;
 public class AppContextGetterTest {
     @Test
     public void test() {
-        Class<? extends DefaultPropertyAppBase> appClass = SamplePropertyApp.class;
-        SamplePropertyApp sampleApp = new SamplePropertyApp();
+        Class<? extends PropertyDefaultAppBase> appClass = SampleApp.class;
+        SampleApp sampleApp = new SampleApp();
 
         // Class<?> ctxClass = AppContextGetter.getPropertyDefaultContext(appClass);
         try {
@@ -55,8 +55,7 @@ public class AppContextGetterTest {
         System.out.println("Vertex<Long>: " + FFITypeFactoryhelper.getForeignName(prev));
     }
 
-    public static class SampleContext extends LabeledVertexDataContext<Long, Double>
-            implements PropertyDefaultContextBase<Long> {
+    public static class SampleContext extends LabeledVertexDataContext<Long, Double> {
         public SampleContext() {}
 
         @Override
@@ -66,7 +65,7 @@ public class AppContextGetterTest {
                 JSONObject jsonObject) {}
     }
 
-    public static class SamplePropertyApp implements DefaultPropertyAppBase<Long, SampleContext> {
+    public static class SampleApp implements PropertyDefaultAppBase<Long, SampleContext> {
         @Override
         public void PEval(
                 ArrowFragment<Long> fragment,

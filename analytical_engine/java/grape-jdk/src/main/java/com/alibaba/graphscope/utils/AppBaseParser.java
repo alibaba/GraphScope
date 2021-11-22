@@ -16,8 +16,8 @@
 
 package com.alibaba.graphscope.utils;
 
-import com.alibaba.graphscope.app.DefaultProjectedAppBase;
-import com.alibaba.graphscope.app.DefaultPropertyAppBase;
+import com.alibaba.graphscope.app.ProjectedDefaultAppBase;
+import com.alibaba.graphscope.app.PropertyDefaultAppBase;
 import com.alibaba.graphscope.context.LabeledVertexDataContext;
 import com.alibaba.graphscope.context.LabeledVertexPropertyContext;
 import com.alibaba.graphscope.context.VertexDataContext;
@@ -38,11 +38,11 @@ public class AppBaseParser {
     private static void loadClassAndParse(String className) {
         try {
             Class<?> clz = Class.forName(className);
-            boolean flag = DefaultPropertyAppBase.class.isAssignableFrom(clz);
+            boolean flag = PropertyDefaultAppBase.class.isAssignableFrom(clz);
             if (flag == true) {
-                System.out.println("DefaultPropertyApp");
-                Class<? extends DefaultPropertyAppBase> clzCasted =
-                        (Class<? extends DefaultPropertyAppBase>) clz;
+                System.out.println("PropertyDefaultApp");
+                Class<? extends PropertyDefaultAppBase> clzCasted =
+                        (Class<? extends PropertyDefaultAppBase>) clz;
                 Type type = clzCasted.getGenericInterfaces()[0];
                 if (type instanceof ParameterizedType) {
                     ParameterizedType parameterizedType = (ParameterizedType) type;
@@ -62,11 +62,11 @@ public class AppBaseParser {
                 return;
             }
             // try Projected
-            flag = DefaultProjectedAppBase.class.isAssignableFrom(clz);
+            flag = ProjectedDefaultAppBase.class.isAssignableFrom(clz);
             if (flag == true) {
-                System.out.println("DefaultProjectedApp");
-                Class<? extends DefaultProjectedAppBase> clzCasted =
-                        (Class<? extends DefaultProjectedAppBase>) clz;
+                System.out.println("ProjectedDefaultApp");
+                Class<? extends ProjectedDefaultAppBase> clzCasted =
+                        (Class<? extends ProjectedDefaultAppBase>) clz;
                 Type type = clzCasted.getGenericInterfaces()[0];
                 if (type instanceof ParameterizedType) {
                     ParameterizedType parameterizedType = (ParameterizedType) type;

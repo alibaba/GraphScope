@@ -20,40 +20,16 @@ import com.alibaba.graphscope.context.LabeledVertexDataContext;
 import com.alibaba.graphscope.context.LabeledVertexPropertyContext;
 import com.alibaba.graphscope.context.ProjectedDefaultContextBase;
 import com.alibaba.graphscope.context.PropertyDefaultContextBase;
-import com.alibaba.graphscope.context.PropertyParallelContextBase;
 import com.alibaba.graphscope.context.VertexDataContext;
 import com.alibaba.graphscope.context.VertexPropertyContext;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 public class ContextUtils {
-    private static Logger logger = LoggerFactory.getLogger(ContextUtils.class.getName());
-
     public static String getPropertyCtxObjBaseClzName(PropertyDefaultContextBase ctxObj) {
         if (ctxObj instanceof LabeledVertexDataContext) {
             return "LabeledVertexDataContext";
         } else if (ctxObj instanceof LabeledVertexPropertyContext) {
             return "LabeledVertexPropertyContext";
         }
-        logger.error(
-                "Cannot find the base class name for "
-                        + ctxObj
-                        + " of class"
-                        + ctxObj.getClass().getName());
-        return null;
-    }
-
-    public static String getPropertyCtxObjBaseClzName(PropertyParallelContextBase ctxObj) {
-        if (ctxObj instanceof LabeledVertexDataContext) {
-            return "LabeledVertexDataContext";
-        } else if (ctxObj instanceof LabeledVertexPropertyContext) {
-            return "LabeledVertexPropertyContext";
-        }
-        logger.error(
-                "Cannot find the base class name for "
-                        + ctxObj
-                        + " of class"
-                        + ctxObj.getClass().getName());
         return null;
     }
 
@@ -63,11 +39,6 @@ public class ContextUtils {
         } else if (ctxObj instanceof VertexPropertyContext) {
             return "VertexPropertyContext";
         }
-        logger.error(
-                "Cannot find the base class name for "
-                        + ctxObj
-                        + " of class"
-                        + ctxObj.getClass().getName());
         return null;
     }
 }

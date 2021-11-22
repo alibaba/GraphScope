@@ -107,7 +107,21 @@ public interface ParallelMessageManager extends MessageManagerBase {
      * @param <FRAG_T> fragment type.
      */
     @FFINameAlias("SyncStateOnOuterVertex")
-    <FRAG_T> void syncStateOnOuterVertex(
+    <FRAG_T extends ImmutableEdgecutFragment> void syncStateOnOuterVertex(
+            @CXXReference FRAG_T frag,
+            @CXXReference @FFITypeAlias(GRAPE_LONG_VERTEX) Vertex<Long> vertex,
+            int channel_id);
+
+    /**
+     * SyncState on outer vertex without message, used in bfs etc.
+     *
+     * @param frag fragment.
+     * @param vertex query vertex.
+     * @param channel_id message channel id.
+     * @param <FRAG_T> fragment type.
+     */
+    @FFINameAlias("SyncStateOnOuterVertex")
+    <FRAG_T extends ArrowProjectedFragment> void syncStateOnOuterVertex(
             @CXXReference FRAG_T frag,
             @CXXReference @FFITypeAlias(GRAPE_LONG_VERTEX) Vertex<Long> vertex,
             int channel_id);
@@ -255,7 +269,9 @@ public interface ParallelMessageManager extends MessageManagerBase {
                             MSG_T msg = msgSupplier.get();
                             boolean result;
                             while (true) {
-                                result = getMessageInBuffer(messageInBuffer);
+                                synchronized (ParallelMessageManager.class) {
+                                    result = getMessageInBuffer(messageInBuffer);
+                                }
                                 if (result) {
                                     while (messageInBuffer.getMessage(frag, vertex, msg)) {
                                         consumer.accept(vertex, msg);
