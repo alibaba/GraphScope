@@ -14,7 +14,7 @@
 //! limitations under the License.
 
 use crate::expr::eval::Context;
-use crate::graph::element::{Edge, Element, Vertex, VertexOrEdge};
+use crate::graph::element::{Edge, GraphElement, Vertex, VertexOrEdge};
 use crate::graph::property::DynDetails;
 use crate::graph::ID;
 use dyn_type::{BorrowObject, Object};
@@ -161,7 +161,7 @@ impl Context<RecordElement> for Record {
     }
 }
 
-impl Element for RecordElement {
+impl GraphElement for RecordElement {
     fn id(&self) -> Option<ID> {
         match self {
             RecordElement::OnGraph(vertex_or_edge) => vertex_or_edge.id(),

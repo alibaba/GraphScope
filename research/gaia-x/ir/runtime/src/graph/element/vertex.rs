@@ -14,7 +14,7 @@
 //! limitations under the License.
 
 use crate::expr::eval::Context;
-use crate::graph::element::Element;
+use crate::graph::element::GraphElement;
 use crate::graph::property::{Details, DynDetails};
 use crate::graph::ID;
 use dyn_type::BorrowObject;
@@ -33,7 +33,7 @@ impl Vertex {
     }
 }
 
-impl Element for Vertex {
+impl GraphElement for Vertex {
     fn id(&self) -> Option<ID> {
         Some(self.details.get_id())
     }

@@ -51,7 +51,7 @@ impl FilterFuncGen for algebra_pb::Select {
 #[cfg(test)]
 mod tests {
     use crate::expr::str_to_expr_pb;
-    use crate::graph::element::Element;
+    use crate::graph::element::GraphElement;
     use crate::graph::property::Details;
     use crate::process::operator::filter::FilterFuncGen;
     use crate::process::operator::tests::init_source;

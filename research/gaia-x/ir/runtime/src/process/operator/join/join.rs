@@ -36,7 +36,7 @@ impl JoinKeyGen<Record, RecordKey, Record> for algebra_pb::Join {
 
 #[cfg(test)]
 mod tests {
-    use crate::graph::element::{Element, Vertex};
+    use crate::graph::element::{GraphElement, Vertex};
     use crate::graph::property::{DefaultDetails, DynDetails};
     use crate::process::functions::JoinKeyGen;
     use crate::process::record::Record;

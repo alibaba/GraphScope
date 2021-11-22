@@ -14,7 +14,7 @@
 //! limitations under the License.
 
 use crate::error::FnExecError;
-use crate::graph::element::Element;
+use crate::graph::element::GraphElement;
 use crate::graph::partitioner::Partitioner;
 use crate::process::record::{Entry, Record, RecordElement};
 use ir_common::error::ParsePbError;

@@ -63,7 +63,7 @@ impl KeyFunctionGen for algebra_pb::Dedup {
 
 #[cfg(test)]
 mod tests {
-    use crate::graph::element::{Element, Vertex};
+    use crate::graph::element::{GraphElement, Vertex};
     use crate::graph::property::{DefaultDetails, DynDetails};
     use crate::process::operator::keyed::KeyFunctionGen;
     use crate::process::record::Record;

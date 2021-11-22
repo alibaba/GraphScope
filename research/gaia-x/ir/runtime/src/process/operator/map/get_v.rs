@@ -14,7 +14,7 @@
 //! limitations under the License.
 
 use crate::error::{FnExecError, FnGenResult};
-use crate::graph::element::{Element, VertexOrEdge};
+use crate::graph::element::{GraphElement, VertexOrEdge};
 use crate::graph::QueryParams;
 use crate::process::operator::map::MapFuncGen;
 use crate::process::operator::KeyedError;

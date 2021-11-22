@@ -29,7 +29,7 @@ mod test {
     use pegasus::result::ResultStream;
     use pegasus::JobConf;
     use runtime::expr::str_to_expr_pb;
-    use runtime::graph::element::{Element, VertexOrEdge};
+    use runtime::graph::element::{GraphElement, VertexOrEdge};
     use runtime::graph::property::Details;
     use runtime::process::operator::flatmap::FlatMapFuncGen;
     use runtime::process::operator::source::source_op_from;

@@ -23,7 +23,7 @@ pub mod sink;
 pub mod sort;
 pub mod source;
 
-use crate::graph::element::Element;
+use crate::graph::element::GraphElement;
 use crate::graph::property::{Details, PropKey};
 use crate::process::record::{Entry, ObjectElement, Record};
 use ir_common::error::ParsePbError;

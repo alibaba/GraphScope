@@ -26,7 +26,7 @@ mod test {
     use pegasus_server::JobRequest;
     use prost::Message;
     use runtime::expr::str_to_expr_pb;
-    use runtime::graph::element::Element;
+    use runtime::graph::element::GraphElement;
 
     fn init_poc_request() -> JobRequest {
         // g.V().hasLabel("person").has("id", 1).out("knows").limit(10)

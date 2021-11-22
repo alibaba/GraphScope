@@ -26,7 +26,7 @@ use std::fmt::Debug;
 use std::io;
 
 /// A field that is further a graph element
-pub trait Element {
+pub trait GraphElement {
     fn id(&self) -> Option<ID> {
         None
     }
@@ -42,19 +42,19 @@ pub trait Element {
     fn as_borrow_object(&self) -> BorrowObject;
 }
 
-impl Element for () {
+impl GraphElement for () {
     fn as_borrow_object(&self) -> BorrowObject {
         BorrowObject::String("")
     }
 }
 
-impl Element for Object {
+impl GraphElement for Object {
     fn as_borrow_object(&self) -> BorrowObject {
         self.as_borrow()
     }
 }
 
-impl<'a> Element for BorrowObject<'a> {
+impl<'a> GraphElement for BorrowObject<'a> {
     fn as_borrow_object(&self) -> BorrowObject<'a> {
         *self
     }
@@ -81,7 +81,7 @@ impl From<Edge> for VertexOrEdge {
     }
 }
 
-impl Element for VertexOrEdge {
+impl GraphElement for VertexOrEdge {
     fn id(&self) -> Option<ID> {
         match self {
             VertexOrEdge::V(v) => v.id(),

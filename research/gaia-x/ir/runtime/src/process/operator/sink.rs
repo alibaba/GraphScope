@@ -13,7 +13,7 @@
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 
-use crate::graph::element::{Edge, Element, Vertex, VertexOrEdge};
+use crate::graph::element::{Edge, GraphElement, Vertex, VertexOrEdge};
 use crate::graph::property::{DefaultDetails, DynDetails};
 use crate::graph::ID;
 use crate::process::record::{Entry, ObjectElement, Record, RecordElement};

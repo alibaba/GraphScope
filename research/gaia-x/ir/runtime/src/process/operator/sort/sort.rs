@@ -79,7 +79,7 @@ impl TryFrom<algebra_pb::OrderBy> for RecordCompare {
 
 #[cfg(test)]
 mod tests {
-    use crate::graph::element::Element;
+    use crate::graph::element::GraphElement;
     use crate::graph::property::Details;
     use crate::process::operator::sort::CompareFunctionGen;
     use crate::process::operator::tests::{init_source, init_source_with_tag};

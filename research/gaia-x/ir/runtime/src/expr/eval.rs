@@ -15,7 +15,7 @@
 //!
 
 use crate::expr::error::{ExprError, ExprResult};
-use crate::graph::element::Element;
+use crate::graph::element::GraphElement;
 use crate::graph::property::{Details, PropKey};
 use dyn_type::arith::Exp;
 use dyn_type::{BorrowObject, Object};
@@ -82,7 +82,7 @@ impl From<&InnerOpr> for OperatorDesc {
 
 /// A `Context` gives the behavior of obtaining a certain tag from the runtime
 /// for evaluating variables in an expression.
-pub trait Context<E: Element> {
+pub trait Context<E: GraphElement> {
     fn get(&self, _tag: Option<&NameOrId>) -> Option<&E> {
         None
     }
@@ -174,7 +174,7 @@ fn apply_logical<'a>(
 impl Evaluator {
     /// Evaluate simple expression that contains less than three operators
     /// without using the stack.
-    fn eval_without_stack<E: Element, C: Context<E>>(
+    fn eval_without_stack<E: GraphElement, C: Context<E>>(
         &self,
         context: Option<&C>,
     ) -> ExprResult<Object> {
@@ -291,7 +291,7 @@ impl Evaluator {
     ///
     /// assert!(eval.eval::<_, _>(Some(&ctxt)).unwrap().as_bool().unwrap())
     /// ```
-    pub fn eval<E: Element, C: Context<E>>(&self, context: Option<&C>) -> ExprResult<Object> {
+    pub fn eval<E: GraphElement, C: Context<E>>(&self, context: Option<&C>) -> ExprResult<Object> {
         let mut stack = self.stack.borrow_mut();
         if self.suffix_tree.len() <= 3 {
             return self.eval_without_stack(context);
@@ -335,7 +335,10 @@ impl Evaluator {
         }
     }
 
-    pub fn eval_bool<E: Element, C: Context<E>>(&self, context: Option<&C>) -> ExprResult<bool> {
+    pub fn eval_bool<E: GraphElement, C: Context<E>>(
+        &self,
+        context: Option<&C>,
+    ) -> ExprResult<bool> {
         Ok(self.eval(context)?.as_bool()?)
     }
 }
@@ -385,7 +388,7 @@ impl TryFrom<pb::ExprOpr> for InnerOpr {
 }
 
 impl InnerOpr {
-    pub fn eval_as_borrow_object<'a, E: Element + 'a, C: Context<E> + 'a>(
+    pub fn eval_as_borrow_object<'a, E: GraphElement + 'a, C: Context<E> + 'a>(
         &'a self,
         context: Option<&'a C>,
     ) -> ExprResult<Option<BorrowObject<'a>>> {
