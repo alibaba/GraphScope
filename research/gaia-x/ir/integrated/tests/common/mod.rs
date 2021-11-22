@@ -21,7 +21,7 @@
 pub mod test {
     use graph_proxy::{InitializeJobCompiler, QueryExpGraph};
     use ir_common::generated::common as common_pb;
-    use ir_common::generated::result::Result;
+    use ir_common::generated::result as result_pb;
     use lazy_static::lazy_static;
     use pegasus::result::{ResultSink, ResultStream};
     use pegasus::{run_opt, Configuration, JobConf, StartupError};
@@ -29,7 +29,12 @@ pub mod test {
     use pegasus_server::JobRequest;
     use runtime::expr::to_suffix_expr_pb;
     use runtime::expr::token::tokenize;
+    use runtime::graph::element::{Edge, Vertex, VertexOrEdge};
+    use runtime::graph::property::{DefaultDetails, DynDetails};
+    use runtime::graph::ID;
+    use runtime::process::record::{Entry, Record, RecordElement};
     use runtime::IRJobCompiler;
+    use std::convert::{TryFrom, TryInto};
     use std::sync::Once;
 
     static INIT: Once = Once::new();
@@ -61,7 +66,7 @@ pub mod test {
         query_exp_graph.initialize_job_compiler()
     }
 
-    pub fn submit_query(job_req: JobRequest, num_workers: u32) -> ResultStream<Result> {
+    pub fn submit_query(job_req: JobRequest, num_workers: u32) -> ResultStream<result_pb::Result> {
         let mut conf = JobConf::default();
         conf.workers = num_workers;
         let (tx, rx) = crossbeam_channel::unbounded();
@@ -74,5 +79,23 @@ pub mod test {
         .expect("submit job failure;");
 
         results
+    }
+
+    pub fn parse_result(result: result_pb::Result) -> Option<Record> {
+        if let Some(result_pb::result::Inner::Record(record_pb)) = result.inner {
+            let mut record = Record::default();
+            for column in record_pb.columns {
+                let tag = if let Some(tag) = column.name_or_id {
+                    Some(tag.try_into().unwrap())
+                } else {
+                    None
+                };
+                let entry = column.entry.unwrap();
+                record.append(Entry::try_from(entry).unwrap(), tag);
+            }
+            Some(record)
+        } else {
+            None
+        }
     }
 }

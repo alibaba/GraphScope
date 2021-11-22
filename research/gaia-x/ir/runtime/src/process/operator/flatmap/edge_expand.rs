@@ -13,7 +13,7 @@
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 
-use crate::error::{str_to_dyn_error, FnExecError, FnGenResult};
+use crate::error::{FnExecError, FnGenError, FnGenResult};
 use crate::graph::element::{Element, VertexOrEdge};
 use crate::graph::{Direction, QueryParams, Statement, ID};
 use crate::process::operator::flatmap::FlatMapFuncGen;
@@ -61,7 +61,7 @@ impl FlatMapFuncGen for algebra_pb::EdgeExpand {
     fn gen_flat_map(
         self,
     ) -> FnGenResult<Box<dyn FlatMapFunction<Record, Record, Target = DynIter<Record>>>> {
-        let graph = crate::get_graph().ok_or(str_to_dyn_error("Graph is None"))?;
+        let graph = crate::get_graph().ok_or(FnGenError::EmptyGraphError)?;
         let expand_base = ExpandBase::try_from(self.base)?;
         if self.is_edge {
             let stmt =

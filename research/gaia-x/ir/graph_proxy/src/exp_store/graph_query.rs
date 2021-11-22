@@ -25,10 +25,10 @@ use graph_store::prelude::{
     LDBCGraphSchema, LargeGraphDB, LocalEdge, LocalVertex, MutableGraphDB, Row, INVALID_LABEL_ID,
 };
 use ir_common::{KeyId, NameOrId};
+use pegasus::api::function::FnResult;
 use pegasus::configure_with_default;
 use pegasus_common::downcast::*;
 use pegasus_common::impl_as_any;
-use runtime::error::DynResult;
 use runtime::graph::element::{Edge, Vertex};
 use runtime::graph::property::{DefaultDetails, Details, DynDetails};
 use runtime::graph::{register_graph, Direction, GraphProxy, QueryParams, Statement, ID};
@@ -223,7 +223,7 @@ impl GraphProxy for DemoGraph {
     fn scan_vertex(
         &self,
         params: &QueryParams,
-    ) -> DynResult<Box<dyn Iterator<Item = Vertex> + Send>> {
+    ) -> FnResult<Box<dyn Iterator<Item = Vertex> + Send>> {
         // DemoGraph contains a single graph partition on each server,
         // therefore, there's no need to use the specific partition id for query.
         // Besides, we guarantee only one worker (on each server) is going to scan (with params.partitions.is_some())
@@ -241,7 +241,7 @@ impl GraphProxy for DemoGraph {
         }
     }
 
-    fn scan_edge(&self, params: &QueryParams) -> DynResult<Box<dyn Iterator<Item = Edge> + Send>> {
+    fn scan_edge(&self, params: &QueryParams) -> FnResult<Box<dyn Iterator<Item = Edge> + Send>> {
         if params.partitions.is_some() {
             let label_ids = encode_storage_edge_label(&params.labels);
             let store = self.store;
@@ -260,7 +260,7 @@ impl GraphProxy for DemoGraph {
         &self,
         ids: &[ID],
         params: &QueryParams,
-    ) -> DynResult<Box<dyn Iterator<Item = Vertex> + Send>> {
+    ) -> FnResult<Box<dyn Iterator<Item = Vertex> + Send>> {
         let mut result = Vec::with_capacity(ids.len());
         for id in ids {
             if let Some(local_vertex) = self.store.get_vertex(*id as DefaultId) {
@@ -279,7 +279,7 @@ impl GraphProxy for DemoGraph {
         &self,
         ids: &[ID],
         params: &QueryParams,
-    ) -> DynResult<Box<dyn Iterator<Item = Edge> + Send>> {
+    ) -> FnResult<Box<dyn Iterator<Item = Edge> + Send>> {
         let mut result = Vec::with_capacity(ids.len());
         for id in ids {
             let eid = encode_store_e_id(id);
@@ -295,7 +295,7 @@ impl GraphProxy for DemoGraph {
         &self,
         direction: Direction,
         params: &QueryParams,
-    ) -> DynResult<Box<dyn Statement<ID, Vertex>>> {
+    ) -> FnResult<Box<dyn Statement<ID, Vertex>>> {
         let edge_label_ids = encode_storage_edge_label(params.labels.as_ref());
         let filter = params.filter.clone();
         let limit = params.limit.clone();
@@ -318,7 +318,7 @@ impl GraphProxy for DemoGraph {
         &self,
         direction: Direction,
         params: &QueryParams,
-    ) -> DynResult<Box<dyn Statement<ID, Edge>>> {
+    ) -> FnResult<Box<dyn Statement<ID, Edge>>> {
         let edge_label_ids = encode_storage_edge_label(&params.labels);
         let filter = params.filter.clone();
         let limit = params.limit.clone();

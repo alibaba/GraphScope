@@ -14,12 +14,16 @@
 //! limitations under the License.
 
 use crate::graph::element::{Edge, Element, Vertex, VertexOrEdge};
+use crate::graph::property::{DefaultDetails, DynDetails};
+use crate::graph::ID;
 use crate::process::record::{Entry, ObjectElement, Record, RecordElement};
 use dyn_type::{Object, Primitives};
+use ir_common::error::ParsePbError;
 use ir_common::generated::common as common_pb;
 use ir_common::generated::result as result_pb;
 use ir_common::NameOrId;
 use pegasus::api::function::{FnResult, MapFunction};
+use std::convert::{TryFrom, TryInto};
 
 pub struct RecordSinkEncoder {
     sink_keys: Vec<Option<NameOrId>>,
@@ -152,4 +156,71 @@ fn object_to_pb_value(value: Object) -> common_pb::Value {
         }
     };
     common_pb::Value { item: Some(item) }
+}
+
+impl TryFrom<result_pb::Entry> for Entry {
+    type Error = ParsePbError;
+
+    fn try_from(entry_pb: result_pb::Entry) -> Result<Self, Self::Error> {
+        if let Some(inner) = entry_pb.inner {
+            match inner {
+                result_pb::entry::Inner::Element(e) => Ok(Entry::Element(e.try_into()?)),
+                result_pb::entry::Inner::Collection(c) => Ok(Entry::Collection(
+                    c.collection
+                        .into_iter()
+                        .map(|e| e.try_into())
+                        .collect::<Result<Vec<_>, Self::Error>>()?,
+                )),
+            }
+        } else {
+            Err(ParsePbError::EmptyFieldError(
+                "entry inner is empty".to_string(),
+            ))?
+        }
+    }
+}
+
+impl TryFrom<result_pb::Element> for RecordElement {
+    type Error = ParsePbError;
+    fn try_from(e: result_pb::Element) -> Result<Self, Self::Error> {
+        if let Some(inner) = e.inner {
+            match inner {
+                result_pb::element::Inner::Vertex(v) => Ok(RecordElement::OnGraph(v.into())),
+                result_pb::element::Inner::Edge(e) => Ok(RecordElement::OnGraph(e.into())),
+                result_pb::element::Inner::Object(_o) => Err(ParsePbError::NotSupported(
+                    "Cannot parse object".to_string(),
+                )),
+            }
+        } else {
+            Err(ParsePbError::EmptyFieldError(
+                "element inner is empty".to_string(),
+            ))?
+        }
+    }
+}
+
+impl From<result_pb::Vertex> for VertexOrEdge {
+    fn from(v: result_pb::Vertex) -> Self {
+        let vertex = Vertex::new(DynDetails::new(DefaultDetails::new(
+            v.id as ID,
+            v.label.unwrap().try_into().unwrap(),
+        )));
+        VertexOrEdge::V(vertex)
+    }
+}
+
+impl From<result_pb::Edge> for VertexOrEdge {
+    fn from(e: result_pb::Edge) -> Self {
+        let mut edge = Edge::new(
+            e.src_id as ID,
+            e.dst_id as ID,
+            DynDetails::new(DefaultDetails::new(
+                e.id as ID,
+                e.label.unwrap().try_into().unwrap(),
+            )),
+        );
+        edge.set_src_label(e.src_label.unwrap().try_into().unwrap());
+        edge.set_dst_label(e.dst_label.unwrap().try_into().unwrap());
+        VertexOrEdge::E(edge)
+    }
 }

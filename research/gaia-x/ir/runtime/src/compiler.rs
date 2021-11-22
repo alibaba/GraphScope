@@ -13,7 +13,7 @@
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 
-use crate::error::{str_to_dyn_error, FnGenResult};
+use crate::error::{FnExecError, FnGenResult};
 use crate::graph::partitioner::Partitioner;
 use crate::process::functions::{CompareFunction, JoinKeyGen};
 use crate::process::operator::filter::FilterFuncGen;
@@ -265,8 +265,8 @@ impl IRJobCompiler {
                                 .map(|(left, right)| Ok(left.value.join(right.value)))?,
                             JoinKind::LeftOuter => left_stream.left_outer_join(right_stream)?.map(
                                 |(left, right)| {
-                                    let left = left.ok_or(str_to_dyn_error(
-                                        "left cannot be None in left outer join",
+                                    let left = left.ok_or(FnExecError::UnExpectedDataType(
+                                        "left cannot be None in left outer join".to_string(),
                                     ))?;
                                     if let Some(right) = right {
                                         Ok(left.value.join(right.value))
@@ -278,8 +278,8 @@ impl IRJobCompiler {
                             JoinKind::RightOuter => left_stream
                                 .right_outer_join(right_stream)?
                                 .map(|(left, right)| {
-                                    let right = right.ok_or(str_to_dyn_error(
-                                        "right cannot be None in right outer join",
+                                    let right = right.ok_or(FnExecError::UnExpectedDataType(
+                                        "right cannot be None in right outer join".to_string(),
                                     ))?;
                                     if let Some(left) = left {
                                         Ok(left.value.join(right.value))

@@ -29,6 +29,8 @@ pub enum FnGenError {
     DecodeOpError(DecodeError),
     /// Parse pb structure error
     ParseError(ParsePbError),
+    /// Empty storage error
+    EmptyGraphError,
     /// Query storage error
     QueryStoreError(DynError),
     /// Not supported error
@@ -40,6 +42,7 @@ impl std::fmt::Display for FnGenError {
         match self {
             FnGenError::DecodeOpError(e) => write!(f, "Decode pb error in fn gen {}", e),
             FnGenError::ParseError(e) => write!(f, "Parse pb error in fn gen {}", e),
+            FnGenError::EmptyGraphError => write!(f, "Empty graph store error in fn gen",),
             FnGenError::QueryStoreError(e) => write!(f, "Query store error in fn gen {}", e),
             FnGenError::UnSupported(e) => write!(f, "Op not supported error in fn gen  {}", e),
         }
@@ -77,6 +80,10 @@ impl From<FnGenError> for BuildJobError {
                 let err: Box<dyn std::error::Error + Send + Sync> = e.into();
                 BuildJobError::UserError(err)
             }
+            FnGenError::EmptyGraphError => {
+                let err: Box<dyn std::error::Error + Send + Sync> = "Empty graph error".into();
+                BuildJobError::UserError(err)
+            }
             FnGenError::QueryStoreError(e) => BuildJobError::UserError(e),
             FnGenError::UnSupported(e) => {
                 let err: Box<dyn std::error::Error + Send + Sync> = e.into();
@@ -86,16 +93,11 @@ impl From<FnGenError> for BuildJobError {
     }
 }
 
-/// A tricky bypassing of Rust's compiler. It is useful to simplify throwing a `DynError`
-/// from a `&str` as `Err(str_to_dyn_err('some str'))`
-pub fn str_to_dyn_error(str: &str) -> DynError {
-    let err: Box<dyn std::error::Error + Send + Sync> = str.into();
-    err
-}
-
 /// Errors that occur when execute a udf in Runtime
 #[derive(Debug)]
 pub enum FnExecError {
+    /// Empty storage error
+    EmptyGraphError,
     /// Query storage error
     QueryStoreError(String),
     /// Keyed error
@@ -111,6 +113,7 @@ pub enum FnExecError {
 impl std::fmt::Display for FnExecError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
+            FnExecError::EmptyGraphError => write!(f, "Empty graph store error in fn exec",),
             FnExecError::QueryStoreError(e) => write!(f, "Query store error in exec {}", e),
             FnExecError::GetTagError(e) => write!(f, "Get tag error in exec {}", e),
             FnExecError::ExprEvalError(e) => write!(f, "Eval expression error in exec {}", e),
@@ -137,6 +140,10 @@ impl From<ExprError> for FnExecError {
 impl From<FnExecError> for DynError {
     fn from(e: FnExecError) -> Self {
         match e {
+            FnExecError::EmptyGraphError => {
+                let err: Box<dyn std::error::Error + Send + Sync> = "Empty graph error".into();
+                err
+            }
             FnExecError::QueryStoreError(e) => {
                 let err: Box<dyn std::error::Error + Send + Sync> = e.into();
                 err

@@ -26,6 +26,7 @@ mod test {
     use pegasus_server::JobRequest;
     use prost::Message;
     use runtime::expr::str_to_expr_pb;
+    use runtime::graph::element::Element;
 
     fn init_poc_request() -> JobRequest {
         // g.V().hasLabel("person").has("id", 1).out("knows").limit(10)
@@ -78,16 +79,21 @@ mod test {
         let request = init_poc_request();
         let mut results = submit_query(request, 1);
         let mut result_collection = vec![];
+        let expected_result_ids = vec![2, 4];
         while let Some(result) = results.next() {
             match result {
                 Ok(res) => {
-                    result_collection.push(res);
+                    let entry = parse_result(res).unwrap();
+                    if let Some(vertex) = entry.get(None).unwrap().as_graph_element() {
+                        result_collection.push(vertex.id().unwrap());
+                    }
                 }
                 Err(e) => {
                     panic!("err result {:?}", e);
                 }
             }
         }
-        assert_eq!(result_collection.len(), 2)
+        result_collection.sort();
+        assert_eq!(result_collection, expected_result_ids)
     }
 }

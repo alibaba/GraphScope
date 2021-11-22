@@ -13,7 +13,7 @@
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 
-use crate::error::{str_to_dyn_error, FnGenResult};
+use crate::error::{FnGenError, FnGenResult};
 use crate::graph::element::{Edge, Vertex};
 use crate::graph::partitioner::Partitioner;
 use crate::graph::QueryParams;
@@ -81,7 +81,7 @@ impl SourceOperator {
         self,
         worker_index: usize,
     ) -> FnGenResult<Box<dyn Iterator<Item = Record> + Send>> {
-        let graph = crate::get_graph().ok_or(str_to_dyn_error("Graph is None"))?;
+        let graph = crate::get_graph().ok_or(FnGenError::EmptyGraphError)?;
         match self.source_type {
             SourceType::Vertex => {
                 let mut v_source =
@@ -117,8 +117,8 @@ impl SourceOperator {
                     e_source.map(move |e| Record::new(e, self.alias.clone())),
                 ))
             }
-            SourceType::Table => Err(str_to_dyn_error(
-                "Source type of Table is not supported yet",
+            SourceType::Table => Err(FnGenError::UnSupported(
+                "Source type of Table is not supported yet".to_string(),
             ))?,
         }
     }

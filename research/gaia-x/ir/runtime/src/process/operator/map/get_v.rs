@@ -64,8 +64,7 @@ impl MapFunction<Record, Record> for GetVertexOperator {
                 ))?,
             },
         };
-        let graph =
-            crate::get_graph().ok_or(FnExecError::QueryStoreError("Graph is None".to_string()))?;
+        let graph = crate::get_graph().ok_or(FnExecError::EmptyGraphError)?;
         let mut result_iter = graph.get_vertex(&[id], &self.query_params)?;
         if let Some(vertex) = result_iter.next() {
             input.append(vertex, self.alias.clone());

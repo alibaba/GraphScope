@@ -19,7 +19,7 @@ mod common;
 
 #[cfg(test)]
 mod test {
-    use graph_proxy::{create_demo_graph, SinglePartition};
+    use graph_proxy::{create_demo_graph, SimplePartition};
     use graph_store::ldbc::LDBCVertexParser;
     use graph_store::prelude::DefaultId;
     use ir_common::generated::algebra as pb;
@@ -51,7 +51,7 @@ mod test {
             &mut source_opr_pb,
             1,
             1,
-            Arc::new(SinglePartition { num_servers: 1 }),
+            Arc::new(SimplePartition { num_servers: 1 }),
         )
         .unwrap();
         source.gen_source(0).unwrap()

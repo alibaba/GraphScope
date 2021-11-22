@@ -17,8 +17,8 @@
 extern crate log;
 #[macro_use]
 extern crate lazy_static;
-pub use exp_store::{create_demo_graph, QueryExpGraph, SinglePartition};
-use runtime::error::{DynIter, DynResult};
+pub use exp_store::{create_demo_graph, QueryExpGraph, SimplePartition};
+use pegasus::api::function::{DynIter, FnResult};
 use runtime::graph::Statement;
 use runtime::IRJobCompiler;
 
@@ -30,7 +30,7 @@ pub trait InitializeJobCompiler {
 
 pub fn from_fn<I, O, F>(func: F) -> Box<dyn Statement<I, O>>
 where
-    F: Fn(I) -> DynResult<DynIter<O>> + Send + Sync + 'static,
+    F: Fn(I) -> FnResult<DynIter<O>> + Send + Sync + 'static,
 {
     Box::new(func) as Box<dyn Statement<I, O>>
 }
