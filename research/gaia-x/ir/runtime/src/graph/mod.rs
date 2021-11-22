@@ -17,13 +17,13 @@ pub mod element;
 pub mod partitioner;
 pub mod property;
 
-use crate::error::{DynIter, DynResult};
 use crate::expr::eval::Evaluator;
 use crate::graph::element::{Edge, Vertex};
 use ir_common::error::ParsePbError;
 use ir_common::generated::algebra as algebra_pb;
 use ir_common::generated::common as common_pb;
 use ir_common::NameOrId;
+use pegasus::api::function::{DynIter, FnResult};
 use std::convert::{TryFrom, TryInto};
 use std::sync::atomic::{AtomicPtr, Ordering};
 use std::sync::Arc;
@@ -140,14 +140,14 @@ impl QueryParams {
 
 /// The function for graph query
 pub trait Statement<I, O>: Send + 'static {
-    fn exec(&self, next: I) -> DynResult<DynIter<O>>;
+    fn exec(&self, next: I) -> FnResult<DynIter<O>>;
 }
 
 impl<I, O, F: 'static> Statement<I, O> for F
 where
-    F: Fn(I) -> DynResult<DynIter<O>> + Send + Sync,
+    F: Fn(I) -> FnResult<DynIter<O>> + Send + Sync,
 {
-    fn exec(&self, param: I) -> DynResult<DynIter<O>> {
+    fn exec(&self, param: I) -> FnResult<DynIter<O>> {
         (self)(param)
     }
 }
@@ -158,24 +158,24 @@ pub trait GraphProxy: Send + Sync {
     fn scan_vertex(
         &self,
         params: &QueryParams,
-    ) -> DynResult<Box<dyn Iterator<Item = Vertex> + Send>>;
+    ) -> FnResult<Box<dyn Iterator<Item = Vertex> + Send>>;
 
     /// Scan all edges with query parameters, and return an iterator over them.
-    fn scan_edge(&self, params: &QueryParams) -> DynResult<Box<dyn Iterator<Item = Edge> + Send>>;
+    fn scan_edge(&self, params: &QueryParams) -> FnResult<Box<dyn Iterator<Item = Edge> + Send>>;
 
     /// Get vertices with the given global_ids (defined in runtime) and parameters, and return an iterator over them.
     fn get_vertex(
         &self,
         ids: &[ID],
         params: &QueryParams,
-    ) -> DynResult<Box<dyn Iterator<Item = Vertex> + Send>>;
+    ) -> FnResult<Box<dyn Iterator<Item = Vertex> + Send>>;
 
     /// Get edges with the given global_ids (defined in runtime) and parameters, and return an iterator over them.
     fn get_edge(
         &self,
         ids: &[ID],
         params: &QueryParams,
-    ) -> DynResult<Box<dyn Iterator<Item = Edge> + Send>>;
+    ) -> FnResult<Box<dyn Iterator<Item = Edge> + Send>>;
 
     /// Get adjacent vertices of the given direction with parameters, and return the closure of Statement.
     /// We could further call the returned closure with input vertex and get its adjacent vertices.
@@ -183,7 +183,7 @@ pub trait GraphProxy: Send + Sync {
         &self,
         direction: Direction,
         params: &QueryParams,
-    ) -> DynResult<Box<dyn Statement<ID, Vertex>>>;
+    ) -> FnResult<Box<dyn Statement<ID, Vertex>>>;
 
     /// Get adjacent edges of the given direction with parameters, and return the closure of Statement.
     /// We could further call the returned closure with input vertex and get its adjacent edges.
@@ -191,7 +191,7 @@ pub trait GraphProxy: Send + Sync {
         &self,
         direction: Direction,
         params: &QueryParams,
-    ) -> DynResult<Box<dyn Statement<ID, Edge>>>;
+    ) -> FnResult<Box<dyn Statement<ID, Edge>>>;
 }
 
 lazy_static! {

@@ -13,7 +13,7 @@
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 
-use crate::error::{DynResult, FnExecError, FnGenResult};
+use crate::error::{FnExecError, FnGenResult};
 use crate::graph::element::{Element, VertexOrEdge};
 use crate::graph::QueryParams;
 use crate::process::operator::map::MapFuncGen;
@@ -22,7 +22,7 @@ use crate::process::record::Record;
 use ir_common::generated::algebra as algebra_pb;
 use ir_common::generated::algebra::get_v::VOpt;
 use ir_common::NameOrId;
-use pegasus::api::function::MapFunction;
+use pegasus::api::function::{FnResult, MapFunction};
 use std::convert::TryInto;
 
 struct GetVertexOperator {
@@ -33,7 +33,7 @@ struct GetVertexOperator {
 }
 
 impl MapFunction<Record, Record> for GetVertexOperator {
-    fn exec(&self, mut input: Record) -> DynResult<Record> {
+    fn exec(&self, mut input: Record) -> FnResult<Record> {
         let entry = input
             .get(self.start_tag.as_ref())
             .ok_or(FnExecError::GetTagError(KeyedError::from(

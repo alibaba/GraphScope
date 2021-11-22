@@ -13,7 +13,7 @@
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 
-use crate::error::{DynResult, FnExecError, FnGenResult};
+use crate::error::{FnExecError, FnGenResult};
 use crate::process::functions::KeyFunction;
 use crate::process::operator::keyed::KeyFunctionGen;
 use crate::process::operator::TagKey;
@@ -21,6 +21,7 @@ use crate::process::record::{Record, RecordKey};
 use ir_common::error::ParsePbError;
 use ir_common::generated::algebra as algebra_pb;
 use ir_common::generated::common as common_pb;
+use pegasus::api::function::FnResult;
 use std::convert::TryFrom;
 
 pub struct KeySelector {
@@ -38,7 +39,7 @@ impl KeySelector {
 }
 
 impl KeyFunction<Record, RecordKey, Record> for KeySelector {
-    fn get_kv(&self, mut input: Record) -> DynResult<(RecordKey, Record)> {
+    fn get_kv(&self, mut input: Record) -> FnResult<(RecordKey, Record)> {
         let keys = self
             .keys
             .iter()

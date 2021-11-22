@@ -16,6 +16,7 @@
 use crate::expr::error::ExprError;
 use crate::process::operator::KeyedError;
 use ir_common::error::ParsePbError;
+use pegasus::api::function::DynError;
 use pegasus::BuildJobError;
 use prost::DecodeError;
 
@@ -84,10 +85,6 @@ impl From<FnGenError> for BuildJobError {
         }
     }
 }
-
-pub type DynError = Box<dyn std::error::Error + Send>;
-pub type DynResult<T> = Result<T, Box<dyn std::error::Error + Send>>;
-pub type DynIter<T> = Box<dyn Iterator<Item = T> + Send>;
 
 /// A tricky bypassing of Rust's compiler. It is useful to simplify throwing a `DynError`
 /// from a `&str` as `Err(str_to_dyn_err('some str'))`

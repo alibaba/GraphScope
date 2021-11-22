@@ -13,14 +13,14 @@
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 
-use crate::error::{DynResult, FnExecError, FnGenResult};
+use crate::error::{FnExecError, FnGenResult};
 use crate::expr::eval::Evaluator;
 use crate::process::operator::map::MapFuncGen;
 use crate::process::record::{ObjectElement, Record};
 use ir_common::error::ParsePbError;
 use ir_common::generated::algebra as algebra_pb;
 use ir_common::NameOrId;
-use pegasus::api::function::MapFunction;
+use pegasus::api::function::{FnResult, MapFunction};
 use std::convert::{TryFrom, TryInto};
 
 struct ProjectOperator {
@@ -29,7 +29,7 @@ struct ProjectOperator {
 }
 
 impl MapFunction<Record, Record> for ProjectOperator {
-    fn exec(&self, mut input: Record) -> DynResult<Record> {
+    fn exec(&self, mut input: Record) -> FnResult<Record> {
         let mut new_record = Record::default();
         for (evaluator, alias) in self.projected_columns.iter() {
             let projected_result = evaluator

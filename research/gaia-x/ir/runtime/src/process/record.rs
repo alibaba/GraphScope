@@ -13,13 +13,13 @@
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 
-use crate::error::DynIter;
 use crate::expr::eval::Context;
 use crate::graph::element::{Edge, Element, Vertex, VertexOrEdge};
 use crate::graph::property::DynDetails;
 use dyn_type::{BorrowObject, Object};
 use indexmap::map::IndexMap;
 use ir_common::NameOrId;
+use pegasus::api::function::DynIter;
 use pegasus::codec::{Decode, Encode, ReadExt, WriteExt};
 use std::cmp::Ordering;
 use std::hash::{Hash, Hasher};

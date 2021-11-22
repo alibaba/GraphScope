@@ -13,13 +13,13 @@
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 
-use crate::error::{DynResult, FnExecError, FnGenResult};
+use crate::error::{FnExecError, FnGenResult};
 use crate::expr::eval::Evaluator;
 use crate::process::operator::filter::FilterFuncGen;
 use crate::process::record::Record;
 use ir_common::error::ParsePbError;
 use ir_common::generated::algebra as algebra_pb;
-use pegasus::api::function::FilterFunction;
+use pegasus::api::function::{FilterFunction, FnResult};
 use std::convert::TryInto;
 
 struct SelectOperator {
@@ -27,7 +27,7 @@ struct SelectOperator {
 }
 
 impl FilterFunction<Record> for SelectOperator {
-    fn test(&self, input: &Record) -> DynResult<bool> {
+    fn test(&self, input: &Record) -> FnResult<bool> {
         let res = self
             .filter
             .eval_bool(Some(input))

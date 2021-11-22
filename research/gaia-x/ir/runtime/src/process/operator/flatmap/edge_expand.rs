@@ -13,7 +13,7 @@
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 
-use crate::error::{str_to_dyn_error, DynIter, DynResult, FnExecError, FnGenResult};
+use crate::error::{str_to_dyn_error, FnExecError, FnGenResult};
 use crate::graph::element::{Element, VertexOrEdge};
 use crate::graph::{Direction, QueryParams, Statement, ID};
 use crate::process::operator::flatmap::FlatMapFuncGen;
@@ -22,7 +22,7 @@ use crate::process::record::{Record, RecordExpandIter};
 use ir_common::error::ParsePbError;
 use ir_common::generated::algebra as algebra_pb;
 use ir_common::NameOrId;
-use pegasus::api::function::FlatMapFunction;
+use pegasus::api::function::{DynIter, FlatMapFunction, FnResult};
 use std::convert::{TryFrom, TryInto};
 
 pub struct EdgeExpandOperator<E: Into<VertexOrEdge>> {
@@ -34,7 +34,7 @@ pub struct EdgeExpandOperator<E: Into<VertexOrEdge>> {
 impl<E: Into<VertexOrEdge> + 'static> FlatMapFunction<Record, Record> for EdgeExpandOperator<E> {
     type Target = DynIter<Record>;
 
-    fn exec(&self, input: Record) -> DynResult<Self::Target> {
+    fn exec(&self, input: Record) -> FnResult<Self::Target> {
         let entry = input
             .get(self.start_v_tag.as_ref())
             .ok_or(FnExecError::GetTagError(KeyedError::from(

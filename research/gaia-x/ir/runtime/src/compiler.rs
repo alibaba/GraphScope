@@ -180,7 +180,6 @@ impl IRJobCompiler {
                     server_pb::operator_def::OpKind::Group(_group) => Err(
                         BuildJobError::Unsupported("Group is not supported yet".to_string()),
                     )?,
-
                     server_pb::operator_def::OpKind::Dedup(_) => Err(BuildJobError::Unsupported(
                         "Dedup is not supported yet".to_string(),
                     ))?,
