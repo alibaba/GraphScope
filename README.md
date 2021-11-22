@@ -134,13 +134,13 @@ paper_features.append("kcore")
 paper_features.append("tc")
 
 # launch a learning engine.
-lg = graphscope.learning(sub_graph, nodes=[("paper", paper_features)],
-                  edges=[("paper", "cites", "paper")],
-                  gen_labels=[
-                      ("train", "paper", 100, (0, 75)),
-                      ("val", "paper", 100, (75, 85)),
-                      ("test", "paper", 100, (85, 100))
-                  ])
+lg = graphscope.graphlearn(sub_graph, nodes=[("paper", paper_features)],
+                           edges=[("paper", "cites", "paper")],
+                           gen_labels=[
+                               ("train", "paper", 100, (0, 75)),
+                               ("val", "paper", 100, (75, 85)),
+                               ("test", "paper", 100, (85, 100))
+                           ])
 ```
 
 Then we define the training process, and run it.
@@ -366,17 +366,7 @@ To verify the correctness of your developed features, your code changes should p
 You may run the whole test suite with commands:
 
 ```bash
-# for the first time, run this script to install make, doxygen for docs and java env for testing.
-# ./scripts/prepare_dev.sh
-
-# run gae related test cases
-cd python && python3 -m pytest -s -v ./tests/unittest
-# or run the selected cases on a certain module e.g.,
-cd python && python3 -m pytest -s -v ./tests/unittest/test_udf_app.py [-k test_create_cython_app]
-
-# run gie gaia or gle related test cases
-cp python/tests/local/test_run_locally.py /tmp/test_run_locally.py
-cd tmp && python3 -m pytest -s -v ./test_run_locally.py [-k test_enable_gaia]
+cd GraphScope && make test
 ```
 
 
