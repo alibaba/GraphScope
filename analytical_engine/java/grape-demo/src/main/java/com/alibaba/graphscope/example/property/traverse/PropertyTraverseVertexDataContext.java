@@ -18,13 +18,11 @@ package com.alibaba.graphscope.example.property.traverse;
 
 import com.alibaba.fastjson.JSONObject;
 import com.alibaba.graphscope.context.LabeledVertexDataContext;
-import com.alibaba.graphscope.context.PropertyDefaultContextBase;
 import com.alibaba.graphscope.ds.EmptyType;
 import com.alibaba.graphscope.fragment.ArrowFragment;
 import com.alibaba.graphscope.parallel.PropertyMessageManager;
 
-public class PropertyTraverseVertexDataContext extends LabeledVertexDataContext<Long, EmptyType>
-        implements PropertyDefaultContextBase<Long> {
+public class PropertyTraverseVertexDataContext extends LabeledVertexDataContext<Long, EmptyType> {
     public int step;
     public int maxStep;
     public long fake_vid;

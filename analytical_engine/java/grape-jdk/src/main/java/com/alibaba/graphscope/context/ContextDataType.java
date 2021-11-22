@@ -21,6 +21,8 @@ import com.alibaba.fastffi.FFITypeAlias;
 import com.alibaba.fastffi.FFITypeRefiner;
 import com.alibaba.graphscope.utils.CppClassName;
 
+// @FFIGen(library = VINEYARD_JNI_LIBRARY)
+// @CXXHead(CONTEXT_PROTOCOLS_H)
 @FFITypeAlias(CppClassName.CONTEXT_DATA_TYPE)
 @FFITypeRefiner("com.alibaba.graphscope.context.ContextDataType.get")
 public enum ContextDataType implements CXXEnum {

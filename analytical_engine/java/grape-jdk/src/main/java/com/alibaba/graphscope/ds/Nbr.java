@@ -42,6 +42,18 @@ import com.alibaba.fastffi.FFITypeAlias;
 @FFIGen(library = JNI_LIBRARY_NAME)
 @CXXHead(GRAPE_ADJ_LIST_H)
 @FFITypeAlias(GRAPE_NBR)
+// @CXXTemplate(
+//        cxx = {"ui/*nt64_t", "std::string"},
+//        java = {"java.lang.Long", "com.alib*/aba.grape.stdcxx.StdString"})
+// @CXXTemplate(
+//        cxx = {"uint64_t", "jdouble"},
+//        java = {"Long", "Double"})
+// @CXXTemplate(
+//        cxx = {"uint64_t", "int64_t"},
+//        java = {"Long", "Long"})
+// @CXXTemplate(
+//        cxx = {"uint64_t", "double"},
+//        java = {"Long", "Double"})
 public interface Nbr<VID, EDATA> extends FFIPointer, CXXPointerRangeElement<Nbr<VID, EDATA>> {
 
     /**

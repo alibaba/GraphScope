@@ -225,11 +225,11 @@ class ILabeledVertexPropertyContextWrapper : public IContextWrapper {
  * @brief A base class for JavaPropertyDefaultContext. It holds an inner
  * ctxWrapper, and redirect function calls to the inner ctxWrapper.
  */
-class IJavaPIEPropertyContextWrapper : public IContextWrapper {
+class IJavaPIEPropertyDefaultContextWrapper : public IContextWrapper {
   using label_id_t = vineyard::property_graph_types::LABEL_ID_TYPE;
 
  public:
-  explicit IJavaPIEPropertyContextWrapper(const std::string& id)
+  explicit IJavaPIEPropertyDefaultContextWrapper(const std::string& id)
       : IContextWrapper(id) {}
 
   virtual bl::result<std::unique_ptr<grape::InArchive>> ToNdArray(
@@ -263,9 +263,9 @@ class IJavaPIEPropertyContextWrapper : public IContextWrapper {
  * @brief A base class for JavaProjectedDefaultContext. It holds an inner
  * ctxWrapper,and redirect function calls to the inner ctxWrapper.
  */
-class IJavaPIEProjectedContextWrapper : public IContextWrapper {
+class IJavaPIEProjectedDefaultContextWrapper : public IContextWrapper {
  public:
-  explicit IJavaPIEProjectedContextWrapper(const std::string& id)
+  explicit IJavaPIEProjectedDefaultContextWrapper(const std::string& id)
       : IContextWrapper(id) {}
 
   virtual bl::result<std::unique_ptr<grape::InArchive>> ToNdArray(

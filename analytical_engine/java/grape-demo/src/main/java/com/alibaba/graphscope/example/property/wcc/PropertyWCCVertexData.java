@@ -16,7 +16,7 @@
 
 package com.alibaba.graphscope.example.property.wcc;
 
-import com.alibaba.graphscope.app.DefaultPropertyAppBase;
+import com.alibaba.graphscope.app.PropertyDefaultAppBase;
 import com.alibaba.graphscope.context.PropertyDefaultContextBase;
 import com.alibaba.graphscope.ds.GSVertexArray;
 import com.alibaba.graphscope.ds.PropertyAdjList;
@@ -28,7 +28,7 @@ import com.alibaba.graphscope.parallel.PropertyMessageManager;
 import com.alibaba.graphscope.parallel.message.LongMsg;
 
 public class PropertyWCCVertexData
-        implements DefaultPropertyAppBase<Long, PropertyWCCVertexDataContext> {
+        implements PropertyDefaultAppBase<Long, PropertyWCCVertexDataContext> {
     @Override
     public void PEval(
             ArrowFragment<Long> fragment,

@@ -91,6 +91,11 @@ class JavaContextBase : public grape::ContextBase {
   }
   const fragment_t& fragment() const { return fragment_; }
 
+  void Output(std::ostream& os) {
+    VLOG(1)
+        << "Java app context will output with other methods: ToNdArray, etc. ";
+  }
+
   const char* app_class_name() const { return app_class_name_; }
 
   uint64_t inner_context_addr() { return inner_ctx_addr_; }
@@ -104,8 +109,6 @@ class JavaContextBase : public grape::ContextBase {
   const jobject& url_class_loader_object() const {
     return url_class_loader_object_;
   }
-
-  virtual void Output(std::ostream& os) = 0;
 
  protected:
   virtual const char* evalDescriptor() = 0;

@@ -265,22 +265,12 @@ if (BUILD_TESTS)
         target_compile_definitions(run_java_app PUBLIC ENABLE_JAVA_SDK)
         target_link_libraries(run_java_app gs_proto ${GFLAGS_LIBRARIES} ${MPI_CXX_LIBRARIES} ${JNI_LIBRARIES} ${Boost_LIBRARIES}
                                         ${CMAKE_DL_LIBS} ${GLOG_LIBRARIES} ${VINEYARD_LIBRARIES})
-
-        # java app benchmark
-        add_executable(property_graph_java_app_benchmarks benchmarks/property_graph_java_app_benchmarks.cc core/java/javasdk.cc)
-        target_include_directories(property_graph_java_app_benchmarks PRIVATE core utils apps)
-        target_compile_definitions(property_graph_java_app_benchmarks PUBLIC ENABLE_JAVA_SDK)
-
-        target_link_libraries(property_graph_java_app_benchmarks ${JNI_LIBRARIES} ${Boost_LIBRARIES} ${CMAKE_DL_LIBS}  ${VINEYARD_LIBRARIES})
         if (${LIBUNWIND_FOUND})
             target_link_libraries(run_java_app ${LIBUNWIND_LIBRARIES})
-            target_link_libraries(property_graph_java_app_benchmarks ${LIBUNWIND_LIBRARIES})
         endif ()
         if (NETWORKX)
             target_include_directories(run_java_app PUBLIC ${FOLLY_ROOT_DIR}/include)
-            target_include_directories(property_graph_java_app_benchmarks PUBLIC ${FOLLY_ROOT_DIR}/include)
             target_link_libraries(run_java_app ${FOLLY_LIBRARIES} ${DOUBLE_CONVERSION_LIBRARY})
-            target_link_libraries(property_graph_java_app_benchmarks gs_proto ${FOLLY_LIBRARIES} ${DOUBLE_CONVERSION_LIBRARY})
         endif()
     endif()
 

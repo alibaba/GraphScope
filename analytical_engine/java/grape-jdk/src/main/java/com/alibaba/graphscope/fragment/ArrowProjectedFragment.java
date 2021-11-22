@@ -46,6 +46,12 @@ import com.alibaba.graphscope.ds.VertexRange;
 @CXXHead(CORE_JAVA_TYPE_ALIAS_H)
 @CXXHead(system = "stdint.h")
 @FFITypeAlias(ARROW_PROJECTED_FRAGMENT)
+// @CXXTemplate(
+// cxx = {"int64_t", "uint64_t", GRAPE_EMPTY_TYPE, "int64_t"},
+// java = {"Long", "Long", "com.alibaba.graphscope.ds.EmptyType", "Long"})
+// @CXXTemplate(
+// cxx = {"int64_t", "uint64_t", "double", "int64_t"},
+// java = {"Long", "Long", "Double", "Long"})
 public interface ArrowProjectedFragment<OID_T, VID_T, VDATA_T, EDATA_T> extends FFIPointer {
     int fid();
 

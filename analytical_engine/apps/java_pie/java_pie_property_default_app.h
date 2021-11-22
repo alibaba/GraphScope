@@ -25,14 +25,14 @@ limitations under the License.
 #include "grape/types.h"
 
 #include "core/app/property_app_base.h"
-#include "core/context/java_pie_property_context.h"
+#include "core/context/java_pie_property_default_context.h"
 #include "core/error.h"
 
 namespace gs {
 
 /**
  * @brief This is a driver app for Java app. The driven java app should be
- * inherited from DefaultPropertyAppBase.
+ * inherited from PropertyDefaultAppBase.
  *
  * @tparam FRAG_T Should be vineyard::ArrowFragment<...>
  */
@@ -58,9 +58,8 @@ class JavaPIEPropertyDefaultApp
       JNIEnv* env = m.env();
 
       jobject app_object = ctx.app_object();
-      auto communicator = static_cast<grape::Communicator*>(this);
       InitJavaCommunicator(env, ctx.url_class_loader_object(), app_object,
-                           reinterpret_cast<jlong>(communicator));
+                           reinterpret_cast<jlong>(this));
 
       jclass app_class = env->GetObjectClass(app_object);
       CHECK_NOTNULL(app_class);

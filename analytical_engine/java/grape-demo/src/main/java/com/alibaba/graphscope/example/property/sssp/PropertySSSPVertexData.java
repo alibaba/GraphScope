@@ -16,7 +16,7 @@
 
 package com.alibaba.graphscope.example.property.sssp;
 
-import com.alibaba.graphscope.app.DefaultPropertyAppBase;
+import com.alibaba.graphscope.app.PropertyDefaultAppBase;
 import com.alibaba.graphscope.context.PropertyDefaultContextBase;
 import com.alibaba.graphscope.ds.PropertyAdjList;
 import com.alibaba.graphscope.ds.PropertyNbr;
@@ -36,7 +36,7 @@ import org.slf4j.LoggerFactory;
  * com.alibaba.graphscope.context.LabeledVertexDataContext}.
  */
 public class PropertySSSPVertexData
-        implements DefaultPropertyAppBase<Long, PropertySSSPVertexDataContext> {
+        implements PropertyDefaultAppBase<Long, PropertySSSPVertexDataContext> {
     private static Logger logger = LoggerFactory.getLogger(PropertySSSPVertexData.class.getName());
 
     @Override

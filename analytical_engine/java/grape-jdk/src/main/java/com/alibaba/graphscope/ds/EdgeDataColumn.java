@@ -36,6 +36,15 @@ import com.alibaba.graphscope.utils.JNILibraryName;
 @FFIGen(library = JNILibraryName.JNI_LIBRARY_NAME)
 @CXXHead(CppHeaderName.CORE_JAVA_TYPE_ALIAS_H)
 @FFITypeAlias(CppClassName.EDGE_DATA_COLUMN)
+// @CXXTemplate(
+//        cxx = {"uint64_t"},
+//        java = {"Long"})
+// @CXXTemplate(
+//        cxx = {"double"},
+//        java = {"Double"})
+// @CXXTemplate(
+//        cxx = {"uint32_t"},
+//        java = {"Integer"})
 public interface EdgeDataColumn<DATA_T> extends FFIPointer {
 
     @CXXOperator(value = "[]")

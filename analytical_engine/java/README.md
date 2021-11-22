@@ -147,7 +147,7 @@ For example, to implement a app which traverse all vertex in a property graph(Ar
 shall code like this
 ```java
 public class PropertyTraverseVertexData
-        implements DefaultPropertyAppBase<Long, PropertyTraverseVertexDataContext> {
+        implements PropertyDefaultAppBase<Long, PropertyTraverseVertexDataContext> {
     @Override
     public void PEval(
             ArrowFragment<Long> fragment,
@@ -201,7 +201,7 @@ graph = graph.add_vertices("gstest/property/p2p-31_property_v_0", label="person"
 graph = graph.add_edges("gstest/property/p2p-31_property_e_0", label="knows")
 
 sssp1=JavaApp(
-    full_jar_path="~/.m2/repository/com/alibaba/graphscope/grape-demo/0.1/grape-demo-0.1-shaded.jar", 
+    full_jar_path="~/.m2/repository/com/alibaba/grape/grape-demo/0.1/grape-demo-0.1-shaded.jar", 
     java_app_class="com.alibaba.graphscope.example.sssp.SSSPDefault", 
 )
 ctx2=sssp1(graph,src=6)
@@ -209,7 +209,7 @@ ctx2=sssp1(graph,src=6)
 graph = graph.project(vertices={"person": ['id']}, edges={"knows": ["dist"]})
 """simple_graph = graph._project_to_simple() will be done by JavaApp"""
 sssp3=JavaApp(
-    full_jar_path="~/.m2/repository/com/alibaba/graphscope/grape-demo/0.1/grape-demo-0.1-shaded.jar", 
+    full_jar_path="~/.m2/repository/com/alibaba/grape/grape-demo/0.1/grape-demo-0.1-shaded.jar", 
     java_app_class="com.alibaba.graphscope.example.projected.SSSPProjected", 
 )
 ctx3=sssp3(graph,src=6)

@@ -41,7 +41,6 @@ public class CppClassName {
 
     public static final String DOUBLE_MSG = "gs::DoubleMsg";
     public static final String LONG_MSG = "gs::LongMsg";
-    public static final String GS_PRIMITIVE_MESSAGE = "gs::PrimitiveMessage";
     public static final String STRING_MSG = "gs::StringMsg";
     public static final String GRAPE_ADJ_LIST = "grape::AdjList";
     public static final String GRAPE_BIT_SET = "grape::Bitset";
@@ -57,8 +56,6 @@ public class CppClassName {
     public static final String GRAPE_DEFAULT_MESSAGE_MANAGER = "grape::DefaultMessageManager";
     public static final String GRAPE_MESSAGE_IN_BUFFER = "grape::MessageInBuffer";
     public static final String GRAPE_PARALLEL_MESSAGE_MANAGER = "grape::ParallelMessageManager";
-    public static final String GS_PARALLEL_PROPERTY_MESSAGE_MANAGER =
-            "gs::ParallelPropertyMessageManager";
     public static final String GRAPE_COMMUNICATOR = "grape::Communicator";
     public static final String ARROW_PROJECTED_FRAGMENT = "gs::ArrowProjectedFragment";
     public static final String PROJECTED_ADJ_LIST =

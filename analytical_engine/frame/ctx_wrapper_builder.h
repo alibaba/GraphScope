@@ -25,8 +25,8 @@
 
 #include "core/context/i_context.h"
 #ifdef ENABLE_JAVA_SDK
-#include "core/context/java_pie_projected_context.h"
-#include "core/context/java_pie_property_context.h"
+#include "core/context/java_pie_projected_default_context.h"
+#include "core/context/java_pie_property_default_context.h"
 #endif
 #include "core/context/labeled_vertex_property_context.h"
 #include "core/context/tensor_context.h"
@@ -160,9 +160,9 @@ struct CtxWrapperBuilder<CTX_T, typename std::enable_if<is_base_of_template<
  * @tparam CTX_T
  */
 template <typename CTX_T>
-struct CtxWrapperBuilder<CTX_T,
-                         typename std::enable_if<is_base_of_template<
-                             CTX_T, JavaPIEPropertyContext>::value>::type> {
+struct CtxWrapperBuilder<
+    CTX_T, typename std::enable_if<is_base_of_template<
+               CTX_T, JavaPIEPropertyDefaultContext>::value>::type> {
   static std::shared_ptr<gs::IContextWrapper> build(
       const std::string& id, std::shared_ptr<IFragmentWrapper> frag_wrapper,
       std::shared_ptr<CTX_T> ctx) {
@@ -175,9 +175,9 @@ struct CtxWrapperBuilder<CTX_T,
  * @tparam CTX_T
  */
 template <typename CTX_T>
-struct CtxWrapperBuilder<CTX_T,
-                         typename std::enable_if<is_base_of_template<
-                             CTX_T, JavaPIEProjectedContext>::value>::type> {
+struct CtxWrapperBuilder<
+    CTX_T, typename std::enable_if<is_base_of_template<
+               CTX_T, JavaPIEProjectedDefaultContext>::value>::type> {
   static std::shared_ptr<gs::IContextWrapper> build(
       const std::string& id, std::shared_ptr<IFragmentWrapper> frag_wrapper,
       std::shared_ptr<CTX_T> ctx) {

@@ -18,7 +18,6 @@ package com.alibaba.graphscope.example.property.wcc;
 
 import com.alibaba.fastjson.JSONObject;
 import com.alibaba.graphscope.context.LabeledVertexDataContext;
-import com.alibaba.graphscope.context.PropertyDefaultContextBase;
 import com.alibaba.graphscope.ds.GSVertexArray;
 import com.alibaba.graphscope.ds.VertexRange;
 import com.alibaba.graphscope.ds.VertexSet;
@@ -31,8 +30,7 @@ import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class PropertyWCCVertexDataContext extends LabeledVertexDataContext<Long, Long>
-        implements PropertyDefaultContextBase<Long> {
+public class PropertyWCCVertexDataContext extends LabeledVertexDataContext<Long, Long> {
     private static Logger logger =
             LoggerFactory.getLogger(PropertySSSPVertexDataContext.class.getName());
     public StdVector<GSVertexArray<Long>> compId;
