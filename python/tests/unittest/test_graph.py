@@ -162,9 +162,6 @@ def test_error_on_project_to_simple_wrong_graph_type(arrow_property_graph):
         pg.project(vertices={"v0": []}, edges={"e0": []})
 
 
-@pytest.mark.skipif(
-    os.environ.get("NETWORKX") != "ON", reason="dynamic graph is in NETWORKX ON"
-)
 def test_error_on_project_to_simple_wrong_graph_type_2(dynamic_property_graph):
     sdg = dynamic_property_graph.project_to_simple()
     assert sdg._graph_type == graph_def_pb2.DYNAMIC_PROJECTED
@@ -177,48 +174,6 @@ def test_error_on_operation_on_graph(graphscope_session):
     with pytest.raises(KeyError, match="v"):
         pg = g.project(vertices={"v": []}, edges={"e": []})
         pg._project_to_simple()._ensure_loaded()
-
-
-def test_error_on_app_query_non_compatible_graph(arrow_property_graph):
-    pg = arrow_property_graph.project(vertices={"v0": []}, edges={"e0": []})
-    # edata is empty, not compatible with sssp
-    with pytest.raises(graphscope.framework.errors.CompilationError):
-        sssp(pg, 4)
-
-
-@pytest.mark.skip(reason="appendonly graph not ready.")
-def test_append_only_graph():
-    g = Graph
-    ag = gs.to_appendable(g)
-    g2 = gs.to_immutable(g)
-    assert g == g2
-    # FIXME:  open is a builtin function
-    kr = open("kafka://xxxx", "r")
-    kw = open("kafka://yyyy", "w")
-    while kr.hasNextChunk():
-        queries, updates = ProcessKafka(kr.nextChunk())
-        ag.extend(updates)
-    result = sampler(ag, queries)
-    kw.output(result)
-
-
-@pytest.mark.skip(reason="appendonly graph not ready.")
-def test_error_on_append_graph():
-    ag = get_append_only_graph()
-    with pytest.raises(RuntimeError, match="data format is not supported"):
-        ag.extend("not recognized data format")  # should be returned by ProcessKafka
-
-
-@pytest.mark.skip(reason="appendonly graph not ready.")
-def test_error_on_transform_graph():
-    g = Graph()
-    ag = gs.to_appendable(g)
-    with pytest.raises(AssertionError, match="expect source graph is immutable"):
-        agg = gs.to_appendable(ag)
-
-    g2 = gs.to_immutable(ag)
-    with pytest.raises(AssertionError, match="expect source graph is appendable"):
-        g3 = gs.to_immutable(g2)
 
 
 def test_load_only_from_efile(

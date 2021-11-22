@@ -16,11 +16,14 @@
 # limitations under the License.
 #
 
+import os
+
 import pytest
 
 from graphscope.dataset import *
 
 
+@pytest.mark.skipif("NIGHTLY" not in os.environ, reason="Run in nightly CI")
 def test_download_dataset(graphscope_session):
     g1 = load_modern_graph(graphscope_session)
     g1.unload()
