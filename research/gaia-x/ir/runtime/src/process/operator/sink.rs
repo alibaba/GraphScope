@@ -93,7 +93,7 @@ impl From<RecordElement> for result_pb::Element {
                     Some(result_pb::element::Inner::Edge(edge_pb))
                 }
             },
-            RecordElement::OutGraph(o) => match o {
+            RecordElement::OffGraph(o) => match o {
                 ObjectElement::None => None,
                 ObjectElement::Prop(obj) | ObjectElement::Agg(obj) => {
                     let value_pb = object_to_pb_value(obj);

@@ -56,7 +56,7 @@ impl RouteFunction<Record> for RecordRouter {
                         ))?,
                         self.num_workers,
                     ),
-                    RecordElement::OutGraph(_) => Ok(0),
+                    RecordElement::OffGraph(_) => Ok(0),
                 },
                 Entry::Collection(_) => Ok(0),
             }

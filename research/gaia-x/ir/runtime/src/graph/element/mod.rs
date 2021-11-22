@@ -21,6 +21,7 @@ use crate::graph::ID;
 use dyn_type::{BorrowObject, Object};
 use ir_common::NameOrId;
 use pegasus_common::codec::{Decode, Encode, ReadExt, WriteExt};
+use std::cmp::Ordering;
 use std::fmt::Debug;
 use std::io;
 
@@ -149,5 +150,23 @@ impl Decode for VertexOrEdge {
             }
             _ => Err(io::Error::new(io::ErrorKind::Other, "unreachable")),
         }
+    }
+}
+
+impl PartialEq for VertexOrEdge {
+    fn eq(&self, other: &Self) -> bool {
+        match (self, other) {
+            (VertexOrEdge::V(v1), VertexOrEdge::V(v2)) => v1.id() == v2.id(),
+            (VertexOrEdge::E(e1), VertexOrEdge::E(e2)) => e1.id() == e2.id(),
+            _ => false,
+        }
+    }
+}
+
+impl PartialOrd for VertexOrEdge {
+    // TODO: not sure if it is reasonable. VertexOrEdge seems to be not comparable.
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+        self.as_borrow_object()
+            .partial_cmp(&other.as_borrow_object())
     }
 }

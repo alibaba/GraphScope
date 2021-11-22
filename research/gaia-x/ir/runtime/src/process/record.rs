@@ -16,6 +16,7 @@
 use crate::expr::eval::Context;
 use crate::graph::element::{Edge, Element, Vertex, VertexOrEdge};
 use crate::graph::property::DynDetails;
+use crate::graph::ID;
 use dyn_type::{BorrowObject, Object};
 use indexmap::map::IndexMap;
 use ir_common::NameOrId;
@@ -40,7 +41,7 @@ pub enum ObjectElement {
 #[derive(Debug, Clone)]
 pub enum RecordElement {
     OnGraph(VertexOrEdge),
-    OutGraph(ObjectElement),
+    OffGraph(ObjectElement),
 }
 
 #[derive(Debug, Clone)]
@@ -139,7 +140,7 @@ impl Into<Entry> for VertexOrEdge {
 
 impl Into<Entry> for ObjectElement {
     fn into(self) -> Entry {
-        Entry::Element(RecordElement::OutGraph(self))
+        Entry::Element(RecordElement::OffGraph(self))
     }
 }
 
@@ -161,31 +162,31 @@ impl Context<RecordElement> for Record {
 }
 
 impl Element for RecordElement {
-    fn id(&self) -> Option<u128> {
+    fn id(&self) -> Option<ID> {
         match self {
             RecordElement::OnGraph(vertex_or_edge) => vertex_or_edge.id(),
-            RecordElement::OutGraph(_) => None,
+            RecordElement::OffGraph(_) => None,
         }
     }
 
     fn label(&self) -> Option<&NameOrId> {
         match self {
             RecordElement::OnGraph(vertex_or_edge) => vertex_or_edge.label(),
-            RecordElement::OutGraph(_) => None,
+            RecordElement::OffGraph(_) => None,
         }
     }
 
     fn details(&self) -> Option<&DynDetails> {
         match self {
             RecordElement::OnGraph(vertex_or_edge) => vertex_or_edge.details(),
-            RecordElement::OutGraph(_) => None,
+            RecordElement::OffGraph(_) => None,
         }
     }
 
     fn as_borrow_object(&self) -> BorrowObject {
         match self {
             RecordElement::OnGraph(vertex_or_edge) => vertex_or_edge.as_borrow_object(),
-            RecordElement::OutGraph(obj_element) => match obj_element {
+            RecordElement::OffGraph(obj_element) => match obj_element {
                 ObjectElement::None => BorrowObject::String(""),
                 ObjectElement::Prop(obj) | ObjectElement::Agg(obj) => obj.as_borrow(),
                 ObjectElement::Count(cnt) => (*cnt).into(),
@@ -213,7 +214,7 @@ impl Hash for RecordElement {
                 .id()
                 .expect("id of VertexOrEdge cannot be None")
                 .hash(&mut state),
-            RecordElement::OutGraph(o) => match o {
+            RecordElement::OffGraph(o) => match o {
                 ObjectElement::None => None::<Object>.hash(&mut state),
                 ObjectElement::Prop(o) => o.hash(&mut state),
                 ObjectElement::Count(o) => o.hash(&mut state),
@@ -250,21 +251,11 @@ impl PartialEq for ObjectElement {
     }
 }
 
-impl PartialEq for VertexOrEdge {
-    fn eq(&self, other: &Self) -> bool {
-        match (self, other) {
-            (VertexOrEdge::V(v1), VertexOrEdge::V(v2)) => v1.id() == v2.id(),
-            (VertexOrEdge::E(e1), VertexOrEdge::E(e2)) => e1.id() == e2.id(),
-            _ => false,
-        }
-    }
-}
-
 impl PartialEq for RecordElement {
     fn eq(&self, other: &Self) -> bool {
         match (self, other) {
             (RecordElement::OnGraph(v1), RecordElement::OnGraph(v2)) => v1 == v2,
-            (RecordElement::OutGraph(o1), RecordElement::OutGraph(o2)) => o1 == o2,
+            (RecordElement::OffGraph(o1), RecordElement::OffGraph(o2)) => o1 == o2,
             _ => false,
         }
     }
@@ -300,19 +291,11 @@ impl PartialOrd for ObjectElement {
     }
 }
 
-impl PartialOrd for VertexOrEdge {
-    // TODO: not sure if it is reasonable. VertexOrEdge seems to be not comparable.
-    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
-        self.as_borrow_object()
-            .partial_cmp(&other.as_borrow_object())
-    }
-}
-
 impl PartialOrd for RecordElement {
     fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
         match (self, other) {
             (RecordElement::OnGraph(v1), RecordElement::OnGraph(v2)) => v1.partial_cmp(v2),
-            (RecordElement::OutGraph(o1), RecordElement::OutGraph(o2)) => o1.partial_cmp(o2),
+            (RecordElement::OffGraph(o1), RecordElement::OffGraph(o2)) => o1.partial_cmp(o2),
             _ => None,
         }
     }
@@ -414,7 +397,7 @@ impl Encode for RecordElement {
                 writer.write_u8(0)?;
                 vertex_or_edge.write_to(writer)?;
             }
-            RecordElement::OutGraph(object_element) => {
+            RecordElement::OffGraph(object_element) => {
                 writer.write_u8(1)?;
                 object_element.write_to(writer)?;
             }
@@ -433,7 +416,7 @@ impl Decode for RecordElement {
             }
             1 => {
                 let object_element = <ObjectElement>::read_from(reader)?;
-                Ok(RecordElement::OutGraph(object_element))
+                Ok(RecordElement::OffGraph(object_element))
             }
             _ => Err(std::io::Error::new(
                 std::io::ErrorKind::Other,

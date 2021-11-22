@@ -120,7 +120,7 @@ mod tests {
         let mut object_result = vec![];
         while let Some(Ok(res)) = result.next() {
             match res.get(None).unwrap().as_ref() {
-                Entry::Element(RecordElement::OutGraph(ObjectElement::Prop(val))) => {
+                Entry::Element(RecordElement::OffGraph(ObjectElement::Prop(val))) => {
                     object_result.push(val.clone());
                 }
                 _ => {}
@@ -152,7 +152,7 @@ mod tests {
                 .unwrap()
                 .as_ref()
             {
-                Entry::Element(RecordElement::OutGraph(ObjectElement::Prop(val))) => {
+                Entry::Element(RecordElement::OffGraph(ObjectElement::Prop(val))) => {
                     object_result.push(val.clone());
                 }
                 _ => {}
