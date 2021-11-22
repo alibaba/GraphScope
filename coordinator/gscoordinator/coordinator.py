@@ -1337,6 +1337,18 @@ def parse_sys_args():
         default=False,
         help="Delete the namespace that created by graphscope.",
     )
+    parser.add_argument(
+        "--mount_dataset",
+        type=str,
+        default=None,
+        help="Mount the aliyun dataset bucket as a volume by ossfs.",
+    )
+    parser.add_argument(
+        "--k8s_dataset_image",
+        type=str,
+        default="registry.cn-hongkong.aliyuncs.com/graphscope/dataset:{__version__}",
+        help="Docker image to mount the dataset bucket",
+    )
     return parser.parse_args()
 
 
@@ -1350,6 +1362,7 @@ def launch_graphscope():
             service_type=args.k8s_service_type,
             gs_image=args.k8s_gs_image,
             etcd_image=args.k8s_etcd_image,
+            dataset_image=args.k8s_dataset_image,
             coordinator_name=args.k8s_coordinator_name,
             coordinator_service_name=args.k8s_coordinator_service_name,
             etcd_num_pods=args.k8s_etcd_num_pods,
@@ -1369,6 +1382,7 @@ def launch_graphscope():
             image_pull_policy=args.k8s_image_pull_policy,
             image_pull_secrets=args.k8s_image_pull_secrets,
             volumes=args.k8s_volumes,
+            mount_dataset=args.mount_dataset,
             num_workers=args.num_workers,
             preemptive=args.preemptive,
             instance_id=args.instance_id,
