@@ -37,13 +37,13 @@ You can view all avaiable datasets in `here <https://github.com/alibaba/GraphSco
 
 
 
-Building from scratch
----------------------
+Loading Your Own Datasets
+--------------------------
 
 However, it's more common that user need to load there own data and do some analysis.
 To load a property graph to GraphScope, we provide a method `g()` defined in `Session`.
 
-First, we create a session, then instantiate a graph instance inside that session.
+To build a property graph on GraphScope, we firstly create an empty graph using ``g()``.
 
 .. code:: python
 
@@ -66,15 +66,12 @@ These methods helps users to construct the schema of the property graph iterativ
 
 We will use files in :file:`ldbc_sample` through this tutorial. You can get the files in `here <https://github.com/GraphScope/gstest/tree/master/ldbc_sample>`_. And you can inspect the graph schema by using `print(graph.schema)`.
 
-Build Vertex
-^^^^^^^^^^^^
+Adding Vertices
+^^^^^^^^^^^^^^^
 
-We can add a kind of vertices to graph, it has the following parameters:
+We can add a kind of vertices to graph, the method has the following parameters:
 
-vertices
-++++++++
-
-A loader for data source, which can be a file location, or a numpy, etc. See more details in :ref:`Loader Object`.
+``vertices``: A location for the vertex data source, which can be a file location, or a numpy, etc. See more details in :ref:`Loader Object`.
 
 A simple example:
 
@@ -83,32 +80,29 @@ A simple example:
     graph = sess.g()
     graph = graph.add_vertices('/home/ldbc_sample/person_0_0.csv')
 
-It will read data from the the location :file:`/home/ldbc_sample/person_0_0.csv`, and create a vertex label default to `_`, use the first column as ID, and other columns are used as properties, both the names and data types of properties will be deduced.
+It will read data from the the location :file:`/home/ldbc_sample/person_0_0.csv`. Since we didn't give additional arguments, these vertices will be labeled ``_`` by default, using the first column in the file as their ID, and other columns as their properties. Both the names and data types of properties will be deduced.
 
-Label
-+++++
+Another commonly used parameter is label:
 
-The label name of the vertex, default to `_`.
+``label``: The label name of the vertex, default to `_`.
 
-There can't have two labels with the same name in a Graph, so user need to assign the name when there are two or more vertex labels. It would also have benefits if user could give every label a meaningful name. It could be any valid identifier.
+Since a property graph allows many kinds of vertices, it is suggested for users to give each kind of vertices a meaningful label name. For example:
 
-For example:
 
 .. code:: python
 
     graph = sess.g()
     graph = graph.add_vertices('/home/ldbc_sample/person_0_0.csv', label='person')
 
-The result will be identical to the one above, except for the label name.
+Then we have a graph with one kind of vertices, its label name is person.
 
-properties
-++++++++++
+In addition, each kind of labeled vertices have their own properties. Here is the third parameter:
 
-A list of properties, Optional, default to `None`. 
+``properties``: A list of properties, Optional, default to ``None``.
 
-The names should be consistent to the header row of the source data file or column names of pandas DataFrame.  
-
-If equal to `None` all columns except the `vid_field` column will be treated as properties. If equal to empty list `[]`, then no properties will be added. Otherwise, only mentioned columns will be loaded.
+This parameter selects the corresponding columns from the source data file or pandas DataFrames as properties. Please note that 
+the values of this parameter should exist in the file/DataFrame. By default( values ``None``), all columns except the ``vid_field`` column 
+will be added as properties. If it equals to a empty list ``[]``, then no properties will be added. 
 
 For example:
 
@@ -127,14 +121,11 @@ For example:
     graph = graph.add_vertices('/home/ldbc_sample/person_0_0.csv', label='person', properties=[])
 
 
-vid_field
-+++++++++
+``vid_field`` determines which column used as vertex ID. (as well as the source ID or destination ID when loading edges.) 
 
-The column used as vertex ID. The value in this column of the data source will be used for source ID or destination ID when loading edges. Default to 0.
+It can be a ``str``, the name of columns, or ``int``, representing the index of the columns.
 
-It can be a `str`, the name of columns, or it can be a `int`, representing the sequence in the columns.
-
-The default value will use the first column.
+By default, the value is 0, hence the first column will be used as vertex ID.
 
 .. code:: python
 
@@ -145,17 +136,12 @@ The default value will use the first column.
     graph = graph.add_vertices('/home/ldbc_sample/person_0_0.csv', vid_field=0)
 
 
-Build Edge
-^^^^^^^^^^
+Adding Edges
+^^^^^^^^^^^^
 
-Now we can add edges to the graph, which is a little complicate than vertices.
+Next, let's take a look on the parameters for loading edges.
 
-edges
-++++++
-
-Similar to the `vertices` in the `Build Vertex` section. It's a location indicating where to read the data.
-
-Let's see an example:
+``edges``: The location indicating where to read the data. e.g.,
 
 .. code:: python
 
@@ -164,12 +150,12 @@ Let's see an example:
     # Note we already added a vertex label named 'person'.
     graph = graph.add_edges('/home/ldbc_sample/person_knows_person_0_0.csv', src_label='person', dst_label='person')
 
-This will load an edge which label is `_e` (the default value), its source vertex and destination vertex will be `person`, using the **first column** as the source vertex ID, the **second column** as the destination vertex ID, the others as properties.
+This will load an edge which label is ``_e`` (the default value), its source vertex and destination vertex will be ``person``, using the **first column** as the source vertex ID, the **second column** as the destination vertex ID, the others as properties.
 
-label
-+++++
+Similar to vertices, we can use parameter `label` to assign label name and `properties` to select properties.
 
-The label name of the edge, default to `_e`. It's recommended to use a meaningful label name.
+``label``: The label name of the edges, default to ``_e``. (It's recommended to use a meaningful label name.)
+``properties``: A list of properties, default to ``None``(add all columns as properties). 
 
 .. code:: python
 
@@ -178,15 +164,13 @@ The label name of the edge, default to `_e`. It's recommended to use a meaningfu
     graph = graph.add_edges('/home/ldbc_sample/person_knows_person_0_0.csv', label='knows', src_label='person', dst_label='person')
 
 
-properties
-++++++++++
+Differ to vertices, edges have some additional parameters.
 
-A list of properties, default to None. The meaning and behavior are identical to the one of Vertex.
+```src_label```: The label name of the source vertex. 
+```dst_label```: The label name of the destination vertex, it can be different to the ``src_label``, 
+```src_field``` and ```dst_field```: The columns used for source(destination) vertex id. Default to 0 and 1, respectively.
 
-src_label and dst_label
-++++++++++++++++++++++++++++++++++
-
-The label name of the source vertex and the label name of the destination vertex. We have already seen these two in above example, where we assigned them both to 'person'. It could be different values, for example:
+e.g.,
 
 .. code:: python
 
@@ -197,12 +181,9 @@ The label name of the source vertex and the label name of the destination vertex
     graph = graph.add_edges('/home/ldbc_sample/person_likes_comment_0_0.csv', label='likes', src_label='person', dst_label='comment')
 
 
-src_field and dst_field
-++++++++++++++++++++++++++++++++++
-
-The columns used for source vertex id and for destination vertex id. Default to 0 and 1, respectively.
-
 The value and behavior is similar to `vid_field` in Vertex, except for it takes two columns as edges is constituted by source vertex id and destination vertex id. Here's an example:
+
+Examples of ``src_field`` and ``dst_field``:
 
 .. code:: python
 
@@ -212,16 +193,16 @@ The value and behavior is similar to `vid_field` in Vertex, except for it takes 
     graph = graph.add_edges('/home/ldbc_sample/person_likes_comment_0_0.csv', label='likes', src_label='person', dst_label='comment', src_field=0, dst_field=1)
 
 
-Advanced techniques
-^^^^^^^^^^^^^^^^^^^
+Advanced Usage
+--------------
 
-Here are some advanced techniques to deal with very simple graphs or very complex graphs.
+Here are some advanced usages to deal with homogeneous graphs or very complex graphs.
 
 Deduce vertex labels when not ambiguous
-+++++++++++++++++++++++++++++++++++++++
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-If there is only one vertex label in the graph, the label of vertices can be omitted.
-GraphScope will infer the source and destination vertex label is that very label.
+If there is only one kind of vertices in a graph, the vertex label can be omitted.
+GraphScope will infer the source and destination vertex label to that very label.
 
 .. code:: python
 
@@ -232,9 +213,9 @@ GraphScope will infer the source and destination vertex label is that very label
 
 
 Deduce vertex from edges
-++++++++++++++++++++++++
+^^^^^^^^^^^^^^^^^^^^^^^^
 
-If user add_edges with unseen `src_label` or `dst_label`, graphscope will extract an vertex table from endpoints of the edges.
+If user add edges with unseen ``src_label`` or ``dst_label``, graphscope will extract an vertex table from the given labels from the edge data.
 
 .. code:: python
 
@@ -249,14 +230,14 @@ If user add_edges with unseen `src_label` or `dst_label`, graphscope will extrac
 
 
 Multiple relations
-++++++++++++++++++
+^^^^^^^^^^^^^^^^^^
 
 In some cases, an edge label may connect two kinds of vertices. For example, in a
 graph, two kinds of edges are labeled with `likes` but represents two relations.
 i.e., `person` -> `likes` <- `comment` and `person` -> `likes` <- `post`. 
 
-In this case, we can simple add the relation again with the same edge label,
-but with different source and destination label.
+In this case, we can simply add the relation again with the same edge label,
+but with different source and destination labels.
 
 .. code:: python
 
@@ -284,31 +265,33 @@ but with different source and destination label.
 Specify data types of properties manually
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-GraphScope will deduce data types from input files, and most of the time it will work as expected.
-However, sometimes user may want more customization. To cater to the need, A additional type can follow the property name, like this:
+GraphScope will deduce data types from input files, and it works as expected in most cases.
+However, sometimes user may want to determine the data types as well, e.g.
 
 .. code:: python
 
     graph = sess.g()
     graph = graph.add_vertices('/home/ldbc_sample/post_0_0.csv', label='post', properties=['content', ('length', 'int'), ])
 
-It will force the property to cast to the type that specified, note it requires the name and the type in one tuple. in this case, the property `length` will have type `int` rather than the default `int64_t`. The most common scenario is to use `int`, `int64`, `float`, `double`, or `str`.
+It forces the property to be (casted and) loaded as specified data type. The format of this parameter is tuple(s) with the name and the type.
+e.g., in this case, the property ``length`` will have type ``int`` rather than the default ``int64_t``. The options of the types are ``int``, ``int64``, ``float``, ``double``, or ``str``.
 
 
-Other Parameters of Graph
+Other parameters of graph
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 
-The class `Graph` has three meta options, which are:
+The class ``Graph`` has three meta options, which are:
 
-- `oid_type`, can be `int64_t` or `string`. Default to `int64_t` cause it's more faster and costs less memory. But if the ID column can't be represented by `int64_t`, then we should use `string`.
-- `directed`, bool, default to `True`. Controls load an directed or undirected Graph.
-- `generate_eid`, bool, default to `True`. Whether to automatically generate an unique id for all edges.
+- ``oid_type``, can be ``int64_t`` or ``string``. Default to ``int64_t`` in consideration of efficiency. But if the ID column can't be represented by ``int64_t``, then we should use ``string``.
+- ``directed``, boolean value and default to ``True``. Controls to load an directed or undirected graph.
+- ``generate_eid``, bool, default to ``True``, whether to generate an unique id for all edges automatically.
 
 
-Put It Together
-^^^^^^^^^^^^^^^
+Putting them Together
+^^^^^^^^^^^^^^^^^^^^^
 
-Let make this example complete.
+Let's make this example complete. 
+A more complex example to load LDBC snb graph can be find [here](https://github.com/alibaba/GraphScope/blob/main/python/graphscope/dataset/ldbc.py).
 
 .. code:: python
 
@@ -325,18 +308,17 @@ Let make this example complete.
 
 A more complex example to load LDBC snb graph can be find `here <https://github.com/alibaba/GraphScope/blob/main/python/graphscope/dataset/ldbc.py>`_.
 
-Load From Pandas or Numpy
-^^^^^^^^^^^^^^^^^^^^^^^^^
+Loading From Pandas or Numpy
+-----------------------------
 
-The datasource aforementioned is an object of :ref:`Loader`. A loader wraps
-a location or the data itself. `graphscope` supports load a graph
-from pandas dataframes or numpy ndarrays, makes it easy for construct a graph right in the python console.
+The data source aforementioned is an object of :ref:`Loader`. A loader wraps a location or the data itself. 
+GraphScope supports load a graph from pandas dataframes or numpy ndarrays, making it easy to construct a graph right in the python console.
 
-Apart from the loader, the other fields like properties, label, etc. is same as examples above.
+Apart from the loader, the other fields like properties, label, etc. are the same as examples above.
 
 
 From Pandas
-+++++++++++
+^^^^^^^^^^^
 
 .. code:: python
 
@@ -352,7 +334,7 @@ From Pandas
 
 
 From Numpy
-++++++++++
+^^^^^^^^^^
 
 Note that each array is a column, we pass it like as COO matrix format to the loader.
 
@@ -367,18 +349,18 @@ Note that each array is a column, we pass it like as COO matrix format to the lo
 
 
 Loader Variants
-^^^^^^^^^^^^^^^
+---------------
 
 When a loader wraps a location, it may only contains a str.
-The string follows the standard of URI. When receiving a request for loading graph
-from a location, `graphscope` will parse the URI and invoke corresponding loader
-according to the schema.
+The string follows the standard of URI. When receiving a request for loading graph from a location, 
+``graphscope`` will parse the URI and invoke corresponding loader according to the schema.
 
-Currently, `graphscope` supports loaders for `local`, `s3`, `oss`, `hdfs`:
-Data is loaded by `v6d <https://github.com/v6d-io/v6d>`_ , `v6d` takes advantage
+Currently, ``graphscope`` supports loaders for ``local``, ``s3``, ``oss``, ``hdfs``.
+Under the hood, data is loaded distributedly by `v6d <https://github.com/v6d-io/v6d>`_, ``v6d`` takes advantage
 of `fsspec <https://github.com/intake/filesystem_spec>`_ to resolve specific scheme and formats.
-Any additional specific configurations can be passed in kwargs of `Loader`, and these configurations will
-directly be passed to corresponding storage class. Like `host` and `port` to `HDFS`, or `access-id`, `secret-access-key` to `oss` or `s3`.
+Any additional configurations can be passed in kwargs of ``Loader``, which will be parsed 
+directly by the specific class. e.g., ``host`` and ``port`` to ``hdfs``, or ``access-id``, ``secret-access-key`` to ``oss`` or ``s3``.
+
 
 .. code:: python
 

@@ -196,6 +196,10 @@ class Loader(object):
         """
         col_names = ["f%s" % i for i in range(len(source))]
         df = pd.DataFrame(source, col_names).T
+        types = {}
+        for i in range(len(source)):
+            types[col_names[i]] = source[i].dtype
+        df = df.astype(types)
         return self.process_pandas(df)
 
     def process_pandas(self, source: pd.DataFrame):
