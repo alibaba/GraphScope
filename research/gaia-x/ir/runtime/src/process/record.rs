@@ -109,15 +109,28 @@ impl Record {
         }
     }
 
-    pub fn join(mut self, mut other: Record) -> Record {
-        // TODO: check if head is also needed?
+    pub fn join(mut self, mut other: Record, opt: Option<HeadJoinOpt>) -> Record {
         for column in other.columns.drain(..) {
             if !self.columns.contains_key(&column.0) {
                 self.columns.insert(column.0, column.1);
             }
         }
+
+        self.curr = match opt {
+            None => None,
+            Some(HeadJoinOpt::Left) => self.curr,
+            Some(HeadJoinOpt::Right) => other.curr,
+        };
         self
     }
+}
+
+/// Join Option for specifying how to store the current entries in record join
+pub enum HeadJoinOpt {
+    /// preserve current entry in left record
+    Left,
+    /// preserve current entry in right record
+    Right,
 }
 
 impl Into<Entry> for Vertex {

@@ -262,14 +262,15 @@ impl IRJobCompiler {
                         stream = match join_kind {
                             JoinKind::Inner => left_stream
                                 .inner_join(right_stream)?
-                                .map(|(left, right)| Ok(left.value.join(right.value)))?,
+                                .map(|(left, right)| Ok(left.value.join(right.value, None)))?,
                             JoinKind::LeftOuter => left_stream.left_outer_join(right_stream)?.map(
                                 |(left, right)| {
                                     let left = left.ok_or(FnExecError::UnExpectedDataType(
                                         "left cannot be None in left outer join".to_string(),
                                     ))?;
                                     if let Some(right) = right {
-                                        Ok(left.value.join(right.value))
+                                        // TODO(bingqing): Specify HeadJoinOpt if necessary
+                                        Ok(left.value.join(right.value, None))
                                     } else {
                                         Ok(left.value)
                                     }
@@ -282,14 +283,16 @@ impl IRJobCompiler {
                                         "right cannot be None in right outer join".to_string(),
                                     ))?;
                                     if let Some(left) = left {
-                                        Ok(left.value.join(right.value))
+                                        Ok(left.value.join(right.value, None))
                                     } else {
                                         Ok(right.value)
                                     }
                                 })?,
                             JoinKind::FullOuter => left_stream.full_outer_join(right_stream)?.map(
                                 |(left, right)| match (left, right) {
-                                    (Some(left), Some(right)) => Ok(left.value.join(right.value)),
+                                    (Some(left), Some(right)) => {
+                                        Ok(left.value.join(right.value, None))
+                                    }
                                     (Some(left), None) => Ok(left.value),
                                     (None, Some(right)) => Ok(right.value),
                                     (None, None) => {

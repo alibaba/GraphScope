@@ -39,7 +39,7 @@ mod tests {
     use crate::graph::element::{GraphElement, Vertex};
     use crate::graph::property::{DefaultDetails, DynDetails};
     use crate::process::functions::JoinKeyGen;
-    use crate::process::record::Record;
+    use crate::process::record::{HeadJoinOpt, Record};
     use ir_common::generated::algebra as pb;
     use ir_common::generated::algebra::join::JoinKind;
     use ir_common::generated::common as common_pb;
@@ -101,14 +101,16 @@ mod tests {
 
                     let stream =
                         match join_kind {
-                            JoinKind::Inner => left_stream
-                                .inner_join(right_stream)?
-                                .map(|(left, right)| Ok(left.value.join(right.value)))?,
+                            JoinKind::Inner => {
+                                left_stream.inner_join(right_stream)?.map(|(left, right)| {
+                                    Ok(left.value.join(right.value, Some(HeadJoinOpt::Left)))
+                                })?
+                            }
                             JoinKind::LeftOuter => left_stream.left_outer_join(right_stream)?.map(
                                 |(left, right)| {
                                     let left = left.unwrap();
                                     if let Some(right) = right {
-                                        Ok(left.value.join(right.value))
+                                        Ok(left.value.join(right.value, Some(HeadJoinOpt::Left)))
                                     } else {
                                         Ok(left.value)
                                     }
@@ -119,14 +121,16 @@ mod tests {
                                 .map(|(left, right)| {
                                     let right = right.unwrap();
                                     if let Some(left) = left {
-                                        Ok(left.value.join(right.value))
+                                        Ok(left.value.join(right.value, Some(HeadJoinOpt::Left)))
                                     } else {
                                         Ok(right.value)
                                     }
                                 })?,
                             JoinKind::FullOuter => left_stream.full_outer_join(right_stream)?.map(
                                 |(left, right)| match (left, right) {
-                                    (Some(left), Some(right)) => Ok(left.value.join(right.value)),
+                                    (Some(left), Some(right)) => {
+                                        Ok(left.value.join(right.value, Some(HeadJoinOpt::Left)))
+                                    }
                                     (Some(left), None) => Ok(left.value),
                                     (None, Some(right)) => Ok(right.value),
                                     (None, None) => {
