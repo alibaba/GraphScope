@@ -162,13 +162,6 @@ def test_error_on_project_to_simple_wrong_graph_type(arrow_property_graph):
         pg.project(vertices={"v0": []}, edges={"e0": []})
 
 
-def test_error_on_project_to_simple_wrong_graph_type_2(dynamic_property_graph):
-    sdg = dynamic_property_graph.project_to_simple()
-    assert sdg._graph_type == graph_def_pb2.DYNAMIC_PROJECTED
-    with pytest.raises(AssertionError):
-        sdg.project_to_simple()
-
-
 def test_error_on_operation_on_graph(graphscope_session):
     g = graphscope_session.g()
     with pytest.raises(KeyError, match="v"):
