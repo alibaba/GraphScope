@@ -104,6 +104,8 @@ class KubernetesClusterLauncher(Launcher):
         timeout_seconds=None,
         dangling_timeout_seconds=None,
         k8s_waiting_for_delete=None,
+        mount_dataset=None,
+        k8s_dataset_image=None,
         **kwargs
     ):
         self._api_client = api_client
@@ -444,6 +446,15 @@ class KubernetesClusterLauncher(Launcher):
             "--k8s_delete_namespace",
             str(self._delete_namespace),
         ]
+        if self._saved_locals["mount_dataset"] is not None:
+            cmd.extend(
+                [
+                    "--mount_dataset",
+                    self._saved_locals["mount_dataset"],
+                    "--k8s_dataset_image",
+                    self._saved_locals["k8s_dataset_image"],
+                ]
+            )
         return ["-c", " ".join(cmd)]
 
     def _create_services(self):

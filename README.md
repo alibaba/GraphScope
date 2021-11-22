@@ -15,7 +15,7 @@
 [![FAQ-zh](https://img.shields.io/badge/-FAQ%E4%B8%AD%E6%96%87-blue?logo=Read%20The%20Docs)](https://graphscope.io/docs/zh/frequently_asked_questions.html)
 [![README-zh](https://shields.io/badge/README-%E4%B8%AD%E6%96%87-blue)](README-zh.md)
 
-GraphScope is a unified distributed graph computing platform that provides a one-stop environment for performing diverse graph operations on a cluster of computers through a user-friendly Python interface. GraphScope makes multi-staged processing of large-scale graph data on compute clusters simple by combining several important pieces of Alibaba technology: including [GRAPE](https://github.com/alibaba/libgrape-lite), [MaxGraph](interactive_engine/), and [Graph-Learn](https://github.com/alibaba/graph-learn) (GL) for analytics, interactive, and graph neural networks (GNN) computation, respectively, and the [vineyard](https://github.com/alibaba/libvineyard) store that offers efficient in-memory data transfers.
+GraphScope is a unified distributed graph computing platform that provides a one-stop environment for performing diverse graph operations on a cluster of computers through a user-friendly Python interface. GraphScope makes multi-staged processing of large-scale graph data on compute clusters simple by combining several important pieces of Alibaba technology: including [GRAPE](https://github.com/alibaba/libgrape-lite), [MaxGraph](interactive_engine/), and [Graph-Learn](https://github.com/alibaba/graph-learn) (GL) for analytics, interactive, and graph neural networks (GNN) computation, respectively, and the [Vineyard](https://github.com/v6d-io/v6d) store that offers efficient in-memory data transfers.
 
 Visit our website at [graphscope.io](https://graphscope.io) to learn more.
 
@@ -29,14 +29,14 @@ Let's begin with the standalone mode.
 
 ### Installation for Standalone Mode
 
-GraphScope pre-compiled package is distributed as a python package with and can be easily installed with pip.
+GraphScope pre-compiled package is distributed as a python package with and can be easily installed with `pip`.
 
 ```bash
 pip3 install graphscope
 ```
 
 Note that `graphscope` requires `Python` >= 3.6 and `pip` >= 19.0.     
-The package is built for and tested on the most popular Linux (Ubuntu18.04+/CentOS 7+) and macOS (version 10.15+) distributions. For Windows, you may want to install Ubuntu on WSL2 to use this package.
+The package is built for and tested on the most popular Linux (Ubuntu 18.04+ / CentOS 7+) and macOS (version 10.15+) distributions. For Windows users, you may want to install Ubuntu on WSL2 to use this package.
 
 Next, we will walk you through a concrete example to illustrate how GraphScope can be used by data scientists to effectively analyze large graphs.
 
@@ -89,7 +89,7 @@ papers = interactive.execute("g.V().has('author', 'id', 2).out('writes').where(_
 ### Graph analytics
 
 Graph analytics is widely used in real world. Many algorithms, like community detection, paths and connectivity, centrality are proven to be very useful in various businesses.
-GraphScope ships with a set of [built-in algorithms](#), enables users easily analysis their graph data.
+GraphScope ships with a set of [built-in algorithms](https://graphscope.io/docs/analytics_engine.html#built-in-algorithms), enables users easily analysis their graph data.
 
 Continuing our example, below we first derive a subgraph by extracting publications in specific time out of the entire graph (using Gremlin!), and then run k-core decomposition and triangle counting to generate the structural features of each paper node.
 
@@ -135,12 +135,12 @@ paper_features.append("tc")
 
 # launch a learning engine.
 lg = graphscope.graphlearn(sub_graph, nodes=[("paper", paper_features)],
-                           edges=[("paper", "cites", "paper")],
-                           gen_labels=[
-                               ("train", "paper", 100, (0, 75)),
-                               ("val", "paper", 100, (75, 85)),
-                               ("test", "paper", 100, (85, 100))
-                           ])
+                  edges=[("paper", "cites", "paper")],
+                  gen_labels=[
+                      ("train", "paper", 100, (0, 75)),
+                      ("val", "paper", 100, (75, 85)),
+                      ("test", "paper", 100, (85, 100))
+                  ])
 ```
 
 Then we define the training process, and run it.
@@ -206,28 +206,28 @@ config = {
 train(config, lg)
 ```
 
-A python script with the entire process is availabe [here](#), you may try it out by yourself. 
+A python script with the entire process is availabe [node_classification_on_citation.ipynb](tutorials/10_node_classification_on_citation.ipynb), you may try it out by yourself. 
 
 
 ### Processing Large Graph on Kubernetes Cluster
 
-GraphScope is designed for processing large graphs, which are usually hard to fit in the memory of a single machine. 
-With [vineyard](https://github.com/v6d-io/v6d) as the distributed in-memory data manager, GraphScope supports run on a cluster managed by Kubernetes(k8s). 
+GraphScope is designed for processing large graphs, which are usually hard to fit in the memory of a single machine.
+With [Vineyard](https://github.com/v6d-io/v6d) as the distributed in-memory data manager, GraphScope supports run on a cluster managed by Kubernetes(k8s).
 
-To continue this tutorial, please ensure that you have a k8s managed cluster and know the credentials for the cluster. 
-(e.g., address of k8s API server, usually stored a `~/.kube/config` file.) 
+To continue this tutorial, please ensure that you have a k8s managed cluster and know the credentials for the cluster.
+(e.g., address of k8s API server, usually stored a `~/.kube/config` file.)
 
-Alternatively, you can set up a local k8s cluster for testing with [Kind](https://kind.sigs.k8s.io/). We provide a script for setup this environment. 
+Alternatively, you can set up a local k8s cluster for testing with [Kind](https://kind.sigs.k8s.io/). We provide a script for setup this environment.
 
 ```bash
-# for usage, type --h
-./scripts/install-deps.sh --k8s
+# for usage, type -h
+./scripts/install_deps.sh --k8s
 ```
 
 If you did not install the `graphscope` package in the above step, you can install a subset of the whole package with client functions only.
 
 ```bash 
-pip install graphscope-client
+pip3 install graphscope-client
 ```
 
 Next, let's revisit the example by running on a cluster instead. 
@@ -239,38 +239,28 @@ Next, let's revisit the example by running on a cluster instead.
 The figure shows the flow of execution in the cluster mode. When users run code in the python client, it will:
 
 - *Step 1*. Create a session or workspace in GraphScope.
-- *Step 2 - Step 5*. Load a graph, query, analysis and run learning task on this graph via Python interface. These steps are the same to local mode, thus users process huge graphs in a distributed setting just like analysis a small graph on a single machine.
+- *Step 2 - Step 5*. Load a graph, query, analysis and run learning task on this graph via Python interface. These steps are the same to local mode, thus users process huge graphs in a distributed setting just like analysis a small graph on a single machine.(Note that `graphscope.gremlin` and `graphscope.graphlearn` need to be changed to `sess.gremlin` and `sess.graphlearn`, respectively. `sess` is the name of the `Session` instance user created.)
 - *Step 6*. Close the session.
 
 
 ### Creating a session
 
-To use GraphScope in a distributed setting, we need to establish a session in a python interpreter. 
+To use GraphScope in a distributed setting, we need to establish a session in a python interpreter.
+
+For convenience, we provide several demo datasets, and an option `mount_dataset` to mount the dataset in the graphscope cluster. The datasets will be mounted to location you assigned in the pods. If you want to use your own data on k8s cluster, please refer to [this](docs/deployment.rst).
 
 ```python
-import os
 import graphscope
 
-# assume we mount `~/test_data` to `/testingdata` in pods.
-k8s_volumes = {
-    "data": {
-        "type": "hostPath",
-        "field": {
-            "path": os.path.expanduser("~/test_data/"),
-            "type": "Directory"
-        },
-        "mounts": {
-            "mountPath": "/testingdata"
-        }
-    }
-}
-
-sess = graphscope.session(k8s_volumes=k8s_volumes)
+sess = graphscope.session(mount_dataset="/dataset")
 ```
+
 For macOS, the session needs to establish with the LoadBalancer service type (which is NodePort by default).
 
 ```python
-sess = graphscope.session(k8s_volumes=k8s_volumes, k8s_service_type="LoadBalancer")
+import graphscope
+
+sess = graphscope.session(mount_dataset="/dataset", k8s_service_type="LoadBalancer")
 ```
 
 A session tries to launch a `coordinator`, which is the entry for the back-end engines. The coordinator manages a cluster of resources (k8s pods), and the interactive/analytical/learning engines ran on them. For each pod in the cluster, there is a vineyard instance at service for distributed data in memory.
@@ -278,19 +268,21 @@ A session tries to launch a `coordinator`, which is the entry for the back-end e
 
 ### Load a graph and processing computation tasks
 
-Similar to the standalone mode, we can still use the functions to load a graph easily. 
+Similar to the standalone mode, we can still use the functions to load a graph easily.
 
 ```python
-from graphscope.dataset.ogbn_mag import load_ogbn_mag
+from graphscope.dataset import load_ogbn_mag
 
-# TODO(yuansi): data preparation?
-g = load_ogbn_mag(sess, "/testingdata/ogbn_mag_small/")
+# Note we have mounted the demo datasets to /dataset,
+# There are several datasets including ogbn_mag_small,
+# User can attach to the engine container and explore the directory.
+g = load_ogbn_mag(sess, "/dataset/ogbn_mag_small/")
 ```
 
 Here, the `g` is loaded in parallel via vineyard and stored in vineyard instances in the cluster managed by the session.
 
-Next, we can conduct graph queries with Gremlin, invoke various graph algorithms, or run graph-based neureul network tasks like we did in the standalone mode.
-We do not repeat code here, but a `.ipynb` processing the classification task on citation network is available [here](#).
+Next, we can conduct graph queries with Gremlin, invoke various graph algorithms, or run graph-based neural network tasks like we did in the standalone mode.
+We do not repeat code here, but a `.ipynb` processing the classification task on citation network is available .
 
 ### Closing the session
 
@@ -310,13 +302,13 @@ Please note that we have not hardened this release for production use and it lac
 
 ### Building on local
 
-To build graphscope python package and the engine bineries, you want to install some dependencies and build tools. 
+To build graphscope Python package and the engine bineries, you need to install some dependencies and build tools.
 
 ```bash
-./scripts/install-deps.sh --dev
+./scripts/install_deps.sh --dev
 
 # With argument --cn to speed up the download if you are in China.
-./scripts/install-deps.sh --dev --cn 
+./scripts/install_deps.sh --dev --cn 
 ```
 
 Then you can build GraphScope with pre-configured `make` commands.
