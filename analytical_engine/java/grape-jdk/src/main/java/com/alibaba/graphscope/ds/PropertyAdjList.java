@@ -31,9 +31,6 @@ import java.util.Iterator;
 @FFIGen(library = JNILibraryName.JNI_LIBRARY_NAME)
 @CXXHead(CppHeaderName.CORE_JAVA_TYPE_ALIAS_H)
 @FFITypeAlias(CppClassName.PROPERTY_ADJ_LIST)
-// @CXXTemplate(
-//        cxx = {"uint64_t"},
-//        java = {"java.lang.Long"})
 public interface PropertyAdjList<VID_T> extends FFIPointer, CXXPointer {
     @FFINameAlias("begin")
     @CXXValue

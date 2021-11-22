@@ -18,6 +18,8 @@ package com.alibaba.graphscope.utils;
 
 import com.alibaba.fastjson.JSONObject;
 import com.alibaba.graphscope.context.LabeledVertexDataContext;
+import com.alibaba.graphscope.context.ProjectedDefaultContextBase;
+import com.alibaba.graphscope.context.PropertyDefaultContextBase;
 import com.alibaba.graphscope.context.VertexDataContext;
 import com.alibaba.graphscope.fragment.ArrowFragment;
 import com.alibaba.graphscope.fragment.ArrowProjectedFragment;
@@ -38,7 +40,8 @@ public class ContextUtilsTest {
                         .equals("VertexDataContext"));
     }
 
-    public static class SampleContext extends LabeledVertexDataContext<Long, Double> {
+    public static class SampleContext extends LabeledVertexDataContext<Long, Double>
+            implements PropertyDefaultContextBase<Long> {
         @Override
         public void init(
                 ArrowFragment<Long> fragment,
@@ -47,7 +50,9 @@ public class ContextUtilsTest {
     }
 
     public static class SampleContext2
-            extends VertexDataContext<ArrowProjectedFragment<Long, Long, Long, Double>, Double> {
+            extends VertexDataContext<ArrowProjectedFragment<Long, Long, Long, Double>, Double>
+            implements ProjectedDefaultContextBase<
+                    ArrowProjectedFragment<Long, Long, Long, Double>> {
         @Override
         public void init(
                 ArrowProjectedFragment<Long, Long, Long, Double> fragment,

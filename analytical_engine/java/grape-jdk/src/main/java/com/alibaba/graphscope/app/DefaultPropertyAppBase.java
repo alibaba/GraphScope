@@ -20,7 +20,7 @@ import com.alibaba.graphscope.context.PropertyDefaultContextBase;
 import com.alibaba.graphscope.fragment.ArrowFragment;
 import com.alibaba.graphscope.parallel.PropertyMessageManager;
 
-public interface PropertyDefaultAppBase<OID_T, C extends PropertyDefaultContextBase<OID_T>> {
+public interface DefaultPropertyAppBase<OID_T, C extends PropertyDefaultContextBase<OID_T>> {
     void PEval(
             ArrowFragment<OID_T> fragment,
             PropertyDefaultContextBase<OID_T> context,

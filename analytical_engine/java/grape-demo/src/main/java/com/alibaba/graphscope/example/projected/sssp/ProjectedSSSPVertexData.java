@@ -16,7 +16,7 @@
 
 package com.alibaba.graphscope.example.projected.sssp;
 
-import com.alibaba.graphscope.app.ProjectedDefaultAppBase;
+import com.alibaba.graphscope.app.DefaultProjectedAppBase;
 import com.alibaba.graphscope.context.ProjectedDefaultContextBase;
 import com.alibaba.graphscope.ds.ProjectedAdjList;
 import com.alibaba.graphscope.ds.ProjectedNbr;
@@ -37,7 +37,7 @@ import org.slf4j.LoggerFactory;
  * com.alibaba.graphscope.context.VertexDataContext}.
  */
 public class ProjectedSSSPVertexData
-        implements ProjectedDefaultAppBase<
+        implements DefaultProjectedAppBase<
                 Long, Long, Double, Long, ProjectedSSSPVertexDataContext> {
     private static Logger logger = LoggerFactory.getLogger(ProjectedSSSPVertexData.class.getName());
 
