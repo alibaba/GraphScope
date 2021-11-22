@@ -247,7 +247,9 @@ def test_multiple_session():
     sess.close()
 
 
-def test_query_modern_graph(gs_session, modern_graph_data_dir, modern_scripts):
+def test_query_modern_graph(
+    gs_session, modern_graph_data_dir, modern_scripts, modern_bytecode
+):
     graph = load_modern_graph(gs_session, modern_graph_data_dir)
     interactive = gs_session.gremlin(graph)
     # query on modern graph
