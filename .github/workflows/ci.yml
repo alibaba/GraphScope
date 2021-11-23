@@ -48,6 +48,7 @@ jobs:
             - 'python/graphscope/deploy/**'
             - 'python/graphscope/framework/**'
             - 'python/graphscope/proto/**'
+            - 'python/tests/unittest/**'
           networkx:
             - 'analytical_engine/apps/**'
             - 'analytical_engine/frame/**'

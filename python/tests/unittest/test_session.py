@@ -120,20 +120,10 @@ def load_graph(session):
 
 
 def test_default_session():
-    s = graphscope.session(cluster_type="hosts")
-    info = s.info
-    assert info["status"] == "active"
-    s.close()
-
     default_sess = graphscope.get_default_session()
     assert default_sess.info["status"] == "active"
     default_sess.close()
     assert default_sess.info["status"] == "closed"
-
-    default_sess2 = graphscope.get_default_session()
-    assert default_sess2.info["status"] == "active"
-    default_sess2.close()
-    assert default_sess2.info["status"] == "closed"
 
 
 def test_launch_cluster_on_local(local_config_file):
@@ -143,6 +133,7 @@ def test_launch_cluster_on_local(local_config_file):
     s.close()
 
 
+@pytest.mark.skipif("NIGHTLY" not in os.environ, reason="Run in nightly CI")
 def test_launch_session_from_config(local_config_file):
     saved = os.environ.get("GS_CONFIG_PATH", "")
     try:
@@ -156,6 +147,7 @@ def test_launch_session_from_config(local_config_file):
         os.environ["GS_CONFIG_PATH"] = saved
 
 
+@pytest.mark.skipif("NIGHTLY" not in os.environ, reason="Run in nightly CI")
 def test_launch_session_from_dict():
     conf_dict = {"num_workers": 4}
     s = graphscope.session(cluster_type="hosts", config=conf_dict)
@@ -165,6 +157,7 @@ def test_launch_session_from_dict():
     s.close()
 
 
+@pytest.mark.skipif("NIGHTLY" not in os.environ, reason="Run in nightly CI")
 def test_config_dict_has_highest_priority(local_config_file):
     s = graphscope.session(
         cluster_type="hosts", config=local_config_file, num_workers=2
@@ -186,24 +179,6 @@ def test_error_on_invalid_config_file(invalid_config_file):
         graphscope.session(cluster_type="hosts", config=invalid_config_file)
 
 
-def test_error_on_used_after_close():
-    # use after session close
-    s1 = graphscope.session(cluster_type="hosts")
-
-    s1.close()
-    with pytest.raises(RuntimeError, match="Attempted to use a closed Session."):
-        g = load_graph(s1)
-
-    # close after close
-    s2 = graphscope.session(cluster_type="hosts")
-
-    s2.close()
-    assert s2.info["status"] == "closed"
-
-    s2.close()
-    assert s2.info["status"] == "closed"
-
-
 def test_correct_closing_on_hosts():
     s1 = graphscope.session(cluster_type="hosts")
 
@@ -213,6 +188,7 @@ def test_correct_closing_on_hosts():
     s1.close()
 
 
+@pytest.mark.skipif("NIGHTLY" not in os.environ, reason="Run in nightly CI")
 def test_border_cases():
     s1 = graphscope.session(cluster_type="hosts")
     s2 = graphscope.session(cluster_type="hosts")

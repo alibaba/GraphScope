@@ -55,9 +55,6 @@ def test_create_app():
     a3 = AppAssets(algo="sssp_has_path", context="tensor")
 
 
-@pytest.mark.skipif(
-    os.environ.get("NETWORKX") != "ON", reason="dynamic graph is in NETWORKX ON"
-)
 def test_compatible_with_dynamic_graph(dynamic_property_graph):
     # bfs
     with pytest.raises(
@@ -65,44 +62,6 @@ def test_compatible_with_dynamic_graph(dynamic_property_graph):
         match="Not compatible for arrow_property dynamic_property type",
     ):
         bfs(dynamic_property_graph, src=4)
-
-
-def test_errors_on_create_app(arrow_property_graph, arrow_project_graph):
-    # builtin-property app is incompatible with projected graph
-    with pytest.raises(graphscope.CompilationError):
-        a = AppAssets(algo="property_sssp", context="labeled_vertex_data")
-        pg = arrow_project_graph._project_to_simple()
-        a(pg, 4)
-
-    # builtin app is incompatible with property graph
-    with pytest.raises(graphscope.CompilationError):
-        a = AppAssets(algo="sssp", context="vertex_data")
-        a(arrow_property_graph, 4)
-
-    # algo not exist
-    with pytest.raises(
-        KeyError,
-        match="Algorithm does not exist in the gar resource",
-    ):
-        a = AppAssets(algo="invalid", context="vertex_data")
-        a(arrow_property_graph, 4)
-
-
-@pytest.mark.skipif(
-    os.environ.get("NETWORKX") != "ON", reason="dynamic graph is in NETWORKX ON"
-)
-def test_errors_on_create_app_with_dynamic(dynamic_project_graph):
-    with pytest.raises(graphscope.CompilationError):
-        a = AppAssets(algo="property_sssp", context="labeled_vertex_data")
-        a(dynamic_project_graph, 4)
-
-
-def test_error_on_non_graph():
-    eg1 = nx.Graph()  # networkx graph is unsupported
-    with pytest.raises(
-        InvalidArgumentError, match="Missing graph_type attribute in graph object"
-    ):
-        sssp(eg1, 4)
 
 
 def test_run_app_on_directed_graph(
@@ -357,16 +316,7 @@ def test_run_app_on_string_oid_graph(p2p_project_directed_graph_string):
     assert r1[r1["node"] == "6"].r.values[0] == 0.0
 
 
-def test_error_on_parameters_not_correct(arrow_project_graph):
-    # Incorrect type of parameters
-    with pytest.raises(ValueError, match="could not convert string to float"):
-        pagerank(arrow_project_graph, "delta=0.85", 10)
-    with pytest.raises(ValueError, match=r"invalid literal for int\(\) with base 10"):
-        pagerank(arrow_project_graph, 0.85, "max_round=10")
-    with pytest.raises(TypeError):
-        pagerank(arrow_project_graph, 0.85, 10, 100, 1000, 10000)
-
-
+@pytest.mark.skipif("NIGHTLY" not in os.environ, reason="Run in nightly CI")
 def test_error_on_run_app(projected_pg_no_edge_data):
     # compile error: wrong type of edge data with sssp
     with pytest.raises(graphscope.CompilationError):

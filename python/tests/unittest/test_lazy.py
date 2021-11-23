@@ -88,7 +88,6 @@ def arrow_property_graph(graphscope_session):
     return g
 
 
-@pytest.mark.skip(reason="waiting for optimization of dag")
 def test_vertices_omitted_form_loader(sess, student_group_e):
     g = sess.g()
     g1 = g.add_edges(student_group_e)
