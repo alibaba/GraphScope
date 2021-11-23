@@ -73,7 +73,7 @@ def _get_extra_data():
     # Copy
     #   1) /opt/graphscope
     #   2) headers of arrow/glog/gflags/google/openmpi/vineyard
-    #   3) openmpi daemon process `orted`
+    #   3) openmpi
     #   4) zetcd
     #   5) /tmp/gs/builtin
     # into site-packages/graphscope.runtime
@@ -82,8 +82,25 @@ def _get_extra_data():
     #   1) gs-coordinator: include python releated code of gscoordinator
     #   2) gs-lib: libs exclude jython-standalone/groovy/grpc/curator/hadoop/gremlin/conscrypt**.jar
     #   3) gs-jython: other libs not included in gs-lib
-    #   5) gs-include: header files
+    #   5) gs-include: header files and full-openmpi
     #   4) gs-engine: other runtime info such as 'bin', 'conf'
+
+    def __get_openmpi_prefix():
+        openmpi_prefix = ""
+        if platform.system() == "Linux":
+            # install "/opt/openmpi" in gsruntime image
+            openmpi_prefix = "/opt/openmpi"
+        elif platform.system() == "Darwin":
+            openmpi_prefix = (
+                subprocess.check_output(["brew", "--prefix", "openmpi"])
+                .decode("utf-8")
+                .strip("\n")
+            )
+        else:
+            raise RuntimeError(
+                "Get openmpi prefix failed on {0}".format(platform.system())
+            )
+        return openmpi_prefix
 
     name = os.environ.get("package_name", "gs-coordinator")
     RUNTIME_ROOT = "graphscope.runtime"
@@ -113,11 +130,6 @@ def _get_extra_data():
                 get_lib_suffix()
             ): os.path.join(RUNTIME_ROOT, "lib"),
         }
-        # MacOS: Some openmpi libs need to be dlopen
-        if platform.system() == "Darwin":
-            data.update(
-                {"/usr/local/opt/open-mpi/lib/": os.path.join(RUNTIME_ROOT, "lib")}
-            )
     elif name == "gs-jython":
         data = {
             "/opt/graphscope/lib/jython-standalone*.jar": os.path.join(
@@ -136,10 +148,6 @@ def _get_extra_data():
             "/opt/graphscope/conf/": os.path.join(RUNTIME_ROOT, "conf"),
             "/opt/graphscope/lib64/": os.path.join(RUNTIME_ROOT, "lib64"),
             "/opt/graphscope/*.jar": os.path.join(RUNTIME_ROOT),
-            os.path.join("/", tempfile.gettempprefix(), "gs", "builtin"): os.path.join(
-                RUNTIME_ROOT, "precompiled"
-            ),
-            "/usr/local/bin/orted": os.path.join(RUNTIME_ROOT, "bin"),
             "/usr/local/bin/zetcd": os.path.join(RUNTIME_ROOT, "bin"),
         }
     elif name == "gs-include":
@@ -156,9 +164,21 @@ def _get_extra_data():
             "/usr/local/include/glog": os.path.join(RUNTIME_ROOT, "include"),
             "/usr/local/include/gflags": os.path.join(RUNTIME_ROOT, "include"),
             "/usr/local/include/google": os.path.join(RUNTIME_ROOT, "include"),
-            "/usr/local/include/mpi*.h": os.path.join(RUNTIME_ROOT, "include"),
-            "/usr/local/include/openmpi": os.path.join(RUNTIME_ROOT, "include"),
         }
+        # precompiled
+        data.update(
+            {
+                os.path.join(
+                    "/", tempfile.gettempprefix(), "gs", "builtin"
+                ): os.path.join(RUNTIME_ROOT, "precompiled"),
+            }
+        )
+        # openmpi
+        data.update(
+            {
+                __get_openmpi_prefix(): os.path.join(RUNTIME_ROOT),
+            }
+        )
     return data
 
 

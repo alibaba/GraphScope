@@ -21,8 +21,6 @@ RUN sudo chown -R $(id -u):$(id -g) /home/graphscope/gs /home/graphscope/.m2 && 
     echo "source ~/.cargo/env" >> ~/.bashrc \
     && source ~/.bashrc \
     && rustup component add rustfmt \
-    && sudo yum install -y clang-devel \
-    && export LIBCLANG_PATH=$(dirname $(python3 -c "import clang; print(clang.__file__)"))/native \
     && echo "build with profile: $profile" \
     && cd /home/graphscope/gs/interactive_engine \
     && if [ "$profile" = "release" ]; then \

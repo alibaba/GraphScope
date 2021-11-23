@@ -174,16 +174,12 @@ jobs:
         source ~/.bashrc
         rustup component add rustfmt
 
-        sudo yum install -y clang-devel
-
     - uses: actions/checkout@v2.3.2
 
     - name: Build
       run: |
         export PATH=${PATH}:/usr/local/go/bin
         source ~/.bashrc
-
-        export LIBCLANG_PATH=$(dirname $(python3 -c "import clang; print(clang.__file__)"))/native
 
         # install zetcd
         go get github.com/etcd-io/zetcd/cmd/zetcd
@@ -690,8 +686,6 @@ jobs:
         source ~/.bashrc
         rustup component add rustfmt
 
-        sudo yum install -y clang-devel
-
         sudo yum install -y librdkafka-devel
         git clone -b 0.4.0 --single-branch --depth=1 https://github.com/mfontanini/cppkafka.git /tmp/cppkafka
         pushd /tmp/cppkafka
@@ -709,8 +703,6 @@ jobs:
         sudo chown -R $(id -u):$(id -g) /opt/graphscope
         export PATH=${PATH}:/usr/local/go/bin
         source ~/.bashrc
-
-        export LIBCLANG_PATH=$(dirname $(python3 -c "import clang; print(clang.__file__)"))/native
 
         cd interactive_engine
         for i in {1..3}; do mvn clean install -Pv2 -Drust.compile.mode=debug -DskipTests --quiet  && break || sleep 60; done

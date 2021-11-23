@@ -94,6 +94,9 @@ class LocalLauncher(Launcher):
     _vineyard_socket_prefix = os.path.join(tempfile.gettempdir(), "vineyard.sock.")
     # add `${GRAPHSCOPE_HOME}/bin` to ${PATH}
     os.environ["PATH"] += os.pathsep + os.path.join(GRAPHSCOPE_HOME, "bin")
+    # OPAL_PREFIX for openmpi
+    if os.path.isdir(os.path.join(GRAPHSCOPE_HOME, "openmpi")):
+        os.environ["OPAL_PREFIX"] = os.path.join(GRAPHSCOPE_HOME, "openmpi")
     # add '${GRAPHSCOPE_HOME}/lib' to ${LD_LIBRARY_PATH} to find libvineyard_internal_registry.so(dylib)
     if "LD_LIBRARY_PATH" in os.environ:
         os.environ["LD_LIBRARY_PATH"] = (
@@ -496,16 +499,6 @@ class LocalLauncher(Launcher):
 
         env = os.environ.copy()
         env.update(mpi_env)
-        # open MPI system need open ORTED daemon
-        if os.path.isfile(os.path.join(GRAPHSCOPE_HOME, "bin", "orted")):
-            # set OPAL only num_workers is 1, otherwise use system mpi
-            if self._num_workers == 1:
-                env.update(
-                    {
-                        "OPAL_PREFIX": os.path.join(GRAPHSCOPE_HOME),
-                        "OPAL_BINDIR": os.path.join(GRAPHSCOPE_HOME, "bin"),
-                    }
-                )
 
         logger.info("Launch analytical engine with command: %s", " ".join(cmd))
 

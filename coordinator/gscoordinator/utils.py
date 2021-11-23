@@ -1395,8 +1395,16 @@ class ResolveMPICmdPrefix(object):
 
     @staticmethod
     def openmpi():
+        ompi_info = ""
+        if "OPAL_PREFIX" in os.environ:
+            ompi_info = os.path.expandvars("$OPAL_PREFIX/bin/ompi_info")
+        if not ompi_info:
+            if "OPAL_BINDIR" in os.environ:
+                ompi_info = os.path.expandvars("$OPAL_BINDIR/ompi_info")
+        if not ompi_info:
+            ompi_info = "ompi_info"
         try:
-            subprocess.check_call(["ompi_info"], stdout=subprocess.DEVNULL)
+            subprocess.check_call([ompi_info], stdout=subprocess.DEVNULL)
         except FileNotFoundError:
             return False
         return True
@@ -1425,6 +1433,21 @@ class ResolveMPICmdPrefix(object):
 
         return ",".join(host_list)
 
+    @staticmethod
+    def find_mpi():
+        mpi = ""
+        if ResolveMPICmdPrefix.openmpi():
+            if "OPAL_PREFIX" in os.environ:
+                mpi = os.path.expandvars("$OPAL_PREFIX/bin/mpirun")
+            if not mpi:
+                if "OPAL_BINDIR" in os.environ:
+                    mpi = os.path.expandvars("$OPAL_BINDIR/mpirun")
+        if not mpi:
+            mpi = shutil.which("mpirun")
+        if not mpi:
+            raise RuntimeError("mpirun command not found.")
+        return mpi
+
     def resolve(self, num_workers, hosts):
         cmd = []
         env = {}
@@ -1450,13 +1473,13 @@ class ResolveMPICmdPrefix(object):
                     env[self._OPENMPI_RSH_AGENT] = rsh_agent_path
             cmd.extend(
                 [
-                    "mpirun",
+                    self.find_mpi(),
                     "--allow-run-as-root",
                 ]
             )
         else:
             # ssh agent supported only
-            cmd.extend(["mpirun"])
+            cmd.extend([self.find_mpi()])
         cmd.extend(["-n", str(num_workers)])
         cmd.extend(["-host", self.alloc(num_workers, hosts)])
 
