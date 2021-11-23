@@ -79,6 +79,18 @@ class NodeBoundary : public AppBase<FRAG_T, NodeBoundaryContext<FRAG_T>>,
       }
     }
 
+    writeToCtx(frag, ctx);
+  }
+
+  void IncEval(const fragment_t& frag, context_t& ctx,
+               message_manager_t& messages) {
+    // Yes, there's no any code in IncEval.
+    // Refer:
+    // https://networkx.org/documentation/stable/_modules/networkx/algorithms/boundary.html#node_boundary
+  }
+
+ private:
+  void writeToCtx(const fragment_& frag, context_t& ctx) {
     // reduce and process boundary on worker-0
     std::set<vid_t> all_boundary;
     AllReduce(ctx.boundary, all_boundary,
@@ -96,13 +108,6 @@ class NodeBoundary : public AppBase<FRAG_T, NodeBoundaryContext<FRAG_T>>,
       std::vector<size_t> shape{data.size()};
       ctx.assign(data, shape);
     }
-  }
-
-  void IncEval(const fragment_t& frag, context_t& ctx,
-               message_manager_t& messages) {
-    // Yes, there's no any code in IncEval.
-    // Refer:
-    // https://networkx.org/documentation/stable/_modules/networkx/algorithms/boundary.html#node_boundary
   }
 };
 }  // namespace gs
