@@ -23,7 +23,7 @@ pub mod sink;
 pub mod sort;
 pub mod source;
 
-use crate::error::{get_tag_error, FnExecError};
+use crate::error::FnExecError;
 use crate::graph::element::Element;
 use crate::graph::property::{Details, PropKey};
 use crate::process::record::{Entry, ObjectElement, Record};
@@ -45,24 +45,24 @@ impl TagKey {
     pub fn get_entry(&self, input: &Record) -> Result<Arc<Entry>, FnExecError> {
         let entry = input
             .get(self.tag.as_ref())
-            .ok_or(get_tag_error(
+            .ok_or(FnExecError::get_tag_error(
                 "Get tag failed since it refers to an empty entry",
             ))?
             .clone();
         if let Some(key) = self.key.as_ref() {
             if let Some(element) = entry.as_graph_element() {
-                let details = element.details().ok_or(get_tag_error(
+                let details = element.details().ok_or(FnExecError::get_tag_error(
                     "Get key failed since get details from a graph element failed",
                 ))?;
                 let properties = details
                     .get(key)
-                    .ok_or(get_tag_error(
+                    .ok_or(FnExecError::get_tag_error(
                         "Get key failed since get prop_key from a graph element failed",
                     ))?
                     .into();
                 Ok(Arc::new(ObjectElement::Prop(properties).into()))
             } else {
-                Err(get_tag_error(
+                Err(FnExecError::get_tag_error(
                     "Get key failed when attempt to get prop_key from a non-graph element",
                 ))
             }

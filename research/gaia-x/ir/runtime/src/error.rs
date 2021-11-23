@@ -36,6 +36,12 @@ pub enum FnGenError {
     UnSupported(String),
 }
 
+impl FnGenError {
+    pub fn unsupported_error(e: &str) -> FnGenError {
+        FnGenError::UnSupported(e.to_string())
+    }
+}
+
 impl std::fmt::Display for FnGenError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
@@ -109,6 +115,24 @@ pub enum FnExecError {
     UnSupported(String),
 }
 
+impl FnExecError {
+    pub fn query_store_error(e: &str) -> FnExecError {
+        FnExecError::QueryStoreError(e.to_string())
+    }
+
+    pub fn get_tag_error(e: &str) -> FnExecError {
+        FnExecError::GetTagError(e.to_string())
+    }
+
+    pub fn unexpected_data_error(e: &str) -> FnExecError {
+        FnExecError::UnExpectedData(e.to_string())
+    }
+
+    pub fn unsupported_error(e: &str) -> FnExecError {
+        FnExecError::UnSupported(e.to_string())
+    }
+}
+
 impl std::fmt::Display for FnExecError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
@@ -159,24 +183,4 @@ impl From<FnExecError> for DynError {
             }
         }
     }
-}
-
-pub fn gen_unsupported_error(e: &str) -> FnGenError {
-    FnGenError::UnSupported(e.to_string())
-}
-
-pub fn query_store_error(e: &str) -> FnExecError {
-    FnExecError::QueryStoreError(e.to_string())
-}
-
-pub fn get_tag_error(e: &str) -> FnExecError {
-    FnExecError::GetTagError(e.to_string())
-}
-
-pub fn unexpected_data_error(e: &str) -> FnExecError {
-    FnExecError::UnExpectedData(e.to_string())
-}
-
-pub fn exec_unsupported_error(e: &str) -> FnExecError {
-    FnExecError::UnSupported(e.to_string())
 }

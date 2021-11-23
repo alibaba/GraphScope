@@ -13,7 +13,7 @@
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 
-use crate::error::{get_tag_error, unexpected_data_error, FnGenError, FnGenResult};
+use crate::error::{FnExecError, FnGenError, FnGenResult};
 use crate::graph::element::{GraphElement, VertexOrEdge};
 use crate::graph::{Direction, QueryParams, Statement, ID};
 use crate::process::operator::flatmap::FlatMapFuncGen;
@@ -36,10 +36,12 @@ impl<E: Into<VertexOrEdge> + 'static> FlatMapFunction<Record, Record> for EdgeEx
     fn exec(&self, input: Record) -> FnResult<Self::Target> {
         let entry = input
             .get(self.start_v_tag.as_ref())
-            .ok_or(get_tag_error("get start_v failed"))?;
-        let vertex_or_edge = entry.as_graph_element().ok_or(unexpected_data_error(
-            "start_v does not refer to a graph element",
-        ))?;
+            .ok_or(FnExecError::get_tag_error("get start_v failed"))?;
+        let vertex_or_edge = entry
+            .as_graph_element()
+            .ok_or(FnExecError::unexpected_data_error(
+                "start_v does not refer to a graph element",
+            ))?;
         let id = vertex_or_edge.id();
         let iter = self.stmt.exec(id)?;
         Ok(Box::new(RecordExpandIter::new(

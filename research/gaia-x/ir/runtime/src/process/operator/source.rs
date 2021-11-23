@@ -13,7 +13,7 @@
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 
-use crate::error::{gen_unsupported_error, FnGenError, FnGenResult};
+use crate::error::{FnGenError, FnGenResult};
 use crate::graph::element::{Edge, Vertex};
 use crate::graph::partitioner::Partitioner;
 use crate::graph::QueryParams;
@@ -152,7 +152,7 @@ impl SourceOperator {
                     e_source.map(move |e| Record::new(e, self.alias.clone())),
                 ))
             }
-            SourceType::Table => Err(gen_unsupported_error(
+            SourceType::Table => Err(FnGenError::unsupported_error(
                 "Source type of Table is not supported yet",
             ))?,
         }
