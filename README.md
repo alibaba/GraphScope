@@ -341,8 +341,7 @@ image doesn't require to be rebuilt.
 You may want to re-install the python client on local.
 
 ```bash
-cd python
-python3 setup.py install
+make client
 ```
 
 Note that the learning engine client has C/C++ extensions modules and setting up the build
