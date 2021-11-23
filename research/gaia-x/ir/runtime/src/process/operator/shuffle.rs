@@ -13,7 +13,6 @@
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 
-use crate::error::FnExecError;
 use crate::graph::element::GraphElement;
 use crate::graph::partitioner::Partitioner;
 use crate::process::record::{Entry, Record, RecordElement};
@@ -37,6 +36,10 @@ impl RecordRouter {
         shuffle_key: common_pb::NameOrIdKey,
     ) -> Result<Self, ParsePbError> {
         let shuffle_key = shuffle_key.key.map(|e| e.try_into()).transpose()?;
+        debug!(
+            "Runtime shuffle number of worker {:?} and shuffle key {:?}",
+            num_workers, shuffle_key
+        );
         Ok(RecordRouter {
             p,
             num_workers,
@@ -50,12 +53,8 @@ impl RouteFunction<Record> for RecordRouter {
         if let Some(entry) = t.get(self.shuffle_key.as_ref()) {
             match entry.as_ref() {
                 Entry::Element(element) => match element {
-                    RecordElement::OnGraph(e) => self.p.get_partition(
-                        &e.id().ok_or(FnExecError::QueryStoreError(
-                            "id of VertexOrEdge cannot be None".to_string(),
-                        ))?,
-                        self.num_workers,
-                    ),
+                    RecordElement::OnGraph(e) => self.p.get_partition(&e.id(), self.num_workers),
+                    //TODO(bingqing): deal with the OffGraph element shuffle
                     RecordElement::OffGraph(_) => Ok(0),
                 },
                 Entry::Collection(_) => Ok(0),

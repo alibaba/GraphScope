@@ -14,7 +14,7 @@
 //! limitations under the License.
 
 use crate::expr::eval::Context;
-use crate::graph::element::GraphElement;
+use crate::graph::element::{Element, GraphElement};
 use crate::graph::property::{Details, DynDetails};
 use crate::graph::ID;
 use dyn_type::BorrowObject;
@@ -31,21 +31,23 @@ pub struct Edge {
     details: DynDetails,
 }
 
-impl GraphElement for Edge {
-    fn id(&self) -> Option<ID> {
-        Some(self.details.get_id())
-    }
-
-    fn label(&self) -> Option<&NameOrId> {
-        Some(self.details.get_label())
-    }
-
+impl Element for Edge {
     fn details(&self) -> Option<&DynDetails> {
         Some(&self.details)
     }
 
     fn as_borrow_object(&self) -> BorrowObject {
-        self.id().unwrap().into()
+        self.id().into()
+    }
+}
+
+impl GraphElement for Edge {
+    fn id(&self) -> ID {
+        self.details.get_id()
+    }
+
+    fn label(&self) -> &NameOrId {
+        self.details.get_label()
     }
 }
 

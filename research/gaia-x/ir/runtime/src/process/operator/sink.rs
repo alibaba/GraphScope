@@ -14,21 +14,18 @@
 //! limitations under the License.
 
 use crate::graph::element::{Edge, GraphElement, Vertex, VertexOrEdge};
-use crate::graph::property::{DefaultDetails, DynDetails};
-use crate::graph::ID;
 use crate::process::record::{Entry, ObjectElement, Record, RecordElement};
-use dyn_type::{Object, Primitives};
-use ir_common::error::ParsePbError;
 use ir_common::generated::common as common_pb;
 use ir_common::generated::result as result_pb;
-use ir_common::NameOrId;
+use ir_common::{object_to_pb_value, NameOrId};
 use pegasus::api::function::{FnResult, MapFunction};
-use std::convert::{TryFrom, TryInto};
 
 pub struct RecordSinkEncoder {
+    /// the given output fields; None means to output current entry;
     sink_keys: Vec<Option<NameOrId>>,
 }
 
+// TODO(bingqing): gen RecordSinkEncoder from pb;
 impl Default for RecordSinkEncoder {
     fn default() -> Self {
         RecordSinkEncoder {
@@ -117,8 +114,8 @@ impl From<RecordElement> for result_pb::Element {
 impl From<Vertex> for result_pb::Vertex {
     fn from(v: Vertex) -> Self {
         result_pb::Vertex {
-            id: v.id().expect("vid should not be empty") as i64,
-            label: v.label().map(|label| label.clone().into()),
+            id: v.id() as i64,
+            label: Some(v.label().clone().into()),
             // TODO: return detached vertex without property for now
             properties: vec![],
         }
@@ -128,8 +125,8 @@ impl From<Vertex> for result_pb::Vertex {
 impl From<Edge> for result_pb::Edge {
     fn from(e: Edge) -> Self {
         result_pb::Edge {
-            id: e.id().expect("vid should not be empty") as i64,
-            label: e.label().map(|label| label.clone().into()),
+            id: e.id() as i64,
+            label: Some(e.label().clone().into()),
             src_id: e.src_id as i64,
             src_label: e.get_src_label().map(|label| label.clone().into()),
             dst_id: e.dst_id as i64,
@@ -137,90 +134,5 @@ impl From<Edge> for result_pb::Edge {
             // TODO: return detached edge without property for now
             properties: vec![],
         }
-    }
-}
-
-fn object_to_pb_value(value: Object) -> common_pb::Value {
-    let item = match value {
-        Object::Primitive(v) => match v {
-            Primitives::Byte(v) => common_pb::value::Item::I32(v as i32),
-            Primitives::Integer(v) => common_pb::value::Item::I32(v),
-            Primitives::Long(v) => common_pb::value::Item::I64(v),
-            Primitives::ULLong(v) => common_pb::value::Item::Blob(v.to_be_bytes().to_vec()),
-            Primitives::Float(v) => common_pb::value::Item::F64(v),
-        },
-        Object::String(s) => common_pb::value::Item::Str(s),
-        Object::Blob(b) => common_pb::value::Item::Blob(b.to_vec()),
-        Object::DynOwned(_u) => {
-            todo!()
-        }
-    };
-    common_pb::Value { item: Some(item) }
-}
-
-impl TryFrom<result_pb::Entry> for Entry {
-    type Error = ParsePbError;
-
-    fn try_from(entry_pb: result_pb::Entry) -> Result<Self, Self::Error> {
-        if let Some(inner) = entry_pb.inner {
-            match inner {
-                result_pb::entry::Inner::Element(e) => Ok(Entry::Element(e.try_into()?)),
-                result_pb::entry::Inner::Collection(c) => Ok(Entry::Collection(
-                    c.collection
-                        .into_iter()
-                        .map(|e| e.try_into())
-                        .collect::<Result<Vec<_>, Self::Error>>()?,
-                )),
-            }
-        } else {
-            Err(ParsePbError::EmptyFieldError(
-                "entry inner is empty".to_string(),
-            ))?
-        }
-    }
-}
-
-impl TryFrom<result_pb::Element> for RecordElement {
-    type Error = ParsePbError;
-    fn try_from(e: result_pb::Element) -> Result<Self, Self::Error> {
-        if let Some(inner) = e.inner {
-            match inner {
-                result_pb::element::Inner::Vertex(v) => Ok(RecordElement::OnGraph(v.into())),
-                result_pb::element::Inner::Edge(e) => Ok(RecordElement::OnGraph(e.into())),
-                result_pb::element::Inner::Object(_o) => Err(ParsePbError::NotSupported(
-                    "Cannot parse object".to_string(),
-                )),
-            }
-        } else {
-            Err(ParsePbError::EmptyFieldError(
-                "element inner is empty".to_string(),
-            ))?
-        }
-    }
-}
-
-impl From<result_pb::Vertex> for VertexOrEdge {
-    fn from(v: result_pb::Vertex) -> Self {
-        let vertex = Vertex::new(DynDetails::new(DefaultDetails::new(
-            v.id as ID,
-            v.label.unwrap().try_into().unwrap(),
-        )));
-        VertexOrEdge::V(vertex)
-    }
-}
-
-impl From<result_pb::Edge> for VertexOrEdge {
-    fn from(e: result_pb::Edge) -> Self {
-        let mut edge = Edge::new(
-            e.src_id as ID,
-            e.dst_id as ID,
-            DynDetails::new(DefaultDetails::new(
-                e.id as ID,
-                e.label.unwrap().try_into().unwrap(),
-            )),
-        );
-        edge.set_src_label(e.src_label.unwrap().try_into().unwrap());
-        edge.set_dst_label(e.dst_label.unwrap().try_into().unwrap());
-        VertexOrEdge::E(edge)
     }
 }

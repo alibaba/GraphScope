@@ -17,7 +17,7 @@ use crate::error::{ParsePbError, ParsePbResult};
 use crate::generated::algebra as pb;
 use crate::generated::common as common_pb;
 use crate::generated::result as result_pb;
-use dyn_type::{BorrowObject, Object};
+use dyn_type::{BorrowObject, Object, Primitives};
 use pegasus_common::codec::{Decode, Encode, ReadExt, WriteExt};
 use prost::Message;
 use std::convert::TryFrom;
@@ -470,6 +470,24 @@ impl From<pb::GetV> for pb::logical_plan::Operator {
             opr: Some(pb::logical_plan::operator::Opr::Vertex(opr)),
         }
     }
+}
+
+pub fn object_to_pb_value(value: Object) -> common_pb::Value {
+    let item = match value {
+        Object::Primitive(v) => match v {
+            Primitives::Byte(v) => common_pb::value::Item::I32(v as i32),
+            Primitives::Integer(v) => common_pb::value::Item::I32(v),
+            Primitives::Long(v) => common_pb::value::Item::I64(v),
+            Primitives::ULLong(v) => common_pb::value::Item::Blob(v.to_be_bytes().to_vec()),
+            Primitives::Float(v) => common_pb::value::Item::F64(v),
+        },
+        Object::String(s) => common_pb::value::Item::Str(s),
+        Object::Blob(b) => common_pb::value::Item::Blob(b.to_vec()),
+        Object::DynOwned(_u) => {
+            todo!()
+        }
+    };
+    common_pb::Value { item: Some(item) }
 }
 
 impl Encode for result_pb::Result {

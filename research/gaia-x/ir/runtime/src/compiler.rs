@@ -23,7 +23,7 @@ use crate::process::operator::map::MapFuncGen;
 use crate::process::operator::shuffle::RecordRouter;
 use crate::process::operator::sink::RecordSinkEncoder;
 use crate::process::operator::sort::CompareFunctionGen;
-use crate::process::operator::source::source_op_from;
+use crate::process::operator::source::SourceOperator;
 use crate::process::record::{Record, RecordKey};
 use ir_common::generated::algebra as algebra_pb;
 use ir_common::generated::algebra::join::JoinKind;
@@ -71,7 +71,7 @@ impl FnGenerator {
     fn gen_source(&self, res: &BinaryResource) -> FnGenResult<DynIter<Record>> {
         let mut step = decode::<algebra_pb::logical_plan::Operator>(res)?;
         let worker_id = pegasus::get_current_worker();
-        let step = source_op_from(
+        let step = SourceOperator::new(
             &mut step,
             worker_id.local_peers as usize,
             worker_id.index,

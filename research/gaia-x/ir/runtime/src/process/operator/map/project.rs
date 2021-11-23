@@ -23,6 +23,7 @@ use ir_common::NameOrId;
 use pegasus::api::function::{FnResult, MapFunction};
 use std::convert::{TryFrom, TryInto};
 
+#[derive(Debug)]
 struct ProjectOperator {
     is_append: bool,
     projected_columns: Vec<(Evaluator, Option<NameOrId>)>,
@@ -67,10 +68,12 @@ impl MapFuncGen for algebra_pb::Project {
             let evaluator = Evaluator::try_from(expr)?;
             projected_columns.push((evaluator, alias));
         }
-        Ok(Box::new(ProjectOperator {
+        let project_operator = ProjectOperator {
             is_append: self.is_append,
             projected_columns,
-        }))
+        };
+        debug!("Runtime project operator {:?}", project_operator);
+        Ok(Box::new(project_operator))
     }
 }
 

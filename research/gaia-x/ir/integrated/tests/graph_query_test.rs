@@ -29,10 +29,10 @@ mod test {
     use pegasus::result::ResultStream;
     use pegasus::JobConf;
     use runtime::expr::str_to_expr_pb;
-    use runtime::graph::element::{GraphElement, VertexOrEdge};
+    use runtime::graph::element::{Element, GraphElement, VertexOrEdge};
     use runtime::graph::property::Details;
     use runtime::process::operator::flatmap::FlatMapFuncGen;
-    use runtime::process::operator::source::source_op_from;
+    use runtime::process::operator::source::SourceOperator;
     use runtime::process::record::Record;
     use std::sync::Arc;
 
@@ -47,7 +47,7 @@ mod test {
         let mut source_opr_pb = pb::logical_plan::Operator {
             opr: Some(pb::logical_plan::operator::Opr::Scan(scan_opr_pb)),
         };
-        let source = source_op_from(
+        let source = SourceOperator::new(
             &mut source_opr_pb,
             1,
             1,
@@ -71,7 +71,7 @@ mod test {
         let mut expected_ids = vec![v1, v2, v3, v4, v5, v6];
         for record in source_iter {
             if let Some(element) = record.get(None).unwrap().as_graph_element() {
-                result_ids.push(element.id().unwrap() as usize)
+                result_ids.push(element.id() as usize)
             }
         }
         result_ids.sort();
@@ -135,7 +135,7 @@ mod test {
         let mut expected_ids = vec![v2, v3, v3, v3, v4, v5];
         while let Some(Ok(record)) = result.next() {
             if let Some(element) = record.get(None).unwrap().as_graph_element() {
-                result_ids.push(element.id().unwrap() as usize)
+                result_ids.push(element.id() as usize)
             }
         }
         result_ids.sort();
@@ -207,7 +207,7 @@ mod test {
         while let Some(Ok(record)) = result.next() {
             if let Some(element) = record.get(None).unwrap().as_graph_element() {
                 result_ids_with_prop.push((
-                    element.id().unwrap() as usize,
+                    element.id() as usize,
                     element
                         .details()
                         .unwrap()
@@ -283,7 +283,7 @@ mod test {
                 .unwrap()
                 .as_graph_element()
             {
-                result_ids.push(element.id().unwrap() as usize)
+                result_ids.push(element.id() as usize)
             }
         }
         result_ids.sort();
@@ -317,7 +317,7 @@ mod test {
         let expected_ids = vec![v2];
         while let Some(Ok(record)) = result.next() {
             if let Some(element) = record.get(None).unwrap().as_graph_element() {
-                result_ids.push(element.id().unwrap() as usize)
+                result_ids.push(element.id() as usize)
             }
         }
         assert_eq!(result_ids, expected_ids)

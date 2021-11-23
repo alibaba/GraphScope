@@ -45,9 +45,7 @@ impl<E: Into<VertexOrEdge> + 'static> FlatMapFunction<Record, Record> for EdgeEx
             .ok_or(FnExecError::UnExpectedDataType(
                 "start_v does not refer to a graph element".to_string(),
             ))?;
-        let id = vertex_or_edge.id().ok_or(FnExecError::QueryStoreError(
-            "id of VertexOrEdge cannot be None".to_string(),
-        ))?;
+        let id = vertex_or_edge.id();
         let iter = self.stmt.exec(id)?;
         Ok(Box::new(RecordExpandIter::new(
             input,
@@ -61,24 +59,34 @@ impl FlatMapFuncGen for algebra_pb::EdgeExpand {
     fn gen_flat_map(
         self,
     ) -> FnGenResult<Box<dyn FlatMapFunction<Record, Record, Target = DynIter<Record>>>> {
-        let graph = crate::get_graph().ok_or(FnGenError::EmptyGraphError)?;
+        let graph = crate::get_graph().ok_or(FnGenError::NullGraphError)?;
         let expand_base = ExpandBase::try_from(self.base)?;
         if self.is_edge {
             let stmt =
                 graph.prepare_explore_edge(expand_base.direction, &expand_base.query_params)?;
-            Ok(Box::new(EdgeExpandOperator {
+            let edge_expand_operator = EdgeExpandOperator {
                 start_v_tag: expand_base.v_tag.clone(),
                 edge_or_end_v_tag: self.alias.map(|e_tag| e_tag.try_into()).transpose()?,
                 stmt,
-            }))
+            };
+            debug!(
+                "Runtime expand operator of edge with start_v_tag {:?} and edge_tag {:?}",
+                edge_expand_operator.start_v_tag, edge_expand_operator.edge_or_end_v_tag
+            );
+            Ok(Box::new(edge_expand_operator))
         } else {
             let stmt =
                 graph.prepare_explore_vertex(expand_base.direction, &expand_base.query_params)?;
-            Ok(Box::new(EdgeExpandOperator {
+            let edge_expand_operator = EdgeExpandOperator {
                 start_v_tag: expand_base.v_tag,
                 edge_or_end_v_tag: self.alias.map(|v_tag| v_tag.try_into()).transpose()?,
                 stmt,
-            }))
+            };
+            debug!(
+                "Runtime expand operator of vertex with start_v_tag {:?} and end_v_tag {:?}",
+                edge_expand_operator.start_v_tag, edge_expand_operator.edge_or_end_v_tag
+            );
+            Ok(Box::new(edge_expand_operator))
         }
     }
 }

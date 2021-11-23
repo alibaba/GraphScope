@@ -16,45 +16,45 @@
 pub use edge::Edge;
 pub use vertex::Vertex;
 
-use crate::graph::property::DynDetails;
+use crate::graph::property::{DefaultDetails, DynDetails};
 use crate::graph::ID;
 use dyn_type::{BorrowObject, Object};
+use ir_common::error::ParsePbError;
+use ir_common::generated::result as result_pb;
 use ir_common::NameOrId;
 use pegasus_common::codec::{Decode, Encode, ReadExt, WriteExt};
 use std::cmp::Ordering;
+use std::convert::{TryFrom, TryInto};
 use std::fmt::Debug;
 use std::io;
 
-/// A field that is further a graph element
-pub trait GraphElement {
-    fn id(&self) -> Option<ID> {
-        None
-    }
-
-    fn label(&self) -> Option<&NameOrId> {
-        None
-    }
-
+/// A field that is an element
+pub trait Element {
     fn details(&self) -> Option<&DynDetails> {
         None
     }
-
     fn as_borrow_object(&self) -> BorrowObject;
 }
 
-impl GraphElement for () {
+/// A field that is further a graph element
+pub trait GraphElement: Element {
+    fn id(&self) -> ID;
+    fn label(&self) -> &NameOrId;
+}
+
+impl Element for () {
     fn as_borrow_object(&self) -> BorrowObject {
         BorrowObject::String("")
     }
 }
 
-impl GraphElement for Object {
+impl Element for Object {
     fn as_borrow_object(&self) -> BorrowObject {
         self.as_borrow()
     }
 }
 
-impl<'a> GraphElement for BorrowObject<'a> {
+impl<'a> Element for BorrowObject<'a> {
     fn as_borrow_object(&self) -> BorrowObject<'a> {
         *self
     }
@@ -81,21 +81,7 @@ impl From<Edge> for VertexOrEdge {
     }
 }
 
-impl GraphElement for VertexOrEdge {
-    fn id(&self) -> Option<ID> {
-        match self {
-            VertexOrEdge::V(v) => v.id(),
-            VertexOrEdge::E(e) => e.id(),
-        }
-    }
-
-    fn label(&self) -> Option<&NameOrId> {
-        match self {
-            VertexOrEdge::V(v) => v.label(),
-            VertexOrEdge::E(e) => e.label(),
-        }
-    }
-
+impl Element for VertexOrEdge {
     fn details(&self) -> Option<&DynDetails> {
         match self {
             VertexOrEdge::V(v) => v.details(),
@@ -111,11 +97,27 @@ impl GraphElement for VertexOrEdge {
     }
 }
 
+impl GraphElement for VertexOrEdge {
+    fn id(&self) -> ID {
+        match self {
+            VertexOrEdge::V(v) => v.id(),
+            VertexOrEdge::E(e) => e.id(),
+        }
+    }
+
+    fn label(&self) -> &NameOrId {
+        match self {
+            VertexOrEdge::V(v) => v.label(),
+            VertexOrEdge::E(e) => e.label(),
+        }
+    }
+}
+
 impl Debug for VertexOrEdge {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
         match self {
-            VertexOrEdge::V(v) => write!(f, "v[{:?}]", v.id().unwrap()),
-            VertexOrEdge::E(e) => write!(f, "e[{:?}]", e.id().unwrap()),
+            VertexOrEdge::V(v) => write!(f, "v[{:?}]", v.id()),
+            VertexOrEdge::E(e) => write!(f, "e[{:?}]", e.id()),
         }
     }
 }
@@ -168,5 +170,45 @@ impl PartialOrd for VertexOrEdge {
     fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
         self.as_borrow_object()
             .partial_cmp(&other.as_borrow_object())
+    }
+}
+
+impl TryFrom<result_pb::Vertex> for VertexOrEdge {
+    type Error = ParsePbError;
+    fn try_from(v: result_pb::Vertex) -> Result<Self, Self::Error> {
+        let vertex = Vertex::new(DynDetails::new(DefaultDetails::new(
+            v.id as ID,
+            v.label
+                .ok_or(ParsePbError::EmptyFieldError("label is empty".to_string()))?
+                .try_into()?,
+        )));
+        Ok(VertexOrEdge::V(vertex))
+    }
+}
+
+impl TryFrom<result_pb::Edge> for VertexOrEdge {
+    type Error = ParsePbError;
+    fn try_from(e: result_pb::Edge) -> Result<Self, Self::Error> {
+        let mut edge = Edge::new(
+            e.src_id as ID,
+            e.dst_id as ID,
+            DynDetails::new(DefaultDetails::new(
+                e.id as ID,
+                e.label
+                    .ok_or(ParsePbError::EmptyFieldError("label is empty".to_string()))?
+                    .try_into()?,
+            )),
+        );
+        edge.set_src_label(
+            e.src_label
+                .ok_or(ParsePbError::EmptyFieldError("label is empty".to_string()))?
+                .try_into()?,
+        );
+        edge.set_dst_label(
+            e.dst_label
+                .ok_or(ParsePbError::EmptyFieldError("label is empty".to_string()))?
+                .try_into()?,
+        );
+        Ok(VertexOrEdge::E(edge))
     }
 }

@@ -53,7 +53,7 @@ impl From<algebra_pb::expand_base::Direction> for Direction {
     }
 }
 
-#[derive(Default)]
+#[derive(Default, Debug)]
 pub struct QueryParams {
     pub labels: Vec<NameOrId>,
     pub limit: Option<usize>,

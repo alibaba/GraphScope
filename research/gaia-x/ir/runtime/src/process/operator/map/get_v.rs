@@ -25,6 +25,7 @@ use ir_common::NameOrId;
 use pegasus::api::function::{FnResult, MapFunction};
 use std::convert::TryInto;
 
+#[derive(Debug)]
 struct GetVertexOperator {
     start_tag: Option<NameOrId>,
     opt: VOpt,
@@ -46,9 +47,7 @@ impl MapFunction<Record, Record> for GetVertexOperator {
             ))?;
         let id = match vertex_or_edge {
             VertexOrEdge::V(v) => match self.opt {
-                VOpt::This => v.id().ok_or(FnExecError::QueryStoreError(
-                    "id of Vertex cannot be None".to_string(),
-                ))?,
+                VOpt::This => v.id(),
                 _ => Err(FnExecError::UnExpectedDataType(
                     "should be vertex entry".to_string(),
                 ))?,
@@ -64,7 +63,7 @@ impl MapFunction<Record, Record> for GetVertexOperator {
                 ))?,
             },
         };
-        let graph = crate::get_graph().ok_or(FnExecError::EmptyGraphError)?;
+        let graph = crate::get_graph().ok_or(FnExecError::NullGraphError)?;
         let mut result_iter = graph.get_vertex(&[id], &self.query_params)?;
         if let Some(vertex) = result_iter.next() {
             input.append(vertex, self.alias.clone());
@@ -90,11 +89,13 @@ impl MapFuncGen for algebra_pb::GetV {
             .alias
             .map(|name_or_id| name_or_id.try_into())
             .transpose()?;
-        Ok(Box::new(GetVertexOperator {
+        let get_vertex_operator = GetVertexOperator {
             start_tag,
             opt,
             query_params,
             alias,
-        }))
+        };
+        debug!("Runtime get_vertex operator: {:?}", get_vertex_operator);
+        Ok(Box::new(get_vertex_operator))
     }
 }

@@ -24,6 +24,7 @@ use ir_common::generated::algebra::order_by::ordering_pair::Order;
 use std::cmp::Ordering;
 use std::convert::{TryFrom, TryInto};
 
+#[derive(Debug)]
 struct RecordCompare {
     tag_key_order: Vec<(TagKey, Order)>,
 }
@@ -54,6 +55,7 @@ impl CompareFunction<Record> for RecordCompare {
 impl CompareFunctionGen for algebra_pb::OrderBy {
     fn gen_cmp(self) -> FnGenResult<Box<dyn CompareFunction<Record>>> {
         let record_compare = RecordCompare::try_from(self)?;
+        debug!("Runtime order operator cmp: {:?}", record_compare);
         Ok(Box::new(record_compare))
     }
 }
@@ -79,7 +81,7 @@ impl TryFrom<algebra_pb::OrderBy> for RecordCompare {
 
 #[cfg(test)]
 mod tests {
-    use crate::graph::element::GraphElement;
+    use crate::graph::element::{Element, GraphElement};
     use crate::graph::property::Details;
     use crate::process::operator::sort::CompareFunctionGen;
     use crate::process::operator::tests::{init_source, init_source_with_tag};
@@ -124,7 +126,7 @@ mod tests {
         let mut result_ids = vec![];
         while let Some(Ok(record)) = result.next() {
             if let Some(element) = record.get(None).unwrap().as_graph_element() {
-                result_ids.push(element.id().unwrap());
+                result_ids.push(element.id());
             }
         }
         let expected_ids = vec![1, 2];
@@ -148,7 +150,7 @@ mod tests {
         let mut result_ids = vec![];
         while let Some(Ok(record)) = result.next() {
             if let Some(element) = record.get(None).unwrap().as_graph_element() {
-                result_ids.push(element.id().unwrap());
+                result_ids.push(element.id());
             }
         }
         let expected_ids = vec![2, 1];
@@ -202,7 +204,7 @@ mod tests {
                 .unwrap()
                 .as_graph_element()
             {
-                result_ids.push(element.id().unwrap());
+                result_ids.push(element.id());
             }
         }
         let expected_ids = vec![2, 1];

@@ -22,6 +22,7 @@ use ir_common::generated::algebra as algebra_pb;
 use pegasus::api::function::{FilterFunction, FnResult};
 use std::convert::TryInto;
 
+#[derive(Debug)]
 struct SelectOperator {
     pub filter: Evaluator,
 }
@@ -39,9 +40,11 @@ impl FilterFunction<Record> for SelectOperator {
 impl FilterFuncGen for algebra_pb::Select {
     fn gen_filter(self) -> FnGenResult<Box<dyn FilterFunction<Record>>> {
         if let Some(predicate) = self.predicate {
-            Ok(Box::new(SelectOperator {
+            let select_operator = SelectOperator {
                 filter: predicate.try_into()?,
-            }))
+            };
+            debug!("Runtime select operator: {:?}", select_operator);
+            Ok(Box::new(select_operator))
         } else {
             Err(ParsePbError::EmptyFieldError("empty select pb".to_string()).into())
         }
@@ -51,7 +54,7 @@ impl FilterFuncGen for algebra_pb::Select {
 #[cfg(test)]
 mod tests {
     use crate::expr::str_to_expr_pb;
-    use crate::graph::element::GraphElement;
+    use crate::graph::element::{Element, GraphElement};
     use crate::graph::property::Details;
     use crate::process::operator::filter::FilterFuncGen;
     use crate::process::operator::tests::init_source;
@@ -89,7 +92,7 @@ mod tests {
         let mut count = 0;
         while let Some(Ok(record)) = result.next() {
             if let Some(element) = record.get(None).unwrap().as_graph_element() {
-                assert!(element.id().unwrap() > 1)
+                assert!(element.id() > 1)
             }
             count += 1;
         }

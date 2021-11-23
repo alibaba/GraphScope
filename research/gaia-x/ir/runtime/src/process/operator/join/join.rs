@@ -22,15 +22,21 @@ use ir_common::generated::algebra::join::JoinKind;
 
 impl JoinKeyGen<Record, RecordKey, Record> for algebra_pb::Join {
     fn gen_left_kv_fn(&self) -> FnGenResult<Box<dyn KeyFunction<Record, RecordKey, Record>>> {
-        Ok(Box::new(KeySelector::with(self.left_keys.clone())?))
+        let left_kv_fn = KeySelector::with(self.left_keys.clone())?;
+        debug!("Runtime join operator left_kv_fn {:?}", left_kv_fn);
+        Ok(Box::new(left_kv_fn))
     }
 
     fn gen_right_kv_fn(&self) -> FnGenResult<Box<dyn KeyFunction<Record, RecordKey, Record>>> {
-        Ok(Box::new(KeySelector::with(self.right_keys.clone())?))
+        let right_kv_fn = KeySelector::with(self.right_keys.clone())?;
+        debug!("Runtime join operator right_kv_fn {:?}", right_kv_fn);
+        Ok(Box::new(right_kv_fn))
     }
 
     fn get_join_kind(&self) -> JoinKind {
-        unsafe { ::std::mem::transmute(self.kind) }
+        let join_kind = unsafe { ::std::mem::transmute(self.kind) };
+        debug!("Runtime join operator join_kind {:?}", join_kind);
+        join_kind
     }
 }
 
@@ -156,7 +162,7 @@ mod tests {
         let mut result_ids = vec![];
         while let Some(Ok(record)) = result.next() {
             if let Some(element) = record.get(None).unwrap().as_graph_element() {
-                result_ids.push(element.id().unwrap());
+                result_ids.push(element.id());
             }
         }
         result_ids.sort();

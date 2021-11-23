@@ -28,6 +28,7 @@ use std::collections::HashMap;
 use std::convert::TryFrom;
 use std::sync::Arc;
 
+#[derive(Debug)]
 pub enum SourceType {
     Vertex,
     Edge,
@@ -35,6 +36,7 @@ pub enum SourceType {
 }
 
 /// Source Operator, fetching a source from the (graph) database
+#[derive(Debug)]
 pub struct SourceOperator {
     query_params: QueryParams,
     src: Option<HashMap<u64, Vec<ID>>>,
@@ -43,6 +45,39 @@ pub struct SourceOperator {
 }
 
 impl SourceOperator {
+    pub fn new(
+        source_pb: &mut algebra_pb::logical_plan::Operator,
+        job_workers: usize,
+        worker_index: u32,
+        partitioner: Arc<dyn Partitioner>,
+    ) -> ParsePbResult<Self> {
+        if let Some(opr) = source_pb.opr.take() {
+            match opr {
+                algebra_pb::logical_plan::operator::Opr::Scan(scan) => {
+                    let mut source_op = SourceOperator::try_from(scan)?;
+                    source_op.set_partitions(job_workers, worker_index, partitioner);
+                    debug!("Runtime source op of scan {:?}", source_op);
+                    Ok(source_op)
+                }
+                algebra_pb::logical_plan::operator::Opr::IndexedScan(indexed_scan) => {
+                    let scan = indexed_scan.scan.ok_or("scan is missing in indexed_scan")?;
+                    let mut source_op = SourceOperator::try_from(scan)?;
+                    let global_ids = parse_indexed_kv_pairs(indexed_scan.or_kv_equiv_pairs)?;
+                    source_op.set_src(global_ids, job_workers, partitioner);
+                    debug!("Runtime source op of indexed_scan {:?}", source_op);
+                    Ok(source_op)
+                }
+                _ => Err(ParsePbError::NotSupported(
+                    "Unsupported source op in pb_request".to_string(),
+                ))?,
+            }
+        } else {
+            Err(ParsePbError::EmptyFieldError(
+                "Empty source op in pb_request".to_string(),
+            ))?
+        }
+    }
+
     /// Assign source vertex ids for each worker to call get_vertex
     fn set_src(&mut self, ids: Vec<ID>, job_workers: usize, partitioner: Arc<dyn Partitioner>) {
         let mut partitions = HashMap::new();
@@ -81,7 +116,7 @@ impl SourceOperator {
         self,
         worker_index: usize,
     ) -> FnGenResult<Box<dyn Iterator<Item = Record> + Send>> {
-        let graph = crate::get_graph().ok_or(FnGenError::EmptyGraphError)?;
+        let graph = crate::get_graph().ok_or(FnGenError::NullGraphError)?;
         match self.source_type {
             SourceType::Vertex => {
                 let mut v_source =
@@ -124,33 +159,6 @@ impl SourceOperator {
     }
 }
 
-pub fn source_op_from(
-    source_pb: &mut algebra_pb::logical_plan::Operator,
-    job_workers: usize,
-    worker_index: u32,
-    partitioner: Arc<dyn Partitioner>,
-) -> ParsePbResult<SourceOperator> {
-    if let Some(opr) = source_pb.opr.take() {
-        match opr {
-            algebra_pb::logical_plan::operator::Opr::Scan(scan) => {
-                let mut source_op = SourceOperator::try_from(scan)?;
-                source_op.set_partitions(job_workers, worker_index, partitioner);
-                Ok(source_op)
-            }
-            algebra_pb::logical_plan::operator::Opr::IndexedScan(indexed_scan) => {
-                let scan = indexed_scan.scan.ok_or("scan is missing in indexed_scan")?;
-                let mut source_op = SourceOperator::try_from(scan)?;
-                let global_ids = source_ids_from(indexed_scan.or_kv_equiv_pairs)?;
-                source_op.set_src(global_ids, job_workers, partitioner);
-                Ok(source_op)
-            }
-            _ => Err("Unsupported source op in pb_request")?,
-        }
-    } else {
-        Err("Empty source op in pb_request")?
-    }
-}
-
 impl TryFrom<algebra_pb::Scan> for SourceOperator {
     type Error = ParsePbError;
 
@@ -179,7 +187,7 @@ impl TryFrom<algebra_pb::Scan> for SourceOperator {
 }
 
 // TODO: we only support global-ids as index for now;
-fn source_ids_from(
+fn parse_indexed_kv_pairs(
     or_kv_equiv_pairs: Vec<algebra_pb::indexed_scan::KvEquivPairs>,
 ) -> ParsePbResult<Vec<ID>> {
     let mut global_ids = vec![];
@@ -203,7 +211,9 @@ fn source_ids_from(
                 Err("Parse source_id from indexed_scan failed")?
             }
         } else {
-            Err("Only support IdKey as indexed field in scan for now")?
+            Err(ParsePbError::NotSupported(
+                "Indexed field other than IdKey is not supported yet".to_string(),
+            ))?
         }
     }
     Ok(global_ids)

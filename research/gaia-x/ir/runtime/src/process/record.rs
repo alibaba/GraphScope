@@ -14,15 +14,17 @@
 //! limitations under the License.
 
 use crate::expr::eval::Context;
-use crate::graph::element::{Edge, GraphElement, Vertex, VertexOrEdge};
+use crate::graph::element::{Edge, Element, GraphElement, Vertex, VertexOrEdge};
 use crate::graph::property::DynDetails;
-use crate::graph::ID;
 use dyn_type::{BorrowObject, Object};
 use indexmap::map::IndexMap;
+use ir_common::error::ParsePbError;
+use ir_common::generated::result as result_pb;
 use ir_common::NameOrId;
 use pegasus::api::function::DynIter;
 use pegasus::codec::{Decode, Encode, ReadExt, WriteExt};
 use std::cmp::Ordering;
+use std::convert::{TryFrom, TryInto};
 use std::hash::{Hash, Hasher};
 use std::sync::Arc;
 
@@ -174,21 +176,7 @@ impl Context<RecordElement> for Record {
     }
 }
 
-impl GraphElement for RecordElement {
-    fn id(&self) -> Option<ID> {
-        match self {
-            RecordElement::OnGraph(vertex_or_edge) => vertex_or_edge.id(),
-            RecordElement::OffGraph(_) => None,
-        }
-    }
-
-    fn label(&self) -> Option<&NameOrId> {
-        match self {
-            RecordElement::OnGraph(vertex_or_edge) => vertex_or_edge.label(),
-            RecordElement::OffGraph(_) => None,
-        }
-    }
-
+impl Element for RecordElement {
     fn details(&self) -> Option<&DynDetails> {
         match self {
             RecordElement::OnGraph(vertex_or_edge) => vertex_or_edge.details(),
@@ -223,10 +211,7 @@ impl RecordKey {
 impl Hash for RecordElement {
     fn hash<H: Hasher>(&self, mut state: &mut H) {
         match self {
-            RecordElement::OnGraph(v) => v
-                .id()
-                .expect("id of VertexOrEdge cannot be None")
-                .hash(&mut state),
+            RecordElement::OnGraph(v) => v.id().hash(&mut state),
             RecordElement::OffGraph(o) => match o {
                 ObjectElement::None => None::<Object>.hash(&mut state),
                 ObjectElement::Prop(o) => o.hash(&mut state),
@@ -533,5 +518,46 @@ impl Decode for RecordKey {
             key_fields.push(Arc::new(entry))
         }
         Ok(RecordKey { key_fields })
+    }
+}
+
+impl TryFrom<result_pb::Entry> for Entry {
+    type Error = ParsePbError;
+
+    fn try_from(entry_pb: result_pb::Entry) -> Result<Self, Self::Error> {
+        if let Some(inner) = entry_pb.inner {
+            match inner {
+                result_pb::entry::Inner::Element(e) => Ok(Entry::Element(e.try_into()?)),
+                result_pb::entry::Inner::Collection(c) => Ok(Entry::Collection(
+                    c.collection
+                        .into_iter()
+                        .map(|e| e.try_into())
+                        .collect::<Result<Vec<_>, Self::Error>>()?,
+                )),
+            }
+        } else {
+            Err(ParsePbError::EmptyFieldError(
+                "entry inner is empty".to_string(),
+            ))?
+        }
+    }
+}
+
+impl TryFrom<result_pb::Element> for RecordElement {
+    type Error = ParsePbError;
+    fn try_from(e: result_pb::Element) -> Result<Self, Self::Error> {
+        if let Some(inner) = e.inner {
+            match inner {
+                result_pb::element::Inner::Vertex(v) => Ok(RecordElement::OnGraph(v.try_into()?)),
+                result_pb::element::Inner::Edge(e) => Ok(RecordElement::OnGraph(e.try_into()?)),
+                result_pb::element::Inner::Object(_o) => Err(ParsePbError::NotSupported(
+                    "Cannot parse object".to_string(),
+                )),
+            }
+        } else {
+            Err(ParsePbError::EmptyFieldError(
+                "element inner is empty".to_string(),
+            ))?
+        }
     }
 }

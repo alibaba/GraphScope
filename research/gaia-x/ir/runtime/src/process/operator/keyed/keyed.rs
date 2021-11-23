@@ -24,6 +24,7 @@ use ir_common::generated::common as common_pb;
 use pegasus::api::function::FnResult;
 use std::convert::TryFrom;
 
+#[derive(Debug)]
 pub struct KeySelector {
     keys: Vec<TagKey>,
 }
@@ -51,13 +52,17 @@ impl KeyFunction<Record, RecordKey, Record> for KeySelector {
 
 impl KeyFunctionGen for algebra_pb::GroupBy {
     fn gen_key(self) -> FnGenResult<Box<dyn KeyFunction<Record, RecordKey, Record>>> {
-        Ok(Box::new(KeySelector::with(self.keys)?))
+        let key_selector = KeySelector::with(self.keys)?;
+        debug!("Runtime group operator key_selector: {:?}", key_selector);
+        Ok(Box::new(key_selector))
     }
 }
 
 impl KeyFunctionGen for algebra_pb::Dedup {
     fn gen_key(self) -> FnGenResult<Box<dyn KeyFunction<Record, RecordKey, Record>>> {
-        Ok(Box::new(KeySelector::with(self.keys)?))
+        let key_selector = KeySelector::with(self.keys)?;
+        debug!("Runtime dedup operator key_selector: {:?}", key_selector);
+        Ok(Box::new(key_selector))
     }
 }
 
@@ -126,7 +131,7 @@ mod tests {
         let mut result_ids = vec![];
         while let Some(Ok(record)) = result.next() {
             if let Some(element) = record.get(None).unwrap().as_graph_element() {
-                result_ids.push(element.id().unwrap());
+                result_ids.push(element.id());
             }
         }
         result_ids.sort();

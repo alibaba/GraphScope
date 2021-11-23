@@ -85,7 +85,7 @@ mod test {
                 Ok(res) => {
                     let entry = parse_result(res).unwrap();
                     if let Some(vertex) = entry.get(None).unwrap().as_graph_element() {
-                        result_collection.push(vertex.id().unwrap());
+                        result_collection.push(vertex.id());
                     }
                 }
                 Err(e) => {

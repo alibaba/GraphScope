@@ -23,7 +23,8 @@ pub mod sink;
 pub mod sort;
 pub mod source;
 
-use crate::graph::element::GraphElement;
+use crate::error::KeyedError;
+use crate::graph::element::Element;
 use crate::graph::property::{Details, PropKey};
 use crate::process::record::{Entry, ObjectElement, Record};
 use ir_common::error::ParsePbError;
@@ -33,38 +34,13 @@ use pegasus::codec::{Decode, Encode, ReadExt, WriteExt};
 use std::convert::TryFrom;
 use std::sync::Arc;
 
-#[derive(Debug)]
-pub struct KeyedError {
-    desc: String,
-}
-
-impl std::fmt::Display for KeyedError {
-    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
-        write!(f, "Get key failed: {}", self.desc)
-    }
-}
-
-impl std::error::Error for KeyedError {}
-
-impl From<String> for KeyedError {
-    fn from(desc: String) -> Self {
-        KeyedError { desc }
-    }
-}
-
-impl From<&str> for KeyedError {
-    fn from(desc: &str) -> Self {
-        desc.to_string().into()
-    }
-}
-
 #[derive(Clone, Debug, Default)]
 pub struct TagKey {
     tag: Option<NameOrId>,
     key: Option<PropKey>,
 }
 
-impl<'a> TagKey {
+impl TagKey {
     /// This is for key generation, which generate the key of the input Record according to the tag_key field
     pub fn get_entry(&self, input: &Record) -> Result<Arc<Entry>, KeyedError> {
         let entry = input
@@ -179,7 +155,7 @@ impl Decode for TagKey {
 #[cfg(test)]
 pub(crate) mod tests {
     use super::*;
-    use crate::graph::element::Vertex;
+    use crate::graph::element::{GraphElement, Vertex};
     use crate::graph::property::{DefaultDetails, DynDetails};
     use crate::process::record::RecordElement;
     use dyn_type::Object;
