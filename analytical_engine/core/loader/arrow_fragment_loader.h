@@ -31,7 +31,7 @@
 #include "vineyard/basic/stream/dataframe_stream.h"
 #include "vineyard/basic/stream/parallel_stream.h"
 #include "vineyard/client/client.h"
-#include "vineyard/common/util/function.h"
+#include "vineyard/common/util/functions.h"
 #include "vineyard/graph/loader/arrow_fragment_loader.h"
 #include "vineyard/io/io/i_io_adaptor.h"
 #include "vineyard/io/io/io_factory.h"
