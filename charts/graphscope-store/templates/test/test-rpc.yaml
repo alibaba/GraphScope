@@ -1,7 +1,7 @@
 apiVersion: v1
 kind: Pod
 metadata:
-  name: {{ include "graphscope-store.frontend.fullname" . }}-test-rpc-service
+  name: {{ include "graphscope-store.frontend.fullname" . }}-test-grpc-service
   annotations:
     "helm.sh/hook": test
 spec:
@@ -12,6 +12,25 @@ spec:
         - /bin/sh
         - -c
         - while sleep 3 && ! curl {{ include "graphscope-store.frontend.fullname" . }}.{{ .Release.Namespace }}:55555 --output -;
+            do echo -n .;
+          done
+  restartPolicy: Never
+
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: {{ include "graphscope-store.frontend.fullname" . }}-test-gremlin-service
+  annotations:
+    "helm.sh/hook": test
+spec:
+  containers:
+    - name: curl
+      image: curlimages/curl:7.65.3
+      command:
+        - /bin/sh
+        - -c
+        - while sleep 3 && ! curl {{ include "graphscope-store.frontend.fullname" . }}.{{ .Release.Namespace }}:12312 --output -;
             do echo -n .;
           done
   restartPolicy: Never
