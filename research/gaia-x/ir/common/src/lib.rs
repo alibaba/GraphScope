@@ -16,8 +16,10 @@
 use crate::error::{ParsePbError, ParsePbResult};
 use crate::generated::algebra as pb;
 use crate::generated::common as common_pb;
-use dyn_type::{BorrowObject, Object};
+use crate::generated::result as result_pb;
+use dyn_type::{BorrowObject, Object, Primitives};
 use pegasus_common::codec::{Decode, Encode, ReadExt, WriteExt};
+use prost::Message;
 use std::convert::TryFrom;
 use std::io;
 
@@ -29,6 +31,8 @@ pub mod generated {
     pub mod algebra;
     #[path = "common.rs"]
     pub mod common;
+    #[path = "result.rs"]
+    pub mod result;
 }
 
 #[cfg(not(feature = "proto_inplace"))]
@@ -38,6 +42,9 @@ mod generated {
     }
     pub mod algebra {
         tonic::include_proto!("algebra");
+    }
+    pub mod result {
+        tonic::include_proto!("result");
     }
 }
 
@@ -135,6 +142,18 @@ impl TryFrom<common_pb::NameOrId> for NameOrId {
             }
         } else {
             Err(ParsePbError::from("empty content provided"))
+        }
+    }
+}
+
+impl From<NameOrId> for common_pb::NameOrId {
+    fn from(tag: NameOrId) -> Self {
+        let name_or_id = match tag {
+            NameOrId::Str(name) => common_pb::name_or_id::Item::Name(name),
+            NameOrId::Id(id) => common_pb::name_or_id::Item::Id(id),
+        };
+        common_pb::NameOrId {
+            item: Some(name_or_id),
         }
     }
 }
@@ -458,6 +477,48 @@ impl From<pb::GetV> for pb::logical_plan::Operator {
         pb::logical_plan::Operator {
             opr: Some(pb::logical_plan::operator::Opr::Vertex(opr)),
         }
+    }
+}
+
+impl From<Object> for common_pb::Value {
+    fn from(value: Object) -> Self {
+        let item = match value {
+            Object::Primitive(v) => match v {
+                // TODO: It seems that Byte is only used for bool for now
+                Primitives::Byte(v) => common_pb::value::Item::Boolean(!(v == 0)),
+                Primitives::Integer(v) => common_pb::value::Item::I32(v),
+                Primitives::Long(v) => common_pb::value::Item::I64(v),
+                Primitives::ULLong(v) => common_pb::value::Item::Blob(v.to_be_bytes().to_vec()),
+                Primitives::Float(v) => common_pb::value::Item::F64(v),
+            },
+            Object::String(s) => common_pb::value::Item::Str(s),
+            Object::Blob(b) => common_pb::value::Item::Blob(b.to_vec()),
+            Object::DynOwned(_u) => {
+                todo!()
+            }
+        };
+        common_pb::Value { item: Some(item) }
+    }
+}
+
+impl Encode for result_pb::Result {
+    fn write_to<W: WriteExt>(&self, writer: &mut W) -> io::Result<()> {
+        let mut bytes = vec![];
+        self.encode_raw(&mut bytes);
+        writer.write_u32(bytes.len() as u32)?;
+        writer.write_all(bytes.as_slice())?;
+        Ok(())
+    }
+}
+
+impl Decode for result_pb::Result {
+    fn read_from<R: ReadExt>(reader: &mut R) -> io::Result<Self> {
+        let len = reader.read_u32()? as usize;
+        let mut buffer = Vec::with_capacity(len);
+        reader.read_exact(&mut buffer)?;
+        result_pb::Result::decode(buffer.as_slice()).map_err(|_e| {
+            std::io::Error::new(std::io::ErrorKind::Other, "decoding result_pb failed!")
+        })
     }
 }
 

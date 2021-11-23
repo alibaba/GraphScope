@@ -15,14 +15,30 @@
 
 pub type ParsePbResult<T> = Result<T, ParsePbError>;
 
+/// Errors that occur when parse a pb struct
 #[derive(Debug, PartialEq)]
-pub struct ParsePbError {
-    desc: String,
+pub enum ParsePbError {
+    /// Parse pb structure error
+    ParseError(String),
+    /// Empty pb fields error
+    EmptyFieldError(String),
+    /// Not supported
+    NotSupported(String),
 }
 
 impl std::fmt::Display for ParsePbError {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
-        write!(f, "invalid protobuf: {}", self.desc)
+        match self {
+            ParsePbError::ParseError(e) => {
+                write!(f, "invalid protobuf: {}", e)
+            }
+            ParsePbError::EmptyFieldError(e) => {
+                write!(f, "empty protobuf field: {}", e)
+            }
+            ParsePbError::NotSupported(e) => {
+                write!(f, "Not supported: {}", e)
+            }
+        }
     }
 }
 
@@ -30,7 +46,7 @@ impl std::error::Error for ParsePbError {}
 
 impl From<String> for ParsePbError {
     fn from(desc: String) -> Self {
-        ParsePbError { desc }
+        ParsePbError::ParseError(desc)
     }
 }
 

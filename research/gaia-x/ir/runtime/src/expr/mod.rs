@@ -19,7 +19,7 @@ pub mod eval;
 pub mod token;
 
 use crate::expr::error::{ExprError, ExprResult};
-use crate::expr::token::Token;
+use crate::expr::token::{tokenize, Token};
 use ir_common::generated::common as pb;
 use ir_common::VAR_PREFIX;
 
@@ -123,6 +123,10 @@ pub fn to_suffix_expr_pb(tokens: Vec<Token>) -> ExprResult<pb::SuffixExpr> {
     }
 
     Ok(pb::SuffixExpr { operators })
+}
+
+pub fn str_to_expr_pb(expr_str: String) -> ExprResult<pb::SuffixExpr> {
+    to_suffix_expr_pb(tokenize(&expr_str)?)
 }
 
 #[cfg(test)]

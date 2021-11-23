@@ -58,8 +58,7 @@ use ir_common::generated::common as common_pb;
 use pegasus::BuildJobError;
 use pegasus_client::builder::JobBuilder;
 use prost::Message;
-use runtime::expr::to_suffix_expr_pb;
-use runtime::expr::token::tokenize;
+use runtime::expr::str_to_expr_pb;
 use std::convert::{TryFrom, TryInto};
 use std::ffi::{c_void, CStr};
 use std::os::raw::c_char;
@@ -112,22 +111,12 @@ pub(crate) fn cstr_to_string(cstr: *const c_char) -> FfiResult<String> {
     }
 }
 
-pub(crate) fn str_to_expr(expr_str: String) -> FfiResult<common_pb::SuffixExpr> {
-    let tokens_result = tokenize(&expr_str);
-    if let Ok(tokens) = tokens_result {
-        if let Ok(expr) = to_suffix_expr_pb(tokens) {
-            return Ok(expr);
-        }
-    }
-    Err(ResultCode::ParseExprError)
-}
-
 pub(crate) fn cstr_to_suffix_expr_pb(cstr: *const c_char) -> FfiResult<common_pb::SuffixExpr> {
     let str = cstr_to_string(cstr);
     if str.is_err() {
         Err(str.err().unwrap())
     } else {
-        str_to_expr(str.unwrap())
+        str_to_expr_pb(str.unwrap()).map_err(|_| ResultCode::ParseExprError)
     }
 }
 

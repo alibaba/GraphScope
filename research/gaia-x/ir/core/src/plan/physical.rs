@@ -318,18 +318,18 @@ impl AsPhysical for LogicalPlan {
 mod test {
     use super::*;
     use crate::plan::logical::Node;
-    use crate::str_to_expr;
     use ir_common::generated::algebra as pb;
     use ir_common::generated::common as common_pb;
+    use runtime::expr::str_to_expr_pb;
 
     #[test]
     fn test_poc_plan() {
-        // g.V().hasLabel("Person").has("id", 10).out("Knows").limit(10)
+        // g.V().hasLabel("person").has("id", 10).out("knows").limit(10)
         let source_opr = pb::logical_plan::Operator::from(pb::Scan {
             scan_opt: 0,
             alias: None,
             params: Some(pb::QueryParams {
-                table_names: vec![common_pb::NameOrId::from("Person".to_string())],
+                table_names: vec![common_pb::NameOrId::from("person".to_string())],
                 columns: vec![],
                 limit: None,
                 predicate: None,
@@ -337,14 +337,14 @@ mod test {
             }),
         });
         let select_opr = pb::logical_plan::Operator::from(pb::Select {
-            predicate: Some(str_to_expr("@HEAD.id == 10".to_string()).unwrap()),
+            predicate: Some(str_to_expr_pb("@.id == 10".to_string()).unwrap()),
         });
         let expand_opr = pb::logical_plan::Operator::from(pb::EdgeExpand {
             base: Some(pb::ExpandBase {
                 v_tag: None,
                 direction: 0,
                 params: Some(pb::QueryParams {
-                    table_names: vec![common_pb::NameOrId::from("Knows".to_string())],
+                    table_names: vec![common_pb::NameOrId::from("knows".to_string())],
                     columns: vec![],
                     limit: None,
                     predicate: None,

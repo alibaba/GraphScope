@@ -13,6 +13,7 @@
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 
+use crate::graph::ID;
 use dyn_type::{BorrowObject, Object};
 use ir_common::error::{ParsePbError, ParsePbResult};
 use ir_common::generated::common as pb;
@@ -24,8 +25,6 @@ use std::convert::TryFrom;
 use std::io;
 use std::ops::{Deref, DerefMut};
 use std::sync::Arc;
-
-pub type ID = u128;
 
 /// The three types of property to get
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
@@ -55,17 +54,53 @@ impl TryFrom<pb::Property> for PropKey {
     }
 }
 
+impl Encode for PropKey {
+    fn write_to<W: WriteExt>(&self, writer: &mut W) -> std::io::Result<()> {
+        match self {
+            PropKey::Id => {
+                writer.write_u8(0)?;
+            }
+            PropKey::Label => {
+                writer.write_u8(1)?;
+            }
+            PropKey::Key(key) => {
+                writer.write_u8(2)?;
+                key.write_to(writer)?;
+            }
+        }
+        Ok(())
+    }
+}
+
+impl Decode for PropKey {
+    fn read_from<R: ReadExt>(reader: &mut R) -> std::io::Result<Self> {
+        let opt = reader.read_u8()?;
+        match opt {
+            0 => Ok(PropKey::Id),
+            1 => Ok(PropKey::Label),
+            2 => {
+                let key = <NameOrId>::read_from(reader)?;
+                Ok(PropKey::Key(key))
+            }
+            _ => Err(std::io::Error::new(
+                std::io::ErrorKind::Other,
+                "unreachable",
+            )),
+        }
+    }
+}
+
 pub trait Details: Send + Sync + AsAny {
     fn get_property(&self, key: &NameOrId) -> Option<BorrowObject>;
 
     fn get_id(&self) -> ID;
 
-    fn get_label(&self) -> &NameOrId;
+    fn get_label(&self) -> Option<&NameOrId>;
 
     fn get(&self, prop_key: &PropKey) -> Option<BorrowObject> {
         match prop_key {
             PropKey::Id => Some(self.get_id().into()),
-            PropKey::Label => Some(self.get_label().as_borrow_object()),
+            PropKey::Label => self.get_label().map(|label| label.as_borrow_object()),
             PropKey::Key(k) => self.get_property(k),
         }
     }
@@ -93,7 +128,7 @@ impl Details for DynDetails {
         self.inner.get_id()
     }
 
-    fn get_label(&self) -> &NameOrId {
+    fn get_label(&self) -> Option<&NameOrId> {
         self.inner.get_label()
     }
 }
@@ -179,8 +214,8 @@ impl Details for DefaultDetails {
         self.id
     }
 
-    fn get_label(&self) -> &NameOrId {
-        &self.label
+    fn get_label(&self) -> Option<&NameOrId> {
+        Some(&self.label)
     }
 }
 
