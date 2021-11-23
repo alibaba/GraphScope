@@ -357,7 +357,7 @@ To verify the correctness of your developed features, your code changes should p
 You may run the whole test suite with commands:
 
 ```bash
-cd GraphScope && make test
+make test
 ```
 
 
