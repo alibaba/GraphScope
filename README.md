@@ -24,7 +24,7 @@ Visit our website at [graphscope.io](https://graphscope.io) to learn more.
 We provide a [Playground](https://try.graphscope.app) with a managed JupyterLab. [Try GraphScope](https://try.graphscope.app) straight away in your browser!
 
 GraphScope supports run in standalone mode or on clusters managed by [Kubernetes](https://kubernetes.io/) within containers. For quickly getting started, 
-Let's begin with the standalone mode.
+let's begin with the standalone mode.
 
 
 ### Installation for Standalone Mode
