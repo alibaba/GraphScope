@@ -180,7 +180,6 @@ class BFSGeneric : public AppBase<FRAG_T, BFSGenericContext<FRAG_T>>,
                      message_manager_t& messages) {
     vid_t v_vid = frag.Vertex2Gid(v);
     auto oes = frag.GetOutgoingAdjList(v);
-    bool need_sync = false;
     for (auto& e : oes) {
       vertex_t u = e.get_neighbor();
       if (ctx.visited[u] == false) {
