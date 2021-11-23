@@ -110,7 +110,7 @@ sub_graph = sub_graph.add_column(ret2, {"tc": "r"})
 ```
 
 In addition, users can write their own algorithms in GraphScope.
-Currently, GraphScope support users to write their own algorithms
+Currently, GraphScope supports users to write their own algorithms
 in Pregel model and PIE model.
 
 ### Graph neural networks (GNNs)
