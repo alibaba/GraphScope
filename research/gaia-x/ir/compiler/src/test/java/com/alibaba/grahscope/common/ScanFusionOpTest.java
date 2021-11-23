@@ -30,6 +30,21 @@ public class ScanFusionOpTest {
         FfiJobBuffer buffer = irCoreLib.buildPhysicalPlan(ptrPlan);
         Assert.assertArrayEquals(GraphStepTest.readBytesFromFile("scan_opt.bytes"), buffer.getBytes());
         irCoreLib.destroyLogicalPlan(ptrPlan);
+        buffer.close();
+    }
+
+    @Test
+    public void predicateTest() {
+        IntByReference oprIdx = new IntByReference(0);
+        Pointer ptrPlan = irCoreLib.initLogicalPlan();
+        ScanFusionOp op = new ScanFusionOp(OpTransformFactory.SCAN_FUSION_OP);
+        op.setScanOpt(new OpArg<>(FfiScanOpt.Vertex, Function.identity()));
+        op.setPredicate(new OpArg("@.id == 1", Function.identity()));
+        irCoreLib.appendScanOperator(ptrPlan, (Pointer) op.get(), oprIdx.getValue(), oprIdx);
+        FfiJobBuffer buffer = irCoreLib.buildPhysicalPlan(ptrPlan);
+        Assert.assertArrayEquals(GraphStepTest.readBytesFromFile("scan_expr.bytes"), buffer.getBytes());
+        irCoreLib.destroyLogicalPlan(ptrPlan);
+        buffer.close();
     }
 
     @Test
@@ -44,6 +59,7 @@ public class ScanFusionOpTest {
         FfiJobBuffer buffer = irCoreLib.buildPhysicalPlan(ptrPlan);
         Assert.assertArrayEquals(GraphStepTest.readBytesFromFile("scan_labels.bytes"), buffer.getBytes());
         irCoreLib.destroyLogicalPlan(ptrPlan);
+        buffer.close();
     }
 
     @Test
@@ -58,5 +74,6 @@ public class ScanFusionOpTest {
         FfiJobBuffer buffer = irCoreLib.buildPhysicalPlan(ptrPlan);
         Assert.assertArrayEquals(GraphStepTest.readBytesFromFile("scan_ids.bytes"), buffer.getBytes());
         irCoreLib.destroyLogicalPlan(ptrPlan);
+        buffer.close();
     }
 }

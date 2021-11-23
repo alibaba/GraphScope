@@ -1138,6 +1138,13 @@ mod scan {
     }
 
     #[no_mangle]
+    pub extern "C" fn set_scan_predicate(
+        ptr_scan: *const c_void, cstr_predicate: *const c_char,
+    ) -> ResultCode {
+        set_predicate(ptr_scan, cstr_predicate, Opr::Scan)
+    }
+
+    #[no_mangle]
     pub extern "C" fn add_scan_table_name(ptr_scan: *const c_void, table_name: FfiNameOrId) -> ResultCode {
         process_params(ptr_scan, ParamsKey::Table, table_name, Opr::Scan)
     }

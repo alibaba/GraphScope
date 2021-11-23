@@ -33,7 +33,11 @@ public enum OpTransformFactory implements Function<BaseOp, Pointer> {
                             irCoreLib.addScanTableName(scan, label));
                 }
             }
-            // todo: add properties
+            Optional<OpArg> predicate = op.getPredicate();
+            if (predicate.isPresent()) {
+                String expr = (String) predicate.get().getArg();
+                irCoreLib.setScanPredicate(scan, expr);
+            }
             // todo: add predicates
             // todo: add limit
             Optional<OpArg> ids = op.getIds();

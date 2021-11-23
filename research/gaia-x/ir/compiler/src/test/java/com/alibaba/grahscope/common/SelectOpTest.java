@@ -25,5 +25,6 @@ public class SelectOpTest {
         FfiJobBuffer buffer = irCoreLib.buildPhysicalPlan(ptrPlan);
         Assert.assertArrayEquals(GraphStepTest.readBytesFromFile("select_expr.bytes"), buffer.getBytes());
         irCoreLib.destroyLogicalPlan(ptrPlan);
+        buffer.close();
     }
 }

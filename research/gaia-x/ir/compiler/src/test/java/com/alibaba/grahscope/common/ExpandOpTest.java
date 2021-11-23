@@ -30,6 +30,7 @@ public class ExpandOpTest {
         FfiJobBuffer buffer = irCoreLib.buildPhysicalPlan(ptrPlan);
         Assert.assertArrayEquals(GraphStepTest.readBytesFromFile("expand_edge_opt.bytes"), buffer.getBytes());
         irCoreLib.destroyLogicalPlan(ptrPlan);
+        buffer.close();
     }
 
     @Test
@@ -45,5 +46,6 @@ public class ExpandOpTest {
         FfiJobBuffer buffer = irCoreLib.buildPhysicalPlan(ptrPlan);
         Assert.assertArrayEquals(GraphStepTest.readBytesFromFile("expand_labels.bytes"), buffer.getBytes());
         irCoreLib.destroyLogicalPlan(ptrPlan);
+        buffer.close();
     }
 }

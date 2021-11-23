@@ -21,6 +21,7 @@ import org.apache.tinkerpop.gremlin.process.traversal.step.util.HasContainer;
 import org.apache.tinkerpop.gremlin.process.traversal.util.ConnectiveP;
 import org.apache.tinkerpop.gremlin.structure.Direction;
 import org.apache.tinkerpop.gremlin.structure.T;
+import org.apache.tinkerpop.gremlin.tinkergraph.process.traversal.step.sideEffect.TinkerGraphStep;
 
 import java.util.*;
 import java.util.function.Function;
@@ -32,10 +33,10 @@ public class Gremlin2IrBuilder implements IrPlanBuilder<Traversal, Pointer> {
     private static Map<Class<?>, Function<Step, Supplier>> stepTransformMapper;
     public static Gremlin2IrBuilder INSTANCE = new Gremlin2IrBuilder();
 
-    public static Function<HasContainerHolder, String> predicate2Expr = (HasContainerHolder holder1) -> {
+    public static Function<List<HasContainer>, String> predicate2Expr = (List<HasContainer> containers) -> {
         String expr = "";
-        for (int i = 0; i < holder1.getHasContainers().size(); ++i) {
-            HasContainer container = holder1.getHasContainers().get(i);
+        for (int i = 0; i < containers.size(); ++i) {
+            HasContainer container = containers.get(i);
             if (container.getPredicate() instanceof ConnectiveP) {
                 throw new IllegalArgumentException("nested predicates are unsupported currently");
             }
@@ -55,6 +56,16 @@ public class Gremlin2IrBuilder implements IrPlanBuilder<Traversal, Pointer> {
         return expr;
     };
 
+    public static Function<GraphStep, List> globalId2Const = (GraphStep s1) -> {
+        return Arrays.stream(s1.getIds()).map((id) -> {
+            if (id instanceof Long) {
+                return irCoreLib.int64AsConst((Long) id);
+            } else {
+                throw new IllegalArgumentException("id type should be long, other types are unsupported currently");
+            }
+        }).collect(Collectors.toList());
+    };
+
     private Gremlin2IrBuilder() {
     }
 
@@ -69,8 +80,24 @@ public class Gremlin2IrBuilder implements IrPlanBuilder<Traversal, Pointer> {
                 else return FfiScanOpt.Edge;
             }));
 
+            if (step.getIds().length > 0) {
+                op.setIds(new OpArg(step, globalId2Const));
+            }
+
+            return op;
+        });
+
+        stepTransformMapper.put(TinkerGraphStep.class, (Step t) -> {
+            TinkerGraphStep step = (TinkerGraphStep) t;
+            ScanFusionOp op = new ScanFusionOp(OpTransformFactory.SCAN_FUSION_OP);
+
+            op.setScanOpt(new OpArg<>(step, (GraphStep s1) -> {
+                if (s1.returnsVertex()) return FfiScanOpt.Vertex;
+                else return FfiScanOpt.Edge;
+            }));
+
             if (step instanceof HasContainerHolder) {
-                op.setLabels(new OpArg<>((HasContainerHolder) step, (HasContainerHolder holder) -> {
+                op.setLabels(new OpArg<>(step, (HasContainerHolder holder) -> {
                     List<String> labels = new ArrayList<>();
                     for (HasContainer container : holder.getHasContainers()) {
                         if (container.getKey().equals(T.label.getAccessor())) {
@@ -83,25 +110,19 @@ public class Gremlin2IrBuilder implements IrPlanBuilder<Traversal, Pointer> {
                             } else {
                                 throw new IllegalArgumentException("label should be string of list of string");
                             }
-                            holder.removeHasContainer(container);
                         }
                     }
-                    return labels.stream().map(k -> irCoreLib.cstrAsConst(k)).collect(Collectors.toList());
+                    return labels.stream().map(k -> irCoreLib.cstrAsNameOrId(k)).collect(Collectors.toList());
                 }));
-                op.setPredicate(new OpArg<>((HasContainerHolder) step, predicate2Expr));
+                List<HasContainer> containers = step.getHasContainers();
+                List<HasContainer> predicates = containers.stream()
+                        .filter(k -> !k.getKey().equals(T.label.getAccessor()))
+                        .collect(Collectors.toList());
+                op.setPredicate(new OpArg(predicates, predicate2Expr));
             }
 
             if (step.getIds().length > 0) {
-                op.setIds(new OpArg<>(step, (GraphStep s1) -> {
-                    List ids = Arrays.asList(s1.getIds());
-                    return ids.stream().map((id) -> {
-                        if (id instanceof Long) {
-                            return irCoreLib.int64AsConst((Long) id);
-                        } else {
-                            throw new IllegalArgumentException("id type should be long, other types are unsupported currently");
-                        }
-                    }).collect(Collectors.toList());
-                }));
+                op.setIds(new OpArg<>(step, globalId2Const));
             }
 
             return op;
@@ -109,7 +130,7 @@ public class Gremlin2IrBuilder implements IrPlanBuilder<Traversal, Pointer> {
 
         stepTransformMapper.put(HasStep.class, (Step t) -> {
             SelectOp op = new SelectOp(OpTransformFactory.SELECT_OP);
-            op.setPredicate(new OpArg<>((HasStep) t, predicate2Expr));
+            op.setPredicate(new OpArg(((HasStep) t).getHasContainers(), predicate2Expr));
             return op;
         });
 
@@ -151,17 +172,21 @@ public class Gremlin2IrBuilder implements IrPlanBuilder<Traversal, Pointer> {
         });
     }
 
+    public Supplier<Pointer> getIrOpSupplier(Step step) {
+        Function<Step, Supplier> stepTransform = stepTransformMapper.get(step.getClass());
+        if (stepTransform == null) {
+            throw new UnsupportedOperationException("step " + step.getClass() + " is unsupported currently");
+        }
+        return stepTransform.apply(step);
+    }
+
     @Override
     public Pointer apply(Traversal traversal) {
         Pointer ptrPlan = irCoreLib.initLogicalPlan();
         IntByReference oprIdx = new IntByReference(0);
         List<Step> steps = traversal.asAdmin().getSteps();
         for (Step step : steps) {
-            Function<Step, Supplier> stepTransform = stepTransformMapper.get(step.getClass());
-            if (stepTransform == null) {
-                throw new UnsupportedOperationException("step " + step.getClass() + " is unsupported currently");
-            }
-            Supplier<Pointer> irOpSupplier = stepTransform.apply(step);
+            Supplier<Pointer> irOpSupplier = getIrOpSupplier(step);
             appendIrOp(ptrPlan, irOpSupplier, oprIdx.getValue(), oprIdx);
         }
         return ptrPlan;

@@ -22,6 +22,8 @@ public interface IrCoreLibrary extends Library {
 
     Pointer initScanOperator(FfiScanOpt opt);
 
+    ResultCode setScanPredicate(Pointer scan, String predicate);
+
     ResultCode addScanTableName(Pointer scan, FfiNameOrId.ByValue tableName);
 
     ResultCode appendScanOperator(Pointer plan, Pointer scan, int parent, IntByReference oprIdx);
