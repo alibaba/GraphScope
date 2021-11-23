@@ -13,8 +13,10 @@
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 
-use crate::graph::element::Element;
-use crate::graph::property::{Details, DynDetails, ID};
+use crate::expr::eval::Context;
+use crate::graph::element::{Element, GraphElement};
+use crate::graph::property::{Details, DynDetails};
+use crate::graph::ID;
 use dyn_type::BorrowObject;
 use ir_common::NameOrId;
 use pegasus_common::codec::{Decode, Encode, ReadExt, WriteExt};
@@ -30,20 +32,22 @@ pub struct Edge {
 }
 
 impl Element for Edge {
-    fn id(&self) -> Option<ID> {
-        Some(self.details.get_id())
-    }
-
-    fn label(&self) -> Option<&NameOrId> {
-        Some(self.details.get_label())
-    }
-
     fn details(&self) -> Option<&DynDetails> {
         Some(&self.details)
     }
 
     fn as_borrow_object(&self) -> BorrowObject {
-        self.id().unwrap().into()
+        self.id().into()
+    }
+}
+
+impl GraphElement for Edge {
+    fn id(&self) -> ID {
+        self.details.get_id()
+    }
+
+    fn label(&self) -> Option<&NameOrId> {
+        self.details.get_label()
     }
 }
 
@@ -64,6 +68,14 @@ impl Edge {
 
     pub fn set_dst_label(&mut self, label: NameOrId) {
         self.dst_label = Some(label);
+    }
+
+    pub fn get_src_label(&self) -> Option<&NameOrId> {
+        self.src_label.as_ref()
+    }
+
+    pub fn get_dst_label(&self) -> Option<&NameOrId> {
+        self.dst_label.as_ref()
     }
 }
 
@@ -92,5 +104,11 @@ impl Decode for Edge {
             dst_label,
             details,
         })
+    }
+}
+
+impl Context<Edge> for Edge {
+    fn get(&self, _tag: Option<&NameOrId>) -> Option<&Edge> {
+        Some(&self)
     }
 }
