@@ -8,6 +8,10 @@ spec:
   containers:
     - name: curl
       image: curlimages/curl:7.65.3
-      command: ['sh']
-      args: ['-c', 'while ! curl {{ include "graphscope-store.frontend.fullname" . }}.{{ .Release.Namespace }}:55555 --output -; do sleep 1 && echo -n .; done']
+      command:
+        - /bin/sh
+        - -c
+        - while sleep 3 && ! curl {{ include "graphscope-store.frontend.fullname" . }}.{{ .Release.Namespace }}:55555 --output -;
+            do echo -n .;
+          done
   restartPolicy: Never
