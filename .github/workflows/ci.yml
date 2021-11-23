@@ -849,7 +849,7 @@ jobs:
         rm -rf /tmp/hadoop* || true
         helm uninstall ci || true
         kubectl delete pvc -l app.kubernetes.io/instance=ci --wait=false || true
-        kubectl delete pod ci-graphscope-store-frontend-test-rpc-service --wait=false || true
+        kubectl delete pod ci-graphscope-store-frontend-test-grpc-service ci-graphscope-store-frontend-test-gremlin-service --wait=false || true
         sudo docker rmi -f registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-store:${{ github.sha }} || true
 
 
