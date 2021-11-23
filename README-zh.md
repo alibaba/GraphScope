@@ -326,8 +326,7 @@ GraphScope Python 包与 GraphScope docker 镜像是独立构建的。
 如果您正在开发 Python 客户端且未修改 protobuf 文件，则 GraphScope docker 镜像不需要重新构建。您只需要在本地重新安装 Python 客户端。
 
 ```bash
-cd python
-python3 setup.py install
+make client
 ```
 
 请注意，图学习引擎的客户端具有 C/C++ 扩展模块，并需要额外的构建环境。
@@ -338,17 +337,7 @@ python3 setup.py install
 为了验证您所开发功能的正确性，您所做的代码更改应通过我们的测试。通过以下脚本执行测试流程。
 
 ```bash
-# for the first time, run this script to install make, doxygen for docs and java env for testing.
-# ./scripts/prepare_dev.sh
-
-# run gae related test cases
-cd python && python3 -m pytest -s -v ./tests/unittest
-# or run the selected cases on a certain module e.g.,
-cd python && python3 -m pytest -s -v ./tests/unittest/test_udf_app.py [-k test_create_cython_app]
-
-# run gie gaia or gle related test cases
-cp python/tests/local/test_run_locally.py /tmp/test_run_locally.py
-cd tmp && python3 -m pytest -s -v ./test_run_locally.py [-k test_enable_gaia]
+make test
 ```
 
 
@@ -369,6 +358,11 @@ open docs/_build/html/index.html
 ## 许可协议
 
 GraphScope 遵循 [Apache License 2.0](https://www.apache.org/licenses/LICENSE-2.0) 开源许可协议。请注意，代码库中的一些第三方库可能有不同的开源许可协议。
+
+
+## 论文
+- Wenfei Fan, Tao He, Longbin Lai, Xue Li, Yong Li, Zhao Li, Zhengping Qian, Chao Tian, Lei Wang, Jingbo Xu, Youyang Yao, Qiang Yin, Wenyuan Yu, Jingren Zhou, Diwen Zhu, Rong Zhu. [GraphScope: A Unified Engine For Big Graph Processing](http://vldb.org/pvldb/vol14/p2879-qian.pdf). The 47th International Conference on Very Large Data Bases (VLDB), industry, 2021.
+- Jingbo Xu, Zhanning Bai, Wenfei Fan, Longbin Lai, Xue Li, Zhao Li, Zhengping Qian, Lei Wang, Yanyan Wang, Wenyuan Yu, Jingren Zhou. [GraphScope: A One-Stop Large Graph Processing System](http://vldb.org/pvldb/vol14/p2703-xu.pdf). The 47th International Conference on Very Large Data Bases (VLDB), demo, 2021
 
 
 ## 贡献
