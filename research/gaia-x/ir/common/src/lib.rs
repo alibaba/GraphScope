@@ -421,6 +421,14 @@ impl From<pb::Limit> for pb::logical_plan::Operator {
     }
 }
 
+impl From<pb::GetDetails> for pb::logical_plan::Operator {
+    fn from(opr: pb::GetDetails) -> Self {
+        pb::logical_plan::Operator {
+            opr: Some(pb::logical_plan::operator::Opr::Details(opr)),
+        }
+    }
+}
+
 impl From<pb::EdgeExpand> for pb::logical_plan::Operator {
     fn from(opr: pb::EdgeExpand) -> Self {
         pb::logical_plan::Operator {

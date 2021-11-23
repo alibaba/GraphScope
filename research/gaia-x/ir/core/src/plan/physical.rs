@@ -149,6 +149,16 @@ impl AsPhysical for pb::GetV {
     }
 }
 
+impl AsPhysical for pb::GetDetails {
+    fn add_job_builder(&self, builder: &mut JobBuilder) -> PhysicalResult<()> {
+        simple_add_job_builder(
+            builder,
+            &pb::logical_plan::Operator::from(self.clone()),
+            PegasusOpr::Map,
+        )
+    }
+}
+
 impl AsPhysical for pb::Limit {
     fn add_job_builder(&self, builder: &mut JobBuilder) -> PhysicalResult<()> {
         if let Some(range) = &self.range {

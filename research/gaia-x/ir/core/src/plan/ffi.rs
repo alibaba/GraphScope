@@ -462,6 +462,7 @@ enum Opr {
     EdgeExpand,
     PathExpand,
     Limit,
+    GetDetails,
     OrderBy,
     Apply,
 }
@@ -648,6 +649,19 @@ fn process_params(ptr: *const c_void, key: ParamsKey, val: FfiNameOrId, opr: Opr
                     _ => unreachable!(),
                 }
                 std::mem::forget(scan);
+            }
+            Opr::GetDetails => {
+                let mut details = unsafe { Box::from_raw(ptr as *mut pb::GetDetails) };
+                match key {
+                    ParamsKey::Tag => details.tag = pb.unwrap(),
+                    ParamsKey::Column => {
+                        if let Some(col) = pb.unwrap() {
+                            details.columns.push(col);
+                        }
+                    }
+                    _ => unreachable!(),
+                }
+                std::mem::forget(details);
             }
             _ => unreachable!(),
         }
@@ -1515,6 +1529,53 @@ mod limit {
     #[no_mangle]
     pub extern "C" fn destroy_limit_operator(ptr: *const c_void) {
         destroy_ptr::<pb::Limit>(ptr)
+    }
+}
+
+mod details {
+    use super::*;
+
+    /// To initialize a get details operator
+    #[no_mangle]
+    pub extern "C" fn init_get_details(is_all: bool) -> *const c_void {
+        let details = Box::new(pb::GetDetails {
+            tag: None,
+            columns: vec![],
+            is_all,
+        });
+
+        Box::into_raw(details) as *const c_void
+    }
+
+    /// Set the tag of the entity to get details
+    #[no_mangle]
+    pub extern "C" fn set_details_tag(ptr_details: *const c_void, tag: FfiNameOrId) -> ResultCode {
+        process_params(ptr_details, ParamsKey::Tag, tag, Opr::GetDetails)
+    }
+
+    #[no_mangle]
+    pub extern "C" fn add_details_property(
+        ptr_details: *const c_void,
+        property: FfiNameOrId,
+    ) -> ResultCode {
+        process_params(ptr_details, ParamsKey::Column, property, Opr::GetDetails)
+    }
+
+    /// Append a get details operator to the logical plan
+    #[no_mangle]
+    pub extern "C" fn append_details_operator(
+        ptr_plan: *const c_void,
+        ptr_details: *const c_void,
+        parent: i32,
+        id: *mut i32,
+    ) -> ResultCode {
+        let details = unsafe { Box::from_raw(ptr_details as *mut pb::GetDetails) };
+        append_operator(ptr_plan, details.as_ref().clone().into(), vec![parent], id)
+    }
+
+    #[no_mangle]
+    pub extern "C" fn destroy_details_operator(ptr: *const c_void) {
+        destroy_ptr::<pb::GetDetails>(ptr)
     }
 }
 
