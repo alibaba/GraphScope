@@ -29,14 +29,13 @@ Let's begin with the standalone mode.
 
 ### Installation for Standalone Mode
 
-GraphScope pre-compiled package is distributed as a python package with and can be easily installed with `pip`.
+GraphScope pre-compiled package is distributed as a python package and can be easily installed with `pip`.
 
 ```bash
 pip3 install graphscope
 ```
 
-Note that `graphscope` requires `Python` >= 3.6 and `pip` >= 19.0.     
-The package is built for and tested on the most popular Linux (Ubuntu 18.04+ / CentOS 7+) and macOS (version 10.15+) distributions. For Windows users, you may want to install Ubuntu on WSL2 to use this package.
+Note that `graphscope` requires `Python` >= 3.6 and `pip` >= 19.0. The package is built for and tested on the most popular Linux (Ubuntu 18.04+ / CentOS 7+) and macOS (version 10.15+) distributions. For Windows users, you may want to install Ubuntu on WSL2 to use this package.
 
 Next, we will walk you through a concrete example to illustrate how GraphScope can be used by data scientists to effectively analyze large graphs.
 
@@ -205,7 +204,7 @@ config = {
 train(config, lg)
 ```
 
-A python script with the entire process is availabe [node_classification_on_citation.ipynb](tutorials/10_node_classification_on_citation.ipynb), you may try it out by yourself. 
+A python script with the entire process is availabe [here](https://colab.research.google.com/github/alibaba/GraphScope/blob/main/tutorials/1_node_classification_on_citation.ipynb), you may try it out by yourself. 
 
 
 ### Processing Large Graph on Kubernetes Cluster
@@ -265,7 +264,7 @@ sess = graphscope.session(mount_dataset="/dataset", k8s_service_type="LoadBalanc
 A session tries to launch a `coordinator`, which is the entry for the back-end engines. The coordinator manages a cluster of resources (k8s pods), and the interactive/analytical/learning engines ran on them. For each pod in the cluster, there is a vineyard instance at service for distributed data in memory.
 
 
-### Load a graph and processing computation tasks
+### Loading a graph and processing computation tasks
 
 Similar to the standalone mode, we can still use the functions to load a graph easily.
 
@@ -281,7 +280,7 @@ g = load_ogbn_mag(sess, "/dataset/ogbn_mag_small/")
 Here, the `g` is loaded in parallel via vineyard and stored in vineyard instances in the cluster managed by the session.
 
 Next, we can conduct graph queries with Gremlin, invoke various graph algorithms, or run graph-based neural network tasks like we did in the standalone mode.
-We do not repeat code here, but a `.ipynb` processing the classification task on citation network is available .
+We do not repeat code here, but a `.ipynb` processing the classification task on k8s is available on the [Playground](https://try.graphscope.app/).
 
 ### Closing the session
 
