@@ -53,7 +53,7 @@
     <maven-surefire-plugin.version>3.0.0-M4</maven-surefire-plugin.version>
     <odps.sdk.version>0.36.4</odps.sdk.version>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    <slf4j-api.version>1.7.25</slf4j-api.version>
+    <slf4j-api.version>1.7.21</slf4j-api.version>
   </properties>
   <dependencyManagement>
     <dependencies>
