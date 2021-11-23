@@ -92,31 +92,6 @@ impl From<FnGenError> for BuildJobError {
     }
 }
 
-#[derive(Debug)]
-pub struct KeyedError {
-    desc: String,
-}
-
-impl std::fmt::Display for KeyedError {
-    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
-        write!(f, "Get key failed: {}", self.desc)
-    }
-}
-
-impl std::error::Error for KeyedError {}
-
-impl From<String> for KeyedError {
-    fn from(desc: String) -> Self {
-        KeyedError { desc }
-    }
-}
-
-impl From<&str> for KeyedError {
-    fn from(desc: &str) -> Self {
-        desc.to_string().into()
-    }
-}
-
 /// Errors that occur when execute a udf in Runtime
 #[derive(Debug)]
 pub enum FnExecError {
@@ -125,11 +100,11 @@ pub enum FnExecError {
     /// Query storage error
     QueryStoreError(String),
     /// Keyed error
-    GetTagError(KeyedError),
+    GetTagError(String),
     /// Evaluating expressions error
     ExprEvalError(ExprError),
     /// Unexpected data type error
-    UnExpectedDataType(String),
+    UnExpectedData(String),
     /// Not supported error
     UnSupported(String),
 }
@@ -141,19 +116,13 @@ impl std::fmt::Display for FnExecError {
             FnExecError::QueryStoreError(e) => write!(f, "Query store error in exec {}", e),
             FnExecError::GetTagError(e) => write!(f, "Get tag error in exec {}", e),
             FnExecError::ExprEvalError(e) => write!(f, "Eval expression error in exec {}", e),
-            FnExecError::UnExpectedDataType(e) => write!(f, "Unexpected data type in exec {}", e),
+            FnExecError::UnExpectedData(e) => write!(f, "Unexpected data type in exec {}", e),
             FnExecError::UnSupported(e) => write!(f, "Op not supported error in exec {}", e),
         }
     }
 }
 
 impl std::error::Error for FnExecError {}
-
-impl From<KeyedError> for FnExecError {
-    fn from(e: KeyedError) -> Self {
-        FnExecError::GetTagError(e)
-    }
-}
 
 impl From<ExprError> for FnExecError {
     fn from(e: ExprError) -> Self {
@@ -180,7 +149,7 @@ impl From<FnExecError> for DynError {
                 let err: Box<dyn std::error::Error + Send + Sync> = e.into();
                 err
             }
-            FnExecError::UnExpectedDataType(_) => {
+            FnExecError::UnExpectedData(_) => {
                 let err: Box<dyn std::error::Error + Send + Sync> = e.into();
                 err
             }
@@ -190,4 +159,24 @@ impl From<FnExecError> for DynError {
             }
         }
     }
+}
+
+pub fn gen_unsupported_error(e: &str) -> FnGenError {
+    FnGenError::UnSupported(e.to_string())
+}
+
+pub fn query_store_error(e: &str) -> FnExecError {
+    FnExecError::QueryStoreError(e.to_string())
+}
+
+pub fn get_tag_error(e: &str) -> FnExecError {
+    FnExecError::GetTagError(e.to_string())
+}
+
+pub fn unexpected_data_error(e: &str) -> FnExecError {
+    FnExecError::UnExpectedData(e.to_string())
+}
+
+pub fn exec_unsupported_error(e: &str) -> FnExecError {
+    FnExecError::UnSupported(e.to_string())
 }

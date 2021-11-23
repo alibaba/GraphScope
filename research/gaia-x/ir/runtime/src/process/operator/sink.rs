@@ -22,14 +22,16 @@ use pegasus::api::function::{FnResult, MapFunction};
 
 pub struct RecordSinkEncoder {
     /// the given output fields; None means to output current entry;
-    sink_keys: Vec<Option<NameOrId>>,
+    sink_keys: Vec<NameOrId>,
+    is_output_head: bool,
 }
 
 // TODO(bingqing): gen RecordSinkEncoder from pb;
 impl Default for RecordSinkEncoder {
     fn default() -> Self {
         RecordSinkEncoder {
-            sink_keys: vec![None],
+            sink_keys: vec![],
+            is_output_head: true,
         }
     }
 }
@@ -38,10 +40,19 @@ impl MapFunction<Record, result_pb::Result> for RecordSinkEncoder {
     fn exec(&self, mut input: Record) -> FnResult<result_pb::Result> {
         let mut sink_columns = Vec::with_capacity(self.sink_keys.len());
         for sink_key in self.sink_keys.iter() {
-            let entry = input.take(sink_key.as_ref());
+            let entry = input.take(Some(sink_key));
             let entry_pb = entry.map(|entry| result_pb::Entry::from((*entry).clone()));
             let column_pb = result_pb::Column {
-                name_or_id: sink_key.clone().map(|key| key.into()),
+                name_or_id: Some(common_pb::NameOrId::from(sink_key.clone())),
+                entry: entry_pb,
+            };
+            sink_columns.push(column_pb);
+        }
+        if self.is_output_head {
+            let entry = input.take(None);
+            let entry_pb = entry.map(|entry| result_pb::Entry::from((*entry).clone()));
+            let column_pb = result_pb::Column {
+                name_or_id: None,
                 entry: entry_pb,
             };
             sink_columns.push(column_pb);

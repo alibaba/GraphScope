@@ -475,7 +475,8 @@ impl From<pb::GetV> for pb::logical_plan::Operator {
 pub fn object_to_pb_value(value: Object) -> common_pb::Value {
     let item = match value {
         Object::Primitive(v) => match v {
-            Primitives::Byte(v) => common_pb::value::Item::I32(v as i32),
+            // TODO: It seems that Byte is only used for bool for now
+            Primitives::Byte(v) => common_pb::value::Item::Boolean(!(v == 0)),
             Primitives::Integer(v) => common_pb::value::Item::I32(v),
             Primitives::Long(v) => common_pb::value::Item::I64(v),
             Primitives::ULLong(v) => common_pb::value::Item::Blob(v.to_be_bytes().to_vec()),

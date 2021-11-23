@@ -15,7 +15,7 @@
 mod get_v;
 mod project;
 
-use crate::error::{FnGenError, FnGenResult};
+use crate::error::{gen_unsupported_error, FnGenResult};
 use crate::process::record::Record;
 use ir_common::error::ParsePbError;
 use ir_common::generated::algebra as algebra_pb;
@@ -31,12 +31,12 @@ impl MapFuncGen for algebra_pb::logical_plan::Operator {
             match opr {
                 algebra_pb::logical_plan::operator::Opr::Project(project) => project.gen_map(),
                 algebra_pb::logical_plan::operator::Opr::Vertex(get_vertex) => get_vertex.gen_map(),
-                algebra_pb::logical_plan::operator::Opr::Path(_path) => Err(
-                    FnGenError::UnSupported("path is not supported yet".to_string()),
-                )?,
-                algebra_pb::logical_plan::operator::Opr::ShortestPath(_shortest_path) => Err(
-                    FnGenError::UnSupported("shortest_path is not supported yet".to_string()),
-                )?,
+                algebra_pb::logical_plan::operator::Opr::Path(_path) => {
+                    Err(gen_unsupported_error("path is not supported yet"))?
+                }
+                algebra_pb::logical_plan::operator::Opr::ShortestPath(_shortest_path) => {
+                    Err(gen_unsupported_error("shortest_path is not supported yet"))?
+                }
                 _ => Err(ParsePbError::from("algebra_pb op is not a map"))?,
             }
         } else {

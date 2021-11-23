@@ -13,11 +13,13 @@
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 
-use crate::error::{FnExecError, FnGenResult};
+use crate::error::{
+    exec_unsupported_error, get_tag_error, query_store_error, unexpected_data_error, FnExecError,
+    FnGenResult,
+};
 use crate::graph::element::{GraphElement, VertexOrEdge};
 use crate::graph::QueryParams;
 use crate::process::operator::map::MapFuncGen;
-use crate::process::operator::KeyedError;
 use crate::process::record::Record;
 use ir_common::generated::algebra as algebra_pb;
 use ir_common::generated::algebra::get_v::VOpt;
@@ -37,30 +39,20 @@ impl MapFunction<Record, Record> for GetVertexOperator {
     fn exec(&self, mut input: Record) -> FnResult<Record> {
         let entry = input
             .get(self.start_tag.as_ref())
-            .ok_or(FnExecError::GetTagError(KeyedError::from(
-                "get tag failed in GetVertexOperator",
-            )))?;
-        let vertex_or_edge = entry
-            .as_graph_element()
-            .ok_or(FnExecError::UnExpectedDataType(
-                "tag does not refer to a graph element".to_string(),
-            ))?;
+            .ok_or(get_tag_error("get tag failed in GetVertexOperator"))?;
+        let vertex_or_edge = entry.as_graph_element().ok_or(unexpected_data_error(
+            "tag does not refer to a graph element",
+        ))?;
         let id = match vertex_or_edge {
             VertexOrEdge::V(v) => match self.opt {
                 VOpt::This => v.id(),
-                _ => Err(FnExecError::UnExpectedDataType(
-                    "should be vertex entry".to_string(),
-                ))?,
+                _ => Err(unexpected_data_error("should be vertex entry"))?,
             },
             VertexOrEdge::E(e) => match self.opt {
                 VOpt::Start => e.src_id,
                 VOpt::End => e.dst_id,
-                VOpt::Other => Err(FnExecError::UnSupported(
-                    "VOpt ot Other is not supported".to_string(),
-                ))?,
-                VOpt::This => Err(FnExecError::UnExpectedDataType(
-                    "should be edge entry".to_string(),
-                ))?,
+                VOpt::Other => Err(exec_unsupported_error("VOpt ot Other is not supported"))?,
+                VOpt::This => Err(unexpected_data_error("should be edge entry"))?,
             },
         };
         let graph = crate::get_graph().ok_or(FnExecError::NullGraphError)?;
@@ -69,7 +61,7 @@ impl MapFunction<Record, Record> for GetVertexOperator {
             input.append(vertex, self.alias.clone());
             Ok(input)
         } else {
-            Err(FnExecError::QueryStoreError(format!(
+            Err(query_store_error(&format!(
                 "vertex with id {} not found",
                 id
             )))?

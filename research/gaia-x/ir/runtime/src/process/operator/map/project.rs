@@ -31,20 +31,22 @@ struct ProjectOperator {
 
 impl MapFunction<Record, Record> for ProjectOperator {
     fn exec(&self, mut input: Record) -> FnResult<Record> {
-        let mut new_record = Record::default();
-        for (evaluator, alias) in self.projected_columns.iter() {
-            let projected_result = evaluator
-                .eval(Some(&input))
-                .map_err(|e| FnExecError::from(e))?;
-            if self.is_append {
-                input.append(ObjectElement::Prop(projected_result), alias.clone());
-            } else {
-                new_record.append(ObjectElement::Prop(projected_result), alias.clone());
-            }
-        }
         if self.is_append {
+            for (evaluator, alias) in self.projected_columns.iter() {
+                let projected_result = evaluator
+                    .eval(Some(&input))
+                    .map_err(|e| FnExecError::from(e))?;
+                input.append(ObjectElement::Prop(projected_result), alias.clone());
+            }
             Ok(input)
         } else {
+            let mut new_record = Record::default();
+            for (evaluator, alias) in self.projected_columns.iter() {
+                let projected_result = evaluator
+                    .eval(Some(&input))
+                    .map_err(|e| FnExecError::from(e))?;
+                new_record.append(ObjectElement::Prop(projected_result), alias.clone());
+            }
             Ok(new_record)
         }
     }
