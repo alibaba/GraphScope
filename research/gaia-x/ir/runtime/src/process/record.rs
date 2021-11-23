@@ -111,6 +111,9 @@ impl Record {
         }
     }
 
+    /// To join this record with `other` record. After the join, the columns
+    /// from both sides will be merged (and deduplicated). The head of the joined
+    /// record will be specified according to `HeadJoinOpt`.
     pub fn join(mut self, mut other: Record, opt: Option<HeadJoinOpt>) -> Record {
         for column in other.columns.drain(..) {
             if !self.columns.contains_key(&column.0) {
@@ -123,15 +126,16 @@ impl Record {
             Some(HeadJoinOpt::Left) => self.curr,
             Some(HeadJoinOpt::Right) => other.curr,
         };
+
         self
     }
 }
 
-/// Join Option for specifying how to store the current entries in record join
+/// `HeadJoinOpt` specifies which head of the recores are to be applied for the joined record
 pub enum HeadJoinOpt {
-    /// preserve current entry in left record
+    /// Store the head as the head of the left record of the join
     Left,
-    /// preserve current entry in right record
+    /// Store the head as the head of the right record of the join
     Right,
 }
 
@@ -188,6 +192,7 @@ impl Element for RecordElement {
         match self {
             RecordElement::OnGraph(vertex_or_edge) => vertex_or_edge.as_borrow_object(),
             RecordElement::OffGraph(obj_element) => match obj_element {
+                // TODO(longbin) We may need a `None` option for `BorrowObject`
                 ObjectElement::None => BorrowObject::String(""),
                 ObjectElement::Prop(obj) | ObjectElement::Agg(obj) => obj.as_borrow(),
                 ObjectElement::Count(cnt) => (*cnt).into(),
