@@ -37,7 +37,7 @@ pub enum FnGenError {
 }
 
 impl FnGenError {
-    pub fn unsupported_error(e: &str) -> FnGenError {
+    pub fn unsupported_error(e: &str) -> Self {
         FnGenError::UnSupported(e.to_string())
     }
 }
@@ -116,19 +116,19 @@ pub enum FnExecError {
 }
 
 impl FnExecError {
-    pub fn query_store_error(e: &str) -> FnExecError {
+    pub fn query_store_error(e: &str) -> Self {
         FnExecError::QueryStoreError(e.to_string())
     }
 
-    pub fn get_tag_error(e: &str) -> FnExecError {
+    pub fn get_tag_error(e: &str) -> Self {
         FnExecError::GetTagError(e.to_string())
     }
 
-    pub fn unexpected_data_error(e: &str) -> FnExecError {
+    pub fn unexpected_data_error(e: &str) -> Self {
         FnExecError::UnExpectedData(e.to_string())
     }
 
-    pub fn unsupported_error(e: &str) -> FnExecError {
+    pub fn unsupported_error(e: &str) -> Self {
         FnExecError::UnSupported(e.to_string())
     }
 }
