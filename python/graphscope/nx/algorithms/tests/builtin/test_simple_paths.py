@@ -24,7 +24,7 @@ from graphscope.nx.tests.utils import almost_equal
 
 @pytest.mark.skipif(
     os.environ.get("DEPLOYMENT", None) == "standalone",
-    reason="all_simple_paths not work on standalone",
+    reason="FIXME(weibin): all_simple_paths does not work on standalone",
 )
 @pytest.mark.usefixtures("graphscope_session")
 class TestIsSimplePath:
@@ -100,7 +100,7 @@ class TestIsSimplePath:
 
 @pytest.mark.skipif(
     os.environ.get("DEPLOYMENT", None) == "standalone",
-    reason="all_simple_paths not work on standalone",
+    reason="FIXME(weibin): all_simple_paths does not work on standalone",
 )
 @pytest.mark.usefixtures("graphscope_session")
 class TestAllSimplePaths:
@@ -267,7 +267,7 @@ class TestAllSimplePaths:
 
 @pytest.mark.skipif(
     os.environ.get("DEPLOYMENT", None) == "standalone",
-    reason="all_simple_paths not work on standalone",
+    reason="FIXME(weibin): all_simple_paths does not work on standalone",
 )
 @pytest.mark.usefixtures("graphscope_session")
 class TestAllSimpleEdgePaths:

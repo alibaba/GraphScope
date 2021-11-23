@@ -90,7 +90,7 @@ class NodeBoundary : public AppBase<FRAG_T, NodeBoundaryContext<FRAG_T>>,
   }
 
  private:
-  void writeToCtx(const fragment_& frag, context_t& ctx) {
+  void writeToCtx(const fragment_t& frag, context_t& ctx) {
     // reduce and process boundary on worker-0
     std::set<vid_t> all_boundary;
     AllReduce(ctx.boundary, all_boundary,

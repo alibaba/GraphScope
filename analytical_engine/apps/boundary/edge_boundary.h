@@ -94,7 +94,7 @@ class EdgeBoundary : public AppBase<FRAG_T, EdgeBoundaryContext<FRAG_T>>,
   }
 
  private:
-  void writeToCtx(const fragment_& frag, context_t& ctx) {
+  void writeToCtx(const fragment_t& frag, context_t& ctx) {
     std::set<std::pair<vid_t, vid_t>> all_boundary;
     AllReduce(ctx.boundary, all_boundary,
               [](std::set<std::pair<vid_t, vid_t>>& out,

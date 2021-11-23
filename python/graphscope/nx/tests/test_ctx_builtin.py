@@ -319,7 +319,7 @@ class TestBuiltInApp:
 
     @pytest.mark.skipif(
         os.environ.get("DEPLOYMENT", None) == "standalone",
-        reason="all_simple_paths not work on standalone",
+        reason="FIXME(weibin): all_simple_paths does not work on standalone",
     )
     def test_all_simple_paths(self):
         ans = nx.builtin.all_simple_paths(self.p2p, 1, 4, cutoff=10)
