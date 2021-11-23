@@ -6,7 +6,7 @@ It also ships with a dataset download module, with pre-configured schemas for kn
 
 ## Basic usage
 
-TODO: some dataset violate this convention (ogbn_mag_small, ppi, u2i)
+TODO: some datasets violate this convention (ogbn_mag_small, ppi, u2i, ldbc-snb)
 
 Users can always use a function named like `load_XXX` to load a builtin dataset, where the `XXX` represent the name of graph. These functions can be imported by `from graphscope.dataset import load_XXX` in Python. All available datasets are listed in the next section.
 
@@ -47,14 +47,14 @@ You are welcomed to contribute a dataset to GraphScope by submitting a Pull Requ
 
 - Find a popular and appropriate graph data. Reformat and organize it as vertex/edge files. If it is a property graph, make one file for each label of vertices/edges. The columns in vertex files start with the ID, followed by properties. While the columns of edge files start with source vertex ID, destination vertex ID, and followed by properties. e.g., 
 
-```csv
+```shell
 # Vertex file format
 id,name,score
 0,James,95
 1,Helen,85
 ```
 
-```csv
+```shell
 # Edge file format (represents )
 sender,receiver,msg_count,last_sent
 0,1,3,2021-11-23
