@@ -8,14 +8,13 @@ It also ships with a dataset download module, with pre-configured schemas for kn
 
 TODO: some dataset violate this convention (ogbn_mag_small, ppi, u2i)
 
-The format of the graph loading function is always `load_XXX`, where the `XXX` represent the name of dataset. And they can be imported by `from graphscope.dataset import load_XXX`.
-A set of avaiable datasets is listed in the next section.
+Users can always use a function named like `load_XXX` to load a builtin dataset, where the `XXX` represent the name of graph. These functions can be imported by `from graphscope.dataset import load_XXX` in Python. All available datasets are listed in the next section.
 
 The signature of the function is `load_XXX(sess=None, prefix=None)`, where
-  - `sess` represents the session in which the graph is loaded. `None` means the default session.
-  - `prefix` represents where the data files are located in. `None` means let graphscope download it from internet.
+  - `sess` represents the session which the graph is loaded. The default value `None` means the default session(local session).
+  - `prefix` assigns the existing files location. By default, users do not need to provide this and `graphscope` will download it from the Internet.
 
-For example, let's load the cora dataset in two lines:
+For example, we can load the `cora` dataset as a `Graph` in `graphscope` with two lines of code:
 
 ```python
 from graphscope.dataset import load_cora
@@ -46,22 +45,23 @@ The list is growing. Hopefully, it would support all datasets from [ogb](https:/
 
 You are welcomed to contribute a dataset to GraphScope by submitting a Pull Request. You may following these to add a dataset.
 
-- Find a popular and appropriate graph data. Reformat and organize it as vertex/edge files. If it is a property graph, make one file for each label of vertices/edges. Vertex files started with the ID, followed by properties; Edge files started with source vertex ID, destination vertex ID, and followed by properties.
+- Find a popular and appropriate graph data. Reformat and organize it as vertex/edge files. If it is a property graph, make one file for each label of vertices/edges. The columns in vertex files start with the ID, followed by properties. While the columns of edge files start with source vertex ID, destination vertex ID, and followed by properties. e.g., 
+
 ```csv
 # Vertex file format
-id,prop_1,prop_2
-0,0.1,a
-1,0.2,b
+id,name,score
+0,James,95
+1,Helen,85
 ```
 
 ```csv
-# Edge file format
-src_id,dst_id,prop_1,prop_2
-0,1,0.3,1000
+# Edge file format (represents )
+sender,receiver,msg_count,last_sent
+0,1,3,2021-11-23
 ```
 
 - Put all files into a folder and name it as the graph name.
-- Compress the folder, then upload the compressed file together with the original folder to the dataset folder of the OSS bucket. e.g., assume you have a folder named `foo`, and two files `foo/nodes.csv` and `foo/edge.csv`, the files in the OSS bucket should be organized as,
+- Compress the folder, then upload the compressed file together with the original folder to the dataset folder of the OSS bucket. e.g., assume you have a folder named `foo`, and two files `foo/nodes.csv` and `foo/edge.csv`, the files in the OSS bucket should be organized as (or see [example](https://github.com/GraphScope/gstest/tree/master/ogbn_mag_small)),
 ```bash
 dataset
 |-- foo.tar.gz
@@ -69,6 +69,5 @@ dataset
     |-- nodes.csv
     |-- edge.csv
 ```
-  See [ogbn_mag](https://github.com/GraphScope/gstest/tree/master/ogbn_mag_small) as a reference for the above steps.
-- Write the loading function load_foo in a new file named `foo.py` inside folder `python/graphscope/dataset/`.  (see [dataset](https://github.com/alibaba/GraphScope/tree/main/python/graphscope/dataset))
+- Write the loading function load_foo in a new file named `foo.py` inside folder `python/graphscope/dataset/`.  (see [example](https://github.com/alibaba/GraphScope/blob/docs/python/graphscope/dataset/ogbn_mag.py))
 - A corresponding unit test is appreciated! See [test_download.py](https://github.com/alibaba/GraphScope/blob/main/python/tests/unittest/test_download.py).
