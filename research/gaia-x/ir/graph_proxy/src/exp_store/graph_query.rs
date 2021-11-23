@@ -460,8 +460,8 @@ impl Details for LazyVertexDetails {
         self.id as ID
     }
 
-    fn get_label(&self) -> &NameOrId {
-        &self.label
+    fn get_label(&self) -> Option<&NameOrId> {
+        Some(&self.label)
     }
 }
 

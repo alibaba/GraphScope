@@ -39,7 +39,7 @@ pub trait Element {
 /// A field that is further a graph element
 pub trait GraphElement: Element {
     fn id(&self) -> ID;
-    fn label(&self) -> &NameOrId;
+    fn label(&self) -> Option<&NameOrId>;
 }
 
 impl Element for () {
@@ -105,7 +105,7 @@ impl GraphElement for VertexOrEdge {
         }
     }
 
-    fn label(&self) -> &NameOrId {
+    fn label(&self) -> Option<&NameOrId> {
         match self {
             VertexOrEdge::V(v) => v.label(),
             VertexOrEdge::E(e) => e.label(),

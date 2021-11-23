@@ -17,7 +17,7 @@ use crate::graph::element::{Edge, GraphElement, Vertex, VertexOrEdge};
 use crate::process::record::{Entry, ObjectElement, Record, RecordElement};
 use ir_common::generated::common as common_pb;
 use ir_common::generated::result as result_pb;
-use ir_common::{object_to_pb_value, NameOrId};
+use ir_common::NameOrId;
 use pegasus::api::function::{FnResult, MapFunction};
 
 pub struct RecordSinkEncoder {
@@ -104,8 +104,7 @@ impl From<RecordElement> for result_pb::Element {
             RecordElement::OffGraph(o) => match o {
                 ObjectElement::None => None,
                 ObjectElement::Prop(obj) | ObjectElement::Agg(obj) => {
-                    let value_pb = object_to_pb_value(obj);
-                    Some(result_pb::element::Inner::Object(value_pb))
+                    Some(result_pb::element::Inner::Object(obj.into()))
                 }
                 ObjectElement::Count(cnt) => {
                     let item = if cnt <= (i64::MAX as u64) {
@@ -126,7 +125,7 @@ impl From<Vertex> for result_pb::Vertex {
     fn from(v: Vertex) -> Self {
         result_pb::Vertex {
             id: v.id() as i64,
-            label: Some(v.label().clone().into()),
+            label: v.label().map(|label| label.clone().into()),
             // TODO: return detached vertex without property for now
             properties: vec![],
         }
@@ -137,7 +136,7 @@ impl From<Edge> for result_pb::Edge {
     fn from(e: Edge) -> Self {
         result_pb::Edge {
             id: e.id() as i64,
-            label: Some(e.label().clone().into()),
+            label: e.label().map(|label| label.clone().into()),
             src_id: e.src_id as i64,
             src_label: e.get_src_label().map(|label| label.clone().into()),
             dst_id: e.dst_id as i64,

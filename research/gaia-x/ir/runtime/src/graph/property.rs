@@ -95,12 +95,12 @@ pub trait Details: Send + Sync + AsAny {
 
     fn get_id(&self) -> ID;
 
-    fn get_label(&self) -> &NameOrId;
+    fn get_label(&self) -> Option<&NameOrId>;
 
     fn get(&self, prop_key: &PropKey) -> Option<BorrowObject> {
         match prop_key {
             PropKey::Id => Some(self.get_id().into()),
-            PropKey::Label => Some(self.get_label().as_borrow_object()),
+            PropKey::Label => self.get_label().map(|label| label.as_borrow_object()),
             PropKey::Key(k) => self.get_property(k),
         }
     }
@@ -128,7 +128,7 @@ impl Details for DynDetails {
         self.inner.get_id()
     }
 
-    fn get_label(&self) -> &NameOrId {
+    fn get_label(&self) -> Option<&NameOrId> {
         self.inner.get_label()
     }
 }
@@ -214,8 +214,8 @@ impl Details for DefaultDetails {
         self.id
     }
 
-    fn get_label(&self) -> &NameOrId {
-        &self.label
+    fn get_label(&self) -> Option<&NameOrId> {
+        Some(&self.label)
     }
 }
 

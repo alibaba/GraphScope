@@ -48,7 +48,7 @@ impl GraphElement for Vertex {
         self.details.get_id()
     }
 
-    fn label(&self) -> &NameOrId {
+    fn label(&self) -> Option<&NameOrId> {
         self.details.get_label()
     }
 }

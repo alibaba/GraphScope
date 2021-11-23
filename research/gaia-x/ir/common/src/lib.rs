@@ -472,23 +472,25 @@ impl From<pb::GetV> for pb::logical_plan::Operator {
     }
 }
 
-pub fn object_to_pb_value(value: Object) -> common_pb::Value {
-    let item = match value {
-        Object::Primitive(v) => match v {
-            // TODO: It seems that Byte is only used for bool for now
-            Primitives::Byte(v) => common_pb::value::Item::Boolean(!(v == 0)),
-            Primitives::Integer(v) => common_pb::value::Item::I32(v),
-            Primitives::Long(v) => common_pb::value::Item::I64(v),
-            Primitives::ULLong(v) => common_pb::value::Item::Blob(v.to_be_bytes().to_vec()),
-            Primitives::Float(v) => common_pb::value::Item::F64(v),
-        },
-        Object::String(s) => common_pb::value::Item::Str(s),
-        Object::Blob(b) => common_pb::value::Item::Blob(b.to_vec()),
-        Object::DynOwned(_u) => {
-            todo!()
-        }
-    };
-    common_pb::Value { item: Some(item) }
+impl From<Object> for common_pb::Value {
+    fn from(value: Object) -> Self {
+        let item = match value {
+            Object::Primitive(v) => match v {
+                // TODO: It seems that Byte is only used for bool for now
+                Primitives::Byte(v) => common_pb::value::Item::Boolean(!(v == 0)),
+                Primitives::Integer(v) => common_pb::value::Item::I32(v),
+                Primitives::Long(v) => common_pb::value::Item::I64(v),
+                Primitives::ULLong(v) => common_pb::value::Item::Blob(v.to_be_bytes().to_vec()),
+                Primitives::Float(v) => common_pb::value::Item::F64(v),
+            },
+            Object::String(s) => common_pb::value::Item::Str(s),
+            Object::Blob(b) => common_pb::value::Item::Blob(b.to_vec()),
+            Object::DynOwned(_u) => {
+                todo!()
+            }
+        };
+        common_pb::Value { item: Some(item) }
+    }
 }
 
 impl Encode for result_pb::Result {
