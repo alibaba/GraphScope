@@ -69,7 +69,6 @@ jobs:
     # Require the user id of the self-hosted is 1001, # which may need to be
     # configured manually when a new self-hosted runenr is added.
     runs-on: self-hosted
-    container: registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-vineyard:v0.3.9
     defaults:
       run:
         shell: bash --noprofile --norc -eo pipefail {0}
