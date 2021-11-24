@@ -18,6 +18,7 @@ package com.alibaba.graphscope.example.property.sssp;
 import com.alibaba.graphscope.app.ParallelPropertyAppBase;
 import com.alibaba.graphscope.context.PropertyParallelContextBase;
 import com.alibaba.graphscope.ds.EdgeDataColumn;
+import com.alibaba.graphscope.ds.GSVertexArray;
 import com.alibaba.graphscope.ds.PropertyNbrUnit;
 import com.alibaba.graphscope.ds.PropertyRawAdjList;
 import com.alibaba.graphscope.ds.Vertex;
@@ -75,6 +76,12 @@ public class ParallelPropertySSSPVertexData
             }
         }
         messageManager.ForceContinue();
+        VertexRange<Long> innerVertices = fragment.innerVertices(0);
+        // update result
+        GSVertexArray<Double> cppPartialResult0 = ctx.cppPartialResult.get(0);
+        for (Vertex<Long> vertex : innerVertices.locals()) {
+            cppPartialResult0.setValue(vertex, ctx.partialResults.get(0));
+        }
 
         ctx.curModified.assign(ctx.nextModified);
         ctx.nextModified.clear();
@@ -115,6 +122,12 @@ public class ParallelPropertySSSPVertexData
         // check condition to move forward
         if (!ctx.nextModified.partialEmpty(0, (int) fragment.getInnerVerticesNum(0))) {
             messageManager.ForceContinue();
+        }
+
+        // update result
+        GSVertexArray<Double> cppPartialResult0 = ctx.cppPartialResult.get(0);
+        for (Vertex<Long> vertex : innerVertices.locals()) {
+            cppPartialResult0.setValue(vertex, ctx.partialResults.get(0));
         }
 
         ctx.curModified.assign(ctx.nextModified);
