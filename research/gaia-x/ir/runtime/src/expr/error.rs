@@ -14,11 +14,13 @@
 //! limitations under the License.
 //!
 
-use crate::expr::eval::OperatorDesc;
-use crate::expr::token::PartialToken;
+use std::fmt::Display;
+
 use dyn_type::CastError;
 use ir_common::error::ParsePbError;
-use std::fmt::Display;
+
+use crate::expr::eval::OperatorDesc;
+use crate::expr::token::PartialToken;
 
 pub type ExprResult<T> = Result<T, ExprError>;
 
@@ -64,21 +66,18 @@ impl Display for ExprError {
         match self {
             UnmatchedLRBraces => write!(f, "the left and right braces may not be matched"),
             IllegalEscapeSequence(s) => write!(f, "illegal escape sequence {:?}", s),
-            UnmatchedPartialToken {
-                first: s1,
-                second: s2,
-            } => write!(f, "partial token {:?} cannot be completed by {:?}", s1, s2),
+            UnmatchedPartialToken { first: s1, second: s2 } => {
+                write!(f, "partial token {:?} cannot be completed by {:?}", s1, s2)
+            }
             CastError(e) => write!(f, "casting error {:?}", e),
             MissingContext(var) => write!(f, "missing context for {:?}", var),
             ParsePbError(err) => write!(f, "parse protobuf error: {:?}", err),
             MissingOperands(opr) => write!(f, "missing operands for {:?}", opr),
             EmptyExpression => write!(f, "try to evaluate an empty expression"),
             NoneOperand(opr) => write!(f, "try to evaluate {:?} but obtain `None` value", opr),
-            UnmatchedOperator(opr) => write!(
-                f,
-                "meant to evaluate a certain operator, but obtain a different one： {:?}",
-                opr
-            ),
+            UnmatchedOperator(opr) => {
+                write!(f, "meant to evaluate a certain operator, but obtain a different one： {:?}", opr)
+            }
             OtherErr(e) => write!(f, "parse error {}", e),
         }
     }

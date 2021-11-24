@@ -19,6 +19,8 @@ mod common;
 
 #[cfg(test)]
 mod test {
+    use std::sync::Arc;
+
     use graph_proxy::{create_demo_graph, SimplePartition};
     use graph_store::ldbc::LDBCVertexParser;
     use graph_store::prelude::DefaultId;
@@ -32,28 +34,19 @@ mod test {
     use runtime::graph::element::{Element, GraphElement, VertexOrEdge};
     use runtime::graph::property::Details;
     use runtime::process::operator::flatmap::FlatMapFuncGen;
+    use runtime::process::operator::map::MapFuncGen;
     use runtime::process::operator::source::SourceOperator;
     use runtime::process::record::Record;
-    use std::sync::Arc;
 
     // g.V()
     fn source_gen(alias: Option<common_pb::NameOrId>) -> Box<dyn Iterator<Item = Record> + Send> {
         create_demo_graph();
-        let scan_opr_pb = pb::Scan {
-            scan_opt: 0,
-            alias,
-            params: None,
-        };
-        let mut source_opr_pb = pb::logical_plan::Operator {
-            opr: Some(pb::logical_plan::operator::Opr::Scan(scan_opr_pb)),
-        };
-        let source = SourceOperator::new(
-            &mut source_opr_pb,
-            1,
-            1,
-            Arc::new(SimplePartition { num_servers: 1 }),
-        )
-        .unwrap();
+        let scan_opr_pb = pb::Scan { scan_opt: 0, alias, params: None };
+        let mut source_opr_pb =
+            pb::logical_plan::Operator { opr: Some(pb::logical_plan::operator::Opr::Scan(scan_opr_pb)) };
+        let source =
+            SourceOperator::new(&mut source_opr_pb, 1, 1, Arc::new(SimplePartition { num_servers: 1 }))
+                .unwrap();
         source.gen_source(0).unwrap()
     }
 
@@ -95,8 +88,7 @@ mod test {
     }
 
     fn expand_test_with_source_tag(
-        source_tag: common_pb::NameOrId,
-        expand: pb::EdgeExpand,
+        source_tag: common_pb::NameOrId, expand: pb::EdgeExpand,
     ) -> ResultStream<Record> {
         let conf = JobConf::new("expand_test");
         let result = pegasus::run(conf, || {
@@ -116,16 +108,8 @@ mod test {
     // g.V().out()
     #[test]
     fn expand_test_01() {
-        let edge_expand_base = pb::ExpandBase {
-            v_tag: None,
-            direction: 0,
-            params: None,
-        };
-        let expand_opr_pb = pb::EdgeExpand {
-            base: Some(edge_expand_base),
-            is_edge: false,
-            alias: None,
-        };
+        let edge_expand_base = pb::ExpandBase { v_tag: None, direction: 0, params: None };
+        let expand_opr_pb = pb::EdgeExpand { base: Some(edge_expand_base), is_edge: false, alias: None };
         let mut result = expand_test(expand_opr_pb);
         let mut result_ids = vec![];
         let v2: DefaultId = LDBCVertexParser::to_global_id(2, 0);
@@ -153,16 +137,8 @@ mod test {
             predicate: None,
             requirements: vec![],
         };
-        let edge_expand_base = pb::ExpandBase {
-            v_tag: None,
-            direction: 0,
-            params: Some(query_param),
-        };
-        let expand_opr_pb = pb::EdgeExpand {
-            base: Some(edge_expand_base),
-            is_edge: true,
-            alias: None,
-        };
+        let edge_expand_base = pb::ExpandBase { v_tag: None, direction: 0, params: Some(query_param) };
+        let expand_opr_pb = pb::EdgeExpand { base: Some(edge_expand_base), is_edge: true, alias: None };
         let mut result = expand_test(expand_opr_pb);
         let mut result_edges = vec![];
         let v1: DefaultId = LDBCVertexParser::to_global_id(1, 0);
@@ -187,23 +163,13 @@ mod test {
             predicate: None,
             requirements: vec![],
         };
-        let edge_expand_base = pb::ExpandBase {
-            v_tag: None,
-            direction: 1,
-            params: Some(query_param),
-        };
-        let expand_opr_pb = pb::EdgeExpand {
-            base: Some(edge_expand_base),
-            is_edge: false,
-            alias: None,
-        };
+        let edge_expand_base = pb::ExpandBase { v_tag: None, direction: 1, params: Some(query_param) };
+        let expand_opr_pb = pb::EdgeExpand { base: Some(edge_expand_base), is_edge: false, alias: None };
         let mut result = expand_test(expand_opr_pb);
         let mut result_ids_with_prop = vec![];
         let v1: DefaultId = LDBCVertexParser::to_global_id(1, 0);
-        let expected_ids_with_prop = vec![
-            (v1, "marko".to_string().into()),
-            (v1, "marko".to_string().into()),
-        ];
+        let expected_ids_with_prop =
+            vec![(v1, "marko".to_string().into()), (v1, "marko".to_string().into())];
         while let Some(Ok(record)) = result.next() {
             if let Some(element) = record.get(None).unwrap().as_graph_element() {
                 result_ids_with_prop.push((
@@ -232,16 +198,8 @@ mod test {
             predicate: None,
             requirements: vec![],
         };
-        let edge_expand_base = pb::ExpandBase {
-            v_tag: None,
-            direction: 2,
-            params: Some(query_param),
-        };
-        let expand_opr_pb = pb::EdgeExpand {
-            base: Some(edge_expand_base),
-            is_edge: false,
-            alias: None,
-        };
+        let edge_expand_base = pb::ExpandBase { v_tag: None, direction: 2, params: Some(query_param) };
+        let expand_opr_pb = pb::EdgeExpand { base: Some(edge_expand_base), is_edge: false, alias: None };
         let mut result = expand_test(expand_opr_pb);
         let mut cnt = 0;
         let expected_result_num = 12;
@@ -301,16 +259,8 @@ mod test {
             predicate: Some(str_to_expr_pb("@.id == 2".to_string()).unwrap()),
             requirements: vec![],
         };
-        let edge_expand_base = pb::ExpandBase {
-            v_tag: None,
-            direction: 0,
-            params: Some(query_param),
-        };
-        let expand_opr_pb = pb::EdgeExpand {
-            base: Some(edge_expand_base),
-            is_edge: false,
-            alias: None,
-        };
+        let edge_expand_base = pb::ExpandBase { v_tag: None, direction: 0, params: Some(query_param) };
+        let expand_opr_pb = pb::EdgeExpand { base: Some(edge_expand_base), is_edge: false, alias: None };
         let mut result = expand_test(expand_opr_pb);
         let mut result_ids = vec![];
         let v2: DefaultId = LDBCVertexParser::to_global_id(2, 0);
@@ -321,5 +271,135 @@ mod test {
             }
         }
         assert_eq!(result_ids, expected_ids)
+    }
+
+    // g.V().outE('knows').inV()
+    #[test]
+    fn getv_test() {
+        let expand_opr = pb::EdgeExpand {
+            base: Some(pb::ExpandBase {
+                v_tag: None,
+                direction: 0,
+                params: Some(pb::QueryParams {
+                    table_names: vec![common_pb::NameOrId::from("knows".to_string())],
+                    columns: vec![],
+                    limit: None,
+                    predicate: None,
+                    requirements: vec![],
+                }),
+            }),
+            is_edge: true,
+            alias: None,
+        };
+
+        let getv_opr = pb::GetV {
+            tag: None,
+            opt: 1, // EndV
+            alias: None,
+        };
+
+        let conf = JobConf::new("getv_test");
+        let mut result = pegasus::run(conf, || {
+            let expand = expand_opr.clone();
+            let getv = getv_opr.clone();
+            |input, output| {
+                let mut stream = input.input_from(source_gen(None))?;
+                let flatmap_func = expand.gen_flat_map().unwrap();
+                stream = stream.flat_map(move |input| flatmap_func.exec(input))?;
+                let map_func = getv.gen_map().unwrap();
+                stream = stream.map(move |input| map_func.exec(input))?;
+                stream.sink_into(output)
+            }
+        })
+        .expect("build job failure");
+
+        let expected_ids = vec![2, 4];
+        let mut result_ids = vec![];
+        while let Some(Ok(record)) = result.next() {
+            if let Some(element) = record.get(None).unwrap().as_graph_element() {
+                result_ids.push(element.id() as usize);
+                assert!(element
+                    .details()
+                    .unwrap()
+                    .get_property(&NameOrId::Str("name".to_string()))
+                    .is_none())
+            }
+        }
+        result_ids.sort();
+        assert_eq!(result_ids, expected_ids)
+    }
+
+    // g.V().outE('knows').inV() with required property "name" of outV
+    #[test]
+    fn get_details_test() {
+        let expand_opr = pb::EdgeExpand {
+            base: Some(pb::ExpandBase {
+                v_tag: None,
+                direction: 0,
+                params: Some(pb::QueryParams {
+                    table_names: vec![common_pb::NameOrId::from("knows".to_string())],
+                    columns: vec![],
+                    limit: None,
+                    predicate: None,
+                    requirements: vec![],
+                }),
+            }),
+            is_edge: true,
+            alias: None,
+        };
+
+        let getv_opr = pb::GetV {
+            tag: None,
+            opt: 1, // EndV
+            alias: None,
+        };
+
+        let details_opr = pb::GetDetails {
+            tag: None,
+            params: Some(pb::QueryParams {
+                table_names: vec![],
+                columns: vec![common_pb::NameOrId::from("name".to_string())],
+                limit: None,
+                predicate: None,
+                requirements: vec![],
+            }),
+        };
+
+        let conf = JobConf::new("getv_test");
+        let mut result = pegasus::run(conf, || {
+            let expand = expand_opr.clone();
+            let getv = getv_opr.clone();
+            let details = details_opr.clone();
+            |input, output| {
+                let mut stream = input.input_from(source_gen(None))?;
+                let flatmap_func = expand.gen_flat_map().unwrap();
+                stream = stream.flat_map(move |input| flatmap_func.exec(input))?;
+                let map_func = getv.gen_map().unwrap();
+                stream = stream.map(move |input| map_func.exec(input))?;
+                let map_func = details.gen_map().unwrap();
+                stream = stream.map(move |input| map_func.exec(input))?;
+                stream.sink_into(output)
+            }
+        })
+        .expect("build job failure");
+
+        let expected_ids_with_prop = vec![(2, "vadas".to_string().into()), (4, "josh".to_string().into())];
+        let mut result_ids_with_prop = vec![];
+        while let Some(Ok(record)) = result.next() {
+            if let Some(element) = record.get(None).unwrap().as_graph_element() {
+                result_ids_with_prop.push((
+                    element.id(),
+                    element
+                        .details()
+                        .unwrap()
+                        .get_property(&NameOrId::Str("name".to_string()))
+                        .unwrap()
+                        .try_to_owned()
+                        .unwrap(),
+                ));
+            }
+        }
+        result_ids_with_prop.sort_by(|a, b| a.0.partial_cmp(&b.0).unwrap());
+        assert_eq!(result_ids_with_prop, expected_ids_with_prop)
     }
 }

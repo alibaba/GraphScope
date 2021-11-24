@@ -13,7 +13,6 @@
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 
-use crate::{try_downcast, try_downcast_ref, CastError, DynType};
 use core::any::TypeId;
 use std::any::Any;
 use std::borrow::Cow;
@@ -22,6 +21,8 @@ use std::convert::TryFrom;
 use std::fmt::Debug;
 use std::hash::{Hash, Hasher};
 use std::ops::Deref;
+
+use crate::{try_downcast, try_downcast_ref, CastError, DynType};
 
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub enum RawType {
@@ -104,15 +105,9 @@ impl Primitives {
     pub fn as_i8(&self) -> Result<i8, CastError> {
         match self {
             Primitives::Byte(v) => Ok(*v),
-            Primitives::Integer(v) => {
-                i8::try_from(*v).map_err(|_| CastError::new::<i8>(RawType::Integer))
-            }
-            Primitives::Long(v) => {
-                i8::try_from(*v).map_err(|_| CastError::new::<i8>(RawType::Long))
-            }
-            Primitives::ULLong(v) => {
-                i8::try_from(*v).map_err(|_| CastError::new::<i8>(RawType::ULLong))
-            }
+            Primitives::Integer(v) => i8::try_from(*v).map_err(|_| CastError::new::<i8>(RawType::Integer)),
+            Primitives::Long(v) => i8::try_from(*v).map_err(|_| CastError::new::<i8>(RawType::Long)),
+            Primitives::ULLong(v) => i8::try_from(*v).map_err(|_| CastError::new::<i8>(RawType::ULLong)),
             Primitives::Float(_) => Err(CastError::new::<i8>(RawType::Float)),
         }
     }
@@ -124,12 +119,8 @@ impl Primitives {
             Primitives::Integer(v) => {
                 i16::try_from(*v).map_err(|_| CastError::new::<i16>(RawType::Integer))
             }
-            Primitives::Long(v) => {
-                i16::try_from(*v).map_err(|_| CastError::new::<i16>(RawType::Long))
-            }
-            Primitives::ULLong(v) => {
-                i16::try_from(*v).map_err(|_| CastError::new::<i16>(RawType::ULLong))
-            }
+            Primitives::Long(v) => i16::try_from(*v).map_err(|_| CastError::new::<i16>(RawType::Long)),
+            Primitives::ULLong(v) => i16::try_from(*v).map_err(|_| CastError::new::<i16>(RawType::ULLong)),
             Primitives::Float(_) => Err(CastError::new::<i16>(RawType::Float)),
         }
     }
@@ -139,12 +130,8 @@ impl Primitives {
         match self {
             Primitives::Byte(v) => Ok(*v as i32),
             Primitives::Integer(v) => Ok(*v),
-            Primitives::Long(v) => {
-                i32::try_from(*v).map_err(|_| CastError::new::<i32>(RawType::Long))
-            }
-            Primitives::ULLong(v) => {
-                i32::try_from(*v).map_err(|_| CastError::new::<i32>(RawType::ULLong))
-            }
+            Primitives::Long(v) => i32::try_from(*v).map_err(|_| CastError::new::<i32>(RawType::Long)),
+            Primitives::ULLong(v) => i32::try_from(*v).map_err(|_| CastError::new::<i32>(RawType::ULLong)),
             Primitives::Float(_) => Err(CastError::new::<i32>(RawType::Float)),
         }
     }
@@ -155,9 +142,7 @@ impl Primitives {
             Primitives::Byte(v) => Ok(*v as i64),
             Primitives::Integer(v) => Ok(*v as i64),
             Primitives::Long(v) => Ok(*v),
-            Primitives::ULLong(v) => {
-                i64::try_from(*v).map_err(|_| CastError::new::<i64>(RawType::ULLong))
-            }
+            Primitives::ULLong(v) => i64::try_from(*v).map_err(|_| CastError::new::<i64>(RawType::ULLong)),
             Primitives::Float(_) => Err(CastError::new::<i64>(RawType::Float)),
         }
     }
@@ -178,18 +163,10 @@ impl Primitives {
     #[inline]
     pub fn as_u8(&self) -> Result<u8, CastError> {
         match self {
-            Primitives::Byte(v) => {
-                u8::try_from(*v).map_err(|_| CastError::new::<u8>(RawType::Byte))
-            }
-            Primitives::Integer(v) => {
-                u8::try_from(*v).map_err(|_| CastError::new::<u8>(RawType::Integer))
-            }
-            Primitives::Long(v) => {
-                u8::try_from(*v).map_err(|_| CastError::new::<u8>(RawType::Long))
-            }
-            Primitives::ULLong(v) => {
-                u8::try_from(*v).map_err(|_| CastError::new::<u8>(RawType::ULLong))
-            }
+            Primitives::Byte(v) => u8::try_from(*v).map_err(|_| CastError::new::<u8>(RawType::Byte)),
+            Primitives::Integer(v) => u8::try_from(*v).map_err(|_| CastError::new::<u8>(RawType::Integer)),
+            Primitives::Long(v) => u8::try_from(*v).map_err(|_| CastError::new::<u8>(RawType::Long)),
+            Primitives::ULLong(v) => u8::try_from(*v).map_err(|_| CastError::new::<u8>(RawType::ULLong)),
             Primitives::Float(_) => Err(CastError::new::<u8>(RawType::Float)),
         }
     }
@@ -197,18 +174,12 @@ impl Primitives {
     #[inline]
     pub fn as_u16(&self) -> Result<u16, CastError> {
         match self {
-            Primitives::Byte(v) => {
-                u16::try_from(*v).map_err(|_| CastError::new::<u16>(RawType::Byte))
-            }
+            Primitives::Byte(v) => u16::try_from(*v).map_err(|_| CastError::new::<u16>(RawType::Byte)),
             Primitives::Integer(v) => {
                 u16::try_from(*v).map_err(|_| CastError::new::<u16>(RawType::Integer))
             }
-            Primitives::Long(v) => {
-                u16::try_from(*v).map_err(|_| CastError::new::<u16>(RawType::Long))
-            }
-            Primitives::ULLong(v) => {
-                u16::try_from(*v).map_err(|_| CastError::new::<u16>(RawType::ULLong))
-            }
+            Primitives::Long(v) => u16::try_from(*v).map_err(|_| CastError::new::<u16>(RawType::Long)),
+            Primitives::ULLong(v) => u16::try_from(*v).map_err(|_| CastError::new::<u16>(RawType::ULLong)),
             Primitives::Float(_) => Err(CastError::new::<u16>(RawType::Float)),
         }
     }
@@ -216,18 +187,12 @@ impl Primitives {
     #[inline]
     pub fn as_u32(&self) -> Result<u32, CastError> {
         match self {
-            Primitives::Byte(v) => {
-                u32::try_from(*v).map_err(|_| CastError::new::<u32>(RawType::Byte))
-            }
+            Primitives::Byte(v) => u32::try_from(*v).map_err(|_| CastError::new::<u32>(RawType::Byte)),
             Primitives::Integer(v) => {
                 u32::try_from(*v).map_err(|_| CastError::new::<u32>(RawType::Integer))
             }
-            Primitives::Long(v) => {
-                u32::try_from(*v).map_err(|_| CastError::new::<u32>(RawType::Long))
-            }
-            Primitives::ULLong(v) => {
-                u32::try_from(*v).map_err(|_| CastError::new::<u32>(RawType::ULLong))
-            }
+            Primitives::Long(v) => u32::try_from(*v).map_err(|_| CastError::new::<u32>(RawType::Long)),
+            Primitives::ULLong(v) => u32::try_from(*v).map_err(|_| CastError::new::<u32>(RawType::ULLong)),
             Primitives::Float(_) => Err(CastError::new::<u32>(RawType::Float)),
         }
     }
@@ -235,18 +200,12 @@ impl Primitives {
     #[inline]
     pub fn as_u64(&self) -> Result<u64, CastError> {
         match self {
-            Primitives::Byte(v) => {
-                u64::try_from(*v).map_err(|_| CastError::new::<u64>(RawType::Byte))
-            }
+            Primitives::Byte(v) => u64::try_from(*v).map_err(|_| CastError::new::<u64>(RawType::Byte)),
             Primitives::Integer(v) => {
                 u64::try_from(*v).map_err(|_| CastError::new::<u64>(RawType::Integer))
             }
-            Primitives::Long(v) => {
-                u64::try_from(*v).map_err(|_| CastError::new::<u64>(RawType::Long))
-            }
-            Primitives::ULLong(v) => {
-                u64::try_from(*v).map_err(|_| CastError::new::<u64>(RawType::ULLong))
-            }
+            Primitives::Long(v) => u64::try_from(*v).map_err(|_| CastError::new::<u64>(RawType::Long)),
+            Primitives::ULLong(v) => u64::try_from(*v).map_err(|_| CastError::new::<u64>(RawType::ULLong)),
             Primitives::Float(_) => Err(CastError::new::<u64>(RawType::Float)),
         }
     }
@@ -259,15 +218,11 @@ impl Primitives {
     #[inline]
     pub fn as_u128(&self) -> Result<u128, CastError> {
         match self {
-            Primitives::Byte(v) => {
-                u128::try_from(*v).map_err(|_| CastError::new::<u128>(RawType::Byte))
-            }
+            Primitives::Byte(v) => u128::try_from(*v).map_err(|_| CastError::new::<u128>(RawType::Byte)),
             Primitives::Integer(v) => {
                 u128::try_from(*v).map_err(|_| CastError::new::<u128>(RawType::Integer))
             }
-            Primitives::Long(v) => {
-                u128::try_from(*v).map_err(|_| CastError::new::<u128>(RawType::Long))
-            }
+            Primitives::Long(v) => u128::try_from(*v).map_err(|_| CastError::new::<u128>(RawType::Long)),
             Primitives::ULLong(v) => Ok(*v),
             Primitives::Float(_) => Err(CastError::new::<u128>(RawType::Float)),
         }
@@ -276,9 +231,7 @@ impl Primitives {
     #[inline]
     pub fn as_f64(&self) -> Result<f64, CastError> {
         match self {
-            Primitives::Byte(v) => {
-                f64::try_from(*v).map_err(|_| CastError::new::<f64>(RawType::Byte))
-            }
+            Primitives::Byte(v) => f64::try_from(*v).map_err(|_| CastError::new::<f64>(RawType::Byte)),
             Primitives::Integer(v) => {
                 f64::try_from(*v).map_err(|_| CastError::new::<f64>(RawType::Integer))
             }
@@ -409,7 +362,10 @@ impl PartialEq for Primitives {
             },
             Primitives::ULLong(v) => match other {
                 Primitives::Float(o) => (*v as f64).eq(o),
-                _ => other.as_u128().map(|o| o == *v).unwrap_or(false),
+                _ => other
+                    .as_u128()
+                    .map(|o| o == *v)
+                    .unwrap_or(false),
             },
             Primitives::Float(v) => other.as_f64().map(|o| o == *v).unwrap_or(false),
         }
@@ -437,7 +393,10 @@ impl PartialOrd for Primitives {
                 Primitives::Float(o) => (*v as f64).partial_cmp(o),
                 _ => other.as_u128().map(|o| v.cmp(&o)).ok(),
             },
-            Primitives::Float(v) => other.as_f64().map(|o| v.partial_cmp(&o)).unwrap_or(None),
+            Primitives::Float(v) => other
+                .as_f64()
+                .map(|o| v.partial_cmp(&o))
+                .unwrap_or(None),
         }
     }
 }
@@ -680,9 +639,7 @@ impl Object {
                 Ok(OwnedOrRef::Owned(v))
             }
             Object::String(x) => try_transmute!(x, T, RawType::String).map(|v| OwnedOrRef::Ref(v)),
-            Object::Blob(x) => {
-                try_transmute!(x, T, RawType::Blob(x.len())).map(|v| OwnedOrRef::Ref(v))
-            }
+            Object::Blob(x) => try_transmute!(x, T, RawType::Blob(x.len())).map(|v| OwnedOrRef::Ref(v)),
             Object::DynOwned(x) => try_downcast_ref!(x, T).map(|v| OwnedOrRef::Ref(v)),
         }
     }
@@ -859,9 +816,18 @@ impl<'a> BorrowObject<'a> {
 impl PartialEq for Object {
     fn eq(&self, other: &Self) -> bool {
         match self {
-            Object::Primitive(p) => other.as_primitive().map(|o| p == &o).unwrap_or(false),
-            Object::Blob(v) => other.as_bytes().map(|o| o.eq(v.as_ref())).unwrap_or(false),
-            Object::String(v) => other.as_str().map(|o| o.eq(v.as_str())).unwrap_or(false),
+            Object::Primitive(p) => other
+                .as_primitive()
+                .map(|o| p == &o)
+                .unwrap_or(false),
+            Object::Blob(v) => other
+                .as_bytes()
+                .map(|o| o.eq(v.as_ref()))
+                .unwrap_or(false),
+            Object::String(v) => other
+                .as_str()
+                .map(|o| o.eq(v.as_str()))
+                .unwrap_or(false),
             // TODO(longbin) Should be able to compare a DynType
             Object::DynOwned(_) => false,
         }
@@ -894,9 +860,18 @@ impl PartialOrd for Object {
 impl<'a> PartialEq for BorrowObject<'a> {
     fn eq(&self, other: &Self) -> bool {
         match self {
-            BorrowObject::Primitive(p) => other.as_primitive().map(|o| p == &o).unwrap_or(false),
-            BorrowObject::String(v) => other.as_str().map(|o| o.eq(*v)).unwrap_or(false),
-            BorrowObject::Blob(v) => other.as_bytes().map(|o| *v == o).unwrap_or(false),
+            BorrowObject::Primitive(p) => other
+                .as_primitive()
+                .map(|o| p == &o)
+                .unwrap_or(false),
+            BorrowObject::String(v) => other
+                .as_str()
+                .map(|o| o.eq(*v))
+                .unwrap_or(false),
+            BorrowObject::Blob(v) => other
+                .as_bytes()
+                .map(|o| *v == o)
+                .unwrap_or(false),
             // TODO(longbin) Should be able to compare a DynType
             BorrowObject::DynRef(_) => false,
         }

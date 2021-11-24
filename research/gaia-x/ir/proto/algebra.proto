@@ -157,13 +157,13 @@ message Limit {
 
 message QueryParams {
   // The tables to fetch data from. While this may sound arbitrary, but in graph db, we often use
-  // label to refer to a table. But in terms of semantics, they are exactly the same.
+  // label instead of table to refer to an entity (vertex/edge). They are semantically the same.
   repeated common.NameOrId table_names = 1;
   // The required columns of the table.
   repeated common.NameOrId columns = 2;
   // The size limit
   Range limit = 3;
-  // The optional predicate for the data tuple
+  // The optional predicate for the data tuple, which may be pushed down to the storage service
   common.SuffixExpr predicate = 4;
   // Extra requirements for general-purpose usage
   repeated string requirements = 5;
@@ -231,18 +231,21 @@ message GetV {
     End = 1;
     // Getting the other vertex of the edge. We are calibrating to Gremlin's bothE.otherV semantics
     Other = 2;
-    // The tag is referring to a vertex. This is just for semantic intact. If the tag refers to a vertex,
-    // the runtime may ignore `VOpt` whatsoever
-    This = 3;
   }
   // The tag that refers to the edge/path where the end vertex will be retrieved
   common.NameOrId tag = 1;
   // Determine what vertex to get from the tagged object
   VOpt opt = 2;
-  // The query parameters define the condition that the vertex must satisfy
-  QueryParams params = 3;
   // The alias of this vertex
-  common.NameOrId alias = 4;
+  common.NameOrId alias = 3;
+}
+
+// To further get details of a given entity, either a vertex, an edge, or other entity that carries extra info.
+message GetDetails {
+  // The tag that refers to the entity where the details will be retrieved
+  common.NameOrId tag = 1;
+  // The details (columns/properties) to be retrieved
+  QueryParams params = 2;
 }
 
 message EdgeExpand {
@@ -339,6 +342,7 @@ message LogicalPlan {
       Scan scan = 11;
       IndexedScan indexed_scan = 12;
       Limit limit = 13;
+      GetDetails details = 14;
       // Saving the room for relational operators
       GetV vertex = 20;
       EdgeExpand edge = 21;

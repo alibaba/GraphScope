@@ -13,10 +13,12 @@
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 
-use crate::error::FnGenResult;
+use std::cmp::Ordering;
+
 use ir_common::generated::algebra::join::JoinKind;
 use pegasus::api::function::FnResult;
-use std::cmp::Ordering;
+
+use crate::error::FnGenResult;
 
 pub trait CompareFunction<D>: Send + 'static {
     fn compare(&self, left: &D, right: &D) -> Ordering;

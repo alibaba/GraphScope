@@ -14,16 +14,18 @@
 //! limitations under the License.
 //!
 
-use crate::expr::error::{ExprError, ExprResult};
-use crate::graph::element::Element;
-use crate::graph::property::{Details, PropKey};
+use std::cell::RefCell;
+use std::convert::TryFrom;
+
 use dyn_type::arith::Exp;
 use dyn_type::{BorrowObject, Object};
 use ir_common::error::{ParsePbError, ParsePbResult};
 use ir_common::generated::common as pb;
 use ir_common::NameOrId;
-use std::cell::RefCell;
-use std::convert::TryFrom;
+
+use crate::expr::error::{ExprError, ExprResult};
+use crate::graph::element::Element;
+use crate::graph::property::{Details, PropKey};
 
 unsafe impl Sync for Evaluator {}
 
@@ -42,10 +44,7 @@ pub(crate) enum InnerOpr {
     Logical(pb::Logical),
     Arith(pb::Arithmetic),
     Const(Option<Object>),
-    Var {
-        tag: Option<NameOrId>,
-        prop_key: Option<PropKey>,
-    },
+    Var { tag: Option<NameOrId>, prop_key: Option<PropKey> },
 }
 
 impl ToString for InnerOpr {
@@ -104,17 +103,12 @@ impl TryFrom<pb::SuffixExpr> for Evaluator {
         for unit in suffix_tree.operators {
             inner_tree.push(InnerOpr::try_from(unit)?);
         }
-        Ok(Self {
-            suffix_tree: inner_tree,
-            stack: RefCell::new(vec![]),
-        })
+        Ok(Self { suffix_tree: inner_tree, stack: RefCell::new(vec![]) })
     }
 }
 
 fn apply_arith<'a>(
-    arith: &pb::Arithmetic,
-    first: Option<BorrowObject<'a>>,
-    second: Option<BorrowObject<'a>>,
+    arith: &pb::Arithmetic, first: Option<BorrowObject<'a>>, second: Option<BorrowObject<'a>>,
 ) -> ExprResult<Object> {
     use pb::Arithmetic::*;
     if first.is_some() && second.is_some() {
@@ -134,9 +128,7 @@ fn apply_arith<'a>(
 }
 
 fn apply_logical<'a>(
-    logical: &pb::Logical,
-    first: Option<BorrowObject<'a>>,
-    second: Option<BorrowObject<'a>>,
+    logical: &pb::Logical, first: Option<BorrowObject<'a>>, second: Option<BorrowObject<'a>>,
 ) -> ExprResult<Object> {
     use pb::Logical::*;
     if logical == &Not {
@@ -158,27 +150,20 @@ fn apply_logical<'a>(
                 Or => Ok((a.as_bool()? || b.as_bool()?).into()),
                 Not => unreachable!(),
                 // todo within, without
-                _ => Err(ExprError::OtherErr(
-                    "`within`, `without` unimplemented!".to_string(),
-                )),
+                _ => Err(ExprError::OtherErr("`within`, `without` unimplemented!".to_string())),
             };
             return rst;
         }
     }
 
-    Err(ExprError::MissingOperands(
-        InnerOpr::Logical(*logical).into(),
-    ))
+    Err(ExprError::MissingOperands(InnerOpr::Logical(*logical).into()))
 }
 
 // Private api
 impl Evaluator {
     /// Evaluate simple expression that contains less than three operators
     /// without using the stack.
-    fn eval_without_stack<E: Element, C: Context<E>>(
-        &self,
-        context: Option<&C>,
-    ) -> ExprResult<Object> {
+    fn eval_without_stack<E: Element, C: Context<E>>(&self, context: Option<&C>) -> ExprResult<Object> {
         assert!(self.suffix_tree.len() <= 3);
         let _first = self.suffix_tree.get(0);
         let _second = self.suffix_tree.get(1);
@@ -354,27 +339,15 @@ impl TryFrom<pb::ExprOpr> for InnerOpr {
                 Logical(logical) => {
                     Self::Logical(unsafe { std::mem::transmute::<_, pb::Logical>(logical) })
                 }
-                Arith(arith) => {
-                    Self::Arith(unsafe { std::mem::transmute::<_, pb::Arithmetic>(arith) })
-                }
+                Arith(arith) => Self::Arith(unsafe { std::mem::transmute::<_, pb::Arithmetic>(arith) }),
                 Const(c) => Self::Const(c.into_object()?),
                 Var(var) => {
                     let (_tag, _property) = (var.tag, var.property);
-                    let tag = if let Some(tag) = _tag {
-                        Some(NameOrId::try_from(tag)?)
-                    } else {
-                        None
-                    };
+                    let tag = if let Some(tag) = _tag { Some(NameOrId::try_from(tag)?) } else { None };
                     if let Some(property) = _property {
-                        Self::Var {
-                            tag,
-                            prop_key: Some(PropKey::try_from(property)?),
-                        }
+                        Self::Var { tag, prop_key: Some(PropKey::try_from(property)?) }
                     } else {
-                        Self::Var {
-                            tag,
-                            prop_key: None,
-                        }
+                        Self::Var { tag, prop_key: None }
                     }
                 }
             };
@@ -387,15 +360,10 @@ impl TryFrom<pb::ExprOpr> for InnerOpr {
 
 impl InnerOpr {
     pub fn eval_as_borrow_object<'a, E: Element + 'a, C: Context<E> + 'a>(
-        &'a self,
-        context: Option<&'a C>,
+        &'a self, context: Option<&'a C>,
     ) -> ExprResult<Option<BorrowObject<'a>>> {
         match self {
-            Self::Const(c_opt) => Ok(if let Some(opt) = c_opt {
-                Some(opt.as_borrow())
-            } else {
-                None
-            }),
+            Self::Const(c_opt) => Ok(if let Some(opt) = c_opt { Some(opt.as_borrow()) } else { None }),
             Self::Var { tag, prop_key } => {
                 if let Some(ctxt) = context {
                     let mut result = Ok(None);
@@ -428,12 +396,13 @@ impl InnerOpr {
 
 #[cfg(test)]
 mod tests {
+    use std::collections::HashMap;
+
     use super::*;
     use crate::expr::to_suffix_expr_pb;
     use crate::expr::token::tokenize;
     use crate::graph::element::Vertex;
     use crate::graph::property::{DefaultDetails, DynDetails};
-    use std::collections::HashMap;
 
     struct Vertices {
         vec: Vec<Vertex>,
@@ -451,35 +420,21 @@ mod tests {
         let map1: HashMap<NameOrId, Object> = vec![
             (NameOrId::from("age".to_string()), 31.into()),
             (NameOrId::from("birthday".to_string()), 19900416.into()),
-            (
-                NameOrId::from("name".to_string()),
-                "John".to_string().into(),
-            ),
+            (NameOrId::from("name".to_string()), "John".to_string().into()),
         ]
         .into_iter()
         .collect();
         let map2: HashMap<NameOrId, Object> = vec![
             (NameOrId::from("age".to_string()), 26.into()),
             (NameOrId::from("birthday".to_string()), 19950816.into()),
-            (
-                NameOrId::from("name".to_string()),
-                "Nancy".to_string().into(),
-            ),
+            (NameOrId::from("name".to_string()), "Nancy".to_string().into()),
         ]
         .into_iter()
         .collect();
         Vertices {
             vec: vec![
-                Vertex::new(DynDetails::new(DefaultDetails::with_property(
-                    1,
-                    NameOrId::from(9),
-                    map1,
-                ))),
-                Vertex::new(DynDetails::new(DefaultDetails::with_property(
-                    2,
-                    NameOrId::from(11),
-                    map2,
-                ))),
+                Vertex::new(DynDetails::new(DefaultDetails::with_property(1, NameOrId::from(9), map1))),
+                Vertex::new(DynDetails::new(DefaultDetails::with_property(2, NameOrId::from(11), map2))),
             ],
         }
     }
@@ -545,8 +500,7 @@ mod tests {
         ];
 
         for (case, expected) in cases.into_iter().zip(expected.into_iter()) {
-            let eval =
-                Evaluator::try_from(to_suffix_expr_pb(tokenize(case).unwrap()).unwrap()).unwrap();
+            let eval = Evaluator::try_from(to_suffix_expr_pb(tokenize(case).unwrap()).unwrap()).unwrap();
             assert_eq!(eval.eval::<(), NoneContext>(None).unwrap(), expected);
         }
     }
@@ -589,8 +543,7 @@ mod tests {
         ];
 
         for (case, expected) in cases.into_iter().zip(expected.into_iter()) {
-            let eval =
-                Evaluator::try_from(to_suffix_expr_pb(tokenize(case).unwrap()).unwrap()).unwrap();
+            let eval = Evaluator::try_from(to_suffix_expr_pb(tokenize(case).unwrap()).unwrap()).unwrap();
             assert_eq!(eval.eval::<(), NoneContext>(None).unwrap(), expected);
         }
     }
@@ -626,8 +579,7 @@ mod tests {
         ];
 
         for (case, expected) in cases.into_iter().zip(expected.into_iter()) {
-            let eval =
-                Evaluator::try_from(to_suffix_expr_pb(tokenize(case).unwrap()).unwrap()).unwrap();
+            let eval = Evaluator::try_from(to_suffix_expr_pb(tokenize(case).unwrap()).unwrap()).unwrap();
             assert_eq!(eval.eval::<_, Vertices>(Some(&ctxt)).unwrap(), expected);
         }
     }
@@ -649,21 +601,9 @@ mod tests {
 
         let expected: Vec<ExprError> = vec![
             // Evaluate variable without providing the context
-            ExprError::MissingContext(
-                InnerOpr::Var {
-                    tag: Some(2.into()),
-                    prop_key: None,
-                }
-                .into(),
-            ),
+            ExprError::MissingContext(InnerOpr::Var { tag: Some(2.into()), prop_key: None }.into()),
             // obtain non-value from the context
-            ExprError::NoneOperand(
-                InnerOpr::Var {
-                    tag: Some(2.into()),
-                    prop_key: None,
-                }
-                .into(),
-            ),
+            ExprError::NoneOperand(InnerOpr::Var { tag: Some(2.into()), prop_key: None }.into()),
             // obtain non-value from the context
             ExprError::NoneOperand(
                 InnerOpr::Var {
@@ -683,11 +623,12 @@ mod tests {
 
         let mut is_context = false;
         for (case, expected) in cases.into_iter().zip(expected.into_iter()) {
-            let eval =
-                Evaluator::try_from(to_suffix_expr_pb(tokenize(case).unwrap()).unwrap()).unwrap();
+            let eval = Evaluator::try_from(to_suffix_expr_pb(tokenize(case).unwrap()).unwrap()).unwrap();
             assert_eq!(
                 if is_context {
-                    eval.eval::<_, Vertices>(Some(&ctxt)).err().unwrap()
+                    eval.eval::<_, Vertices>(Some(&ctxt))
+                        .err()
+                        .unwrap()
                 } else {
                     eval.eval::<_, NoneContext>(None).err().unwrap()
                 },

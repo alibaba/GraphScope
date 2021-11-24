@@ -13,14 +13,16 @@
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 
+use std::convert::TryInto;
+
+use ir_common::error::ParsePbError;
+use ir_common::generated::algebra as algebra_pb;
+use pegasus::api::function::{FilterFunction, FnResult};
+
 use crate::error::{FnExecError, FnGenResult};
 use crate::expr::eval::Evaluator;
 use crate::process::operator::filter::FilterFuncGen;
 use crate::process::record::Record;
-use ir_common::error::ParsePbError;
-use ir_common::generated::algebra as algebra_pb;
-use pegasus::api::function::{FilterFunction, FnResult};
-use std::convert::TryInto;
 
 #[derive(Debug)]
 struct SelectOperator {
@@ -40,9 +42,7 @@ impl FilterFunction<Record> for SelectOperator {
 impl FilterFuncGen for algebra_pb::Select {
     fn gen_filter(self) -> FnGenResult<Box<dyn FilterFunction<Record>>> {
         if let Some(predicate) = self.predicate {
-            let select_operator = SelectOperator {
-                filter: predicate.try_into()?,
-            };
+            let select_operator = SelectOperator { filter: predicate.try_into()? };
             debug!("Runtime select operator: {:?}", select_operator);
             Ok(Box::new(select_operator))
         } else {
@@ -53,17 +53,18 @@ impl FilterFuncGen for algebra_pb::Select {
 
 #[cfg(test)]
 mod tests {
+    use ir_common::generated::algebra as pb;
+    use ir_common::NameOrId;
+    use pegasus::api::{Filter, Sink};
+    use pegasus::result::ResultStream;
+    use pegasus::JobConf;
+
     use crate::expr::str_to_expr_pb;
     use crate::graph::element::{Element, GraphElement};
     use crate::graph::property::Details;
     use crate::process::operator::filter::FilterFuncGen;
     use crate::process::operator::tests::init_source;
     use crate::process::record::Record;
-    use ir_common::generated::algebra as pb;
-    use ir_common::NameOrId;
-    use pegasus::api::{Filter, Sink};
-    use pegasus::result::ResultStream;
-    use pegasus::JobConf;
 
     fn select_test(source: Vec<Record>, select_opr_pb: pb::Select) -> ResultStream<Record> {
         let conf = JobConf::new("select_test");
@@ -85,9 +86,7 @@ mod tests {
     // g.V().has("id",gt(1))
     #[test]
     fn select_test_01() {
-        let select_opr_pb = pb::Select {
-            predicate: Some(str_to_expr_pb("@.id > 1".to_string()).unwrap()),
-        };
+        let select_opr_pb = pb::Select { predicate: Some(str_to_expr_pb("@.id > 1".to_string()).unwrap()) };
         let mut result = select_test(init_source(), select_opr_pb);
         let mut count = 0;
         while let Some(Ok(record)) = result.next() {
@@ -103,9 +102,8 @@ mod tests {
     // g.V().has("name","marko")
     #[test]
     fn select_test_02() {
-        let select_opr_pb = pb::Select {
-            predicate: Some(str_to_expr_pb("@.name == \"marko\"".to_string()).unwrap()),
-        };
+        let select_opr_pb =
+            pb::Select { predicate: Some(str_to_expr_pb("@.name == \"marko\"".to_string()).unwrap()) };
         let mut result = select_test(init_source(), select_opr_pb);
         let mut count = 0;
         while let Some(Ok(record)) = result.next() {

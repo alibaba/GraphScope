@@ -13,15 +13,16 @@
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 
-use ir_common::error::{ParsePbError, ParsePbResult};
-use ir_common::generated::algebra as pb;
-use ir_common::generated::algebra::logical_plan::operator::Opr;
 use std::cell::RefCell;
 use std::collections::{BTreeSet, HashMap};
 use std::convert::TryFrom;
 use std::fmt;
 use std::iter::FromIterator;
 use std::rc::Rc;
+
+use ir_common::error::{ParsePbError, ParsePbResult};
+use ir_common::generated::algebra as pb;
+use ir_common::generated::algebra::logical_plan::operator::Opr;
 use vec_map::VecMap;
 
 /// An internal representation of the pb-[`Node`].
@@ -38,12 +39,7 @@ pub(crate) struct Node {
 #[allow(dead_code)]
 impl Node {
     pub fn new(id: u32, opr: pb::logical_plan::Operator) -> Node {
-        Node {
-            id,
-            opr,
-            parents: BTreeSet::new(),
-            children: BTreeSet::new(),
-        }
+        Node { id, opr, parents: BTreeSet::new(), children: BTreeSet::new() }
     }
 
     pub fn add_child(&mut self, child_id: u32) {
@@ -100,19 +96,16 @@ impl fmt::Debug for LogicalPlan {
     }
 }
 
-fn parse_pb_node(
-    node_pbs: &Vec<pb::logical_plan::Node>,
-    nodes: &Vec<NodeType>,
-) -> ParsePbResult<()> {
+fn parse_pb_node(node_pbs: &Vec<pb::logical_plan::Node>, nodes: &Vec<NodeType>) -> ParsePbResult<()> {
     for (node_pb, node) in node_pbs.iter().zip(nodes.iter()) {
         for child_id in &node_pb.children {
             node.borrow_mut().add_child(*child_id as u32);
             if let Some(child_node) = nodes.get(*child_id as usize) {
-                child_node.borrow_mut().add_parent(node.borrow().id as u32);
+                child_node
+                    .borrow_mut()
+                    .add_parent(node.borrow().id as u32);
             } else {
-                return Err(ParsePbError::from(
-                    "the child id is out of index".to_string(),
-                ));
+                return Err(ParsePbError::from("the child id is out of index".to_string()));
             }
         }
     }
@@ -155,10 +148,7 @@ impl From<LogicalPlan> for pb::LogicalPlan {
         }
         let mut plan_pb = pb::LogicalPlan { nodes: vec![] };
         for (_, node) in &plan.nodes {
-            let mut node_pb = pb::logical_plan::Node {
-                opr: None,
-                children: vec![],
-            };
+            let mut node_pb = pb::logical_plan::Node { opr: None, children: vec![] };
             node_pb.opr = Some(node.borrow().opr.clone());
             node_pb.children = node
                 .borrow()
@@ -190,7 +180,11 @@ impl LogicalPlan {
             let mut layer = 0;
             let mut curr_node_opt = Some(branch_node.clone());
             while curr_node_opt.is_some() {
-                let next_node_id = curr_node_opt.as_ref().unwrap().borrow().get_first_child();
+                let next_node_id = curr_node_opt
+                    .as_ref()
+                    .unwrap()
+                    .borrow()
+                    .get_first_child();
                 curr_node_opt = next_node_id.and_then(|id| self.get_node(id));
                 if let Some(curr_node) = &curr_node_opt {
                     let curr_ref = curr_node.borrow();
@@ -224,10 +218,7 @@ impl LogicalPlan {
     pub fn with_root(node: Node) -> Self {
         let mut nodes = VecMap::new();
         nodes.insert(node.id as usize, Rc::new(RefCell::new(node)));
-        Self {
-            nodes,
-            total_size: 1,
-        }
+        Self { nodes, total_size: 1 }
     }
 
     /// Get a node reference from the logical plan
@@ -258,7 +249,8 @@ impl LogicalPlan {
                 parent_node.borrow_mut().add_child(id);
             }
         }
-        self.nodes.insert(id as usize, Rc::new(RefCell::new(node)));
+        self.nodes
+            .insert(id as usize, Rc::new(RefCell::new(node)));
         self.total_size = id as usize + 1;
 
         id as i32
@@ -266,9 +258,7 @@ impl LogicalPlan {
 
     /// Append an operator into the logical plan, as a new node with `self.total_size` as its id.
     pub fn append_operator_as_node(
-        &mut self,
-        opr: pb::logical_plan::Operator,
-        parent_ids: Vec<u32>,
+        &mut self, opr: pb::logical_plan::Operator, parent_ids: Vec<u32>,
     ) -> i32 {
         self.append_node(Node::new(self.total_size as u32, opr), parent_ids)
     }
@@ -311,7 +301,10 @@ impl LogicalPlan {
     }
 
     pub fn root(&self) -> Option<NodeType> {
-        self.nodes.iter().next().map(|(_, node)| node.clone())
+        self.nodes
+            .iter()
+            .next()
+            .map(|(_, node)| node.clone())
     }
 
     /// Determine whether the logical plan is valid while checking the follows:
@@ -339,8 +332,12 @@ impl LogicalPlan {
         } else {
             for subplan in subplans {
                 if let Some((_, root)) = subplan.nodes.iter().next() {
-                    node.borrow_mut().children.insert(root.borrow().id);
-                    root.borrow_mut().parents.insert(node.borrow().id);
+                    node.borrow_mut()
+                        .children
+                        .insert(root.borrow().id);
+                    root.borrow_mut()
+                        .parents
+                        .insert(node.borrow().id);
                 }
                 self.nodes.extend(subplan.nodes.into_iter());
             }
@@ -403,10 +400,7 @@ impl LogicalPlan {
                 let next_node_id = curr_node.borrow().get_first_child().unwrap();
                 if let Some(next_node) = self.get_node(next_node_id) {
                     if next_node.borrow().id != to_node.borrow().id {
-                        plan.append_node(
-                            clone_pure_node(next_node.clone()),
-                            vec![curr_node.borrow().id],
-                        );
+                        plan.append_node(clone_pure_node(next_node.clone()), vec![curr_node.borrow().id]);
                     }
                     curr_node = next_node;
                 } else {
@@ -415,13 +409,14 @@ impl LogicalPlan {
             } else {
                 let (merge_node_opt, subplans) = self.get_branch_plans(curr_node.clone());
                 if let Some(merge_node) = merge_node_opt {
-                    plan.append_branch_plans(
-                        plan.get_node(curr_node.borrow().id).unwrap(),
-                        subplans,
-                    );
+                    plan.append_branch_plans(plan.get_node(curr_node.borrow().id).unwrap(), subplans);
                     if merge_node.borrow().id != to_node.borrow().id {
-                        let merge_node_parent =
-                            merge_node.borrow().parents.iter().map(|x| *x).collect();
+                        let merge_node_parent = merge_node
+                            .borrow()
+                            .parents
+                            .iter()
+                            .map(|x| *x)
+                            .collect();
                         let merge_node_clone = clone_pure_node(merge_node.clone());
                         plan.append_node(merge_node_clone, merge_node_parent);
                     }
@@ -561,24 +556,13 @@ mod test {
     fn test_logical_plan_from_pb() {
         let opr = pb::logical_plan::Operator { opr: None };
 
-        let root_pb = pb::logical_plan::Node {
-            opr: Some(opr.clone()),
-            children: vec![1, 2],
-        };
+        let root_pb = pb::logical_plan::Node { opr: Some(opr.clone()), children: vec![1, 2] };
 
-        let node1_pb = pb::logical_plan::Node {
-            opr: Some(opr.clone()),
-            children: vec![2],
-        };
+        let node1_pb = pb::logical_plan::Node { opr: Some(opr.clone()), children: vec![2] };
 
-        let node2_pb = pb::logical_plan::Node {
-            opr: Some(opr.clone()),
-            children: vec![],
-        };
+        let node2_pb = pb::logical_plan::Node { opr: Some(opr.clone()), children: vec![] };
 
-        let plan_pb = pb::LogicalPlan {
-            nodes: vec![root_pb, node1_pb, node2_pb],
-        };
+        let plan_pb = pb::LogicalPlan { nodes: vec![root_pb, node1_pb, node2_pb] };
 
         let plan = LogicalPlan::try_from(plan_pb).unwrap();
         assert_eq!(plan.len(), 3);

@@ -13,18 +13,8 @@
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 
-use crate::error::{FnExecError, FnGenResult};
-use crate::graph::partitioner::Partitioner;
-use crate::process::functions::{CompareFunction, JoinKeyGen};
-use crate::process::operator::filter::FilterFuncGen;
-use crate::process::operator::flatmap::FlatMapFuncGen;
-use crate::process::operator::join::JoinFunctionGen;
-use crate::process::operator::map::MapFuncGen;
-use crate::process::operator::shuffle::RecordRouter;
-use crate::process::operator::sink::RecordSinkEncoder;
-use crate::process::operator::sort::CompareFunctionGen;
-use crate::process::operator::source::SourceOperator;
-use crate::process::record::{Record, RecordKey};
+use std::sync::Arc;
+
 use ir_common::generated::algebra as algebra_pb;
 use ir_common::generated::algebra::join::JoinKind;
 use ir_common::generated::common as common_pb;
@@ -43,7 +33,19 @@ use pegasus_server::pb::OperatorDef;
 use pegasus_server::service::JobParser;
 use pegasus_server::JobRequest;
 use prost::Message;
-use std::sync::Arc;
+
+use crate::error::{FnExecError, FnGenResult};
+use crate::graph::partitioner::Partitioner;
+use crate::process::functions::{CompareFunction, JoinKeyGen};
+use crate::process::operator::filter::FilterFuncGen;
+use crate::process::operator::flatmap::FlatMapFuncGen;
+use crate::process::operator::join::JoinFunctionGen;
+use crate::process::operator::map::MapFuncGen;
+use crate::process::operator::shuffle::RecordRouter;
+use crate::process::operator::sink::RecordSinkEncoder;
+use crate::process::operator::sort::CompareFunctionGen;
+use crate::process::operator::source::SourceOperator;
+use crate::process::record::{Record, RecordKey};
 
 type RecordMap = Box<dyn MapFunction<Record, Record>>;
 type RecordFlatMap = Box<dyn FlatMapFunction<Record, Record, Target = DynIter<Record>>>;
@@ -124,15 +126,11 @@ impl FnGenerator {
 
 impl IRJobCompiler {
     pub fn new<D: Partitioner>(partitioner: D) -> Self {
-        IRJobCompiler {
-            udf_gen: FnGenerator::new(Arc::new(partitioner)),
-        }
+        IRJobCompiler { udf_gen: FnGenerator::new(Arc::new(partitioner)) }
     }
 
     fn install(
-        &self,
-        mut stream: Stream<Record>,
-        plan: &[OperatorDef],
+        &self, mut stream: Stream<Record>, plan: &[OperatorDef],
     ) -> Result<Stream<Record>, BuildJobError> {
         for op in &plan[..] {
             if let Some(ref op_kind) = op.op_kind {
@@ -145,9 +143,7 @@ impl IRJobCompiler {
                         Some(server_pb::communicate::ChKind::ToOne(_)) => {
                             stream = stream.aggregate();
                         }
-                        Some(server_pb::communicate::ChKind::ToOthers(_)) => {
-                            stream = stream.broadcast()
-                        }
+                        Some(server_pb::communicate::ChKind::ToOthers(_)) => stream = stream.broadcast(),
                         None => {}
                     },
                     server_pb::operator_def::OpKind::Map(map) => {
@@ -168,33 +164,37 @@ impl IRJobCompiler {
                     server_pb::operator_def::OpKind::Sort(sort) => {
                         let cmp = self.udf_gen.gen_cmp(&sort.compare)?;
                         if sort.limit > 0 {
-                            stream = stream
-                                .sort_limit_by(sort.limit as u32, move |a, b| cmp.compare(a, b))?;
+                            stream =
+                                stream.sort_limit_by(sort.limit as u32, move |a, b| cmp.compare(a, b))?;
                         } else {
                             stream = stream.sort_by(move |a, b| cmp.compare(a, b))?;
                         }
                     }
-                    server_pb::operator_def::OpKind::Fold(_fold) => Err(
-                        BuildJobError::Unsupported("Fold is not supported yet".to_string()),
-                    )?,
-                    server_pb::operator_def::OpKind::Group(_group) => Err(
-                        BuildJobError::Unsupported("Group is not supported yet".to_string()),
-                    )?,
-                    server_pb::operator_def::OpKind::Dedup(_) => Err(BuildJobError::Unsupported(
-                        "Dedup is not supported yet".to_string(),
-                    ))?,
+                    server_pb::operator_def::OpKind::Fold(_fold) => {
+                        Err(BuildJobError::Unsupported("Fold is not supported yet".to_string()))?
+                    }
+                    server_pb::operator_def::OpKind::Group(_group) => {
+                        Err(BuildJobError::Unsupported("Group is not supported yet".to_string()))?
+                    }
+                    server_pb::operator_def::OpKind::Dedup(_) => {
+                        Err(BuildJobError::Unsupported("Dedup is not supported yet".to_string()))?
+                    }
                     server_pb::operator_def::OpKind::Merge(merge) => {
                         let (mut ori_stream, sub_stream) = stream.copied()?;
                         stream = self.install(sub_stream, &merge.tasks[0].plan[..])?;
                         for subtask in &merge.tasks[1..] {
                             let copied = ori_stream.copied()?;
                             ori_stream = copied.0;
-                            stream = self.install(copied.1, &subtask.plan[..])?.merge(stream)?;
+                            stream = self
+                                .install(copied.1, &subtask.plan[..])?
+                                .merge(stream)?;
                         }
                     }
                     server_pb::operator_def::OpKind::Iterate(iter) => {
-                        let until = if let Some(condition) =
-                            iter.until.as_ref().and_then(|f| Some(f.resource.as_ref()))
+                        let until = if let Some(condition) = iter
+                            .until
+                            .as_ref()
+                            .and_then(|f| Some(f.resource.as_ref()))
                         {
                             let cond = self.udf_gen.gen_filter(condition)?;
                             let mut until = IterCondition::new();
@@ -205,9 +205,8 @@ impl IRJobCompiler {
                             IterCondition::max_iters(iter.max_iters)
                         };
                         if let Some(ref iter_body) = iter.body {
-                            stream = stream.iterate_until(until, |start| {
-                                self.install(start, &iter_body.plan[..])
-                            })?;
+                            stream = stream
+                                .iterate_until(until, |start| self.install(start, &iter_body.plan[..]))?;
                         } else {
                             Err("iteration body can't be empty;")?
                         }
@@ -232,9 +231,9 @@ impl IRJobCompiler {
                                 .filter_map(move |(parent, sub)| join_func.exec(parent, sub))?;
                         }
                     }
-                    OpKind::SegApply(_) => Err(BuildJobError::Unsupported(
-                        "SegApply is not supported yet".to_string(),
-                    ))?,
+                    OpKind::SegApply(_) => {
+                        Err(BuildJobError::Unsupported("SegApply is not supported yet".to_string()))?
+                    }
                     OpKind::Join(join) => {
                         let joiner = self.udf_gen.gen_join(&join.resource)?;
                         let left_key_selector = joiner.gen_left_kv_fn()?;
@@ -259,61 +258,62 @@ impl IRJobCompiler {
                             .key_by(move |record| right_key_selector.get_kv(record))?
                             // TODO(bingqing): remove this when new keyed-join in gaia-x is ready;
                             .partition_by_key();
-                        stream = match join_kind {
-                            JoinKind::Inner => left_stream
-                                .inner_join(right_stream)?
-                                .map(|(left, right)| Ok(left.value.join(right.value, None)))?,
-                            JoinKind::LeftOuter => left_stream.left_outer_join(right_stream)?.map(
-                                |(left, right)| {
-                                    let left = left.ok_or(FnExecError::unexpected_data_error(
-                                        "left cannot be None in left outer join",
-                                    ))?;
-                                    if let Some(right) = right {
-                                        // TODO(bingqing): Specify HeadJoinOpt if necessary
-                                        Ok(left.value.join(right.value, None))
-                                    } else {
-                                        Ok(left.value)
-                                    }
-                                },
-                            )?,
-                            JoinKind::RightOuter => left_stream
-                                .right_outer_join(right_stream)?
-                                .map(|(left, right)| {
-                                    let right = right.ok_or(FnExecError::unexpected_data_error(
-                                        "right cannot be None in right outer join",
-                                    ))?;
-                                    if let Some(left) = left {
-                                        Ok(left.value.join(right.value, None))
-                                    } else {
-                                        Ok(right.value)
-                                    }
-                                })?,
-                            JoinKind::FullOuter => left_stream.full_outer_join(right_stream)?.map(
-                                |(left, right)| match (left, right) {
-                                    (Some(left), Some(right)) => {
-                                        Ok(left.value.join(right.value, None))
-                                    }
-                                    (Some(left), None) => Ok(left.value),
-                                    (None, Some(right)) => Ok(right.value),
-                                    (None, None) => {
-                                        unreachable!()
-                                    }
-                                },
-                            )?,
-                            JoinKind::Semi => left_stream
-                                .semi_join(right_stream)?
-                                .map(|left| Ok(left.value))?,
-                            JoinKind::Anti => left_stream
-                                .anti_join(right_stream)?
-                                .map(|left| Ok(left.value))?,
-                            JoinKind::Times => Err(BuildJobError::Unsupported(
-                                "JoinKind of Times is not supported yet".to_string(),
-                            ))?,
-                        }
+                        stream =
+                            match join_kind {
+                                JoinKind::Inner => left_stream
+                                    .inner_join(right_stream)?
+                                    .map(|(left, right)| Ok(left.value.join(right.value, None)))?,
+                                JoinKind::LeftOuter => {
+                                    left_stream
+                                        .left_outer_join(right_stream)?
+                                        .map(|(left, right)| {
+                                            let left = left.ok_or(FnExecError::unexpected_data_error(
+                                                "left cannot be None in left outer join",
+                                            ))?;
+                                            if let Some(right) = right {
+                                                // TODO(bingqing): Specify HeadJoinOpt if necessary
+                                                Ok(left.value.join(right.value, None))
+                                            } else {
+                                                Ok(left.value)
+                                            }
+                                        })?
+                                }
+                                JoinKind::RightOuter => left_stream
+                                    .right_outer_join(right_stream)?
+                                    .map(|(left, right)| {
+                                        let right = right.ok_or(FnExecError::unexpected_data_error(
+                                            "right cannot be None in right outer join",
+                                        ))?;
+                                        if let Some(left) = left {
+                                            Ok(left.value.join(right.value, None))
+                                        } else {
+                                            Ok(right.value)
+                                        }
+                                    })?,
+                                JoinKind::FullOuter => left_stream.full_outer_join(right_stream)?.map(
+                                    |(left, right)| match (left, right) {
+                                        (Some(left), Some(right)) => Ok(left.value.join(right.value, None)),
+                                        (Some(left), None) => Ok(left.value),
+                                        (None, Some(right)) => Ok(right.value),
+                                        (None, None) => {
+                                            unreachable!()
+                                        }
+                                    },
+                                )?,
+                                JoinKind::Semi => left_stream
+                                    .semi_join(right_stream)?
+                                    .map(|left| Ok(left.value))?,
+                                JoinKind::Anti => left_stream
+                                    .anti_join(right_stream)?
+                                    .map(|left| Ok(left.value))?,
+                                JoinKind::Times => Err(BuildJobError::Unsupported(
+                                    "JoinKind of Times is not supported yet".to_string(),
+                                ))?,
+                            }
                     }
-                    OpKind::KeyBy(_) => Err(BuildJobError::Unsupported(
-                        "KeyBy is not supported yet".to_string(),
-                    ))?,
+                    OpKind::KeyBy(_) => {
+                        Err(BuildJobError::Unsupported("KeyBy is not supported yet".to_string()))?
+                    }
                 }
             } else {
                 Err("Unknown operator with empty kind;")?;
@@ -325,13 +325,13 @@ impl IRJobCompiler {
 
 impl JobParser<Record, result_pb::Result> for IRJobCompiler {
     fn parse(
-        &self,
-        plan: &JobRequest,
-        input: &mut Source<Record>,
-        output: ResultSink<result_pb::Result>,
+        &self, plan: &JobRequest, input: &mut Source<Record>, output: ResultSink<result_pb::Result>,
     ) -> Result<(), BuildJobError> {
         if let Some(source) = plan.source.as_ref() {
-            let source = input.input_from(self.udf_gen.gen_source(source.resource.as_ref())?)?;
+            let source = input.input_from(
+                self.udf_gen
+                    .gen_source(source.resource.as_ref())?,
+            )?;
             let stream = if let Some(task) = plan.plan.as_ref() {
                 self.install(source, &task.plan)?
             } else {
@@ -340,7 +340,9 @@ impl JobParser<Record, result_pb::Result> for IRJobCompiler {
             if let Some(_sinker) = plan.sink.as_ref() {
                 // TODO: specify the columns to sink in _sinker
                 let ec = self.udf_gen.gen_sink(&vec![])?;
-                stream.map(move |record| ec.exec(record))?.sink_into(output)
+                stream
+                    .map(move |record| ec.exec(record))?
+                    .sink_into(output)
             } else {
                 Err("sink of job not found")?
             }

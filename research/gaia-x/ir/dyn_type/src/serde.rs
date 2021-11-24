@@ -13,10 +13,12 @@
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 
-use crate::{de_dyn_obj, Object, Primitives};
 use core::any::TypeId;
-use pegasus_common::codec::{Decode, Encode, ReadExt, WriteExt};
 use std::io;
+
+use pegasus_common::codec::{Decode, Encode, ReadExt, WriteExt};
+
+use crate::{de_dyn_obj, Object, Primitives};
 
 impl Encode for Primitives {
     fn write_to<W: WriteExt>(&self, writer: &mut W) -> io::Result<()> {

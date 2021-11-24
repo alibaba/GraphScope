@@ -12,9 +12,6 @@ tonic = "0.4"
 [build-dependencies]
 tonic-build = "0.4"
 
-[profile.release]
-lto = true
-panic = "abort"
-
 [features]
+default = []
 proto_inplace = []

@@ -13,14 +13,16 @@
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 
+use std::io;
+
+use dyn_type::BorrowObject;
+use ir_common::NameOrId;
+use pegasus_common::codec::{Decode, Encode, ReadExt, WriteExt};
+
 use crate::expr::eval::Context;
 use crate::graph::element::{Element, GraphElement};
 use crate::graph::property::{Details, DynDetails};
 use crate::graph::ID;
-use dyn_type::BorrowObject;
-use ir_common::NameOrId;
-use pegasus_common::codec::{Decode, Encode, ReadExt, WriteExt};
-use std::io;
 
 #[derive(Clone)]
 pub struct Edge {
@@ -53,13 +55,7 @@ impl GraphElement for Edge {
 
 impl Edge {
     pub fn new(src: ID, dst: ID, details: DynDetails) -> Self {
-        Edge {
-            src_id: src,
-            dst_id: dst,
-            src_label: None,
-            dst_label: None,
-            details,
-        }
+        Edge { src_id: src, dst_id: dst, src_label: None, dst_label: None, details }
     }
 
     pub fn set_src_label(&mut self, label: NameOrId) {
@@ -97,13 +93,7 @@ impl Decode for Edge {
         let src_label = <Option<NameOrId>>::read_from(reader)?;
         let dst_label = <Option<NameOrId>>::read_from(reader)?;
         let details = <DynDetails>::read_from(reader)?;
-        Ok(Edge {
-            src_id,
-            dst_id,
-            src_label,
-            dst_label,
-            details,
-        })
+        Ok(Edge { src_id, dst_id, src_label, dst_label, details })
     }
 }
 

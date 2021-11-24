@@ -14,11 +14,12 @@
 //! limitations under the License.
 mod edge_expand;
 
-use crate::error::{FnGenError, FnGenResult};
-use crate::process::record::Record;
 use ir_common::error::ParsePbError;
 use ir_common::generated::algebra as algebra_pb;
 use pegasus::api::function::{DynIter, FlatMapFunction};
+
+use crate::error::{FnGenError, FnGenResult};
+use crate::process::record::Record;
 
 pub trait FlatMapFuncGen {
     fn gen_flat_map(
@@ -31,18 +32,14 @@ impl FlatMapFuncGen for algebra_pb::logical_plan::Operator {
     ) -> FnGenResult<Box<dyn FlatMapFunction<Record, Record, Target = DynIter<Record>>>> {
         if let Some(opr) = self.opr {
             match opr {
-                algebra_pb::logical_plan::operator::Opr::Edge(edge_expand) => {
-                    edge_expand.gen_flat_map()
-                }
+                algebra_pb::logical_plan::operator::Opr::Edge(edge_expand) => edge_expand.gen_flat_map(),
                 algebra_pb::logical_plan::operator::Opr::Unfold(_unfold) => {
                     Err(FnGenError::unsupported_error("unfold is not supported yet"))
                 }
                 _ => Err(ParsePbError::from("algebra_pb op is not a flatmap"))?,
             }
         } else {
-            Err(ParsePbError::EmptyFieldError(
-                "algebra op is empty".to_string(),
-            ))?
+            Err(ParsePbError::EmptyFieldError("algebra op is empty".to_string()))?
         }
     }
 }

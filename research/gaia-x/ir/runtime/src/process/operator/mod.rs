@@ -23,16 +23,18 @@ pub mod sink;
 pub mod sort;
 pub mod source;
 
-use crate::error::FnExecError;
-use crate::graph::element::Element;
-use crate::graph::property::{Details, PropKey};
-use crate::process::record::{Entry, ObjectElement, Record};
+use std::convert::TryFrom;
+use std::sync::Arc;
+
 use ir_common::error::ParsePbError;
 use ir_common::generated::common as common_pb;
 use ir_common::NameOrId;
 use pegasus::codec::{Decode, Encode, ReadExt, WriteExt};
-use std::convert::TryFrom;
-use std::sync::Arc;
+
+use crate::error::FnExecError;
+use crate::graph::element::Element;
+use crate::graph::property::{Details, PropKey};
+use crate::process::record::{Entry, ObjectElement, Record};
 
 #[derive(Clone, Debug, Default)]
 pub struct TagKey {
@@ -45,15 +47,15 @@ impl TagKey {
     pub fn get_entry(&self, input: &Record) -> Result<Arc<Entry>, FnExecError> {
         let entry = input
             .get(self.tag.as_ref())
-            .ok_or(FnExecError::get_tag_error(
-                "Get tag failed since it refers to an empty entry",
-            ))?
+            .ok_or(FnExecError::get_tag_error("Get tag failed since it refers to an empty entry"))?
             .clone();
         if let Some(key) = self.key.as_ref() {
             if let Some(element) = entry.as_graph_element() {
-                let details = element.details().ok_or(FnExecError::get_tag_error(
-                    "Get key failed since get details from a graph element failed",
-                ))?;
+                let details = element
+                    .details()
+                    .ok_or(FnExecError::get_tag_error(
+                        "Get key failed since get details from a graph element failed",
+                    ))?;
                 let properties = details
                     .get(key)
                     .ok_or(FnExecError::get_tag_error(
@@ -76,16 +78,8 @@ impl TryFrom<common_pb::Variable> for TagKey {
     type Error = ParsePbError;
 
     fn try_from(v: common_pb::Variable) -> Result<Self, Self::Error> {
-        let tag = if let Some(tag) = v.tag {
-            Some(NameOrId::try_from(tag)?)
-        } else {
-            None
-        };
-        let prop = if let Some(prop) = v.property {
-            Some(PropKey::try_from(prop)?)
-        } else {
-            None
-        };
+        let tag = if let Some(tag) = v.tag { Some(NameOrId::try_from(tag)?) } else { None };
+        let prop = if let Some(prop) = v.property { Some(PropKey::try_from(prop)?) } else { None };
         Ok(TagKey { tag, key: prop })
     }
 }
@@ -121,54 +115,38 @@ impl Decode for TagKey {
             0 => {
                 let tag = <NameOrId>::read_from(reader)?;
                 let key = <PropKey>::read_from(reader)?;
-                Ok(TagKey {
-                    tag: Some(tag),
-                    key: Some(key),
-                })
+                Ok(TagKey { tag: Some(tag), key: Some(key) })
             }
             1 => {
                 let tag = <NameOrId>::read_from(reader)?;
-                Ok(TagKey {
-                    tag: Some(tag),
-                    key: None,
-                })
+                Ok(TagKey { tag: Some(tag), key: None })
             }
             2 => {
                 let key = <PropKey>::read_from(reader)?;
-                Ok(TagKey {
-                    tag: None,
-                    key: Some(key),
-                })
+                Ok(TagKey { tag: None, key: Some(key) })
             }
-            3 => Ok(TagKey {
-                tag: None,
-                key: None,
-            }),
-            _ => Err(std::io::Error::new(
-                std::io::ErrorKind::Other,
-                "unreachable",
-            )),
+            3 => Ok(TagKey { tag: None, key: None }),
+            _ => Err(std::io::Error::new(std::io::ErrorKind::Other, "unreachable")),
         }
     }
 }
 
 #[cfg(test)]
 pub(crate) mod tests {
+    use std::collections::HashMap;
+
+    use dyn_type::Object;
+
     use super::*;
     use crate::graph::element::{GraphElement, Vertex};
     use crate::graph::property::{DefaultDetails, DynDetails};
     use crate::process::record::RecordElement;
-    use dyn_type::Object;
-    use std::collections::HashMap;
 
     fn init_vertex1() -> Vertex {
         let map1: HashMap<NameOrId, Object> = vec![
             (NameOrId::from("id".to_string()), 1.into()),
             (NameOrId::from("age".to_string()), 29.into()),
-            (
-                NameOrId::from("name".to_string()),
-                "marko".to_string().into(),
-            ),
+            (NameOrId::from("name".to_string()), "marko".to_string().into()),
         ]
         .into_iter()
         .collect();
@@ -184,10 +162,7 @@ pub(crate) mod tests {
         let map2: HashMap<NameOrId, Object> = vec![
             (NameOrId::from("id".to_string()), 2.into()),
             (NameOrId::from("age".to_string()), 27.into()),
-            (
-                NameOrId::from("name".to_string()),
-                "vadas".to_string().into(),
-            ),
+            (NameOrId::from("name".to_string()), "vadas".to_string().into()),
         ]
         .into_iter()
         .collect();
@@ -228,10 +203,7 @@ pub(crate) mod tests {
 
     #[test]
     fn test_get_none_tag_entry() {
-        let tag_key = TagKey {
-            tag: None,
-            key: None,
-        };
+        let tag_key = TagKey { tag: None, key: None };
         let expected = init_vertex1();
         let record = init_record();
         let entry = tag_key.get_entry(&record).unwrap();
@@ -244,10 +216,7 @@ pub(crate) mod tests {
 
     #[test]
     fn test_get_tag_entry() {
-        let tag_key = TagKey {
-            tag: Some(NameOrId::Id(0)),
-            key: None,
-        };
+        let tag_key = TagKey { tag: Some(NameOrId::Id(0)), key: None };
         let expected = init_vertex2();
         let record = init_record();
         let entry = tag_key.get_entry(&record).unwrap();

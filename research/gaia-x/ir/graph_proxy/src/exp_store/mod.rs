@@ -16,11 +16,12 @@
 mod graph_partition;
 mod graph_query;
 
-use crate::InitializeJobCompiler;
 pub use graph_partition::SimplePartition;
 pub use graph_query::create_demo_graph;
 use runtime::graph::{ID, ID_BITS};
 use runtime::IRJobCompiler;
+
+use crate::InitializeJobCompiler;
 
 pub const ID_SHIFT_BITS: usize = ID_BITS >> 1;
 
@@ -42,9 +43,7 @@ impl QueryExpGraph {
 impl InitializeJobCompiler for QueryExpGraph {
     fn initialize_job_compiler(&self) -> IRJobCompiler {
         create_demo_graph();
-        let partitioner = SimplePartition {
-            num_servers: self.num_servers.clone(),
-        };
+        let partitioner = SimplePartition { num_servers: self.num_servers.clone() };
         IRJobCompiler::new(partitioner)
     }
 }

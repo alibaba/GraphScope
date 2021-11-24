@@ -13,12 +13,13 @@
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 
-use crate::graph::element::{Edge, GraphElement, Vertex, VertexOrEdge};
-use crate::process::record::{Entry, ObjectElement, Record, RecordElement};
 use ir_common::generated::common as common_pb;
 use ir_common::generated::result as result_pb;
 use ir_common::NameOrId;
 use pegasus::api::function::{FnResult, MapFunction};
+
+use crate::graph::element::{Edge, GraphElement, Vertex, VertexOrEdge};
+use crate::process::record::{Entry, ObjectElement, Record, RecordElement};
 
 pub struct RecordSinkEncoder {
     /// the given output fields; None means to output current entry;
@@ -29,10 +30,7 @@ pub struct RecordSinkEncoder {
 // TODO(bingqing): gen RecordSinkEncoder from pb;
 impl Default for RecordSinkEncoder {
     fn default() -> Self {
-        RecordSinkEncoder {
-            sink_keys: vec![],
-            is_output_head: true,
-        }
+        RecordSinkEncoder { sink_keys: vec![], is_output_head: true }
     }
 }
 
@@ -51,18 +49,11 @@ impl MapFunction<Record, result_pb::Result> for RecordSinkEncoder {
         if self.is_output_head {
             let entry = input.take(None);
             let entry_pb = entry.map(|entry| result_pb::Entry::from((*entry).clone()));
-            let column_pb = result_pb::Column {
-                name_or_id: None,
-                entry: entry_pb,
-            };
+            let column_pb = result_pb::Column { name_or_id: None, entry: entry_pb };
             sink_columns.push(column_pb);
         }
-        let record_pb = result_pb::Record {
-            columns: sink_columns,
-        };
-        Ok(result_pb::Result {
-            inner: Some(result_pb::result::Inner::Record(record_pb)),
-        })
+        let record_pb = result_pb::Record { columns: sink_columns };
+        Ok(result_pb::Result { inner: Some(result_pb::result::Inner::Record(record_pb)) })
     }
 }
 
@@ -138,9 +129,13 @@ impl From<Edge> for result_pb::Edge {
             id: e.id() as i64,
             label: e.label().map(|label| label.clone().into()),
             src_id: e.src_id as i64,
-            src_label: e.get_src_label().map(|label| label.clone().into()),
+            src_label: e
+                .get_src_label()
+                .map(|label| label.clone().into()),
             dst_id: e.dst_id as i64,
-            dst_label: e.get_dst_label().map(|label| label.clone().into()),
+            dst_label: e
+                .get_dst_label()
+                .map(|label| label.clone().into()),
             // TODO: return detached edge without property for now
             properties: vec![],
         }

@@ -19,7 +19,6 @@ mod common;
 
 #[cfg(test)]
 mod test {
-    use crate::common::test::*;
     use ir_common::generated::algebra as pb;
     use ir_common::generated::common as common_pb;
     use pegasus_client::builder::*;
@@ -27,6 +26,8 @@ mod test {
     use prost::Message;
     use runtime::expr::str_to_expr_pb;
     use runtime::graph::element::GraphElement;
+
+    use crate::common::test::*;
 
     fn init_poc_request() -> JobRequest {
         // g.V().hasLabel("person").has("id", 1).out("knows").limit(10)
@@ -41,9 +42,7 @@ mod test {
                 requirements: vec![],
             }),
         };
-        let select_opr = pb::Select {
-            predicate: Some(str_to_expr_pb("@.id == 1".to_string()).unwrap()),
-        };
+        let select_opr = pb::Select { predicate: Some(str_to_expr_pb("@.id == 1".to_string()).unwrap()) };
         let expand_opr = pb::EdgeExpand {
             base: Some(pb::ExpandBase {
                 v_tag: None,
