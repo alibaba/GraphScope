@@ -17,7 +17,11 @@ pegasus = { path = "../../pegasus/pegasus" }
 pegasus_client = {path = "../../pegasus/clients/rust/client"}
 pegasus_server = { path = "../../pegasus/server" }
 pegasus_common = { path = "../../pegasus/common" }
-ir_common = {path = "../common", features = ["proto_inplace"]}
+ir_common = {path = "../common"}
 runtime = {path="../runtime"}
 graph_proxy = {path = "../graph_proxy"}
 graph_store = {path = "../../../graph_store"}
+
+[features]
+default = []
+proto_inplace = ["ir_common/proto_inplace"]

@@ -8,7 +8,7 @@ crate-type = ["rlib", "cdylib"]
 
 [dependencies]
 dyn_type = {path = "../dyn_type"}
-ir_common = {path = "../common", features = ["proto_inplace"]}
+ir_common = {path = "../common"}
 pegasus_client = {path = "../../pegasus/clients/rust/client"}
 pegasus_server = {path = "../../pegasus/server"}
 pegasus = {path = "../../pegasus/pegasus"}
@@ -16,9 +16,7 @@ prost = "0.8"
 runtime = {path = "../runtime"}
 vec_map = "0.8.2"
 
-[profile.release]
-lto = true
-panic = "abort"
-
-
+[features]
+default = []
+proto_inplace = ["ir_common/proto_inplace"]
 
