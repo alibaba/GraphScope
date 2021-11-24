@@ -13,20 +13,21 @@
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 
-pub use edge::Edge;
-pub use vertex::Vertex;
-
-use crate::graph::property::{DefaultDetails, DynDetails};
-use crate::graph::ID;
-use dyn_type::{BorrowObject, Object};
-use ir_common::error::ParsePbError;
-use ir_common::generated::result as result_pb;
-use ir_common::NameOrId;
-use pegasus_common::codec::{Decode, Encode, ReadExt, WriteExt};
 use std::cmp::Ordering;
 use std::convert::{TryFrom, TryInto};
 use std::fmt::Debug;
 use std::io;
+
+use dyn_type::{BorrowObject, Object};
+pub use edge::Edge;
+use ir_common::error::ParsePbError;
+use ir_common::generated::result as result_pb;
+use ir_common::NameOrId;
+use pegasus_common::codec::{Decode, Encode, ReadExt, WriteExt};
+pub use vertex::Vertex;
+
+use crate::graph::property::{DefaultDetails, DynDetails};
+use crate::graph::ID;
 
 /// A field that is an element
 pub trait Element {

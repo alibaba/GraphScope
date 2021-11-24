@@ -19,6 +19,8 @@ mod common;
 
 #[cfg(test)]
 mod test {
+    use std::sync::Arc;
+
     use graph_proxy::{create_demo_graph, SimplePartition};
     use graph_store::ldbc::LDBCVertexParser;
     use graph_store::prelude::DefaultId;
@@ -35,7 +37,6 @@ mod test {
     use runtime::process::operator::map::MapFuncGen;
     use runtime::process::operator::source::SourceOperator;
     use runtime::process::record::Record;
-    use std::sync::Arc;
 
     // g.V()
     fn source_gen(alias: Option<common_pb::NameOrId>) -> Box<dyn Iterator<Item = Record> + Send> {
@@ -235,8 +236,10 @@ mod test {
         let v4: DefaultId = LDBCVertexParser::to_global_id(4, 0);
         let mut expected_ids = vec![v2, v4];
         while let Some(Ok(record)) = result.next() {
-            if let Some(element) =
-                record.get(Some(&NameOrId::Str("b".to_string()))).unwrap().as_graph_element()
+            if let Some(element) = record
+                .get(Some(&NameOrId::Str("b".to_string())))
+                .unwrap()
+                .as_graph_element()
             {
                 result_ids.push(element.id() as usize)
             }

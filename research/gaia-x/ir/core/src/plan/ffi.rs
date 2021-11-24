@@ -51,17 +51,19 @@
 //! Save the codes as </path/to/c-caller/test.cc>, and build like:
 //! `g++ -o test test.cc -std=c++11 -L. -lir_core`
 
-use crate::plan::logical::LogicalPlan;
-use crate::plan::physical::{AsPhysical, PhysicalError};
+use std::convert::{TryFrom, TryInto};
+use std::ffi::{c_void, CStr};
+use std::os::raw::c_char;
+
 use ir_common::generated::algebra as pb;
 use ir_common::generated::common as common_pb;
 use pegasus::BuildJobError;
 use pegasus_client::builder::JobBuilder;
 use prost::Message;
 use runtime::expr::str_to_expr_pb;
-use std::convert::{TryFrom, TryInto};
-use std::ffi::{c_void, CStr};
-use std::os::raw::c_char;
+
+use crate::plan::logical::LogicalPlan;
+use crate::plan::physical::{AsPhysical, PhysicalError};
 
 #[repr(i32)]
 #[derive(Clone, Copy, Debug, PartialEq)]
@@ -1168,8 +1170,9 @@ mod scan {
 }
 
 mod idxscan {
-    use super::*;
     use ir_common::generated::algebra::indexed_scan::{KvEquivPair, KvEquivPairs};
+
+    use super::*;
 
     /// To initialize an indexed-scan operator from a scan operator
     #[no_mangle]

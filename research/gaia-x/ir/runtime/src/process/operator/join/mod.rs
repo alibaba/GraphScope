@@ -15,11 +15,12 @@
 
 mod join;
 
+use ir_common::error::ParsePbError;
+use ir_common::generated::algebra as algebra_pb;
+
 use crate::error::FnGenResult;
 use crate::process::functions::JoinKeyGen;
 use crate::process::record::{Record, RecordKey};
-use ir_common::error::ParsePbError;
-use ir_common::generated::algebra as algebra_pb;
 
 pub trait JoinFunctionGen {
     fn gen_join(self) -> FnGenResult<Box<dyn JoinKeyGen<Record, RecordKey, Record>>>;
@@ -33,9 +34,7 @@ impl JoinFunctionGen for algebra_pb::logical_plan::Operator {
                 _ => Err(ParsePbError::from("algebra_pb op is not a keyed op"))?,
             }
         } else {
-            Err(ParsePbError::EmptyFieldError(
-                "algebra op is empty".to_string(),
-            ))?
+            Err(ParsePbError::EmptyFieldError("algebra op is empty".to_string()))?
         }
     }
 }

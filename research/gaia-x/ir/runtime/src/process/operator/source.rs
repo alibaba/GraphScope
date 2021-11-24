@@ -13,20 +13,22 @@
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 
+use std::collections::HashMap;
+use std::convert::TryFrom;
+use std::sync::Arc;
+
+use ir_common::error::{ParsePbError, ParsePbResult};
+use ir_common::generated::algebra as algebra_pb;
+use ir_common::generated::common::property;
+use ir_common::generated::common::value;
+use ir_common::NameOrId;
+
 use crate::error::{FnGenError, FnGenResult};
 use crate::graph::element::{Edge, Vertex};
 use crate::graph::partitioner::Partitioner;
 use crate::graph::QueryParams;
 use crate::graph::ID;
 use crate::process::record::Record;
-use ir_common::error::{ParsePbError, ParsePbResult};
-use ir_common::generated::algebra as algebra_pb;
-use ir_common::generated::common::property;
-use ir_common::generated::common::value;
-use ir_common::NameOrId;
-use std::collections::HashMap;
-use std::convert::TryFrom;
-use std::sync::Arc;
 
 #[derive(Debug)]
 pub enum SourceType {
@@ -46,9 +48,7 @@ pub struct SourceOperator {
 
 impl SourceOperator {
     pub fn new(
-        source_pb: &mut algebra_pb::logical_plan::Operator,
-        job_workers: usize,
-        worker_index: u32,
+        source_pb: &mut algebra_pb::logical_plan::Operator, job_workers: usize, worker_index: u32,
         partitioner: Arc<dyn Partitioner>,
     ) -> ParsePbResult<Self> {
         if let Some(opr) = source_pb.opr.take() {
@@ -60,21 +60,19 @@ impl SourceOperator {
                     Ok(source_op)
                 }
                 algebra_pb::logical_plan::operator::Opr::IndexedScan(indexed_scan) => {
-                    let scan = indexed_scan.scan.ok_or("scan is missing in indexed_scan")?;
+                    let scan = indexed_scan
+                        .scan
+                        .ok_or("scan is missing in indexed_scan")?;
                     let mut source_op = SourceOperator::try_from(scan)?;
                     let global_ids = parse_indexed_kv_pairs(indexed_scan.or_kv_equiv_pairs)?;
                     source_op.set_src(global_ids, job_workers, partitioner);
                     debug!("Runtime source op of indexed_scan {:?}", source_op);
                     Ok(source_op)
                 }
-                _ => Err(ParsePbError::NotSupported(
-                    "Unsupported source op in pb_request".to_string(),
-                ))?,
+                _ => Err(ParsePbError::NotSupported("Unsupported source op in pb_request".to_string()))?,
             }
         } else {
-            Err(ParsePbError::EmptyFieldError(
-                "Empty source op in pb_request".to_string(),
-            ))?
+            Err(ParsePbError::EmptyFieldError("Empty source op in pb_request".to_string()))?
         }
     }
 
@@ -83,7 +81,10 @@ impl SourceOperator {
         let mut partitions = HashMap::new();
         for id in ids {
             if let Ok(wid) = partitioner.get_partition(&id, job_workers) {
-                partitions.entry(wid).or_insert_with(Vec::new).push(id);
+                partitions
+                    .entry(wid)
+                    .or_insert_with(Vec::new)
+                    .push(id);
             } else {
                 debug!("get server id failed in graph_partition_manager in source op");
             }
@@ -93,17 +94,9 @@ impl SourceOperator {
     }
 
     /// Assign partition_list for each worker to call scan_vertex
-    fn set_partitions(
-        &mut self,
-        job_workers: usize,
-        worker_index: u32,
-        partitioner: Arc<dyn Partitioner>,
-    ) {
+    fn set_partitions(&mut self, job_workers: usize, worker_index: u32, partitioner: Arc<dyn Partitioner>) {
         if let Ok(partition_list) = partitioner.get_worker_partitions(job_workers, worker_index) {
-            debug!(
-                "Assign worker {:?} to scan partition list: {:?}",
-                worker_index, partition_list
-            );
+            debug!("Assign worker {:?} to scan partition list: {:?}", worker_index, partition_list);
             self.query_params.partitions = partition_list;
         } else {
             debug!("get partition list failed in graph_partition_manager in source op");
@@ -112,15 +105,11 @@ impl SourceOperator {
 }
 
 impl SourceOperator {
-    pub fn gen_source(
-        self,
-        worker_index: usize,
-    ) -> FnGenResult<Box<dyn Iterator<Item = Record> + Send>> {
+    pub fn gen_source(self, worker_index: usize) -> FnGenResult<Box<dyn Iterator<Item = Record> + Send>> {
         let graph = crate::get_graph().ok_or(FnGenError::NullGraphError)?;
         match self.source_type {
             SourceType::Vertex => {
-                let mut v_source =
-                    Box::new(std::iter::empty()) as Box<dyn Iterator<Item = Vertex> + Send>;
+                let mut v_source = Box::new(std::iter::empty()) as Box<dyn Iterator<Item = Vertex> + Send>;
                 if let Some(ref seeds) = self.src {
                     if let Some(src) = seeds.get(&(worker_index as u64)) {
                         if !src.is_empty() {
@@ -131,13 +120,10 @@ impl SourceOperator {
                     // parallel scan, and each worker should scan the partitions assigned to it in self.v_params.partitions
                     v_source = graph.scan_vertex(&self.query_params)?;
                 };
-                Ok(Box::new(
-                    v_source.map(move |v| Record::new(v, self.alias.clone())),
-                ))
+                Ok(Box::new(v_source.map(move |v| Record::new(v, self.alias.clone()))))
             }
             SourceType::Edge => {
-                let mut e_source =
-                    Box::new(std::iter::empty()) as Box<dyn Iterator<Item = Edge> + Send>;
+                let mut e_source = Box::new(std::iter::empty()) as Box<dyn Iterator<Item = Edge> + Send>;
                 if let Some(ref seeds) = self.src {
                     if let Some(src) = seeds.get(&(worker_index as u64)) {
                         if !src.is_empty() {
@@ -148,13 +134,11 @@ impl SourceOperator {
                     // parallel scan, and each worker should scan the partitions assigned to it in self.e_params.partitions
                     e_source = graph.scan_edge(&self.query_params)?;
                 }
-                Ok(Box::new(
-                    e_source.map(move |e| Record::new(e, self.alias.clone())),
-                ))
+                Ok(Box::new(e_source.map(move |e| Record::new(e, self.alias.clone()))))
             }
-            SourceType::Table => Err(FnGenError::unsupported_error(
-                "Source type of Table is not supported yet",
-            ))?,
+            SourceType::Table => {
+                Err(FnGenError::unsupported_error("Source type of Table is not supported yet"))?
+            }
         }
     }
 }
@@ -163,8 +147,7 @@ impl TryFrom<algebra_pb::Scan> for SourceOperator {
     type Error = ParsePbError;
 
     fn try_from(scan_pb: algebra_pb::Scan) -> Result<Self, Self::Error> {
-        let scan_opt: algebra_pb::scan::ScanOpt =
-            unsafe { ::std::mem::transmute(scan_pb.scan_opt) };
+        let scan_opt: algebra_pb::scan::ScanOpt = unsafe { ::std::mem::transmute(scan_pb.scan_opt) };
         let source_type = match scan_opt {
             algebra_pb::scan::ScanOpt::Vertex => SourceType::Vertex,
             algebra_pb::scan::ScanOpt::Edge => SourceType::Edge,
@@ -177,12 +160,7 @@ impl TryFrom<algebra_pb::Scan> for SourceOperator {
 
         let query_params = QueryParams::try_from(scan_pb.params)?;
 
-        Ok(SourceOperator {
-            query_params,
-            src: None,
-            alias,
-            source_type,
-        })
+        Ok(SourceOperator { query_params, src: None, alias, source_type })
     }
 }
 

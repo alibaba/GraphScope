@@ -13,16 +13,18 @@
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 
+use std::cmp::Ordering;
+use std::convert::{TryFrom, TryInto};
+
+use ir_common::error::ParsePbError;
+use ir_common::generated::algebra as algebra_pb;
+use ir_common::generated::algebra::order_by::ordering_pair::Order;
+
 use crate::error::FnGenResult;
 use crate::process::functions::CompareFunction;
 use crate::process::operator::sort::CompareFunctionGen;
 use crate::process::operator::TagKey;
 use crate::process::record::Record;
-use ir_common::error::ParsePbError;
-use ir_common::generated::algebra as algebra_pb;
-use ir_common::generated::algebra::order_by::ordering_pair::Order;
-use std::cmp::Ordering;
-use std::convert::{TryFrom, TryInto};
 
 #[derive(Debug)]
 struct RecordCompare {
@@ -68,9 +70,7 @@ impl TryFrom<algebra_pb::OrderBy> for RecordCompare {
         for order_pair in order_pb.pairs {
             let key = order_pair
                 .key
-                .ok_or(ParsePbError::EmptyFieldError(
-                    "key is empty in order".to_string(),
-                ))?
+                .ok_or(ParsePbError::EmptyFieldError("key is empty in order".to_string()))?
                 .try_into()?;
             let order: Order = unsafe { ::std::mem::transmute(order_pair.order) };
             tag_key_order.push((key, order));
@@ -81,17 +81,18 @@ impl TryFrom<algebra_pb::OrderBy> for RecordCompare {
 
 #[cfg(test)]
 mod tests {
-    use crate::graph::element::{Element, GraphElement};
-    use crate::graph::property::Details;
-    use crate::process::operator::sort::CompareFunctionGen;
-    use crate::process::operator::tests::{init_source, init_source_with_tag};
-    use crate::process::record::Record;
     use ir_common::generated::algebra as pb;
     use ir_common::generated::common as common_pb;
     use ir_common::NameOrId;
     use pegasus::api::{Sink, SortBy};
     use pegasus::result::ResultStream;
     use pegasus::JobConf;
+
+    use crate::graph::element::{Element, GraphElement};
+    use crate::graph::property::Details;
+    use crate::process::operator::sort::CompareFunctionGen;
+    use crate::process::operator::tests::{init_source, init_source_with_tag};
+    use crate::process::record::Record;
 
     fn sort_test(source: Vec<Record>, sort_opr: pb::OrderBy) -> ResultStream<Record> {
         let conf = JobConf::new("sort_test");
@@ -114,10 +115,7 @@ mod tests {
     fn sort_test_01() {
         let sort_opr = pb::OrderBy {
             pairs: vec![pb::order_by::OrderingPair {
-                key: Some(common_pb::Variable {
-                    tag: None,
-                    property: None,
-                }),
+                key: Some(common_pb::Variable { tag: None, property: None }),
                 order: 1, // ascending
             }],
             limit: None,
@@ -138,10 +136,7 @@ mod tests {
     fn sort_test_02() {
         let sort_opr = pb::OrderBy {
             pairs: vec![pb::order_by::OrderingPair {
-                key: Some(common_pb::Variable {
-                    tag: None,
-                    property: None,
-                }),
+                key: Some(common_pb::Variable { tag: None, property: None }),
                 order: 2, // descending
             }],
             limit: None,

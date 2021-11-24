@@ -159,9 +159,7 @@ fn parse_escape_sequence<Iter: Iterator<Item = char>>(iter: &mut Iter) -> ExprRe
 /// The string is terminated by a double quote `"`.
 /// Occurrences of `"` within the string can be escaped with `\`.
 /// The backslash needs to be escaped with another backslash `\`.
-fn parse_string_literal<Iter: Iterator<Item = char>>(
-    mut iter: &mut Iter,
-) -> ExprResult<PartialToken> {
+fn parse_string_literal<Iter: Iterator<Item = char>>(mut iter: &mut Iter) -> ExprResult<PartialToken> {
     let mut result = String::new();
 
     while let Some(c) = iter.next() {
@@ -374,23 +372,11 @@ mod tests {
         assert_eq!(case2, expected_case2);
 
         let case3 = tokenize("1 + (-2)").unwrap();
-        let expected_case3 = vec![
-            Token::Int(1),
-            Token::Plus,
-            Token::LBrace,
-            Token::Int(-2),
-            Token::RBrace,
-        ];
+        let expected_case3 = vec![Token::Int(1), Token::Plus, Token::LBrace, Token::Int(-2), Token::RBrace];
         assert_eq!(case3, expected_case3);
 
         let case4 = tokenize("1 + -2 + 2").unwrap();
-        let expected_case4 = vec![
-            Token::Int(1),
-            Token::Plus,
-            Token::Int(-2),
-            Token::Plus,
-            Token::Int(2),
-        ];
+        let expected_case4 = vec![Token::Int(1), Token::Plus, Token::Int(-2), Token::Plus, Token::Int(2)];
         assert_eq!(case4, expected_case4);
     }
 
@@ -406,19 +392,13 @@ mod tests {
         let case2 = tokenize("1 & 2");
         assert_eq!(
             case2.err().unwrap(),
-            ExprError::unmatched_partial_token(
-                PartialToken::Ampersand,
-                Some(PartialToken::Whitespace)
-            )
+            ExprError::unmatched_partial_token(PartialToken::Ampersand, Some(PartialToken::Whitespace))
         );
 
         let case3 = tokenize("1 | 2");
         assert_eq!(
             case3.err().unwrap(),
-            ExprError::unmatched_partial_token(
-                PartialToken::VerticalBar,
-                Some(PartialToken::Whitespace)
-            )
+            ExprError::unmatched_partial_token(PartialToken::VerticalBar, Some(PartialToken::Whitespace))
         );
 
         let case4 = tokenize("-a");

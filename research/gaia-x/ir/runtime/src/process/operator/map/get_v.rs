@@ -13,16 +13,18 @@
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 
+use std::convert::TryInto;
+
+use ir_common::generated::algebra as algebra_pb;
+use ir_common::generated::algebra::get_v::VOpt;
+use ir_common::NameOrId;
+use pegasus::api::function::{FnResult, MapFunction};
+
 use crate::error::{FnExecError, FnGenResult};
 use crate::graph::element::{Vertex, VertexOrEdge};
 use crate::graph::property::{DefaultDetails, DynDetails};
 use crate::process::operator::map::MapFuncGen;
 use crate::process::record::Record;
-use ir_common::generated::algebra as algebra_pb;
-use ir_common::generated::algebra::get_v::VOpt;
-use ir_common::NameOrId;
-use pegasus::api::function::{FnResult, MapFunction};
-use std::convert::TryInto;
 
 #[derive(Debug)]
 struct GetVertexOperator {
@@ -57,9 +59,15 @@ impl MapFunction<Record, Record> for GetVertexOperator {
 
 impl MapFuncGen for algebra_pb::GetV {
     fn gen_map(self) -> FnGenResult<Box<dyn MapFunction<Record, Record>>> {
-        let start_tag = self.tag.map(|name_or_id| name_or_id.try_into()).transpose()?;
+        let start_tag = self
+            .tag
+            .map(|name_or_id| name_or_id.try_into())
+            .transpose()?;
         let opt: VOpt = unsafe { ::std::mem::transmute(self.opt) };
-        let alias = self.alias.map(|name_or_id| name_or_id.try_into()).transpose()?;
+        let alias = self
+            .alias
+            .map(|name_or_id| name_or_id.try_into())
+            .transpose()?;
         let get_vertex_operator = GetVertexOperator { start_tag, opt, alias };
         debug!("Runtime get_vertex operator: {:?}", get_vertex_operator);
         Ok(Box::new(get_vertex_operator))

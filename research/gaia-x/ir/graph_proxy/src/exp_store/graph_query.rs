@@ -13,16 +13,18 @@
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 
-use crate::exp_store::{ID_MASK, ID_SHIFT_BITS};
-use crate::from_fn;
-use crate::{filter_limit, limit_n};
+use std::collections::HashMap;
+use std::path::Path;
+use std::sync::atomic::{AtomicPtr, Ordering};
+use std::sync::Arc;
+
 use dyn_type::{object, BorrowObject, Object};
 use graph_store::common::LabelId;
 use graph_store::config::{JsonConf, DIR_GRAPH_SCHEMA, FILE_SCHEMA};
 use graph_store::ldbc::LDBCVertexParser;
 use graph_store::prelude::{
-    DefaultId, EdgeId, GlobalStoreTrait, GlobalStoreUpdate, GraphDBConfig, InternalId,
-    LDBCGraphSchema, LargeGraphDB, LocalEdge, LocalVertex, MutableGraphDB, Row, INVALID_LABEL_ID,
+    DefaultId, EdgeId, GlobalStoreTrait, GlobalStoreUpdate, GraphDBConfig, InternalId, LDBCGraphSchema,
+    LargeGraphDB, LocalEdge, LocalVertex, MutableGraphDB, Row, INVALID_LABEL_ID,
 };
 use ir_common::{KeyId, NameOrId};
 use pegasus::api::function::FnResult;
@@ -32,10 +34,10 @@ use pegasus_common::impl_as_any;
 use runtime::graph::element::{Edge, Vertex};
 use runtime::graph::property::{DefaultDetails, Details, DynDetails};
 use runtime::graph::{register_graph, Direction, GraphProxy, QueryParams, Statement, ID};
-use std::collections::HashMap;
-use std::path::Path;
-use std::sync::atomic::{AtomicPtr, Ordering};
-use std::sync::Arc;
+
+use crate::exp_store::{ID_MASK, ID_SHIFT_BITS};
+use crate::from_fn;
+use crate::{filter_limit, limit_n};
 
 lazy_static! {
     pub static ref DATA_PATH: String = configure_with_default!(String, "DATA_PATH", "".to_string());
@@ -213,17 +215,13 @@ fn _init_modern_graph() -> LargeGraphDB<DefaultId, InternalId> {
       }
     }
     "#;
-    let schema =
-        LDBCGraphSchema::from_json(modern_graph_schema.to_string()).expect("Parse schema error!");
+    let schema = LDBCGraphSchema::from_json(modern_graph_schema.to_string()).expect("Parse schema error!");
 
     mut_graph.into_graph(schema)
 }
 
 impl GraphProxy for DemoGraph {
-    fn scan_vertex(
-        &self,
-        params: &QueryParams,
-    ) -> FnResult<Box<dyn Iterator<Item = Vertex> + Send>> {
+    fn scan_vertex(&self, params: &QueryParams) -> FnResult<Box<dyn Iterator<Item = Vertex> + Send>> {
         // DemoGraph contains a single graph partition on each server,
         // therefore, there's no need to use the specific partition id for query.
         // Besides, we guarantee only one worker (on each server) is going to scan (with params.partitions.is_some())
@@ -257,9 +255,7 @@ impl GraphProxy for DemoGraph {
     }
 
     fn get_vertex(
-        &self,
-        ids: &[ID],
-        params: &QueryParams,
+        &self, ids: &[ID], params: &QueryParams,
     ) -> FnResult<Box<dyn Iterator<Item = Vertex> + Send>> {
         let mut result = Vec::with_capacity(ids.len());
         for id in ids {
@@ -276,9 +272,7 @@ impl GraphProxy for DemoGraph {
     }
 
     fn get_edge(
-        &self,
-        ids: &[ID],
-        params: &QueryParams,
+        &self, ids: &[ID], params: &QueryParams,
     ) -> FnResult<Box<dyn Iterator<Item = Edge> + Send>> {
         let mut result = Vec::with_capacity(ids.len());
         for id in ids {
@@ -292,9 +286,7 @@ impl GraphProxy for DemoGraph {
     }
 
     fn prepare_explore_vertex(
-        &self,
-        direction: Direction,
-        params: &QueryParams,
+        &self, direction: Direction, params: &QueryParams,
     ) -> FnResult<Box<dyn Statement<ID, Vertex>>> {
         let edge_label_ids = encode_storage_edge_label(params.labels.as_ref());
         let filter = params.filter.clone();
@@ -315,9 +307,7 @@ impl GraphProxy for DemoGraph {
     }
 
     fn prepare_explore_edge(
-        &self,
-        direction: Direction,
-        params: &QueryParams,
+        &self, direction: Direction, params: &QueryParams,
     ) -> FnResult<Box<dyn Statement<ID, Edge>>> {
         let edge_label_ids = encode_storage_edge_label(&params.labels);
         let filter = params.filter.clone();
@@ -344,8 +334,7 @@ pub fn create_demo_graph() {
 
 #[inline]
 fn to_runtime_vertex(
-    v: LocalVertex<DefaultId>,
-    store: &'static LargeGraphDB<DefaultId, InternalId>,
+    v: LocalVertex<DefaultId>, store: &'static LargeGraphDB<DefaultId, InternalId>,
 ) -> Vertex {
     // For vertices, we query properties via vid
     let label = encode_runtime_v_label(&v);
@@ -375,15 +364,12 @@ fn to_runtime_vertex_with_property(v: LocalVertex<DefaultId>, props: &Vec<NameOr
         }
     }
 
-    Vertex::new(DynDetails::new(DefaultDetails::with_property(
-        id, label, properties,
-    )))
+    Vertex::new(DynDetails::new(DefaultDetails::with_property(id, label, properties)))
 }
 
 #[inline]
 fn to_runtime_edge(
-    e: LocalEdge<DefaultId, InternalId>,
-    _store: &'static LargeGraphDB<DefaultId, InternalId>,
+    e: LocalEdge<DefaultId, InternalId>, _store: &'static LargeGraphDB<DefaultId, InternalId>,
 ) -> Edge {
     // TODO: For edges, we clone all properties by default for now. But we'd better get properties on demand
     let id = encode_runtime_e_id(&e);
@@ -414,16 +400,9 @@ impl_as_any!(LazyVertexDetails);
 
 impl LazyVertexDetails {
     pub fn new(
-        id: DefaultId,
-        label: NameOrId,
-        store: &'static LargeGraphDB<DefaultId, InternalId>,
+        id: DefaultId, label: NameOrId, store: &'static LargeGraphDB<DefaultId, InternalId>,
     ) -> Self {
-        LazyVertexDetails {
-            id,
-            label,
-            inner: AtomicPtr::default(),
-            store,
-        }
+        LazyVertexDetails { id, label, inner: AtomicPtr::default(), store }
     }
 }
 
@@ -515,7 +494,10 @@ fn labels_to_ids(labels: &Vec<NameOrId>, is_vertex: bool) -> Option<Vec<LabelId>
                         let label_id = if is_vertex {
                             (*GRAPH).get_schema().get_vertex_label_id(s)
                         } else {
-                            (*GRAPH).get_schema().get_edge_label_id(s).map(|id| id)
+                            (*GRAPH)
+                                .get_schema()
+                                .get_edge_label_id(s)
+                                .map(|id| id)
                         };
                         label_id.unwrap_or(INVALID_LABEL_ID)
                     }
@@ -536,9 +518,10 @@ fn encode_storage_edge_label(labels: &Vec<NameOrId>) -> Option<Vec<LabelId>> {
 
 #[cfg(test)]
 mod tests {
-    use super::GRAPH;
     use graph_store::ldbc::LDBCVertexParser;
     use graph_store::prelude::{DefaultId, GlobalStoreTrait};
+
+    use super::GRAPH;
 
     #[test]
     fn it_works() {

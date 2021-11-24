@@ -16,11 +16,12 @@ mod get_detail;
 mod get_v;
 mod project;
 
-use crate::error::{FnGenError, FnGenResult};
-use crate::process::record::Record;
 use ir_common::error::ParsePbError;
 use ir_common::generated::algebra as algebra_pb;
 use pegasus::api::function::MapFunction;
+
+use crate::error::{FnGenError, FnGenResult};
+use crate::process::record::Record;
 
 pub trait MapFuncGen {
     fn gen_map(self) -> FnGenResult<Box<dyn MapFunction<Record, Record>>>;

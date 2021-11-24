@@ -17,12 +17,14 @@
 mod tests {
     extern crate itertools;
 
-    use self::itertools::Itertools;
-    use dyn_type::{object, Object, Primitives};
     use std::cmp::Ordering;
     use std::collections::HashMap;
     use std::fmt::Debug;
     use std::hash::Hash;
+
+    use dyn_type::{object, Object, Primitives};
+
+    use self::itertools::Itertools;
 
     #[test]
     fn test_as_primitive() {

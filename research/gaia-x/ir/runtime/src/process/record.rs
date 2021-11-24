@@ -13,9 +13,11 @@
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 
-use crate::expr::eval::Context;
-use crate::graph::element::{Edge, Element, GraphElement, Vertex, VertexOrEdge};
-use crate::graph::property::DynDetails;
+use std::cmp::Ordering;
+use std::convert::{TryFrom, TryInto};
+use std::hash::{Hash, Hasher};
+use std::sync::Arc;
+
 use dyn_type::{BorrowObject, Object};
 use indexmap::map::IndexMap;
 use ir_common::error::ParsePbError;
@@ -23,10 +25,10 @@ use ir_common::generated::result as result_pb;
 use ir_common::NameOrId;
 use pegasus::api::function::DynIter;
 use pegasus::codec::{Decode, Encode, ReadExt, WriteExt};
-use std::cmp::Ordering;
-use std::convert::{TryFrom, TryInto};
-use std::hash::{Hash, Hasher};
-use std::sync::Arc;
+
+use crate::expr::eval::Context;
+use crate::graph::element::{Edge, Element, GraphElement, Vertex, VertexOrEdge};
+use crate::graph::property::DynDetails;
 
 #[derive(Debug, Clone)]
 pub enum ObjectElement {
@@ -73,15 +75,9 @@ impl Record {
         let mut columns = IndexMap::new();
         if let Some(tag) = tag {
             columns.insert(tag, Arc::new(entry.into()));
-            Record {
-                curr: None,
-                columns,
-            }
+            Record { curr: None, columns }
         } else {
-            Record {
-                curr: Some(Arc::new(entry.into())),
-                columns,
-            }
+            Record { curr: Some(Arc::new(entry.into())), columns }
         }
     }
 
@@ -322,11 +318,7 @@ pub struct RecordExpandIter<E> {
 
 impl<E> RecordExpandIter<E> {
     pub fn new(origin: Record, tag: Option<&NameOrId>, children: DynIter<E>) -> Self {
-        RecordExpandIter {
-            tag: tag.map(|e| e.clone()),
-            origin,
-            children,
-        }
+        RecordExpandIter { tag: tag.map(|e| e.clone()), origin, children }
     }
 }
 
@@ -385,10 +377,7 @@ impl Decode for ObjectElement {
                 let object = <Object>::read_from(reader)?;
                 Ok(ObjectElement::Agg(object))
             }
-            _ => Err(std::io::Error::new(
-                std::io::ErrorKind::Other,
-                "unreachable",
-            )),
+            _ => Err(std::io::Error::new(std::io::ErrorKind::Other, "unreachable")),
         }
     }
 }
@@ -421,10 +410,7 @@ impl Decode for RecordElement {
                 let object_element = <ObjectElement>::read_from(reader)?;
                 Ok(RecordElement::OffGraph(object_element))
             }
-            _ => Err(std::io::Error::new(
-                std::io::ErrorKind::Other,
-                "unreachable",
-            )),
+            _ => Err(std::io::Error::new(std::io::ErrorKind::Other, "unreachable")),
         }
     }
 }
@@ -457,10 +443,7 @@ impl Decode for Entry {
                 let collection = <Vec<RecordElement>>::read_from(reader)?;
                 Ok(Entry::Collection(collection))
             }
-            _ => Err(std::io::Error::new(
-                std::io::ErrorKind::Other,
-                "unreachable",
-            )),
+            _ => Err(std::io::Error::new(std::io::ErrorKind::Other, "unreachable")),
         }
     }
 }
@@ -488,11 +471,7 @@ impl Encode for Record {
 impl Decode for Record {
     fn read_from<R: ReadExt>(reader: &mut R) -> std::io::Result<Self> {
         let opt = reader.read_u8()?;
-        let curr = if opt == 0 {
-            None
-        } else {
-            Some(Arc::new(<Entry>::read_from(reader)?))
-        };
+        let curr = if opt == 0 { None } else { Some(Arc::new(<Entry>::read_from(reader)?)) };
         let size = <u64>::read_from(reader)? as usize;
         let mut columns = IndexMap::with_capacity(size);
         for _i in 0..size {
@@ -541,9 +520,7 @@ impl TryFrom<result_pb::Entry> for Entry {
                 )),
             }
         } else {
-            Err(ParsePbError::EmptyFieldError(
-                "entry inner is empty".to_string(),
-            ))?
+            Err(ParsePbError::EmptyFieldError("entry inner is empty".to_string()))?
         }
     }
 }
@@ -555,14 +532,12 @@ impl TryFrom<result_pb::Element> for RecordElement {
             match inner {
                 result_pb::element::Inner::Vertex(v) => Ok(RecordElement::OnGraph(v.try_into()?)),
                 result_pb::element::Inner::Edge(e) => Ok(RecordElement::OnGraph(e.try_into()?)),
-                result_pb::element::Inner::Object(_o) => Err(ParsePbError::NotSupported(
-                    "Cannot parse object".to_string(),
-                )),
+                result_pb::element::Inner::Object(_o) => {
+                    Err(ParsePbError::NotSupported("Cannot parse object".to_string()))
+                }
             }
         } else {
-            Err(ParsePbError::EmptyFieldError(
-                "element inner is empty".to_string(),
-            ))?
+            Err(ParsePbError::EmptyFieldError("element inner is empty".to_string()))?
         }
     }
 }

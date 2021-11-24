@@ -13,8 +13,9 @@
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 
-use crate::graph::ID;
 use pegasus::api::function::FnResult;
+
+use crate::graph::ID;
 
 pub trait Partitioner: Send + Sync + 'static {
     /// Given the element id and job_workers (number of worker per server),
@@ -22,9 +23,5 @@ pub trait Partitioner: Send + Sync + 'static {
     fn get_partition(&self, id: &ID, job_workers: usize) -> FnResult<u64>;
     /// Given job_workers (number of worker per server) and worker_id (worker index),
     /// return the partition list that the worker is going to process
-    fn get_worker_partitions(
-        &self,
-        job_workers: usize,
-        worker_id: u32,
-    ) -> FnResult<Option<Vec<u64>>>;
+    fn get_worker_partitions(&self, job_workers: usize, worker_id: u32) -> FnResult<Option<Vec<u64>>>;
 }

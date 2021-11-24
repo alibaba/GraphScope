@@ -13,15 +13,17 @@
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 
+use std::convert::TryInto;
+
+use ir_common::generated::algebra as algebra_pb;
+use ir_common::NameOrId;
+use pegasus::api::function::{FnResult, MapFunction};
+
 use crate::error::{FnExecError, FnGenResult};
 use crate::graph::element::{GraphElement, VertexOrEdge};
 use crate::graph::QueryParams;
 use crate::process::operator::map::MapFuncGen;
 use crate::process::record::Record;
-use ir_common::generated::algebra as algebra_pb;
-use ir_common::NameOrId;
-use pegasus::api::function::{FnResult, MapFunction};
-use std::convert::TryInto;
 
 /// Get details for the given entity.
 /// Specifically, we will replace the old entity with the new one with details.
@@ -71,7 +73,10 @@ impl MapFunction<Record, Record> for GetDetailOperator {
 
 impl MapFuncGen for algebra_pb::GetDetails {
     fn gen_map(self) -> FnGenResult<Box<dyn MapFunction<Record, Record>>> {
-        let start_tag = self.tag.map(|name_or_id| name_or_id.try_into()).transpose()?;
+        let start_tag = self
+            .tag
+            .map(|name_or_id| name_or_id.try_into())
+            .transpose()?;
         let query_params = self.params.try_into()?;
         let get_detail_operator = GetDetailOperator { tag: start_tag, query_params };
         debug!("Runtime get_details operator: {:?}", get_detail_operator);

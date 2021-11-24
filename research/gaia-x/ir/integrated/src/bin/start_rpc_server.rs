@@ -55,10 +55,7 @@ pub struct ServerConfig {
         help = "the path of config file for pegasus"
     )]
     pub config: String,
-    #[structopt(
-        long = "report",
-        help = "the option to report the job latency and memory usage"
-    )]
+    #[structopt(long = "report", help = "the option to report the job latency and memory usage")]
     pub report: bool,
 }
 
@@ -76,11 +73,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     } else {
         Some(CommonConfig::read_from(server_config.config)?)
     };
-    let num_servers = if let Some(h) = &host_config {
-        h.peers.len()
-    } else {
-        1
-    };
+    let num_servers = if let Some(h) = &host_config { h.peers.len() } else { 1 };
     let config = combine_config(server_config.server_id, host_config, common_config);
     let addr = format!("{}:{}", "0.0.0.0", server_config.rpc_port);
 

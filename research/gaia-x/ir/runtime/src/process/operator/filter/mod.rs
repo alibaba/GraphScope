@@ -14,11 +14,12 @@
 //! limitations under the License.
 mod select;
 
-use crate::error::FnGenResult;
-use crate::process::record::Record;
 use ir_common::error::ParsePbError;
 use ir_common::generated::algebra as algebra_pb;
 use pegasus::api::function::FilterFunction;
+
+use crate::error::FnGenResult;
+use crate::process::record::Record;
 
 pub trait FilterFuncGen {
     fn gen_filter(self) -> FnGenResult<Box<dyn FilterFunction<Record>>>;
@@ -32,9 +33,7 @@ impl FilterFuncGen for algebra_pb::logical_plan::Operator {
                 _ => Err(ParsePbError::from("algebra_pb op is not a filter"))?,
             }
         } else {
-            Err(ParsePbError::EmptyFieldError(
-                "algebra op is empty".to_string(),
-            ))?
+            Err(ParsePbError::EmptyFieldError("algebra op is empty".to_string()))?
         }
     }
 }

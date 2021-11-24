@@ -13,8 +13,9 @@
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 
-use crate::object::RawType;
 use std::fmt;
+
+use crate::object::RawType;
 
 #[derive(Debug, PartialEq)]
 pub struct CastError {

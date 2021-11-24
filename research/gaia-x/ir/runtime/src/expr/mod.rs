@@ -18,10 +18,11 @@ pub mod error;
 pub mod eval;
 pub mod token;
 
-use crate::expr::error::{ExprError, ExprResult};
-use crate::expr::token::{tokenize, Token};
 use ir_common::generated::common as pb;
 use ir_common::VAR_PREFIX;
+
+use crate::expr::error::{ExprError, ExprResult};
+use crate::expr::token::{tokenize, Token};
 
 impl From<Token> for ExprResult<pb::ExprOpr> {
     fn from(token: Token) -> Self {
@@ -41,22 +42,10 @@ impl From<Token> for ExprResult<pb::ExprOpr> {
             Token::And => Ok(pb::Logical::And.into()),
             Token::Or => Ok(pb::Logical::Or.into()),
             Token::Not => Ok(pb::Logical::Not.into()),
-            Token::Boolean(b) => Ok(pb::Const {
-                value: Some(b.into()),
-            }
-            .into()),
-            Token::Int(i) => Ok(pb::Const {
-                value: Some(i.into()),
-            }
-            .into()),
-            Token::Float(f) => Ok(pb::Const {
-                value: Some(f.into()),
-            }
-            .into()),
-            Token::String(s) => Ok(pb::Const {
-                value: Some(s.into()),
-            }
-            .into()),
+            Token::Boolean(b) => Ok(pb::Const { value: Some(b.into()) }.into()),
+            Token::Int(i) => Ok(pb::Const { value: Some(i.into()) }.into()),
+            Token::Float(f) => Ok(pb::Const { value: Some(f.into()) }.into()),
+            Token::String(s) => Ok(pb::Const { value: Some(s.into()) }.into()),
             Token::Identifier(ident) => {
                 if !ident.starts_with(VAR_PREFIX) {
                     Err("invalid token, a variable must start with \"@\"".into())
@@ -65,7 +54,9 @@ impl From<Token> for ExprResult<pb::ExprOpr> {
                     Ok(var.into())
                 }
             }
-            _ => Err(format!("invalid token {:?}", token).as_str().into()),
+            _ => Err(format!("invalid token {:?}", token)
+                .as_str()
+                .into()),
         }
     }
 }
@@ -99,8 +90,7 @@ fn to_suffix_tokens(tokens: Vec<Token>) -> ExprResult<Vec<Token>> {
             if stack.is_empty() {
                 stack.push(token);
             } else {
-                while !stack.is_empty() && stack.last().unwrap().precedence() >= token.precedence()
-                {
+                while !stack.is_empty() && stack.last().unwrap().precedence() >= token.precedence() {
                     results.push(stack.pop().unwrap());
                 }
                 stack.push(token);
@@ -143,35 +133,17 @@ mod tests {
 
         // 1 + 2 == 3
         let case2 = tokenize("1 + 2 == 3").unwrap();
-        let expected_case2 = vec![
-            Token::Int(1),
-            Token::Int(2),
-            Token::Plus,
-            Token::Int(3),
-            Token::Eq,
-        ];
+        let expected_case2 = vec![Token::Int(1), Token::Int(2), Token::Plus, Token::Int(3), Token::Eq];
         assert_eq!(to_suffix_tokens(case2).unwrap(), expected_case2);
 
         // 1 + 2 * 3
         let case3 = tokenize("1 + 2 * 3").unwrap();
-        let expected_case3 = vec![
-            Token::Int(1),
-            Token::Int(2),
-            Token::Int(3),
-            Token::Star,
-            Token::Plus,
-        ];
+        let expected_case3 = vec![Token::Int(1), Token::Int(2), Token::Int(3), Token::Star, Token::Plus];
         assert_eq!(to_suffix_tokens(case3).unwrap(), expected_case3);
 
         // (1 + 2) * 3
         let case4 = tokenize("(1 + 2) * 3").unwrap();
-        let expected_case4 = vec![
-            Token::Int(1),
-            Token::Int(2),
-            Token::Plus,
-            Token::Int(3),
-            Token::Star,
-        ];
+        let expected_case4 = vec![Token::Int(1), Token::Int(2), Token::Plus, Token::Int(3), Token::Star];
         assert_eq!(to_suffix_tokens(case4).unwrap(), expected_case4);
 
         // 1 + 2 ^ 3 > 6

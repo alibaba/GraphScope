@@ -13,18 +13,20 @@
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 
-use crate::graph::ID;
+use std::collections::HashMap;
+use std::convert::TryFrom;
+use std::io;
+use std::ops::{Deref, DerefMut};
+use std::sync::Arc;
+
 use dyn_type::{BorrowObject, Object};
 use ir_common::error::{ParsePbError, ParsePbResult};
 use ir_common::generated::common as pb;
 use ir_common::NameOrId;
 use pegasus_common::codec::{Decode, Encode, ReadExt, WriteExt};
 use pegasus_common::downcast::*;
-use std::collections::HashMap;
-use std::convert::TryFrom;
-use std::io;
-use std::ops::{Deref, DerefMut};
-use std::sync::Arc;
+
+use crate::graph::ID;
 
 /// The three types of property to get
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
@@ -97,7 +99,9 @@ pub trait Details: Send + Sync + AsAny {
     fn get(&self, prop_key: &PropKey) -> Option<BorrowObject> {
         match prop_key {
             PropKey::Id => Some(self.get_id().into()),
-            PropKey::Label => self.get_label().map(|label| label.as_borrow_object()),
+            PropKey::Label => self
+                .get_label()
+                .map(|label| label.as_borrow_object()),
             PropKey::Key(k) => self.get_property(k),
         }
     }
@@ -132,7 +136,11 @@ impl Details for DynDetails {
 
 impl Encode for DynDetails {
     fn write_to<W: WriteExt>(&self, writer: &mut W) -> io::Result<()> {
-        if let Some(default) = self.inner.as_any_ref().downcast_ref::<DefaultDetails>() {
+        if let Some(default) = self
+            .inner
+            .as_any_ref()
+            .downcast_ref::<DefaultDetails>()
+        {
             // hint to be as DefaultDetails
             writer.write_u8(1)?;
             default.write_to(writer)?;

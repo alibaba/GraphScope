@@ -19,6 +19,9 @@
 #[allow(dead_code)]
 #[allow(unused_imports)]
 pub mod test {
+    use std::convert::{TryFrom, TryInto};
+    use std::sync::Once;
+
     use graph_proxy::{InitializeJobCompiler, QueryExpGraph};
     use ir_common::generated::common as common_pb;
     use ir_common::generated::result as result_pb;
@@ -34,8 +37,6 @@ pub mod test {
     use runtime::graph::ID;
     use runtime::process::record::{Entry, Record, RecordElement};
     use runtime::IRJobCompiler;
-    use std::convert::{TryFrom, TryInto};
-    use std::sync::Once;
 
     static INIT: Once = Once::new();
 
@@ -85,11 +86,8 @@ pub mod test {
         if let Some(result_pb::result::Inner::Record(record_pb)) = result.inner {
             let mut record = Record::default();
             for column in record_pb.columns {
-                let tag = if let Some(tag) = column.name_or_id {
-                    Some(tag.try_into().unwrap())
-                } else {
-                    None
-                };
+                let tag =
+                    if let Some(tag) = column.name_or_id { Some(tag.try_into().unwrap()) } else { None };
                 let entry = column.entry.unwrap();
                 record.append(Entry::try_from(entry).unwrap(), tag);
             }

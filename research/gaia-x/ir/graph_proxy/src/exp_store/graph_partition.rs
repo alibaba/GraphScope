@@ -13,10 +13,11 @@
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 
-use crate::exp_store::ID_MASK;
 use pegasus::api::function::FnResult;
 use runtime::graph::partitioner::Partitioner;
 use runtime::graph::ID;
+
+use crate::exp_store::ID_MASK;
 
 /// A simple partition utility that one server contains a single graph partition
 pub struct SimplePartition {
@@ -36,11 +37,7 @@ impl Partitioner for SimplePartition {
         Ok(((id_usize - magic_num * self.num_servers) * workers + magic_num % workers) as u64)
     }
 
-    fn get_worker_partitions(
-        &self,
-        job_workers: usize,
-        worker_id: u32,
-    ) -> FnResult<Option<Vec<u64>>> {
+    fn get_worker_partitions(&self, job_workers: usize, worker_id: u32) -> FnResult<Option<Vec<u64>>> {
         // In graph that one server contains a single graph partition,
         // we assign the first worker on current server to process (scan) the partition,
         // and we assume the partition id is identity to the server id

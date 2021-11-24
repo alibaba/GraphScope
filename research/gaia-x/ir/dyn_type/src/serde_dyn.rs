@@ -13,13 +13,15 @@
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 
-use crate::DynType;
-use pegasus_common::codec::{Decode, Encode};
 use std::any::{Any, TypeId};
 use std::collections::HashMap;
 use std::fmt::Debug;
 use std::io;
 use std::sync::RwLock;
+
+use pegasus_common::codec::{Decode, Encode};
+
+use crate::DynType;
 
 lazy_static! {
     static ref TYPE_TABLE: RwLock<HashMap<TypeId, Box<dyn Ph>>> = RwLock::new(HashMap::new());
@@ -99,9 +101,10 @@ impl<T: Any + Send + Sync + Clone + Debug + Encode> DynType for T {
 
 #[cfg(test)]
 mod test {
+    use pegasus_common::codec::{ReadExt, WriteExt};
+
     use super::*;
     use crate::{Object, OwnedOrRef};
-    use pegasus_common::codec::{ReadExt, WriteExt};
 
     #[test]
     fn test_ser_dyn_type() {

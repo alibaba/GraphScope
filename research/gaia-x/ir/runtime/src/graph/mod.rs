@@ -17,16 +17,18 @@ pub mod element;
 pub mod partitioner;
 pub mod property;
 
-use crate::expr::eval::Evaluator;
-use crate::graph::element::{Edge, Vertex};
+use std::convert::{TryFrom, TryInto};
+use std::sync::atomic::{AtomicPtr, Ordering};
+use std::sync::Arc;
+
 use ir_common::error::ParsePbError;
 use ir_common::generated::algebra as algebra_pb;
 use ir_common::generated::common as common_pb;
 use ir_common::NameOrId;
 use pegasus::api::function::{DynIter, FnResult};
-use std::convert::{TryFrom, TryInto};
-use std::sync::atomic::{AtomicPtr, Ordering};
-use std::sync::Arc;
+
+use crate::expr::eval::Evaluator;
+use crate::graph::element::{Edge, Vertex};
 
 pub type ID = u128;
 
@@ -86,10 +88,7 @@ impl QueryParams {
         Ok(self)
     }
 
-    fn with_filter(
-        mut self,
-        filter_pb: Option<common_pb::SuffixExpr>,
-    ) -> Result<Self, ParsePbError> {
+    fn with_filter(mut self, filter_pb: Option<common_pb::SuffixExpr>) -> Result<Self, ParsePbError> {
         if let Some(filter_pb) = filter_pb {
             self.filter = Some(Arc::new(filter_pb.try_into()?));
         }
@@ -113,8 +112,7 @@ impl QueryParams {
     // Some(vec![]) indicates we need all properties
     // and None indicates we do not need any property,
     fn with_required_properties(
-        mut self,
-        required_properties_pb: Vec<common_pb::NameOrId>,
+        mut self, required_properties_pb: Vec<common_pb::NameOrId>,
     ) -> Result<Self, ParsePbError> {
         // TODO: Specify whether we need all properties or None properties
         // we assume that empty required_properties_pb vec indicates all properties needed
@@ -130,9 +128,7 @@ impl QueryParams {
     // Extra query params for different storages
     fn with_extra_params(self, extra_params: Vec<String>) -> Result<Self, ParsePbError> {
         if !extra_params.is_empty() {
-            Err(ParsePbError::NotSupported(
-                "extra_params in QueryParams is not supported yet".to_string(),
-            ))?
+            Err(ParsePbError::NotSupported("extra_params in QueryParams is not supported yet".to_string()))?
         }
         Ok(self)
     }
@@ -155,42 +151,30 @@ where
 /// The interface of graph query in runtime
 pub trait GraphProxy: Send + Sync {
     /// Scan all vertices with query parameters, and return an iterator over them.
-    fn scan_vertex(
-        &self,
-        params: &QueryParams,
-    ) -> FnResult<Box<dyn Iterator<Item = Vertex> + Send>>;
+    fn scan_vertex(&self, params: &QueryParams) -> FnResult<Box<dyn Iterator<Item = Vertex> + Send>>;
 
     /// Scan all edges with query parameters, and return an iterator over them.
     fn scan_edge(&self, params: &QueryParams) -> FnResult<Box<dyn Iterator<Item = Edge> + Send>>;
 
     /// Get vertices with the given global_ids (defined in runtime) and parameters, and return an iterator over them.
     fn get_vertex(
-        &self,
-        ids: &[ID],
-        params: &QueryParams,
+        &self, ids: &[ID], params: &QueryParams,
     ) -> FnResult<Box<dyn Iterator<Item = Vertex> + Send>>;
 
     /// Get edges with the given global_ids (defined in runtime) and parameters, and return an iterator over them.
-    fn get_edge(
-        &self,
-        ids: &[ID],
-        params: &QueryParams,
-    ) -> FnResult<Box<dyn Iterator<Item = Edge> + Send>>;
+    fn get_edge(&self, ids: &[ID], params: &QueryParams)
+        -> FnResult<Box<dyn Iterator<Item = Edge> + Send>>;
 
     /// Get adjacent vertices of the given direction with parameters, and return the closure of Statement.
     /// We could further call the returned closure with input vertex and get its adjacent vertices.
     fn prepare_explore_vertex(
-        &self,
-        direction: Direction,
-        params: &QueryParams,
+        &self, direction: Direction, params: &QueryParams,
     ) -> FnResult<Box<dyn Statement<ID, Vertex>>>;
 
     /// Get adjacent edges of the given direction with parameters, and return the closure of Statement.
     /// We could further call the returned closure with input vertex and get its adjacent edges.
     fn prepare_explore_edge(
-        &self,
-        direction: Direction,
-        params: &QueryParams,
+        &self, direction: Direction, params: &QueryParams,
     ) -> FnResult<Box<dyn Statement<ID, Edge>>>;
 }
 
