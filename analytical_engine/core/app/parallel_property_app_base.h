@@ -21,6 +21,7 @@
 #include "grape/types.h"
 
 #include "core/worker/parallel_property_worker.h"
+
 namespace gs {
 
 class ParallelPropertyMessageManager;
