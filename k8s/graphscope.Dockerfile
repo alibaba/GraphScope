@@ -4,8 +4,10 @@
 FROM python:3.9
 
 # Add graphscope user with user id 1001
-RUN useradd -m graphscope -u 1001 && \
-    echo 'graphscope ALL=(ALL) NOPASSWD:ALL' >> /etc/sudoers
+RUN apt update -y && apt install sudo openjdk-11-jdk -y && \
+    useradd -m graphscope -u 1001 && \
+    echo 'graphscope ALL=(ALL) NOPASSWD:ALL' >> /etc/sudoers && \
+    rm -fr /var/lib/apt/lists/*
 
 # Change to graphscope user
 USER graphscope
@@ -32,6 +34,4 @@ RUN cd /home/graphscope/gs && \
     else \
         python3 -m pip install graphscope; \
     fi && \
-    pip3 install git+https://github.com/mars-project/mars.git@d09e1e4c3e32ceb05f42d0b5b79775b1ebd299fb#egg=pymars && \
-    sudo apt get update -y && sudo apt install openjdk-11-jdk -y && \
-    rm -fr /var/lib/apt/lists/*
+    pip3 install git+https://github.com/mars-project/mars.git@d09e1e4c3e32ceb05f42d0b5b79775b1ebd299fb#egg=pymars

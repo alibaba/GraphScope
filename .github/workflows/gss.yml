@@ -53,6 +53,8 @@ jobs:
 
     - name: Install Dependencies
       run: |
+        # debug
+        cargo
         # install rdkafka
         sudo yum install -y librdkafka-devel
         # install cppkafka
