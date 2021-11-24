@@ -82,10 +82,7 @@ impl Decode for PropKey {
                 let key = <NameOrId>::read_from(reader)?;
                 Ok(PropKey::Key(key))
             }
-            _ => Err(std::io::Error::new(
-                std::io::ErrorKind::Other,
-                "unreachable",
-            )),
+            _ => Err(std::io::Error::new(std::io::ErrorKind::Other, "unreachable")),
         }
     }
 }
@@ -166,26 +163,22 @@ impl Decode for DynDetails {
 #[allow(dead_code)]
 pub struct DefaultDetails {
     id: ID,
-    label: NameOrId,
+    label: Option<NameOrId>,
     inner: HashMap<NameOrId, Object>,
 }
 
 #[allow(dead_code)]
 impl DefaultDetails {
     pub fn new(id: ID, label: NameOrId) -> Self {
-        DefaultDetails {
-            id,
-            label,
-            inner: HashMap::new(),
-        }
+        DefaultDetails { id, label: Some(label), inner: HashMap::new() }
+    }
+
+    pub fn with(id: ID, label: Option<NameOrId>) -> Self {
+        DefaultDetails { id, label, inner: HashMap::new() }
     }
 
     pub fn with_property(id: ID, label: NameOrId, properties: HashMap<NameOrId, Object>) -> Self {
-        DefaultDetails {
-            id,
-            label,
-            inner: properties,
-        }
+        DefaultDetails { id, label: Some(label), inner: properties }
     }
 }
 
@@ -215,7 +208,7 @@ impl Details for DefaultDetails {
     }
 
     fn get_label(&self) -> Option<&NameOrId> {
-        Some(&self.label)
+        self.label.as_ref()
     }
 }
 
@@ -235,7 +228,7 @@ impl Encode for DefaultDetails {
 impl Decode for DefaultDetails {
     fn read_from<R: ReadExt>(reader: &mut R) -> io::Result<Self> {
         let id = reader.read_u128()?;
-        let label = <NameOrId>::read_from(reader)?;
+        let label = <Option<NameOrId>>::read_from(reader)?;
         let len = reader.read_u64()?;
         let mut map = HashMap::with_capacity(len as usize);
         for _i in 0..len {
@@ -243,10 +236,6 @@ impl Decode for DefaultDetails {
             let v = <Object>::read_from(reader)?;
             map.insert(k, v);
         }
-        Ok(DefaultDetails {
-            id,
-            label,
-            inner: map,
-        })
+        Ok(DefaultDetails { id, label, inner: map })
     }
 }

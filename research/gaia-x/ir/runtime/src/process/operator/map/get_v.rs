@@ -14,8 +14,8 @@
 //! limitations under the License.
 
 use crate::error::{FnExecError, FnGenResult};
-use crate::graph::element::{GraphElement, VertexOrEdge};
-use crate::graph::QueryParams;
+use crate::graph::element::{Vertex, VertexOrEdge};
+use crate::graph::property::{DefaultDetails, DynDetails};
 use crate::process::operator::map::MapFuncGen;
 use crate::process::record::Record;
 use ir_common::generated::algebra as algebra_pb;
@@ -28,7 +28,6 @@ use std::convert::TryInto;
 struct GetVertexOperator {
     start_tag: Option<NameOrId>,
     opt: VOpt,
-    query_params: QueryParams,
     alias: Option<NameOrId>,
 }
 
@@ -40,40 +39,28 @@ impl MapFunction<Record, Record> for GetVertexOperator {
         let vertex_or_edge = entry
             .as_graph_element()
             .ok_or(FnExecError::unexpected_data_error("tag does not refer to a graph element"))?;
-        let id = match vertex_or_edge {
+        let (id, label) = match vertex_or_edge {
             VertexOrEdge::V(_) => Err(FnExecError::unexpected_data_error(
                 "should not apply `GetV` (`GetDetails` instead) on a vertex",
             ))?,
             VertexOrEdge::E(e) => match self.opt {
-                VOpt::Start => e.src_id,
-                VOpt::End => e.dst_id,
+                VOpt::Start => (e.src_id, e.get_src_label()),
+                VOpt::End => (e.dst_id, e.get_dst_label()),
                 VOpt::Other => Err(FnExecError::unsupported_error("VOpt ot Other is not supported"))?,
             },
         };
-        let graph = crate::get_graph().ok_or(FnExecError::NullGraphError)?;
-        let mut result_iter = graph.get_vertex(&[id], &self.query_params)?;
-        if let Some(vertex) = result_iter.next() {
-            input.append(vertex, self.alias.clone());
-            Ok(input)
-        } else {
-            Err(FnExecError::query_store_error(&format!("vertex with id {} not found", id)))?
-        }
+        let vertex = Vertex::new(DynDetails::new(DefaultDetails::with(id, label.map(|l| l.clone()))));
+        input.append(vertex, self.alias.clone());
+        Ok(input)
     }
 }
 
 impl MapFuncGen for algebra_pb::GetV {
     fn gen_map(self) -> FnGenResult<Box<dyn MapFunction<Record, Record>>> {
-        let start_tag = self
-            .tag
-            .map(|name_or_id| name_or_id.try_into())
-            .transpose()?;
+        let start_tag = self.tag.map(|name_or_id| name_or_id.try_into()).transpose()?;
         let opt: VOpt = unsafe { ::std::mem::transmute(self.opt) };
-        let query_params = self.params.try_into()?;
-        let alias = self
-            .alias
-            .map(|name_or_id| name_or_id.try_into())
-            .transpose()?;
-        let get_vertex_operator = GetVertexOperator { start_tag, opt, query_params, alias };
+        let alias = self.alias.map(|name_or_id| name_or_id.try_into()).transpose()?;
+        let get_vertex_operator = GetVertexOperator { start_tag, opt, alias };
         debug!("Runtime get_vertex operator: {:?}", get_vertex_operator);
         Ok(Box::new(get_vertex_operator))
     }

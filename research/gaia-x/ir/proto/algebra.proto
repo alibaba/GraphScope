@@ -236,10 +236,8 @@ message GetV {
   common.NameOrId tag = 1;
   // Determine what vertex to get from the tagged object
   VOpt opt = 2;
-  // The required labels of the vertex
-  repeated common.NameOrId labels = 3;
   // The alias of this vertex
-  common.NameOrId alias = 4;
+  common.NameOrId alias = 3;
 }
 
 // To further get details of a given entity, either a vertex, an edge, or other entity that carries extra info.
