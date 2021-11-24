@@ -414,10 +414,10 @@ fn set_range(ptr: *const c_void, lower: i32, upper: i32, opr: Opr) -> ResultCode
         ResultCode::InvalidRangeError
     } else {
         match opr {
-            Opr::GetV => {
-                let mut getv = unsafe { Box::from_raw(ptr as *mut pb::GetV) };
-                getv.params.as_mut().unwrap().limit = Some(pb::Range { lower, upper });
-                std::mem::forget(getv);
+            Opr::GetDetails => {
+                let mut details = unsafe { Box::from_raw(ptr as *mut pb::GetDetails) };
+                details.params.as_mut().unwrap().limit = Some(pb::Range { lower, upper });
+                std::mem::forget(details);
             }
             Opr::ExpandBase => {
                 let mut base = unsafe { Box::from_raw(ptr as *mut pb::ExpandBase) };
@@ -504,10 +504,10 @@ fn set_predicate(ptr: *const c_void, cstr_predicate: *const c_char, opr: Opr) ->
                 select.predicate = predicate_pb.ok();
                 std::mem::forget(select);
             }
-            Opr::GetV => {
-                let mut getv = unsafe { Box::from_raw(ptr as *mut pb::GetV) };
-                getv.params.as_mut().unwrap().predicate = predicate_pb.ok();
-                std::mem::forget(getv);
+            Opr::GetDetails => {
+                let mut details = unsafe { Box::from_raw(ptr as *mut pb::GetDetails) };
+                details.params.as_mut().unwrap().predicate = predicate_pb.ok();
+                std::mem::forget(details);
             }
             Opr::ExpandBase => {
                 let mut expand = unsafe { Box::from_raw(ptr as *mut pb::ExpandBase) };
@@ -590,7 +590,7 @@ fn process_params(ptr: *const c_void, key: ParamsKey, val: FfiNameOrId, opr: Opr
                         }
                     }
                 }
-                std::mem::forget(getv);
+                std::mem::forget(details);
             }
             Opr::Scan => {
                 let mut scan = unsafe { Box::from_raw(ptr as *mut pb::Scan) };
@@ -617,14 +617,9 @@ fn process_params(ptr: *const c_void, key: ParamsKey, val: FfiNameOrId, opr: Opr
                 let mut getv = unsafe { Box::from_raw(ptr as *mut pb::GetV) };
                 match key {
                     ParamsKey::Tag => getv.tag = pb.unwrap(),
-                    ParamsKey::Table => {
-                        if let Some(label) = pb.unwrap() {
-                            getv.labels.push(label);
-                        }
-                    }
                     _ => unreachable!(),
                 }
-                std::mem::forget(details);
+                std::mem::forget(getv);
             }
             _ => unreachable!(),
         }
@@ -1531,7 +1526,6 @@ mod graph {
         let getv = Box::new(pb::GetV {
             tag: None,
             opt: unsafe { std::mem::transmute::<FfiVOpt, i32>(opt) },
-            labels: vec![],
             alias: None,
         });
         Box::into_raw(getv) as *const c_void
@@ -1547,12 +1541,6 @@ mod graph {
     #[no_mangle]
     pub extern "C" fn set_getv_alias(ptr_getv: *const c_void, alias: FfiNameOrId) -> ResultCode {
         set_alias(ptr_getv, alias, true, Opr::GetV)
-    }
-
-    /// Add a label of the vertex that this getv must satisfy
-    #[no_mangle]
-    pub extern "C" fn add_getv_label(ptr_getv: *const c_void, label: FfiNameOrId) -> ResultCode {
-        process_params(ptr_getv, ParamsKey::Table, label, Opr::GetV)
     }
 
     /// Append an edge expand operator to the logical plan
