@@ -1,0 +1,70 @@
+name: GraphScope Docker Nightly Build CI
+
+on:
+  workflow_dispatch:
+  schedule:
+    # The notifications for scheduled workflows are sent to the user who
+    # last modified the cron syntax in the workflow file.
+    # Trigger the workflow at 03:00(CST) every day.
+    - cron:  '00 19 * * *'
+
+jobs:
+  python-test:
+    if: ${{ github.ref == 'refs/heads/main' && github.repository == 'alibaba/GraphScope' }}
+    runs-on: ubuntu-20.04
+    defaults:
+      run:
+        shell: bash --noprofile --norc -eo pipefail {0}
+    container:
+      image: registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-vineyard:v0.3.9
+      options:
+        --shm-size 4096m
+    steps:
+    - uses: actions/checkout@v2.3.2
+
+    - name: Build
+      env:
+        GS_TEST_DIR: ${{ GITHUB_WORKSPACE }}/gstest
+        NIGHTLY: ON
+      run: |
+        make gae
+        # also make coordinator andclient for python test
+        make coordinator && make client
+        # download dataset
+        git clone -b master --single-branch --depth=1 https://github.com/7br/gstest.git ${GS_TEST_DIR}
+
+    - name: Run Python Test
+      env:
+        GS_TEST_DIR: ${{ GITHUB_WORKSPACE }}/gstest
+      run: |
+        make unittest
+
+  build-gss-image:
+    if: ${{ github.ref == 'refs/heads/main' && github.repository == 'alibaba/GraphScope' }}
+    runs-on: ubuntu-20.04
+
+    - uses: actions/checkout@v2.3.2
+
+    - name: Add envs to GITHUB_ENV
+      run: |
+        short_sha=$(git rev-parse --short HEAD)
+        echo "SHORT_SHA=${short_sha}" >> $GITHUB_ENV
+        echo "GS_IMAGE=graphscope/graphscope:${short_sha}" >> $GITHUB_ENV
+
+    - name: Build GraphScope Store Image
+      run: |
+        cd ${GITHUB_WORKSPACE}
+        sudo make graphscope-store-image
+        sudo docker tag graphscope/graphscope-store:${SHORT_SHA} \
+                        registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-store:nightly
+
+    - name: Release Image
+      run: |
+        echo ${{ secrets.ALIYUN_TOKEN }} | sudo docker login --username=grape_dev registry.cn-hongkong.aliyuncs.com --password-stdin
+        sudo docker push registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-store:nightly
+
+    - name: Clean
+      if: always()
+      run: |
+        sudo docker rmi -f graphscope/graphscope-store:${SHORT_SHA} \
+            registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-store:nightly || true

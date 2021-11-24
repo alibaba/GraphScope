@@ -135,7 +135,7 @@ def test_minimize_udf_app():
 
 
 def test_minimize_networkx():
-    s = graphscope.session(cluster_type="hosts", num_workers=1)
+    s = graphscope.session(cluster_type="hosts", num_workers=2)
     s.as_default()
     # case-1 run app
     G = nx.path_graph(10)
@@ -151,7 +151,7 @@ def test_multiple_session(ogbn_small_script):
     s1 = graphscope.session(cluster_type="hosts", num_workers=1)
     assert s1.info["status"] == "active"
 
-    s2 = graphscope.session(cluster_type="hosts", num_workers=1)
+    s2 = graphscope.session(cluster_type="hosts", num_workers=2)
     assert s2.info["status"] == "active"
 
     simple_flow(s1, ogbn_small_script)
@@ -180,7 +180,7 @@ def test_gaia(ogbn_small_script):
     s2.close()
 
 
-def test_default_session(ogbn_small_script):
+def test_demo_with_default_session(ogbn_small_script):
     graph = load_ogbn_mag()
 
     # Interactive engine
