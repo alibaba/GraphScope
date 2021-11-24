@@ -57,6 +57,7 @@ public interface LongMsg extends FFIPointer {
         /**
          * Create a DoubleMsg with initial value.
          *
+         * @param inData input data.
          * @return msg instance.
          */
         LongMsg create(long inData);

@@ -25,9 +25,9 @@ import com.alibaba.graphscope.parallel.ParallelMessageManager;
  * ImmutableEdgecutFragment} and {@link ParallelMessageManager}
  *
  * <p>To define your sequential graph algorithms, you should implement this interface and provide
- * the corresponding implementation for {@link ParallelAppBase#PEval(ImmutableEdgecutFragment,
- * ParallelContextBase, ParallelMessageManager)} and {@link
- * ParallelAppBase#IncEval(ImmutableEdgecutFragment, ParallelContextBase, ParallelMessageManager)}
+ * the corresponding implementation for {@link ParallelAppBase#PEval(SimpleFragment,
+ * ParallelContextBase, ParallelMessageManager)} and {@link ParallelAppBase#IncEval(SimpleFragment,
+ * ParallelContextBase, ParallelMessageManager)}
  *
  * <p>User-defined app shall work along with user-defined context, which should be an implementation
  * of {@link ParallelContextBase}.

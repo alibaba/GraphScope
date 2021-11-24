@@ -16,18 +16,17 @@
 
 package com.alibaba.graphscope.app;
 
-import com.alibaba.graphscope.fragment.ImmutableEdgecutFragment;
 import com.alibaba.graphscope.fragment.SimpleFragment;
 import com.alibaba.graphscope.parallel.DefaultMessageManager;
 
 /**
  * The base interface for all <em>sequential</em> PIE apps which work along with {@link
- * ImmutableEdgecutFragment} and {@link DefaultMessageManager}
+ * SimpleFragment} and {@link DefaultMessageManager}
  *
  * <p>To define your sequential graph algorithms, you should implement this interface and provide
- * the corresponding implementation for {@link DefaultAppBase#PEval(ImmutableEdgecutFragment,
- * DefaultContextBase, DefaultMessageManager)} and {@link
- * DefaultAppBase#IncEval(ImmutableEdgecutFragment, DefaultContextBase, DefaultMessageManager)}
+ * the corresponding implementation for {@link DefaultAppBase#PEval(SimpleFragment,
+ * DefaultContextBase, DefaultMessageManager)} and {@link DefaultAppBase#IncEval(SimpleFragment,
+ * DefaultContextBase, DefaultMessageManager)}
  *
  * <p>User-defined app shall work along with user-defined context, which should be an implementation
  * of {@link DefaultContextBase}.
@@ -37,22 +36,22 @@ import com.alibaba.graphscope.parallel.DefaultMessageManager;
  * <pre>
  * {
  *         class MyContext implements DefaultContextBase&lt;Long, Long, Long, Double&gt; {
- *                 public void Init(ImmutableEdgecutFragment&lt;Long, Long, Long, Double&gt; frag,
+ *                 public void Init(SimpleFragment&lt;Long, Long, Long, Double&gt; frag,
  *                                 DefaultMessageManager messageManager, StdVector&lt;FFIByteString&gt; args) {
  *
  *                 }
  *
- *                 public void Output(ImmutableEdgecutFragment&lt;Long, Long, Long, Double&gt; frag) {
+ *                 public void Output(SimpleFragment&lt;Long, Long, Long, Double&gt; frag) {
  *
  *                 }
  *         }
  *         class MyApp implements DefaultAppBase&lt;Long, Long, Long, Double, MyContext&gt; {
- *                 public void PEval(ImmutableEdgecutFragment&lt;Long, Long, Long, Double&gt; graph,
+ *                 public void PEval(SimpleFragment&lt;Long, Long, Long, Double&gt; graph,
  *                                 DefaultContextBase context, DefaultMessageManager messageManager) {
  *
  *                 }
  *
- *                 public void IncEval(ImmutableEdgecutFragment&lt;Long, Long, Long, Double&gt; graph,
+ *                 public void IncEval(SimpleFragment&lt;Long, Long, Long, Double&gt; graph,
  *                                 DefaultContextBase context, DefaultMessageManager messageManager) {
  *
  *                 }

@@ -101,7 +101,7 @@ public interface VertexArray<T, VID> extends FFIPointer, CXXPointer {
     /**
      * Get the underlying vertex range.
      *
-     * @return
+     * @return the underlying vertex range.
      */
     @CXXReference
     VertexRange<VID> GetVertexRange();

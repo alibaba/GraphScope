@@ -27,26 +27,29 @@ import com.alibaba.graphscope.utils.FFITypeFactoryhelper;
 import java.util.Objects;
 
 public abstract class LabeledVertexDataContext<OID_T, DATA_T> {
+
     private long ffiContextAddress;
     private FFILabeledVertexDataContext<ArrowFragment<OID_T>, DATA_T> ffiLabeledVertexDataContext;
     private FFILabeledVertexDataContext.Factory factory;
 
+
     /**
-     * Must be called by jni, to create ffi context.
+     * ust be called by jni, to create ffi context.
      *
-     * @param fragment query fragment.
-     * @param dataClass class object for data type.
+     * @param fragment  fragment query fragment.
+     * @param oidClass  dataClass class object for data type.
+     * @param dataClass class object for data.
      */
     protected void createFFIContext(
-            ArrowFragment<OID_T> fragment, Class<?> oidClass, Class<?> dataClass) {
+        ArrowFragment<OID_T> fragment, Class<?> oidClass, Class<?> dataClass) {
         // System.out.println("fragment: " + FFITypeFactoryhelper.makeParameterize(ARROW_FRAGMENT,
         // FFITypeFactoryhelper.javaType2CppType(oidClass)));
         String fragmentTemplateStr = FFITypeFactoryhelper.getForeignName(fragment);
         String contextName =
-                FFITypeFactoryhelper.makeParameterize(
-                        CppClassName.LABELED_VERTEX_DATA_CONTEXT,
-                        fragmentTemplateStr,
-                        FFITypeFactoryhelper.javaType2CppType(dataClass));
+            FFITypeFactoryhelper.makeParameterize(
+                CppClassName.LABELED_VERTEX_DATA_CONTEXT,
+                fragmentTemplateStr,
+                FFITypeFactoryhelper.javaType2CppType(dataClass));
         System.out.println("context name: " + contextName);
         factory = FFITypeFactory.getFactory(FFILabeledVertexDataContext.class, contextName);
         ffiLabeledVertexDataContext = factory.create(fragment, true);

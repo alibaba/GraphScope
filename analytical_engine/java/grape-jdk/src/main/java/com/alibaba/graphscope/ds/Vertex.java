@@ -67,7 +67,7 @@ public interface Vertex<VID_T> extends FFIPointer, CXXPointer, CXXValueRangeElem
     /**
      * Judge whether Two vertex id are the same.
      *
-     * @param vertex
+     * @param vertex vertex to compare with.
      * @return equal or not.
      */
     @CXXOperator("==")

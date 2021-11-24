@@ -45,6 +45,7 @@ public interface PrimitiveMessage<T> extends FFIPointer {
         /**
          * Create a DoubleMsg with initial value.
          *
+         * @param inData element type
          * @return msg instance.
          */
         PrimitiveMessage<T> create(T inData);

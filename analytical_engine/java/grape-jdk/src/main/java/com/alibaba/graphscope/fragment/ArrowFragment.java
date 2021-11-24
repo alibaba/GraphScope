@@ -259,10 +259,10 @@ public interface ArrowFragment<OID_T> extends FFIPointer {
     /**
      * Try to get oid's corresponding vertex, if not inner vertex, return false.
      *
-     * @param vertexLabelId
-     * @param oid
-     * @param vertex
-     * @return
+     * @param vertexLabelId label id for vertex.
+     * @param oid querying oid.
+     * @param vertex output vertex.
+     * @return true if operation succeed.
      */
     @FFINameAlias("GetInnerVertex")
     boolean getInnerVertex(
