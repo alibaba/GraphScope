@@ -123,7 +123,7 @@ class ArrowFragmentLoader {
       v_tables = tmp_v;
     }
     for (const auto& table : v_tables) {
-      BOOST_LEAF_CHECK(sanityCheck(table));
+      BOOST_LEAF_CHECK(sanityChecks(table));
     }
     LOG_IF(INFO, comm_spec_.worker_id() == 0)
         << "PROGRESS--GRAPH-LOADING-READ-VERTEX-100";
@@ -153,7 +153,7 @@ class ArrowFragmentLoader {
       e_tables = tmp_e;
     }
     for (const auto& table : e_tables) {
-      BOOST_LEAF_CHECK(sanityCheck(table));
+      BOOST_LEAF_CHECK(sanityChecks(table));
     }
     LOG_IF(INFO, comm_spec_.worker_id() == 0)
         << "PROGRESS--GRAPH-LOADING-READ-EDGE-100";
