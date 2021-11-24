@@ -36,7 +36,7 @@ pub mod generated {
 }
 
 #[cfg(not(feature = "proto_inplace"))]
-mod generated {
+pub mod generated {
     pub mod common {
         tonic::include_proto!("common");
     }
@@ -152,9 +152,7 @@ impl From<NameOrId> for common_pb::NameOrId {
             NameOrId::Str(name) => common_pb::name_or_id::Item::Name(name),
             NameOrId::Id(id) => common_pb::name_or_id::Item::Id(id),
         };
-        common_pb::NameOrId {
-            item: Some(name_or_id),
-        }
+        common_pb::NameOrId { item: Some(name_or_id) }
     }
 }
 
@@ -180,73 +178,55 @@ impl From<common_pb::Logical> for common_pb::ExprOpr {
 
 impl From<common_pb::Const> for common_pb::ExprOpr {
     fn from(const_val: common_pb::Const) -> Self {
-        common_pb::ExprOpr {
-            item: Some(common_pb::expr_opr::Item::Const(const_val)),
-        }
+        common_pb::ExprOpr { item: Some(common_pb::expr_opr::Item::Const(const_val)) }
     }
 }
 
 impl From<common_pb::Variable> for common_pb::ExprOpr {
     fn from(var: common_pb::Variable) -> Self {
-        common_pb::ExprOpr {
-            item: Some(common_pb::expr_opr::Item::Var(var)),
-        }
+        common_pb::ExprOpr { item: Some(common_pb::expr_opr::Item::Var(var)) }
     }
 }
 
 impl From<bool> for common_pb::Value {
     fn from(b: bool) -> Self {
-        common_pb::Value {
-            item: Some(common_pb::value::Item::Boolean(b)),
-        }
+        common_pb::Value { item: Some(common_pb::value::Item::Boolean(b)) }
     }
 }
 
 impl From<f64> for common_pb::Value {
     fn from(f: f64) -> Self {
-        common_pb::Value {
-            item: Some(common_pb::value::Item::F64(f)),
-        }
+        common_pb::Value { item: Some(common_pb::value::Item::F64(f)) }
     }
 }
 
 impl From<i32> for common_pb::Value {
     fn from(i: i32) -> Self {
-        common_pb::Value {
-            item: Some(common_pb::value::Item::I32(i)),
-        }
+        common_pb::Value { item: Some(common_pb::value::Item::I32(i)) }
     }
 }
 
 impl From<i64> for common_pb::Value {
     fn from(i: i64) -> Self {
-        common_pb::Value {
-            item: Some(common_pb::value::Item::I64(i)),
-        }
+        common_pb::Value { item: Some(common_pb::value::Item::I64(i)) }
     }
 }
 
 impl From<String> for common_pb::Value {
     fn from(s: String) -> Self {
-        common_pb::Value {
-            item: Some(common_pb::value::Item::Str(s)),
-        }
+        common_pb::Value { item: Some(common_pb::value::Item::Str(s)) }
     }
 }
 
 impl From<i32> for common_pb::NameOrId {
     fn from(i: i32) -> Self {
-        common_pb::NameOrId {
-            item: Some(common_pb::name_or_id::Item::Id(i)),
-        }
+        common_pb::NameOrId { item: Some(common_pb::name_or_id::Item::Id(i)) }
     }
 }
 
 impl From<String> for common_pb::NameOrId {
     fn from(str: String) -> Self {
-        common_pb::NameOrId {
-            item: Some(common_pb::name_or_id::Item::Name(str)),
-        }
+        common_pb::NameOrId { item: Some(common_pb::name_or_id::Item::Name(str)) }
     }
 }
 
@@ -256,28 +236,18 @@ const LABEL_KEY: &'static str = "LABEL";
 impl From<String> for common_pb::Property {
     fn from(str: String) -> Self {
         if str == ID_KEY {
-            common_pb::Property {
-                item: Some(common_pb::property::Item::Id(common_pb::IdKey {})),
-            }
+            common_pb::Property { item: Some(common_pb::property::Item::Id(common_pb::IdKey {})) }
         } else if str == LABEL_KEY {
-            common_pb::Property {
-                item: Some(common_pb::property::Item::Label(common_pb::LabelKey {})),
-            }
+            common_pb::Property { item: Some(common_pb::property::Item::Label(common_pb::LabelKey {})) }
         } else {
-            common_pb::Property {
-                item: Some(common_pb::property::Item::Key(str.into())),
-            }
+            common_pb::Property { item: Some(common_pb::property::Item::Key(str.into())) }
         }
     }
 }
 
 fn str_as_tag(str: String) -> Option<common_pb::NameOrId> {
     if !str.is_empty() {
-        Some(if let Ok(str_int) = str.parse::<i32>() {
-            str_int.into()
-        } else {
-            str.into()
-        })
+        Some(if let Ok(str_int) = str.parse::<i32>() { str_int.into() } else { str.into() })
     } else {
         None
     }
@@ -296,16 +266,10 @@ impl From<String> for common_pb::Variable {
             }
         } else {
             let mut splitter = str.split(SPLITTER);
-            let tag: Option<common_pb::NameOrId> = if let Some(first) = splitter.next() {
-                str_as_tag(first.to_string())
-            } else {
-                None
-            };
-            let property: Option<common_pb::Property> = if let Some(second) = splitter.next() {
-                Some(second.to_string().into())
-            } else {
-                None
-            };
+            let tag: Option<common_pb::NameOrId> =
+                if let Some(first) = splitter.next() { str_as_tag(first.to_string()) } else { None };
+            let property: Option<common_pb::Property> =
+                if let Some(second) = splitter.next() { Some(second.to_string().into()) } else { None };
             common_pb::Variable { tag, property }
         }
     }
@@ -338,145 +302,109 @@ impl common_pb::Const {
 
 impl From<pb::Project> for pb::logical_plan::Operator {
     fn from(opr: pb::Project) -> Self {
-        pb::logical_plan::Operator {
-            opr: Some(pb::logical_plan::operator::Opr::Project(opr)),
-        }
+        pb::logical_plan::Operator { opr: Some(pb::logical_plan::operator::Opr::Project(opr)) }
     }
 }
 
 impl From<pb::Select> for pb::logical_plan::Operator {
     fn from(opr: pb::Select) -> Self {
-        pb::logical_plan::Operator {
-            opr: Some(pb::logical_plan::operator::Opr::Select(opr)),
-        }
+        pb::logical_plan::Operator { opr: Some(pb::logical_plan::operator::Opr::Select(opr)) }
     }
 }
 
 impl From<pb::Join> for pb::logical_plan::Operator {
     fn from(opr: pb::Join) -> Self {
-        pb::logical_plan::Operator {
-            opr: Some(pb::logical_plan::operator::Opr::Join(opr)),
-        }
+        pb::logical_plan::Operator { opr: Some(pb::logical_plan::operator::Opr::Join(opr)) }
     }
 }
 
 impl From<pb::Union> for pb::logical_plan::Operator {
     fn from(opr: pb::Union) -> Self {
-        pb::logical_plan::Operator {
-            opr: Some(pb::logical_plan::operator::Opr::Union(opr)),
-        }
+        pb::logical_plan::Operator { opr: Some(pb::logical_plan::operator::Opr::Union(opr)) }
     }
 }
 
 impl From<pb::GroupBy> for pb::logical_plan::Operator {
     fn from(opr: pb::GroupBy) -> Self {
-        pb::logical_plan::Operator {
-            opr: Some(pb::logical_plan::operator::Opr::GroupBy(opr)),
-        }
+        pb::logical_plan::Operator { opr: Some(pb::logical_plan::operator::Opr::GroupBy(opr)) }
     }
 }
 
 impl From<pb::OrderBy> for pb::logical_plan::Operator {
     fn from(opr: pb::OrderBy) -> Self {
-        pb::logical_plan::Operator {
-            opr: Some(pb::logical_plan::operator::Opr::OrderBy(opr)),
-        }
+        pb::logical_plan::Operator { opr: Some(pb::logical_plan::operator::Opr::OrderBy(opr)) }
     }
 }
 
 impl From<pb::Dedup> for pb::logical_plan::Operator {
     fn from(opr: pb::Dedup) -> Self {
-        pb::logical_plan::Operator {
-            opr: Some(pb::logical_plan::operator::Opr::Dedup(opr)),
-        }
+        pb::logical_plan::Operator { opr: Some(pb::logical_plan::operator::Opr::Dedup(opr)) }
     }
 }
 
 impl From<pb::Unfold> for pb::logical_plan::Operator {
     fn from(opr: pb::Unfold) -> Self {
-        pb::logical_plan::Operator {
-            opr: Some(pb::logical_plan::operator::Opr::Unfold(opr)),
-        }
+        pb::logical_plan::Operator { opr: Some(pb::logical_plan::operator::Opr::Unfold(opr)) }
     }
 }
 
 impl From<pb::Apply> for pb::logical_plan::Operator {
     fn from(opr: pb::Apply) -> Self {
-        pb::logical_plan::Operator {
-            opr: Some(pb::logical_plan::operator::Opr::Apply(opr)),
-        }
+        pb::logical_plan::Operator { opr: Some(pb::logical_plan::operator::Opr::Apply(opr)) }
     }
 }
 
 impl From<pb::SegmentApply> for pb::logical_plan::Operator {
     fn from(opr: pb::SegmentApply) -> Self {
-        pb::logical_plan::Operator {
-            opr: Some(pb::logical_plan::operator::Opr::SegApply(opr)),
-        }
+        pb::logical_plan::Operator { opr: Some(pb::logical_plan::operator::Opr::SegApply(opr)) }
     }
 }
 
 impl From<pb::Scan> for pb::logical_plan::Operator {
     fn from(opr: pb::Scan) -> Self {
-        pb::logical_plan::Operator {
-            opr: Some(pb::logical_plan::operator::Opr::Scan(opr)),
-        }
+        pb::logical_plan::Operator { opr: Some(pb::logical_plan::operator::Opr::Scan(opr)) }
     }
 }
 
 impl From<pb::IndexedScan> for pb::logical_plan::Operator {
     fn from(opr: pb::IndexedScan) -> Self {
-        pb::logical_plan::Operator {
-            opr: Some(pb::logical_plan::operator::Opr::IndexedScan(opr)),
-        }
+        pb::logical_plan::Operator { opr: Some(pb::logical_plan::operator::Opr::IndexedScan(opr)) }
     }
 }
 
 impl From<pb::Limit> for pb::logical_plan::Operator {
     fn from(opr: pb::Limit) -> Self {
-        pb::logical_plan::Operator {
-            opr: Some(pb::logical_plan::operator::Opr::Limit(opr)),
-        }
+        pb::logical_plan::Operator { opr: Some(pb::logical_plan::operator::Opr::Limit(opr)) }
     }
 }
 
 impl From<pb::GetDetails> for pb::logical_plan::Operator {
     fn from(opr: pb::GetDetails) -> Self {
-        pb::logical_plan::Operator {
-            opr: Some(pb::logical_plan::operator::Opr::Details(opr)),
-        }
+        pb::logical_plan::Operator { opr: Some(pb::logical_plan::operator::Opr::Details(opr)) }
     }
 }
 
 impl From<pb::EdgeExpand> for pb::logical_plan::Operator {
     fn from(opr: pb::EdgeExpand) -> Self {
-        pb::logical_plan::Operator {
-            opr: Some(pb::logical_plan::operator::Opr::Edge(opr)),
-        }
+        pb::logical_plan::Operator { opr: Some(pb::logical_plan::operator::Opr::Edge(opr)) }
     }
 }
 
 impl From<pb::PathExpand> for pb::logical_plan::Operator {
     fn from(opr: pb::PathExpand) -> Self {
-        pb::logical_plan::Operator {
-            opr: Some(pb::logical_plan::operator::Opr::Path(opr)),
-        }
+        pb::logical_plan::Operator { opr: Some(pb::logical_plan::operator::Opr::Path(opr)) }
     }
 }
 
 impl From<pb::ShortestPathExpand> for pb::logical_plan::Operator {
     fn from(opr: pb::ShortestPathExpand) -> Self {
-        pb::logical_plan::Operator {
-            opr: Some(pb::logical_plan::operator::Opr::ShortestPath(opr)),
-        }
+        pb::logical_plan::Operator { opr: Some(pb::logical_plan::operator::Opr::ShortestPath(opr)) }
     }
 }
 
 impl From<pb::GetV> for pb::logical_plan::Operator {
     fn from(opr: pb::GetV) -> Self {
-        pb::logical_plan::Operator {
-            opr: Some(pb::logical_plan::operator::Opr::Vertex(opr)),
-        }
+        pb::logical_plan::Operator { opr: Some(pb::logical_plan::operator::Opr::Vertex(opr)) }
     }
 }
 
@@ -516,9 +444,8 @@ impl Decode for result_pb::Result {
         let len = reader.read_u32()? as usize;
         let mut buffer = Vec::with_capacity(len);
         reader.read_exact(&mut buffer)?;
-        result_pb::Result::decode(buffer.as_slice()).map_err(|_e| {
-            std::io::Error::new(std::io::ErrorKind::Other, "decoding result_pb failed!")
-        })
+        result_pb::Result::decode(buffer.as_slice())
+            .map_err(|_e| std::io::Error::new(std::io::ErrorKind::Other, "decoding result_pb failed!"))
     }
 }
 
@@ -530,19 +457,13 @@ mod test {
     fn test_str_to_variable() {
         let case1 = "@1";
         assert_eq!(
-            common_pb::Variable {
-                tag: Some(common_pb::NameOrId::from(1)),
-                property: None
-            },
+            common_pb::Variable { tag: Some(common_pb::NameOrId::from(1)), property: None },
             common_pb::Variable::from(case1.to_string())
         );
 
         let case2 = "@a";
         assert_eq!(
-            common_pb::Variable {
-                tag: Some(common_pb::NameOrId::from("a".to_string())),
-                property: None
-            },
+            common_pb::Variable { tag: Some(common_pb::NameOrId::from("a".to_string())), property: None },
             common_pb::Variable::from(case2.to_string())
         );
 
@@ -592,10 +513,7 @@ mod test {
 
         let case7 = "@";
         assert_eq!(
-            common_pb::Variable {
-                tag: None,
-                property: None
-            },
+            common_pb::Variable { tag: None, property: None },
             common_pb::Variable::from(case7.to_string())
         );
     }

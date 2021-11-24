@@ -157,13 +157,13 @@ message Limit {
 
 message QueryParams {
   // The tables to fetch data from. While this may sound arbitrary, but in graph db, we often use
-  // label to refer to a table. But in terms of semantics, they are exactly the same.
+  // label instead of table to refer to an entity (vertex/edge). They are semantically the same.
   repeated common.NameOrId table_names = 1;
   // The required columns of the table.
   repeated common.NameOrId columns = 2;
   // The size limit
   Range limit = 3;
-  // The optional predicate for the data tuple
+  // The optional predicate for the data tuple, which may be pushed down to the storage service
   common.SuffixExpr predicate = 4;
   // Extra requirements for general-purpose usage
   repeated string requirements = 5;
@@ -236,8 +236,8 @@ message GetV {
   common.NameOrId tag = 1;
   // Determine what vertex to get from the tagged object
   VOpt opt = 2;
-  // The query parameters define the condition that the vertex must satisfy
-  QueryParams params = 3;
+  // The required labels of the vertex
+  repeated common.NameOrId labels = 3;
   // The alias of this vertex
   common.NameOrId alias = 4;
 }
@@ -247,9 +247,7 @@ message GetDetails {
   // The tag that refers to the entity where the details will be retrieved
   common.NameOrId tag = 1;
   // The details (columns/properties) to be retrieved
-  repeated common.NameOrId columns = 2;
-  // A handy flag to specify whether it is getting all details (columns/properties)
-  bool is_all = 3;
+  QueryParams params = 2;
 }
 
 message EdgeExpand {

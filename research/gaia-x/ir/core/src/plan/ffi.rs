@@ -565,13 +565,14 @@ fn process_params(ptr: *const c_void, key: ParamsKey, val: FfiNameOrId, opr: Opr
                 }
                 std::mem::forget(expand);
             }
-            Opr::GetV => {
-                let mut getv = unsafe { Box::from_raw(ptr as *mut pb::GetV) };
+            Opr::GetDetails => {
+                let mut details = unsafe { Box::from_raw(ptr as *mut pb::GetDetails) };
                 match key {
-                    ParamsKey::Tag => getv.tag = pb.unwrap(),
+                    ParamsKey::Tag => details.tag = pb.unwrap(),
                     ParamsKey::Table => {
                         if let Some(label) = pb.unwrap() {
-                            getv.params
+                            details
+                                .params
                                 .as_mut()
                                 .unwrap()
                                 .table_names
@@ -580,7 +581,12 @@ fn process_params(ptr: *const c_void, key: ParamsKey, val: FfiNameOrId, opr: Opr
                     }
                     ParamsKey::Column => {
                         if let Some(ppt) = pb.unwrap() {
-                            getv.params.as_mut().unwrap().columns.push(ppt)
+                            details
+                                .params
+                                .as_mut()
+                                .unwrap()
+                                .columns
+                                .push(ppt)
                         }
                     }
                 }
@@ -607,13 +613,13 @@ fn process_params(ptr: *const c_void, key: ParamsKey, val: FfiNameOrId, opr: Opr
                 }
                 std::mem::forget(scan);
             }
-            Opr::GetDetails => {
-                let mut details = unsafe { Box::from_raw(ptr as *mut pb::GetDetails) };
+            Opr::GetV => {
+                let mut getv = unsafe { Box::from_raw(ptr as *mut pb::GetV) };
                 match key {
-                    ParamsKey::Tag => details.tag = pb.unwrap(),
-                    ParamsKey::Column => {
-                        if let Some(col) = pb.unwrap() {
-                            details.columns.push(col);
+                    ParamsKey::Tag => getv.tag = pb.unwrap(),
+                    ParamsKey::Table => {
+                        if let Some(label) = pb.unwrap() {
+                            getv.labels.push(label);
                         }
                     }
                     _ => unreachable!(),
@@ -1372,8 +1378,8 @@ mod details {
 
     /// To initialize a get details operator
     #[no_mangle]
-    pub extern "C" fn init_get_details(is_all: bool) -> *const c_void {
-        let details = Box::new(pb::GetDetails { tag: None, columns: vec![], is_all });
+    pub extern "C" fn init_get_details() -> *const c_void {
+        let details = Box::new(pb::GetDetails { tag: None, params: None });
 
         Box::into_raw(details) as *const c_void
     }
@@ -1382,6 +1388,20 @@ mod details {
     #[no_mangle]
     pub extern "C" fn set_details_tag(ptr_details: *const c_void, tag: FfiNameOrId) -> ResultCode {
         process_params(ptr_details, ParamsKey::Tag, tag, Opr::GetDetails)
+    }
+
+    /// Set the size range limitation of getting details
+    #[no_mangle]
+    pub extern "C" fn set_details_limit(ptr_details: *const c_void, lower: i32, upper: i32) -> ResultCode {
+        set_range(ptr_details, lower, upper, Opr::GetDetails)
+    }
+
+    /// Set the predicate of getting details
+    #[no_mangle]
+    pub extern "C" fn set_getv_predicate(
+        ptr_details: *const c_void, cstr_predicate: *const c_char,
+    ) -> ResultCode {
+        set_predicate(ptr_details, cstr_predicate, Opr::GetDetails)
     }
 
     #[no_mangle]
@@ -1511,13 +1531,7 @@ mod graph {
         let getv = Box::new(pb::GetV {
             tag: None,
             opt: unsafe { std::mem::transmute::<FfiVOpt, i32>(opt) },
-            params: Some(pb::QueryParams {
-                table_names: vec![],
-                columns: vec![],
-                limit: None,
-                predicate: None,
-                requirements: vec![],
-            }),
+            labels: vec![],
             alias: None,
         });
         Box::into_raw(getv) as *const c_void
@@ -1539,26 +1553,6 @@ mod graph {
     #[no_mangle]
     pub extern "C" fn add_getv_label(ptr_getv: *const c_void, label: FfiNameOrId) -> ResultCode {
         process_params(ptr_getv, ParamsKey::Table, label, Opr::GetV)
-    }
-
-    /// Add a property that this vertex must carry
-    #[no_mangle]
-    pub extern "C" fn add_getv_property(ptr_getv: *const c_void, property: FfiNameOrId) -> ResultCode {
-        process_params(ptr_getv, ParamsKey::Column, property, Opr::GetV)
-    }
-
-    /// Set the size range limitation of getting vertices
-    #[no_mangle]
-    pub extern "C" fn set_getv_limit(ptr_getv: *const c_void, lower: i32, upper: i32) -> ResultCode {
-        set_range(ptr_getv, lower, upper, Opr::GetV)
-    }
-
-    /// Set the predicate of getting vertices
-    #[no_mangle]
-    pub extern "C" fn set_getv_predicate(
-        ptr_getv: *const c_void, cstr_predicate: *const c_char,
-    ) -> ResultCode {
-        set_predicate(ptr_getv, cstr_predicate, Opr::GetV)
     }
 
     /// Append an edge expand operator to the logical plan
