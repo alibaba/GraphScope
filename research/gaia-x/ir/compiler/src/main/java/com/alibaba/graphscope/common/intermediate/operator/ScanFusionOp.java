@@ -1,11 +1,10 @@
 package com.alibaba.graphscope.common.intermediate.operator;
 
 import java.util.Optional;
-import java.util.function.Function;
 
-public class ScanFusionOp extends BaseOp {
-    public ScanFusionOp(Function transformer) {
-        super(transformer);
+public class ScanFusionOp extends InterOpBase {
+    public ScanFusionOp() {
+        super();
         scanOpt = Optional.empty();
         labels = Optional.empty();
         properties = Optional.empty();

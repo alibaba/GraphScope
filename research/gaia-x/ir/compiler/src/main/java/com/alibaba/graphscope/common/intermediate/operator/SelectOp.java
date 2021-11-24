@@ -1,11 +1,10 @@
 package com.alibaba.graphscope.common.intermediate.operator;
 
 import java.util.Optional;
-import java.util.function.Function;
 
-public class SelectOp extends BaseOp {
-    public SelectOp(Function transformer) {
-        super(transformer);
+public class SelectOp extends InterOpBase {
+    public SelectOp() {
+        super();
         this.predicate = Optional.empty();
     }
 

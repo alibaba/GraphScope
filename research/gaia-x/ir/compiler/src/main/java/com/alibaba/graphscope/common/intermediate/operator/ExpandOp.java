@@ -1,11 +1,10 @@
 package com.alibaba.graphscope.common.intermediate.operator;
 
 import java.util.Optional;
-import java.util.function.Function;
 
-public class ExpandOp extends BaseOp {
-    public ExpandOp(Function transformer) {
-        super(transformer);
+public class ExpandOp extends InterOpBase {
+    public ExpandOp() {
+        super();
         this.edgeOpt = Optional.empty();
         this.direction = Optional.empty();
         this.labels = Optional.empty();
@@ -20,10 +19,13 @@ public class ExpandOp extends BaseOp {
     // in/out/both
     private Optional<OpArg> direction;
 
+    // filter edge by labels
     private Optional<OpArg> labels;
 
+    // filter edge by properties
     private Optional<OpArg> properties;
 
+    // filter edge by predicates
     private Optional<OpArg> predicate;
 
     private Optional<OpArg> limit;
