@@ -22,7 +22,6 @@ import com.alibaba.graphscope.ds.PropertyNbrUnit;
 import com.alibaba.graphscope.ds.PropertyRawAdjList;
 import com.alibaba.graphscope.ds.Vertex;
 import com.alibaba.graphscope.ds.VertexRange;
-import com.alibaba.graphscope.example.property.traverse.ParallelPropertyTraverseVertexData;
 import com.alibaba.graphscope.fragment.ArrowFragment;
 import com.alibaba.graphscope.parallel.ParallelEngine;
 import com.alibaba.graphscope.parallel.ParallelPropertyMessageManager;
@@ -38,8 +37,9 @@ import org.slf4j.LoggerFactory;
 public class ParallelPropertyWCCVertexData
         implements ParallelPropertyAppBase<Long, ParallelPropertyWCCVertexDataContext>,
                 ParallelEngine {
+
     private static Logger logger =
-            LoggerFactory.getLogger(ParallelPropertyTraverseVertexData.class.getName());
+            LoggerFactory.getLogger(ParallelPropertyWCCVertexData.class.getName());
 
     private void PropagateLabelPush(
             ArrowFragment<Long> frag,

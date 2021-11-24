@@ -22,7 +22,6 @@ import com.alibaba.graphscope.context.PropertyParallelContextBase;
 import com.alibaba.graphscope.ds.Vertex;
 import com.alibaba.graphscope.ds.VertexRange;
 import com.alibaba.graphscope.ds.VertexSet;
-import com.alibaba.graphscope.example.property.traverse.ParallelPropertyTraverseVertexDataContext;
 import com.alibaba.graphscope.fragment.ArrowFragment;
 import com.alibaba.graphscope.parallel.ParallelPropertyMessageManager;
 import com.alibaba.graphscope.utils.AtomicLongArrayWrapper;
@@ -39,8 +38,9 @@ import org.slf4j.LoggerFactory;
 
 public class ParallelPropertyWCCVertexDataContext extends LabeledVertexDataContext<Long, Double>
         implements PropertyParallelContextBase<Long> {
+
     private static Logger logger =
-            LoggerFactory.getLogger(ParallelPropertyTraverseVertexDataContext.class.getName());
+            LoggerFactory.getLogger(ParallelPropertyWCCVertexDataContext.class.getName());
     public int threadNum;
     public int chunkSize;
     public ExecutorService executor;
