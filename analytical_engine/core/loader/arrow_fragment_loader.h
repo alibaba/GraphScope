@@ -152,8 +152,10 @@ class ArrowFragmentLoader {
                       vineyard::sync_gs_error(comm_spec_, load_e_procedure));
       e_tables = tmp_e;
     }
-    for (const auto& table : e_tables) {
-      BOOST_LEAF_CHECK(sanityChecks(table));
+    for (const auto& table_vec : e_tables) {
+      for (const auto& table : table_vec) {
+        BOOST_LEAF_CHECK(sanityChecks(table));
+      }
     }
     LOG_IF(INFO, comm_spec_.worker_id() == 0)
         << "PROGRESS--GRAPH-LOADING-READ-EDGE-100";
