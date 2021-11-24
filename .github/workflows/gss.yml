@@ -111,7 +111,7 @@ jobs:
     - name: Prepare Image
       run: |
         cd ${GITHUB_WORKSPACE}
-        sudo make graphscope-image
+        sudo make graphscope-store-image
 
     - name: Python Test with Helm Deployment
       env:
@@ -123,7 +123,7 @@ jobs:
 
         # retag image for helm test
         sudo docker tag graphscope/graphscope-store:${SHORT_SHA} \
-            registry.cn-hongkong.aliyuncs.com/graphscope/graphscope:${SHORT_SHA}
+            registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-store:${SHORT_SHA}
 
         # update helm dependency
         cd ${GITHUB_WORKSPACE}/charts/graphscope-store
@@ -185,6 +185,6 @@ jobs:
         rm -rf /tmp/hadoop* || true
         helm uninstall ci || true
         kubectl delete pvc -l app.kubernetes.io/instance=ci --wait=false || true
-        kubectl delete pod ci-graphscope-store-frontend-test-rpc-service --wait=false || true
+        kubectl delete pod ci-graphscope-store-frontend-test-grpc-service ci-graphscope-store-frontend-test-gremlin-service --wait=false || true
         sudo docker rmi -f graphscope/graphscope-store:${SHORT_SHA}
         sudo docker rmi -f registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-store:${SHORT_SHA} || true
