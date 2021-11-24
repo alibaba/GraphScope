@@ -18,6 +18,7 @@ package com.alibaba.graphscope.utils;
 
 import com.alibaba.graphscope.app.DefaultAppBase;
 import com.alibaba.graphscope.app.DefaultPropertyAppBase;
+import com.alibaba.graphscope.app.ParallelPropertyAppBase;
 import com.alibaba.graphscope.context.LabeledVertexDataContext;
 import com.alibaba.graphscope.context.LabeledVertexPropertyContext;
 import com.alibaba.graphscope.context.VertexDataContext;
@@ -51,6 +52,30 @@ public class AppBaseParser {
                         System.out.println(
                                 "Error: Number of params error, expected 2, actuval "
                                         + typeParams.length);
+                        return;
+                    }
+                    System.out.println("TypeParams: " + typeParams[0].getTypeName());
+                    Class<?> ctxType = (Class<?>) typeParams[1];
+                    System.out.println("ContextType:" + javaContextToCppContextName(ctxType));
+                    return;
+                }
+                System.out.println("Error: Not a parameterized type " + type.getTypeName());
+                return;
+            }
+
+            flag = ParallelPropertyAppBase.class.isAssignableFrom(clz);
+            if (flag == true) {
+                System.out.println("ParallelPropertyApp");
+                Class<? extends ParallelPropertyAppBase> clzCasted =
+                    (Class<? extends ParallelPropertyAppBase>) clz;
+                Type type = clzCasted.getGenericInterfaces()[0];
+                if (type instanceof ParameterizedType) {
+                    ParameterizedType parameterizedType = (ParameterizedType) type;
+                    Type[] typeParams = parameterizedType.getActualTypeArguments();
+                    if (typeParams.length != 2) {
+                        System.out.println(
+                            "Error: Number of params error, expected 2, actuval "
+                                + typeParams.length);
                         return;
                     }
                     System.out.println("TypeParams: " + typeParams[0].getTypeName());
