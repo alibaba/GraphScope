@@ -16,6 +16,8 @@
 # limitations under the License.
 #
 
+import os
+
 import pytest
 
 import graphscope
@@ -26,7 +28,10 @@ def graphscope_session():
     graphscope.set_option(show_log=True)
     graphscope.set_option(initializing_interactive_engine=False)
 
-    sess = graphscope.session(cluster_type="hosts")
+    if os.environ.get("DEPLOYMENT", None) == "standalone":
+        sess = graphscope.session(cluster_type="hosts", num_workers=1)
+    else:
+        sess = graphscope.session(cluster_type="hosts")
     sess.as_default()
     yield sess
     sess.close()

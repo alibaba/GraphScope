@@ -517,7 +517,7 @@ class TestWeightedBetweennessCentrality:
             "Napoleon": 0.000,
             "OldMan": 0.000,
             "Perpetue": 0.000,
-            "Pontmercy": 19.737,
+            "Pontmercy": 19.7375,
             "Prouvaire": 0.000,
             "Scaufflaire": 0.000,
             "Simplice": 24.625,

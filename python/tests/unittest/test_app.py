@@ -68,6 +68,7 @@ def test_run_app_on_directed_graph(
     p2p_project_directed_graph,
     sssp_result,
     pagerank_result,
+    hits_result,
     bfs_result,
     clustering_result,
     dc_result,
@@ -107,6 +108,30 @@ def test_run_app_on_directed_graph(
     r3 = sssp(p2p_project_directed_graph, 100000000)
     assert r3 is not None
 
+    # pagerank
+    ctx_pr = pagerank(p2p_project_directed_graph, delta=0.85, max_round=10)
+    ret_pr = (
+        ctx_pr.to_dataframe({"node": "v.id", "r": "r"})
+        .sort_values(by=["node"])
+        .to_numpy(dtype=float)
+    )
+    assert np.allclose(ret_pr, pagerank_result["directed"])
+
+    # hits
+    ctx_hits = hits(p2p_project_directed_graph, tolerance=0.001)
+    ret_hub = (
+        ctx_hits.to_dataframe({"node": "v.id", "hub": "r.hub"})
+        .sort_values(by=["node"])
+        .to_numpy(dtype=float)
+    )
+    ret_auth = (
+        ctx_hits.to_dataframe({"node": "v.id", "auth": "r.auth"})
+        .sort_values(by=["node"])
+        .to_numpy(dtype=float)
+    )
+    assert np.allclose(ret_hub, hits_result["hub"])
+    assert np.allclose(ret_auth, hits_result["auth"])
+
     # bfs
     ctx4 = bfs(p2p_project_directed_graph, src=6)
     r4 = (
@@ -135,13 +160,42 @@ def test_run_app_on_directed_graph(
     )
 
     # simple_path
-    ctx6 = is_simple_path(p2p_project_directed_graph, [1, 10])
-    assert ctx6
+    assert is_simple_path(p2p_project_directed_graph, [1, 10])
 
     with pytest.raises(
         InvalidArgumentError, match="Louvain not support directed graph."
     ):
         louvain(p2p_project_directed_graph)
+
+    # clustering
+    ctx_clustering = clustering(p2p_project_directed_graph)
+    ret_clustering = (
+        ctx_clustering.to_dataframe({"node": "v.id", "r": "r"})
+        .sort_values(by=["node"])
+        .to_numpy(dtype=float)
+    )
+    assert np.allclose(ret_clustering, clustering_result["directed"])
+
+    # degree_centrality
+    ctx_dc = degree_centrality(p2p_project_directed_graph)
+    ret_dc = (
+        ctx_dc.to_dataframe({"node": "v.id", "r": "r"})
+        .sort_values(by=["node"])
+        .to_numpy(dtype=float)
+    )
+    assert np.allclose(ret_dc, dc_result["directed"])
+
+    # eigenvector_centrality
+    ctx_ev = eigenvector_centrality(p2p_project_directed_graph)
+    ret_ev = (
+        ctx_ev.to_dataframe({"node": "v.id", "r": "r"})
+        .sort_values(by=["node"])
+        .to_numpy(dtype=float)
+    )
+    assert np.allclose(ret_ev, ev_result["directed"])
+
+    # katz_centrality
+    ctx_katz = katz_centrality(p2p_project_directed_graph)
 
 
 def test_app_on_undirected_graph(
@@ -302,12 +356,20 @@ def test_app_on_undirected_graph(
     )
     assert np.all(ctx10.to_numpy("r", vertex_range={"begin": 1, "end": 4}) == [0, 0, 0])
 
+    # triangles
+    ctx_triangles = triangles(p2p_project_undirected_graph)
+    ret_triangles = (
+        ctx_triangles.to_dataframe({"node": "v.id", "r": "r"})
+        .sort_values(by=["node"])
+        .to_numpy(dtype=float)
+    )
+    assert np.allclose(ret_triangles, triangles_result["undirected"])
+
     # louvain
     ctx10 = louvain(p2p_project_undirected_graph, min_progress=50, progress_tries=2)
 
     # simple_path
-    ctx11 = is_simple_path(p2p_project_undirected_graph, [1, 10])
-    assert ctx11
+    assert is_simple_path(p2p_project_undirected_graph, [1, 10])
 
 
 def test_run_app_on_string_oid_graph(p2p_project_directed_graph_string):
