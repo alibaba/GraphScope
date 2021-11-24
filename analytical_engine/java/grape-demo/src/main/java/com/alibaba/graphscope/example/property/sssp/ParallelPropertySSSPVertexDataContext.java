@@ -18,11 +18,13 @@ package com.alibaba.graphscope.example.property.sssp;
 import com.alibaba.fastjson.JSONObject;
 import com.alibaba.graphscope.context.LabeledVertexDataContext;
 import com.alibaba.graphscope.context.PropertyParallelContextBase;
+import com.alibaba.graphscope.ds.GSVertexArray;
 import com.alibaba.graphscope.ds.Vertex;
 import com.alibaba.graphscope.ds.VertexRange;
 import com.alibaba.graphscope.ds.VertexSet;
 import com.alibaba.graphscope.fragment.ArrowFragment;
 import com.alibaba.graphscope.parallel.ParallelPropertyMessageManager;
+import com.alibaba.graphscope.stdcxx.StdVector;
 import com.alibaba.graphscope.utils.AtomicDoubleArrayWrapper;
 import java.io.BufferedWriter;
 import java.io.File;
@@ -35,7 +37,7 @@ import java.util.concurrent.Executors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class ParallelPropertySSSPVertexDataContext extends LabeledVertexDataContext<Long, Long>
+public class ParallelPropertySSSPVertexDataContext extends LabeledVertexDataContext<Long, Double>
         implements PropertyParallelContextBase<Long> {
     private static Logger logger =
             LoggerFactory.getLogger(ParallelPropertySSSPVertexDataContext.class.getName());
@@ -46,6 +48,7 @@ public class ParallelPropertySSSPVertexDataContext extends LabeledVertexDataCont
     //    public StdVector<GSVertexArray<Double>> partialResults;
     //    public List<AtomicDoubleArrayWrapper> receivedMessages;
     public AtomicDoubleArrayWrapper partialResults;
+    public StdVector<GSVertexArray<Double>> cppPartialResult;
     public int threadNum;
     public int chunkSize;
 
@@ -71,6 +74,7 @@ public class ParallelPropertySSSPVertexDataContext extends LabeledVertexDataCont
         nextModified = new VertexSet(vertices);
         partialResults =
                 new AtomicDoubleArrayWrapper(fragment.getTotalVerticesNum(), Double.MAX_VALUE);
+        cppPartialResult = data();
 
         if (jsonObject.containsKey("src")) {
             sourceOid = jsonObject.getLong("src");
