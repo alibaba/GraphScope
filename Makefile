@@ -137,21 +137,21 @@ graphscope-docs: prepare-client
 	$(MAKE) -C $(WORKING_DIR)/docs/ html
 
 .PHONY: test
-test: unit-test minimize-test k8s-test
+test: unittest minitest k8stest
 
-.PHONY: unit-test
-unit-test:
+.PHONY: unittest
+unittest:
 	cd $(WORKING_DIR)/python && \
 	python3 -m pytest -s -v ./tests/unittest
 
-.PHONY: minimize-test
-minimize-test:
+.PHONY: minitest
+minitest:
 	cd $(WORKING_DIR)/python && \
 	pip3 install tensorflow==2.5.2 && \
 	python3 -m pytest -s -v ./tests/minitest
 
-.PHONY: k8s-test
-k8s-test:
+.PHONY: k8stest
+k8stest:
 	cd $(WORKING_DIR)/python && \
 	pip3 install tensorflow==2.5.2 && \
 	python3 -m pytest -s -v ./tests/kubernetes
