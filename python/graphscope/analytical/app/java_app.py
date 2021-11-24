@@ -333,7 +333,7 @@ class JavaAppDagNode(AppDAGNode):
             raise RuntimeError("The graph is not loaded")
         check_argument(not args, "Only support using keyword arguments in cython app.")
 
-        if self._app_assets.java_app_type == "property":
+        if self._app_assets.java_app_type.find("property") != -1:
             frag_name_for_java = self._convert_arrow_frag_for_java(
                 self._graph.template_str
             )
