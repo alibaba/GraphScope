@@ -67,7 +67,7 @@ class NodeBoundary : public AppBase<FRAG_T, NodeBoundaryContext<FRAG_T>>,
 
     // get the boundary
     for (auto& gid : source_gid_set) {
-      if (frag.InnerVertexGid2Vertex(gid, v)) {
+      if (frag.Gid2Vertex(gid, v) && frag.IsInnerVertex(v)) {
         for (auto& e : frag.GetOutgoingAdjList(v)) {
           vid_t v_gid = frag.Vertex2Gid(e.get_neighbor());
           if (source_gid_set.find(v_gid) == source_gid_set.end() &&
@@ -79,18 +79,7 @@ class NodeBoundary : public AppBase<FRAG_T, NodeBoundaryContext<FRAG_T>>,
       }
     }
 
-    // gather and process boundary on worker-0
-    std::vector<std::set<vid_t>> all_boundary;
-    AllGather(ctx.boundary, all_boundary);
-
-    if (frag.fid() == 0) {
-      for (size_t i = 1; i < all_boundary.size(); ++i) {
-        for (auto& v : all_boundary[i]) {
-          ctx.boundary.insert(v);
-        }
-      }
-      writeToCtx(frag, ctx);
-    }
+    writeToCtx(frag, ctx);
   }
 
   void IncEval(const fragment_t& frag, context_t& ctx,
@@ -102,12 +91,23 @@ class NodeBoundary : public AppBase<FRAG_T, NodeBoundaryContext<FRAG_T>>,
 
  private:
   void writeToCtx(const fragment_t& frag, context_t& ctx) {
-    std::vector<typename fragment_t::oid_t> data;
-    for (auto& v : ctx.boundary) {
-      data.push_back(frag.Gid2Oid(v));
+    // reduce and process boundary on worker-0
+    std::set<vid_t> all_boundary;
+    AllReduce(ctx.boundary, all_boundary,
+              [](std::set<vid_t>& out, const std::set<vid_t>& in) {
+                for (auto& v : in) {
+                  out.insert(v);
+                }
+              });
+
+    if (frag.fid() == 0) {
+      std::vector<typename fragment_t::oid_t> data;
+      for (auto& v : all_boundary) {
+        data.push_back(frag.Gid2Oid(v));
+      }
+      std::vector<size_t> shape{data.size()};
+      ctx.assign(data, shape);
     }
-    std::vector<size_t> shape{data.size()};
-    ctx.assign(data, shape);
   }
 };
 }  // namespace gs

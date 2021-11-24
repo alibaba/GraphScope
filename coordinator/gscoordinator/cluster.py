@@ -166,6 +166,7 @@ class KubernetesClusterLauncher(Launcher):
         service_type=None,
         gs_image=None,
         etcd_image=None,
+        dataset_image=None,
         coordinator_name=None,
         coordinator_service_name=None,
         etcd_num_pods=None,
@@ -185,6 +186,7 @@ class KubernetesClusterLauncher(Launcher):
         image_pull_policy=None,
         image_pull_secrets=None,
         volumes=None,
+        mount_dataset=None,
         num_workers=None,
         preemptive=None,
         instance_id=None,
@@ -549,7 +551,20 @@ class KubernetesClusterLauncher(Launcher):
                 mounts_list=[{"mountPath": "/dev/shm"}],
             )
         )
-        # volumes for test data
+
+        # Mount aliyun demo dataset bucket
+        if self._saved_locals["mount_dataset"] is not None:
+            self._volumes["dataset"] = {
+                "type": "emptyDir",
+                "field": {},
+                "mounts": {
+                    "mountPath": self._saved_locals["mount_dataset"],
+                    "readOnly": True,
+                    "mountPropagation": "HostToContainer",
+                },
+            }
+
+        # Mount user specified volumes
         for name, volume in self._volumes.items():
             volume_builder = resolve_volume_builder(name, volume)
             if volume_builder is not None:
@@ -604,6 +619,23 @@ class KubernetesClusterLauncher(Launcher):
                 port=self._mars_worker_port,
                 scheduler_endpoint="%s:%s"
                 % (self._mars_service_name, self._mars_scheduler_port),
+            )
+
+        if self._saved_locals["mount_dataset"]:
+            engine_builder.add_container(
+                {
+                    "name": "dataset",
+                    "image": self._saved_locals["dataset_image"],
+                    "imagePullPolicy": self._saved_locals["image_pull_policy"],
+                    "volumeMounts": [
+                        {
+                            "name": "dataset",
+                            "mountPath": "/dataset",
+                            "mountPropagation": "Bidirectional",
+                        }
+                    ],
+                    "securityContext": {"privileged": True},
+                }
             )
         for name in self._image_pull_secrets:
             engine_builder.add_image_pull_secret(name)

@@ -14,12 +14,18 @@
 # NetworkX is distributed under a BSD license; see LICENSE.txt for more
 # information.
 #
+import os
+
 import pytest
 
 from graphscope import nx
 from graphscope.nx.tests.utils import almost_equal
 
 
+@pytest.mark.skipif(
+    os.environ.get("DEPLOYMENT", None) == "standalone",
+    reason="FIXME(weibin): all_simple_paths does not work on standalone",
+)
 @pytest.mark.usefixtures("graphscope_session")
 class TestIsSimplePath:
     """Unit tests for the
@@ -92,6 +98,10 @@ class TestIsSimplePath:
             ctx = nx.builtin.is_simple_path(G, 1)
 
 
+@pytest.mark.skipif(
+    os.environ.get("DEPLOYMENT", None) == "standalone",
+    reason="FIXME(weibin): all_simple_paths does not work on standalone",
+)
 @pytest.mark.usefixtures("graphscope_session")
 class TestAllSimplePaths:
     """Unit tests for the
@@ -255,6 +265,10 @@ class TestAllSimplePaths:
             list(nx.builtin.all_simple_paths(nx.DiGraph(G), 1, 4))
 
 
+@pytest.mark.skipif(
+    os.environ.get("DEPLOYMENT", None) == "standalone",
+    reason="FIXME(weibin): all_simple_paths does not work on standalone",
+)
 @pytest.mark.usefixtures("graphscope_session")
 class TestAllSimpleEdgePaths:
     """Unit tests for the

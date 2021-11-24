@@ -14,6 +14,9 @@
 # NetworkX is distributed under a BSD license; see LICENSE.txt for more
 # information.
 #
+
+import os
+
 import networkx
 import pytest
 from networkx.classes.tests import test_graphviews as test_gvs
@@ -134,7 +137,7 @@ class TestChainsOfViews(test_gvs.TestChainsOfViews):
         SG = self.G.subgraph([4, 5, 6])
         SSG = SG.to_undirected()
         assert sorted(list(SSG)) == [4, 5, 6]
-        assert sorted(SSG.edges) == [(4, 5), (6, 5)]
+        assert sorted(SSG.edges) in ([(5, 4), (6, 5)], [(4, 5), (6, 5)])
 
     def test_reverse_subgraph_toundirected(self):
         # a view can not project subgraph in graphscope.nx
@@ -142,7 +145,7 @@ class TestChainsOfViews(test_gvs.TestChainsOfViews):
         SG = G.subgraph([4, 5, 6])
         SSG = SG.to_undirected()
         assert sorted(list(SSG)) == [4, 5, 6]
-        assert sorted(SSG.edges) == [(4, 5), (6, 5)]
+        assert sorted(SSG.edges) in ([(5, 4), (6, 5)], [(4, 5), (6, 5)])
 
     def test_reverse_reverse_copy(self):
         G = self.DG.reverse(copy=False)

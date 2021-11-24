@@ -77,8 +77,7 @@ class UnionVertexRange {
 
     iterator operator+(size_t offset) const {
       if (vertex_ranges_.get().empty()) {
-        return iterator(vertex_ranges_.get(), vertex_ranges_.get().back().end(),
-                        0);
+        return iterator(vertex_ranges_.get(), grape::Vertex<T>(0), 0);
       }
 
       grape::Vertex<T> new_vertex(curr_vertex_);
@@ -113,9 +112,15 @@ class UnionVertexRange {
   };
 
   iterator begin() const {
+    if (vertex_ranges_.empty()) {
+      return iterator(vertex_ranges_, grape::Vertex<T>(0), 0);
+    }
     return iterator(vertex_ranges_, vertex_ranges_.front().begin(), 0);
   }
   iterator end() const {
+    if (vertex_ranges_.empty()) {
+      return iterator(vertex_ranges_, grape::Vertex<T>(0), 0);
+    }
     return iterator(vertex_ranges_, vertex_ranges_.back().end(),
                     vertex_ranges_.size());
   }

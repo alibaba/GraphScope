@@ -48,6 +48,7 @@ jobs:
             - 'python/graphscope/deploy/**'
             - 'python/graphscope/framework/**'
             - 'python/graphscope/proto/**'
+            - 'python/tests/unittest/**'
           networkx:
             - 'analytical_engine/apps/**'
             - 'analytical_engine/frame/**'
@@ -293,6 +294,10 @@ jobs:
       image: registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-runtime:latest
       options:
         --shm-size 4096m
+    strategy:
+      matrix:
+        deployment: ["standalone", "distributed"]
+
     steps:
     - uses: actions/checkout@v2.3.2
 
@@ -344,6 +349,8 @@ jobs:
         mvn clean install -DskipTests -Dmaven.antrun.skip=true --quiet
 
     - name: GraphScope python unittest
+      env:
+        DEPLOYMENT: ${{ matrix.deployment }}
       run: |
         export GRAPHSCOPE_HOME='/opt/graphscope'
         export GS_TEST_DIR='/home/graphscope/gstest'
@@ -375,6 +382,9 @@ jobs:
       image: registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-runtime:latest
       options:
         --shm-size 4096m
+    strategy:
+      matrix:
+        deployment: ["standalone", "distributed"]
     steps:
     - uses: actions/checkout@v2.3.2
     - uses: dorny/paths-filter@v2
@@ -446,25 +456,30 @@ jobs:
 
     - name: Basic test
       if: steps.nx-filter.outputs.basic == 'true'
+      env:
+        DEPLOYMENT: ${{ matrix.deployment }}
       run: |
         export GRAPHSCOPE_HOME='/opt/graphscope'
         export GS_TEST_DIR='/home/graphscope/gstest'
-        python3 -m pytest --exitfirst -s -v python/graphscope/nx/tests \
-                          --ignore=python/graphscope/nx/tests/algorithms
+        python3 -m pytest --exitfirst -s -v python/graphscope/nx/tests
 
     - name: Algorithm test
       if: steps.nx-filter.outputs.algorithm == 'true'
+      env:
+        DEPLOYMENT: ${{ matrix.deployment }}
       run: |
         export GRAPHSCOPE_HOME='/opt/graphscope'
         export GS_TEST_DIR='/home/graphscope/gstest'
-        python3 -m pytest --exitfirst -s -v python/graphscope/nx/tests/algorithms/builtin
+        python3 -m pytest --exitfirst -s -v python/graphscope/nx/algorithms/tests/builtin
 
     - name: Generator test
       if: steps.nx-filter.outputs.generator == 'true'
+      env:
+        DEPLOYMENT: ${{ matrix.deployment }}
       run: |
         export GRAPHSCOPE_HOME='/opt/graphscope'
         export GS_TEST_DIR='/home/graphscope/gstest'
-        python3 -m pytest -s -v python/graphscope/nx/generators/tests
+        python3 -m pytest --exitfirst -s -v python/graphscope/nx/generators/tests
 
   k8s-test:
     runs-on: self-hosted

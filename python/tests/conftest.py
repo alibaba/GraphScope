@@ -19,6 +19,7 @@
 import os
 
 import numpy as np
+import pandas as pd
 import pytest
 
 import graphscope
@@ -28,7 +29,6 @@ from graphscope import sssp
 from graphscope.client.session import default_session
 from graphscope.dataset import load_ldbc
 from graphscope.dataset import load_modern_graph
-from graphscope.framework.graph import Graph
 from graphscope.framework.loader import Loader
 
 
@@ -36,7 +36,10 @@ from graphscope.framework.loader import Loader
 def graphscope_session():
     graphscope.set_option(show_log=True)
     graphscope.set_option(initializing_interactive_engine=False)
-    sess = graphscope.session(cluster_type="hosts")
+    if os.environ.get("DEPLOYMENT", None) == "standalone":
+        sess = graphscope.session(cluster_type="hosts", num_workers=1)
+    else:
+        sess = graphscope.session(cluster_type="hosts")
     yield sess
     sess.close()
 
@@ -543,6 +546,20 @@ def pagerank_result():
 
 
 @pytest.fixture(scope="module")
+def hits_result():
+    ret = {}
+    df = pd.read_csv(
+        "{}/../p2p-31-hits-directed".format(property_dir),
+        sep="\t",
+        header=None,
+        prefix="",
+    )
+    ret["hub"] = df.iloc[:, [0, 1]].to_numpy(dtype=float)
+    ret["auth"] = df.iloc[:, [0, 2]].to_numpy(dtype=float)
+    yield ret
+
+
+@pytest.fixture(scope="module")
 def bfs_result():
     ret = {}
     ret["directed"] = np.loadtxt(
@@ -560,42 +577,44 @@ def cdlp_result():
 
 @pytest.fixture(scope="module")
 def clustering_result():
-    ret = np.fromfile(
-        "{}/results/twitter_property_clustering_ndarray".format(property_dir), sep="\n"
+    ret = {}
+    ret["directed"] = np.loadtxt(
+        "{}/../p2p-31-clustering".format(property_dir), dtype=float
     )
     yield ret
 
 
 @pytest.fixture(scope="module")
 def dc_result():
-    ret = np.fromfile(
-        "{}/results/twitter_property_dc_ndarray".format(property_dir), sep="\n"
+    ret = {}
+    ret["directed"] = np.loadtxt(
+        "{}/../p2p-31-degree_centrality".format(property_dir), dtype=float
     )
     yield ret
 
 
 @pytest.fixture(scope="module")
 def ev_result():
-    ret = np.fromfile(
-        "{}/results/twitter_property_ev_ndarray".format(property_dir), sep="\n"
+    ret = {}
+    ret["directed"] = np.loadtxt(
+        "{}/../p2p-31-eigenvector".format(property_dir), dtype=float
     )
     yield ret
 
 
 @pytest.fixture(scope="module")
 def katz_result():
-    ret = np.fromfile(
-        "{}/results/twitter_property_katz_ndarray".format(property_dir), sep="\n"
-    )
+    ret = {}
+    ret["directed"] = np.loadtxt("{}/../p2p-31-katz".format(property_dir), dtype=float)
     yield ret
 
 
 @pytest.fixture(scope="module")
 def triangles_result():
-    ret = np.fromfile(
-        "{}/results/twitter_property_triangles_ndarray".format(property_dir),
+    ret = {}
+    ret["undirected"] = np.loadtxt(
+        "{}/../p2p-31-triangles".format(property_dir),
         dtype=np.int64,
-        sep="\n",
     )
     yield ret
 

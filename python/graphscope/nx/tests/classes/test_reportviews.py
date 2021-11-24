@@ -16,6 +16,8 @@
 #
 
 # fmt: off
+import os
+
 import networkx
 import pytest
 from networkx.classes.reportviews import NodeDataView
@@ -52,12 +54,16 @@ class TestNodeView(_TestNodeView):
         cls.nv = cls.G.nodes  # NodeView(G)
 
     def test_str(self):
-        # NB: only pass on num_workers=2
-        assert str(self.nv) == "[0, 2, 4, 6, 8, 1, 3, 5, 7]"
+        assert str(self.nv) in (
+            "[0, 1, 2, 3, 4, 5, 6, 7, 8]",
+            "[0, 2, 4, 6, 8, 1, 3, 5, 7]",
+        )
 
     def test_repr(self):
-        # NB: only pass on num_workers=2
-        assert repr(self.nv) == "NodeView((0, 2, 4, 6, 8, 1, 3, 5, 7))"
+        assert repr(self.nv) in (
+            "NodeView((0, 1, 2, 3, 4, 5, 6, 7, 8))",
+            "NodeView((0, 2, 4, 6, 8, 1, 3, 5, 7))",
+        )
 
     def test_iter(self):
         nv = self.nv
@@ -91,25 +97,31 @@ class TestNodeDataView(_TestNodeDataView):
         pass
 
     def test_str(self):
-        # NB: only pass on num_workers=2
-        assert (
-            str(self.ndv)
-            == "[(0, {}), (2, {}), (4, {}), (6, {}), (8, {}), (1, {}), (3, {}), (5, {}), (7, {})]"
+        assert str(self.ndv) in (
+            "[(0, {}), (1, {}), (2, {}), (3, {}), (4, {}), (5, {}), (6, {}), (7, {}), (8, {})]",
+            "[(0, {}), (2, {}), (4, {}), (6, {}), (8, {}), (1, {}), (3, {}), (5, {}), (7, {})]",
         )
 
     def test_repr(self):
-        expected = "NodeDataView((0, 2, 4, 6, 8, 1, 3, 5, 7))"
-        assert repr(self.nv) == expected
         expected = (
+            "NodeDataView((0, 1, 2, 3, 4, 5, 6, 7, 8))",
+            "NodeDataView((0, 2, 4, 6, 8, 1, 3, 5, 7))",
+        )
+        assert repr(self.nv) in expected
+        expected = (
+            "NodeDataView({0: {}, 1: {}, 2: {}, 3: {}, "
+            + "4: {}, 5: {}, 6: {}, 7: {}, 8: {}})",
             "NodeDataView({0: {}, 2: {}, 4: {}, 6: {}, "
-            + "8: {}, 1: {}, 3: {}, 5: {}, 7: {}})"
+            + "8: {}, 1: {}, 3: {}, 5: {}, 7: {}})",
         )
-        assert repr(self.ndv) == expected
+        assert repr(self.ndv) in expected
         expected = (
+            "NodeDataView({0: None, 1: None, 2: None, 3: None, 4: None, "
+            + "5: None, 6: None, 7: None, 8: None}, data='foo')",
             "NodeDataView({0: None, 2: None, 4: None, 6: None, 8: None, "
-            + "1: None, 3: None, 5: None, 7: None}, data='foo')"
+            + "1: None, 3: None, 5: None, 7: None}, data='foo')",
         )
-        assert repr(self.nwv) == expected
+        assert repr(self.nwv) in expected
 
     def test_iter(self):
         G = self.G.copy()
@@ -225,7 +237,7 @@ class TestInEdgeDataView(_TestInEdgeDataView):
         for u, v in ev:
             pass
         iev = iter(ev)
-        assert next(iev) == (1, 2)  # NB: only assert pass when num_workers=2
+        assert next(iev) in ((0, 1), (1, 2))
         assert iter(ev) != ev
         assert iter(iev) == iev
 
@@ -247,18 +259,21 @@ class TestEdgeView(_TestEdgeView):
 
     def test_str(self):
         ev = self.eview(self.G)
-        # NB: only pass on num_workers=2
-        rep = str([(0, 1), (2, 3), (2, 1), (4, 5), (4, 3), (6, 7), (6, 5), (8, 7)])
-        assert str(ev) == rep
+        rep = (
+            str([(0, 1), (1, 2), (2, 3), (3, 4), (4, 5), (5, 6), (6, 7), (7, 8)]),
+            str([(0, 1), (2, 3), (2, 1), (4, 5), (4, 3), (6, 7), (6, 5), (8, 7)]),
+        )
+        assert str(ev) in rep
 
     def test_repr(self):
         ev = self.eview(self.G)
-        # NB: only pass on num_workers=2
         rep = (
+            "EdgeView([(0, 1), (1, 2), (2, 3), (3, 4), "
+            + "(4, 5), (5, 6), (6, 7), (7, 8)])",
             "EdgeView([(0, 1), (2, 3), (2, 1), (4, 5), "
-            + "(4, 3), (6, 7), (6, 5), (8, 7)])"
+            + "(4, 3), (6, 7), (6, 5), (8, 7)])",
         )
-        assert repr(ev) == rep
+        assert repr(ev) in rep
 
     def test_or(self):
         # print("G | H edges:", gnv | hnv)
@@ -282,9 +297,13 @@ class TestEdgeView(_TestEdgeView):
             result.update({(1, 0), (0, 2)})
             assert ev ^ some_edges == result
         else:
-            result = {(n, n - 1) for n in (2, 4, 6)}
-            result.update({(n, n + 1) for n in (2, 4, 6)})
-            result.update({(0, 2), (8, 7)})
+            if os.environ.get("DEPLOYMENT", None) == "standalone":
+                result = {(n, n + 1) for n in range(1, 8)}
+                result.update({(0, 2)})
+            else:  # num_workers=2
+                result = {(n, n - 1) for n in (2, 4, 6)}
+                result.update({(n, n + 1) for n in (2, 4, 6)})
+                result.update({(0, 2), (8, 7)})
             assert ev ^ some_edges == result
         return
 
@@ -300,18 +319,21 @@ class TestOutEdgeView(_TestOutEdgeView):
 
     def test_str(self):
         ev = self.eview(self.G)
-        # NB: only pass on num_workers=2
-        rep = str([(0, 1), (2, 3), (4, 5), (6, 7), (1, 2), (3, 4), (5, 6), (7, 8)])
-        assert str(ev) == rep
+        rep = (
+            str([(0, 1), (1, 2), (2, 3), (3, 4), (4, 5), (5, 6), (6, 7), (7, 8)]),
+            str([(0, 1), (2, 3), (4, 5), (6, 7), (1, 2), (3, 4), (5, 6), (7, 8)]),
+        )
+        assert str(ev) in rep
 
     def test_repr(self):
         ev = self.eview(self.G)
-        # NB: only pass on num_workers=2
         rep = (
+            "OutEdgeView([(0, 1), (1, 2), (2, 3), (3, 4), "
+            + "(4, 5), (5, 6), (6, 7), (7, 8)])",
             "OutEdgeView([(0, 1), (2, 3), (4, 5), (6, 7), "
-            + "(1, 2), (3, 4), (5, 6), (7, 8)])"
+            + "(1, 2), (3, 4), (5, 6), (7, 8)])",
         )
-        assert repr(ev) == rep
+        assert repr(ev) in rep
 
     def test_pickle(self):
         pass
@@ -325,9 +347,11 @@ class TestInEdgeView(_TestInEdgeView):
 
     def test_str(self):
         ev = self.eview(self.G)
-        # NB: only pass on num_workers=2
-        rep = str([(1, 2), (3, 4), (5, 6), (7, 8), (0, 1), (2, 3), (4, 5), (6, 7)])
-        assert str(ev) == rep
+        rep = (
+            str([(0, 1), (1, 2), (2, 3), (3, 4), (4, 5), (5, 6), (6, 7), (7, 8)]),
+            str([(1, 2), (3, 4), (5, 6), (7, 8), (0, 1), (2, 3), (4, 5), (6, 7)]),
+        )
+        assert str(ev) in rep
 
     def test_repr(self):
         ev = self.eview(self.G)
@@ -342,7 +366,7 @@ class TestInEdgeView(_TestInEdgeView):
         for u, v in ev:
             pass
         iev = iter(ev)
-        assert next(iev) == (1, 2)  # NB: only assert pass when num_workers=2
+        assert next(iev) in ((0, 1), (1, 2))
         assert iter(ev) != ev
         assert iter(iev) == iev
 
@@ -355,18 +379,22 @@ class TestDegreeView(_TestDegreeView):
     dview = networkx.reportviews.DegreeView
 
     def test_str(self):
-        # NB: only pass on num_workers=2
         dv = self.dview(self.G)
-        rep = str([(0, 1), (2, 2), (4, 2), (1, 3), (3, 3), (5, 1)])
-        assert str(dv) == rep
+        rep = (
+            str([(0, 1), (1, 3), (2, 2), (3, 3), (4, 2), (5, 1)]),
+            str([(0, 1), (2, 2), (4, 2), (1, 3), (3, 3), (5, 1)]),
+        )
+        assert str(dv) in rep
         dv = self.G.degree()
-        assert str(dv) == rep
+        assert str(dv) in rep
 
     def test_repr(self):
-        # NB: only pass on num_workers=2
         dv = self.dview(self.G)
-        rep = "DegreeView({0: 1, 2: 2, 4: 2, 1: 3, 3: 3, 5: 1})"
-        assert repr(dv) == rep
+        rep = (
+            "DegreeView({0: 1, 1: 3, 2: 2, 3: 3, 4: 2, 5: 1})",
+            "DegreeView({0: 1, 2: 2, 4: 2, 1: 3, 3: 3, 5: 1})",
+        )
+        assert repr(dv) in rep
 
     def test_iter(self):
         dv = self.dview(self.G)
@@ -399,8 +427,11 @@ class TestDiDegreeView(TestDegreeView):
 
     def test_repr(self):
         dv = self.G.degree()
-        rep = "DiDegreeView({0: 1, 2: 2, 4: 2, 1: 3, 3: 3, 5: 1})"
-        assert repr(dv) == rep
+        rep = (
+            "DiDegreeView({0: 1, 1: 3, 2: 2, 3: 3, 4: 2, 5: 1})",
+            "DiDegreeView({0: 1, 2: 2, 4: 2, 1: 3, 3: 3, 5: 1})",
+        )
+        assert repr(dv) in rep
 
 
 class TestOutDegreeView(_TestOutDegreeView):
@@ -408,18 +439,23 @@ class TestOutDegreeView(_TestOutDegreeView):
     dview = networkx.reportviews.OutDegreeView
 
     def test_str(self):
-        # NB: only pass on num_workers=2
         dv = self.dview(self.G)
-        rep = str([(0, 1), (2, 1), (4, 1), (1, 2), (3, 1), (5, 0)])
-        assert str(dv) == rep
+        rep = (
+            str([(0, 1), (1, 2), (2, 1), (3, 1), (4, 1), (5, 0)]),
+            str([(0, 1), (2, 1), (4, 1), (1, 2), (3, 1), (5, 0)]),
+        )
+        assert str(dv) in rep
         dv = self.G.out_degree()
-        assert str(dv) == rep
+        assert str(dv) in rep
 
     def test_repr(self):
         # NB: only pass on num_workers=2
         dv = self.dview(self.G)
-        rep = "OutDegreeView({0: 1, 2: 1, 4: 1, 1: 2, 3: 1, 5: 0})"
-        assert repr(dv) == rep
+        rep = (
+            "OutDegreeView({0: 1, 1: 2, 2: 1, 3: 1, 4: 1, 5: 0})",
+            "OutDegreeView({0: 1, 2: 1, 4: 1, 1: 2, 3: 1, 5: 0})",
+        )
+        assert repr(dv) in rep
 
     def test_iter(self):
         dv = self.dview(self.G)
@@ -451,15 +487,21 @@ class TestInDegreeView(_TestInDegreeView):
 
     def test_str(self):
         dv = self.dview(self.G)
-        rep = str([(0, 0), (2, 1), (4, 1), (1, 1), (3, 2), (5, 1)])
-        assert str(dv) == rep
+        rep = (
+            str([(0, 0), (1, 1), (2, 1), (3, 2), (4, 1), (5, 1)]),
+            str([(0, 0), (2, 1), (4, 1), (1, 1), (3, 2), (5, 1)]),
+        )
+        assert str(dv) in rep
         dv = self.G.in_degree()
-        assert str(dv) == rep
+        assert str(dv) in rep
 
     def test_repr(self):
         dv = self.G.in_degree()
-        rep = "InDegreeView({0: 0, 2: 1, 4: 1, 1: 1, 3: 2, 5: 1})"
-        assert repr(dv) == rep
+        rep = (
+            "InDegreeView({0: 0, 1: 1, 2: 1, 3: 2, 4: 1, 5: 1})",
+            "InDegreeView({0: 0, 2: 1, 4: 1, 1: 1, 3: 2, 5: 1})",
+        )
+        assert repr(dv) in rep
 
     def test_iter(self):
         dv = self.dview(self.G)

@@ -163,13 +163,22 @@ class TestGraphCopyOnWrite(_TestGraph):
                 (6, 7, {"weight": 2}),
             ]
         else:
-            elist = [
-                (0, 1, {}),
-                (2, 0, {}),  # N.B: diff with _TestGraph, update the order of id
-                (2, 1, {}),
-                (4, 5, {}),
-                (6, 7, {"weight": 2}),
-            ]
+            if os.environ.get("DEPLOYMENT", None) == "standalone":
+                elist = [
+                    (0, 1, {}),
+                    (0, 2, {}),
+                    (1, 2, {}),
+                    (4, 5, {}),
+                    (6, 7, {"weight": 2}),
+                ]
+            else:  # num_workers=2
+                elist = [
+                    (0, 1, {}),
+                    (2, 0, {}),  # N.B: diff with _TestGraph, update the order of id
+                    (2, 1, {}),
+                    (4, 5, {}),
+                    (6, 7, {"weight": 2}),
+                ]
         assert sorted(G.edges.data()) == elist
         assert G.graph == {}
 
@@ -204,7 +213,7 @@ class TestGraphCopyOnWrite(_TestGraph):
         if H.is_directed():
             assert sorted(H.edges.data()) == [(3, 4, {})]
         else:
-            assert sorted(H.edges.data()) == [(4, 3, {})]
+            assert sorted(H.edges.data()) in ([(3, 4, {})], [(4, 3, {})])
         assert H.size() == 1
 
         # No inputs -> exception
@@ -353,7 +362,7 @@ class TestBuiltinCopyOnWrite:
 
     def test_bfs_edges(self):
         ret = nx.builtin.bfs_edges(self.SG, 1, depth_limit=10)
-        assert sorted(ret) == [[1, 3], [3, 5], [4, 6], [5, 4]]
+        assert sorted(ret) == [[1, 2], [1, 3], [3, 5], [5, 4], [5, 6]]
 
     def bfs_tree(self):
         ret = nx.builtin.bfs_tree(self.SG, 1, depth_limit=10)
@@ -389,7 +398,7 @@ class TestBuiltinCopyOnWrite:
 
     def test_edge_boundary(self):
         ret = nx.builtin.edge_boundary(self.SG, [1, 2])
-        assert ret == [[2, 3], [1, 3]]
+        assert ret == [[1, 3]]
 
     def test_attribute_assortativity_coefficient(self):
         ret = nx.builtin.attribute_assortativity_coefficient(self.SG, attribute="attr")

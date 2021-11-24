@@ -918,8 +918,7 @@ def test_error_with_import_module():
                 pass
 
 
-def test_dump_gar(graphscope_session, random_gar, not_exist_gar):
-    logger.debug("random_gar is %s", random_gar)
+def test_dump_gar(random_gar, not_exist_gar):
     SSSP_Pregel.to_gar(random_gar)
     # gar file already exist
     with pytest.raises(RuntimeError, match="Path exist"):
@@ -929,9 +928,7 @@ def test_dump_gar(graphscope_session, random_gar, not_exist_gar):
         SSSP_Pregel.to_gar(not_exist_gar)
 
 
-def test_load_app_from_gar(
-    graphscope_session, random_gar, not_exist_gar, non_zipfile_gar
-):
+def test_load_app_from_gar(random_gar, not_exist_gar, non_zipfile_gar):
     # file not exist, also works with permission denied
     with pytest.raises(FileNotFoundError, match="No such file or directory"):
         ast1 = load_app("SSSP_Pregel", not_exist_gar)
@@ -948,39 +945,24 @@ def test_load_app_from_gar(
     assert isinstance(ast1, AppAssets)
 
 
-def test_create_cython_app(
-    graphscope_session, p2p_property_graph, arrow_project_graph, random_gar, empty_gar
+def test_error_on_create_cython_app(
+    graphscope_session, dynamic_property_graph, random_gar, empty_gar
 ):
     SSSP_Pregel.to_gar(random_gar)
-    a1 = load_app("SSSP_Pregel", random_gar)
-    a1(p2p_property_graph, src=6)
+    with pytest.raises(InvalidArgumentError, match="App is uncompatible with graph"):
+        a1 = load_app("SSSP_Pregel", random_gar)
+        a1(dynamic_property_graph, src=4)
     # algo not found in gar resource
     with pytest.raises(InvalidArgumentError, match="App not found in gar: sssp"):
         a2 = load_app("sssp", random_gar)
         a2(p2p_property_graph, src=6)
-
     # no `.gs_conf.yaml` in empty gar, raise KeyError exception
     with pytest.raises(KeyError):
         a3 = load_app("SSSP_Pregel", empty_gar)
         a3(p2p_property_graph, src=6)
 
 
-@pytest.mark.skipif(
-    os.environ.get("NETWORKX") != "ON", reason="dynamic graph is in NETWORKX ON"
-)
-def test_error_on_create_cython_app(
-    graphscope_session, dynamic_property_graph, dynamic_project_graph, random_gar
-):
-    SSSP_Pregel.to_gar(random_gar)
-    with pytest.raises(InvalidArgumentError, match="App is uncompatible with graph"):
-        a1 = load_app("SSSP_Pregel", random_gar)
-        a1(dynamic_property_graph, src=4)
-
-    with pytest.raises(InvalidArgumentError, match="App is uncompatible with graph"):
-        a2 = load_app("SSSP_Pregel", random_gar)
-        a2(dynamic_project_graph, src=4)
-
-
+@pytest.mark.skipif("NIGHTLY" not in os.environ, reason="Run in nightly CI")
 def test_get_schema(graphscope_session, arrow_property_graph):
     # pregel
     a1 = Pregel_GetSchema()
@@ -1002,6 +984,7 @@ def test_get_schema(graphscope_session, arrow_property_graph):
     ]
 
 
+@pytest.mark.skipif("NIGHTLY" not in os.environ, reason="Run in nightly CI")
 def test_run_cython_pregel_app(
     graphscope_session, p2p_property_graph, sssp_result, random_gar
 ):
@@ -1059,6 +1042,7 @@ def test_run_cython_pregel_app(
     a7(p2p_property_graph)
 
 
+@pytest.mark.skipif("NIGHTLY" not in os.environ, reason="Run in nightly CI")
 def test_run_cython_pie_app(
     graphscope_session, p2p_property_graph, sssp_result, random_gar
 ):
@@ -1098,6 +1082,7 @@ def test_run_cython_pie_app(
         ctx4 = a3(p2p_property_graph, 6, src=6)
 
 
+@pytest.mark.skipif("NIGHTLY" not in os.environ, reason="Run in nightly CI")
 def test_vertex_traversal(arrow_property_graph, twitter_v_0, twitter_v_1):
     traversal = PregelVertexTraversal()
     ctx = traversal(arrow_property_graph)
@@ -1124,6 +1109,7 @@ def test_vertex_traversal(arrow_property_graph, twitter_v_0, twitter_v_1):
     compare_result(r1, twitter_v_1)
 
 
+@pytest.mark.skipif("NIGHTLY" not in os.environ, reason="Run in nightly CI")
 def test_modern_graph_vertex_traversal(arrow_modern_graph):
     traversal = PregelVertexTraversal()
     ctx = traversal(arrow_modern_graph)
@@ -1143,6 +1129,7 @@ def test_modern_graph_vertex_traversal(arrow_modern_graph):
     compare_id(r1, ["name", "lang"])
 
 
+@pytest.mark.skipif("NIGHTLY" not in os.environ, reason="Run in nightly CI")
 def test_edge_traversal(
     arrow_property_graph,
     twitter_e_0_0_0,

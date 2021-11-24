@@ -16,6 +16,7 @@
 # limitations under the License.
 #
 
+import os
 
 import pandas as pd
 import pytest
@@ -100,27 +101,6 @@ def test_property_context_to_vineyard_dataframe(graphscope_session, property_con
     )
     assert out is not None
 
-    # info = graphscope_session.info
-    # conf = info["engine_config"]
-    # vineyard_endpoint = conf["vineyard_rpc_endpoint"]
-    # vineyard_ipc_socket = conf["vineyard_socket"]
-    # print("run: vineyard_read_vineyard_dataframe {} {} 1 0".format(vineyard_ipc_socket, 'vineyard://'+str(out)))
-    # comment out this part since the user have to custom ssh.sh and remove a line in the 01-stream.py:56
-    # FIXME: DFToFile has problem again, caused by stale vineyard process
-    # dfstream = vineyard.io.open(
-    #     "vineyard://" + str(out),
-    #     vineyard_ipc_socket=vineyard_ipc_socket,
-    #     vineyard_endpoint=vineyard_endpoint,
-    # )
-    # vineyard.io.open(
-    #     "file:///tmp/test_property_context_to_vineyard_dataframe",
-    #     dfstream,
-    #     mode="w",
-    #     vineyard_ipc_socket=vineyard_ipc_socket,
-    #     vineyard_endpoint=vineyard_endpoint,
-    # )
-    # assert out is not None
-
 
 def test_add_column(arrow_property_graph, property_context):
     g2 = arrow_property_graph.add_column(
@@ -158,6 +138,7 @@ def test_lpa(arrow_property_graph_lpa):
     )
 
 
+@pytest.mark.skipif("NIGHTLY" not in os.environ, reason="Run in nightly CI")
 def test_error_on_selector(property_context):
     with pytest.raises(KeyError, match="non_exist_label"):
         out = property_context.to_numpy("v:non_exist_label.id")
