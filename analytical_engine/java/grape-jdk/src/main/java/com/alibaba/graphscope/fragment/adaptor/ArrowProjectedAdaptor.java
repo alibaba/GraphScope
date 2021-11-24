@@ -69,16 +69,6 @@ public class ArrowProjectedAdaptor<OID_T, VID_T, VDATA_T, EDATA_T>
     }
 
     @Override
-    public VDATA_T getData(Vertex<VID_T> vertex) {
-        return fragment.getData(vertex);
-    }
-
-    @Override
-    public void setData(Vertex<VID_T> vertex, VDATA_T val) {
-        fragment.setData(vertex, val);
-    }
-
-    @Override
     public int getLocalInDegree(Vertex<VID_T> vertex) {
         return fragment.getLocalInDegree(vertex);
     }
@@ -96,16 +86,6 @@ public class ArrowProjectedAdaptor<OID_T, VID_T, VDATA_T, EDATA_T>
     @Override
     public VID_T vertex2Gid(Vertex<VID_T> vertex) {
         return fragment.vertex2Gid(vertex);
-    }
-
-    @Override
-    public int fid_offset() {
-        return fragment.fid_offset();
-    }
-
-    @Override
-    public VID_T id_mask() {
-        return fragment.id_mask();
     }
 
     @Override

@@ -20,7 +20,6 @@ import com.alibaba.fastffi.CXXReference;
 import com.alibaba.fastffi.CXXValue;
 import com.alibaba.fastffi.FFINameAlias;
 import com.alibaba.graphscope.ds.DestList;
-import com.alibaba.graphscope.ds.GrapeAdjList;
 import com.alibaba.graphscope.ds.Vertex;
 import com.alibaba.graphscope.ds.VertexRange;
 
@@ -40,11 +39,11 @@ import com.alibaba.graphscope.ds.VertexRange;
 public interface EdgecutFragment<OID_T, VID_T, VDATA_T, EDATA_T>
         extends FragmentBase<OID_T, VID_T, VDATA_T, EDATA_T> {
 
-    /** @return The number of bits for the fid offset. */
-    int fid_offset();
-
-    /** @return The id mask used to mask global id into local id. */
-    VID_T id_mask();
+    //    /** @return The number of bits for the fid offset. */
+    //    int fid_offset();
+    //
+    //    /** @return The id mask used to mask global id into local id. */
+    //    VID_T id_mask();
     /**
      * Get the number of inner vertices.
      *
@@ -229,23 +228,25 @@ public interface EdgecutFragment<OID_T, VID_T, VDATA_T, EDATA_T>
     @CXXValue
     DestList inOutEdgeDests(@CXXReference Vertex<VID_T> vertex);
 
-    /**
-     * Returns the incoming adjacent inner vertices of v.
-     *
-     * @param vertex querying vertex.
-     * @return The incoming adjacent inner vertices of v.
-     */
-    @FFINameAlias("GetIncomingInnerVertexAdjList")
-    @CXXValue
-    GrapeAdjList<VID_T, EDATA_T> getIncomingInnerVertexAdjList(@CXXReference Vertex<VID_T> vertex);
-
-    /**
-     * Returns the outgoing adjacent inner vertices of v.
-     *
-     * @param vertex querying vertex.
-     * @return The outgoing adjacent inner vertices of v.
-     */
-    @FFINameAlias("GetOutgoingInnerVertexAdjList")
-    @CXXValue
-    GrapeAdjList<VID_T, EDATA_T> getOutgoingInnerVertexAdjList(@CXXReference Vertex<VID_T> vertex);
+    //    /**
+    //     * Returns the incoming adjacent inner vertices of v.
+    //     *
+    //     * @param vertex querying vertex.
+    //     * @return The incoming adjacent inner vertices of v.
+    //     */
+    //    @FFINameAlias("GetIncomingInnerVertexAdjList")
+    //    @CXXValue
+    //    GrapeAdjList<VID_T, EDATA_T> getIncomingInnerVertexAdjList(@CXXReference Vertex<VID_T>
+    // vertex);
+    //
+    //    /**
+    //     * Returns the outgoing adjacent inner vertices of v.
+    //     *
+    //     * @param vertex querying vertex.
+    //     * @return The outgoing adjacent inner vertices of v.
+    //     */
+    //    @FFINameAlias("GetOutgoingInnerVertexAdjList")
+    //    @CXXValue
+    //    GrapeAdjList<VID_T, EDATA_T> getOutgoingInnerVertexAdjList(@CXXReference Vertex<VID_T>
+    // vertex);
 }

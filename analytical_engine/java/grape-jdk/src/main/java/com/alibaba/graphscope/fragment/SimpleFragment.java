@@ -79,22 +79,6 @@ public interface SimpleFragment<OID_T, VID_T, VDATA_T, EDATA_T> {
      */
     int getFragId(@CXXReference Vertex<VID_T> vertex);
 
-    /**
-     * The data bound to the vertex.
-     *
-     * @param vertex querying vertex.
-     * @return bounded data.
-     */
-    VDATA_T getData(@CXXReference Vertex<VID_T> vertex);
-
-    /**
-     * Bind a vertex to a data value.
-     *
-     * @param vertex querying vertex.
-     * @param val vertex value.
-     */
-    void setData(@CXXReference Vertex<VID_T> vertex, @CXXReference VDATA_T val);
-
     int getLocalInDegree(@CXXReference Vertex<VID_T> vertex);
 
     int getLocalOutDegree(@CXXReference Vertex<VID_T> vertex);
@@ -102,11 +86,7 @@ public interface SimpleFragment<OID_T, VID_T, VDATA_T, EDATA_T> {
     boolean gid2Vertex(@CXXReference VID_T gid, @CXXReference Vertex<VID_T> vertex);
 
     VID_T vertex2Gid(@CXXReference Vertex<VID_T> vertex);
-    /** @return The number of bits for the fid offset. */
-    int fid_offset();
 
-    /** @return The id mask used to mask global id into local id. */
-    VID_T id_mask();
     /**
      * Get the number of inner vertices.
      *
