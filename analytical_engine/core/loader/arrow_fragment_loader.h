@@ -31,6 +31,7 @@
 #include "vineyard/basic/stream/dataframe_stream.h"
 #include "vineyard/basic/stream/parallel_stream.h"
 #include "vineyard/client/client.h"
+#include "vineyard/common/util/functions.h"
 #include "vineyard/graph/loader/arrow_fragment_loader.h"
 #include "vineyard/io/io/i_io_adaptor.h"
 #include "vineyard/io/io/io_factory.h"
@@ -404,7 +405,8 @@ class ArrowFragmentLoader {
   boost::leaf::result<std::shared_ptr<arrow::Table>> readTableFromLocation(
       const std::string& location, int index, int total_parts) {
     std::shared_ptr<arrow::Table> table;
-    auto io_adaptor = vineyard::IOFactory::CreateIOAdaptor(location);
+    std::string expanded = vineyard::ExpandEnvironmentVariables(location);
+    auto io_adaptor = vineyard::IOFactory::CreateIOAdaptor(expanded);
     if (io_adaptor == nullptr) {
       RETURN_GS_ERROR(vineyard::ErrorCode::kIOError,
                       "Cannot find a supported adaptor for " + location);
