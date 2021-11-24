@@ -31,7 +31,7 @@ jobs:
     container:
       image: registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-vineyard:v0.3.9
       options:
-        --pull
+        --pull always
     defaults:
       run:
         shell: bash --noprofile --norc -eo pipefail {0}
