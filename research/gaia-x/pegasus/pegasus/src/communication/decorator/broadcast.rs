@@ -37,8 +37,8 @@ impl<D: Data> BroadcastBatchPush<D> {
         }
 
         if let Some(mut end) = batch.take_end() {
-            if end.peers.value() == 1 {
-                end.peers = DynPeers::all();
+            if end.peers().value() == 1 {
+                end.update_peers(DynPeers::all());
                 batch.set_end(end);
                 self.pushes[target].push(batch)?;
             } else {

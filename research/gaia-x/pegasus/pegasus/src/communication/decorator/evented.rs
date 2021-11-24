@@ -57,43 +57,43 @@ impl<T: Data> EventEmitPush<T> {
     pub fn push_end(&mut self, mut end: EndOfScope, children: DynPeers) -> IOResult<()> {
         if end.tag.len() == self.push_monitor.scope_level as usize {
             assert_eq!(
-                end.peers.value(),
+                end.peers().value(),
                 1,
                 "peers = {} of scope {:?} should be sync;",
-                end.peers.value(),
+                end.peers().value(),
                 end.tag
             );
-            if end.peers.contains_source(self.source_worker) {
+            if end.peers_contains(self.source_worker) {
                 trace_worker!(
                     "output[{:?}] send end of {:?} to channel[{}] to worker {}, peers {:?} => {:?}",
                     self.ch_info.source_port,
                     end.tag,
                     self.ch_info.id.index,
                     self.target_worker,
-                    end.peers,
+                    end.peers(),
                     children
                 );
-                end.peers = children;
+                end.update_peers(children);
                 let end_batch = MicroBatch::last(self.source_worker, end);
                 self.push(end_batch)
             } else {
                 Ok(())
             }
         } else {
-            end.peers = children;
+            end.update_peers(children);
             let end_batch = MicroBatch::last(self.source_worker, end);
             self.push(end_batch)
         }
     }
 
     pub fn sync_end(&mut self, mut end: EndOfScope, children: DynPeers) -> IOResult<()> {
-        if end.peers.value() == 1 {
+        if end.peers().value() == 1 {
             // need not sync;
             return self.push_end(end, children);
         }
         if end.tag.len() == self.push_monitor.scope_level as usize {
             assert!(
-                end.peers.contains_source(self.source_worker),
+                end.peers().contains_source(self.source_worker),
                 "send end of {:?} without allow ",
                 end.tag
             );
@@ -109,7 +109,7 @@ impl<T: Data> EventEmitPush<T> {
                 self.ch_info.id.index,
                 self.target_worker,
                 size.2,
-                end.peers,
+                end.peers(),
                 children,
             );
         } else {
@@ -147,7 +147,7 @@ impl<D: Data> Push<MicroBatch<D>> for EventEmitPush<D> {
                     self.ch_info.id.index,
                     self.target_worker,
                     end.global_total_send,
-                    end.peers,
+                    end.peers(),
                 );
             batch.set_end(end);
             batch.set_seq(seq as u64);

@@ -52,7 +52,7 @@ impl<D: Data> HasAny<D> for Stream<D> {
                     if let Some(end) = batch.take_end() {
                         if any_map.remove(batch.tag()).is_none() {
                             let worker = crate::worker_id::get_current_worker().index;
-                            if end.peers.contains_source(worker) {
+                            if end.peers_contains(worker) {
                                 output
                                     .new_session(batch.tag())?
                                     .give(Single(false))?;

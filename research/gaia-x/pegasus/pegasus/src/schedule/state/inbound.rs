@@ -22,9 +22,10 @@ impl ScopeEndPanel {
         let mut merged = DynPeers::empty();
         merged.add_source(src);
         let (end, children) = end.take();
+        let expect_src = end.peers().clone();
         ScopeEndPanel {
             tag: end.tag,
-            expect_src: end.peers,
+            expect_src,
             children,
             in_merge: merged,
             count: end.total_send,
@@ -36,7 +37,7 @@ impl ScopeEndPanel {
     fn merge(&mut self, src: u32, end: EndSyncSignal) -> Option<EndOfScope> {
         let (end, children) = end.take();
         assert_eq!(end.tag, self.tag);
-        assert_eq!(end.peers, self.expect_src);
+        assert_eq!(end.peers(), &self.expect_src);
         self.in_merge.add_source(src);
         self.children.merge(children);
         self.count += end.total_send;
@@ -44,18 +45,12 @@ impl ScopeEndPanel {
 
         if self.in_merge == self.expect_src {
             self.is_exhaust = true;
-            let mut src = std::mem::replace(&mut self.children, DynPeers::empty());
-            if src.value() == 0 {
-                let mut owner = 0;
-                let worker_id = crate::worker_id::get_current_worker();
-                if self.tag.len() > 0 {
-                    owner = self.tag.current_uncheck() % worker_id.total_peers()
-                }
-                if owner == worker_id.index {
-                    src = DynPeers::single(worker_id.index);
-                }
-            }
-            Some(EndOfScope::new(self.tag.clone(), src, self.count, self.global_count))
+            let src = std::mem::replace(&mut self.children, DynPeers::empty());
+            let mut new_end = end.clone();
+            new_end.total_send = self.count;
+            new_end.global_total_send = self.global_count;
+            new_end.update_peers(src);
+            Some(new_end)
         } else {
             None
         }
@@ -109,10 +104,10 @@ impl InboundStreamState {
                 self.port,
                 end.tag,
                 end.total_send,
-                end.peers,
+                end.peers(),
                 child
             );
-            end.peers = child;
+            end.update_peers(child);
             return self.notify.notify(end);
         }
 
@@ -143,7 +138,7 @@ impl InboundStreamState {
                     e.tag,
                     e.total_send,
                     e.global_total_send,
-                    e.peers
+                    e.peers()
                 );
                 self.notify.notify(e)?;
             } else {

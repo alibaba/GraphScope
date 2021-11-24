@@ -196,8 +196,9 @@ impl<D: Data> ExchangeByDataPush<D> {
         }
 
         trace_worker!(
-            "output[{:?}]: try to update eos weight to {:?} of scope {:?}",
+            "output[{:?}]: try to update peers from {:?} to {:?} of scope {:?}",
             self.port,
+            end.peers(),
             weight,
             end.tag
         );
@@ -254,7 +255,7 @@ impl<D: Data> ExchangeByDataPush<D> {
             would_block!("no buffer available in exchange;")
         } else {
             if let Some(end) = batch.take_end() {
-                assert!(end.peers.contains_source(self.src), "push illegal data without allow;");
+                assert!(end.peers_contains(self.src), "push illegal data without allow;");
                 self.flush_last_buffer(&batch.tag)?;
                 for (i, (t, g, children)) in self.update_end(None, &end).enumerate() {
                     let mut new_end = end.clone();
@@ -300,7 +301,8 @@ impl<D: Data> Push<MicroBatch<D>> for ExchangeByDataPush<D> {
         if len == 0 {
             if let Some(end) = batch.take_end() {
                 if level == self.scope_level {
-                    if end.peers.value() == 0 {
+                    if end.peers().value() == 0 {
+                        // TODO: seems unreachable;
                         assert_eq!(batch.get_seq(), 0);
                         // handle empty stream
                         let mut owner = 0;
@@ -316,19 +318,19 @@ impl<D: Data> Push<MicroBatch<D>> for ExchangeByDataPush<D> {
                                 let mut new_end = end.clone();
                                 new_end.total_send = 0;
                                 new_end.global_total_send = 0;
-                                new_end.peers = DynPeers::single(self.src);
+                                new_end.update_peers(DynPeers::single(self.src));
                                 p.push_end(new_end, DynPeers::single(self.src))?;
                             }
                         } else {
-                            trace_worker!("output[{:?}]: ignore end of scope {:?} as peers = {:?}", self.port,end.tag, end.peers);
+                            trace_worker!("output[{:?}]: ignore end of scope {:?} as peers = {:?}", self.port,end.tag, end.peers());
                         }
                         return Ok(());
                     }
 
                     if batch.get_seq() == 0 {
                         // it's the first batch need to be pushed on this port, and it's an empty batch;
-                        if !end.peers.contains_source(self.src) {
-                            trace_worker!("output[{:?}]: ignore end of scope {:?} as peers = {:?}", self.port,end.tag, end.peers);
+                        if !end.peers_contains(self.src) {
+                            trace_worker!("output[{:?}]: ignore end of scope {:?} as peers = {:?}", self.port,end.tag, end.peers());
                             return Ok(());
                         }
 
@@ -340,7 +342,7 @@ impl<D: Data> Push<MicroBatch<D>> for ExchangeByDataPush<D> {
                         }
                     } else {
                         // not the first batch;
-                        assert!(end.peers.contains_source(self.src), "pushed invalid data without allow;");
+                        assert!(end.peers_contains(self.src), "pushed invalid data without allow;");
                         self.flush_last_buffer(batch.tag())?;
                         for (i, (t, g, children)) in self.update_end(None, &end).enumerate() {
                             let mut new_end = end.clone();
@@ -366,14 +368,14 @@ impl<D: Data> Push<MicroBatch<D>> for ExchangeByDataPush<D> {
             // only one data, not need re-batching;
             assert_eq!(level, self.scope_level);
             if let Some(end) = batch.take_end() {
-                assert!(end.peers.contains_source(self.src), "invalid data, can't push without allow;");
+                assert!(end.peers_contains(self.src), "invalid data, can't push without allow;");
                 let x = batch
                     .get(0)
                     .expect("expect at least one entry as len = 1");
                 let target = self.route.route(x)? as usize;
                 if batch.get_seq() == 0 {
                     // only one data scope;
-                    if end.peers.value() == 1 {
+                    if end.peers().value() == 1 {
                         for i in 1..self.pushes.len() {
                             if i != target {
                                 let mut new_end = end.clone();
@@ -385,7 +387,7 @@ impl<D: Data> Push<MicroBatch<D>> for ExchangeByDataPush<D> {
                         let mut new_end = end;
                         new_end.total_send = 1;
                         new_end.global_total_send = 1;
-                        new_end.peers = DynPeers::single(target as u32);
+                        new_end.update_peers(DynPeers::single(target as u32));
                         batch.set_end(new_end);
                         self.pushes[target as usize].push(batch)?;
                     } else {
@@ -407,13 +409,14 @@ impl<D: Data> Push<MicroBatch<D>> for ExchangeByDataPush<D> {
                     // flush previous buffered data;
                     self.flush_last_buffer(&batch.tag)?;
                     let result = self.update_end(Some(target), &end);
-                    if end.peers.value() == 1 {
+                    if end.peers().value() == 1 {
                         for (i, (t, g, children)) in result.enumerate() {
                             let mut new_end = end.clone();
                             new_end.total_send = t;
                             new_end.global_total_send = g;
                             if i == target {
                                 let mut batch = std::mem::replace(&mut batch, MicroBatch::empty());
+                                new_end.update_peers(children);
                                 batch.set_end(new_end);
                                 self.pushes[i].push(batch)?;
                             } else {
@@ -589,7 +592,7 @@ impl<D: Data> ExchangeByBatchPush<D> {
         trace_worker!(
             "output[{:?}]: try to update peers from {:?} to {:?} of scope {:?}",
             self.ch_info.source_port,
-            end.peers,
+            end.peers(),
             weight,
             end.tag
         );
@@ -600,8 +603,9 @@ impl<D: Data> ExchangeByBatchPush<D> {
     }
 
     fn handle_last(&mut self, seq: u64, end: EndOfScope) -> Result<(), IOError> {
-        if !end.peers.contains_source(self.src) {
-            if end.peers.value() == 0 {
+        if !end.peers_contains(self.src) {
+            if end.peers().value() == 0 {
+                // TODO: seems unreachable
                 let mut owner = 0;
                 if end.tag.len() > 0 {
                     owner = end.tag.current_uncheck() % (self.pushes.len() as u32);
@@ -611,14 +615,14 @@ impl<D: Data> ExchangeByBatchPush<D> {
                         let mut new_end = end.clone();
                         new_end.total_send = 0;
                         new_end.global_total_send = 0;
-                        new_end.peers = DynPeers::single(self.src);
+                        new_end.update_peers(DynPeers::single(self.src));
                         p.push_end(new_end, DynPeers::single(self.src))?;
                     }
                 } else {
-                    trace_worker!("output[{:?}]: ignore end of scope {:?} as peers = {:?}", self.ch_info.source_port , end.tag, end.peers)
+                    trace_worker!("output[{:?}]: ignore end of scope {:?} as peers = {:?}", self.ch_info.source_port , end.tag, end.peers())
                 }
             } else {
-                trace_worker!("output[{:?}]: ignore end of scope {:?} as peers = {:?}", self.ch_info.source_port , end.tag, end.peers)
+                trace_worker!("output[{:?}]: ignore end of scope {:?} as peers = {:?}", self.ch_info.source_port , end.tag, end.peers())
             }
             return Ok(());
         }
@@ -642,8 +646,8 @@ impl<D: Data> ExchangeByBatchPush<D> {
     }
 
     fn handle_last_batch(&mut self, target: usize, mut end: EndOfScope, mut batch: MicroBatch<D>) -> Result<(), IOError> {
-        assert!(end.peers.contains_source(self.src));
-        if end.peers.value() == 1 {
+        assert!(end.peers_contains(self.src));
+        if end.peers().value() == 1 {
             // if only one peers, it must be this worker;
             if batch.get_seq() == 0 {
                 // if the first batch:
@@ -658,7 +662,7 @@ impl<D: Data> ExchangeByBatchPush<D> {
                     }
                 }
 
-                end.peers = DynPeers::single(target as u32);
+                end.update_peers(DynPeers::single(target as u32));
                 end.total_send = total_send;
                 end.global_total_send = total_send;
                 batch.set_end(end);
@@ -672,6 +676,7 @@ impl<D: Data> ExchangeByBatchPush<D> {
                     new_end.global_total_send = g;
                     if i == target {
                         let mut batch = std::mem::replace(&mut batch, MicroBatch::empty());
+                        new_end.update_peers(c);
                         batch.set_end(new_end);
                         self.pushes[i].push(batch)?;
                     } else {

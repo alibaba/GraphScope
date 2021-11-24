@@ -224,13 +224,13 @@ impl Decode for DynPeers {
 pub struct EndOfScope {
     /// The tag of scope this end belongs to;
     pub(crate) tag: Tag,
-    /// The worker peers who also has send data(and end) of this scope;
-    /// It indicates how many the `[EndOfScope]` will be received by consumers;
-    pub(crate) peers: DynPeers,
     /// Record how many data has send to a consumer;
     pub(crate) total_send: u64,
     /// Record how many data has send to all consumers;
     pub(crate) global_total_send: u64,
+    /// The worker peers who also has send data(and end) of this scope;
+    /// It indicates how many the `[EndOfScope]` will be received by consumers;
+    peers: DynPeers,
 }
 
 impl EndOfScope {
@@ -243,6 +243,28 @@ impl EndOfScope {
         self.peers.merge(other.peers);
         self.total_send += other.total_send;
         self.global_total_send += other.global_total_send;
+    }
+
+    pub fn update_peers(&mut self, mut peers: DynPeers) {
+        if peers.value() == 0 {
+            let owner = if self.tag.len() == 0 {
+                0
+            } else {
+                let peers = crate::worker_id::get_current_worker().total_peers();
+                self.tag.current_uncheck() % peers
+            };
+            peers = DynPeers::single(owner);
+        }
+        trace_worker!("update peers from {:?} to {:?} of scope {:?}", self.peers, peers, self.tag);
+        self.peers = peers;
+    }
+
+    pub fn peers_contains(&self, index: u32) -> bool {
+        self.peers.contains_source(index)
+    }
+
+    pub fn peers(&self) -> &DynPeers {
+        &self.peers
     }
 
     pub(crate) fn contains_source(&self, src: u32) -> bool {
