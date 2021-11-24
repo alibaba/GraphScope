@@ -67,15 +67,15 @@ public class AppBaseParser {
             if (flag == true) {
                 System.out.println("ParallelPropertyApp");
                 Class<? extends ParallelPropertyAppBase> clzCasted =
-                    (Class<? extends ParallelPropertyAppBase>) clz;
+                        (Class<? extends ParallelPropertyAppBase>) clz;
                 Type type = clzCasted.getGenericInterfaces()[0];
                 if (type instanceof ParameterizedType) {
                     ParameterizedType parameterizedType = (ParameterizedType) type;
                     Type[] typeParams = parameterizedType.getActualTypeArguments();
                     if (typeParams.length != 2) {
                         System.out.println(
-                            "Error: Number of params error, expected 2, actuval "
-                                + typeParams.length);
+                                "Error: Number of params error, expected 2, actuval "
+                                        + typeParams.length);
                         return;
                     }
                     System.out.println("TypeParams: " + typeParams[0].getTypeName());

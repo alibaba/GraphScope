@@ -27,7 +27,7 @@ limitations under the License.
 #include "core/app/parallel_property_app_base.h"
 #include "core/context/java_pie_property_context.h"
 #include "core/error.h"
-
+#include "core/worker/parallel_property_worker.h"
 namespace gs {
 
 /**
