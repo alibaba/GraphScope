@@ -50,7 +50,7 @@
 #include "core/object/fragment_wrapper.h"
 #include "core/utils/transform_utils.h"
 #include "java_pie/java_pie_projected_default_app.h"
-#include "java_pie/java_pie_property_default_app.h"
+#include "java_pie/java_pie_property_parallel_app.h"
 #include "proto/graph_def.pb.h"
 
 using FragmentType =
@@ -218,7 +218,7 @@ void QueryProperty(vineyard::Client& client,
                    const std::string& basic_params,
                    const std::string& selector_string,
                    const std::string& selectors_string) {
-  using AppType = gs::JavaPIEPropertyDefaultApp<FragmentType>;
+  using AppType = gs::JavaPIEPropertyParallelApp<FragmentType>;
   auto app = std::make_shared<AppType>();
   auto worker = AppType::CreateWorker(app, fragment);
   auto spec = grape::DefaultParallelEngineSpec();
