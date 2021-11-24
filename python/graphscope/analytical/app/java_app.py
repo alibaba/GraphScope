@@ -53,7 +53,13 @@ except KeyError:
     WORKSPACE = os.path.join("/", tempfile.gettempprefix(), "gs")
 DEFAULT_GS_CONFIG_FILE = ".gs_conf.yaml"
 
-POSSIBLE_APP_TYPES = ["default_property", "parallel_property", "default_simple", "parallel_simple"]
+POSSIBLE_APP_TYPES = [
+    "default_property",
+    "parallel_property",
+    "default_simple",
+    "parallel_simple",
+]
+
 
 def _parse_user_app(java_app_class: str, java_jar_full_path: str):
     _java_app_type = ""
@@ -96,12 +102,12 @@ def _parse_user_app(java_app_class: str, java_jar_full_path: str):
             continue
         if line.find("ParallelPropertyApp") != -1:
             _java_app_type = "parallel_property"
-            continue 
+            continue
         if line.find("DefaultAppBase") != -1:
             _java_app_type = "default_simple"
         if line.find("ParallelAppBase") != -1:
             _java_app_type = "parallel_simple"
-            continue 
+            continue
         if line.find("Error") != -1:
             raise Exception("Error occured in verifying user app")
         if line.find("TypeParams") != -1:
@@ -208,7 +214,6 @@ class JavaApp(AppAssets):
 
         gar.append(DEFAULT_GS_CONFIG_FILE, yaml.dump(gs_config))
         super().__init__("java_app", _java_ctx_type, gar.read_bytes())
-            
 
     # Override is_compatible to make sure type params of graph consists with java app.
     def is_compatible(self, graph):
