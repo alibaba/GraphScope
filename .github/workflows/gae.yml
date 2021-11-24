@@ -29,7 +29,7 @@ jobs:
 
     - name: Build
       env:
-        GS_TEST_DIR: ${{ GITHUB_WORKSPACE }}/gstest
+        GS_TEST_DIR: ${{ github.workspace }}/gstest
         RUN_JAVA_TESTS: ON
       run: |
         make gae ENABLE_JAVA_SDK=ON BUILD_TEST=ON
@@ -41,7 +41,7 @@ jobs:
 
     - name: Run Cpp Test
       env:
-        GS_TEST_DIR: ${{ GITHUB_WORKSPACE }}/gstest
+        GS_TEST_DIR: ${{ github.workspace }}/gstest
         RUN_JAVA_TESTS: ON
       run: |
         # java maven test
@@ -55,7 +55,7 @@ jobs:
 
     - name: Run Java Python Test
       env:
-        GS_TEST_DIR: ${{ GITHUB_WORKSPACE }}/gstest
+        GS_TEST_DIR: ${{ github.workspace }}/gstest
         RUN_JAVA_TESTS: ON
       run: |
         export USER_JAR_PATH=${GITHUB_WORKSPACE}/analytical_engine/java/grape-demo/target/grape-demo-0.1-shaded.jar

@@ -141,18 +141,18 @@ jobs:
 
     - name: Build
       run: |
-      cd ${GITHUB_WORKSPACE}/k8s
+        cd ${GITHUB_WORKSPACE}/k8s
 
-      # build graphscope wheels
-      sudo make graphscope-py3-package
+        # build graphscope wheels
+        sudo make graphscope-py3-package
 
-      # build client wheels
-      sudo make graphscope-client-py3-package
+        # build client wheels
+        sudo make graphscope-client-py3-package
 
-      # package
-      cd ${GITHUB_WORKSPACE}
-      tar -zcf client.tar.gz python/dist/wheelhouse/*.wh
-      tar -zcf graphscope.tar.gz coordinator/dist/
+        # package
+        cd ${GITHUB_WORKSPACE}
+        tar -zcf client.tar.gz python/dist/wheelhouse/*.wh
+        tar -zcf graphscope.tar.gz coordinator/dist/
 
     - name: Upload Artifact
       uses: actions/upload-artifact@v2
@@ -201,7 +201,7 @@ jobs:
 
       - name: Run Minimize Test
         env:
-          GS_TEST_DIR: ${{ GITHUB_WORKSPACE }}/gstest
+          GS_TEST_DIR: ${{ github.workspace }}/gstest
         run: |
           # download dataset
           git clone -b master --single-branch --depth=1 https://github.com/7br/gstest.git ${GS_TEST_DIR}
@@ -253,7 +253,7 @@ jobs:
 
     - name: Run Python Test
       env:
-        GS_TEST_DIR: ${{ GITHUB_WORKSPACE }}/gstest
+        GS_TEST_DIR: ${{ github.workspace }}/gstest
         DEPLOYMENT: ${{ matrix.deployment }}
       run: |
         # download dataset
@@ -306,7 +306,7 @@ jobs:
 
     - name: Prepare Environment
       env:
-        GS_TEST_DIR: ${{ GITHUB_WORKSPACE }}/gstest
+        GS_TEST_DIR: ${{ github.workspace }}/gstest
       run: |
         # install graphscope-client
         cd artifacts
@@ -331,7 +331,7 @@ jobs:
       if: steps.nx-filter.outputs.basic == 'true'
       env:
         DEPLOYMENT: ${{ matrix.deployment }}
-        GS_TEST_DIR: ${{ GITHUB_WORKSPACE }}/gstest
+        GS_TEST_DIR: ${{ github.workspace }}/gstest
       run: |
         python3 -m pytest --exitfirst -s -v python/graphscope/nx/tests
 
@@ -339,7 +339,7 @@ jobs:
       if: steps.nx-filter.outputs.algorithm == 'true'
       env:
         DEPLOYMENT: ${{ matrix.deployment }}
-        GS_TEST_DIR: ${{ GITHUB_WORKSPACE }}/gstest
+        GS_TEST_DIR: ${{ github.workspace }}/gstest
       run: |
         python3 -m pytest --exitfirst -s -v python/graphscope/nx/algorithms/tests/builtin
 
@@ -347,7 +347,7 @@ jobs:
       if: steps.nx-filter.outputs.generator == 'true'
       env:
         DEPLOYMENT: ${{ matrix.deployment }}
-        GS_TEST_DIR: ${{ GITHUB_WORKSPACE }}/gstest
+        GS_TEST_DIR: ${{ github.workspace }}/gstest
       run: |
         python3 -m pytest --exitfirst -s -v python/graphscope/nx/generators/tests
 
@@ -381,7 +381,7 @@ jobs:
 
       - name: Prepare Environment
         env:
-          GS_TEST_DIR: ${{ GITHUB_WORKSPACE }}/gstest
+          GS_TEST_DIR: ${{ github.workspace }}/gstest
         run: |
           cd ${GITHUB_WORKSPACE}/artifacts
           tar -zxf ./wheel-${{ github.sha }}/client.tar.gz
@@ -401,7 +401,7 @@ jobs:
 
       - name: Run Function Test
         env:
-          GS_TEST_DIR: ${{ GITHUB_WORKSPACE }}/gstest
+          GS_TEST_DIR: ${{ github.workspace }}/gstest
         run: |
           cd ${GITHUB_WORKSPACE}/interactive_engine/tests
           ./function_test.sh 8111 1 registry.cn-hongkong.aliyuncs.com/graphscope/graphscope:${SHORT_SHA}
@@ -442,7 +442,7 @@ jobs:
 
       - name: Prepare Environment
         env:
-          GS_TEST_DIR: ${{ GITHUB_WORKSPACE }}/gstest
+          GS_TEST_DIR: ${{ github.workspace }}/gstest
         run: |
           cd ${GITHUB_WORKSPACE}/artifacts
           tar -zxf ./wheel-${{ github.sha }}/client.tar.gz
@@ -466,7 +466,7 @@ jobs:
       - name: Kubernetes Test
         env:
           CHANGE_MINIKUBE_NONE_USER: true
-          GS_TEST_DIR: ${{ GITHUB_WORKSPACE }}/gstest
+          GS_TEST_DIR: ${{ github.workspace }}/gstest
         run: |
           # set GS_IMAGE
           export GS_IMAGE = registry.cn-hongkong.aliyuncs.com/graphscope/graphscope:${SHORT_SHA}
@@ -499,7 +499,7 @@ jobs:
         env:
           CHANGE_MINIKUBE_NONE_USER: true
           JAVA_HOME: /usr/lib/jvm/default-java
-          GS_TEST_DIR: ${{ GITHUB_WORKSPACE }}/gstest
+          GS_TEST_DIR: ${{ github.workspace }}/gstest
         run: |
           export GS_IMAGE = registry.cn-hongkong.aliyuncs.com/graphscope/graphscope:${SHORT_SHA}
 
