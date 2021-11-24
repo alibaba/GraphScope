@@ -3,14 +3,15 @@ package com.alibaba.graphscope.ds.adaptor;
 import com.alibaba.graphscope.ds.GrapeAdjList;
 
 public class GrapeAdjListAdaptor<VID_T, EDATA_T> implements AdjList<VID_T, EDATA_T> {
-    private GrapeAdjList adjList;
+    public static final String TYPE = "GrapeAdjList";
+    private GrapeAdjList<VID_T, EDATA_T> adjList;
 
     @Override
     public String type() {
-        return "GrapeAdjList";
+        return TYPE;
     }
 
-    public GrapeAdjListAdaptor(GrapeAdjList adj) {
+    public GrapeAdjListAdaptor(GrapeAdjList<VID_T, EDATA_T> adj) {
         adjList = adj;
     }
 

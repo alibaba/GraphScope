@@ -2,16 +2,20 @@ package com.alibaba.graphscope.ds.adaptor;
 
 import com.alibaba.graphscope.ds.GrapeNbr;
 import com.alibaba.graphscope.ds.Vertex;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class GrapeNbrAdaptor<VID_T, EDATA_T> implements Nbr<VID_T, EDATA_T> {
-    private GrapeNbr nbr;
+    private static Logger logger = LoggerFactory.getLogger(GrapeNbrAdaptor.class.getName());
+    public static final String TYPE = "GrapeNbr";
+    private GrapeNbr<VID_T, EDATA_T> nbr;
 
     @Override
     public String type() {
-        return "GrapeNbr";
+        return TYPE;
     }
 
-    public GrapeNbrAdaptor(GrapeNbr n) {
+    public GrapeNbrAdaptor(GrapeNbr<VID_T, EDATA_T> n) {
         nbr = n;
     }
 
@@ -27,16 +31,19 @@ public class GrapeNbrAdaptor<VID_T, EDATA_T> implements Nbr<VID_T, EDATA_T> {
 
     @Override
     public Nbr<VID_T, EDATA_T> inc() {
-        return (Nbr<VID_T, EDATA_T>) nbr.inc();
+        logger.error("No implementation for inc in grapeNbr");
+        return null;
     }
 
     @Override
     public boolean eq(Nbr<VID_T, EDATA_T> rhs) {
-        return nbr.eq((GrapeNbr) rhs);
+        logger.error("No implementation for eq in grapeNbr");
+        return false;
     }
 
     @Override
     public Nbr<VID_T, EDATA_T> dec() {
-        return (Nbr<VID_T, EDATA_T>) nbr.dec();
+        logger.error("No implementation for dec in grapeNbr");
+        return null;
     }
 }

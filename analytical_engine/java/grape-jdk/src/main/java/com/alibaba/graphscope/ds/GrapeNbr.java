@@ -71,21 +71,6 @@ public interface GrapeNbr<VID_T, EDATA_T>
     @FFIGetter
     @CXXReference
     EDATA_T data();
-    /**
-     * self increment.
-     *
-     * @return the incremented.
-     */
-    @CXXOperator("++")
-    @CXXReference
-    GrapeNbr<VID_T, EDATA_T> inc();
-
-    @CXXOperator("==")
-    boolean eq(@CXXReference GrapeNbr<VID_T, EDATA_T> rhs);
-
-    @CXXOperator("--")
-    @CXXReference
-    GrapeNbr<VID_T, EDATA_T> dec();
 
     /**
      * Factory class for Nbr.

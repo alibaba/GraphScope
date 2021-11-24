@@ -4,14 +4,15 @@ import com.alibaba.graphscope.ds.ProjectedNbr;
 import com.alibaba.graphscope.ds.Vertex;
 
 public class ProjectedNbrAdaptor<VID_T, EDATA_T> implements Nbr<VID_T, EDATA_T> {
+    public static final String TYPE = "GrapeNbr";
     private ProjectedNbr<VID_T, EDATA_T> nbr;
 
     @Override
     public String type() {
-        return "GrapeNbr";
+        return TYPE;
     }
 
-    public ProjectedNbrAdaptor(ProjectedNbr n) {
+    public ProjectedNbrAdaptor(ProjectedNbr<VID_T, EDATA_T> n) {
         nbr = n;
     }
 
