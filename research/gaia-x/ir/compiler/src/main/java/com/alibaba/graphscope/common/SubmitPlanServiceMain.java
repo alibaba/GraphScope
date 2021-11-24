@@ -4,10 +4,7 @@ import com.alibaba.graphscope.common.client.*;
 import com.alibaba.graphscope.common.config.Configs;
 import com.alibaba.graphscope.common.config.FileLoadType;
 import com.alibaba.graphscope.common.config.PegasusConfig;
-import com.alibaba.graphscope.common.jna.IrCoreLibrary;
-import com.alibaba.graphscope.common.jna.type.FfiJobBuffer;
 import com.alibaba.pegasus.service.protocol.PegasusClient;
-import com.sun.jna.Pointer;
 import org.apache.commons.lang3.NotImplementedException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -20,30 +17,23 @@ public class SubmitPlanServiceMain {
     private static final Logger logger = LoggerFactory.getLogger(SubmitPlanServiceMain.class);
 
     public static void main(String[] args) throws Exception {
-        Pointer ptrPlan;
+        IrPlan irPlan;
         String opt = "poc";
         if (args.length > 0) {
             opt = args[0];
         }
         if (opt.equals("poc")) {
-            ptrPlan = PlanFactory.getPocPlan();
-        } else if (opt.equals("cr2")) {
-            ptrPlan = PlanFactory.getCR2Plan();
+            irPlan = PlanFactory.getPocPlan();
         } else {
             throw new NotImplementedException("unimplemented opt type " + opt);
         }
 
-        IrCoreLibrary irCoreLib = IrCoreLibrary.INSTANCE;
-        irCoreLib.debugPlan(ptrPlan);
+        irPlan.debug();
 
-        FfiJobBuffer jobBuffer = irCoreLib.buildPhysicalPlan(ptrPlan);
-        assert jobBuffer.len > 0;
-        byte[] physicalPlanBytes = jobBuffer.getBytes();
+        byte[] physicalPlanBytes = irPlan.toPhysicalBytes();
+        irPlan.close();
 
-        jobBuffer.close();
-        irCoreLib.destroyLogicalPlan(ptrPlan);
-
-        Configs configs = new Configs("conf/ir.plan.properties", FileLoadType.RELATIVE_PATH);
+        Configs configs = new Configs("conf/ir.compiler.properties", FileLoadType.RELATIVE_PATH);
         int serverNum = PegasusConfig.PEGASUS_HOSTS.get(configs).split(",").length;
         List<Long> servers = new ArrayList<>();
         for (long i = 0; i < serverNum; ++i) {

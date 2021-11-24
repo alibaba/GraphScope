@@ -1,6 +1,7 @@
 package com.alibaba.graphscope.common;
 
 import com.alibaba.graphscope.common.exception.AppendInterOpException;
+import com.alibaba.graphscope.common.exception.BuildPhysicalException;
 import com.alibaba.graphscope.common.exception.InterOpIllegalArgException;
 import com.alibaba.graphscope.common.exception.InterOpUnsupportedException;
 import com.alibaba.graphscope.common.intermediate.operator.*;
@@ -41,14 +42,19 @@ public class IrPlan implements Closeable {
                     for (FfiNameOrId.ByValue label : ffiLabels) {
                         ResultCode resultCode = irCoreLib.addScanTableName(scan, label);
                         if (resultCode != ResultCode.Success) {
-                            throw new InterOpIllegalArgException(baseOp.getClass(), "labels", "addScanTableName returns " + resultCode.name());
+                            throw new InterOpIllegalArgException(baseOp.getClass(),
+                                    "labels", "addScanTableName returns " + resultCode.name());
                         }
                     }
                 }
                 Optional<OpArg> predicate = op.getPredicate();
                 if (predicate.isPresent()) {
                     String expr = (String) predicate.get().getArg();
-                    irCoreLib.setScanPredicate(scan, expr);
+                    ResultCode resultCode = irCoreLib.setScanPredicate(scan, expr);
+                    if (resultCode != ResultCode.Success) {
+                        throw new InterOpIllegalArgException(baseOp.getClass(),
+                                "predicate", "setScanPredicate returns " + resultCode.name());
+                    }
                 }
                 // todo: add predicates
                 // todo: add limit
@@ -64,11 +70,13 @@ public class IrPlan implements Closeable {
                         }
                         ResultCode resultCode = irCoreLib.andKvEquivPair(pairs, irCoreLib.asIdKey(), ffiIds.get(i));
                         if (resultCode != ResultCode.Success) {
-                            throw new InterOpIllegalArgException(baseOp.getClass(), "ids", "andKvEquivPair returns " + resultCode.name());
+                            throw new InterOpIllegalArgException(baseOp.getClass(),
+                                    "ids", "andKvEquivPair returns " + resultCode.name());
                         }
                         resultCode = irCoreLib.addIdxscanKvEquivPairs(scan, pairs);
                         if (resultCode != ResultCode.Success) {
-                            throw new InterOpIllegalArgException(baseOp.getClass(), "ids", "addIdxscanKvEquivPairs returns " + resultCode.name());
+                            throw new InterOpIllegalArgException(baseOp.getClass(),
+                                    "ids", "addIdxscanKvEquivPairs returns " + resultCode.name());
                         }
                     }
                 }
@@ -87,7 +95,8 @@ public class IrPlan implements Closeable {
                 Pointer select = irCoreLib.initSelectOperator();
                 ResultCode resultCode = irCoreLib.setSelectPredicate(select, expr);
                 if (resultCode != ResultCode.Success) {
-                    throw new InterOpIllegalArgException(baseOp.getClass(), "predicate", "setSelectPredicate returns " + resultCode.name());
+                    throw new InterOpIllegalArgException(baseOp.getClass(),
+                            "predicate", "setSelectPredicate returns " + resultCode.name());
                 }
                 return select;
             }
@@ -108,7 +117,8 @@ public class IrPlan implements Closeable {
                     for (FfiNameOrId.ByValue label : ffiLabels) {
                         ResultCode resultCode = irCoreLib.addExpandLabel(expand, label);
                         if (resultCode != ResultCode.Success) {
-                            throw new InterOpIllegalArgException(baseOp.getClass(), "labels", "addExpandLabel returns " + resultCode.name());
+                            throw new InterOpIllegalArgException(baseOp.getClass(),
+                                    "labels", "addExpandLabel returns " + resultCode.name());
                         }
                     }
                 }
@@ -137,9 +147,11 @@ public class IrPlan implements Closeable {
                     throw new InterOpIllegalArgException(baseOp.getClass(), "upper", "not present");
                 }
                 Pointer ptrLimit = irCoreLib.initLimitOperator();
-                ResultCode resultCode = irCoreLib.setLimitRange(ptrLimit, (Integer) lower.get().getArg(), (Integer) upper.get().getArg());
+                ResultCode resultCode = irCoreLib.setLimitRange(ptrLimit,
+                        (Integer) lower.get().getArg(), (Integer) upper.get().getArg());
                 if (resultCode != ResultCode.Success) {
-                    throw new InterOpIllegalArgException(baseOp.getClass(), "lower+upper", "setLimitRange returns " + resultCode.name());
+                    throw new InterOpIllegalArgException(baseOp.getClass(),
+                            "lower+upper", "setLimitRange returns " + resultCode.name());
                 }
                 return ptrLimit;
             }
@@ -164,7 +176,8 @@ public class IrPlan implements Closeable {
         }
     }
 
-    public void appendInterOp(InterOpBase base) throws InterOpIllegalArgException, InterOpUnsupportedException, AppendInterOpException {
+    public void appendInterOp(InterOpBase base) throws
+            InterOpIllegalArgException, InterOpUnsupportedException, AppendInterOpException {
         ResultCode resultCode;
         if (base instanceof ScanFusionOp) {
             Pointer ptrScan = TransformFactory.SCAN_FUSION_OP.apply(base);
@@ -190,13 +203,16 @@ public class IrPlan implements Closeable {
         }
     }
 
-    public byte[] toPhysicalBytes() {
-        if (ptrPlan != null) {
-            FfiJobBuffer.ByValue buffer = irCoreLib.buildPhysicalPlan(ptrPlan);
-            byte[] bytes = buffer.getBytes();
-            buffer.close();
-            return bytes;
+    public byte[] toPhysicalBytes() throws BuildPhysicalException {
+        if (ptrPlan == null) {
+            throw new BuildPhysicalException("ptrPlan is NullPointer");
         }
-        return null;
+        FfiJobBuffer.ByValue buffer = irCoreLib.buildPhysicalPlan(ptrPlan);
+        if (buffer.len == 0) {
+            throw new BuildPhysicalException("call libc returns " + ResultCode.BuildJobError.name());
+        }
+        byte[] bytes = buffer.getBytes();
+        buffer.close();
+        return bytes;
     }
 }

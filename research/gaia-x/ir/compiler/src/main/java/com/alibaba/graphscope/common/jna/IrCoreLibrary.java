@@ -95,44 +95,4 @@ public interface IrCoreLibrary extends Library {
     FfiVariable.ByValue asNoneVar();
 
     void destroyJobBuffer(FfiJobBuffer value);
-
-    enum FunctionName {
-        initLogicalPlan,
-        debugPlan,
-        destroyLogicalPlan,
-        buildPhysicalPlan,
-        initScanOperator,
-        addScanTableName,
-        appendScanOperator,
-        initIdxscanOperator,
-        appendIdxscanOperator,
-        initKvEquivPairs,
-        andKvEquivPair,
-        addIdxscanKvEquivPairs,
-        initExpandBase,
-        addExpandLabel,
-        initEdgexpdOperator,
-        appendEdgexpdOperator,
-        setEdgexpdAlias,
-        initLimitOperator,
-        setLimitRange,
-        appendLimitOperator,
-        initSelectOperator,
-        setSelectPredicate,
-        appendSelectOperator,
-        initOrderbyOperator,
-        addOrderbyPair,
-        setOrderbyLimit,
-        appendOrderbyOperator,
-        initProjectOperator,
-        addProjectMapping,
-        appendProjectOperator,
-        cstrAsNameOrId,
-        cstrAsConst,
-        int64AsConst,
-        asLabelKey,
-        asIdKey,
-        asPropertyKey,
-        asVarPpt
-    }
 }
