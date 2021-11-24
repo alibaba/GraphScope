@@ -231,9 +231,6 @@ message GetV {
     End = 1;
     // Getting the other vertex of the edge. We are calibrating to Gremlin's bothE.otherV semantics
     Other = 2;
-    // The tag is referring to a vertex. This is just for semantic intact. If the tag refers to a vertex,
-    // the runtime may ignore `VOpt` whatsoever
-    This = 3;
   }
   // The tag that refers to the edge/path where the end vertex will be retrieved
   common.NameOrId tag = 1;

@@ -36,26 +36,18 @@ impl MapFunction<Record, Record> for GetVertexOperator {
     fn exec(&self, mut input: Record) -> FnResult<Record> {
         let entry = input
             .get(self.start_tag.as_ref())
-            .ok_or(FnExecError::get_tag_error(
-                "get tag failed in GetVertexOperator",
-            ))?;
+            .ok_or(FnExecError::get_tag_error("get tag failed in GetVertexOperator"))?;
         let vertex_or_edge = entry
             .as_graph_element()
-            .ok_or(FnExecError::unexpected_data_error(
-                "tag does not refer to a graph element",
-            ))?;
+            .ok_or(FnExecError::unexpected_data_error("tag does not refer to a graph element"))?;
         let id = match vertex_or_edge {
-            VertexOrEdge::V(v) => match self.opt {
-                VOpt::This => v.id(),
-                _ => Err(FnExecError::unexpected_data_error("should be vertex entry"))?,
-            },
+            VertexOrEdge::V(_) => Err(FnExecError::unexpected_data_error(
+                "should not apply `GetV` (`GetDetails` instead) on a vertex",
+            ))?,
             VertexOrEdge::E(e) => match self.opt {
                 VOpt::Start => e.src_id,
                 VOpt::End => e.dst_id,
-                VOpt::Other => Err(FnExecError::unsupported_error(
-                    "VOpt ot Other is not supported",
-                ))?,
-                VOpt::This => Err(FnExecError::unexpected_data_error("should be edge entry"))?,
+                VOpt::Other => Err(FnExecError::unsupported_error("VOpt ot Other is not supported"))?,
             },
         };
         let graph = crate::get_graph().ok_or(FnExecError::NullGraphError)?;
@@ -64,10 +56,7 @@ impl MapFunction<Record, Record> for GetVertexOperator {
             input.append(vertex, self.alias.clone());
             Ok(input)
         } else {
-            Err(FnExecError::query_store_error(&format!(
-                "vertex with id {} not found",
-                id
-            )))?
+            Err(FnExecError::query_store_error(&format!("vertex with id {} not found", id)))?
         }
     }
 }
@@ -84,12 +73,7 @@ impl MapFuncGen for algebra_pb::GetV {
             .alias
             .map(|name_or_id| name_or_id.try_into())
             .transpose()?;
-        let get_vertex_operator = GetVertexOperator {
-            start_tag,
-            opt,
-            query_params,
-            alias,
-        };
+        let get_vertex_operator = GetVertexOperator { start_tag, opt, query_params, alias };
         debug!("Runtime get_vertex operator: {:?}", get_vertex_operator);
         Ok(Box::new(get_vertex_operator))
     }

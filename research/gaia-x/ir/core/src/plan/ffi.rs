@@ -143,11 +143,7 @@ pub struct FfiNameOrId {
 
 impl Default for FfiNameOrId {
     fn default() -> Self {
-        Self {
-            opt: FfiNameIdOpt::default(),
-            name: std::ptr::null() as *const c_char,
-            name_id: 0,
-        }
+        Self { opt: FfiNameIdOpt::default(), name: std::ptr::null() as *const c_char, name_id: 0 }
     }
 }
 
@@ -160,9 +156,9 @@ impl TryFrom<FfiNameOrId> for Option<common_pb::NameOrId> {
             FfiNameIdOpt::Name => Ok(Some(common_pb::NameOrId {
                 item: Some(common_pb::name_or_id::Item::Name(cstr_to_string(ffi.name)?)),
             })),
-            FfiNameIdOpt::Id => Ok(Some(common_pb::NameOrId {
-                item: Some(common_pb::name_or_id::Item::Id(ffi.name_id)),
-            })),
+            FfiNameIdOpt::Id => {
+                Ok(Some(common_pb::NameOrId { item: Some(common_pb::name_or_id::Item::Id(ffi.name_id)) }))
+            }
         }
     }
 }
@@ -195,17 +191,15 @@ impl TryFrom<FfiProperty> for Option<common_pb::Property> {
     fn try_from(ffi: FfiProperty) -> FfiResult<Self> {
         let result = match &ffi.opt {
             FfiPropertyOpt::None => None,
-            FfiPropertyOpt::Id => Some(common_pb::Property {
-                item: Some(common_pb::property::Item::Id(common_pb::IdKey {})),
-            }),
+            FfiPropertyOpt::Id => {
+                Some(common_pb::Property { item: Some(common_pb::property::Item::Id(common_pb::IdKey {})) })
+            }
             FfiPropertyOpt::Label => Some(common_pb::Property {
                 item: Some(common_pb::property::Item::Label(common_pb::LabelKey {})),
             }),
             FfiPropertyOpt::Key => {
                 if let Some(key) = ffi.key.try_into()? {
-                    Some(common_pb::Property {
-                        item: Some(common_pb::property::Item::Key(key)),
-                    })
+                    Some(common_pb::Property { item: Some(common_pb::property::Item::Key(key)) })
                 } else {
                     None
                 }
@@ -234,76 +228,49 @@ impl TryFrom<FfiVariable> for common_pb::Variable {
 /// Build a none-`NameOrId`
 #[no_mangle]
 pub extern "C" fn none_name_or_id() -> FfiNameOrId {
-    FfiNameOrId {
-        opt: FfiNameIdOpt::None,
-        name: std::ptr::null(),
-        name_id: 0,
-    }
+    FfiNameOrId { opt: FfiNameIdOpt::None, name: std::ptr::null(), name_id: 0 }
 }
 
 /// Transform a c-like string into `NameOrId`
 #[no_mangle]
 pub extern "C" fn cstr_as_name_or_id(cstr: *const c_char) -> FfiNameOrId {
-    FfiNameOrId {
-        opt: FfiNameIdOpt::Name,
-        name: cstr,
-        name_id: 0,
-    }
+    FfiNameOrId { opt: FfiNameIdOpt::Name, name: cstr, name_id: 0 }
 }
 
 /// Transform an integer into `NameOrId`.
 #[no_mangle]
 pub extern "C" fn int_as_name_or_id(integer: i32) -> FfiNameOrId {
-    FfiNameOrId {
-        opt: FfiNameIdOpt::Id,
-        name: std::ptr::null(),
-        name_id: integer,
-    }
+    FfiNameOrId { opt: FfiNameIdOpt::Id, name: std::ptr::null(), name_id: integer }
 }
 
 /// Build an id property
 #[no_mangle]
 pub extern "C" fn as_id_key() -> FfiProperty {
-    FfiProperty {
-        opt: FfiPropertyOpt::Id,
-        key: FfiNameOrId::default(),
-    }
+    FfiProperty { opt: FfiPropertyOpt::Id, key: FfiNameOrId::default() }
 }
 
 /// Build a label property
 #[no_mangle]
 pub extern "C" fn as_label_key() -> FfiProperty {
-    FfiProperty {
-        opt: FfiPropertyOpt::Label,
-        key: FfiNameOrId::default(),
-    }
+    FfiProperty { opt: FfiPropertyOpt::Label, key: FfiNameOrId::default() }
 }
 
 /// Build a keyed property from a given key
 #[no_mangle]
 pub extern "C" fn as_property_key(key: FfiNameOrId) -> FfiProperty {
-    FfiProperty {
-        opt: FfiPropertyOpt::Key,
-        key,
-    }
+    FfiProperty { opt: FfiPropertyOpt::Key, key }
 }
 
 /// Build a variable with tag only
 #[no_mangle]
 pub extern "C" fn as_var_tag_only(tag: FfiNameOrId) -> FfiVariable {
-    FfiVariable {
-        tag,
-        property: FfiProperty::default(),
-    }
+    FfiVariable { tag, property: FfiProperty::default() }
 }
 
 /// Build a variable with property only
 #[no_mangle]
 pub extern "C" fn as_var_property_only(property: FfiProperty) -> FfiVariable {
-    FfiVariable {
-        tag: FfiNameOrId::default(),
-        property,
-    }
+    FfiVariable { tag: FfiNameOrId::default(), property }
 }
 
 /// Build a variable with tag and property
@@ -315,10 +282,7 @@ pub extern "C" fn as_var(tag: FfiNameOrId, property: FfiProperty) -> FfiVariable
 /// Build a default variable with `None` tag and property
 #[no_mangle]
 pub extern "C" fn as_none_var() -> FfiVariable {
-    FfiVariable {
-        tag: FfiNameOrId::default(),
-        property: FfiProperty::default(),
-    }
+    FfiVariable { tag: FfiNameOrId::default(), property: FfiProperty::default() }
 }
 
 fn destroy_ptr<M>(ptr: *const c_void) {
@@ -361,19 +325,13 @@ pub extern "C" fn destroy_job_buffer(buffer: FfiJobBuffer) {
 
 impl From<PhysicalError> for FfiJobBuffer {
     fn from(_: PhysicalError) -> Self {
-        FfiJobBuffer {
-            ptr: std::ptr::null_mut(),
-            len: 0,
-        }
+        FfiJobBuffer { ptr: std::ptr::null_mut(), len: 0 }
     }
 }
 
 impl From<BuildJobError> for FfiJobBuffer {
     fn from(_: BuildJobError) -> Self {
-        FfiJobBuffer {
-            ptr: std::ptr::null_mut(),
-            len: 0,
-        }
+        FfiJobBuffer { ptr: std::ptr::null_mut(), len: 0 }
     }
 }
 
@@ -387,10 +345,7 @@ pub extern "C" fn build_physical_plan(ptr_plan: *const c_void) -> FfiJobBuffer {
         let req_result = builder.build();
         if let Ok(req) = req_result {
             let mut req_bytes = req.encode_to_vec().into_boxed_slice();
-            let buffer = FfiJobBuffer {
-                ptr: req_bytes.as_mut_ptr(),
-                len: req_bytes.len(),
-            };
+            let buffer = FfiJobBuffer { ptr: req_bytes.as_mut_ptr(), len: req_bytes.len() };
             std::mem::forget(req_bytes);
 
             buffer
@@ -407,10 +362,7 @@ pub extern "C" fn build_physical_plan(ptr_plan: *const c_void) -> FfiJobBuffer {
 }
 
 fn append_operator(
-    ptr_plan: *const c_void,
-    operator: pb::logical_plan::Operator,
-    parent_ids: Vec<i32>,
-    id: *mut i32,
+    ptr_plan: *const c_void, operator: pb::logical_plan::Operator, parent_ids: Vec<i32>, id: *mut i32,
 ) -> ResultCode {
     let mut plan = unsafe { Box::from_raw(ptr_plan as *mut LogicalPlan) };
     let opr_id = plan.append_operator_as_node(
@@ -528,10 +480,8 @@ fn set_alias(ptr: *const c_void, alias: FfiNameOrId, is_query_given: bool, opr: 
             }
             Opr::Apply => {
                 let mut apply = unsafe { Box::from_raw(ptr as *mut pb::Apply) };
-                apply.subtask.as_mut().unwrap().alias = Some(pb::project::Alias {
-                    alias: alias_pb.unwrap(),
-                    is_query_given,
-                });
+                apply.subtask.as_mut().unwrap().alias =
+                    Some(pb::project::Alias { alias: alias_pb.unwrap(), is_query_given });
                 std::mem::forget(apply);
             }
             _ => unreachable!(),
@@ -594,12 +544,22 @@ fn process_params(ptr: *const c_void, key: ParamsKey, val: FfiNameOrId, opr: Opr
                     ParamsKey::Tag => expand.v_tag = pb.unwrap(),
                     ParamsKey::Table => {
                         if let Some(label) = pb.unwrap() {
-                            expand.params.as_mut().unwrap().table_names.push(label)
+                            expand
+                                .params
+                                .as_mut()
+                                .unwrap()
+                                .table_names
+                                .push(label)
                         }
                     }
                     ParamsKey::Column => {
                         if let Some(ppt) = pb.unwrap() {
-                            expand.params.as_mut().unwrap().columns.push(ppt)
+                            expand
+                                .params
+                                .as_mut()
+                                .unwrap()
+                                .columns
+                                .push(ppt)
                         }
                     }
                 }
@@ -611,7 +571,11 @@ fn process_params(ptr: *const c_void, key: ParamsKey, val: FfiNameOrId, opr: Opr
                     ParamsKey::Tag => getv.tag = pb.unwrap(),
                     ParamsKey::Table => {
                         if let Some(label) = pb.unwrap() {
-                            getv.params.as_mut().unwrap().table_names.push(label)
+                            getv.params
+                                .as_mut()
+                                .unwrap()
+                                .table_names
+                                .push(label)
                         }
                     }
                     ParamsKey::Column => {
@@ -627,7 +591,11 @@ fn process_params(ptr: *const c_void, key: ParamsKey, val: FfiNameOrId, opr: Opr
                 match key {
                     ParamsKey::Table => {
                         if let Some(table) = pb.unwrap() {
-                            scan.params.as_mut().unwrap().table_names.push(table)
+                            scan.params
+                                .as_mut()
+                                .unwrap()
+                                .table_names
+                                .push(table)
                         }
                     }
                     ParamsKey::Column => {
@@ -666,10 +634,7 @@ mod project {
     /// To initialize a project operator.
     #[no_mangle]
     pub extern "C" fn init_project_operator(is_append: bool) -> *const c_void {
-        let project = Box::new(pb::Project {
-            mappings: vec![],
-            is_append,
-        });
+        let project = Box::new(pb::Project { mappings: vec![], is_append });
         Box::into_raw(project) as *const c_void
     }
 
@@ -677,10 +642,7 @@ mod project {
     /// expression, to a `NameOrId` parameter that represents an alias.
     #[no_mangle]
     pub extern "C" fn add_project_mapping(
-        ptr_project: *const c_void,
-        cstr_expr: *const c_char,
-        alias: FfiNameOrId,
-        is_query_given: bool,
+        ptr_project: *const c_void, cstr_expr: *const c_char, alias: FfiNameOrId, is_query_given: bool,
     ) -> ResultCode {
         let mut return_code = ResultCode::Success;
         let mut project = unsafe { Box::from_raw(ptr_project as *mut pb::Project) };
@@ -692,10 +654,7 @@ mod project {
         } else {
             let attribute = pb::project::ExprAlias {
                 expr: expr_pb.ok(),
-                alias: Some(pb::project::Alias {
-                    alias: alias_pb.unwrap(),
-                    is_query_given,
-                }),
+                alias: Some(pb::project::Alias { alias: alias_pb.unwrap(), is_query_given }),
             };
             project.mappings.push(attribute);
         }
@@ -724,18 +683,10 @@ mod project {
     ///
     #[no_mangle]
     pub extern "C" fn append_project_operator(
-        ptr_plan: *const c_void,
-        ptr_project: *const c_void,
-        parent_id: i32,
-        id: *mut i32,
+        ptr_plan: *const c_void, ptr_project: *const c_void, parent_id: i32, id: *mut i32,
     ) -> ResultCode {
         let project = unsafe { Box::from_raw(ptr_project as *mut pb::Project) };
-        append_operator(
-            ptr_plan,
-            project.as_ref().clone().into(),
-            vec![parent_id],
-            id,
-        )
+        append_operator(ptr_plan, project.as_ref().clone().into(), vec![parent_id], id)
     }
 
     #[no_mangle]
@@ -757,8 +708,7 @@ mod select {
     /// To set a select operator's metadata, which is a predicate represented as a c-string.
     #[no_mangle]
     pub extern "C" fn set_select_predicate(
-        ptr_select: *const c_void,
-        cstr_predicate: *const c_char,
+        ptr_select: *const c_void, cstr_predicate: *const c_char,
     ) -> ResultCode {
         set_predicate(ptr_select, cstr_predicate, Opr::Select)
     }
@@ -766,18 +716,10 @@ mod select {
     /// Append a select operator to the logical plan
     #[no_mangle]
     pub extern "C" fn append_select_operator(
-        ptr_plan: *const c_void,
-        ptr_select: *const c_void,
-        parent_id: i32,
-        id: *mut i32,
+        ptr_plan: *const c_void, ptr_select: *const c_void, parent_id: i32, id: *mut i32,
     ) -> ResultCode {
         let select = unsafe { Box::from_raw(ptr_select as *mut pb::Select) };
-        append_operator(
-            ptr_plan,
-            select.as_ref().clone().into(),
-            vec![parent_id],
-            id,
-        )
+        append_operator(ptr_plan, select.as_ref().clone().into(), vec![parent_id], id)
     }
 
     #[no_mangle]
@@ -821,11 +763,7 @@ mod join {
             FfiJoinKind::Anti => 5,
             FfiJoinKind::Times => 6,
         };
-        let join = Box::new(pb::Join {
-            left_keys: vec![],
-            right_keys: vec![],
-            kind,
-        });
+        let join = Box::new(pb::Join { left_keys: vec![], right_keys: vec![], kind });
         Box::into_raw(join) as *const c_void
     }
 
@@ -834,9 +772,7 @@ mod join {
     /// regarding left and right keys are **equivalent**.
     #[no_mangle]
     pub extern "C" fn add_join_key_pair(
-        ptr_join: *const c_void,
-        left_key: FfiVariable,
-        right_key: FfiVariable,
+        ptr_join: *const c_void, left_key: FfiVariable, right_key: FfiVariable,
     ) -> ResultCode {
         let mut return_code = ResultCode::Success;
         let mut join = unsafe { Box::from_raw(ptr_join as *mut pb::Join) };
@@ -859,22 +795,13 @@ mod join {
     /// for join must be non-negative, and they must refer some nodes in the logical plan
     #[no_mangle]
     pub extern "C" fn append_join_operator(
-        ptr_plan: *const c_void,
-        ptr_join: *const c_void,
-        parent_left: i32,
-        parent_right: i32,
-        id: *mut i32,
+        ptr_plan: *const c_void, ptr_join: *const c_void, parent_left: i32, parent_right: i32, id: *mut i32,
     ) -> ResultCode {
         if parent_left < 0 || parent_right < 0 {
             ResultCode::NegativeIndexError
         } else {
             let join = unsafe { Box::from_raw(ptr_join as *mut pb::Join) };
-            append_operator(
-                ptr_plan,
-                join.as_ref().clone().into(),
-                vec![parent_left, parent_right],
-                id,
-            )
+            append_operator(ptr_plan, join.as_ref().clone().into(), vec![parent_left, parent_right], id)
         }
     }
 
@@ -897,19 +824,11 @@ mod union {
     /// Append a union operator to the logical plan
     #[no_mangle]
     pub extern "C" fn append_union_operator(
-        ptr_plan: *const c_void,
-        ptr_union: *const c_void,
-        parent_left: i32,
-        parent_right: i32,
+        ptr_plan: *const c_void, ptr_union: *const c_void, parent_left: i32, parent_right: i32,
         id: *mut i32,
     ) -> ResultCode {
         let union = unsafe { Box::from_raw(ptr_union as *mut pb::Union) };
-        append_operator(
-            ptr_plan,
-            union.as_ref().clone().into(),
-            vec![parent_left, parent_right],
-            id,
-        )
+        append_operator(ptr_plan, union.as_ref().clone().into(), vec![parent_left, parent_right], id)
     }
 }
 
@@ -919,10 +838,7 @@ mod groupby {
     /// To initialize a groupby operator
     #[no_mangle]
     pub extern "C" fn init_groupby_operator() -> *const c_void {
-        let group = Box::new(pb::GroupBy {
-            keys: vec![],
-            functions: vec![],
-        });
+        let group = Box::new(pb::GroupBy { keys: vec![], functions: vec![] });
         Box::into_raw(group) as *const c_void
     }
 
@@ -972,16 +888,10 @@ mod groupby {
     /// TODO(longbin) Will provide the support for multiple grouping variables
     #[no_mangle]
     pub extern "C" fn build_agg_fn(
-        agg_var: FfiVariable,
-        aggregate: FfiAggOpt,
-        alias: FfiNameOrId,
+        agg_var: FfiVariable, aggregate: FfiAggOpt, alias: FfiNameOrId,
     ) -> FfiAggFn {
         let vars: Box<Vec<FfiVariable>> = Box::new(vec![agg_var]);
-        FfiAggFn {
-            vars: Box::into_raw(vars) as *const FfiVariable,
-            aggregate,
-            alias,
-        }
+        FfiAggFn { vars: Box::into_raw(vars) as *const FfiVariable, aggregate, alias }
     }
 
     /// Add the key according to which the grouping is conducted
@@ -1002,16 +912,16 @@ mod groupby {
 
     /// Add the aggregate function for each group.
     #[no_mangle]
-    pub extern "C" fn add_groupby_agg_fn(
-        ptr_groupby: *const c_void,
-        agg_fn: FfiAggFn,
-    ) -> ResultCode {
+    pub extern "C" fn add_groupby_agg_fn(ptr_groupby: *const c_void, agg_fn: FfiAggFn) -> ResultCode {
         let mut return_code = ResultCode::Success;
         let mut group = unsafe { Box::from_raw(ptr_groupby as *mut pb::GroupBy) };
         let agg_fn_pb: FfiResult<pb::group_by::AggFunc> = agg_fn.try_into();
 
         if agg_fn_pb.is_ok() {
-            group.as_mut().functions.push(agg_fn_pb.unwrap());
+            group
+                .as_mut()
+                .functions
+                .push(agg_fn_pb.unwrap());
         } else {
             return_code = agg_fn_pb.err().unwrap();
         }
@@ -1023,10 +933,7 @@ mod groupby {
     /// Append a groupby operator to the logical plan
     #[no_mangle]
     pub extern "C" fn append_groupby_operator(
-        ptr_plan: *const c_void,
-        ptr_groupby: *const c_void,
-        parent: i32,
-        id: *mut i32,
+        ptr_plan: *const c_void, ptr_groupby: *const c_void, parent: i32, id: *mut i32,
     ) -> ResultCode {
         let group = unsafe { Box::from_raw(ptr_groupby as *mut pb::GroupBy) };
         append_operator(ptr_plan, group.as_ref().clone().into(), vec![parent], id)
@@ -1053,19 +960,14 @@ mod orderby {
     /// To initialize an orderby operator
     #[no_mangle]
     pub extern "C" fn init_orderby_operator() -> *const c_void {
-        let order = Box::new(pb::OrderBy {
-            pairs: vec![],
-            limit: None,
-        });
+        let order = Box::new(pb::OrderBy { pairs: vec![], limit: None });
         Box::into_raw(order) as *const c_void
     }
 
     /// Add the pair for conducting ordering.
     #[no_mangle]
     pub extern "C" fn add_orderby_pair(
-        ptr_orderby: *const c_void,
-        var: FfiVariable,
-        order_opt: FfiOrderOpt,
+        ptr_orderby: *const c_void, var: FfiVariable, order_opt: FfiOrderOpt,
     ) -> ResultCode {
         let mut return_code = ResultCode::Success;
         let mut orderby = unsafe { Box::from_raw(ptr_orderby as *mut pb::OrderBy) };
@@ -1076,10 +978,9 @@ mod orderby {
                 FfiOrderOpt::Asc => 1,
                 FfiOrderOpt::Desc => 2,
             };
-            orderby.pairs.push(pb::order_by::OrderingPair {
-                key: key_result.ok(),
-                order,
-            });
+            orderby
+                .pairs
+                .push(pb::order_by::OrderingPair { key: key_result.ok(), order });
         } else {
             return_code = key_result.err().unwrap();
         }
@@ -1090,21 +991,14 @@ mod orderby {
 
     /// Set the size limit of the orderby operator, which will turn it into topk
     #[no_mangle]
-    pub extern "C" fn set_orderby_limit(
-        ptr_orderby: *const c_void,
-        lower: i32,
-        upper: i32,
-    ) -> ResultCode {
+    pub extern "C" fn set_orderby_limit(ptr_orderby: *const c_void, lower: i32, upper: i32) -> ResultCode {
         set_range(ptr_orderby, lower, upper, Opr::OrderBy)
     }
 
     /// Append an orderby operator to the logical plan
     #[no_mangle]
     pub extern "C" fn append_orderby_operator(
-        ptr_plan: *const c_void,
-        ptr_orderby: *const c_void,
-        parent: i32,
-        id: *mut i32,
+        ptr_plan: *const c_void, ptr_orderby: *const c_void, parent: i32, id: *mut i32,
     ) -> ResultCode {
         let orderby = unsafe { Box::from_raw(ptr_orderby as *mut pb::OrderBy) };
         append_operator(ptr_plan, orderby.as_ref().clone().into(), vec![parent], id)
@@ -1145,10 +1039,7 @@ mod dedup {
     /// Append a dedup operator to the logical plan
     #[no_mangle]
     pub extern "C" fn append_dedup_operator(
-        ptr_plan: *const c_void,
-        ptr_dedup: *const c_void,
-        parent: i32,
-        id: *mut i32,
+        ptr_plan: *const c_void, ptr_dedup: *const c_void, parent: i32, id: *mut i32,
     ) -> ResultCode {
         let dedup = unsafe { Box::from_raw(ptr_dedup as *mut pb::Dedup) };
         append_operator(ptr_plan, dedup.as_ref().clone().into(), vec![parent], id)
@@ -1166,10 +1057,7 @@ mod unfold {
     /// To initialize an unfold operator
     #[no_mangle]
     pub extern "C" fn init_unfold_operator() -> *const c_void {
-        let unfold = Box::new(pb::Unfold {
-            tag: None,
-            alias: None,
-        });
+        let unfold = Box::new(pb::Unfold { tag: None, alias: None });
         Box::into_raw(unfold) as *const c_void
     }
 
@@ -1178,9 +1066,7 @@ mod unfold {
     /// * an alias for referencing to each element of the collection.
     #[no_mangle]
     pub extern "C" fn set_unfold_pair(
-        ptr_unfold: *const c_void,
-        tag: FfiNameOrId,
-        alias: FfiNameOrId,
+        ptr_unfold: *const c_void, tag: FfiNameOrId, alias: FfiNameOrId,
     ) -> ResultCode {
         let mut return_code = ResultCode::Success;
         let mut unfold = unsafe { Box::from_raw(ptr_unfold as *mut pb::Unfold) };
@@ -1191,11 +1077,8 @@ mod unfold {
             unfold.tag = tag_result.unwrap();
             unfold.alias = alias_result.unwrap();
         } else {
-            return_code = if tag_result.is_err() {
-                tag_result.err().unwrap()
-            } else {
-                alias_result.err().unwrap()
-            };
+            return_code =
+                if tag_result.is_err() { tag_result.err().unwrap() } else { alias_result.err().unwrap() };
         }
         std::mem::forget(unfold);
 
@@ -1205,10 +1088,7 @@ mod unfold {
     /// Append an unfold operator to the logical plan
     #[no_mangle]
     pub extern "C" fn append_unfold_operator(
-        ptr_plan: *const c_void,
-        ptr_unfold: *const c_void,
-        parent: i32,
-        id: *mut i32,
+        ptr_plan: *const c_void, ptr_unfold: *const c_void, parent: i32, id: *mut i32,
     ) -> ResultCode {
         let unfold = unsafe { Box::from_raw(ptr_unfold as *mut pb::Unfold) };
         append_operator(ptr_plan, unfold.as_ref().clone().into(), vec![parent], id)
@@ -1250,19 +1130,12 @@ mod scan {
     }
 
     #[no_mangle]
-    pub extern "C" fn set_scan_limit(
-        ptr_scan: *const c_void,
-        lower: i32,
-        upper: i32,
-    ) -> ResultCode {
+    pub extern "C" fn set_scan_limit(ptr_scan: *const c_void, lower: i32, upper: i32) -> ResultCode {
         set_range(ptr_scan, lower, upper, Opr::Scan)
     }
 
     #[no_mangle]
-    pub extern "C" fn add_scan_table_name(
-        ptr_scan: *const c_void,
-        table_name: FfiNameOrId,
-    ) -> ResultCode {
+    pub extern "C" fn add_scan_table_name(ptr_scan: *const c_void, table_name: FfiNameOrId) -> ResultCode {
         process_params(ptr_scan, ParamsKey::Table, table_name, Opr::Scan)
     }
 
@@ -1281,10 +1154,7 @@ mod scan {
     /// Append a scan operator to the logical plan
     #[no_mangle]
     pub extern "C" fn append_scan_operator(
-        ptr_plan: *const c_void,
-        ptr_scan: *const c_void,
-        parent: i32,
-        id: *mut i32,
+        ptr_plan: *const c_void, ptr_scan: *const c_void, parent: i32, id: *mut i32,
     ) -> ResultCode {
         let scan = unsafe { Box::from_raw(ptr_scan as *mut pb::Scan) };
         append_operator(ptr_plan, scan.as_ref().clone().into(), vec![parent], id)
@@ -1304,10 +1174,8 @@ mod idxscan {
     #[no_mangle]
     pub extern "C" fn init_idxscan_operator(ptr_scan: *const c_void) -> *const c_void {
         let scan = unsafe { Box::from_raw(ptr_scan as *mut pb::Scan) };
-        let indexed_scan = Box::new(pb::IndexedScan {
-            scan: Some(scan.as_ref().clone()),
-            or_kv_equiv_pairs: vec![],
-        });
+        let indexed_scan =
+            Box::new(pb::IndexedScan { scan: Some(scan.as_ref().clone()), or_kv_equiv_pairs: vec![] });
         Box::into_raw(indexed_scan) as *const c_void
     }
 
@@ -1355,24 +1223,18 @@ mod idxscan {
         fn try_from(ffi: FfiConst) -> Result<Self, Self::Error> {
             match &ffi.data_type {
                 FfiDataType::Unknown => Err(ResultCode::UnknownTypeError),
-                FfiDataType::Boolean => Ok(common_pb::Const {
-                    value: Some(common_pb::Value::from(ffi.boolean)),
-                }),
-                FfiDataType::I32 => Ok(common_pb::Const {
-                    value: Some(common_pb::Value::from(ffi.int32)),
-                }),
-                FfiDataType::I64 => Ok(common_pb::Const {
-                    value: Some(common_pb::Value::from(ffi.int64)),
-                }),
-                FfiDataType::F64 => Ok(common_pb::Const {
-                    value: Some(common_pb::Value::from(ffi.float64)),
-                }),
+                FfiDataType::Boolean => {
+                    Ok(common_pb::Const { value: Some(common_pb::Value::from(ffi.boolean)) })
+                }
+                FfiDataType::I32 => Ok(common_pb::Const { value: Some(common_pb::Value::from(ffi.int32)) }),
+                FfiDataType::I64 => Ok(common_pb::Const { value: Some(common_pb::Value::from(ffi.int64)) }),
+                FfiDataType::F64 => {
+                    Ok(common_pb::Const { value: Some(common_pb::Value::from(ffi.float64)) })
+                }
                 FfiDataType::Str => {
                     let str = cstr_to_string(ffi.cstr);
                     if str.is_ok() {
-                        Ok(common_pb::Const {
-                            value: str.ok().map(|s| common_pb::Value::from(s)),
-                        })
+                        Ok(common_pb::Const { value: str.ok().map(|s| common_pb::Value::from(s)) })
                     } else {
                         Err(str.err().unwrap())
                     }
@@ -1429,9 +1291,7 @@ mod idxscan {
 
     #[no_mangle]
     pub extern "C" fn and_kv_equiv_pair(
-        ptr_pairs: *const c_void,
-        key: FfiProperty,
-        value: FfiConst,
+        ptr_pairs: *const c_void, key: FfiProperty, value: FfiConst,
     ) -> ResultCode {
         let mut return_code = ResultCode::Success;
         let key_pb: FfiResult<Option<common_pb::Property>> = key.try_into();
@@ -1442,10 +1302,7 @@ mod idxscan {
             return_code = value_pb.err().unwrap();
         } else {
             let mut kv_equiv_pairs = unsafe { Box::from_raw(ptr_pairs as *mut Vec<KvEquivPair>) };
-            kv_equiv_pairs.push(KvEquivPair {
-                key: key_pb.unwrap(),
-                value: value_pb.ok(),
-            });
+            kv_equiv_pairs.push(KvEquivPair { key: key_pb.unwrap(), value: value_pb.ok() });
             std::mem::forget(kv_equiv_pairs)
         }
 
@@ -1454,14 +1311,13 @@ mod idxscan {
 
     #[no_mangle]
     pub extern "C" fn add_idxscan_kv_equiv_pairs(
-        ptr_idxscan: *const c_void,
-        ptr_pairs: *const c_void,
+        ptr_idxscan: *const c_void, ptr_pairs: *const c_void,
     ) -> ResultCode {
         let mut idxscan = unsafe { Box::from_raw(ptr_idxscan as *mut pb::IndexedScan) };
         let kv_equiv_pairs = unsafe { Box::from_raw(ptr_pairs as *mut Vec<KvEquivPair>) };
-        idxscan.or_kv_equiv_pairs.push(KvEquivPairs {
-            pairs: kv_equiv_pairs.as_ref().clone(),
-        });
+        idxscan
+            .or_kv_equiv_pairs
+            .push(KvEquivPairs { pairs: kv_equiv_pairs.as_ref().clone() });
         std::mem::forget(idxscan);
 
         ResultCode::Success
@@ -1470,10 +1326,7 @@ mod idxscan {
     /// Append an indexed scan operator to the logical plan
     #[no_mangle]
     pub extern "C" fn append_idxscan_operator(
-        ptr_plan: *const c_void,
-        ptr_idxscan: *const c_void,
-        parent: i32,
-        id: *mut i32,
+        ptr_plan: *const c_void, ptr_idxscan: *const c_void, parent: i32, id: *mut i32,
     ) -> ResultCode {
         let idxscan = unsafe { Box::from_raw(ptr_idxscan as *mut pb::IndexedScan) };
         append_operator(ptr_plan, idxscan.as_ref().clone().into(), vec![parent], id)
@@ -1495,21 +1348,14 @@ mod limit {
     }
 
     #[no_mangle]
-    pub extern "C" fn set_limit_range(
-        ptr_limit: *const c_void,
-        lower: i32,
-        upper: i32,
-    ) -> ResultCode {
+    pub extern "C" fn set_limit_range(ptr_limit: *const c_void, lower: i32, upper: i32) -> ResultCode {
         set_range(ptr_limit, lower, upper, Opr::Limit)
     }
 
     /// Append an indexed scan operator to the logical plan
     #[no_mangle]
     pub extern "C" fn append_limit_operator(
-        ptr_plan: *const c_void,
-        ptr_limit: *const c_void,
-        parent: i32,
-        id: *mut i32,
+        ptr_plan: *const c_void, ptr_limit: *const c_void, parent: i32, id: *mut i32,
     ) -> ResultCode {
         let limit = unsafe { Box::from_raw(ptr_limit as *mut pb::Limit) };
         append_operator(ptr_plan, limit.as_ref().clone().into(), vec![parent], id)
@@ -1527,11 +1373,7 @@ mod details {
     /// To initialize a get details operator
     #[no_mangle]
     pub extern "C" fn init_get_details(is_all: bool) -> *const c_void {
-        let details = Box::new(pb::GetDetails {
-            tag: None,
-            columns: vec![],
-            is_all,
-        });
+        let details = Box::new(pb::GetDetails { tag: None, columns: vec![], is_all });
 
         Box::into_raw(details) as *const c_void
     }
@@ -1544,8 +1386,7 @@ mod details {
 
     #[no_mangle]
     pub extern "C" fn add_details_property(
-        ptr_details: *const c_void,
-        property: FfiNameOrId,
+        ptr_details: *const c_void, property: FfiNameOrId,
     ) -> ResultCode {
         process_params(ptr_details, ParamsKey::Column, property, Opr::GetDetails)
     }
@@ -1553,10 +1394,7 @@ mod details {
     /// Append a get details operator to the logical plan
     #[no_mangle]
     pub extern "C" fn append_details_operator(
-        ptr_plan: *const c_void,
-        ptr_details: *const c_void,
-        parent: i32,
-        id: *mut i32,
+        ptr_plan: *const c_void, ptr_details: *const c_void, parent: i32, id: *mut i32,
     ) -> ResultCode {
         let details = unsafe { Box::from_raw(ptr_details as *mut pb::GetDetails) };
         append_operator(ptr_plan, details.as_ref().clone().into(), vec![parent], id)
@@ -1605,73 +1443,50 @@ mod graph {
 
     /// Add a label of the edge that this expansion must satisfy
     #[no_mangle]
-    pub extern "C" fn add_expand_label(
-        ptr_expand: *const c_void,
-        label: FfiNameOrId,
-    ) -> ResultCode {
+    pub extern "C" fn add_expand_label(ptr_expand: *const c_void, label: FfiNameOrId) -> ResultCode {
         process_params(ptr_expand, ParamsKey::Table, label, Opr::ExpandBase)
     }
 
     /// Add a property that this edge expansion must carry
     #[no_mangle]
-    pub extern "C" fn add_expand_property(
-        ptr_expand: *const c_void,
-        property: FfiNameOrId,
-    ) -> ResultCode {
+    pub extern "C" fn add_expand_property(ptr_expand: *const c_void, property: FfiNameOrId) -> ResultCode {
         process_params(ptr_expand, ParamsKey::Column, property, Opr::ExpandBase)
     }
 
     /// Set the size range limitation of this expansion
     #[no_mangle]
-    pub extern "C" fn set_expand_limit(
-        ptr_expand: *const c_void,
-        lower: i32,
-        upper: i32,
-    ) -> ResultCode {
+    pub extern "C" fn set_expand_limit(ptr_expand: *const c_void, lower: i32, upper: i32) -> ResultCode {
         set_range(ptr_expand, lower, upper, Opr::ExpandBase)
     }
 
     /// Set the edge predicate of this expansion
     #[no_mangle]
     pub extern "C" fn set_expand_predicate(
-        ptr_expand: *const c_void,
-        cstr_predicate: *const c_char,
+        ptr_expand: *const c_void, cstr_predicate: *const c_char,
     ) -> ResultCode {
         set_predicate(ptr_expand, cstr_predicate, Opr::ExpandBase)
     }
 
     /// To initialize an edge expand operator from an expand base
     #[no_mangle]
-    pub extern "C" fn init_edgexpd_operator(
-        ptr_expand: *const c_void,
-        is_edge: bool,
-    ) -> *const c_void {
+    pub extern "C" fn init_edgexpd_operator(ptr_expand: *const c_void, is_edge: bool) -> *const c_void {
         let expand = unsafe { Box::from_raw(ptr_expand as *mut pb::ExpandBase) };
-        let edgexpd = Box::new(pb::EdgeExpand {
-            base: Some(expand.as_ref().clone()),
-            is_edge,
-            alias: None,
-        });
+        let edgexpd =
+            Box::new(pb::EdgeExpand { base: Some(expand.as_ref().clone()), is_edge, alias: None });
 
         Box::into_raw(edgexpd) as *const c_void
     }
 
     /// Set edge alias of this edge expansion
     #[no_mangle]
-    pub extern "C" fn set_edgexpd_alias(
-        ptr_edgexpd: *const c_void,
-        alias: FfiNameOrId,
-    ) -> ResultCode {
+    pub extern "C" fn set_edgexpd_alias(ptr_edgexpd: *const c_void, alias: FfiNameOrId) -> ResultCode {
         set_alias(ptr_edgexpd, alias, true, Opr::EdgeExpand)
     }
 
     /// Append an edge expand operator to the logical plan
     #[no_mangle]
     pub extern "C" fn append_edgexpd_operator(
-        ptr_plan: *const c_void,
-        ptr_edgexpd: *const c_void,
-        parent: i32,
-        id: *mut i32,
+        ptr_plan: *const c_void, ptr_edgexpd: *const c_void, parent: i32, id: *mut i32,
     ) -> ResultCode {
         let edgexpd = unsafe { Box::from_raw(ptr_edgexpd as *mut pb::EdgeExpand) };
         append_operator(ptr_plan, edgexpd.as_ref().clone().into(), vec![parent], id)
@@ -1688,7 +1503,6 @@ mod graph {
         Start = 0,
         End = 1,
         Other = 2,
-        This = 3,
     }
 
     /// To initialize an expansion base
@@ -1729,28 +1543,20 @@ mod graph {
 
     /// Add a property that this vertex must carry
     #[no_mangle]
-    pub extern "C" fn add_getv_property(
-        ptr_getv: *const c_void,
-        property: FfiNameOrId,
-    ) -> ResultCode {
+    pub extern "C" fn add_getv_property(ptr_getv: *const c_void, property: FfiNameOrId) -> ResultCode {
         process_params(ptr_getv, ParamsKey::Column, property, Opr::GetV)
     }
 
     /// Set the size range limitation of getting vertices
     #[no_mangle]
-    pub extern "C" fn set_getv_limit(
-        ptr_getv: *const c_void,
-        lower: i32,
-        upper: i32,
-    ) -> ResultCode {
+    pub extern "C" fn set_getv_limit(ptr_getv: *const c_void, lower: i32, upper: i32) -> ResultCode {
         set_range(ptr_getv, lower, upper, Opr::GetV)
     }
 
     /// Set the predicate of getting vertices
     #[no_mangle]
     pub extern "C" fn set_getv_predicate(
-        ptr_getv: *const c_void,
-        cstr_predicate: *const c_char,
+        ptr_getv: *const c_void, cstr_predicate: *const c_char,
     ) -> ResultCode {
         set_predicate(ptr_getv, cstr_predicate, Opr::GetV)
     }
@@ -1758,10 +1564,7 @@ mod graph {
     /// Append an edge expand operator to the logical plan
     #[no_mangle]
     pub extern "C" fn append_getv_operator(
-        ptr_plan: *const c_void,
-        ptr_getv: *const c_void,
-        parent: i32,
-        id: *mut i32,
+        ptr_plan: *const c_void, ptr_getv: *const c_void, parent: i32, id: *mut i32,
     ) -> ResultCode {
         let getv = unsafe { Box::from_raw(ptr_getv as *mut pb::GetV) };
         append_operator(ptr_plan, getv.as_ref().clone().into(), vec![parent], id)
@@ -1774,10 +1577,7 @@ mod graph {
 
     /// To initialize an path expand operator from an expand base
     #[no_mangle]
-    pub extern "C" fn init_pathxpd_operator(
-        ptr_expand: *const c_void,
-        is_path: bool,
-    ) -> *const c_void {
+    pub extern "C" fn init_pathxpd_operator(ptr_expand: *const c_void, is_path: bool) -> *const c_void {
         let expand = unsafe { Box::from_raw(ptr_expand as *mut pb::ExpandBase) };
         let edgexpd = Box::new(pb::PathExpand {
             base: Some(expand.as_ref().clone()),
@@ -1791,30 +1591,20 @@ mod graph {
 
     /// Set path alias of this path expansion
     #[no_mangle]
-    pub extern "C" fn set_pathxpd_alias(
-        ptr_pathxpd: *const c_void,
-        alias: FfiNameOrId,
-    ) -> ResultCode {
+    pub extern "C" fn set_pathxpd_alias(ptr_pathxpd: *const c_void, alias: FfiNameOrId) -> ResultCode {
         set_alias(ptr_pathxpd, alias, true, Opr::PathExpand)
     }
 
     /// Set the hop-range limitation of expanding path
     #[no_mangle]
-    pub extern "C" fn set_pathxpd_hops(
-        ptr_pathxpd: *const c_void,
-        lower: i32,
-        upper: i32,
-    ) -> ResultCode {
+    pub extern "C" fn set_pathxpd_hops(ptr_pathxpd: *const c_void, lower: i32, upper: i32) -> ResultCode {
         set_range(ptr_pathxpd, lower, upper, Opr::PathExpand)
     }
 
     /// Append an path-expand operator to the logical plan
     #[no_mangle]
     pub extern "C" fn append_pathxpd_operator(
-        ptr_plan: *const c_void,
-        ptr_pathxpd: *const c_void,
-        parent: i32,
-        id: *mut i32,
+        ptr_plan: *const c_void, ptr_pathxpd: *const c_void, parent: i32, id: *mut i32,
     ) -> ResultCode {
         let pathxpd = unsafe { Box::from_raw(ptr_pathxpd as *mut pb::PathExpand) };
         append_operator(ptr_plan, pathxpd.as_ref().clone().into(), vec![parent], id)
@@ -1834,17 +1624,10 @@ mod subtask {
     /// the subtask, one need to first prepare the subtask and append the operators within to the
     /// logical plan.
     #[no_mangle]
-    pub extern "C" fn init_apply_operator(
-        subtask_root: i32,
-        join_kind: FfiJoinKind,
-    ) -> *const c_void {
+    pub extern "C" fn init_apply_operator(subtask_root: i32, join_kind: FfiJoinKind) -> *const c_void {
         let apply = Box::new(pb::Apply {
             join_kind: unsafe { std::mem::transmute::<FfiJoinKind, i32>(join_kind) },
-            subtask: Some(pb::apply::Subtask {
-                tags: vec![],
-                subtask: subtask_root,
-                alias: None,
-            }),
+            subtask: Some(pb::apply::Subtask { tags: vec![], subtask: subtask_root, alias: None }),
         });
 
         Box::into_raw(apply) as *const c_void
@@ -1869,9 +1652,7 @@ mod subtask {
 
     #[no_mangle]
     pub extern "C" fn set_apply_alias(
-        ptr_apply: *const c_void,
-        alias: FfiNameOrId,
-        is_query_given: bool,
+        ptr_apply: *const c_void, alias: FfiNameOrId, is_query_given: bool,
     ) -> ResultCode {
         set_alias(ptr_apply, alias, is_query_given, Opr::Apply)
     }
@@ -1881,10 +1662,7 @@ mod subtask {
     /// in the logical plan.
     #[no_mangle]
     pub extern "C" fn append_apply_operator(
-        ptr_plan: *const c_void,
-        ptr_apply: *const c_void,
-        parent: i32,
-        id: *mut i32,
+        ptr_plan: *const c_void, ptr_apply: *const c_void, parent: i32, id: *mut i32,
     ) -> ResultCode {
         let apply = unsafe { Box::from_raw(ptr_apply as *mut pb::Apply) };
         append_operator(ptr_plan, apply.as_ref().clone().into(), vec![parent], id)
@@ -1899,20 +1677,15 @@ mod subtask {
     #[no_mangle]
     pub extern "C" fn init_segapply_operator(ptr_apply: *const c_void) -> *const c_void {
         let apply = unsafe { Box::from_raw(ptr_apply as *mut pb::Apply) };
-        let segapply = Box::new(pb::SegmentApply {
-            keys: vec![],
-            apply_subtask: Some(apply.as_ref().clone()),
-        });
+        let segapply =
+            Box::new(pb::SegmentApply { keys: vec![], apply_subtask: Some(apply.as_ref().clone()) });
 
         Box::into_raw(segapply) as *const c_void
     }
 
     /// To add the key for grouping on which the segment apply can be conducted.
     #[no_mangle]
-    pub extern "C" fn add_segapply_key(
-        ptr_segapply: *const c_void,
-        ffi_key: FfiNameOrId,
-    ) -> ResultCode {
+    pub extern "C" fn add_segapply_key(ptr_segapply: *const c_void, ffi_key: FfiNameOrId) -> ResultCode {
         let mut return_code = ResultCode::Success;
         let key_pb: FfiResult<Option<common_pb::NameOrId>> = ffi_key.try_into();
         if key_pb.is_ok() {
@@ -1932,10 +1705,7 @@ mod subtask {
     /// must not be negative and must present in the logical plan.
     #[no_mangle]
     pub extern "C" fn append_segapply_operator(
-        ptr_plan: *const c_void,
-        ptr_segapply: *const c_void,
-        parent: i32,
-        id: *mut i32,
+        ptr_plan: *const c_void, ptr_segapply: *const c_void, parent: i32, id: *mut i32,
     ) -> ResultCode {
         if parent < 0 {
             ResultCode::NegativeIndexError
