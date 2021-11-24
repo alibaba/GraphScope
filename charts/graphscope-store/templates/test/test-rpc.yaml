@@ -1,13 +1,43 @@
 apiVersion: v1
 kind: Pod
 metadata:
-  name: {{ include "graphscope-store.frontend.fullname" . }}-test-rpc-service
+  name: {{ include "graphscope-store.frontend.fullname" . }}-test-grpc-service
   annotations:
     "helm.sh/hook": test
 spec:
   containers:
-    - name: curl
-      image: curlimages/curl:7.65.3
-      command: ['sh']
-      args: ['-c', 'while ! curl {{ include "graphscope-store.frontend.fullname" . }}.{{ .Release.Namespace }}:55555 --output -; do sleep 1 && echo -n .; done']
+    - name: python
+      image: python:3.9.9-alpine3.14
+      env:
+        - name: frontend
+          value: {{ include "graphscope-store.frontend.fullname" . }}.{{ .Release.Namespace }}
+      command:
+        - /bin/sh
+        - -c
+        - while sleep 3 && ! python3 -c 'import socket; import os; socket.create_connection((os.getenv("frontend"), 55555))';
+            do echo -n .;
+          done
+
+  restartPolicy: Never
+
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: {{ include "graphscope-store.frontend.fullname" . }}-test-gremlin-service
+  annotations:
+    "helm.sh/hook": test
+spec:
+  containers:
+    - name: python
+      image: python:3.9.9-alpine3.14
+      env:
+        - name: frontend
+          value: {{ include "graphscope-store.frontend.fullname" . }}.{{ .Release.Namespace }}
+      command:
+        - /bin/sh
+        - -c
+        - while sleep 3 && ! python3 -c 'import socket; import os; socket.create_connection((os.getenv("frontend"), 12312))';
+            do echo -n .;
+          done
   restartPolicy: Never
