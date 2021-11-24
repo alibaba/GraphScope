@@ -18,10 +18,10 @@ package com.alibaba.graphscope.example.simple.traverse;
 
 import com.alibaba.graphscope.app.ParallelAppBase;
 import com.alibaba.graphscope.app.ParallelContextBase;
-import com.alibaba.graphscope.ds.AdjList;
-import com.alibaba.graphscope.ds.Nbr;
 import com.alibaba.graphscope.ds.Vertex;
-import com.alibaba.graphscope.fragment.ImmutableEdgecutFragment;
+import com.alibaba.graphscope.ds.adaptor.AdjList;
+import com.alibaba.graphscope.ds.adaptor.Nbr;
+import com.alibaba.graphscope.fragment.SimpleFragment;
 import com.alibaba.graphscope.parallel.ParallelEngine;
 import com.alibaba.graphscope.parallel.ParallelMessageManager;
 import java.util.concurrent.CountDownLatch;
@@ -32,7 +32,7 @@ public class TraverseParallel
                 ParallelEngine {
     @Override
     public void PEval(
-            ImmutableEdgecutFragment<Long, Long, Long, Double> fragment,
+            SimpleFragment<Long, Long, Long, Double> fragment,
             ParallelContextBase<Long, Long, Long, Double> contextBase,
             ParallelMessageManager messageManager) {
         TraverseParallelContext ctx = (TraverseParallelContext) contextBase;
@@ -50,7 +50,7 @@ public class TraverseParallel
                             for (long lid = start; lid < end; ++lid) {
                                 vertex.SetValue(lid);
                                 AdjList<Long, Double> adjList = fragment.getOutgoingAdjList(vertex);
-                                for (Nbr<Long, Double> cur : adjList) {
+                                for (Nbr<Long, Double> cur : adjList.iterator()) {
                                     ctx.fake_edata = cur.data();
                                     ctx.fake_vid = cur.neighbor().GetValue();
                                 }
@@ -71,7 +71,7 @@ public class TraverseParallel
 
     @Override
     public void IncEval(
-            ImmutableEdgecutFragment<Long, Long, Long, Double> fragment,
+            SimpleFragment<Long, Long, Long, Double> fragment,
             ParallelContextBase<Long, Long, Long, Double> contextBase,
             ParallelMessageManager messageManager) {
         TraverseParallelContext ctx = (TraverseParallelContext) contextBase;
@@ -101,7 +101,7 @@ public class TraverseParallel
                                     vertex.SetValue(lid);
                                     AdjList<Long, Double> adjList =
                                             fragment.getOutgoingAdjList(vertex);
-                                    for (Nbr<Long, Double> cur : adjList) {
+                                    for (Nbr<Long, Double> cur : adjList.iterator()) {
                                         fake_vid = cur.neighbor().GetValue();
                                         fake_edata = cur.data();
                                     }

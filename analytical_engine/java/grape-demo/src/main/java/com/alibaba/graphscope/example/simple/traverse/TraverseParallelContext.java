@@ -16,15 +16,18 @@
 
 package com.alibaba.graphscope.example.simple.traverse;
 
-import com.alibaba.fastffi.FFIByteString;
+import com.alibaba.fastjson.JSONObject;
 import com.alibaba.graphscope.app.ParallelContextBase;
-import com.alibaba.graphscope.fragment.ImmutableEdgecutFragment;
+import com.alibaba.graphscope.fragment.SimpleFragment;
 import com.alibaba.graphscope.parallel.ParallelMessageManager;
-import com.alibaba.graphscope.stdcxx.StdVector;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class TraverseParallelContext implements ParallelContextBase<Long, Long, Long, Double> {
+
+    private static Logger logger = LoggerFactory.getLogger(TraverseParallelContext.class);
 
     public int step;
     public int maxStep;
@@ -36,11 +39,20 @@ public class TraverseParallelContext implements ParallelContextBase<Long, Long, 
 
     @Override
     public void Init(
-            ImmutableEdgecutFragment<Long, Long, Long, Double> immutableEdgecutFragment,
-            ParallelMessageManager javaDefaultMessageManager,
-            StdVector<FFIByteString> args) {
-        maxStep = Integer.parseInt(args.get(0).toString());
-        threadNum = Integer.parseInt(args.get(1).toString());
+            SimpleFragment<Long, Long, Long, Double> immutableEdgecutFragment,
+            ParallelMessageManager messageManager,
+            JSONObject jsonObject) {
+        if (!jsonObject.containsKey("maxStep")) {
+            logger.error("no maxStep in params");
+            return;
+        }
+        maxStep = jsonObject.getInteger("maxStep");
+
+        if (!jsonObject.containsKey("threadNum")) {
+            logger.error("no threadNum in params");
+            return;
+        }
+        threadNum = jsonObject.getInteger("threadNum");
         executor = Executors.newFixedThreadPool(threadNum);
         long innerVerticesNum = immutableEdgecutFragment.getInnerVerticesNum();
         // chunkSize = (innerVerticesNum + threadNum - 1) / threadNum;
@@ -49,6 +61,5 @@ public class TraverseParallelContext implements ParallelContextBase<Long, Long, 
     }
 
     @Override
-    public void Output(
-            ImmutableEdgecutFragment<Long, Long, Long, Double> immutableEdgecutFragment) {}
+    public void Output(SimpleFragment<Long, Long, Long, Double> edgecutFragment) {}
 }

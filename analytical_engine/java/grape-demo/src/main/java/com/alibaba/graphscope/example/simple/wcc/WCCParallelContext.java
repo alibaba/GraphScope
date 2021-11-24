@@ -16,14 +16,13 @@
 
 package com.alibaba.graphscope.example.simple.wcc;
 
-import com.alibaba.fastffi.FFIByteString;
+import com.alibaba.fastjson.JSONObject;
 import com.alibaba.graphscope.app.ParallelContextBase;
 import com.alibaba.graphscope.ds.Vertex;
 import com.alibaba.graphscope.ds.VertexRange;
 import com.alibaba.graphscope.ds.VertexSet;
-import com.alibaba.graphscope.fragment.ImmutableEdgecutFragment;
+import com.alibaba.graphscope.fragment.SimpleFragment;
 import com.alibaba.graphscope.parallel.ParallelMessageManager;
-import com.alibaba.graphscope.stdcxx.StdVector;
 import com.alibaba.graphscope.utils.AtomicLongArrayWrapper;
 import java.io.BufferedWriter;
 import java.io.FileWriter;
@@ -41,10 +40,13 @@ class WCCParallelContext implements ParallelContextBase<Long, Long, Long, Double
 
     @Override
     public void Init(
-            ImmutableEdgecutFragment<Long, Long, Long, Double> frag,
+            SimpleFragment<Long, Long, Long, Double> frag,
             ParallelMessageManager messageManager,
-            StdVector<FFIByteString> args) {
-        threadNum = Integer.parseInt(args.get(0).toString());
+            JSONObject jsonObject) {
+        if (!jsonObject.containsKey("threadNum")) {
+            return;
+        }
+        threadNum = jsonObject.getInteger("threadNum");
         System.out.println("thread num " + threadNum);
         comp_id = new AtomicLongArrayWrapper(frag.vertices(), Long.MAX_VALUE);
         currModified = new VertexSet(frag.vertices());
@@ -54,7 +56,7 @@ class WCCParallelContext implements ParallelContextBase<Long, Long, Long, Double
     }
 
     @Override
-    public void Output(ImmutableEdgecutFragment<Long, Long, Long, Double> frag) {
+    public void Output(SimpleFragment<Long, Long, Long, Double> frag) {
         String prefix = "/tmp/wcc_parallel_output";
         String filePath = prefix + "_frag_" + frag.fid();
         try {

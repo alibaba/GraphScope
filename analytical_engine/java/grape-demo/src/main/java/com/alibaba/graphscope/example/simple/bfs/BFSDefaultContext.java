@@ -16,20 +16,23 @@
 
 package com.alibaba.graphscope.example.simple.bfs;
 
-import com.alibaba.fastffi.FFIByteString;
+import com.alibaba.fastjson.JSONObject;
 import com.alibaba.graphscope.app.DefaultContextBase;
 import com.alibaba.graphscope.ds.Vertex;
 import com.alibaba.graphscope.ds.VertexRange;
 import com.alibaba.graphscope.ds.VertexSet;
-import com.alibaba.graphscope.fragment.ImmutableEdgecutFragment;
+import com.alibaba.graphscope.fragment.SimpleFragment;
 import com.alibaba.graphscope.parallel.DefaultMessageManager;
-import com.alibaba.graphscope.stdcxx.StdVector;
 import com.alibaba.graphscope.utils.IntArrayWrapper;
 import java.io.BufferedWriter;
 import java.io.FileWriter;
 import java.io.IOException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class BFSDefaultContext implements DefaultContextBase<Long, Long, Long, Double> {
+    private static Logger logger = LoggerFactory.getLogger(BFSDefaultContext.class);
+
     public long sourceOid;
     public IntArrayWrapper partialResults;
     // public BooleanArrayWrapper currendInnerUpdated;
@@ -38,10 +41,15 @@ public class BFSDefaultContext implements DefaultContextBase<Long, Long, Long, D
 
     @Override
     public void Init(
-            ImmutableEdgecutFragment<Long, Long, Long, Double> frag,
+            SimpleFragment<Long, Long, Long, Double> frag,
             DefaultMessageManager messageManager,
-            StdVector<FFIByteString> args) {
-        sourceOid = Long.valueOf(args.get(0).toString());
+            JSONObject jsonObject) {
+        //        sourceOid = Long.valueOf(args.get(0).toString());
+        if (!jsonObject.containsKey("src")) {
+            logger.error("No src arg found");
+            return;
+        }
+        sourceOid = jsonObject.getLong("src");
         partialResults = new IntArrayWrapper(frag.getVerticesNum().intValue(), Integer.MAX_VALUE);
         currentInnerUpdated = new VertexSet(frag.innerVertices());
         nextInnerUpdated = new VertexSet(frag.innerVertices());
@@ -49,7 +57,7 @@ public class BFSDefaultContext implements DefaultContextBase<Long, Long, Long, D
     }
 
     @Override
-    public void Output(ImmutableEdgecutFragment<Long, Long, Long, Double> frag) {
+    public void Output(SimpleFragment<Long, Long, Long, Double> frag) {
         String prefix = "/tmp/bfs_default_output";
         System.out.println("depth " + currentDepth);
         String filePath = prefix + "_frag_" + frag.fid();

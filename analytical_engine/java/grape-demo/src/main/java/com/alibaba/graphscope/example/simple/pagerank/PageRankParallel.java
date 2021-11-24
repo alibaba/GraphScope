@@ -19,11 +19,11 @@ package com.alibaba.graphscope.example.simple.pagerank;
 import com.alibaba.graphscope.app.ParallelAppBase;
 import com.alibaba.graphscope.app.ParallelContextBase;
 import com.alibaba.graphscope.communication.Communicator;
-import com.alibaba.graphscope.ds.AdjList;
-import com.alibaba.graphscope.ds.Nbr;
 import com.alibaba.graphscope.ds.Vertex;
 import com.alibaba.graphscope.ds.VertexRange;
-import com.alibaba.graphscope.fragment.ImmutableEdgecutFragment;
+import com.alibaba.graphscope.ds.adaptor.AdjList;
+import com.alibaba.graphscope.ds.adaptor.Nbr;
+import com.alibaba.graphscope.fragment.SimpleFragment;
 import com.alibaba.graphscope.parallel.ParallelEngine;
 import com.alibaba.graphscope.parallel.ParallelMessageManager;
 import com.alibaba.graphscope.parallel.message.DoubleMsg;
@@ -40,20 +40,20 @@ public class PageRankParallel extends Communicator
 
     @Override
     public void PEval(
-            ImmutableEdgecutFragment<Long, Long, Long, Double> frag,
+            SimpleFragment<Long, Long, Long, Double> fragment,
             ParallelContextBase<Long, Long, Long, Double> contextBase,
             ParallelMessageManager javaParallelMessageManager) {
         PageRankParallelContext ctx = (PageRankParallelContext) contextBase;
         javaParallelMessageManager.initChannels(ctx.thread_num());
-        VertexRange<Long> innerVertices = frag.innerVertices();
-        int totalVertexNum = (int) frag.getTotalVerticesNum();
+        VertexRange<Long> innerVertices = fragment.innerVertices();
+        int totalVertexNum = (int) fragment.getTotalVerticesNum();
 
         ctx.superStep = 0;
         double base = 1.0 / totalVertexNum;
 
         BiConsumer<Vertex<Long>, Integer> calc =
                 (Vertex<Long> vertex, Integer finalTid) -> {
-                    int edgeNum = (int) frag.getOutgoingAdjList(vertex).size();
+                    int edgeNum = (int) fragment.getOutgoingAdjList(vertex).size();
                     ctx.degree.set(vertex, edgeNum);
                     if (edgeNum == 0) {
                         ctx.pagerank.set(vertex, base);
@@ -61,11 +61,11 @@ public class PageRankParallel extends Communicator
                         ctx.pagerank.set(vertex, base / edgeNum);
                         DoubleMsg msg = FFITypeFactoryhelper.newDoubleMsg(base / edgeNum);
                         javaParallelMessageManager.sendMsgThroughOEdges(
-                                frag, vertex, msg, finalTid);
+                                fragment, vertex, msg, finalTid);
                     }
                 };
         forEachVertex(innerVertices, ctx.thread_num, ctx.executor, calc);
-        int innerVertexSize = frag.getInnerVerticesNum().intValue();
+        int innerVertexSize = fragment.getInnerVerticesNum().intValue();
         for (int i = 0; i < innerVertexSize; ++i) {
             if (ctx.degree.get(i) == 0) {
                 ctx.danglingVNum += 1;
@@ -80,12 +80,13 @@ public class PageRankParallel extends Communicator
 
     @Override
     public void IncEval(
-            ImmutableEdgecutFragment<Long, Long, Long, Double> frag,
+            SimpleFragment<Long, Long, Long, Double> fragment,
             ParallelContextBase<Long, Long, Long, Double> contextBase,
             ParallelMessageManager javaParallelMessageManager) {
+
         PageRankParallelContext ctx = (PageRankParallelContext) contextBase;
-        int innerVertexNum = frag.getInnerVerticesNum().intValue();
-        VertexRange<Long> innerVertices = frag.innerVertices();
+        int innerVertexNum = fragment.getInnerVerticesNum().intValue();
+        VertexRange<Long> innerVertices = fragment.innerVertices();
 
         ctx.superStep = ctx.superStep + 1;
         if (ctx.superStep > ctx.maxIteration) {
@@ -98,7 +99,7 @@ public class PageRankParallel extends Communicator
             return;
         }
 
-        int totalVertexNum = (int) frag.getTotalVerticesNum();
+        int totalVertexNum = (int) fragment.getTotalVerticesNum();
         double base =
                 (1.0 - ctx.alpha) / totalVertexNum + ctx.alpha * ctx.danglingSum / totalVertexNum;
 
@@ -110,7 +111,7 @@ public class PageRankParallel extends Communicator
                     });
             Supplier<DoubleMsg> msgSupplier = () -> DoubleMsg.factory.create();
             javaParallelMessageManager.parallelProcess(
-                    frag, ctx.thread_num, ctx.executor, msgSupplier, consumer);
+                    fragment, ctx.thread_num, ctx.executor, msgSupplier, consumer);
         } // finish receive data
         // logger.info("end of receiving data");
 
@@ -120,11 +121,8 @@ public class PageRankParallel extends Communicator
                         ctx.nextResult.set(vertex, base);
                     } else {
                         double cur = 0.0;
-                        AdjList<Long, Double> nbrs = frag.getIncomingAdjList(vertex);
-                        long endPointerAddr = nbrs.end().getAddress();
-                        Nbr<Long, Double> nbr = nbrs.begin();
-                        long elementSize = nbr.elementSize();
-                        for (; nbr.getAddress() != endPointerAddr; nbr.addV(elementSize)) {
+                        AdjList<Long, Double> nbrs = fragment.getIncomingAdjList(vertex);
+                        for (Nbr<Long, Double> nbr : nbrs.iterator()) {
                             cur += ctx.pagerank.get(nbr.neighbor());
                         }
                         cur = (cur * ctx.alpha + base) / ctx.degree.get(vertex);
@@ -132,7 +130,7 @@ public class PageRankParallel extends Communicator
                         DoubleMsg msg =
                                 FFITypeFactoryhelper.newDoubleMsg(ctx.nextResult.get(vertex));
                         javaParallelMessageManager.sendMsgThroughOEdges(
-                                frag, vertex, msg, finalTid);
+                                fragment, vertex, msg, finalTid);
                     }
                 });
         forEachVertex(innerVertices, ctx.thread_num, ctx.executor, calc);

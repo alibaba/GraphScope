@@ -17,6 +17,7 @@
 package com.alibaba.graphscope.app;
 
 import com.alibaba.graphscope.fragment.ImmutableEdgecutFragment;
+import com.alibaba.graphscope.fragment.SimpleFragment;
 import com.alibaba.graphscope.parallel.ParallelMessageManager;
 
 /**
@@ -81,12 +82,12 @@ public interface ParallelAppBase<
      * @param context context. User defined context which manages data during the whole
      *     computations.
      * @param messageManager The message manger which manages messages between fragments.
-     * @see ImmutableEdgecutFragment
+     * @see SimpleFragment
      * @see ParallelContextBase
      * @see ParallelMessageManager
      */
     void PEval(
-            ImmutableEdgecutFragment<OID_T, VID_T, VDATA_T, EDATA_T> graph,
+            SimpleFragment<OID_T, VID_T, VDATA_T, EDATA_T> graph,
             ParallelContextBase<OID_T, VID_T, VDATA_T, EDATA_T> context,
             ParallelMessageManager messageManager);
     /**
@@ -96,12 +97,12 @@ public interface ParallelAppBase<
      * @param context context. User defined context which manages data during the whole
      *     computations.
      * @param messageManager The message manger which manages messages between fragments.
-     * @see ImmutableEdgecutFragment
+     * @see SimpleFragment
      * @see ParallelContextBase
      * @see ParallelMessageManager
      */
     void IncEval(
-            ImmutableEdgecutFragment<OID_T, VID_T, VDATA_T, EDATA_T> graph,
+            SimpleFragment<OID_T, VID_T, VDATA_T, EDATA_T> graph,
             ParallelContextBase<OID_T, VID_T, VDATA_T, EDATA_T> context,
             ParallelMessageManager messageManager);
 }

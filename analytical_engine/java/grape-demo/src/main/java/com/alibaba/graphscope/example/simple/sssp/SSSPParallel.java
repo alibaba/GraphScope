@@ -18,11 +18,11 @@ package com.alibaba.graphscope.example.simple.sssp;
 
 import com.alibaba.graphscope.app.ParallelAppBase;
 import com.alibaba.graphscope.app.ParallelContextBase;
-import com.alibaba.graphscope.ds.AdjList;
-import com.alibaba.graphscope.ds.Nbr;
 import com.alibaba.graphscope.ds.Vertex;
 import com.alibaba.graphscope.ds.VertexSet;
-import com.alibaba.graphscope.fragment.ImmutableEdgecutFragment;
+import com.alibaba.graphscope.ds.adaptor.AdjList;
+import com.alibaba.graphscope.ds.adaptor.Nbr;
+import com.alibaba.graphscope.fragment.SimpleFragment;
 import com.alibaba.graphscope.parallel.ParallelEngine;
 import com.alibaba.graphscope.parallel.ParallelMessageManager;
 import com.alibaba.graphscope.parallel.message.DoubleMsg;
@@ -35,7 +35,7 @@ public class SSSPParallel
         implements ParallelAppBase<Long, Long, Long, Double, SSSPParallelContext>, ParallelEngine {
     @Override
     public void PEval(
-            ImmutableEdgecutFragment<Long, Long, Long, Double> frag,
+            SimpleFragment<Long, Long, Long, Double> fragment,
             ParallelContextBase<Long, Long, Long, Double> contextBase,
             ParallelMessageManager mm) {
         SSSPParallelContext context = (SSSPParallelContext) contextBase;
@@ -44,10 +44,10 @@ public class SSSPParallel
 
         Vertex<Long> source = FFITypeFactoryhelper.newVertexLong();
 
-        boolean sourceInThisFrag = frag.getInnerVertex(context.sourceOid, source);
+        boolean sourceInThisFrag = fragment.getInnerVertex(context.sourceOid, source);
         System.out.println(
                 "source in this frag?"
-                        + frag.fid()
+                        + fragment.fid()
                         + ", "
                         + sourceInThisFrag
                         + ", lid: "
@@ -59,13 +59,13 @@ public class SSSPParallel
         DoubleMsg msg = FFITypeFactoryhelper.newDoubleMsg();
         if (sourceInThisFrag) {
             partialResults.set(source, 0.0);
-            AdjList<Long, Double> adjList = frag.getOutgoingAdjList(source);
-            for (Nbr<Long, Double> nbr : adjList) {
+            AdjList<Long, Double> adjList = fragment.getOutgoingAdjList(source);
+            for (Nbr<Long, Double> nbr : adjList.iterator()) {
                 Vertex<Long> vertex = nbr.neighbor();
                 partialResults.set(vertex, Math.min(nbr.data(), partialResults.get(vertex)));
-                if (frag.isOuterVertex(vertex)) {
+                if (fragment.isOuterVertex(vertex)) {
                     msg.setData(partialResults.get(vertex));
-                    mm.syncStateOnOuterVertex(frag, vertex, msg, 0);
+                    mm.syncStateOnOuterVertex(fragment, vertex, msg, 0);
                 } else {
                     nextModified.set(vertex);
                 }
@@ -77,7 +77,7 @@ public class SSSPParallel
 
     @Override
     public void IncEval(
-            ImmutableEdgecutFragment<Long, Long, Long, Double> frag,
+            SimpleFragment<Long, Long, Long, Double> fragment,
             ParallelContextBase<Long, Long, Long, Double> contextBase,
             ParallelMessageManager messageManager) {
         SSSPParallelContext context = (SSSPParallelContext) contextBase;
@@ -85,19 +85,19 @@ public class SSSPParallel
 
         // Parallel process the message with the support of JavaMessageInBuffer.
         context.receiveMessageTime -= System.nanoTime();
-        receiveMessage(context, frag, messageManager);
+        receiveMessage(context, fragment, messageManager);
         context.receiveMessageTime += System.nanoTime();
 
         // Do incremental calculation
         context.execTime -= System.nanoTime();
-        execute(context, frag);
+        execute(context, fragment);
         context.execTime += System.nanoTime();
 
         context.sendMessageTime -= System.nanoTime();
-        sendMessage(context, frag, messageManager);
+        sendMessage(context, fragment, messageManager);
         context.sendMessageTime += System.nanoTime();
 
-        if (!context.nextModified.partialEmpty(0, frag.getInnerVerticesNum().intValue())) {
+        if (!context.nextModified.partialEmpty(0, fragment.getInnerVerticesNum().intValue())) {
             messageManager.ForceContinue();
         }
         context.curModified.assign(context.nextModified);
@@ -105,7 +105,7 @@ public class SSSPParallel
 
     private void receiveMessage(
             SSSPParallelContext context,
-            ImmutableEdgecutFragment<Long, Long, Long, Double> frag,
+            SimpleFragment<Long, Long, Long, Double> frag,
             ParallelMessageManager messageManager) {
 
         Supplier<DoubleMsg> msgSupplier = () -> DoubleMsg.factory.create();
@@ -122,14 +122,14 @@ public class SSSPParallel
     }
 
     private void execute(
-            SSSPParallelContext context, ImmutableEdgecutFragment<Long, Long, Long, Double> frag) {
+            SSSPParallelContext context, SimpleFragment<Long, Long, Long, Double> frag) {
         int innerVerticesNum = frag.getInnerVerticesNum().intValue();
 
         BiConsumer<Vertex<Long>, Integer> consumer =
                 (vertex, finalTid) -> {
                     double curDist = context.partialResults.get(vertex);
                     AdjList<Long, Double> nbrs = frag.getOutgoingAdjList(vertex);
-                    for (Nbr<Long, Double> nbr : nbrs) {
+                    for (Nbr<Long, Double> nbr : nbrs.iterator()) {
                         long curLid = nbr.neighbor().GetValue();
                         double nextDist = curDist + nbr.data();
                         if (nextDist < context.partialResults.get(curLid)) {
@@ -148,7 +148,7 @@ public class SSSPParallel
 
     private void sendMessage(
             SSSPParallelContext context,
-            ImmutableEdgecutFragment<Long, Long, Long, Double> frag,
+            SimpleFragment<Long, Long, Long, Double> frag,
             ParallelMessageManager messageManager) {
         // for outer vertices sync data
         BiConsumer<Vertex<Long>, Integer> msgSender =

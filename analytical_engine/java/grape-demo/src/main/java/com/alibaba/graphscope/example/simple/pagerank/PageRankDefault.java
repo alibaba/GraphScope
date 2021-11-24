@@ -19,11 +19,11 @@ package com.alibaba.graphscope.example.simple.pagerank;
 import com.alibaba.graphscope.app.DefaultAppBase;
 import com.alibaba.graphscope.app.DefaultContextBase;
 import com.alibaba.graphscope.communication.Communicator;
-import com.alibaba.graphscope.ds.AdjList;
-import com.alibaba.graphscope.ds.Nbr;
 import com.alibaba.graphscope.ds.Vertex;
 import com.alibaba.graphscope.ds.VertexRange;
-import com.alibaba.graphscope.fragment.ImmutableEdgecutFragment;
+import com.alibaba.graphscope.ds.adaptor.AdjList;
+import com.alibaba.graphscope.ds.adaptor.Nbr;
+import com.alibaba.graphscope.fragment.SimpleFragment;
 import com.alibaba.graphscope.parallel.DefaultMessageManager;
 import com.alibaba.graphscope.parallel.message.DoubleMsg;
 import com.alibaba.graphscope.utils.DoubleArrayWrapper;
@@ -34,26 +34,26 @@ public class PageRankDefault extends Communicator
 
     @Override
     public void PEval(
-            ImmutableEdgecutFragment<Long, Long, Long, Double> frag,
+            SimpleFragment<Long, Long, Long, Double> fragment,
             DefaultContextBase<Long, Long, Long, Double> ctx,
             DefaultMessageManager messageManager) {
         PageRankDefaultContext context = (PageRankDefaultContext) ctx;
 
-        VertexRange<Long> innerVertices = frag.innerVertices();
-        int totalVertexNum = (int) frag.getTotalVerticesNum();
+        VertexRange<Long> innerVertices = fragment.innerVertices();
+        int totalVertexNum = (int) fragment.getTotalVerticesNum();
         context.superStep = 0;
         double base = 1.0 / totalVertexNum;
         double local_dangling_sum = 0.0;
 
-        for (Vertex<Long> vertex : frag.innerVertices().locals()) {
-            AdjList<Long, Double> nbrs = frag.getOutgoingAdjList(vertex);
+        for (Vertex<Long> vertex : fragment.innerVertices().locals()) {
+            AdjList<Long, Double> nbrs = fragment.getOutgoingAdjList(vertex);
             context.degree.set(vertex.GetValue(), (int) nbrs.size());
             DoubleMsg msg = DoubleMsg.factory.create();
             if (nbrs.size() > 0) {
                 context.pagerank.set(
                         vertex.GetValue(), base / context.degree.get(vertex.GetValue()));
                 msg.setData(context.pagerank.get(vertex.GetValue()));
-                messageManager.sendMsgThroughOEdges(frag, vertex, msg);
+                messageManager.sendMsgThroughOEdges(fragment, vertex, msg);
             } else {
                 context.pagerank.set(vertex.GetValue(), base);
                 local_dangling_sum += base;
@@ -69,11 +69,11 @@ public class PageRankDefault extends Communicator
 
     @Override
     public void IncEval(
-            ImmutableEdgecutFragment<Long, Long, Long, Double> frag,
+            SimpleFragment<Long, Long, Long, Double> fragment,
             DefaultContextBase<Long, Long, Long, Double> ctx,
             DefaultMessageManager messageManager) {
         PageRankDefaultContext context = (PageRankDefaultContext) ctx;
-        int innerVertexNum = frag.getInnerVerticesNum().intValue();
+        int innerVertexNum = fragment.getInnerVerticesNum().intValue();
 
         context.superStep = context.superStep + 1;
         if (context.superStep > context.maxIteration) {
@@ -84,8 +84,8 @@ public class PageRankDefault extends Communicator
             }
             return;
         }
-        int graphVertexNum = frag.getVerticesNum().intValue();
-        int totalVertexNum = (int) frag.getTotalVerticesNum();
+        int graphVertexNum = fragment.getVerticesNum().intValue();
+        int totalVertexNum = (int) fragment.getTotalVerticesNum();
         double base =
                 (1.0 - context.alpha) / totalVertexNum
                         + context.alpha * context.danglingSum / totalVertexNum;
@@ -96,21 +96,21 @@ public class PageRankDefault extends Communicator
         // System.out.println("dangling sum: " + context.danglingSum);
         // msgs are all out vertex in this frag, and has incoming edges to the vertex in this frag
         {
-            Vertex<Long> vertex = frag.innerVertices().begin();
+            Vertex<Long> vertex = fragment.innerVertices().begin();
             DoubleMsg msg = DoubleMsg.factory.create();
-            while (messageManager.getMessage(frag, vertex, msg)) {
+            while (messageManager.getMessage(fragment, vertex, msg)) {
                 context.pagerank.set(vertex.GetValue(), msg.getData());
             }
         }
 
-        for (Vertex<Long> vertex : frag.innerVertices().locals()) {
+        for (Vertex<Long> vertex : fragment.innerVertices().locals()) {
             if (context.degree.get(vertex.GetValue()) == 0) {
                 nextResult.set(vertex, base);
                 local_dangling_sum += base;
             } else {
                 double cur = 0.0;
-                AdjList<Long, Double> nbrs = frag.getIncomingAdjList(vertex);
-                for (Nbr<Long, Double> nbr : nbrs) {
+                AdjList<Long, Double> nbrs = fragment.getIncomingAdjList(vertex);
+                for (Nbr<Long, Double> nbr : nbrs.iterator()) {
                     cur += context.pagerank.get(nbr.neighbor());
                 }
                 cur = (context.alpha * cur + base) / context.degree.get(vertex.GetValue());
@@ -118,10 +118,10 @@ public class PageRankDefault extends Communicator
             }
         }
         DoubleMsg msg = DoubleMsg.factory.create();
-        for (Vertex<Long> vertex : frag.innerVertices().locals()) {
+        for (Vertex<Long> vertex : fragment.innerVertices().locals()) {
             context.pagerank.set(vertex.GetValue(), nextResult.get(vertex.GetValue()));
             msg.setData(context.pagerank.get(vertex.GetValue()));
-            messageManager.sendMsgThroughOEdges(frag, vertex, msg);
+            messageManager.sendMsgThroughOEdges(fragment, vertex, msg);
         }
 
         DoubleMsg msgDanglingSum = FFITypeFactoryhelper.newDoubleMsg(0.0);

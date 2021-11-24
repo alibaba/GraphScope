@@ -18,12 +18,12 @@ package com.alibaba.graphscope.example.simple.bfs;
 
 import com.alibaba.graphscope.app.ParallelAppBase;
 import com.alibaba.graphscope.app.ParallelContextBase;
-import com.alibaba.graphscope.ds.AdjList;
 import com.alibaba.graphscope.ds.EmptyType;
-import com.alibaba.graphscope.ds.Nbr;
 import com.alibaba.graphscope.ds.Vertex;
 import com.alibaba.graphscope.ds.VertexRange;
-import com.alibaba.graphscope.fragment.ImmutableEdgecutFragment;
+import com.alibaba.graphscope.ds.adaptor.AdjList;
+import com.alibaba.graphscope.ds.adaptor.Nbr;
+import com.alibaba.graphscope.fragment.SimpleFragment;
 import com.alibaba.graphscope.parallel.ParallelEngine;
 import com.alibaba.graphscope.parallel.ParallelMessageManager;
 import com.alibaba.graphscope.utils.FFITypeFactoryhelper;
@@ -38,24 +38,24 @@ public class BFSParallel
 
     @Override
     public void PEval(
-            ImmutableEdgecutFragment<Long, Long, Long, Double> frag,
+            SimpleFragment<Long, Long, Long, Double> fragment,
             ParallelContextBase<Long, Long, Long, Double> context,
             ParallelMessageManager messageManager) {
         BFSParallelContext ctx = (BFSParallelContext) context;
         Vertex<Long> vertex = FFITypeFactoryhelper.newVertexLong();
-        boolean inThisFrag = frag.getInnerVertex(ctx.sourceOid, vertex);
+        boolean inThisFrag = fragment.getInnerVertex(ctx.sourceOid, vertex);
         messageManager.initChannels(ctx.threadNum);
         ctx.currentDepth = 1;
         if (inThisFrag) {
-            logger.info("in frag" + frag.fid() + " " + vertex.GetValue());
+            logger.info("in frag" + fragment.fid() + " " + vertex.GetValue());
             ctx.partialResults.set(vertex, 0);
-            AdjList<Long, Double> adjList = frag.getOutgoingAdjList(vertex);
-            for (Nbr<Long, Double> nbr : adjList) {
+            AdjList<Long, Double> adjList = fragment.getOutgoingAdjList(vertex);
+            for (Nbr<Long, Double> nbr : adjList.iterator()) {
                 Vertex<Long> neighbor = nbr.neighbor();
                 if (ctx.partialResults.get(neighbor) == Integer.MAX_VALUE) {
                     ctx.partialResults.set(neighbor, 1);
-                    if (frag.isOuterVertex(neighbor)) {
-                        messageManager.syncStateOnOuterVertex(frag, neighbor, 0);
+                    if (fragment.isOuterVertex(neighbor)) {
+                        messageManager.syncStateOnOuterVertex(fragment, neighbor, 0);
                     } else {
                         ctx.currentInnerUpdated.set(neighbor);
                     }
@@ -67,11 +67,11 @@ public class BFSParallel
 
     @Override
     public void IncEval(
-            ImmutableEdgecutFragment<Long, Long, Long, Double> frag,
+            SimpleFragment<Long, Long, Long, Double> fragment,
             ParallelContextBase<Long, Long, Long, Double> context,
             ParallelMessageManager messageManager) {
         BFSParallelContext ctx = (BFSParallelContext) context;
-        VertexRange<Long> innerVertices = frag.innerVertices();
+        VertexRange<Long> innerVertices = fragment.innerVertices();
         int nextDepth = ctx.currentDepth + 1;
         ctx.nextInnerUpdated.clear();
 
@@ -83,17 +83,18 @@ public class BFSParallel
                     }
                 };
         Supplier<EmptyType> msgSupplier = () -> EmptyType.factory.create();
-        messageManager.parallelProcess(frag, ctx.threadNum, ctx.executor, msgSupplier, receiveMsg);
+        messageManager.parallelProcess(
+                fragment, ctx.threadNum, ctx.executor, msgSupplier, receiveMsg);
 
         BiConsumer<Vertex<Long>, Integer> vertexProcessConsumer =
                 (cur, finalTid) -> {
-                    AdjList<Long, Double> adjList = frag.getOutgoingAdjList(cur);
-                    for (Nbr<Long, Double> nbr : adjList) {
+                    AdjList<Long, Double> adjList = fragment.getOutgoingAdjList(cur);
+                    for (Nbr<Long, Double> nbr : adjList.iterator()) {
                         Vertex<Long> vertex = nbr.neighbor();
                         if (ctx.partialResults.get(vertex) == Integer.MAX_VALUE) {
                             ctx.partialResults.set(vertex, nextDepth);
-                            if (frag.isOuterVertex(vertex)) {
-                                messageManager.syncStateOnOuterVertex(frag, vertex, finalTid);
+                            if (fragment.isOuterVertex(vertex)) {
+                                messageManager.syncStateOnOuterVertex(fragment, vertex, finalTid);
                             } else {
                                 ctx.nextInnerUpdated.insert(vertex);
                             }

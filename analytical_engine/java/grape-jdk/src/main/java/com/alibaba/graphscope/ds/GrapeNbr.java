@@ -36,13 +36,14 @@ import com.alibaba.fastffi.FFITypeAlias;
  * href="https://github.com/alibaba/libgrape-lite/blob/master/grape/graph/adj_list.h#L35">grape::Nbr</a>,
  * representing an edge with dst vertex and edge data.
  *
- * @param <VID> vertex id type.
- * @param <EDATA> edge data type.
+ * @param <VID_T> vertex id type.
+ * @param <EDATA_T> edge data type.
  */
 @FFIGen(library = JNI_LIBRARY_NAME)
 @CXXHead(GRAPE_ADJ_LIST_H)
 @FFITypeAlias(GRAPE_NBR)
-public interface Nbr<VID, EDATA> extends FFIPointer, CXXPointerRangeElement<Nbr<VID, EDATA>> {
+public interface GrapeNbr<VID_T, EDATA_T>
+        extends FFIPointer, CXXPointerRangeElement<GrapeNbr<VID_T, EDATA_T>> {
 
     /**
      * Deep copy for current Nbr object.
@@ -51,7 +52,7 @@ public interface Nbr<VID, EDATA> extends FFIPointer, CXXPointerRangeElement<Nbr<
      */
     @CXXOperator("*&")
     @CXXValue
-    Nbr<VID, EDATA> copy();
+    GrapeNbr<VID_T, EDATA_T> copy();
 
     /**
      * Get the neighboring vertex.
@@ -60,7 +61,7 @@ public interface Nbr<VID, EDATA> extends FFIPointer, CXXPointerRangeElement<Nbr<
      */
     @FFIGetter
     @CXXReference
-    Vertex<VID> neighbor();
+    Vertex<VID_T> neighbor();
 
     /**
      * Get the edge data.
@@ -69,23 +70,38 @@ public interface Nbr<VID, EDATA> extends FFIPointer, CXXPointerRangeElement<Nbr<
      */
     @FFIGetter
     @CXXReference
-    EDATA data();
+    EDATA_T data();
+    /**
+     * self increment.
+     *
+     * @return the incremented.
+     */
+    @CXXOperator("++")
+    @CXXReference
+    GrapeNbr<VID_T, EDATA_T> inc();
+
+    @CXXOperator("==")
+    boolean eq(@CXXReference GrapeNbr<VID_T, EDATA_T> rhs);
+
+    @CXXOperator("--")
+    @CXXReference
+    GrapeNbr<VID_T, EDATA_T> dec();
 
     /**
      * Factory class for Nbr.
      *
-     * @param <VID> vertex id type.
-     * @param <EDATA> edge data type.
+     * @param <VID_T> vertex id type.
+     * @param <EDATA_T> edge data type.
      */
     @FFIFactory
-    interface Factory<VID, EDATA> {
+    interface Factory<VID_T, EDATA_T> {
 
         /**
          * Create a default Nbr.
          *
          * @return Nbr instance.
          */
-        Nbr<VID, EDATA> create();
+        GrapeNbr<VID_T, EDATA_T> create();
 
         /**
          * Create a Nbr with adjacent vertex.
@@ -93,7 +109,7 @@ public interface Nbr<VID, EDATA> extends FFIPointer, CXXPointerRangeElement<Nbr<
          * @param lid vertex id.
          * @return Nbr instance.
          */
-        Nbr<VID, EDATA> create(VID lid);
+        GrapeNbr<VID_T, EDATA_T> create(VID_T lid);
 
         /**
          * Create a Nbr with adjacent vertex and edge data.
@@ -102,6 +118,6 @@ public interface Nbr<VID, EDATA> extends FFIPointer, CXXPointerRangeElement<Nbr<
          * @param edata edge data.
          * @return Nbr instance.
          */
-        Nbr<VID, EDATA> create(VID lid, @CXXReference EDATA edata);
+        GrapeNbr<VID_T, EDATA_T> create(VID_T lid, @CXXReference EDATA_T edata);
     }
 }

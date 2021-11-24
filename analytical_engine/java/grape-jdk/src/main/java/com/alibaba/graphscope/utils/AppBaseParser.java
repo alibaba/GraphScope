@@ -16,7 +16,7 @@
 
 package com.alibaba.graphscope.utils;
 
-import com.alibaba.graphscope.app.DefaultProjectedAppBase;
+import com.alibaba.graphscope.app.DefaultAppBase;
 import com.alibaba.graphscope.app.DefaultPropertyAppBase;
 import com.alibaba.graphscope.context.LabeledVertexDataContext;
 import com.alibaba.graphscope.context.LabeledVertexPropertyContext;
@@ -62,11 +62,10 @@ public class AppBaseParser {
                 return;
             }
             // try Projected
-            flag = DefaultProjectedAppBase.class.isAssignableFrom(clz);
+            flag = DefaultAppBase.class.isAssignableFrom(clz);
             if (flag == true) {
-                System.out.println("DefaultProjectedApp");
-                Class<? extends DefaultProjectedAppBase> clzCasted =
-                        (Class<? extends DefaultProjectedAppBase>) clz;
+                System.out.println("DefaultAppBase");
+                Class<? extends DefaultAppBase> clzCasted = (Class<? extends DefaultAppBase>) clz;
                 Type type = clzCasted.getGenericInterfaces()[0];
                 if (type instanceof ParameterizedType) {
                     ParameterizedType parameterizedType = (ParameterizedType) type;

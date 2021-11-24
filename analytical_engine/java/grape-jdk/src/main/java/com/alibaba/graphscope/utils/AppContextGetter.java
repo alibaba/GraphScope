@@ -16,11 +16,11 @@
 
 package com.alibaba.graphscope.utils;
 
-import com.alibaba.graphscope.app.DefaultProjectedAppBase;
+import com.alibaba.graphscope.app.DefaultAppBase;
+import com.alibaba.graphscope.app.DefaultContextBase;
 import com.alibaba.graphscope.app.DefaultPropertyAppBase;
 import com.alibaba.graphscope.app.ParallelPropertyAppBase;
 import com.alibaba.graphscope.context.LabeledVertexDataContext;
-import com.alibaba.graphscope.context.ProjectedDefaultContextBase;
 import com.alibaba.graphscope.context.PropertyDefaultContextBase;
 import com.alibaba.graphscope.context.VertexDataContext;
 import java.lang.reflect.ParameterizedType;
@@ -93,11 +93,9 @@ public class AppContextGetter {
      * @param appClass user-defined app class object.
      * @return the base class name.
      */
-    public static String getProjectedDefaultContextName(
-            Class<? extends DefaultProjectedAppBase> appClass) {
-        Class<? extends ProjectedDefaultContextBase> clz =
-                (Class<? extends ProjectedDefaultContextBase>)
-                        getInterfaceTemplateType(appClass, 4);
+    public static String getDefaultContextName(Class<? extends DefaultAppBase> appClass) {
+        Class<? extends DefaultContextBase> clz =
+                (Class<? extends DefaultContextBase>) getInterfaceTemplateType(appClass, 4);
         return clz.getName();
     }
 
@@ -124,9 +122,8 @@ public class AppContextGetter {
                 "obj class"
                         + obj.getClass().getName()
                         + " is not instance of DefaultPropertyAppBase.");
-        if (obj instanceof DefaultProjectedAppBase) {
-            return getProjectedDefaultContextName(
-                    (Class<? extends DefaultProjectedAppBase>) obj.getClass());
+        if (obj instanceof DefaultAppBase) {
+            return getDefaultContextName((Class<? extends DefaultAppBase>) obj.getClass());
         }
         System.out.println(
                 "obj class"

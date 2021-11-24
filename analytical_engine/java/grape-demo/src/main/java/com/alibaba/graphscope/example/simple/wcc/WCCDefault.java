@@ -18,11 +18,11 @@ package com.alibaba.graphscope.example.simple.wcc;
 
 import com.alibaba.graphscope.app.DefaultAppBase;
 import com.alibaba.graphscope.app.DefaultContextBase;
-import com.alibaba.graphscope.ds.AdjList;
-import com.alibaba.graphscope.ds.Nbr;
 import com.alibaba.graphscope.ds.Vertex;
 import com.alibaba.graphscope.ds.VertexRange;
-import com.alibaba.graphscope.fragment.ImmutableEdgecutFragment;
+import com.alibaba.graphscope.ds.adaptor.AdjList;
+import com.alibaba.graphscope.ds.adaptor.Nbr;
+import com.alibaba.graphscope.fragment.SimpleFragment;
 import com.alibaba.graphscope.parallel.DefaultMessageManager;
 import com.alibaba.graphscope.parallel.message.LongMsg;
 import com.alibaba.graphscope.utils.FFITypeFactoryhelper;
@@ -33,16 +33,16 @@ public class WCCDefault implements DefaultAppBase<Long, Long, Long, Double, WCCD
     private static Logger logger = LoggerFactory.getLogger(WCCDefault.class);
 
     private void PropagateLabelPush(
-            ImmutableEdgecutFragment<Long, Long, Long, Double> frag,
+            SimpleFragment<Long, Long, Long, Double> fragment,
             WCCDefaultContext ctx,
             DefaultMessageManager mm) {
-        VertexRange<Long> innerVertices = frag.innerVertices();
-        VertexRange<Long> outerVertices = frag.outerVertices();
+        VertexRange<Long> innerVertices = fragment.innerVertices();
+        VertexRange<Long> outerVertices = fragment.outerVertices();
         for (Vertex<Long> vertex : innerVertices.locals()) {
             if (ctx.currModified.get(vertex)) {
                 long cid = ctx.comp_id.get(vertex);
-                AdjList<Long, Double> adjListv2 = frag.getOutgoingAdjList(vertex);
-                for (Nbr<Long, Double> nbr : adjListv2) {
+                AdjList<Long, Double> adjList = fragment.getOutgoingAdjList(vertex);
+                for (Nbr<Long, Double> nbr : adjList.iterator()) {
                     Vertex<Long> cur = nbr.neighbor();
                     if (Long.compareUnsigned(ctx.comp_id.get(cur), cid) > 0) {
                         ctx.comp_id.set(cur, cid);
@@ -55,23 +55,23 @@ public class WCCDefault implements DefaultAppBase<Long, Long, Long, Double, WCCD
         for (Vertex<Long> vertex : outerVertices.locals()) {
             if (ctx.nextModified.get(vertex)) {
                 msg.setData(ctx.comp_id.get(vertex));
-                mm.syncStateOnOuterVertex(frag, vertex, msg);
+                mm.syncStateOnOuterVertex(fragment, vertex, msg);
             }
         }
     }
 
     private void PropagateLabelPull(
-            ImmutableEdgecutFragment<Long, Long, Long, Double> frag,
+            SimpleFragment<Long, Long, Long, Double> fragment,
             WCCDefaultContext ctx,
             DefaultMessageManager mm) {
-        VertexRange<Long> innerVertices = frag.innerVertices();
-        VertexRange<Long> outerVertices = frag.outerVertices();
+        VertexRange<Long> innerVertices = fragment.innerVertices();
+        VertexRange<Long> outerVertices = fragment.outerVertices();
 
         for (Vertex<Long> cur : innerVertices) {
             long oldCid = ctx.comp_id.get(cur);
             long newCid = oldCid;
-            AdjList<Long, Double> nbrs = frag.getOutgoingInnerVertexAdjList(cur);
-            for (Nbr<Long, Double> nbr : nbrs) {
+            AdjList<Long, Double> nbrs = fragment.getIncomingAdjList(cur);
+            for (Nbr<Long, Double> nbr : nbrs.iterator()) {
                 long value = ctx.comp_id.get(nbr.neighbor());
                 if (Long.compareUnsigned(value, newCid) < 0) {
                     newCid = value;
@@ -86,8 +86,8 @@ public class WCCDefault implements DefaultAppBase<Long, Long, Long, Double, WCCD
         for (Vertex<Long> cur : outerVertices) {
             long oldCid = ctx.comp_id.get(cur);
             long newCid = oldCid;
-            AdjList<Long, Double> nbrs = frag.getIncomingAdjList(cur);
-            for (Nbr<Long, Double> nbr : nbrs) {
+            AdjList<Long, Double> nbrs = fragment.getIncomingAdjList(cur);
+            for (Nbr<Long, Double> nbr : nbrs.iterator()) {
                 long value = ctx.comp_id.get(nbr.neighbor());
                 if (Long.compareUnsigned(value, newCid) < 0) {
                     newCid = value;
@@ -97,29 +97,29 @@ public class WCCDefault implements DefaultAppBase<Long, Long, Long, Double, WCCD
                 ctx.comp_id.set(cur, newCid);
                 ctx.nextModified.set(cur);
                 msg.setData(newCid);
-                mm.syncStateOnOuterVertex(frag, cur, msg);
+                mm.syncStateOnOuterVertex(fragment, cur, msg);
             }
         }
     }
 
     @Override
     public void PEval(
-            ImmutableEdgecutFragment<Long, Long, Long, Double> frag,
+            SimpleFragment<Long, Long, Long, Double> fragment,
             DefaultContextBase<Long, Long, Long, Double> context,
             DefaultMessageManager messageManager) {
         WCCDefaultContext ctx = (WCCDefaultContext) context;
-        VertexRange<Long> innerVertices = frag.innerVertices();
-        VertexRange<Long> outerVertices = frag.outerVertices();
+        VertexRange<Long> innerVertices = fragment.innerVertices();
+        VertexRange<Long> outerVertices = fragment.outerVertices();
         for (Vertex<Long> vertex : innerVertices.locals()) {
-            ctx.comp_id.set(vertex, frag.getInnerVertexGid(vertex));
+            ctx.comp_id.set(vertex, fragment.getInnerVertexGid(vertex));
         }
         for (Vertex<Long> vertex : outerVertices.locals()) {
-            ctx.comp_id.set(vertex, frag.getOuterVertexGid(vertex));
+            ctx.comp_id.set(vertex, fragment.getOuterVertexGid(vertex));
         }
         // difference between propagateLabel is no currModified check
-        PropagateLabelPull(frag, ctx, messageManager);
+        PropagateLabelPull(fragment, ctx, messageManager);
 
-        if (!ctx.nextModified.partialEmpty(0, frag.getInnerVerticesNum().intValue())) {
+        if (!ctx.nextModified.partialEmpty(0, fragment.getInnerVerticesNum().intValue())) {
             messageManager.ForceContinue();
         }
         ctx.currModified.assign(ctx.nextModified);
@@ -127,7 +127,7 @@ public class WCCDefault implements DefaultAppBase<Long, Long, Long, Double, WCCD
 
     @Override
     public void IncEval(
-            ImmutableEdgecutFragment<Long, Long, Long, Double> frag,
+            SimpleFragment<Long, Long, Long, Double> fragment,
             DefaultContextBase<Long, Long, Long, Double> context,
             DefaultMessageManager messageManager) {
         WCCDefaultContext ctx = (WCCDefaultContext) context;
@@ -135,7 +135,7 @@ public class WCCDefault implements DefaultAppBase<Long, Long, Long, Double, WCCD
         { // aggregate message
             Vertex<Long> vertex = FFITypeFactoryhelper.newVertexLong();
             LongMsg msg = LongMsg.factory.create();
-            while (messageManager.getMessage(frag, vertex, msg)) {
+            while (messageManager.getMessage(fragment, vertex, msg)) {
                 if (Long.compareUnsigned(ctx.comp_id.get(vertex), msg.getData()) > 0) {
                     ctx.comp_id.set(vertex, msg.getData());
                     ctx.currModified.set(vertex);
@@ -146,12 +146,12 @@ public class WCCDefault implements DefaultAppBase<Long, Long, Long, Double, WCCD
 
         double rate = (double) ctx.currModified.getBitSet().cardinality() / ctx.innerVerticesNum;
         if (rate > 0.1) {
-            PropagateLabelPull(frag, ctx, messageManager);
+            PropagateLabelPull(fragment, ctx, messageManager);
         } else {
-            PropagateLabelPush(frag, ctx, messageManager);
+            PropagateLabelPush(fragment, ctx, messageManager);
         }
 
-        if (!ctx.nextModified.partialEmpty(0, frag.getInnerVerticesNum().intValue())) {
+        if (!ctx.nextModified.partialEmpty(0, fragment.getInnerVerticesNum().intValue())) {
             messageManager.ForceContinue();
         }
         ctx.currModified.assign(ctx.nextModified);

@@ -19,12 +19,12 @@ package com.alibaba.graphscope.context;
 import com.alibaba.fastffi.FFITypeFactory;
 import com.alibaba.graphscope.context.ffi.FFIVertexDataContext;
 import com.alibaba.graphscope.ds.GSVertexArray;
-import com.alibaba.graphscope.fragment.ArrowProjectedFragment;
+import com.alibaba.graphscope.fragment.EdgecutFragment;
 import com.alibaba.graphscope.utils.CppClassName;
 import com.alibaba.graphscope.utils.FFITypeFactoryhelper;
 import java.util.Objects;
 
-public abstract class VertexDataContext<FRAG_T extends ArrowProjectedFragment, DATA_T> {
+public abstract class VertexDataContext<FRAG_T extends EdgecutFragment, DATA_T> {
     private long ffiContextAddress;
     private FFIVertexDataContext<FRAG_T, DATA_T> ffiVertexDataContext;
     private FFIVertexDataContext.Factory factory;

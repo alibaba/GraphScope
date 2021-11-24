@@ -41,7 +41,7 @@
     <fastjson.version>1.2.76</fastjson.version>
     <google-java-format.version>1.7</google-java-format.version>
     <javapoet.version>1.13.0</javapoet.version>
-    <junit.version>4.12</junit.version>
+    <junit.version>4.13.2</junit.version>
     <logback-classic.version>1.2.3</logback-classic.version>
     <maven-antrun-plugin.version>3.0.0</maven-antrun-plugin.version>
     <maven-compiler-plugin.version>3.8.1</maven-compiler-plugin.version>

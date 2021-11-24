@@ -18,24 +18,25 @@ package com.alibaba.graphscope.example.simple.traverse;
 
 import com.alibaba.graphscope.app.DefaultAppBase;
 import com.alibaba.graphscope.app.DefaultContextBase;
-import com.alibaba.graphscope.ds.AdjList;
-import com.alibaba.graphscope.ds.Nbr;
 import com.alibaba.graphscope.ds.Vertex;
 import com.alibaba.graphscope.ds.VertexRange;
-import com.alibaba.graphscope.fragment.ImmutableEdgecutFragment;
+import com.alibaba.graphscope.ds.adaptor.AdjList;
+import com.alibaba.graphscope.ds.adaptor.Nbr;
+import com.alibaba.graphscope.fragment.SimpleFragment;
 import com.alibaba.graphscope.parallel.DefaultMessageManager;
 
 public class Traverse implements DefaultAppBase<Long, Long, Long, Double, TraverseDefaultContext> {
     @Override
     public void PEval(
-            ImmutableEdgecutFragment<Long, Long, Long, Double> fragment,
+            SimpleFragment<Long, Long, Long, Double> fragment,
             DefaultContextBase<Long, Long, Long, Double> defaultContextBase,
             DefaultMessageManager messageManager) {
+
         TraverseDefaultContext ctx = (TraverseDefaultContext) defaultContextBase;
         VertexRange<Long> innerVertices = fragment.innerVertices();
         for (Vertex<Long> vertex : innerVertices.locals()) {
             AdjList<Long, Double> adjList = fragment.getOutgoingAdjList(vertex);
-            for (Nbr<Long, Double> cur : adjList) {
+            for (Nbr<Long, Double> cur : adjList.iterator()) {
                 ctx.fake_edata = cur.data();
                 ctx.fake_vid = cur.neighbor().GetValue();
             }
@@ -47,7 +48,7 @@ public class Traverse implements DefaultAppBase<Long, Long, Long, Double, Traver
 
     @Override
     public void IncEval(
-            ImmutableEdgecutFragment<Long, Long, Long, Double> fragment,
+            SimpleFragment<Long, Long, Long, Double> fragment,
             DefaultContextBase<Long, Long, Long, Double> defaultContextBase,
             DefaultMessageManager messageManager) {
         TraverseDefaultContext ctx = (TraverseDefaultContext) defaultContextBase;
@@ -57,7 +58,7 @@ public class Traverse implements DefaultAppBase<Long, Long, Long, Double, Traver
         VertexRange<Long> innerVertices = fragment.innerVertices();
         for (Vertex<Long> vertex : innerVertices.locals()) {
             AdjList<Long, Double> adjList = fragment.getOutgoingAdjList(vertex);
-            for (Nbr<Long, Double> cur : adjList) {
+            for (Nbr<Long, Double> cur : adjList.iterator()) {
                 ctx.fake_edata = cur.data();
                 ctx.fake_vid = cur.neighbor().GetValue();
             }

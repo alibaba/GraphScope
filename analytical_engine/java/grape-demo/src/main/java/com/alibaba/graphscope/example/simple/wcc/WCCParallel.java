@@ -18,11 +18,12 @@ package com.alibaba.graphscope.example.simple.wcc;
 
 import com.alibaba.graphscope.app.ParallelAppBase;
 import com.alibaba.graphscope.app.ParallelContextBase;
-import com.alibaba.graphscope.ds.AdjList;
-import com.alibaba.graphscope.ds.Nbr;
 import com.alibaba.graphscope.ds.Vertex;
 import com.alibaba.graphscope.ds.VertexRange;
+import com.alibaba.graphscope.ds.adaptor.AdjList;
+import com.alibaba.graphscope.ds.adaptor.Nbr;
 import com.alibaba.graphscope.fragment.ImmutableEdgecutFragment;
+import com.alibaba.graphscope.fragment.SimpleFragment;
 import com.alibaba.graphscope.parallel.ParallelEngine;
 import com.alibaba.graphscope.parallel.ParallelMessageManager;
 import com.alibaba.graphscope.parallel.message.DoubleMsg;
@@ -34,29 +35,29 @@ import java.util.function.Supplier;
 public class WCCParallel
         implements ParallelAppBase<Long, Long, Long, Double, WCCParallelContext>, ParallelEngine {
     private void PropagateLabelPush(
-            ImmutableEdgecutFragment<Long, Long, Long, Double> frag,
+            SimpleFragment<Long, Long, Long, Double> fragment,
             ParallelContextBase<Long, Long, Long, Double> context,
             ParallelMessageManager mm) {
         WCCParallelContext ctx = (WCCParallelContext) context;
-        VertexRange<Long> innerVertices = frag.innerVertices();
-        VertexRange<Long> outerVertices = frag.outerVertices();
+        VertexRange<Long> innerVertices = fragment.innerVertices();
+        VertexRange<Long> outerVertices = fragment.outerVertices();
         BiConsumer<Vertex<Long>, Integer> consumer =
                 (vertex, finalTid) -> {
                     long cid = ctx.comp_id.get(vertex);
                     // AdjListv2<Long, Double> adjListv2 = frag.GetOutgoingAdjListV2(vertex);
-                    AdjList<Long, Double> adjListv2 = frag.getOutgoingAdjList(vertex);
-                    for (Nbr<Long, Double> nbr : adjListv2) {
+                    AdjList<Long, Double> adjList = fragment.getOutgoingAdjList(vertex);
+                    for (Nbr<Long, Double> nbr : adjList.iterator()) {
                         Vertex<Long> cur = nbr.neighbor();
                         if (nbr.neighbor().GetValue().intValue()
-                                > frag.getVerticesNum().intValue()) {
+                                > fragment.getVerticesNum().intValue()) {
                             System.out.println(
                                     "accessing vertex "
                                             + vertex.GetValue()
                                             + " nbr "
                                             + nbr.neighbor().GetValue().intValue()
                                             + " num vertices "
-                                            + frag.getVerticesNum().intValue());
-                            System.out.println("try to get oid" + frag.getId(nbr.neighbor()));
+                                            + fragment.getVerticesNum().intValue());
+                            System.out.println("try to get oid" + fragment.getId(nbr.neighbor()));
                         }
                         if (Long.compareUnsigned(ctx.comp_id.get(cur), cid) > 0) {
                             ctx.comp_id.compareAndSetMinUnsigned(cur, cid);
@@ -74,7 +75,7 @@ public class WCCParallel
         BiConsumer<Vertex<Long>, Integer> msgSender =
                 (vertex, finalTid) -> {
                     DoubleMsg msg = FFITypeFactoryhelper.newDoubleMsg(ctx.comp_id.get(vertex));
-                    mm.syncStateOnOuterVertex(frag, vertex, msg, finalTid);
+                    mm.syncStateOnOuterVertex(fragment, vertex, msg, finalTid);
                 };
         forEachVertex(outerVertices, ctx.threadNum, ctx.executor, ctx.nextModified, msgSender);
         // mm.ParallelSyncStateOnOuterVertex(outerVertices, ctx.nextModified, ctx.threadNum,
@@ -82,18 +83,18 @@ public class WCCParallel
     }
 
     private void PropagateLabelPull(
-            ImmutableEdgecutFragment<Long, Long, Long, Double> frag,
+            SimpleFragment<Long, Long, Long, Double> fragment,
             WCCParallelContext ctx,
             ParallelMessageManager mm) {
-        VertexRange<Long> innerVertices = frag.innerVertices();
-        VertexRange<Long> outerVertices = frag.outerVertices();
+        VertexRange<Long> innerVertices = fragment.innerVertices();
+        VertexRange<Long> outerVertices = fragment.outerVertices();
 
         BiConsumer<Vertex<Long>, Integer> outgoing =
                 (vertex, finalTid) -> {
                     long oldCid = ctx.comp_id.get(vertex);
                     long newCid = oldCid;
-                    AdjList<Long, Double> adjListv2 = frag.getOutgoingInnerVertexAdjList(vertex);
-                    for (Nbr<Long, Double> nbr : adjListv2) {
+                    AdjList<Long, Double> adjList = fragment.getIncomingAdjList(vertex);
+                    for (Nbr<Long, Double> nbr : adjList.iterator()) {
                         long value = ctx.comp_id.get(nbr.neighbor());
                         if (Long.compareUnsigned(value, newCid) < 0) {
                             newCid = value;
@@ -108,9 +109,8 @@ public class WCCParallel
                 (vertex, finalTid) -> {
                     long oldCid = ctx.comp_id.get(vertex);
                     long newCid = oldCid;
-                    // AdjListv2<Long, Double> adjListv2 = frag.GetIncomingAdjListV2(vertex);
-                    AdjList<Long, Double> adjListv2 = frag.getIncomingAdjList(vertex);
-                    for (Nbr<Long, Double> nbr : adjListv2) {
+                    AdjList<Long, Double> adjList = fragment.getIncomingAdjList(vertex);
+                    for (Nbr<Long, Double> nbr : adjList.iterator()) {
                         long value = ctx.comp_id.get(nbr.neighbor());
                         if (Long.compareUnsigned(value, newCid) < 0) {
                             newCid = value;
@@ -121,7 +121,7 @@ public class WCCParallel
                         ctx.comp_id.set(vertex, newCid);
                         ctx.nextModified.set(vertex);
                         msg.setData(newCid);
-                        mm.syncStateOnOuterVertex(frag, vertex, msg, finalTid);
+                        mm.syncStateOnOuterVertex(fragment, vertex, msg, finalTid);
                     }
                 };
         forEachVertex(innerVertices, ctx.threadNum, ctx.executor, outgoing);
@@ -130,7 +130,7 @@ public class WCCParallel
 
     @Override
     public void PEval(
-            ImmutableEdgecutFragment<Long, Long, Long, Double> frag,
+            SimpleFragment<Long, Long, Long, Double> frag,
             ParallelContextBase<Long, Long, Long, Double> context,
             ParallelMessageManager messageManager) {
         WCCParallelContext ctx = (WCCParallelContext) context;
@@ -159,9 +159,11 @@ public class WCCParallel
 
     @Override
     public void IncEval(
-            ImmutableEdgecutFragment<Long, Long, Long, Double> frag,
+            SimpleFragment<Long, Long, Long, Double> frag,
             ParallelContextBase<Long, Long, Long, Double> context,
             ParallelMessageManager messageManager) {
+        ImmutableEdgecutFragment<Long, Long, Long, Double> fragment =
+                (ImmutableEdgecutFragment<Long, Long, Long, Double>) frag;
         WCCParallelContext ctx = (WCCParallelContext) context;
         ctx.nextModified.clear();
 

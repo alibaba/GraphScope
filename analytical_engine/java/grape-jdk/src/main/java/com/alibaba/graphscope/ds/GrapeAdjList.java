@@ -31,7 +31,7 @@ import com.alibaba.fastffi.FFITypeAlias;
 
 /**
  * AdjList is the data structure representing the edges(destination vertex and edge data) of a
- * single vertex. The edges are representing in form of {@link Nbr}.
+ * single vertex. The edges are representing in form of {@link GrapeNbr}.
  *
  * <p>This is a wrapper for <a
  * href="https://github.com/alibaba/libgrape-lite/blob/master/grape/graph/adj_list.h">C++ AdjList
@@ -40,14 +40,14 @@ import com.alibaba.fastffi.FFITypeAlias;
 @FFIGen(library = JNI_LIBRARY_NAME)
 @CXXHead({GRAPE_ADJ_LIST_H, GRAPE_TYPES_H})
 @FFITypeAlias(GRAPE_ADJ_LIST)
-public interface AdjList<VID, EDATA>
-        extends FFIPointer, CXXPointer, CXXPointerRange<Nbr<VID, EDATA>> {
+public interface GrapeAdjList<VID_T, EDATA_T>
+        extends FFIPointer, CXXPointer, CXXPointerRange<GrapeNbr<VID_T, EDATA_T>> {
     /**
      * Get the begin Nbr.
      *
      * @return the first Nbr.
      */
-    default Nbr<VID, EDATA> begin() {
+    default GrapeNbr<VID_T, EDATA_T> begin() {
         return begin_pointer();
     }
     /**
@@ -55,7 +55,7 @@ public interface AdjList<VID, EDATA>
      *
      * @return the last Nbr.
      */
-    default Nbr<VID, EDATA> end() {
+    default GrapeNbr<VID_T, EDATA_T> end() {
         return end_pointer();
     }
 
@@ -64,14 +64,14 @@ public interface AdjList<VID, EDATA>
      *
      * @return the first Nbr.
      */
-    Nbr<VID, EDATA> begin_pointer();
+    GrapeNbr<VID_T, EDATA_T> begin_pointer();
 
     /**
      * Get the last Nbr.
      *
      * @return the last Nbr.
      */
-    Nbr<VID, EDATA> end_pointer();
+    GrapeNbr<VID_T, EDATA_T> end_pointer();
 
     /**
      * Get the size of this adjList.

@@ -20,7 +20,6 @@ import com.alibaba.fastffi.CXXReference;
 import com.alibaba.fastffi.CXXValue;
 import com.alibaba.fastffi.FFINameAlias;
 import com.alibaba.fastffi.FFIPointer;
-import com.alibaba.graphscope.ds.AdjList;
 import com.alibaba.graphscope.ds.Vertex;
 import com.alibaba.graphscope.ds.VertexRange;
 
@@ -143,12 +142,4 @@ public interface FragmentBase<OID_T, VID_T, VDATA_T, EDATA_T> extends FFIPointer
     @FFINameAlias("Vertex2Gid")
     @CXXValue
     VID_T vertex2Gid(@CXXReference Vertex<VID_T> vertex);
-
-    @FFINameAlias("GetIncomingAdjList")
-    @CXXValue
-    AdjList<VID_T, EDATA_T> getIncomingAdjList(@CXXReference Vertex<VID_T> vertex);
-
-    @FFINameAlias("GetOutgoingAdjList")
-    @CXXValue
-    AdjList<VID_T, EDATA_T> getOutgoingAdjList(@CXXReference Vertex<VID_T> vertex);
 }

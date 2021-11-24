@@ -17,6 +17,7 @@
 package com.alibaba.graphscope.app;
 
 import com.alibaba.graphscope.fragment.ImmutableEdgecutFragment;
+import com.alibaba.graphscope.fragment.SimpleFragment;
 import com.alibaba.graphscope.parallel.DefaultMessageManager;
 
 /**
@@ -59,7 +60,7 @@ import com.alibaba.graphscope.parallel.DefaultMessageManager;
  * }
  * </pre>
  *
- * For more examples, please refer to module com.alibaba.graphscope.grape-demo
+ * <p>For more examples, please refer to module com.alibaba.graphscope.grape-demo
  *
  * @param <OID_T> original id type
  * @param <VID_T> vertex id type
@@ -74,6 +75,7 @@ public interface DefaultAppBase<
                 EDATA_T,
                 C extends DefaultContextBase<OID_T, VID_T, VDATA_T, EDATA_T>>
         extends AppBase<OID_T, VID_T, VDATA_T, EDATA_T, C> {
+
     /**
      * Partial Evaluation to implement.
      *
@@ -81,12 +83,12 @@ public interface DefaultAppBase<
      * @param context context. User defined context which manages data during the whole
      *     computations.
      * @param messageManager The message manger which manages messages between fragments.
-     * @see ImmutableEdgecutFragment
+     * @see SimpleFragment
      * @see DefaultContextBase
      * @see DefaultMessageManager
      */
     void PEval(
-            ImmutableEdgecutFragment<OID_T, VID_T, VDATA_T, EDATA_T> graph,
+            SimpleFragment<OID_T, VID_T, VDATA_T, EDATA_T> graph,
             DefaultContextBase<OID_T, VID_T, VDATA_T, EDATA_T> context,
             DefaultMessageManager messageManager);
 
@@ -97,12 +99,12 @@ public interface DefaultAppBase<
      * @param context context. User defined context which manages data during the whole
      *     computations.
      * @param messageManager The message manger which manages messages between fragments.
-     * @see ImmutableEdgecutFragment
+     * @see SimpleFragment
      * @see DefaultContextBase
      * @see DefaultMessageManager
      */
     void IncEval(
-            ImmutableEdgecutFragment<OID_T, VID_T, VDATA_T, EDATA_T> graph,
+            SimpleFragment<OID_T, VID_T, VDATA_T, EDATA_T> graph,
             DefaultContextBase<OID_T, VID_T, VDATA_T, EDATA_T> context,
             DefaultMessageManager messageManager);
 }

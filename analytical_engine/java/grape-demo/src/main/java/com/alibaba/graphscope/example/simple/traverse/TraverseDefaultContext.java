@@ -16,13 +16,15 @@
 
 package com.alibaba.graphscope.example.simple.traverse;
 
-import com.alibaba.fastffi.FFIByteString;
+import com.alibaba.fastjson.JSONObject;
 import com.alibaba.graphscope.app.DefaultContextBase;
-import com.alibaba.graphscope.fragment.ImmutableEdgecutFragment;
+import com.alibaba.graphscope.fragment.SimpleFragment;
 import com.alibaba.graphscope.parallel.DefaultMessageManager;
-import com.alibaba.graphscope.stdcxx.StdVector;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class TraverseDefaultContext implements DefaultContextBase<Long, Long, Long, Double> {
+    private static Logger logger = LoggerFactory.getLogger(TraverseDefaultContext.class);
 
     public int step;
     public int maxStep;
@@ -31,14 +33,17 @@ public class TraverseDefaultContext implements DefaultContextBase<Long, Long, Lo
 
     @Override
     public void Init(
-            ImmutableEdgecutFragment<Long, Long, Long, Double> immutableEdgecutFragment,
+            SimpleFragment<Long, Long, Long, Double> fragment,
             DefaultMessageManager javaDefaultMessageManager,
-            StdVector<FFIByteString> args) {
-        maxStep = Integer.parseInt(args.get(0).toString());
+            JSONObject jsonObject) {
+        if (!jsonObject.containsKey("maxStep")) {
+            logger.error("No maxStep in params");
+            return;
+        }
+        maxStep = jsonObject.getInteger("maxStep");
         step = 0;
     }
 
     @Override
-    public void Output(
-            ImmutableEdgecutFragment<Long, Long, Long, Double> immutableEdgecutFragment) {}
+    public void Output(SimpleFragment<Long, Long, Long, Double> immutableEdgecutFragment) {}
 }

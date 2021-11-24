@@ -26,14 +26,14 @@ import java.util.function.Consumer;
  * @param <VID_T> vertex id type.
  * @param <EDATA_T> edge data type.
  */
-public class AdjListv2<VID_T, EDATA_T> implements Iterable<Nbr<VID_T, EDATA_T>> {
-    private Nbr<VID_T, EDATA_T> beginNbr;
-    private Nbr<VID_T, EDATA_T> endNbr;
+public class AdjListv2<VID_T, EDATA_T> implements Iterable<GrapeNbr<VID_T, EDATA_T>> {
+    private GrapeNbr<VID_T, EDATA_T> beginNbr;
+    private GrapeNbr<VID_T, EDATA_T> endNbr;
     private long endNbrAddr;
     private long elementSize;
     private long beginNbrAddr;
 
-    public AdjListv2(Nbr<VID_T, EDATA_T> inbegin, Nbr<VID_T, EDATA_T> inEnd) {
+    public AdjListv2(GrapeNbr<VID_T, EDATA_T> inbegin, GrapeNbr<VID_T, EDATA_T> inEnd) {
         beginNbr = inbegin;
         endNbr = inEnd;
         elementSize = inbegin.elementSize();
@@ -46,7 +46,7 @@ public class AdjListv2<VID_T, EDATA_T> implements Iterable<Nbr<VID_T, EDATA_T>> 
      *
      * @return the first Nbr.
      */
-    public Nbr<VID_T, EDATA_T> begin() {
+    public GrapeNbr<VID_T, EDATA_T> begin() {
         return beginNbr;
     }
 
@@ -55,7 +55,7 @@ public class AdjListv2<VID_T, EDATA_T> implements Iterable<Nbr<VID_T, EDATA_T>> 
      *
      * @return the last Nbr.
      */
-    public Nbr<VID_T, EDATA_T> end() {
+    public GrapeNbr<VID_T, EDATA_T> end() {
         return endNbr;
     }
 
@@ -73,9 +73,9 @@ public class AdjListv2<VID_T, EDATA_T> implements Iterable<Nbr<VID_T, EDATA_T>> 
      *
      * @return the iterator.
      */
-    public Iterator<Nbr<VID_T, EDATA_T>> iterator() {
-        return new Iterator<Nbr<VID_T, EDATA_T>>() {
-            private Nbr<VID_T, EDATA_T> cur = begin().moveTo(beginNbrAddr);
+    public Iterator<GrapeNbr<VID_T, EDATA_T>> iterator() {
+        return new Iterator<GrapeNbr<VID_T, EDATA_T>>() {
+            private GrapeNbr<VID_T, EDATA_T> cur = begin().moveTo(beginNbrAddr);
             private long curAddr = beginNbrAddr;
 
             @Override
@@ -84,7 +84,7 @@ public class AdjListv2<VID_T, EDATA_T> implements Iterable<Nbr<VID_T, EDATA_T>> 
             }
 
             @Override
-            public Nbr<VID_T, EDATA_T> next() {
+            public GrapeNbr<VID_T, EDATA_T> next() {
                 cur.setAddress(curAddr);
                 curAddr += elementSize;
                 return cur;
@@ -92,8 +92,8 @@ public class AdjListv2<VID_T, EDATA_T> implements Iterable<Nbr<VID_T, EDATA_T>> 
         };
     }
 
-    public void forEachVertex(Consumer<Nbr<VID_T, EDATA_T>> consumer) {
-        Nbr<VID_T, EDATA_T> cur = begin().moveTo(beginNbrAddr);
+    public void forEachVertex(Consumer<GrapeNbr<VID_T, EDATA_T>> consumer) {
+        GrapeNbr<VID_T, EDATA_T> cur = begin().moveTo(beginNbrAddr);
         while (cur.getAddress() != endNbrAddr) {
             consumer.accept(cur);
             cur.addV(elementSize);

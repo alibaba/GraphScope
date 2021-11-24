@@ -16,14 +16,13 @@
 
 package com.alibaba.graphscope.example.simple.sssp;
 
-import com.alibaba.fastffi.FFIByteString;
+import com.alibaba.fastjson.JSONObject;
 import com.alibaba.graphscope.app.ParallelContextBase;
 import com.alibaba.graphscope.ds.Vertex;
 import com.alibaba.graphscope.ds.VertexRange;
 import com.alibaba.graphscope.ds.VertexSet;
-import com.alibaba.graphscope.fragment.ImmutableEdgecutFragment;
+import com.alibaba.graphscope.fragment.SimpleFragment;
 import com.alibaba.graphscope.parallel.ParallelMessageManager;
-import com.alibaba.graphscope.stdcxx.StdVector;
 import com.alibaba.graphscope.utils.AtomicDoubleArrayWrapper;
 import java.io.BufferedWriter;
 import java.io.File;
@@ -31,8 +30,12 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class SSSPParallelContext implements ParallelContextBase<Long, Long, Long, Double> {
+    private static Logger logger = LoggerFactory.getLogger(SSSPDefaultContext.class);
+
     public ExecutorService executor;
     public AtomicDoubleArrayWrapper partialResults;
     public VertexSet curModified;
@@ -52,24 +55,31 @@ public class SSSPParallelContext implements ParallelContextBase<Long, Long, Long
 
     @Override
     public void Init(
-            ImmutableEdgecutFragment<Long, Long, Long, Double> frag,
+            SimpleFragment<Long, Long, Long, Double> frag,
             ParallelMessageManager mm,
-            StdVector<FFIByteString> args) {
+            JSONObject jsonObject) {
+        if (!jsonObject.containsKey("src")) {
+            logger.error("No src in params");
+            return;
+        }
+        sourceOid = jsonObject.getLong("threadNum");
+        if (!jsonObject.containsKey("threadNum")) {
+            logger.error("No threadNum in params");
+            return;
+        }
+        threadNum = jsonObject.getInteger("threadNum");
         Long allVertexNum = frag.getVerticesNum();
         // partialResults = new AtomicDouble(allVertexNum.intValue(), Double.MAX_VALUE);
         partialResults = new AtomicDoubleArrayWrapper(allVertexNum.intValue(), Double.MAX_VALUE);
         curModified = new VertexSet(0, allVertexNum.intValue());
         nextModified = new VertexSet(0, allVertexNum.intValue());
 
-        // args 0, 1 are app class and app ctx class
-        sourceOid = Long.valueOf(args.get(0).toString());
-        threadNum = Integer.valueOf(args.get(1).toString());
         executor = Executors.newFixedThreadPool(threadNum);
         chunkSize = 1024;
     }
 
     @Override
-    public void Output(ImmutableEdgecutFragment<Long, Long, Long, Double> frag) {
+    public void Output(SimpleFragment<Long, Long, Long, Double> frag) {
         executor.shutdown();
 
         System.out.println(

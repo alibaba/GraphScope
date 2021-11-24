@@ -16,20 +16,23 @@
 
 package com.alibaba.graphscope.example.simple.sssp;
 
-import com.alibaba.fastffi.FFIByteString;
+import com.alibaba.fastjson.JSONObject;
 import com.alibaba.graphscope.app.DefaultContextBase;
 import com.alibaba.graphscope.ds.Vertex;
 import com.alibaba.graphscope.ds.VertexRange;
 import com.alibaba.graphscope.ds.VertexSet;
-import com.alibaba.graphscope.fragment.ImmutableEdgecutFragment;
+import com.alibaba.graphscope.fragment.SimpleFragment;
 import com.alibaba.graphscope.parallel.DefaultMessageManager;
-import com.alibaba.graphscope.stdcxx.StdVector;
 import com.alibaba.graphscope.utils.DoubleArrayWrapper;
 import java.io.BufferedWriter;
 import java.io.FileWriter;
 import java.io.IOException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class SSSPDefaultContext implements DefaultContextBase<Long, Long, Long, Double> {
+    private static Logger logger = LoggerFactory.getLogger(SSSPDefaultContext.class);
+
     public DoubleArrayWrapper partialResults;
     // private BooleanArrayWrapper curModified;
     // private BooleanArrayWrapper nextModified;
@@ -66,22 +69,24 @@ public class SSSPDefaultContext implements DefaultContextBase<Long, Long, Long, 
 
     @Override
     public void Init(
-            ImmutableEdgecutFragment<Long, Long, Long, Double> frag,
+            SimpleFragment<Long, Long, Long, Double> frag,
             DefaultMessageManager mm,
-            StdVector<FFIByteString> args) {
+            JSONObject jsonObject) {
         Long allVertexNum = frag.getVerticesNum();
         partialResults = new DoubleArrayWrapper(allVertexNum.intValue(), Double.MAX_VALUE);
         curModified = new VertexSet(0, allVertexNum.intValue());
         nextModified = new VertexSet(0, allVertexNum.intValue());
 
-        sourceOid = Long.valueOf(args.get(0).toString());
-        // System.out.println("SSSPContext.init : source oid = " + sourceOid);
-
-        // messager = new DoubleMessageAdaptor<Long, Long>(frag);
+        //        sourceOid = Long.valueOf(args.get(0).toString());
+        if (!jsonObject.containsKey("src")) {
+            logger.error("No src in params");
+            return;
+        }
+        sourceOid = jsonObject.getLong("src");
     }
 
     @Override
-    public void Output(ImmutableEdgecutFragment<Long, Long, Long, Double> frag) {
+    public void Output(SimpleFragment<Long, Long, Long, Double> frag) {
         String prefix = "/tmp/sssp_output";
         System.out.println(
                 "frag: " + frag.fid() + " sendMessageTime: " + sendMessageTime / 1000000000);
@@ -98,13 +103,6 @@ public class SSSPDefaultContext implements DefaultContextBase<Long, Long, Long, 
             BufferedWriter bufferedWriter = new BufferedWriter(fileWritter);
             VertexRange<Long> innerNodes = frag.innerVertices();
 
-            // ArrayListWrapper<Long> partialResults = this.getPartialResults();
-            // System.out.println(frag.GetInnerVerticesNum() + " " + innerNodes.begin().GetValue() +
-            // " "
-            // + innerNodes.end().GetValue());
-            // for (Vertex<Long> cur = innerNodes.begin(); cur.GetValue() !=
-            // innerNodes.end().GetValue();
-            // cur.inc()) {
             Vertex<Long> cur = innerNodes.begin();
             for (long index = 0; index < frag.getInnerVerticesNum(); ++index) {
                 cur.SetValue(index);

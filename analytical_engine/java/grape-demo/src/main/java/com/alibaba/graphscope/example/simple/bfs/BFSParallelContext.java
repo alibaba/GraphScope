@@ -16,22 +16,25 @@
 
 package com.alibaba.graphscope.example.simple.bfs;
 
-import com.alibaba.fastffi.FFIByteString;
+import com.alibaba.fastjson.JSONObject;
 import com.alibaba.graphscope.app.ParallelContextBase;
 import com.alibaba.graphscope.ds.Vertex;
 import com.alibaba.graphscope.ds.VertexRange;
 import com.alibaba.graphscope.ds.VertexSet;
-import com.alibaba.graphscope.fragment.ImmutableEdgecutFragment;
+import com.alibaba.graphscope.fragment.SimpleFragment;
 import com.alibaba.graphscope.parallel.ParallelMessageManager;
-import com.alibaba.graphscope.stdcxx.StdVector;
 import com.alibaba.graphscope.utils.IntArrayWrapper;
 import java.io.BufferedWriter;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 class BFSParallelContext implements ParallelContextBase<Long, Long, Long, Double> {
+    private static Logger logger = LoggerFactory.getLogger(BFSParallelContext.class);
+
     public long sourceOid;
     public IntArrayWrapper partialResults;
     // public BooleanArrayWrapper currendInnerUpdated;
@@ -42,11 +45,19 @@ class BFSParallelContext implements ParallelContextBase<Long, Long, Long, Double
 
     @Override
     public void Init(
-            ImmutableEdgecutFragment<Long, Long, Long, Double> frag,
+            SimpleFragment<Long, Long, Long, Double> frag,
             ParallelMessageManager messageManager,
-            StdVector<FFIByteString> args) {
-        sourceOid = Long.valueOf(args.get(0).toString());
-        threadNum = Integer.valueOf(args.get(1).toString());
+            JSONObject jsonObject) {
+        if (!jsonObject.containsKey("src")) {
+            logger.error("No src arg found");
+            return;
+        }
+        sourceOid = jsonObject.getLong("src");
+        if (!jsonObject.containsKey("threadNum")) {
+            logger.error("No threadNum arg found");
+            return;
+        }
+        threadNum = jsonObject.getInteger("threadNum");
         partialResults = new IntArrayWrapper(frag.getVerticesNum().intValue(), Integer.MAX_VALUE);
         currentInnerUpdated = new VertexSet(frag.innerVertices());
         nextInnerUpdated = new VertexSet(frag.innerVertices());
@@ -55,7 +66,7 @@ class BFSParallelContext implements ParallelContextBase<Long, Long, Long, Double
     }
 
     @Override
-    public void Output(ImmutableEdgecutFragment<Long, Long, Long, Double> frag) {
+    public void Output(SimpleFragment<Long, Long, Long, Double> frag) {
         String prefix = "/tmp/bfs_parallel_output";
         System.out.println("depth " + currentDepth);
         String filePath = prefix + "_frag_" + frag.fid();

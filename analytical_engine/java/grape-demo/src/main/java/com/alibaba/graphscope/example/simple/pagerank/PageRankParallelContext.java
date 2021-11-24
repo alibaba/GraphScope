@@ -16,14 +16,13 @@
 
 package com.alibaba.graphscope.example.simple.pagerank;
 
-import com.alibaba.fastffi.FFIByteString;
+import com.alibaba.fastjson.JSONObject;
 import com.alibaba.graphscope.app.ParallelContextBase;
 import com.alibaba.graphscope.ds.Vertex;
 import com.alibaba.graphscope.ds.VertexRange;
-import com.alibaba.graphscope.fragment.ImmutableEdgecutFragment;
+import com.alibaba.graphscope.fragment.SimpleFragment;
 import com.alibaba.graphscope.parallel.MessageInBuffer;
 import com.alibaba.graphscope.parallel.ParallelMessageManager;
-import com.alibaba.graphscope.stdcxx.StdVector;
 import com.alibaba.graphscope.utils.DoubleArrayWrapper;
 import com.alibaba.graphscope.utils.FFITypeFactoryhelper;
 import com.alibaba.graphscope.utils.IntArrayWrapper;
@@ -33,8 +32,12 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class PageRankParallelContext implements ParallelContextBase<Long, Long, Long, Double> {
+    private static Logger logger = LoggerFactory.getLogger(PageRankParallelContext.class);
+
     public double alpha;
     public int maxIteration;
     public int superStep;
@@ -53,13 +56,28 @@ public class PageRankParallelContext implements ParallelContextBase<Long, Long, 
 
     @Override
     public void Init(
-            ImmutableEdgecutFragment<Long, Long, Long, Double> frag,
+            SimpleFragment<Long, Long, Long, Double> frag,
             ParallelMessageManager javaParallelMessageManager,
-            StdVector<FFIByteString> args) {
+            JSONObject jsonObject) {
+        if (!jsonObject.containsKey("alpha")) {
+            logger.error("expect alpha in params");
+            return;
+        }
+        alpha = jsonObject.getDouble("alpha");
+
+        if (!jsonObject.containsKey("maxIteration")) {
+            logger.error("expect alpha in params");
+            return;
+        }
+        maxIteration = jsonObject.getInteger("maxIteration");
+
+        if (!jsonObject.containsKey("threadNum")) {
+            logger.error("expect threadNum in params");
+            return;
+        }
+        maxIteration = jsonObject.getInteger("threadNum");
+
         bufferFactory = FFITypeFactoryhelper.newMessageInBuffer();
-        alpha = Double.parseDouble(args.get(0).toString());
-        maxIteration = Integer.parseInt(args.get(1).toString());
-        thread_num = Integer.parseInt(args.get(2).toString());
         System.out.println(
                 "alpha: ["
                         + alpha
@@ -76,7 +94,7 @@ public class PageRankParallelContext implements ParallelContextBase<Long, Long, 
     }
 
     @Override
-    public void Output(ImmutableEdgecutFragment<Long, Long, Long, Double> frag) {
+    public void Output(SimpleFragment<Long, Long, Long, Double> frag) {
         String prefix = "/tmp/pagerank_parallel_output";
         System.out.println("sum double " + sumDoubleTime / 10e9 + " swap time " + swapTime / 10e9);
         String filePath = prefix + "_frag_" + String.valueOf(frag.fid());

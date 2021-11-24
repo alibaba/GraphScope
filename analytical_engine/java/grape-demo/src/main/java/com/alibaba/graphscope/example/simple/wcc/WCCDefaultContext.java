@@ -16,14 +16,13 @@
 
 package com.alibaba.graphscope.example.simple.wcc;
 
-import com.alibaba.fastffi.FFIByteString;
+import com.alibaba.fastjson.JSONObject;
 import com.alibaba.graphscope.app.DefaultContextBase;
 import com.alibaba.graphscope.ds.Vertex;
 import com.alibaba.graphscope.ds.VertexRange;
 import com.alibaba.graphscope.ds.VertexSet;
-import com.alibaba.graphscope.fragment.ImmutableEdgecutFragment;
+import com.alibaba.graphscope.fragment.SimpleFragment;
 import com.alibaba.graphscope.parallel.DefaultMessageManager;
-import com.alibaba.graphscope.stdcxx.StdVector;
 import com.alibaba.graphscope.utils.LongArrayWrapper;
 import java.io.BufferedWriter;
 import java.io.FileWriter;
@@ -36,9 +35,9 @@ public class WCCDefaultContext implements DefaultContextBase<Long, Long, Long, D
 
     @Override
     public void Init(
-            ImmutableEdgecutFragment<Long, Long, Long, Double> frag,
+            SimpleFragment<Long, Long, Long, Double> frag,
             DefaultMessageManager messageManager,
-            StdVector<FFIByteString> args) {
+            JSONObject jsonObject) {
         comp_id = new LongArrayWrapper(frag.vertices(), Long.MAX_VALUE);
         currModified = new VertexSet(frag.vertices());
         nextModified = new VertexSet(frag.vertices());
@@ -46,7 +45,7 @@ public class WCCDefaultContext implements DefaultContextBase<Long, Long, Long, D
     }
 
     @Override
-    public void Output(ImmutableEdgecutFragment<Long, Long, Long, Double> frag) {
+    public void Output(SimpleFragment<Long, Long, Long, Double> frag) {
         String prefix = "/tmp/wcc_default_output";
         String filePath = prefix + "_frag_" + frag.fid();
         try {

@@ -16,21 +16,24 @@
 
 package com.alibaba.graphscope.example.simple.pagerank;
 
-import com.alibaba.fastffi.FFIByteString;
+import com.alibaba.fastjson.JSONObject;
 import com.alibaba.graphscope.app.DefaultContextBase;
 import com.alibaba.graphscope.ds.Vertex;
 import com.alibaba.graphscope.ds.VertexRange;
-import com.alibaba.graphscope.fragment.ImmutableEdgecutFragment;
+import com.alibaba.graphscope.fragment.SimpleFragment;
 import com.alibaba.graphscope.parallel.DefaultMessageManager;
-import com.alibaba.graphscope.stdcxx.StdVector;
 import com.alibaba.graphscope.utils.DoubleArrayWrapper;
 import com.alibaba.graphscope.utils.IntArrayWrapper;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class PageRankDefaultContext implements DefaultContextBase<Long, Long, Long, Double> {
+    private static Logger logger = LoggerFactory.getLogger(PageRankDefaultContext.class);
+
     public double alpha;
     public int maxIteration;
     public int superStep;
@@ -41,18 +44,27 @@ public class PageRankDefaultContext implements DefaultContextBase<Long, Long, Lo
 
     @Override
     public void Init(
-            ImmutableEdgecutFragment<Long, Long, Long, Double> frag,
+            SimpleFragment<Long, Long, Long, Double> frag,
             DefaultMessageManager messageManager,
-            StdVector<FFIByteString> args) {
-        alpha = Double.parseDouble(args.get(0).toString());
-        maxIteration = Integer.parseInt(args.get(1).toString());
+            JSONObject jsonObject) {
+        if (!jsonObject.containsKey("alpha")) {
+            logger.error("expect alpha in params");
+            return;
+        }
+        alpha = jsonObject.getDouble("alpha");
+
+        if (!jsonObject.containsKey("maxIteration")) {
+            logger.error("expect alpha in params");
+            return;
+        }
+        maxIteration = jsonObject.getInteger("maxIteration");
         System.out.println("alpha: [" + alpha + "], max iteration: [" + maxIteration + "]");
         pagerank = new DoubleArrayWrapper((frag.getVerticesNum().intValue()), 0.0);
         degree = new IntArrayWrapper((int) frag.getInnerVerticesNum().intValue(), 0);
     }
 
     @Override
-    public void Output(ImmutableEdgecutFragment<Long, Long, Long, Double> frag) {
+    public void Output(SimpleFragment<Long, Long, Long, Double> frag) {
         String prefix = "/tmp/pagerank_output";
         String filePath = prefix + "_frag_" + String.valueOf(frag.fid());
         try {
