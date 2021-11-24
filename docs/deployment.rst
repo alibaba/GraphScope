@@ -19,6 +19,35 @@ allows users to deploy and connect GraphScope on a k8s cluster.
 
 As shown above, a session can easily launch a cluster on k8s.
 
+Sometimes users may want to use their dataset on the local disk, in this case, we provide options to mount a
+host directory to the cluster.
+
+Assume we want to mount `~/test_data` in the host machine to `/testingdata` in pods, we can define
+a dict as follows, then pass it as `k8s_volumes` in session constructor.
+
+Note that the host path is relative to the kubernetes node, that is, if you have a cluster created by `kind`, then you need to copy that directory to the kind node, or mount that path to kind node.
+See more details `here <https://kind.sigs.k8s.io/docs/user/configuration/#extra-mounts>`_.
+
+```python
+import os
+import graphscope
+
+k8s_volumes = {
+    "data": {
+        "type": "hostPath",
+        "field": {
+            "path": os.path.expanduser("~/test_data/"),
+            "type": "Directory"
+        },
+        "mounts": {
+            "mountPath": "/testingdata"
+        }
+    }
+}
+
+sess = graphscope.session(k8s_volumes=k8s_volumes)
+```
+
 A cluster on k8s contains a pod running an etcd container for meta-data syncing, a
 pod running the Coordinator, and a replica set of GraphScope engines.
 
@@ -28,6 +57,7 @@ and takes responsibility for applying or releasing the pods for interactive, ana
 and learning engines.
 
 The image URIs for the engines are configurable, see more details in :ref:`Session`.
+
 
 
 Deployment with Helm

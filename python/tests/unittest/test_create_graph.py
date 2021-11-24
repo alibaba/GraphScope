@@ -316,7 +316,6 @@ def test_v_property_omitted_form_loader(graphscope_session, student_group_e, stu
     assert graph.loaded()
 
 
-@pytest.mark.skip(reason="vertex must be exist before add edges in eager mode.")
 def test_vertices_omitted_form_loader(graphscope_session, student_group_e):
     # vertices can be omit.
     graph = graphscope_session.g()
@@ -324,14 +323,12 @@ def test_vertices_omitted_form_loader(graphscope_session, student_group_e):
     assert graph.loaded()
 
 
-@pytest.mark.skip(reason="vertex must be exist before add edges in eager mode.")
 def test_all_omitted_form_loader(graphscope_session, student_group_e):
     graph = graphscope_session.g()
     graph = graph.add_edges(student_group_e, "group")
     assert graph.loaded()
 
 
-@pytest.mark.skip(reason="vertex must be exist before add edges in eager mode.")
 def test_multiple_e_all_omitted_form_loader(
     graphscope_session, student_group_e, friend_e
 ):

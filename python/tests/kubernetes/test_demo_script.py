@@ -112,30 +112,6 @@ def p2p_property_dir():
     return "/testingdata/property"
 
 
-def test_demo(gs_session, data_dir):
-    graph = load_ldbc(gs_session, data_dir)
-
-    # Interactive engine
-    interactive = gs_session.gremlin(graph)
-    sub_graph = interactive.subgraph(  # noqa: F841
-        'g.V().hasLabel("person").outE("knows")'
-    )
-
-    # Analytical engine
-    # project the projected graph to simple graph.
-    simple_g = sub_graph.project(vertices={"person": []}, edges={"knows": []})
-
-    pr_result = graphscope.pagerank(simple_g, delta=0.8)
-    tc_result = graphscope.triangles(simple_g)
-
-    # add the PageRank and triangle-counting results as new columns to the property graph
-    # FIXME: Add column to sub_graph
-    sub_graph.add_column(pr_result, {"Ranking": "r"})
-    sub_graph.add_column(tc_result, {"TC": "r"})
-
-    # GNN engine
-
-
 @pytest.mark.skipif("HDFS_TEST_DIR" not in os.environ, reason="the test case need HDFS")
 def test_demo_on_hdfs(gs_session_distributed):
     graph = gs_session_distributed.g()
@@ -220,7 +196,6 @@ def test_demo_distribute(gs_session_distributed, data_dir, modern_graph_data_dir
     tc_result = graphscope.triangles(simple_g)
 
     # add the PageRank and triangle-counting results as new columns to the property graph
-    # FIXME: Add column to sub_graph
     sub_graph.add_column(pr_result, {"Ranking": "r"})
     sub_graph.add_column(tc_result, {"TC": "r"})
 
@@ -272,60 +247,18 @@ def test_multiple_session():
     sess.close()
 
 
-def test_query_modern_graph(gs_session, modern_graph_data_dir, modern_scripts):
+def test_query_modern_graph(
+    gs_session, modern_graph_data_dir, modern_scripts, modern_bytecode
+):
     graph = load_modern_graph(gs_session, modern_graph_data_dir)
     interactive = gs_session.gremlin(graph)
-
+    # query on modern graph
     for q in modern_scripts:
         result = interactive.execute(q).all()[0]
         assert result == 1
-    with pytest.raises(
-        NotImplementedError,
-        match="GAIA not enabled",
-    ):
-        interactive.gaia().execute(modern_scripts[0]).all()
-
-
-def test_traversal_modern_graph(gs_session, modern_graph_data_dir, modern_bytecode):
-    graph = load_modern_graph(gs_session, modern_graph_data_dir)
-    interactive = gs_session.gremlin(graph)
+    # traversal on moder graph
     g = interactive.traversal_source()
     modern_bytecode(g)
-
-    with pytest.raises(
-        NotImplementedError,
-        match="GAIA not enabled",
-    ):
-        g.gaia().V().count().toList()
-
-
-def test_add_vertices_edges(gs_session_distributed, modern_graph_data_dir):
-    graph = load_modern_graph(gs_session_distributed, modern_graph_data_dir)
-    graph = graph.add_vertices(
-        Loader(os.path.join(modern_graph_data_dir, "person.csv"), delimiter="|"),
-        "person2",
-        ["name", ("age", "int")],
-        "id",
-    )
-    assert "person2" in graph.schema.vertex_labels
-
-    graph = graph.add_edges(
-        Loader(
-            os.path.join(modern_graph_data_dir, "knows.csv"),
-            delimiter="|",
-        ),
-        "knows2",
-        ["weight"],
-        src_label="person2",
-        dst_label="person2",
-    )
-
-    assert "knows2" in graph.schema.edge_labels
-
-    interactive = gs_session_distributed.gremlin(graph)
-    g = interactive.traversal_source()
-    assert g.V().count().toList()[0] == 10
-    assert g.E().count().toList()[0] == 8
 
 
 def test_serialize_roundtrip(gs_session_distributed, p2p_property_dir):

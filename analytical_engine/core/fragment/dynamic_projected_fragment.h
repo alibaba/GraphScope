@@ -49,37 +49,25 @@ pack_dynamic(folly::dynamic& d, const T& val) {
 template <typename T>
 typename std::enable_if<std::is_integral<T>::value, T>::type unpack_dynamic(
     const folly::dynamic& data, const std::string& v_prop_key) {
-  if (data.count(v_prop_key) == 0) {
-    LOG(ERROR) << "vertex not contains property " << v_prop_key;
-  }
-  return data[v_prop_key].asInt();
+  return data.at(v_prop_key).asInt();
 }
 
 template <typename T>
 typename std::enable_if<std::is_floating_point<T>::value, T>::type
 unpack_dynamic(const folly::dynamic& data, const std::string& v_prop_key) {
-  if (data.count(v_prop_key) == 0) {
-    LOG(ERROR) << "vertex not contains property " << v_prop_key;
-  }
-  return data[v_prop_key].asDouble();
+  return data.at(v_prop_key).asDouble();
 }
 
 template <typename T>
 typename std::enable_if<std::is_same<T, bool>::value, T>::type unpack_dynamic(
     const folly::dynamic& data, const std::string& v_prop_key) {
-  if (data.count(v_prop_key) == 0) {
-    LOG(ERROR) << "vertex not contains property " << v_prop_key;
-  }
-  return data[v_prop_key].asBool();
+  return data.at(v_prop_key).asBool();
 }
 
 template <typename T>
 typename std::enable_if<std::is_same<T, std::string>::value, T>::type
 unpack_dynamic(const folly::dynamic& data, const std::string& v_prop_key) {
-  if (data.count(v_prop_key) == 0) {
-    LOG(ERROR) << "vertex not contains property " << v_prop_key;
-  }
-  return data[v_prop_key].asString();
+  return data.at(v_prop_key).asString();
 }
 
 template <typename T>
@@ -92,44 +80,28 @@ template <typename T>
 typename std::enable_if<std::is_integral<T>::value>::type unpack_nbr(
     dynamic_fragment_impl::Nbr<T>& nbr, const folly::dynamic& d,
     const std::string& key) {
-  if (d.count(key)) {
-    nbr.set_data(d[key].asInt());
-  } else {
-    LOG(ERROR) << "edge not contains property " << key;
-  }
+  nbr.set_data(d.at(key).asInt());
 }
 
 template <typename T>
 typename std::enable_if<std::is_floating_point<T>::value>::type unpack_nbr(
     dynamic_fragment_impl::Nbr<T>& nbr, const folly::dynamic& d,
     const std::string& key) {
-  if (d.count(key)) {
-    nbr.set_data(d[key].asDouble());
-  } else {
-    LOG(ERROR) << "edge not contains property " << key;
-  }
+  nbr.set_data(d.at(key).asDouble());
 }
 
 template <typename T>
 typename std::enable_if<std::is_same<std::string, T>::value>::type unpack_nbr(
     dynamic_fragment_impl::Nbr<T>& nbr, const folly::dynamic& d,
     const std::string& key) {
-  if (d.count(key)) {
-    nbr.set_data(d[key].asString());
-  } else {
-    LOG(ERROR) << "edge not contains property " << key;
-  }
+  nbr.set_data(d.at(key).asString());
 }
 
 template <typename T>
 typename std::enable_if<std::is_same<bool, T>::value>::type unpack_nbr(
     dynamic_fragment_impl::Nbr<T>& nbr, const folly::dynamic& d,
     const std::string& key) {
-  if (d.count(key)) {
-    nbr.set_data(d[key].asBool());
-  } else {
-    LOG(ERROR) << "edge not contains property " << key;
-  }
+  nbr.set_data(d.at(key).asBool());
 }
 
 template <typename T>

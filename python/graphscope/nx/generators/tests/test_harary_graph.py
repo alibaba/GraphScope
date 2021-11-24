@@ -1,6 +1,8 @@
 """Unit tests for the :mod:`graphscope.nx.generators.harary_graph` module.
 """
 
+import os
+
 import pytest
 from networkx.algorithms.isomorphism.isomorph import is_isomorphic
 from networkx.generators.tests.test_harary_graph import TestHararyGraph
@@ -51,7 +53,7 @@ class TestHararyGraph:
             for i in range(0, half + 1):
                 # add half+1 edges between i and i+half
                 eSet3.add((i, (i + half) % n))
-            if k == 7:
+            if os.environ.get("DEPLOYMENT", None) != "standalone" and k == 7:
                 eSet1.remove((8, 3))
                 eSet1.remove((6, 1))
                 eSet1.remove((10, 5))

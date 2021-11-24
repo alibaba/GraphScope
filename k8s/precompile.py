@@ -6,6 +6,7 @@ import multiprocessing
 import os
 import shutil
 import subprocess
+import sys
 import zipfile
 from pathlib import Path
 from string import Template
@@ -23,8 +24,8 @@ try:
 
     COORDINATOR_HOME = Path(gscoordinator.__file__).parent.parent.absolute()
 except ModuleNotFoundError:
-    print("Could not found coordinator")
-    exit(1)
+    COORDINATOR_HOME = Path(os.path.join(os.path.dirname(__file__), "..", "coordinator"))
+
 TEMPLATE_DIR = COORDINATOR_HOME / "gscoordinator" / "template"
 BUILTIN_APP_RESOURCE_PATH = (
     COORDINATOR_HOME / "gscoordinator" / "builtin" / "app" / "builtin_app.gar"
