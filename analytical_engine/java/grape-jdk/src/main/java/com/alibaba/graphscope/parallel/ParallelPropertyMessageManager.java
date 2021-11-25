@@ -102,7 +102,7 @@ public interface ParallelPropertyMessageManager extends MessageManagerBase {
             @CXXReference MSG_T msg,
             int channel_id);
 
-    @FFINameAlias("GetMessageInBuffer")
+    @FFINameAlias("GetMessages")
     boolean getMessageInBuffer(@CXXReference MessageInBuffer buf);
 
     default <FRAG_T, MSG_T> void parallelProcess(

@@ -26,14 +26,14 @@ import java.util.function.Consumer;
  * @param <VID_T> vertex id type.
  * @param <EDATA_T> edge data type.
  */
-public class AdjListv2<VID_T, EDATA_T> implements Iterable<GrapeNbr<VID_T, EDATA_T>> {
+public class GrapeAdjListIterable<VID_T, EDATA_T> implements Iterable<GrapeNbr<VID_T, EDATA_T>> {
     private GrapeNbr<VID_T, EDATA_T> beginNbr;
     private GrapeNbr<VID_T, EDATA_T> endNbr;
     private long endNbrAddr;
     private long elementSize;
     private long beginNbrAddr;
 
-    public AdjListv2(GrapeNbr<VID_T, EDATA_T> inbegin, GrapeNbr<VID_T, EDATA_T> inEnd) {
+    public GrapeAdjListIterable(GrapeNbr<VID_T, EDATA_T> inbegin, GrapeNbr<VID_T, EDATA_T> inEnd) {
         beginNbr = inbegin;
         endNbr = inEnd;
         elementSize = inbegin.elementSize();

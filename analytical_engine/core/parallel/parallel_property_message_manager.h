@@ -296,7 +296,7 @@ class ParallelPropertyMessageManager : public grape::MessageManagerBase {
    *
    * @param buf Message buffer which holds a grape::OutArchive.
    */
-  inline bool GetMessageInBuffer(grape::MessageInBuffer& buf) {
+  inline bool GetMessages(grape::MessageInBuffer& buf) {
     grape::OutArchive arc;
     auto& que = recv_queues_[round_ % 2];
     if (que.Get(arc)) {

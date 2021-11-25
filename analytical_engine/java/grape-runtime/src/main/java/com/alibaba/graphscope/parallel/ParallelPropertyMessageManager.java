@@ -40,6 +40,7 @@ import com.alibaba.graphscope.fragment.ArrowFragment;
 import com.alibaba.graphscope.utils.CppClassName;
 import com.alibaba.graphscope.utils.FFITypeFactoryhelper;
 import com.alibaba.graphscope.utils.TriConsumer;
+
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.function.BiConsumer;
@@ -181,7 +182,7 @@ public interface ParallelPropertyMessageManager extends MessageManagerBase {
             @CXXReference MSG_T msg,
             int channel_id);
 
-    @FFINameAlias("GetMessageInBuffer")
+    @FFINameAlias("GetMessages")
     boolean getMessageInBuffer(@CXXReference MessageInBuffer buf);
 
     default <FRAG_T, MSG_T> void parallelProcess(

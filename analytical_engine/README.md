@@ -11,7 +11,7 @@ A lightweight version of GRAPE is open-sourced as [libgrape-lite](https://github
 ## Java PIE SDK
 
 Apart from the PIE programming interfaces exposed in Python, GraphScope also
-Provides an efficient **Java SDK** for users to write Graph analytical algorithms in Java . See [Grape-jdk](java/) for details.
+Provides an efficient **Java SDK** for users to write Graph analytical algorithms in Java . See [GRAPE-JDK](java/) for details.
 
 ## Publications
 

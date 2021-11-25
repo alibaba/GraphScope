@@ -11,7 +11,7 @@ GRAPE 的核心轻量版本以 [libgrape-lite](https://github.com/alibaba/libgra
 
 ## Java PIE SDK
 
-除了在Python中提供的PIE编程接口之外，GraphScope也提供一个高效的**Java SDK**，借助于它，用户可以在Java中实现图分析算法，并且提交到GraphScope上运行。更多细节请查看[Grape-jdk](java/)。
+除了在Python中提供的PIE编程接口之外，GraphScope也提供一个高效的**Java SDK**，借助于它，用户可以在Java中实现图分析算法，并且提交到GraphScope上运行。更多细节请查看[GRAPE-JDK](java/)。
 
 ## 论文列表
 
