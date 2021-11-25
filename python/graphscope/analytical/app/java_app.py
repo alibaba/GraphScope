@@ -80,6 +80,7 @@ def _parse_user_app(java_app_class: str, java_jar_full_path: str):
         parse_user_app_cmd,
         env=os.environ.copy(),
         encoding="utf-8",
+        errors="replace",
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,
         universal_newlines=True,

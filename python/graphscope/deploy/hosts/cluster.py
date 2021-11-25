@@ -132,6 +132,7 @@ class HostsClusterLauncher(Launcher):
             cwd=COORDINATOR_HOME,
             env=env,
             encoding="utf-8",
+            errors="replace",
             stdin=subprocess.DEVNULL,
             stdout=subprocess.PIPE if gs_config.show_log else subprocess.DEVNULL,
             stderr=subprocess.PIPE,
