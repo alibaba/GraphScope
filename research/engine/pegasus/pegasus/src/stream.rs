@@ -40,12 +40,15 @@ pub struct Stream<D: Data> {
     ch: Channel<D>,
     /// builder of dataflow plan;
     builder: DataflowBuilder,
+    /// static partitions of the stream;
+    partitions: usize,
 }
 
 impl<D: Data> Stream<D> {
     pub(crate) fn new(upstream: OutputBuilderImpl<D>, dfb: &DataflowBuilder) -> Self {
         let ch = Channel::bind(&upstream);
-        Stream { upstream, ch, builder: dfb.clone() }
+        let partitions = dfb.worker_id.total_peers() as usize;
+        Stream { upstream, ch, builder: dfb.clone(), partitions }
     }
 }
 
@@ -97,6 +100,10 @@ impl<D: Data> Stream<D> {
         self.upstream.set_batch_capacity(cap);
         self
     }
+
+    pub fn get_partitions(&self) -> usize {
+        self.partitions
+    }
 }
 
 impl<D: Data> Stream<D> {
@@ -104,7 +111,10 @@ impl<D: Data> Stream<D> {
     // aggregate().enter() :
     // aggregate().leave() :
     pub fn aggregate(mut self) -> Stream<D> {
-        self.ch.set_channel_kind(ChannelKind::Aggregate);
+        if self.partitions > 1 {
+            self.ch.set_channel_kind(ChannelKind::Aggregate);
+            self.partitions = 1;
+        }
         self
     }
 
@@ -112,12 +122,14 @@ impl<D: Data> Stream<D> {
     where
         F: Fn(&D) -> FnResult<u64> + Send + 'static,
     {
+        self.partitions = self.builder.worker_id.total_peers() as usize;
         self.ch
             .set_channel_kind(ChannelKind::Shuffle(box_route!(route)));
         self
     }
 
     pub fn broadcast(mut self) -> Stream<D> {
+        self.partitions = self.builder.worker_id.total_peers() as usize;
         self.ch.set_channel_kind(ChannelKind::Broadcast);
         self
     }
@@ -130,6 +142,7 @@ impl<D: Data> Stream<D> {
                 upstream: self.upstream.copy_data(),
                 ch: self.ch.clone(),
                 builder: self.builder.clone(),
+                partitions: self.partitions,
             };
             Ok((self, copy))
         } else {
@@ -141,6 +154,7 @@ impl<D: Data> Stream<D> {
                 upstream: shuffled.upstream.copy_data(),
                 ch: shuffled.ch.clone(),
                 builder: shuffled.builder.clone(),
+                partitions: shuffled.partitions
             };
             Ok((shuffled, copy))
         }
@@ -162,12 +176,12 @@ impl<D: Data> Stream<D> {
         F: FnOnce(&OperatorInfo) -> T,
     {
         let dfb = self.builder.clone();
+        let partitions = self.partitions;
         let op = self.add_operator(name, op_builder)?;
-
         let port = op.new_output::<O>();
         let ch = Channel::bind(&port);
 
-        Ok(Stream { upstream: port, ch, builder: dfb })
+        Ok(Stream { upstream: port, ch, builder: dfb, partitions })
     }
 
     pub fn transform_notify<F, O, T>(
@@ -179,12 +193,12 @@ impl<D: Data> Stream<D> {
         F: FnOnce(&OperatorInfo) -> T,
     {
         let dfb = self.builder.clone();
+        let partitions = self.partitions;
         let op = self.add_notify_operator(name, op_builder)?;
-
         let port = op.new_output::<O>();
         let ch = Channel::bind(&port);
 
-        Ok(Stream { upstream: port, ch, builder: dfb })
+        Ok(Stream { upstream: port, ch, builder: dfb, partitions })
     }
 
     pub fn union_transform<R, O, F, T>(
@@ -206,10 +220,11 @@ impl<D: Data> Stream<D> {
             let edge = other.connect(&mut op)?;
             self.builder.add_edge(edge);
             let dfb = self.builder.clone();
+            let partitions = std::cmp::max(self.partitions, other.partitions);
             let port = op.new_output::<O>();
 
             let ch = Channel::bind(&port);
-            Ok(Stream { upstream: port, ch, builder: dfb })
+            Ok(Stream { upstream: port, ch, builder: dfb, partitions })
         }
     }
 
@@ -232,9 +247,10 @@ impl<D: Data> Stream<D> {
             let edge = other.connect(&mut op)?;
             self.builder.add_edge(edge);
             let dfb = self.builder.clone();
+            let partitions = std::cmp::max(self.partitions, other.partitions);
             let output = op.new_output::<O>();
             let ch = Channel::bind(&output);
-            Ok(Stream { ch, upstream: output, builder: dfb })
+            Ok(Stream { ch, upstream: output, builder: dfb, partitions })
         }
     }
 
@@ -251,10 +267,11 @@ impl<D: Data> Stream<D> {
         let left = op.new_output::<L>();
         let right = op.new_output::<R>();
         let dfb = self.builder.clone();
+        let partitions = self.partitions;
         let ch = Channel::bind(&left);
-        let left = Stream { upstream: left, ch, builder: dfb.clone() };
+        let left = Stream { upstream: left, ch, builder: dfb.clone(), partitions };
         let ch = Channel::bind(&right);
-        let right = Stream { upstream: right, ch, builder: dfb };
+        let right = Stream { upstream: right, ch, builder: dfb, partitions };
         Ok((left, right))
     }
 
@@ -271,10 +288,11 @@ impl<D: Data> Stream<D> {
         let left = op.new_output::<L>();
         let right = op.new_output::<R>();
         let dfb = self.builder.clone();
+        let partitions = self.partitions;
         let ch = Channel::bind(&left);
-        let left = Stream { upstream: left, ch, builder: dfb.clone() };
+        let left = Stream { upstream: left, ch, builder: dfb.clone(), partitions };
         let ch = Channel::bind(&right);
-        let right = Stream { upstream: right, ch, builder: dfb };
+        let right = Stream { upstream: right, ch, builder: dfb, partitions };
         Ok((left, right))
     }
 
