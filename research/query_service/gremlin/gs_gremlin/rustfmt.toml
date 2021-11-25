@@ -1,0 +1,5 @@
+
+# Stable
+edition = "2018"
+use_small_heuristics = "Max"
+fn_args_layout = "Compressed"
