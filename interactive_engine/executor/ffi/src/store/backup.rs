@@ -21,6 +21,7 @@ use maxgraph_store::db::api::{GraphBackup, GraphStorage};
 use maxgraph_store::db::graph::store::{GraphStore, GraphBackupEngine};
 use crate::store::graph::GraphHandle;
 use crate::store::jna_response::JnaResponse;
+use maxgraph_store::db::api::multi_version_graph::MultiVersionGraph;
 
 pub type GraphBackupHandle = *const c_void;
 

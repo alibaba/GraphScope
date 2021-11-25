@@ -54,7 +54,7 @@ impl IntoIterator for VertexTypeScan {
                         match self.vertex_type_info.get_decoder(snapshot_id, codec_version) {
                             Ok(decoder) => {
                                 let label = self.vertex_type_info.get_label();
-                                Some(Ok(RocksVertexImpl::new(vertex_id, label, decoder, raw_val)))
+                                Some(Ok(RocksVertexImpl::new(vertex_id, label, Some(decoder), raw_val)))
                             }
                             Err(e) => {
                                 Some(Err(e.into()))
@@ -162,7 +162,7 @@ impl IntoIterator for EdgeKindScan {
                 match self.edge_kind_info.get_decoder(snapshot_id, codec_version) {
                     Ok(decoder) => {
                         let edge_kind = self.edge_kind_info.get_type();
-                        Some(Ok(RocksEdgeImpl::new(edge_id.into(), edge_kind.into(), decoder, raw_val)))
+                        Some(Ok(RocksEdgeImpl::new(edge_id.into(), edge_kind.into(), Some(decoder), raw_val)))
                     }
                     Err(e) => {
                         Some(Err(e.into()))

@@ -28,4 +28,3 @@ pub enum Condition {
     Equal(PropertyId, PropertyValue),
     NotEqual(PropertyId, PropertyValue),
 }
-

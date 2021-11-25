@@ -220,7 +220,7 @@ pub extern fn GetOutDegree(partition_snapshot: PartitionSnapshotHandle,
                            -> usize {
     unsafe {
         let handler = &*(partition_snapshot as *const FfiSnapshot);
-        match handler.get_out_degree(vertex_id, edge_relation) {
+        match handler.get_out_degree(vertex_id, Some(edge_relation.get_edge_label_id())) {
             Ok(degree) => {
                 degree
             }
@@ -240,7 +240,7 @@ pub extern fn GetInDegree(partition_snapshot: PartitionSnapshotHandle,
                           -> usize {
     unsafe {
         let handler = &*(partition_snapshot as *const FfiSnapshot);
-        match handler.get_in_degree(vertex_id, edge_relation) {
+        match handler.get_in_degree(vertex_id, Some(edge_relation.get_edge_label_id())) {
             Ok(degree) => {
                 degree
             }
@@ -582,7 +582,7 @@ pub extern fn GetPropertyAsString(property_handle: PropertyHandle, error: *mut E
 pub extern fn GetErrorInfo(error_handle: ErrorHandle) -> StringSlice {
     unsafe {
         let handler = &*(error_handle as *const GraphError);
-        let info = handler.what();
+        let info = format!("{:?}", handler);
         StringSlice::new(info.as_ptr(), info.len())
     }
 }

@@ -10,7 +10,6 @@ use super::vertex::*;
 use super::edge::*;
 use super::types::*;
 use super::codec::*;
-use super::property::*;
 use super::meta::*;
 use super::bin::*;
 use protobuf::Message;
@@ -151,14 +150,14 @@ impl MultiVersionGraph for GraphStore {
         self.query_edges(snapshot_id, Some(vertex_id), EdgeDirection::In, label_id, condition, property_ids)
     }
 
-    fn get_out_degree(&self, snapshot_id: SnapshotId, vertex_id: VertexId, edge_relation: &EdgeKind) -> GraphResult<usize> {
-        let edges_iter = self.get_out_edges(snapshot_id, vertex_id, Some(edge_relation.get_edge_label_id()), None,
+    fn get_out_degree(&self, snapshot_id: SnapshotId, vertex_id: VertexId,  label_id: Option<LabelId>) -> GraphResult<usize> {
+        let edges_iter = self.get_out_edges(snapshot_id, vertex_id, label_id, None,
                                             Some(vec![]).as_ref())?;
         Ok(edges_iter.count())
     }
 
-    fn get_in_degree(&self, snapshot_id: SnapshotId, vertex_id: VertexId, edge_relation: &EdgeKind) -> GraphResult<usize> {
-        let edges_iter = self.get_in_edges(snapshot_id, vertex_id, Some(edge_relation.get_edge_label_id()), None,
+    fn get_in_degree(&self, snapshot_id: SnapshotId, vertex_id: VertexId,  label_id: Option<LabelId>,) -> GraphResult<usize> {
+        let edges_iter = self.get_in_edges(snapshot_id, vertex_id, label_id, None,
                                            Some(vec![]).as_ref())?;
         Ok(edges_iter.count())
     }
@@ -545,7 +544,7 @@ impl GraphStore {
                 if k[0..16] == key[0..16] && v.len() > 4 {
                     let codec_version = get_codec_version(v);
                     let decoder = vertex_type_info.get_decoder(snapshot_id, codec_version)?;
-                    let vertex = RocksVertexImpl::new(vertex_id, vertex_type_info.get_label() as LabelId, decoder, RawBytes::new(v));
+                    let vertex = RocksVertexImpl::new(vertex_id, vertex_type_info.get_label() as LabelId, Some(decoder), RawBytes::new(v));
                     return Ok(Some(vertex));
                 }
             }
@@ -568,7 +567,7 @@ impl GraphStore {
                 if k[0..32] == key[0..32] && v.len() >= 4 {
                     let codec_version = get_codec_version(v);
                     let decoder = info.get_decoder(snapshot_id, codec_version)?;
-                    let edge = RocksEdgeImpl::new(edge_id, info.get_type().into(), decoder, RawBytes::new(v));
+                    let edge = RocksEdgeImpl::new(edge_id, info.get_type().into(), Some(decoder), RawBytes::new(v));
                     return Ok(Some(edge));
                 }
             }

@@ -2,6 +2,7 @@ use crate::db::api::{GraphResult, BackupId};
 
 pub mod rocksdb;
 use self::rocksdb::RocksDBIter;
+use std::ptr::null;
 
 pub trait ExternalStorage: Send + Sync {
     fn get(&self, key: &[u8]) -> GraphResult<Option<StorageRes>>;
@@ -60,6 +61,13 @@ impl RawBytes {
         RawBytes {
             ptr: slice.as_ptr(),
             len: slice.len(),
+        }
+    }
+
+    pub fn empty() -> Self {
+        RawBytes {
+            ptr: null(),
+            len: 0,
         }
     }
 

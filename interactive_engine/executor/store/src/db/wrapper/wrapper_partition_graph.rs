@@ -136,23 +136,23 @@ impl<G: MultiVersionGraph> PartitionSnapshot for WrapperPartitionSnapshot<G> {
 
     fn get_out_degree(&self,
                       vertex_id: VertexId,
-                      edge_relation: &EdgeKind
+                      label_id: Option<LabelId>,
     ) -> GraphResult<usize> {
         self.multi_version_graph.get_out_degree(
             self.snapshot_id,
             vertex_id,
-            edge_relation
+            label_id,
         )
     }
 
     fn get_in_degree(&self,
                      vertex_id: VertexId,
-                     edge_relation: &EdgeKind
+                     label_id: Option<LabelId>,
     ) -> GraphResult<usize> {
         self.multi_version_graph.get_in_degree(
             self.snapshot_id,
             vertex_id,
-            edge_relation
+            label_id,
         )
     }
 

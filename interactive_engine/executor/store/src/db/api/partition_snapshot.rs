@@ -94,18 +94,18 @@ pub trait PartitionSnapshot {
         property_ids: Option<&Vec<PropertyId>>,
     ) -> GraphResult<Records<Self::E>>;
 
-    /// Returns the out-degree of vertex `vertex_id` in `edge_relation`
+    /// Returns the out-degree of vertex `vertex_id` in `label_id`
     fn get_out_degree(
         &self,
         vertex_id: VertexId,
-        edge_relation: &EdgeKind,
+        label_id: Option<LabelId>,
     ) -> GraphResult<usize>;
 
-    /// Returns the in-degree of vertex `vertex_id` in `edge_relation`
+    /// Returns the in-degree of vertex `vertex_id` in `label_id`
     fn get_in_degree(
         &self,
         vertex_id: VertexId,
-        edge_relation: &EdgeKind,
+        label_id: Option<LabelId>,
     ) -> GraphResult<usize>;
 
     /// Returns the `k`th out edge of vertex `vertex_id` in `edge_relation`.

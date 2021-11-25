@@ -75,14 +75,14 @@ pub trait MultiVersionGraph {
         &self,
         snapshot_id: SnapshotId,
         vertex_id: VertexId,
-        edge_relation: &EdgeKind,
+        label_id: Option<LabelId>,
     ) -> GraphResult<usize>;
 
     fn get_in_degree(
         &self,
         snapshot_id: SnapshotId,
         vertex_id: VertexId,
-        edge_relation: &EdgeKind,
+        label_id: Option<LabelId>,
     ) -> GraphResult<usize>;
 
     fn get_kth_out_edge(
