@@ -1,1 +1,0 @@
-g.V().hasLabel("person").as("a").filter(has("name", "josh").has("age", 32)).values("id").select("a")

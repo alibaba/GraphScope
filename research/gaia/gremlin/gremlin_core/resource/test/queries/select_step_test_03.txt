@@ -1,1 +1,0 @@
-g.V().order().by("id").as("a").select("a").by("id")
