@@ -440,9 +440,11 @@ create_gremlin_instance_on_k8s() {
     # to find the gremlin server port, and the file may not exist, we add a || true to
     # ignore the error.
     # FIXME: the port should fetch from .log file, not .out or .err
-    gremlin_server_port_in_log=$(awk '/frontend host/ { print }' ${log_dir}/maxgraph-frontend.log | awk -F: '{print $6}') || true
-    gremlin_server_port_in_out=$(awk '/frontend host/ { print }' ${log_dir}/maxgraph-frontend.out | awk -F: '{print $7}') || true
-    gremlin_server_port_in_err=$(awk '/frontend host/ { print }' ${log_dir}/maxgraph-frontend.err | awk -F: '{print $4}') || true
+    #
+    # NB. match the last element, as the log format (format of date/time) may change
+    gremlin_server_port_in_log=$(awk '/frontend host/ { print }' ${log_dir}/maxgraph-frontend.log | awk -F: '{print $NF}') || true
+    gremlin_server_port_in_out=$(awk '/frontend host/ { print }' ${log_dir}/maxgraph-frontend.out | awk -F: '{print $NF}') || true
+    gremlin_server_port_in_err=$(awk '/frontend host/ { print }' ${log_dir}/maxgraph-frontend.err | awk -F: '{print $NF}') || true
     if [ ! -z "${gremlin_server_port_in_log}" ]; then
       maxgraph_frontend_port=${gremlin_server_port_in_log}
       gremlin_server_ready=True
@@ -456,9 +458,9 @@ create_gremlin_instance_on_k8s() {
 
     # fetch gaia frontend port
     if [ "${enable_gaia}" = True ]; then
-      gaia_gremlin_server_port_in_log=$(awk '/frontend host/ { print }' ${log_dir}/gaia-frontend.log | awk -F: '{print $6}') || true
-      gaia_gremlin_server_port_in_out=$(awk '/frontend host/ { print }' ${log_dir}/gaia-frontend.out | awk -F: '{print $7}') || true
-      gaia_gremlin_server_port_in_err=$(awk '/frontend host/ { print }' ${log_dir}/gaia-frontend.err | awk -F: '{print $4}') || true
+      gaia_gremlin_server_port_in_log=$(awk '/frontend host/ { print }' ${log_dir}/gaia-frontend.log | awk -F: '{print $NF}') || true
+      gaia_gremlin_server_port_in_out=$(awk '/frontend host/ { print }' ${log_dir}/gaia-frontend.out | awk -F: '{print $NF}') || true
+      gaia_gremlin_server_port_in_err=$(awk '/frontend host/ { print }' ${log_dir}/gaia-frontend.err | awk -F: '{print $NF}') || true
       if [ ! -z "${gaia_gremlin_server_port_in_log}" ]; then
         gaia_frontend_port=${gaia_gremlin_server_port_in_log}
         gaia_gremlin_server_ready=True
