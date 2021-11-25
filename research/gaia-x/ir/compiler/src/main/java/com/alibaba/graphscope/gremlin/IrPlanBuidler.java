@@ -114,6 +114,8 @@ public class IrPlanBuidler {
                 op = StepTransformFactory.VERTEX_STEP.apply(step);
             } else if (step instanceof HasStep) {
                 op = StepTransformFactory.HAS_STEP.apply(step);
+            } else if (step instanceof RangeGlobalStep) {
+                op = StepTransformFactory.LIMIT_STEP.apply(step);
             } else {
                 throw new StepUnsupportedException(step.getClass(), "unimplemented yet");
             }
