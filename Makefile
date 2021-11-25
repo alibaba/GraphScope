@@ -142,16 +142,16 @@ test: unittest minitest k8stest
 .PHONY: unittest
 unittest:
 	cd $(WORKING_DIR)/python && \
-	python3 -m pytest -s -v ./tests/unittest
+	python3 -m pytest -s -v ./graphscope/tests/unittest
 
 .PHONY: minitest
 minitest:
 	cd $(WORKING_DIR)/python && \
 	pip3 install tensorflow==2.5.2 && \
-	python3 -m pytest -s -v ./tests/minitest
+	python3 -m pytest -s -v ./graphscope/tests/minitest
 
 .PHONY: k8stest
 k8stest:
 	cd $(WORKING_DIR)/python && \
 	pip3 install tensorflow==2.5.2 && \
-	python3 -m pytest -s -v ./tests/kubernetes
+	python3 -m pytest -s -v ./graphscope/tests/kubernetes

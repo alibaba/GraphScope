@@ -203,7 +203,7 @@ jobs:
           popd
 
           # install tensorflow
-          python3 -m pip install pytest "tensorflow<=2.5.2" --user;
+          python3 -m pip install pytest "tensorflow<=2.5.2" --user
           # install java
           sudo apt update -y && sudo apt install openjdk-11-jdk -y
 
@@ -214,7 +214,7 @@ jobs:
           # download dataset
           git clone -b master --single-branch --depth=1 https://github.com/7br/gstest.git ${GS_TEST_DIR}
 
-          python3 -m pytest -s -v $(dirname $(python3 -c "import graphscope; print(graphscope.__file__)"))/tests
+          python3 -m pytest -s -v $(dirname $(python3 -c "import graphscope; print(graphscope.__file__)"))/tests/minitest
 
       - name: Upload GIE log
         if: always()
@@ -259,6 +259,9 @@ jobs:
         python3 -m pip install ./*.whl
         popd
 
+        # install pytest
+        python3 -m pip install pytest
+
     - name: Run Python Test
       env:
         GS_TEST_DIR: ${{ github.workspace }}/gstest
@@ -269,7 +272,7 @@ jobs:
 
         python3 -m pytest -s -v --cov=graphscope --cov-config=.coveragerc \
                                 --cov-report=xml --cov-report=term --exitfirst \
-                                $(dirname $(python3 -c "import graphscope; print(graphscope.__file__)"))/tests
+                                $(dirname $(python3 -c "import graphscope; print(graphscope.__file__)"))/tests/unittest
 
     - name: Upload Coverage
       uses: codecov/codecov-action@v1.0.5
@@ -332,6 +335,9 @@ jobs:
         pushd coordinator/dist
         python3 -m pip install ./*.whl
         popd
+
+        # install pytest
+        python3 -m pip install pytest
 
         # download dataset
         git clone -b master --single-branch --depth=1 https://github.com/7br/gstest.git ${GS_TEST_DIR}
