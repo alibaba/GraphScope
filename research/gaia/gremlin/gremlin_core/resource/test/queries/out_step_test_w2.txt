@@ -1,1 +1,0 @@
-g.V().out().order().by(id)

@@ -1,8 +1,0 @@
-[[peers]]
-server_id = 0
-ip = '127.0.0.1'
-port = 12334
-[[peers]]
-server_id = 1
-ip = '127.0.0.1'
-port = 12335

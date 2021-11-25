@@ -1,0 +1,150 @@
+/**
+ * Copyright 2020 Alibaba Group Holding Limited.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+syntax = "proto3";
+package protocol;
+option java_package = "com.alibaba.pegasus.service.protocol";
+option java_outer_classname = "PegasusClient";
+
+
+message Empty { }
+
+message BinaryResource {
+  bytes resource = 1;
+}
+
+
+enum CommunicateKind {
+  EXCHANGE = 0;
+  BROADCAST = 1;
+  AGGREGATE = 2;
+}
+
+message CommunicateOperator {
+  CommunicateKind kind = 1;
+  BinaryResource resource = 2;
+}
+
+message Inputs {
+  BinaryResource src = 1;
+}
+
+enum MapKind {
+  MAP = 0;
+  FLATMAP = 1;
+  FILTER_MAP = 2;
+  FILTER = 3;
+}
+
+message MapOperator {
+  MapKind kind = 1;
+  BinaryResource resource = 2;
+}
+
+enum Scope {
+  PARTITION = 0;
+  GLOBAL = 1;
+}
+
+enum FoldKind {
+  TO_VEC = 0;
+  TO_SET = 1;
+  COUNT = 2;
+  CUSTOM_FOLD = 3;
+}
+
+enum ReduceKind {
+  SUM = 0;
+  MAX = 1;
+  MIN = 2;
+  CUSTOM_REDUCE = 3;
+}
+
+enum UnfoldKind {
+  DIRECT = 0;
+  FLAT_MAP = 1;
+}
+
+message UnfoldOperator {
+  UnfoldKind kind = 1;
+  BinaryResource resource = 2;
+}
+
+message AggregationOperator {
+  Scope scope = 1;
+  oneof kind {
+    FoldKind fold = 2;
+    ReduceKind reduce = 3;
+  }
+  BinaryResource resource = 4;
+  UnfoldOperator unfold = 5;
+}
+
+message Iteration {
+  uint32 max_iters = 1;
+  BinaryResource until = 2;
+  ExecutionPlan plan = 3;
+}
+
+message Operator {
+  uint32 index = 1;
+  oneof op_kind {
+    CommunicateOperator comm = 2;
+    MapOperator map = 3;
+    AggregationOperator agg = 4;
+    Iteration iter = 5;
+  }
+}
+
+message ExecutionPlan {
+  repeated Operator plan = 1;
+}
+
+message ServerList {
+  repeated uint64 servers  = 1;
+}
+
+message JobConfig {
+  uint64 job_id             = 1;
+  string job_name           = 2;
+  uint32 workers            = 3;
+  uint64 time_limit         = 4;
+  uint32 batch_size         = 5;
+  uint32 batch_capacity     = 6;
+  uint32 scope_capacity     = 7;
+  uint32 memory_limit       = 8;
+  bool plan_print           = 9;
+  oneof servers {
+    Empty local             = 10;
+    ServerList part         = 11;
+    Empty all               = 12;
+  }
+}
+
+message JobRequest {
+  JobConfig conf          = 1;
+  BinaryResource source   = 2;
+  BinaryResource plan     = 3;
+  BinaryResource resource = 4;
+}
+
+message JobResponse {
+  uint64 job_id       = 1;
+  BinaryResource res  = 2;
+}
+
+service JobService {
+  rpc Submit(JobRequest) returns(stream JobResponse) {}
+}

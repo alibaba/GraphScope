@@ -1,1 +1,0 @@
-g.V().path().count(local)
