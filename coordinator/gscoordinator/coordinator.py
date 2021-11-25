@@ -684,9 +684,9 @@ class CoordinatorServiceServicer(
         # create instance
         proc = self._launcher.create_interactive_instance(op.attr)
         try:
-            # 120 seconds is enough, see also GH#1024
+            # 60 seconds is enough, see also GH#1024
             # already add errs to outs
-            outs, errs = proc.communicate(timeout=120)
+            outs, errs = proc.communicate(timeout=60)
             return_code = proc.poll()
             if return_code == 0:
                 # match maxgraph endpoint and check for ready
