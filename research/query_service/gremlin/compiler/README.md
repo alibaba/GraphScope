@@ -1,12 +1,12 @@
 ### Compiler Steps
 * Engine Startup
 ```
-cd gaia/gremlin/gremlin_core 
+cd query_service/gremlin/gremlin_core 
 cargo run --bin main --features proto_inplace
 ```
 * Compiler Startup
 ```
-cd gaia/gremlin/compiler
+cd query_service/gremlin/compiler
 mvn clean package -DskipTests
 java -cp .:gremlin-server-plugin/target/gremlin-server-plugin-1.0-SNAPSHOT-jar-with-dependencies.jar com.compiler.demo.server.GremlinServiceMain
 ```

@@ -20,6 +20,6 @@ java -cp bin/gremlin-server-plugin-1.0-SNAPSHOT-jar-with-dependencies.jar com.al
 ```
 * Run Gremlin Tests
 ```
-cd GraphScope/research/gaia/gremlin/compiler/gremlin-test
+cd GraphScope/research/query_service/gremlin/compiler/gremlin-test
 mvn test
 ```

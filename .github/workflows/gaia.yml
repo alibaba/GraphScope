@@ -6,12 +6,12 @@ on:
     branches:
       - main
     paths:
-      - 'research/gaia/**'
+      - 'research/**'
   pull_request:
     branches:
       - main
     paths:
-      - 'research/gaia/**'
+      - 'research/**'
 
 jobs:
   gaia-test:
@@ -34,10 +34,6 @@ jobs:
       run: |
         source ~/.bashrc
 
-        cd research/gaia/gremlin/gremlin_core/tests
-        sh prepare_all_test_plan.sh
-        cargo test
-
-        cd ../../../../gaia-x/gremlin/gremlin_core/tests/
+        cd research/query_service/gremlin/gremlin_core/tests
         sh prepare_all_test_plan.sh
         cargo test
