@@ -3,6 +3,7 @@ import pytest
 import graphscope.nx as nx
 
 
+@pytest.mark.usefixtures("graphscope_session")
 class TestVoteRankCentrality:
     @pytest.mark.skip(reason="not support list as attribute")
     def test_voterank_centrality_1(self):

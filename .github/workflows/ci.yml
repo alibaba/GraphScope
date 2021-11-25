@@ -373,7 +373,7 @@ jobs:
 
   networkx-test:
     runs-on: ubuntu-20.04
-    needs: [build-gae, build-gle, changes]
+    needs: [build-gae, changes]
     if: ${{ needs.changes.outputs.networkx == 'true' }}
     defaults:
       run:
@@ -425,7 +425,6 @@ jobs:
         python3 -m pip install pytest-cov
         tar -xf ./gae-${{ github.sha }}/vineyard.tar
         tar -xf ./gae-${{ github.sha }}/gae.tar
-        tar -xf ./gle-${{ github.sha }}/gle.tar
 
         # install vineyard into /usr/local
         sudo cp -r -n opt/vineyard/* /usr/local/
@@ -446,13 +445,6 @@ jobs:
         python3 -m pip install -r python/requirements-dev.txt
         pushd python && python3 setup.py build_proto && popd
         pushd coordinator && python3 setup.py build_builtin && popd
-
-        cd /tmp/
-        git clone https://github.com/alibaba/fastFFI.git
-        cd fastFFI
-        git checkout a166c6287f2efb938c27fb01b3d499932d484f9c
-        export PATH=${PATH}:${LLVM11_HOME}/bin
-        mvn clean install -DskipTests -Dmaven.antrun.skip=true --quiet
 
     - name: Basic test
       if: steps.nx-filter.outputs.basic == 'true'
