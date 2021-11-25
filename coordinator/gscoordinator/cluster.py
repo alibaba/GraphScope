@@ -389,9 +389,6 @@ class KubernetesClusterLauncher(Launcher):
             stderr=subprocess.STDOUT,
             bufsize=1,
         )
-        stdout_watcher = PipeWatcher(process.stdout, sys.stdout)
-        setattr(process, "stdout_watcher", stdout_watcher)
-        time.sleep(100)
         return process
 
     def close_interactive_instance(self, object_id):
