@@ -7,8 +7,8 @@ from graphscope.nx.utils.compat import with_graphscope_nx_context
 import_as_graphscope_nx(networkx.algorithms.tree.tests.test_coding,
                         decorators=pytest.mark.usefixtures("graphscope_session"))
 
-from networkx.algorithms.tree.tests.test_coding import TestPruferSequence
 from networkx.algorithms.tree.tests.test_coding import TestNestedTuple
+from networkx.algorithms.tree.tests.test_coding import TestPruferSequence
 
 
 @pytest.mark.usefixtures("graphscope_session")

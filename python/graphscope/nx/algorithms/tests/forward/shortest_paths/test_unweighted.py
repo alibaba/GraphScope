@@ -10,7 +10,6 @@ import_as_graphscope_nx(networkx.algorithms.shortest_paths.tests.test_unweighted
 from networkx.algorithms.shortest_paths.tests.test_unweighted import TestUnweightedPath
 from networkx.generators.lattice import grid_2d_graph
 
-
 pytest.mark.usefixtures("graphscope_session")
 @with_graphscope_nx_context(TestUnweightedPath)
 class TestUnweightedPath:

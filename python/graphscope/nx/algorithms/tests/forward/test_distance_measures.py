@@ -10,6 +10,7 @@ import_as_graphscope_nx(networkx.algorithms.tests.test_distance_measures,
 from networkx.algorithms.tests.test_distance_measures import TestDistance
 from networkx.generators.lattice import grid_2d_graph
 
+
 @pytest.mark.usefixtures("graphscope_session")
 @with_graphscope_nx_context(TestDistance)
 class TestDistance:

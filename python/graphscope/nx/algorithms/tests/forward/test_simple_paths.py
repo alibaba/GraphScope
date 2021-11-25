@@ -1,5 +1,5 @@
-import networkx.algorithms.tests.test_simple_paths
 import networkx as nxa
+import networkx.algorithms.tests.test_simple_paths
 import pytest
 
 from graphscope.nx.utils.compat import import_as_graphscope_nx

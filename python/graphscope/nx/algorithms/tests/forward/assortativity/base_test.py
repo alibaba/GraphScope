@@ -20,6 +20,7 @@ import pytest
 
 import graphscope.nx as nx
 
+
 @pytest.mark.usefixtures("graphscope_session")
 class BaseTestAttributeMixing:
     def setup_method(cls):

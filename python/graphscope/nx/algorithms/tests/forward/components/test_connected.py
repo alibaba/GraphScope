@@ -10,6 +10,7 @@ import_as_graphscope_nx(networkx.algorithms.components.tests.test_connected,
 from networkx.algorithms.components.tests.test_connected import TestConnected
 from networkx.generators.lattice import grid_2d_graph
 
+
 @pytest.mark.usefixtures("graphscope_session")
 @with_graphscope_nx_context(TestConnected)
 class TestConnected:

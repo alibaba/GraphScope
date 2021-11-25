@@ -7,10 +7,12 @@ from graphscope.nx.utils.compat import with_graphscope_nx_context
 import_as_graphscope_nx(networkx.algorithms.tests.test_triads,
                         decorators=pytest.mark.usefixtures("graphscope_session"))
 
-import graphscope.nx as nx
 from collections import defaultdict
 from itertools import permutations
 from random import sample
+
+import graphscope.nx as nx
+
 
 # FIXME(@weibin): forward is_triad not replace networkx with graphscope.nx correctly.
 def is_triad(G):

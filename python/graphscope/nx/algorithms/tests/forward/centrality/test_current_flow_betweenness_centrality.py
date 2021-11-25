@@ -9,7 +9,8 @@ import_as_graphscope_nx(
     decorators=pytest.mark.usefixtures("graphscope_session"))
 
 
-from networkx.algorithms.centrality.tests.test_current_flow_betweenness_centrality import TestApproximateFlowBetweennessCentrality
+from networkx.algorithms.centrality.tests.test_current_flow_betweenness_centrality import \
+    TestApproximateFlowBetweennessCentrality
 
 
 @pytest.mark.usefixtures("graphscope_session")

@@ -1,6 +1,6 @@
 import networkx.algorithms.tests.test_cycles
-from networkx.algorithms.tests.test_cycles import TestMinimumCycles
 import pytest
+from networkx.algorithms.tests.test_cycles import TestMinimumCycles
 
 from graphscope.nx.utils.compat import import_as_graphscope_nx
 from graphscope.nx.utils.compat import with_graphscope_nx_context

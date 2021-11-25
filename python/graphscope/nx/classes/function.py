@@ -74,8 +74,8 @@ from networkx.classes.function import degree_histogram
 from networkx.classes.function import density
 from networkx.classes.function import edges
 from networkx.classes.function import freeze
-from networkx.classes.function import get_node_attributes
 from networkx.classes.function import get_edge_attributes
+from networkx.classes.function import get_node_attributes
 from networkx.classes.function import info
 from networkx.classes.function import is_directed
 from networkx.classes.function import is_empty

@@ -1,8 +1,9 @@
-from networkx.algorithms.tests.test_chordal import TestMCS
 import pytest
+from networkx.algorithms.tests.test_chordal import TestMCS
 
 import graphscope.nx as nx
 from graphscope.nx.utils.compat import with_graphscope_nx_context
+
 
 @pytest.mark.usefixtures("graphscope_session")
 @with_graphscope_nx_context(TestMCS)
