@@ -22,6 +22,7 @@ import random
 import socket
 import string
 import threading
+import time
 from queue import Queue
 
 import numpy as np
@@ -69,6 +70,40 @@ class PipeWatcher(object):
 
     def drop(self, drop=True):
         self._drop = drop
+
+
+class PipeMerger(object):
+    def __init__(self, pipe1, pipe2):
+        self._queue = Queue()
+        self._stop = False
+
+        def read_and_pool(self, tag, pipe, target: Queue):
+            while True:
+                try:
+                    target.put((tag, pipe.poll()))
+                except Exception:
+                    time.sleep(1)
+                if self._stop:
+                    break
+
+        self._pipe1_thread = threading.Thread(
+            target=read_and_pool, args=(self, "out", pipe1, self._queue)
+        )
+        self._pipe1_thread.daemon = True
+
+        self._pipe2_thread = threading.Thread(
+            target=read_and_pool, args=(self, "err", pipe2, self._queue)
+        )
+        self._pipe2_thread.daemon = True
+
+        self._pipe1_thread.start()
+        self._pipe2_thread.start()
+
+    def poll(self, block=True, timeout=None):
+        return self._queue.get(block=block, timeout=timeout)
+
+    def stop(self):
+        self._stop = True
 
 
 def is_free_port(port, host="localhost", timeout=0.2):

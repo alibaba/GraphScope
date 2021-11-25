@@ -79,10 +79,11 @@ def _parse_user_app(java_app_class: str, java_jar_full_path: str):
     parse_user_app_process = subprocess.Popen(
         parse_user_app_cmd,
         env=os.environ.copy(),
-        universal_newlines=True,
         encoding="utf-8",
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,
+        universal_newlines=True,
+        bufsize=1,
     )
     out, err = parse_user_app_process.communicate()
     logger.info(err)
