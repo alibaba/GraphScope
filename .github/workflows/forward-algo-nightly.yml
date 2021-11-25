@@ -41,7 +41,7 @@ jobs:
       env:
         DEPLOYMENT: 'standalone'
       run: |
-        python3 -m pip install pytest-cov
+        python3 -m pip install pytest-cov networkx==2.5
         cd ${GITHUB_WORKSPACE}/python
         ln -s ../algorithms/tests graphscope/nx/tests/algorithms
         python3 -m pytest -s -v -m "not slow" graphscope/nx/tests/algorithms/forward
