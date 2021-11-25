@@ -27,11 +27,8 @@ jobs:
       run: |
         pushd ${GITHUB_WORKSPACE}
         make gae ENABLE_JAVA_SDK=OFF BUILD_TEST=OFF
-        sudo chown -R $(id -u):$(id -g) /opt/graphscope
-        cp k8s/kube_ssh /opt/graphscope/bin/kube_ssh
-        cp k8s/pre_stop.py /opt/graphscope/bin/pre_stop.py
-
         make coordinator
+        make client
         popd
 
     - name: Run Forward algorithms test
