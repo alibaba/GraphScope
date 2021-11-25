@@ -30,7 +30,7 @@ else
 endif
 
 VERSION ?= latest
-VINEYARD_VERSION ?= v0.3.9
+VINEYARD_VERSION ?= v0.3.10
 PROFILE ?= release
 
 BUILD_PROGRESS  	= auto
