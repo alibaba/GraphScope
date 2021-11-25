@@ -85,6 +85,10 @@ def cmake_app(app):
         graph_header = "vineyard/graph/fragment/arrow_fragment.h"
     elif "ArrowProjectedFragment" in graph_class:
         graph_header = "core/fragment/arrow_projected_fragment.h"
+    elif "ArrowFlattendFragment" in graph_class:
+        graph_header = "core/fragment/arrow_flattened_fragment.h"
+    elif "DynamicProjectedFragment" in graph_class:
+        graph_header = "core/fragment/dynamic_projected_fragment.h"
     else:
         raise ValueError("Not supported graph class %s" % graph_class)
 
@@ -244,8 +248,8 @@ def compile_cpp_pie_app():
                 ("sssp_average_length", dtee),
                 ("sssp_average_length", dtel),
                 ("sssp_average_length", dted),
-                ("pagerak_nx", fluee),
-                ("pagerak_nx", dtee),
+                ("pagerank_nx", fluee),
+                ("pagerank_nx", dtee),
                 ("hits", dtee),
                 ("eigenvector_centrality", luee),
                 ("eigenvector_centrality", lued),

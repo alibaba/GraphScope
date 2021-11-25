@@ -42,7 +42,7 @@ jobs:
     outputs:
       gae-python: ${{ steps.filter.outputs.gae-python }}
       networkx: ${{ steps.filter.outputs.networkx }}
-      gie-function-test: ${{ steps.filter.outputs.gie-function }}
+      gie-function-test: ${{ steps.filter.outputs.gie-function-test }}
     steps:
     # For push it's necessary to checkout the code
     - uses: actions/checkout@v2
