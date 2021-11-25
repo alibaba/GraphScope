@@ -672,6 +672,16 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "320cfe77175da3a483efed4bc0adc1968ca050b098ce4f2f1c13a56626128790"
 
 [[package]]
+name = "libloading"
+version = "0.7.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "afe203d669ec979b7128619bae5a63b7b42e9203c1b29146079ee05e2f604b52"
+dependencies = [
+ "cfg-if 1.0.0",
+ "winapi",
+]
+
+[[package]]
 name = "linked-hash-map"
 version = "0.5.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -999,6 +1009,27 @@ dependencies = [
  "serde",
  "structopt 0.3.22",
  "toml",
+]
+
+[[package]]
+name = "pegasus_server"
+version = "0.1.0"
+dependencies = [
+ "crossbeam-utils 0.6.6",
+ "libloading",
+ "log",
+ "pegasus",
+ "pegasus_common",
+ "pegasus_memory",
+ "pegasus_network",
+ "prost",
+ "serde",
+ "structopt 0.2.18",
+ "tokio",
+ "tokio-stream",
+ "toml",
+ "tonic",
+ "tonic-build",
 ]
 
 [[package]]

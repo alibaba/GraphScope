@@ -20,9 +20,12 @@ use crate::{BuildJobError, Data};
 // TODO : optimize limit into channel;
 impl<D: Data> Limit<D> for Stream<D> {
     fn limit(self, size: u32) -> Result<Stream<D>, BuildJobError> {
-        self.limit_partition(size)?
-            .aggregate()
-            .limit_partition(size)
+        let stream = self.limit_partition(size)?;
+        if stream.get_partitions() > 1 {
+            stream.aggregate().limit_partition(size)
+        } else {
+            Ok(stream)
+        }
     }
 
     fn limit_partition(mut self, size: u32) -> Result<Stream<D>, BuildJobError> {

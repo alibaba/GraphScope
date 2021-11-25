@@ -16,6 +16,7 @@
 package com.alibaba.pegasus.builder;
 
 import com.alibaba.pegasus.intf.NestedFunc;
+import com.alibaba.pegasus.service.protocol.PegasusClient.Communicate;
 import com.alibaba.pegasus.service.protocol.PegasusClient.Sink;
 import com.alibaba.pegasus.service.protocol.PegasusClient.OrderBy;
 import com.alibaba.pegasus.service.protocol.PegasusClient.Union;
@@ -25,18 +26,13 @@ import com.alibaba.pegasus.service.protocol.PegasusClient.TaskPlan;
 import com.alibaba.pegasus.service.protocol.PegasusClient.Iteration;
 import com.alibaba.pegasus.service.protocol.PegasusClient.OperatorDef;
 import com.alibaba.pegasus.service.protocol.PegasusClient.OperatorDef.OpKindCase;
-import com.alibaba.pegasus.service.protocol.PegasusClient.ChannelDef.ChKindCase;
-import com.alibaba.pegasus.service.protocol.PegasusClient.ChannelDef;
 import com.alibaba.pegasus.service.protocol.PegasusClient.Exchange;
 import com.alibaba.pegasus.service.protocol.PegasusClient.Broadcast;
 import com.alibaba.pegasus.service.protocol.PegasusClient.Aggregate;
-import com.alibaba.pegasus.service.protocol.PegasusClient.Pipeline;
 import com.alibaba.pegasus.service.protocol.PegasusClient.Map;
 import com.alibaba.pegasus.service.protocol.PegasusClient.FlatMap;
 import com.alibaba.pegasus.service.protocol.PegasusClient.Filter;
-import com.alibaba.pegasus.service.protocol.PegasusClient.Range;
 import com.alibaba.pegasus.service.protocol.PegasusClient.Limit;
-import com.alibaba.pegasus.service.protocol.PegasusClient.Shuffle;
 import com.alibaba.pegasus.service.protocol.PegasusClient.Fold;
 import com.alibaba.pegasus.service.protocol.PegasusClient.OperatorDef.Builder;
 import com.alibaba.pegasus.service.protocol.PegasusClient.AccumKind;
@@ -75,14 +71,13 @@ public class Plan {
                 .newBuilder()
                 .setResource(route)
                 .build();
-        ChannelDef channelDef = ChannelDef
+        Communicate communicate = Communicate
                 .newBuilder()
                 .setToAnother(exchange)
                 .build();
         OperatorDef operatorDef = OperatorDef
                 .newBuilder()
-                .setCh(channelDef)
-                .setShuffle(Shuffle.newBuilder().build())
+                .setComm(communicate)
                 .build();
         this.plan.add(operatorDef);
     }
@@ -91,14 +86,13 @@ public class Plan {
         Broadcast broadcast = Broadcast
                 .newBuilder()
                 .build();
-        ChannelDef channelDef = ChannelDef
+        Communicate communicate = Communicate
                 .newBuilder()
                 .setToOthers(broadcast)
                 .build();
         OperatorDef operatorDef = OperatorDef
                 .newBuilder()
-                .setCh(channelDef)
-                .setShuffle(Shuffle.newBuilder().build())
+                .setComm(communicate)
                 .build();
         this.plan.add(operatorDef);
     }
@@ -108,14 +102,13 @@ public class Plan {
                 .newBuilder()
                 .setResource(route)
                 .build();
-        ChannelDef channelDef = ChannelDef
+        Communicate communicate = Communicate
                 .newBuilder()
                 .setToOthers(broadcast)
                 .build();
         OperatorDef operatorDef = OperatorDef
                 .newBuilder()
-                .setCh(channelDef)
-                .setShuffle(Shuffle.newBuilder().build())
+                .setComm(communicate)
                 .build();
         this.plan.add(operatorDef);
     }
@@ -125,177 +118,103 @@ public class Plan {
                 .newBuilder()
                 .setTarget(target)
                 .build();
-        ChannelDef channelDef = ChannelDef
+        Communicate communicate = Communicate
                 .newBuilder()
                 .setToOne(aggregate)
                 .build();
         OperatorDef operatorDef = OperatorDef
                 .newBuilder()
-                .setCh(channelDef)
-                .setShuffle(Shuffle.newBuilder().build())
+                .setComm(communicate)
                 .build();
         this.plan.add(operatorDef);
     }
 
     public void map(ByteString func) {
-        Pipeline pipeline = Pipeline
-                .newBuilder()
-                .build();
-        ChannelDef channelDef = ChannelDef
-                .newBuilder()
-                .setToLocal(pipeline)
-                .build();
         Map map = Map.newBuilder()
                 .setResource(func).build();
         Builder builder = OperatorDef
                 .newBuilder()
-                .setCh(channelDef)
                 .setMap(map);
-        tryChain(builder);
         OperatorDef operatorDef = builder.build();
         this.plan.add(operatorDef);
     }
 
     public void flatMap(ByteString func) {
-        Pipeline pipeline = Pipeline
-                .newBuilder()
-                .build();
-        ChannelDef channelDef = ChannelDef
-                .newBuilder()
-                .setToLocal(pipeline)
-                .build();
         FlatMap flatMap = FlatMap
                 .newBuilder()
                 .setResource(func)
                 .build();
         Builder builder = OperatorDef
                 .newBuilder()
-                .setCh(channelDef)
                 .setFlatMap(flatMap);
-        tryChain(builder);
         OperatorDef operatorDef = builder.build();
         this.plan.add(operatorDef);
     }
 
     public void filter(ByteString func) {
-        Pipeline pipeline = Pipeline
-                .newBuilder()
-                .build();
-        ChannelDef channelDef = ChannelDef
-                .newBuilder()
-                .setToLocal(pipeline)
-                .build();
         Filter filter = Filter
                 .newBuilder()
                 .setResource(func)
                 .build();
         Builder builder = OperatorDef
                 .newBuilder()
-                .setCh(channelDef)
                 .setFilter(filter);
-        tryChain(builder);
         OperatorDef operatorDef = builder.build();
         this.plan.add(operatorDef);
     }
 
-    public void limit(boolean isGlobal, int n) {
+    public void limit(int n) {
         Limit limitInfo = Limit
                 .newBuilder()
-                .setRange(isGlobal?Range.GLOBAL:Range.LOCAL)
                 .setLimit(n)
-                .build();
-        Pipeline pipeline = Pipeline
-                .newBuilder()
-                .build();
-        ChannelDef channelDef = ChannelDef
-                .newBuilder()
-                .setToLocal(pipeline)
                 .build();
         OperatorDef operatorDef = OperatorDef
                 .newBuilder()
-                .setCh(channelDef)
                 .setLimit(limitInfo)
                 .build();
         this.plan.add(operatorDef);
     }
 
-    public void count(boolean isGlobal) {
-        Pipeline pipeline = Pipeline
-                .newBuilder()
-                .build();
-        ChannelDef channelDef = ChannelDef
-                .newBuilder()
-                .setToLocal(pipeline)
-                .build();
+    public void count() {
         Fold fold = Fold.newBuilder()
-                .setRange(isGlobal?Range.GLOBAL:Range.LOCAL)
                 .setAccum(AccumKind.CNT)
                 .build();
         OperatorDef operatorDef = OperatorDef
                 .newBuilder()
-                .setCh(channelDef)
                 .setFold(fold)
                 .build();
         this.plan.add(operatorDef);
     }
 
-    public void fold(boolean isGlobal, AccumKind accumKind) {
-        Pipeline pipeline = Pipeline
-                .newBuilder()
-                .build();
-        ChannelDef channelDef = ChannelDef
-                .newBuilder()
-                .setToLocal(pipeline)
-                .build();
+    public void fold(AccumKind accumKind) {
         Fold fold = Fold.newBuilder()
-                .setRange(isGlobal?Range.GLOBAL:Range.LOCAL)
                 .setAccum(accumKind)
                 .build();
         OperatorDef operatorDef = OperatorDef
                 .newBuilder()
-                .setCh(channelDef)
                 .setFold(fold)
                 .build();
         this.plan.add(operatorDef);
     }
 
-    public void foldCustom(boolean isGlobal, AccumKind accumKind, ByteString accumFunc) {
-        Pipeline pipeline = Pipeline
-                .newBuilder()
-                .build();
-        ChannelDef channelDef = ChannelDef
-                .newBuilder()
-                .setToLocal(pipeline)
-                .build();
+    public void foldCustom(AccumKind accumKind, ByteString accumFunc) {
         Fold fold = Fold.newBuilder()
-                .setRange(isGlobal?Range.GLOBAL:Range.LOCAL)
                 .setAccum(accumKind)
                 .setResource(accumFunc)
                 .build();
         OperatorDef operatorDef = OperatorDef
                 .newBuilder()
-                .setCh(channelDef)
                 .setFold(fold)
                 .build();
         this.plan.add(operatorDef);
     }
 
-    public void dedup(boolean isGlobal, ByteString set) {
+    public void dedup() {
         Dedup dedup = Dedup
                 .newBuilder()
-                .setRange(isGlobal?Range.GLOBAL:Range.LOCAL)
-                .setSet(set)
-                .build();
-        Pipeline pipeline = Pipeline
-                .newBuilder()
-                .build();
-        ChannelDef channelDef = ChannelDef
-                .newBuilder()
-                .setToLocal(pipeline)
                 .build();
         OperatorDef operatorDef = OperatorDef
                 .newBuilder()
-                .setCh(channelDef)
                 .setDedup(dedup)
                 .build();
         this.plan.add(operatorDef);
@@ -311,16 +230,8 @@ public class Plan {
                 .setMaxIters(times)
                 .setBody(taskPlan)
                 .build();
-        Pipeline pipeline = Pipeline
-                .newBuilder()
-                .build();
-        ChannelDef channelDef = ChannelDef
-                .newBuilder()
-                .setToLocal(pipeline)
-                .build();
         OperatorDef operatorDef = OperatorDef
                 .newBuilder()
-                .setCh(channelDef)
                 .setIterate(iteration)
                 .build();
         this.plan.add(operatorDef);
@@ -338,16 +249,8 @@ public class Plan {
                 .setMaxIters(times)
                 .setBody(taskPlan)
                 .build();
-        Pipeline pipeline = Pipeline
-                .newBuilder()
-                .build();
-        ChannelDef channelDef = ChannelDef
-                .newBuilder()
-                .setToLocal(pipeline)
-                .build();
         OperatorDef operatorDef = OperatorDef
                 .newBuilder()
-                .setCh(channelDef)
                 .setIterate(iteration)
                 .build();
         this.plan.add(operatorDef);
@@ -367,16 +270,8 @@ public class Plan {
                 .setBody(taskPlan)
                 .setUntil(filterUntil)
                 .build();
-        Pipeline pipeline = Pipeline
-                .newBuilder()
-                .build();
-        ChannelDef channelDef = ChannelDef
-                .newBuilder()
-                .setToLocal(pipeline)
-                .build();
         OperatorDef operatorDef = OperatorDef
                 .newBuilder()
-                .setCh(channelDef)
                 .setIterate(iteration)
                 .build();
         this.plan.add(operatorDef);
@@ -398,16 +293,8 @@ public class Plan {
                 .setBody(taskPlan)
                 .setUntil(filterUntil)
                 .build();
-        Pipeline pipeline = Pipeline
-                .newBuilder()
-                .build();
-        ChannelDef channelDef = ChannelDef
-                .newBuilder()
-                .setToLocal(pipeline)
-                .build();
         OperatorDef operatorDef = OperatorDef
                 .newBuilder()
-                .setCh(channelDef)
                 .setIterate(iteration)
                 .build();
         this.plan.add(operatorDef);
@@ -422,16 +309,8 @@ public class Plan {
                 .newBuilder()
                 .setTask(taskPlan)
                 .build();
-        Pipeline pipeline = Pipeline
-                .newBuilder()
-                .build();
-        ChannelDef channelDef = ChannelDef
-                .newBuilder()
-                .setToLocal(pipeline)
-                .build();
         OperatorDef operatorDef = OperatorDef
                 .newBuilder()
-                .setCh(channelDef)
                 .setSubtask(subtask)
                 .build();
         this.plan.add(operatorDef);
@@ -448,16 +327,8 @@ public class Plan {
                 .newBuilder()
                 .setTask(taskPlan)
                 .build();
-        Pipeline pipeline = Pipeline
-                .newBuilder()
-                .build();
-        ChannelDef channelDef = ChannelDef
-                .newBuilder()
-                .setToLocal(pipeline)
-                .build();
         OperatorDef operatorDef = OperatorDef
                 .newBuilder()
-                .setCh(channelDef)
                 .setSubtask(subtask)
                 .build();
         this.plan.add(operatorDef);
@@ -477,16 +348,8 @@ public class Plan {
                 .setTask(taskPlan)
                 .setJoin(leftJoin)
                 .build();
-        Pipeline pipeline = Pipeline
-                .newBuilder()
-                .build();
-        ChannelDef channelDef = ChannelDef
-                .newBuilder()
-                .setToLocal(pipeline)
-                .build();
         OperatorDef operatorDef = OperatorDef
                 .newBuilder()
-                .setCh(channelDef)
                 .setSubtask(subtask)
                 .build();
         this.plan.add(operatorDef);
@@ -508,29 +371,14 @@ public class Plan {
                 .setTask(taskPlan)
                 .setJoin(leftJoin)
                 .build();
-        Pipeline pipeline = Pipeline
-                .newBuilder()
-                .build();
-        ChannelDef channelDef = ChannelDef
-                .newBuilder()
-                .setToLocal(pipeline)
-                .build();
         OperatorDef operatorDef = OperatorDef
                 .newBuilder()
-                .setCh(channelDef)
                 .setSubtask(subtask)
                 .build();
         this.plan.add(operatorDef);
     }
 
     public void union(List<Plan> subPlans) {
-        Pipeline pipeline = Pipeline
-                .newBuilder()
-                .build();
-        ChannelDef channelDef = ChannelDef
-                .newBuilder()
-                .setToLocal(pipeline)
-                .build();
         List<TaskPlan> unionTasks = new ArrayList<>();
         subPlans.forEach(plan ->
                 unionTasks.add(TaskPlan
@@ -543,73 +391,46 @@ public class Plan {
                 .build();
         OperatorDef operatorDef = OperatorDef
                 .newBuilder()
-                .setCh(channelDef)
                 .setUnion(union)
                 .build();
         this.plan.add(operatorDef);
     }
 
-    public void sortBy(boolean isGlobal, ByteString cmp) {
+    public void sortBy(ByteString cmp) {
         int noLimit = -1;
         OrderBy orderBy = OrderBy
                 .newBuilder()
-                .setRange(isGlobal?Range.GLOBAL:Range.LOCAL)
                 .setLimit(noLimit)
                 .setCompare(cmp)
                 .build();
-        Pipeline pipeline = Pipeline
-                .newBuilder()
-                .build();
-        ChannelDef channelDef = ChannelDef
-                .newBuilder()
-                .setToLocal(pipeline)
-                .build();
         OperatorDef operatorDef = OperatorDef
                 .newBuilder()
-                .setCh(channelDef)
                 .setOrder(orderBy)
                 .build();
         this.plan.add(operatorDef);
     }
 
-    public void topBy(boolean isGlobal, int n, ByteString cmp) {
+    public void topBy(int n, ByteString cmp) {
         OrderBy orderBy = OrderBy
                 .newBuilder()
-                .setRange(isGlobal?Range.GLOBAL:Range.LOCAL)
                 .setLimit(n)
                 .setCompare(cmp)
                 .build();
-        Pipeline pipeline = Pipeline
-                .newBuilder()
-                .build();
-        ChannelDef channelDef = ChannelDef
-                .newBuilder()
-                .setToLocal(pipeline)
-                .build();
         OperatorDef operatorDef = OperatorDef
                 .newBuilder()
-                .setCh(channelDef)
                 .setOrder(orderBy)
                 .build();
         this.plan.add(operatorDef);
     }
 
-    public void groupBy(boolean isGlobal, ByteString map) {
+    public void groupBy(AccumKind accumKind, ByteString keySelector) {
         GroupBy groupBy = GroupBy
                 .newBuilder()
-                .setRange(isGlobal?Range.GLOBAL:Range.LOCAL)
-                .setMap(map)
-                .build();
-        Pipeline pipeline = Pipeline
-                .newBuilder()
-                .build();
-        ChannelDef channelDef = ChannelDef
-                .newBuilder()
-                .setToLocal(pipeline)
+                .setAccum(accumKind)
+                .setResource(keySelector)
                 .build();
         OperatorDef operatorDef = OperatorDef
                 .newBuilder()
-                .setCh(channelDef)
                 .setGroup(groupBy)
                 .build();
         this.plan.add(operatorDef);
@@ -656,22 +477,6 @@ public class Plan {
             }
         }
         return sinkBuilder.build();
-    }
-
-    private void tryChain(Builder opBuilder) {
-        if (plan.size() > 0) {
-            OperatorDef pre = plan.get(plan.size() - 1);
-            if (pre.getOpKindCase() != OpKindCase.SHUFFLE) {
-                return;
-            }
-            ChKindCase chKindCase = pre.getCh().getChKindCase();
-            if (chKindCase == ChKindCase.TO_ANOTHER
-                    || chKindCase == ChKindCase.TO_OTHERS
-                    || chKindCase == ChKindCase.TO_ONE) {
-                plan.remove(plan.size() - 1);
-                opBuilder.setCh(pre.getCh());
-            }
-        }
     }
 
     private ByteString toBytes(boolean raw) {

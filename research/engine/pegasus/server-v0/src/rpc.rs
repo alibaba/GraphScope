@@ -119,8 +119,7 @@ where
         }
 
         let conf_req = job_req.conf.take().unwrap();
-        let mut conf = parse_conf_req(conf_req);
-        conf.plan_print = true;
+        let conf = parse_conf_req(conf_req);
         let (tx, rx) = tokio::sync::mpsc::unbounded_channel();
         let rpc_sink = RpcSink::new(conf.job_id, tx);
         let sink = ResultSink::<O>::with(rpc_sink);
