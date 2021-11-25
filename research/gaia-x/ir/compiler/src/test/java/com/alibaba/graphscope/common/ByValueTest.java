@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.alibaba.grahscope.common;
+package com.alibaba.graphscope.common;
 
 import com.alibaba.graphscope.common.jna.IrCoreLibrary;
 import com.alibaba.graphscope.common.jna.type.*;

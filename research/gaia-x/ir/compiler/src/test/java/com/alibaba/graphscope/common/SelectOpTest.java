@@ -14,28 +14,26 @@
  * limitations under the License.
  */
 
-package com.alibaba.grahscope.common;
+package com.alibaba.graphscope.common;
 
-import com.alibaba.graphscope.common.IrPlan;
-import com.alibaba.graphscope.common.intermediate.operator.LimitOp;
 import com.alibaba.graphscope.common.intermediate.operator.OpArg;
+import com.alibaba.graphscope.common.intermediate.operator.SelectOp;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Test;
 
 import java.util.function.Function;
 
-public class LimitOpTest {
+public class SelectOpTest {
     private IrPlan irPlan = new IrPlan();
 
     @Test
-    public void limitOpTest() {
-        LimitOp op = new LimitOp();
-        op.setLower(new OpArg<>(Integer.valueOf(1), Function.identity()));
-        op.setUpper(new OpArg<>(Integer.valueOf(2), Function.identity()));
+    public void selectOpTest() {
+        SelectOp op = new SelectOp();
+        op.setPredicate(new OpArg("@.id == 1 && @.name == \"marko\"", Function.identity()));
         irPlan.appendInterOp(op);
         byte[] bytes = irPlan.toPhysicalBytes();
-        Assert.assertArrayEquals(TestUtils.readBytesFromFile("limit_range.bytes"), bytes);
+        Assert.assertArrayEquals(TestUtils.readBytesFromFile("select_expr.bytes"), bytes);
     }
 
     @After

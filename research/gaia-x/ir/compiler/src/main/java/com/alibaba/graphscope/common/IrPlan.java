@@ -33,7 +33,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.function.Function;
 
-// represent ir plan in a chain of operators
+// represent ir plan as a chain of operators
 public class IrPlan implements Closeable {
     private static IrCoreLibrary irCoreLib = IrCoreLibrary.INSTANCE;
     private static Logger logger = LoggerFactory.getLogger(IrPlan.class);
