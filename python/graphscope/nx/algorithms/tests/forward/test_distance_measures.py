@@ -15,6 +15,8 @@ from networkx.generators.lattice import grid_2d_graph
 @with_graphscope_nx_context(TestDistance)
 class TestDistance:
     def setup_method(self):
+        # NB: graphscope.nx does not support grid_2d_graph(which use tuple as node)
+        # we use a tricky way to replace it.
         H = cnlti(grid_2d_graph(4, 4), first_label=1, ordering="sorted")
         G = nx.Graph(H)
         self.G = G

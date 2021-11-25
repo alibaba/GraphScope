@@ -16,6 +16,8 @@ from networkx.generators.lattice import grid_2d_graph
 class TestConnected:
     @classmethod
     def setup_class(cls):
+        # NB: graphscope.nx does not support tuple graph, we construct from
+        # networkx and then convert to nx.Graph
         H1 = cnlti(grid_2d_graph(2, 2), first_label=0, ordering="sorted")
         G1 = nx.Graph(H1)
         G2 = cnlti(nx.lollipop_graph(3, 3), first_label=4, ordering="sorted")

@@ -15,7 +15,8 @@ from networkx.algorithms.tests.test_euler import TestIsSemiEulerian
 @pytest.mark.usefixtures("graphscope_session")
 @with_graphscope_nx_context(TestIsEulerian)
 class TestIsEulerian:
-    # NB: graphscope.nx does not support hypercube_graph, remove it
+    # NB: graphscope.nx does not support hypercube_graph(which use tuple as node),
+    # remove it
     def test_is_eulerian(self):
         assert nx.is_eulerian(nx.complete_graph(5))
         assert nx.is_eulerian(nx.complete_graph(7))
@@ -30,7 +31,8 @@ class TestIsEulerian:
 @pytest.mark.usefixtures("graphscope_session")
 @with_graphscope_nx_context(TestHasEulerianPath)
 class TestHasEulerianPath:
-    # NB: graphscope.nx does not support hypercube_graph, remove it
+    # NB: graphscope.nx does not support hypercube_graph(which use tuple as node),
+    # remove it
     def test_has_eulerian_path_cyclic(self):
         # Test graphs with Eulerian cycles return True.
         assert nx.has_eulerian_path(nx.complete_graph(5))
@@ -40,7 +42,8 @@ class TestHasEulerianPath:
 @pytest.mark.usefixtures("graphscope_session")
 @with_graphscope_nx_context(TestIsSemiEulerian)
 class TestIsSemiEulerian:
-    # NB: graphscope.nx does not support hypercube_graph, remove it
+    # NB: graphscope.nx does not support hypercube_graph(which use tuple as node),
+    # remove it
     def test_is_semieulerian(self):
         # Test graphs with Eulerian paths but no cycles return True.
         assert nx.is_semieulerian(nx.path_graph(4))

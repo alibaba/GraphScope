@@ -20,4 +20,5 @@ def assert_basis_equal(a, b):
 class TestMinimumCycles:
     def test_weighted_diamond(self):
         mcb = minimum_cycle_basis(self.diamond_graph, weight="weight")
+        # in graphscope.nx, answer is [[1, 2, 3, 4], [2, 3, 4]] and it's correct too.
         assert_basis_equal([sorted(c) for c in mcb], [[1, 2, 3, 4], [2, 3, 4]])

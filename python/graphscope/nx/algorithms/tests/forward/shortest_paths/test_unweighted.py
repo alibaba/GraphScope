@@ -17,6 +17,8 @@ class TestUnweightedPath:
     def setup_class(cls):
         from networkx import convert_node_labels_to_integers as cnlti
 
+        # NB: graphscope.nx does not support grid_2d_graph(which use tuple as node)
+        # we use a tricky way to replace it.
         grid = cnlti(grid_2d_graph(4, 4), first_label=1, ordering="sorted")
         cls.grid = nx.Graph(grid)
         cls.cycle = nx.cycle_graph(7)

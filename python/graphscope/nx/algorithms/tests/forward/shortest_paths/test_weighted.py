@@ -36,6 +36,8 @@ from networkx.generators.lattice import grid_2d_graph
 class WeightedTestBase():
     def setup(self):
         """Creates some graphs for use in the unit tests."""
+        # NB: graphscope.nx does not support grid_2d_graph(which use tuple as node)
+        # we use a tricky way to replace it.
         cnlti = nx.convert_node_labels_to_integers
         grid = cnlti(grid_2d_graph(4, 4), first_label=1, ordering="sorted")
         self.grid = nx.Graph(grid)

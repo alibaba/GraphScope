@@ -9,6 +9,7 @@ import_as_graphscope_nx(networkx.algorithms.isomorphism.tests.test_isomorphvf2,
 
 @pytest.mark.usefixtures("graphscope_session")
 def test_noncomparable_nodes():
+    # NB: graphscope.nx does not support object() node, use number to replace.
     node1 = 1
     node2 = 1
     node3 = 1
