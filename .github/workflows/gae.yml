@@ -63,6 +63,7 @@ jobs:
       env:
         GS_TEST_DIR: ${{ github.workspace }}/gstest
         RUN_JAVA_TESTS: ON
+        GRAPHSCOPE_HOME: /opt/graphscope
       run: |
         export USER_JAR_PATH=${GITHUB_WORKSPACE}/analytical_engine/java/grape-demo/target/grape-demo-0.1-shaded.jar
         source ${GRAPHSCOPE_HOME}/conf/grape_jvm_opts

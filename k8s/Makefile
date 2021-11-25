@@ -51,7 +51,7 @@ gsvineyard-image:
 
 graphscope-image: submodule
 	docker build --progress=$(BUILD_PROGRESS) \
-				 --build-arg profile=${PROFILE} \
+				 --build-arg CI=${CI} \
 				 -t graphscope/graphscope:${SHORT_SHA} \
 				 --network=host \
 				 -f $(WORKING_DIR)/graphscope.Dockerfile ..

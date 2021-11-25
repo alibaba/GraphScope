@@ -156,12 +156,7 @@ def find_graphscope_packages():
 
     # add graphscope
     for pkg in find_packages("."):
-        if "tests" not in pkg:
-            packages.append(pkg)
-
-    # add tests
-    for pkg in find_packages("tests"):
-        packages.append("graphscope.tests.%s" % pkg)
+        packages.append(pkg)
 
     # add graphlearn
     for pkg in find_packages("../learning_engine/graph-learn"):
@@ -173,7 +168,6 @@ def find_graphscope_packages():
 def resolve_graphscope_package_dir():
     package_dir = {
         "graphscope": "graphscope",
-        "graphscope.tests": "tests",
         "graphscope.learning.examples": "../learning_engine/graph-learn/examples",
         "graphscope.learning.graphlearn": "../learning_engine/graph-learn/graphlearn",
     }
