@@ -51,6 +51,8 @@ __all__ = [
     "common_neighbors",
     "set_node_attributes",
     "get_node_attributes",
+    "set_edge_attributes",
+    "get_edge_attributes",
     "is_weighted",
     "is_negatively_weighted",
     "is_empty",
@@ -73,6 +75,7 @@ from networkx.classes.function import density
 from networkx.classes.function import edges
 from networkx.classes.function import freeze
 from networkx.classes.function import get_node_attributes
+from networkx.classes.function import get_edge_attributes
 from networkx.classes.function import info
 from networkx.classes.function import is_directed
 from networkx.classes.function import is_empty
@@ -177,3 +180,45 @@ def set_node_attributes(G, values, name=None):
                 dd = G.get_node_data(n)
                 dd.update(d)
                 G.set_node_data(n, dd)
+
+
+@patch_docstring(func.set_edge_attributes)
+def set_edge_attributes(G, values, name=None):  # noqa: C901
+    if name is not None:
+        # `values` does not contain attribute names
+        try:
+            # if `values` is a dict using `.items()` => {edge: value}
+            if G.is_multigraph():
+                for (u, v, key), value in values.items():
+                    try:
+                        G[u][v][key][name] = value
+                    except KeyError:
+                        pass
+            else:
+                for (u, v), value in values.items():
+                    try:
+                        dd = G.get_edge_data(u, v)
+                        dd[name] = value
+                        G.set_edge_data(u, v, dd)
+                    except KeyError:
+                        pass
+        except AttributeError:
+            # treat `values` as a constant
+            for u, v, data in G.edges(data=True):
+                data[name] = values
+    else:
+        # `values` consists of doct-of-dict {edge: {attr: value}} shape
+        if G.is_multigraph():
+            for (u, v, key), d in values.items():
+                try:
+                    G[u][v][key].update(d)
+                except KeyError:
+                    pass
+        else:
+            for (u, v), d in values.items():
+                try:
+                    dd = G.get_edge_data(u, v)
+                    dd.update(d)
+                    G.set_edge_data(u, v, dd)
+                except KeyError:
+                    pass

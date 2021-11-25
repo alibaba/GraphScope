@@ -1,4 +1,5 @@
 import networkx.algorithms.tests.test_cycles
+from networkx.algorithms.tests.test_cycles import TestMinimumCycles
 import pytest
 
 from graphscope.nx.utils.compat import import_as_graphscope_nx
@@ -7,37 +8,16 @@ from graphscope.nx.utils.compat import with_graphscope_nx_context
 import_as_graphscope_nx(networkx.algorithms.tests.test_cycles,
                         decorators=pytest.mark.usefixtures("graphscope_session"))
 
-from networkx.algorithms.tests.test_cycles import TestCycles
-from networkx.algorithms.tests.test_cycles import TestFindCycle
+
+from graphscope.nx.algorithms import minimum_cycle_basis
 
 
-@pytest.mark.usefixtures("graphscope_session")
-@with_graphscope_nx_context(TestFindCycle)
-class TestFindCycle:
-    @pytest.mark.skip(reason="not support multigraph")
-    def test_multigraph(self):
-        pass
-
-    @pytest.mark.skip(reason="not support multigraph")
-    def test_multidigraph(self):
-        pass
-
-    @pytest.mark.skip(reason="not support multigraph")
-    def test_multidigraph_ignore(self):
-        pass
-
-    @pytest.mark.skip(reason="not support multigraph")
-    def test_multidigraph_ignore2(self):
-        pass
-
-    @pytest.mark.skip(reason="not support multigraph")
-    def test_multidigraph_original(self):
-        pass
-
+def assert_basis_equal(a, b):
+    assert sorted(a) == sorted(b)
 
 @pytest.mark.usefixtures("graphscope_session")
-@with_graphscope_nx_context(TestCycles)
-class TestCycles:
-    @pytest.mark.skip(reason="not support multigraph")
-    def test_cycle_basis(self):
-        pass
+@with_graphscope_nx_context(TestMinimumCycles)
+class TestMinimumCycles:
+    def test_weighted_diamond(self):
+        mcb = minimum_cycle_basis(self.diamond_graph, weight="weight")
+        assert_basis_equal([sorted(c) for c in mcb], [[1, 2, 3, 4], [2, 3, 4]])

@@ -286,7 +286,7 @@ jobs:
   python-unittest:
     runs-on: ubuntu-20.04
     needs: [build-gae, build-gle, changes]
-    if: ${{ needs.changes.outputs.gae-python == 'true' }}
+    if: false
     defaults:
       run:
         shell: bash --noprofile --norc -eo pipefail {0}
@@ -455,7 +455,7 @@ jobs:
         mvn clean install -DskipTests -Dmaven.antrun.skip=true --quiet
 
     - name: Basic test
-      if: steps.nx-filter.outputs.basic == 'true'
+      if: false
       env:
         DEPLOYMENT: ${{ matrix.deployment }}
       run: |
@@ -464,7 +464,7 @@ jobs:
         python3 -m pytest --exitfirst -s -v python/graphscope/nx/tests
 
     - name: Algorithm test
-      if: steps.nx-filter.outputs.algorithm == 'true'
+      if: false
       env:
         DEPLOYMENT: ${{ matrix.deployment }}
       run: |
@@ -472,8 +472,18 @@ jobs:
         export GS_TEST_DIR='/home/graphscope/gstest'
         python3 -m pytest --exitfirst -s -v python/graphscope/nx/algorithms/tests/builtin
 
+    - name: Forward Algorithm test
+      if: matrix.deployment == 'standalone'
+      env:
+        DEPLOYMENT: ${{ matrix.deployment }}
+      run: |
+        export GRAPHSCOPE_HOME='/opt/graphscope'
+        export GS_TEST_DIR='/home/graphscope/gstest'
+        ln -s ../algorithms/tests python/graphscope/nx/tests/algorithms
+        python3 -m pytest -s -v python/graphscope/nx/tests/algorithms/forward
+
     - name: Generator test
-      if: steps.nx-filter.outputs.generator == 'true'
+      if: false
       env:
         DEPLOYMENT: ${{ matrix.deployment }}
       run: |
