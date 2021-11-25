@@ -24,6 +24,10 @@ on:
       - '.github/workflows/gae.yml'
       - '!analytical_engine/**.md'
 
+concurrency:
+  group: ${{ github.repository }}-${{ github.head_ref || github.sha }}-${{ github.workflow }}
+  cancel-in-progress: true
+
 jobs:
   build-gae:
     runs-on: ubuntu-20.04

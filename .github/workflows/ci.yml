@@ -30,6 +30,10 @@ on:
       - 'scripts/**'
       - 'tutorials/**'
 
+concurrency:
+  group: ${{ github.repository }}-${{ github.head_ref || github.sha }}-${{ github.workflow }}
+  cancel-in-progress: true
+
 jobs:
   # JOB to run change detection
   changes:
@@ -58,14 +62,17 @@ jobs:
             - 'python/graphscope/framework/**'
             - 'python/graphscope/tests/unittest/**'
             - 'coordinator/gscoordinator/**'
+            - '.github/workflows/ci.yml'
           networkx:
             - 'analytical_engine/apps/**'
             - 'analytical_engine/frame/**'
             - 'analytical_engine/core/**'
             - 'python/graphscope/nx/**'
+            - '.github/workflows/ci.yml'
           gie-function-test:
             - 'interactive_engine/**'
             - 'python/graphscope/interactive/**'
+            - '.github/workflows/ci.yml'
 
   build-wheels:
     # Require the user id of the self-hosted is 1001, which may need to be

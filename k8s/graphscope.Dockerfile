@@ -41,7 +41,7 @@ RUN cd /home/graphscope/gs && \
         pushd artifacts/coordinator/dist/wheelhouse; \
         python3 -m pip install ./*.whl; \
         popd; \
-        pushd coordinator/dist; \
+        pushd artifacts/coordinator/dist; \
         python3 -m pip install ./*.whl; \
     else \
         python3 -m pip install graphscope; \
