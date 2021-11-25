@@ -976,7 +976,7 @@ def graph_to_dataframe(graph, selector=None, vertex_range=None):
     return op
 
 
-def create_interactive_query(graph, engine_params, enable_gaia):
+def create_interactive_query(graph, engine_params):
     """Create a interactive engine that query on the :code:`graph`
 
     Args:
@@ -994,7 +994,6 @@ def create_interactive_query(graph, engine_params, enable_gaia):
         config[types_pb2.GIE_GREMLIN_ENGINE_PARAMS] = utils.s_to_attr(
             json.dumps(engine_params)
         )
-    config[types_pb2.GIE_ENABLE_GAIA] = utils.b_to_attr(enable_gaia)
     op = Operation(
         graph.session_id,
         types_pb2.CREATE_INTERACTIVE_QUERY,
@@ -1073,7 +1072,7 @@ def close_learning_instance(learning_instance):
     return op
 
 
-def gremlin_query(interactive_query, query, request_options=None, query_gaia=False):
+def gremlin_query(interactive_query, query, request_options=None):
     """Execute a gremlin query.
 
     Args:
@@ -1095,7 +1094,6 @@ def gremlin_query(interactive_query, query, request_options=None, query_gaia=Fal
         config[types_pb2.GIE_GREMLIN_REQUEST_OPTIONS] = utils.s_to_attr(
             json.dumps(request_options)
         )
-    config[types_pb2.GIE_QUERY_GAIA] = utils.b_to_attr(query_gaia)
     op = Operation(
         interactive_query.session_id,
         types_pb2.GREMLIN_QUERY,

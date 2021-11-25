@@ -75,7 +75,6 @@ from gscoordinator.object_manager import InteractiveQueryManager
 from gscoordinator.object_manager import LearningInstanceManager
 from gscoordinator.object_manager import LibMeta
 from gscoordinator.object_manager import ObjectManager
-from gscoordinator.utils import COORDINATOR_HOME
 from gscoordinator.utils import GRAPHSCOPE_HOME
 from gscoordinator.utils import WORKSPACE
 from gscoordinator.utils import check_gremlin_server_ready
@@ -669,21 +668,15 @@ class CoordinatorServiceServicer(
 
         # vineyard object id of graph
         object_id = op.attr[types_pb2.VINEYARD_ID].i
-        enable_gaia = op.attr[types_pb2.GIE_ENABLE_GAIA].b
         # maxgraph endpoint pattern
         MAXGRAPH_FRONTEND_PATTERN = re.compile("(?<=MAXGRAPH_FRONTEND_ENDPOINT:).*$")
         MAXGRAPH_FRONTEND_EXTERNAL_PATTERN = re.compile(
             "(?<=MAXGRAPH_FRONTEND_EXTERNAL_ENDPOINT:).*$"
         )
-        # gaia endpoint pattern
-        GAIA_FRONTEND_PATTERN = re.compile("(?<=GAIA_FRONTEND_ENDPOINT:).*$")
-        GAIA_FRONTEND_EXTERNAL_PATTERN = re.compile(
-            "(?<=GAIA_FRONTEND_EXTERNAL_ENDPOINT:).*$"
-        )
-        # maxgraph endpoint and gaia endpoint
-        endpoints = []
-        # maxgraph and gaia external endpoint, for client and gremlin function test
-        external_endpoints = []
+        # maxgraph endpoint
+        maxgraph_endpoint = None
+        # maxgraph external endpoint, for client and gremlin function test
+        maxgraph_external_endpoint = None
         # create instance
         proc = self._launcher.create_interactive_instance(op.attr)
         try:
@@ -697,7 +690,6 @@ class CoordinatorServiceServicer(
                     MAXGRAPH_FRONTEND_PATTERN, outs
                 )
                 if check_gremlin_server_ready(maxgraph_endpoint):
-                    endpoints.append(maxgraph_endpoint)
                     logger.info(
                         "build maxgraph frontend %s for graph %ld",
                         maxgraph_endpoint,
@@ -706,35 +698,17 @@ class CoordinatorServiceServicer(
                 maxgraph_external_endpoint = _match_frontend_endpoint(
                     MAXGRAPH_FRONTEND_EXTERNAL_PATTERN, outs
                 )
-                if maxgraph_external_endpoint:
-                    external_endpoints.append(maxgraph_external_endpoint)
-                # match gaia endpoint and check for ready
-                if enable_gaia:
-                    gaia_endpoint = _match_frontend_endpoint(
-                        GAIA_FRONTEND_PATTERN, outs
-                    )
-                    if check_gremlin_server_ready(gaia_endpoint):
-                        endpoints.append(gaia_endpoint)
-                        logger.info(
-                            "build gaia frontend %s for graph %ld",
-                            gaia_endpoint,
-                            object_id,
-                        )
-                    gaia_external_endpoint = _match_frontend_endpoint(
-                        GAIA_FRONTEND_EXTERNAL_PATTERN,
-                        outs,
-                    )
-                    if gaia_external_endpoint:
-                        external_endpoints.append(gaia_external_endpoint)
+
                 self._object_manager.put(
-                    op.key, InteractiveQueryManager(op.key, endpoints, object_id)
+                    op.key,
+                    InteractiveQueryManager(op.key, maxgraph_endpoint, object_id),
                 )
                 return op_def_pb2.OpResult(
                     code=error_codes_pb2.OK,
                     key=op.key,
-                    result=",".join(external_endpoints).encode("utf-8")
-                    if external_endpoints
-                    else ",".join(endpoints).encode("utf-8"),
+                    result=maxgraph_external_endpoint.encode("utf-8")
+                    if maxgraph_external_endpoint
+                    else maxgraph_endpoint.encode("utf-8"),
                     extra_info=str(object_id).encode("utf-8"),
                 )
             else:
@@ -753,14 +727,11 @@ class CoordinatorServiceServicer(
             request_options = json.loads(
                 op.attr[types_pb2.GIE_GREMLIN_REQUEST_OPTIONS].s.decode()
             )
-        query_gaia = op.attr[types_pb2.GIE_QUERY_GAIA].b
         key_of_parent_op = op.parents[0]
 
         gremlin_client = self._object_manager.get(key_of_parent_op)
         try:
-            rlt = gremlin_client.submit(
-                message, request_options=request_options, query_gaia=query_gaia
-            )
+            rlt = gremlin_client.submit(message, request_options=request_options)
         except Exception as e:
             raise RuntimeError("Gremlin query failed.") from e
         self._object_manager.put(op.key, GremlinResultSet(op.key, rlt))

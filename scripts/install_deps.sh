@@ -1022,7 +1022,7 @@ install_deps_dev() {
   install_dependencies
 
   succ_msg="The script has installed all dependencies for builing GraphScope, use commands:\n
-  $ export ${OUTPUT_ENV_FILE}
+  $ source ${OUTPUT_ENV_FILE}
   $ make graphscope\n
   to build and develop GraphScope."
   succ "${succ_msg}"
