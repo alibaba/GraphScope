@@ -173,17 +173,19 @@ def compile_graph():
 
 
 def compile_cpp_pie_app():
-    template = "gs::ArrowProjectedFragment<{},{},{},{}>"
+    property_template = "vineyard::ArrowFragment<{},{}>"
+    project_template = "gs::ArrowProjectedFragment<{},{},{},{}>"
     flatten_template = "gs::ArrowFlattenedFragment<{},{},{},{}>"
     dynamic_template = "gs::DynamicProjectedFragment<{},{}>"
 
-    sull = template.format("std::string", "uint64_t", "int64_t", "int64_t")
-    lull = template.format("int64_t", "uint64_t", "int64_t", "int64_t")
-    luee = template.format(
+    lu = property_template.format("int64_t", "uint64_t")
+    psull = project_template.format("std::string", "uint64_t", "int64_t", "int64_t")
+    pllul = project_template.format("int64_t", "uint64_t", "int64_t", "int64_t")
+    pluee = project_template.format(
         "int64_t", "uint64_t", "grape::EmptyType", "grape::EmptyType"
     )
-    luel = template.format("int64_t", "uint64_t", "grape::EmptyType", "int64_t")
-    lued = template.format("int64_t", "uint64_t", "grape::EmptyType", "double")
+    pluel = project_template.format("int64_t", "uint64_t", "grape::EmptyType", "int64_t")
+    lued = project_template.format("int64_t", "uint64_t", "grape::EmptyType", "double")
     fluee = flatten_template.format(
         "int64_t", "uint64_t", "grape::EmptyType", "grape::EmptyType"
     )
@@ -196,54 +198,54 @@ def compile_cpp_pie_app():
     dted = dynamic_template.format("grape::EmptyType", "double")
 
     targets = [
-        ("pagerank", luee),
-        ("pagerank", luel),
-        ("pagerank", lull),
-        ("hits", luee),
+        ("pagerank", pluee),
+        ("pagerank", pluel),
+        ("pagerank", pllul),
+        ("hits", pluee),
         ("hits", fluee),
-        ("hits", lull),
-        ("wcc", luee),
-        ("wcc", luel),
-        ("wcc", lull),
-        ("cdlp", luee),
-        ("cdlp", luel),
-        ("bfs", luee),
-        ("bfs", luel),
-        ("bfs", lull),
-        ("sssp", luel),
+        ("hits", pllul),
+        ("wcc", pluee),
+        ("wcc", pluel),
+        ("wcc", pllul),
+        ("cdlp", pluee),
+        ("cdlp", pluel),
+        ("bfs", pluee),
+        ("bfs", pluel),
+        ("bfs", pllul),
+        ("sssp", pluel),
         ("sssp", lued),
-        ("sssp", lull),
-        ("sssp", sull),
-        ("kcore", luee),
+        ("sssp", pllul),
+        ("sssp", psull),
+        ("kcore", pluee),
         ("kcore", dtee),
-        ("kshell", luee),
-        ("kshell", lull),
-        ("triangles", luee),
+        ("kshell", pluee),
+        ("kshell", pllul),
+        ("triangles", pluee),
         ("triangles", dtee),
-        ("triangles", lull),
-        ("clustering", luee),
+        ("triangles", pllul),
+        ("clustering", pluee),
         ("clustering", fluee),
         ("clustering", dtee),
-        ("clustering", lull),
-        ("degree_centrality", luee),
-        ("degree_centrality", lull),
+        ("clustering", pllul),
+        ("degree_centrality", pluee),
+        ("degree_centrality", pllul),
         ("degree_centrality", fluee),
         ("degree_centrality", dtee),
-        ("eigenvector_centrality", luel),
-        ("eigenvector_centrality", lull),
-        ("katz_centrality", luel),
-        ("katz_centrality", lull),
-        ("is_simple_path", lull),
-        ("louvain", lull),
-        ("sssp_has_path", lull),
-        ("property_sssp", lull),
+        ("eigenvector_centrality", pluel),
+        ("eigenvector_centrality", pllul),
+        ("katz_centrality", pluel),
+        ("katz_centrality", pllul),
+        ("is_simple_path", pllul),
+        ("louvain", pllul),
+        ("sssp_has_path", pllul),
+        ("property_sssp", lu),
     ]
 
     if "NIGHTLY" in os.environ:
         targets.extend(
             [
-                ("sssp_average_length", luee),
-                ("sssp_average_length", luel),
+                ("sssp_average_length", pluee),
+                ("sssp_average_length", pluel),
                 ("sssp_average_length", lued),
                 ("sssp_average_length", dtee),
                 ("sssp_average_length", dtel),
@@ -251,7 +253,7 @@ def compile_cpp_pie_app():
                 ("pagerank_nx", fluee),
                 ("pagerank_nx", dtee),
                 ("hits", dtee),
-                ("eigenvector_centrality", luee),
+                ("eigenvector_centrality", pluee),
                 ("eigenvector_centrality", lued),
                 ("eigenvector_centrality", fluee),
                 ("eigenvector_centrality", fluel),
@@ -259,7 +261,7 @@ def compile_cpp_pie_app():
                 ("eigenvector_centrality", dtee),
                 ("eigenvector_centrality", dtel),
                 ("eigenvector_centrality", dted),
-                ("katz_centrality", luee),
+                ("katz_centrality", pluee),
                 ("katz_centrality", lued),
                 ("katz_centrality", fluee),
                 ("katz_centrality", fluel),
@@ -267,10 +269,10 @@ def compile_cpp_pie_app():
                 ("katz_centrality", dtee),
                 ("katz_centrality", dtel),
                 ("katz_centrality", dted),
-                ("transitivity", luee),
+                ("transitivity", pluee),
                 ("transitivity", fluee),
                 ("transitivity", dtee),
-                ("avg_clustering", luee),
+                ("avg_clustering", pluee),
                 ("avg_clustering", fluee),
                 ("avg_clustering", dtee),
                 ("sssp_projected", dtee),
