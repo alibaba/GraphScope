@@ -11,9 +11,9 @@ on:
       - 'interactive_engine/**'
       - 'python/graphscope/client/**'
       - 'charts/graphscope-store/**'
-      - '.github/workflows/gss-yml'
-    paths-ignore:
-      - '**.md'
+      - '.github/workflows/gss.yml'
+      - '!interactive_engine/**.md'
+      - '!charts/graphscope-store/**.md'
   pull_request:
     branches:
       - main
@@ -22,9 +22,9 @@ on:
       - 'interactive_engine/**'
       - 'python/graphscope/client/**'
       - 'charts/graphscope-store/**'
-      - '.github/workflows/gss-yml'
-    paths-ignore:
-      - '**.md'
+      - '.github/workflows/gss.yml'
+      - '!interactive_engine/**.md'
+      - '!charts/graphscope-store/**.md'
 
 jobs:
   gremlin-test:

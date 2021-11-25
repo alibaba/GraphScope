@@ -8,15 +8,15 @@ on:
       - main
     paths:
       - 'analytical_engine/**'
-    paths-ignore:
-      - '**.md'
+      - '.github/workflows/gae.yml'
+      - '!analytical_engine/**.md'
   pull_request:
     branches:
       - main
     paths:
       - 'analytical_engine/**'
-    paths-ignore:
-       - '**.md'
+      - '.github/workflows/gae.yml'
+      - '!analytical_engine/**.md'
 
 jobs:
   build-gae:
