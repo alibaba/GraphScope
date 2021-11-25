@@ -382,12 +382,12 @@ class KubernetesClusterLauncher(Launcher):
             start_new_session=True,
             cwd=os.getcwd(),
             env=env,
-            universal_newlines=True,
             encoding="utf-8",
             stdin=subprocess.DEVNULL,
             stdout=subprocess.PIPE,
             stderr=subprocess.STDOUT,
             bufsize=1,
+            universal_newlines=True,
         )
         return process
 
@@ -408,11 +408,11 @@ class KubernetesClusterLauncher(Launcher):
             start_new_session=True,
             cwd=os.getcwd(),
             env=env,
-            universal_newlines=True,
             encoding="utf-8",
             stdin=subprocess.DEVNULL,
             stdout=subprocess.PIPE,
             stderr=subprocess.STDOUT,
+            universal_newlines=True,
             bufsize=1,
         )
         return process
@@ -821,11 +821,11 @@ class KubernetesClusterLauncher(Launcher):
             start_new_session=True,
             cwd=os.getcwd(),
             env=os.environ.copy(),
-            universal_newlines=True,
             encoding="utf-8",
             stdin=subprocess.DEVNULL,
             stdout=subprocess.PIPE,
             stderr=subprocess.STDOUT,
+            universal_newlines=True,
             bufsize=1,
         )
         stdout_watcher = PipeWatcher(self._zetcd_process.stdout, sys.stdout, drop=True)
@@ -1023,6 +1023,8 @@ class KubernetesClusterLauncher(Launcher):
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
             encoding="utf-8",
+            universal_newlines=True,
+            bufsize=1,
         )
 
         stdout_watcher = PipeWatcher(
@@ -1203,7 +1205,11 @@ class KubernetesClusterLauncher(Launcher):
             ]
             logging.info("launching learning server: %s", " ".join(cmd))
             proc = subprocess.Popen(
-                cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT
+                cmd,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.STDOUT,
+                universal_newlines=True,
+                bufsize=1,
             )
             stdout_watcher = PipeWatcher(proc.stdout, sys.stdout, drop=True)
             setattr(proc, "stdout_watcher", stdout_watcher)

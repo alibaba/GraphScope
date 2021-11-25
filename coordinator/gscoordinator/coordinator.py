@@ -54,6 +54,7 @@ from graphscope.framework.errors import AnalyticalEngineInternalError
 from graphscope.framework.graph_utils import normalize_parameter_edges
 from graphscope.framework.graph_utils import normalize_parameter_vertices
 from graphscope.framework.loader import Loader
+from graphscope.framework.utils import PipeMerger
 from graphscope.framework.utils import normalize_data_type_str
 from graphscope.proto import attr_value_pb2
 from graphscope.proto import coordinator_service_pb2_grpc
@@ -155,6 +156,7 @@ class CoordinatorServiceServicer(
 
         # control log fetching
         self._streaming_logs = True
+        self._pipe_merged = PipeMerger(sys.stdout, sys.stderr)
 
         # dangling check
         self._dangling_timeout_seconds = dangling_timeout_seconds
@@ -622,15 +624,17 @@ class CoordinatorServiceServicer(
     def FetchLogs(self, request, context):
         while self._streaming_logs:
             try:
-                info_message = sys.stdout.poll(timeout=2)
+                tag, message = self._pipe_merged.poll(timeout=2)
             except queue.Empty:
-                info_message = ""
-            try:
-                error_message = sys.stderr.poll(timeout=2)
-            except queue.Empty:
-                error_message = ""
+                tag, message = "", ""
+            except Exception as e:
+                tag, message = "out", "WARNING: failed to read log: %s" % e
 
-            if info_message or error_message:
+            if tag and message:
+                if tag == "err":
+                    info_message, error_message = "", message
+                elif tag == "out":
+                    info_message, error_message = message, ""
                 if self._streaming_logs:
                     yield message_pb2.FetchLogsResponse(
                         info_message=info_message, error_message=error_message

@@ -130,13 +130,13 @@ class HostsClusterLauncher(Launcher):
             cmd,
             start_new_session=True,
             cwd=COORDINATOR_HOME,
-            universal_newlines=True,
+            env=env,
             encoding="utf-8",
             stdin=subprocess.DEVNULL,
             stdout=subprocess.PIPE if gs_config.show_log else subprocess.DEVNULL,
             stderr=subprocess.PIPE,
+            universal_newlines=True,
             bufsize=1,
-            env=env,
         )
         stdout_watcher = PipeWatcher(process.stdout, sys.stdout)
         stderr_watcher = PipeWatcher(process.stderr, sys.stderr)

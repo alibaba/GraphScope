@@ -321,10 +321,11 @@ def compile_app(workspace: str, library_name, attr, engine_config: dict):
     cmake_process = subprocess.Popen(
         cmake_commands,
         env=os.environ.copy(),
-        universal_newlines=True,
         encoding="utf-8",
         stdout=subprocess.DEVNULL,
         stderr=subprocess.PIPE,
+        universal_newlines=True,
+        bufsize=1,
     )
     cmake_stderr_watcher = PipeWatcher(cmake_process.stderr, sys.stdout)
     setattr(cmake_process, "stderr_watcher", cmake_stderr_watcher)
@@ -333,10 +334,11 @@ def compile_app(workspace: str, library_name, attr, engine_config: dict):
     make_process = subprocess.Popen(
         ["make", "-j4"],
         env=os.environ.copy(),
-        universal_newlines=True,
         encoding="utf-8",
         stdout=subprocess.DEVNULL,
         stderr=subprocess.PIPE,
+        universal_newlines=True,
+        bufsize=1,
     )
     make_stderr_watcher = PipeWatcher(make_process.stderr, sys.stdout)
     setattr(make_process, "stderr_watcher", make_stderr_watcher)
@@ -411,10 +413,11 @@ def compile_graph_frame(workspace: str, library_name, attr: dict, engine_config:
     cmake_process = subprocess.Popen(
         cmake_commands,
         env=os.environ.copy(),
-        universal_newlines=True,
         encoding="utf-8",
         stdout=subprocess.DEVNULL,
         stderr=subprocess.PIPE,
+        universal_newlines=True,
+        bufsize=1,
     )
     cmake_stderr_watcher = PipeWatcher(cmake_process.stderr, sys.stdout)
     setattr(cmake_process, "stderr_watcher", cmake_stderr_watcher)
@@ -423,10 +426,11 @@ def compile_graph_frame(workspace: str, library_name, attr: dict, engine_config:
     make_process = subprocess.Popen(
         ["make", "-j4"],
         env=os.environ.copy(),
-        universal_newlines=True,
         encoding="utf-8",
         stdout=subprocess.DEVNULL,
         stderr=subprocess.PIPE,
+        universal_newlines=True,
+        bufsize=1,
     )
     make_stderr_watcher = PipeWatcher(make_process.stderr, sys.stdout)
     setattr(make_process, "stderr_watcher", make_stderr_watcher)

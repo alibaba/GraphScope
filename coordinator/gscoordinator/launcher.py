@@ -258,11 +258,11 @@ class LocalLauncher(Launcher):
             start_new_session=True,
             cwd=os.getcwd(),
             env=env,
-            universal_newlines=True,
             encoding="utf-8",
             stdin=subprocess.DEVNULL,
             stdout=subprocess.PIPE,
             stderr=subprocess.STDOUT,
+            universal_newlines=True,
             bufsize=1,
         )
         return process
@@ -282,11 +282,11 @@ class LocalLauncher(Launcher):
             start_new_session=True,
             cwd=os.getcwd(),
             env=env,
-            universal_newlines=True,
             encoding="utf-8",
             stdin=subprocess.DEVNULL,
             stdout=subprocess.PIPE,
             stderr=subprocess.STDOUT,
+            universal_newlines=True,
             bufsize=1,
         )
         return process
@@ -328,11 +328,11 @@ class LocalLauncher(Launcher):
             start_new_session=True,
             cwd=os.getcwd(),
             env=env,
-            universal_newlines=True,
             encoding="utf-8",
             stdin=subprocess.DEVNULL,
             stdout=subprocess.DEVNULL,
             stderr=subprocess.DEVNULL,
+            universal_newlines=True,
             bufsize=1,
         )
 
@@ -371,11 +371,11 @@ class LocalLauncher(Launcher):
             start_new_session=True,
             cwd=os.getcwd(),
             env=os.environ.copy(),
-            universal_newlines=True,
             encoding="utf-8",
             stdin=subprocess.DEVNULL,
             stdout=subprocess.DEVNULL,
             stderr=subprocess.STDOUT,
+            universal_newlines=True,
             bufsize=1,
         )
 
@@ -430,11 +430,11 @@ class LocalLauncher(Launcher):
                 start_new_session=True,
                 cwd=os.getcwd(),
                 env=env,
-                universal_newlines=True,
                 encoding="utf-8",
                 stdin=subprocess.DEVNULL,
                 stdout=subprocess.PIPE,
                 stderr=subprocess.STDOUT,
+                universal_newlines=True,
                 bufsize=1,
             )
 
@@ -509,11 +509,11 @@ class LocalLauncher(Launcher):
             start_new_session=True,
             cwd=os.getcwd(),
             env=env,
-            universal_newlines=True,
             encoding="utf-8",
             stdin=subprocess.DEVNULL,
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
+            universal_newlines=True,
             bufsize=1,
         )
 
@@ -580,6 +580,8 @@ class LocalLauncher(Launcher):
                 env=env,
                 stdout=subprocess.PIPE,
                 stderr=subprocess.STDOUT,
+                universal_newlines=True,
+                bufsize=1,
             )
             stdout_watcher = PipeWatcher(proc.stdout, sys.stdout)
             setattr(proc, "stdout_watcher", stdout_watcher)
