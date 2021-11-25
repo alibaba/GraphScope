@@ -74,17 +74,9 @@ jobs:
 
     - name: Build GraphScope Image
       run: |
+        cd ${GITHUB_WORKSPACE}/artifacts
+        tar -zxf ./wheel-${{ github.sha }}/client.tar.gz
+        tar -zxf ./wheel-${{ github.sha }}/graphscope.tar.gz
+
+        cd ${GITHUB_WORKSPACE}
         sudo make graphscope-image
-        sudo docker tag graphscope/graphscope:${SHORT_SHA} \
-            registry.cn-hongkong.aliyuncs.com/graphscope/graphscope:nightly
-
-    - name: Release Image
-      run: |
-        echo ${{ secrets.ALIYUN_TOKEN }} | sudo docker login --username=grape_dev registry.cn-hongkong.aliyuncs.com --password-stdin
-        sudo docker push registry.cn-hongkong.aliyuncs.com/graphscope/graphscope:nightly
-
-    - name: Clean
-      if: always()
-      run: |
-        sudo docker rmi -f graphscope/graphscope:${SHORT_SHA} \
-            registry.cn-hongkong.aliyuncs.com/graphscope/graphscope:nightly || true

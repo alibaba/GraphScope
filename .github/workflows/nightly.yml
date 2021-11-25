@@ -50,22 +50,8 @@ jobs:
       run: |
         short_sha=$(git rev-parse --short HEAD)
         echo "SHORT_SHA=${short_sha}" >> $GITHUB_ENV
-        echo "GS_IMAGE=graphscope/graphscope:${short_sha}" >> $GITHUB_ENV
 
     - name: Build GraphScope Store Image
       run: |
         cd ${GITHUB_WORKSPACE}
         sudo make graphscope-store-image
-        sudo docker tag graphscope/graphscope-store:${SHORT_SHA} \
-                        registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-store:nightly
-
-    - name: Release Image
-      run: |
-        echo ${{ secrets.ALIYUN_TOKEN }} | sudo docker login --username=grape_dev registry.cn-hongkong.aliyuncs.com --password-stdin
-        sudo docker push registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-store:nightly
-
-    - name: Clean
-      if: always()
-      run: |
-        sudo docker rmi -f graphscope/graphscope-store:${SHORT_SHA} \
-            registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-store:nightly || true

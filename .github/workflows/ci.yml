@@ -57,6 +57,7 @@ jobs:
             - 'python/graphscope/deploy/**'
             - 'python/graphscope/framework/**'
             - 'python/tests/unittest/**'
+            - 'coordinator/gscoordinator/**'
           networkx:
             - 'analytical_engine/apps/**'
             - 'analytical_engine/frame/**'
@@ -64,10 +65,11 @@ jobs:
             - 'python/graphscope/nx/**'
           gie-function-test:
             - 'interactive_engine/**'
+            - 'python/graphscope/interactive/**'
 
   build-wheels:
-    # Require the user id of the self-hosted is 1001, # which may need to be
-    # configured manually when a new self-hosted runenr is added.
+    # Require the user id of the self-hosted is 1001, which may need to be
+    # configured manually when a new self-hosted runner is added.
     runs-on: self-hosted
     defaults:
       run:
@@ -162,7 +164,7 @@ jobs:
           graphscope.tar.gz
         retention-days: 5
 
-  minimize-test:
+  mini-test:
     runs-on: ubuntu-20.04
     needs: [build-wheels]
     defaults:
@@ -389,8 +391,6 @@ jobs:
           # build graphscope image
           cd ${GITHUB_WORKSPACE}
           make graphscope-image
-          sudo docker tag graphscope/graphscope:${SHORT_SHA} \
-              registry.cn-hongkong.aliyuncs.com/graphscope/graphscope:${SHORT_SHA}
 
           # build python client
           make client
@@ -403,14 +403,13 @@ jobs:
           GS_TEST_DIR: ${{ github.workspace }}/gstest
         run: |
           cd ${GITHUB_WORKSPACE}/interactive_engine/tests
-          ./function_test.sh 8111 1 registry.cn-hongkong.aliyuncs.com/graphscope/graphscope:${SHORT_SHA}
-          ./function_test.sh 8112 2 registry.cn-hongkong.aliyuncs.com/graphscope/graphscope:${SHORT_SHA}
+          ./function_test.sh 8111 1 graphscope/graphscope:${SHORT_SHA}
+          ./function_test.sh 8112 2 graphscope/graphscope:${SHORT_SHA}
 
       - name: Clean
         if: always()
         run: |
           sudo docker rmi -f graphscope/graphscope:${SHORT_SHA} || true
-          sudo docker rmi -f registry.cn-hongkong.aliyuncs.com/graphscope/graphscope:${SHORT_SHA} || true
 
   k8s-test:
     runs-on: self-hosted
