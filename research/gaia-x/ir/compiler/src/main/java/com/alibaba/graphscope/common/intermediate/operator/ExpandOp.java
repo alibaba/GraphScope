@@ -21,7 +21,7 @@ import java.util.Optional;
 public class ExpandOp extends InterOpBase {
     public ExpandOp() {
         super();
-        this.edgeOpt = Optional.empty();
+        this.isEdge = Optional.empty();
         this.direction = Optional.empty();
         this.labels = Optional.empty();
         this.properties = Optional.empty();
@@ -30,7 +30,7 @@ public class ExpandOp extends InterOpBase {
     }
 
     // out or outE
-    private Optional<OpArg> edgeOpt;
+    private Optional<OpArg> isEdge;
 
     // in/out/both
     private Optional<OpArg> direction;
@@ -86,11 +86,11 @@ public class ExpandOp extends InterOpBase {
         this.limit = Optional.of(limit);
     }
 
-    public Optional<OpArg> getEdgeOpt() {
-        return edgeOpt;
+    public Optional<OpArg> getIsEdge() {
+        return isEdge;
     }
 
-    public void setEdgeOpt(OpArg edgeOpt) {
-        this.edgeOpt = Optional.of(edgeOpt);
+    public void setEdgeOpt(OpArg isEdge) {
+        this.isEdge = Optional.of(isEdge);
     }
 }

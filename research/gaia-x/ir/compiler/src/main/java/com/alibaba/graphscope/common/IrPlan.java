@@ -141,7 +141,7 @@ public class IrPlan implements Closeable {
                 // todo: add properties
                 // todo: add predicates
                 // todo: add limit
-                Optional<OpArg> edgeOpt = op.getEdgeOpt();
+                Optional<OpArg> edgeOpt = op.getIsEdge();
                 if (!edgeOpt.isPresent()) {
                     throw new InterOpIllegalArgException(baseOp.getClass(), "edgeOpt", "not present");
                 }
