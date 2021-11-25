@@ -16,6 +16,32 @@ GraphScope 以 docker 镜像的方式分发引擎等组件。
 
 如上述代码所示，用户可以很容易的通过会话来拉起一个 GraphScope 实例。
 
+用户有时需要使用在本机磁盘上的数据，我们提供了选项供用户将本机的目录挂载到集群上。
+
+假定我们要将本机的 `~/test_data` 的路径挂载到 Pod 中的 `/testingdata` 路径，我们可以定义如下一个字典，然后将其通过
+`k8s_volumes` 的参数传给会话的构造函数。
+
+注意这里的本机路径是相对于 k8s 节点的概念，也就是说，如果你是通过 `Kind` 创建的集群，那么你需要将这个目录拷贝到 `Kind`
+的虚拟主机的相应路径上，或者在配置中将路径提前挂载到虚拟主机上去。在 `这里 <https://kind.sigs.k8s.io/docs/user/configuration/#extra-mounts>`_ 查看更多细节。
+
+```python
+import os
+import graphscope
+k8s_volumes = {
+    "data": {
+        "type": "hostPath",
+        "field": {
+            "path": os.path.expanduser("~/test_data/"),
+            "type": "Directory"
+        },
+        "mounts": {
+            "mountPath": "/testingdata"
+        }
+    }
+}
+sess = graphscope.session(k8s_volumes=k8s_volumes)
+```
+
 Kubernetes 上的一个 GraphScope 实例包含: 一个运行 etcd 的 pod，负责元信息的同步；一个运行 Coordinator 的 pod，负责对 GraphScope 引擎容器的管理；
 以及一组运行 GraphScope 引擎容器的 ReplicaSet 对象。
 
