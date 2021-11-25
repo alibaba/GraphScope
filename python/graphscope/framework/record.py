@@ -16,8 +16,6 @@
 # limitations under the License.
 #
 
-from collections import namedtuple
-
 from graphscope.proto import write_service_pb2
 
 

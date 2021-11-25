@@ -40,7 +40,7 @@ def katz_centrality(
     https://networkx.org/documentation/stable/reference/algorithms/generated/networkx.algorithms.centrality.katz_centrality_numpy.html
 
     Args:
-        graph (:class:`Graph`): A projected simple graph.
+        graph (:class:`Graph`): A simple graph.
         alpha (float, optional): Auttenuation factor. Defaults to 0.1.
         beta (float, optional): Weight attributed to the immediate neighborhood. Defaults to 1.0.
         tolerance (float, optional): Error tolerance. Defaults to 1e-06.
@@ -56,8 +56,8 @@ def katz_centrality(
     .. code:: python
 
         import graphscope as gs
-        sess = gs.session()
-        g = sess.g()
+        g = gs.g()
+        # Load some data, then project to a simple graph (if needed).
         pg = g.project(vertices={"vlabel": []}, edges={"elabel": []})
         r = gs.katz_centrality(pg)
         s.close()

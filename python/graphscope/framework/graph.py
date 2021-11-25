@@ -23,7 +23,6 @@ import threading
 from abc import ABCMeta
 from abc import abstractmethod
 from copy import deepcopy
-from itertools import chain
 from typing import List
 from typing import Mapping
 from typing import Union

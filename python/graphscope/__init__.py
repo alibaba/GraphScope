@@ -16,6 +16,7 @@
 # limitations under the License.
 #
 
+from graphscope import Graph
 from graphscope.analytical.app import *
 from graphscope.analytical.udf import declare
 from graphscope.analytical.udf.types import Vertex
@@ -29,7 +30,6 @@ from graphscope.client.session import gremlin
 from graphscope.client.session import session
 from graphscope.client.session import set_option
 from graphscope.framework.errors import *
-from graphscope.framework.graph import Graph
 from graphscope.framework.graph_builder import load_from
 from graphscope.version import __version__
 

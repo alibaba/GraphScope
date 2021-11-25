@@ -46,8 +46,8 @@ def sssp(graph, src=0):
     .. code:: python
 
         import graphscope as gs
-        sess = gs.session()
-        g = sess.g()
+        g = gs.g()
+        # Load some data, then project to a simple graph (if needed).
         pg = g.project(vertices={"vlabel": []}, edges={"elabel": ["e_property"]})
         r = gs.sssp(pg, src=0)
         s.close()

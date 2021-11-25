@@ -25,10 +25,10 @@ import numpy as np
 import pytest
 
 import graphscope
+from graphscope import Graph
 from graphscope.config import GSConfig as gs_config
 from graphscope.dataset import load_ldbc
 from graphscope.dataset import load_modern_graph
-from graphscope.framework.graph import Graph
 from graphscope.framework.loader import Loader
 
 graphscope.set_option(show_log=True)

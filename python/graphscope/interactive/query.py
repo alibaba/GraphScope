@@ -16,9 +16,7 @@
 # limitations under the License.
 #
 
-import datetime
 import logging
-from concurrent.futures import ThreadPoolExecutor
 from copy import deepcopy
 from enum import Enum
 
@@ -31,7 +29,6 @@ from graphscope.framework.dag_utils import create_interactive_query
 from graphscope.framework.dag_utils import fetch_gremlin_result
 from graphscope.framework.dag_utils import gremlin_query
 from graphscope.framework.dag_utils import gremlin_to_subgraph
-from graphscope.framework.loader import Loader
 
 logger = logging.getLogger("graphscope")
 
@@ -186,7 +183,7 @@ class InteractiveQueryDAGNode(DAGNode):
                 A new graph constructed by the gremlin output, that also stored in vineyard.
         """
         # avoid circular import
-        from graphscope.framework.graph import GraphDAGNode
+        from graphscope import GraphDAGNode
 
         op = gremlin_to_subgraph(
             self,
