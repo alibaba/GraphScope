@@ -22,7 +22,7 @@ use crate::{str_to_dyn_error, Partitioner};
 use pegasus::api::function::*;
 use pegasus::api::{
     Collect, CorrelatedSubTask, Dedup, Filter, Fold, FoldByKey, IterCondition, Iteration, KeyBy,
-    Limit, Map, Merge, Sink, SortBy, SortLimitBy, Source,
+    Limit, Map, Merge, Sink, SortBy, Source,
 };
 use pegasus::result::ResultSink;
 use pegasus::stream::Stream;
@@ -180,11 +180,11 @@ impl GremlinJobCompiler {
                         stream = stream.limit(n.limit)?;
                     }
                     server_pb::operator_def::OpKind::Order(order) => {
-                        // TODO(bingqing): should set order_key for traverser, and then directly compare traverser
                         let cmp = self.udf_gen.gen_cmp(&order.compare)?;
                         if order.limit > 0 {
+                            // TODO(bingqing): use sort_limit_by when pegasus is ready
                             stream = stream
-                                .sort_limit_by(order.limit as u32, move |a, b| cmp.compare(a, b))?;
+                                .sort_by(move |a, b| cmp.compare(a, b))?.limit(order.limit as u32)?;
                         } else {
                             stream = stream.sort_by(move |a, b| cmp.compare(a, b))?;
                         }
