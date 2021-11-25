@@ -183,8 +183,7 @@ impl GremlinJobCompiler {
                         let cmp = self.udf_gen.gen_cmp(&order.compare)?;
                         if order.limit > 0 {
                             // TODO(bingqing): use sort_limit_by when pegasus is ready
-                            stream = stream
-                                .sort_by(move |a, b| cmp.compare(a, b))?.limit(order.limit as u32)?;
+                            Err("Do not support top-k for now")?;
                         } else {
                             stream = stream.sort_by(move |a, b| cmp.compare(a, b))?;
                         }
