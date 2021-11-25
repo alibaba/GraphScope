@@ -85,7 +85,7 @@ def cmake_app(app):
         graph_header = "vineyard/graph/fragment/arrow_fragment.h"
     elif "ArrowProjectedFragment" in graph_class:
         graph_header = "core/fragment/arrow_projected_fragment.h"
-    elif "ArrowFlattendFragment" in graph_class:
+    elif "ArrowFlattenedFragment" in graph_class:
         graph_header = "core/fragment/arrow_flattened_fragment.h"
     elif "DynamicProjectedFragment" in graph_class:
         graph_header = "core/fragment/dynamic_projected_fragment.h"
@@ -174,8 +174,8 @@ def compile_graph():
 
 def compile_cpp_pie_app():
     template = "gs::ArrowProjectedFragment<{},{},{},{}>"
-    flatten_template = "gs::ArrowFlattendFragment<{},{},{},{}>"
-    dynamic_template = "gs::DynamicProjectedFragment<{},{}"
+    flatten_template = "gs::ArrowFlattenedFragment<{},{},{},{}>"
+    dynamic_template = "gs::DynamicProjectedFragment<{},{}>"
 
     sull = template.format("std::string", "uint64_t", "int64_t", "int64_t")
     lull = template.format("int64_t", "uint64_t", "int64_t", "int64_t")
