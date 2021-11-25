@@ -151,12 +151,76 @@ pub struct ServerConfig {
     port: u16,
 }
 
+impl ServerConfig {
+    pub fn get_ip(&self) -> &str {
+        &self.ip
+    }
+
+    pub fn get_port(&self) -> u16 {
+        self.port
+    }
+}
+
 pub fn read_from<P: AsRef<Path>>(path: P) -> Result<NetworkConfig, NetError> {
     let config_str = std::fs::read_to_string(path)?;
     NetworkConfig::parse(&config_str)
 }
 
 impl NetworkConfig {
+    pub fn new(server_id: u64) -> Self {
+        NetworkConfig {
+            server_id,
+            nonblocking: None,
+            read_timeout_ms: None,
+            write_timeout_ms: None,
+            read_slab_size: None,
+            no_delay: None,
+            send_buffer: None,
+            heartbeat_sec: None,
+            servers: None,
+        }
+    }
+
+    pub fn with_nonblocking(mut self, enable: Option<bool>) -> Self {
+        self.nonblocking = enable;
+        self
+    }
+
+    pub fn with_read_timeout_ms(mut self, timeout: Option<u32>) -> Self {
+        self.read_timeout_ms = timeout;
+        self
+    }
+
+    pub fn with_write_timeout_ms(mut self, timeout: Option<u32>) -> Self {
+        self.write_timeout_ms = timeout;
+        self
+    }
+
+    pub fn with_read_slab_size(mut self, slab_size: Option<u32>) -> Self {
+        self.send_buffer = slab_size;
+        self
+    }
+
+    pub fn with_no_delay(mut self, enable: Option<bool>) -> Self {
+        self.no_delay = enable;
+        self
+    }
+
+    pub fn with_send_buffer(mut self, buffer_size: Option<u32>) -> Self {
+        self.send_buffer = buffer_size;
+        self
+    }
+
+    pub fn with_heartbeat_sec(mut self, seconds: Option<u32>) -> Self {
+        self.heartbeat_sec = seconds;
+        self
+    }
+
+    pub fn with_servers(mut self, servers: Option<Vec<ServerConfig>>) -> Self {
+        self.servers = servers;
+        self
+    }
+
     pub fn parse(content: &str) -> Result<Self, NetError> {
         Ok(toml::from_str(&content)?)
     }
