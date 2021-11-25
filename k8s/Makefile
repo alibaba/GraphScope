@@ -50,14 +50,15 @@ gsvineyard-image:
 				 -f $(WORKING_DIR)/gsvineyard.Dockerfile .
 
 graphscope-image: submodule
-	docker build --pull --progress=$(BUILD_PROGRESS) \
+	docker build --progress=$(BUILD_PROGRESS) \
 				 --build-arg profile=${PROFILE} \
 				 -t graphscope/graphscope:${SHORT_SHA} \
 				 --network=host \
 				 -f $(WORKING_DIR)/graphscope.Dockerfile ..
 
 graphscope-store-image:
-	docker build --pull --progress=$(BUILD_PROGRESS) \
+	docker pull ${REGISTRY}/$(DOCKER_ORG)/graphscope-vineyard:${VINEYARD_VERSION}
+	docker build --progress=$(BUILD_PROGRESS) \
                  --build-arg profile=${PROFILE} \
                  -t graphscope/graphscope-store:${SHORT_SHA} \
                  --network=host \

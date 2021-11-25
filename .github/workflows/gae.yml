@@ -32,6 +32,7 @@ jobs:
         GS_TEST_DIR: ${{ github.workspace }}/gstest
         RUN_JAVA_TESTS: ON
       run: |
+        # default install to "/opt/graphscope"
         make gae ENABLE_JAVA_SDK=ON BUILD_TEST=ON
         # also make coordinator andclient for python test
         make coordinator && make client
@@ -41,6 +42,7 @@ jobs:
 
     - name: Run Cpp Test
       env:
+        GRAPHSCOPE_HOME: /opt/graphscope
         GS_TEST_DIR: ${{ github.workspace }}/gstest
         RUN_JAVA_TESTS: ON
       run: |
