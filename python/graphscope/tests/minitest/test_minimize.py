@@ -33,9 +33,6 @@ from graphscope.learning.graphlearn.python.model.tf.trainer import LocalTFTraine
 graphscope.set_option(show_log=True)
 graphscope.set_option(initializing_interactive_engine=False)
 
-print(graphscope)
-sys.exit(0)
-
 
 @pytest.fixture(scope="module")
 def ogbn_small_script():

@@ -6,10 +6,16 @@ on:
   push:
     branches:
       - main
-    paths:
-      - 'analytical_engine/**'
-      - '.github/workflows/gae.yml'
-      - '!analytical_engine/**.md'
+    paths-ignore:
+      - 'CONTRIBUTORS'
+      - 'LICENSE'
+      - 'NOTICE.txt'
+      - '**.md'
+      - '**.rst'
+      - 'docs/**'
+      - 'demo/**'
+      - 'scripts/**'
+      - 'tutorials/**'
   pull_request:
     branches:
       - main
@@ -69,4 +75,4 @@ jobs:
         source ${GRAPHSCOPE_HOME}/conf/grape_jvm_opts
 
         cd ${GITHUB_WORKSPACE}/python
-        python3 -m pytest --exitfirst -s -v tests/unittest/test_java_app.py
+        python3 -m pytest --exitfirst -s -v graphscope/tests/unittest/test_java_app.py

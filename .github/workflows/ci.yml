@@ -471,10 +471,10 @@ jobs:
           export GS_IMAGE = registry.cn-hongkong.aliyuncs.com/graphscope/graphscope:${SHORT_SHA}
 
           cd ${GITHUB_WORKSPACE}/python
-          python3 -m pytest --ignore=./tests/kubernetes/test_store_service.py \
+          python3 -m pytest --ignore=./graphscope/tests/kubernetes/test_store_service.py \
                           --cov=graphscope --cov-config=.coveragerc --cov-report=xml \
                           --cov-report=term --exitfirst -s -vvv --log-cli-level=INFO \
-                          ./tests/kubernetes
+                          ./graphscope/tests/kubernetes
 
       - name: Upload Coverage
         uses: codecov/codecov-action@v1.0.5
@@ -520,7 +520,7 @@ jobs:
 
           # run test
           cd ${GITHUB_WORKSPACE}/python
-          python3 -m pytest -s ./tests/kubernetes/test_demo_script.py -k test_demo_on_hdfs
+          python3 -m pytest -s ./graphscope/tests/kubernetes/test_demo_script.py -k test_demo_on_hdfs
           # Check the result file have successfully written to the given location
           hdfs dfs -test -e /ldbc_sample/res.csv_0 && hdfs dfs -test -e /ldbc_sample/res.csv_1
 
