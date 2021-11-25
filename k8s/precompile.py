@@ -24,14 +24,20 @@ try:
 
     COORDINATOR_HOME = Path(gscoordinator.__file__).parent.parent.absolute()
 except ModuleNotFoundError:
-    COORDINATOR_HOME = Path(os.path.join(os.path.dirname(__file__), "..", "coordinator"))
+    COORDINATOR_HOME = Path(
+        os.path.join(os.path.dirname(__file__), "..", "coordinator")
+    )
 
 TEMPLATE_DIR = COORDINATOR_HOME / "gscoordinator" / "template"
 BUILTIN_APP_RESOURCE_PATH = (
     COORDINATOR_HOME / "gscoordinator" / "builtin" / "app" / "builtin_app.gar"
 )
 CMAKELISTS_TEMPLATE = TEMPLATE_DIR / "CMakeLists.template"
-GRAPHSCOPE_HOME = os.environ["GRAPHSCOPE_HOME"] if "GRAPHSCOPE_HOME" in os.environ else "/opt/graphscope"
+GRAPHSCOPE_HOME = (
+    os.environ["GRAPHSCOPE_HOME"]
+    if "GRAPHSCOPE_HOME" in os.environ
+    else "/opt/graphscope"
+)
 WORKSPACE = Path("/tmp/gs/builtin")
 
 
@@ -126,6 +132,8 @@ def get_app_info(algo: str):
 def compile_graph():
     property_frame_template = "vineyard::ArrowFragment<{},{}>"
     projected_frame_template = "gs::ArrowProjectedFragment<{},{},{},{}>"
+    flattened_frame_template = "gs::ArrowFlattenedFragment<{},{},{},{}>"
+    dynamic_projected_frame_template = "gs::DynamicProjectedFragment<{},{}>"
 
     oid_types = ["int64_t", "std::string"]
     vid_types = ["uint64_t"]
@@ -145,7 +153,16 @@ def compile_graph():
                     graph_class = projected_frame_template.format(
                         oid, vid, vdata, edata
                     )
+                    flattend_graph_class = flattened_frame_template.format(
+                        oid, vid, vdata, edata
+                    )
                     graph_classes.append(graph_class)
+                    graph_classes.append(flattend_graph_class)
+
+    for vdata in vdata_types:
+        for edata in edata_types:
+            graph_class = dynamic_projected_frame_template.format(vdata, edata)
+            graph_classes.append(graph_class)
 
     with multiprocessing.Pool() as pool:
         pool.map(cmake_graph, graph_classes)
@@ -153,25 +170,113 @@ def compile_graph():
 
 def compile_cpp_pie_app():
     template = "gs::ArrowProjectedFragment<{},{},{},{}>"
+    flatten_template = "gs::ArrowFlattendFragment<{},{},{},{}>"
+    dynamic_template = "gs::DynamicProjectedFragment<{},{}"
+
+    sull = template.format("std::string", "uint64_t", "int64_t", "int64_t")
+    lull = template.format("int64_t", "uint64_t", "int64_t", "int64_t")
     luee = template.format(
         "int64_t", "uint64_t", "grape::EmptyType", "grape::EmptyType"
     )
     luel = template.format("int64_t", "uint64_t", "grape::EmptyType", "int64_t")
     lued = template.format("int64_t", "uint64_t", "grape::EmptyType", "double")
+    fluee = flatten_template.format(
+        "int64_t", "uint64_t", "grape::EmptyType", "grape::EmptyType"
+    )
+    fluel = flatten_template.format(
+        "int64_t", "uint64_t", "grape::EmptyType", "int64_t"
+    )
+    flued = flatten_template.format("int64_t", "uint64_t", "grape::EmptyType", "double")
+    dtee = dynamic_template.format("grape::EmptyType", "grape::EmptyType")
+    dtel = dynamic_template.format("grape::EmptyType", "int64_t")
+    dted = dynamic_template.format("grape::EmptyType", "double")
+
     targets = [
         ("pagerank", luee),
         ("pagerank", luel),
+        ("pagerank", lull),
+        ("hits", luee),
+        ("hits", fluee),
+        ("hits", lull),
         ("wcc", luee),
         ("wcc", luel),
+        ("wcc", lull),
         ("cdlp", luee),
         ("cdlp", luel),
         ("bfs", luee),
         ("bfs", luel),
+        ("bfs", lull),
         ("sssp", luel),
         ("sssp", lued),
+        ("sssp", lull),
+        ("sssp", sull),
         ("kcore", luee),
+        ("kcore", dtee),
+        ("kshell", luee),
+        ("kshell", lull),
         ("triangles", luee),
+        ("triangles", dtee),
+        ("triangles", lull),
+        ("clustering", luee),
+        ("clustering", fluee),
+        ("clustering", dtee),
+        ("clustering", lull),
+        ("degree_centrality", luee),
+        ("degree_centrality", lull),
+        ("degree_centrality", fluee),
+        ("degree_centrality", dtee),
+        ("eigenvector_centrality", luel),
+        ("eigenvector_centrality", lull),
+        ("katz_centrality", luel),
+        ("katz_centrality", lull),
+        ("is_simple_path", lull),
+        ("louvain", lull),
+        ("sssp_has_path", lull),
+        ("property_sssp", lull),
     ]
+
+    if "NIGHTLY" in os.environ:
+        targets.extend(
+            [
+                ("sssp_average_length", luee),
+                ("sssp_average_length", luel),
+                ("sssp_average_length", lued),
+                ("sssp_average_length", dtee),
+                ("sssp_average_length", dtel),
+                ("sssp_average_length", dted),
+                ("pagerak_nx", fluee),
+                ("pagerak_nx", dtee),
+                ("hits", dtee),
+                ("eigenvector_centrality", luee),
+                ("eigenvector_centrality", lued),
+                ("eigenvector_centrality", fluee),
+                ("eigenvector_centrality", fluel),
+                ("eigenvector_centrality", flued),
+                ("eigenvector_centrality", dtee),
+                ("eigenvector_centrality", dtel),
+                ("eigenvector_centrality", dted),
+                ("katz_centrality", luee),
+                ("katz_centrality", lued),
+                ("katz_centrality", fluee),
+                ("katz_centrality", fluel),
+                ("katz_centrality", flued),
+                ("katz_centrality", dtee),
+                ("katz_centrality", dtel),
+                ("katz_centrality", dted),
+                ("transitivity", luee),
+                ("transitivity", fluee),
+                ("transitivity", dtee),
+                ("avg_clustering", luee),
+                ("avg_clustering", fluee),
+                ("avg_clustering", dtee),
+                ("sssp_projected", dtee),
+                ("sssp_projected", dtel),
+                ("sssp_projected", dted),
+                ("sssp_projected", fluee),
+                ("sssp_projected", fluel),
+                ("sssp_projected", flued),
+            ]
+        )
 
     with multiprocessing.Pool() as pool:
         pool.map(cmake_app, targets)

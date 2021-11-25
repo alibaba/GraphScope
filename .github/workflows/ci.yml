@@ -260,7 +260,7 @@ jobs:
         popd
 
         # install pytest
-        python3 -m pip install pytest
+        python3 -m pip install pytest pytest-cov
 
     - name: Run Python Test
       env:
@@ -348,7 +348,8 @@ jobs:
         DEPLOYMENT: ${{ matrix.deployment }}
         GS_TEST_DIR: ${{ github.workspace }}/gstest
       run: |
-        python3 -m pytest --exitfirst -s -v python/graphscope/nx/tests
+        python3 -m pytest --exitfirst -s -v \
+            $(dirname $(python3 -c "import graphscope; print(graphscope.__file__)"))/nx/tests
 
     - name: Algorithm test
       if: steps.nx-filter.outputs.algorithm == 'true'
@@ -356,7 +357,8 @@ jobs:
         DEPLOYMENT: ${{ matrix.deployment }}
         GS_TEST_DIR: ${{ github.workspace }}/gstest
       run: |
-        python3 -m pytest --exitfirst -s -v python/graphscope/nx/algorithms/tests/builtin
+        python3 -m pytest --exitfirst -s -v \
+            $(dirname $(python3 -c "import graphscope; print(graphscope.__file__)"))/nx/algorithms/tests/builtin
 
     - name: Generator test
       if: steps.nx-filter.outputs.generator == 'true'
@@ -364,7 +366,8 @@ jobs:
         DEPLOYMENT: ${{ matrix.deployment }}
         GS_TEST_DIR: ${{ github.workspace }}/gstest
       run: |
-        python3 -m pytest --exitfirst -s -v python/graphscope/nx/generators/tests
+        python3 -m pytest --exitfirst -s -v \
+            $(dirname $(python3 -c "import graphscope; print(graphscope.__file__)"))/nx/generators/tests
 
   gie-test:
     runs-on: self-hosted
@@ -466,11 +469,15 @@ jobs:
           sudo docker tag graphscope/graphscope:${SHORT_SHA} \
               registry.cn-hongkong.aliyuncs.com/graphscope/graphscope:${SHORT_SHA}
 
-          # build python client
-          make client
+          # build python client proto
+          cd ${GITHUB_WORKSPACE}/python
+          python3 setup.py build_proto
 
           # install mars
           python3 -m pip install git+https://github.com/mars-project/mars.git@d09e1e4c3e32ceb05f42d0b5b79775b1ebd299fb#egg=pymars
+
+          # install pytest
+          python3 -m pip install pytest pytest-cov
 
           # download dataset
           git clone -b master --single-branch --depth=1 https://github.com/7br/gstest.git ${GS_TEST_DIR}
