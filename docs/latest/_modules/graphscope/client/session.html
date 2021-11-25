@@ -438,6 +438,7 @@
         <span class="n">k8s_service_type</span><span class="o">=</span><span class="n">gs_config</span><span class="o">.</span><span class="n">k8s_service_type</span><span class="p">,</span>
         <span class="n">k8s_gs_image</span><span class="o">=</span><span class="n">gs_config</span><span class="o">.</span><span class="n">k8s_gs_image</span><span class="p">,</span>
         <span class="n">k8s_etcd_image</span><span class="o">=</span><span class="n">gs_config</span><span class="o">.</span><span class="n">k8s_etcd_image</span><span class="p">,</span>
+        <span class="n">k8s_dataset_image</span><span class="o">=</span><span class="n">gs_config</span><span class="o">.</span><span class="n">k8s_dataset_image</span><span class="p">,</span>
         <span class="n">k8s_image_pull_policy</span><span class="o">=</span><span class="n">gs_config</span><span class="o">.</span><span class="n">k8s_image_pull_policy</span><span class="p">,</span>
         <span class="n">k8s_image_pull_secrets</span><span class="o">=</span><span class="n">gs_config</span><span class="o">.</span><span class="n">k8s_image_pull_secrets</span><span class="p">,</span>
         <span class="n">k8s_coordinator_cpu</span><span class="o">=</span><span class="n">gs_config</span><span class="o">.</span><span class="n">k8s_coordinator_cpu</span><span class="p">,</span>
@@ -461,6 +462,7 @@
         <span class="n">dangling_timeout_seconds</span><span class="o">=</span><span class="n">gs_config</span><span class="o">.</span><span class="n">dangling_timeout_seconds</span><span class="p">,</span>
         <span class="n">with_mars</span><span class="o">=</span><span class="n">gs_config</span><span class="o">.</span><span class="n">with_mars</span><span class="p">,</span>
         <span class="n">enable_gaia</span><span class="o">=</span><span class="n">gs_config</span><span class="o">.</span><span class="n">enable_gaia</span><span class="p">,</span>
+        <span class="n">mount_dataset</span><span class="o">=</span><span class="n">gs_config</span><span class="o">.</span><span class="n">mount_dataset</span><span class="p">,</span>
         <span class="n">reconnect</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
         <span class="o">**</span><span class="n">kw</span><span class="p">,</span>
     <span class="p">):</span>
@@ -504,6 +506,8 @@
 <span class="sd">            k8s_gs_image (str, optional): The GraphScope engine&#39;s image.</span>
 
 <span class="sd">            k8s_etcd_image (str, optional): The image of etcd, which used by vineyard.</span>
+
+<span class="sd">            k8s_dataset_image(str, optional): The image which mounts aliyun dataset bucket to local path.</span>
 
 <span class="sd">            k8s_image_pull_policy (str, optional): Kubernetes image pull policy. Defaults to &quot;IfNotPresent&quot;.</span>
 
@@ -550,6 +554,9 @@
 
 <span class="sd">            enable_gaia (bool, optional):</span>
 <span class="sd">                Launch graphscope with gaia enabled. Defaults to False.</span>
+
+<span class="sd">            mount_dataset (str, optional):</span>
+<span class="sd">                Create a container and mount aliyun demo dataset bucket to the path specified by `mount_dataset`.</span>
 
 <span class="sd">            k8s_volumes (dict, optional): A dict of k8s volume which represents a directory containing data, accessible to the</span>
 <span class="sd">                containers in a pod. Defaults to {}.</span>
@@ -689,6 +696,8 @@
             <span class="s2">&quot;k8s_waiting_for_delete&quot;</span><span class="p">,</span>
             <span class="s2">&quot;timeout_seconds&quot;</span><span class="p">,</span>
             <span class="s2">&quot;dangling_timeout_seconds&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;mount_dataset&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;k8s_dataset_image&quot;</span><span class="p">,</span>
         <span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_deprecated_params</span> <span class="o">=</span> <span class="p">(</span>
             <span class="s2">&quot;show_log&quot;</span><span class="p">,</span>
@@ -1303,11 +1312,6 @@
             <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">_learning_instance_dict</span><span class="p">[</span><span class="n">graph</span><span class="o">.</span><span class="n">vineyard_id</span><span class="p">]</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
         <span class="p">):</span>
             <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_learning_instance_dict</span><span class="p">[</span><span class="n">graph</span><span class="o">.</span><span class="n">vineyard_id</span><span class="p">]</span>
-
-        <span class="k">if</span> <span class="n">sys</span><span class="o">.</span><span class="n">platform</span> <span class="o">!=</span> <span class="s2">&quot;linux&quot;</span> <span class="ow">and</span> <span class="n">sys</span><span class="o">.</span><span class="n">platform</span> <span class="o">!=</span> <span class="s2">&quot;linux2&quot;</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
-                <span class="sa">f</span><span class="s2">&quot;The learning engine currently only supports running on Linux, got </span><span class="si">{</span><span class="n">sys</span><span class="o">.</span><span class="n">platform</span><span class="si">}</span><span class="s2">&quot;</span>
-            <span class="p">)</span>
 
         <span class="k">if</span> <span class="ow">not</span> <span class="n">graph</span><span class="o">.</span><span class="n">graph_type</span> <span class="o">==</span> <span class="n">graph_def_pb2</span><span class="o">.</span><span class="n">ARROW_PROPERTY</span><span class="p">:</span>
             <span class="k">raise</span> <span class="n">InvalidArgumentError</span><span class="p">(</span><span class="s2">&quot;The graph should be a property graph.&quot;</span><span class="p">)</span>

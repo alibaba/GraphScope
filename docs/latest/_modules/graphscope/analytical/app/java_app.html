@@ -192,10 +192,12 @@
     <span class="n">parse_user_app_process</span> <span class="o">=</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">Popen</span><span class="p">(</span>
         <span class="n">parse_user_app_cmd</span><span class="p">,</span>
         <span class="n">env</span><span class="o">=</span><span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">copy</span><span class="p">(),</span>
-        <span class="n">universal_newlines</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
         <span class="n">encoding</span><span class="o">=</span><span class="s2">&quot;utf-8&quot;</span><span class="p">,</span>
+        <span class="n">errors</span><span class="o">=</span><span class="s2">&quot;replace&quot;</span><span class="p">,</span>
         <span class="n">stdout</span><span class="o">=</span><span class="n">subprocess</span><span class="o">.</span><span class="n">PIPE</span><span class="p">,</span>
         <span class="n">stderr</span><span class="o">=</span><span class="n">subprocess</span><span class="o">.</span><span class="n">PIPE</span><span class="p">,</span>
+        <span class="n">universal_newlines</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+        <span class="n">bufsize</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
     <span class="p">)</span>
     <span class="n">out</span><span class="p">,</span> <span class="n">err</span> <span class="o">=</span> <span class="n">parse_user_app_process</span><span class="o">.</span><span class="n">communicate</span><span class="p">()</span>
     <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="n">err</span><span class="p">)</span>

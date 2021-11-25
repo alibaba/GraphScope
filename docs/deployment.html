@@ -132,6 +132,37 @@ allows users to deploy and connect GraphScope on a k8s cluster.</p>
 </pre></div>
 </div>
 <p>As shown above, a session can easily launch a cluster on k8s.</p>
+<p>Sometimes users may want to use their dataset on the local disk, in this case, we provide options to mount a
+host directory to the cluster.</p>
+<p>Assume we want to mount <cite>~/test_data</cite> in the host machine to <cite>/testingdata</cite> in pods, we can define
+a dict as follows, then pass it as <cite>k8s_volumes</cite> in session constructor.</p>
+<p>Note that the host path is relative to the kubernetes node, that is, if you have a cluster created by <cite>kind</cite>, then you need to copy that directory to the kind node, or mount that path to kind node.
+See more details <a class="reference external" href="https://kind.sigs.k8s.io/docs/user/configuration/#extra-mounts">here</a>.</p>
+<p><a href="#id1"><span class="problematic" id="id2">``</span></a><a href="#id3"><span class="problematic" id="id4">`</span></a>python
+import os
+import graphscope</p>
+<dl>
+<dt>k8s_volumes = {</dt><dd><dl>
+<dt>“data”: {</dt><dd><p>“type”: “hostPath”,
+“field”: {</p>
+<blockquote>
+<div><p>“path”: os.path.expanduser(“~/test_data/”),
+“type”: “Directory”</p>
+</div></blockquote>
+<p>},
+“mounts”: {</p>
+<blockquote>
+<div><p>“mountPath”: “/testingdata”</p>
+</div></blockquote>
+<p>}</p>
+</dd>
+</dl>
+<p>}</p>
+</dd>
+</dl>
+<p>}</p>
+<p>sess = graphscope.session(k8s_volumes=k8s_volumes)
+<a href="#id5"><span class="problematic" id="id6">``</span></a><a href="#id7"><span class="problematic" id="id8">`</span></a></p>
 <p>A cluster on k8s contains a pod running an etcd container for meta-data syncing, a
 pod running the Coordinator, and a replica set of GraphScope engines.</p>
 <p>The Coordinator in GraphScope is the endpoint of the backend. It
