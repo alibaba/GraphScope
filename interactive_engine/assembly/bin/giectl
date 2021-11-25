@@ -350,9 +350,9 @@ create_gremlin_instance_on_local() {
 
     # fetch gaia frontend port
     if [ "${enable_gaia}" = True ]; then
-      gaia_gremlin_server_port_in_log=$(awk '/frontend host/ { print }' ${log_dir}/gaia-frontend.log | awk -F: '{print $6}') || true
-      gaia_gremlin_server_port_in_out=$(awk '/frontend host/ { print }' ${log_dir}/gaia-frontend.out | awk -F: '{print $7}') || true
-      gaia_gremlin_server_port_in_err=$(awk '/frontend host/ { print }' ${log_dir}/gaia-frontend.err | awk -F: '{print $4}') || true
+      gaia_gremlin_server_port_in_log=$(awk '/frontend host/ { print }' ${log_dir}/gaia-frontend.log | awk -F: '{print $NF}') || true
+      gaia_gremlin_server_port_in_out=$(awk '/frontend host/ { print }' ${log_dir}/gaia-frontend.out | awk -F: '{print $NF}') || true
+      gaia_gremlin_server_port_in_err=$(awk '/frontend host/ { print }' ${log_dir}/gaia-frontend.err | awk -F: '{print $NF}') || true
       if [ ! -z "${gaia_gremlin_server_port_in_log}" ]; then
         log "GAIA_FRONTEND_ENDPOINT:127.0.0.1:${gaia_gremlin_server_port_in_log}"
         gaia_gremlin_server_ready=True
