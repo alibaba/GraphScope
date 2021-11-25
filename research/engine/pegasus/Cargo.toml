@@ -6,7 +6,8 @@ members = [
     "executor",
     "graph",
     "pegasus",
-    "server"
+    "server",
+    "server-v0"
 ]
 
 [profile.dev]

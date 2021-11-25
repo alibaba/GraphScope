@@ -19,7 +19,7 @@ dyn-clonable = "0.9.0"
 dyn_type = { path = "../../../dyn_type" }
 pegasus = { path = "../../../engine/pegasus/pegasus" }
 pegasus_common = { path = "../../../engine/pegasus/common" }
-pegasus_server_v1 = { path = "../../../engine/pegasus/server" }
+pegasus_server = { path = "../../../engine/pegasus/server-v0" }
 prost = "0.8"
 graph_store = { path = "../../../graph_store" }
 tonic = "0.4"
