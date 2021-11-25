@@ -286,7 +286,7 @@ jobs:
   python-unittest:
     runs-on: ubuntu-20.04
     needs: [build-gae, build-gle, changes]
-    if: false
+    if: ${{ needs.changes.outputs.gae-python == 'true' }}
     defaults:
       run:
         shell: bash --noprofile --norc -eo pipefail {0}
@@ -373,7 +373,7 @@ jobs:
 
   networkx-test:
     runs-on: ubuntu-20.04
-    needs: [build-gae, build-gle, changes]
+    needs: [build-gae, changes]
     if: ${{ needs.changes.outputs.networkx == 'true' }}
     defaults:
       run:
@@ -425,7 +425,6 @@ jobs:
         python3 -m pip install pytest-cov
         tar -xf ./gae-${{ github.sha }}/vineyard.tar
         tar -xf ./gae-${{ github.sha }}/gae.tar
-        tar -xf ./gle-${{ github.sha }}/gle.tar
 
         # install vineyard into /usr/local
         sudo cp -r -n opt/vineyard/* /usr/local/
@@ -447,15 +446,8 @@ jobs:
         pushd python && python3 setup.py build_proto && popd
         pushd coordinator && python3 setup.py build_builtin && popd
 
-        cd /tmp/
-        git clone https://github.com/alibaba/fastFFI.git
-        cd fastFFI
-        git checkout a166c6287f2efb938c27fb01b3d499932d484f9c
-        export PATH=${PATH}:${LLVM11_HOME}/bin
-        mvn clean install -DskipTests -Dmaven.antrun.skip=true --quiet
-
     - name: Basic test
-      if: false
+      if: steps.nx-filter.outputs.basic == 'true'
       env:
         DEPLOYMENT: ${{ matrix.deployment }}
       run: |
@@ -464,7 +456,7 @@ jobs:
         python3 -m pytest --exitfirst -s -v python/graphscope/nx/tests
 
     - name: Algorithm test
-      if: false
+      if: steps.nx-filter.outputs.algorithm == 'true'
       env:
         DEPLOYMENT: ${{ matrix.deployment }}
       run: |
@@ -473,7 +465,7 @@ jobs:
         python3 -m pytest --exitfirst -s -v python/graphscope/nx/algorithms/tests/builtin
 
     - name: Generator test
-      if: false
+      if: steps.nx-filter.outputs.generator == 'true'
       env:
         DEPLOYMENT: ${{ matrix.deployment }}
       run: |
