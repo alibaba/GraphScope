@@ -49,7 +49,7 @@ public interface DestList extends FFIPointer, CXXPointer, CXXPointerRange<FidPoi
     /**
      * Fetch the end fid pointer
      *
-     * @return
+     * @return the end fid pointer.
      */
     @FFIGetter
     FidPointer end();

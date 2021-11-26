@@ -33,6 +33,9 @@ import com.alibaba.fastffi.FFITypeAlias;
 import com.alibaba.graphscope.ds.Vertex;
 import com.alibaba.graphscope.fragment.ArrowProjectedFragment;
 import com.alibaba.graphscope.fragment.ImmutableEdgecutFragment;
+import com.alibaba.graphscope.fragment.SimpleFragment;
+import com.alibaba.graphscope.fragment.adaptor.ArrowProjectedAdaptor;
+import com.alibaba.graphscope.fragment.adaptor.ImmutableEdgecutFragmentAdaptor;
 import com.alibaba.graphscope.utils.FFITypeFactoryhelper;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
@@ -53,6 +56,58 @@ import java.util.function.Supplier;
     CORE_JAVA_JAVA_MESSAGES_H
 })
 public interface ParallelMessageManager extends MessageManagerBase {
+
+    default <FRAG_T extends SimpleFragment, MSG_T> boolean syncStateOnOuterVertex(
+            @CXXReference FRAG_T frag,
+            @CXXReference @FFITypeAlias(GRAPE_LONG_VERTEX) Vertex<Long> vertex,
+            @CXXReference MSG_T msg,
+            int channelId) {
+        if (frag.fragmentType().equals(ArrowProjectedAdaptor.fragmentType)) {
+            syncStateOnOuterVertex((ArrowProjectedFragment) frag, vertex, msg, channelId);
+        } else if (frag.fragmentType().equals(ImmutableEdgecutFragmentAdaptor.fragmentType)) {
+            syncStateOnOuterVertex((ImmutableEdgecutFragment) frag, vertex, msg, channelId);
+        }
+        return false;
+    }
+
+    default <FRAG_T extends SimpleFragment, MSG_T> boolean sendMsgThroughOEdges(
+            @CXXReference FRAG_T frag,
+            @CXXReference @FFITypeAlias(GRAPE_LONG_VERTEX) Vertex<Long> vertex,
+            @CXXReference MSG_T msg,
+            int channelId) {
+        if (frag.fragmentType().equals(ArrowProjectedAdaptor.fragmentType)) {
+            sendMsgThroughOEdges((ArrowProjectedFragment) frag, vertex, msg, channelId);
+        } else if (frag.fragmentType().equals(ImmutableEdgecutFragmentAdaptor.fragmentType)) {
+            sendMsgThroughOEdges((ImmutableEdgecutFragment) frag, vertex, msg, channelId);
+        }
+        return false;
+    }
+
+    default <FRAG_T extends SimpleFragment, MSG_T> boolean sendMsgThroughEdges(
+            @CXXReference FRAG_T frag,
+            @CXXReference @FFITypeAlias(GRAPE_LONG_VERTEX) Vertex<Long> vertex,
+            @CXXReference MSG_T msg,
+            int channelId) {
+        if (frag.fragmentType().equals(ArrowProjectedAdaptor.fragmentType)) {
+            sendMsgThroughEdges((ArrowProjectedFragment) frag, vertex, msg, channelId);
+        } else if (frag.fragmentType().equals(ImmutableEdgecutFragmentAdaptor.fragmentType)) {
+            sendMsgThroughEdges((ImmutableEdgecutFragment) frag, vertex, msg, channelId);
+        }
+        return false;
+    }
+
+    default <FRAG_T extends SimpleFragment, MSG_T> boolean sendMsgThroughIEdges(
+            @CXXReference FRAG_T frag,
+            @CXXReference @FFITypeAlias(GRAPE_LONG_VERTEX) Vertex<Long> vertex,
+            @CXXReference MSG_T msg,
+            int channelId) {
+        if (frag.fragmentType().equals(ArrowProjectedAdaptor.fragmentType)) {
+            sendMsgThroughIEdges((ArrowProjectedFragment) frag, vertex, msg, channelId);
+        } else if (frag.fragmentType().equals(ImmutableEdgecutFragmentAdaptor.fragmentType)) {
+            sendMsgThroughIEdges((ImmutableEdgecutFragment) frag, vertex, msg, channelId);
+        }
+        return false;
+    }
     /**
      * Init the message manager which number of possible channels. Each channel will swap messages
      * in parallel.
@@ -107,21 +162,7 @@ public interface ParallelMessageManager extends MessageManagerBase {
      * @param <FRAG_T> fragment type.
      */
     @FFINameAlias("SyncStateOnOuterVertex")
-    <FRAG_T extends ImmutableEdgecutFragment> void syncStateOnOuterVertex(
-            @CXXReference FRAG_T frag,
-            @CXXReference @FFITypeAlias(GRAPE_LONG_VERTEX) Vertex<Long> vertex,
-            int channel_id);
-
-    /**
-     * SyncState on outer vertex without message, used in bfs etc.
-     *
-     * @param frag fragment.
-     * @param vertex query vertex.
-     * @param channel_id message channel id.
-     * @param <FRAG_T> fragment type.
-     */
-    @FFINameAlias("SyncStateOnOuterVertex")
-    <FRAG_T extends ArrowProjectedFragment> void syncStateOnOuterVertex(
+    <FRAG_T> void syncStateOnOuterVertex(
             @CXXReference FRAG_T frag,
             @CXXReference @FFITypeAlias(GRAPE_LONG_VERTEX) Vertex<Long> vertex,
             int channel_id);
@@ -214,7 +255,7 @@ public interface ParallelMessageManager extends MessageManagerBase {
      * @param <MSG_T> message type.
      */
     @FFINameAlias("SendMsgThroughEdges")
-    <FRAG_T extends ImmutableEdgecutFragment, MSG_T> void SendMsgThroughEdges(
+    <FRAG_T extends ImmutableEdgecutFragment, MSG_T> void sendMsgThroughEdges(
             @CXXReference FRAG_T frag,
             @CXXReference @FFITypeAlias(GRAPE_LONG_VERTEX) Vertex<Long> vertex,
             @CXXReference MSG_T msg,
@@ -231,7 +272,7 @@ public interface ParallelMessageManager extends MessageManagerBase {
      * @param <MSG_T> message type.
      */
     @FFINameAlias("SendMsgThroughEdges")
-    <FRAG_T extends ArrowProjectedFragment, MSG_T> void SendMsgThroughEdges(
+    <FRAG_T extends ArrowProjectedFragment, MSG_T> void sendMsgThroughEdges(
             @CXXReference FRAG_T frag,
             @CXXReference @FFITypeAlias(GRAPE_LONG_VERTEX) Vertex<Long> vertex,
             @CXXReference MSG_T msg,
@@ -269,9 +310,7 @@ public interface ParallelMessageManager extends MessageManagerBase {
                             MSG_T msg = msgSupplier.get();
                             boolean result;
                             while (true) {
-                                synchronized (ParallelMessageManager.class) {
-                                    result = getMessageInBuffer(messageInBuffer);
-                                }
+                                result = getMessageInBuffer(messageInBuffer);
                                 if (result) {
                                     while (messageInBuffer.getMessage(frag, vertex, msg)) {
                                         consumer.accept(vertex, msg);

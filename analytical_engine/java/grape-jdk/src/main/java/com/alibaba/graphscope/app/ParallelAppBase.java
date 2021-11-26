@@ -17,6 +17,7 @@
 package com.alibaba.graphscope.app;
 
 import com.alibaba.graphscope.fragment.ImmutableEdgecutFragment;
+import com.alibaba.graphscope.fragment.SimpleFragment;
 import com.alibaba.graphscope.parallel.ParallelMessageManager;
 
 /**
@@ -24,42 +25,40 @@ import com.alibaba.graphscope.parallel.ParallelMessageManager;
  * ImmutableEdgecutFragment} and {@link ParallelMessageManager}
  *
  * <p>To define your sequential graph algorithms, you should implement this interface and provide
- * the corresponding implementation for {@link ParallelAppBase#PEval(ImmutableEdgecutFragment,
- * ParallelContextBase, ParallelMessageManager)} and {@link
- * ParallelAppBase#IncEval(ImmutableEdgecutFragment, ParallelContextBase, ParallelMessageManager)}
+ * the corresponding implementation for {@link ParallelAppBase#PEval(SimpleFragment,
+ * ParallelContextBase, ParallelMessageManager)} and {@link ParallelAppBase#IncEval(SimpleFragment,
+ * ParallelContextBase, ParallelMessageManager)}
  *
  * <p>User-defined app shall work along with user-defined context, which should be an implementation
  * of {@link ParallelContextBase}.
  *
  * <p>For example, you can implement your app like this.
  *
- * <pre>
- * {
- *         class MyContext implements ParallelContextBase&lt;Long, Long, Long, Double&gt; {
- *                 public void Init(ImmutableEdgecutFragment&lt;Long, Long, Long, Double&gt; frag,
- *                                 ParallelMessageManager messageManager, StdVector&lt;FFIByteString&gt; args) {
+ * <pre>{
+ * class MyContext implements ParallelContextBase&lt;Long, Long, Long, Double&gt;{
+ *      public void Init(ImmutableEdgecutFragment&lt;Long, Long, Long, Double&gt;
+ * frag, ParallelMessageManager messageManager, StdVector&lt;FFIByteString&gt; args) {
  *
- *                 }
+ *      }
  *
- *                 public void Output(ImmutableEdgecutFragment&lt;Long, Long, Long, Double&gt; frag) {
+ *      public void Output(ImmutableEdgecutFragment&lt;Long, Long, Long, Double&gt;
+ * frag) {
  *
- *                 }
- *         }
- *         class MyApp implements ParallelAppBase&lt;Long, Long, Long, Double, MyContext&gt; {
- *                 public void PEval(ImmutableEdgecutFragment&lt;Long, Long, Long, Double&gt; graph,
- *                                 ParallelContextBase&lt;Long, Long, Long, Double&gt; context,
- *                                 ParallelMessageManager messageManager) {
+ *      }
+ *  }
+ *  class MyApp implements ParallelAppBase&lt;Long,Long,Long,Double, MyContext&gt;{
+ *      public void PEval(ImmutableEdgecutFragment&lt;Long, Long, Long, Double&gt;
+ * graph, ParallelContextBase&lt;Long,Long,Long,Double&gt; context,
+ * ParallelMessageManager messageManager) {
  *
- *                 }
+ *      }
+ *      public void IncEval(ImmutableEdgecutFragment&lt;Long, Long, Long, Double&gt;
+ * graph, ParallelContextBase&lt;Long,Long,Long,Double&gt; context,
+ * ParallelMessageManager messageManager) {
  *
- *                 public void IncEval(ImmutableEdgecutFragment&lt;Long, Long, Long, Double&gt; graph,
- *                                 ParallelContextBase&lt;Long, Long, Long, Double&gt; context,
- *                                 ParallelMessageManager messageManager) {
- *
- *                 }
- *         }
- * }
- * </pre>
+ *      }
+ *  }
+ * }</pre>
  *
  * For more examples, please refer to module com.alibaba.graphscope.graphscope-demo
  *
@@ -83,15 +82,14 @@ public interface ParallelAppBase<
      * @param context context. User defined context which manages data during the whole
      *     computations.
      * @param messageManager The message manger which manages messages between fragments.
-     * @see ImmutableEdgecutFragment
+     * @see SimpleFragment
      * @see ParallelContextBase
      * @see ParallelMessageManager
      */
     void PEval(
-            ImmutableEdgecutFragment<OID_T, VID_T, VDATA_T, EDATA_T> graph,
+            SimpleFragment<OID_T, VID_T, VDATA_T, EDATA_T> graph,
             ParallelContextBase<OID_T, VID_T, VDATA_T, EDATA_T> context,
             ParallelMessageManager messageManager);
-
     /**
      * Incremental Evaluation to implement.
      *
@@ -99,12 +97,12 @@ public interface ParallelAppBase<
      * @param context context. User defined context which manages data during the whole
      *     computations.
      * @param messageManager The message manger which manages messages between fragments.
-     * @see ImmutableEdgecutFragment
+     * @see SimpleFragment
      * @see ParallelContextBase
      * @see ParallelMessageManager
      */
     void IncEval(
-            ImmutableEdgecutFragment<OID_T, VID_T, VDATA_T, EDATA_T> graph,
+            SimpleFragment<OID_T, VID_T, VDATA_T, EDATA_T> graph,
             ParallelContextBase<OID_T, VID_T, VDATA_T, EDATA_T> context,
             ParallelMessageManager messageManager);
 }

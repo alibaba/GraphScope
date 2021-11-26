@@ -116,9 +116,9 @@ class JavaPIEParallelContext : public grape::ContextBase<FRAG_T> {
       CHECK_NOTNULL(args_object);
 
       const char* descriptor =
-          "(Lcom/alibaba/grape/fragment/ImmutableEdgecutFragment;"
-          "Lcom/alibaba/grape/parallel/ParallelMessageManager;"
-          "Lcom/alibaba/grape/stdcxx/StdVector;)V";
+          "(Lcom/alibaba/graphscope/fragment/ImmutableEdgecutFragment;"
+          "Lcom/alibaba/graphscope/parallel/ParallelMessageManager;"
+          "Lcom/alibaba/graphscope/stdcxx/StdVector;)V";
       jmethodID init_methodID =
           env->GetMethodID(context_class, "Init", descriptor);
       CHECK_NOTNULL(init_methodID);
@@ -138,7 +138,7 @@ class JavaPIEParallelContext : public grape::ContextBase<FRAG_T> {
       CHECK_NOTNULL(context_class);
 
       const char* descriptor =
-          "(Lcom/alibaba/grape/fragment/ImmutableEdgecutFragment;)V";
+          "(Lcom/alibaba/graphscope/fragment/ImmutableEdgecutFragment;)V";
       jmethodID output_methodID =
           env->GetMethodID(context_class, "Output", descriptor);
       CHECK_NOTNULL(output_methodID);

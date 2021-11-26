@@ -54,13 +54,8 @@ def demo_jar():
 
 
 @pytest.fixture(scope="module")
-def property_graph_sssp_vertex_property_class():
-    return "com.alibaba.graphscope.example.property.sssp.PropertySSSPVertexProperty"
-
-
-@pytest.fixture(scope="module")
 def property_graph_sssp_vertex_data_class():
-    return "com.alibaba.graphscope.example.property.sssp.PropertySSSPVertexData"
+    return "com.alibaba.graphscope.example.property.sssp.ParallelPropertySSSPVertexData"
 
 
 @pytest.fixture(scope="module")
@@ -140,21 +135,5 @@ def test_sssp_property_vertex_data(
 ):
     sssp = JavaApp(
         full_jar_path=demo_jar, java_app_class=property_graph_sssp_vertex_data_class
-    )
-    sssp(p2p_property_graph, src=6)
-
-
-@pytest.mark.skipif(
-    os.environ.get("RUN_JAVA_TESTS") != "ON",
-    reason="Java SDK is disabled, skip this test.",
-)
-def test_sssp_property_vertex_property(
-    demo_jar,
-    graphscope_session,
-    p2p_property_graph,
-    property_graph_sssp_vertex_property_class,
-):
-    sssp = JavaApp(
-        full_jar_path=demo_jar, java_app_class=property_graph_sssp_vertex_property_class
     )
     sssp(p2p_property_graph, src=6)

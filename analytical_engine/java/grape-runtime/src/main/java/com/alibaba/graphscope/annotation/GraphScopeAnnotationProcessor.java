@@ -54,9 +54,9 @@ import com.alibaba.graphscope.context.ffi.FFILabeledVertexDataContext;
 import com.alibaba.graphscope.context.ffi.FFILabeledVertexPropertyContext;
 import com.alibaba.graphscope.context.ffi.FFIVertexDataContext;
 import com.alibaba.graphscope.context.ffi.FFIVertexPropertyContext;
-import com.alibaba.graphscope.ds.AdjList;
 import com.alibaba.graphscope.ds.GSVertexArray;
-import com.alibaba.graphscope.ds.Nbr;
+import com.alibaba.graphscope.ds.GrapeAdjList;
+import com.alibaba.graphscope.ds.GrapeNbr;
 import com.alibaba.graphscope.ds.ProjectedAdjList;
 import com.alibaba.graphscope.ds.ProjectedNbr;
 import com.alibaba.graphscope.ds.PropertyAdjList;
@@ -460,7 +460,7 @@ public class GraphScopeAnnotationProcessor extends javax.annotation.processing.A
 
     private void addNbr(AnnotationSpec.Builder ffiGenBatchBuilder) {
         AnnotationSpec.Builder ffiGenVertex = AnnotationSpec.builder(FFIGen.class);
-        ffiGenVertex.addMember("type", "$S", Nbr.class.getName());
+        ffiGenVertex.addMember("type", "$S", GrapeNbr.class.getName());
         ffiGenVertex.addMember(
                 "templates",
                 "$L",
@@ -484,7 +484,7 @@ public class GraphScopeAnnotationProcessor extends javax.annotation.processing.A
 
     private void addAdjList(AnnotationSpec.Builder ffiGenBatchBuilder) {
         AnnotationSpec.Builder ffiGenVertex = AnnotationSpec.builder(FFIGen.class);
-        ffiGenVertex.addMember("type", "$S", AdjList.class.getName());
+        ffiGenVertex.addMember("type", "$S", GrapeAdjList.class.getName());
         ffiGenVertex.addMember(
                 "templates",
                 "$L",

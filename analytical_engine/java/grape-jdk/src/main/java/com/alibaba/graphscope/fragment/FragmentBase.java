@@ -20,7 +20,6 @@ import com.alibaba.fastffi.CXXReference;
 import com.alibaba.fastffi.CXXValue;
 import com.alibaba.fastffi.FFINameAlias;
 import com.alibaba.fastffi.FFIPointer;
-import com.alibaba.graphscope.ds.AdjList;
 import com.alibaba.graphscope.ds.Vertex;
 import com.alibaba.graphscope.ds.VertexRange;
 
@@ -106,31 +105,6 @@ public interface FragmentBase<OID_T, VID_T, VDATA_T, EDATA_T> extends FFIPointer
     @FFINameAlias("GetFragId")
     int getFragId(@CXXReference Vertex<VID_T> vertex);
 
-    /**
-     * The data bound to the vertex.
-     *
-     * @param vertex querying vertex.
-     * @return bounded data.
-     */
-    @FFINameAlias("GetData")
-    @CXXReference
-    VDATA_T getData(@CXXReference Vertex<VID_T> vertex);
-
-    /**
-     * Bind a vertex to a data value.
-     *
-     * @param vertex querying vertex.
-     * @param val vertex value.
-     */
-    @FFINameAlias("SetData")
-    void setData(@CXXReference Vertex<VID_T> vertex, @CXXReference VDATA_T val);
-
-    @FFINameAlias("HasChild")
-    boolean hasChild(@CXXReference Vertex<VID_T> vertex);
-
-    @FFINameAlias("HasParent")
-    boolean hasParent(@CXXReference Vertex<VID_T> vertex);
-
     @FFINameAlias("GetLocalInDegree")
     int getLocalInDegree(@CXXReference Vertex<VID_T> vertex);
 
@@ -143,12 +117,4 @@ public interface FragmentBase<OID_T, VID_T, VDATA_T, EDATA_T> extends FFIPointer
     @FFINameAlias("Vertex2Gid")
     @CXXValue
     VID_T vertex2Gid(@CXXReference Vertex<VID_T> vertex);
-
-    @FFINameAlias("GetIncomingAdjList")
-    @CXXValue
-    AdjList<VID_T, EDATA_T> getIncomingAdjList(@CXXReference Vertex<VID_T> vertex);
-
-    @FFINameAlias("GetOutgoingAdjList")
-    @CXXValue
-    AdjList<VID_T, EDATA_T> getOutgoingAdjList(@CXXReference Vertex<VID_T> vertex);
 }

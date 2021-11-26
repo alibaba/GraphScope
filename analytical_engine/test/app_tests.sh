@@ -391,8 +391,7 @@ then
   if [[ "${USER_JAR_PATH}"x != ""x ]]
   then
     echo "Running Java tests..."
-    run_vy ${np} ./run_java_app "${socket_file}" 2 "${test_dir}"/new_property/v2_e2/twitter_e 2 "${test_dir}"/new_property/v2_e2/twitter_v 0 1 1 com.alibaba.graphscope.example.property.sssp.PropertySSSPVertexProperty
-    run_vy ${np} ./run_java_app "${socket_file}" 2 "${test_dir}"/new_property/v2_e2/twitter_e 2 "${test_dir}"/new_property/v2_e2/twitter_v 0 0 1 com.alibaba.graphscope.example.property.sssp.PropertySSSPVertexData
+    run_vy ${np} ./run_java_app "${socket_file}" 2 "${test_dir}"/new_property/v2_e2/twitter_e 2 "${test_dir}"/new_property/v2_e2/twitter_v 0 0 1 com.alibaba.graphscope.example.property.sssp.ParallelPropertySSSPVertexData
   fi
 fi
 

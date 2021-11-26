@@ -30,8 +30,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /** VertexPropertyContext only compatible with simple graph, i.e. ArrowProjectedFragment @FRAG_T */
-public abstract class VertexPropertyContext<FRAG_T extends ArrowProjectedFragment>
-        implements ProjectedDefaultContextBase<FRAG_T> {
+public abstract class VertexPropertyContext<FRAG_T extends ArrowProjectedFragment> {
     private static Logger logger = LoggerFactory.getLogger(VertexPropertyContext.class.getName());
     private long ffiContextAddress;
     private FFIVertexPropertyContext<FRAG_T> ffiVertexPropertyContext;

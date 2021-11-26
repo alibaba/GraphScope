@@ -47,6 +47,8 @@ public class CppHeaderName {
             "grape/parallel/default_message_manager.h";
     public static final String GRAPE_PARALLEL_PARALLEL_MESSAGE_MANAGER_H =
             "grape/parallel/parallel_message_manager.h";
+    public static final String CORE_PARALLEL_PARALLEL_PROPERTY_MESSAGE_MANAGER_H =
+            "core/parallel/parallel_property_message_manager.h";
     // public static final String GRAPE_MESSAGE_IN_BUFFER_H =
     // "core/parallel/java_message_in_buffer.h";
     public static final String GRAPE_LONG_VECTOR_H = "core/utils/long_vector.h";
@@ -57,6 +59,6 @@ public class CppHeaderName {
     public static final String GRAPE_COMMUNICATOR_H = "grape/communication/communicator.h";
     public static final String ARROW_PROJECTED_FRAGMENT_H =
             "core/fragment/arrow_projected_fragment.h";
-    //    public static final String CORE_JAVA_TYPE_ALIAS_H = "core/java/type_alias.h";
+    // public static final String CORE_JAVA_TYPE_ALIAS_H = "core/java/type_alias.h";
     public static final String GRAPE_WORKER_COMM_SPEC_H = "grape/worker/comm_spec.h";
 }

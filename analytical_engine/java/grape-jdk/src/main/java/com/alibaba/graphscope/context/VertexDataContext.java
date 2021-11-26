@@ -19,13 +19,12 @@ package com.alibaba.graphscope.context;
 import com.alibaba.fastffi.FFITypeFactory;
 import com.alibaba.graphscope.context.ffi.FFIVertexDataContext;
 import com.alibaba.graphscope.ds.GSVertexArray;
-import com.alibaba.graphscope.fragment.ArrowProjectedFragment;
+import com.alibaba.graphscope.fragment.EdgecutFragment;
 import com.alibaba.graphscope.utils.CppClassName;
 import com.alibaba.graphscope.utils.FFITypeFactoryhelper;
 import java.util.Objects;
 
-public abstract class VertexDataContext<FRAG_T extends ArrowProjectedFragment, DATA_T>
-        implements ProjectedDefaultContextBase<FRAG_T> {
+public abstract class VertexDataContext<FRAG_T extends EdgecutFragment, DATA_T> {
     private long ffiContextAddress;
     private FFIVertexDataContext<FRAG_T, DATA_T> ffiVertexDataContext;
     private FFIVertexDataContext.Factory factory;
@@ -38,8 +37,7 @@ public abstract class VertexDataContext<FRAG_T extends ArrowProjectedFragment, D
      * @param includeOuter whether to include outer vertices or not.
      */
     protected void createFFIContext(FRAG_T fragment, Class<?> dataClass, boolean includeOuter) {
-        // String fragmentTemplateStr =
-        // FFITypeFactory.getFFITypeName(fragment.getClass(), true);
+        // String fragmentTemplateStr = FFITypeFactory.getFFITypeName(fragment.getClass(), true);
         String fragmentTemplateStr = FFITypeFactoryhelper.getForeignName(fragment);
         System.out.println("fragment: " + fragmentTemplateStr);
         String contextName =

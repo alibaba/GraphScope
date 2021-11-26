@@ -16,8 +16,9 @@
 
 package com.alibaba.graphscope.utils;
 
-import com.alibaba.graphscope.app.ProjectedDefaultAppBase;
-import com.alibaba.graphscope.app.PropertyDefaultAppBase;
+import com.alibaba.graphscope.app.DefaultAppBase;
+import com.alibaba.graphscope.app.DefaultPropertyAppBase;
+import com.alibaba.graphscope.app.ParallelPropertyAppBase;
 import com.alibaba.graphscope.context.LabeledVertexDataContext;
 import com.alibaba.graphscope.context.LabeledVertexPropertyContext;
 import com.alibaba.graphscope.context.VertexDataContext;
@@ -38,11 +39,35 @@ public class AppBaseParser {
     private static void loadClassAndParse(String className) {
         try {
             Class<?> clz = Class.forName(className);
-            boolean flag = PropertyDefaultAppBase.class.isAssignableFrom(clz);
+            boolean flag = DefaultPropertyAppBase.class.isAssignableFrom(clz);
             if (flag == true) {
-                System.out.println("PropertyDefaultApp");
-                Class<? extends PropertyDefaultAppBase> clzCasted =
-                        (Class<? extends PropertyDefaultAppBase>) clz;
+                System.out.println("DefaultPropertyApp");
+                Class<? extends DefaultPropertyAppBase> clzCasted =
+                        (Class<? extends DefaultPropertyAppBase>) clz;
+                Type type = clzCasted.getGenericInterfaces()[0];
+                if (type instanceof ParameterizedType) {
+                    ParameterizedType parameterizedType = (ParameterizedType) type;
+                    Type[] typeParams = parameterizedType.getActualTypeArguments();
+                    if (typeParams.length != 2) {
+                        System.out.println(
+                                "Error: Number of params error, expected 2, actuval "
+                                        + typeParams.length);
+                        return;
+                    }
+                    System.out.println("TypeParams: " + typeParams[0].getTypeName());
+                    Class<?> ctxType = (Class<?>) typeParams[1];
+                    System.out.println("ContextType:" + javaContextToCppContextName(ctxType));
+                    return;
+                }
+                System.out.println("Error: Not a parameterized type " + type.getTypeName());
+                return;
+            }
+
+            flag = ParallelPropertyAppBase.class.isAssignableFrom(clz);
+            if (flag == true) {
+                System.out.println("ParallelPropertyApp");
+                Class<? extends ParallelPropertyAppBase> clzCasted =
+                        (Class<? extends ParallelPropertyAppBase>) clz;
                 Type type = clzCasted.getGenericInterfaces()[0];
                 if (type instanceof ParameterizedType) {
                     ParameterizedType parameterizedType = (ParameterizedType) type;
@@ -62,11 +87,10 @@ public class AppBaseParser {
                 return;
             }
             // try Projected
-            flag = ProjectedDefaultAppBase.class.isAssignableFrom(clz);
+            flag = DefaultAppBase.class.isAssignableFrom(clz);
             if (flag == true) {
-                System.out.println("ProjectedDefaultApp");
-                Class<? extends ProjectedDefaultAppBase> clzCasted =
-                        (Class<? extends ProjectedDefaultAppBase>) clz;
+                System.out.println("DefaultAppBase");
+                Class<? extends DefaultAppBase> clzCasted = (Class<? extends DefaultAppBase>) clz;
                 Type type = clzCasted.getGenericInterfaces()[0];
                 if (type instanceof ParameterizedType) {
                     ParameterizedType parameterizedType = (ParameterizedType) type;

@@ -32,7 +32,7 @@ namespace gs {
 
 /**
  * @brief This is a driver app for java app. The driven java app should be
- * inherited from com.alibaba.graphscope.app.DefaultAppBase.
+ * inherited from com.alibaba.grape.app.DefaultAppBase.
  *
  * @tparam FRAG_T Should be grape::ImmutableEdgecutFragment<...>
  */
@@ -56,16 +56,17 @@ class JavaPIEDefaultApp : public AppBase<FRAG_T, JavaPIEDefaultContext<FRAG_T>>,
       JNIEnv* env = m.env();
 
       jobject app_object = ctx.app_object();
+      auto communicator = static_cast<grape::Communicator*>(this);
       InitJavaCommunicator(env, ctx.url_class_loader_object(), app_object,
-                           reinterpret_cast<jlong>(this));
+                           reinterpret_cast<jlong>(communicator));
 
       jclass app_class = env->GetObjectClass(app_object);
       CHECK_NOTNULL(app_class);
 
       const char* descriptor =
-          "(Lcom/alibaba/grape/fragment/ImmutableEdgecutFragment;"
-          "Lcom/alibaba/grape/app/DefaultContextBase;"
-          "Lcom/alibaba/grape/parallel/DefaultMessageManager;)V";
+          "(Lcom/alibaba/graphscope/fragment/ImmutableEdgecutFragment;"
+          "Lcom/alibaba/graphscope/app/DefaultContextBase;"
+          "Lcom/alibaba/graphscope/parallel/DefaultMessageManager;)V";
       jmethodID pEval_methodID =
           env->GetMethodID(app_class, "PEval", descriptor);
       CHECK_NOTNULL(pEval_methodID);
@@ -99,9 +100,9 @@ class JavaPIEDefaultApp : public AppBase<FRAG_T, JavaPIEDefaultContext<FRAG_T>>,
       CHECK_NOTNULL(app_class);
 
       const char* descriptor =
-          "(Lcom/alibaba/grape/fragment/ImmutableEdgecutFragment;"
-          "Lcom/alibaba/grape/app/DefaultContextBase;"
-          "Lcom/alibaba/grape/parallel/DefaultMessageManager;)V";
+          "(Lcom/alibaba/graphscope/fragment/ImmutableEdgecutFragment;"
+          "Lcom/alibaba/graphscope/app/DefaultContextBase;"
+          "Lcom/alibaba/graphscope/parallel/DefaultMessageManager;)V";
       jmethodID incEval_methodID =
           env->GetMethodID(app_class, "IncEval", descriptor);
       CHECK_NOTNULL(incEval_methodID);
