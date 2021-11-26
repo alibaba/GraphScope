@@ -25,8 +25,8 @@ struct MockServerDetect {
 }
 
 impl ServerDetect for MockServerDetect {
-    fn fetch(&mut self) -> &[Server] {
-        self.servers.as_slice()
+    fn fetch(&self) -> Vec<Server> {
+        self.servers.clone()
     }
 }
 

@@ -138,6 +138,7 @@ mod transport;
 
 pub use error::NetError;
 pub use manager::ServerDetect;
+pub use manager::SimpleServerDetector;
 #[cfg(feature = "benchmark")]
 pub use message::{MessageHeader, MESSAGE_HEAD_SIZE};
 pub use receive::IPCReceiver;
