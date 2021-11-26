@@ -8,4 +8,7 @@ build:
 run:
 	cd $(CUR_DIR) && java -cp ".:./target/libs/*:./target/ir-compiler-1.0-SNAPSHOT.jar" -Djna.library.path=../core/target/release com.alibaba.graphscope.common.SubmitPlanServiceMain $(OPT)
 
+server:
+	cd $(CUR_DIR) && java -cp ".:./target/libs/*:./target/ir-compiler-1.0-SNAPSHOT.jar" -Djna.library.path=../core/target/release com.alibaba.graphscope.gremlin.service.GraphServiceMain
+
 .PHONY: build run
