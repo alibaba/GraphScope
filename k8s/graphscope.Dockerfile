@@ -16,8 +16,12 @@ SHELL ["/bin/bash", "-c"]
 ENV TZ=Asia/Shanghai
 RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 
-# Install python3 java8
-RUN apt update -y && apt install -y \
+# change apt source to aliyun
+# install python3 java8
+RUN sed -i 's/archive.ubuntu.com/mirrors.ustc.edu.cn/g' /etc/apt/sources.list && \
+    sed -i 's/security.ubuntu.com/mirrors.ustc.edu.cn/g' /etc/apt/sources.list && \
+    cat /etc/apt/sources.list && \
+    apt update -y && apt install -y \
       git openjdk-8-jdk python3-pip sudo && \
     apt clean && rm -fr /var/lib/apt/lists/*
 
