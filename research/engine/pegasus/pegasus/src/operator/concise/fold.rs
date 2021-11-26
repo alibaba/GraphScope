@@ -14,11 +14,7 @@ impl<D: Data> Fold<D> for Stream<D> {
         F: FnMut(B, D) -> FnResult<B> + Send + 'static,
         C: Fn() -> F + Send + 'static,
     {
-        let mut stream = self;
-        if stream.get_partitions() > 1 {
-            stream = stream.aggregate();
-        }
-        let s = stream.unary("fold", |info| {
+        let s = self.aggregate().unary("fold", |info| {
             let mut table = TidyTagMap::<(B, F)>::new(info.scope_level);
             move |input, output| {
                 input.for_each_batch(|batch| {

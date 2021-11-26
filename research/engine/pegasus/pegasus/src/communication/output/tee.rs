@@ -27,9 +27,9 @@ use crate::data::MicroBatch;
 use crate::data_plane::Push;
 use crate::errors::IOError;
 use crate::graph::Port;
+use crate::progress::DynPeers;
 use crate::tag::tools::map::TidyTagMap;
 use crate::{Data, Tag};
-use crate::progress::DynPeers;
 
 struct ChannelCancel {
     scope_level: u32,
@@ -191,16 +191,16 @@ impl<D: Data> Push<MicroBatch<D>> for PerChannelPush<D> {
                     let mut end_cp = end.clone();
                     batch.set_end(end);
                     batch.set_tag(tag);
-                    trace_worker!("channel[{}] pushed end of scope{:?};",  self.ch_info.id.index, batch.tag);
+                    trace_worker!("channel[{}] pushed end of scope{:?};", self.ch_info.id.index, batch.tag);
                     self.push.push(batch)?;
                     end_cp.update_peers(DynPeers::all());
                     let last = MicroBatch::last(self.src, end_cp);
-                    trace_worker!("channel[{}] pushed end of scope{:?};",  self.ch_info.id.index, last.tag);
+                    trace_worker!("channel[{}] pushed end of scope{:?};", self.ch_info.id.index, last.tag);
                     self.push.push(last)
                 } else if self.delta.scope_level_delta() == 0 {
                     batch.set_end(end);
                     batch.set_tag(tag);
-                    trace_worker!("channel[{}] pushed end of scope{:?};",  self.ch_info.id.index, batch.tag);
+                    trace_worker!("channel[{}] pushed end of scope{:?};", self.ch_info.id.index, batch.tag);
                     self.push.push(batch)
                 } else {
                     // leave / to parent
@@ -235,7 +235,7 @@ impl<D: Data> Push<MicroBatch<D>> for PerChannelPush<D> {
                 let seq = self.re_seq.remove(&batch.tag).unwrap_or(0);
                 batch.set_seq(seq);
             }
-            trace_worker!("channel[{}] pushed end of scope{:?};",  self.ch_info.id.index, batch.tag);
+            trace_worker!("channel[{}] pushed end of scope{:?};", self.ch_info.id.index, batch.tag);
             self.push.push(batch)
         } else {
             unreachable!("unrecognized batch from child scope {:?}", batch.tag);

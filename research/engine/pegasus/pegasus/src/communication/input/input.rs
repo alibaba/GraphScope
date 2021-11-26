@@ -246,7 +246,12 @@ impl<D: Data> InputHandle<D> {
                             self.data_exhaust = true;
                         }
                         let end = batch.take_end().expect("unreachable");
-                        trace_worker!("channel[{}] pulled end of scope{:?} peers: {:?}", self.ch_info.index(), batch.tag, end.peers());
+                        trace_worker!(
+                            "channel[{}] pulled end of scope{:?} peers: {:?}",
+                            self.ch_info.index(),
+                            batch.tag,
+                            end.peers()
+                        );
                         self.parent_ends.push_back(end);
                     } else {
                         if let Some(end) = batch.take_end() {

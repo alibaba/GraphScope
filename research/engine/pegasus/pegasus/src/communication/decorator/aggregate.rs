@@ -36,7 +36,8 @@ impl<D: Data> AggregateBatchPush<D> {
             AggregateBatchPush { push }
         } else {
             let chancel_handle = DynSingleConsCancelPtr::new(info.scope_level, pushes.len());
-            let mut push = ExchangeByBatchPush::new(info, BatchRoute::Dyn(Box::new(ScopedAggregate::new())), pushes);
+            let mut push =
+                ExchangeByBatchPush::new(info, BatchRoute::Dyn(Box::new(ScopedAggregate::new())), pushes);
             push.update_cancel_handle(CancelHandle::DSC(chancel_handle));
             AggregateBatchPush { push }
         }

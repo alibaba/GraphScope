@@ -80,7 +80,9 @@ impl<D: Data> OutputHandle<D> {
         }
     }
 
-    pub fn push_iter<I: Iterator<Item = D> + Send + 'static>(&mut self, tag: &Tag, mut iter: I) -> IOResult<()> {
+    pub fn push_iter<I: Iterator<Item = D> + Send + 'static>(
+        &mut self, tag: &Tag, mut iter: I,
+    ) -> IOResult<()> {
         if self.is_skipped(tag) {
             return Ok(());
         }
@@ -524,11 +526,21 @@ impl<D: Data> ScopeStreamPush<D> for OutputHandle<D> {
             } else {
                 MicroBatch::new(end.tag.clone(), self.src, ReadBuffer::new())
             };
-            trace_worker!("output[{:?}] send end of scope{:?} peers: {:?}", self.port, batch.tag, end.peers());
+            trace_worker!(
+                "output[{:?}] send end of scope{:?} peers: {:?}",
+                self.port,
+                batch.tag,
+                end.peers()
+            );
             batch.set_end(end);
             self.send_batch(batch)
         } else if level < self.scope_level {
-            trace_worker!("output[{:?}] send end of scope{:?} peers: {:?}", self.port, end.tag, end.peers());
+            trace_worker!(
+                "output[{:?}] send end of scope{:?} peers: {:?}",
+                self.port,
+                end.tag,
+                end.peers()
+            );
             let mut buf_pool = std::mem::replace(&mut self.buf_pool, Default::default());
             let result = self.clean_lost_end_child(&end.tag, &mut buf_pool);
             self.buf_pool = buf_pool;

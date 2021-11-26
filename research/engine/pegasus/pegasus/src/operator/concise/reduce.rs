@@ -18,11 +18,7 @@ impl<D: Data> Reduce<D> for Stream<D> {
         F: FnMut(D, D) -> FnResult<D> + Send + 'static,
         B: Fn() -> F + Send + Sync + 'static,
     {
-        let stream = if self.get_partitions() > 1 {
-            self.aggregate()
-        } else {
-            self
-        };
+        let stream = self.aggregate();
         do_reduce(stream, builder)
     }
 }
