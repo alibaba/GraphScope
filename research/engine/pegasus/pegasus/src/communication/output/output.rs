@@ -80,7 +80,9 @@ impl<D: Data> OutputHandle<D> {
         }
     }
 
-    pub fn push_iter<I: Iterator<Item = D> + Send + 'static>(&mut self, tag: &Tag, mut iter: I) -> IOResult<()> {
+    pub fn push_iter<I: Iterator<Item = D> + Send + 'static>(
+        &mut self, tag: &Tag, mut iter: I,
+    ) -> IOResult<()> {
         if self.is_skipped(tag) {
             return Ok(());
         }
@@ -341,13 +343,7 @@ impl<D: Data> OutputHandle<D> {
         }
 
         let tag = batch.tag().clone();
-        if batch.is_last() {
-            if batch.is_empty() {
-                trace_worker!("output[{:?}] send end of {:?};", self.port, tag);
-            } else {
-                trace_worker!("output[{:?}] send last batch(len={}) of {:?} ;", self.port, batch.len(), tag)
-            }
-        } else {
+        if !batch.is_empty() {
             trace_worker!(
                 "output[{:?}] send {}th batch(len={}) of {:?} ;",
                 self.port,
@@ -530,11 +526,21 @@ impl<D: Data> ScopeStreamPush<D> for OutputHandle<D> {
             } else {
                 MicroBatch::new(end.tag.clone(), self.src, ReadBuffer::new())
             };
+            trace_worker!(
+                "output[{:?}] send end of scope{:?} peers: {:?}",
+                self.port,
+                batch.tag,
+                end.peers()
+            );
             batch.set_end(end);
-            trace_worker!("output[{:?}] notify end of {:?}", self.port, batch.tag);
             self.send_batch(batch)
         } else if level < self.scope_level {
-            trace_worker!("output[{:?}] notify end of parent scope {:?}", self.port, end.tag);
+            trace_worker!(
+                "output[{:?}] send end of scope{:?} peers: {:?}",
+                self.port,
+                end.tag,
+                end.peers()
+            );
             let mut buf_pool = std::mem::replace(&mut self.buf_pool, Default::default());
             let result = self.clean_lost_end_child(&end.tag, &mut buf_pool);
             self.buf_pool = buf_pool;

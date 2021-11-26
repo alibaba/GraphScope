@@ -35,9 +35,10 @@ impl<D: Data> HasAny<D> for Stream<D> {
     }
 }
 
-
 fn has_any<T: Data>(mut stream: Stream<T>) -> Result<SingleItem<bool>, BuildJobError> {
-    stream.set_upstream_batch_capacity(1).set_upstream_batch_size(1);
+    stream
+        .set_upstream_batch_capacity(1)
+        .set_upstream_batch_size(1);
     let x = stream.unary("any_global", |info| {
         let mut any_map = TidyTagMap::<()>::new(info.scope_level);
         move |input, output| {

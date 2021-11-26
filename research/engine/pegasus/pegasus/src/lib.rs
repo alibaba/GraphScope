@@ -53,6 +53,7 @@ mod worker;
 
 use std::collections::HashSet;
 use std::fmt::Debug;
+use std::net::SocketAddr;
 
 pub use config::{read_from, Configuration, JobConf, ServerConf};
 pub use data::Data;
@@ -68,7 +69,6 @@ pub use crate::errors::{BuildJobError, JobSubmitError, SpawnJobError, StartupErr
 use crate::resource::PartitionedResource;
 use crate::result::{ResultSink, ResultStream};
 use crate::worker_id::WorkerIdIter;
-use std::net::SocketAddr;
 
 lazy_static! {
     static ref SERVER_ID: Mutex<Option<u64>> = Mutex::new(None);
@@ -173,7 +173,9 @@ pub fn startup(conf: Configuration) -> Result<(), StartupError> {
     Ok(())
 }
 
-pub fn startup_with<D: ServerDetect + 'static>(conf: Configuration, detect: D) -> Result<Option<SocketAddr>, StartupError> {
+pub fn startup_with<D: ServerDetect + 'static>(
+    conf: Configuration, detect: D,
+) -> Result<Option<SocketAddr>, StartupError> {
     if let Some(pool_size) = conf.max_pool_size {
         pegasus_executor::set_core_pool_size(pool_size as usize);
     }
