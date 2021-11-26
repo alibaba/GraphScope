@@ -112,7 +112,7 @@ def p2p_property_dir():
     return "/testingdata/property"
 
 
-@pytest.mark.skipif("HDFS_TEST_DIR" not in os.environ, reason="the test case need HDFS")
+@pytest.mark.skip(reason="waiting for vineyard_read_vineyard_dataframe in v6d package")
 def test_demo_on_hdfs(gs_session_distributed):
     graph = gs_session_distributed.g()
     graph = graph.add_vertices(
