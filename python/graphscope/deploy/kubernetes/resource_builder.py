@@ -17,10 +17,7 @@
 #
 
 
-import json
 import logging
-import os
-import shutil
 
 from graphscope.deploy.kubernetes.utils import parse_readable_memory
 

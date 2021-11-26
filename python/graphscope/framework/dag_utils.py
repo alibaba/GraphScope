@@ -19,10 +19,7 @@
 import json
 import pickle
 
-import numpy as np
-
 from graphscope.framework import utils
-from graphscope.framework.dag import DAGNode
 from graphscope.framework.errors import check_argument
 from graphscope.framework.operation import Operation
 from graphscope.proto import attr_value_pb2

@@ -124,8 +124,9 @@ class BetweennessCentralityGeneric
       distu = -heap.top().first;
       heap.pop();
 
-      if (D[u])
+      if (D[u]) {
         continue;
+      }
       D[u] = true;
       S.push(u);
 

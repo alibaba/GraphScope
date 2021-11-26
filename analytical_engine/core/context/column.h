@@ -44,7 +44,7 @@ class IColumn {
 };
 
 /**
- * @brief Column is an templated implementation of IColumn. Each element in the
+ * @brief Column is a templated implementation of IColumn. Each element in the
  * column must be associated with a vertex in the fragment.
  *
  * @tparam FRAG_T Fragment class

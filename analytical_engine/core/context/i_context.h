@@ -97,7 +97,7 @@ class IVertexDataContextWrapper : public IContextWrapper {
 
   virtual bl::result<std::string> GetContextData(const rpc::GSParams& params) {
     RETURN_GS_ERROR(vineyard::ErrorCode::kInvalidOperationError,
-                    "Not implement the operation.");
+                    "Not implemented operation: GetContextData");
   }
 };
 

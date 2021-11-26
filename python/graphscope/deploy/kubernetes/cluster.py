@@ -17,20 +17,14 @@
 #
 
 
-import atexit
 import json
 import logging
 import os
 import queue
 import random
-import re
-import subprocess
-import sys
-import threading
 import time
 
 from kubernetes import client as kube_client
-from kubernetes import watch as kube_watch
 from kubernetes.client import CoreV1Api
 from kubernetes.client.rest import ApiException as K8SApiException
 

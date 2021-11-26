@@ -262,7 +262,7 @@ def pack_query_params(*args, **kwargs):
     params = []
     for i in args:
         params.append(pack(i))
-    for k, v in kwargs.items():
+    for _, v in kwargs.items():
         params.append(pack(v))
     return params
 
@@ -304,14 +304,14 @@ def decode_numpy(value):
     archive = OutArchive(value)
     shape_size = archive.get_size()
     shape = []
-    for i in range(shape_size):
+    for _ in range(shape_size):
         shape.append(archive.get_size())
     dtype = _context_protocol_to_numpy_dtype(archive.get_int())
     array_size = archive.get_size()
     check_argument(array_size == np.prod(shape))
     if dtype is object:
         data_copy = []
-        for i in range(array_size):
+        for _ in range(array_size):
             data_copy.append(archive.get_string())
         array = np.array(data_copy, dtype=dtype)
     else:
@@ -332,12 +332,12 @@ def decode_dataframe(value):
     row_num = archive.get_size()
     arrays = {}
 
-    for i in range(column_num):
+    for _ in range(column_num):
         col_name = archive.get_string()
         dtype = _context_protocol_to_numpy_dtype(archive.get_int())
         if dtype is object:
             data_copy = []
-            for i in range(row_num):
+            for _ in range(row_num):
                 data_copy.append(archive.get_string())
             array = np.array(data_copy, dtype=dtype)
         else:

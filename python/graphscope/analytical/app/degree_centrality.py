@@ -32,7 +32,7 @@ def degree_centrality(graph, centrality_type="both"):
     n is the number of nodes in G.
 
     Args:
-        graph (:class:`Graph`): A projected simple graph.
+        graph (:class:`Graph`): A simple graph.
         centrality_type (str, optional): Available options are in/out/both.
             Defaults to "both".
 
@@ -45,8 +45,8 @@ def degree_centrality(graph, centrality_type="both"):
     .. code:: python
 
         import graphscope as gs
-        sess = gs.session()
-        g = sess.g()
+        g = gs.g()
+        # Load some data, then project to a simple graph (if needed).
         pg = g.project(vertices={"vlabel": []}, edges={"elabel": []})
         r = gs.degree_centrality(pg, centrality_type="both")
         s.close()

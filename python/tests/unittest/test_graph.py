@@ -24,6 +24,7 @@ import pytest
 import vineyard
 
 import graphscope
+from graphscope import Graph
 from graphscope import property_sssp
 from graphscope import sssp
 from graphscope.dataset import load_ldbc
@@ -32,7 +33,6 @@ from graphscope.dataset import load_ogbn_mag
 from graphscope.framework.errors import AnalyticalEngineInternalError
 from graphscope.framework.errors import GRPCError
 from graphscope.framework.errors import InvalidArgumentError
-from graphscope.framework.graph import Graph
 from graphscope.framework.loader import Loader
 from graphscope.proto import graph_def_pb2
 from graphscope.proto import types_pb2

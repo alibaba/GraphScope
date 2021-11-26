@@ -48,7 +48,7 @@ class DegreeAssortativityContext : public TensorContext<FRAG_T, double> {
     } else if (source_degree_type == "out") {
       source_degree_type_ = DegreeType::OUT;
     } else {
-      LOG(FATAL) << "invalid parameter source_degree_type: "
+      LOG(FATAL) << "Invalid parameter source_degree_type: "
                  << source_degree_type;
     }
     if (target_degree_type == "in") {
@@ -56,7 +56,7 @@ class DegreeAssortativityContext : public TensorContext<FRAG_T, double> {
     } else if (target_degree_type == "out") {
       target_degree_type_ = DegreeType::OUT;
     } else {
-      LOG(FATAL) << "invalid parameter target_degree_type: "
+      LOG(FATAL) << "Invalid parameter target_degree_type: "
                  << target_degree_type;
     }
   }

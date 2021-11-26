@@ -27,7 +27,6 @@ import logging
 import os
 import pickle
 import signal
-import sys
 import threading
 import time
 import uuid

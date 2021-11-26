@@ -21,7 +21,6 @@ import os
 from graphscope.client.session import get_default_session
 from graphscope.dataset.io_utils import DATA_SITE
 from graphscope.dataset.io_utils import download_file
-from graphscope.framework.graph import Graph
 from graphscope.framework.loader import Loader
 
 

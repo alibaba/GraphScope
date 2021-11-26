@@ -21,7 +21,6 @@ import os
 from graphscope.client.session import get_default_session
 from graphscope.dataset.io_utils import DATA_SITE
 from graphscope.dataset.io_utils import download_file
-from graphscope.framework.graph import Graph
 
 
 def load_ppi_graph(sess=None, prefix=None, directed=False):

@@ -16,9 +16,7 @@
 # limitations under the License.
 #
 
-from gremlin_python import statics
 from gremlin_python.process.graph_traversal import GraphTraversal
-from gremlin_python.process.traversal import Bytecode
 
 
 def gaia(cls, *args):

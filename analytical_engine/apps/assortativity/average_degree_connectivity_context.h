@@ -49,7 +49,7 @@ class AverageDegreeConnectivityContext : public TensorContext<FRAG_T, double> {
     } else if (source_degree_type == "in+out") {
       source_degree_type_ = DegreeType::INANDOUT;
     } else {
-      LOG(FATAL) << "invalid parameter source_degree_type: "
+      LOG(FATAL) << "Invalid parameter source_degree_type: "
                  << source_degree_type;
     }
     if (target_degree_type == "in") {
@@ -59,7 +59,7 @@ class AverageDegreeConnectivityContext : public TensorContext<FRAG_T, double> {
     } else if (target_degree_type == "in+out") {
       target_degree_type_ = DegreeType::INANDOUT;
     } else {
-      LOG(FATAL) << "invalid parameter target_degree_type: "
+      LOG(FATAL) << "Invalid parameter target_degree_type: "
                  << target_degree_type;
     }
     if (std::is_same<edata_t, grape::EmptyType>::value) {
@@ -82,7 +82,7 @@ class AverageDegreeConnectivityContext : public TensorContext<FRAG_T, double> {
   bool weighted;
   DegreeType source_degree_type_;
   DegreeType target_degree_type_;
-  // <degree, <sum of neighbor's, weighted degree> pair
+  // <degree, <sum of neighbor's, weighted degree> pair>
   std::unordered_map<int, std::pair<double, double>> degree_connectivity_map;
 };
 }  // namespace gs

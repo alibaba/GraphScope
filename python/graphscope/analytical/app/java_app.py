@@ -23,10 +23,8 @@ import logging
 import os
 import shutil
 import subprocess
-import sys
 import tempfile
 import zipfile
-from glob import glob
 from pathlib import Path
 
 import yaml

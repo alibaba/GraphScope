@@ -30,20 +30,20 @@ def cdlp(graph, max_round=10):
     """Evaluate Community Detection with Label Propagation.
 
     Args:
-        graph (:class:`Graph`): A projected simple graph.
+        graph (:class:`Graph`): A simple graph.
         max_round (int, optional): Maximum rounds. Defaults to 10.
 
     Returns:
         :class:`graphscope.framework.context.VertexDataContextDAGNode`:
-            A context with each vertex assigned with a community ID, evaluated in eager mode.
+            A context with each vertex assigned with a community ID, will be evaluated in eager mode.
 
     Examples:
 
     .. code:: python
 
         import graphscope as gs
-        sess = gs.session()
-        g = sess.g()
+        g = gs.g()
+        # Load some data, then project to a simple graph (if needed).
         pg = g.project(vertices={"vlabel": []}, edges={"elabel": []})
         r = gs.cdlp(g, max_round=10)
         s.close()
