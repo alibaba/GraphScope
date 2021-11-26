@@ -13,7 +13,7 @@
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 
-use pegasus::api::{CorrelatedSubTask, Count, HasAny, Map, Sink};
+use pegasus::api::{Collect, CorrelatedSubTask, Count, Filter, HasAny, Map, Sink};
 use pegasus::JobConf;
 
 #[test]
@@ -175,6 +175,70 @@ fn apply_x_flatmap_any_x_test() {
     }
 
     assert_eq!(count, 2000);
+}
+
+#[test]
+fn apply_count_empty_stream() {
+    let mut conf = JobConf::new("apply_x_flatmap_any_x_test");
+    conf.set_workers(2);
+    let mut result = pegasus::run(conf, || {
+        |input, output| {
+            input
+                .input_from(0..1000u32)?
+                .apply(|sub| {
+                    sub.repartition(|x| Ok(*x as u64))
+                        .flat_map(|i| Ok(vec![i, i + 2].into_iter()))?
+                        .filter(|i| Ok(*i % 2 == 0))?
+                        .map(|x| Ok(x))?
+                        .count()
+                })?
+                .filter_map(|(x, cnt)| if cnt == 0 { Ok(None) } else { Ok(Some((x, cnt))) })?
+                .sink_into(output)
+        }
+    })
+    .expect("build job failure");
+
+    let mut count = 0;
+    while let Some(Ok(d)) = result.next() {
+        assert_eq!(d.0 % 2, 0);
+        assert_eq!(d.1, 2);
+        count += 1;
+    }
+
+    assert_eq!(count, 1000);
+}
+
+#[test]
+fn apply_collect_empty_stream() {
+    let mut conf = JobConf::new("apply_x_flatmap_any_x_test");
+    conf.set_workers(2);
+    let mut result = pegasus::run(conf, || {
+        |input, output| {
+            input
+                .input_from(0..1000u32)?
+                .apply(|sub| {
+                    sub.repartition(|x| Ok(*x as u64))
+                        .flat_map(|i| Ok(vec![i, i + 2].into_iter()))?
+                        .filter(|i| Ok(*i % 2 == 0))?
+                        .map(|x| Ok(x))?
+                        .collect::<Vec<_>>()
+                })?
+                .filter_map(
+                    |(x, vec)| if vec.is_empty() { Ok(None) } else { Ok(Some((x, vec.len() as u64))) },
+                )?
+                .sink_into(output)
+        }
+    })
+    .expect("build job failure");
+
+    let mut count = 0;
+    while let Some(Ok(d)) = result.next() {
+        assert_eq!(d.0 % 2, 0);
+        assert_eq!(d.1, 2);
+        count += 1;
+    }
+
+    assert_eq!(count, 1000);
 }
 
 //#[test]

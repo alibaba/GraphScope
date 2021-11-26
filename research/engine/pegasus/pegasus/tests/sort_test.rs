@@ -17,9 +17,8 @@
 #[macro_use]
 extern crate lazy_static;
 
-use pegasus::JobConf;
 use pegasus::api::{Map, Sink};
-
+use pegasus::JobConf;
 
 lazy_static! {
     pub static ref MAP: std::collections::HashMap<u32, Vec<(u32, f32)>> = vec![
@@ -29,7 +28,9 @@ lazy_static! {
         (4, vec![(3, 0.4f32), (5, 1.0f32)]),
         (5, vec![]),
         (6, vec![(3, 0.2f32)])
-    ].into_iter().collect();
+    ]
+    .into_iter()
+    .collect();
 }
 
 #[test]
@@ -44,17 +45,16 @@ fn modern_graph_sort_by_test() {
         let index = pegasus::get_current_worker().index;
         move |input, output| {
             input
-                .input_from((1 .. 7).filter(move |x| *x % num_workers == index))?
+                .input_from((1..7).filter(move |x| *x % num_workers == index))?
                 .flat_map(|v| Ok(MAP.get(&v).unwrap().iter().cloned()))?
                 .sort_by(|x, y| y.1.partial_cmp(&x.1).unwrap())?
                 .map(|x| Ok(x.1))?
                 .sink_into(output)
         }
     })
-        .expect("submit job failure");
+    .expect("submit job failure");
 
-    let results: Vec<f32> = result_stream.map(|x| x.unwrap())
-        .collect();
+    let results: Vec<f32> = result_stream.map(|x| x.unwrap()).collect();
 
     assert_eq!(results, vec![1.0, 1.0, 0.5, 0.4, 0.4, 0.2]);
 }
