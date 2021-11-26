@@ -68,6 +68,7 @@ pub use crate::errors::{BuildJobError, JobSubmitError, SpawnJobError, StartupErr
 use crate::resource::PartitionedResource;
 use crate::result::{ResultSink, ResultStream};
 use crate::worker_id::WorkerIdIter;
+use std::net::SocketAddr;
 
 lazy_static! {
     static ref SERVER_ID: Mutex<Option<u64>> = Mutex::new(None);
@@ -183,7 +184,7 @@ pub fn startup_with<D: ServerDetect + 'static>(conf: Configuration, detect: D) -
         return Err(StartupError::AlreadyStarted(id));
     }
 
-    let res =  if let Some(net_conf) = conf.network_config() {
+    Ok(if let Some(net_conf) = conf.network_config() {
         let addr = net_conf.local_addr()?;
         let conn_conf = net_conf.get_connection_param();
         let addr = pegasus_network::start_up(server_id, conn_conf, addr, detect)?;
@@ -191,8 +192,7 @@ pub fn startup_with<D: ServerDetect + 'static>(conf: Configuration, detect: D) -
         Some(addr)
     } else {
         None
-    };
-    Ok(res)
+    })
 }
 
 pub fn shutdown_all() {
@@ -327,7 +327,6 @@ fn allocate_local_worker(conf: &Arc<JobConf>) -> Result<Option<WorkerIdIter>, Bu
 }
 
 use std::sync::Once;
-use std::net::SocketAddr;
 lazy_static! {
     static ref SINGLETON_INIT: Once = Once::new();
 }
