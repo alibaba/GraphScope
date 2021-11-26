@@ -4,7 +4,7 @@ grpcio
 grpcio-tools
 kubernetes
 nest_asyncio
-networkx
+networkx<2.6
 numpy
 packaging
 pandas
