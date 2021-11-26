@@ -341,6 +341,7 @@ jobs:
         DEPLOYMENT: ${{ matrix.deployment }}
         GS_TEST_DIR: ${{ github.workspace }}/gstest
       run: |
+        pip3 show networkx
         python3 -m pytest --exitfirst -s -v \
             $(dirname $(python3 -c "import graphscope; print(graphscope.__file__)"))/nx/tests
 
@@ -407,6 +408,7 @@ jobs:
         DEPLOYMENT: ${{ matrix.deployment }}
         GS_TEST_DIR: ${{ github.workspace }}/gstest
       run: |
+        pip3 show networkx
         python3 -m pytest --exitfirst -s -v \
             $(dirname $(python3 -c "import graphscope; print(graphscope.__file__)"))/nx/algorithms/tests/builtin
 
@@ -416,6 +418,7 @@ jobs:
         DEPLOYMENT: ${{ matrix.deployment }}
         GS_TEST_DIR: ${{ github.workspace }}/gstest
       run: |
+        pip3 show networkx
         python3 -m pytest --exitfirst -s -v \
             $(dirname $(python3 -c "import graphscope; print(graphscope.__file__)"))/nx/generators/tests
 
