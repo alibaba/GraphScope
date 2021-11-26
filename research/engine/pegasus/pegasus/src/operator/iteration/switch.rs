@@ -152,9 +152,7 @@ impl<D: Data> OperatorCore for SwitchOperator<D> {
                         self.iterate_states
                             .insert(p, IterateState::new());
                     }
-                    if end.contains_source(self.worker_index) {
-                        enter.notify_end(end)?;
-                    }
+                    enter.notify_end(end)?;
                 }
             }
 

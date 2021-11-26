@@ -246,6 +246,7 @@ impl<D: Data> InputHandle<D> {
                             self.data_exhaust = true;
                         }
                         let end = batch.take_end().expect("unreachable");
+                        trace_worker!("channel[{}] pulled end of scope{:?} peers: {:?}", self.ch_info.index(), batch.tag, end.peers());
                         self.parent_ends.push_back(end);
                     } else {
                         if let Some(end) = batch.take_end() {
@@ -269,21 +270,22 @@ impl<D: Data> InputHandle<D> {
                             }
                         } else {
                             if log_enabled!(log::Level::Trace) {
-                                if batch.is_last() {
-                                    trace_worker!(
-                                        "channel[{}] pulled last batch(len={}) of {:?} from {}",
-                                        self.ch_info.id.index,
-                                        batch.len(),
-                                        batch.tag,
-                                        batch.src
-                                    );
-                                } else {
+                                if !batch.is_empty() {
                                     trace_worker!(
                                         "channel[{}] pulled batch(len={}) of {:?} from {}",
                                         self.ch_info.id.index,
                                         batch.len(),
                                         batch.tag,
                                         batch.src
+                                    );
+                                }
+
+                                if let Some(end) = batch.get_end() {
+                                    trace_worker!(
+                                        "channel[{}] pulled end of scope{:?} peers: {:?}",
+                                        self.ch_info.id.index,
+                                        end.tag,
+                                        end.peers(),
                                     );
                                 }
                             }
