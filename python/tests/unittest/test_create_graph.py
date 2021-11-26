@@ -18,7 +18,6 @@
 
 import os
 
-import numpy as np
 import pandas as pd
 import pytest
 import vineyard
@@ -29,47 +28,47 @@ from graphscope.framework.loader import Loader
 from graphscope.proto import graph_def_pb2
 
 
-@pytest.fixture
+@pytest.fixture(scope="function")
 def lesson_v(data_dir=os.path.expandvars("${GS_TEST_DIR}/property_graph")):
     return Loader("%s/lesson.v" % data_dir, header_row=True, delimiter=",")
 
 
-@pytest.fixture
+@pytest.fixture(scope="function")
 def student_v(data_dir=os.path.expandvars("${GS_TEST_DIR}/property_graph")):
     return Loader("%s/student.v" % data_dir, header_row=True, delimiter=",")
 
 
-@pytest.fixture
+@pytest.fixture(scope="function")
 def teacher_v(data_dir=os.path.expandvars("${GS_TEST_DIR}/property_graph")):
     return Loader("%s/teacher.v" % data_dir, header_row=True, delimiter=",")
 
 
-@pytest.fixture
+@pytest.fixture(scope="function")
 def score_e(data_dir=os.path.expandvars("${GS_TEST_DIR}/property_graph")):
     return Loader("%s/score.e" % data_dir, header_row=True, delimiter=",")
 
 
-@pytest.fixture
+@pytest.fixture(scope="function")
 def student_teacher_e(data_dir=os.path.expandvars("${GS_TEST_DIR}/property_graph")):
     return Loader("%s/student_teacher.e" % data_dir, header_row=True, delimiter=",")
 
 
-@pytest.fixture
+@pytest.fixture(scope="function")
 def teacher_lesson_e(data_dir=os.path.expandvars("${GS_TEST_DIR}/property_graph")):
     return Loader("%s/teacher_lesson.e" % data_dir, header_row=True, delimiter=",")
 
 
-@pytest.fixture
+@pytest.fixture(scope="function")
 def student_group_e(data_dir=os.path.expandvars("${GS_TEST_DIR}/property_graph")):
     return Loader("%s/group.e" % data_dir, header_row=True, delimiter=",")
 
 
-@pytest.fixture
+@pytest.fixture(scope="function")
 def teacher_group_e(data_dir=os.path.expandvars("${GS_TEST_DIR}/property_graph")):
     return Loader("%s/teacher_group.e" % data_dir, header_row=True, delimiter=",")
 
 
-@pytest.fixture
+@pytest.fixture(scope="function")
 def friend_e(data_dir=os.path.expandvars("${GS_TEST_DIR}/property_graph")):
     return Loader("%s/friend.e" % data_dir, header_row=True, delimiter=",")
 
@@ -116,17 +115,17 @@ def lesson_v_mars():
     return "mars://lesson.v"
 
 
-@pytest.fixture
+@pytest.fixture(scope="function")
 def one_column_file(data_dir=os.path.expandvars("${GS_TEST_DIR}/property_graph")):
     return Loader("%s/one_column.e" % data_dir, header_row=True)
 
 
-@pytest.fixture
+@pytest.fixture(scope="function")
 def double_type_id_file(data_dir=os.path.expandvars("${GS_TEST_DIR}/property_graph")):
     return Loader("%s/double_type_id_file" % data_dir)
 
 
-@pytest.fixture
+@pytest.fixture(scope="function")
 def empty_file(data_dir=os.path.expandvars("${GS_TEST_DIR}/property_graph")):
     return Loader("%s/empty_file" % data_dir)
 

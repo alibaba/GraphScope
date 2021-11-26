@@ -53,22 +53,22 @@ def sess():
     session.close()
 
 
-@pytest.fixture
+@pytest.fixture(scope="function")
 def student_v(data_dir=os.path.expandvars("${GS_TEST_DIR}/property_graph")):
     return Loader("%s/student.v" % data_dir, header_row=True, delimiter=",")
 
 
-@pytest.fixture
+@pytest.fixture(scope="function")
 def teacher_v(data_dir=os.path.expandvars("${GS_TEST_DIR}/property_graph")):
     return Loader("%s/teacher.v" % data_dir, header_row=True, delimiter=",")
 
 
-@pytest.fixture
+@pytest.fixture(scope="function")
 def student_group_e(data_dir=os.path.expandvars("${GS_TEST_DIR}/property_graph")):
     return Loader("%s/group.e" % data_dir, header_row=True, delimiter=",")
 
 
-@pytest.fixture
+@pytest.fixture(scope="function")
 def teacher_group_e(data_dir=os.path.expandvars("${GS_TEST_DIR}/property_graph")):
     return Loader("%s/teacher_group.e" % data_dir, header_row=True, delimiter=",")
 
