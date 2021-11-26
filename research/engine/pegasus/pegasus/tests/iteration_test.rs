@@ -415,7 +415,7 @@ lazy_static!{
 }
 
 #[test]
-fn modern_graph_iter_times2_and_times2() {
+fn modern_graph_iter_times2_and_times2_twice() {
     let mut conf = JobConf::new("modern_graph_iter_times2_and_times2");
     let num_workers = 2;
     conf.set_workers(num_workers);
@@ -454,42 +454,4 @@ fn modern_graph_iter_times2_and_times2() {
     }
     expected.sort();
     assert_eq!(results, expected)
-}
-
-lazy_static! {
-    pub static ref MAP2: std::collections::HashMap<u32, Vec<(u32, f32)>> = vec![
-        (1, vec![(2, 0.5f32), (3, 0.4f32), (4, 1.0f32)]),
-        (2, vec![]),
-        (3, vec![]),
-        (4, vec![(3, 0.4f32), (5, 1.0f32)]),
-        (5, vec![]),
-        (6, vec![(3, 0.2f32)])
-    ].into_iter().collect();
-}
-
-#[test]
-fn modern_graph_order_by_test() {
-    use pegasus::api::SortBy;
-
-    let mut conf = JobConf::new("modern_graph_order_by_test");
-    let num_workers = 2;
-    conf.set_workers(num_workers);
-
-    let result_stream = pegasus::run(conf, || {
-        let index = pegasus::get_current_worker().index;
-        move |input, output| {
-            input
-                .input_from((1 .. 7).filter(move |x| *x % num_workers == index))?
-                .flat_map(|v| Ok(MAP2.get(&v).unwrap().iter().cloned()))?
-                .sort_by(|x, y| y.1.partial_cmp(&x.1).unwrap())?
-                .map(|x| Ok(x.1))?
-                .sink_into(output)
-        }
-    })
-        .expect("submit job failure");
-
-    let results: Vec<f32> = result_stream.map(|x| x.unwrap())
-        .collect();
-
-    assert_eq!(results, vec![1.0, 1.0, 0.5, 0.4, 0.4, 0.2]);
 }
