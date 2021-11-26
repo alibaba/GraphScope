@@ -29,7 +29,6 @@ from pathlib import Path
 
 import yaml
 
-from graphscope import Graph
 from graphscope.analytical.udf.utils import InMemoryZip
 from graphscope.framework.app import AppAssets
 from graphscope.framework.app import AppDAGNode
@@ -38,6 +37,7 @@ from graphscope.framework.context import create_context_node
 from graphscope.framework.dag import DAGNode
 from graphscope.framework.dag_utils import bind_app
 from graphscope.framework.errors import InvalidArgumentError
+from graphscope.framework.graph import Graph
 from graphscope.proto import graph_def_pb2
 
 __all__ = ["JavaApp"]

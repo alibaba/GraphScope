@@ -183,7 +183,7 @@ class InteractiveQueryDAGNode(DAGNode):
                 A new graph constructed by the gremlin output, that also stored in vineyard.
         """
         # avoid circular import
-        from graphscope import GraphDAGNode
+        from graphscope.framework.graph import GraphDAGNode
 
         op = gremlin_to_subgraph(
             self,

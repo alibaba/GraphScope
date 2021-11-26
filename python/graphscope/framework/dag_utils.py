@@ -19,8 +19,6 @@
 import json
 import pickle
 
-import numpy as np
-
 from graphscope.framework import utils
 from graphscope.framework.errors import check_argument
 from graphscope.framework.operation import Operation
@@ -181,7 +179,7 @@ def add_labels_to_graph(graph, loader_op):
         Since we don't want to trigger the loading, we must not use
         any api that can trigger the loading process implicitly.
     """
-    from graphscope import GraphDAGNode
+    from graphscope.framework.graph import GraphDAGNode
 
     assert isinstance(graph, GraphDAGNode)
     inputs = [graph.op, loader_op]

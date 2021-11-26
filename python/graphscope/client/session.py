@@ -27,7 +27,6 @@ import logging
 import os
 import pickle
 import signal
-import sys
 import threading
 import time
 import uuid
@@ -41,8 +40,6 @@ except ImportError:
     kube_config = None
 
 import graphscope
-from graphscope import Graph
-from graphscope import GraphDAGNode
 from graphscope.client.rpc import GRPCClient
 from graphscope.client.utils import CaptureKeyboardInterrupt
 from graphscope.client.utils import GSLogger
@@ -56,6 +53,8 @@ from graphscope.framework.errors import FatalError
 from graphscope.framework.errors import InteractiveEngineInternalError
 from graphscope.framework.errors import InvalidArgumentError
 from graphscope.framework.errors import K8sError
+from graphscope.framework.graph import Graph
+from graphscope.framework.graph import GraphDAGNode
 from graphscope.framework.operation import Operation
 from graphscope.framework.utils import decode_dataframe
 from graphscope.framework.utils import decode_numpy

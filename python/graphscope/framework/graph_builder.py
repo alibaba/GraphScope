@@ -25,10 +25,10 @@ try:
 except ImportError:
     vineyard = None
 
-from graphscope import Graph
 from graphscope.client.session import get_default_session
 from graphscope.framework import dag_utils
 from graphscope.framework import utils
+from graphscope.framework.graph import Graph
 from graphscope.framework.graph_utils import LoaderVariants
 from graphscope.framework.graph_utils import VineyardObjectTypes
 from graphscope.framework.graph_utils import normalize_parameter_edges
