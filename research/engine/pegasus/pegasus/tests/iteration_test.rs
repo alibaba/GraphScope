@@ -415,7 +415,7 @@ lazy_static!{
 }
 
 #[test]
-fn modern_graph_iter_times2_and_times2_twice() {
+fn modern_graph_iter_times2_and_times2() {
     let mut conf = JobConf::new("modern_graph_iter_times2_and_times2");
     let num_workers = 2;
     conf.set_workers(num_workers);
@@ -426,10 +426,12 @@ fn modern_graph_iter_times2_and_times2_twice() {
             input
                 .input_from((1 .. 7).filter(move |x| *x % num_workers == index))?
                 .iterate(2, |sub| {
-                    sub.flat_map(move |x| Ok(MAP.get(&x).unwrap().0.iter().cloned()))
+                    sub.repartition(|x| Ok(*x as u64))
+                        .flat_map(move |x| Ok(MAP.get(&x).unwrap().0.iter().cloned()))
                 })?
                 .iterate(2, |sub| {
-                    sub.flat_map(move |x| Ok(MAP.get(&x).unwrap().1.iter().cloned()))
+                    sub.repartition(|x| Ok(*x as u64))
+                        .flat_map(move |x| Ok(MAP.get(&x).unwrap().1.iter().cloned()))
                 })?
                 .sink_into(output)
         }

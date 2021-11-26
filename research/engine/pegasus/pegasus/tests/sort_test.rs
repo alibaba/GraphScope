@@ -22,7 +22,7 @@ use pegasus::api::{Map, Sink};
 
 
 lazy_static! {
-    pub static ref MAP2: std::collections::HashMap<u32, Vec<(u32, f32)>> = vec![
+    pub static ref MAP: std::collections::HashMap<u32, Vec<(u32, f32)>> = vec![
         (1, vec![(2, 0.5f32), (3, 0.4f32), (4, 1.0f32)]),
         (2, vec![]),
         (3, vec![]),
@@ -45,7 +45,7 @@ fn modern_graph_sort_by_test() {
         move |input, output| {
             input
                 .input_from((1 .. 7).filter(move |x| *x % num_workers == index))?
-                .flat_map(|v| Ok(MAP2.get(&v).unwrap().iter().cloned()))?
+                .flat_map(|v| Ok(MAP.get(&v).unwrap().iter().cloned()))?
                 .sort_by(|x, y| y.1.partial_cmp(&x.1).unwrap())?
                 .map(|x| Ok(x.1))?
                 .sink_into(output)
