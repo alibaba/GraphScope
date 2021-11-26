@@ -20,10 +20,7 @@ use crate::process::traversal::step::*;
 use crate::process::traversal::traverser::Traverser;
 use crate::{str_to_dyn_error, Partitioner};
 use pegasus::api::function::*;
-use pegasus::api::{
-    Collect, CorrelatedSubTask, Dedup, Filter, Fold, FoldByKey, IterCondition, Iteration, KeyBy,
-    Limit, Map, Merge, Sink, SortBy, Source,
-};
+use pegasus::api::{Collect, CorrelatedSubTask, Dedup, Filter, Fold, FoldByKey, IterCondition, Iteration, KeyBy, Limit, Map, Merge, Sink, SortBy, Source, Count};
 use pegasus::result::ResultSink;
 use pegasus::stream::Stream;
 use pegasus::BuildJobError;
