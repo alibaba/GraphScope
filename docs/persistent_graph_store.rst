@@ -19,7 +19,7 @@ Known Limitation
 Deploying Store Service
 -----------------------
 
-This chart bootstraps a ``GraphScope Store`` cluster deployment on a `Kubernetes <http://kubernetes.io>`_ cluster using the `Helm <https://helm.sh>`_ package manager.
+This chart bootstraps a `GraphScope Store <https://github.com/alibaba/GraphScope/tree/main/interactive_engine/groot/src/main/java/com/alibaba/graphscope/groot>`_ cluster deployment on a `Kubernetes <http://kubernetes.io>`_ cluster using the `Helm <https://helm.sh>`_ package manager.
 
 
 Prerequisites
