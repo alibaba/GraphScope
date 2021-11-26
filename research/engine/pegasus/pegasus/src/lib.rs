@@ -68,6 +68,7 @@ pub use crate::errors::{BuildJobError, JobSubmitError, SpawnJobError, StartupErr
 use crate::resource::PartitionedResource;
 use crate::result::{ResultSink, ResultStream};
 use crate::worker_id::WorkerIdIter;
+use std::net::SocketAddr;
 
 lazy_static! {
     static ref SERVER_ID: Mutex<Option<u64>> = Mutex::new(None);
@@ -172,7 +173,7 @@ pub fn startup(conf: Configuration) -> Result<(), StartupError> {
     Ok(())
 }
 
-pub fn startup_with<D: ServerDetect + 'static>(conf: Configuration, detect: D) -> Result<(), StartupError> {
+pub fn startup_with<D: ServerDetect + 'static>(conf: Configuration, detect: D) -> Result<Option<SocketAddr>, StartupError> {
     if let Some(pool_size) = conf.max_pool_size {
         pegasus_executor::set_core_pool_size(pool_size as usize);
     }
@@ -183,13 +184,15 @@ pub fn startup_with<D: ServerDetect + 'static>(conf: Configuration, detect: D) -
         return Err(StartupError::AlreadyStarted(id));
     }
 
-    if let Some(net_conf) = conf.network_config() {
+    Ok(if let Some(net_conf) = conf.network_config() {
         let addr = net_conf.local_addr()?;
         let conn_conf = net_conf.get_connection_param();
         let addr = pegasus_network::start_up(server_id, conn_conf, addr, detect)?;
         info!("server {} start on {:?}", server_id, addr);
-    }
-    Ok(())
+        Some(addr)
+    } else {
+        None
+    })
 }
 
 pub fn shutdown_all() {

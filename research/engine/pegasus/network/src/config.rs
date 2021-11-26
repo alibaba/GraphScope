@@ -152,6 +152,13 @@ pub struct ServerConfig {
 }
 
 impl ServerConfig {
+    pub fn new(ip: String, port: u16) -> Self {
+        ServerConfig {
+            ip,
+            port
+        }
+    }
+
     pub fn get_ip(&self) -> &str {
         &self.ip
     }

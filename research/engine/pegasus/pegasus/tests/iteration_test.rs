@@ -399,3 +399,64 @@ fn apply_x_iterate_x_flatmap_x_count_x_test() {
 
     println!("get result {:?}", vec);
 }
+
+#[macro_use]
+extern crate lazy_static;
+
+lazy_static! {
+    pub static ref MAP: std::collections::HashMap<u32, (Vec<u32>, Vec<u32>)> = vec![
+        (1, (vec![2, 3, 4], vec![])),
+        (2, (vec![], vec![1])),
+        (3, (vec![], vec![1, 4, 6])),
+        (4, (vec![3, 5], vec![1])),
+        (5, (vec![], vec![4])),
+        (6, (vec![3], vec![]))
+    ]
+    .into_iter()
+    .collect();
+}
+
+#[test]
+fn modern_graph_iter_times2_and_times2() {
+    let mut conf = JobConf::new("modern_graph_iter_times2_and_times2");
+    let num_workers = 2;
+    conf.set_workers(num_workers);
+
+    let result_stream = pegasus::run(conf, || {
+        let index = pegasus::get_current_worker().index;
+        move |input, output| {
+            input
+                .input_from((1..7).filter(move |x| *x % num_workers == index))?
+                .iterate(2, |sub| {
+                    sub.repartition(|x| Ok(*x as u64))
+                        .flat_map(move |x| Ok(MAP.get(&x).unwrap().0.iter().cloned()))
+                })?
+                .iterate(2, |sub| {
+                    sub.repartition(|x| Ok(*x as u64))
+                        .flat_map(move |x| Ok(MAP.get(&x).unwrap().1.iter().cloned()))
+                })?
+                .sink_into(output)
+        }
+    })
+    .expect("submit job failure");
+
+    let mut results = result_stream
+        .map(|item| item.unwrap())
+        .collect::<Vec<u32>>();
+    results.sort();
+
+    let mut expected = Vec::new();
+    for v in 1..7 {
+        for n1 in &MAP.get(&v).unwrap_or(&(vec![], vec![])).0 {
+            for n2 in &MAP.get(n1).unwrap_or(&(vec![], vec![])).0 {
+                for n3 in &MAP.get(n2).unwrap_or(&(vec![], vec![])).1 {
+                    for n4 in &MAP.get(n3).unwrap_or(&(vec![], vec![])).1 {
+                        expected.push(*n4);
+                    }
+                }
+            }
+        }
+    }
+    expected.sort();
+    assert_eq!(results, expected)
+}
