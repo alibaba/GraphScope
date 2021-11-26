@@ -596,7 +596,7 @@ jobs:
           cd ${GITHUB_WORKSPACE}/python
           python3 -m pytest -s ./graphscope/tests/kubernetes/test_demo_script.py -k test_demo_on_hdfs
           # Check the result file have successfully written to the given location
-          hdfs dfs -test -e /ldbc_sample/res.csv_0 && hdfs dfs -test -e /ldbc_sample/res.csv_1
+          # hdfs dfs -test -e /ldbc_sample/res.csv_0 && hdfs dfs -test -e /ldbc_sample/res.csv_1
 
       - name: Clean
         if: always()
