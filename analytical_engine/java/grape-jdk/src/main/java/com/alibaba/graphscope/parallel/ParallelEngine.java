@@ -22,7 +22,6 @@ import com.alibaba.graphscope.parallel.message.DoubleMsg;
 import com.alibaba.graphscope.parallel.message.PrimitiveMessage;
 import com.alibaba.graphscope.utils.FFITypeFactoryhelper;
 import com.alibaba.graphscope.utils.TriConsumer;
-
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.atomic.AtomicInteger;

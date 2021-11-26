@@ -78,6 +78,7 @@ public interface ProjectedNbr<VID_T, EDATA_T> extends FFIPointer {
 
     /**
      * Check equality.
+     *
      * @param rhs Nbr to be compared with
      * @return true if is the same pointer.
      */
@@ -86,6 +87,7 @@ public interface ProjectedNbr<VID_T, EDATA_T> extends FFIPointer {
 
     /**
      * Self decrement.
+     *
      * @return decreased pointer
      */
     @CXXOperator("--")
