@@ -7,7 +7,17 @@
   </formats>
   <fileSets>
     <fileSet>
+      <directory>${project.parent.basedir}/executor/target</directory>
+      <includes>
+        <include>libmaxgraph_ffi*</include>
+      </includes>
+      <outputDirectory>native</outputDirectory>
+    </fileSet>
+    <fileSet>
       <directory>${project.parent.basedir}/lgraph/build/install</directory>
+      <excludes>
+        <exclude>${project.parent.basedir}/lgraph/build/install/lib/libmaxgraph_ffi*</exclude>
+      </excludes>
       <outputDirectory>native</outputDirectory>
     </fileSet>
     <fileSet>
