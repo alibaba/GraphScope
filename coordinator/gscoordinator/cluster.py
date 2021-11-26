@@ -60,6 +60,7 @@ from graphscope.framework.utils import is_free_port
 from graphscope.proto import types_pb2
 
 from gscoordinator.launcher import Launcher
+from gscoordinator.utils import ANALYTICAL_ENGINE_PATH
 from gscoordinator.utils import GRAPHSCOPE_HOME
 from gscoordinator.utils import INTERACTIVE_ENGINE_SCRIPT
 from gscoordinator.utils import WORKSPACE
@@ -140,7 +141,6 @@ class KubernetesClusterLauncher(Launcher):
     _vineyard_service_name_prefix = "gs-vineyard-service-"
     _gle_service_name_prefix = "gs-graphlearn-service-"
 
-    _analytical_engine_exec = "grape_engine"
     _vineyard_container_name = "vineyard"  # fixed
     _etcd_container_name = "etcd"
     _engine_container_name = "engine"  # fixed
@@ -196,6 +196,8 @@ class KubernetesClusterLauncher(Launcher):
         delete_namespace=None,
         **kwargs
     ):
+
+        super().__init__()
         self._api_client = try_to_resolve_api_client()
         self._core_api = kube_client.CoreV1Api(self._api_client)
         self._app_api = kube_client.AppsV1Api(self._api_client)
@@ -573,13 +575,20 @@ class KubernetesClusterLauncher(Launcher):
                 engine_builder.add_volume(volume_builder)
 
         # add env
-        engine_builder.add_simple_envs(
-            {
-                "GLOG_v": str(self._glog_level),
-                "VINEYARD_IPC_SOCKET": "/tmp/vineyard_workspace/vineyard.sock",
-                "WITH_VINEYARD": "ON",
-            }
-        )
+        env = {
+            "GLOG_v": str(self._glog_level),
+            "VINEYARD_IPC_SOCKET": "/tmp/vineyard_workspace/vineyard.sock",
+            "WITH_VINEYARD": "ON",
+            "PATH": os.environ["PATH"],
+            "LD_LIBRARY_PATH": os.environ["LD_LIBRARY_PATH"],
+            "DYLD_LIBRARY_PATH": os.environ["DYLD_LIBRARY_PATH"],
+        }
+        if "OPAL_PREFIX" in os.environ:
+            env.update({"OPAL_PREFIX": os.environ["OPAL_PREFIX"]})
+        if "OPAL_BINDIR" in os.environ:
+            env.update({"OPAL_BINDIR": os.environ["OPAL_BINDIR"]})
+
+        engine_builder.add_simple_envs(env)
 
         # add engine container
         engine_builder.add_engine_container(
@@ -1005,7 +1014,7 @@ class KubernetesClusterLauncher(Launcher):
         rmcp = ResolveMPICmdPrefix(rsh_agent=True)
         cmd, mpi_env = rmcp.resolve(self._num_workers, ",".join(self._pod_name_list))
 
-        cmd.append(self._analytical_engine_exec)
+        cmd.append(ANALYTICAL_ENGINE_PATH)
         cmd.extend(["--host", "0.0.0.0"])
         cmd.extend(["--port", str(self._random_analytical_engine_rpc_port)])
 
@@ -1015,7 +1024,7 @@ class KubernetesClusterLauncher(Launcher):
             mpi_env["GLOG_v"] = str(self._glog_level)
 
         cmd.extend(["--vineyard_socket", "/tmp/vineyard_workspace/vineyard.sock"])
-        logger.debug("Analytical engine launching command: {}".format(" ".join(cmd)))
+        logger.info("Analytical engine launching command: {}".format(" ".join(cmd)))
 
         env = os.environ.copy()
         env.update(mpi_env)

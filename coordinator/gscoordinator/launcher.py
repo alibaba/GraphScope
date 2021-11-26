@@ -51,6 +51,29 @@ class Launcher(metaclass=ABCMeta):
         self._num_workers = None
         self._analytical_engine_endpoint = None
 
+        # add `${GRAPHSCOPE_HOME}/bin` to ${PATH}
+        os.environ["PATH"] += os.pathsep + os.path.join(GRAPHSCOPE_HOME, "bin")
+        # OPAL_PREFIX for openmpi
+        if os.path.isdir(os.path.join(GRAPHSCOPE_HOME, "openmpi")):
+            os.environ["OPAL_PREFIX"] = os.path.join(GRAPHSCOPE_HOME, "openmpi")
+        # add '${GRAPHSCOPE_HOME}/lib' to ${LD_LIBRARY_PATH} to find libvineyard_internal_registry.so(dylib)
+        if "LD_LIBRARY_PATH" in os.environ:
+            os.environ["LD_LIBRARY_PATH"] = (
+                os.path.join(GRAPHSCOPE_HOME, "lib")
+                + os.pathsep
+                + os.environ["LD_LIBRARY_PATH"]
+            )
+        else:
+            os.environ["LD_LIBRARY_PATH"] = os.path.join(GRAPHSCOPE_HOME, "lib")
+        if "DYLD_LIBRARY_PATH" in os.environ:
+            os.environ["DYLD_LIBRARY_PATH"] = (
+                os.path.join(GRAPHSCOPE_HOME, "lib")
+                + os.pathsep
+                + os.environ["DYLD_LIBRARY_PATH"]
+            )
+        else:
+            os.environ["DYLD_LIBRARY_PATH"] = os.path.join(GRAPHSCOPE_HOME, "lib")
+
     @property
     def analytical_engine_endpoint(self):
         if self._analytical_engine_endpoint is None:
@@ -91,30 +114,6 @@ class LocalLauncher(Launcher):
     Launch engine localy with serveral hosts.
     """
 
-    _vineyard_socket_prefix = os.path.join(tempfile.gettempdir(), "vineyard.sock.")
-    # add `${GRAPHSCOPE_HOME}/bin` to ${PATH}
-    os.environ["PATH"] += os.pathsep + os.path.join(GRAPHSCOPE_HOME, "bin")
-    # OPAL_PREFIX for openmpi
-    if os.path.isdir(os.path.join(GRAPHSCOPE_HOME, "openmpi")):
-        os.environ["OPAL_PREFIX"] = os.path.join(GRAPHSCOPE_HOME, "openmpi")
-    # add '${GRAPHSCOPE_HOME}/lib' to ${LD_LIBRARY_PATH} to find libvineyard_internal_registry.so(dylib)
-    if "LD_LIBRARY_PATH" in os.environ:
-        os.environ["LD_LIBRARY_PATH"] = (
-            os.path.join(GRAPHSCOPE_HOME, "lib")
-            + os.pathsep
-            + os.environ["LD_LIBRARY_PATH"]
-        )
-    else:
-        os.environ["LD_LIBRARY_PATH"] = os.path.join(GRAPHSCOPE_HOME, "lib")
-    if "DYLD_LIBRARY_PATH" in os.environ:
-        os.environ["DYLD_LIBRARY_PATH"] = (
-            os.path.join(GRAPHSCOPE_HOME, "lib")
-            + os.pathsep
-            + os.environ["DYLD_LIBRARY_PATH"]
-        )
-    else:
-        os.environ["DYLD_LIBRARY_PATH"] = os.path.join(GRAPHSCOPE_HOME, "lib")
-
     def __init__(
         self,
         num_workers,
@@ -133,6 +132,10 @@ class LocalLauncher(Launcher):
         self._glog_level = parse_as_glog_level(log_level)
         self._instance_id = instance_id
         self._timeout_seconds = timeout_seconds
+
+        self._vineyard_socket_prefix = os.path.join(
+            tempfile.gettempdir(), "vineyard.sock."
+        )
 
         # A graphsope instance may has multiple session by reconnecting to coordinator
         self._instance_workspace = os.path.join(WORKSPACE, self._instance_id)

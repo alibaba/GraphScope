@@ -355,6 +355,7 @@ class KubernetesClusterLauncher(Launcher):
             ports=[
                 self._random_coordinator_service_port,
             ],
+            module_name=self._coordinator_module_name,
         )
 
         targets.append(

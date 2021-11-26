@@ -226,7 +226,7 @@ jobs:
   python-unittest:
     runs-on: ubuntu-20.04
     needs: [build-wheels, changes]
-    if: ${{ needs.changes.outputs.gae-python == 'true' || github.ref == 'refs/heads/main' }}
+    if: needs.changes.outputs.gae-python == 'true' || ${{ github.ref == 'refs/heads/main' && github.repository == 'alibaba/GraphScope' }}
     defaults:
       run:
         shell: bash --noprofile --norc -eo pipefail {0}
@@ -283,7 +283,7 @@ jobs:
   networkx-basic-test:
     runs-on: ubuntu-20.04
     needs: [build-wheels, changes]
-    if: ${{ needs.changes.outputs.networkx == 'true'  || github.ref == 'refs/heads/main' }}
+    if: needs.changes.outputs.networkx == 'true' || ${{ github.ref == 'refs/heads/main' && github.repository == 'alibaba/GraphScope' }}
     defaults:
       run:
         shell: bash --noprofile --norc -eo pipefail {0}
@@ -336,7 +336,7 @@ jobs:
         git clone -b master --single-branch --depth=1 https://github.com/7br/gstest.git ${GS_TEST_DIR}
 
     - name: Basic Test
-      if: steps.nx-filter.outputs.basic == 'true' || github.ref == 'refs/heads/main'
+      if: steps.nx-filter.outputs.basic == 'true' || ${{ github.ref == 'refs/heads/main' && github.repository == 'alibaba/GraphScope' }}
       env:
         DEPLOYMENT: ${{ matrix.deployment }}
         GS_TEST_DIR: ${{ github.workspace }}/gstest
@@ -347,7 +347,7 @@ jobs:
   networkx-algo-and-generator-test:
     runs-on: ubuntu-20.04
     needs: [build-wheels, changes]
-    if: ${{ needs.changes.outputs.networkx == 'true'  || github.ref == 'refs/heads/main' }}
+    if: ${{ needs.changes.outputs.networkx == 'true' }}
     defaults:
       run:
         shell: bash --noprofile --norc -eo pipefail {0}
@@ -402,7 +402,7 @@ jobs:
         git clone -b master --single-branch --depth=1 https://github.com/7br/gstest.git ${GS_TEST_DIR}
 
     - name: Algorithm test
-      if: steps.nx-filter.outputs.algorithm == 'true' || github.ref == 'refs/heads/main'
+      if: steps.nx-filter.outputs.algorithm == 'true'
       env:
         DEPLOYMENT: ${{ matrix.deployment }}
         GS_TEST_DIR: ${{ github.workspace }}/gstest
@@ -411,7 +411,7 @@ jobs:
             $(dirname $(python3 -c "import graphscope; print(graphscope.__file__)"))/nx/algorithms/tests/builtin
 
     - name: Generator test
-      if: steps.nx-filter.outputs.generator == 'true' || github.ref == 'refs/heads/main'
+      if: steps.nx-filter.outputs.generator == 'true'
       env:
         DEPLOYMENT: ${{ matrix.deployment }}
         GS_TEST_DIR: ${{ github.workspace }}/gstest
@@ -422,8 +422,7 @@ jobs:
   gie-test:
     runs-on: self-hosted
     needs: [build-wheels, changes]
-    if: ${{ needs.changes.outputs.gie-function-test == 'true' }}
-    if: ${{ needs.changes.outputs.gie-function-test == 'true' || github.ref == 'refs/heads/main' }}
+    if: needs.changes.outputs.gie-function-test == 'true' || ${{ github.ref == 'refs/heads/main' && github.repository == 'alibaba/GraphScope' }}
     steps:
       - name: Clean up
         run: |

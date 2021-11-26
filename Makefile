@@ -63,7 +63,8 @@ gae:
 	cd $(WORKING_DIR)/analytical_engine/build && \
 	cmake -DCMAKE_INSTALL_PREFIX=$(INSTALL_PREFIX) -DNETWORKX=$(NETWORKX) -DBUILD_TESTS=${BUILD_TEST} -DENABLE_JAVA_SDK=${ENABLE_JAVA_SDK} .. && \
 	make -j`nproc` && \
-	sudo make install
+	sudo make install && \
+	sudo cp -r $(WORKING_DIR)/k8s/kube_ssh $(INSTALL_PREFIX)
 ifneq ($(INSTALL_PREFIX), /usr/local)
 	sudo rm -fr /usr/local/include/graphscope && \
 	sudo ln -sf $(INSTALL_PREFIX)/bin/* /usr/local/bin/ && \

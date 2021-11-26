@@ -134,7 +134,6 @@ class CoordinatorServiceServicer(
             self._launcher._analytical_engine_endpoint = GS_DEBUG_ENDPOINT
         else:
             if not self._launcher.start():
-                logger.error("Launching analytical engine failed")
                 raise RuntimeError("Coordinator Launching failed.")
 
         self._launcher_type = self._launcher.type()

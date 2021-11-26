@@ -21,8 +21,15 @@ RUN sed -i 's/archive.ubuntu.com/mirrors.ustc.edu.cn/g' /etc/apt/sources.list &&
     sed -i 's/security.ubuntu.com/mirrors.ustc.edu.cn/g' /etc/apt/sources.list && \
     cat /etc/apt/sources.list && \
     apt update -y && apt install -y \
-      git openjdk-8-jdk python3-pip sudo && \
+      curl git openjdk-8-jdk python3-pip sudo && \
     apt clean && rm -fr /var/lib/apt/lists/*
+
+# kubectl v1.19.2
+RUN cd /tmp && export KUBE_VER=v1.19.2 && \
+    curl -LO https://storage.googleapis.com/kubernetes-release/release/${KUBE_VER}/bin/linux/amd64/kubectl && \
+    chmod +x ./kubectl && \
+    cd /tmp && \
+    mv ./kubectl /usr/local/bin/kubectl
 
 # Add graphscope user with user id 1001
 RUN useradd -m graphscope -u 1001 && \
@@ -39,16 +46,16 @@ COPY . /home/graphscope/gs
 RUN cd /home/graphscope/gs && \
     if [ "${CI}" == "true" ]; then \
         pushd artifacts/python/dist/wheelhouse; \
-        for f in * ; do python3 -m pip --no-cache-dir install $f; done || true; \
+        for f in * ; do python3 -m pip install --no-cache-dir $f; done || true; \
         popd; \
         pushd artifacts/coordinator/dist/wheelhouse; \
-        python3 -m pip --no-cache-dirinstall ./*.whl; \
+        python3 -m pip install --no-cache-dir ./*.whl; \
         popd; \
         pushd artifacts/coordinator/dist; \
-        python3 -m pip --no-cache-dir install ./*.whl; \
+        python3 -m pip install --no-cache-dir ./*.whl; \
         popd; \
-        rm -fr artifacts; \
     else \
-        python3 -m pip --no-cache-dir install graphscope; \
+        python3 -m pip install --no-cache-dir graphscope; \
     fi && \
-    python3 -m pip --no-cache-dir install git+https://github.com/mars-project/mars.git@d09e1e4c3e32ceb05f42d0b5b79775b1ebd299fb#egg=pymars
+    sudo rm -fr /home/graphscope/gs && cd ${HOME} && \
+    python3 -m pip install --no-cache-dir git+https://github.com/mars-project/mars.git@d09e1e4c3e32ceb05f42d0b5b79775b1ebd299fb#egg=pymars
