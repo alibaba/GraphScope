@@ -35,13 +35,8 @@ public:
   LogMessage Poll(size_t timeout_ms);
   std::vector<LogMessage> PollBatch(size_t max_batch_size, size_t timeout_ms);
 
-  int64_t GetCurrentOffset() const {
-    return current_offset_;
-  }
-
 private:
   cppkafka::Consumer consumer_;
-  int64_t current_offset_;
 };
 
 }
