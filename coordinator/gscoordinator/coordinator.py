@@ -664,7 +664,7 @@ class CoordinatorServiceServicer(
             for line in lines.split("\n"):
                 rlt = re.findall(pattern, line)
                 if rlt:
-                    return rlt[0]
+                    return rlt[0].strip()
             return ""
 
         # vineyard object id of graph

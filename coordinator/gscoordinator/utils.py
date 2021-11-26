@@ -37,6 +37,7 @@ import threading
 import time
 import uuid
 import zipfile
+from concurrent.futures import ThreadPoolExecutor
 from io import BytesIO
 from pathlib import Path
 from queue import Empty as EmptyQueue
@@ -1664,27 +1665,46 @@ def get_java_version():
 
 
 def check_gremlin_server_ready(endpoint):
-    from gremlin_python.driver.client import Client
+    def _check_task(endpoint):
+        from gremlin_python.driver.client import Client
 
-    if "MY_POD_NAME" in os.environ:
-        # inner kubernetes env
-        if endpoint == "localhost" or endpoint == "127.0.0.1":
-            # now, used in mac os with docker-desktop kubernetes cluster,
-            # which external ip is 'localhost' when service type is 'LoadBalancer'
-            return True
+        if "MY_POD_NAME" in os.environ:
+            # inner kubernetes env
+            if endpoint == "localhost" or endpoint == "127.0.0.1":
+                # now, used in mac os with docker-desktop kubernetes cluster,
+                # which external ip is 'localhost' when service type is 'LoadBalancer'
+                return True
 
-    client = Client(f"ws://{endpoint}/gremlin", "g")
-    error_message = ""
-    begin_time = time.time()
-    while True:
         try:
+            client = Client(f"ws://{endpoint}/gremlin", "g")
             client.submit("g.V().limit(1)").all().result()
+            try:
+                client.close()
+            except:  # noqa: E722
+                pass
         except Exception as e:
+            try:
+                client.close()
+            except:  # noqa: E722
+                pass
+            raise RuntimeError(str(e))
+
+        return True
+
+    executor = ThreadPoolExecutor(max_workers=20)
+
+    begin_time = time.time()
+    error_message = ""
+    while True:
+        t = executor.submit(_check_task, endpoint)
+        try:
+            rlt = t.result(timeout=30)
+        except Exception as e:
+            t.cancel()
             error_message = str(e)
         else:
-            client.close()
-            return True
+            return rlt
         time.sleep(3)
         if time.time() - begin_time > INTERAVTIVE_INSTANCE_TIMEOUT_SECONDS:
-            client.close()
+            executor.shutdown(wait=False, cancel_futures=True)
             raise TimeoutError(f"Gremlin check query failed: {error_message}")
