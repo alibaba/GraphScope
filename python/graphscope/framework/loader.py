@@ -231,6 +231,8 @@ class Loader(object):
             )
 
     def select_columns(self, columns: Sequence[Tuple[str, int]], include_all=False):
+        self.options.include_columns = []
+        self.options.column_types = []
         for name, data_type in columns:
             self.options.include_columns.append(name)
             self.options.column_types.append(data_type)

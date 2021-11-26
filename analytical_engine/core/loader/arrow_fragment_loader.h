@@ -20,6 +20,7 @@
 #include <map>
 #include <memory>
 #include <set>
+#include <sstream>
 #include <string>
 #include <unordered_map>
 #include <utility>
@@ -121,6 +122,9 @@ class ArrowFragmentLoader {
                       vineyard::sync_gs_error(comm_spec_, load_v_procedure));
       v_tables = tmp_v;
     }
+    for (const auto& table : v_tables) {
+      BOOST_LEAF_CHECK(sanityChecks(table));
+    }
     LOG_IF(INFO, comm_spec_.worker_id() == 0)
         << "PROGRESS--GRAPH-LOADING-READ-VERTEX-100";
     return v_tables;
@@ -147,6 +151,11 @@ class ArrowFragmentLoader {
       BOOST_LEAF_AUTO(tmp_e,
                       vineyard::sync_gs_error(comm_spec_, load_e_procedure));
       e_tables = tmp_e;
+    }
+    for (const auto& table_vec : e_tables) {
+      for (const auto& table : table_vec) {
+        BOOST_LEAF_CHECK(sanityChecks(table));
+      }
     }
     LOG_IF(INFO, comm_spec_.worker_id() == 0)
         << "PROGRESS--GRAPH-LOADING-READ-EDGE-100";
@@ -845,6 +854,34 @@ class ArrowFragmentLoader {
     }
     CHECK_OR_RAISE(sourceId != vineyard::InvalidObjectID());
     return sourceId;
+  }
+
+  /// Do some necessary sanity checks.
+  boost::leaf::result<void> sanityChecks(std::shared_ptr<arrow::Table> table) {
+    // We require that there are no identical column names
+    auto names = table->ColumnNames();
+    std::sort(names.begin(), names.end());
+    const auto duplicate = std::adjacent_find(names.begin(), names.end());
+    if (duplicate != names.end()) {
+      auto meta = table->schema()->metadata();
+      int label_meta_index = meta->FindKey(LABEL_TAG);
+      std::string label_name = meta->value(label_meta_index);
+      std::stringstream msg;
+      msg << "Label " << label_name
+          << " has identical property names, which is not allowed. The "
+             "original names are: ";
+      auto origin_names = table->ColumnNames();
+      msg << "[";
+      for (size_t i = 0; i < origin_names.size(); ++i) {
+        if (i != 0) {
+          msg << ", ";
+        }
+        msg << origin_names[i];
+      }
+      msg << "]";
+      RETURN_GS_ERROR(vineyard::ErrorCode::kInvalidValueError, msg.str());
+    }
+    return {};
   }
 
   vineyard::Client& client_;
