@@ -15,6 +15,7 @@ import org.apache.tinkerpop.gremlin.process.traversal.step.util.HasContainer;
 import org.apache.tinkerpop.gremlin.structure.T;
 import org.apache.tinkerpop.gremlin.tinkergraph.process.traversal.step.sideEffect.TinkerGraphStep;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -39,7 +40,7 @@ public class IrPlanBuidler {
                 }));
 
                 if (graphStep.getIds().length > 0) {
-                    op.setIds(new OpArg(step, OpArgTransformFactory.ID_CONST));
+                    op.setIds(new OpArg(step, OpArgTransformFactory.CONST_IDS_FROM_STEP));
                 }
                 return op;
             }
@@ -53,16 +54,24 @@ public class IrPlanBuidler {
                 op.setScanOpt(new OpArg(step, OpArgTransformFactory.SCAN_OPT));
 
                 if (!tinkerGraphStep.getHasContainers().isEmpty()) {
-                    op.setLabels(new OpArg(step, OpArgTransformFactory.EXTRACT_LABELS));
                     List<HasContainer> allContainers = tinkerGraphStep.getHasContainers();
-                    List<HasContainer> predicates = allContainers.stream()
-                            .filter(k -> !k.getKey().equals(T.label.getAccessor()))
+                    List<HasContainer> labels = allContainers.stream()
+                            .filter(k -> k.getKey().equals(T.label.getAccessor()))
                             .collect(Collectors.toList());
-                    op.setPredicate(new OpArg(predicates, OpArgTransformFactory.PREDICATE_EXPR));
+                    // add corner judgement
+                    if (!labels.isEmpty()) {
+                        op.setLabels(new OpArg(labels, OpArgTransformFactory.LABELS_FROM_CONTAINERS));
+                    }
+                    List<HasContainer> predicates = new ArrayList<>(allContainers);
+                    predicates.removeAll(labels);
+                    // add corner judgement
+                    if (!predicates.isEmpty()) {
+                        op.setPredicate(new OpArg(predicates, OpArgTransformFactory.EXPR_FROM_CONTAINERS));
+                    }
                 }
 
                 if (tinkerGraphStep.getIds().length > 0) {
-                    op.setIds(new OpArg(step, OpArgTransformFactory.ID_CONST));
+                    op.setIds(new OpArg(step, OpArgTransformFactory.CONST_IDS_FROM_STEP));
                 }
 
                 return op;
@@ -72,7 +81,11 @@ public class IrPlanBuidler {
             @Override
             public InterOpBase apply(Step step) {
                 SelectOp op = new SelectOp();
-                op.setPredicate(new OpArg(((HasStep) step).getHasContainers(), OpArgTransformFactory.PREDICATE_EXPR));
+                List containers = ((HasStep) step).getHasContainers();
+                // add corner judgement
+                if (!containers.isEmpty()) {
+                    op.setPredicate(new OpArg(containers, OpArgTransformFactory.EXPR_FROM_CONTAINERS));
+                }
                 return op;
             }
         },
@@ -80,9 +93,12 @@ public class IrPlanBuidler {
             @Override
             public InterOpBase apply(Step step) {
                 ExpandOp op = new ExpandOp();
-                op.setDirection(new OpArg(step, OpArgTransformFactory.DIRECTION));
-                op.setEdgeOpt(new OpArg(step, OpArgTransformFactory.IS_EDGE));
-                op.setLabels(new OpArg(step, OpArgTransformFactory.EDGE_LABELS));
+                op.setDirection(new OpArg(step, OpArgTransformFactory.DIRECTION_FROM_STEP));
+                op.setEdgeOpt(new OpArg(step, OpArgTransformFactory.IS_EDGE_FROM_STEP));
+                // add corner judgement
+                if (((VertexStep) step).getEdgeLabels().length > 0) {
+                    op.setLabels(new OpArg(step, OpArgTransformFactory.EDGE_LABELS_FROM_STEP));
+                }
                 return op;
             }
         },
@@ -104,17 +120,18 @@ public class IrPlanBuidler {
         traversal.asAdmin().applyStrategies();
         IrPlan irPlan = new IrPlan();
         List<Step> steps = traversal.asAdmin().getSteps();
+        // judge by class type instead of instance
         for (Step step : steps) {
             InterOpBase op;
-            if (step instanceof GraphStep) {
+            if (equalClass(step, GraphStep.class)) {
                 op = StepTransformFactory.GRAPH_STEP.apply(step);
-            } else if (step instanceof TinkerGraphStep) {
+            } else if (equalClass(step, TinkerGraphStep.class)) {
                 op = StepTransformFactory.TINKER_GRAPH_STEP.apply(step);
-            } else if (step instanceof VertexStep) {
+            } else if (equalClass(step, VertexStep.class)) {
                 op = StepTransformFactory.VERTEX_STEP.apply(step);
-            } else if (step instanceof HasStep) {
+            } else if (equalClass(step, HasStep.class)) {
                 op = StepTransformFactory.HAS_STEP.apply(step);
-            } else if (step instanceof RangeGlobalStep) {
+            } else if (equalClass(step, RangeGlobalStep.class)) {
                 op = StepTransformFactory.LIMIT_STEP.apply(step);
             } else {
                 throw new StepUnsupportedException(step.getClass(), "unimplemented yet");
@@ -124,5 +141,9 @@ public class IrPlanBuidler {
             }
         }
         return irPlan;
+    }
+
+    private boolean equalClass(Step t1, Class<? extends Step> target) {
+        return t1.getClass().equals(target);
     }
 }

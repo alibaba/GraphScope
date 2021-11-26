@@ -5,7 +5,6 @@ import com.alibaba.graphscope.common.jna.IrCoreLibrary;
 import com.alibaba.graphscope.common.jna.type.FfiDirection;
 import com.alibaba.graphscope.common.jna.type.FfiScanOpt;
 import org.apache.tinkerpop.gremlin.process.traversal.Compare;
-import org.apache.tinkerpop.gremlin.process.traversal.step.HasContainerHolder;
 import org.apache.tinkerpop.gremlin.process.traversal.step.map.GraphStep;
 import org.apache.tinkerpop.gremlin.process.traversal.step.map.VertexStep;
 import org.apache.tinkerpop.gremlin.process.traversal.step.util.HasContainer;
@@ -27,7 +26,7 @@ public class OpArgTransformFactory {
         else return FfiScanOpt.Edge;
     };
 
-    public static Function<GraphStep, List> ID_CONST = (GraphStep s1) ->
+    public static Function<GraphStep, List> CONST_IDS_FROM_STEP = (GraphStep s1) ->
             Arrays.stream(s1.getIds()).map((id) -> {
                 if (id instanceof Long) {
                     return irCoreLib.int64AsConst((Long) id);
@@ -36,7 +35,7 @@ public class OpArgTransformFactory {
                 }
             }).collect(Collectors.toList());
 
-    public static Function<List<HasContainer>, String> PREDICATE_EXPR = (List<HasContainer> containers) -> {
+    public static Function<List<HasContainer>, String> EXPR_FROM_CONTAINERS = (List<HasContainer> containers) -> {
         String expr = "";
         for (int i = 0; i < containers.size(); ++i) {
             HasContainer container = containers.get(i);
@@ -59,9 +58,9 @@ public class OpArgTransformFactory {
         return expr;
     };
 
-    public static Function<HasContainerHolder, List> EXTRACT_LABELS = (HasContainerHolder holder) -> {
+    public static Function<List<HasContainer>, List> LABELS_FROM_CONTAINERS = (List<HasContainer> containers) -> {
         List<String> labels = new ArrayList<>();
-        for (HasContainer container : holder.getHasContainers()) {
+        for (HasContainer container : containers) {
             if (container.getKey().equals(T.label.getAccessor())) {
                 Object value = container.getValue();
                 if (value instanceof String) {
@@ -78,7 +77,7 @@ public class OpArgTransformFactory {
         return labels.stream().map(k -> irCoreLib.cstrAsNameOrId(k)).collect(Collectors.toList());
     };
 
-    public static Function<VertexStep, FfiDirection> DIRECTION = (VertexStep s1) -> {
+    public static Function<VertexStep, FfiDirection> DIRECTION_FROM_STEP = (VertexStep s1) -> {
         Direction direction = s1.getDirection();
         switch (direction) {
             case IN:
@@ -92,7 +91,7 @@ public class OpArgTransformFactory {
         }
     };
 
-    public static Function<VertexStep, Boolean> IS_EDGE = (VertexStep s1) -> {
+    public static Function<VertexStep, Boolean> IS_EDGE_FROM_STEP = (VertexStep s1) -> {
         if (s1.returnsEdge()) {
             return Boolean.valueOf(true);
         } else {
@@ -100,6 +99,6 @@ public class OpArgTransformFactory {
         }
     };
 
-    public static Function<VertexStep, List> EDGE_LABELS = (VertexStep s1) ->
+    public static Function<VertexStep, List> EDGE_LABELS_FROM_STEP = (VertexStep s1) ->
             Arrays.stream(s1.getEdgeLabels()).map(k -> irCoreLib.cstrAsNameOrId(k)).collect(Collectors.toList());
 }
