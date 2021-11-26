@@ -147,8 +147,8 @@ pub struct NetworkConfig {
 
 #[derive(Debug, Deserialize)]
 pub struct ServerConfig {
-    pub ip: String,
-    pub port: u16,
+    ip: String,
+    port: u16,
 }
 
 impl ServerConfig {
