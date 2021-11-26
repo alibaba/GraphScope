@@ -226,7 +226,7 @@ jobs:
   python-unittest:
     runs-on: ubuntu-20.04
     needs: [build-wheels, changes]
-    if: ${{ needs.changes.outputs.gae-python == 'true' }}
+    if: ${{ needs.changes.outputs.gae-python == 'true' || github.ref == 'refs/heads/main' }}
     defaults:
       run:
         shell: bash --noprofile --norc -eo pipefail {0}
@@ -280,10 +280,10 @@ jobs:
         file: ./python/coverage.xml
         fail_ci_if_error: true
 
-  networkx-test:
+  networkx-basic-test:
     runs-on: ubuntu-20.04
     needs: [build-wheels, changes]
-    if: ${{ needs.changes.outputs.networkx == 'true' }}
+    if: ${{ needs.changes.outputs.networkx == 'true'  || github.ref == 'refs/heads/main' }}
     defaults:
       run:
         shell: bash --noprofile --norc -eo pipefail {0}
@@ -303,14 +303,7 @@ jobs:
             - 'python/graphscope/nx/__init__.py'
             - 'python/graphscope/nx/classes/**'
             - 'python/graphscope/nx/utils/**'
-          algorithm:
-            - 'analytical_engine/apps/**'
-            - 'analytical_engine/frame/**'
-            - 'python/graphscope/nx/algorithms/builtin.py'
-          generator:
-            - 'python/graphscope/nx/classes/**'
-            - 'python/graphscope/nx/utils/**'
-            - 'python/graphscope/nx/generators/**'
+            - '.github/workflows/ci.yml'
 
     - uses: actions/download-artifact@v2
       with:
@@ -343,7 +336,7 @@ jobs:
         git clone -b master --single-branch --depth=1 https://github.com/7br/gstest.git ${GS_TEST_DIR}
 
     - name: Basic Test
-      if: steps.nx-filter.outputs.basic == 'true'
+      if: steps.nx-filter.outputs.basic == 'true' || github.ref == 'refs/heads/main'
       env:
         DEPLOYMENT: ${{ matrix.deployment }}
         GS_TEST_DIR: ${{ github.workspace }}/gstest
@@ -351,8 +344,65 @@ jobs:
         python3 -m pytest --exitfirst -s -v \
             $(dirname $(python3 -c "import graphscope; print(graphscope.__file__)"))/nx/tests
 
+  networkx-algo-and-generator-test:
+    runs-on: ubuntu-20.04
+    needs: [build-wheels, changes]
+    if: ${{ needs.changes.outputs.networkx == 'true'  || github.ref == 'refs/heads/main' }}
+    defaults:
+      run:
+        shell: bash --noprofile --norc -eo pipefail {0}
+    strategy:
+      matrix:
+        deployment: ["standalone", "distributed"]
+    steps:
+    - uses: actions/checkout@v2.3.2
+    - uses: dorny/paths-filter@v2
+      id: nx-filter
+      with:
+        filters: |
+          algorithm:
+            - 'analytical_engine/apps/**'
+            - 'analytical_engine/frame/**'
+            - 'python/graphscope/nx/algorithms/builtin.py'
+            - '.github/workflows/ci.yml'
+          generator:
+            - 'python/graphscope/nx/classes/**'
+            - 'python/graphscope/nx/utils/**'
+            - 'python/graphscope/nx/generators/**'
+            - '.github/workflows/ci.yml'
+
+    - uses: actions/download-artifact@v2
+      with:
+        path: artifacts
+
+    - name: Prepare Environment
+      env:
+        GS_TEST_DIR: ${{ github.workspace }}/gstest
+      run: |
+        # install graphscope-client
+        cd artifacts
+        tar -zxf ./wheel-${{ github.sha }}/client.tar.gz
+        pushd python/dist/wheelhouse
+        for f in * ; do python3 -m pip install $f || true; done
+        popd
+
+        # install graphscope
+        tar -zxf ./wheel-${{ github.sha }}/graphscope.tar.gz
+        pushd coordinator/dist/wheelhouse
+        python3 -m pip install ./*.whl
+        popd
+        pushd coordinator/dist
+        python3 -m pip install ./*.whl
+        popd
+
+        # install pytest
+        python3 -m pip install pytest
+
+        # download dataset
+        git clone -b master --single-branch --depth=1 https://github.com/7br/gstest.git ${GS_TEST_DIR}
+
     - name: Algorithm test
-      if: steps.nx-filter.outputs.algorithm == 'true'
+      if: steps.nx-filter.outputs.algorithm == 'true' || github.ref == 'refs/heads/main'
       env:
         DEPLOYMENT: ${{ matrix.deployment }}
         GS_TEST_DIR: ${{ github.workspace }}/gstest
@@ -361,7 +411,7 @@ jobs:
             $(dirname $(python3 -c "import graphscope; print(graphscope.__file__)"))/nx/algorithms/tests/builtin
 
     - name: Generator test
-      if: steps.nx-filter.outputs.generator == 'true'
+      if: steps.nx-filter.outputs.generator == 'true' || github.ref == 'refs/heads/main'
       env:
         DEPLOYMENT: ${{ matrix.deployment }}
         GS_TEST_DIR: ${{ github.workspace }}/gstest
@@ -373,6 +423,7 @@ jobs:
     runs-on: self-hosted
     needs: [build-wheels, changes]
     if: ${{ needs.changes.outputs.gie-function-test == 'true' }}
+    if: ${{ needs.changes.outputs.gie-function-test == 'true' || github.ref == 'refs/heads/main' }}
     steps:
       - name: Clean up
         run: |

@@ -16,7 +16,6 @@ SHELL ["/bin/bash", "-c"]
 ENV TZ=Asia/Shanghai
 RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 
-# change apt source to aliyun
 # install python3 java8
 RUN sed -i 's/archive.ubuntu.com/mirrors.ustc.edu.cn/g' /etc/apt/sources.list && \
     sed -i 's/security.ubuntu.com/mirrors.ustc.edu.cn/g' /etc/apt/sources.list && \
@@ -40,14 +39,16 @@ COPY . /home/graphscope/gs
 RUN cd /home/graphscope/gs && \
     if [ "${CI}" == "true" ]; then \
         pushd artifacts/python/dist/wheelhouse; \
-        for f in * ; do python3 -m pip install $f; done || true; \
+        for f in * ; do python3 -m pip --no-cache-dir install $f; done || true; \
         popd; \
         pushd artifacts/coordinator/dist/wheelhouse; \
-        python3 -m pip install ./*.whl; \
+        python3 -m pip --no-cache-dirinstall ./*.whl; \
         popd; \
         pushd artifacts/coordinator/dist; \
-        python3 -m pip install ./*.whl; \
+        python3 -m pip --no-cache-dir install ./*.whl; \
+        popd; \
+        rm -fr artifacts; \
     else \
-        python3 -m pip install graphscope; \
+        python3 -m pip --no-cache-dir install graphscope; \
     fi && \
-    pip3 install git+https://github.com/mars-project/mars.git@d09e1e4c3e32ceb05f42d0b5b79775b1ebd299fb#egg=pymars
+    python3 -m pip --no-cache-dir install git+https://github.com/mars-project/mars.git@d09e1e4c3e32ceb05f42d0b5b79775b1ebd299fb#egg=pymars

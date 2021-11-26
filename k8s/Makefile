@@ -39,18 +39,18 @@ submodule:
 	cd ../ && git submodule update --init
 
 gsruntime-image:
-	docker build --progress=$(BUILD_PROGRESS) \
+	docker build --squash --progress=$(BUILD_PROGRESS) \
 				 -t ${REGISTRY}/$(DOCKER_ORG)/graphscope-runtime:${VERSION} \
 				 --network=host \
 				 -f $(WORKING_DIR)/manylinux2014.Dockerfile .
 
 gsvineyard-image:
-	docker build --progress=$(BUILD_PROGRESS) \
+	docker build --squash --progress=$(BUILD_PROGRESS) \
 				 -t ${REGISTRY}/$(DOCKER_ORG)/graphscope-vineyard:${VERSION} \
 				 -f $(WORKING_DIR)/gsvineyard.Dockerfile .
 
 graphscope-image: submodule
-	docker build --progress=$(BUILD_PROGRESS) \
+	docker build --squash --progress=$(BUILD_PROGRESS) \
 				 --build-arg CI=${CI} \
 				 -t graphscope/graphscope:${SHORT_SHA} \
 				 --network=host \
@@ -58,7 +58,7 @@ graphscope-image: submodule
 
 graphscope-store-image:
 	docker pull ${REGISTRY}/$(DOCKER_ORG)/graphscope-vineyard:${VINEYARD_VERSION}
-	docker build --progress=$(BUILD_PROGRESS) \
+	docker build --squash --progress=$(BUILD_PROGRESS) \
                  --build-arg profile=${PROFILE} \
                  -t graphscope/graphscope-store:${SHORT_SHA} \
                  --network=host \
