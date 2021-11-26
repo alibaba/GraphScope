@@ -21,7 +21,7 @@
         <build.helper.version>1.4</build.helper.version>
         <maven.jar.version>3.0.0</maven.jar.version>
         <maven.compile.version>3.7.0</maven.compile.version>
-        <jna.version>5.5.0</jna.version>
+        <jna.version>5.7.0</jna.version>
         <exec.maven.version>3.0.0</exec.maven.version>
         <junit.version>4.13.2</junit.version>
         <maven.surefire.version>2.22.2</maven.surefire.version>
@@ -128,7 +128,7 @@
                 <version>${maven.surefire.version}</version>
                 <configuration>
                     <argLine>
-                         -Djna.library.path=${project.basedir}/../core/target/release
+                         -Djna.library.path=${project.basedir}/../target/release
                     </argLine>
                 </configuration>
             </plugin>
