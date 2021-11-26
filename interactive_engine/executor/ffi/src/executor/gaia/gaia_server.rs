@@ -7,8 +7,8 @@ use gaia_pegasus::Configuration as GaiaConfig;
 use maxgraph_store::db::api::GraphErrorCode::EngineError;
 use tokio::runtime::Runtime;
 use pegasus_server::service::Service;
-use pegasus_server::rpc::start_rpc_server;
-use pegasus_network::manager::SimpleServerDetector;
+use pegasus_server::rpc::{start_rpc_server, RpcService};
+use pegasus_network::SimpleServerDetector;
 use pegasus_network::config::NetworkConfig;
 use gs_gremlin::{InitializeJobCompiler, QueryMaxGraph};
 use maxgraph_store::api::PartitionId;
@@ -71,7 +71,8 @@ impl GaiaServer {
             let query_maxgraph = QueryMaxGraph::new(self.graph.clone(), self.graph.clone(), worker_num, server_id);
             let job_compiler = query_maxgraph.initialize_job_compiler();
             let service = Service::new(job_compiler);
-            let local_addr = start_rpc_server(addr, service, report, false).await.unwrap();
+            let rpc_service = RpcService::new(service, report);
+            let local_addr = start_rpc_server(addr, rpc_service, false).await.unwrap();
             local_addr.port()
         });
         Ok((socket_addr.port(), rpc_port))
@@ -89,8 +90,8 @@ impl GaiaServer {
 fn make_gaia_config(graph_config: Arc<GraphConfig>) -> GaiaConfig {
     let server_id = graph_config.get_storage_option("node.idx").expect("required config node.idx is missing")
         .parse().expect("parse node.idx failed");
-    let ip = "0.0.0.0".to_string();
-    let port = match graph_config.get_storage_option("gaia.engine.port") {
+    let _ip = "0.0.0.0".to_string();
+    let _port = match graph_config.get_storage_option("gaia.engine.port") {
         None => { 0 },
         Some(server_port_string) => {
             server_port_string.parse().expect("parse gaia.engine.port failed")
@@ -112,19 +113,15 @@ fn make_gaia_config(graph_config: Arc<GraphConfig>) -> GaiaConfig {
         .map(|config_str| config_str.parse().expect("parse gaia.heartbeat.sec failed"));
     let max_pool_size = graph_config.get_storage_option("gaia.max.pool.size")
         .map(|config_str| config_str.parse().expect("parse gaia.max.pool.size failed"));
-    let network_config = NetworkConfig {
-        server_id,
-        ip,
-        port,
-        nonblocking,
-        read_timeout_ms,
-        write_timeout_ms,
-        read_slab_size,
-        no_delay,
-        send_buffer,
-        heartbeat_sec,
-        peers: None,
-    };
+    let network_config = NetworkConfig::new(server_id)
+        .with_nonblocking(nonblocking)
+        .with_read_timeout_ms(read_timeout_ms)
+        .with_write_timeout_ms(write_timeout_ms)
+        .with_read_slab_size(read_slab_size)
+        .with_no_delay(no_delay)
+        .with_send_buffer(send_buffer)
+        .with_heartbeat_sec(heartbeat_sec)
+        .with_servers(None);
     GaiaConfig {
         network: Some(network_config),
         max_pool_size,
