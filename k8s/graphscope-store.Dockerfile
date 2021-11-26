@@ -44,4 +44,8 @@ COPY ./k8s/ready_probe.sh /tmp/ready_probe.sh
 COPY --from=builder /home/graphscope/gs/interactive_engine/distribution/target/maxgraph.tar.gz /tmp/maxgraph.tar.gz
 RUN sudo tar -zxf /tmp/maxgraph.tar.gz -C /usr/local
 
+# init log directory
+RUN sudo mkdir /var/log/graphscope \
+  && sudo -R $(id -u):$(id -g) /var/log/graphscope
+
 ENV GRAPHSCOPE_HOME=/usr/local

@@ -64,7 +64,11 @@ _setup_maxgraph_env() {
   export LD_LIBRARY_PATH=${MAXGRAPH_HOME}/native:${MAXGRAPH_HOME}/native/lib:${LD_LIBRARY_PATH}:/usr/local/lib
 
   if [ -z "${LOG_DIR}" ]; then
-    export LOG_DIR="/tmp/graphscope-store"
+    if [ ! -d "/var/log/graphscope" ]; then
+      sudo mkdir -p /var/log/graphscope && \
+      chown -R $(id -u):$(id -g) /var/log/graphscope
+    fi
+    export LOG_DIR="/var/log/graphscope/graphscope-store"
   fi
 
   mkdir -p ${LOG_DIR}

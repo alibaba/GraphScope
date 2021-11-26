@@ -76,7 +76,7 @@ start_coordinator() {
 
   # create related directories
   declare -r config_dir=${GRAPHSCOPE_RUNTIME}/config/${object_id}
-  declare -r log_dir=${GRAPHSCOPE_RUNTIME}/logs/${object_id}
+  declare -r log_dir=/var/log/graphscope/${object_id}
   declare -r pid_dir=${GRAPHSCOPE_RUNTIME}/pid/${object_id}
   mkdir -p ${log_dir} ${config_dir} ${pid_dir}
 
@@ -143,7 +143,7 @@ start_frontend() {
 
   # create related directories
   declare -r config_dir=${GRAPHSCOPE_RUNTIME}/config/${object_id}
-  declare -r log_dir=${GRAPHSCOPE_RUNTIME}/logs/${object_id}
+  declare -r log_dir=/var/log/graphscope/${object_id}
   declare -r pid_dir=${GRAPHSCOPE_RUNTIME}/pid/${object_id}
   mkdir -p ${log_dir} ${config_dir} ${pid_dir}
 
@@ -210,7 +210,7 @@ start_executor() {
   declare -r interactive_engine_params=$7
 
   declare -r config_dir=${GRAPHSCOPE_RUNTIME}/config/${object_id}
-  declare -r log_dir=${GRAPHSCOPE_RUNTIME}/logs/${object_id}
+  declare -r log_dir=/var/log/graphscope/logs/${object_id}
   declare -r pid_dir=${GRAPHSCOPE_RUNTIME}/pid/${object_id}
   mkdir -p ${log_dir} ${config_dir} ${pid_dir}
   # log4rs needs LOG_DIRS env
@@ -267,7 +267,7 @@ create_gremlin_instance_on_local() {
   export VINEYARD_IPC_SOCKET=$5
   declare -r zookeeper_port=$6
   declare -r engine_params=$7
-  declare -r log_dir=${GRAPHSCOPE_RUNTIME}/logs/${object_id}
+  declare -r log_dir=${LOG_BASE}/${object_id}/frontend
 
   declare -r cluster_type="local"
   declare -r zookeeper_ip="localhost"
@@ -287,7 +287,7 @@ create_gremlin_instance_on_local() {
   declare gremlin_server_port_in_log gremlin_server_port_in_out gremlin_server_port_in_err
   while true
   do
-    # The fronted log may randomly output to log/out/err, this is an ad-hoc solution
+    # The frontend log may randomly output to log/out/err, this is an ad-hoc solution
     # to find the gremlin server port, and the file may not exist, we add a || true to
     # ignore the error.
     # FIXME: the port should fetch from .log file, not .out or .err
@@ -352,7 +352,7 @@ create_gremlin_instance_on_k8s() {
   declare -r host_ip=$(hostname -i)
   declare -r zookeeper_port="2181"
 
-  declare -r log_dir=${GRAPHSCOPE_RUNTIME}/logs/${object_id}
+  declare -r log_dir=/var/log/graphscope/${object_id}
   declare -r cluster_type="k8s"
   start_coordinator ${GRAPHSCOPE_RUNTIME} ${cluster_type} ${object_id} ${host_ip} \
       ${zookeeper_port} ${engine_count}
@@ -369,7 +369,7 @@ create_gremlin_instance_on_k8s() {
   declare gremlin_server_port_in_log gremlin_server_port_in_out gremlin_server_port_in_err
   while true
   do
-    # The fronted log may randomly output to log/out/err, this is an ad-hoc solution
+    # The frontend log may randomly output to log/out/err, this is an ad-hoc solution
     # to find the gremlin server port, and the file may not exist, we add a || true to
     # ignore the error.
     # FIXME: the port should fetch from .log file, not .out or .err
