@@ -16,7 +16,7 @@ jobs:
       run:
         shell: bash --noprofile --norc -eo pipefail {0}
     container:
-      image: registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-vineyard:v0.3.9
+      image: registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-vineyard:v0.3.11
       options:
         --shm-size 4096m
 
@@ -27,8 +27,8 @@ jobs:
       run: |
         pushd ${GITHUB_WORKSPACE}
         make gae ENABLE_JAVA_SDK=OFF BUILD_TEST=OFF
-        make coordinator
-        make client
+        # also make coordinator andclient for python test
+        make coordinator && make client
         popd
 
     - name: Run Forward algorithms test
@@ -37,5 +37,4 @@ jobs:
       run: |
         python3 -m pip install pytest-cov networkx==2.5
         cd ${GITHUB_WORKSPACE}/python
-        ln -s ../algorithms/tests graphscope/nx/tests/algorithms
-        python3 -m pytest -s -v -m "not slow" graphscope/nx/tests/algorithms/forward
+        python3 -m pytest -s -v -m "not slow" graphscope/nx/algorithms/tests/forward

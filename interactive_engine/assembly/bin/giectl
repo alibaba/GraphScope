@@ -496,7 +496,7 @@ create_gremlin_instance_on_k8s() {
   _server_id=1
   for pod in $(echo ${pod_hosts})
   do
-    launch_executor_cmd="${GRAPHSCOPE_HOME}/bin/giectl start_executor ${GRAPHSCOPE_RUNTIME} ${object_id} ${_server_id} ${host_ip} ${zookeeper_port} ${engine_count} ${enable_gaia} ${engine_params}"
+    launch_executor_cmd="GRAPHSCOPE_HOME=${GRAPHSCOPE_HOME} ${GRAPHSCOPE_HOME}/bin/giectl start_executor ${GRAPHSCOPE_RUNTIME} ${object_id} ${_server_id} ${host_ip} ${zookeeper_port} ${engine_count} ${enable_gaia} ${engine_params}"
     kubectl --namespace=${KUBE_NAMESPACE} exec ${pod} -c ${engine_container} -- /bin/bash -c "${launch_executor_cmd}"
     let _server_id+=1
   done

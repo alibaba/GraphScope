@@ -176,7 +176,7 @@ class PIE_API_Test(AppAssets):
 
                 for ov in outer_nodes:
                     assert frag.is_outer_node(ov) == True
-                    id = frag.get_node_id(iv)
+                    id = frag.get_node_id(ov)
                     assert frag.get_node(v_label_id, id, node) == True
                     assert frag.get_outer_node(v_label_id, id, node) == True
 

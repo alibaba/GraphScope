@@ -112,7 +112,7 @@ def p2p_property_dir():
     return "/testingdata/property"
 
 
-@pytest.mark.skipif("HDFS_TEST_DIR" not in os.environ, reason="the test case need HDFS")
+@pytest.mark.skip(reason="waiting for vineyard_read_vineyard_dataframe in v6d package")
 def test_demo_on_hdfs(gs_session_distributed):
     graph = gs_session_distributed.g()
     graph = graph.add_vertices(
@@ -261,6 +261,7 @@ def test_query_modern_graph(
     modern_bytecode(g)
 
 
+@pytest.mark.skip(reason="waiting for vineyard_read_vineyard_dataframe in v6d package")
 def test_serialize_roundtrip(gs_session_distributed, p2p_property_dir):
     graph = gs_session_distributed.g(generate_eid=False)
     graph = graph.add_vertices(f"{p2p_property_dir}/p2p-31_property_v_0", "person")

@@ -18,6 +18,7 @@
 
 
 import logging
+import sys
 
 from graphscope.deploy.kubernetes.utils import parse_readable_memory
 
@@ -656,7 +657,8 @@ class GSEngineBuilder(ReplicaSetBuilder):
     ):
         vineyard_command = " ".join(
             [
-                "vineyardd",
+                sys.executable,
+                "-m" "vineyard",
                 "--size=%s" % str(shared_mem),
                 '--etcd_endpoint="%s"' % (";".join(etcd_endpoints),),
                 "--socket=%s" % self._ipc_socket_file,
@@ -1218,6 +1220,7 @@ class GSCoordinatorBuilder(DeploymentBuilder):
     def add_coordinator_container(self, name, image, cpu, mem, preemptive, **kwargs):
         cmd = kwargs.pop("cmd", None)
         args = kwargs.pop("args", None)
+        module_name = kwargs.pop("module_name", "gscoordinator")
 
         resources_dict = {
             "requests": ResourceBuilder(self._requests_cpu, self._requests_mem).build()
@@ -1231,7 +1234,11 @@ class GSCoordinatorBuilder(DeploymentBuilder):
             for vol_mount in vol.build_mount():
                 volumeMounts.append(vol_mount)
 
-        pre_stop_command = ["python3", "/usr/local/bin/pre_stop.py"]
+        pre_stop_command = [
+            sys.executable,
+            "-m",
+            "{0}.hook.prestop".format(module_name),
+        ]
         lifecycle_dict = _remove_nones(
             {
                 "preStop": {

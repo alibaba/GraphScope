@@ -37,6 +37,7 @@ import threading
 import time
 import uuid
 import zipfile
+from concurrent.futures import ThreadPoolExecutor
 from io import BytesIO
 from pathlib import Path
 from queue import Empty as EmptyQueue
@@ -1395,8 +1396,16 @@ class ResolveMPICmdPrefix(object):
 
     @staticmethod
     def openmpi():
+        ompi_info = ""
+        if "OPAL_PREFIX" in os.environ:
+            ompi_info = os.path.expandvars("$OPAL_PREFIX/bin/ompi_info")
+        if not ompi_info:
+            if "OPAL_BINDIR" in os.environ:
+                ompi_info = os.path.expandvars("$OPAL_BINDIR/ompi_info")
+        if not ompi_info:
+            ompi_info = "ompi_info"
         try:
-            subprocess.check_call(["ompi_info"], stdout=subprocess.DEVNULL)
+            subprocess.check_call([ompi_info], stdout=subprocess.DEVNULL)
         except FileNotFoundError:
             return False
         return True
@@ -1425,6 +1434,21 @@ class ResolveMPICmdPrefix(object):
 
         return ",".join(host_list)
 
+    @staticmethod
+    def find_mpi():
+        mpi = ""
+        if ResolveMPICmdPrefix.openmpi():
+            if "OPAL_PREFIX" in os.environ:
+                mpi = os.path.expandvars("$OPAL_PREFIX/bin/mpirun")
+            if not mpi:
+                if "OPAL_BINDIR" in os.environ:
+                    mpi = os.path.expandvars("$OPAL_BINDIR/mpirun")
+        if not mpi:
+            mpi = shutil.which("mpirun")
+        if not mpi:
+            raise RuntimeError("mpirun command not found.")
+        return mpi
+
     def resolve(self, num_workers, hosts):
         cmd = []
         env = {}
@@ -1450,13 +1474,13 @@ class ResolveMPICmdPrefix(object):
                     env[self._OPENMPI_RSH_AGENT] = rsh_agent_path
             cmd.extend(
                 [
-                    "mpirun",
+                    self.find_mpi(),
                     "--allow-run-as-root",
                 ]
             )
         else:
             # ssh agent supported only
-            cmd.extend(["mpirun"])
+            cmd.extend([self.find_mpi()])
         cmd.extend(["-n", str(num_workers)])
         cmd.extend(["-host", self.alloc(num_workers, hosts)])
 
@@ -1641,27 +1665,46 @@ def get_java_version():
 
 
 def check_gremlin_server_ready(endpoint):
-    from gremlin_python.driver.client import Client
+    def _check_task(endpoint):
+        from gremlin_python.driver.client import Client
 
-    if "MY_POD_NAME" in os.environ:
-        # inner kubernetes env
-        if endpoint == "localhost" or endpoint == "127.0.0.1":
-            # now, used in mac os with docker-desktop kubernetes cluster,
-            # which external ip is 'localhost' when service type is 'LoadBalancer'
-            return True
+        if "MY_POD_NAME" in os.environ:
+            # inner kubernetes env
+            if endpoint == "localhost" or endpoint == "127.0.0.1":
+                # now, used in mac os with docker-desktop kubernetes cluster,
+                # which external ip is 'localhost' when service type is 'LoadBalancer'
+                return True
 
-    client = Client(f"ws://{endpoint}/gremlin", "g")
-    error_message = ""
-    begin_time = time.time()
-    while True:
         try:
+            client = Client(f"ws://{endpoint}/gremlin", "g")
             client.submit("g.V().limit(1)").all().result()
+            try:
+                client.close()
+            except:  # noqa: E722
+                pass
         except Exception as e:
+            try:
+                client.close()
+            except:  # noqa: E722
+                pass
+            raise RuntimeError(str(e))
+
+        return True
+
+    executor = ThreadPoolExecutor(max_workers=20)
+
+    begin_time = time.time()
+    error_message = ""
+    while True:
+        t = executor.submit(_check_task, endpoint)
+        try:
+            rlt = t.result(timeout=30)
+        except Exception as e:
+            t.cancel()
             error_message = str(e)
         else:
-            client.close()
-            return True
+            return rlt
         time.sleep(3)
         if time.time() - begin_time > INTERAVTIVE_INSTANCE_TIMEOUT_SECONDS:
-            client.close()
+            executor.shutdown(wait=False, cancel_futures=True)
             raise TimeoutError(f"Gremlin check query failed: {error_message}")

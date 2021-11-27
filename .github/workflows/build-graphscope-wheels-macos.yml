@@ -11,11 +11,7 @@ on:
 jobs:
   build-wheels:
     if: ${{ github.ref == 'refs/heads/main' && github.repository == 'alibaba/GraphScope' }}
-    runs-on: ${{ matrix.os }}
-    strategy:
-      matrix:
-        os: [macos-10.15]
-
+    runs-on: macos-10.15
     steps:
     - uses: actions/checkout@v2
       with:
@@ -50,10 +46,9 @@ jobs:
         path: graphscope.tar.gz
         retention-days: 5
 
-  test:
+  build-client-wheels:
     if: ${{ github.ref == 'refs/heads/main' && github.repository == 'alibaba/GraphScope' }}
     runs-on: ${{ matrix.os }}
-    needs: [build-wheels]
     strategy:
       matrix:
         os: [macos-10.15]
@@ -64,10 +59,6 @@ jobs:
       with:
         submodules: true
 
-    - uses: actions/download-artifact@v2
-      with:
-        path: artifacts
-
     - name: Set up Python
       uses: actions/setup-python@v2
       with:
@@ -77,7 +68,7 @@ jobs:
       run: |
         /bin/bash ${GITHUB_WORKSPACE}/scripts/install_deps.sh --dev --verbose
 
-    - name: Test Client Wheel with ${{ matrix.python-version }}
+    - name: Build Client Wheels
       run: |
         python3 -c "import sys; print(sys.version)"
         source ~/.graphscope_env
@@ -90,25 +81,7 @@ jobs:
         cd ${GITHUB_WORKSPACE}
         tar -zcf client.tar.gz python/dist/*.whl
 
-        # install client
-        cd ${GITHUB_WORKSPACE}/python/dist
-        for f in ./*.whl ; do python3 -m pip install $f --user || true; done
-
-        # install graphscope
-        cd ${GITHUB_WORKSPACE}/artifacts
-        tar -zxf ./wheel-macos-${{ github.sha }}/graphscope.tar.gz
-        pushd coordinator/dist/wheelhouse
-        python3 -m pip install ./*.whl --user
-        popd
-
-        # run test
-        pip3 install pytest "tensorflow<=2.5.2" --user;
-        export PATH=${HOME}/.local/bin:${PATH}
-        cd ${GITHUB_WORKSPACE}/python
-        python3 -m pytest -s -v ./tests/local/test_standalone.py
-
     - name: Upload Artifact
-      if: always()
       uses: actions/upload-artifact@v2
       with:
         name: wheel-macos-${{ github.sha }}-${{ matrix.python-version }}

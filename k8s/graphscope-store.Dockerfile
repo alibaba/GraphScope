@@ -1,4 +1,4 @@
-ARG BASE_VERSION=v0.3.9
+ARG BASE_VERSION=v0.3.11
 FROM registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-vineyard:$BASE_VERSION as builder
 
 ARG CI=true
@@ -21,8 +21,13 @@ RUN sudo chown -R $(id -u):$(id -g) /home/graphscope/gs /home/graphscope/.m2 && 
     echo "source ~/.cargo/env" >> ~/.bashrc \
     && source ~/.bashrc \
     && rustup component add rustfmt \
-    && sudo yum install -y clang-devel \
-    && export LIBCLANG_PATH=$(dirname $(python3 -c "import clang; print(clang.__file__)"))/native \
+    && echo "install cppkafka" \
+    && sudo yum update -y && sudo yum install -y librdkafka-devel \
+    && git clone -b 0.4.0 --single-branch --depth=1 https://github.com/mfontanini/cppkafka.git /tmp/cppkafka \
+    && cd /tmp/cppkafka && git submodule update --init \
+    && mkdir -p build && cd build \
+    && cmake .. && make -j && sudo make install \
+    && rm -fr /tmp/cppkafka \
     && echo "build with profile: $profile" \
     && cd /home/graphscope/gs/interactive_engine \
     && if [ "$profile" = "release" ]; then \

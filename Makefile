@@ -63,7 +63,8 @@ gae:
 	cd $(WORKING_DIR)/analytical_engine/build && \
 	cmake -DCMAKE_INSTALL_PREFIX=$(INSTALL_PREFIX) -DNETWORKX=$(NETWORKX) -DBUILD_TESTS=${BUILD_TEST} -DENABLE_JAVA_SDK=${ENABLE_JAVA_SDK} .. && \
 	make -j`nproc` && \
-	sudo make install
+	sudo make install && \
+	sudo cp -r $(WORKING_DIR)/k8s/kube_ssh $(INSTALL_PREFIX)/bin/
 ifneq ($(INSTALL_PREFIX), /usr/local)
 	sudo rm -fr /usr/local/include/graphscope && \
 	sudo ln -sf $(INSTALL_PREFIX)/bin/* /usr/local/bin/ && \
@@ -137,7 +138,21 @@ graphscope-docs: prepare-client
 	$(MAKE) -C $(WORKING_DIR)/docs/ html
 
 .PHONY: test
-test:
+test: unittest minitest k8stest
+
+.PHONY: unittest
+unittest:
+	cd $(WORKING_DIR)/python && \
+	python3 -m pytest -s -v ./graphscope/tests/unittest
+
+.PHONY: minitest
+minitest:
 	cd $(WORKING_DIR)/python && \
 	pip3 install tensorflow==2.5.2 && \
-	python3 -m pytest -s -v ./tests/unittest/ ./tests/local/
+	python3 -m pytest -s -v ./graphscope/tests/minitest
+
+.PHONY: k8stest
+k8stest:
+	cd $(WORKING_DIR)/python && \
+	pip3 install tensorflow==2.5.2 && \
+	python3 -m pytest -s -v ./graphscope/tests/kubernetes

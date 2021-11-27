@@ -1,10 +1,11 @@
 Cython==3.0a6
+decorator>=5.1.0
 gremlinpython>=3.4.9
 grpcio
 grpcio-tools
 kubernetes
 nest_asyncio
-networkx
+networkx<2.6
 numpy
 packaging
 pandas

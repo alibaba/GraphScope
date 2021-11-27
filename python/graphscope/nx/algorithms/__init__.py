@@ -22,6 +22,7 @@ import sys
 import networkx
 
 from graphscope.nx.algorithms import builtin
+from graphscope.nx.algorithms import tests
 
 # NB: currently we don't what to make "builtin" in precedence to network's
 # pure python implementation.

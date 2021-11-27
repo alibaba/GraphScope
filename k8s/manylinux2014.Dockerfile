@@ -226,14 +226,15 @@ RUN cd /tmp && \
     cd /tmp && \
     rm -fr /tmp/v2020.10.19.00.tar.gz /tmp/folly-2020.10.19.00
 
-# openmpi v4.0.5
+# install openmpi v4.0.5 to /opt/openmpi and link to /usr/local
 RUN cd /tmp && \
     wget -q https://download.open-mpi.org/release/open-mpi/v4.0/openmpi-4.0.5.tar.gz && \
     tar zxvf openmpi-4.0.5.tar.gz && \
     cd openmpi-4.0.5 && \
-    ./configure --enable-mpi-cxx --disable-dlopen && \
+    ./configure --enable-mpi-cxx --disable-dlopen --prefix=/opt/openmpi  && \
     make -j`nproc` && \
     make install && \
+    cp -rs /opt/openmpi/* /usr/local/ && \
     cd /tmp && \
     rm -fr /tmp/openmpi-4.0.5 /tmp/openmpi-4.0.5.tar.gz
 
@@ -328,6 +329,8 @@ RUN useradd -m graphscope -u 1001 \
 USER graphscope
 WORKDIR /home/graphscope
 ENV PATH=${PATH}:/home/graphscope/.local/bin
+ENV LIBCLANG_PATH=/opt/llvm11/lib
+ENV LLVM_CONFIG_PATH=/opt/llvm11/bin/llvm-config
 
 RUN curl -sf -L https://static.rust-lang.org/rustup.sh | \
         sh -s -- -y --profile minimal --default-toolchain stable && \
