@@ -161,25 +161,6 @@ def test_multiple_session(ogbn_small_script):
     s2.close()
 
 
-def test_gaia(ogbn_small_script):
-    s1 = graphscope.session(cluster_type="hosts", num_workers=1, enable_gaia=True)
-    assert s1.info["status"] == "active"
-    g1 = load_ogbn_mag(s1)
-    interactive1 = s1.gremlin(g1)
-    papers = interactive1.gaia().execute(ogbn_small_script).one()[0]
-    assert papers == 1
-
-    s2 = graphscope.session(cluster_type="hosts", num_workers=1, enable_gaia=True)
-    assert s2.info["status"] == "active"
-    g2 = load_ogbn_mag(s2)
-    interactive2 = s2.gremlin(g2)
-    papers = interactive2.gaia().execute(ogbn_small_script).one()[0]
-    assert papers == 1
-
-    s1.close()
-    s2.close()
-
-
 def test_demo_with_default_session(ogbn_small_script):
     graph = load_ogbn_mag()
 

@@ -22,9 +22,3 @@
 import nest_asyncio
 
 nest_asyncio.apply()
-
-from graphscope.interactive import graph_traversal
-from graphscope.interactive.query import InteractiveQuery
-from graphscope.interactive.query import InteractiveQueryStatus
-
-del graph_traversal

@@ -235,7 +235,7 @@ class LocalLauncher(Launcher):
         schema_path = config[types_pb2.SCHEMA_PATH].s.decode()
         # engine params format:
         #   k1:v1;k2:v2;k3:v3
-        engine_params = {"gaia.engine.port": get_free_port("localhost")}
+        engine_params = {}
         if types_pb2.GIE_GREMLIN_ENGINE_PARAMS in config:
             engine_params = json.loads(
                 config[types_pb2.GIE_GREMLIN_ENGINE_PARAMS].s.decode()
@@ -243,7 +243,6 @@ class LocalLauncher(Launcher):
         engine_params = [
             "{}:{}".format(key, value) for key, value in engine_params.items()
         ]
-        enable_gaia = config[types_pb2.GIE_ENABLE_GAIA].b
         env = os.environ.copy()
         env.update({"GRAPHSCOPE_HOME": GRAPHSCOPE_HOME})
         cmd = [
@@ -256,7 +255,6 @@ class LocalLauncher(Launcher):
             self.vineyard_socket,
             str(self.zookeeper_port),
             "{}".format(";".join(engine_params)),
-            str(enable_gaia),
         ]
         logger.info("Create GIE instance with command: %s", " ".join(cmd))
         process = subprocess.Popen(
