@@ -56,8 +56,10 @@ coordinator:
 	cd $(WORKING_DIR)/coordinator && \
 	pip3 install -r requirements.txt -r requirements-dev.txt --user && \
 	python3 setup.py build_builtin
-	sudo mkdir -p /var/graphscope && \
-	sudo chown -R `id -u`:`id -g` /var/log/graphscope
+	if [ -d "/var/log/graphscope" ]; then \
+		sudo mkdir -p /var/graphscope && \
+		sudo chown -R `id -u`:`id -g` /var/log/graphscope \
+	fi
 
 .PHONY: gae
 gae:

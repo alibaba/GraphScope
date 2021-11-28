@@ -274,6 +274,12 @@ create_gremlin_instance_on_local() {
   declare -r cluster_type="local"
   declare -r zookeeper_ip="localhost"
   declare -r executor_count="1"  # local mode only start one executor
+
+  # check the log directory exist
+  if [ -d "${LOG_BASE}" ]; then
+    sudo mkdir ${LOG_BASE}
+    sudo -R $(id -u):$(id -g) ${LOG_BASE}
+  fi
   start_coordinator ${GRAPHSCOPE_RUNTIME} ${cluster_type} ${object_id} ${zookeeper_ip} ${zookeeper_port} \
                     ${executor_count}
   sleep 1

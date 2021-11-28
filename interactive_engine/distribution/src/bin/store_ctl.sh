@@ -66,7 +66,7 @@ _setup_maxgraph_env() {
   if [ -z "${LOG_DIR}" ]; then
     if [ ! -d "/var/log/graphscope" ]; then
       sudo mkdir -p /var/log/graphscope && \
-      chown -R $(id -u):$(id -g) /var/log/graphscope
+      sudo chown -R $(id -u):$(id -g) /var/log/graphscope
     fi
     export LOG_DIR="/var/log/graphscope/graphscope-store"
   fi
