@@ -221,7 +221,7 @@ jobs:
         uses: actions/upload-artifact@v2
         with:
           name: gie-log
-          path: /tmp/gs/
+          path: /var/log/graphscope
 
   python-unittest:
     runs-on: ubuntu-20.04
