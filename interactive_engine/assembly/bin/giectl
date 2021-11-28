@@ -10,6 +10,8 @@ readonly YELLOW="\033[1;33m"
 readonly GREEN="\033[0;32m"
 readonly NC="\033[0m" # No Color
 
+readonly LOG_BASE=/var/log/graphscope
+
 err() {
   echo -e "${RED}[$(date +'%Y-%m-%dT%H:%M:%S%z')]: [ERROR] $*${NC}" >&2
 }
@@ -76,7 +78,7 @@ start_coordinator() {
 
   # create related directories
   declare -r config_dir=${GRAPHSCOPE_RUNTIME}/config/${object_id}
-  declare -r log_dir=/var/log/graphscope/${object_id}
+  declare -r log_dir=${LOG_BASE}/${object_id}/coordinator
   declare -r pid_dir=${GRAPHSCOPE_RUNTIME}/pid/${object_id}
   mkdir -p ${log_dir} ${config_dir} ${pid_dir}
 
@@ -143,7 +145,7 @@ start_frontend() {
 
   # create related directories
   declare -r config_dir=${GRAPHSCOPE_RUNTIME}/config/${object_id}
-  declare -r log_dir=/var/log/graphscope/${object_id}
+  declare -r log_dir=${LOG_BASE}/${object_id}/frontend
   declare -r pid_dir=${GRAPHSCOPE_RUNTIME}/pid/${object_id}
   mkdir -p ${log_dir} ${config_dir} ${pid_dir}
 
@@ -210,7 +212,7 @@ start_executor() {
   declare -r interactive_engine_params=$7
 
   declare -r config_dir=${GRAPHSCOPE_RUNTIME}/config/${object_id}
-  declare -r log_dir=/var/log/graphscope/logs/${object_id}
+  declare -r log_dir=${LOG_BASE}/${object_id}/executor
   declare -r pid_dir=${GRAPHSCOPE_RUNTIME}/pid/${object_id}
   mkdir -p ${log_dir} ${config_dir} ${pid_dir}
   # log4rs needs LOG_DIRS env
