@@ -46,6 +46,6 @@ RUN sudo tar -zxf /tmp/maxgraph.tar.gz -C /usr/local
 
 # init log directory
 RUN sudo mkdir /var/log/graphscope \
-  && sudo -R $(id -u):$(id -g) /var/log/graphscope
+  && sudo chown -R $(id -u):$(id -g) /var/log/graphscope
 
 ENV GRAPHSCOPE_HOME=/usr/local

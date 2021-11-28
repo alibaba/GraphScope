@@ -276,7 +276,7 @@ create_gremlin_instance_on_local() {
   declare -r executor_count="1"  # local mode only start one executor
 
   # check the log directory exist
-  if [ -d "${LOG_BASE}" ]; then
+  if [ ! -d "${LOG_BASE}" ]; then
     sudo mkdir ${LOG_BASE}
     sudo -R $(id -u):$(id -g) ${LOG_BASE}
   fi

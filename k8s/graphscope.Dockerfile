@@ -62,4 +62,4 @@ RUN cd /home/graphscope/gs && \
 
 # init log directory
 RUN sudo mkdir /var/log/graphscope \
-  && sudo -R $(id -u):$(id -g) /var/log/graphscope
+  && sudo chown -R $(id -u):$(id -g) /var/log/graphscope
