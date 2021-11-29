@@ -78,6 +78,8 @@ jobs:
     # Require the user id of the self-hosted is 1001, which may need to be
     # configured manually when a new self-hosted runner is added.
     runs-on: self-hosted
+    needs: [changes]
+    if: needs.changes.outputs.networkx == 'xxxx' || (github.ref == 'refs/heads/main' && github.repository == 'alibaba/GraphScope')
     defaults:
       run:
         shell: bash --noprofile --norc -eo pipefail {0}
@@ -283,7 +285,7 @@ jobs:
   networkx-basic-test:
     runs-on: ubuntu-20.04
     needs: [build-wheels, changes]
-    if: needs.changes.outputs.networkx == 'true' || ${{ github.ref == 'refs/heads/main' && github.repository == 'alibaba/GraphScope' }}
+    if: needs.changes.outputs.networkx == 'true' || (github.ref == 'refs/heads/main' && github.repository == 'alibaba/GraphScope')
     defaults:
       run:
         shell: bash --noprofile --norc -eo pipefail {0}

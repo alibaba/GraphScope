@@ -962,7 +962,7 @@ def test_error_on_create_cython_app(
         a3(p2p_property_graph, src=6)
 
 
-@pytest.mark.skipif("NIGHTLY" not in os.environ, reason="Run in nightly CI")
+@pytest.mark.skipif("FULL-TEST-SUITE" not in os.environ, reason="Run in nightly CI")
 def test_get_schema(graphscope_session, arrow_property_graph):
     # pregel
     a1 = Pregel_GetSchema()
@@ -984,7 +984,7 @@ def test_get_schema(graphscope_session, arrow_property_graph):
     ]
 
 
-@pytest.mark.skipif("NIGHTLY" not in os.environ, reason="Run in nightly CI")
+@pytest.mark.skipif("FULL-TEST-SUITE" not in os.environ, reason="Run in nightly CI")
 def test_run_cython_pregel_app(
     graphscope_session, p2p_property_graph, sssp_result, random_gar
 ):
@@ -1042,7 +1042,7 @@ def test_run_cython_pregel_app(
     a7(p2p_property_graph)
 
 
-@pytest.mark.skipif("NIGHTLY" not in os.environ, reason="Run in nightly CI")
+@pytest.mark.skipif("FULL-TEST-SUITE" not in os.environ, reason="Run in nightly CI")
 def test_run_cython_pie_app(
     graphscope_session, p2p_property_graph, sssp_result, random_gar
 ):
@@ -1082,7 +1082,7 @@ def test_run_cython_pie_app(
         ctx4 = a3(p2p_property_graph, 6, src=6)
 
 
-@pytest.mark.skipif("NIGHTLY" not in os.environ, reason="Run in nightly CI")
+@pytest.mark.skipif("FULL-TEST-SUITE" not in os.environ, reason="Run in nightly CI")
 def test_vertex_traversal(arrow_property_graph, twitter_v_0, twitter_v_1):
     traversal = PregelVertexTraversal()
     ctx = traversal(arrow_property_graph)
@@ -1109,7 +1109,7 @@ def test_vertex_traversal(arrow_property_graph, twitter_v_0, twitter_v_1):
     compare_result(r1, twitter_v_1)
 
 
-@pytest.mark.skipif("NIGHTLY" not in os.environ, reason="Run in nightly CI")
+@pytest.mark.skipif("FULL-TEST-SUITE" not in os.environ, reason="Run in nightly CI")
 def test_modern_graph_vertex_traversal(arrow_modern_graph):
     traversal = PregelVertexTraversal()
     ctx = traversal(arrow_modern_graph)
@@ -1129,7 +1129,7 @@ def test_modern_graph_vertex_traversal(arrow_modern_graph):
     compare_id(r1, ["name", "lang"])
 
 
-@pytest.mark.skipif("NIGHTLY" not in os.environ, reason="Run in nightly CI")
+@pytest.mark.skipif("FULL-TEST-SUITE" not in os.environ, reason="Run in nightly CI")
 def test_edge_traversal(
     arrow_property_graph,
     twitter_e_0_0_0,

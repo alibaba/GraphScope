@@ -34,6 +34,11 @@ gsvineyard:
 graphscope-image:
 	$(MAKE) -C $(WORKING_DIR)/k8s/ graphscope-image VERSION=$(VERSION)
 
+# bulld graphscope image from source code without wheel package
+.PHONY: graphscope-dev-image
+graphscope-dev-image:
+	$(MAKE) -C $(WORKING_DIR)/k8s/ graphscope-dev-image VERSION=$(VERSION)
+
 .PHONY: graphscope-store-image
 graphscope-store-image:
 	$(MAKE) -C $(WORKING_DIR)/k8s/ graphscope-store-image VERSION=$(VERSION)
