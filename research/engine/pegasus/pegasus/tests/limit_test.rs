@@ -14,8 +14,24 @@
 //! limitations under the License.
 //
 
+#[macro_use]
+extern crate lazy_static;
+
 use pegasus::api::{CorrelatedSubTask, HasAny, Iteration, Limit, Map, Merge, Sink};
 use pegasus::JobConf;
+
+lazy_static! {
+    pub static ref MAP: std::collections::HashMap<u32, Vec<(u32, f32)>> = vec![
+        (1, vec![(2, 0.5f32), (3, 0.4f32), (4, 1.0f32)]),
+        (2, vec![]),
+        (3, vec![]),
+        (4, vec![(3, 0.4f32), (5, 1.0f32)]),
+        (5, vec![]),
+        (6, vec![(3, 0.2f32)])
+    ]
+    .into_iter()
+    .collect();
+}
 
 // the most common case with early-stop
 #[test]
@@ -262,4 +278,52 @@ fn iterate_x_apply_x_flatmap_any_x_map_x_limit_test() {
     }
 
     assert_eq!(count, 10);
+}
+
+#[test]
+fn sort_limit_test() {
+    use pegasus::api::SortLimit;
+
+    let mut conf = JobConf::new("sort_limit_test");
+    let num_workers = 2;
+    conf.set_workers(num_workers);
+
+    let result_stream = pegasus::run(conf, || {
+        let index = pegasus::get_current_worker().index;
+        move |input, output| {
+            input
+                .input_from((1_u32..100).filter(move |x| *x % num_workers == index))?
+                .sort_limit(3)?
+                .sink_into(output)
+        }
+    }).expect("submit job failure");
+
+    let results: Vec<u32> = result_stream.map(|x| x.unwrap()).collect();
+
+    assert_eq!(results, vec![1_u32, 2, 3]);
+}
+
+#[test]
+fn modern_graph_sort_limit_by_test() {
+    use pegasus::api::SortLimitBy;
+
+    let mut conf = JobConf::new("modern_graph_sort_limit_by_test");
+    let num_workers = 2;
+    conf.set_workers(num_workers);
+
+    let result_stream = pegasus::run(conf, || {
+        let index = pegasus::get_current_worker().index;
+        move |input, output| {
+            input
+                .input_from((1..7).filter(move |x| *x % num_workers == index))?
+                .flat_map(|v| Ok(MAP.get(&v).unwrap().iter().cloned()))?
+                .sort_limit_by(3, |x, y| y.1.partial_cmp(&x.1).unwrap())?
+                .map(|x| Ok(x.1))?
+                .sink_into(output)
+        }
+    }).expect("submit job failure");
+
+    let results: Vec<f32> = result_stream.map(|x| x.unwrap()).collect();
+
+    assert_eq!(results, vec![1.0, 1.0, 0.5]);
 }
