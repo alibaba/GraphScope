@@ -77,8 +77,8 @@ start_coordinator() {
   declare -r executor_count=$6
 
   # create related directories
+  declare -r log_dir=${GS_LOG}/${object_id}
   declare -r config_dir=${GRAPHSCOPE_RUNTIME}/config/${object_id}
-  declare -r log_dir=${GS_LOG}/${object_id}/coordinator
   declare -r pid_dir=${GRAPHSCOPE_RUNTIME}/pid/${object_id}
   mkdir -p ${log_dir} ${config_dir} ${pid_dir}
 
@@ -144,7 +144,7 @@ start_frontend() {
   declare -r executor_count=$7
 
   # create related directories
-  declare -r log_dir=${GS_LOG}/${object_id}/frontend
+  declare -r log_dir=${GS_LOG}/${object_id}
   declare -r config_dir=${GRAPHSCOPE_RUNTIME}/config/${object_id}
   declare -r pid_dir=${GRAPHSCOPE_RUNTIME}/pid/${object_id}
   mkdir -p ${log_dir} ${config_dir} ${pid_dir}
@@ -211,7 +211,7 @@ start_executor() {
   declare -r engine_count=$6
   declare -r interactive_engine_params=$7
 
-  declare -r log_dir=${GS_LOG}/${object_id}/executor
+  declare -r log_dir=${GS_LOG}/${object_id}
   declare -r config_dir=${GRAPHSCOPE_RUNTIME}/config/${object_id}
   declare -r pid_dir=${GRAPHSCOPE_RUNTIME}/pid/${object_id}
   mkdir -p ${log_dir} ${config_dir} ${pid_dir}
@@ -274,8 +274,8 @@ create_gremlin_instance_on_local() {
   declare -r zookeeper_ip="localhost"
   declare -r executor_count="1"  # local mode only start one executor
 
-  if [ ! -w "/var/log" ]; then
-    # /var/log is not writable, switch to ${HOME}/.local/log/graphscope
+  if [[ ! -d "${GS_LOG}" || ! -w "${GS_LOG}" ]]; then
+    # /var/log/graphscope is not existed/writable, switch to ${HOME}/.local/log/graphscope
     GS_LOG=${HOME}/.local/log/graphscope
   fi
   # init Graphscope log location
@@ -291,7 +291,7 @@ create_gremlin_instance_on_local() {
 
   sleep 4
   # expose gremlin server (NB: must before start executor)
-  declare -r frontedn_log_dir=${GS_LOG}/${object_id}/frontend
+  declare -r log_dir=${GS_LOG}/${object_id}
   declare -r timeout_seconds=60
   declare wait_period_seconds=0
   declare gremlin_server_ready=False
@@ -304,9 +304,9 @@ create_gremlin_instance_on_local() {
     # FIXME: the port should fetch from .log file, not .out or .err
     #
     # NB. match the last element, as the log format (format of date/time) may change
-    gremlin_server_port_in_log=$(awk '/frontend host/ { print }' ${frontend_log_dir}/maxgraph-frontend.log | awk -F: '{print $NF}') || true
-    gremlin_server_port_in_out=$(awk '/frontend host/ { print }' ${frontend_log_dir}/maxgraph-frontend.out | awk -F: '{print $NF}') || true
-    gremlin_server_port_in_err=$(awk '/frontend host/ { print }' ${frontend_log_dir}/maxgraph-frontend.err | awk -F: '{print $NF}') || true
+    gremlin_server_port_in_log=$(awk '/frontend host/ { print }' ${log_dir}/maxgraph-frontend.log | awk -F: '{print $NF}') || true
+    gremlin_server_port_in_out=$(awk '/frontend host/ { print }' ${log_dir}/maxgraph-frontend.out | awk -F: '{print $NF}') || true
+    gremlin_server_port_in_err=$(awk '/frontend host/ { print }' ${log_dir}/maxgraph-frontend.err | awk -F: '{print $NF}') || true
     if [ ! -z "${gremlin_server_port_in_log}" ]; then
       log "MAXGRAPH_FRONTEND_ENDPOINT:127.0.0.1:${gremlin_server_port_in_log}"
       gremlin_server_ready=True
@@ -373,7 +373,7 @@ create_gremlin_instance_on_k8s() {
   sleep 4
 
   # expose gremlin server (NB: must before start executor)
-  declare -r frontend_log_dir=${GS_LOG}/${object_id}/frontend
+  declare -r frontend_log_dir=${GS_LOG}/${object_id}
   declare -r timeout_seconds=60
   declare wait_period_seconds=0
   declare gremlin_server_ready=False
@@ -386,9 +386,9 @@ create_gremlin_instance_on_k8s() {
     # FIXME: the port should fetch from .log file, not .out or .err
     #
     # NB. match the last element, as the log format (format of date/time) may change
-    gremlin_server_port_in_log=$(awk '/frontend host/ { print }' ${frontend_log_dir}/maxgraph-frontend.log | awk -F: '{print $NF}') || true
-    gremlin_server_port_in_out=$(awk '/frontend host/ { print }' ${frontend_log_dir}/maxgraph-frontend.out | awk -F: '{print $NF}') || true
-    gremlin_server_port_in_err=$(awk '/frontend host/ { print }' ${frontend_log_dir}/maxgraph-frontend.err | awk -F: '{print $NF}') || true
+    gremlin_server_port_in_log=$(awk '/frontend host/ { print }' ${log_dir}/maxgraph-frontend.log | awk -F: '{print $NF}') || true
+    gremlin_server_port_in_out=$(awk '/frontend host/ { print }' ${log_dir}/maxgraph-frontend.out | awk -F: '{print $NF}') || true
+    gremlin_server_port_in_err=$(awk '/frontend host/ { print }' ${log_dir}/maxgraph-frontend.err | awk -F: '{print $NF}') || true
     if [ ! -z "${gremlin_server_port_in_log}" ]; then
       maxgraph_frontend_port=${gremlin_server_port_in_log}
       gremlin_server_ready=True
