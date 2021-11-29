@@ -278,7 +278,7 @@ create_gremlin_instance_on_local() {
   # check the log directory exist
   if [ ! -d "${LOG_BASE}" ]; then
     sudo mkdir ${LOG_BASE}
-    sudo -R $(id -u):$(id -g) ${LOG_BASE}
+    sudo chown -R $(id -u):$(id -g) ${LOG_BASE}
   fi
   start_coordinator ${GRAPHSCOPE_RUNTIME} ${cluster_type} ${object_id} ${zookeeper_ip} ${zookeeper_port} \
                     ${executor_count}
