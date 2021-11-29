@@ -49,7 +49,10 @@ class InteractiveQueryManager(object):
         return self.client.submit(message, bindings, request_options)
 
     def close(self):
-        self.client.close()
+        try:
+            self.client.close()
+        except Exception:
+            pass
         self.closed = True
 
 
