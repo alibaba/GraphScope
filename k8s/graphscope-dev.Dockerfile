@@ -31,12 +31,14 @@ RUN export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/opt/graphscope/lib:/opt/graphscope/
     cd ${HOME}/gs/python && \
     pip3 install -U setuptools && \
     pip3 install -r requirements.txt -r requirements-dev.txt && \
+    sudo rm -fr build dist && \
     python3 setup.py bdist_wheel && \
     cd ./dist && \
     auditwheel repair --plat=manylinux2014_x86_64 ./*.whl || true && \
     mkdir -p /opt/graphscope/dist && cp ./wheelhouse/* /opt/graphscope/dist/ && \
     pip3 install ./wheelhouse/*.whl || true && \
     cd ${HOME}/gs/coordinator && \
+    sudo rm -fr build dist && \
     pip3 install -r requirements.txt -r requirements-dev.txt && \
     python3 setup.py bdist_wheel && \
     cp ./dist/* /opt/graphscope/dist/ && \

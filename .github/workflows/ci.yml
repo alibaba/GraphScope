@@ -68,7 +68,6 @@ jobs:
             - 'analytical_engine/frame/**'
             - 'analytical_engine/core/**'
             - 'python/graphscope/nx/**'
-            - '.github/workflows/ci.yml'
           gie-function-test:
             - 'interactive_engine/**'
             - 'python/graphscope/interactive/**'
@@ -78,8 +77,6 @@ jobs:
     # Require the user id of the self-hosted is 1001, which may need to be
     # configured manually when a new self-hosted runner is added.
     runs-on: self-hosted
-    needs: [changes]
-    if: needs.changes.outputs.networkx == 'xxxx' || (github.ref == 'refs/heads/main' && github.repository == 'alibaba/GraphScope')
     defaults:
       run:
         shell: bash --noprofile --norc -eo pipefail {0}
@@ -228,7 +225,7 @@ jobs:
   python-unittest:
     runs-on: ubuntu-20.04
     needs: [build-wheels, changes]
-    if: needs.changes.outputs.gae-python == 'true' || ${{ github.ref == 'refs/heads/main' && github.repository == 'alibaba/GraphScope' }}
+    if: needs.changes.outputs.gae-python == 'true' || (github.ref == 'refs/heads/main' && github.repository == 'alibaba/GraphScope')
     defaults:
       run:
         shell: bash --noprofile --norc -eo pipefail {0}
@@ -305,7 +302,6 @@ jobs:
             - 'python/graphscope/nx/__init__.py'
             - 'python/graphscope/nx/classes/**'
             - 'python/graphscope/nx/utils/**'
-            - '.github/workflows/ci.yml'
 
     - uses: actions/download-artifact@v2
       with:
@@ -367,12 +363,10 @@ jobs:
             - 'analytical_engine/apps/**'
             - 'analytical_engine/frame/**'
             - 'python/graphscope/nx/algorithms/builtin.py'
-            - '.github/workflows/ci.yml'
           generator:
             - 'python/graphscope/nx/classes/**'
             - 'python/graphscope/nx/utils/**'
             - 'python/graphscope/nx/generators/**'
-            - '.github/workflows/ci.yml'
 
     - uses: actions/download-artifact@v2
       with:
@@ -427,7 +421,7 @@ jobs:
   gie-test:
     runs-on: self-hosted
     needs: [build-wheels, changes]
-    if: needs.changes.outputs.gie-function-test == 'true' || ${{ github.ref == 'refs/heads/main' && github.repository == 'alibaba/GraphScope' }}
+    if: needs.changes.outputs.gie-function-test == 'true' || (github.ref == 'refs/heads/main' && github.repository == 'alibaba/GraphScope')
     steps:
       - name: Clean up
         run: |
