@@ -5,7 +5,6 @@ use crate::db::api::types::{PropertyReader, PropertyValue, Property, RocksVertex
 use std::fmt::{Debug, Formatter};
 use crate::api::{Vertex, Edge};
 use crate::schema::PropId;
-use crate::api::prelude::Property::Null;
 
 pub struct PropertyImpl {
     property_id: PropertyId,

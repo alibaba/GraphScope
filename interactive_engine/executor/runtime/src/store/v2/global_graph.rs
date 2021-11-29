@@ -14,10 +14,9 @@
 //! limitations under the License.
 
 
-use maxgraph_store::db::api::{Vertex, Edge, GraphResult, EdgeResultIter, PropIter, ValueRef, ValueType, EdgeDirection, VertexWrapper, VertexResultIter, GraphConfigBuilder, GraphConfig, GraphDef, Records, PropertyId};
+use maxgraph_store::db::api::{GraphResult, ValueRef, ValueType, EdgeDirection, GraphConfigBuilder, GraphConfig, GraphDef, Records, PropertyId};
 use std::sync::Arc;
 use maxgraph_store::api::{GlobalGraphQuery, SnapshotId, PartitionVertexIds, LabelId, Condition, PropId, VertexId, PartitionId, PartitionLabeledVertexIds};
-use store::v2::edge_iterator::EdgeIterator;
 use store::{LocalStoreVertex, LocalStoreEdge};
 use maxgraph_store::api::graph_schema::Schema;
 use std::collections::{HashMap, HashSet};

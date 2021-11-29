@@ -55,48 +55,6 @@ pub fn gen_edge_prop_map(si: SnapshotId, edge_type: &EdgeKind, id: &EdgeId, prop
     map
 }
 
-pub fn check_vertex<V: Vertex>(si: SnapshotId, v: &V, type_def: &TypeDef) {
-    let mut map = HashMap::new();
-    for prop_def in type_def.get_prop_defs() {
-        let val = vertex_prop(si, v.get_label(), v.get_id(), prop_def.r#type);
-        map.insert(prop_def.id, val);
-    }
-    check_vertex_with_properties(v, &map);
-}
-
-pub fn check_vertex_with_properties<V: Vertex>(v: &V, properties: &HashMap<PropertyId, Value>) {
-    for (prop_id, property) in properties {
-        assert_eq!(v.get_property(*prop_id).unwrap(), property.as_ref());
-    }
-    let mut map = properties.clone();
-    let mut iter = v.get_properties_iter();
-    while let Some((prop_id, val)) = iter.next() {
-        assert_eq!(map.remove(&prop_id).unwrap().as_ref(), val);
-    }
-    assert!(map.is_empty());
-}
-
-pub fn check_edge<E: Edge>(si: SnapshotId, e: &E, type_def: &TypeDef) {
-    let mut map = HashMap::new();
-    for prop_def in type_def.get_prop_defs() {
-        let val = edge_prop(si, e.get_kind(), e.get_id(), prop_def.r#type);
-        map.insert(prop_def.id, val);
-    }
-    check_edge_with_properties(e, &map);
-}
-
-pub fn check_edge_with_properties<E: Edge>(e: &E, properties: &HashMap<PropertyId, Value>) {
-    for (prop_id, property) in properties {
-        assert_eq!(e.get_property(*prop_id).unwrap(), property.as_ref());
-    }
-    let mut map = properties.clone();
-    let mut iter = e.get_properties_iter();
-    while let Some((prop_id, val)) = iter.next() {
-        assert_eq!(map.remove(&prop_id).unwrap().as_ref(), val);
-    }
-    assert!(map.is_empty());
-}
-
 fn vertex_prop(si: SnapshotId, label: LabelId, id: VertexId, r#type: ValueType) -> Value {
     let s = si as i64;
     let x = label as i64;

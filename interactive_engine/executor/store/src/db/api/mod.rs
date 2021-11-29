@@ -6,8 +6,6 @@ use crate::db::proto::model::{EdgeIdPb, EdgeKindPb};
 pub use self::config::*;
 pub use self::entity::*;
 pub use self::error::*;
-pub use self::graph::*;
-pub use self::old_condition::*;
 pub use self::property::*;
 pub use self::schema::*;
 
@@ -15,7 +13,6 @@ pub use self::schema::*;
 pub mod error;
 pub mod property;
 mod entity;
-mod old_condition;
 mod schema;
 mod config;
 pub mod multi_version_graph;

@@ -6,7 +6,6 @@ pub mod bin;
 mod property;
 mod meta;
 pub mod store;
-mod query;
 #[cfg(test)]
 mod tests;
 #[cfg(test)]

@@ -14,7 +14,7 @@
 //! limitations under the License.
 
 use crate::db::api::condition::Condition;
-use crate::db::api::{SnapshotId, VertexId, LabelId, GraphResult, EdgeId, EdgeKind, Records, SerialId, TypeDef, PropertyMap, DataLoadTarget, GraphBackup, PropertyId};
+use crate::db::api::{SnapshotId, VertexId, LabelId, GraphResult, EdgeId, EdgeKind, Records, SerialId, TypeDef, PropertyMap, DataLoadTarget, PropertyId, BackupId};
 use crate::db::api::types::{RocksVertex, RocksEdge};
 
 pub trait MultiVersionGraph {
@@ -209,4 +209,32 @@ pub trait MultiVersionGraph {
     fn open_backup_engine(&self, backup_path: &str) -> GraphResult<Box<dyn GraphBackup>>;
 }
 
+pub trait GraphBackup {
+    /// Create a new backup of graph store. This interface is thread safe.
+    ///
+    /// Returns the new created backup id if successful, `GraphError` otherwise.
+    fn create_new_backup(&mut self) -> GraphResult<BackupId>;
 
+    /// Delete a backup of `backup_id`. This interface is thread safe.
+    ///
+    /// If `backup_id` is not available, something error when deleting or other errors,
+    /// `GraphError` will be returned.
+    fn delete_backup(&mut self, backup_id: BackupId) -> GraphResult<()>;
+
+    /// Restore the graph store from `backup_id` at `restore_path`. This interface is thread safe.
+    ///
+    /// If `restore_path` is not available，`backup_id` is not available, something error when
+    /// restoring or other errors, `GraphError` will be returned.
+    fn restore_from_backup(&mut self, restore_path: &str, backup_id: BackupId) -> GraphResult<()>;
+
+    /// Verify the backup of `backup_id`. This interface is thread safe.
+    ///
+    /// If `backup_id` is not available, backup files are broken, backup checksum mismatch or
+    /// other errors, `GraphError` will be returned.
+    fn verify_backup(&self, backup_id: BackupId) -> GraphResult<()>;
+
+    /// Get the current available backup id list. This interface is thread safe.
+    ///
+    /// Returns the available backup id vector(may be empty)。
+    fn get_backup_list(&self) -> Vec<BackupId>;
+}

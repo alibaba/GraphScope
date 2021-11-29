@@ -6,8 +6,6 @@ use crate::db::api::*;
 use crate::db::storage::{ExternalStorage, ExternalStorageBackup, RawBytes};
 use crate::db::storage::rocksdb::{RocksDB};
 use crate::db::util::lock::GraphMutexLock;
-use super::vertex::*;
-use super::edge::*;
 use super::types::*;
 use super::codec::*;
 use super::meta::*;
@@ -17,7 +15,7 @@ use crate::db::api::GraphErrorCode::{InvalidData, TypeNotFound};
 use crate::db::graph::table_manager::Table;
 use crate::db::graph::entity::{RocksVertexImpl, RocksEdgeImpl};
 use crate::db::graph::iter::{EdgeTypeScan, VertexTypeScan};
-use crate::db::api::multi_version_graph::MultiVersionGraph;
+use crate::db::api::multi_version_graph::{MultiVersionGraph, GraphBackup};
 use crate::db::api::condition::Condition;
 
 pub struct GraphStore {

@@ -16,13 +16,12 @@ use std::os::raw::{c_void, c_char};
 use std::ffi::CStr;
 use std::str;
 use std::sync::Arc;
-use std::vec::IntoIter;
 
 use crate::store::graph::{PartitionGraphHandle, FfiPartitionGraph};
 use maxgraph_store::db::wrapper::wrapper_partition_graph::{WrapperPartitionSnapshot, WrapperPartitionGraph};
 use maxgraph_store::db::graph::store::GraphStore;
 use maxgraph_store::db::api::partition_graph::PartitionGraph;
-use maxgraph_store::db::api::{GraphConfigBuilder, GraphResult, SnapshotId, VertexId, LabelId, EdgeId, EdgeKind, SerialId, PropertyId, Records, GraphError};
+use maxgraph_store::db::api::{GraphConfigBuilder, SnapshotId, VertexId, LabelId, EdgeId, EdgeKind, SerialId, PropertyId, Records, GraphError};
 use maxgraph_store::db::api::partition_snapshot::PartitionSnapshot;
 use maxgraph_store::db::api::types::{RocksVertex, PropertyValue, Property, PropertyReader, RocksEdge};
 use maxgraph_store::db::graph::entity::{RocksVertexImpl, RocksEdgeImpl, PropertyImpl, PropertiesIter};
