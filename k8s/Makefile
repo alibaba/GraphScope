@@ -116,8 +116,6 @@ graphscope-darwin-py3:
 		rm -fr build && \
 		package_name=graphscope python3 setup.py bdist_wheel --plat=macosx_10_9_x86_64 && \
 		pip3 install delocate && \
-		sed -i '' 's/return location/return realpath(location)/' \
-			$$(python -c "import delocate.libsana; print(delocate.libsana.__file__)") && \
 		for wheel in `ls dist/*.whl`; do \
 			delocate-listdeps -a -d $$wheel; \
 			delocate-wheel -w dist/wheelhouse -v $$wheel && rm $$wheel; \
