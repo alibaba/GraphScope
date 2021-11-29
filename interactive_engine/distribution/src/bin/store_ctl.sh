@@ -64,11 +64,17 @@ _setup_maxgraph_env() {
   export LD_LIBRARY_PATH=${MAXGRAPH_HOME}/native:${MAXGRAPH_HOME}/native/lib:${LD_LIBRARY_PATH}:/usr/local/lib
 
   if [ -z "${LOG_DIR}" ]; then
-    if [ ! -d "/var/log/graphscope" ]; then
-      sudo mkdir -p /var/log/graphscope && \
-      sudo chown -R $(id -u):$(id -g) /var/log/graphscope
+    # init LOG_DIR
+    if [ -w "/var/log" ]; then
+      # /var/log is writable
+      GS_LOG=/var/log/graphscope
+    else
+      # /var/log is not writable, switch to ${HOME}/.local/log/graphscope
+      GS_LOG=${HOME}/.local/log/graphscope
     fi
-    export LOG_DIR="/var/log/graphscope/store"
+    readonly GS_LOG
+    mkdir -p ${GS_LOG}
+    export LOG_DIR=${GS_LOG}/store
   fi
 
   mkdir -p ${LOG_DIR}

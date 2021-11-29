@@ -221,7 +221,7 @@ jobs:
         uses: actions/upload-artifact@v2
         with:
           name: gie-log
-          path: /var/log/graphscope
+          path: ~/.local/log/graphscope
 
   python-unittest:
     runs-on: ubuntu-20.04
@@ -283,7 +283,7 @@ jobs:
   networkx-basic-test:
     runs-on: ubuntu-20.04
     needs: [build-wheels, changes]
-    if: needs.changes.outputs.networkx == 'true' || ${{ github.ref == 'refs/heads/main' && github.repository == 'alibaba/GraphScope' }}
+    if: needs.changes.outputs.networkx == 'true' || (github.ref == 'refs/heads/main' && github.repository == 'alibaba/GraphScope')
     defaults:
       run:
         shell: bash --noprofile --norc -eo pipefail {0}

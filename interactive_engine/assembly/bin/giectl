@@ -10,7 +10,7 @@ readonly YELLOW="\033[1;33m"
 readonly GREEN="\033[0;32m"
 readonly NC="\033[0m" # No Color
 
-readonly LOG_BASE=/var/log/graphscope
+GS_LOG=/var/log/graphscope
 
 err() {
   echo -e "${RED}[$(date +'%Y-%m-%dT%H:%M:%S%z')]: [ERROR] $*${NC}" >&2
@@ -78,7 +78,7 @@ start_coordinator() {
 
   # create related directories
   declare -r config_dir=${GRAPHSCOPE_RUNTIME}/config/${object_id}
-  declare -r log_dir=${LOG_BASE}/${object_id}/coordinator
+  declare -r log_dir=${GS_LOG}/${object_id}/coordinator
   declare -r pid_dir=${GRAPHSCOPE_RUNTIME}/pid/${object_id}
   mkdir -p ${log_dir} ${config_dir} ${pid_dir}
 
@@ -144,8 +144,8 @@ start_frontend() {
   declare -r executor_count=$7
 
   # create related directories
+  declare -r log_dir=${GS_LOG}/${object_id}/frontend
   declare -r config_dir=${GRAPHSCOPE_RUNTIME}/config/${object_id}
-  declare -r log_dir=${LOG_BASE}/${object_id}/frontend
   declare -r pid_dir=${GRAPHSCOPE_RUNTIME}/pid/${object_id}
   mkdir -p ${log_dir} ${config_dir} ${pid_dir}
 
@@ -211,8 +211,8 @@ start_executor() {
   declare -r engine_count=$6
   declare -r interactive_engine_params=$7
 
+  declare -r log_dir=${GS_LOG}/${object_id}/executor
   declare -r config_dir=${GRAPHSCOPE_RUNTIME}/config/${object_id}
-  declare -r log_dir=${LOG_BASE}/${object_id}/executor
   declare -r pid_dir=${GRAPHSCOPE_RUNTIME}/pid/${object_id}
   mkdir -p ${log_dir} ${config_dir} ${pid_dir}
   # log4rs needs LOG_DIRS env
@@ -269,17 +269,19 @@ create_gremlin_instance_on_local() {
   export VINEYARD_IPC_SOCKET=$5
   declare -r zookeeper_port=$6
   declare -r engine_params=$7
-  declare -r log_dir=${LOG_BASE}/${object_id}/frontend
 
   declare -r cluster_type="local"
   declare -r zookeeper_ip="localhost"
   declare -r executor_count="1"  # local mode only start one executor
 
-  # check the log directory exist
-  if [ ! -d "${LOG_BASE}" ]; then
-    sudo mkdir ${LOG_BASE}
-    sudo chown -R $(id -u):$(id -g) ${LOG_BASE}
+  if [ ! -w "/var/log" ]; then
+    # /var/log is not writable, switch to ${HOME}/.local/log/graphscope
+    GS_LOG=${HOME}/.local/log/graphscope
   fi
+  # init Graphscope log location
+  readonly GS_LOG
+  mkdir -p ${GS_LOG}
+
   start_coordinator ${GRAPHSCOPE_RUNTIME} ${cluster_type} ${object_id} ${zookeeper_ip} ${zookeeper_port} \
                     ${executor_count}
   sleep 1
@@ -289,6 +291,7 @@ create_gremlin_instance_on_local() {
 
   sleep 4
   # expose gremlin server (NB: must before start executor)
+  declare -r frontedn_log_dir=${GS_LOG}/${object_id}/frontend
   declare -r timeout_seconds=60
   declare wait_period_seconds=0
   declare gremlin_server_ready=False
@@ -301,9 +304,9 @@ create_gremlin_instance_on_local() {
     # FIXME: the port should fetch from .log file, not .out or .err
     #
     # NB. match the last element, as the log format (format of date/time) may change
-    gremlin_server_port_in_log=$(awk '/frontend host/ { print }' ${log_dir}/maxgraph-frontend.log | awk -F: '{print $NF}') || true
-    gremlin_server_port_in_out=$(awk '/frontend host/ { print }' ${log_dir}/maxgraph-frontend.out | awk -F: '{print $NF}') || true
-    gremlin_server_port_in_err=$(awk '/frontend host/ { print }' ${log_dir}/maxgraph-frontend.err | awk -F: '{print $NF}') || true
+    gremlin_server_port_in_log=$(awk '/frontend host/ { print }' ${frontend_log_dir}/maxgraph-frontend.log | awk -F: '{print $NF}') || true
+    gremlin_server_port_in_out=$(awk '/frontend host/ { print }' ${frontend_log_dir}/maxgraph-frontend.out | awk -F: '{print $NF}') || true
+    gremlin_server_port_in_err=$(awk '/frontend host/ { print }' ${frontend_log_dir}/maxgraph-frontend.err | awk -F: '{print $NF}') || true
     if [ ! -z "${gremlin_server_port_in_log}" ]; then
       log "MAXGRAPH_FRONTEND_ENDPOINT:127.0.0.1:${gremlin_server_port_in_log}"
       gremlin_server_ready=True
@@ -360,7 +363,6 @@ create_gremlin_instance_on_k8s() {
   declare -r host_ip=$(hostname -i)
   declare -r zookeeper_port="2181"
 
-  declare -r log_dir=${LOG_BASE}/${object_id}/frontend
   declare -r cluster_type="k8s"
   start_coordinator ${GRAPHSCOPE_RUNTIME} ${cluster_type} ${object_id} ${host_ip} \
       ${zookeeper_port} ${engine_count}
@@ -371,6 +373,7 @@ create_gremlin_instance_on_k8s() {
   sleep 4
 
   # expose gremlin server (NB: must before start executor)
+  declare -r frontend_log_dir=${GS_LOG}/${object_id}/frontend
   declare -r timeout_seconds=60
   declare wait_period_seconds=0
   declare gremlin_server_ready=False
@@ -383,9 +386,9 @@ create_gremlin_instance_on_k8s() {
     # FIXME: the port should fetch from .log file, not .out or .err
     #
     # NB. match the last element, as the log format (format of date/time) may change
-    gremlin_server_port_in_log=$(awk '/frontend host/ { print }' ${log_dir}/maxgraph-frontend.log | awk -F: '{print $NF}') || true
-    gremlin_server_port_in_out=$(awk '/frontend host/ { print }' ${log_dir}/maxgraph-frontend.out | awk -F: '{print $NF}') || true
-    gremlin_server_port_in_err=$(awk '/frontend host/ { print }' ${log_dir}/maxgraph-frontend.err | awk -F: '{print $NF}') || true
+    gremlin_server_port_in_log=$(awk '/frontend host/ { print }' ${frontend_log_dir}/maxgraph-frontend.log | awk -F: '{print $NF}') || true
+    gremlin_server_port_in_out=$(awk '/frontend host/ { print }' ${frontend_log_dir}/maxgraph-frontend.out | awk -F: '{print $NF}') || true
+    gremlin_server_port_in_err=$(awk '/frontend host/ { print }' ${frontend_log_dir}/maxgraph-frontend.err | awk -F: '{print $NF}') || true
     if [ ! -z "${gremlin_server_port_in_log}" ]; then
       maxgraph_frontend_port=${gremlin_server_port_in_log}
       gremlin_server_ready=True
