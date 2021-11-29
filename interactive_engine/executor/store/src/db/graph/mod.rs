@@ -6,8 +6,6 @@ pub mod bin;
 mod property;
 mod meta;
 pub mod store;
-pub mod vertex;
-pub mod edge;
 mod query;
 #[cfg(test)]
 mod tests;

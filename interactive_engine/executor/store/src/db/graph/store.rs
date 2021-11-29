@@ -616,32 +616,6 @@ fn merge_updates<'a>(old: &mut HashMap<PropertyId, ValueRef<'a>>, updates: &'a d
     }
 }
 
-pub struct EmptyResultIter;
-
-impl VertexResultIter for EmptyResultIter {
-    type V = VertexImpl;
-
-    fn next(&mut self) -> Option<VertexWrapper<Self::V>> {
-        None
-    }
-
-    fn ok(&self) -> GraphResult<()> {
-        Ok(())
-    }
-}
-
-impl EdgeResultIter for EmptyResultIter {
-    type E = EdgeImpl;
-
-    fn next(&mut self) -> Option<EdgeWrapper<Self::E>> {
-        None
-    }
-
-    fn ok(&self) -> GraphResult<()> {
-        Ok(())
-    }
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;

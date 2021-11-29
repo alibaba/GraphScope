@@ -15,7 +15,6 @@ pub use self::schema::*;
 pub mod error;
 pub mod property;
 mod entity;
-mod graph;
 mod old_condition;
 mod schema;
 mod config;

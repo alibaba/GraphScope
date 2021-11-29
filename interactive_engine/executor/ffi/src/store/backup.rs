@@ -17,7 +17,7 @@
 use std::ffi::CStr;
 use std::os::raw::{c_char, c_void};
 use std::{str, mem};
-use maxgraph_store::db::api::{GraphBackup, GraphStorage};
+use maxgraph_store::db::api::{GraphBackup};
 use maxgraph_store::db::graph::store::{GraphStore, GraphBackupEngine};
 use crate::store::graph::GraphHandle;
 use crate::store::jna_response::JnaResponse;
