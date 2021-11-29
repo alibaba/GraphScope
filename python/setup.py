@@ -187,7 +187,7 @@ def build_learning_engine():
     extra_compile_args = []
     extra_link_args = []
 
-    include_dirs.append("/usr/local")
+    include_dirs.append("/usr/local/include")
     include_dirs.append(ROOT_PATH)
     include_dirs.append(ROOT_PATH + "/graphlearn/include")
     include_dirs.append(ROOT_PATH + "/built")
