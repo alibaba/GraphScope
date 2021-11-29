@@ -44,6 +44,7 @@ from graphscope.deploy.kubernetes.utils import wait_for_deployment_complete
 from graphscope.deploy.launcher import Launcher
 from graphscope.framework.errors import K8sError
 from graphscope.framework.utils import random_string
+from graphscope.version import __version__
 
 logger = logging.getLogger("graphscope")
 
@@ -303,7 +304,13 @@ class KubernetesClusterLauncher(Launcher):
         logger.info("Launching coordinator...")
         targets = []
 
-        labels = {"name": self._coordinator_name}
+        labels = {
+            "app.kubernetes.io/name": self._coordinator_name,
+            "app.kubernetes.io/instance": self._instance_id,
+            "graphscope.components": "coordinator",
+            "graphscope.version": __version__,
+        }
+
         # create coordinator service
         service_builder = ServiceBuilder(
             self._coordinator_service_name,
