@@ -1,16 +1,21 @@
 name: Build GraphScope Wheels on MacOS
 
 on:
-  workflow_dispatch:
-  schedule:
-    # The notifications for scheduled workflows are sent to the user who
-    # last modified the cron syntax in the workflow file.
-    # Trigger the workflow at 03:00(CST) every day.
-    - cron:  '00 19 * * *'
+  # Trigger the workflow on push or pull request,
+  # but only for the main branch
+  pull_request:
+    branches:
+      - main
+    paths:
+      - '.github/workflows/build-graphscope-wheels-macos.yml'
+
+concurrency:
+  group: ${{ github.repository }}-${{ github.head_ref || github.sha }}-${{ github.workflow }}
+  cancel-in-progress: true
+
 
 jobs:
   build-wheels:
-    if: ${{ github.ref == 'refs/heads/main' && github.repository == 'alibaba/GraphScope' }}
     runs-on: macos-10.15
     steps:
     - uses: actions/checkout@v2
@@ -47,7 +52,6 @@ jobs:
         retention-days: 5
 
   build-client-wheels:
-    if: ${{ github.ref == 'refs/heads/main' && github.repository == 'alibaba/GraphScope' }}
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
