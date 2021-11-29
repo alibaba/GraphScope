@@ -47,7 +47,7 @@ RUN export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/opt/graphscope/lib:/opt/graphscope/
 # build maxgraph engine: compile maxgraph rust
 RUN source ~/.bashrc \
     && echo "build with profile: $profile" \
-    && make BUILD_TYPE=$profile gie
+    && cd ${HOME}/gs && make BUILD_TYPE=$profile gie
     
 
 # # # # # # # # # # # # # # # # # # # # # #
