@@ -373,7 +373,7 @@ create_gremlin_instance_on_k8s() {
   sleep 4
 
   # expose gremlin server (NB: must before start executor)
-  declare -r frontend_log_dir=${GS_LOG}/${object_id}
+  declare -r log_dir=${GS_LOG}/${object_id}
   declare -r timeout_seconds=60
   declare wait_period_seconds=0
   declare gremlin_server_ready=False
