@@ -305,10 +305,10 @@ class KubernetesClusterLauncher(Launcher):
         targets = []
 
         labels = {
-            "app.kubernetes.io/name": self._coordinator_name,
+            "app.kubernetes.io/name": "graphscope",
             "app.kubernetes.io/instance": self._instance_id,
-            "graphscope.components": "coordinator",
-            "graphscope.version": __version__,
+            "app.kubernetes.io/version": __version__,
+            "app.kubernetes.io/component": "coordinator",
         }
 
         # create coordinator service

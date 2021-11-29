@@ -421,10 +421,10 @@ class KubernetesClusterLauncher(Launcher):
         logger.info("Launching mars scheduler pod for GraphScope ...")
 
         labels = {
-            "app.kubernetes.io/name": self._mars_scheduler_name,
+            "app.kubernetes.io/name": "graphscope",
             "app.kubernetes.io/instance": self._instance_id,
-            "graphscope.externals": "mars",
-            "graphscope.version": __version__,
+            "app.kubernetes.io/version": __version__,
+            "app.kubernetes.io/external": "mars",
         }
 
         # create mars service
@@ -531,10 +531,10 @@ class KubernetesClusterLauncher(Launcher):
         logger.info("Launching GraphScope engines pod ...")
 
         labels = {
-            "app.kubernetes.io/name": self._engine_name,
+            "app.kubernetes.io/name": "graphscope",
             "app.kubernetes.io/instance": self._instance_id,
-            "graphscope.components": "engine",
-            "graphscope.version": __version__,
+            "app.kubernetes.io/version": __version__,
+            "app.kubernetes.io/component": "engine",
         }
 
         # create engine replicaset
@@ -684,10 +684,10 @@ class KubernetesClusterLauncher(Launcher):
         logger.info("Launching etcd ...")
 
         labels = {
-            "app.kubernetes.io/name": self._etcd_name,
+            "app.kubernetes.io/name": "graphscope",
             "app.kubernetes.io/instance": self._instance_id,
-            "graphscope.components": "etcd",
-            "graphscope.version": __version__,
+            "app.kubernetes.io/version": __version__,
+            "app.kubernetes.io/component": "etcd",
         }
 
         # should create service first
@@ -740,10 +740,10 @@ class KubernetesClusterLauncher(Launcher):
     def _create_vineyard_service(self):
         # vineyard in engine pod
         labels = {
-            "app.kubernetes.io/name": self._engine_name,
+            "app.kubernetes.io/name": "graphscope",
             "app.kubernetes.io/instance": self._instance_id,
-            "graphscope.components": "engine",
-            "graphscope.version": __version__,
+            "app.kubernetes.io/version": __version__,
+            "app.kubernetes.io/component": "engine",
         }
 
         service_builder = ServiceBuilder(
@@ -782,10 +782,10 @@ class KubernetesClusterLauncher(Launcher):
         targets = []
 
         labels = {
-            "app.kubernetes.io/name": self._engine_name,
+            "app.kubernetes.io/name": "graphscope",
             "app.kubernetes.io/instance": self._instance_id,
-            "graphscope.components": "engine",
-            "graphscope.version": __version__,
+            "app.kubernetes.io/version": __version__,
+            "app.kubernetes.io/component": "engine",
         }
 
         service_builder = ServiceBuilder(
@@ -913,6 +913,7 @@ class KubernetesClusterLauncher(Launcher):
     def _waiting_for_services_ready(self):
         start_time = time.time()
         event_messages = []
+        engine_pod_selector = ""
         while True:
             replicasets = self._app_api.list_namespaced_replica_set(
                 namespace=self._saved_locals["namespace"]
@@ -935,6 +936,7 @@ class KubernetesClusterLauncher(Launcher):
                     for k, v in rs.spec.selector.match_labels.items():
                         selector += k + "=" + v + ","
                     selector = selector[:-1]
+                    engine_pod_selector = selector
 
                     pods = self._core_api.list_namespaced_pod(
                         namespace=self._saved_locals["namespace"],
@@ -972,7 +974,7 @@ class KubernetesClusterLauncher(Launcher):
         self._pod_host_ip_list = []
         pods = self._core_api.list_namespaced_pod(
             namespace=self._saved_locals["namespace"],
-            label_selector="name=%s" % self._engine_name,
+            label_selector=engine_pod_selector,
         )
         for pod in pods.items:
             self._pod_name_list.append(pod.metadata.name)
