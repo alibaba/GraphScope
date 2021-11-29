@@ -423,7 +423,7 @@ class KubernetesClusterLauncher(Launcher):
         labels = {
             "app.kubernetes.io/name": self._mars_scheduler_name,
             "app.kubernetes.io/instance": self._instance_id,
-            "graphscope.components": "mars",
+            "graphscope.externals": "mars",
             "graphscope.version": __version__,
         }
 
