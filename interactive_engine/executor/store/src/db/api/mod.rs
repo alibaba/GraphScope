@@ -4,7 +4,6 @@ use crate::db::proto::common::DataLoadTargetPb;
 use crate::db::proto::model::{EdgeIdPb, EdgeKindPb};
 
 pub use self::config::*;
-pub use self::entity::*;
 pub use self::error::*;
 pub use self::property::*;
 pub use self::schema::*;
@@ -12,7 +11,6 @@ pub use self::schema::*;
 #[macro_use]
 pub mod error;
 pub mod property;
-mod entity;
 mod schema;
 mod config;
 pub mod multi_version_graph;
