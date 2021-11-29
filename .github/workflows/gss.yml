@@ -56,8 +56,6 @@ jobs:
         find ./ -name "*_pb2_grpc.py" | xargs sudo rm -rf || true
 
     - uses: actions/checkout@v2
-      with:
-        submodules: true
 
     - name: Install Dependencies
       run: |
@@ -116,9 +114,6 @@ jobs:
   helm-test:
     runs-on: self-hosted
     needs: [gremlin-test]
-    defaults:
-      run:
-        shell: bash --noprofile --norc -eo pipefail {0}
     strategy:
       matrix:
         executor: [maxgraph, gaia]
