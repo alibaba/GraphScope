@@ -64,7 +64,14 @@ _setup_maxgraph_env() {
   export LD_LIBRARY_PATH=${MAXGRAPH_HOME}/native:${MAXGRAPH_HOME}/native/lib:${LD_LIBRARY_PATH}:/usr/local/lib
 
   if [ -z "${LOG_DIR}" ]; then
-    export LOG_DIR="/tmp/graphscope-store"
+    GS_LOG="/var/log/graphscope"
+    if [[ ! -d "${GS_LOG}" || ! -w "${GS_LOG}" ]]; then
+      # /var/log/graphscope is not existed/writable, switch to ${HOME}/.local/log/graphscope
+      GS_LOG=${HOME}/.local/log/graphscope
+    fi
+    readonly GS_LOG
+    mkdir -p ${GS_LOG}
+    export LOG_DIR=${GS_LOG}/store
   fi
 
   mkdir -p ${LOG_DIR}

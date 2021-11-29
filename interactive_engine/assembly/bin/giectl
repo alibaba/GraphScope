@@ -10,6 +10,8 @@ readonly YELLOW="\033[1;33m"
 readonly GREEN="\033[0;32m"
 readonly NC="\033[0m" # No Color
 
+GS_LOG=/var/log/graphscope
+
 err() {
   echo -e "${RED}[$(date +'%Y-%m-%dT%H:%M:%S%z')]: [ERROR] $*${NC}" >&2
 }
@@ -75,8 +77,8 @@ start_coordinator() {
   declare -r executor_count=$6
 
   # create related directories
+  declare -r log_dir=${GS_LOG}/${object_id}
   declare -r config_dir=${GRAPHSCOPE_RUNTIME}/config/${object_id}
-  declare -r log_dir=${GRAPHSCOPE_RUNTIME}/logs/${object_id}
   declare -r pid_dir=${GRAPHSCOPE_RUNTIME}/pid/${object_id}
   mkdir -p ${log_dir} ${config_dir} ${pid_dir}
 
@@ -142,8 +144,8 @@ start_frontend() {
   declare -r executor_count=$7
 
   # create related directories
+  declare -r log_dir=${GS_LOG}/${object_id}
   declare -r config_dir=${GRAPHSCOPE_RUNTIME}/config/${object_id}
-  declare -r log_dir=${GRAPHSCOPE_RUNTIME}/logs/${object_id}
   declare -r pid_dir=${GRAPHSCOPE_RUNTIME}/pid/${object_id}
   mkdir -p ${log_dir} ${config_dir} ${pid_dir}
 
@@ -209,8 +211,8 @@ start_executor() {
   declare -r engine_count=$6
   declare -r interactive_engine_params=$7
 
+  declare -r log_dir=${GS_LOG}/${object_id}
   declare -r config_dir=${GRAPHSCOPE_RUNTIME}/config/${object_id}
-  declare -r log_dir=${GRAPHSCOPE_RUNTIME}/logs/${object_id}
   declare -r pid_dir=${GRAPHSCOPE_RUNTIME}/pid/${object_id}
   mkdir -p ${log_dir} ${config_dir} ${pid_dir}
   # log4rs needs LOG_DIRS env
@@ -267,11 +269,19 @@ create_gremlin_instance_on_local() {
   export VINEYARD_IPC_SOCKET=$5
   declare -r zookeeper_port=$6
   declare -r engine_params=$7
-  declare -r log_dir=${GRAPHSCOPE_RUNTIME}/logs/${object_id}
 
   declare -r cluster_type="local"
   declare -r zookeeper_ip="localhost"
   declare -r executor_count="1"  # local mode only start one executor
+
+  if [[ ! -d "${GS_LOG}" || ! -w "${GS_LOG}" ]]; then
+    # /var/log/graphscope is not existed/writable, switch to ${HOME}/.local/log/graphscope
+    GS_LOG=${HOME}/.local/log/graphscope
+  fi
+  # init Graphscope log location
+  readonly GS_LOG
+  mkdir -p ${GS_LOG}
+
   start_coordinator ${GRAPHSCOPE_RUNTIME} ${cluster_type} ${object_id} ${zookeeper_ip} ${zookeeper_port} \
                     ${executor_count}
   sleep 1
@@ -281,13 +291,14 @@ create_gremlin_instance_on_local() {
 
   sleep 4
   # expose gremlin server (NB: must before start executor)
+  declare -r log_dir=${GS_LOG}/${object_id}
   declare -r timeout_seconds=60
   declare wait_period_seconds=0
   declare gremlin_server_ready=False
   declare gremlin_server_port_in_log gremlin_server_port_in_out gremlin_server_port_in_err
   while true
   do
-    # The fronted log may randomly output to log/out/err, this is an ad-hoc solution
+    # The frontend log may randomly output to log/out/err, this is an ad-hoc solution
     # to find the gremlin server port, and the file may not exist, we add a || true to
     # ignore the error.
     # FIXME: the port should fetch from .log file, not .out or .err
@@ -352,7 +363,6 @@ create_gremlin_instance_on_k8s() {
   declare -r host_ip=$(hostname -i)
   declare -r zookeeper_port="2181"
 
-  declare -r log_dir=${GRAPHSCOPE_RUNTIME}/logs/${object_id}
   declare -r cluster_type="k8s"
   start_coordinator ${GRAPHSCOPE_RUNTIME} ${cluster_type} ${object_id} ${host_ip} \
       ${zookeeper_port} ${engine_count}
@@ -363,13 +373,14 @@ create_gremlin_instance_on_k8s() {
   sleep 4
 
   # expose gremlin server (NB: must before start executor)
+  declare -r log_dir=${GS_LOG}/${object_id}
   declare -r timeout_seconds=60
   declare wait_period_seconds=0
   declare gremlin_server_ready=False
   declare gremlin_server_port_in_log gremlin_server_port_in_out gremlin_server_port_in_err
   while true
   do
-    # The fronted log may randomly output to log/out/err, this is an ad-hoc solution
+    # The frontend log may randomly output to log/out/err, this is an ad-hoc solution
     # to find the gremlin server port, and the file may not exist, we add a || true to
     # ignore the error.
     # FIXME: the port should fetch from .log file, not .out or .err
