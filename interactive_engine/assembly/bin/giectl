@@ -360,7 +360,7 @@ create_gremlin_instance_on_k8s() {
   declare -r host_ip=$(hostname -i)
   declare -r zookeeper_port="2181"
 
-  declare -r log_dir=/var/log/graphscope/${object_id}
+  declare -r log_dir=${LOG_BASE}/${object_id}/frontend
   declare -r cluster_type="k8s"
   start_coordinator ${GRAPHSCOPE_RUNTIME} ${cluster_type} ${object_id} ${host_ip} \
       ${zookeeper_port} ${engine_count}
