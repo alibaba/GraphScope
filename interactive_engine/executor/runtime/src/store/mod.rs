@@ -36,7 +36,7 @@ pub mod global_schema;
 pub mod graph_builder_ffi;
 mod test_global_store;
 mod test_ffi_store;
-pub mod v2;
+pub mod groot;
 
 pub enum StoreOperatorType {
     VERTEXOUT,

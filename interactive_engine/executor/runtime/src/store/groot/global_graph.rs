@@ -27,7 +27,7 @@ use itertools::Itertools;
 use maxgraph_store::api::graph_partition::GraphPartitionManager;
 use maxgraph_store::config::StoreConfig;
 use maxgraph_store::db::graph::store::GraphStore;
-use store::v2::global_graph_schema::GlobalGraphSchema;
+use store::groot::global_graph_schema::GlobalGraphSchema;
 use maxgraph_store::db::graph::entity::{RocksVertexImpl, RocksEdgeImpl};
 use maxgraph_store::db::api::multi_version_graph::MultiVersionGraph;
 use maxgraph_store::db::api::types::RocksEdge;

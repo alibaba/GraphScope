@@ -168,7 +168,7 @@ impl<'a, G: MultiVersionGraph> GraphTestHelper<'a, G> {
     pub fn check_query_vertices(&self, si: SnapshotId, label: Option<LabelId>, mut ids: HashSet<VertexId>) {
         let mut ans = self.vertex_data.scan(si, label);
         let mut iter = self.graph.scan_vertex(si, label, None, None).unwrap();
-        while let Some(mut v) = iter.next() {
+        while let Some(v) = iter.next() {
             let v = v.unwrap();
             assert!(ids.remove(&v.get_vertex_id()));
             let ans_v = ans.remove(&v.get_vertex_id()).unwrap();
@@ -210,7 +210,7 @@ impl<'a, G: MultiVersionGraph> GraphTestHelper<'a, G> {
     /// `ids`: user's answer
     pub fn check_query_edges(&self, si: SnapshotId, label: Option<LabelId>, ids: HashSet<EdgeId>) {
         let ans = self.edge_data.scan(si, label);
-        let mut iter = self.graph.scan_edge(si, label, None, None).unwrap();
+        let iter = self.graph.scan_edge(si, label, None, None).unwrap();
         check_edge_iter(iter, ans, ids);
     }
 
@@ -220,7 +220,7 @@ impl<'a, G: MultiVersionGraph> GraphTestHelper<'a, G> {
 
     pub fn check_get_out_edges(&self, si: SnapshotId, src_id: VertexId, label: Option<LabelId>, ids: HashSet<EdgeId>) {
         let ans = self.edge_data.get_out_edges(si, src_id, label);
-        let mut iter = self.graph.get_out_edges(si, src_id, label, None, None).unwrap();
+        let iter = self.graph.get_out_edges(si, src_id, label, None, None).unwrap();
         check_edge_iter(iter, ans, ids);
     }
 
@@ -230,7 +230,7 @@ impl<'a, G: MultiVersionGraph> GraphTestHelper<'a, G> {
 
     pub fn check_get_in_edges(&self, si: SnapshotId, dst_id: VertexId, label: Option<LabelId>, ids: HashSet<EdgeId>) {
         let ans = self.edge_data.get_in_edges(si, dst_id, label);
-        let mut iter = self.graph.get_in_edges(si, dst_id, label, None, None).unwrap();
+        let iter = self.graph.get_in_edges(si, dst_id, label, None, None).unwrap();
         check_edge_iter(iter, ans, ids);
     }
 
