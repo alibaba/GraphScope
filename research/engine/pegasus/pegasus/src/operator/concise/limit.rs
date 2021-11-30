@@ -189,11 +189,7 @@ fn sort_limit_by_partition<D: Data, F>(stream: Stream<D>, name: &str, size: u32,
                     if dataset.is_last() {
                         let mut session = output.new_session(&dataset.tag)?;
                         if let Some(heap) = table.remove(&dataset.tag) {
-                            let mut vec = Vec::with_capacity(heap.len());
-                            for item in heap.into_sorted_vec() {
-                                vec.push(item.inner);
-                            }
-                            session.give_iterator(vec.into_iter())?;
+                            session.give_iterator(heap.into_sorted_vec().into_iter().map(|item| item.inner))?;
                         }
                     }
                     Ok(())

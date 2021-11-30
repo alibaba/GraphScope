@@ -292,7 +292,7 @@ fn sort_limit_test() {
         let index = pegasus::get_current_worker().index;
         move |input, output| {
             input
-                .input_from((1_u32..100).filter(move |x| *x % num_workers == index))?
+                .input_from((1_u32..2000).filter(move |x| *x % num_workers == index))?
                 .sort_limit(3)?
                 .sink_into(output)
         }
@@ -301,6 +301,29 @@ fn sort_limit_test() {
     let results: Vec<u32> = result_stream.map(|x| x.unwrap()).collect();
 
     assert_eq!(results, vec![1_u32, 2, 3]);
+}
+
+#[test]
+fn sort_limit_1_test() {
+    use pegasus::api::SortLimit;
+
+    let mut conf = JobConf::new("sort_limit_1_test");
+    let num_workers = 2;
+    conf.set_workers(num_workers);
+
+    let result_stream = pegasus::run(conf, || {
+        let index = pegasus::get_current_worker().index;
+        move |input, output| {
+            input
+                .input_from((1_u32..2000).rev().filter(move |x| *x % num_workers == index))?
+                .sort_limit(1)?
+                .sink_into(output)
+        }
+    }).expect("submit job failure");
+
+    let results: Vec<u32> = result_stream.map(|x| x.unwrap()).collect();
+
+    assert_eq!(results, vec![1_u32]);
 }
 
 #[test]
@@ -326,4 +349,29 @@ fn modern_graph_sort_limit_by_test() {
     let results: Vec<f32> = result_stream.map(|x| x.unwrap()).collect();
 
     assert_eq!(results, vec![1.0, 1.0, 0.5]);
+}
+
+#[test]
+fn modern_graph_sort_limit_1_by_test() {
+    use pegasus::api::SortLimitBy;
+
+    let mut conf = JobConf::new("modern_graph_sort_limit_1_by_test");
+    let num_workers = 2;
+    conf.set_workers(num_workers);
+
+    let result_stream = pegasus::run(conf, || {
+        let index = pegasus::get_current_worker().index;
+        move |input, output| {
+            input
+                .input_from((1..7).filter(move |x| *x % num_workers == index))?
+                .flat_map(|v| Ok(MAP.get(&v).unwrap().iter().cloned()))?
+                .sort_limit_by(1, |x, y| y.1.partial_cmp(&x.1).unwrap())?
+                .map(|x| Ok(x.1))?
+                .sink_into(output)
+        }
+    }).expect("submit job failure");
+
+    let results: Vec<f32> = result_stream.map(|x| x.unwrap()).collect();
+
+    assert_eq!(results, vec![1.0]);
 }
