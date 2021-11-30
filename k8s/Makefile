@@ -29,9 +29,20 @@ else
 	TARGET_SERVER_PACKAGE := graphscope-darwin-py3
 endif
 
+USE_CACHE := false
+ifeq ($(USE_CACHE), false)
+    CACHE_MOUNT_OPTS =
+else
+    CACHE_MOUNT_OPTS = -v ${HOME}/.m2:/home/graphscope/.m2 \
+					   -v ${HOME}/.cache/sccache:/home/graphscope/.cache/sccache \
+					   -v ${HOME}/.cargo/git:/home/graphscope/.cargo/git \
+					   -v ${HOME}/.cargo/registry:/home/graphscope/.cargo/registry
+endif
+
 VERSION ?= latest
 VINEYARD_VERSION ?= v0.3.11
 PROFILE ?= release
+
 
 BUILD_PROGRESS  	= auto
 
@@ -124,11 +135,19 @@ graphscope-darwin-py3:
 graphscope-manylinux2014-py3:
 	docker pull ${REGISTRY}/$(DOCKER_ORG)/graphscope-vineyard:${VINEYARD_VERSION}
 	docker run --rm -v $(WORKING_DIR)/..:/work \
+		$(CACHE_MOUNT_OPTS) \
 		${REGISTRY}/$(DOCKER_ORG)/graphscope-vineyard:${VINEYARD_VERSION} \
 		bash -c 'source ~/.bashrc && \
+			curl -L https://github.com/mozilla/sccache/releases/download/v0.2.15/sccache-v0.2.15-x86_64-unknown-linux-musl.tar.gz | tar xz && \
+			sudo mv sccache-v0.2.15-x86_64-unknown-linux-musl/sccache /usr/local/bin/ && \
+			sudo chmod +x /usr/local/bin/sccache && \
+			export SCCACHE_DIR=/home/graphscope/.cache/sccache && \
+			export RUSTC_WRAPPER=/usr/local/bin/sccache && \
+			sccache --start-server && \
 			cd /work && \
 			make install && \
 			python3 /work/k8s/precompile.py && \
+			sccache --show-stats && \
 			export WITH_EXTRA_DATA=ON && \
 			cd /work/coordinator && \
 			rm -fr build dist/*.whl && \
@@ -174,8 +193,7 @@ graphscope-client-manylinux2014-py3:
 	docker pull ${REGISTRY}/$(DOCKER_ORG)/graphscope-vineyard:${VINEYARD_VERSION}
 	docker run --rm -v $(WORKING_DIR)/..:/work \
 		${REGISTRY}/$(DOCKER_ORG)/graphscope-vineyard:${VINEYARD_VERSION} \
-		bash -c 'cd /tmp && \
-			cd /work/learning_engine/graph-learn && \
+		bash -c 'cd /work/learning_engine/graph-learn && \
 			git submodule update --init third_party/pybind11 && \
 			rm -rf cmake-build && \
 			mkdir -p cmake-build && \
