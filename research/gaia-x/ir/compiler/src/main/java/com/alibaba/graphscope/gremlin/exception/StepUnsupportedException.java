@@ -1,4 +1,4 @@
-package com.alibaba.graphscope.common.exception;
+package com.alibaba.graphscope.gremlin.exception;
 
 import org.apache.tinkerpop.gremlin.process.traversal.Step;
 
