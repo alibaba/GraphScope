@@ -16,12 +16,8 @@
 # limitations under the License.
 #
 
-import networkx.generators.tests.test_nonisomorphic_trees
-import pytest
+import networkx.readwrite.multiline_adjlist
 
 from graphscope.nx.utils.compat import import_as_graphscope_nx
 
-import_as_graphscope_nx(
-    networkx.generators.tests.test_nonisomorphic_trees,
-    decorators=pytest.mark.usefixtures("graphscope_session"),
-)
+import_as_graphscope_nx(networkx.readwrite.multiline_adjlist)

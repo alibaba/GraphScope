@@ -15,13 +15,3 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-
-import networkx.generators.tests.test_nonisomorphic_trees
-import pytest
-
-from graphscope.nx.utils.compat import import_as_graphscope_nx
-
-import_as_graphscope_nx(
-    networkx.generators.tests.test_nonisomorphic_trees,
-    decorators=pytest.mark.usefixtures("graphscope_session"),
-)

@@ -16,12 +16,12 @@
 # limitations under the License.
 #
 
-import networkx.generators.tests.test_nonisomorphic_trees
+import networkx.drawing.tests.test_agraph
 import pytest
 
 from graphscope.nx.utils.compat import import_as_graphscope_nx
 
 import_as_graphscope_nx(
-    networkx.generators.tests.test_nonisomorphic_trees,
+    networkx.drawing.tests.test_agraph,
     decorators=pytest.mark.usefixtures("graphscope_session"),
 )
