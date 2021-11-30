@@ -38,6 +38,7 @@ def parse_edgelist(
     from ast import literal_eval
 
     G = nx.empty_graph(0, create_using)
+    edges = []
     for line in lines:
         p = line.find(comments)
         if p >= 0:
@@ -91,7 +92,8 @@ def parse_edgelist(
                         f"to type {edge_type}."
                     ) from e
                 edgedata.update({edge_key: edge_value})
-        G.add_edge(u, v, **edgedata)
+        edges.append((u, v, edgedata))
+    G.add_edges_from(edges)
     return G
 
 
