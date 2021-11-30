@@ -13,14 +13,14 @@
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 
-use std::cmp::Ordering;
-use std::collections::BinaryHeap;
-use std::sync::Arc;
 use crate::api::{Limit, SortLimit, SortLimitBy, Unary};
+use crate::communication::output::OutputProxy;
 use crate::stream::Stream;
 use crate::tag::tools::map::TidyTagMap;
 use crate::{BuildJobError, Data};
-use crate::communication::output::OutputProxy;
+use std::cmp::Ordering;
+use std::collections::BinaryHeap;
+use std::sync::Arc;
 
 // TODO : optimize limit into channel;
 impl<D: Data> Limit<D> for Stream<D> {
@@ -73,7 +73,10 @@ impl<D: Data + Ord> SortLimit<D> for Stream<D> {
 }
 
 impl<D: Data> SortLimitBy<D> for Stream<D> {
-    fn sort_limit_by<F>(self, size: u32, cmp: F) -> Result<Stream<D>, BuildJobError> where F: Fn(&D, &D) -> Ordering + Send + 'static {
+    fn sort_limit_by<F>(self, size: u32, cmp: F) -> Result<Stream<D>, BuildJobError>
+    where
+        F: Fn(&D, &D) -> Ordering + Send + 'static,
+    {
         let cmp = ShadeCmp { cmp: Arc::new(cmp) };
         let cmp_clone = cmp.clone();
 
@@ -123,8 +126,12 @@ impl<D> Ord for Item<D> {
 
 unsafe impl<D: Send> Send for Item<D> {}
 
-fn sort_limit_by_partition<D: Data, F>(stream: Stream<D>, name: &str, size: u32, cmp: ShadeCmp<F>) -> Result<Stream<D>, BuildJobError>
-    where F: Fn(&D, &D) -> Ordering + Send + 'static {
+fn sort_limit_by_partition<D: Data, F>(
+    stream: Stream<D>, name: &str, size: u32, cmp: ShadeCmp<F>,
+) -> Result<Stream<D>, BuildJobError>
+where
+    F: Fn(&D, &D) -> Ordering + Send + 'static,
+{
     if size == 0 {
         stream.limit(0)
     } else if size == 1 {
@@ -173,7 +180,8 @@ fn sort_limit_by_partition<D: Data, F>(stream: Stream<D>, name: &str, size: u32,
                 input.for_each_batch(|dataset| {
                     let cmp_clone = cmp.cmp.clone();
                     if !dataset.is_empty() {
-                        let heap = table.get_mut_or_else(&dataset.tag, || { BinaryHeap::with_capacity(size as usize) });
+                        let heap = table
+                            .get_mut_or_else(&dataset.tag, || BinaryHeap::with_capacity(size as usize));
                         for d in dataset.drain() {
                             if heap.len() < size as usize {
                                 heap.push(Item { inner: d, cmp: cmp_clone.clone() });
@@ -189,7 +197,11 @@ fn sort_limit_by_partition<D: Data, F>(stream: Stream<D>, name: &str, size: u32,
                     if dataset.is_last() {
                         let mut session = output.new_session(&dataset.tag)?;
                         if let Some(heap) = table.remove(&dataset.tag) {
-                            session.give_iterator(heap.into_sorted_vec().into_iter().map(|item| item.inner))?;
+                            session.give_iterator(
+                                heap.into_sorted_vec()
+                                    .into_iter()
+                                    .map(|item| item.inner),
+                            )?;
                         }
                     }
                     Ok(())
