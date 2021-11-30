@@ -17,7 +17,9 @@
 #[macro_use]
 extern crate lazy_static;
 
-use pegasus::api::{CorrelatedSubTask, HasAny, Iteration, Limit, Map, Merge, Sink};
+use pegasus::api::{
+    Collect, CorrelatedSubTask, HasAny, Iteration, Limit, Map, Merge, Sink, SortLimit, SortLimitBy,
+};
 use pegasus::JobConf;
 
 lazy_static! {
@@ -282,8 +284,6 @@ fn iterate_x_apply_x_flatmap_any_x_map_x_limit_test() {
 
 #[test]
 fn sort_limit_test() {
-    use pegasus::api::SortLimit;
-
     let mut conf = JobConf::new("sort_limit_test");
     let num_workers = 2;
     conf.set_workers(num_workers);
@@ -296,7 +296,8 @@ fn sort_limit_test() {
                 .sort_limit(3)?
                 .sink_into(output)
         }
-    }).expect("submit job failure");
+    })
+    .expect("submit job failure");
 
     let results: Vec<u32> = result_stream.map(|x| x.unwrap()).collect();
 
@@ -304,9 +305,34 @@ fn sort_limit_test() {
 }
 
 #[test]
-fn sort_limit_1_test() {
-    use pegasus::api::SortLimit;
+fn multi_scope_sort_limit_test() {
+    let mut conf = JobConf::new("sort_limit_test");
+    let num_workers = 2;
+    conf.set_workers(num_workers);
 
+    let result_stream = pegasus::run(conf, || {
+        let index = pegasus::get_current_worker().index;
+        move |input, output| {
+            input
+                .input_from((1_u32..5).filter(move |x| *x % num_workers == index))?
+                .apply(|sub| {
+                    sub.flat_map(|x| Ok(0..x))?
+                        .sort_limit(3)?
+                        .collect::<Vec<u32>>()
+                })?
+                .sort_limit_by(3, |x, y| y.0.cmp(&x.0))?
+                .sink_into(output)
+        }
+    })
+    .expect("submit job failure");
+
+    let results: Vec<(u32, Vec<u32>)> = result_stream.map(|x| x.unwrap()).collect();
+
+    assert_eq!(results, vec![(4, vec![0, 1, 2]), (3, vec![0, 1, 2]), (2, vec![0, 1])]);
+}
+
+#[test]
+fn sort_limit_1_test() {
     let mut conf = JobConf::new("sort_limit_1_test");
     let num_workers = 2;
     conf.set_workers(num_workers);
@@ -315,11 +341,16 @@ fn sort_limit_1_test() {
         let index = pegasus::get_current_worker().index;
         move |input, output| {
             input
-                .input_from((1_u32..2000).rev().filter(move |x| *x % num_workers == index))?
+                .input_from(
+                    (1_u32..2000)
+                        .rev()
+                        .filter(move |x| *x % num_workers == index),
+                )?
                 .sort_limit(1)?
                 .sink_into(output)
         }
-    }).expect("submit job failure");
+    })
+    .expect("submit job failure");
 
     let results: Vec<u32> = result_stream.map(|x| x.unwrap()).collect();
 
@@ -327,9 +358,33 @@ fn sort_limit_1_test() {
 }
 
 #[test]
-fn modern_graph_sort_limit_by_test() {
-    use pegasus::api::SortLimitBy;
+fn sort_limit_more_number_test() {
+    let mut conf = JobConf::new("sort_limit_1_test");
+    let num_workers = 2;
+    conf.set_workers(num_workers);
 
+    let result_stream = pegasus::run(conf, || {
+        let index = pegasus::get_current_worker().index;
+        move |input, output| {
+            input
+                .input_from(
+                    (1_u32..5)
+                        .rev()
+                        .filter(move |x| *x % num_workers == index),
+                )?
+                .sort_limit(10)?
+                .sink_into(output)
+        }
+    })
+    .expect("submit job failure");
+
+    let results: Vec<u32> = result_stream.map(|x| x.unwrap()).collect();
+
+    assert_eq!(results, vec![1_u32, 2, 3, 4]);
+}
+
+#[test]
+fn modern_graph_sort_limit_by_test() {
     let mut conf = JobConf::new("modern_graph_sort_limit_by_test");
     let num_workers = 2;
     conf.set_workers(num_workers);
@@ -344,7 +399,8 @@ fn modern_graph_sort_limit_by_test() {
                 .map(|x| Ok(x.1))?
                 .sink_into(output)
         }
-    }).expect("submit job failure");
+    })
+    .expect("submit job failure");
 
     let results: Vec<f32> = result_stream.map(|x| x.unwrap()).collect();
 
@@ -353,8 +409,6 @@ fn modern_graph_sort_limit_by_test() {
 
 #[test]
 fn modern_graph_sort_limit_1_by_test() {
-    use pegasus::api::SortLimitBy;
-
     let mut conf = JobConf::new("modern_graph_sort_limit_1_by_test");
     let num_workers = 2;
     conf.set_workers(num_workers);
@@ -369,7 +423,8 @@ fn modern_graph_sort_limit_1_by_test() {
                 .map(|x| Ok(x.1))?
                 .sink_into(output)
         }
-    }).expect("submit job failure");
+    })
+    .expect("submit job failure");
 
     let results: Vec<f32> = result_stream.map(|x| x.unwrap()).collect();
 
