@@ -254,6 +254,7 @@ class ServiceBuilder(object):
             "metadata": {
                 "annotations": self._annotations,
                 "name": self._name,
+                "labels": self._selector,
             },
             "spec": _remove_nones(
                 {
