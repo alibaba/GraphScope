@@ -74,7 +74,7 @@ pub trait SortLimit<D: Data + Ord> {
 
 /// An alternative of `SortLimit` but requires a comparator of the data.
 pub trait SortLimitBy<D: Data> {
-    fn sort_limit_by<F>(self, cmp: F) -> Result<Stream<D>, BuildJobError>
+    fn sort_limit_by<F>(self, size: u32, cmp: F) -> Result<Stream<D>, BuildJobError>
         where
             F: Fn(&D, &D) -> Ordering + Send + 'static;
 }
