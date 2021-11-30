@@ -15,7 +15,7 @@ All tutorials are listed as follows:
    :maxdepth: 2
    :caption: Contents
 
-   How to Create a Session <https://nbviewer.jupyter.org/github/alibaba/GraphScope/blob/main/tutorials/1_how_to_launch_a_session.ipynb>
+   Node Classification on citation network <https://nbviewer.jupyter.org/github/alibaba/GraphScope/blob/main/tutorials/1_node_classification_on_citation.ipynb>
    Graph Manipulations with NetowrkX Compatible APIs <https://nbviewer.jupyter.org/github/alibaba/GraphScope/blob/main/tutorials/2_graph_manipulations_with_networkx_compatible_apis.ipynb>
    Loading Graphs <https://nbviewer.jupyter.org/github/alibaba/GraphScope/blob/main/tutorials/3_loading_graphs.ipynb>
    Built-in Analytical Algorithms <https://nbviewer.jupyter.org/github/alibaba/GraphScope/blob/main/tutorials/4_builtin_analytical_algorithms.ipynb>
@@ -23,5 +23,5 @@ All tutorials are listed as follows:
    Interactive Query with Gremlin <https://nbviewer.jupyter.org/github/alibaba/GraphScope/blob/main/tutorials/6_interactive_query_with_gremlin.ipynb>
    Unsupervised Learning with GraphSage <https://nbviewer.jupyter.org/github/alibaba/GraphScope/blob/main/tutorials/7_unsupervised_learning_with_graphsage.ipynb>
    Supervised Learning with GCN <https://nbviewer.jupyter.org/github/alibaba/GraphScope/blob/main/tutorials/8_supervised_learning_with_gcn.ipynb>
-   Unsupervised Learning with BipartiteGraphSage <https://nbviewer.jupyter.org/github/alibaba/GraphScope/blob/main/tutorials/9_unsupervised_learning_with_bipartite_graphsage.ipynb>
-   A Complex Workflow: Node Classification on Citation Network <https://nbviewer.jupyter.org/github/alibaba/GraphScope/blob/main/tutorials/10_node_classification_on_citation_network.ipynb>
+   Unsupervised Learning with Bipartite GraphSage <https://nbviewer.jupyter.org/github/alibaba/GraphScope/blob/main/tutorials/9_unsupervised_learning_with_bipartite_graphsage.ipynb>
+   Revisit Classification on Citation Network on K8s <https://nbviewer.jupyter.org/github/alibaba/GraphScope/blob/main/tutorials/10_revisit_classification_on_citation_network_on_k8s.ipynb>
