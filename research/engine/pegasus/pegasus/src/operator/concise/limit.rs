@@ -16,7 +16,7 @@
 use std::cmp::Ordering;
 use std::mem::ManuallyDrop;
 use std::ptr;
-use std::rc::Rc;
+use std::sync::Arc;
 use crate::api::{Limit, SortLimit, SortLimitBy, Unary};
 use crate::stream::Stream;
 use crate::tag::tools::map::TidyTagMap;
@@ -75,15 +75,15 @@ impl<D: Data + Ord> SortLimit<D> for Stream<D> {
 
 impl<D: Data> SortLimitBy<D> for Stream<D> {
     fn sort_limit_by<F>(self, size: u32, cmp: F) -> Result<Stream<D>, BuildJobError> where F: Fn(&D, &D) -> Ordering + Send + 'static {
-        let share_cmp = ShadeCmp { cmp: Rc::new(cmp) };
-        let cmp_clone = ShadeCmp { cmp: share_cmp.cmp.clone() };
+        let cmp = ShadeCmp { cmp: Arc::new(cmp) };
+        let cmp_clone = cmp.clone();
 
         let local_sort = sort_limit_by_partition(self, size, cmp_clone, false)?;
-        sort_limit_by_partition(local_sort.aggregate(), size, share_cmp, true)
+        sort_limit_by_partition(local_sort.aggregate(), size, cmp, true)
     }
 }
 
-fn sort_limit_by_partition<D: Data, F>(stream: Stream<D>, size: u32, share_cmp: ShadeCmp<F>, last_sort: bool) -> Result<Stream<D>, BuildJobError>
+fn sort_limit_by_partition<D: Data, F>(stream: Stream<D>, size: u32, cmp: ShadeCmp<F>, last_sort: bool) -> Result<Stream<D>, BuildJobError>
 where F: Fn(&D, &D) -> Ordering + Send + 'static {
     if size == 0 {
         stream.limit(0)
@@ -91,11 +91,10 @@ where F: Fn(&D, &D) -> Ordering + Send + 'static {
         stream.unary("sort_limit_by_partition", |info| {
             let mut table = TidyTagMap::<D>::new(info.scope_level);
             move |input, output| {
-                let cmp_clone = share_cmp.cmp.clone();
                 input.for_each_batch(|dataset| {
-                    if let Some(min_value) = dataset.drain().min_by(|x, y| (*cmp_clone)(x, y)) {
+                    if let Some(min_value) = dataset.drain().min_by(|x, y| (*cmp.cmp)(x, y)) {
                         let new_min = if let Some(cur) = table.remove(&dataset.tag) {
-                            if (*cmp_clone)(&min_value, &cur) == Ordering::Less {
+                            if (*cmp.cmp)(&min_value, &cur) == Ordering::Less {
                                min_value
                             } else {
                                 cur
@@ -132,7 +131,7 @@ where F: Fn(&D, &D) -> Ordering + Send + 'static {
             let mut table = TidyTagMap::<FixedSizeHeap<D>>::new(info.scope_level);
             move |input, output| {
                 input.for_each_batch(|dataset| {
-                    let cmp_clone = share_cmp.cmp.clone();
+                    let cmp_clone = cmp.cmp.clone();
                     if !dataset.is_empty() {
                         let heap = table.get_mut_or_else(&dataset.tag, || { FixedSizeHeap::new(size as usize, cmp_clone)});
                         for d in dataset.drain() {
@@ -158,13 +157,19 @@ where F: Fn(&D, &D) -> Ordering + Send + 'static {
     }
 }
 
-type Cmp<D> = Rc<dyn Fn(&D, &D) -> Ordering + Send + 'static>;
+type Cmp<D> = Arc<dyn Fn(&D, &D) -> Ordering + Send + 'static>;
 
 struct ShadeCmp<C> {
-    pub cmp: Rc<C>,
+    cmp: Arc<C>,
 }
 
 unsafe impl<C: Send> Send for ShadeCmp<C> {}
+
+impl<C> Clone for ShadeCmp<C> {
+    fn clone(&self) -> Self {
+        ShadeCmp { cmp: self.cmp.clone() }
+    }
+}
 
 struct FixedSizeHeap<D> {
     limit: usize,
