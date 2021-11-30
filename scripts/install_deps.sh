@@ -250,7 +250,7 @@ init_basic_packages() {
 # Check the dependencies of deploy command.
 ##########################
 check_dependencies() {
-  log "Checking dependencies of deploy."
+  log "Checking dependencies for building GraphScope."
 
   # check python3 >= 3.6
   if ! command -v python3 &> /dev/null ||
@@ -1079,9 +1079,6 @@ install_deps_k8s() {
   succ ${succ_msg}
 }
 
-set -e
-set -o pipefail
-
 if test $# -eq 0; then
   usage; exit 1;
 fi
@@ -1100,6 +1097,3 @@ while test $# -ne 0; do
       usage; exit 1;;
   esac
 done
-
-set +e
-set +o pipefail
