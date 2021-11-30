@@ -302,8 +302,7 @@ jobs:
             - 'python/graphscope/nx/__init__.py'
             - 'python/graphscope/nx/classes/**'
             - 'python/graphscope/nx/utils/**'
-            - 'python/graphscope/nx/tests/**'
-            - '!(python/graphscope/nx/tests/convert/**)'
+            - 'python/graphscope/nx/tests/!(convert)'
           convert:
             - 'python/graphscope/nx/convert.py'
             - 'python/graphscope/nx/convert_matrix.py'
