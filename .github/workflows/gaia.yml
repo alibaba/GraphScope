@@ -64,10 +64,6 @@ jobs:
       run: |
         source ${HOME}/.graphscope_env
 
-        cd ${GITHUB_WORKSPACE}/research/gaia/gremlin/gremlin_core/tests
-        sh prepare_all_test_plan.sh
-        cargo test
-
-        cd ${GITHUB_WORKSPACE}/research/gaia-x/gremlin/gremlin_core/tests
+        cd ${GITHUB_WORKSPACE}/research/query_service/gremlin/gremlin_core/tests
         sh prepare_all_test_plan.sh
         cargo test
