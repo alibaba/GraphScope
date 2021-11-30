@@ -386,7 +386,7 @@ impl<D: Data> Push<MicroBatch<D>> for ExchangeByDataPush<D> {
                 if batch.get_seq() == 0 {
                     // only one data scope;
                     if end.peers().value() == 1 {
-                        for i in 1..self.pushes.len() {
+                        for i in 0..self.pushes.len() {
                             if i != target {
                                 let mut new_end = end.clone();
                                 new_end.total_send = 0;
