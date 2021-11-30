@@ -17,20 +17,14 @@
 #
 
 
-import atexit
 import json
 import logging
 import os
 import queue
 import random
-import re
-import subprocess
-import sys
-import threading
 import time
 
 from kubernetes import client as kube_client
-from kubernetes import watch as kube_watch
 from kubernetes.client import CoreV1Api
 from kubernetes.client.rest import ApiException as K8SApiException
 
@@ -50,6 +44,7 @@ from graphscope.deploy.kubernetes.utils import wait_for_deployment_complete
 from graphscope.deploy.launcher import Launcher
 from graphscope.framework.errors import K8sError
 from graphscope.framework.utils import random_string
+from graphscope.version import __version__
 
 logger = logging.getLogger("graphscope")
 
@@ -309,7 +304,13 @@ class KubernetesClusterLauncher(Launcher):
         logger.info("Launching coordinator...")
         targets = []
 
-        labels = {"name": self._coordinator_name}
+        labels = {
+            "app.kubernetes.io/name": "graphscope",
+            "app.kubernetes.io/instance": self._instance_id,
+            "app.kubernetes.io/version": __version__,
+            "app.kubernetes.io/component": "coordinator",
+        }
+
         # create coordinator service
         service_builder = ServiceBuilder(
             self._coordinator_service_name,
@@ -361,6 +362,7 @@ class KubernetesClusterLauncher(Launcher):
             ports=[
                 self._random_coordinator_service_port,
             ],
+            module_name=self._coordinator_module_name,
         )
 
         targets.append(

@@ -21,9 +21,13 @@ import static com.alibaba.graphscope.utils.CppHeaderName.GRAPE_FRAGMENT_IMMUTABL
 import static com.alibaba.graphscope.utils.JNILibraryName.JNI_LIBRARY_NAME;
 
 import com.alibaba.fastffi.CXXHead;
-import com.alibaba.fastffi.FFIFactory;
+import com.alibaba.fastffi.CXXReference;
+import com.alibaba.fastffi.CXXValue;
 import com.alibaba.fastffi.FFIGen;
+import com.alibaba.fastffi.FFINameAlias;
 import com.alibaba.fastffi.FFITypeAlias;
+import com.alibaba.graphscope.ds.GrapeAdjList;
+import com.alibaba.graphscope.ds.Vertex;
 
 /**
  * Java wrapper for grape ImmutableEdgecutFragment.
@@ -70,24 +74,14 @@ import com.alibaba.fastffi.FFITypeAlias;
 @FFIGen(library = JNI_LIBRARY_NAME)
 @CXXHead(GRAPE_FRAGMENT_IMMUTABLE_EDGECUT_FRAGMENT_H)
 @FFITypeAlias(GRAPE_IMMUTABLE_FRAGMENT)
-// @CXXTemplate(
-//        cxx = {"uint64_t", "uint64_t", "uint64_t", "double"},
-//        cxxFull = "uint64_t,uint64_t,uint64_t,double",
-//        java = {"Long", "Long", "Long", "Double"})
-// @CXXTemplate(
-//        cxx = {"jlong", "uint64_t", "jlong", "jdouble"},
-//        java = {"Long", "Long", "Long", "Double"})
 public interface ImmutableEdgecutFragment<OID_T, VID_T, VDATA_T, EDATA_T>
         extends EdgecutFragment<OID_T, VID_T, VDATA_T, EDATA_T> {
 
-    /** @return The number of bits for the fid offset. */
-    int fid_offset();
+    @FFINameAlias("GetIncomingAdjList")
+    @CXXValue
+    GrapeAdjList<VID_T, EDATA_T> getIncomingAdjList(@CXXReference Vertex<VID_T> vertex);
 
-    /** @return The id mask used to mask global id into local id. */
-    VID_T id_mask();
-
-    @FFIFactory
-    interface Factory<OID_T, VID_T, VDATA_T, EDATA_T> {
-        ImmutableEdgecutFragment<OID_T, VID_T, VDATA_T, EDATA_T> create();
-    }
+    @FFINameAlias("GetOutgoingAdjList")
+    @CXXValue
+    GrapeAdjList<VID_T, EDATA_T> getOutgoingAdjList(@CXXReference Vertex<VID_T> vertex);
 }

@@ -60,11 +60,13 @@ from graphscope.framework.utils import is_free_port
 from graphscope.proto import types_pb2
 
 from gscoordinator.launcher import Launcher
+from gscoordinator.utils import ANALYTICAL_ENGINE_PATH
 from gscoordinator.utils import GRAPHSCOPE_HOME
 from gscoordinator.utils import INTERACTIVE_ENGINE_SCRIPT
 from gscoordinator.utils import WORKSPACE
 from gscoordinator.utils import ResolveMPICmdPrefix
 from gscoordinator.utils import parse_as_glog_level
+from gscoordinator.version import __version__
 
 logger = logging.getLogger("graphscope")
 
@@ -140,7 +142,6 @@ class KubernetesClusterLauncher(Launcher):
     _vineyard_service_name_prefix = "gs-vineyard-service-"
     _gle_service_name_prefix = "gs-graphlearn-service-"
 
-    _analytical_engine_exec = "grape_engine"
     _vineyard_container_name = "vineyard"  # fixed
     _etcd_container_name = "etcd"
     _engine_container_name = "engine"  # fixed
@@ -151,7 +152,6 @@ class KubernetesClusterLauncher(Launcher):
     _mars_service_name_prefix = "mars-"
 
     _zookeeper_port = 2181  # fixed
-    _gaia_engine_port = random.randint(40001, 41000)
     _random_analytical_engine_rpc_port = random.randint(56001, 57000)
     _random_etcd_listen_peer_service_port = random.randint(57001, 58000)
     _random_etcd_listen_client_service_port = random.randint(58001, 59000)
@@ -196,6 +196,8 @@ class KubernetesClusterLauncher(Launcher):
         delete_namespace=None,
         **kwargs
     ):
+
+        super().__init__()
         self._api_client = try_to_resolve_api_client()
         self._core_api = kube_client.CoreV1Api(self._api_client)
         self._app_api = kube_client.AppsV1Api(self._api_client)
@@ -351,9 +353,7 @@ class KubernetesClusterLauncher(Launcher):
         schema_path = config[types_pb2.SCHEMA_PATH].s.decode()
         # engine params format:
         #   k1:v1;k2:v2;k3:v3
-        engine_params = {
-            "gaia.engine.port": self._gaia_engine_port,
-        }
+        engine_params = {}
         if types_pb2.GIE_GREMLIN_ENGINE_PARAMS in config:
             engine_params = json.loads(
                 config[types_pb2.GIE_GREMLIN_ENGINE_PARAMS].s.decode()
@@ -361,7 +361,6 @@ class KubernetesClusterLauncher(Launcher):
         engine_params = [
             "{}:{}".format(key, value) for key, value in engine_params.items()
         ]
-        enable_gaia = config[types_pb2.GIE_ENABLE_GAIA].b
         env = os.environ.copy()
         env.update({"GRAPHSCOPE_HOME": GRAPHSCOPE_HOME})
         cmd = [
@@ -373,7 +372,6 @@ class KubernetesClusterLauncher(Launcher):
             self.hosts,
             self._engine_container_name,
             "{}".format(";".join(engine_params)),
-            str(enable_gaia),
             self._coordinator_name,
         ]
         logger.info("Create GIE instance with command: {0}".format(" ".join(cmd)))
@@ -382,12 +380,13 @@ class KubernetesClusterLauncher(Launcher):
             start_new_session=True,
             cwd=os.getcwd(),
             env=env,
-            universal_newlines=True,
             encoding="utf-8",
+            errors="replace",
             stdin=subprocess.DEVNULL,
             stdout=subprocess.PIPE,
             stderr=subprocess.STDOUT,
             bufsize=1,
+            universal_newlines=True,
         )
         return process
 
@@ -408,18 +407,39 @@ class KubernetesClusterLauncher(Launcher):
             start_new_session=True,
             cwd=os.getcwd(),
             env=env,
-            universal_newlines=True,
             encoding="utf-8",
+            errors="replace",
             stdin=subprocess.DEVNULL,
             stdout=subprocess.PIPE,
             stderr=subprocess.STDOUT,
+            universal_newlines=True,
             bufsize=1,
         )
         return process
 
     def _create_mars_scheduler(self):
         logger.info("Launching mars scheduler pod for GraphScope ...")
-        labels = {"name": self._mars_scheduler_name}
+
+        labels = {
+            "app.kubernetes.io/name": "graphscope",
+            "app.kubernetes.io/instance": self._instance_id,
+            "app.kubernetes.io/version": __version__,
+            "app.kubernetes.io/external": "mars",
+        }
+
+        # create mars service
+        service_builder = ServiceBuilder(
+            self._mars_service_name,
+            service_type=self._saved_locals["service_type"],
+            port=self._mars_scheduler_port,
+            selector=labels,
+        )
+        self._resource_object.append(
+            self._core_api.create_namespaced_service(
+                self._saved_locals["namespace"], service_builder.build()
+            )
+        )
+
         # create engine replicaset
         scheduler_builder = self._gs_mars_scheduler_builder_cls(
             name=self._mars_scheduler_name,
@@ -509,7 +529,14 @@ class KubernetesClusterLauncher(Launcher):
 
     def _create_engine_replicaset(self):
         logger.info("Launching GraphScope engines pod ...")
-        labels = {"name": self._engine_name}
+
+        labels = {
+            "app.kubernetes.io/name": "graphscope",
+            "app.kubernetes.io/instance": self._instance_id,
+            "app.kubernetes.io/version": __version__,
+            "app.kubernetes.io/component": "engine",
+        }
+
         # create engine replicaset
         engine_builder = self._gs_engine_builder_cls(
             name=self._engine_name,
@@ -571,13 +598,20 @@ class KubernetesClusterLauncher(Launcher):
                 engine_builder.add_volume(volume_builder)
 
         # add env
-        engine_builder.add_simple_envs(
-            {
-                "GLOG_v": str(self._glog_level),
-                "VINEYARD_IPC_SOCKET": "/tmp/vineyard_workspace/vineyard.sock",
-                "WITH_VINEYARD": "ON",
-            }
-        )
+        env = {
+            "GLOG_v": str(self._glog_level),
+            "VINEYARD_IPC_SOCKET": "/tmp/vineyard_workspace/vineyard.sock",
+            "WITH_VINEYARD": "ON",
+            "PATH": os.environ["PATH"],
+            "LD_LIBRARY_PATH": os.environ["LD_LIBRARY_PATH"],
+            "DYLD_LIBRARY_PATH": os.environ["DYLD_LIBRARY_PATH"],
+        }
+        if "OPAL_PREFIX" in os.environ:
+            env.update({"OPAL_PREFIX": os.environ["OPAL_PREFIX"]})
+        if "OPAL_BINDIR" in os.environ:
+            env.update({"OPAL_BINDIR": os.environ["OPAL_BINDIR"]})
+
+        engine_builder.add_simple_envs(env)
 
         # add engine container
         engine_builder.add_engine_container(
@@ -648,7 +682,14 @@ class KubernetesClusterLauncher(Launcher):
 
     def _create_etcd(self):
         logger.info("Launching etcd ...")
-        labels = {"name": self._etcd_name}
+
+        labels = {
+            "app.kubernetes.io/name": "graphscope",
+            "app.kubernetes.io/instance": self._instance_id,
+            "app.kubernetes.io/version": __version__,
+            "app.kubernetes.io/component": "etcd",
+        }
+
         # should create service first
         service_builder = ServiceBuilder(
             self._etcd_service_name,
@@ -696,22 +737,15 @@ class KubernetesClusterLauncher(Launcher):
                 )
             )
 
-    def _create_mars_service(self):
-        labels = {"name": self._mars_scheduler_name}
-        service_builder = ServiceBuilder(
-            self._mars_service_name,
-            service_type=self._saved_locals["service_type"],
-            port=self._mars_scheduler_port,
-            selector=labels,
-        )
-        self._resource_object.append(
-            self._core_api.create_namespaced_service(
-                self._saved_locals["namespace"], service_builder.build()
-            )
-        )
-
     def _create_vineyard_service(self):
-        labels = {"name": self._engine_name}  # vineyard in engine pod
+        # vineyard in engine pod
+        labels = {
+            "app.kubernetes.io/name": "graphscope",
+            "app.kubernetes.io/instance": self._instance_id,
+            "app.kubernetes.io/version": __version__,
+            "app.kubernetes.io/component": "engine",
+        }
+
         service_builder = ServiceBuilder(
             self._vineyard_service_name,
             service_type=self._saved_locals["service_type"],
@@ -746,7 +780,14 @@ class KubernetesClusterLauncher(Launcher):
 
     def _create_graphlearn_service(self, object_id, start_port, num_workers):
         targets = []
-        labels = {"name": self._engine_name}
+
+        labels = {
+            "app.kubernetes.io/name": "graphscope",
+            "app.kubernetes.io/instance": self._instance_id,
+            "app.kubernetes.io/version": __version__,
+            "app.kubernetes.io/component": "engine",
+        }
+
         service_builder = ServiceBuilder(
             self._gle_service_name_prefix + str(object_id),
             service_type=self._saved_locals["service_type"],
@@ -821,11 +862,12 @@ class KubernetesClusterLauncher(Launcher):
             start_new_session=True,
             cwd=os.getcwd(),
             env=os.environ.copy(),
-            universal_newlines=True,
             encoding="utf-8",
+            errors="replace",
             stdin=subprocess.DEVNULL,
             stdout=subprocess.PIPE,
             stderr=subprocess.STDOUT,
+            universal_newlines=True,
             bufsize=1,
         )
         stdout_watcher = PipeWatcher(self._zetcd_process.stdout, sys.stdout, drop=True)
@@ -860,7 +902,6 @@ class KubernetesClusterLauncher(Launcher):
         if self._saved_locals["with_mars"]:
             # scheduler used by mars
             self._create_mars_scheduler()
-            self._create_mars_service()
 
         logger.info("Creating engine replicaset...")
         self._create_engine_replicaset()
@@ -872,6 +913,7 @@ class KubernetesClusterLauncher(Launcher):
     def _waiting_for_services_ready(self):
         start_time = time.time()
         event_messages = []
+        engine_pod_selector = ""
         while True:
             replicasets = self._app_api.list_namespaced_replica_set(
                 namespace=self._saved_locals["namespace"]
@@ -894,6 +936,7 @@ class KubernetesClusterLauncher(Launcher):
                     for k, v in rs.spec.selector.match_labels.items():
                         selector += k + "=" + v + ","
                     selector = selector[:-1]
+                    engine_pod_selector = selector
 
                     pods = self._core_api.list_namespaced_pod(
                         namespace=self._saved_locals["namespace"],
@@ -931,7 +974,7 @@ class KubernetesClusterLauncher(Launcher):
         self._pod_host_ip_list = []
         pods = self._core_api.list_namespaced_pod(
             namespace=self._saved_locals["namespace"],
-            label_selector="name=%s" % self._engine_name,
+            label_selector=engine_pod_selector,
         )
         for pod in pods.items:
             self._pod_name_list.append(pod.metadata.name)
@@ -1002,7 +1045,7 @@ class KubernetesClusterLauncher(Launcher):
         rmcp = ResolveMPICmdPrefix(rsh_agent=True)
         cmd, mpi_env = rmcp.resolve(self._num_workers, ",".join(self._pod_name_list))
 
-        cmd.append(self._analytical_engine_exec)
+        cmd.append(ANALYTICAL_ENGINE_PATH)
         cmd.extend(["--host", "0.0.0.0"])
         cmd.extend(["--port", str(self._random_analytical_engine_rpc_port)])
 
@@ -1012,7 +1055,7 @@ class KubernetesClusterLauncher(Launcher):
             mpi_env["GLOG_v"] = str(self._glog_level)
 
         cmd.extend(["--vineyard_socket", "/tmp/vineyard_workspace/vineyard.sock"])
-        logger.debug("Analytical engine launching command: {}".format(" ".join(cmd)))
+        logger.info("Analytical engine launching command: {}".format(" ".join(cmd)))
 
         env = os.environ.copy()
         env.update(mpi_env)
@@ -1023,6 +1066,9 @@ class KubernetesClusterLauncher(Launcher):
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
             encoding="utf-8",
+            errors="replace",
+            universal_newlines=True,
+            bufsize=1,
         )
 
         stdout_watcher = PipeWatcher(
@@ -1203,7 +1249,13 @@ class KubernetesClusterLauncher(Launcher):
             ]
             logging.info("launching learning server: %s", " ".join(cmd))
             proc = subprocess.Popen(
-                cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT
+                cmd,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.STDOUT,
+                encoding="utf-8",
+                errors="replace",
+                universal_newlines=True,
+                bufsize=1,
             )
             stdout_watcher = PipeWatcher(proc.stdout, sys.stdout, drop=True)
             setattr(proc, "stdout_watcher", stdout_watcher)

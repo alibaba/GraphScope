@@ -32,7 +32,7 @@ def eigenvector_centrality(graph, tolerance=1e-06, max_round=100):
     https://networkx.org/documentation/networkx-1.10/reference/generated/networkx.algorithms.centrality.eigenvector_centrality.html
 
     Args:
-        graph (:class:`Graph`): A projected simple graph.
+        graph (:class:`Graph`): A simple graph.
         tolerance (float, optional): Defaults to 1e-06.
         max_round (int, optional): Defaults to 100.
 
@@ -45,8 +45,8 @@ def eigenvector_centrality(graph, tolerance=1e-06, max_round=100):
     .. code:: python
 
         import graphscope as gs
-        sess = gs.session()
-        g = sess.g()
+        g = gs.g()
+        # Load some data, then project to a simple graph (if needed).
         pg = g.project(vertices={"vlabel": []}, edges={"elabel": []})
         r = gs.eigenvector_centrality(pg)
         s.close()

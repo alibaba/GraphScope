@@ -28,6 +28,7 @@ from networkx.algorithms.shortest_paths.tests.test_weighted import \
 from networkx.algorithms.shortest_paths.tests.test_weighted import TestJohnsonAlgorithm
 from networkx.algorithms.shortest_paths.tests.test_weighted import TestWeightedPath
 from networkx.algorithms.shortest_paths.tests.test_weighted import WeightedTestBase
+from networkx.generators.lattice import grid_2d_graph
 
 
 @pytest.mark.usefixtures("graphscope_session")
@@ -35,8 +36,11 @@ from networkx.algorithms.shortest_paths.tests.test_weighted import WeightedTestB
 class WeightedTestBase():
     def setup(self):
         """Creates some graphs for use in the unit tests."""
+        # NB: graphscope.nx does not support grid_2d_graph(which use tuple as node)
+        # we use a tricky way to replace it.
         cnlti = nx.convert_node_labels_to_integers
-        self.grid = cnlti(nx.grid_2d_graph(4, 4), first_label=1, ordering="sorted")
+        grid = cnlti(grid_2d_graph(4, 4), first_label=1, ordering="sorted")
+        self.grid = nx.Graph(grid)
         self.cycle = nx.cycle_graph(7)
         self.directed_cycle = nx.cycle_graph(7, create_using=nx.DiGraph())
         self.XG = nx.DiGraph()

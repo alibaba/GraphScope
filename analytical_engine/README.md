@@ -8,6 +8,11 @@ GRAPE differs from prior systems in its ability to parallelize sequential graph 
 
 A lightweight version of GRAPE is open-sourced as [libgrape-lite](https://github.com/alibaba/libgrape-lite/). The analytical engine extends libgrape-lite with features for mutable fragments, [vineyard](https://github.com/alibaba/libvineyard/) support, and the service mode for the engine, etc.
 
+## Java PIE SDK
+
+Apart from the PIE programming interfaces exposed in Python, GraphScope also
+Provides an efficient **Java SDK** for users to write Graph analytical algorithms in Java . See [GRAPE-JDK](java/) for details.
+
 ## Publications
 
 - Wenfei Fan, Jingbo Xu, Wenyuan Yu, Jingren Zhou, Xiaojian Luo, Ping Lu, Qiang Yin, Yang Cao, and Ruiqi Xu. [Parallelizing Sequential Graph Computations](https://dl.acm.org/doi/10.1145/3282488). ACM Transactions on Database Systems (TODS) 43(4): 18:1-18:39.

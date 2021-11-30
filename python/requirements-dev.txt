@@ -6,6 +6,7 @@ isort==5.5.4
 m2r2
 pylint
 pytest
+pytest-cov
 Pygments>=2.4.1
 recommonmark
 sphinx==4.0.3

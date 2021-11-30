@@ -30,9 +30,6 @@ import java.util.Iterator;
 @FFIGen(library = JNILibraryName.JNI_LIBRARY_NAME)
 @CXXHead(CppHeaderName.CORE_JAVA_TYPE_ALIAS_H)
 @FFITypeAlias(CppClassName.PROPERTY_RAW_ADJ_LIST)
-// @CXXTemplate(
-//        cxx = {"uint64_t"},
-//        java = {"java.lang.Long"})
 public interface PropertyRawAdjList<VID_T> extends FFIPointer, CXXPointer {
     @FFINameAlias("begin")
     PropertyNbrUnit<VID_T> begin();

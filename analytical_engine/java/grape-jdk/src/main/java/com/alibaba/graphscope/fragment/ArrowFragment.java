@@ -204,21 +204,6 @@ public interface ArrowFragment<OID_T> extends FFIPointer {
             @FFIConst @FFITypeAlias(GRAPE_VERTEX + "<uint64_t>") @CXXReference Vertex<Long> vertex,
             int edgeLabelId);
 
-    // @FFINameAlias("edge_data_column<uint64_t>")
-    // @CXXValue EdgeDataColumnLong<PropertyNbrUnit<Long>> edgeDataColumnLong(int
-    // edgeLabelId, int
-    // propertyId);
-    //
-    // @FFINameAlias("edge_data_column<double>")
-    // @CXXValue EdgeDataColumnDouble<PropertyNbrUnit<Long>>
-    // edgeDataColumnDouble(int edgeLabelId,
-    // int propertyId);
-    //
-    // @FFINameAlias("edge_data_column<uint32_t>")
-    // @CXXValue EdgeDataColumnInt<PropertyNbrUnit<Long>> edgeDataColumnInt(int
-    // edgeLabelId, int
-    // propertyId);
-
     @FFINameAlias("edge_data_column")
     @CXXValue
     <DATA_T> EdgeDataColumn<DATA_T> edgeDataColumn(
@@ -228,13 +213,6 @@ public interface ArrowFragment<OID_T> extends FFIPointer {
     @CXXValue
     <DATA_T> VertexDataColumn<DATA_T> vertexDataColumn(
             int vertexLabelId, int propertyId, @FFISkip DATA_T unused);
-
-    // @FFINameAlias("GetData")
-    // @CXXValue <DATA_T>
-    // DATA_T getData(@FFITypeAlias(GRAPE_VERTEX + "<uint64_t>") @CXXReference
-    // Vertex<Long> vertex,
-    // int propertyId,
-    // @FFISkip DATA_T unused);
 
     @FFINameAlias("GetData<uint64_t>")
     long getLongData(
@@ -281,10 +259,10 @@ public interface ArrowFragment<OID_T> extends FFIPointer {
     /**
      * Try to get oid's corresponding vertex, if not inner vertex, return false.
      *
-     * @param vertexLabelId
-     * @param oid
-     * @param vertex
-     * @return
+     * @param vertexLabelId label id for vertex.
+     * @param oid querying oid.
+     * @param vertex output vertex.
+     * @return true if operation succeed.
      */
     @FFINameAlias("GetInnerVertex")
     boolean getInnerVertex(

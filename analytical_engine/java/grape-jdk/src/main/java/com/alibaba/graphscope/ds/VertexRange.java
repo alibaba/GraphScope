@@ -40,8 +40,6 @@ import java.util.function.Consumer;
 @FFIGen(library = JNI_LIBRARY_NAME)
 @CXXHead(GRAPE_VERTEX_ARRAY_H)
 @FFITypeAlias(GRAPE_VERTEX_RANGE)
-// @CXXTemplate(cxx = "uint32_t", java = "java.lang.Integer")
-// @CXXTemplate(cxx = "uint64_t", java = "java.lang.Long")
 public interface VertexRange<VID_T> extends FFIPointer, CXXPointer, CXXValueRange<Vertex<VID_T>> {
     /**
      * Return the Begin vertex for this VertexRange. Note that invoking this methods multiple times

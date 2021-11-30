@@ -147,7 +147,7 @@ For example, to implement a app which traverse all vertex in a property graph(Ar
 shall code like this
 ```java
 public class PropertyTraverseVertexData
-        implements PropertyDefaultAppBase<Long, PropertyTraverseVertexDataContext> {
+        implements DefaultPropertyAppBase<Long, PropertyTraverseVertexDataContext> {
     @Override
     public void PEval(
             ArrowFragment<Long> fragment,
@@ -201,7 +201,7 @@ graph = graph.add_vertices("gstest/property/p2p-31_property_v_0", label="person"
 graph = graph.add_edges("gstest/property/p2p-31_property_e_0", label="knows")
 
 sssp1=JavaApp(
-    full_jar_path="~/.m2/repository/com/alibaba/grape/grape-demo/0.1/grape-demo-0.1-shaded.jar", 
+    full_jar_path="~/.m2/repository/com/alibaba/graphscope/grape-demo/0.1/grape-demo-0.1-shaded.jar", 
     java_app_class="com.alibaba.graphscope.example.sssp.SSSPDefault", 
 )
 ctx2=sssp1(graph,src=6)
@@ -209,7 +209,7 @@ ctx2=sssp1(graph,src=6)
 graph = graph.project(vertices={"person": ['id']}, edges={"knows": ["dist"]})
 """simple_graph = graph._project_to_simple() will be done by JavaApp"""
 sssp3=JavaApp(
-    full_jar_path="~/.m2/repository/com/alibaba/grape/grape-demo/0.1/grape-demo-0.1-shaded.jar", 
+    full_jar_path="~/.m2/repository/com/alibaba/graphscope/grape-demo/0.1/grape-demo-0.1-shaded.jar", 
     java_app_class="com.alibaba.graphscope.example.projected.SSSPProjected", 
 )
 ctx3=sssp3(graph,src=6)
@@ -219,14 +219,22 @@ ctx.to_numpy("r:label0.dist_0")
 
 # Documentation
 
-You can obtain the documentation using use plugins supported by
-[Intellij IDEA](https://www.jetbrains.com/help/idea/working-with-code-documentation.html) 
-or [Eclipse](https://www.tutorialspoint.com/How-to-write-generate-and-use-Javadoc-in-Eclipse). 
+Online JavaDoc is availabel at [GraphScope Docs](https://graphscope.io/docs/reference/gae_java/index.html).
 
+You can also generate the documentation with in three different ways.
+- use Intellij IDEA plugin: [Intellij IDEA-javadoc](https://www.jetbrains.com/help/idea/working-with-code-documentation.html) 
+- Use Eclipse plugin: [Eclipse-javadoc](https://www.tutorialspoint.com/How-to-write-generate-and-use-Javadoc-in-Eclipse). 
+- Generate javaDoc from cmd.
+```bash
+cd ${GRAPHSCOPE_REPO}/analytical_engine/java/grape-jdk
+mvn javadoc::javadoc -Djavadoc.output.directory=${OUTPUT_DIR} -Djavadoc.output.destDir=${OUTPUT_DEST_DIR}
+```
 
+# Performance
+
+Apart from the user-friendly interface, grape-jdk also provide user with high performance graph analytics. Please refer to [benchmark](performance.md) for the benchmark results.
 
 # TODO
-- Performance evaluation
 - Support more programming model
   - Pregel
 - A test suite for verifying algorithm correctness, without GraphScope analytical engine.

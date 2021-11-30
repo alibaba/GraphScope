@@ -6,34 +6,68 @@ on:
     branches:
       - main
     paths:
-      - 'research/**'
+      - 'research/gaia/**'
+      - '.github/workflows/gaia.yml'
+      - '!research/gaia/**.md'
   pull_request:
     branches:
       - main
     paths:
-      - 'research/**'
+      - 'research/gaia/**'
+      - '.github/workflows/gaia.yml'
+      - '!research/gaia/**.md'
 
 jobs:
   gaia-test:
     runs-on: ubuntu-20.04
+    defaults:
+      run:
+        shell: bash --noprofile --norc -eo pipefail {0}
     steps:
-    - name: Checkout Code
-      uses: actions/checkout@v2
+    - uses: actions/checkout@v2
       with:
         submodules: true
-        fetch-depth: 0
 
     - name: Install Dependencies
       run: |
-        curl -sf -L https://static.rust-lang.org/rustup.sh | sh -s -- -y --profile minimal --default-toolchain 1.52.1
-        echo "source ~/.cargo/env" >> ~/.bashrc
+        # Due to an observation of changing hostname in github runners,
+        # append 127.0.0.1 to etc/hosts to avoid DNS lookup.
+        r=`cat /etc/hosts | grep $(hostname) || true`
+        if [ -z "${r}" ];then export hn=$(hostname); sudo -E bash -c 'echo "127.0.0.1 ${hn}" >> /etc/hosts'; fi
+        cat /etc/hosts
 
-        rustup component add rustfmt
+        # install dependencies
+        ${GITHUB_WORKSPACE}/scripts/install_deps.sh --dev --verbose
 
-    - name: Build & Test
+    - name: Build GraphScope
       run: |
-        source ~/.bashrc
+        source ${HOME}/.graphscope_env
+        make BUILD_TYPE=debug
 
-        cd research/query_service/gremlin/gremlin_core/tests
+    - name: Build MaxGraph Store
+      run: |
+        source ${HOME}/.graphscope_env
+        cd ${GITHUB_WORKSPACE}/interactive_engine
+        mvn clean install -DskipTests -Pv2
+
+    - name: Gaia test on MaxGraph Store
+      run: |
+        source ${HOME}/.graphscope_env
+        cd ${GITHUB_WORKSPACE}/interactive_engine/gaia-adaptor && ./gremlin_test.sh
+
+    - name: Run Backup Test on Maxgraph Store
+      run: |
+        source ${HOME}/.graphscope_env
+        cd ${GITHUB_WORKSPACE}/interactive_engine/sdk && ./backup_test.sh
+
+    - name: Gaia runtime test
+      run: |
+        source ${HOME}/.graphscope_env
+
+        cd ${GITHUB_WORKSPACE}/research/gaia/gremlin/gremlin_core/tests
+        sh prepare_all_test_plan.sh
+        cargo test
+
+        cd ${GITHUB_WORKSPACE}/research/gaia-x/gremlin/gremlin_core/tests
         sh prepare_all_test_plan.sh
         cargo test

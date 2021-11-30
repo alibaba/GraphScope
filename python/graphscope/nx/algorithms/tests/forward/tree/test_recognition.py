@@ -86,10 +86,12 @@ class TestTreeRecognition(object):
         assert not nx.is_forest(self.NF1)
 
 
+@pytest.mark.usefixtures("graphscope_session")
 class TestDirectedTreeRecognition(TestTreeRecognition):
     graph = nx.DiGraph
 
 
+@pytest.mark.usefixtures("graphscope_session")
 def test_disconnected_graph():
     # https://github.com/networkx/networkx/issues/1144
     G = nx.Graph()
@@ -101,6 +103,7 @@ def test_disconnected_graph():
     assert not nx.is_tree(G)
 
 
+@pytest.mark.usefixtures("graphscope_session")
 def test_dag_nontree():
     G = nx.DiGraph()
     G.add_edges_from([(0, 1), (0, 2), (1, 2)])
@@ -108,6 +111,7 @@ def test_dag_nontree():
     assert nx.is_directed_acyclic_graph(G)
 
 
+@pytest.mark.usefixtures("graphscope_session")
 def test_emptybranch():
     G = nx.DiGraph()
     G.add_nodes_from(range(10))
@@ -115,6 +119,7 @@ def test_emptybranch():
     assert not nx.is_arborescence(G)
 
 
+@pytest.mark.usefixtures("graphscope_session")
 def test_path():
     G = nx.DiGraph()
     nx.add_path(G, range(5))

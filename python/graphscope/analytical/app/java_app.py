@@ -23,10 +23,8 @@ import logging
 import os
 import shutil
 import subprocess
-import sys
 import tempfile
 import zipfile
-from glob import glob
 from pathlib import Path
 
 import yaml
@@ -52,6 +50,13 @@ try:
 except KeyError:
     WORKSPACE = os.path.join("/", tempfile.gettempprefix(), "gs")
 DEFAULT_GS_CONFIG_FILE = ".gs_conf.yaml"
+
+POSSIBLE_APP_TYPES = [
+    "default_property",
+    "parallel_property",
+    "default_simple",
+    "parallel_simple",
+]
 
 
 def _parse_user_app(java_app_class: str, java_jar_full_path: str):
@@ -79,10 +84,12 @@ def _parse_user_app(java_app_class: str, java_jar_full_path: str):
     parse_user_app_process = subprocess.Popen(
         parse_user_app_cmd,
         env=os.environ.copy(),
-        universal_newlines=True,
         encoding="utf-8",
+        errors="replace",
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,
+        universal_newlines=True,
+        bufsize=1,
     )
     out, err = parse_user_app_process.communicate()
     logger.info(err)
@@ -90,11 +97,16 @@ def _parse_user_app(java_app_class: str, java_jar_full_path: str):
         logger.info(line)
         if len(line) == 0:
             continue
-        if line.find("PropertyDefaultApp") != -1:
-            _java_app_type = "property"
+        if line.find("DefaultPropertyApp") != -1:
+            _java_app_type = "default_property"
             continue
-        if line.find("ProjectedDefaultApp") != -1:
-            _java_app_type = "projected"
+        if line.find("ParallelPropertyApp") != -1:
+            _java_app_type = "parallel_property"
+            continue
+        if line.find("DefaultAppBase") != -1:
+            _java_app_type = "default_simple"
+        if line.find("ParallelAppBase") != -1:
+            _java_app_type = "parallel_simple"
             continue
         if line.find("Error") != -1:
             raise Exception("Error occured in verifying user app")
@@ -170,27 +182,38 @@ class JavaApp(AppAssets):
         self._java_app_type, self._frag_param_str, _java_ctx_type = _parse_user_app(
             java_app_class, full_jar_path
         )
-        # For two different java type, we use two different driver class
-        if self._java_app_type == "property":
+        # For four different java type, we use two different driver class
+        if self._java_app_type not in POSSIBLE_APP_TYPES:
+            raise RuntimeError("Unexpected app type: {}".format(self._java_app_type))
+        if self._java_app_type.find("property") != -1:
+            gs_config["app"][0]["compatible_graph"] = ["vineyard::ArrowFragment"]
+        else:
+            gs_config["app"][0]["compatible_graph"] = ["gs::ArrowProjectedFragment"]
+
+        gs_config["app"][0]["context_type"] = _java_ctx_type
+        if self._java_app_type == "default_property":
             gs_config["app"][0][
                 "driver_header"
             ] = "apps/java_pie/java_pie_property_default_app.h"
             gs_config["app"][0]["class_name"] = "gs::JavaPIEPropertyDefaultApp"
-            gs_config["app"][0]["compatible_graph"] = ["vineyard::ArrowFragment"]
-            gs_config["app"][0]["context_type"] = _java_ctx_type
-            gar.append(DEFAULT_GS_CONFIG_FILE, yaml.dump(gs_config))
-            super().__init__("java_app", _java_ctx_type, gar.read_bytes())
-        elif self._java_app_type == "projected":
+        elif self._java_app_type == "parallel_property":
+            gs_config["app"][0][
+                "driver_header"
+            ] = "apps/java_pie/java_pie_property_parallel_app.h"
+            gs_config["app"][0]["class_name"] = "gs::JavaPIEPropertyParallelApp"
+        elif self._java_app_type == "default_simple":
             gs_config["app"][0][
                 "driver_header"
             ] = "apps/java_pie/java_pie_projected_default_app.h"
             gs_config["app"][0]["class_name"] = "gs::JavaPIEProjectedDefaultApp"
-            gs_config["app"][0]["compatible_graph"] = ["gs::ArrowProjectedFragment"]
-            gs_config["app"][0]["context_type"] = _java_ctx_type
-            gar.append(DEFAULT_GS_CONFIG_FILE, yaml.dump(gs_config))
-            super().__init__("java_app", _java_ctx_type, gar.read_bytes())
         else:
-            raise RuntimeError("Unexpected app type: {}".format(self._java_app_type))
+            gs_config["app"][0][
+                "driver_header"
+            ] = "apps/java_pie/java_pie_projected_parallel_app.h"
+            gs_config["app"][0]["class_name"] = "gs::JavaPIEProjectedParallelApp"
+
+        gar.append(DEFAULT_GS_CONFIG_FILE, yaml.dump(gs_config))
+        super().__init__("java_app", _java_ctx_type, gar.read_bytes())
 
     # Override is_compatible to make sure type params of graph consists with java app.
     def is_compatible(self, graph):
@@ -315,7 +338,7 @@ class JavaAppDagNode(AppDAGNode):
             raise RuntimeError("The graph is not loaded")
         check_argument(not args, "Only support using keyword arguments in cython app.")
 
-        if self._app_assets.java_app_type == "property":
+        if self._app_assets.java_app_type.find("property") != -1:
             frag_name_for_java = self._convert_arrow_frag_for_java(
                 self._graph.template_str
             )

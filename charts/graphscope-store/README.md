@@ -3,7 +3,7 @@ GraphStore Charts
 
 [![Artifact HUB](https://img.shields.io/endpoint?url=https://artifacthub.io/badge/repository/graphscope)](https://artifacthub.io/packages/helm/graphscope/graphscope-store)
 
-[GraphScope Store](https://github.com/alibaba/GraphScope/tree/main/interactive_engine/src/v2/src/main) is a new disk-based row-oriented multi-versioned persistent graph store.
+[GraphScope Store](https://github.com/alibaba/GraphScope/tree/main/interactive_engine/groot/src/main) is a new disk-based row-oriented multi-versioned persistent graph store.
 
 
 ## TL;DR
@@ -15,7 +15,7 @@ $ helm install my-release graphscope/graphscope-store
 
 ## Introduction
 
-This chart bootstraps a [GraphScope Store](https://github.com/alibaba/GraphScope/tree/main/interactive_engine/src/v2/src/main) cluster deployment on a [Kubernetes](http://kubernetes.io) cluster using the [Helm](https://helm.sh) package manager.
+This chart bootstraps a [GraphScope Store](https://github.com/alibaba/GraphScope/tree/main/interactive_engine/groot/src/main) cluster deployment on a [Kubernetes](http://kubernetes.io) cluster using the [Helm](https://helm.sh) package manager.
 
 ## Prerequisites
 

@@ -74,7 +74,7 @@ class AllPairsShortestPathLengthContext
     return this->data()[v];
   }
 
-  // length[src][v] is path length from src to v
+  // length[src][v] is the path length from src to v
   typename FRAG_T::template vertex_array_t<
       typename FRAG_T::template vertex_array_t<double>>
       length;

@@ -36,30 +36,23 @@ class GraphMeta(object):
 
 
 class InteractiveQueryManager(object):
-    def __init__(self, key, frontend_endpoints, object_id):
+    def __init__(self, key, frontend_endpoint, object_id):
         self.key = key
         self.type = "gie_manager"
-        self.frontend_endpoints = frontend_endpoints
         # graph object id in vineyard
         self.object_id = object_id
-        self.graph_urls = [f"ws://{ep}/gremlin" for ep in self.frontend_endpoints]
-        self.clients = [Client(url, "g") for url in self.graph_urls]
+        self.graph_url = f"ws://{frontend_endpoint}/gremlin"
+        self.client = Client(self.graph_url, "g")
         self.closed = False
 
-    def submit(self, message, bindings=None, request_options=None, query_gaia=False):
-        if query_gaia:
-            if len(self.clients) != 2:
-                raise ValueError("Gaia endpoint is not found.")
-            return self.clients[1].submit(message, bindings, request_options)
-        else:
-            return self.clients[0].submit(message, bindings, request_options)
+    def submit(self, message, bindings=None, request_options=None):
+        return self.client.submit(message, bindings, request_options)
 
     def close(self):
-        for client in self.clients:
-            try:
-                client.close()
-            except Exception:
-                pass
+        try:
+            self.client.close()
+        except Exception:
+            pass
         self.closed = True
 
 

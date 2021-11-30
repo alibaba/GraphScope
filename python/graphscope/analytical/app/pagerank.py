@@ -30,7 +30,7 @@ def pagerank(graph, delta=0.85, max_round=10):
     """Evalute PageRank on a graph.
 
     Args:
-        graph (Graph): A projected simple graph.
+        graph (Graph): A simple graph.
         delta (float, optional): Dumping factor. Defaults to 0.85.
         max_round (int, optional): Maximum number of rounds. Defaults to 10.
 
@@ -43,8 +43,8 @@ def pagerank(graph, delta=0.85, max_round=10):
     .. code:: python
 
         import graphscope as gs
-        sess = gs.session()
-        g = sess.g()
+        g = gs.g()
+        # Load some data, then project to a simple graph (if needed).
         pg = g.project(vertices={"vlabel": []}, edges={"elabel": []})
         r = gs.pagerank(pg, delta=0.85, max_round=10)
         s.close()

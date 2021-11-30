@@ -54,6 +54,7 @@ from graphscope.framework.errors import AnalyticalEngineInternalError
 from graphscope.framework.graph_utils import normalize_parameter_edges
 from graphscope.framework.graph_utils import normalize_parameter_vertices
 from graphscope.framework.loader import Loader
+from graphscope.framework.utils import PipeMerger
 from graphscope.framework.utils import normalize_data_type_str
 from graphscope.proto import attr_value_pb2
 from graphscope.proto import coordinator_service_pb2_grpc
@@ -74,7 +75,6 @@ from gscoordinator.object_manager import InteractiveQueryManager
 from gscoordinator.object_manager import LearningInstanceManager
 from gscoordinator.object_manager import LibMeta
 from gscoordinator.object_manager import ObjectManager
-from gscoordinator.utils import COORDINATOR_HOME
 from gscoordinator.utils import GRAPHSCOPE_HOME
 from gscoordinator.utils import WORKSPACE
 from gscoordinator.utils import check_gremlin_server_ready
@@ -133,7 +133,6 @@ class CoordinatorServiceServicer(
             self._launcher._analytical_engine_endpoint = GS_DEBUG_ENDPOINT
         else:
             if not self._launcher.start():
-                logger.error("Launching analytical engine failed")
                 raise RuntimeError("Coordinator Launching failed.")
 
         self._launcher_type = self._launcher.type()
@@ -155,6 +154,7 @@ class CoordinatorServiceServicer(
 
         # control log fetching
         self._streaming_logs = True
+        self._pipe_merged = PipeMerger(sys.stdout, sys.stderr)
 
         # dangling check
         self._dangling_timeout_seconds = dangling_timeout_seconds
@@ -622,15 +622,17 @@ class CoordinatorServiceServicer(
     def FetchLogs(self, request, context):
         while self._streaming_logs:
             try:
-                info_message = sys.stdout.poll(timeout=2)
+                tag, message = self._pipe_merged.poll(timeout=2)
             except queue.Empty:
-                info_message = ""
-            try:
-                error_message = sys.stderr.poll(timeout=2)
-            except queue.Empty:
-                error_message = ""
+                tag, message = "", ""
+            except Exception as e:
+                tag, message = "out", "WARNING: failed to read log: %s" % e
 
-            if info_message or error_message:
+            if tag and message:
+                if tag == "err":
+                    info_message, error_message = "", message
+                elif tag == "out":
+                    info_message, error_message = message, ""
                 if self._streaming_logs:
                     yield message_pb2.FetchLogsResponse(
                         info_message=info_message, error_message=error_message
@@ -661,32 +663,26 @@ class CoordinatorServiceServicer(
             for line in lines.split("\n"):
                 rlt = re.findall(pattern, line)
                 if rlt:
-                    return rlt[0]
+                    return rlt[0].strip()
             return ""
 
         # vineyard object id of graph
         object_id = op.attr[types_pb2.VINEYARD_ID].i
-        enable_gaia = op.attr[types_pb2.GIE_ENABLE_GAIA].b
         # maxgraph endpoint pattern
         MAXGRAPH_FRONTEND_PATTERN = re.compile("(?<=MAXGRAPH_FRONTEND_ENDPOINT:).*$")
         MAXGRAPH_FRONTEND_EXTERNAL_PATTERN = re.compile(
             "(?<=MAXGRAPH_FRONTEND_EXTERNAL_ENDPOINT:).*$"
         )
-        # gaia endpoint pattern
-        GAIA_FRONTEND_PATTERN = re.compile("(?<=GAIA_FRONTEND_ENDPOINT:).*$")
-        GAIA_FRONTEND_EXTERNAL_PATTERN = re.compile(
-            "(?<=GAIA_FRONTEND_EXTERNAL_ENDPOINT:).*$"
-        )
-        # maxgraph endpoint and gaia endpoint
-        endpoints = []
-        # maxgraph and gaia external endpoint, for client and gremlin function test
-        external_endpoints = []
+        # maxgraph endpoint
+        maxgraph_endpoint = None
+        # maxgraph external endpoint, for client and gremlin function test
+        maxgraph_external_endpoint = None
         # create instance
         proc = self._launcher.create_interactive_instance(op.attr)
         try:
-            # 60 seconds is enough
+            # 60 seconds is enough, see also GH#1024; try 120
             # already add errs to outs
-            outs, errs = proc.communicate(timeout=60)
+            outs, errs = proc.communicate(timeout=120)
             return_code = proc.poll()
             if return_code == 0:
                 # match maxgraph endpoint and check for ready
@@ -694,7 +690,6 @@ class CoordinatorServiceServicer(
                     MAXGRAPH_FRONTEND_PATTERN, outs
                 )
                 if check_gremlin_server_ready(maxgraph_endpoint):
-                    endpoints.append(maxgraph_endpoint)
                     logger.info(
                         "build maxgraph frontend %s for graph %ld",
                         maxgraph_endpoint,
@@ -703,35 +698,17 @@ class CoordinatorServiceServicer(
                 maxgraph_external_endpoint = _match_frontend_endpoint(
                     MAXGRAPH_FRONTEND_EXTERNAL_PATTERN, outs
                 )
-                if maxgraph_external_endpoint:
-                    external_endpoints.append(maxgraph_external_endpoint)
-                # match gaia endpoint and check for ready
-                if enable_gaia:
-                    gaia_endpoint = _match_frontend_endpoint(
-                        GAIA_FRONTEND_PATTERN, outs
-                    )
-                    if check_gremlin_server_ready(gaia_endpoint):
-                        endpoints.append(gaia_endpoint)
-                        logger.info(
-                            "build gaia frontend %s for graph %ld",
-                            gaia_endpoint,
-                            object_id,
-                        )
-                    gaia_external_endpoint = _match_frontend_endpoint(
-                        GAIA_FRONTEND_EXTERNAL_PATTERN,
-                        outs,
-                    )
-                    if gaia_external_endpoint:
-                        external_endpoints.append(gaia_external_endpoint)
+
                 self._object_manager.put(
-                    op.key, InteractiveQueryManager(op.key, endpoints, object_id)
+                    op.key,
+                    InteractiveQueryManager(op.key, maxgraph_endpoint, object_id),
                 )
                 return op_def_pb2.OpResult(
                     code=error_codes_pb2.OK,
                     key=op.key,
-                    result=",".join(external_endpoints).encode("utf-8")
-                    if external_endpoints
-                    else ",".join(endpoints).encode("utf-8"),
+                    result=maxgraph_external_endpoint.encode("utf-8")
+                    if maxgraph_external_endpoint
+                    else maxgraph_endpoint.encode("utf-8"),
                     extra_info=str(object_id).encode("utf-8"),
                 )
             else:
@@ -750,14 +727,11 @@ class CoordinatorServiceServicer(
             request_options = json.loads(
                 op.attr[types_pb2.GIE_GREMLIN_REQUEST_OPTIONS].s.decode()
             )
-        query_gaia = op.attr[types_pb2.GIE_QUERY_GAIA].b
         key_of_parent_op = op.parents[0]
 
         gremlin_client = self._object_manager.get(key_of_parent_op)
         try:
-            rlt = gremlin_client.submit(
-                message, request_options=request_options, query_gaia=query_gaia
-            )
+            rlt = gremlin_client.submit(message, request_options=request_options)
         except Exception as e:
             raise RuntimeError("Gremlin query failed.") from e
         self._object_manager.put(op.key, GremlinResultSet(op.key, rlt))

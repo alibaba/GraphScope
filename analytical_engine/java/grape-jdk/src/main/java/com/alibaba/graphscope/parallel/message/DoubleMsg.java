@@ -57,6 +57,7 @@ public interface DoubleMsg extends FFIPointer {
         /**
          * Create a DoubleMsg with initial value.
          *
+         * @param inData input data.
          * @return msg instance.
          */
         DoubleMsg create(double inData);

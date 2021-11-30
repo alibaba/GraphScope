@@ -22,7 +22,7 @@ from graphscope.nx.utils.compat import import_as_graphscope_nx
 import_as_graphscope_nx(networkx.algorithms.isomorphism.tests.test_vf2userfunc,
                         decorators=pytest.mark.usefixtures("graphscope_session"))
 
-
+@pytest.mark.usefixtures("graphscope_session")
 def test_simple():
     # 16 simple tests
     w = 'weight'

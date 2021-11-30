@@ -91,11 +91,6 @@ class JavaContextBase : public grape::ContextBase {
   }
   const fragment_t& fragment() const { return fragment_; }
 
-  void Output(std::ostream& os) {
-    VLOG(1)
-        << "Java app context will output with other methods: ToNdArray, etc. ";
-  }
-
   const char* app_class_name() const { return app_class_name_; }
 
   uint64_t inner_context_addr() { return inner_ctx_addr_; }
@@ -109,6 +104,8 @@ class JavaContextBase : public grape::ContextBase {
   const jobject& url_class_loader_object() const {
     return url_class_loader_object_;
   }
+
+  virtual void Output(std::ostream& os) = 0;
 
  protected:
   virtual const char* evalDescriptor() = 0;
@@ -163,8 +160,7 @@ class JavaContextBase : public grape::ContextBase {
           env->CallStaticVoidMethod(load_library_class, load_library_methodID,
                                     user_library_jstring);
           if (env->ExceptionCheck()) {
-            LOG(ERROR) << std::string(
-                "Exception occurred in loading user library");
+            LOG(ERROR) << "Exception occurred when loading user library";
             env->ExceptionDescribe();
             env->ExceptionClear();
             LOG(ERROR) << "Exiting since exception occurred";
@@ -174,20 +170,20 @@ class JavaContextBase : public grape::ContextBase {
       }
 
       {
-        VLOG(1) << "Now create app object: " << app_class_name_;
+        VLOG(1) << "Creating app object: " << app_class_name_;
         app_object_ =
             LoadAndCreate(env, url_class_loader_object_, app_class_name_);
-        VLOG(1) << "Successfully create app object with class loader:"
+        VLOG(1) << "Successfully created app object with class loader:"
                 << &url_class_loader_object_
                 << ", of type: " << std::string(app_class_name_);
       }
 
       {
         std::string _context_class_name_str = getCtxClassNameFromAppObject(env);
-        VLOG(1) << "context class name: " << _context_class_name_str;
+        VLOG(1) << "Context class name: " << _context_class_name_str;
         context_object_ = LoadAndCreate(env, url_class_loader_object_,
                                         _context_class_name_str.c_str());
-        VLOG(1) << "Successfully create ctx object with class loader:"
+        VLOG(1) << "Successfully created ctx object with class loader:"
                 << &url_class_loader_object_
                 << ", of type: " << _context_class_name_str;
       }

@@ -16,10 +16,11 @@
 
 package com.alibaba.graphscope.utils;
 
-import com.alibaba.graphscope.app.ProjectedDefaultAppBase;
-import com.alibaba.graphscope.app.PropertyDefaultAppBase;
+import com.alibaba.graphscope.app.DefaultAppBase;
+import com.alibaba.graphscope.app.DefaultContextBase;
+import com.alibaba.graphscope.app.DefaultPropertyAppBase;
+import com.alibaba.graphscope.app.ParallelPropertyAppBase;
 import com.alibaba.graphscope.context.LabeledVertexDataContext;
-import com.alibaba.graphscope.context.ProjectedDefaultContextBase;
 import com.alibaba.graphscope.context.PropertyDefaultContextBase;
 import com.alibaba.graphscope.context.VertexDataContext;
 import java.lang.reflect.ParameterizedType;
@@ -80,7 +81,7 @@ public class AppContextGetter {
      * @return the base class name.
      */
     public static String getPropertyDefaultContextName(
-            Class<? extends PropertyDefaultAppBase> appClass) {
+            Class<? extends DefaultPropertyAppBase> appClass) {
         Class<? extends PropertyDefaultContextBase> clz =
                 (Class<? extends PropertyDefaultContextBase>) getInterfaceTemplateType(appClass, 1);
         return clz.getName();
@@ -92,32 +93,51 @@ public class AppContextGetter {
      * @param appClass user-defined app class object.
      * @return the base class name.
      */
-    public static String getProjectedDefaultContextName(
-            Class<? extends ProjectedDefaultAppBase> appClass) {
-        Class<? extends ProjectedDefaultContextBase> clz =
-                (Class<? extends ProjectedDefaultContextBase>)
-                        getInterfaceTemplateType(appClass, 4);
+    public static String getDefaultContextName(Class<? extends DefaultAppBase> appClass) {
+        Class<? extends DefaultContextBase> clz =
+                (Class<? extends DefaultContextBase>) getInterfaceTemplateType(appClass, 4);
+        return clz.getName();
+    }
+
+    /**
+     * For parallel property app ,the index of context type in template is 1.
+     *
+     * @param appClass user-defined app class object.
+     * @return the corrsponding class name.
+     */
+    public static String getParallelPropertyContextName(
+            Class<? extends ParallelPropertyAppBase> appClass) {
+        Class<? extends PropertyDefaultContextBase> clz =
+                (Class<? extends PropertyDefaultContextBase>) getInterfaceTemplateType(appClass, 1);
         return clz.getName();
     }
 
     public static String getContextName(Object obj) {
         System.out.println("obj class " + obj.getClass().getName());
-        if (obj instanceof PropertyDefaultAppBase) {
+        if (obj instanceof DefaultPropertyAppBase) {
             return getPropertyDefaultContextName(
-                    (Class<? extends PropertyDefaultAppBase>) obj.getClass());
+                    (Class<? extends DefaultPropertyAppBase>) obj.getClass());
         }
         System.out.println(
                 "obj class"
                         + obj.getClass().getName()
-                        + " is not instance of PropertyDefaultAppBase.");
-        if (obj instanceof ProjectedDefaultAppBase) {
-            return getProjectedDefaultContextName(
-                    (Class<? extends ProjectedDefaultAppBase>) obj.getClass());
+                        + " is not instance of DefaultPropertyAppBase.");
+        if (obj instanceof DefaultAppBase) {
+            return getDefaultContextName((Class<? extends DefaultAppBase>) obj.getClass());
         }
         System.out.println(
                 "obj class"
                         + obj.getClass().getName()
                         + " is not instance of ProjectedDefaultAppBase.");
+
+        if (obj instanceof ParallelPropertyAppBase) {
+            return getParallelPropertyContextName(
+                    (Class<? extends ParallelPropertyAppBase>) obj.getClass());
+        }
+        System.out.println(
+                "obj class"
+                        + obj.getClass().getName()
+                        + " is not instance of ParallelPropertyAppBase.");
         return null;
     }
 

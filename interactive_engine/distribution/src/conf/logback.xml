@@ -1,5 +1,5 @@
 <configuration>
-    <property name="log_dir" value="${log.dir:-/tmp/graphscope-store}"/>
+    <property name="log_dir" value="${log.dir:-/var/log/graphscope/store}"/>
     <property name="log_name" value="${log.name:-maxgraph}"/>
     <appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
         <file>${log_dir}/${log_name}.log</file>

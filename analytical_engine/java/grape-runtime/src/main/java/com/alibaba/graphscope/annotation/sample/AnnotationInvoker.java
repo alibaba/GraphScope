@@ -1,18 +1,44 @@
+/*
+ * Copyright 2021 Alibaba Group Holding Limited.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *  	http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package com.alibaba.graphscope.annotation.sample;
 
 import static com.alibaba.graphscope.utils.CppClassName.ARROW_FRAGMENT;
 import static com.alibaba.graphscope.utils.CppClassName.ARROW_PROJECTED_FRAGMENT;
+import static com.alibaba.graphscope.utils.CppClassName.DOUBLE_MSG;
 import static com.alibaba.graphscope.utils.CppClassName.GRAPE_EMPTY_TYPE;
 import static com.alibaba.graphscope.utils.CppClassName.GS_VERTEX_ARRAY;
 
 import com.alibaba.fastffi.CXXTemplate;
+import com.alibaba.fastffi.FFIFunGen;
 import com.alibaba.fastffi.FFIGen;
 import com.alibaba.fastffi.FFIGenBatch;
+import com.alibaba.graphscope.utils.CppClassName;
 
 @FFIGenBatch(
         value = {
+            @FFIGen(type = "com.alibaba.graphscope.ds.EmptyType"),
             @FFIGen(type = "com.alibaba.graphscope.parallel.message.DoubleMsg"),
             @FFIGen(type = "com.alibaba.graphscope.parallel.message.LongMsg"),
+            @FFIGen(
+                    type = "com.alibaba.graphscope.parallel.message.PrimitiveMessage",
+                    templates = {
+                        @CXXTemplate(cxx = "double", java = "Double"),
+                        @CXXTemplate(cxx = "int64_t", java = "Long")
+                    }),
             @FFIGen(
                     type = "com.alibaba.graphscope.ds.Vertex",
                     templates = {
@@ -48,7 +74,7 @@ import com.alibaba.fastffi.FFIGenBatch;
                                 java = {"Double", "Long"}),
                     }),
             @FFIGen(
-                    type = "com.alibaba.graphscope.ds.Nbr",
+                    type = "com.alibaba.graphscope.ds.GrapeNbr",
                     templates = {
                         @CXXTemplate(
                                 cxx = {"uint64_t", "double"},
@@ -61,7 +87,7 @@ import com.alibaba.fastffi.FFIGenBatch;
                                 java = {"Long", "Long"}),
                     }),
             @FFIGen(
-                    type = "com.alibaba.graphscope.ds.AdjList",
+                    type = "com.alibaba.graphscope.ds.GrapeAdjList",
                     templates = {
                         @CXXTemplate(
                                 cxx = {"uint64_t", "double"},
@@ -79,9 +105,6 @@ import com.alibaba.fastffi.FFIGenBatch;
                         @CXXTemplate(cxx = "int64_t", java = "Long"),
                         @CXXTemplate(cxx = "double", java = "Double"),
                         @CXXTemplate(cxx = "int32_t", java = "Integer"),
-                        @CXXTemplate(cxx = "uint64_t", java = "Long"),
-                        @CXXTemplate(cxx = "double", java = "Double"),
-                        @CXXTemplate(cxx = "uint32_t", java = "Integer"),
                     }),
             @FFIGen(
                     type = "com.alibaba.graphscope.stdcxx.StdVector",
@@ -123,12 +146,31 @@ import com.alibaba.fastffi.FFIGenBatch;
                         @CXXTemplate(cxx = "uint64_t", java = "Long"),
                         @CXXTemplate(cxx = "uint32_t", java = "Integer"),
                     }),
-            @FFIGen(
-                    type = "com.alibaba.graphscope.fragment.ArrowFragment",
-                    templates = {
-                        @CXXTemplate(cxx = "int64_t", java = "Long"),
-                        @CXXTemplate(cxx = "int32_t", java = "Integer"),
-                    }),
+            //            @FFIGen(
+            //                    type = "com.alibaba.graphscope.ds.EdgeDataColumn",
+            //                    templates = {
+            //                        @CXXTemplate(cxx = "int64_t", java = "Long"),
+            //                        @CXXTemplate(cxx = "int32_t", java = "Integer"),
+            //                        @CXXTemplate(cxx = "double", java = "Double")
+            //                    }),
+            //            @FFIGen(
+            //                    type = "com.alibaba.graphscope.fragment.ArrowFragment",
+            //                    templates = {
+            //                        @CXXTemplate(cxx = "int64_t", java = "Long"),
+            //                        @CXXTemplate(cxx = "int32_t", java = "Integer"),
+            //                    },
+            //                    functionTemplates = {
+            //                        @FFIFunGen(
+            //                                name = "edgeDataColumn",
+            //                                parameterTypes = {"DATA_T"},
+            //                                returnType =
+            // "com.alibaba.graphscope.ds.EdgeDataColumn<DATA_T>",
+            //                                templates = {
+            //                                    @CXXTemplate(cxx = "int32_t", java = "Integer"),
+            //                                    @CXXTemplate(cxx = "int64_t", java = "Long"),
+            //                                    @CXXTemplate(cxx = "double", java = "Double")
+            //                                })
+            //                    }),
             @FFIGen(
                     type = "com.alibaba.graphscope.fragment.ArrowProjectedFragment",
                     templates = {
@@ -314,6 +356,7 @@ import com.alibaba.fastffi.FFIGenBatch;
                                     "com.alibaba.graphscope.fragment.ArrowProjectedFragment<java.lang.Long,java.lang.Long,com.alibaba.graphscope.ds.EmptyType,java.lang.Long>"
                                 })
                     }),
+
             //            @FFIGen(
             //                    type = "com.alibaba.graphscope.parallel.PropertyMessageManager",
             //                    functionTemplates = {
@@ -468,159 +511,89 @@ import com.alibaba.fastffi.FFIGenBatch;
             //                                            })
             //                                }),
             //                    }),
-            //            @FFIGen(
-            //                    type = "com.alibaba.graphscope.parallel.DefaultMessageManager",
-            //                    functionTemplates = {
-            //                        @FFIFunGen(
-            //                                name = "sendMsgThroughIEdges",
-            //                                returnType = "void",
-            //                                parameterTypes = {"FRAG_T", "MSG_T"},
-            //                                templates = {
-            //                                    @CXXTemplate(
-            //                                            cxx = {
-            //                                                CppClassName.ARROW_FRAGMENT +
-            // "<int64_t>",
-            //                                                DOUBLE_MSG
-            //                                            },
-            //                                            java = {
-            //
-            // "com.alibaba.graphscope.fragment.ArrowFragment<java.lang.Long>",
-            //
-            // "com.alibaba.graphscope.parallel.message.DoubleMsg"
-            //                                            }),
-            //                                    @CXXTemplate(
-            //                                            cxx = {
-            //                                                CppClassName.ARROW_FRAGMENT +
-            // "<int64_t>",
-            //                                                LONG_MSG
-            //                                            },
-            //                                            java = {
-            //
-            // "com.alibaba.graphscope.fragment.ArrowFragment<java.lang.Long>",
-            //
-            // "com.alibaba.graphscope.parallel.message.LongMsg"
-            //                                            })
-            //                                }),
-            //                        @FFIFunGen(
-            //                                name = "sendMsgThroughOEdges",
-            //                                returnType = "void",
-            //                                parameterTypes = {"FRAG_T", "MSG_T"},
-            //                                templates = {
-            //                                    @CXXTemplate(
-            //                                            cxx = {
-            //                                                CppClassName.ARROW_FRAGMENT +
-            // "<int64_t>",
-            //                                                DOUBLE_MSG
-            //                                            },
-            //                                            java = {
-            //
-            // "com.alibaba.graphscope.fragment.ArrowFragment<java.lang.Long>",
-            //
-            // "com.alibaba.graphscope.parallel.message.DoubleMsg"
-            //                                            }),
-            //                                    @CXXTemplate(
-            //                                            cxx = {
-            //                                                CppClassName.ARROW_FRAGMENT +
-            // "<int64_t>",
-            //                                                LONG_MSG
-            //                                            },
-            //                                            java = {
-            //
-            // "com.alibaba.graphscope.fragment.ArrowFragment<java.lang.Long>",
-            //
-            // "com.alibaba.graphscope.parallel.message.LongMsg"
-            //                                            })
-            //                                }),
-            //                        @FFIFunGen(
-            //                                name = "sendMsgThroughEdges",
-            //                                returnType = "void",
-            //                                parameterTypes = {"FRAG_T", "MSG_T"},
-            //                                templates = {
-            //                                    @CXXTemplate(
-            //                                            cxx = {
-            //                                                CppClassName.ARROW_FRAGMENT +
-            // "<int64_t>",
-            //                                                DOUBLE_MSG
-            //                                            },
-            //                                            java = {
-            //
-            // "com.alibaba.graphscope.fragment.ArrowFragment<java.lang.Long>",
-            //
-            // "com.alibaba.graphscope.parallel.message.DoubleMsg"
-            //                                            }),
-            //                                    @CXXTemplate(
-            //                                            cxx = {
-            //                                                CppClassName.ARROW_FRAGMENT +
-            // "<int64_t>",
-            //                                                LONG_MSG
-            //                                            },
-            //                                            java = {
-            //
-            // "com.alibaba.graphscope.fragment.ArrowFragment<java.lang.Long>",
-            //
-            // "com.alibaba.graphscope.parallel.message.LongMsg"
-            //                                            })
-            //                                }),
-            //                        @FFIFunGen(
-            //                                name = "syncStateOnOuterVertex",
-            //                                returnType = "void",
-            //                                parameterTypes = {"FRAG_T", "MSG_T"},
-            //                                templates = {
-            //                                    @CXXTemplate(
-            //                                            cxx = {
-            //                                                CppClassName.ARROW_FRAGMENT +
-            // "<int64_t>",
-            //                                                DOUBLE_MSG
-            //                                            },
-            //                                            java = {
-            //
-            // "com.alibaba.graphscope.fragment.ArrowFragment<java.lang.Long>",
-            //
-            // "com.alibaba.graphscope.parallel.message.DoubleMsg"
-            //                                            }),
-            //                                    @CXXTemplate(
-            //                                            cxx = {
-            //                                                CppClassName.ARROW_FRAGMENT +
-            // "<int64_t>",
-            //                                                LONG_MSG
-            //                                            },
-            //                                            java = {
-            //
-            // "com.alibaba.graphscope.fragment.ArrowFragment<java.lang.Long>",
-            //
-            // "com.alibaba.graphscope.parallel.message.LongMsg"
-            //                                            })
-            //                                }),
-            //                        @FFIFunGen(
-            //                                name = "getMessage",
-            //                                returnType = "boolean",
-            //                                parameterTypes = {"FRAG_T", "MSG_T"},
-            //                                templates = {
-            //                                    @CXXTemplate(
-            //                                            cxx = {
-            //                                                CppClassName.ARROW_FRAGMENT +
-            // "<int64_t>",
-            //                                                DOUBLE_MSG
-            //                                            },
-            //                                            java = {
-            //
-            // "com.alibaba.graphscope.fragment.ArrowFragment<java.lang.Long>",
-            //
-            // "com.alibaba.graphscope.parallel.message.DoubleMsg"
-            //                                            }),
-            //                                    @CXXTemplate(
-            //                                            cxx = {
-            //                                                CppClassName.ARROW_FRAGMENT +
-            // "<int64_t>",
-            //                                                LONG_MSG
-            //                                            },
-            //                                            java = {
-            //
-            // "com.alibaba.graphscope.fragment.ArrowFragment<java.lang.Long>",
-            //
-            // "com.alibaba.graphscope.parallel.message.LongMsg"
-            //                                            })
-            //                                }),
-            //                    }),
+            @FFIGen(
+                    type = "com.alibaba.graphscope.parallel.DefaultMessageManager",
+                    functionTemplates = {
+                        @FFIFunGen(
+                                name = "sendMsgThroughIEdges",
+                                returnType = "void",
+                                parameterTypes = {"FRAG_T", "MSG_T"},
+                                templates = {
+                                    @CXXTemplate(
+                                            cxx = {
+                                                CppClassName.GRAPE_IMMUTABLE_FRAGMENT
+                                                        + "<jlong,uint64_t,jlong,jdouble>",
+                                                DOUBLE_MSG
+                                            },
+                                            java = {
+                                                "com.alibaba.graphscope.fragment.ImmutableEdgecutFragment<Long,Long,Long,Double>",
+                                                "com.alibaba.graphscope.parallel.message.DoubleMsg"
+                                            }),
+                                }),
+                        @FFIFunGen(
+                                name = "sendMsgThroughOEdges",
+                                returnType = "void",
+                                parameterTypes = {"FRAG_T", "MSG_T"},
+                                templates = {
+                                    @CXXTemplate(
+                                            cxx = {
+                                                CppClassName.GRAPE_IMMUTABLE_FRAGMENT
+                                                        + "<jlong,uint64_t,jlong,jdouble>",
+                                                DOUBLE_MSG
+                                            },
+                                            java = {
+                                                "com.alibaba.graphscope.fragment.ImmutableEdgecutFragment<Long,Long,Long,Double>",
+                                                "com.alibaba.graphscope.parallel.message.DoubleMsg"
+                                            }),
+                                }),
+                        @FFIFunGen(
+                                name = "sendMsgThroughEdges",
+                                returnType = "void",
+                                parameterTypes = {"FRAG_T", "MSG_T"},
+                                templates = {
+                                    @CXXTemplate(
+                                            cxx = {
+                                                CppClassName.GRAPE_IMMUTABLE_FRAGMENT
+                                                        + "<jlong,uint64_t,jlong,jdouble>",
+                                                DOUBLE_MSG
+                                            },
+                                            java = {
+                                                "com.alibaba.graphscope.fragment.ImmutableEdgecutFragment<Long,Long,Long,Double>",
+                                                "com.alibaba.graphscope.parallel.message.DoubleMsg"
+                                            }),
+                                }),
+                        @FFIFunGen(
+                                name = "syncStateOnOuterVertex",
+                                returnType = "void",
+                                parameterTypes = {"FRAG_T", "MSG_T"},
+                                templates = {
+                                    @CXXTemplate(
+                                            cxx = {
+                                                CppClassName.GRAPE_IMMUTABLE_FRAGMENT
+                                                        + "<jlong,uint64_t,jlong,jdouble>",
+                                                DOUBLE_MSG
+                                            },
+                                            java = {
+                                                "com.alibaba.graphscope.fragment.ImmutableEdgecutFragment<Long,Long,Long,Double>",
+                                                "com.alibaba.graphscope.parallel.message.DoubleMsg"
+                                            }),
+                                }),
+                        @FFIFunGen(
+                                name = "getMessage",
+                                returnType = "boolean",
+                                parameterTypes = {"FRAG_T", "MSG_T"},
+                                templates = {
+                                    @CXXTemplate(
+                                            cxx = {
+                                                CppClassName.GRAPE_IMMUTABLE_FRAGMENT
+                                                        + "<jlong,uint64_t,jlong,jdouble>",
+                                                DOUBLE_MSG
+                                            },
+                                            java = {
+                                                "com.alibaba.graphscope.fragment.ImmutableEdgecutFragment<Long,Long,Long,Double>",
+                                                "com.alibaba.graphscope.parallel.message.DoubleMsg"
+                                            }),
+                                }),
+                    }),
         })
 public class AnnotationInvoker {}

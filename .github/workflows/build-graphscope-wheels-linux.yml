@@ -27,17 +27,18 @@ jobs:
 
     - name: Build Wheel Package
       run: |
-        # avoid access node by DNS hostnames
+        # Due to an observation of changing hostname in github runners,
+        # append 127.0.0.1 to etc/hosts to avoid DNS lookup.
         r=`cat /etc/hosts | grep $(hostname) || true`
         if [ -z "${r}" ];then export hn=$(hostname); sudo -E bash -c 'echo "127.0.0.1 ${hn}" >> /etc/hosts'; fi
         cat /etc/hosts
 
         cd ${GITHUB_WORKSPACE}/k8s
         # build graphscope wheels
-        sudo make graphscope-py3-package
+        sudo -E make graphscope-py3-package
 
         # build client wheels
-        sudo make graphscope-client-py3-package
+        sudo -E make graphscope-client-py3-package
 
         # package
         cd ${GITHUB_WORKSPACE}
@@ -47,58 +48,36 @@ jobs:
     - name: Upload Artifact
       uses: actions/upload-artifact@v2
       with:
-        name: wheel-linux-${{ github.sha }}
+        name: wheel--${{ github.sha }}
         path: |
           client.tar.gz
           graphscope.tar.gz
         retention-days: 5
 
-  test:
+  build-image:
     if: ${{ github.ref == 'refs/heads/main' && github.repository == 'alibaba/GraphScope' }}
-    runs-on: ${{ matrix.os }}
+    runs-on: [ubuntu-20.04]
     needs: [build-wheels]
-    strategy:
-      matrix:
-        os: [ubuntu-20.04]
-        python-version: ['3.6', '3.7', '3.8', '3.9']
 
     steps:
     - uses: actions/checkout@v2.3.2
       with:
         submodules: true
 
-    - name: Set up Python
-      uses: actions/setup-python@v2
-      with:
-        python-version: ${{ matrix.python-version }}
-
     - uses: actions/download-artifact@v2
       with:
         path: artifacts
 
-    - name: Run Test on ${{ matrix.python-version }}
-      shell: bash
+    - name: Add envs to GITHUB_ENV
       run: |
-        python3 -c "import sys; print(sys.version)"
+        short_sha=$(git rev-parse --short HEAD)
+        echo "SHORT_SHA=${short_sha}" >> $GITHUB_ENV
 
-        pushd artifacts
-        # install graphscope-client
-        tar -zxf ./wheel-linux-${{ github.sha }}/client.tar.gz
-        pushd python/dist/wheelhouse
-        for f in * ; do python3 -m pip install $f || true; done
-        popd
-        # install graphscope
-        tar -zxf ./wheel-linux-${{ github.sha }}/graphscope.tar.gz
-        pushd coordinator/dist/wheelhouse
-        python3 -m pip install ./*.whl
-        popd
-        pushd coordinator/dist
-        python3 -m pip install ./*.whl
-        popd
-        popd
+    - name: Build GraphScope Image
+      run: |
+        cd ${GITHUB_WORKSPACE}/artifacts
+        tar -zxf ./wheel-${{ github.sha }}/client.tar.gz
+        tar -zxf ./wheel-${{ github.sha }}/graphscope.tar.gz
 
-        # run test
-        python3 -m pip install pytest "tensorflow<=2.5.2" --user;
-        sudo apt update -y && sudo apt install openjdk-11-jdk -y
-        cd ${GITHUB_WORKSPACE}/python
-        python3 -m pytest -s -v ./tests/local/test_standalone.py
+        cd ${GITHUB_WORKSPACE}
+        sudo make graphscope-image

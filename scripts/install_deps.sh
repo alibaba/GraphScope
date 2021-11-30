@@ -14,8 +14,8 @@ readonly GREEN="\033[0;32m"
 readonly NC="\033[0m" # No Color
 
 readonly GRAPE_BRANCH="master" # libgrape-lite branch
-readonly V6D_VERSION="0.3.9"  # vineyard version
-readonly V6D_BRANCH="v0.3.10" # vineyard branch
+readonly V6D_VERSION="0.3.11"  # vineyard version
+readonly V6D_BRANCH="v0.3.11" # vineyard branch
 
 readonly OUTPUT_ENV_FILE="${HOME}/.graphscope_env"
 IS_IN_WSL=false && [[ ! -z "${IS_WSL}" || ! -z "${WSL_DISTRO_NAME}" ]] && IS_IN_WSL=true
@@ -1022,7 +1022,7 @@ install_deps_dev() {
   install_dependencies
 
   succ_msg="The script has installed all dependencies for builing GraphScope, use commands:\n
-  $ export ${OUTPUT_ENV_FILE}
+  $ source ${OUTPUT_ENV_FILE}
   $ make graphscope\n
   to build and develop GraphScope."
   succ "${succ_msg}"

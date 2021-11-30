@@ -21,7 +21,6 @@ import networkx.exception as exception
 import networkx.testing as testing
 from networkx.exception import *
 
-from graphscope.nx.algorithms import *
 from graphscope.nx.classes import *
 from graphscope.nx.convert import *
 from graphscope.nx.convert_matrix import *
@@ -29,6 +28,9 @@ from graphscope.nx.generators import *
 from graphscope.nx.readwrite import *
 from graphscope.nx.relabel import *
 from graphscope.nx.utils import *
+
+# NB: algorithm may conflict in name with generators, use algorithm first
+from graphscope.nx.algorithms import *  # isort:skip
 
 # set session attribute to Graph and DiGraph
 setattr(Graph, "_session", None)

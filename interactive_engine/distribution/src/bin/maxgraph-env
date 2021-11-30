@@ -32,7 +32,7 @@ fi
 
 NATIVE_DIR="$MAXGRAPH_HOME/native"
 
-export LD_LIBRARY_PATH=${NATIVE_DIR}:${LD_LIBRARY_PATH}:/usr/local/lib
+export LD_LIBRARY_PATH=${NATIVE_DIR}:${NATIVE_DIR}/lib:${LD_LIBRARY_PATH}:/usr/local/lib
 
 if [ -z "$MAXGRAPH_CONF_DIR" ]; then
     MAXGRAPH_CONF_DIR="$MAXGRAPH_HOME/conf"

@@ -34,10 +34,13 @@ import com.alibaba.graphscope.app.DefaultAppBase;
 import com.alibaba.graphscope.ds.Vertex;
 import com.alibaba.graphscope.fragment.ArrowProjectedFragment;
 import com.alibaba.graphscope.fragment.ImmutableEdgecutFragment;
+import com.alibaba.graphscope.fragment.SimpleFragment;
+import com.alibaba.graphscope.fragment.adaptor.ArrowProjectedAdaptor;
+import com.alibaba.graphscope.fragment.adaptor.ImmutableEdgecutFragmentAdaptor;
 
 /**
  * The default message manager, used in serial apps {@link DefaultAppBase} and {@link
- * com.alibaba.graphscope.app.ProjectedDefaultAppBase}.
+ * DefaultAppBase}.
  */
 @FFIGen(library = JNI_LIBRARY_NAME)
 @FFITypeAlias(GRAPE_DEFAULT_MESSAGE_MANAGER)
@@ -49,6 +52,66 @@ import com.alibaba.graphscope.fragment.ImmutableEdgecutFragment;
     CORE_JAVA_JAVA_MESSAGES_H
 })
 public interface DefaultMessageManager extends MessageManagerBase {
+
+    default <FRAG_T extends SimpleFragment, MSG_T> boolean getMessage(
+            @CXXReference FRAG_T frag,
+            @CXXReference @FFITypeAlias(GRAPE_LONG_VERTEX) Vertex<Long> vertex,
+            @CXXReference MSG_T msg) {
+        if (frag.fragmentType().equals(ArrowProjectedAdaptor.fragmentType)) {
+            getMessage((ArrowProjectedFragment) frag, vertex, msg);
+        } else if (frag.fragmentType().equals(ImmutableEdgecutFragmentAdaptor.fragmentType)) {
+            getMessage((ImmutableEdgecutFragment) frag, vertex, msg);
+        }
+        return false;
+    }
+
+    default <FRAG_T extends SimpleFragment, MSG_T> boolean syncStateOnOuterVertex(
+            @CXXReference FRAG_T frag,
+            @CXXReference @FFITypeAlias(GRAPE_LONG_VERTEX) Vertex<Long> vertex,
+            @CXXReference MSG_T msg) {
+        if (frag.fragmentType().equals(ArrowProjectedAdaptor.fragmentType)) {
+            syncStateOnOuterVertex((ArrowProjectedFragment) frag, vertex, msg);
+        } else if (frag.fragmentType().equals(ImmutableEdgecutFragmentAdaptor.fragmentType)) {
+            syncStateOnOuterVertex((ImmutableEdgecutFragment) frag, vertex, msg);
+        }
+        return false;
+    }
+
+    default <FRAG_T extends SimpleFragment, MSG_T> boolean sendMsgThroughOEdges(
+            @CXXReference FRAG_T frag,
+            @CXXReference @FFITypeAlias(GRAPE_LONG_VERTEX) Vertex<Long> vertex,
+            @CXXReference MSG_T msg) {
+        if (frag.fragmentType().equals(ArrowProjectedAdaptor.fragmentType)) {
+            sendMsgThroughOEdges((ArrowProjectedFragment) frag, vertex, msg);
+        } else if (frag.fragmentType().equals(ImmutableEdgecutFragmentAdaptor.fragmentType)) {
+            sendMsgThroughOEdges((ImmutableEdgecutFragment) frag, vertex, msg);
+        }
+        return false;
+    }
+
+    default <FRAG_T extends SimpleFragment, MSG_T> boolean sendMsgThroughEdges(
+            @CXXReference FRAG_T frag,
+            @CXXReference @FFITypeAlias(GRAPE_LONG_VERTEX) Vertex<Long> vertex,
+            @CXXReference MSG_T msg) {
+        if (frag.fragmentType().equals(ArrowProjectedAdaptor.fragmentType)) {
+            sendMsgThroughEdges((ArrowProjectedFragment) frag, vertex, msg);
+        } else if (frag.fragmentType().equals(ImmutableEdgecutFragmentAdaptor.fragmentType)) {
+            sendMsgThroughEdges((ImmutableEdgecutFragment) frag, vertex, msg);
+        }
+        return false;
+    }
+
+    default <FRAG_T extends SimpleFragment, MSG_T> boolean sendMsgThroughIEdges(
+            @CXXReference FRAG_T frag,
+            @CXXReference @FFITypeAlias(GRAPE_LONG_VERTEX) Vertex<Long> vertex,
+            @CXXReference MSG_T msg) {
+        if (frag.fragmentType().equals(ArrowProjectedAdaptor.fragmentType)) {
+            sendMsgThroughIEdges((ArrowProjectedFragment) frag, vertex, msg);
+        } else if (frag.fragmentType().equals(ImmutableEdgecutFragmentAdaptor.fragmentType)) {
+            sendMsgThroughIEdges((ImmutableEdgecutFragment) frag, vertex, msg);
+        }
+        return false;
+    }
 
     /**
      * Get the message received for specified vertex during last super step.
@@ -83,10 +146,9 @@ public interface DefaultMessageManager extends MessageManagerBase {
             @CXXReference MSG_T msg);
 
     /**
-     * Send a msg to the fragment where the querying outer vertex is an inner vertex in another
-     * fragment.
+     * Send a msg to the fragment where the querying outer vertex is an inner vertex.
      *
-     * @param frag ImmutableEdgeCutFragment.
+     * @param frag fragment.
      * @param vertex querying vertex.
      * @param msg msg to send.
      * @param <FRAG_T> fragment type.
@@ -99,8 +161,7 @@ public interface DefaultMessageManager extends MessageManagerBase {
             @CXXReference MSG_T msg);
 
     /**
-     * Send a msg to the fragment where the querying outer vertex is an inner vertexin another
-     * fragment.
+     * Send a msg to the fragment where the querying outer vertex is an inner vertex.
      *
      * @param frag fragment.
      * @param vertex querying vertex.

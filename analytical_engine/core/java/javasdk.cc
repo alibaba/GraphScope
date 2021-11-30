@@ -378,7 +378,7 @@ void InitJavaCommunicator(JNIEnv* env, const jobject& url_class_loader,
   CHECK_NOTNULL(communicator_class);
   if (env->IsInstanceOf(java_app, communicator_class)) {
     jmethodID init_communicator_method =
-        env->GetMethodID(communicator_class, "initCommunicator", "(Z;)V");
+        env->GetMethodID(communicator_class, "initCommunicator", "(J)V");
     CHECK_NOTNULL(init_communicator_method);
     env->CallVoidMethod(java_app, init_communicator_method, app_address);
     if (env->ExceptionCheck()) {

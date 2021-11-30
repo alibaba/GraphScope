@@ -21,7 +21,6 @@ import functools
 import json
 import logging
 import pickle
-import sys
 import threading
 import time
 

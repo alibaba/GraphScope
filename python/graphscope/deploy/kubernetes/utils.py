@@ -26,7 +26,6 @@ from queue import Queue
 
 from kubernetes import client as kube_client
 from kubernetes import config as kube_config
-from kubernetes import watch as kube_watch
 from kubernetes.client.rest import ApiException as K8SApiException
 
 from graphscope.framework.errors import K8sError

@@ -97,7 +97,7 @@ class IVertexDataContextWrapper : public IContextWrapper {
 
   virtual bl::result<std::string> GetContextData(const rpc::GSParams& params) {
     RETURN_GS_ERROR(vineyard::ErrorCode::kInvalidOperationError,
-                    "Not implement the operation.");
+                    "Not implemented operation: GetContextData");
   }
 };
 
@@ -225,11 +225,11 @@ class ILabeledVertexPropertyContextWrapper : public IContextWrapper {
  * @brief A base class for JavaPropertyDefaultContext. It holds an inner
  * ctxWrapper, and redirect function calls to the inner ctxWrapper.
  */
-class IJavaPIEPropertyDefaultContextWrapper : public IContextWrapper {
+class IJavaPIEPropertyContextWrapper : public IContextWrapper {
   using label_id_t = vineyard::property_graph_types::LABEL_ID_TYPE;
 
  public:
-  explicit IJavaPIEPropertyDefaultContextWrapper(const std::string& id)
+  explicit IJavaPIEPropertyContextWrapper(const std::string& id)
       : IContextWrapper(id) {}
 
   virtual bl::result<std::unique_ptr<grape::InArchive>> ToNdArray(
@@ -263,9 +263,9 @@ class IJavaPIEPropertyDefaultContextWrapper : public IContextWrapper {
  * @brief A base class for JavaProjectedDefaultContext. It holds an inner
  * ctxWrapper,and redirect function calls to the inner ctxWrapper.
  */
-class IJavaPIEProjectedDefaultContextWrapper : public IContextWrapper {
+class IJavaPIEProjectedContextWrapper : public IContextWrapper {
  public:
-  explicit IJavaPIEProjectedDefaultContextWrapper(const std::string& id)
+  explicit IJavaPIEProjectedContextWrapper(const std::string& id)
       : IContextWrapper(id) {}
 
   virtual bl::result<std::unique_ptr<grape::InArchive>> ToNdArray(

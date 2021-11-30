@@ -26,18 +26,15 @@ from io import BytesIO
 
 import yaml
 
-import graphscope
 from graphscope.framework.context import create_context_node
 from graphscope.framework.dag import DAGNode
 from graphscope.framework.dag_utils import bind_app
 from graphscope.framework.dag_utils import create_app
-from graphscope.framework.dag_utils import run_app
 from graphscope.framework.dag_utils import unload_app
 from graphscope.framework.errors import InvalidArgumentError
 from graphscope.framework.errors import check_argument
 from graphscope.framework.utils import graph_type_to_cpp_class
 from graphscope.proto import graph_def_pb2
-from graphscope.proto import types_pb2
 
 DEFAULT_GS_CONFIG_FILE = ".gs_conf.yaml"
 
@@ -117,7 +114,7 @@ def not_compatible_for(*graph_types):
 
 
 class AppAssets(DAGNode):
-    """A class represents a app assert node in a DAG that holds the bytes of the gar resource.
+    """A class represents an app asset node in a DAG that holds the bytes of the gar resource.
 
     Assets includes an algorithm name, and gar (for user defined algorithm),
     a context type (one of 'tensor', 'vertex_data', 'vertex_property',
@@ -174,7 +171,7 @@ class AppAssets(DAGNode):
         Raises:
             InvalidArgumentError:
                 - :code:`gs_conf.yaml` not exist in gar resource.
-                - Algo not found in gar resource.
+                - App not found in gar resource.
         """
         fp = BytesIO(self._gar)
         archive = zipfile.ZipFile(fp, "r")

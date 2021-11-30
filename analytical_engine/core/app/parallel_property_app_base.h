@@ -20,12 +20,11 @@
 
 #include "grape/types.h"
 
+#include "core/worker/parallel_property_worker.h"
+
 namespace gs {
 
 class ParallelPropertyMessageManager;
-
-template <typename T>
-class ParallelPropertyWorker;
 
 /**
  * @brief ParallelPropertyAppBase is a base class for apps on property graph,

@@ -116,6 +116,21 @@ public class AtomicLongArrayWrapper {
                 && !data.compareAndSet(lid - left, preValue, newValue));
     }
 
+    /**
+     * Atomicl update the array, compare values using unsigned comparasion.
+     *
+     * @param vertexId querying vertex id.
+     * @param newValue new value.
+     */
+    public void compareAndSetMinUnsigned(long vertexId, long newValue) {
+        int vid = (int) vertexId;
+        long preValue;
+        do {
+            preValue = data.get(vid - left);
+        } while (Long.compareUnsigned(preValue, newValue) > 0
+                && !data.compareAndSet(vid - left, preValue, newValue));
+    }
+
     public int getSize() {
         return size;
     }

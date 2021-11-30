@@ -30,6 +30,7 @@ else
 endif
 
 VERSION ?= latest
+VINEYARD_VERSION ?= v0.3.11
 PROFILE ?= release
 
 BUILD_PROGRESS  	= auto
@@ -50,12 +51,19 @@ gsvineyard-image:
 
 graphscope-image: submodule
 	docker build --progress=$(BUILD_PROGRESS) \
-				 --build-arg profile=${PROFILE} \
+				 --build-arg CI=${CI} \
 				 -t graphscope/graphscope:${SHORT_SHA} \
 				 --network=host \
 				 -f $(WORKING_DIR)/graphscope.Dockerfile ..
 
+graphscope-dev-image: submodule
+	docker build --progress=$(BUILD_PROGRESS) \
+				 -t graphscope/graphscope:${SHORT_SHA} \
+				 --network=host \
+				 -f $(WORKING_DIR)/graphscope-dev.Dockerfile ..
+
 graphscope-store-image:
+	docker pull ${REGISTRY}/$(DOCKER_ORG)/graphscope-vineyard:${VINEYARD_VERSION}
 	docker build --progress=$(BUILD_PROGRESS) \
                  --build-arg profile=${PROFILE} \
                  -t graphscope/graphscope-store:${SHORT_SHA} \
@@ -77,7 +85,7 @@ graphscope-darwin-py3:
 	# Avoid copy vineyard library with the same basename by:
 	# 	1) reinstall vineyard to /usr/local and
 	# 	2) rm /opt/vineyard/lib
-	cd /tmp && git clone -b v0.3.9 https://github.com/alibaba/libvineyard.git --depth=1 && \
+	cd /tmp && git clone -b ${VINEYARD_VERSION} https://github.com/alibaba/libvineyard.git --depth=1 && \
 		cd libvineyard && git submodule update --init && \
 		mkdir -p build && cd build && \
 		cmake .. -DCMAKE_INSTALL_PREFIX=/usr/local && \
@@ -95,8 +103,7 @@ graphscope-darwin-py3:
 		sudo strip /opt/graphscope/bin/grape_engine && \
 		sudo strip /opt/graphscope/bin/executor && \
 		sudo strip /opt/graphscope/bin/gaia_executor && \
-		sudo install_name_tool -add_rpath /usr/local/lib /opt/graphscope/bin/executor && \
-		sudo install_name_tool -add_rpath /usr/local/lib /opt/graphscope/bin/gaia_executor && \
+		export DYLD_LIBRARY_PATH=/usr/local/lib:$$DYLD_LIBRARY_PATH && \
 		package_name=gs-lib python3 setup.py bdist_wheel --plat=macosx_10_9_x86_64 && \
 		rm -fr build && \
 		package_name=gs-include python3 setup.py bdist_wheel --plat=macosx_10_9_x86_64 && \
@@ -115,39 +122,11 @@ graphscope-darwin-py3:
 		done
 
 graphscope-manylinux2014-py3:
+	docker pull ${REGISTRY}/$(DOCKER_ORG)/graphscope-vineyard:${VINEYARD_VERSION}
 	docker run --rm -v $(WORKING_DIR)/..:/work \
-		${REGISTRY}/$(DOCKER_ORG)/graphscope-runtime:${VERSION} \
-		bash -c 'source ~/.bashrc && sudo mkdir -p /opt/vineyard && \
-			cd /tmp && \
-			git clone https://github.com/alibaba/libgrape-lite.git --depth=1 && \
-			cd libgrape-lite && mkdir build && cd build && \
-			cmake .. && \
-			sudo make -j`nproc` install && \
-			cd /tmp && \
-			git clone -b v0.3.9 https://github.com/alibaba/libvineyard.git --depth=1 && \
-			cd libvineyard && \
-			git submodule update --init && \
-			mkdir -p build && cd build && \
-			cmake .. -DCMAKE_INSTALL_PREFIX=/opt/vineyard \
-				     -DBUILD_SHARED_LIBS=ON && \
-			sudo make install -j`nproc` && \
-			cd /tmp/libvineyard && \
-			python3 setup.py bdist_wheel && \
-			cd dist && \
-			auditwheel repair --plat=manylinux2014_x86_64 ./*.whl && \
-			sudo mkdir -p /opt/vineyard/dist && \
-			sudo cp -f wheelhouse/* /opt/vineyard/dist && \
-			pip3 install wheelhouse/*.whl && \
-			cd /tmp/libvineyard/modules/io && \
-			python3 setup.py bdist_wheel && \
-			sudo cp -f dist/* /opt/vineyard/dist && \
-			pip3 install dist/* && \
-			sudo cp -rf /opt/vineyard/* /usr/local/ && \
-			cd /tmp && \
-			sudo rm -fr /tmp/libvineyard /tmp/libgrape-lite && \
+		${REGISTRY}/$(DOCKER_ORG)/graphscope-vineyard:${VINEYARD_VERSION} \
+		bash -c 'source ~/.bashrc && \
 			cd /work && \
-			sudo yum install -y clang-devel && \
-			export LIBCLANG_PATH=$$(dirname $$(python3 -c "import clang; print(clang.__file__)"))/native && \
 			make install && \
 			python3 /work/k8s/precompile.py && \
 			export WITH_EXTRA_DATA=ON && \
@@ -182,36 +161,20 @@ graphscope-client-darwin-py3:
 		cd cmake-build && \
 		cmake -DWITH_VINEYARD=ON -DTESTING=OFF .. && \
 		make graphlearn_shared -j`nproc` && \
-		export DYLD_LIBRARY_PATH=$(WORKING_DIR)/../learning_engine/graph-learn/built/lib:$$DYLD_LIBRARY_PATH && \
+		export DYLD_LIBRARY_PATH=$(WORKING_DIR)/../learning_engine/graph-learn/built/lib:/usr/local/lib:$$DYLD_LIBRARY_PATH && \
 		cd $(WORKING_DIR)/../python && \
 		pip3 install -U pip numpy==1.18.5 delocate grpcio grpcio_tools wheel && \
 		rm -fr build dist/*.whl || true && \
-		export MACOSX_DEPLOYMENT_TARGET=10.9 && \
 		python3 setup.py bdist_wheel --plat=macosx_10_9_x86_64 && \
 		for wheel in `ls dist/*.whl`; do \
 			delocate-wheel -w dist/wheelhouse -v $$wheel && rm $$wheel; \
 		done
 
 graphscope-client-manylinux2014-py3:
+	docker pull ${REGISTRY}/$(DOCKER_ORG)/graphscope-vineyard:${VINEYARD_VERSION}
 	docker run --rm -v $(WORKING_DIR)/..:/work \
-		${REGISTRY}/$(DOCKER_ORG)/graphscope-runtime:${VERSION} \
+		${REGISTRY}/$(DOCKER_ORG)/graphscope-vineyard:${VINEYARD_VERSION} \
 		bash -c 'cd /tmp && \
-			git clone https://github.com/alibaba/libgrape-lite.git --depth=1 && \
-			cd libgrape-lite && mkdir build && cd build && \
-			cmake .. -DCMAKE_INSTALL_PREFIX=/opt/vineyard && \
-			sudo make -j`nproc` install && \
-			cd /tmp && \
-			git clone -b v0.3.9 https://github.com/alibaba/libvineyard.git --depth=1 && \
-			cd libvineyard && \
-			git submodule update --init && \
-			mkdir -p build && cd build && \
-			cmake .. -DCMAKE_PREFIX_PATH=/opt/vineyard \
-				-DCMAKE_INSTALL_PREFIX=/opt/vineyard \
-				-DBUILD_SHARED_LIBS=OFF \
-				-DBUILD_VINEYARD_MIGRATION=OFF && \
-			sudo make install vineyard_client_python -j`nproc` && \
-			sudo cp -rf /opt/vineyard/* /usr/local/ && \
-			sudo rm -fr /tmp/libvineyard /tmp/libgrape-lite && \
 			cd /work/learning_engine/graph-learn && \
 			git submodule update --init third_party/pybind11 && \
 			rm -rf cmake-build && \

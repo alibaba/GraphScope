@@ -75,6 +75,10 @@ public:
     return kafka_msg_.is_eof();
   }
 
+  int64_t GetOffset() const {
+    return kafka_msg_.get_offset();
+  }
+
   const unsigned char *Data() const {
     return kafka_msg_.get_payload().get_data();
   }

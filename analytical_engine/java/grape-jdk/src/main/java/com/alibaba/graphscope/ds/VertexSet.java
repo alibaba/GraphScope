@@ -93,7 +93,7 @@ public class VertexSet {
      * {@code ensureCapcity} is to be invoked, causing problem. So we access the highest bit in
      * initializing.
      *
-     * @param vertex
+     * @param vertex input vertex.
      */
     public void set(Vertex<Long> vertex) {
         bs.set(vertex.GetValue().intValue() - left);

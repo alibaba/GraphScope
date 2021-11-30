@@ -21,6 +21,7 @@ import pytest
 import graphscope.nx as nx
 
 
+@pytest.mark.usefixtures("graphscope_session")
 class BaseTestAttributeMixing:
     def setup_method(cls):
         G = nx.Graph()
@@ -49,6 +50,7 @@ class BaseTestAttributeMixing:
         cls.S = S
 
 
+@pytest.mark.usefixtures("graphscope_session")
 class BaseTestDegreeMixing:
     def setup_method(cls):
         cls.P4 = nx.path_graph(4)

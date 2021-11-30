@@ -27,7 +27,6 @@ import logging
 import os
 import pickle
 import signal
-import sys
 import threading
 import time
 import uuid
@@ -81,8 +80,8 @@ class _FetchHandler(object):
     This class takes care of extracting a sub-DAG as targets for a user-provided structure for fetches,
     which can be used for a low level `run` call of grpc_client.
 
-    Given the results of the low level run call, this class can also rebuild a result structure
-    matching the user-provided structure for fetches, but containing the corresponding results.
+    Given the results of the low level run call, this class can also rebuild a result structure matching
+    the user-provided structure for fetches, but containing the corresponding results.
     """
 
     def __init__(self, dag, fetches):
@@ -348,7 +347,6 @@ class Session(object):
         timeout_seconds=gs_config.timeout_seconds,
         dangling_timeout_seconds=gs_config.dangling_timeout_seconds,
         with_mars=gs_config.with_mars,
-        enable_gaia=gs_config.enable_gaia,
         mount_dataset=gs_config.mount_dataset,
         reconnect=False,
         **kw,
@@ -438,9 +436,6 @@ class Session(object):
 
             with_mars (bool, optional):
                 Launch graphscope with mars. Defaults to False.
-
-            enable_gaia (bool, optional):
-                Launch graphscope with gaia enabled. Defaults to False.
 
             mount_dataset (str, optional):
                 Create a container and mount aliyun demo dataset bucket to the path specified by `mount_dataset`.
@@ -577,7 +572,6 @@ class Session(object):
             "k8s_mars_scheduler_cpu",
             "k8s_mars_scheduler_mem",
             "with_mars",
-            "enable_gaia",
             "reconnect",
             "k8s_volumes",
             "k8s_waiting_for_delete",
@@ -1150,9 +1144,8 @@ class Session(object):
             self._interactive_instance_dict[graph.vineyard_id] = interactive_query
 
         try:
-            enable_gaia = self._config_params["enable_gaia"]
             _wrapper = self._wrapper(
-                InteractiveQueryDAGNode(self, graph, engine_params, enable_gaia)
+                InteractiveQueryDAGNode(self, graph, engine_params)
             )
         except Exception as e:
             if self.eager():
@@ -1272,7 +1265,6 @@ def set_option(**kwargs):
         - k8s_mars_scheduler_cpu
         - k8s_mars_scheduler_mem
         - with_mars
-        - enable_gaia
         - k8s_volumes
         - k8s_waiting_for_delete
         - engine_params
@@ -1327,7 +1319,6 @@ def get_option(key):
         - k8s_mars_scheduler_cpu
         - k8s_mars_scheduler_mem
         - with_mars
-        - enable_gaia
         - k8s_volumes
         - k8s_waiting_for_delete
         - engine_params

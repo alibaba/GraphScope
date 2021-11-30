@@ -33,15 +33,6 @@ import com.alibaba.graphscope.utils.JNILibraryName;
 @FFIGen(library = JNILibraryName.JNI_LIBRARY_NAME)
 @CXXHead(CppHeaderName.CORE_JAVA_TYPE_ALIAS_H)
 @FFITypeAlias(CppClassName.VERTEX_DATA_COLUMN)
-// @CXXTemplate(
-//        cxx = {"uint64_t"},
-//        java = {"Long"})
-// @CXXTemplate(
-//        cxx = {"double"},
-//        java = {"Double"})
-// @CXXTemplate(
-//        cxx = {"uint32_t"},
-//        java = {"Integer"})
 public interface VertexDataColumn<DATA_T> extends FFIPointer {
     @CXXOperator(value = "[]")
     @CXXValue

@@ -31,7 +31,7 @@ def k_shell(graph, k: int):
     That is, nodes in the k-core that are not in the (k+1)-core.
 
     Args:
-        graph (:class:`Graph`): A projected simple graph.
+        graph (:class:`Graph`): A simple graph.
         k (int): The `k` for k-shell.
 
     Returns:
@@ -45,8 +45,8 @@ def k_shell(graph, k: int):
     .. code:: python
 
         import graphscope as gs
-        sess = gs.session()
-        g = sess.g()
+        g = gs.g()
+        # Load some data, then project to a simple graph (if needed).
         pg = g.project(vertices={"vlabel": []}, edges={"elabel": []})
         r = gs.k_shell(pg)
         s.close()

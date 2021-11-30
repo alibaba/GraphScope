@@ -57,8 +57,8 @@ def degree_assortativity_coefficient(G, x="out", y="in", weight=None):
     .. code:: python
 
         import graphscope as gs
-        sess = gs.session()
-        g = sess.g()
+        g = gs.g()
+        # Load some data, then project to a simple graph (if needed).
         pg = g.project(vertices={"vlabel": []}, edges={"elabel": []})
         r = gs.degree_assortativity_coefficient(pg)
         s.close()

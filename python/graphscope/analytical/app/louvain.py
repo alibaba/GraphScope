@@ -32,7 +32,7 @@ def louvain(graph, min_progress=1000, progress_tries=1):
     """Compute best partition on the `graph` by louvain.
 
     Args:
-        graph (:class:`Graph`): A projected simple undirected graph.
+        graph (:class:`Graph`): A simple undirected graph.
         min_progress: The minimum delta X required to be considered progress, where X is the number of nodes
                       that have changed their community on a particular pass.
                       Delta X is then the difference in number of nodes that changed communities
@@ -54,15 +54,14 @@ def louvain(graph, min_progress=1000, progress_tries=1):
 
     Notes:
         louvain now only support undirected graph. If input graph is directed graph, louvain would raise
-        a InvalidArgumentError.
+        an InvalidArgumentError.
 
     Examples:
 
     .. code:: python
 
         import graphscope as gs
-        s = gs.session()
-        g = s.g(directed=False)
+        g = gs.g(directed=False)
         g = g.add_vertices('The parameters for loading a graph...')
         g = g.add_edges('The parameters for loading a graph...')
         pg = g.project(vertices={"vlabel": []}, edges={"elabel": ["weight"]})

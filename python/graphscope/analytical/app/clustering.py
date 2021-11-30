@@ -28,23 +28,22 @@ __all__ = ["clustering"]
 @not_compatible_for("arrow_property", "dynamic_property")
 def clustering(graph):
     """Local clustering coefficient of a node in a Graph is the fraction
-    of pairs of the node’s neighbors that are adjacent to each
-    other.
+    of pairs of the node’s neighbors that are adjacent to each other.
 
     Args:
-        graph (:class:`Graph`): A projected simple graph.
+        graph (:class:`Graph`): A simple graph.
 
     Returns:
         :class:`graphscope.framework.context.VertexDataContextDAGNode`:
-            A context with each vertex assigned the computed clustering value, evaluated in eager mode.
+            A context with each vertex assigned the computed clustering value, will be evaluated in eager mode.
 
     Examples:
 
     .. code:: python
 
         import graphscope as gs
-        sess = gs.session()
-        g = sess.g()
+        g = gs.g()
+        # Load some data, then project to a simple graph (if needed).
         pg = g.project(vertices={"vlabel": []}, edges={"elabel": []})
         r = gs.clustering(pg)
         s.close()

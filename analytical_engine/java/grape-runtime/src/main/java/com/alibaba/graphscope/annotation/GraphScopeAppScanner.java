@@ -122,16 +122,16 @@ public class GraphScopeAppScanner {
 
     private String scanAppAndGenerateImpl() {
         // readConfig();
-        // for all ffiMirror we suppose they are all possible to appear in
-        // messageManager
+        // for all ffiMirror we suppose they are all possible to appear in messageManager
         collectFFIMirror();
         StringBuilder sb = new StringBuilder();
         for (String str : ffiMirrors.keySet()) {
             sb.append(ffiMirrors.get(str) + "=" + str + ",");
         }
         // add support for doubleMsg and LongMsg
+        //
         // sb.append("gs::DoubleMsg=com.alibaba.graphscopescope.parallel.message.DoubleMsg,");
-        // sb.append("gs::LongMsg=com.alibaba.graphscopescope.parallel.message.LongMsg,");
+        //        sb.append("gs::LongMsg=com.alibaba.graphscopescope.parallel.message.LongMsg,");
         String temp = sb.toString();
         String messageTypes = temp.substring(0, temp.length() - 1);
         // create a dummy graphConfig, oid type should never be used.

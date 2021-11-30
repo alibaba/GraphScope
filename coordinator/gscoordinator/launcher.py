@@ -51,6 +51,29 @@ class Launcher(metaclass=ABCMeta):
         self._num_workers = None
         self._analytical_engine_endpoint = None
 
+        # add `${GRAPHSCOPE_HOME}/bin` to ${PATH}
+        os.environ["PATH"] += os.pathsep + os.path.join(GRAPHSCOPE_HOME, "bin")
+        # OPAL_PREFIX for openmpi
+        if os.path.isdir(os.path.join(GRAPHSCOPE_HOME, "openmpi")):
+            os.environ["OPAL_PREFIX"] = os.path.join(GRAPHSCOPE_HOME, "openmpi")
+        # add '${GRAPHSCOPE_HOME}/lib' to ${LD_LIBRARY_PATH} to find libvineyard_internal_registry.so(dylib)
+        if "LD_LIBRARY_PATH" in os.environ:
+            os.environ["LD_LIBRARY_PATH"] = (
+                os.path.join(GRAPHSCOPE_HOME, "lib")
+                + os.pathsep
+                + os.environ["LD_LIBRARY_PATH"]
+            )
+        else:
+            os.environ["LD_LIBRARY_PATH"] = os.path.join(GRAPHSCOPE_HOME, "lib")
+        if "DYLD_LIBRARY_PATH" in os.environ:
+            os.environ["DYLD_LIBRARY_PATH"] = (
+                os.path.join(GRAPHSCOPE_HOME, "lib")
+                + os.pathsep
+                + os.environ["DYLD_LIBRARY_PATH"]
+            )
+        else:
+            os.environ["DYLD_LIBRARY_PATH"] = os.path.join(GRAPHSCOPE_HOME, "lib")
+
     @property
     def analytical_engine_endpoint(self):
         if self._analytical_engine_endpoint is None:
@@ -91,27 +114,6 @@ class LocalLauncher(Launcher):
     Launch engine localy with serveral hosts.
     """
 
-    _vineyard_socket_prefix = os.path.join(tempfile.gettempdir(), "vineyard.sock.")
-    # add `${GRAPHSCOPE_HOME}/bin` to ${PATH}
-    os.environ["PATH"] += os.pathsep + os.path.join(GRAPHSCOPE_HOME, "bin")
-    # add '${GRAPHSCOPE_HOME}/lib' to ${LD_LIBRARY_PATH} to find libvineyard_internal_registry.so(dylib)
-    if "LD_LIBRARY_PATH" in os.environ:
-        os.environ["LD_LIBRARY_PATH"] = (
-            os.path.join(GRAPHSCOPE_HOME, "lib")
-            + os.pathsep
-            + os.environ["LD_LIBRARY_PATH"]
-        )
-    else:
-        os.environ["LD_LIBRARY_PATH"] = os.path.join(GRAPHSCOPE_HOME, "lib")
-    if "DYLD_LIBRARY_PATH" in os.environ:
-        os.environ["DYLD_LIBRARY_PATH"] = (
-            os.path.join(GRAPHSCOPE_HOME, "lib")
-            + os.pathsep
-            + os.environ["DYLD_LIBRARY_PATH"]
-        )
-    else:
-        os.environ["DYLD_LIBRARY_PATH"] = os.path.join(GRAPHSCOPE_HOME, "lib")
-
     def __init__(
         self,
         num_workers,
@@ -130,6 +132,10 @@ class LocalLauncher(Launcher):
         self._glog_level = parse_as_glog_level(log_level)
         self._instance_id = instance_id
         self._timeout_seconds = timeout_seconds
+
+        self._vineyard_socket_prefix = os.path.join(
+            tempfile.gettempdir(), "vineyard.sock."
+        )
 
         # A graphsope instance may has multiple session by reconnecting to coordinator
         self._instance_workspace = os.path.join(WORKSPACE, self._instance_id)
@@ -229,7 +235,7 @@ class LocalLauncher(Launcher):
         schema_path = config[types_pb2.SCHEMA_PATH].s.decode()
         # engine params format:
         #   k1:v1;k2:v2;k3:v3
-        engine_params = {"gaia.engine.port": get_free_port("localhost")}
+        engine_params = {}
         if types_pb2.GIE_GREMLIN_ENGINE_PARAMS in config:
             engine_params = json.loads(
                 config[types_pb2.GIE_GREMLIN_ENGINE_PARAMS].s.decode()
@@ -237,7 +243,6 @@ class LocalLauncher(Launcher):
         engine_params = [
             "{}:{}".format(key, value) for key, value in engine_params.items()
         ]
-        enable_gaia = config[types_pb2.GIE_ENABLE_GAIA].b
         env = os.environ.copy()
         env.update({"GRAPHSCOPE_HOME": GRAPHSCOPE_HOME})
         cmd = [
@@ -250,7 +255,6 @@ class LocalLauncher(Launcher):
             self.vineyard_socket,
             str(self.zookeeper_port),
             "{}".format(";".join(engine_params)),
-            str(enable_gaia),
         ]
         logger.info("Create GIE instance with command: %s", " ".join(cmd))
         process = subprocess.Popen(
@@ -258,11 +262,12 @@ class LocalLauncher(Launcher):
             start_new_session=True,
             cwd=os.getcwd(),
             env=env,
-            universal_newlines=True,
             encoding="utf-8",
+            errors="replace",
             stdin=subprocess.DEVNULL,
             stdout=subprocess.PIPE,
             stderr=subprocess.STDOUT,
+            universal_newlines=True,
             bufsize=1,
         )
         return process
@@ -282,11 +287,12 @@ class LocalLauncher(Launcher):
             start_new_session=True,
             cwd=os.getcwd(),
             env=env,
-            universal_newlines=True,
             encoding="utf-8",
+            errors="replace",
             stdin=subprocess.DEVNULL,
             stdout=subprocess.PIPE,
             stderr=subprocess.STDOUT,
+            universal_newlines=True,
             bufsize=1,
         )
         return process
@@ -328,11 +334,12 @@ class LocalLauncher(Launcher):
             start_new_session=True,
             cwd=os.getcwd(),
             env=env,
-            universal_newlines=True,
             encoding="utf-8",
+            errors="replace",
             stdin=subprocess.DEVNULL,
             stdout=subprocess.DEVNULL,
             stderr=subprocess.DEVNULL,
+            universal_newlines=True,
             bufsize=1,
         )
 
@@ -371,11 +378,12 @@ class LocalLauncher(Launcher):
             start_new_session=True,
             cwd=os.getcwd(),
             env=os.environ.copy(),
-            universal_newlines=True,
             encoding="utf-8",
+            errors="replace",
             stdin=subprocess.DEVNULL,
             stdout=subprocess.DEVNULL,
             stderr=subprocess.STDOUT,
+            universal_newlines=True,
             bufsize=1,
         )
 
@@ -430,11 +438,12 @@ class LocalLauncher(Launcher):
                 start_new_session=True,
                 cwd=os.getcwd(),
                 env=env,
-                universal_newlines=True,
                 encoding="utf-8",
+                errors="replace",
                 stdin=subprocess.DEVNULL,
                 stdout=subprocess.PIPE,
                 stderr=subprocess.STDOUT,
+                universal_newlines=True,
                 bufsize=1,
             )
 
@@ -491,16 +500,6 @@ class LocalLauncher(Launcher):
 
         env = os.environ.copy()
         env.update(mpi_env)
-        # open MPI system need open ORTED daemon
-        if os.path.isfile(os.path.join(GRAPHSCOPE_HOME, "bin", "orted")):
-            # set OPAL only num_workers is 1, otherwise use system mpi
-            if self._num_workers == 1:
-                env.update(
-                    {
-                        "OPAL_PREFIX": os.path.join(GRAPHSCOPE_HOME),
-                        "OPAL_BINDIR": os.path.join(GRAPHSCOPE_HOME, "bin"),
-                    }
-                )
 
         logger.info("Launch analytical engine with command: %s", " ".join(cmd))
 
@@ -509,11 +508,12 @@ class LocalLauncher(Launcher):
             start_new_session=True,
             cwd=os.getcwd(),
             env=env,
-            universal_newlines=True,
             encoding="utf-8",
+            errors="replace",
             stdin=subprocess.DEVNULL,
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
+            universal_newlines=True,
             bufsize=1,
         )
 
@@ -580,6 +580,10 @@ class LocalLauncher(Launcher):
                 env=env,
                 stdout=subprocess.PIPE,
                 stderr=subprocess.STDOUT,
+                encoding="utf-8",
+                errors="replace",
+                universal_newlines=True,
+                bufsize=1,
             )
             stdout_watcher = PipeWatcher(proc.stdout, sys.stdout)
             setattr(proc, "stdout_watcher", stdout_watcher)
