@@ -15,8 +15,6 @@
 
 use std::cmp::Ordering;
 use std::collections::BinaryHeap;
-use std::mem::ManuallyDrop;
-use std::ptr;
 use std::sync::Arc;
 use crate::api::{Limit, SortLimit, SortLimitBy, Unary};
 use crate::stream::Stream;
