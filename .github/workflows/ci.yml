@@ -302,11 +302,12 @@ jobs:
             - 'python/graphscope/nx/__init__.py'
             - 'python/graphscope/nx/classes/**'
             - 'python/graphscope/nx/utils/**'
-<<<<<<< HEAD
-=======
             - 'python/graphscope/nx/tests/**'
-            - '.github/workflows/ci.yml'
->>>>>>> 54ed1f77 (add convdert tests)
+            - '!(python/graphscope/nx/tests/convert/**)'
+          convert:
+            - 'python/graphscope/nx/convert.py'
+            - 'python/graphscope/nx/convert_matrix.py'
+            - 'python/graphscope/nx/tests/convert/**'
 
     - uses: actions/download-artifact@v2
       with:
@@ -346,12 +347,23 @@ jobs:
       run: |
         pip3 show networkx
         python3 -m pytest --exitfirst -s -v \
-            $(dirname $(python3 -c "import graphscope; print(graphscope.__file__)"))/nx/tests
+            $(dirname $(python3 -c "import graphscope; print(graphscope.__file__)"))/nx/tests \
+            --ignore=$(dirname $(python3 -c "import graphscope; print(graphscope.__file__)"))/nx/tests/convert
+
+    - name: Convert Test
+      if: steps.nx-filter.outputs.convert == 'true'
+      env:
+        DEPLOYMENT: ${{ matrix.deployment }}
+        GS_TEST_DIR: ${{ github.workspace }}/gstest
+      run: |
+        pip3 show networkx
+        python3 -m pytest --exitfirst -s -v \
+            $(dirname $(python3 -c "import graphscope; print(graphscope.__file__)"))/nx/tests/convert
 
   networkx-algo-and-generator-test:
     runs-on: ubuntu-20.04
     needs: [build-wheels, changes]
-    if: ${{ needs.changes.outputs.networkx == 'true' }}
+    if: needs.changes.outputs.networkx == 'true'
     defaults:
       run:
         shell: bash --noprofile --norc -eo pipefail {0}
