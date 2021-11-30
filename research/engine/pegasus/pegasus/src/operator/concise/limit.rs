@@ -14,6 +14,7 @@
 //! limitations under the License.
 
 use std::cmp::Ordering;
+use std::collections::BinaryHeap;
 use std::mem::ManuallyDrop;
 use std::ptr;
 use std::sync::Arc;
@@ -78,29 +79,70 @@ impl<D: Data> SortLimitBy<D> for Stream<D> {
         let cmp = ShadeCmp { cmp: Arc::new(cmp) };
         let cmp_clone = cmp.clone();
 
-        let local_sort = sort_limit_by_partition(self, size, cmp_clone, false)?;
-        sort_limit_by_partition(local_sort.aggregate(), size, cmp, true)
+        let local_sort = sort_limit_by_partition(self, "sort_limit_by_partition_locally", size, cmp_clone)?;
+        sort_limit_by_partition(local_sort.aggregate(), "sort_limit_by_partition_globally", size, cmp)
     }
 }
 
-fn sort_limit_by_partition<D: Data, F>(stream: Stream<D>, size: u32, cmp: ShadeCmp<F>, last_sort: bool) -> Result<Stream<D>, BuildJobError>
-where F: Fn(&D, &D) -> Ordering + Send + 'static {
+type Cmp<D> = Arc<dyn Fn(&D, &D) -> Ordering + Send + 'static>;
+
+struct ShadeCmp<C> {
+    cmp: Arc<C>,
+}
+
+unsafe impl<C: Send> Send for ShadeCmp<C> {}
+
+impl<C> Clone for ShadeCmp<C> {
+    fn clone(&self) -> Self {
+        ShadeCmp { cmp: self.cmp.clone() }
+    }
+}
+
+struct Item<D> {
+    inner: D,
+    cmp: Cmp<D>,
+}
+
+impl<D> Eq for Item<D> {}
+
+impl<D> PartialEq<Self> for Item<D> {
+    fn eq(&self, other: &Self) -> bool {
+        (*(self.cmp))(&self.inner, &other.inner) == Ordering::Equal
+    }
+}
+
+impl<D> PartialOrd<Self> for Item<D> {
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+        Some((*(self.cmp))(&self.inner, &other.inner))
+    }
+}
+
+impl<D> Ord for Item<D> {
+    fn cmp(&self, other: &Self) -> Ordering {
+        (*(self.cmp))(&self.inner, &other.inner)
+    }
+}
+
+unsafe impl<D: Send> Send for Item<D> {}
+
+fn sort_limit_by_partition<D: Data, F>(stream: Stream<D>, name: &str, size: u32, cmp: ShadeCmp<F>) -> Result<Stream<D>, BuildJobError>
+    where F: Fn(&D, &D) -> Ordering + Send + 'static {
     if size == 0 {
         stream.limit(0)
     } else if size == 1 {
-        stream.unary("sort_limit_by_partition", |info| {
+        stream.unary(name, |info| {
             let mut table = TidyTagMap::<D>::new(info.scope_level);
             move |input, output| {
                 input.for_each_batch(|dataset| {
                     if let Some(min_value) = dataset.drain().min_by(|x, y| (*cmp.cmp)(x, y)) {
                         let new_min = if let Some(cur) = table.remove(&dataset.tag) {
                             if (*cmp.cmp)(&min_value, &cur) == Ordering::Less {
-                               min_value
+                                min_value
                             } else {
                                 cur
                             }
                         } else {
-                           min_value
+                            min_value
                         };
 
                         if let Some(end) = dataset.take_end() {
@@ -127,174 +169,38 @@ where F: Fn(&D, &D) -> Ordering + Send + 'static {
             }
         })
     } else {
-        stream.unary("sort_limit_by_partition", |info| {
-            let mut table = TidyTagMap::<FixedSizeHeap<D>>::new(info.scope_level);
+        stream.unary(name, |info| {
+            let mut table = TidyTagMap::<BinaryHeap<Item<D>>>::new(info.scope_level);
             move |input, output| {
                 input.for_each_batch(|dataset| {
                     let cmp_clone = cmp.cmp.clone();
                     if !dataset.is_empty() {
-                        let heap = table.get_mut_or_else(&dataset.tag, || { FixedSizeHeap::new(size as usize, cmp_clone)});
+                        let heap = table.get_mut_or_else(&dataset.tag, || { BinaryHeap::with_capacity(size as usize) });
                         for d in dataset.drain() {
-                            heap.push(d);
+                            if heap.len() < size as usize {
+                                heap.push(Item { inner: d, cmp: cmp_clone.clone() });
+                            } else {
+                                if (*cmp_clone)(&d, &heap.peek().unwrap().inner) == Ordering::Less {
+                                    heap.pop();
+                                    heap.push(Item { inner: d, cmp: cmp_clone.clone() });
+                                }
+                            }
                         }
                     }
 
                     if dataset.is_last() {
                         let mut session = output.new_session(&dataset.tag)?;
-                        if let Some(mut heap) = table.remove(&dataset.tag) {
-                            if last_sort {
-                                heap.sort();
+                        if let Some(heap) = table.remove(&dataset.tag) {
+                            let mut vec = Vec::with_capacity(heap.len());
+                            for item in heap.into_sorted_vec() {
+                                vec.push(item.inner);
                             }
-                            let im_heap = heap;
-                            session.give_iterator(im_heap.into_iter())?;
+                            session.give_iterator(vec.into_iter())?;
                         }
                     }
-
                     Ok(())
                 })
             }
         })
-    }
-}
-
-type Cmp<D> = Arc<dyn Fn(&D, &D) -> Ordering + Send + 'static>;
-
-struct ShadeCmp<C> {
-    cmp: Arc<C>,
-}
-
-unsafe impl<C: Send> Send for ShadeCmp<C> {}
-
-impl<C> Clone for ShadeCmp<C> {
-    fn clone(&self) -> Self {
-        ShadeCmp { cmp: self.cmp.clone() }
-    }
-}
-
-struct FixedSizeHeap<D> {
-    limit: usize,
-    cmp: Cmp<D>,
-    data: Vec<D>,
-}
-
-unsafe impl<D: Send> Send for FixedSizeHeap<D> {}
-
-struct Hole<'a, T: 'a> {
-    data: &'a mut[T],
-    elt: ManuallyDrop<T>,
-    pos: usize,
-}
-
-impl<'a, T> Hole<'a, T> {
-    #[inline]
-    unsafe fn new(data: &'a mut [T], pos: usize) -> Self {
-        let elt = unsafe { ptr::read(data.get_unchecked(pos)) };
-        Hole { data, elt: ManuallyDrop::new(elt), pos }
-    }
-
-    #[inline]
-    fn pos(&self) -> usize {
-        self.pos
-    }
-
-    #[inline]
-    fn element(&self) -> &T {
-        &self.elt
-    }
-
-    #[inline]
-    fn get(&self, index: usize) -> &T {
-        unsafe { self.data.get_unchecked(index) }
-    }
-
-    #[inline]
-    unsafe fn move_to(&mut self, index: usize) {
-        unsafe {
-            let ptr = self.data.as_mut_ptr();
-            let index_ptr: *const _ = ptr.add(index);
-            let hole_ptr = ptr.add(self.pos);
-            ptr::copy_nonoverlapping(index_ptr, hole_ptr, 1);
-        }
-        self.pos = index;
-    }
-}
-
-impl<T> Drop for Hole<'_, T> {
-    #[inline]
-    fn drop(&mut self) {
-        unsafe {
-            let pos = self.pos;
-            ptr::copy_nonoverlapping(&*self.elt, self.data.get_unchecked_mut(pos), 1);
-        }
-    }
-}
-
-impl<T> FixedSizeHeap<T> {
-    pub fn new(limit: usize, cmp: Cmp<T>) -> Self {
-        FixedSizeHeap { limit, cmp, data: Vec::with_capacity(limit) }
-    }
-
-    pub fn push(&mut self, item: T) {
-        let old_len = self.data.len();
-        if old_len == self.limit {
-            if (*self.cmp)(&self.data[0], &item) == Ordering::Greater {
-                self.data[0] = item;
-                unsafe { self.sift_down_to_bottom(0) };
-            }
-        } else {
-            self.data.push(item);
-            unsafe { self.sift_up(0, old_len) };
-        }
-    }
-
-    unsafe fn sift_up(&mut self, start: usize, pos: usize) -> usize {
-        let mut hole = unsafe { Hole::new(&mut self.data, pos) };
-
-        while hole.pos() > start {
-            let parent = (hole.pos() - 1) / 2;
-            if (*self.cmp)(hole.element(), unsafe { hole.get(parent)}) != Ordering::Greater {
-                break;
-            }
-            unsafe { hole.move_to(parent) };
-        }
-
-        hole.pos()
-    }
-
-    unsafe fn sift_down_to_bottom(&mut self, mut pos: usize) {
-        let end = self.data.len();
-        let start = pos;
-
-        let mut hole = unsafe { Hole::new(&mut self.data, pos) };
-        let mut child = 2 * hole.pos() + 1;
-
-        while child <= end.saturating_sub(2) {
-            child += unsafe { (*self.cmp)(hole.get(child), hole.get(child + 1)) != Ordering::Greater } as usize;
-            unsafe { hole.move_to(child) };
-            child = 2 * hole.pos() + 1
-        }
-
-        if child == end - 1 {
-            unsafe { hole.move_to(child) };
-        }
-
-        pos = hole.pos();
-        drop(hole);
-
-        unsafe { self.sift_up(start, pos) };
-    }
-
-    pub fn sort(&mut self) {
-        let cmp = self.cmp.clone();
-        self.data.sort_by(|x, y| (*cmp)(&x, &y));
-    }
-}
-
-impl<T> IntoIterator for FixedSizeHeap<T> {
-    type Item = T;
-    type IntoIter = std::vec::IntoIter<T>;
-
-    fn into_iter(self) -> Self::IntoIter {
-        self.data.into_iter()
     }
 }
