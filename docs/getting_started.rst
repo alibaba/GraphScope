@@ -75,7 +75,7 @@ For macOS, the session needs to establish with the LoadBalancer service type (wh
 
 Also note that the value `data.field.path` is the hostpath in your Kubernetes hosts. With Docker-Desktop on Mac,
 you need to first add the path into the shared directories of the docker, which is normally the `/Users`.
-For more detailed instructions, please refer to `how to mount hostpath using docker for mac kubernetes <https://forums.docker.com/t/how-to-mount-hostpath-using-docker-for-mac-kubernetes/44083/5>`_.
+For more detailed instructions, please refer`how to mount hostpath using docker for mac kubernetes <https://forums.docker.com/t/how-to-mount-hostpath-using-docker-for-mac-kubernetes/44083/5>`_.
 
 
 A :ref:`Session` tries to launch a coordinator, which is the entry for the back-end engines. The coordinator
