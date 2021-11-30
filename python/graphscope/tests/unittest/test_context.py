@@ -139,7 +139,7 @@ def test_lpa(arrow_property_graph_lpa):
     )
 
 
-@pytest.mark.skipif("NIGHTLY" not in os.environ, reason="Run in nightly CI")
+@pytest.mark.skipif("FULL-TEST-SUITE" not in os.environ, reason="Run in nightly CI")
 def test_error_on_selector(property_context):
     with pytest.raises(KeyError, match="non_exist_label"):
         out = property_context.to_numpy("v:non_exist_label.id")

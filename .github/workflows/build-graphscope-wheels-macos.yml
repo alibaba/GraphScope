@@ -23,7 +23,7 @@ jobs:
 
     - name: Install Dependencies
       run: |
-        /bin/bash ${GITHUB_WORKSPACE}/scripts/install_deps.sh --dev --vineyard_prefix /opt/vineyard --verbose
+        ${GITHUB_WORKSPACE}/scripts/install_deps.sh --dev --vineyard_prefix /opt/vineyard --verbose
 
     - name: Build Server Wheel
       run: |
@@ -66,7 +66,7 @@ jobs:
 
     - name: Install Dependencies
       run: |
-        /bin/bash ${GITHUB_WORKSPACE}/scripts/install_deps.sh --dev --verbose
+        ${GITHUB_WORKSPACE}/scripts/install_deps.sh --dev --verbose
 
     - name: Build Client Wheels
       run: |
@@ -79,7 +79,7 @@ jobs:
 
         # package
         cd ${GITHUB_WORKSPACE}
-        tar -zcf client.tar.gz python/dist/*.whl
+        tar -zcf client.tar.gz python/dist/
 
     - name: Upload Artifact
       uses: actions/upload-artifact@v2
