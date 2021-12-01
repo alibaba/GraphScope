@@ -64,6 +64,8 @@ class KubernetesClusterLauncher(Launcher):
     _cluster_role_binding_name_prefix = "gs-cluster-reader-binding-"
 
     _random_coordinator_service_port = random.randint(59001, 60000)
+    # placeholder port sometime is needed, such as sshd service
+    _random_coordinator_placeholder_port = random.randint(60001, 61000)
 
     _url_pattern = r"(?i)\b((?:https?://|www\d{0,3}[.]|[a-z0-9.\-]+[.][a-z]{2,4}/)(?:[^\s()<>]+|\(([^\s()<>]+|(\([^\s()<>]+\)))*\))+(?:\(([^\s()<>]+|(\([^\s()<>]+\)))*\)|[^\s`!()\[\]{};:'\".,<>?«»“”‘’]))"  # noqa: E501
     _endpoint_pattern = r"(?:http.*://)?(?P<host>[^:/ ]+).?(?P<port>[0-9]*).*"
@@ -361,6 +363,7 @@ class KubernetesClusterLauncher(Launcher):
             preemptive=self._saved_locals["preemptive"],
             ports=[
                 self._random_coordinator_service_port,
+                self._random_coordinator_placeholder_port,
             ],
             module_name=self._coordinator_module_name,
         )

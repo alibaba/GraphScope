@@ -23,6 +23,8 @@ DEFINE_int32(port, 60001, "the port to listen by gRPC server");
 
 // for vineyard
 DEFINE_string(vineyard_socket, "", "Unix domain socket path for vineyardd");
+DEFINE_string(vineyard_shared_mem, "2048000000",
+              "Init size of vineyard shared memory");
 DEFINE_string(etcd_endpoint, "http://127.0.0.1:2379",
               "Etcd endpoint that will be used to launch vineyardd");
 

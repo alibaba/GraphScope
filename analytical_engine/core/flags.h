@@ -25,6 +25,7 @@ DECLARE_string(dag_file);
 
 // vineyard
 DECLARE_string(vineyard_socket);
+DECLARE_string(vineyard_shared_mem);
 DECLARE_string(etcd_endpoint);
 
 #endif  // ANALYTICAL_ENGINE_CORE_FLAGS_H_
