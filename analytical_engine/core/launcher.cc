@@ -70,9 +70,9 @@ void VineyardServer::Start() {
     vineyardd_path = "/usr/bin/env python3 -m vineyard";
   }
   std::string cmd = vineyardd_path + " --socket " + vineyard_socket_ +
-                    " --size " + FLAGS_vineyard_shared_mem + " --etcd_endpoint " +
-                    FLAGS_etcd_endpoint + " --etcd_prefix vineyard.gsa." +
-                    std::to_string(ts);
+                    " --size " + FLAGS_vineyard_shared_mem +
+                    " --etcd_endpoint " + FLAGS_etcd_endpoint +
+                    " --etcd_prefix vineyard.gsa." + std::to_string(ts);
   auto env = boost::this_process::environment();
   // Set verbosity level to 2 can get rid of most of vineyard server's
   // debugging output
