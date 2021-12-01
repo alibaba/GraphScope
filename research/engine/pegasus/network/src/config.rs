@@ -153,10 +153,7 @@ pub struct ServerConfig {
 
 impl ServerConfig {
     pub fn new(ip: String, port: u16) -> Self {
-        ServerConfig {
-            ip,
-            port
-        }
+        ServerConfig { ip, port }
     }
 
     pub fn get_ip(&self) -> &str {
@@ -226,6 +223,19 @@ impl NetworkConfig {
     pub fn with_servers(mut self, servers: Option<Vec<ServerConfig>>) -> Self {
         self.servers = servers;
         self
+    }
+
+    pub fn insert_server(&mut self, server_id: u64, ip: String, port: u16) {
+        let server_config = ServerConfig { ip, port };
+        if let Some(servers) = self.servers.as_mut() {
+            if server_id >= servers.len() as u64 {
+                servers.reserve(server_id as usize - servers.len() + 1);
+            }
+            servers.insert(server_id as usize, server_config);
+        } else {
+            let mut servers = Vec::with_capacity((server_id + 1) as usize);
+            servers.insert(server_id as usize, server_config)
+        }
     }
 
     pub fn parse(content: &str) -> Result<Self, NetError> {
