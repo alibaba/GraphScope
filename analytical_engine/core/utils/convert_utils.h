@@ -107,13 +107,13 @@ struct PropertyConverter {
       case arrow::Type::type::STRING: {
         auto array =
             std::dynamic_pointer_cast<arrow::StringArray>(column->chunk(0));
-        ret.insert(property_name, array->Value(row_id));
+        ret.insert(property_name, array->GetString(row_id));
         break;
       }
       case arrow::Type::type::LARGE_STRING: {
         auto array = std::dynamic_pointer_cast<arrow::LargeStringArray>(
             column->chunk(0));
-        ret.insert(property_name, array->Value(row_id));
+        ret.insert(property_name, array->GetString(row_id));
         break;
       }
       default:
