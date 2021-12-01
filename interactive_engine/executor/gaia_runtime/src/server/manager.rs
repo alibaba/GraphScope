@@ -215,11 +215,9 @@ fn build_gaia_config(worker_id: usize, address_list: &[RuntimeAddressProto], sto
 
 fn parse_store_ip_list_for_gaia(address_list: &[RuntimeAddressProto], store_config: Arc<StoreConfig>) -> Vec<ServerConfig> {
     let mut peers_list = Vec::with_capacity(address_list.len());
-    let mut server_idx = 0;
     for address in address_list {
         let peer_config = ServerConfig::new(address.get_ip().to_string(), store_config.gaia_engine_port as u16);
         peers_list.push(peer_config);
-        server_idx += 1;
     }
     peers_list
 }
