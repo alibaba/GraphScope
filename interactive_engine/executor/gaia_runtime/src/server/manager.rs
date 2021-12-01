@@ -205,8 +205,9 @@ impl ServerManager for GaiaServerManager {
 fn build_gaia_config(worker_id: usize, address_list: &[RuntimeAddressProto], store_config: Arc<StoreConfig>) -> Configuration {
     let peers = parse_store_ip_list_for_gaia(address_list, store_config);
     info!("gaia peers list: {:?}", peers);
-    // TODO: more configuration from store_config for pegasus
-    let network_config = NetworkConfig::new(worker_id as u64).with_servers(Some(peers));
+    let ip = peers.get(worker_id as usize).unwrap().ip.clone();
+    let port = peers.get(worker_id as usize).unwrap().port.clone();
+    let network_config = NetworkConfig::new(worker_id as u64, ip, port).with_peers(Some(peers));
     Configuration {
         network: Some(network_config),
         max_pool_size: None,
@@ -215,9 +216,16 @@ fn build_gaia_config(worker_id: usize, address_list: &[RuntimeAddressProto], sto
 
 fn parse_store_ip_list_for_gaia(address_list: &[RuntimeAddressProto], store_config: Arc<StoreConfig>) -> Vec<ServerConfig> {
     let mut peers_list = Vec::with_capacity(address_list.len());
+    let mut server_idx = 0;
     for address in address_list {
-        let peer_config = ServerConfig::new(address.get_ip().to_string(), store_config.gaia_engine_port as u16);
+        let peer_config = ServerConfig {
+            server_id: server_idx,
+            ip: address.get_ip().to_string(),
+            // assign a random port for pegasus
+            port: store_config.gaia_engine_port as u16,
+        };
         peers_list.push(peer_config);
+        server_idx += 1;
     }
     peers_list
 }

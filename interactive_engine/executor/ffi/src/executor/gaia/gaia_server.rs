@@ -113,15 +113,15 @@ fn make_gaia_config(graph_config: Arc<GraphConfig>) -> GaiaConfig {
         .map(|config_str| config_str.parse().expect("parse gaia.heartbeat.sec failed"));
     let max_pool_size = graph_config.get_storage_option("gaia.max.pool.size")
         .map(|config_str| config_str.parse().expect("parse gaia.max.pool.size failed"));
-    let mut network_config = NetworkConfig::new(server_id)
+    let network_config = NetworkConfig::new(server_id, ip, port)
         .with_nonblocking(nonblocking)
         .with_read_timeout_ms(read_timeout_ms)
         .with_write_timeout_ms(write_timeout_ms)
         .with_read_slab_size(read_slab_size)
         .with_no_delay(no_delay)
         .with_send_buffer(send_buffer)
-        .with_heartbeat_sec(heartbeat_sec);
-    network_config.insert_server(server_id, ip, port);
+        .with_heartbeat_sec(heartbeat_sec)
+        .with_peers(None);
     GaiaConfig {
         network: Some(network_config),
         max_pool_size,
