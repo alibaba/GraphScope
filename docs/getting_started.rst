@@ -77,10 +77,10 @@ Also note that the value `data.field.path` is the hostpath in your Kubernetes ho
 you need to first add the path into the shared directories of the docker, which is normally the `/Users`.
 For more detailed instructions, please refer`how to mount hostpath using docker for mac kubernetes <https://forums.docker.com/t/how-to-mount-hostpath-using-docker-for-mac-kubernetes/44083/5>`_.
 
-
 A :ref:`Session` tries to launch a coordinator, which is the entry for the back-end engines. The coordinator
 manages a cluster of resources (k8s pods), and the interactive/analytical/learning engines ran on them. For
 each pod in the cluster, there is a vineyard instance at service for distributed data in memory.
+
 
 Loading Graph
 -------------
@@ -99,8 +99,7 @@ For example, Cites edges connect two vertices labeled Paper. Another example is 
 vertex is labeled Author and the destination is a Paper vertex. All the vertices and edges may have properties.
 e.g., Paper vertices have properties like features, publish year, subject label, etc.
 
-
-To load this graph to GraphScope, one may use the code below.
+To load this `graph <https://graphscope.oss-accelerate.aliyuncs.com/ogbn_mag_small.tar.gz>`_ to GraphScope, one may use the code below.
 
 .. code:: python
 

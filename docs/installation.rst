@@ -9,7 +9,7 @@ GraphScope is tested and supported on the following 64-bit systems:
 - macOS 11.2.1 (Big Sur) or later (Apple M1 is not support yet!)
 
 
-Run GraphScope locally without Kubernetes 
+Instal GraphScope locally without Kubernetes
 --------------------------------------------
 
 GraphScope is distributed as a `python package <https://pypi.org/project/graphscope>`_ and can be easily installed with `pip <https://pip.pypa.io/en/stable/>`_.
@@ -25,8 +25,8 @@ GraphScope is distributed as a `python package <https://pypi.org/project/graphsc
     pip3 install --upgrade graphscope
 
 
-Run GraphScope on Kubernetes
-----------------------------
+Install GraphScope Client for Kubernetes
+----------------------------------------
 
 For quickly getting started, we set up a local kubernetes cluster and take advantage of pre-built Docker images as follows.
 The following dependencies or tools are required.

@@ -1,8 +1,9 @@
 Developer Guide
 ===============
 
-GraphScope has been developed by an active team of software engineers and researchers.
-Any contributions from the open-source community to improve this project are greatly appreciated!
+`GraphScope <https://github.com/alibaba/GraphScope>`_ has been developed by an active team of
+software engineers and researchers. Any contributions from the open-source community to improve
+this project are greatly appreciated!
 
 GraphScope is licensed under Apache License 2.0.
 
@@ -26,8 +27,11 @@ make their changes to the code and build GraphScope with command:
     sudo docker run --shm-size 10240m -it registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-vineyard:latest /bin/bash
 
     git clone https://github.com/alibaba/GraphScope.git
+    
+    # download dataset for test
     git clone https://github.com/GraphScope/gstest.git
 
+    # building
     cd GraphScope && make install
 
     # testing
