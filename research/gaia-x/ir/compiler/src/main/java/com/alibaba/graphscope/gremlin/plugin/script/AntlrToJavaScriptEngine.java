@@ -31,8 +31,8 @@ import org.antlr.v4.runtime.CommonTokenStream;
 import org.apache.commons.lang3.NotImplementedException;
 import org.apache.tinkerpop.gremlin.jsr223.GremlinScriptEngine;
 import org.apache.tinkerpop.gremlin.jsr223.GremlinScriptEngineFactory;
-import org.apache.tinkerpop.gremlin.language.grammar.GremlinGS_0_2Lexer;
-import org.apache.tinkerpop.gremlin.language.grammar.GremlinGS_0_2Parser;
+import org.apache.tinkerpop.gremlin.language.grammar.GremlinGSParser;
+import org.apache.tinkerpop.gremlin.language.grammar.GremlinGSLexer;
 import org.apache.tinkerpop.gremlin.process.traversal.Bytecode;
 import org.apache.tinkerpop.gremlin.process.traversal.Traversal;
 import org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.GraphTraversalSource;
@@ -53,8 +53,8 @@ public class AntlrToJavaScriptEngine extends AbstractScriptEngine implements Gre
         GraphTraversalSource g = (GraphTraversalSource) globalBindings.get("g");
         GremlinAntlrToJava antlrToJava = GremlinAntlrToJava.getInstance(g);
 
-        GremlinGS_0_2Lexer lexer = new GremlinGS_0_2Lexer(CharStreams.fromString(script));
-        GremlinGS_0_2Parser parser = new GremlinGS_0_2Parser(new CommonTokenStream(lexer));
+        GremlinGSLexer lexer = new GremlinGSLexer(CharStreams.fromString(script));
+        GremlinGSParser parser = new GremlinGSParser(new CommonTokenStream(lexer));
         return antlrToJava.visit(parser.query());
     }
 

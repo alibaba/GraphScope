@@ -18,8 +18,8 @@ package com.alibaba.graphscope.gremlin.antlr4;
 
 import org.antlr.v4.runtime.CharStreams;
 import org.antlr.v4.runtime.CommonTokenStream;
-import org.apache.tinkerpop.gremlin.language.grammar.GremlinGS_0_2Lexer;
-import org.apache.tinkerpop.gremlin.language.grammar.GremlinGS_0_2Parser;
+import org.apache.tinkerpop.gremlin.language.grammar.GremlinGSParser;
+import org.apache.tinkerpop.gremlin.language.grammar.GremlinGSLexer;
 import org.apache.tinkerpop.gremlin.process.traversal.P;
 import org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.GraphTraversalSource;
 import org.apache.tinkerpop.gremlin.structure.Graph;
@@ -42,8 +42,8 @@ public class AntlrEvalTest {
     }
 
     private Object eval(String query) {
-        final GremlinGS_0_2Lexer lexer = new GremlinGS_0_2Lexer(CharStreams.fromString(query));
-        final GremlinGS_0_2Parser parser = new GremlinGS_0_2Parser(new CommonTokenStream(lexer));
+        final GremlinGSLexer lexer = new GremlinGSLexer(CharStreams.fromString(query));
+        final GremlinGSParser parser = new GremlinGSParser(new CommonTokenStream(lexer));
         return antlrToJava.visit(parser.query());
     }
 

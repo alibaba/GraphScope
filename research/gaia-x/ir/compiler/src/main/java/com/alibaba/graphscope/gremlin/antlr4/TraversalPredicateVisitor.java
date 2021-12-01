@@ -27,11 +27,11 @@ package com.alibaba.graphscope.gremlin.antlr4;
 
 import com.alibaba.graphscope.gremlin.exception.UnsupportedEvalException;
 import org.antlr.v4.runtime.tree.ParseTree;
-import org.apache.tinkerpop.gremlin.language.grammar.GremlinGS_0_2BaseVisitor;
-import org.apache.tinkerpop.gremlin.language.grammar.GremlinGS_0_2Parser;
+import org.apache.tinkerpop.gremlin.language.grammar.GremlinGSBaseVisitor;
+import org.apache.tinkerpop.gremlin.language.grammar.GremlinGSParser;
 import org.apache.tinkerpop.gremlin.process.traversal.P;
 
-public class TraversalPredicateVisitor extends GremlinGS_0_2BaseVisitor<P> {
+public class TraversalPredicateVisitor extends GremlinGSBaseVisitor<P> {
     private static TraversalPredicateVisitor instance;
 
     public static TraversalPredicateVisitor getInstance() {
@@ -48,7 +48,7 @@ public class TraversalPredicateVisitor extends GremlinGS_0_2BaseVisitor<P> {
      * {@inheritDoc}
      */
     @Override
-    public P visitTraversalPredicate(final GremlinGS_0_2Parser.TraversalPredicateContext ctx) {
+    public P visitTraversalPredicate(final GremlinGSParser.TraversalPredicateContext ctx) {
         if (ctx.getChildCount() != 1) {
             throw new UnsupportedEvalException(ctx.getClass(), "support pattern is [P.predicate(...)]");
         }
@@ -63,14 +63,14 @@ public class TraversalPredicateVisitor extends GremlinGS_0_2BaseVisitor<P> {
         final int childIndexOfParameterValue = 2;
 
         return GenericLiteralVisitor.getInstance().visitGenericLiteral(
-                (GremlinGS_0_2Parser.GenericLiteralContext) ctx.getChild(childIndexOfParameterValue));
+                (GremlinGSParser.GenericLiteralContext) ctx.getChild(childIndexOfParameterValue));
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public P visitTraversalPredicate_eq(final GremlinGS_0_2Parser.TraversalPredicate_eqContext ctx) {
+    public P visitTraversalPredicate_eq(final GremlinGSParser.TraversalPredicate_eqContext ctx) {
         return P.eq(getSingleGenericLiteralArgument(ctx));
     }
 
@@ -78,7 +78,7 @@ public class TraversalPredicateVisitor extends GremlinGS_0_2BaseVisitor<P> {
      * {@inheritDoc}
      */
     @Override
-    public P visitTraversalPredicate_neq(final GremlinGS_0_2Parser.TraversalPredicate_neqContext ctx) {
+    public P visitTraversalPredicate_neq(final GremlinGSParser.TraversalPredicate_neqContext ctx) {
         return P.neq(getSingleGenericLiteralArgument(ctx));
     }
 
@@ -86,7 +86,7 @@ public class TraversalPredicateVisitor extends GremlinGS_0_2BaseVisitor<P> {
      * {@inheritDoc}
      */
     @Override
-    public P visitTraversalPredicate_lt(final GremlinGS_0_2Parser.TraversalPredicate_ltContext ctx) {
+    public P visitTraversalPredicate_lt(final GremlinGSParser.TraversalPredicate_ltContext ctx) {
         return P.lt(getSingleGenericLiteralArgument(ctx));
     }
 
@@ -94,7 +94,7 @@ public class TraversalPredicateVisitor extends GremlinGS_0_2BaseVisitor<P> {
      * {@inheritDoc}
      */
     @Override
-    public P visitTraversalPredicate_lte(final GremlinGS_0_2Parser.TraversalPredicate_lteContext ctx) {
+    public P visitTraversalPredicate_lte(final GremlinGSParser.TraversalPredicate_lteContext ctx) {
         return P.lte(getSingleGenericLiteralArgument(ctx));
     }
 
@@ -102,7 +102,7 @@ public class TraversalPredicateVisitor extends GremlinGS_0_2BaseVisitor<P> {
      * {@inheritDoc}
      */
     @Override
-    public P visitTraversalPredicate_gt(final GremlinGS_0_2Parser.TraversalPredicate_gtContext ctx) {
+    public P visitTraversalPredicate_gt(final GremlinGSParser.TraversalPredicate_gtContext ctx) {
         return P.gt(getSingleGenericLiteralArgument(ctx));
     }
 
@@ -110,7 +110,7 @@ public class TraversalPredicateVisitor extends GremlinGS_0_2BaseVisitor<P> {
      * {@inheritDoc}
      */
     @Override
-    public P visitTraversalPredicate_gte(final GremlinGS_0_2Parser.TraversalPredicate_gteContext ctx) {
+    public P visitTraversalPredicate_gte(final GremlinGSParser.TraversalPredicate_gteContext ctx) {
         return P.gte(getSingleGenericLiteralArgument(ctx));
     }
 }

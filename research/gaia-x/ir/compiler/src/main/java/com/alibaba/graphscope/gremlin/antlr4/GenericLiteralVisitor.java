@@ -26,8 +26,8 @@
 package com.alibaba.graphscope.gremlin.antlr4;
 
 import org.apache.commons.text.StringEscapeUtils;
-import org.apache.tinkerpop.gremlin.language.grammar.GremlinGS_0_2BaseVisitor;
-import org.apache.tinkerpop.gremlin.language.grammar.GremlinGS_0_2Parser;
+import org.apache.tinkerpop.gremlin.language.grammar.GremlinGSBaseVisitor;
+import org.apache.tinkerpop.gremlin.language.grammar.GremlinGSParser;
 import org.apache.tinkerpop.gremlin.process.traversal.Traversal;
 
 import java.math.BigDecimal;
@@ -40,7 +40,7 @@ import java.util.Objects;
  * Visitor class to handle generic literal. All visitor methods return type is Object. It maybe used as a singleton
  * in cases where a {@link Traversal} object is not expected, otherwise a new instance must be constructed.
  */
-public class GenericLiteralVisitor extends GremlinGS_0_2BaseVisitor<Object> {
+public class GenericLiteralVisitor extends GremlinGSBaseVisitor<Object> {
 
     private static GenericLiteralVisitor instance;
 
@@ -57,21 +57,21 @@ public class GenericLiteralVisitor extends GremlinGS_0_2BaseVisitor<Object> {
     /**
      * Parse a string literal context and return the string literal
      */
-    public static String getStringLiteral(final GremlinGS_0_2Parser.StringLiteralContext stringLiteral) {
+    public static String getStringLiteral(final GremlinGSParser.StringLiteralContext stringLiteral) {
         return (String) (getInstance().visitStringLiteral(stringLiteral));
     }
 
     /**
      * Parse a boolean literal context and return the boolean literal
      */
-    public static boolean getBooleanLiteral(final GremlinGS_0_2Parser.BooleanLiteralContext booleanLiteral) {
+    public static boolean getBooleanLiteral(final GremlinGSParser.BooleanLiteralContext booleanLiteral) {
         return (boolean) (getInstance().visitBooleanLiteral(booleanLiteral));
     }
 
     /**
      * Parse a String literal list context and return a string array
      */
-    public static String[] getStringLiteralList(final GremlinGS_0_2Parser.StringLiteralListContext stringLiteralList) {
+    public static String[] getStringLiteralList(final GremlinGSParser.StringLiteralListContext stringLiteralList) {
         if (stringLiteralList == null || stringLiteralList.stringLiteralExpr() == null) {
             return new String[0];
         }
@@ -85,7 +85,7 @@ public class GenericLiteralVisitor extends GremlinGS_0_2BaseVisitor<Object> {
     /**
      * Parse a generic literal list, and return an object array
      */
-    public static Object[] getGenericLiteralList(final GremlinGS_0_2Parser.GenericLiteralListContext objectLiteralList) {
+    public static Object[] getGenericLiteralList(final GremlinGSParser.GenericLiteralListContext objectLiteralList) {
         if (objectLiteralList == null || objectLiteralList.genericLiteralExpr() == null) {
             return new Object[0];
         }
@@ -110,7 +110,7 @@ public class GenericLiteralVisitor extends GremlinGS_0_2BaseVisitor<Object> {
      * {@inheritDoc}
      */
     @Override
-    public Object visitGenericLiteralList(final GremlinGS_0_2Parser.GenericLiteralListContext ctx) {
+    public Object visitGenericLiteralList(final GremlinGSParser.GenericLiteralListContext ctx) {
         return visitChildren(ctx);
     }
 
@@ -118,7 +118,7 @@ public class GenericLiteralVisitor extends GremlinGS_0_2BaseVisitor<Object> {
      * {@inheritDoc}
      */
     @Override
-    public Object visitGenericLiteralExpr(final GremlinGS_0_2Parser.GenericLiteralExprContext ctx) {
+    public Object visitGenericLiteralExpr(final GremlinGSParser.GenericLiteralExprContext ctx) {
         final int childCount = ctx.getChildCount();
         switch (childCount) {
             case 0:
@@ -126,14 +126,14 @@ public class GenericLiteralVisitor extends GremlinGS_0_2BaseVisitor<Object> {
                 return new Object[0];
             case 1:
                 // handle single generic literal
-                return visitGenericLiteral((GremlinGS_0_2Parser.GenericLiteralContext) ctx.getChild(0));
+                return visitGenericLiteral((GremlinGSParser.GenericLiteralContext) ctx.getChild(0));
             default:
                 // handle multiple generic literal separated by comma
                 final List<Object> genericLiterals = new ArrayList<>();
                 int childIndex = 0;
                 while (childIndex < ctx.getChildCount()) {
                     genericLiterals.add(visitGenericLiteral(
-                            (GremlinGS_0_2Parser.GenericLiteralContext) ctx.getChild(childIndex)));
+                            (GremlinGSParser.GenericLiteralContext) ctx.getChild(childIndex)));
                     // skip comma
                     childIndex += 2;
                 }
@@ -145,7 +145,7 @@ public class GenericLiteralVisitor extends GremlinGS_0_2BaseVisitor<Object> {
      * {@inheritDoc}
      */
     @Override
-    public Object visitGenericLiteral(final GremlinGS_0_2Parser.GenericLiteralContext ctx) {
+    public Object visitGenericLiteral(final GremlinGSParser.GenericLiteralContext ctx) {
         return visitChildren(ctx);
     }
 
@@ -153,7 +153,7 @@ public class GenericLiteralVisitor extends GremlinGS_0_2BaseVisitor<Object> {
      * {@inheritDoc}
      */
     @Override
-    public Object visitIntegerLiteral(final GremlinGS_0_2Parser.IntegerLiteralContext ctx) {
+    public Object visitIntegerLiteral(final GremlinGSParser.IntegerLiteralContext ctx) {
         String integerLiteral = ctx.getText().toLowerCase().replace("_", "");
         // handle suffix: L/l
         final int lastCharIndex = integerLiteral.length() - 1;
@@ -206,7 +206,7 @@ public class GenericLiteralVisitor extends GremlinGS_0_2BaseVisitor<Object> {
      * {@inheritDoc}
      */
     @Override
-    public Object visitFloatLiteral(final GremlinGS_0_2Parser.FloatLiteralContext ctx) {
+    public Object visitFloatLiteral(final GremlinGSParser.FloatLiteralContext ctx) {
         final String floatLiteral = ctx.getText().toLowerCase();
 
         // check suffix
@@ -229,7 +229,7 @@ public class GenericLiteralVisitor extends GremlinGS_0_2BaseVisitor<Object> {
      * {@inheritDoc}
      */
     @Override
-    public Object visitBooleanLiteral(final GremlinGS_0_2Parser.BooleanLiteralContext ctx) {
+    public Object visitBooleanLiteral(final GremlinGSParser.BooleanLiteralContext ctx) {
         return Boolean.valueOf(ctx.getText());
     }
 
@@ -237,7 +237,7 @@ public class GenericLiteralVisitor extends GremlinGS_0_2BaseVisitor<Object> {
      * {@inheritDoc}
      */
     @Override
-    public Object visitStringLiteral(final GremlinGS_0_2Parser.StringLiteralContext ctx) {
+    public Object visitStringLiteral(final GremlinGSParser.StringLiteralContext ctx) {
         // Using Java string unescaping because it coincides with the Groovy rules:
         // https://docs.oracle.com/javase/tutorial/java/data/characters.html
         // http://groovy-lang.org/syntax.html#_escaping_special_characters
@@ -251,7 +251,7 @@ public class GenericLiteralVisitor extends GremlinGS_0_2BaseVisitor<Object> {
      * {@inheritDoc}
      */
     @Override
-    public Object visitNullLiteral(final GremlinGS_0_2Parser.NullLiteralContext ctx) {
+    public Object visitNullLiteral(final GremlinGSParser.NullLiteralContext ctx) {
         return null;
     }
 }

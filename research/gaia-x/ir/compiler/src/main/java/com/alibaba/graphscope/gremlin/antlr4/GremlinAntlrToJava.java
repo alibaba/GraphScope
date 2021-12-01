@@ -18,16 +18,16 @@ package com.alibaba.graphscope.gremlin.antlr4;
 
 import com.alibaba.graphscope.gremlin.exception.UnsupportedEvalException;
 import org.antlr.v4.runtime.tree.ParseTree;
-import org.apache.tinkerpop.gremlin.language.grammar.GremlinGS_0_2BaseVisitor;
-import org.apache.tinkerpop.gremlin.language.grammar.GremlinGS_0_2Parser;
+import org.apache.tinkerpop.gremlin.language.grammar.GremlinGSBaseVisitor;
+import org.apache.tinkerpop.gremlin.language.grammar.GremlinGSParser;
 import org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.GraphTraversal;
 import org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.GraphTraversalSource;
 
-public class GremlinAntlrToJava extends GremlinGS_0_2BaseVisitor<Object> {
+public class GremlinAntlrToJava extends GremlinGSBaseVisitor<Object> {
     final GraphTraversalSource g;
 
-    final GremlinGS_0_2BaseVisitor<GraphTraversalSource> gvisitor;
-    final GremlinGS_0_2BaseVisitor<GraphTraversal> tvisitor;
+    final GremlinGSBaseVisitor<GraphTraversalSource> gvisitor;
+    final GremlinGSBaseVisitor<GraphTraversal> tvisitor;
 
     private static GremlinAntlrToJava instance;
 
@@ -45,7 +45,7 @@ public class GremlinAntlrToJava extends GremlinGS_0_2BaseVisitor<Object> {
     }
 
     @Override
-    public Object visitQuery(GremlinGS_0_2Parser.QueryContext ctx) {
+    public Object visitQuery(GremlinGSParser.QueryContext ctx) {
         final int childCount = ctx.getChildCount();
         String notice = "supported pattern of query is [g] or [g.V()...]";
         if (childCount != 1) {
@@ -53,10 +53,10 @@ public class GremlinAntlrToJava extends GremlinGS_0_2BaseVisitor<Object> {
         }
         final ParseTree firstChild = ctx.getChild(0);
 
-        if (firstChild instanceof GremlinGS_0_2Parser.TraversalSourceContext) {
-            return this.gvisitor.visitTraversalSource((GremlinGS_0_2Parser.TraversalSourceContext) firstChild);
-        } else if (firstChild instanceof GremlinGS_0_2Parser.RootTraversalContext) {
-            return this.tvisitor.visitRootTraversal((GremlinGS_0_2Parser.RootTraversalContext) firstChild);
+        if (firstChild instanceof GremlinGSParser.TraversalSourceContext) {
+            return this.gvisitor.visitTraversalSource((GremlinGSParser.TraversalSourceContext) firstChild);
+        } else if (firstChild instanceof GremlinGSParser.RootTraversalContext) {
+            return this.tvisitor.visitRootTraversal((GremlinGSParser.RootTraversalContext) firstChild);
         } else {
             throw new UnsupportedEvalException(firstChild.getClass(), notice);
         }

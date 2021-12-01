@@ -18,42 +18,42 @@ package com.alibaba.graphscope.gremlin.antlr4;
 
 import com.alibaba.graphscope.gremlin.exception.UnsupportedEvalException;
 import org.antlr.v4.runtime.tree.ParseTree;
-import org.apache.tinkerpop.gremlin.language.grammar.GremlinGS_0_2BaseVisitor;
-import org.apache.tinkerpop.gremlin.language.grammar.GremlinGS_0_2Parser;
+import org.apache.tinkerpop.gremlin.language.grammar.GremlinGSBaseVisitor;
+import org.apache.tinkerpop.gremlin.language.grammar.GremlinGSParser;
 import org.apache.tinkerpop.gremlin.process.traversal.Traversal;
 import org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.GraphTraversal;
 import org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.GraphTraversalSource;
 
-public class TraversalRootVisitor<G extends Traversal> extends GremlinGS_0_2BaseVisitor<Traversal> {
-    final GremlinGS_0_2BaseVisitor<GraphTraversalSource> gvisitor;
+public class TraversalRootVisitor<G extends Traversal> extends GremlinGSBaseVisitor<Traversal> {
+    final GremlinGSBaseVisitor<GraphTraversalSource> gvisitor;
 
-    public TraversalRootVisitor(final GremlinGS_0_2BaseVisitor<GraphTraversalSource> gvisitor) {
+    public TraversalRootVisitor(final GremlinGSBaseVisitor<GraphTraversalSource> gvisitor) {
         this.gvisitor = gvisitor;
     }
 
     @Override
-    public Traversal visitRootTraversal(final GremlinGS_0_2Parser.RootTraversalContext ctx) {
+    public Traversal visitRootTraversal(final GremlinGSParser.RootTraversalContext ctx) {
         int childCount = ctx.getChildCount();
         String notice = "supported pattern of root is [g.V()] or [g.V().{...}]";
         if (childCount != 3 && childCount != 5) {
             throw new UnsupportedEvalException(ctx.getClass(), notice);
         }
         ParseTree first = ctx.getChild(0);
-        GraphTraversalSource g = this.gvisitor.visitTraversalSource((GremlinGS_0_2Parser.TraversalSourceContext) first);
+        GraphTraversalSource g = this.gvisitor.visitTraversalSource((GremlinGSParser.TraversalSourceContext) first);
         ParseTree third = ctx.getChild(2);
         GraphTraversal graphTraversal = (new TraversalSourceSpawnMethodVisitor(g)).visitTraversalSourceSpawnMethod(
-                (GremlinGS_0_2Parser.TraversalSourceSpawnMethodContext) third);
+                (GremlinGSParser.TraversalSourceSpawnMethodContext) third);
         if (childCount == 5) {
             ParseTree forth = ctx.getChild(4);
             TraversalMethodVisitor methodVisitor = new TraversalMethodVisitor(this.gvisitor, graphTraversal);
-            return methodVisitor.visitChainedTraversal((GremlinGS_0_2Parser.ChainedTraversalContext) forth);
+            return methodVisitor.visitChainedTraversal((GremlinGSParser.ChainedTraversalContext) forth);
         } else {
             return graphTraversal;
         }
     }
 
     @Override
-    public Traversal visitChainedTraversal(GremlinGS_0_2Parser.ChainedTraversalContext ctx) {
+    public Traversal visitChainedTraversal(GremlinGSParser.ChainedTraversalContext ctx) {
         int childCount = ctx.getChildCount();
         String notice = "supported pattern of chained is [..out()] or [..{...}.out()]";
         if (childCount != 1 && childCount != 3) {

@@ -17,11 +17,11 @@
 package com.alibaba.graphscope.gremlin.antlr4;
 
 import com.alibaba.graphscope.gremlin.exception.UnsupportedEvalException;
-import org.apache.tinkerpop.gremlin.language.grammar.GremlinGS_0_2BaseVisitor;
-import org.apache.tinkerpop.gremlin.language.grammar.GremlinGS_0_2Parser;
+import org.apache.tinkerpop.gremlin.language.grammar.GremlinGSBaseVisitor;
+import org.apache.tinkerpop.gremlin.language.grammar.GremlinGSParser;
 import org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.GraphTraversalSource;
 
-public class GraphTraversalSourceVisitor extends GremlinGS_0_2BaseVisitor<GraphTraversalSource> {
+public class GraphTraversalSourceVisitor extends GremlinGSBaseVisitor<GraphTraversalSource> {
     private GraphTraversalSource g;
 
     public GraphTraversalSourceVisitor(GraphTraversalSource g) {
@@ -29,7 +29,7 @@ public class GraphTraversalSourceVisitor extends GremlinGS_0_2BaseVisitor<GraphT
     }
 
     @Override
-    public GraphTraversalSource visitTraversalSource(GremlinGS_0_2Parser.TraversalSourceContext ctx) {
+    public GraphTraversalSource visitTraversalSource(GremlinGSParser.TraversalSourceContext ctx) {
         if (ctx.getChildCount() != 1) {
             throw new UnsupportedEvalException(ctx.getClass(), "supported pattern of source is [g]");
         }

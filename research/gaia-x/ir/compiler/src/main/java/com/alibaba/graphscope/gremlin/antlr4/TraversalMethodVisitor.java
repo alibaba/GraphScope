@@ -17,8 +17,8 @@
 package com.alibaba.graphscope.gremlin.antlr4;
 
 import com.alibaba.graphscope.gremlin.exception.UnsupportedEvalException;
-import org.apache.tinkerpop.gremlin.language.grammar.GremlinGS_0_2BaseVisitor;
-import org.apache.tinkerpop.gremlin.language.grammar.GremlinGS_0_2Parser;
+import org.apache.tinkerpop.gremlin.language.grammar.GremlinGSBaseVisitor;
+import org.apache.tinkerpop.gremlin.language.grammar.GremlinGSParser;
 import org.apache.tinkerpop.gremlin.process.traversal.Traversal;
 import org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.GraphTraversal;
 import org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.GraphTraversalSource;
@@ -26,19 +26,19 @@ import org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.GraphTraversalSo
 public class TraversalMethodVisitor extends TraversalRootVisitor<GraphTraversal> {
     final GraphTraversal graphTraversal;
 
-    public TraversalMethodVisitor(final GremlinGS_0_2BaseVisitor<GraphTraversalSource> gvisitor,
+    public TraversalMethodVisitor(final GremlinGSBaseVisitor<GraphTraversalSource> gvisitor,
                                   final GraphTraversal graphTraversal) {
         super(gvisitor);
         this.graphTraversal = graphTraversal;
     }
 
     @Override
-    public Traversal visitTraversalMethod(GremlinGS_0_2Parser.TraversalMethodContext ctx) {
+    public Traversal visitTraversalMethod(GremlinGSParser.TraversalMethodContext ctx) {
         return visitChildren(ctx);
     }
 
     @Override
-    public Traversal visitTraversalMethod_hasLabel(GremlinGS_0_2Parser.TraversalMethod_hasLabelContext ctx) {
+    public Traversal visitTraversalMethod_hasLabel(GremlinGSParser.TraversalMethod_hasLabelContext ctx) {
         if (ctx.getChildCount() == 4) {
             return graphTraversal.hasLabel(GenericLiteralVisitor.getStringLiteral(ctx.stringLiteral()));
         } else if (ctx.stringLiteralList() != null) {
@@ -51,7 +51,7 @@ public class TraversalMethodVisitor extends TraversalRootVisitor<GraphTraversal>
     }
 
     @Override
-    public Traversal visitTraversalMethod_hasId(GremlinGS_0_2Parser.TraversalMethod_hasIdContext ctx) {
+    public Traversal visitTraversalMethod_hasId(GremlinGSParser.TraversalMethod_hasIdContext ctx) {
         if (ctx.getChildCount() == 4) {
             return graphTraversal.hasId(GenericLiteralVisitor.getInstance().visitGenericLiteral(ctx.genericLiteral()));
         } else if (ctx.genericLiteralList() != null) {
@@ -64,7 +64,7 @@ public class TraversalMethodVisitor extends TraversalRootVisitor<GraphTraversal>
     }
 
     @Override
-    public Traversal visitTraversalMethod_has(GremlinGS_0_2Parser.TraversalMethod_hasContext ctx) {
+    public Traversal visitTraversalMethod_has(GremlinGSParser.TraversalMethod_hasContext ctx) {
         if (ctx.genericLiteral() != null) {
             return graphTraversal.has(GenericLiteralVisitor.getStringLiteral(ctx.stringLiteral()),
                     GenericLiteralVisitor.getInstance().visitGenericLiteral(ctx.genericLiteral()));
@@ -78,21 +78,21 @@ public class TraversalMethodVisitor extends TraversalRootVisitor<GraphTraversal>
     }
 
     @Override
-    public Traversal visitTraversalMethod_out(GremlinGS_0_2Parser.TraversalMethod_outContext ctx) {
+    public Traversal visitTraversalMethod_out(GremlinGSParser.TraversalMethod_outContext ctx) {
         return graphTraversal.out(GenericLiteralVisitor.getStringLiteralList(ctx.stringLiteralList()));
     }
 
     @Override
-    public Traversal visitTraversalMethod_in(GremlinGS_0_2Parser.TraversalMethod_inContext ctx) {
+    public Traversal visitTraversalMethod_in(GremlinGSParser.TraversalMethod_inContext ctx) {
         return graphTraversal.in(GenericLiteralVisitor.getStringLiteralList(ctx.stringLiteralList()));
     }
 
     @Override
-    public Traversal visitTraversalMethod_both(GremlinGS_0_2Parser.TraversalMethod_bothContext ctx) {
+    public Traversal visitTraversalMethod_both(GremlinGSParser.TraversalMethod_bothContext ctx) {
         return graphTraversal.both(GenericLiteralVisitor.getStringLiteralList(ctx.stringLiteralList()));
     }
 
-    public Traversal visitTraversalMethod_outE(GremlinGS_0_2Parser.TraversalMethod_outEContext ctx) {
+    public Traversal visitTraversalMethod_outE(GremlinGSParser.TraversalMethod_outEContext ctx) {
         GraphTraversal traversal = graphTraversal.outE(GenericLiteralVisitor.getStringLiteralList(ctx.stringLiteralList()));
         if (ctx.traversalMethod_inV() != null) {
             return visitTraversalMethod_inV(ctx.traversalMethod_inV());
@@ -102,7 +102,7 @@ public class TraversalMethodVisitor extends TraversalRootVisitor<GraphTraversal>
     }
 
     @Override
-    public Traversal visitTraversalMethod_inE(GremlinGS_0_2Parser.TraversalMethod_inEContext ctx) {
+    public Traversal visitTraversalMethod_inE(GremlinGSParser.TraversalMethod_inEContext ctx) {
         GraphTraversal traversal = graphTraversal.inE(GenericLiteralVisitor.getStringLiteralList(ctx.stringLiteralList()));
         if (ctx.traversalMethod_outV() != null) {
             return graphTraversal.outV();
@@ -112,7 +112,7 @@ public class TraversalMethodVisitor extends TraversalRootVisitor<GraphTraversal>
     }
 
     @Override
-    public Traversal visitTraversalMethod_bothE(GremlinGS_0_2Parser.TraversalMethod_bothEContext ctx) {
+    public Traversal visitTraversalMethod_bothE(GremlinGSParser.TraversalMethod_bothEContext ctx) {
         GraphTraversal traversal = graphTraversal.bothE(GenericLiteralVisitor.getStringLiteralList(ctx.stringLiteralList()));
         if (ctx.traversalMethod_otherV() != null) {
             return graphTraversal.otherV();
@@ -122,22 +122,22 @@ public class TraversalMethodVisitor extends TraversalRootVisitor<GraphTraversal>
     }
 
     @Override
-    public Traversal visitTraversalMethod_limit(GremlinGS_0_2Parser.TraversalMethod_limitContext ctx) {
+    public Traversal visitTraversalMethod_limit(GremlinGSParser.TraversalMethod_limitContext ctx) {
         return graphTraversal.limit((Integer) GenericLiteralVisitor.getInstance().visitIntegerLiteral(ctx.integerLiteral()));
     }
 
     @Override
-    public Traversal visitTraversalMethod_outV(GremlinGS_0_2Parser.TraversalMethod_outVContext ctx) {
+    public Traversal visitTraversalMethod_outV(GremlinGSParser.TraversalMethod_outVContext ctx) {
         return graphTraversal.outV();
     }
 
     @Override
-    public Traversal visitTraversalMethod_inV(GremlinGS_0_2Parser.TraversalMethod_inVContext ctx) {
+    public Traversal visitTraversalMethod_inV(GremlinGSParser.TraversalMethod_inVContext ctx) {
         return graphTraversal.inV();
     }
 
     @Override
-    public Traversal visitTraversalMethod_otherV(GremlinGS_0_2Parser.TraversalMethod_otherVContext ctx) {
+    public Traversal visitTraversalMethod_otherV(GremlinGSParser.TraversalMethod_otherVContext ctx) {
         return graphTraversal.otherV();
     }
 }
