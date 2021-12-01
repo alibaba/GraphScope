@@ -23,9 +23,11 @@ Built-in algorithms can be easily invoked over loaded graphs. For example,
 
 .. code:: python
 
+    import graphscope
     from graphscope import pagerank
     from graphscope import lpa
 
+    g = graphscope.g()
     # algorithms defined on property graph can be invoked directly.
     result = lpa(g)
 
@@ -64,7 +66,7 @@ Result Processing
 When finish a computation, the results are wrapped as :ref:`Context` 
 and preserved on the distributed machines.
 
-Users may want to fetch the results to the client, or write to cloud or distributed file systems.
+Users may want to fetch the results to the client, or write to cloud storage or distributed file systems.
 
 There is a list of supported method to retrieve the results.
 
@@ -74,7 +76,7 @@ There is a list of supported method to retrieve the results.
     result_pr.to_numpy()
     result_pr.to_dataframe()
 
-    # or write to hdfs or oss, or local (local to pod)
+    # or write to hdfs or oss, or local (local means the path is relative to the pods)
     result_pr.output("hdfs://output")
     result_pr.output("oss://id:key@endpoint/bucket/object")
     result_pr.output("file:///tmp/path")
@@ -86,7 +88,7 @@ There is a list of supported method to retrieve the results.
     result_pr.to_vineyard_dataframe()
     result_pr.to_vineyard_numpy()
 
-In addition, as shown in the Getting_Started, computation results can add back to 
+In addition, as shown in the :ref:`Getting Started`, computation results can add back to 
 the graph as a new property (column) of the vertices(edges).
 
 .. code:: python
@@ -94,7 +96,7 @@ the graph as a new property (column) of the vertices(edges).
     simple_g = g.project(vertices={"paper": []}, edges={"sites": []})
     ret = graphscope.kcore(simple_g, k=5)
 
-    # add the results as new columns to the citation graph
+    # add the results as new columns to the citation graph, the column name is 'kcore'
     subgraph = sub_graph.add_column(ret, {'kcore': 'r'})
 
 
@@ -143,23 +145,26 @@ To implement this, a user just need to fulfill this class.
 
 .. code:: python
 
-    @graphscope.analytical.udf.pie
+    from graphscope.analytical.udf import pie
+    from graphscope.framework.app import AppAssets
+
+    @pie
     class YourAlgorithm(AppAssets):
         @staticmethod
-        def Initialize(context, frag):
+        def Init(frag, context):
             pass
 
         @staticmethod
-        def PEval(context, frag):
+        def PEval(frag, context):
             pass
 
         @staticmethod
-        def IncEval(context, frag):
+        def IncEval(frag, context):
             pass
 
 As shown in the code, users need to implement a class decorated with
-`@graphscope.analytical.udf.pie` and provides three sequential graph functions.
-In the class, the `Initialize` is a function to set the initial status. `PEval` is
+`@pie` and provides three sequential graph functions.
+In the class, the `Init` is a function to set the initial status. `PEval` is
 a sequential method for partial evaluation, and `IncEval` is a sequential function
 for incremental evaluation over the partitioned fragment. The full API of fragment
 can be found in :ref:`Cython SDK API`.
@@ -168,22 +173,24 @@ Let's take SSSP as example, a user defined SSSP in PIE model may be like this.
 
 .. code:: python
 
-    @graphscope.analytical.udf.pie
-    class SSSP:
+    from graphscope.analytical.udf import pie
+    from graphscope.framework.app import AppAssets
+
+    @pie(vd_type="double", md_type="double")
+    class SSSP_PIE(AppAssets):
         @staticmethod
-        def Initialize(context, frag):
+        def Init(frag, context):
             v_label_num = frag.vertex_label_num()
-            # init every vertex with a max distance representing unreachable.
             for v_label_id in range(v_label_num):
                 nodes = frag.nodes(v_label_id)
-                context.init_value(nodes, v_label_id, 1000000000.0,
-                               PIEAggregateType.kMinAggregate)
-            context.register_sync_buffer(MessageStrategy.kSyncOnOuterVertex)
+                context.init_value(
+                    nodes, v_label_id, 1000000000.0, PIEAggregateType.kMinAggregate
+                )
+                context.register_sync_buffer(v_label_id, MessageStrategy.kSyncOnOuterVertex)
 
         @staticmethod
-        def PEval(context, frag):
-            # get the source node from the query, passed from context.
-            src = int(context.get_config(b'src'))
+        def PEval(frag, context):
+            src = int(context.get_config(b"src"))
             graphscope.declare(graphscope.Vertex, source)
             native_source = False
             v_label_num = frag.vertex_label_num()
@@ -195,8 +202,6 @@ Let's take SSSP as example, a user defined SSSP in PIE model may be like this.
                 context.set_node_value(source, 0)
             else:
                 return
-
-            # in the source fragment, run the dijkstra algorithm as partial evaluation.
             e_label_num = frag.edge_label_num()
             for e_label_id in range(e_label_num):
                 edges = frag.get_outgoing_edges(source, e_label_id)
@@ -207,10 +212,9 @@ Let's take SSSP as example, a user defined SSSP in PIE model may be like this.
                         context.set_node_value(dst, distv)
 
         @staticmethod
-        def IncEval(context, frag):
+        def IncEval(frag, context):
             v_label_num = frag.vertex_label_num()
             e_label_num = frag.edge_label_num()
-            # incremental computation to update the distance.
             for v_label_id in range(v_label_num):
                 iv = frag.inner_nodes(v_label_id)
                 for v in iv:
@@ -239,6 +243,9 @@ You may develop an algorithms in `Pregel` model by implementing this.
 
 .. code:: python
 
+    from graphscope.analytical.udf import pregel
+    from graphscope.framework.app import AppAssets
+
     @pregel(vd_type='double', md_type='double')
     class YourPregelAlgorithm(AppAssets):
 
@@ -254,11 +261,14 @@ You may develop an algorithms in `Pregel` model by implementing this.
         def Combine(messages):
             pass
 
-Differ from the PIE model, the decorator for this class is @graphscope.analytical.udf.pregel.
+Differ from the PIE model, the decorator for this class is ``@pregel``.
 And the functions to be implemented is defined on vertex, rather than the fragment.
 Take SSSP as example, the algorithm in Pregel model looks like this.
 
 .. code:: python
+
+    from graphscope.analytical.udf import pregel
+    from graphscope.framework.app import AppAssets
 
     # decorator, and assign the types for vertex data, message data.
     @pregel(vd_type='double', md_type='double')
@@ -292,6 +302,67 @@ Take SSSP as example, the algorithm in Pregel model looks like this.
                 ret = min(ret, m)
             return ret
 
+Using ``math.h`` Functions in Algorithms
+----------------------------------------
+
+GraphScope supports using C functions from :code:`math.h` in user-defined algorithms,
+via the :code:`context.math` interface. E.g.,
+
+.. code:: python
+
+    @staticmethod
+    def Init(v, context):
+        v.set_value(context.math.sin(1000000000.0 * context.math.M_PI))
+
+will be translated to the following efficient C code
+
+.. code:: c
+
+    ... Init(...)
+
+        v.set_value(sin(1000000000.0 * M_PI));
+
+Run Your Own Algorithms
+-------------------------
+
+To run your own algorithms, you may trigger it in place where you defined it.
+
+.. code:: python
+
+    import graphscope
+
+    sess = graphscope.session()
+    g = sess.g()
+
+    # load my algorithm
+    my_app = SSSP_Pregel()
+
+    # run my algorithm over a graph and get the result.
+    # Here the `src` is correspondent to the `context.get_config(b"src")`
+    ret = my_app(g, src="0")
+
+
+After developing and testing, you may want to save it for the future use.
+
+.. code:: python
+
+    SSSP_Pregel.to_gar("file:///var/graphscope/udf/my_sssp_pregel.gar")
+
+
+Later, you can load your own algorithm from the gar package.
+
+.. code:: python
+
+    import graphscope
+
+    g = graphscope.g()
+
+    # load my algorithm from a gar package
+    my_app = load_app('SSSP_Pregel', 'file:///var/graphscope/udf/my_sssp_pregel.gar')
+
+    # run my algorithm over a graph and get the result.
+    ret = my_app(g, src="0")
+
 Writing Your Own Algorithms In Java
 ----------------------------------------------
 
@@ -306,8 +377,7 @@ from maven central repositories in the future, however, currently you need to bu
 Please follow :ref:`gae_java_sdk_about` for building grape-jdk from source.
 
 
-After installing ``grape-jdk``, you can include it as dependency in your maven project. You shall add classifier *shaded* to use the 
-jar which includes all necessary dependencies.
+After installing ``grape-jdk``, you can include it as dependency in your maven project. You shall add classifier *shaded* to use the jar which includes all necessary dependencies.
 
 .. code:: xml
 
@@ -420,69 +490,7 @@ and you need to specify the app you want in this run.
 
     ctx.to_numpy("r:label0.dist_0")
 
-After computation, you can obtain the results stored in context with the help of 
-:ref:`Context`.
-
-Using ``math.h`` Functions in Algorithms
-----------------------------------------
-
-GraphScope supports using C functions from :code:`math.h` in user-defined algorithms,
-via the :code:`context.math` interface. E.g.,
-
-.. code:: python
-
-    @staticmethod
-    def Init(v, context):
-        v.set_value(context.math.sin(1000000000.0 * context.math.M_PI))
-
-will be translated to the following efficient C code
-
-.. code:: c
-
-    ... Init(...)
-
-        v.set_value(sin(1000000000.0 * M_PI));
-
-Run Your Own Algorithms
--------------------------
-
-To run your own algorithms, you may trigger it in place where you defined it.
-
-.. code:: python
-
-    import graphscope
-
-    sess = graphscope.session()
-    g = sess.g()
-
-    # load my algorithm
-    my_app = SSSP_Pregel()
-
-    # run my algorithm over a graph and get the result.
-    ret = my_app(g, source="0")
-
-
-After developing and testing, you may want to save it for the future use.
-
-.. code:: python
-
-    SSSP_Pregel.to_gar("file:///var/graphscope/udf/my_sssp_pregel.gar")
-
-
-Later, you can load your own algorithm from the gar package.
-
-.. code:: python
-
-    import graphscope
-
-    sess = graphscope.session()
-    g = graphscope.Session(sess)
-
-    # load my algorithm from a gar package
-    my_app = load_app('SSSP_Pregel', 'file:///var/graphscope/udf/my_sssp_pregel.gar')
-
-    # run my algorithm over a graph and get the result.
-    ret = my_app(g, src="0")
+After computation, you can obtain the results stored in context with the help of :ref:`Context`.
 
 **Publications**
 
