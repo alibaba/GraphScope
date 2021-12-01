@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 use crate::db::api::*;
 
-pub fn gen_properties(type_def: &TypeDef) -> HashMap<PropId, Value> {
+pub fn gen_properties(type_def: &TypeDef) -> HashMap<PropertyId, Value> {
     let mut ret = HashMap::new();
     for prop_def in type_def.get_prop_defs() {
         let v = gen_property(prop_def.r#type);
@@ -21,7 +21,7 @@ fn gen_property(r#type: ValueType) -> Value {
     }
 }
 
-pub fn gen_one_string_properties(type_def: &TypeDef, len: usize) -> HashMap<PropId, Value> {
+pub fn gen_one_string_properties(type_def: &TypeDef, len: usize) -> HashMap<PropertyId, Value> {
     let prop_def = type_def.get_prop_defs().next().unwrap();
     assert_eq!(prop_def.r#type, ValueType::String);
     let mut ret = HashMap::new();

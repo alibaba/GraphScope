@@ -16,17 +16,15 @@ use std::os::raw::{c_void, c_char};
 use std::ffi::CStr;
 use std::str;
 use std::sync::Arc;
-use std::vec::IntoIter;
 
-use maxgraph_store::v2::api::*;
-use maxgraph_store::v2::errors::GraphError;
 use crate::store::graph::{PartitionGraphHandle, FfiPartitionGraph};
-use maxgraph_store::v2::wrapper::wrapper_partition_graph::{WrapperPartitionSnapshot, WrapperPartitionGraph};
-use maxgraph_store::v2::wrapper::graph_storage::{GraphStorageWrapper, WrapperVertex, WrapperEdge, WrapperProperty};
+use maxgraph_store::db::wrapper::wrapper_partition_graph::{WrapperPartitionSnapshot, WrapperPartitionGraph};
 use maxgraph_store::db::graph::store::GraphStore;
-use maxgraph_store::v2::api::partition_graph::PartitionGraph;
-use maxgraph_store::v2::GraphResult;
-use maxgraph_store::db::api::GraphConfigBuilder;
+use maxgraph_store::db::api::partition_graph::PartitionGraph;
+use maxgraph_store::db::api::{GraphConfigBuilder, SnapshotId, VertexId, LabelId, EdgeId, EdgeKind, SerialId, PropertyId, Records, GraphError};
+use maxgraph_store::db::api::partition_snapshot::PartitionSnapshot;
+use maxgraph_store::db::api::types::{RocksVertex, PropertyValue, Property, PropertyReader, RocksEdge};
+use maxgraph_store::db::graph::entity::{RocksVertexImpl, RocksEdgeImpl, PropertyImpl, PropertiesIter};
 
 pub type PartitionSnapshotHandle = *const c_void;
 pub type ErrorHandle = *const c_void;
@@ -37,14 +35,13 @@ pub type EdgeIteratorHandle = *const c_void;
 pub type PropertyHandle = *const c_void;
 pub type PropertyIteratorHandle = *const c_void;
 
-// pub type FfiMultiVersionGraph = WrapperPartitionGraph<GraphStorageWrapper<GraphStore>>;
-pub type FfiSnapshot = WrapperPartitionSnapshot<GraphStorageWrapper<GraphStore>>;
-pub type FfiVertex = WrapperVertex;
-pub type FfiEdge = WrapperEdge;
-pub type FfiVertexIterator = IntoIter<GraphResult<FfiVertex>>;
-pub type FfiEdgeIterator = IntoIter<GraphResult<FfiEdge>>;
-pub type FfiProperty = WrapperProperty;
-pub type FfiPropertyIterator = IntoIter<GraphResult<FfiProperty>>;
+pub type FfiSnapshot = WrapperPartitionSnapshot<GraphStore>;
+pub type FfiVertex = RocksVertexImpl;
+pub type FfiEdge = RocksEdgeImpl;
+pub type FfiVertexIterator = Records<FfiVertex>;
+pub type FfiEdgeIterator = Records<FfiEdge>;
+pub type FfiProperty = PropertyImpl;
+pub type FfiPropertyIterator = PropertiesIter<'static>;
 
 #[repr(C)]
 pub struct StringSlice {
@@ -79,9 +76,7 @@ pub extern fn OpenPartitionGraph(store_path: *const c_char) -> PartitionGraphHan
         config_builder.set_storage_engine("rocksdb");
         let config = config_builder.build();
         let graph_store = Arc::new(GraphStore::open(&config, store_path_str).unwrap());
-        let storage_wrapper = GraphStorageWrapper::new(graph_store);
-        let multi_version_graph = Arc::new(storage_wrapper);
-        let partition_graph = WrapperPartitionGraph::new(multi_version_graph);
+        let partition_graph = WrapperPartitionGraph::new(graph_store);
         Box::into_raw(Box::new(partition_graph)) as PartitionGraphHandle
     }
 }
@@ -117,7 +112,7 @@ pub extern fn GetVertex(partition_snapshot: PartitionSnapshotHandle,
 
 #[no_mangle]
 pub extern fn GetEdge(partition_snapshot: PartitionSnapshotHandle,
-                      edge_id: EdgeId, edge_relation: &EdgeRelation,
+                      edge_id: EdgeId, edge_relation: &EdgeKind,
                       error: *mut ErrorHandle)
                       -> EdgeHandle {
     unsafe {
@@ -159,7 +154,7 @@ pub extern fn ScanVertex(partition_snapshot: PartitionSnapshotHandle,
 
 #[no_mangle]
 pub extern fn ScanEdge(partition_snapshot: PartitionSnapshotHandle,
-                       edge_relation: &EdgeRelation,
+                       edge_relation: &EdgeKind,
                        error: *mut ErrorHandle)
                        -> EdgeIteratorHandle {
     unsafe {
@@ -219,12 +214,12 @@ pub extern fn GetInEdges(partition_snapshot: PartitionSnapshotHandle,
 
 #[no_mangle]
 pub extern fn GetOutDegree(partition_snapshot: PartitionSnapshotHandle,
-                           vertex_id: VertexId, edge_relation: &EdgeRelation,
+                           vertex_id: VertexId, edge_relation: &EdgeKind,
                            error: *mut ErrorHandle)
                            -> usize {
     unsafe {
         let handler = &*(partition_snapshot as *const FfiSnapshot);
-        match handler.get_out_degree(vertex_id, edge_relation) {
+        match handler.get_out_degree(vertex_id, Some(edge_relation.get_edge_label_id())) {
             Ok(degree) => {
                 degree
             }
@@ -239,12 +234,12 @@ pub extern fn GetOutDegree(partition_snapshot: PartitionSnapshotHandle,
 
 #[no_mangle]
 pub extern fn GetInDegree(partition_snapshot: PartitionSnapshotHandle,
-                          vertex_id: VertexId, edge_relation: &EdgeRelation,
+                          vertex_id: VertexId, edge_relation: &EdgeKind,
                           error: *mut ErrorHandle)
                           -> usize {
     unsafe {
         let handler = &*(partition_snapshot as *const FfiSnapshot);
-        match handler.get_in_degree(vertex_id, edge_relation) {
+        match handler.get_in_degree(vertex_id, Some(edge_relation.get_edge_label_id())) {
             Ok(degree) => {
                 degree
             }
@@ -259,7 +254,7 @@ pub extern fn GetInDegree(partition_snapshot: PartitionSnapshotHandle,
 
 #[no_mangle]
 pub extern fn GetKthOutEdge(partition_snapshot: PartitionSnapshotHandle,
-                            vertex_id: VertexId, edge_relation: &EdgeRelation, k: SerialId,
+                            vertex_id: VertexId, edge_relation: &EdgeKind, k: SerialId,
                             error: *mut ErrorHandle)
                             -> EdgeHandle {
     unsafe {
@@ -282,7 +277,7 @@ pub extern fn GetKthOutEdge(partition_snapshot: PartitionSnapshotHandle,
 
 #[no_mangle]
 pub extern fn GetKthInEdge(partition_snapshot: PartitionSnapshotHandle,
-                           vertex_id: VertexId, edge_relation: &EdgeRelation, k: SerialId,
+                           vertex_id: VertexId, edge_relation: &EdgeKind, k: SerialId,
                            error: *mut ErrorHandle)
                            -> EdgeHandle {
     unsafe {
@@ -407,7 +402,7 @@ pub extern fn GetEdgeId(edge_handle: EdgeHandle) -> EdgeId {
 }
 
 #[no_mangle]
-pub extern fn GetEdgeRelation(edge_handle: EdgeHandle) -> EdgeRelation {
+pub extern fn GetEdgeRelation(edge_handle: EdgeHandle) -> EdgeKind {
     unsafe {
         let handler = &*(edge_handle as *const FfiEdge);
         handler.get_edge_relation().clone()
@@ -586,7 +581,7 @@ pub extern fn GetPropertyAsString(property_handle: PropertyHandle, error: *mut E
 pub extern fn GetErrorInfo(error_handle: ErrorHandle) -> StringSlice {
     unsafe {
         let handler = &*(error_handle as *const GraphError);
-        let info = handler.what();
+        let info = format!("{:?}", handler);
         StringSlice::new(info.as_ptr(), info.len())
     }
 }
@@ -675,7 +670,7 @@ fn label_option(label_id : LabelId) -> Option<LabelId> {
     }
 }
 
-fn edge_relation_option(edge_relation: &EdgeRelation) -> Option<&EdgeRelation> {
+fn edge_relation_option(edge_relation: &EdgeKind) -> Option<&EdgeKind> {
     if edge_relation.get_edge_label_id() != LabelId::MAX {
         Some(edge_relation)
     } else {

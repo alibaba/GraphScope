@@ -77,7 +77,7 @@ pub fn create_test_type_def(label: LabelId) -> TypeDef {
     let types = ValueType::all_value_types();
     let mut builder = TypeDefBuilder::new();
     for x in label..label + 10 {
-        let id = (x * 10 + 1) as PropId;
+        let id = (x * 10 + 1) as PropertyId;
         let inner_id = id * 2 - 1;
         let r#type = types[x as usize % types.len()];
         builder.add_property(id, inner_id, id.to_string(), r#type, None, false, "cmt".to_string());
@@ -90,7 +90,7 @@ pub fn create_full_type_def(label: LabelId) -> TypeDef {
     let types = ValueType::all_value_types();
     let mut builder = TypeDefBuilder::new();
     for i in 0..types.len() {
-        let id = i as PropId + 1;
+        let id = i as PropertyId + 1;
         let inner_id = id * 2 - 1;
         let r#type = types[i];
         builder.add_property(id, inner_id, id.to_string(), r#type, None, false, "cmt".to_string());

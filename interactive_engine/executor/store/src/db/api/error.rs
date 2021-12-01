@@ -1,15 +1,15 @@
 use std::fmt::Debug;
 
 #[derive(Clone)]
-pub struct GraphError {
+pub struct ErrorWithBackTrace {
     err_code: GraphErrorCode,
     msg: String,
     backtrace: Vec<(String, String)>,
 }
 
-impl GraphError {
+impl ErrorWithBackTrace {
     pub fn new(err_code: GraphErrorCode, msg: String) -> Self {
-        GraphError {
+        ErrorWithBackTrace {
             err_code,
             msg,
             backtrace: Vec::new(),
@@ -25,15 +25,65 @@ impl GraphError {
     }
 }
 
+#[derive(Clone)]
+pub enum GraphError {
+    WithBackTrace(ErrorWithBackTrace),
+    Internal(String),
+    Rocksdb(String),
+    InvalidArgument(String),
+    TooManyVersions(usize),
+}
+
+impl GraphError {
+    pub fn new(err_code: GraphErrorCode, msg: String) -> Self {
+        let inner = ErrorWithBackTrace {
+            err_code,
+            msg,
+            backtrace: Vec::new(),
+        };
+        GraphError::WithBackTrace(inner)
+    }
+
+    pub fn add_backtrace(&mut self, function: String, code_info: String) {
+        match self {
+            GraphError::WithBackTrace(inner) => {
+                inner.add_backtrace(function, code_info);
+            },
+            _ => {
+                unimplemented!()
+            }
+        }
+    }
+
+    pub fn get_error_code(&self) -> GraphErrorCode {
+        match self {
+            GraphError::WithBackTrace(inner) => {
+                inner.get_error_code()
+            },
+            _ => {
+                unimplemented!()
+            }
+        }
+    }
+}
+
 impl Debug for GraphError {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> Result<(), std::fmt::Error> {
-        writeln!(f, "")?;
-        writeln!(f, "error code: {:?}, msg: {}", self.err_code, self.msg)?;
-        for bt in self.backtrace.iter().rev() {
-            writeln!(f, "\t{}", bt.0)?;
-            writeln!(f, "\t\tat {}", bt.1)?;
+        match self {
+            GraphError::WithBackTrace(inner) => {
+                writeln!(f, "")?;
+                writeln!(f, "error code: {:?}, msg: {}", inner.err_code, inner.msg)?;
+                for bt in inner.backtrace.iter().rev() {
+                    writeln!(f, "\t{}", bt.0)?;
+                    writeln!(f, "\t\tat {}", bt.1)?;
+                }
+                write!(f, "")
+            }
+            GraphError::Internal(s) | GraphError::Rocksdb(s) | GraphError::InvalidArgument(s) => {
+                write!(f, "{}", s)
+            }
+            GraphError::TooManyVersions(limit) => write!(f, "version count exceed limit {}", limit)
         }
-        write!(f, "")
     }
 }
 

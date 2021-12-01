@@ -1,66 +1,107 @@
-use std::sync::Arc;
-use std::marker::PhantomData;
-use super::schema::*;
-use super::{VertexId, SnapshotId, LabelId, BackupId, GraphResult, EdgeId,
-            Vertex, Edge, EdgeKind, PropId, PropertyMap, Condition,
-            PropertiesRef, ValueRef};
-use crate::db::api::DataLoadTarget;
+//
+//! Copyright 2020 Alibaba Group Holding Limited.
+//!
+//! Licensed under the Apache License, Version 2.0 (the "License");
+//! you may not use this file except in compliance with the License.
+//! You may obtain a copy of the License at
+//!
+//! http://www.apache.org/licenses/LICENSE-2.0
+//!
+//! Unless required by applicable law or agreed to in writing, software
+//! distributed under the License is distributed on an "AS IS" BASIS,
+//! WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+//! See the License for the specific language governing permissions and
+//! limitations under the License.
 
-pub trait GraphStorage {
-    type V: Vertex;
-    type E: Edge;
+use crate::db::api::condition::Condition;
+use crate::db::api::{SnapshotId, VertexId, LabelId, GraphResult, EdgeId, EdgeKind, Records, SerialId, TypeDef, PropertyMap, DataLoadTarget, PropertyId, BackupId};
+use crate::db::api::types::{RocksVertex, RocksEdge};
 
-    /// Return the vertex with the `id` at `si`. This interface is thread safe.
-    ///
-    /// if `label` is None, all vertex types will be searched and the first match vertex will be returned.
-    ///
-    /// If vertex type of `label` is not found, something error when query storage, something error
-    /// in meta or other errors, `GraphError` will be returned
-    fn get_vertex(&self, si: SnapshotId, id: VertexId, label: Option<LabelId>) -> GraphResult<Option<VertexWrapper<Self::V>>>;
+pub trait MultiVersionGraph {
+    type V: RocksVertex;
+    type E: RocksEdge;
 
-    /// Return the edge with the `id` at `si`. This interface is thread safe.
-    ///
-    /// If `kind` is None, all edge kinds will be searched and the first match edge will be returned
-    ///
-    /// If edge kind of `kind` is not found, something error when query storage, something error in
-    /// meta or other errors, `GraphError` will be returned
-    fn get_edge(&self, si: SnapshotId, id: EdgeId, kind: Option<&EdgeKind>) -> GraphResult<Option<EdgeWrapper<Self::E>>>;
+    fn get_vertex(
+        &self,
+        snapshot_id: SnapshotId,
+        vertex_id: VertexId,
+        label_id: Option<LabelId>,
+        property_ids: Option<&Vec<PropertyId>>,
+    ) -> GraphResult<Option<Self::V>>;
 
-    /// Return all vertices of `label` matching `condition` at `si`. This interface is thread safe.
-    ///
-    /// If `condition` is None, all vertices of `label` will be scanned without filter.
-    /// If `label` is None, all vertex types will be scanned.
-    ///
-    /// If vertex type of `label` is not found, something error when query storage, error in meta,
-    /// decoding properties error or other errors, `GraphError` will be returned.
-    fn query_vertices<'a>(&'a self, si: SnapshotId, label: Option<LabelId>, condition: Option<Arc<Condition>>) -> GraphResult<Box<dyn VertexResultIter<V=Self::V> + 'a>>;
+    fn get_edge(
+        &self,
+        snapshot_id: SnapshotId,
+        edge_id: EdgeId,
+        edge_relation: Option<&EdgeKind>,
+        property_ids: Option<&Vec<PropertyId>>,
+    ) -> GraphResult<Option<Self::E>>;
 
-    /// Return all out edges of vertex with id=`src_id` matching `condition` at `si`. This interface is thread safe.
-    ///
-    /// if `label` is None, all out edges will be returned, otherwise only edges with the `label` will be returned.
-    /// if `condition` is None, all edges will be scanned without filter.
-    ///
-    /// If edge type of `label` is not found, something error when query storage, error in meta,
-    /// decoding properties error or other errors, `GraphError` will be returned.
-    fn get_out_edges<'a>(&'a self, si: SnapshotId, src_id: VertexId, label: Option<LabelId>, condition: Option<Arc<Condition>>) -> GraphResult<Box<dyn EdgeResultIter<E=Self::E> + 'a>>;
+    fn scan_vertex(
+        &self,
+        snapshot_id: SnapshotId,
+        label_id: Option<LabelId>,
+        condition: Option<&Condition>,
+        property_ids: Option<&Vec<PropertyId>>,
+    ) -> GraphResult<Records<Self::V>>;
 
-    /// Return all in edges of vertex with id=`dst_id` matching `condition` at `si`. This interface is thread safe.
-    ///
-    /// if `label` is None, all out edges will be returned, otherwise only edges with the `label` will be returned.
-    /// if `condition` is None, all edges will be scanned without filter.
-    ///
-    /// If edge type of `label` is not found, something error when query storage, error in meta,
-    /// decoding properties error or other errors, `GraphError` will be returned.
-    fn get_in_edges<'a>(&'a self, si: SnapshotId, dst_id: VertexId, label: Option<LabelId>, condition: Option<Arc<Condition>>) -> GraphResult<Box<dyn EdgeResultIter<E=Self::E> + 'a>>;
+    fn scan_edge(
+        &self,
+        snapshot_id: SnapshotId,
+        label_id: Option<LabelId>,
+        condition: Option<&Condition>,
+        property_ids: Option<&Vec<PropertyId>>,
+    ) -> GraphResult<Records<Self::E>>;
 
-    /// Return all edges of `label` matching `condition` at `si`. This interface is thread safe.
-    ///
-    /// If `condition` is None, all edges of `label` will be scanned without filter.
-    /// If `label` is None, all edge types will be scanned.
-    ///
-    /// If edge type of `label` is not found, something error when query storage, error in meta,
-    /// decoding properties error or other errors, `GraphError` will be returned.
-    fn query_edges<'a>(&'a self, si: SnapshotId, label: Option<LabelId>, condition: Option<Arc<Condition>>) -> GraphResult<Box<dyn EdgeResultIter<E=Self::E> + 'a>>;
+    fn get_out_edges(
+        &self,
+        snapshot_id: SnapshotId,
+        vertex_id: VertexId,
+        label_id: Option<LabelId>,
+        condition: Option<&Condition>,
+        property_ids: Option<&Vec<PropertyId>>,
+    ) -> GraphResult<Records<Self::E>>;
+
+    fn get_in_edges(
+        &self,
+        snapshot_id: SnapshotId,
+        vertex_id: VertexId,
+        label_id: Option<LabelId>,
+        condition: Option<&Condition>,
+        property_ids: Option<&Vec<PropertyId>>,
+    ) -> GraphResult<Records<Self::E>>;
+
+    fn get_out_degree(
+        &self,
+        snapshot_id: SnapshotId,
+        vertex_id: VertexId,
+        label_id: Option<LabelId>,
+    ) -> GraphResult<usize>;
+
+    fn get_in_degree(
+        &self,
+        snapshot_id: SnapshotId,
+        vertex_id: VertexId,
+        label_id: Option<LabelId>,
+    ) -> GraphResult<usize>;
+
+    fn get_kth_out_edge(
+        &self,
+        snapshot_id: SnapshotId,
+        vertex_id: VertexId,
+        edge_relation: &EdgeKind,
+        k: SerialId,
+        property_ids: Option<&Vec<PropertyId>>,
+    ) -> GraphResult<Option<Self::E>>;
+
+    fn get_kth_in_edge(
+        &self,
+        snapshot_id: SnapshotId,
+        vertex_id: VertexId,
+        edge_relation: &EdgeKind,
+        k: SerialId,
+        property_ids: Option<&Vec<PropertyId>>,
+    ) -> GraphResult<Option<Self::E>>;
 
     /// Create a new vertex type with `label` and `type_def` at `si` and `schema_version`. This interface is thread safe.
     ///
@@ -196,104 +237,4 @@ pub trait GraphBackup {
     ///
     /// Returns the available backup id vector(may be empty)。
     fn get_backup_list(&self) -> Vec<BackupId>;
-}
-
-pub trait VertexResultIter {
-    type V: Vertex;
-    fn next(&mut self) -> Option<VertexWrapper<Self::V>>;
-    fn ok(&self) -> GraphResult<()>;
-}
-
-pub trait EdgeResultIter {
-    type E: Edge;
-    fn next(&mut self) -> Option<EdgeWrapper<Self::E>>;
-    fn ok(&self) -> GraphResult<()>;
-}
-
-pub struct VertexWrapper<'a, V> {
-    v: V,
-    _phantom: PhantomData<&'a ()>,
-}
-
-impl<'a, V> VertexWrapper<'a, V> {
-    pub fn new(v: V) -> Self {
-        VertexWrapper {
-            v,
-            _phantom: Default::default(),
-        }
-    }
-}
-
-impl<'a, V: Vertex> Vertex for VertexWrapper<'a, V> {
-    type PI = V::PI;
-
-    fn get_id(&self) -> VertexId {
-        self.v.get_id()
-    }
-
-    fn get_label(&self) -> LabelId {
-        self.v.get_label()
-    }
-
-    fn get_property(&self, prop_id: PropId) -> Option<ValueRef> {
-        self.v.get_property(prop_id)
-    }
-
-    fn get_properties_iter(&self) -> PropertiesRef<Self::PI> {
-        self.v.get_properties_iter()
-    }
-}
-
-impl<'a, V: Vertex> std::fmt::Debug for VertexWrapper<'a, V> {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{:?}", self.v)
-    }
-}
-
-pub struct EdgeWrapper<'a, E> {
-    e: E,
-    _phantom: PhantomData<&'a ()>,
-}
-
-impl<'a, E> EdgeWrapper<'a, E> {
-    pub fn new(e: E) -> Self {
-        EdgeWrapper {
-            e,
-            _phantom: Default::default(),
-        }
-    }
-}
-
-impl<'a, E: Edge> Edge for EdgeWrapper<'a, E> {
-    type PI = E::PI;
-
-    fn get_id(&self) -> &EdgeId {
-        self.e.get_id()
-    }
-
-    fn get_src_id(&self) -> i64 {
-        self.e.get_src_id()
-    }
-
-    fn get_dst_id(&self) -> i64 {
-        self.e.get_dst_id()
-    }
-
-    fn get_kind(&self) -> &EdgeKind {
-        self.e.get_kind()
-    }
-
-    fn get_property(&self, prop_id: i32) -> Option<ValueRef> {
-        self.e.get_property(prop_id)
-    }
-
-    fn get_properties_iter(&self) -> PropertiesRef<Self::PI> {
-        self.e.get_properties_iter()
-    }
-}
-
-impl<'a, E: Edge> std::fmt::Debug for EdgeWrapper<'a, E> {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{:?}", self.e)
-    }
 }

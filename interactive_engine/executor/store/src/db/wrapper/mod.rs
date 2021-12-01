@@ -13,19 +13,4 @@
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 
-use crate::v2::api::PropertyId;
-use crate::v2::api::types::PropertyValue;
-
-#[allow(dead_code)]
-pub enum Condition {
-    And(Box<Condition>, Box<Condition>),
-    Or(Box<Condition>, Box<Condition>),
-    Not(Box<Condition>),
-    LessThan(PropertyId, PropertyValue),
-    LessEqual(PropertyId, PropertyValue),
-    GreaterThan(PropertyId, PropertyValue),
-    GreaterEqual(PropertyId, PropertyValue),
-    Equal(PropertyId, PropertyValue),
-    NotEqual(PropertyId, PropertyValue),
-}
-
+pub mod wrapper_partition_graph;

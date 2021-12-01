@@ -1,12 +1,10 @@
 use crate::db::storage::ExternalStorage;
 use std::sync::Arc;
 use crate::db::graph::types::{VertexTypeInfo, EdgeInfo, EdgeKindInfo};
-use crate::v2::GraphResult;
-use crate::v2::graph::entity::{VertexImpl, EdgeImpl};
-use crate::v2::api::{SnapshotId, VertexId, LabelId, Records, EdgeRelation};
+use crate::db::graph::entity::{RocksVertexImpl, RocksEdgeImpl};
 use crate::db::graph::bin::{vertex_table_prefix_key, parse_vertex_key, edge_table_prefix_key, parse_edge_key, edge_prefix};
 use crate::db::graph::codec::{get_codec_version};
-use crate::db::api::EdgeDirection;
+use crate::db::api::{EdgeDirection, SnapshotId, GraphResult, Records, VertexId};
 
 pub struct VertexTypeScan {
     storage: Arc<dyn ExternalStorage>,
@@ -28,8 +26,8 @@ impl VertexTypeScan {
 }
 
 impl IntoIterator for VertexTypeScan {
-    type Item = GraphResult<VertexImpl>;
-    type IntoIter = Records<VertexImpl>;
+    type Item = GraphResult<RocksVertexImpl>;
+    type IntoIter = Records<RocksVertexImpl>;
 
     fn into_iter(self) -> Self::IntoIter {
         let snapshot_id = self.snapshot_id as i64;
@@ -56,7 +54,7 @@ impl IntoIterator for VertexTypeScan {
                         match self.vertex_type_info.get_decoder(snapshot_id, codec_version) {
                             Ok(decoder) => {
                                 let label = self.vertex_type_info.get_label();
-                                Some(Ok(VertexImpl::new(vertex_id as VertexId, label as LabelId, decoder, raw_val)))
+                                Some(Ok(RocksVertexImpl::new(vertex_id, label, Some(decoder), raw_val)))
                             }
                             Err(e) => {
                                 Some(Err(e.into()))
@@ -94,12 +92,12 @@ impl EdgeTypeScan {
 }
 
 impl IntoIterator for EdgeTypeScan {
-    type Item = GraphResult<EdgeImpl>;
-    type IntoIter = Records<EdgeImpl>;
+    type Item = GraphResult<RocksEdgeImpl>;
+    type IntoIter = Records<RocksEdgeImpl>;
 
     fn into_iter(self) -> Self::IntoIter {
         let mut edge_kind_iter = self.edge_info.get_kinds(self.snapshot_id as i64);
-        let mut res: Records<EdgeImpl> = Box::new(::std::iter::empty());
+        let mut res: Records<RocksEdgeImpl> = Box::new(::std::iter::empty());
         while let Some(edge_kind) = edge_kind_iter.next() {
             let iter = EdgeKindScan::new(self.storage.clone(), self.snapshot_id, edge_kind.clone(), self.vertex_id, self.direction).into_iter();
             res = Box::new(res.chain(iter));
@@ -128,7 +126,7 @@ impl EdgeKindScan {
 }
 
 impl IntoIterator for EdgeKindScan {
-    type Item = GraphResult<EdgeImpl>;
+    type Item = GraphResult<RocksEdgeImpl>;
     type IntoIter = Box<dyn Iterator<Item=Self::Item> + Send>;
 
     fn into_iter(self) -> Self::IntoIter {
@@ -164,10 +162,7 @@ impl IntoIterator for EdgeKindScan {
                 match self.edge_kind_info.get_decoder(snapshot_id, codec_version) {
                     Ok(decoder) => {
                         let edge_kind = self.edge_kind_info.get_type();
-                        let edge_relation = EdgeRelation::new(edge_kind.edge_label_id as LabelId,
-                                                              edge_kind.src_vertex_label_id as LabelId,
-                                                              edge_kind.dst_vertex_label_id as LabelId);
-                        Some(Ok(EdgeImpl::new(edge_id.into(), edge_relation, decoder, raw_val)))
+                        Some(Ok(RocksEdgeImpl::new(edge_id.into(), edge_kind.into(), Some(decoder), raw_val)))
                     }
                     Err(e) => {
                         Some(Err(e.into()))

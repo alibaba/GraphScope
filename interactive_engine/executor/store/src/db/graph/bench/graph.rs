@@ -4,13 +4,14 @@ use super::types;
 use super::data;
 use super::util::*;
 use self::benchmark::*;
+use crate::db::api::multi_version_graph::MultiVersionGraph;
 
-pub fn bench_insert_vertex<G: GraphStorage>(graph: G) {
+pub fn bench_insert_vertex<G: MultiVersionGraph>(graph: G) {
     let benchmark = InsertVertexBenchmark::new(graph);
     benchmark.execute();
 }
 
-pub fn bench_insert_edge<G: GraphStorage>(graph: G) {
+pub fn bench_insert_edge<G: MultiVersionGraph>(graph: G) {
     let benchmark = InsertEdgeBenchmark::new(graph);
     benchmark.execute();
 }
@@ -19,11 +20,11 @@ mod benchmark {
     use super::*;
     use std::collections::HashMap;
 
-    pub struct InsertVertexBenchmark<G: GraphStorage> {
+    pub struct InsertVertexBenchmark<G: MultiVersionGraph> {
         graph: G,
     }
 
-    impl<G: GraphStorage> InsertVertexBenchmark<G> {
+    impl<G: MultiVersionGraph> InsertVertexBenchmark<G> {
         pub fn new(graph: G) -> Self {
             InsertVertexBenchmark {
                 graph,
@@ -114,7 +115,7 @@ mod benchmark {
             println!("========================================");
         }
 
-        fn bench(&self, label: LabelId, properties: &HashMap<PropId, Value>, test_count: usize) -> f64 {
+        fn bench(&self, label: LabelId, properties: &HashMap<PropertyId, Value>, test_count: usize) -> f64 {
             // warmup
             for _ in 0..test_count {
                 let id = random();
@@ -131,11 +132,11 @@ mod benchmark {
         }
     }
 
-    pub struct InsertEdgeBenchmark<G: GraphStorage> {
+    pub struct InsertEdgeBenchmark<G: MultiVersionGraph> {
         graph: G,
     }
 
-    impl<G: GraphStorage> InsertEdgeBenchmark<G> {
+    impl<G: MultiVersionGraph> InsertEdgeBenchmark<G> {
         pub fn new(graph: G) -> Self {
             InsertEdgeBenchmark {
                 graph,
@@ -239,7 +240,7 @@ mod benchmark {
             println!("========================================");
         }
 
-        fn bench(&self, edge_type: &EdgeKind, properties: &HashMap<PropId, Value>, test_count: usize) -> f64 {
+        fn bench(&self, edge_type: &EdgeKind, properties: &HashMap<PropertyId, Value>, test_count: usize) -> f64 {
             // warmup
             self.insert(edge_type, properties, test_count);
 
@@ -249,7 +250,7 @@ mod benchmark {
             test_count as f64 / cost
         }
 
-        fn insert(&self, edge_type: &EdgeKind, properties: &HashMap<PropId, Value>, mut test_count: usize) {
+        fn insert(&self, edge_type: &EdgeKind, properties: &HashMap<PropertyId, Value>, mut test_count: usize) {
             let mut inner_id = 0;
             while test_count > 0 {
                 let src_id = random();

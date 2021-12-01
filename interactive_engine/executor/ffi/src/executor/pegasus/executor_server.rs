@@ -16,7 +16,7 @@ use maxgraph_common::proto::gremlin_query_grpc;
 use maxgraph_store::db::graph::store::GraphStore;
 use std::sync::mpsc::channel;
 use std::time::Duration;
-use maxgraph_runtime::store::v2::global_graph::GlobalGraph;
+use maxgraph_runtime::store::groot::global_graph::GlobalGraph;
 use maxgraph_runtime::server::manager::ManagerGuards;
 use maxgraph_runtime::store::task_partition_manager::TaskPartitionManager;
 use maxgraph_runtime::server::query_manager::QueryManager;

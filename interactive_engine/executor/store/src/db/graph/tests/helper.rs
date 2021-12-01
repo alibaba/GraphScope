@@ -2,8 +2,10 @@
 use crate::db::api::*;
 use std::collections::{HashMap, HashSet};
 use super::data;
+use crate::db::api::multi_version_graph::MultiVersionGraph;
+use crate::db::api::types::{RocksVertex, Property, PropertyValue, RocksEdge};
 
-pub struct GraphTestHelper<'a, G: GraphStorage> {
+pub struct GraphTestHelper<'a, G: MultiVersionGraph> {
     graph: &'a G,
     cur_si: SnapshotId,
     vertex_data: VertexDataManager,
@@ -12,7 +14,7 @@ pub struct GraphTestHelper<'a, G: GraphStorage> {
     edge_type_manager: EdgeTypeManager,
 }
 
-impl<'a, G: GraphStorage> GraphTestHelper<'a, G> {
+impl<'a, G: MultiVersionGraph> GraphTestHelper<'a, G> {
     pub fn new(graph: &'a G) -> Self {
         GraphTestHelper {
             graph,
@@ -141,9 +143,9 @@ impl<'a, G: GraphStorage> GraphTestHelper<'a, G> {
     pub fn check_get_vertex(&self, si: SnapshotId, label: LabelId, ids: &Vec<VertexId>) {
         for id in ids {
             let ans = self.vertex_data.get(si, *id, label).unwrap();
-            let v = self.graph.get_vertex(si, *id, Some(label)).unwrap().unwrap();
+            let v = self.graph.get_vertex(si, *id, Some(label), None).unwrap().unwrap();
             check_vertex(&v, &ans);
-            let v = self.graph.get_vertex(si, *id, None).unwrap().unwrap();
+            let v = self.graph.get_vertex(si, *id, None, None).unwrap().unwrap();
             check_vertex(&v, &ans);
         }
     }
@@ -151,24 +153,25 @@ impl<'a, G: GraphStorage> GraphTestHelper<'a, G> {
     pub fn check_get_vertex_none(&self, si: SnapshotId, label: LabelId, ids: &Vec<VertexId>) {
         for id in ids {
             assert!(self.vertex_data.get(si, *id, label).is_none());
-            assert!(self.graph.get_vertex(si, *id, Some(label)).unwrap().is_none());
-            assert!(self.graph.get_vertex(si, *id, None).unwrap().is_none());
+            assert!(self.graph.get_vertex(si, *id, Some(label), None).unwrap().is_none());
+            assert!(self.graph.get_vertex(si, *id, None, None).unwrap().is_none());
         }
     }
 
     pub fn check_get_vertex_err(&self, si: SnapshotId, label: LabelId, ids: &Vec<VertexId>) {
         for id in ids {
-            assert!(self.graph.get_vertex(si, *id, Some(label)).is_err());
-            assert!(self.graph.get_vertex(si, *id, None).unwrap().is_none());
+            assert!(self.graph.get_vertex(si, *id, Some(label), None).is_err());
+            assert!(self.graph.get_vertex(si, *id, None, None).unwrap().is_none());
         }
     }
 
     pub fn check_query_vertices(&self, si: SnapshotId, label: Option<LabelId>, mut ids: HashSet<VertexId>) {
         let mut ans = self.vertex_data.scan(si, label);
-        let mut iter = self.graph.query_vertices(si, label, None).unwrap();
+        let mut iter = self.graph.scan_vertex(si, label, None, None).unwrap();
         while let Some(v) = iter.next() {
-            assert!(ids.remove(&v.get_id()));
-            let ans_v = ans.remove(&v.get_id()).unwrap();
+            let v = v.unwrap();
+            assert!(ids.remove(&v.get_vertex_id()));
+            let ans_v = ans.remove(&v.get_vertex_id()).unwrap();
             check_vertex(&v, &ans_v);
         }
         assert!(ids.is_empty());
@@ -176,15 +179,15 @@ impl<'a, G: GraphStorage> GraphTestHelper<'a, G> {
     }
 
     pub fn check_query_vertices_empty(&self, si: SnapshotId, label: LabelId) {
-        assert!(self.graph.query_vertices(si, Some(label), None).unwrap().next().is_none());
+        assert!(self.graph.scan_vertex(si, Some(label), None, None).unwrap().next().is_none());
     }
 
     pub fn check_get_edge<'b, I: Iterator<Item=&'b EdgeId>>(&self, si: SnapshotId, edge_kind: &EdgeKind, ids: I) {
         for id in ids {
             let ans = self.edge_data.get(si, *id, edge_kind).expect(format!("{:?} not found in helper", id).as_str());
-            let e = self.graph.get_edge(si, *id, Some(edge_kind)).unwrap().unwrap();
+            let e = self.graph.get_edge(si, *id, Some(edge_kind), None).unwrap().unwrap();
             check_edge(&e, &ans);
-            let e = self.graph.get_edge(si, *id, None).unwrap().unwrap();
+            let e = self.graph.get_edge(si, *id, None, None).unwrap().unwrap();
             check_edge(&e, &ans);
         }
     }
@@ -192,47 +195,47 @@ impl<'a, G: GraphStorage> GraphTestHelper<'a, G> {
     pub fn check_get_edge_none<'b, I: Iterator<Item=&'b EdgeId>>(&self, si: SnapshotId, edge_kind: &EdgeKind, ids: I) {
         for id in ids {
             assert!(self.edge_data.get(si, *id, edge_kind).is_none());
-            assert!(self.graph.get_edge(si, *id, Some(edge_kind)).unwrap().is_none());
-            assert!(self.graph.get_edge(si, *id, None).unwrap().is_none());
+            assert!(self.graph.get_edge(si, *id, Some(edge_kind), None).unwrap().is_none());
+            assert!(self.graph.get_edge(si, *id, None, None).unwrap().is_none());
         }
     }
 
     pub fn check_get_edge_err<'b, I: Iterator<Item=&'b EdgeId>>(&self, si: SnapshotId, edge_kind: &EdgeKind, ids: I) {
         for id in ids {
-            assert!(self.graph.get_edge(si, *id, Some(edge_kind)).is_err());
-            assert!(self.graph.get_edge(si, *id, None).unwrap().is_none());
+            assert!(self.graph.get_edge(si, *id, Some(edge_kind), None).is_err());
+            assert!(self.graph.get_edge(si, *id, None, None).unwrap().is_none());
         }
     }
 
     /// `ids`: user's answer
     pub fn check_query_edges(&self, si: SnapshotId, label: Option<LabelId>, ids: HashSet<EdgeId>) {
         let ans = self.edge_data.scan(si, label);
-        let mut iter = self.graph.query_edges(si, label, None).unwrap();
-        check_edge_iter(iter.as_mut(), ans, ids);
+        let iter = self.graph.scan_edge(si, label, None, None).unwrap();
+        check_edge_iter(iter, ans, ids);
     }
 
     pub fn check_query_edges_empty(&self, si: SnapshotId, label: Option<LabelId>) {
-        assert!(self.graph.query_edges(si, label, None).unwrap().next().is_none());
+        assert!(self.graph.scan_edge(si, label, None, None).unwrap().next().is_none());
     }
 
     pub fn check_get_out_edges(&self, si: SnapshotId, src_id: VertexId, label: Option<LabelId>, ids: HashSet<EdgeId>) {
         let ans = self.edge_data.get_out_edges(si, src_id, label);
-        let mut iter = self.graph.get_out_edges(si, src_id, label, None).unwrap();
-        check_edge_iter(iter.as_mut(), ans, ids);
+        let iter = self.graph.get_out_edges(si, src_id, label, None, None).unwrap();
+        check_edge_iter(iter, ans, ids);
     }
 
     pub fn check_get_out_edges_empty(&self, si: SnapshotId, src_id: VertexId, label: Option<LabelId>) {
-        assert!(self.graph.get_out_edges(si, src_id, label, None).unwrap().next().is_none());
+        assert!(self.graph.get_out_edges(si, src_id, label, None, None).unwrap().next().is_none());
     }
 
     pub fn check_get_in_edges(&self, si: SnapshotId, dst_id: VertexId, label: Option<LabelId>, ids: HashSet<EdgeId>) {
         let ans = self.edge_data.get_in_edges(si, dst_id, label);
-        let mut iter = self.graph.get_in_edges(si, dst_id, label, None).unwrap();
-        check_edge_iter(iter.as_mut(), ans, ids);
+        let iter = self.graph.get_in_edges(si, dst_id, label, None, None).unwrap();
+        check_edge_iter(iter, ans, ids);
     }
 
     pub fn check_get_in_edges_empty(&self, si: SnapshotId, dst_id: VertexId, label: Option<LabelId>) {
-        assert!(self.graph.get_in_edges(si, dst_id, label, None).unwrap().next().is_none());
+        assert!(self.graph.get_in_edges(si, dst_id, label, None, None).unwrap().next().is_none());
     }
 
     fn check_and_update_si(&mut self, si: SnapshotId) -> GraphResult<()> {
@@ -472,12 +475,12 @@ impl VertexDataManager {
         }
     }
 
-    fn insert(&mut self, si: SnapshotId, id: VertexId, label: LabelId, properties: HashMap<PropId, Value>) {
+    fn insert(&mut self, si: SnapshotId, id: VertexId, label: LabelId, properties: HashMap<PropertyId, Value>) {
         let data = self.map.entry(label).or_insert_with(|| VertexDataMap::new(label));
         data.insert(si, id, properties);
     }
 
-    fn update(&mut self, si: SnapshotId, id: VertexId, label: LabelId, properties: HashMap<PropId, Value>) {
+    fn update(&mut self, si: SnapshotId, id: VertexId, label: LabelId, properties: HashMap<PropertyId, Value>) {
         let data = self.map.entry(label).or_insert_with(|| VertexDataMap::new(label));
         data.update(si, id, properties);
     }
@@ -503,7 +506,7 @@ impl VertexDataManager {
     }
 }
 
-type Props = HashMap<PropId, Value>;
+type Props = HashMap<PropertyId, Value>;
 
 struct VertexDataMap {
     label: LabelId,
@@ -566,17 +569,20 @@ impl<'a> VertexDataRef<'a> {
     }
 }
 
-fn check_vertex<V: Vertex>(v: &V, ans: &VertexDataRef) {
-    assert_eq!(v.get_label(), ans.label);
+fn check_vertex<V: RocksVertex>(v: &V, ans: &VertexDataRef) {
+    assert_eq!(v.get_label_id(), ans.label);
     for (prop_id, ans_val) in ans.properties {
         let val = v.get_property(*prop_id).unwrap();
-        assert_eq!(val, ans_val.as_ref());
+        assert_eq!(*val.get_property_value(), PropertyValue::from(ans_val.as_ref()));
     }
     let mut set = HashSet::new();
-    let mut iter = v.get_properties_iter();
-    while let Some((prop_id, val)) = iter.next() {
+    let mut iter = v.get_property_iterator();
+    while let Some(property) = iter.next() {
+        let p = property.unwrap();
+        let prop_id = p.get_property_id();
+        let val = p.get_property_value();
         let ans_val = ans.properties.get(&prop_id).unwrap();
-        assert_eq!(ans_val.as_ref(), val);
+        assert_eq!(PropertyValue::from(ans_val.as_ref()), *val);
         set.insert(prop_id);
     }
     assert_eq!(set.len(), ans.properties.len());
@@ -731,26 +737,30 @@ impl<'a> EdgeDataRef<'a> {
     }
 }
 
-fn check_edge<E: Edge>(e: &E, ans: &EdgeDataRef) {
-    assert_eq!(e.get_kind(), ans.edge_kind);
+fn check_edge<E: RocksEdge>(e: &E, ans: &EdgeDataRef) {
+    assert_eq!(e.get_edge_relation(), ans.edge_kind);
     for (prop_id, ans_val) in ans.properties {
         let val = e.get_property(*prop_id).unwrap();
-        assert_eq!(val, ans_val.as_ref());
+        assert_eq!(*val.get_property_value(), PropertyValue::from(ans_val.as_ref()));
     }
     let mut set = HashSet::new();
-    let mut iter = e.get_properties_iter();
-    while let Some((prop_id, val)) = iter.next() {
+    let mut iter = e.get_property_iterator();
+    while let Some(p) = iter.next() {
+        let p = p.unwrap();
+        let prop_id = p.get_property_id();
+        let val = p.get_property_value();
         let ans_val = ans.properties.get(&prop_id).unwrap();
-        assert_eq!(val, ans_val.as_ref());
+        assert_eq!(*val, PropertyValue::from(ans_val.as_ref()));
         set.insert(prop_id);
     }
     assert_eq!(set.len(), ans.properties.len());
 }
 
-fn check_edge_iter<E: Edge>(iter: &mut dyn EdgeResultIter<E=E>, mut ans: HashMap<EdgeId, EdgeDataRef>, mut ids: HashSet<EdgeId>) {
-    while let Some(e) = iter.next() {
-        assert!(ids.remove(e.get_id()), "find an edge not in user's answer, this edge is {:?}", e);
-        let ans_e = ans.remove(e.get_id()).unwrap();
+fn check_edge_iter<E: RocksEdge>(mut iter: Records<E>, mut ans: HashMap<EdgeId, EdgeDataRef>, mut ids: HashSet<EdgeId>) {
+    while let Some(edge) = iter.next() {
+        let e = edge.unwrap();
+        assert!(ids.remove(e.get_edge_id()), "find an edge not in user's answer, this edge is {:?}", e);
+        let ans_e = ans.remove(e.get_edge_id()).unwrap();
         check_edge(&e, &ans_e);
     }
     assert!(ids.is_empty(), "some edge in user's answer is not found in data");

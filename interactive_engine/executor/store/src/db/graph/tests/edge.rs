@@ -2,38 +2,39 @@ use crate::db::api::*;
 
 use super::helper::GraphTestHelper;
 use super::types;
+use crate::db::api::multi_version_graph::MultiVersionGraph;
 
-pub fn test_get_edge<G: GraphStorage>(graph: G) {
+pub fn test_get_edge<G: MultiVersionGraph>(graph: G) {
     let tester = tester::GetEdgeTester::new(graph);
     tester.execute();
 }
 
-pub fn test_query_edges<G: GraphStorage>(graph: G) {
+pub fn test_query_edges<G: MultiVersionGraph>(graph: G) {
     let tester = tester::QueryEdgesTester::new(graph);
     tester.execute();
 }
 
-pub fn test_get_in_out_edges<G: GraphStorage>(graph: G) {
+pub fn test_get_in_out_edges<G: MultiVersionGraph>(graph: G) {
     let tester = tester::GetInOutEdgesTester::new(graph);
     tester.execute();
 }
 
-pub fn test_update_edge<G: GraphStorage>(graph: G) {
+pub fn test_update_edge<G: MultiVersionGraph>(graph: G) {
     let tester = tester::UpdateEdgeTester::new(graph);
     tester.execute();
 }
 
-pub fn test_delete_edge<G: GraphStorage>(graph: G) {
+pub fn test_delete_edge<G: MultiVersionGraph>(graph: G) {
     let tester = tester::DeleteEdgeTester::new(graph);
     tester.execute();
 }
 
-pub fn test_drop_edge<G: GraphStorage>(graph: G) {
+pub fn test_drop_edge<G: MultiVersionGraph>(graph: G) {
     let tester = tester::DropEdgeTester::new(graph);
     tester.execute();
 }
 
-pub fn test_remove_edge_kind<G: GraphStorage>(graph: G) {
+pub fn test_remove_edge_kind<G: MultiVersionGraph>(graph: G) {
     let tester = tester::RemoveEdgeKindTester::new(graph);
     tester.execute();
 }
@@ -41,12 +42,13 @@ pub fn test_remove_edge_kind<G: GraphStorage>(graph: G) {
 mod tester {
     use super::*;
     use super::common::*;
+    use crate::db::api::multi_version_graph::MultiVersionGraph;
 
-    pub struct QueryEdgesTester<G: GraphStorage> {
+    pub struct QueryEdgesTester<G: MultiVersionGraph> {
         graph: G,
     }
 
-    impl<G: GraphStorage> QueryEdgesTester<G> {
+    impl<G: MultiVersionGraph> QueryEdgesTester<G> {
         pub fn new(graph: G) -> Self {
             QueryEdgesTester {
                 graph,
@@ -132,7 +134,7 @@ mod tester {
         graph: G,
     }
 
-    impl<G: GraphStorage> GetInOutEdgesTester<G> {
+    impl<G: MultiVersionGraph> GetInOutEdgesTester<G> {
         pub fn new(graph: G) -> Self {
             GetInOutEdgesTester {
                 graph,
@@ -257,11 +259,11 @@ mod tester {
         }
     }
 
-    pub struct UpdateEdgeTester<G: GraphStorage> {
+    pub struct UpdateEdgeTester<G: MultiVersionGraph> {
         graph: G,
     }
 
-    impl<G: GraphStorage> UpdateEdgeTester<G> {
+    impl<G: MultiVersionGraph> UpdateEdgeTester<G> {
         pub fn new(graph: G) -> Self {
             UpdateEdgeTester {
                 graph,
@@ -356,11 +358,11 @@ mod tester {
         }
     }
 
-    pub struct DeleteEdgeTester<G: GraphStorage> {
+    pub struct DeleteEdgeTester<G: MultiVersionGraph> {
         graph: G,
     }
 
-    impl<G: GraphStorage> DeleteEdgeTester<G> {
+    impl<G: MultiVersionGraph> DeleteEdgeTester<G> {
         pub fn new(graph: G) -> Self {
             DeleteEdgeTester {
                 graph,
@@ -442,11 +444,11 @@ mod tester {
         }
     }
 
-    pub struct GetEdgeTester<G: GraphStorage> {
+    pub struct GetEdgeTester<G: MultiVersionGraph> {
         graph: G,
     }
 
-    impl<G: GraphStorage> GetEdgeTester<G> {
+    impl<G: MultiVersionGraph> GetEdgeTester<G> {
         pub fn new(graph: G) -> Self {
             GetEdgeTester {
                 graph,
@@ -489,7 +491,7 @@ mod tester {
         graph: G,
     }
 
-    impl<G: GraphStorage> DropEdgeTester<G> {
+    impl<G: MultiVersionGraph> DropEdgeTester<G> {
         pub fn new(graph: G) -> Self {
             DropEdgeTester {
                 graph,
@@ -561,7 +563,7 @@ mod tester {
         graph: G,
     }
 
-    impl<G: GraphStorage> RemoveEdgeKindTester<G> {
+    impl<G: MultiVersionGraph> RemoveEdgeKindTester<G> {
         pub fn new(graph: G) -> Self {
             RemoveEdgeKindTester {
                 graph,
@@ -646,13 +648,14 @@ mod common {
     use super::*;
     use std::collections::{HashSet, HashMap};
     use std::iter::FromIterator;
+    use crate::db::api::multi_version_graph::MultiVersionGraph;
 
-    pub struct EdgeDataInsertHelper<'a, 'b, G: GraphStorage> {
+    pub struct EdgeDataInsertHelper<'a, 'b, G: MultiVersionGraph> {
         helper: &'a mut GraphTestHelper<'b, G>,
         data_gen: &'a EdgeDataGen,
     }
 
-    impl<'a, 'b, G: GraphStorage> EdgeDataInsertHelper<'a, 'b, G> {
+    impl<'a, 'b, G: MultiVersionGraph> EdgeDataInsertHelper<'a, 'b, G> {
         pub fn new(helper: &'a mut GraphTestHelper<'b, G>, data_gen: &'a EdgeDataGen) -> Self {
             EdgeDataInsertHelper {
                 helper,
@@ -804,12 +807,12 @@ mod common {
         }
     }
 
-    pub struct EdgeCheckHelper<'a, G: GraphStorage> {
+    pub struct EdgeCheckHelper<'a, G: MultiVersionGraph> {
         helper: &'a GraphTestHelper<'a, G>,
         data_gen: &'a EdgeDataGen,
     }
 
-    impl<'a, G: GraphStorage> EdgeCheckHelper<'a, G> {
+    impl<'a, G: MultiVersionGraph> EdgeCheckHelper<'a, G> {
         pub fn new(helper: &'a GraphTestHelper<'a, G>, data_gen: &'a EdgeDataGen) -> Self {
             EdgeCheckHelper {
                 helper,

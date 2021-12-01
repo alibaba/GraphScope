@@ -2,7 +2,7 @@ use maxgraph_store::db::api::{GraphConfig, GraphResult, GraphError};
 use std::sync::Arc;
 use maxgraph_store::db::graph::store::GraphStore;
 use std::net::SocketAddr;
-use maxgraph_runtime::store::v2::global_graph::GlobalGraph;
+use maxgraph_runtime::store::groot::global_graph::GlobalGraph;
 use gaia_pegasus::Configuration as GaiaConfig;
 use maxgraph_store::db::api::GraphErrorCode::EngineError;
 use tokio::runtime::Runtime;
