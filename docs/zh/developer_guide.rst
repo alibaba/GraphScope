@@ -106,7 +106,7 @@ macOS
 .. code:: bash
 
     cd GraphScope
-    ./scripts/install_deps.sh --dev
+    ./scripts/install_deps.sh --dev --vineyard_prefix /opt/vineyard
     source ~/.graphscope_env
 
 - 构建 GraphScope Server Wheels

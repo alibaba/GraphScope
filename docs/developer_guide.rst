@@ -114,7 +114,7 @@ The wheel packages for MacOS could be built directly on Mac, thus you need to in
 .. code:: bash
 
     cd GraphScope
-    ./scripts/install_deps.sh --dev
+    ./scripts/install_deps.sh --dev --vineyard_prefix /opt/vineyard
     source ~/.graphscope_env
 
 Assuming you are in the root directory of GraphScope repository.
