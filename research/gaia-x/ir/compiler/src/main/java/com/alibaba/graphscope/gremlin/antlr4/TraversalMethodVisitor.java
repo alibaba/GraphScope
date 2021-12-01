@@ -1,6 +1,22 @@
+/*
+ * Copyright 2020 Alibaba Group Holding Limited.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package com.alibaba.graphscope.gremlin.antlr4;
 
-import com.alibaba.graphscope.gremlin.exception.UnsupportedAntlrException;
+import com.alibaba.graphscope.gremlin.exception.UnsupportedEvalException;
 import org.apache.tinkerpop.gremlin.language.grammar.GremlinGS_0_2BaseVisitor;
 import org.apache.tinkerpop.gremlin.language.grammar.GremlinGS_0_2Parser;
 import org.apache.tinkerpop.gremlin.process.traversal.Traversal;
@@ -29,7 +45,7 @@ public class TraversalMethodVisitor extends TraversalRootVisitor<GraphTraversal>
             return graphTraversal.hasLabel(GenericLiteralVisitor.getStringLiteral(ctx.stringLiteral()),
                     GenericLiteralVisitor.getStringLiteralList(ctx.stringLiteralList()));
         } else {
-            throw new UnsupportedAntlrException(ctx.getClass(),
+            throw new UnsupportedEvalException(ctx.getClass(),
                     "supported pattern is [hasLabel('str')] or hasLabel('str1', ...)");
         }
     }
@@ -42,7 +58,7 @@ public class TraversalMethodVisitor extends TraversalRootVisitor<GraphTraversal>
             return graphTraversal.hasId(GenericLiteralVisitor.getInstance().visitGenericLiteral(ctx.genericLiteral()),
                     GenericLiteralVisitor.getGenericLiteralList(ctx.genericLiteralList()));
         } else {
-            throw new UnsupportedAntlrException(ctx.getClass(),
+            throw new UnsupportedEvalException(ctx.getClass(),
                     "supported pattern is [hasId(1)] or hasId(1, 2, ...)");
         }
     }
@@ -56,7 +72,7 @@ public class TraversalMethodVisitor extends TraversalRootVisitor<GraphTraversal>
             return graphTraversal.has(GenericLiteralVisitor.getStringLiteral(ctx.stringLiteral()),
                     TraversalPredicateVisitor.getInstance().visitTraversalPredicate(ctx.traversalPredicate()));
         } else {
-            throw new UnsupportedAntlrException(ctx.getClass(),
+            throw new UnsupportedEvalException(ctx.getClass(),
                     "supported pattern is [has('key', 'value')] or [has('key', P)]");
         }
     }

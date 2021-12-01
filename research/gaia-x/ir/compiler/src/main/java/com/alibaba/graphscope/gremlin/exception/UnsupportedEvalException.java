@@ -16,10 +16,10 @@
 
 package com.alibaba.graphscope.gremlin.exception;
 
-import org.apache.tinkerpop.gremlin.process.traversal.Step;
+import org.antlr.v4.runtime.tree.ParseTree;
 
-public class StepUnsupportedException extends UnsupportedOperationException {
-    public StepUnsupportedException(Class<? extends Step> type, String error) {
-        super(String.format("step type {%s} is unsupported, cause is {%s}", type, error));
+public class UnsupportedEvalException extends UnsupportedOperationException {
+    public UnsupportedEvalException(Class<? extends ParseTree> antlrCtx, String error) {
+        super(String.format("antlr context {%s} parsing to traversal is unsupported, error is {}", antlrCtx, error));
     }
 }

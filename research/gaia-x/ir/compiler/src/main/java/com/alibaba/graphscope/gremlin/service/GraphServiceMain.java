@@ -18,7 +18,8 @@ package com.alibaba.graphscope.gremlin.service;
 
 import com.alibaba.graphscope.common.config.Configs;
 import com.alibaba.graphscope.common.config.FileLoadType;
-import com.alibaba.graphscope.gremlin.IrStandardOpProcessor;
+import com.alibaba.graphscope.gremlin.plugin.processor.IrOpLoader;
+import com.alibaba.graphscope.gremlin.plugin.processor.IrStandardOpProcessor;
 import org.apache.tinkerpop.gremlin.server.GremlinServer;
 import org.apache.tinkerpop.gremlin.server.Settings;
 

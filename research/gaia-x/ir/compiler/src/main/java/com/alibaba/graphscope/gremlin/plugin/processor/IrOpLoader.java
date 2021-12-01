@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.alibaba.graphscope.gremlin.service;
+package com.alibaba.graphscope.gremlin.plugin.processor;
 
 import org.apache.tinkerpop.gremlin.server.OpProcessor;
 
