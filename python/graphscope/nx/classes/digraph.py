@@ -36,7 +36,7 @@ from graphscope.framework.errors import check_argument
 from graphscope.framework.graph_schema import GraphSchema
 from graphscope.nx import NetworkXError
 from graphscope.nx.classes.graph import Graph
-from graphscope.nx.convert import to_nx_graph
+from graphscope.nx.convert import to_networkx_graph
 from graphscope.nx.utils.compat import patch_docstring
 from graphscope.nx.utils.misc import check_node_is_legal
 from graphscope.nx.utils.misc import empty_graph_in_engine
@@ -72,7 +72,7 @@ class DiGraph(Graph):
     incoming_graph_data : input graph (optional, default: None)
         Data to initialize graph. If None (default) an empty
         graph is created.  The data can be any format that is supported
-        by the to_nx_graph() function, currently including edge list,
+        by the to_networkx_graph() function, currently including edge list,
         dict of dicts, dict of lists, NetworkX graph, NumPy matrix
         or 2d ndarray, Pandas DataFrame, SciPy sparse matrix, or a GraphScope
         graph object.
@@ -282,10 +282,10 @@ class DiGraph(Graph):
             if self._is_gs_graph(incoming_graph_data):
                 self._init_with_arrow_property_graph(incoming_graph_data)
             else:
-                g = to_nx_graph(incoming_graph_data, create_using=self)
+                g = to_networkx_graph(incoming_graph_data, create_using=self)
                 check_argument(isinstance(g, Graph))
 
-        # load graph attributes (must be after to_nx_graph)
+        # load graph attributes (must be after to_networkx_graph)
         self.graph.update(attr)
         self._saved_signature = self.signature
 

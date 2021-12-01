@@ -728,6 +728,7 @@ def _pre_process_for_context_op(op, op_result_pool, key_to_op, **kwargs):
                 next_op = key_to_op[next_op_key]
                 if next_op.op in (
                     types_pb2.CREATE_GRAPH,
+                    types_pb2.ADD_COLUMN,
                     types_pb2.ADD_LABELS,
                     types_pb2.TRANSFORM_GRAPH,
                     types_pb2.PROJECT_GRAPH,

@@ -77,9 +77,6 @@ jobs:
     # Require the user id of the self-hosted is 1001, which may need to be
     # configured manually when a new self-hosted runner is added.
     runs-on: self-hosted
-    defaults:
-      run:
-        shell: bash --noprofile --norc -eo pipefail {0}
     steps:
     - name: Clean Up
       run: |
@@ -98,9 +95,10 @@ jobs:
 
     - name: Cpp Format And Lint Check
       run: |
-        # install clang-format
-        sudo curl -L https://github.com/muttleyxd/clang-tools-static-binaries/releases/download/master-22538c65/clang-format-8_linux-amd64 --output /usr/bin/clang-format
-        sudo chmod +x /usr/bin/clang-format
+        if ! command -v clang-format &> /dev/null; then
+            sudo curl -L https://github.com/muttleyxd/clang-tools-static-binaries/releases/download/master-22538c65/clang-format-8_linux-amd64 --output /usr/bin/clang-format
+            sudo chmod +x /usr/bin/clang-format
+        fi
 
         # run clang-format
         cd analytical_engine/
@@ -146,15 +144,15 @@ jobs:
         python3 -m black --check --diff .
         python3 -m flake8 .
 
-    - name: Build
+    - name: Build Wheels
       run: |
+        mkdir -p ${HOME}/.m2 ${HOME}/.cache/sccache ${HOME}/.cargo/git ${HOME}/.cargo/registry
+
         cd ${GITHUB_WORKSPACE}/k8s
-
         # build graphscope wheels
-        sudo make graphscope-py3-package
-
+        make graphscope-py3-package USE_CACHE=true
         # build client wheels
-        sudo make graphscope-client-py3-package
+        make graphscope-client-py3-package
 
         # package
         cd ${GITHUB_WORKSPACE}
@@ -173,9 +171,6 @@ jobs:
   mini-test:
     runs-on: ubuntu-20.04
     needs: [build-wheels]
-    defaults:
-      run:
-        shell: bash --noprofile --norc -eo pipefail {0}
     steps:
       - uses: actions/checkout@v2.3.2
 
@@ -210,7 +205,6 @@ jobs:
         env:
           GS_TEST_DIR: ${{ github.workspace }}/gstest
         run: |
-          # download dataset
           git clone -b master --single-branch --depth=1 https://github.com/7br/gstest.git ${GS_TEST_DIR}
 
           python3 -m pytest -s -v $(dirname $(python3 -c "import graphscope; print(graphscope.__file__)"))/tests/minitest
@@ -285,7 +279,7 @@ jobs:
     if: needs.changes.outputs.networkx == 'true' || (github.ref == 'refs/heads/main' && github.repository == 'alibaba/GraphScope')
     defaults:
       run:
-        shell: bash --noprofile --norc -eo pipefail {0}
+        shell: bash
     strategy:
       matrix:
         deployment: ["standalone", "distributed"]
@@ -302,6 +296,11 @@ jobs:
             - 'python/graphscope/nx/__init__.py'
             - 'python/graphscope/nx/classes/**'
             - 'python/graphscope/nx/utils/**'
+            - 'python/graphscope/nx/tests/!(convert)'
+          convert:
+            - 'python/graphscope/nx/convert.py'
+            - 'python/graphscope/nx/convert_matrix.py'
+            - 'python/graphscope/nx/tests/convert/**'
 
     - uses: actions/download-artifact@v2
       with:
@@ -341,15 +340,23 @@ jobs:
       run: |
         pip3 show networkx
         python3 -m pytest --exitfirst -s -v \
-            $(dirname $(python3 -c "import graphscope; print(graphscope.__file__)"))/nx/tests
+            $(dirname $(python3 -c "import graphscope; print(graphscope.__file__)"))/nx/tests \
+            --ignore=$(dirname $(python3 -c "import graphscope; print(graphscope.__file__)"))/nx/tests/convert
+
+    - name: Convert Test
+      if: steps.nx-filter.outputs.convert == 'true'
+      env:
+        DEPLOYMENT: ${{ matrix.deployment }}
+        GS_TEST_DIR: ${{ github.workspace }}/gstest
+      run: |
+        pip3 show networkx
+        python3 -m pytest --exitfirst -s -v \
+            $(dirname $(python3 -c "import graphscope; print(graphscope.__file__)"))/nx/tests/convert
 
   networkx-algo-and-generator-test:
     runs-on: ubuntu-20.04
     needs: [build-wheels, changes]
-    if: ${{ needs.changes.outputs.networkx == 'true' }}
-    defaults:
-      run:
-        shell: bash --noprofile --norc -eo pipefail {0}
+    if: needs.changes.outputs.networkx == 'true'
     strategy:
       matrix:
         deployment: ["standalone", "distributed"]
@@ -367,6 +374,8 @@ jobs:
             - 'python/graphscope/nx/classes/**'
             - 'python/graphscope/nx/utils/**'
             - 'python/graphscope/nx/generators/**'
+          io:
+            - 'python/graphscope/nx/readwrite/**'
 
     - uses: actions/download-artifact@v2
       with:
@@ -418,6 +427,12 @@ jobs:
         python3 -m pytest --exitfirst -s -v \
             $(dirname $(python3 -c "import graphscope; print(graphscope.__file__)"))/nx/generators/tests
 
+    - name: Readwrite test
+      if: steps.nx-filter.outputs.io == 'true'
+      run: |
+        python3 -m pytest --exitfirst -s -v \
+            $(dirname $(python3 -c "import graphscope; print(graphscope.__file__)"))/nx/readwrite/tests
+
   gie-test:
     runs-on: self-hosted
     needs: [build-wheels, changes]
@@ -447,8 +462,6 @@ jobs:
           echo "SHORT_SHA=${short_sha}" >> $GITHUB_ENV
 
       - name: Prepare Environment
-        env:
-          GS_TEST_DIR: ${{ github.workspace }}/gstest
         run: |
           cd ${GITHUB_WORKSPACE}/artifacts
           tar -zxf ./wheel-${{ github.sha }}/client.tar.gz
@@ -462,13 +475,14 @@ jobs:
           cd ${GITHUB_WORKSPACE}/python
           python3 setup.py build_proto
 
-          # download dataset
-          git clone -b master --single-branch --depth=1 https://github.com/7br/gstest.git ${GS_TEST_DIR}
 
       - name: Run Function Test
         env:
           GS_TEST_DIR: ${{ github.workspace }}/gstest
         run: |
+          # download dataset
+          git clone -b master --single-branch --depth=1 https://github.com/7br/gstest.git ${GS_TEST_DIR}
+
           cd ${GITHUB_WORKSPACE}/interactive_engine/tests
           ./function_test.sh 8111 1 graphscope/graphscope:${SHORT_SHA}
           ./function_test.sh 8112 2 graphscope/graphscope:${SHORT_SHA}
@@ -506,8 +520,6 @@ jobs:
           echo "SHORT_SHA=${short_sha}" >> $GITHUB_ENV
 
       - name: Prepare Environment
-        env:
-          GS_TEST_DIR: ${{ github.workspace }}/gstest
         run: |
           cd ${GITHUB_WORKSPACE}/artifacts
           tar -zxf ./wheel-${{ github.sha }}/client.tar.gz
@@ -529,14 +541,14 @@ jobs:
           # install pytest
           python3 -m pip install pytest pytest-cov
 
-          # download dataset
-          git clone -b master --single-branch --depth=1 https://github.com/7br/gstest.git ${GS_TEST_DIR}
-
       - name: Kubernetes Test
         env:
           CHANGE_MINIKUBE_NONE_USER: true
           GS_TEST_DIR: ${{ github.workspace }}/gstest
         run: |
+          # download dataset
+          git clone -b master --single-branch --depth=1 https://github.com/7br/gstest.git ${GS_TEST_DIR}
+
           # set GS_IMAGE
           export GS_IMAGE=registry.cn-hongkong.aliyuncs.com/graphscope/graphscope:${SHORT_SHA}
 
@@ -554,8 +566,9 @@ jobs:
 
       - name: Helm Test
         run: |
-          curl https://raw.githubusercontent.com/helm/helm/master/scripts/get-helm-3 | bash
-
+          if ! command -v helm &> /dev/null; then
+            curl https://raw.githubusercontent.com/helm/helm/master/scripts/get-helm-3 | bash
+          fi
           cd charts
           helm install graphscope --set coordinator.image.tag=${SHORT_SHA} \
                                   --set engines.image.tag=${SHORT_SHA} \

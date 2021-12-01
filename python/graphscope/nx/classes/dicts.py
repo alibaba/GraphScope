@@ -184,6 +184,9 @@ class AdjInnerDict(MutableMapping):
     def __repr__(self):
         return f"{type(self).__name__}({self.mapping})"
 
+    def copy(self):
+        return self.mapping
+
 
 class AdjEdgeAttrDict(MutableMapping):
     __slots__ = ("_graph", "_node", "_nbr", "mapping")

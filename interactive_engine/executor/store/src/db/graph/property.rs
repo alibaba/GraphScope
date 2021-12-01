@@ -1,7 +1,6 @@
 use std::collections::HashMap;
 
 use crate::db::api::*;
-use super::codec::*;
 
 pub enum PropData<'a> {
     Owned(Vec<u8>),
@@ -9,6 +8,7 @@ pub enum PropData<'a> {
 }
 
 impl<'a> PropData<'a> {
+    #[allow(dead_code)]
     pub fn as_bytes(&self) -> &[u8] {
         match *self {
             PropData::Owned(ref v) => v.as_slice(),
@@ -29,25 +29,7 @@ impl<'a> From<&'a [u8]> for PropData<'a> {
     }
 }
 
-pub struct PropertiesIter<'a> {
-    iter: IterDecoder<'a>
-}
-
-impl<'a> PropertiesIter<'a> {
-    pub fn new(iter: IterDecoder<'a>) -> Self {
-        PropertiesIter {
-            iter,
-        }
-    }
-}
-
-impl<'a> PropIter for PropertiesIter<'a> {
-    fn next(&mut self) -> Option<(i32, ValueRef)> {
-        self.iter.next()
-    }
-}
-
-impl PropertyMap for HashMap<PropId, Value> {
+impl PropertyMap for HashMap<PropertyId, Value> {
     fn get(&self, prop_id: i32) -> Option<ValueRef> {
         self.get(&prop_id).map(|v| v.as_ref())
     }
@@ -61,7 +43,7 @@ impl PropertyMap for HashMap<PropId, Value> {
     }
 }
 
-impl PropertyMap for HashMap<PropId, ValueRef<'_>> {
+impl PropertyMap for HashMap<PropertyId, ValueRef<'_>> {
     fn get(&self, prop_id: i32) -> Option<ValueRef> {
         self.get(&prop_id).map(|v| *v)
     }

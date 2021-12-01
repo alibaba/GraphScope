@@ -31,9 +31,6 @@ concurrency:
 jobs:
   build-gae:
     runs-on: ubuntu-20.04
-    defaults:
-      run:
-        shell: bash --noprofile --norc -eo pipefail {0}
     container:
       image: registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-vineyard:v0.3.11
       options:
@@ -43,7 +40,6 @@ jobs:
 
     - name: Build
       env:
-        GS_TEST_DIR: ${{ github.workspace }}/gstest
         RUN_JAVA_TESTS: ON
       run: |
         # default install to "/opt/graphscope"
@@ -51,8 +47,6 @@ jobs:
         # also make coordinator andclient for python test
         make coordinator && make client
 
-        # download dataset
-        git clone -b master --single-branch --depth=1 https://github.com/7br/gstest.git ${GS_TEST_DIR}
 
     - name: Run Cpp Test
       env:
@@ -60,6 +54,9 @@ jobs:
         GS_TEST_DIR: ${{ github.workspace }}/gstest
         RUN_JAVA_TESTS: ON
       run: |
+        # download dataset
+        git clone -b master --single-branch --depth=1 https://github.com/7br/gstest.git ${GS_TEST_DIR}
+
         # java maven test
         cd ${GITHUB_WORKSPACE}/analytical_engine/java
         mvn install -Dmaven.antrun.skip=true --quiet

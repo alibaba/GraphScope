@@ -139,9 +139,10 @@ class HostsClusterLauncher(Launcher):
             universal_newlines=True,
             bufsize=1,
         )
-        stdout_watcher = PipeWatcher(process.stdout, sys.stdout)
+        if gs_config.show_log:
+            stdout_watcher = PipeWatcher(process.stdout, sys.stdout)
+            setattr(process, "stdout_watcher", stdout_watcher)
         stderr_watcher = PipeWatcher(process.stderr, sys.stderr)
-        setattr(process, "stdout_watcher", stdout_watcher)
         setattr(process, "stderr_watcher", stderr_watcher)
         self._proc = process
 

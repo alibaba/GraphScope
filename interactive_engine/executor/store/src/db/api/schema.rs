@@ -3,7 +3,7 @@ use std::collections::{HashMap, HashSet};
 
 use crate::db::common::bytes::util::parse_pb;
 use crate::db::api::property::Value;
-use super::{GraphResult, PropId};
+use super::{GraphResult, PropertyId};
 use super::property::ValueType;
 use super::error::*;
 use crate::db::proto::model::{TypeDefPb, PropertyDefPb, GraphDefPb, TypeEnumPb, VertexTableIdEntry, EdgeTableIdEntry};
@@ -154,7 +154,7 @@ pub struct TypeDef {
     version: i32,
     label: String,
     label_id: LabelId,
-    properties: HashMap<PropId, PropDef>,
+    properties: HashMap<PropertyId, PropDef>,
     type_enum: TypeEnumPb,
 }
 
@@ -167,7 +167,7 @@ impl TypeDef {
         self.properties.values()
     }
 
-    pub fn get_prop_def(&self, prop_id: PropId) -> Option<&PropDef> {
+    pub fn get_prop_def(&self, prop_id: PropertyId) -> Option<&PropDef> {
         self.properties.get(&prop_id)
     }
 
@@ -220,7 +220,7 @@ impl TypeDef {
         }
     }
 
-    fn new(version: i32, label: String, label_id: LabelId, properties: HashMap<PropId, PropDef>, type_enum: TypeEnumPb) -> Self {
+    fn new(version: i32, label: String, label_id: LabelId, properties: HashMap<PropertyId, PropDef>, type_enum: TypeEnumPb) -> Self {
         TypeDef {
             version,
             label,
@@ -238,7 +238,7 @@ impl TypeDef {
                          ValueType::String, ValueType::Bytes, ValueType::IntList, ValueType::LongList,
                          ValueType::FloatList, ValueType::DoubleList, ValueType::StringList];
         for i in 0..types.len() {
-            let id = i as PropId + 112;
+            let id = i as PropertyId + 112;
             let inner_id = id * 2 + 123;
             let name = format!("type-{}", i);
             builder.add_property(id, inner_id, name, types[i], None, false, "comment".to_string());
@@ -258,7 +258,7 @@ impl TypeDefBuilder {
         }
     }
 
-    pub fn add_property(&mut self, id: PropId, inner_id: PropId, name: String, r#type: ValueType, default_value: Option<Value>, pk: bool, comment: String) -> &mut Self {
+    pub fn add_property(&mut self, id: PropertyId, inner_id: PropertyId, name: String, r#type: ValueType, default_value: Option<Value>, pk: bool, comment: String) -> &mut Self {
         self.type_def.properties.insert(id, PropDef::new(id, inner_id, name, r#type, default_value, pk, comment));
         self
     }
@@ -289,8 +289,8 @@ impl TypeDefBuilder {
 /// same but they will have different inner ids to distinguish that they are not the same property.
 #[derive(Clone, Debug, PartialEq)]
 pub struct PropDef {
-    pub id: PropId,
-    pub inner_id: PropId,
+    pub id: PropertyId,
+    pub inner_id: PropertyId,
     pub name: String,
     pub r#type: ValueType,
     pub default_value: Option<Value>,
@@ -299,7 +299,7 @@ pub struct PropDef {
 }
 
 impl PropDef {
-    fn new(id: PropId, inner_id: PropId, name: String, r#type: ValueType, default_value: Option<Value>, pk: bool, comment: String) -> Self {
+    fn new(id: PropertyId, inner_id: PropertyId, name: String, r#type: ValueType, default_value: Option<Value>, pk: bool, comment: String) -> Self {
         if let Some(ref v) = default_value {
             if !v.is_type(r#type) {
                 panic!("{:?} is not {:?}", v, r#type);
