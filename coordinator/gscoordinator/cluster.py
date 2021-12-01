@@ -1048,6 +1048,7 @@ class KubernetesClusterLauncher(Launcher):
         cmd.append(ANALYTICAL_ENGINE_PATH)
         cmd.extend(["--host", "0.0.0.0"])
         cmd.extend(["--port", str(self._random_analytical_engine_rpc_port)])
+        cmd.extend(["--vineyard_shared_mem", self._saved_locals["vineyard_shared_mem"]])
 
         if rmcp.openmpi():
             cmd.extend(["-v", str(self._glog_level)])

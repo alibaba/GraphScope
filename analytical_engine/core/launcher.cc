@@ -70,7 +70,7 @@ void VineyardServer::Start() {
     vineyardd_path = "/usr/bin/env python3 -m vineyard";
   }
   std::string cmd = vineyardd_path + " --socket " + vineyard_socket_ +
-                    " --size " + "2048000000" + " --etcd_endpoint " +
+                    " --size " + FLAGS_vineyard_shared_mem + " --etcd_endpoint " +
                     FLAGS_etcd_endpoint + " --etcd_prefix vineyard.gsa." +
                     std::to_string(ts);
   auto env = boost::this_process::environment();
