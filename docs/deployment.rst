@@ -1,5 +1,5 @@
 Deployment
-============
+===========
 
 The engines of GraphScope are distributed as a docker image.
 The `graphscope` python client will pull the image if they are not present.
@@ -28,25 +28,27 @@ a dict as follows, then pass it as `k8s_volumes` in session constructor.
 Note that the host path is relative to the kubernetes node, that is, if you have a cluster created by `kind`, then you need to copy that directory to the kind node, or mount that path to kind node.
 See more details `here <https://kind.sigs.k8s.io/docs/user/configuration/#extra-mounts>`_.
 
-```python
-import os
-import graphscope
 
-k8s_volumes = {
-    "data": {
-        "type": "hostPath",
-        "field": {
-            "path": os.path.expanduser("~/test_data/"),
-            "type": "Directory"
-        },
-        "mounts": {
+.. code:: python
+
+
+    import os
+    import graphscope
+
+    k8s_volumes = {
+        "data": {
+            "type": "hostPath",
+            "field": {
+                "path": os.path.expanduser("~/test_data/"),
+                "type": "Directory"
+            },
+            "mounts": {
             "mountPath": "/testingdata"
+            }
         }
     }
-}
 
-sess = graphscope.session(k8s_volumes=k8s_volumes)
-```
+    sess = graphscope.session(k8s_volumes=k8s_volumes)
 
 A cluster on k8s contains a pod running an etcd container for meta-data syncing, a
 pod running the Coordinator, and a replica set of GraphScope engines.
@@ -57,7 +59,6 @@ and takes responsibility for applying or releasing the pods for interactive, ana
 and learning engines.
 
 The image URIs for the engines are configurable, see more details in :ref:`Session`.
-
 
 
 Deployment with Helm

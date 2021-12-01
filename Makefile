@@ -135,6 +135,15 @@ ifneq ($(INSTALL_PREFIX), /usr/local)
 	sudo ln -sf ${INSTALL_PREFIX}/lib/*dylib* /usr/local/lib
 endif
 
+# wheels
+.PHONY: graphscope-py3-package
+graphscope-py3-package:
+	$(MAKE) -C $(WORKING_DIR)/k8s/ graphscope-py3-package
+
+.PHONY: graphscope-client-py3-package
+graphscope-client-py3-package:
+	 $(MAKE) -C $(WORKING_DIR)/k8s/ graphscope-client-py3-package
+
 .PHONY: prepare-client
 prepare-client:
 	cd $(WORKING_DIR)/python && \

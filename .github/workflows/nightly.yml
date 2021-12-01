@@ -1,4 +1,4 @@
-name: GraphScope Docker Nightly Build CI
+name: GraphScope Nightly Build CI
 
 on:
   workflow_dispatch:
@@ -11,10 +11,13 @@ on:
 jobs:
   nightly-test:
     if: ${{ github.ref == 'refs/heads/main' && github.repository == 'alibaba/GraphScope' }}
-    runs-on: [ubuntu-20.04, macos-10.15]
+    runs-on: ${{ matrix.os }}
     defaults:
       run:
         shell: bash --noprofile --norc -eo pipefail {0}
+    strategy:
+      matrix:
+        os: [ubuntu-20.04, macos-10.15]
     steps:
     - uses: actions/checkout@v2
       with:
