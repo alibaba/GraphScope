@@ -16,6 +16,7 @@
 #ifndef ANALYTICAL_ENGINE_CORE_UTILS_CONVERT_UTILS_H_
 #define ANALYTICAL_ENGINE_CORE_UTILS_CONVERT_UTILS_H_
 
+#include <memory>
 #include <string>
 
 #include "folly/dynamic.h"
