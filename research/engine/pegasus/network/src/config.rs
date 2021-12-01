@@ -221,7 +221,7 @@ impl NetworkConfig {
         self
     }
 
-    pub fn with_peers(mut self, peers: Option<Vec<ServerConfig>>) -> Self {
+    pub fn with_servers(mut self, peers: Option<Vec<ServerConfig>>) -> Self {
         self.peers = peers;
         self
     }
@@ -276,7 +276,7 @@ impl NetworkConfig {
         params
     }
 
-    pub fn get_peers(&self) -> Result<Option<Vec<Server>>, NetError> {
+    pub fn get_servers(&self) -> Result<Option<Vec<Server>>, NetError> {
         if let Some(ref peers) = self.peers {
             let mut servers = Vec::with_capacity(peers.len());
             for p in peers {
@@ -330,7 +330,7 @@ mod test {
         assert_eq!(wp.nodelay, false);
         assert_eq!(wp.buffer, DEFAULT_SEND_BUFFER_SIZE);
         assert_eq!(wp.heartbeat, DEFAULT_HEARTBEAT_INTERVAL_SEC);
-        let peers = config.get_peers().unwrap().unwrap();
+        let peers = config.get_servers().unwrap().unwrap();
         assert_eq!(peers.len(), 2);
         assert_eq!(peers[0].id, 0);
         assert_eq!(peers[0].addr, "127.0.0.1:8080".parse().unwrap());

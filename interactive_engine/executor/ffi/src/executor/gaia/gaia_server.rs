@@ -121,7 +121,7 @@ fn make_gaia_config(graph_config: Arc<GraphConfig>) -> GaiaConfig {
         .with_no_delay(no_delay)
         .with_send_buffer(send_buffer)
         .with_heartbeat_sec(heartbeat_sec)
-        .with_peers(None);
+        .with_servers(None);
     GaiaConfig {
         network: Some(network_config),
         max_pool_size,
