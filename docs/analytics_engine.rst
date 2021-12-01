@@ -302,6 +302,67 @@ Take SSSP as example, the algorithm in Pregel model looks like this.
                 ret = min(ret, m)
             return ret
 
+Using ``math.h`` Functions in Algorithms
+----------------------------------------
+
+GraphScope supports using C functions from :code:`math.h` in user-defined algorithms,
+via the :code:`context.math` interface. E.g.,
+
+.. code:: python
+
+    @staticmethod
+    def Init(v, context):
+        v.set_value(context.math.sin(1000000000.0 * context.math.M_PI))
+
+will be translated to the following efficient C code
+
+.. code:: c
+
+    ... Init(...)
+
+        v.set_value(sin(1000000000.0 * M_PI));
+
+Run Your Own Algorithms
+-------------------------
+
+To run your own algorithms, you may trigger it in place where you defined it.
+
+.. code:: python
+
+    import graphscope
+
+    sess = graphscope.session()
+    g = sess.g()
+
+    # load my algorithm
+    my_app = SSSP_Pregel()
+
+    # run my algorithm over a graph and get the result.
+    # Here the `src` is correspondent to the `context.get_config(b"src")`
+    ret = my_app(g, src="0")
+
+
+After developing and testing, you may want to save it for the future use.
+
+.. code:: python
+
+    SSSP_Pregel.to_gar("file:///var/graphscope/udf/my_sssp_pregel.gar")
+
+
+Later, you can load your own algorithm from the gar package.
+
+.. code:: python
+
+    import graphscope
+
+    g = graphscope.g()
+
+    # load my algorithm from a gar package
+    my_app = load_app('SSSP_Pregel', 'file:///var/graphscope/udf/my_sssp_pregel.gar')
+
+    # run my algorithm over a graph and get the result.
+    ret = my_app(g, src="0")
+
 Writing Your Own Algorithms In Java
 ----------------------------------------------
 
@@ -429,69 +490,7 @@ and you need to specify the app you want in this run.
 
     ctx.to_numpy("r:label0.dist_0")
 
-After computation, you can obtain the results stored in context with the help of 
-:ref:`Context`.
-
-Using ``math.h`` Functions in Algorithms
-----------------------------------------
-
-GraphScope supports using C functions from :code:`math.h` in user-defined algorithms,
-via the :code:`context.math` interface. E.g.,
-
-.. code:: python
-
-    @staticmethod
-    def Init(v, context):
-        v.set_value(context.math.sin(1000000000.0 * context.math.M_PI))
-
-will be translated to the following efficient C code
-
-.. code:: c
-
-    ... Init(...)
-
-        v.set_value(sin(1000000000.0 * M_PI));
-
-Run Your Own Algorithms
--------------------------
-
-To run your own algorithms, you may trigger it in place where you defined it.
-
-.. code:: python
-
-    import graphscope
-
-    sess = graphscope.session()
-    g = sess.g()
-
-    # load my algorithm
-    my_app = SSSP_Pregel()
-
-    # run my algorithm over a graph and get the result.
-    # Here the `src` is correspondent to the `context.get_config(b"src")`
-    ret = my_app(g, src="0")
-
-
-After developing and testing, you may want to save it for the future use.
-
-.. code:: python
-
-    SSSP_Pregel.to_gar("file:///var/graphscope/udf/my_sssp_pregel.gar")
-
-
-Later, you can load your own algorithm from the gar package.
-
-.. code:: python
-
-    import graphscope
-
-    g = graphscope.g()
-
-    # load my algorithm from a gar package
-    my_app = load_app('SSSP_Pregel', 'file:///var/graphscope/udf/my_sssp_pregel.gar')
-
-    # run my algorithm over a graph and get the result.
-    ret = my_app(g, src="0")
+After computation, you can obtain the results stored in context with the help of :ref:`Context`.
 
 **Publications**
 
