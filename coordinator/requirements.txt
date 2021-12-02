@@ -1,6 +1,6 @@
 cmake>=3.21.2
 etcd-distro>=3.5.1
-graphscope-client>=0.9.0
+graphscope-client>=0.8.0
 grpcio
 kubernetes
 protobuf
