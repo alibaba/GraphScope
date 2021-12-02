@@ -334,7 +334,7 @@ def compile_app(workspace: str, library_name, attr, engine_config: dict):
     cmake_process.wait()
 
     make_process = subprocess.Popen(
-        ["make", "-j4"],
+        [shutil.which("make"), "-j4"],
         env=os.environ.copy(),
         encoding="utf-8",
         errors="replace",
@@ -428,7 +428,7 @@ def compile_graph_frame(workspace: str, library_name, attr: dict, engine_config:
     cmake_process.wait()
 
     make_process = subprocess.Popen(
-        ["make", "-j4"],
+        [shutil.which("make"), "-j4"],
         env=os.environ.copy(),
         encoding="utf-8",
         errors="replace",

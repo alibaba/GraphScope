@@ -364,19 +364,6 @@ def test_errors_on_files(
 ):
     with pytest.raises(AnalyticalEngineInternalError, match="Object not exists"):
         graphscope_session.g(vineyard.ObjectName("non_exist_vy_name"))
-    return
-    graph = graphscope_session.g()
-    with pytest.raises(AnalyticalEngineInternalError, match="IOError"):
-        non_existing_file = "file:///abc"
-        graph.add_edges(Loader(non_existing_file))._ensure_loaded()
-    with pytest.raises(AnalyticalEngineInternalError, match="Index out of range: 1"):
-        graph.add_edges(one_column_file)._ensure_loaded()
-    with pytest.raises(
-        AnalyticalEngineInternalError, match="CSV conversion error to int64"
-    ):
-        graph.add_edges(double_type_id_file)._ensure_loaded()
-    with pytest.raises(AnalyticalEngineInternalError, match="End Of File"):
-        graph.add_edges(empty_file)._ensure_loaded()
 
 
 def test_error_on_non_default_and_non_existing_v_label(
