@@ -31,10 +31,10 @@ RUN sudo chown -R $(id -u):$(id -g) /home/graphscope/gs /home/graphscope/.m2 && 
     && echo "build with profile: $profile" \
     && cd /home/graphscope/gs/interactive_engine \
     && if [ "$profile" = "release" ]; then \
-          echo "release mode"; && \
+          echo "release mode"; \
           for i in {1..5}; do mvn clean package -Pv2 -DskipTests --quiet -Drust.compile.mode=release && break || sleep 60; done; \
        else \
-          echo "debug mode"; && \
+          echo "debug mode"; \
           for i in {1..5}; do mvn clean package -Pv2 -DskipTests --quiet -Drust.compile.mode=debug && break || sleep 60; done; \
        fi
 
