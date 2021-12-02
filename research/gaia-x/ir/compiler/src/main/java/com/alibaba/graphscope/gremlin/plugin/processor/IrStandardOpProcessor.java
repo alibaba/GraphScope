@@ -23,12 +23,14 @@
  * under the License.
  */
 
-package com.alibaba.graphscope.gremlin;
+package com.alibaba.graphscope.gremlin.plugin.processor;
 
 import com.alibaba.graphscope.common.IrPlan;
 import com.alibaba.graphscope.common.client.*;
 import com.alibaba.graphscope.common.config.Configs;
 import com.alibaba.graphscope.common.config.PegasusConfig;
+import com.alibaba.graphscope.gremlin.IrPlanBuidler;
+import com.alibaba.graphscope.gremlin.plugin.script.AntlrToJavaScriptEngineFactory;
 import com.alibaba.pegasus.service.protocol.PegasusClient;
 import com.google.protobuf.InvalidProtocolBufferException;
 import org.apache.tinkerpop.gremlin.driver.message.RequestMessage;
@@ -79,7 +81,8 @@ public class IrStandardOpProcessor extends StandardOpProcessor {
         GremlinExecutor gremlinExecutor = gremlinExecutorSupplier.get();
         Map<String, Object> args = msg.getArgs();
         String script = (String) args.get("gremlin");
-        String language = args.containsKey("language") ? (String) args.get("language") : null;
+        // replace with antlr parser
+        String language = AntlrToJavaScriptEngineFactory.ENGINE_NAME;
         Bindings bindings = new SimpleBindings();
 
         GremlinExecutor.LifeCycle lifeCycle = createLifeCycle(ctx, gremlinExecutorSupplier, bindingsSupplier);
@@ -87,7 +90,8 @@ public class IrStandardOpProcessor extends StandardOpProcessor {
         try {
             CompletableFuture<Object> evalFuture = gremlinExecutor.eval(script, language, bindings, lifeCycle);
             evalFuture.handle((v, t) -> {
-                timerContext.stop();
+                long elapsed = timerContext.stop();
+                logger.info("query \"{}\" total execution time is {} ms", script, elapsed / 1000000.0f);
                 if (t != null) {
                     Optional<Throwable> possibleTemporaryException = determineIfTemporaryException(t);
                     if (possibleTemporaryException.isPresent()) {

@@ -18,7 +18,7 @@ package com.alibaba.graphscope.gremlin;
 
 import com.alibaba.graphscope.common.IrPlan;
 import com.alibaba.graphscope.common.exception.OpArgIllegalException;
-import com.alibaba.graphscope.common.exception.StepUnsupportedException;
+import com.alibaba.graphscope.gremlin.exception.StepUnsupportedException;
 import com.alibaba.graphscope.common.intermediate.operator.*;
 import com.alibaba.graphscope.common.jna.type.FfiScanOpt;
 import org.apache.tinkerpop.gremlin.process.traversal.Step;

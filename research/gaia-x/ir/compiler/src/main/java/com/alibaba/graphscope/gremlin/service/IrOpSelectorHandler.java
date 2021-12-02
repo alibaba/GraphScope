@@ -16,6 +16,7 @@
 
 package com.alibaba.graphscope.gremlin.service;
 
+import com.alibaba.graphscope.gremlin.plugin.processor.IrOpLoader;
 import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandlerContext;
 import org.apache.tinkerpop.gremlin.driver.message.RequestMessage;
