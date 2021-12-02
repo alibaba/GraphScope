@@ -9,7 +9,7 @@ use tokio::runtime::Runtime;
 use pegasus_server::service::Service;
 use pegasus_server::rpc::{start_rpc_server, RpcService};
 use pegasus_network::SimpleServerDetector;
-use pegasus_network::config::NetworkConfig;
+use pegasus_network::config::{NetworkConfig, ServerConfig};
 use gs_gremlin::{InitializeJobCompiler, QueryMaxGraph};
 use maxgraph_store::api::PartitionId;
 use gremlin_core::register_gremlin_types;
@@ -90,13 +90,18 @@ impl GaiaServer {
 fn make_gaia_config(graph_config: Arc<GraphConfig>) -> GaiaConfig {
     let server_id = graph_config.get_storage_option("node.idx").expect("required config node.idx is missing")
         .parse().expect("parse node.idx failed");
-    let _ip = "0.0.0.0".to_string();
-    let _port = match graph_config.get_storage_option("gaia.engine.port") {
+    let ip = "0.0.0.0".to_string();
+    let port = match graph_config.get_storage_option("gaia.engine.port") {
         None => { 0 },
         Some(server_port_string) => {
             server_port_string.parse().expect("parse gaia.engine.port failed")
         },
     };
+    let mut servers = Vec::with_capacity(server_id  as usize + 1);
+    // we only need to guarantee that servers[server_id] == ServerConfig{ip, port}
+    for _ in 0..server_id + 1 {
+        servers.push(ServerConfig::new(ip.clone(), port));
+    }
     let nonblocking = graph_config.get_storage_option("gaia.nonblocking")
         .map(|config_str| config_str.parse().expect("parse gaia.nonblocking failed"));
     let read_timeout_ms = graph_config.get_storage_option("gaia.read.timeout.ms")
@@ -121,9 +126,10 @@ fn make_gaia_config(graph_config: Arc<GraphConfig>) -> GaiaConfig {
         .with_no_delay(no_delay)
         .with_send_buffer(send_buffer)
         .with_heartbeat_sec(heartbeat_sec)
-        .with_servers(None);
+        .with_servers(Some(servers));
     GaiaConfig {
         network: Some(network_config),
         max_pool_size,
     }
 }
+
