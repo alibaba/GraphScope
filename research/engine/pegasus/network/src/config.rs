@@ -135,6 +135,8 @@ impl ConnectionParams {
 #[derive(Debug, Deserialize)]
 pub struct NetworkConfig {
     pub server_id: u64,
+    ip: String,
+    port: u16,
     nonblocking: Option<bool>,
     read_timeout_ms: Option<u32>,
     write_timeout_ms: Option<u32>,
@@ -147,13 +149,15 @@ pub struct NetworkConfig {
 
 #[derive(Debug, Deserialize)]
 pub struct ServerConfig {
+    server_id: u64,
     ip: String,
     port: u16,
 }
 
 impl ServerConfig {
-    pub fn new(ip: String, port: u16) -> Self {
+    pub fn new(server_id:u64, ip: String, port: u16) -> Self {
         ServerConfig {
+            server_id,
             ip,
             port
         }
@@ -174,9 +178,11 @@ pub fn read_from<P: AsRef<Path>>(path: P) -> Result<NetworkConfig, NetError> {
 }
 
 impl NetworkConfig {
-    pub fn new(server_id: u64) -> Self {
+    pub fn new(server_id: u64, ip: String, port: u16) -> Self {
         NetworkConfig {
             server_id,
+            ip,
+            port,
             nonblocking: None,
             read_timeout_ms: None,
             write_timeout_ms: None,
@@ -233,12 +239,8 @@ impl NetworkConfig {
     }
 
     pub fn local_addr(&self) -> Result<SocketAddr, NetError> {
-        let index = self.server_id as usize;
-        if let Some(server) = self.servers.as_ref().and_then(|s| s.get(index)) {
-            Ok(SocketAddr::new(server.ip.parse()?, server.port))
-        } else {
-            Ok(SocketAddr::new("0.0.0.0".parse()?, 0))
-        }
+        let ip = self.ip.parse()?;
+        Ok(SocketAddr::new(ip, self.port))
     }
 
     pub fn get_connection_param(&self) -> ConnectionParams {
@@ -283,12 +285,12 @@ impl NetworkConfig {
     }
 
     pub fn get_servers(&self) -> Result<Option<Vec<Server>>, NetError> {
-        if let Some(ref server_configs) = self.servers {
-            let mut servers = Vec::with_capacity(server_configs.len());
-            for (id, p) in server_configs.iter().enumerate() {
+        if let Some(ref peers) = self.servers {
+            let mut servers = Vec::with_capacity(peers.len());
+            for p in peers {
                 let ip = p.ip.parse()?;
                 let addr = SocketAddr::new(ip, p.port);
-                let server = Server { id: id as u64, addr };
+                let server = Server { id: p.server_id, addr };
                 servers.push(server);
             }
             Ok(Some(servers))
@@ -307,15 +309,17 @@ mod test {
     fn toml_config_test() {
         let content = r#"
             server_id = 0
+            ip = '127.0.0.1'
+            port = 80
             nonblocking = false
             read_timeout_ms = 8
             write_timeout_ms = 8
-
-            [[servers]]
+            [[peers]]
+            server_id = 0
             ip = '127.0.0.1'
             port = 8080
-
-            [[servers]]
+            [[peers]]
+            server_id = 1
             ip = '127.0.0.1'
             port = 8081
         "#;

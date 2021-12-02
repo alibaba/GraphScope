@@ -70,7 +70,7 @@ pub fn combine_config(
         let ip = local_host.get_ip().to_owned();
         let port = local_host.get_port();
         let config = if let Some(common_config) = common_config {
-            let network_config = NetworkConfig::new(server_id)
+            let network_config = NetworkConfig::new(server_id, ip, port)
                 .with_nonblocking(common_config.nonblocking)
                 .with_read_timeout_ms(common_config.read_timeout_ms)
                 .with_write_timeout_ms(common_config.write_timeout_ms)
@@ -81,7 +81,7 @@ pub fn combine_config(
                 .with_servers(Some(host_config.peers));
             Configuration { network: Some(network_config), max_pool_size: common_config.max_pool_size }
         } else {
-            let network_config = NetworkConfig::new(server_id).with_servers(Some(host_config.peers));
+            let network_config = NetworkConfig::new(server_id, ip, port).with_servers(Some(host_config.peers));
             Configuration { network: Some(network_config), max_pool_size: None }
         };
         Some(config)
