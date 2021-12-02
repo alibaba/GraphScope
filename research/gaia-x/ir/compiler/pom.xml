@@ -13,8 +13,8 @@
         <jackson.version>2.12.1</jackson.version>
         <commons.langs.version>3.12.0</commons.langs.version>
         <commons.io.version>2.6</commons.io.version>
-        <protobuf.version>3.12.0</protobuf.version>
-        <protoc.grpc.version>1.35.0</protoc.grpc.version>
+        <protobuf.version>3.18.0</protobuf.version>
+        <protoc.grpc.version>1.42.1</protoc.grpc.version>
         <os.maven.version>1.4.1.Final</os.maven.version>
         <maven.clean.version>3.0.0</maven.clean.version>
         <protobuf.maven.version>0.5.0</protobuf.maven.version>
