@@ -572,15 +572,18 @@ def copy_graph(graph, copy_type="identical"):
 
 
 def to_directed(graph):
-    """Create to_directed operation for nx graph.
+    """Create to_directed operation graph.
 
     Args:
-        graph (:class:`nx.Graph`): A nx graph.
+        graph (:class:`nx.Graph`)
 
     Returns:
         Operation
     """
-    check_argument(graph.graph_type == graph_def_pb2.DYNAMIC_PROPERTY)
+    check_argument(
+        graph.graph_type
+        in (graph_def_pb2.DYNAMIC_PROPERTY, graph_def_pb2.ARROW_PROPERTY)
+    )
     config = {
         types_pb2.GRAPH_NAME: utils.s_to_attr(graph.key),
     }
@@ -595,15 +598,18 @@ def to_directed(graph):
 
 
 def to_undirected(graph):
-    """Create to_undirected operation for nx graph.
+    """Create to_undirected operation for graph.
 
     Args:
-        graph (:class:`nx.Graph`): A nx graph.
+        graph (:class:`nx.Graph`)
 
     Returns:
         Operation
     """
-    check_argument(graph.graph_type == graph_def_pb2.DYNAMIC_PROPERTY)
+    check_argument(
+        graph.graph_type
+        in (graph_def_pb2.DYNAMIC_PROPERTY, graph_def_pb2.ARROW_PROPERTY)
+    )
     config = {
         types_pb2.GRAPH_NAME: utils.s_to_attr(graph.key),
     }

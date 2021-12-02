@@ -532,6 +532,14 @@ def test_error_on_project(arrow_property_graph, ldbc_graph):
         sub_graph._project_to_simple()
 
 
+def test_transform(arrow_modern_graph):
+    g = arrow_modern_graph.to_undirected()
+    assert not g.directed
+
+    g2 = g.to_directed()
+    assert g2.directed
+
+
 def test_add_column(ldbc_graph, arrow_modern_graph):
     ldbc = ldbc_graph
     modern = arrow_modern_graph
