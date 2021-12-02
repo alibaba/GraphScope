@@ -20,12 +20,12 @@ use std::fmt::Debug;
 use std::path::Path;
 
 use pegasus::{Configuration, StartupError};
-use pegasus_network::config::{NetworkConfig, ServerConfig};
+use pegasus_network::config::{NetworkConfig, ServerAddr};
 use serde::Deserialize;
 
 #[derive(Debug, Deserialize)]
 pub struct HostsConfig {
-    pub peers: Vec<ServerConfig>,
+    pub peers: Vec<ServerAddr>,
 }
 
 impl HostsConfig {
@@ -70,18 +70,17 @@ pub fn combine_config(
         let ip = local_host.get_ip().to_owned();
         let port = local_host.get_port();
         let config = if let Some(common_config) = common_config {
-            let network_config = NetworkConfig::new(server_id)
-                .with_nonblocking(common_config.nonblocking)
-                .with_read_timeout_ms(common_config.read_timeout_ms)
-                .with_write_timeout_ms(common_config.write_timeout_ms)
-                .with_read_slab_size(common_config.read_slab_size)
-                .with_no_delay(common_config.no_delay)
-                .with_send_buffer(common_config.send_buffer)
-                .with_heartbeat_sec(common_config.heartbeat_sec)
-                .with_servers(Some(host_config.peers));
+            let mut network_config = NetworkConfig::with(server_id, host_config.peers);
+            network_config.nonblocking(common_config.nonblocking)
+                .read_timeout_ms(common_config.read_timeout_ms)
+                .write_timeout_ms(common_config.write_timeout_ms)
+                .read_slab_size(common_config.read_slab_size)
+                .no_delay(common_config.no_delay)
+                .send_buffer(common_config.send_buffer)
+                .heartbeat_sec(common_config.heartbeat_sec);
             Configuration { network: Some(network_config), max_pool_size: common_config.max_pool_size }
         } else {
-            let network_config = NetworkConfig::new(server_id).with_servers(Some(host_config.peers));
+            let network_config = NetworkConfig::with(server_id, host_config.peers);
             Configuration { network: Some(network_config), max_pool_size: None }
         };
         Some(config)

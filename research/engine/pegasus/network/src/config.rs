@@ -135,6 +135,7 @@ impl ConnectionParams {
 #[derive(Debug, Deserialize)]
 pub struct NetworkConfig {
     pub server_id: u64,
+    pub servers_size: usize,
     nonblocking: Option<bool>,
     read_timeout_ms: Option<u32>,
     write_timeout_ms: Option<u32>,
@@ -142,18 +143,18 @@ pub struct NetworkConfig {
     no_delay: Option<bool>,
     send_buffer: Option<u32>,
     heartbeat_sec: Option<u32>,
-    servers: Option<Vec<ServerConfig>>,
+    servers: Option<Vec<Option<ServerAddr>>>,
 }
 
 #[derive(Debug, Deserialize)]
-pub struct ServerConfig {
+pub struct ServerAddr {
     ip: String,
     port: u16,
 }
 
-impl ServerConfig {
+impl ServerAddr {
     pub fn new(ip: String, port: u16) -> Self {
-        ServerConfig {
+        ServerAddr {
             ip,
             port
         }
@@ -174,9 +175,21 @@ pub fn read_from<P: AsRef<Path>>(path: P) -> Result<NetworkConfig, NetError> {
 }
 
 impl NetworkConfig {
-    pub fn new(server_id: u64) -> Self {
+    pub fn new(server_id: u64, addr: ServerAddr, servers_size: usize) -> Self {
+        let servers = if servers_size > 0 {
+            let mut servers = Vec::with_capacity(servers_size);
+            for _ in 0..servers_size {
+                servers.push(None);
+            }
+            servers[server_id as usize] = Some(addr);
+            Some(servers)
+        } else {
+            assert!((server_id as usize) < servers_size, "index out of bound, server_id({}) can't larger than server_size({})", server_id, servers_size);
+            None
+        };
         NetworkConfig {
             server_id,
+            servers_size,
             nonblocking: None,
             read_timeout_ms: None,
             write_timeout_ms: None,
@@ -184,60 +197,155 @@ impl NetworkConfig {
             no_delay: None,
             send_buffer: None,
             heartbeat_sec: None,
-            servers: None,
+            servers
         }
     }
 
-    pub fn with_nonblocking(mut self, enable: Option<bool>) -> Self {
-        self.nonblocking = enable;
-        self
-    }
-
-    pub fn with_read_timeout_ms(mut self, timeout: Option<u32>) -> Self {
-        self.read_timeout_ms = timeout;
-        self
-    }
-
-    pub fn with_write_timeout_ms(mut self, timeout: Option<u32>) -> Self {
-        self.write_timeout_ms = timeout;
-        self
-    }
-
-    pub fn with_read_slab_size(mut self, slab_size: Option<u32>) -> Self {
-        self.send_buffer = slab_size;
-        self
-    }
-
-    pub fn with_no_delay(mut self, enable: Option<bool>) -> Self {
-        self.no_delay = enable;
-        self
-    }
-
-    pub fn with_send_buffer(mut self, buffer_size: Option<u32>) -> Self {
-        self.send_buffer = buffer_size;
-        self
-    }
-
-    pub fn with_heartbeat_sec(mut self, seconds: Option<u32>) -> Self {
-        self.heartbeat_sec = seconds;
-        self
-    }
-
-    pub fn with_servers(mut self, servers: Option<Vec<ServerConfig>>) -> Self {
-        self.servers = servers;
-        self
+    pub fn with(server_id: u64,  addrs: Vec<ServerAddr>) -> Self {
+        let servers_size = addrs.len();
+        let servers = if servers_size > 0 {
+            let mut servers = Vec::with_capacity(servers_size);
+            for s in addrs {
+                servers.push(Some(s));
+            }
+            Some(servers)
+        } else {
+            assert!((server_id as usize) < servers_size, "index out of bound, server_id({}) can't larger than server_size({})", server_id, servers_size);
+            None
+        };
+        NetworkConfig {
+            server_id,
+            servers_size,
+            nonblocking: None,
+            read_timeout_ms: None,
+            write_timeout_ms: None,
+            read_slab_size: None,
+            no_delay: None,
+            send_buffer: None,
+            heartbeat_sec: None,
+            servers
+        }
     }
 
     pub fn parse(content: &str) -> Result<Self, NetError> {
         Ok(toml::from_str(&content)?)
     }
 
+    pub fn nonblocking(&mut self, v: Option<bool>) -> &mut Self {
+        match v {
+            Some(true) => {
+                self.set_nonblocking();
+            }
+            _ => ()
+        }
+        self
+    }
+
+    pub fn set_nonblocking(&mut self) -> &mut Self {
+        self.nonblocking = Some(true);
+        self
+    }
+
+    pub fn read_timeout_ms(&mut self, v: Option<u32>) -> &mut Self {
+        if let Some(v) = v {
+            self.set_read_timeout_ms(v);
+        }
+        self
+    }
+
+    pub fn set_read_timeout_ms(&mut self, timeout: u32) -> &mut Self {
+        self.read_timeout_ms = Some(timeout);
+        self
+    }
+
+    pub fn write_timeout_ms(&mut self, v: Option<u32>) -> &mut Self {
+        if let Some(v) = v {
+            self.set_write_timeout_ms(v);
+        }
+        self
+    }
+
+    pub fn set_write_timeout_ms(&mut self, timeout: u32) -> &mut Self {
+        self.write_timeout_ms = Some(timeout);
+        self
+    }
+
+    pub fn read_slab_size(&mut self, v: Option<u32>) -> &mut Self {
+        if let Some(v) = v {
+            self.set_read_slab_size(v);
+        }
+        self
+    }
+
+    pub fn set_read_slab_size(&mut self, slab_size: u32) -> &mut Self {
+        self.send_buffer = Some(slab_size);
+        self
+    }
+
+
+    pub fn no_delay(&mut self, v: Option<bool>) -> &mut Self {
+        match v {
+            Some(true) => {
+                self.set_no_delay();
+            },
+            _ => ()
+        }
+        self
+    }
+
+    pub fn set_no_delay(&mut self) -> &mut Self {
+        self.no_delay = Some(true);
+        self
+    }
+
+    pub fn send_buffer(&mut self, v: Option<u32>) -> &mut Self {
+        if let Some(v) = v {
+            self.set_send_buffer(v);
+        }
+        self
+    }
+
+    pub fn set_send_buffer(&mut self, buffer_size: u32) -> &mut Self {
+        self.send_buffer = Some(buffer_size);
+        self
+    }
+
+    pub fn heartbeat_sec(&mut self, v: Option<u32>) -> &mut Self {
+        if let Some(v) = v {
+            self.set_heartbeat_sec(v);
+        }
+        self
+    }
+
+    pub fn set_heartbeat_sec(&mut self, seconds: u32) -> &mut Self {
+        self.heartbeat_sec = Some(seconds);
+        self
+    }
+
+    pub fn set_server_addr(&mut self, server_id: u64, addr: ServerAddr) -> Result<&mut Self, NetError> {
+        if server_id as usize >= self.servers_size {
+            Err(NetError::InvalidConfig(Some(format!("invalid server_id({}) larger than server size {}", server_id, self.servers_size))))
+        } else {
+            if let Some(ref mut servers) = self.servers {
+               servers[server_id as usize] = Some(addr);
+            } else {
+                unreachable!("servers is none while server size = {}", self.servers_size);
+            }
+            Ok(self)
+        }
+    }
+
     pub fn local_addr(&self) -> Result<SocketAddr, NetError> {
         let index = self.server_id as usize;
-        if let Some(server) = self.servers.as_ref().and_then(|s| s.get(index)) {
-            Ok(SocketAddr::new(server.ip.parse()?, server.port))
+        assert!(index < self.servers_size);
+        if let Some(ref servers) = self.servers {
+            if let Some(ref addr) = servers[index] {
+                Ok(SocketAddr::new(addr.ip.parse()?, addr.port))
+            } else {
+                Err(NetError::InvalidConfig(Some("local server address not found".to_owned())))
+            }
         } else {
-            Ok(SocketAddr::new("0.0.0.0".parse()?, 0))
+            Err(NetError::InvalidConfig(Some("local server address not found".to_owned())))
         }
     }
 
@@ -286,10 +394,14 @@ impl NetworkConfig {
         if let Some(ref server_configs) = self.servers {
             let mut servers = Vec::with_capacity(server_configs.len());
             for (id, p) in server_configs.iter().enumerate() {
-                let ip = p.ip.parse()?;
-                let addr = SocketAddr::new(ip, p.port);
-                let server = Server { id: id as u64, addr };
-                servers.push(server);
+                if let Some(peer) = p {
+                    let ip = peer.ip.parse()?;
+                    let addr = SocketAddr::new(ip, peer.port);
+                    let server = Server { id: id as u64, addr };
+                    servers.push(server);
+                } else {
+                    return Err(NetError::InvalidConfig(Some(format!("addredd of server {} not found", id))));
+                }
             }
             Ok(Some(servers))
         } else {
