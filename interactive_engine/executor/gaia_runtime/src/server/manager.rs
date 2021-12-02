@@ -29,7 +29,7 @@ use maxgraph_runtime::store::task_partition_manager::TaskPartitionManager;
 use maxgraph_store::config::StoreConfig;
 use pegasus::{network_connection, ConfigArgs};
 use pegasus::Pegasus;
-use pegasus_network::config::{NetworkConfig, ServerConfig};
+use pegasus_network::config::{NetworkConfig, ServerAddr};
 use std::collections::HashMap;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::mpsc::Receiver;
@@ -206,17 +206,17 @@ fn build_gaia_config(worker_id: usize, address_list: &[RuntimeAddressProto], sto
     let peers = parse_store_ip_list_for_gaia(address_list, store_config);
     info!("gaia peers list: {:?}", peers);
     // TODO: more configuration from store_config for pegasus
-    let network_config = NetworkConfig::new(worker_id as u64).with_servers(Some(peers));
+    let network_config = NetworkConfig::with(worker_id as u64, peers);
     Configuration {
         network: Some(network_config),
         max_pool_size: None,
     }
 }
 
-fn parse_store_ip_list_for_gaia(address_list: &[RuntimeAddressProto], store_config: Arc<StoreConfig>) -> Vec<ServerConfig> {
+fn parse_store_ip_list_for_gaia(address_list: &[RuntimeAddressProto], store_config: Arc<StoreConfig>) -> Vec<ServerAddr> {
     let mut peers_list = Vec::with_capacity(address_list.len());
     for address in address_list {
-        let peer_config = ServerConfig::new(address.get_ip().to_string(), store_config.gaia_engine_port as u16);
+        let peer_config = ServerAddr::new(address.get_ip().to_string(), store_config.gaia_engine_port as u16);
         peers_list.push(peer_config);
     }
     peers_list
