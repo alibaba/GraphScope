@@ -64,7 +64,7 @@ coordinator:
 	if [ ! -d "/var/log/graphscope" ]; then \
 		sudo mkdir /var/log/graphscope; \
 	fi
-	sudo chown -R $(id -u):$(id -g) /var/log/graphscope
+	sudo chown -R `id -u`:`id -g` /var/log/graphscope
 
 .PHONY: gae
 gae:
