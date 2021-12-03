@@ -41,5 +41,22 @@ template <bool B, typename T>
 auto static_if(T t) {
   return static_if(std::integral_constant<bool, B>{}, t, [](auto&&...) {});
 }
+
+template <typename T>
+struct is_flattened_fragment {
+  using type = std::false_type;
+  static constexpr bool value = false;
+};
+
+template <typename OID_T, typename VID_T, typename VDATA_T, typename EDATA_T>
+class ArrowFlattenedFragment;
+
+template <typename OID_T, typename VID_T, typename VDATA_T, typename EDATA_T>
+struct is_flattened_fragment<
+    ArrowFlattenedFragment<OID_T, VID_T, VDATA_T, EDATA_T>> {
+  using type = std::true_type;
+  static constexpr bool value = true;
+};
+
 }  // namespace gs
 #endif  // ANALYTICAL_ENGINE_CORE_UTILS_APP_UTILS_H_

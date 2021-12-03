@@ -185,25 +185,31 @@ class TestBuiltInApp:
         ret = nx.builtin.single_source_dijkstra_path_length(
             self.p2p_subgraph_undirected, 6, weight="weight"
         )
+        print("Done 1")
         SG = self.p2p_undirected.subgraph(self.p2p_subgraph_undirected.nodes)
         ret_sg = nx.builtin.single_source_dijkstra_path_length(SG, 6, weight="weight")
         assert ret == ret_sg
+        print("Done 2")
         ESG = self.p2p_undirected.edge_subgraph(self.p2p_subgraph_undirected.edges)
         ret_esg = nx.builtin.single_source_dijkstra_path_length(ESG, 6, weight="weight")
         assert ret == ret_esg
+        print("Done 3")
 
         # test subgraph and edge_subgraph with p2p directed
         ret2 = nx.builtin.single_source_dijkstra_path_length(
             self.p2p_subgraph, 6, weight="weight"
         )
+        print("Done 4")
         SDG = self.p2p.subgraph(self.p2p_subgraph.nodes)
         ret_sdg = nx.builtin.single_source_dijkstra_path_length(SDG, 6, weight="weight")
         assert ret2 == ret_sdg
+        print("Done 5")
         ESDG = self.p2p.edge_subgraph(self.p2p_subgraph.edges)
         ret_esdg = nx.builtin.single_source_dijkstra_path_length(
             ESDG, 6, weight="weight"
         )
         assert ret2 == ret_esdg
+        print("Done 6")
 
     def test_shortest_path(self):
         ctx1 = nx.builtin.shortest_path(self.grid, source=1, weight="weight")

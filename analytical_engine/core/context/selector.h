@@ -229,6 +229,8 @@ class LabeledSelector : public Selector {
       }
       return ret;
     }
+    default:
+      break;
     }
     return "";
   }
