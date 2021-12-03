@@ -61,6 +61,7 @@
     <protobuf.maven.plugin.version>0.6.1</protobuf.maven.plugin.version>
     <commons.codec.version>1.11</commons.codec.version>
     <metrics.core.version>3.2.5</metrics.core.version>
+    <skip.tests>true</skip.tests>
   </properties>
 
   <dependencyManagement>
@@ -614,6 +615,9 @@
           <configuration>
             <excludes>
               <exclude>com/alibaba/maxgraph/client/gremlin/additional/*</exclude>
+              <exclude>**/GaiaAdaptor*.java</exclude>
+              <exclude>**/ClientTest.java</exclude>
+              <exclude>**/DataLoadingTest.java</exclude>
             </excludes>
           </configuration>
         </plugin>
