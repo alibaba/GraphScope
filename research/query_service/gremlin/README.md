@@ -32,7 +32,7 @@ Even though GAIA may build on systems similar to Linux, we have not tested corre
 so please beware.
 
 At the minimum, GAIA depends on the following software:
-* [Rust](https://www.rust-lang.org/) (>= 1.49): GAIA currently works on Rust 1.50+, but we suppose that it also works
+* [Rust](https://www.rust-lang.org/) (>= 1.50): GAIA currently works on Rust 1.50+, but we suppose that it also works
   for any later version.
 * Java (Must be Java 8): Due to a known issue of gRPC that uses an older version of java annotation apis, the project is
   subject to **JDK 8** for now.
@@ -44,7 +44,7 @@ At the minimum, GAIA depends on the following software:
 * Maven (>= 3.6): [Maven](https://maven.apache.org/download.cgi) is required to build the Gremlin compiler.
 * Other Rust and Java dependencies, check (note that from now on, we assume you are on the root directory
   of `/research/query_serivce/gremlin`):
-    * `.、compiler/pom.xml`
+    * `./compiler/pom.xml`
     * `./gremlin_core/Cargo.toml`
     * `../../graph_store/Cargo.toml`
     * `../../engine/pegasus/Cargo.toml`
@@ -98,7 +98,7 @@ To load graph data on one machine, let's first download the LDBC raw data from H
 
 Then run:
 ```shell
-bin/simple_loader <local_ldbc_data> <graph_store> ./conf/ldbc.schema.json <number_of_partitions>
+bin/simple_loader <local_ldbc_data> <graph_store> ./conf/ldbc.schema.json -p <number_of_partitions>
 ```
 After the loading, you shall find the following folder in your `<graph_store>` directory:
 ```
