@@ -13,6 +13,8 @@
  */
 package com.alibaba.graphscope.groot.store.jna;
 
+import com.alibaba.graphscope.groot.store.GraphPartitionBackup;
+import com.alibaba.maxgraph.common.config.BackupConfig;
 import com.alibaba.maxgraph.proto.groot.GraphDefPb;
 import com.alibaba.graphscope.groot.operation.OperationBatch;
 import com.alibaba.maxgraph.common.config.Configs;
@@ -34,16 +36,21 @@ public class JnaGraphStore implements GraphPartition {
     private Pointer pointer;
     private int partitionId;
     private Path downloadPath;
+    private Path backupPath;
 
     public JnaGraphStore(Configs configs, int partitionId) throws IOException {
         String dataRoot = StoreConfig.STORE_DATA_PATH.get(configs);
         Path partitionPath = Paths.get(dataRoot, "" + partitionId);
         this.downloadPath = Paths.get(dataRoot, "download");
+        this.backupPath = Paths.get(dataRoot, "backups", "" + partitionId);
         if (!Files.isDirectory(partitionPath)) {
             Files.createDirectories(partitionPath);
         }
         if (!Files.isDirectory(downloadPath)) {
             Files.createDirectories(downloadPath);
+        }
+        if (!Files.isDirectory(backupPath)) {
+            Files.createDirectories(backupPath);
         }
         Configs storeConfigs =
                 Configs.newBuilder(configs)
@@ -106,6 +113,11 @@ public class JnaGraphStore implements GraphPartition {
                 throw new IOException(response.getErrMsg());
             }
         }
+    }
+
+    @Override
+    public GraphPartitionBackup openBackupEngine() {
+        return new JnaGraphBackupEngine(this.pointer, this.partitionId, this.backupPath.toString());
     }
 
     @Override

@@ -14,9 +14,9 @@
  * limitations under the License.
  */
 
-#include "jna/native.h"
+#include "lgraph/jna/native.h"
 
-namespace DB_NAMESPACE {
+namespace LGRAPH_NAMESPACE {
 
 thread_local PartitionGraphHandle local_graph_handle_ = nullptr;
 
@@ -24,4 +24,4 @@ void setPartitionGraph(PartitionGraphHandle handle) {
   local_graph_handle_ = handle;
 }
 
-}  // namespace DB_NAMESPACE
+}

@@ -32,15 +32,21 @@ public class LogRecycler {
     private LogService logService;
     private SnapshotManager snapshotManager;
     private ScheduledExecutorService scheduler;
+    private boolean recycleEnable;
     private long recycleIntervalSeconds;
 
     public LogRecycler(Configs configs, LogService logService, SnapshotManager snapshotManager) {
         this.logService = logService;
         this.snapshotManager = snapshotManager;
+        this.recycleEnable = CoordinatorConfig.LOG_RECYCLE_ENABLE.get(configs);
         this.recycleIntervalSeconds = CoordinatorConfig.LOG_RECYCLE_INTERVAL_SECOND.get(configs);
     }
 
     public void start() {
+        if (!this.recycleEnable) {
+            logger.info("log recycler is disable");
+            return;
+        }
         this.scheduler =
                 Executors.newScheduledThreadPool(
                         1,

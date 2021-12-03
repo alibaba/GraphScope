@@ -21,7 +21,6 @@
 
 import networkx.readwrite.adjlist
 from networkx.readwrite.adjlist import parse_adjlist as _parse_adjlist
-from networkx.readwrite.adjlist import read_adjlist as _read_adjlist
 from networkx.utils.decorators import open_file
 
 from graphscope import nx
@@ -37,11 +36,12 @@ def parse_adjlist(
 ):
     G = nx.empty_graph(0, create_using)
     edges = []
+    nodes = []  # nodes that has not any adjacency
     for line in lines:
         p = line.find(comments)
         if p >= 0:
             line = line[:p]
-        if not len(line):
+        if not line:
             continue
         vlist = line.strip().split(delimiter)
         u = vlist.pop(0)
@@ -53,6 +53,8 @@ def parse_adjlist(
                 raise TypeError(
                     "Failed to convert node ({}) to type {}".format(u, nodetype)
                 ) from e
+        if len(vlist) == 0:
+            nodes.append(u)
         if nodetype is not None:
             try:
                 vlist = map(nodetype, vlist)
@@ -63,6 +65,8 @@ def parse_adjlist(
                     )
                 ) from e
         edges.extend([u, v] for v in vlist)
+    if nodes:
+        G.add_nodes_from(nodes)
     G.add_edges_from(edges)
     return G
 

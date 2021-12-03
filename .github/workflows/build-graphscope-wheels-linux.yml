@@ -1,0 +1,83 @@
+name: Build GraphScope Wheels on Linux
+
+on:
+  workflow_dispatch:
+  schedule:
+    # The notifications for scheduled workflows are sent to the user who
+    # last modified the cron syntax in the workflow file.
+    # Trigger the workflow at 03:00(CST) every day.
+    - cron:  '00 19 * * *'
+
+jobs:
+  build-wheels:
+    if: ${{ github.ref == 'refs/heads/main' && github.repository == 'alibaba/GraphScope' }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-20.04]
+
+    steps:
+    - uses: actions/checkout@v2
+      with:
+        submodules: true
+
+    - name: Setup tmate session
+      if: false
+      uses: mxschmitt/action-tmate@v2
+
+    - name: Build Wheel Package
+      run: |
+        # Due to an observation of changing hostname in github runners,
+        # append 127.0.0.1 to etc/hosts to avoid DNS lookup.
+        r=`cat /etc/hosts | grep $(hostname) || true`
+        if [ -z "${r}" ];then export hn=$(hostname); sudo -E bash -c 'echo "127.0.0.1 ${hn}" >> /etc/hosts'; fi
+        cat /etc/hosts
+
+        cd ${GITHUB_WORKSPACE}/k8s
+        # build graphscope wheels
+        sudo -E make graphscope-py3-package
+
+        # build client wheels
+        sudo -E make graphscope-client-py3-package
+
+        # package
+        cd ${GITHUB_WORKSPACE}
+        tar -zcf client.tar.gz python/dist/wheelhouse/*.whl
+        tar -zcf graphscope.tar.gz coordinator/dist/
+
+    - name: Upload Artifact
+      uses: actions/upload-artifact@v2
+      with:
+        name: wheel-${{ github.sha }}
+        path: |
+          client.tar.gz
+          graphscope.tar.gz
+        retention-days: 5
+
+  build-image:
+    if: ${{ github.ref == 'refs/heads/main' && github.repository == 'alibaba/GraphScope' }}
+    runs-on: ubuntu-20.04
+    needs: [build-wheels]
+
+    steps:
+    - uses: actions/checkout@v2.3.2
+      with:
+        submodules: true
+
+    - uses: actions/download-artifact@v2
+      with:
+        path: artifacts
+
+    - name: Add envs to GITHUB_ENV
+      run: |
+        short_sha=$(git rev-parse --short HEAD)
+        echo "SHORT_SHA=${short_sha}" >> $GITHUB_ENV
+
+    - name: Build GraphScope Image
+      run: |
+        cd ${GITHUB_WORKSPACE}/artifacts
+        tar -zxf ./wheel-${{ github.sha }}/client.tar.gz
+        tar -zxf ./wheel-${{ github.sha }}/graphscope.tar.gz
+
+        cd ${GITHUB_WORKSPACE}
+        sudo make graphscope-image

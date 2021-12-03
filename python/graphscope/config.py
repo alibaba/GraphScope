@@ -36,8 +36,8 @@ class GSConfig(object):
 
     # image
     k8s_etcd_image = "quay.io/coreos/etcd:v3.4.13"
-    k8s_gs_image = "registry.cn-hongkong.aliyuncs.com/graphscope/graphscope:{0}".format(
-        __version__
+    k8s_gs_image = (
+        f"registry.cn-hongkong.aliyuncs.com/graphscope/graphscope:{__version__}"
     )
 
     # image pull configuration
@@ -98,5 +98,8 @@ class GSConfig(object):
     # disable dangling check by setting -1.
     dangling_timeout_seconds = 600
 
-    # Set to true to enable gaia
-    enable_gaia = False
+    # Demo dataset related
+    mount_dataset = None
+    k8s_dataset_image = (
+        f"registry.cn-hongkong.aliyuncs.com/graphscope/dataset:{__version__}"
+    )

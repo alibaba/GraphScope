@@ -30,7 +30,7 @@ def pagerank_nx(graph, alpha=0.85, max_iter=100, tol=1e-06):
     """Evalute PageRank on a graph in NetworkX version.
 
     Args:
-        graph (Graph): A projected simple graph.
+        graph (Graph): A simple graph.
         alpha (float, optional): Dumping factor. Defaults to 0.85.
         max_iter (int, optional): Maximum number of iteration. Defaults to 100.
         tol (float, optional): Error tolerance used to check convergence in power method solver.
@@ -44,8 +44,8 @@ def pagerank_nx(graph, alpha=0.85, max_iter=100, tol=1e-06):
     .. code:: python
 
         import graphscope as gs
-        sess = gs.session()
-        g = sess.g()
+        g = gs.g()
+        # Load some data, then project to a simple graph (if needed).
         pg = g.project(vertices={"vlabel": []}, edges={"elabel": []})
         r = gs.pagerank(pg, alpha=0.85, max_iter=10)
         s.close()

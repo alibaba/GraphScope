@@ -3,29 +3,27 @@
 use std::os::raw::{c_char, c_void};
 use std::ffi::CStr;
 use std::str;
-use maxgraph_store::db::api::{GraphConfigBuilder, SnapshotId, GraphResult, GraphStorage, TypeDef, EdgeId, EdgeKind, DataLoadTarget};
+use maxgraph_store::db::api::{GraphConfigBuilder, SnapshotId, GraphResult, TypeDef, EdgeId, EdgeKind, DataLoadTarget};
 use maxgraph_store::db::api::PropertyMap;
 use maxgraph_store::db::proto::model::{OpTypePb, OperationBatchPb, OperationPb, DataOperationPb, VertexIdPb, LabelIdPb, EdgeIdPb, EdgeKindPb, TypeDefPb, DdlOperationPb, ConfigPb, CreateVertexTypePb, AddEdgeKindPb, EdgeLocationPb};
 use maxgraph_store::db::graph::store::GraphStore;
 use maxgraph_store::db::common::bytes::util::parse_pb;
 use std::sync::{Once, Arc};
 use crate::store::jna_response::JnaResponse;
-use maxgraph_store::v2::wrapper::graph_storage::GraphStorageWrapper;
-use maxgraph_store::v2::wrapper::wrapper_partition_graph::WrapperPartitionGraph;
+use maxgraph_store::db::wrapper::wrapper_partition_graph::WrapperPartitionGraph;
 use maxgraph_store::db::proto::common::{CommitDataLoadPb, PrepareDataLoadPb};
+use maxgraph_store::db::api::multi_version_graph::MultiVersionGraph;
 
 pub type GraphHandle = *const c_void;
 pub type PartitionGraphHandle = *const c_void;
-pub type FfiPartitionGraph = WrapperPartitionGraph<GraphStorageWrapper<GraphStore>>;
+pub type FfiPartitionGraph = WrapperPartitionGraph<GraphStore>;
 
 static INIT: Once = Once::new();
 
 #[no_mangle]
 pub extern fn createWrapperPartitionGraph(handle: GraphHandle) -> PartitionGraphHandle {
     let graph_store = unsafe { Arc::from_raw(handle as *const GraphStore) };
-    let storage_wrapper = GraphStorageWrapper::new(graph_store);
-    let multi_version_graph = Arc::new(storage_wrapper);
-    let partition_graph = WrapperPartitionGraph::new(multi_version_graph);
+    let partition_graph = WrapperPartitionGraph::new(graph_store);
     Box::into_raw(Box::new(partition_graph)) as PartitionGraphHandle
 }
 
@@ -129,7 +127,7 @@ pub extern fn writeBatch(ptr: GraphHandle, snapshot_id: i64, data: *const u8, le
     }
 }
 
-fn do_write_batch<G: GraphStorage>(graph: &G, snapshot_id: SnapshotId, buf: &[u8]) -> GraphResult<bool> {
+fn do_write_batch<G: MultiVersionGraph>(graph: &G, snapshot_id: SnapshotId, buf: &[u8]) -> GraphResult<bool> {
     let proto = parse_pb::<OperationBatchPb>(buf)?;
     let mut has_ddl = false;
     let operations = proto.get_operations();
@@ -192,7 +190,7 @@ fn do_write_batch<G: GraphStorage>(graph: &G, snapshot_id: SnapshotId, buf: &[u8
     Ok(has_ddl)
 }
 
-fn commit_data_load<G: GraphStorage>(graph: &G, snapshot_id: i64, op: &OperationPb) -> GraphResult<bool> {
+fn commit_data_load<G: MultiVersionGraph>(graph: &G, snapshot_id: i64, op: &OperationPb) -> GraphResult<bool> {
     let ddl_operation_pb = parse_pb::<DdlOperationPb>(op.get_dataBytes())?;
     let schema_version = ddl_operation_pb.get_schemaVersion();
     let commit_data_load_pb = parse_pb::<CommitDataLoadPb>(ddl_operation_pb.get_ddlBlob())?;
@@ -202,7 +200,7 @@ fn commit_data_load<G: GraphStorage>(graph: &G, snapshot_id: i64, op: &Operation
     graph.commit_data_load(snapshot_id, schema_version, &target, table_id)
 }
 
-fn prepare_data_load<G: GraphStorage>(graph: &G, snapshot_id: i64, op: &OperationPb) -> GraphResult<bool> {
+fn prepare_data_load<G: MultiVersionGraph>(graph: &G, snapshot_id: i64, op: &OperationPb) -> GraphResult<bool> {
     let ddl_operation_pb = parse_pb::<DdlOperationPb>(op.get_dataBytes())?;
     let schema_version = ddl_operation_pb.get_schemaVersion();
     let prepare_data_load_pb = parse_pb::<PrepareDataLoadPb>(ddl_operation_pb.get_ddlBlob())?;
@@ -212,7 +210,7 @@ fn prepare_data_load<G: GraphStorage>(graph: &G, snapshot_id: i64, op: &Operatio
     graph.prepare_data_load(snapshot_id, schema_version, &target, table_id)
 }
 
-fn create_vertex_type<G: GraphStorage>(graph: &G, snapshot_id: i64, op: &OperationPb) -> GraphResult<bool> {
+fn create_vertex_type<G: MultiVersionGraph>(graph: &G, snapshot_id: i64, op: &OperationPb) -> GraphResult<bool> {
     let ddl_operation_pb = parse_pb::<DdlOperationPb>(op.get_dataBytes())?;
     let schema_version = ddl_operation_pb.get_schemaVersion();
     let create_vertex_type_pb = parse_pb::<CreateVertexTypePb>(ddl_operation_pb.get_ddlBlob())?;
@@ -223,7 +221,7 @@ fn create_vertex_type<G: GraphStorage>(graph: &G, snapshot_id: i64, op: &Operati
     graph.create_vertex_type(snapshot_id, schema_version, label_id, &typedef, table_id)
 }
 
-fn drop_vertex_type<G: GraphStorage>(graph: &G, snapshot_id: i64, op: &OperationPb) -> GraphResult<bool> {
+fn drop_vertex_type<G: MultiVersionGraph>(graph: &G, snapshot_id: i64, op: &OperationPb) -> GraphResult<bool> {
     let ddl_operation_pb = parse_pb::<DdlOperationPb>(op.get_dataBytes())?;
     let schema_version = ddl_operation_pb.get_schemaVersion();
     let label_id_pb = parse_pb::<LabelIdPb>(ddl_operation_pb.get_ddlBlob())?;
@@ -231,7 +229,7 @@ fn drop_vertex_type<G: GraphStorage>(graph: &G, snapshot_id: i64, op: &Operation
     graph.drop_vertex_type(snapshot_id, schema_version, label_id)
 }
 
-fn create_edge_type<G: GraphStorage>(graph: &G, snapshot_id: i64, op: &OperationPb) -> GraphResult<bool> {
+fn create_edge_type<G: MultiVersionGraph>(graph: &G, snapshot_id: i64, op: &OperationPb) -> GraphResult<bool> {
     let ddl_operation_pb = parse_pb::<DdlOperationPb>(op.get_dataBytes())?;
     let schema_version = ddl_operation_pb.get_schemaVersion();
     let typedef_pb = parse_pb::<TypeDefPb>(ddl_operation_pb.get_ddlBlob())?;
@@ -240,7 +238,7 @@ fn create_edge_type<G: GraphStorage>(graph: &G, snapshot_id: i64, op: &Operation
     graph.create_edge_type(snapshot_id, schema_version, label_id, &typedef)
 }
 
-fn drop_edge_type<G: GraphStorage>(graph: &G, snapshot_id: i64, op: &OperationPb) -> GraphResult<bool> {
+fn drop_edge_type<G: MultiVersionGraph>(graph: &G, snapshot_id: i64, op: &OperationPb) -> GraphResult<bool> {
     let ddl_operation_pb = parse_pb::<DdlOperationPb>(op.get_dataBytes())?;
     let schema_version = ddl_operation_pb.get_schemaVersion();
     let label_id_pb = parse_pb::<LabelIdPb>(ddl_operation_pb.get_ddlBlob())?;
@@ -248,7 +246,7 @@ fn drop_edge_type<G: GraphStorage>(graph: &G, snapshot_id: i64, op: &OperationPb
     graph.drop_edge_type(snapshot_id, schema_version, label_id)
 }
 
-fn add_edge_kind<G: GraphStorage>(graph: &G, snapshot_id: i64, op: &OperationPb) -> GraphResult<bool> {
+fn add_edge_kind<G: MultiVersionGraph>(graph: &G, snapshot_id: i64, op: &OperationPb) -> GraphResult<bool> {
     let ddl_operation_pb = parse_pb::<DdlOperationPb>(op.get_dataBytes())?;
     let schema_version = ddl_operation_pb.get_schemaVersion();
     let add_edge_kind_pb = parse_pb::<AddEdgeKindPb>(ddl_operation_pb.get_ddlBlob())?;
@@ -258,7 +256,7 @@ fn add_edge_kind<G: GraphStorage>(graph: &G, snapshot_id: i64, op: &OperationPb)
     graph.add_edge_kind(snapshot_id, schema_version, &edge_kind, table_id)
 }
 
-fn remove_edge_kind<G: GraphStorage>(graph: &G, snapshot_id: i64, op: &OperationPb) -> GraphResult<bool> {
+fn remove_edge_kind<G: MultiVersionGraph>(graph: &G, snapshot_id: i64, op: &OperationPb) -> GraphResult<bool> {
     let ddl_operation_pb = parse_pb::<DdlOperationPb>(op.get_dataBytes())?;
     let schema_version = ddl_operation_pb.get_schemaVersion();
     let edge_kind_pb = parse_pb::<EdgeKindPb>(ddl_operation_pb.get_ddlBlob())?;
@@ -266,7 +264,7 @@ fn remove_edge_kind<G: GraphStorage>(graph: &G, snapshot_id: i64, op: &Operation
     graph.remove_edge_kind(snapshot_id, schema_version, &edge_kind)
 }
 
-fn overwrite_vertex<G: GraphStorage>(graph: &G, snapshot_id: i64, op: &OperationPb) -> GraphResult<()> {
+fn overwrite_vertex<G: MultiVersionGraph>(graph: &G, snapshot_id: i64, op: &OperationPb) -> GraphResult<()> {
     let data_operation_pb = parse_pb::<DataOperationPb>(op.get_dataBytes())?;
 
     let vertex_id_pb = parse_pb::<VertexIdPb>(data_operation_pb.get_keyBlob())?;
@@ -279,7 +277,7 @@ fn overwrite_vertex<G: GraphStorage>(graph: &G, snapshot_id: i64, op: &Operation
     graph.insert_overwrite_vertex(snapshot_id, vertex_id, label_id, &property_map)
 }
 
-fn update_vertex<G: GraphStorage>(graph: &G, snapshot_id: i64, op: &OperationPb) -> GraphResult<()> {
+fn update_vertex<G: MultiVersionGraph>(graph: &G, snapshot_id: i64, op: &OperationPb) -> GraphResult<()> {
     let data_operation_pb = parse_pb::<DataOperationPb>(op.get_dataBytes())?;
 
     let vertex_id_pb = parse_pb::<VertexIdPb>(data_operation_pb.get_keyBlob())?;
@@ -292,7 +290,7 @@ fn update_vertex<G: GraphStorage>(graph: &G, snapshot_id: i64, op: &OperationPb)
     graph.insert_update_vertex(snapshot_id, vertex_id, label_id, &property_map)
 }
 
-fn delete_vertex<G: GraphStorage>(graph: &G, snapshot_id: i64, op: &OperationPb) -> GraphResult<()> {
+fn delete_vertex<G: MultiVersionGraph>(graph: &G, snapshot_id: i64, op: &OperationPb) -> GraphResult<()> {
     let data_operation_pb = parse_pb::<DataOperationPb>(op.get_dataBytes())?;
 
     let vertex_id_pb = parse_pb::<VertexIdPb>(data_operation_pb.get_keyBlob())?;
@@ -304,7 +302,7 @@ fn delete_vertex<G: GraphStorage>(graph: &G, snapshot_id: i64, op: &OperationPb)
     graph.delete_vertex(snapshot_id, vertex_id, label_id)
 }
 
-fn overwrite_edge<G: GraphStorage>(graph: &G, snapshot_id: i64, op: &OperationPb) -> GraphResult<()> {
+fn overwrite_edge<G: MultiVersionGraph>(graph: &G, snapshot_id: i64, op: &OperationPb) -> GraphResult<()> {
     let data_operation_pb = parse_pb::<DataOperationPb>(op.get_dataBytes())?;
 
     let edge_id_pb = parse_pb::<EdgeIdPb>(data_operation_pb.get_keyBlob())?;
@@ -317,7 +315,7 @@ fn overwrite_edge<G: GraphStorage>(graph: &G, snapshot_id: i64, op: &OperationPb
     graph.insert_overwrite_edge(snapshot_id, edge_id, &edge_kind, edge_location_pb.get_forward(), &property_map)
 }
 
-fn update_edge<G: GraphStorage>(graph: &G, snapshot_id: i64, op: &OperationPb) -> GraphResult<()> {
+fn update_edge<G: MultiVersionGraph>(graph: &G, snapshot_id: i64, op: &OperationPb) -> GraphResult<()> {
     let data_operation_pb = parse_pb::<DataOperationPb>(op.get_dataBytes())?;
 
     let edge_id_pb = parse_pb::<EdgeIdPb>(data_operation_pb.get_keyBlob())?;
@@ -330,7 +328,7 @@ fn update_edge<G: GraphStorage>(graph: &G, snapshot_id: i64, op: &OperationPb) -
     graph.insert_update_edge(snapshot_id, edge_id, &edge_kind, edge_location_pb.get_forward(), &property_map)
 }
 
-fn delete_edge<G: GraphStorage>(graph: &G, snapshot_id: i64, op: &OperationPb) -> GraphResult<()> {
+fn delete_edge<G: MultiVersionGraph>(graph: &G, snapshot_id: i64, op: &OperationPb) -> GraphResult<()> {
     let data_operation_pb = parse_pb::<DataOperationPb>(op.get_dataBytes())?;
 
     let edge_id_pb = parse_pb::<EdgeIdPb>(data_operation_pb.get_keyBlob())?;

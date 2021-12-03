@@ -24,6 +24,10 @@
 #include "grape/app/void_context.h"
 
 #include "core/context/i_context.h"
+#ifdef ENABLE_JAVA_SDK
+#include "core/context/java_pie_projected_context.h"
+#include "core/context/java_pie_property_context.h"
+#endif
 #include "core/context/labeled_vertex_property_context.h"
 #include "core/context/tensor_context.h"
 #include "core/context/vertex_data_context.h"
@@ -149,5 +153,37 @@ struct CtxWrapperBuilder<CTX_T, typename std::enable_if<is_base_of_template<
         id, frag_wrapper, ctx);
   }
 };
+
+#ifdef ENABLE_JAVA_SDK
+/**
+ * @brief A specialized CtxWrapperBuilder for JavaPropertyPIEctx
+ * @tparam CTX_T
+ */
+template <typename CTX_T>
+struct CtxWrapperBuilder<CTX_T,
+                         typename std::enable_if<is_base_of_template<
+                             CTX_T, JavaPIEPropertyContext>::value>::type> {
+  static std::shared_ptr<gs::IContextWrapper> build(
+      const std::string& id, std::shared_ptr<IFragmentWrapper> frag_wrapper,
+      std::shared_ptr<CTX_T> ctx) {
+    return ctx->CreateInnerCtxWrapper(id, frag_wrapper);
+  }
+};
+
+/**
+ * @brief A specialized CtxWrapperBuilder for JavaProjectedPIEctx
+ * @tparam CTX_T
+ */
+template <typename CTX_T>
+struct CtxWrapperBuilder<CTX_T,
+                         typename std::enable_if<is_base_of_template<
+                             CTX_T, JavaPIEProjectedContext>::value>::type> {
+  static std::shared_ptr<gs::IContextWrapper> build(
+      const std::string& id, std::shared_ptr<IFragmentWrapper> frag_wrapper,
+      std::shared_ptr<CTX_T> ctx) {
+    return ctx->CreateInnerCtxWrapper(id, frag_wrapper);
+  }
+};
+#endif
 }  // namespace gs
 #endif  // ANALYTICAL_ENGINE_FRAME_CTX_WRAPPER_BUILDER_H_

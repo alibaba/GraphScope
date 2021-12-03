@@ -43,7 +43,7 @@ def parse_edgelist(
         p = line.find(comments)
         if p >= 0:
             line = line[:p]
-        if not len(line):
+        if not line:
             continue
         # split line, should have 2 or more
         s = line.strip().split(delimiter)
@@ -58,7 +58,7 @@ def parse_edgelist(
                 v = nodetype(v)
             except Exception as e:
                 raise TypeError(
-                    "Failed to convert nodes %s,%s to type %s." % (u, v, nodetype)
+                    f"Failed to convert nodes {u},{v} to type {nodetype}."
                 ) from e
 
         if len(d) == 0 or data is False:
@@ -67,16 +67,20 @@ def parse_edgelist(
         elif data is True:
             # no edge types specified
             try:  # try to evaluate as dictionary
-                edgedata = dict(literal_eval(" ".join(d)))
+                if delimiter == ",":
+                    edgedata_str = ",".join(d)
+                else:
+                    edgedata_str = " ".join(d)
+                edgedata = dict(literal_eval(edgedata_str.strip()))
             except Exception as e:
                 raise TypeError(
-                    "Failed to convert edge data (%s) to dictionary." % (d)
+                    f"Failed to convert edge data ({d}) to dictionary."
                 ) from e
         else:
             # convert edge data to dictionary with specified keys and type
             if len(d) != len(data):
                 raise IndexError(
-                    "Edge data %s and data_keys %s are not the same length" % (d, data)
+                    f"Edge data {d} and data_keys {data} are not the same length"
                 )
             edgedata = {}
             for (edge_key, edge_type), edge_value in zip(data, d):
@@ -84,8 +88,8 @@ def parse_edgelist(
                     edge_value = edge_type(edge_value)
                 except Exception as e:
                     raise TypeError(
-                        "Failed to convert %s data %s to type %s."
-                        % (edge_key, edge_value, edge_type)
+                        f"Failed to convert {edge_key} data {edge_value} "
+                        f"to type {edge_type}."
                     ) from e
                 edgedata.update({edge_key: edge_value})
         edges.append((u, v, edgedata))
@@ -93,6 +97,7 @@ def parse_edgelist(
     return G
 
 
+@patch_docstring(_read_edgelist)
 @open_file(0, mode="rb")
 def read_edgelist(
     path,
@@ -104,44 +109,7 @@ def read_edgelist(
     edgetype=None,
     encoding="utf-8",
 ):
-    """Read a graph from a list of edges.
-
-    Parameters
-    ----------
-    path : file or string
-       File or filename to read. If a file is provided, it must be
-       opened in 'rb' mode.
-       Filenames ending in .gz or .bz2 will be uncompressed.
-    comments : string, optional
-       The character used to indicate the start of a comment.
-    delimiter : string, optional
-       The string used to separate values.  The default is whitespace.
-    create_using : NetworkX graph constructor, optional (default=nx.Graph)
-       Graph type to create. If graph instance, then cleared before populated.
-    nodetype : int, float, str, tuple, bool Python object, optional
-       Convert node data from strings to specified type
-    data : bool or list of (label,type) tuples
-       Tuples specifying dictionary key names and types for edge data
-    edgetype : int, float, str, tuple, bool Python object, optional OBSOLETE
-       Convert edge data from strings to specified type and use as 'weight'
-    encoding: string, optional
-       Specify which encoding to use when reading file.
-
-    Returns
-    -------
-    G : graph
-       A networkx Graph or other type specified with create_using
-
-    See Also
-    --------
-    read_adjlist
-
-    Notes
-    -----
-    Since nodes must be hashable, the function nodetype must return hashable
-    types (e.g. int, float, str, frozenset - or tuples of those, etc.)
-    """
-    lines = (line.decode(encoding) for line in path)
+    lines = (line if isinstance(line, str) else line.decode(encoding) for line in path)
     return parse_edgelist(
         lines,
         comments=comments,

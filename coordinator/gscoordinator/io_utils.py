@@ -88,7 +88,6 @@ class StdStreamWrapper(object):
             LoadingProgressTracker.cur_stub = 0
             LoadingProgressTracker.progbar.close()
             LoadingProgressTracker.progbar = None
-            sys.stderr.write("\n")
             sys.stderr.flush()
 
     def _filter_progress(self, line):
@@ -97,37 +96,3 @@ class StdStreamWrapper(object):
             return line
         self._show_progress()
         return None
-
-
-class PipeWatcher(object):
-    def __init__(self, pipe, sink, queue=None, drop=True):
-        """Watch a pipe, and buffer its output if drop is False."""
-        self._pipe = pipe
-        self._sink = sink
-        self._drop = drop
-        if queue is None:
-            self._lines = Queue()
-        else:
-            self._lines = queue
-
-        def read_and_poll(self):
-            for line in self._pipe:
-                try:
-                    self._sink.write(line)
-                except:  # noqa: E722
-                    pass
-                try:
-                    if not self._drop:
-                        self._lines.put(line)
-                except:  # noqa: E722
-                    pass
-
-        self._polling_thread = threading.Thread(target=read_and_poll, args=(self,))
-        self._polling_thread.daemon = True
-        self._polling_thread.start()
-
-    def poll(self, block=True, timeout=None):
-        return self._lines.get(block=block, timeout=timeout)
-
-    def drop(self, drop=True):
-        self._drop = drop

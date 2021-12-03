@@ -17,7 +17,9 @@ import com.alibaba.graphscope.groot.discovery.FileDiscovery;
 import com.alibaba.graphscope.groot.discovery.LocalNodeProvider;
 import com.alibaba.graphscope.groot.discovery.NodeDiscovery;
 import com.alibaba.graphscope.groot.discovery.ZkDiscovery;
+import com.alibaba.graphscope.groot.frontend.BackupClient;
 import com.alibaba.graphscope.groot.frontend.BatchDdlClient;
+import com.alibaba.graphscope.groot.frontend.ClientBackupService;
 import com.alibaba.graphscope.groot.frontend.ClientDdlService;
 import com.alibaba.graphscope.groot.frontend.ClientService;
 import com.alibaba.graphscope.groot.frontend.ClientWriteService;
@@ -25,7 +27,7 @@ import com.alibaba.graphscope.groot.frontend.FrontendSnapshotService;
 import com.alibaba.graphscope.groot.frontend.IngestorWriteClient;
 import com.alibaba.graphscope.groot.frontend.SchemaClient;
 import com.alibaba.graphscope.groot.frontend.SchemaWriter;
-import com.alibaba.graphscope.groot.frontend.SnapshotCache;
+import com.alibaba.graphscope.groot.SnapshotCache;
 import com.alibaba.graphscope.groot.frontend.StoreIngestClient;
 import com.alibaba.graphscope.groot.frontend.StoreIngestClients;
 import com.alibaba.graphscope.groot.frontend.StoreIngestor;
@@ -117,6 +119,9 @@ public class Frontend extends NodeBase {
                         snapshotCache, edgeIdGenerator, this.metaService, ingestorWriteClients);
         ClientWriteService clientWriteService =
                 new ClientWriteService(writeSessionGenerator, graphWriter);
+        RoleClients<BackupClient> backupClients =
+                new RoleClients<>(this.channelManager, RoleType.COORDINATOR, BackupClient::new);
+        ClientBackupService clientBackupService = new ClientBackupService(backupClients);
         this.rpcServer =
                 new RpcServer(
                         configs,
@@ -125,7 +130,8 @@ public class Frontend extends NodeBase {
                         clientService,
                         metricsCollectService,
                         clientDdlService,
-                        clientWriteService);
+                        clientWriteService,
+                        clientBackupService);
 
         WrappedSchemaFetcher wrappedSchemaFetcher =
                 new WrappedSchemaFetcher(snapshotCache, metaService);

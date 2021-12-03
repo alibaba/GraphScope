@@ -48,7 +48,7 @@ use maxgraph_server::StoreContext;
 use maxgraph_store::api::graph_partition::GraphPartitionManager;
 use maxgraph_store::api::prelude::*;
 use maxgraph_store::config::{StoreConfig, VINEYARD_GRAPH};
-use pegasus_server::rpc::start_rpc_server;
+use pegasus_server::rpc::{start_rpc_server, RpcService};
 use pegasus_server::service::Service;
 use protobuf::Message;
 use std::collections::HashMap;
@@ -86,22 +86,14 @@ fn main() {
     let worker_num = store_config.timely_worker_per_process;
     let store_config = Arc::new(store_config);
     if store_config.graph_type.to_lowercase().eq(VINEYARD_GRAPH) {
-        if cfg!(target_os = "linux") {
-            info!(
-                "Start executor with vineyard graph object id {:?}",
-                store_config.vineyard_graph_id
-            );
-            use maxgraph_runtime::store::ffi::FFIGraphStore;
-            let ffi_store = FFIGraphStore::new(store_config.vineyard_graph_id, worker_num as i32);
-            let partition_manager = ffi_store.get_partition_manager();
-            run_main(
-                store_config,
-                Arc::new(ffi_store),
-                Arc::new(partition_manager),
-            );
-        } else {
-            unimplemented!("Mac not support vineyard graph")
-        }
+        info!(
+            "Start executor with vineyard graph object id {:?}",
+            store_config.vineyard_graph_id
+        );
+        use maxgraph_runtime::store::ffi::FFIGraphStore;
+        let ffi_store = FFIGraphStore::new(store_config.vineyard_graph_id, worker_num as i32);
+        let partition_manager = ffi_store.get_partition_manager();
+        run_main(store_config, Arc::new(ffi_store), Arc::new(partition_manager));
     } else {
         unimplemented!("only start vineyard graph from executor")
     }
@@ -295,9 +287,9 @@ where
             let job_compiler = query_vineyard.initialize_job_compiler();
             let service = Service::new(job_compiler);
             let addr = format!("{}:{}", "0.0.0.0", self.store_config.rpc_port);
-            let local_addr = start_rpc_server(addr.parse().unwrap(), service, true, false)
-                .await
-                .unwrap();
+            // TODO: add report in store_config
+            let rpc_service = RpcService::new(service, true);
+            let local_addr =  start_rpc_server(addr.parse().unwrap(), rpc_service, false).await.unwrap();
             local_addr.port()
         });
         let ip = get_local_ip();

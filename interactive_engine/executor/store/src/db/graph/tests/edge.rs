@@ -2,38 +2,39 @@ use crate::db::api::*;
 
 use super::helper::GraphTestHelper;
 use super::types;
+use crate::db::api::multi_version_graph::MultiVersionGraph;
 
-pub fn test_get_edge<G: GraphStorage>(graph: G) {
+pub fn test_get_edge<G: MultiVersionGraph>(graph: G) {
     let tester = tester::GetEdgeTester::new(graph);
     tester.execute();
 }
 
-pub fn test_query_edges<G: GraphStorage>(graph: G) {
+pub fn test_query_edges<G: MultiVersionGraph>(graph: G) {
     let tester = tester::QueryEdgesTester::new(graph);
     tester.execute();
 }
 
-pub fn test_get_in_out_edges<G: GraphStorage>(graph: G) {
+pub fn test_get_in_out_edges<G: MultiVersionGraph>(graph: G) {
     let tester = tester::GetInOutEdgesTester::new(graph);
     tester.execute();
 }
 
-pub fn test_update_edge<G: GraphStorage>(graph: G) {
+pub fn test_update_edge<G: MultiVersionGraph>(graph: G) {
     let tester = tester::UpdateEdgeTester::new(graph);
     tester.execute();
 }
 
-pub fn test_delete_edge<G: GraphStorage>(graph: G) {
+pub fn test_delete_edge<G: MultiVersionGraph>(graph: G) {
     let tester = tester::DeleteEdgeTester::new(graph);
     tester.execute();
 }
 
-pub fn test_drop_edge<G: GraphStorage>(graph: G) {
+pub fn test_drop_edge<G: MultiVersionGraph>(graph: G) {
     let tester = tester::DropEdgeTester::new(graph);
     tester.execute();
 }
 
-pub fn test_remove_edge_kind<G: GraphStorage>(graph: G) {
+pub fn test_remove_edge_kind<G: MultiVersionGraph>(graph: G) {
     let tester = tester::RemoveEdgeKindTester::new(graph);
     tester.execute();
 }
@@ -41,12 +42,13 @@ pub fn test_remove_edge_kind<G: GraphStorage>(graph: G) {
 mod tester {
     use super::*;
     use super::common::*;
+    use crate::db::api::multi_version_graph::MultiVersionGraph;
 
-    pub struct QueryEdgesTester<G: GraphStorage> {
+    pub struct QueryEdgesTester<G: MultiVersionGraph> {
         graph: G,
     }
 
-    impl<G: GraphStorage> QueryEdgesTester<G> {
+    impl<G: MultiVersionGraph> QueryEdgesTester<G> {
         pub fn new(graph: G) -> Self {
             QueryEdgesTester {
                 graph,
@@ -80,13 +82,13 @@ mod tester {
             let check_helper = EdgeCheckHelper::new(&helper, &data_gen);
             for si in (1..10).step_by(3) {
                 check_helper.check_query_edges(si, None, &vec![]);
-                check_helper.check_query_edges_err(si, Some(label1));
-                check_helper.check_query_edges_err(si, Some(label2));
+                check_helper.check_query_edges_empty(si, Some(label1));
+                check_helper.check_query_edges_empty(si, Some(label2));
                 println!("check si#{} success", si);
             }
             for si in 10..35 {
                 if si < 20 {
-                    check_helper.check_query_edges_err(si, Some(label2));
+                    check_helper.check_query_edges_empty(si, Some(label2));
                     if si < 13 {
                         check_helper.check_query_edges(si, None, &vec![]);
                         check_helper.check_query_edges(si, Some(label1), &vec![]);
@@ -132,7 +134,7 @@ mod tester {
         graph: G,
     }
 
-    impl<G: GraphStorage> GetInOutEdgesTester<G> {
+    impl<G: MultiVersionGraph> GetInOutEdgesTester<G> {
         pub fn new(graph: G) -> Self {
             GetInOutEdgesTester {
                 graph,
@@ -165,10 +167,10 @@ mod tester {
 
             let check_helper =  EdgeCheckHelper::new(&helper, &data_gen);
             for si in (1..10).step_by(3) {
-                check_helper.check_get_out_edges_err(si, Some(label1));
-                check_helper.check_get_in_edges_err(si, Some(label1));
-                check_helper.check_get_out_edges_err(si, Some(label2));
-                check_helper.check_get_in_edges_err(si, Some(label2));
+                check_helper.check_get_out_edges_empty(si, Some(label1));
+                check_helper.check_get_in_edges_empty(si, Some(label1));
+                check_helper.check_get_out_edges_empty(si, Some(label2));
+                check_helper.check_get_in_edges_empty(si, Some(label2));
                 let mut edge_kinds = Vec::new();
                 edge_kinds.extend_from_slice(&label1_edge_kinds);
                 edge_kinds.extend_from_slice(&label2_edge_kinds);
@@ -179,8 +181,8 @@ mod tester {
 
             for si in 10..35 {
                 if si < 20 {
-                    check_helper.check_get_out_edges_err(si, Some(label2));
-                    check_helper.check_get_in_edges_err(si, Some(label2));
+                    check_helper.check_get_out_edges_empty(si, Some(label2));
+                    check_helper.check_get_in_edges_empty(si, Some(label2));
                     if si < 13 {
                         check_helper.check_get_out_edges_none(si, Some(label1), &label1_edge_kinds);
                         check_helper.check_get_in_edges_none(si, Some(label1), &label1_edge_kinds);
@@ -257,11 +259,11 @@ mod tester {
         }
     }
 
-    pub struct UpdateEdgeTester<G: GraphStorage> {
+    pub struct UpdateEdgeTester<G: MultiVersionGraph> {
         graph: G,
     }
 
-    impl<G: GraphStorage> UpdateEdgeTester<G> {
+    impl<G: MultiVersionGraph> UpdateEdgeTester<G> {
         pub fn new(graph: G) -> Self {
             UpdateEdgeTester {
                 graph,
@@ -356,11 +358,11 @@ mod tester {
         }
     }
 
-    pub struct DeleteEdgeTester<G: GraphStorage> {
+    pub struct DeleteEdgeTester<G: MultiVersionGraph> {
         graph: G,
     }
 
-    impl<G: GraphStorage> DeleteEdgeTester<G> {
+    impl<G: MultiVersionGraph> DeleteEdgeTester<G> {
         pub fn new(graph: G) -> Self {
             DeleteEdgeTester {
                 graph,
@@ -442,11 +444,11 @@ mod tester {
         }
     }
 
-    pub struct GetEdgeTester<G: GraphStorage> {
+    pub struct GetEdgeTester<G: MultiVersionGraph> {
         graph: G,
     }
 
-    impl<G: GraphStorage> GetEdgeTester<G> {
+    impl<G: MultiVersionGraph> GetEdgeTester<G> {
         pub fn new(graph: G) -> Self {
             GetEdgeTester {
                 graph,
@@ -489,7 +491,7 @@ mod tester {
         graph: G,
     }
 
-    impl<G: GraphStorage> DropEdgeTester<G> {
+    impl<G: MultiVersionGraph> DropEdgeTester<G> {
         pub fn new(graph: G) -> Self {
             DropEdgeTester {
                 graph,
@@ -561,7 +563,7 @@ mod tester {
         graph: G,
     }
 
-    impl<G: GraphStorage> RemoveEdgeKindTester<G> {
+    impl<G: MultiVersionGraph> RemoveEdgeKindTester<G> {
         pub fn new(graph: G) -> Self {
             RemoveEdgeKindTester {
                 graph,
@@ -646,13 +648,14 @@ mod common {
     use super::*;
     use std::collections::{HashSet, HashMap};
     use std::iter::FromIterator;
+    use crate::db::api::multi_version_graph::MultiVersionGraph;
 
-    pub struct EdgeDataInsertHelper<'a, 'b, G: GraphStorage> {
+    pub struct EdgeDataInsertHelper<'a, 'b, G: MultiVersionGraph> {
         helper: &'a mut GraphTestHelper<'b, G>,
         data_gen: &'a EdgeDataGen,
     }
 
-    impl<'a, 'b, G: GraphStorage> EdgeDataInsertHelper<'a, 'b, G> {
+    impl<'a, 'b, G: MultiVersionGraph> EdgeDataInsertHelper<'a, 'b, G> {
         pub fn new(helper: &'a mut GraphTestHelper<'b, G>, data_gen: &'a EdgeDataGen) -> Self {
             EdgeDataInsertHelper {
                 helper,
@@ -804,12 +807,12 @@ mod common {
         }
     }
 
-    pub struct EdgeCheckHelper<'a, G: GraphStorage> {
+    pub struct EdgeCheckHelper<'a, G: MultiVersionGraph> {
         helper: &'a GraphTestHelper<'a, G>,
         data_gen: &'a EdgeDataGen,
     }
 
-    impl<'a, G: GraphStorage> EdgeCheckHelper<'a, G> {
+    impl<'a, G: MultiVersionGraph> EdgeCheckHelper<'a, G> {
         pub fn new(helper: &'a GraphTestHelper<'a, G>, data_gen: &'a EdgeDataGen) -> Self {
             EdgeCheckHelper {
                 helper,
@@ -819,9 +822,9 @@ mod common {
 
         pub fn check_all_data_err_of_labels(&self, si: SnapshotId, labels: Vec<LabelId>) {
             for label in labels.clone() {
-                self.check_get_out_edges_err(si, Some(label));
-                self.check_get_in_edges_err(si, Some(label));
-                self.check_query_edges_err(si, Some(label));
+                self.check_get_out_edges_empty(si, Some(label));
+                self.check_get_in_edges_empty(si, Some(label));
+                self.check_query_edges_empty(si, Some(label));
             }
             self.check_get_edge_err_of_labels(si, labels);
         }
@@ -942,9 +945,9 @@ mod common {
             }
         }
 
-        pub fn check_get_out_edges_err(&self, si: SnapshotId, label: Option<LabelId>) {
+        pub fn check_get_out_edges_empty(&self, si: SnapshotId, label: Option<LabelId>) {
             for (src_id, _) in self.data_gen.all_out_edges(vec![label.unwrap()]) {
-                self.helper.check_get_out_edges_err(si, src_id, label);
+                self.helper.check_get_out_edges_empty(si, src_id, label);
             }
         }
 
@@ -968,9 +971,9 @@ mod common {
             }
         }
 
-        pub fn check_get_in_edges_err(&self, si: SnapshotId, label: Option<LabelId>) {
+        pub fn check_get_in_edges_empty(&self, si: SnapshotId, label: Option<LabelId>) {
             for (dst_id, _) in self.data_gen.all_in_edges(vec![label.unwrap()]) {
-                self.helper.check_get_in_edges_err(si, dst_id, label);
+                self.helper.check_get_in_edges_empty(si, dst_id, label);
             }
         }
 
@@ -990,8 +993,8 @@ mod common {
             self.helper.check_query_edges(si, label, ids);
         }
 
-        pub fn check_query_edges_err(&self, si: SnapshotId, label: Option<LabelId>) {
-            self.helper.check_query_edges_err(si, label);
+        pub fn check_query_edges_empty(&self, si: SnapshotId, label: Option<LabelId>) {
+            self.helper.check_query_edges_empty(si, label);
         }
 
         fn check_all_data(&self, si: SnapshotId, map: HashMap<LabelId, Vec<EdgeKind>>) {

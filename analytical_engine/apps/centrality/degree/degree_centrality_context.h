@@ -49,7 +49,7 @@ class DegreeCentralityContext
     } else if (centrality_type == "both") {
       degree_centrality_type = DegreeCentralityType::BOTH;
     } else {
-      LOG(FATAL) << "invalid parameter: " << centrality_type;
+      LOG(FATAL) << "Invalid parameter: " << centrality_type;
     }
   }
 

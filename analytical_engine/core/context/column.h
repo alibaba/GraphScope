@@ -44,7 +44,7 @@ class IColumn {
 };
 
 /**
- * @brief Column is an templated implementation of IColumn. Each element in the
+ * @brief Column is a templated implementation of IColumn. Each element in the
  * column must be associated with a vertex in the fragment.
  *
  * @tparam FRAG_T Fragment class
@@ -86,6 +86,8 @@ class Column : public IColumn {
   DATA_T& at(vertex_t v) { return data_[v]; }
 
   const DATA_T& at(vertex_t v) const { return data_[v]; }
+
+  void set(vertex_t v, const DATA_T& value) { data_[v] = value; }
 
   vertex_array_t& data() { return data_; }
 

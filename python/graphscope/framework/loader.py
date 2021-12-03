@@ -26,6 +26,7 @@ from urllib.parse import urlparse
 
 import numpy as np
 import pandas as pd
+import pyarrow as pa
 
 from graphscope.framework import utils
 from graphscope.framework.errors import check_argument
@@ -128,6 +129,9 @@ class Loader(object):
             See more additional info in `Loading Graph` section of Docs, and implementations in `libvineyard`.
         """
         self.protocol = ""
+        # For numpy or pandas, source is the serialized raw bytes
+        # For files, it's the location
+        # For vineyard, it's the ID or name
         self.source = ""
         # options for data source is csv
         self.options = CSVOptions()
@@ -138,10 +142,7 @@ class Loader(object):
         self.options.delimiter = delimiter
         self.options.header_row = header_row
         # metas for data source is numpy or dataframe
-        self.row_num = 0
-        self.column_num = 0
         self.deduced_properties = None
-        self.property_bytes = None
         # extra args directly passed to storage system
         # find more details in fsspec
         #   https://filesystem-spec.readthedocs.io/en/latest/
@@ -190,46 +191,30 @@ class Loader(object):
         self.source = source
 
     def process_numpy(self, source: Sequence[np.ndarray]):
-        self.protocol = "numpy"
-        self.row_num = source[0].shape[0]
-        self.column_num = len(source)
-
-        # Only support a subset of data types.
-        check_argument(source[0].dtype in (np.dtype("int64"), np.dtype("long")))
-        for col in source:
-            check_argument(
-                col.dtype
-                in (
-                    np.dtype("int64"),
-                    np.dtype("long"),
-                    np.dtype("float64"),
-                )
-            )
-
-        col_names = ["f%s" % i for i in range(self.column_num)]
-        col_types = [utils._from_numpy_dtype(col.dtype) for col in source]
-
-        self.deduced_properties = list(zip(col_names, col_types))
-        self.property_bytes = [col.tobytes("F") for col in source]
+        """Transform arrays to equivalent DataFrame,
+        note the transpose is necessary.
+        """
+        col_names = ["f%s" % i for i in range(len(source))]
+        df = pd.DataFrame(source, col_names).T
+        types = {}
+        for i, _ in enumerate(source):
+            types[col_names[i]] = source[i].dtype
+        df = df.astype(types)
+        return self.process_pandas(df)
 
     def process_pandas(self, source: pd.DataFrame):
         self.protocol = "pandas"
-        check_argument(len(source.shape) == 2)
-        self.row_num = source.shape[0]
-        self.column_num = source.shape[1]
-
-        # Only support a subset of data types.
-        check_argument(source.dtypes.values[0] in (np.dtype("int64"), np.dtype("long")))
-        for dtype in source.dtypes.values:
-            check_argument(
-                dtype in (np.dtype("int64"), np.dtype("long"), np.dtype("float64"))
-            )
-
         col_names = list(source.columns.values)
         col_types = [utils._from_numpy_dtype(dtype) for dtype in source.dtypes.values]
 
+        table = pa.Table.from_pandas(source, preserve_index=False)
+        sink = pa.BufferOutputStream()
+        with pa.ipc.new_stream(sink, table.schema) as writer:
+            writer.write_table(table)
+        buf = sink.getvalue()
+
         self.deduced_properties = list(zip(col_names, col_types))
-        self.property_bytes = [source[name].values.tobytes("F") for name in col_names]
+        self.source = bytes(memoryview(buf))
 
     def process_vy_object(self, source):
         self.protocol = "vineyard"
@@ -246,6 +231,8 @@ class Loader(object):
             )
 
     def select_columns(self, columns: Sequence[Tuple[str, int]], include_all=False):
+        self.options.include_columns = []
+        self.options.column_types = []
         for name, data_type in columns:
             self.options.include_columns.append(name)
             self.options.column_types.append(data_type)
@@ -263,16 +250,8 @@ class Loader(object):
             attr.func.attr[types_pb2.VALUES].CopyFrom(
                 utils.bytes_to_attr(source.encode("utf-8"))
             )
-        elif self.protocol in ("numpy", "pandas"):
-            attr.func.attr[types_pb2.ROW_NUM].CopyFrom(utils.i_to_attr(self.row_num))
-            attr.func.attr[types_pb2.COLUMN_NUM].CopyFrom(
-                utils.i_to_attr(self.column_num)
-            )
-            # Use key start from 10000 + col_index to store raw bytes.
-            for i in range(len(self.property_bytes)):
-                attr.func.attr[10000 + i].CopyFrom(
-                    utils.bytes_to_attr(self.property_bytes[i])
-                )
+        elif self.protocol == "pandas":
+            attr.func.attr[types_pb2.VALUES].CopyFrom(utils.bytes_to_attr(self.source))
         else:  # Let vineyard handle other data source.
             attr.func.attr[types_pb2.VALUES].CopyFrom(
                 utils.bytes_to_attr(self.source.encode("utf-8"))

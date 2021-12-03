@@ -17,20 +17,14 @@
 #
 
 
-import atexit
 import json
 import logging
 import os
 import queue
 import random
-import re
-import subprocess
-import sys
-import threading
 import time
 
 from kubernetes import client as kube_client
-from kubernetes import watch as kube_watch
 from kubernetes.client import CoreV1Api
 from kubernetes.client.rest import ApiException as K8SApiException
 
@@ -50,6 +44,7 @@ from graphscope.deploy.kubernetes.utils import wait_for_deployment_complete
 from graphscope.deploy.launcher import Launcher
 from graphscope.framework.errors import K8sError
 from graphscope.framework.utils import random_string
+from graphscope.version import __version__
 
 logger = logging.getLogger("graphscope")
 
@@ -69,6 +64,8 @@ class KubernetesClusterLauncher(Launcher):
     _cluster_role_binding_name_prefix = "gs-cluster-reader-binding-"
 
     _random_coordinator_service_port = random.randint(59001, 60000)
+    # placeholder port sometime is needed, such as sshd service
+    _random_coordinator_placeholder_port = random.randint(60001, 61000)
 
     _url_pattern = r"(?i)\b((?:https?://|www\d{0,3}[.]|[a-z0-9.\-]+[.][a-z]{2,4}/)(?:[^\s()<>]+|\(([^\s()<>]+|(\([^\s()<>]+\)))*\))+(?:\(([^\s()<>]+|(\([^\s()<>]+\)))*\)|[^\s`!()\[\]{};:'\".,<>?«»“”‘’]))"  # noqa: E501
     _endpoint_pattern = r"(?:http.*://)?(?P<host>[^:/ ]+).?(?P<port>[0-9]*).*"
@@ -104,6 +101,8 @@ class KubernetesClusterLauncher(Launcher):
         timeout_seconds=None,
         dangling_timeout_seconds=None,
         k8s_waiting_for_delete=None,
+        mount_dataset=None,
+        k8s_dataset_image=None,
         **kwargs
     ):
         self._api_client = api_client
@@ -248,7 +247,7 @@ class KubernetesClusterLauncher(Launcher):
             role_builer = RoleBuilder(
                 name=self._role_name,
                 namespace=self._namespace,
-                api_groups="apps,",
+                api_groups="apps,extensions,",
                 resources="configmaps,deployments,deployments/status,endpoints,events,pods,pods/log,pods/exec,pods/status,services,replicasets",  # noqa: E501
                 verbs="create,delete,get,update,watch,list",
             )
@@ -307,7 +306,13 @@ class KubernetesClusterLauncher(Launcher):
         logger.info("Launching coordinator...")
         targets = []
 
-        labels = {"name": self._coordinator_name}
+        labels = {
+            "app.kubernetes.io/name": "graphscope",
+            "app.kubernetes.io/instance": self._instance_id,
+            "app.kubernetes.io/version": __version__,
+            "app.kubernetes.io/component": "coordinator",
+        }
+
         # create coordinator service
         service_builder = ServiceBuilder(
             self._coordinator_service_name,
@@ -358,7 +363,9 @@ class KubernetesClusterLauncher(Launcher):
             preemptive=self._saved_locals["preemptive"],
             ports=[
                 self._random_coordinator_service_port,
+                self._random_coordinator_placeholder_port,
             ],
+            module_name=self._coordinator_module_name,
         )
 
         targets.append(
@@ -444,6 +451,15 @@ class KubernetesClusterLauncher(Launcher):
             "--k8s_delete_namespace",
             str(self._delete_namespace),
         ]
+        if self._saved_locals["mount_dataset"] is not None:
+            cmd.extend(
+                [
+                    "--mount_dataset",
+                    self._saved_locals["mount_dataset"],
+                    "--k8s_dataset_image",
+                    self._saved_locals["k8s_dataset_image"],
+                ]
+            )
         return ["-c", " ".join(cmd)]
 
     def _create_services(self):

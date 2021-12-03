@@ -30,7 +30,7 @@ def triangles(graph):
     """Evaluate triangle counting of the graph G.
 
     Args:
-        graph (:class:`Graph`): A projected simple graph.
+        graph (:class:`Graph`): A simple graph.
 
     Returns:
         :class:`graphscope.framework.context.VertexDataContextDAGNode`:
@@ -41,8 +41,8 @@ def triangles(graph):
     .. code:: python
 
         import graphscope as gs
-        sess = gs.session()
-        g = sess.g()
+        g = gs.g()
+        # Load some data, then project to a simple graph (if needed).
         pg = g.project(vertices={"vlabel": []}, edges={"elabel": []})
         r = gs.triangles(pg)
         s.close()

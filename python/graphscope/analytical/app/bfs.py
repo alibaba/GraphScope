@@ -30,20 +30,21 @@ def bfs(graph, src=0):
     """Breadth first search from the src on projected simple graph.
 
     Args:
-        graph (:class:`Graph`): A projected simple graph.
-        src (int, optional): Source vertex of breadth first search. Defaults to 0.
+        graph (:class:`Graph`): A simple graph.
+        src (optional): Source vertex of breadth first search. Defaults to 0.
+            Its type should be consistent with oid type of the `graph`.
 
     Returns:
         :class:`graphscope.framework.context.VertexDataContextDAGNode`:
-            A context with each vertex with a distance from the source, evaluated in eager mode.
+            A context with each vertex with a distance from the source, will be evaluated in eager mode.
 
     Examples:
 
     .. code:: python
 
         import graphscope as gs
-        sess = gs.session()
-        g = sess.g()
+        g = gs.g()
+        # Load some data, then project to a simple graph (if needed).
         pg = g.project(vertices={"vlabel": []}, edges={"elabel": []})
         r = gs.bfs(pg, 6)  # use 6 as source vertex
         s.close()
@@ -59,6 +60,7 @@ def property_bfs(graph, src=0):
     Args:
         graph (:class:`Graph`): A property graph.
         src (int, optional): Source vertex of breadth first search. Defaults to 0.
+            Its type should be consistent with oid type of the `graph`.
 
     Returns:
         :class:`graphscope.framework.context.LabeledVertexDataContextDAGNode`:

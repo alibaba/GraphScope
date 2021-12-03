@@ -1,15 +1,31 @@
+//
+//! Copyright 2021 Alibaba Group Holding Limited.
+//!
+//! Licensed under the Apache License, Version 2.0 (the "License");
+//! you may not use this file except in compliance with the License.
+//! You may obtain a copy of the License at
+//!
+//! http://www.apache.org/licenses/LICENSE-2.0
+//!
+//! Unless required by applicable law or agreed to in writing, software
+//! distributed under the License is distributed on an "AS IS" BASIS,
+//! WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+//! See the License for the specific language governing permissions and
+//! limitations under the License.
+//!
+
 use maxgraph_store::db::api::{GraphConfig, GraphResult, GraphError};
 use std::sync::Arc;
 use maxgraph_store::db::graph::store::GraphStore;
 use std::net::SocketAddr;
-use maxgraph_runtime::store::v2::global_graph::GlobalGraph;
+use maxgraph_runtime::store::groot::global_graph::GlobalGraph;
 use gaia_pegasus::Configuration as GaiaConfig;
 use maxgraph_store::db::api::GraphErrorCode::EngineError;
 use tokio::runtime::Runtime;
 use pegasus_server::service::Service;
-use pegasus_server::rpc::start_rpc_server;
-use pegasus_network::manager::SimpleServerDetector;
-use pegasus_network::config::NetworkConfig;
+use pegasus_server::rpc::{start_rpc_server, RpcService};
+use pegasus_network::SimpleServerDetector;
+use pegasus_network::config::{NetworkConfig, ServerAddr};
 use gs_gremlin::{InitializeJobCompiler, QueryMaxGraph};
 use maxgraph_store::api::PartitionId;
 use gremlin_core::register_gremlin_types;
@@ -71,7 +87,8 @@ impl GaiaServer {
             let query_maxgraph = QueryMaxGraph::new(self.graph.clone(), self.graph.clone(), worker_num, server_id);
             let job_compiler = query_maxgraph.initialize_job_compiler();
             let service = Service::new(job_compiler);
-            let local_addr = start_rpc_server(addr, service, report, false).await.unwrap();
+            let rpc_service = RpcService::new(service, report);
+            let local_addr = start_rpc_server(addr, rpc_service, false).await.unwrap();
             local_addr.port()
         });
         Ok((socket_addr.port(), rpc_port))
@@ -96,6 +113,10 @@ fn make_gaia_config(graph_config: Arc<GraphConfig>) -> GaiaConfig {
             server_port_string.parse().expect("parse gaia.engine.port failed")
         },
     };
+    let worker_num = match graph_config.get_storage_option("worker.num") {
+        None => 1,
+        Some(worker_num_string) => worker_num_string.parse().expect("parse worker.num failed"),
+    };
     let nonblocking = graph_config.get_storage_option("gaia.nonblocking")
         .map(|config_str| config_str.parse().expect("parse gaia.nonblocking failed"));
     let read_timeout_ms = graph_config.get_storage_option("gaia.read.timeout.ms")
@@ -112,21 +133,17 @@ fn make_gaia_config(graph_config: Arc<GraphConfig>) -> GaiaConfig {
         .map(|config_str| config_str.parse().expect("parse gaia.heartbeat.sec failed"));
     let max_pool_size = graph_config.get_storage_option("gaia.max.pool.size")
         .map(|config_str| config_str.parse().expect("parse gaia.max.pool.size failed"));
-    let network_config = NetworkConfig {
-        server_id,
-        ip,
-        port,
-        nonblocking,
-        read_timeout_ms,
-        write_timeout_ms,
-        read_slab_size,
-        no_delay,
-        send_buffer,
-        heartbeat_sec,
-        peers: None,
-    };
+    let mut network_config = NetworkConfig::new(server_id, ServerAddr::new(ip, port), worker_num);
+    network_config.nonblocking(nonblocking)
+        .read_timeout_ms(read_timeout_ms)
+        .write_timeout_ms(write_timeout_ms)
+        .read_slab_size(read_slab_size)
+        .no_delay(no_delay)
+        .send_buffer(send_buffer)
+        .heartbeat_sec(heartbeat_sec);
     GaiaConfig {
         network: Some(network_config),
         max_pool_size,
     }
 }
+

@@ -9,6 +9,10 @@ GraphScope 中的图分析引擎继承自 **GRAPE**，该系统实现了论文 [
 
 GRAPE 的核心轻量版本以 [libgrape-lite](https://github.com/alibaba/libgrape-lite/) 开源。GraphScope 中的分析引擎扩展了 libgrape-lite 的功能，支持了可变子图，[vineyard](https://github.com/alibaba/libvineyard/) 支持以及引擎的服务模式等。
 
+## Java PIE SDK
+
+除了在Python中提供的PIE编程接口之外，GraphScope也提供一个高效的**Java SDK**，借助于它，用户可以在Java中实现图分析算法，并且提交到GraphScope上运行。更多细节请查看[GRAPE-JDK](java/)。
+
 ## 论文列表
 
 - Wenfei Fan, Jingbo Xu, Wenyuan Yu, Jingren Zhou, Xiaojian Luo, Ping Lu, Qiang Yin, Yang Cao, and Ruiqi Xu. [Parallelizing Sequential Graph Computations](https://dl.acm.org/doi/10.1145/3282488). ACM Transactions on Database Systems (TODS) 43(4): 18:1-18:39.

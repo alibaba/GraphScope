@@ -13,6 +13,7 @@
  */
 package com.alibaba.graphscope.groot.frontend;
 
+import com.alibaba.graphscope.groot.SnapshotCache;
 import com.alibaba.graphscope.groot.schema.EdgeKind;
 import com.alibaba.graphscope.groot.schema.GraphDef;
 import com.alibaba.graphscope.groot.schema.GraphSchemaMapper;
@@ -306,6 +307,17 @@ public class ClientService extends ClientGrpc.ClientImplBase {
     public void getSchema(GetSchemaRequest request, StreamObserver<GetSchemaResponse> observer) {
         GraphDef graphDef = this.snapshotCache.getSnapshotWithSchema().getGraphDef();
         observer.onNext(GetSchemaResponse.newBuilder().setGraphDef(graphDef.toProto()).build());
+        observer.onCompleted();
+    }
+
+    @Override
+    public void getLoggerInfo(GetLoggerInfoRequest request, StreamObserver<GetLoggerInfoResponse> observer) {
+        GetLoggerInfoResponse response = GetLoggerInfoResponse.newBuilder()
+                .setLoggerServers(metaService.getLoggerServers())
+                .setLoggerTopic(metaService.getLoggerTopicName())
+                .setLoggerQueueCount(metaService.getQueueCount())
+                .build();
+        observer.onNext(response);
         observer.onCompleted();
     }
 

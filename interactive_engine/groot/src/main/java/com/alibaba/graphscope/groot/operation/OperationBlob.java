@@ -40,6 +40,10 @@ public class OperationBlob {
         return partitionKey;
     }
 
+    public OperationType getOperationType() {
+        return operationType;
+    }
+
     public OperationPb toProto() {
         return OperationPb.newBuilder()
                 .setPartitionKey(partitionKey)

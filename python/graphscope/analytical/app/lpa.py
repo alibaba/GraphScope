@@ -40,8 +40,8 @@ def lpa(graph, max_round=10):
     .. code:: python
 
         import graphscope as gs
-        sess = gs.session()
-        g = sess.g()
+        g = gs.g()
+        # Load some data
         r = gs.lpa(g)
         s.close()
 

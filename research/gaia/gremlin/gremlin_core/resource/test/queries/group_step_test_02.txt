@@ -1,1 +1,0 @@
-g.V().groupCount().unfold().order().by(select(keys).values("id"))

@@ -1,0 +1,39 @@
+# Copyright 2020 Alibaba Group Holding Limited.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+# 	http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+
+if [[ "$GRAPHSCOPE_HOME"x == x ]];
+then
+    echo "No GRAPHSCOPE_HOME found, using default /opt/graphscope/"
+    export GRAPHSCOPE_HOME=/opt/graphscope
+fi
+
+# This env point to the directory where the output for llvm4jni run.sh on Grape-runtime.jar resides
+if [[ "${RUNTIME_LLVM4JNI_OUTPUT}"x != x ]];
+then
+    echo "find env RUNTIME_LLVM4JNI_OUTPUT, append to init java class path"
+    class_path=${RUNTIME_LLVM4JNI_OUTPUT}:${GRAPHSCOPE_HOME}/lib/grape-runtime-0.1-shaded.jar
+else 
+    class_path=${GRAPHSCOPE_HOME}/lib/grape-runtime-0.1-shaded.jar
+fi
+
+export GRAPE_JVM_OPTS="-Dcom.alibaba.fastffi.rvBuffer=2147483648 -XX:+StartAttachListener -XX:+PreserveFramePointer \
+-XX:+UseParallelGC -XX:+UseParallelOldGC -XX:+PrintGCDetails -XX:+PrintGCDateStamps \
+-XX:+UnlockDiagnosticVMOptions -XX:LoopUnrollLimit=1 \
+-XX:CompileCommandFile=${GRAPHSCOPE_HOME}/conf/compile-commands.txt \
+-Djava.library.path=${GRAPHSCOPE_HOME}/lib \
+-Djava.class.path=${class_path}"
+
+#-XX:+PrintInlining \
+#-XX:+TraceClassLoading \

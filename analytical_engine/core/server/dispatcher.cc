@@ -14,6 +14,7 @@
  */
 
 #include "core/server/dispatcher.h"
+#include "core/io/property_parser.h"
 
 namespace gs {
 
@@ -95,13 +96,41 @@ std::shared_ptr<DispatchResult> Dispatcher::processCmd(
   return r;
 }
 
+void Dispatcher::publisherPreprocessCmd(CommandDetail& cmd) {
+  if (cmd.type == rpc::CREATE_GRAPH || cmd.type == rpc::ADD_LABELS) {
+    // Distribute raw bytes if there are some data from pandas
+    auto params_vec = DistributeGraph(cmd.params, comm_spec_.worker_num());
+    CHECK_EQ(static_cast<int>(params_vec.size()), comm_spec_.worker_num());
+    for (int i = 1; i < comm_spec_.worker_num(); ++i) {
+      grape::InArchive ia;
+      cmd.params = params_vec[i];
+      ia << cmd;
+      grape::SendArchive(ia, i, MPI_COMM_WORLD);
+    }
+    cmd.params = params_vec[0];
+  } else {
+    grape::BcastSend(cmd, MPI_COMM_WORLD);
+  }
+}
+
+void Dispatcher::subscriberPreprocessCmd(rpc::OperationType type,
+                                         CommandDetail& cmd) {
+  if (type == rpc::CREATE_GRAPH || type == rpc::ADD_LABELS) {
+    grape::OutArchive oa;
+    grape::RecvArchive(oa, grape::kCoordinatorRank, MPI_COMM_WORLD);
+    oa >> cmd;
+  } else {
+    grape::BcastRecv(cmd, MPI_COMM_WORLD, grape::kCoordinatorRank);
+  }
+}
+
 void Dispatcher::publisherLoop() {
   CHECK_EQ(comm_spec_.worker_id(), grape::kCoordinatorRank);
   while (running_) {
     auto cmd = cmd_queue_.Pop();
+    grape::BcastSend(cmd.type, MPI_COMM_WORLD);
+    publisherPreprocessCmd(cmd);
     // process local event
-    grape::BcastSend(cmd, MPI_COMM_WORLD);
-
     auto r = processCmd(cmd);
     std::vector<DispatchResult> results(comm_spec_.worker_num());
 
@@ -115,9 +144,10 @@ void Dispatcher::publisherLoop() {
 void Dispatcher::subscriberLoop() {
   CHECK_NE(comm_spec_.worker_id(), grape::kCoordinatorRank);
   while (running_) {
+    rpc::OperationType type;
+    grape::BcastRecv(type, MPI_COMM_WORLD, grape::kCoordinatorRank);
     CommandDetail cmd;
-
-    grape::BcastRecv(cmd, MPI_COMM_WORLD, grape::kCoordinatorRank);
+    subscriberPreprocessCmd(type, cmd);
     auto r = processCmd(cmd);
 
     vineyard::_GatherL(*r, grape::kCoordinatorRank, comm_spec_.comm());

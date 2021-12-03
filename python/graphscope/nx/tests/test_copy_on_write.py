@@ -26,6 +26,7 @@ import graphscope
 import graphscope.nx as nx
 from graphscope.framework.errors import InvalidArgumentError
 from graphscope.framework.loader import Loader
+from graphscope.nx import NetworkXError
 from graphscope.nx.tests.classes.test_digraph import TestDiGraph as _TestDiGraph
 from graphscope.nx.tests.classes.test_graph import TestGraph as _TestGraph
 from graphscope.nx.tests.utils import almost_equal
@@ -74,6 +75,31 @@ def simple_label_graph(prefix, directed):
     )
     graph = graph.add_edges(
         Loader(os.path.join(prefix, "simple_e_1.csv")),
+        "e-1",
+        src_label="v-0",
+        dst_label="v-1",
+    )
+    graph = graph.add_edges(
+        Loader(os.path.join(prefix, "simple_e_2.csv")),
+        "e-2",
+        src_label="v-1",
+        dst_label="v-1",
+    )
+    return graph
+
+
+def simple_label_multigraph(prefix, directed):
+    graph = graphscope.g(directed=directed, generate_eid=False)
+    graph = graph.add_vertices(Loader(os.path.join(prefix, "simple_v_0.csv")), "v-0")
+    graph = graph.add_vertices(Loader(os.path.join(prefix, "simple_v_1.csv")), "v-1")
+    graph = graph.add_edges(
+        Loader(os.path.join(prefix, "simple_e_0.csv")),
+        "e-0",
+        src_label="v-0",
+        dst_label="v-0",
+    )
+    graph = graph.add_edges(
+        Loader(os.path.join(prefix, "simple_e_1_multiple.csv")),
         "e-1",
         src_label="v-0",
         dst_label="v-1",
@@ -137,13 +163,22 @@ class TestGraphCopyOnWrite(_TestGraph):
                 (6, 7, {"weight": 2}),
             ]
         else:
-            elist = [
-                (0, 1, {}),
-                (2, 0, {}),  # N.B: diff with _TestGraph, update the order of id
-                (2, 1, {}),
-                (4, 5, {}),
-                (6, 7, {"weight": 2}),
-            ]
+            if os.environ.get("DEPLOYMENT", None) == "standalone":
+                elist = [
+                    (0, 1, {}),
+                    (0, 2, {}),
+                    (1, 2, {}),
+                    (4, 5, {}),
+                    (6, 7, {"weight": 2}),
+                ]
+            else:  # num_workers=2
+                elist = [
+                    (0, 1, {}),
+                    (2, 0, {}),  # N.B: diff with _TestGraph, update the order of id
+                    (2, 1, {}),
+                    (4, 5, {}),
+                    (6, 7, {"weight": 2}),
+                ]
         assert sorted(G.edges.data()) == elist
         assert G.graph == {}
 
@@ -178,7 +213,7 @@ class TestGraphCopyOnWrite(_TestGraph):
         if H.is_directed():
             assert sorted(H.edges.data()) == [(3, 4, {})]
         else:
-            assert sorted(H.edges.data()) == [(4, 3, {})]
+            assert sorted(H.edges.data()) in ([(3, 4, {})], [(4, 3, {})])
         assert H.size() == 1
 
         # No inputs -> exception
@@ -208,6 +243,7 @@ class TestBuiltinCopyOnWrite:
         p2p_dir = os.path.expandvars("${GS_TEST_DIR}")
 
         self.simple = simple_label_graph(data_dir, True)
+        self.multi_simple = simple_label_multigraph(data_dir, True)
         self.SG = nx.DiGraph(self.simple, default_label="v-0")
         self.SG.pagerank = {
             1: 0.03721197,
@@ -261,6 +297,13 @@ class TestBuiltinCopyOnWrite:
         #         prefix="",
         #     ).values
         # )
+
+    def test_error_with_multigraph(self):
+        with pytest.raises(
+            NetworkXError,
+            match="Graph is multigraph, cannot be converted to networkx graph",
+        ):
+            MSG = nx.DiGraph(self.multi_simple)
 
     def test_single_source_dijkstra_path_length(self):
         ret = nx.builtin.single_source_dijkstra_path_length(
@@ -319,7 +362,7 @@ class TestBuiltinCopyOnWrite:
 
     def test_bfs_edges(self):
         ret = nx.builtin.bfs_edges(self.SG, 1, depth_limit=10)
-        assert sorted(ret) == [[1, 3], [3, 5], [4, 6], [5, 4]]
+        assert sorted(ret) == [[1, 2], [1, 3], [3, 5], [5, 4], [5, 6]]
 
     def bfs_tree(self):
         ret = nx.builtin.bfs_tree(self.SG, 1, depth_limit=10)
@@ -355,7 +398,7 @@ class TestBuiltinCopyOnWrite:
 
     def test_edge_boundary(self):
         ret = nx.builtin.edge_boundary(self.SG, [1, 2])
-        assert ret == [[2, 3], [1, 3]]
+        assert ret == [[1, 3]]
 
     def test_attribute_assortativity_coefficient(self):
         ret = nx.builtin.attribute_assortativity_coefficient(self.SG, attribute="attr")

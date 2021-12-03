@@ -9,15 +9,15 @@ RUN yum -y update && \
     rm -fr /var/cache/yum
 
 
-# Add the user UID:1000, GID:1000, home at /app
-RUN groupadd -r app -g 1000 && useradd -u 1000 -r -g app -m -d /app -s /sbin/nologin -c "App user" app && \
-    chmod 755 /app
+RUN useradd -m graphscope -u 1001 && \
+    echo 'graphscope ALL=(ALL) NOPASSWD:ALL' >> /etc/sudoers
 
-RUN python3 -m pip install --upgrade pip
-RUN python3 -m pip install jupyterlab graphscope
+USER graphscope
+WORKDIR /home/graphscope
 
-RUN mkdir -p /main
+ENV PATH=${PATH}:/home/graphscope/.local/bin
 
-WORKDIR /main
+RUN python3 -m pip install --upgrade pip --user
+RUN python3 -m pip install jupyterlab graphscope-client==0.8.0 --user
 
-CMD ["jupyter", "lab", "--port=8888", "--no-browser", "--ip=0.0.0.0", "--allow-root"]
+CMD ["jupyter", "lab", "--port=8888", "--no-browser", "--ip=0.0.0.0"]

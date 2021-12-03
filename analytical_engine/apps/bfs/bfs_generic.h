@@ -83,20 +83,10 @@ class BFSGeneric : public AppBase<FRAG_T, BFSGenericContext<FRAG_T>>,
     vertex_t u;
     while (messages.GetMessage<fragment_t, vid_t>(frag, u, msg)) {
       // Update predecessor of mirror u in this fragment.
-      ctx.visited[u] = true;
-      ctx.predecessor[u] = msg;
-      vid_t u_vid = frag.Vertex2Gid(u);
-      // Iterate and activate all unvisited neighbors.
-      for (auto w : inner_vertices) {
-        if (ctx.visited[w] == false) {
-          auto oes = frag.GetOutgoingAdjList(w);
-          for (auto& e : oes)
-            if (e.get_neighbor() == u) {
-              ctx.visited[w] = true;
-              ctx.predecessor[w] = u_vid;
-              ctx.next_level_inner.push(w);
-            }
-        }
+      if (ctx.visited[u] == false) {
+        ctx.predecessor[u] = msg;
+        ctx.next_level_inner.push(u);
+        ctx.visited[u] = true;
       }
     }
     ctx.curr_level_inner.swap(ctx.next_level_inner);
@@ -112,13 +102,18 @@ class BFSGeneric : public AppBase<FRAG_T, BFSGenericContext<FRAG_T>>,
         ctx.curr_level_inner.pop();
         vertexProcess(v, frag, ctx, messages);
       }
+    }
 
-      // Make sure IncEval continues when all activated neighbor is local.
-      if (ctx.next_level_inner.empty()) {
-        writeToCtx(frag, ctx);
-      } else {
-        messages.ForceContinue();
-      }
+    // Make sure IncEval continues when all activated neighbor is local.
+    int terminate_worker_num = 0;
+    if (ctx.next_level_inner.empty() || ctx.depth == ctx.depth_limit) {
+      Sum(1, terminate_worker_num);
+    } else {
+      Sum(0, terminate_worker_num);
+      messages.ForceContinue();
+    }
+    if (terminate_worker_num == frag.fnum()) {
+      writeToCtx(frag, ctx);
     }
 #ifdef PROFILING
     ctx.post_time += GetCurrentTime();
@@ -133,22 +128,18 @@ class BFSGeneric : public AppBase<FRAG_T, BFSGenericContext<FRAG_T>>,
     auto& predecessor = ctx.predecessor;
     auto source_id = ctx.source_id;
     size_t row_num = 0;
-    std::vector<typename fragment_t::oid_t> data;
+    std::vector<std::pair<vid_t, vid_t>> bfs_edges;
 
     if (output_format == "edges") {
       for (auto v : inner_vertices) {
         if (visited[v] && frag.GetId(v) != source_id) {
-          data.push_back(frag.Gid2Oid(predecessor[v]));
-          data.push_back(frag.GetId(v));
-          row_num++;
+          bfs_edges.emplace_back(predecessor[v], frag.Vertex2Gid(v));
         }
       }
     } else if (output_format == "predecessors") {
       for (auto v : inner_vertices) {
         if (visited[v] && frag.GetId(v) != source_id) {
-          data.push_back(frag.GetId(v));
-          data.push_back(frag.Gid2Oid(predecessor[v]));
-          row_num++;
+          bfs_edges.emplace_back(frag.Vertex2Gid(v), predecessor[v]);
         }
       }
     } else if (output_format == "successors") {
@@ -158,38 +149,48 @@ class BFSGeneric : public AppBase<FRAG_T, BFSGenericContext<FRAG_T>>,
           auto oes = frag.GetOutgoingAdjList(v);
           for (auto& e : oes) {
             if (predecessor[e.get_neighbor()] == v_vid) {
-              data.push_back(frag.GetId(v));
-              data.push_back(frag.GetId(e.get_neighbor()));
-              row_num++;
+              bfs_edges.emplace_back(v_vid, frag.Vertex2Gid(e.get_neighbor()));
             }
           }
         }
       }
     }
-    std::vector<size_t> shape{row_num, 2};
-    ctx.assign(data, shape);
+    std::vector<std::pair<vid_t, vid_t>> all_bfs_edges;
+    AllReduce(bfs_edges, all_bfs_edges,
+              [](std::vector<std::pair<vid_t, vid_t>>& out,
+                 const std::vector<std::pair<vid_t, vid_t>>& in) {
+                for (auto& e : in) {
+                  out.push_back(e);
+                }
+              });
+    bfs_edges.clear();
+
+    if (frag.fid() == 0) {
+      std::vector<typename fragment_t::oid_t> data;
+      for (auto& e : all_bfs_edges) {
+        data.push_back(frag.Gid2Oid(e.first));
+        data.push_back(frag.Gid2Oid(e.second));
+      }
+      std::vector<size_t> shape{data.size() / 2, 2};
+      ctx.assign(data, shape);
+    }
   }
 
   void vertexProcess(vertex_t v, const fragment_t& frag, context_t& ctx,
                      message_manager_t& messages) {
     vid_t v_vid = frag.Vertex2Gid(v);
     auto oes = frag.GetOutgoingAdjList(v);
-    bool need_sync = false;
     for (auto& e : oes) {
       vertex_t u = e.get_neighbor();
-      if (!frag.IsOuterVertex(u)) {
-        if (ctx.visited[u] == false) {
+      if (ctx.visited[u] == false) {
+        if (!frag.IsOuterVertex(u)) {
           ctx.predecessor[u] = v_vid;
           ctx.next_level_inner.push(u);
+        } else {
+          messages.SyncStateOnOuterVertex<fragment_t, vid_t>(frag, u, v_vid);
         }
-      } else {
-        need_sync = true;
+        ctx.visited[u] = true;
       }
-      ctx.visited[u] = true;
-    }
-    if (need_sync) {
-      messages.SendMsgThroughOEdges<fragment_t, vid_t>(frag, v,
-                                                       ctx.predecessor[v]);
     }
   }
 };

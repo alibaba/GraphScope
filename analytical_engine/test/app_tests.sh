@@ -386,5 +386,16 @@ exact_verify "${test_dir}"/twitter-sssp-4
 run ${np} ./run_pregel_app tc "${test_dir}"/p2p-31.e "${test_dir}"/p2p-31.v ./test_output 
 exact_verify "${test_dir}/p2p-31"-triangles
 
+if [[ "${RUN_JAVA_TESTS}" == "ON" ]];
+then
+  if [[ "${USER_JAR_PATH}"x != ""x ]]
+  then
+    echo "Running Java tests..."
+    run_vy ${np} ./run_java_app "${socket_file}" 2 "${test_dir}"/new_property/v2_e2/twitter_e 2 "${test_dir}"/new_property/v2_e2/twitter_v 0 0 1 com.alibaba.graphscope.example.property.sssp.ParallelPropertySSSPVertexData
+  fi
+fi
+
+
+
 info "Passed all tests for GraphScope analytical engine."
 

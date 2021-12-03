@@ -1,40 +1,70 @@
 Developer Guide
 ===============
 
-GraphScope has been developed by an active team of software engineers and researchers.
-Any contributions from the open-source community to improve this project are greatly appreciated!
+`GraphScope <https://github.com/alibaba/GraphScope>`_ has been developed by an active team of
+software engineers and researchers. Any contributions from the open-source community to improve
+this project are greatly appreciated!
 
 GraphScope is licensed under Apache License 2.0.
 
 
-Building and Testing
---------------------
+Building and Testing GraphScope locally with Docker
+---------------------------------------------------
 
-GraphScope has many dependencies.
-
-To make life easier, we provide two docker images with all required dependencies
-installed.
-
-    - `graphscope-vineyard` as the builder, and
-    - `graphscope-runtime` as the base image for runtime.
-
-For developers, they just need to ``git clone`` the latest version of code from
-our `repo <https://github.com/alibaba/GraphScope>`_,
-make their changes to the code and build with command in the root:
+GraphScope has many dependencies. To make life easier, We provide a docker image based on centos7
+with all required dependencies installed.
 
 .. code:: bash
 
-    make graphscope
+    sudo docker pull registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-vineyard:latest
 
-This command triggers the building process.
-It will build the current source code in a container with image `graphscope-vineyard`,
-and copy built binaries into a new image based from `graphscope-runtime`.
+For developers, they just need to ``git clone`` the latest version of code from our `repo <https://github.com/alibaba/GraphScope>`_,
+make their changes to the code and build GraphScope with command:
+
+.. code:: bash
+
+    # set docker container shared memory: 10G
+    sudo docker run --shm-size 10240m -it registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-vineyard:latest /bin/bash
+
+    git clone https://github.com/alibaba/GraphScope.git
+    
+    # download dataset for test
+    git clone https://github.com/GraphScope/gstest.git
+
+    # building
+    cd GraphScope && make install
+
+    # testing
+    cd GraphScope && make minitest(unittest)
+
+If you just change or want to build one of the specific components of graphscope, such as `python client` or `analytical engine`,
+you can run command with:
+
+.. code:: bash
+
+    cd GraphScope
+    # make client/gae/gie/gle/coordinator
+    make client
+
+
+Building and Testing GraphScope on Kubernetes
+---------------------------------------------
+
+For developers, they just need to ``git clone`` the latest version of code from our `repo <https://github.com/alibaba/GraphScope>`_,
+make their changes to the code and build with command to build graphscope image:
+
+.. code:: bash
+
+    cd GraphScope
+    make graphscope-dev-image
+
+This command triggers the building process. It will build the current source code in a container with
+image `graphscope-vineyard`, and copy built binaries into a new image based from `graphscope-runtime`. 
 The generated releasing image is tagged as ``graphscope/graphscope:SHORTSHA``
 
-GraphScope python client is separate with the engines image.
-If you are developing python client and not modifying the proto files,
-the engines image doesn't need to rebuild.
-You may want to re-install the python client on local.
+GraphScope python client is separate with the engines image. If you are developing python client and
+not modifying the proto files, the engines image doesn't need to rebuild. You may want to reinstall
+the python client on local.
 
 .. code:: bash
 
@@ -53,109 +83,58 @@ To test the newly built binaries, manually open a session and assigned your imag
     # ...
 
 
-Or use the test script to pass all test cases.
-
-.. code:: bash
-
-    ./scripts/test.sh --all --image graphscope/graphscope:SHORTSHA
-
-
-Building and Testing GraphScope Locally with Docker
----------------------------------------------------
-
-We provide a docker images based on ubuntu:20.04 with all required dependencies
-installed.
-
-    - registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-vineyard:ubuntu
-
-For developers, they just need to start a container with ``docker run`` and
-``git clone`` the latest version of code from our `repo <https://github.com/alibaba/GraphScope>`_,
-make their changes to the code and build with command:
-
-.. code:: bash
-
-    docker pull registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-vineyard:ubuntu
-    # set docker container shared memory: 10G
-    docker run --shm-size 10240m -it registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-vineyard:ubuntu /bin/bash
-    # inner container
-    git clone https://github.com/alibaba/GraphScope.git
-    git clone https://github.com/GraphScope/gstest.git
-    # building
-    export WITH_LEARNING_ENGINE=ON
-    export GRAPHSCOPE_HOME=/opt/graphscope
-    cd GraphScope && make INSTALL_PREFIX=/opt/graphscope install
-    # testing:
-    #   export GS_TEST_DIR=<path_to_your_gstest_dir>
-    cd GraphScope/python && python3 -m pytest -s -v ./tests/unittest
-
-
 Build Python Wheels
 -------------------
-
-GraphScope's python client can run on Linux and MacOS, which can be installed from wheel packages we
-distributed on `pypi <https://pypi.org/project/graphscope>`_. For developers, the wheel packages could
-be built via the following procedure:
 
 Linux
 ^^^^^
 
-The wheel packages for Linux is built inside the manylinux2010 environment. The pre-built docker image
-is available via
+The wheel packages for Linux is built inside the manylinux2014 environment.
+
+- Build GraphScope Server Wheels
 
 .. code:: bash
 
-    docker pull registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-manylinux2010:latest
+    cd GraphScope
+    make graphscope-py3-package
 
-Or, you can build the image from scratch. Assuming you are in the root directory of GraphScope repository,
-You could build the docker image (note that you only need to rebuild the docker image when you
-update dependencies in :code:`manylinux2010.Dockerfile`) by
-
-.. code:: bash
-
-    cd k8s
-    make graphscope-manylinux2010
-
-The wheel packages for python{36,37,38,39} could be build by the following command:
+- Build GraphScope Client Wheels for python{36,37,38,39}
 
 .. code:: bash
 
-    cd k8s
-    make graphscope-manylinux2010-py{36,37,38,39}
+    cd GraphScope
+    make graphscope-client-py3-package
+
 
 MacOS
 ^^^^^
 
-The wheel packages for MacOS could be built directly on Mac. Assuming you are in the root directory of
-GraphScope repository:
+The wheel packages for MacOS could be built directly on Mac, thus you need to install the dependent locally first.
 
 .. code:: bash
 
-    python3 setup.py bdist_wheel
-
-To make sure the maximum compatibility you may need:
-
-.. code:: bash
-
-    python3 setup.py bdist_wheel --plat-name macosx-10.9-x86_64
-
-Note that if you want to build wheel packages for different Python versions, you may need to install multiple
-version of Python using `conda` or `pyenv`.
-
-The GraphScope analytical engine and interactive engine could be built locally on mac with script.
-
-If GraphScope's dependencies are not satisfied，you could use the to install
-dependencies of GraphScope.
-
-.. code::shell
-
-    ./scripts/deploy_local.sh install_deps
+    cd GraphScope
+    ./scripts/install_deps.sh --dev --vineyard_prefix /opt/vineyard
     source ~/.graphscope_env
 
-Deploy the GraphScope with the script
+Assuming you are in the root directory of GraphScope repository.
 
-.. code::shell
+- Build GraphScope Server Wheels
 
-    ./scripts/deploy_local.sh build_and_deploy
+.. code:: bash
+
+    cd GraphScope
+    make graphscope-py3-package
+
+Build GraphScope Client Wheels for specified python version.
+
+.. code:: bash
+
+    cd GraphScope
+    make graphscope-client-py3-package
+
+Note that if you want to build wheel packages for different Python versions, you may need to install multiple
+version of Python using `conda <https://docs.conda.io/en/latest/>`_ or `pyenv <https://github.com/pyenv/pyenv>`_.
 
 
 Code Format

@@ -5,6 +5,7 @@ use std::sync::Arc;
 
 use crate::db::api::*;
 use super::{StorageIter, StorageRes, ExternalStorage, ExternalStorageBackup};
+use crate::db::storage::{KvPair, RawBytes};
 
 pub struct RocksDB {
     db: Arc<DB>,
@@ -112,7 +113,41 @@ impl ExternalStorage for RocksDB {
         };
         Ok(Box::from(ret))
     }
+
+    fn new_scan(&self, prefix: &[u8]) -> GraphResult<Box<dyn Iterator<Item=KvPair> + Send>> {
+        let mut iter = match bytes_upper_bound(prefix) {
+            Some(upper) => {
+                let mut option = ReadOptions::default();
+                option.set_iterate_upper_bound(upper);
+                self.db.raw_iterator_opt(option)
+            }
+            None => self.db.raw_iterator(),
+        };
+        iter.seek(prefix);
+        Ok(Box::new(Scan::new(iter)))
+    }
 }
+
+pub struct Scan {
+    inner_iter: RocksDBIter<'static>,
+}
+
+impl Scan {
+    pub fn new(iter: DBRawIterator) -> Self {
+        Scan {
+            inner_iter: unsafe { std::mem::transmute(RocksDBIter::new(iter)) },
+        }
+    }
+}
+
+impl Iterator for Scan {
+    type Item = KvPair;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        self.inner_iter.next().map(|(k, v)| (RawBytes::new(k), RawBytes::new(v)))
+    }
+}
+
 
 impl ExternalStorageBackup for RocksDBBackupEngine {
     /// Optimize this method after a new rust-rocksdb version.
@@ -138,29 +173,11 @@ impl ExternalStorageBackup for RocksDBBackupEngine {
         Ok(())
     }
 
-    fn purge_old_backups(&mut self, num_backups_to_keep: usize) -> GraphResult<()> {
-        self.backup_engine.purge_old_backups(num_backups_to_keep).map_err(|e| {
-            let msg = format!("purge old rocksdb backups failed, because {}", e.into_string());
-            gen_graph_err!(GraphErrorCode::ExternalStorageError, msg)
-        })?;
-        Ok(())
-    }
-
     fn restore_from_backup(&mut self, restore_path: &str, backup_id: BackupId) -> GraphResult<()> {
         let mut restore_option = RestoreOptions::default();
         restore_option.set_keep_log_files(false);
         self.backup_engine.restore_from_backup(restore_path, restore_path, &restore_option, backup_id as u32).map_err(|e| {
             let msg = format!("restore from rocksdb backup {} failed, because {}", backup_id, e.into_string());
-            gen_graph_err!(GraphErrorCode::ExternalStorageError, msg)
-        })?;
-        Ok(())
-    }
-
-    fn restore_from_latest_backup(&mut self, restore_path: &str) -> GraphResult<()> {
-        let mut restore_option = RestoreOptions::default();
-        restore_option.set_keep_log_files(false);
-        self.backup_engine.restore_from_latest_backup(restore_path, restore_path, &restore_option).map_err(|e| {
-            let msg = format!("restore from latest rocksdb backup failed, because {}", e.into_string());
             gen_graph_err!(GraphErrorCode::ExternalStorageError, msg)
         })?;
         Ok(())

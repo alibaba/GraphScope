@@ -129,13 +129,23 @@ void PropertyTableAppender::Apply(
     size_t property_size, Property* properties,
     std::map<int, int> const& property_id_mapping,
     std::shared_ptr<arrow::RecordBatch>& batch_out) {
-  VINEYARD_ASSERT(col_num_ == 1 + property_size);
+  std::set<int> prop_ids, processed;
+  processed.emplace(0);
   generic_appender<VertexId>(builder->GetField(0), id);
   for (size_t i = 0; i < property_size; ++i) {
 #ifndef NDEBUG
     LOG(INFO) << "vertex property: " << i << " -> id = " << properties[i].id;
 #endif
+    if (prop_ids.find(properties[i].id) != prop_ids.end()) {
+#ifndef NDEBUG
+      LOG(WARNING) << "detect duplicate vertex property id, ignored: "
+                   << properties[i].id;
+#endif
+      continue;
+    }
+    prop_ids.emplace(properties[i].id);
     int index = property_id_mapping.at(properties[i].id);
+    processed.emplace(index);
 #ifndef NDEBUG
     LOG(INFO) << "vertex properties: i = " << i
               << ", type = " << properties[i].type
@@ -143,6 +153,13 @@ void PropertyTableAppender::Apply(
               << ", prop_id = " << properties[i].id;
 #endif
     funcs_[index](builder->GetField(index), properties + i);
+  }
+  for (size_t i = 0; i < builder->num_fields(); ++i) {
+    // fill a null value for missing values to make sure columns
+    // has the same length before being finalized.
+    if (processed.find(i) == processed.end()) {
+      builder->GetField(i)->AppendNull();
+    }
   }
   if (builder->GetField(0)->length() == builder->initial_capacity()) {
     CHECK_ARROW_ERROR(builder->Flush(&batch_out));
@@ -155,14 +172,25 @@ void PropertyTableAppender::Apply(
     size_t property_size, Property* properties,
     std::map<int, int> const& property_id_mapping,
     std::shared_ptr<arrow::RecordBatch>& batch_out) {
-  VINEYARD_ASSERT(col_num_ == 2 + property_size);
+  std::set<int> prop_ids, processed;
+  processed.emplace(0);
+  processed.emplace(1);
   generic_appender<VertexId>(builder->GetField(0), src_id);
   generic_appender<VertexId>(builder->GetField(1), dst_id);
   for (size_t i = 0; i < property_size; ++i) {
 #ifndef NDEBUG
     LOG(INFO) << "edge property: " << i << " -> id = " << properties[i].id;
 #endif
+    if (prop_ids.find(properties[i].id) != prop_ids.end()) {
+#ifndef NDEBUG
+      LOG(WARNING) << "detect duplicate edge property id, ignored: "
+                   << properties[i].id;
+#endif
+      continue;
+    }
+    prop_ids.emplace(properties[i].id);
     int index = property_id_mapping.at(properties[i].id);
+    processed.emplace(index);
 #ifndef NDEBUG
     LOG(INFO) << "edge properties: i = "
               << i << ", type = "
@@ -172,6 +200,13 @@ void PropertyTableAppender::Apply(
               << ", prop_id = " << properties[i].id;
 #endif
     funcs_[index](builder->GetField(index), properties + i);
+  }
+  for (size_t i = 0; i < builder->num_fields(); ++i) {
+    // fill a null value for missing values to make sure columns
+    // has the same length before being finalized.
+    if (processed.find(i) == processed.end()) {
+      builder->GetField(i)->AppendNull();
+    }
   }
   if (builder->GetField(0)->length() == builder->initial_capacity()) {
     CHECK_ARROW_ERROR(builder->Flush(&batch_out));

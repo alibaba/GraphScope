@@ -241,7 +241,7 @@ def empty_graph(n=0, create_using=None, default=nx.Graph, **kw):
         G = default(**kw)
     elif hasattr(create_using, "_adj"):
         # create_using is a NetworkX style Graph
-        # create_using.clear()
+        create_using.clear()
         G = create_using
     else:
         # try create_using as constructor

@@ -25,6 +25,8 @@
 
 #include "vineyard/graph/fragment/arrow_fragment.h"
 
+#include "core/utils/convert_utils.h"
+
 namespace gs {
 /**
  * @brief A utility class to pack basic C++ data type to folly::dynamic
@@ -84,57 +86,6 @@ class ArrowToDynamicConverter {
   }
 
  private:
-  bl::result<void> extractProperty(const std::shared_ptr<arrow::Table>& table,
-                                   int64_t row_id, int col_id,
-                                   folly::dynamic& data) {
-    auto column = table->column(col_id);
-    auto type = column->type();
-    auto prop_key = table->field(col_id)->name();
-
-    CHECK_LE(column->num_chunks(), 1);
-    if (data.find(prop_key) != data.items().end()) {
-      RETURN_GS_ERROR(vineyard::ErrorCode::kIllegalStateError,
-                      "Duplicated key " + prop_key);
-    }
-    if (type == arrow::int32()) {
-      auto array =
-          std::dynamic_pointer_cast<arrow::Int32Array>(column->chunk(0));
-      data[prop_key] = array->Value(row_id);
-    } else if (type == arrow::int64()) {
-      auto array =
-          std::dynamic_pointer_cast<arrow::Int64Array>(column->chunk(0));
-      data[prop_key] = array->Value(row_id);
-    } else if (type == arrow::uint32()) {
-      auto array =
-          std::dynamic_pointer_cast<arrow::UInt32Array>(column->chunk(0));
-      data[prop_key] = array->Value(row_id);
-    } else if (type == arrow::uint64()) {
-      auto array =
-          std::dynamic_pointer_cast<arrow::UInt64Array>(column->chunk(0));
-      data[prop_key] = array->Value(row_id);
-    } else if (type == arrow::float32()) {
-      auto array =
-          std::dynamic_pointer_cast<arrow::FloatArray>(column->chunk(0));
-      data[prop_key] = array->Value(row_id);
-    } else if (type == arrow::float64()) {
-      auto array =
-          std::dynamic_pointer_cast<arrow::DoubleArray>(column->chunk(0));
-      data[prop_key] = array->Value(row_id);
-    } else if (type == arrow::utf8()) {
-      auto array =
-          std::dynamic_pointer_cast<arrow::StringArray>(column->chunk(0));
-      data[prop_key] = array->GetString(row_id);
-    } else if (type == arrow::large_utf8()) {
-      auto array =
-          std::dynamic_pointer_cast<arrow::LargeStringArray>(column->chunk(0));
-      data[prop_key] = array->GetString(row_id);
-    } else {
-      RETURN_GS_ERROR(vineyard::ErrorCode::kDataTypeError,
-                      "Unexpected type: " + type->ToString());
-    }
-    return {};
-  }
-
   bl::result<std::shared_ptr<vertex_map_t>> convertVertexMap(
       const std::shared_ptr<src_fragment_t>& arrow_frag) {
     auto src_vm_ptr = arrow_frag->GetVertexMap();
@@ -201,27 +152,8 @@ class ArrowToDynamicConverter {
           auto column = v_data->column(col_id);
           auto prop_key = v_data->field(col_id)->name();
           auto type = column->type();
-
-          if (type == arrow::int32()) {
-            data[prop_key] = src_frag->template GetData<int32_t>(u, col_id);
-          } else if (type == arrow::int64()) {
-            data[prop_key] = src_frag->template GetData<int64_t>(u, col_id);
-          } else if (type == arrow::uint32()) {
-            data[prop_key] = src_frag->template GetData<uint32_t>(u, col_id);
-          } else if (type == arrow::uint64()) {
-            data[prop_key] = src_frag->template GetData<uint64_t>(u, col_id);
-          } else if (type == arrow::float32()) {
-            data[prop_key] = src_frag->template GetData<float>(u, col_id);
-          } else if (type == arrow::float64()) {
-            data[prop_key] = src_frag->template GetData<double>(u, col_id);
-          } else if (type == arrow::utf8()) {
-            data[prop_key] = src_frag->template GetData<std::string>(u, col_id);
-          } else if (type == arrow::large_utf8()) {
-            data[prop_key] = src_frag->template GetData<std::string>(u, col_id);
-          } else {
-            RETURN_GS_ERROR(vineyard::ErrorCode::kDataTypeError,
-                            "Unexpected type: " + type->ToString());
-          }
+          PropertyConverter<src_fragment_t>::NodeValue(src_frag, u, type,
+                                                       prop_key, col_id, data);
         }
         processed_vertices.emplace_back(u_gid, data);
 
@@ -242,9 +174,7 @@ class ArrowToDynamicConverter {
             }
             CHECK(dst_vm->GetGid(v_oid, v_gid));
             data = folly::dynamic::object();
-            for (auto col_id = 0; col_id < e_data->num_columns(); col_id++) {
-              BOOST_LEAF_CHECK(extractProperty(e_data, e_id, col_id, data));
-            }
+            PropertyConverter<src_fragment_t>::EdgeValue(e_data, e_id, data);
             processed_edges.emplace_back(u_gid, v_gid, data);
           }
 
@@ -264,10 +194,8 @@ class ArrowToDynamicConverter {
                 }
                 CHECK(dst_vm->GetGid(v_oid, v_gid));
                 data = folly::dynamic::object();
-                for (auto col_id = 0; col_id < e_data->num_columns();
-                     col_id++) {
-                  BOOST_LEAF_CHECK(extractProperty(e_data, e_id, col_id, data));
-                }
+                PropertyConverter<src_fragment_t>::EdgeValue(e_data, e_id,
+                                                             data);
                 processed_edges.emplace_back(v_gid, u_gid, data);
               }
             }

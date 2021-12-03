@@ -68,7 +68,16 @@ jobs:
         sudo apt update
         sudo apt install -y doxygen
 
+        # Install fastffi for Java sdk compilation
+        cd /tmp/
+        git clone https://github.com/alibaba/fastFFI.git
+        cd fastFFI
+        git checkout a166c6287f2efb938c27fb01b3d499932d484f9c
+        export PATH=${PATH}:${LLVM11_HOME}/bin
+        mvn clean install -DskipTests -Dmaven.antrun.skip=true --quiet
+
         # generate a taged version
+        cd ${GITHUB_WORKSPACE}
         make graphscope-docs
 
         # generate a stable version

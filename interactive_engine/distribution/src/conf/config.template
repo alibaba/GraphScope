@@ -20,6 +20,7 @@ ingestor.sender.buffer.size=128
 ## Coordinator Config
 snapshot.increase.interval.ms=1000
 offsets.persist.interval.ms=3000
+log.recycle.enable=true
 
 ## Store Config
 store.data.path=./data
@@ -35,6 +36,10 @@ kafka.topic=graph_test
 
 ## Frontend Config
 gremlin.server.port=12312
+
+## Backup Config
+backup.enable=false
+store.backup.thread.count=1
 
 executor.worker.per.process=2
 executor.query.thread.count=2

@@ -37,5 +37,7 @@ public interface GraphPartition extends Closeable {
 
     void ingestHdfsFile(FileSystem fs, Path filePath) throws IOException;
 
+    GraphPartitionBackup openBackupEngine();
+
     int getId();
 }

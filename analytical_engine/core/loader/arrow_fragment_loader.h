@@ -20,16 +20,19 @@
 #include <map>
 #include <memory>
 #include <set>
+#include <sstream>
 #include <string>
 #include <unordered_map>
 #include <utility>
 #include <vector>
 
 #include "grape/worker/comm_spec.h"
+#include "vineyard/basic/ds/arrow_utils.h"
 #include "vineyard/basic/stream/byte_stream.h"
 #include "vineyard/basic/stream/dataframe_stream.h"
 #include "vineyard/basic/stream/parallel_stream.h"
 #include "vineyard/client/client.h"
+#include "vineyard/common/util/functions.h"
 #include "vineyard/graph/loader/arrow_fragment_loader.h"
 #include "vineyard/io/io/i_io_adaptor.h"
 #include "vineyard/io/io/io_factory.h"
@@ -119,6 +122,9 @@ class ArrowFragmentLoader {
                       vineyard::sync_gs_error(comm_spec_, load_v_procedure));
       v_tables = tmp_v;
     }
+    for (const auto& table : v_tables) {
+      BOOST_LEAF_CHECK(sanityChecks(table));
+    }
     LOG_IF(INFO, comm_spec_.worker_id() == 0)
         << "PROGRESS--GRAPH-LOADING-READ-VERTEX-100";
     return v_tables;
@@ -145,6 +151,11 @@ class ArrowFragmentLoader {
       BOOST_LEAF_AUTO(tmp_e,
                       vineyard::sync_gs_error(comm_spec_, load_e_procedure));
       e_tables = tmp_e;
+    }
+    for (const auto& table_vec : e_tables) {
+      for (const auto& table : table_vec) {
+        BOOST_LEAF_CHECK(sanityChecks(table));
+      }
     }
     LOG_IF(INFO, comm_spec_.worker_id() == 0)
         << "PROGRESS--GRAPH-LOADING-READ-EDGE-100";
@@ -389,53 +400,22 @@ class ArrowFragmentLoader {
   }
 
  private:
-  boost::leaf::result<std::shared_ptr<arrow::Table>> readTableFromNumpy(
-      std::vector<std::string>& data, size_t row_num, size_t col_num, int index,
-      int total_parts,
-      std::vector<std::pair<std::string, rpc::DataType>> properties) {
-    int chunk_start = index * (row_num / total_parts);
-    int chunk_size = row_num / total_parts;
-    if (index == total_parts - 1) {
-      chunk_size += row_num % total_parts;
+  boost::leaf::result<std::shared_ptr<arrow::Table>> readTableFromPandas(
+      const std::string& data) {
+    std::shared_ptr<arrow::Table> table;
+    if (!data.empty()) {
+      std::shared_ptr<arrow::Buffer> buffer =
+          arrow::Buffer::Wrap(data.data(), data.size());
+      VY_OK_OR_RAISE(vineyard::DeserializeTable(buffer, &table));
     }
-    std::vector<std::shared_ptr<arrow::Array>> arrays;
-    std::vector<std::shared_ptr<arrow::Field>> schemas;
-    CHECK_EQ(properties.size(), col_num);
-    for (size_t i = 0; i < col_num; ++i) {
-      std::shared_ptr<arrow::Array> array;
-      const char* bytes = data[i].data();
-      auto& prop = properties[i];
-      if (prop.second == rpc::INT64 || prop.second == rpc::LONG) {
-        schemas.push_back(arrow::field(prop.first, arrow::int64()));
-        arrow::Int64Builder builder;
-        ARROW_OK_OR_RAISE(builder.AppendValues(
-            reinterpret_cast<const int64_t*>(bytes +
-                                             chunk_start * sizeof(int64_t)),
-            chunk_size));
-        ARROW_OK_OR_RAISE(builder.Finish(&array));
-      } else if (prop.second == rpc::DOUBLE) {
-        schemas.push_back(arrow::field(prop.first, arrow::float64()));
-        arrow::DoubleBuilder builder;
-        ARROW_OK_OR_RAISE(builder.AppendValues(
-            reinterpret_cast<const double*>(bytes +
-                                            chunk_start * sizeof(double)),
-            chunk_size));
-        ARROW_OK_OR_RAISE(builder.Finish(&array));
-      } else {
-        CHECK(0);
-      }
-      arrays.push_back(array);
-    }
-    auto schema = std::make_shared<arrow::Schema>(schemas);
-    auto table = arrow::Table::Make(schema, arrays);
-    ARROW_OK_OR_RAISE(table->Validate());
     return table;
   }
 
   boost::leaf::result<std::shared_ptr<arrow::Table>> readTableFromLocation(
       const std::string& location, int index, int total_parts) {
     std::shared_ptr<arrow::Table> table;
-    auto io_adaptor = vineyard::IOFactory::CreateIOAdaptor(location);
+    std::string expanded = vineyard::ExpandEnvironmentVariables(location);
+    auto io_adaptor = vineyard::IOFactory::CreateIOAdaptor(expanded);
     if (io_adaptor == nullptr) {
       RETURN_GS_ERROR(vineyard::ErrorCode::kIOError,
                       "Cannot find a supported adaptor for " + location);
@@ -551,10 +531,7 @@ class ArrowFragmentLoader {
         std::shared_ptr<arrow::Table> table;
         if (vertices[i]->protocol == "numpy" ||
             vertices[i]->protocol == "pandas") {
-          BOOST_LEAF_AUTO(
-              tmp, readTableFromNumpy(vertices[i]->data, vertices[i]->row_num,
-                                      vertices[i]->column_num, index,
-                                      total_parts, vertices[i]->properties));
+          BOOST_LEAF_AUTO(tmp, readTableFromPandas(vertices[i]->values));
           table = tmp;
         } else if (vertices[i]->protocol == "vineyard") {
           VLOG(2) << "read vertex table from vineyard: " << vertices[i]->values;
@@ -750,13 +727,8 @@ class ArrowFragmentLoader {
         auto load_procedure =
             [&]() -> boost::leaf::result<std::shared_ptr<arrow::Table>> {
           std::shared_ptr<arrow::Table> table;
-          if (sub_labels[j].protocol == "numpy" ||
-              sub_labels[j].protocol == "pandas") {
-            BOOST_LEAF_ASSIGN(
-                table,
-                readTableFromNumpy(sub_labels[j].data, sub_labels[j].row_num,
-                                   sub_labels[j].column_num, index, total_parts,
-                                   sub_labels[j].properties));
+          if (sub_labels[j].protocol == "pandas") {
+            BOOST_LEAF_ASSIGN(table, readTableFromPandas(sub_labels[j].values));
           } else if (sub_labels[j].protocol == "vineyard") {
             LOG(INFO) << "read edge table from vineyard: "
                       << sub_labels[j].values;
@@ -882,6 +854,34 @@ class ArrowFragmentLoader {
     }
     CHECK_OR_RAISE(sourceId != vineyard::InvalidObjectID());
     return sourceId;
+  }
+
+  /// Do some necessary sanity checks.
+  boost::leaf::result<void> sanityChecks(std::shared_ptr<arrow::Table> table) {
+    // We require that there are no identical column names
+    auto names = table->ColumnNames();
+    std::sort(names.begin(), names.end());
+    const auto duplicate = std::adjacent_find(names.begin(), names.end());
+    if (duplicate != names.end()) {
+      auto meta = table->schema()->metadata();
+      int label_meta_index = meta->FindKey(LABEL_TAG);
+      std::string label_name = meta->value(label_meta_index);
+      std::stringstream msg;
+      msg << "Label " << label_name
+          << " has identical property names, which is not allowed. The "
+             "original names are: ";
+      auto origin_names = table->ColumnNames();
+      msg << "[";
+      for (size_t i = 0; i < origin_names.size(); ++i) {
+        if (i != 0) {
+          msg << ", ";
+        }
+        msg << origin_names[i];
+      }
+      msg << "]";
+      RETURN_GS_ERROR(vineyard::ErrorCode::kInvalidValueError, msg.str());
+    }
+    return {};
   }
 
   vineyard::Client& client_;

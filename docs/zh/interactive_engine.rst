@@ -1,5 +1,5 @@
 图交互式分析引擎 
-==========
+==============
 
 GraphScope的交互查询引擎（简称GIE）是一个分布式系统，它为不同经验的用户提供了一个易用的交互式环境，支持海量复杂图数据上的 *实时分析与交互探索* 。该引擎支持 `Gremlin <http://tinkerpop.apache.org/>`_ 语言表达的交互图查询，并提供了自动化和用户透明的分布式并行执行。
 
@@ -18,7 +18,7 @@ Apache TinkerPop
 .. code:: python
 
     import graphscope
-    from graphscope.dataset.ldbc import load_ldbc
+    from graphscope.dataset import load_ldbc
 
     # 创建一个新的交互会话，载入LDBC示例图数据
     # 随后返回一个Gremlin查询提交入口

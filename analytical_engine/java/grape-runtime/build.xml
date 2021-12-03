@@ -1,0 +1,49 @@
+<!--
+  ~ Copyright 2021 Alibaba Group Holding Limited.
+  ~
+  ~ Licensed under the Apache License, Version 2.0 (the "License");
+  ~ you may not use this file except in compliance with the License.
+  ~ You may obtain a copy of the License at
+  ~
+  ~  	http://www.apache.org/licenses/LICENSE-2.0
+  ~
+  ~ Unless required by applicable law or agreed to in writing, software
+  ~ distributed under the License is distributed on an "AS IS" BASIS,
+  ~ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  ~ See the License for the specific language governing permissions and
+  ~ limitations under the License.
+  -->
+<project name="Grape-JNI">
+  <target name="grape-jni">
+    <condition property="platform" value="linux64">
+      <os arch="amd64" family="unix"/>
+    </condition>
+
+    <mkdir dir="${project.build.directory}/native"/>
+
+    <condition property="platform" value="mac">
+      <os arch="x86_64" family="mac"/>
+    </condition>
+
+    <echo level="info" message="Make graphscope java sdk jni code"/>
+
+    <echo level="info" message="Native Library Name: ${jni.library.name}"/>
+
+    <exec dir="${project.build.directory}/native" executable="cmake" failonerror="true" os="Linux">
+      <arg line="-DCMAKE_PREFIX_PATH=/opt/graphscope;${env.GRAPHSCOPE_HOME} ${basedir}"/>
+    </exec>
+
+    <exec dir="${project.build.directory}/native" executable="cmake" failonerror="true"
+      os="Mac OS X">
+      <arg line="${basedir}"/>
+    </exec>
+
+    <exec dir="${project.build.directory}/native" executable="make" failonerror="true">
+      <arg line="VERBOSE=1 -j4"/>
+    </exec>
+
+    <fail message="Not a supported platform." unless="platform"/>
+
+    <mkdir dir="${project.build.directory}/native"/>
+  </target>
+</project>
