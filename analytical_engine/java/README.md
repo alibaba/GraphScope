@@ -1,225 +1,67 @@
-# Grape JDK on GraphScope analytics
+# GRAPE-JDK with GraphScope Analytical Engine
 
-GRAPE JDK is a subproject under GraphScope, presenting an efficient java SDK for GraphScope analytical engine-GRAPE.
-Powered By [Alibaba-FastFFI](https://github.com/alibaba/fastFFI), which is able to bridge the huge programming gap between Java and C++, Java PIE
-SDK enables Java Programmers to acquire the following abilities
+GRAPE-JDK is a subproject of GraphScope, presenting an efficient Java SDK for the analytical engine.
+Powered by [Alibaba-FastFFI](https://github.com/alibaba/fastFFI) and its ability to bridge the huge programming gap between Java and C++, GRAPE-JDK
+enables Java programmers to write and run graph algorithms with these benefits.
 
-- **Ease of developing graph algorithms in Java**.
+- **Easy to Program**. GRAPE-JDK mirrors the full-featured GRAPE framework, including ```Fragment```, ```MessageManager```, in a Java style, 
+  hence a Java programmer can develop algorithms in GRAPE PIE-model easily.
 
-  PIE SDK mirrors the full-featured grape framework, including ```Fragment```, ```MessageManager```, etc.
-  Armed with PIE SDK, a Java Programmer can develop algorithms in grape PIE model with no efforts.
-- **Efficient execution for Java graph algorithms**.
+- **Efficient Execution**. Due to the limited ability to access low-level system resources, existing graph computing systems written in Java are 
+  usually suboptimal at efficiency. By leveraging the JNI acceleration provided by [```LLVM4JNI```](https://github.com/alibaba/fastFFI/tree/main/llvm4jni),
+  GRAPE-JDK substantially narrows the gap between apps written in Java and in C++. As [experiments](#performance) shows, the overall performance gap 
+  between native C++ and GRAPE-JDK are lower than 2x, and in some scenarios like PageRank, GRAPE-JDK runs nearly as fast as native C++ implementation. 
 
-  There are a bunch of graph computing platforms developed in Java, and providing programming interfaces
-  in java. However, since Java, the language itself, lacks the ability to access low-level system resources
-  and memories, these java frameworks are drastically outperformed when compared to C++ framework, grape.
-  To provide efficient execution for java graph programs, simple JNI bridging is never enough. By
-  leveraging the JNI acceleration provided by [```LLVM4JNI```](https://github.com/alibaba/fastFFI/tree/main/llvm4jni), PIE SDK substantially narrows the gap
-  between java app and c++ app.
-  As experiments shows, the minimum gap is around 1.5x.
+<!-- - **Seamless integration with GraphScope**.
 
-- **Seamless integration with GraphScope**.
-
-  To run a Java app developed with PIE SDK, the user just need to pack Java app into ```jar``` and
+  To run a Java app developed with GRAPE-JDK, the user just need to pack Java app into ```jar``` and
   submit in python client, as show in example. The input graph can be either property graph or
   projected graph in GraphScope, and the output can be redirected to client fs, vineyard just like
-  normal GraphScope apps.
+  normal GraphScope apps. -->
   
-## Structure
+## Organization
 
-- **grape-demo**
-  
-  Providing examples apps and [FFIMirrors](#user-defined-data-structure).
-- **grape-runtime**
-  
-  Contains necessary static functions to create URL class loader, which is later
-  used to load user jars.
-  Annotation processor design for graphscope sdk, responsible for java and jni
-  code generation, will be invoked by grape-engine, when ```ENABLE_JAVA_SDK```set to true.
-- **grape-jdk**
+- **grape-demo** provides example apps and [FFIMirrors](#user-defined-data-structure).
+- **grape-jdk** provides the SDK with graph computing interfaces.
+- **grape-runtime** contains the essential files for JNI code-gen and the glue code invoked by the analytcial engine (building with `ENABLE_JAVA_SDK`). 
 
-  The core java sdk defines graph computing interfaces.
+-----
+(To be revise)
 
-# How to use
 
-Build from local:
+## Get grape-jdk
+
+### Building from source
+
+First you need **fastFFI** installed, see [alibaba/fastFFI](https://github.com/alibaba/fastFFI) for
+installation guide.
+
 ```bash
+git clone https://github.com/alibaba/GraphScope.git
+cd analytical_engine/java/grape-jdk
 mvn clean install
 ```
 
-If you only need interfaces defined in ```grape-jdk```, just type
-```bash
-mvn clean install -DskipTests -Dmaven.antrun.skip=true
-```
-which will skip the codegen process.
-## From Maven Central repo
+This will only install `grape-jdk` for you, if you are only interested in writing 
+graph algorithms in java, that's enough for you :D.
+
+To build the whole project, make sure there is one usable c++ compiler in your envirment
+and both [`GraphScope-Analytical engine`](https://github.com/alibaba/GraphScope/tree/main/analytical_engine) 
+and [`Vineyard`](https://github.com/v6d-io/v6d) is installed.
+
+### From Maven Central repo
 
 TODO
-## Simple Examples
-Here we provide a simple example illustrating the usage of PIE SDK.
-### 0. Include java sdk in your maven project
-First, you should include ```grape-jdk``` as maven dependency in your project
-```pom.xml```
 
-```xml
-    <dependency>
-      <groupId>com.alibaba.graphscope</groupId>
-      <artifactId>grape-jdk</artifactId>
-      <version>0.1</version>
-      <classifier>shaded</classifier>
-    </dependency>
-```
+## Getting Started
 
-Your may notice that you are required to depend on graphscope-sdk with shaded classifier.
-Actually the shaded jar contains all necessary dependencies in one jar.
-And in your project, you shall use ```plugin``` to pack your jar with dependencies!
-```xml
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-shade-plugin</artifactId>
-      </plugin>
-```
-### 1. User-defined data structure
+- [Run a simple sssp](https://graphscope.io/docs/analytics_engine.html#run-a-demo-java-algorithm)
+- [Implement your own algorithm](https://graphscope.io/docs/analytics_engine.html#writing-your-own-algorithms-in-java)
 
-With the codegen abilities provided by [alibaba-FastFFI](https://github.com/alibaba/fastFFI), user 
-can define new data structures in java interfaces. User can also define the 
-```hash``` and ```equal``` methods.
-
-graphscope-processor will generate the corresponding C++ and java code after ```jar```
-is submitted to GraphScope.
-```java
-@FFIMirror
-@FFINameSpace("sample")
-@FFITypeAlias("MyData")
-public interface MyData extends CXXPointer, FFIJava {
-  //Static factory field
-  Factory factory = FFITypeFactory.getFactory(MyData.class);
-
-  //To create a instance for MyData
-  static MyData create() {
-    return factory.create();
-  }
-
-  //Getter method
-  @FFIGetter
-  long id();
-
-  //Setter method
-  @FFISetter
-  void id(long value);
-
-  //If specified, will be used as hash() in the generated java class.
-  //Otherwise will use the default implementation.
-  default int javaHashCode() {
-    return (int) id();
-  }
-  
-  //If specified, will be used as toString() in the generated java class.
-  //Otherwise will use the default implementation.
-  default String toJavaString() {
-    return String.valueOf(id());
-  }
-
-  //If specified, will be used as equals() in the generated java class.
-  //Otherwise will use the default implementation.
-  default boolean javaEquals(Object obj) {
-    if (obj instanceof MyData) {
-      MyData other = (MyData) obj;
-      return id() == other.id();
-    } else {
-      return false;
-    }
-  }
-
-  @FFIFactory
-  interface Factory {
-    MyData create();
-  }
-}
-```
-
-### 2. User-defined app
-Apart from common data structures provided in ```java.lang```, user can also use
-```FFIMirror``` in app implementation. For String, user shall use ```FFIByteString```
-as substitution.
-
-For example, to implement a app which traverse all vertex in a property graph(ArrowFragment), user
-shall code like this
-```java
-public class PropertyTraverseVertexData
-        implements DefaultPropertyAppBase<Long, PropertyTraverseVertexDataContext> {
-    @Override
-    public void PEval(
-            ArrowFragment<Long> fragment,
-            PropertyDefaultContextBase<Long> context,
-            PropertyMessageManager messageManager) {
-        PropertyTraverseVertexDataContext ctx = (PropertyTraverseVertexDataContext) context;
-        VertexRange<Long> innerVertices = fragment.innerVertices(0);
-        for (Vertex<Long> vertex : innerVertices.locals()) {
-            PropertyAdjList<Long> adjList = fragment.getOutgoingAdjList(vertex, 0);
-            for (PropertyNbr<Long> cur : adjList.iterator()) {
-                ctx.fake_edata = cur.getDouble(0);
-                ctx.fake_vid = cur.neighbor().GetValue();
-            }
-        }
-    }
-
-    @Override
-    public void IncEval(
-            ArrowFragment<Long> fragment,
-            PropertyDefaultContextBase<Long> context,
-            PropertyMessageManager messageManager) {
-        PropertyTraverseVertexDataContext ctx = (PropertyTraverseVertexDataContext) context;
-        if (ctx.step >= ctx.maxStep) {
-            return;
-        }
-        VertexRange<Long> innerVertices = fragment.innerVertices(0);
-        for (Vertex<Long> vertex : innerVertices.locals()) {
-            PropertyAdjList<Long> adjList = fragment.getOutgoingAdjList(vertex, 0);
-            for (PropertyNbr<Long> cur : adjList.iterator()) {
-                ctx.fake_edata = cur.getDouble(0);
-                ctx.fake_vid = cur.neighbor().GetValue();
-            }
-        }
-        messageManager.ForceContinue();
-    }
-}
-```
-### 3. Run java app in GraphScope
-To run your app on GraphScope, make sure you have installed ```Graphscope``` client, as specified in [GraphScope-README](../README.md).
-Then enter python cmd line,
-```python3
-import graphscope
-from graphscope import JavaApp
-graphscope.set_option(show_log=True)
-"""Or lauch session in k8s cluster"""
-sess = graphscope.session(cluster_type='hosts') 
-
-graph = sess.g()
-graph = sess.g(directed=False)
-graph = graph.add_vertices("gstest/property/p2p-31_property_v_0", label="person")
-graph = graph.add_edges("gstest/property/p2p-31_property_e_0", label="knows")
-
-sssp1=JavaApp(
-    full_jar_path="~/.m2/repository/com/alibaba/graphscope/grape-demo/0.1/grape-demo-0.1-shaded.jar", 
-    java_app_class="com.alibaba.graphscope.example.sssp.SSSPDefault", 
-)
-ctx2=sssp1(graph,src=6)
-
-graph = graph.project(vertices={"person": ['id']}, edges={"knows": ["dist"]})
-"""simple_graph = graph._project_to_simple() will be done by JavaApp"""
-sssp3=JavaApp(
-    full_jar_path="~/.m2/repository/com/alibaba/graphscope/grape-demo/0.1/grape-demo-0.1-shaded.jar", 
-    java_app_class="com.alibaba.graphscope.example.projected.SSSPProjected", 
-)
-ctx3=sssp3(graph,src=6)
-
-ctx.to_numpy("r:label0.dist_0")
-```
 
 # Documentation
 
-Online JavaDoc is availabel at [GraphScope Docs](https://graphscope.io/docs/reference/gae_java/index.html).
+Online JavaDoc is available at [GraphScope Docs](https://graphscope.io/docs/reference/gae_java/index.html).
 
 You can also generate the documentation with in three different ways.
 - use Intellij IDEA plugin: [Intellij IDEA-javadoc](https://www.jetbrains.com/help/idea/working-with-code-documentation.html) 
@@ -232,11 +74,12 @@ mvn javadoc::javadoc -Djavadoc.output.directory=${OUTPUT_DIR} -Djavadoc.output.d
 
 # Performance
 
-Apart from the user-friendly interface, grape-jdk also provide user with high performance graph analytics. Please refer to [benchmark](performance.md) for the benchmark results.
+Apart from the user-friendly interface, grape-jdk also provide user with high performance graph 
+analytics experience. Please refer to [benchmark](performance.md) for the benchmark results.
 
 # TODO
 - Support more programming model
-  - Pregel
+  - Giraph(Pregel)
 - A test suite for verifying algorithm correctness, without GraphScope analytical engine.
 - Documentation
 - User-friendly error report

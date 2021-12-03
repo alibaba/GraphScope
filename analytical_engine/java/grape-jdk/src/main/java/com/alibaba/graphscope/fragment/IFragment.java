@@ -3,12 +3,22 @@ package com.alibaba.graphscope.fragment;
 import com.alibaba.fastffi.CXXReference;
 import com.alibaba.fastffi.CXXValue;
 import com.alibaba.fastffi.FFINameAlias;
+import com.alibaba.fastffi.FFIPointer;
 import com.alibaba.graphscope.ds.DestList;
 import com.alibaba.graphscope.ds.Vertex;
 import com.alibaba.graphscope.ds.VertexRange;
 import com.alibaba.graphscope.ds.adaptor.AdjList;
 
-public interface SimpleFragment<OID_T, VID_T, VDATA_T, EDATA_T> {
+/**
+ * IFragment defines a simple fragment interface, which conforms two different simple fragment
+ * {@link ArrowProjectedFragment} and {@link ImmutableEdgecutFragment} into one.
+ *
+ * @param <OID_T> original vertex id type.
+ * @param <VID_T> vertex id type.
+ * @param <VDATA_T> vertex data type.
+ * @param <EDATA_T> edge data type.
+ */
+public interface IFragment<OID_T, VID_T, VDATA_T, EDATA_T> {
 
     /**
      * Return the underlying fragment type,i.e. ArrowProjected or Simple.
@@ -16,6 +26,14 @@ public interface SimpleFragment<OID_T, VID_T, VDATA_T, EDATA_T> {
      * @return underlying fragment type.
      */
     String fragmentType();
+
+    /**
+     * Get the actual fragment FFIPointer we are using.
+     *
+     * @return a ffipointer
+     */
+    FFIPointer getFFIPointer();
+
     /** @return The id of current fragment. */
     int fid();
 
@@ -86,20 +104,19 @@ public interface SimpleFragment<OID_T, VID_T, VDATA_T, EDATA_T> {
     boolean gid2Vertex(@CXXReference VID_T gid, @CXXReference Vertex<VID_T> vertex);
 
     VID_T vertex2Gid(@CXXReference Vertex<VID_T> vertex);
-
     /**
      * Get the number of inner vertices.
      *
      * @return number of inner vertices.
      */
-    VID_T getInnerVerticesNum();
+    long getInnerVerticesNum();
 
     /**
      * Get the number of outer vertices.
      *
      * @return umber of outer vertices.
      */
-    VID_T getOuterVerticesNum();
+    long getOuterVerticesNum();
 
     /**
      * Obtain vertex range contains all inner vertices.
@@ -250,4 +267,22 @@ public interface SimpleFragment<OID_T, VID_T, VDATA_T, EDATA_T> {
     @FFINameAlias("GetOutgoingAdjList")
     @CXXValue
     AdjList<VID_T, EDATA_T> getOutgoingAdjList(@CXXReference Vertex<VID_T> vertex);
+
+    /**
+     * Get the data on vertex.
+     *
+     * @param vertex querying vertex.
+     * @return vertex data
+     */
+    @FFINameAlias("GetData")
+    VDATA_T getData(@CXXReference Vertex<VID_T> vertex);
+
+    /**
+     * Update vertex data with a new value.
+     *
+     * @param vertex querying vertex.
+     * @param vdata new vertex data.
+     */
+    @FFINameAlias("SetData")
+    void setData(@CXXReference Vertex<VID_T> vertex, @CXXReference VDATA_T vdata);
 }

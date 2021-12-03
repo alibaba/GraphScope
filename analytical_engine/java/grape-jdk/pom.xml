@@ -78,6 +78,7 @@
         <configuration>
           <reportOutputDirectory>${javadoc.output.directory}</reportOutputDirectory>
           <destDir>${javadoc.output.destDir}</destDir>
+          <failOnError>false</failOnError>
           <locale>en_US</locale>
         </configuration>
       </plugin>

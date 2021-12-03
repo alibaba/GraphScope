@@ -32,6 +32,10 @@ public abstract class Communicator {
     private static Logger logger = LoggerFactory.getLogger(Communicator.class.getName());
     private FFICommunicator communicatorImpl;
 
+    public FFICommunicator getFFICommunicator() {
+        return communicatorImpl;
+    }
+
     /**
      * This function is set private, not intended to be invokede by user. It is meat to only be
      * called by jni, and let the exceptions accepted by cpp, so they can be obviously displayed.
@@ -53,7 +57,7 @@ public abstract class Communicator {
             if (constructor.getParameterCount() == 1
                     && constructor.getParameterTypes()[0].getName().equals("long")) {
                 communicatorImpl = communicatorClass.cast(constructor.newInstance(appAddr));
-                System.out.println(communicatorImpl);
+                logger.info("Init communicator:" + communicatorImpl);
             }
         }
     }

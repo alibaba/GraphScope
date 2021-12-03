@@ -25,9 +25,9 @@ limitations under the License.
 #include "grape/grape.h"
 #include "grape/types.h"
 
+#include "apps/java_pie/java_pie_parallel_context.h"
 #include "core/app/java/java_parallel_app_base.h"
 #include "core/error.h"
-#include "java_pie/java_pie_parallel_context.h"
 
 namespace gs {
 
@@ -67,8 +67,8 @@ class JavaPIEParallelApp
       CHECK_NOTNULL(app_class);
 
       const char* descriptor =
-          "(Lcom/alibaba/graphscope/fragment/ImmutableEdgecutFragment;"
-          "Lcom/alibaba/graphscope/app/ParallelContextBase;"
+          "(Lcom/alibaba/graphscope/fragment/IFragment;"
+          "Lcom/alibaba/graphscope/context/ParallelContextBase;"
           "Lcom/alibaba/graphscope/parallel/ParallelMessageManager;)V";
       jmethodID pEval_methodID =
           env->GetMethodID(app_class, "PEval", descriptor);
@@ -103,8 +103,8 @@ class JavaPIEParallelApp
       CHECK_NOTNULL(app_class);
 
       const char* descriptor =
-          "(Lcom/alibaba/graphscope/fragment/ImmutableEdgecutFragment;"
-          "Lcom/alibaba/graphscope/app/ParallelContextBase;"
+          "(Lcom/alibaba/graphscope/fragment/IFragment;"
+          "Lcom/alibaba/graphscope/context/ParallelContextBase;"
           "Lcom/alibaba/graphscope/parallel/ParallelMessageManager;)V";
       jmethodID incEval_methodID =
           env->GetMethodID(app_class, "IncEval", descriptor);

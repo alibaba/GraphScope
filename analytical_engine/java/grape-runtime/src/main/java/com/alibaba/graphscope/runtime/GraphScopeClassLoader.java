@@ -16,10 +16,15 @@
 
 package com.alibaba.graphscope.runtime;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.io.File;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.lang.reflect.ParameterizedType;
+import java.lang.reflect.Type;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
@@ -38,6 +43,10 @@ import java.util.stream.Collectors;
  * jvm environment provided by class loaders, which can avoid possible class conflicts.
  */
 public class GraphScopeClassLoader {
+
+    private static Logger logger = LoggerFactory.getLogger(GraphScopeClassLoader.class);
+    private static String FFI_TYPE_FACTORY_CLASS = "com.alibaba.graphscope.runtime.FFITypeFactory";
+
     static {
         try {
             String GS_HOME = System.getenv("GRAPHSCOPE_HOME");
@@ -45,13 +54,11 @@ public class GraphScopeClassLoader {
                 GS_HOME = "/opt/graphscope";
             }
             System.load(GS_HOME + "/lib/libgrape-jni.so");
-            System.out.println("loaded jni lib");
+            logger.info("loaded jni lib");
         } catch (Exception e) {
             e.printStackTrace();
         }
     }
-
-    private static String FFI_TYPE_FACTORY_CLASS = "com.alibaba.fastffi.FFITypeFactory";
 
     /**
      * Create a new URLClassLoaders with given classPaths. The classPath shall be in form {@code
@@ -64,9 +71,16 @@ public class GraphScopeClassLoader {
     public static URLClassLoader newGraphScopeClassLoader(String classPath)
             throws IllegalAccessException {
         String[] libraries = ClassScope.getLoadedLibraries(ClassLoader.getSystemClassLoader());
-        log("Loaded lib: " + String.join(" ", libraries));
-        return new URLClassLoader(
-                classPath2URLArray(classPath), GraphScopeClassLoader.class.getClassLoader());
+        //        log("Loaded lib: " + String.join(" ", libraries));
+        logger.info("Loaded lib: " + String.join(" ", libraries));
+        URLClassLoader urlClassLoader =
+                new URLClassLoader(
+                        classPath2URLArray(classPath),
+                        GraphScopeClassLoader.class.getClassLoader());
+        logger.info(
+                "URLClassLoader loaded lib: "
+                        + String.join(",", ClassScope.getLoadedLibraries(urlClassLoader)));
+        return urlClassLoader;
     }
 
     /**
@@ -77,7 +91,7 @@ public class GraphScopeClassLoader {
      */
     public static URLClassLoader newGraphScopeClassLoader() throws IllegalAccessException {
         String[] libraries = ClassScope.getLoadedLibraries(ClassLoader.getSystemClassLoader());
-        log("Loaded lib: " + String.join(" ", libraries));
+        logger.info("Loaded lib: " + String.join(" ", libraries));
         // CAUTION: add '.' to avoid empty url.
         return new URLClassLoader(
                 classPath2URLArray("."), Thread.currentThread().getContextClassLoader());
@@ -96,6 +110,7 @@ public class GraphScopeClassLoader {
      */
     public static Object loadAndCreate(URLClassLoader classLoader, String className)
             throws ClassNotFoundException, InstantiationException, IllegalAccessException {
+        logger.info("Load and create: " + formatting(className));
         Class<?> clz = classLoader.loadClass(formatting(className));
         return clz.newInstance();
     }
@@ -120,14 +135,16 @@ public class GraphScopeClassLoader {
         // FFITypeFactor class need to be ensure loaded in current classLoader,
         // don't make it static.
         Class<?> ffiTypeFactoryClass = classLoader.loadClass(FFI_TYPE_FACTORY_CLASS);
-        log(
+        logger.info(
                 "Creating FFIPointer, typename ["
                         + foreignName
                         + "], address ["
                         + address
                         + "]"
-                        + ", ffi type factor ["
-                        + ffiTypeFactoryClass);
+                        + ", ffi type factory ["
+                        + ffiTypeFactoryClass
+                        + "], loaded by "
+                        + ffiTypeFactoryClass.getClassLoader());
         // a new classLoader contains new class path, we load the ffi.properties
         // here.
         Method loadClassLoaderMethod =
@@ -136,14 +153,13 @@ public class GraphScopeClassLoader {
 
         // To make FFITypeFactor use our classLoader to find desired type matching,
         // we load FFIType with our classLoader.
-        Class<?> ffiTypeClass = classLoader.loadClass("com.alibaba.fastffi.FFIType");
-        System.out.println(
-                "ffitype cl :" + ffiTypeClass.getClassLoader() + ", url cl: " + classLoader);
+        // Class<?> ffiTypeClass = classLoader.loadClass("com.alibaba.fastffi.FFIType");
+        // logger.info("ffitype cl :" + ffiTypeClass.getClassLoader() + ", url cl: " + classLoader);
 
         // First load class by FFITypeFactor
         Method getTypeMethod =
-                ffiTypeFactoryClass.getDeclaredMethod("getType", Class.class, String.class);
-        Class<?> ffiJavaClass = (Class<?>) getTypeMethod.invoke(null, ffiTypeClass, foreignName);
+                ffiTypeFactoryClass.getDeclaredMethod("getType", ClassLoader.class, String.class);
+        Class<?> ffiJavaClass = (Class<?>) getTypeMethod.invoke(null, classLoader, foreignName);
         // The class loaded by FFITypeFactor's classLoader can not be directly used
         // by us. We load again with our class loader.
         Class<?> javaClass = classLoader.loadClass(ffiJavaClass.getName());
@@ -152,15 +168,15 @@ public class GraphScopeClassLoader {
             for (Constructor constructor : constructors) {
                 if (constructor.getParameterCount() == 1
                         && constructor.getParameterTypes()[0].getName().equals("long")) {
-                    log("Desired constructor exists for " + javaClass.getName());
+                    logger.info("Desired constructor exists for " + javaClass.getName());
                     Object obj = constructor.newInstance(address);
-                    log("Successfully Construct " + obj);
+                    logger.info("Successfully Construct " + obj);
                     return obj;
                 }
             }
-            log("No Suitable constructors found.");
+            logger.info("No Suitable constructors found.");
         }
-        log("Loaded null class.");
+        logger.info("Loaded null class.");
         return null;
     }
 
@@ -174,7 +190,7 @@ public class GraphScopeClassLoader {
      */
     public static Class<?> loadClass(URLClassLoader classLoader, String className)
             throws ClassNotFoundException {
-        log("Loading class " + className);
+        logger.info("Loading class " + className);
         return classLoader.loadClass(formatting(className));
     }
 
@@ -191,13 +207,15 @@ public class GraphScopeClassLoader {
     }
 
     private static String formatting(String className) {
-        if (className.indexOf("/") == -1) return className;
+        if (!className.contains("/")) {
+            return className;
+        }
         return className.replace("/", ".");
     }
 
     private static URL[] classPath2URLArray(String classPath) {
         if (Objects.isNull(classPath) || classPath.length() == 0) {
-            System.err.println("Empty class Path!");
+            logger.error("Empty class Path!");
             return new URL[] {};
         }
         String[] splited = classPath.split(":");
@@ -214,7 +232,7 @@ public class GraphScopeClassLoader {
                                     return null;
                                 })
                         .collect(Collectors.toList());
-        System.out.println(
+        logger.info(
                 "Extracted URL"
                         + String.join(
                                 ":", res.stream().map(URL::toString).collect(Collectors.toList())));
@@ -225,12 +243,33 @@ public class GraphScopeClassLoader {
         return ret;
     }
 
-    private static void log(String info) {
-        System.out.print("[GS Class Loader]: ");
-        System.out.println(info);
+    /**
+     * Get the actual argument a child class has to implement a generic interface.
+     *
+     * @param baseClass baseclass
+     * @param childClass child class
+     * @param <T> type to evaluation
+     * @return
+     */
+    public static <T> Class<?>[] getTypeArgumentFromInterface(
+            Class<T> baseClass, Class<? extends T> childClass) {
+        Type type = childClass.getGenericInterfaces()[0];
+        Class<?>[] classes;
+        if (type instanceof ParameterizedType) {
+            ParameterizedType parameterizedType = (ParameterizedType) type;
+            Type[] typeParams = parameterizedType.getActualTypeArguments();
+            classes = new Class<?>[typeParams.length];
+            for (int i = 0; i < typeParams.length; ++i) {
+                classes[i] = (Class<?>) typeParams[i];
+            }
+            return classes;
+        } else {
+            throw new IllegalStateException("Not a parameterized type");
+        }
     }
 
     private static class ClassScope {
+
         private static java.lang.reflect.Field LIBRARIES = null;
 
         static {

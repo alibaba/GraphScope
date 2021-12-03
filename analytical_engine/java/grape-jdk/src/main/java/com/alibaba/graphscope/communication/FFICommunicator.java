@@ -41,6 +41,7 @@ import com.alibaba.fastffi.FFITypeAlias;
 @CXXHead(CORE_JAVA_JAVA_MESSAGES_H)
 @FFITypeAlias(GRAPE_COMMUNICATOR)
 public interface FFICommunicator extends FFIPointer {
+
     @FFINameAlias("Sum")
     <MSG_T> void sum(@FFIConst @CXXReference MSG_T msgIn, @CXXReference MSG_T msgOut);
 
@@ -49,4 +50,10 @@ public interface FFICommunicator extends FFIPointer {
 
     @FFINameAlias("Max")
     <MSG_T> void max(@FFIConst @CXXReference MSG_T msgIn, @CXXReference MSG_T msgOut);
+
+    @FFINameAlias("SendTo")
+    <MST_T> void sendTo(int dstFid, @FFIConst @CXXReference MST_T msgOut);
+
+    @FFINameAlias("RecvFrom")
+    <MSG_T> void receiveFrom(int srcFid, @CXXReference MSG_T msgIn);
 }

@@ -157,7 +157,7 @@ class JavaPIEPropertyContext : public JavaContextBase<FRAG_T> {
           m.env(), this->url_class_loader_object(), CONTEXT_UTILS_CLASS);
       CHECK_NOTNULL(context_utils_class);
       jmethodID ctx_base_class_name_get_method = m.env()->GetStaticMethodID(
-          context_utils_class, "getPropertyCtxObjBaseClzName",
+          context_utils_class, "getCtxObjBaseClzName",
           getPropertyCtxObjBaseClazNameDesc());
 
       CHECK_NOTNULL(ctx_base_class_name_get_method);
@@ -217,7 +217,7 @@ class JavaPIEPropertyDefaultContext : public JavaPIEPropertyContext<FRAG_T> {
            "Lcom/alibaba/fastjson/JSONObject;)V";
   }
   const char* getPropertyCtxObjBaseClazNameDesc() override {
-    return "(Lcom/alibaba/graphscope/context/PropertyDefaultContextBase;)"
+    return "(Lcom/alibaba/graphscope/context/ContextBase;)"
            "Ljava/lang/String;";
   }
 };
@@ -248,7 +248,7 @@ class JavaPIEPropertyParallelContext : public JavaPIEPropertyContext<FRAG_T> {
            "Lcom/alibaba/fastjson/JSONObject;)V";
   }
   const char* getPropertyCtxObjBaseClazNameDesc() override {
-    return "(Lcom/alibaba/graphscope/context/PropertyParallelContextBase;)"
+    return "(Lcom/alibaba/graphscope/context/ContextBase;)"
            "Ljava/lang/String;";
   }
 };

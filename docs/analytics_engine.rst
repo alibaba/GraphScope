@@ -356,19 +356,51 @@ Later, you can load your own algorithm from the gar package.
     # run my algorithm over a graph and get the result.
     ret = my_app(g, src="6")
 
-Writing Your Own Algorithms In Java
+Run Algorithm in Java
 ----------------------------------------------
 
 If you are a ``Java`` programmer, then you may want to implement your graph algorithm in ``Java``, and 
-run it on GraphScope analytical engine.
+run it on GraphScope analytical engine. We first show you how to run a demo java algorithm(i.e. sssp), and then 
+how to implement your own algorithms in java.
 
-Step 0: Get grape-jdk
+Run a Demo Java Algorithm
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-First, you will need ``grape-jdk`` installed on your developing environment. We will support downloading/installing ``grape-jdk``
-from maven central repositories in the future, however, currently you need to build from source. 
-Please follow :ref:`gae_java_sdk_about` for building grape-jdk from source.
+We provide some sample java app implementation, and you can directly run them on Graphscope Analytical Engine. First you 
+need to download a `grape-demo.jar <https://github.com/GraphScope/gstest/blob/master/jars/graphscope-demo-0.1-shaded.jar>`_ 
+and testing data `gstest <https://github.com/GraphScope/gstest>`_.
 
+Then open your graphscope python client, try to load a graph, and run the sample sssp algorithm.
+
+.. code:: python
+
+    import graphscope
+    from graphscope import JavaApp
+    from graphscope.dataset import load_p2p_network
+
+    """Or lauch session in k8s cluster"""
+    sess = graphscope.session(cluster_type='hosts') 
+
+    graph = load_p2p_network(sess)    
+
+    """This app need to run on simple graph"""
+    graph = graph.project(vertices={"host": ['id']}, edges={"connect": ["dist"]})
+
+    sssp=JavaApp(
+        full_jar_path="grape-demo.jar", # The path to the grape-demo.jar
+        java_app_class="com.alibaba.graphscope.example.bfs.BFS", 
+    )
+    ctx=sssp(graph,src=6)
+
+    """Fetch the result via context"""
+    ctx.to_numpy("r:label0.dist_0")
+
+
+Writing Your Own Algorithms in Java
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+To develop your algorithm in java, first, you will need ``grape-jdk`` installed on your developing environment. 
+Currently you need to build from source. Please follow :ref:`gae_java_sdk_about` for building grape-jdk from source.
 
 After installing ``grape-jdk``, you can include it as dependency in your maven project. You shall add classifier *shaded* to use the jar which includes all necessary dependencies.
 
@@ -381,68 +413,115 @@ After installing ``grape-jdk``, you can include it as dependency in your maven p
       <classifier>shaded</classifier>
     </dependency>
 
-Step 1: Develop your graph algorithm in Java
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+To address the jar dependencies issue, we need you to pack your jar with dependencies included. For example, you can
+used maven plugin `maven-shade-pluging`.
 
-You shall implement your algorithm in `PIE <https://dl.acm.org/doi/10.1145/3282488>`_  programming model, and your app shall inherit
- :code:`com.alibaba.graphscope.app.PropertyDefaultAppBase` if it works on a property graph,  
- or :code:`com.alibaba.graphscope.app.ProjectedDefaultAppBase` in case it works on a projected graph. 
+.. code:: xml
+
+    <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-shade-plugin</artifactId>
+    </plugin>
+
+For the implementation of your algorithm, You shall follow `PIE <https://dl.acm.org/doi/10.1145/3282488>`_  programming model, 
+and your app need to inherit :code:`DefaultPropertyAppBase` or :code:`ParallelPropertyAppBase` if it works on a property graph,  
+or :code:`DefaultAppBase` or :code:`ParallelAppBase` in case it works on a simple graph. Meanwhile, you also need to implement 
+the corresponding context for your app, by inheriting :code:`DefaultPropertyContextBase` , :code:`ParallelPropertyContextBase`,
+:code:`DefaultContextBase` or :code:`ParallelContextBase`. 
  
- Here we present a simple app which traverse all vertices and edges on a property graph.
+Here we present a simple app which traverse a simple graph with a breadth-first manner.
 
- .. code:: java
+.. code:: java
 
-    public class PropertyTraverseVertexData implements PropertyDefaultAppBase<Long, PropertyTraverseVertexDataContext> {
-        static private int propertyId = 0;
-
-        @Override
-        public void PEval(ArrowFragment<Long> fragment, PropertyDefaultContextBase<Long> context,
-                PropertyMessageManager messageManager) {
-            PropertyTraverseVertexDataContext ctx = (PropertyTraverseVertexDataContext) context;
-            for (int i = 0; i < fragment.vertexLabelNum(); ++i) {
-                VertexRange<Long> innerVertices = fragment.innerVertices(i);
-                for (Vertex<Long> vertex : innerVertices.locals()) {
-                    for (int j = 0; j < fragment.edgeLabelNum(); ++j) {
-                        PropertyAdjList<Long> adjList = fragment.getOutgoingAdjList(vertex, j);
-                        for (PropertyNbr<Long> nbr : adjList.iterator()) {
-                            Vertex<Long> dst = nbr.neighbor();
-                            double edgeData = nbr.getDouble(propertyId);
-                        }
-                    }
-                }
-            }
-        }
+    public class Traverse implements ParallelAppBase<Long, Long, Double, Long, TraverseContext>,
+        ParallelEngine {
 
         @Override
-        public void IncEval(ArrowFragment<Long> fragment, PropertyDefaultContextBase<Long> context,
-                PropertyMessageManager messageManager) {
-            PropertyTraverseVertexDataContext ctx = (PropertyTraverseVertexDataContext) context;
-            if (ctx.step >= ctx.maxStep) {
-                return;
-            }
-            for (int i = 0; i < fragment.vertexLabelNum(); ++i) {
-                VertexRange<Long> innerVertices = fragment.innerVertices(i);
-                for (Vertex<Long> vertex : innerVertices.locals()) {
-                    for (int j = 0; j < fragment.edgeLabelNum(); ++j) {
-                        PropertyAdjList<Long> adjList = fragment.getOutgoingAdjList(vertex, j);
-                        for (PropertyNbr<Long> nbr : adjList.iterator()) {
-                            Vertex<Long> dst = nbr.neighbor();
-                            double edgeData = nbr.getDouble(propertyId);
-                        }
-                    }
+        public void PEval(IFragment<Long, Long, Double, Long> fragment,
+            ParallelContextBase<Long, Long, Double, Long> context,
+            ParallelMessageManager messageManager) {
+            TraverseContext ctx = (TraverseContext) context;
+            for (Vertex<Long> vertex : fragment.innerVertices()) {
+                AdjList<Long, Long> adjList = fragment.getOutgoingAdjList(vertex);
+                for (Nbr<Long, Long> nbr : adjList.iterator()) {
+                    Vertex<Long> dst = nbr.neighbor();
+                    //Update largest distance for current vertex
+                    ctx.vertexArray.setValue(vertex, Math.max(nbr.data(), ctx.vertexArray.get(vertex)));
                 }
             }
             messageManager.ForceContinue();
         }
+
+        @Override
+        public void IncEval(IFragment<Long, Long, Double, Long> fragment,
+            ParallelContextBase<Long, Long, Double, Long> context,
+            ParallelMessageManager messageManager) {
+            TraverseContext ctx = (TraverseContext) context;
+            for (Vertex<Long> vertex : fragment.innerVertices()) {
+                AdjList<Long, Long> adjList = fragment.getOutgoingAdjList(vertex);
+                for (Nbr<Long, Long> nbr : adjList.iterator()) {
+                    Vertex<Long> dst = nbr.neighbor();
+                    //Update largest distance for current vertex
+                    ctx.vertexArray.setValue(vertex, Math.max(nbr.data(), ctx.vertexArray.get(vertex)));
+                }
+            }
+        }
+    }
+
+Corresponding context:
+
+.. code:: java
+    
+    public class TraverseContext extends
+        VertexDataContext<IFragment<Long, Long, Double, Long>, Long> implements ParallelContextBase<Long,Long,Double,Long> {
+
+        public GSVertexArray<Long> vertexArray;
+        public int maxIteration;
+
+        @Override
+        public void Init(IFragment<Long, Long, Double, Long> frag,
+            ParallelMessageManager messageManager, JSONObject jsonObject) {
+            createFFIContext(frag, Long.class, false);
+            //This vertex Array is created by our framework. Data stored in this array will be available
+            //after execution, you can receive them by invoking method provided in Python Context.
+            vertexArray = data();
+            maxIteration = 10;
+            if (jsonObject.containsKey("maxIteration")){
+                maxIteration = jsonObject.getInteger("maxIteration");
+            }
+        }
+
+        @Override
+        public void Output(IFragment<Long, Long, Double, Long> frag) {
+            //You can also write output logic in this function.
+        }
     }
 
 
-Step 2: Pack to jar and submit to GraphScope
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+You may want to verify your implementation locally, before submitting your algorithm to GraphScope analytical engine.
+A simple bash script is provided to address this need. To verfy your algorithm, just run
 
-To run your algorithms on GraphScope analytical engine, first you need to pack your algorithms in a ``jar``.
-To address the jar dependencies issue, we need you to pack with dependencies included. For example, you can
-used maven plugin `maven-shade-pluging`.
+.. code:: bash
+
+    python3 ${GRAPHSCOPE_REPO}/analytical_engine/java/java-app-runner.py
+                --app=${app_class_name} --graph_type=${true/false} --java_path=${path_to_your_jar} 
+                --test_dir=${test_dir} --param_str=${params_str}
+
+``app_class_name`` is the fully-specified name for your algorithm class(i.e. com.xxx.Traverse), ``path_to_your_jar`` should be the place where your packed jar resides, and 
+``test_dir`` points to the path of `gstest data <https://github.com/GraphScope/gstest>`_.
+To pass params to your contex, put them in ``params`` like ``src=6,threadNum=1``, and these params will be provided in ``Context::Init`` as a json string. For example,
+
+.. code:: bash
+
+    cd ${GRAPHSCOPE_REPO}/analytical_engine/java/
+    python3 java-app-runner.py --app com.alibaba.graphscope.example.traverse.Traverse 
+                --directed False 
+                --jar_path /home/graphscope/GraphScope/analytical_engine/java/grape-demo/target/grape-demo-0.1-shaded.jar 
+                --test_dir /tmp/gstest/ 
+                --arguments "maxIteration=10"
+
+After verifying your algorithm locally, you may try to run your algorithms on GraphScope analytical engine. First you need to pack your algorithms in a ``jar``.
+To address the jar dependencies issue, we need you to pack with dependencies included. For example, you can used maven plugin `maven-shade-plugin`.
 
 .. code:: xml
 
@@ -459,29 +538,19 @@ and you need to specify the app you want in this run.
 
     import graphscope
     from graphscope import JavaApp
-    graphscope.set_option(show_log=True)
+    from graphscope.dataset import load_p2p_network
+    
     """Or lauch session in k8s cluster"""
-    sess = graphscope.session(cluster_type='hosts') 
+    sess = graphscope.session(cluster_type='hosts')
 
-    graph = sess.g()
-    graph = sess.g(directed=False)
-    graph = graph.add_vertices("gstest/property/p2p-31_property_v_0", label="person")
-    graph = graph.add_edges("gstest/property/p2p-31_property_e_0", label="knows")
+    graph = load_p2p_network(sess)
+    graph = graph.project(vertices={"host": ['id']}, edges={"connect": ["dist"]})
 
-    sssp1=JavaApp(
-        full_jar_path="full/path/to/your/packed/jar", 
-        java_app_class="fullly/qualified/class/name/of/your/app", 
+    app=JavaApp(
+        full_jar_path="{full/path/to/your/packed/jar}", 
+        java_app_class="{fullly/qualified/class/name/of/your/app}", 
     )
-    ctx2=sssp1(graph,src=6)
-
-    graph = graph.project(vertices={"person": ['id']}, edges={"knows": ["dist"]})
-    sssp3=JavaApp(
-        full_jar_path="full/path/to/your/packed/jar", 
-        java_app_class="app/on/projected/graph", 
-    )
-    ctx3=sssp3(graph,src=6)
-
-    ctx.to_numpy("r:label0.dist_0")
+    ctx=app(graph, "{param string}")
 
 After computation, you can obtain the results stored in context with the help of :ref:`Context`.
 

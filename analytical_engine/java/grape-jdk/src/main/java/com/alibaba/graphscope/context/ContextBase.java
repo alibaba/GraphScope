@@ -16,12 +16,5 @@
 
 package com.alibaba.graphscope.context;
 
-/**
- * Root interface for DefaultContextBase and ParallelContextBase.
- *
- * @param <OID_T> vertex original id type
- * @param <VID_T> vertex inner representation id type
- * @param <VDATA_T> vertex data type
- * @param <EDATA_T> edge data type
- */
-public interface ContextBase<OID_T, VID_T, VDATA_T, EDATA_T> {}
+/** Root interface for all contexts. */
+public interface ContextBase {}
