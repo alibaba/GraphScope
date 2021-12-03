@@ -17,6 +17,7 @@
 #
 
 import argparse
+import shutil
 import subprocess
 import toml
 import time
@@ -84,7 +85,7 @@ def clean_up(prog_name, hosts, num=0):
     pool = list()
     for server_id in range( num):
         host = hosts[server_id][0]
-        command = ["ssh", host, "pkill -f " + prog_name]
+        command = [shutil.which("ssh"), host, "pkill -f " + prog_name]
         print(command)
         pool.append(subprocess.Popen(command))
 

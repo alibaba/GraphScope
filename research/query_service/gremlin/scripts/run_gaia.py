@@ -19,6 +19,7 @@
 import argparse
 import tempfile
 import os
+import shutil
 import subprocess
 from utils import get_hosts_from_toml, hosts_dict_to_list, sync_process, clean_up, str2bool
 
@@ -38,8 +39,8 @@ def extract_file_name(line: str):
     filename = absolute_path[idx + 1:]
     if filename.startswith('.'):
         return None, None
-    else:
-        return absolute_path, filename
+
+    return absolute_path, filename
 
 
 ####################################################################
@@ -89,9 +90,9 @@ def prepare_files():
     schema_folder = os.path.join(args.graph_dir, "graph_schema")
     schema_file = os.path.join(args.graph_dir, "graph_schema", "schema.json")
 
-    subprocess.check_call(["mkdir", "-p", tmp_dir])
-    subprocess.check_call(["mkdir", "-p", schema_folder])
-    subprocess.check_call(["cp", args.schema_file, schema_file])
+    subprocess.check_call([shutil.which("mkdir"), "-p", tmp_dir])
+    subprocess.check_call([shutil.which("mkdir"), "-p", schema_folder])
+    subprocess.check_call([shutil.which("cp"), args.schema_file, schema_file])
 
     if args.host_file is not None:
         host_list_file = os.path.join(tmp_dir, "hosts")
@@ -99,10 +100,10 @@ def prepare_files():
             for host in hosts:
                 f.write("%s:%s\n" % (host[0], host[1]))
         for i in range(num_machines):
-            subprocess.check_call(["ssh", hosts[i][0], "mkdir", "-p", tmp_dir])
-            subprocess.check_call(["ssh", hosts[i][0], "mkdir", "-p", schema_folder])
-            subprocess.check_call(["scp", args.schema_file, "%s:%s" % (hosts[i][0], schema_file)])
-            subprocess.check_call(["scp", host_list_file, "%s:%s" % (hosts[i][0], tmp_dir)])
+            subprocess.check_call([shutil.which("ssh"), hosts[i][0], "mkdir", "-p", tmp_dir])
+            subprocess.check_call([shutil.which("ssh"), hosts[i][0], "mkdir", "-p", schema_folder])
+            subprocess.check_call([shutil.which("scp"), args.schema_file, "%s:%s" % (hosts[i][0], schema_file)])
+            subprocess.check_call([shutil.which("scp"), host_list_file, "%s:%s" % (hosts[i][0], tmp_dir)])
 
 
 def download_from_hdfs():
@@ -122,7 +123,7 @@ def download_from_hdfs():
             run_params = "%s %s %s %s %s %d -w %d -n %d -p %d -h %s" % \
                      (env, program, args.hadoop_home, args.raw_data_dir, tmp_dir,
                       args.raw_partitions, args.workers, num_machines, i, host_list_file)
-            cmd = ["ssh", hosts[i][0], run_params]
+            cmd = [shutil.which("ssh"), hosts[i][0], run_params]
             print(cmd)
             pool.append(subprocess.Popen(cmd))
         sync_process(pool)
@@ -146,7 +147,6 @@ def par_loader():
     log_dir = os.path.join(os.getcwd(), "logs", "par_loader", "%s_w%d_m%d" % (graph_name, args.workers, num_machines))
     if not os.path.exists(log_dir):
         os.makedirs(log_dir)
-
     local_dir = args.raw_data_dir
     # Means the raw data is in HDFS
     if args.raw_data_dir.startswith("hdfs://"):
@@ -169,12 +169,11 @@ def par_loader():
             run_params = "%s %s %s %s %d -w %d -n %d -p %d -h %s" % \
                          (env, program, local_dir, args.graph_dir,
                           args.raw_partitions, args.workers, num_machines, i, host_list_file)
-            cmd = ["ssh", hosts[i][0], run_params]
+            cmd = [shutil.which("ssh"), hosts[i][0], run_params]
             print(cmd)
             pool.append(subprocess.Popen(cmd, stdout=log_file, stderr=log_file))
             log_file.close()
         sync_process(pool)
-
 
 def start_rpc():
     """
@@ -217,7 +216,7 @@ def start_rpc():
                 port = prev_port + 1
             prev_port = port
             run_params = "%s -p %d --report" % (run_params, port)
-            cmd = ["ssh", hosts[i][0], run_params]
+            cmd = [shutil.which("ssh"), hosts[i][0], run_params]
             print(cmd)
             pool.append(subprocess.Popen(cmd, stdout=log_file, stderr=log_file))
             prev_host = hosts[i][0]
