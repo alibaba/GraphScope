@@ -661,6 +661,16 @@ class KubernetesClusterLauncher(Launcher):
                     "name": "dataset",
                     "image": self._saved_locals["dataset_image"],
                     "imagePullPolicy": self._saved_locals["image_pull_policy"],
+                    "resources": {
+                        "requests": {
+                            "memory": "64Mi",
+                            "cpu": "250m",
+                        },
+                        "limits": {
+                            "memory": "64Mi",
+                            "cpu": "250m",
+                        },
+                    },
                     "volumeMounts": [
                         {
                             "name": "dataset",
