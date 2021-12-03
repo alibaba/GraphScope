@@ -47,7 +47,7 @@ public class RpcClient {
         AtomicBoolean finished = new AtomicBoolean(false);
         for (RpcChannel rpcChannel : channels) {
             JobServiceStub asyncStub = JobServiceGrpc.newStub(rpcChannel.getChannel());
-            // TODO: fix timeout according to config
+            // todo: make timeout configurable
             asyncStub.withDeadlineAfter(600000, TimeUnit.MILLISECONDS).submit(jobRequest, new JobResponseObserver(responseIterator, finished, counter));
         }
         return responseIterator;
