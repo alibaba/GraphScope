@@ -1851,6 +1851,7 @@ class Graph(_GraphBase):
         g._key = graph_def.key
         g._session = self._session
         g._schema = copy.deepcopy(self._schema)
+        g._op = op
         return g
 
     def edge_subgraph(self, edges):

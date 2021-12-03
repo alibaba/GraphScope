@@ -776,7 +776,6 @@ bl::result<rpc::graph::GraphDefPb> GrapeInstance::copyGraph(
 
 bl::result<rpc::graph::GraphDefPb> GrapeInstance::toDirected(
     const rpc::GSParams& params) {
-#ifdef NETWORKX
   BOOST_LEAF_AUTO(src_graph_name, params.Get<std::string>(rpc::GRAPH_NAME));
   // BOOST_LEAF_AUTO(copy_type, params.Get<std::string>(rpc::COPY_TYPE));
 
@@ -788,16 +787,10 @@ bl::result<rpc::graph::GraphDefPb> GrapeInstance::toDirected(
                   src_wrapper->ToDirected(comm_spec_, dst_graph_name));
   BOOST_LEAF_CHECK(object_manager_.PutObject(dst_wrapper));
   return dst_wrapper->graph_def();
-#else
-  RETURN_GS_ERROR(vineyard::ErrorCode::kUnimplementedMethod,
-                  "GraphScope is built with NETWORKX=OFF, please recompile it "
-                  "with NETWORKX=ON");
-#endif  // NETWORKX
 }
 
 bl::result<rpc::graph::GraphDefPb> GrapeInstance::toUnDirected(
     const rpc::GSParams& params) {
-#ifdef NETWORKX
   BOOST_LEAF_AUTO(src_graph_name, params.Get<std::string>(rpc::GRAPH_NAME));
 
   BOOST_LEAF_AUTO(src_wrapper,
@@ -808,11 +801,6 @@ bl::result<rpc::graph::GraphDefPb> GrapeInstance::toUnDirected(
                   src_wrapper->ToUndirected(comm_spec_, dst_graph_name));
   BOOST_LEAF_CHECK(object_manager_.PutObject(dst_wrapper));
   return dst_wrapper->graph_def();
-#else
-  RETURN_GS_ERROR(vineyard::ErrorCode::kUnimplementedMethod,
-                  "GraphScope is built with NETWORKX=OFF, please recompile it "
-                  "with NETWORKX=ON");
-#endif  // NETWORKX
 }
 
 #ifdef NETWORKX
