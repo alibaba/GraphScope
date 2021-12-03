@@ -46,7 +46,7 @@ def extract_file_name(line: str):
 ####################### Prepare the arguments ######################
 ####################################################################
 
-TMP_FOLDER = "tmp4p1wlx9p"
+TMP_FOLDER = "gaia_tmp"
 parser = argparse.ArgumentParser()
 # Note that we need to create temporary folder on each machine
 tmp_dir = os.path.join(tempfile.gettempdir(), TMP_FOLDER)
@@ -89,9 +89,9 @@ def prepare_files():
     schema_folder = os.path.join(args.graph_dir, "graph_schema")
     schema_file = os.path.join(args.graph_dir, "graph_schema", "schema.json")
 
-    subprocess.call(["mkdir", "-p", tmp_dir])
-    subprocess.call(["mkdir", "-p", schema_folder])
-    subprocess.call(["cp", args.schema_file, schema_file])
+    subprocess.check_call(["mkdir", "-p", tmp_dir])
+    subprocess.check_call(["mkdir", "-p", schema_folder])
+    subprocess.check_call(["cp", args.schema_file, schema_file])
 
     if args.host_file is not None:
         host_list_file = os.path.join(tmp_dir, "hosts")
@@ -99,16 +99,20 @@ def prepare_files():
             for host in hosts:
                 f.write("%s:%s\n" % (host[0], host[1]))
         for i in range(num_machines):
-            subprocess.call(["ssh", hosts[i][0], "mkdir", "-p", tmp_dir])
-            subprocess.call(["ssh", hosts[i][0], "mkdir", "-p", schema_folder])
-            subprocess.call(["scp", args.schema_file, "%s:%s" % (hosts[i][0], schema_file)])
-            subprocess.call(["scp", host_list_file, "%s:%s" % (hosts[i][0], tmp_dir)])
+            subprocess.check_call(["ssh", hosts[i][0], "mkdir", "-p", tmp_dir])
+            subprocess.check_call(["ssh", hosts[i][0], "mkdir", "-p", schema_folder])
+            subprocess.check_call(["scp", args.schema_file, "%s:%s" % (hosts[i][0], schema_file)])
+            subprocess.check_call(["scp", host_list_file, "%s:%s" % (hosts[i][0], tmp_dir)])
 
 
 def download_from_hdfs():
     """
     Download given files from HDFS to local hosts
     """
+    if args.host_file is None:
+        print("Must specify -H/--host_file")
+        parser.print_help()
+        exit(1)
     program = os.path.join(os.getcwd(), "bin", "downloader")
     pool = []
     env = "RUST_LOG=Info"
@@ -122,11 +126,6 @@ def download_from_hdfs():
             print(cmd)
             pool.append(subprocess.Popen(cmd))
         sync_process(pool)
-    else:
-        cmd = "%s %s %s %s %s %d -w %d" % (env, program, args.hadoop_home, args.raw_data_dir, tmp_dir,
-                      args.raw_partitions, args.workers)
-        print(cmd)
-        subprocess.call([cmd], shell=True)
 
 
 def par_loader():
@@ -136,6 +135,10 @@ def par_loader():
     # Check the required arguments for building storage
     if args.raw_data_dir is None or args.graph_dir is None or args.schema_file is None:
         print("Must specify -d/--raw_data_dir, -g/--graph_dir, -s/--schema_file")
+        parser.print_help()
+        exit(1)
+    if args.host_file is None:
+        print("Must specify -H/--host_file")
         parser.print_help()
         exit(1)
 
@@ -171,11 +174,6 @@ def par_loader():
             pool.append(subprocess.Popen(cmd, stdout=log_file, stderr=log_file))
             log_file.close()
         sync_process(pool)
-    else:
-        cmd = "%s %s %s %s %d -w %d" % \
-                     (env, program, local_dir, args.graph_dir, args.raw_partitions, args.workers)
-        print(cmd)
-        subprocess.call([cmd], shell=True)
 
 
 def start_rpc():
@@ -185,6 +183,10 @@ def start_rpc():
     # Check the required arguments for starting RPC service
     if args.graph_dir is None:
         print("Must specify -g/--graph_dir")
+        parser.print_help()
+        exit(1)
+    if args.host_file is None:
+        print("Must specify -H/--host_file")
         parser.print_help()
         exit(1)
 
@@ -221,10 +223,6 @@ def start_rpc():
             prev_host = hosts[i][0]
             log_file.close()
         sync_process(pool)
-    else:
-        cmd = "%s %s" % (env, program)
-        print(cmd)
-        subprocess.call([cmd], shell=True)
 
 
 if __name__ == '__main__':
