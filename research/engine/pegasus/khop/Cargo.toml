@@ -1,0 +1,24 @@
+[workspace]
+
+[package]
+name = "pegasus-khop"
+version = "0.1.0"
+edition = "2018"
+
+[dependencies]
+pegasus_graph = { path = "../graph" }
+pegasus = { path = "../pegasus" }
+pegasus_common = { path = "../common" }
+time = "0.1"
+env_logger = { version = "0.6" }
+structopt = "0.3"
+rand = "0.8.3"
+
+[[bin]]
+name = "k_hop"
+
+[[bin]]
+name = "correlated_k_hop"
+
+[[bin]]
+name = "decorrelated_k_hop"

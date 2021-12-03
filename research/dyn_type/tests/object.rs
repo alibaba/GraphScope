@@ -73,6 +73,7 @@ mod tests {
         let vec_borrow_to_owned = vec_borrow.try_to_owned().unwrap();
         assert_eq!(vec_borrow_to_owned.get::<Vec<u32>>().unwrap(), vec);
 
+        /*
         let mut map = HashMap::new();
         // Review some books.
         map.insert("Adventures of Huckleberry Finn".to_string(), "My favorite book.".to_string());
@@ -90,6 +91,7 @@ mod tests {
         let map_borrow = map_obj.as_borrow();
         let map_borrow_to_owned = map_borrow.try_to_owned().unwrap();
         assert!(is_map_eq(&map, &(*map_borrow_to_owned.get::<HashMap<String, String>>().unwrap())));
+         */
     }
 
     #[test]

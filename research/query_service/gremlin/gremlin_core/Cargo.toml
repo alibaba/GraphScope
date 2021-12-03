@@ -1,0 +1,36 @@
+[package]
+name = "gremlin_core"
+version = "0.1.0"
+edition = "2018"
+
+[dependencies]
+log = "0.4"
+lazy_static = "1.3.0"
+enum_dispatch = "0.3"
+bitflags = "1.2.1"
+bit-set = "0.5.2"
+clap = "2.32.0"
+strum = "0.18.0"
+strum_macros = "0.18.0"
+crossbeam-queue = "0.1"
+crossbeam-utils = "0.6"
+crossbeam-channel = "0.3.6"
+dyn-clonable = "0.9.0"
+dyn_type = { path = "../../../dyn_type" }
+pegasus = { path = "../../../engine/pegasus/pegasus" }
+pegasus_common = { path = "../../../engine/pegasus/common" }
+pegasus_server = { path = "../../../engine/pegasus/server-v0" }
+prost = "0.8"
+graph_store = { path = "../../../graph_store" }
+tonic = "0.4"
+tokio = { version = "1.0", features = ["macros", "sync"] }
+structopt = "0.2"
+vec_map = "0.8.2"
+tempdir = "0.3"
+
+[build-dependencies]
+tonic-build = "0.4"
+
+[features]
+default = []
+proto_inplace = []

@@ -1,1 +1,0 @@
-g.V().as("a").out("created").in("created").as("b").where("a", P.gt("b")).by("age")

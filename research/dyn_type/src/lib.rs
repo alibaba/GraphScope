@@ -19,6 +19,7 @@ extern crate pegasus_common;
 
 extern crate dyn_clonable;
 
+pub mod arith;
 pub mod error;
 pub mod object;
 pub mod serde_dyn;
