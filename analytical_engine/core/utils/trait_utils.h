@@ -13,8 +13,8 @@
  * limitations under the License.
  */
 
-#ifndef ANALYTICAL_ENGINE_CORE_UTILS_APP_UTILS_H_
-#define ANALYTICAL_ENGINE_CORE_UTILS_APP_UTILS_H_
+#ifndef ANALYTICAL_ENGINE_CORE_UTILS_TRAIT_UTILS_H_
+#define ANALYTICAL_ENGINE_CORE_UTILS_TRAIT_UTILS_H_
 
 #include <dlfcn.h>
 
@@ -59,4 +59,4 @@ struct is_flattened_fragment<
 };
 
 }  // namespace gs
-#endif  // ANALYTICAL_ENGINE_CORE_UTILS_APP_UTILS_H_
+#endif  // ANALYTICAL_ENGINE_CORE_UTILS_TRAIT_UTILS_H_
