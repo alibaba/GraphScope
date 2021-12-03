@@ -502,6 +502,8 @@ def op_pre_process(op, op_result_pool, key_to_op, **kwargs):  # noqa: C901
         )
     if op.op == types_pb2.OUTPUT:
         _pre_process_for_output_op(op, op_result_pool, key_to_op, **kwargs)
+    if op.op in (types_pb2.TO_DIRECTED, types_pb2.TO_UNDIRECTED):
+        _pre_process_for_transform_op(op, op_result_pool, key_to_op, **kwargs)
 
 
 def _pre_process_for_create_graph_op(op, op_result_pool, key_to_op, **kwargs):
@@ -526,6 +528,12 @@ def _pre_process_for_add_labels_op(op, op_result_pool, key_to_op, **kwargs):
             op.attr[types_pb2.GRAPH_NAME].CopyFrom(
                 utils.s_to_attr(result.graph_def.key)
             )
+
+
+def _pre_process_for_transform_op(op, op_result_pool, key_to_op, **kwargs):
+    assert len(op.parents) == 1
+    result = op_result_pool[op.parents[0]]
+    op.attr[types_pb2.GRAPH_NAME].CopyFrom(utils.s_to_attr(result.graph_def.key))
 
 
 def _pre_process_for_close_interactive_query_op(
@@ -733,6 +741,8 @@ def _pre_process_for_context_op(op, op_result_pool, key_to_op, **kwargs):
                     types_pb2.TRANSFORM_GRAPH,
                     types_pb2.PROJECT_GRAPH,
                     types_pb2.PROJECT_TO_SIMPLE,
+                    types_pb2.TO_DIRECTED,
+                    types_pb2.TO_UNDIRECTED,
                 ):
                     return next_op
                 for parent_key in next_op.parents:

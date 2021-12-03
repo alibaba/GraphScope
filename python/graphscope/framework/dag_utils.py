@@ -584,14 +584,16 @@ def to_directed(graph):
         graph.graph_type
         in (graph_def_pb2.DYNAMIC_PROPERTY, graph_def_pb2.ARROW_PROPERTY)
     )
-    config = {
-        types_pb2.GRAPH_NAME: utils.s_to_attr(graph.key),
-    }
+    config = {}
+    # The key maybe filled later in coordinator
+    if hasattr(graph, "key"):
+        config[types_pb2.GRAPH_NAME] = utils.s_to_attr(graph.key)
 
     op = Operation(
         graph.session_id,
         types_pb2.TO_DIRECTED,
         config=config,
+        inputs=[graph.op],
         output_types=types_pb2.GRAPH,
     )
     return op
@@ -610,14 +612,16 @@ def to_undirected(graph):
         graph.graph_type
         in (graph_def_pb2.DYNAMIC_PROPERTY, graph_def_pb2.ARROW_PROPERTY)
     )
-    config = {
-        types_pb2.GRAPH_NAME: utils.s_to_attr(graph.key),
-    }
+    config = {}
+    # The key maybe filled later in coordinator
+    if hasattr(graph, "key"):
+        config[types_pb2.GRAPH_NAME] = utils.s_to_attr(graph.key)
 
     op = Operation(
         graph.session_id,
         types_pb2.TO_UNDIRECTED,
         config=config,
+        inputs=[graph.op],
         output_types=types_pb2.GRAPH,
     )
     return op

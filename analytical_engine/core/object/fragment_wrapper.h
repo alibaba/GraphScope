@@ -637,7 +637,11 @@ class FragmentWrapper<vineyard::ArrowFragment<OID_T, VID_T>>
       const std::string& dst_graph_name) override {
     auto& meta = fragment_->meta();
     auto* client = dynamic_cast<vineyard::Client*>(meta.GetClient());
-    BOOST_LEAF_AUTO(new_frag_id, fragment_->TransformDirection(*client));
+    int thread_num =
+        (std::thread::hardware_concurrency() + comm_spec.local_num() - 1) /
+        comm_spec.local_num();
+    BOOST_LEAF_AUTO(new_frag_id,
+                    fragment_->TransformDirection(*client, thread_num));
     VINEYARD_CHECK_OK(client->Persist(new_frag_id));
     BOOST_LEAF_AUTO(frag_group_id, vineyard::ConstructFragmentGroup(
                                        *client, new_frag_id, comm_spec));
@@ -658,7 +662,7 @@ class FragmentWrapper<vineyard::ArrowFragment<OID_T, VID_T>>
 
     auto wrapper = std::make_shared<FragmentWrapper<fragment_t>>(
         dst_graph_name, new_graph_def, new_frag);
-    return std::dynamic_pointer_cast<ILabeledFragmentWrapper>(wrapper);
+    return std::dynamic_pointer_cast<IFragmentWrapper>(wrapper);
   }
 
   bl::result<std::shared_ptr<IFragmentWrapper>> ToUndirected(
