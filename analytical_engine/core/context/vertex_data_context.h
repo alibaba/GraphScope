@@ -39,6 +39,7 @@
 #include "core/context/i_context.h"
 #include "core/context/tensor_dataframe_builder.h"
 #include "core/error.h"
+#include "core/fragment/arrow_flattened_fragment.h"
 #include "core/fragment/arrow_projected_fragment.h"
 #include "core/fragment/dynamic_projected_fragment.h"
 #include "core/utils/transform_utils.h"
@@ -154,9 +155,9 @@ class LabeledVertexDataContext : public grape::ContextBase {
   const fragment_t& fragment() { return fragment_; }
 
   const data_t& GetValue(vertex_t v) const {
-    label_id_t i = fragment_->vertex_label(v);
-    int64_t offset = fragment_->vertex_offset(v);
-    return data_[i][offset];
+    label_id_t i = fragment_.vertex_label(v);
+    int64_t offset = fragment_.vertex_offset(v);
+    return data_[i][vertex_t{offset}];
   }
 
   std::vector<vertex_array_t>& data() { return data_; }

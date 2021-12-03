@@ -12,14 +12,14 @@ The store is a distributed graph store built on top of the popular RocksDB key v
 Known Limitation
 ~~~~~~~~~~~~~~~~
 
-*  Initially, the new persistent store is provided as a separate option from Vineyard, and it can accept Gremlin queries for data access. Going foward we hope to evole them into an integrated hybrid graph store suitable for all kinds of workloads.
-*  In the v0.5 release, data can only be loaded into the store in a bulk fashion. APIs for real-time updates (inserts and deletes of individual vertices and egdes) were added in the v0.7 release.
+*  Initially, the new persistent store is provided as a separate option from Vineyard, and it can accept Gremlin queries for data access. Going foward we hope to evolve them into an integrated hybrid graph store suitable for all kinds of workloads.
+*  In the v0.5 release, data can only be loaded into the store in a bulk fashion. APIs for real-time updates (inserts and deletes of individual vertices and egdes) has been added in the v0.7 release.
 
 
 Deploying Store Service
 -----------------------
 
-This chart bootstraps a `GraphScope Store <https://github.com/alibaba/GraphScope/tree/main/interactive_engine/src/v2/src/main>`_ cluster deployment on a `Kubernetes <http://kubernetes.io>`_ cluster using the `Helm <https://helm.sh>`_ package manager.
+This chart bootstraps a `GraphScope Store <https://github.com/alibaba/GraphScope/tree/main/interactive_engine/groot/src/main/java/com/alibaba/graphscope/groot>`_ cluster deployment on a `Kubernetes <http://kubernetes.io>`_ cluster using the `Helm <https://helm.sh>`_ package manager.
 
 
 Prerequisites

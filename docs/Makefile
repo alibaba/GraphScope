@@ -1,5 +1,7 @@
 # Minimal makefile for Sphinx documentation
 #
+MKFILE_PATH 			:= $(abspath $(lastword $(MAKEFILE_LIST)))
+WORKING_DIR 			:= $(dir $(MKFILE_PATH))
 
 # You can set these variables from the command line, and also
 # from the environment for the first two.
@@ -31,6 +33,11 @@ clean:
 %: Makefile doxygen
 	@echo "Tag is:" $(TAG)
 	@$(SPHINXBUILD) -M $@ "$(SOURCEDIR)" "$(BUILDDIR)/$(TAG)" $(SPHINXOPTS) $(O)
+
+	@echo "Building Java doc to $(BUILDDIR)/${TAG}/$@/reference/gae_java"
+
+	cd ${WORKING_DIR}/../analytical_engine/java/grape-jdk && \
+	mvn javadoc::javadoc -Djavadoc.output.directory=${WORKING_DIR}/$(BUILDDIR)/${TAG}/$@/reference -Djavadoc.output.destDir=gae_java --quiet
 
 doxygen:
 	@mkdir -p _build

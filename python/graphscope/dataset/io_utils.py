@@ -22,6 +22,7 @@ import os
 import shutil
 import sys
 import tarfile
+import tempfile
 import urllib
 import zipfile
 from urllib.request import urlretrieve
@@ -30,6 +31,7 @@ from tqdm import tqdm
 
 logger = logging.getLogger("graphscope")
 
+DATA_SITE = "https://graphscope.oss-cn-beijing.aliyuncs.com/dataset"
 
 if sys.version_info >= (3, 6):
 
@@ -198,7 +200,7 @@ def download_file(
         cache_dir = os.path.join(os.path.expanduser("~"), ".graphscope")
     cache_dir = os.path.expanduser(cache_dir)
     if os.path.exists(cache_dir) and not os.access(cache_dir, os.W_OK):
-        cache_dir = os.path.join("/tmp", ".graphscope")
+        cache_dir = os.path.join("/", tempfile.gettempprefix(), ".graphscope")
     datadir = os.path.join(cache_dir, cache_subdir)
     os.makedirs(datadir, exist_ok=True)
 

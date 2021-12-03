@@ -23,8 +23,10 @@ import signal
 import subprocess
 import sys
 
+import graphscope
 from graphscope.config import GSConfig as gs_config
 from graphscope.deploy.launcher import Launcher
+from graphscope.framework.utils import PipeWatcher
 from graphscope.framework.utils import get_free_port
 from graphscope.framework.utils import is_free_port
 from graphscope.framework.utils import random_string
@@ -105,27 +107,44 @@ class HostsClusterLauncher(Launcher):
         if self._vineyard_shared_mem is not None:
             cmd.extend(["--vineyard_shared_mem", self._vineyard_shared_mem])
 
-        if self._vineyard_socket is not None:
+        if self._vineyard_socket:
             cmd.extend(["--vineyard_socket", "{}".format(self._vineyard_socket)])
 
-        logger.info("Initializing coordinator.")
+        logger.info("Initializing coordinator with command: %s", " ".join(cmd))
 
         env = os.environ.copy()
         env["PYTHONUNBUFFERED"] = "TRUE"
+        # add graphscope module to PYTHONPATH
+        if "PYTHONPATH" in env:
+            env["PYTHONPATH"] = (
+                os.path.join(os.path.dirname(graphscope.__file__), "..")
+                + os.pathsep
+                + env["PYTHONPATH"]
+            )
+        else:
+            env["PYTHONPATH"] = os.path.join(os.path.dirname(graphscope.__file__), "..")
+
         # Param `start_new_session=True` is for putting child process to a new process group
         # so it won't get the signals from parent.
-        self._proc = subprocess.Popen(
+        process = subprocess.Popen(
             cmd,
             start_new_session=True,
             cwd=COORDINATOR_HOME,
-            universal_newlines=True,
-            encoding="utf-8",
-            stdin=subprocess.DEVNULL,
-            stdout=sys.stdout if gs_config.show_log else subprocess.DEVNULL,
-            stderr=sys.stderr,
-            bufsize=1,
             env=env,
+            encoding="utf-8",
+            errors="replace",
+            stdin=subprocess.DEVNULL,
+            stdout=subprocess.PIPE if gs_config.show_log else subprocess.DEVNULL,
+            stderr=subprocess.PIPE,
+            universal_newlines=True,
+            bufsize=1,
         )
+        if gs_config.show_log:
+            stdout_watcher = PipeWatcher(process.stdout, sys.stdout)
+            setattr(process, "stdout_watcher", stdout_watcher)
+        stderr_watcher = PipeWatcher(process.stderr, sys.stderr)
+        setattr(process, "stderr_watcher", stderr_watcher)
+        self._proc = process
 
     def type(self):
         return "hosts"

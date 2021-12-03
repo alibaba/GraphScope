@@ -25,15 +25,16 @@ import networkx.convert
 from networkx.convert import from_dict_of_dicts
 from networkx.convert import from_dict_of_lists
 from networkx.convert import from_edgelist
+from networkx.convert import to_dict_of_dicts
+from networkx.convert import to_dict_of_lists
 
 from graphscope import nx
-from graphscope.framework.dag_utils import arrow_to_dynamic
 from graphscope.nx.utils.compat import import_as_graphscope_nx
 
 import_as_graphscope_nx(networkx.convert)
 
 
-def to_nx_graph(data, create_using=None, multigraph_input=False):  # noqa: C901
+def to_networkx_graph(data, create_using=None, multigraph_input=False):  # noqa: C901
     """Make a graph from a known data structure.
 
     The preferred way to call this is automatically
@@ -160,7 +161,7 @@ def to_nx_graph(data, create_using=None, multigraph_input=False):  # noqa: C901
     raise nx.NetworkXError("Input is not a known data type for conversion.")
 
 
-def to_networkx_graph(nx_graph):
+def to_nx_graph(nx_graph):
     import networkx
 
     if not nx_graph.is_directed() and not nx_graph.is_multigraph():

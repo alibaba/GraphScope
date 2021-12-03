@@ -2,12 +2,23 @@ The GraphScope has been deployed.
 
 {{- if contains "NodePort" .Values.coordinator.service.type }}
 Get service address by:
-  export NODE_IP=$(kubectl --namespace {{ .Release.Namespace }} get pod -o jsonpath="{.status.hostIP}" {{ template "graphscope.fullname" .}}-coordinator)
+  export NODE_IP=$(kubectl --namespace {{ .Release.Namespace }}  get pod -l {{ template "graphscope.coordinator.labelSelector" . }} --no-headers=true | awk '/ /{print $1}' | xargs kubectl --namespace {{ .Release.Namespace }} get pod -o jsonpath="{.status.hostIP}")
   export NODE_PORT=$(kubectl --namespace {{ .Release.Namespace }} get services -o jsonpath="{.spec.ports[0].nodePort}" {{ template "graphscope.fullname" . }}-coordinator-service)
+  export JUPYTER_PORT=
   echo "GraphScope service listen on ${NODE_IP}:${NODE_PORT}"
+
+{{- if .Values.jupyter }}
+
+A jupyter-lab container is shipped with GraphScope, you can get the jupyter URL by executing 
+  'kubectl --namespace {{ .Release.Namespace }} logs {{ template "graphscope.fullname" .}}-coordinator -c jupyter'
+
+Then replace the '127.0.0.1:8888' to '${NODE_IP}:{{ .Values.jupyter.port }}'.
+
+{{- end }}
+
 {{- else if contains "LoadBalancer" .Values.coordinator.service.type }}
 It may take a few minutes for the LoadBalancer IP to be available.
-You can watch the status by running 'kubectl --namespace {{ .Release.Namespace }} get services -o wide -w {{ template "graphscope.fullname" . }}-coordinator-service'
+You can watch the status by executing 'kubectl --namespace {{ .Release.Namespace }} get services -o wide -w {{ template "graphscope.fullname" . }}-coordinator-service'
 {{- end }}
 
 An example to connect service in python.

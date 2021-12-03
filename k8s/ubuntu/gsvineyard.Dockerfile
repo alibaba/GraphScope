@@ -14,14 +14,13 @@ RUN cd /tmp && \
     make -j`nproc` && \
     make install && \
     cd /tmp && \
-    git clone -b v0.2.12 https://github.com/alibaba/libvineyard.git --depth=1 && \
+    git clone -b v0.3.11 https://github.com/alibaba/libvineyard.git --depth=1 && \
     cd libvineyard && \
     git submodule update --init && \
     mkdir -p /tmp/libvineyard/build && \
     cd /tmp/libvineyard/build && \
     cmake .. -DBUILD_VINEYARD_PYPI_PACKAGES=ON \
-             -DBUILD_SHARED_LIBS=ON \
-             -DBUILD_VINEYARD_IO_OSS=ON && \
+             -DBUILD_SHARED_LIBS=ON && \
     make install vineyard_client_python -j && \
     cd /tmp/libvineyard && \
     python3 setup.py bdist_wheel && \

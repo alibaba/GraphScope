@@ -1,0 +1,77 @@
+/**
+ * Copyright 2020 Alibaba Group Holding Limited.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+syntax = "proto3";
+
+import "model.proto";
+
+option java_package = "com.alibaba.maxgraph.proto.groot";
+option java_multiple_files = true;
+
+service ClientBackup {
+  rpc createNewGraphBackup(CreateNewGraphBackupRequest) returns (CreateNewGraphBackupResponse);
+  rpc deleteGraphBackup(DeleteGraphBackupRequest) returns (DeleteGraphBackupResponse);
+  rpc purgeOldGraphBackups(PurgeOldGraphBackupsRequest) returns (PurgeOldGraphBackupsResponse);
+  rpc restoreFromGraphBackup(RestoreFromGraphBackupRequest) returns (RestoreFromGraphBackupResponse);
+  rpc verifyGraphBackup(VerifyGraphBackupRequest) returns (VerifyGraphBackupResponse);
+  rpc getGraphBackupInfo(GetGraphBackupInfoRequest) returns (GetGraphBackupInfoResponse);
+}
+
+
+message CreateNewGraphBackupRequest {
+}
+
+message CreateNewGraphBackupResponse {
+  int32 backupId = 1;
+}
+
+message DeleteGraphBackupRequest {
+  int32 backupId = 1;
+}
+
+message DeleteGraphBackupResponse {
+}
+
+message PurgeOldGraphBackupsRequest {
+  int32 keepAliveNumber = 1;
+}
+
+message PurgeOldGraphBackupsResponse {
+}
+
+message RestoreFromGraphBackupRequest {
+  int32 backupId = 1;
+  string meta_restore_path = 2;
+  string store_restore_path = 3;
+}
+
+message RestoreFromGraphBackupResponse {
+}
+
+message VerifyGraphBackupRequest {
+  int32 backupId = 1;
+}
+
+message VerifyGraphBackupResponse {
+  bool isOk = 1;
+  string errMsg = 2;
+}
+
+message GetGraphBackupInfoRequest {
+}
+
+message GetGraphBackupInfoResponse {
+  repeated BackupInfoPb backupInfoList = 1;
+}

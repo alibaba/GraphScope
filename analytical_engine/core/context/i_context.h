@@ -97,7 +97,7 @@ class IVertexDataContextWrapper : public IContextWrapper {
 
   virtual bl::result<std::string> GetContextData(const rpc::GSParams& params) {
     RETURN_GS_ERROR(vineyard::ErrorCode::kInvalidOperationError,
-                    "Not implement the operation.");
+                    "Not implemented operation: GetContextData");
   }
 };
 
@@ -219,6 +219,81 @@ class ILabeledVertexPropertyContextWrapper : public IContextWrapper {
                 const std::vector<std::pair<std::string, LabeledSelector>>&
                     selectors) = 0;
 };
+
+#ifdef ENABLE_JAVA_SDK
+/**
+ * @brief A base class for JavaPropertyDefaultContext. It holds an inner
+ * ctxWrapper, and redirect function calls to the inner ctxWrapper.
+ */
+class IJavaPIEPropertyContextWrapper : public IContextWrapper {
+  using label_id_t = vineyard::property_graph_types::LABEL_ID_TYPE;
+
+ public:
+  explicit IJavaPIEPropertyContextWrapper(const std::string& id)
+      : IContextWrapper(id) {}
+
+  virtual bl::result<std::unique_ptr<grape::InArchive>> ToNdArray(
+      const grape::CommSpec& comm_spec, const LabeledSelector& selector,
+      const std::pair<std::string, std::string>& range) = 0;
+
+  virtual bl::result<std::unique_ptr<grape::InArchive>> ToDataframe(
+      const grape::CommSpec& comm_spec,
+      const std::vector<std::pair<std::string, LabeledSelector>>& selectors,
+      const std::pair<std::string, std::string>& range) = 0;
+
+  virtual bl::result<vineyard::ObjectID> ToVineyardTensor(
+      const grape::CommSpec& comm_spec, vineyard::Client& client,
+      const LabeledSelector& selector,
+      const std::pair<std::string, std::string>& range) = 0;
+
+  virtual bl::result<vineyard::ObjectID> ToVineyardDataframe(
+      const grape::CommSpec& comm_spec, vineyard::Client& client,
+      const std::vector<std::pair<std::string, LabeledSelector>>& selectors,
+      const std::pair<std::string, std::string>& range) = 0;
+
+  virtual bl::result<std::map<
+      label_id_t,
+      std::vector<std::pair<std::string, std::shared_ptr<arrow::Array>>>>>
+  ToArrowArrays(const grape::CommSpec& comm_spec,
+                const std::vector<std::pair<std::string, LabeledSelector>>&
+                    selectors) = 0;
+};
+
+/**
+ * @brief A base class for JavaProjectedDefaultContext. It holds an inner
+ * ctxWrapper,and redirect function calls to the inner ctxWrapper.
+ */
+class IJavaPIEProjectedContextWrapper : public IContextWrapper {
+ public:
+  explicit IJavaPIEProjectedContextWrapper(const std::string& id)
+      : IContextWrapper(id) {}
+
+  virtual bl::result<std::unique_ptr<grape::InArchive>> ToNdArray(
+      const grape::CommSpec& comm_spec, const Selector& selector,
+      const std::pair<std::string, std::string>& range) = 0;
+
+  virtual bl::result<std::unique_ptr<grape::InArchive>> ToDataframe(
+      const grape::CommSpec& comm_spec,
+      const std::vector<std::pair<std::string, Selector>>& selectors,
+      const std::pair<std::string, std::string>& range) = 0;
+
+  virtual bl::result<vineyard::ObjectID> ToVineyardTensor(
+      const grape::CommSpec& comm_spec, vineyard::Client& client,
+      const Selector& selector,
+      const std::pair<std::string, std::string>& range) = 0;
+
+  virtual bl::result<vineyard::ObjectID> ToVineyardDataframe(
+      const grape::CommSpec& comm_spec, vineyard::Client& client,
+      const std::vector<std::pair<std::string, Selector>>& selectors,
+      const std::pair<std::string, std::string>& range) = 0;
+
+  virtual bl::result<
+      std::vector<std::pair<std::string, std::shared_ptr<arrow::Array>>>>
+  ToArrowArrays(
+      const grape::CommSpec& comm_spec,
+      const std::vector<std::pair<std::string, Selector>>& selectors) = 0;
+};
+#endif
 
 /**
  * @brief An abstract ContextWrapper for the data not assigned to vertex/edges.

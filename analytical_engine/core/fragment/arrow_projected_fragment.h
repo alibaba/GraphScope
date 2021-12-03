@@ -16,6 +16,7 @@
 #ifndef ANALYTICAL_ENGINE_CORE_FRAGMENT_ARROW_PROJECTED_FRAGMENT_H_
 #define ANALYTICAL_ENGINE_CORE_FRAGMENT_ARROW_PROJECTED_FRAGMENT_H_
 
+#include <limits>
 #include <memory>
 #include <set>
 #include <string>
@@ -325,8 +326,9 @@ class AdjList<VID_T, EID_T, grape::EmptyType> {
 }  // namespace arrow_projected_fragment_impl
 
 /**
- * @brief This class represents the fragment projected from ArrowFragment. The
- * fragment has no label and property.
+ * @brief This class represents the fragment projected from ArrowFragment which
+ * contains only one vertex label and edge label. The fragment has no label and
+ * property.
  *
  * @tparam OID_T OID type
  * @tparam VID_T VID type
@@ -549,6 +551,22 @@ class ArrowProjectedFragment
     ivnum_ = static_cast<vid_t>(inner_vertices_.size());
     ovnum_ = static_cast<vid_t>(outer_vertices_.size());
     tvnum_ = static_cast<vid_t>(vertices_.size());
+    if (ivnum_ > 0) {
+      ienum_ = static_cast<size_t>(oe_offsets_end_->Value(ivnum_ - 1) -
+                                   oe_offsets_begin_->Value(0));
+      if (directed_) {
+        ienum_ += static_cast<size_t>(ie_offsets_end_->Value(ivnum_ - 1) -
+                                      ie_offsets_begin_->Value(0));
+      }
+    }
+    if (ovnum_ > 0) {
+      oenum_ = static_cast<size_t>(oe_offsets_end_->Value(tvnum_ - 1) -
+                                   oe_offsets_begin_->Value(ivnum_));
+      if (directed_) {
+        oenum_ += static_cast<size_t>(ie_offsets_end_->Value(tvnum_ - 1) -
+                                      ie_offsets_begin_->Value(ivnum_));
+      }
+    }
 
     vertex_label_num_ = fragment_->vertex_label_num_;
     edge_label_num_ = fragment_->edge_label_num_;
@@ -681,9 +699,7 @@ class ArrowProjectedFragment
 
   inline vid_t GetVerticesNum() const { return tvnum_; }
 
-  inline size_t GetEdgeNum() const {
-    return static_cast<size_t>(edge_data_array_->length());
-  }
+  inline size_t GetEdgeNum() const { return ienum_ + oenum_; }
 
   inline size_t GetTotalVerticesNum() const {
     return vm_ptr_->GetTotalVerticesNum();
@@ -743,6 +759,16 @@ class ArrowProjectedFragment
 
   inline bool Oid2Gid(const oid_t& oid, vid_t& gid) const {
     return vm_ptr_->GetGid(internal_oid_t(oid), gid);
+  }
+
+  // For Java use, can not use Oid2Gid(const oid_t & oid, vid_t & gid) since
+  // Java can not pass vid_t by reference.
+  inline vid_t Oid2Gid(const oid_t& oid) const {
+    vid_t gid;
+    if (vm_ptr_->GetGid(internal_oid_t(oid), gid)) {
+      return gid;
+    }
+    return std::numeric_limits<vid_t>::max();
   }
 
   inline bool InnerVertexGid2Vertex(const vid_t& gid, vertex_t& v) const {
@@ -862,6 +888,8 @@ class ArrowProjectedFragment
     assert(offset < static_cast<int64_t>(ivnum_));
     return grape::DestList(iodoffset_[offset], iodoffset_[offset + 1]);
   }
+
+  inline bool directed() const { return directed_; }
 
  private:
   inline static std::pair<int64_t, int64_t> getRangeOfLabel(
@@ -1065,6 +1093,7 @@ class ArrowProjectedFragment
   bool directed_;
 
   vid_t ivnum_, ovnum_, tvnum_;
+  size_t ienum_{}, oenum_{};
 
   label_id_t vertex_label_num_, edge_label_num_;
   label_id_t vertex_label_, edge_label_;

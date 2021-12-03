@@ -21,9 +21,13 @@ import os
 import random
 import socket
 import string
+import threading
+import time
+from queue import Queue
 
 import numpy as np
 import pandas as pd
+import psutil
 from google.protobuf.any_pb2 import Any
 
 from graphscope.client.archive import OutArchive
@@ -32,6 +36,74 @@ from graphscope.proto import attr_value_pb2
 from graphscope.proto import data_types_pb2
 from graphscope.proto import graph_def_pb2
 from graphscope.proto import types_pb2
+
+
+class PipeWatcher(object):
+    def __init__(self, pipe, sink, queue=None, drop=True):
+        """Watch a pipe, and buffer its output if drop is False."""
+        self._pipe = pipe
+        self._sink = sink
+        self._drop = drop
+        if queue is None:
+            self._lines = Queue()
+        else:
+            self._lines = queue
+
+        def read_and_poll(self):
+            for line in self._pipe:
+                try:
+                    self._sink.write(line)
+                except:  # noqa: E722
+                    pass
+                try:
+                    if not self._drop:
+                        self._lines.put(line)
+                except:  # noqa: E722
+                    pass
+
+        self._polling_thread = threading.Thread(target=read_and_poll, args=(self,))
+        self._polling_thread.daemon = True
+        self._polling_thread.start()
+
+    def poll(self, block=True, timeout=None):
+        return self._lines.get(block=block, timeout=timeout)
+
+    def drop(self, drop=True):
+        self._drop = drop
+
+
+class PipeMerger(object):
+    def __init__(self, pipe1, pipe2):
+        self._queue = Queue()
+        self._stop = False
+
+        def read_and_pool(self, tag, pipe, target: Queue):
+            while True:
+                try:
+                    target.put((tag, pipe.poll()))
+                except Exception:
+                    time.sleep(1)
+                if self._stop:
+                    break
+
+        self._pipe1_thread = threading.Thread(
+            target=read_and_pool, args=(self, "out", pipe1, self._queue)
+        )
+        self._pipe1_thread.daemon = True
+
+        self._pipe2_thread = threading.Thread(
+            target=read_and_pool, args=(self, "err", pipe2, self._queue)
+        )
+        self._pipe2_thread.daemon = True
+
+        self._pipe1_thread.start()
+        self._pipe2_thread.start()
+
+    def poll(self, block=True, timeout=None):
+        return self._queue.get(block=block, timeout=timeout)
+
+    def stop(self):
+        self._stop = True
 
 
 def is_free_port(port, host="localhost", timeout=0.2):
@@ -45,6 +117,15 @@ def is_free_port(port, host="localhost", timeout=0.2):
     Returns:
         True if port is available, False otherwise.
     """
+    if host == "localhost" or host == "127.0.0.1":
+        try:
+            return int(port) not in [
+                conn.laddr.port for conn in psutil.net_connections()
+            ]
+        except psutil.AccessDenied:
+            # back to the socket.connect
+            pass
+
     sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     try:
         sock.settimeout(timeout)
@@ -181,7 +262,7 @@ def pack_query_params(*args, **kwargs):
     params = []
     for i in args:
         params.append(pack(i))
-    for k, v in kwargs.items():
+    for _, v in kwargs.items():
         params.append(pack(v))
     return params
 
@@ -223,14 +304,14 @@ def decode_numpy(value):
     archive = OutArchive(value)
     shape_size = archive.get_size()
     shape = []
-    for i in range(shape_size):
+    for _ in range(shape_size):
         shape.append(archive.get_size())
     dtype = _context_protocol_to_numpy_dtype(archive.get_int())
     array_size = archive.get_size()
     check_argument(array_size == np.prod(shape))
     if dtype is object:
         data_copy = []
-        for i in range(array_size):
+        for _ in range(array_size):
             data_copy.append(archive.get_string())
         array = np.array(data_copy, dtype=dtype)
     else:
@@ -251,12 +332,12 @@ def decode_dataframe(value):
     row_num = archive.get_size()
     arrays = {}
 
-    for i in range(column_num):
+    for _ in range(column_num):
         col_name = archive.get_string()
         dtype = _context_protocol_to_numpy_dtype(archive.get_int())
         if dtype is object:
             data_copy = []
-            for i in range(row_num):
+            for _ in range(row_num):
                 data_copy.append(archive.get_string())
             array = np.array(data_copy, dtype=dtype)
         else:
@@ -319,6 +400,7 @@ def unify_type(t):
             str: graph_def_pb2.STRING,
             bool: graph_def_pb2.BOOL,
             list: graph_def_pb2.INT_LIST,
+            tuple: graph_def_pb2.INT_LIST,
         }
         return unify_types[t]
     elif isinstance(t, int):  # graph_def_pb2.DataType
@@ -406,9 +488,10 @@ def _from_numpy_dtype(dtype):
         np.dtype(np.uint64): types_pb2.UINT64,
         np.dtype(np.intc): types_pb2.INT,
         np.dtype(np.long): types_pb2.LONG,
-        np.dtype(np.bool): types_pb2.BOOLEAN,
-        np.dtype(np.float): types_pb2.FLOAT,
+        np.dtype(bool): types_pb2.BOOLEAN,
+        np.dtype(float): types_pb2.FLOAT,
         np.dtype(np.double): types_pb2.DOUBLE,
+        np.dtype(np.object): types_pb2.STRING,
     }
     pbdtype = dtype_reverse_map.get(dtype)
     if pbdtype is None:
@@ -431,6 +514,7 @@ def _to_numpy_dtype(dtype):
         types_pb2.BOOLEAN: np.bool,
         types_pb2.FLOAT: np.float,
         types_pb2.DOUBLE: np.double,
+        types_pb2.STRING: np.object,
     }
     npdtype = dtype_map.get(dtype)
     if npdtype is None:

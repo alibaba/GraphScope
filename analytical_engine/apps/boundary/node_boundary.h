@@ -23,6 +23,7 @@ limitations under the License.
 #include "grape/grape.h"
 
 #include "apps/boundary/node_boundary_context.h"
+#include "apps/boundary/utils.h"
 #include "core/app/app_base.h"
 
 namespace gs {
@@ -46,50 +47,39 @@ class NodeBoundary : public AppBase<FRAG_T, NodeBoundaryContext<FRAG_T>>,
   void PEval(const fragment_t& frag, context_t& ctx,
              message_manager_t& messages) {
     // parse input node array from json
-    folly::dynamic node_array_1 = folly::parseJson(ctx.nbunch1);
-    std::set<vid_t> node_gid_set, node_gid_set_2;
+    folly::dynamic source_array = folly::parseJson(ctx.nbunch1);
+    std::set<vid_t> source_gid_set, target_gid_set;
     vid_t gid;
     vertex_t v;
-    for (const auto& oid : node_array_1) {
-      if (frag.Oid2Gid(oid, gid)) {
-        node_gid_set.insert(gid);
+    for (const auto& node : source_array) {
+      if (frag.Oid2Gid(dynamic_to_oid<oid_t>(node), gid)) {
+        source_gid_set.insert(gid);
       }
     }
     if (!ctx.nbunch2.empty()) {
-      auto node_array_2 = folly::parseJson(ctx.nbunch2);
-      for (const auto& oid : node_array_2) {
-        if (frag.Oid2Gid(oid, gid)) {
-          node_gid_set_2.insert(gid);
+      auto target_array = folly::parseJson(ctx.nbunch2);
+      for (const auto& node : target_array) {
+        if (frag.Oid2Gid(dynamic_to_oid<oid_t>(node), gid)) {
+          target_gid_set.insert(gid);
         }
       }
     }
 
     // get the boundary
-    for (auto& gid : node_gid_set) {
-      if (frag.InnerVertexGid2Vertex(gid, v)) {
-        for (auto e : frag.GetOutgoingAdjList(v)) {
-          vid_t gid = frag.Vertex2Gid(e.get_neighbor());
-          if (node_gid_set.find(gid) == node_gid_set.end() &&
-              (node_gid_set_2.empty() ||
-               node_gid_set_2.find(gid) != node_gid_set_2.end())) {
-            ctx.boundary.insert(gid);
+    for (auto& gid : source_gid_set) {
+      if (frag.Gid2Vertex(gid, v) && frag.IsInnerVertex(v)) {
+        for (auto& e : frag.GetOutgoingAdjList(v)) {
+          vid_t v_gid = frag.Vertex2Gid(e.get_neighbor());
+          if (source_gid_set.find(v_gid) == source_gid_set.end() &&
+              (target_gid_set.empty() ||
+               target_gid_set.find(v_gid) != target_gid_set.end())) {
+            ctx.boundary.insert(v_gid);
           }
         }
       }
     }
 
-    // gather and process boundary on worker-0
-    std::vector<std::set<vid_t>> all_boundary;
-    AllGather(ctx.boundary, all_boundary);
-
-    if (frag.fid() == 0) {
-      for (size_t i = 1; i < all_boundary.size(); ++i) {
-        for (auto& v : all_boundary[i]) {
-          ctx.boundary.insert(v);
-        }
-      }
-      writeToCtx(frag, ctx);
-    }
+    writeToCtx(frag, ctx);
   }
 
   void IncEval(const fragment_t& frag, context_t& ctx,
@@ -101,12 +91,23 @@ class NodeBoundary : public AppBase<FRAG_T, NodeBoundaryContext<FRAG_T>>,
 
  private:
   void writeToCtx(const fragment_t& frag, context_t& ctx) {
-    std::vector<typename fragment_t::oid_t> data;
-    for (auto& v : ctx.boundary) {
-      data.push_back(frag.Gid2Oid(v));
+    // reduce and process boundary on worker-0
+    std::set<vid_t> all_boundary;
+    AllReduce(ctx.boundary, all_boundary,
+              [](std::set<vid_t>& out, const std::set<vid_t>& in) {
+                for (auto& v : in) {
+                  out.insert(v);
+                }
+              });
+
+    if (frag.fid() == 0) {
+      std::vector<typename fragment_t::oid_t> data;
+      for (auto& v : all_boundary) {
+        data.push_back(frag.Gid2Oid(v));
+      }
+      std::vector<size_t> shape{data.size()};
+      ctx.assign(data, shape);
     }
-    std::vector<size_t> shape{data.size()};
-    ctx.assign(data, shape);
   }
 };
 }  // namespace gs

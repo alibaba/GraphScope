@@ -19,9 +19,8 @@
 import os
 
 from graphscope.client.session import get_default_session
-from graphscope.dataset import DATA_SITE
+from graphscope.dataset.io_utils import DATA_SITE
 from graphscope.dataset.io_utils import download_file
-from graphscope.framework.graph import Graph
 from graphscope.framework.loader import Loader
 
 
@@ -34,7 +33,7 @@ def load_modern_graph(sess=None, prefix=None, directed=True):
         sess (:class:`graphscope.Session`): Load graph within the session.
             Default session will be used when setting to None. Defaults to None.
         prefix (str): `PathLike` object that represents a path.
-            With standalone mode, set prefix None will try to download from
+            With standalone mode, set prefix to None will try to download from
             source URL. Defaults to None.
         directed (bool, optional): Determine to load a directed or undirected graph.
             Defaults to True.

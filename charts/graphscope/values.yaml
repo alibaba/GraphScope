@@ -102,3 +102,17 @@ etcd:
     limits:
       cpu: 0.5
       memory: 128Mi
+
+withJupyter: true
+jupyter:
+  image:
+    name: registry.cn-hongkong.aliyuncs.com/graphscope/jupyter
+    tag: ""
+  resources:
+    requests:
+      cpu: 1.0
+      memory: 4Gi
+    limits:
+      cpu: 1.0
+      memory: 4Gi
+  port: 30080

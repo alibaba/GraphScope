@@ -26,18 +26,15 @@ from io import BytesIO
 
 import yaml
 
-import graphscope
 from graphscope.framework.context import create_context_node
 from graphscope.framework.dag import DAGNode
 from graphscope.framework.dag_utils import bind_app
 from graphscope.framework.dag_utils import create_app
-from graphscope.framework.dag_utils import run_app
 from graphscope.framework.dag_utils import unload_app
 from graphscope.framework.errors import InvalidArgumentError
 from graphscope.framework.errors import check_argument
 from graphscope.framework.utils import graph_type_to_cpp_class
 from graphscope.proto import graph_def_pb2
-from graphscope.proto import types_pb2
 
 DEFAULT_GS_CONFIG_FILE = ".gs_conf.yaml"
 
@@ -94,6 +91,7 @@ def not_compatible_for(*graph_types):
                 "arrow_projected": graph.graph_type == graph_def_pb2.ARROW_PROJECTED,
                 "dynamic_projected": graph.graph_type
                 == graph_def_pb2.DYNAMIC_PROJECTED,
+                "arrow_flattened": graph.graph_type == graph_def_pb2.ARROW_FLATTENED,
             }
             match = False
             try:
@@ -101,7 +99,7 @@ def not_compatible_for(*graph_types):
                     match = match or terms[t]
             except KeyError:
                 raise InvalidArgumentError(
-                    "Use one or more of arrow_property,dynamic_property,arrow_projected,dynamic_projected",
+                    "Use one or more of arrow_property,dynamic_property,arrow_projected,dynamic_projected,arrow_flattened",
                 )
             if match:
                 raise InvalidArgumentError(
@@ -116,7 +114,7 @@ def not_compatible_for(*graph_types):
 
 
 class AppAssets(DAGNode):
-    """A class represents a app assert node in a DAG that holds the bytes of the gar resource.
+    """A class represents an app asset node in a DAG that holds the bytes of the gar resource.
 
     Assets includes an algorithm name, and gar (for user defined algorithm),
     a context type (one of 'tensor', 'vertex_data', 'vertex_property',
@@ -173,7 +171,7 @@ class AppAssets(DAGNode):
         Raises:
             InvalidArgumentError:
                 - :code:`gs_conf.yaml` not exist in gar resource.
-                - Algo not found in gar resource.
+                - App not found in gar resource.
         """
         fp = BytesIO(self._gar)
         archive = zipfile.ZipFile(fp, "r")
@@ -206,7 +204,7 @@ class AppAssets(DAGNode):
 
     @property
     def type(self):
-        """Algorithm type, one of `cpp_pie`, `cython_pie` or `cython_pregel`.
+        """Algorithm type, one of `cpp_pie`, `cython_pie`, `java_pie` or `cython_pregel`.
 
         Returns:
             str: Algorithm type of this asset.
@@ -343,7 +341,7 @@ class AppDAGNode(DAGNode):
         if not isinstance(self._graph, DAGNode) and not self._graph.loaded():
             raise RuntimeError("The graph is not loaded")
 
-        if self._app_assets.type in ["cython_pie", "cython_pregel"]:
+        if self._app_assets.type in ["cython_pie", "cython_pregel", "java_pie"]:
             # cython app support kwargs only
             check_argument(
                 not args, "Only support using keyword arguments in cython app."

@@ -22,16 +22,15 @@
 import atexit
 import base64
 import contextlib
-import copy
 import json
 import logging
 import os
 import pickle
-import sys
+import signal
 import threading
 import time
+import uuid
 import warnings
-from queue import Empty as EmptyQueue
 
 try:
     from kubernetes import client as kube_client
@@ -44,18 +43,16 @@ import graphscope
 from graphscope.client.rpc import GRPCClient
 from graphscope.client.utils import CaptureKeyboardInterrupt
 from graphscope.client.utils import GSLogger
+from graphscope.client.utils import SignalIgnore
 from graphscope.client.utils import set_defaults
 from graphscope.config import GSConfig as gs_config
 from graphscope.deploy.hosts.cluster import HostsClusterLauncher
 from graphscope.deploy.kubernetes.cluster import KubernetesClusterLauncher
 from graphscope.framework.dag import Dag
-from graphscope.framework.errors import ConnectionError
 from graphscope.framework.errors import FatalError
-from graphscope.framework.errors import GRPCError
 from graphscope.framework.errors import InteractiveEngineInternalError
 from graphscope.framework.errors import InvalidArgumentError
 from graphscope.framework.errors import K8sError
-from graphscope.framework.errors import check_argument
 from graphscope.framework.graph import Graph
 from graphscope.framework.graph import GraphDAGNode
 from graphscope.framework.operation import Operation
@@ -83,8 +80,8 @@ class _FetchHandler(object):
     This class takes care of extracting a sub-DAG as targets for a user-provided structure for fetches,
     which can be used for a low level `run` call of grpc_client.
 
-    Given the results of the low level run call, this class can also rebuild a result structure
-    matching the user-provided structure for fetches, but containing the corresponding results.
+    Given the results of the low level run call, this class can also rebuild a result structure matching
+    the user-provided structure for fetches, but containing the corresponding results.
     """
 
     def __init__(self, dag, fetches):
@@ -185,7 +182,7 @@ class _FetchHandler(object):
         result_set_dag_node = self._fetches[seq]
         return ResultSet(result_set_dag_node)
 
-    def wrapper_results(self, response: message_pb2.RunStepResponse):
+    def wrap_results(self, response: message_pb2.RunStepResponse):
         rets = list()
         for seq, op in enumerate(self._ops):
             for op_result in response.results:
@@ -232,6 +229,26 @@ class _FetchHandler(object):
                         rets.append(None)
                     break
         return rets[0] if self._unpack else rets
+
+    def get_dag_for_unload(self):
+        """Unload operations (graph, app, context) in dag which are not
+        existed in fetches.
+        """
+        unload_dag = op_def_pb2.DagDef()
+        keys_of_fetches = set([op.key for op in self._ops])
+        mapping = {
+            types_pb2.CREATE_GRAPH: types_pb2.UNLOAD_GRAPH,
+            types_pb2.CREATE_APP: types_pb2.UNLOAD_APP,
+            types_pb2.RUN_APP: types_pb2.UNLOAD_CONTEXT,
+        }
+        for op_def in self._sub_dag.op:
+            if op_def.op in mapping and op_def.key not in keys_of_fetches:
+                unload_op_def = op_def_pb2.OpDef(
+                    op=mapping[op_def.op], key=uuid.uuid4().hex
+                )
+                unload_op_def.parents.extend([op_def.key])
+                unload_dag.op.extend([unload_op_def])
+        return unload_dag
 
 
 class Session(object):
@@ -307,6 +324,7 @@ class Session(object):
         k8s_service_type=gs_config.k8s_service_type,
         k8s_gs_image=gs_config.k8s_gs_image,
         k8s_etcd_image=gs_config.k8s_etcd_image,
+        k8s_dataset_image=gs_config.k8s_dataset_image,
         k8s_image_pull_policy=gs_config.k8s_image_pull_policy,
         k8s_image_pull_secrets=gs_config.k8s_image_pull_secrets,
         k8s_coordinator_cpu=gs_config.k8s_coordinator_cpu,
@@ -329,7 +347,7 @@ class Session(object):
         timeout_seconds=gs_config.timeout_seconds,
         dangling_timeout_seconds=gs_config.dangling_timeout_seconds,
         with_mars=gs_config.with_mars,
-        enable_gaia=gs_config.enable_gaia,
+        mount_dataset=gs_config.mount_dataset,
         reconnect=False,
         **kw,
     ):
@@ -374,6 +392,8 @@ class Session(object):
 
             k8s_etcd_image (str, optional): The image of etcd, which used by vineyard.
 
+            k8s_dataset_image(str, optional): The image which mounts aliyun dataset bucket to local path.
+
             k8s_image_pull_policy (str, optional): Kubernetes image pull policy. Defaults to "IfNotPresent".
 
             k8s_image_pull_secrets (list[str], optional): A list of secret name used to authorize pull image.
@@ -417,8 +437,8 @@ class Session(object):
             with_mars (bool, optional):
                 Launch graphscope with mars. Defaults to False.
 
-            enable_gaia (bool, optional):
-                Launch graphscope with gaia enabled. Defaults to False.
+            mount_dataset (str, optional):
+                Create a container and mount aliyun demo dataset bucket to the path specified by `mount_dataset`.
 
             k8s_volumes (dict, optional): A dict of k8s volume which represents a directory containing data, accessible to the
                 containers in a pod. Defaults to {}.
@@ -552,12 +572,13 @@ class Session(object):
             "k8s_mars_scheduler_cpu",
             "k8s_mars_scheduler_mem",
             "with_mars",
-            "enable_gaia",
             "reconnect",
             "k8s_volumes",
             "k8s_waiting_for_delete",
             "timeout_seconds",
             "dangling_timeout_seconds",
+            "mount_dataset",
+            "k8s_dataset_image",
         )
         self._deprecated_params = (
             "show_log",
@@ -774,9 +795,16 @@ class Session(object):
         """Closes this session.
 
         This method frees all resources associated with the session.
+
+        Note that closing will ignore SIGINT and SIGTERM signal and recover later.
         """
+        with SignalIgnore([signal.SIGINT, signal.SIGTERM]):
+            self._close()
+
+    def _close(self):
         if self._closed:
             return
+        time.sleep(5)
         self._closed = True
         self._coordinator_endpoint = None
 
@@ -927,7 +955,15 @@ class Session(object):
         except FatalError:
             self.close()
             raise
-        return fetch_handler.wrapper_results(response)
+        if not self.eager():
+            # Unload operations that cannot be touched anymore
+            dag_to_unload = fetch_handler.get_dag_for_unload()
+            try:
+                self._grpc_client.run(dag_to_unload)
+            except FatalError:
+                self.close()
+                raise
+        return fetch_handler.wrap_results(response)
 
     def _connect(self):
         if self._config_params["addr"] is not None:
@@ -945,9 +981,15 @@ class Session(object):
             ):
                 api_client = self._config_params["k8s_client_config"]
             else:
-                api_client = kube_config.new_client_from_config(
-                    **self._config_params["k8s_client_config"]
-                )
+                try:
+                    api_client = kube_config.new_client_from_config(
+                        **self._config_params["k8s_client_config"]
+                    )
+                except kube_config.ConfigException as e:
+                    raise RuntimeError(
+                        "Kubernetes environment not found, you may want to"
+                        ' launch session locally with param cluster_type="hosts"'
+                    ) from e
             self._launcher = KubernetesClusterLauncher(
                 api_client=api_client,
                 **self._config_params,
@@ -973,7 +1015,9 @@ class Session(object):
             self._coordinator_endpoint = self._launcher.coordinator_endpoint
 
         # waiting service ready
-        self._grpc_client = GRPCClient(self._launcher, self._config_params["reconnect"])
+        self._grpc_client = GRPCClient(
+            self._launcher, self._coordinator_endpoint, self._config_params["reconnect"]
+        )
         self._grpc_client.waiting_service_ready(
             timeout_seconds=self._config_params["timeout_seconds"],
         )
@@ -1100,9 +1144,8 @@ class Session(object):
             self._interactive_instance_dict[graph.vineyard_id] = interactive_query
 
         try:
-            enable_gaia = self._config_params["enable_gaia"]
             _wrapper = self._wrapper(
-                InteractiveQueryDAGNode(self, graph, engine_params, enable_gaia)
+                InteractiveQueryDAGNode(self, graph, engine_params)
             )
         except Exception as e:
             if self.eager():
@@ -1116,6 +1159,16 @@ class Session(object):
         return _wrapper
 
     def learning(self, graph, nodes=None, edges=None, gen_labels=None):
+        """Start a graph learning engine.
+
+        Note that this method has been deprecated, using `graphlearn` replace.
+        """
+        warnings.warn(
+            "The method 'learning' has been deprecated, using graphlearn replace."
+        )
+        return self.graphlearn(graph, nodes, edges, gen_labels)
+
+    def graphlearn(self, graph, nodes=None, edges=None, gen_labels=None):
         """Start a graph learning engine.
 
         Args:
@@ -1139,11 +1192,6 @@ class Session(object):
             and self._learning_instance_dict[graph.vineyard_id] is not None
         ):
             return self._learning_instance_dict[graph.vineyard_id]
-
-        if sys.platform != "linux" and sys.platform != "linux2":
-            raise RuntimeError(
-                f"The learning engine currently only supports running on Linux, got {sys.platform}"
-            )
 
         if not graph.graph_type == graph_def_pb2.ARROW_PROPERTY:
             raise InvalidArgumentError("The graph should be a property graph.")
@@ -1217,7 +1265,6 @@ def set_option(**kwargs):
         - k8s_mars_scheduler_cpu
         - k8s_mars_scheduler_mem
         - with_mars
-        - enable_gaia
         - k8s_volumes
         - k8s_waiting_for_delete
         - engine_params
@@ -1272,7 +1319,6 @@ def get_option(key):
         - k8s_mars_scheduler_cpu
         - k8s_mars_scheduler_mem
         - with_mars
-        - enable_gaia
         - k8s_volumes
         - k8s_waiting_for_delete
         - engine_params
@@ -1414,7 +1460,7 @@ def gremlin(graph, engine_params=None):
     return get_default_session().gremlin(graph, engine_params)
 
 
-def learning(self, graph, nodes=None, edges=None, gen_labels=None):
+def graphlearn(graph, nodes=None, edges=None, gen_labels=None):
     """Create a graph learning engine.
 
     See params detail in :meth:`graphscope.Session.learning`
@@ -1433,4 +1479,4 @@ def learning(self, graph, nodes=None, edges=None, gen_labels=None):
     """
     if _default_session_stack.is_cleared():
         raise RuntimeError("No de fault session found.")
-    return get_default_session().learning(graph, nodes, edges, gen_labels)
+    return get_default_session().graphlearn(graph, nodes, edges, gen_labels)

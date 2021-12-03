@@ -1,0 +1,27 @@
+[package]
+name = "maxgraph-ffi"
+version = "0.1.0"
+authors = ["maxgraph@alibaba-inc.com"]
+edition = "2018"
+
+[lib]
+crate-type = ["rlib", "cdylib"]
+
+[dependencies]
+maxgraph-runtime = { path = "../runtime" }
+maxgraph-store = { path = "../store" }
+maxgraph-common = { path = "../../rust-common" }
+maxgraph-server = { path = "../server" }
+pegasus = { path = "../Pegasus", package = "pegasus" }
+gaia_pegasus = { path = "../../../research/engine/pegasus/pegasus", package = "pegasus" }
+pegasus_network = { path = "../../../research/engine/pegasus/network" }
+pegasus_server = { path = "../../../research/engine/pegasus/server-v0" }
+gremlin_core = { path = "../../../research/query_service/gremlin/gremlin_core" }
+gs_gremlin = { path = "../../../research/query_service/gremlin/gs_gremlin" }
+itertools = "0.7.8"
+log = "0.3"
+log4rs = "0.8.0"
+lazy_static = "1.2.0"
+grpcio = "=0.4.1"
+tokio = { version = "1.0", features = ["macros", "sync"] }
+futures = { version = "0.3.0", features = ["thread-pool"] }

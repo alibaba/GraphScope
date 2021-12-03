@@ -22,11 +22,11 @@ limitations under the License.
 #include <utility>
 #include <vector>
 
-#include "apps/simple_path/utils.h"
 #include "folly/dynamic.h"
 #include "folly/json.h"
 #include "grape/grape.h"
 
+#include "apps/boundary/utils.h"
 #include "core/context/tensor_context.h"
 
 namespace gs {
@@ -57,12 +57,10 @@ class IsSimplePathContext : public TensorContext<FRAG_T, bool> {
     vertex_t source;
     counter = 0;
     vid_t p1, p2;
-    std::vector<oid_t> path_oid_array;
-    folly::dynamic path_nodes_id_array = folly::parseJson(nodes_json);
-    ExtractOidArrayFromDynamic(path_nodes_id_array, path_oid_array);
-    for (const auto& val : path_oid_array) {
+    folly::dynamic path_nodes_array = folly::parseJson(nodes_json);
+    for (const auto& node : path_nodes_array) {
       counter++;
-      if (!frag.Oid2Gid(val, p1)) {
+      if (!frag.Oid2Gid(dynamic_to_oid<oid_t>(node), p1)) {
         LOG(ERROR) << "Input oid error" << std::endl;
         is_simple_path = false;
         break;
@@ -87,7 +85,8 @@ class IsSimplePathContext : public TensorContext<FRAG_T, bool> {
     if (counter == 0) {
       is_simple_path = false;
     } else if (counter == 1) {
-      if (frag.GetInnerVertex(path_oid_array[0], source))
+      if (frag.GetInnerVertex(dynamic_to_oid<oid_t>(path_nodes_array[0]),
+                              source))
         is_simple_path = true;
       else
         is_simple_path = false;

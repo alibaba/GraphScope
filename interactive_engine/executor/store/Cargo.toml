@@ -1,0 +1,37 @@
+[package]
+name = "maxgraph-store"
+version = "0.1.0"
+authors = ["勤远 <wubin.cwb@alibaba-inc.com>"]
+edition = "2018"
+build = "build.rs"
+
+[dependencies]
+byteorder = "1"
+log = "0.3"
+protobuf = { version = "~2.0", features = ["with-bytes"] }
+serde = "1.0.72"
+serde_derive = "1.0.72"
+serde_json = "1.0"
+structopt = "0.2"
+tempfile = "3"
+crossbeam-epoch = "0.7"
+bincode = "1.2.0"
+crc = "1.8.1"
+rust-ini = "0.13"
+libc = "0.2"
+log4rs = "0.8.0"
+grpcio = "=0.4.1"
+grpcio-sys = { version = "0.4.7", features = ["openssl-vendored"] }
+rand = "0.8.4"
+#rocksdb = "0.17.0"
+
+maxgraph-common = { path = "../../rust-common" }
+
+# For temporal use to support restoring from a specified backup.
+# Change to a stable version of rust-rocksdb later.
+[dependencies.rocksdb]
+git = "https://github.com/GoldenLeaves/rust-rocksdb.git"
+rev = "082dfcfbb4b51e61d1c01672951b84cb464601e2"
+
+[build-dependencies]
+protoc-grpcio = "0.3.0"

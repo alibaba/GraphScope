@@ -24,6 +24,7 @@ from distutils.cmd import Command
 from setuptools import Extension
 from setuptools import find_packages
 from setuptools import setup
+from setuptools.command.build_ext import build_ext
 from setuptools.command.build_py import build_py
 from setuptools.command.develop import develop
 from setuptools.command.sdist import sdist
@@ -90,6 +91,12 @@ class CustomBuildPy(build_py):
         build_py.run(self)
 
 
+class CustomBuildExt(build_ext):
+    def run(self):
+        self.run_command("build_proto")
+        build_ext.run(self)
+
+
 class CustomDevelop(develop):
     def run(self):
         develop.run(self)
@@ -108,36 +115,28 @@ class CustomBDistWheel(bdist_wheel):
         self.root_is_pure = False
 
     def run(self):
-        if learning_engine_enabled():
+        if sys.platform == "darwin":
+            graphlearn_shared_lib = "libgraphlearn_shared.dylib"
+        else:
             graphlearn_shared_lib = "libgraphlearn_shared.so"
-            if not os.path.isfile(
-                os.path.join(
-                    repo_root,
-                    "..",
-                    "learning_engine",
-                    "graph-learn",
-                    "built",
-                    "lib",
-                    graphlearn_shared_lib,
-                )
-            ):
-                raise ValueError("You must build the graphlearn library at first")
+        if not os.path.isfile(
+            os.path.join(
+                repo_root,
+                "..",
+                "learning_engine",
+                "graph-learn",
+                "built",
+                "lib",
+                graphlearn_shared_lib,
+            )
+        ):
+            raise ValueError("You must build the graphlearn library at first")
         self.run_command("build_proto")
         bdist_wheel.run(self)
 
 
 with open(os.path.join(repo_root, "..", "README.md"), "r", encoding="utf-8") as fp:
     long_description = fp.read()
-
-
-def learning_engine_enabled():
-    if os.environ.get("WITH_LEARNING_ENGINE") != "ON":
-        return False
-
-    if sys.platform != "linux" and sys.platform != "linux2":
-        return False
-
-    return True
 
 
 def parsed_reqs():
@@ -157,17 +156,11 @@ def find_graphscope_packages():
 
     # add graphscope
     for pkg in find_packages("."):
-        if "tests" not in pkg:
-            packages.append(pkg)
-
-    # add tests
-    for pkg in find_packages("tests"):
-        packages.append("graphscope.tests.%s" % pkg)
+        packages.append(pkg)
 
     # add graphlearn
-    if learning_engine_enabled():
-        for pkg in find_packages("../learning_engine/graph-learn"):
-            packages.append("graphscope.learning.%s" % pkg)
+    for pkg in find_packages("../learning_engine/graph-learn"):
+        packages.append("graphscope.learning.%s" % pkg)
 
     return packages
 
@@ -175,22 +168,13 @@ def find_graphscope_packages():
 def resolve_graphscope_package_dir():
     package_dir = {
         "graphscope": "graphscope",
-        "graphscope.tests": "tests",
+        "graphscope.learning.examples": "../learning_engine/graph-learn/examples",
+        "graphscope.learning.graphlearn": "../learning_engine/graph-learn/graphlearn",
     }
-    if learning_engine_enabled():
-        package_dir.update(
-            {
-                "graphscope.learning.examples": "../learning_engine/graph-learn/examples",
-                "graphscope.learning.graphlearn": "../learning_engine/graph-learn/graphlearn",
-            }
-        )
     return package_dir
 
 
 def build_learning_engine():
-    if not learning_engine_enabled():
-        return None
-
     import numpy
 
     ROOT_PATH = os.path.abspath(
@@ -203,6 +187,7 @@ def build_learning_engine():
     extra_compile_args = []
     extra_link_args = []
 
+    include_dirs.append("/usr/local/include")
     include_dirs.append(ROOT_PATH)
     include_dirs.append(ROOT_PATH + "/graphlearn/include")
     include_dirs.append(ROOT_PATH + "/built")
@@ -286,7 +271,7 @@ del version_file_path
 
 
 setup(
-    name="graphscope",
+    name="graphscope-client",
     description="GraphScope: A One-Stop Large-Scale Graph Computing System from Alibaba",
     long_description=long_description,
     long_description_content_type="text/markdown",
@@ -322,6 +307,7 @@ setup(
     packages=find_graphscope_packages(),
     ext_modules=build_learning_engine(),
     cmdclass={
+        "build_ext": CustomBuildExt,
         "build_proto": BuildProto,
         "build_py": CustomBuildPy,
         "bdist_wheel": CustomBDistWheel,

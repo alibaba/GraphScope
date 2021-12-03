@@ -185,7 +185,7 @@ int main(int argc, char* argv[]) {
   RedirectLogSink redirect_log_sink;
   google::AddLogSink(&redirect_log_sink);
 
-  // InitMPI
+  // Init MPI
   grape::InitMPIComm();
 
   auto host = FLAGS_host;

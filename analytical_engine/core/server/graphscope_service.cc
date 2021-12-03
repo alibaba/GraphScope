@@ -56,19 +56,6 @@ Status GraphScopeService::HeartBeat(::grpc::ServerContext* context,
       auto ok = (e.error_code() == rpc::Code::OK);
       if (ok) {
         CHECK_EQ(e.aggregate_policy(), policy);
-        auto& graph_def = e.graph_def();
-
-        if (!graph_def.key().empty()) {
-          if (op_result->graph_def().key().empty()) {
-            op_result->mutable_graph_def()->CopyFrom(graph_def);
-          } else if (!::google::protobuf::util::MessageDifferencer::Equals(
-                         graph_def, op_result->graph_def())) {
-            std::string error_msg =
-                "BUG: Multiple workers return different graph def.";
-            LOG(ERROR) << error_msg;
-            return Status(StatusCode::INTERNAL, error_msg);
-          }
-        }
       } else {
         error_msgs += e.message() + "\n";
         op_result->set_code(e.error_code());
@@ -82,7 +69,7 @@ Status GraphScopeService::HeartBeat(::grpc::ServerContext* context,
       return Status(StatusCode::INTERNAL, error_msgs);
     }
 
-    // Second pass: aggregate result according to the policy
+    // Second pass: aggregate graph def or data result according to the policy
     switch (policy) {
     case DispatchResult::AggregatePolicy::kPickFirst: {
       op_result->mutable_result()->assign(result[0].data());
@@ -124,6 +111,28 @@ Status GraphScopeService::HeartBeat(::grpc::ServerContext* context,
       for (auto& e : result) {
         op_result->mutable_result()->append(e.data());
       }
+      break;
+    }
+    case DispatchResult::AggregatePolicy::kPickFirstNonEmptyGraphDef: {
+      for (auto& e : result) {
+        auto& graph_def = e.graph_def();
+        if (!graph_def.key().empty()) {
+          op_result->mutable_graph_def()->CopyFrom(graph_def);
+          break;
+        }
+      }
+      break;
+    }
+    case DispatchResult::AggregatePolicy::kMergeGraphDef: {
+      rpc::graph::GraphDefPb merged_graph_def = result[0].graph_def();
+      // aggregate the is_multigraph status of all fragments.
+      for (auto& e : result) {
+        auto& graph_def = e.graph_def();
+        bool update =
+            (merged_graph_def.is_multigraph() || graph_def.is_multigraph());
+        merged_graph_def.set_is_multigraph(update);
+      }
+      op_result->mutable_graph_def()->CopyFrom(merged_graph_def);
       break;
     }
     }

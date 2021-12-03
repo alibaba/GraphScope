@@ -19,18 +19,13 @@
 import os
 import sys
 
-if os.environ.get("WITH_LEARNING_ENGINE") == "ON" and (
-    sys.platform != "linux" and sys.platform != "linux2"
-):
-    raise RuntimeError(
-        "The learning engine currently supports Linux only, doesn't support %s"
-        % sys.platform
-    )
-
 try:
     sys.path.insert(0, os.path.dirname(__file__))
 
-    import graphlearn
+    import vineyard
+
+    with vineyard.envvars("VINEYARD_USE_LOCAL_REGISTRY", "TRUE"):
+        import graphlearn
 
     try:
         import examples

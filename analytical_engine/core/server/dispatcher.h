@@ -48,6 +48,8 @@ class DispatchResult {
     kPickFirstNonEmpty,
     kRequireConsistent,
     kConcat,
+    kPickFirstNonEmptyGraphDef,
+    kMergeGraphDef,
   };
 
   DispatchResult() = default;
@@ -71,10 +73,10 @@ class DispatchResult {
    * workers.
    * @param graph_def
    */
-  void set_graph_def(const rpc::graph::GraphDefPb& graph_def) {
-    if (worker_id_ == grape::kCoordinatorRank) {
-      graph_def_ = graph_def;
-    }
+  void set_graph_def(const rpc::graph::GraphDefPb& graph_def,
+                     AggregatePolicy policy = AggregatePolicy::kMergeGraphDef) {
+    graph_def_ = graph_def;
+    aggregate_policy_ = policy;
   }
 
   const rpc::graph::GraphDefPb& graph_def() const { return graph_def_; }
@@ -154,6 +156,10 @@ class Dispatcher {
   void publisherLoop();
 
   void subscriberLoop();
+
+  void publisherPreprocessCmd(CommandDetail& cmd);
+
+  void subscriberPreprocessCmd(rpc::OperationType type, CommandDetail& cmd);
 
  private:
   bool running_;

@@ -58,7 +58,7 @@ function _stop {
 
 function _test {
     url=`cat $tmp_result`
-    cd $curdir && mvn test -Dclient.server.url=${url}
+    cd $curdir && mvn test -Dclient.server.url=${url} -Dskip.tests=false
 }
 
 opt=$1

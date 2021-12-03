@@ -17,7 +17,6 @@
 #
 
 import inspect
-import pickle
 
 from graphscope.proto import error_codes_pb2
 from graphscope.proto import op_def_pb2

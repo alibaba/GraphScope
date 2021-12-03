@@ -23,7 +23,6 @@ import threading
 from abc import ABCMeta
 from abc import abstractmethod
 from copy import deepcopy
-from itertools import chain
 from typing import List
 from typing import Mapping
 from typing import Union
@@ -712,6 +711,7 @@ class Graph(GraphInterface):
         )
         self._key = graph_def.key
         self._directed = graph_def.directed
+        self._is_multigraph = graph_def.is_multigraph
         vy_info = graph_def_pb2.VineyardInfoPb()
         graph_def.extension.Unpack(vy_info)
         self._vineyard_id = vy_info.vineyard_id
@@ -775,7 +775,7 @@ class Graph(GraphInterface):
     def template_str(self):
         # transform str/string to std::string
         oid_type = utils.normalize_data_type_str(self._oid_type)
-        vid_type = self._schema.vid_type
+        vid_type = utils.data_type_to_cpp(self._schema._vid_type)
         vdata_type = utils.data_type_to_cpp(self._schema.vdata_type)
         edata_type = utils.data_type_to_cpp(self._schema.edata_type)
         if self._graph_type == graph_def_pb2.ARROW_PROPERTY:
@@ -905,6 +905,9 @@ class Graph(GraphInterface):
 
     def is_directed(self):
         return self._directed
+
+    def is_multigraph(self):
+        return self._is_multigraph
 
     def _check_unmodified(self):
         check_argument(

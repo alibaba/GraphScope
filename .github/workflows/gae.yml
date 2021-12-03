@@ -1,0 +1,79 @@
+name: GraphScope GAE CI
+
+on:
+  # Trigger the workflow on push or pull request,
+  # but only for the main branch
+  push:
+    branches:
+      - main
+    paths-ignore:
+      - 'CONTRIBUTORS'
+      - 'LICENSE'
+      - 'NOTICE.txt'
+      - '**.md'
+      - '**.rst'
+      - 'docs/**'
+      - 'demo/**'
+      - 'scripts/**'
+      - 'tutorials/**'
+  pull_request:
+    branches:
+      - main
+    paths:
+      - 'analytical_engine/**'
+      - '.github/workflows/gae.yml'
+      - '!analytical_engine/**.md'
+
+concurrency:
+  group: ${{ github.repository }}-${{ github.head_ref || github.sha }}-${{ github.workflow }}
+  cancel-in-progress: true
+
+jobs:
+  build-gae:
+    runs-on: ubuntu-20.04
+    container:
+      image: registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-vineyard:v0.3.11
+      options:
+        --shm-size 4096m
+    steps:
+    - uses: actions/checkout@v2.3.2
+
+    - name: Build
+      env:
+        RUN_JAVA_TESTS: ON
+      run: |
+        # default install to "/opt/graphscope"
+        make gae ENABLE_JAVA_SDK=ON BUILD_TEST=ON
+        # also make coordinator andclient for python test
+        make coordinator && make client
+
+
+    - name: Run Cpp Test
+      env:
+        GRAPHSCOPE_HOME: /opt/graphscope
+        GS_TEST_DIR: ${{ github.workspace }}/gstest
+        RUN_JAVA_TESTS: ON
+      run: |
+        # download dataset
+        git clone -b master --single-branch --depth=1 https://github.com/7br/gstest.git ${GS_TEST_DIR}
+
+        # java maven test
+        cd ${GITHUB_WORKSPACE}/analytical_engine/java
+        mvn install -Dmaven.antrun.skip=true --quiet
+
+        source ${GRAPHSCOPE_HOME}/conf/grape_jvm_opts
+        export USER_JAR_PATH=${GITHUB_WORKSPACE}/analytical_engine/java/grape-demo/target/grape-demo-0.1-shaded.jar
+        cd ${GITHUB_WORKSPACE}/analytical_engine/build
+        ../test/app_tests.sh --test_dir ${GS_TEST_DIR}
+
+    - name: Run Java Python Test
+      env:
+        GS_TEST_DIR: ${{ github.workspace }}/gstest
+        RUN_JAVA_TESTS: ON
+        GRAPHSCOPE_HOME: /opt/graphscope
+      run: |
+        export USER_JAR_PATH=${GITHUB_WORKSPACE}/analytical_engine/java/grape-demo/target/grape-demo-0.1-shaded.jar
+        source ${GRAPHSCOPE_HOME}/conf/grape_jvm_opts
+
+        cd ${GITHUB_WORKSPACE}/python
+        python3 -m pytest --exitfirst -s -v graphscope/tests/unittest/test_java_app.py

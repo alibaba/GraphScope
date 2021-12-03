@@ -21,7 +21,6 @@ cat <<END
     max_node_gaia                       start max_node of gaia
     max_node_maxgraph                   start max_node of maxgraph
     maxgraph                            start maxgraph with v2
-    admin_tools                         start admin_tools of v2
     load_tools                          start load_tools of maxgraph
 END
 }
@@ -62,10 +61,17 @@ _setup_maxgraph_env() {
     readonly LOG_NAME="maxgraph"
   fi
 
-  export LD_LIBRARY_PATH=${MAXGRAPH_HOME}/native:${LD_LIBRARY_PATH}:/usr/local/lib
+  export LD_LIBRARY_PATH=${MAXGRAPH_HOME}/native:${MAXGRAPH_HOME}/native/lib:${LD_LIBRARY_PATH}:/usr/local/lib
 
   if [ -z "${LOG_DIR}" ]; then
-    export LOG_DIR="/tmp/graphscope-store"
+    GS_LOG="/var/log/graphscope"
+    if [[ ! -d "${GS_LOG}" || ! -w "${GS_LOG}" ]]; then
+      # /var/log/graphscope is not existed/writable, switch to ${HOME}/.local/log/graphscope
+      GS_LOG=${HOME}/.local/log/graphscope
+    fi
+    readonly GS_LOG
+    mkdir -p ${GS_LOG}
+    export LOG_DIR=${GS_LOG}/store
   fi
 
   mkdir -p ${LOG_DIR}
@@ -78,37 +84,13 @@ max_node() {
   type=$1; shift
   _setup_maxgraph_env
 
-  if [[ "${type}" == "gaia" ]]; then
-    java -server \
-         -Dlogback.configurationFile="${MAXGRAPH_LOGBACK_FILE}" \
-         -Dconfig.file="${MAXGRAPH_CONF_FILE}" \
-         -Dlog.dir="${LOG_DIR}" \
-         -Dlog.name="${LOG_NAME}" \
-         -cp "${libpath}" com.alibaba.graphscope.gaia.MaxNode \
-         "$@" > >(tee -a "${LOG_DIR}/${LOG_NAME}.out") 2> >(tee -a "${LOG_DIR}/${LOG_NAME}.err" >&2)
-  else
-    java -server \
-         -Dlogback.configurationFile="${MAXGRAPH_LOGBACK_FILE}" \
-         -Dconfig.file="${MAXGRAPH_CONF_FILE}" \
-         -Dlog.dir="${LOG_DIR}" \
-         -Dlog.name="${LOG_NAME}" \
-         -cp "${libpath}" com.alibaba.maxgraph.v2.MaxNode \
-         "$@" > >(tee -a "${LOG_DIR}/${LOG_NAME}.out") 2> >(tee -a "${LOG_DIR}/${LOG_NAME}.err" >&2)
-  fi
-}
-
-# start admin_tools of v2
-admin_tools() {
-  _setup_maxgraph_env
-
-  java_opt="-server ${MAXGRAPH_JAVA_OPTS}"
-  java ${java_opt} \
-      -Dlogback.configurationFile="${MAXGRAPH_LOGBACK_FILE}" \
-      -Dconfig.file="${MAXGRAPH_CONF_FILE}" \
-      -Dlog.dir="${LOG_DIR}" \
-      -Dlog.name="${LOG_NAME}" \
-      -cp "${libpath}" com.alibaba.maxgraph.v2.AdminTools \
-      "$@" > >(tee -a "${LOG_DIR}/${LOG_NAME}.out") 2> >(tee -a "${LOG_DIR}/${LOG_NAME}.err" >&2)
+  java -server \
+       -Dlogback.configurationFile="${MAXGRAPH_LOGBACK_FILE}" \
+       -Dconfig.file="${MAXGRAPH_CONF_FILE}" \
+       -Dlog.dir="${LOG_DIR}" \
+       -Dlog.name="${LOG_NAME}" \
+       -cp "${libpath}" com.alibaba.maxgraph.servers.MaxNode \
+       "$@" > >(tee -a "${LOG_DIR}/${LOG_NAME}.out") 2> >(tee -a "${LOG_DIR}/${LOG_NAME}.err" >&2)
 }
 
 load_tools() {
@@ -147,7 +129,7 @@ maxgraph() {
       -Dconfig.file="${MAXGRAPH_CONF_FILE}" \
       -Dlog.dir="${LOG_DIR}" \
       -Dlog.name="${LOG_NAME}" \
-      -cp "${libpath}" com.alibaba.maxgraph.groot.MaxGraph \
+      -cp "${libpath}" com.alibaba.maxgraph.servers.MaxGraph \
       "$@" > >(tee -a "${LOG_DIR}/${LOG_NAME}.out") 2> >(tee -a "${LOG_DIR}/${LOG_NAME}.err" >&2)
 }
 
@@ -159,7 +141,6 @@ while test $# -ne 0; do
     max_node_gaia) max_node "gaia" "$@"; exit;;
     max_node_maxgraph) max_node "maxgraph" "$@"; exit;;
     maxgraph) maxgraph "$@"; exit;;
-    admin_tools) admin_tools "$@"; exit;;
     load_tools) load_tools "$@"; exit;;
     *)
       echo "unrecognized option or command '${arg}'"

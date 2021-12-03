@@ -28,6 +28,7 @@ import logging
 import numbers
 import os
 import pickle
+import re
 import shutil
 import socket
 import subprocess
@@ -36,21 +37,24 @@ import threading
 import time
 import uuid
 import zipfile
+from concurrent.futures import ThreadPoolExecutor
 from io import BytesIO
+from pathlib import Path
 from queue import Empty as EmptyQueue
 from queue import Queue
 from string import Template
 
 import yaml
+from google.protobuf.any_pb2 import Any
 from graphscope.framework import utils
 from graphscope.framework.errors import CompilationError
 from graphscope.framework.graph_schema import GraphSchema
+from graphscope.framework.utils import PipeWatcher
 from graphscope.proto import attr_value_pb2
+from graphscope.proto import data_types_pb2
 from graphscope.proto import graph_def_pb2
 from graphscope.proto import op_def_pb2
 from graphscope.proto import types_pb2
-
-from gscoordinator.io_utils import PipeWatcher
 
 logger = logging.getLogger("graphscope")
 
@@ -80,6 +84,7 @@ BUILTIN_APP_RESOURCE_PATH = os.path.join(
 )
 # default config file in gar resource
 DEFAULT_GS_CONFIG_FILE = ".gs_conf.yaml"
+DEFAULT_GRAPHSCOPE_HOME = "/opt/graphscope"
 
 # GRAPHSCOPE_HOME
 #   1) get from environment variable `GRAPHSCOPE_HOME`, if not exist,
@@ -91,10 +96,10 @@ if GRAPHSCOPE_HOME is None:
     if os.path.isdir(os.path.join(COORDINATOR_HOME, "graphscope.runtime")):
         GRAPHSCOPE_HOME = os.path.join(COORDINATOR_HOME, "graphscope.runtime")
 
-# resolve from egg installed package
+# find from DEFAULT_GRAPHSCOPE_HOME
 if GRAPHSCOPE_HOME is None:
-    if os.path.isdir(os.path.join(COORDINATOR_HOME, "..", "graphscope.runtime")):
-        GRAPHSCOPE_HOME = os.path.join(COORDINATOR_HOME, "..", "graphscope.runtime")
+    if os.path.isdir(DEFAULT_GRAPHSCOPE_HOME):
+        GRAPHSCOPE_HOME = DEFAULT_GRAPHSCOPE_HOME
 
 # resolve from develop source tree
 if GRAPHSCOPE_HOME is None:
@@ -118,6 +123,15 @@ if not os.path.isfile(INTERACTIVE_ENGINE_SCRIPT):
     INTERACTIVE_ENGINE_SCRIPT = os.path.join(
         GRAPHSCOPE_HOME, "interactive_engine", "bin", "giectl"
     )
+
+# JAVA SDK related CONSTANTS
+LLVM4JNI_HOME = os.environ.get("LLVM4JNI_HOME", None)
+LLVM4JNI_USER_OUT_DIR_BASE = "user-llvm4jni-output"
+PROCESSOR_MAIN_CLASS = "com.alibaba.graphscope.annotation.Main"
+JAVA_CODEGNE_OUTPUT_PREFIX = "gs-ffi"
+GRAPE_PROCESSOR_JAR = os.path.join(
+    GRAPHSCOPE_HOME, "lib", "grape-runtime-0.1-shaded.jar"
+)
 
 
 def get_timestamp():
@@ -144,6 +158,8 @@ def get_app_sha256(attr):
         vd_type,
         md_type,
         pregel_combine,
+        java_jar_path,
+        java_app_class,
     ) = _codegen_app_info(attr, DEFAULT_GS_CONFIG_FILE)
     graph_header, graph_type = _codegen_graph_info(attr)
     logger.info("Codegened graph type: %s, Graph header: %s", graph_type, graph_header)
@@ -151,6 +167,14 @@ def get_app_sha256(attr):
         return hashlib.sha256(
             f"{app_type}.{app_class}.{graph_type}".encode("utf-8")
         ).hexdigest()
+    elif app_type == "java_pie":
+        s = hashlib.sha256()
+        # CAUTION!!!!!
+        # We believe jar_path.java_app_class can uniquely define one java app
+        s.update(f"{app_type}.{java_jar_path}.{java_app_class}".encode("utf-8"))
+        if types_pb2.GAR in attr:
+            s.update(attr[types_pb2.GAR].s)
+        return s.hexdigest()
     else:
         s = hashlib.sha256()
         s.update(f"{app_type}.{app_class}.{graph_type}".encode("utf-8"))
@@ -175,6 +199,9 @@ def compile_app(workspace: str, library_name, attr, engine_config: dict):
 
     Returns:
         str: Path of the built library.
+        str: Java jar path. For c++/python app, return None.
+        str: Directory containing generated java and jni code. For c++/python app, return None.
+        str: App type.
     """
     app_dir = os.path.join(workspace, library_name)
     os.makedirs(app_dir, exist_ok=True)
@@ -189,15 +216,20 @@ def compile_app(workspace: str, library_name, attr, engine_config: dict):
         vd_type,
         md_type,
         pregel_combine,
+        java_jar_path,
+        java_app_class,
     ) = _codegen_app_info(attr, DEFAULT_GS_CONFIG_FILE)
     logger.info(
-        "Codegened application type: %s, app header: %s, app_class: %s, vd_type: %s, md_type: %s, pregel_combine: %s",
+        "Codegened application type: %s, app header: %s, app_class: %s, vd_type: %s, md_type: %s, pregel_combine: %s, \
+            java_jar_path: %s, java_app_class: %s",
         app_type,
         app_header,
         app_class,
         str(vd_type),
         str(md_type),
         str(pregel_combine),
+        str(java_jar_path),
+        str(java_app_class),
     )
 
     graph_header, graph_type = _codegen_graph_info(attr)
@@ -206,13 +238,45 @@ def compile_app(workspace: str, library_name, attr, engine_config: dict):
     os.chdir(app_dir)
 
     module_name = ""
+    # Output directory for java codegen
+    java_codegen_out_dir = ""
     cmake_commands = [
         "cmake",
         ".",
         f"-DNETWORKX={engine_config['networkx']}",
-        "-DCMAKE_PREFIX_PATH={GRAPHSCOPE_HOME}",
+        f"-DCMAKE_PREFIX_PATH={GRAPHSCOPE_HOME}",
     ]
-    if app_type != "cpp_pie":
+    if app_type == "java_pie":
+        if not os.path.isfile(GRAPE_PROCESSOR_JAR):
+            raise RuntimeError("Grape runtime jar not found")
+        # for java need to run preprocess
+        java_codegen_out_dir = os.path.join(
+            workspace, "{}-{}".format(JAVA_CODEGNE_OUTPUT_PREFIX, library_name)
+        )
+        cmake_commands += [
+            "-DENABLE_JAVA_SDK=ON",
+            "-DJAVA_PIE_APP=ON",
+            "-DPRE_CP={}:{}".format(GRAPE_PROCESSOR_JAR, java_jar_path),
+            "-DPROCESSOR_MAIN_CLASS={}".format(PROCESSOR_MAIN_CLASS),
+            "-DJAR_PATH={}".format(java_jar_path),
+            "-DOUTPUT_DIR={}".format(java_codegen_out_dir),
+        ]
+        # if run llvm4jni.sh not found, we just go ahead,since it is optional.
+        if LLVM4JNI_HOME and os.path.isfile(os.path.join(LLVM4JNI_HOME, "run.sh")):
+            llvm4jni_user_out_dir = os.path.join(
+                workspace, "{}-{}".format(LLVM4JNI_USER_OUT_DIR_BASE, library_name)
+            )
+            cmake_commands += [
+                "-DRUN_LLVM4JNI_SH={}".format(os.path.join(LLVM4JNI_HOME, "run.sh")),
+                "-DLLVM4JNI_OUTPUT={}".format(llvm4jni_user_out_dir),
+                "-DLIB_PATH={}".format(get_lib_path(app_dir, library_name)),
+            ]
+        else:
+            logger.info(
+                "Skip running llvm4jni since env var LLVM4JNI_HOME not found or run.sh not found under LLVM4JNI_HOME"
+            )
+        logger.info(" ".join(cmake_commands))
+    elif app_type != "cpp_pie":
         if app_type == "cython_pregel":
             pxd_name = "pregel"
             cmake_commands += ["-DCYTHON_PREGEL_APP=True"]
@@ -258,22 +322,26 @@ def compile_app(workspace: str, library_name, attr, engine_config: dict):
     cmake_process = subprocess.Popen(
         cmake_commands,
         env=os.environ.copy(),
-        universal_newlines=True,
         encoding="utf-8",
+        errors="replace",
         stdout=subprocess.DEVNULL,
         stderr=subprocess.PIPE,
+        universal_newlines=True,
+        bufsize=1,
     )
     cmake_stderr_watcher = PipeWatcher(cmake_process.stderr, sys.stdout)
     setattr(cmake_process, "stderr_watcher", cmake_stderr_watcher)
     cmake_process.wait()
 
     make_process = subprocess.Popen(
-        ["make", "-j4"],
+        [shutil.which("make"), "-j4"],
         env=os.environ.copy(),
-        universal_newlines=True,
         encoding="utf-8",
+        errors="replace",
         stdout=subprocess.DEVNULL,
         stderr=subprocess.PIPE,
+        universal_newlines=True,
+        bufsize=1,
     )
     make_stderr_watcher = PipeWatcher(make_process.stderr, sys.stdout)
     setattr(make_process, "stderr_watcher", make_stderr_watcher)
@@ -281,7 +349,7 @@ def compile_app(workspace: str, library_name, attr, engine_config: dict):
     lib_path = get_lib_path(app_dir, library_name)
     if not os.path.isfile(lib_path):
         raise CompilationError(f"Failed to compile app {app_class}")
-    return lib_path
+    return lib_path, java_jar_path, java_codegen_out_dir, app_type
 
 
 def compile_graph_frame(workspace: str, library_name, attr: dict, engine_config: dict):
@@ -298,6 +366,9 @@ def compile_graph_frame(workspace: str, library_name, attr: dict, engine_config:
 
     Returns:
         str: Path of the built graph library.
+        None: For consistency with compiler_app.
+        None: For consistency with compile_app.
+        None: for consistency with compile_app.
     """
 
     _, graph_class = _codegen_graph_info(attr)
@@ -319,9 +390,10 @@ def compile_graph_frame(workspace: str, library_name, attr: dict, engine_config:
     ]
     if graph_type == graph_def_pb2.ARROW_PROPERTY:
         cmake_commands += ["-DPROPERTY_GRAPH_FRAME=True"]
-    elif (
-        graph_type == graph_def_pb2.ARROW_PROJECTED
-        or graph_type == graph_def_pb2.DYNAMIC_PROJECTED
+    elif graph_type in (
+        graph_def_pb2.ARROW_PROJECTED,
+        graph_def_pb2.DYNAMIC_PROJECTED,
+        graph_def_pb2.ARROW_FLATTENED,
     ):
         cmake_commands += ["-DPROJECT_FRAME=True"]
     else:
@@ -344,22 +416,26 @@ def compile_graph_frame(workspace: str, library_name, attr: dict, engine_config:
     cmake_process = subprocess.Popen(
         cmake_commands,
         env=os.environ.copy(),
-        universal_newlines=True,
         encoding="utf-8",
+        errors="replace",
         stdout=subprocess.DEVNULL,
         stderr=subprocess.PIPE,
+        universal_newlines=True,
+        bufsize=1,
     )
     cmake_stderr_watcher = PipeWatcher(cmake_process.stderr, sys.stdout)
     setattr(cmake_process, "stderr_watcher", cmake_stderr_watcher)
     cmake_process.wait()
 
     make_process = subprocess.Popen(
-        ["make", "-j4"],
+        [shutil.which("make"), "-j4"],
         env=os.environ.copy(),
-        universal_newlines=True,
         encoding="utf-8",
+        errors="replace",
         stdout=subprocess.DEVNULL,
         stderr=subprocess.PIPE,
+        universal_newlines=True,
+        bufsize=1,
     )
     make_stderr_watcher = PipeWatcher(make_process.stderr, sys.stdout)
     setattr(make_process, "stderr_watcher", make_stderr_watcher)
@@ -367,8 +443,7 @@ def compile_graph_frame(workspace: str, library_name, attr: dict, engine_config:
     lib_path = get_lib_path(library_dir, library_name)
     if not os.path.isfile(lib_path):
         raise CompilationError(f"Failed to compile graph {graph_class}")
-
-    return lib_path
+    return lib_path, None, None, None
 
 
 def op_pre_process(op, op_result_pool, key_to_op, **kwargs):  # noqa: C901
@@ -579,6 +654,15 @@ def _pre_process_for_run_app_op(op, op_result_pool, key_to_op, **kwargs):
         attr_value_pb2.AttrValue(s=result.result.decode("utf-8").encode("utf-8"))
     )
 
+    app_type = parent_op.attr[types_pb2.APP_ALGO].s.decode("utf-8")
+    if app_type == "java_app":
+        # For java app, we need lib path as an explicit arg.
+        param = Any()
+        lib_path = parent_op.attr[types_pb2.APP_LIBRARY_PATH].s.decode("utf-8")
+        param.Pack(data_types_pb2.StringValue(value=lib_path))
+        op.query_args.args.extend([param])
+        logger.info("Lib path {}".format(lib_path))
+
 
 def _pre_process_for_unload_graph_op(op, op_result_pool, key_to_op, **kwargs):
     assert len(op.parents) == 1
@@ -644,6 +728,7 @@ def _pre_process_for_context_op(op, op_result_pool, key_to_op, **kwargs):
                 next_op = key_to_op[next_op_key]
                 if next_op.op in (
                     types_pb2.CREATE_GRAPH,
+                    types_pb2.ADD_COLUMN,
                     types_pb2.ADD_LABELS,
                     types_pb2.TRANSFORM_GRAPH,
                     types_pb2.PROJECT_GRAPH,
@@ -722,7 +807,10 @@ def _pre_process_for_output_graph_op(op, op_result_pool, key_to_op, **kwargs):
 
 def _pre_process_for_project_to_simple_op(op, op_result_pool, key_to_op, **kwargs):
     # for nx graph
-    if op.attr[types_pb2.GRAPH_TYPE].graph_type == graph_def_pb2.DYNAMIC_PROJECTED:
+    if op.attr[types_pb2.GRAPH_TYPE].graph_type in (
+        graph_def_pb2.DYNAMIC_PROJECTED,
+        graph_def_pb2.ARROW_FLATTENED,
+    ):
         return
     assert len(op.parents) == 1
     # get parent graph schema
@@ -1066,12 +1154,14 @@ def _codegen_app_info(attr, meta_file: str):
     algo = attr[types_pb2.APP_ALGO].s.decode("utf-8")
     for app in config_yaml["app"]:
         if app["algo"] == algo:
-            app_type = app["type"]  # cpp_pie or cython_pregel or cython_pie
+            app_type = app["type"]  # cpp_pie or cython_pregel or cython_pie, java_pie
             if app_type == "cpp_pie":
                 return (
                     app_type,
                     app["src"],
                     f"{app['class_name']}<_GRAPH_TYPE>",
+                    None,
+                    None,
                     None,
                     None,
                     None,
@@ -1085,6 +1175,19 @@ def _codegen_app_info(attr, meta_file: str):
                     app["vd_type"],
                     app["md_type"],
                     app["pregel_combine"],
+                    None,
+                    None,
+                )
+            if app_type == "java_pie":
+                return (
+                    app_type,
+                    app["driver_header"],  # cxx header
+                    "{}<_GRAPH_TYPE>".format(app["class_name"]),  # cxx class name
+                    None,  # vd_type,
+                    None,  # md_type
+                    None,  # pregel combine
+                    app["java_jar_path"],
+                    app["java_app_class"],  # the running java app class
                 )
 
     raise KeyError("Algorithm does not exist in the gar resource.")
@@ -1112,6 +1215,10 @@ GRAPH_HEADER_MAP = {
         "gs::DynamicFragment",
         "core/fragment/dynamic_fragment.h",
     ),
+    graph_def_pb2.ARROW_FLATTENED: (
+        "gs::ArrowFlattenedFragment",
+        "core/fragment/arrow_flattened_fragment.h",
+    ),
 }
 
 
@@ -1132,6 +1239,14 @@ def _codegen_graph_info(attr):
     ):
         # in a format of gs::ArrowProjectedFragment<int64_t, uint32_t, double, double>
         # or grape::ImmutableEdgecutFragment<int64_t, uint32_t, double, double>
+        graph_fqn = "{}<{},{},{},{}>".format(
+            graph_class,
+            attr[types_pb2.OID_TYPE].s.decode("utf-8"),
+            attr[types_pb2.VID_TYPE].s.decode("utf-8"),
+            attr[types_pb2.V_DATA_TYPE].s.decode("utf-8"),
+            attr[types_pb2.E_DATA_TYPE].s.decode("utf-8"),
+        )
+    elif graph_class == "gs::ArrowFlattenedFragment":
         graph_fqn = "{}<{},{},{},{}>".format(
             graph_class,
             attr[types_pb2.OID_TYPE].s.decode("utf-8"),
@@ -1264,6 +1379,14 @@ class ResolveMPICmdPrefix(object):
         ['mpirun', '-n', '4', '-host', 'h1:2,h2:1,h3:1']
         >>> env
         {} # always empty
+
+        >>> # run without mpi on localhost when setting `num_workers` to 1
+        >>> rmcp = ResolveMPICmdPrefix()
+        >>> (cmd, env) = rmcp.resolve(1, 'localhost')
+        >>> cmd
+        []
+        >>> env
+        {}
     """
 
     _OPENMPI_RSH_AGENT = "OMPI_MCA_plm_rsh_agent"
@@ -1274,8 +1397,16 @@ class ResolveMPICmdPrefix(object):
 
     @staticmethod
     def openmpi():
+        ompi_info = ""
+        if "OPAL_PREFIX" in os.environ:
+            ompi_info = os.path.expandvars("$OPAL_PREFIX/bin/ompi_info")
+        if not ompi_info:
+            if "OPAL_BINDIR" in os.environ:
+                ompi_info = os.path.expandvars("$OPAL_BINDIR/ompi_info")
+        if not ompi_info:
+            ompi_info = "ompi_info"
         try:
-            subprocess.check_call(["ompi_info"], stdout=subprocess.DEVNULL)
+            subprocess.check_call([ompi_info], stdout=subprocess.DEVNULL)
         except FileNotFoundError:
             return False
         return True
@@ -1304,9 +1435,31 @@ class ResolveMPICmdPrefix(object):
 
         return ",".join(host_list)
 
+    @staticmethod
+    def find_mpi():
+        mpi = ""
+        if ResolveMPICmdPrefix.openmpi():
+            if "OPAL_PREFIX" in os.environ:
+                mpi = os.path.expandvars("$OPAL_PREFIX/bin/mpirun")
+            if not mpi:
+                if "OPAL_BINDIR" in os.environ:
+                    mpi = os.path.expandvars("$OPAL_BINDIR/mpirun")
+        if not mpi:
+            mpi = shutil.which("mpirun")
+        if not mpi:
+            raise RuntimeError("mpirun command not found.")
+        return mpi
+
     def resolve(self, num_workers, hosts):
         cmd = []
         env = {}
+
+        if num_workers == 1 and (hosts == "localhost" or hosts == "127.0.0.1"):
+            # run without mpi on localhost if workers num is 1
+            if shutil.which("ssh") is None:
+                # also need a fake ssh agent
+                env[self._OPENMPI_RSH_AGENT] = sys.executable
+            return cmd, env
 
         if self.openmpi():
             env["OMPI_MCA_btl_vader_single_copy_mechanism"] = "none"
@@ -1322,13 +1475,13 @@ class ResolveMPICmdPrefix(object):
                     env[self._OPENMPI_RSH_AGENT] = rsh_agent_path
             cmd.extend(
                 [
-                    "mpirun",
+                    self.find_mpi(),
                     "--allow-run-as-root",
                 ]
             )
         else:
             # ssh agent supported only
-            cmd.extend(["mpirun"])
+            cmd.extend([self.find_mpi()])
         cmd.extend(["-n", str(num_workers)])
         cmd.extend(["-host", self.alloc(num_workers, hosts)])
 
@@ -1494,28 +1647,65 @@ def check_argument(condition, message=None):
         raise ValueError(f"Check failed: {message}")
 
 
+def find_java():
+    java_exec = ""
+    if "JAVA_HOME" in os.environ:
+        java_exec = os.path.expandvars("$JAVA_HOME/bin/java")
+    if not java_exec:
+        java_exec = shutil.which("java")
+    if not java_exec:
+        raise RuntimeError("java command not found.")
+    return java_exec
+
+
+def get_java_version():
+    java_exec = find_java()
+    pattern = r'"(\d+\.\d+\.\d+).*"'
+    version = subprocess.check_output([java_exec, "-version"], stderr=subprocess.STDOUT)
+    return re.search(pattern, version.decode("utf-8")).groups()[0]
+
+
 def check_gremlin_server_ready(endpoint):
-    from gremlin_python.driver.client import Client
+    def _check_task(endpoint):
+        from gremlin_python.driver.client import Client
 
-    if "MY_POD_NAME" in os.environ:
-        # inner kubernetes env
-        if endpoint == "localhost" or endpoint == "127.0.0.1":
-            # now, used in mac os with docker-desktop kubernetes cluster,
-            # which external ip is 'localhost' when service type is 'LoadBalancer'
-            return True
+        if "MY_POD_NAME" in os.environ:
+            # inner kubernetes env
+            if endpoint == "localhost" or endpoint == "127.0.0.1":
+                # now, used in mac os with docker-desktop kubernetes cluster,
+                # which external ip is 'localhost' when service type is 'LoadBalancer'
+                return True
 
-    client = Client(f"ws://{endpoint}/gremlin", "g")
-    error_message = ""
-    begin_time = time.time()
-    while True:
         try:
+            client = Client(f"ws://{endpoint}/gremlin", "g")
             client.submit("g.V().limit(1)").all().result()
+            try:
+                client.close()
+            except:  # noqa: E722
+                pass
         except Exception as e:
+            try:
+                client.close()
+            except:  # noqa: E722
+                pass
+            raise RuntimeError(str(e))
+
+        return True
+
+    executor = ThreadPoolExecutor(max_workers=20)
+
+    begin_time = time.time()
+    error_message = ""
+    while True:
+        t = executor.submit(_check_task, endpoint)
+        try:
+            rlt = t.result(timeout=30)
+        except Exception as e:
+            t.cancel()
             error_message = str(e)
         else:
-            client.close()
-            return True
+            return rlt
         time.sleep(3)
         if time.time() - begin_time > INTERAVTIVE_INSTANCE_TIMEOUT_SECONDS:
-            client.close()
+            executor.shutdown(wait=False, cancel_futures=True)
             raise TimeoutError(f"Gremlin check query failed: {error_message}")

@@ -1,5 +1,5 @@
 Deployment
-============
+===========
 
 The engines of GraphScope are distributed as a docker image.
 The `graphscope` python client will pull the image if they are not present.
@@ -18,6 +18,37 @@ allows users to deploy and connect GraphScope on a k8s cluster.
 
 
 As shown above, a session can easily launch a cluster on k8s.
+
+Sometimes users may want to use their dataset on the local disk, in this case, we provide options to mount a
+host directory to the cluster.
+
+Assume we want to mount `~/test_data` in the host machine to `/testingdata` in pods, we can define
+a dict as follows, then pass it as `k8s_volumes` in session constructor.
+
+Note that the host path is relative to the kubernetes node, that is, if you have a cluster created by `kind`, then you need to copy that directory to the kind node, or mount that path to kind node.
+See more details `here <https://kind.sigs.k8s.io/docs/user/configuration/#extra-mounts>`_.
+
+
+.. code:: python
+
+
+    import os
+    import graphscope
+
+    k8s_volumes = {
+        "data": {
+            "type": "hostPath",
+            "field": {
+                "path": os.path.expanduser("~/test_data/"),
+                "type": "Directory"
+            },
+            "mounts": {
+            "mountPath": "/testingdata"
+            }
+        }
+    }
+
+    sess = graphscope.session(k8s_volumes=k8s_volumes)
 
 A cluster on k8s contains a pod running an etcd container for meta-data syncing, a
 pod running the Coordinator, and a replica set of GraphScope engines.
@@ -81,17 +112,16 @@ You can use the script as follows or use `./script/launch_cluster.py --help` to 
 
 Deployment on local
 ----------------------
-We provide script to install dependencies and deploy GraphScope locally on
+We provide script to install dependencies of GraphScope on
 Ubuntu 20.04+ or MacOS.
 
-* install independencies of GraphScope
+* install development independencies of GraphScope
 .. code:: shell
 
-    ./scripts/deploy_local.sh install_deps
+    ./scripts/install_deps.sh --dev
+
+* then you can build and deploy GraphScope locally
+.. code:: shell
+
     source ~/.graphscope_env
-
-* build and deploy GraphScope locally
-.. code:: shell
-
-    ./scripts/deploy_local.sh build_and_deploy
-    export GRAPHSCOPE_HOME=/opt/graphscope
+    make graphscope

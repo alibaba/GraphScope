@@ -5,7 +5,6 @@
 ARG BASE_VERSION=latest
 FROM registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-runtime:$BASE_VERSION
 
-# TODO: adapt to the latest API of libgrape-lite
 RUN sudo mkdir -p /opt/vineyard && \
     sudo chown -R $(id -u):$(id -g) /opt/vineyard && \
     cd /tmp && \
@@ -17,16 +16,14 @@ RUN sudo mkdir -p /opt/vineyard && \
     make -j`nproc` && \
     make install && \
     cd /tmp && \
-    git clone -b v0.2.12 https://github.com/alibaba/libvineyard.git --depth=1 && \
+    git clone -b v0.3.11 https://github.com/alibaba/libvineyard.git --depth=1 && \
     cd libvineyard && \
     git submodule update --init && \
     mkdir -p /tmp/libvineyard/build && \
     cd /tmp/libvineyard/build && \
     cmake .. -DCMAKE_PREFIX_PATH=/opt/vineyard \
              -DCMAKE_INSTALL_PREFIX=/opt/vineyard \
-             -DBUILD_VINEYARD_PYPI_PACKAGES=ON \
-             -DBUILD_SHARED_LIBS=ON \
-             -DBUILD_VINEYARD_IO_OSS=ON && \
+             -DBUILD_SHARED_LIBS=ON && \
     make install vineyard_client_python -j && \
     cd /tmp/libvineyard && \
     python3 setup.py bdist_wheel && \
@@ -42,3 +39,15 @@ RUN sudo mkdir -p /opt/vineyard && \
     sudo cp -r /opt/vineyard/* /usr/local/ && \
     cd /tmp && \
     rm -fr /tmp/libvineyard /tmp/libgrape-lite
+
+# build & install fastffi
+RUN cd /opt/ && \
+    sudo git clone https://github.com/alibaba/fastFFI.git && \
+    sudo chown -R $(id -u):$(id -g) /opt/fastFFI && \
+    cd fastFFI && \
+    git checkout a166c6287f2efb938c27fb01b3d499932d484f9c && \
+    export PATH=${PATH}:${LLVM11_HOME}/bin && \
+    mvn clean install -DskipTests
+
+ENV LLVM4JNI_HOME=/opt/fastFFI/llvm4jni
+

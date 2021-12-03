@@ -1,0 +1,40 @@
+name: NetworkX Forward algorithm CI
+
+on:
+  workflow_dispatch:
+  schedule:
+    # The notifications for scheduled workflows are sent to the user who
+    # last modified the cron syntax in the workflow file.
+    # Trigger the workflow at 03:00(CST) every day.
+    - cron:  '00 19 * * *'
+
+jobs:
+  forward-algo-test:
+    if: ${{ github.ref == 'refs/heads/main' && github.repository == 'alibaba/GraphScope' }}
+    runs-on: ubuntu-20.04
+    defaults:
+      run:
+        shell: bash --noprofile --norc -eo pipefail {0}
+    container:
+      image: registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-vineyard:v0.3.11
+      options:
+        --shm-size 4096m
+
+    steps:
+    - uses: actions/checkout@v2.3.2
+
+    - name: Build GAE and coordinator
+      run: |
+        pushd ${GITHUB_WORKSPACE}
+        make gae ENABLE_JAVA_SDK=OFF BUILD_TEST=OFF
+        # also make coordinator and client for python test
+        make coordinator && make client
+        popd
+
+    - name: Run Forward algorithms test
+      env:
+        DEPLOYMENT: 'standalone'
+      run: |
+        python3 -m pip install pytest-cov networkx==2.5
+        cd ${GITHUB_WORKSPACE}/python
+        python3 -m pytest -s -v -m "not slow" graphscope/nx/algorithms/tests/forward

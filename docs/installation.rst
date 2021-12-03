@@ -1,16 +1,37 @@
 Installation
 ============
 
-The client of GraphScope is distributed as a Python package. It manages a set of
-backend engines and the coordinator via containers.
+GraphScope is tested and supported on the following 64-bit systems:
 
-In practice, GraphScope runs on clusters managed by Kubernetes.
-For quickly getting started, we set up a local Kubernetes cluster and take advantage of pre-built Docker images as follows.
+- Python 3.6 - 3.9
+- Ubuntu 18.04 or later
+- CentOS 7 or later
+- macOS 11.2.1 (Big Sur) or later (Apple M1 is not support yet!)
 
-To run GraphScope on your local computer, the following dependencies or tools are required.
 
-- Docker
-- Python 3.6+ (with pip)
+Instal GraphScope locally without Kubernetes
+--------------------------------------------
+
+GraphScope is distributed as a `python package <https://pypi.org/project/graphscope>`_ and can be easily installed with `pip <https://pip.pypa.io/en/stable/>`_.
+
+**GraphScope packages require a pip version > 19.0 (or > 20.3 for macOS)**
+
+.. code:: bash
+
+    # Requires the latest pip
+    pip3 install --upgrade pip
+
+    # Current stable release
+    pip3 install --upgrade graphscope
+
+
+Install GraphScope Client for Kubernetes
+----------------------------------------
+
+For quickly getting started, we set up a local kubernetes cluster and take advantage of pre-built Docker images as follows.
+The following dependencies or tools are required.
+
+- Python 3.6 - 3.9
 - Local Kubernetes cluster set-up tool (e.g. `Kind <https://kind.sigs.k8s.io>`_)
 
 On Windows and macOS, you can follow the official guides to install them and enable Kubernetes in Docker.
@@ -20,40 +41,16 @@ Alternatively, you may want to install `WSL2 <https://docs.microsoft.com/en-us/w
 
 .. code:: bash
 
-    # run the environment preparing script.
-    ./scripts/prepare_env.sh
-
-Then the package can be easily installed using `pip <https://pip.pypa.io/en/stable/>`_:
-
-.. code:: shell
-
-    pip install graphscope
-
-Or you can install the package from source
-
-.. code:: shell
-
-    pip install 'git+https://github.com/alibaba/GraphScope.git'
-
-If you have the :code:`.wheel` package, you can install the package using
-
-.. code:: shell
-
-    pip install graphscope-0.1.macosx-10.14-x86_64.tar.gz
+    # run the k8s environment preparing script.
+    ./scripts/install_deps.sh --k8s
 
 
-To build the package from source code, please download the latest version
-from our `repo <https://github.com/alibaba/GraphScope.git>`_ with git:
+Install a subset of the whole package with `client <https://pypi.org/project/graphscope-client>`_ functions **only** for running GraphScope on `Kubernetes <https://kubernetes.io>`_.
 
-.. code:: shell
+.. code:: bash
 
-    git clone git@github.com:alibaba/GraphScope.git
-    git submodule update --init
-    cd python
+    # Requires the latest pip
+    pip3 install --upgrade pip
 
-Then install the package from source with the following command:
-
-.. code:: shell
-
-    pip install -U -r requirements.txt
-    python setup.py install
+    # Current stable release
+    pip3 install --upgrade graphscope-client

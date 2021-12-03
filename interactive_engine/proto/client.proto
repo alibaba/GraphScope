@@ -1,0 +1,150 @@
+/**
+ * Copyright 2020 Alibaba Group Holding Limited.
+ * 
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ * 
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+syntax = "proto3";
+
+import "sdk/common.proto";
+import "model.proto";
+
+option java_package = "com.alibaba.maxgraph.proto.groot";
+option java_multiple_files = true;
+
+service Client {
+  rpc addVertices(AddVerticesRequest) returns (AddVerticesResponse);
+  rpc addEdges(AddEdgesRequest) returns (AddEdgesResponse);
+  rpc remoteFlush(RemoteFlushRequest) returns (RemoteFlushResponse);
+  rpc getSchema(GetSchemaRequest) returns (GetSchemaResponse);
+  rpc ingestData(IngestDataRequest) returns (IngestDataResponse);
+  rpc getMetrics(GetMetricsRequest) returns (GetMetricsResponse);
+  rpc loadJsonSchema(LoadJsonSchemaRequest) returns(LoadJsonSchemaResponse);
+  rpc dropSchema(DropSchemaRequest) returns(DropSchemaResponse);
+  rpc prepareDataLoad(PrepareDataLoadRequest) returns(PrepareDataLoadResponse);
+  rpc commitDataLoad(CommitDataLoadRequest) returns(CommitDataLoadResponse);
+  rpc getPartitionNum(GetPartitionNumRequest) returns(GetPartitionNumResponse);
+  rpc getLoggerInfo(GetLoggerInfoRequest) returns(GetLoggerInfoResponse);
+}
+
+message VertexDataPb {
+  string label = 1;
+  map<string, string> properties = 2;
+}
+
+message AddVerticesRequest {
+  string session = 1;
+  repeated VertexDataPb dataList = 2;
+}
+
+message AddVerticesResponse {
+  int64 snapshotId = 1;
+}
+
+message EdgeDataPb {
+  string label = 1;
+  string srcLabel = 2;
+  string dstLabel = 3;
+  map<string, string> srcPk = 4;
+  map<string, string> dstPk = 5;
+  map<string, string> properties = 6;
+}
+
+message AddEdgesRequest {
+  string session = 1;
+  repeated EdgeDataPb dataList = 2;
+}
+
+message AddEdgesResponse {
+  int64 snapshotId = 1;
+}
+
+message RemoteFlushRequest {
+  int64 snapshotId = 1;
+}
+
+message RemoteFlushResponse {
+
+}
+
+message GetSchemaRequest {
+
+}
+
+message GetSchemaResponse {
+  GraphDefPb graphDef = 1;
+}
+
+message IngestDataRequest {
+  string dataPath = 1;
+}
+
+message IngestDataResponse {
+}
+
+message GetMetricsRequest {
+  string roleNames = 1;
+}
+
+message GetMetricsResponse {
+  string metricsJson = 1;
+}
+
+message LoadJsonSchemaRequest {
+  string schemaJson = 1;
+}
+
+message LoadJsonSchemaResponse {
+  GraphDefPb graphDef = 1;
+}
+
+message DropSchemaRequest {
+
+}
+
+message DropSchemaResponse {
+  GraphDefPb graphDef = 1;
+}
+
+message PrepareDataLoadRequest {
+  repeated DataLoadTargetPb dataLoadTargets = 1;
+}
+
+message PrepareDataLoadResponse {
+  GraphDefPb graphDef = 1;
+}
+
+message CommitDataLoadRequest {
+  map<int64, DataLoadTargetPb> tableToTarget = 1;
+}
+
+message CommitDataLoadResponse {
+
+}
+
+message GetPartitionNumRequest {
+
+}
+
+message GetPartitionNumResponse {
+  int32 partitionNum = 1;
+}
+
+message GetLoggerInfoRequest {
+
+}
+
+message GetLoggerInfoResponse {
+  string loggerServers = 1;
+  string loggerTopic = 2;
+  int32 loggerQueueCount = 3;
+}

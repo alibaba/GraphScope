@@ -1,0 +1,122 @@
+/**
+ * Copyright 2020 Alibaba Group Holding Limited.
+ * 
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ * 
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+syntax = "proto3";
+
+option java_package = "com.alibaba.maxgraph.proto";
+option java_outer_classname = "CommonProto";
+option java_multiple_files = true;
+option java_generate_equals_and_hash = true;
+option java_generic_services = true;
+
+message EndpointProto {
+  string host = 1;
+  // default rpc port
+  int32 port = 2;
+  // gremlin server port, frontend only
+  int32 gremlinServerPort = 3;
+  // timely's port, executor only
+  int32 runtimePort = 4;
+  // runtime control port to query or cancel running job, and async timely's port, executor only.
+  int32 runtimCtrlAndAsyncPort = 5;
+}
+
+enum DataTypePb {
+  UNKNOWN = 0;
+  BOOL = 1;
+  CHAR = 2;
+  SHORT = 3;
+  INT = 4;
+  LONG = 5;
+  FLOAT = 6;
+  DOUBLE = 7;
+  STRING = 8;
+  BYTES = 9;
+  INT_LIST = 10;
+  LONG_LIST = 11;
+  FLOAT_LIST = 12;
+  DOUBLE_LIST = 13;
+  STRING_LIST = 14;
+}
+
+message Request {
+  string traceId = 1;
+}
+
+message Response {
+  int32 errCode = 1;
+  string errMsg = 2;
+}
+
+message Empty {
+}
+
+message MetricInfoProto {
+  map<string, string> metricInfo = 1;
+  repeated DiskMetricProto diskMetrics = 2;
+}
+
+message ServerMetricValue {
+  int32 serverId = 1;
+  int64 timestamp = 2;
+  string value = 3;
+  repeated DiskMetricProto diskValue = 4;
+  int32 nodeId = 5;
+}
+
+message DiskMetricProto {
+  string path = 1;
+  int64 usage = 2;
+  int64 available = 3;
+  int64 total = 4;
+}
+
+message MetricInfoRequest {
+  string metricName = 1;
+}
+
+message AllMetricsInfoResp {
+  repeated AllMetricsInfoProto info = 1;
+  Response resp = 2;
+}
+
+message AllMetricsInfoProto {
+  string metricName = 1;
+  repeated ServerMetricValue values = 2;
+}
+
+message MetricInfoResp {
+  repeated ServerMetricValue values = 1;
+  Response resp = 2;
+}
+
+message DataLoadTargetPb {
+  string label = 1;
+  string srcLabel = 2;
+  string dstLabel = 3;
+  int32 labelId = 4;
+  int32 srcLabelId = 5;
+  int32 dstLabelId = 6;
+}
+
+message PrepareDataLoadPb {
+  DataLoadTargetPb target = 1;
+  int64 tableIdx = 2;
+}
+
+message CommitDataLoadPb {
+  DataLoadTargetPb target = 1;
+  int64 tableIdx = 2;
+}

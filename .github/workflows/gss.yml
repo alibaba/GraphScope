@@ -1,0 +1,229 @@
+name: GraphScope Store CI
+
+on:
+  # Trigger the workflow on push or pull request,
+  # but only for the main branch
+  push:
+    branches:
+      - main
+    paths-ignore:
+      - 'CONTRIBUTORS'
+      - 'LICENSE'
+      - 'NOTICE.txt'
+      - '**.md'
+      - '**.rst'
+      - 'docs/**'
+      - 'demo/**'
+      - 'scripts/**'
+      - 'tutorials/**'
+  pull_request:
+    branches:
+      - main
+    paths:
+      - 'proto/**'
+      - 'interactive_engine/**'
+      - 'python/graphscope/client/**'
+      - 'charts/graphscope-store/**'
+      - '.github/workflows/gss.yml'
+      - '!interactive_engine/**.md'
+      - '!charts/graphscope-store/**.md'
+
+concurrency:
+  group: ${{ github.repository }}-${{ github.head_ref || github.sha }}-${{ github.workflow }}
+  cancel-in-progress: true
+
+jobs:
+  gremlin-test:
+    # Require the host is able to run docker without sudo and
+    # can `ssh localhost` without password, which may need to
+    # be configured manually when a new self-hosted runner is added.
+    runs-on: self-hosted
+    container:
+      image: registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-vineyard:v0.3.11
+    defaults:
+      run:
+        shell: bash --noprofile --norc -eo pipefail {0}
+    steps:
+    - name: Clean Up
+      run: |
+        echo "CI is running on host $(curl -s 'https://api.ipify.org')"
+
+        sudo chmod -R a+wrx ${GITHUB_WORKSPACE}
+        sudo rm -rf ./* || true
+        find ./ -name "*.egg-info" | xargs sudo rm -rf || true
+        find ./ -name "*.whl" | xargs sudo rm -rf || true
+        find ./ -name "*_pb2.py" | xargs sudo rm -rf || true
+        find ./ -name "*_pb2_grpc.py" | xargs sudo rm -rf || true
+
+    - uses: actions/checkout@v2
+
+    - name: Install Dependencies
+      run: |
+        # install cargo cause github change $HOME to /github/home, so we can't use
+        # `source ~/.bashrc` or `source ${HOME}/.bashrc` to find cargo command.
+        sudo chown -R $(id -u):$(id -g) ${HOME}
+        sudo chmod -R a+wrx ${HOME} ${GITHUB_WORKSPACE}
+        wget --no-verbose https://golang.org/dl/go1.15.5.linux-amd64.tar.gz
+        sudo tar -C /usr/local -xzf go1.15.5.linux-amd64.tar.gz
+        curl -sf -L https://static.rust-lang.org/rustup.sh | sh -s -- -y --profile minimal --default-toolchain 1.54.0
+        echo "source ~/.cargo/env" >> ~/.bashrc
+        source ${HOME}/.bashrc
+        rustup component add rustfmt
+
+        # install rdkafka
+        sudo yum install -y librdkafka-devel
+        # install cppkafka
+        git clone -b 0.4.0 --single-branch --depth=1 \
+            https://github.com/mfontanini/cppkafka.git /tmp/cppkafka && \
+          cd /tmp/cppkafka && git submodule update --init && \
+          mkdir -p build && cd build && \
+          cmake .. && make -j && sudo make install && \
+          rm -fr /tmp/cppkafka
+
+    - name: Build GraphScope Store
+      run: |
+        source ${HOME}/.bashrc
+        cd ${GITHUB_WORKSPACE}/interactive_engine
+        for i in {1..3}; do mvn clean install -Pv2 -Drust.compile.mode=debug -DskipTests --quiet && break || sleep 60; done
+        cd ${GITHUB_WORKSPACE}
+        # maxgraph.tar.gz is for helm test
+        mv interactive_engine/distribution/target/maxgraph.tar.gz ./maxgraph.tar.gz
+        # graphscope_store_data_load.tar.gz is for release
+        mv interactive_engine/data_load_tools/target/data_load.tar.gz ./graphscope_store_data_load.tar.gz
+
+    - name: Gremlin Test
+      run: |
+        cd interactive_engine/groot-server
+        mvn test -Pgremlin-test
+
+    - name: Upload tools for helm test to Artifact
+      uses: actions/upload-artifact@v2
+      with:
+        name: gss-${{ github.sha }}
+        path: maxgraph.tar.gz
+        retention-days: 5
+
+    - name: Upload Data Load to Artifact
+      uses: actions/upload-artifact@v2
+      with:
+        name: data_load-${{ github.sha }}
+        path: |
+          graphscope_store_data_load.tar.gz
+        retention-days: 5
+
+  helm-test:
+    runs-on: self-hosted
+    needs: [gremlin-test]
+    strategy:
+      matrix:
+        executor: [maxgraph, gaia]
+    steps:
+    - name: Clean Up
+      run: |
+        echo "CI is running on host $(curl -s 'https://api.ipify.org')"
+
+        sudo chmod -R a+wrx ${GITHUB_WORKSPACE}
+        sudo rm -rf ./* || true
+        find ./ -name "*.egg-info" | xargs sudo rm -rf || true
+        find ./ -name "*.whl" | xargs sudo rm -rf || true
+        find ./ -name "*_pb2.py" | xargs sudo rm -rf || true
+        find ./ -name "*_pb2_grpc.py" | xargs sudo rm -rf || true
+
+    - uses: actions/checkout@v2
+      with:
+        submodules: true
+
+    - uses: actions/download-artifact@v2
+      with:
+        path: artifacts
+
+    - name: Set GITHUB_ENV
+      run: |
+        short_sha=$(git rev-parse --short HEAD)
+        echo "SHORT_SHA=${short_sha}" >> $GITHUB_ENV
+
+    - name: Prepare Image
+      run: |
+        cd ${GITHUB_WORKSPACE}
+        sudo make graphscope-store-image
+
+    - name: Python Test with Helm Deployment
+      env:
+        JAVA_HOME: /usr/lib/jvm/default-java
+        GS_TEST_DIR: ${{ github.workspace }}/gstest
+      run: |
+        # maxgraph.tar.gz is needed for offline_load.sh
+        # see .github/workflows/hadoop_scripts/offline_load.sh.template
+        pushd artifacts
+        tar -zxf ./gss-${{ github.sha }}/maxgraph.tar.gz
+
+        # download gstest
+        git clone -b master --single-branch --depth=1 https://github.com/7br/gstest.git ${GS_TEST_DIR}
+
+        # retag image for helm test
+        sudo docker tag graphscope/graphscope-store:${SHORT_SHA} \
+            registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-store:${SHORT_SHA}
+
+        # update helm dependency
+        cd ${GITHUB_WORKSPACE}/charts/graphscope-store
+        helm dependency update
+
+        # helm deployment and testing
+        cd ${GITHUB_WORKSPACE}/charts
+        helm install ci --set image.tag=${SHORT_SHA},executor=${{ matrix.executor }} ./graphscope-store
+        helm test ci --timeout 5m0s
+
+        # 1. get gss service endpoint
+        export GRPC_PORT=$(kubectl get --namespace default -o jsonpath="{.spec.ports[0].nodePort}" services ci-graphscope-store-frontend)
+        export GREMLIN_PORT=$(kubectl get --namespace default -o jsonpath="{.spec.ports[1].nodePort}" services ci-graphscope-store-frontend)
+        export NODE_IP=$(kubectl get nodes --namespace default -o jsonpath="{.items[0].status.addresses[0].address}")
+
+        # 2. deploy hadoop hdfs
+        cd /tmp
+        wget -q https://mirror.cogentco.com/pub/apache/hadoop/common/hadoop-2.10.1/hadoop-2.10.1.tar.gz
+        tar -zxf hadoop-2.10.1.tar.gz
+        cd ${GITHUB_WORKSPACE}/.github/workflows/hadoop_scripts
+        REPLACE_STR=${GITHUB_WORKSPACE}/artifacts/maxgraph
+        sed s/MAXGRAPH_HOME/${REPLACE_STR//\//\\/}/ offline_load.sh.template > offline_load.sh
+        chmod +x offline_load.sh
+        export LOAD_DATA_SCRIPT=${GITHUB_WORKSPACE}/.github/workflows/hadoop_scripts/offline_load.sh
+        sed s/GRAPH_ENDPOINT/$NODE_IP:$GRPC_PORT/ databuild.config.template > databuild.config
+        ./prepare_hadoop.sh /tmp/hadoop-2.10.1
+        export PATH=${PATH}:/tmp/hadoop-2.10.1/bin
+
+        # 3. upload data to HDFS
+        hadoop fs -mkdir /ldbc_sample || true
+        hadoop fs -put ${GS_TEST_DIR}/ldbc_sample/person_0_0.csv /ldbc_sample/person_0_0.csv
+        hadoop fs -put ${GS_TEST_DIR}/ldbc_sample/person_knows_person_0_0.csv /ldbc_sample/person_knows_person_0_0.csv
+
+        # python test
+        cd ${GITHUB_WORKSPACE}/python
+        python3 -m pip install -r ./requirements.txt --user
+        python3 -m pip install -r ./requirements-dev.txt --user
+        python3 -m pip install pytest-cov --user
+        python3 setup.py build_proto
+        python3 -m pytest -s -vvv graphscope/tests/kubernetes/test_store_service.py -k test_demo_fresh
+
+        # restart helm and run demo with the PersistentVolume
+        helm uninstall ci
+        cd ${GITHUB_WORKSPACE}/charts
+        helm install ci --set image.tag=${SHORT_SHA},executor=${{ matrix.executor }} ./graphscope-store
+
+        # helm test and python test on the restarted store
+        export GRPC_PORT=$(kubectl get --namespace default -o jsonpath="{.spec.ports[0].nodePort}" services ci-graphscope-store-frontend)
+        export GREMLIN_PORT=$(kubectl get --namespace default -o jsonpath="{.spec.ports[1].nodePort}" services ci-graphscope-store-frontend)
+        export NODE_IP=$(kubectl get nodes --namespace default -o jsonpath="{.items[0].status.addresses[0].address}")
+        helm test ci --timeout 5m0s
+        cd ${GITHUB_WORKSPACE}/python
+        python3 -m pytest -s -vvv graphscope/tests/kubernetes/test_store_service.py -k test_demo_after_restart
+
+    - name: Clean
+      if: always()
+      run: |
+        HADOOP_SSH_OPTS="-o StrictHostKeyChecking=no" /tmp/hadoop-2.10.1/sbin/stop-dfs.sh || true
+        rm -rf /tmp/hadoop* || true
+        helm uninstall ci || true
+        kubectl delete pvc -l app.kubernetes.io/instance=ci --wait=false || true
+        kubectl delete pod ci-graphscope-store-frontend-test-grpc-service ci-graphscope-store-frontend-test-gremlin-service --wait=false || true
+        sudo docker rmi -f graphscope/graphscope-store:${SHORT_SHA}
+        sudo docker rmi -f registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-store:${SHORT_SHA} || true

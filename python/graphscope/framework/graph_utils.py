@@ -16,10 +16,7 @@
 # limitations under the License.
 #
 
-from itertools import chain
 from typing import Any
-from typing import Dict
-from typing import Iterable
 from typing import Mapping
 from typing import Sequence
 from typing import Tuple

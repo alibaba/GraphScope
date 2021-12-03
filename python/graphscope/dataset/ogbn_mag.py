@@ -19,9 +19,8 @@
 import os
 
 from graphscope.client.session import get_default_session
-from graphscope.dataset import DATA_SITE
+from graphscope.dataset.io_utils import DATA_SITE
 from graphscope.dataset.io_utils import download_file
-from graphscope.framework.graph import Graph
 
 
 def load_ogbn_mag(sess=None, prefix=None):
@@ -47,14 +46,14 @@ def load_ogbn_mag(sess=None, prefix=None):
 
         >>> # lazy mode
         >>> import graphscope
-        >>> from graphscope.dataset.ogbn_mag import load_ogbn_mag
+        >>> from graphscope.dataset import load_ogbn_mag
         >>> sess = graphscope.session(mode="lazy")
         >>> g = load_ogbn_mag(sess, "/path/to/dataset")
         >>> g1 = sess.run(g)
 
         >>> # eager mode
         >>> import graphscope
-        >>> from graphscope.dataset.ogbn_mag import load_ogbn_mag
+        >>> from graphscope.dataset import load_ogbn_mag
         >>> sess = graphscope.session(mode="eager")
         >>> g = load_ogbn_mag(sess, "/path/to/dataset")
     """

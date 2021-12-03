@@ -22,7 +22,6 @@ import json
 from copy import deepcopy
 from typing import Mapping
 
-from graphscope.client.session import get_session_by_id
 from graphscope.framework import dag_utils
 from graphscope.framework import utils
 from graphscope.framework.dag import DAGNode

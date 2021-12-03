@@ -69,58 +69,32 @@ class KatzCentrality : public AppBase<FRAG_T, KatzCentralityContext<FRAG_T>>,
     return false;
   }
 
-  template <typename FRAG_T_, typename = void>
-  struct PullAndSend {
-    void operator()(const fragment_t& frag, context_t& ctx,
-                    message_manager_t& messages) {
-      auto inner_vertices = frag.InnerVertices();
-      auto& x = ctx.x;
-      auto& x_last = ctx.x_last;
+  void pullAndSend(const fragment_t& frag, context_t& ctx,
+                   message_manager_t& messages) {
+    auto inner_vertices = frag.InnerVertices();
+    auto& x = ctx.x;
+    auto& x_last = ctx.x_last;
 
-      for (auto& v : inner_vertices) {
-        auto es = frag.GetIncomingAdjList(v);
-        x[v] = 0;
-        for (auto& e : es) {
-          // do the multiplication y^T = Alpha * x^T A - Beta
-          x[v] += x_last[e.get_neighbor()];
-        }
-        x[v] = x[v] * ctx.alpha + ctx.beta;
-        messages.SendMsgThroughEdges(frag, v, ctx.x[v]);
+    for (auto& v : inner_vertices) {
+      auto es = frag.GetIncomingAdjList(v);
+      x[v] = 0;
+      for (auto& e : es) {
+        // do the multiplication y^T = Alpha * x^T A - Beta
+        double edata = 1.0;
+        static_if<!std::is_same<edata_t, grape::EmptyType>{}>(
+            [&](auto& e, auto& data) {
+              data = static_cast<double>(e.get_data());
+            })(e, edata);
+        x[v] += x_last[e.get_neighbor()] * edata;
       }
+      x[v] = x[v] * ctx.alpha + ctx.beta;
+      messages.SendMsgThroughEdges(frag, v, ctx.x[v]);
     }
-  };
-
-  template <typename FRAG_T_>
-  struct PullAndSend<
-      FRAG_T_, typename std::enable_if<!std::is_same<
-                   typename FRAG_T_::edata_t, grape::EmptyType>::value>::type> {
-    void operator()(const fragment_t& frag, context_t& ctx,
-                    message_manager_t& messages) {
-      auto inner_vertices = frag.InnerVertices();
-      auto& x = ctx.x;
-      auto& x_last = ctx.x_last;
-
-      for (auto& v : inner_vertices) {
-        auto es = frag.GetIncomingAdjList(v);
-        x[v] = 0;
-        for (auto& e : es) {
-          // do the multiplication y^T = Alpha * x^T A - Beta
-          double edata = 1.0;
-          static_if<!std::is_same<edata_t, grape::EmptyType>{}>(
-              [&](auto& e, auto& data) {
-                data = static_cast<double>(e.get_data());
-              })(e, edata);
-          x[v] += x_last[e.get_neighbor()] * edata;
-        }
-        x[v] = x[v] * ctx.alpha + ctx.beta;
-        messages.SendMsgThroughEdges(frag, v, ctx.x[v]);
-      }
-    }
-  };
+  }
 
   void PEval(const fragment_t& frag, context_t& ctx,
              message_manager_t& messages) {
-    PullAndSend<fragment_t>{}(frag, ctx, messages);
+    pullAndSend(frag, ctx, messages);
 
     if (frag.fnum() == 1) {
       messages.ForceContinue();
@@ -158,7 +132,7 @@ class KatzCentrality : public AppBase<FRAG_T, KatzCentralityContext<FRAG_T>>,
 
     x_last.Swap(x);
 
-    PullAndSend<fragment_t>{}(frag, ctx, messages);
+    pullAndSend(frag, ctx, messages);
 
     if (frag.fnum() == 1) {
       messages.ForceContinue();

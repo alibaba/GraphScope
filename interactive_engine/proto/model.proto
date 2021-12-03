@@ -1,0 +1,199 @@
+/**
+ * Copyright 2020 Alibaba Group Holding Limited.
+ * 
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ * 
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+syntax = "proto3";
+
+import "sdk/common.proto";
+
+option java_package = "com.alibaba.maxgraph.proto.groot";
+option java_multiple_files = true;
+
+message OperationPb {
+  int64 partitionKey = 1;
+  OpTypePb opType = 2;
+  bytes dataBytes = 3;
+}
+
+message OperationBatchPb {
+  int64 latestSnapshotId = 1;
+  repeated OperationPb operations = 2;
+}
+
+message LogEntryPb {
+  int64 snapshotId = 1;
+  OperationBatchPb operations = 2;
+}
+
+enum OpTypePb {
+  MARKER = 0;
+
+  OVERWRITE_VERTEX = 1;
+  UPDATE_VERTEX = 2;
+  DELETE_VERTEX = 3;
+  OVERWRITE_EDGE = 4;
+  UPDATE_EDGE = 5;
+  DELETE_EDGE = 6;
+
+  CREATE_VERTEX_TYPE = 7;
+  CREATE_EDGE_TYPE = 8;
+  ADD_EDGE_KIND = 9;
+
+  DROP_VERTEX_TYPE = 10;
+  DROP_EDGE_TYPE = 11;
+  REMOVE_EDGE_KIND = 12;
+
+  PREPARE_DATA_LOAD = 13;
+  COMMIT_DATA_LOAD = 14;
+}
+
+message MarkerOperationPb {
+}
+
+message PropertyValuePb {
+  DataTypePb dataType = 1;
+  bytes val = 2;
+}
+
+message VertexIdPb {
+  int64 id = 1;
+}
+
+message EdgeIdPb {
+  VertexIdPb srcId = 1;
+  VertexIdPb dstId = 2;
+  int64 id = 3;
+}
+
+message LabelIdPb {
+  int32 id = 1;
+}
+
+message EdgeKindPb {
+  string edgeLabel = 1;
+  LabelIdPb edgeLabelId = 2;
+  string srcVertexLabel = 3;
+  LabelIdPb srcVertexLabelId = 4;
+  string dstVertexLabel = 5;
+  LabelIdPb dstVertexLabelId = 6;
+}
+
+message EdgeLocationPb {
+  EdgeKindPb edgeKind = 1;
+  bool forward = 2;
+}
+
+message DataOperationPb {
+  // One of [VertexIdPb, EdgeIdPb]
+  bytes keyBlob = 1;
+  // One of [LabelIdPb, EdgeLocation]
+  bytes locationBlob = 2;
+  map<int32, PropertyValuePb> props = 3;
+}
+
+message KindOperationPb {
+  EdgeKindPb edgeKind = 1;
+}
+
+message TypeDefPb {
+  int32 versionId = 1;
+  string label = 2;
+  LabelIdPb labelId = 3;
+  TypeEnumPb typeEnum = 4;
+  repeated PropertyDefPb props = 5;
+}
+
+message PropertyDefPb {
+  int32 id = 1;
+  int32 innerId = 2;
+  string name = 3;
+  DataTypePb dataType = 4;
+  PropertyValuePb defaultValue = 5;
+  bool pk = 6;
+  string comment = 7;
+}
+
+message DdlRequestPb {
+  OpTypePb opType = 1;
+  bytes ddlBytes = 2;
+}
+
+message DdlRequestBatchPb {
+  repeated DdlRequestPb ddlRequests = 1;
+}
+
+message DdlOperationPb {
+  int64 schemaVersion = 1;
+  bytes ddlBlob = 2;
+}
+
+message CreateVertexTypePb {
+  TypeDefPb typeDef = 1;
+  int64 tableIdx = 2;
+}
+
+message AddEdgeKindPb {
+  EdgeKindPb edgeKind = 1;
+  int64 tableIdx = 2;
+}
+
+
+
+message EdgeTableIdEntry {
+  EdgeKindPb edgeKind = 1;
+  int64 tableId = 2;
+}
+
+message VertexTableIdEntry {
+  LabelIdPb labelId = 1;
+  int64 tableId = 2;
+}
+
+message GraphDefPb {
+  int64 version = 1;
+  repeated TypeDefPb typeDefs = 2;
+  repeated EdgeKindPb edgeKinds = 3;
+  map<string, int32> propertyNameToId = 4;
+  int32 labelIdx = 5;
+  int32 propertyIdx = 6;
+  repeated VertexTableIdEntry vertexTableIds = 7;
+  repeated EdgeTableIdEntry edgeTableIds = 8;
+  int64 tableIdx = 9;
+}
+
+enum TypeEnumPb {
+  VERTEX = 0;
+  EDGE = 1;
+}
+
+message StorePropertyPb {
+  int32 property_id = 1;
+  PropertyValuePb property_value = 2;
+}
+
+message StorePropertyListPb {
+  repeated StorePropertyPb properties = 1;
+}
+
+message ConfigPb {
+  map<string, string> configs = 1;
+}
+
+message BackupInfoPb {
+  int32 globalBackupId = 1;
+  int64 snapshotId = 2;
+  GraphDefPb graphDef = 3;
+  repeated int64 walOffsets = 4;
+  map<int32, int32> partitionToBackupId = 5;
+}

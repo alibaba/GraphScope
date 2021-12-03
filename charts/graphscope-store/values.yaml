@@ -49,7 +49,7 @@ maxgraphLogbackFile: ""
 
 rpcMaxBytesMb: 4
 
-engineType: "pegasus"
+engineType: "maxgraph"
 
 discoveryMode: "file"
 
@@ -337,11 +337,11 @@ frontend:
     failureThreshold: 3
     successThreshold: 1
   readinessProbe:
-    enabled: false
+    enabled: true
     initialDelaySeconds: 30
-    periodSeconds: 10
+    periodSeconds: 30
     timeoutSeconds: 1
-    failureThreshold: 3
+    failureThreshold: 10
     successThreshold: 1
 
   initContainers: []

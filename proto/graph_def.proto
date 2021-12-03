@@ -29,6 +29,7 @@ enum GraphTypePb {
     ARROW_PROPERTY = 4;
     ARROW_PROJECTED = 5;
     PERSISTENT_STORE = 6;
+    ARROW_FLATTENED = 7;
 }
 
 message MaxGraphInfoPb {
@@ -42,7 +43,7 @@ message VineyardInfoPb {
     DataTypePb vid_type = 2;
     DataTypePb vdata_type = 3;
     DataTypePb edata_type = 4;
-    
+
     string schema_path = 5;
     bool generate_eid = 6;
     int64 vineyard_id = 7;
@@ -57,10 +58,11 @@ message GraphDefPb {
     repeated TypeDefPb type_defs = 5;
     repeated EdgeKindPb edge_kinds = 6;
     map<string, int32> property_name_to_id = 7;
-    // current extension supported: 
+    // current extension supported:
     //   - MaxGraphInfoPb
     //   - VineyardInfoPb
     google.protobuf.Any extension = 8;
+    bool is_multigraph = 9;
 }
 
 message TypeDefPb {

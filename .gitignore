@@ -56,12 +56,18 @@ default.etcd/
 # outer build directory
 build/
 
-interactive_engine/src/common/rust/common/src/proto/*
-!interactive_engine/src/common/rust/common/src/proto/mod.rs
+interactive_engine/rust-common/src/proto/*
+!interactive_engine/rust-common/src/proto/mod.rs
 **/generated/
 
-interactive_engine/src/executor/store/src/db/proto/*
-!interactive_engine/src/executor/store/src/db/proto/mod.rs
-interactive_engine/src/data_load_tools/dependency-reduced-pom.xml
-interactive_engine/src/gaia-adaptor/dependency-reduced-pom.xml
-interactive_engine/src/executor/Cargo.lock
+interactive_engine/executor/store/src/db/proto/*
+!interactive_engine/executor/store/src/db/proto/mod.rs
+interactive_engine/data_load_tools/dependency-reduced-pom.xml
+interactive_engine/gaia-adaptor/dependency-reduced-pom.xml
+interactive_engine/executor/Cargo.lock
+
+# java sdk
+java/**/dependency-reduced-pom.xml
+
+# GraphLearn
+coordinator/graphlearn*

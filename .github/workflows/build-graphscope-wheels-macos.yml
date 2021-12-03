@@ -1,0 +1,89 @@
+name: Build GraphScope Wheels on MacOS
+
+on:
+  workflow_dispatch:
+  schedule:
+    # The notifications for scheduled workflows are sent to the user who
+    # last modified the cron syntax in the workflow file.
+    # Trigger the workflow at 03:00(CST) every day.
+    - cron:  '00 19 * * *'
+
+jobs:
+  build-wheels:
+    if: ${{ github.ref == 'refs/heads/main' && github.repository == 'alibaba/GraphScope' }}
+    runs-on: macos-10.15
+    steps:
+    - uses: actions/checkout@v2
+      with:
+        submodules: true
+
+    - name: Setup tmate session
+      if: false
+      uses: mxschmitt/action-tmate@v2
+
+    - name: Install Dependencies
+      run: |
+        ${GITHUB_WORKSPACE}/scripts/install_deps.sh --dev --vineyard_prefix /opt/vineyard --verbose
+
+    - name: Build Server Wheel
+      run: |
+        # source environment variable
+        source ~/.graphscope_env
+        echo ${CC}
+
+        # build graphscope server wheel
+        cd ${GITHUB_WORKSPACE}/k8s
+        sudo -E make graphscope-py3-package
+
+        # package
+        cd ${GITHUB_WORKSPACE}
+        tar -zcf graphscope.tar.gz coordinator/dist/wheelhouse/*.whl
+
+    - name: Upload Artifact
+      uses: actions/upload-artifact@v2
+      with:
+        name: wheel-macos-${{ github.sha }}
+        path: graphscope.tar.gz
+        retention-days: 5
+
+  build-client-wheels:
+    if: ${{ github.ref == 'refs/heads/main' && github.repository == 'alibaba/GraphScope' }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [macos-10.15]
+        python-version: ['3.6', '3.7', '3.8', '3.9']
+
+    steps:
+    - uses: actions/checkout@v2.3.2
+      with:
+        submodules: true
+
+    - name: Set up Python
+      uses: actions/setup-python@v2
+      with:
+        python-version: ${{ matrix.python-version }}
+
+    - name: Install Dependencies
+      run: |
+        ${GITHUB_WORKSPACE}/scripts/install_deps.sh --dev --verbose
+
+    - name: Build Client Wheels
+      run: |
+        python3 -c "import sys; print(sys.version)"
+        source ~/.graphscope_env
+
+        # build graphscope client wheel
+        cd ${GITHUB_WORKSPACE}/k8s
+        make graphscope-client-py3-package
+
+        # package
+        cd ${GITHUB_WORKSPACE}
+        tar -zcf client.tar.gz python/dist/
+
+    - name: Upload Artifact
+      uses: actions/upload-artifact@v2
+      with:
+        name: wheel-macos-${{ github.sha }}-${{ matrix.python-version }}
+        path: client.tar.gz
+        retention-days: 5

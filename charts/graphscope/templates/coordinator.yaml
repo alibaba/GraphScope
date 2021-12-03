@@ -1,122 +1,137 @@
-apiVersion: v1
-kind: Pod
+apiVersion: apps/v1
+kind: Deployment
 metadata:
   name: {{ include "graphscope.fullname" . }}-coordinator
-  labels:
-     {{- include "graphscope.coordinator.labels" . | nindent 4 }}
+  namespace: {{ .Release.Namespace }}
 spec:
-  {{- include "graphscope.imagePullSecrets" . | indent 2 }}
-  restartPolicy: Never
-  containers:
-    - name: coordinator-container
-      {{- if .Values.coordinator.image.tag }}
-      image: "{{ .Values.coordinator.image.name }}:{{ .Values.coordinator.image.tag }}"
-      {{- else }}
-      image: "{{ .Values.coordinator.image.name }}:{{ .Chart.AppVersion }}"
+  replicas: 1
+  selector:
+    matchLabels: {{- include "graphscope.coordinator.labels" . | nindent 6 }}
+  template:
+    metadata:
+      labels: {{- include "graphscope.coordinator.labels" . | nindent 8 }}
+    spec:
+      {{- include "graphscope.imagePullSecrets" . | indent 6 }}
+      containers:
+      - name: coordinator-container
+        {{- if .Values.coordinator.image.tag }}
+        image: "{{ .Values.coordinator.image.name }}:{{ .Values.coordinator.image.tag }}"
+        {{- else }}
+        image: "{{ .Values.coordinator.image.name }}:{{ .Chart.AppVersion }}"
+        {{- end }}
+        imagePullPolicy: {{ .Values.imagePullPolicy }}
+        resources: {{- toYaml .Values.coordinator.resources | nindent 10 }}
+        env:
+          - name: PYTHONUNBUFFERED
+            value: "TRUE"
+          {{- range $key, $value := .Values.coordinator.extraEnv }}
+          - name: {{ $key | quote }}
+            value: {{ $value | quote }}
+          {{- end }}
+        ports:
+          - containerPort: 59001
+            name: coordinator
+        {{- if .Values.coordinator.readinessProbe.enabled }}
+        readinessProbe:
+          initialDelaySeconds: {{ .Values.coordinator.readinessProbe.initialDelaySeconds }}
+          periodSeconds: {{ .Values.coordinator.readinessProbe.periodSeconds }}
+          timeoutSeconds: {{ .Values.coordinator.readinessProbe.timeoutSeconds }}
+          successThreshold: {{ .Values.coordinator.readinessProbe.successThreshold }}
+          failureThreshold: {{ .Values.coordinator.readinessProbe.failureThreshold }}
+          tcpSocket:
+            port: 59001
+        {{- end }}
+        lifecycle:
+          preStop:
+            exec:
+              command:
+                - python3
+                - /usr/local/bin/pre_stop.py
+        command:
+          - python3
+          - "-m"
+          - gscoordinator
+          - "--cluster_type"
+          - "k8s"
+          - "--port"
+          - "59001"
+          - "--num_workers"
+          - {{ .Values.engines.num_workers | quote }}
+          - "--instance_id"
+          - {{ .Release.Name }}
+          - "--log_level"
+          - {{ .Values.engines.log_level }}
+          - "--k8s_namespace"
+          - {{ .Release.Namespace }}
+          - "--k8s_service_type"
+          - {{ .Values.coordinator.service.type }}
+          - "--preemptive"
+          - {{ .Values.preemptive | quote }}
+          - "--k8s_gs_image"
+          {{- if .Values.engines.image.tag }}
+          - "{{ .Values.engines.image.name }}:{{ .Values.engines.image.tag }}"
+          {{- else }}
+          - "{{ .Values.engines.image.name }}:{{ .Chart.AppVersion }}"
+          {{- end }}
+          - "--k8s_etcd_image"
+          {{- if .Values.etcd.image.tag }}
+          - "{{ .Values.etcd.image.name }}:{{ .Values.etcd.image.tag }}"
+          {{- else }}
+          - "{{ .Values.etcd.image.name }}:{{ .Chart.AppVersion }}"
+          {{- end }}
+          - "--k8s_image_pull_policy"
+          - {{ .Values.imagePullPolicy | quote }}
+          - "--k8s_image_pull_secrets"
+          - {{ include "graphscope.imagePullSecretsStr" . | default (printf "''") | trimAll "\n" | quote }}
+          - "--k8s_coordinator_name"
+          {{- $fullname := include "graphscope.fullname" . }}
+          - {{ printf "%s-%s" $fullname "coordinator" | quote }}
+          - "--k8s_coordinator_service_name"
+          - {{ printf "%s-%s" $fullname "coordinator-service" | quote }}
+          - "--k8s_etcd_cpu"
+          - {{ .Values.etcd.resources.requests.cpu | quote }}
+          - "--k8s_etcd_mem"
+          - {{ .Values.etcd.resources.requests.memory }}
+          - "--k8s_vineyard_daemonset"
+          {{- if .Values.vineyard.daemonset }}
+          - {{ .Values.vineyard.daemonset }}
+          {{- else }}
+          - "\"\""
+          {{- end }}
+          - "--k8s_vineyard_cpu"
+          - {{ .Values.vineyard.resources.requests.cpu | quote }}
+          - "--k8s_vineyard_mem"
+          - {{ .Values.vineyard.resources.requests.memory }}
+          - "--vineyard_shared_mem"
+          - {{ .Values.vineyard.shared_mem }}
+          - "--k8s_engine_cpu"
+          - {{ .Values.engines.resources.requests.cpu | quote }}
+          - "--k8s_engine_mem"
+          - {{ .Values.engines.resources.requests.memory }}
+          - '--k8s_volumes'
+          {{- if .Values.volumes.enabled }}
+          - {{ mustToJson .Values.volumes.items | quote}}
+          {{- else }}
+          - "{}"
+          {{- end }}
+          - "--timeout_seconds"
+          - {{ .Values.coordinator.timeout_seconds | quote }}
+          - "--dangling_timeout_seconds"
+          - "-1"
+          - "--waiting_for_delete"
+          - "False"
+          - "--k8s_delete_namespace"
+          - "False"
+      {{- if .Values.withJupyter }}
+      - name: jupyter
+        {{- if .Values.jupyter.image.tag }}
+        image: "{{ .Values.jupyter.image.name }}:{{ .Values.jupyter.image.tag }}"
+        {{- else }}
+        image: "{{ .Values.jupyter.image.name }}:{{ .Chart.AppVersion }}"
+        {{- end }}
+        imagePullPolicy: {{ .Values.imagePullPolicy }}
+        resources: {{- toYaml .Values.jupyter.resources | nindent 10 }}
+        ports:
+          - containerPort: 8888
+            name: jupyter
       {{- end }}
-      imagePullPolicy: {{ .Values.imagePullPolicy }}
-      resources:
-{{ toYaml .Values.coordinator.resources | indent 8 }}
-      env:
-        - name: PYTHONPATH
-          value: /root/gsa
-        - name: PYTHONUNBUFFERED
-          value: "TRUE"
-        {{- range $key, $value := .Values.coordinator.extraEnv }}
-        - name: {{ $key | quote }}
-          value: {{ $value | quote }}
-        {{- end }}
-      ports:
-        - containerPort: 59001
-          name: coordinator
-      {{- if .Values.coordinator.readinessProbe.enabled }}
-      readinessProbe:
-        initialDelaySeconds: {{ .Values.coordinator.readinessProbe.initialDelaySeconds }}
-        periodSeconds: {{ .Values.coordinator.readinessProbe.periodSeconds }}
-        timeoutSeconds: {{ .Values.coordinator.readinessProbe.timeoutSeconds }}
-        successThreshold: {{ .Values.coordinator.readinessProbe.successThreshold }}
-        failureThreshold: {{ .Values.coordinator.readinessProbe.failureThreshold }}
-        tcpSocket:
-          port: 59001
-      {{- end }}
-      lifecycle:
-        preStop:
-          exec:
-            command:
-              - python3
-              - /usr/local/bin/pre_stop.py
-      command:
-        - python3
-        - "-m"
-        - gscoordinator
-        - "--cluster_type"
-        - "k8s"
-        - "--port"
-        - "59001"
-        - "--num_workers"
-        - {{ .Values.engines.num_workers | quote }}
-        - "--instance_id"
-        - {{ .Release.Name }}
-        - "--log_level"
-        - {{ .Values.engines.log_level }}
-        - "--k8s_namespace"
-        - {{ .Release.Namespace }}
-        - "--k8s_service_type"
-        - {{ .Values.coordinator.service.type }}
-        - "--preemptive"
-        - {{ .Values.preemptive | quote }}
-        - "--k8s_gs_image"
-        {{- if .Values.engines.image.tag }}
-        - "{{ .Values.engines.image.name }}:{{ .Values.engines.image.tag }}"
-        {{- else }}
-        - "{{ .Values.engines.image.name }}:{{ .Chart.AppVersion }}"
-        {{- end }}
-        - "--k8s_etcd_image"
-        {{- if .Values.etcd.image.tag }}
-        - "{{ .Values.etcd.image.name }}:{{ .Values.etcd.image.tag }}"
-        {{- else }}
-        - "{{ .Values.etcd.image.name }}:{{ .Chart.AppVersion }}"
-        {{- end }}
-        - "--k8s_image_pull_policy"
-        - {{ .Values.imagePullPolicy | quote }}
-        - "--k8s_image_pull_secrets"
-        - {{ include "graphscope.imagePullSecretsStr" . | default (printf "''") | trimAll "\n" | quote }}
-        - "--k8s_coordinator_name"
-        {{- $fullname := include "graphscope.fullname" . }}
-        - {{ printf "%s-%s" $fullname "coordinator" | quote }}
-        - "--k8s_coordinator_service_name"
-        - {{ printf "%s-%s" $fullname "coordinator-service" | quote }}
-        - "--k8s_etcd_cpu"
-        - {{ .Values.etcd.resources.requests.cpu | quote }}
-        - "--k8s_etcd_mem"
-        - {{ .Values.etcd.resources.requests.memory }}
-        - "--k8s_vineyard_daemonset"
-        {{- if .Values.vineyard.daemonset }}
-        - {{ .Values.vineyard.daemonset }}
-        {{- else }}
-        - "\"\""
-        {{- end }}
-        - "--k8s_vineyard_cpu"
-        - {{ .Values.vineyard.resources.requests.cpu | quote }}
-        - "--k8s_vineyard_mem"
-        - {{ .Values.vineyard.resources.requests.memory }}
-        - "--vineyard_shared_mem"
-        - {{ .Values.vineyard.shared_mem }}
-        - "--k8s_engine_cpu"
-        - {{ .Values.engines.resources.requests.cpu | quote }}
-        - "--k8s_engine_mem"
-        - {{ .Values.engines.resources.requests.memory }}
-        - '--k8s_volumes'
-        {{- if .Values.volumes.enabled }}
-        - {{ mustToJson .Values.volumes.items | quote}}
-        {{- else }}
-        - "{}"
-        {{- end }}
-        - "--timeout_seconds"
-        - {{ .Values.coordinator.timeout_seconds | quote }}
-        - "--dangling_timeout_seconds"
-        - "-1"
-        - "--waiting_for_delete"
-        - "False"
-        - "--k8s_delete_namespace"
-        - "False"

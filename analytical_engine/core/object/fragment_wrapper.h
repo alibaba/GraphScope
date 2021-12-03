@@ -21,15 +21,23 @@
 #include <utility>
 #include <vector>
 
+#ifdef ENABLE_JAVA_SDK
+#include "boost/algorithm/string.hpp"
+#include "boost/algorithm/string/split.hpp"
+#endif
+
 #include "grape/util.h"
 #include "vineyard/client/client.h"
 #include "vineyard/graph/fragment/graph_schema.h"
 #include "vineyard/graph/utils/grape_utils.h"
 
+#include "core/context/java_pie_projected_context.h"
+#include "core/context/java_pie_property_context.h"
 #include "core/context/labeled_vertex_property_context.h"
 #include "core/context/vertex_data_context.h"
 #include "core/context/vertex_property_context.h"
 #include "core/error.h"
+#include "core/fragment/arrow_flattened_fragment.h"
 #include "core/fragment/dynamic_fragment_view.h"
 #include "core/fragment/dynamic_projected_fragment.h"
 #include "core/fragment/fragment_reporter.h"
@@ -169,6 +177,9 @@ inline void set_graph_def(
   const auto& schema = fragment->schema();
   graph_def.set_graph_type(rpc::graph::ARROW_PROPERTY);
   graph_def.set_directed(static_cast<bool>(meta.GetKeyValue<int>("directed")));
+  graph_def.set_is_multigraph(
+      static_cast<bool>(meta.GetKeyValue<int>("is_multigraph")));
+
   auto v_entries = schema.vertex_entries();
   auto e_entries = schema.edge_entries();
   for (const auto& entry : v_entries) {
@@ -312,7 +323,14 @@ class FragmentWrapper<vineyard::ArrowFragment<OID_T, VID_T>>
     if (context_type != CONTEXT_TYPE_VERTEX_DATA &&
         context_type != CONTEXT_TYPE_LABELED_VERTEX_DATA &&
         context_type != CONTEXT_TYPE_VERTEX_PROPERTY &&
-        context_type != CONTEXT_TYPE_LABELED_VERTEX_PROPERTY) {
+        context_type != CONTEXT_TYPE_LABELED_VERTEX_PROPERTY
+#ifdef ENABLE_JAVA_SDK
+        && (context_type.find(CONTEXT_TYPE_JAVA_PIE_PROPERTY) ==
+            std::string::npos) &&
+        (context_type.find(CONTEXT_TYPE_JAVA_PIE_PROJECTED) ==
+         std::string::npos)
+#endif
+    ) {
       RETURN_GS_ERROR(vineyard::ErrorCode::kIllegalStateError,
                       "Illegal context type: " + context_type);
     }
@@ -383,7 +401,46 @@ class FragmentWrapper<vineyard::ArrowFragment<OID_T, VID_T>>
       BOOST_LEAF_AUTO(selectors, LabeledSelector::ParseSelectors(s_selectors));
       BOOST_LEAF_ASSIGN(columns,
                         vp_ctx_wrapper->ToArrowArrays(comm_spec, selectors));
+#ifdef ENABLE_JAVA_SDK
+    } else if (context_type.find(CONTEXT_TYPE_JAVA_PIE_PROPERTY) !=
+               std::string::npos) {
+      std::vector<std::string> outer_and_inner;
+      boost::split(outer_and_inner, context_type, boost::is_any_of(":"));
+      if (outer_and_inner.size() != 2) {
+        RETURN_GS_ERROR(vineyard::ErrorCode::kIllegalStateError,
+                        "Unsupported java property context type: " +
+                            std::string(context_type));
+      }
+      auto vp_ctx_wrapper =
+          std::dynamic_pointer_cast<IJavaPIEPropertyContextWrapper>(
+              ctx_wrapper);
+      BOOST_LEAF_AUTO(selectors, LabeledSelector::ParseSelectors(s_selectors));
+      BOOST_LEAF_ASSIGN(columns,
+                        vp_ctx_wrapper->ToArrowArrays(comm_spec, selectors));
+    } else if (context_type.find(CONTEXT_TYPE_JAVA_PIE_PROJECTED) !=
+               std::string::npos) {
+      std::vector<std::string> outer_and_inner;
+      boost::split(outer_and_inner, context_type, boost::is_any_of(":"));
+      if (outer_and_inner.size() != 2) {
+        RETURN_GS_ERROR(vineyard::ErrorCode::kIllegalStateError,
+                        "Unsupported java projected context type: " +
+                            std::string(context_type));
+      }
+      auto vp_ctx_wrapper =
+          std::dynamic_pointer_cast<IJavaPIEProjectedContextWrapper>(
+              ctx_wrapper);
+      auto& proj_meta =
+          std::static_pointer_cast<const ArrowProjectedFragmentBase>(
+              frag_wrapper->fragment())
+              ->meta();
+      auto v_label_id = proj_meta.GetKeyValue<label_id_t>("projected_v_label");
+      BOOST_LEAF_AUTO(selectors, Selector::ParseSelectors(s_selectors));
+      BOOST_LEAF_AUTO(arrow_arrays,
+                      vp_ctx_wrapper->ToArrowArrays(comm_spec, selectors));
+      columns[v_label_id] = arrow_arrays;
+#endif
     }
+
     vineyard::ObjectMeta ctx_meta, cur_meta;
     VINEYARD_CHECK_OK(client->GetMetaData(vm_id_from_ctx, ctx_meta));
     VINEYARD_CHECK_OK(
@@ -582,7 +639,7 @@ class FragmentWrapper<vineyard::ArrowFragment<OID_T, VID_T>>
                     "Cannot convert to the directed ArrowFragment");
   }
 
-  bl::result<std::shared_ptr<IFragmentWrapper>> ToUnDirected(
+  bl::result<std::shared_ptr<IFragmentWrapper>> ToUndirected(
       const grape::CommSpec& comm_spec,
       const std::string& dst_graph_name) override {
     RETURN_GS_ERROR(vineyard::ErrorCode::kInvalidOperationError,
@@ -648,7 +705,7 @@ class FragmentWrapper<ArrowProjectedFragment<OID_T, VID_T, VDATA_T, EDATA_T>>
                     "Cannot convert to the directed DynamicProjectedFragment");
   }
 
-  bl::result<std::shared_ptr<IFragmentWrapper>> ToUnDirected(
+  bl::result<std::shared_ptr<IFragmentWrapper>> ToUndirected(
       const grape::CommSpec& comm_spec,
       const std::string& dst_graph_name) override {
     RETURN_GS_ERROR(
@@ -778,7 +835,7 @@ class FragmentWrapper<DynamicFragment> : public IFragmentWrapper {
     return std::dynamic_pointer_cast<IFragmentWrapper>(wrapper);
   }
 
-  bl::result<std::shared_ptr<IFragmentWrapper>> ToUnDirected(
+  bl::result<std::shared_ptr<IFragmentWrapper>> ToUndirected(
       const grape::CommSpec& comm_spec,
       const std::string& dst_graph_name) override {
     // copy vertex map
@@ -807,7 +864,7 @@ class FragmentWrapper<DynamicFragment> : public IFragmentWrapper {
     // copy fragment
     auto dst_frag = std::make_shared<fragment_t>(new_vm_ptr);
 
-    dst_frag->ToUnDirectedFrom(fragment_);
+    dst_frag->ToUndirectedFrom(fragment_);
 
     auto dst_graph_def = graph_def_;
     dst_graph_def.set_key(dst_graph_name);
@@ -881,7 +938,7 @@ class FragmentWrapper<DynamicProjectedFragment<VDATA_T, EDATA_T>>
                     "Cannot convert to the directed DynamicProjectedFragment");
   }
 
-  bl::result<std::shared_ptr<IFragmentWrapper>> ToUnDirected(
+  bl::result<std::shared_ptr<IFragmentWrapper>> ToUndirected(
       const grape::CommSpec& comm_spec,
       const std::string& dst_graph_name) override {
     RETURN_GS_ERROR(
@@ -894,6 +951,71 @@ class FragmentWrapper<DynamicProjectedFragment<VDATA_T, EDATA_T>>
       const std::string& copy_type) override {
     RETURN_GS_ERROR(vineyard::ErrorCode::kInvalidOperationError,
                     "Cannot generate a graph view over the ArrowFragment.");
+  }
+
+ private:
+  rpc::graph::GraphDefPb graph_def_;
+  std::shared_ptr<fragment_t> fragment_;
+};
+
+/**
+ * @brief A specialized FragmentWrapper for ArrowFlattenedFragment.
+ */
+template <typename OID_T, typename VID_T, typename VDATA_T, typename EDATA_T>
+class FragmentWrapper<ArrowFlattenedFragment<OID_T, VID_T, VDATA_T, EDATA_T>>
+    : public IFragmentWrapper {
+  using fragment_t = ArrowFlattenedFragment<OID_T, VID_T, VDATA_T, EDATA_T>;
+
+ public:
+  FragmentWrapper(const std::string& id, rpc::graph::GraphDefPb graph_def,
+                  std::shared_ptr<fragment_t> fragment)
+      : IFragmentWrapper(id),
+        graph_def_(std::move(graph_def)),
+        fragment_(std::move(fragment)) {
+    CHECK_EQ(graph_def_.graph_type(), rpc::graph::ARROW_FLATTENED);
+  }
+
+  std::shared_ptr<void> fragment() const override {
+    return std::static_pointer_cast<void>(fragment_);
+  }
+
+  const rpc::graph::GraphDefPb& graph_def() const override {
+    return graph_def_;
+  }
+
+  bl::result<std::string> ReportGraph(const grape::CommSpec& comm_spec,
+                                      const rpc::GSParams& params) override {
+    RETURN_GS_ERROR(vineyard::ErrorCode::kInvalidOperationError,
+                    "Not implemented.");
+  }
+
+  bl::result<std::shared_ptr<IFragmentWrapper>> CopyGraph(
+      const grape::CommSpec& comm_spec, const std::string& dst_graph_name,
+      const std::string& copy_type) override {
+    RETURN_GS_ERROR(vineyard::ErrorCode::kInvalidOperationError,
+                    "Cannot copy the ArrowFlattenedFragment");
+  }
+
+  bl::result<std::shared_ptr<IFragmentWrapper>> ToDirected(
+      const grape::CommSpec& comm_spec,
+      const std::string& dst_graph_name) override {
+    RETURN_GS_ERROR(vineyard::ErrorCode::kInvalidOperationError,
+                    "Cannot convert to the directed ArrowFlattenedFragment");
+  }
+
+  bl::result<std::shared_ptr<IFragmentWrapper>> ToUndirected(
+      const grape::CommSpec& comm_spec,
+      const std::string& dst_graph_name) override {
+    RETURN_GS_ERROR(vineyard::ErrorCode::kInvalidOperationError,
+                    "Cannot convert to the undirected ArrowFlattenedFragment");
+  }
+
+  bl::result<std::shared_ptr<IFragmentWrapper>> CreateGraphView(
+      const grape::CommSpec& comm_spec, const std::string& dst_graph_name,
+      const std::string& copy_type) override {
+    RETURN_GS_ERROR(
+        vineyard::ErrorCode::kInvalidOperationError,
+        "Cannot generate a graph view over the ArrowFlattenedFragment.");
   }
 
  private:

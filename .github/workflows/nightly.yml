@@ -1,0 +1,66 @@
+name: GraphScope Nightly Build CI
+
+on:
+  workflow_dispatch:
+  schedule:
+    # The notifications for scheduled workflows are sent to the user who
+    # last modified the cron syntax in the workflow file.
+    # Trigger the workflow at 03:00(CST) every day.
+    - cron:  '00 19 * * *'
+
+jobs:
+  nightly-test:
+    if: ${{ github.ref == 'refs/heads/main' && github.repository == 'alibaba/GraphScope' }}
+    runs-on: ${{ matrix.os }}
+    defaults:
+      run:
+        shell: bash --noprofile --norc -eo pipefail {0}
+    strategy:
+      matrix:
+        os: [ubuntu-20.04, macos-10.15]
+    steps:
+    - uses: actions/checkout@v2
+      with:
+        submodules: true
+
+    - name: Install Dependencies of GraphScope
+      run: |
+        # Due to an observation of changing hostname in github runners,
+        # append 127.0.0.1 to etc/hosts to avoid DNS lookup.
+        r=`cat /etc/hosts | grep $(hostname) || true`
+        if [ -z "${r}" ];then export hn=$(hostname); sudo -E bash -c 'echo "127.0.0.1 ${hn}" >> /etc/hosts'; fi
+        cat /etc/hosts
+
+        /bin/bash ${GITHUB_WORKSPACE}/scripts/install_deps.sh --dev --verbose
+
+    - name: Build GraphScope
+      run: |
+        source ${HOME}/.graphscope_env
+        make BUILD_TYPE=debug
+
+    - name: Run Python Test
+      if: matrix.os == 'ubuntu-20.04'
+      env:
+        FULL-TEST-SUITE: ON
+        GS_TEST_DIR: ${{ github.workspace }}/gstest
+      run: |
+        # download dataset
+        git clone -b master --single-branch --depth=1 https://github.com/7br/gstest.git ${GS_TEST_DIR}
+        # run test
+        make unittest
+
+  build-gss-image:
+    if: ${{ github.ref == 'refs/heads/main' && github.repository == 'alibaba/GraphScope' }}
+    runs-on: ubuntu-20.04
+    steps:
+    - uses: actions/checkout@v2.3.2
+
+    - name: Add envs to GITHUB_ENV
+      run: |
+        short_sha=$(git rev-parse --short HEAD)
+        echo "SHORT_SHA=${short_sha}" >> $GITHUB_ENV
+
+    - name: Build GraphScope Store Image
+      run: |
+        cd ${GITHUB_WORKSPACE}
+        sudo make graphscope-store-image

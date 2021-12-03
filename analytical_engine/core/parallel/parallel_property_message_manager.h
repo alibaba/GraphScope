@@ -27,6 +27,7 @@
 #include <vector>
 
 #include "grape/communication/sync_comm.h"
+#include "grape/parallel/message_in_buffer.h"
 #include "grape/parallel/message_manager_base.h"
 #include "grape/serialization/in_archive.h"
 #include "grape/serialization/out_archive.h"
@@ -288,6 +289,22 @@ class ParallelPropertyMessageManager : public grape::MessageManagerBase {
                                   const MESSAGE_T& msg, int channel_id = 0) {
     channels_[channel_id].SendMsgThroughEdges<GRAPH_T, MESSAGE_T>(frag, v,
                                                                   label, msg);
+  }
+
+  /**
+   * @brief Get a bunch of messages, stored in a MessageInBuffer.
+   *
+   * @param buf Message buffer which holds a grape::OutArchive.
+   */
+  inline bool GetMessages(grape::MessageInBuffer& buf) {
+    grape::OutArchive arc;
+    auto& que = recv_queues_[round_ % 2];
+    if (que.Get(arc)) {
+      buf.Init(std::move(arc));
+      return true;
+    } else {
+      return false;
+    }
   }
 
   /**

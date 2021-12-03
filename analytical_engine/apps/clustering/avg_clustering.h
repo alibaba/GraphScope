@@ -48,12 +48,13 @@ class AvgClustering
 
     messages.InitChannels(thread_num());
     ctx.stage = 0;
-    ForEach(inner_vertices, [&messages, &frag, &ctx](int tid, vertex_t v) {
-      ctx.global_degree[v] =
-          frag.GetLocalOutDegree(v) + frag.GetLocalInDegree(v);
-      messages.SendMsgThroughEdges<fragment_t, int>(frag, v,
-                                                    ctx.global_degree[v], tid);
-    });
+    ForEach(inner_vertices.begin(), inner_vertices.end(),
+            [&messages, &frag, &ctx](int tid, vertex_t v) {
+              ctx.global_degree[v] =
+                  frag.GetLocalOutDegree(v) + frag.GetLocalInDegree(v);
+              messages.SendMsgThroughEdges<fragment_t, int>(
+                  frag, v, ctx.global_degree[v], tid);
+            });
     messages.ForceContinue();
   }
 
@@ -69,91 +70,91 @@ class AvgClustering
           thread_num(), frag,
           [&ctx](int tid, vertex_t u, int msg) { ctx.global_degree[u] = msg; });
 
-      ForEach(inner_vertices, [&frag, &ctx, &messages, &vertices](int tid,
-                                                                  vertex_t v) {
-        vid_t u_gid, v_gid;
-        auto& nbr_vec = ctx.complete_neighbor[v];
-        int degree = ctx.global_degree[v];
-        nbr_vec.reserve(degree);
-        std::vector<std::pair<vid_t, uint32_t>> msg_vec;
-        msg_vec.reserve(degree);
+      ForEach(inner_vertices.begin(), inner_vertices.end(),
+              [&frag, &ctx, &messages, &vertices](int tid, vertex_t v) {
+                vid_t u_gid, v_gid;
+                auto& nbr_vec = ctx.complete_neighbor[v];
+                int degree = ctx.global_degree[v];
+                nbr_vec.reserve(degree);
+                std::vector<std::pair<vid_t, uint32_t>> msg_vec;
+                msg_vec.reserve(degree);
 
-        typename FRAG_T::template vertex_array_t<uint32_t> is_rec;
-        is_rec.Init(vertices, 0);
-        auto es = frag.GetOutgoingAdjList(v);
-        for (auto& e : es) {
-          auto u = e.get_neighbor();
-          is_rec[u]++;
-        }
-        es = frag.GetIncomingAdjList(v);
-        for (auto& e : es) {
-          auto u = e.get_neighbor();
-          is_rec[u]++;
-          if (is_rec[u] == 2) {
-            ctx.rec_degree[v]++;
-          }
-        }
+                typename FRAG_T::template vertex_array_t<uint32_t> is_rec;
+                is_rec.Init(vertices, 0);
+                auto es = frag.GetOutgoingAdjList(v);
+                for (auto& e : es) {
+                  auto u = e.get_neighbor();
+                  is_rec[u]++;
+                }
+                es = frag.GetIncomingAdjList(v);
+                for (auto& e : es) {
+                  auto u = e.get_neighbor();
+                  is_rec[u]++;
+                  if (is_rec[u] == 2) {
+                    ctx.rec_degree[v]++;
+                  }
+                }
 
-        es = frag.GetOutgoingAdjList(v);
-        for (auto& e : es) {
-          auto u = e.get_neighbor();
-          if (ctx.global_degree[u] < ctx.global_degree[v]) {
-            std::pair<vid_t, uint32_t> msg;
-            msg.first = frag.Vertex2Gid(u);
-            if (is_rec[u] == 2) {
-              msg.second = 2;
-            } else {
-              msg.second = 1;
-            }
-            msg_vec.push_back(msg);
-            nbr_vec.push_back(std::make_pair(u, msg.second));
-          } else if (ctx.global_degree[u] == ctx.global_degree[v]) {
-            u_gid = frag.Vertex2Gid(u);
-            v_gid = frag.GetInnerVertexGid(v);
-            if (v_gid > u_gid) {
-              std::pair<vid_t, uint32_t> msg;
-              msg.first = frag.Vertex2Gid(u);
-              if (is_rec[u] == 2) {
-                msg.second = 2;
-              } else {
-                msg.second = 1;
-              }
-              nbr_vec.push_back(std::make_pair(u, msg.second));
-              msg_vec.push_back(msg);
-            }
-          }
-        }
+                es = frag.GetOutgoingAdjList(v);
+                for (auto& e : es) {
+                  auto u = e.get_neighbor();
+                  if (ctx.global_degree[u] < ctx.global_degree[v]) {
+                    std::pair<vid_t, uint32_t> msg;
+                    msg.first = frag.Vertex2Gid(u);
+                    if (is_rec[u] == 2) {
+                      msg.second = 2;
+                    } else {
+                      msg.second = 1;
+                    }
+                    msg_vec.push_back(msg);
+                    nbr_vec.push_back(std::make_pair(u, msg.second));
+                  } else if (ctx.global_degree[u] == ctx.global_degree[v]) {
+                    u_gid = frag.Vertex2Gid(u);
+                    v_gid = frag.GetInnerVertexGid(v);
+                    if (v_gid > u_gid) {
+                      std::pair<vid_t, uint32_t> msg;
+                      msg.first = frag.Vertex2Gid(u);
+                      if (is_rec[u] == 2) {
+                        msg.second = 2;
+                      } else {
+                        msg.second = 1;
+                      }
+                      nbr_vec.push_back(std::make_pair(u, msg.second));
+                      msg_vec.push_back(msg);
+                    }
+                  }
+                }
 
-        es = frag.GetIncomingAdjList(v);
-        for (auto& e : es) {
-          auto u = e.get_neighbor();
-          if (ctx.global_degree[u] < ctx.global_degree[v]) {
-            std::pair<vid_t, uint32_t> msg;
-            msg.first = frag.Vertex2Gid(u);
-            if (is_rec[u] == 1) {
-              msg.second = 1;
-              msg_vec.push_back(msg);
-              nbr_vec.push_back(std::make_pair(u, 1));
-            }
-          } else if (ctx.global_degree[u] == ctx.global_degree[v]) {
-            u_gid = frag.Vertex2Gid(u);
-            v_gid = frag.GetInnerVertexGid(v);
-            if (v_gid > u_gid) {
-              std::pair<vid_t, uint32_t> msg;
-              msg.first = frag.Vertex2Gid(u);
-              if (is_rec[u] == 1) {
-                msg.second = 1;
-                msg_vec.push_back(msg);
-                nbr_vec.push_back(std::make_pair(u, 1));
-              }
-            }
-          }
-        }
+                es = frag.GetIncomingAdjList(v);
+                for (auto& e : es) {
+                  auto u = e.get_neighbor();
+                  if (ctx.global_degree[u] < ctx.global_degree[v]) {
+                    std::pair<vid_t, uint32_t> msg;
+                    msg.first = frag.Vertex2Gid(u);
+                    if (is_rec[u] == 1) {
+                      msg.second = 1;
+                      msg_vec.push_back(msg);
+                      nbr_vec.push_back(std::make_pair(u, 1));
+                    }
+                  } else if (ctx.global_degree[u] == ctx.global_degree[v]) {
+                    u_gid = frag.Vertex2Gid(u);
+                    v_gid = frag.GetInnerVertexGid(v);
+                    if (v_gid > u_gid) {
+                      std::pair<vid_t, uint32_t> msg;
+                      msg.first = frag.Vertex2Gid(u);
+                      if (is_rec[u] == 1) {
+                        msg.second = 1;
+                        msg_vec.push_back(msg);
+                        nbr_vec.push_back(std::make_pair(u, 1));
+                      }
+                    }
+                  }
+                }
 
-        messages.SendMsgThroughEdges<fragment_t,
-                                     std::vector<std::pair<vid_t, uint32_t>>>(
-            frag, v, msg_vec, tid);
-      });
+                messages.SendMsgThroughEdges<
+                    fragment_t, std::vector<std::pair<vid_t, uint32_t>>>(
+                    frag, v, msg_vec, tid);
+              });
       messages.ForceContinue();
     } else if (ctx.stage == 1) {
       ctx.stage = 2;
@@ -195,12 +196,13 @@ class AvgClustering
         }
       }
 
-      ForEach(outer_vertices, [&messages, &frag, &ctx](int tid, vertex_t v) {
-        if (ctx.tricnt[v] != 0) {
-          messages.SyncStateOnOuterVertex<fragment_t, int>(frag, v,
-                                                           ctx.tricnt[v], tid);
-        }
-      });
+      ForEach(outer_vertices.begin(), outer_vertices.end(),
+              [&messages, &frag, &ctx](int tid, vertex_t v) {
+                if (ctx.tricnt[v] != 0) {
+                  messages.SyncStateOnOuterVertex<fragment_t, int>(
+                      frag, v, ctx.tricnt[v], tid);
+                }
+              });
       messages.ForceContinue();
     } else if (ctx.stage == 2) {
       ctx.stage = 3;

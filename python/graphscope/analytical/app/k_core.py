@@ -25,7 +25,7 @@ __all__ = ["k_core"]
 
 
 @project_to_simple
-@not_compatible_for("arrow_property", "dynamic_property")
+@not_compatible_for("arrow_property", "dynamic_property", "arrow_flattened")
 def k_core(graph, k: int):
     """K-cores of the graph are connected components that are left after
     all vertices of degree less than `k` have been removed.
@@ -45,8 +45,8 @@ def k_core(graph, k: int):
     .. code:: python
 
         import graphscope as gs
-        sess = gs.session()
-        g = sess.g()
+        g = gs.g()
+        # Load some data, then project to a simple graph (if needed).
         pg = g.project(vertices={"vlabel": []}, edges={"elabel": []})
         r = gs.k_core(pg)
         s.close()

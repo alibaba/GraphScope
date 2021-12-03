@@ -44,21 +44,28 @@ Transform the Docker Image Registry Secret Names to string with comma separated.
 
 
 {{/*
-Kubernetes Selector labels of GraphScope Coordinator.
+Unique Label of GraphScope Coordinator.
 */}}
-{{- define "graphscope.coordinator.selectorLabels" -}}
-app.kubernetes.io/name: {{ .Chart.Name }}
-app.kubernetes.io/instance: {{ .Release.Name }}
+{{- define "graphscope.coordinator.uniqueLabel" -}}
+graphscope.coordinator.name: {{ include "graphscope.fullname" . }}-coordinator
 {{- end }}
 
+{{/*
+Label Selector Corresponding to Unique Label of GraphScope Coordinator
+*/}}
+{{- define "graphscope.coordinator.labelSelector" -}}
+graphscope.coordinator.name={{ include "graphscope.fullname" . }}-coordinator
+{{- end }}
 
 {{/*
 Kubernetes labels of GraphScope Coordinator.
 */}}
 {{- define "graphscope.coordinator.labels" -}}
+app.kubernetes.io/name: {{ .Chart.Name }}
+app.kubernetes.io/instance: {{ .Release.Name }}
 graphscope.components: coordinator
 helm.sh/chart: {{ include "graphscope.chart" . }}
-{{ include "graphscope.coordinator.selectorLabels" . }}
+{{ include "graphscope.coordinator.uniqueLabel" . }}
 {{- if .Chart.AppVersion }}
 app.kubernetes.io/version: {{ .Chart.AppVersion | quote }}
 {{- end }}

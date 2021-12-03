@@ -23,20 +23,22 @@ import os
 import shutil
 import subprocess
 import sys
+import tempfile
 import time
 from abc import ABCMeta
 from abc import abstractmethod
 
+from graphscope.framework.utils import PipeWatcher
 from graphscope.framework.utils import get_free_port
 from graphscope.framework.utils import is_free_port
 from graphscope.proto import types_pb2
 
-from gscoordinator.io_utils import PipeWatcher
 from gscoordinator.utils import ANALYTICAL_ENGINE_PATH
 from gscoordinator.utils import GRAPHSCOPE_HOME
 from gscoordinator.utils import INTERACTIVE_ENGINE_SCRIPT
 from gscoordinator.utils import WORKSPACE
 from gscoordinator.utils import ResolveMPICmdPrefix
+from gscoordinator.utils import get_java_version
 from gscoordinator.utils import get_timestamp
 from gscoordinator.utils import parse_as_glog_level
 
@@ -48,6 +50,29 @@ class Launcher(metaclass=ABCMeta):
         self._instance_id = None
         self._num_workers = None
         self._analytical_engine_endpoint = None
+
+        # add `${GRAPHSCOPE_HOME}/bin` to ${PATH}
+        os.environ["PATH"] += os.pathsep + os.path.join(GRAPHSCOPE_HOME, "bin")
+        # OPAL_PREFIX for openmpi
+        if os.path.isdir(os.path.join(GRAPHSCOPE_HOME, "openmpi")):
+            os.environ["OPAL_PREFIX"] = os.path.join(GRAPHSCOPE_HOME, "openmpi")
+        # add '${GRAPHSCOPE_HOME}/lib' to ${LD_LIBRARY_PATH} to find libvineyard_internal_registry.so(dylib)
+        if "LD_LIBRARY_PATH" in os.environ:
+            os.environ["LD_LIBRARY_PATH"] = (
+                os.path.join(GRAPHSCOPE_HOME, "lib")
+                + os.pathsep
+                + os.environ["LD_LIBRARY_PATH"]
+            )
+        else:
+            os.environ["LD_LIBRARY_PATH"] = os.path.join(GRAPHSCOPE_HOME, "lib")
+        if "DYLD_LIBRARY_PATH" in os.environ:
+            os.environ["DYLD_LIBRARY_PATH"] = (
+                os.path.join(GRAPHSCOPE_HOME, "lib")
+                + os.pathsep
+                + os.environ["DYLD_LIBRARY_PATH"]
+            )
+        else:
+            os.environ["DYLD_LIBRARY_PATH"] = os.path.join(GRAPHSCOPE_HOME, "lib")
 
     @property
     def analytical_engine_endpoint(self):
@@ -89,8 +114,6 @@ class LocalLauncher(Launcher):
     Launch engine localy with serveral hosts.
     """
 
-    _vineyard_socket_prefix = "/tmp/vineyard.sock."
-
     def __init__(
         self,
         num_workers,
@@ -109,6 +132,10 @@ class LocalLauncher(Launcher):
         self._glog_level = parse_as_glog_level(log_level)
         self._instance_id = instance_id
         self._timeout_seconds = timeout_seconds
+
+        self._vineyard_socket_prefix = os.path.join(
+            tempfile.gettempdir(), "vineyard.sock."
+        )
 
         # A graphsope instance may has multiple session by reconnecting to coordinator
         self._instance_workspace = os.path.join(WORKSPACE, self._instance_id)
@@ -162,7 +189,7 @@ class LocalLauncher(Launcher):
         for host in self._hosts.split(","):
             if host not in ("localhost", "127.0.0.1"):
                 subprocess.check_call(["ssh", host, "mkdir -p {}".format(dir)])
-                subprocess.check_call(["scp", path, "{}:{}".format(host, path)])
+                subprocess.check_call(["scp", "-r", path, "{}:{}".format(host, path)])
 
     def poll(self):
         if self._analytical_engine_process:
@@ -200,11 +227,15 @@ class LocalLauncher(Launcher):
         Args:
             config (dict): dict of op_def_pb2.OpDef.attr.
         """
+        # check java version
+        java_version = get_java_version()
+        logger.info("Java version: %s", java_version)
+
         object_id = config[types_pb2.VINEYARD_ID].i
         schema_path = config[types_pb2.SCHEMA_PATH].s.decode()
         # engine params format:
         #   k1:v1;k2:v2;k3:v3
-        engine_params = {"gaia.engine.port": get_free_port("localhost")}
+        engine_params = {}
         if types_pb2.GIE_GREMLIN_ENGINE_PARAMS in config:
             engine_params = json.loads(
                 config[types_pb2.GIE_GREMLIN_ENGINE_PARAMS].s.decode()
@@ -212,7 +243,6 @@ class LocalLauncher(Launcher):
         engine_params = [
             "{}:{}".format(key, value) for key, value in engine_params.items()
         ]
-        enable_gaia = config[types_pb2.GIE_ENABLE_GAIA].b
         env = os.environ.copy()
         env.update({"GRAPHSCOPE_HOME": GRAPHSCOPE_HOME})
         cmd = [
@@ -225,7 +255,6 @@ class LocalLauncher(Launcher):
             self.vineyard_socket,
             str(self.zookeeper_port),
             "{}".format(";".join(engine_params)),
-            str(enable_gaia),
         ]
         logger.info("Create GIE instance with command: %s", " ".join(cmd))
         process = subprocess.Popen(
@@ -233,11 +262,12 @@ class LocalLauncher(Launcher):
             start_new_session=True,
             cwd=os.getcwd(),
             env=env,
-            universal_newlines=True,
             encoding="utf-8",
+            errors="replace",
             stdin=subprocess.DEVNULL,
             stdout=subprocess.PIPE,
             stderr=subprocess.STDOUT,
+            universal_newlines=True,
             bufsize=1,
         )
         return process
@@ -257,28 +287,33 @@ class LocalLauncher(Launcher):
             start_new_session=True,
             cwd=os.getcwd(),
             env=env,
-            universal_newlines=True,
             encoding="utf-8",
+            errors="replace",
             stdin=subprocess.DEVNULL,
             stdout=subprocess.PIPE,
             stderr=subprocess.STDOUT,
+            universal_newlines=True,
             bufsize=1,
         )
         return process
 
-    def _launch_etcd(self):
-        etcd_exec = shutil.which("etcd")
-        if not etcd_exec:
-            raise RuntimeError("etcd command not found.")
+    def _find_etcd(self):
+        etcd = shutil.which("etcd")
+        if not etcd:
+            etcd = [sys.executable, "-m", "etcd_distro.etcd"]
+        if not isinstance(etcd, list):
+            etcd = [etcd]
+        return etcd
 
+    def _launch_etcd(self):
+        etcd_exec = self._find_etcd()
         self._etcd_peer_port = 2380 if is_free_port(2380) else get_free_port()
         self._etcd_client_port = 2379 if is_free_port(2379) else get_free_port()
 
         env = os.environ.copy()
         env.update({"ETCD_MAX_TXN_OPS": "102400"})
 
-        cmd = [
-            etcd_exec,
+        cmd = etcd_exec + [
             "--data-dir",
             str(self._instance_workspace),
             "--listen-peer-urls",
@@ -286,11 +321,11 @@ class LocalLauncher(Launcher):
             "--listen-client-urls",
             "http://0.0.0.0:{0}".format(str(self._etcd_client_port)),
             "--advertise-client-urls",
-            "http://localhost:{0}".format(str(self._etcd_client_port)),
+            "http://127.0.0.1:{0}".format(str(self._etcd_client_port)),
             "--initial-cluster",
-            "default=http://localhost:{0}".format(str(self._etcd_peer_port)),
+            "default=http://127.0.0.1:{0}".format(str(self._etcd_peer_port)),
             "--initial-advertise-peer-urls",
-            "http://localhost:{0}".format(str(self._etcd_peer_port)),
+            "http://127.0.0.1:{0}".format(str(self._etcd_peer_port)),
         ]
         logger.info("Launch etcd with command: %s", " ".join(cmd))
 
@@ -299,11 +334,12 @@ class LocalLauncher(Launcher):
             start_new_session=True,
             cwd=os.getcwd(),
             env=env,
-            universal_newlines=True,
             encoding="utf-8",
+            errors="replace",
             stdin=subprocess.DEVNULL,
             stdout=subprocess.DEVNULL,
             stderr=subprocess.DEVNULL,
+            universal_newlines=True,
             bufsize=1,
         )
 
@@ -342,11 +378,12 @@ class LocalLauncher(Launcher):
             start_new_session=True,
             cwd=os.getcwd(),
             env=os.environ.copy(),
-            universal_newlines=True,
             encoding="utf-8",
+            errors="replace",
             stdin=subprocess.DEVNULL,
             stdout=subprocess.DEVNULL,
             stderr=subprocess.STDOUT,
+            universal_newlines=True,
             bufsize=1,
         )
 
@@ -372,14 +409,16 @@ class LocalLauncher(Launcher):
         if not vineyardd:
             vineyardd = shutil.which("vineyardd")
         if not vineyardd:
-            vineyardd = "vineyardd"
+            vineyardd = [sys.executable, "-m", "vineyard"]
+        if not isinstance(vineyardd, list):
+            vineyardd = [vineyardd]
         return vineyardd
 
     def _create_vineyard(self):
         if not self._vineyard_socket:
             ts = get_timestamp()
             vineyard_socket = f"{self._vineyard_socket_prefix}{ts}"
-            cmd = [self._find_vineyardd()]
+            cmd = self._find_vineyardd()
             cmd.extend(["--socket", vineyard_socket])
             cmd.extend(["--size", self._shared_mem])
             cmd.extend(
@@ -388,7 +427,7 @@ class LocalLauncher(Launcher):
                     "http://localhost:{0}".format(self._etcd_client_port),
                 ]
             )
-            cmd.extend(["--etcd_prefix", f"vineyard.gsa.{ts}"])
+            cmd.extend(["-etcd_prefix", f"vineyard.gsa.{ts}"])
             env = os.environ.copy()
             env["GLOG_v"] = str(self._glog_level)
 
@@ -399,11 +438,12 @@ class LocalLauncher(Launcher):
                 start_new_session=True,
                 cwd=os.getcwd(),
                 env=env,
-                universal_newlines=True,
                 encoding="utf-8",
+                errors="replace",
                 stdin=subprocess.DEVNULL,
                 stdout=subprocess.PIPE,
                 stderr=subprocess.STDOUT,
+                universal_newlines=True,
                 bufsize=1,
             )
 
@@ -413,6 +453,18 @@ class LocalLauncher(Launcher):
 
             self._vineyard_socket = vineyard_socket
             self._vineyardd_process = process
+
+            start_time = time.time()
+            while not os.path.exists(self._vineyard_socket):
+                time.sleep(1)
+                if (
+                    self._timeout_seconds
+                    and self._timeout_seconds + start_time < time.time()
+                ):
+                    raise RuntimeError("Launch vineyardd failed due to timeout.")
+            logger.info(
+                "Vineyardd is ready, ipc socket is {0}".format(self._vineyard_socket)
+            )
 
     def _create_services(self):
         # create etcd
@@ -437,6 +489,7 @@ class LocalLauncher(Launcher):
         cmd.append(ANALYTICAL_ENGINE_PATH)
         cmd.extend(["--host", "0.0.0.0"])
         cmd.extend(["--port", str(rpc_port)])
+        cmd.extend(["--vineyard_shared_mem", self._shared_mem])
 
         if rmcp.openmpi():
             cmd.extend(["-v", str(self._glog_level)])
@@ -456,11 +509,12 @@ class LocalLauncher(Launcher):
             start_new_session=True,
             cwd=os.getcwd(),
             env=env,
-            universal_newlines=True,
             encoding="utf-8",
+            errors="replace",
             stdin=subprocess.DEVNULL,
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
+            universal_newlines=True,
             bufsize=1,
         )
 
@@ -471,6 +525,21 @@ class LocalLauncher(Launcher):
         setattr(process, "stderr_watcher", stderr_watcher)
 
         self._analytical_engine_process = process
+
+        start_time = time.time()
+
+        while is_free_port(rpc_port):
+            time.sleep(1)
+            if (
+                self._timeout_seconds
+                and self._timeout_seconds + start_time < time.time()
+            ):
+                raise RuntimeError("Launch analytical engine failed due to timeout.")
+        logger.info(
+            "Analytical engine is ready, endpoint is {0}".format(
+                self._analytical_engine_endpoint
+            )
+        )
 
     def create_learning_instance(self, object_id, handle, config):
         # prepare argument
@@ -484,6 +553,17 @@ class LocalLauncher(Launcher):
         handle = base64.b64encode(json.dumps(handle).encode("utf-8")).decode("utf-8")
 
         # launch the server
+        env = os.environ.copy()
+        # set coordinator dir to PYTHONPATH
+        if "PYTHONPATH" in env:
+            env["PYTHONPATH"] = (
+                os.path.join(os.path.dirname(__file__), "..")
+                + os.pathsep
+                + env["PYTHONPATH"]
+            )
+        else:
+            env["PYTHONPATH"] = os.path.join(os.path.dirname(__file__), "..")
+
         self._learning_instance_processes[object_id] = []
         for index in range(self._num_workers):
             cmd = [
@@ -495,8 +575,16 @@ class LocalLauncher(Launcher):
                 str(index),
             ]
             logger.info("launching learning server: %s", " ".join(cmd))
+
             proc = subprocess.Popen(
-                cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT
+                cmd,
+                env=env,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.STDOUT,
+                encoding="utf-8",
+                errors="replace",
+                universal_newlines=True,
+                bufsize=1,
             )
             stdout_watcher = PipeWatcher(proc.stdout, sys.stdout)
             setattr(proc, "stdout_watcher", stdout_watcher)
@@ -523,7 +611,7 @@ class LocalLauncher(Launcher):
         self._stop_subprocess(self._zetcd_process)
 
     def _stop_analytical_engine(self):
-        self._stop_subprocess(self._analytical_engine_process)
+        self._stop_subprocess(self._analytical_engine_process, kill=True)
         self._analytical_engine_endpoint = None
 
     def _stop_subprocess(self, proc, kill=False):
