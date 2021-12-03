@@ -10,9 +10,9 @@ e-commerce to cybersecurity. This repository contains three main components of i
   called *Scope* in order to hide the complex control flow (e.g. conditional and loop) and fine-grained dependency in
   a Gremlin query from the dataflow engine. Taking a Gremlin query as input, the GAIA compiler is responsible for
   compiling it to a dataflow (with Scope abstraction) in order to be executed in the dataflow engine. The compiler
-  is built on top of the [Gremlin server](http://tinkerpop.apache.org/docs/3.4.3/reference/##connecting-gremlin-server)
+  is built on top of the [Gremlin server](https://tinkerpop.apache.org/docs/3.4.12/reference/##connecting-gremlin-server)
   interface so that the system can seamlessly interact with the TinkerPop ecosystem, including development tools
-  such as [Gremlin Console](http://tinkerpop.apache.org/docs/3.4.3/reference/##gremlin-console)
+  such as [Gremlin Console](http://tinkerpop.apache.org/docs/3.4.12/reference/##gremlin-console)
   and language wrappers such as Java and Python.
 * Distributed runtime: The GAIA execution runtime provides automatic support for efficient execution of Gremlin
   queries at scale. Each query is compiled by the GAIA compiler into a distributed execution plan that is
@@ -251,7 +251,7 @@ java -cp bin/gremlin-server-plugin-1.0-SNAPSHOT-jar-with-dependencies.jar com.al
 ```
 
 ## Run Query
-- Download TinkerPop's official [gremlin-console](https://archive.apache.org/dist/tinkerpop/3.4.9/apache-tinkerpop-gremlin-console-3.4.9-bin.zip)
+- Download TinkerPop's official [gremlin-console](https://archive.apache.org/dist/tinkerpop/3.4.12/apache-tinkerpop-gremlin-console-3.4.12-bin.zip)
   in your client machine
 - cd `/path/to/gremlin/console`, modify `conf/remote.yaml`
   ```yaml
