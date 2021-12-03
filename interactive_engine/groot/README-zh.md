@@ -2,9 +2,7 @@
 
 存储实时写入的整体链路如下图所示：
 
-<div align="center">
-    <img src="../../docs/images/groot.png" alt="groot">
-</div>
+<img src="../../docs/images/groot.png" width="500" alt="groot">
 
 下面分两部分介绍：
 - 数据写入链路
