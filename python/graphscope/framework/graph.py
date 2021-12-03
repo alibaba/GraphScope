@@ -923,8 +923,7 @@ class Graph(GraphInterface):
         """
         if self._directed:
             return self
-        else:
-            return self._session._wrapper(self._graph_node.to_directed())
+        return self._session._wrapper(self._graph_node.to_directed())
 
     def to_undirected(self):
         """Returns an undirected representation of the digraph.
@@ -937,8 +936,7 @@ class Graph(GraphInterface):
         """
         if not self._directed:
             return self
-        else:
-            return self._session._wrapper(self._graph_node.to_undirected())
+        return self._session._wrapper(self._graph_node.to_undirected())
 
     def is_directed(self):
         return self._directed
