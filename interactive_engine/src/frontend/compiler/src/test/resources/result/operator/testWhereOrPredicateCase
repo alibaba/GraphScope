@@ -25,9 +25,9 @@ query_plan {
           prop_id: 9999
           value {
             int_value: 20
-            value_type: VT_INTEGER
+            value_type: VT_INT
           }
-          type: VT_INTEGER
+          type: VT_INT
         }
         child_compare_list {
           prop_id: 2

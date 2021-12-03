@@ -225,6 +225,14 @@ app:
       - grape::ImmutableEdgecutFragment
       - gs::ArrowProjectedFragment
       - gs::DynamicProjectedFragment
+  - algo: all_simple_paths
+    type: cpp_pie
+    class_name: gs::AllSimplePaths
+    src: apps/simple_path/all_simple_paths.h
+    compatible_graph:
+      - grape::ImmutableEdgecutFragment
+      - gs::ArrowProjectedFragment
+      - gs::DynamicProjectedFragment
   - algo: betweenness_centrality
     type: cpp_pie
     class_name: gs::BetweennessCentrality

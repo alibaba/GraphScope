@@ -250,3 +250,9 @@ class TestBuiltInApp:
     def test_degree_assortativity_coefficient(self):
         ans = nx.builtin.degree_assortativity_coefficient(self.p2p_undirected)
         assert almost_equal(ans, -0.0925578, places=5)
+
+    def test_all_simple_paths(self):
+        ans = nx.builtin.all_simple_paths(self.p2p, 1, 4, cutoff=10)
+        assert len(ans) == 1022
+        ans = nx.builtin.all_simple_paths(self.p2p_undirected, 1, [4, 6], cutoff=5)
+        assert len(ans) == 1675

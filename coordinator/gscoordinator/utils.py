@@ -373,7 +373,6 @@ def compile_graph_frame(workspace: str, library_name, attr: dict, engine_config:
 
 def op_pre_process(op, op_result_pool, key_to_op, **kwargs):  # noqa: C901
     if op.op == types_pb2.REPORT_GRAPH:
-        # do nothing for nx report graph
         return
     if op.op == types_pb2.CREATE_GRAPH:
         _pre_process_for_create_graph_op(op, op_result_pool, key_to_op, **kwargs)

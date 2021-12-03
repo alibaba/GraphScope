@@ -37,9 +37,9 @@ query_plan {
         compare: LT
         value {
           int_value: 2009
-          value_type: VT_INTEGER
+          value_type: VT_INT
         }
-        type: VT_INTEGER
+        type: VT_INT
       }
       before_requirement {
         req_argument {

@@ -240,6 +240,9 @@ if (BUILD_TESTS)
         add_vineyard_app(test_convert SRCS test/test_convert.cc)
         target_include_directories(test_convert PRIVATE ${FOLLY_ROOT_DIR}/include)
         target_link_libraries(test_convert ${FOLLY_LIBRARIES} ${DOUBLE_CONVERSION_LIBRARY})
+
+        target_include_directories(run_ctx PUBLIC ${FOLLY_ROOT_DIR}/include)
+        target_link_libraries(run_ctx ${FOLLY_LIBRARIES} ${DOUBLE_CONVERSION_LIBRARY})
     endif ()
 endif ()
 

@@ -156,8 +156,6 @@ def load_from(
     from graphscope import nx
 
     sess = get_default_session()
-    if sess is None:
-        raise ValueError("No default session found.")
     if isinstance(edges, (Graph, nx.Graph, *VineyardObjectTypes)):
         return sess.g(edges)
     oid_type = utils.normalize_data_type_str(oid_type)

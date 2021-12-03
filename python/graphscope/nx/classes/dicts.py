@@ -51,7 +51,7 @@ class NodeDict(MutableMapping):
         # batch get nodes
         node_num = self.__len__()
         count = 0
-        pos = (0, 0)  # start iterate from the (worker:0, lid:0) node.
+        pos = (0, 0, 0)  # start iterate from the (worker:0, lid:0, label_id:0) node.
         while count < node_num:
             while True:
                 ret = self._graph._batch_get_node(pos)
@@ -130,7 +130,7 @@ class AdjDict(MutableMapping):
         # batch get nodes
         node_num = self.__len__()
         count = 0
-        pos = (0, 0)  # start iterate from the (worker:0, lid:0) node.
+        pos = (0, 0, 0)  # start iterate from the (worker:0, lid:0, label_id:0) node.
         while count < node_num:
             while True:
                 ret = self._graph._batch_get_node(pos)
