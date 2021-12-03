@@ -32,7 +32,7 @@ Even though GAIA may build on systems similar to Linux, we have not tested corre
 so please beware.
 
 At the minimum, GAIA depends on the following software:
-* [Rust](https://www.rust-lang.org/) (>= 1.49): GAIA currently works on Rust 1.49, but we suppose that it also works
+* [Rust](https://www.rust-lang.org/) (>= 1.49): GAIA currently works on Rust 1.50+, but we suppose that it also works
   for any later version.
 * Java (Must be Java 8): Due to a known issue of gRPC that uses an older version of java annotation apis, the project is
   subject to **JDK 8** for now.
@@ -42,11 +42,12 @@ At the minimum, GAIA depends on the following software:
   LDBC [datagen](https://github.com/ldbc/ldbc_snb_datagen).
 * Python3: Further install the [toml](https://pypi.org/project/toml/) library for parsing a `toml`-format file.
 * Maven (>= 3.6): [Maven](https://maven.apache.org/download.cgi) is required to build the Gremlin compiler.
-* Other Rust and Java dependencies, check
-    * `gremlin/compiler/pom.xml`
-    * `gremlin/gremlin_core/Cargo.toml`
-    * `graph_store/Cargo.toml`
-    * `pegasus/Cargo.toml`
+* Other Rust and Java dependencies, check (note that from now on, we assume you are on the root directory
+  of `/research/query_serivce/gremlin`):
+    * `.、compiler/pom.xml`
+    * `./gremlin_core/Cargo.toml`
+    * `../../graph_store/Cargo.toml`
+    * `../../engine/pegasus/Cargo.toml`
 
 ## Build the codes
 Download the codes, get into the 'scripts' folder, and then build the codes as:
