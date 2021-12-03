@@ -55,6 +55,7 @@ def project_to_simple(func):
             else:
                 graph = graph._project_to_simple()
         return func(graph, *args[1:], **kwargs)
+
     return wrapper
 
 
@@ -65,7 +66,9 @@ def context_to_dict(func):
         graph = args[0]
         if graph.graph_type == graph_def_pb2.ARROW_FLATTENED:
             d = dict()
-            df = ctx.to_dataframe({"label_id": "v.label_id", "id": "v.id", "value": "r"})
+            df = ctx.to_dataframe(
+                {"label_id": "v.label_id", "id": "v.id", "value": "r"}
+            )
             vertex_labels = graph.schema.vertex_labels
             for row in df.itertuples():
                 if row.label_id != graph._default_label_id:
@@ -78,6 +81,7 @@ def context_to_dict(func):
             .set_index("id")["value"]
             .to_dict()
         )
+
     return wrapper
 
 
