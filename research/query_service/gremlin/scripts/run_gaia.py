@@ -22,7 +22,6 @@ import os
 import subprocess
 from utils import get_hosts_from_toml, hosts_dict_to_list, sync_process, clean_up, str2bool
 
-
 def extract_file_name(line: str):
     """
     Extract the file name from a line getting by a line of string that contains a directory like `/path/to/file`,
@@ -90,9 +89,9 @@ def prepare_files():
     schema_folder = os.path.join(args.graph_dir, "graph_schema")
     schema_file = os.path.join(args.graph_dir, "graph_schema", "schema.json")
 
-    subprocess.Popen(["mkdir", "-p", tmp_dir]).wait()
-    subprocess.Popen(["mkdir", "-p", schema_folder]).wait()
-    subprocess.Popen(["cp", args.schema_file, schema_file]).wait()
+    subprocess.call(["mkdir", "-p", tmp_dir])
+    subprocess.call(["mkdir", "-p", schema_folder])
+    subprocess.call(["cp", args.schema_file, schema_file])
 
     if args.host_file is not None:
         host_list_file = os.path.join(tmp_dir, "hosts")
@@ -100,10 +99,10 @@ def prepare_files():
             for host in hosts:
                 f.write("%s:%s\n" % (host[0], host[1]))
         for i in range(num_machines):
-            subprocess.Popen(["ssh", hosts[i][0], "mkdir", "-p", tmp_dir]).wait()
-            subprocess.Popen(["ssh", hosts[i][0], "mkdir", "-p", schema_folder]).wait()
-            subprocess.Popen(["scp", args.schema_file, "%s:%s" % (hosts[i][0], schema_file)]).wait()
-            subprocess.Popen(["scp", host_list_file, "%s:%s" % (hosts[i][0], tmp_dir)]).wait()
+            subprocess.call(["ssh", hosts[i][0], "mkdir", "-p", tmp_dir])
+            subprocess.call(["ssh", hosts[i][0], "mkdir", "-p", schema_folder])
+            subprocess.call(["scp", args.schema_file, "%s:%s" % (hosts[i][0], schema_file)])
+            subprocess.call(["scp", host_list_file, "%s:%s" % (hosts[i][0], tmp_dir)])
 
 
 def download_from_hdfs():
@@ -127,7 +126,7 @@ def download_from_hdfs():
         cmd = "%s %s %s %s %s %d -w %d" % (env, program, args.hadoop_home, args.raw_data_dir, tmp_dir,
                       args.raw_partitions, args.workers)
         print(cmd)
-        os.system(cmd)
+        subprocess.call([cmd], shell=True)
 
 
 def par_loader():
@@ -176,7 +175,7 @@ def par_loader():
         cmd = "%s %s %s %s %d -w %d" % \
                      (env, program, local_dir, args.graph_dir, args.raw_partitions, args.workers)
         print(cmd)
-        os.system(cmd)
+        subprocess.call([cmd], shell=True)
 
 
 def start_rpc():
@@ -225,7 +224,7 @@ def start_rpc():
     else:
         cmd = "%s %s" % (env, program)
         print(cmd)
-        os.system(cmd)
+        subprocess.call([cmd], shell=True)
 
 
 if __name__ == '__main__':
