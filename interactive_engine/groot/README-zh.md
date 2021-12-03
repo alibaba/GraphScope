@@ -2,6 +2,10 @@
 
 存储实时写入的整体链路如下图所示：
 
+<div align="center">
+    <img src="../../docs/images/groot.png" alt="groot">
+</div>
+
 下面分两部分介绍：
 - 数据写入链路
 - 容错设计
