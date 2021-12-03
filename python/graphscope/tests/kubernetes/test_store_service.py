@@ -18,6 +18,7 @@
 
 import logging
 import os
+import subprocess
 
 import numpy as np
 import pytest
@@ -54,7 +55,7 @@ def demo(gs_conn, restart):
         schema.update()
         # Bulk load data
         load_script = os.environ["LOAD_DATA_SCRIPT"]
-        os.system(load_script)
+        subprocess.check_call([load_script])
 
     interactive = gs_conn.gremlin()
     assert interactive.V().count().toList()[0] == 903

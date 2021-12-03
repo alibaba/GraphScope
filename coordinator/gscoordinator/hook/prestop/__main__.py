@@ -20,9 +20,11 @@
 """
 
 import json
+import os
 import subprocess
+import tempfile
 
-DEFAULT_PATH = "/tmp/resource_object"
+DEFAULT_PATH = os.path.join("/", tempfile.gettempprefix(), "resource_object")
 
 
 class KubernetesResources(object):

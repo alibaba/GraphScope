@@ -82,6 +82,29 @@ public class PlanUtils {
         return Gremlin.SelectStep.Pop.valueOf(gremlinPop.name().toUpperCase());
     }
 
+    public static Gremlin.OrderByComparePair.Order convertFrom(Order gremlinOrder) {
+        return Gremlin.OrderByComparePair.Order.valueOf(gremlinOrder.name().toUpperCase());
+    }
+
+    public static Gremlin.PropKeys convertFrom(ToFetchProperties toFetchProperties) {
+        Gremlin.PropKeys.Builder keysBuilder = Gremlin.PropKeys.newBuilder();
+        if (toFetchProperties.isAll()) {
+            keysBuilder.setIsAll(true);
+        } else if (toFetchProperties.getProperties() != null && !toFetchProperties.getProperties().isEmpty()) {
+            List<String> properties = toFetchProperties.getProperties();
+            if (StringUtils.isNumeric(properties.get(0))) {
+                keysBuilder.addAllPropKeys(properties.stream()
+                        .map(k -> Common.PropertyKey.newBuilder().setNameId(Integer.valueOf(k)).build())
+                        .collect(Collectors.toList()));
+            } else {
+                keysBuilder.addAllPropKeys(properties.stream()
+                        .map(k -> Common.PropertyKey.newBuilder().setName(k).build())
+                        .collect(Collectors.toList()));
+            }
+        }
+        return keysBuilder.build();
+    }
+
     public static List<String> getSelectKeysList(Step step) {
         String field = "selectKeys";
         try {
@@ -128,10 +151,6 @@ public class PlanUtils {
         }
     }
 
-    public static Gremlin.OrderByComparePair.Order convertFrom(Order gremlinOrder) {
-        return Gremlin.OrderByComparePair.Order.valueOf(gremlinOrder.name().toUpperCase());
-    }
-
     public static Gremlin.OrderByStep constructFrom(ComparatorHolder holder, Configuration conf) {
         Gremlin.OrderByStep.Builder builder = Gremlin.OrderByStep.newBuilder();
         holder.getComparators().forEach((k) -> {
@@ -143,6 +162,19 @@ public class PlanUtils {
             if (!isEmpty(tagKey)) pairs.setKey(tagKey);
             builder.addPairs(pairs);
         });
+        return builder.build();
+    }
+
+    public static Gremlin.GroupByStep constructFrom(Step groupByStep, Configuration conf) {
+        Traversal.Admin keyTraversal;
+        if (groupByStep instanceof GroupStep || groupByStep instanceof GroupCountStep) {
+            keyTraversal = PlanUtils.getKeyTraversal(groupByStep);
+        } else {
+            throw new UnsupportedOperationException("cannot support traversal other than " + groupByStep.getClass());
+        }
+        Gremlin.GroupByStep.Builder builder = Gremlin.GroupByStep.newBuilder();
+        Gremlin.TagKey tagKey = TagKeyExtractorFactory.GroupKeyBy.extractFrom(keyTraversal, false, conf);
+        if (!isEmpty(tagKey)) builder.setKey(tagKey);
         return builder.build();
     }
 
@@ -274,19 +306,6 @@ public class PlanUtils {
         return mapObj.entrySet().iterator().next();
     }
 
-    public static Gremlin.GroupByStep constructFrom(Step groupByStep, Configuration conf) {
-        Traversal.Admin keyTraversal;
-        if (groupByStep instanceof GroupStep || groupByStep instanceof GroupCountStep) {
-            keyTraversal = PlanUtils.getKeyTraversal(groupByStep);
-        } else {
-            throw new UnsupportedOperationException("cannot support traversal other than " + groupByStep.getClass());
-        }
-        Gremlin.GroupByStep.Builder builder = Gremlin.GroupByStep.newBuilder();
-        Gremlin.TagKey tagKey = TagKeyExtractorFactory.GroupKeyBy.extractFrom(keyTraversal, false, conf);
-        if (!isEmpty(tagKey)) builder.setKey(tagKey);
-        return builder.build();
-    }
-
     public static PegasusClient.AccumKind getAccumKind(Step groupByStep) {
         Traversal.Admin valueTraversal;
         if (groupByStep instanceof GroupStep) {
@@ -340,25 +359,6 @@ public class PlanUtils {
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
-    }
-
-    public static Gremlin.PropKeys convertFrom(ToFetchProperties toFetchProperties) {
-        Gremlin.PropKeys.Builder keysBuilder = Gremlin.PropKeys.newBuilder();
-        if (toFetchProperties.isAll()) {
-            keysBuilder.setIsAll(true);
-        } else if (toFetchProperties.getProperties() != null && !toFetchProperties.getProperties().isEmpty()) {
-            List<String> properties = toFetchProperties.getProperties();
-            if (StringUtils.isNumeric(properties.get(0))) {
-                keysBuilder.addAllPropKeys(properties.stream()
-                        .map(k -> Common.PropertyKey.newBuilder().setNameId(Integer.valueOf(k)).build())
-                        .collect(Collectors.toList()));
-            } else {
-                keysBuilder.addAllPropKeys(properties.stream()
-                        .map(k -> Common.PropertyKey.newBuilder().setName(k).build())
-                        .collect(Collectors.toList()));
-            }
-        }
-        return keysBuilder.build();
     }
 
     public static boolean getIsSimple(Step step) {

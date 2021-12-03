@@ -27,4 +27,3 @@ class TestGenericPath:
         cls.neg_weights.add_edge(0, 2, weight=3)
         cls.neg_weights.add_edge(1, 3, weight=1)
         cls.neg_weights.add_edge(2, 3, weight=-2)
-

@@ -20,6 +20,7 @@ import datetime
 import io
 import logging
 import os
+import tempfile
 import zipfile
 from io import BytesIO
 from pathlib import Path
@@ -45,7 +46,8 @@ logger = logging.getLogger("graphscope")
 @pytest.fixture(scope="function")
 def random_gar():
     path = os.path.join(
-        "/tmp",
+        "/",
+        tempfile.gettempprefix(),
         "{}.gar".format(str(datetime.datetime.now().strftime("%Y-%m-%d-%H-%M-%S-%f"))),
     )
     yield path
@@ -60,7 +62,7 @@ def not_exist_gar():
 
 @pytest.fixture(scope="module")
 def non_zipfile_gar():
-    path = os.path.join("/tmp", "test.txt")
+    path = os.path.join("/", tempfile.gettempprefix(), "test.txt")
     Path(path).touch()
     yield path
     os.remove(path)
@@ -69,7 +71,8 @@ def non_zipfile_gar():
 @pytest.fixture(scope="module")
 def empty_gar():
     path = os.path.join(
-        "/tmp",
+        "/",
+        tempfile.gettempprefix(),
         "{}.gar".format(str(datetime.datetime.now().strftime("%Y-%m-%d-%H-%M-%S-%f"))),
     )
     empty_zip_data = b"PK\x05\x06\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"
@@ -81,7 +84,8 @@ def empty_gar():
 
 def invalid_configfile_gar():
     path = os.path.join(
-        "/tmp",
+        "/",
+        tempfile.gettempprefix(),
         "{}.gar".format(str(datetime.datetime.now().strftime("%Y-%m-%d-%H-%M-%S-%f"))),
     )
     config = {"a": 10}

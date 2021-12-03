@@ -82,11 +82,12 @@ def test_property_context_to_dataframe(property_context):
     assert out.shape == (40786, 2)
 
 
-def test_property_context_output(property_context):
+def test_property_context_output(property_context, tmp_path):
+    rlt = os.path.join(tmp_path, "r0")
     property_context.output_to_client(
-        fd="/tmp/r0", selector={"id": "v:v0.id", "result": "r:v0.dist_0"}
+        fd=rlt, selector={"id": "v:v0.id", "result": "r:v0.dist_0"}
     )
-    out = pd.read_csv("/tmp/r0")
+    out = pd.read_csv(rlt)
     assert out.shape == (40521, 2)
 
 

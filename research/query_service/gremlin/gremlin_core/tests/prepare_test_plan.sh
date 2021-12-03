@@ -16,11 +16,11 @@
 # prepare query plan
 nohup java -cp .:./gremlin-server-plugin/target/gremlin-server-plugin-1.0-SNAPSHOT-jar-with-dependencies.jar -Dgremlin.graph.schema="conf/modern.schema.json" -Dremove_tag=$1 -Dproperty_cache=$2 com.alibaba.graphscope.gaia.GremlinServiceMain &
 sleep 3
-cd benchmark-tool/
+pushd benchmark-tool
 java -cp .:./target/benchmark-tool-1.0-SNAPSHOT-jar-with-dependencies.jar com.alibaba.graphscope.gaia.GeneratePlanBinaryTool ../../gremlin_core/resource/test/queries$3 ".txt" ../../gremlin_core/resource/test/query_plans "" 0.0.0.0 8182
-cd ..
+popd
 # kill gremlin server
-ID=`ps -ef | grep "GremlinServiceMain" | grep -v "$0" | grep -v "grep" | awk '{print $2}'`
+ID=$(ps -ef | grep "GremlinServiceMain" | grep -v "$0" | grep -v "grep" | awk '{print $2}')
 for id in $ID
 do
 kill -9 $id

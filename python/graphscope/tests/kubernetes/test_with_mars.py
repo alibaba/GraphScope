@@ -42,8 +42,7 @@ def get_k8s_volumes():
 def get_gs_image_on_ci_env():
     if "GS_IMAGE" in os.environ:
         return os.environ["GS_IMAGE"]
-    else:
-        return gs_config.k8s_gs_image
+    return gs_config.k8s_gs_image
 
 
 @pytest.fixture
@@ -79,4 +78,4 @@ def test_mars_session(gs_session):
 
     tensor = mt.ones((4, 5, 6))
     b = mt.to_vineyard(tensor)
-    b.execute().fetch()[0]
+    print(b.execute().fetch()[0])

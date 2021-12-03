@@ -20,6 +20,7 @@ import logging
 import os
 import random
 import string
+import tempfile
 
 import numpy as np
 import pytest
@@ -49,8 +50,7 @@ def get_k8s_volumes():
 def get_gs_image_on_ci_env():
     if "GS_IMAGE" in os.environ:
         return os.environ["GS_IMAGE"]
-    else:
-        return gs_config.k8s_gs_image
+    return gs_config.k8s_gs_image
 
 
 @pytest.fixture
@@ -272,8 +272,9 @@ def test_serialize_roundtrip(gs_session_distributed, p2p_property_dir):
         dst_label="person",
     )
 
-    graph.save_to("/tmp/serialize")
-    new_graph = Graph.load_from("/tmp/serialize", gs_session_distributed)
+    serialization_path = os.path.join("/", tempfile.gettempprefix(), "serialize")
+    graph.save_to(serialization_path)
+    new_graph = Graph.load_from(serialization_path, gs_session_distributed)
     pg = new_graph.project(vertices={"person": []}, edges={"knows": ["dist"]})
     ctx = graphscope.sssp(pg, src=6)
     ret = (

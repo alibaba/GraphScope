@@ -23,7 +23,7 @@ cd benchmark-tool/
 mkdir -p $1
 java -cp .:./target/benchmark-tool-1.0-SNAPSHOT-jar-with-dependencies.jar com.alibaba.graphscope.gaia.GeneratePlanBinaryTool ../../gremlin_core/resource/benchmark/queries ".txt" $1 "" 0.0.0.0 8182
 # kill gremlin server
-ID=`ps -ef | grep "GremlinServiceMain" | grep -v "$0" | grep -v "grep" | awk '{print $2}'`
+ID=$(ps -ef | grep "GremlinServiceMain" | grep -v "$0" | grep -v "grep" | awk '{print $2}')
 for id in $ID
 do
 kill -9 $id
