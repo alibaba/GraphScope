@@ -46,7 +46,8 @@ logger = logging.getLogger("graphscope")
 @pytest.fixture(scope="function")
 def random_gar():
     path = os.path.join(
-        "/", tempfile.gettempprefix(),
+        "/",
+        tempfile.gettempprefix(),
         "{}.gar".format(str(datetime.datetime.now().strftime("%Y-%m-%d-%H-%M-%S-%f"))),
     )
     yield path
@@ -70,7 +71,8 @@ def non_zipfile_gar():
 @pytest.fixture(scope="module")
 def empty_gar():
     path = os.path.join(
-        "/", tempfile.gettempprefix(),
+        "/",
+        tempfile.gettempprefix(),
         "{}.gar".format(str(datetime.datetime.now().strftime("%Y-%m-%d-%H-%M-%S-%f"))),
     )
     empty_zip_data = b"PK\x05\x06\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"
@@ -82,7 +84,8 @@ def empty_gar():
 
 def invalid_configfile_gar():
     path = os.path.join(
-        "/", tempfile.gettempprefix(),
+        "/",
+        tempfile.gettempprefix(),
         "{}.gar".format(str(datetime.datetime.now().strftime("%Y-%m-%d-%H-%M-%S-%f"))),
     )
     config = {"a": 10}
