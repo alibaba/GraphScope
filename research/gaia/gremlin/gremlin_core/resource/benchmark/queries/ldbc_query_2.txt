@@ -1,9 +1,0 @@
-g.V().hasLabel('PERSON').has('id', 17592186044810) \
-  .both('KNOWS').as('p') \
-  .in('HASCREATOR') \
-  .has('creationDate',lte(20120803072025654)) \
-  .order().by('creationDate',desc).by('id',asc) \
-  .limit(20).as('m') \
-  .select('p', 'm') \
-  .by(valueMap('id', 'firstName', 'lastName')) \
-  .by(valueMap('id', 'imageFile', 'creationDate', 'content'))

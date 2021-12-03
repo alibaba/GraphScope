@@ -1,1 +1,0 @@
-g.V(1).repeat(both('knows')).times(5).dedup().limit(1)

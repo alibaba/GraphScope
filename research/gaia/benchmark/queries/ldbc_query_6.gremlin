@@ -1,1 +1,0 @@
-g.V().hasLabel('PERSON').has('id', $personId).both('KNOWS').union(identity(), both('KNOWS')).dedup().has('id', neq($personId)).in('HASCREATOR').hasLabel('POST').filter(out('HASTAG').has('name', eq('Angola'))).out('HASTAG').has('name', neq('$tagName')).groupCount().unfold().order().by(select(values), desc).by(select(keys).values('name'), asc).limit(10)

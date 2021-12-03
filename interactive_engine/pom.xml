@@ -27,7 +27,7 @@
     <module>tests</module>
     <module>benchmark</module>
     <module>distribution</module>
-    <module>../research/gaia/gremlin/compiler</module>
+    <module>../research/query_service/gremlin/compiler</module>
   </modules>
 
   <properties>

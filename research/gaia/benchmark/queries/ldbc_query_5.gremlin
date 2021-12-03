@@ -1,1 +1,0 @@
-g.V().hasLabel('PERSON').has('id', $personId).both('KNOWS').union(identity(), both('KNOWS')).dedup().as('p').inE('HASMEMBER').has('joinDate', gt($minDate)).outV().group().by().by(out('CONTAINEROF').out('HASCREATOR').where(eq('p')).count()).unfold().order().by(select(values), desc).by(select(keys).values('id'), asc).limit(20)
