@@ -40,7 +40,7 @@ else
 endif
 
 VERSION ?= latest
-VINEYARD_VERSION ?= debug
+VINEYARD_VERSION ?= v0.3.12
 PROFILE ?= release
 
 
