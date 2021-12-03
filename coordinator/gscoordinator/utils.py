@@ -533,7 +533,9 @@ def _pre_process_for_add_labels_op(op, op_result_pool, key_to_op, **kwargs):
 def _pre_process_for_transform_op(op, op_result_pool, key_to_op, **kwargs):
     assert len(op.parents) == 1
     result = op_result_pool[op.parents[0]]
-    op.attr[types_pb2.GRAPH_NAME].CopyFrom(utils.s_to_attr(result.graph_def.key))
+    # To compatible with eager evaluation cases where it will has the key.
+    if types_pb2.GRAPH_NAME not in op.attr:
+        op.attr[types_pb2.GRAPH_NAME].CopyFrom(utils.s_to_attr(result.graph_def.key))
 
 
 def _pre_process_for_close_interactive_query_op(
