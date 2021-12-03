@@ -85,8 +85,8 @@ def context_to_dict(func):
     return wrapper
 
 
-@project_to_simple
 @context_to_dict
+@project_to_simple
 def pagerank(G, alpha=0.85, max_iter=100, tol=1.0e-6):
     """Returns the PageRank of the nodes in the graph.
 
@@ -192,8 +192,8 @@ def hits(G, max_iter=100, tol=1.0e-8, normalized=True):
     return (df.set_index("id")["hub"].to_dict(), df.set_index("id")["auth"].to_dict())
 
 
-@project_to_simple
 @context_to_dict
+@project_to_simple
 def degree_centrality(G):
     """Compute the degree centrality for nodes.
 
@@ -223,8 +223,8 @@ def degree_centrality(G):
 
 
 @not_implemented_for("undirected")
-@project_to_simple
 @context_to_dict
+@project_to_simple
 def in_degree_centrality(G):
     """Compute the in-degree centrality for nodes.
 
@@ -259,8 +259,8 @@ def in_degree_centrality(G):
 
 
 @not_implemented_for("undirected")
-@project_to_simple
 @context_to_dict
+@project_to_simple
 def out_degree_centrality(G):
     """Compute the out-degree centrality for nodes.
 
@@ -294,8 +294,8 @@ def out_degree_centrality(G):
     return graphscope.degree_centrality(G, centrality_type="out")
 
 
-@project_to_simple
 @context_to_dict
+@project_to_simple
 def eigenvector_centrality(G, max_iter=100, tol=1e-06, weight=None):
     r"""Compute the eigenvector centrality for the graph `G`.
 
@@ -345,8 +345,8 @@ def eigenvector_centrality(G, max_iter=100, tol=1e-06, weight=None):
     return graphscope.eigenvector_centrality(G, tolerance=tol, max_round=max_iter)
 
 
-@project_to_simple
 @context_to_dict
+@project_to_simple
 def katz_centrality(
     G,
     alpha=0.1,
@@ -458,8 +458,8 @@ def shortest_path(G, source=None, target=None, weight=None):
     return AppAssets(algo="sssp_path", context="tensor")(G, source)
 
 
-@project_to_simple
 @context_to_dict
+@project_to_simple
 def single_source_dijkstra_path_length(G, source, weight=None):
     """Find shortest weighted path lengths in G from a source node.
 
@@ -628,8 +628,8 @@ def all_pairs_shortest_path_length(G, weight=None):
     return AppAssets(algo="all_pairs_shortest_path_length", context="vertex_data")(G)
 
 
-@project_to_simple
 @context_to_dict
+@project_to_simple
 def closeness_centrality(G, weight=None, wf_improved=True):
     r"""Compute closeness centrality for nodes.
 
@@ -755,8 +755,8 @@ def k_core(G, k=None, core_number=None):
     return graphscope.k_core(G, k)
 
 
-@project_to_simple
 @context_to_dict
+@project_to_simple
 def clustering(G):
     r"""Compute the clustering coefficient for nodes.
 
@@ -829,8 +829,8 @@ def clustering(G):
     return graphscope.clustering(G)
 
 
-@project_to_simple
 @context_to_dict
+@project_to_simple
 def triangles(G, nodes=None):
     """Compute the number of triangles.
 
@@ -913,8 +913,8 @@ def average_clustering(G, nodes=None, count_zeros=True):
     return ctx.to_numpy("r")[0]
 
 
-@project_to_simple
 @context_to_dict
+@project_to_simple
 def weakly_connected_components(G):
     """Generate weakly connected components of G.
 
@@ -1390,8 +1390,8 @@ def all_simple_edge_paths(G, source, target_nodes, cutoff=None):
     return paths
 
 
-@project_to_simple
 @context_to_dict
+@project_to_simple
 def betweenness_centrality(
     G, k=None, normalized=True, weight=None, endpoints=False, seed=None
 ):
