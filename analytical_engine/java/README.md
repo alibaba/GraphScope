@@ -1,44 +1,37 @@
-# Grape JDK on GraphScope analytics
+# GRAPE-JDK with GraphScope Analytical Engine
 
-GRAPE JDK is a subproject under GraphScope, presenting an efficient java SDK for GraphScope analytical engine-GRAPE.
-Powered By [Alibaba-FastFFI](https://github.com/alibaba/fastFFI), which is able to bridge the huge programming gap between Java and C++, Java PIE
-SDK enables Java Programmers to acquire the following abilities
+[pagerank-app]: analytical_engine/java/grape-demo/src/main/java/com/alibaba/graphscope/example/property/pagerank/ParallelPropertyPageRankVertexData.java
+[sssp-app]: analytical_engine/java/grape-demo/src/main/java/com/alibaba/graphscope/example/property/sssp/ParallelPropertySSSPVertexData.java
+[wcc-app]: analytical_engine/java/grape-demo/src/main/java/com/alibaba/graphscope/example/property/wcc/ParallelPropertyWCCVertexData.java
+[bfs-app]: analytical_engine/java/grape-demo/src/main/java/com/alibaba/graphscope/example/property/bfs/ParallelPropertyBfsVertexData.java
 
-- **Ease of developing graph algorithms in Java**.
 
-  PIE SDK mirrors the full-featured grape framework, including ```Fragment```, ```MessageManager```, etc.
-  Armed with PIE SDK, a Java Programmer can develop algorithms in grape PIE model with no efforts.
-- **Efficient execution for Java graph algorithms**.
+GRAPE-JDK is a subproject of GraphScope, presenting an efficient Java SDK for the analytical engine.
+Powered by [Alibaba-FastFFI](https://github.com/alibaba/fastFFI) and its ability to bridge the huge programming gap between Java and C++, GRAPE-JDK
+enables Java programmers to write and run graph algorithms with these benefits.
 
-  There are a bunch of graph computing platforms developed in Java, and providing programming interfaces
-  in java. However, since Java, the language itself, lacks the ability to access low-level system resources
-  and memories, these java frameworks are drastically outperformed when compared to C++ framework, grape.
-  To provide efficient execution for java graph programs, simple JNI bridging is never enough. By
-  leveraging the JNI acceleration provided by [```LLVM4JNI```](https://github.com/alibaba/fastFFI/tree/main/llvm4jni), PIE SDK substantially narrows the gap
-  between java app and c++ app.
-  As experiments shows, the minimum gap is around 1.5x.
+- **Easy to Program**. GRAPE-JDK mirrors the full-featured GRAPE framework, including ```Fragment```, ```MessageManager```, in a Java style, 
+  hence a Java programmer can develop algorithms in GRAPE PIE-model easily.
 
-- **Seamless integration with GraphScope**.
+- **Efficient Execution**. Due to the limited ability to access low-level system resources, existing graph computing systems written in Java are 
+  usually suboptimal at efficiency. By leveraging the JNI acceleration provided by [```LLVM4JNI```](https://github.com/alibaba/fastFFI/tree/main/llvm4jni), GRAPE-JDK substantially narrows the gap between apps written in Java and in C++. As [experiments(TODO: link)](#) shows...
 
-  To run a Java app developed with PIE SDK, the user just need to pack Java app into ```jar``` and
+<!-- - **Seamless integration with GraphScope**.
+
+  To run a Java app developed with GRAPE-JDK, the user just need to pack Java app into ```jar``` and
   submit in python client, as show in example. The input graph can be either property graph or
   projected graph in GraphScope, and the output can be redirected to client fs, vineyard just like
-  normal GraphScope apps.
+  normal GraphScope apps. -->
   
-## Structure
+## Organization
 
-- **grape-demo**
-  
-  Providing examples apps and [FFIMirrors](#user-defined-data-structure).
-- **grape-runtime**
-  
-  Contains necessary static functions to create URL class loader, which is later
-  used to load user jars.
-  Annotation processor design for graphscope sdk, responsible for java and jni
-  code generation, will be invoked by grape-engine, when ```ENABLE_JAVA_SDK```set to true.
-- **grape-jdk**
+- **grape-demo** provides example apps and [FFIMirrors](#user-defined-data-structure).
+- **grape-jdk** provides the SDK with graph computing interfaces.
+- **grape-runtime** contains the essential files for JNI code-gen and the glue code invoked by the analytcial engine (building with `ENABLE_JAVA_SDK`). 
 
-  The core java sdk defines graph computing interfaces.
+-----
+(To be revise)
+
 
 # How to use
 
