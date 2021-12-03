@@ -538,6 +538,13 @@ class TransformUtils<FRAG_T,
     }
   }
 
+  void SerializeVertexLabelId(const std::vector<vertex_t>& range,
+                              grape::InArchive& arc) {
+    for (auto v : range) {
+      arc << frag_.vertex_label(v);
+    }
+  }
+
   bl::result<std::shared_ptr<arrow::Array>> VertexIdToArrowArray(
       label_id_t label_id) {
     typename vineyard::ConvertToArrowType<oid_t>::BuilderType builder;
@@ -752,6 +759,13 @@ class TransformUtils<
                          grape::InArchive& arc) {
     for (auto v : range) {
       arc << frag_.GetId(v);
+    }
+  }
+
+  void SerializeVertexLabelId(const std::vector<vertex_t>& range,
+                              grape::InArchive& arc) {
+    for (auto v : range) {
+      arc << frag_.vertex_label(v);
     }
   }
 

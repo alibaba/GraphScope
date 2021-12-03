@@ -304,6 +304,14 @@ class VertexDataContextWrapper : public IVertexDataContextWrapper {
         trans_utils.SerializeVertexId(vertices, *arc);
         break;
       }
+      case SelectorType::kVertexLabelId: {
+        if (comm_spec.fid() == 0) {
+          *arc << static_cast<int>(vineyard::TypeToInt<int>::value);
+        }
+        old_size = arc->GetSize();
+        trans_utils.SerializeVertexLabelId(vertices, *arc);
+        break;
+      }
       case SelectorType::kVertexData: {
         if (comm_spec.fid() == 0) {
           *arc << static_cast<int>(vineyard::TypeToInt<vdata_t>::value);

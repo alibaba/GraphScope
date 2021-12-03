@@ -197,6 +197,12 @@ def degree_centrality(G):
     possible degree in a simple graph n-1 where n is the number of nodes in G.
     """
     ctx = graphscope.degree_centrality(G, centrality_type="both")
+    if G.graph_type == graph_def_pb2.ARROW_FLATTENED:
+        d = dict()
+        df = ctx.to_dataframe({"label": "v.label_id", "id": "v.id", "value": "r"})
+        for row in df.itertuples():
+            d[(row.label, row.id)] = row.value
+        return d
     return (
         ctx.to_dataframe({"id": "v.id", "value": "r"})
         .set_index("id")["value"]
