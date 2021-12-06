@@ -49,19 +49,17 @@ class AllSimplePaths : public AppBase<FRAG_T, AllSimplePathsContext<FRAG_T>>,
     vid_t source_gid;
 
     frag.Oid2Gid(ctx.source_id, source_gid);
-    ctx.soucre_fid = source_gid >> ctx.fid_offset;
+    ctx.source_fid = source_gid >> ctx.fid_offset;
     // If is native_source, resize the edge_map, otherwise send the fragment
     // inner vertex num to source-vertex's fragment.
     if (ctx.native_source) {
       ctx.simple_paths_edge_map.resize(frag.GetTotalVerticesNum());
     }
-    if (frag.fnum() == 0 || !ctx.native_source) {
-      vid_t inner_num = frag.GetInnerVerticesNum();
-      fid_t fid = frag.fid();
-      MsgType msg_type = init_msg;
-      msg_t msg = std::make_tuple(msg_type, (vid_t) fid, inner_num);
-      messages.SendToFragment(ctx.soucre_fid, msg);
-    }
+    vid_t inner_num = frag.GetInnerVerticesNum();
+    fid_t fid = frag.fid();
+    MsgType msg_type = init_msg;
+    msg_t msg = std::make_tuple(msg_type, (vid_t) fid, inner_num);
+    messages.SendToFragment(ctx.source_fid, msg);
     messages.ForceContinue();
   }
 
@@ -123,11 +121,13 @@ class AllSimplePaths : public AppBase<FRAG_T, AllSimplePathsContext<FRAG_T>>,
           frag_finish_counter++;
       }
     }
-    if (!ctx.next_level_inner.empty() || frag_finish_counter > 0)
-      messages.ForceContinue();
     Sum(frag_finish_counter, ctx.frag_finish_counter);
-    if (ctx.frag_finish_counter == 0 && frag.fid() == ctx.soucre_fid) {
-      writeToCtx(frag, ctx);
+    if (!ctx.next_level_inner.empty() || ctx.frag_finish_counter > 0) {
+      messages.ForceContinue();
+    } else {
+      if (ctx.frag_finish_counter == 0 && frag.fid() == ctx.source_fid) {
+        writeToCtx(frag, ctx);
+      }
     }
   }
 
@@ -146,14 +146,14 @@ class AllSimplePaths : public AppBase<FRAG_T, AllSimplePathsContext<FRAG_T>>,
         if (ctx.native_source == false) {
           MsgType msg_type = edge_map_msg;
           msg_t msg = std::make_tuple(msg_type, gid, u_gid);
-          messages.SendToFragment(ctx.soucre_fid, msg);
+          messages.SendToFragment(ctx.source_fid, msg);
           ret = true;
         } else {
           vid_t u_index = ctx.Gid2GlobalIndex(gid);
           vid_t v_index = ctx.Gid2GlobalIndex(u_gid);
           ctx.simple_paths_edge_map[u_index].push_back(v_index);
         }
-        if (!frag.IsOuterVertex(u)) {
+        if (frag.IsInnerVertex(u)) {
           if (!ctx.visited[u]) {
             ctx.visited[u] = true;
             ctx.next_level_inner.push(std::make_pair(u_gid, depth + 1));
@@ -188,7 +188,6 @@ class AllSimplePaths : public AppBase<FRAG_T, AllSimplePathsContext<FRAG_T>>,
       shape.pop_back();
       shape[0] = 1;
     }
-    VLOG(0) << "path_num: " << ctx.path_num << std::endl;
     ctx.assign(data, shape);
   }
 

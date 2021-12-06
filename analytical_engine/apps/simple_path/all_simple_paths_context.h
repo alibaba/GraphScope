@@ -131,7 +131,7 @@ class AllSimplePathsContext
   std::vector<vid_t> frag_vertex_num;
   int cutoff;
   bool native_source = false;
-  fid_t soucre_fid;
+  fid_t source_fid;
   vid_t id_mask;
   int fid_offset;
   std::vector<std::vector<vid_t>> simple_paths_edge_map;
