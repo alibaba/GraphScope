@@ -1,18 +1,17 @@
 /** Copyright 2020 Alibaba Group Holding Limited.
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-Author: Ma JingYuan<nn9902@qq.com>
-*/
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * 	http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 
 #ifndef ANALYTICAL_ENGINE_APPS_SIMPLE_PATH_ALL_SIMPLE_PATHS_H_
 #define ANALYTICAL_ENGINE_APPS_SIMPLE_PATH_ALL_SIMPLE_PATHS_H_
@@ -36,7 +35,7 @@ class AllSimplePaths : public AppBase<FRAG_T, AllSimplePathsContext<FRAG_T>>,
   INSTALL_DEFAULT_WORKER(AllSimplePaths<FRAG_T>, AllSimplePathsContext<FRAG_T>,
                          FRAG_T)
   static constexpr grape::MessageStrategy message_strategy =
-      grape::MessageStrategy::kAlongOutgoingEdgeToOuterVertex;
+      grape::MessageStrategy::kSyncOnOuterVertex;
   static constexpr grape::LoadStrategy load_strategy =
       grape::LoadStrategy::kBothOutIn;
   enum MsgType { init_msg, bfs_msg, edge_map_msg };
@@ -50,18 +49,17 @@ class AllSimplePaths : public AppBase<FRAG_T, AllSimplePathsContext<FRAG_T>>,
     vid_t source_gid;
 
     frag.Oid2Gid(ctx.source_id, source_gid);
-    ctx.soucre_fid = source_gid >> ctx.fid_offset;
+    ctx.source_fid = source_gid >> ctx.fid_offset;
     // If is native_source, resize the edge_map, otherwise send the fragment
     // inner vertex num to source-vertex's fragment.
     if (ctx.native_source) {
       ctx.simple_paths_edge_map.resize(frag.GetTotalVerticesNum());
-    } else {
-      vid_t inner_num = frag.GetInnerVerticesNum();
-      fid_t fid = frag.fid();
-      MsgType msg_type = init_msg;
-      msg_t msg = std::make_tuple(msg_type, (vid_t) fid, inner_num);
-      messages.SendToFragment(ctx.soucre_fid, msg);
     }
+    vid_t inner_num = frag.GetInnerVerticesNum();
+    fid_t fid = frag.fid();
+    MsgType msg_type = init_msg;
+    msg_t msg = std::make_tuple(msg_type, (vid_t) fid, inner_num);
+    messages.SendToFragment(ctx.source_fid, msg);
     messages.ForceContinue();
   }
 
@@ -85,7 +83,7 @@ class AllSimplePaths : public AppBase<FRAG_T, AllSimplePathsContext<FRAG_T>>,
         vid_t inner_num = std::get<2>(msg);
         init_counter++;
         ctx.frag_vertex_num[fid] = inner_num;
-        if (init_counter == static_cast<int>(frag.fnum()) - 1) {
+        if (init_counter == static_cast<int>(frag.fnum())) {
           reloadFragVertexNum(ctx.frag_vertex_num);
           vertex_t source;
           frag.GetInnerVertex(ctx.source_id, source);
@@ -123,11 +121,13 @@ class AllSimplePaths : public AppBase<FRAG_T, AllSimplePathsContext<FRAG_T>>,
           frag_finish_counter++;
       }
     }
-    if (!ctx.next_level_inner.empty() || frag_finish_counter > 0)
-      messages.ForceContinue();
     Sum(frag_finish_counter, ctx.frag_finish_counter);
-    if (ctx.frag_finish_counter == 0 && frag.fid() == ctx.soucre_fid) {
-      writeToCtx(frag, ctx);
+    if (!ctx.next_level_inner.empty() || ctx.frag_finish_counter > 0) {
+      messages.ForceContinue();
+    } else {
+      if (ctx.frag_finish_counter == 0 && frag.fid() == ctx.source_fid) {
+        writeToCtx(frag, ctx);
+      }
     }
   }
 
@@ -146,14 +146,14 @@ class AllSimplePaths : public AppBase<FRAG_T, AllSimplePathsContext<FRAG_T>>,
         if (ctx.native_source == false) {
           MsgType msg_type = edge_map_msg;
           msg_t msg = std::make_tuple(msg_type, gid, u_gid);
-          messages.SendToFragment(ctx.soucre_fid, msg);
+          messages.SendToFragment(ctx.source_fid, msg);
           ret = true;
         } else {
           vid_t u_index = ctx.Gid2GlobalIndex(gid);
           vid_t v_index = ctx.Gid2GlobalIndex(u_gid);
           ctx.simple_paths_edge_map[u_index].push_back(v_index);
         }
-        if (!frag.IsOuterVertex(u)) {
+        if (frag.IsInnerVertex(u)) {
           if (!ctx.visited[u]) {
             ctx.visited[u] = true;
             ctx.next_level_inner.push(std::make_pair(u_gid, depth + 1));
@@ -188,7 +188,6 @@ class AllSimplePaths : public AppBase<FRAG_T, AllSimplePathsContext<FRAG_T>>,
       shape.pop_back();
       shape[0] = 1;
     }
-    VLOG(0) << "path_num: " << ctx.path_num << std::endl;
     ctx.assign(data, shape);
   }
 
