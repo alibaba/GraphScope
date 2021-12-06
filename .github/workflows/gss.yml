@@ -24,7 +24,7 @@ on:
       - 'interactive_engine/**'
       - 'python/graphscope/client/**'
       - 'charts/graphscope-store/**'
-      - 'research/gaia/**'
+      - 'research/**'
       - '.github/workflows/gss.yml'
       - '!interactive_engine/**.md'
       - '!charts/graphscope-store/**.md'
