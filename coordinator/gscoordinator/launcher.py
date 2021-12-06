@@ -188,8 +188,12 @@ class LocalLauncher(Launcher):
         dir = os.path.dirname(path)
         for host in self._hosts.split(","):
             if host not in ("localhost", "127.0.0.1"):
-                subprocess.check_call(["ssh", host, "mkdir -p {}".format(dir)])
-                subprocess.check_call(["scp", "-r", path, "{}:{}".format(host, path)])
+                subprocess.check_call(
+                    [shutil.which("ssh"), host, "mkdir -p {}".format(dir)]
+                )
+                subprocess.check_call(
+                    [shutil.which("scp"), "-r", path, "{}:{}".format(host, path)]
+                )
 
     def poll(self):
         if self._analytical_engine_process:

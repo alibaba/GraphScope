@@ -322,7 +322,7 @@ class KubernetesClusterLauncher(Launcher):
         for pod in self._pod_name_list:
             subprocess.check_call(
                 [
-                    "kubectl",
+                    shutil.which("kubectl"),
                     "exec",
                     pod,
                     "-c",
@@ -335,7 +335,7 @@ class KubernetesClusterLauncher(Launcher):
             )
             subprocess.check_call(
                 [
-                    "kubectl",
+                    shutil.which("kubectl"),
                     "cp",
                     path,
                     "{}:{}".format(pod, path),
@@ -1040,7 +1040,7 @@ class KubernetesClusterLauncher(Launcher):
         for pod in self._pod_name_list:
             subprocess.check_call(
                 [
-                    "kubectl",
+                    shutil.which("kubectl"),
                     "-n",
                     self._saved_locals["namespace"],
                     "cp",

@@ -47,7 +47,10 @@ def cmake_and_make(cmake_commands):
             cmake_commands, stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=True
         )
         make_process = subprocess.run(
-            ["make", "-j4"], stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=True
+            [shutil.which("make"), "-j4"],
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            check=True,
         )
         shutil.rmtree("CMakeFiles")
     except subprocess.CalledProcessError as e:
@@ -184,7 +187,9 @@ def compile_cpp_pie_app():
     pluee = project_template.format(
         "int64_t", "uint64_t", "grape::EmptyType", "grape::EmptyType"
     )
-    pluel = project_template.format("int64_t", "uint64_t", "grape::EmptyType", "int64_t")
+    pluel = project_template.format(
+        "int64_t", "uint64_t", "grape::EmptyType", "int64_t"
+    )
     lued = project_template.format("int64_t", "uint64_t", "grape::EmptyType", "double")
     fluee = flatten_template.format(
         "int64_t", "uint64_t", "grape::EmptyType", "grape::EmptyType"

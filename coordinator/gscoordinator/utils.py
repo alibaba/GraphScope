@@ -295,7 +295,9 @@ def compile_app(workspace: str, library_name, attr, engine_config: dict):
         for pyx_file in glob.glob(app_dir + "/*.pyx"):
             module_name = os.path.splitext(os.path.basename(pyx_file))[0]
             cc_file = os.path.join(app_dir, module_name + ".cc")
-            subprocess.check_call(["cython", "-3", "--cplus", "-o", cc_file, pyx_file])
+            subprocess.check_call(
+                [shutil.which("cython"), "-3", "--cplus", "-o", cc_file, pyx_file]
+            )
         app_header = f"{module_name}.h"
 
     # replace and generate cmakelist
