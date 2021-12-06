@@ -18,9 +18,11 @@
 
 
 import logging
+import os
 import sys
 
 from graphscope.deploy.kubernetes.utils import parse_readable_memory
+from graphscope.framework.utils import get_tempdir
 
 logger = logging.getLogger("graphscope")
 
@@ -639,7 +641,9 @@ class GSEngineBuilder(ReplicaSetBuilder):
         self._labels = labels
         self._num_workers = num_workers
         self._image_pull_policy = image_pull_policy
-        self._ipc_socket_file = "/tmp/vineyard_workspace/vineyard.sock"
+        self._ipc_socket_file = os.path.join(
+            get_tempdir(), "vineyard_workspace", "vineyard.sock"
+        )
         super().__init__(
             self._name, self._labels, self._num_workers, self._image_pull_policy
         )

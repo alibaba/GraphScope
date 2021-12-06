@@ -7,6 +7,7 @@ import os
 import shutil
 import subprocess
 import sys
+import tempfile
 import zipfile
 from pathlib import Path
 from string import Template
@@ -38,7 +39,7 @@ GRAPHSCOPE_HOME = (
     if "GRAPHSCOPE_HOME" in os.environ
     else "/opt/graphscope"
 )
-WORKSPACE = Path("/tmp/gs/builtin")
+WORKSPACE = Path(os.path.join("/", tempfile.gettempprefix(), "gs", "builtin"))
 
 
 def cmake_and_make(cmake_commands):

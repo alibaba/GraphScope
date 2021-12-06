@@ -55,6 +55,7 @@ from graphscope.framework.graph_utils import normalize_parameter_edges
 from graphscope.framework.graph_utils import normalize_parameter_vertices
 from graphscope.framework.loader import Loader
 from graphscope.framework.utils import PipeMerger
+from graphscope.framework.utils import get_tempdir
 from graphscope.framework.utils import normalize_data_type_str
 from graphscope.proto import attr_value_pb2
 from graphscope.proto import coordinator_service_pb2_grpc
@@ -382,7 +383,9 @@ class CoordinatorServiceServicer(
                 types_pb2.ADD_LABELS,
                 types_pb2.ADD_COLUMN,
             ):
-                schema_path = os.path.join("/tmp", op_result.graph_def.key + ".json")
+                schema_path = os.path.join(
+                    get_tempdir(), op_result.graph_def.key + ".json"
+                )
                 vy_info = graph_def_pb2.VineyardInfoPb()
                 op_result.graph_def.extension.Unpack(vy_info)
                 self._object_manager.put(

@@ -23,13 +23,13 @@ import os
 import shutil
 import subprocess
 import sys
-import tempfile
 import time
 from abc import ABCMeta
 from abc import abstractmethod
 
 from graphscope.framework.utils import PipeWatcher
 from graphscope.framework.utils import get_free_port
+from graphscope.framework.utils import get_tempdir
 from graphscope.framework.utils import is_free_port
 from graphscope.proto import types_pb2
 
@@ -133,9 +133,7 @@ class LocalLauncher(Launcher):
         self._instance_id = instance_id
         self._timeout_seconds = timeout_seconds
 
-        self._vineyard_socket_prefix = os.path.join(
-            tempfile.gettempdir(), "vineyard.sock."
-        )
+        self._vineyard_socket_prefix = os.path.join(get_tempdir(), "vineyard.sock.")
 
         # A graphsope instance may has multiple session by reconnecting to coordinator
         self._instance_workspace = os.path.join(WORKSPACE, self._instance_id)

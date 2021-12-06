@@ -56,6 +56,7 @@ from graphscope.deploy.kubernetes.utils import get_kubernetes_object_info
 from graphscope.deploy.kubernetes.utils import get_service_endpoints
 from graphscope.deploy.kubernetes.utils import try_to_resolve_api_client
 from graphscope.framework.utils import PipeWatcher
+from graphscope.framework.utils import get_tempdir
 from graphscope.framework.utils import is_free_port
 from graphscope.proto import types_pb2
 
@@ -85,7 +86,7 @@ class ResourceManager(object):
         }
     """
 
-    _resource_object_path = "/tmp/resource_object"  # fixed
+    _resource_object_path = os.path.join(get_tempdir(), "resource_object")  # fixed
 
     def __init__(self, api_client):
         self._api_client = api_client
@@ -467,7 +468,7 @@ class KubernetesClusterLauncher(Launcher):
                 type=vineyard_socket_volume_type,
                 field=vineyard_socket_volume_fields,
                 mounts_list=[
-                    {"mountPath": "/tmp/vineyard_workspace"},
+                    {"mountPath": os.path.join(get_tempdir(), "vineyard_workspace")},
                 ],
             )
         )
@@ -484,7 +485,9 @@ class KubernetesClusterLauncher(Launcher):
         scheduler_builder.add_simple_envs(
             {
                 "GLOG_v": str(self._glog_level),
-                "VINEYARD_IPC_SOCKET": "/tmp/vineyard_workspace/vineyard.sock",
+                "VINEYARD_IPC_SOCKET": os.path.join(
+                    get_tempdir(), "vineyard_workspace", "vineyard.sock"
+                ),
                 "WITH_VINEYARD": "ON",
             }
         )
@@ -600,7 +603,9 @@ class KubernetesClusterLauncher(Launcher):
         # add env
         env = {
             "GLOG_v": str(self._glog_level),
-            "VINEYARD_IPC_SOCKET": "/tmp/vineyard_workspace/vineyard.sock",
+            "VINEYARD_IPC_SOCKET": os.path.join(
+                get_tempdir(), "vineyard_workspace", "vineyard.sock"
+            ),
             "WITH_VINEYARD": "ON",
             "PATH": os.environ["PATH"],
             "LD_LIBRARY_PATH": os.environ["LD_LIBRARY_PATH"],
@@ -1033,7 +1038,8 @@ class KubernetesClusterLauncher(Launcher):
         )
 
         # generate and distribute hostfile
-        with open("/tmp/kube_hosts", "w") as f:
+        kube_hosts_path = os.path.join(get_tempdir(), "kube_hosts")
+        with open(kube_hosts_path, "w") as f:
             for i in range(len(self._pod_ip_list)):
                 f.write("{} {}\n".format(self._pod_ip_list[i], self._pod_name_list[i]))
 
@@ -1044,7 +1050,7 @@ class KubernetesClusterLauncher(Launcher):
                     "-n",
                     self._saved_locals["namespace"],
                     "cp",
-                    "/tmp/kube_hosts",
+                    kube_hosts_path,
                     "{}:/tmp/hosts_of_nodes".format(pod),
                     "-c",
                     self._engine_container_name,
@@ -1065,7 +1071,12 @@ class KubernetesClusterLauncher(Launcher):
         else:
             mpi_env["GLOG_v"] = str(self._glog_level)
 
-        cmd.extend(["--vineyard_socket", "/tmp/vineyard_workspace/vineyard.sock"])
+        cmd.extend(
+            [
+                "--vineyard_socket",
+                os.path.join(get_tempdir(), "vineyard_workspace", "vineyard.sock"),
+            ]
+        )
         logger.info("Analytical engine launching command: {}".format(" ".join(cmd)))
 
         env = os.environ.copy()

@@ -50,6 +50,7 @@ from graphscope.framework import utils
 from graphscope.framework.errors import CompilationError
 from graphscope.framework.graph_schema import GraphSchema
 from graphscope.framework.utils import PipeWatcher
+from graphscope.framework.utils import get_tempdir
 from graphscope.proto import attr_value_pb2
 from graphscope.proto import data_types_pb2
 from graphscope.proto import graph_def_pb2
@@ -63,7 +64,7 @@ logger = logging.getLogger("graphscope")
 try:
     WORKSPACE = os.environ["GRAPHSCOPE_RUNTIME"]
 except KeyError:
-    WORKSPACE = "/tmp/gs"
+    WORKSPACE = os.path.join(get_tempdir(), "gs")
 
 # COORDINATOR_HOME
 #   1) get from gscoordinator python module, if failed,

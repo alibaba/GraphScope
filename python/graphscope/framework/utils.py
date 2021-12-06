@@ -21,6 +21,7 @@ import os
 import random
 import socket
 import string
+import tempfile
 import threading
 import time
 from queue import Queue
@@ -156,6 +157,10 @@ def get_free_port(host="localhost", port_range=(32768, 64999)):
 def random_string(nlen):
     """Create random string which length is `nlen`."""
     return "".join([random.choice(string.ascii_lowercase) for _ in range(nlen)])
+
+
+def get_tempdir():
+    return os.path.join("/", tempfile.gettempprefix())
 
 
 def read_file_to_bytes(file_path):
