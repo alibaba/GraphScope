@@ -54,7 +54,8 @@ class AllSimplePaths : public AppBase<FRAG_T, AllSimplePathsContext<FRAG_T>>,
     // inner vertex num to source-vertex's fragment.
     if (ctx.native_source) {
       ctx.simple_paths_edge_map.resize(frag.GetTotalVerticesNum());
-    } else {
+    }
+    if (frag.fnum() == 0 || !ctx.native_source) {
       vid_t inner_num = frag.GetInnerVerticesNum();
       fid_t fid = frag.fid();
       MsgType msg_type = init_msg;
@@ -84,7 +85,7 @@ class AllSimplePaths : public AppBase<FRAG_T, AllSimplePathsContext<FRAG_T>>,
         vid_t inner_num = std::get<2>(msg);
         init_counter++;
         ctx.frag_vertex_num[fid] = inner_num;
-        if (init_counter == static_cast<int>(frag.fnum()) - 1) {
+        if (init_counter == static_cast<int>(frag.fnum())) {
           reloadFragVertexNum(ctx.frag_vertex_num);
           vertex_t source;
           frag.GetInnerVertex(ctx.source_id, source);
