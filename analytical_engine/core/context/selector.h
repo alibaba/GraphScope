@@ -48,6 +48,7 @@ inline std::string generate_selectors(
 
 enum class SelectorType {
   kVertexId,
+  kVertexLabelId,
   kVertexData,
   kEdgeSrc,
   kEdgeDst,
@@ -79,6 +80,8 @@ class Selector {
     switch (type_) {
     case SelectorType::kVertexId:
       return "v.id";
+    case SelectorType::kVertexLabelId:
+      return "v.label_id";
     case SelectorType::kVertexData:
       return "v.data";
     case SelectorType::kEdgeSrc:
@@ -111,6 +114,7 @@ class Selector {
     std::smatch sm;
 
     std::regex r_vid("v\\.id");
+    std::regex r_vlabel_id("v\\.label_id");
     std::regex r_vdata("v\\.data");
     std::regex r_esrc("e\\.src");
     std::regex r_edst("e\\.dst");
@@ -120,6 +124,8 @@ class Selector {
 
     if (std::regex_match(selector, sm, r_vid)) {
       return Selector(SelectorType::kVertexId);
+    } else if (std::regex_match(selector, sm, r_vlabel_id)) {
+      return Selector(SelectorType::kVertexLabelId);
     } else if (std::regex_match(selector, sm, r_vdata)) {
       return Selector(SelectorType::kVertexData);
     } else if (std::regex_match(selector, sm, r_esrc)) {
@@ -223,6 +229,8 @@ class LabeledSelector : public Selector {
       }
       return ret;
     }
+    default:
+      break;
     }
     return "";
   }

@@ -2154,6 +2154,8 @@ class Graph(_GraphBase):
                 self, v_prop, e_prop, v_prop_type, e_prop_type
             )
             graph._graph_type = graph_def_pb2.DYNAMIC_PROJECTED
+            graph_def = op.eval(leaf=False)
+            graph.schema.from_graph_def(graph_def)
         else:
             op = dag_utils.flatten_arrow_property_graph(
                 self,
@@ -2165,10 +2167,11 @@ class Graph(_GraphBase):
                 self.schema.vid_type,
             )
             graph._graph_type = graph_def_pb2.ARROW_FLATTENED
-        graph_def = op.eval(leaf=False)
+            graph._default_label_id = self._default_label_id
+            graph_def = op.eval(leaf=False)
+            graph._schema = self.schema  # inherit the schema
         graph._key = graph_def.key
         graph._session = self._session
-        graph.schema.from_graph_def(graph_def)
         graph._saved_signature = self._saved_signature
         graph._graph = self  # projected graph also can report nodes.
         graph._op = op

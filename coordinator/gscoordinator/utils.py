@@ -986,8 +986,8 @@ def _tranform_dataframe_selector(context_type, schema, selector):
 
 
 def _transform_vertex_data_v(selector):
-    if selector not in ("v.id", "v.data"):
-        raise SyntaxError("selector of v must be 'id' or 'data'")
+    if selector not in ("v.id", "v.data", "v.label_id"):
+        raise SyntaxError("selector of v must be 'id', 'data' or 'label_id'")
     return selector
 
 
