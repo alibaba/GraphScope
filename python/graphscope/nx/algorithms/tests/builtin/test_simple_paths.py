@@ -257,10 +257,6 @@ class TestAllSimplePaths:
             list(nx.builtin.all_simple_paths(nx.DiGraph(G), 1, 4))
 
 
-@pytest.mark.skipif(
-    os.environ.get("DEPLOYMENT", None) == "standalone",
-    reason="FIXME(weibin): all_simple_paths does not work on standalone",
-)
 @pytest.mark.usefixtures("graphscope_session")
 class TestAllSimpleEdgePaths:
     """Unit tests for the
