@@ -978,12 +978,12 @@ class Graph(_GraphBase):
                     )
                 ) from e
             if len(edges) > 10000:  # make sure messages size not larger than rpc max
-                op = dag_utils.modify_edges(self, types_pb2.NX_ADD_EDGES, edges)
-                op.eval()
+                self._op = dag_utils.modify_edges(self, types_pb2.NX_ADD_EDGES, edges)
+                self._op.eval()
                 edges.clear()
         if len(edges) > 0:
-            op = dag_utils.modify_edges(self, types_pb2.NX_ADD_EDGES, edges)
-            op.eval()
+            self._op = dag_utils.modify_edges(self, types_pb2.NX_ADD_EDGES, edges)
+            self._op.eval()
 
     def add_weighted_edges_from(self, ebunch_to_add, weight="weight", **attr):
         """Add weighted edges in `ebunch_to_add` with specified weight attr
@@ -1574,8 +1574,8 @@ class Graph(_GraphBase):
         []
         """
         self._convert_arrow_to_dynamic()
-        op = dag_utils.clear_edges(self)
-        op.eval()
+        self._op = dag_utils.clear_edges(self)
+        self._op.eval()
 
     @patch_docstring(RefGraph.is_directed)
     def is_directed(self):
@@ -1804,6 +1804,7 @@ class Graph(_GraphBase):
             g._key = graph_def.key
             g._session = self._session
             g._schema = copy.deepcopy(self._schema)
+            g._op = op
             return g
 
     def subgraph(self, nodes):
@@ -2216,8 +2217,8 @@ class Graph(_GraphBase):
             the method is implicit called by modification and graph view methods.
         """
         if self.graph_type == graph_def_pb2.ARROW_PROPERTY:
-            op = dag_utils.arrow_to_dynamic(self)
-            graph_def = op.eval()
+            self._op = dag_utils.arrow_to_dynamic(self)
+            graph_def = self._op.eval()
             self._key = graph_def.key
             schema = GraphSchema()
             schema.init_nx_schema(self._schema)

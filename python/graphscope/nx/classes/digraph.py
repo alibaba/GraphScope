@@ -478,6 +478,7 @@ class DiGraph(Graph):
             g = self.__class__(create_empty_in_engine=False)
             g.graph.update(self.graph)
             op = dag_utils.create_graph_view(self, "reversed")
+            g._op = self._op
             graph_def = op.eval()
             g._key = graph_def.key
             g._schema = deepcopy(self._schema)
