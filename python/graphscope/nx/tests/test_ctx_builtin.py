@@ -335,10 +335,6 @@ class TestBuiltInApp:
         ans = nx.builtin.average_degree_connectivity(self.p2p_undirected)
         assert gt == ans
 
-    @pytest.mark.skipif(
-        os.environ.get("DEPLOYMENT", None) == "standalone",
-        reason="FIXME(weibin): all_simple_paths does not work on standalone",
-    )
     def test_all_simple_paths(self):
         ans = nx.builtin.all_simple_paths(self.p2p, 1, 4, cutoff=10)
         assert len(ans) == 1022
