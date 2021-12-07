@@ -236,7 +236,7 @@ traversalMethod_count
 // only one argument is permitted
 // values("name")
 traversalMethod_values
-    : 'values' LPAREN stringLiteral RPAREN
+    : 'values' LPAREN NonEmptyStringLiteral RPAREN
     ;
 
 stringLiteral
