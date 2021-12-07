@@ -3,6 +3,7 @@ Installation
 
 GraphScope is tested and supported on the following 64-bit systems:
 
+- gcc 7.1+
 - Python 3.6 - 3.9
 - Ubuntu 18.04 or later
 - CentOS 7 or later

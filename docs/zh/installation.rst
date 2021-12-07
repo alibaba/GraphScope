@@ -3,6 +3,7 @@
 
 GraphScope 目前支持的平台如下:
 
+- gcc 7.1+
 - Python 3.6 - 3.9
 - Ubuntu 18.04 or later
 - CentOS 7 or later
