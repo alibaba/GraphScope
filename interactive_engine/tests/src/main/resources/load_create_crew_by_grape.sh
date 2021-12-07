@@ -53,7 +53,7 @@ curl -XPOST $url -d 'crew_graph = session.load_from(
 
 curl -XPOST $url -d 'crew_gremlin = session.gremlin(crew_graph)'>/dev/null
 code=$(curl -XPOST $url -d 'crew_gremlin._graph_url' --write-out %{http_code} --silent --output ./gremlin.tmp)
-res=`cat ./gremlin.tmp`
+res=$(cat ./gremlin.tmp)
 if [ -f "gremlin.tmp" ];then
     rm gremlin.tmp 1>/dev/null 2>&1
 fi

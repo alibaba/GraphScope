@@ -7,19 +7,19 @@ set -o pipefail
 
 SCRIPT="$0"
 while [ -h "$SCRIPT" ] ; do
-  ls=`ls -ld "$SCRIPT"`
+  ls=$(ls -ld "$SCRIPT")
   # Drop everything prior to ->
-  link=`expr "$ls" : '.*-> \(.*\)$'`
+  link=$(expr "$ls" : '.*-> \(.*\)$')
   if expr "$link" : '/.*' > /dev/null; then
     SCRIPT="$link"
   else
-    SCRIPT=`dirname "$SCRIPT"`/"$link"
+    SCRIPT=$(dirname "$SCRIPT")/"$link"
   fi
 done
 
-LOAD_TOOL_HOME=`dirname "$SCRIPT"`
-LOAD_TOOL_HOME=`cd "$LOAD_TOOL_HOME"; pwd`
-LOAD_TOOL_HOME=`dirname "$LOAD_TOOL_HOME"`
+LOAD_TOOL_HOME=$(dirname "$SCRIPT")
+LOAD_TOOL_HOME=$(cd "$LOAD_TOOL_HOME"; pwd)
+LOAD_TOOL_HOME=$(dirname "$LOAD_TOOL_HOME")
 JAR_FILE="$(echo "$LOAD_TOOL_HOME"/lib/*.jar | tr ' ' ':')"
 
 if [ "$1" = "hadoop-build" ]; then

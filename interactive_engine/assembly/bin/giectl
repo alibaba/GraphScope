@@ -230,8 +230,7 @@ start_executor() {
 
   # update parameters(key-value) in config file
   if [ ! -z "${interactive_engine_params}" ]; then
-    params=`echo ${interactive_engine_params} |
-      awk -F";" '{for(i=1; i<=NF; ++i){print $i}}'` # trans to key-value pairs
+    params=$(echo ${interactive_engine_params} | awk -F";" '{for(i=1; i<=NF; ++i){print $i}}') # trans to key-value pairs
     for param in $(echo ${params})
     do
       key=$(echo ${param} | awk -F":" '{print $1}')
@@ -355,8 +354,8 @@ create_gremlin_instance_on_k8s() {
   declare -r GRAPHSCOPE_RUNTIME=$1
   declare -r object_id=$2
   declare -r schema_path=$3
-  declare -r pod_hosts=`echo $4 | awk -F"," '{for(i=1;i<=NF;++i) {print $i" "}}'`
-  declare -r engine_count=`echo $4 | awk -F"," '{print NF}'`
+  declare -r pod_hosts=$(echo $4 | awk -F"," '{for(i=1;i<=NF;++i) {print $i" "}}')
+  declare -r engine_count=$(echo $4 | awk -F"," '{print NF}')
   declare -r engine_container=$5
   declare -r engine_params=$6
   declare -r coordinator_name=$7 # deployment name of coordinator
@@ -418,7 +417,7 @@ create_gremlin_instance_on_k8s() {
   do
     launch_executor_cmd="GRAPHSCOPE_HOME=${GRAPHSCOPE_HOME} ${GRAPHSCOPE_HOME}/bin/giectl start_executor ${GRAPHSCOPE_RUNTIME} ${object_id} ${_server_id} ${host_ip} ${zookeeper_port} ${engine_count} ${engine_params}"
     kubectl --namespace=${KUBE_NAMESPACE} exec ${pod} -c ${engine_container} -- /bin/bash -c "${launch_executor_cmd}"
-    let _server_id+=1
+    (( _server_id+=1 ))
   done
 
   log "Expose gremlin server."
@@ -451,7 +450,7 @@ create_gremlin_instance_on_k8s() {
     wait_period_seconds=0
     while true
     do
-      mg_external_port=$(kubectl describe services mg-gremlin-${object_id} | grep "NodePort" | grep "TCP" | tr -cd "[0-9]")
+      mg_external_port=$(kubectl describe services mg-gremlin-${object_id} | grep "NodePort" | grep "TCP" | tr -cd "0-9")
       if [ -n "${mg_external_port}" ]; then
         break
       fi
@@ -526,7 +525,7 @@ close_gremlin_instance_on_local() {
 close_gremlin_instance_on_k8s() {
   declare -r GRAPHSCOPE_RUNTIME=$1
   declare -r object_id=$2
-  declare -r pod_hosts=`echo $3 | awk -F"," '{for(i=1;i<=NF;++i) {print $i" "}}'`
+  declare -r pod_hosts=$(echo $3 | awk -F"," '{for(i=1;i<=NF;++i) {print $i" "}}')
   declare -r engine_container=$4
 
   declare -r pid_dir=${GRAPHSCOPE_RUNTIME}/pid/${object_id}

@@ -14,7 +14,7 @@
 # limitations under the License.
 
 frontend_classpath=$classpath
-for file in `ls lib`; do
+for file in $(ls lib); do
     frontend_classpath=$frontend_classpath":lib/"$file
 done
 

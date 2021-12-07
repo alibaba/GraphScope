@@ -33,7 +33,7 @@ function _start {
     curl_sess="curl -XPOST http://localhost:${_port} -d 'session = graphscope.session(num_workers=${workers}, k8s_volumes={\"data\": {\"type\": \"hostPath\", \"field\": {\"path\": \"${GS_TEST_DIR}\", \"type\": \"Directory\"}, \"mounts\": {\"mountPath\": \"/testingdata\"}}}, k8s_coordinator_cpu=1.0, k8s_coordinator_mem='\''4Gi'\'', k8s_vineyard_cpu=1.0, k8s_vineyard_mem='\''4Gi'\'', vineyard_shared_mem='\''4Gi'\'', k8s_engine_cpu=1.0, k8s_engine_mem='\''4Gi'\'', k8s_etcd_num_pods=3, k8s_etcd_cpu=2, k8s_gs_image='\''${gs_image}'\'')' --write-out %{http_code} --silent --output ./curl.tmp"
 
     echo $curl_sess
-    code=`sh -c "$curl_sess"`
+    code=$(sh -c "$curl_sess")
     cat ./curl.tmp && rm -rf ./curl.tmp
     if [ -f "$tmp_result" ]; then
         rm $tmp_result
@@ -50,14 +50,14 @@ function _stop {
     curl -XPOST http://localhost:${_port} -d 'session.close()'
     _port=`cat $tmp_result | awk -F":" '{print $3}'`
     echo "stop port is ${_port}"
-    kill -INT `lsof -i:${_port} -t`
+    kill -INT $(lsof -i:${_port} -t)
     if [ -f "$tmp_result" ]; then
         rm $tmp_result
     fi
 }
 
 function _test {
-    url=`cat $tmp_result`
+    url=$(cat $tmp_result)
     cd $curdir && mvn test -Dclient.server.url=${url} -Dskip.tests=false
 }
 
