@@ -21,7 +21,7 @@ use ir_common::generated::common as common_pb;
 use ir_common::generated::result as result_pb;
 use pegasus::api::function::*;
 use pegasus::api::{
-    Collect, CorrelatedSubTask, Filter, IterCondition, Iteration, Join, KeyBy, Limit, Map, Merge,
+    Collect, CorrelatedSubTask, Dedup, Filter, IterCondition, Iteration, Join, KeyBy, Limit, Map, Merge,
     PartitionByKey, Sink, SortBy, SortLimitBy, Source,
 };
 use pegasus::result::ResultSink;
@@ -36,10 +36,11 @@ use prost::Message;
 
 use crate::error::{FnExecError, FnGenResult};
 use crate::graph::partitioner::Partitioner;
-use crate::process::functions::{CompareFunction, JoinKeyGen};
+use crate::process::functions::{CompareFunction, JoinKeyGen, KeyFunction};
 use crate::process::operator::filter::FilterFuncGen;
 use crate::process::operator::flatmap::FlatMapFuncGen;
 use crate::process::operator::join::JoinFunctionGen;
+use crate::process::operator::keyed::KeyFunctionGen;
 use crate::process::operator::map::MapFuncGen;
 use crate::process::operator::shuffle::RecordRouter;
 use crate::process::operator::sink::RecordSinkEncoder;
@@ -55,6 +56,7 @@ type RecordEncode = Box<dyn MapFunction<Record, result_pb::Result>>;
 type RecordShuffle = Box<dyn RouteFunction<Record>>;
 type RecordCompare = Box<dyn CompareFunction<Record>>;
 type RecordJoin = Box<dyn JoinKeyGen<Record, RecordKey, Record>>;
+type RecordKeySelector = Box<dyn KeyFunction<Record, RecordKey, Record>>;
 type BinaryResource = Vec<u8>;
 
 pub struct IRJobCompiler {
@@ -119,6 +121,11 @@ impl FnGenerator {
         Ok(step.gen_join()?)
     }
 
+    fn gen_key(&self, res: &BinaryResource) -> FnGenResult<RecordKeySelector> {
+        let step = decode::<algebra_pb::logical_plan::Operator>(res)?;
+        Ok(step.gen_key()?)
+    }
+
     fn gen_sink(&self, _res: &BinaryResource) -> FnGenResult<RecordEncode> {
         Ok(Box::new(RecordSinkEncoder::default()))
     }
@@ -176,8 +183,12 @@ impl IRJobCompiler {
                     server_pb::operator_def::OpKind::Group(_group) => {
                         Err(BuildJobError::Unsupported("Group is not supported yet".to_string()))?
                     }
-                    server_pb::operator_def::OpKind::Dedup(_) => {
-                        Err(BuildJobError::Unsupported("Dedup is not supported yet".to_string()))?
+                    server_pb::operator_def::OpKind::Dedup(dedup) => {
+                        let selector = self.udf_gen.gen_key(&dedup.resource)?;
+                        stream = stream
+                            .key_by(move |record| selector.get_kv(record))?
+                            .dedup()?
+                            .map(|pair| Ok(pair.value))?;
                     }
                     server_pb::operator_def::OpKind::Merge(merge) => {
                         let (mut ori_stream, sub_stream) = stream.copied()?;
