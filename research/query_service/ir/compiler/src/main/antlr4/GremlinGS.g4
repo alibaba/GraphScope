@@ -65,6 +65,9 @@ traversalMethod
     | traversalMethod_valueMap  // valueMap()
     | traversalMethod_order  // order()
     | traversalMethod_select  // order()
+    | traversalMethod_dedup
+    | traversalMethod_group
+    | traversalMethod_groupCount
     ;
 
 traversalSourceSpawnMethod_V
@@ -183,6 +186,54 @@ traversalMethod_selectby_list
     : traversalMethod_selectby (DOT traversalMethod_selectby)*
     ;
 
+// dedup in global scope
+// dedup().by('name')
+// dedup().by(valueMap('name', 'id'))
+// dedup('a').by('name')
+// dedup('a').by(valueMap('name', 'id'))
+traversalMethod_dedup
+	: 'dedup' LPAREN stringLiteralList RPAREN (DOT traversalMethod_dedupby)?
+	;
+
+//  multiple by() of dedup is unsupported in standard gremlin
+traversalMethod_dedupby
+	: 'by' LPAREN stringLiteralList RPAREN
+    | 'by' LPAREN traversalMethod_valueMap RPAREN
+	;
+
+traversalMethod_group
+	: 'group' LPAREN RPAREN (DOT traversalMethod_group_keyby)? (DOT traversalMethod_group_valueby)?
+	;
+
+traversalMethod_groupCount
+	: 'groupCount' LPAREN RPAREN (DOT traversalMethod_group_keyby)?
+	;
+
+// group().by('name')
+// group().by(valueMap('name'))
+// group().by(valueMap('name').as('key'))
+traversalMethod_group_keyby
+    : 'by' LPAREN stringLiteral RPAREN
+    | 'by' LPAREN traversalMethod_valueMap (DOT traversalMethod_as)? RPAREN
+    ;
+
+// group().by(...).by()
+// group().by(...).by(count())
+// group().by(...).by(count().as("value"))
+traversalMethod_group_valueby
+    : 'by' LPAREN EmptyStringLiteral RPAREN
+    | 'by' LPAREN traversalMethod_aggregate_func (DOT traversalMethod_as)? RPAREN
+    ;
+
+traversalMethod_aggregate_func
+    : traversalMethod_count
+    ;
+
+// count in global scope
+traversalMethod_count
+	: 'count' LPAREN RPAREN
+	;
+
 stringLiteral
     : NonEmptyStringLiteral
     | EmptyStringLiteral
@@ -238,6 +289,8 @@ traversalPredicate
     | traversalPredicate_lte
     | traversalPredicate_gt
     | traversalPredicate_gte
+    | traversalPredicate_within
+    | traversalPredicate_without
     ;
 
 traversalPredicate_eq
@@ -262,6 +315,14 @@ traversalPredicate_gt
 
 traversalPredicate_gte
     : 'gte' LPAREN genericLiteral RPAREN
+    ;
+
+traversalPredicate_within
+    : 'within' LPAREN genericLiteralList RPAREN
+    ;
+
+traversalPredicate_without
+    : 'without' LPAREN genericLiteralList RPAREN
     ;
 
 traversalOrder
