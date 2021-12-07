@@ -593,7 +593,6 @@ def _pre_process_for_create_learning_graph_op(op, op_result_pool, key_to_op, **k
     edges = pickle.loads(op.attr[types_pb2.EDGES].s)
     gen_labels = pickle.loads(op.attr[types_pb2.GLE_GEN_LABELS].s)
     # get graph schema
-    op, op_result_pool, key_to_op
     key_of_parent_op = op.parents[0]
     result = op_result_pool[key_of_parent_op]
     assert result.graph_def.extension.Is(graph_def_pb2.VineyardInfoPb.DESCRIPTOR)

@@ -102,7 +102,7 @@ class TestChainsOfViews(test_gvs.TestChainsOfViews):
         cls.Rv = cls.DG.reverse()
         cls.graphs = [cls.G, cls.DG, cls.Gv, cls.DGv, cls.Rv]
         for G in cls.graphs:
-            G.edges, G.nodes, G.degree
+            print(G.edges, G.nodes, G.degree)
 
     def test_pickle(self):
         pass
