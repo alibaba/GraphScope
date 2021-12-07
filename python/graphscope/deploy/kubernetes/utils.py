@@ -213,7 +213,9 @@ class KubernetesPodWatcher(object):
                 )
 
 
-def get_service_endpoints(api_client, namespace, name, service_type, timeout_seconds=60):
+def get_service_endpoints(
+    api_client, namespace, name, service_type, timeout_seconds=60
+):
     """Get service endpoint by service name and service type.
 
     Args:

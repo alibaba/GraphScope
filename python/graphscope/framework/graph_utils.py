@@ -293,9 +293,7 @@ def _convert_array_to_deprecated_form(items):
         if i < 2:
             compat_items.append(item)
         elif i == 2:
-            if isinstance(item, (int, str)) and isinstance(
-                items[i + 1], (int, str)
-            ):
+            if isinstance(item, (int, str)) and isinstance(items[i + 1], (int, str)):
                 compat_items.append("_")
                 compat_items.append("_")
                 compat_items.append(item)

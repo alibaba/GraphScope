@@ -714,9 +714,7 @@ class CoordinatorServiceServicer(
                     else maxgraph_endpoint.encode("utf-8"),
                     extra_info=str(object_id).encode("utf-8"),
                 )
-            raise RuntimeError(
-                "Error code: {0}, message {1}".format(return_code, outs)
-            )
+            raise RuntimeError("Error code: {0}, message {1}".format(return_code, outs))
         except Exception as e:
             proc.kill()
             self._launcher.close_interactive_instance(object_id)

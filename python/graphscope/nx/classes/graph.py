@@ -431,11 +431,9 @@ class Graph(_GraphBase):
 
     @property
     def template_str(self):
-        s = ""
-
         if self._key is None:
             raise RuntimeError("graph should be registered in remote.")
-
+        s = ""
         if self._graph_type == graph_def_pb2.DYNAMIC_PROPERTY:
             s = "gs::DynamicFragment"
         elif self._graph_type == graph_def_pb2.DYNAMIC_PROJECTED:
@@ -458,7 +456,6 @@ class Graph(_GraphBase):
             s = f"gs::ArrowFlattenedFragment<{oid_type},{vid_type},{vdata_type},{edata_type}>"
         else:
             raise ValueError(f"Unsupported graph type: {self._graph_type}")
-
         return s
 
     @property
@@ -1747,7 +1744,6 @@ class Graph(_GraphBase):
             g._session = self._session
             g._schema = copy.deepcopy(self._schema)
             return g
-
         return self.copy(as_view=as_view)
 
     def to_directed(self, as_view=False):
@@ -1791,29 +1787,29 @@ class Graph(_GraphBase):
 
         if self.is_directed():
             return self.copy(as_view=as_view)
-	graph_class = self.to_directed_class()
-	if as_view:
-	    g = graph_class(create_empty_in_engine=False)
-	    g.graph.update(self.graph)
-	    op = dag_utils.create_graph_view(self, "directed")
-	    graph_def = op.eval()
-	    g._op = op
-	    g._key = graph_def.key
-	    g._schema = copy.deepcopy(self._schema)
-	    g._graph = self
-	    g._session = self._session
-	    g._is_client_view = False
-	    g = freeze(g)
-	    return g
-	g = graph_class(create_empty_in_engine=False)
-	g.graph = copy.deepcopy(self.graph)
-	op = dag_utils.to_directed(self)
-	graph_def = op.eval()
-	g._key = graph_def.key
-	g._session = self._session
-	g._schema = copy.deepcopy(self._schema)
-	g._op = op
-	return g
+        graph_class = self.to_directed_class()
+        if as_view:
+            g = graph_class(create_empty_in_engine=False)
+            g.graph.update(self.graph)
+            op = dag_utils.create_graph_view(self, "directed")
+            graph_def = op.eval()
+            g._op = op
+            g._key = graph_def.key
+            g._schema = copy.deepcopy(self._schema)
+            g._graph = self
+            g._session = self._session
+            g._is_client_view = False
+            g = freeze(g)
+            return g
+        g = graph_class(create_empty_in_engine=False)
+        g.graph = copy.deepcopy(self.graph)
+        op = dag_utils.to_directed(self)
+        graph_def = op.eval()
+        g._key = graph_def.key
+        g._session = self._session
+        g._schema = copy.deepcopy(self._schema)
+        g._op = op
+        return g
 
     def subgraph(self, nodes):
         """Returns a independent deep copy subgraph induced on `nodes`.

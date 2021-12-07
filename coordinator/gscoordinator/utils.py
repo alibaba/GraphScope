@@ -1309,7 +1309,7 @@ def dump_as_json(schema, path):
         idx += 1
 
     for i, edge_label in enumerate(schema.edge_labels):
-        edge = {"id": idx, "label": edgel_label, "type": "EDGE"}
+        edge = {"id": idx, "label": edge_label, "type": "EDGE"}
         edge["propertyDefList"] = []
         for j, value in enumerate(schema.edge_property_names[i].s):
             names = schema.edge_property_names[i]
