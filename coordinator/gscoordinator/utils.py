@@ -1309,10 +1309,10 @@ def dump_as_json(schema, path):
         items.append(vertex)
         idx += 1
 
-    for i in range(len(schema.edge_labels)):
-        edge = {"id": idx, "label": schema.edge_labels[i], "type": "EDGE"}
+    for i, edge_label in enumerate(schema.edge_labels):
+        edge = {"id": idx, "label": edgel_label, "type": "EDGE"}
         edge["propertyDefList"] = []
-        for j in range(len(schema.edge_property_names[i].s)):
+        for j, value in enumerate(schema.edge_property_names[i].s):
             names = schema.edge_property_names[i]
             types = schema.edge_property_types[i]
             edge["propertyDefList"].append(
