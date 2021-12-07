@@ -57,7 +57,13 @@ impl KeyFunction<Record, RecordKey, Record> for KeySelector {
 
 impl KeyFunctionGen for algebra_pb::GroupBy {
     fn gen_key(self) -> FnGenResult<Box<dyn KeyFunction<Record, RecordKey, Record>>> {
-        let key_selector = KeySelector::with(self.keys)?;
+        // TODO(bingqing) May be fixed according to protobuf change
+        let key_selector = KeySelector::with(
+            self.mappings
+                .iter()
+                .map(|mapping| mapping.key.clone().unwrap())
+                .collect::<Vec<_>>(),
+        )?;
         debug!("Runtime group operator key_selector: {:?}", key_selector);
         Ok(Box::new(key_selector))
     }

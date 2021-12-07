@@ -22,15 +22,16 @@ option java_outer_classname = "GraphAlgebra";
 import "common.proto";
 import "expr.proto";
 
+message Alias {
+  // The name/name identifier of the aliased attribute
+  common.NameOrId alias = 1;
+  // An alias may be given by the query or by the compiler/optimizer for functional/optimization purpose.
+  // This indicator is used to differentiate the two cases.
+  bool is_query_given = 2;
+}
+
 // To project a relation on certain attributes or further their properties
 message Project {
-  message Alias {
-    // The name/name identifier of the aliased attribute
-    common.NameOrId alias = 1;
-    // An alias may be given by the query or by the compiler/optimizer for functional/optimization purpose.
-    // This indicator is used to differentiate the two cases.
-    bool is_query_given = 2;
-  }
   message ExprAlias {
     // The expression to be aliased
     common.SuffixExpr expr = 1;
@@ -105,9 +106,15 @@ message GroupBy {
     // The alias for the aggregated value
     common.NameOrId alias = 3;
   }
-  // The keys to perform grouping
-  // TODO(longbin) An expression here is a more general form
-  repeated common.Variable keys = 1;
+  message KeyAlias {
+    // The key to perform grouping
+    // TODO(longbin) An expression here is a more general form
+    common.Variable key = 1;
+    // The alias for the key
+    Alias alias = 2;
+  }
+  // A collection of key-alias mappings
+  repeated KeyAlias mappings = 1;
   // The grouping functions
   repeated AggFunc functions = 2;
 }
@@ -307,7 +314,7 @@ message Apply {
     int32 subtask = 2;
     // An alias for the result of the subtask. In order for Apply to be semantically intact,
     // the subtask must return a scalar value.
-    Project.Alias alias = 3;
+    Alias alias = 3;
   }
   // Define how to join the result of the subtask back to the original relation
   Join.JoinKind join_kind = 1;

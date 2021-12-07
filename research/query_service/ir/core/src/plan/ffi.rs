@@ -483,7 +483,7 @@ fn set_alias(ptr: *const c_void, alias: FfiNameOrId, is_query_given: bool, opr: 
             Opr::Apply => {
                 let mut apply = unsafe { Box::from_raw(ptr as *mut pb::Apply) };
                 apply.subtask.as_mut().unwrap().alias =
-                    Some(pb::project::Alias { alias: alias_pb.unwrap(), is_query_given });
+                    Some(pb::Alias { alias: alias_pb.unwrap(), is_query_given });
                 std::mem::forget(apply);
             }
             _ => unreachable!(),
@@ -657,7 +657,7 @@ mod project {
         } else {
             let attribute = pb::project::ExprAlias {
                 expr: expr_pb.ok(),
-                alias: Some(pb::project::Alias { alias: alias_pb.unwrap(), is_query_given }),
+                alias: Some(pb::Alias { alias: alias_pb.unwrap(), is_query_given }),
             };
             project.mappings.push(attribute);
         }
@@ -841,7 +841,7 @@ mod groupby {
     /// To initialize a groupby operator
     #[no_mangle]
     pub extern "C" fn init_groupby_operator() -> *const c_void {
-        let group = Box::new(pb::GroupBy { keys: vec![], functions: vec![] });
+        let group = Box::new(pb::GroupBy { mappings: vec![], functions: vec![] });
         Box::into_raw(group) as *const c_void
     }
 
@@ -897,14 +897,25 @@ mod groupby {
         FfiAggFn { vars: Box::into_raw(vars) as *const FfiVariable, aggregate, alias }
     }
 
-    /// Add the key according to which the grouping is conducted
+    /// Add the key (and its alias if any) according to which the grouping is conducted
     #[no_mangle]
-    pub extern "C" fn add_groupby_key(ptr_groupby: *const c_void, key: FfiVariable) -> ResultCode {
+    pub extern "C" fn add_groupby_key_alias(
+        ptr_groupby: *const c_void, key: FfiVariable, alias: FfiNameOrId, is_query_given: bool,
+    ) -> ResultCode {
         let mut return_code = ResultCode::Success;
         let mut group = unsafe { Box::from_raw(ptr_groupby as *mut pb::GroupBy) };
         let key_pb: FfiResult<common_pb::Variable> = key.try_into();
-        if key_pb.is_ok() {
-            group.keys.push(key_pb.unwrap());
+        let alias_pb: FfiResult<Option<common_pb::NameOrId>> = alias.try_into();
+
+        if key_pb.is_ok() && alias_pb.is_ok() {
+            group.mappings.push(pb::group_by::KeyAlias {
+                key: key_pb.ok(),
+                alias: if let Some(alias) = alias_pb.unwrap() {
+                    Some(pb::Alias { alias: Some(alias), is_query_given })
+                } else {
+                    None
+                },
+            });
         } else {
             return_code = key_pb.err().unwrap();
         }
