@@ -544,7 +544,7 @@ class TransformUtils<FRAG_T,
     for (auto v : range) {
       arc << frag_.vertex_label(v);
     }
-    return{};
+    return {};
   }
 
   bl::result<std::shared_ptr<arrow::Array>> VertexIdToArrowArray(
