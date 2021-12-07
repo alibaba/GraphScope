@@ -207,8 +207,8 @@ def newman_watts_strogatz_graph(n, k, p, seed=None):
     # connect the k/2 neighbors
     for j in range(1, k // 2 + 1):
         tov = fromv[j:] + fromv[0:j]  # the first j are now last
-        for i in range(len(fromv)):
-            G.add_edge(fromv[i], tov[i])
+        for i, value in enumerate(fromv):
+            G.add_edge(value, tov[i])
     # for each edge u-v, with probability p, randomly select existing
     # node w and add new edge u-w
     e = list(G.edges())

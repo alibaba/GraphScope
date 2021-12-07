@@ -178,8 +178,8 @@ class GraphModel(widgets.DOMWidget):
         edges = []
 
         def _process_node(list_id, list_val, list_prop):
-            for i in range(len(list_id)):
-                vid = str(list_id[i].id)
+            for i, item in enumerate(list_id):
+                vid = str(item.id)
                 if vid in self._nodes_id_dict:
                     continue
                 #
@@ -187,11 +187,11 @@ class GraphModel(widgets.DOMWidget):
                 node["id"] = vid
                 node["oid"] = str(list_val[i])
                 node["parentId"] = ""
-                node["label"] = str(list_id[i].label)
+                node["label"] = str(item.label)
                 node["level"] = 0
                 node["degree"] = 1  # need to update
                 node["count"] = 0
-                node["nodeType"] = str(list_id[i].label)
+                node["nodeType"] = str(item.label)
                 node["properties"] = list_prop[i]
                 self._nodes_id_dict[vid] = True
                 self._nodes_id_map[vid] = str(list_val[i])

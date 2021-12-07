@@ -1040,8 +1040,8 @@ class KubernetesClusterLauncher(Launcher):
         # generate and distribute hostfile
         kube_hosts_path = os.path.join(get_tempdir(), "kube_hosts")
         with open(kube_hosts_path, "w") as f:
-            for i in range(len(self._pod_ip_list)):
-                f.write("{} {}\n".format(self._pod_ip_list[i], self._pod_name_list[i]))
+            for i, pod_ip in enumerate(self._pod_ip_list):
+                f.write("{} {}\n".format(pod_ip, self._pod_name_list[i]))
 
         for pod in self._pod_name_list:
             subprocess.check_call(

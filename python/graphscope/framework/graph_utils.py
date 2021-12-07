@@ -288,27 +288,28 @@ class EdgeLabel(object):
 
 def _convert_array_to_deprecated_form(items):
     compat_items = []
-    for i in range(len(items)):
+    # for i in range(len(items)):
+    for i, item in enumerate(items):
         if i < 2:
-            compat_items.append(items[i])
+            compat_items.append(item)
         elif i == 2:
-            if isinstance(items[i], (int, str)) and isinstance(
+            if isinstance(item, (int, str)) and isinstance(
                 items[i + 1], (int, str)
             ):
                 compat_items.append("_")
                 compat_items.append("_")
-                compat_items.append(items[i])
+                compat_items.append(item)
                 compat_items.append(items[i + 1])
             else:
-                assert len(items[i]) == 2 and len(items[i + 1]) == 2
-                compat_items.append(items[i][1])
+                assert len(item) == 2 and len(items[i + 1]) == 2
+                compat_items.append(item[1])
                 compat_items.append(items[i + 1][1])
-                compat_items.append(items[i][0])
+                compat_items.append(item[0])
                 compat_items.append(items[i + 1][0])
         elif i == 3:
             pass
         else:
-            compat_items.append(items[i])
+            compat_items.append(item)
     return compat_items
 
 

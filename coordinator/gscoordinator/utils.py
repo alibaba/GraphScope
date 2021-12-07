@@ -1295,10 +1295,10 @@ def dump_as_json(schema, path):
     out = {}
     items = []
     idx = 0
-    for i in range(len(schema.vertex_labels)):
-        vertex = {"id": idx, "label": schema.vertex_labels[i], "type": "VERTEX"}
+    for i, vertex_label in enumerate(schema.vertex_labels):
+        vertex = {"id": idx, "label": vertex_label, "type": "VERTEX"}
         vertex["propertyDefList"] = []
-        for j in range(len(schema.vertex_property_names[i].s)):
+        for j, value in enumerate(schema.vertex_property_names[i].s):
             names = schema.vertex_property_names[i]
             types = schema.vertex_property_types[i]
             vertex["propertyDefList"].append(
