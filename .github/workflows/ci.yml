@@ -291,6 +291,7 @@ jobs:
     strategy:
       matrix:
         deployment: ["standalone", "distributed"]
+        python-version: [3.6, 3.7, 3.8, 3.9]
     steps:
     - uses: actions/checkout@v2.3.2
     - uses: dorny/paths-filter@v2
@@ -345,6 +346,7 @@ jobs:
       env:
         DEPLOYMENT: ${{ matrix.deployment }}
         GS_TEST_DIR: ${{ github.workspace }}/gstest
+        PYTHON: ${{ matrix.python-version }}
       run: |
         pip3 show networkx
         python3 -m pytest --exitfirst -s -v \
