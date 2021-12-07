@@ -488,11 +488,7 @@ public class TreeNodeUtils {
             }
             if (currTreeNode instanceof RangeGlobalTreeNode) {
                 RangeGlobalTreeNode rangeGlobalTreeNode = RangeGlobalTreeNode.class.cast(currTreeNode);
-                if (rangeGlobalTreeNode.getHigh() - rangeGlobalTreeNode.getLow() > 1) {
-                    return true;
-                } else {
-                    return false;
-                }
+                return (rangeGlobalTreeNode.getHigh() - rangeGlobalTreeNode.getLow() > 1);
             }
             if (currTreeNode.getNodeType() == NodeType.AGGREGATE) {
                 return false;

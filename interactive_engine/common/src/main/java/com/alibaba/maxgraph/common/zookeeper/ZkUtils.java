@@ -179,6 +179,15 @@ public class ZkUtils implements AutoCloseable {
         }
     }
 
+    public void createPath(String path, String data, CreateMode createMode) throws Exception {
+        createPath(path, data.getBytes(StandardCharsets.UTF_8), createMode);
+    }
+
+    public void createPath(String path, byte[] data, CreateMode createMode) throws Exception {
+        zkClient.create().creatingParentsIfNeeded().withMode(createMode).
+                forPath(path, data);
+    }
+
     public Pair<String, Stat> readData(String path) throws Exception {
         Stat stat = new Stat();
         String dataStr = new String(zkClient.getData().storingStatIn(stat).forPath(path));
@@ -209,15 +218,6 @@ public class ZkUtils implements AutoCloseable {
 
     public void createOrUpdatePath(String path, String data, CreateMode createMode) throws Exception {
         createOrUpdatePath(path, data.getBytes(StandardCharsets.UTF_8), createMode);
-    }
-
-    public void createPath(String path, String data, CreateMode createMode) throws Exception {
-        createPath(path, data.getBytes(StandardCharsets.UTF_8), createMode);
-    }
-
-    public void createPath(String path, byte[] data, CreateMode createMode) throws Exception {
-        zkClient.create().creatingParentsIfNeeded().withMode(createMode).
-                forPath(path, data);
     }
 
     public void addConnectionStateListener(ConnectionStateListener listener) {

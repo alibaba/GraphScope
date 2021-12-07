@@ -28,20 +28,20 @@ public final class Text {
         return new StringPredicate(content, MatchType.STARTSWITH);
     }
 
-    public static StringPredicate endsWith(String content) {
-        return new StringPredicate(content, MatchType.ENDSWITH);
-    }
-
-    public static StringPredicate contains(String content) {
-        return new StringPredicate(content, MatchType.CONTAINS);
-    }
-
     public static StringKeyPredicate startsWith(String key, String content) {
         return new StringKeyPredicate(key, content, MatchType.STARTSWITH);
     }
 
+    public static StringPredicate endsWith(String content) {
+        return new StringPredicate(content, MatchType.ENDSWITH);
+    }
+
     public static StringKeyPredicate endsWith(String key, String content) {
         return new StringKeyPredicate(key, content, MatchType.ENDSWITH);
+    }
+
+    public static StringPredicate contains(String content) {
+        return new StringPredicate(content, MatchType.CONTAINS);
     }
 
     public static StringKeyPredicate contains(String key, String content) {

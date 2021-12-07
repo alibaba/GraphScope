@@ -66,6 +66,11 @@ public class WorkerInfo implements Protoable<WorkerInfoProto>, Comparable<Worker
     }
 
     @Override
+    public void fromProto(byte[] data) throws InvalidProtocolBufferException {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
     public String toString() {
         return MoreObjects.toStringHelper(this)
                 .add("id", id)
@@ -74,11 +79,6 @@ public class WorkerInfo implements Protoable<WorkerInfoProto>, Comparable<Worker
                 .add("workerStatus", workerStatus)
                 .add("dataStatus", dataStatus)
                 .toString();
-    }
-
-    @Override
-    public void fromProto(byte[] data) throws InvalidProtocolBufferException {
-        throw new UnsupportedOperationException();
     }
 
     @Override
