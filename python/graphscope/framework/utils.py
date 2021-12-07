@@ -169,8 +169,7 @@ def read_file_to_bytes(file_path):
         with open(abs_dir, "rb") as b:
             content = b.read()
         return content
-    else:
-        raise IOError("No such file: " + file_path)
+    raise IOError("No such file: " + file_path)
 
 
 def i_to_attr(i: int) -> attr_value_pb2.AttrValue:
@@ -477,8 +476,7 @@ def normalize_data_type_str(data_type):
 def transform_vertex_range(vertex_range):
     if vertex_range:
         return json.dumps(vertex_range)
-    else:
-        return None
+    return None
 
 
 def _from_numpy_dtype(dtype):

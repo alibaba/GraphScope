@@ -164,8 +164,10 @@ def get_app_sha256(attr):
     ) = _codegen_app_info(attr, DEFAULT_GS_CONFIG_FILE)
     graph_header, graph_type = _codegen_graph_info(attr)
     logger.info("Codegened graph type: %s, Graph header: %s", graph_type, graph_header)
+
+    app_sha256 = ""
     if app_type == "cpp_pie":
-        return hashlib.sha256(
+        app_sha256 = hashlib.sha256(
             f"{app_type}.{app_class}.{graph_type}".encode("utf-8")
         ).hexdigest()
     elif app_type == "java_pie":
@@ -175,13 +177,14 @@ def get_app_sha256(attr):
         s.update(f"{app_type}.{java_jar_path}.{java_app_class}".encode("utf-8"))
         if types_pb2.GAR in attr:
             s.update(attr[types_pb2.GAR].s)
-        return s.hexdigest()
+        app_sha256 = s.hexdigest()
     else:
         s = hashlib.sha256()
         s.update(f"{app_type}.{app_class}.{graph_type}".encode("utf-8"))
         if types_pb2.GAR in attr:
             s.update(attr[types_pb2.GAR].s)
-        return s.hexdigest()
+        app_sha256 = s.hexdigest()
+    return app_sha256
 
 
 def get_graph_sha256(attr):
@@ -1016,18 +1019,16 @@ def _transform_labeled_vertex_data_v(schema, label, prop):
     label_id = schema.get_vertex_label_id(label)
     if prop == "id":
         return f"label{label_id}.{prop}"
-    else:
-        prop_id = schema.get_vertex_property_id(label, prop)
-        return f"label{label_id}.property{prop_id}"
+    prop_id = schema.get_vertex_property_id(label, prop)
+    return f"label{label_id}.property{prop_id}"
 
 
 def _transform_labeled_vertex_data_e(schema, label, prop):
     label_id = schema.get_edge_label_id(label)
     if prop in ("src", "dst"):
         return f"label{label_id}.{prop}"
-    else:
-        prop_id = schema.get_vertex_property_id(label, prop)
-        return f"label{label_id}.property{prop_id}"
+    prop_id = schema.get_vertex_property_id(label, prop)
+    return f"label{label_id}.property{prop_id}"
 
 
 def _transform_labeled_vertex_data_r(schema, label):

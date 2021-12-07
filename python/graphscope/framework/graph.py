@@ -745,8 +745,7 @@ class Graph(GraphInterface):
     def __getattr__(self, name):
         if hasattr(self._graph_node, name):
             return getattr(self._graph_node, name)
-        else:
-            raise AttributeError("{0} not found.".format(name))
+        raise AttributeError("{0} not found.".format(name))
 
     @property
     def key(self):

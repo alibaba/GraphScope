@@ -54,8 +54,7 @@ def try_to_resolve_api_client():
                 config = kube_client.Configuration()
                 config.host = os.environ["KUBE_API_ADDRESS"]
                 return kube_client.ApiClient(config)
-            else:
-                raise RuntimeError("Resolve kube api client failed.")
+            raise RuntimeError("Resolve kube api client failed.")
     return kube_client.ApiClient()
 
 
@@ -101,23 +100,22 @@ def wait_for_deployment_complete(api_client, namespace, name, timeout_seconds=60
             and s.observed_generation >= response.metadata.generation
         ):
             return True
-        else:
-            # check failed
-            selector = ""
-            for k, v in response.spec.selector.match_labels.items():
-                selector += k + "=" + v + ","
-            selector = selector[:-1]
-            pods = core_api.list_namespaced_pod(
-                namespace=namespace, label_selector=selector
-            )
-            for pod in pods.items:
-                if pod.status.container_statuses is not None:
-                    for container_status in pod.status.container_statuses:
-                        if (
-                            not container_status.ready
-                            and container_status.restart_count > 0
-                        ):
-                            raise K8sError("Deployment {} start failed.".format(name))
+        # check failed
+        selector = ""
+        for k, v in response.spec.selector.match_labels.items():
+            selector += k + "=" + v + ","
+        selector = selector[:-1]
+        pods = core_api.list_namespaced_pod(
+            namespace=namespace, label_selector=selector
+        )
+        for pod in pods.items:
+            if pod.status.container_statuses is not None:
+                for container_status in pod.status.container_statuses:
+                    if (
+                        not container_status.ready
+                        and container_status.restart_count > 0
+                    ):
+                        raise K8sError("Deployment {} start failed.".format(name))
     raise TimeoutError("Waiting timeout for deployment {}".format(name))
 
 

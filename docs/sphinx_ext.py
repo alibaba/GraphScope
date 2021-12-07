@@ -49,8 +49,7 @@ def resolve_git_tags():
 def concat_path(page, base):
     if "/" in page:
         return page[: (page.rfind("/") + 1)] + base
-    else:
-        return base
+    return base
 
 
 class TocTreeExt(TocTree):

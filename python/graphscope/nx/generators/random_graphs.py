@@ -413,7 +413,7 @@ def dual_barabasi_albert_graph(n, m1, m2, p, seed=None):
     # For simplicity, if p == 0 or 1, just return BA
     if p == 1:
         return barabasi_albert_graph(n, m1, seed)
-    elif p == 0:
+    if p == 0:
         return barabasi_albert_graph(n, m2, seed)
 
     # Add max(m1,m2) initial nodes (m0 in barabasi-speak)

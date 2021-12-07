@@ -51,10 +51,9 @@ class Vector(object):
     def __lt__(self, other):
         if self.quadrant < other.quadrant:
             return True
-        elif self.quadrant > other.quadrant:
+        if self.quadrant > other.quadrant:
             return False
-        else:
-            return self.x * other.y < self.y * other.x
+        return self.x * other.y < self.y * other.x
 
     def __ne__(self, other):
         return not self == other

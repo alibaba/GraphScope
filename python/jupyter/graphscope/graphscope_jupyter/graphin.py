@@ -349,10 +349,9 @@ def repr_graphscope_graph(graph, *args, **kwargs):
         return draw_graphscope_graph(graph, vertices=range(1, 100))._ipython_display_(
             *args, **kwargs
         )
-    else:
-        return draw_graphscope_graph(graph, vertices=range(1, 100))._repr_mimebundle_(
-            *args, **kwargs
-        )
+    return draw_graphscope_graph(graph, vertices=range(1, 100))._repr_mimebundle_(
+        *args, **kwargs
+    )
 
 
 def in_ipython():
@@ -368,10 +367,9 @@ def in_notebook():
         shell = get_ipython().__class__.__name__
         if shell == "ZMQInteractiveShell":
             return True  # Jupyter notebook or qtconsole
-        elif shell == "TerminalInteractiveShell":
+        if shell == "TerminalInteractiveShell":
             return False  # Terminal running IPython
-        else:
-            return False  # Other type (?)
+        return False  # Other type (?)
     except NameError:
         return False  # Probably standard Python interpreter
 

@@ -431,20 +431,23 @@ class Graph(_GraphBase):
 
     @property
     def template_str(self):
+        s = ""
+
         if self._key is None:
             raise RuntimeError("graph should be registered in remote.")
+
         if self._graph_type == graph_def_pb2.DYNAMIC_PROPERTY:
-            return "gs::DynamicFragment"
+            s = "gs::DynamicFragment"
         elif self._graph_type == graph_def_pb2.DYNAMIC_PROJECTED:
             vdata_type = utils.data_type_to_cpp(self._schema.vdata_type)
             edata_type = utils.data_type_to_cpp(self._schema.edata_type)
-            return f"gs::DynamicProjectedFragment<{vdata_type},{edata_type}>"
+            s = f"gs::DynamicProjectedFragment<{vdata_type},{edata_type}>"
         elif self._graph_type == graph_def_pb2.ARROW_PROPERTY:
             oid_type = utils.normalize_data_type_str(
                 utils.data_type_to_cpp(self._schema.oid_type)
             )
             vid_type = self._schema.vid_type
-            return f"vineyard::ArrowFragment<{oid_type},{vid_type}>"
+            s = f"vineyard::ArrowFragment<{oid_type},{vid_type}>"
         elif self._graph_type == graph_def_pb2.ARROW_FLATTENED:
             oid_type = utils.normalize_data_type_str(
                 utils.data_type_to_cpp(self._schema.oid_type)
@@ -452,9 +455,11 @@ class Graph(_GraphBase):
             vid_type = self._schema.vid_type
             vdata_type = utils.data_type_to_cpp(self._schema.vdata_type)
             edata_type = utils.data_type_to_cpp(self._schema.edata_type)
-            return f"gs::ArrowFlattenedFragment<{oid_type},{vid_type},{vdata_type},{edata_type}>"
+            s = f"gs::ArrowFlattenedFragment<{oid_type},{vid_type},{vdata_type},{edata_type}>"
         else:
             raise ValueError(f"Unsupported graph type: {self._graph_type}")
+
+        return s
 
     @property
     def graph_type(self):
@@ -1252,18 +1257,17 @@ class Graph(_GraphBase):
         """
         if weight:
             return sum(d for v, d in self.degree(weight=weight)) / 2
-        else:
-            op = dag_utils.report_graph(self, types_pb2.EDGE_NUM)
-            return int(op.eval()) // 2
+        op = dag_utils.report_graph(self, types_pb2.EDGE_NUM)
+        return int(op.eval()) // 2
 
     @patch_docstring(RefGraph.number_of_edges)
     def number_of_edges(self, u=None, v=None):
+        edges_num = 0
         if u is None:
-            return self.size()
+            edges_num = self.size()
         elif self.has_edge(u, v):
-            return 1
-        else:
-            return 0
+            edges_num = 1
+        return edges_num
 
     def number_of_selfloops(self):
         op = dag_utils.report_graph(self, types_pb2.SELFLOOPS_NUM)
@@ -1743,8 +1747,8 @@ class Graph(_GraphBase):
             g._session = self._session
             g._schema = copy.deepcopy(self._schema)
             return g
-        else:
-            return self.copy(as_view=as_view)
+
+        return self.copy(as_view=as_view)
 
     def to_directed(self, as_view=False):
         """Returns a directed representation of the graph.
@@ -1787,30 +1791,29 @@ class Graph(_GraphBase):
 
         if self.is_directed():
             return self.copy(as_view=as_view)
-        else:
-            graph_class = self.to_directed_class()
-            if as_view:
-                g = graph_class(create_empty_in_engine=False)
-                g.graph.update(self.graph)
-                op = dag_utils.create_graph_view(self, "directed")
-                graph_def = op.eval()
-                g._op = op
-                g._key = graph_def.key
-                g._schema = copy.deepcopy(self._schema)
-                g._graph = self
-                g._session = self._session
-                g._is_client_view = False
-                g = freeze(g)
-                return g
-            g = graph_class(create_empty_in_engine=False)
-            g.graph = copy.deepcopy(self.graph)
-            op = dag_utils.to_directed(self)
-            graph_def = op.eval()
-            g._key = graph_def.key
-            g._session = self._session
-            g._schema = copy.deepcopy(self._schema)
-            g._op = op
-            return g
+	graph_class = self.to_directed_class()
+	if as_view:
+	    g = graph_class(create_empty_in_engine=False)
+	    g.graph.update(self.graph)
+	    op = dag_utils.create_graph_view(self, "directed")
+	    graph_def = op.eval()
+	    g._op = op
+	    g._key = graph_def.key
+	    g._schema = copy.deepcopy(self._schema)
+	    g._graph = self
+	    g._session = self._session
+	    g._is_client_view = False
+	    g = freeze(g)
+	    return g
+	g = graph_class(create_empty_in_engine=False)
+	g.graph = copy.deepcopy(self.graph)
+	op = dag_utils.to_directed(self)
+	graph_def = op.eval()
+	g._key = graph_def.key
+	g._session = self._session
+	g._schema = copy.deepcopy(self._schema)
+	g._op = op
+	return g
 
     def subgraph(self, nodes):
         """Returns a independent deep copy subgraph induced on `nodes`.
