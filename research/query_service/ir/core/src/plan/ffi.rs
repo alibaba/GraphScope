@@ -644,7 +644,7 @@ mod project {
     /// To add a mapping for the project operator, which maps a c-like string to represent an
     /// expression, to a `NameOrId` parameter that represents an alias.
     #[no_mangle]
-    pub extern "C" fn add_project_mapping(
+    pub extern "C" fn add_project_expr_alias(
         ptr_project: *const c_void, cstr_expr: *const c_char, alias: FfiNameOrId, is_query_given: bool,
     ) -> ResultCode {
         let mut return_code = ResultCode::Success;
