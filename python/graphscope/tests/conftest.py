@@ -638,6 +638,17 @@ def ldbc_graph(graphscope_session):
 
 
 @pytest.fixture(scope="module")
+def ldbc_graph_undirected(graphscope_session):
+    graph = load_ldbc(
+        graphscope_session,
+        prefix="{}/ldbc_sample".format(test_repo_dir),
+        directed=False,
+    )
+    yield graph
+    graph.unload()
+
+
+@pytest.fixture(scope="module")
 def modern_scripts():
     queries = [
         "g.V().has('name','marko').count()",
