@@ -318,6 +318,7 @@ jobs:
     - name: Prepare Environment
       env:
         GS_TEST_DIR: ${{ github.workspace }}/gstest
+        PYTHON: ${{ matrix.python-version }}
       run: |
         # install graphscope-client
         cd artifacts
