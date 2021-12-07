@@ -18,7 +18,7 @@ package com.alibaba.graphscope.gremlin;
 
 import com.alibaba.graphscope.common.IrPlan;
 import com.alibaba.graphscope.common.exception.OpArgIllegalException;
-import com.alibaba.graphscope.gremlin.exception.StepUnsupportedException;
+import com.alibaba.graphscope.gremlin.exception.UnsupportedStepException;
 import com.alibaba.graphscope.common.intermediate.operator.*;
 import com.alibaba.graphscope.common.jna.type.FfiScanOpt;
 import org.apache.tinkerpop.gremlin.process.traversal.Step;
@@ -132,7 +132,7 @@ public class IrPlanBuidler {
         }
     }
 
-    public IrPlan build() throws OpArgIllegalException, StepUnsupportedException {
+    public IrPlan build() throws OpArgIllegalException, UnsupportedStepException {
         traversal.asAdmin().applyStrategies();
         IrPlan irPlan = new IrPlan();
         List<Step> steps = traversal.asAdmin().getSteps();
@@ -150,7 +150,7 @@ public class IrPlanBuidler {
             } else if (equalClass(step, RangeGlobalStep.class)) {
                 op = StepTransformFactory.LIMIT_STEP.apply(step);
             } else {
-                throw new StepUnsupportedException(step.getClass(), "unimplemented yet");
+                throw new UnsupportedStepException(step.getClass(), "unimplemented yet");
             }
             if (op != null) {
                 irPlan.appendInterOp(op);

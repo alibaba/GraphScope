@@ -47,15 +47,13 @@ public class GremlinAntlrToJava extends GremlinGSBaseVisitor<Object> {
     @Override
     public Object visitQuery(GremlinGSParser.QueryContext ctx) {
         final int childCount = ctx.getChildCount();
-        String notice = "supported pattern of query is [g] or [g.V()...]";
+        String notice = "supported pattern of query is [g.V()...]";
         if (childCount != 1) {
             throw new UnsupportedEvalException(ctx.getClass(), notice);
         }
         final ParseTree firstChild = ctx.getChild(0);
 
-        if (firstChild instanceof GremlinGSParser.TraversalSourceContext) {
-            return this.gvisitor.visitTraversalSource((GremlinGSParser.TraversalSourceContext) firstChild);
-        } else if (firstChild instanceof GremlinGSParser.RootTraversalContext) {
+        if (firstChild instanceof GremlinGSParser.RootTraversalContext) {
             return this.tvisitor.visitRootTraversal((GremlinGSParser.RootTraversalContext) firstChild);
         } else {
             throw new UnsupportedEvalException(firstChild.getClass(), notice);

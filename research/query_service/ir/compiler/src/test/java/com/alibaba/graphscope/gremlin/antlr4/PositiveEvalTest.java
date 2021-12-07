@@ -16,10 +16,7 @@
 
 package com.alibaba.graphscope.gremlin.antlr4;
 
-import org.antlr.v4.runtime.CharStreams;
-import org.antlr.v4.runtime.CommonTokenStream;
-import org.apache.tinkerpop.gremlin.language.grammar.GremlinGSParser;
-import org.apache.tinkerpop.gremlin.language.grammar.GremlinGSLexer;
+import com.alibaba.graphscope.gremlin.plugin.script.AntlrToJavaScriptEngine;
 import org.apache.tinkerpop.gremlin.process.traversal.P;
 import org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.GraphTraversalSource;
 import org.apache.tinkerpop.gremlin.structure.Graph;
@@ -29,22 +26,30 @@ import org.junit.Before;
 
 import org.junit.Test;
 
-public class AntlrEvalTest {
-    private GremlinAntlrToJava antlrToJava;
+import javax.script.Bindings;
+import javax.script.ScriptContext;
+import javax.script.SimpleBindings;
+import javax.script.SimpleScriptContext;
+
+public class PositiveEvalTest {
     private Graph graph;
     private GraphTraversalSource g;
+    private AntlrToJavaScriptEngine scriptEngine;
+    private ScriptContext context;
 
     @Before
     public void before() {
         graph = TinkerFactory.createModern();
         g = graph.traversal();
-        antlrToJava = GremlinAntlrToJava.getInstance(g);
+        Bindings globalBindings = new SimpleBindings();
+        globalBindings.put("g", g);
+        context = new SimpleScriptContext();
+        context.setBindings(globalBindings, ScriptContext.ENGINE_SCOPE);
+        scriptEngine = new AntlrToJavaScriptEngine();
     }
 
     private Object eval(String query) {
-        final GremlinGSLexer lexer = new GremlinGSLexer(CharStreams.fromString(query));
-        final GremlinGSParser parser = new GremlinGSParser(new CommonTokenStream(lexer));
-        return antlrToJava.visit(parser.query());
+        return scriptEngine.eval(query, context);
     }
 
     @Test
