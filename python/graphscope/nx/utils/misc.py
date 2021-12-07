@@ -48,6 +48,7 @@ def empty_graph_in_engine(graph, directed, distributed):
         efile="",
         vfile="",
     )
+    graph._op = op
     graph_def = op.eval()
     return graph_def
 
