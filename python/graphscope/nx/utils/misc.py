@@ -20,6 +20,7 @@
 import json
 
 import networkx.utils.misc
+import numpy as np
 from networkx.exception import NetworkXError
 
 from graphscope.client.session import get_session_by_id
@@ -79,6 +80,8 @@ def check_node_is_legal(n):
     NetworkXError
         If the type of node is illegal.
     """
+    # FIXME: maybe we should not check node is illegal.
+    return True
 
     def check_node_type(n):
         if not isinstance(n, (int, float, str, bool, type(None))):
@@ -96,3 +99,9 @@ def check_node_is_legal(n):
             check_node_type(n[1])
     else:
         check_node_type(n)
+
+
+def json_encoder(ob):
+    if isinstance(ob, (np.generic, np.ndarray)):
+        return ob.item()
+    return ob

@@ -16,17 +16,12 @@
 # limitations under the License.
 #
 
-from graphscope.nx.readwrite.adjlist import *
-from graphscope.nx.readwrite.edgelist import *
-from graphscope.nx.readwrite.multiline_adjlist import *
-from graphscope.nx.readwrite.pajek import *
-from graphscope.nx.readwrite.gexf import *
-from graphscope.nx.readwrite.gpickle import *
-from graphscope.nx.readwrite.gml import *
-from graphscope.nx.readwrite.graph6 import *
-from graphscope.nx.readwrite.leda import *
-from graphscope.nx.readwrite.sparse6 import *
-from graphscope.nx.readwrite.json_graph import *
-from graphscope.nx.readwrite.graphml import *
-from graphscope.nx.readwrite.nx_yaml import *
-from graphscope.nx.readwrite.nx_shp import *
+import networkx.readwrite.tests.test_gml
+import pytest
+
+from graphscope.nx.utils.compat import import_as_graphscope_nx
+
+import_as_graphscope_nx(
+    networkx.readwrite.tests.test_gml,
+    decorators=pytest.mark.usefixtures("graphscope_session"),
+)

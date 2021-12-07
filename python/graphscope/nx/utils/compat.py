@@ -347,7 +347,7 @@ def with_module_map(  # noqa: C901
                         global_ctx[k] = v
 
         for name, meth in source_methods.items():
-            if name in existing_methods:
+            if name in existing_methods or isinstance(meth, ModuleType):
                 continue
 
             if isinstance(meth, classmethod):

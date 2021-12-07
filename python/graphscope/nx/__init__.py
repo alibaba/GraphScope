@@ -17,6 +17,7 @@
 #
 
 # forward
+from networkx import __version__
 import networkx.exception as exception
 import networkx.testing as testing
 from networkx.exception import *

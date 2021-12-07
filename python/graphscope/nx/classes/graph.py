@@ -45,6 +45,7 @@ from graphscope.nx.utils.compat import patch_docstring
 from graphscope.nx.utils.misc import check_node_is_legal
 from graphscope.nx.utils.misc import empty_graph_in_engine
 from graphscope.nx.utils.misc import parse_ret_as_dict
+from graphscope.nx.utils.misc import json_encoder
 from graphscope.proto import graph_def_pb2
 from graphscope.proto import types_pb2
 
@@ -483,12 +484,6 @@ class Graph(_GraphBase):
     def __str__(self):
         return self.name
 
-    def __repr__(self):
-        s = "graphscope.nx.Graph\n"
-        s += "type: " + self.template_str.split("<")[0] + "\n"
-        s += str(self._schema)
-        return s
-
     def __copy__(self):
         """override default __copy__"""
         raise NetworkXError("graphscope.nx not support shallow copy.")
@@ -665,10 +660,10 @@ class Graph(_GraphBase):
             check_node_is_legal(n)
             if self._schema.add_nx_vertex_properties(data):
                 try:
-                    nodes.append(json.dumps(node))
+                    nodes.append(json.dumps(node, default=json_encoder))
                 except TypeError as e:
                     raise NetworkXError(
-                        "The node and its {} data failed to be serialized by json.".format(
+                        "The node and its data {} ailed to be serialized by json.".format(
                             node
                         )
                     ) from e
@@ -739,7 +734,7 @@ class Graph(_GraphBase):
         nodes = []
         for n in nodes_for_removing:
             check_node_is_legal(n)
-            nodes.append(json.dumps([n]))
+            nodes.append(json.dumps([n], default=json_encoder))
         self._op = dag_utils.modify_vertices(self, types_pb2.NX_DEL_NODES, nodes)
         return self._op.eval()
 
@@ -855,8 +850,8 @@ class Graph(_GraphBase):
             check_node_is_legal(n)
             if self.graph_type == graph_def_pb2.ARROW_PROPERTY:
                 n = self._convert_to_label_id_tuple(n)
-            op = dag_utils.report_graph(self, types_pb2.HAS_NODE, node=json.dumps([n]))
-            return int(op.eval())
+            op = dag_utils.report_graph(self, types_pb2.HAS_NODE, node=json.dumps([n], default=json_encoder))
+            return bool(int(op.eval()))
         except (TypeError, NetworkXError, KeyError):
             return False
 
@@ -972,7 +967,7 @@ class Graph(_GraphBase):
             self._schema.add_nx_edge_properties(data)
             edge = [u, v, data]
             try:
-                edges.append(json.dumps(edge))
+                edges.append(json.dumps(edge, default=json_encoder))
             except TypeError as e:
                 raise NetworkXError(
                     "The edge and its data {} failed to be serialized by json.".format(
@@ -1061,7 +1056,7 @@ class Graph(_GraphBase):
                 raise ValueError("Edge tuple %s must be a 2-tuple or 3-tuple." % (e,))
             check_node_is_legal(e[0])
             check_node_is_legal(e[1])
-            edges.append(json.dumps(e[:2]))  # ignore edge data if present
+            edges.append(json.dumps(e[:2], default=json_encoder))  # ignore edge data if present
         self._op = dag_utils.modify_edges(self, types_pb2.NX_DEL_EDGES, edges)
         return self._op.eval()
 
@@ -1098,7 +1093,7 @@ class Graph(_GraphBase):
         self._convert_arrow_to_dynamic()
 
         try:
-            edge = [json.dumps((u, v, data))]
+            edge = [json.dumps((u, v, data), default=json_encoder)]
         except TypeError as e:
             raise TypeError(
                 "The edge and its data {} failed to be serialized by json.".format(
@@ -1141,7 +1136,7 @@ class Graph(_GraphBase):
         self._convert_arrow_to_dynamic()
 
         try:
-            node = [json.dumps((n, data))]
+            node = [json.dumps((n, data), default=json_encoder)]
         except TypeError as e:
             raise NetworkXError(
                 "The node and its data {} failed to be serialized by json.".format(
@@ -1460,7 +1455,7 @@ class Graph(_GraphBase):
                 u = self._convert_to_label_id_tuple(u)
                 v = self._convert_to_label_id_tuple(v)
             op = dag_utils.report_graph(
-                self, types_pb2.EDGE_DATA, edge=json.dumps((u, v)), key=""
+                self, types_pb2.EDGE_DATA, edge=json.dumps((u, v), default=json_encoder), key=""
             )
             ret = op.eval()
             return json.loads(ret)
@@ -1844,7 +1839,7 @@ class Graph(_GraphBase):
         for n in nodes:
             check_node_is_legal(n)
             try:
-                induced_nodes.append(json.dumps([n]))
+                induced_nodes.append(json.dumps([n], default=json_encoder))
             except TypeError as e:
                 raise TypeError(
                     "The node {} failed to be serialized by json.".format(n)
@@ -1898,7 +1893,7 @@ class Graph(_GraphBase):
             check_node_is_legal(u)
             check_node_is_legal(v)
             try:
-                induced_edges.append(json.dumps((u, v)))
+                induced_edges.append(json.dumps((u, v), default=json_encoder))
             except TypeError as e:
                 raise NetworkXError(
                     "The edge {} failed to be serialized by json.".format((u, v))
@@ -1988,7 +1983,7 @@ class Graph(_GraphBase):
             raise NetworkXError("The node %s is not in the graph." % (n,))
         if self.graph_type == graph_def_pb2.ARROW_PROPERTY:
             n = self._convert_to_label_id_tuple(n)
-        op = dag_utils.report_graph(self, report_type, node=json.dumps([n]))
+        op = dag_utils.report_graph(self, report_type, node=json.dumps([n], default=json_encoder))
         ret = op.eval()
         return ret
 
@@ -2048,7 +2043,7 @@ class Graph(_GraphBase):
         Raise NetworkxError if node not in graph.
         """
         check_node_is_legal(n)
-        op = dag_utils.report_graph(self, report_type, node=json.dumps([n]), key=weight)
+        op = dag_utils.report_graph(self, report_type, node=json.dumps([n], default=json_encoder), key=weight)
         degree = float(op.eval())
         return degree if weight is not None else int(degree)
 
