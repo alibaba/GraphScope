@@ -37,7 +37,10 @@ def resolve_volume_builder(name, value):
         logger.warning("Volume %s must contains 'type' 'field' and 'mounts'", name)
         return None
     return VolumeBuilder(
-        name=name, type=value["type"], field=value["field"], mounts_list=value["mounts"]
+        name=name,
+        volume_type=value["type"],
+        field=value["field"],
+        mounts_list=value["mounts"],
     )
 
 
