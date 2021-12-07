@@ -10,7 +10,7 @@ Get service address by:
 {{- if .Values.jupyter }}
 
 A jupyter-lab container is shipped with GraphScope, you can get the jupyter URL by executing 
-  'kubectl --namespace {{ .Release.Namespace }} logs {{ template "graphscope.fullname" .}}-coordinator -c jupyter'
+  'kubectl --namespace {{ .Release.Namespace }} logs --tail=10 -lgraphscope.components=coordinator -c jupyter'
 
 Then replace the '127.0.0.1:8888' to '${NODE_IP}:{{ .Values.jupyter.port }}'.
 
