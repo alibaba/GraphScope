@@ -68,6 +68,7 @@ traversalMethod
     | traversalMethod_dedup
     | traversalMethod_group
     | traversalMethod_groupCount
+    | traversalMethod_values
     ;
 
 traversalSourceSpawnMethod_V
@@ -189,10 +190,8 @@ traversalMethod_selectby_list
 // dedup in global scope
 // dedup().by('name')
 // dedup().by(valueMap('name', 'id'))
-// dedup('a').by('name')
-// dedup('a').by(valueMap('name', 'id'))
 traversalMethod_dedup
-	: 'dedup' LPAREN stringLiteralList RPAREN (DOT traversalMethod_dedupby)?
+	: 'dedup' LPAREN RPAREN (DOT traversalMethod_dedupby)?
 	;
 
 //  multiple by() of dedup is unsupported in standard gremlin
@@ -210,18 +209,18 @@ traversalMethod_groupCount
 	;
 
 // group().by('name')
-// group().by(valueMap('name'))
-// group().by(valueMap('name').as('key'))
+// group().by(values('name'))
+// group().by(values('name').as('key'))
 traversalMethod_group_keyby
     : 'by' LPAREN stringLiteral RPAREN
-    | 'by' LPAREN traversalMethod_valueMap (DOT traversalMethod_as)? RPAREN
+    | 'by' LPAREN traversalMethod_values (DOT traversalMethod_as)? RPAREN
     ;
 
 // group().by(...).by()
 // group().by(...).by(count())
 // group().by(...).by(count().as("value"))
 traversalMethod_group_valueby
-    : 'by' LPAREN EmptyStringLiteral RPAREN
+    : 'by' LPAREN RPAREN
     | 'by' LPAREN traversalMethod_aggregate_func (DOT traversalMethod_as)? RPAREN
     ;
 
@@ -233,6 +232,12 @@ traversalMethod_aggregate_func
 traversalMethod_count
 	: 'count' LPAREN RPAREN
 	;
+
+// only one argument is permitted
+// values("name")
+traversalMethod_values
+    : 'values' LPAREN stringLiteral RPAREN
+    ;
 
 stringLiteral
     : NonEmptyStringLiteral
