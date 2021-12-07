@@ -21,8 +21,7 @@ grammar GremlinGS;
 
 // g or g.rootTraversal()
 query
-    : traversalSource
-    | rootTraversal
+    : rootTraversal
     ;
 
 // g
