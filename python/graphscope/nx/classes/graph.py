@@ -1671,12 +1671,14 @@ class Graph(_GraphBase):
         if as_view:
             g = generic_graph_view(self)
             g._is_client_view = True
+            g._op = self._op
         else:
             self._convert_arrow_to_dynamic()
             g = self.__class__(create_empty_in_engine=False)
             g.graph = copy.deepcopy(self.graph)
             op = dag_utils.copy_graph(self, "identical")
             graph_def = op.eval()
+            g._op = op
             g._key = graph_def.key
             g._schema = copy.deepcopy(self._schema)
         g._session = self._session
@@ -1724,6 +1726,7 @@ class Graph(_GraphBase):
                 g.graph.update(self.graph)
                 op = dag_utils.create_graph_view(self, "undirected")
                 graph_def = op.eval()
+                g._op = op
                 g._key = graph_def.key
                 g._schema = copy.deepcopy(self._schema)
                 g._graph = self
@@ -1735,6 +1738,7 @@ class Graph(_GraphBase):
             g.graph = copy.deepcopy(self.graph)
             op = dag_utils.to_undirected(self)
             graph_def = op.eval()
+            g._op = op
             g._key = graph_def.key
             g._session = self._session
             g._schema = copy.deepcopy(self._schema)
@@ -1790,6 +1794,7 @@ class Graph(_GraphBase):
                 g.graph.update(self.graph)
                 op = dag_utils.create_graph_view(self, "directed")
                 graph_def = op.eval()
+                g._op = op
                 g._key = graph_def.key
                 g._schema = copy.deepcopy(self._schema)
                 g._graph = self
