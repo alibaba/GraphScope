@@ -24,7 +24,6 @@ from graphscope.proto import op_def_pb2
 # All kinds of Graphscope error.
 __all__ = [
     "NotFoundError",
-    "ConnectionError",
     "VineyardError",
     "CompilationError",
     "AlreadyExistsError",
@@ -60,10 +59,6 @@ class GSError(Exception):
 
 
 class NotFoundError(GSError):
-    pass
-
-
-class ConnectionError(GSError):  # pylint: disable=redefined-builtin
     pass
 
 

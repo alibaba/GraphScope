@@ -213,7 +213,7 @@ class KubernetesPodWatcher(object):
                 )
 
 
-def get_service_endpoints(api_client, namespace, name, type, timeout_seconds=60):
+def get_service_endpoints(api_client, namespace, name, service_type, timeout_seconds=60):
     """Get service endpoint by service name and service type.
 
     Args:
@@ -223,7 +223,7 @@ def get_service_endpoints(api_client, namespace, name, type, timeout_seconds=60)
             Namespace of the service belongs to.
         name: str
             Service name.
-        type: str
+        service_type: str
             Service type. Valid options are NodePort, LoadBalancer and ClusterIP.
         timeout_seconds: int
             Raise TimeoutError after waiting for this seconds, only used in LoadBalancer type.
@@ -253,12 +253,12 @@ def get_service_endpoints(api_client, namespace, name, type, timeout_seconds=60)
 
     ips = []
     ports = []
-    if type == "NodePort":
+    if service_type == "NodePort":
         for pod in pods.items:
             ips.append(pod.status.host_ip)
         for port in svc.spec.ports:
             ports.append(port.node_port)
-    elif type == "LoadBalancer":
+    elif service_type == "LoadBalancer":
         while True:
             svc = core_api.read_namespaced_service(name=name, namespace=namespace)
             if svc.status.load_balancer.ingress is not None:
@@ -273,18 +273,18 @@ def get_service_endpoints(api_client, namespace, name, type, timeout_seconds=60)
             time.sleep(1)
             if time.time() - start_time > timeout_seconds:
                 raise TimeoutError("LoadBalancer service type is not supported yet.")
-    elif type == "ClusterIP":
+    elif service_type == "ClusterIP":
         ips.append(svc.spec.cluster_ip)
         for port in svc.spec.ports:
             ports.append(port.port)
     else:
-        raise K8sError("Service type {0} is not supported yet".format(type))
+        raise K8sError("Service type {0} is not supported yet".format(service_type))
 
     # generate endpoint
     endpoints = []
 
     if not ips or not ports:
-        raise K8sError("Get {0} service {1} failed.".format(type, name))
+        raise K8sError("Get {0} service {1} failed.".format(service_type, name))
 
     for ip in ips:
         for port in ports:

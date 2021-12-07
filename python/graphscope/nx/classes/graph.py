@@ -2247,7 +2247,7 @@ class Graph(_GraphBase):
         arrow_property graph.
         """
         if isinstance(n, tuple):
-            id = n[1]
+            label_id = n[1]
             new_n = (self._schema.get_vertex_label_id(n[0]), n[1])
             if new_n[0] == self._default_label_id:
                 raise KeyError("default label's node must be non-tuple format.")
@@ -2255,9 +2255,9 @@ class Graph(_GraphBase):
             # the n is non-tuple, but default id is -1
             raise KeyError("default label id is -1.")
         else:
-            id = n
+            label_id = n
             new_n = (self._default_label_id, n)
-        if not isinstance(id, utils.data_type_to_python(self._schema.oid_type)):
+        if not isinstance(label_id, utils.data_type_to_python(self._schema.oid_type)):
             # id is not oid type
             raise KeyError("the node type is not arrow_property oid_type.")
         return new_n

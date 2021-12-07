@@ -527,7 +527,7 @@ class KubernetesClusterLauncher(Launcher):
             api_client=self._api_client,
             namespace=self._namespace,
             name=self._coordinator_service_name,
-            type=self._saved_locals["k8s_service_type"],
+            service_type=self._saved_locals["k8s_service_type"],
         )
 
         return endpoints[0]

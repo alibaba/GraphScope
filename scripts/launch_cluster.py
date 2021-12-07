@@ -701,7 +701,7 @@ class AliyunLauncher(Launcher):
     default=os.environ["HOME"] + "/.kube/config",
     show_default=True,
 )
-def launch(type, id, secret, region, output):
+def launch(cluster_type, access_key_id, secret_access_key, region, output):
     """Interactive script to launch cluster on AWS or Aliyun and output kube config file.
 
     Notice: this script would require your AWS/Aliyun account's access_key_id and secret_access_key
@@ -712,7 +712,7 @@ def launch(type, id, secret, region, output):
     install aws-iam-authenticator.
     """
 
-    if not check_requirements(type, output):
+    if not check_requirements(cluster_type, output):
         click.echo(
             "Requirements of the script not fulfill, please follow the prompt to install requirement."
         )
@@ -720,10 +720,10 @@ def launch(type, id, secret, region, output):
     else:
         click.echo("Requirements fulfilled.")
 
-    if type == "aws":
-        launcher = AWSLauncher(id, secret, region, output)
+    if cluster_type == "aws":
+        launcher = AWSLauncher(access_key_id, secret_access_key, region, output)
     else:
-        launcher = AliyunLauncher(id, secret, region, output)
+        launcher = AliyunLauncher(access_key_id, secret_access_key, region, output)
 
     launcher.launch_cluster()
 

@@ -337,9 +337,9 @@ class ResourceBuilder(object):
 class VolumeBuilder(object):
     """Builder for k8s volumes."""
 
-    def __init__(self, name, type, field, mounts_list):
+    def __init__(self, name, volume_type, field, mounts_list):
         self._name = name
-        self._type = type
+        self._type = volume_type
         self._field = field
         self._mounts_list = mounts_list
         if not isinstance(self._mounts_list, list):

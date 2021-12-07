@@ -179,12 +179,12 @@ class GraphModel(widgets.DOMWidget):
 
         def _process_node(list_id, list_val, list_prop):
             for i in range(len(list_id)):
-                id = str(list_id[i].id)
-                if id in self._nodes_id_dict:
+                vid = str(list_id[i].id)
+                if vid in self._nodes_id_dict:
                     continue
                 #
                 node = {}
-                node["id"] = id
+                node["id"] = vid
                 node["oid"] = str(list_val[i])
                 node["parentId"] = ""
                 node["label"] = str(list_id[i].label)
@@ -193,8 +193,8 @@ class GraphModel(widgets.DOMWidget):
                 node["count"] = 0
                 node["nodeType"] = str(list_id[i].label)
                 node["properties"] = list_prop[i]
-                self._nodes_id_dict[id] = True
-                self._nodes_id_map[id] = str(list_val[i])
+                self._nodes_id_dict[vid] = True
+                self._nodes_id_map[vid] = str(list_val[i])
                 nodes.append(node)
 
         def _process_edge(list_edge):
@@ -303,9 +303,9 @@ class GraphModel(widgets.DOMWidget):
             buffers (bool): Listening required.
         """
         if "nodeId" in params and "degree" in params:
-            id = str(params["nodeId"])
+            vid = str(params["nodeId"])
             # convert to original id
-            oid = self._nodes_id_map[id]
+            oid = self._nodes_id_map[vid]
             hop = int(params["degree"])
 
             if hop == 1:

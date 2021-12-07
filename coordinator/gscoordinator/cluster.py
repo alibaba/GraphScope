@@ -319,7 +319,7 @@ class KubernetesClusterLauncher(Launcher):
         return ",".join(self._pod_name_list)
 
     def distribute_file(self, path):
-        dir = os.path.dirname(path)
+        d = os.path.dirname(path)
         for pod in self._pod_name_list:
             subprocess.check_call(
                 [
@@ -331,7 +331,7 @@ class KubernetesClusterLauncher(Launcher):
                     "--",
                     "mkdir",
                     "-p",
-                    dir,
+                    d,
                 ]
             )
             subprocess.check_call(
@@ -465,7 +465,7 @@ class KubernetesClusterLauncher(Launcher):
         scheduler_builder.add_volume(
             VolumeBuilder(
                 name="vineyard-ipc-volume",
-                type=vineyard_socket_volume_type,
+                volume_type=vineyard_socket_volume_type,
                 field=vineyard_socket_volume_fields,
                 mounts_list=[
                     {"mountPath": os.path.join(get_tempdir(), "vineyard_workspace")},
@@ -476,7 +476,7 @@ class KubernetesClusterLauncher(Launcher):
         scheduler_builder.add_volume(
             VolumeBuilder(
                 name="host-shm",
-                type="emptyDir",
+                volume_type="emptyDir",
                 field={"medium": "Memory"},
                 mounts_list=[{"mountPath": "/dev/shm"}],
             )
@@ -565,7 +565,7 @@ class KubernetesClusterLauncher(Launcher):
         engine_builder.add_volume(
             VolumeBuilder(
                 name="vineyard-ipc-volume",
-                type=vineyard_socket_volume_type,
+                volume_type=vineyard_socket_volume_type,
                 field=vineyard_socket_volume_fields,
                 mounts_list=[
                     {"mountPath": "/tmp/vineyard_workspace"},
@@ -576,7 +576,7 @@ class KubernetesClusterLauncher(Launcher):
         engine_builder.add_volume(
             VolumeBuilder(
                 name="host-shm",
-                type="emptyDir",
+                volume_type="emptyDir",
                 field={"medium": "Memory"},
                 mounts_list=[{"mountPath": "/dev/shm"}],
             )
@@ -779,7 +779,7 @@ class KubernetesClusterLauncher(Launcher):
             api_client=self._api_client,
             namespace=self._saved_locals["namespace"],
             name=self._vineyard_service_name,
-            type=self._saved_locals["service_type"],
+            service_type=self._saved_locals["service_type"],
         )
         return endpoints[0]
 
@@ -789,7 +789,7 @@ class KubernetesClusterLauncher(Launcher):
             api_client=self._api_client,
             namespace=self._saved_locals["namespace"],
             name=self._mars_service_name,
-            type=self._saved_locals["service_type"],
+            service_type=self._saved_locals["service_type"],
         )
         return endpoints[0]
 
@@ -840,7 +840,7 @@ class KubernetesClusterLauncher(Launcher):
                 api_client=self._api_client,
                 namespace=self._saved_locals["namespace"],
                 name=self._gle_service_name_prefix + str(object_id),
-                type=self._saved_locals["service_type"],
+                service_type=self._saved_locals["service_type"],
             )
             return endpoints
         raise RuntimeError("Get graphlearn service endpoint failed.")
@@ -1026,7 +1026,7 @@ class KubernetesClusterLauncher(Launcher):
             api_client=self._api_client,
             namespace=self._saved_locals["namespace"],
             name=self._etcd_service_name,
-            type="ClusterIP",
+            service_type="ClusterIP",
         )
         return endpoints[0]
 

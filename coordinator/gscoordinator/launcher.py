@@ -183,11 +183,11 @@ class LocalLauncher(Launcher):
         os.makedirs(self._session_workspace, exist_ok=True)
 
     def distribute_file(self, path):
-        dir = os.path.dirname(path)
+        d = os.path.dirname(path)
         for host in self._hosts.split(","):
             if host not in ("localhost", "127.0.0.1"):
                 subprocess.check_call(
-                    [shutil.which("ssh"), host, "mkdir -p {}".format(dir)]
+                    [shutil.which("ssh"), host, "mkdir -p {}".format(d)]
                 )
                 subprocess.check_call(
                     [shutil.which("scp"), "-r", path, "{}:{}".format(host, path)]

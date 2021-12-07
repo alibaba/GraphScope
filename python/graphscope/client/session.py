@@ -884,7 +884,7 @@ class Session(object):
         self.as_default()
         return self
 
-    def __exit__(self, type, value, traceback):
+    def __exit__(self, exc_type, exc_value, exc_tb):
         """Deregister self from the default session,
         close the session and release the resources, ignore all exceptions in close().
         """

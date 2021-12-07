@@ -28,12 +28,12 @@ from graphscope.proto import graph_def_pb2
 
 
 class Property:
-    def __init__(self, name, data_type, is_primary_key=False, id=0):
+    def __init__(self, name, data_type, is_primary_key=False, property_id=0):
         self.name: str = name
         self.data_type: int = data_type
         self.is_primary_key: bool = is_primary_key
 
-        self.id: int = id
+        self.id: int = property_id
         self.inner_id: int = 0
         self.default_value = None
         self.comment = ""
@@ -78,11 +78,11 @@ class Label:
         "_prop_index",
     ]
 
-    def __init__(self, name, id=0):
+    def __init__(self, name, label_id=0):
         self._name: str = name
         self._props: list[Property] = []
         self._version_id: int = 0
-        self._label_id: int = id
+        self._label_id: int = label_id
 
         self._valid_props: list[int] = []
         self._prop_index: dict[str, int] = {}
@@ -157,8 +157,8 @@ class VertexLabel(Label):
 class EdgeLabel(Label):
     __slots__ = ["_relations"]
 
-    def __init__(self, name, id=0):
-        super().__init__(name, id)
+    def __init__(self, name, label_id=0):
+        super().__init__(name, label_id)
         self._relations: list[Relation] = []
 
     @property
