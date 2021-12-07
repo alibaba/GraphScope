@@ -54,11 +54,12 @@ def concat_path(page, base):
 
 class TocTreeExt(TocTree):
     def get_local_toctree_for(self, master_doc, docname, builder, collapse, **kwargs):
-        """Like `get_local_toctree` in `TocTree`, but don't generate
+        """Return the global TOC nodetree.
+
+        Like `get_local_toctree` in `TocTree`, but don't generate
         toctree for master_doc, rather, generate toctree for the
         given doc.
         """
-        """Return the global TOC nodetree."""
         doctree = self.env.get_doctree(master_doc)
         toctrees = []  # type: List[Element]
         if "includehidden" not in kwargs:
