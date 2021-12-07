@@ -21,8 +21,8 @@ import networkx.exception as exception
 import networkx.testing as testing
 from networkx.exception import *
 
-import graphscope.nx.drawing.nx_agraph as nx_agraph
-import graphscope.nx.drawing.nx_pydot as nx_pydot
+from graphscope.nx.drawing import nx_agraph
+from graphscope.nx.drawing import nx_pydot
 from graphscope.nx.classes import *
 from graphscope.nx.convert import *
 from graphscope.nx.convert_matrix import *
