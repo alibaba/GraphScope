@@ -1,6 +1,9 @@
 name: Build GraphScope Wheels on MacOS
 
 on:
+  pull_request:
+    branches:
+      - main
   workflow_dispatch:
   schedule:
     # The notifications for scheduled workflows are sent to the user who
@@ -10,7 +13,7 @@ on:
 
 jobs:
   build-wheels:
-    if: ${{ github.ref == 'refs/heads/main' && github.repository == 'alibaba/GraphScope' }}
+    # if: ${{ github.ref == 'refs/heads/main' && github.repository == 'alibaba/GraphScope' }}
     runs-on: macos-10.15
     steps:
     - uses: actions/checkout@v2
@@ -47,11 +50,10 @@ jobs:
         retention-days: 5
 
   build-client-wheels:
-    if: ${{ github.ref == 'refs/heads/main' && github.repository == 'alibaba/GraphScope' }}
-    runs-on: ${{ matrix.os }}
+    # if: ${{ github.ref == 'refs/heads/main' && github.repository == 'alibaba/GraphScope' }}
+    runs-on: macos-10.15
     strategy:
       matrix:
-        os: [macos-10.15]
         python-version: ['3.6', '3.7', '3.8', '3.9']
 
     steps:
@@ -87,3 +89,50 @@ jobs:
         name: wheel-macos-${{ github.sha }}-${{ matrix.python-version }}
         path: client.tar.gz
         retention-days: 5
+
+  python-test:
+    # if: ${{ github.ref == 'refs/heads/main' && github.repository == 'alibaba/GraphScope' }}
+    runs-on: macos-10.15
+    needs: [build-wheels, build-client-wheels]
+    strategy:
+      matrix:
+        python-version: ['3.6', '3.7', '3.8', '3.9']
+
+    steps:
+    - uses: actions/download-artifact@v2
+      with:
+        path: artifacts
+
+    - name: Set up Python
+      uses: actions/setup-python@v2
+      with:
+        python-version: ${{ matrix.python-version }}
+
+    - name: Prepare Environment
+      run: |
+        cd artifacts
+        # install graphscope-client
+        cd artifacts
+        tar -zxf ./wheel-macos-${{ github.sha }}-${{ matrix.python-version }}/client.tar.gz
+        pushd python/dist/wheelhouse
+        for f in * ; do python3 -m pip install $f --user || true; done
+        popd
+        # install graphscope
+        tar -zxf ./wheel-macos-${{ github.sha }}/graphscope.tar.gz
+        pushd coordinator/dist/wheelhouse
+        python3 -m pip install ./*.whl --user
+        popd
+        pushd coordinator/dist
+        python3 -m pip install ./*.whl --user
+        popd
+
+        # install tensorflow
+        python3 -m pip install pytest "tensorflow<=2.5.2" --user
+
+    - name: Run Minimum Test
+      env:
+        GS_TEST_DIR: ${{ github.workspace }}/gstest
+      run: |
+        python3 -c "import sys; print(sys.version)"
+        git clone -b master --single-branch --depth=1 https://github.com/7br/gstest.git ${GS_TEST_DIR}
+        python3 -m pytest -s -v $(dirname $(python3 -c "import graphscope; print(graphscope.__file__)"))/tests/minitest

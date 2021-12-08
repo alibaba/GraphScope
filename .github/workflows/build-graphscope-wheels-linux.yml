@@ -94,26 +94,28 @@ jobs:
       with:
         path: artifacts
 
+    - name: Set up Python
+      uses: actions/setup-python@v2
+      with:
+        python-version: ${{ matrix.python-version }}
+
     - name: Prepare Environment
-      env:
-        PYTHON: ${{ matrix.python-version }}
       shell: bash
       run: |
-        python3 --version
         # install graphscope-client
         cd artifacts
         tar -zxf ./wheel-${{ github.sha }}/client.tar.gz
         pushd python/dist/wheelhouse
-        for f in * ; do python3 -m pip install $f || true; done
+        for f in * ; do python3 -m pip install $f --user || true; done
         popd
 
         # install graphscope
         tar -zxf ./wheel-${{ github.sha }}/graphscope.tar.gz
         pushd coordinator/dist/wheelhouse
-        python3 -m pip install ./*.whl
+        python3 -m pip install ./*.whl --user
         popd
         pushd coordinator/dist
-        python3 -m pip install ./*.whl
+        python3 -m pip install ./*.whl --user
         popd
 
         # install tensorflow
@@ -125,6 +127,7 @@ jobs:
       env:
         GS_TEST_DIR: ${{ github.workspace }}/gstest
       run: |
+        python3 -c "import sys; print(sys.version)"
         git clone -b master --single-branch --depth=1 https://github.com/7br/gstest.git ${GS_TEST_DIR}
         python3 -m pytest -s -v $(dirname $(python3 -c "import graphscope; print(graphscope.__file__)"))/tests/minitest
 
@@ -132,7 +135,7 @@ jobs:
     runs-on: ubuntu-20.04
     needs: [build-wheels]
     container:
-      image: centos:8
+      image: centos:7
       options:
         --shm-size 4096m
 
