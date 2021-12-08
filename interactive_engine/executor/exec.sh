@@ -13,15 +13,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-if [ -z {$HADOOP_HOME} ]; then
+if [ -z ${HADOOP_HOME} ]; then
   echo "HADOOP_HOME is not set."
-  exit -1
+  exit 1
 fi
 
 echo "VINEYARD_ROOT_DIR = $VINEYARD_ROOT_DIR"
 
-current=`dirname $0`
-export MAXGRAPH_HOME=`cd ${current}/../../ ;pwd`
+current=$(dirname $0)
+export MAXGRAPH_HOME=$(cd ${current}/../../ ;pwd)
 
 export GCC492_HOME='/usr/ali/alicpp/built/gcc-4.9.2/'
 

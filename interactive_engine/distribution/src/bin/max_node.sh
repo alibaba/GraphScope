@@ -1,6 +1,6 @@
 #!/bin/bash
 
-source "`dirname "$0"`"/maxgraph-env
+source "$(dirname "$0")"/maxgraph-env
 
 exec "$JAVA" -server \
   -Dlogback.configurationFile="$MAXGRAPH_CONF_DIR/logback.xml" \

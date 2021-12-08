@@ -53,7 +53,7 @@ curl -XPOST $url -d 'grateful_graph = session.load_from(
 
 curl -XPOST $url -d 'grateful_gremlin = session.gremlin(grateful_graph)' >/dev/null
 code=$(curl -XPOST $url -d 'grateful_gremlin._graph_url' --write-out %{http_code} --silent --output ./grateful.tmp)
-res=`cat ./grateful.tmp`
+res=$(cat ./grateful.tmp)
 if [ -f "grateful.tmp" ];then
     rm grateful.tmp 1>/dev/null 2>&1
 fi

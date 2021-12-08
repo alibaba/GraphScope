@@ -5,19 +5,19 @@ set -e -o pipefail
 SCRIPT="$0"
 
 while [ -h "$SCRIPT" ] ; do
-  ls=`ls -ld "$SCRIPT"`
+  ls=$(ls -ld "$SCRIPT")
   # Drop everything prior to ->
-  link=`expr "$ls" : '.*-> \(.*\)$'`
+  link=$(expr "$ls" : '.*-> \(.*\)$')
   if expr "$link" : '/.*' > /dev/null; then
     SCRIPT="$link"
   else
-    SCRIPT=`dirname "$SCRIPT"`/"$link"
+    SCRIPT=$(dirname "$SCRIPT")/"$link"
   fi
 done
 
-MAXGRAPH_HOME=`dirname "$SCRIPT"`
-MAXGRAPH_HOME=`cd "$MAXGRAPH_HOME"; pwd`
-MAXGRAPH_HOME=`dirname $MAXGRAPH_HOME`
+MAXGRAPH_HOME=$(dirname "$SCRIPT")
+MAXGRAPH_HOME=$(cd "$MAXGRAPH_HOME"; pwd)
+MAXGRAPH_HOME=$(dirname $MAXGRAPH_HOME)
 
 MAXGRAPH_CLASSPATH="$(echo "$MAXGRAPH_HOME"/lib/*.jar | tr ' ' ':')"
 
@@ -51,7 +51,7 @@ if [ -z "$LOG_DIR" ]; then
 fi
 
 mkdir -p $LOG_DIR
-LOG_DIR=`cd "$LOG_DIR"; pwd`
+LOG_DIR=$(cd "$LOG_DIR"; pwd)
 
 if [ -z "$LOG_NAME" ]; then
     LOG_NAME="maxgraph"

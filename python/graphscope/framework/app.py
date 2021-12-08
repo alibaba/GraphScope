@@ -383,8 +383,7 @@ class App(object):
     def __getattr__(self, name):
         if hasattr(self._app_node, name):
             return getattr(self._app_node, name)
-        else:
-            raise AttributeError("{0} not found.".format(name))
+        raise AttributeError("{0} not found.".format(name))
 
     @property
     def key(self):

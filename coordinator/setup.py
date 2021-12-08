@@ -23,6 +23,7 @@ import os
 import platform
 import shutil
 import subprocess
+import sys
 import tempfile
 from distutils.cmd import Command
 
@@ -229,17 +230,17 @@ class FormatAndLint(Command):
 
     def run(self):
         if self.inplace:
-            subprocess.check_call(["python3", "-m", "isort", "."], cwd=repo_root)
-            subprocess.check_call(["python3", "-m", "black", "."], cwd=repo_root)
-            subprocess.check_call(["python3", "-m", "flake8", "."], cwd=repo_root)
+            subprocess.check_call([sys.executable, "-m", "isort", "."], cwd=repo_root)
+            subprocess.check_call([sys.executable, "-m", "black", "."], cwd=repo_root)
+            subprocess.check_call([sys.executable, "-m", "flake8", "."], cwd=repo_root)
         else:
             subprocess.check_call(
-                ["python3", "-m", "isort", "--check", "--diff", "."], cwd=repo_root
+                [sys.executable, "-m", "isort", "--check", "--diff", "."], cwd=repo_root
             )
             subprocess.check_call(
-                ["python3", "-m", "black", "--check", "--diff", "."], cwd=repo_root
+                [sys.executable, "-m", "black", "--check", "--diff", "."], cwd=repo_root
             )
-            subprocess.check_call(["python3", "-m", "flake8", "."], cwd=repo_root)
+            subprocess.check_call([sys.executable, "-m", "flake8", "."], cwd=repo_root)
 
 
 class CustomBuildPy(build_py):

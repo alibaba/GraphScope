@@ -117,6 +117,16 @@ public class ResultParserUtils {
         return new PropertyResult(getPropertyName(propertyEntity.getPropId(), schema), parseValue(propertyEntity.getPropValue(), schema, graph), element);
     }
 
+    private static QueryResult parseProperty(Message.RawMessageProto message, GraphSchema schema, Graph graph) {
+        String propName = getPropertyName((int) message.getId(), schema);
+        Object propValue = parseValue(message.getExtra().getExtraValueProp().getValueEntity(), schema, graph);
+        if (message.getTypeId() == 0) {
+            return new VertexPropertyResult<>((int) message.getId(), propName, propValue, new VertexResult(0, 0, "", graph, 0));
+        } else {
+            return new PropertyResult<>(propName, propValue, new VertexResult(0, 0, "", graph, 0));
+        }
+    }
+
     private static Object parseValue(Message.ValueEntityProto valueEntity, GraphSchema schema, Graph graph) {
         ByteString byteString = valueEntity.getPayload();
         ByteBuffer byteBuffer = byteString.asReadOnlyByteBuffer();
@@ -191,16 +201,6 @@ public class ResultParserUtils {
             default: {
                 throw new UnsupportedOperationException(valueEntity.getValueType().toString());
             }
-        }
-    }
-
-    private static QueryResult parseProperty(Message.RawMessageProto message, GraphSchema schema, Graph graph) {
-        String propName = getPropertyName((int) message.getId(), schema);
-        Object propValue = parseValue(message.getExtra().getExtraValueProp().getValueEntity(), schema, graph);
-        if (message.getTypeId() == 0) {
-            return new VertexPropertyResult<>((int) message.getId(), propName, propValue, new VertexResult(0, 0, "", graph, 0));
-        } else {
-            return new PropertyResult<>(propName, propValue, new VertexResult(0, 0, "", graph, 0));
         }
     }
 

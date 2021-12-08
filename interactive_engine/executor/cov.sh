@@ -13,21 +13,21 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-BASE_DIR="`dirname "$0"`"
-BASE_DIR=`cd ${BASE_DIR}; pwd`
+BASE_DIR=$(dirname "$0")
+BASE_DIR=$(cd ${BASE_DIR}; pwd)
 TMP_LOG=${BASE_DIR}/tmp.log
 ALL_LOG=${BASE_DIR}/all.log
 REPORT=${BASE_DIR}/report.html
 
-function module_prefix {
+module_prefix() {
     module=$1
     head -5  ${module}/Cargo.toml  | grep name | cut -d '"' -f 2 | sed "s#-#_#g"
 }
 
-function run_module {
+run_module() {
     module=$1
-    ut_bin_prefix=`module_prefix ${module}`
-    ut_bin=`find target/debug/ -regextype egrep -maxdepth 1 -regex ".*/${ut_bin_prefix}-[^.]+" | xargs ls -t | head -1`
+    ut_bin_prefix=$(module_prefix ${module})
+    ut_bin=$(find target/debug/ -regextype egrep -maxdepth 1 -regex ".*/${ut_bin_prefix}-[^.]+" | xargs ls -t | head -1)
     echo "module: ${module}, ut binary: ${ut_bin}"
     rm -f ${TMP_LOG}
     cd ${BASE_DIR}/${module}
@@ -44,20 +44,20 @@ function run_module {
     fi
 }
 
-function print_result {
+print_result() {
     cd ${BASE_DIR}
-    passed_cnt=`grep '^ok ' ${ALL_LOG} -c`
-    failed_cnt=`grep '^failed ' ${ALL_LOG} -c`
-    ignored_cnt=`grep '^ignored ' ${ALL_LOG} -c`
+    passed_cnt=$(grep '^ok ' ${ALL_LOG} -c)
+    failed_cnt=$(grep '^failed ' ${ALL_LOG} -c)
+    ignored_cnt=$(grep '^ignored ' ${ALL_LOG} -c)
 
     echo "TEST_CASE_AMOUNT: {\"blocked\":0,\"passed\":${passed_cnt},\"failed\":${failed_cnt},\"skipped\":${ignored_cnt}}"
 
     cov_report_file="target/cov/kcov-merged/coverage.json"
     if [[ ! -f "${cov_report_file}" ]]; then
-        cov_report_file=`find target/cov/ -name coverage.json | head -n 1`
+      cov_report_file=$(find target/cov/ -name coverage.json | head -n 1)
     fi
-    covered_lines=`grep covered_lines ${cov_report_file}  | grep -v file | awk '{print $2}' | sed 's#,##g'`
-    total_lines=`grep total_lines ${cov_report_file}  | grep -v file | awk '{print $2}' | sed 's#,##g'`
+    covered_lines=$(grep covered_lines ${cov_report_file}  | grep -v file | awk '{print $2}' | sed 's#,##g')
+    total_lines=$(grep total_lines ${cov_report_file}  | grep -v file | awk '{print $2}' | sed 's#,##g')
 
     echo "CODE_COVERAGE_LINES: ${covered_lines}/${total_lines}"
     echo "CODE_COVERAGE_EN_NAME_LINES: Line"
@@ -69,8 +69,8 @@ function print_result {
 }
 
 
-function show_header {
-    echo "<!DOCTYPE html>
+show_header() {
+    echo '<!DOCTYPE html>
 <html>
 <head>
     <title>Rust Test Case Report</title>
@@ -103,36 +103,36 @@ function show_header {
         <tr>
             <th>Case Name</th>
             <th>Result</th>
-        </tr>"
+        </tr>'
 }
 
-function show_footer {
+show_footer() {
     echo "</table>
 </body>
 </html>"
 }
 
-function show_data {
+show_data() {
     log_file=$1
     awk '{printf("<tr><td>%s</td><td class=\"%s\">%s</td></tr>\n", $2, $1, $1);}' ${log_file}
 }
 
-function generate_report {
+generate_report() {
     show_header
     show_data $1
     show_footer
 }
 
-function upload_report {
+upload_report() {
     file=$1
-    ts=`date '+%Y_%m_%d_%H_%M_%S'`
+    ts=$(date '+%Y_%m_%d_%H_%M_%S')
     oss_url="oss://graphcompute/reports/${ts}_report.html"
     osscmd put ${file} ${oss_url}
-    url=`osscmd signurl ${oss_url} --timeout=31536000 2>1 | grep http`
+    url=$(osscmd signurl ${oss_url} --timeout=31536000 2>&1 | grep http)
     echo "TEST_REPORT: ${url}"
 }
 
-function install_kcov {
+install_kcov() {
     sudo yum install cmake zlib-devel libcurl-devel binutils-devel elfutils-devel elfutils-libelf-devel -y
     wget https://github.com/SimonKagstrom/kcov/archive/v33.tar.gz
     tar zxf v33.tar.gz
@@ -142,7 +142,7 @@ function install_kcov {
     sudo make install
 }
 
-function run {
+run() {
     rm -fr target/cov
     RUSTFLAGS='-C link-dead-code' cargo test --all --no-run
     if [[ $? -ne 0 ]]; then
@@ -158,7 +158,7 @@ function run {
     done
 }
 
-function usage {
+usage() {
     echo "Usage: "
     echo "    ./cov --install-deps"
     echo "    ./cov module_a module_b"

@@ -26,7 +26,6 @@ import time
 
 import grpc
 
-from graphscope.framework.errors import ConnectionError
 from graphscope.framework.errors import FatalError
 from graphscope.framework.errors import GRPCError
 from graphscope.proto import coordinator_service_pb2_grpc

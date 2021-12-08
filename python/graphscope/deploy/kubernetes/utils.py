@@ -54,8 +54,7 @@ def try_to_resolve_api_client():
                 config = kube_client.Configuration()
                 config.host = os.environ["KUBE_API_ADDRESS"]
                 return kube_client.ApiClient(config)
-            else:
-                raise RuntimeError("Resolve kube api client failed.")
+            raise RuntimeError("Resolve kube api client failed.")
     return kube_client.ApiClient()
 
 
@@ -101,23 +100,22 @@ def wait_for_deployment_complete(api_client, namespace, name, timeout_seconds=60
             and s.observed_generation >= response.metadata.generation
         ):
             return True
-        else:
-            # check failed
-            selector = ""
-            for k, v in response.spec.selector.match_labels.items():
-                selector += k + "=" + v + ","
-            selector = selector[:-1]
-            pods = core_api.list_namespaced_pod(
-                namespace=namespace, label_selector=selector
-            )
-            for pod in pods.items:
-                if pod.status.container_statuses is not None:
-                    for container_status in pod.status.container_statuses:
-                        if (
-                            not container_status.ready
-                            and container_status.restart_count > 0
-                        ):
-                            raise K8sError("Deployment {} start failed.".format(name))
+        # check failed
+        selector = ""
+        for k, v in response.spec.selector.match_labels.items():
+            selector += k + "=" + v + ","
+        selector = selector[:-1]
+        pods = core_api.list_namespaced_pod(
+            namespace=namespace, label_selector=selector
+        )
+        for pod in pods.items:
+            if pod.status.container_statuses is not None:
+                for container_status in pod.status.container_statuses:
+                    if (
+                        not container_status.ready
+                        and container_status.restart_count > 0
+                    ):
+                        raise K8sError("Deployment {} start failed.".format(name))
     raise TimeoutError("Waiting timeout for deployment {}".format(name))
 
 
@@ -215,7 +213,9 @@ class KubernetesPodWatcher(object):
                 )
 
 
-def get_service_endpoints(api_client, namespace, name, type, timeout_seconds=60):
+def get_service_endpoints(
+    api_client, namespace, name, service_type, timeout_seconds=60
+):
     """Get service endpoint by service name and service type.
 
     Args:
@@ -225,7 +225,7 @@ def get_service_endpoints(api_client, namespace, name, type, timeout_seconds=60)
             Namespace of the service belongs to.
         name: str
             Service name.
-        type: str
+        service_type: str
             Service type. Valid options are NodePort, LoadBalancer and ClusterIP.
         timeout_seconds: int
             Raise TimeoutError after waiting for this seconds, only used in LoadBalancer type.
@@ -255,12 +255,12 @@ def get_service_endpoints(api_client, namespace, name, type, timeout_seconds=60)
 
     ips = []
     ports = []
-    if type == "NodePort":
+    if service_type == "NodePort":
         for pod in pods.items:
             ips.append(pod.status.host_ip)
         for port in svc.spec.ports:
             ports.append(port.node_port)
-    elif type == "LoadBalancer":
+    elif service_type == "LoadBalancer":
         while True:
             svc = core_api.read_namespaced_service(name=name, namespace=namespace)
             if svc.status.load_balancer.ingress is not None:
@@ -275,18 +275,18 @@ def get_service_endpoints(api_client, namespace, name, type, timeout_seconds=60)
             time.sleep(1)
             if time.time() - start_time > timeout_seconds:
                 raise TimeoutError("LoadBalancer service type is not supported yet.")
-    elif type == "ClusterIP":
+    elif service_type == "ClusterIP":
         ips.append(svc.spec.cluster_ip)
         for port in svc.spec.ports:
             ports.append(port.port)
     else:
-        raise K8sError("Service type {0} is not supported yet".format(type))
+        raise K8sError("Service type {0} is not supported yet".format(service_type))
 
     # generate endpoint
     endpoints = []
 
     if not ips or not ports:
-        raise K8sError("Get {0} service {1} failed.".format(type, name))
+        raise K8sError("Get {0} service {1} failed.".format(service_type, name))
 
     for ip in ips:
         for port in ports:

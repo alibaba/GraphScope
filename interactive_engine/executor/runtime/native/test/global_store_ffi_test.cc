@@ -52,8 +52,8 @@ template<class TypeBuilder>
 class TypeBuilderBase {
  private:
   TypeBuilder& AsTypeBuilder() { return static_cast<TypeBuilder&>(*this); }
- public:
 
+ public:
   virtual ~TypeBuilderBase() = default;
 
   TypeBuilder& id(LabelId id) { id_ = id; return AsTypeBuilder(); }
@@ -107,7 +107,6 @@ class SchemaBuilder {
     }
 
    private:
-
     VineyardVertexTypeBuilder builder_;
   };
 
@@ -554,6 +553,7 @@ class GraphElement {
     }
     os << ']';
   }
+
  private:
   const GraphElementSchema& schema_;
   size_t num_properties_;
@@ -954,7 +954,6 @@ class ModernGraphTest : public ::testing::Test {
       Property id_prop_;
       Property name_prop_;
       Property language_prop_;
-
     };
 
     class KnowsEdge {

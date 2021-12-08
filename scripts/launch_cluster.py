@@ -51,9 +51,7 @@ def check_requirements(cloud_type, file_path):
     ready = True
     click.echo("Checking requirements...")
     if os.path.isfile(file_path):
-        click.echo(
-            "* %s already existed, please remove or make a backup." % file_path
-        )
+        click.echo("* %s already existed, please remove or make a backup." % file_path)
         ready = False
 
     # check kubectl is installed.
@@ -64,7 +62,7 @@ def check_requirements(cloud_type, file_path):
     if cloud_type == "aws":
         if boto3 is None:
             click.echo(
-                "* boto3 module not found, please install by \"pip3 install boto3\"."
+                '* boto3 module not found, please install by "pip3 install boto3".'
             )
             ready = False
         if shutil.which("aws-iam-authenticator") is None:
@@ -75,7 +73,7 @@ def check_requirements(cloud_type, file_path):
     elif cloud_type == "aliyun":
         if not (CS20151215Client and Ecs20140526Client and Vpc20160428Client):
             click.echo(
-                "* Aliyun python sdk not found, please install by \"pip3 install alibabacloud_cs20151215 alibabacloud_ecs20140526 alibabacloud_vpc20160428\"."
+                '* Aliyun python sdk not found, please install by "pip3 install alibabacloud_cs20151215 alibabacloud_ecs20140526 alibabacloud_vpc20160428".'
             )
             ready = False
     return ready
@@ -85,11 +83,12 @@ class Launcher(object):
     def launch_cluster(self):
         clusters = self._list_clusters()
         if clusters and click.confirm(
-            "Now cloud has clusters %s, Do you want to use existed clusters?" % str(clusters)
+            "Now cloud has clusters %s, Do you want to use existed clusters?"
+            % str(clusters)
         ):
             cluster = click.prompt(
                 "You choose to use existed cluster, which cluster do you want?",
-                type=click.Choice(clusters, case_sensitive=False)
+                type=click.Choice(clusters, case_sensitive=False),
             )
         else:
             config = self._get_cluster_config()
@@ -114,15 +113,13 @@ class AWSLauncher(Launcher):
     vpc_template = "https://s3.us-west-2.amazonaws.com/amazon-eks/cloudformation/2020-10-29/amazon-eks-vpc-sample.yaml"
     workers_template = "https://s3.us-west-2.amazonaws.com/amazon-eks/cloudformation/2020-10-29/amazon-eks-nodegroup.yaml"
 
-    def __init__(self,
-                 access_key_id=None,
-                 secret_access_key=None,
-                 region=None,
-                 output_path=None):
+    def __init__(
+        self, access_key_id=None, secret_access_key=None, region=None, output_path=None
+    ):
         sess = boto3.session.Session(
             aws_access_key_id=access_key_id,
             aws_secret_access_key=secret_access_key,
-            region_name=region
+            region_name=region,
         )
         self._eks = sess.client("eks")
         self._cf = sess.client("cloudformation")
@@ -142,20 +139,19 @@ class AWSLauncher(Launcher):
         config["k8s_version"] = click.prompt(
             "k8s version",
             type=click.Choice(["1.15", "1.16", "1.17", "1.18", "1.19"]),
-            default="1.18")
+            default="1.18",
+        )
         config["instance_type"] = click.prompt(
-            "Worker node instance type, defalut",
-            default="t4g.large"
+            "Worker node instance type, defalut", default="t4g.large"
         )
         config["node_num"] = click.prompt(
-            "Worker node num, default",
-            type=int,
-            default=4
+            "Worker node num, default", type=int, default=4
         )
         return config
 
-    def _create_cluster(self, cluster_name=None, k8s_version=None, instance_type=None,
-                        node_num=4, **kw):
+    def _create_cluster(
+        self, cluster_name=None, k8s_version=None, instance_type=None, node_num=4, **kw
+    ):
         click.echo("*** EKS cluster")
         vpc_name = cluster_name + "-vpc"
         role_name = cluster_name + "-role"
@@ -171,7 +167,7 @@ class AWSLauncher(Launcher):
             resourcesVpcConfig={
                 "subnetIds": vpc_meta["subnet_ids"],
                 "securityGroupIds": [vpc_meta["security_group"]],
-                "endpointPublicAccess": True
+                "endpointPublicAccess": True,
             },
         )
         click.echo("Start creating cluster.")
@@ -193,7 +189,8 @@ class AWSLauncher(Launcher):
             vpc_meta["id"],
             vpc_meta["security_group"],
             vpc_meta["subnet_ids"],
-            instance_type, node_num
+            instance_type,
+            node_num,
         )
 
         return cluster_name
@@ -207,18 +204,18 @@ class AWSLauncher(Launcher):
         except Exception:
             click.echo("IAM role does not exist.  Creating...")
             # This is an AWS role policy document.  Allows access for EKS.
-            trust_policy = json.dumps({
-              "Version": "2012-10-17",
-              "Statement": [
+            trust_policy = json.dumps(
                 {
-                  "Effect": "Allow",
-                  "Principal": {
-                    "Service": "eks.amazonaws.com"
-                  },
-                  "Action": "sts:AssumeRole"
+                    "Version": "2012-10-17",
+                    "Statement": [
+                        {
+                            "Effect": "Allow",
+                            "Principal": {"Service": "eks.amazonaws.com"},
+                            "Action": "sts:AssumeRole",
+                        }
+                    ],
                 }
-              ]
-            })
+            )
             # Create role.
             self._iam.create_role(
                 RoleName=role_name,
@@ -310,7 +307,9 @@ class AWSLauncher(Launcher):
 
         return vpc_meta
 
-    def create_worker_stack(self, cluster_name, vpc_id, vpc_sg, vpc_subnet_ids, instance_type, node_num):
+    def create_worker_stack(
+        self, cluster_name, vpc_id, vpc_sg, vpc_subnet_ids, instance_type, node_num
+    ):
         # a stack of worker instances is created using CloudFormation.
         click.echo("*** Workers stack.")
         workers_name = cluster_name + "-workers"
@@ -354,7 +353,7 @@ class AWSLauncher(Launcher):
                     {
                         "ParameterKey": "Subnets",
                         "ParameterValue": ",".join(vpc_subnet_ids),
-                    }
+                    },
                 ],
                 TimeoutInMinutes=15,
                 OnFailure="DELETE",
@@ -388,11 +387,15 @@ class AWSLauncher(Launcher):
         click.echo("Node instance role: %s" % node_instance_role)
         click.echo("*** Update worker auth.")
 
-        config = "apiVersion: v1\nkind: ConfigMap\nmetadata:\n  name: aws-auth\n" + \
-                "  namespace: kube-system\ndata:\n  mapRoles: |\n" + \
-                "    - rolearn: " + node_instance_role + "\n" + \
-                "      username: system:node:{{EC2PrivateDNSName}}\n" + \
-                "      groups:\n        - system:bootstrappers\n        - system:nodes\n"
+        config = (
+            "apiVersion: v1\nkind: ConfigMap\nmetadata:\n  name: aws-auth\n"
+            + "  namespace: kube-system\ndata:\n  mapRoles: |\n"
+            + "    - rolearn: "
+            + node_instance_role
+            + "\n"
+            + "      username: system:node:{{EC2PrivateDNSName}}\n"
+            + "      groups:\n        - system:bootstrappers\n        - system:nodes\n"
+        )
 
         click.echo("Write config map...")
         worker_auth_file = os.path.dirname(self._output_path) + "/aws-auth-cm.yaml"
@@ -404,7 +407,7 @@ class AWSLauncher(Launcher):
         try:
             subprocess.run(
                 [
-                    "kubectl",
+                    shutil.which("kubectl"),
                     "--kubeconfig=%s" % self._output_path,
                     "apply",
                     "-f",
@@ -412,7 +415,7 @@ class AWSLauncher(Launcher):
                 ],
                 stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE,
-                check=True
+                check=True,
             )
         except subprocess.CalledProcessError as e:
             click.echo("Error: %s" % e.stderr)
@@ -451,13 +454,7 @@ class AWSLauncher(Launcher):
                 }
             ],
             "contexts": [
-                {
-                    "context": {
-                        "cluster": "kubernetes",
-                        "user": "aws"
-                    },
-                    "name": "aws"
-                }
+                {"context": {"cluster": "kubernetes", "user": "aws"}, "name": "aws"}
             ],
             "current-context": "aws",
             "preferences": {},
@@ -468,11 +465,9 @@ class AWSLauncher(Launcher):
                         "exec": {
                             "apiVersion": "client.authentication.k8s.io/v1alpha1",
                             "command": "aws-iam-authenticator",
-                            "args": [
-                                "token", "-i", cluster_name
-                            ]
+                            "args": ["token", "-i", cluster_name],
                         }
-                    }
+                    },
                 }
             ],
         }
@@ -486,11 +481,9 @@ class AWSLauncher(Launcher):
 
 
 class AliyunLauncher(Launcher):
-    def __init__(self,
-                 access_key_id=None,
-                 secret_access_key=None,
-                 region=None,
-                 output_path=None):
+    def __init__(
+        self, access_key_id=None, secret_access_key=None, region=None, output_path=None
+    ):
         config = open_api_models.Config(
             access_key_id=access_key_id, access_key_secret=secret_access_key
         )
@@ -516,8 +509,10 @@ class AliyunLauncher(Launcher):
         config["cluster_name"] = click.prompt("The name of cluster to create")
         config["k8s_version"] = click.prompt(
             "k8s version",
-            type=click.Choice(["1.16.9-aliyun.1", "1.18.8-aliyun.1"], case_sensitive=False),
-            default="1.18.8-aliyun.1"
+            type=click.Choice(
+                ["1.16.9-aliyun.1", "1.18.8-aliyun.1"], case_sensitive=False
+            ),
+            default="1.18.8-aliyun.1",
         )
         config["vpc_cidr_block"] = click.prompt(
             "VPC CIDR block", default="192.168.0.0/16"
@@ -528,18 +523,24 @@ class AliyunLauncher(Launcher):
         config["container_cidr"] = click.prompt(
             "Container CIDR", default="172.20.0.0/16"
         )
-        config["service_cidr"] = click.prompt(
-            "Service CIDR", default="172.21.0.0/20"
-        )
+        config["service_cidr"] = click.prompt("Service CIDR", default="172.21.0.0/20")
         config["instance_type"] = click.prompt(
             "Worker node instance type", type=str, default="ecs.g5.large"
         )
         config["node_num"] = click.prompt("Worker node num", type=int, default=4)
         return config
 
-    def _create_cluster(self, cluster_name=None, k8s_version=None, container_cidr=None,
-                        instance_type=None, service_cidr=None, node_num=2, **kw):
-        keypair_name = cluster_name + '-keypair'
+    def _create_cluster(
+        self,
+        cluster_name=None,
+        k8s_version=None,
+        container_cidr=None,
+        instance_type=None,
+        service_cidr=None,
+        node_num=2,
+        **kw
+    ):
+        keypair_name = cluster_name + "-keypair"
         click.echo("Create key-pair.")
         create_key_pair_request = ecs_20140526_models.CreateKeyPairRequest(
             region_id=self._region, key_pair_name=keypair_name
@@ -587,7 +588,9 @@ class AliyunLauncher(Launcher):
         cluster_id = desc_cluster_res.cluster_id
 
         # get kube config of cluster
-        describe_cluster_user_kubeconfig_request = cs20151215_models.DescribeClusterUserKubeconfigRequest()
+        describe_cluster_user_kubeconfig_request = (
+            cs20151215_models.DescribeClusterUserKubeconfigRequest()
+        )
         config = self._eks.describe_cluster_user_kubeconfig(
             cluster_id, describe_cluster_user_kubeconfig_request
         ).body.config
@@ -643,8 +646,10 @@ class AliyunLauncher(Launcher):
             vswitch_ids = [vswitch_res.body.v_switch_id]
 
             # check vswitch create complete
-            describe_vswitch_request = vpc_20160428_models.DescribeVSwitchAttributesRequest(
-                v_switch_id=vswitch_ids[0]
+            describe_vswitch_request = (
+                vpc_20160428_models.DescribeVSwitchAttributesRequest(
+                    v_switch_id=vswitch_ids[0]
+                )
             )
             while True:
                 res = self._vpc.describe_vswitch_attributes(describe_vswitch_request)
@@ -685,7 +690,7 @@ class AliyunLauncher(Launcher):
     "type",
     type=click.Choice(["aws", "aliyun"], case_sensitive=False),
     help="Cloud type to launch cluster.",
-    required=True
+    required=True,
 )
 @click.option("--id", help="The access_key_id of cloud.", required=True)
 @click.option("--secret", help="The access_key_secret of cloud.", required=True)
@@ -694,9 +699,9 @@ class AliyunLauncher(Launcher):
     "--output",
     help="The kube config file output path.",
     default=os.environ["HOME"] + "/.kube/config",
-    show_default=True
+    show_default=True,
 )
-def launch(type, id, secret, region, output):
+def launch(cluster_type, access_key_id, secret_access_key, region, output):
     """Interactive script to launch cluster on AWS or Aliyun and output kube config file.
 
     Notice: this script would require your AWS/Aliyun account's access_key_id and secret_access_key
@@ -707,7 +712,7 @@ def launch(type, id, secret, region, output):
     install aws-iam-authenticator.
     """
 
-    if not check_requirements(type, output):
+    if not check_requirements(cluster_type, output):
         click.echo(
             "Requirements of the script not fulfill, please follow the prompt to install requirement."
         )
@@ -715,10 +720,10 @@ def launch(type, id, secret, region, output):
     else:
         click.echo("Requirements fulfilled.")
 
-    if type == "aws":
-        launcher = AWSLauncher(id, secret, region, output)
+    if cluster_type == "aws":
+        launcher = AWSLauncher(access_key_id, secret_access_key, region, output)
     else:
-        launcher = AliyunLauncher(id, secret, region, output)
+        launcher = AliyunLauncher(access_key_id, secret_access_key, region, output)
 
     launcher.launch_cluster()
 

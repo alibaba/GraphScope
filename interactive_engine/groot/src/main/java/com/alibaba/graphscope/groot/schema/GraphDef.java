@@ -241,6 +241,13 @@ public class GraphDef implements GraphSchema {
         return convertVertexEdgeType(idToType.get(labelId));
     }
 
+    @Override
+    public GraphElement getElement(int labelId) throws GraphElementNotFoundException {
+        TypeDef typeDef = idToType.get(new LabelId(labelId));
+        return convertVertexEdgeType(typeDef);
+    }
+
+
     private GraphElement convertVertexEdgeType(TypeDef typeDef) {
         if (null == typeDef) {
             throw new RuntimeException("No type def with given label id/name");
@@ -252,12 +259,6 @@ public class GraphDef implements GraphSchema {
         } else {
             throw new IllegalArgumentException("Not support type value " + typeDef.getTypeEnum());
         }
-    }
-
-    @Override
-    public GraphElement getElement(int labelId) throws GraphElementNotFoundException {
-        TypeDef typeDef = idToType.get(new LabelId(labelId));
-        return convertVertexEdgeType(typeDef);
     }
 
     @Override
