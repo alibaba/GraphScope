@@ -63,7 +63,11 @@ traversalMethod
     | traversalMethod_limit    // limit()
     | traversalMethod_valueMap  // valueMap()
     | traversalMethod_order  // order()
-    | traversalMethod_select  // order()
+    | traversalMethod_select  // select()
+    | traversalMethod_dedup   // dedup()
+    | traversalMethod_group   // group()
+    | traversalMethod_groupCount // groupCount()
+    | traversalMethod_values    // values()
     ;
 
 traversalSourceSpawnMethod_V
@@ -169,7 +173,7 @@ traversalMethod_orderby_list
 // select('s', ...)
 // select('s', ...).by(...).by(...)
 traversalMethod_select
-    : 'select' LPAREN stringLiteral (COMMA stringLiteralList)? RPAREN (DOT traversalMethod_selectby_list)?
+    : 'select' LPAREN NonEmptyStringLiteral (COMMA NonEmptyStringLiteral)? RPAREN (DOT traversalMethod_selectby_list)?
     ;
 
 // by(valueMap())
@@ -181,6 +185,57 @@ traversalMethod_selectby
 traversalMethod_selectby_list
     : traversalMethod_selectby (DOT traversalMethod_selectby)*
     ;
+
+// dedup in global scope
+traversalMethod_dedup
+	: 'dedup' LPAREN RPAREN
+	;
+
+traversalMethod_group
+	: 'group' LPAREN RPAREN (DOT traversalMethod_group_keyby)? (DOT traversalMethod_group_valueby)?
+	;
+
+traversalMethod_groupCount
+	: 'groupCount' LPAREN RPAREN (DOT traversalMethod_group_keyby)?
+	;
+
+// group().by('name')
+// group().by(values('name'))
+// group().by(values('name').as('key'))
+traversalMethod_group_keyby
+    : 'by' LPAREN stringLiteral RPAREN
+    | 'by' LPAREN traversalMethod_values (DOT traversalMethod_as)? RPAREN
+    ;
+
+// group().by(...).by() infers group().by(...).by(fold())
+// group().by(...).by(fold().as("value"))
+// group().by(...).by(count())
+// group().by(...).by(count().as("value"))
+traversalMethod_group_valueby
+    : 'by' LPAREN RPAREN
+    | 'by' LPAREN traversalMethod_aggregate_func (DOT traversalMethod_as)? RPAREN
+    ;
+
+traversalMethod_aggregate_func
+    : traversalMethod_count
+    | traversalMethod_fold
+    ;
+
+// count in global scope
+traversalMethod_count
+	: 'count' LPAREN RPAREN
+	;
+
+// only one argument is permitted
+// values("name")
+traversalMethod_values
+    : 'values' LPAREN NonEmptyStringLiteral RPAREN
+    ;
+
+// fold()
+traversalMethod_fold
+	: 'fold' LPAREN RPAREN
+	;
 
 stringLiteral
     : NonEmptyStringLiteral
@@ -237,6 +292,8 @@ traversalPredicate
     | traversalPredicate_lte
     | traversalPredicate_gt
     | traversalPredicate_gte
+    | traversalPredicate_within
+    | traversalPredicate_without
     ;
 
 traversalPredicate_eq
@@ -261,6 +318,14 @@ traversalPredicate_gt
 
 traversalPredicate_gte
     : 'gte' LPAREN genericLiteral RPAREN
+    ;
+
+traversalPredicate_within
+    : 'within' LPAREN genericLiteralList RPAREN
+    ;
+
+traversalPredicate_without
+    : 'without' LPAREN genericLiteralList RPAREN
     ;
 
 traversalOrder
