@@ -42,10 +42,15 @@ impl From<Token> for ExprResult<pb::ExprOpr> {
             Token::And => Ok(pb::Logical::And.into()),
             Token::Or => Ok(pb::Logical::Or.into()),
             Token::Not => Ok(pb::Logical::Not.into()),
+            Token::Within => Ok(pb::Logical::Within.into()),
+            Token::Without => Ok(pb::Logical::Without.into()),
             Token::Boolean(b) => Ok(pb::Const { value: Some(b.into()) }.into()),
             Token::Int(i) => Ok(pb::Const { value: Some(i.into()) }.into()),
             Token::Float(f) => Ok(pb::Const { value: Some(f.into()) }.into()),
             Token::String(s) => Ok(pb::Const { value: Some(s.into()) }.into()),
+            Token::IntArray(v) => Ok(pb::Const { value: Some(v.into()) }.into()),
+            Token::FloatArray(v) => Ok(pb::Const { value: Some(v.into()) }.into()),
+            Token::StrArray(v) => Ok(pb::Const { value: Some(v.into()) }.into()),
             Token::Identifier(ident) => {
                 if !ident.starts_with(VAR_PREFIX) {
                     Err("invalid token, a variable must start with \"@\"".into())

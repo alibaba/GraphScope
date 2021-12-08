@@ -15,7 +15,7 @@
 
 #[cfg(test)]
 mod tests {
-    use dyn_type::{object, Object, Primitives};
+    use dyn_type::{object, BorrowObject, Object, Primitives};
     use std::cmp::Ordering;
 
     #[test]
@@ -60,6 +60,14 @@ mod tests {
         assert!(!object_vec.contains(&vec![1, 5].into()));
         assert!(!object_vec.contains(&vec![1, 2, 3, 4].into()));
 
+        // vector of floats
+        let object_vec: Object = vec![1.0, 2.0, 3.0].into();
+        assert!(object_vec.contains(&1.0.into()));
+        assert!(!object_vec.contains(&4.0.into()));
+        assert!(object_vec.contains(&vec![1.0, 3.0].into()));
+        assert!(!object_vec.contains(&vec![1.0, 5.0].into()));
+        assert!(!object_vec.contains(&vec![1.0, 2.0, 3.0, 4.0].into()));
+
         // vector of strings
         let object_vec: Object = vec!["a".to_string(), "b".to_string(), "c".to_string()].into();
         assert!(object_vec.contains(&"a".to_string().into()));
@@ -72,6 +80,13 @@ mod tests {
         assert!(object_str.contains(&"a".to_string().into()));
         assert!(object_str.contains(&"abc".to_string().into()));
         assert!(!object_str.contains(&"ac".to_string().into()));
+
+        // borrow object
+        let object_vec_b: BorrowObject = object_vec.as_borrow();
+        assert!(object_vec_b.contains(&Object::from("a".to_string()).as_borrow()));
+        assert!(!object_vec_b.contains(&Object::from("d".to_string()).as_borrow()));
+        assert!(object_vec_b.contains(&Object::from(vec!["a".to_string()]).as_borrow()));
+        assert!(!object_vec_b.contains(&Object::from(vec!["a".to_string(), "d".to_string()]).as_borrow()));
     }
 
     #[test]

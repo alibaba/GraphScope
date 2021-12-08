@@ -148,10 +148,11 @@ fn apply_logical<'a>(
                 Ge => Ok((a >= b).into()),
                 And => Ok((a.as_bool()? && b.as_bool()?).into()),
                 Or => Ok((a.as_bool()? || b.as_bool()?).into()),
+                Within => Ok(b.contains(&a).into()),
+                Without => Ok((!b.contains(&a)).into()),
                 Not => unreachable!(),
-                // todo within, without
-                _ => Err(ExprError::OtherErr("`within`, `without` unimplemented!".to_string())),
             };
+
             return rst;
         }
     }
@@ -401,6 +402,7 @@ mod tests {
     use super::*;
     use crate::expr::to_suffix_expr_pb;
     use crate::expr::token::tokenize;
+    use crate::expr::token::Token;
     use crate::graph::element::Vertex;
     use crate::graph::property::{DefaultDetails, DynDetails};
 
@@ -503,6 +505,77 @@ mod tests {
             let eval = Evaluator::try_from(to_suffix_expr_pb(tokenize(case).unwrap()).unwrap()).unwrap();
             assert_eq!(eval.eval::<(), NoneContext>(None).unwrap(), expected);
         }
+    }
+
+    #[test]
+    fn test_eval_contains() {
+        let tokens = vec![Token::Int(10), Token::Within, Token::IntArray(vec![10, 9, 8, 7])];
+        let eval = Evaluator::try_from(to_suffix_expr_pb(tokens).unwrap()).unwrap();
+        assert!(eval.eval_bool::<(), NoneContext>(None).unwrap());
+
+        let tokens = vec![Token::IntArray(vec![10, 7]), Token::Within, Token::IntArray(vec![10, 9, 8, 7])];
+        let eval = Evaluator::try_from(to_suffix_expr_pb(tokens).unwrap()).unwrap();
+        assert!(eval.eval_bool::<(), NoneContext>(None).unwrap());
+
+        let tokens = vec![Token::IntArray(vec![10, 6]), Token::Within, Token::IntArray(vec![10, 9, 8, 7])];
+        let eval = Evaluator::try_from(to_suffix_expr_pb(tokens).unwrap()).unwrap();
+        assert!(!eval.eval_bool::<(), NoneContext>(None).unwrap());
+
+        let tokens = vec![Token::IntArray(vec![10, 6]), Token::Without, Token::IntArray(vec![10, 9, 8, 7])];
+        let eval = Evaluator::try_from(to_suffix_expr_pb(tokens).unwrap()).unwrap();
+        assert!(eval.eval_bool::<(), NoneContext>(None).unwrap());
+
+        let tokens = vec![Token::Float(10.0), Token::Within, Token::FloatArray(vec![10.0, 9.0, 8.0, 7.0])];
+        let eval = Evaluator::try_from(to_suffix_expr_pb(tokens).unwrap()).unwrap();
+        assert!(eval.eval_bool::<(), NoneContext>(None).unwrap());
+
+        let tokens = vec![
+            Token::FloatArray(vec![10.0, 7.0]),
+            Token::Within,
+            Token::FloatArray(vec![10.0, 9.0, 8.0, 7.0]),
+        ];
+        let eval = Evaluator::try_from(to_suffix_expr_pb(tokens).unwrap()).unwrap();
+        assert!(eval.eval_bool::<(), NoneContext>(None).unwrap());
+
+        let tokens = vec![Token::Float(11.0), Token::Within, Token::FloatArray(vec![10.0, 9.0, 8.0, 7.0])];
+        let eval = Evaluator::try_from(to_suffix_expr_pb(tokens).unwrap()).unwrap();
+        assert!(!eval.eval_bool::<(), NoneContext>(None).unwrap());
+
+        let tokens = vec![Token::Float(11.0), Token::Without, Token::FloatArray(vec![10.0, 9.0, 8.0, 7.0])];
+        let eval = Evaluator::try_from(to_suffix_expr_pb(tokens).unwrap()).unwrap();
+        assert!(eval.eval_bool::<(), NoneContext>(None).unwrap());
+
+        let tokens = vec![
+            Token::String("a".to_string()),
+            Token::Within,
+            Token::StrArray(vec!["a".to_string(), "b".to_string(), "c".to_string()]),
+        ];
+        let eval = Evaluator::try_from(to_suffix_expr_pb(tokens).unwrap()).unwrap();
+        assert!(eval.eval_bool::<(), NoneContext>(None).unwrap());
+
+        let tokens = vec![
+            Token::StrArray(vec!["a".to_string()]),
+            Token::Within,
+            Token::StrArray(vec!["a".to_string(), "b".to_string(), "c".to_string()]),
+        ];
+        let eval = Evaluator::try_from(to_suffix_expr_pb(tokens).unwrap()).unwrap();
+        assert!(eval.eval_bool::<(), NoneContext>(None).unwrap());
+
+        let tokens = vec![
+            Token::StrArray(vec!["d".to_string()]),
+            Token::Within,
+            Token::StrArray(vec!["a".to_string(), "b".to_string(), "c".to_string()]),
+        ];
+        let eval = Evaluator::try_from(to_suffix_expr_pb(tokens).unwrap()).unwrap();
+        assert!(!eval.eval_bool::<(), NoneContext>(None).unwrap());
+
+        let tokens = vec![
+            Token::StrArray(vec!["d".to_string()]),
+            Token::Without,
+            Token::StrArray(vec!["a".to_string(), "b".to_string(), "c".to_string()]),
+        ];
+        let eval = Evaluator::try_from(to_suffix_expr_pb(tokens).unwrap()).unwrap();
+        assert!(eval.eval_bool::<(), NoneContext>(None).unwrap());
     }
 
     #[test]

@@ -863,6 +863,40 @@ impl<'a> BorrowObject<'a> {
             BorrowObject::DynRef(d) => Some(Object::DynOwned((*d).clone())),
         }
     }
+
+    pub fn contains(&self, sub_obj: &BorrowObject) -> bool {
+        match self {
+            BorrowObject::Vector(v1) => {
+                let set = v1
+                    .iter()
+                    .map(|obj| obj.as_borrow())
+                    .collect::<HashSet<_>>();
+                match sub_obj {
+                    BorrowObject::Vector(v2) => {
+                        if v1.len() >= v2.len() {
+                            let mut cmp = true;
+                            for key in v2.iter().map(|obj| obj.as_borrow()) {
+                                if !set.contains(&key) {
+                                    cmp = false;
+                                    break;
+                                }
+                            }
+                            cmp
+                        } else {
+                            false
+                        }
+                    }
+                    BorrowObject::Primitive(_) | BorrowObject::String(_) => set.contains(&sub_obj),
+                    _ => false,
+                }
+            }
+            BorrowObject::String(str1) => match sub_obj {
+                BorrowObject::String(str2) => str1.contains(str2),
+                _ => false,
+            },
+            _ => false,
+        }
+    }
 }
 
 impl PartialEq for Object {
@@ -1085,6 +1119,48 @@ impl Hash for Object {
             }
             // TODO(longbin) Should be able to hash a DynType
             Object::DynOwned(_) => {
+                unimplemented!()
+            }
+        }
+    }
+}
+
+impl<'a> Hash for BorrowObject<'a> {
+    fn hash<H: Hasher>(&self, state: &mut H) {
+        match self {
+            BorrowObject::Primitive(p) => match p {
+                Primitives::Byte(v) => {
+                    v.hash(state);
+                }
+                Primitives::Integer(v) => {
+                    v.hash(state);
+                }
+                Primitives::Long(v) => {
+                    v.hash(state);
+                }
+                Primitives::Float(v) => {
+                    integer_decode(*v).hash(state);
+                }
+                Primitives::ULLong(v) => {
+                    v.hash(state);
+                }
+            },
+            BorrowObject::String(s) => {
+                s.hash(state);
+            }
+            BorrowObject::Blob(b) => {
+                b.hash(state);
+            }
+            BorrowObject::Vector(v) => {
+                v.hash(state);
+            }
+            BorrowObject::KV(kv) => {
+                for pair in kv.iter() {
+                    pair.hash(state);
+                }
+            }
+            // TODO(longbin) Should be able to hash a DynType
+            BorrowObject::DynRef(_) => {
                 unimplemented!()
             }
         }

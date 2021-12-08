@@ -221,6 +221,24 @@ impl From<String> for common_pb::Value {
     }
 }
 
+impl From<Vec<i64>> for common_pb::Value {
+    fn from(item: Vec<i64>) -> Self {
+        common_pb::Value { item: Some(common_pb::value::Item::I64Array(common_pb::I64Array { item })) }
+    }
+}
+
+impl From<Vec<f64>> for common_pb::Value {
+    fn from(item: Vec<f64>) -> Self {
+        common_pb::Value { item: Some(common_pb::value::Item::F64Array(common_pb::DoubleArray { item })) }
+    }
+}
+
+impl From<Vec<String>> for common_pb::Value {
+    fn from(item: Vec<String>) -> Self {
+        common_pb::Value { item: Some(common_pb::value::Item::StrArray(common_pb::StringArray { item })) }
+    }
+}
+
 impl From<i32> for common_pb::NameOrId {
     fn from(i: i32) -> Self {
         common_pb::NameOrId { item: Some(common_pb::name_or_id::Item::Id(i)) }

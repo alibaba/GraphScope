@@ -27,26 +27,31 @@ pub enum Token {
     Hat,     // ^
 
     // Logical
-    Eq,  // ==
-    Ne,  // !=
-    Gt,  // >
-    Lt,  // <
-    Ge,  // >=
-    Le,  // <=
-    And, // &&
-    Or,  // ||
-    Not, // !
+    Eq,      // ==
+    Ne,      // !=
+    Gt,      // >
+    Lt,      // <
+    Ge,      // >=
+    Le,      // <=
+    And,     // &&
+    Or,      // ||
+    Not,     // !
+    Within,  // Within
+    Without, // Without
 
     // Precedence
     LBrace, // (
     RBrace, // )
 
     // Values and Variables
-    Identifier(String), // a string-identifier
-    Float(f64),         // a float value
-    Int(i64),           // an integer value
-    Boolean(bool),      // a boolean value
-    String(String),     // a string value
+    Identifier(String),    // a string-identifier
+    Float(f64),            // a float value
+    Int(i64),              // an integer value
+    Boolean(bool),         // a boolean value
+    String(String),        // a string value
+    IntArray(Vec<i64>),    // a integer array
+    FloatArray(Vec<f64>),  // a float array
+    StrArray(Vec<String>), // a string array
 }
 
 impl Token {
@@ -54,7 +59,8 @@ impl Token {
     pub fn is_operand(&self) -> bool {
         use crate::expr::token::Token::*;
         match self {
-            Identifier(_) | Float(_) | Int(_) | Boolean(_) | String(_) => true,
+            Identifier(_) | Float(_) | Int(_) | Boolean(_) | String(_) | IntArray(_) | FloatArray(_)
+            | StrArray(_) => true,
             _ => false,
         }
     }
@@ -125,7 +131,6 @@ fn char_to_partial_token(c: char) -> PartialToken {
         '&' => PartialToken::Ampersand,
         '|' => PartialToken::VerticalBar,
         '-' => PartialToken::Minus,
-        // '-' => PartialToken::Token(Token::Minus),
         '+' => PartialToken::Token(Token::Plus),
         '*' => PartialToken::Token(Token::Star),
         '/' => PartialToken::Token(Token::Slash),
