@@ -1,23 +1,16 @@
 name: GraphScope Nightly Build CI
 
-on:
-  workflow_dispatch:
-  schedule:
-    # The notifications for scheduled workflows are sent to the user who
-    # last modified the cron syntax in the workflow file.
-    # Trigger the workflow at 03:00(CST) every day.
-    - cron:  '00 19 * * *'
+on: [push, pull_request]
 
 jobs:
   nightly-test:
-    if: ${{ github.ref == 'refs/heads/main' && github.repository == 'alibaba/GraphScope' }}
     runs-on: ${{ matrix.os }}
     defaults:
       run:
         shell: bash --noprofile --norc -eo pipefail {0}
     strategy:
       matrix:
-        os: [ubuntu-20.04, macos-10.15]
+        os: [ubuntu-20.04]
     steps:
     - uses: actions/checkout@v2
       with:
@@ -38,8 +31,11 @@ jobs:
         source ${HOME}/.graphscope_env
         make BUILD_TYPE=debug
 
+    - name: Setup tmate session
+      if: true
+      uses: mxschmitt/action-tmate@v2
+
     - name: Run Python Test
-      if: matrix.os == 'ubuntu-20.04'
       env:
         FULL-TEST-SUITE: ON
         GS_TEST_DIR: ${{ github.workspace }}/gstest
@@ -48,19 +44,3 @@ jobs:
         git clone -b master --single-branch --depth=1 https://github.com/7br/gstest.git ${GS_TEST_DIR}
         # run test
         make unittest
-
-  build-gss-image:
-    if: ${{ github.ref == 'refs/heads/main' && github.repository == 'alibaba/GraphScope' }}
-    runs-on: ubuntu-20.04
-    steps:
-    - uses: actions/checkout@v2.3.2
-
-    - name: Add envs to GITHUB_ENV
-      run: |
-        short_sha=$(git rev-parse --short HEAD)
-        echo "SHORT_SHA=${short_sha}" >> $GITHUB_ENV
-
-    - name: Build GraphScope Store Image
-      run: |
-        cd ${GITHUB_WORKSPACE}
-        sudo make graphscope-store-image
