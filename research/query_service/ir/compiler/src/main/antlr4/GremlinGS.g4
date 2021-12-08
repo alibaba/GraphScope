@@ -64,11 +64,11 @@ traversalMethod
     | traversalMethod_limit    // limit()
     | traversalMethod_valueMap  // valueMap()
     | traversalMethod_order  // order()
-    | traversalMethod_select  // order()
-    | traversalMethod_dedup
-    | traversalMethod_group
-    | traversalMethod_groupCount
-    | traversalMethod_values
+    | traversalMethod_select  // select()
+    | traversalMethod_dedup   // dedup()
+    | traversalMethod_group   // group()
+    | traversalMethod_groupCount // groupCount()
+    | traversalMethod_values    values()
     ;
 
 traversalSourceSpawnMethod_V
@@ -174,7 +174,7 @@ traversalMethod_orderby_list
 // select('s', ...)
 // select('s', ...).by(...).by(...)
 traversalMethod_select
-    : 'select' LPAREN stringLiteral (COMMA stringLiteralList)? RPAREN (DOT traversalMethod_selectby_list)?
+    : 'select' LPAREN NonEmptyStringLiteral (COMMA NonEmptyStringLiteral)? RPAREN (DOT traversalMethod_selectby_list)?
     ;
 
 // by(valueMap())
@@ -188,16 +188,8 @@ traversalMethod_selectby_list
     ;
 
 // dedup in global scope
-// dedup().by('name')
-// dedup().by(valueMap('name', 'id'))
 traversalMethod_dedup
-	: 'dedup' LPAREN RPAREN (DOT traversalMethod_dedupby)?
-	;
-
-//  multiple by() of dedup is unsupported in standard gremlin
-traversalMethod_dedupby
-	: 'by' LPAREN stringLiteralList RPAREN
-    | 'by' LPAREN traversalMethod_valueMap RPAREN
+	: 'dedup' LPAREN RPAREN
 	;
 
 traversalMethod_group
@@ -216,7 +208,8 @@ traversalMethod_group_keyby
     | 'by' LPAREN traversalMethod_values (DOT traversalMethod_as)? RPAREN
     ;
 
-// group().by(...).by()
+// group().by(...).by() infers group().by(...).by(fold())
+// group().by(...).by(fold().as("value"))
 // group().by(...).by(count())
 // group().by(...).by(count().as("value"))
 traversalMethod_group_valueby
@@ -226,6 +219,7 @@ traversalMethod_group_valueby
 
 traversalMethod_aggregate_func
     : traversalMethod_count
+    | traversalMethod_fold
     ;
 
 // count in global scope
@@ -238,6 +232,11 @@ traversalMethod_count
 traversalMethod_values
     : 'values' LPAREN NonEmptyStringLiteral RPAREN
     ;
+
+// fold()
+traversalMethod_fold
+	: 'fold' LPAREN RPAREN
+	;
 
 stringLiteral
     : NonEmptyStringLiteral
