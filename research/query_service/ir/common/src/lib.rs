@@ -509,7 +509,6 @@ impl From<Object> for common_pb::Value {
                 }
                 common_pb::value::Item::PairArray(common_pb::PairArray { item: pairs })
             }
-            _ => unimplemented!(),
         };
 
         common_pb::Value { item: Some(item) }

@@ -22,7 +22,6 @@ extern crate dyn_clonable;
 pub mod arith;
 pub mod error;
 pub mod object;
-pub mod serde_dyn;
 #[macro_use]
 pub mod macros;
 pub mod serde;
@@ -30,7 +29,6 @@ pub mod serde;
 use dyn_clonable::*;
 pub use error::CastError;
 pub use object::{BorrowObject, Object, OwnedOrRef, Primitives};
-pub use serde_dyn::{de_dyn_obj, register_type};
 use std::any::Any;
 use std::fmt::Debug;
 use std::io;

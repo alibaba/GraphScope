@@ -13,8 +13,7 @@
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 
-use crate::{de_dyn_obj, Object, Primitives};
-use core::any::TypeId;
+use crate::{Object, Primitives};
 use pegasus_common::codec::{Decode, Encode, ReadExt, WriteExt};
 use std::collections::BTreeMap;
 use std::io;
@@ -110,12 +109,6 @@ impl Encode for Object {
                 writer.write_all(&(**b))?;
                 Ok(())
             }
-            Object::DynOwned(dyn_type) => {
-                writer.write_u8(5)?;
-                let bytes = (**dyn_type).to_bytes()?;
-                bytes.write_to(writer)?;
-                Ok(())
-            }
         }
     }
 }
@@ -154,14 +147,6 @@ impl Decode for Object {
                     b.push(ele);
                 }
                 Ok(Object::Blob(b.into_boxed_slice()))
-            }
-            5 => {
-                let bytes = <Vec<u8>>::read_from(reader)?;
-                let mut bytes_reader = &bytes[0..];
-                let number = <u64>::read_from(&mut bytes_reader)?;
-                let t: TypeId = unsafe { std::mem::transmute(number) };
-                let obj = de_dyn_obj(&t, &mut bytes_reader)?;
-                Ok(Object::DynOwned(obj))
             }
             _ => Err(io::Error::new(io::ErrorKind::Other, "not supported")),
         }

@@ -13,7 +13,7 @@
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 
-use crate::{try_downcast, try_downcast_ref, CastError, DynType};
+use crate::{CastError, DynType};
 use core::any::TypeId;
 use itertools::Itertools;
 use std::any::Any;
@@ -448,7 +448,6 @@ pub enum Object {
     Vector(Vec<Object>),
     KV(BTreeMap<Object, Object>),
     Blob(Box<[u8]>),
-    DynOwned(Box<dyn DynType>),
 }
 
 impl ToString for Object {
@@ -460,7 +459,6 @@ impl ToString for Object {
             Vector(v) => format!("{:?}", v),
             KV(kv) => format!("{:?}", kv),
             Blob(b) => format!("{:?}", b),
-            DynOwned(_) => unimplemented!(),
         }
     }
 }
@@ -473,8 +471,6 @@ pub enum BorrowObject<'a> {
     Vector(&'a [Object]),
     KV(&'a BTreeMap<Object, Object>),
     Blob(&'a [u8]),
-    /// To borrow from `Object::DynOwned`, and it can be cloned back to `Object::DynOwned`
-    DynRef(&'a Box<dyn DynType>),
 }
 
 impl<'a> ToString for BorrowObject<'a> {
@@ -486,7 +482,6 @@ impl<'a> ToString for BorrowObject<'a> {
             Vector(v) => format!("{:?}", v),
             KV(kv) => format!("{:?}", kv),
             Blob(b) => format!("{:?}", b),
-            DynRef(_) => unimplemented!(),
         }
     }
 }
@@ -499,7 +494,6 @@ impl Object {
             Object::Vector(_) => RawType::Vector,
             Object::KV(_) => RawType::KV,
             Object::Blob(b) => RawType::Blob(b.len()),
-            Object::DynOwned(_) => RawType::Unknown,
         }
     }
 
@@ -510,7 +504,6 @@ impl Object {
             Object::Vector(v) => BorrowObject::Vector(v.as_slice()),
             Object::KV(kv) => BorrowObject::KV(kv),
             Object::Blob(v) => BorrowObject::Blob(v.as_ref()),
-            Object::DynOwned(v) => BorrowObject::DynRef(v),
         }
     }
 
@@ -518,7 +511,6 @@ impl Object {
     pub fn as_primitive(&self) -> Result<Primitives, CastError> {
         match self {
             Object::Primitive(p) => Ok(*p),
-            Object::DynOwned(x) => try_downcast!(x, Primitives),
             _ => Err(CastError::new::<Primitives>(self.raw_type())),
         }
     }
@@ -541,7 +533,6 @@ impl Object {
     pub fn as_i16(&self) -> Result<i16, CastError> {
         match self {
             Object::Primitive(p) => p.as_i16(),
-            Object::DynOwned(x) => try_downcast!(x, i16),
             _ => Err(CastError::new::<i16>(self.raw_type())),
         }
     }
@@ -550,7 +541,6 @@ impl Object {
     pub fn as_i32(&self) -> Result<i32, CastError> {
         match self {
             Object::Primitive(p) => p.as_i32(),
-            Object::DynOwned(x) => try_downcast!(x, i32),
             _ => Err(CastError::new::<i32>(self.raw_type())),
         }
     }
@@ -559,7 +549,6 @@ impl Object {
     pub fn as_i64(&self) -> Result<i64, CastError> {
         match self {
             Object::Primitive(p) => p.as_i64(),
-            Object::DynOwned(x) => try_downcast!(x, i64),
             _ => Err(CastError::new::<i64>(self.raw_type())),
         }
     }
@@ -568,7 +557,6 @@ impl Object {
     pub fn as_i128(&self) -> Result<i128, CastError> {
         match self {
             Object::Primitive(p) => p.as_i128(),
-            Object::DynOwned(x) => try_downcast!(x, i128),
             _ => Err(CastError::new::<i128>(self.raw_type())),
         }
     }
@@ -586,7 +574,6 @@ impl Object {
     pub fn as_u16(&self) -> Result<u16, CastError> {
         match self {
             Object::Primitive(p) => p.as_u16(),
-            Object::DynOwned(x) => try_downcast!(x, u16),
             _ => Err(CastError::new::<u16>(self.raw_type())),
         }
     }
@@ -595,7 +582,6 @@ impl Object {
     pub fn as_u32(&self) -> Result<u32, CastError> {
         match self {
             Object::Primitive(p) => p.as_u32(),
-            Object::DynOwned(x) => try_downcast!(x, u32),
             _ => Err(CastError::new::<u32>(self.raw_type())),
         }
     }
@@ -604,7 +590,6 @@ impl Object {
     pub fn as_u64(&self) -> Result<u64, CastError> {
         match self {
             Object::Primitive(p) => p.as_u64(),
-            Object::DynOwned(x) => try_downcast!(x, u64),
             _ => Err(CastError::new::<u64>(self.raw_type())),
         }
     }
@@ -613,7 +598,6 @@ impl Object {
     pub fn as_u128(&self) -> Result<u128, CastError> {
         match self {
             Object::Primitive(p) => p.as_u128(),
-            Object::DynOwned(x) => try_downcast!(x, u128),
             _ => Err(CastError::new::<u128>(self.raw_type())),
         }
     }
@@ -622,7 +606,6 @@ impl Object {
     pub fn as_f64(&self) -> Result<f64, CastError> {
         match self {
             Object::Primitive(p) => p.as_f64(),
-            Object::DynOwned(x) => try_downcast!(x, f64),
             _ => Err(CastError::new::<f64>(self.raw_type())),
         }
     }
@@ -632,7 +615,6 @@ impl Object {
         match self {
             Object::String(str) => Ok(Cow::Borrowed(str.as_str())),
             Object::Blob(b) => Ok(String::from_utf8_lossy(b)),
-            Object::DynOwned(x) => try_downcast!(x, String, as_str).map(|r| Cow::Borrowed(r)),
             _ => Err(CastError::new::<String>(self.raw_type())),
         }
     }
@@ -643,7 +625,6 @@ impl Object {
             Object::Primitive(p) => Err(CastError::new::<&[u8]>(p.raw_type())),
             Object::String(str) => Ok(str.as_bytes()),
             Object::Blob(v) => Ok(v.as_ref()),
-            Object::DynOwned(x) => try_downcast!(x, Vec<u8>, as_slice),
             _ => Err(CastError::new::<&[u8]>(self.raw_type())),
         }
     }
@@ -656,7 +637,6 @@ impl Object {
             }
             Object::String(x) => try_transmute!(x, T, RawType::String).map(|v| OwnedOrRef::Ref(v)),
             Object::Blob(x) => try_transmute!(x, T, RawType::Blob(x.len())).map(|v| OwnedOrRef::Ref(v)),
-            Object::DynOwned(x) => try_downcast_ref!(x, T).map(|v| OwnedOrRef::Ref(v)),
             _ => Err(CastError::new::<OwnedOrRef<T>>(self.raw_type())),
         }
     }
@@ -664,13 +644,6 @@ impl Object {
     pub fn take_string(self) -> Result<String, CastError> {
         match self {
             Object::String(str) => Ok(str),
-            Object::DynOwned(mut x) => {
-                if let Some(v) = x.try_downcast_mut::<String>() {
-                    Ok(std::mem::replace(v, "".to_owned()))
-                } else {
-                    Err(CastError::new::<i32>(RawType::Unknown))
-                }
-            }
             _ => Err(CastError::new::<String>(self.raw_type())),
         }
     }
@@ -715,7 +688,6 @@ impl<'a> BorrowObject<'a> {
             BorrowObject::Vector(_) => RawType::Vector,
             BorrowObject::KV(_) => RawType::KV,
             BorrowObject::Blob(b) => RawType::Blob(b.len()),
-            BorrowObject::DynRef(_) => RawType::Unknown,
         }
     }
 
@@ -723,7 +695,6 @@ impl<'a> BorrowObject<'a> {
     pub fn as_primitive(&self) -> Result<Primitives, CastError> {
         match self {
             BorrowObject::Primitive(p) => Ok(*p),
-            BorrowObject::DynRef(x) => try_downcast!(x, Primitives),
             _ => Err(CastError::new::<Primitives>(self.raw_type())),
         }
     }
@@ -737,7 +708,6 @@ impl<'a> BorrowObject<'a> {
     pub fn as_i8(&self) -> Result<i8, CastError> {
         match self {
             BorrowObject::Primitive(p) => p.as_i8(),
-            BorrowObject::DynRef(x) => try_downcast!(x, i8),
             _ => Err(CastError::new::<i8>(self.raw_type())),
         }
     }
@@ -746,7 +716,6 @@ impl<'a> BorrowObject<'a> {
     pub fn as_u8(&self) -> Result<u8, CastError> {
         match self {
             BorrowObject::Primitive(p) => p.as_u8(),
-            BorrowObject::DynRef(x) => try_downcast!(x, u8),
             _ => Err(CastError::new::<u8>(self.raw_type())),
         }
     }
@@ -755,7 +724,6 @@ impl<'a> BorrowObject<'a> {
     pub fn as_i16(&self) -> Result<i16, CastError> {
         match self {
             BorrowObject::Primitive(p) => p.as_i16(),
-            BorrowObject::DynRef(x) => try_downcast!(x, i16),
             _ => Err(CastError::new::<i16>(self.raw_type())),
         }
     }
@@ -764,7 +732,6 @@ impl<'a> BorrowObject<'a> {
     pub fn as_u16(&self) -> Result<u16, CastError> {
         match self {
             BorrowObject::Primitive(p) => p.as_u16(),
-            BorrowObject::DynRef(x) => try_downcast!(x, u16),
             _ => Err(CastError::new::<u16>(self.raw_type())),
         }
     }
@@ -773,7 +740,6 @@ impl<'a> BorrowObject<'a> {
     pub fn as_i32(&self) -> Result<i32, CastError> {
         match self {
             BorrowObject::Primitive(p) => p.as_i32(),
-            BorrowObject::DynRef(x) => try_downcast!(x, i32),
             _ => Err(CastError::new::<i32>(self.raw_type())),
         }
     }
@@ -782,7 +748,6 @@ impl<'a> BorrowObject<'a> {
     pub fn as_u32(&self) -> Result<u32, CastError> {
         match self {
             BorrowObject::Primitive(p) => p.as_u32(),
-            BorrowObject::DynRef(x) => try_downcast!(x, u32),
             _ => Err(CastError::new::<u32>(self.raw_type())),
         }
     }
@@ -791,7 +756,6 @@ impl<'a> BorrowObject<'a> {
     pub fn as_i64(&self) -> Result<i64, CastError> {
         match self {
             BorrowObject::Primitive(p) => p.as_i64(),
-            BorrowObject::DynRef(x) => try_downcast!(x, i64),
             _ => Err(CastError::new::<i64>(self.raw_type())),
         }
     }
@@ -800,7 +764,6 @@ impl<'a> BorrowObject<'a> {
     pub fn as_u64(&self) -> Result<u64, CastError> {
         match self {
             BorrowObject::Primitive(p) => p.as_u64(),
-            BorrowObject::DynRef(x) => try_downcast!(x, u64),
             _ => Err(CastError::new::<u64>(self.raw_type())),
         }
     }
@@ -809,7 +772,6 @@ impl<'a> BorrowObject<'a> {
     pub fn as_i128(&self) -> Result<i128, CastError> {
         match self {
             BorrowObject::Primitive(p) => p.as_i128(),
-            BorrowObject::DynRef(x) => try_downcast!(x, i128),
             _ => Err(CastError::new::<i128>(self.raw_type())),
         }
     }
@@ -818,7 +780,6 @@ impl<'a> BorrowObject<'a> {
     pub fn as_u128(&self) -> Result<u128, CastError> {
         match self {
             BorrowObject::Primitive(p) => p.as_u128(),
-            BorrowObject::DynRef(x) => try_downcast!(x, u128),
             _ => Err(CastError::new::<u128>(self.raw_type())),
         }
     }
@@ -827,7 +788,6 @@ impl<'a> BorrowObject<'a> {
     pub fn as_f64(&self) -> Result<f64, CastError> {
         match self {
             BorrowObject::Primitive(p) => p.as_f64(),
-            BorrowObject::DynRef(x) => try_downcast!(x, f64),
             _ => Err(CastError::new::<f64>(self.raw_type())),
         }
     }
@@ -837,7 +797,6 @@ impl<'a> BorrowObject<'a> {
         match self {
             BorrowObject::String(str) => Ok(Cow::Borrowed(*str)),
             BorrowObject::Blob(b) => Ok(String::from_utf8_lossy(b)),
-            BorrowObject::DynRef(x) => try_downcast!(x, String, as_str).map(|r| Cow::Borrowed(r)),
             _ => Err(CastError::new::<String>(self.raw_type())),
         }
     }
@@ -848,7 +807,6 @@ impl<'a> BorrowObject<'a> {
             BorrowObject::Primitive(p) => Err(CastError::new::<&[u8]>(p.raw_type())),
             BorrowObject::String(v) => Ok(v.as_bytes()),
             BorrowObject::Blob(v) => Ok(*v),
-            BorrowObject::DynRef(v) => try_downcast!(v, Vec<u8>, as_slice),
             _ => Err(CastError::new::<&[u8]>(self.raw_type())),
         }
     }
@@ -860,7 +818,6 @@ impl<'a> BorrowObject<'a> {
             BorrowObject::Vector(v) => Some(Object::Vector(v.to_vec())),
             BorrowObject::KV(kv) => Some(Object::KV(kv.clone())),
             BorrowObject::Blob(b) => Some(Object::Blob(b.to_vec().into_boxed_slice())),
-            BorrowObject::DynRef(d) => Some(Object::DynOwned((*d).clone())),
         }
     }
 
@@ -928,8 +885,6 @@ impl PartialEq for Object {
                     false
                 }
             }
-            // TODO(longbin) Should be able to compare a DynType
-            Object::DynOwned(_) => false,
         }
     }
 }
@@ -965,8 +920,6 @@ impl PartialOrd for Object {
                     None
                 }
             }
-            // TODO(longbin) Should be able to compare a DynType
-            Object::DynOwned(_) => None,
         }
     }
 }
@@ -1011,8 +964,6 @@ impl<'a> PartialEq for BorrowObject<'a> {
                     false
                 }
             }
-            // TODO(longbin) Should be able to compare a DynType
-            BorrowObject::DynRef(_) => false,
         }
     }
 }
@@ -1048,8 +999,6 @@ impl<'a> PartialOrd for BorrowObject<'a> {
                     None
                 }
             }
-            // TODO(longbin) Should be able to compare a DynType
-            BorrowObject::DynRef(_) => None,
         }
     }
 }
@@ -1059,7 +1008,6 @@ impl<'a> Ord for BorrowObject<'a> {
         if let Some(ord) = self.partial_cmp(other) {
             ord
         } else {
-            // TODO(longbin) Note that DynType is still uncomparable
             Ordering::Equal
         }
     }
@@ -1117,10 +1065,6 @@ impl Hash for Object {
                     pair.hash(state);
                 }
             }
-            // TODO(longbin) Should be able to hash a DynType
-            Object::DynOwned(_) => {
-                unimplemented!()
-            }
         }
     }
 }
@@ -1158,10 +1102,6 @@ impl<'a> Hash for BorrowObject<'a> {
                 for pair in kv.iter() {
                     pair.hash(state);
                 }
-            }
-            // TODO(longbin) Should be able to hash a DynType
-            BorrowObject::DynRef(_) => {
-                unimplemented!()
             }
         }
     }
@@ -1327,7 +1267,6 @@ impl<'a> From<BorrowObject<'a>> for Object {
             BorrowObject::String(s) => Object::String(s.to_string()),
             BorrowObject::Vector(v) => Object::Vector(v.to_vec()),
             BorrowObject::KV(kv) => Object::KV(kv.clone()),
-            _ => unimplemented!(),
         }
     }
 }
