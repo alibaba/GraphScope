@@ -16,7 +16,7 @@ curl_sess="curl -XPOST http://localhost:${_port} -d 'graph = load_modern_graph(s
 sh -c "$curl_sess"
 curl -XPOST http://localhost:${_port} -d 'interactive = session.gremlin(graph)' --output /tmp/test_modern.log
 curl -XPOST http://localhost:${_port} -d 'interactive._graph_url[1]' --output /tmp/test_modern.log
-GAIA_PORT=$(cat /tmp/test_modern.log | awk -F'\/|:' '{print $5}')
+GAIA_PORT=$(awk -F'\/|:' '{print $5}' < /tmp/test_modern.log)
 echo "localhost:$GAIA_PORT" > ${base_dir}/src/test/resources/graph.endpoint
 cd ${base_dir}/.. &&  mvn clean install -DskipTests -Pjava-release
 cd ${base_dir} && mvn test

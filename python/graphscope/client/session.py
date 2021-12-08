@@ -1120,17 +1120,14 @@ class Session(object):
                 return interactive_query
             if interactive_query.status == InteractiveQueryStatus.Failed:
                 raise InteractiveEngineInternalError(interactive_query.error_msg)
-            else:
-                # Initializing.
-                # while True is ok, as the status is either running or failed eventually after timeout.
-                while True:
-                    time.sleep(1)
-                    if interactive_query.status == InteractiveQueryStatus.Failed:
-                        raise InteractiveEngineInternalError(
-                            interactive_query.error_msg
-                        )
-                    elif interactive_query.status == InteractiveQueryStatus.Running:
-                        return interactive_query
+            # Initializing.
+            # while True is ok, as the status is either running or failed eventually after timeout.
+            while True:
+                time.sleep(1)
+                if interactive_query.status == InteractiveQueryStatus.Failed:
+                    raise InteractiveEngineInternalError(interactive_query.error_msg)
+                if interactive_query.status == InteractiveQueryStatus.Running:
+                    return interactive_query
 
         if not graph.graph_type == graph_def_pb2.ARROW_PROPERTY:
             raise InvalidArgumentError("The graph should be a property graph.")

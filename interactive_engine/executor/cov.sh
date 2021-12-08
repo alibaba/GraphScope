@@ -13,7 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-BASE_DIR=$(`dirname "$0"`)
+BASE_DIR=$(dirname "$0")
 BASE_DIR=$(cd ${BASE_DIR}; pwd)
 TMP_LOG=${BASE_DIR}/tmp.log
 ALL_LOG=${BASE_DIR}/all.log
