@@ -63,6 +63,16 @@ public class TimelyExecutor implements QueryExecutor<List<QueryResult>>, Closeab
     }
 
     @Override
+    public void execute(TimelyQuery timelyQuery, ExecuteConfig executeConfig, GraphSchema schema, long timeout, String queryId) {
+        QueryFlowManager queryFlowManager = timelyQuery.getQueryFlowManager();
+        try {
+            rpcConnector.query(queryFlowManager.getQueryFlow().setQueryId(queryId), timelyQuery.getResultProcessor(), schema, timelyQuery.getGraph(), timeout, this.isAsyncGrpc);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    @Override
     public void prepare(String prepareId, TimelyQuery timelyQuery, ExecuteConfig executeConfig ) {
         QueryFlowManager queryFlowManager = timelyQuery.getQueryFlowManager();
         checkArgument(queryFlowManager.checkValidPrepareFlow(), "There's no argument for prepare statement");
@@ -78,16 +88,6 @@ public class TimelyExecutor implements QueryExecutor<List<QueryResult>>, Closeab
             OperatorListManager operatorListManager = queryFlowManager.getOperatorListManager();
             statementStore.save(prepareId, new PrepareStoreEntity(operatorListManager.getPrepareEntityList(), operatorListManager.getLabelManager(), queryFlowManager.getResultValueType(), queryFlow));
             logger.info("PREPARE " + prepareId + " success");
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    @Override
-    public void execute(TimelyQuery timelyQuery, ExecuteConfig executeConfig, GraphSchema schema, long timeout, String queryId) {
-        QueryFlowManager queryFlowManager = timelyQuery.getQueryFlowManager();
-        try {
-            rpcConnector.query(queryFlowManager.getQueryFlow().setQueryId(queryId), timelyQuery.getResultProcessor(), schema, timelyQuery.getGraph(), timeout, this.isAsyncGrpc);
         } catch (Exception e) {
             throw new RuntimeException(e);
         }

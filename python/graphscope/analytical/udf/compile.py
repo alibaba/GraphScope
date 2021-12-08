@@ -319,12 +319,11 @@ class GRAPECompiler(ast.NodeVisitor):
         if isinstance(node.value, str):
             if node.kind == "u":
                 return UnicodeNode(self.loc(node), value=node.value, bytes_value=None)
-            else:
-                return StringNode(
-                    self.loc(node),
-                    value=node.value,
-                    unicode_value=StringEncoding.EncodedString(node.value),
-                )
+            return StringNode(
+                self.loc(node),
+                value=node.value,
+                unicode_value=StringEncoding.EncodedString(node.value),
+            )
         if (
             isinstance(Ellipsis, type)
             and isinstance(node.value, Ellipsis)
@@ -378,8 +377,7 @@ class GRAPECompiler(ast.NodeVisitor):
     def visit_NameConstant(self, node):
         if node.value in [True, False]:
             return BoolNode(self.loc(node), value=node.value)
-        else:
-            return NoneNode(self.loc(node))
+        return NoneNode(self.loc(node))
 
     def visit_Name(self, node):
         return NameNode(self.loc(node), name=node.id)
@@ -507,27 +505,26 @@ class GRAPECompiler(ast.NodeVisitor):
             return PrimaryCmpNode(
                 self.loc(node), operator=operator, operand1=operand1, operand2=operand2
             )
-        else:
-            # multiple continuous comparison
+        # multiple continuous comparison
+        cascade_node = CascadedCmpNode(
+            self.loc(node),
+            operator=self.visit(node.ops[-1]),
+            operand2=self.visit(node.comparators[-1]),
+        )
+        for op, comparator in zip(node.ops[-2:0:-1], node.comparators[-2:0:-1]):
             cascade_node = CascadedCmpNode(
                 self.loc(node),
-                operator=self.visit(node.ops[-1]),
-                operand2=self.visit(node.comparators[-1]),
-            )
-            for op, comparator in zip(node.ops[-2:0:-1], node.comparators[-2:0:-1]):
-                cascade_node = CascadedCmpNode(
-                    self.loc(node),
-                    operator=self.visit(op),
-                    operand2=self.visit(comparator),
-                    cascade=cascade_node,
-                )
-            return PrimaryCmpNode(
-                self.loc(node),
-                operator=operator,
-                operand1=operand1,
-                operand2=operand2,
+                operator=self.visit(op),
+                operand2=self.visit(comparator),
                 cascade=cascade_node,
             )
+        return PrimaryCmpNode(
+            self.loc(node),
+            operator=operator,
+            operand1=operand1,
+            operand2=operand2,
+            cascade=cascade_node,
+        )
 
     def visit_Eq(self, node):
         return "=="
@@ -691,17 +688,16 @@ class GRAPECompiler(ast.NodeVisitor):
                 function=self.visit(node.func),
                 args=[self.visit(arg) for arg in node.args],
             )
-        else:
-            # with kwargs param
-            return GeneralCallNode(
-                self.loc(node),
-                function=self.visit(node.func),
-                positional_args=TupleNode(
-                    self.loc(node), args=[self.visit(arg) for arg in node.args]
-                ),
-                # keyword_args=DictNode(self.loc(node), key_value_pairs=[]))
-                keyword_args=self._visit_keywords(node.keywords),
-            )
+        # with kwargs param
+        return GeneralCallNode(
+            self.loc(node),
+            function=self.visit(node.func),
+            positional_args=TupleNode(
+                self.loc(node), args=[self.visit(arg) for arg in node.args]
+            ),
+            # keyword_args=DictNode(self.loc(node), key_value_pairs=[]))
+            keyword_args=self._visit_keywords(node.keywords),
+        )
 
     def _visit_keywords(self, node):
         kvs = []
@@ -727,10 +723,9 @@ class GRAPECompiler(ast.NodeVisitor):
             mnode = copy.copy(node)
             mnode.value = ast.Name(id="math")
             return self.visit(mnode)
-        else:
-            return AttributeNode(
-                self.loc(node), obj=self.visit(node.value), attribute=node.attr
-            )
+        return AttributeNode(
+            self.loc(node), obj=self.visit(node.value), attribute=node.attr
+        )
 
     def visit_Subscript(self, node):
         return IndexNode(
@@ -965,8 +960,7 @@ class GRAPECompiler(ast.NodeVisitor):
             return TryFinallyStatNode(
                 self.loc(node), body=try_except_stat_node, finally_clause=final_clause
             )
-        else:
-            return try_except_stat_node
+        return try_except_stat_node
 
     def visit_Assert(self, node):
         return AssertStatNode(

@@ -26,7 +26,7 @@ limitations under the License.
 
 #include "apps/centrality/closeness/closeness_centrality_context.h"
 
-#include "core/utils/app_utils.h"
+#include "core/utils/trait_utils.h"
 
 namespace gs {
 

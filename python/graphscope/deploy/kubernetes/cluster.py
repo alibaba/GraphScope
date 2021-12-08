@@ -152,10 +152,8 @@ class KubernetesClusterLauncher(Launcher):
     def __del__(self):
         self.stop()
 
-    # TODO(dongze): Check the coordinator pod status, like the poll in Popen
-    # we can use this to determine the coordinator status,
-    # None for pending, 0 for successed (not likely), other int value for failed.
     def poll(self):
+        """Check the coordinator pod status, 0 for successed."""
         return 0
 
     def get_namespace(self):
@@ -527,7 +525,7 @@ class KubernetesClusterLauncher(Launcher):
             api_client=self._api_client,
             namespace=self._namespace,
             name=self._coordinator_service_name,
-            type=self._saved_locals["k8s_service_type"],
+            service_type=self._saved_locals["k8s_service_type"],
         )
 
         return endpoints[0]

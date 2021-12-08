@@ -314,8 +314,10 @@ class VertexDataContextDAGNode(BaseContextDAGNode):
         if len(segments) > 2:
             raise SyntaxError("Invalid selector: {0}".format(selector))
         if segments[0] == "v":
-            if selector not in ("v.id", "v.data"):
-                raise SyntaxError("Selector of v must be 'v.id' or 'v.data'")
+            if selector not in ("v.id", "v.data", "v.label_id"):
+                raise SyntaxError(
+                    "Selector of v must be 'v.id', 'v.data' or 'v.label_id'"
+                )
         elif segments[0] == "e":
             raise NotImplementedError("Selector of e not supported yet")
             if selector not in ("e.src", "e.dst", "e.data"):
@@ -447,8 +449,10 @@ class VertexPropertyContextDAGNode(BaseContextDAGNode):
         if len(segments) != 2:
             raise SyntaxError("Invalid selector: {0}".format(selector))
         if segments[0] == "v":
-            if selector not in ("v.id", "v.data"):
-                raise SyntaxError("Selector of v must be 'v.id' or 'v.data'")
+            if selector not in ("v.id", "v.data", "v.label_id"):
+                raise SyntaxError(
+                    "Selector of v must be 'v.id', 'v.data' or 'v.label_id'"
+                )
         elif segments[0] == "e":
             raise NotImplementedError("Selector of e not supported yet")
         elif segments[0] == "r":

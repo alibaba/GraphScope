@@ -1,17 +1,17 @@
 /** Copyright 2020 Alibaba Group Holding Limited.
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-*/
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * 	http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 
 #ifndef ANALYTICAL_ENGINE_APPS_SIMPLE_PATH_IS_SIMPLE_PATH_CONTEXT_H_
 #define ANALYTICAL_ENGINE_APPS_SIMPLE_PATH_IS_SIMPLE_PATH_CONTEXT_H_
@@ -42,13 +42,12 @@ class IsSimplePathContext : public TensorContext<FRAG_T, bool> {
       : TensorContext<FRAG_T, bool>(fragment) {}
 
   /**
-   * @brief json formate
-   *  josn = [(oid_t)node1,(oid_t)node2,....]
+   * @brief json format
+   *  json = [(oid_t)node1,(oid_t)node2,....]
    *
    * @param messages
    * @param nodes_json
    */
-
   void Init(grape::DefaultMessageManager& messages,
             const std::string& nodes_json) {
     auto& frag = this->fragment();
@@ -79,12 +78,11 @@ class IsSimplePathContext : public TensorContext<FRAG_T, bool> {
       }
       p2 = p1;
     }
-    // The empty list is not a valid path.
-    // If the list is a single node, just check that the node is actually in the
-    // graph.
     if (counter == 0) {
+      // empty list is not a valid path.
       is_simple_path = false;
     } else if (counter == 1) {
+      // a list of one node is a path.
       if (frag.GetInnerVertex(dynamic_to_oid<oid_t>(path_nodes_array[0]),
                               source))
         is_simple_path = true;

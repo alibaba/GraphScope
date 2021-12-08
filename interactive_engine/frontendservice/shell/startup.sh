@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 # Copyright 2020 Alibaba Group Holding Limited.
 # 
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -13,9 +13,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+shopt -s nullglob
+
 frontend_classpath=$classpath
-for file in `ls lib`; do
-    frontend_classpath=$frontend_classpath":lib/"$file
+
+for file in "lib"/*; do
+    frontend_classpath=$frontend_classpath":"${file}
 done
 
 java -cp $frontend_classpath com.alibaba.maxgraph.frontendservice.FrontendServiceMain conf/standalone.properties

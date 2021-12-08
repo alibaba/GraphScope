@@ -19,7 +19,6 @@
 
 import io
 import os
-import tempfile
 
 import pytest
 from networkx.readwrite.tests.test_adjlist import TestAdjlist

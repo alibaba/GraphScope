@@ -27,7 +27,7 @@ Author: Ning Xin
 #include "apps/assortativity/attribute_assortativity_context.h"
 #include "apps/assortativity/utils.h"
 #include "core/app/app_base.h"
-#include "core/utils/app_utils.h"
+#include "core/utils/trait_utils.h"
 #include "core/worker/default_worker.h"
 
 namespace gs {

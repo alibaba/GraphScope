@@ -144,6 +144,13 @@ public class TreeNodeLabelManager implements Serializable {
         }
     }
 
+    public String createSysLabelStart(String tag) {
+        String labelName = generateLabel(tag);
+        int labelId = getSysLabelId();
+        updateLabelIndexList(labelName, labelId);
+        return labelName;
+    }
+
     public String createBeforeSysLabelStart(LogicalVertex logicalVertex, String tag) {
         if (vertexBeforeLabelList.containsKey(logicalVertex.getId())) {
             return vertexBeforeLabelList.get(logicalVertex.getId());
@@ -173,13 +180,6 @@ public class TreeNodeLabelManager implements Serializable {
 
     public boolean containsVertexLabel(LogicalVertex logicalVertex) {
         return vertexLabelList.containsKey(logicalVertex.getId());
-    }
-
-    public String createSysLabelStart(String tag) {
-        String labelName = generateLabel(tag);
-        int labelId = getSysLabelId();
-        updateLabelIndexList(labelName, labelId);
-        return labelName;
     }
 
     private int getSysLabelId() {

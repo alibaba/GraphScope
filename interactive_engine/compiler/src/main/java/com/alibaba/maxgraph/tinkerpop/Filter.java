@@ -207,6 +207,15 @@ public class Filter {
             }
         }
 
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) {return true;}
+            if (o == null || getClass() != o.getClass()) {return false;}
+            Predicate p = (Predicate)o;
+            return Objects.equals(compare, p.compare) &&
+                Objects.equals(value, p.value);
+        }
+
         private boolean containsInCollection(Object v) {
             if (this.value instanceof Collection) {
                 return ((Collection)this.value).contains(v);
@@ -237,15 +246,6 @@ public class Filter {
                 return ps.stream().anyMatch(p -> p.test(v));
             }
             return false;
-        }
-
-        @Override
-        public boolean equals(Object o) {
-            if (this == o) {return true;}
-            if (o == null || getClass() != o.getClass()) {return false;}
-            Predicate p = (Predicate)o;
-            return Objects.equals(compare, p.compare) &&
-                Objects.equals(value, p.value);
         }
 
         @Override
@@ -281,13 +281,14 @@ public class Filter {
             }
         }
 
+        public static List<Predicate> translate(List<P> ps) {
+            return ps.stream().map(p -> translate(p)).collect(Collectors.toList());
+        }
+
+
         @Override
         public String toString() {
             return this.compare + "(" + this.value + ")";
-        }
-
-        public static List<Predicate> translate(List<P> ps) {
-            return ps.stream().map(p -> translate(p)).collect(Collectors.toList());
         }
 
     }

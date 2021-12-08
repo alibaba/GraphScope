@@ -178,7 +178,8 @@ class AppAssets(DAGNode):
         config = yaml.safe_load(archive.read(DEFAULT_GS_CONFIG_FILE))
         for meta in config["app"]:
             if self._algo == meta["algo"]:
-                self._context_type = meta["context_type"]
+                if "context_type" in meta:
+                    self._context_type = meta["context_type"]
                 self._type = meta["type"]
                 self._meta = meta
                 return
@@ -383,8 +384,7 @@ class App(object):
     def __getattr__(self, name):
         if hasattr(self._app_node, name):
             return getattr(self._app_node, name)
-        else:
-            raise AttributeError("{0} not found.".format(name))
+        raise AttributeError("{0} not found.".format(name))
 
     @property
     def key(self):
@@ -421,7 +421,7 @@ class UnloadedApp(DAGNode):
         self._session.dag.add_op(self._op)
 
 
-def load_app(algo, gar=None, **kwargs):
+def load_app(algo, gar=None, context=None, **kwargs):
     """Load an app from gar.
     bytes or the resource of the specified path or bytes.
 
@@ -453,12 +453,12 @@ def load_app(algo, gar=None, **kwargs):
                 - gs::ArrowProjectedFragment
     """
     if isinstance(gar, (BytesIO, bytes)):
-        return AppAssets(str(algo), None, gar, **kwargs)
+        return AppAssets(str(algo), context, gar, **kwargs)
     elif isinstance(gar, str):
         with open(gar, "rb") as f:
             content = f.read()
         if not zipfile.is_zipfile(gar):
             raise InvalidArgumentError("{} is not a zip file.".format(gar))
-        return AppAssets(str(algo), None, content, **kwargs)
+        return AppAssets(str(algo), context, content, **kwargs)
     else:
         raise InvalidArgumentError("Wrong type with {}".format(gar))

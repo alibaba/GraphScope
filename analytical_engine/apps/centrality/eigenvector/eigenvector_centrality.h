@@ -21,7 +21,7 @@ limitations under the License.
 #include "apps/centrality/eigenvector/eigenvector_centrality_context.h"
 
 #include "core/app/app_base.h"
-#include "core/utils/app_utils.h"
+#include "core/utils/trait_utils.h"
 #include "core/worker/default_worker.h"
 
 namespace gs {

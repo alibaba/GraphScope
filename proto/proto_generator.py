@@ -18,6 +18,7 @@
 
 import glob
 import os
+import shutil
 import subprocess
 import sys
 
@@ -40,7 +41,7 @@ def cpp_out(base_dir, proto_path, output_dir):
     for proto_file in files:
         subprocess.check_call(
             [
-                "protoc",
+                shutil.which("protoc"),
                 "-I%s" % ".",
                 "--cpp_out=%s" % output_dir,
                 proto_file,
@@ -54,7 +55,7 @@ def python_out(base_dir, proto_path, output_dir):
     for proto_file in files:
         subprocess.check_call(
             [
-                "python3",
+                sys.executable,
                 "-m",
                 "grpc_tools.protoc",
                 "-I%s" % ".",
@@ -67,14 +68,14 @@ def python_out(base_dir, proto_path, output_dir):
 
 def cpp_service_out(base_dir, proto_path, output_dir):
     plugin_path = str(
-        subprocess.check_output(["which", "grpc_cpp_plugin"]), "utf-8"
+        subprocess.check_output([shutil.which("which"), "grpc_cpp_plugin"]), "utf-8"
     ).strip()
     suffix = "*_service.proto"
     files = gather_all_proto(os.path.join(base_dir, proto_path), suffix)
     for proto_file in files:
         subprocess.check_call(
             [
-                "protoc",
+                shutil.which("protoc"),
                 "-I%s" % ".",
                 "--grpc_out=%s" % output_dir,
                 "--plugin=protoc-gen-grpc=%s" % plugin_path,
@@ -90,7 +91,7 @@ def python_service_out(base_dir, proto_path, output_dir):
     for proto_file in files:
         subprocess.check_call(
             [
-                "python3",
+                sys.executable,
                 "-m",
                 "grpc_tools.protoc",
                 "-I%s" % ".",

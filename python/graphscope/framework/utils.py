@@ -21,6 +21,7 @@ import os
 import random
 import socket
 import string
+import tempfile
 import threading
 import time
 from queue import Queue
@@ -158,14 +159,17 @@ def random_string(nlen):
     return "".join([random.choice(string.ascii_lowercase) for _ in range(nlen)])
 
 
+def get_tempdir():
+    return os.path.join("/", tempfile.gettempprefix())
+
+
 def read_file_to_bytes(file_path):
     abs_dir = os.path.abspath(os.path.expanduser(file_path))
     if os.path.isfile(abs_dir):
         with open(abs_dir, "rb") as b:
             content = b.read()
         return content
-    else:
-        raise IOError("No such file: " + file_path)
+    raise IOError("No such file: " + file_path)
 
 
 def i_to_attr(i: int) -> attr_value_pb2.AttrValue:
@@ -472,8 +476,7 @@ def normalize_data_type_str(data_type):
 def transform_vertex_range(vertex_range):
     if vertex_range:
         return json.dumps(vertex_range)
-    else:
-        return None
+    return None
 
 
 def _from_numpy_dtype(dtype):

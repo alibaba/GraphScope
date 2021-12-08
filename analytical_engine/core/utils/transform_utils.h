@@ -31,6 +31,7 @@ limitations under the License.
 #include "vineyard/basic/ds/tensor.h"
 
 #include "core/context/column.h"
+#include "core/utils/trait_utils.h"
 
 #ifdef NETWORKX
 namespace grape {
@@ -538,6 +539,14 @@ class TransformUtils<FRAG_T,
     }
   }
 
+  bl::result<void> SerializeVertexLabelId(const std::vector<vertex_t>& range,
+                                          grape::InArchive& arc) {
+    for (auto v : range) {
+      arc << frag_.vertex_label(v);
+    }
+    return {};
+  }
+
   bl::result<std::shared_ptr<arrow::Array>> VertexIdToArrowArray(
       label_id_t label_id) {
     typename vineyard::ConvertToArrowType<oid_t>::BuilderType builder;
@@ -723,8 +732,9 @@ class TransformUtils<FRAG_T,
 
 /**
  * @brief A transform utils for the non-labeled fragment but the type of oid is
- * not dynamic, like ArrowProjectedFragment. This utility provides a bunch of
- * methods to serialize/transform context data and the data in the fragment.
+ * not dynamic, like ArrowProjectedFragment or ArrowFlattenedFragment. This
+ * utility provides a bunch of methods to serialize/transform context data and
+ * the data in the fragment.
  * @tparam FRAG_T Non-labeled fragment class
  */
 template <typename FRAG_T>
@@ -753,6 +763,19 @@ class TransformUtils<
     for (auto v : range) {
       arc << frag_.GetId(v);
     }
+  }
+
+  bl::result<void> SerializeVertexLabelId(const std::vector<vertex_t>& range,
+                                          grape::InArchive& arc) {
+    for (auto v : range) {
+      int label_id = 0;
+      static_if<is_flattened_fragment<FRAG_T>::value>(
+          [&](auto& frag, auto& v, auto& label_id) {
+            label_id = frag.vertex_label(v);
+          })(frag_, v, label_id);
+      arc << label_id;
+    }
+    return {};
   }
 
   bl::result<std::shared_ptr<arrow::Array>> VertexIdToArrowArray() {
@@ -875,6 +898,15 @@ class TransformUtils<
     for (auto v : range) {
       arc << frag_.GetId(v);
     }
+  }
+
+  bl::result<void> SerializeVertexLabelId(const std::vector<vertex_t>& range,
+                                          grape::InArchive& arc) {
+    // N.B. one should not select label_id with DynamicFragment or
+    // DynamicProjected
+    RETURN_GS_ERROR(
+        vineyard::ErrorCode::kUnsupportedOperationError,
+        "vlabel_id selector only support on ArrowFlattenedFragment.");
   }
 
   bl::result<std::shared_ptr<arrow::Array>> VertexIdToArrowArray() {

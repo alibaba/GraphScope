@@ -138,7 +138,8 @@ class PIE_API_Test(AppAssets):
         graphscope.declare(graphscope.Vertex, node)
         fid = frag.fid()
         if fid == 0:
-            assert frag.fnum() == 4
+            # This is not stable, as it depend on worker's number
+            # assert frag.fnum() == 4
             assert frag.vertex_label_num() == 8
             assert frag.edge_label_num() == 15
             assert frag.get_total_nodes_num() == 190376
@@ -162,9 +163,9 @@ class PIE_API_Test(AppAssets):
                 for iv in inner_nodes:
                     assert frag.get_node_fid(iv) == 0
                     assert frag.is_inner_node(iv) == True
-                    id = frag.get_node_id(iv)
-                    assert frag.get_node(v_label_id, id, node) == True
-                    assert frag.get_inner_node(v_label_id, id, node) == True
+                    vid = frag.get_node_id(iv)
+                    assert frag.get_node(v_label_id, vid, node) == True
+                    assert frag.get_inner_node(v_label_id, vid, node) == True
 
                     e_label_num = frag.edge_label_num()
                     for e_label_id in range(e_label_num):
@@ -180,9 +181,9 @@ class PIE_API_Test(AppAssets):
 
                 for ov in outer_nodes:
                     assert frag.is_outer_node(ov) == True
-                    id = frag.get_node_id(ov)
-                    assert frag.get_node(v_label_id, id, node) == True
-                    assert frag.get_outer_node(v_label_id, id, node) == True
+                    vid = frag.get_node_id(ov)
+                    assert frag.get_node(v_label_id, vid, node) == True
+                    assert frag.get_outer_node(v_label_id, vid, node) == True
 
             for v_label in frag.vertex_labels():
                 label_id = frag.get_vertex_label_id_by_name(v_label)
@@ -238,12 +239,12 @@ class Pregel_API_Test(AppAssets):
         v.vote_to_halt()
 
         # v.id()
-        id = v.id()
+        vid = v.id()
 
         # v.label()
         label = v.label()
 
-        if id == b"933" and label == b"person":
+        if vid == b"933" and label == b"person":
             # v.label_id()
             label_id = v.label_id()
 
@@ -1193,6 +1194,6 @@ def test_pregel_api(graphscope_session, ldbc_graph):
     a1(ldbc_graph, param1="graphscope", param2="graphscope2")
 
 
-def test_pie_api(graphscope_session, ldbc_graph):
+def test_pie_api(graphscope_session, ldbc_graph_undirected):
     a1 = PIE_API_Test()
-    a1(ldbc_graph, param1="graphscope", param2="graphscope2")
+    a1(ldbc_graph_undirected, param1="graphscope", param2="graphscope2")

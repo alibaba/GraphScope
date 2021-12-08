@@ -30,7 +30,7 @@ from networkx.drawing.nx_pylab import draw_networkx_edges as _draw_networkx_edge
 from networkx.drawing.nx_pylab import draw_networkx_labels as _draw_networkx_labels
 from networkx.drawing.nx_pylab import draw_networkx_nodes as _draw_networkx_nodes
 
-import graphscope.nx as nx
+from graphscope import nx
 from graphscope.nx.drawing.layout import circular_layout
 from graphscope.nx.drawing.layout import kamada_kawai_layout
 from graphscope.nx.drawing.layout import planar_layout

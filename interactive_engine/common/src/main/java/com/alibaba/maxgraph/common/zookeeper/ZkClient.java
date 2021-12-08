@@ -175,13 +175,13 @@ public class ZkClient implements CuratorFramework {
     }
 
     @Override
-    public void createContainers(String path) throws Exception {
-        delegate.createContainers(path);
+    public SyncBuilder sync() {
+        return delegate.sync();
     }
 
     @Override
-    public SyncBuilder sync() {
-        return delegate.sync();
+    public void createContainers(String path) throws Exception {
+        delegate.createContainers(path);
     }
 
     @Override

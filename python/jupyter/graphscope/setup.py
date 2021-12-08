@@ -13,22 +13,20 @@ from os.path import join as pjoin
 from setupbase import HERE
 from setupbase import combine_commands
 from setupbase import create_cmdclass
-from setupbase import ensure_python
 from setupbase import ensure_targets
 from setupbase import find_packages
 from setupbase import get_version
 from setupbase import install_npm
 from setuptools import setup
 
+from graphscope import __version__
+
 # The name of the project
 name = "graphscope-jupyter"
 package_name = "graphscope_jupyter"
 
-# Ensure a valid python version
-ensure_python(">=3.4")
-
 # Get our version
-version = get_version(pjoin(package_name, "_version.py"))
+version = __version__
 
 nb_path = pjoin(HERE, package_name, "nbextension", "static")
 lab_path = pjoin(HERE, package_name, "labextension")

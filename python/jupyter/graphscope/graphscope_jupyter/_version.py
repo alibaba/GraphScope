@@ -16,7 +16,7 @@
 # limitations under the License.
 #
 
+from graphscope.version import __version__
 from graphscope.version import __version_tuple__
 
 version_info = __version_tuple__
-__version__ = ".".join(map(str, version_info))
