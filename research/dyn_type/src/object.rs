@@ -459,7 +459,7 @@ impl ToString for Object {
             String(s) => s.to_string(),
             Vector(v) => format!("{:?}", v),
             KV(kv) => format!("{:?}", kv),
-            Blob(_) => unimplemented!(),
+            Blob(b) => format!("{:?}", b),
             DynOwned(_) => unimplemented!(),
         }
     }
@@ -485,7 +485,7 @@ impl<'a> ToString for BorrowObject<'a> {
             String(s) => s.to_string(),
             Vector(v) => format!("{:?}", v),
             KV(kv) => format!("{:?}", kv),
-            Blob(_) => unimplemented!(),
+            Blob(b) => format!("{:?}", b),
             DynRef(_) => unimplemented!(),
         }
     }
@@ -698,6 +698,10 @@ impl Object {
                     _ => false,
                 }
             }
+            Object::String(str1) => match sub_obj {
+                Object::String(str2) => str1.contains(str2),
+                _ => false,
+            },
             _ => false,
         }
     }

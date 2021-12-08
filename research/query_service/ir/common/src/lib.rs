@@ -233,8 +233,8 @@ impl From<String> for common_pb::NameOrId {
     }
 }
 
-const ID_KEY: &'static str = "ID";
-const LABEL_KEY: &'static str = "LABEL";
+const ID_KEY: &'static str = "~id";
+const LABEL_KEY: &'static str = "~label";
 
 impl From<String> for common_pb::Property {
     fn from(str: String) -> Self {
@@ -292,8 +292,30 @@ impl common_pb::Const {
                     Str(s) => Ok(Some(s.clone().into())),
                     Blob(blob) => Ok(Some(blob.clone().into())),
                     None(_) => Ok(Option::None),
-                    I32Array(_) | I64Array(_) | F64Array(_) | StrArray(_) => {
-                        Err(ParsePbError::from("the const values of `I32Array`, `I64Array`, `F64Array`, `StrArray` are unsupported"))
+                    I32Array(v) => Ok(Some(v.item.clone().into())),
+                    I64Array(v) => Ok(Some(v.item.clone().into())),
+                    F64Array(v) => Ok(Some(v.item.clone().into())),
+                    StrArray(v) => Ok(Some(v.item.clone().into())),
+                    PairArray(pairs) => {
+                        let mut vec = Vec::<(Object, Object)>::with_capacity(pairs.item.len());
+                        let mut is_ok = true;
+                        for item in pairs.item.clone().into_iter() {
+                            let (key_obj_opt, val_obj_opt) = (
+                                common_pb::Const { value: item.key }.into_object()?,
+                                common_pb::Const { value: item.val }.into_object()?,
+                            );
+                            if key_obj_opt.is_none() || val_obj_opt.is_none() {
+                                is_ok = false;
+                                break;
+                            } else {
+                                vec.push((key_obj_opt.unwrap(), val_obj_opt.unwrap()));
+                            }
+                        }
+                        if is_ok {
+                            Ok(Some(vec.into()))
+                        } else {
+                            Err(ParsePbError::from("empty value provided"))
+                        }
                     }
                 };
             }
@@ -460,6 +482,15 @@ impl From<Object> for common_pb::Value {
                     common_pb::value::Item::None(common_pb::None {})
                 }
             }
+            Object::KV(kv) => {
+                let mut pairs: Vec<common_pb::Pair> = Vec::with_capacity(kv.len());
+                for (key, val) in kv {
+                    let key_pb: common_pb::Value = key.into();
+                    let val_pb: common_pb::Value = val.into();
+                    pairs.push(common_pb::Pair { key: Some(key_pb), val: Some(val_pb) })
+                }
+                common_pb::value::Item::PairArray(common_pb::PairArray { item: pairs })
+            }
             _ => unimplemented!(),
         };
 
@@ -505,7 +536,7 @@ mod test {
             common_pb::Variable::from(case2.to_string())
         );
 
-        let case3 = "@1.ID";
+        let case3 = "@1.~id";
         assert_eq!(
             common_pb::Variable {
                 tag: Some(common_pb::NameOrId::from(1)),
@@ -516,7 +547,7 @@ mod test {
             common_pb::Variable::from(case3.to_string())
         );
 
-        let case4 = "@1.LABEL";
+        let case4 = "@1.~label";
         assert_eq!(
             common_pb::Variable {
                 tag: Some(common_pb::NameOrId::from(1)),

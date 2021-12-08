@@ -51,6 +51,30 @@ mod tests {
     }
 
     #[test]
+    fn test_object_contains() {
+        // vector of numbers
+        let object_vec: Object = vec![1, 2, 3].into();
+        assert!(object_vec.contains(&1.into()));
+        assert!(!object_vec.contains(&4.into()));
+        assert!(object_vec.contains(&vec![1, 3].into()));
+        assert!(!object_vec.contains(&vec![1, 5].into()));
+        assert!(!object_vec.contains(&vec![1, 2, 3, 4].into()));
+
+        // vector of strings
+        let object_vec: Object = vec!["a".to_string(), "b".to_string(), "c".to_string()].into();
+        assert!(object_vec.contains(&"a".to_string().into()));
+        assert!(!object_vec.contains(&"d".to_string().into()));
+        assert!(object_vec.contains(&vec!["a".to_string()].into()));
+        assert!(!object_vec.contains(&vec!["a".to_string(), "d".to_string()].into()));
+
+        // string object
+        let object_str: Object = "abcde".to_string().into();
+        assert!(object_str.contains(&"a".to_string().into()));
+        assert!(object_str.contains(&"abc".to_string().into()));
+        assert!(!object_str.contains(&"ac".to_string().into()));
+    }
+
+    #[test]
     fn test_object_compare() {
         // vector
         let object_vec1 = Object::from(vec![1, 2, 3]);

@@ -554,11 +554,11 @@ mod tests {
         // [v1: id = 2, label = 11, age = 26, birthday = 19950816]
         let ctxt = prepare_context();
         let cases: Vec<&str> = vec![
-            "@0.ID",                                       // 1
-            "@1.LABEL",                                    // 1
-            "@0.ID < @1.ID",                               // true
+            "@0.~id",                                      // 1
+            "@1.~label",                                   // 1
+            "@0.~id < @1.~id",                             // true
             "@0.birthday > @1.birthday",                   // false
-            "@0.LABEL == @1.LABEL",                        // false
+            "@0.~label == @1.~label",                      // false
             "@0.name != @1.name",                          // true
             "@0.name == \"John\"",                         // true
             "@0.name == \"John\" && @1.name == \"Jimmy\"", // false

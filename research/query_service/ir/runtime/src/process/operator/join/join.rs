@@ -78,8 +78,8 @@ mod tests {
                 let s1 = input.input_from(source_s1_gen())?;
                 let s2 = input.input_from(source_s2_gen())?;
                 let join_opr_pb = pb::Join {
-                    left_keys: vec![common_pb::Variable::from("@.ID".to_string())],
-                    right_keys: vec![common_pb::Variable::from("@.ID".to_string())],
+                    left_keys: vec![common_pb::Variable::from("@.~id".to_string())],
+                    right_keys: vec![common_pb::Variable::from("@.~id".to_string())],
                     kind: join_kind,
                 };
                 let left_key_selector = join_opr_pb.gen_left_kv_fn()?;

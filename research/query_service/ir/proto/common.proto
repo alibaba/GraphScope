@@ -37,6 +37,15 @@ message StringArray {
   repeated string item = 1;
 }
 
+message Pair {
+  Value key = 1;
+  Value val = 2;
+}
+
+message PairArray {
+  repeated Pair item = 1;
+}
+
 message Value {
   oneof item {
     bool  boolean     = 2;
@@ -45,10 +54,11 @@ message Value {
     double f64        = 5;
     string str        = 6;
     bytes blob        = 7;
-    I32Array i32_array = 8;
-    I64Array i64_array = 9;
-    DoubleArray f64_array = 10;
+    I32Array i32_array       = 8;
+    I64Array i64_array       = 9;
+    DoubleArray f64_array    = 10;
     StringArray str_array    = 11;
-    None  none        = 12;
+    PairArray pair_array     = 12;
+    None  none               = 13;
   }
 }
