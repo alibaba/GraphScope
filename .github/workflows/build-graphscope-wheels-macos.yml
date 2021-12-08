@@ -110,9 +110,8 @@ jobs:
 
     - name: Prepare Environment
       run: |
-        cd artifacts
+        cd ${GITHUB_WORKSPACE}/artifacts
         # install graphscope-client
-        cd artifacts
         tar -zxf ./wheel-macos-${{ github.sha }}-${{ matrix.python-version }}/client.tar.gz
         pushd python/dist/wheelhouse
         for f in * ; do python3 -m pip install $f --user || true; done

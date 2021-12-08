@@ -149,11 +149,11 @@ jobs:
       run: |
         # install gcc (https://stackoverflow.com/a/57084638)
         yum install -y centos-release-scl
-        yum install -y devtoolset-7-gcc-*
+        yum install -y devtoolset-7-gcc-* || true
         echo "source scl_source enable devtoolset-7" >> /etc/bashrc && source /etc/bashrc
 
         # install git and python3
-        yum install -y git python3-pip
+        yum install -y git python3-pip cmake make
         python3 -m pip install --upgrade pip --user
 
         # install graphscope-client
