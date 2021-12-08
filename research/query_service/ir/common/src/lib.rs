@@ -24,6 +24,7 @@ use crate::error::{ParsePbError, ParsePbResult};
 use crate::generated::algebra as pb;
 use crate::generated::common as common_pb;
 use crate::generated::result as result_pb;
+use dyn_type::object::RawType;
 
 pub mod error;
 
@@ -423,10 +424,45 @@ impl From<Object> for common_pb::Value {
             },
             Object::String(s) => common_pb::value::Item::Str(s),
             Object::Blob(b) => common_pb::value::Item::Blob(b.to_vec()),
-            Object::DynOwned(_u) => {
-                todo!()
+            Object::Vector(v) => {
+                if !v.is_empty() {
+                    let pivot = v.get(0).unwrap();
+                    match pivot.raw_type() {
+                        RawType::Byte | RawType::Integer => {
+                            common_pb::value::Item::I32Array(common_pb::I32Array {
+                                item: v
+                                    .into_iter()
+                                    .map(|obj| obj.as_i32().unwrap())
+                                    .collect(),
+                            })
+                        }
+                        RawType::Long => common_pb::value::Item::I64Array(common_pb::I64Array {
+                            item: v
+                                .into_iter()
+                                .map(|obj| obj.as_i64().unwrap())
+                                .collect(),
+                        }),
+                        RawType::Float => common_pb::value::Item::F64Array(common_pb::DoubleArray {
+                            item: v
+                                .into_iter()
+                                .map(|obj| obj.as_f64().unwrap())
+                                .collect(),
+                        }),
+                        RawType::String => common_pb::value::Item::StrArray(common_pb::StringArray {
+                            item: v
+                                .into_iter()
+                                .map(|obj| obj.to_string())
+                                .collect(),
+                        }),
+                        _ => unimplemented!(),
+                    }
+                } else {
+                    common_pb::value::Item::None(common_pb::None {})
+                }
             }
+            _ => unimplemented!(),
         };
+
         common_pb::Value { item: Some(item) }
     }
 }

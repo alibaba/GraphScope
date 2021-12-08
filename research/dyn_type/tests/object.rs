@@ -15,14 +15,8 @@
 
 #[cfg(test)]
 mod tests {
-    extern crate itertools;
-
-    use self::itertools::Itertools;
     use dyn_type::{object, Object, Primitives};
     use std::cmp::Ordering;
-    use std::collections::HashMap;
-    use std::fmt::Debug;
-    use std::hash::Hash;
 
     #[test]
     fn test_as_primitive() {
@@ -56,10 +50,30 @@ mod tests {
         assert!(!obj.as_bool().unwrap());
     }
 
-    fn is_map_eq<K: PartialEq + Ord + Debug + Hash, V: PartialEq + Ord + Debug>(
-        map1: &HashMap<K, V>, map2: &HashMap<K, V>,
-    ) -> bool {
-        map1.iter().sorted().eq(map2.iter().sorted())
+    #[test]
+    fn test_object_compare() {
+        // vector
+        let object_vec1 = Object::from(vec![1, 2, 3]);
+        let object_vec2 = Object::from(vec![1, 2, 3]);
+        let object_vec3 = Object::from(vec![3, 2]);
+
+        assert_eq!(object_vec1, object_vec2);
+        assert_ne!(object_vec1, object_vec3);
+        assert!(object_vec1 < object_vec3);
+        assert!(object_vec3 > object_vec2);
+
+        // kv
+        let object_kv1 = Object::from(vec![("a".to_string(), 1_u64), ("b".to_string(), 2_u64)]);
+        let object_kv2 = Object::from(vec![("a".to_string(), 1_u64), ("b".to_string(), 2_u64)]);
+        let object_kv3 = Object::from(vec![("a".to_string(), 2_u64), ("b".to_string(), 3_u64)]);
+        let object_kv4 = Object::from(vec![("c".to_string(), 1_u64), ("d".to_string(), 2_u64)]);
+
+        assert_eq!(object_kv1, object_kv2);
+        assert_ne!(object_kv1, object_kv3);
+        assert!(object_kv1 < object_kv3);
+        assert!(object_kv3 > object_kv2);
+        assert!(object_kv1 < object_kv4);
+        assert!(object_kv4 > object_kv2);
     }
 
     #[test]
@@ -72,26 +86,6 @@ mod tests {
         let vec_borrow = vec_obj.as_borrow();
         let vec_borrow_to_owned = vec_borrow.try_to_owned().unwrap();
         assert_eq!(vec_borrow_to_owned.get::<Vec<u32>>().unwrap(), vec);
-
-        /*
-        let mut map = HashMap::new();
-        // Review some books.
-        map.insert("Adventures of Huckleberry Finn".to_string(), "My favorite book.".to_string());
-        map.insert("Grimms' Fairy Tales".to_string(), "Masterpiece.".to_string());
-        map.insert("Pride and Prejudice".to_string(), "Very enjoyable.".to_string());
-        map.insert(
-            "The Adventures of Sherlock Holmes".to_string(),
-            "Eye lyked it alot.".to_string(),
-        );
-
-        let map_obj = Object::DynOwned(Box::new(map.clone()));
-        let map_recovered = map_obj.get::<HashMap<String, String>>().unwrap();
-        assert!(is_map_eq(&map, &(*map_recovered)));
-
-        let map_borrow = map_obj.as_borrow();
-        let map_borrow_to_owned = map_borrow.try_to_owned().unwrap();
-        assert!(is_map_eq(&map, &(*map_borrow_to_owned.get::<HashMap<String, String>>().unwrap())));
-         */
     }
 
     #[test]

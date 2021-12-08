@@ -16,6 +16,7 @@
 use crate::{de_dyn_obj, Object, Primitives};
 use core::any::TypeId;
 use pegasus_common::codec::{Decode, Encode, ReadExt, WriteExt};
+use std::collections::BTreeMap;
 use std::io;
 
 impl Encode for Primitives {
@@ -88,15 +89,29 @@ impl Encode for Object {
                 str.write_to(writer)?;
                 Ok(())
             }
-            Object::Blob(b) => {
+            Object::Vector(vec) => {
                 writer.write_u8(2)?;
+                vec.write_to(writer)?;
+                Ok(())
+            }
+            Object::KV(kv) => {
+                writer.write_u8(3)?;
+                writer.write_u64(kv.len() as u64)?;
+                for (key, val) in kv {
+                    key.write_to(writer)?;
+                    val.write_to(writer)?;
+                }
+                Ok(())
+            }
+            Object::Blob(b) => {
+                writer.write_u8(4)?;
                 let len = b.len();
                 writer.write_u64(len as u64)?;
                 writer.write_all(&(**b))?;
                 Ok(())
             }
             Object::DynOwned(dyn_type) => {
-                writer.write_u8(3)?;
+                writer.write_u8(5)?;
                 let bytes = (**dyn_type).to_bytes()?;
                 bytes.write_to(writer)?;
                 Ok(())
@@ -118,6 +133,20 @@ impl Decode for Object {
                 Ok(Object::String(str))
             }
             2 => {
+                let vec = <Vec<Object>>::read_from(reader)?;
+                Ok(Object::Vector(vec))
+            }
+            3 => {
+                let len = <u64>::read_from(reader)?;
+                let mut map = BTreeMap::new();
+                for _ in 0..len {
+                    let key = <Object>::read_from(reader)?;
+                    let value = <Object>::read_from(reader)?;
+                    map.insert(key, value);
+                }
+                Ok(Object::KV(map))
+            }
+            4 => {
                 let len = <u64>::read_from(reader)?;
                 let mut b = vec![];
                 for _i in 0..len {
@@ -126,7 +155,7 @@ impl Decode for Object {
                 }
                 Ok(Object::Blob(b.into_boxed_slice()))
             }
-            3 => {
+            5 => {
                 let bytes = <Vec<u8>>::read_from(reader)?;
                 let mut bytes_reader = &bytes[0..];
                 let number = <u64>::read_from(&mut bytes_reader)?;

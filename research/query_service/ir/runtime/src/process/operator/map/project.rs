@@ -116,7 +116,7 @@ mod tests {
         let project_opr_pb = pb::Project {
             mappings: vec![pb::project::ExprAlias {
                 expr: Some(str_to_expr_pb("@.id".to_string()).unwrap()),
-                alias: Some(pb::project::Alias { alias: None, is_query_given: false }),
+                alias: Some(pb::Alias { alias: None, is_query_given: false }),
             }],
             is_append: false,
         };
@@ -140,7 +140,7 @@ mod tests {
         let project_opr_pb = pb::Project {
             mappings: vec![pb::project::ExprAlias {
                 expr: Some(str_to_expr_pb("@a.name".to_string()).unwrap()),
-                alias: Some(pb::project::Alias {
+                alias: Some(pb::Alias {
                     alias: Some(NameOrId::Str("b".to_string()).into()),
                     is_query_given: false,
                 }),
