@@ -46,6 +46,11 @@ class Dag(object):
     def __repr__(self):
         return self.__str__()
 
+    def exist(self, op):
+        if not isinstance(op, Operation):
+            raise TypeError("op must be an Operation: {0}".format(op))
+        return op.key in self._ops_by_key
+
     def add_op(self, op):
         if not isinstance(op, Operation):
             raise TypeError("op must be an Operation: {0}".format(op))
