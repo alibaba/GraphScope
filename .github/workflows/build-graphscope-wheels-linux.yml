@@ -151,7 +151,7 @@ jobs:
 
         # install git and python3
         yum install -y git python3-pip
-        dnf --enablerepo=powertools install python3-Cython
+        dnf --enablerepo=powertools install -y python3-Cython
         python3 -m pip install --upgrade pip --user
 
         # install graphscope-client
