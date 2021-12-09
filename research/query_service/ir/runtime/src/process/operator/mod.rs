@@ -238,7 +238,7 @@ pub(crate) mod tests {
         let entry = tag_key.get_entry(&record).unwrap();
         match entry.as_ref() {
             Entry::Element(RecordElement::OffGraph(ObjectElement::Prop(obj))) => {
-                assert_eq!(obj.clone(), Object::from(expected));
+                assert_eq!(obj.clone(), object!(expected));
             }
             _ => {
                 assert!(false);

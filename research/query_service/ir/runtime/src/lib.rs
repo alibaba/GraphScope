@@ -24,6 +24,8 @@ pub mod graph;
 pub mod process;
 
 #[macro_use]
+extern crate dyn_type;
+#[macro_use]
 extern crate pegasus_common;
 #[macro_use]
 extern crate lazy_static;

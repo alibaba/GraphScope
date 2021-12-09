@@ -93,7 +93,6 @@ mod tests {
     use crate::process::operator::sort::CompareFunctionGen;
     use crate::process::operator::tests::{init_source, init_source_with_tag};
     use crate::process::record::Record;
-    use dyn_type::Object;
 
     fn sort_test(source: Vec<Record>, sort_opr: pb::OrderBy) -> ResultStream<Record> {
         let conf = JobConf::new("sort_test");
@@ -178,7 +177,7 @@ mod tests {
                 );
             }
         }
-        let expected_names: Vec<Object> = vec!["vadas".to_string().into(), "marko".to_string().into()];
+        let expected_names = vec![object!("vadas"), object!("marko")];
         assert_eq!(result_name, expected_names);
     }
 

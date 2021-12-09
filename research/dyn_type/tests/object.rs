@@ -76,8 +76,8 @@ mod tests {
 
         // vector of strings
         let object_vec: Object = vec!["a".to_string(), "b".to_string(), "c".to_string()].into();
-        assert!(object_vec.contains(&"a".to_string().into()));
-        assert!(!object_vec.contains(&"d".to_string().into()));
+        assert!(object_vec.contains(&"a".into()));
+        assert!(!object_vec.contains(&"d".into()));
         assert!(object_vec.contains(&vec!["a".to_string()].into()));
         assert!(!object_vec.contains(&vec!["a".to_string(), "d".to_string()].into()));
 
@@ -89,18 +89,18 @@ mod tests {
 
         // borrow object
         let object_vec_b: BorrowObject = object_vec.as_borrow();
-        assert!(object_vec_b.contains(&Object::from("a".to_string()).as_borrow()));
-        assert!(!object_vec_b.contains(&Object::from("d".to_string()).as_borrow()));
-        assert!(object_vec_b.contains(&Object::from(vec!["a".to_string()]).as_borrow()));
-        assert!(!object_vec_b.contains(&Object::from(vec!["a".to_string(), "d".to_string()]).as_borrow()));
+        assert!(object_vec_b.contains(&object!("a".to_string()).as_borrow()));
+        assert!(!object_vec_b.contains(&object!("d".to_string()).as_borrow()));
+        assert!(object_vec_b.contains(&object!(vec!["a".to_string()]).as_borrow()));
+        assert!(!object_vec_b.contains(&object!(vec!["a".to_string(), "d".to_string()]).as_borrow()));
     }
 
     #[test]
     fn test_object_compare() {
         // vector
-        let object_vec1 = Object::from(vec![1, 2, 3]);
-        let object_vec2 = Object::from(vec![1, 2, 3]);
-        let object_vec3 = Object::from(vec![3, 2]);
+        let object_vec1 = object!(vec![1, 2, 3]);
+        let object_vec2 = object!(vec![1, 2, 3]);
+        let object_vec3 = object!(vec![3, 2]);
 
         assert_eq!(object_vec1, object_vec2);
         assert_ne!(object_vec1, object_vec3);
@@ -108,10 +108,10 @@ mod tests {
         assert!(object_vec3 > object_vec2);
 
         // kv
-        let object_kv1 = Object::from(vec![("a".to_string(), 1_u64), ("b".to_string(), 2_u64)]);
-        let object_kv2 = Object::from(vec![("a".to_string(), 1_u64), ("b".to_string(), 2_u64)]);
-        let object_kv3 = Object::from(vec![("a".to_string(), 2_u64), ("b".to_string(), 3_u64)]);
-        let object_kv4 = Object::from(vec![("c".to_string(), 1_u64), ("d".to_string(), 2_u64)]);
+        let object_kv1 = object!(vec![("a".to_string(), 1_u64), ("b".to_string(), 2_u64)]);
+        let object_kv2 = object!(vec![("a".to_string(), 1_u64), ("b".to_string(), 2_u64)]);
+        let object_kv3 = object!(vec![("a".to_string(), 2_u64), ("b".to_string(), 3_u64)]);
+        let object_kv4 = object!(vec![("c".to_string(), 1_u64), ("d".to_string(), 2_u64)]);
 
         assert_eq!(object_kv1, object_kv2);
         assert_ne!(object_kv1, object_kv3);
