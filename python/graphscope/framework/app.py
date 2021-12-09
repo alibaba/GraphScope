@@ -273,10 +273,6 @@ class AppAssets(DAGNode):
 
     def __call__(self, graph, *args, **kwargs):
         """Instantiate an App and do queries over it."""
-        session = graph.session
-        # add app_assets op to dag if not exist
-        if not session.dag.exist(self.op):
-            session.dag.add_op(self.op)
         app_ = graph.session._wrapper(AppDAGNode(graph, self))
         return app_(*args, **kwargs)
 
@@ -302,6 +298,9 @@ class AppDAGNode(DAGNode):
         self._app_assets.is_compatible(self._graph)
 
         self._op = bind_app(graph, self._app_assets)
+        # add app_assets op to dag is not exist
+        if not self._session.dag.exists(self._app_assets.op):
+            self._session.dag.add_op(self._app_assets.op)
         # add op to dag
         self._session.dag.add_op(self._op)
 
