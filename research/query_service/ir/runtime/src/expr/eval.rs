@@ -402,7 +402,6 @@ mod tests {
     use super::*;
     use crate::expr::to_suffix_expr_pb;
     use crate::expr::token::tokenize;
-    use crate::expr::token::Token;
     use crate::graph::element::Vertex;
     use crate::graph::property::{DefaultDetails, DynDetails};
 
@@ -423,6 +422,10 @@ mod tests {
             (NameOrId::from("age".to_string()), 31.into()),
             (NameOrId::from("birthday".to_string()), 19900416.into()),
             (NameOrId::from("name".to_string()), "John".to_string().into()),
+            (
+                NameOrId::from("hobbies".to_string()),
+                vec!["football".to_string(), "guitar".to_string()].into(),
+            ),
         ]
         .into_iter()
         .collect();
@@ -509,73 +512,42 @@ mod tests {
 
     #[test]
     fn test_eval_contains() {
-        let tokens = vec![Token::Int(10), Token::Within, Token::IntArray(vec![10, 9, 8, 7])];
-        let eval = Evaluator::try_from(to_suffix_expr_pb(tokens).unwrap()).unwrap();
-        assert!(eval.eval_bool::<(), NoneContext>(None).unwrap());
-
-        let tokens = vec![Token::IntArray(vec![10, 7]), Token::Within, Token::IntArray(vec![10, 9, 8, 7])];
-        let eval = Evaluator::try_from(to_suffix_expr_pb(tokens).unwrap()).unwrap();
-        assert!(eval.eval_bool::<(), NoneContext>(None).unwrap());
-
-        let tokens = vec![Token::IntArray(vec![10, 6]), Token::Within, Token::IntArray(vec![10, 9, 8, 7])];
-        let eval = Evaluator::try_from(to_suffix_expr_pb(tokens).unwrap()).unwrap();
-        assert!(!eval.eval_bool::<(), NoneContext>(None).unwrap());
-
-        let tokens = vec![Token::IntArray(vec![10, 6]), Token::Without, Token::IntArray(vec![10, 9, 8, 7])];
-        let eval = Evaluator::try_from(to_suffix_expr_pb(tokens).unwrap()).unwrap();
-        assert!(eval.eval_bool::<(), NoneContext>(None).unwrap());
-
-        let tokens = vec![Token::Float(10.0), Token::Within, Token::FloatArray(vec![10.0, 9.0, 8.0, 7.0])];
-        let eval = Evaluator::try_from(to_suffix_expr_pb(tokens).unwrap()).unwrap();
-        assert!(eval.eval_bool::<(), NoneContext>(None).unwrap());
-
-        let tokens = vec![
-            Token::FloatArray(vec![10.0, 7.0]),
-            Token::Within,
-            Token::FloatArray(vec![10.0, 9.0, 8.0, 7.0]),
+        let cases: Vec<&str> = vec![
+            "10 within [10, 9, 8, 7]",                                                // true
+            "[10, 7] within [10, 9, 8, 7]",                                           // true
+            "[10, 6] within [10, 9, 8, 7]",                                           // false
+            "[10, 6] without [10, 9, 8, 7]",                                          // true
+            "10.0 within [10.0, 9.0, 8.0, 7.0]",                                      // true
+            "[10.0, 7.0] within [10.0, 9.0, 8.0, 7.0]",                               // true
+            "[10.0, 6.0] within [10.0, 9.0, 8.0, 7.0]",                               // false
+            "[10.0, 6.0] without [10.0, 9.0, 8.0, 7.0]",                              // true
+            "\"a\" within [\"a\", \"b\", \"c\", \"d\"]",                              // true
+            "[\"f\"] within [\"a\", \"b\", \"c\", \"d\"]",                            // false
+            "[\"f\"] without [\"a\", \"b\", \"c\", \"d\"]",                           // true
+            "10 within [10, 9, 8, 7] && [\"f\"] within [\"a\", \"b\", \"c\", \"d\"]", // false
+            "(3 + 7) within [10, 9, 8, 7] || [\"f\"] within [\"a\", \"b\", \"c\", \"d\"]", // true
         ];
-        let eval = Evaluator::try_from(to_suffix_expr_pb(tokens).unwrap()).unwrap();
-        assert!(eval.eval_bool::<(), NoneContext>(None).unwrap());
 
-        let tokens = vec![Token::Float(11.0), Token::Within, Token::FloatArray(vec![10.0, 9.0, 8.0, 7.0])];
-        let eval = Evaluator::try_from(to_suffix_expr_pb(tokens).unwrap()).unwrap();
-        assert!(!eval.eval_bool::<(), NoneContext>(None).unwrap());
-
-        let tokens = vec![Token::Float(11.0), Token::Without, Token::FloatArray(vec![10.0, 9.0, 8.0, 7.0])];
-        let eval = Evaluator::try_from(to_suffix_expr_pb(tokens).unwrap()).unwrap();
-        assert!(eval.eval_bool::<(), NoneContext>(None).unwrap());
-
-        let tokens = vec![
-            Token::String("a".to_string()),
-            Token::Within,
-            Token::StrArray(vec!["a".to_string(), "b".to_string(), "c".to_string()]),
+        let expected: Vec<Object> = vec![
+            Object::from(true),
+            Object::from(true),
+            Object::from(false),
+            Object::from(true),
+            Object::from(true),
+            Object::from(true),
+            Object::from(false),
+            Object::from(true),
+            Object::from(true),
+            Object::from(false),
+            Object::from(true),
+            Object::from(false),
+            Object::from(true),
         ];
-        let eval = Evaluator::try_from(to_suffix_expr_pb(tokens).unwrap()).unwrap();
-        assert!(eval.eval_bool::<(), NoneContext>(None).unwrap());
 
-        let tokens = vec![
-            Token::StrArray(vec!["a".to_string()]),
-            Token::Within,
-            Token::StrArray(vec!["a".to_string(), "b".to_string(), "c".to_string()]),
-        ];
-        let eval = Evaluator::try_from(to_suffix_expr_pb(tokens).unwrap()).unwrap();
-        assert!(eval.eval_bool::<(), NoneContext>(None).unwrap());
-
-        let tokens = vec![
-            Token::StrArray(vec!["d".to_string()]),
-            Token::Within,
-            Token::StrArray(vec!["a".to_string(), "b".to_string(), "c".to_string()]),
-        ];
-        let eval = Evaluator::try_from(to_suffix_expr_pb(tokens).unwrap()).unwrap();
-        assert!(!eval.eval_bool::<(), NoneContext>(None).unwrap());
-
-        let tokens = vec![
-            Token::StrArray(vec!["d".to_string()]),
-            Token::Without,
-            Token::StrArray(vec!["a".to_string(), "b".to_string(), "c".to_string()]),
-        ];
-        let eval = Evaluator::try_from(to_suffix_expr_pb(tokens).unwrap()).unwrap();
-        assert!(eval.eval_bool::<(), NoneContext>(None).unwrap());
+        for (case, expected) in cases.into_iter().zip(expected.into_iter()) {
+            let eval = Evaluator::try_from(to_suffix_expr_pb(tokenize(case).unwrap()).unwrap()).unwrap();
+            assert_eq!(eval.eval::<(), NoneContext>(None).unwrap(), expected);
+        }
     }
 
     #[test]
@@ -623,8 +595,8 @@ mod tests {
 
     #[test]
     fn test_eval_variable() {
-        // [v0: id = 1, label = 9, age = 31, birthday = 19900416]
-        // [v1: id = 2, label = 11, age = 26, birthday = 19950816]
+        // [v0: id = 1, label = 9, age = 31, name = John, birthday = 19900416, hobbies = [football, guitar]]
+        // [v1: id = 2, label = 11, age = 26, name = Jimmy, birthday = 19950816]
         let ctxt = prepare_context();
         let cases: Vec<&str> = vec![
             "@0.~id",                                      // 1
@@ -636,7 +608,8 @@ mod tests {
             "@0.name == \"John\"",                         // true
             "@0.name == \"John\" && @1.name == \"Jimmy\"", // false
             "@0.age + @0.birthday / 10000 == \
-                @1.age + @1.birthday / 10000", // true
+                            @1.age + @1.birthday / 10000", // true
+            "@0.hobbies within [\"football\", \"guitar\", \"chess\"]", // true
         ];
 
         let expected: Vec<Object> = vec![
@@ -648,6 +621,7 @@ mod tests {
             Object::from(true),
             Object::from(true),
             Object::from(false),
+            Object::from(true),
             Object::from(true),
         ];
 

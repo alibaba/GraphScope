@@ -29,6 +29,8 @@ pub type ExprResult<T> = Result<T, ExprError>;
 pub enum ExprError {
     /// The left brace may not be closed by a right brace
     UnmatchedLRBraces,
+    /// The left bracket may not be closed by a right braket
+    UnmatchedLRBrackets,
     /// An escape sequence within a string literal is illegal.
     IllegalEscapeSequence(String),
     /// A `PartialToken` is unmatched, such that it cannot be combined into a full `Token`.
@@ -56,6 +58,8 @@ pub enum ExprError {
     UnmatchedOperator(OperatorDesc),
     /// The error caused by parsing invalid protobuf
     ParsePbError(ParsePbError),
+    /// Unsupported
+    Unsupported(String),
     /// Other unknown errors that is converted from a error description
     OtherErr(String),
 }
@@ -65,6 +69,7 @@ impl Display for ExprError {
         use super::ExprError::*;
         match self {
             UnmatchedLRBraces => write!(f, "the left and right braces may not be matched"),
+            UnmatchedLRBrackets => write!(f, "the left and right brackets may not be matched"),
             IllegalEscapeSequence(s) => write!(f, "illegal escape sequence {:?}", s),
             UnmatchedPartialToken { first: s1, second: s2 } => {
                 write!(f, "partial token {:?} cannot be completed by {:?}", s1, s2)
@@ -78,6 +83,7 @@ impl Display for ExprError {
             UnmatchedOperator(opr) => {
                 write!(f, "meant to evaluate a certain operator, but obtain a different one： {:?}", opr)
             }
+            Unsupported(e) => write!(f, "unsupported: {}", e),
             OtherErr(e) => write!(f, "parse error {}", e),
         }
     }
@@ -88,6 +94,10 @@ impl std::error::Error for ExprError {}
 impl ExprError {
     pub fn unmatched_partial_token(first: PartialToken, second: Option<PartialToken>) -> Self {
         Self::UnmatchedPartialToken { first, second }
+    }
+
+    pub fn unsupported(string: String) -> Self {
+        Self::Unsupported(string)
     }
 }
 

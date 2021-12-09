@@ -23,9 +23,12 @@ use ir_common::VAR_PREFIX;
 
 use crate::expr::error::{ExprError, ExprResult};
 use crate::expr::token::{tokenize, Token};
+use std::convert::{TryFrom, TryInto};
 
-impl From<Token> for ExprResult<pb::ExprOpr> {
-    fn from(token: Token) -> Self {
+impl TryFrom<Token> for pb::ExprOpr {
+    type Error = ExprError;
+
+    fn try_from(token: Token) -> ExprResult<Self> {
         match token {
             Token::Plus => Ok(pb::Arithmetic::Add.into()),
             Token::Minus => Ok(pb::Arithmetic::Sub.into()),
@@ -53,7 +56,9 @@ impl From<Token> for ExprResult<pb::ExprOpr> {
             Token::StrArray(v) => Ok(pb::Const { value: Some(v.into()) }.into()),
             Token::Identifier(ident) => {
                 if !ident.starts_with(VAR_PREFIX) {
-                    Err("invalid token, a variable must start with \"@\"".into())
+                    Err(format!("invalid variable token: {:?}, a variable must start with \"@\"", ident)
+                        .as_str()
+                        .into())
                 } else {
                     let var: pb::Variable = ident.into();
                     Ok(var.into())
@@ -114,7 +119,7 @@ pub fn to_suffix_expr_pb(tokens: Vec<Token>) -> ExprResult<pb::SuffixExpr> {
     let mut operators = Vec::<pb::ExprOpr>::with_capacity(tokens.len());
 
     for token in tokens {
-        operators.push(ExprResult::<pb::ExprOpr>::from(token)?);
+        operators.push(token.try_into()?);
     }
 
     Ok(pb::SuffixExpr { operators })
