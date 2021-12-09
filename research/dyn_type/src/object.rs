@@ -19,7 +19,7 @@ use itertools::Itertools;
 use std::any::Any;
 use std::borrow::Cow;
 use std::cmp::Ordering;
-use std::collections::{BTreeMap, HashSet};
+use std::collections::{BTreeMap, BTreeSet};
 use std::convert::TryFrom;
 use std::fmt::Debug;
 use std::hash::{Hash, Hasher};
@@ -651,7 +651,7 @@ impl Object {
     pub fn contains(&self, sub_obj: &Object) -> bool {
         match self {
             Object::Vector(v1) => {
-                let set = v1.iter().collect::<HashSet<_>>();
+                let set = v1.iter().collect::<BTreeSet<_>>();
                 match sub_obj {
                     Object::Vector(v2) => {
                         if v1.len() >= v2.len() {
@@ -827,7 +827,7 @@ impl<'a> BorrowObject<'a> {
                 let set = v1
                     .iter()
                     .map(|obj| obj.as_borrow())
-                    .collect::<HashSet<_>>();
+                    .collect::<BTreeSet<_>>();
                 match sub_obj {
                     BorrowObject::Vector(v2) => {
                         if v1.len() >= v2.len() {

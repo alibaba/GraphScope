@@ -58,6 +58,8 @@ mod tests {
         assert!(object_vec.contains(&vec![1, 3].into()));
         assert!(!object_vec.contains(&vec![1, 5].into()));
         assert!(!object_vec.contains(&vec![1, 2, 3, 4].into()));
+        // An i32 array can contain a `u64` value
+        assert!(object_vec.contains(&1_u64.into()));
 
         // vector of floats
         let object_vec: Object = vec![1.0, 2.0, 3.0].into();
@@ -66,6 +68,11 @@ mod tests {
         assert!(object_vec.contains(&vec![1.0, 3.0].into()));
         assert!(!object_vec.contains(&vec![1.0, 5.0].into()));
         assert!(!object_vec.contains(&vec![1.0, 2.0, 3.0, 4.0].into()));
+        // An float-number array can contain a `u64` value
+        assert!(object_vec.contains(&1_u64.into()));
+        let object_vec: Object = vec![1.1, 2.0, 3.0].into();
+        // An float-number array can contain a `u64` value only their values are equal
+        assert!(!object_vec.contains(&1_u64.into()));
 
         // vector of strings
         let object_vec: Object = vec!["a".to_string(), "b".to_string(), "c".to_string()].into();
