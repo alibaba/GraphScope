@@ -53,6 +53,7 @@ impl FilterFuncGen for algebra_pb::Select {
 
 #[cfg(test)]
 mod tests {
+    use dyn_type::Object;
     use ir_common::generated::algebra as pb;
     use ir_common::NameOrId;
     use pegasus::api::{Filter, Sink};
@@ -117,7 +118,7 @@ mod tests {
                             .unwrap()
                             .try_to_owned()
                             .unwrap(),
-                        "marko".to_string().into()
+                        Object::from("marko".to_string())
                     );
                 }
                 count += 1;

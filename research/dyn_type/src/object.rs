@@ -19,7 +19,7 @@ use itertools::Itertools;
 use std::any::Any;
 use std::borrow::Cow;
 use std::cmp::Ordering;
-use std::collections::{BTreeMap, BTreeSet};
+use std::collections::BTreeMap;
 use std::convert::TryFrom;
 use std::fmt::Debug;
 use std::hash::{Hash, Hasher};
@@ -486,6 +486,29 @@ impl<'a> ToString for BorrowObject<'a> {
     }
 }
 
+macro_rules! contains_single {
+    ($self: expr, $single: expr, $ty: ident) => {
+        match $self {
+            $crate::$ty::Vector(vec) => match $single {
+                $crate::$ty::Primitive(_) | $crate::$ty::String(_) => {
+                    for val in vec.iter() {
+                        if $single == val {
+                            return true;
+                        }
+                    }
+                    false
+                }
+                _ => false,
+            },
+            $crate::$ty::String(str1) => match $single {
+                $crate::$ty::String(str2) => str1.contains(str2),
+                _ => false,
+            },
+            _ => false,
+        }
+    };
+}
+
 impl Object {
     pub fn raw_type(&self) -> RawType {
         match self {
@@ -648,33 +671,21 @@ impl Object {
         }
     }
 
-    pub fn contains(&self, sub_obj: &Object) -> bool {
-        match self {
-            Object::Vector(v1) => {
-                let set = v1.iter().collect::<BTreeSet<_>>();
-                match sub_obj {
-                    Object::Vector(v2) => {
-                        if v1.len() >= v2.len() {
-                            let mut cmp = true;
-                            for key in v2 {
-                                if !set.contains(key) {
-                                    cmp = false;
-                                    break;
-                                }
-                            }
-                            cmp
-                        } else {
-                            false
-                        }
+    fn contains_single(&self, single: &Object) -> bool {
+        contains_single!(self, single, Object)
+    }
+
+    pub fn contains(&self, obj: &Object) -> bool {
+        match obj {
+            Object::Vector(vec) => {
+                for val in vec.iter() {
+                    if !self.contains_single(val) {
+                        return false;
                     }
-                    Object::Primitive(_) | Object::String(_) => set.contains(sub_obj),
-                    _ => false,
                 }
+                true
             }
-            Object::String(str1) => match sub_obj {
-                Object::String(str2) => str1.contains(str2),
-                _ => false,
-            },
+            Object::Primitive(_) | Object::String(_) => self.contains_single(obj),
             _ => false,
         }
     }
@@ -821,150 +832,137 @@ impl<'a> BorrowObject<'a> {
         }
     }
 
-    pub fn contains(&self, sub_obj: &BorrowObject) -> bool {
-        match self {
-            BorrowObject::Vector(v1) => {
-                let set = v1
-                    .iter()
-                    .map(|obj| obj.as_borrow())
-                    .collect::<BTreeSet<_>>();
-                match sub_obj {
-                    BorrowObject::Vector(v2) => {
-                        if v1.len() >= v2.len() {
-                            let mut cmp = true;
-                            for key in v2.iter().map(|obj| obj.as_borrow()) {
-                                if !set.contains(&key) {
-                                    cmp = false;
-                                    break;
-                                }
-                            }
-                            cmp
-                        } else {
-                            false
-                        }
+    fn contains_single(&self, single: &BorrowObject) -> bool {
+        contains_single!(self, single, BorrowObject)
+    }
+
+    pub fn contains(&self, obj: &BorrowObject) -> bool {
+        match obj {
+            BorrowObject::Vector(vec) => {
+                for val in vec.iter() {
+                    if !self.contains_single(&val.as_borrow()) {
+                        return false;
                     }
-                    BorrowObject::Primitive(_) | BorrowObject::String(_) => set.contains(&sub_obj),
-                    _ => false,
                 }
+                true
             }
-            BorrowObject::String(str1) => match sub_obj {
-                BorrowObject::String(str2) => str1.contains(str2),
-                _ => false,
-            },
+            BorrowObject::Primitive(_) | BorrowObject::String(_) => self.contains_single(obj),
             _ => false,
         }
     }
 }
 
-impl PartialEq for Object {
-    fn eq(&self, other: &Self) -> bool {
-        match self {
-            Object::Primitive(p) => other
+impl<'a> PartialEq<Object> for BorrowObject<'a> {
+    fn eq(&self, other: &Object) -> bool {
+        self.eq(&other.as_borrow())
+    }
+}
+
+impl<'a> PartialEq<BorrowObject<'a>> for Object {
+    fn eq(&self, other: &BorrowObject<'a>) -> bool {
+        self.as_borrow().eq(other)
+    }
+}
+
+macro_rules! eq {
+    ($self:expr, $other:expr, $ty:ident) => {
+        match $self {
+            $crate::$ty::Primitive(p) => $other
                 .as_primitive()
                 .map(|o| p == &o)
                 .unwrap_or(false),
-            Object::Blob(v) => other
+            $crate::$ty::Blob(v) => $other
                 .as_bytes()
                 .map(|o| o.eq(v.as_ref()))
                 .unwrap_or(false),
-            Object::String(v) => other
+            $crate::$ty::String(v) => $other
                 .as_str()
-                .map(|o| o.eq(v.as_str()))
+                .map(|o| o.eq(&(*v)))
                 .unwrap_or(false),
-            Object::Vector(v1) => {
-                if let Object::Vector(v2) = other {
+            $crate::$ty::Vector(v1) => {
+                if let $crate::$ty::Vector(v2) = $other {
                     v1 == v2
                 } else {
                     false
                 }
             }
-            Object::KV(kv1) => {
-                if let Object::KV(kv2) = other {
+            $crate::$ty::KV(kv1) => {
+                if let $crate::$ty::KV(kv2) = $other {
                     kv1 == kv2
                 } else {
                     false
                 }
             }
         }
+    };
+}
+
+impl PartialEq for Object {
+    fn eq(&self, other: &Self) -> bool {
+        eq!(self, other, Object)
     }
 }
 
 impl Eq for Object {}
 
-impl PartialOrd for Object {
-    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
-        match self {
-            Object::Primitive(p) => other
+macro_rules! partial_cmp {
+    ($self:expr, $other:expr, $ty:ident) => {
+        match $self {
+            $crate::$ty::Primitive(p) => $other
                 .as_primitive()
                 .map(|o| p.partial_cmp(&o))
                 .unwrap_or(None),
-            Object::Blob(v) => other
+            $crate::$ty::Blob(v) => $other
                 .as_bytes()
                 .map(|o| v.as_ref().partial_cmp(o))
                 .unwrap_or(None),
-            Object::String(v) => other
+            $crate::$ty::String(v) => $other
                 .as_str()
-                .map(|o| v.as_str().partial_cmp(o.as_ref()))
+                .map(|o| (&(**v)).partial_cmp(&(*o)))
                 .unwrap_or(None),
-            Object::Vector(v1) => {
-                if let Object::Vector(v2) = other {
+            $crate::$ty::Vector(v1) => {
+                if let $crate::$ty::Vector(v2) = $other {
                     v1.partial_cmp(v2)
                 } else {
                     None
                 }
             }
-            Object::KV(kv1) => {
-                if let Object::KV(kv2) = other {
+            $crate::$ty::KV(kv1) => {
+                if let $crate::$ty::KV(kv2) = $other {
                     kv1.partial_cmp(kv2)
                 } else {
                     None
                 }
             }
         }
+    };
+}
+
+macro_rules! cmp {
+    ($self:expr, $other:expr) => {
+        if let Some(ord) = $self.partial_cmp($other) {
+            ord
+        } else {
+            Ordering::Equal
+        }
+    };
+}
+
+impl PartialOrd for Object {
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+        partial_cmp!(self, other, Object)
     }
 }
 
 impl Ord for Object {
     fn cmp(&self, other: &Self) -> Ordering {
-        if let Some(ord) = self.partial_cmp(other) {
-            ord
-        } else {
-            // TODO(longbin) Note that DynType is still uncomparable
-            Ordering::Equal
-        }
+        cmp!(self, other)
     }
 }
 
 impl<'a> PartialEq for BorrowObject<'a> {
     fn eq(&self, other: &Self) -> bool {
-        match self {
-            BorrowObject::Primitive(p) => other
-                .as_primitive()
-                .map(|o| p == &o)
-                .unwrap_or(false),
-            BorrowObject::String(v) => other
-                .as_str()
-                .map(|o| o.eq(*v))
-                .unwrap_or(false),
-            BorrowObject::Blob(v) => other
-                .as_bytes()
-                .map(|o| *v == o)
-                .unwrap_or(false),
-            BorrowObject::Vector(v1) => {
-                if let BorrowObject::Vector(v2) = other {
-                    v1 == v2
-                } else {
-                    false
-                }
-            }
-            BorrowObject::KV(kv1) => {
-                if let BorrowObject::KV(kv2) = other {
-                    kv1 == kv2
-                } else {
-                    false
-                }
-            }
-        }
+        eq!(self, other, BorrowObject)
     }
 }
 
@@ -972,44 +970,13 @@ impl<'a> Eq for BorrowObject<'a> {}
 
 impl<'a> PartialOrd for BorrowObject<'a> {
     fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
-        match self {
-            BorrowObject::Primitive(p) => other
-                .as_primitive()
-                .map(|o| p.partial_cmp(&o))
-                .unwrap_or(None),
-            BorrowObject::String(v) => other
-                .as_str()
-                .map(|o| (*v).partial_cmp(o.as_ref()))
-                .unwrap_or(None),
-            BorrowObject::Blob(v) => other
-                .as_bytes()
-                .map(|o| (*v).partial_cmp(o))
-                .unwrap_or(None),
-            BorrowObject::Vector(v1) => {
-                if let BorrowObject::Vector(v2) = other {
-                    v1.partial_cmp(v2)
-                } else {
-                    None
-                }
-            }
-            BorrowObject::KV(kv1) => {
-                if let BorrowObject::KV(kv2) = other {
-                    kv1.partial_cmp(kv2)
-                } else {
-                    None
-                }
-            }
-        }
+        partial_cmp!(self, other, BorrowObject)
     }
 }
 
 impl<'a> Ord for BorrowObject<'a> {
     fn cmp(&self, other: &Self) -> Ordering {
-        if let Some(ord) = self.partial_cmp(other) {
-            ord
-        } else {
-            Ordering::Equal
-        }
+        cmp!(self, other)
     }
 }
 
@@ -1031,79 +998,53 @@ fn integer_decode(val: f64) -> (u64, i16, i8) {
     (mantissa, exponent, sign)
 }
 
-impl Hash for Object {
-    fn hash<H: Hasher>(&self, state: &mut H) {
-        match self {
-            Object::Primitive(p) => match p {
-                Primitives::Byte(v) => {
-                    v.hash(state);
+macro_rules! hash {
+    ($self:expr, $state:expr, $ty:ident) => {
+        match $self {
+            $crate::$ty::Primitive(p) => match p {
+                $crate::Primitives::Byte(v) => {
+                    v.hash($state);
                 }
-                Primitives::Integer(v) => {
-                    v.hash(state);
+                $crate::Primitives::Integer(v) => {
+                    v.hash($state);
                 }
-                Primitives::Long(v) => {
-                    v.hash(state);
+                $crate::Primitives::Long(v) => {
+                    v.hash($state);
                 }
-                Primitives::Float(v) => {
-                    integer_decode(*v).hash(state);
+                $crate::Primitives::Float(v) => {
+                    integer_decode(*v).hash($state);
                 }
-                Primitives::ULLong(v) => {
-                    v.hash(state);
+                $crate::Primitives::ULLong(v) => {
+                    v.hash($state);
                 }
             },
-            Object::String(s) => {
-                s.hash(state);
+            $crate::$ty::String(s) => {
+                s.hash($state);
             }
-            Object::Blob(b) => {
-                b.hash(state);
+            $crate::$ty::Blob(b) => {
+                b.hash($state);
             }
-            Object::Vector(v) => {
-                v.hash(state);
+            $crate::$ty::Vector(v) => {
+                v.hash($state);
             }
-            Object::KV(kv) => {
-                for pair in kv {
-                    pair.hash(state);
+            $crate::$ty::KV(kv) => {
+                for pair in kv.iter() {
+                    pair.hash($state);
                 }
             }
         }
+    };
+}
+
+impl Hash for Object {
+    fn hash<H: Hasher>(&self, state: &mut H) {
+        hash!(self, state, Object)
     }
 }
 
 impl<'a> Hash for BorrowObject<'a> {
     fn hash<H: Hasher>(&self, state: &mut H) {
-        match self {
-            BorrowObject::Primitive(p) => match p {
-                Primitives::Byte(v) => {
-                    v.hash(state);
-                }
-                Primitives::Integer(v) => {
-                    v.hash(state);
-                }
-                Primitives::Long(v) => {
-                    v.hash(state);
-                }
-                Primitives::Float(v) => {
-                    integer_decode(*v).hash(state);
-                }
-                Primitives::ULLong(v) => {
-                    v.hash(state);
-                }
-            },
-            BorrowObject::String(s) => {
-                s.hash(state);
-            }
-            BorrowObject::Blob(b) => {
-                b.hash(state);
-            }
-            BorrowObject::Vector(v) => {
-                v.hash(state);
-            }
-            BorrowObject::KV(kv) => {
-                for pair in kv.iter() {
-                    pair.hash(state);
-                }
-            }
-        }
+        hash!(self, state, BorrowObject)
     }
 }
 

@@ -92,6 +92,7 @@ mod tests {
     use crate::process::operator::map::MapFuncGen;
     use crate::process::operator::tests::{init_source, init_source_with_tag};
     use crate::process::record::{Entry, ObjectElement, Record, RecordElement};
+    use dyn_type::Object;
 
     fn project_test(source: Vec<Record>, project_opr_pb: pb::Project) -> ResultStream<Record> {
         let conf = JobConf::new("project_test");
@@ -130,7 +131,7 @@ mod tests {
                 _ => {}
             }
         }
-        let expected_result = vec![1.into(), 2.into()];
+        let expected_result: Vec<Object> = vec![1.into(), 2.into()];
         assert_eq!(object_result, expected_result);
     }
 
@@ -162,7 +163,7 @@ mod tests {
                 _ => {}
             }
         }
-        let expected_result = vec!["marko".into(), "vadas".into()];
+        let expected_result: Vec<Object> = vec!["marko".into(), "vadas".into()];
         assert_eq!(object_result, expected_result);
     }
 }
