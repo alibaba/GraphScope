@@ -1,9 +1,6 @@
 name: Build GraphScope Wheels on Linux
 
 on:
-  push:
-    branches:
-      - acezen/extend_nightly
   workflow_dispatch:
   schedule:
     # The notifications for scheduled workflows are sent to the user who

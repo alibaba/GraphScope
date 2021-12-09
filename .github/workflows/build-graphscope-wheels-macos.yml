@@ -95,8 +95,7 @@ jobs:
     needs: [build-wheels, build-client-wheels]
     strategy:
       matrix:
-        # python-version: ['3.6', '3.7', '3.8', '3.9']
-        python-version: ['3.6']
+        python-version: ['3.6', '3.7', '3.8', '3.9']
 
     steps:
     - uses: actions/download-artifact@v2
@@ -134,7 +133,7 @@ jobs:
         GS_TEST_DIR: ${{ github.workspace }}/gstest
       run: |
         export JAVA_HOME=$(/usr/libexec/java_home -v11)
-        export PATH=$JAVA_HOME/bin:$PATH
+        export PATH=$JAVA_HOME/bin:$HOME/.local/bin:$PATH
         python3 -c "import sys; print(sys.version)"
         git clone -b master --single-branch --depth=1 https://github.com/7br/gstest.git ${GS_TEST_DIR}
         python3 -m pytest -s -v $(dirname $(python3 -c "import graphscope; print(graphscope.__file__)"))/tests/minitest
