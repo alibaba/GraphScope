@@ -16,7 +16,7 @@
 # limitations under the License.
 #
 
-from graphscope.dataset.cora import load_cora_graph
+from graphscope.dataset.cora import load_cora
 from graphscope.dataset.ldbc import load_ldbc
 from graphscope.dataset.modern_graph import load_modern_graph
 from graphscope.dataset.ogbl_collab import load_ogbl_collab

@@ -23,7 +23,7 @@ from graphscope.dataset.io_utils import DATA_SITE
 from graphscope.dataset.io_utils import download_file
 
 
-def load_cora_graph(sess=None, prefix=None, directed=False):
+def load_cora(sess=None, prefix=None, directed=False):
     """Load cora datasets.
 
     The Cora dataset consists of 2708 scientific publications classified into one of seven classes.
@@ -51,16 +51,16 @@ def load_cora_graph(sess=None, prefix=None, directed=False):
 
         >>> # lazy mode
         >>> import graphscope
-        >>> from graphscope.dataset import load_cora_graph
+        >>> from graphscope.dataset import load_cora
         >>> sess = graphscope.session(mode="lazy")
-        >>> g = load_cora_graph(sess, "/path/to/dataset")
+        >>> g = load_cora(sess, "/path/to/dataset")
         >>> g1 = sess.run(g)
 
         >>> # eager mode
         >>> import graphscope
-        >>> from graphscope.dataset import load_cora_graph
+        >>> from graphscope.dataset import load_cora
         >>> sess = graphscope.session(mode="eager")
-        >>> g = load_cora_graph(sess, "/path/to/dataset")
+        >>> g = load_cora(sess, "/path/to/dataset")
     """
     if prefix is not None:
         prefix = os.path.expandvars(prefix)

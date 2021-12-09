@@ -42,7 +42,7 @@ def test_download_dataset(graphscope_session):
     g7.unload()
     g8 = load_p2p_network(graphscope_session)
     g8.unload()
-    g9 = load_cora_graph(graphscope_session)
+    g9 = load_cora(graphscope_session)
     g9.unload()
     g10 = load_ppi_graph(graphscope_session)
     g10.unload()
