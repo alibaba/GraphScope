@@ -166,16 +166,16 @@ fn parse_escape_sequence<Iter: Iterator<Item = char>>(iter: &mut Iter) -> ExprRe
 
 /// Parses a string value from the given character iterator.
 ///
-/// The first character from the iterator is interpreted as first character of the string.
-/// The string is terminated by a double quote `"`.
-/// Occurrences of `"` within the string can be escaped with `\`.
-/// The backslash needs to be escaped with another backslash `\`.
+/// Either in the case of an array, in which the whole literal is enclosed by a pair of brackets [],
+/// or it is a typical string literal in a quote, in this case:
+///   * The first character from the iterator is interpreted as first character of the string.
+///   * The string is terminated by a double quote `"`.
+///   * Occurrences of `"` within the string can be escaped with `\`.
+///   * The backslash needs to be escaped with another backslash `\`.
 fn parse_string_literal<Iter: Iterator<Item = char>>(
     mut iter: &mut Iter, is_in_bracket: bool,
-) -> ExprResult<(PartialToken, Option<char>)> {
+) -> ExprResult<PartialToken> {
     let mut result = String::new();
-    let mut last_char = None;
-
     if !is_in_bracket {
         while let Some(c) = iter.next() {
             match c {
@@ -185,10 +185,11 @@ fn parse_string_literal<Iter: Iterator<Item = char>>(
             }
         }
     } else {
+        let mut has_right_bracket = false;
         // Treat everything as a string
         while let Some(c) = iter.next() {
             if c == ']' {
-                last_char = Some(c);
+                has_right_bracket = true;
                 break;
             } else if c == '[' {
                 return Err(ExprError::unsupported("nested array is not supported".to_string()));
@@ -196,9 +197,13 @@ fn parse_string_literal<Iter: Iterator<Item = char>>(
                 result.push(c);
             }
         }
+
+        if !has_right_bracket {
+            return Err(ExprError::UnmatchedLRBrackets);
+        }
     }
 
-    Ok((PartialToken::Token(Token::String(result)), last_char))
+    Ok(PartialToken::Token(Token::String(result)))
 }
 
 /// Converts a string to a vector of partial tokens.
@@ -207,14 +212,12 @@ fn str_to_partial_tokens(string: &str) -> ExprResult<Vec<PartialToken>> {
     let mut iter = string.chars().peekable();
     while let Some(c) = iter.next() {
         if c == '"' {
-            result.push(parse_string_literal(&mut iter, false)?.0);
+            result.push(parse_string_literal(&mut iter, false)?);
         } else if c == '[' {
             result.push(PartialToken::LBracket);
-            let (literal, last_char) = parse_string_literal(&mut iter, true)?;
-            result.push(literal);
-            if last_char.is_some() {
-                result.push(PartialToken::RBracket);
-            }
+            result.push(parse_string_literal(&mut iter, true)?);
+            // must have right bracket to escape from `parse_string_literal()`
+            result.push(PartialToken::RBracket);
         } else {
             let partial_token = char_to_partial_token(c);
 
