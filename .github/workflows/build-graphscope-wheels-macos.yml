@@ -124,10 +124,6 @@ jobs:
         # install tensorflow
         python3 -m pip install pytest "tensorflow<=2.5.2" --user
 
-    - name: Setup tmate session
-      if: true
-      uses: mxschmitt/action-tmate@v2
-
     - name: Run Minimum Test
       env:
         GS_TEST_DIR: ${{ github.workspace }}/gstest

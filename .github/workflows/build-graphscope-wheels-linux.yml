@@ -10,7 +10,7 @@ on:
 
 jobs:
   build-wheels:
-    # if: ${{ github.ref == 'refs/heads/main' && github.repository == 'alibaba/GraphScope' }}
+    if: ${{ github.ref == 'refs/heads/main' && github.repository == 'alibaba/GraphScope' }}
     runs-on: ubuntu-20.04
 
     steps:
@@ -80,6 +80,7 @@ jobs:
         sudo make graphscope-image
 
   ubuntu-python-test:
+    if: ${{ github.ref == 'refs/heads/main' && github.repository == 'alibaba/GraphScope' }}
     runs-on: ubuntu-20.04
     needs: [build-wheels]
     strategy:
@@ -129,6 +130,7 @@ jobs:
         python3 -m pytest -s -v $(dirname $(python3 -c "import graphscope; print(graphscope.__file__)"))/tests/minitest
 
   centos-test:
+    if: ${{ github.ref == 'refs/heads/main' && github.repository == 'alibaba/GraphScope' }}
     runs-on: ubuntu-20.04
     needs: [build-wheels]
     container:
