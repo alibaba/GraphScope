@@ -123,8 +123,6 @@ pub enum PartialToken {
     LBracket,
     /// To terminate an array, ']'
     RBracket,
-    /// Array splitter, ','
-    Comma,
 }
 
 #[inline]
@@ -139,7 +137,6 @@ fn char_to_partial_token(c: char) -> PartialToken {
         '-' => PartialToken::Minus,
         '[' => PartialToken::LBracket,
         ']' => PartialToken::RBracket,
-        ',' => PartialToken::Comma,
         '+' => PartialToken::Token(Token::Plus),
         '*' => PartialToken::Token(Token::Star),
         '/' => PartialToken::Token(Token::Slash),
@@ -173,28 +170,51 @@ fn parse_escape_sequence<Iter: Iterator<Item = char>>(iter: &mut Iter) -> ExprRe
 /// The string is terminated by a double quote `"`.
 /// Occurrences of `"` within the string can be escaped with `\`.
 /// The backslash needs to be escaped with another backslash `\`.
-fn parse_string_literal<Iter: Iterator<Item = char>>(mut iter: &mut Iter) -> ExprResult<PartialToken> {
+fn parse_string_literal<Iter: Iterator<Item = char>>(
+    mut iter: &mut Iter, is_in_bracket: bool,
+) -> ExprResult<(PartialToken, Option<char>)> {
     let mut result = String::new();
+    let mut last_char = None;
 
-    while let Some(c) = iter.next() {
-        match c {
-            '"' => break,
-            '\\' => result.push(parse_escape_sequence(&mut iter)?),
-            c => result.push(c),
+    if !is_in_bracket {
+        while let Some(c) = iter.next() {
+            match c {
+                '"' => break,
+                '\\' => result.push(parse_escape_sequence(&mut iter)?),
+                c => result.push(c),
+            }
+        }
+    } else {
+        // Treat everything as a string
+        while let Some(c) = iter.next() {
+            if c == ']' {
+                last_char = Some(c);
+                break;
+            } else if c == '[' {
+                return Err(ExprError::unsupported("nested array is not supported".to_string()));
+            } else {
+                result.push(c);
+            }
         }
     }
 
-    Ok(PartialToken::Token(Token::String(result)))
+    Ok((PartialToken::Token(Token::String(result)), last_char))
 }
 
 /// Converts a string to a vector of partial tokens.
 fn str_to_partial_tokens(string: &str) -> ExprResult<Vec<PartialToken>> {
     let mut result = Vec::new();
     let mut iter = string.chars().peekable();
-
     while let Some(c) = iter.next() {
         if c == '"' {
-            result.push(parse_string_literal(&mut iter)?);
+            result.push(parse_string_literal(&mut iter, false)?.0);
+        } else if c == '[' {
+            result.push(PartialToken::LBracket);
+            let (literal, last_char) = parse_string_literal(&mut iter, true)?;
+            result.push(literal);
+            if last_char.is_some() {
+                result.push(PartialToken::RBracket);
+            }
         } else {
             let partial_token = char_to_partial_token(c);
 
@@ -216,7 +236,7 @@ fn str_to_partial_tokens(string: &str) -> ExprResult<Vec<PartialToken>> {
     Ok(result)
 }
 
-fn token_array_as_token(token_array: Vec<Token>) -> ExprResult<Token> {
+fn token_array_to_token(token_array: Vec<Token>) -> ExprResult<Token> {
     // use pivot to regulate the type of all elements
     let pivot = token_array.first().unwrap();
     match pivot {
@@ -386,67 +406,40 @@ fn partial_tokens_to_tokens(mut tokens: &[PartialToken]) -> ExprResult<Vec<Token
                 _ => return Err(ExprError::unmatched_partial_token(first, second)),
             },
             PartialToken::LBracket => {
-                let mut token_array: Vec<Token> = Vec::new();
-                let mut prev_token = None;
-                let mut has_right_bracket = false;
-                cutoff = 1;
-                for token in tokens.iter().skip(1) {
-                    match token {
-                        &PartialToken::Comma | &PartialToken::Whitespace | &PartialToken::Minus => {
-                            // skip
-                        }
-                        PartialToken::Literal(literal) => {
-                            let t = if let Ok(number) = literal.parse::<i64>() {
-                                if prev_token == Some(&PartialToken::Minus) {
-                                    Token::Int(-number)
+                cutoff = 3;
+                if third != Some(PartialToken::RBracket) {
+                    return Err(ExprError::UnmatchedLRBrackets);
+                } else {
+                    let mut token_array: Vec<Token> = Vec::new();
+                    match second {
+                        Some(PartialToken::Token(Token::String(ref s))) => {
+                            let elements = s.split(",");
+                            for e in elements {
+                                let t = partial_tokens_to_tokens(&str_to_partial_tokens(e)?)?;
+                                if t.len() != 1 {
+                                    return Err(format!("invalid token: {:?}", second)
+                                        .as_str()
+                                        .into());
                                 } else {
-                                    Token::Int(number)
+                                    token_array.push(t[0].clone())
                                 }
-                            } else if let Ok(number) = literal.parse::<f64>() {
-                                if prev_token == Some(&PartialToken::Minus) {
-                                    Token::Float(-number)
-                                } else {
-                                    Token::Float(number)
-                                }
-                            } else {
-                                return Err(ExprError::unsupported(format!(
-                                    "array of this type: {:?} is not supported",
-                                    literal
-                                )));
-                            };
-                            token_array.push(t);
-                        }
-                        PartialToken::Token(t) => {
-                            token_array.push(t.clone());
-                        }
-                        &PartialToken::RBracket => {
-                            cutoff += 1;
-                            has_right_bracket = true;
-                            break;
-                        }
-                        &PartialToken::LBracket => {
-                            return Err(ExprError::unsupported("nested array is not supported".to_string()))
+                            }
                         }
                         _ => {
-                            return Err(format!("invalid token: {:?})", token)
+                            return Err(format!("invalid token: {:?}", second)
                                 .as_str()
-                                .into());
+                                .into())
                         }
                     }
-                    cutoff += 1;
-                    prev_token = Some(token);
-                }
-
-                if !has_right_bracket {
-                    return Err(ExprError::UnmatchedLRBrackets);
-                } else if token_array.is_empty() {
-                    return Err("empty array is given".into());
-                } else {
-                    Some(token_array_as_token(token_array)?)
+                    if token_array.is_empty() {
+                        return Err("empty array is given".into());
+                    } else {
+                        Some(token_array_to_token(token_array)?)
+                    }
                 }
             }
             _ => {
-                return Err(format!("invalid token: {:?})", first)
+                return Err(format!("invalid token: {:?}", first)
                     .as_str()
                     .into());
             }
@@ -557,11 +550,19 @@ mod tests {
         let case10 = tokenize("[@a]");
         assert_eq!(
             case10.err().unwrap(),
-            ExprError::unsupported(format!("array of this type: \"@a\" is not supported"))
+            ExprError::unsupported(format!(
+                "array of this type: {:?} is not supported",
+                Token::Identifier("@a".to_string())
+            ))
         );
 
         let case11 = tokenize("[]");
-        assert_eq!(case11.err().unwrap(), ExprError::from("empty array is given"));
+        assert_eq!(
+            case11.err().unwrap(),
+            format!("invalid token: {:?}", Some(PartialToken::Token(Token::String("".to_string()))))
+                .as_str()
+                .into()
+        );
     }
 
     #[test]
