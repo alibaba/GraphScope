@@ -56,6 +56,9 @@ class Launcher(metaclass=ABCMeta):
         # OPAL_PREFIX for openmpi
         if os.path.isdir(os.path.join(GRAPHSCOPE_HOME, "openmpi")):
             os.environ["OPAL_PREFIX"] = os.path.join(GRAPHSCOPE_HOME, "openmpi")
+        # Darwin is open-mpi
+        if os.path.isdir(os.path.join(GRAPHSCOPE_HOME, "open-mpi")):
+            os.environ["OPAL_PREFIX"] = os.path.join(GRAPHSCOPE_HOME, "open-mpi")
         # add '${GRAPHSCOPE_HOME}/lib' to ${LD_LIBRARY_PATH} to find libvineyard_internal_registry.so(dylib)
         if "LD_LIBRARY_PATH" in os.environ:
             os.environ["LD_LIBRARY_PATH"] = (

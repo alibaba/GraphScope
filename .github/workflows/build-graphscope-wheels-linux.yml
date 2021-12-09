@@ -80,6 +80,7 @@ jobs:
         sudo make graphscope-image
 
   ubuntu-python-test:
+    if: ${{ github.ref == 'refs/heads/main' && github.repository == 'alibaba/GraphScope' }}
     runs-on: ubuntu-20.04
     needs: [build-wheels]
     strategy:
@@ -129,6 +130,7 @@ jobs:
         python3 -m pytest -s -v $(dirname $(python3 -c "import graphscope; print(graphscope.__file__)"))/tests/minitest
 
   centos-test:
+    if: ${{ github.ref == 'refs/heads/main' && github.repository == 'alibaba/GraphScope' }}
     runs-on: ubuntu-20.04
     needs: [build-wheels]
     container:
@@ -147,8 +149,7 @@ jobs:
         yum install -y gcc gcc-c++ make cmake
 
         # install git and python3
-        yum install -y git python3-pip
-        dnf --enablerepo=powertools install -y python3-Cython
+        yum install -y git python3-pip python3-devel
         python3 -m pip install --upgrade pip --user
 
         # install graphscope-client
@@ -176,6 +177,7 @@ jobs:
       env:
         GS_TEST_DIR: ${{ github.workspace }}/gstest
       run: |
+        # python3-Cython version is too old, use cython installed by pip in $HOME/.local/bin
+        export PATH=$HOME/.local/bin:$PATH
         git clone -b master --single-branch --depth=1 https://github.com/7br/gstest.git ${GS_TEST_DIR}
-        # FIXME(dongze): test_minimum_udf_app failed
-        python3 -m pytest -s -v $(dirname $(python3 -c "import graphscope; print(graphscope.__file__)"))/tests/minitest -k "not minimum_udf_app"
+        python3 -m pytest -s -v $(dirname $(python3 -c "import graphscope; print(graphscope.__file__)"))/tests/minitest
