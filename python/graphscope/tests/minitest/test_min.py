@@ -116,7 +116,7 @@ def simple_flow(sess, ogbn_small_script):
     train(config, lg)
 
 
-def test_minimize_udf_app():
+def test_minimum_udf_app():
     @pregel(vd_type="string", md_type="string")
     class DummyClass(AppAssets):
         @staticmethod
@@ -134,7 +134,7 @@ def test_minimize_udf_app():
     s.close()
 
 
-def test_minimize_networkx():
+def test_minimum_networkx():
     s = graphscope.session(cluster_type="hosts", num_workers=2)
     s.as_default()
     # case-1 run app
