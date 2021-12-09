@@ -28,7 +28,7 @@ This chart bootstraps a [GraphScope Store](https://github.com/alibaba/GraphScope
 To install the chart with the release name `my-release`:
 
 ```bash
-$ helm repo add graphscope https://graphscope.oss-cn-beijing.aliyuncs.com/store/charts/
+$ helm repo add graphscope https://graphscope.oss-cn-beijing.aliyuncs.com/charts/
 $ helm install my-release graphscope/graphscope-store
 ```
 
