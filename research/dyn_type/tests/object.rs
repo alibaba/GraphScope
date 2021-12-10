@@ -16,6 +16,7 @@
 #[cfg(test)]
 mod tests {
     use dyn_type::{object, BorrowObject, Object, Primitives};
+    use std::cmp::Ordering;
 
     #[test]
     fn test_as_primitive() {
@@ -119,5 +120,27 @@ mod tests {
         assert!(object_kv3 > object_kv2);
         assert!(object_kv1 < object_kv4);
         assert!(object_kv4 > object_kv2);
+    }
+
+    #[test]
+    fn test_dyn_object() {
+        let vec = vec![1_u32, 2, 3, 4, 5];
+        let vec_obj = Object::DynOwned(Box::new(vec.clone()));
+        let vec_recovered = vec_obj.get::<Vec<u32>>().unwrap();
+        assert_eq!(vec_recovered, vec);
+
+        let vec_borrow = vec_obj.as_borrow();
+        let vec_borrow_to_owned = vec_borrow.try_to_owned().unwrap();
+        assert_eq!(vec_borrow_to_owned.get::<Vec<u32>>().unwrap(), vec);
+    }
+
+    #[test]
+    fn test_owned_or_ref() {
+        let a = object!(8_u128);
+        let left = 0u128;
+        let right = a.get().unwrap();
+        assert_eq!(left.partial_cmp(&*right), Some(Ordering::Less));
+        assert_eq!(right.partial_cmp(&left), Some(Ordering::Greater));
+        assert_eq!(*&*right, 8_u128);
     }
 }

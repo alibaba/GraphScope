@@ -303,6 +303,7 @@ pub mod test {
                                 }
                             }
                         }
+                        _ => unreachable!(),
                     }
                 }
             }

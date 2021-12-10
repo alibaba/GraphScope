@@ -61,7 +61,8 @@ impl TagKey {
                     .ok_or(FnExecError::get_tag_error(
                         "Get key failed since get prop_key from a graph element failed",
                     ))?
-                    .into();
+                    .try_to_owned()
+                    .ok_or(FnExecError::UnExpectedData("unable to own the `BorrowObject`".to_string()))?;
                 Ok(Arc::new(ObjectElement::Prop(properties).into()))
             } else {
                 Err(FnExecError::get_tag_error(

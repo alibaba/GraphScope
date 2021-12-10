@@ -133,10 +133,8 @@ fn object_to_pb_value(value: &Object) -> common_pb::Value {
         }
         Object::String(s) => common_pb::value::Item::Str(s.clone()),
         Object::Blob(b) => common_pb::value::Item::Blob(b.to_vec()),
-        Object::DynOwned(_u) => {
-            // TODO: more dyn type downcast
-            unimplemented!()
-        }
+        // TODO: more types to support
+        _ => unimplemented!(),
     };
     common_pb::Value { item: Some(item) }
 }
@@ -215,6 +213,7 @@ pub fn result_to_pb(t: Traverser) -> result_pb::Result {
                     debug!("result_process other object result {:?}", x);
                 }
             }
+            _ => unreachable!(),
         }
     } else {
         debug!("result_process object result is none!");

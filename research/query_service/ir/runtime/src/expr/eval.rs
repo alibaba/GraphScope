@@ -176,11 +176,11 @@ impl Evaluator {
             Ok(first
                 .eval_as_borrow_object(context)?
                 .ok_or(ExprError::NoneOperand(first.into()))?
-                .into())
+                .try_to_owned()
+                .ok_or(ExprError::OtherErr("unable to own the `BorrowObject`".to_string()))?)
         } else if self.suffix_tree.len() == 2 {
             let first = _first.unwrap();
             let second = _second.unwrap();
-            // must be not
             if let InnerOpr::Logical(logical) = second {
                 apply_logical(logical, first.eval_as_borrow_object(context)?, None)
             } else {
@@ -287,7 +287,10 @@ impl Evaluator {
         for opr in &self.suffix_tree {
             if opr.is_operand() {
                 if let Some(obj) = opr.eval_as_borrow_object(context)? {
-                    stack.push(obj.into());
+                    stack.push(
+                        obj.try_to_owned()
+                            .ok_or(ExprError::OtherErr("unable to own the `BorrowObject`".to_string()))?,
+                    );
                 } else {
                     return Err(ExprError::NoneOperand(opr.into()));
                 }
