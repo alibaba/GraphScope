@@ -50,8 +50,6 @@ def wrap_init(
             }
         ]
     }
-    print("algo_name: ", module_name)
-    print("pyx_code: ", pyx_code)
 
     garfile = InMemoryZip()
     garfile.append("{}.pyx".format(module_name), pyx_code)
