@@ -163,6 +163,25 @@ def get_tempdir():
     return os.path.join("/", tempfile.gettempprefix())
 
 
+def get_timestamp(with_milliseconds=True):
+    """Get current timestamp.
+
+    Returns:
+        Str of current time in seconds since the Epoch.
+
+    Examples:
+        >>> get_timestamp()
+        '1639108065.941239'
+
+        >>> get_timestamp(with_milliseconds=False)
+        '1639108065'
+    """
+    t = str(time.time())
+    if not with_milliseconds:
+        t = t[0 : t.find(".")]
+    return t
+
+
 def read_file_to_bytes(file_path):
     abs_dir = os.path.abspath(os.path.expanduser(file_path))
     if os.path.isfile(abs_dir):
