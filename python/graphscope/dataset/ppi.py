@@ -23,7 +23,7 @@ from graphscope.dataset.io_utils import DATA_SITE
 from graphscope.dataset.io_utils import download_file
 
 
-def load_ppi_graph(sess=None, prefix=None, directed=False):
+def load_ppi(sess=None, prefix=None, directed=False):
     """Load protein-protein links datasets.
 
     In protein-protein links graph, every node represents a protein,and edges represent
@@ -49,16 +49,16 @@ def load_ppi_graph(sess=None, prefix=None, directed=False):
 
         >>> # lazy mode
         >>> import graphscope
-        >>> from graphscope.dataset import load_ppi_graph
+        >>> from graphscope.dataset import load_ppi
         >>> sess = graphscope.session(mode="lazy")
-        >>> g = load_ppi_graph(sess, "/path/to/dataset")
+        >>> g = load_ppi(sess, "/path/to/dataset")
         >>> g1 = sess.run(g)
 
         >>> # eager mode
         >>> import graphscope
-        >>> from graphscope.dataset import load_ppi_graph
+        >>> from graphscope.dataset import load_ppi
         >>> sess = graphscope.session(mode="eager")
-        >>> g = load_ppi_graph(sess, "/path/to/dataset")
+        >>> g = load_ppi(sess, "/path/to/dataset")
     """
     if prefix is not None:
         prefix = os.path.expandvars(prefix)

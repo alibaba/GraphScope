@@ -11,10 +11,7 @@ on:
 jobs:
   build-wheels:
     if: ${{ github.ref == 'refs/heads/main' && github.repository == 'alibaba/GraphScope' }}
-    runs-on: ${{ matrix.os }}
-    strategy:
-      matrix:
-        os: [ubuntu-20.04]
+    runs-on: ubuntu-20.04
 
     steps:
     - uses: actions/checkout@v2
@@ -81,3 +78,106 @@ jobs:
 
         cd ${GITHUB_WORKSPACE}
         sudo make graphscope-image
+
+  ubuntu-python-test:
+    if: ${{ github.ref == 'refs/heads/main' && github.repository == 'alibaba/GraphScope' }}
+    runs-on: ubuntu-20.04
+    needs: [build-wheels]
+    strategy:
+      matrix:
+        python-version: [3.6, 3.7, 3.8, 3.9]
+
+    steps:
+    - uses: actions/download-artifact@v2
+      with:
+        path: artifacts
+
+    - name: Set up Python
+      uses: actions/setup-python@v2
+      with:
+        python-version: ${{ matrix.python-version }}
+
+    - name: Prepare Environment
+      shell: bash
+      run: |
+        # install graphscope-client
+        cd artifacts
+        tar -zxf ./wheel-${{ github.sha }}/client.tar.gz
+        pushd python/dist/wheelhouse
+        for f in * ; do python3 -m pip install $f --user || true; done
+        popd
+
+        # install graphscope
+        tar -zxf ./wheel-${{ github.sha }}/graphscope.tar.gz
+        pushd coordinator/dist/wheelhouse
+        python3 -m pip install ./*.whl --user
+        popd
+        pushd coordinator/dist
+        python3 -m pip install ./*.whl --user
+        popd
+
+        # install tensorflow
+        python3 -m pip install pytest "tensorflow<=2.5.2" --user
+        # install java
+        sudo apt update -y && sudo apt install openjdk-11-jdk -y
+
+    - name: Run Minimum Test
+      env:
+        GS_TEST_DIR: ${{ github.workspace }}/gstest
+      run: |
+        python3 -c "import sys; print(sys.version)"
+        git clone -b master --single-branch --depth=1 https://github.com/7br/gstest.git ${GS_TEST_DIR}
+        python3 -m pytest -s -v $(dirname $(python3 -c "import graphscope; print(graphscope.__file__)"))/tests/minitest
+
+  centos-test:
+    if: ${{ github.ref == 'refs/heads/main' && github.repository == 'alibaba/GraphScope' }}
+    runs-on: ubuntu-20.04
+    needs: [build-wheels]
+    container:
+      image: centos:8
+      options:
+        --shm-size 4096m
+
+    steps:
+    - uses: actions/download-artifact@v2
+      with:
+        path: artifacts
+
+    - name: Prepare Environment
+      shell: bash
+      run: |
+        yum install -y gcc gcc-c++ make cmake
+
+        # install git and python3
+        yum install -y git python3-pip python3-devel
+        python3 -m pip install --upgrade pip --user
+
+        # install graphscope-client
+        cd ${GITHUB_WORKSPACE}/artifacts
+        tar -zxf ./wheel-${{ github.sha }}/client.tar.gz
+        pushd python/dist/wheelhouse
+        for f in * ; do python3 -m pip install $f --user || true; done
+        popd
+
+        # install graphscope
+        tar -zxf ./wheel-${{ github.sha }}/graphscope.tar.gz
+        pushd coordinator/dist/wheelhouse
+        python3 -m pip install ./*.whl --user
+        popd
+        pushd coordinator/dist
+        python3 -m pip install ./*.whl --user || true
+        popd
+
+        # install tensorflow
+        python3 -m pip install pytest "tensorflow<=2.5.2" --user
+        # install jdk
+        yum install -y java-11-openjdk-devel
+
+    - name: Run Minimum Test
+      env:
+        GS_TEST_DIR: ${{ github.workspace }}/gstest
+      run: |
+        # python3-Cython version is too old, use cython installed by pip in $HOME/.local/bin
+        export PATH=$HOME/.local/bin:$PATH
+        git clone -b master --single-branch --depth=1 https://github.com/7br/gstest.git ${GS_TEST_DIR}
+        python3 -m pytest -s -v $(dirname $(python3 -c "import graphscope; print(graphscope.__file__)"))/tests/minitest

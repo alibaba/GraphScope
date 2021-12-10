@@ -16,7 +16,7 @@
 # limitations under the License.
 #
 
-from graphscope.dataset.cora import load_cora_graph
+from graphscope.dataset.cora import load_cora
 from graphscope.dataset.ldbc import load_ldbc
 from graphscope.dataset.modern_graph import load_modern_graph
 from graphscope.dataset.ogbl_collab import load_ogbl_collab
@@ -25,5 +25,5 @@ from graphscope.dataset.ogbn_arxiv import load_ogbn_arxiv
 from graphscope.dataset.ogbn_mag import load_ogbn_mag
 from graphscope.dataset.ogbn_proteins import load_ogbn_proteins
 from graphscope.dataset.p2p_network import load_p2p_network
-from graphscope.dataset.ppi import load_ppi_graph
-from graphscope.dataset.user2item import load_u2i_graph
+from graphscope.dataset.ppi import load_ppi
+from graphscope.dataset.u2i import load_u2i

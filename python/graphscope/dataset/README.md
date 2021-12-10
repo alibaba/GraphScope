@@ -6,8 +6,6 @@ It also ships with a dataset download module, with pre-configured schemas for kn
 
 ## Basic usage
 
-TODO: some datasets violate this convention (ogbn_mag_small, ppi, u2i, ldbc-snb)
-
 Users can always use a function named like `load_XXX` to load a builtin dataset, where the `XXX` represent the name of graph. These functions can be imported by `from graphscope.dataset import load_XXX` in Python. All available datasets are listed in the next section.
 
 The signature of the function is `load_XXX(sess=None, prefix=None)`, where
@@ -22,6 +20,7 @@ from graphscope.dataset import load_cora
 g = load_cora()
 ```
 
+Note: There are some datasets violate this convention (ogbn_mag_small, ldbc-snb)
 
 ## Available datasets
 

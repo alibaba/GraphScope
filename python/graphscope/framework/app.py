@@ -298,8 +298,10 @@ class AppDAGNode(DAGNode):
         self._app_assets.is_compatible(self._graph)
 
         self._op = bind_app(graph, self._app_assets)
+        # add app_assets op to dag is not exist
+        if not self._session.dag.exists(self._app_assets.op):
+            self._session.dag.add_op(self._app_assets.op)
         # add op to dag
-        self._session.dag.add_op(self._app_assets.op)
         self._session.dag.add_op(self._op)
 
     def __repr__(self):
