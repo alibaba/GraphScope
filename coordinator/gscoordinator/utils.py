@@ -50,6 +50,7 @@ from graphscope.framework import utils
 from graphscope.framework.errors import CompilationError
 from graphscope.framework.graph_schema import GraphSchema
 from graphscope.framework.utils import PipeWatcher
+from graphscope.framework.utils import get_tempdir
 from graphscope.proto import attr_value_pb2
 from graphscope.proto import data_types_pb2
 from graphscope.proto import graph_def_pb2
@@ -63,7 +64,7 @@ logger = logging.getLogger("graphscope")
 try:
     WORKSPACE = os.environ["GRAPHSCOPE_RUNTIME"]
 except KeyError:
-    WORKSPACE = "/tmp/gs"
+    WORKSPACE = os.path.join(get_tempdir(), "gs")
 
 # COORDINATOR_HOME
 #   1) get from gscoordinator python module, if failed,
@@ -163,8 +164,10 @@ def get_app_sha256(attr):
     ) = _codegen_app_info(attr, DEFAULT_GS_CONFIG_FILE)
     graph_header, graph_type = _codegen_graph_info(attr)
     logger.info("Codegened graph type: %s, Graph header: %s", graph_type, graph_header)
+
+    app_sha256 = ""
     if app_type == "cpp_pie":
-        return hashlib.sha256(
+        app_sha256 = hashlib.sha256(
             f"{app_type}.{app_class}.{graph_type}".encode("utf-8")
         ).hexdigest()
     elif app_type == "java_pie":
@@ -174,13 +177,14 @@ def get_app_sha256(attr):
         s.update(f"{app_type}.{java_jar_path}.{java_app_class}".encode("utf-8"))
         if types_pb2.GAR in attr:
             s.update(attr[types_pb2.GAR].s)
-        return s.hexdigest()
+        app_sha256 = s.hexdigest()
     else:
         s = hashlib.sha256()
         s.update(f"{app_type}.{app_class}.{graph_type}".encode("utf-8"))
         if types_pb2.GAR in attr:
             s.update(attr[types_pb2.GAR].s)
-        return s.hexdigest()
+        app_sha256 = s.hexdigest()
+    return app_sha256
 
 
 def get_graph_sha256(attr):
@@ -295,7 +299,9 @@ def compile_app(workspace: str, library_name, attr, engine_config: dict):
         for pyx_file in glob.glob(app_dir + "/*.pyx"):
             module_name = os.path.splitext(os.path.basename(pyx_file))[0]
             cc_file = os.path.join(app_dir, module_name + ".cc")
-            subprocess.check_call(["cython", "-3", "--cplus", "-o", cc_file, pyx_file])
+            subprocess.check_call(
+                [shutil.which("cython"), "-3", "--cplus", "-o", cc_file, pyx_file]
+            )
         app_header = f"{module_name}.h"
 
     # replace and generate cmakelist
@@ -502,6 +508,8 @@ def op_pre_process(op, op_result_pool, key_to_op, **kwargs):  # noqa: C901
         )
     if op.op == types_pb2.OUTPUT:
         _pre_process_for_output_op(op, op_result_pool, key_to_op, **kwargs)
+    if op.op in (types_pb2.TO_DIRECTED, types_pb2.TO_UNDIRECTED):
+        _pre_process_for_transform_op(op, op_result_pool, key_to_op, **kwargs)
 
 
 def _pre_process_for_create_graph_op(op, op_result_pool, key_to_op, **kwargs):
@@ -526,6 +534,14 @@ def _pre_process_for_add_labels_op(op, op_result_pool, key_to_op, **kwargs):
             op.attr[types_pb2.GRAPH_NAME].CopyFrom(
                 utils.s_to_attr(result.graph_def.key)
             )
+
+
+def _pre_process_for_transform_op(op, op_result_pool, key_to_op, **kwargs):
+    assert len(op.parents) == 1
+    result = op_result_pool[op.parents[0]]
+    # To compatible with eager evaluation cases where it will has the key.
+    if types_pb2.GRAPH_NAME not in op.attr:
+        op.attr[types_pb2.GRAPH_NAME].CopyFrom(utils.s_to_attr(result.graph_def.key))
 
 
 def _pre_process_for_close_interactive_query_op(
@@ -577,7 +593,6 @@ def _pre_process_for_create_learning_graph_op(op, op_result_pool, key_to_op, **k
     edges = pickle.loads(op.attr[types_pb2.EDGES].s)
     gen_labels = pickle.loads(op.attr[types_pb2.GLE_GEN_LABELS].s)
     # get graph schema
-    op, op_result_pool, key_to_op
     key_of_parent_op = op.parents[0]
     result = op_result_pool[key_of_parent_op]
     assert result.graph_def.extension.Is(graph_def_pb2.VineyardInfoPb.DESCRIPTOR)
@@ -733,6 +748,8 @@ def _pre_process_for_context_op(op, op_result_pool, key_to_op, **kwargs):
                     types_pb2.TRANSFORM_GRAPH,
                     types_pb2.PROJECT_GRAPH,
                     types_pb2.PROJECT_TO_SIMPLE,
+                    types_pb2.TO_DIRECTED,
+                    types_pb2.TO_UNDIRECTED,
                 ):
                     return next_op
                 for parent_key in next_op.parents:
@@ -974,8 +991,8 @@ def _tranform_dataframe_selector(context_type, schema, selector):
 
 
 def _transform_vertex_data_v(selector):
-    if selector not in ("v.id", "v.data"):
-        raise SyntaxError("selector of v must be 'id' or 'data'")
+    if selector not in ("v.id", "v.data", "v.label_id"):
+        raise SyntaxError("selector of v must be 'id', 'data' or 'label_id'")
     return selector
 
 
@@ -1001,18 +1018,16 @@ def _transform_labeled_vertex_data_v(schema, label, prop):
     label_id = schema.get_vertex_label_id(label)
     if prop == "id":
         return f"label{label_id}.{prop}"
-    else:
-        prop_id = schema.get_vertex_property_id(label, prop)
-        return f"label{label_id}.property{prop_id}"
+    prop_id = schema.get_vertex_property_id(label, prop)
+    return f"label{label_id}.property{prop_id}"
 
 
 def _transform_labeled_vertex_data_e(schema, label, prop):
     label_id = schema.get_edge_label_id(label)
     if prop in ("src", "dst"):
         return f"label{label_id}.{prop}"
-    else:
-        prop_id = schema.get_vertex_property_id(label, prop)
-        return f"label{label_id}.property{prop_id}"
+    prop_id = schema.get_vertex_property_id(label, prop)
+    return f"label{label_id}.property{prop_id}"
 
 
 def _transform_labeled_vertex_data_r(schema, label):
@@ -1279,10 +1294,10 @@ def dump_as_json(schema, path):
     out = {}
     items = []
     idx = 0
-    for i in range(len(schema.vertex_labels)):
-        vertex = {"id": idx, "label": schema.vertex_labels[i], "type": "VERTEX"}
+    for i, vertex_label in enumerate(schema.vertex_labels):
+        vertex = {"id": idx, "label": vertex_label, "type": "VERTEX"}
         vertex["propertyDefList"] = []
-        for j in range(len(schema.vertex_property_names[i].s)):
+        for j, value in enumerate(schema.vertex_property_names[i].s):
             names = schema.vertex_property_names[i]
             types = schema.vertex_property_types[i]
             vertex["propertyDefList"].append(
@@ -1293,10 +1308,10 @@ def dump_as_json(schema, path):
         items.append(vertex)
         idx += 1
 
-    for i in range(len(schema.edge_labels)):
-        edge = {"id": idx, "label": schema.edge_labels[i], "type": "EDGE"}
+    for i, edge_label in enumerate(schema.edge_labels):
+        edge = {"id": idx, "label": edge_label, "type": "EDGE"}
         edge["propertyDefList"] = []
-        for j in range(len(schema.edge_property_names[i].s)):
+        for j, value in enumerate(schema.edge_property_names[i].s):
             names = schema.edge_property_names[i]
             types = schema.edge_property_types[i]
             edge["propertyDefList"].append(

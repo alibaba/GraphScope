@@ -170,8 +170,7 @@ class _FetchHandler(object):
         if context_type == "dynamic_vertex_data":
             # for nx
             return DynamicVertexDataContext(context_dag_node, ret["context_key"])
-        else:
-            return Context(context_dag_node, ret["context_key"], ret["context_schema"])
+        return Context(context_dag_node, ret["context_key"], ret["context_schema"])
 
     def _rebuild_gremlin_results(
         self, seq, op: Operation, op_result: op_def_pb2.OpResult
@@ -729,17 +728,18 @@ class Session(object):
                 raise exp
 
     def _parse_cluster_type(self):
-        if self._config_params["addr"] is not None:
-            # get the cluster type after connecting
-            return types_pb2.UNDEFINED
-        else:
+        # get the cluster type after connecting
+        cluster_type = types_pb2.UNDEFINED
+
+        if self._config_params["addr"] is None:
             if self._config_params["cluster_type"] == "hosts":
                 self._run_on_local()
-                return types_pb2.HOSTS
+                cluster_type = types_pb2.HOSTS
             elif self._config_params["cluster_type"] == "k8s":
-                return types_pb2.K8S
+                cluster_type = types_pb2.K8S
             else:
                 raise ValueError("Expect hosts or k8s of cluster_type parameter")
+        return cluster_type
 
     @property
     def engine_config(self):
@@ -884,7 +884,7 @@ class Session(object):
         self.as_default()
         return self
 
-    def __exit__(self, type, value, traceback):
+    def __exit__(self, exc_type, exc_value, exc_tb):
         """Deregister self from the default session,
         close the session and release the resources, ignore all exceptions in close().
         """
@@ -923,8 +923,7 @@ class Session(object):
     def _wrapper(self, dag_node):
         if self.eager():
             return self.run(dag_node)
-        else:
-            return dag_node
+        return dag_node
 
     def run(self, fetches, debug=False):
         """Run operations of `fetch`.
@@ -1119,19 +1118,16 @@ class Session(object):
             interactive_query = self._interactive_instance_dict[graph.vineyard_id]
             if interactive_query.status == InteractiveQueryStatus.Running:
                 return interactive_query
-            elif interactive_query.status == InteractiveQueryStatus.Failed:
+            if interactive_query.status == InteractiveQueryStatus.Failed:
                 raise InteractiveEngineInternalError(interactive_query.error_msg)
-            else:
-                # Initializing.
-                # while True is ok, as the status is either running or failed eventually after timeout.
-                while True:
-                    time.sleep(1)
-                    if interactive_query.status == InteractiveQueryStatus.Running:
-                        return interactive_query
-                    elif interactive_query.status == InteractiveQueryStatus.Failed:
-                        raise InteractiveEngineInternalError(
-                            interactive_query.error_msg
-                        )
+            # Initializing.
+            # while True is ok, as the status is either running or failed eventually after timeout.
+            while True:
+                time.sleep(1)
+                if interactive_query.status == InteractiveQueryStatus.Failed:
+                    raise InteractiveEngineInternalError(interactive_query.error_msg)
+                if interactive_query.status == InteractiveQueryStatus.Running:
+                    return interactive_query
 
         if not graph.graph_type == graph_def_pb2.ARROW_PROPERTY:
             raise InvalidArgumentError("The graph should be a property graph.")
@@ -1336,8 +1332,7 @@ def get_option(key):
     """
     if hasattr(gs_config, key):
         return getattr(gs_config, key)
-    else:
-        raise ValueError("No such option {} exists.".format(key))
+    raise ValueError("No such option {} exists.".format(key))
 
 
 def default_session(session):

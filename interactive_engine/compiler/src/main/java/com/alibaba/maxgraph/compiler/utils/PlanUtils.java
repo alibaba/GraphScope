@@ -68,6 +68,17 @@ public class PlanUtils {
         return targetVertexList;
     }
 
+    public static List<LogicalVertex> getSourceVertexList(Graph<LogicalVertex, LogicalEdge> plan) {
+        List<LogicalVertex> logicalVertexList = Lists.newArrayList();
+        for (LogicalVertex logicalVertex : plan.vertexSet()) {
+            if (plan.inDegreeOf(logicalVertex) == 0) {
+                logicalVertexList.add(logicalVertex);
+            }
+        }
+
+        return logicalVertexList;
+    }
+
     /**
      * Get target vertex list for given plan and vertex
      *
@@ -104,17 +115,6 @@ public class PlanUtils {
 
         checkArgument(logicalVertexList.size() == 1, "There's more than one source vertex");
         return logicalVertexList.get(0);
-    }
-
-    public static List<LogicalVertex> getSourceVertexList(Graph<LogicalVertex, LogicalEdge> plan) {
-        List<LogicalVertex> logicalVertexList = Lists.newArrayList();
-        for (LogicalVertex logicalVertex : plan.vertexSet()) {
-            if (plan.inDegreeOf(logicalVertex) == 0) {
-                logicalVertexList.add(logicalVertex);
-            }
-        }
-
-        return logicalVertexList;
     }
 
     /**

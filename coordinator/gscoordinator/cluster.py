@@ -56,6 +56,7 @@ from graphscope.deploy.kubernetes.utils import get_kubernetes_object_info
 from graphscope.deploy.kubernetes.utils import get_service_endpoints
 from graphscope.deploy.kubernetes.utils import try_to_resolve_api_client
 from graphscope.framework.utils import PipeWatcher
+from graphscope.framework.utils import get_tempdir
 from graphscope.framework.utils import is_free_port
 from graphscope.proto import types_pb2
 
@@ -85,7 +86,7 @@ class ResourceManager(object):
         }
     """
 
-    _resource_object_path = "/tmp/resource_object"  # fixed
+    _resource_object_path = os.path.join(get_tempdir(), "resource_object")  # fixed
 
     def __init__(self, api_client):
         self._api_client = api_client
@@ -318,11 +319,11 @@ class KubernetesClusterLauncher(Launcher):
         return ",".join(self._pod_name_list)
 
     def distribute_file(self, path):
-        dir = os.path.dirname(path)
+        d = os.path.dirname(path)
         for pod in self._pod_name_list:
             subprocess.check_call(
                 [
-                    "kubectl",
+                    shutil.which("kubectl"),
                     "exec",
                     pod,
                     "-c",
@@ -330,12 +331,12 @@ class KubernetesClusterLauncher(Launcher):
                     "--",
                     "mkdir",
                     "-p",
-                    dir,
+                    d,
                 ]
             )
             subprocess.check_call(
                 [
-                    "kubectl",
+                    shutil.which("kubectl"),
                     "cp",
                     path,
                     "{}:{}".format(pod, path),
@@ -464,10 +465,10 @@ class KubernetesClusterLauncher(Launcher):
         scheduler_builder.add_volume(
             VolumeBuilder(
                 name="vineyard-ipc-volume",
-                type=vineyard_socket_volume_type,
+                volume_type=vineyard_socket_volume_type,
                 field=vineyard_socket_volume_fields,
                 mounts_list=[
-                    {"mountPath": "/tmp/vineyard_workspace"},
+                    {"mountPath": os.path.join(get_tempdir(), "vineyard_workspace")},
                 ],
             )
         )
@@ -475,7 +476,7 @@ class KubernetesClusterLauncher(Launcher):
         scheduler_builder.add_volume(
             VolumeBuilder(
                 name="host-shm",
-                type="emptyDir",
+                volume_type="emptyDir",
                 field={"medium": "Memory"},
                 mounts_list=[{"mountPath": "/dev/shm"}],
             )
@@ -484,7 +485,9 @@ class KubernetesClusterLauncher(Launcher):
         scheduler_builder.add_simple_envs(
             {
                 "GLOG_v": str(self._glog_level),
-                "VINEYARD_IPC_SOCKET": "/tmp/vineyard_workspace/vineyard.sock",
+                "VINEYARD_IPC_SOCKET": os.path.join(
+                    get_tempdir(), "vineyard_workspace", "vineyard.sock"
+                ),
                 "WITH_VINEYARD": "ON",
             }
         )
@@ -562,7 +565,7 @@ class KubernetesClusterLauncher(Launcher):
         engine_builder.add_volume(
             VolumeBuilder(
                 name="vineyard-ipc-volume",
-                type=vineyard_socket_volume_type,
+                volume_type=vineyard_socket_volume_type,
                 field=vineyard_socket_volume_fields,
                 mounts_list=[
                     {"mountPath": "/tmp/vineyard_workspace"},
@@ -573,7 +576,7 @@ class KubernetesClusterLauncher(Launcher):
         engine_builder.add_volume(
             VolumeBuilder(
                 name="host-shm",
-                type="emptyDir",
+                volume_type="emptyDir",
                 field={"medium": "Memory"},
                 mounts_list=[{"mountPath": "/dev/shm"}],
             )
@@ -600,7 +603,9 @@ class KubernetesClusterLauncher(Launcher):
         # add env
         env = {
             "GLOG_v": str(self._glog_level),
-            "VINEYARD_IPC_SOCKET": "/tmp/vineyard_workspace/vineyard.sock",
+            "VINEYARD_IPC_SOCKET": os.path.join(
+                get_tempdir(), "vineyard_workspace", "vineyard.sock"
+            ),
             "WITH_VINEYARD": "ON",
             "PATH": os.environ["PATH"],
             "LD_LIBRARY_PATH": os.environ["LD_LIBRARY_PATH"],
@@ -661,6 +666,16 @@ class KubernetesClusterLauncher(Launcher):
                     "name": "dataset",
                     "image": self._saved_locals["dataset_image"],
                     "imagePullPolicy": self._saved_locals["image_pull_policy"],
+                    "resources": {
+                        "requests": {
+                            "memory": "64Mi",
+                            "cpu": "250m",
+                        },
+                        "limits": {
+                            "memory": "64Mi",
+                            "cpu": "250m",
+                        },
+                    },
                     "volumeMounts": [
                         {
                             "name": "dataset",
@@ -764,7 +779,7 @@ class KubernetesClusterLauncher(Launcher):
             api_client=self._api_client,
             namespace=self._saved_locals["namespace"],
             name=self._vineyard_service_name,
-            type=self._saved_locals["service_type"],
+            service_type=self._saved_locals["service_type"],
         )
         return endpoints[0]
 
@@ -774,7 +789,7 @@ class KubernetesClusterLauncher(Launcher):
             api_client=self._api_client,
             namespace=self._saved_locals["namespace"],
             name=self._mars_service_name,
-            type=self._saved_locals["service_type"],
+            service_type=self._saved_locals["service_type"],
         )
         return endpoints[0]
 
@@ -825,7 +840,7 @@ class KubernetesClusterLauncher(Launcher):
                 api_client=self._api_client,
                 namespace=self._saved_locals["namespace"],
                 name=self._gle_service_name_prefix + str(object_id),
-                type=self._saved_locals["service_type"],
+                service_type=self._saved_locals["service_type"],
             )
             return endpoints
         raise RuntimeError("Get graphlearn service endpoint failed.")
@@ -1011,7 +1026,7 @@ class KubernetesClusterLauncher(Launcher):
             api_client=self._api_client,
             namespace=self._saved_locals["namespace"],
             name=self._etcd_service_name,
-            type="ClusterIP",
+            service_type="ClusterIP",
         )
         return endpoints[0]
 
@@ -1023,18 +1038,19 @@ class KubernetesClusterLauncher(Launcher):
         )
 
         # generate and distribute hostfile
-        with open("/tmp/kube_hosts", "w") as f:
-            for i in range(len(self._pod_ip_list)):
-                f.write("{} {}\n".format(self._pod_ip_list[i], self._pod_name_list[i]))
+        kube_hosts_path = os.path.join(get_tempdir(), "kube_hosts")
+        with open(kube_hosts_path, "w") as f:
+            for i, pod_ip in enumerate(self._pod_ip_list):
+                f.write("{} {}\n".format(pod_ip, self._pod_name_list[i]))
 
         for pod in self._pod_name_list:
             subprocess.check_call(
                 [
-                    "kubectl",
+                    shutil.which("kubectl"),
                     "-n",
                     self._saved_locals["namespace"],
                     "cp",
-                    "/tmp/kube_hosts",
+                    kube_hosts_path,
                     "{}:/tmp/hosts_of_nodes".format(pod),
                     "-c",
                     self._engine_container_name,
@@ -1055,7 +1071,12 @@ class KubernetesClusterLauncher(Launcher):
         else:
             mpi_env["GLOG_v"] = str(self._glog_level)
 
-        cmd.extend(["--vineyard_socket", "/tmp/vineyard_workspace/vineyard.sock"])
+        cmd.extend(
+            [
+                "--vineyard_socket",
+                os.path.join(get_tempdir(), "vineyard_workspace", "vineyard.sock"),
+            ]
+        )
         logger.info("Analytical engine launching command: {}".format(" ".join(cmd)))
 
         env = os.environ.copy()

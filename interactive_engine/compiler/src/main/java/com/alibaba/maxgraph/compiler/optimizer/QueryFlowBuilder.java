@@ -55,21 +55,6 @@ public class QueryFlowBuilder {
     private static final Logger logger = LoggerFactory.getLogger(QueryFlowBuilder.class);
 
     /**
-     * Build logical query plan to query flow
-     *
-     * @param queryPlan The given plan
-     * @return The result query flow
-     */
-    public QueryFlow.Builder buildQueryFlow(LogicalQueryPlan queryPlan, long snapshot) {
-        QueryFlowManager queryFlowManager = prepareQueryFlow(queryPlan, snapshot);
-        if (!queryFlowManager.checkValidPrepareFlow()) {
-            return queryFlowManager.getQueryFlow();
-        } else {
-            throw new IllegalArgumentException("PREPARE query flow can't be execute directly");
-        }
-    }
-
-    /**
      * PREPARE logical query plan to query flow
      *
      * @param queryPlan The given query plan
@@ -108,6 +93,21 @@ public class QueryFlowBuilder {
         }
 
         return id;
+    }
+
+    /**
+     * Build logical query plan to query flow
+     *
+     * @param queryPlan The given plan
+     * @return The result query flow
+     */
+    public QueryFlow.Builder buildQueryFlow(LogicalQueryPlan queryPlan, long snapshot) {
+        QueryFlowManager queryFlowManager = prepareQueryFlow(queryPlan, snapshot);
+        if (!queryFlowManager.checkValidPrepareFlow()) {
+            return queryFlowManager.getQueryFlow();
+        } else {
+            throw new IllegalArgumentException("PREPARE query flow can't be execute directly");
+        }
     }
 
     private void buildQueryFlow(QueryPlan.Builder queryPlanBuilder, LogicalQueryPlan queryPlan, long snapshot) {

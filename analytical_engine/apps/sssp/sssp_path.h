@@ -22,7 +22,7 @@ limitations under the License.
 #include "grape/grape.h"
 
 #include "core/app/app_base.h"
-#include "core/utils/app_utils.h"
+#include "core/utils/trait_utils.h"
 #include "core/worker/default_worker.h"
 #include "sssp/sssp_path_context.h"
 

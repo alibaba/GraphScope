@@ -73,7 +73,7 @@ def friend_e(data_dir=os.path.expandvars("${GS_TEST_DIR}/property_graph")):
     return Loader("%s/friend.e" % data_dir, header_row=True, delimiter=",")
 
 
-@pytest.fixture
+@pytest.fixture(scope="function")
 def student_group_e_df(data_dir=os.path.expandvars("${GS_TEST_DIR}/property_graph")):
     df = pd.read_csv(
         os.path.join(data_dir, "group.e"),
@@ -82,7 +82,7 @@ def student_group_e_df(data_dir=os.path.expandvars("${GS_TEST_DIR}/property_grap
     return df
 
 
-@pytest.fixture
+@pytest.fixture(scope="function")
 def student_group_e_array(student_group_e_df):
     array = [
         student_group_e_df[col].values
@@ -91,7 +91,7 @@ def student_group_e_array(student_group_e_df):
     return array
 
 
-@pytest.fixture
+@pytest.fixture(scope="function")
 def student_v_df(data_dir=os.path.expandvars("${GS_TEST_DIR}/property_graph")):
     df = pd.read_csv(
         os.path.join(data_dir, "student.v"),
@@ -100,17 +100,17 @@ def student_v_df(data_dir=os.path.expandvars("${GS_TEST_DIR}/property_graph")):
     return df
 
 
-@pytest.fixture
+@pytest.fixture(scope="function")
 def student_v_array(student_v_df):
     return [student_v_df[col].values for col in student_v_df.columns.values]
 
 
-@pytest.fixture
+@pytest.fixture(scope="function")
 def teacher_v_oss():
     return "oss://siyuan-transfer/property_graph/teacher.v"
 
 
-@pytest.fixture
+@pytest.fixture(scope="function")
 def lesson_v_mars():
     return "mars://lesson.v"
 

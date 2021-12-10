@@ -10,10 +10,12 @@ spec:
   template:
     metadata:
       labels: {{- include "graphscope.coordinator.labels" . | nindent 8 }}
+      annotations:
+        kubectl.kubernetes.io/default-container: coordinator
     spec:
       {{- include "graphscope.imagePullSecrets" . | indent 6 }}
       containers:
-      - name: coordinator-container
+      - name: coordinator
         {{- if .Values.coordinator.image.tag }}
         image: "{{ .Values.coordinator.image.name }}:{{ .Values.coordinator.image.tag }}"
         {{- else }}

@@ -18,9 +18,11 @@
 
 
 import logging
+import os
 import sys
 
 from graphscope.deploy.kubernetes.utils import parse_readable_memory
+from graphscope.framework.utils import get_tempdir
 
 logger = logging.getLogger("graphscope")
 
@@ -35,7 +37,10 @@ def resolve_volume_builder(name, value):
         logger.warning("Volume %s must contains 'type' 'field' and 'mounts'", name)
         return None
     return VolumeBuilder(
-        name=name, type=value["type"], field=value["field"], mounts_list=value["mounts"]
+        name=name,
+        volume_type=value["type"],
+        field=value["field"],
+        mounts_list=value["mounts"],
     )
 
 
@@ -335,9 +340,9 @@ class ResourceBuilder(object):
 class VolumeBuilder(object):
     """Builder for k8s volumes."""
 
-    def __init__(self, name, type, field, mounts_list):
+    def __init__(self, name, volume_type, field, mounts_list):
         self._name = name
-        self._type = type
+        self._type = volume_type
         self._field = field
         self._mounts_list = mounts_list
         if not isinstance(self._mounts_list, list):
@@ -639,7 +644,9 @@ class GSEngineBuilder(ReplicaSetBuilder):
         self._labels = labels
         self._num_workers = num_workers
         self._image_pull_policy = image_pull_policy
-        self._ipc_socket_file = "/tmp/vineyard_workspace/vineyard.sock"
+        self._ipc_socket_file = os.path.join(
+            get_tempdir(), "vineyard_workspace", "vineyard.sock"
+        )
         super().__init__(
             self._name, self._labels, self._num_workers, self._image_pull_policy
         )

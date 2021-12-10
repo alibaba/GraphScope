@@ -85,5 +85,4 @@ def is_simple_path(G, nodes):
         n1json = json.dumps(nodes)
         ctx = AppAssets(algo="is_simple_path", context="tensor")(G, n1json)
         return ctx.to_numpy("r", axis=0)[0]
-    else:
-        raise ValueError("input nodes is not a list object!")
+    raise ValueError("input nodes is not a list object!")

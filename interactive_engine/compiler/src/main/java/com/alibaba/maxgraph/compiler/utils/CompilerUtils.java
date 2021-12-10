@@ -414,11 +414,7 @@ public class CompilerUtils {
             if (currentNode.getNodeType() == NodeType.AGGREGATE) {
                 aggregate = true;
             } else if (currentNode.getNodeType() == NodeType.FLATMAP) {
-                if (aggregate) {
-                    return false;
-                } else {
-                    return true;
-                }
+                return !aggregate;
             }
             currentNode = UnaryTreeNode.class.cast(currentNode).getInputNode();
         }
@@ -440,11 +436,7 @@ public class CompilerUtils {
             if (currentNode.getNodeType() == NodeType.AGGREGATE) {
                 aggregate = true;
             } else if (currentNode.getNodeType() == NodeType.MAP || currentNode.getNodeType() == NodeType.FILTER) {
-                if (aggregate) {
-                    return false;
-                } else {
-                    return true;
-                }
+                return !aggregate;
             }
             currentNode = UnaryTreeNode.class.cast(currentNode).getInputNode();
         }

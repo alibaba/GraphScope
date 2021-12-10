@@ -28,7 +28,7 @@ limitations under the License.
 #include "grape/grape.h"
 
 #include "apps/apsp/all_pairs_shortest_path_length_context.h"
-#include "core/utils/app_utils.h"
+#include "core/utils/trait_utils.h"
 
 namespace gs {
 

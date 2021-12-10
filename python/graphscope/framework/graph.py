@@ -367,6 +367,16 @@ class GraphDAGNode(DAGNode, GraphInterface):
         op = dag_utils.graph_to_dataframe(self, selector, vertex_range)
         return ResultDAGNode(self, op)
 
+    def to_directed(self):
+        op = dag_utils.to_directed(self)
+        graph_dag_node = GraphDAGNode(self._session, op)
+        return graph_dag_node
+
+    def to_undirected(self):
+        op = dag_utils.to_undirected(self)
+        graph_dag_node = GraphDAGNode(self._session, op)
+        return graph_dag_node
+
     def add_vertices(self, vertices, label="_", properties=None, vid_field=0):
         """Add vertices to the graph, and return a new graph.
 
@@ -735,8 +745,7 @@ class Graph(GraphInterface):
     def __getattr__(self, name):
         if hasattr(self._graph_node, name):
             return getattr(self._graph_node, name)
-        else:
-            raise AttributeError("{0} not found.".format(name))
+        raise AttributeError("{0} not found.".format(name))
 
     @property
     def key(self):
@@ -902,6 +911,31 @@ class Graph(GraphInterface):
         return self._session._wrapper(
             self._graph_node.to_dataframe(selector, vertex_range)
         )
+
+    def to_directed(self):
+        """Returns a directed representation of the graph.
+
+        Returns:
+            :class:`Graph`: A directed graph with the same name, same nodes, and
+                with each edge (u, v, data) replaced by two directed edges (u, v, data) and (v, u, data).
+
+        """
+        if self._directed:
+            return self
+        return self._session._wrapper(self._graph_node.to_directed())
+
+    def to_undirected(self):
+        """Returns an undirected representation of the digraph.
+
+        Returns:
+            :class:`Graph`: An undirected graph with the same name and nodes and
+                with edge (u, v, data) if either (u, v, data) or (v, u, data) is in the digraph.
+                If both edges exist in digraph, they will both be preserved.
+                You must check and correct for this manually if desired.
+        """
+        if not self._directed:
+            return self
+        return self._session._wrapper(self._graph_node.to_undirected())
 
     def is_directed(self):
         return self._directed

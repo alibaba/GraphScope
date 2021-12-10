@@ -178,23 +178,23 @@ class GraphModel(widgets.DOMWidget):
         edges = []
 
         def _process_node(list_id, list_val, list_prop):
-            for i in range(len(list_id)):
-                id = str(list_id[i].id)
-                if id in self._nodes_id_dict:
+            for i, item in enumerate(list_id):
+                vid = str(item.id)
+                if vid in self._nodes_id_dict:
                     continue
                 #
                 node = {}
-                node["id"] = id
+                node["id"] = vid
                 node["oid"] = str(list_val[i])
                 node["parentId"] = ""
-                node["label"] = str(list_id[i].label)
+                node["label"] = str(item.label)
                 node["level"] = 0
                 node["degree"] = 1  # need to update
                 node["count"] = 0
-                node["nodeType"] = str(list_id[i].label)
+                node["nodeType"] = str(item.label)
                 node["properties"] = list_prop[i]
-                self._nodes_id_dict[id] = True
-                self._nodes_id_map[id] = str(list_val[i])
+                self._nodes_id_dict[vid] = True
+                self._nodes_id_map[vid] = str(list_val[i])
                 nodes.append(node)
 
         def _process_edge(list_edge):
@@ -303,9 +303,9 @@ class GraphModel(widgets.DOMWidget):
             buffers (bool): Listening required.
         """
         if "nodeId" in params and "degree" in params:
-            id = str(params["nodeId"])
+            vid = str(params["nodeId"])
             # convert to original id
-            oid = self._nodes_id_map[id]
+            oid = self._nodes_id_map[vid]
             hop = int(params["degree"])
 
             if hop == 1:
@@ -349,10 +349,9 @@ def repr_graphscope_graph(graph, *args, **kwargs):
         return draw_graphscope_graph(graph, vertices=range(1, 100))._ipython_display_(
             *args, **kwargs
         )
-    else:
-        return draw_graphscope_graph(graph, vertices=range(1, 100))._repr_mimebundle_(
-            *args, **kwargs
-        )
+    return draw_graphscope_graph(graph, vertices=range(1, 100))._repr_mimebundle_(
+        *args, **kwargs
+    )
 
 
 def in_ipython():
@@ -368,10 +367,9 @@ def in_notebook():
         shell = get_ipython().__class__.__name__
         if shell == "ZMQInteractiveShell":
             return True  # Jupyter notebook or qtconsole
-        elif shell == "TerminalInteractiveShell":
+        if shell == "TerminalInteractiveShell":
             return False  # Terminal running IPython
-        else:
-            return False  # Other type (?)
+        return False  # Other type (?)
     except NameError:
         return False  # Probably standard Python interpreter
 

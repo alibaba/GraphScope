@@ -84,7 +84,7 @@ It will read data from the the location :file:`/home/ldbc_sample/person_0_0.csv`
 
 Another commonly used parameter is label:
 
-``label``: The label name of the vertex, default to `_`.
+``label``: The label name of the vertex, default to ``_``.
 
 Since a property graph allows many kinds of vertices, it is suggested for users to give each kind of vertices a meaningful label name. For example:
 
@@ -166,9 +166,9 @@ Similar to vertices, we can use parameter `label` to assign label name and `prop
 
 Differ to vertices, edges have some additional parameters.
 
-```src_label```: The label name of the source vertex. 
-```dst_label```: The label name of the destination vertex, it can be different to the ``src_label``, 
-```src_field``` and ```dst_field```: The columns used for source(destination) vertex id. Default to 0 and 1, respectively.
+``src_label``: The label name of the source vertex. 
+``dst_label``: The label name of the destination vertex, it can be different to the ``src_label``, 
+``src_field`` and ``dst_field``: The columns used for source(destination) vertex id. Default to 0 and 1, respectively.
 
 e.g.,
 
@@ -181,7 +181,7 @@ e.g.,
     graph = graph.add_edges('/home/ldbc_sample/person_likes_comment_0_0.csv', label='likes', src_label='person', dst_label='comment')
 
 
-The value and behavior is similar to `vid_field` in Vertex, except for it takes two columns as edges is constituted by source vertex id and destination vertex id. Here's an example:
+The value and behavior is similar to ``vid_field`` in Vertex, except for it takes two columns as edges is constituted by source vertex id and destination vertex id. Here's an example:
 
 Examples of ``src_field`` and ``dst_field``:
 
@@ -291,7 +291,6 @@ Putting them Together
 ^^^^^^^^^^^^^^^^^^^^^
 
 Let's make this example complete. 
-A more complex example to load LDBC snb graph can be find [here](https://github.com/alibaba/GraphScope/blob/main/python/graphscope/dataset/ldbc.py).
 
 .. code:: python
 

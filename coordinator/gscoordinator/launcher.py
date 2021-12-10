@@ -23,13 +23,13 @@ import os
 import shutil
 import subprocess
 import sys
-import tempfile
 import time
 from abc import ABCMeta
 from abc import abstractmethod
 
 from graphscope.framework.utils import PipeWatcher
 from graphscope.framework.utils import get_free_port
+from graphscope.framework.utils import get_tempdir
 from graphscope.framework.utils import is_free_port
 from graphscope.proto import types_pb2
 
@@ -56,6 +56,9 @@ class Launcher(metaclass=ABCMeta):
         # OPAL_PREFIX for openmpi
         if os.path.isdir(os.path.join(GRAPHSCOPE_HOME, "openmpi")):
             os.environ["OPAL_PREFIX"] = os.path.join(GRAPHSCOPE_HOME, "openmpi")
+        # Darwin is open-mpi
+        if os.path.isdir(os.path.join(GRAPHSCOPE_HOME, "open-mpi")):
+            os.environ["OPAL_PREFIX"] = os.path.join(GRAPHSCOPE_HOME, "open-mpi")
         # add '${GRAPHSCOPE_HOME}/lib' to ${LD_LIBRARY_PATH} to find libvineyard_internal_registry.so(dylib)
         if "LD_LIBRARY_PATH" in os.environ:
             os.environ["LD_LIBRARY_PATH"] = (
@@ -133,9 +136,7 @@ class LocalLauncher(Launcher):
         self._instance_id = instance_id
         self._timeout_seconds = timeout_seconds
 
-        self._vineyard_socket_prefix = os.path.join(
-            tempfile.gettempdir(), "vineyard.sock."
-        )
+        self._vineyard_socket_prefix = os.path.join(get_tempdir(), "vineyard.sock.")
 
         # A graphsope instance may has multiple session by reconnecting to coordinator
         self._instance_workspace = os.path.join(WORKSPACE, self._instance_id)
@@ -185,11 +186,15 @@ class LocalLauncher(Launcher):
         os.makedirs(self._session_workspace, exist_ok=True)
 
     def distribute_file(self, path):
-        dir = os.path.dirname(path)
+        d = os.path.dirname(path)
         for host in self._hosts.split(","):
             if host not in ("localhost", "127.0.0.1"):
-                subprocess.check_call(["ssh", host, "mkdir -p {}".format(dir)])
-                subprocess.check_call(["scp", "-r", path, "{}:{}".format(host, path)])
+                subprocess.check_call(
+                    [shutil.which("ssh"), host, "mkdir -p {}".format(d)]
+                )
+                subprocess.check_call(
+                    [shutil.which("scp"), "-r", path, "{}:{}".format(host, path)]
+                )
 
     def poll(self):
         if self._analytical_engine_process:

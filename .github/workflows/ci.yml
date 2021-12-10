@@ -209,7 +209,7 @@ jobs:
           # install java
           sudo apt update -y && sudo apt install openjdk-11-jdk -y
 
-      - name: Run Mini Test
+      - name: Run Minimum Test
         env:
           GS_TEST_DIR: ${{ github.workspace }}/gstest
         run: |

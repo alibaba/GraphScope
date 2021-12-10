@@ -24,7 +24,7 @@ from graphscope.dataset.io_utils import download_file
 from graphscope.framework.loader import Loader
 
 
-def load_u2i_graph(sess=None, prefix=None, directed=True):
+def load_u2i(sess=None, prefix=None, directed=True):
     """Load user2item datasets.
 
     The user-2-item datasets consists of 5241 nodes, which represents both user and item node,
@@ -51,16 +51,16 @@ def load_u2i_graph(sess=None, prefix=None, directed=True):
 
         >>> # lazy mode
         >>> import graphscope
-        >>> from graphscope.dataset import load_u2i_graph
+        >>> from graphscope.dataset import load_u2i
         >>> sess = graphscope.session(mode="lazy")
-        >>> g = load_u2i_graph(sess, "/path/to/dataset")
+        >>> g = load_u2i(sess, "/path/to/dataset")
         >>> g1 = sess.run(g)
 
         >>> # eager mode
         >>> import graphscope
-        >>> from graphscope.dataset import load_u2i_graph
+        >>> from graphscope.dataset import load_u2i
         >>> sess = graphscope.session(mode="eager")
-        >>> g = load_u2i_graph(sess, "/path/to/dataset")
+        >>> g = load_u2i(sess, "/path/to/dataset")
 
     """
     if prefix is not None:

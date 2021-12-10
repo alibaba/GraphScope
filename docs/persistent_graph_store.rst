@@ -38,7 +38,7 @@ To install the chart with the release name `my-release`:
 
 .. code:: bash
 
-    $ helm repo add graphscope https://graphscope.oss-cn-beijing.aliyuncs.com/store/charts/
+    $ helm repo add graphscope https://graphscope.oss-cn-beijing.aliyuncs.com/charts/
     $ helm install my-release graphscope/graphscope-store
 
 These commands deploy GraphScope Store on the Kubernetes cluster in the default configuration. The :ref:`Parameters` section lists the parameters that can be configured during installation.

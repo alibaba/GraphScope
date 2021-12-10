@@ -19,7 +19,7 @@
 
 import networkx as nxa
 
-import graphscope.nx as nx
+from graphscope import nx
 from graphscope.framework.errors import UnimplementedError
 from graphscope.nx import NetworkXError
 from graphscope.nx.generators.classic import complete_graph

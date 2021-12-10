@@ -404,8 +404,9 @@ class ArrowFragmentLoader {
       const std::string& data) {
     std::shared_ptr<arrow::Table> table;
     if (!data.empty()) {
-      std::shared_ptr<arrow::Buffer> buffer =
-          arrow::Buffer::Wrap(data.data(), data.size());
+      // Assume the data is not large.
+      auto copy = data;
+      std::shared_ptr<arrow::Buffer> buffer = arrow::Buffer::FromString(copy);
       VY_OK_OR_RAISE(vineyard::DeserializeTable(buffer, &table));
     }
     return table;

@@ -20,9 +20,9 @@ from gremlin_python.driver.client import Client
 
 
 class LibMeta(object):
-    def __init__(self, key, type, lib_path):
+    def __init__(self, key, lib_type, lib_path):
         self.key = key
-        self.type = type
+        self.type = lib_type
         self.lib_path = lib_path
 
 
