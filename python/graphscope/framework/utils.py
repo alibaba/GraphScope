@@ -18,9 +18,14 @@
 
 import json
 import os
+import platform
 import random
+import re
+import shutil
 import socket
 import string
+import subprocess
+import sys
 import tempfile
 import threading
 import time
@@ -152,6 +157,44 @@ def get_free_port(host="localhost", port_range=(32768, 64999)):
         port = random.randint(port_range[0], port_range[1])
         if is_free_port(port, host=host):
             return port
+
+
+def find_java():
+    java_exec = ""
+    if "JAVA_HOME" in os.environ:
+        java_exec = os.path.expandvars("$JAVA_HOME/bin/java")
+    if not java_exec:
+        java_exec = shutil.which("java")
+    if not java_exec:
+        raise RuntimeError("java command not found.")
+    return java_exec
+
+
+def get_java_version():
+    java_exec = find_java()
+    pattern = r'"(\d+\.\d+\.\d+).*"'
+    version = subprocess.check_output([java_exec, "-version"], stderr=subprocess.STDOUT)
+    return re.search(pattern, version.decode("utf-8")).groups()[0]
+
+
+def get_platform_info():
+    def _get_gcc_version():
+        gcc = shutil.which("gcc")
+        if gcc is None:
+            raise RuntimeError("gcc command not found.")
+        return subprocess.check_output([gcc, "--version"], stderr=subprocess.STDOUT)
+
+    platform_info = (
+        f"system: {platform.system()}\n"
+        f"machine: {platform.machine()}\n"
+        f"platform: {platform.platform()}\n"
+        f"uname: {platform.uname()}\n"
+        f"kernel_ver: {platform.version()}\n"
+        f"mac_ver: {platform.mac_ver()}\n"
+        f"gcc_ver: {_get_gcc_version()}\n"
+        f"python_ver: {platform.python_version()}\n"
+    )
+    return platform_info
 
 
 def random_string(nlen):
