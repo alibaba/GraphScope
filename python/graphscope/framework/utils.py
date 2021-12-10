@@ -221,7 +221,7 @@ def get_timestamp(with_milliseconds=True):
     """
     t = str(time.time())
     if not with_milliseconds:
-        t = t[0 : t.find(".")]
+        t = t.split('.')[0]
     return t
 
 
