@@ -16,8 +16,8 @@
 # limitations under the License.
 #
 
-from graphscope.nx.readwrite.json_graph.node_link import *
 from graphscope.nx.readwrite.json_graph.adjacency import *
-from graphscope.nx.readwrite.json_graph.tree import *
-from graphscope.nx.readwrite.json_graph.jit import *
 from graphscope.nx.readwrite.json_graph.cytoscape import *
+from graphscope.nx.readwrite.json_graph.jit import *
+from graphscope.nx.readwrite.json_graph.node_link import *
+from graphscope.nx.readwrite.json_graph.tree import *

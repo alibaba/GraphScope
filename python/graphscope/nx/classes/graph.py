@@ -44,8 +44,8 @@ from graphscope.nx.convert import to_networkx_graph
 from graphscope.nx.utils.compat import patch_docstring
 from graphscope.nx.utils.misc import check_node_is_legal
 from graphscope.nx.utils.misc import empty_graph_in_engine
-from graphscope.nx.utils.misc import parse_ret_as_dict
 from graphscope.nx.utils.misc import json_encoder
+from graphscope.nx.utils.misc import parse_ret_as_dict
 from graphscope.proto import graph_def_pb2
 from graphscope.proto import types_pb2
 
