@@ -28,7 +28,6 @@ import logging
 import numbers
 import os
 import pickle
-import re
 import shutil
 import socket
 import subprocess
@@ -50,6 +49,7 @@ from graphscope.framework import utils
 from graphscope.framework.errors import CompilationError
 from graphscope.framework.graph_schema import GraphSchema
 from graphscope.framework.utils import PipeWatcher
+from graphscope.framework.utils import get_platform_info
 from graphscope.framework.utils import get_tempdir
 from graphscope.proto import attr_value_pb2
 from graphscope.proto import data_types_pb2
@@ -245,7 +245,7 @@ def compile_app(workspace: str, library_name, attr, engine_config: dict):
     # Output directory for java codegen
     java_codegen_out_dir = ""
     cmake_commands = [
-        "cmake",
+        shutil.which("cmake"),
         ".",
         f"-DNETWORKX={engine_config['networkx']}",
         f"-DCMAKE_PREFIX_PATH={GRAPHSCOPE_HOME}",
@@ -354,7 +354,9 @@ def compile_app(workspace: str, library_name, attr, engine_config: dict):
     make_process.wait()
     lib_path = get_lib_path(app_dir, library_name)
     if not os.path.isfile(lib_path):
-        raise CompilationError(f"Failed to compile app {app_class}")
+        raise CompilationError(
+            f"Failed to compile app {app_class} on platform {get_platform_info()}"
+        )
     return lib_path, java_jar_path, java_codegen_out_dir, app_type
 
 
@@ -389,7 +391,7 @@ def compile_graph_frame(workspace: str, library_name, attr: dict, engine_config:
     graph_type = attr[types_pb2.GRAPH_TYPE].graph_type
 
     cmake_commands = [
-        "cmake",
+        shutil.which("cmake"),
         ".",
         f"-DNETWORKX={engine_config['networkx']}",
         f"-DCMAKE_PREFIX_PATH={GRAPHSCOPE_HOME}",
@@ -448,7 +450,9 @@ def compile_graph_frame(workspace: str, library_name, attr: dict, engine_config:
     make_process.wait()
     lib_path = get_lib_path(library_dir, library_name)
     if not os.path.isfile(lib_path):
-        raise CompilationError(f"Failed to compile graph {graph_class}")
+        raise CompilationError(
+            f"Failed to compile graph {graph_class} on platform {get_platform_info()}"
+        )
     return lib_path, None, None, None
 
 
@@ -1660,24 +1664,6 @@ def check_argument(condition, message=None):
         if message is None:
             message = "in '%s'" % inspect.stack()[1].code_context[0]
         raise ValueError(f"Check failed: {message}")
-
-
-def find_java():
-    java_exec = ""
-    if "JAVA_HOME" in os.environ:
-        java_exec = os.path.expandvars("$JAVA_HOME/bin/java")
-    if not java_exec:
-        java_exec = shutil.which("java")
-    if not java_exec:
-        raise RuntimeError("java command not found.")
-    return java_exec
-
-
-def get_java_version():
-    java_exec = find_java()
-    pattern = r'"(\d+\.\d+\.\d+).*"'
-    version = subprocess.check_output([java_exec, "-version"], stderr=subprocess.STDOUT)
-    return re.search(pattern, version.decode("utf-8")).groups()[0]
 
 
 def check_gremlin_server_ready(endpoint):

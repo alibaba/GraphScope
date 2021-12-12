@@ -936,17 +936,17 @@ def test_dump_gar(random_gar, not_exist_gar):
 def test_load_app_from_gar(random_gar, not_exist_gar, non_zipfile_gar):
     # file not exist, also works with permission denied
     with pytest.raises(FileNotFoundError, match="No such file or directory"):
-        ast1 = load_app("SSSP_Pregel", not_exist_gar)
+        ast1 = load_app(not_exist_gar)
     # not a zip file
     with pytest.raises(ValueError, match="not a zip file"):
-        ast2 = load_app("SSSP_Pregel", non_zipfile_gar)
+        ast2 = load_app(non_zipfile_gar)
     # type error
     with pytest.raises(ValueError, match="Wrong type"):
-        ast3 = load_app("SSSP_Pregel", [1, 2, 3, 4])
+        ast3 = load_app([1, 2, 3, 4])
     with pytest.raises(ValueError, match="Wrong type"):
-        ast4 = load_app("SSSP_Pregel", gar=None)
+        ast4 = load_app(gar=None)
     SSSP_Pregel.to_gar(random_gar)
-    ast1 = load_app("SSSP_Pregel", random_gar)
+    ast1 = load_app(random_gar)
     assert isinstance(ast1, AppAssets)
 
 
@@ -955,15 +955,15 @@ def test_error_on_create_cython_app(
 ):
     SSSP_Pregel.to_gar(random_gar)
     with pytest.raises(InvalidArgumentError, match="App is uncompatible with graph"):
-        a1 = load_app("SSSP_Pregel", random_gar)
+        a1 = load_app(random_gar)
         a1(dynamic_property_graph, src=4)
     # algo not found in gar resource
     with pytest.raises(InvalidArgumentError, match="App not found in gar: sssp"):
-        a2 = load_app("sssp", random_gar)
+        a2 = load_app(algo="sssp", gar=random_gar)
         a2(p2p_property_graph, src=6)
     # no `.gs_conf.yaml` in empty gar, raise KeyError exception
     with pytest.raises(KeyError):
-        a3 = load_app("SSSP_Pregel", empty_gar)
+        a3 = load_app(algo="SSSP_Pregel", gar=empty_gar)
         a3(p2p_property_graph, src=6)
 
 
@@ -1013,7 +1013,7 @@ def test_run_cython_pregel_app(
     r2[r2 == 1000000000.0] = float("inf")
     assert np.allclose(r2, sssp_result["directed"])
     # load from gar
-    a2 = load_app("SSSP_Pregel", random_gar)
+    a2 = load_app(random_gar)
     ctx3 = a2(p2p_property_graph, src=6)
     r3 = (
         ctx3.to_dataframe({"node": "v:person.id", "r": "r:person"})
@@ -1026,7 +1026,7 @@ def test_run_cython_pregel_app(
     with pytest.raises(
         InvalidArgumentError, match="Only support using keyword arguments in cython app"
     ):
-        a3 = load_app("SSSP_Pregel", random_gar)
+        a3 = load_app(random_gar)
         ctx4 = a3(p2p_property_graph, 6, src=6)
     # combine
     a5 = SSSP_Pregel_Combine()
@@ -1070,7 +1070,7 @@ def test_run_cython_pie_app(
     r2[r2 == 1000000000.0] = float("inf")
     assert np.allclose(r2, sssp_result["directed"])
     # load from gar
-    a2 = load_app("SSSP_PIE", random_gar)
+    a2 = load_app(random_gar)
     ctx3 = a2(p2p_property_graph, src=6)
     r3 = (
         ctx3.to_dataframe({"node": "v:person.id", "r": "r:person"})
@@ -1083,7 +1083,7 @@ def test_run_cython_pie_app(
     with pytest.raises(
         InvalidArgumentError, match="Only support using keyword arguments in cython app"
     ):
-        a3 = load_app("SSSP_PIE", random_gar)
+        a3 = load_app(random_gar)
         ctx4 = a3(p2p_property_graph, 6, src=6)
 
 
