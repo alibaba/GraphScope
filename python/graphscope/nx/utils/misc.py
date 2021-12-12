@@ -105,6 +105,4 @@ def json_encoder(obj):
     if isinstance(obj, (np.generic, np.ndarray)):
         return obj.item()
     else:
-        raise TypeError(
-            "Unserializable object {} of type {}".format(obj, type(obj))
-        )
+        raise TypeError("Unserializable object {} of type {}".format(obj, type(obj)))
