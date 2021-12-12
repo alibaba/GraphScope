@@ -850,7 +850,9 @@ class Graph(_GraphBase):
             check_node_is_legal(n)
             if self.graph_type == graph_def_pb2.ARROW_PROPERTY:
                 n = self._convert_to_label_id_tuple(n)
-            op = dag_utils.report_graph(self, types_pb2.HAS_NODE, node=json.dumps([n], default=json_encoder))
+            op = dag_utils.report_graph(
+                self, types_pb2.HAS_NODE, node=json.dumps([n], default=json_encoder)
+            )
             return bool(int(op.eval()))
         except (TypeError, NetworkXError, KeyError):
             return False
@@ -1056,7 +1058,9 @@ class Graph(_GraphBase):
                 raise ValueError("Edge tuple %s must be a 2-tuple or 3-tuple." % (e,))
             check_node_is_legal(e[0])
             check_node_is_legal(e[1])
-            edges.append(json.dumps(e[:2], default=json_encoder))  # ignore edge data if present
+            edges.append(
+                json.dumps(e[:2], default=json_encoder)
+            )  # ignore edge data if present
         self._op = dag_utils.modify_edges(self, types_pb2.NX_DEL_EDGES, edges)
         return self._op.eval()
 
@@ -1455,7 +1459,10 @@ class Graph(_GraphBase):
                 u = self._convert_to_label_id_tuple(u)
                 v = self._convert_to_label_id_tuple(v)
             op = dag_utils.report_graph(
-                self, types_pb2.EDGE_DATA, edge=json.dumps((u, v), default=json_encoder), key=""
+                self,
+                types_pb2.EDGE_DATA,
+                edge=json.dumps((u, v), default=json_encoder),
+                key="",
             )
             ret = op.eval()
             return json.loads(ret)
@@ -1983,7 +1990,9 @@ class Graph(_GraphBase):
             raise NetworkXError("The node %s is not in the graph." % (n,))
         if self.graph_type == graph_def_pb2.ARROW_PROPERTY:
             n = self._convert_to_label_id_tuple(n)
-        op = dag_utils.report_graph(self, report_type, node=json.dumps([n], default=json_encoder))
+        op = dag_utils.report_graph(
+            self, report_type, node=json.dumps([n], default=json_encoder)
+        )
         ret = op.eval()
         return ret
 
@@ -2043,7 +2052,9 @@ class Graph(_GraphBase):
         Raise NetworkxError if node not in graph.
         """
         check_node_is_legal(n)
-        op = dag_utils.report_graph(self, report_type, node=json.dumps([n], default=json_encoder), key=weight)
+        op = dag_utils.report_graph(
+            self, report_type, node=json.dumps([n], default=json_encoder), key=weight
+        )
         degree = float(op.eval())
         return degree if weight is not None else int(degree)
 
