@@ -101,7 +101,10 @@ def check_node_is_legal(n):
         check_node_type(n)
 
 
-def json_encoder(ob):
-    if isinstance(ob, (np.generic, np.ndarray)):
-        return ob.item()
-    return ob
+def json_encoder(obj):
+    if isinstance(obj, (np.generic, np.ndarray)):
+        return obj.item()
+    else:
+        raise TypeError(
+            "Unserializable object {} of type {}".format(obj, type(obj))
+        )
