@@ -333,7 +333,7 @@ GraphScope 支持用户在自定义算法中通过 :code:`context.math` 上的�
     g = graphscope.g()
 
     # 从gar包中加载自己的算法
-    my_app = load_app('SSSP_Pregel', 'file:///var/graphscope/udf/my_sssp_pregel.gar')
+    my_app = load_app('file:///var/graphscope/udf/my_sssp_pregel.gar')
 
     # 在图上运行自己的算法，得到计算结果
     ret = my_app(g, src="0")
