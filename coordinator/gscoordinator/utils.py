@@ -244,11 +244,13 @@ def compile_app(workspace: str, library_name, attr, engine_config: dict):
     module_name = ""
     # Output directory for java codegen
     java_codegen_out_dir = ""
+    # set OPAL_PREFIX in CMAKE_PREFIX_PATH
+    OPAL_PREFIX = os.environ.get("OPAL_PREFIX", "")
     cmake_commands = [
         shutil.which("cmake"),
         ".",
         f"-DNETWORKX={engine_config['networkx']}",
-        f"-DCMAKE_PREFIX_PATH={GRAPHSCOPE_HOME}",
+        f"-DCMAKE_PREFIX_PATH='{GRAPHSCOPE_HOME};{OPAL_PREFIX}'",
     ]
     if app_type == "java_pie":
         if not os.path.isfile(GRAPE_PROCESSOR_JAR):
@@ -335,7 +337,7 @@ def compile_app(workspace: str, library_name, attr, engine_config: dict):
         universal_newlines=True,
         bufsize=1,
     )
-    cmake_stderr_watcher = PipeWatcher(cmake_process.stderr, sys.stdout)
+    cmake_stderr_watcher = PipeWatcher(cmake_process.stderr, sys.stderr)
     setattr(cmake_process, "stderr_watcher", cmake_stderr_watcher)
     cmake_process.wait()
 
@@ -349,7 +351,7 @@ def compile_app(workspace: str, library_name, attr, engine_config: dict):
         universal_newlines=True,
         bufsize=1,
     )
-    make_stderr_watcher = PipeWatcher(make_process.stderr, sys.stdout)
+    make_stderr_watcher = PipeWatcher(make_process.stderr, sys.stderr)
     setattr(make_process, "stderr_watcher", make_stderr_watcher)
     make_process.wait()
     lib_path = get_lib_path(app_dir, library_name)
@@ -390,11 +392,13 @@ def compile_graph_frame(workspace: str, library_name, attr: dict, engine_config:
 
     graph_type = attr[types_pb2.GRAPH_TYPE].graph_type
 
+    # set OPAL_PREFIX in CMAKE_PREFIX_PATH
+    OPAL_PREFIX = os.environ.get("OPAL_PREFIX", "")
     cmake_commands = [
         shutil.which("cmake"),
         ".",
         f"-DNETWORKX={engine_config['networkx']}",
-        f"-DCMAKE_PREFIX_PATH={GRAPHSCOPE_HOME}",
+        f"-DCMAKE_PREFIX_PATH='{GRAPHSCOPE_HOME};{OPAL_PREFIX}'",
     ]
     if graph_type == graph_def_pb2.ARROW_PROPERTY:
         cmake_commands += ["-DPROPERTY_GRAPH_FRAME=True"]
@@ -431,7 +435,7 @@ def compile_graph_frame(workspace: str, library_name, attr: dict, engine_config:
         universal_newlines=True,
         bufsize=1,
     )
-    cmake_stderr_watcher = PipeWatcher(cmake_process.stderr, sys.stdout)
+    cmake_stderr_watcher = PipeWatcher(cmake_process.stderr, sys.stderr)
     setattr(cmake_process, "stderr_watcher", cmake_stderr_watcher)
     cmake_process.wait()
 
@@ -445,7 +449,7 @@ def compile_graph_frame(workspace: str, library_name, attr: dict, engine_config:
         universal_newlines=True,
         bufsize=1,
     )
-    make_stderr_watcher = PipeWatcher(make_process.stderr, sys.stdout)
+    make_stderr_watcher = PipeWatcher(make_process.stderr, sys.stderr)
     setattr(make_process, "stderr_watcher", make_stderr_watcher)
     make_process.wait()
     lib_path = get_lib_path(library_dir, library_name)
