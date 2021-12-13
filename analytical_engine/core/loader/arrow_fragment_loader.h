@@ -103,34 +103,36 @@ class ArrowFragmentLoader {
 
   boost::leaf::result<std::pair<table_vec_t, std::vector<table_vec_t>>>
   LoadVertexEdgeTables() {
-    std::stringstream labels;
-    labels << "Loading ";
-    if (graph_info_->vertices.empty() && graph_info_->edges.empty()) {
-      labels << " empty graph";
-    } else {
-      for (size_t i = 0; i < graph_info_->vertices.size(); ++i) {
-        if (i == 0) {
-          labels << "vertex labeled ";  // prefix
-        } else {
-          labels << ", ";  // label seperator
+    if (graph_info_) {
+      std::stringstream labels;
+      labels << "Loading ";
+      if (graph_info_->vertices.empty() && graph_info_->edges.empty()) {
+        labels << "empty graph";
+      } else {
+        for (size_t i = 0; i < graph_info_->vertices.size(); ++i) {
+          if (i == 0) {
+            labels << "vertex labeled ";  // prefix
+          } else {
+            labels << ", ";  // label seperator
+          }
+          labels << graph_info_->vertices[i]->label;
         }
-        labels << graph_info_->vertices[i]->label;
-      }
 
-      for (size_t i = 0; i < graph_info_->edges.size(); ++i) {
-        if (!graph_info_->vertices.empty()) {
-          labels << " and ";
+        for (size_t i = 0; i < graph_info_->edges.size(); ++i) {
+          if (!graph_info_->vertices.empty()) {
+            labels << " and ";
+          }
+          if (i == 0) {
+            labels << "edge labeled ";  // prefix
+          } else {
+            labels << ", ";  // label seperator
+          }
+          labels << graph_info_->edges[i]->label;
         }
-        if (i == 0) {
-          labels << "edge labeled ";  // prefix
-        } else {
-          labels << ", ";  // label seperator
-        }
-        labels << graph_info_->edges[i]->label;
       }
+      LOG_IF(INFO, comm_spec_.worker_id() == 0)
+          << "PROGRESS--GRAPH-LOADING-DESCRIPTION-" << labels.str();
     }
-    LOG_IF(INFO, comm_spec_.worker_id() == 0)
-        << "PROGRESS--GRAPH-LOADING-DESCRIPTION-" << labels.str();
     BOOST_LEAF_AUTO(v_tables, LoadVertexTables());
     BOOST_LEAF_AUTO(e_tables, LoadEdgeTables());
     return std::make_pair(v_tables, e_tables);

@@ -65,7 +65,7 @@ class StdStreamWrapper(object):
         line = self._filter_progress(line)
         if line is None:
             return
-        line = line.encode("ascii", "ignore").decode("ascii")
+        line = line.encode("ascii", "ignore").decode("ascii").strip()
         self._stream_backup.write(line)
         if not self._drop:
             self._lines.put(line)
