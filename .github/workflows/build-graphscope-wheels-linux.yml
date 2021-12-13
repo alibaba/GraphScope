@@ -7,6 +7,9 @@ on:
     # last modified the cron syntax in the workflow file.
     # Trigger the workflow at 03:00(CST) every day.
     - cron:  '00 19 * * *'
+  push:
+    tags:
+      - "v*"
 
 jobs:
   build-wheels:
@@ -51,6 +54,30 @@ jobs:
           graphscope.tar.gz
         retention-days: 5
 
+    # We do this, since failures on test.pypi aren't that bad
+    - name: Publish to Test PyPI
+      if: ${{ github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v') && github.repository == 'alibaba/GraphScope' }}
+      uses: pypa/gh-action-pypi-publish@master
+      with:
+        user: __token__
+        password: ${{ secrets.TEST_PYPI_PASSWORD }}
+        repository_url: https://test.pypi.org/legacy/
+        packages_dir: |
+          python/dist/wheelhouse/
+          coordinator/dist/wheelhouse/
+          coordinator/dist/
+
+    - name: Publish distribution to PyPI
+      if: ${{ github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v') && github.repository == 'alibaba/GraphScope' }}
+      uses: pypa/gh-action-pypi-publish@master
+      with:
+        user: __token__
+        password: ${{ secrets.PYPI_PASSWORD }}
+        packages_dir: |
+          python/dist/wheelhouse/
+          coordinator/dist/wheelhouse/
+          coordinator/dist/
+
   build-image:
     if: ${{ github.ref == 'refs/heads/main' && github.repository == 'alibaba/GraphScope' }}
     runs-on: ubuntu-20.04
@@ -78,6 +105,21 @@ jobs:
 
         cd ${GITHUB_WORKSPACE}
         sudo make graphscope-image
+        sudo docker tag graphscope/graphscope:${SHORT_SHA} \
+             registry.cn-hongkong.aliyuncs.com/graphscope/graphscope:${SHORT_SHA}
+
+    - name: Extract tag name
+      id: tag
+      if: ${{ github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v') }}
+      run: echo ::set-output name=TAG::${GITHUB_REF#refs/tags/v}
+
+    - name: Release Images
+      if: ${{ github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v') && github.repository == 'alibaba/GraphScope' }}
+      run: |
+        echo ${{ secrets.ALIYUN_TOKEN }} | sudo docker login --username=${{ secrets.ALIYUN_USER }} registry.cn-hongkong.aliyuncs.com --password-stdin
+        sudo docker tag graphscope/graphscope:${SHORT_SHA} \
+            registry.cn-hongkong.aliyuncs.com/graphscope/graphscope:${{ steps.tag.outputs.TAG }}
+        sudo docker push registry.cn-hongkong.aliyuncs.com/graphscope/graphscope:${{ steps.tag.outputs.TAG }}
 
   ubuntu-python-test:
     if: ${{ github.ref == 'refs/heads/main' && github.repository == 'alibaba/GraphScope' }}
