@@ -20,7 +20,10 @@ use crate::process::traversal::step::*;
 use crate::process::traversal::traverser::Traverser;
 use crate::{str_to_dyn_error, Partitioner};
 use pegasus::api::function::*;
-use pegasus::api::{Collect, CorrelatedSubTask, Dedup, Filter, Fold, FoldByKey, IterCondition, Iteration, KeyBy, Limit, Map, Merge, Sink, SortBy, Source, Count, SortLimitBy};
+use pegasus::api::{
+    Collect, CorrelatedSubTask, Count, Dedup, Filter, Fold, FoldByKey, IterCondition, Iteration,
+    KeyBy, Limit, Map, Merge, Sink, SortBy, SortLimitBy, Source,
+};
 use pegasus::result::ResultSink;
 use pegasus::stream::Stream;
 use pegasus::BuildJobError;
@@ -176,7 +179,7 @@ impl GremlinJobCompiler {
                     server_pb::operator_def::OpKind::Limit(n) => {
                         stream = stream.limit(n.limit)?;
                     }
-                    server_pb::operator_def::OpKind::Order(order) => {
+                    server_pb::operator_def::OpKind::Sort(order) => {
                         let cmp = self.udf_gen.gen_cmp(&order.compare)?;
                         if order.limit > 0 {
                             // TODO(bingqing): use sort_limit_by when pegasus is ready
@@ -241,10 +244,10 @@ impl GremlinJobCompiler {
                         // TODO: only support dedup by itself for now
                         stream = stream.dedup()?;
                     }
-                    server_pb::operator_def::OpKind::Union(union) => {
+                    server_pb::operator_def::OpKind::Merge(union) => {
                         let (mut ori_stream, sub_stream) = stream.copied()?;
-                        stream = self.install(sub_stream, &union.branches[0].plan[..])?;
-                        for subtask in &union.branches[1..] {
+                        stream = self.install(sub_stream, &union.tasks[0].plan[..])?;
+                        for subtask in &union.tasks[1..] {
                             let copied = ori_stream.copied()?;
                             ori_stream = copied.0;
                             stream = self.install(copied.1, &subtask.plan[..])?.merge(stream)?;
@@ -270,7 +273,7 @@ impl GremlinJobCompiler {
                             Err("iteration body can't be empty;")?
                         }
                     }
-                    server_pb::operator_def::OpKind::Subtask(sub) => {
+                    server_pb::operator_def::OpKind::Apply(sub) => {
                         let join_func = self.udf_gen.gen_subtask(
                             sub.join.as_ref().expect("should have subtask_kind").resource.as_ref(),
                         )?;
@@ -286,6 +289,7 @@ impl GremlinJobCompiler {
                                 .filter_map(move |(parent, sub)| join_func.exec(parent, sub))?;
                         }
                     }
+                    _ => Err(format!("The operator {:?} is not supported;", op).as_str())?,
                 }
             } else {
                 Err("Unknown operator with empty kind;")?;

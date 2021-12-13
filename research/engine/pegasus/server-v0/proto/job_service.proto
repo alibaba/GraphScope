@@ -18,9 +18,7 @@ package protocol;
 option java_package = "com.alibaba.pegasus.service.protocol";
 option java_outer_classname = "PegasusClient";
 
-
-
-message Exchange {
+message Repartition {
   bytes resource  = 1;
 }
 
@@ -34,7 +32,7 @@ message Aggregate {
 
 message Communicate {
   oneof ch_kind {
-    Exchange to_another  = 1;
+    Repartition to_another  = 1;
     Broadcast to_others  = 2;
     Aggregate to_one     = 3;
   }
@@ -73,9 +71,10 @@ message Limit {
 }
 
 message Dedup {
+  bytes resource = 1;
 }
 
-message OrderBy {
+message SortBy {
   int64 limit = 1;
   bytes compare = 2;
 }
@@ -102,8 +101,8 @@ message GroupBy {
   FlatMap unfold  = 3;
 }
 
-message Union {
-  repeated TaskPlan branches = 1;
+message Merge {
+  repeated TaskPlan tasks = 1;
 }
 
 message Iteration {
@@ -112,9 +111,41 @@ message Iteration {
   TaskPlan body   = 3;
 }
 
-message Subtask {
+message Apply {
   LeftJoin join = 1;
   TaskPlan task = 2;
+}
+
+message SegmentApply {
+  LeftJoin join = 1;
+  TaskPlan task = 2;
+}
+
+message Join {
+  enum JoinKind {
+    // Inner join
+    INNER = 0;
+    // Left outer join
+    LEFT_OUTER = 1;
+    // Right outer join
+    RIGHT_OUTER = 2;
+    // Full outer join
+    FULL_OUTER = 3;
+    // Left semi-join, right alternative can be naturally adapted
+    SEMI = 4;
+    // Left anti-join, right alternative can be naturally adapted
+    ANTI = 5;
+    // aka. Cartesian product
+    TIMES = 6;
+  }
+  JoinKind kind = 1;
+  bytes resource = 2;
+  TaskPlan left_task = 3;
+  TaskPlan right_task = 4;
+}
+
+message KeyBy {
+  bytes key_selector  = 2;
 }
 
 message OperatorDef {
@@ -124,13 +155,16 @@ message OperatorDef {
     FlatMap flat_map = 4;
     Filter filter = 5;
     Limit limit = 6;
-    OrderBy order = 7;
+    SortBy sort = 7;
     Fold fold = 8;
     GroupBy group = 9;
-    Union union = 10;
+    Merge merge = 10;
     Iteration iterate = 11;
-    Subtask subtask = 12;
+    Apply apply = 12;
     Dedup dedup = 13;
+    SegmentApply seg_apply = 14;
+    Join join = 15;
+    KeyBy key_by = 16;
   }
 }
 

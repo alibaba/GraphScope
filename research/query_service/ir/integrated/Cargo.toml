@@ -24,4 +24,4 @@ graph_store = {path = "../../../graph_store"}
 
 [features]
 default = []
-proto_inplace = ["ir_common/proto_inplace"]
+proto_inplace = ["ir_common/proto_inplace", "pegasus_server/gcip"]
