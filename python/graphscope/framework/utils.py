@@ -45,6 +45,8 @@ class PipeWatcher(object):
         self._pipe = pipe
         self._sink = sink
         self._drop = drop
+        self._filters = []
+
         if queue is None:
             self._lines = Queue()
         else:
@@ -52,15 +54,16 @@ class PipeWatcher(object):
 
         def read_and_poll(self):
             for line in self._pipe:
-                try:
-                    self._sink.write(line)
-                except:  # noqa: E722
-                    pass
-                try:
-                    if not self._drop:
-                        self._lines.put(line)
-                except:  # noqa: E722
-                    pass
+                if self.filter(line):
+                    try:
+                        self._sink.write(line)
+                    except:  # noqa: E722
+                        pass
+                    try:
+                        if not self._drop:
+                            self._lines.put(line)
+                    except:  # noqa: E722
+                        pass
 
         self._polling_thread = threading.Thread(target=read_and_poll, args=(self,))
         self._polling_thread.daemon = True
@@ -71,6 +74,19 @@ class PipeWatcher(object):
 
     def drop(self, drop=True):
         self._drop = drop
+
+    def addFilter(self, filter):
+        if not (filter in self._filters):
+            self._filters.append(filter)
+
+    def filter(self, line):
+        rv = True
+        for f in self._filters:
+            result = f(line)  # assume callable - will raise if not
+            if not result:
+                rv = False
+                break
+        return rv
 
 
 class PipeMerger(object):
