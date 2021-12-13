@@ -81,7 +81,8 @@ class PipeMerger(object):
         def read_and_pool(self, tag, pipe, target: Queue):
             while True:
                 try:
-                    target.put((tag, pipe.poll()))
+                    msg = (pipe.poll(), "")
+                    target.put(msg if tag == "out" else msg[::-1])
                 except Exception:
                     time.sleep(1)
                 if self._stop:
