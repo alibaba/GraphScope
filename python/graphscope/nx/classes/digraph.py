@@ -38,7 +38,6 @@ from graphscope.nx import NetworkXError
 from graphscope.nx.classes.graph import Graph
 from graphscope.nx.convert import to_networkx_graph
 from graphscope.nx.utils.compat import patch_docstring
-from graphscope.nx.utils.misc import check_node_is_legal
 from graphscope.nx.utils.misc import empty_graph_in_engine
 from graphscope.proto import graph_def_pb2
 from graphscope.proto import types_pb2
@@ -311,7 +310,6 @@ class DiGraph(Graph):
 
     @patch_docstring(RefDiGraph.successors)
     def successors(self, n):
-        check_node_is_legal(n)
         try:
             return iter(self._succ[n])
         except KeyError:
@@ -322,7 +320,6 @@ class DiGraph(Graph):
 
     @patch_docstring(RefDiGraph.predecessors)
     def predecessors(self, n):
-        check_node_is_legal(n)
         try:
             return iter(self._pred[n])
         except KeyError:

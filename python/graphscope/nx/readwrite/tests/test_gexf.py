@@ -17,6 +17,7 @@
 # information.
 #
 
+import os
 import sys
 import time
 
@@ -30,6 +31,10 @@ from graphscope.nx.utils.compat import with_graphscope_nx_context
 @pytest.mark.usefixtures("graphscope_session")
 @with_graphscope_nx_context(TestGEXF)
 class TestGEXF:
+    @pytest.mark.skipif(
+        os.environ.get("DEPLOYMENT", None) != "standalone",
+        reason="Only test on standalone",
+    )
     def test_write_with_node_attributes(self):
         # Addresses #673.
         G = nx.Graph()

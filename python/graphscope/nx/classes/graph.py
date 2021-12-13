@@ -42,7 +42,6 @@ from graphscope.nx.classes.dicts import AdjDict
 from graphscope.nx.classes.dicts import NodeDict
 from graphscope.nx.convert import to_networkx_graph
 from graphscope.nx.utils.compat import patch_docstring
-from graphscope.nx.utils.misc import check_node_is_legal
 from graphscope.nx.utils.misc import empty_graph_in_engine
 from graphscope.nx.utils.misc import json_encoder
 from graphscope.nx.utils.misc import parse_ret_as_dict
@@ -654,19 +653,10 @@ class Graph(_GraphBase):
                 nn, dd = n
                 data.update(dd)
                 node = [nn, data]
-                n = nn
             except (TypeError, ValueError):
                 node = [n, data]
-            check_node_is_legal(n)
             if self._schema.add_nx_vertex_properties(data):
-                try:
-                    nodes.append(json.dumps(node, default=json_encoder))
-                except TypeError as e:
-                    raise NetworkXError(
-                        "The node and its data {} ailed to be serialized by json.".format(
-                            node
-                        )
-                    ) from e
+                nodes.append(json.dumps(node, default=json_encoder))
         self._op = dag_utils.modify_vertices(self, types_pb2.NX_ADD_NODES, nodes)
         return self._op.eval()
 
@@ -733,7 +723,6 @@ class Graph(_GraphBase):
         self._convert_arrow_to_dynamic()
         nodes = []
         for n in nodes_for_removing:
-            check_node_is_legal(n)
             nodes.append(json.dumps([n], default=json_encoder))
         self._op = dag_utils.modify_vertices(self, types_pb2.NX_DEL_NODES, nodes)
         return self._op.eval()
@@ -778,7 +767,6 @@ class Graph(_GraphBase):
         {}
 
         """
-        check_node_is_legal(n)
         if self.graph_type == graph_def_pb2.ARROW_PROPERTY:
             n = self._convert_to_label_id_tuple(n)
         op = dag_utils.report_graph(self, types_pb2.NODE_DATA, node=json.dumps([n]))
@@ -847,7 +835,6 @@ class Graph(_GraphBase):
 
         """
         try:
-            check_node_is_legal(n)
             if self.graph_type == graph_def_pb2.ARROW_PROPERTY:
                 n = self._convert_to_label_id_tuple(n)
             op = dag_utils.report_graph(
@@ -964,8 +951,6 @@ class Graph(_GraphBase):
                     "Edge tuple %s must be a 2-tuple or 3-tuple." % (e,)
                 )
             # FIXME: support dynamic data type in same property
-            check_node_is_legal(u)
-            check_node_is_legal(v)
             self._schema.add_nx_edge_properties(data)
             edge = [u, v, data]
             try:
@@ -1056,8 +1041,6 @@ class Graph(_GraphBase):
             ne = len(e)
             if ne < 2:
                 raise ValueError("Edge tuple %s must be a 2-tuple or 3-tuple." % (e,))
-            check_node_is_legal(e[0])
-            check_node_is_legal(e[1])
             edges.append(
                 json.dumps(e[:2], default=json_encoder)
             )  # ignore edge data if present
@@ -1092,8 +1075,6 @@ class Graph(_GraphBase):
         {'foo': 'bar'}
 
         """
-        check_node_is_legal(u)
-        check_node_is_legal(v)
         self._convert_arrow_to_dynamic()
 
         try:
@@ -1136,7 +1117,6 @@ class Graph(_GraphBase):
         {'weight': 3}
 
         """
-        check_node_is_legal(n)
         self._convert_arrow_to_dynamic()
 
         try:
@@ -1305,8 +1285,6 @@ class Graph(_GraphBase):
         True
 
         """
-        check_node_is_legal(u)
-        check_node_is_legal(v)
         try:
             return v in self._adj[u]
         except KeyError:
@@ -1350,7 +1328,6 @@ class Graph(_GraphBase):
         >>> [n for n in G[0]]
         [1]
         """
-        check_node_is_legal(n)
         try:
             return iter(self._adj[n])
         except KeyError:
@@ -1599,7 +1576,6 @@ class Graph(_GraphBase):
             def bunch_iter(nlist, adj):
                 try:
                     for n in nlist:
-                        check_node_is_legal(n)
                         if n in adj:
                             yield n
                 except TypeError as e:
@@ -1844,7 +1820,6 @@ class Graph(_GraphBase):
 
         induced_nodes = []
         for n in nodes:
-            check_node_is_legal(n)
             try:
                 induced_nodes.append(json.dumps([n], default=json_encoder))
             except TypeError as e:
@@ -1897,8 +1872,6 @@ class Graph(_GraphBase):
         induced_edges = []
         for e in edges:
             u, v = e
-            check_node_is_legal(u)
-            check_node_is_legal(v)
             try:
                 induced_edges.append(json.dumps((u, v), default=json_encoder))
             except TypeError as e:
@@ -2051,7 +2024,6 @@ class Graph(_GraphBase):
         -----
         Raise NetworkxError if node not in graph.
         """
-        check_node_is_legal(n)
         op = dag_utils.report_graph(
             self, report_type, node=json.dumps([n], default=json_encoder), key=weight
         )
