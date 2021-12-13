@@ -1395,7 +1395,16 @@ mod details {
     /// To initialize a get details operator
     #[no_mangle]
     pub extern "C" fn init_get_details() -> *const c_void {
-        let details = Box::new(pb::GetDetails { tag: None, params: None });
+        let details = Box::new(pb::GetDetails {
+            tag: None,
+            params: Some(pb::QueryParams {
+                table_names: vec![],
+                columns: vec![],
+                limit: None,
+                predicate: None,
+                requirements: vec![],
+            }),
+        });
 
         Box::into_raw(details) as *const c_void
     }
