@@ -329,9 +329,9 @@ mod test {
         assert_eq!(result_ids, expected_ids)
     }
 
-    // g.V().outE('knows').inV() with required property "name" of outV
+    // g.V().outE('knows').inV() with required property "name" of inV
     #[test]
-    fn get_details_test() {
+    fn auxilia_test() {
         let expand_opr = pb::EdgeExpand {
             base: Some(pb::ExpandBase {
                 v_tag: None,
@@ -354,7 +354,7 @@ mod test {
             alias: None,
         };
 
-        let details_opr = pb::GetDetails {
+        let auxilia_opr = pb::Auxilia {
             tag: None,
             params: Some(pb::QueryParams {
                 table_names: vec![],
@@ -363,13 +363,14 @@ mod test {
                 predicate: None,
                 requirements: vec![],
             }),
+            alias: None,
         };
 
         let conf = JobConf::new("getv_test");
         let mut result = pegasus::run(conf, || {
             let expand = expand_opr.clone();
             let getv = getv_opr.clone();
-            let details = details_opr.clone();
+            let details = auxilia_opr.clone();
             |input, output| {
                 let mut stream = input.input_from(source_gen(None))?;
                 let flatmap_func = expand.gen_flat_map().unwrap();

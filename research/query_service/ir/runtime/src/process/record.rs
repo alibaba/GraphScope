@@ -83,11 +83,15 @@ impl Record {
 
     // TODO: consider to maintain the record without any alias, which also needed to be stored;
     // We may: 1. define a None type in NameOrId; or 2. define different Record types, for the gremlin path requirement
-    pub fn append<E: Into<Entry>>(&mut self, entry: E, tag: Option<NameOrId>) {
-        if let Some(tag) = tag {
-            self.columns.insert(tag, Arc::new(entry.into()));
+    pub fn append<E: Into<Entry>>(&mut self, entry: E, alias: Option<NameOrId>) {
+        self.append_arc_entry(Arc::new(entry.into()), alias)
+    }
+
+    pub fn append_arc_entry(&mut self, entry: Arc<Entry>, alias: Option<NameOrId>) {
+        if let Some(alias) = alias {
+            self.columns.insert(alias, entry);
         } else {
-            self.curr = Some(Arc::new(entry.into()));
+            self.curr = Some(entry);
         }
     }
 

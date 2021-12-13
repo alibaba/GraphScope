@@ -129,7 +129,7 @@ impl AsPhysical for pb::GetV {
     }
 }
 
-impl AsPhysical for pb::GetDetails {
+impl AsPhysical for pb::Auxilia {
     fn add_job_builder(&self, builder: &mut JobBuilder) -> PhysicalResult<()> {
         simple_add_job_builder(builder, &pb::logical_plan::Operator::from(self.clone()), PegasusOpr::Map)
     }

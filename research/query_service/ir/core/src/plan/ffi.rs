@@ -405,7 +405,7 @@ enum Opr {
     EdgeExpand,
     PathExpand,
     Limit,
-    GetDetails,
+    Auxilia,
     OrderBy,
     Apply,
 }
@@ -416,10 +416,10 @@ fn set_range(ptr: *const c_void, lower: i32, upper: i32, opr: Opr) -> ResultCode
         ResultCode::InvalidRangeError
     } else {
         match opr {
-            Opr::GetDetails => {
-                let mut details = unsafe { Box::from_raw(ptr as *mut pb::GetDetails) };
-                details.params.as_mut().unwrap().limit = Some(pb::Range { lower, upper });
-                std::mem::forget(details);
+            Opr::Auxilia => {
+                let mut auxilia = unsafe { Box::from_raw(ptr as *mut pb::Auxilia) };
+                auxilia.params.as_mut().unwrap().limit = Some(pb::Range { lower, upper });
+                std::mem::forget(auxilia);
             }
             Opr::ExpandBase => {
                 let mut base = unsafe { Box::from_raw(ptr as *mut pb::ExpandBase) };
@@ -486,6 +486,11 @@ fn set_alias(ptr: *const c_void, alias: FfiNameOrId, is_query_given: bool, opr: 
                     Some(pb::Alias { alias: alias_pb.unwrap(), is_query_given });
                 std::mem::forget(apply);
             }
+            Opr::Auxilia => {
+                let mut auxilia = unsafe { Box::from_raw(ptr as *mut pb::Auxilia) };
+                auxilia.alias = Some(pb::Alias { alias: alias_pb.unwrap(), is_query_given });
+                std::mem::forget(auxilia);
+            }
             _ => unreachable!(),
         }
     }
@@ -506,10 +511,10 @@ fn set_predicate(ptr: *const c_void, cstr_predicate: *const c_char, opr: Opr) ->
                 select.predicate = predicate_pb.ok();
                 std::mem::forget(select);
             }
-            Opr::GetDetails => {
-                let mut details = unsafe { Box::from_raw(ptr as *mut pb::GetDetails) };
-                details.params.as_mut().unwrap().predicate = predicate_pb.ok();
-                std::mem::forget(details);
+            Opr::Auxilia => {
+                let mut auxilia = unsafe { Box::from_raw(ptr as *mut pb::Auxilia) };
+                auxilia.params.as_mut().unwrap().predicate = predicate_pb.ok();
+                std::mem::forget(auxilia);
             }
             Opr::ExpandBase => {
                 let mut expand = unsafe { Box::from_raw(ptr as *mut pb::ExpandBase) };
@@ -567,13 +572,13 @@ fn process_params(ptr: *const c_void, key: ParamsKey, val: FfiNameOrId, opr: Opr
                 }
                 std::mem::forget(expand);
             }
-            Opr::GetDetails => {
-                let mut details = unsafe { Box::from_raw(ptr as *mut pb::GetDetails) };
+            Opr::Auxilia => {
+                let mut auxilia = unsafe { Box::from_raw(ptr as *mut pb::Auxilia) };
                 match key {
-                    ParamsKey::Tag => details.tag = pb.unwrap(),
+                    ParamsKey::Tag => auxilia.tag = pb.unwrap(),
                     ParamsKey::Table => {
                         if let Some(label) = pb.unwrap() {
-                            details
+                            auxilia
                                 .params
                                 .as_mut()
                                 .unwrap()
@@ -583,7 +588,7 @@ fn process_params(ptr: *const c_void, key: ParamsKey, val: FfiNameOrId, opr: Opr
                     }
                     ParamsKey::Column => {
                         if let Some(ppt) = pb.unwrap() {
-                            details
+                            auxilia
                                 .params
                                 .as_mut()
                                 .unwrap()
@@ -592,7 +597,7 @@ fn process_params(ptr: *const c_void, key: ParamsKey, val: FfiNameOrId, opr: Opr
                         }
                     }
                 }
-                std::mem::forget(details);
+                std::mem::forget(auxilia);
             }
             Opr::Scan => {
                 let mut scan = unsafe { Box::from_raw(ptr as *mut pb::Scan) };
@@ -1389,13 +1394,13 @@ mod limit {
     }
 }
 
-mod details {
+mod auxilia {
     use super::*;
 
-    /// To initialize a get details operator
+    /// To initialize an auxilia operator
     #[no_mangle]
-    pub extern "C" fn init_get_details() -> *const c_void {
-        let details = Box::new(pb::GetDetails {
+    pub extern "C" fn init_auxilia() -> *const c_void {
+        let auxilia = Box::new(pb::Auxilia {
             tag: None,
             params: Some(pb::QueryParams {
                 table_names: vec![],
@@ -1404,50 +1409,59 @@ mod details {
                 predicate: None,
                 requirements: vec![],
             }),
+            alias: None,
         });
 
-        Box::into_raw(details) as *const c_void
+        Box::into_raw(auxilia) as *const c_void
     }
 
-    /// Set the tag of the entity to get details
+    /// Set the tag of the entity to Auxilia
     #[no_mangle]
-    pub extern "C" fn set_details_tag(ptr_details: *const c_void, tag: FfiNameOrId) -> ResultCode {
-        process_params(ptr_details, ParamsKey::Tag, tag, Opr::GetDetails)
+    pub extern "C" fn set_auxilia_tag(ptr_auxilia: *const c_void, tag: FfiNameOrId) -> ResultCode {
+        process_params(ptr_auxilia, ParamsKey::Tag, tag, Opr::Auxilia)
     }
 
-    /// Set the size range limitation of getting details
+    /// Set the size range limitation of Auxilia
     #[no_mangle]
-    pub extern "C" fn set_details_limit(ptr_details: *const c_void, lower: i32, upper: i32) -> ResultCode {
-        set_range(ptr_details, lower, upper, Opr::GetDetails)
+    pub extern "C" fn set_auxilia_limit(ptr_auxilia: *const c_void, lower: i32, upper: i32) -> ResultCode {
+        set_range(ptr_auxilia, lower, upper, Opr::Auxilia)
     }
 
-    /// Set the predicate of getting details
+    /// Set the predicate of Auxilia
     #[no_mangle]
-    pub extern "C" fn set_getv_predicate(
-        ptr_details: *const c_void, cstr_predicate: *const c_char,
+    pub extern "C" fn set_auxilia_predicate(
+        ptr_auxilia: *const c_void, cstr_predicate: *const c_char,
     ) -> ResultCode {
-        set_predicate(ptr_details, cstr_predicate, Opr::GetDetails)
+        set_predicate(ptr_auxilia, cstr_predicate, Opr::Auxilia)
     }
 
     #[no_mangle]
-    pub extern "C" fn add_details_property(
-        ptr_details: *const c_void, property: FfiNameOrId,
+    pub extern "C" fn add_auxilia_property(
+        ptr_auxilia: *const c_void, property: FfiNameOrId,
     ) -> ResultCode {
-        process_params(ptr_details, ParamsKey::Column, property, Opr::GetDetails)
+        process_params(ptr_auxilia, ParamsKey::Column, property, Opr::Auxilia)
     }
 
-    /// Append a get details operator to the logical plan
+    /// Set the alias of the entity to Auxilia
     #[no_mangle]
-    pub extern "C" fn append_details_operator(
-        ptr_plan: *const c_void, ptr_details: *const c_void, parent: i32, id: *mut i32,
+    pub extern "C" fn set_auxilia_alias(
+        ptr_auxilia: *const c_void, alias: FfiNameOrId, is_query_given: bool,
     ) -> ResultCode {
-        let details = unsafe { Box::from_raw(ptr_details as *mut pb::GetDetails) };
-        append_operator(ptr_plan, details.as_ref().clone().into(), vec![parent], id)
+        set_alias(ptr_auxilia, alias, is_query_given, Opr::Auxilia)
+    }
+
+    /// Append an Auxilia operator to the logical plan
+    #[no_mangle]
+    pub extern "C" fn append_auxilia_operator(
+        ptr_plan: *const c_void, ptr_auxilia: *const c_void, parent: i32, id: *mut i32,
+    ) -> ResultCode {
+        let auxilia = unsafe { Box::from_raw(ptr_auxilia as *mut pb::Auxilia) };
+        append_operator(ptr_plan, auxilia.as_ref().clone().into(), vec![parent], id)
     }
 
     #[no_mangle]
-    pub extern "C" fn destroy_details_operator(ptr: *const c_void) {
-        destroy_ptr::<pb::GetDetails>(ptr)
+    pub extern "C" fn destroy_auxilia_operator(ptr: *const c_void) {
+        destroy_ptr::<pb::Auxilia>(ptr)
     }
 }
 

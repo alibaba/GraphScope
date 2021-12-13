@@ -247,12 +247,18 @@ message GetV {
   common.NameOrId alias = 3;
 }
 
-// To further get details of a given entity, either a vertex, an edge, or other entity that carries extra info.
-message GetDetails {
+// An operator that provides auxiliary functionalities given the tag-referred entity, which include:
+// * To get certain properties/columns from the entity
+// * To filter out the entity based on the data
+// * To re-name the entity with other alias
+message Auxilia {
   // The tag that refers to the entity where the details will be retrieved
   common.NameOrId tag = 1;
   // The details (columns/properties) to be retrieved
   QueryParams params = 2;
+  // The alias to give if any, this is especially helpful when the tag is `None`, and the entity
+  // now refers to the head of the record
+  Alias alias = 3;
 }
 
 message EdgeExpand {
@@ -349,7 +355,7 @@ message LogicalPlan {
       Scan scan = 11;
       IndexedScan indexed_scan = 12;
       Limit limit = 13;
-      GetDetails details = 14;
+      Auxilia auxilia = 14;
       // Saving the room for relational operators
       GetV vertex = 20;
       EdgeExpand edge = 21;
