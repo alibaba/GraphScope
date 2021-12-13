@@ -59,8 +59,8 @@ public class KafkaLogService implements LogService {
         AdminClient admin = getAdmin();
         NewTopic newTopic = new NewTopic(this.topic, this.queueCount, this.replicationFactor);
         Map<String, String> configs = new HashMap<>();
-        configs.put("log.retention.ms", "-1");
-        configs.put("log.retention.bytes", "-1");
+        configs.put("retention.ms", "-1");
+        configs.put("retention.bytes", "-1");
         newTopic.configs(configs);
         try {
             admin.createTopics(Collections.singleton(newTopic)).all().get();
