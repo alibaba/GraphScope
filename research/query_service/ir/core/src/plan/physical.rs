@@ -181,6 +181,7 @@ impl AsPhysical for pb::logical_plan::Operator {
                 IndexedScan(idxscan) => idxscan.add_job_builder(builder),
                 Limit(limit) => limit.add_job_builder(builder),
                 OrderBy(orderby) => orderby.add_job_builder(builder),
+                Auxilia(auxilia) => auxilia.add_job_builder(builder),
                 _ => Err(PhysicalError::Unsupported),
             }
         } else {
