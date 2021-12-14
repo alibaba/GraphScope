@@ -80,8 +80,11 @@ jobs:
       # run: echo ::set-output name=TAG::${GITHUB_REF#refs/tags/v}
 
     - name: Release Image
+      env:
+        docker_password: ${{ secrets.DOCKER_PASSWORD }}
+        docker_username: ${{ secrets.DOCKER_USER }}
       run: |
-        echo ${{ secrets.DOCKER_PASSWORD }} | sudo docker login --username=${{ secrets.DOCKER_USER }} ${{ env.DOCKER_URL }} --password-stdin
+        echo "${docker_password}" | sudo docker login --username="${docker_username}" ${{ env.DOCKER_URL }} --password-stdin
         sudo docker tag graphscope/graphscope-store:${SHORT_SHA} \
           ${{ env.GSS_IMAGE }}:${{ steps.tag.outputs.TAG }}
         sudo docker push ${{ env.GSS_IMAGE }}:${{ steps.tag.outputs.TAG }}
@@ -95,6 +98,9 @@ jobs:
 
     # this step is needed for update index.yaml
     - name: Download Released Charts
+      env:
+        oss_accesskey_id: ${{ secrets.ALIYUN_OSS_ACCESSKEY_ID }}
+        oss_accesskey_secret: ${{ secrets.ALIYUN_OSS_ACCESSKEY_SECRET }}
       run: |
         # download ossutils
         sudo wget -O /usr/bin/ossutil64 http://gosspublic.alicdn.com/ossutil/1.7.7/ossutil64
@@ -102,8 +108,8 @@ jobs:
 
         # download released charts
         cd ${GITHUB_WORKSPACE}/charts
-        ossutil64 -i ${{ secrets.ALIYUN_OSS_ACCESSKEY_ID }} \
-                  -k ${{ secrets.ALIYUN_OSS_ACCESSKEY_SECRET }} \
+        ossutil64 -i "${oss_accesskey_id}" \
+                  -k "${oss_accesskey_secret}" \
                   -e ${{ env.OSS_ENDPOINT }} \
                   cp -r oss://graphscope/charts ./
 
