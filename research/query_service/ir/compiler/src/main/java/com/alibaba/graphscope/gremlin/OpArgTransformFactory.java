@@ -19,6 +19,9 @@ package com.alibaba.graphscope.gremlin;
 import com.alibaba.graphscope.common.exception.OpArgIllegalException;
 import com.alibaba.graphscope.common.intermediate.ArgUtils;
 import com.alibaba.graphscope.common.jna.type.*;
+import com.alibaba.graphscope.common.jna.type.FfiDirection;
+import com.alibaba.graphscope.common.jna.type.FfiNameOrId;
+import com.alibaba.graphscope.common.jna.type.FfiScanOpt;
 import org.apache.tinkerpop.gremlin.process.traversal.Compare;
 import org.apache.tinkerpop.gremlin.process.traversal.Order;
 import org.apache.tinkerpop.gremlin.process.traversal.Traversal;
@@ -229,4 +232,6 @@ public class OpArgTransformFactory {
         }
         return valueExpr;
     }
+
+    public static Function<String, FfiNameOrId.ByValue> STEP_TAG_TO_OP_ALIAS = (String tag) -> ArgUtils.strAsNameId(tag);
 }

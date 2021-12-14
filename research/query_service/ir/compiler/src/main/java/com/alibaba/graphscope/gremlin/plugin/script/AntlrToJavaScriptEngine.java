@@ -51,7 +51,7 @@ public class AntlrToJavaScriptEngine extends AbstractScriptEngine implements Gre
 
     @Override
     public Object eval(String script, ScriptContext ctx) {
-        logger.info("antlr start to eval \"{}\"", script);
+        logger.debug("antlr start to eval \"{}\"", script);
         Bindings globalBindings = ctx.getBindings(ScriptContext.ENGINE_SCOPE);
         GraphTraversalSource g = (GraphTraversalSource) globalBindings.get("g");
         GremlinAntlrToJava antlrToJava = GremlinAntlrToJava.getInstance(g);

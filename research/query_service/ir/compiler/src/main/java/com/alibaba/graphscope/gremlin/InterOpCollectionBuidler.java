@@ -16,8 +16,8 @@
 
 package com.alibaba.graphscope.gremlin;
 
-import com.alibaba.graphscope.common.IrPlan;
 import com.alibaba.graphscope.common.exception.OpArgIllegalException;
+import com.alibaba.graphscope.common.intermediate.InterOpCollection;
 import com.alibaba.graphscope.gremlin.exception.UnsupportedStepException;
 import com.alibaba.graphscope.common.intermediate.operator.*;
 import com.alibaba.graphscope.common.jna.type.FfiScanOpt;
@@ -31,6 +31,8 @@ import org.apache.tinkerpop.gremlin.process.traversal.step.util.HasContainer;
 import org.apache.tinkerpop.gremlin.process.traversal.util.DefaultTraversal;
 import org.apache.tinkerpop.gremlin.structure.T;
 import org.apache.tinkerpop.gremlin.tinkergraph.process.traversal.step.sideEffect.TinkerGraphStep;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -39,10 +41,11 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 
 // build IrPlan from gremlin traversal
-public class IrPlanBuidler {
+public class InterOpCollectionBuidler {
+    private static final Logger logger = LoggerFactory.getLogger(InterOpCollectionBuidler.class);
     private Traversal traversal;
 
-    public IrPlanBuidler(Traversal traversal) {
+    public InterOpCollectionBuidler(Traversal traversal) {
         this.traversal = traversal;
     }
 
@@ -168,9 +171,8 @@ public class IrPlanBuidler {
         }
     }
 
-    public IrPlan build() throws OpArgIllegalException, UnsupportedStepException {
-        traversal.asAdmin().applyStrategies();
-        IrPlan irPlan = new IrPlan();
+    public InterOpCollection build() throws OpArgIllegalException, UnsupportedStepException {
+        InterOpCollection opCollection = new InterOpCollection();
         List<Step> steps = traversal.asAdmin().getSteps();
         // judge by class type instead of instance
         for (Step step : steps) {
@@ -195,10 +197,17 @@ public class IrPlanBuidler {
                 throw new UnsupportedStepException(step.getClass(), "unimplemented yet");
             }
             if (op != null) {
-                irPlan.appendInterOp(op);
+                // set alias
+                if (step.getLabels().size() > 1) {
+                    logger.error("multiple aliases of one object is unsupported, take the first and ignore others");
+                }
+                if (!step.getLabels().isEmpty()) {
+                    op.setAlias(new OpArg(step.getLabels().iterator().next(), OpArgTransformFactory.STEP_TAG_TO_OP_ALIAS));
+                }
+                opCollection.appendInterOp(op);
             }
         }
-        return irPlan;
+        return opCollection;
     }
 
     private boolean equalClass(Step t1, Class<? extends Step> target) {

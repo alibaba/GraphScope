@@ -29,7 +29,8 @@ import com.alibaba.graphscope.common.IrPlan;
 import com.alibaba.graphscope.common.client.*;
 import com.alibaba.graphscope.common.config.Configs;
 import com.alibaba.graphscope.common.config.PegasusConfig;
-import com.alibaba.graphscope.gremlin.IrPlanBuidler;
+import com.alibaba.graphscope.common.intermediate.InterOpCollection;
+import com.alibaba.graphscope.gremlin.InterOpCollectionBuidler;
 import com.alibaba.graphscope.gremlin.plugin.script.AntlrToJavaScriptEngineFactory;
 import com.alibaba.pegasus.service.protocol.PegasusClient;
 import com.google.protobuf.InvalidProtocolBufferException;
@@ -148,7 +149,9 @@ public class IrStandardOpProcessor extends StandardOpProcessor {
                 .withResult(o -> {
                     try {
                         if (o != null && o instanceof Traversal) {
-                            IrPlan irPlan = (new IrPlanBuidler((Traversal) o)).build();
+                            InterOpCollection opCollection = (new InterOpCollectionBuidler((Traversal) o)).build();
+                            IrPlan irPlan = opCollection.buildIrPlan();
+
                             byte[] physicalPlanBytes = irPlan.toPhysicalBytes();
                             irPlan.close();
 

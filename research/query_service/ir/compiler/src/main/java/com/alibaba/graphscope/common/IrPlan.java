@@ -37,6 +37,7 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.function.Function;
 
 // represent ir plan as a chain of operators
@@ -97,6 +98,11 @@ public class IrPlan implements Closeable {
                 }
                 // todo: add other predicates
                 // todo: add limit
+
+                Optional<OpArg> aliasOpt = baseOp.getAlias();
+                if (aliasOpt.isPresent()) {
+                    irCoreLib.setScanAlias(scan, (FfiNameOrId.ByValue) aliasOpt.get().getArg());
+                }
                 return scan;
             }
         },
@@ -148,6 +154,11 @@ public class IrPlan implements Closeable {
                 }
                 Boolean isEdge = (Boolean) edgeOpt.get().getArg();
                 expand = irCoreLib.initEdgexpdOperator(expand, isEdge);
+
+                Optional<OpArg> aliasOpt = baseOp.getAlias();
+                if (aliasOpt.isPresent()) {
+                    irCoreLib.setEdgexpdAlias(expand, (FfiNameOrId.ByValue) aliasOpt.get().getArg());
+                }
                 return expand;
             }
         },
@@ -223,6 +234,28 @@ public class IrPlan implements Closeable {
                 }
                 return ptrOrder;
             }
+        },
+        AUXILIA_OP {
+            @Override
+            public Pointer apply(InterOpBase baseOp) {
+                AuxiliaOp op = (AuxiliaOp) baseOp;
+                Optional<OpArg> propertyDetails = op.getPropertyDetails();
+                if (!propertyDetails.isPresent()) {
+                    throw new InterOpIllegalArgException(baseOp.getClass(), "propertyDetails", "not present");
+                }
+                Set<FfiNameOrId.ByValue> properties = (Set<FfiNameOrId.ByValue>) propertyDetails.get().getArg();
+                if (properties.isEmpty()) {
+                    throw new InterOpIllegalArgException(baseOp.getClass(), "propertyDetails", "should not be empty");
+                }
+                Pointer ptrAuxilia = irCoreLib.initAuxilia();
+                properties.forEach(k -> {
+                    irCoreLib.addAuxiliaProperty(ptrAuxilia, k);
+                });
+                if (baseOp.getAlias().isPresent()) {
+                    throw new InterOpIllegalArgException(baseOp.getClass(), "alias", "unimplemented yet");
+                }
+                return ptrAuxilia;
+            }
         }
     }
 
@@ -275,6 +308,9 @@ public class IrPlan implements Closeable {
         } else if (base instanceof OrderOp) {
             Pointer ptrOrder = TransformFactory.ORDER_OP.apply(base);
             resultCode = irCoreLib.appendOrderbyOperator(ptrPlan, ptrOrder, oprIdx.getValue(), oprIdx);
+        } else if (base instanceof AuxiliaOp) {
+            Pointer prtAuxilia = TransformFactory.AUXILIA_OP.apply(base);
+            resultCode = irCoreLib.appendAuxiliaOperator(ptrPlan, prtAuxilia, oprIdx.getValue(), oprIdx);
         } else {
             throw new InterOpUnsupportedException(base.getClass(), "unimplemented yet");
         }
