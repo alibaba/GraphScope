@@ -26,6 +26,7 @@ import com.alibaba.graphscope.common.jna.type.*;
 import com.sun.jna.Pointer;
 import com.sun.jna.ptr.IntByReference;
 import org.apache.commons.io.FileUtils;
+import org.javatuples.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -176,6 +177,56 @@ public class IrPlan implements Closeable {
                 }
                 return ptrLimit;
             }
+        },
+        PROJECT_OP {
+            @Override
+            public Pointer apply(InterOpBase baseOp) {
+                ProjectOp op = (ProjectOp) baseOp;
+                Optional<OpArg> exprWithAlias = op.getProjectExprWithAlias();
+                if (!exprWithAlias.isPresent()) {
+                    throw new InterOpIllegalArgException(baseOp.getClass(), "exprWithAlias", "not present");
+                }
+                List<Pair> exprList = (List<Pair>) exprWithAlias.get().getArg();
+                if (exprList.isEmpty()) {
+                    throw new InterOpIllegalArgException(baseOp.getClass(), "exprWithAlias", "should not be empty");
+                }
+                // todo: make append configurable
+                Pointer ptrProject = irCoreLib.initProjectOperator(false);
+                exprList.forEach(pair -> {
+                    String expr = (String) pair.getValue0();
+                    FfiNameOrId.ByValue alias = (FfiNameOrId.ByValue) pair.getValue1();
+                    // todo: make isQueryGiven configurable
+                    irCoreLib.addProjectExprAlias(ptrProject, expr, alias, false);
+                });
+                if (baseOp.getAlias().isPresent()) {
+                    throw new InterOpIllegalArgException(baseOp.getClass(), "alias", "unimplemented yet");
+                }
+                return ptrProject;
+            }
+        },
+        ORDER_OP {
+            @Override
+            public Pointer apply(InterOpBase baseOp) {
+                OrderOp op = (OrderOp) baseOp;
+                Optional<OpArg> varWithOpt = op.getOrderVarWithOrder();
+                if (!varWithOpt.isPresent()) {
+                    throw new InterOpIllegalArgException(baseOp.getClass(), "varWithOrder", "not present");
+                }
+                List<Pair> orderList = (List<Pair>) varWithOpt.get().getArg();
+                if (orderList.isEmpty()) {
+                    throw new InterOpIllegalArgException(baseOp.getClass(), "varWithOrder", "should not be empty");
+                }
+                Pointer ptrOrder = irCoreLib.initOrderbyOperator();
+                orderList.forEach(pair -> {
+                    FfiVariable.ByValue var = (FfiVariable.ByValue) pair.getValue0();
+                    FfiOrderOpt opt = (FfiOrderOpt) pair.getValue1();
+                    irCoreLib.addOrderbyPair(ptrOrder, var, opt);
+                });
+                if (baseOp.getAlias().isPresent()) {
+                    throw new InterOpIllegalArgException(baseOp.getClass(), "alias", "unimplemented yet");
+                }
+                return ptrOrder;
+            }
         }
     }
 
@@ -226,6 +277,12 @@ public class IrPlan implements Closeable {
         } else if (base instanceof LimitOp) {
             Pointer ptrLimit = TransformFactory.LIMIT_OP.apply(base);
             resultCode = irCoreLib.appendLimitOperator(ptrPlan, ptrLimit, oprIdx.getValue(), oprIdx);
+        } else if (base instanceof ProjectOp) {
+            Pointer ptrProject = TransformFactory.PROJECT_OP.apply(base);
+            resultCode = irCoreLib.appendProjectOperator(ptrPlan, ptrProject, oprIdx.getValue(), oprIdx);
+        } else if (base instanceof OrderOp) {
+            Pointer ptrOrder = TransformFactory.ORDER_OP.apply(base);
+            resultCode = irCoreLib.appendOrderbyOperator(ptrPlan, ptrOrder, oprIdx.getValue(), oprIdx);
         } else {
             throw new InterOpUnsupportedException(base.getClass(), "unimplemented yet");
         }

@@ -86,7 +86,7 @@ public interface IrCoreLibrary extends Library {
 
     Pointer initProjectOperator(boolean isAppend);
 
-    ResultCode addProjectMapping(Pointer project, String expr, FfiNameOrId.ByValue alias, boolean isQueryGiven);
+    ResultCode addProjectExprAlias(Pointer project, String expr, FfiNameOrId.ByValue alias, boolean isQueryGiven);
 
     ResultCode appendProjectOperator(Pointer plan, Pointer project, int parent, IntByReference oprIdx);
 

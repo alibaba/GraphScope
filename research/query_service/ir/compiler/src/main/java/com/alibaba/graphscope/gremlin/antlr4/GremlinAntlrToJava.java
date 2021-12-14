@@ -22,6 +22,9 @@ import org.apache.tinkerpop.gremlin.language.grammar.GremlinGSBaseVisitor;
 import org.apache.tinkerpop.gremlin.language.grammar.GremlinGSParser;
 import org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.GraphTraversal;
 import org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.GraphTraversalSource;
+import org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.__;
+
+import java.util.function.Supplier;
 
 public class GremlinAntlrToJava extends GremlinGSBaseVisitor<Object> {
     final GraphTraversalSource g;
@@ -30,12 +33,17 @@ public class GremlinAntlrToJava extends GremlinGSBaseVisitor<Object> {
     final GremlinGSBaseVisitor<GraphTraversal> tvisitor;
 
     private static GremlinAntlrToJava instance;
+    private static Supplier<GraphTraversal<?, ?>> traversalSupplier = __::start;
 
     public static GremlinAntlrToJava getInstance(GraphTraversalSource g) {
         if (instance == null) {
             instance = new GremlinAntlrToJava(g);
         }
         return instance;
+    }
+
+    public static Supplier<GraphTraversal<?, ?>> getTraversalSupplier() {
+        return traversalSupplier;
     }
 
     private GremlinAntlrToJava(GraphTraversalSource g) {

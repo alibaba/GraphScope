@@ -21,18 +21,20 @@ import com.alibaba.graphscope.common.exception.OpArgIllegalException;
 import com.alibaba.graphscope.gremlin.exception.UnsupportedStepException;
 import com.alibaba.graphscope.common.intermediate.operator.*;
 import com.alibaba.graphscope.common.jna.type.FfiScanOpt;
+import com.google.common.collect.ImmutableMap;
 import org.apache.tinkerpop.gremlin.process.traversal.Step;
 import org.apache.tinkerpop.gremlin.process.traversal.Traversal;
 import org.apache.tinkerpop.gremlin.process.traversal.step.filter.HasStep;
 import org.apache.tinkerpop.gremlin.process.traversal.step.filter.RangeGlobalStep;
-import org.apache.tinkerpop.gremlin.process.traversal.step.map.GraphStep;
-import org.apache.tinkerpop.gremlin.process.traversal.step.map.VertexStep;
+import org.apache.tinkerpop.gremlin.process.traversal.step.map.*;
 import org.apache.tinkerpop.gremlin.process.traversal.step.util.HasContainer;
+import org.apache.tinkerpop.gremlin.process.traversal.util.DefaultTraversal;
 import org.apache.tinkerpop.gremlin.structure.T;
 import org.apache.tinkerpop.gremlin.tinkergraph.process.traversal.step.sideEffect.TinkerGraphStep;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -129,6 +131,40 @@ public class IrPlanBuidler {
                 op.setUpper(new OpArg(Integer.valueOf(upper), Function.identity()));
                 return op;
             }
+        },
+        SELECT_BY_STEP {
+            @Override
+            public InterOpBase apply(Step step) {
+                SelectStep selectStep = (SelectStep) step;
+                Map<String, Traversal> byTraversals = selectStep.getByTraversals();
+                ProjectOp op = new ProjectOp();
+                if (!byTraversals.isEmpty()) {
+                    op.setProjectExprWithAlias(new OpArg(byTraversals, OpArgTransformFactory.PROJECT_EXPR_FROM_BY_TRAVERSALS));
+                }
+                return op;
+            }
+        },
+        ORDER_BY_STEP {
+            @Override
+            public InterOpBase apply(Step step) {
+                OrderGlobalStep orderStep = (OrderGlobalStep) step;
+                OrderOp op = new OrderOp();
+                if (!orderStep.getComparators().isEmpty()) {
+                    op.setOrderVarWithOrder(new OpArg(orderStep.getComparators(), OpArgTransformFactory.ORDER_VAR_FROM_COMPARATORS));
+                }
+                return op;
+            }
+        },
+        VALUE_MAP_STEP {
+            @Override
+            public InterOpBase apply(Step step) {
+                PropertyMapStep valueMapStep = (PropertyMapStep) step;
+                ProjectOp op = new ProjectOp();
+                Traversal.Admin valueTraversal = (new DefaultTraversal()).addStep(valueMapStep);
+                Map<String, Traversal.Admin> valueMap = ImmutableMap.of("", valueTraversal);
+                op.setProjectExprWithAlias(new OpArg(valueMap, OpArgTransformFactory.PROJECT_EXPR_FROM_BY_TRAVERSALS));
+                return op;
+            }
         }
     }
 
@@ -149,6 +185,12 @@ public class IrPlanBuidler {
                 op = StepTransformFactory.HAS_STEP.apply(step);
             } else if (equalClass(step, RangeGlobalStep.class)) {
                 op = StepTransformFactory.LIMIT_STEP.apply(step);
+            } else if (equalClass(step, SelectStep.class)) {
+                op = StepTransformFactory.SELECT_BY_STEP.apply(step);
+            } else if (equalClass(step, OrderGlobalStep.class)) {
+                op = StepTransformFactory.ORDER_BY_STEP.apply(step);
+            } else if (equalClass(step, PropertyMapStep.class)) {
+                op = StepTransformFactory.VALUE_MAP_STEP.apply(step);
             } else {
                 throw new UnsupportedStepException(step.getClass(), "unimplemented yet");
             }
