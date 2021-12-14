@@ -71,7 +71,6 @@ def to_networkx_graph(data, create_using=None, multigraph_input=False):  # noqa:
         a multigraph from a multigraph.
     """
     # networkx graph or graphscope.nx graph
-    print(data, type(data))
     if hasattr(data, "adj"):
         try:
             result = from_dict_of_dicts(
