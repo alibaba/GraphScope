@@ -18,15 +18,15 @@ package com.alibaba.pegasus.builder;
 import com.alibaba.pegasus.intf.NestedFunc;
 import com.alibaba.pegasus.service.protocol.PegasusClient.Communicate;
 import com.alibaba.pegasus.service.protocol.PegasusClient.Sink;
-import com.alibaba.pegasus.service.protocol.PegasusClient.OrderBy;
-import com.alibaba.pegasus.service.protocol.PegasusClient.Union;
-import com.alibaba.pegasus.service.protocol.PegasusClient.Subtask;
+import com.alibaba.pegasus.service.protocol.PegasusClient.SortBy;
+import com.alibaba.pegasus.service.protocol.PegasusClient.Merge;
+import com.alibaba.pegasus.service.protocol.PegasusClient.Apply;
 import com.alibaba.pegasus.service.protocol.PegasusClient.LeftJoin;
 import com.alibaba.pegasus.service.protocol.PegasusClient.TaskPlan;
 import com.alibaba.pegasus.service.protocol.PegasusClient.Iteration;
 import com.alibaba.pegasus.service.protocol.PegasusClient.OperatorDef;
 import com.alibaba.pegasus.service.protocol.PegasusClient.OperatorDef.OpKindCase;
-import com.alibaba.pegasus.service.protocol.PegasusClient.Exchange;
+import com.alibaba.pegasus.service.protocol.PegasusClient.Repartition;
 import com.alibaba.pegasus.service.protocol.PegasusClient.Broadcast;
 import com.alibaba.pegasus.service.protocol.PegasusClient.Aggregate;
 import com.alibaba.pegasus.service.protocol.PegasusClient.Map;
@@ -67,7 +67,7 @@ public class Plan {
     }
 
     public void exchange(ByteString route) {
-        Exchange exchange = Exchange
+        Repartition exchange = Repartition
                 .newBuilder()
                 .setResource(route)
                 .build();
@@ -305,13 +305,13 @@ public class Plan {
                 .newBuilder()
                 .addAllPlan(subPlan.getPlan())
                 .build();
-        Subtask subtask = Subtask
+        Apply subtask = Apply
                 .newBuilder()
                 .setTask(taskPlan)
                 .build();
         OperatorDef operatorDef = OperatorDef
                 .newBuilder()
-                .setSubtask(subtask)
+                .setApply(subtask)
                 .build();
         this.plan.add(operatorDef);
     }
@@ -323,13 +323,13 @@ public class Plan {
                 .newBuilder()
                 .addAllPlan(subPlan.getPlan())
                 .build();
-        Subtask subtask = Subtask
+        Apply subtask = Apply
                 .newBuilder()
                 .setTask(taskPlan)
                 .build();
         OperatorDef operatorDef = OperatorDef
                 .newBuilder()
-                .setSubtask(subtask)
+                .setApply(subtask)
                 .build();
         this.plan.add(operatorDef);
     }
@@ -343,14 +343,14 @@ public class Plan {
                 .newBuilder()
                 .setResource(joiner)
                 .build();
-        Subtask subtask = Subtask
+        Apply subtask = Apply
                 .newBuilder()
                 .setTask(taskPlan)
                 .setJoin(leftJoin)
                 .build();
         OperatorDef operatorDef = OperatorDef
                 .newBuilder()
-                .setSubtask(subtask)
+                .setApply(subtask)
                 .build();
         this.plan.add(operatorDef);
     }
@@ -366,14 +366,14 @@ public class Plan {
                 .newBuilder()
                 .setResource(joiner)
                 .build();
-        Subtask subtask = Subtask
+        Apply subtask = Apply
                 .newBuilder()
                 .setTask(taskPlan)
                 .setJoin(leftJoin)
                 .build();
         OperatorDef operatorDef = OperatorDef
                 .newBuilder()
-                .setSubtask(subtask)
+                .setApply(subtask)
                 .build();
         this.plan.add(operatorDef);
     }
@@ -385,40 +385,40 @@ public class Plan {
                         .newBuilder()
                         .addAllPlan(plan.getPlan())
                         .build()));
-        Union union = Union
+        Merge union = Merge
                 .newBuilder()
-                .addAllBranches(unionTasks)
+                .addAllTasks(unionTasks)
                 .build();
         OperatorDef operatorDef = OperatorDef
                 .newBuilder()
-                .setUnion(union)
+                .setMerge(union)
                 .build();
         this.plan.add(operatorDef);
     }
 
     public void sortBy(ByteString cmp) {
         int noLimit = -1;
-        OrderBy orderBy = OrderBy
+        SortBy orderBy = SortBy
                 .newBuilder()
                 .setLimit(noLimit)
                 .setCompare(cmp)
                 .build();
         OperatorDef operatorDef = OperatorDef
                 .newBuilder()
-                .setOrder(orderBy)
+                .setSort(orderBy)
                 .build();
         this.plan.add(operatorDef);
     }
 
     public void topBy(int n, ByteString cmp) {
-        OrderBy orderBy = OrderBy
+        SortBy orderBy = SortBy
                 .newBuilder()
                 .setLimit(n)
                 .setCompare(cmp)
                 .build();
         OperatorDef operatorDef = OperatorDef
                 .newBuilder()
-                .setOrder(orderBy)
+                .setSort(orderBy)
                 .build();
         this.plan.add(operatorDef);
     }

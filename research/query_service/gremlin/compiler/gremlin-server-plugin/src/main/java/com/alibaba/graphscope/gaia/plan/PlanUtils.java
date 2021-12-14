@@ -224,20 +224,20 @@ public class PlanUtils {
                 List<Object> body = new ArrayList<>();
                 op.getIterate().getBody().getPlanList().forEach(p -> body.add(printOpr(p)));
                 results.put("body", body);
-            } else if (op.getOpKindCase() == PegasusClient.OperatorDef.OpKindCase.SUBTASK) {
+            } else if (op.getOpKindCase() == PegasusClient.OperatorDef.OpKindCase.APPLY) {
                 List<Object> subtask = new ArrayList<>();
-                op.getSubtask().getTask().getPlanList().forEach(p -> subtask.add(printOpr(p)));
+                op.getApply().getTask().getPlanList().forEach(p -> subtask.add(printOpr(p)));
                 results.put("subtask", subtask);
-            } else if (op.getOpKindCase() == PegasusClient.OperatorDef.OpKindCase.ORDER) {
-                results.put("limit", op.getOrder().getLimit());
-                results.put("compare", printGremlinStep(op.getOrder().getCompare()));
+            } else if (op.getOpKindCase() == PegasusClient.OperatorDef.OpKindCase.SORT) {
+                results.put("limit", op.getSort().getLimit());
+                results.put("compare", printGremlinStep(op.getSort().getCompare()));
             } else if (op.getOpKindCase() == PegasusClient.OperatorDef.OpKindCase.GROUP) {
                 results.put("map", printGremlinStep(op.getGroup().getResource()));
                 results.put("accum", op.getGroup().getAccumValue());
-            } else if (op.getOpKindCase() == PegasusClient.OperatorDef.OpKindCase.UNION) {
-                for (int i = 0; i < op.getUnion().getBranchesList().size(); ++i) {
+            } else if (op.getOpKindCase() == PegasusClient.OperatorDef.OpKindCase.MERGE) {
+                for (int i = 0; i < op.getMerge().getTasksList().size(); ++i) {
                     List<Object> branches = new ArrayList<>();
-                    op.getUnion().getBranches(i).getPlanList().forEach(p -> branches.add(printOpr(p)));
+                    op.getMerge().getTasks(i).getPlanList().forEach(p -> branches.add(printOpr(p)));
                     results.put(String.format("branch-%d", i), branches);
                 }
             } else if (op.getOpKindCase() == PegasusClient.OperatorDef.OpKindCase.MAP) {
