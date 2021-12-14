@@ -48,7 +48,7 @@ on:
       - '.github/workflows/build-graphscope-wheels-linux.yml'
       - '.github/workflows/build-graphscope-wheels-maos.yml'
 
-configuration:
+env:
   DOCKER_URL: registry.cn-hongkong.aliyuncs.com
   GS_IMAGE: registry.cn-hongkong.aliyuncs.com/graphscope/graphscope
 
@@ -162,10 +162,10 @@ jobs:
       # if: ${{ github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v') && github.repository == 'alibaba/GraphScope' }}
       if: ${{ github.ref == 'refs/heads/main' && github.repository == 'alibaba/GraphScope' }}
       run: |
-        echo ${{ secrets.DOCKER_PASSWORD }} | sudo docker login --username=${{ secrets.DOCKER_USER }} ${{ configuration.DOCKER_URL }} --password-stdin
+        echo ${{ secrets.DOCKER_PASSWORD }} | sudo docker login --username=${{ secrets.DOCKER_USER }} ${{ env.DOCKER_URL }} --password-stdin
         sudo docker tag graphscope/graphscope:${SHORT_SHA} \
-            ${{ configuration.GS_IMAGE }}:${{ steps.tag.outputs.TAG }}
-        sudo docker push ${{ configuration.GS_IMAGE }}:${{ steps.tag.outputs.TAG }}
+            ${{ env.GS_IMAGE }}:${{ steps.tag.outputs.TAG }}
+        sudo docker push ${{ env.GS_IMAGE }}:${{ steps.tag.outputs.TAG }}
 
   ubuntu-python-test:
     if: ${{ github.ref == 'refs/heads/main' && github.repository == 'alibaba/GraphScope' }}
