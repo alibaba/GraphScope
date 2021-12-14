@@ -8,9 +8,6 @@ on:
     # Trigger the workflow at 03:00(CST) every day.
     - cron:  '00 19 * * *'
 
-env:
-  VINEYARD_IMAGE: registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-vineyard:v0.3.12
-
 jobs:
   forward-algo-test:
     if: ${{ github.ref == 'refs/heads/main' && github.repository == 'alibaba/GraphScope' }}
@@ -19,7 +16,7 @@ jobs:
       run:
         shell: bash --noprofile --norc -eo pipefail {0}
     container:
-      image: ${{ env.VINEYARD_IMAGE }}
+      image: registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-vineyard:v0.3.12
       options:
         --shm-size 4096m
 

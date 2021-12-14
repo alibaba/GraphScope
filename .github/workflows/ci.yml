@@ -540,8 +540,7 @@ jobs:
           # build graphscope image
           cd ${GITHUB_WORKSPACE}
           make graphscope-image
-          sudo docker tag graphscope/graphscope:${SHORT_SHA} \
-              ${{ env.GS_IMAGE }}:${SHORT_SHA}
+          sudo docker tag graphscope/graphscope:${SHORT_SHA} ${{ env.GS_IMAGE }}:${SHORT_SHA}
 
           # build python client proto
           cd ${GITHUB_WORKSPACE}/python

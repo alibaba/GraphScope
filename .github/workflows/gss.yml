@@ -34,7 +34,6 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  VINEYARD_IMAGE: registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-vineyard:v0.3.12
   GSS_IMAGE: registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-store
 
 jobs:
@@ -44,7 +43,7 @@ jobs:
     # be configured manually when a new self-hosted runner is added.
     runs-on: self-hosted
     container:
-      image: ${{ env.VINEYARD_IMAGE }}
+      image: registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-vineyard:v0.3.12
     defaults:
       run:
         shell: bash --noprofile --norc -eo pipefail {0}

@@ -28,14 +28,11 @@ concurrency:
   group: ${{ github.repository }}-${{ github.head_ref || github.sha }}-${{ github.workflow }}
   cancel-in-progress: true
 
-env:
-  VINEYARD_IMAGE: registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-vineyard:v0.3.12
-
 jobs:
   build-gae:
     runs-on: ubuntu-20.04
     container:
-      image: ${{ env.VINEYARD_IMAGE }}
+      image: registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-vineyard:v0.3.12
       options:
         --shm-size 4096m
     steps:
