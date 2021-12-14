@@ -413,6 +413,7 @@ def unify_type(t):
             np.bool8: graph_def_pb2.BOOL,
             list: graph_def_pb2.INT_LIST,
             tuple: graph_def_pb2.INT_LIST,
+            dict: graph_def_pb2.INT_LIST,
         }
         return unify_types[t]
     elif isinstance(t, int):  # graph_def_pb2.DataType

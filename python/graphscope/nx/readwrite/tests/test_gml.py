@@ -1,27 +1,127 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 #
-# Copyright 2020 Alibaba Group Holding Limited. All Rights Reserved.
+# This file is referred and derived from project NetworkX
 #
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
+# which has the following license:
 #
-#     http://www.apache.org/licenses/LICENSE-2.0
+# Copyright (C) 2004-2020, NetworkX Developers
+# Aric Hagberg <hagberg@lanl.gov>
+# Dan Schult <dschult@colgate.edu>
+# Pieter Swart <swart@lanl.gov>
+# All rights reserved.
 #
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
+# This file is part of NetworkX.
+#
+# NetworkX is distributed under a BSD license; see LICENSE.txt for more
+# information.
 #
 
 import networkx.readwrite.tests.test_gml
 import pytest
+from networkx.readwrite.tests.test_gml import TestGraph
 
+from graphscope import nx
 from graphscope.nx.utils.compat import import_as_graphscope_nx
+from graphscope.nx.utils.compat import with_graphscope_nx_context
 
 import_as_graphscope_nx(
     networkx.readwrite.tests.test_gml,
     decorators=pytest.mark.usefixtures("graphscope_session"),
 )
+
+
+@pytest.mark.usefixtures("graphscope_session")
+@with_graphscope_nx_context(TestGraph)
+class TestGraph:
+    def test_tuplelabels(self):
+        # https://github.com/networkx/networkx/pull/1048
+        # Writing tuple labels to GML failed.
+        G = nx.Graph()
+        G.add_edge((0, 1), (1, 0))
+        data = "\n".join(nx.generate_gml(G, stringizer=literal_stringizer))
+        answer = """graph [
+  node [
+    id 0
+    label "(0,1)"
+  ]
+  node [
+    id 1
+    label "(1,0)"
+  ]
+  edge [
+    source 0
+    target 1
+  ]
+]"""
+        assert data == answer
+
+    def test_data_types(self):
+        # NB: json can't use tuple, byte as key
+        data = [
+            True,
+            False,
+            10 ** 10,  # 10 ** 20 overflow on folly::dynamic
+            -2e33,
+            "'",
+            '"&&amp;&&#34;"',
+            [{"\xfd": "\x7f", chr(0x4444): [1, 2]}, [2, "3"]],
+        ]
+        try:  # fails under IronPython
+            data.append(chr(0x14444))
+        except ValueError:
+            data.append(chr(0x1444))
+        G = nx.Graph()
+        G.name = data
+        G.graph["data"] = data
+        print(dict(data=data))
+        G.add_node(0, int=-1, data=dict(data=data))
+        G.add_edge(0, 0, float=-2.5, data=data)
+        gml = "\n".join(nx.generate_gml(G, stringizer=literal_stringizer))
+        G = nx.parse_gml(gml, destringizer=literal_destringizer)
+        assert data == G.name
+        assert {"name": data, "data": data} == G.graph
+        assert list(G.nodes(data=True)) == [(0, dict(int=-1, data=dict(data=data)))]
+        assert list(G.edges(data=True)) == [(0, 0, dict(float=-2.5, data=data))]
+        G = nx.Graph()
+        G.graph["data"] = "frozenset([1, 2, 3])"
+        G = nx.parse_gml(nx.generate_gml(G), destringizer=literal_eval)
+        assert G.graph["data"] == "frozenset([1, 2, 3])"
+
+    def test_tuplelabels(self):
+        # https://github.com/networkx/networkx/pull/1048
+        # Writing tuple labels to GML failed.
+        G = nx.Graph()
+        G.add_edge((0, 1), (1, 0))
+        data = "\n".join(nx.generate_gml(G, stringizer=literal_stringizer))
+        answer = (
+            """graph [
+  node [
+    id 0
+    label "(0,1)"
+  ]
+  node [
+    id 1
+    label "(1,0)"
+  ]
+  edge [
+    source 0
+    target 1
+  ]
+]""",
+            """graph [
+  node [
+    id 0
+    label "(1,0)"
+  ]
+  node [
+    id 1
+    label "(0,1)"
+  ]
+  edge [
+    source 0
+    target 1
+  ]
+]""",
+        )
+        assert data in answer

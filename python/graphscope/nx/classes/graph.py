@@ -769,7 +769,9 @@ class Graph(_GraphBase):
         """
         if self.graph_type == graph_def_pb2.ARROW_PROPERTY:
             n = self._convert_to_label_id_tuple(n)
-        op = dag_utils.report_graph(self, types_pb2.NODE_DATA, node=json.dumps([n]))
+        op = dag_utils.report_graph(
+            self, types_pb2.NODE_DATA, node=json.dumps([n], default=json_encoder)
+        )
         return op.eval()
 
     def number_of_nodes(self):
@@ -1077,14 +1079,7 @@ class Graph(_GraphBase):
         """
         self._convert_arrow_to_dynamic()
 
-        try:
-            edge = [json.dumps((u, v, data), default=json_encoder)]
-        except TypeError as e:
-            raise TypeError(
-                "The edge and its data {} failed to be serialized by json.".format(
-                    (u, v, data)
-                )
-            ) from e
+        edge = [json.dumps((u, v, data), default=json_encoder)]
         self._schema.add_nx_edge_properties(data)
         self._op = dag_utils.modify_edges(self, types_pb2.NX_UPDATE_EDGES, edge)
         return self._op.eval()
@@ -1119,14 +1114,7 @@ class Graph(_GraphBase):
         """
         self._convert_arrow_to_dynamic()
 
-        try:
-            node = [json.dumps((n, data), default=json_encoder)]
-        except TypeError as e:
-            raise NetworkXError(
-                "The node and its data {} failed to be serialized by json.".format(
-                    (n, data)
-                )
-            ) from e
+        node = [json.dumps((n, data), default=json_encoder)]
         self._op = dag_utils.modify_vertices(self, types_pb2.NX_UPDATE_NODES, node)
         return self._op.eval()
 
@@ -1928,7 +1916,8 @@ class Graph(_GraphBase):
                 lid=location[1],
                 label_id=location[2],
             )
-        return op.eval()
+        ret = op.eval()
+        return ret
 
     @parse_ret_as_dict
     def _get_nbrs(self, n, report_type=types_pb2.SUCCS_BY_NODE):

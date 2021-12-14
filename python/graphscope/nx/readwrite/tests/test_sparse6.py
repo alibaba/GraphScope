@@ -1,27 +1,41 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 #
-# Copyright 2020 Alibaba Group Holding Limited. All Rights Reserved.
+# This file is referred and derived from project NetworkX
 #
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
+# which has the following license:
 #
-#     http://www.apache.org/licenses/LICENSE-2.0
+# Copyright (C) 2004-2020, NetworkX Developers
+# Aric Hagberg <hagberg@lanl.gov>
+# Dan Schult <dschult@colgate.edu>
+# Pieter Swart <swart@lanl.gov>
+# All rights reserved.
 #
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
+# This file is part of NetworkX.
+#
+# NetworkX is distributed under a BSD license; see LICENSE.txt for more
+# information.
 #
 
 import networkx.readwrite.tests.test_sparse6
 import pytest
+from networkx.readwrite.tests.test_sparse6 import TestWriteSparse6
 
 from graphscope.nx.utils.compat import import_as_graphscope_nx
+from graphscope.nx.utils.compat import with_graphscope_nx_context
 
 import_as_graphscope_nx(
     networkx.readwrite.tests.test_sparse6,
     decorators=pytest.mark.usefixtures("graphscope_session"),
 )
+
+
+@pytest.mark.usefixtures("graphscope_session")
+@with_graphscope_nx_context(TestWriteSparse6)
+class TestWriteSparse6:
+    @pytest.mark.slow
+    def test_very_large_empty_graph(self):
+        G = nx.empty_graph(258049)
+        result = BytesIO()
+        nx.write_sparse6(G, result)
+        assert result.getvalue() == b">>sparse6<<:~~???~?@\n"

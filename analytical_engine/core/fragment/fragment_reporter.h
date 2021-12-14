@@ -24,6 +24,7 @@
 #include <utility>
 
 #include "boost/lexical_cast.hpp"
+#include "double-conversion/double-conversion.h"
 #include "folly/dynamic.h"
 #include "folly/json.h"
 
@@ -52,6 +53,10 @@ class DynamicFragmentReporter : public grape::Communicator {
     InitCommunicator(comm_spec.comm());
     json_opts_.allow_non_string_keys = true;
     json_opts_.allow_nan_inf = true;
+    // N.B: default SHORTEST mode would omit floating digit like 1.0 -> 1,
+    // replace with FIXED mode and double digit num = 12
+    json_opts_.double_mode = double_conversion::DoubleToStringConverter::FIXED;
+    json_opts_.double_num_digits = 12;
   }
 
   bl::result<std::string> Report(std::shared_ptr<fragment_t>& fragment,
@@ -175,7 +180,7 @@ class DynamicFragmentReporter : public grape::Communicator {
                           const oid_t& n) {
     vertex_t v;
     if (fragment->GetInnerVertex(n, v) && fragment->IsAliveInnerVertex(v)) {
-      return folly::toJson(fragment->GetData(v));
+      return folly::json::serialize(fragment->GetData(v), json_opts_);
     }
     return std::string();
   }
@@ -557,7 +562,8 @@ class ArrowFragmentReporter<vineyard::ArrowFragment<OID_T, VID_T>>
                                                  col_id, ref_data);
       }
     }
-    return ref_data.isNull() ? std::string() : folly::toJson(ref_data);
+    return ref_data.isNull() ? std::string()
+                             : folly::json::serialize(ref_data, json_opts_);
   }
 
   std::string getEdgeData(std::shared_ptr<fragment_t>& fragment,
@@ -584,7 +590,8 @@ class ArrowFragmentReporter<vineyard::ArrowFragment<OID_T, VID_T>>
         }
       }
     }
-    return ref_data.isNull() ? std::string() : folly::toJson(ref_data);
+    return ref_data.isNull() ? std::string()
+                             : folly::json::serialize(ref_data, json_opts_);
   }
 
   std::string getNeighbors(std::shared_ptr<fragment_t>& fragment,
@@ -623,7 +630,8 @@ class ArrowFragmentReporter<vineyard::ArrowFragment<OID_T, VID_T>>
         }
       }
     }
-    return nbrs.empty() ? std::string() : folly::toJson(nbrs);
+    return nbrs.empty() ? std::string()
+                        : folly::json::serialize(nbrs, json_opts_);
   }
 
   std::string batchGetNodes(std::shared_ptr<fragment_t>& fragment, vid_t fid,
@@ -676,7 +684,7 @@ class ArrowFragmentReporter<vineyard::ArrowFragment<OID_T, VID_T>>
       // the start vertex location of next batch_get_nodes operation.
       ob["next"] = folly::dynamic::array(fid, start, label_id);
     }
-    return ob.empty() ? std::string() : folly::toJson(ob);
+    return ob.empty() ? std::string() : folly::json::serialize(ob, json_opts_);
   }
 
   grape::CommSpec comm_spec_;
