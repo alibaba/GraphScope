@@ -61,7 +61,10 @@ pub(crate) struct ReadParams {
 
 impl Default for ReadParams {
     fn default() -> Self {
-        ReadParams { mode: BlockMode::Nonblocking, slab_size: DEFAULT_SLAB_SIZE }
+        ReadParams {
+            mode: BlockMode::Nonblocking,
+            slab_size: DEFAULT_SLAB_SIZE,
+        }
     }
 }
 
@@ -76,7 +79,11 @@ impl ConnectionParams {
     pub fn nonblocking() -> Self {
         let write = WriteParams::default();
         let read = ReadParams::default();
-        ConnectionParams { is_nonblocking: true, write, read }
+        ConnectionParams {
+            is_nonblocking: true,
+            write,
+            read,
+        }
     }
 
     pub fn blocking() -> Self {
@@ -84,7 +91,11 @@ impl ConnectionParams {
         write.mode = BlockMode::Blocking(None);
         let mut read = ReadParams::default();
         read.mode = BlockMode::Blocking(None);
-        ConnectionParams { is_nonblocking: false, write, read }
+        ConnectionParams {
+            is_nonblocking: false,
+            write,
+            read,
+        }
     }
 
     pub fn set_read_timeout(&mut self, timeout: Duration) {
@@ -154,10 +165,7 @@ pub struct ServerAddr {
 
 impl ServerAddr {
     pub fn new(ip: String, port: u16) -> Self {
-        ServerAddr {
-            ip,
-            port
-        }
+        ServerAddr { ip, port }
     }
 
     pub fn get_ip(&self) -> &str {
@@ -184,7 +192,12 @@ impl NetworkConfig {
             servers[server_id as usize] = Some(addr);
             Some(servers)
         } else {
-            assert!((server_id as usize) < servers_size, "index out of bound, server_id({}) can't larger than server_size({})", server_id, servers_size);
+            assert!(
+                (server_id as usize) < servers_size,
+                "index out of bound, server_id({}) can't larger than server_size({})",
+                server_id,
+                servers_size
+            );
             None
         };
         NetworkConfig {
@@ -197,11 +210,11 @@ impl NetworkConfig {
             no_delay: None,
             send_buffer: None,
             heartbeat_sec: None,
-            servers
+            servers,
         }
     }
 
-    pub fn with(server_id: u64,  addrs: Vec<ServerAddr>) -> Self {
+    pub fn with(server_id: u64, addrs: Vec<ServerAddr>) -> Self {
         let servers_size = addrs.len();
         let servers = if servers_size > 0 {
             let mut servers = Vec::with_capacity(servers_size);
@@ -210,7 +223,12 @@ impl NetworkConfig {
             }
             Some(servers)
         } else {
-            assert!((server_id as usize) < servers_size, "index out of bound, server_id({}) can't larger than server_size({})", server_id, servers_size);
+            assert!(
+                (server_id as usize) < servers_size,
+                "index out of bound, server_id({}) can't larger than server_size({})",
+                server_id,
+                servers_size
+            );
             None
         };
         NetworkConfig {
@@ -223,7 +241,7 @@ impl NetworkConfig {
             no_delay: None,
             send_buffer: None,
             heartbeat_sec: None,
-            servers
+            servers,
         }
     }
 
@@ -236,7 +254,7 @@ impl NetworkConfig {
             Some(true) => {
                 self.set_nonblocking();
             }
-            _ => ()
+            _ => (),
         }
         self
     }
@@ -282,13 +300,12 @@ impl NetworkConfig {
         self
     }
 
-
     pub fn no_delay(&mut self, v: Option<bool>) -> &mut Self {
         match v {
             Some(true) => {
                 self.set_no_delay();
-            },
-            _ => ()
+            }
+            _ => (),
         }
         self
     }
@@ -322,12 +339,19 @@ impl NetworkConfig {
         self
     }
 
-    pub fn set_server_addr(&mut self, server_id: u64, addr: ServerAddr) -> Result<&mut Self, NetError> {
+    pub fn set_server_addr(
+        &mut self,
+        server_id: u64,
+        addr: ServerAddr,
+    ) -> Result<&mut Self, NetError> {
         if server_id as usize >= self.servers_size {
-            Err(NetError::InvalidConfig(Some(format!("invalid server_id({}) larger than server size {}", server_id, self.servers_size))))
+            Err(NetError::InvalidConfig(Some(format!(
+                "invalid server_id({}) larger than server size {}",
+                server_id, self.servers_size
+            ))))
         } else {
             if let Some(ref mut servers) = self.servers {
-               servers[server_id as usize] = Some(addr);
+                servers[server_id as usize] = Some(addr);
             } else {
                 unreachable!("servers is none while server size = {}", self.servers_size);
             }
@@ -342,10 +366,14 @@ impl NetworkConfig {
             if let Some(ref addr) = servers[index] {
                 Ok(SocketAddr::new(addr.ip.parse()?, addr.port))
             } else {
-                Err(NetError::InvalidConfig(Some("local server address not found".to_owned())))
+                Err(NetError::InvalidConfig(Some(
+                    "local server address not found".to_owned(),
+                )))
             }
         } else {
-            Err(NetError::InvalidConfig(Some("local server address not found".to_owned())))
+            Err(NetError::InvalidConfig(Some(
+                "local server address not found".to_owned(),
+            )))
         }
     }
 
@@ -397,10 +425,16 @@ impl NetworkConfig {
                 if let Some(peer) = p {
                     let ip = peer.ip.parse()?;
                     let addr = SocketAddr::new(ip, peer.port);
-                    let server = Server { id: id as u64, addr };
+                    let server = Server {
+                        id: id as u64,
+                        addr,
+                    };
                     servers.push(server);
                 } else {
-                    return Err(NetError::InvalidConfig(Some(format!("addredd of server {} not found", id))));
+                    return Err(NetError::InvalidConfig(Some(format!(
+                        "addredd of server {} not found",
+                        id
+                    ))));
                 }
             }
             Ok(Some(servers))
