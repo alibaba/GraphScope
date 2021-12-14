@@ -134,14 +134,15 @@ class HostsClusterLauncher(Launcher):
             encoding="utf-8",
             errors="replace",
             stdin=subprocess.DEVNULL,
-            stdout=subprocess.PIPE if gs_config.show_log else subprocess.DEVNULL,
+            stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
             universal_newlines=True,
             bufsize=1,
         )
-        if gs_config.show_log:
-            stdout_watcher = PipeWatcher(process.stdout, sys.stdout)
-            setattr(process, "stdout_watcher", stdout_watcher)
+        stdout_watcher = PipeWatcher(process.stdout, sys.stdout)
+        if not gs_config.show_log:
+            stdout_watcher.addFilter(lambda line: "Loading" in line and "it/s]" in line)
+        setattr(process, "stdout_watcher", stdout_watcher)
         stderr_watcher = PipeWatcher(process.stderr, sys.stderr)
         setattr(process, "stderr_watcher", stderr_watcher)
         self._proc = process

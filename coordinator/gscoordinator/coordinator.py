@@ -32,7 +32,6 @@ import signal
 import string
 import sys
 import threading
-import time
 import traceback
 import urllib.parse
 import urllib.request
@@ -625,17 +624,13 @@ class CoordinatorServiceServicer(
     def FetchLogs(self, request, context):
         while self._streaming_logs:
             try:
-                tag, message = self._pipe_merged.poll(timeout=2)
+                info_message, error_message = self._pipe_merged.poll(timeout=2)
             except queue.Empty:
-                tag, message = "", ""
+                info_message, error_message = "", ""
             except Exception as e:
-                tag, message = "out", "WARNING: failed to read log: %s" % e
+                info_message, error_message = "WARNING: failed to read log: %s" % e, ""
 
-            if tag and message:
-                if tag == "err":
-                    info_message, error_message = "", message
-                elif tag == "out":
-                    info_message, error_message = message, ""
+            if info_message and error_message:
                 if self._streaming_logs:
                     yield message_pb2.FetchLogsResponse(
                         info_message=info_message, error_message=error_message

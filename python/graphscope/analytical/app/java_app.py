@@ -16,7 +16,6 @@
 # limitations under the License.
 #
 
-# from coordinator.gscoordinator.io_utils import PipeWatcher
 import hashlib
 import json
 import logging
