@@ -10,6 +10,7 @@ name: Build GraphScope Wheels on Linux
 #   push:
 #     tags:
 #       - "v*"
+
 on:
   # Trigger the workflow on push or pull request,
   # but only for the main branch
@@ -36,7 +37,7 @@ env:
 
 jobs:
   build-wheels:
-    if: ${{ github.ref == 'refs/heads/main' && github.repository == 'alibaba/GraphScope' }}
+    # if: ${{ github.ref == 'refs/heads/main' && github.repository == 'alibaba/GraphScope' }}
     runs-on: ubuntu-20.04
 
     steps:
@@ -86,7 +87,7 @@ jobs:
     # We do this, since failures on test.pypi aren't that bad
     - name: Publish to Test PyPI
       # if: ${{ github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v') && github.repository == 'alibaba/GraphScope' }}
-      if: ${{ github.ref == 'refs/heads/main' && github.repository == 'alibaba/GraphScope' }}
+      # if: ${{ github.ref == 'refs/heads/main' && github.repository == 'alibaba/GraphScope' }}
       uses: pypa/gh-action-pypi-publish@v1.4.2
       with:
         user: __token__
@@ -96,7 +97,7 @@ jobs:
 
     - name: Publish distribution to PyPI
       # if: ${{ github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v') && github.repository == 'alibaba/GraphScope' }}
-      if: ${{ github.ref == 'refs/heads/main' && github.repository == 'alibaba/GraphScope' }}
+      # if: ${{ github.ref == 'refs/heads/main' && github.repository == 'alibaba/GraphScope' }}
       uses: pypa/gh-action-pypi-publish@v1.4.2
       with:
         user: __token__
@@ -104,7 +105,7 @@ jobs:
         packages_dir: upload_pypi/
 
   build-image:
-    if: ${{ github.ref == 'refs/heads/main' && github.repository == 'alibaba/GraphScope' }}
+    # if: ${{ github.ref == 'refs/heads/main' && github.repository == 'alibaba/GraphScope' }}
     runs-on: ubuntu-20.04
     needs: [build-wheels]
 
@@ -135,14 +136,14 @@ jobs:
       id: tag
       env:
          GITHUB_REF_DUMMY: refs/tags/v0.9.1
-      if: ${{ github.ref == 'refs/heads/main' && github.repository == 'alibaba/GraphScope' }}
+      # if: ${{ github.ref == 'refs/heads/main' && github.repository == 'alibaba/GraphScope' }}
       run: echo ::set-output name=TAG::${GITHUB_REF_DUMMY#refs/tags/v}
       # if: ${{ github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v') }}
       # run: echo ::set-output name=TAG::${GITHUB_REF#refs/tags/v}
 
     - name: Release Image
       # if: ${{ github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v') && github.repository == 'alibaba/GraphScope' }}
-      if: ${{ github.ref == 'refs/heads/main' && github.repository == 'alibaba/GraphScope' }}
+      # if: ${{ github.ref == 'refs/heads/main' && github.repository == 'alibaba/GraphScope' }}
       run: |
         echo ${{ secrets.DOCKER_PASSWORD }} | sudo docker login --username=${{ secrets.DOCKER_USER }} ${{ env.DOCKER_URL }} --password-stdin
         sudo docker tag graphscope/graphscope:${SHORT_SHA} \
