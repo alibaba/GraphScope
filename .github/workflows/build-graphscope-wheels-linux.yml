@@ -11,6 +11,10 @@ on:
     tags:
       - "v*"
 
+configuration:
+  DOCKER_URL: registry.cn-hongkong.aliyuncs.com
+  GS_IMAGE: registry.cn-hongkong.aliyuncs.com/graphscope/graphscope
+
 jobs:
   build-wheels:
     if: ${{ github.ref == 'refs/heads/main' && github.repository == 'alibaba/GraphScope' }}
@@ -105,21 +109,19 @@ jobs:
 
         cd ${GITHUB_WORKSPACE}
         sudo make graphscope-image
-        sudo docker tag graphscope/graphscope:${SHORT_SHA} \
-             registry.cn-hongkong.aliyuncs.com/graphscope/graphscope:${SHORT_SHA}
 
-    - name: Extract tag name
+    - name: Extract Tag Name
       id: tag
       if: ${{ github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v') }}
       run: echo ::set-output name=TAG::${GITHUB_REF#refs/tags/v}
 
-    - name: Release Images
+    - name: Release Image
       if: ${{ github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v') && github.repository == 'alibaba/GraphScope' }}
       run: |
-        echo ${{ secrets.ALIYUN_TOKEN }} | sudo docker login --username=${{ secrets.ALIYUN_USER }} registry.cn-hongkong.aliyuncs.com --password-stdin
+        echo ${{ secrets.DOCKER_PASSWORD }} | sudo docker login --username=${{ secrets.DOCKER_USER }} ${{ configuration.DOCKER_URL }} --password-stdin
         sudo docker tag graphscope/graphscope:${SHORT_SHA} \
-            registry.cn-hongkong.aliyuncs.com/graphscope/graphscope:${{ steps.tag.outputs.TAG }}
-        sudo docker push registry.cn-hongkong.aliyuncs.com/graphscope/graphscope:${{ steps.tag.outputs.TAG }}
+            ${{ configuration.GS_IMAGE }}:${{ steps.tag.outputs.TAG }}
+        sudo docker push ${{ configuration.GS_IMAGE }}:${{ steps.tag.outputs.TAG }}
 
   ubuntu-python-test:
     if: ${{ github.ref == 'refs/heads/main' && github.repository == 'alibaba/GraphScope' }}

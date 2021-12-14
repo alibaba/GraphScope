@@ -42,6 +42,9 @@ concurrency:
   group: ${{ github.repository }}-${{ github.head_ref || github.sha }}-${{ github.workflow }}
   cancel-in-progress: true
 
+configuration:
+  GS_IMAGE: registry.cn-hongkong.aliyuncs.com/graphscope/graphscope
+
 jobs:
   # JOB to run change detection
   changes:
@@ -537,7 +540,7 @@ jobs:
           cd ${GITHUB_WORKSPACE}
           make graphscope-image
           sudo docker tag graphscope/graphscope:${SHORT_SHA} \
-              registry.cn-hongkong.aliyuncs.com/graphscope/graphscope:${SHORT_SHA}
+              ${{ configuration.GS_IMAGE }}:${SHORT_SHA}
 
           # build python client proto
           cd ${GITHUB_WORKSPACE}/python
@@ -558,7 +561,7 @@ jobs:
           git clone -b master --single-branch --depth=1 https://github.com/7br/gstest.git ${GS_TEST_DIR}
 
           # set GS_IMAGE
-          export GS_IMAGE=registry.cn-hongkong.aliyuncs.com/graphscope/graphscope:${SHORT_SHA}
+          export GS_IMAGE=${{ configuration.GS_IMAGE }}:${SHORT_SHA}
 
           cd ${GITHUB_WORKSPACE}/python
           python3 -m pytest --ignore=./graphscope/tests/kubernetes/test_store_service.py \
@@ -591,7 +594,7 @@ jobs:
           JAVA_HOME: /usr/lib/jvm/default-java
           GS_TEST_DIR: ${{ github.workspace }}/gstest
         run: |
-          export GS_IMAGE=registry.cn-hongkong.aliyuncs.com/graphscope/graphscope:${SHORT_SHA}
+          export GS_IMAGE=${{ configuration.GS_IMAGE }}:${SHORT_SHA}
 
           # install hadoop HDFS
           cd /tmp
@@ -623,6 +626,6 @@ jobs:
           HADOOP_SSH_OPTS="-o StrictHostKeyChecking=no" /tmp/hadoop-2.10.1/sbin/stop-dfs.sh || true
           rm -rf /tmp/hadoop* || true
           sudo docker rmi -f graphscope/graphscope:${SHORT_SHA} || true
-          sudo docker rmi -f registry.cn-hongkong.aliyuncs.com/graphscope/graphscope:${SHORT_SHA} || true
+          sudo docker rmi -f ${{ configuration.GS_IMAGE }}:${SHORT_SHA} || true
           helm uninstall graphscope || true
           kubectl delete pod graphscope-test-rpc-service --wait=false || true

@@ -1,0 +1,100 @@
+name: Cut Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+configuration:
+  DOCKER_URL: registry.cn-hongkong.aliyuncs.com
+  GSS_IMAGE: registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-store
+  HELM_CHARTS_URL: https://graphscope.oss-cn-beijing.aliyuncs.com/charts/
+  OSS_REGION: oss-cn-beijing.aliyuncs.com
+
+jobs:
+  release-gss-image:
+    if: ${{ github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v') && github.repository == 'alibaba/GraphScope' }}
+    runs-on: ubuntu-20.04
+    steps:
+    - uses: actions/checkout@v2.3.2
+
+    - name: Add envs to GITHUB_ENV
+      run: |
+        short_sha=$(git rev-parse --short HEAD)
+        echo "SHORT_SHA=${short_sha}" >> $GITHUB_ENV
+
+    - name: Build GraphScope Store Image
+      run: |
+        cd ${GITHUB_WORKSPACE}
+        sudo make graphscope-store-image
+
+    - name: Extract Tag Name
+      id: tag
+      run: echo ::set-output name=TAG::${GITHUB_REF#refs/tags/v}
+
+    - name: Release Image
+      run: |
+        echo ${{ secrets.DOCKER_PASSWORD }} | sudo docker login --username=${{ secrets.DOCKER_USER }} ${{ configuration.DOCKER_URL }} --password-stdin
+        sudo docker tag graphscope/graphscope-store:${SHORT_SHA} \
+          ${{ configuration.GSS_IMAGE }}:${{ steps.tag.outputs.TAG }}
+        sudo docker push ${{ configuration.GSS_IMAGE }}:${{ steps.tag.outputs.TAG }}
+
+  release-helm-charts: 
+    if: ${{ github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v') && github.repository == 'alibaba/GraphScope' }}
+    runs-on: ubuntu-20.04
+    steps:
+    - uses: actions/checkout@v2.3.2
+
+    # this step is needed for update index.yaml
+    - name: Download Released Charts
+      run: |
+        # download ossutils
+        sudo wget -O /usr/bin/ossutil64 http://gosspublic.alicdn.com/ossutil/1.7.7/ossutil64
+        sudo chmod +x /usr/bin/ossutil64
+
+        # download released charts
+        cd ${GITHUB_WORKSPACE}/charts
+        ossutil64 -i ${{ secrets.ALIYUN_OSS_ACCESSKEY_ID }} \
+                  -k ${{ secrets.ALIYUN_OSS_ACCESSKEY_SECRET }} \
+                  -e ${{ configuration.OSS_REGION }} \
+                  cp -r oss://graphscope/charts ./
+
+    - name: Package Charts
+      run: |
+        # download helm
+        if ! command -v helm &> /dev/null; then
+          curl https://raw.githubusercontent.com/helm/helm/master/scripts/get-helm-3 | bash
+        fi
+
+        cd ${GITHUB_WORKSPACE}/charts
+        # package graphscope
+        helm package ./graphscope
+        # package graphscope-store
+        helm package --dependency-update ./graphscope-store
+        # generate index.yaml
+        helm repo index . --url ${{ configuration.HELM_CHARTS_URL }}
+
+    - name: Extract Tag Name
+      id: tag
+      if: ${{ github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v') }}
+      run: echo ::set-output name=TAG::${GITHUB_REF#refs/tags/v}
+
+
+    - name: Upload Charts to OSS
+      run: |
+        cd ${GITHUB_WORKSPACE}/charts
+        # upload graphscope helm package
+        ossutil64 -i ${{ secrets.ALIYUN_OSS_ACCESSKEY_ID }} \
+                  -k ${{ secrets.ALIYUN_OSS_ACCESSKEY_SECRET }} \
+                  -e ${{ configuration.OSS_REGION }} \
+                  cp ./graphscope-${{ steps.tag.outputs.TAG }}-tgz oss://graphscope/charts/
+        # upload graphscope-store helm package
+        ossutil64 -i ${{ secrets.ALIYUN_OSS_ACCESSKEY_ID }} \
+                  -k ${{ secrets.ALIYUN_OSS_ACCESSKEY_SECRET }} \
+                  -e ${{ configuration.OSS_REGION }} \
+                  cp ./graphscope-store--${{ steps.tag.outputs.TAG }}-tgz oss://graphscope/charts/
+        # upload index.yaml
+        ossutil64 -i ${{ secrets.ALIYUN_OSS_ACCESSKEY_ID }} \
+                  -k ${{ secrets.ALIYUN_OSS_ACCESSKEY_SECRET }} \
+                  -e ${{ configuration.OSS_REGION }} \
+                  cp ./index.yaml oss://graphscope/charts/
