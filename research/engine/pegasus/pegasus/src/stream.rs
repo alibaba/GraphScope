@@ -154,7 +154,7 @@ impl<D: Data> Stream<D> {
                 upstream: shuffled.upstream.copy_data(),
                 ch: shuffled.ch.clone(),
                 builder: shuffled.builder.clone(),
-                partitions: shuffled.partitions
+                partitions: shuffled.partitions,
             };
             Ok((shuffled, copy))
         }

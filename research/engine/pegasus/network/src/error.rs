@@ -14,12 +14,12 @@
 //! limitations under the License.
 
 use std::error::Error;
-use std::fmt::Display;
+use std::fmt::{Display};
 use std::net::{AddrParseError, SocketAddr};
 
 #[derive(Debug)]
 pub enum NetError {
-    InvalidConfig,
+    InvalidConfig(Option<String>),
     ReadConfigError(toml::de::Error),
     IllegalChannelId,
     NotConnected(u64),
@@ -36,8 +36,12 @@ pub enum NetError {
 impl Display for NetError {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
         match self {
-            NetError::InvalidConfig => {
-                write!(f, "invalid config;")
+            NetError::InvalidConfig(msg) => {
+                if let Some(msg) = msg {
+                    write!(f, "invalid config: {}", msg)
+                } else {
+                    write!(f, "invalid config, unknown error;")
+                }
             }
             NetError::ReadConfigError(e) => {
                 write!(f, "parse configuration failure: {};", e)

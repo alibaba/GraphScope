@@ -32,7 +32,6 @@ impl IterateState {
 }
 
 pub(crate) struct SwitchOperator<D> {
-    worker_index: u32,
     scope_level: u32,
     cond: IterCondition<D>,
     // record scopes in iteration;
@@ -54,7 +53,6 @@ impl<D> SwitchOperator<D> {
             parent_parent_scope_ends.push(vec![]);
         }
         SwitchOperator {
-            worker_index: crate::worker_id::get_current_worker().index,
             scope_level,
             cond,
             iterate_states: TidyTagMap::new(scope_level - 1),
@@ -152,9 +150,7 @@ impl<D: Data> OperatorCore for SwitchOperator<D> {
                         self.iterate_states
                             .insert(p, IterateState::new());
                     }
-                    if end.contains_source(self.worker_index) {
-                        enter.notify_end(end)?;
-                    }
+                    enter.notify_end(end)?;
                 }
             }
 

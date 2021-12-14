@@ -21,6 +21,7 @@ use crate::api::function::{BatchRouteFunction, FnResult, RouteFunction};
 use crate::channel_id::ChannelInfo;
 use crate::communication::buffer::ScopeBufferPool;
 use crate::communication::cancel::{CancelHandle, MultiConsCancelPtr, SingleConsCancel};
+use crate::communication::channel::BatchRoute;
 use crate::communication::decorator::evented::EventEmitPush;
 use crate::communication::decorator::BlockPush;
 use crate::communication::{IOResult, Magic};
@@ -31,7 +32,6 @@ use crate::graph::Port;
 use crate::progress::{DynPeers, EndOfScope};
 use crate::tag::tools::map::TidyTagMap;
 use crate::{Data, Tag};
-use crate::communication::channel::BatchRoute;
 
 struct Exchange<D> {
     magic: Magic,
@@ -322,7 +322,12 @@ impl<D: Data> Push<MicroBatch<D>> for ExchangeByDataPush<D> {
                                 p.push_end(new_end, DynPeers::single(self.src))?;
                             }
                         } else {
-                            trace_worker!("output[{:?}]: ignore end of scope {:?} as peers = {:?}", self.port,end.tag, end.peers());
+                            trace_worker!(
+                                "output[{:?}]: ignore end of scope {:?} as peers = {:?}",
+                                self.port,
+                                end.tag,
+                                end.peers()
+                            );
                         }
                         return Ok(());
                     }
@@ -330,7 +335,12 @@ impl<D: Data> Push<MicroBatch<D>> for ExchangeByDataPush<D> {
                     if batch.get_seq() == 0 {
                         // it's the first batch need to be pushed on this port, and it's an empty batch;
                         if !end.peers_contains(self.src) {
-                            trace_worker!("output[{:?}]: ignore end of scope {:?} as peers = {:?}", self.port,end.tag, end.peers());
+                            trace_worker!(
+                                "output[{:?}]: ignore end of scope {:?} as peers = {:?}",
+                                self.port,
+                                end.tag,
+                                end.peers()
+                            );
                             return Ok(());
                         }
 
@@ -376,7 +386,7 @@ impl<D: Data> Push<MicroBatch<D>> for ExchangeByDataPush<D> {
                 if batch.get_seq() == 0 {
                     // only one data scope;
                     if end.peers().value() == 1 {
-                        for i in 1..self.pushes.len() {
+                        for i in 0..self.pushes.len() {
                             if i != target {
                                 let mut new_end = end.clone();
                                 new_end.total_send = 0;
@@ -544,19 +554,13 @@ pub struct ExchangeByBatchPush<D: Data> {
 }
 
 impl<D: Data> ExchangeByBatchPush<D> {
-    pub fn new(
-        ch_info: ChannelInfo, route: BatchRoute<D>, pushes: Vec<EventEmitPush<D>>,
-    ) -> Self {
+    pub fn new(ch_info: ChannelInfo, route: BatchRoute<D>, pushes: Vec<EventEmitPush<D>>) -> Self {
         let len = pushes.len();
         let magic = Magic::new(len);
         let src = crate::worker_id::get_current_worker().index;
         let cancel_handle = match route {
-            BatchRoute::AllToOne(t) => {
-                CancelHandle::SC(SingleConsCancel::new(t))
-            }
-            BatchRoute::Dyn(_) => {
-                CancelHandle::MC(MultiConsCancelPtr::new(ch_info.scope_level, len))
-            }
+            BatchRoute::AllToOne(t) => CancelHandle::SC(SingleConsCancel::new(t)),
+            BatchRoute::Dyn(_) => CancelHandle::MC(MultiConsCancelPtr::new(ch_info.scope_level, len)),
         };
         ExchangeByBatchPush { ch_info, src, pushes, magic, route, cancel_handle }
     }
@@ -619,10 +623,20 @@ impl<D: Data> ExchangeByBatchPush<D> {
                         p.push_end(new_end, DynPeers::single(self.src))?;
                     }
                 } else {
-                    trace_worker!("output[{:?}]: ignore end of scope {:?} as peers = {:?}", self.ch_info.source_port , end.tag, end.peers())
+                    trace_worker!(
+                        "output[{:?}]: ignore end of scope {:?} as peers = {:?}",
+                        self.ch_info.source_port,
+                        end.tag,
+                        end.peers()
+                    )
                 }
             } else {
-                trace_worker!("output[{:?}]: ignore end of scope {:?} as peers = {:?}", self.ch_info.source_port , end.tag, end.peers())
+                trace_worker!(
+                    "output[{:?}]: ignore end of scope {:?} as peers = {:?}",
+                    self.ch_info.source_port,
+                    end.tag,
+                    end.peers()
+                )
             }
             return Ok(());
         }
@@ -645,7 +659,9 @@ impl<D: Data> ExchangeByBatchPush<D> {
         Ok(())
     }
 
-    fn handle_last_batch(&mut self, target: usize, mut end: EndOfScope, mut batch: MicroBatch<D>) -> Result<(), IOError> {
+    fn handle_last_batch(
+        &mut self, target: usize, mut end: EndOfScope, mut batch: MicroBatch<D>,
+    ) -> Result<(), IOError> {
         assert!(end.peers_contains(self.src));
         if end.peers().value() == 1 {
             // if only one peers, it must be this worker;
@@ -739,8 +755,7 @@ impl<D: Data> Push<MicroBatch<D>> for ExchangeByBatchPush<D> {
                 } else {
                     //
                 }
-            }
-            else {
+            } else {
                 // batch is not empty, it means this worker must in peers of the scope;
                 let r = self.route.route(&batch)?;
                 let target = self.magic.exec(r) as usize;
@@ -755,8 +770,7 @@ impl<D: Data> Push<MicroBatch<D>> for ExchangeByBatchPush<D> {
                     self.handle_last_batch(target, end, batch)?;
                 } else if !batch.is_empty() {
                     self.pushes[target].push(batch)?;
-                }
-                else {
+                } else {
                     // ignore
                 }
             }

@@ -7,7 +7,7 @@ use pegasus::{Configuration, JobConf, ServerConf};
 use structopt::StructOpt;
 
 #[derive(Debug, StructOpt)]
-#[structopt(name = "Logistic Regression", about = "")]
+#[structopt(name = "Logistic Regression", about = "logistic regression")]
 struct Config {
     /// The number of hop this job will search;
     #[structopt(short = "t", default_value = "100")]

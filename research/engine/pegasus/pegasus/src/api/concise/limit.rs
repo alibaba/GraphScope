@@ -16,6 +16,7 @@
 use crate::errors::BuildJobError;
 use crate::stream::Stream;
 use crate::Data;
+use std::cmp::Ordering;
 
 /// Produce certain number of data in the output stream
 pub trait Limit<D: Data> {
@@ -56,7 +57,7 @@ pub trait Limit<D: Data> {
 
 /// Similar to `Limit`, but requires the output items are the minimum ones according to the
 /// data ordering.
-pub trait OrderLimit<D: Data + Ord> {
+pub trait SortLimit<D: Data + Ord> {
     /// Given a `size` argument, `sort_limit()` produces an output stream that contains up to
     /// `size` number of data, where these data items are the **minimum** ones among all data. The
     /// ordering of data is determined by [`Ord`]. The `sort_limit()` function is semantically
@@ -69,4 +70,11 @@ pub trait OrderLimit<D: Data + Ord> {
     /// [`sort()`]: crate::api::order::Sort::sort()
     /// [`limit()`]: crate::api::limit::Limit::limit()
     fn sort_limit(self, size: u32) -> Result<Stream<D>, BuildJobError>;
+}
+
+/// An alternative of `SortLimit` but requires a comparator of the data.
+pub trait SortLimitBy<D: Data> {
+    fn sort_limit_by<F>(self, size: u32, cmp: F) -> Result<Stream<D>, BuildJobError>
+        where
+            F: Fn(&D, &D) -> Ordering + Send + 'static;
 }

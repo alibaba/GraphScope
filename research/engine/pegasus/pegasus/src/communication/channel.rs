@@ -23,7 +23,7 @@ use crate::communication::decorator::broadcast::BroadcastBatchPush;
 use crate::communication::decorator::evented::EventEmitPush;
 use crate::communication::decorator::exchange::{ExchangeByBatchPush, ExchangeByDataPush};
 use crate::communication::decorator::{LocalMicroBatchPush, MicroBatchPush};
-use crate::communication::output::{PerChannelPush, OutputBuilderImpl};
+use crate::communication::output::{OutputBuilderImpl, PerChannelPush};
 use crate::data::MicroBatch;
 use crate::data_plane::{GeneralPull, GeneralPush};
 use crate::dataflow::DataflowBuilder;
@@ -31,20 +31,16 @@ use crate::graph::Port;
 use crate::BuildJobError;
 use crate::Data;
 
-
 pub enum BatchRoute<T: Data> {
     AllToOne(u32),
-    Dyn(Box<dyn BatchRouteFunction<T>>)
+    Dyn(Box<dyn BatchRouteFunction<T>>),
 }
-
 
 impl<T: Data> BatchRouteFunction<T> for BatchRoute<T> {
     fn route(&self, batch: &MicroBatch<T>) -> FnResult<u64> {
         match self {
-            BatchRoute::AllToOne(t) => { Ok(*t as u64) }
-            BatchRoute::Dyn(f) => {
-                f.route(batch)
-            }
+            BatchRoute::AllToOne(t) => Ok(*t as u64),
+            BatchRoute::Dyn(f) => f.route(batch),
         }
     }
 }
@@ -110,7 +106,9 @@ pub(crate) struct MaterializedChannel<T: Data> {
 }
 
 impl<T: Data> MaterializedChannel<T> {
-    pub fn take(self) -> (PerChannelPush<T>, GeneralPull<MicroBatch<T>>, Option<GeneralPush<MicroBatch<T>>>) {
+    pub fn take(
+        self,
+    ) -> (PerChannelPush<T>, GeneralPull<MicroBatch<T>>, Option<GeneralPush<MicroBatch<T>>>) {
         (self.push, self.pull, self.notify)
     }
 }
@@ -236,8 +234,12 @@ impl<T: Data> Channel<T> {
                 let (info, pushes, pull, notify) = self.build_remote(scope_level, target, id, dfb)?;
                 let push = ExchangeByBatchPush::new(info, route, pushes);
                 let cancel = push.get_cancel_handle();
-                let push =
-                    PerChannelPush::new(info, self.scope_delta, MicroBatchPush::ExchangeByBatch(push), cancel);
+                let push = PerChannelPush::new(
+                    info,
+                    self.scope_delta,
+                    MicroBatchPush::ExchangeByBatch(push),
+                    cancel,
+                );
                 Ok(MaterializedChannel { push, pull: pull.into(), notify: Some(notify) })
             }
             ChannelKind::Broadcast => {

@@ -53,6 +53,7 @@ mod worker;
 
 use std::collections::HashSet;
 use std::fmt::Debug;
+use std::net::SocketAddr;
 
 pub use config::{read_from, Configuration, JobConf, ServerConf};
 pub use data::Data;
@@ -68,7 +69,6 @@ pub use crate::errors::{BuildJobError, JobSubmitError, SpawnJobError, StartupErr
 use crate::resource::PartitionedResource;
 use crate::result::{ResultSink, ResultStream};
 use crate::worker_id::WorkerIdIter;
-use std::net::SocketAddr;
 
 lazy_static! {
     static ref SERVER_ID: Mutex<Option<u64>> = Mutex::new(None);
@@ -98,16 +98,12 @@ pub fn server_id() -> Option<u64> {
 }
 
 pub fn get_servers() -> Vec<u64> {
-    let lock = SERVERS
-        .read()
-        .expect("fetch read lock failure;");
+    let lock = SERVERS.read().expect("fetch read lock failure;");
     lock.to_vec()
 }
 
 pub fn get_servers_len() -> usize {
-    let lock = SERVERS
-        .read()
-        .expect("fetch read lock failure;");
+    let lock = SERVERS.read().expect("fetch read lock failure;");
     lock.len()
 }
 
@@ -162,9 +158,7 @@ pub fn startup(conf: Configuration) -> Result<(), StartupError> {
             return Err(StartupError::CannotFindServers);
         }
     }
-    let mut lock = SERVERS
-        .write()
-        .expect("fetch servers lock failure;");
+    let mut lock = SERVERS.write().expect("fetch servers lock failure;");
     assert!(lock.is_empty());
     for s in servers {
         lock.push(s);
@@ -173,7 +167,10 @@ pub fn startup(conf: Configuration) -> Result<(), StartupError> {
     Ok(())
 }
 
-pub fn startup_with<D: ServerDetect + 'static>(conf: Configuration, detect: D) -> Result<Option<SocketAddr>, StartupError> {
+pub fn startup_with<D: ServerDetect + 'static>(
+    conf: Configuration,
+    detect: D,
+) -> Result<Option<SocketAddr>, StartupError> {
     if let Some(pool_size) = conf.max_pool_size {
         pegasus_executor::set_core_pool_size(pool_size as usize);
     }
@@ -220,7 +217,9 @@ where
 }
 
 pub fn run_with_resources<DI, DO, F, FN, R>(
-    conf: JobConf, mut resource: PartitionedResource<R>, func: F,
+    conf: JobConf,
+    mut resource: PartitionedResource<R>,
+    func: F,
 ) -> Result<ResultStream<DO>, JobSubmitError>
 where
     DI: Data,
@@ -243,7 +242,11 @@ where
     Ok(results)
 }
 
-pub fn run_opt<DI, DO, F>(conf: JobConf, sink: ResultSink<DO>, mut logic: F) -> Result<(), JobSubmitError>
+pub fn run_opt<DI, DO, F>(
+    conf: JobConf,
+    sink: ResultSink<DO>,
+    mut logic: F,
+) -> Result<(), JobSubmitError>
 where
     DI: Data,
     DO: Debug + Send + 'static,
@@ -269,7 +272,12 @@ where
         return Ok(());
     }
 
-    info!("spawn job_{}({}) with {} workers;", conf.job_name, conf.job_id, workers.len());
+    info!(
+        "spawn job_{}({}) with {} workers;",
+        conf.job_name,
+        conf.job_id,
+        workers.len()
+    );
     match pegasus_executor::spawn_batch(workers) {
         Ok(_) => Ok(()),
         Err(e) => {
@@ -317,7 +325,10 @@ fn allocate_local_worker(conf: &Arc<JobConf>) -> Result<Option<WorkerIdIter>, Bu
                         servers.len() as u32,
                     )))
                 } else {
-                    return BuildJobError::server_err(format!("servers {:?} are not connected;", servers));
+                    return BuildJobError::server_err(format!(
+                        "servers {:?} are not connected;",
+                        servers
+                    ));
                 }
             }
         } else {

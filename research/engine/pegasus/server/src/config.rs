@@ -20,12 +20,12 @@ use std::fmt::Debug;
 use std::path::Path;
 
 use pegasus::{Configuration, StartupError};
-use pegasus_network::config::{NetworkConfig, ServerConfig};
+use pegasus_network::config::{NetworkConfig, ServerAddr};
 use serde::Deserialize;
 
 #[derive(Debug, Deserialize)]
 pub struct HostsConfig {
-    pub peers: Vec<ServerConfig>,
+    pub peers: Vec<ServerAddr>,
 }
 
 impl HostsConfig {

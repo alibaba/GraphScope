@@ -17,7 +17,6 @@ use std::cell::RefCell;
 use std::rc::Rc;
 
 use ahash::AHashSet;
-use pegasus_common::buffer::ReadBuffer;
 
 use crate::api::scope::MergedScopeDelta;
 use crate::channel_id::ChannelInfo;
@@ -28,6 +27,7 @@ use crate::data::MicroBatch;
 use crate::data_plane::Push;
 use crate::errors::IOError;
 use crate::graph::Port;
+use crate::progress::DynPeers;
 use crate::tag::tools::map::TidyTagMap;
 use crate::{Data, Tag};
 
@@ -188,17 +188,19 @@ impl<D: Data> Push<MicroBatch<D>> for PerChannelPush<D> {
             if let Some(end) = batch.take_end() {
                 if self.delta.scope_level_delta() > 0 {
                     // enter / to-child
-                    let end_cp = end.clone();
+                    let mut end_cp = end.clone();
                     batch.set_end(end);
-                    trace_worker!("output[{:?}] send end of {:?} to channel[{}]", self.ch_info.source_port, tag, self.ch_info.id.index);
                     batch.set_tag(tag);
+                    trace_worker!("channel[{}] pushed end of scope{:?};", self.ch_info.id.index, batch.tag);
                     self.push.push(batch)?;
-                    let mut p = MicroBatch::new(end_cp.tag.clone(), self.src, ReadBuffer::new());
-                    p.set_end(end_cp);
-                    self.push.push(p)
+                    end_cp.update_peers(DynPeers::all());
+                    let last = MicroBatch::last(self.src, end_cp);
+                    trace_worker!("channel[{}] pushed end of scope{:?};", self.ch_info.id.index, last.tag);
+                    self.push.push(last)
                 } else if self.delta.scope_level_delta() == 0 {
                     batch.set_end(end);
                     batch.set_tag(tag);
+                    trace_worker!("channel[{}] pushed end of scope{:?};", self.ch_info.id.index, batch.tag);
                     self.push.push(batch)
                 } else {
                     // leave / to parent
@@ -233,6 +235,7 @@ impl<D: Data> Push<MicroBatch<D>> for PerChannelPush<D> {
                 let seq = self.re_seq.remove(&batch.tag).unwrap_or(0);
                 batch.set_seq(seq);
             }
+            trace_worker!("channel[{}] pushed end of scope{:?};", self.ch_info.id.index, batch.tag);
             self.push.push(batch)
         } else {
             unreachable!("unrecognized batch from child scope {:?}", batch.tag);

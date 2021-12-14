@@ -23,7 +23,7 @@ rand = "0.8.3"
 
 [dev-dependencies]
 bincode = "1.0.1"
-rand = "0.7.2"
+rand = "0.8"
 
 [features]
 env_log = ["env_logger", "time"]
