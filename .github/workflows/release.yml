@@ -39,7 +39,7 @@ jobs:
           ${{ configuration.GSS_IMAGE }}:${{ steps.tag.outputs.TAG }}
         sudo docker push ${{ configuration.GSS_IMAGE }}:${{ steps.tag.outputs.TAG }}
 
-  release-helm-charts: 
+  release-helm-charts:
     if: ${{ github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v') && github.repository == 'alibaba/GraphScope' }}
     runs-on: ubuntu-20.04
     steps:
@@ -79,7 +79,6 @@ jobs:
       if: ${{ github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v') }}
       run: echo ::set-output name=TAG::${GITHUB_REF#refs/tags/v}
 
-
     - name: Upload Charts to OSS
       run: |
         cd ${GITHUB_WORKSPACE}/charts
@@ -92,7 +91,7 @@ jobs:
         ossutil64 -i ${{ secrets.ALIYUN_OSS_ACCESSKEY_ID }} \
                   -k ${{ secrets.ALIYUN_OSS_ACCESSKEY_SECRET }} \
                   -e ${{ configuration.OSS_REGION }} \
-                  cp ./graphscope-store--${{ steps.tag.outputs.TAG }}-tgz oss://graphscope/charts/
+                  cp ./graphscope-store-${{ steps.tag.outputs.TAG }}-tgz oss://graphscope/charts/
         # upload index.yaml
         ossutil64 -i ${{ secrets.ALIYUN_OSS_ACCESSKEY_ID }} \
                   -k ${{ secrets.ALIYUN_OSS_ACCESSKEY_SECRET }} \
