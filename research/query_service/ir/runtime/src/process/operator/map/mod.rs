@@ -18,7 +18,7 @@ mod project;
 
 use ir_common::error::ParsePbError;
 use ir_common::generated::algebra as algebra_pb;
-use pegasus::api::function::MapFunction;
+use pegasus::api::function::{FilterMapFunction, MapFunction};
 
 use crate::error::{FnGenError, FnGenResult};
 use crate::process::record::Record;
@@ -33,13 +33,29 @@ impl MapFuncGen for algebra_pb::logical_plan::Operator {
             match opr {
                 algebra_pb::logical_plan::operator::Opr::Project(project) => project.gen_map(),
                 algebra_pb::logical_plan::operator::Opr::Vertex(get_vertex) => get_vertex.gen_map(),
-                algebra_pb::logical_plan::operator::Opr::Auxilia(auxilia) => auxilia.gen_map(),
                 algebra_pb::logical_plan::operator::Opr::Path(_path) => {
                     Err(FnGenError::unsupported_error("path is not supported yet"))?
                 }
                 algebra_pb::logical_plan::operator::Opr::ShortestPath(_shortest_path) => {
                     Err(FnGenError::unsupported_error("shortest_path is not supported yet"))?
                 }
+                _ => Err(ParsePbError::from("algebra_pb op is not a map"))?,
+            }
+        } else {
+            Err(ParsePbError::EmptyFieldError("algebra op is empty".to_string()))?
+        }
+    }
+}
+
+pub trait FilterMapFuncGen {
+    fn gen_filter_map(self) -> FnGenResult<Box<dyn FilterMapFunction<Record, Record>>>;
+}
+
+impl FilterMapFuncGen for algebra_pb::logical_plan::Operator {
+    fn gen_filter_map(self) -> FnGenResult<Box<dyn FilterMapFunction<Record, Record>>> {
+        if let Some(opr) = self.opr {
+            match opr {
+                algebra_pb::logical_plan::operator::Opr::Auxilia(auxilia) => auxilia.gen_filter_map(),
                 _ => Err(ParsePbError::from("algebra_pb op is not a map"))?,
             }
         } else {

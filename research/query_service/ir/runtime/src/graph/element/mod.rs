@@ -64,7 +64,7 @@ impl<'a> Element for BorrowObject<'a> {
 mod edge;
 mod vertex;
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub enum VertexOrEdge {
     V(Vertex),
     E(Edge),
@@ -110,15 +110,6 @@ impl GraphElement for VertexOrEdge {
         match self {
             VertexOrEdge::V(v) => v.label(),
             VertexOrEdge::E(e) => e.label(),
-        }
-    }
-}
-
-impl Debug for VertexOrEdge {
-    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
-        match self {
-            VertexOrEdge::V(v) => write!(f, "v[{:?}]", v.id()),
-            VertexOrEdge::E(e) => write!(f, "e[{:?}]", e.id()),
         }
     }
 }

@@ -148,6 +148,10 @@ message KeyBy {
   bytes key_selector  = 2;
 }
 
+message FilterMap {
+  bytes resource = 1;
+}
+
 message OperatorDef {
   oneof op_kind {
     Communicate comm = 1;
@@ -165,6 +169,7 @@ message OperatorDef {
     SegmentApply seg_apply = 14;
     Join join = 15;
     KeyBy key_by = 16;
+    FilterMap filter_map = 17;
   }
 }
 

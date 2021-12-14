@@ -13,11 +13,9 @@
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 
-use std::collections::HashMap;
-use std::path::Path;
-use std::sync::atomic::{AtomicPtr, Ordering};
-use std::sync::Arc;
-
+use crate::exp_store::{ID_MASK, ID_SHIFT_BITS};
+use crate::from_fn;
+use crate::{filter_limit, limit_n};
 use dyn_type::{object, BorrowObject, Object};
 use graph_store::common::LabelId;
 use graph_store::config::{JsonConf, DIR_GRAPH_SCHEMA, FILE_SCHEMA};
@@ -34,10 +32,11 @@ use pegasus_common::impl_as_any;
 use runtime::graph::element::{Edge, Vertex};
 use runtime::graph::property::{DefaultDetails, Details, DynDetails};
 use runtime::graph::{register_graph, Direction, GraphProxy, QueryParams, Statement, ID};
-
-use crate::exp_store::{ID_MASK, ID_SHIFT_BITS};
-use crate::from_fn;
-use crate::{filter_limit, limit_n};
+use std::collections::HashMap;
+use std::fmt;
+use std::path::Path;
+use std::sync::atomic::{AtomicPtr, Ordering};
+use std::sync::Arc;
 
 lazy_static! {
     pub static ref DATA_PATH: String = configure_with_default!(String, "DATA_PATH", "".to_string());
@@ -268,7 +267,7 @@ impl GraphProxy for DemoGraph {
                 result.push(v);
             }
         }
-        Ok(filter_limit!(result.into_iter(), params.filter, None))
+        Ok(filter_limit!(result.into_iter(), params.filter, params.limit))
     }
 
     fn get_edge(
@@ -282,7 +281,7 @@ impl GraphProxy for DemoGraph {
                 result.push(e);
             }
         }
-        Ok(filter_limit!(result.into_iter(), params.filter, None))
+        Ok(filter_limit!(result.into_iter(), params.filter, params.limit))
     }
 
     fn prepare_explore_vertex(
@@ -363,7 +362,6 @@ fn to_runtime_vertex_with_property(v: LocalVertex<DefaultId>, props: &Vec<NameOr
             }
         }
     }
-
     Vertex::new(DynDetails::new(DefaultDetails::with_property(id, label, properties)))
 }
 
@@ -403,6 +401,16 @@ impl LazyVertexDetails {
         id: DefaultId, label: NameOrId, store: &'static LargeGraphDB<DefaultId, InternalId>,
     ) -> Self {
         LazyVertexDetails { id, label, inner: AtomicPtr::default(), store }
+    }
+}
+
+impl fmt::Debug for LazyVertexDetails {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_struct("LazyVertexDetails")
+            .field("id", &self.id)
+            .field("label", &self.label)
+            .field("inner", &self.inner)
+            .finish()
     }
 }
 

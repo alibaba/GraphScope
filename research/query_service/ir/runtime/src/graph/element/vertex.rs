@@ -24,7 +24,7 @@ use crate::graph::element::{Element, GraphElement};
 use crate::graph::property::{Details, DynDetails};
 use crate::graph::ID;
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct Vertex {
     details: DynDetails,
 }

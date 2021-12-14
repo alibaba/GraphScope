@@ -132,6 +132,14 @@ impl QueryParams {
         }
         Ok(self)
     }
+
+    pub fn is_queryable(&self) -> bool {
+        !(self.labels.is_empty()
+            && self.filter.is_none()
+            && self.limit.is_none()
+            && self.partitions.is_none()
+            && self.props.is_none())
+    }
 }
 
 /// The function for graph query

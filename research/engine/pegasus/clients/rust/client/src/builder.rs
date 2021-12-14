@@ -287,6 +287,13 @@ impl Plan {
         self
     }
 
+    pub fn filter_map(&mut self, resource: BinaryResource) -> &mut Self {
+        let filter_map = pb::FilterMap { resource };
+        let op = pb::OperatorDef { op_kind: Some(pb::operator_def::OpKind::FilterMap(filter_map)) };
+        self.plan.push(op);
+        self
+    }
+
     pub fn take(self) -> Vec<pb::OperatorDef> {
         self.plan
     }
@@ -466,6 +473,11 @@ impl JobBuilder {
 
     pub fn key_by(&mut self, key_selector: BinaryResource) -> &mut Self {
         self.plan.key_by(key_selector);
+        self
+    }
+
+    pub fn filter_map(&mut self, udf: BinaryResource) -> &mut Self {
+        self.plan.filter_map(udf);
         self
     }
 

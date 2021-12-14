@@ -258,7 +258,7 @@ message Auxilia {
   QueryParams params = 2;
   // The alias to give if any, this is especially helpful when the tag is `None`, and the entity
   // now refers to the head of the record
-  Alias alias = 3;
+  common.NameOrId alias = 3;
 }
 
 message EdgeExpand {

@@ -27,6 +27,7 @@ use pegasus_common::codec::{Decode, Encode, ReadExt, WriteExt};
 use pegasus_common::downcast::*;
 
 use crate::graph::ID;
+use std::fmt;
 
 /// The three types of property to get
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
@@ -89,7 +90,7 @@ impl Decode for PropKey {
     }
 }
 
-pub trait Details: Send + Sync + AsAny {
+pub trait Details: std::fmt::Debug + Send + Sync + AsAny {
     fn get_property(&self, key: &NameOrId) -> Option<BorrowObject>;
 
     fn get_id(&self) -> ID;
@@ -134,6 +135,16 @@ impl Details for DynDetails {
     }
 }
 
+impl fmt::Debug for DynDetails {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_struct("DynDetails")
+            .field("id", &self.get_id())
+            .field("label", &self.get_label())
+            .field("properties", &format!("{:?}", &self.inner.as_ref()))
+            .finish()
+    }
+}
+
 impl Encode for DynDetails {
     fn write_to<W: WriteExt>(&self, writer: &mut W) -> io::Result<()> {
         if let Some(default) = self
@@ -169,6 +180,7 @@ impl Decode for DynDetails {
 }
 
 #[allow(dead_code)]
+#[derive(Clone, Debug)]
 pub struct DefaultDetails {
     id: ID,
     label: Option<NameOrId>,

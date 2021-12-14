@@ -456,9 +456,7 @@ fn set_range(ptr: *const c_void, lower: i32, upper: i32, opr: Opr) -> ResultCode
 fn set_alias(ptr: *const c_void, alias: FfiNameOrId, is_query_given: bool, opr: Opr) -> ResultCode {
     let mut return_code = ResultCode::Success;
     let alias_pb: FfiResult<Option<common_pb::NameOrId>> = alias.try_into();
-    if alias_pb.is_err() {
-        return_code = alias_pb.err().unwrap()
-    } else {
+    if alias_pb.is_ok() {
         match &opr {
             Opr::Scan => {
                 let mut scan = unsafe { Box::from_raw(ptr as *mut pb::Scan) };
@@ -488,11 +486,13 @@ fn set_alias(ptr: *const c_void, alias: FfiNameOrId, is_query_given: bool, opr: 
             }
             Opr::Auxilia => {
                 let mut auxilia = unsafe { Box::from_raw(ptr as *mut pb::Auxilia) };
-                auxilia.alias = Some(pb::Alias { alias: alias_pb.unwrap(), is_query_given });
+                auxilia.alias = alias_pb.unwrap();
                 std::mem::forget(auxilia);
             }
             _ => unreachable!(),
         }
+    } else {
+        return_code = alias_pb.err().unwrap()
     }
 
     return_code
@@ -1399,7 +1399,7 @@ mod auxilia {
 
     /// To initialize an auxilia operator
     #[no_mangle]
-    pub extern "C" fn init_auxilia() -> *const c_void {
+    pub extern "C" fn init_auxilia_operator() -> *const c_void {
         let auxilia = Box::new(pb::Auxilia {
             tag: None,
             params: Some(pb::QueryParams {
@@ -1444,10 +1444,8 @@ mod auxilia {
 
     /// Set the alias of the entity to Auxilia
     #[no_mangle]
-    pub extern "C" fn set_auxilia_alias(
-        ptr_auxilia: *const c_void, alias: FfiNameOrId, is_query_given: bool,
-    ) -> ResultCode {
-        set_alias(ptr_auxilia, alias, is_query_given, Opr::Auxilia)
+    pub extern "C" fn set_auxilia_alias(ptr_auxilia: *const c_void, alias: FfiNameOrId) -> ResultCode {
+        set_alias(ptr_auxilia, alias, true, Opr::Auxilia)
     }
 
     /// Append an Auxilia operator to the logical plan

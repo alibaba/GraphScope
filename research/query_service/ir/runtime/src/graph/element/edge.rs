@@ -24,7 +24,7 @@ use crate::graph::element::{Element, GraphElement};
 use crate::graph::property::{Details, DynDetails};
 use crate::graph::ID;
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct Edge {
     pub src_id: ID,
     pub dst_id: ID,

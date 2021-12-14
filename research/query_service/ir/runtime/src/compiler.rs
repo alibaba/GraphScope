@@ -28,8 +28,6 @@ use pegasus::result::ResultSink;
 use pegasus::stream::Stream;
 use pegasus::BuildJobError;
 use pegasus_server::pb as server_pb;
-use pegasus_server::pb::operator_def::OpKind;
-use pegasus_server::pb::OperatorDef;
 use pegasus_server::service::JobParser;
 use pegasus_server::JobRequest;
 use prost::Message;
@@ -41,7 +39,7 @@ use crate::process::operator::filter::FilterFuncGen;
 use crate::process::operator::flatmap::FlatMapFuncGen;
 use crate::process::operator::join::JoinFunctionGen;
 use crate::process::operator::keyed::KeyFunctionGen;
-use crate::process::operator::map::MapFuncGen;
+use crate::process::operator::map::{FilterMapFuncGen, MapFuncGen};
 use crate::process::operator::shuffle::RecordRouter;
 use crate::process::operator::sink::RecordSinkEncoder;
 use crate::process::operator::sort::CompareFunctionGen;
@@ -49,6 +47,7 @@ use crate::process::operator::source::SourceOperator;
 use crate::process::record::{Record, RecordKey};
 
 type RecordMap = Box<dyn MapFunction<Record, Record>>;
+type RecordFilterMap = Box<dyn FilterMapFunction<Record, Record>>;
 type RecordFlatMap = Box<dyn FlatMapFunction<Record, Record, Target = DynIter<Record>>>;
 type RecordFilter = Box<dyn FilterFunction<Record>>;
 type RecordLeftJoin = Box<dyn BinaryFunction<Record, Vec<Record>, Option<Record>>>;
@@ -97,6 +96,11 @@ impl FnGenerator {
         Ok(step.gen_map()?)
     }
 
+    fn gen_filter_map(&self, res: &BinaryResource) -> FnGenResult<RecordFilterMap> {
+        let step = decode::<algebra_pb::logical_plan::Operator>(res)?;
+        Ok(step.gen_filter_map()?)
+    }
+
     fn gen_flat_map(&self, res: &BinaryResource) -> FnGenResult<RecordFlatMap> {
         let step = decode::<algebra_pb::logical_plan::Operator>(res)?;
         Ok(step.gen_flat_map()?)
@@ -137,7 +141,7 @@ impl IRJobCompiler {
     }
 
     fn install(
-        &self, mut stream: Stream<Record>, plan: &[OperatorDef],
+        &self, mut stream: Stream<Record>, plan: &[server_pb::OperatorDef],
     ) -> Result<Stream<Record>, BuildJobError> {
         for op in &plan[..] {
             if let Some(ref op_kind) = op.op_kind {
@@ -156,6 +160,12 @@ impl IRJobCompiler {
                     server_pb::operator_def::OpKind::Map(map) => {
                         let func = self.udf_gen.gen_map(&map.resource)?;
                         stream = stream.map(move |input| func.exec(input))?;
+                    }
+                    server_pb::operator_def::OpKind::FilterMap(filter_map) => {
+                        let func = self
+                            .udf_gen
+                            .gen_filter_map(&filter_map.resource)?;
+                        stream = stream.filter_map(move |input| func.exec(input))?;
                     }
                     server_pb::operator_def::OpKind::FlatMap(flat_map) => {
                         let func = self.udf_gen.gen_flat_map(&flat_map.resource)?;
@@ -242,10 +252,10 @@ impl IRJobCompiler {
                                 .filter_map(move |(parent, sub)| join_func.exec(parent, sub))?;
                         }
                     }
-                    OpKind::SegApply(_) => {
+                    server_pb::operator_def::OpKind::SegApply(_) => {
                         Err(BuildJobError::Unsupported("SegApply is not supported yet".to_string()))?
                     }
-                    OpKind::Join(join) => {
+                    server_pb::operator_def::OpKind::Join(join) => {
                         let joiner = self.udf_gen.gen_join(&join.resource)?;
                         let left_key_selector = joiner.gen_left_kv_fn()?;
                         let right_key_selector = joiner.gen_right_kv_fn()?;
@@ -322,7 +332,7 @@ impl IRJobCompiler {
                                 ))?,
                             }
                     }
-                    OpKind::KeyBy(_) => {
+                    server_pb::operator_def::OpKind::KeyBy(_) => {
                         Err(BuildJobError::Unsupported("KeyBy is not supported yet".to_string()))?
                     }
                 }
