@@ -33,4 +33,8 @@ public abstract class InterOpBase {
     public void setAlias(OpArg alias) {
         this.alias = Optional.of(alias);
     }
+
+    public void clearAlias() {
+        this.alias = Optional.empty();
+    }
 }

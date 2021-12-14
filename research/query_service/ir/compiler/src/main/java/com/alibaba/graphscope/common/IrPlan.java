@@ -251,8 +251,10 @@ public class IrPlan implements Closeable {
                 properties.forEach(k -> {
                     irCoreLib.addAuxiliaProperty(ptrAuxilia, k);
                 });
-                if (baseOp.getAlias().isPresent()) {
-                    throw new InterOpIllegalArgException(baseOp.getClass(), "alias", "unimplemented yet");
+
+                Optional<OpArg> aliasOpt = baseOp.getAlias();
+                if (aliasOpt.isPresent()) {
+                    irCoreLib.setAuxiliaAlias(ptrAuxilia, (FfiNameOrId.ByValue) aliasOpt.get().getArg(), true);
                 }
                 return ptrAuxilia;
             }

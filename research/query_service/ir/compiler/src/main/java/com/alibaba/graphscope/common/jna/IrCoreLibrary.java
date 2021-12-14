@@ -95,6 +95,8 @@ public interface IrCoreLibrary extends Library {
 
     ResultCode addAuxiliaProperty(Pointer auxilia, FfiNameOrId.ByValue property);
 
+    ResultCode setAuxiliaAlias(Pointer auxilia, FfiNameOrId.ByValue alias, boolean is_query_given);
+
     ResultCode appendAuxiliaOperator(Pointer plan, Pointer auxilia, int parent, IntByReference oprIdx);
 
     FfiNameOrId.ByValue cstrAsNameOrId(String name);

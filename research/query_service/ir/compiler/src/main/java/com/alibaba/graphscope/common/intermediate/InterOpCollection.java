@@ -2,6 +2,7 @@ package com.alibaba.graphscope.common.intermediate;
 
 import com.alibaba.graphscope.common.IrPlan;
 import com.alibaba.graphscope.common.intermediate.operator.InterOpBase;
+import com.alibaba.graphscope.common.intermediate.process.AliasProcessor;
 import com.alibaba.graphscope.common.intermediate.process.InterOpProcessor;
 import com.alibaba.graphscope.common.intermediate.process.PropertyDetailsProcessor;
 import org.apache.commons.collections.list.UnmodifiableList;
@@ -13,7 +14,7 @@ import java.util.List;
 // collection of intermediate operators
 public class InterOpCollection {
     private List<InterOpBase> opCollection;
-    private static List<InterOpProcessor> processors = Arrays.asList(PropertyDetailsProcessor.INSTANCE);
+    private static List<InterOpProcessor> processors = Arrays.asList(PropertyDetailsProcessor.INSTANCE, AliasProcessor.INSTANCE);
 
     public InterOpCollection() {
         opCollection = new ArrayList<>();
