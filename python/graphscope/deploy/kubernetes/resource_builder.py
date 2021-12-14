@@ -551,6 +551,7 @@ class ReplicaSetBuilder(object):
         self._containers = []
         self._volumes = []
         self._envs = dict()
+        self._annotations = dict()
         self._image_pull_secrets = []
         self._host_network = False
 
@@ -566,6 +567,9 @@ class ReplicaSetBuilder(object):
 
     def set_image_pull_policy(self, policy):
         self._image_pull_policy = policy
+
+    def add_annotation(self, name, value):
+        self._annotations[name] = value
 
     def add_env(self, name, value=None):
         if value:
@@ -618,6 +622,7 @@ class ReplicaSetBuilder(object):
                 "template": {
                     "metadata": {
                         "labels": self._labels,
+                        "annotations": self._annotations,
                     },
                     "spec": self.build_pod_spec(),
                 },
@@ -799,6 +804,7 @@ class GSEngineBuilder(ReplicaSetBuilder):
                 }
             )
         )
+        super().add_annotation("kubectl.kubernetes.io/default-container", name)
 
     def add_mars_worker_container(
         self, name, image, cpu, mem, preemptive, port, scheduler_endpoint
