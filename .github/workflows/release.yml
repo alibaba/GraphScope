@@ -9,7 +9,8 @@ configuration:
   DOCKER_URL: registry.cn-hongkong.aliyuncs.com
   GSS_IMAGE: registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-store
   HELM_CHARTS_URL: https://graphscope.oss-cn-beijing.aliyuncs.com/charts/
-  OSS_REGION: oss-cn-beijing.aliyuncs.com
+  OSS_REGION: oss-cn-beijing
+  OSS_ENDPOINT: oss-cn-beijing.aliyuncs.com
 
 jobs:
   release-gss-image:
@@ -56,7 +57,7 @@ jobs:
         cd ${GITHUB_WORKSPACE}/charts
         ossutil64 -i ${{ secrets.ALIYUN_OSS_ACCESSKEY_ID }} \
                   -k ${{ secrets.ALIYUN_OSS_ACCESSKEY_SECRET }} \
-                  -e ${{ configuration.OSS_REGION }} \
+                  -e ${{ configuration.OSS_ENDPOINT }} \
                   cp -r oss://graphscope/charts ./
 
     - name: Package Charts
@@ -80,20 +81,13 @@ jobs:
       run: echo ::set-output name=TAG::${GITHUB_REF#refs/tags/v}
 
     - name: Upload Charts to OSS
-      run: |
-        cd ${GITHUB_WORKSPACE}/charts
-        # upload graphscope helm package
-        ossutil64 -i ${{ secrets.ALIYUN_OSS_ACCESSKEY_ID }} \
-                  -k ${{ secrets.ALIYUN_OSS_ACCESSKEY_SECRET }} \
-                  -e ${{ configuration.OSS_REGION }} \
-                  cp ./graphscope-${{ steps.tag.outputs.TAG }}-tgz oss://graphscope/charts/
-        # upload graphscope-store helm package
-        ossutil64 -i ${{ secrets.ALIYUN_OSS_ACCESSKEY_ID }} \
-                  -k ${{ secrets.ALIYUN_OSS_ACCESSKEY_SECRET }} \
-                  -e ${{ configuration.OSS_REGION }} \
-                  cp ./graphscope-store-${{ steps.tag.outputs.TAG }}-tgz oss://graphscope/charts/
-        # upload index.yaml
-        ossutil64 -i ${{ secrets.ALIYUN_OSS_ACCESSKEY_ID }} \
-                  -k ${{ secrets.ALIYUN_OSS_ACCESSKEY_SECRET }} \
-                  -e ${{ configuration.OSS_REGION }} \
-                  cp ./index.yaml oss://graphscope/charts/
+      uses: tvrcgo/upload-to-oss@v0.1.1
+      with:
+        key-id: ${{ secrets.ALIYUN_OSS_ACCESSKEY_ID }}
+        key-secret: ${{ secrets.ALIYUN_OSS_ACCESSKEY_SECRET }}
+        region: ${{ configuration.OSS_REGION }}
+        bucket: graphscope
+        assets: |
+          charts/graphscope-${{ steps.tag.outputs.TAG }}-tgz:/charts/graphscope-${{ steps.tag.outputs.TAG }}-tgz
+          charts/graphscope-store-${{ steps.tag.outputs.TAG }}-tgz:/charts/graphscope-store-${{ steps.tag.outputs.TAG }}-tgz
+          charts/index.yaml:/charts/index.yaml
