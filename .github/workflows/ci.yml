@@ -34,6 +34,7 @@ on:
       - '.github/workflows/gaia.yml'
       - '.github/workflows/gae.yml'
       - '.github/workflows/nightly.yml'
+      - '.github/workflows/release.yml'
       - '.github/workflows/networkx-forward-algo-nightly.yml'
       - '.github/workflows/build-graphscope-wheels-linux.yml'
       - '.github/workflows/build-graphscope-wheels-maos.yml'

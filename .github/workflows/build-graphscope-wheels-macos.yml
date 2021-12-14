@@ -1,15 +1,52 @@
 name: Build GraphScope Wheels on MacOS
 
+# on:
+#   workflow_dispatch:
+#   schedule:
+#     # The notifications for scheduled workflows are sent to the user who
+#     # last modified the cron syntax in the workflow file.
+#     # Trigger the workflow at 03:00(CST) every day.
+#     - cron:  '00 19 * * *'
+#   push:
+#     tags:
+#       - "v*"
 on:
-  workflow_dispatch:
-  schedule:
-    # The notifications for scheduled workflows are sent to the user who
-    # last modified the cron syntax in the workflow file.
-    # Trigger the workflow at 03:00(CST) every day.
-    - cron:  '00 19 * * *'
+  # Trigger the workflow on push or pull request,
+  # but only for the main branch
   push:
-    tags:
-      - "v*"
+    branches:
+      - main
+    paths-ignore:
+      - 'CONTRIBUTORS'
+      - 'LICENSE'
+      - 'NOTICE.txt'
+      - '**.md'
+      - '**.rst'
+      - 'docs/**'
+      - 'demo/**'
+      - 'scripts/**'
+      - 'tutorials/**'
+  pull_request:
+    branches:
+      - main
+    paths-ignore:
+      - 'CONTRIBUTORS'
+      - 'LICENSE'
+      - 'NOTICE.txt'
+      - '**.md'
+      - '**.rst'
+      - 'docs/**'
+      - 'demo/**'
+      - 'scripts/**'
+      - 'tutorials/**'
+      - '.github/workflows/docs.yml'
+      - '.github/workflows/gss.yml'
+      - '.github/workflows/gaia.yml'
+      - '.github/workflows/gae.yml'
+      - '.github/workflows/nightly.yml'
+      - '.github/workflows/networkx-forward-algo-nightly.yml'
+      - '.github/workflows/build-graphscope-wheels-linux.yml'
+      - '.github/workflows/build-graphscope-wheels-maos.yml'
 
 jobs:
   build-wheels:
@@ -51,7 +88,8 @@ jobs:
 
     # We do this, since failures on test.pypi aren't that bad
     - name: Publish to Test PyPI
-      if: ${{ github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v') && github.repository == 'alibaba/GraphScope' }}
+      # if: ${{ github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v') && github.repository == 'alibaba/GraphScope' }}
+      if: ${{ github.ref == 'refs/heads/main' && github.repository == 'alibaba/GraphScope' }}
       uses: pypa/gh-action-pypi-publish@v1.4.2
       with:
         user: __token__
@@ -60,7 +98,8 @@ jobs:
         packages_dir: coordinator/dist/wheelhouse/
 
     - name: Publish distribution to PyPI
-      if: ${{ github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v') && github.repository == 'alibaba/GraphScope' }}
+      # if: ${{ github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v') && github.repository == 'alibaba/GraphScope' }}
+      if: ${{ github.ref == 'refs/heads/main' && github.repository == 'alibaba/GraphScope' }}
       uses: pypa/gh-action-pypi-publish@v1.4.2
       with:
         user: __token__
@@ -110,7 +149,8 @@ jobs:
 
     # We do this, since failures on test.pypi aren't that bad
     - name: Publish to Test PyPI
-      if: ${{ github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v') && github.repository == 'alibaba/GraphScope' }}
+      # if: ${{ github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v') && github.repository == 'alibaba/GraphScope' }}
+      if: ${{ github.ref == 'refs/heads/main' && github.repository == 'alibaba/GraphScope' }}
       uses: pypa/gh-action-pypi-publish@v1.4.2
       with:
         user: __token__
@@ -119,7 +159,8 @@ jobs:
         packages_dir: python/dist/wheelhouse/
 
     - name: Publish distribution to PyPI
-      if: ${{ github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v') && github.repository == 'alibaba/GraphScope' }}
+      # if: ${{ github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v') && github.repository == 'alibaba/GraphScope' }}
+      if: ${{ github.ref == 'refs/heads/main' && github.repository == 'alibaba/GraphScope' }}
       uses: pypa/gh-action-pypi-publish@v1.4.2
       with:
         user: __token__
