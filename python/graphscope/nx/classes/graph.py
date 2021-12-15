@@ -1916,8 +1916,7 @@ class Graph(_GraphBase):
                 lid=location[1],
                 label_id=location[2],
             )
-        ret = op.eval()
-        return ret
+        return op.eval()
 
     @parse_ret_as_dict
     def _get_nbrs(self, n, report_type=types_pb2.SUCCS_BY_NODE):
