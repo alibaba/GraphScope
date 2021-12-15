@@ -4,8 +4,6 @@ newIssueWelcomeComment: >
 newPRWelcomeComment: >
   Thanks for submitting your first pull request! You are awesome! 🤗
 
-  Please make sure you followed the pull request template, as this will help us review your contribution more quickly.
+  Please make sure you have signed the [CLA](https://cla-assistant.io/alibaba/GraphScope), as this is a mandatory check before a PR being merged.
 
-  You can meet the other graphscopers by joining our [Slack](http://slack.graphscope.io/) and say Hi!
-
-  Welcome to the GraphScope community! 🎉
+  Welcome to the GraphScope community! 🎉 You can meet the community on [DingTalk](https://h5.dingtalk.com/circle/healthCheckin.html?dtaction=os&corpId=dingb4b76e0fa9ccd8d516fd0f0acdf19f55&68e71190=0fe34ec0&cbdbhh=qwertyuiop) or [Slack](http://slack.graphscope.io/).
