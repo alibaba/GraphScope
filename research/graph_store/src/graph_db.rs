@@ -40,7 +40,9 @@ pub struct RowWithSchema<'a> {
 
 impl<'a> Debug for RowWithSchema<'a> {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        f.debug_struct("RowWithSchema").field("row", &self.row).finish()
+        f.debug_struct("RowWithSchema")
+            .field("row", &self.row)
+            .finish()
     }
 }
 
@@ -83,7 +85,10 @@ impl<'a> RowWithSchema<'a> {
     pub fn into_properties(self) -> Option<HashMap<String, ItemType>> {
         self.header.and_then(|header| {
             let mut map = HashMap::new();
-            for (key, (_, index)) in header.iter().sorted_by(|x, y| x.1 .1.cmp(&y.1 .1)) {
+            for (key, (_, index)) in header
+                .iter()
+                .sorted_by(|x, y| x.1 .1.cmp(&y.1 .1))
+            {
                 if let Some(val) = self.row.get(*index) {
                     if let Some(obj) = val.try_to_owned() {
                         map.insert(key.clone(), obj);
@@ -125,11 +130,15 @@ impl<'a, G: IndexType> LocalVertex<'a, G> {
     }
 
     pub fn get_property(&self, key: &str) -> Option<ItemTypeRef> {
-        self.properties.as_ref().and_then(|prop| prop.get(key))
+        self.properties
+            .as_ref()
+            .and_then(|prop| prop.get(key))
     }
 
     pub fn clone_all_properties(&self) -> Option<HashMap<String, ItemType>> {
-        self.properties.as_ref().and_then(|prop| prop.clone().into_properties())
+        self.properties
+            .as_ref()
+            .and_then(|prop| prop.clone().into_properties())
     }
 }
 
@@ -196,16 +205,24 @@ impl<'a, G: IndexType, I: IndexType> LocalEdge<'a, G, I> {
         }
     }
 
+    pub fn is_from_start(&self) -> bool {
+        self.from_start
+    }
+
     pub fn get_label(&self) -> LabelId {
         self.label
     }
 
     pub fn get_property(&self, key: &str) -> Option<ItemTypeRef> {
-        self.properties.as_ref().and_then(|prop| prop.get(key))
+        self.properties
+            .as_ref()
+            .and_then(|prop| prop.get(key))
     }
 
     pub fn clone_all_properties(&self) -> Option<HashMap<String, ItemType>> {
-        self.properties.as_ref().and_then(|prop| prop.clone().into_properties())
+        self.properties
+            .as_ref()
+            .and_then(|prop| prop.clone().into_properties())
     }
 }
 
@@ -231,23 +248,17 @@ pub trait GlobalStoreTrait<G: IndexType, I: IndexType> {
     ) -> Iter<LocalEdge<G, I>>;
 
     /// A wrapper of `Self::get_adj_vertices()` for outgoing direction.
-    fn get_out_vertices(
-        &self, src_id: G, edge_labels: Option<&Vec<LabelId>>,
-    ) -> Iter<LocalVertex<G>> {
+    fn get_out_vertices(&self, src_id: G, edge_labels: Option<&Vec<LabelId>>) -> Iter<LocalVertex<G>> {
         self.get_adj_vertices(src_id, edge_labels, Direction::Outgoing)
     }
 
     /// A wrapper of `Self::get_adj_vertices()` for incoming direction.
-    fn get_in_vertices(
-        &self, src_id: G, edge_labels: Option<&Vec<LabelId>>,
-    ) -> Iter<LocalVertex<G>> {
+    fn get_in_vertices(&self, src_id: G, edge_labels: Option<&Vec<LabelId>>) -> Iter<LocalVertex<G>> {
         self.get_adj_vertices(src_id, edge_labels, Direction::Incoming)
     }
 
     /// Concatenate `get_out_vertices()` and `get_in_vertices()`
-    fn get_both_vertices(
-        &self, src_id: G, edge_labels: Option<&Vec<LabelId>>,
-    ) -> Iter<LocalVertex<G>> {
+    fn get_both_vertices(&self, src_id: G, edge_labels: Option<&Vec<LabelId>>) -> Iter<LocalVertex<G>> {
         Iter::from_iter(
             self.get_out_vertices(src_id, edge_labels)
                 .chain(self.get_in_vertices(src_id, edge_labels)),
@@ -255,9 +266,7 @@ pub trait GlobalStoreTrait<G: IndexType, I: IndexType> {
     }
 
     /// A wrapper of `Self::get_adj_edges()` for outgoing direction.
-    fn get_out_edges(
-        &self, src_id: G, edge_labels: Option<&Vec<LabelId>>,
-    ) -> Iter<LocalEdge<G, I>> {
+    fn get_out_edges(&self, src_id: G, edge_labels: Option<&Vec<LabelId>>) -> Iter<LocalEdge<G, I>> {
         self.get_adj_edges(src_id, edge_labels, Direction::Outgoing)
     }
 
@@ -267,11 +276,10 @@ pub trait GlobalStoreTrait<G: IndexType, I: IndexType> {
     }
 
     /// A wrapper of `Self::get_adj_edges()` for both directions.
-    fn get_both_edges(
-        &self, src_id: G, edge_labels: Option<&Vec<LabelId>>,
-    ) -> Iter<LocalEdge<G, I>> {
+    fn get_both_edges(&self, src_id: G, edge_labels: Option<&Vec<LabelId>>) -> Iter<LocalEdge<G, I>> {
         Iter::from_iter(
-            self.get_out_edges(src_id, edge_labels).chain(self.get_in_edges(src_id, edge_labels)),
+            self.get_out_edges(src_id, edge_labels)
+                .chain(self.get_in_edges(src_id, edge_labels)),
         )
     }
 
@@ -318,9 +326,7 @@ pub trait GlobalStoreUpdate<G: Copy, I> {
     /// * `Err` if the vertex does not exist or unexpected errors occur.
     /// * `Ok(None)` if the vertex's properties do not present, and the data is inserted
     /// * `Ok(Some(old_data))` if the vertex's properties do present, and the data is updated.
-    fn add_or_update_vertex_properties(
-        &mut self, global_id: G, properties: Row,
-    ) -> GDBResult<Option<Row>>;
+    fn add_or_update_vertex_properties(&mut self, global_id: G, properties: Row) -> GDBResult<Option<Row>>;
 
     /// And a vertex (cannot be corner vertex) with its properties. Return
     /// * `Err` if the vertex does not exist or unexpected errors occur

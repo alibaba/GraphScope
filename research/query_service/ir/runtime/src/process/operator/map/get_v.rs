@@ -43,12 +43,12 @@ impl MapFunction<Record, Record> for GetVertexOperator {
             .ok_or(FnExecError::unexpected_data_error("tag does not refer to a graph element"))?;
         let (id, label) = match vertex_or_edge {
             VertexOrEdge::V(_) => Err(FnExecError::unexpected_data_error(
-                "should not apply `GetV` (`GetDetails` instead) on a vertex",
+                "should not apply `GetV` (`Auxilia` instead) on a vertex",
             ))?,
             VertexOrEdge::E(e) => match self.opt {
                 VOpt::Start => (e.src_id, e.get_src_label()),
                 VOpt::End => (e.dst_id, e.get_dst_label()),
-                VOpt::Other => Err(FnExecError::unsupported_error("VOpt ot Other is not supported"))?,
+                VOpt::Other => (e.get_other_id(), e.get_other_label()),
             },
         };
         let vertex = Vertex::new(DynDetails::new(DefaultDetails::with(id, label.map(|l| l.clone()))));

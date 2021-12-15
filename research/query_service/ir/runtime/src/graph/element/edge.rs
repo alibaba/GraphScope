@@ -30,6 +30,8 @@ pub struct Edge {
     pub dst_id: ID,
     src_label: Option<NameOrId>,
     dst_label: Option<NameOrId>,
+    /// An indicator for whether this edge is obtained from the source or destination vertex
+    from_src: bool,
     details: DynDetails,
 }
 
@@ -55,7 +57,11 @@ impl GraphElement for Edge {
 
 impl Edge {
     pub fn new(src: ID, dst: ID, details: DynDetails) -> Self {
-        Edge { src_id: src, dst_id: dst, src_label: None, dst_label: None, details }
+        Edge { src_id: src, dst_id: dst, src_label: None, dst_label: None, from_src: true, details }
+    }
+
+    pub fn with_from_src(src: ID, dst: ID, from_src: bool, details: DynDetails) -> Self {
+        Edge { src_id: src, dst_id: dst, src_label: None, dst_label: None, from_src, details }
     }
 
     pub fn set_src_label(&mut self, label: NameOrId) {
@@ -73,6 +79,22 @@ impl Edge {
     pub fn get_dst_label(&self) -> Option<&NameOrId> {
         self.dst_label.as_ref()
     }
+
+    pub fn get_other_id(&self) -> ID {
+        if self.from_src {
+            self.dst_id
+        } else {
+            self.src_id
+        }
+    }
+
+    pub fn get_other_label(&self) -> Option<&NameOrId> {
+        if self.from_src {
+            self.get_dst_label()
+        } else {
+            self.get_src_label()
+        }
+    }
 }
 
 impl Encode for Edge {
@@ -81,6 +103,7 @@ impl Encode for Edge {
         writer.write_u128(self.dst_id)?;
         self.src_label.write_to(writer)?;
         self.dst_label.write_to(writer)?;
+        self.from_src.write_to(writer)?;
         self.details.write_to(writer)?;
         Ok(())
     }
@@ -92,8 +115,9 @@ impl Decode for Edge {
         let dst_id = reader.read_u128()?;
         let src_label = <Option<NameOrId>>::read_from(reader)?;
         let dst_label = <Option<NameOrId>>::read_from(reader)?;
+        let from_src = <bool>::read_from(reader)?;
         let details = <DynDetails>::read_from(reader)?;
-        Ok(Edge { src_id, dst_id, src_label, dst_label, details })
+        Ok(Edge { src_id, dst_id, src_label, dst_label, from_src, details })
     }
 }
 

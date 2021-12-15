@@ -369,19 +369,20 @@ fn to_runtime_vertex_with_property(v: LocalVertex<DefaultId>, props: &Vec<NameOr
 fn to_runtime_edge(
     e: LocalEdge<DefaultId, InternalId>, _store: &'static LargeGraphDB<DefaultId, InternalId>,
 ) -> Edge {
-    // TODO: For edges, we clone all properties by default for now. But we'd better get properties on demand
     let id = encode_runtime_e_id(&e);
     let label = encode_runtime_e_label(&e);
     let mut properties = HashMap::new();
+    // TODO: For edges, we clone all properties by default for now. But we'd better get properties on demand
     if let Some(mut prop_vals) = e.clone_all_properties() {
         for (prop, obj) in prop_vals.drain() {
             properties.insert(prop.into(), obj as Object);
         }
     }
 
-    Edge::new(
+    Edge::with_from_src(
         e.get_src_id() as ID,
         e.get_dst_id() as ID,
+        e.is_from_start(),
         DynDetails::new(DefaultDetails::with_property(id, label, properties)),
     )
 }

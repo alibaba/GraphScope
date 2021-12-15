@@ -30,7 +30,7 @@ use crate::expr::eval::Context;
 use crate::graph::element::{Edge, Element, GraphElement, Vertex, VertexOrEdge};
 use crate::graph::property::DynDetails;
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, PartialOrd)]
 pub enum ObjectElement {
     // TODO: common-used object elements
     None,
@@ -242,18 +242,6 @@ impl Hash for RecordKey {
     }
 }
 
-impl PartialEq for ObjectElement {
-    fn eq(&self, other: &Self) -> bool {
-        match (self, other) {
-            (ObjectElement::Prop(o1), ObjectElement::Prop(o2)) => o1 == o2,
-            (ObjectElement::Count(o1), ObjectElement::Count(o2)) => o1 == o2,
-            (ObjectElement::Agg(o1), ObjectElement::Agg(o2)) => o1 == o2,
-            (ObjectElement::None, ObjectElement::None) => true,
-            _ => false,
-        }
-    }
-}
-
 impl PartialEq for RecordElement {
     fn eq(&self, other: &Self) -> bool {
         match (self, other) {
@@ -281,18 +269,6 @@ impl PartialEq for RecordKey {
 }
 
 impl Eq for RecordKey {}
-
-impl PartialOrd for ObjectElement {
-    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
-        match (self, other) {
-            (ObjectElement::Prop(o1), ObjectElement::Prop(o2)) => o1.partial_cmp(o2),
-            (ObjectElement::Count(o1), ObjectElement::Count(o2)) => o1.partial_cmp(o2),
-            (ObjectElement::Agg(o1), ObjectElement::Agg(o2)) => o1.partial_cmp(o2),
-            (ObjectElement::None, ObjectElement::None) => Some(Ordering::Equal),
-            _ => None,
-        }
-    }
-}
 
 impl PartialOrd for RecordElement {
     fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
