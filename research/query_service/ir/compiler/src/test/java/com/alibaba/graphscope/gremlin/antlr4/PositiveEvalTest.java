@@ -238,4 +238,69 @@ public class PositiveEvalTest {
     public void g_V_limit_out_out_limit() {
         Assert.assertEquals(g.V().limit(1).out().out().limit(1), eval("g.V().limit(1).out().out().limit(1)"));
     }
+
+    @Test
+    public void g_V_has_property_test() {
+        Assert.assertEquals(g.V().has("name", "marko"), eval("g.V().has('name', 'marko')"));
+    }
+
+    @Test
+    public void g_V_has_eq_test() {
+        Assert.assertEquals(g.V().has("name", P.eq("marko")), eval("g.V().has('name', eq('marko'))"));
+    }
+
+    @Test
+    public void g_V_has_neq_test() {
+        Assert.assertEquals(g.V().has("name", P.neq("marko")), eval("g.V().has('name', neq('marko'))"));
+    }
+
+    @Test
+    public void g_V_has_lt_test() {
+        Assert.assertEquals(g.V().has("age", P.lt(10)), eval("g.V().has('age', lt(10))"));
+    }
+
+    @Test
+    public void g_V_has_lte_test() {
+        Assert.assertEquals(g.V().has("age", P.lte(10)), eval("g.V().has('age', lte(10))"));
+    }
+
+    @Test
+    public void g_V_has_gt_test() {
+        Assert.assertEquals(g.V().has("age", P.gt(10)), eval("g.V().has('age', gt(10))"));
+    }
+
+    @Test
+    public void g_V_has_gte_test() {
+        Assert.assertEquals(g.V().has("age", P.gte(10)), eval("g.V().has('age', gte(10))"));
+    }
+
+    @Test
+    public void g_V_has_within_int_test() {
+        Assert.assertEquals(g.V().has("age", P.within(10)), eval("g.V().has('age', within(10))"));
+    }
+
+    @Test
+    public void g_V_has_within_ints_test() {
+        Assert.assertEquals(g.V().has("age", P.within(10, 11)), eval("g.V().has('age', within(10, 11))"));
+    }
+
+    @Test
+    public void g_V_has_without_int_test() {
+        Assert.assertEquals(g.V().has("age", P.without(10)), eval("g.V().has('age', without(10))"));
+    }
+
+    @Test
+    public void g_V_has_without_ints_test() {
+        Assert.assertEquals(g.V().has("age", P.without(10, 11)), eval("g.V().has('age', without(10, 11))"));
+    }
+
+    @Test
+    public void g_V_has_within_strs_test() {
+        Assert.assertEquals(g.V().has("name", P.within("marko", "josh")), eval("g.V().has('name', within('marko', 'josh'))"));
+    }
+
+    @Test
+    public void g_V_has_without_strs_test() {
+        Assert.assertEquals(g.V().has("name", P.without("marko", "josh")), eval("g.V().has('name', without('marko', 'josh'))"));
+    }
 }

@@ -320,12 +320,14 @@ traversalPredicate_gte
     : 'gte' LPAREN genericLiteral RPAREN
     ;
 
+// within() is unsupported
 traversalPredicate_within
-    : 'within' LPAREN genericLiteralList RPAREN
+    : 'within' LPAREN genericLiteralExpr RPAREN
     ;
 
+// without() is unsupported
 traversalPredicate_without
-    : 'without' LPAREN genericLiteralList RPAREN
+    : 'without' LPAREN genericLiteralExpr RPAREN
     ;
 
 traversalOrder

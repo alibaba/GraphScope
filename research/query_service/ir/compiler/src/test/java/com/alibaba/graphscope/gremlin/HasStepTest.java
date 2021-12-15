@@ -17,6 +17,7 @@
 package com.alibaba.graphscope.gremlin;
 
 import com.alibaba.graphscope.common.intermediate.operator.SelectOp;
+import org.apache.tinkerpop.gremlin.process.traversal.P;
 import org.apache.tinkerpop.gremlin.process.traversal.Step;
 import org.apache.tinkerpop.gremlin.process.traversal.Traversal;
 import org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.GraphTraversalSource;
@@ -35,5 +36,101 @@ public class HasStepTest {
         Step hasStep = traversal.asAdmin().getEndStep();
         SelectOp op = (SelectOp) IrPlanBuidler.StepTransformFactory.HAS_STEP.apply(hasStep);
         Assert.assertEquals("@.name == \"marko\"", op.getPredicate().get().getArg());
+    }
+
+    @Test
+    public void g_V_has_eq_test() {
+        Traversal traversal = g.V().has("name", P.eq("marko"));
+        Step hasStep = traversal.asAdmin().getEndStep();
+        SelectOp op = (SelectOp) IrPlanBuidler.StepTransformFactory.HAS_STEP.apply(hasStep);
+        Assert.assertEquals("@.name == \"marko\"", op.getPredicate().get().getArg());
+    }
+
+    @Test
+    public void g_V_has_neq_test() {
+        Traversal traversal = g.V().has("name", P.neq("marko"));
+        Step hasStep = traversal.asAdmin().getEndStep();
+        SelectOp op = (SelectOp) IrPlanBuidler.StepTransformFactory.HAS_STEP.apply(hasStep);
+        Assert.assertEquals("@.name != \"marko\"", op.getPredicate().get().getArg());
+    }
+
+    @Test
+    public void g_V_has_lt_test() {
+        Traversal traversal = g.V().has("age", P.lt(10));
+        Step hasStep = traversal.asAdmin().getEndStep();
+        SelectOp op = (SelectOp) IrPlanBuidler.StepTransformFactory.HAS_STEP.apply(hasStep);
+        Assert.assertEquals("@.age < 10", op.getPredicate().get().getArg());
+    }
+
+    @Test
+    public void g_V_has_lte_test() {
+        Traversal traversal = g.V().has("age", P.lte(10));
+        Step hasStep = traversal.asAdmin().getEndStep();
+        SelectOp op = (SelectOp) IrPlanBuidler.StepTransformFactory.HAS_STEP.apply(hasStep);
+        Assert.assertEquals("@.age <= 10", op.getPredicate().get().getArg());
+    }
+
+    @Test
+    public void g_V_has_gt_test() {
+        Traversal traversal = g.V().has("age", P.gt(10));
+        Step hasStep = traversal.asAdmin().getEndStep();
+        SelectOp op = (SelectOp) IrPlanBuidler.StepTransformFactory.HAS_STEP.apply(hasStep);
+        Assert.assertEquals("@.age > 10", op.getPredicate().get().getArg());
+    }
+
+    @Test
+    public void g_V_has_gte_test() {
+        Traversal traversal = g.V().has("age", P.gte(10));
+        Step hasStep = traversal.asAdmin().getEndStep();
+        SelectOp op = (SelectOp) IrPlanBuidler.StepTransformFactory.HAS_STEP.apply(hasStep);
+        Assert.assertEquals("@.age >= 10", op.getPredicate().get().getArg());
+    }
+
+    @Test
+    public void g_V_has_within_int_test() {
+        Traversal traversal = g.V().has("age", P.within(10));
+        Step hasStep = traversal.asAdmin().getEndStep();
+        SelectOp op = (SelectOp) IrPlanBuidler.StepTransformFactory.HAS_STEP.apply(hasStep);
+        Assert.assertEquals("@.age within [10]", op.getPredicate().get().getArg());
+    }
+
+    @Test
+    public void g_V_has_within_ints_test() {
+        Traversal traversal = g.V().has("age", P.within(10, 11));
+        Step hasStep = traversal.asAdmin().getEndStep();
+        SelectOp op = (SelectOp) IrPlanBuidler.StepTransformFactory.HAS_STEP.apply(hasStep);
+        Assert.assertEquals("@.age within [10, 11]", op.getPredicate().get().getArg());
+    }
+
+    @Test
+    public void g_V_has_without_int_test() {
+        Traversal traversal = g.V().has("age", P.without(10));
+        Step hasStep = traversal.asAdmin().getEndStep();
+        SelectOp op = (SelectOp) IrPlanBuidler.StepTransformFactory.HAS_STEP.apply(hasStep);
+        Assert.assertEquals("@.age without [10]", op.getPredicate().get().getArg());
+    }
+
+    @Test
+    public void g_V_has_without_ints_test() {
+        Traversal traversal = g.V().has("age", P.without(10, 11));
+        Step hasStep = traversal.asAdmin().getEndStep();
+        SelectOp op = (SelectOp) IrPlanBuidler.StepTransformFactory.HAS_STEP.apply(hasStep);
+        Assert.assertEquals("@.age without [10, 11]", op.getPredicate().get().getArg());
+    }
+
+    @Test
+    public void g_V_has_within_strs_test() {
+        Traversal traversal = g.V().has("name", P.within("marko", "josh"));
+        Step hasStep = traversal.asAdmin().getEndStep();
+        SelectOp op = (SelectOp) IrPlanBuidler.StepTransformFactory.HAS_STEP.apply(hasStep);
+        Assert.assertEquals("@.name within [\"marko\", \"josh\"]", op.getPredicate().get().getArg());
+    }
+
+    @Test
+    public void g_V_has_without_strs_test() {
+        Traversal traversal = g.V().has("name", P.without("marko", "josh"));
+        Step hasStep = traversal.asAdmin().getEndStep();
+        SelectOp op = (SelectOp) IrPlanBuidler.StepTransformFactory.HAS_STEP.apply(hasStep);
+        Assert.assertEquals("@.name without [\"marko\", \"josh\"]", op.getPredicate().get().getArg());
     }
 }
