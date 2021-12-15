@@ -1,0 +1,11 @@
+newIssueWelcomeComment: >
+  Thanks for opening your first issue here! Be sure to follow the issue template! And a maintainer will get back to you shortly!
+
+newPRWelcomeComment: >
+	Thanks for submitting your first pull request! You are awesome! 🤗
+
+  Please make sure you followed the pull request template, as this will help us review your contribution more quickly.
+
+  You can meet the other graphscopers by joining our [Slack](http://slack.graphscope.io/) and say Hi!
+
+	Welcome to the GraphScope community! 🎉
