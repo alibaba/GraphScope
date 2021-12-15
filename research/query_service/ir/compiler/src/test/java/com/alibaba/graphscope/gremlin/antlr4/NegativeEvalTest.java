@@ -1,3 +1,19 @@
+/*
+ * Copyright 2020 Alibaba Group Holding Limited.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package com.alibaba.graphscope.gremlin.antlr4;
 
 import com.alibaba.graphscope.gremlin.exception.InvalidGremlinScriptException;
@@ -143,6 +159,94 @@ public class NegativeEvalTest {
     public void g_V_bothV_test() {
         try {
             scriptEngine.eval("g.V().bothV()", context);
+        } catch (InvalidGremlinScriptException e) {
+            // expected error
+            return;
+        }
+        Assert.fail();
+    }
+
+    @Test
+    public void g_V_valueMap_int_test() {
+        try {
+            scriptEngine.eval("g.V().valueMap(1)", context);
+        } catch (InvalidGremlinScriptException e) {
+            // expected error
+            return;
+        }
+        Assert.fail();
+    }
+
+    @Test
+    public void g_V_select_none_test() {
+        try {
+            scriptEngine.eval("g.V().select()", context);
+        } catch (InvalidGremlinScriptException e) {
+            // expected error
+            return;
+        }
+        Assert.fail();
+    }
+
+    @Test
+    public void g_V_select_by_none_test() {
+        try {
+            scriptEngine.eval("g.V().select('a').by()", context);
+        } catch (InvalidGremlinScriptException e) {
+            // expected error
+            return;
+        }
+        Assert.fail();
+    }
+
+    @Test
+    public void g_V_select_by_keys_test() {
+        try {
+            scriptEngine.eval("g.V().select().by('name', 'id')", context);
+        } catch (InvalidGremlinScriptException e) {
+            // expected error
+            return;
+        }
+        Assert.fail();
+    }
+
+    @Test
+    public void g_V_order_by_none_test() {
+        try {
+            scriptEngine.eval("g.V().order().by()", context);
+        } catch (InvalidGremlinScriptException e) {
+            // expected error
+            return;
+        }
+        Assert.fail();
+    }
+
+    @Test
+    public void g_V_order_by_orders_test() {
+        try {
+            scriptEngine.eval("g.V().order().by(asc, desc)", context);
+        } catch (InvalidGremlinScriptException e) {
+            // expected error
+            return;
+        }
+        Assert.fail();
+    }
+
+    @Test
+    public void g_V_order_by_keys_test() {
+        try {
+            scriptEngine.eval("g.V().order().by('name', 'id')", context);
+        } catch (InvalidGremlinScriptException e) {
+            // expected error
+            return;
+        }
+        Assert.fail();
+    }
+
+    @Test
+    public void g_V_valueMap_none_test() {
+        try {
+            scriptEngine.eval("g.V().valueMap()", context);
         } catch (InvalidGremlinScriptException e) {
             // expected error
             return;

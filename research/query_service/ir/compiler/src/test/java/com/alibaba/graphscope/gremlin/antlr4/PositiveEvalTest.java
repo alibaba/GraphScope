@@ -17,8 +17,13 @@
 package com.alibaba.graphscope.gremlin.antlr4;
 
 import com.alibaba.graphscope.gremlin.plugin.script.AntlrToJavaScriptEngine;
+import org.apache.tinkerpop.gremlin.process.traversal.Order;
 import org.apache.tinkerpop.gremlin.process.traversal.P;
+import org.apache.tinkerpop.gremlin.process.traversal.Pop;
+import org.apache.tinkerpop.gremlin.process.traversal.Traversal;
 import org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.GraphTraversalSource;
+import org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.__;
+import org.apache.tinkerpop.gremlin.process.traversal.step.map.SelectStep;
 import org.apache.tinkerpop.gremlin.structure.Graph;
 import org.apache.tinkerpop.gremlin.tinkergraph.structure.TinkerFactory;
 import org.junit.Assert;
@@ -146,97 +151,239 @@ public class PositiveEvalTest {
     // has
 
     @Test
-    public void g_V_hasLabel() {
+    public void g_V_hasLabel_test() {
         Assert.assertEquals(g.V().hasLabel("person"), eval("g.V().hasLabel('person')"));
     }
 
     @Test
-    public void g_V_hasLabels() {
+    public void g_V_hasLabels_test() {
         Assert.assertEquals(g.V().hasLabel("person", "software"), eval("g.V().hasLabel('person', 'software')"));
     }
 
     @Test
-    public void g_V_hasId() {
+    public void g_V_hasId_test() {
         Assert.assertEquals(g.V().hasId(1), eval("g.V().hasId(1)"));
     }
 
     @Test
-    public void g_V_hasIds() {
+    public void g_V_hasIds_test() {
         Assert.assertEquals(g.V().hasId(1, 2), eval("g.V().hasId(1, 2)"));
     }
 
     @Test
-    public void g_V_has_name_str() {
+    public void g_V_has_name_str_test() {
         Assert.assertEquals(g.V().has("name", "marko"), eval("g.V().has('name', 'marko')"));
     }
 
     @Test
-    public void g_V_has_age_int() {
+    public void g_V_has_age_int_test() {
         Assert.assertEquals(g.V().has("age", 10), eval("g.V().has('age', 10)"));
     }
 
     // predicate
 
     @Test
-    public void g_V_has_age_P_eq() {
+    public void g_V_has_age_P_eq_test() {
         Assert.assertEquals(g.V().has("age", P.eq(10)), eval("g.V().has('age', eq(10))"));
     }
 
     @Test
-    public void g_V_has_age_P_neq() {
+    public void g_V_has_age_P_neq_test() {
         Assert.assertEquals(g.V().has("age", P.neq(10)), eval("g.V().has('age', neq(10))"));
     }
 
     @Test
-    public void g_V_has_age_P_lt() {
+    public void g_V_has_age_P_lt_test() {
         Assert.assertEquals(g.V().has("age", P.lt(10)), eval("g.V().has('age', lt(10))"));
     }
 
     @Test
-    public void g_V_has_age_P_lte() {
+    public void g_V_has_age_P_lte_test() {
         Assert.assertEquals(g.V().has("age", P.lte(10)), eval("g.V().has('age', lte(10))"));
     }
 
     @Test
-    public void g_V_has_age_P_gt() {
+    public void g_V_has_age_P_gt_test() {
         Assert.assertEquals(g.V().has("age", P.gt(10)), eval("g.V().has('age', gt(10))"));
     }
 
     @Test
-    public void g_V_has_age_P_gte() {
+    public void g_V_has_age_P_gte_test() {
         Assert.assertEquals(g.V().has("age", P.gte(10)), eval("g.V().has('age', gte(10))"));
     }
 
     // limit
 
     @Test
-    public void g_V_limit() {
+    public void g_V_limit_test() {
         Assert.assertEquals(g.V().limit(1), eval("g.V().limit(1)"));
     }
 
     @Test
-    public void g_V_hasLabel_limit() {
+    public void g_V_hasLabel_limit_test() {
         Assert.assertEquals(g.V().limit(1), eval("g.V().limit(1)"));
     }
 
     @Test
-    public void g_V_limit_hasLabel() {
+    public void g_V_limit_hasLabel_test() {
         Assert.assertEquals(g.V().hasLabel("person").limit(1), eval("g.V().hasLabel('person').limit(1)"));
     }
 
     @Test
-    public void g_V_out_limit() {
+    public void g_V_out_limit_test() {
         Assert.assertEquals(g.V().out().limit(1), eval("g.V().out().limit(1)"));
     }
 
     @Test
-    public void g_V_hasLabel_out_limit() {
+    public void g_V_hasLabel_out_limit_test() {
         Assert.assertEquals(g.V().hasLabel("person").out().limit(1), eval("g.V().hasLabel('person').out().limit(1)"));
     }
 
     @Test
-    public void g_V_limit_out_out_limit() {
+    public void g_V_limit_out_out_limit_test() {
         Assert.assertEquals(g.V().limit(1).out().out().limit(1), eval("g.V().limit(1).out().out().limit(1)"));
+    }
+
+    @Test
+    public void g_V_valueMap_str_test() {
+        Assert.assertEquals(g.V().valueMap("name"), eval("g.V().valueMap('name')"));
+    }
+
+    @Test
+    public void g_V_valueMap_strs_test() {
+        Assert.assertEquals(g.V().valueMap("name", "id"), eval("g.V().valueMap('name', 'id')"));
+    }
+
+    @Test
+    public void g_V_select_a_test() {
+        // SelectOneStep is integrated with SelectStep
+        Traversal expected = g.V().select("a");
+        expected.asAdmin().removeStep(1);
+        expected.asAdmin().addStep(new SelectStep(expected.asAdmin(), Pop.last, "a", ""));
+        Assert.assertEquals(expected, eval("g.V().select('a')"));
+    }
+
+    @Test
+    public void g_V_select_a_b_test() {
+        Assert.assertEquals(g.V().select("a", "b"), eval("g.V().select('a', 'b')"));
+    }
+
+    @Test
+    public void g_V_select_a_b_c_test() {
+        Assert.assertEquals(g.V().select("a", "b", "c"), eval("g.V().select('a', 'b', 'c')"));
+    }
+
+    @Test
+    public void g_V_select_a_b_by_str_test() {
+        Assert.assertEquals(g.V().select("a", "b").by("name"), eval("g.V().select('a', 'b').by('name')"));
+    }
+
+    @Test
+    public void g_V_select_a_b_by_valueMap_key_test() {
+        Assert.assertEquals(g.V().select("a", "b").by(__.valueMap("name")),
+                eval("g.V().select('a', 'b').by(valueMap('name'))"));
+    }
+
+    @Test
+    public void g_V_select_a_b_by_valueMap_keys_test() {
+        Assert.assertEquals(g.V().select("a", "b").by(__.valueMap("name", "id")).by(__.valueMap("age")),
+                eval("g.V().select('a', 'b').by(valueMap('name', 'id')).by(valueMap('age'))"));
+    }
+
+    @Test
+    public void g_V_order_test() {
+        Assert.assertEquals(g.V().order(), eval("g.V().order()"));
+    }
+
+    @Test
+    public void g_V_order_by_asc_test() {
+        Assert.assertEquals(g.V().order().by(Order.asc), eval("g.V().order().by(asc)"));
+    }
+
+    @Test
+    public void g_V_order_by_desc_test() {
+        Assert.assertEquals(g.V().order().by(Order.desc), eval("g.V().order().by(desc)"));
+    }
+
+    @Test
+    public void g_V_order_by_key_asc_test() {
+        Assert.assertEquals(g.V().order().by("name", Order.asc), eval("g.V().order().by('name', asc)"));
+    }
+
+    @Test
+    public void g_V_order_by_key_desc_test() {
+        Assert.assertEquals(g.V().order().by("name", Order.desc), eval("g.V().order().by('name', desc)"));
+    }
+
+    @Test
+    public void g_V_order_by_keys() {
+        Assert.assertEquals(g.V().order().by("name", Order.desc).by("id", Order.asc),
+                eval("g.V().order().by('name', desc).by('id', asc)"));
+    }
+
+    @Test
+    public void g_V_has_property_test() {
+        Assert.assertEquals(g.V().has("name", "marko"), eval("g.V().has('name', 'marko')"));
+    }
+
+    @Test
+    public void g_V_has_eq_test() {
+        Assert.assertEquals(g.V().has("name", P.eq("marko")), eval("g.V().has('name', eq('marko'))"));
+    }
+
+    @Test
+    public void g_V_has_neq_test() {
+        Assert.assertEquals(g.V().has("name", P.neq("marko")), eval("g.V().has('name', neq('marko'))"));
+    }
+
+    @Test
+    public void g_V_has_lt_test() {
+        Assert.assertEquals(g.V().has("age", P.lt(10)), eval("g.V().has('age', lt(10))"));
+    }
+
+    @Test
+    public void g_V_has_lte_test() {
+        Assert.assertEquals(g.V().has("age", P.lte(10)), eval("g.V().has('age', lte(10))"));
+    }
+
+    @Test
+    public void g_V_has_gt_test() {
+        Assert.assertEquals(g.V().has("age", P.gt(10)), eval("g.V().has('age', gt(10))"));
+    }
+
+    @Test
+    public void g_V_has_gte_test() {
+        Assert.assertEquals(g.V().has("age", P.gte(10)), eval("g.V().has('age', gte(10))"));
+    }
+
+    @Test
+    public void g_V_has_within_int_test() {
+        Assert.assertEquals(g.V().has("age", P.within(10)), eval("g.V().has('age', within(10))"));
+    }
+
+    @Test
+    public void g_V_has_within_ints_test() {
+        Assert.assertEquals(g.V().has("age", P.within(10, 11)), eval("g.V().has('age', within(10, 11))"));
+    }
+
+    @Test
+    public void g_V_has_without_int_test() {
+        Assert.assertEquals(g.V().has("age", P.without(10)), eval("g.V().has('age', without(10))"));
+    }
+
+    @Test
+    public void g_V_has_without_ints_test() {
+        Assert.assertEquals(g.V().has("age", P.without(10, 11)), eval("g.V().has('age', without(10, 11))"));
+    }
+
+    @Test
+    public void g_V_has_within_strs_test() {
+        Assert.assertEquals(g.V().has("name", P.within("marko", "josh")), eval("g.V().has('name', within('marko', 'josh'))"));
+    }
+
+    @Test
+    public void g_V_has_without_strs_test() {
+        Assert.assertEquals(g.V().has("name", P.without("marko", "josh")), eval("g.V().has('name', without('marko', 'josh'))"));
     }
 
     @Test

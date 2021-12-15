@@ -17,6 +17,7 @@
 package com.alibaba.graphscope.common.jna.type;
 
 import com.alibaba.graphscope.common.jna.IrTypeMapper;
+import com.google.common.base.Objects;
 import com.sun.jna.Structure;
 
 @Structure.FieldOrder({"opt", "name", "nameId"})
@@ -32,19 +33,18 @@ public class FfiNameOrId extends Structure {
     public String name;
     public int nameId;
 
-    public static FfiNameOrId create() {
-        return new FfiNameOrId();
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        FfiNameOrId that = (FfiNameOrId) o;
+        return nameId == that.nameId &&
+                opt == that.opt &&
+                Objects.equal(name, that.name);
     }
 
-    public FfiNameOrId name(String name) {
-        this.opt = FfiNameIdOpt.Name;
-        this.name = name;
-        return this;
-    }
-
-    public FfiNameOrId nameId(int nameId) {
-        this.opt = FfiNameIdOpt.Id;
-        this.nameId = nameId;
-        return this;
+    @Override
+    public int hashCode() {
+        return Objects.hashCode(opt, name, nameId);
     }
 }
