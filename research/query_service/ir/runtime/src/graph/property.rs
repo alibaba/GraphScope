@@ -13,21 +13,19 @@
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 
-use std::collections::HashMap;
-use std::convert::TryFrom;
-use std::io;
-use std::ops::{Deref, DerefMut};
-use std::sync::Arc;
-
+use crate::graph::ID;
 use dyn_type::{BorrowObject, Object};
 use ir_common::error::{ParsePbError, ParsePbResult};
 use ir_common::generated::common as pb;
 use ir_common::NameOrId;
 use pegasus_common::codec::{Decode, Encode, ReadExt, WriteExt};
 use pegasus_common::downcast::*;
-
-use crate::graph::ID;
+use std::collections::HashMap;
+use std::convert::TryFrom;
 use std::fmt;
+use std::io;
+use std::ops::{Deref, DerefMut};
+use std::sync::Arc;
 
 /// The three types of property to get
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]

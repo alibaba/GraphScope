@@ -12,7 +12,7 @@ log = "0.4"
 pegasus_common = { path = "../../../engine/pegasus/common" }
 pegasus = { path = "../../../engine/pegasus/pegasus" }
 pegasus_server = { path = "../../../engine/pegasus/server-v0" }
-prost = "0.8"
+prost = "0.9"
 
 [features]
 default = []

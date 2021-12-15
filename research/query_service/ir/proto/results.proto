@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 syntax = "proto3";
-package result;
+package results;
 option java_package = "com.alibaba.graphscope.gaia.proto";
 option java_outer_classname = "IrResult";
 
@@ -70,7 +70,7 @@ message Record {
   repeated Column columns = 1;
 }
 
-message Result {
+message Results {
   oneof inner {
     Record record = 1;
   }

@@ -10,9 +10,13 @@ log = "0.4"
 lazy_static = "1.3.0"
 graph_store = {path = "../../../graph_store"}
 dyn_type = { path = "../../../dyn_type" }
-ir_common = {path = "../common", features = ["proto_inplace"]}
+ir_common = {path = "../common"}
 pegasus = { path = "../../../engine/pegasus/pegasus" }
 pegasus_common = { path = "../../../engine/pegasus/common" }
 pegasus_network = { path = "../../../engine/pegasus/network" }
 pegasus_server = { path = "../../../engine/pegasus/server-v0" }
-runtime = {path="../runtime"}
+runtime = { path="../runtime" }
+
+[features]
+default = []
+proto_inplace = ["ir_common/proto_inplace"]

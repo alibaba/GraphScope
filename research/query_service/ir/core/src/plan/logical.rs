@@ -13,16 +13,15 @@
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 
+use ir_common::error::{ParsePbError, ParsePbResult};
+use ir_common::generated::algebra as pb;
+use ir_common::generated::algebra::logical_plan::operator::Opr;
 use std::cell::RefCell;
 use std::collections::{BTreeSet, HashMap};
 use std::convert::TryFrom;
 use std::fmt;
 use std::iter::FromIterator;
 use std::rc::Rc;
-
-use ir_common::error::{ParsePbError, ParsePbResult};
-use ir_common::generated::algebra as pb;
-use ir_common::generated::algebra::logical_plan::operator::Opr;
 use vec_map::VecMap;
 
 /// An internal representation of the pb-[`Node`].
@@ -60,7 +59,7 @@ pub(crate) type NodeType = Rc<RefCell<Node>>;
 /// An internal representation of the pb-[`LogicalPlan`].
 ///
 /// [`LogicalPlan`]: crate::generated::algebra::LogicalPlan
-#[derive(Default)]
+#[derive(Default, Clone)]
 pub(crate) struct LogicalPlan {
     pub nodes: VecMap<NodeType>,
     /// To record the total number of operators ever created in the logical plan,

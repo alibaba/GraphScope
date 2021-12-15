@@ -13,18 +13,16 @@
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 
-use std::convert::TryInto;
-
-use ir_common::generated::algebra as algebra_pb;
-use ir_common::generated::algebra::get_v::VOpt;
-use ir_common::NameOrId;
-use pegasus::api::function::{FnResult, MapFunction};
-
 use crate::error::{FnExecError, FnGenResult};
 use crate::graph::element::{Vertex, VertexOrEdge};
 use crate::graph::property::{DefaultDetails, DynDetails};
 use crate::process::operator::map::MapFuncGen;
 use crate::process::record::Record;
+use ir_common::generated::algebra as algebra_pb;
+use ir_common::generated::algebra::get_v::VOpt;
+use ir_common::NameOrId;
+use pegasus::api::function::{FnResult, MapFunction};
+use std::convert::TryInto;
 
 #[derive(Debug)]
 struct GetVertexOperator {

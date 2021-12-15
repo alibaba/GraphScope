@@ -14,7 +14,7 @@
 //! limitations under the License.
 
 use ir_common::generated::common as common_pb;
-use ir_common::generated::result as result_pb;
+use ir_common::generated::results as result_pb;
 use ir_common::NameOrId;
 use pegasus::api::function::{FnResult, MapFunction};
 
@@ -34,8 +34,8 @@ impl Default for RecordSinkEncoder {
     }
 }
 
-impl MapFunction<Record, result_pb::Result> for RecordSinkEncoder {
-    fn exec(&self, mut input: Record) -> FnResult<result_pb::Result> {
+impl MapFunction<Record, result_pb::Results> for RecordSinkEncoder {
+    fn exec(&self, mut input: Record) -> FnResult<result_pb::Results> {
         let mut sink_columns = Vec::with_capacity(self.sink_keys.len());
         for sink_key in self.sink_keys.iter() {
             let entry = input.take(Some(sink_key));
@@ -53,7 +53,7 @@ impl MapFunction<Record, result_pb::Result> for RecordSinkEncoder {
             sink_columns.push(column_pb);
         }
         let record_pb = result_pb::Record { columns: sink_columns };
-        Ok(result_pb::Result { inner: Some(result_pb::result::Inner::Record(record_pb)) })
+        Ok(result_pb::Results { inner: Some(result_pb::results::Inner::Record(record_pb)) })
     }
 }
 

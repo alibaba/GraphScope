@@ -13,13 +13,12 @@
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 
-use ir_common::generated::algebra as algebra_pb;
-use ir_common::generated::algebra::join::JoinKind;
-
 use crate::error::FnGenResult;
 use crate::process::functions::{JoinKeyGen, KeyFunction};
 use crate::process::operator::keyed::KeySelector;
 use crate::process::record::{Record, RecordKey};
+use ir_common::generated::algebra as algebra_pb;
+use ir_common::generated::algebra::join::JoinKind;
 
 impl JoinKeyGen<Record, RecordKey, Record> for algebra_pb::Join {
     fn gen_left_kv_fn(&self) -> FnGenResult<Box<dyn KeyFunction<Record, RecordKey, Record>>> {

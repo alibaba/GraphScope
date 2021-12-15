@@ -13,12 +13,11 @@
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 
+use crate::expr::error::ExprError;
 use ir_common::error::ParsePbError;
 use pegasus::api::function::DynError;
 use pegasus::BuildJobError;
 use prost::DecodeError;
-
-use crate::expr::error::ExprError;
 
 pub type FnGenResult<T> = Result<T, FnGenError>;
 

@@ -13,18 +13,16 @@
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 
-use std::cmp::Ordering;
-use std::convert::{TryFrom, TryInto};
-
-use ir_common::error::ParsePbError;
-use ir_common::generated::algebra as algebra_pb;
-use ir_common::generated::algebra::order_by::ordering_pair::Order;
-
 use crate::error::FnGenResult;
 use crate::process::functions::CompareFunction;
 use crate::process::operator::sort::CompareFunctionGen;
 use crate::process::operator::TagKey;
 use crate::process::record::Record;
+use ir_common::error::ParsePbError;
+use ir_common::generated::algebra as algebra_pb;
+use ir_common::generated::algebra::order_by::ordering_pair::Order;
+use std::cmp::Ordering;
+use std::convert::{TryFrom, TryInto};
 
 #[derive(Debug)]
 struct RecordCompare {

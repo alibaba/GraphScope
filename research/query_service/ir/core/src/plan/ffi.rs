@@ -51,19 +51,18 @@
 //! Save the codes as </path/to/c-caller/test.cc>, and build like:
 //! `g++ -o test test.cc -std=c++11 -L. -lir_core`
 
-use std::convert::{TryFrom, TryInto};
-use std::ffi::{c_void, CStr};
-use std::os::raw::c_char;
-
+use crate::plan::logical::LogicalPlan;
+use crate::plan::physical::{AsPhysical, PhysicalError};
 use ir_common::generated::algebra as pb;
 use ir_common::generated::common as common_pb;
 use pegasus::BuildJobError;
 use pegasus_client::builder::JobBuilder;
 use prost::Message;
 use runtime::expr::str_to_expr_pb;
-
-use crate::plan::logical::LogicalPlan;
-use crate::plan::physical::{AsPhysical, PhysicalError};
+use std::convert::{TryFrom, TryInto};
+use std::ffi::{c_void, CStr};
+use std::fs::File;
+use std::os::raw::c_char;
 
 #[repr(i32)]
 #[derive(Clone, Copy, Debug, PartialEq)]
@@ -388,10 +387,13 @@ fn append_operator(
 }
 
 #[no_mangle]
-pub extern "C" fn debug_plan(ptr_plan: *const c_void) {
+pub extern "C" fn write_plan_to_json(ptr_plan: *const c_void, cstr_file: *const c_char) {
     let plan = unsafe { Box::from_raw(ptr_plan as *mut LogicalPlan) };
-
-    println!("{:#?}", plan);
+    let plan_pb = pb::LogicalPlan::from(plan.as_ref().clone());
+    let file_str = cstr_to_string(cstr_file).unwrap();
+    let writer = File::create(&file_str).expect(&format!("Create json file: {:?} error", file_str));
+    serde_json::to_writer_pretty(writer, &plan_pb)
+        .expect(&format!("Write json file: {:?} error", file_str));
     std::mem::forget(plan);
 }
 

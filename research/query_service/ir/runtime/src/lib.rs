@@ -13,10 +13,8 @@
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 
-pub use compiler::IRJobCompiler;
-
 pub use crate::graph::{get_graph, register_graph};
-
+pub use compiler::IRJobCompiler;
 pub mod compiler;
 pub mod error;
 pub mod expr;

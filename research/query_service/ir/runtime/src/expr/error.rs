@@ -14,13 +14,11 @@
 //! limitations under the License.
 //!
 
-use std::fmt::Display;
-
-use dyn_type::CastError;
-use ir_common::error::ParsePbError;
-
 use crate::expr::eval::OperatorDesc;
 use crate::expr::token::PartialToken;
+use dyn_type::CastError;
+use ir_common::error::ParsePbError;
+use std::fmt::Display;
 
 pub type ExprResult<T> = Result<T, ExprError>;
 

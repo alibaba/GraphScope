@@ -14,12 +14,11 @@
 //! limitations under the License.
 mod sort;
 
-use ir_common::error::ParsePbError;
-use ir_common::generated::algebra as algebra_pb;
-
 use crate::error::FnGenResult;
 use crate::process::functions::CompareFunction;
 use crate::process::record::Record;
+use ir_common::error::ParsePbError;
+use ir_common::generated::algebra as algebra_pb;
 
 pub trait CompareFunctionGen {
     fn gen_cmp(self) -> FnGenResult<Box<dyn CompareFunction<Record>>>;
