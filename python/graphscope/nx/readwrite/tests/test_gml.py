@@ -125,3 +125,23 @@ class TestGraph:
 ]""",
         )
         assert data in answer
+
+    @pytest.mark.skip(
+        reason="the folly json serialization does not support to keep the decimal point in SHORTEST mode, keep record on issue #1167"
+    )
+    def test_float_label(self):
+        node = 1.0
+        G = nx.Graph()
+        G.add_node(node)
+        fobj = tempfile.NamedTemporaryFile()
+        nx.write_gml(G, fobj)
+        fobj.seek(0)
+        # Should be bytes in 2.x and 3.x
+        data = fobj.read().strip().decode("ascii")
+        answer = """graph [
+  node [
+    id 0
+    label "1"
+  ]
+]"""
+        assert data == answer

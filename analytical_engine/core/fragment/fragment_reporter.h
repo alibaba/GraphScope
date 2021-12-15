@@ -53,10 +53,6 @@ class DynamicFragmentReporter : public grape::Communicator {
     InitCommunicator(comm_spec.comm());
     json_opts_.allow_non_string_keys = true;
     json_opts_.allow_nan_inf = true;
-    // N.B: default SHORTEST mode would omit floating digit like 1.0 -> 1,
-    // replace with FIXED mode and double digit num = 12
-    json_opts_.double_mode = double_conversion::DoubleToStringConverter::FIXED;
-    json_opts_.double_num_digits = 12;
   }
 
   bl::result<std::string> Report(std::shared_ptr<fragment_t>& fragment,
