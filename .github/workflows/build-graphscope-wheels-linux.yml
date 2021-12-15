@@ -1,32 +1,15 @@
 name: Build GraphScope Wheels on Linux
 
-# on:
-#   workflow_dispatch:
-#   schedule:
-#     # The notifications for scheduled workflows are sent to the user who
-#     # last modified the cron syntax in the workflow file.
-#     # Trigger the workflow at 03:00(CST) every day.
-#     - cron:  '00 19 * * *'
-#   push:
-#     tags:
-#       - "v*"
-
 on:
-  # Trigger the workflow on push or pull request,
-  # but only for the main branch
+  workflow_dispatch:
+  schedule:
+    # The notifications for scheduled workflows are sent to the user who
+    # last modified the cron syntax in the workflow file.
+    # Trigger the workflow at 03:00(CST) every day.
+    - cron:  '00 19 * * *'
   push:
-    branches:
-      - release
-    paths-ignore:
-      - 'CONTRIBUTORS'
-      - 'LICENSE'
-      - 'NOTICE.txt'
-      - '**.md'
-      - '**.rst'
-      - 'docs/**'
-      - 'demo/**'
-      - 'scripts/**'
-      - 'tutorials/**'
+    tags:
+      - "v*"
 
 env:
   DOCKER_URL: registry.cn-hongkong.aliyuncs.com
@@ -34,7 +17,7 @@ env:
 
 jobs:
   build-wheels:
-    # if: ${{ github.ref == 'refs/heads/main' && github.repository == 'alibaba/GraphScope' }}
+    if: (github.ref == 'refs/heads/main' && github.repository == 'alibaba/GraphScope') || (github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v') && github.repository == 'alibaba/GraphScope')
     runs-on: ubuntu-20.04
 
     steps:
@@ -100,7 +83,7 @@ jobs:
         packages_dir: upload_pypi/
 
   build-image:
-    # if: ${{ github.ref == 'refs/heads/main' && github.repository == 'alibaba/GraphScope' }}
+    if: (github.ref == 'refs/heads/main' && github.repository == 'alibaba/GraphScope') || (github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v') && github.repository == 'alibaba/GraphScope')
     runs-on: ubuntu-20.04
     needs: [build-wheels]
 
@@ -128,20 +111,15 @@ jobs:
         make graphscope-image
 
     - name: Extract Tag Name
+      if: ${{ github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v') && github.repository == 'alibaba/GraphScope' }}
       id: tag
-      env:
-         GITHUB_REF_DUMMY: refs/tags/v0.9.1
-      # if: ${{ github.ref == 'refs/heads/main' && github.repository == 'alibaba/GraphScope' }}
-      run: echo ::set-output name=TAG::${GITHUB_REF_DUMMY#refs/tags/v}
-      # if: ${{ github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v') }}
-      # run: echo ::set-output name=TAG::${GITHUB_REF#refs/tags/v}
+      run: echo ::set-output name=TAG::${GITHUB_REF#refs/tags/v}
 
     - name: Release Image
+      if: ${{ github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v') && github.repository == 'alibaba/GraphScope' }}
       env:
         docker_password: ${{ secrets.DOCKER_PASSWORD }}
         docker_username: ${{ secrets.DOCKER_USER }}
-      # if: ${{ github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v') && github.repository == 'alibaba/GraphScope' }}
-      # if: ${{ github.ref == 'refs/heads/main' && github.repository == 'alibaba/GraphScope' }}
       run: |
         echo "${docker_password}" | sudo docker login --username="${docker_username}" ${{ env.DOCKER_URL }} --password-stdin
         sudo docker tag graphscope/graphscope:${SHORT_SHA} \
