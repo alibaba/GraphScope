@@ -33,6 +33,9 @@ concurrency:
   group: ${{ github.repository }}-${{ github.head_ref || github.sha }}-${{ github.workflow }}
   cancel-in-progress: true
 
+env:
+  GSS_IMAGE: registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-store
+
 jobs:
   gremlin-test:
     # Require the host is able to run docker without sudo and
@@ -163,7 +166,7 @@ jobs:
 
         # retag image for helm test
         sudo docker tag graphscope/graphscope-store:${SHORT_SHA} \
-            registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-store:${SHORT_SHA}
+            ${{ env.GSS_IMAGE }}:${SHORT_SHA}
 
         # update helm dependency
         cd ${GITHUB_WORKSPACE}/charts/graphscope-store
@@ -227,4 +230,4 @@ jobs:
         kubectl delete pvc -l app.kubernetes.io/instance=ci --wait=false || true
         kubectl delete pod ci-graphscope-store-frontend-test-grpc-service ci-graphscope-store-frontend-test-gremlin-service --wait=false || true
         sudo docker rmi -f graphscope/graphscope-store:${SHORT_SHA}
-        sudo docker rmi -f registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-store:${SHORT_SHA} || true
+        sudo docker rmi -f ${{ env.GSS_IMAGE }}:${SHORT_SHA} || true
