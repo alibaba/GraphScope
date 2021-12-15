@@ -163,6 +163,7 @@ public class IngestProcessor implements MetricsAgent {
 
         boolean suc = this.ingestBuffer.offer(new IngestTask(requestId, operationBatch, callback));
         if (!suc) {
+            logger.warn("ingest buffer is full");
             this.ingestorRejectCount.incrementAndGet();
             throw new IngestRejectException("add ingestTask to buffer failed");
         }
