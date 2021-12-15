@@ -117,7 +117,7 @@ jobs:
       run: echo ::set-output name=TAG::${GITHUB_REF_DUMMY#refs/tags/v}
 
     - name: Upload Charts to OSS
-      uses: tvrcgo/upload-to-oss@v0.1.1
+      uses: tvrcgo/upload-to-oss@master
       with:
         key-id: ${{ secrets.ALIYUN_OSS_ACCESSKEY_ID }}
         key-secret: ${{ secrets.ALIYUN_OSS_ACCESSKEY_SECRET }}
