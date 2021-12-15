@@ -16,8 +16,8 @@
 
 package com.alibaba.graphscope.gremlin;
 
+import com.alibaba.graphscope.common.intermediate.ArgUtils;
 import com.alibaba.graphscope.common.intermediate.operator.ProjectOp;
-import com.alibaba.graphscope.common.jna.IrCoreLibrary;
 import org.apache.tinkerpop.gremlin.process.traversal.Step;
 import org.apache.tinkerpop.gremlin.process.traversal.Traversal;
 import org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.GraphTraversalSource;
@@ -31,7 +31,6 @@ import java.util.Arrays;
 import java.util.List;
 
 public class SelectStepTest {
-    private IrCoreLibrary irCoreLib = IrCoreLibrary.INSTANCE;
     private Graph graph = TinkerFactory.createModern();
     private GraphTraversalSource g = graph.traversal();
 
@@ -40,8 +39,8 @@ public class SelectStepTest {
         Traversal traversal = g.V().select("a", "b");
         Step selectStep = traversal.asAdmin().getEndStep();
         ProjectOp op = (ProjectOp) IrPlanBuidler.StepTransformFactory.SELECT_BY_STEP.apply(selectStep);
-        List<Pair> expected = Arrays.asList(Pair.with("@a", irCoreLib.cstrAsNameOrId("~@a")),
-                Pair.with("@b", irCoreLib.cstrAsNameOrId("~@b")));
+        List<Pair> expected = Arrays.asList(Pair.with("@a", ArgUtils.strAsNameId("~@a")),
+                Pair.with("@b", ArgUtils.strAsNameId("~@b")));
         Assert.assertEquals(expected, op.getProjectExprWithAlias().get().getArg());
     }
 
@@ -50,8 +49,8 @@ public class SelectStepTest {
         Traversal traversal = g.V().select("a", "b").by("name");
         Step selectStep = traversal.asAdmin().getEndStep();
         ProjectOp op = (ProjectOp) IrPlanBuidler.StepTransformFactory.SELECT_BY_STEP.apply(selectStep);
-        List<Pair> expected = Arrays.asList(Pair.with("@a.name", irCoreLib.cstrAsNameOrId("~@a.name")),
-                Pair.with("@b.name", irCoreLib.cstrAsNameOrId("~@b.name")));
+        List<Pair> expected = Arrays.asList(Pair.with("@a.name", ArgUtils.strAsNameId("~@a.name")),
+                Pair.with("@b.name", ArgUtils.strAsNameId("~@b.name")));
         Assert.assertEquals(expected, op.getProjectExprWithAlias().get().getArg());
     }
 }

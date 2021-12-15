@@ -16,9 +16,10 @@
 
 package com.alibaba.graphscope.gremlin;
 
+import com.alibaba.graphscope.common.intermediate.ArgUtils;
 import com.alibaba.graphscope.common.intermediate.operator.OrderOp;
-import com.alibaba.graphscope.common.jna.IrCoreLibrary;
 import com.alibaba.graphscope.common.jna.type.FfiOrderOpt;
+import com.alibaba.graphscope.common.jna.type.FfiProperty;
 import org.apache.tinkerpop.gremlin.process.traversal.Step;
 import org.apache.tinkerpop.gremlin.process.traversal.Traversal;
 import org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.GraphTraversalSource;
@@ -32,7 +33,6 @@ import java.util.Arrays;
 import java.util.List;
 
 public class OrderStepTest {
-    private IrCoreLibrary irCoreLib = IrCoreLibrary.INSTANCE;
     private Graph graph = TinkerFactory.createModern();
     private GraphTraversalSource g = graph.traversal();
 
@@ -41,7 +41,7 @@ public class OrderStepTest {
         Traversal traversal = g.V().order();
         Step orderStep = traversal.asAdmin().getEndStep();
         OrderOp op = (OrderOp) IrPlanBuidler.StepTransformFactory.ORDER_BY_STEP.apply(orderStep);
-        List<Pair> expected = Arrays.asList(Pair.with(irCoreLib.asNoneVar(), FfiOrderOpt.Asc));
+        List<Pair> expected = Arrays.asList(Pair.with(ArgUtils.asNoneVar(), FfiOrderOpt.Asc));
         Assert.assertEquals(expected, op.getOrderVarWithOrder().get().getArg());
     }
 
@@ -50,7 +50,8 @@ public class OrderStepTest {
         Traversal traversal = g.V().order().by("~label");
         Step orderStep = traversal.asAdmin().getEndStep();
         OrderOp op = (OrderOp) IrPlanBuidler.StepTransformFactory.ORDER_BY_STEP.apply(orderStep);
-        List<Pair> expected = Arrays.asList(Pair.with(irCoreLib.asVarPropertyOnly(irCoreLib.asLabelKey()), FfiOrderOpt.Asc));
+        FfiProperty.ByValue property = ArgUtils.asFfiProperty("~label");
+        List<Pair> expected = Arrays.asList(Pair.with(ArgUtils.asVarPropertyOnly(property), FfiOrderOpt.Asc));
         Assert.assertEquals(expected, op.getOrderVarWithOrder().get().getArg());
     }
 
@@ -59,8 +60,8 @@ public class OrderStepTest {
         Traversal traversal = g.V().order().by("name");
         Step orderStep = traversal.asAdmin().getEndStep();
         OrderOp op = (OrderOp) IrPlanBuidler.StepTransformFactory.ORDER_BY_STEP.apply(orderStep);
-        List<Pair> expected = Arrays.asList(Pair.with(
-                irCoreLib.asVarPropertyOnly(irCoreLib.asPropertyKey(irCoreLib.cstrAsNameOrId("name"))), FfiOrderOpt.Asc));
+        FfiProperty.ByValue property = ArgUtils.asFfiProperty("name");
+        List<Pair> expected = Arrays.asList(Pair.with(ArgUtils.asVarPropertyOnly(property), FfiOrderOpt.Asc));
         Assert.assertEquals(expected, op.getOrderVarWithOrder().get().getArg());
     }
 }

@@ -94,6 +94,8 @@ public interface IrCoreLibrary extends Library {
 
     FfiConst.ByValue cstrAsConst(String value);
 
+    FfiConst.ByValue int32AsConst(int value);
+
     FfiConst.ByValue int64AsConst(long value);
 
     FfiProperty.ByValue asLabelKey();

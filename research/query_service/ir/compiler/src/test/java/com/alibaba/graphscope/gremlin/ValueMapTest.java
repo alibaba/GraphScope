@@ -16,8 +16,8 @@
 
 package com.alibaba.graphscope.gremlin;
 
+import com.alibaba.graphscope.common.intermediate.ArgUtils;
 import com.alibaba.graphscope.common.intermediate.operator.ProjectOp;
-import com.alibaba.graphscope.common.jna.IrCoreLibrary;
 import org.apache.tinkerpop.gremlin.process.traversal.Step;
 import org.apache.tinkerpop.gremlin.process.traversal.Traversal;
 import org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.GraphTraversalSource;
@@ -31,7 +31,6 @@ import java.util.Arrays;
 import java.util.List;
 
 public class ValueMapTest {
-    private IrCoreLibrary irCoreLib = IrCoreLibrary.INSTANCE;
     private Graph graph = TinkerFactory.createModern();
     private GraphTraversalSource g = graph.traversal();
 
@@ -40,8 +39,9 @@ public class ValueMapTest {
         Traversal traversal = g.V().valueMap("name", "id");
         Step valueMapStep = traversal.asAdmin().getEndStep();
         ProjectOp op = (ProjectOp) IrPlanBuidler.StepTransformFactory.VALUE_MAP_STEP.apply(valueMapStep);
-        List<Pair> expected = Arrays.asList(Pair.with("@.name", irCoreLib.cstrAsNameOrId("~@.name")),
-                Pair.with("@.id", irCoreLib.cstrAsNameOrId("~@.id")));
+
+        List<Pair> expected = Arrays.asList(Pair.with("@.name", ArgUtils.strAsNameId("~@.name")),
+                Pair.with("@.id", ArgUtils.strAsNameId("~@.id")));
         Assert.assertEquals(expected, op.getProjectExprWithAlias().get().getArg());
     }
 }

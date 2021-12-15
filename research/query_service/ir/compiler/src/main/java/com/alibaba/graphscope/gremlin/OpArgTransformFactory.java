@@ -17,7 +17,7 @@
 package com.alibaba.graphscope.gremlin;
 
 import com.alibaba.graphscope.common.exception.OpArgIllegalException;
-import com.alibaba.graphscope.common.jna.IrCoreLibrary;
+import com.alibaba.graphscope.common.intermediate.ArgUtils;
 import com.alibaba.graphscope.common.jna.type.*;
 import org.apache.tinkerpop.gremlin.process.traversal.Compare;
 import org.apache.tinkerpop.gremlin.process.traversal.Order;
@@ -39,13 +39,10 @@ import java.util.function.BiPredicate;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.function.BiPredicate;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
 public class OpArgTransformFactory {
-    private static final IrCoreLibrary irCoreLib = IrCoreLibrary.INSTANCE;
-    private static final String HIDDEN_PREFIX = "~";
 
     public static Function<GraphStep, FfiScanOpt> SCAN_OPT = (GraphStep s1) -> {
         if (s1.returnsVertex()) return FfiScanOpt.Vertex;
@@ -54,8 +51,10 @@ public class OpArgTransformFactory {
 
     public static Function<GraphStep, List<FfiConst.ByValue>> CONST_IDS_FROM_STEP = (GraphStep s1) ->
             Arrays.stream(s1.getIds()).map((id) -> {
-                if (id instanceof Long) {
-                    return irCoreLib.int64AsConst((Long) id);
+                if (id instanceof Integer) {
+                    return ArgUtils.intAsConst((Integer) id);
+                } else if (id instanceof Long) {
+                    return ArgUtils.longAsConst((Long) id);
                 } else {
                     throw new OpArgIllegalException(OpArgIllegalException.Cause.UNSUPPORTED_TYPE, "unimplemented yet");
                 }
@@ -112,7 +111,7 @@ public class OpArgTransformFactory {
                 }
             }
         }
-        return labels.stream().map(k -> irCoreLib.cstrAsNameOrId(k)).collect(Collectors.toList());
+        return labels.stream().map(k -> ArgUtils.strAsNameId(k)).collect(Collectors.toList());
     };
 
     public static Function<VertexStep, FfiDirection> DIRECTION_FROM_STEP = (VertexStep s1) -> {
@@ -138,7 +137,7 @@ public class OpArgTransformFactory {
     };
 
     public static Function<VertexStep, List<FfiNameOrId.ByValue>> EDGE_LABELS_FROM_STEP = (VertexStep s1) ->
-            Arrays.stream(s1.getEdgeLabels()).map(k -> irCoreLib.cstrAsNameOrId(k)).collect(Collectors.toList());
+            Arrays.stream(s1.getEdgeLabels()).map(k -> ArgUtils.strAsNameId(k)).collect(Collectors.toList());
 
     public static Function<Map<String, Traversal.Admin>, List<Pair<String, FfiNameOrId.ByValue>>>
             PROJECT_EXPR_FROM_BY_TRAVERSALS = (Map<String, Traversal.Admin> map) -> {
@@ -146,23 +145,23 @@ public class OpArgTransformFactory {
         List<Pair<String, FfiNameOrId.ByValue>> exprWithAlias = new ArrayList<>();
         map.forEach((k, v) -> {
             String expr = "@" + k;
-            String alias = HIDDEN_PREFIX + expr;
+            String alias = ArgUtils.asHiddenStr(expr);
             if (v == null || v instanceof IdentityTraversal) { // select(..)
-                exprWithAlias.add(Pair.with(expr, irCoreLib.cstrAsNameOrId(alias)));
+                exprWithAlias.add(Pair.with(expr, ArgUtils.strAsNameId(alias)));
             } else if (v instanceof ValueTraversal) {
                 expr = String.format("@%s.%s", k, ((ValueTraversal) v).getPropertyKey()); // select(..).by('name')
-                alias = HIDDEN_PREFIX + expr;
-                exprWithAlias.add(Pair.with(expr, irCoreLib.cstrAsNameOrId(alias)));
+                alias = ArgUtils.asHiddenStr(expr);
+                exprWithAlias.add(Pair.with(expr, ArgUtils.strAsNameId(alias)));
             } else if (v.getSteps().size() == 1 && v.getStartStep() instanceof PropertyMapStep) { // select(..).by(valueMap(''))
                 String[] mapKeys = ((PropertyMapStep) v.getStartStep()).getPropertyKeys();
                 if (mapKeys.length > 0) {
                     for (int i = 0; i < mapKeys.length; ++i) {
                         String e1 = String.format("@%s.%s", k, mapKeys[i]);
-                        String a1 = HIDDEN_PREFIX + e1;
-                        exprWithAlias.add(Pair.with(e1, irCoreLib.cstrAsNameOrId(a1)));
+                        String a1 = ArgUtils.asHiddenStr(e1);
+                        exprWithAlias.add(Pair.with(e1, ArgUtils.strAsNameId(a1)));
                     }
                 } else {
-                    exprWithAlias.add(Pair.with(expr, irCoreLib.cstrAsNameOrId(alias)));
+                    exprWithAlias.add(Pair.with(expr, ArgUtils.strAsNameId(alias)));
                 }
             } else {
                 throw new OpArgIllegalException(OpArgIllegalException.Cause.UNSUPPORTED_TYPE,
@@ -181,9 +180,10 @@ public class OpArgTransformFactory {
             // order().by('name', order)
             if (admin != null && admin instanceof ValueTraversal) {
                 String key = ((ValueTraversal) admin).getPropertyKey();
-                vars.add(Pair.with(irCoreLib.asVarPropertyOnly(getFfiProperty(key)), orderOpt));
+                FfiProperty.ByValue property = ArgUtils.asFfiProperty(key);
+                vars.add(Pair.with(ArgUtils.asVarPropertyOnly(property), orderOpt));
             } else if (admin == null || admin instanceof IdentityTraversal) { // order, order().by(order)
-                vars.add(Pair.with(irCoreLib.asNoneVar(), orderOpt));
+                vars.add(Pair.with(ArgUtils.asNoneVar(), orderOpt));
             } else {
                 throw new OpArgIllegalException(OpArgIllegalException.Cause.UNSUPPORTED_TYPE,
                         "supported pattern is [order()] or [order().by(order) or order().by('name', order)]");
@@ -202,16 +202,6 @@ public class OpArgTransformFactory {
                 return FfiOrderOpt.Desc;
             default:
                 throw new OpArgIllegalException(OpArgIllegalException.Cause.INVALID_TYPE, "invalid order type");
-        }
-    }
-
-    public static FfiProperty.ByValue getFfiProperty(String key) {
-        if (key.equals(T.label.getAccessor())) {
-            return irCoreLib.asLabelKey();
-        } else if (key.equals(T.id.getAccessor())) {
-            return irCoreLib.asIdKey();
-        } else {
-            return irCoreLib.asPropertyKey(irCoreLib.cstrAsNameOrId(key));
         }
     }
 
