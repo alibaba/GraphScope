@@ -68,4 +68,4 @@ class TestEdgelist:
         G.add_edge(2, 3, weight=3.0)
         nx.write_edgelist(G, fh, data=[("weight")])
         fh.seek(0)
-        assert fh.read() in (b"1 2 2\n2 3 3\n", b"2 3 3.0\n2 1 2\n")
+        assert fh.read() in (b"1 2 2\n2 3 3\n", b"2 3 3\n2 1 2\n")
