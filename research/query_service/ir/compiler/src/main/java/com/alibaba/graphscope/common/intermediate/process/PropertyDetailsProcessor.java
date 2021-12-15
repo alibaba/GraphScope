@@ -104,14 +104,17 @@ public class PropertyDetailsProcessor implements InterOpProcessor {
         Map<Integer, Set<FfiProperty.ByValue>> opPropertyDetails = new HashMap<>();
 
         List<InterOpBase> opList = opCollection.unmodifiableCollection();
+        Optional<GraphElement> output = Optional.empty();
+
         for (int i = 0; i < opList.size(); ++i) {
             InterOpBase op = opList.get(i);
-            Optional<GraphElement> elementOpt = Optional.empty();
+            output = outputGraphElementOpt(output, op, elementRecord);
+            // set creating point of element
             if (op instanceof ScanFusionOp || op instanceof ExpandOp) {
-                GraphElement element = (GraphElement) PropertyDetailsFactory.CREATE.apply(op);
-                elementStartPos.put(element, i);
-                elementOpt = Optional.of(element);
-            } else if (op instanceof OrderOp || op instanceof SelectOp || op instanceof ProjectOp) {
+                elementStartPos.put(output.get(), i);
+            }
+            // set required properties
+            if (op instanceof OrderOp || op instanceof SelectOp || op instanceof ProjectOp) {
                 TagRequiredProperties properties = (TagRequiredProperties) PropertyDetailsFactory.REQUIRE.apply(op);
                 properties.getTags().forEach(tag -> {
                     Set<FfiProperty.ByValue> required = properties.getTagProperties(tag, true);
@@ -123,16 +126,14 @@ public class PropertyDetailsProcessor implements InterOpProcessor {
                         }
                     }
                 });
-                if (op instanceof ProjectOp) {
-                    elementOpt = projectOneGraphElement((ProjectOp) op, elementRecord);
-                }
             }
-            if (elementOpt.isPresent()) {
+            // output of the current op is GraphElement
+            if (output.isPresent()) {
                 // set head
-                elementRecord.put(FfiNameOrId.ByValue.getHead(), elementOpt.get());
+                elementRecord.put(FfiNameOrId.ByValue.getHead(), output.get());
                 // set alias
                 if (op.getAlias().isPresent()) {
-                    elementRecord.put((FfiNameOrId.ByValue) op.getAlias().get().getArg(), elementOpt.get());
+                    elementRecord.put((FfiNameOrId.ByValue) op.getAlias().get().getArg(), output.get());
                 }
             }
         }
@@ -153,7 +154,21 @@ public class PropertyDetailsProcessor implements InterOpProcessor {
         }
     }
 
-    private Optional<GraphElement> projectOneGraphElement(ProjectOp op, Map<FfiNameOrId.ByValue, GraphElement> elementRecord) {
+    private Optional<GraphElement> outputGraphElementOpt(Optional<GraphElement> inputOpt, InterOpBase op,
+                                                         Map<FfiNameOrId.ByValue, GraphElement> elementRecord) {
+        if (op instanceof ScanFusionOp || op instanceof ExpandOp) {
+            GraphElement element = (GraphElement) PropertyDetailsFactory.CREATE.apply(op);
+            return Optional.of(element);
+        } else if (op instanceof OrderOp || op instanceof SelectOp || op instanceof LimitOp) {
+            return inputOpt;
+        } else if (op instanceof ProjectOp) {
+            return projectOneGraphElementOpt((ProjectOp) op, elementRecord);
+        } else {
+            throw new InterOpUnsupportedException(op.getClass(), "unsupported yet");
+        }
+    }
+
+    private Optional<GraphElement> projectOneGraphElementOpt(ProjectOp op, Map<FfiNameOrId.ByValue, GraphElement> elementRecord) {
         List<Pair> projectList = (List<Pair>) op.getProjectExprWithAlias().get().getArg();
         if (projectList.size() != 1) return Optional.empty();
         String expr = (String) projectList.get(0).getValue0();

@@ -238,19 +238,19 @@ public class IrPlan implements Closeable {
         AUXILIA_OP {
             @Override
             public Pointer apply(InterOpBase baseOp) {
+                Pointer ptrAuxilia = irCoreLib.initAuxiliaOperator();
                 AuxiliaOp op = (AuxiliaOp) baseOp;
                 Optional<OpArg> propertyDetails = op.getPropertyDetails();
-                if (!propertyDetails.isPresent()) {
-                    throw new InterOpIllegalArgException(baseOp.getClass(), "propertyDetails", "not present");
+
+                if (propertyDetails.isPresent()) {
+                    Set<FfiNameOrId.ByValue> properties = (Set<FfiNameOrId.ByValue>) propertyDetails.get().getArg();
+                    if (properties.isEmpty()) {
+                        throw new InterOpIllegalArgException(baseOp.getClass(), "propertyDetails", "should not be empty if present");
+                    }
+                    properties.forEach(k -> {
+                        irCoreLib.addAuxiliaProperty(ptrAuxilia, k);
+                    });
                 }
-                Set<FfiNameOrId.ByValue> properties = (Set<FfiNameOrId.ByValue>) propertyDetails.get().getArg();
-                if (properties.isEmpty()) {
-                    throw new InterOpIllegalArgException(baseOp.getClass(), "propertyDetails", "should not be empty");
-                }
-                Pointer ptrAuxilia = irCoreLib.initAuxilia();
-                properties.forEach(k -> {
-                    irCoreLib.addAuxiliaProperty(ptrAuxilia, k);
-                });
 
                 Optional<OpArg> aliasOpt = baseOp.getAlias();
                 if (aliasOpt.isPresent()) {

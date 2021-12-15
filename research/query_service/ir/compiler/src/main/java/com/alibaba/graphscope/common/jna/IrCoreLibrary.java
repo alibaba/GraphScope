@@ -91,7 +91,7 @@ public interface IrCoreLibrary extends Library {
 
     ResultCode appendProjectOperator(Pointer plan, Pointer project, int parent, IntByReference oprIdx);
 
-    Pointer initAuxilia();
+    Pointer initAuxiliaOperator();
 
     ResultCode addAuxiliaProperty(Pointer auxilia, FfiNameOrId.ByValue property);
 
