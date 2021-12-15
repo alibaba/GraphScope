@@ -15,7 +15,7 @@ on:
   # but only for the main branch
   push:
     branches:
-      - main
+      - release
     paths-ignore:
       - 'CONTRIBUTORS'
       - 'LICENSE'
@@ -26,9 +26,6 @@ on:
       - 'demo/**'
       - 'scripts/**'
       - 'tutorials/**'
-  pull_request:
-    branches:
-      - main
 
 jobs:
   build-wheels:
