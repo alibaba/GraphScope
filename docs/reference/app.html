@@ -33,6 +33,16 @@
   gtag('config', 'G-4TMYCGJ0X2');
 </script>
 
+<script>
+  var _hmt = _hmt || [];
+  (function() {
+    var hm = document.createElement("script");
+    hm.src = "https://hm.baidu.com/hm.js?da649ade2298891886e31922dfc8870f";
+    var s = document.getElementsByTagName("script")[0];
+    s.parentNode.insertBefore(hm, s);
+  })();
+</script>
+
 
 </head>
 
@@ -142,7 +152,7 @@
 <dl class="py class">
 <dt class="sig sig-object py" id="graphscope.framework.app.AppAssets">
 <em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">graphscope.framework.app.</span></span><span class="sig-name descname"><span class="pre">AppAssets</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">algo</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">context</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gar</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/graphscope/framework/app.html#AppAssets"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#graphscope.framework.app.AppAssets" title="Permalink to this definition"></a></dt>
-<dd><p>A class represents a app assert node in a DAG that holds the bytes of the gar resource.</p>
+<dd><p>A class represents an app asset node in a DAG that holds the bytes of the gar resource.</p>
 <p>Assets includes an algorithm name, and gar (for user defined algorithm),
 a context type (one of ‘tensor’, ‘vertex_data’, ‘vertex_property’,
 ‘labeled_vertex_data’, ‘dynamic_vertex_data’, ‘labeled_vertex_property’),
@@ -402,7 +412,7 @@ previous ones.</p>
 <col style="width: 90%" />
 </colgroup>
 <tbody>
-<tr class="row-odd"><td><p><a class="reference internal" href="generated/graphscope.framework.app.load_app.html#graphscope.framework.app.load_app" title="graphscope.framework.app.load_app"><code class="xref py py-obj docutils literal notranslate"><span class="pre">graphscope.framework.app.load_app</span></code></a>(algo[, gar])</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="generated/graphscope.framework.app.load_app.html#graphscope.framework.app.load_app" title="graphscope.framework.app.load_app"><code class="xref py py-obj docutils literal notranslate"><span class="pre">graphscope.framework.app.load_app</span></code></a>([gar, …])</p></td>
 <td><p>Load an app from gar.</p></td>
 </tr>
 </tbody>
@@ -417,12 +427,13 @@ previous ones.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>graph</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">Graph</span></code>) – A projected simple graph.</p></li>
-<li><p><strong>src</strong> (<em>int</em><em>, </em><em>optional</em>) – Source vertex of breadth first search. Defaults to 0.</p></li>
+<li><p><strong>graph</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">Graph</span></code>) – A simple graph.</p></li>
+<li><p><strong>src</strong> (<em>optional</em>) – Source vertex of breadth first search. Defaults to 0.
+Its type should be consistent with oid type of the <cite>graph</cite>.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
-<dd class="field-even"><p>A context with each vertex with a distance from the source, evaluated in eager mode.</p>
+<dd class="field-even"><p>A context with each vertex with a distance from the source, will be evaluated in eager mode.</p>
 </dd>
 <dt class="field-odd">Return type</dt>
 <dd class="field-odd"><p><a class="reference internal" href="context.html#graphscope.framework.context.VertexDataContextDAGNode" title="graphscope.framework.context.VertexDataContextDAGNode"><code class="xref py py-class docutils literal notranslate"><span class="pre">graphscope.framework.context.VertexDataContextDAGNode</span></code></a></p>
@@ -430,8 +441,8 @@ previous ones.</p>
 </dl>
 <p>Examples:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">graphscope</span> <span class="k">as</span> <span class="nn">gs</span>
-<span class="n">sess</span> <span class="o">=</span> <span class="n">gs</span><span class="o">.</span><span class="n">session</span><span class="p">()</span>
-<span class="n">g</span> <span class="o">=</span> <span class="n">sess</span><span class="o">.</span><span class="n">g</span><span class="p">()</span>
+<span class="n">g</span> <span class="o">=</span> <span class="n">gs</span><span class="o">.</span><span class="n">g</span><span class="p">()</span>
+<span class="c1"># Load some data, then project to a simple graph (if needed).</span>
 <span class="n">pg</span> <span class="o">=</span> <span class="n">g</span><span class="o">.</span><span class="n">project</span><span class="p">(</span><span class="n">vertices</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;vlabel&quot;</span><span class="p">:</span> <span class="p">[]},</span> <span class="n">edges</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;elabel&quot;</span><span class="p">:</span> <span class="p">[]})</span>
 <span class="n">r</span> <span class="o">=</span> <span class="n">gs</span><span class="o">.</span><span class="n">bfs</span><span class="p">(</span><span class="n">pg</span><span class="p">,</span> <span class="mi">6</span><span class="p">)</span>  <span class="c1"># use 6 as source vertex</span>
 <span class="n">s</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
@@ -446,7 +457,7 @@ previous ones.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>graph</strong> (<a class="reference internal" href="graph.html#graphscope.framework.graph.Graph" title="graphscope.framework.graph.Graph"><em>Graph</em></a>) – A projected simple graph.</p></li>
+<li><p><strong>graph</strong> (<a class="reference internal" href="graph.html#graphscope.framework.graph.Graph" title="graphscope.framework.graph.Graph"><em>Graph</em></a>) – A simple graph.</p></li>
 <li><p><strong>delta</strong> (<em>float</em><em>, </em><em>optional</em>) – Dumping factor. Defaults to 0.85.</p></li>
 <li><p><strong>max_round</strong> (<em>int</em><em>, </em><em>optional</em>) – Maximum number of rounds. Defaults to 10.</p></li>
 </ul>
@@ -460,8 +471,8 @@ previous ones.</p>
 </dl>
 <p>Examples:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">graphscope</span> <span class="k">as</span> <span class="nn">gs</span>
-<span class="n">sess</span> <span class="o">=</span> <span class="n">gs</span><span class="o">.</span><span class="n">session</span><span class="p">()</span>
-<span class="n">g</span> <span class="o">=</span> <span class="n">sess</span><span class="o">.</span><span class="n">g</span><span class="p">()</span>
+<span class="n">g</span> <span class="o">=</span> <span class="n">gs</span><span class="o">.</span><span class="n">g</span><span class="p">()</span>
+<span class="c1"># Load some data, then project to a simple graph (if needed).</span>
 <span class="n">pg</span> <span class="o">=</span> <span class="n">g</span><span class="o">.</span><span class="n">project</span><span class="p">(</span><span class="n">vertices</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;vlabel&quot;</span><span class="p">:</span> <span class="p">[]},</span> <span class="n">edges</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;elabel&quot;</span><span class="p">:</span> <span class="p">[]})</span>
 <span class="n">r</span> <span class="o">=</span> <span class="n">gs</span><span class="o">.</span><span class="n">pagerank</span><span class="p">(</span><span class="n">pg</span><span class="p">,</span> <span class="n">delta</span><span class="o">=</span><span class="mf">0.85</span><span class="p">,</span> <span class="n">max_round</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
 <span class="n">s</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
@@ -490,8 +501,8 @@ previous ones.</p>
 </dl>
 <p>Examples:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">graphscope</span> <span class="k">as</span> <span class="nn">gs</span>
-<span class="n">sess</span> <span class="o">=</span> <span class="n">gs</span><span class="o">.</span><span class="n">session</span><span class="p">()</span>
-<span class="n">g</span> <span class="o">=</span> <span class="n">sess</span><span class="o">.</span><span class="n">g</span><span class="p">()</span>
+<span class="n">g</span> <span class="o">=</span> <span class="n">gs</span><span class="o">.</span><span class="n">g</span><span class="p">()</span>
+<span class="c1"># Load some data, then project to a simple graph (if needed).</span>
 <span class="n">pg</span> <span class="o">=</span> <span class="n">g</span><span class="o">.</span><span class="n">project</span><span class="p">(</span><span class="n">vertices</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;vlabel&quot;</span><span class="p">:</span> <span class="p">[]},</span> <span class="n">edges</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;elabel&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;e_property&quot;</span><span class="p">]})</span>
 <span class="n">r</span> <span class="o">=</span> <span class="n">gs</span><span class="o">.</span><span class="n">sssp</span><span class="p">(</span><span class="n">pg</span><span class="p">,</span> <span class="n">src</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
 <span class="n">s</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
@@ -505,7 +516,7 @@ previous ones.</p>
 <dd><p>Evaluate weakly connected components on the <cite>graph</cite>.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>graph</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">Graph</span></code>) – A projected simple graph.</p>
+<dd class="field-odd"><p><strong>graph</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">Graph</span></code>) – A simple graph.</p>
 </dd>
 <dt class="field-even">Returns</dt>
 <dd class="field-even"><p>A context with each vertex assigned with the component ID, evaluated in eager mode.</p>
@@ -516,8 +527,8 @@ previous ones.</p>
 </dl>
 <p>Examples:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">graphscope</span> <span class="k">as</span> <span class="nn">gs</span>
-<span class="n">sess</span> <span class="o">=</span> <span class="n">gs</span><span class="o">.</span><span class="n">session</span><span class="p">()</span>
-<span class="n">g</span> <span class="o">=</span> <span class="n">sess</span><span class="o">.</span><span class="n">g</span><span class="p">()</span>
+<span class="n">g</span> <span class="o">=</span> <span class="n">gs</span><span class="o">.</span><span class="n">g</span><span class="p">()</span>
+<span class="c1"># Load some data, then project to a simple graph (if needed).</span>
 <span class="n">pg</span> <span class="o">=</span> <span class="n">g</span><span class="o">.</span><span class="n">project</span><span class="p">(</span><span class="n">vertices</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;vlabel&quot;</span><span class="p">:</span> <span class="p">[]},</span> <span class="n">edges</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;elabel&quot;</span><span class="p">:</span> <span class="p">[]})</span>
 <span class="n">r</span> <span class="o">=</span> <span class="n">gs</span><span class="o">.</span><span class="n">wcc</span><span class="p">(</span><span class="n">pg</span><span class="p">)</span>
 <span class="n">s</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
@@ -532,12 +543,12 @@ previous ones.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>graph</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">Graph</span></code>) – A projected simple graph.</p></li>
+<li><p><strong>graph</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">Graph</span></code>) – A simple graph.</p></li>
 <li><p><strong>max_round</strong> (<em>int</em><em>, </em><em>optional</em>) – Maximum rounds. Defaults to 10.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
-<dd class="field-even"><p>A context with each vertex assigned with a community ID, evaluated in eager mode.</p>
+<dd class="field-even"><p>A context with each vertex assigned with a community ID, will be evaluated in eager mode.</p>
 </dd>
 <dt class="field-odd">Return type</dt>
 <dd class="field-odd"><p><a class="reference internal" href="context.html#graphscope.framework.context.VertexDataContextDAGNode" title="graphscope.framework.context.VertexDataContextDAGNode"><code class="xref py py-class docutils literal notranslate"><span class="pre">graphscope.framework.context.VertexDataContextDAGNode</span></code></a></p>
@@ -545,8 +556,8 @@ previous ones.</p>
 </dl>
 <p>Examples:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">graphscope</span> <span class="k">as</span> <span class="nn">gs</span>
-<span class="n">sess</span> <span class="o">=</span> <span class="n">gs</span><span class="o">.</span><span class="n">session</span><span class="p">()</span>
-<span class="n">g</span> <span class="o">=</span> <span class="n">sess</span><span class="o">.</span><span class="n">g</span><span class="p">()</span>
+<span class="n">g</span> <span class="o">=</span> <span class="n">gs</span><span class="o">.</span><span class="n">g</span><span class="p">()</span>
+<span class="c1"># Load some data, then project to a simple graph (if needed).</span>
 <span class="n">pg</span> <span class="o">=</span> <span class="n">g</span><span class="o">.</span><span class="n">project</span><span class="p">(</span><span class="n">vertices</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;vlabel&quot;</span><span class="p">:</span> <span class="p">[]},</span> <span class="n">edges</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;elabel&quot;</span><span class="p">:</span> <span class="p">[]})</span>
 <span class="n">r</span> <span class="o">=</span> <span class="n">gs</span><span class="o">.</span><span class="n">cdlp</span><span class="p">(</span><span class="n">g</span><span class="p">,</span> <span class="n">max_round</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
 <span class="n">s</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
@@ -558,14 +569,13 @@ previous ones.</p>
 <dt class="sig sig-object py" id="graphscope.clustering">
 <span class="sig-prename descclassname"><span class="pre">graphscope.</span></span><span class="sig-name descname"><span class="pre">clustering</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">graph</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/graphscope/analytical/app/clustering.html#clustering"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#graphscope.clustering" title="Permalink to this definition"></a></dt>
 <dd><p>Local clustering coefficient of a node in a Graph is the fraction
-of pairs of the node’s neighbors that are adjacent to each
-other.</p>
+of pairs of the node’s neighbors that are adjacent to each other.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>graph</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">Graph</span></code>) – A projected simple graph.</p>
+<dd class="field-odd"><p><strong>graph</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">Graph</span></code>) – A simple graph.</p>
 </dd>
 <dt class="field-even">Returns</dt>
-<dd class="field-even"><p>A context with each vertex assigned the computed clustering value, evaluated in eager mode.</p>
+<dd class="field-even"><p>A context with each vertex assigned the computed clustering value, will be evaluated in eager mode.</p>
 </dd>
 <dt class="field-odd">Return type</dt>
 <dd class="field-odd"><p><a class="reference internal" href="context.html#graphscope.framework.context.VertexDataContextDAGNode" title="graphscope.framework.context.VertexDataContextDAGNode"><code class="xref py py-class docutils literal notranslate"><span class="pre">graphscope.framework.context.VertexDataContextDAGNode</span></code></a></p>
@@ -573,8 +583,8 @@ other.</p>
 </dl>
 <p>Examples:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">graphscope</span> <span class="k">as</span> <span class="nn">gs</span>
-<span class="n">sess</span> <span class="o">=</span> <span class="n">gs</span><span class="o">.</span><span class="n">session</span><span class="p">()</span>
-<span class="n">g</span> <span class="o">=</span> <span class="n">sess</span><span class="o">.</span><span class="n">g</span><span class="p">()</span>
+<span class="n">g</span> <span class="o">=</span> <span class="n">gs</span><span class="o">.</span><span class="n">g</span><span class="p">()</span>
+<span class="c1"># Load some data, then project to a simple graph (if needed).</span>
 <span class="n">pg</span> <span class="o">=</span> <span class="n">g</span><span class="o">.</span><span class="n">project</span><span class="p">(</span><span class="n">vertices</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;vlabel&quot;</span><span class="p">:</span> <span class="p">[]},</span> <span class="n">edges</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;elabel&quot;</span><span class="p">:</span> <span class="p">[]})</span>
 <span class="n">r</span> <span class="o">=</span> <span class="n">gs</span><span class="o">.</span><span class="n">clustering</span><span class="p">(</span><span class="n">pg</span><span class="p">)</span>
 <span class="n">s</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
@@ -591,7 +601,7 @@ n is the number of nodes in G.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>graph</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">Graph</span></code>) – A projected simple graph.</p></li>
+<li><p><strong>graph</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">Graph</span></code>) – A simple graph.</p></li>
 <li><p><strong>centrality_type</strong> (<em>str</em><em>, </em><em>optional</em>) – Available options are in/out/both.
 Defaults to “both”.</p></li>
 </ul>
@@ -605,8 +615,8 @@ Defaults to “both”.</p></li>
 </dl>
 <p>Examples:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">graphscope</span> <span class="k">as</span> <span class="nn">gs</span>
-<span class="n">sess</span> <span class="o">=</span> <span class="n">gs</span><span class="o">.</span><span class="n">session</span><span class="p">()</span>
-<span class="n">g</span> <span class="o">=</span> <span class="n">sess</span><span class="o">.</span><span class="n">g</span><span class="p">()</span>
+<span class="n">g</span> <span class="o">=</span> <span class="n">gs</span><span class="o">.</span><span class="n">g</span><span class="p">()</span>
+<span class="c1"># Load some data, then project to a simple graph (if needed).</span>
 <span class="n">pg</span> <span class="o">=</span> <span class="n">g</span><span class="o">.</span><span class="n">project</span><span class="p">(</span><span class="n">vertices</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;vlabel&quot;</span><span class="p">:</span> <span class="p">[]},</span> <span class="n">edges</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;elabel&quot;</span><span class="p">:</span> <span class="p">[]})</span>
 <span class="n">r</span> <span class="o">=</span> <span class="n">gs</span><span class="o">.</span><span class="n">degree_centrality</span><span class="p">(</span><span class="n">pg</span><span class="p">,</span> <span class="n">centrality_type</span><span class="o">=</span><span class="s2">&quot;both&quot;</span><span class="p">)</span>
 <span class="n">s</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
@@ -623,7 +633,7 @@ See more about eigenvector centrality here:
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>graph</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">Graph</span></code>) – A projected simple graph.</p></li>
+<li><p><strong>graph</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">Graph</span></code>) – A simple graph.</p></li>
 <li><p><strong>tolerance</strong> (<em>float</em><em>, </em><em>optional</em>) – Defaults to 1e-06.</p></li>
 <li><p><strong>max_round</strong> (<em>int</em><em>, </em><em>optional</em>) – Defaults to 100.</p></li>
 </ul>
@@ -637,8 +647,8 @@ See more about eigenvector centrality here:
 </dl>
 <p>Examples:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">graphscope</span> <span class="k">as</span> <span class="nn">gs</span>
-<span class="n">sess</span> <span class="o">=</span> <span class="n">gs</span><span class="o">.</span><span class="n">session</span><span class="p">()</span>
-<span class="n">g</span> <span class="o">=</span> <span class="n">sess</span><span class="o">.</span><span class="n">g</span><span class="p">()</span>
+<span class="n">g</span> <span class="o">=</span> <span class="n">gs</span><span class="o">.</span><span class="n">g</span><span class="p">()</span>
+<span class="c1"># Load some data, then project to a simple graph (if needed).</span>
 <span class="n">pg</span> <span class="o">=</span> <span class="n">g</span><span class="o">.</span><span class="n">project</span><span class="p">(</span><span class="n">vertices</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;vlabel&quot;</span><span class="p">:</span> <span class="p">[]},</span> <span class="n">edges</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;elabel&quot;</span><span class="p">:</span> <span class="p">[]})</span>
 <span class="n">r</span> <span class="o">=</span> <span class="n">gs</span><span class="o">.</span><span class="n">eigenvector_centrality</span><span class="p">(</span><span class="n">pg</span><span class="p">)</span>
 <span class="n">s</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
@@ -656,7 +666,7 @@ is a link analysis algorithm that rates Web pages. See more here:
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>graph</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">Graph</span></code>) – A projected simple graph.</p></li>
+<li><p><strong>graph</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">Graph</span></code>) – A simple graph.</p></li>
 <li><p><strong>tolerance</strong> (<em>float</em><em>, </em><em>optional</em>) – Defaults to 0.01.</p></li>
 <li><p><strong>max_round</strong> (<em>int</em><em>, </em><em>optional</em>) – Defaults to 100.</p></li>
 <li><p><strong>normalized</strong> (<em>bool</em><em>, </em><em>optional</em>) – Whether to normalize the result to 0-1. Defaults to True.</p></li>
@@ -671,8 +681,8 @@ is a link analysis algorithm that rates Web pages. See more here:
 </dl>
 <p>Examples:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">graphscope</span> <span class="k">as</span> <span class="nn">gs</span>
-<span class="n">sess</span> <span class="o">=</span> <span class="n">gs</span><span class="o">.</span><span class="n">session</span><span class="p">()</span>
-<span class="n">g</span> <span class="o">=</span> <span class="n">sess</span><span class="o">.</span><span class="n">g</span><span class="p">()</span>
+<span class="n">g</span> <span class="o">=</span> <span class="n">gs</span><span class="o">.</span><span class="n">g</span><span class="p">()</span>
+<span class="c1"># Load some data, then project to a simple graph (if needed).</span>
 <span class="n">pg</span> <span class="o">=</span> <span class="n">g</span><span class="o">.</span><span class="n">project</span><span class="p">(</span><span class="n">vertices</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;vlabel&quot;</span><span class="p">:</span> <span class="p">[]},</span> <span class="n">edges</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;elabel&quot;</span><span class="p">:</span> <span class="p">[]})</span>
 <span class="n">r</span> <span class="o">=</span> <span class="n">gs</span><span class="o">.</span><span class="n">hits</span><span class="p">(</span><span class="n">pg</span><span class="p">)</span>
 <span class="n">s</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
@@ -706,8 +716,8 @@ all vertices of degree less than <cite>k</cite> have been removed.</p>
 </dl>
 <p>Examples:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">graphscope</span> <span class="k">as</span> <span class="nn">gs</span>
-<span class="n">sess</span> <span class="o">=</span> <span class="n">gs</span><span class="o">.</span><span class="n">session</span><span class="p">()</span>
-<span class="n">g</span> <span class="o">=</span> <span class="n">sess</span><span class="o">.</span><span class="n">g</span><span class="p">()</span>
+<span class="n">g</span> <span class="o">=</span> <span class="n">gs</span><span class="o">.</span><span class="n">g</span><span class="p">()</span>
+<span class="c1"># Load some data, then project to a simple graph (if needed).</span>
 <span class="n">pg</span> <span class="o">=</span> <span class="n">g</span><span class="o">.</span><span class="n">project</span><span class="p">(</span><span class="n">vertices</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;vlabel&quot;</span><span class="p">:</span> <span class="p">[]},</span> <span class="n">edges</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;elabel&quot;</span><span class="p">:</span> <span class="p">[]})</span>
 <span class="n">r</span> <span class="o">=</span> <span class="n">gs</span><span class="o">.</span><span class="n">k_core</span><span class="p">(</span><span class="n">pg</span><span class="p">)</span>
 <span class="n">s</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
@@ -724,7 +734,7 @@ all vertices of degree less than <cite>k</cite> have been removed.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>graph</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">Graph</span></code>) – A projected simple graph.</p></li>
+<li><p><strong>graph</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">Graph</span></code>) – A simple graph.</p></li>
 <li><p><strong>alpha</strong> (<em>float</em><em>, </em><em>optional</em>) – Auttenuation factor. Defaults to 0.1.</p></li>
 <li><p><strong>beta</strong> (<em>float</em><em>, </em><em>optional</em>) – Weight attributed to the immediate neighborhood. Defaults to 1.0.</p></li>
 <li><p><strong>tolerance</strong> (<em>float</em><em>, </em><em>optional</em>) – Error tolerance. Defaults to 1e-06.</p></li>
@@ -741,8 +751,8 @@ all vertices of degree less than <cite>k</cite> have been removed.</p>
 </dl>
 <p>Examples:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">graphscope</span> <span class="k">as</span> <span class="nn">gs</span>
-<span class="n">sess</span> <span class="o">=</span> <span class="n">gs</span><span class="o">.</span><span class="n">session</span><span class="p">()</span>
-<span class="n">g</span> <span class="o">=</span> <span class="n">sess</span><span class="o">.</span><span class="n">g</span><span class="p">()</span>
+<span class="n">g</span> <span class="o">=</span> <span class="n">gs</span><span class="o">.</span><span class="n">g</span><span class="p">()</span>
+<span class="c1"># Load some data, then project to a simple graph (if needed).</span>
 <span class="n">pg</span> <span class="o">=</span> <span class="n">g</span><span class="o">.</span><span class="n">project</span><span class="p">(</span><span class="n">vertices</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;vlabel&quot;</span><span class="p">:</span> <span class="p">[]},</span> <span class="n">edges</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;elabel&quot;</span><span class="p">:</span> <span class="p">[]})</span>
 <span class="n">r</span> <span class="o">=</span> <span class="n">gs</span><span class="o">.</span><span class="n">katz_centrality</span><span class="p">(</span><span class="n">pg</span><span class="p">)</span>
 <span class="n">s</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
@@ -770,8 +780,8 @@ all vertices of degree less than <cite>k</cite> have been removed.</p>
 </dl>
 <p>Examples:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">graphscope</span> <span class="k">as</span> <span class="nn">gs</span>
-<span class="n">sess</span> <span class="o">=</span> <span class="n">gs</span><span class="o">.</span><span class="n">session</span><span class="p">()</span>
-<span class="n">g</span> <span class="o">=</span> <span class="n">sess</span><span class="o">.</span><span class="n">g</span><span class="p">()</span>
+<span class="n">g</span> <span class="o">=</span> <span class="n">gs</span><span class="o">.</span><span class="n">g</span><span class="p">()</span>
+<span class="c1"># Load some data</span>
 <span class="n">r</span> <span class="o">=</span> <span class="n">gs</span><span class="o">.</span><span class="n">lpa</span><span class="p">(</span><span class="n">g</span><span class="p">)</span>
 <span class="n">s</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
 </pre></div>
@@ -784,7 +794,7 @@ all vertices of degree less than <cite>k</cite> have been removed.</p>
 <dd><p>Evaluate triangle counting of the graph G.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>graph</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">Graph</span></code>) – A projected simple graph.</p>
+<dd class="field-odd"><p><strong>graph</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">Graph</span></code>) – A simple graph.</p>
 </dd>
 <dt class="field-even">Returns</dt>
 <dd class="field-even"><p>A context with each vertex assigned with the triangle counting result, evaluated in eager mode.</p>
@@ -795,8 +805,8 @@ all vertices of degree less than <cite>k</cite> have been removed.</p>
 </dl>
 <p>Examples:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">graphscope</span> <span class="k">as</span> <span class="nn">gs</span>
-<span class="n">sess</span> <span class="o">=</span> <span class="n">gs</span><span class="o">.</span><span class="n">session</span><span class="p">()</span>
-<span class="n">g</span> <span class="o">=</span> <span class="n">sess</span><span class="o">.</span><span class="n">g</span><span class="p">()</span>
+<span class="n">g</span> <span class="o">=</span> <span class="n">gs</span><span class="o">.</span><span class="n">g</span><span class="p">()</span>
+<span class="c1"># Load some data, then project to a simple graph (if needed).</span>
 <span class="n">pg</span> <span class="o">=</span> <span class="n">g</span><span class="o">.</span><span class="n">project</span><span class="p">(</span><span class="n">vertices</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;vlabel&quot;</span><span class="p">:</span> <span class="p">[]},</span> <span class="n">edges</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;elabel&quot;</span><span class="p">:</span> <span class="p">[]})</span>
 <span class="n">r</span> <span class="o">=</span> <span class="n">gs</span><span class="o">.</span><span class="n">triangles</span><span class="p">(</span><span class="n">pg</span><span class="p">)</span>
 <span class="n">s</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
@@ -811,7 +821,7 @@ all vertices of degree less than <cite>k</cite> have been removed.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>graph</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">Graph</span></code>) – A projected simple undirected graph.</p></li>
+<li><p><strong>graph</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">Graph</span></code>) – A simple undirected graph.</p></li>
 <li><p><strong>min_progress</strong> – The minimum delta X required to be considered progress, where X is the number of nodes
 that have changed their community on a particular pass.
 Delta X is then the difference in number of nodes that changed communities
@@ -833,11 +843,10 @@ before exiting form the current level and compressing the graph.</p></li>
 <p>[3] <a class="reference external" href="https://sotera.github.io/distributed-graph-analytics/louvain/">https://sotera.github.io/distributed-graph-analytics/louvain/</a></p>
 <p class="rubric">Notes</p>
 <p>louvain now only support undirected graph. If input graph is directed graph, louvain would raise
-a InvalidArgumentError.</p>
+an InvalidArgumentError.</p>
 <p>Examples:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">graphscope</span> <span class="k">as</span> <span class="nn">gs</span>
-<span class="n">s</span> <span class="o">=</span> <span class="n">gs</span><span class="o">.</span><span class="n">session</span><span class="p">()</span>
-<span class="n">g</span> <span class="o">=</span> <span class="n">s</span><span class="o">.</span><span class="n">g</span><span class="p">(</span><span class="n">directed</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+<span class="n">g</span> <span class="o">=</span> <span class="n">gs</span><span class="o">.</span><span class="n">g</span><span class="p">(</span><span class="n">directed</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
 <span class="n">g</span> <span class="o">=</span> <span class="n">g</span><span class="o">.</span><span class="n">add_vertices</span><span class="p">(</span><span class="s1">&#39;The parameters for loading a graph...&#39;</span><span class="p">)</span>
 <span class="n">g</span> <span class="o">=</span> <span class="n">g</span><span class="o">.</span><span class="n">add_edges</span><span class="p">(</span><span class="s1">&#39;The parameters for loading a graph...&#39;</span><span class="p">)</span>
 <span class="n">pg</span> <span class="o">=</span> <span class="n">g</span><span class="o">.</span><span class="n">project</span><span class="p">(</span><span class="n">vertices</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;vlabel&quot;</span><span class="p">:</span> <span class="p">[]},</span> <span class="n">edges</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;elabel&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;weight&quot;</span><span class="p">]})</span>
@@ -906,6 +915,16 @@ a InvalidArgumentError.</p>
             
               
                 <dd><a href="../index.html">stable</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../v0.9.0/index.html">v0.9.0</a></dd>
               
             
 

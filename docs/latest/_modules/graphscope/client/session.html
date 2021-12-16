@@ -31,6 +31,16 @@
   gtag('config', 'G-4TMYCGJ0X2');
 </script>
 
+<script>
+  var _hmt = _hmt || [];
+  (function() {
+    var hm = document.createElement("script");
+    hm.src = "https://hm.baidu.com/hm.js?da649ade2298891886e31922dfc8870f";
+    var s = document.getElementsByTagName("script")[0];
+    s.parentNode.insertBefore(hm, s);
+  })();
+</script>
+
 
 </head>
 
@@ -140,7 +150,6 @@
 <span class="kn">import</span> <span class="nn">os</span>
 <span class="kn">import</span> <span class="nn">pickle</span>
 <span class="kn">import</span> <span class="nn">signal</span>
-<span class="kn">import</span> <span class="nn">sys</span>
 <span class="kn">import</span> <span class="nn">threading</span>
 <span class="kn">import</span> <span class="nn">time</span>
 <span class="kn">import</span> <span class="nn">uuid</span>
@@ -194,8 +203,8 @@
 <span class="sd">    This class takes care of extracting a sub-DAG as targets for a user-provided structure for fetches,</span>
 <span class="sd">    which can be used for a low level `run` call of grpc_client.</span>
 
-<span class="sd">    Given the results of the low level run call, this class can also rebuild a result structure</span>
-<span class="sd">    matching the user-provided structure for fetches, but containing the corresponding results.</span>
+<span class="sd">    Given the results of the low level run call, this class can also rebuild a result structure matching</span>
+<span class="sd">    the user-provided structure for fetches, but containing the corresponding results.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dag</span><span class="p">,</span> <span class="n">fetches</span><span class="p">):</span>
@@ -284,8 +293,7 @@
         <span class="k">if</span> <span class="n">context_type</span> <span class="o">==</span> <span class="s2">&quot;dynamic_vertex_data&quot;</span><span class="p">:</span>
             <span class="c1"># for nx</span>
             <span class="k">return</span> <span class="n">DynamicVertexDataContext</span><span class="p">(</span><span class="n">context_dag_node</span><span class="p">,</span> <span class="n">ret</span><span class="p">[</span><span class="s2">&quot;context_key&quot;</span><span class="p">])</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="k">return</span> <span class="n">Context</span><span class="p">(</span><span class="n">context_dag_node</span><span class="p">,</span> <span class="n">ret</span><span class="p">[</span><span class="s2">&quot;context_key&quot;</span><span class="p">],</span> <span class="n">ret</span><span class="p">[</span><span class="s2">&quot;context_schema&quot;</span><span class="p">])</span>
+        <span class="k">return</span> <span class="n">Context</span><span class="p">(</span><span class="n">context_dag_node</span><span class="p">,</span> <span class="n">ret</span><span class="p">[</span><span class="s2">&quot;context_key&quot;</span><span class="p">],</span> <span class="n">ret</span><span class="p">[</span><span class="s2">&quot;context_schema&quot;</span><span class="p">])</span>
 
     <span class="k">def</span> <span class="nf">_rebuild_gremlin_results</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span> <span class="n">seq</span><span class="p">,</span> <span class="n">op</span><span class="p">:</span> <span class="n">Operation</span><span class="p">,</span> <span class="n">op_result</span><span class="p">:</span> <span class="n">op_def_pb2</span><span class="o">.</span><span class="n">OpResult</span>
@@ -461,7 +469,6 @@
         <span class="n">timeout_seconds</span><span class="o">=</span><span class="n">gs_config</span><span class="o">.</span><span class="n">timeout_seconds</span><span class="p">,</span>
         <span class="n">dangling_timeout_seconds</span><span class="o">=</span><span class="n">gs_config</span><span class="o">.</span><span class="n">dangling_timeout_seconds</span><span class="p">,</span>
         <span class="n">with_mars</span><span class="o">=</span><span class="n">gs_config</span><span class="o">.</span><span class="n">with_mars</span><span class="p">,</span>
-        <span class="n">enable_gaia</span><span class="o">=</span><span class="n">gs_config</span><span class="o">.</span><span class="n">enable_gaia</span><span class="p">,</span>
         <span class="n">mount_dataset</span><span class="o">=</span><span class="n">gs_config</span><span class="o">.</span><span class="n">mount_dataset</span><span class="p">,</span>
         <span class="n">reconnect</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
         <span class="o">**</span><span class="n">kw</span><span class="p">,</span>
@@ -551,9 +558,6 @@
 
 <span class="sd">            with_mars (bool, optional):</span>
 <span class="sd">                Launch graphscope with mars. Defaults to False.</span>
-
-<span class="sd">            enable_gaia (bool, optional):</span>
-<span class="sd">                Launch graphscope with gaia enabled. Defaults to False.</span>
 
 <span class="sd">            mount_dataset (str, optional):</span>
 <span class="sd">                Create a container and mount aliyun demo dataset bucket to the path specified by `mount_dataset`.</span>
@@ -690,7 +694,6 @@
             <span class="s2">&quot;k8s_mars_scheduler_cpu&quot;</span><span class="p">,</span>
             <span class="s2">&quot;k8s_mars_scheduler_mem&quot;</span><span class="p">,</span>
             <span class="s2">&quot;with_mars&quot;</span><span class="p">,</span>
-            <span class="s2">&quot;enable_gaia&quot;</span><span class="p">,</span>
             <span class="s2">&quot;reconnect&quot;</span><span class="p">,</span>
             <span class="s2">&quot;k8s_volumes&quot;</span><span class="p">,</span>
             <span class="s2">&quot;k8s_waiting_for_delete&quot;</span><span class="p">,</span>
@@ -848,17 +851,18 @@
                 <span class="k">raise</span> <span class="n">exp</span>
 
     <span class="k">def</span> <span class="nf">_parse_cluster_type</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_config_params</span><span class="p">[</span><span class="s2">&quot;addr&quot;</span><span class="p">]</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="c1"># get the cluster type after connecting</span>
-            <span class="k">return</span> <span class="n">types_pb2</span><span class="o">.</span><span class="n">UNDEFINED</span>
-        <span class="k">else</span><span class="p">:</span>
+        <span class="c1"># get the cluster type after connecting</span>
+        <span class="n">cluster_type</span> <span class="o">=</span> <span class="n">types_pb2</span><span class="o">.</span><span class="n">UNDEFINED</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_config_params</span><span class="p">[</span><span class="s2">&quot;addr&quot;</span><span class="p">]</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_config_params</span><span class="p">[</span><span class="s2">&quot;cluster_type&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;hosts&quot;</span><span class="p">:</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">_run_on_local</span><span class="p">()</span>
-                <span class="k">return</span> <span class="n">types_pb2</span><span class="o">.</span><span class="n">HOSTS</span>
+                <span class="n">cluster_type</span> <span class="o">=</span> <span class="n">types_pb2</span><span class="o">.</span><span class="n">HOSTS</span>
             <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">_config_params</span><span class="p">[</span><span class="s2">&quot;cluster_type&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;k8s&quot;</span><span class="p">:</span>
-                <span class="k">return</span> <span class="n">types_pb2</span><span class="o">.</span><span class="n">K8S</span>
+                <span class="n">cluster_type</span> <span class="o">=</span> <span class="n">types_pb2</span><span class="o">.</span><span class="n">K8S</span>
             <span class="k">else</span><span class="p">:</span>
                 <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Expect hosts or k8s of cluster_type parameter&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">cluster_type</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">engine_config</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
@@ -1003,7 +1007,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">as_default</span><span class="p">()</span>
         <span class="k">return</span> <span class="bp">self</span></div>
 
-<div class="viewcode-block" id="Session.__exit__"><a class="viewcode-back" href="../../../reference/session.html#graphscope.Session.__exit__">[docs]</a>    <span class="k">def</span> <span class="fm">__exit__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="nb">type</span><span class="p">,</span> <span class="n">value</span><span class="p">,</span> <span class="n">traceback</span><span class="p">):</span>
+<div class="viewcode-block" id="Session.__exit__"><a class="viewcode-back" href="../../../reference/session.html#graphscope.Session.__exit__">[docs]</a>    <span class="k">def</span> <span class="fm">__exit__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">exc_type</span><span class="p">,</span> <span class="n">exc_value</span><span class="p">,</span> <span class="n">exc_tb</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Deregister self from the default session,</span>
 <span class="sd">        close the session and release the resources, ignore all exceptions in close().</span>
 <span class="sd">        &quot;&quot;&quot;</span>
@@ -1042,8 +1046,7 @@
     <span class="k">def</span> <span class="nf">_wrapper</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dag_node</span><span class="p">):</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">eager</span><span class="p">():</span>
             <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">dag_node</span><span class="p">)</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="k">return</span> <span class="n">dag_node</span>
+        <span class="k">return</span> <span class="n">dag_node</span>
 
     <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fetches</span><span class="p">,</span> <span class="n">debug</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Run operations of `fetch`.</span>
@@ -1238,19 +1241,16 @@
             <span class="n">interactive_query</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_interactive_instance_dict</span><span class="p">[</span><span class="n">graph</span><span class="o">.</span><span class="n">vineyard_id</span><span class="p">]</span>
             <span class="k">if</span> <span class="n">interactive_query</span><span class="o">.</span><span class="n">status</span> <span class="o">==</span> <span class="n">InteractiveQueryStatus</span><span class="o">.</span><span class="n">Running</span><span class="p">:</span>
                 <span class="k">return</span> <span class="n">interactive_query</span>
-            <span class="k">elif</span> <span class="n">interactive_query</span><span class="o">.</span><span class="n">status</span> <span class="o">==</span> <span class="n">InteractiveQueryStatus</span><span class="o">.</span><span class="n">Failed</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">interactive_query</span><span class="o">.</span><span class="n">status</span> <span class="o">==</span> <span class="n">InteractiveQueryStatus</span><span class="o">.</span><span class="n">Failed</span><span class="p">:</span>
                 <span class="k">raise</span> <span class="n">InteractiveEngineInternalError</span><span class="p">(</span><span class="n">interactive_query</span><span class="o">.</span><span class="n">error_msg</span><span class="p">)</span>
-            <span class="k">else</span><span class="p">:</span>
-                <span class="c1"># Initializing.</span>
-                <span class="c1"># while True is ok, as the status is either running or failed eventually after timeout.</span>
-                <span class="k">while</span> <span class="kc">True</span><span class="p">:</span>
-                    <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
-                    <span class="k">if</span> <span class="n">interactive_query</span><span class="o">.</span><span class="n">status</span> <span class="o">==</span> <span class="n">InteractiveQueryStatus</span><span class="o">.</span><span class="n">Running</span><span class="p">:</span>
-                        <span class="k">return</span> <span class="n">interactive_query</span>
-                    <span class="k">elif</span> <span class="n">interactive_query</span><span class="o">.</span><span class="n">status</span> <span class="o">==</span> <span class="n">InteractiveQueryStatus</span><span class="o">.</span><span class="n">Failed</span><span class="p">:</span>
-                        <span class="k">raise</span> <span class="n">InteractiveEngineInternalError</span><span class="p">(</span>
-                            <span class="n">interactive_query</span><span class="o">.</span><span class="n">error_msg</span>
-                        <span class="p">)</span>
+            <span class="c1"># Initializing.</span>
+            <span class="c1"># while True is ok, as the status is either running or failed eventually after timeout.</span>
+            <span class="k">while</span> <span class="kc">True</span><span class="p">:</span>
+                <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">interactive_query</span><span class="o">.</span><span class="n">status</span> <span class="o">==</span> <span class="n">InteractiveQueryStatus</span><span class="o">.</span><span class="n">Failed</span><span class="p">:</span>
+                    <span class="k">raise</span> <span class="n">InteractiveEngineInternalError</span><span class="p">(</span><span class="n">interactive_query</span><span class="o">.</span><span class="n">error_msg</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">interactive_query</span><span class="o">.</span><span class="n">status</span> <span class="o">==</span> <span class="n">InteractiveQueryStatus</span><span class="o">.</span><span class="n">Running</span><span class="p">:</span>
+                    <span class="k">return</span> <span class="n">interactive_query</span>
 
         <span class="k">if</span> <span class="ow">not</span> <span class="n">graph</span><span class="o">.</span><span class="n">graph_type</span> <span class="o">==</span> <span class="n">graph_def_pb2</span><span class="o">.</span><span class="n">ARROW_PROPERTY</span><span class="p">:</span>
             <span class="k">raise</span> <span class="n">InvalidArgumentError</span><span class="p">(</span><span class="s2">&quot;The graph should be a property graph.&quot;</span><span class="p">)</span>
@@ -1263,9 +1263,8 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">_interactive_instance_dict</span><span class="p">[</span><span class="n">graph</span><span class="o">.</span><span class="n">vineyard_id</span><span class="p">]</span> <span class="o">=</span> <span class="n">interactive_query</span>
 
         <span class="k">try</span><span class="p">:</span>
-            <span class="n">enable_gaia</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_config_params</span><span class="p">[</span><span class="s2">&quot;enable_gaia&quot;</span><span class="p">]</span>
             <span class="n">_wrapper</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_wrapper</span><span class="p">(</span>
-                <span class="n">InteractiveQueryDAGNode</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">graph</span><span class="p">,</span> <span class="n">engine_params</span><span class="p">,</span> <span class="n">enable_gaia</span><span class="p">)</span>
+                <span class="n">InteractiveQueryDAGNode</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">graph</span><span class="p">,</span> <span class="n">engine_params</span><span class="p">)</span>
             <span class="p">)</span>
         <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
             <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">eager</span><span class="p">():</span>
@@ -1385,7 +1384,6 @@
 <span class="sd">        - k8s_mars_scheduler_cpu</span>
 <span class="sd">        - k8s_mars_scheduler_mem</span>
 <span class="sd">        - with_mars</span>
-<span class="sd">        - enable_gaia</span>
 <span class="sd">        - k8s_volumes</span>
 <span class="sd">        - k8s_waiting_for_delete</span>
 <span class="sd">        - engine_params</span>
@@ -1440,7 +1438,6 @@
 <span class="sd">        - k8s_mars_scheduler_cpu</span>
 <span class="sd">        - k8s_mars_scheduler_mem</span>
 <span class="sd">        - with_mars</span>
-<span class="sd">        - enable_gaia</span>
 <span class="sd">        - k8s_volumes</span>
 <span class="sd">        - k8s_waiting_for_delete</span>
 <span class="sd">        - engine_params</span>
@@ -1458,8 +1455,7 @@
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">gs_config</span><span class="p">,</span> <span class="n">key</span><span class="p">):</span>
         <span class="k">return</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">gs_config</span><span class="p">,</span> <span class="n">key</span><span class="p">)</span>
-    <span class="k">else</span><span class="p">:</span>
-        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;No such option </span><span class="si">{}</span><span class="s2"> exists.&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">key</span><span class="p">))</span></div>
+    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;No such option </span><span class="si">{}</span><span class="s2"> exists.&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">key</span><span class="p">))</span></div>
 
 
 <span class="k">def</span> <span class="nf">default_session</span><span class="p">(</span><span class="n">session</span><span class="p">):</span>
@@ -1656,6 +1652,16 @@
             
               
                 <dd><a href="../../../../index.html">stable</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../../v0.9.0/index.html">v0.9.0</a></dd>
               
             
 

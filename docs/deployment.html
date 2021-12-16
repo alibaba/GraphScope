@@ -33,6 +33,16 @@
   gtag('config', 'G-4TMYCGJ0X2');
 </script>
 
+<script>
+  var _hmt = _hmt || [];
+  (function() {
+    var hm = document.createElement("script");
+    hm.src = "https://hm.baidu.com/hm.js?da649ade2298891886e31922dfc8870f";
+    var s = document.getElementsByTagName("script")[0];
+    s.parentNode.insertBefore(hm, s);
+  })();
+</script>
+
 
 </head>
 
@@ -138,31 +148,25 @@ host directory to the cluster.</p>
 a dict as follows, then pass it as <cite>k8s_volumes</cite> in session constructor.</p>
 <p>Note that the host path is relative to the kubernetes node, that is, if you have a cluster created by <cite>kind</cite>, then you need to copy that directory to the kind node, or mount that path to kind node.
 See more details <a class="reference external" href="https://kind.sigs.k8s.io/docs/user/configuration/#extra-mounts">here</a>.</p>
-<p><a href="#id1"><span class="problematic" id="id2">``</span></a><a href="#id3"><span class="problematic" id="id4">`</span></a>python
-import os
-import graphscope</p>
-<dl>
-<dt>k8s_volumes = {</dt><dd><dl>
-<dt>“data”: {</dt><dd><p>“type”: “hostPath”,
-“field”: {</p>
-<blockquote>
-<div><p>“path”: os.path.expanduser(“~/test_data/”),
-“type”: “Directory”</p>
-</div></blockquote>
-<p>},
-“mounts”: {</p>
-<blockquote>
-<div><p>“mountPath”: “/testingdata”</p>
-</div></blockquote>
-<p>}</p>
-</dd>
-</dl>
-<p>}</p>
-</dd>
-</dl>
-<p>}</p>
-<p>sess = graphscope.session(k8s_volumes=k8s_volumes)
-<a href="#id5"><span class="problematic" id="id6">``</span></a><a href="#id7"><span class="problematic" id="id8">`</span></a></p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">graphscope</span>
+
+<span class="n">k8s_volumes</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s2">&quot;data&quot;</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;hostPath&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;field&quot;</span><span class="p">:</span> <span class="p">{</span>
+            <span class="s2">&quot;path&quot;</span><span class="p">:</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">expanduser</span><span class="p">(</span><span class="s2">&quot;~/test_data/&quot;</span><span class="p">),</span>
+            <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;Directory&quot;</span>
+        <span class="p">},</span>
+        <span class="s2">&quot;mounts&quot;</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s2">&quot;mountPath&quot;</span><span class="p">:</span> <span class="s2">&quot;/testingdata&quot;</span>
+        <span class="p">}</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+
+<span class="n">sess</span> <span class="o">=</span> <span class="n">graphscope</span><span class="o">.</span><span class="n">session</span><span class="p">(</span><span class="n">k8s_volumes</span><span class="o">=</span><span class="n">k8s_volumes</span><span class="p">)</span>
+</pre></div>
+</div>
 <p>A cluster on k8s contains a pod running an etcd container for meta-data syncing, a
 pod running the Coordinator, and a replica set of GraphScope engines.</p>
 <p>The Coordinator in GraphScope is the endpoint of the backend. It
@@ -287,6 +291,16 @@ make graphscope
             
               
                 <dd><a href="index.html">stable</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="v0.9.0/index.html">v0.9.0</a></dd>
               
             
 

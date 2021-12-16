@@ -14,13 +14,13 @@
    :maxdepth: 2
    :caption: 目录
 
-   如何创建会话 <https://nbviewer.jupyter.org/github/alibaba/GraphScope/blob/main/tutorials/zh/1_how_to_launch_a_session.ipynb>
+   论文引用关系网中的节点分类任务 <https://nbviewer.jupyter.org/github/alibaba/GraphScope/blob/main/tutorials/zh/1_node_classification_on_citation.ipynb>
    使用兼容 NetworkX 的 API 进行图操作 <https://nbviewer.jupyter.org/github/alibaba/GraphScope/blob/main/tutorials/zh/2_graph_manipulations_with_networkx_compatible_apis.ipynb>
-   载图 <https://nbviewer.jupyter.org/github/alibaba/GraphScope/blob/main/tutorials/zh/3_loading_graphs.ipynb>
-   内置图分析算法 <https://nbviewer.jupyter.org/github/alibaba/GraphScope/blob/main/tutorials/zh/4_builtin_analytical_algorithms.ipynb>
+   载入图数据 <https://nbviewer.jupyter.org/github/alibaba/GraphScope/blob/main/tutorials/zh/3_loading_graphs.ipynb>
+   内置的图分析算法 <https://nbviewer.jupyter.org/github/alibaba/GraphScope/blob/main/tutorials/zh/4_builtin_analytical_algorithms.ipynb>
    编写自定义图分析算法 <https://nbviewer.jupyter.org/github/alibaba/GraphScope/blob/main/tutorials/zh/5_writing_your_own_algorithms.ipynb>
-   基于Gremlin的交互式查询 <https://nbviewer.jupyter.org/github/alibaba/GraphScope/blob/main/tutorials/zh/6_interactive_query_with_gremlin.ipynb>
-   基于GraphSage的无监督学习 <https://nbviewer.jupyter.org/github/alibaba/GraphScope/blob/main/tutorials/zh/7_unsupervised_learning_with_graphsage.ipynb>
-   基于GCN的有监督学习 <https://nbviewer.jupyter.org/github/alibaba/GraphScope/blob/main/tutorials/zh/8_supervised_learning_with_gcn.ipynb>
-   基予BipartiteGraphSage的二部图无监督学习 <https://nbviewer.jupyter.org/github/alibaba/GraphScope/blob/main/tutorials/zh/9_unsupervised_learning_with_bipartite_graphsage.ipynb>
-   论文引用网络中的节点分类任务 <https://nbviewer.jupyter.org/github/alibaba/GraphScope/blob/main/tutorials/zh/10_node_classification_on_citation_network.ipynb>
+   使用查询语言 Gremlin 进行交互式查询 <https://nbviewer.jupyter.org/github/alibaba/GraphScope/blob/main/tutorials/zh/6_interactive_query_with_gremlin.ipynb>
+   使用 GraphSage 进行无监督图学习 <https://nbviewer.jupyter.org/github/alibaba/GraphScope/blob/main/tutorials/zh/7_unsupervised_learning_with_graphsage.ipynb>
+   使用 GCN 进行有监督图学习 <https://nbviewer.jupyter.org/github/alibaba/GraphScope/blob/main/tutorials/zh/8_supervised_learning_with_gcn.ipynb>
+   基于 BipartiteGraphSage 的二部图无监督学习 <https://nbviewer.jupyter.org/github/alibaba/GraphScope/blob/main/tutorials/zh/9_unsupervised_learning_with_bipartite_graphsage.ipynb>
+   基于 Kubernetes 环境再探论文引用网络中的节点分类任务 <https://nbviewer.jupyter.org/github/alibaba/GraphScope/blob/main/tutorials/zh/10_revisit_classification_on_citation_network_on_k8s.ipynb>

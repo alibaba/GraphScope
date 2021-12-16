@@ -31,6 +31,16 @@
   gtag('config', 'G-4TMYCGJ0X2');
 </script>
 
+<script>
+  var _hmt = _hmt || [];
+  (function() {
+    var hm = document.createElement("script");
+    hm.src = "https://hm.baidu.com/hm.js?da649ade2298891886e31922dfc8870f";
+    var s = document.getElementsByTagName("script")[0];
+    s.parentNode.insertBefore(hm, s);
+  })();
+</script>
+
 
 </head>
 
@@ -129,9 +139,7 @@
 <span class="c1"># limitations under the License.</span>
 <span class="c1">#</span>
 
-<span class="kn">import</span> <span class="nn">datetime</span>
 <span class="kn">import</span> <span class="nn">logging</span>
-<span class="kn">from</span> <span class="nn">concurrent.futures</span> <span class="kn">import</span> <span class="n">ThreadPoolExecutor</span>
 <span class="kn">from</span> <span class="nn">copy</span> <span class="kn">import</span> <span class="n">deepcopy</span>
 <span class="kn">from</span> <span class="nn">enum</span> <span class="kn">import</span> <span class="n">Enum</span>
 
@@ -144,7 +152,6 @@
 <span class="kn">from</span> <span class="nn">graphscope.framework.dag_utils</span> <span class="kn">import</span> <span class="n">fetch_gremlin_result</span>
 <span class="kn">from</span> <span class="nn">graphscope.framework.dag_utils</span> <span class="kn">import</span> <span class="n">gremlin_query</span>
 <span class="kn">from</span> <span class="nn">graphscope.framework.dag_utils</span> <span class="kn">import</span> <span class="n">gremlin_to_subgraph</span>
-<span class="kn">from</span> <span class="nn">graphscope.framework.loader</span> <span class="kn">import</span> <span class="n">Loader</span>
 
 <span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="s2">&quot;graphscope&quot;</span><span class="p">)</span>
 
@@ -232,7 +239,7 @@
 <span class="sd">        &gt;&gt;&gt; print(g2) # &lt;graphscope.framework.graph.Graph object&gt;</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">session</span><span class="p">,</span> <span class="n">graph</span><span class="p">,</span> <span class="n">engine_params</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">enable_gaia</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">session</span><span class="p">,</span> <span class="n">graph</span><span class="p">,</span> <span class="n">engine_params</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Args:</span>
 <span class="sd">            session (:class:`Session`): instance of GraphScope session.</span>
@@ -245,25 +252,9 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_session</span> <span class="o">=</span> <span class="n">session</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_graph</span> <span class="o">=</span> <span class="n">graph</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_engine_params</span> <span class="o">=</span> <span class="n">engine_params</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_enable_gaia</span> <span class="o">=</span> <span class="n">enable_gaia</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_query_gaia</span> <span class="o">=</span> <span class="kc">False</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_op</span> <span class="o">=</span> <span class="n">create_interactive_query</span><span class="p">(</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_graph</span><span class="p">,</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_engine_params</span><span class="p">,</span>
-            <span class="n">enable_gaia</span><span class="p">,</span>
-        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_op</span> <span class="o">=</span> <span class="n">create_interactive_query</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_graph</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_engine_params</span><span class="p">)</span>
         <span class="c1"># add op to dag</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_session</span><span class="o">.</span><span class="n">dag</span><span class="o">.</span><span class="n">add_op</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_op</span><span class="p">)</span>
-
-    <span class="k">def</span> <span class="nf">clone</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="bp">cls</span> <span class="o">=</span> <span class="n">InteractiveQueryDAGNode</span><span class="o">.</span><span class="fm">__new__</span><span class="p">(</span><span class="n">InteractiveQueryDAGNode</span><span class="p">)</span>
-        <span class="bp">cls</span><span class="o">.</span><span class="n">_session</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_session</span>
-        <span class="bp">cls</span><span class="o">.</span><span class="n">_graph</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_graph</span>
-        <span class="bp">cls</span><span class="o">.</span><span class="n">_engine_params</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_engine_params</span>
-        <span class="bp">cls</span><span class="o">.</span><span class="n">_enable_gaia</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_enable_gaia</span>
-        <span class="bp">cls</span><span class="o">.</span><span class="n">_query_gaia</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_query_gaia</span>
-        <span class="bp">cls</span><span class="o">.</span><span class="n">_op</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_op</span>
-        <span class="k">return</span> <span class="bp">cls</span>
 
     <span class="k">def</span> <span class="nf">execute</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">query</span><span class="p">,</span> <span class="n">request_options</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Execute gremlin querying scripts.</span>
@@ -279,7 +270,7 @@
 <span class="sd">            :class:`graphscope.framework.context.ResultDAGNode`:</span>
 <span class="sd">                A result holds the gremlin result, evaluated in eager mode.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">op</span> <span class="o">=</span> <span class="n">gremlin_query</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">query</span><span class="p">,</span> <span class="n">request_options</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_query_gaia</span><span class="p">)</span>
+        <span class="n">op</span> <span class="o">=</span> <span class="n">gremlin_query</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">query</span><span class="p">,</span> <span class="n">request_options</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">ResultSetDAGNode</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">op</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">subgraph</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">gremlin_script</span><span class="p">,</span> <span class="n">request_options</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
@@ -359,15 +350,6 @@
                 <span class="sa">f</span><span class="s2">&quot;ws://</span><span class="si">{</span><span class="n">endpoint</span><span class="si">}</span><span class="s2">/gremlin&quot;</span> <span class="k">for</span> <span class="n">endpoint</span> <span class="ow">in</span> <span class="n">frontend_endpoint</span>
             <span class="p">]</span></div>
 
-<div class="viewcode-block" id="InteractiveQuery.clone"><a class="viewcode-back" href="../../../reference/interactive.html#graphscope.interactive.query.InteractiveQuery.clone">[docs]</a>    <span class="k">def</span> <span class="nf">clone</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="n">ret</span> <span class="o">=</span> <span class="n">InteractiveQuery</span><span class="p">()</span>
-        <span class="n">ret</span><span class="o">.</span><span class="n">_status</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_status</span>
-        <span class="n">ret</span><span class="o">.</span><span class="n">_graph_url</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_graph_url</span>
-        <span class="n">ret</span><span class="o">.</span><span class="n">_object_id</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_object_id</span>
-        <span class="n">ret</span><span class="o">.</span><span class="n">_interactive_query_node</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_interactive_query_node</span><span class="o">.</span><span class="n">clone</span><span class="p">()</span>
-        <span class="n">ret</span><span class="o">.</span><span class="n">_session</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_interactive_query_node</span><span class="o">.</span><span class="n">session</span>
-        <span class="k">return</span> <span class="n">ret</span></div>
-
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">graph_url</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;The gremlin graph url can be used with any standard gremlin console, e.g., tinkerpop.&quot;&quot;&quot;</span>
@@ -396,19 +378,6 @@
 <div class="viewcode-block" id="InteractiveQuery.closed"><a class="viewcode-back" href="../../../reference/interactive.html#graphscope.interactive.query.InteractiveQuery.closed">[docs]</a>    <span class="k">def</span> <span class="nf">closed</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Return if the current instance is closed.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_status</span> <span class="o">==</span> <span class="n">InteractiveQueryStatus</span><span class="o">.</span><span class="n">Closed</span></div>
-
-<div class="viewcode-block" id="InteractiveQuery.gaia"><a class="viewcode-back" href="../../../reference/interactive.html#graphscope.interactive.query.InteractiveQuery.gaia">[docs]</a>    <span class="k">def</span> <span class="nf">gaia</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_status</span> <span class="o">!=</span> <span class="n">InteractiveQueryStatus</span><span class="o">.</span><span class="n">Running</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
-                <span class="s2">&quot;Interactive query is unavailable with </span><span class="si">%s</span><span class="s2"> status.&quot;</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_status</span><span class="p">)</span>
-            <span class="p">)</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_interactive_query_node</span><span class="o">.</span><span class="n">_enable_gaia</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span>
-                <span class="s2">&quot;GAIA not enabled. Enable gaia with `session(enable_gaia=True)`&quot;</span>
-            <span class="p">)</span>
-        <span class="bp">cls</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">clone</span><span class="p">()</span>
-        <span class="bp">cls</span><span class="o">.</span><span class="n">_interactive_query_node</span><span class="o">.</span><span class="n">_query_gaia</span> <span class="o">=</span> <span class="kc">True</span>
-        <span class="k">return</span> <span class="bp">cls</span></div>
 
 <div class="viewcode-block" id="InteractiveQuery.subgraph"><a class="viewcode-back" href="../../../reference/interactive.html#graphscope.interactive.query.InteractiveQuery.subgraph">[docs]</a>    <span class="k">def</span> <span class="nf">subgraph</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">gremlin_script</span><span class="p">,</span> <span class="n">request_options</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_status</span> <span class="o">!=</span> <span class="n">InteractiveQueryStatus</span><span class="o">.</span><span class="n">Running</span><span class="p">:</span>
@@ -455,21 +424,6 @@
                 <span class="s2">&quot;Interactive query is unavailable with </span><span class="si">%s</span><span class="s2"> status.&quot;</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_status</span><span class="p">)</span>
             <span class="p">)</span>
         <span class="n">ret</span> <span class="o">=</span> <span class="n">traversal</span><span class="p">()</span><span class="o">.</span><span class="n">withRemote</span><span class="p">(</span><span class="n">DriverRemoteConnection</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_graph_url</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="s2">&quot;g&quot;</span><span class="p">))</span>
-        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">graph_url</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
-
-            <span class="k">def</span> <span class="nf">gaia</span><span class="p">():</span>
-                <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span>
-                    <span class="s2">&quot;GAIA not enabled. Enable gaia with `session(enable_gaia=True)`&quot;</span>
-                <span class="p">)</span>
-
-        <span class="k">else</span><span class="p">:</span>
-
-            <span class="k">def</span> <span class="nf">gaia</span><span class="p">():</span>
-                <span class="k">return</span> <span class="n">traversal</span><span class="p">()</span><span class="o">.</span><span class="n">withRemote</span><span class="p">(</span>
-                    <span class="n">DriverRemoteConnection</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_graph_url</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="s2">&quot;g&quot;</span><span class="p">)</span>
-                <span class="p">)</span>
-
-        <span class="nb">setattr</span><span class="p">(</span><span class="n">ret</span><span class="p">,</span> <span class="s2">&quot;gaia&quot;</span><span class="p">,</span> <span class="n">gaia</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">ret</span></div>
 
 <div class="viewcode-block" id="InteractiveQuery.close"><a class="viewcode-back" href="../../../reference/interactive.html#graphscope.interactive.query.InteractiveQuery.close">[docs]</a>    <span class="k">def</span> <span class="nf">close</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
@@ -542,6 +496,16 @@
             
               
                 <dd><a href="../../../../index.html">stable</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../../v0.9.0/index.html">v0.9.0</a></dd>
               
             
 

@@ -33,6 +33,16 @@
   gtag('config', 'G-4TMYCGJ0X2');
 </script>
 
+<script>
+  var _hmt = _hmt || [];
+  (function() {
+    var hm = document.createElement("script");
+    hm.src = "https://hm.baidu.com/hm.js?da649ade2298891886e31922dfc8870f";
+    var s = document.getElementsByTagName("script")[0];
+    s.parentNode.insertBefore(hm, s);
+  })();
+</script>
+
 
 </head>
 
@@ -118,11 +128,10 @@
              
   <div class="section" id="id1">
 <h1>部署<a class="headerlink" href="#id1" title="Permalink to this headline"></a></h1>
-<p>GraphScope 以 docker 镜像的方式分发引擎等组件。
-默认情况下，如果运行 GraphScope 的集群机器上不存在该镜像，则会拉取对应版本的最新镜像。
-因此，请确保您的集群可以访问公共镜像仓库。</p>
-<p>会话（<a class="reference internal" href="../reference/session.html#session"><span class="std std-ref">Session</span></a>) 作为 GraphScope 在 Python 客户端，它封装、管理着 GraphScope 引擎的各种组件，
-并部署、连接、操作用户在 Kubernetes 集群上的 GraphScope 引擎。</p>
+<p>GraphScope 以 docker 镜像的方式分发引擎等组件。默认情况下，如果运行 GraphScope 的集群机器上不存在该镜像，
+则会拉取对应版本的最新镜像。因此，请确保您的集群可以访问公共镜像仓库。</p>
+<p>会话（<a class="reference internal" href="../reference/session.html#session"><span class="std std-ref">Session</span></a>) 作为 GraphScope 在 Python 客户端，它封装、管理着 GraphScope 引擎的各种组件，并
+部署、连接、操作用户在 Kubernetes 集群上的 GraphScope 引擎。</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">graphscope</span>
 
 <span class="n">sess</span> <span class="o">=</span> <span class="n">graphscope</span><span class="o">.</span><span class="n">session</span><span class="p">()</span>
@@ -130,37 +139,31 @@
 </div>
 <p>如上述代码所示，用户可以很容易的通过会话来拉起一个 GraphScope 实例。</p>
 <p>用户有时需要使用在本机磁盘上的数据，我们提供了选项供用户将本机的目录挂载到集群上。</p>
-<p>假定我们要将本机的 <cite>~/test_data</cite> 的路径挂载到 Pod 中的 <cite>/testingdata</cite> 路径，我们可以定义如下一个字典，然后将其通过
-<cite>k8s_volumes</cite> 的参数传给会话的构造函数。</p>
-<p>注意这里的本机路径是相对于 k8s 节点的概念，也就是说，如果你是通过 <cite>Kind</cite> 创建的集群，那么你需要将这个目录拷贝到 <cite>Kind</cite>
-的虚拟主机的相应路径上，或者在配置中将路径提前挂载到虚拟主机上去。在 <a class="reference external" href="https://kind.sigs.k8s.io/docs/user/configuration/#extra-mounts">这里</a> 查看更多细节。</p>
-<p><a href="#id3"><span class="problematic" id="id4">``</span></a><a href="#id5"><span class="problematic" id="id6">`</span></a>python
-import os
-import graphscope
-k8s_volumes = {</p>
-<blockquote>
-<div><dl>
-<dt>“data”: {</dt><dd><p>“type”: “hostPath”,
-“field”: {</p>
-<blockquote>
-<div><p>“path”: os.path.expanduser(“~/test_data/”),
-“type”: “Directory”</p>
-</div></blockquote>
-<p>},
-“mounts”: {</p>
-<blockquote>
-<div><p>“mountPath”: “/testingdata”</p>
-</div></blockquote>
-<p>}</p>
-</dd>
-</dl>
-<p>}</p>
-</div></blockquote>
-<p>}
-sess = graphscope.session(k8s_volumes=k8s_volumes)
-<a href="#id7"><span class="problematic" id="id8">``</span></a><a href="#id9"><span class="problematic" id="id10">`</span></a></p>
-<p>Kubernetes 上的一个 GraphScope 实例包含: 一个运行 etcd 的 pod，负责元信息的同步；一个运行 Coordinator 的 pod，负责对 GraphScope 引擎容器的管理；
-以及一组运行 GraphScope 引擎容器的 ReplicaSet 对象。</p>
+<p>假定我们要将本机的 <cite>~/test_data</cite> 的路径挂载到 Pod 中的 <cite>/testingdata</cite> 路径，我们可以定义如下一个字典，然后
+将其通过`k8s_volumes` 的参数传给会话的构造函数。</p>
+<p>注意这里的本机路径是相对于 k8s 节点的概念，也就是说，如果你是通过 <cite>Kind</cite> 创建的集群，那么你需要将这个目录拷贝到
+<cite>Kind</cite> 的虚拟主机的相应路径上，或者在配置中将路径提前挂载到虚拟主机上去。在 <a class="reference external" href="https://kind.sigs.k8s.io/docs/user/configuration/#extra-mounts">这里</a> 查看更多细节。</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">graphscope</span>
+
+<span class="n">k8s_volumes</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s2">&quot;data&quot;</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;hostPath&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;field&quot;</span><span class="p">:</span> <span class="p">{</span>
+            <span class="s2">&quot;path&quot;</span><span class="p">:</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">expanduser</span><span class="p">(</span><span class="s2">&quot;~/test_data/&quot;</span><span class="p">),</span>
+            <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;Directory&quot;</span>
+        <span class="p">},</span>
+        <span class="s2">&quot;mounts&quot;</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s2">&quot;mountPath&quot;</span><span class="p">:</span> <span class="s2">&quot;/testingdata&quot;</span>
+        <span class="p">}</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+
+<span class="n">sess</span> <span class="o">=</span> <span class="n">graphscope</span><span class="o">.</span><span class="n">session</span><span class="p">(</span><span class="n">k8s_volumes</span><span class="o">=</span><span class="n">k8s_volumes</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Kubernetes 上的一个 GraphScope 实例包含: 一个运行 etcd 的 pod，负责元信息的同步；一个运行 Coordinator 的 pod，
+负责对 GraphScope 引擎容器的管理；以及一组运行 GraphScope 引擎容器的 ReplicaSet 对象。</p>
 <p>Coordinator 作为 GraphScope 后端服务的入口，通过 grpc 接收来自 Python 客户端的连接和命令，并管理着图分析引擎(GAE)、
 图查询引擎(GIE)，图学习引擎(GLE)的生命周期。</p>
 <p>您可以根据需求配置引擎镜像地址等参数，请在 <a class="reference internal" href="../reference/session.html#session"><span class="std std-ref">Session</span></a> 中参阅更多的详细信息。</p>
@@ -207,17 +210,16 @@ $ helm <span class="nb">test</span> <span class="o">[</span>RELEASE_NAME<span cl
 </div>
 <div class="section" id="graphscope">
 <h2>本地部署GraphScope<a class="headerlink" href="#graphscope" title="Permalink to this headline"></a></h2>
-<p>我们提供了一个可在本地安装GraphScope相关依赖的脚本，这一脚本可以运行在
-Ubuntu 20.04+或MacOS平台上, 主要的用法如下。你可以通过 <cite>./scripts/install_deps.sh -h</cite>
-获取更详细的帮助信息。</p>
+<p>我们提供了一个可在本地安装GraphScope相关依赖的脚本，该脚本可以运行在 Ubuntu 20.04+ 或 MacOS 11.2+ 平台上, 主要的用法如下：
+你可以通过 <cite>./scripts/install_deps.sh -h</cite> 获取更详细的帮助信息。</p>
 <ul class="simple">
-<li><p>使用`install_deps.sh`安装GraphScope开发相关依赖</p></li>
+<li><p>安装 GraphScope 开发相关依赖</p></li>
 </ul>
 <div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>./scripts/install_deps.sh --dev
 </pre></div>
 </div>
 <ul class="simple">
-<li><p>本地部署GraphScope</p></li>
+<li><p>本地部署 GraphScope</p></li>
 </ul>
 <div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="nb">source</span> ~/.graphscope_env
 make graphscope
@@ -282,6 +284,16 @@ make graphscope
             
               
                 <dd><a href="../../zh/index.html">stable</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../v0.9.0/zh/index.html">v0.9.0</a></dd>
               
             
 

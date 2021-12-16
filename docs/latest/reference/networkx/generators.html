@@ -33,6 +33,16 @@
   gtag('config', 'G-4TMYCGJ0X2');
 </script>
 
+<script>
+  var _hmt = _hmt || [];
+  (function() {
+    var hm = document.createElement("script");
+    hm.src = "https://hm.baidu.com/hm.js?da649ade2298891886e31922dfc8870f";
+    var s = document.getElementsByTagName("script")[0];
+    s.parentNode.insertBefore(hm, s);
+  })();
+</script>
+
 
 </head>
 
@@ -204,7 +214,7 @@
 <td><p>Returns the circular ladder graph $CL_n$ of length n.</p></td>
 </tr>
 <tr class="row-odd"><td><p><a class="reference internal" href="generated/graphscope.nx.generators.classic.circulant_graph.html#graphscope.nx.generators.classic.circulant_graph" title="graphscope.nx.generators.classic.circulant_graph"><code class="xref py py-obj docutils literal notranslate"><span class="pre">circulant_graph</span></code></a>(n, offsets[, create_using])</p></td>
-<td><p>Returns the circulant graph $Ci_n(x_1, x_2, …, x_m)$ with $n$ nodes.</p></td>
+<td><p>Generates the circulant graph $Ci_n(x_1, x_2, …, x_m)$ with $n$ vertices.</p></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="generated/graphscope.nx.generators.classic.cycle_graph.html#graphscope.nx.generators.classic.cycle_graph" title="graphscope.nx.generators.classic.cycle_graph"><code class="xref py py-obj docutils literal notranslate"><span class="pre">cycle_graph</span></code></a>(n[, create_using])</p></td>
 <td><p>Returns the cycle graph $C_n$ of cyclically connected nodes.</p></td>
@@ -222,7 +232,7 @@
 <td><p>Return the star graph</p></td>
 </tr>
 <tr class="row-odd"><td><p><a class="reference internal" href="generated/graphscope.nx.generators.classic.full_rary_tree.html#graphscope.nx.generators.classic.full_rary_tree" title="graphscope.nx.generators.classic.full_rary_tree"><code class="xref py py-obj docutils literal notranslate"><span class="pre">full_rary_tree</span></code></a>(r, n[, create_using])</p></td>
-<td><p>Creates a full r-ary tree of <cite>n</cite> nodes.</p></td>
+<td><p>Creates a full r-ary tree of n vertices.</p></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="generated/graphscope.nx.generators.classic.ladder_graph.html#graphscope.nx.generators.classic.ladder_graph" title="graphscope.nx.generators.classic.ladder_graph"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ladder_graph</span></code></a>(n[, create_using])</p></td>
 <td><p>Returns the Ladder graph of length n.</p></td>
@@ -602,11 +612,11 @@ graph.</p>
 <col style="width: 90%" />
 </colgroup>
 <tbody>
-<tr class="row-odd"><td><p><a class="reference internal" href="generated/graphscope.nx.generators.trees.random_tree.html#graphscope.nx.generators.trees.random_tree" title="graphscope.nx.generators.trees.random_tree"><code class="xref py py-obj docutils literal notranslate"><span class="pre">random_tree</span></code></a>(n[, seed, create_using])</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="generated/graphscope.nx.generators.trees.random_tree.html#graphscope.nx.generators.trees.random_tree" title="graphscope.nx.generators.trees.random_tree"><code class="xref py py-obj docutils literal notranslate"><span class="pre">random_tree</span></code></a>(n[, seed])</p></td>
 <td><p>Returns a uniformly random tree on <cite>n</cite> nodes.</p></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="generated/graphscope.nx.generators.trees.prefix_tree.html#graphscope.nx.generators.trees.prefix_tree" title="graphscope.nx.generators.trees.prefix_tree"><code class="xref py py-obj docutils literal notranslate"><span class="pre">prefix_tree</span></code></a>(paths)</p></td>
-<td><p>Creates a directed prefix tree from a list of paths.</p></td>
+<td><p>Creates a directed prefix tree from the given list of iterables.</p></td>
 </tr>
 </tbody>
 </table>
@@ -787,6 +797,16 @@ Proc. Nat. Acad. Sci. USA 48, 1142-1146, 1962.</p>
             
               
                 <dd><a href="../../../index.html">stable</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../v0.9.0/index.html">v0.9.0</a></dd>
               
             
 

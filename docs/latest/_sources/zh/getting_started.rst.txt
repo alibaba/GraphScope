@@ -1,24 +1,20 @@
 快速上手
-========
+=======
 
-`graphscope` 是一站式图计算系统 GraphScope 的 Python 客户端，
-可以处理图的交互式查询、图分析和图学习任务。它具有易于使用、高性能和良好的可扩展性等特点。
+`GraphScope <https://github.com/alibaba/GraphScope>`_ 做为一站式图计算系统，可以处理图的交互式查询、图分析和图学习任务, 并且具有易于使用、高性能和良好的可扩展性等特点。
 
-本章节将通过一个例子介绍 `graphscope` 如何帮助数据科学家来高效的分析大图。
+本章节将通过一个例子介绍如何基于 `Kubernetes <https://kubernetes.io>`_ 使用 `GraphScope <https://github.com/alibaba/GraphScope>`_ 并帮助数据科学家来高效的分析大图。
+
 
 示例: 论文引用网络中的节点分类任务
---------------------------------------------
-`ogbn-mag <https://ogb.stanford.edu/docs/nodeprop/#ogbn-mag)>`_ 是
-由微软学术关系图（Microsoft Academic Graph）的子集组成的异构图网络。
-该图中包含4种类型的实体（即论文、作者、机构和研究领域），
-以及连接两个实体的四种类型的有向关系边。
+----------------------------
 
-我们需要处理的任务是，给出异构的 `ogbn-mag` 数据，
-在该图上预测每篇论文的类别。这是一个节点分类任务，
-该任务可以归类在各个领域、各个方向或研究小组的论文，
-通过对论文属性和引用图上的结构信息对论文进行分类。在该数据中，
-每个论文节点包含了一个从论文标题、摘要抽取的 128 维 word2vec 向量作为表征，
-该表征是经过预训练提前获取的；而结构信息是在以下过程中即时计算的。
+`ogbn-mag 数据集 <https://ogb.stanford.edu/docs/nodeprop/#ogbn-mag)>`_ 是由微软学术关系图（Microsoft Academic Graph）的子集组成的异构图网络。
+该图中包含4种类型的实体（即论文、作者、机构和研究领域），以及连接两个实体的四种类型的有向关系边。
+
+我们需要处理的任务是，给出异构的 `ogbn-mag` 数据，在该图上预测每篇论文的类别。这是一个节点分类任务，该任务可以归类在各个领域、各个方向或研究小组的论文，
+通过对论文属性和引用图上的结构信息对论文进行分类。在该数据中， 每个论文节点包含了一个从论文标题、摘要抽取的 128 维 word2vec 向量作为表征，该表征是经过
+预训练提前获取的；而结构信息是在以下过程中即时计算的。
 
 
 .. image:: ../images/how-it-works.png
@@ -38,7 +34,7 @@
 
 
 创建会话
-----------------------------
+-------
 
 使用 GraphScope 的第一步，我们需要在 Python 中创建一个会话（session）。
 
@@ -47,7 +43,7 @@
     import os
     import graphscope
 
-    # assume we mount `~/test_data` to `/testingdata` in pods.
+    # assume we mount `~/test_data` to `/testingdata` in pods, and `ogbn_mag_small` within.
     k8s_volumes = {
         "data": {
             "type": "hostPath",
@@ -72,13 +68,13 @@
 另外，注意 `data.field.path` 是 Kubernetes 主机上的路径，当在 Mac 上使用 Docker-Desktop 时，需要首先将此路径加入到 Docker
 的共享目录中，通常为 `/Users`。更详细的指引请参看 `how to mount hostpath using docker for mac kubernetes <https://forums.docker.com/t/how-to-mount-hostpath-using-docker-for-mac-kubernetes/44083/5>`_.
 
-会话（:ref:`Session`）的建立过程中，首选会在背后尝试拉起一个 `coordinator` 作为后端引擎的入口。
-该 `coordinator` 负责管理该次会话的所有资源（k8s pods），以及交互式查询、图分析、图学习引擎的生命周期。
-在 `coordinator` 后续拉起的其他每个 pod 中，都有一个 vineyard 实例作为内存管理层，分布式的管理图数据。
+会话（:ref:`Session`）的建立过程中，首选会在背后尝试拉起一个 `coordinator` 作为后端引擎的入口。 该 `coordinator` 负责管理该次会话的
+所有资源（k8s pods），以及交互式查询、图分析、图学习引擎的生命周期。 在 `coordinator` 后续拉起的其他每个 pod 中，都有一个 vineyard 
+实例作为内存管理层，分布式的管理图数据。
 
 
 载图
-----------------------------
+---
 
 GraphScope 以属性图（property graph）建模图数据。属性图中，点和边都有一个标签（label），不同的标签有不同的属性（property）。
 以 `ogbn-mag` 为例，下图展示了属性图的模型。
@@ -88,15 +84,11 @@ GraphScope 以属性图（property graph）建模图数据。属性图中，点�
     :align: center
     :alt: a sample property graph.
 
-该图具有四种顶点，分别标记为“论文”、“作者”、“机构”和“研究领域”。有四种连接它们的边，
-每种边都有一个标签，并且边的两端顶点的标签也是确定的。
-例如，“引用”这种标签的边连接两个“论文”顶点。另一个例子是标记为“撰写”的边，
-它要求该起始点的标记为“作者”，终止点的标记为“论文”。
-所有的顶点和边都可以具有属性。 例如，“论文”顶点具有诸如发布年份、主题标签等属性。
+该图具有四种顶点，分别标记为“论文”、“作者”、“机构”和“研究领域”。有四种连接它们的边， 每种边都有一个标签，并且边的两端顶点的标签也是确定的。
+例如，“引用”这种标签的边连接两个“论文”顶点。另一个例子是标记为“撰写”的边， 它要求该起始点的标记为“作者”，终止点的标记为“论文”。 所有的顶点
+和边都可以具有属性。 例如，“论文”顶点具有诸如发布年份、主题标签等属性。
 
-
-要将此图加载到 GraphScope，可以将以下代码与
-`数据文件 <https://graphscope.oss-accelerate.aliyuncs.com/ogbn_mag_small.tar.gz>`_ 结合使用。
+要将此图加载到 GraphScope，可以将以下代码与 `数据文件 <https://graphscope.oss-accelerate.aliyuncs.com/ogbn_mag_small.tar.gz>`_ 结合使用。
 请下载数据并将其解压缩到本地的挂载目录（在本例中为`〜/test_data`）。
 
 .. code:: python
@@ -133,17 +125,22 @@ GraphScope 以属性图（property graph）建模图数据。属性图中，点�
         )
     )
 
+也可通过我们提供的内置数据集函数帮助完成载图流程:
 
-请注意，这里的 `g` 已经是一个分布式存储在 vineyard 中的图。图数据分布在这个会话背后拉起的 k8s pods中。
-更多细节请查看 :ref:`载图`
+.. code:: python
+
+    from graphscope.dataset import load_ogbn_mag
+
+    g = load_ogbn_mag(sess, "/testingdata/ogbn_mag_small/")
+
+需要注意的是，这里的 `g` 已经是一个分布式存储在 vineyard 中的图。图数据分布在这个会话背后拉起的 k8s pods 中。更多细节请查看 :ref:`载图`
 
 
 交互式查询
-----------------------------
+--------
 
-交互式查询允许用户以“探索性”方式来探索、查看和显示图数据，
-以方便的定位和洞察特定的深入信息。GraphScope 采用称为 `Gremlin <http://tinkerpop.apache.org/>`_  的高级语言进行图遍历，
-并提供大规模的高效执行。
+交互式查询允许用户以“探索性”方式来探索、查看和显示图数据， 以方便的定位和洞察特定的深入信息。GraphScope 采用称为 `Gremlin <http://tinkerpop.apache.org/>`_ 
+的高级语言进行图遍历，并提供大规模的高效执行。
 
 在此示例中，我们使用图遍历来查看两位给定作者共同撰写的论文数量。为了简化查询，我们假设作者可以分别由ID `2` 和 `4307` 唯一标识。
 
@@ -157,22 +154,19 @@ GraphScope 以属性图（property graph）建模图数据。属性图中，点�
     edge_num = interactive.execute("g.E().count()").one()
 
     # count the number of papers two authors (with id 2 and 4307) have co-authored.
-    papers = interactive.execute("g.V().has('author', 'id', 2).out('writes')\
+    papers = interactive.execute("g.V().has('author', 'id', 2).out('writes') \
                     .where(__.in('writes').has('id', 4307)).count()").one()
 
 
 图分析
-----------------------------
+-----
 
-图分析是在真实场景中被广泛使用的一类图计算。事实证明，
-许多算法（例如社区检测，路径和连接性，集中性）在各种业务中都非常有效。
+图分析是在真实场景中被广泛使用的一类图计算。事实证明， 许多算法（例如社区检测，路径和连接性，集中性）在各种业务中都非常有效。
 GraphScope 内建了一组预置常用算法，方便用户可以轻松分析图数据。
 
-继续我们的示例，下面我们首先通过在特定周期内从全图中提取论文（使用Gremlin！）
-来导出一个子图，然后运行 k-core 分解和三角形计数以生成每个论文节点的结构特征。
+下面我们首先通过在特定周期内从全图中提取论文（背后基于 Gremlin！）来导出一个子图，然后运行 k-core 分解和三角形计数以生成每个论文节点的结构特征。
 
-请注意，许多算法可能仅适用于同构图（只有一类点和一类边而不区分标签），
-因此，要在属性图上使用这些算法，我们首先需要将其投影到一个简单的同构图中。
+需要注意的是，由于许多算法可能仅适用于同构图（只有一类点和一类边而不区分标签），因此，要在属性图上使用这些算法，我们首先需要将其投影到一个简单的同构图中。
 
 .. code:: python
 
@@ -193,15 +187,11 @@ GraphScope 内建了一组预置常用算法，方便用户可以轻松分析图
 
 
 图神经网络 (GNNs)
-----------------------------
+---------------
 
-图神经网络（GNN）结合了图结构和机器学习的优势，
-可以将图中的结构信息和属性信息压缩为每个节点上的低维嵌入向量。
-这些嵌入和表征可以进一步输入到下游的机器学习任务中。
+图神经网络（GNN）结合了图结构和机器学习的优势，可以将图中的结构信息和属性信息压缩为每个节点上的低维嵌入向量。这些嵌入和表征可以进一步输入到下游的机器学习任务中。
 
-在我们的示例中，我们训练了 GCN 模型，将节点（论文）分类为349个类别，
-每个类别代表一个出处（例如预印本和会议）。
-为此，首先我们接着上一步，启动学习引擎并构建一个具有特征的数据图。
+在我们的示例中，我们训练了 GCN 模型，将节点（论文）分类为349个类别，每个类别代表一个出处（例如预印本和会议）。为此，接着上一步，首先需要启动学习引擎并构建一个具有特征的数据图。
 
 .. code:: python
 
@@ -219,7 +209,7 @@ GraphScope 内建了一组预置常用算法，方便用户可以轻松分析图
                             ("train", "paper", 100, (0, 75)),
                             ("val", "paper", 100, (75, 85)),
                             ("test", "paper", 100, (85, 100))
-                      ])
+                       ])
 
 然后我们定义一个训练过程并执行。
 
@@ -278,11 +268,10 @@ GraphScope 内建了一组预置常用算法，方便用户可以轻松分析图
     train(config, lg)
 
 
-
 关闭会话
-----------------------------
+-------
 
-最后，当我们完成所有的计算过程后，关闭当前的会话。该步骤会告知背后的 `Coordinator` 和引擎，释放当前所有的资源
+最后，当我们完成所有的计算过程后，关闭当前的会话。该步骤会告知背后的 `Coordinator` 和引擎，释放当前所有的资源。
 
 .. code:: python
 

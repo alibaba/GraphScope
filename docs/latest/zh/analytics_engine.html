@@ -33,6 +33,16 @@
   gtag('config', 'G-4TMYCGJ0X2');
 </script>
 
+<script>
+  var _hmt = _hmt || [];
+  (function() {
+    var hm = document.createElement("script");
+    hm.src = "https://hm.baidu.com/hm.js?da649ade2298891886e31922dfc8870f";
+    var s = document.getElementsByTagName("script")[0];
+    s.parentNode.insertBefore(hm, s);
+  })();
+</script>
+
 
 </head>
 
@@ -130,10 +140,11 @@
 <h2>内置算法<a class="headerlink" href="#id2" title="Permalink to this headline"></a></h2>
 <p>GraphScope 图分析引擎内置了许多常用的图分析算法，包括连通性分析算法、路径分析算法、社区检测和中心度计算等类型。</p>
 <p>内置算法可以在图上轻松调用。例如，</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">graphscope</span> <span class="kn">import</span> <span class="n">pagerank</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">graphscope</span>
+<span class="kn">from</span> <span class="nn">graphscope</span> <span class="kn">import</span> <span class="n">pagerank</span>
 <span class="kn">from</span> <span class="nn">graphscope</span> <span class="kn">import</span> <span class="n">lpa</span>
 
-<span class="c1"># algorithms defined on property graph can be invoked directly.</span>
+<span class="n">g</span> <span class="o">=</span> <span class="n">graphscope</span><span class="o">.</span><span class="n">g</span><span class="p">()</span>
 <span class="c1"># 定义在属性图上的算法可以直接调用。</span>
 <span class="n">result</span> <span class="o">=</span> <span class="n">lpa</span><span class="p">(</span><span class="n">g</span><span class="p">)</span>
 
@@ -189,7 +200,7 @@
 <span class="n">result_pr</span><span class="o">.</span><span class="n">to_vineyard_numpy</span><span class="p">()</span>
 </pre></div>
 </div>
-<p>此外，如 :ref: <cite>快速上手</cite> 中所示，用户可以将计算结果加回到该图数据中作为顶点（边）的新属性（列）。</p>
+<p>此外，如 <a class="reference internal" href="getting_started.html#id1"><span class="std std-ref">快速上手</span></a> 中所示，用户可以将计算结果加回到该图数据中作为顶点（边）的新属性（列）。</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">simple_g</span> <span class="o">=</span> <span class="n">sub_graph</span><span class="o">.</span><span class="n">project</span><span class="p">(</span><span class="n">vertices</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;paper&quot;</span><span class="p">:</span> <span class="p">[]},</span> <span class="n">edges</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;cites&quot;</span><span class="p">:</span> <span class="p">[]})</span>
 
 <span class="n">ret</span> <span class="o">=</span> <span class="n">graphscope</span><span class="o">.</span><span class="n">kcore</span><span class="p">(</span><span class="n">simple_g</span><span class="p">,</span> <span class="n">k</span><span class="o">=</span><span class="mi">5</span><span class="p">)</span>
@@ -224,45 +235,52 @@
 </div>
 <div class="section" id="pie">
 <h2>使用 PIE 编程模型自定义算法<a class="headerlink" href="#pie" title="Permalink to this headline"></a></h2>
-<p>如果内置算法无法满足需求，用户可以编写自己的算法。用户可以通过 <cite>graphscope</cite> 在纯 Python 模式
+<p>如果内置算法无法满足需求，用户可以编写自己的算法。用户可以通过 <code class="docutils literal notranslate"><span class="pre">graphscope</span></code> 在纯 Python 模式
 下使用 <a class="reference external" href="https://dl.acm.org/doi/10.1145/3282488">PIE</a> 编程模型编写算法。</p>
 <a class="reference internal image-reference" href="../_images/pie.png"><img alt="Workflow of PIE" class="align-center" src="../_images/pie.png" style="width: 600px;" /></a>
 <p>为了实现自己的算法，用户需要实现此类。</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="nd">@graphscope</span><span class="o">.</span><span class="n">analytical</span><span class="o">.</span><span class="n">udf</span><span class="o">.</span><span class="n">pie</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">graphscope.analytical.udf</span> <span class="kn">import</span> <span class="n">pie</span>
+<span class="kn">from</span> <span class="nn">graphscope.framework.app</span> <span class="kn">import</span> <span class="n">AppAssets</span>
+
+<span class="nd">@pie</span>
 <span class="k">class</span> <span class="nc">YourAlgorithm</span><span class="p">(</span><span class="n">AppAssets</span><span class="p">):</span>
     <span class="nd">@staticmethod</span>
-    <span class="k">def</span> <span class="nf">Initialize</span><span class="p">(</span><span class="n">context</span><span class="p">,</span> <span class="n">frag</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">Init</span><span class="p">(</span><span class="n">frag</span><span class="p">,</span> <span class="n">context</span><span class="p">):</span>
         <span class="k">pass</span>
 
     <span class="nd">@staticmethod</span>
-    <span class="k">def</span> <span class="nf">PEval</span><span class="p">(</span><span class="n">context</span><span class="p">,</span> <span class="n">frag</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">PEval</span><span class="p">(</span><span class="n">frag</span><span class="p">,</span> <span class="n">context</span><span class="p">):</span>
         <span class="k">pass</span>
 
     <span class="nd">@staticmethod</span>
-    <span class="k">def</span> <span class="nf">IncEval</span><span class="p">(</span><span class="n">context</span><span class="p">,</span> <span class="n">frag</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">IncEval</span><span class="p">(</span><span class="n">frag</span><span class="p">,</span> <span class="n">context</span><span class="p">):</span>
         <span class="k">pass</span>
 </pre></div>
 </div>
-<p>如代码所示，用户需要实现一个以 <cite>&#64;graphscope.analytical.udf.pie</cite> 装饰的类，并提供三个串行
+<p>如代码所示，用户需要实现一个以 <code class="docutils literal notranslate"><span class="pre">&#64;pie</span></code> 装饰的类，并提供三个串行
 图算法函数。其中，<cite>Initialize</cite> 函数用于设置算法初始状态，<cite>PEval</cite> 函数定义算法的局部计算，
-<cite>IncEval</cite> 函数定义对分区数据的增量计算。与 fragment 相关的完整 API 可以参考 <a class="reference internal" href="../reference/cython_sdk.html#cython-sdk-api"><span class="std std-ref">Cython SDK API</span></a>。</p>
+<code class="docutils literal notranslate"><span class="pre">IncEval</span></code> 函数定义对分区数据的增量计算。与 fragment 相关的完整 API 可以参考 <a class="reference internal" href="../reference/cython_sdk.html#cython-sdk-api"><span class="std std-ref">Cython SDK API</span></a>。</p>
 <p>以单源最短路径算法 SSSP 为例，用户在 PIE 模型中定义的 SSSP 算法可如下所示。</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="nd">@graphscope</span><span class="o">.</span><span class="n">analytical</span><span class="o">.</span><span class="n">udf</span><span class="o">.</span><span class="n">pie</span>
-<span class="k">class</span> <span class="nc">SSSP</span><span class="p">:</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">graphscope.analytical.udf</span> <span class="kn">import</span> <span class="n">pie</span>
+<span class="kn">from</span> <span class="nn">graphscope.framework.app</span> <span class="kn">import</span> <span class="n">AppAssets</span>
+
+<span class="nd">@pie</span><span class="p">(</span><span class="n">vd_type</span><span class="o">=</span><span class="s2">&quot;double&quot;</span><span class="p">,</span> <span class="n">md_type</span><span class="o">=</span><span class="s2">&quot;double&quot;</span><span class="p">)</span>
+<span class="k">class</span> <span class="nc">SSSP_PIE</span><span class="p">(</span><span class="n">AppAssets</span><span class="p">):</span>
     <span class="nd">@staticmethod</span>
-    <span class="k">def</span> <span class="nf">Initialize</span><span class="p">(</span><span class="n">context</span><span class="p">,</span> <span class="n">frag</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">Init</span><span class="p">(</span><span class="n">frag</span><span class="p">,</span> <span class="n">context</span><span class="p">):</span>
         <span class="n">v_label_num</span> <span class="o">=</span> <span class="n">frag</span><span class="o">.</span><span class="n">vertex_label_num</span><span class="p">()</span>
-        <span class="c1"># 初始化每个顶点的距离</span>
         <span class="k">for</span> <span class="n">v_label_id</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">v_label_num</span><span class="p">):</span>
             <span class="n">nodes</span> <span class="o">=</span> <span class="n">frag</span><span class="o">.</span><span class="n">nodes</span><span class="p">(</span><span class="n">v_label_id</span><span class="p">)</span>
-            <span class="n">context</span><span class="o">.</span><span class="n">init_value</span><span class="p">(</span><span class="n">nodes</span><span class="p">,</span> <span class="n">v_label_id</span><span class="p">,</span> <span class="mf">1000000000.0</span><span class="p">,</span>
-                           <span class="n">PIEAggregateType</span><span class="o">.</span><span class="n">kMinAggregate</span><span class="p">)</span>
-        <span class="n">context</span><span class="o">.</span><span class="n">register_sync_buffer</span><span class="p">(</span><span class="n">MessageStrategy</span><span class="o">.</span><span class="n">kSyncOnOuterVertex</span><span class="p">)</span>
+            <span class="c1"># 初始化每个顶点的距离</span>
+            <span class="n">context</span><span class="o">.</span><span class="n">init_value</span><span class="p">(</span>
+                <span class="n">nodes</span><span class="p">,</span> <span class="n">v_label_id</span><span class="p">,</span> <span class="mf">1000000000.0</span><span class="p">,</span> <span class="n">PIEAggregateType</span><span class="o">.</span><span class="n">kMinAggregate</span>
+            <span class="p">)</span>
+            <span class="n">context</span><span class="o">.</span><span class="n">register_sync_buffer</span><span class="p">(</span><span class="n">v_label_id</span><span class="p">,</span> <span class="n">MessageStrategy</span><span class="o">.</span><span class="n">kSyncOnOuterVertex</span><span class="p">)</span>
 
     <span class="nd">@staticmethod</span>
-    <span class="k">def</span> <span class="nf">PEval</span><span class="p">(</span><span class="n">context</span><span class="p">,</span> <span class="n">frag</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">PEval</span><span class="p">(</span><span class="n">frag</span><span class="p">,</span> <span class="n">context</span><span class="p">):</span>
         <span class="c1"># 从context中获取源顶点</span>
-        <span class="n">src</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">context</span><span class="o">.</span><span class="n">get_config</span><span class="p">(</span><span class="sa">b</span><span class="s1">&#39;src&#39;</span><span class="p">))</span>
+        <span class="n">src</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">context</span><span class="o">.</span><span class="n">get_config</span><span class="p">(</span><span class="sa">b</span><span class="s2">&quot;src&quot;</span><span class="p">))</span>
         <span class="n">graphscope</span><span class="o">.</span><span class="n">declare</span><span class="p">(</span><span class="n">graphscope</span><span class="o">.</span><span class="n">Vertex</span><span class="p">,</span> <span class="n">source</span><span class="p">)</span>
         <span class="n">native_source</span> <span class="o">=</span> <span class="kc">False</span>
         <span class="n">v_label_num</span> <span class="o">=</span> <span class="n">frag</span><span class="o">.</span><span class="n">vertex_label_num</span><span class="p">()</span>
@@ -274,9 +292,8 @@
             <span class="n">context</span><span class="o">.</span><span class="n">set_node_value</span><span class="p">(</span><span class="n">source</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="k">return</span>
-
-        <span class="c1"># 在源顶点所在分区中，运行dijkstra算法作为部分计算</span>
         <span class="n">e_label_num</span> <span class="o">=</span> <span class="n">frag</span><span class="o">.</span><span class="n">edge_label_num</span><span class="p">()</span>
+        <span class="c1"># 在源顶点所在分区中，运行dijkstra算法作为部分计算</span>
         <span class="k">for</span> <span class="n">e_label_id</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">e_label_num</span><span class="p">):</span>
             <span class="n">edges</span> <span class="o">=</span> <span class="n">frag</span><span class="o">.</span><span class="n">get_outgoing_edges</span><span class="p">(</span><span class="n">source</span><span class="p">,</span> <span class="n">e_label_id</span><span class="p">)</span>
             <span class="k">for</span> <span class="n">e</span> <span class="ow">in</span> <span class="n">edges</span><span class="p">:</span>
@@ -286,7 +303,7 @@
                     <span class="n">context</span><span class="o">.</span><span class="n">set_node_value</span><span class="p">(</span><span class="n">dst</span><span class="p">,</span> <span class="n">distv</span><span class="p">)</span>
 
     <span class="nd">@staticmethod</span>
-    <span class="k">def</span> <span class="nf">IncEval</span><span class="p">(</span><span class="n">context</span><span class="p">,</span> <span class="n">frag</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">IncEval</span><span class="p">(</span><span class="n">frag</span><span class="p">,</span> <span class="n">context</span><span class="p">):</span>
         <span class="n">v_label_num</span> <span class="o">=</span> <span class="n">frag</span><span class="o">.</span><span class="n">vertex_label_num</span><span class="p">()</span>
         <span class="n">e_label_num</span> <span class="o">=</span> <span class="n">frag</span><span class="o">.</span><span class="n">edge_label_num</span><span class="p">()</span>
         <span class="c1"># 增量计算，更新最短距离</span>
@@ -308,9 +325,12 @@
 </div>
 <div class="section" id="pregel">
 <h2>使用 Pregel 编程模型自定义算法<a class="headerlink" href="#pregel" title="Permalink to this headline"></a></h2>
-<p>除了基于子图的 PIE 模型之外，<cite>graphscope</cite> 也支持以顶点为中心的 <cite>Pregel</cite> 编程模型。
-您可以通过实现以下算法类来在 <cite>Pregel</cite> 模型中开发算法。</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="nd">@pregel</span><span class="p">(</span><span class="n">vd_type</span><span class="o">=</span><span class="s1">&#39;double&#39;</span><span class="p">,</span> <span class="n">md_type</span><span class="o">=</span><span class="s1">&#39;double&#39;</span><span class="p">)</span>
+<p>除了基于子图的 PIE 模型之外，<code class="docutils literal notranslate"><span class="pre">graphscope</span></code> 也支持以顶点为中心的 <code class="docutils literal notranslate"><span class="pre">Pregel</span></code> 编程模型。
+您可以通过实现以下算法类来在 <code class="docutils literal notranslate"><span class="pre">Pregel</span></code> 模型中开发算法。</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">graphscope.analytical.udf</span> <span class="kn">import</span> <span class="n">pregel</span>
+<span class="kn">from</span> <span class="nn">graphscope.framework.app</span> <span class="kn">import</span> <span class="n">AppAssets</span>
+
+<span class="nd">@pregel</span><span class="p">(</span><span class="n">vd_type</span><span class="o">=</span><span class="s1">&#39;double&#39;</span><span class="p">,</span> <span class="n">md_type</span><span class="o">=</span><span class="s1">&#39;double&#39;</span><span class="p">)</span>
 <span class="k">class</span> <span class="nc">YourPregelAlgorithm</span><span class="p">(</span><span class="n">AppAssets</span><span class="p">):</span>
 
     <span class="nd">@staticmethod</span>
@@ -326,7 +346,7 @@
         <span class="k">pass</span>
 </pre></div>
 </div>
-<p>与 PIE 模型不同，Pregel 算法类的装饰器为 <cite>&#64;graphscope.analytical.udf.pregel</cite> ，该类方法是
+<p>与 PIE 模型不同，Pregel 算法类的装饰器为 <code class="docutils literal notranslate"><span class="pre">&#64;pregel</span></code> ，该类方法是
 定义在顶点上的，而不同于 PIE 模型中定义在图分区上。
 还是以 SSSP 为例，Pregel 模型下的算法如下所示。</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># 装饰器, 定义顶点数据和消息数据的类型</span>
@@ -384,14 +404,14 @@
 <p>运行自定义算法，用户需要在定义算法后调用算法。</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">graphscope</span>
 
-<span class="n">sess</span> <span class="o">=</span> <span class="n">graphscope</span><span class="o">.</span><span class="n">session</span><span class="p">()</span>
-<span class="n">g</span> <span class="o">=</span> <span class="n">sess</span><span class="o">.</span><span class="n">g</span><span class="p">()</span>
+<span class="n">g</span> <span class="o">=</span> <span class="n">graphscope</span><span class="o">.</span><span class="n">g</span><span class="p">()</span>
 
 <span class="c1"># 加载自己的算法</span>
 <span class="n">my_app</span> <span class="o">=</span> <span class="n">SSSP_Pregel</span><span class="p">()</span>
 
 <span class="c1"># 在图上运行自己的算法，得到计算结果</span>
-<span class="n">ret</span> <span class="o">=</span> <span class="n">my_app</span><span class="p">(</span><span class="n">g</span><span class="p">,</span> <span class="n">source</span><span class="o">=</span><span class="s2">&quot;0&quot;</span><span class="p">)</span>
+<span class="c1"># 这里 `src` 是与 `context.get_config(b&quot;src&quot;)` 相对应的</span>
+<span class="n">ret</span> <span class="o">=</span> <span class="n">my_app</span><span class="p">(</span><span class="n">g</span><span class="p">,</span> <span class="n">src</span><span class="o">=</span><span class="s2">&quot;0&quot;</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>在开发和测试之后，您可以通过 <cite>to_gar</cite> 方法将算法保存成 gar 包以备将来使用。</p>
@@ -401,11 +421,10 @@
 <p>在此之后，您可以从 gar 包加载自定义的算法。</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">graphscope</span>
 
-<span class="n">sess</span> <span class="o">=</span> <span class="n">graphscope</span><span class="o">.</span><span class="n">session</span><span class="p">()</span>
-<span class="n">g</span> <span class="o">=</span> <span class="n">sess</span><span class="o">.</span><span class="n">g</span><span class="p">()</span>
+<span class="n">g</span> <span class="o">=</span> <span class="n">graphscope</span><span class="o">.</span><span class="n">g</span><span class="p">()</span>
 
 <span class="c1"># 从gar包中加载自己的算法</span>
-<span class="n">my_app</span> <span class="o">=</span> <span class="n">load_app</span><span class="p">(</span><span class="s1">&#39;SSSP_Pregel&#39;</span><span class="p">,</span> <span class="s1">&#39;file:///var/graphscope/udf/my_sssp_pregel.gar&#39;</span><span class="p">)</span>
+<span class="n">my_app</span> <span class="o">=</span> <span class="n">load_app</span><span class="p">(</span><span class="s1">&#39;file:///var/graphscope/udf/my_sssp_pregel.gar&#39;</span><span class="p">)</span>
 
 <span class="c1"># 在图上运行自己的算法，得到计算结果</span>
 <span class="n">ret</span> <span class="o">=</span> <span class="n">my_app</span><span class="p">(</span><span class="n">g</span><span class="p">,</span> <span class="n">src</span><span class="o">=</span><span class="s2">&quot;0&quot;</span><span class="p">)</span>
@@ -476,6 +495,16 @@
             
               
                 <dd><a href="../../zh/index.html">stable</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../v0.9.0/zh/index.html">v0.9.0</a></dd>
               
             
 

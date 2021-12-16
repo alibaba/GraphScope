@@ -33,6 +33,16 @@
   gtag('config', 'G-4TMYCGJ0X2');
 </script>
 
+<script>
+  var _hmt = _hmt || [];
+  (function() {
+    var hm = document.createElement("script");
+    hm.src = "https://hm.baidu.com/hm.js?da649ade2298891886e31922dfc8870f";
+    var s = document.getElementsByTagName("script")[0];
+    s.parentNode.insertBefore(hm, s);
+  })();
+</script>
+
 
 </head>
 
@@ -114,58 +124,82 @@
              
   <div class="section" id="frequently-asked-questions">
 <h1>Frequently Asked Questions<a class="headerlink" href="#frequently-asked-questions" title="Permalink to this headline"></a></h1>
-<p>Below are some questions which are frequently by our end users. If the following sections still doesn’t answer your question, feel free to open an <a class="reference external" href="https://github.com/alibaba/GraphScope/issues/new/choose">open an issue</a> or <a class="reference external" href="https://github.com/alibaba/GraphScope/discussions">post it to discussions</a>.</p>
-<p><em>1. What are the minimum resources and system requirements required to run GraphScope?</em></p>
+<p>If you don’t find an answer to your question here, feel free to file a <a class="reference external" href="https://github.com/alibaba/GraphScope/issues/new/choose">Issues</a> or post it to <a class="reference external" href="https://github.com/alibaba/GraphScope/discussions">Discussions</a>.</p>
+<ol class="arabic">
+<li><p>What are the minimum resources and system requirements required to run GraphScope?</p>
 <blockquote>
 <div><p>To use GraphScope Python interface, <strong>Python &gt;= 3.6</strong> and <strong>pip &gt;= 19.0</strong> is required.
-GraphScope engine can be deployed in standalone mode or distributed mode. For standalone deployment, a physical machine with at least <strong>4 cores CPU</strong> and <strong>8G memory</strong> is required. GraphScope is tested and supported on the following systems:</p>
+GraphScope engine can be deployed in standalone mode or distributed mode. For standalone deployment, the mininum requirement is  <strong>4 cores CPU</strong> and <strong>8G memory</strong>.</p>
+<p>GraphScope is tested and supported on the following systems:</p>
 <ul class="simple">
-<li><p>CentOS7+</p></li>
-<li><p>Ubuntu18+</p></li>
+<li><p>CentOS 7+</p></li>
+<li><p>Ubuntu 18.04+</p></li>
+<li><p>MacOS 10.15+</p></li>
 </ul>
-<p>For distributed depolyment, a cluster managed by Kubernetes is required. GraphScope has tested on
-k8s <strong>version &gt;= v1.12.0+</strong>.</p>
+<p>For distributed depolyment, a cluster managed by Kubernetes is required. GraphScope has been tested on
+Kubernetes <strong>version &gt;= v1.12.0+</strong>.</p>
 </div></blockquote>
-<p><em>2. Is Kubernetes an enssential to run GraphScope?</em></p>
+</li>
+<li><p>Is Kubernetes an enssential to use GraphScope?</p>
 <blockquote>
-<div><p>No. GraphScope supports <a class="reference external" href="https://graphscope.io/docs/deployment.html#deployment-on-local">build and run on local</a> in a single machine.
-However, GraphScope depends on many third-party libraries and projects. To make our life easier, we suggest you build and run GraphScope on k8s with our provided dev-image and release-image. If you don’t have a kubernetes cluster, you may use tools like <a class="reference external" href="https://kind.sigs.k8s.io/">kind</a> to setup a local cluster to use the images for trying graphscope.</p>
+<div><p>No. GraphScope supports run in standalone mode on a single machine. GraphScope pre-compiled package is distributed as a python package and can be easily installed with <cite>pip</cite>: <cite>pip3 install graphscope</cite>.</p>
 </div></blockquote>
-<p><em>3. How to debug or get detailed information when run GraphScope?</em></p>
+</li>
+<li><p>How to debug or get detailed information when using GraphScope?</p>
 <blockquote>
 <div><p>By default, GraphScope is usually running in a silent mode following the convention of Python applications.
 To enable verbose logging, turn on it by this:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">graphscope</span><span class="o">.</span><span class="n">set_option</span><span class="p">(</span><span class="n">show_log</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 </pre></div>
 </div>
-<p>If you are running GraphScope in k8s, you can use <a class="reference external" href="https://kubernetes.io/docs/reference/generated/kubectl/kubectl-commands">kubectl describe/logs</a> to check the log/status of the cluster. If the disk space is accessible(on local or via pods), you may also find logs in <cite>/tmp/graphscope/runtime/logs</cite>.</p>
+<p>If you are running GraphScope in k8s, you can use <a class="reference external" href="https://kubernetes.io/docs/reference/generated/kubectl/kubectl-commands">kubectl describe/logs</a> to check the log/status of the cluster. If the disk storage is accessible(on local or via Pods), you may also find logs in <cite>/tmp/gs/runtime/logs</cite>.</p>
 </div></blockquote>
-<p><em>4. Why I find more pods than expected with command `kubectl get pod`?</em></p>
+</li>
+<li><p>Why I find more Pods than expected with command <cite>kubectl get pod</cite>?</p>
 <blockquote>
-<div><p>For the failed pods, you may need to delete them manually.
-This case is observed when using GraphScope with helm. If users did not correctly set the <cite>role</cite> and <cite>rolebinding</cite>, the command <cite>helm uninstall GraphScope</cite> may not correctly recycle allocated resources. More details please refer to <a class="reference external" href="https://artifacthub.io/packages/helm/graphscope/graphscope">Helm Support</a>.</p>
+<div><p>For the failed Pods, you may need to delete them manually by <cite>kubectl delete pod &lt;pod-names&gt;</cite>
+This case is observed when using GraphScope with helm. If users did not correctly set the <cite>role</cite> and <cite>rolebinding</cite>, the command <cite>helm uninstall &lt;release-name&gt;</cite> may not correctly recycle allocated resources. More details please refer to <a class="reference external" href="https://artifacthub.io/packages/helm/graphscope/graphscope">Helm Support</a>.</p>
 </div></blockquote>
-<p><em>5. Is GraphScope a graph database?</em></p>
+</li>
+<li><p>Is GraphScope a graph database?</p>
 <blockquote>
-<div><p>No, GraphScope is not a graph database.  It cannot provide transactions on graph.
-Instead, it provides an efficient “immutable” in-memory store for fast queries and analysis, and a persistent store(service) for updates on graphs. Both are scale very well - you can launch a larger session from your python notebook to handle a bigger graph or run a complex algorithm.</p>
+<div><p>GraphScope is not a graph database, however there is a persistent storage component that can serve as database inside GraphScope called <a class="reference external" href="https://graphscope.io/docs/persistent_graph_store.html">graphscope-store</a>.</p>
 </div></blockquote>
-<p><em>6. What’s the compatibility of Gremlin in GraphScope?</em></p>
+</li>
+<li><p>What’s the compatibility of Gremlin in GraphScope?</p>
 <blockquote>
 <div><p>GraphScope supports most querying operators in Gremlin. You may check the compatibility in this <a class="reference external" href="https://graphscope.io/docs/interactive_engine.html#unsupported-features">link</a>.</p>
 </div></blockquote>
-<p><em>7. The system seems get stuck, what are the possible reasons?</em></p>
+</li>
+<li><p>The system seems get stuck, what are the possible reasons?</p>
 <blockquote>
 <div><p>If GraphScope seems to get stuck, the possible cause might be:</p>
 <ul class="simple">
-<li><p>In the session launching stage, the most cases are waiting for pods ready. The time consuming may be caused by a poor network connection during pulling image, or caused by the resources cannot meet the need to launch a session.</p></li>
+<li><p>In the session launching stage, the most cases are waiting for Pods ready. The time consuming may be caused by a poor network connection during pulling image, or by failing to acquire the requested resources to launch a session.</p></li>
 <li><p>In the graph loading stage, it is time consuming to load and build a large graph.</p></li>
-<li><p>When running a user-defined or built-in analytical algorithm, it takes time to compile/distribute the algorithm over the loaded graph.</p></li>
+<li><p>When running a user-defined or built-in analytical algorithm, it may takes time to compile the algorithm over the loaded graph.</p></li>
 </ul>
 </div></blockquote>
-<p><em>I do have many other questions…</em></p>
+</li>
+<li><p>Why <cite>No such file or directory</cite> error when loading graph?</p>
 <blockquote>
-<div><p>Please feel free to contact us. You may reach us by <a class="reference external" href="https://github.com/alibaba/GraphScope/issues/new/choose">submitting an issue(prefered)</a>, ask questions in <a class="reference external" href="https://github.com/alibaba/GraphScope/discussions">Discussions</a>, or drop a message in <a class="reference external" href="http://slack.graphscope.io">Slack</a> or <a class="reference external" href="https://h5.dingtalk.com/circle/healthCheckin.html?dtaction=os&amp;corpId=ding82073ee2a22b2f86748126f6422b5d02&amp;109d1=d3892&amp;cbdbhh=qwertyuiop">DingTalk</a>. We are happy to answer your questions responsively.</p>
+<div><p>This mostly occur when you are deploying GraphScope in a Kubernetes cluster, the file must be visible to the <code class="docutils literal notranslate"><span class="pre">engnine</span></code> Pod of GraphScope. You may need to mount a volume to the Pods or use cloud storage providers.</p>
+<p>Specifically, if your cluster is deployed with <a class="reference external" href="https://kind.sigs.k8s.io">kind</a>, you may need to setup <a class="reference external" href="https://kind.sigs.k8s.io/docs/user/configuration/#extra-mounts">extra-mounts</a> to mount your local directory to kind nodes.</p>
+</div></blockquote>
+</li>
+<li><p>What’s the relationship between <code class="docutils literal notranslate"><span class="pre">k8s_vineyard_mem</span></code>, <code class="docutils literal notranslate"><span class="pre">vineyard_shared_mem</span></code> and <code class="docutils literal notranslate"><span class="pre">k8s_engine_mem</span></code>?</p>
+<blockquote>
+<div><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">k8s_vineyard_mem</span></code>: The memory allocated for the vineyard container.  It stores the metadata of blobs managed by vineyard, such as the shape, id, name, and so forth. As the metadata would be much smaller than datasets, the default configuration is sufficient in most cases. It’s equivalent to <code class="docutils literal notranslate"><span class="pre">vineyard.resources.memory.requests</span></code> and <code class="docutils literal notranslate"><span class="pre">vineyard.resources.memory.limits</span></code> in graphscope helm charts.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">vineyard_shared_mem</span></code>: The memory where the data would be loaded in. Its value needs to be adjusted according to the size of the datasets. We found that setting the value to 5 times the size of the datasets on disk is usually a reasonable value. It’s equivalent to <code class="docutils literal notranslate"><span class="pre">vineyard.shared_mem</span></code> in graphscope helm charts.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">k8s_engine_mem</span></code>: The memory of the engine pods, can just be set equal to the value of <code class="docutils literal notranslate"><span class="pre">vineyard_shared_mem</span></code>. Equivalent to <code class="docutils literal notranslate"><span class="pre">engines.resources.memory.requests</span></code> and <code class="docutils literal notranslate"><span class="pre">engines.resources.memory.limits</span></code> in graphscope helm charts.</p></li>
+</ul>
+</div></blockquote>
+</li>
+</ol>
+<p><strong>I do have many other questions…</strong></p>
+<blockquote>
+<div><p>Please feel free to contact us. You may reach us by <a class="reference external" href="https://github.com/alibaba/GraphScope/issues/new/choose">Issues</a>, ask questions in <a class="reference external" href="https://github.com/alibaba/GraphScope/discussions">Discussions</a>, or drop a message in <a class="reference external" href="http://slack.graphscope.io">Slack</a> or <a class="reference external" href="https://h5.dingtalk.com/circle/healthCheckin.html?dtaction=os&amp;corpId=ding82073ee2a22b2f86748126f6422b5d02&amp;109d1=d3892&amp;cbdbhh=qwertyuiop">DingTalk</a>. We are happy to answer your questions responsively.</p>
 </div></blockquote>
 </div>
 
@@ -225,6 +259,16 @@ Instead, it provides an efficient “immutable” in-memory store for fast queri
             
               
                 <dd><a href="../index.html">stable</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../v0.9.0/index.html">v0.9.0</a></dd>
               
             
 

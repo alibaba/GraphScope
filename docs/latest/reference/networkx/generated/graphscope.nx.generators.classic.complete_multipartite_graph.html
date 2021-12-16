@@ -33,6 +33,16 @@
   gtag('config', 'G-4TMYCGJ0X2');
 </script>
 
+<script>
+  var _hmt = _hmt || [];
+  (function() {
+    var hm = document.createElement("script");
+    hm.src = "https://hm.baidu.com/hm.js?da649ade2298891886e31922dfc8870f";
+    var s = document.getElementsByTagName("script")[0];
+    s.parentNode.insertBefore(hm, s);
+  })();
+</script>
+
 
 </head>
 
@@ -169,7 +179,7 @@
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><p><strong>subset_sizes</strong> (<em>tuple of integers</em><em> or </em><em>tuple of node iterables</em>) – The arguments can either all be integer number of nodes or they
 can all be iterables of nodes. If integers, they represent the
-number of nodes in each subset of the multipartite graph.
+number of vertices in each subset of the multipartite graph.
 If iterables, each is used to create the nodes for that subset.
 The length of subset_sizes is the number of subsets.</p>
 </dd>
@@ -185,7 +195,7 @@ indicating which subset contains the node.</p>
 </dl>
 <p class="rubric">Examples</p>
 <p>Creating a complete tripartite graph, with subsets of one, two, and three
-nodes, respectively.</p>
+vertices, respectively.</p>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">G</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">complete_multipartite_graph</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="p">[</span><span class="n">G</span><span class="o">.</span><span class="n">nodes</span><span class="p">[</span><span class="n">u</span><span class="p">][</span><span class="s2">&quot;subset&quot;</span><span class="p">]</span> <span class="k">for</span> <span class="n">u</span> <span class="ow">in</span> <span class="n">G</span><span class="p">]</span>
 <span class="go">[0, 1, 1, 2, 2, 2]</span>
@@ -203,7 +213,7 @@ nodes, respectively.</p>
 </pre></div>
 </div>
 <p class="rubric">Notes</p>
-<p>This function generalizes several other graph builder functions.</p>
+<p>This function generalizes several other graph generator functions.</p>
 <ul class="simple">
 <li><p>If no subset sizes are given, this returns the null graph.</p></li>
 <li><p>If a single subset size <cite>n</cite> is given, this returns the empty graph on
@@ -277,6 +287,16 @@ bipartite graph on <cite>m + n</cite> nodes.</p></li>
             
               
                 <dd><a href="../../../../index.html">stable</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../../v0.9.0/index.html">v0.9.0</a></dd>
               
             
 

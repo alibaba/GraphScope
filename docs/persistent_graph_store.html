@@ -33,6 +33,16 @@
   gtag('config', 'G-4TMYCGJ0X2');
 </script>
 
+<script>
+  var _hmt = _hmt || [];
+  (function() {
+    var hm = document.createElement("script");
+    hm.src = "https://hm.baidu.com/hm.js?da649ade2298891886e31922dfc8870f";
+    var s = document.getElementsByTagName("script")[0];
+    s.parentNode.insertBefore(hm, s);
+  })();
+</script>
+
 
 </head>
 
@@ -156,14 +166,14 @@
 <div class="section" id="known-limitation">
 <h3>Known Limitation<a class="headerlink" href="#known-limitation" title="Permalink to this headline"></a></h3>
 <ul class="simple">
-<li><p>Initially, the new persistent store is provided as a separate option from Vineyard, and it can accept Gremlin queries for data access. Going foward we hope to evole them into an integrated hybrid graph store suitable for all kinds of workloads.</p></li>
-<li><p>In the v0.5 release, data can only be loaded into the store in a bulk fashion. APIs for real-time updates (inserts and deletes of individual vertices and egdes) were added in the v0.7 release.</p></li>
+<li><p>Initially, the new persistent store is provided as a separate option from Vineyard, and it can accept Gremlin queries for data access. Going foward we hope to evolve them into an integrated hybrid graph store suitable for all kinds of workloads.</p></li>
+<li><p>In the v0.5 release, data can only be loaded into the store in a bulk fashion. APIs for real-time updates (inserts and deletes of individual vertices and egdes) has been added in the v0.7 release.</p></li>
 </ul>
 </div>
 </div>
 <div class="section" id="deploying-store-service">
 <h2>Deploying Store Service<a class="headerlink" href="#deploying-store-service" title="Permalink to this headline"></a></h2>
-<p>This chart bootstraps a <a class="reference external" href="https://github.com/alibaba/GraphScope/tree/main/interactive_engine/src/v2/src/main">GraphScope Store</a> cluster deployment on a <a class="reference external" href="http://kubernetes.io">Kubernetes</a> cluster using the <a class="reference external" href="https://helm.sh">Helm</a> package manager.</p>
+<p>This chart bootstraps a <a class="reference external" href="https://github.com/alibaba/GraphScope/tree/main/interactive_engine/groot/src/main/java/com/alibaba/graphscope/groot">GraphScope Store</a> cluster deployment on a <a class="reference external" href="http://kubernetes.io">Kubernetes</a> cluster using the <a class="reference external" href="https://helm.sh">Helm</a> package manager.</p>
 <div class="section" id="prerequisites">
 <h3>Prerequisites<a class="headerlink" href="#prerequisites" title="Permalink to this headline"></a></h3>
 <ul class="simple">
@@ -175,7 +185,7 @@
 <div class="section" id="installing-the-chart">
 <h3>Installing the Chart<a class="headerlink" href="#installing-the-chart" title="Permalink to this headline"></a></h3>
 <p>To install the chart with the release name <cite>my-release</cite>:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$ helm repo add graphscope https://graphscope.oss-cn-beijing.aliyuncs.com/store/charts/
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$ helm repo add graphscope https://graphscope.oss-cn-beijing.aliyuncs.com/charts/
 $ helm install my-release graphscope/graphscope-store
 </pre></div>
 </div>
@@ -806,6 +816,16 @@ For an edge type, the mapping info should includes 1) label of the edge type, 2)
             
               
                 <dd><a href="index.html">stable</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="v0.9.0/index.html">v0.9.0</a></dd>
               
             
 

@@ -33,6 +33,16 @@
   gtag('config', 'G-4TMYCGJ0X2');
 </script>
 
+<script>
+  var _hmt = _hmt || [];
+  (function() {
+    var hm = document.createElement("script");
+    hm.src = "https://hm.baidu.com/hm.js?da649ade2298891886e31922dfc8870f";
+    var s = document.getElementsByTagName("script")[0];
+    s.parentNode.insertBefore(hm, s);
+  })();
+</script>
+
 
 </head>
 
@@ -455,6 +465,24 @@ a <cite>path_{worker_id}</cite> file to storage.
 </dd></dl>
 
 <dl class="py method">
+<dt class="sig sig-object py" id="graphscope.framework.graph.Graph.to_directed">
+<span class="sig-name descname"><span class="pre">to_directed</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/graphscope/framework/graph.html#Graph.to_directed"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#graphscope.framework.graph.Graph.to_directed" title="Permalink to this definition"></a></dt>
+<dd><p>Returns a directed representation of the graph.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p><dl class="simple">
+<dt>A directed graph with the same name, same nodes, and</dt><dd><p>with each edge (u, v, data) replaced by two directed edges (u, v, data) and (v, u, data).</p>
+</dd>
+</dl>
+</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><a class="reference internal" href="#graphscope.framework.graph.Graph" title="graphscope.framework.graph.Graph"><code class="xref py py-class docutils literal notranslate"><span class="pre">Graph</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
 <dt class="sig sig-object py" id="graphscope.framework.graph.Graph.to_numpy">
 <span class="sig-name descname"><span class="pre">to_numpy</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">selector</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">vertex_range</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/graphscope/framework/graph.html#Graph.to_numpy"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#graphscope.framework.graph.Graph.to_numpy" title="Permalink to this definition"></a></dt>
 <dd><p>Select some elements of the graph and output to numpy.</p>
@@ -467,6 +495,26 @@ a <cite>path_{worker_id}</cite> file to storage.
 </dd>
 <dt class="field-even">Returns</dt>
 <dd class="field-even"><p><cite>numpy.ndarray</cite></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="graphscope.framework.graph.Graph.to_undirected">
+<span class="sig-name descname"><span class="pre">to_undirected</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/graphscope/framework/graph.html#Graph.to_undirected"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#graphscope.framework.graph.Graph.to_undirected" title="Permalink to this definition"></a></dt>
+<dd><p>Returns an undirected representation of the digraph.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p><dl class="simple">
+<dt>An undirected graph with the same name and nodes and</dt><dd><p>with edge (u, v, data) if either (u, v, data) or (v, u, data) is in the digraph.
+If both edges exist in digraph, they will both be preserved.
+You must check and correct for this manually if desired.</p>
+</dd>
+</dl>
+</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><a class="reference internal" href="#graphscope.framework.graph.Graph" title="graphscope.framework.graph.Graph"><code class="xref py py-class docutils literal notranslate"><span class="pre">Graph</span></code></a></p>
 </dd>
 </dl>
 </dd></dl>
@@ -711,6 +759,16 @@ If you only need to work with analytical engine, set it to False. Defaults to Fa
             
               
                 <dd><a href="../index.html">stable</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../v0.9.0/index.html">v0.9.0</a></dd>
               
             
 

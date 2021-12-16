@@ -33,6 +33,16 @@
   gtag('config', 'G-4TMYCGJ0X2');
 </script>
 
+<script>
+  var _hmt = _hmt || [];
+  (function() {
+    var hm = document.createElement("script");
+    hm.src = "https://hm.baidu.com/hm.js?da649ade2298891886e31922dfc8870f";
+    var s = document.getElementsByTagName("script")[0];
+    s.parentNode.insertBefore(hm, s);
+  })();
+</script>
+
 
 </head>
 
@@ -65,7 +75,11 @@
       
         <p class="caption"><span class="caption-text">目录</span></p>
 <ul class="current">
-<li class="toctree-l1 current"><a class="current reference internal" href="#">安装</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">安装</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#id2">单机环境下安装</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#kubernetes-graphscope">基于 Kubernetes 安装 GraphScope 客户端</a></li>
+</ul>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="getting_started.html">快速上手</a></li>
 <li class="toctree-l1"><a class="reference internal" href="deployment.html">部署</a></li>
 <li class="toctree-l1"><a class="reference internal" href="tutorials.html">入门教程</a></li>
@@ -113,44 +127,49 @@
              
   <div class="section" id="id1">
 <h1>安装<a class="headerlink" href="#id1" title="Permalink to this headline"></a></h1>
-<p>GraphScope 客户端以 Python 程序包的形式发布，背后通过容器机制管理一组引擎和一个协调器。</p>
-<p>GraphScope 被设计为运行在 Kubernetes 管理的群集上。
-方便起见，我们可以按照本文档的以下步骤部署一个本地 Kubernetes 集群，并加载预编译好的镜像。</p>
-<p>本地运行 GraphScope 需要预先安装以下依赖。</p>
+<p>GraphScope 目前支持的平台如下:</p>
 <ul class="simple">
-<li><p>Docker</p></li>
-<li><p>Python 3.6+ (with pip)</p></li>
+<li><p>gcc 7.1+</p></li>
+<li><p>Python 3.6 - 3.9</p></li>
+<li><p>Ubuntu 18.04 or later</p></li>
+<li><p>CentOS 7 or later</p></li>
+<li><p>macOS 11.2.1 (Big Sur) or later (Apple M1 is not support yet!)</p></li>
+</ul>
+<div class="section" id="id2">
+<h2>单机环境下安装<a class="headerlink" href="#id2" title="Permalink to this headline"></a></h2>
+<p>GraphScope 以 <a class="reference external" href="https://pypi.org/project/graphscope">Python 程序包</a> 的形式发布, 可直接通过 <a class="reference external" href="https://pip.pypa.io/en/stable/">pip</a> 安装。</p>
+<p><strong>注意: 需要满足 pip 版本 &gt; 19.0 (or &gt; 20.3 for macOS)</strong></p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="c1"># Requires the latest pip</span>
+pip3 install --upgrade pip
+
+<span class="c1"># Current stable release</span>
+pip3 install --upgrade graphscope
+</pre></div>
+</div>
+</div>
+<div class="section" id="kubernetes-graphscope">
+<h2>基于 Kubernetes 安装 GraphScope 客户端<a class="headerlink" href="#kubernetes-graphscope" title="Permalink to this headline"></a></h2>
+<p>我们可以按照本文档的以下步骤部署一个本地 Kubernetes 集群，并加载预编译好的镜像，在 Kubernetes 环境下运行 GraphScope。</p>
+<p>首先需要预先安装以下依赖。</p>
+<ul class="simple">
+<li><p>Python 3.6 - 3.9 (with pip)</p></li>
 <li><p>Local Kubernetes cluster set-up tool (e.g. <a class="reference external" href="https://kind.sigs.k8s.io">Kind</a>)</p></li>
 </ul>
-<p>对于 Windows 和 MacOS 的用户，可通过官方文档来安装上述依赖, 并在Docker中开启Kubernetes功能。
-对于Ubuntu/CentOS Linux 发行版用户，我们提供了脚本来准备运行时环境。
+<p>对于 Windows 和 MacOS 的用户，可通过官方文档来安装上述依赖, 并在 Docker 中开启 Kubernetes 功能。
+对于 Ubuntu/CentOS Linux 发行版用户，我们提供了脚本来准备运行时环境。
 您也可以在 Windows 上安装 <a class="reference external" href="https://docs.microsoft.com/zh-cn/windows/wsl/install-win10">WSL2</a> 以使用脚本。</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="c1"># run the environment preparing script.</span>
 ./scripts/install_deps.sh --k8s
 </pre></div>
 </div>
-<p>接下来，通过 <a class="reference external" href="https://pip.pypa.io/en/stable/">pip</a> 安装 GraphScope 客户端：</p>
-<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>pip install graphscope
+<p>接下来，我们只需要通过 <a class="reference external" href="https://pip.pypa.io/en/stable/">pip</a> 安装 GraphScope 客户端：</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="c1"># Requires the latest pip</span>
+pip3 install --upgrade pip
+
+<span class="c1"># Current stable release</span>
+pip3 install --upgrade graphscope-client
 </pre></div>
 </div>
-<p>或者，您可以通过源码安装 GraphScope 客户端:</p>
-<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>pip install <span class="s1">&#39;git+https://github.com/alibaba/GraphScope.git&#39;</span>
-</pre></div>
-</div>
-<p>或者，您可以通过如下命令直接安装 <code class="code docutils literal notranslate"><span class="pre">.wheel</span></code> 包:</p>
-<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>pip install graphscope-0.1.macosx-10.14-x86_64.tar.gz
-</pre></div>
-</div>
-<p>如果您想从源代码构建软件包，请使用 git 从 <a class="reference external" href="https://github.com/alibaba/GraphScope.git">alibaba/graphscope</a> 下载最新版本的代码:</p>
-<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>git clone git@github.com:alibaba/GraphScope.git
-git submodule update --init
-<span class="nb">cd</span> python
-</pre></div>
-</div>
-<p>源码的安装命令如下:</p>
-<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>pip install -U -r requirements.txt
-python setup.py install
-</pre></div>
 </div>
 </div>
 
@@ -210,6 +229,16 @@ python setup.py install
             
               
                 <dd><a href="index.html">stable</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../v0.9.0/zh/index.html">v0.9.0</a></dd>
               
             
 

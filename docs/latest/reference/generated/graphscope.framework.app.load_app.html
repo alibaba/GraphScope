@@ -33,6 +33,16 @@
   gtag('config', 'G-4TMYCGJ0X2');
 </script>
 
+<script>
+  var _hmt = _hmt || [];
+  (function() {
+    var hm = document.createElement("script");
+    hm.src = "https://hm.baidu.com/hm.js?da649ade2298891886e31922dfc8870f";
+    var s = document.getElementsByTagName("script")[0];
+    s.parentNode.insertBefore(hm, s);
+  })();
+</script>
+
 
 </head>
 
@@ -140,14 +150,15 @@
 <h1>graphscope.framework.app.load_app<a class="headerlink" href="#graphscope-framework-app-load-app" title="Permalink to this headline"></a></h1>
 <dl class="py function">
 <dt class="sig sig-object py" id="graphscope.framework.app.load_app">
-<span class="sig-prename descclassname"><span class="pre">graphscope.framework.app.</span></span><span class="sig-name descname"><span class="pre">load_app</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">algo</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gar</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/graphscope/framework/app.html#load_app"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#graphscope.framework.app.load_app" title="Permalink to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="pre">graphscope.framework.app.</span></span><span class="sig-name descname"><span class="pre">load_app</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">gar</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">algo</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">context</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/graphscope/framework/app.html#load_app"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#graphscope.framework.app.load_app" title="Permalink to this definition"></a></dt>
 <dd><p>Load an app from gar.
 bytes or the resource of the specified path or bytes.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>algo</strong> – str
-Algo name inside resource.</p></li>
+Algo name inside resource. None will extract name from gar resource
+if there is only one app in it.</p></li>
 <li><p><strong>gar</strong> – bytes or BytesIO or str
 str represent the path of resource.</p></li>
 </ul>
@@ -164,7 +175,7 @@ str represent the path of resource.</p></li>
 </dd>
 </dl>
 <p class="rubric">Examples</p>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">sssp</span> <span class="o">=</span> <span class="n">load_app</span><span class="p">(</span><span class="s1">&#39;sssp&#39;</span><span class="p">,</span> <span class="n">gar</span><span class="o">=</span><span class="s1">&#39;./resource.gar&#39;</span><span class="p">)</span>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">sssp</span> <span class="o">=</span> <span class="n">load_app</span><span class="p">(</span><span class="n">algo</span><span class="o">=</span><span class="s1">&#39;sssp&#39;</span><span class="p">,</span> <span class="n">gar</span><span class="o">=</span><span class="s1">&#39;./resource.gar&#39;</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">sssp</span><span class="p">(</span><span class="n">src</span><span class="o">=</span><span class="mi">4</span><span class="p">)</span>
 </pre></div>
 </div>
@@ -247,6 +258,16 @@ compatible_graph:</p>
             
               
                 <dd><a href="../../../index.html">stable</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../v0.9.0/index.html">v0.9.0</a></dd>
               
             
 

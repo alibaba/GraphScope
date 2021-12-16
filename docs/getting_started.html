@@ -33,6 +33,16 @@
   gtag('config', 'G-4TMYCGJ0X2');
 </script>
 
+<script>
+  var _hmt = _hmt || [];
+  (function() {
+    var hm = document.createElement("script");
+    hm.src = "https://hm.baidu.com/hm.js?da649ade2298891886e31922dfc8870f";
+    var s = document.getElementsByTagName("script")[0];
+    s.parentNode.insertBefore(hm, s);
+  })();
+</script>
+
 
 </head>
 
@@ -123,37 +133,34 @@
              
   <div class="section" id="getting-started">
 <h1>Getting Started<a class="headerlink" href="#getting-started" title="Permalink to this headline"></a></h1>
-<p><cite>graphscope</cite> is the Python client for GraphScope,
-a one-stop graph computation system to process interactive queries,
-analytical jobs and graph learning. It featured with ease-of-use, high-performance and
-the scalability to evaluate graph computations over extremely large graphs.</p>
-<p>This guide takes a walk-through for the <cite>graphscope</cite>.
-We use a concrete example to illustrate how GraphScope
+<p>GraphScope is a one-stop graph computation system to process interactive queries,
+analytical jobs and graph learning. It featured with ease-of-use, high-performance
+and the scalability to evaluate graph computations over extremely large graphs.</p>
+<p>This guide takes a walk-through for the <a class="reference external" href="https://github.com/alibaba/GraphScope">GraphScope</a>
+on <a class="reference external" href="https://kubernetes.io">Kubernetes</a>, We use a concrete example to illustrate how GraphScope
 can be used by data scientists to effectively analyze large graphs.</p>
 <div class="section" id="example-node-clustering-on-citation-network">
 <h2>Example: Node clustering on Citation Network<a class="headerlink" href="#example-node-clustering-on-citation-network" title="Permalink to this headline"></a></h2>
-<p><a class="reference external" href="https://ogb.stanford.edu/docs/nodeprop/#ogbn-mag">ogbn-mag</a> is a
-heterogeneous network composed of a subset of the Microsoft
-Academic Graph. It contains 4 types of entities(i.e., papers, authors, institutions, and fields of study),
-as well as four types of directed relations connecting two entities.</p>
-<p>Given the heterogeneous ogbn-mag data,
-the prediction task is to predict the classification of each paper.
-Node clustering can group papers sharing the similar topics together,
-which identifies cooperations and trends in scientific groups.
-We apply the attribute and structural information to cluster
-similar papers together. In the graph, each paper node contains
-a 128-dimensional word2vec vector representing its content,
-which is obtained by averaging the embeddings of words in
-its title and abstract. The embeddings of individual words
-are pre-trained. The structural information is computed on-the-fly.</p>
+<p><a class="reference external" href="https://ogb.stanford.edu/docs/nodeprop/#ogbn-mag">ogbn-mag</a> is a heterogeneous network
+composed of a subset of the Microsoft Academic Graph. It contains 4 types of entities
+(i.e., papers, authors, institutions, and fields of study), as well as four types of directed
+relations connecting two entities.</p>
+<p>Given the heterogeneous ogbn-mag data, the prediction task is to predict the classification of each
+paper. Node clustering can group papers sharing the similar topics together, which identifies cooperations
+and trends in scientific groups. We apply the attribute and structural information to cluster similar papers
+together. In the graph, each paper node contains a 128-dimensional word2vec vector representing its content,
+which is obtained by averaging the embeddings of words in its title and abstract. The embeddings of individual
+words are pre-trained. The structural information is computed on-the-fly.</p>
 <a class="reference internal image-reference" href="_images/how-it-works.png"><img alt="How it works." class="align-center" src="_images/how-it-works.png" style="width: 600px;" /></a>
-<p>The figure shows the flow of execution when a client Python program is executed..</p>
-<p>Step 1. Create a session or workspace in GraphScope.
-Step 2. Define schema and load the graph.
-Step 3. Query graph data.
-Step 4. Run graph algorithms.
-Step 5. Run graph-based machine learing tasks.
-Step 6. Close the session.</p>
+<p>The figure shows the flow of execution when a client Python program is executed.</p>
+<ul class="simple">
+<li><p>Step 1. Create a session or workspace in GraphScope.</p></li>
+<li><p>Step 2. Load the graph.</p></li>
+<li><p>Step 3. Query graph data on interactive engine.</p></li>
+<li><p>Step 4. Run graph algorithms on analytical engine.</p></li>
+<li><p>Step 5. Run graph-based machine learing tasks on learning engine.</p></li>
+<li><p>Step 6. Close the session.</p></li>
+</ul>
 </div>
 <div class="section" id="launching-session">
 <h2>Launching Session<a class="headerlink" href="#launching-session" title="Permalink to this headline"></a></h2>
@@ -161,7 +168,7 @@ Step 6. Close the session.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">os</span>
 <span class="kn">import</span> <span class="nn">graphscope</span>
 
-<span class="c1"># assume we mount `~/test_data` to `/testingdata` in pods.</span>
+<span class="c1"># Assume we mount `~/test_data` to `/testingdata` in pods, and `ogbn_mag_small` within.</span>
 <span class="n">k8s_volumes</span> <span class="o">=</span> <span class="p">{</span>
     <span class="s2">&quot;data&quot;</span><span class="p">:</span> <span class="p">{</span>
         <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;hostPath&quot;</span><span class="p">,</span>
@@ -182,31 +189,24 @@ Step 6. Close the session.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">sess</span> <span class="o">=</span> <span class="n">graphscope</span><span class="o">.</span><span class="n">session</span><span class="p">(</span><span class="n">k8s_volumes</span><span class="o">=</span><span class="n">k8s_volumes</span><span class="p">,</span> <span class="n">k8s_service_type</span><span class="o">=</span><span class="s2">&quot;LoadBalancer&quot;</span><span class="p">)</span>
 </pre></div>
 </div>
-<p>Also note that the value <cite>data.field.path</cite> is the hostpath in your Kubernetes hosts. With Docker-Desktop on Mac, you need to first add the path into the shared directories of the docker, which is normally the <cite>/Users</cite>.
-For more detailed instructions, please refer to <a class="reference external" href="https://forums.docker.com/t/how-to-mount-hostpath-using-docker-for-mac-kubernetes/44083/5">how to mount hostpath using docker for mac kubernetes</a>.</p>
-<p>A <a class="reference internal" href="reference/session.html#session"><span class="std std-ref">Session</span></a> tries to launch a coordinator,
-which is the entry for the back-end engines.
-The coordinator manages a cluster of resources (k8s pods),
-and the interactive/analytical/learning engines ran on them.
-For each pod in the cluster,
-there is a vineyard instance at service for distributed data in memory.</p>
+<p>Also note that the value <cite>data.field.path</cite> is the hostpath in your Kubernetes hosts. With Docker-Desktop on Mac,
+you need to first add the path into the shared directories of the docker, which is normally the <cite>/Users</cite>.
+For more detailed instructions, please refer`how to mount hostpath using docker for mac kubernetes &lt;<a class="reference external" href="https://forums.docker.com/t/how-to-mount-hostpath-using-docker-for-mac-kubernetes/44083/5">https://forums.docker.com/t/how-to-mount-hostpath-using-docker-for-mac-kubernetes/44083/5</a>&gt;`_.</p>
+<p>A <a class="reference internal" href="reference/session.html#session"><span class="std std-ref">Session</span></a> tries to launch a coordinator, which is the entry for the back-end engines. The coordinator
+manages a cluster of resources (k8s pods), and the interactive/analytical/learning engines ran on them. For
+each pod in the cluster, there is a vineyard instance at service for distributed data in memory.</p>
 </div>
 <div class="section" id="loading-graph">
 <h2>Loading Graph<a class="headerlink" href="#loading-graph" title="Permalink to this headline"></a></h2>
-<p>GraphScope models graph data as property graph,
-in which the edges/vertices are labeled and have many properties.
+<p>GraphScope models graph data as property graph, in which the edges/vertices are labeled and have many properties.
 Taking ogbn-mag as example, the figure below shows the model of the property graph.</p>
 <a class="reference internal image-reference" href="_images/sample_pg.png"><img alt="a sample property graph." class="align-center" src="_images/sample_pg.png" style="width: 600px;" /></a>
-<p>This graph has fours kinds of vertices, labeled as Paper, Author,
-Institution and Field_of_study.
-There are four kinds of edges connecting them,
-each kind of edges has a label and specifies the vertex labels
-for its two ends. For example, Cites edges connect two vertices labeled Paper.
-Another example is Writes, it requires the source vertex is
-labeled Author and the destination is a Paper vertex.
-All the vertices and edges may have properties. e.g.,
-Paper vertices have properties like features, publish year, subject label, etc.</p>
-<p>To load this graph to GraphScope, one may use the code below.</p>
+<p>This graph has fours kinds of vertices, labeled as Paper, Author, Institution and Field_of_study. There are four
+kinds of edges connecting them, each kind of edges has a label and specifies the vertex labels for its two ends.
+For example, Cites edges connect two vertices labeled Paper. Another example is Writes, it requires the source
+vertex is labeled Author and the destination is a Paper vertex. All the vertices and edges may have properties.
+e.g., Paper vertices have properties like features, publish year, subject label, etc.</p>
+<p>To load this <a class="reference external" href="https://graphscope.oss-accelerate.aliyuncs.com/ogbn_mag_small.tar.gz">graph</a> to GraphScope, one may use the code below.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">g</span> <span class="o">=</span> <span class="n">sess</span><span class="o">.</span><span class="n">g</span><span class="p">()</span>
 <span class="n">g</span> <span class="o">=</span> <span class="p">(</span>
     <span class="n">g</span><span class="o">.</span><span class="n">add_vertices</span><span class="p">(</span><span class="s2">&quot;paper.csv&quot;</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s2">&quot;paper&quot;</span><span class="p">)</span>
@@ -246,21 +246,17 @@ Paper vertices have properties like features, publish year, subject label, etc.<
 <span class="n">g</span> <span class="o">=</span> <span class="n">load_ogbn_mag</span><span class="p">(</span><span class="n">sess</span><span class="p">,</span> <span class="s2">&quot;/testingdata/ogbn_mag_small/&quot;</span><span class="p">)</span>
 </pre></div>
 </div>
-<p>Here, the <code class="docutils literal notranslate"><span class="pre">g</span></code> is loaded in parallel via vineyard and stored
-in vineyard instances in the cluster managed by the session.
-See more details in <a class="reference internal" href="loading_graph.html#loading-graphs"><span class="std std-ref">Loading Graphs</span></a></p>
+<p>Here, the <code class="docutils literal notranslate"><span class="pre">g</span></code> is loaded in parallel via vineyard and stored in vineyard instances in the cluster
+managed by the session. See more details in <a class="reference internal" href="loading_graph.html#loading-graphs"><span class="std std-ref">Loading Graphs</span></a></p>
 </div>
 <div class="section" id="interactive-query">
 <h2>Interactive Query<a class="headerlink" href="#interactive-query" title="Permalink to this headline"></a></h2>
-<p>Understanding diverse graph data is an essential prerequisite to effective analysis,
-and therefore it is very common for users to directly explore,
-examine, and present graph data in an interactive environment
-in order to locate specific information in time.
-GraphScope adopts a high-level language called Gremlin
-for graph traversal, and provides efficient execution at scale.</p>
-<p>In this example, we use graph queries to find citation counts
-for a particular author, and to derive a subgraph by
-extracting publications in specific time out of the entire graph.</p>
+<p>Understanding diverse graph data is an essential prerequisite to effective analysis, and therefore
+it is very common for users to directly explore, examine, and present graph data in an interactive
+environment in order to locate specific information in time. GraphScope adopts a high-level language
+called Gremlin for graph traversal, and provides efficient execution at scale.</p>
+<p>In this example, we use graph queries to find citation counts for a particular author, and to derive
+a subgraph by extracting publications in specific time out of the entire graph.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># get the entrypoint for submitting Gremlin queries on graph g.</span>
 <span class="n">interactive</span> <span class="o">=</span> <span class="n">sess</span><span class="o">.</span><span class="n">gremlin</span><span class="p">(</span><span class="n">g</span><span class="p">)</span>
 
@@ -269,22 +265,20 @@ extracting publications in specific time out of the entire graph.</p>
 <span class="n">edge_num</span> <span class="o">=</span> <span class="n">interactive</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="s2">&quot;g.E().count()&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">one</span><span class="p">()</span>
 
 <span class="c1"># count the number of papers two authors (with id 2 and 4307) have co-authored.</span>
-<span class="n">papers</span> <span class="o">=</span> <span class="n">interactive</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="s2">&quot;g.V().has(&#39;author&#39;, &#39;id&#39;, 2).out(&#39;writes&#39;)</span><span class="se">\</span>
+<span class="n">papers</span> <span class="o">=</span> <span class="n">interactive</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="s2">&quot;g.V().has(&#39;author&#39;, &#39;id&#39;, 2).out(&#39;writes&#39;) </span><span class="se">\</span>
 <span class="s2">                .where(__.in(&#39;writes&#39;).has(&#39;id&#39;, 4307)).count()&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">one</span><span class="p">()</span>
 </pre></div>
 </div>
 </div>
 <div class="section" id="graph-analytics">
 <h2>Graph Analytics<a class="headerlink" href="#graph-analytics" title="Permalink to this headline"></a></h2>
-<p>Graph analytics is widely used in real world. Many algorithms,
-like community detection, paths and connectivity, centrality are proven to be
-very useful in various businesses. GraphScope ships
-with a set of built-in algorithms, enables users easily analysis their graph data.</p>
-<p>Please note that many algorithms may only work on homogeneous graphs.
-To evaluate these algorithms over a property graph,
-you may want to project the property graph to a simple graph at first.</p>
-<p>Continue our example, we run k-core decomposition and triangle counting
-to generate the structural features of each paper node.</p>
+<p>Graph analytics is widely used in real world. Many algorithms, like community detection, paths and
+connectivity, centrality are proven to be very useful in various businesses. GraphScope ships with
+a set of built-in algorithms, enables users easily analysis their graph data.</p>
+<p>Please note that many algorithms may only work on homogeneous graphs. To evaluate these algorithms
+over a property graph, you may want to project the property graph to a simple graph at first.</p>
+<p>Continue our example, we run k-core decomposition and triangle counting to generate the structural
+features of each paper node.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># exact a subgraph of publication within a time range</span>
 <span class="n">sub_graph</span> <span class="o">=</span> <span class="n">interactive</span><span class="o">.</span><span class="n">subgraph</span><span class="p">(</span><span class="s2">&quot;g.V().has(&#39;year&#39;, inside(2014, 2020)).outE(&#39;cites&#39;)&quot;</span><span class="p">)</span>
 
@@ -299,21 +293,17 @@ to generate the structural features of each paper node.</p>
 <span class="n">sub_graph</span> <span class="o">=</span> <span class="n">sub_graph</span><span class="o">.</span><span class="n">add_column</span><span class="p">(</span><span class="n">ret2</span><span class="p">,</span> <span class="p">{</span><span class="s2">&quot;tc&quot;</span><span class="p">:</span> <span class="s2">&quot;r&quot;</span><span class="p">})</span>
 </pre></div>
 </div>
-<p>In addition, users can write their own algorithms in GraphScope.
-Currently, GraphScope support users to write their own algorithms in
-PIE model and Pregel model.</p>
+<p>In addition, users can write their own algorithms in GraphScope. Currently, GraphScope support users to write their
+own algorithms in PIE model and Pregel model.</p>
 </div>
 <div class="section" id="graph-neural-networks-gnns">
 <h2>Graph Neural Networks (GNNs)<a class="headerlink" href="#graph-neural-networks-gnns" title="Permalink to this headline"></a></h2>
-<p>Graph neural networks (GNNs) combines superiority of
-both graph analytics and machine learning.
-GNN algorithms can compress both structural and attribute information
-in a graph into low-dimensional embedding vectors on each node.
+<p>Graph neural networks (GNNs) combines superiority of both graph analytics and machine learning. GNN algorithms can
+compress both structural and attribute information in a graph into low-dimensional embedding vectors on each node.
 These embeddings can be further fed into downstream machine learning tasks.</p>
-<p>In our example, we train a GCN model to classify the nodes (papers) into 349 categories,
-each of which represents a venue (e.g. pre-print and conference).
-To achieve this, first we launch a learning engine and build
-a graph with features following the last step.</p>
+<p>In our example, we train a GCN model to classify the nodes (papers) into 349 categories, each of which represents
+a venue (e.g. pre-print and conference). To achieve this, first we launch a learning engine and build a graph with
+features following the last step.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># define the features for learning</span>
 <span class="n">paper_features</span> <span class="o">=</span> <span class="p">[]</span>
 <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">128</span><span class="p">):</span>
@@ -328,7 +318,7 @@ a graph with features following the last step.</p>
                         <span class="p">(</span><span class="s2">&quot;train&quot;</span><span class="p">,</span> <span class="s2">&quot;paper&quot;</span><span class="p">,</span> <span class="mi">100</span><span class="p">,</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">75</span><span class="p">)),</span>
                         <span class="p">(</span><span class="s2">&quot;val&quot;</span><span class="p">,</span> <span class="s2">&quot;paper&quot;</span><span class="p">,</span> <span class="mi">100</span><span class="p">,</span> <span class="p">(</span><span class="mi">75</span><span class="p">,</span> <span class="mi">85</span><span class="p">)),</span>
                         <span class="p">(</span><span class="s2">&quot;test&quot;</span><span class="p">,</span> <span class="s2">&quot;paper&quot;</span><span class="p">,</span> <span class="mi">100</span><span class="p">,</span> <span class="p">(</span><span class="mi">85</span><span class="p">,</span> <span class="mi">100</span><span class="p">))</span>
-                  <span class="p">])</span>
+                   <span class="p">])</span>
 </pre></div>
 </div>
 <p>Then we define the training and testing process, and run it.</p>
@@ -392,8 +382,7 @@ a graph with features following the last step.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">sess</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
 </pre></div>
 </div>
-<p>This operation will notify the backend engines and vineyard
-to safely unload graphs and their applications.
+<p>This operation will notify the backend engines and vineyard to safely unload graphs and their applications.
 Then, the coordinator will dealloc all the applied resources in the k8s cluster.</p>
 </div>
 </div>
@@ -454,6 +443,16 @@ Then, the coordinator will dealloc all the applied resources in the k8s cluster.
             
               
                 <dd><a href="index.html">stable</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="v0.9.0/index.html">v0.9.0</a></dd>
               
             
 
