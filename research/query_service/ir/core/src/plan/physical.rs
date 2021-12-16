@@ -68,6 +68,7 @@ pub trait AsPhysical {
 enum PegasusOpr {
     Source,
     Map,
+    FilterMap,
     Flatmap,
     Filter,
     SortBy,
@@ -80,6 +81,7 @@ fn simple_add_job_builder<M: Message>(
     match opr {
         PegasusOpr::Source => builder.add_source(bytes),
         PegasusOpr::Map => builder.map(bytes),
+        PegasusOpr::FilterMap => builder.filter_map(bytes),
         PegasusOpr::Flatmap => builder.flat_map(bytes),
         PegasusOpr::Filter => builder.filter(bytes),
         PegasusOpr::SortBy => builder.sort_by(bytes),
@@ -129,7 +131,11 @@ impl AsPhysical for pb::GetV {
 
 impl AsPhysical for pb::Auxilia {
     fn add_job_builder(&self, builder: &mut JobBuilder) -> PhysicalResult<()> {
-        simple_add_job_builder(builder, &pb::logical_plan::Operator::from(self.clone()), PegasusOpr::Map)
+        simple_add_job_builder(
+            builder,
+            &pb::logical_plan::Operator::from(self.clone()),
+            PegasusOpr::FilterMap,
+        )
     }
 }
 
