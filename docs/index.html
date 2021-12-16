@@ -32,6 +32,16 @@
   gtag('config', 'G-4TMYCGJ0X2');
 </script>
 
+<script>
+  var _hmt = _hmt || [];
+  (function() {
+    var hm = document.createElement("script");
+    hm.src = "https://hm.baidu.com/hm.js?da649ade2298891886e31922dfc8870f";
+    var s = document.getElementsByTagName("script")[0];
+    s.parentNode.insertBefore(hm, s);
+  })();
+</script>
+
 
 </head>
 
@@ -125,7 +135,11 @@ and the vineyard store that offers efficient in-memory data transfers.</p>
 <div class="toctree-wrapper compound">
 <p class="caption"><span class="caption-text">Contents</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="installation.html#instal-graphscope-locally-without-kubernetes">Instal GraphScope locally without Kubernetes</a></li>
+<li class="toctree-l2"><a class="reference internal" href="installation.html#install-graphscope-client-for-kubernetes">Install GraphScope Client for Kubernetes</a></li>
+</ul>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="getting_started.html">Getting Started</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="getting_started.html#example-node-clustering-on-citation-network">Example: Node clustering on Citation Network</a></li>
 <li class="toctree-l2"><a class="reference internal" href="getting_started.html#launching-session">Launching Session</a></li>
@@ -137,7 +151,7 @@ and the vineyard store that offers efficient in-memory data transfers.</p>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="tutorials.html">Tutorials</a><ul>
-<li class="toctree-l2"><a class="reference external" href="https://nbviewer.jupyter.org/github/alibaba/GraphScope/blob/main/tutorials/1_how_to_launch_a_session.ipynb">How to Create a Session</a></li>
+<li class="toctree-l2"><a class="reference external" href="https://nbviewer.jupyter.org/github/alibaba/GraphScope/blob/main/tutorials/1_node_classification_on_citation.ipynb">Node Classification on citation network</a></li>
 <li class="toctree-l2"><a class="reference external" href="https://nbviewer.jupyter.org/github/alibaba/GraphScope/blob/main/tutorials/2_graph_manipulations_with_networkx_compatible_apis.ipynb">Graph Manipulations with NetowrkX Compatible APIs</a></li>
 <li class="toctree-l2"><a class="reference external" href="https://nbviewer.jupyter.org/github/alibaba/GraphScope/blob/main/tutorials/3_loading_graphs.ipynb">Loading Graphs</a></li>
 <li class="toctree-l2"><a class="reference external" href="https://nbviewer.jupyter.org/github/alibaba/GraphScope/blob/main/tutorials/4_builtin_analytical_algorithms.ipynb">Built-in Analytical Algorithms</a></li>
@@ -145,8 +159,8 @@ and the vineyard store that offers efficient in-memory data transfers.</p>
 <li class="toctree-l2"><a class="reference external" href="https://nbviewer.jupyter.org/github/alibaba/GraphScope/blob/main/tutorials/6_interactive_query_with_gremlin.ipynb">Interactive Query with Gremlin</a></li>
 <li class="toctree-l2"><a class="reference external" href="https://nbviewer.jupyter.org/github/alibaba/GraphScope/blob/main/tutorials/7_unsupervised_learning_with_graphsage.ipynb">Unsupervised Learning with GraphSage</a></li>
 <li class="toctree-l2"><a class="reference external" href="https://nbviewer.jupyter.org/github/alibaba/GraphScope/blob/main/tutorials/8_supervised_learning_with_gcn.ipynb">Supervised Learning with GCN</a></li>
-<li class="toctree-l2"><a class="reference external" href="https://nbviewer.jupyter.org/github/alibaba/GraphScope/blob/main/tutorials/9_unsupervised_learning_with_bipartite_graphsage.ipynb">Unsupervised Learning with BipartiteGraphSage</a></li>
-<li class="toctree-l2"><a class="reference external" href="https://nbviewer.jupyter.org/github/alibaba/GraphScope/blob/main/tutorials/10_node_classification_on_citation_network.ipynb">A Complex Workflow: Node Classification on Citation Network</a></li>
+<li class="toctree-l2"><a class="reference external" href="https://nbviewer.jupyter.org/github/alibaba/GraphScope/blob/main/tutorials/9_unsupervised_learning_with_bipartite_graphsage.ipynb">Unsupervised Learning with Bipartite GraphSage</a></li>
+<li class="toctree-l2"><a class="reference external" href="https://nbviewer.jupyter.org/github/alibaba/GraphScope/blob/main/tutorials/10_revisit_classification_on_citation_network_on_k8s.ipynb">Revisit Classification on Citation Network on K8s</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="deployment.html">Deployment</a><ul>
@@ -175,9 +189,9 @@ and the vineyard store that offers efficient in-memory data transfers.</p>
 <li class="toctree-l2"><a class="reference internal" href="analytics_engine.html#result-processing">Result Processing</a></li>
 <li class="toctree-l2"><a class="reference internal" href="analytics_engine.html#writing-your-own-algorithms-in-pie">Writing Your Own Algorithms in PIE</a></li>
 <li class="toctree-l2"><a class="reference internal" href="analytics_engine.html#writing-algorithms-in-pregel">Writing Algorithms in Pregel</a></li>
-<li class="toctree-l2"><a class="reference internal" href="analytics_engine.html#writing-your-own-algorithms-in-java">Writing Your Own Algorithms In Java</a></li>
 <li class="toctree-l2"><a class="reference internal" href="analytics_engine.html#using-math-h-functions-in-algorithms">Using <code class="docutils literal notranslate"><span class="pre">math.h</span></code> Functions in Algorithms</a></li>
 <li class="toctree-l2"><a class="reference internal" href="analytics_engine.html#run-your-own-algorithms">Run Your Own Algorithms</a></li>
+<li class="toctree-l2"><a class="reference internal" href="analytics_engine.html#writing-your-own-algorithms-in-java">Writing Your Own Algorithms In Java</a></li>
 <li class="toctree-l2"><a class="reference internal" href="analytics_engine.html#glossory">Glossory</a></li>
 </ul>
 </li>
@@ -206,8 +220,8 @@ and the vineyard store that offers efficient in-memory data transfers.</p>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="frequently_asked_questions.html">Frequently Asked Questions</a></li>
 <li class="toctree-l1"><a class="reference internal" href="developer_guide.html">Developer Guide</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="developer_guide.html#building-and-testing">Building and Testing</a></li>
-<li class="toctree-l2"><a class="reference internal" href="developer_guide.html#building-and-testing-graphscope-locally-with-docker">Building and Testing GraphScope Locally with Docker</a></li>
+<li class="toctree-l2"><a class="reference internal" href="developer_guide.html#building-and-testing-graphscope-locally-with-docker">Building and Testing GraphScope locally with Docker</a></li>
+<li class="toctree-l2"><a class="reference internal" href="developer_guide.html#building-and-testing-graphscope-on-kubernetes">Building and Testing GraphScope on Kubernetes</a></li>
 <li class="toctree-l2"><a class="reference internal" href="developer_guide.html#build-python-wheels">Build Python Wheels</a></li>
 <li class="toctree-l2"><a class="reference internal" href="developer_guide.html#code-format">Code Format</a></li>
 </ul>
@@ -308,6 +322,16 @@ and the vineyard store that offers efficient in-memory data transfers.</p>
             
               
                 <dd><a href="#">stable</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="v0.9.0/index.html">v0.9.0</a></dd>
               
             
 

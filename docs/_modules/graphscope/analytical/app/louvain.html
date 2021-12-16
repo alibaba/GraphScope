@@ -31,6 +31,16 @@
   gtag('config', 'G-4TMYCGJ0X2');
 </script>
 
+<script>
+  var _hmt = _hmt || [];
+  (function() {
+    var hm = document.createElement("script");
+    hm.src = "https://hm.baidu.com/hm.js?da649ade2298891886e31922dfc8870f";
+    var s = document.getElementsByTagName("script")[0];
+    s.parentNode.insertBefore(hm, s);
+  })();
+</script>
+
 
 </head>
 
@@ -145,7 +155,7 @@
     <span class="sd">&quot;&quot;&quot;Compute best partition on the `graph` by louvain.</span>
 
 <span class="sd">    Args:</span>
-<span class="sd">        graph (:class:`Graph`): A projected simple undirected graph.</span>
+<span class="sd">        graph (:class:`Graph`): A simple undirected graph.</span>
 <span class="sd">        min_progress: The minimum delta X required to be considered progress, where X is the number of nodes</span>
 <span class="sd">                      that have changed their community on a particular pass.</span>
 <span class="sd">                      Delta X is then the difference in number of nodes that changed communities</span>
@@ -167,15 +177,14 @@
 
 <span class="sd">    Notes:</span>
 <span class="sd">        louvain now only support undirected graph. If input graph is directed graph, louvain would raise</span>
-<span class="sd">        a InvalidArgumentError.</span>
+<span class="sd">        an InvalidArgumentError.</span>
 
 <span class="sd">    Examples:</span>
 
 <span class="sd">    .. code:: python</span>
 
 <span class="sd">        import graphscope as gs</span>
-<span class="sd">        s = gs.session()</span>
-<span class="sd">        g = s.g(directed=False)</span>
+<span class="sd">        g = gs.g(directed=False)</span>
 <span class="sd">        g = g.add_vertices(&#39;The parameters for loading a graph...&#39;)</span>
 <span class="sd">        g = g.add_edges(&#39;The parameters for loading a graph...&#39;)</span>
 <span class="sd">        pg = g.project(vertices={&quot;vlabel&quot;: []}, edges={&quot;elabel&quot;: [&quot;weight&quot;]})</span>
@@ -242,6 +251,16 @@
             
               
                 <dd><a href="../../../../index.html">stable</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../../v0.9.0/index.html">v0.9.0</a></dd>
               
             
 

@@ -33,6 +33,16 @@
   gtag('config', 'G-4TMYCGJ0X2');
 </script>
 
+<script>
+  var _hmt = _hmt || [];
+  (function() {
+    var hm = document.createElement("script");
+    hm.src = "https://hm.baidu.com/hm.js?da649ade2298891886e31922dfc8870f";
+    var s = document.getElementsByTagName("script")[0];
+    s.parentNode.insertBefore(hm, s);
+  })();
+</script>
+
 
 </head>
 
@@ -165,16 +175,16 @@
 <dt class="sig sig-object py" id="graphscope.nx.generators.classic.turan_graph">
 <span class="sig-prename descclassname"><span class="pre">graphscope.nx.generators.classic.</span></span><span class="sig-name descname"><span class="pre">turan_graph</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">r</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/graphscope/nx/generators/classic.html#turan_graph"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#graphscope.nx.generators.classic.turan_graph" title="Permalink to this definition"></a></dt>
 <dd><p>Return the Turan Graph</p>
-<p>The Turan Graph is a complete multipartite graph on $n$ nodes
-with $r$ disjoint subsets. That is, edges connect each node to
-every node not in its subset.</p>
-<p>Given $n$ and $r$, we create a complete multipartite graph with
+<p>The Turan Graph is a complete multipartite graph on $n$ vertices
+with $r$ disjoint subsets. It is the graph with the edges for any graph with
+$n$ vertices and $r$ disjoint subsets.</p>
+<p>Given $n$ and $r$, we generate a complete multipartite graph with
 $r-(n mod r)$ partitions of size $n/r$, rounded down, and
 $n mod r$ partitions of size $n/r+1$, rounded down.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>n</strong> (<em>int</em>) – The number of nodes.</p></li>
+<li><p><strong>n</strong> (<em>int</em>) – The number of vertices.</p></li>
 <li><p><strong>r</strong> (<em>int</em>) – The number of partitions.
 Must be less than or equal to n.</p></li>
 </ul>
@@ -243,6 +253,16 @@ The graph has $(r-1)(n^2)/(2r)$ edges, rounded down.</p>
             
               
                 <dd><a href="../../../index.html">stable</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../v0.9.0/index.html">v0.9.0</a></dd>
               
             
 

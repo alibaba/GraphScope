@@ -31,6 +31,16 @@
   gtag('config', 'G-4TMYCGJ0X2');
 </script>
 
+<script>
+  var _hmt = _hmt || [];
+  (function() {
+    var hm = document.createElement("script");
+    hm.src = "https://hm.baidu.com/hm.js?da649ade2298891886e31922dfc8870f";
+    var s = document.getElementsByTagName("script")[0];
+    s.parentNode.insertBefore(hm, s);
+  })();
+</script>
+
 
 </head>
 
@@ -141,23 +151,22 @@
 <span class="nd">@not_compatible_for</span><span class="p">(</span><span class="s2">&quot;arrow_property&quot;</span><span class="p">,</span> <span class="s2">&quot;dynamic_property&quot;</span><span class="p">)</span>
 <span class="k">def</span> <span class="nf">clustering</span><span class="p">(</span><span class="n">graph</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Local clustering coefficient of a node in a Graph is the fraction</span>
-<span class="sd">    of pairs of the node’s neighbors that are adjacent to each</span>
-<span class="sd">    other.</span>
+<span class="sd">    of pairs of the node’s neighbors that are adjacent to each other.</span>
 
 <span class="sd">    Args:</span>
-<span class="sd">        graph (:class:`Graph`): A projected simple graph.</span>
+<span class="sd">        graph (:class:`Graph`): A simple graph.</span>
 
 <span class="sd">    Returns:</span>
 <span class="sd">        :class:`graphscope.framework.context.VertexDataContextDAGNode`:</span>
-<span class="sd">            A context with each vertex assigned the computed clustering value, evaluated in eager mode.</span>
+<span class="sd">            A context with each vertex assigned the computed clustering value, will be evaluated in eager mode.</span>
 
 <span class="sd">    Examples:</span>
 
 <span class="sd">    .. code:: python</span>
 
 <span class="sd">        import graphscope as gs</span>
-<span class="sd">        sess = gs.session()</span>
-<span class="sd">        g = sess.g()</span>
+<span class="sd">        g = gs.g()</span>
+<span class="sd">        # Load some data, then project to a simple graph (if needed).</span>
 <span class="sd">        pg = g.project(vertices={&quot;vlabel&quot;: []}, edges={&quot;elabel&quot;: []})</span>
 <span class="sd">        r = gs.clustering(pg)</span>
 <span class="sd">        s.close()</span>
@@ -218,6 +227,16 @@
             
               
                 <dd><a href="../../../../../index.html">stable</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../../../v0.9.0/index.html">v0.9.0</a></dd>
               
             
 

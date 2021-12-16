@@ -33,6 +33,16 @@
   gtag('config', 'G-4TMYCGJ0X2');
 </script>
 
+<script>
+  var _hmt = _hmt || [];
+  (function() {
+    var hm = document.createElement("script");
+    hm.src = "https://hm.baidu.com/hm.js?da649ade2298891886e31922dfc8870f";
+    var s = document.getElementsByTagName("script")[0];
+    s.parentNode.insertBefore(hm, s);
+  })();
+</script>
+
 
 </head>
 
@@ -155,9 +165,9 @@ Filenames ending in .gz or .bz2 will be uncompressed.</p></li>
 <li><p><strong>comments</strong> (<em>string</em><em>, </em><em>optional</em>) – The character used to indicate the start of a comment.</p></li>
 <li><p><strong>delimiter</strong> (<em>string</em><em>, </em><em>optional</em>) – The string used to separate values.  The default is whitespace.</p></li>
 <li><p><strong>create_using</strong> (<em>NetworkX graph constructor</em><em>, </em><em>optional</em><em> (</em><em>default=nx.Graph</em><em>)</em>) – Graph type to create. If graph instance, then cleared before populated.</p></li>
-<li><p><strong>nodetype</strong> (<em>int</em><em>, </em><em>float</em><em>, </em><em>str</em><em>, </em><em>tuple</em><em>, </em><em>bool Python object</em><em>, </em><em>optional</em>) – Convert node data from strings to specified type</p></li>
+<li><p><strong>nodetype</strong> (<em>int</em><em>, </em><em>float</em><em>, </em><em>str</em><em>, </em><em>Python type</em><em>, </em><em>optional</em>) – Convert node data from strings to specified type</p></li>
 <li><p><strong>data</strong> (<em>bool</em><em> or </em><em>list of</em><em> (</em><em>label</em><em>,</em><em>type</em><em>) </em><em>tuples</em>) – Tuples specifying dictionary key names and types for edge data</p></li>
-<li><p><strong>edgetype</strong> (<em>int</em><em>, </em><em>float</em><em>, </em><em>str</em><em>, </em><em>tuple</em><em>, </em><em>bool Python object</em><em>, </em><em>optional OBSOLETE</em>) – Convert edge data from strings to specified type and use as ‘weight’</p></li>
+<li><p><strong>edgetype</strong> (<em>int</em><em>, </em><em>float</em><em>, </em><em>str</em><em>, </em><em>Python type</em><em>, </em><em>optional OBSOLETE</em>) – Convert edge data from strings to specified type and use as ‘weight’</p></li>
 <li><p><strong>encoding</strong> (<em>string</em><em>, </em><em>optional</em>) – Specify which encoding to use when reading file.</p></li>
 </ul>
 </dd>
@@ -168,9 +178,36 @@ Filenames ending in .gz or .bz2 will be uncompressed.</p></li>
 <dd class="field-odd"><p>graph</p>
 </dd>
 </dl>
+<p class="rubric">Examples</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">nx</span><span class="o">.</span><span class="n">write_edgelist</span><span class="p">(</span><span class="n">nx</span><span class="o">.</span><span class="n">path_graph</span><span class="p">(</span><span class="mi">4</span><span class="p">),</span> <span class="s2">&quot;test.edgelist&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">G</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">read_edgelist</span><span class="p">(</span><span class="s2">&quot;test.edgelist&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">fh</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="s2">&quot;test.edgelist&quot;</span><span class="p">,</span> <span class="s2">&quot;rb&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">G</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">read_edgelist</span><span class="p">(</span><span class="n">fh</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">fh</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+</pre></div>
+</div>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">G</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">read_edgelist</span><span class="p">(</span><span class="s2">&quot;test.edgelist&quot;</span><span class="p">,</span> <span class="n">nodetype</span><span class="o">=</span><span class="nb">int</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">G</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">read_edgelist</span><span class="p">(</span><span class="s2">&quot;test.edgelist&quot;</span><span class="p">,</span> <span class="n">create_using</span><span class="o">=</span><span class="n">nx</span><span class="o">.</span><span class="n">DiGraph</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Edgelist with data in a list:</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">textline</span> <span class="o">=</span> <span class="s2">&quot;1 2 3&quot;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">fh</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="s2">&quot;test.edgelist&quot;</span><span class="p">,</span> <span class="s2">&quot;w&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">d</span> <span class="o">=</span> <span class="n">fh</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">textline</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">fh</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">G</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">read_edgelist</span><span class="p">(</span><span class="s2">&quot;test.edgelist&quot;</span><span class="p">,</span> <span class="n">nodetype</span><span class="o">=</span><span class="nb">int</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="p">((</span><span class="s2">&quot;weight&quot;</span><span class="p">,</span> <span class="nb">float</span><span class="p">),))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">list</span><span class="p">(</span><span class="n">G</span><span class="p">)</span>
+<span class="go">[1, 2]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">list</span><span class="p">(</span><span class="n">G</span><span class="o">.</span><span class="n">edges</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="kc">True</span><span class="p">))</span>
+<span class="go">[(1, 2, {&#39;weight&#39;: 3.0})]</span>
+</pre></div>
+</div>
+<p>See parse_edgelist() for more examples of formatting.</p>
 <div class="admonition seealso">
 <p class="admonition-title">See also</p>
-<p><a class="reference internal" href="#graphscope.nx.read_adjlist" title="graphscope.nx.read_adjlist"><code class="xref py py-obj docutils literal notranslate"><span class="pre">read_adjlist</span></code></a></p>
+<p><code class="xref py py-obj docutils literal notranslate"><span class="pre">parse_edgelist</span></code>, <code class="xref py py-obj docutils literal notranslate"><span class="pre">write_edgelist</span></code></p>
 </div>
 <p class="rubric">Notes</p>
 <p>Since nodes must be hashable, the function nodetype must return hashable
@@ -269,6 +306,16 @@ Filenames ending in .gz or .bz2 will be uncompressed.</p></li>
             
               
                 <dd><a href="../../../index.html">stable</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../v0.9.0/index.html">v0.9.0</a></dd>
               
             
 

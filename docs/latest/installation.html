@@ -33,6 +33,16 @@
   gtag('config', 'G-4TMYCGJ0X2');
 </script>
 
+<script>
+  var _hmt = _hmt || [];
+  (function() {
+    var hm = document.createElement("script");
+    hm.src = "https://hm.baidu.com/hm.js?da649ade2298891886e31922dfc8870f";
+    var s = document.getElementsByTagName("script")[0];
+    s.parentNode.insertBefore(hm, s);
+  })();
+</script>
+
 
 </head>
 
@@ -65,7 +75,11 @@
       
         <p class="caption"><span class="caption-text">Contents</span></p>
 <ul class="current">
-<li class="toctree-l1 current"><a class="current reference internal" href="#">Installation</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Installation</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#instal-graphscope-locally-without-kubernetes">Instal GraphScope locally without Kubernetes</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#install-graphscope-client-for-kubernetes">Install GraphScope Client for Kubernetes</a></li>
+</ul>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="getting_started.html">Getting Started</a></li>
 <li class="toctree-l1"><a class="reference internal" href="tutorials.html">Tutorials</a></li>
 <li class="toctree-l1"><a class="reference internal" href="deployment.html">Deployment</a></li>
@@ -114,14 +128,32 @@
              
   <div class="section" id="installation">
 <h1>Installation<a class="headerlink" href="#installation" title="Permalink to this headline"></a></h1>
-<p>The client of GraphScope is distributed as a Python package. It manages a set of
-backend engines and the coordinator via containers.</p>
-<p>In practice, GraphScope runs on clusters managed by Kubernetes.
-For quickly getting started, we set up a local Kubernetes cluster and take advantage of pre-built Docker images as follows.</p>
-<p>To run GraphScope on your local computer, the following dependencies or tools are required.</p>
+<p>GraphScope is tested and supported on the following 64-bit systems:</p>
 <ul class="simple">
-<li><p>Docker</p></li>
-<li><p>Python 3.6+ (with pip)</p></li>
+<li><p>gcc 7.1+</p></li>
+<li><p>Python 3.6 - 3.9</p></li>
+<li><p>Ubuntu 18.04 or later</p></li>
+<li><p>CentOS 7 or later</p></li>
+<li><p>macOS 11.2.1 (Big Sur) or later (Apple M1 is not support yet!)</p></li>
+</ul>
+<div class="section" id="instal-graphscope-locally-without-kubernetes">
+<h2>Instal GraphScope locally without Kubernetes<a class="headerlink" href="#instal-graphscope-locally-without-kubernetes" title="Permalink to this headline"></a></h2>
+<p>GraphScope is distributed as a <a class="reference external" href="https://pypi.org/project/graphscope">python package</a> and can be easily installed with <a class="reference external" href="https://pip.pypa.io/en/stable/">pip</a>.</p>
+<p><strong>GraphScope packages require a pip version &gt; 19.0 (or &gt; 20.3 for macOS)</strong></p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="c1"># Requires the latest pip</span>
+pip3 install --upgrade pip
+
+<span class="c1"># Current stable release</span>
+pip3 install --upgrade graphscope
+</pre></div>
+</div>
+</div>
+<div class="section" id="install-graphscope-client-for-kubernetes">
+<h2>Install GraphScope Client for Kubernetes<a class="headerlink" href="#install-graphscope-client-for-kubernetes" title="Permalink to this headline"></a></h2>
+<p>For quickly getting started, we set up a local kubernetes cluster and take advantage of pre-built Docker images as follows.
+The following dependencies or tools are required.</p>
+<ul class="simple">
+<li><p>Python 3.6 - 3.9</p></li>
 <li><p>Local Kubernetes cluster set-up tool (e.g. <a class="reference external" href="https://kind.sigs.k8s.io">Kind</a>)</p></li>
 </ul>
 <p>On Windows and macOS, you can follow the official guides to install them and enable Kubernetes in Docker.
@@ -132,29 +164,14 @@ Alternatively, you may want to install <a class="reference external" href="https
 ./scripts/install_deps.sh --k8s
 </pre></div>
 </div>
-<p>Then the package can be easily installed using <a class="reference external" href="https://pip.pypa.io/en/stable/">pip</a>:</p>
-<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>pip install graphscope
+<p>Install a subset of the whole package with <a class="reference external" href="https://pypi.org/project/graphscope-client">client</a> functions <strong>only</strong> for running GraphScope on <a class="reference external" href="https://kubernetes.io">Kubernetes</a>.</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="c1"># Requires the latest pip</span>
+pip3 install --upgrade pip
+
+<span class="c1"># Current stable release</span>
+pip3 install --upgrade graphscope-client
 </pre></div>
 </div>
-<p>Or you can install the package from source</p>
-<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>pip install <span class="s1">&#39;git+https://github.com/alibaba/GraphScope.git&#39;</span>
-</pre></div>
-</div>
-<p>If you have the <code class="code docutils literal notranslate"><span class="pre">.wheel</span></code> package, you can install the package using</p>
-<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>pip install graphscope-0.1.macosx-10.14-x86_64.tar.gz
-</pre></div>
-</div>
-<p>To build the package from source code, please download the latest version
-from our <a class="reference external" href="https://github.com/alibaba/GraphScope.git">repo</a> with git:</p>
-<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>git clone git@github.com:alibaba/GraphScope.git
-git submodule update --init
-<span class="nb">cd</span> python
-</pre></div>
-</div>
-<p>Then install the package from source with the following command:</p>
-<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>pip install -U -r requirements.txt
-python setup.py install
-</pre></div>
 </div>
 </div>
 
@@ -214,6 +231,16 @@ python setup.py install
             
               
                 <dd><a href="../index.html">stable</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../v0.9.0/index.html">v0.9.0</a></dd>
               
             
 

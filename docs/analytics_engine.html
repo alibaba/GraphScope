@@ -33,6 +33,16 @@
   gtag('config', 'G-4TMYCGJ0X2');
 </script>
 
+<script>
+  var _hmt = _hmt || [];
+  (function() {
+    var hm = document.createElement("script");
+    hm.src = "https://hm.baidu.com/hm.js?da649ade2298891886e31922dfc8870f";
+    var s = document.getElementsByTagName("script")[0];
+    s.parentNode.insertBefore(hm, s);
+  })();
+</script>
+
 
 </head>
 
@@ -76,14 +86,14 @@
 <li class="toctree-l2"><a class="reference internal" href="#result-processing">Result Processing</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#writing-your-own-algorithms-in-pie">Writing Your Own Algorithms in PIE</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#writing-algorithms-in-pregel">Writing Algorithms in Pregel</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#using-math-h-functions-in-algorithms">Using <code class="docutils literal notranslate"><span class="pre">math.h</span></code> Functions in Algorithms</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#run-your-own-algorithms">Run Your Own Algorithms</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#writing-your-own-algorithms-in-java">Writing Your Own Algorithms In Java</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#step-0-get-grape-jdk">Step 0: Get grape-jdk</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#step-1-develop-your-graph-algorithm-in-java">Step 1: Develop your graph algorithm in Java</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#step-2-pack-to-jar-and-submit-to-graphscope">Step 2: Pack to jar and submit to GraphScope</a></li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="#using-math-h-functions-in-algorithms">Using <code class="docutils literal notranslate"><span class="pre">math.h</span></code> Functions in Algorithms</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#run-your-own-algorithms">Run Your Own Algorithms</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#glossory">Glossory</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#loadstrategy">LoadStrategy</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="#onlyout">OnlyOut</a></li>
@@ -174,9 +184,11 @@ variety and complexity from real-life graph applications.</p>
 including connectivity and path
 analysis, community detection, centrality computations.</p>
 <p>Built-in algorithms can be easily invoked over loaded graphs. For example,</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">graphscope</span> <span class="kn">import</span> <span class="n">pagerank</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">graphscope</span>
+<span class="kn">from</span> <span class="nn">graphscope</span> <span class="kn">import</span> <span class="n">pagerank</span>
 <span class="kn">from</span> <span class="nn">graphscope</span> <span class="kn">import</span> <span class="n">lpa</span>
 
+<span class="n">g</span> <span class="o">=</span> <span class="n">graphscope</span><span class="o">.</span><span class="n">g</span><span class="p">()</span>
 <span class="c1"># algorithms defined on property graph can be invoked directly.</span>
 <span class="n">result</span> <span class="o">=</span> <span class="n">lpa</span><span class="p">(</span><span class="n">g</span><span class="p">)</span>
 
@@ -217,13 +229,13 @@ property graph or not is described in its docstring.</p>
 <h2>Result Processing<a class="headerlink" href="#result-processing" title="Permalink to this headline"></a></h2>
 <p>When finish a computation, the results are wrapped as <a class="reference internal" href="reference/context.html#context"><span class="std std-ref">Context</span></a>
 and preserved on the distributed machines.</p>
-<p>Users may want to fetch the results to the client, or write to cloud or distributed file systems.</p>
+<p>Users may want to fetch the results to the client, or write to cloud storage or distributed file systems.</p>
 <p>There is a list of supported method to retrieve the results.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># fetch to data structures</span>
 <span class="n">result_pr</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">()</span>
 <span class="n">result_pr</span><span class="o">.</span><span class="n">to_dataframe</span><span class="p">()</span>
 
-<span class="c1"># or write to hdfs or oss, or local (local to pod)</span>
+<span class="c1"># or write to hdfs or oss, or local (local means the path is relative to the pods)</span>
 <span class="n">result_pr</span><span class="o">.</span><span class="n">output</span><span class="p">(</span><span class="s2">&quot;hdfs://output&quot;</span><span class="p">)</span>
 <span class="n">result_pr</span><span class="o">.</span><span class="n">output</span><span class="p">(</span><span class="s2">&quot;oss://id:key@endpoint/bucket/object&quot;</span><span class="p">)</span>
 <span class="n">result_pr</span><span class="o">.</span><span class="n">output</span><span class="p">(</span><span class="s2">&quot;file:///tmp/path&quot;</span><span class="p">)</span>
@@ -236,12 +248,12 @@ and preserved on the distributed machines.</p>
 <span class="n">result_pr</span><span class="o">.</span><span class="n">to_vineyard_numpy</span><span class="p">()</span>
 </pre></div>
 </div>
-<p>In addition, as shown in the Getting_Started, computation results can add back to
+<p>In addition, as shown in the <a class="reference internal" href="getting_started.html#getting-started"><span class="std std-ref">Getting Started</span></a>, computation results can add back to
 the graph as a new property (column) of the vertices(edges).</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">simple_g</span> <span class="o">=</span> <span class="n">g</span><span class="o">.</span><span class="n">project</span><span class="p">(</span><span class="n">vertices</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;paper&quot;</span><span class="p">:</span> <span class="p">[]},</span> <span class="n">edges</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;sites&quot;</span><span class="p">:</span> <span class="p">[]})</span>
 <span class="n">ret</span> <span class="o">=</span> <span class="n">graphscope</span><span class="o">.</span><span class="n">kcore</span><span class="p">(</span><span class="n">simple_g</span><span class="p">,</span> <span class="n">k</span><span class="o">=</span><span class="mi">5</span><span class="p">)</span>
 
-<span class="c1"># add the results as new columns to the citation graph</span>
+<span class="c1"># add the results as new columns to the citation graph, the column name is &#39;kcore&#39;</span>
 <span class="n">subgraph</span> <span class="o">=</span> <span class="n">sub_graph</span><span class="o">.</span><span class="n">add_column</span><span class="p">(</span><span class="n">ret</span><span class="p">,</span> <span class="p">{</span><span class="s1">&#39;kcore&#39;</span><span class="p">:</span> <span class="s1">&#39;r&#39;</span><span class="p">})</span>
 </pre></div>
 </div>
@@ -277,44 +289,49 @@ algorithms in the <a class="reference external" href="https://dl.acm.org/doi/10.
 programming model in a pure Python mode.</p>
 <a class="reference internal image-reference" href="_images/pie.png"><img alt="Workflow of PIE" class="align-center" src="_images/pie.png" style="width: 600px;" /></a>
 <p>To implement this, a user just need to fulfill this class.</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="nd">@graphscope</span><span class="o">.</span><span class="n">analytical</span><span class="o">.</span><span class="n">udf</span><span class="o">.</span><span class="n">pie</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">graphscope.analytical.udf</span> <span class="kn">import</span> <span class="n">pie</span>
+<span class="kn">from</span> <span class="nn">graphscope.framework.app</span> <span class="kn">import</span> <span class="n">AppAssets</span>
+
+<span class="nd">@pie</span>
 <span class="k">class</span> <span class="nc">YourAlgorithm</span><span class="p">(</span><span class="n">AppAssets</span><span class="p">):</span>
     <span class="nd">@staticmethod</span>
-    <span class="k">def</span> <span class="nf">Initialize</span><span class="p">(</span><span class="n">context</span><span class="p">,</span> <span class="n">frag</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">Init</span><span class="p">(</span><span class="n">frag</span><span class="p">,</span> <span class="n">context</span><span class="p">):</span>
         <span class="k">pass</span>
 
     <span class="nd">@staticmethod</span>
-    <span class="k">def</span> <span class="nf">PEval</span><span class="p">(</span><span class="n">context</span><span class="p">,</span> <span class="n">frag</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">PEval</span><span class="p">(</span><span class="n">frag</span><span class="p">,</span> <span class="n">context</span><span class="p">):</span>
         <span class="k">pass</span>
 
     <span class="nd">@staticmethod</span>
-    <span class="k">def</span> <span class="nf">IncEval</span><span class="p">(</span><span class="n">context</span><span class="p">,</span> <span class="n">frag</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">IncEval</span><span class="p">(</span><span class="n">frag</span><span class="p">,</span> <span class="n">context</span><span class="p">):</span>
         <span class="k">pass</span>
 </pre></div>
 </div>
 <p>As shown in the code, users need to implement a class decorated with
-<cite>&#64;graphscope.analytical.udf.pie</cite> and provides three sequential graph functions.
-In the class, the <cite>Initialize</cite> is a function to set the initial status. <cite>PEval</cite> is
+<cite>&#64;pie</cite> and provides three sequential graph functions.
+In the class, the <cite>Init</cite> is a function to set the initial status. <cite>PEval</cite> is
 a sequential method for partial evaluation, and <cite>IncEval</cite> is a sequential function
 for incremental evaluation over the partitioned fragment. The full API of fragment
 can be found in <a class="reference internal" href="reference/cython_sdk.html#cython-sdk-api"><span class="std std-ref">Cython SDK API</span></a>.</p>
 <p>Let’s take SSSP as example, a user defined SSSP in PIE model may be like this.</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="nd">@graphscope</span><span class="o">.</span><span class="n">analytical</span><span class="o">.</span><span class="n">udf</span><span class="o">.</span><span class="n">pie</span>
-<span class="k">class</span> <span class="nc">SSSP</span><span class="p">:</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">graphscope.analytical.udf</span> <span class="kn">import</span> <span class="n">pie</span>
+<span class="kn">from</span> <span class="nn">graphscope.framework.app</span> <span class="kn">import</span> <span class="n">AppAssets</span>
+
+<span class="nd">@pie</span><span class="p">(</span><span class="n">vd_type</span><span class="o">=</span><span class="s2">&quot;double&quot;</span><span class="p">,</span> <span class="n">md_type</span><span class="o">=</span><span class="s2">&quot;double&quot;</span><span class="p">)</span>
+<span class="k">class</span> <span class="nc">SSSP_PIE</span><span class="p">(</span><span class="n">AppAssets</span><span class="p">):</span>
     <span class="nd">@staticmethod</span>
-    <span class="k">def</span> <span class="nf">Initialize</span><span class="p">(</span><span class="n">context</span><span class="p">,</span> <span class="n">frag</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">Init</span><span class="p">(</span><span class="n">frag</span><span class="p">,</span> <span class="n">context</span><span class="p">):</span>
         <span class="n">v_label_num</span> <span class="o">=</span> <span class="n">frag</span><span class="o">.</span><span class="n">vertex_label_num</span><span class="p">()</span>
-        <span class="c1"># init every vertex with a max distance representing unreachable.</span>
         <span class="k">for</span> <span class="n">v_label_id</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">v_label_num</span><span class="p">):</span>
             <span class="n">nodes</span> <span class="o">=</span> <span class="n">frag</span><span class="o">.</span><span class="n">nodes</span><span class="p">(</span><span class="n">v_label_id</span><span class="p">)</span>
-            <span class="n">context</span><span class="o">.</span><span class="n">init_value</span><span class="p">(</span><span class="n">nodes</span><span class="p">,</span> <span class="n">v_label_id</span><span class="p">,</span> <span class="mf">1000000000.0</span><span class="p">,</span>
-                           <span class="n">PIEAggregateType</span><span class="o">.</span><span class="n">kMinAggregate</span><span class="p">)</span>
-        <span class="n">context</span><span class="o">.</span><span class="n">register_sync_buffer</span><span class="p">(</span><span class="n">MessageStrategy</span><span class="o">.</span><span class="n">kSyncOnOuterVertex</span><span class="p">)</span>
+            <span class="n">context</span><span class="o">.</span><span class="n">init_value</span><span class="p">(</span>
+                <span class="n">nodes</span><span class="p">,</span> <span class="n">v_label_id</span><span class="p">,</span> <span class="mf">1000000000.0</span><span class="p">,</span> <span class="n">PIEAggregateType</span><span class="o">.</span><span class="n">kMinAggregate</span>
+            <span class="p">)</span>
+            <span class="n">context</span><span class="o">.</span><span class="n">register_sync_buffer</span><span class="p">(</span><span class="n">v_label_id</span><span class="p">,</span> <span class="n">MessageStrategy</span><span class="o">.</span><span class="n">kSyncOnOuterVertex</span><span class="p">)</span>
 
     <span class="nd">@staticmethod</span>
-    <span class="k">def</span> <span class="nf">PEval</span><span class="p">(</span><span class="n">context</span><span class="p">,</span> <span class="n">frag</span><span class="p">):</span>
-        <span class="c1"># get the source node from the query, passed from context.</span>
-        <span class="n">src</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">context</span><span class="o">.</span><span class="n">get_config</span><span class="p">(</span><span class="sa">b</span><span class="s1">&#39;src&#39;</span><span class="p">))</span>
+    <span class="k">def</span> <span class="nf">PEval</span><span class="p">(</span><span class="n">frag</span><span class="p">,</span> <span class="n">context</span><span class="p">):</span>
+        <span class="n">src</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">context</span><span class="o">.</span><span class="n">get_config</span><span class="p">(</span><span class="sa">b</span><span class="s2">&quot;src&quot;</span><span class="p">))</span>
         <span class="n">graphscope</span><span class="o">.</span><span class="n">declare</span><span class="p">(</span><span class="n">graphscope</span><span class="o">.</span><span class="n">Vertex</span><span class="p">,</span> <span class="n">source</span><span class="p">)</span>
         <span class="n">native_source</span> <span class="o">=</span> <span class="kc">False</span>
         <span class="n">v_label_num</span> <span class="o">=</span> <span class="n">frag</span><span class="o">.</span><span class="n">vertex_label_num</span><span class="p">()</span>
@@ -326,8 +343,6 @@ can be found in <a class="reference internal" href="reference/cython_sdk.html#cy
             <span class="n">context</span><span class="o">.</span><span class="n">set_node_value</span><span class="p">(</span><span class="n">source</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="k">return</span>
-
-        <span class="c1"># in the source fragment, run the dijkstra algorithm as partial evaluation.</span>
         <span class="n">e_label_num</span> <span class="o">=</span> <span class="n">frag</span><span class="o">.</span><span class="n">edge_label_num</span><span class="p">()</span>
         <span class="k">for</span> <span class="n">e_label_id</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">e_label_num</span><span class="p">):</span>
             <span class="n">edges</span> <span class="o">=</span> <span class="n">frag</span><span class="o">.</span><span class="n">get_outgoing_edges</span><span class="p">(</span><span class="n">source</span><span class="p">,</span> <span class="n">e_label_id</span><span class="p">)</span>
@@ -338,10 +353,9 @@ can be found in <a class="reference internal" href="reference/cython_sdk.html#cy
                     <span class="n">context</span><span class="o">.</span><span class="n">set_node_value</span><span class="p">(</span><span class="n">dst</span><span class="p">,</span> <span class="n">distv</span><span class="p">)</span>
 
     <span class="nd">@staticmethod</span>
-    <span class="k">def</span> <span class="nf">IncEval</span><span class="p">(</span><span class="n">context</span><span class="p">,</span> <span class="n">frag</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">IncEval</span><span class="p">(</span><span class="n">frag</span><span class="p">,</span> <span class="n">context</span><span class="p">):</span>
         <span class="n">v_label_num</span> <span class="o">=</span> <span class="n">frag</span><span class="o">.</span><span class="n">vertex_label_num</span><span class="p">()</span>
         <span class="n">e_label_num</span> <span class="o">=</span> <span class="n">frag</span><span class="o">.</span><span class="n">edge_label_num</span><span class="p">()</span>
-        <span class="c1"># incremental computation to update the distance.</span>
         <span class="k">for</span> <span class="n">v_label_id</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">v_label_num</span><span class="p">):</span>
             <span class="n">iv</span> <span class="o">=</span> <span class="n">frag</span><span class="o">.</span><span class="n">inner_nodes</span><span class="p">(</span><span class="n">v_label_id</span><span class="p">)</span>
             <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">iv</span><span class="p">:</span>
@@ -366,7 +380,10 @@ incremental version works for large graphs partitioned on a cluster.</p>
 <cite>graphscope</cite> supports vertex-centric
 <cite>Pregel</cite> model as well.
 You may develop an algorithms in <cite>Pregel</cite> model by implementing this.</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="nd">@pregel</span><span class="p">(</span><span class="n">vd_type</span><span class="o">=</span><span class="s1">&#39;double&#39;</span><span class="p">,</span> <span class="n">md_type</span><span class="o">=</span><span class="s1">&#39;double&#39;</span><span class="p">)</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">graphscope.analytical.udf</span> <span class="kn">import</span> <span class="n">pregel</span>
+<span class="kn">from</span> <span class="nn">graphscope.framework.app</span> <span class="kn">import</span> <span class="n">AppAssets</span>
+
+<span class="nd">@pregel</span><span class="p">(</span><span class="n">vd_type</span><span class="o">=</span><span class="s1">&#39;double&#39;</span><span class="p">,</span> <span class="n">md_type</span><span class="o">=</span><span class="s1">&#39;double&#39;</span><span class="p">)</span>
 <span class="k">class</span> <span class="nc">YourPregelAlgorithm</span><span class="p">(</span><span class="n">AppAssets</span><span class="p">):</span>
 
     <span class="nd">@staticmethod</span>
@@ -382,10 +399,13 @@ You may develop an algorithms in <cite>Pregel</cite> model by implementing this.
         <span class="k">pass</span>
 </pre></div>
 </div>
-<p>Differ from the PIE model, the decorator for this class is &#64;graphscope.analytical.udf.pregel.
+<p>Differ from the PIE model, the decorator for this class is <code class="docutils literal notranslate"><span class="pre">&#64;pregel</span></code>.
 And the functions to be implemented is defined on vertex, rather than the fragment.
 Take SSSP as example, the algorithm in Pregel model looks like this.</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># decorator, and assign the types for vertex data, message data.</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">graphscope.analytical.udf</span> <span class="kn">import</span> <span class="n">pregel</span>
+<span class="kn">from</span> <span class="nn">graphscope.framework.app</span> <span class="kn">import</span> <span class="n">AppAssets</span>
+
+<span class="c1"># decorator, and assign the types for vertex data, message data.</span>
 <span class="nd">@pregel</span><span class="p">(</span><span class="n">vd_type</span><span class="o">=</span><span class="s1">&#39;double&#39;</span><span class="p">,</span> <span class="n">md_type</span><span class="o">=</span><span class="s1">&#39;double&#39;</span><span class="p">)</span>
 <span class="k">class</span> <span class="nc">SSSP_Pregel</span><span class="p">(</span><span class="n">AppAssets</span><span class="p">):</span>
 
@@ -419,6 +439,55 @@ Take SSSP as example, the algorithm in Pregel model looks like this.</p>
 </pre></div>
 </div>
 </div>
+<div class="section" id="using-math-h-functions-in-algorithms">
+<h2>Using <code class="docutils literal notranslate"><span class="pre">math.h</span></code> Functions in Algorithms<a class="headerlink" href="#using-math-h-functions-in-algorithms" title="Permalink to this headline"></a></h2>
+<p>GraphScope supports using C functions from <code class="code docutils literal notranslate"><span class="pre">math.h</span></code> in user-defined algorithms,
+via the <code class="code docutils literal notranslate"><span class="pre">context.math</span></code> interface. E.g.,</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="nd">@staticmethod</span>
+<span class="k">def</span> <span class="nf">Init</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="n">context</span><span class="p">):</span>
+    <span class="n">v</span><span class="o">.</span><span class="n">set_value</span><span class="p">(</span><span class="n">context</span><span class="o">.</span><span class="n">math</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="mf">1000000000.0</span> <span class="o">*</span> <span class="n">context</span><span class="o">.</span><span class="n">math</span><span class="o">.</span><span class="n">M_PI</span><span class="p">))</span>
+</pre></div>
+</div>
+<p>will be translated to the following efficient C code</p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="p">...</span><span class="w"> </span><span class="n">Init</span><span class="p">(...)</span><span class="w"></span>
+
+<span class="w">    </span><span class="n">v</span><span class="p">.</span><span class="n">set_value</span><span class="p">(</span><span class="n">sin</span><span class="p">(</span><span class="mf">1000000000.0</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">M_PI</span><span class="p">));</span><span class="w"></span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="run-your-own-algorithms">
+<h2>Run Your Own Algorithms<a class="headerlink" href="#run-your-own-algorithms" title="Permalink to this headline"></a></h2>
+<p>To run your own algorithms, you may trigger it in place where you defined it.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">graphscope</span>
+
+<span class="n">sess</span> <span class="o">=</span> <span class="n">graphscope</span><span class="o">.</span><span class="n">session</span><span class="p">()</span>
+<span class="n">g</span> <span class="o">=</span> <span class="n">sess</span><span class="o">.</span><span class="n">g</span><span class="p">()</span>
+
+<span class="c1"># load my algorithm</span>
+<span class="n">my_app</span> <span class="o">=</span> <span class="n">SSSP_Pregel</span><span class="p">()</span>
+
+<span class="c1"># run my algorithm over a graph and get the result.</span>
+<span class="c1"># Here the `src` is correspondent to the `context.get_config(b&quot;src&quot;)`</span>
+<span class="n">ret</span> <span class="o">=</span> <span class="n">my_app</span><span class="p">(</span><span class="n">g</span><span class="p">,</span> <span class="n">src</span><span class="o">=</span><span class="s2">&quot;0&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>After developing and testing, you may want to save it for the future use.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">SSSP_Pregel</span><span class="o">.</span><span class="n">to_gar</span><span class="p">(</span><span class="s2">&quot;file:///var/graphscope/udf/my_sssp_pregel.gar&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Later, you can load your own algorithm from the gar package.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">graphscope</span>
+
+<span class="n">g</span> <span class="o">=</span> <span class="n">graphscope</span><span class="o">.</span><span class="n">g</span><span class="p">()</span>
+
+<span class="c1"># load my algorithm from a gar package</span>
+<span class="n">my_app</span> <span class="o">=</span> <span class="n">load_app</span><span class="p">(</span><span class="s1">&#39;file:///var/graphscope/udf/my_sssp_pregel.gar&#39;</span><span class="p">)</span>
+
+<span class="c1"># run my algorithm over a graph and get the result.</span>
+<span class="n">ret</span> <span class="o">=</span> <span class="n">my_app</span><span class="p">(</span><span class="n">g</span><span class="p">,</span> <span class="n">src</span><span class="o">=</span><span class="s2">&quot;0&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
 <div class="section" id="writing-your-own-algorithms-in-java">
 <h2>Writing Your Own Algorithms In Java<a class="headerlink" href="#writing-your-own-algorithms-in-java" title="Permalink to this headline"></a></h2>
 <p>If you are a <code class="docutils literal notranslate"><span class="pre">Java</span></code> programmer, then you may want to implement your graph algorithm in <code class="docutils literal notranslate"><span class="pre">Java</span></code>, and
@@ -428,8 +497,7 @@ run it on GraphScope analytical engine.</p>
 <p>First, you will need <code class="docutils literal notranslate"><span class="pre">grape-jdk</span></code> installed on your developing environment. We will support downloading/installing <code class="docutils literal notranslate"><span class="pre">grape-jdk</span></code>
 from maven central repositories in the future, however, currently you need to build from source.
 Please follow <a class="reference internal" href="reference/gae_java/about.html#gae-java-sdk-about"><span class="std std-ref">About Grape JDK</span></a> for building grape-jdk from source.</p>
-<p>After installing <code class="docutils literal notranslate"><span class="pre">grape-jdk</span></code>, you can include it as dependency in your maven project. You shall add classifier <em>shaded</em> to use the
-jar which includes all necessary dependencies.</p>
+<p>After installing <code class="docutils literal notranslate"><span class="pre">grape-jdk</span></code>, you can include it as dependency in your maven project. You shall add classifier <em>shaded</em> to use the jar which includes all necessary dependencies.</p>
 <div class="highlight-xml notranslate"><div class="highlight"><pre><span></span><span class="nt">&lt;dependency&gt;</span>
   <span class="nt">&lt;groupId&gt;</span>com.alibaba.graphscope<span class="nt">&lt;/groupId&gt;</span>
   <span class="nt">&lt;artifactId&gt;</span>grape-jdk<span class="nt">&lt;/artifactId&gt;</span>
@@ -533,64 +601,14 @@ and you need to specify the app you want in this run.</p>
 <span class="n">ctx</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">(</span><span class="s2">&quot;r:label0.dist_0&quot;</span><span class="p">)</span>
 </pre></div>
 </div>
-<p>After computation, you can obtain the results stored in context with the help of
-<a class="reference internal" href="reference/context.html#context"><span class="std std-ref">Context</span></a>.</p>
-</div>
-</div>
-<div class="section" id="using-math-h-functions-in-algorithms">
-<h2>Using <code class="docutils literal notranslate"><span class="pre">math.h</span></code> Functions in Algorithms<a class="headerlink" href="#using-math-h-functions-in-algorithms" title="Permalink to this headline"></a></h2>
-<p>GraphScope supports using C functions from <code class="code docutils literal notranslate"><span class="pre">math.h</span></code> in user-defined algorithms,
-via the <code class="code docutils literal notranslate"><span class="pre">context.math</span></code> interface. E.g.,</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="nd">@staticmethod</span>
-<span class="k">def</span> <span class="nf">Init</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="n">context</span><span class="p">):</span>
-    <span class="n">v</span><span class="o">.</span><span class="n">set_value</span><span class="p">(</span><span class="n">context</span><span class="o">.</span><span class="n">math</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="mf">1000000000.0</span> <span class="o">*</span> <span class="n">context</span><span class="o">.</span><span class="n">math</span><span class="o">.</span><span class="n">M_PI</span><span class="p">))</span>
-</pre></div>
-</div>
-<p>will be translated to the following efficient C code</p>
-<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="p">...</span><span class="w"> </span><span class="n">Init</span><span class="p">(...)</span><span class="w"></span>
-
-<span class="w">    </span><span class="n">v</span><span class="p">.</span><span class="n">set_value</span><span class="p">(</span><span class="n">sin</span><span class="p">(</span><span class="mf">1000000000.0</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">M_PI</span><span class="p">));</span><span class="w"></span>
-</pre></div>
-</div>
-</div>
-<div class="section" id="run-your-own-algorithms">
-<h2>Run Your Own Algorithms<a class="headerlink" href="#run-your-own-algorithms" title="Permalink to this headline"></a></h2>
-<p>To run your own algorithms, you may trigger it in place where you defined it.</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">graphscope</span>
-
-<span class="n">sess</span> <span class="o">=</span> <span class="n">graphscope</span><span class="o">.</span><span class="n">session</span><span class="p">()</span>
-<span class="n">g</span> <span class="o">=</span> <span class="n">sess</span><span class="o">.</span><span class="n">g</span><span class="p">()</span>
-
-<span class="c1"># load my algorithm</span>
-<span class="n">my_app</span> <span class="o">=</span> <span class="n">SSSP_Pregel</span><span class="p">()</span>
-
-<span class="c1"># run my algorithm over a graph and get the result.</span>
-<span class="n">ret</span> <span class="o">=</span> <span class="n">my_app</span><span class="p">(</span><span class="n">g</span><span class="p">,</span> <span class="n">source</span><span class="o">=</span><span class="s2">&quot;0&quot;</span><span class="p">)</span>
-</pre></div>
-</div>
-<p>After developing and testing, you may want to save it for the future use.</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">SSSP_Pregel</span><span class="o">.</span><span class="n">to_gar</span><span class="p">(</span><span class="s2">&quot;file:///var/graphscope/udf/my_sssp_pregel.gar&quot;</span><span class="p">)</span>
-</pre></div>
-</div>
-<p>Later, you can load your own algorithm from the gar package.</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">graphscope</span>
-
-<span class="n">sess</span> <span class="o">=</span> <span class="n">graphscope</span><span class="o">.</span><span class="n">session</span><span class="p">()</span>
-<span class="n">g</span> <span class="o">=</span> <span class="n">graphscope</span><span class="o">.</span><span class="n">Session</span><span class="p">(</span><span class="n">sess</span><span class="p">)</span>
-
-<span class="c1"># load my algorithm from a gar package</span>
-<span class="n">my_app</span> <span class="o">=</span> <span class="n">load_app</span><span class="p">(</span><span class="s1">&#39;SSSP_Pregel&#39;</span><span class="p">,</span> <span class="s1">&#39;file:///var/graphscope/udf/my_sssp_pregel.gar&#39;</span><span class="p">)</span>
-
-<span class="c1"># run my algorithm over a graph and get the result.</span>
-<span class="n">ret</span> <span class="o">=</span> <span class="n">my_app</span><span class="p">(</span><span class="n">g</span><span class="p">,</span> <span class="n">src</span><span class="o">=</span><span class="s2">&quot;0&quot;</span><span class="p">)</span>
-</pre></div>
-</div>
+<p>After computation, you can obtain the results stored in context with the help of <a class="reference internal" href="reference/context.html#context"><span class="std std-ref">Context</span></a>.</p>
 <p><strong>Publications</strong></p>
 <ul class="simple">
 <li><p>Wenfei Fan, Jingbo Xu, Wenyuan Yu, Jingren Zhou, Xiaojian Luo, Ping Lu, Qiang Yin, Yang Cao, and Ruiqi Xu. <a class="reference external" href="https://dl.acm.org/doi/10.1145/3282488">Parallelizing Sequential Graph Computations.</a>, ACM Transactions on Database Systems (TODS) 43(4): 18:1-18:39.</p></li>
 <li><p>Wenfei Fan, Jingbo Xu, Yinghui Wu, Wenyuan Yu, Jiaxin Jiang. <a class="reference external" href="http://www.vldb.org/pvldb/vol10/p1889-fan.pdf">GRAPE: Parallelizing Sequential Graph Computations.</a>, The 43rd International Conference on Very Large Data Bases (VLDB), demo, 2017 (the Best Demo Award).</p></li>
 <li><p>Wenfei Fan, Jingbo Xu, Yinghui Wu, Wenyuan Yu, Jiaxin Jiang, Zeyu Zheng, Bohan Zhang, Yang Cao, and Chao Tian. <a class="reference external" href="https://dl.acm.org/doi/10.1145/3035918.3035942">Parallelizing Sequential Graph Computations.</a>, ACM SIG Conference on Management of Data (SIGMOD), 2017 (the Best Paper Award).</p></li>
 </ul>
+</div>
 </div>
 <div class="section" id="glossory">
 <h2>Glossory<a class="headerlink" href="#glossory" title="Permalink to this headline"></a></h2>
@@ -743,6 +761,16 @@ via the <code class="code docutils literal notranslate"><span class="pre">contex
             
               
                 <dd><a href="index.html">stable</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="v0.9.0/index.html">v0.9.0</a></dd>
               
             
 

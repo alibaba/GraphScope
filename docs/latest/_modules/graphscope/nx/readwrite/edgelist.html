@@ -31,6 +31,16 @@
   gtag('config', 'G-4TMYCGJ0X2');
 </script>
 
+<script>
+  var _hmt = _hmt || [];
+  (function() {
+    var hm = document.createElement("script");
+    hm.src = "https://hm.baidu.com/hm.js?da649ade2298891886e31922dfc8870f";
+    var s = document.getElementsByTagName("script")[0];
+    s.parentNode.insertBefore(hm, s);
+  })();
+</script>
+
 
 </head>
 
@@ -156,7 +166,7 @@
         <span class="n">p</span> <span class="o">=</span> <span class="n">line</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="n">comments</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">p</span> <span class="o">&gt;=</span> <span class="mi">0</span><span class="p">:</span>
             <span class="n">line</span> <span class="o">=</span> <span class="n">line</span><span class="p">[:</span><span class="n">p</span><span class="p">]</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="nb">len</span><span class="p">(</span><span class="n">line</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">line</span><span class="p">:</span>
             <span class="k">continue</span>
         <span class="c1"># split line, should have 2 or more</span>
         <span class="n">s</span> <span class="o">=</span> <span class="n">line</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">delimiter</span><span class="p">)</span>
@@ -171,7 +181,7 @@
                 <span class="n">v</span> <span class="o">=</span> <span class="n">nodetype</span><span class="p">(</span><span class="n">v</span><span class="p">)</span>
             <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
                 <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span>
-                    <span class="s2">&quot;Failed to convert nodes </span><span class="si">%s</span><span class="s2">,</span><span class="si">%s</span><span class="s2"> to type </span><span class="si">%s</span><span class="s2">.&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">u</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="n">nodetype</span><span class="p">)</span>
+                    <span class="sa">f</span><span class="s2">&quot;Failed to convert nodes </span><span class="si">{</span><span class="n">u</span><span class="si">}</span><span class="s2">,</span><span class="si">{</span><span class="n">v</span><span class="si">}</span><span class="s2"> to type </span><span class="si">{</span><span class="n">nodetype</span><span class="si">}</span><span class="s2">.&quot;</span>
                 <span class="p">)</span> <span class="kn">from</span> <span class="nn">e</span>
 
         <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">d</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span> <span class="ow">or</span> <span class="n">data</span> <span class="ow">is</span> <span class="kc">False</span><span class="p">:</span>
@@ -180,16 +190,20 @@
         <span class="k">elif</span> <span class="n">data</span> <span class="ow">is</span> <span class="kc">True</span><span class="p">:</span>
             <span class="c1"># no edge types specified</span>
             <span class="k">try</span><span class="p">:</span>  <span class="c1"># try to evaluate as dictionary</span>
-                <span class="n">edgedata</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">literal_eval</span><span class="p">(</span><span class="s2">&quot; &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">d</span><span class="p">)))</span>
+                <span class="k">if</span> <span class="n">delimiter</span> <span class="o">==</span> <span class="s2">&quot;,&quot;</span><span class="p">:</span>
+                    <span class="n">edgedata_str</span> <span class="o">=</span> <span class="s2">&quot;,&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">d</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">edgedata_str</span> <span class="o">=</span> <span class="s2">&quot; &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">d</span><span class="p">)</span>
+                <span class="n">edgedata</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">literal_eval</span><span class="p">(</span><span class="n">edgedata_str</span><span class="o">.</span><span class="n">strip</span><span class="p">()))</span>
             <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
                 <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span>
-                    <span class="s2">&quot;Failed to convert edge data (</span><span class="si">%s</span><span class="s2">) to dictionary.&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">d</span><span class="p">)</span>
+                    <span class="sa">f</span><span class="s2">&quot;Failed to convert edge data (</span><span class="si">{</span><span class="n">d</span><span class="si">}</span><span class="s2">) to dictionary.&quot;</span>
                 <span class="p">)</span> <span class="kn">from</span> <span class="nn">e</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="c1"># convert edge data to dictionary with specified keys and type</span>
             <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">d</span><span class="p">)</span> <span class="o">!=</span> <span class="nb">len</span><span class="p">(</span><span class="n">data</span><span class="p">):</span>
                 <span class="k">raise</span> <span class="ne">IndexError</span><span class="p">(</span>
-                    <span class="s2">&quot;Edge data </span><span class="si">%s</span><span class="s2"> and data_keys </span><span class="si">%s</span><span class="s2"> are not the same length&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">d</span><span class="p">,</span> <span class="n">data</span><span class="p">)</span>
+                    <span class="sa">f</span><span class="s2">&quot;Edge data </span><span class="si">{</span><span class="n">d</span><span class="si">}</span><span class="s2"> and data_keys </span><span class="si">{</span><span class="n">data</span><span class="si">}</span><span class="s2"> are not the same length&quot;</span>
                 <span class="p">)</span>
             <span class="n">edgedata</span> <span class="o">=</span> <span class="p">{}</span>
             <span class="k">for</span> <span class="p">(</span><span class="n">edge_key</span><span class="p">,</span> <span class="n">edge_type</span><span class="p">),</span> <span class="n">edge_value</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">d</span><span class="p">):</span>
@@ -197,8 +211,8 @@
                     <span class="n">edge_value</span> <span class="o">=</span> <span class="n">edge_type</span><span class="p">(</span><span class="n">edge_value</span><span class="p">)</span>
                 <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
                     <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span>
-                        <span class="s2">&quot;Failed to convert </span><span class="si">%s</span><span class="s2"> data </span><span class="si">%s</span><span class="s2"> to type </span><span class="si">%s</span><span class="s2">.&quot;</span>
-                        <span class="o">%</span> <span class="p">(</span><span class="n">edge_key</span><span class="p">,</span> <span class="n">edge_value</span><span class="p">,</span> <span class="n">edge_type</span><span class="p">)</span>
+                        <span class="sa">f</span><span class="s2">&quot;Failed to convert </span><span class="si">{</span><span class="n">edge_key</span><span class="si">}</span><span class="s2"> data </span><span class="si">{</span><span class="n">edge_value</span><span class="si">}</span><span class="s2"> &quot;</span>
+                        <span class="sa">f</span><span class="s2">&quot;to type </span><span class="si">{</span><span class="n">edge_type</span><span class="si">}</span><span class="s2">.&quot;</span>
                     <span class="p">)</span> <span class="kn">from</span> <span class="nn">e</span>
                 <span class="n">edgedata</span><span class="o">.</span><span class="n">update</span><span class="p">({</span><span class="n">edge_key</span><span class="p">:</span> <span class="n">edge_value</span><span class="p">})</span>
         <span class="n">edges</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">u</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="n">edgedata</span><span class="p">))</span>
@@ -206,7 +220,8 @@
     <span class="k">return</span> <span class="n">G</span>
 
 
-<div class="viewcode-block" id="read_edgelist"><a class="viewcode-back" href="../../../../reference/networkx/io.html#graphscope.nx.read_edgelist">[docs]</a><span class="nd">@open_file</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s2">&quot;rb&quot;</span><span class="p">)</span>
+<div class="viewcode-block" id="read_edgelist"><a class="viewcode-back" href="../../../../reference/networkx/io.html#graphscope.nx.read_edgelist">[docs]</a><span class="nd">@patch_docstring</span><span class="p">(</span><span class="n">_read_edgelist</span><span class="p">)</span>
+<span class="nd">@open_file</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s2">&quot;rb&quot;</span><span class="p">)</span>
 <span class="k">def</span> <span class="nf">read_edgelist</span><span class="p">(</span>
     <span class="n">path</span><span class="p">,</span>
     <span class="n">comments</span><span class="o">=</span><span class="s2">&quot;#&quot;</span><span class="p">,</span>
@@ -217,44 +232,7 @@
     <span class="n">edgetype</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
     <span class="n">encoding</span><span class="o">=</span><span class="s2">&quot;utf-8&quot;</span><span class="p">,</span>
 <span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Read a graph from a list of edges.</span>
-
-<span class="sd">    Parameters</span>
-<span class="sd">    ----------</span>
-<span class="sd">    path : file or string</span>
-<span class="sd">       File or filename to read. If a file is provided, it must be</span>
-<span class="sd">       opened in &#39;rb&#39; mode.</span>
-<span class="sd">       Filenames ending in .gz or .bz2 will be uncompressed.</span>
-<span class="sd">    comments : string, optional</span>
-<span class="sd">       The character used to indicate the start of a comment.</span>
-<span class="sd">    delimiter : string, optional</span>
-<span class="sd">       The string used to separate values.  The default is whitespace.</span>
-<span class="sd">    create_using : NetworkX graph constructor, optional (default=nx.Graph)</span>
-<span class="sd">       Graph type to create. If graph instance, then cleared before populated.</span>
-<span class="sd">    nodetype : int, float, str, tuple, bool Python object, optional</span>
-<span class="sd">       Convert node data from strings to specified type</span>
-<span class="sd">    data : bool or list of (label,type) tuples</span>
-<span class="sd">       Tuples specifying dictionary key names and types for edge data</span>
-<span class="sd">    edgetype : int, float, str, tuple, bool Python object, optional OBSOLETE</span>
-<span class="sd">       Convert edge data from strings to specified type and use as &#39;weight&#39;</span>
-<span class="sd">    encoding: string, optional</span>
-<span class="sd">       Specify which encoding to use when reading file.</span>
-
-<span class="sd">    Returns</span>
-<span class="sd">    -------</span>
-<span class="sd">    G : graph</span>
-<span class="sd">       A networkx Graph or other type specified with create_using</span>
-
-<span class="sd">    See Also</span>
-<span class="sd">    --------</span>
-<span class="sd">    read_adjlist</span>
-
-<span class="sd">    Notes</span>
-<span class="sd">    -----</span>
-<span class="sd">    Since nodes must be hashable, the function nodetype must return hashable</span>
-<span class="sd">    types (e.g. int, float, str, frozenset - or tuples of those, etc.)</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">lines</span> <span class="o">=</span> <span class="p">(</span><span class="n">line</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="n">encoding</span><span class="p">)</span> <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">path</span><span class="p">)</span>
+    <span class="n">lines</span> <span class="o">=</span> <span class="p">(</span><span class="n">line</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">line</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span> <span class="k">else</span> <span class="n">line</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="n">encoding</span><span class="p">)</span> <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">path</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">parse_edgelist</span><span class="p">(</span>
         <span class="n">lines</span><span class="p">,</span>
         <span class="n">comments</span><span class="o">=</span><span class="n">comments</span><span class="p">,</span>
@@ -317,6 +295,16 @@
             
               
                 <dd><a href="../../../../../index.html">stable</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../../../v0.9.0/index.html">v0.9.0</a></dd>
               
             
 

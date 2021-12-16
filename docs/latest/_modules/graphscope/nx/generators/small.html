@@ -31,6 +31,16 @@
   gtag('config', 'G-4TMYCGJ0X2');
 </script>
 
+<script>
+  var _hmt = _hmt || [];
+  (function() {
+    var hm = document.createElement("script");
+    hm.src = "https://hm.baidu.com/hm.js?da649ade2298891886e31922dfc8870f";
+    var s = document.getElementsByTagName("script")[0];
+    s.parentNode.insertBefore(hm, s);
+  })();
+</script>
+
 
 </head>
 
@@ -114,24 +124,25 @@
 <span></span><span class="ch">#!/usr/bin/env python3</span>
 <span class="c1"># -*- coding: utf-8 -*-</span>
 <span class="c1">#</span>
-<span class="c1"># Copyright 2020 Alibaba Group Holding Limited. All Rights Reserved.</span>
+<span class="c1"># This file is referred and derived from project NetworkX</span>
 <span class="c1">#</span>
-<span class="c1"># Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);</span>
-<span class="c1"># you may not use this file except in compliance with the License.</span>
-<span class="c1"># You may obtain a copy of the License at</span>
+<span class="c1"># which has the following license:</span>
 <span class="c1">#</span>
-<span class="c1">#     http://www.apache.org/licenses/LICENSE-2.0</span>
+<span class="c1"># Copyright (C) 2004-2020, NetworkX Developers</span>
+<span class="c1"># Aric Hagberg &lt;hagberg@lanl.gov&gt;</span>
+<span class="c1"># Dan Schult &lt;dschult@colgate.edu&gt;</span>
+<span class="c1"># Pieter Swart &lt;swart@lanl.gov&gt;</span>
+<span class="c1"># All rights reserved.</span>
 <span class="c1">#</span>
-<span class="c1"># Unless required by applicable law or agreed to in writing, software</span>
-<span class="c1"># distributed under the License is distributed on an &quot;AS IS&quot; BASIS,</span>
-<span class="c1"># WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.</span>
-<span class="c1"># See the License for the specific language governing permissions and</span>
-<span class="c1"># limitations under the License.</span>
+<span class="c1"># This file is part of NetworkX.</span>
+<span class="c1">#</span>
+<span class="c1"># NetworkX is distributed under a BSD license; see LICENSE.txt for more</span>
+<span class="c1"># information.</span>
 <span class="c1">#</span>
 
 <span class="kn">import</span> <span class="nn">networkx</span> <span class="k">as</span> <span class="nn">nxa</span>
 
-<span class="kn">import</span> <span class="nn">graphscope.nx</span> <span class="k">as</span> <span class="nn">nx</span>
+<span class="kn">from</span> <span class="nn">graphscope</span> <span class="kn">import</span> <span class="n">nx</span>
 <span class="kn">from</span> <span class="nn">graphscope.framework.errors</span> <span class="kn">import</span> <span class="n">UnimplementedError</span>
 <span class="kn">from</span> <span class="nn">graphscope.nx</span> <span class="kn">import</span> <span class="n">NetworkXError</span>
 <span class="kn">from</span> <span class="nn">graphscope.nx.generators.classic</span> <span class="kn">import</span> <span class="n">complete_graph</span>
@@ -655,6 +666,16 @@
             
               
                 <dd><a href="../../../../../index.html">stable</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../../../v0.9.0/index.html">v0.9.0</a></dd>
               
             
 

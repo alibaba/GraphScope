@@ -33,6 +33,16 @@
   gtag('config', 'G-4TMYCGJ0X2');
 </script>
 
+<script>
+  var _hmt = _hmt || [];
+  (function() {
+    var hm = document.createElement("script");
+    hm.src = "https://hm.baidu.com/hm.js?da649ade2298891886e31922dfc8870f";
+    var s = document.getElementsByTagName("script")[0];
+    s.parentNode.insertBefore(hm, s);
+  })();
+</script>
+
 
 </head>
 
@@ -132,11 +142,14 @@ GraphScope 的交互查询引擎的论文已被 NSDI 2021录用。
 <div class="toctree-wrapper compound">
 <p class="caption"><span class="caption-text">目录</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="installation.html">安装</a></li>
+<li class="toctree-l1"><a class="reference internal" href="installation.html">安装</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="installation.html#id2">单机环境下安装</a></li>
+<li class="toctree-l2"><a class="reference internal" href="installation.html#kubernetes-graphscope">基于 Kubernetes 安装 GraphScope 客户端</a></li>
+</ul>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="getting_started.html">快速上手</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="getting_started.html#id2">示例: 论文引用网络中的节点分类任务</a></li>
-<li class="toctree-l2"><a class="reference internal" href="getting_started.html#id3">创建会话</a></li>
-<li class="toctree-l2"><a class="reference internal" href="getting_started.html#id4">载图</a></li>
+<li class="toctree-l2"><a class="reference internal" href="getting_started.html#id3">示例: 论文引用网络中的节点分类任务</a></li>
+<li class="toctree-l2"><a class="reference internal" href="getting_started.html#id4">创建会话</a></li>
 <li class="toctree-l2"><a class="reference internal" href="getting_started.html#id6">交互式查询</a></li>
 <li class="toctree-l2"><a class="reference internal" href="getting_started.html#id7">图分析</a></li>
 <li class="toctree-l2"><a class="reference internal" href="getting_started.html#gnns">图神经网络 (GNNs)</a></li>
@@ -150,16 +163,16 @@ GraphScope 的交互查询引擎的论文已被 NSDI 2021录用。
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="tutorials.html">入门教程</a><ul>
-<li class="toctree-l2"><a class="reference external" href="https://nbviewer.jupyter.org/github/alibaba/GraphScope/blob/main/tutorials/zh/1_how_to_launch_a_session.ipynb">如何创建会话</a></li>
+<li class="toctree-l2"><a class="reference external" href="https://nbviewer.jupyter.org/github/alibaba/GraphScope/blob/main/tutorials/zh/1_node_classification_on_citation.ipynb">论文引用关系网中的节点分类任务</a></li>
 <li class="toctree-l2"><a class="reference external" href="https://nbviewer.jupyter.org/github/alibaba/GraphScope/blob/main/tutorials/zh/2_graph_manipulations_with_networkx_compatible_apis.ipynb">使用兼容 NetworkX 的 API 进行图操作</a></li>
-<li class="toctree-l2"><a class="reference external" href="https://nbviewer.jupyter.org/github/alibaba/GraphScope/blob/main/tutorials/zh/3_loading_graphs.ipynb">载图</a></li>
-<li class="toctree-l2"><a class="reference external" href="https://nbviewer.jupyter.org/github/alibaba/GraphScope/blob/main/tutorials/zh/4_builtin_analytical_algorithms.ipynb">内置图分析算法</a></li>
+<li class="toctree-l2"><a class="reference external" href="https://nbviewer.jupyter.org/github/alibaba/GraphScope/blob/main/tutorials/zh/3_loading_graphs.ipynb">载入图数据</a></li>
+<li class="toctree-l2"><a class="reference external" href="https://nbviewer.jupyter.org/github/alibaba/GraphScope/blob/main/tutorials/zh/4_builtin_analytical_algorithms.ipynb">内置的图分析算法</a></li>
 <li class="toctree-l2"><a class="reference external" href="https://nbviewer.jupyter.org/github/alibaba/GraphScope/blob/main/tutorials/zh/5_writing_your_own_algorithms.ipynb">编写自定义图分析算法</a></li>
-<li class="toctree-l2"><a class="reference external" href="https://nbviewer.jupyter.org/github/alibaba/GraphScope/blob/main/tutorials/zh/6_interactive_query_with_gremlin.ipynb">基于Gremlin的交互式查询</a></li>
-<li class="toctree-l2"><a class="reference external" href="https://nbviewer.jupyter.org/github/alibaba/GraphScope/blob/main/tutorials/zh/7_unsupervised_learning_with_graphsage.ipynb">基于GraphSage的无监督学习</a></li>
-<li class="toctree-l2"><a class="reference external" href="https://nbviewer.jupyter.org/github/alibaba/GraphScope/blob/main/tutorials/zh/8_supervised_learning_with_gcn.ipynb">基于GCN的有监督学习</a></li>
-<li class="toctree-l2"><a class="reference external" href="https://nbviewer.jupyter.org/github/alibaba/GraphScope/blob/main/tutorials/zh/9_unsupervised_learning_with_bipartite_graphsage.ipynb">基予BipartiteGraphSage的二部图无监督学习</a></li>
-<li class="toctree-l2"><a class="reference external" href="https://nbviewer.jupyter.org/github/alibaba/GraphScope/blob/main/tutorials/zh/10_node_classification_on_citation_network.ipynb">论文引用网络中的节点分类任务</a></li>
+<li class="toctree-l2"><a class="reference external" href="https://nbviewer.jupyter.org/github/alibaba/GraphScope/blob/main/tutorials/zh/6_interactive_query_with_gremlin.ipynb">使用查询语言 Gremlin 进行交互式查询</a></li>
+<li class="toctree-l2"><a class="reference external" href="https://nbviewer.jupyter.org/github/alibaba/GraphScope/blob/main/tutorials/zh/7_unsupervised_learning_with_graphsage.ipynb">使用 GraphSage 进行无监督图学习</a></li>
+<li class="toctree-l2"><a class="reference external" href="https://nbviewer.jupyter.org/github/alibaba/GraphScope/blob/main/tutorials/zh/8_supervised_learning_with_gcn.ipynb">使用 GCN 进行有监督图学习</a></li>
+<li class="toctree-l2"><a class="reference external" href="https://nbviewer.jupyter.org/github/alibaba/GraphScope/blob/main/tutorials/zh/9_unsupervised_learning_with_bipartite_graphsage.ipynb">基于 BipartiteGraphSage 的二部图无监督学习</a></li>
+<li class="toctree-l2"><a class="reference external" href="https://nbviewer.jupyter.org/github/alibaba/GraphScope/blob/main/tutorials/zh/10_revisit_classification_on_citation_network_on_k8s.ipynb">基于 Kubernetes 环境再探论文引用网络中的节点分类任务</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="loading_graph.html">载图</a><ul>
@@ -202,10 +215,10 @@ GraphScope 的交互查询引擎的论文已被 NSDI 2021录用。
 </li>
 <li class="toctree-l1"><a class="reference internal" href="frequently_asked_questions.html">常见问题</a></li>
 <li class="toctree-l1"><a class="reference internal" href="developer_guide.html">开发者指南</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="developer_guide.html#id2">构建和测试</a></li>
-<li class="toctree-l2"><a class="reference internal" href="developer_guide.html#docker-graphscope">基于 Docker 镜像在本地构建并测试 GraphScope</a></li>
+<li class="toctree-l2"><a class="reference internal" href="developer_guide.html#docker-graphscope">基于 Docker 环境构建并测试 GraphScope</a></li>
+<li class="toctree-l2"><a class="reference internal" href="developer_guide.html#kubernetes-graphscope">基于 Kubernetes 环境构建并测试 GraphScope</a></li>
 <li class="toctree-l2"><a class="reference internal" href="developer_guide.html#python-wheels">构建 Python Wheels</a></li>
-<li class="toctree-l2"><a class="reference internal" href="developer_guide.html#id4">代码风格</a></li>
+<li class="toctree-l2"><a class="reference internal" href="developer_guide.html#id3">代码风格</a></li>
 </ul>
 </li>
 </ul>
@@ -283,6 +296,16 @@ GraphScope 的交互查询引擎的论文已被 NSDI 2021录用。
             
               
                 <dd><a href="../../zh/index.html">stable</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../v0.9.0/zh/index.html">v0.9.0</a></dd>
               
             
 

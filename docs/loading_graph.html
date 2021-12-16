@@ -33,6 +33,16 @@
   gtag('config', 'G-4TMYCGJ0X2');
 </script>
 
+<script>
+  var _hmt = _hmt || [];
+  (function() {
+    var hm = document.createElement("script");
+    hm.src = "https://hm.baidu.com/hm.js?da649ade2298891886e31922dfc8870f";
+    var s = document.getElementsByTagName("script")[0];
+    s.parentNode.insertBefore(hm, s);
+  })();
+</script>
+
 
 </head>
 
@@ -192,7 +202,7 @@ To load a property graph to GraphScope, we provide a method <cite>g()</cite> def
 </div>
 <p>It will read data from the the location <code class="file docutils literal notranslate"><span class="pre">/home/ldbc_sample/person_0_0.csv</span></code>. Since we didn’t give additional arguments, these vertices will be labeled <code class="docutils literal notranslate"><span class="pre">_</span></code> by default, using the first column in the file as their ID, and other columns as their properties. Both the names and data types of properties will be deduced.</p>
 <p>Another commonly used parameter is label:</p>
-<p><code class="docutils literal notranslate"><span class="pre">label</span></code>: The label name of the vertex, default to <cite>_</cite>.</p>
+<p><code class="docutils literal notranslate"><span class="pre">label</span></code>: The label name of the vertex, default to <code class="docutils literal notranslate"><span class="pre">_</span></code>.</p>
 <p>Since a property graph allows many kinds of vertices, it is suggested for users to give each kind of vertices a meaningful label name. For example:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">graph</span> <span class="o">=</span> <span class="n">sess</span><span class="o">.</span><span class="n">g</span><span class="p">()</span>
 <span class="n">graph</span> <span class="o">=</span> <span class="n">graph</span><span class="o">.</span><span class="n">add_vertices</span><span class="p">(</span><span class="s1">&#39;/home/ldbc_sample/person_0_0.csv&#39;</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s1">&#39;person&#39;</span><span class="p">)</span>
@@ -249,9 +259,9 @@ will be added as properties. If it equals to a empty list <code class="docutils 
 </pre></div>
 </div>
 <p>Differ to vertices, edges have some additional parameters.</p>
-<p><code class="docutils literal notranslate"><span class="pre">`src_label`</span></code>: The label name of the source vertex.
-<code class="docutils literal notranslate"><span class="pre">`dst_label`</span></code>: The label name of the destination vertex, it can be different to the <code class="docutils literal notranslate"><span class="pre">src_label</span></code>,
-<code class="docutils literal notranslate"><span class="pre">`src_field`</span></code> and <code class="docutils literal notranslate"><span class="pre">`dst_field`</span></code>: The columns used for source(destination) vertex id. Default to 0 and 1, respectively.</p>
+<p><code class="docutils literal notranslate"><span class="pre">src_label</span></code>: The label name of the source vertex.
+<code class="docutils literal notranslate"><span class="pre">dst_label</span></code>: The label name of the destination vertex, it can be different to the <code class="docutils literal notranslate"><span class="pre">src_label</span></code>,
+<code class="docutils literal notranslate"><span class="pre">src_field</span></code> and <code class="docutils literal notranslate"><span class="pre">dst_field</span></code>: The columns used for source(destination) vertex id. Default to 0 and 1, respectively.</p>
 <p>e.g.,</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">graph</span> <span class="o">=</span> <span class="n">sess</span><span class="o">.</span><span class="n">g</span><span class="p">()</span>
 <span class="n">graph</span> <span class="o">=</span> <span class="n">graph</span><span class="o">.</span><span class="n">add_vertices</span><span class="p">(</span><span class="s1">&#39;/home/ldbc_sample/person_0_0.csv&#39;</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s1">&#39;person&#39;</span><span class="p">)</span>
@@ -260,7 +270,7 @@ will be added as properties. If it equals to a empty list <code class="docutils 
 <span class="n">graph</span> <span class="o">=</span> <span class="n">graph</span><span class="o">.</span><span class="n">add_edges</span><span class="p">(</span><span class="s1">&#39;/home/ldbc_sample/person_likes_comment_0_0.csv&#39;</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s1">&#39;likes&#39;</span><span class="p">,</span> <span class="n">src_label</span><span class="o">=</span><span class="s1">&#39;person&#39;</span><span class="p">,</span> <span class="n">dst_label</span><span class="o">=</span><span class="s1">&#39;comment&#39;</span><span class="p">)</span>
 </pre></div>
 </div>
-<p>The value and behavior is similar to <cite>vid_field</cite> in Vertex, except for it takes two columns as edges is constituted by source vertex id and destination vertex id. Here’s an example:</p>
+<p>The value and behavior is similar to <code class="docutils literal notranslate"><span class="pre">vid_field</span></code> in Vertex, except for it takes two columns as edges is constituted by source vertex id and destination vertex id. Here’s an example:</p>
 <p>Examples of <code class="docutils literal notranslate"><span class="pre">src_field</span></code> and <code class="docutils literal notranslate"><span class="pre">dst_field</span></code>:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Steps to init a graph and add vertices are omitted</span>
 <span class="n">graph</span> <span class="o">=</span> <span class="n">graph</span><span class="o">.</span><span class="n">add_edges</span><span class="p">(</span><span class="s1">&#39;/home/ldbc_sample/person_likes_comment_0_0.csv&#39;</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s1">&#39;likes&#39;</span><span class="p">,</span> <span class="n">src_label</span><span class="o">=</span><span class="s1">&#39;person&#39;</span><span class="p">,</span> <span class="n">dst_label</span><span class="o">=</span><span class="s1">&#39;comment&#39;</span><span class="p">,</span> <span class="n">src_field</span><span class="o">=</span><span class="s1">&#39;Person.id&#39;</span><span class="p">,</span> <span class="n">dst_field</span><span class="o">=</span><span class="s1">&#39;Comment.id&#39;</span><span class="p">)</span>
@@ -340,8 +350,7 @@ e.g., in this case, the property <code class="docutils literal notranslate"><spa
 </div>
 <div class="section" id="putting-them-together">
 <h3>Putting them Together<a class="headerlink" href="#putting-them-together" title="Permalink to this headline"></a></h3>
-<p>Let’s make this example complete.
-A more complex example to load LDBC snb graph can be find [here](<a class="reference external" href="https://github.com/alibaba/GraphScope/blob/main/python/graphscope/dataset/ldbc.py">https://github.com/alibaba/GraphScope/blob/main/python/graphscope/dataset/ldbc.py</a>).</p>
+<p>Let’s make this example complete.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">graph</span> <span class="o">=</span> <span class="n">sess</span><span class="o">.</span><span class="n">g</span><span class="p">(</span><span class="n">oid_type</span><span class="o">=</span><span class="s1">&#39;int64_t&#39;</span><span class="p">,</span> <span class="n">directed</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">generate_eid</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 <span class="n">graph</span> <span class="o">=</span> <span class="n">graph</span><span class="o">.</span><span class="n">add_vertices</span><span class="p">(</span><span class="s1">&#39;/home/ldbc_sample/person_0_0.csv&#39;</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s1">&#39;person&#39;</span><span class="p">)</span>
 <span class="n">graph</span> <span class="o">=</span> <span class="n">graph</span><span class="o">.</span><span class="n">add_vertices</span><span class="p">(</span><span class="s1">&#39;/home/ldbc_sample/comment_0_0.csv&#39;</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s1">&#39;comment&#39;</span><span class="p">)</span>
@@ -470,6 +479,16 @@ The only methods user need to override is <code class="docutils literal notransl
             
               
                 <dd><a href="index.html">stable</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="v0.9.0/index.html">v0.9.0</a></dd>
               
             
 
