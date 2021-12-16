@@ -136,10 +136,6 @@
                     <argLine>
                          -Djna.library.path=${project.basedir}/../target/release
                     </argLine>
-                    <!--skip ir operator tests currently-->
-                    <excludes>
-                        <exclude>**/*OpTest.java</exclude>
-                    </excludes>
                 </configuration>
             </plugin>
             <plugin>
