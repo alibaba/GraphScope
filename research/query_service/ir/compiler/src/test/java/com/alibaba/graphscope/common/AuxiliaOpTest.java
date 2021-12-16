@@ -17,7 +17,7 @@ public class AuxiliaOpTest {
     private IrPlan irPlan = new IrPlan();
 
     @Test
-    public void auxilia_properties_test() throws IOException {
+    public void auxiliaPropertiesTest() throws IOException {
         AuxiliaOp op = new AuxiliaOp();
         Set properties = Sets.newHashSet(ArgUtils.strAsNameId("age"), ArgUtils.strAsNameId("name"));
         op.setPropertyDetails(new OpArg(properties, Function.identity()));
@@ -27,7 +27,7 @@ public class AuxiliaOpTest {
     }
 
     @Test
-    public void auxilia_alias_test() throws IOException {
+    public void auxiliaAliasTest() throws IOException {
         AuxiliaOp op = new AuxiliaOp();
         FfiNameOrId.ByValue alias = ArgUtils.strAsNameId("a");
         op.setAlias(new OpArg(alias, Function.identity()));

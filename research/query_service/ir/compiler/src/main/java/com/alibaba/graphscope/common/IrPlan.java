@@ -35,10 +35,9 @@ import java.io.Closeable;
 import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
-import java.util.List;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 
 // represent ir plan as a chain of operators
 public class IrPlan implements Closeable {
@@ -247,7 +246,10 @@ public class IrPlan implements Closeable {
                     if (properties.isEmpty()) {
                         throw new InterOpIllegalArgException(baseOp.getClass(), "propertyDetails", "should not be empty if present");
                     }
-                    properties.forEach(k -> {
+                    List<FfiNameOrId.ByValue> propertyList = new ArrayList<>(properties);
+                    // sort in ascending order of name
+                    propertyList.sort(Comparator.comparing(FfiNameOrId::hashCode));
+                    propertyList.forEach(k -> {
                         irCoreLib.addAuxiliaProperty(ptrAuxilia, k);
                     });
                 }
