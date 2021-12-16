@@ -16,12 +16,16 @@
 
 package com.alibaba.graphscope.gremlin.antlr4;
 
+import com.alibaba.graphscope.gremlin.Utils;
 import com.alibaba.graphscope.gremlin.exception.UnsupportedEvalException;
 import org.apache.tinkerpop.gremlin.language.grammar.GremlinGSBaseVisitor;
 import org.apache.tinkerpop.gremlin.language.grammar.GremlinGSParser;
+import org.apache.tinkerpop.gremlin.process.traversal.Order;
 import org.apache.tinkerpop.gremlin.process.traversal.Traversal;
 import org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.GraphTraversal;
 import org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.GraphTraversalSource;
+import org.apache.tinkerpop.gremlin.process.traversal.step.map.OrderGlobalStep;
+import org.apache.tinkerpop.gremlin.process.traversal.step.map.SelectStep;
 
 public class TraversalMethodVisitor extends TraversalRootVisitor<GraphTraversal> {
     final GraphTraversal graphTraversal;
@@ -139,5 +143,74 @@ public class TraversalMethodVisitor extends TraversalRootVisitor<GraphTraversal>
     @Override
     public Traversal visitTraversalMethod_otherV(GremlinGSParser.TraversalMethod_otherVContext ctx) {
         return graphTraversal.otherV();
+    }
+
+    @Override
+    public Traversal visitTraversalMethod_valueMap(GremlinGSParser.TraversalMethod_valueMapContext ctx) {
+        return graphTraversal.valueMap(GenericLiteralVisitor.getstringLiteralExpr(ctx.stringLiteralExpr()));
+    }
+
+    @Override
+    public Traversal visitTraversalMethod_select(GremlinGSParser.TraversalMethod_selectContext ctx) {
+        String tag = GenericLiteralVisitor.getStringLiteral(ctx.stringLiteral());
+        // set tags
+        if (ctx.stringLiteralList() != null) {
+            String[] tags = GenericLiteralVisitor.getStringLiteralList(ctx.stringLiteralList());
+            if (tags.length == 0) {
+                graphTraversal.select(tag, "");
+            } else if (tags.length == 1) {
+                graphTraversal.select(tag, tags[0]);
+            } else {
+                String[] otherTags = Utils.removeStringEle(0, tags);
+                graphTraversal.select(tag, tags[0], otherTags);
+            }
+        } else {
+            graphTraversal.select(tag, "");
+        }
+        // set by traversal
+        if (ctx.traversalMethod_selectby_list() != null) {
+            SelectStep step = (SelectStep) graphTraversal.asAdmin().getEndStep();
+            int childCount = ctx.traversalMethod_selectby_list().getChildCount();
+            for (int i = 0; i < childCount; ++i) {
+                GremlinGSParser.TraversalMethod_selectbyContext byCtx =
+                        ctx.traversalMethod_selectby_list().traversalMethod_selectby(i);
+                if (byCtx == null) continue;
+                // select(..).by('name')
+                if (byCtx.stringLiteral() != null) {
+                    step.modulateBy(GenericLiteralVisitor.getStringLiteral(byCtx.stringLiteral()));
+                } else if (byCtx.traversalMethod_valueMap() != null) {
+                    // select(..).by(valueMap())
+                    TraversalMethodVisitor nestedVisitor = new TraversalMethodVisitor(gvisitor,
+                            GremlinAntlrToJava.getTraversalSupplier().get());
+                    Traversal nestedTraversal = nestedVisitor.visitTraversalMethod_valueMap(byCtx.traversalMethod_valueMap());
+                    step.modulateBy(nestedTraversal.asAdmin());
+                }
+            }
+        }
+        return graphTraversal;
+    }
+
+    @Override
+    public Traversal visitTraversalMethod_order(GremlinGSParser.TraversalMethod_orderContext ctx) {
+        OrderGlobalStep step = (OrderGlobalStep) graphTraversal.order().asAdmin().getEndStep();
+        // set order().by(...)
+        if (ctx.traversalMethod_orderby_list() != null) {
+            int childCount = ctx.traversalMethod_orderby_list().getChildCount();
+            for (int i = 0; i < childCount; ++i) {
+                GremlinGSParser.TraversalMethod_orderbyContext byCtx = ctx.traversalMethod_orderby_list().traversalMethod_orderby(i);
+                if (byCtx == null) continue;
+                if (byCtx.getChildCount() == 4 && byCtx.traversalOrder() != null) {
+                    Order order = TraversalEnumParser.parseTraversalEnumFromContext(Order.class, byCtx.traversalOrder());
+                    step.modulateBy(order);
+                } else if (byCtx.getChildCount() == 6 && byCtx.traversalOrder() != null && byCtx.stringLiteral() != null) {
+                    Order order = TraversalEnumParser.parseTraversalEnumFromContext(Order.class, byCtx.traversalOrder());
+                    step.modulateBy(GenericLiteralVisitor.getStringLiteral(byCtx.stringLiteral()), order);
+                } else {
+                    throw new UnsupportedEvalException(byCtx.getClass(),
+                            "supported pattern is [order().by(order)] or [order().by('key', order)]");
+                }
+            }
+        }
+        return graphTraversal;
     }
 }

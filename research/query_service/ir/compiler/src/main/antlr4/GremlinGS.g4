@@ -79,7 +79,7 @@ traversalSourceSpawnMethod_E
     ;
 
 traversalMethod_as
-    : 'as' LPAREN stringLiteral RPAREN
+    : 'as' LPAREN asStringLiteral RPAREN
     ;
 
 // hasLabel('')
@@ -148,9 +148,10 @@ traversalMethod_limit
 	: 'limit' LPAREN integerLiteral RPAREN
 	;
 
-// valueMap(), valueMap('s1', ...)
+// valueMap('s1', ...)
+// valueMap() is unsupported
 traversalMethod_valueMap
-    : 'valueMap' LPAREN stringLiteralList RPAREN
+    : 'valueMap' LPAREN stringLiteralExpr RPAREN
     ;
 
 // order()
@@ -173,7 +174,7 @@ traversalMethod_orderby_list
 // select('s', ...)
 // select('s', ...).by(...).by(...)
 traversalMethod_select
-    : 'select' LPAREN NonEmptyStringLiteral (COMMA NonEmptyStringLiteral)? RPAREN (DOT traversalMethod_selectby_list)?
+    : 'select' LPAREN stringLiteral (COMMA stringLiteralList)? RPAREN (DOT traversalMethod_selectby_list)?
     ;
 
 // by(valueMap())
@@ -237,10 +238,28 @@ traversalMethod_fold
 	: 'fold' LPAREN RPAREN
 	;
 
+// escape alias starting with ~, reserved for the generated aliases
+asStringLiteral
+    : EscapeHiddenPrefixString
+    ;
+
+// skip ~
+fragment
+EscapeHiddenPrefix
+    :	~('"' | '\\' | '~')
+    |   JoinLineEscape
+    |	EscapeSequence
+    ;
+
+fragment
+EscapeHiddenPrefixString
+    :   '"' EscapeHiddenPrefix(DoubleQuotedStringCharacters)? '"'
+    |   '\'' EscapeHiddenPrefix(SingleQuotedStringCharacters)? '\''
+    ;
+
+// only permit non empty, \'\' or \"\" or \'null\' is meaningless as a parameter
 stringLiteral
     : NonEmptyStringLiteral
-    | EmptyStringLiteral
-    | NullLiteral
     ;
 
 stringLiteralList
@@ -257,7 +276,6 @@ genericLiteral
 	| floatLiteral
 	| booleanLiteral
 	| stringLiteral
-	| nullLiteral
 	;
 
 genericLiteralList

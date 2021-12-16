@@ -17,37 +17,44 @@
 package com.alibaba.graphscope.gremlin;
 
 import com.alibaba.graphscope.common.exception.OpArgIllegalException;
-import com.alibaba.graphscope.common.jna.IrCoreLibrary;
-import com.alibaba.graphscope.common.jna.type.FfiDirection;
-import com.alibaba.graphscope.common.jna.type.FfiScanOpt;
+import com.alibaba.graphscope.common.intermediate.ArgUtils;
+import com.alibaba.graphscope.common.jna.type.*;
 import org.apache.tinkerpop.gremlin.process.traversal.Compare;
+import org.apache.tinkerpop.gremlin.process.traversal.Order;
+import org.apache.tinkerpop.gremlin.process.traversal.Traversal;
+import org.apache.tinkerpop.gremlin.process.traversal.lambda.IdentityTraversal;
+import org.apache.tinkerpop.gremlin.process.traversal.lambda.ValueTraversal;
 import org.apache.tinkerpop.gremlin.process.traversal.Contains;
 import org.apache.tinkerpop.gremlin.process.traversal.step.map.GraphStep;
+import org.apache.tinkerpop.gremlin.process.traversal.step.map.PropertyMapStep;
 import org.apache.tinkerpop.gremlin.process.traversal.step.map.VertexStep;
 import org.apache.tinkerpop.gremlin.process.traversal.step.util.HasContainer;
 import org.apache.tinkerpop.gremlin.process.traversal.util.ConnectiveP;
 import org.apache.tinkerpop.gremlin.structure.Direction;
 import org.apache.tinkerpop.gremlin.structure.T;
+import org.javatuples.Pair;
 
+import java.util.*;
+import java.util.function.BiPredicate;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.function.BiPredicate;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
 public class OpArgTransformFactory {
-    private static final IrCoreLibrary irCoreLib = IrCoreLibrary.INSTANCE;
 
     public static Function<GraphStep, FfiScanOpt> SCAN_OPT = (GraphStep s1) -> {
         if (s1.returnsVertex()) return FfiScanOpt.Vertex;
         else return FfiScanOpt.Edge;
     };
 
-    public static Function<GraphStep, List> CONST_IDS_FROM_STEP = (GraphStep s1) ->
+    public static Function<GraphStep, List<FfiConst.ByValue>> CONST_IDS_FROM_STEP = (GraphStep s1) ->
             Arrays.stream(s1.getIds()).map((id) -> {
-                if (id instanceof Long) {
-                    return irCoreLib.int64AsConst((Long) id);
+                if (id instanceof Integer) {
+                    return ArgUtils.intAsConst((Integer) id);
+                } else if (id instanceof Long) {
+                    return ArgUtils.longAsConst((Long) id);
                 } else {
                     throw new OpArgIllegalException(OpArgIllegalException.Cause.UNSUPPORTED_TYPE, "unimplemented yet");
                 }
@@ -88,7 +95,7 @@ public class OpArgTransformFactory {
         return expr;
     };
 
-    public static Function<List<HasContainer>, List> LABELS_FROM_CONTAINERS = (List<HasContainer> containers) -> {
+    public static Function<List<HasContainer>, List<FfiNameOrId.ByValue>> LABELS_FROM_CONTAINERS = (List<HasContainer> containers) -> {
         List<String> labels = new ArrayList<>();
         for (HasContainer container : containers) {
             if (container.getKey().equals(T.label.getAccessor())) {
@@ -104,7 +111,7 @@ public class OpArgTransformFactory {
                 }
             }
         }
-        return labels.stream().map(k -> irCoreLib.cstrAsNameOrId(k)).collect(Collectors.toList());
+        return labels.stream().map(k -> ArgUtils.strAsNameId(k)).collect(Collectors.toList());
     };
 
     public static Function<VertexStep, FfiDirection> DIRECTION_FROM_STEP = (VertexStep s1) -> {
@@ -129,8 +136,74 @@ public class OpArgTransformFactory {
         }
     };
 
-    public static Function<VertexStep, List> EDGE_LABELS_FROM_STEP = (VertexStep s1) ->
-            Arrays.stream(s1.getEdgeLabels()).map(k -> irCoreLib.cstrAsNameOrId(k)).collect(Collectors.toList());
+    public static Function<VertexStep, List<FfiNameOrId.ByValue>> EDGE_LABELS_FROM_STEP = (VertexStep s1) ->
+            Arrays.stream(s1.getEdgeLabels()).map(k -> ArgUtils.strAsNameId(k)).collect(Collectors.toList());
+
+    public static Function<Map<String, Traversal.Admin>, List<Pair<String, FfiNameOrId.ByValue>>>
+            PROJECT_EXPR_FROM_BY_TRAVERSALS = (Map<String, Traversal.Admin> map) -> {
+        // return List<<expr, alias>>
+        List<Pair<String, FfiNameOrId.ByValue>> exprWithAlias = new ArrayList<>();
+        map.forEach((k, v) -> {
+            String expr = "@" + k;
+            String alias = ArgUtils.asHiddenStr(expr);
+            if (v == null || v instanceof IdentityTraversal) { // select(..)
+                exprWithAlias.add(Pair.with(expr, ArgUtils.strAsNameId(alias)));
+            } else if (v instanceof ValueTraversal) {
+                expr = String.format("@%s.%s", k, ((ValueTraversal) v).getPropertyKey()); // select(..).by('name')
+                alias = ArgUtils.asHiddenStr(expr);
+                exprWithAlias.add(Pair.with(expr, ArgUtils.strAsNameId(alias)));
+            } else if (v.getSteps().size() == 1 && v.getStartStep() instanceof PropertyMapStep) { // select(..).by(valueMap(''))
+                String[] mapKeys = ((PropertyMapStep) v.getStartStep()).getPropertyKeys();
+                if (mapKeys.length > 0) {
+                    for (int i = 0; i < mapKeys.length; ++i) {
+                        String e1 = String.format("@%s.%s", k, mapKeys[i]);
+                        String a1 = ArgUtils.asHiddenStr(e1);
+                        exprWithAlias.add(Pair.with(e1, ArgUtils.strAsNameId(a1)));
+                    }
+                } else {
+                    exprWithAlias.add(Pair.with(expr, ArgUtils.strAsNameId(alias)));
+                }
+            } else {
+                throw new OpArgIllegalException(OpArgIllegalException.Cause.UNSUPPORTED_TYPE,
+                        "supported pattern is [select(..)] or [selecy(..).by('name')] or [select(..).by(valueMap(..))]");
+            }
+        });
+        return exprWithAlias;
+    };
+
+    public static Function<List<Pair<Traversal.Admin, Comparator>>, List<Pair<FfiVariable.ByValue, FfiOrderOpt>>>
+            ORDER_VAR_FROM_COMPARATORS = (List<Pair<Traversal.Admin, Comparator>> list) -> {
+        List<Pair<FfiVariable.ByValue, FfiOrderOpt>> vars = new ArrayList<>();
+        list.forEach(k -> {
+            Traversal.Admin admin = k.getValue0();
+            FfiOrderOpt orderOpt = getFfiOrderOpt((Order) k.getValue1());
+            // order().by('name', order)
+            if (admin != null && admin instanceof ValueTraversal) {
+                String key = ((ValueTraversal) admin).getPropertyKey();
+                FfiProperty.ByValue property = ArgUtils.asFfiProperty(key);
+                vars.add(Pair.with(ArgUtils.asVarPropertyOnly(property), orderOpt));
+            } else if (admin == null || admin instanceof IdentityTraversal) { // order, order().by(order)
+                vars.add(Pair.with(ArgUtils.asNoneVar(), orderOpt));
+            } else {
+                throw new OpArgIllegalException(OpArgIllegalException.Cause.UNSUPPORTED_TYPE,
+                        "supported pattern is [order()] or [order().by(order) or order().by('name', order)]");
+            }
+        });
+        return vars;
+    };
+
+    public static FfiOrderOpt getFfiOrderOpt(Order order) {
+        switch (order) {
+            case asc:
+                return FfiOrderOpt.Asc;
+            case desc:
+                return FfiOrderOpt.Desc;
+            case shuffle:
+                return FfiOrderOpt.Desc;
+            default:
+                throw new OpArgIllegalException(OpArgIllegalException.Cause.INVALID_TYPE, "invalid order type");
+        }
+    }
 
     public static String getValueExpr(Object value) {
         String valueExpr;
