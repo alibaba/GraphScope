@@ -24,7 +24,6 @@ mod test {
     use graph_store::prelude::DefaultId;
     use ir_common::generated::algebra as pb;
     use ir_common::generated::common as common_pb;
-    use ir_common::NameOrId;
     use pegasus::api::{Map, Sink};
     use pegasus::result::ResultStream;
     use pegasus::JobConf;
@@ -108,7 +107,7 @@ mod test {
     #[test]
     fn expand_oute_with_label_test() {
         let query_param = pb::QueryParams {
-            table_names: vec![common_pb::NameOrId::from("knows".to_string())],
+            table_names: vec!["knows".into()],
             columns: vec![],
             limit: None,
             predicate: None,
@@ -130,12 +129,43 @@ mod test {
         assert_eq!(result_edges, expected_edges)
     }
 
+    // g.V().outE('knows', 'created')
+    #[test]
+    fn expand_oute_with_many_labels_test() {
+        let query_param = pb::QueryParams {
+            table_names: vec!["knows".into(), "created".into()],
+            columns: vec![],
+            limit: None,
+            predicate: None,
+            requirements: vec![],
+        };
+        let edge_expand_base = pb::ExpandBase { v_tag: None, direction: 0, params: Some(query_param) };
+        let expand_opr_pb = pb::EdgeExpand { base: Some(edge_expand_base), is_edge: true, alias: None };
+        let mut result = expand_test(expand_opr_pb);
+        let mut result_edges = vec![];
+        let v1: DefaultId = LDBCVertexParser::to_global_id(1, 0);
+        let v2: DefaultId = LDBCVertexParser::to_global_id(2, 0);
+        let v3: DefaultId = LDBCVertexParser::to_global_id(3, 1);
+        let v4: DefaultId = LDBCVertexParser::to_global_id(4, 0);
+        let v5: DefaultId = LDBCVertexParser::to_global_id(5, 1);
+        let v6: DefaultId = LDBCVertexParser::to_global_id(6, 0);
+        let mut expected_edges = vec![(v1, v2), (v1, v3), (v1, v4), (v4, v3), (v4, v5), (v6, v3)];
+        expected_edges.sort();
+        while let Some(Ok(record)) = result.next() {
+            if let Some(VertexOrEdge::E(e)) = record.get(None).unwrap().as_graph_element() {
+                result_edges.push((e.src_id as usize, e.dst_id as usize));
+            }
+        }
+        result_edges.sort();
+        assert_eq!(result_edges, expected_edges)
+    }
+
     // g.V().in('knows') with required properties
     #[test]
     fn expand_inv_with_label_property_test() {
         let query_param = pb::QueryParams {
-            table_names: vec![common_pb::NameOrId::from("knows".to_string())],
-            columns: vec![common_pb::NameOrId::from("name".to_string())],
+            table_names: vec!["knows".into()],
+            columns: vec!["name".into()],
             limit: None,
             predicate: None,
             requirements: vec![],
@@ -154,7 +184,7 @@ mod test {
                     element
                         .details()
                         .unwrap()
-                        .get_property(&NameOrId::Str("name".to_string()))
+                        .get_property(&"name".into())
                         .unwrap()
                         .try_to_owned()
                         .unwrap(),
@@ -190,31 +220,24 @@ mod test {
     #[test]
     fn expand_outv_from_tag_as_tag_test() {
         let query_param = pb::QueryParams {
-            table_names: vec![common_pb::NameOrId::from("knows".to_string())],
+            table_names: vec!["knows".into()],
             columns: vec![],
             limit: None,
             predicate: None,
             requirements: vec![],
         };
-        let edge_expand_base = pb::ExpandBase {
-            v_tag: Some(common_pb::NameOrId::from("a".to_string())),
-            direction: 0,
-            params: Some(query_param),
-        };
-        let expand_opr_pb = pb::EdgeExpand {
-            base: Some(edge_expand_base),
-            is_edge: false,
-            alias: Some(common_pb::NameOrId::from("b".to_string())),
-        };
-        let mut result =
-            expand_test_with_source_tag(common_pb::NameOrId::from("a".to_string()), expand_opr_pb);
+        let edge_expand_base =
+            pb::ExpandBase { v_tag: Some("a".into()), direction: 0, params: Some(query_param) };
+        let expand_opr_pb =
+            pb::EdgeExpand { base: Some(edge_expand_base), is_edge: false, alias: Some("b".into()) };
+        let mut result = expand_test_with_source_tag("a".into(), expand_opr_pb);
         let mut result_ids = vec![];
         let v2: DefaultId = LDBCVertexParser::to_global_id(2, 0);
         let v4: DefaultId = LDBCVertexParser::to_global_id(4, 0);
         let mut expected_ids = vec![v2, v4];
         while let Some(Ok(record)) = result.next() {
             if let Some(element) = record
-                .get(Some(&NameOrId::Str("b".to_string())))
+                .get(Some(&"b".into()))
                 .unwrap()
                 .as_graph_element()
             {
@@ -230,7 +253,7 @@ mod test {
     #[test]
     fn expand_outv_filter_test() {
         let query_param = pb::QueryParams {
-            table_names: vec![common_pb::NameOrId::from("knows".to_string())],
+            table_names: vec!["knows".into()],
             columns: vec![],
             limit: None,
             predicate: str_to_expr_pb("@.id == 2".to_string()).ok(),
@@ -258,7 +281,7 @@ mod test {
                 v_tag: None,
                 direction: 0,
                 params: Some(pb::QueryParams {
-                    table_names: vec![common_pb::NameOrId::from("knows".to_string())],
+                    table_names: vec!["knows".into()],
                     columns: vec![],
                     limit: None,
                     predicate: None,
@@ -298,7 +321,7 @@ mod test {
                 assert!(element
                     .details()
                     .unwrap()
-                    .get_property(&NameOrId::Str("name".to_string()))
+                    .get_property(&"name".into())
                     .is_none())
             }
         }
@@ -314,7 +337,7 @@ mod test {
                 v_tag: None,
                 direction: 1,
                 params: Some(pb::QueryParams {
-                    table_names: vec![common_pb::NameOrId::from("created".to_string())],
+                    table_names: vec!["created".into()],
                     columns: vec![],
                     limit: None,
                     predicate: None,
@@ -354,7 +377,7 @@ mod test {
                 assert!(element
                     .details()
                     .unwrap()
-                    .get_property(&NameOrId::Str("name".to_string()))
+                    .get_property(&"name".into())
                     .is_none())
             }
         }
@@ -370,7 +393,7 @@ mod test {
                 v_tag: None,
                 direction: 2,
                 params: Some(pb::QueryParams {
-                    table_names: vec![common_pb::NameOrId::from("knows".to_string())],
+                    table_names: vec!["knows".into()],
                     columns: vec![],
                     limit: None,
                     predicate: None,
@@ -410,7 +433,7 @@ mod test {
                 assert!(element
                     .details()
                     .unwrap()
-                    .get_property(&NameOrId::Str("name".to_string()))
+                    .get_property(&"name".into())
                     .is_none())
             }
         }

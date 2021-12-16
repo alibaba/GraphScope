@@ -91,6 +91,12 @@ impl From<String> for NameOrId {
     }
 }
 
+impl From<&str> for NameOrId {
+    fn from(str: &str) -> Self {
+        Self::Str(str.to_string())
+    }
+}
+
 impl Encode for NameOrId {
     fn write_to<W: WriteExt>(&self, writer: &mut W) -> io::Result<()> {
         match self {
@@ -243,6 +249,12 @@ impl From<Vec<String>> for common_pb::Value {
 impl From<i32> for common_pb::NameOrId {
     fn from(i: i32) -> Self {
         common_pb::NameOrId { item: Some(common_pb::name_or_id::Item::Id(i)) }
+    }
+}
+
+impl From<&str> for common_pb::NameOrId {
+    fn from(str: &str) -> Self {
+        common_pb::NameOrId { item: Some(common_pb::name_or_id::Item::Name(str.to_string())) }
     }
 }
 
