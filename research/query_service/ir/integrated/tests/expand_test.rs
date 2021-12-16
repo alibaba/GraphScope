@@ -39,7 +39,7 @@ mod test {
     // g.V()
     fn source_gen(alias: Option<common_pb::NameOrId>) -> Box<dyn Iterator<Item = Record> + Send> {
         create_demo_graph();
-        let scan_opr_pb = pb::Scan { scan_opt: 0, alias, params: None };
+        let scan_opr_pb = pb::Scan { scan_opt: 0, alias, params: None, idx_predicate: None };
         let mut source_opr_pb =
             pb::logical_plan::Operator { opr: Some(pb::logical_plan::operator::Opr::Scan(scan_opr_pb)) };
         let source =

@@ -107,12 +107,6 @@ impl AsPhysical for pb::Scan {
     }
 }
 
-impl AsPhysical for pb::IndexedScan {
-    fn add_job_builder(&self, builder: &mut JobBuilder) -> PhysicalResult<()> {
-        simple_add_job_builder(builder, &pb::logical_plan::Operator::from(self.clone()), PegasusOpr::Source)
-    }
-}
-
 impl AsPhysical for pb::EdgeExpand {
     fn add_job_builder(&self, builder: &mut JobBuilder) -> PhysicalResult<()> {
         simple_add_job_builder(
@@ -182,7 +176,6 @@ impl AsPhysical for pb::logical_plan::Operator {
                 Vertex(getv) => getv.add_job_builder(builder),
                 Edge(edgexpd) => edgexpd.add_job_builder(builder),
                 Scan(scan) => scan.add_job_builder(builder),
-                IndexedScan(idxscan) => idxscan.add_job_builder(builder),
                 Limit(limit) => limit.add_job_builder(builder),
                 OrderBy(orderby) => orderby.add_job_builder(builder),
                 Auxilia(auxilia) => auxilia.add_job_builder(builder),
@@ -316,6 +309,7 @@ mod test {
                 predicate: None,
                 requirements: vec![],
             }),
+            idx_predicate: None,
         });
         let select_opr = pb::logical_plan::Operator::from(pb::Select {
             predicate: Some(str_to_expr_pb("@.id == 10".to_string()).unwrap()),
@@ -370,6 +364,7 @@ mod test {
                 predicate: None,
                 requirements: vec![],
             }),
+            idx_predicate: None,
         });
 
         let orderby_opr = pb::logical_plan::Operator::from(pb::OrderBy { pairs: vec![], limit: None });
@@ -409,6 +404,7 @@ mod test {
                 predicate: None,
                 requirements: vec![],
             }),
+            idx_predicate: None,
         });
         let expand_opr = pb::logical_plan::Operator::from(pb::EdgeExpand {
             base: Some(pb::ExpandBase { v_tag: None, direction: 0, params: None }),

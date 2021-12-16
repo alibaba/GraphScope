@@ -52,20 +52,21 @@ impl SourceOperator {
         if let Some(opr) = source_pb.opr.take() {
             match opr {
                 algebra_pb::logical_plan::operator::Opr::Scan(scan) => {
-                    let mut source_op = SourceOperator::try_from(scan)?;
-                    source_op.set_partitions(job_workers, worker_index, partitioner);
-                    debug!("Runtime source op of scan {:?}", source_op);
-                    Ok(source_op)
-                }
-                algebra_pb::logical_plan::operator::Opr::IndexedScan(indexed_scan) => {
-                    let scan = indexed_scan
-                        .scan
-                        .ok_or("scan is missing in indexed_scan")?;
-                    let mut source_op = SourceOperator::try_from(scan)?;
-                    let global_ids = parse_indexed_kv_pairs(indexed_scan.or_kv_equiv_pairs)?;
-                    source_op.set_src(global_ids, job_workers, partitioner);
-                    debug!("Runtime source op of indexed_scan {:?}", source_op);
-                    Ok(source_op)
+                    if let Some(index_predicate) = &scan.idx_predicate {
+                        let or_equiv_conds = index_predicate.or_conds.clone();
+                        let mut source_op = SourceOperator::try_from(scan)?;
+                        if !or_equiv_conds.is_empty() {
+                            let global_ids = parse_equiv_conds(or_equiv_conds)?;
+                            source_op.set_src(global_ids, job_workers, partitioner);
+                            debug!("Runtime source op of indexed_scan {:?}", source_op);
+                        }
+                        Ok(source_op)
+                    } else {
+                        let mut source_op = SourceOperator::try_from(scan)?;
+                        source_op.set_partitions(job_workers, worker_index, partitioner);
+                        debug!("Runtime source op of scan {:?}", source_op);
+                        Ok(source_op)
+                    }
                 }
                 _ => Err(ParsePbError::NotSupported("Unsupported source op in pb_request".to_string()))?,
             }
@@ -163,16 +164,17 @@ impl TryFrom<algebra_pb::Scan> for SourceOperator {
 }
 
 // TODO: we only support global-ids as index for now;
-fn parse_indexed_kv_pairs(
-    or_kv_equiv_pairs: Vec<algebra_pb::indexed_scan::KvEquivPairs>,
+fn parse_equiv_conds(
+    or_equiv_conds: Vec<algebra_pb::index_predicate::AndCondition>,
 ) -> ParsePbResult<Vec<ID>> {
     let mut global_ids = vec![];
-    for or_kv_pair in or_kv_equiv_pairs {
-        let kv_pair = or_kv_pair
-            .pairs
+    for and_cond in or_equiv_conds {
+        let cond = and_cond
+            .conds
             .get(0)
-            .ok_or("kv_equiv_pair is empty in indexed_scan")?;
-        let (key, value) = (kv_pair.key.as_ref(), kv_pair.value.as_ref());
+            .ok_or("EquivCond is empty in Scan")?;
+
+        let (key, value) = (cond.key.as_ref(), cond.value.as_ref());
         let key = key.ok_or("key is empty in kv_pair in indexed_scan")?;
         if let Some(property::Item::Id(_id_key)) = key.item.as_ref() {
             let value = value

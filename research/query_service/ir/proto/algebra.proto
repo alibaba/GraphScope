@@ -162,6 +162,24 @@ message Limit {
   Range range = 1;
 }
 
+// To define a predicate of {{k1, cmp, v1} and {k2, cmp, v2}} or ...,
+// where the values referred by k1, k2, ... are indexed and hence the
+// predicate can be efficiently verified by leveraging the index.
+message IndexPredicate {
+  // A pair defines that a key must be **equal** to a given constant value.
+  // TODO(longbin) More comparators (gt, ge, lt, le, ne) other than equivalence (eq) may be required
+  message EquivCond {
+    common.Property key = 1;
+    common.Const value = 2;
+  }
+  // A collection of `EquivCond` that forms a logical **AND** of all `Condition`s.
+  message AndCondition {
+    repeated EquivCond conds = 1;
+  }
+  // A collection of `AndCondition` that forms a logical **OR** of all `AndCondition`s
+  repeated AndCondition or_conds = 1;
+}
+
 message QueryParams {
   // The tables to fetch data from. While this may sound arbitrary, but in graph db, we often use
   // label instead of table to refer to an entity (vertex/edge). They are semantically the same.
@@ -192,25 +210,8 @@ message Scan {
   common.NameOrId alias = 2;
   // The required parameters for the scan
   QueryParams params = 3;
-}
-
-// In addition to `Scan`, this operator allow runtime to leverage certain optimization strategy while the predicates
-// involve some equivalence conditions of the primary keys that are indexed.
-message IndexedScan {
-  // A pair defines that a key must be **equal** to a given constant value.
-  // TODO(longbin) More comparators (gt, ge, lt, le, ne) other than equivalence (eq) may be required
-  message KVEquivPair {
-    common.Property key = 1;
-    common.Const value = 2;
-  }
-  // A collection of KVEquiPair that must hold at the same time, i.e., it defines a logical **AND**
-  // of all KVEquiPairs.
-  message KVEquivPairs {
-    repeated KVEquivPair pairs = 1;
-  }
-  Scan scan = 1;
-  // A collection of KVEquivPairs that is connected by logical **OR**.
-  repeated KVEquivPairs orKvEquivPairs = 2;
+  // The optional filtering predicate for the field that have been indexed
+  IndexPredicate idx_predicate = 4;
 }
 
 // To expand satisfied edges from a tag of the graph relation that refers to a vertex attribute
@@ -353,7 +354,6 @@ message LogicalPlan {
       Apply apply = 9;
       SegmentApply seg_apply = 10;
       Scan scan = 11;
-      IndexedScan indexed_scan = 12;
       Limit limit = 13;
       Auxilia auxilia = 14;
       // Saving the room for relational operators
