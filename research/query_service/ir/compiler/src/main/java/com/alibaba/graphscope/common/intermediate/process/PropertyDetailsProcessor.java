@@ -2,6 +2,7 @@ package com.alibaba.graphscope.common.intermediate.process;
 
 import com.alibaba.graphscope.common.exception.InterOpIllegalArgException;
 import com.alibaba.graphscope.common.exception.InterOpUnsupportedException;
+import com.alibaba.graphscope.common.intermediate.ArgUtils;
 import com.alibaba.graphscope.common.intermediate.InterOpCollection;
 import com.alibaba.graphscope.common.intermediate.operator.*;
 import com.alibaba.graphscope.common.jna.IrCoreLibrary;
@@ -210,7 +211,7 @@ public class PropertyDetailsProcessor implements InterOpProcessor {
             String property = expr.substring(propertyPos + 1, propertyEnd);
             if (!property.isEmpty()) {
                 FfiNameOrId.ByValue ffiNameId = tag.isEmpty() ? FfiNameOrId.ByValue.getHead() : irCoreLib.cstrAsNameOrId(tag);
-                pairList.add(Pair.with(ffiNameId, getFfiProperty(property)));
+                pairList.add(Pair.with(ffiNameId, ArgUtils.asFfiProperty(property)));
             }
         }
         return pairList;

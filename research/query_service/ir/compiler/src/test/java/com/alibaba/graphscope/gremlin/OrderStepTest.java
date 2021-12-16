@@ -25,6 +25,7 @@ import org.apache.tinkerpop.gremlin.process.traversal.Traversal;
 import org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.GraphTraversalSource;
 import org.apache.tinkerpop.gremlin.structure.Graph;
 import org.apache.tinkerpop.gremlin.tinkergraph.structure.TinkerFactory;
+import com.alibaba.graphscope.gremlin.InterOpCollectionBuidler.StepTransformFactory;
 import org.javatuples.Pair;
 import org.junit.Assert;
 import org.junit.Test;
@@ -36,11 +37,12 @@ public class OrderStepTest {
     private Graph graph = TinkerFactory.createModern();
     private GraphTraversalSource g = graph.traversal();
 
+
     @Test
     public void g_V_order_test() {
         Traversal traversal = g.V().order();
         Step orderStep = traversal.asAdmin().getEndStep();
-        OrderOp op = (OrderOp) IrPlanBuidler.StepTransformFactory.ORDER_BY_STEP.apply(orderStep);
+        OrderOp op = (OrderOp) StepTransformFactory.ORDER_BY_STEP.apply(orderStep);
         List<Pair> expected = Arrays.asList(Pair.with(ArgUtils.asNoneVar(), FfiOrderOpt.Asc));
         Assert.assertEquals(expected, op.getOrderVarWithOrder().get().getArg());
     }
@@ -49,7 +51,7 @@ public class OrderStepTest {
     public void g_V_order_by_label_test() {
         Traversal traversal = g.V().order().by("~label");
         Step orderStep = traversal.asAdmin().getEndStep();
-        OrderOp op = (OrderOp) IrPlanBuidler.StepTransformFactory.ORDER_BY_STEP.apply(orderStep);
+        OrderOp op = (OrderOp) StepTransformFactory.ORDER_BY_STEP.apply(orderStep);
         FfiProperty.ByValue property = ArgUtils.asFfiProperty("~label");
         List<Pair> expected = Arrays.asList(Pair.with(ArgUtils.asVarPropertyOnly(property), FfiOrderOpt.Asc));
         Assert.assertEquals(expected, op.getOrderVarWithOrder().get().getArg());
@@ -59,7 +61,7 @@ public class OrderStepTest {
     public void g_V_order_by_key_test() {
         Traversal traversal = g.V().order().by("name");
         Step orderStep = traversal.asAdmin().getEndStep();
-        OrderOp op = (OrderOp) IrPlanBuidler.StepTransformFactory.ORDER_BY_STEP.apply(orderStep);
+        OrderOp op = (OrderOp) StepTransformFactory.ORDER_BY_STEP.apply(orderStep);
         FfiProperty.ByValue property = ArgUtils.asFfiProperty("name");
         List<Pair> expected = Arrays.asList(Pair.with(ArgUtils.asVarPropertyOnly(property), FfiOrderOpt.Asc));
         Assert.assertEquals(expected, op.getOrderVarWithOrder().get().getArg());

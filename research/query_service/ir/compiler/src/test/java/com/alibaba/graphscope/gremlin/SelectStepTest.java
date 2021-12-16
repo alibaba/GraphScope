@@ -23,6 +23,7 @@ import org.apache.tinkerpop.gremlin.process.traversal.Traversal;
 import org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.GraphTraversalSource;
 import org.apache.tinkerpop.gremlin.structure.Graph;
 import org.apache.tinkerpop.gremlin.tinkergraph.structure.TinkerFactory;
+import com.alibaba.graphscope.gremlin.InterOpCollectionBuidler.StepTransformFactory;
 import org.javatuples.Pair;
 import org.junit.Assert;
 import org.junit.Test;
@@ -38,7 +39,7 @@ public class SelectStepTest {
     public void g_V_select_test() {
         Traversal traversal = g.V().select("a", "b");
         Step selectStep = traversal.asAdmin().getEndStep();
-        ProjectOp op = (ProjectOp) IrPlanBuidler.StepTransformFactory.SELECT_BY_STEP.apply(selectStep);
+        ProjectOp op = (ProjectOp) StepTransformFactory.SELECT_BY_STEP.apply(selectStep);
         List<Pair> expected = Arrays.asList(Pair.with("@a", ArgUtils.strAsNameId("~@a")),
                 Pair.with("@b", ArgUtils.strAsNameId("~@b")));
         Assert.assertEquals(expected, op.getProjectExprWithAlias().get().getArg());
@@ -48,7 +49,7 @@ public class SelectStepTest {
     public void g_V_select_key_test() {
         Traversal traversal = g.V().select("a", "b").by("name");
         Step selectStep = traversal.asAdmin().getEndStep();
-        ProjectOp op = (ProjectOp) IrPlanBuidler.StepTransformFactory.SELECT_BY_STEP.apply(selectStep);
+        ProjectOp op = (ProjectOp) StepTransformFactory.SELECT_BY_STEP.apply(selectStep);
         List<Pair> expected = Arrays.asList(Pair.with("@a.name", ArgUtils.strAsNameId("~@a.name")),
                 Pair.with("@b.name", ArgUtils.strAsNameId("~@b.name")));
         Assert.assertEquals(expected, op.getProjectExprWithAlias().get().getArg());
