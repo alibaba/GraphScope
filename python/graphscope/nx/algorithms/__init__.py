@@ -24,12 +24,12 @@ import networkx
 from graphscope.nx.algorithms import builtin
 from graphscope.nx.algorithms import tests
 
-# NB: currently we don't what to make "builtin" in precedence to network's
+# NB: currently we don't what to make "builtin" in precedence to networkx's
 # pure python implementation.
 #
 # After our built-in is ready, you just need to uncomment the following line.
 #
-# from python.grape.nx.algorithms.builtin import *
+# from python.graphscope.nx.algorithms.builtin import *
 from graphscope.nx.utils.compat import import_as_graphscope_nx
 from graphscope.nx.utils.compat import internal_name
 

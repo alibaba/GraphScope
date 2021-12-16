@@ -476,11 +476,20 @@ def unify_type(t):
     elif isinstance(t, type):
         unify_types = {
             int: graph_def_pb2.LONG,
+            np.int32: graph_def_pb2.INT,
+            np.int64: graph_def_pb2.LONG,
+            np.uint32: graph_def_pb2.UINT,
+            np.uint64: graph_def_pb2.ULONG,
             float: graph_def_pb2.DOUBLE,
+            np.float32: graph_def_pb2.FLOAT,
+            np.float64: graph_def_pb2.DOUBLE,
             str: graph_def_pb2.STRING,
+            np.str_: graph_def_pb2.STRING,
             bool: graph_def_pb2.BOOL,
+            np.bool8: graph_def_pb2.BOOL,
             list: graph_def_pb2.INT_LIST,
             tuple: graph_def_pb2.INT_LIST,
+            dict: graph_def_pb2.DYNAMIC,
         }
         return unify_types[t]
     elif isinstance(t, int):  # graph_def_pb2.DataType

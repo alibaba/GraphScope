@@ -441,8 +441,10 @@ jobs:
 
     - name: Readwrite test
       if: steps.nx-filter.outputs.io == 'true'
+      env:
+        DEPLOYMENT: ${{ matrix.deployment }}
       run: |
-        python3 -m pytest --exitfirst -s -v \
+        python3 -m pytest --exitfirst -s -v -m "not slow" \
             $(dirname $(python3 -c "import graphscope; print(graphscope.__file__)"))/nx/readwrite/tests
 
   gie-test:

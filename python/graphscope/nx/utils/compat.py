@@ -26,6 +26,7 @@ import copy
 import functools
 import imp
 import inspect
+from enum import Enum
 from types import FunctionType
 from types import LambdaType
 from types import ModuleType
@@ -65,6 +66,9 @@ def copy_function(func, global_ctx=None):
 
 
 def copy_class(cls):
+    if issubclass(cls, Enum):
+        return cls
+
     class T(*cls.__bases__):
         pass
 
@@ -347,7 +351,7 @@ def with_module_map(  # noqa: C901
                         global_ctx[k] = v
 
         for name, meth in source_methods.items():
-            if name in existing_methods:
+            if name in existing_methods or isinstance(meth, ModuleType):
                 continue
 
             if isinstance(meth, classmethod):

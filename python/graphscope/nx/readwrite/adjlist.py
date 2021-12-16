@@ -65,6 +65,7 @@ def parse_adjlist(
                     )
                 ) from e
         edges.extend([u, v] for v in vlist)
+    # N.B: batch add edges to graph.
     if nodes:
         G.add_nodes_from(nodes)
     G.add_edges_from(edges)

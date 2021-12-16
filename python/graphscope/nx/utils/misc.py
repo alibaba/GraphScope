@@ -20,6 +20,7 @@
 import json
 
 import networkx.utils.misc
+import numpy as np
 from networkx.exception import NetworkXError
 
 from graphscope.client.session import get_session_by_id
@@ -67,32 +68,8 @@ def parse_ret_as_dict(func):
     return wrapper
 
 
-def check_node_is_legal(n):
-    """check the node is legal or not.
-
-    Parameters:
-    -----------
-    n: node
-
-    Raises
-    ------
-    NetworkXError
-        If the type of node is illegal.
-    """
-
-    def check_node_type(n):
-        if not isinstance(n, (int, float, str, bool, type(None))):
-            raise NetworkXError(
-                "Node %s is illegal. Type of node must be one of [int, float, str, bool, NoneType], but got %s"
-                % (n, type(n))
-            )
-
-    if isinstance(n, tuple):
-        if len(n) != 2 or not isinstance(n[0], str):
-            raise NetworkXError(
-                "Labeled node %s must be a 2-tuple and label must be str" % (n,)
-            )
-        else:
-            check_node_type(n[1])
+def json_encoder(obj):
+    if isinstance(obj, (np.generic, np.ndarray)):
+        return obj.item()
     else:
-        check_node_type(n)
+        raise TypeError("Unserializable object {} of type {}".format(obj, type(obj)))
