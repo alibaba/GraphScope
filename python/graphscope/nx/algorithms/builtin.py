@@ -497,7 +497,6 @@ def single_source_dijkstra_path_length(G, source, weight=None):
     return AppAssets(algo="sssp_projected", context="vertex_data")(G, source)
 
 
-@project_to_simple
 def average_shortest_path_length(G, weight=None):
     """Returns the average shortest path length.
 
@@ -527,7 +526,25 @@ def average_shortest_path_length(G, weight=None):
     2.0
 
     """
-    return graphscope.average_shortest_path_length(G)
+
+    @project_to_simple
+    def _average_shortest_path_length(G, weight=None):
+        return graphscope.average_shortest_path_length(G)
+
+    n = len(G)
+    # For the specail case of the null graph. raise an exception, since
+    # there are no paths in the null graph.
+    if n == 0:
+        msg = (
+            "the null graph has no paths, thus there is no average"
+            "shortest path length"
+        )
+        raise nx.NetworkXPointlessConcept(msg)
+    # For the special case of the trivial graph, return zero immediately.
+    if n == 1:
+        return 0
+
+    return _average_shortest_path_length(G, weight=weight)
 
 
 @project_to_simple
