@@ -18,8 +18,6 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 #[cfg(feature = "proto_inplace")]
-use prost_wkt_build::*;
-#[cfg(feature = "proto_inplace")]
 use std::path::PathBuf;
 #[cfg(feature = "proto_inplace")]
 const GEN_DIR: &'static str = "src/generated";
@@ -35,14 +33,9 @@ fn codegen_inplace() -> Result<(), Box<dyn std::error::Error>> {
         std::fs::remove_dir_all(GEN_DIR).unwrap();
     }
     std::fs::create_dir(GEN_DIR).unwrap();
-    let descriptor_file = out_dir.join("descriptors.bin");
     prost_build::Config::new()
         .type_attribute(".", "#[derive(Serialize,Deserialize)]")
         .out_dir(&out_dir)
-        .extern_path(".google.protobuf.Any", "::prost_wkt_types::Any")
-        .extern_path(".google.protobuf.Timestamp", "::prost_wkt_types::Timestamp")
-        .extern_path(".google.protobuf.Value", "::prost_wkt_types::Value")
-        .file_descriptor_set_path(&descriptor_file)
         .compile_protos(
             &[
                 "../proto/common.proto",
@@ -52,9 +45,6 @@ fn codegen_inplace() -> Result<(), Box<dyn std::error::Error>> {
             ],
             &["../proto"],
         )?;
-    let descriptor_bytes = std::fs::read(descriptor_file).unwrap();
-    let descriptor = FileDescriptorSet::decode(&descriptor_bytes[..]).unwrap();
-    prost_wkt_build::add_serde(out_dir, descriptor);
 
     Ok(())
 }
@@ -63,9 +53,6 @@ fn codegen_inplace() -> Result<(), Box<dyn std::error::Error>> {
 fn codegen_inplace() -> Result<(), Box<dyn std::error::Error>> {
     prost_build::Config::new()
         .type_attribute(".", "#[derive(Serialize,Deserialize)]")
-        .extern_path(".google.protobuf.Any", "::prost_wkt_types::Any")
-        .extern_path(".google.protobuf.Timestamp", "::prost_wkt_types::Timestamp")
-        .extern_path(".google.protobuf.Value", "::prost_wkt_types::Value")
         .compile_protos(
             &[
                 "../proto/common.proto",
@@ -75,5 +62,6 @@ fn codegen_inplace() -> Result<(), Box<dyn std::error::Error>> {
             ],
             &["../proto"],
         )?;
+
     Ok(())
 }
