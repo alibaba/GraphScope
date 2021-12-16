@@ -46,6 +46,11 @@ def project_to_simple(func):
                 "weight" in inspect.getfullargspec(func)[0]
             ):  # func has 'weight' argument
                 weight = kwargs.get("weight", None)
+                try:
+                    e_label = graph.schema.vertex_labels[0]
+                    graph.schema.get_edge_property_id(e_label, weight)
+                except KeyError:
+                    weight = None
                 graph = graph._project_to_simple(e_prop=weight)
             elif "attribute" in inspect.getfullargspec(func)[0]:
                 attribute = kwargs.get("attribute", None)
