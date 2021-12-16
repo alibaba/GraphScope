@@ -16,13 +16,12 @@
 mod graph_partition;
 mod graph_query;
 
-pub use graph_partition::SimplePartition;
-pub use graph_query::create_demo_graph;
+use crate::InitializeJobCompiler;
 use runtime::graph::{ID, ID_BITS};
 use runtime::IRJobCompiler;
 
-use crate::InitializeJobCompiler;
-
+pub use graph_partition::SimplePartition;
+pub use graph_query::create_demo_graph;
 pub const ID_SHIFT_BITS: usize = ID_BITS >> 1;
 
 /// Given the encoding of an edge, the `ID_MASK` is used to get the lower half part of an edge, which is

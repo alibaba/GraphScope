@@ -13,16 +13,14 @@
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 
-use std::convert::TryInto;
-
-use ir_common::error::ParsePbError;
-use ir_common::generated::algebra as algebra_pb;
-use pegasus::api::function::{FilterFunction, FnResult};
-
 use crate::error::{FnExecError, FnGenResult};
 use crate::expr::eval::Evaluator;
 use crate::process::operator::filter::FilterFuncGen;
 use crate::process::record::Record;
+use ir_common::error::ParsePbError;
+use ir_common::generated::algebra as algebra_pb;
+use pegasus::api::function::{FilterFunction, FnResult};
+use std::convert::TryInto;
 
 #[derive(Debug)]
 struct SelectOperator {

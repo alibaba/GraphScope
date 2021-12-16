@@ -19,12 +19,9 @@
 #[allow(dead_code)]
 #[allow(unused_imports)]
 pub mod test {
-    use std::convert::{TryFrom, TryInto};
-    use std::sync::Once;
-
     use graph_proxy::{InitializeJobCompiler, QueryExpGraph};
     use ir_common::generated::common as common_pb;
-    use ir_common::generated::result as result_pb;
+    use ir_common::generated::results as result_pb;
     use lazy_static::lazy_static;
     use pegasus::result::{ResultSink, ResultStream};
     use pegasus::{run_opt, Configuration, JobConf, StartupError};
@@ -37,6 +34,8 @@ pub mod test {
     use runtime::graph::ID;
     use runtime::process::record::{Entry, Record, RecordElement};
     use runtime::IRJobCompiler;
+    use std::convert::{TryFrom, TryInto};
+    use std::sync::Once;
 
     static INIT: Once = Once::new();
 
@@ -67,7 +66,7 @@ pub mod test {
         query_exp_graph.initialize_job_compiler()
     }
 
-    pub fn submit_query(job_req: JobRequest, num_workers: u32) -> ResultStream<result_pb::Result> {
+    pub fn submit_query(job_req: JobRequest, num_workers: u32) -> ResultStream<result_pb::Results> {
         let mut conf = JobConf::default();
         conf.workers = num_workers;
         let (tx, rx) = crossbeam_channel::unbounded();
@@ -82,8 +81,8 @@ pub mod test {
         results
     }
 
-    pub fn parse_result(result: result_pb::Result) -> Option<Record> {
-        if let Some(result_pb::result::Inner::Record(record_pb)) = result.inner {
+    pub fn parse_result(result: result_pb::Results) -> Option<Record> {
+        if let Some(result_pb::results::Inner::Record(record_pb)) = result.inner {
             let mut record = Record::default();
             for column in record_pb.columns {
                 let tag =

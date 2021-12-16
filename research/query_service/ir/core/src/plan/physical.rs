@@ -19,16 +19,14 @@
 //! protobuf structure.
 //!
 
-use std::fmt;
-
+use crate::plan::logical::{LogicalPlan, NodeType};
 use ir_common::generated::algebra as pb;
 use ir_common::generated::algebra::join::JoinKind;
 use ir_common::generated::common as common_pb;
 use pegasus_client::builder::*;
 use pegasus_server::pb as server_pb;
 use prost::{EncodeError, Message};
-
-use crate::plan::logical::{LogicalPlan, NodeType};
+use std::fmt;
 
 /// Record any error while transforming ir to a pegasus physical plan
 #[derive(Debug, Clone)]

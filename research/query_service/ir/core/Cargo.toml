@@ -12,9 +12,11 @@ ir_common = {path = "../common"}
 pegasus_client = {path = "../../../engine/pegasus/clients/rust/client"}
 pegasus_server = {path = "../../../engine/pegasus/server-v0"}
 pegasus = {path = "../../../engine/pegasus/pegasus"}
-prost = "0.8"
+prost = "0.9"
+serde = "1.0"
+serde_json = "1.0"
 runtime = {path = "../runtime"}
-vec_map = "0.8.2"
+vec_map = { version = "0.8.2", features = ["serde"] }
 
 [features]
 default = []

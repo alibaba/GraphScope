@@ -13,16 +13,16 @@
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 
+use ir_common::error::{ParsePbError, ParsePbResult};
+use ir_common::generated::algebra as pb;
+use ir_common::generated::algebra::logical_plan::operator::Opr;
 use std::cell::RefCell;
 use std::collections::{BTreeSet, HashMap};
 use std::convert::TryFrom;
 use std::fmt;
+use std::io;
 use std::iter::FromIterator;
 use std::rc::Rc;
-
-use ir_common::error::{ParsePbError, ParsePbResult};
-use ir_common::generated::algebra as pb;
-use ir_common::generated::algebra::logical_plan::operator::Opr;
 use vec_map::VecMap;
 
 /// An internal representation of the pb-[`Node`].
@@ -60,7 +60,7 @@ pub(crate) type NodeType = Rc<RefCell<Node>>;
 /// An internal representation of the pb-[`LogicalPlan`].
 ///
 /// [`LogicalPlan`]: crate::generated::algebra::LogicalPlan
-#[derive(Default)]
+#[derive(Default, Clone)]
 pub(crate) struct LogicalPlan {
     pub nodes: VecMap<NodeType>,
     /// To record the total number of operators ever created in the logical plan,
@@ -427,6 +427,24 @@ impl LogicalPlan {
             }
         }
         Some(plan)
+    }
+
+    /// Write the logical plan to a json via the given `writer`.
+    pub fn into_json<W: io::Write>(self, writer: W) -> io::Result<()> {
+        let plan_pb: pb::LogicalPlan = self.into();
+        serde_json::to_writer_pretty(writer, &plan_pb)?;
+
+        Ok(())
+    }
+
+    /// Read the logical plan from a json via the given `reader`
+    pub fn from_json<R: io::Read>(reader: R) -> ParsePbResult<Self> {
+        let serde_result = serde_json::from_reader::<_, pb::LogicalPlan>(reader);
+        if let Ok(plan_pb) = serde_result {
+            Self::try_from(plan_pb)
+        } else {
+            Err(ParsePbError::SerdeError(format!("{:?}", serde_result.err().unwrap())))
+        }
     }
 }
 

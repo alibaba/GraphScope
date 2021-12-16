@@ -13,17 +13,15 @@
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 
-use std::convert::{TryFrom, TryInto};
-
-use ir_common::error::ParsePbError;
-use ir_common::generated::algebra as algebra_pb;
-use ir_common::NameOrId;
-use pegasus::api::function::{FnResult, MapFunction};
-
 use crate::error::{FnExecError, FnGenResult};
 use crate::expr::eval::Evaluator;
 use crate::process::operator::map::MapFuncGen;
 use crate::process::record::{ObjectElement, Record};
+use ir_common::error::ParsePbError;
+use ir_common::generated::algebra as algebra_pb;
+use ir_common::NameOrId;
+use pegasus::api::function::{FnResult, MapFunction};
+use std::convert::{TryFrom, TryInto};
 
 #[derive(Debug)]
 struct ProjectOperator {

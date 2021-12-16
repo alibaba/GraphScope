@@ -13,9 +13,8 @@
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 
-use pegasus::api::function::FnResult;
-
 use crate::graph::ID;
+use pegasus::api::function::FnResult;
 
 pub trait Partitioner: Send + Sync + 'static {
     /// Given the element id and job_workers (number of worker per server),

@@ -17,18 +17,16 @@ pub mod element;
 pub mod partitioner;
 pub mod property;
 
-use std::convert::{TryFrom, TryInto};
-use std::sync::atomic::{AtomicPtr, Ordering};
-use std::sync::Arc;
-
+use crate::expr::eval::Evaluator;
+use crate::graph::element::{Edge, Vertex};
 use ir_common::error::ParsePbError;
 use ir_common::generated::algebra as algebra_pb;
 use ir_common::generated::common as common_pb;
 use ir_common::NameOrId;
 use pegasus::api::function::{DynIter, FnResult};
-
-use crate::expr::eval::Evaluator;
-use crate::graph::element::{Edge, Vertex};
+use std::convert::{TryFrom, TryInto};
+use std::sync::atomic::{AtomicPtr, Ordering};
+use std::sync::Arc;
 
 pub type ID = u128;
 

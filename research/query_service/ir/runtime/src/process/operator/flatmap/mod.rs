@@ -14,12 +14,11 @@
 //! limitations under the License.
 mod edge_expand;
 
+use crate::error::{FnGenError, FnGenResult};
+use crate::process::record::Record;
 use ir_common::error::ParsePbError;
 use ir_common::generated::algebra as algebra_pb;
 use pegasus::api::function::{DynIter, FlatMapFunction};
-
-use crate::error::{FnGenError, FnGenResult};
-use crate::process::record::Record;
 
 pub trait FlatMapFuncGen {
     fn gen_flat_map(

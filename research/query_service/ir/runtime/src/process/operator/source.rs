@@ -13,22 +13,20 @@
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 
-use std::collections::HashMap;
-use std::convert::TryFrom;
-use std::sync::Arc;
-
-use ir_common::error::{ParsePbError, ParsePbResult};
-use ir_common::generated::algebra as algebra_pb;
-use ir_common::generated::common::property;
-use ir_common::generated::common::value;
-use ir_common::NameOrId;
-
 use crate::error::{FnGenError, FnGenResult};
 use crate::graph::element::{Edge, Vertex};
 use crate::graph::partitioner::Partitioner;
 use crate::graph::QueryParams;
 use crate::graph::ID;
 use crate::process::record::Record;
+use ir_common::error::{ParsePbError, ParsePbResult};
+use ir_common::generated::algebra as algebra_pb;
+use ir_common::generated::common::property;
+use ir_common::generated::common::value;
+use ir_common::NameOrId;
+use std::collections::HashMap;
+use std::convert::TryFrom;
+use std::sync::Arc;
 
 #[derive(Debug)]
 pub enum SourceType {

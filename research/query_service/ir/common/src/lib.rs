@@ -23,10 +23,13 @@ use prost::Message;
 use crate::error::{ParsePbError, ParsePbResult};
 use crate::generated::algebra as pb;
 use crate::generated::common as common_pb;
-use crate::generated::result as result_pb;
+use crate::generated::results as result_pb;
 use dyn_type::object::RawType;
 
 pub mod error;
+
+#[macro_use]
+extern crate serde;
 
 #[cfg(feature = "proto_inplace")]
 pub mod generated {
@@ -34,8 +37,8 @@ pub mod generated {
     pub mod algebra;
     #[path = "common.rs"]
     pub mod common;
-    #[path = "result.rs"]
-    pub mod result;
+    #[path = "results.rs"]
+    pub mod results;
 }
 
 #[cfg(not(feature = "proto_inplace"))]
@@ -46,8 +49,8 @@ pub mod generated {
     pub mod algebra {
         tonic::include_proto!("algebra");
     }
-    pub mod result {
-        tonic::include_proto!("result");
+    pub mod results {
+        tonic::include_proto!("results");
     }
 }
 
@@ -516,7 +519,7 @@ impl From<Object> for common_pb::Value {
     }
 }
 
-impl Encode for result_pb::Result {
+impl Encode for result_pb::Results {
     fn write_to<W: WriteExt>(&self, writer: &mut W) -> io::Result<()> {
         let mut bytes = vec![];
         self.encode_raw(&mut bytes);
@@ -526,12 +529,12 @@ impl Encode for result_pb::Result {
     }
 }
 
-impl Decode for result_pb::Result {
+impl Decode for result_pb::Results {
     fn read_from<R: ReadExt>(reader: &mut R) -> io::Result<Self> {
         let len = reader.read_u32()? as usize;
         let mut buffer = Vec::with_capacity(len);
         reader.read_exact(&mut buffer)?;
-        result_pb::Result::decode(buffer.as_slice())
+        result_pb::Results::decode(buffer.as_slice())
             .map_err(|_e| std::io::Error::new(std::io::ErrorKind::Other, "decoding result_pb failed!"))
     }
 }

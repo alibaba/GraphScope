@@ -18,7 +18,7 @@ use std::sync::Arc;
 use ir_common::generated::algebra as algebra_pb;
 use ir_common::generated::algebra::join::JoinKind;
 use ir_common::generated::common as common_pb;
-use ir_common::generated::result as result_pb;
+use ir_common::generated::results as result_pb;
 use pegasus::api::function::*;
 use pegasus::api::{
     Collect, CorrelatedSubTask, Dedup, Filter, IterCondition, Iteration, Join, KeyBy, Limit, Map, Merge,
@@ -51,7 +51,7 @@ type RecordFilterMap = Box<dyn FilterMapFunction<Record, Record>>;
 type RecordFlatMap = Box<dyn FlatMapFunction<Record, Record, Target = DynIter<Record>>>;
 type RecordFilter = Box<dyn FilterFunction<Record>>;
 type RecordLeftJoin = Box<dyn BinaryFunction<Record, Vec<Record>, Option<Record>>>;
-type RecordEncode = Box<dyn MapFunction<Record, result_pb::Result>>;
+type RecordEncode = Box<dyn MapFunction<Record, result_pb::Results>>;
 type RecordShuffle = Box<dyn RouteFunction<Record>>;
 type RecordCompare = Box<dyn CompareFunction<Record>>;
 type RecordJoin = Box<dyn JoinKeyGen<Record, RecordKey, Record>>;
@@ -344,9 +344,9 @@ impl IRJobCompiler {
     }
 }
 
-impl JobParser<Record, result_pb::Result> for IRJobCompiler {
+impl JobParser<Record, result_pb::Results> for IRJobCompiler {
     fn parse(
-        &self, plan: &JobRequest, input: &mut Source<Record>, output: ResultSink<result_pb::Result>,
+        &self, plan: &JobRequest, input: &mut Source<Record>, output: ResultSink<result_pb::Results>,
     ) -> Result<(), BuildJobError> {
         if let Some(source) = plan.source.as_ref() {
             let source = input.input_from(

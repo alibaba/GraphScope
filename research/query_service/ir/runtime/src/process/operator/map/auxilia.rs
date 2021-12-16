@@ -13,18 +13,16 @@
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 
-use std::convert::TryInto;
-
-use ir_common::generated::algebra as algebra_pb;
-use ir_common::NameOrId;
-use pegasus::api::function::{FilterMapFunction, FnResult};
-use std::sync::Arc;
-
 use crate::error::{FnExecError, FnGenResult};
 use crate::graph::element::{GraphElement, VertexOrEdge};
 use crate::graph::QueryParams;
 use crate::process::operator::map::FilterMapFuncGen;
 use crate::process::record::{Entry, Record};
+use ir_common::generated::algebra as algebra_pb;
+use ir_common::NameOrId;
+use pegasus::api::function::{FilterMapFunction, FnResult};
+use std::convert::TryInto;
+use std::sync::Arc;
 
 /// An Auxilia operator to get extra information for the given entity.
 /// Specifically, we will replace the old entity with the new one with details,

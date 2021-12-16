@@ -14,18 +14,16 @@
 //! limitations under the License.
 //!
 
-use std::cell::RefCell;
-use std::convert::TryFrom;
-
+use crate::expr::error::{ExprError, ExprResult};
+use crate::graph::element::Element;
+use crate::graph::property::{Details, PropKey};
 use dyn_type::arith::Exp;
 use dyn_type::{BorrowObject, Object};
 use ir_common::error::{ParsePbError, ParsePbResult};
 use ir_common::generated::common as pb;
 use ir_common::NameOrId;
-
-use crate::expr::error::{ExprError, ExprResult};
-use crate::graph::element::Element;
-use crate::graph::property::{Details, PropKey};
+use std::cell::RefCell;
+use std::convert::TryFrom;
 
 unsafe impl Sync for Evaluator {}
 
