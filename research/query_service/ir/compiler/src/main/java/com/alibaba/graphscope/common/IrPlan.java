@@ -25,10 +25,14 @@ import com.alibaba.graphscope.common.jna.IrCoreLibrary;
 import com.alibaba.graphscope.common.jna.type.*;
 import com.sun.jna.Pointer;
 import com.sun.jna.ptr.IntByReference;
+import org.apache.commons.io.FileUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.Closeable;
+import java.io.File;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Optional;
 import java.util.function.Function;
@@ -37,6 +41,7 @@ import java.util.function.Function;
 public class IrPlan implements Closeable {
     private static IrCoreLibrary irCoreLib = IrCoreLibrary.INSTANCE;
     private static Logger logger = LoggerFactory.getLogger(IrPlan.class);
+    private static String PLAN_JSON_FILE = "plan.json";
     private Pointer ptrPlan;
     private IntByReference oprIdx;
 
@@ -186,10 +191,20 @@ public class IrPlan implements Closeable {
         }
     }
 
-    public void debug() {
+    public String getPlanAsJson() throws IOException {
+        String json = "";
         if (ptrPlan != null) {
-            irCoreLib.debugPlan(ptrPlan);
+            File file = new File(PLAN_JSON_FILE);
+            if (file.exists()) {
+                file.delete();
+            }
+            irCoreLib.write_plan_to_json(ptrPlan, PLAN_JSON_FILE);
+            json = FileUtils.readFileToString(file, StandardCharsets.UTF_8);
+            if (file.exists()) {
+                file.delete();
+            }
         }
+        return json;
     }
 
     public void appendInterOp(InterOpBase base) throws

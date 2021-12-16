@@ -25,6 +25,7 @@ import org.junit.After;
 import org.junit.Assert;
 import org.junit.Test;
 
+import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
 import java.util.function.Function;
@@ -34,25 +35,25 @@ public class ExpandOpTest {
     private IrPlan irPlan = new IrPlan();
 
     @Test
-    public void edgeOptTest() {
+    public void edgeOptTest() throws IOException {
         ExpandOp op = new ExpandOp();
         op.setEdgeOpt(new OpArg<>(Boolean.valueOf(true), Function.identity()));
         op.setDirection(new OpArg<>(FfiDirection.Out, Function.identity()));
         irPlan.appendInterOp(op);
-        byte[] bytes = irPlan.toPhysicalBytes();
-        Assert.assertArrayEquals(TestUtils.readBytesFromFile("expand_edge_opt.bytes"), bytes);
+        String actual = irPlan.getPlanAsJson();
+        Assert.assertEquals(TestUtils.readJsonFromResource("expand_edge_opt.json"), actual);
     }
 
     @Test
-    public void labelsTest() {
+    public void labelsTest() throws IOException {
         ExpandOp op = new ExpandOp();
         op.setEdgeOpt(new OpArg<>(Boolean.valueOf(true), Function.identity()));
         op.setDirection(new OpArg<>(FfiDirection.Out, Function.identity()));
         List<FfiNameOrId.ByValue> values = Arrays.asList(irCoreLib.cstrAsNameOrId("knows"));
         op.setLabels(new OpArg<List, List>(values, Function.identity()));
         irPlan.appendInterOp(op);
-        byte[] bytes = irPlan.toPhysicalBytes();
-        Assert.assertArrayEquals(TestUtils.readBytesFromFile("expand_labels.bytes"), bytes);
+        String actual = irPlan.getPlanAsJson();
+        Assert.assertEquals(TestUtils.readJsonFromResource("expand_labels.json"), actual);
     }
 
     @After

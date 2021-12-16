@@ -22,19 +22,20 @@ import org.junit.After;
 import org.junit.Assert;
 import org.junit.Test;
 
+import java.io.IOException;
 import java.util.function.Function;
 
 public class LimitOpTest {
     private IrPlan irPlan = new IrPlan();
 
     @Test
-    public void limitOpTest() {
+    public void limitOpTest() throws IOException {
         LimitOp op = new LimitOp();
         op.setLower(new OpArg<>(Integer.valueOf(1), Function.identity()));
         op.setUpper(new OpArg<>(Integer.valueOf(2), Function.identity()));
         irPlan.appendInterOp(op);
-        byte[] bytes = irPlan.toPhysicalBytes();
-        Assert.assertArrayEquals(TestUtils.readBytesFromFile("limit_range.bytes"), bytes);
+        String actual = irPlan.getPlanAsJson();
+        Assert.assertEquals(TestUtils.readJsonFromResource("limit_range.json"), actual);
     }
 
     @After

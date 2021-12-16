@@ -1,0 +1,28 @@
+{
+  "nodes": [
+    {
+      "opr": {
+        "opr": {
+          "Scan": {
+            "scan_opt": 0,
+            "alias": null,
+            "params": {
+              "table_names": [
+                {
+                  "item": {
+                    "Name": "person"
+                  }
+                }
+              ],
+              "columns": [],
+              "limit": null,
+              "predicate": null,
+              "requirements": []
+            }
+          }
+        }
+      },
+      "children": []
+    }
+  ]
+}

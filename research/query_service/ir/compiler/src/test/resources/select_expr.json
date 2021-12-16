@@ -1,0 +1,86 @@
+{
+  "nodes": [
+    {
+      "opr": {
+        "opr": {
+          "Select": {
+            "predicate": {
+              "operators": [
+                {
+                  "item": {
+                    "Var": {
+                      "tag": null,
+                      "property": {
+                        "item": {
+                          "Key": {
+                            "item": {
+                              "Name": "id"
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                },
+                {
+                  "item": {
+                    "Const": {
+                      "value": {
+                        "item": {
+                          "I64": 1
+                        }
+                      }
+                    }
+                  }
+                },
+                {
+                  "item": {
+                    "Logical": 0
+                  }
+                },
+                {
+                  "item": {
+                    "Var": {
+                      "tag": null,
+                      "property": {
+                        "item": {
+                          "Key": {
+                            "item": {
+                              "Name": "name"
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                },
+                {
+                  "item": {
+                    "Const": {
+                      "value": {
+                        "item": {
+                          "Str": "marko"
+                        }
+                      }
+                    }
+                  }
+                },
+                {
+                  "item": {
+                    "Logical": 0
+                  }
+                },
+                {
+                  "item": {
+                    "Logical": 8
+                  }
+                }
+              ]
+            }
+          }
+        }
+      },
+      "children": []
+    }
+  ]
+}

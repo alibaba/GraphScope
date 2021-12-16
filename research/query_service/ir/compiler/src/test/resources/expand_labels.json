@@ -1,0 +1,32 @@
+{
+  "nodes": [
+    {
+      "opr": {
+        "opr": {
+          "Edge": {
+            "base": {
+              "v_tag": null,
+              "direction": 0,
+              "params": {
+                "table_names": [
+                  {
+                    "item": {
+                      "Name": "knows"
+                    }
+                  }
+                ],
+                "columns": [],
+                "limit": null,
+                "predicate": null,
+                "requirements": []
+              }
+            },
+            "is_edge": true,
+            "alias": null
+          }
+        }
+      },
+      "children": []
+    }
+  ]
+}

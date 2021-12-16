@@ -30,7 +30,7 @@ public interface IrCoreLibrary extends Library {
 
     Pointer initLogicalPlan();
 
-    void debugPlan(Pointer plan);
+    void write_plan_to_json(Pointer plan, String jsonFile);
 
     void destroyLogicalPlan(Pointer plan);
 
