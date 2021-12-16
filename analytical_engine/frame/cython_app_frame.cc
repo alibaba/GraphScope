@@ -159,10 +159,10 @@ void Query(void* worker_handler, const gs::rpc::QueryArgs& query_args,
            const std::string& context_key,
            std::shared_ptr<gs::IFragmentWrapper> frag_wrapper,
            std::shared_ptr<gs::IContextWrapper>& ctx_wrapper,
-           bl::result<nullptr_t>& wrapper_error) {
+           gs::bl::result<nullptr_t>& wrapper_error) {
   auto worker = static_cast<worker_handler_t*>(worker_handler)->worker;
   auto result = gs::AppInvoker<_APP_TYPE>::Query(worker, query_args);
-  if (!wrapper_error) {
+  if (!result) {
     wrapper_error = std::move(result);
     return;
   }
