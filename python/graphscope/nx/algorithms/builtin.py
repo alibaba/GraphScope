@@ -26,7 +26,6 @@ from networkx.utils.decorators import not_implemented_for
 import graphscope
 from graphscope import nx
 from graphscope.framework.app import AppAssets
-from graphscope.framework.app import not_compatible_for
 from graphscope.framework.errors import InvalidArgumentError
 from graphscope.nx.utils.compat import patch_docstring
 from graphscope.proto import graph_def_pb2
@@ -194,103 +193,24 @@ def hits(G, max_iter=100, tol=1.0e-8, normalized=True):
 
 @context_to_dict
 @project_to_simple
+@patch_docstring(nxa.degree_centrality)
 def degree_centrality(G):
-    """Compute the degree centrality for nodes.
-
-    The degree centrality for a node v is the fraction of nodes it
-    is connected to.
-
-    Parameters
-    ----------
-    G : graph
-      A networkx graph
-
-    Returns
-    -------
-    nodes : dataframe
-       Dataframe of nodes with degree centrality as the value.
-
-    See Also
-    --------
-    eigenvector_centrality
-
-    Notes
-    -----
-    The degree centrality values are normalized by dividing by the maximum
-    possible degree in a simple graph n-1 where n is the number of nodes in G.
-    """
     return graphscope.degree_centrality(G, centrality_type="both")
 
 
 @not_implemented_for("undirected")
 @context_to_dict
 @project_to_simple
+@patch_docstring(nxa.in_degree_centrality)
 def in_degree_centrality(G):
-    """Compute the in-degree centrality for nodes.
-
-    The in-degree centrality for a node v is the fraction of nodes its
-    incoming edges are connected to.
-
-    Parameters
-    ----------
-    G : graph
-        A networkx graph
-
-    Returns
-    -------
-    nodes : dataframe
-        Dataframe of nodes with in-degree centrality as values.
-
-    Raises
-    ------
-    NetworkXNotImplemented
-        If G is undirected.
-
-    See Also
-    --------
-    degree_centrality, out_degree_centrality
-
-    Notes
-    -----
-    The degree centrality values are normalized by dividing by the maximum
-    possible degree in a simple graph n-1 where n is the number of nodes in G.
-    """
     return graphscope.degree_centrality(G, centrality_type="in")
 
 
 @not_implemented_for("undirected")
 @context_to_dict
 @project_to_simple
+@patch_docstring(nxa.out_degree_centrality)
 def out_degree_centrality(G):
-    """Compute the out-degree centrality for nodes.
-
-    The out-degree centrality for a node v is the fraction of nodes its
-    outgoing edges are connected to.
-
-    Parameters
-    ----------
-    G : graph
-        A networkx graph
-
-    Returns
-    -------
-    nodes : dataframe
-        Dataframe of nodes with out-degree centrality as values.
-
-    Raises
-    ------
-    NetworkXNotImplemented
-        If G is undirected.
-
-    See Also
-    --------
-    degree_centrality, in_degree_centrality
-
-    Notes
-    -----
-    The degree centrality values are normalized by dividing by the maximum
-    possible degree in a simple graph n-1 where n is the number of nodes in G.
-    """
     return graphscope.degree_centrality(G, centrality_type="out")
 
 
@@ -435,19 +355,8 @@ def katz_centrality(
 
 
 @project_to_simple
+@patch_docstring(nxa.has_path)
 def has_path(G, source, target):
-    """Returns *True* if *G* has a path from *source* to *target*.
-
-    Parameters
-    ----------
-    G : networkx graph
-
-    source : node
-       Starting node for path
-
-    target : node
-       Ending node for path
-    """
     ctx = AppAssets(algo="sssp_has_path", context="tensor")(G, source, target)
     return ctx.to_numpy("r", axis=0)[0]
 
@@ -1002,99 +911,40 @@ def degree_assortativity_coefficient(G, x="out", y="in", weight=None):
     return graphscope.degree_assortativity_coefficient(G, x, y, weight)
 
 
-@project_to_simple
+@patch_docstring(nxa.node_boundary)
 def node_boundary(G, nbunch1, nbunch2=None):
-    """Returns the node boundary of `nbunch1`.
+    @project_to_simple
+    def _node_boundary(G, nbunch1, nbunch2=None):
+        n1json = json.dumps(list(nbunch1))
+        if nbunch2:
+            n2json = json.dumps(list(nbunch2))
+        else:
+            n2json = ""
+        ctx = AppAssets(algo="node_boundary", context="tensor")(G, n1json, n2json)
+        return ctx.to_numpy("r", axis=0).tolist()
 
-    The *node boundary* of a set *S* with respect to a set *T* is the
-    set of nodes *v* in *T* such that for some *u* in *S*, there is an
-    edge joining *u* to *v*. If *T* is not specified, it is assumed to
-    be the set of all nodes not in *S*.
-
-    Parameters
-    ----------
-    G : networkx graph
-
-    nbunch1 : iterable
-        Iterable of nodes in the graph representing the set of nodes
-        whose node boundary will be returned. (This is the set *S* from
-        the definition above.)
-
-    nbunch2 : iterable
-        Iterable of nodes representing the target (or "exterior") set of
-        nodes. (This is the set *T* from the definition above.) If not
-        specified, this is assumed to be the set of all nodes in `G`
-        not in `nbunch1`.
-
-    Returns
-    -------
-    list
-        The node boundary of `nbunch1` with respect to `nbunch2`.
-
-    Notes
-    -----
-    Any element of `nbunch` that is not in the graph `G` will be
-    ignored.
-
-    `nbunch1` and `nbunch2` are usually meant to be disjoint, but in
-    the interest of speed and generality, that is not required here.
-
-    """
-    n1json = json.dumps(list(nbunch1))
-    if nbunch2:
-        n2json = json.dumps(list(nbunch2))
-    else:
-        n2json = ""
-    ctx = AppAssets(algo="node_boundary", context="tensor")(G, n1json, n2json)
-    return ctx.to_numpy("r", axis=0).tolist()
+    if G.is_multigraph():
+        # forward to the NetworkX node_boundary
+        return nxa.node_boundary(G, nbunch1, nbunch2)
+    return _node_boundary(G, nbunch1, nbunch2)
 
 
-@project_to_simple
-def edge_boundary(G, nbunch1, nbunch2=None):
-    """Returns the edge boundary of `nbunch1`.
+@patch_docstring(nxa.edge_boundary)
+def edge_boundary(G, nbunch1, nbunch2=None, data=False, keys=False, default=None):
+    @project_to_simple
+    def _boundary(G, nbunch1, nbunch2=None)
+        n1json = json.dumps(list(nbunch1))
+        if nbunch2:
+            n2json = json.dumps(list(nbunch2))
+        else:
+            n2json = ""
+        ctx = AppAssets(algo="edge_boundary", context="tensor")(G, n1json, n2json)
+        return ctx.to_numpy("r", axis=0).tolist()
 
-    The *edge boundary* of a set *S* with respect to a set *T* is the
-    set of edges (*u*, *v*) such that *u* is in *S* and *v* is in *T*.
-    If *T* is not specified, it is assumed to be the set of all nodes
-    not in *S*.
-
-    Parameters
-    ----------
-    G : networkx graph
-
-    nbunch1 : iterable
-        Iterable of nodes in the graph representing the set of nodes
-        whose edge boundary will be returned. (This is the set *S* from
-        the definition above.)
-
-    nbunch2 : iterable
-        Iterable of nodes representing the target (or "exterior") set of
-        nodes. (This is the set *T* from the definition above.) If not
-        specified, this is assumed to be the set of all nodes in `G`
-        not in `nbunch1`.
-
-    Returns
-    -------
-    list
-        An list of the edges in the boundary of `nbunch1` with
-        respect to `nbunch2`.
-
-    Notes
-    -----
-    Any element of `nbunch` that is not in the graph `G` will be
-    ignored.
-
-    `nbunch1` and `nbunch2` are usually meant to be disjoint, but in
-    the interest of speed and generality, that is not required here.
-
-    """
-    n1json = json.dumps(list(nbunch1))
-    if nbunch2:
-        n2json = json.dumps(list(nbunch2))
-    else:
-        n2json = ""
-    ctx = AppAssets(algo="edge_boundary", context="tensor")(G, n1json, n2json)
-    return ctx.to_numpy("r", axis=0).tolist()
+    if G.is_multigraph():
+        # forward the NetworkX edge boundary
+        return nxa.edge_boundary(G, nbunch1, nbunch2, data, keys, default)
+    return _boundary(G, nbunch1, nbunch2)
 
 
 @project_to_simple

@@ -7,18 +7,14 @@ from graphscope.nx.tests.utils import replace_with_inf
 
 @pytest.mark.usefixtures("graphscope_session")
 class TestRunGenericPath:
-    def setup_class(self):
-        self.edges = [(0, 1), (0, 2), (1, 2), (2, 3), (1, 4)]
+    def setup_class(cls):
+        cls.edges = [(0, 1), (0, 2), (1, 2), (2, 3), (1, 4)]
         G = nx.Graph()
-        G.add_edges_from(self.edges, weight=1)
+        G.add_edges_from(cls.edges, weight=1)
         DG = nx.DiGraph()
-        DG.add_edges_from(self.edges, weight=1)
-        self.G = G
-        self.DG = DG
-
-    def teardown_method(self):
-        del self.G
-        del self.edges
+        DG.add_edges_from(cls.edges, weight=1)
+        cls.G = G
+        cls.DG = DG
 
     def test_run_shortest_path(self):
         nx.builtin.shortest_path(self.G, source=0, weight="weight")
