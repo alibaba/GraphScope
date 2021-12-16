@@ -317,9 +317,9 @@ inline std::vector<std::map<int, rpc::AttrValue>> DistributeGraph(
     for (const auto& item : items) {
       std::vector<AttrMap> vec;
       if (item.name() == "vertex") {
-        vec = std::move(DistributeVertex(item.attr(), num));
+        vec = DistributeVertex(item.attr(), num);
       } else if (item.name() == "edge") {
-        vec = std::move(DistributeEdge(item.attr(), num));
+        vec = DistributeEdge(item.attr(), num);
       }
       named_items.emplace_back(item.name(), std::move(vec));
     }

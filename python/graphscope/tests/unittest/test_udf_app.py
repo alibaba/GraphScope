@@ -951,7 +951,11 @@ def test_load_app_from_gar(random_gar, not_exist_gar, non_zipfile_gar):
 
 
 def test_error_on_create_cython_app(
-    graphscope_session, dynamic_property_graph, random_gar, empty_gar
+    graphscope_session,
+    p2p_property_graph,
+    dynamic_property_graph,
+    random_gar,
+    empty_gar,
 ):
     SSSP_Pregel.to_gar(random_gar)
     with pytest.raises(InvalidArgumentError, match="App is uncompatible with graph"):
@@ -959,11 +963,11 @@ def test_error_on_create_cython_app(
         a1(dynamic_property_graph, src=4)
     # algo not found in gar resource
     with pytest.raises(InvalidArgumentError, match="App not found in gar: sssp"):
-        a2 = load_app(algo="sssp", gar=random_gar)
+        a2 = load_app(gar=random_gar, algo="sssp")
         a2(p2p_property_graph, src=6)
     # no `.gs_conf.yaml` in empty gar, raise KeyError exception
     with pytest.raises(KeyError):
-        a3 = load_app(algo="SSSP_Pregel", gar=empty_gar)
+        a3 = load_app(gar=empty_gar, algo="SSSP_Pregel")
         a3(p2p_property_graph, src=6)
 
 

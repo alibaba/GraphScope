@@ -16,7 +16,6 @@
 # limitations under the License.
 #
 
-import sys
 from queue import Queue
 
 from tqdm import tqdm
@@ -65,7 +64,7 @@ class StdStreamWrapper(object):
         line = self._filter_progress(line)
         if line is None:
             return
-        line = line.encode("ascii", "ignore").decode("ascii").strip()
+        line = line.encode("ascii", "ignore").decode("ascii")
         self._stream_backup.write(line)
         if not self._drop:
             self._lines.put(line)
