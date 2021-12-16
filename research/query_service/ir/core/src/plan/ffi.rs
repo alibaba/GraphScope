@@ -388,13 +388,13 @@ fn append_operator(
 
 #[no_mangle]
 pub extern "C" fn write_plan_to_json(ptr_plan: *const c_void, cstr_file: *const c_char) {
-    let plan = unsafe { Box::from_raw(ptr_plan as *mut LogicalPlan) };
-    let plan_pb = pb::LogicalPlan::from(plan.as_ref().clone());
-    let file_str = cstr_to_string(cstr_file).unwrap();
-    let writer = File::create(&file_str).expect(&format!("Create json file: {:?} error", file_str));
-    serde_json::to_writer_pretty(writer, &plan_pb)
-        .expect(&format!("Write json file: {:?} error", file_str));
-    std::mem::forget(plan);
+    let box_plan = unsafe { Box::from_raw(ptr_plan as *mut LogicalPlan) };
+    let plan = box_plan.as_ref().clone();
+    let file = cstr_to_string(cstr_file).expect("C String to Rust String error!");
+    plan.into_json(File::create(&file).expect(&format!("Create json file: {:?} error", file)))
+        .expect("Write to json error");
+
+    std::mem::forget(box_plan);
 }
 
 #[allow(dead_code)]

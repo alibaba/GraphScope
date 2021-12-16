@@ -20,6 +20,8 @@ pub type ParsePbResult<T> = Result<T, ParsePbError>;
 pub enum ParsePbError {
     /// Parse pb structure error
     ParseError(String),
+    /// Caused by any transformation for the pb from `serde_json`
+    SerdeError(String),
     /// Empty pb fields error
     EmptyFieldError(String),
     /// Not supported
@@ -31,6 +33,9 @@ impl std::fmt::Display for ParsePbError {
         match self {
             ParsePbError::ParseError(e) => {
                 write!(f, "invalid protobuf: {}", e)
+            }
+            ParsePbError::SerdeError(e) => {
+                write!(f, "serde error: {}", e)
             }
             ParsePbError::EmptyFieldError(e) => {
                 write!(f, "empty protobuf field: {}", e)
