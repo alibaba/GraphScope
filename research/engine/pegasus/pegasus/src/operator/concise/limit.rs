@@ -13,14 +13,15 @@
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 
+use std::cmp::Ordering;
+use std::collections::BinaryHeap;
+use std::sync::Arc;
+
 use crate::api::{Limit, SortLimit, SortLimitBy, Unary};
 use crate::communication::output::OutputProxy;
 use crate::stream::Stream;
 use crate::tag::tools::map::TidyTagMap;
 use crate::{BuildJobError, Data};
-use std::cmp::Ordering;
-use std::collections::BinaryHeap;
-use std::sync::Arc;
 
 // TODO : optimize limit into channel;
 impl<D: Data> Limit<D> for Stream<D> {

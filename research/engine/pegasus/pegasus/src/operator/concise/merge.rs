@@ -8,11 +8,7 @@ impl<D: Data> Merge<D> for Stream<D> {
             |left, right, output| {
                 left.for_each_batch(|batch| {
                     let end = batch.take_end();
-                    let res = if !batch.is_empty() {
-                        output.push_batch_mut(batch)
-                    } else {
-                        Ok(())
-                    };
+                    let res = if !batch.is_empty() { output.push_batch_mut(batch) } else { Ok(()) };
 
                     if let Some(end) = end {
                         batch.set_end(end);
@@ -21,11 +17,7 @@ impl<D: Data> Merge<D> for Stream<D> {
                 })?;
                 right.for_each_batch(|batch| {
                     let end = batch.take_end();
-                    let res = if !batch.is_empty() {
-                        output.push_batch_mut(batch)
-                    } else {
-                        Ok(())
-                    };
+                    let res = if !batch.is_empty() { output.push_batch_mut(batch) } else { Ok(()) };
 
                     if let Some(end) = end {
                         batch.set_end(end);
