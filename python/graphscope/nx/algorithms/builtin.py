@@ -29,7 +29,6 @@ from graphscope.framework.app import AppAssets
 from graphscope.framework.errors import InvalidArgumentError
 from graphscope.nx.utils.compat import patch_docstring
 from graphscope.proto import graph_def_pb2
-from graphscope.proto import types_pb2
 
 
 # decorator function
@@ -198,17 +197,17 @@ def degree_centrality(G):
     return graphscope.degree_centrality(G, centrality_type="both")
 
 
-@not_implemented_for("undirected")
 @context_to_dict
 @project_to_simple
+@not_implemented_for("undirected")
 @patch_docstring(nxa.in_degree_centrality)
 def in_degree_centrality(G):
     return graphscope.degree_centrality(G, centrality_type="in")
 
 
-@not_implemented_for("undirected")
 @context_to_dict
 @project_to_simple
+@not_implemented_for("undirected")
 @patch_docstring(nxa.out_degree_centrality)
 def out_degree_centrality(G):
     return graphscope.degree_centrality(G, centrality_type="out")
@@ -932,7 +931,7 @@ def node_boundary(G, nbunch1, nbunch2=None):
 @patch_docstring(nxa.edge_boundary)
 def edge_boundary(G, nbunch1, nbunch2=None, data=False, keys=False, default=None):
     @project_to_simple
-    def _boundary(G, nbunch1, nbunch2=None)
+    def _boundary(G, nbunch1, nbunch2=None):
         n1json = json.dumps(list(nbunch1))
         if nbunch2:
             n2json = json.dumps(list(nbunch2))
@@ -1282,11 +1281,6 @@ def betweenness_centrality(
     G : graph
       A NetworkX graph.
 
-    k : int, optional (default=None)
-      If k is not None use k node samples to estimate betweenness.
-      The value of k <= n where n is the number of nodes in the graph.
-      Higher values give better approximation.
-
     normalized : bool, optional
       If True the betweenness values are normalized by `2/((n-1)(n-2))`
       for graphs, and `1/((n-1)(n-2))` for directed graphs where `n`
@@ -1300,11 +1294,6 @@ def betweenness_centrality(
 
     endpoints : bool, optional
       If True include the endpoints in the shortest path counts.
-
-    seed : integer, random_state, or None (default)
-        Indicator of random number generation state.
-        See :ref:`Randomness<randomness>`.
-        Note that this is only used if k is not None.
 
     Returns
     -------

@@ -57,3 +57,4 @@ from graphscope.nx.algorithms.builtin import has_path
 from graphscope.nx.algorithms.builtin import in_degree_centrality
 from graphscope.nx.algorithms.builtin import node_boundary
 from graphscope.nx.algorithms.builtin import out_degree_centrality
+from graphscope.nx.algorithms.builtin import betweenness_centrality
