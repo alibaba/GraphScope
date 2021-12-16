@@ -1,0 +1,44 @@
+{
+  "nodes": [
+    {
+      "opr": {
+        "opr": {
+          "IndexedScan": {
+            "scan": {
+              "scan_opt": 0,
+              "alias": null,
+              "params": {
+                "table_names": [],
+                "columns": [],
+                "limit": null,
+                "predicate": null,
+                "requirements": []
+              }
+            },
+            "or_kv_equiv_pairs": [
+              {
+                "pairs": [
+                  {
+                    "key": {
+                      "item": {
+                        "Id": {}
+                      }
+                    },
+                    "value": {
+                      "value": {
+                        "item": {
+                          "I64": 1
+                        }
+                      }
+                    }
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      },
+      "children": []
+    }
+  ]
+}

@@ -26,6 +26,7 @@ import org.junit.After;
 import org.junit.Assert;
 import org.junit.Test;
 
+import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
 import java.util.function.Function;
@@ -35,44 +36,44 @@ public class ScanFusionOpTest {
     private IrPlan irPlan = new IrPlan();
 
     @Test
-    public void scanOptTest() {
+    public void scanOptTest() throws IOException {
         ScanFusionOp op = new ScanFusionOp();
         op.setScanOpt(new OpArg<>(FfiScanOpt.Vertex, Function.identity()));
         irPlan.appendInterOp(op);
-        byte[] bytes = irPlan.toPhysicalBytes();
-        Assert.assertArrayEquals(TestUtils.readBytesFromFile("scan_opt.bytes"), bytes);
+        String actual = irPlan.getPlanAsJson();
+        Assert.assertEquals(TestUtils.readJsonFromResource("scan_opt.json"), actual);
     }
 
     @Test
-    public void predicateTest() {
+    public void predicateTest() throws IOException {
         ScanFusionOp op = new ScanFusionOp();
         op.setScanOpt(new OpArg<>(FfiScanOpt.Vertex, Function.identity()));
         op.setPredicate(new OpArg("@.id == 1", Function.identity()));
         irPlan.appendInterOp(op);
-        byte[] bytes = irPlan.toPhysicalBytes();
-        Assert.assertArrayEquals(TestUtils.readBytesFromFile("scan_expr.bytes"), bytes);
+        String actual = irPlan.getPlanAsJson();
+        Assert.assertEquals(TestUtils.readJsonFromResource("scan_expr.json"), actual);
     }
 
     @Test
-    public void labelsTest() {
+    public void labelsTest() throws IOException {
         ScanFusionOp op = new ScanFusionOp();
         op.setScanOpt(new OpArg<>(FfiScanOpt.Vertex, Function.identity()));
         List<FfiNameOrId.ByValue> values = Arrays.asList(irCoreLib.cstrAsNameOrId("person"));
         op.setLabels(new OpArg<List, List>(values, Function.identity()));
         irPlan.appendInterOp(op);
-        byte[] bytes = irPlan.toPhysicalBytes();
-        Assert.assertArrayEquals(TestUtils.readBytesFromFile("scan_labels.bytes"), bytes);
+        String actual = irPlan.getPlanAsJson();
+        Assert.assertEquals(TestUtils.readJsonFromResource("scan_labels.json"), actual);
     }
 
     @Test
-    public void idsTest() {
+    public void idsTest() throws IOException {
         ScanFusionOp op = new ScanFusionOp();
         op.setScanOpt(new OpArg<>(FfiScanOpt.Vertex, Function.identity()));
         List<FfiConst.ByValue> values = Arrays.asList(irCoreLib.int64AsConst(1L));
         op.setIds(new OpArg<List, List>(values, Function.identity()));
         irPlan.appendInterOp(op);
-        byte[] bytes = irPlan.toPhysicalBytes();
-        Assert.assertArrayEquals(TestUtils.readBytesFromFile("scan_ids.bytes"), bytes);
+        String actual = irPlan.getPlanAsJson();
+        Assert.assertEquals(TestUtils.readJsonFromResource("scan_ids.json"), actual);
     }
 
     @After

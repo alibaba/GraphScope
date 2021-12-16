@@ -22,18 +22,19 @@ import org.junit.After;
 import org.junit.Assert;
 import org.junit.Test;
 
+import java.io.IOException;
 import java.util.function.Function;
 
 public class SelectOpTest {
     private IrPlan irPlan = new IrPlan();
 
     @Test
-    public void selectOpTest() {
+    public void selectOpTest() throws IOException {
         SelectOp op = new SelectOp();
         op.setPredicate(new OpArg("@.id == 1 && @.name == \"marko\"", Function.identity()));
         irPlan.appendInterOp(op);
-        byte[] bytes = irPlan.toPhysicalBytes();
-        Assert.assertArrayEquals(TestUtils.readBytesFromFile("select_expr.bytes"), bytes);
+        String actual = irPlan.getPlanAsJson();
+        Assert.assertEquals(TestUtils.readJsonFromResource("select_expr.json"), actual);
     }
 
     @After

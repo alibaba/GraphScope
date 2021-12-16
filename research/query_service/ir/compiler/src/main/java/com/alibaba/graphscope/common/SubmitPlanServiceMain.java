@@ -44,8 +44,6 @@ public class SubmitPlanServiceMain {
             throw new NotImplementedException("unimplemented opt type " + opt);
         }
 
-        irPlan.debug();
-
         byte[] physicalPlanBytes = irPlan.toPhysicalBytes();
         irPlan.close();
 
