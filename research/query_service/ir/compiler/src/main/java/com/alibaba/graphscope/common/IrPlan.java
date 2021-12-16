@@ -44,7 +44,6 @@ public class IrPlan implements Closeable {
     private static IrCoreLibrary irCoreLib = IrCoreLibrary.INSTANCE;
     private static Logger logger = LoggerFactory.getLogger(IrPlan.class);
     private static String PLAN_JSON_FILE = "plan.json";
-    private static final String HIDDEN_PREFIX = "~";
     private Pointer ptrPlan;
     private IntByReference oprIdx;
 
