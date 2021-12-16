@@ -16,6 +16,7 @@
 
 package com.alibaba.graphscope.common.jna.type;
 
+import com.google.common.base.Objects;
 import com.sun.jna.Structure;
 
 @Structure.FieldOrder({"tag", "property"})
@@ -25,4 +26,18 @@ public class FfiVariable extends Structure {
 
     public FfiNameOrId.ByValue tag;
     public FfiProperty.ByValue property;
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        FfiVariable that = (FfiVariable) o;
+        return Objects.equal(tag, that.tag) &&
+                Objects.equal(property, that.property);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hashCode(tag, property);
+    }
 }

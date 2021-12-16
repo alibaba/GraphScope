@@ -83,6 +83,17 @@ public class GenericLiteralVisitor extends GremlinGSBaseVisitor<Object> {
     }
 
     /**
+     * Parse a String literal expr context and return a string array
+     */
+    public static String[] getstringLiteralExpr(final GremlinGSParser.StringLiteralExprContext stringLiteralExpr) {
+        return stringLiteralExpr.stringLiteral()
+                .stream()
+                .filter(Objects::nonNull)
+                .map(stringLiteral -> getInstance().visitStringLiteral(stringLiteral))
+                .toArray(String[]::new);
+    }
+
+    /**
      * Parse a generic literal list, and return an object array
      */
     public static Object[] getGenericLiteralList(final GremlinGSParser.GenericLiteralListContext objectLiteralList) {
@@ -241,9 +252,7 @@ public class GenericLiteralVisitor extends GremlinGSBaseVisitor<Object> {
         // Using Java string unescaping because it coincides with the Groovy rules:
         // https://docs.oracle.com/javase/tutorial/java/data/characters.html
         // http://groovy-lang.org/syntax.html#_escaping_special_characters
-        if (ctx.NullLiteral() != null) {
-            return null;
-        }
+
         return StringEscapeUtils.unescapeJava(stripQuotes(ctx.getText()));
     }
 

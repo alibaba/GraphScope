@@ -42,4 +42,17 @@ public class Utils {
             throw new RuntimeException(e);
         }
     }
+
+    public static String[] removeStringEle(int i, String[] data) {
+        if (data.length == 0 || i < 0 || i >= data.length) return data;
+        String[] copy = new String[data.length - 1];
+        for (int j = 0; j < data.length - 1; ++j) {
+            if (j < i) {
+                copy[j] = data[j];
+            } else {
+                copy[j] = data[j + 1];
+            }
+        }
+        return copy;
+    }
 }
