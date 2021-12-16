@@ -31,6 +31,8 @@ import org.apache.tinkerpop.gremlin.language.grammar.GremlinGSBaseVisitor;
 import org.apache.tinkerpop.gremlin.language.grammar.GremlinGSParser;
 import org.apache.tinkerpop.gremlin.process.traversal.P;
 
+import java.util.Collection;
+
 public class TraversalPredicateVisitor extends GremlinGSBaseVisitor<P> {
     private static TraversalPredicateVisitor instance;
 
@@ -61,7 +63,6 @@ public class TraversalPredicateVisitor extends GremlinGSBaseVisitor<P> {
      */
     private Object getSingleGenericLiteralArgument(final ParseTree ctx) {
         final int childIndexOfParameterValue = 2;
-
         return GenericLiteralVisitor.getInstance().visitGenericLiteral(
                 (GremlinGSParser.GenericLiteralContext) ctx.getChild(childIndexOfParameterValue));
     }
@@ -112,5 +113,47 @@ public class TraversalPredicateVisitor extends GremlinGSBaseVisitor<P> {
     @Override
     public P visitTraversalPredicate_gte(final GremlinGSParser.TraversalPredicate_gteContext ctx) {
         return P.gte(getSingleGenericLiteralArgument(ctx));
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public P visitTraversalPredicate_within(GremlinGSParser.TraversalPredicate_withinContext ctx) {
+        if (ctx.genericLiteralExpr() != null) {
+            Object args = GenericLiteralVisitor.getInstance().visitGenericLiteralExpr(ctx.genericLiteralExpr());
+            P within;
+            if (args instanceof Object[]) {
+                within = P.within((Object[]) args);
+            } else if (args instanceof Collection) {
+                within = P.within((Collection) args);
+            } else {
+                within = P.within(args);
+            }
+            return within;
+        } else {
+            throw new UnsupportedEvalException(ctx.getClass(), "supported pattern is [within('a')] or [within('a', 'b')]");
+        }
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public P visitTraversalPredicate_without(GremlinGSParser.TraversalPredicate_withoutContext ctx) {
+        if (ctx.genericLiteralExpr() != null) {
+            Object args = GenericLiteralVisitor.getInstance().visitGenericLiteralExpr(ctx.genericLiteralExpr());
+            P without;
+            if (args instanceof Object[]) {
+                without = P.without((Object[]) args);
+            } else if (args instanceof Collection) {
+                without = P.without((Collection) args);
+            } else {
+                without = P.without(args);
+            }
+            return without;
+        } else {
+            throw new UnsupportedEvalException(ctx.getClass(), "supported pattern is [without('a')] or [without('a', 'b')]");
+        }
     }
 }

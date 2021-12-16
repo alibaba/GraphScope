@@ -21,6 +21,7 @@ import com.alibaba.graphscope.common.jna.IrCoreLibrary;
 import com.alibaba.graphscope.common.jna.type.FfiDirection;
 import com.alibaba.graphscope.common.jna.type.FfiScanOpt;
 import org.apache.tinkerpop.gremlin.process.traversal.Compare;
+import org.apache.tinkerpop.gremlin.process.traversal.Contains;
 import org.apache.tinkerpop.gremlin.process.traversal.step.map.GraphStep;
 import org.apache.tinkerpop.gremlin.process.traversal.step.map.VertexStep;
 import org.apache.tinkerpop.gremlin.process.traversal.step.util.HasContainer;
@@ -31,6 +32,7 @@ import org.apache.tinkerpop.gremlin.structure.T;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.function.BiPredicate;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -54,21 +56,33 @@ public class OpArgTransformFactory {
     public static Function<List<HasContainer>, String> EXPR_FROM_CONTAINERS = (List<HasContainer> containers) -> {
         String expr = "";
         for (int i = 0; i < containers.size(); ++i) {
+            if (i > 0) {
+                expr += "&&";
+            }
             HasContainer container = containers.get(i);
             if (container.getPredicate() instanceof ConnectiveP) {
                 throw new OpArgIllegalException(OpArgIllegalException.Cause.UNSUPPORTED_TYPE, "nested predicate");
             }
-            if (container.getPredicate().getBiPredicate() != Compare.eq) {
-                throw new OpArgIllegalException(OpArgIllegalException.Cause.UNSUPPORTED_TYPE, "not eq");
-            }
-            if (i > 0) {
-                expr += "&&";
-            }
-            Object value = container.getValue();
-            if (value instanceof String) {
-                expr += String.format("@.%s == \"%s\"", container.getKey(), value);
+            String valueExpr = getValueExpr(container.getValue());
+            BiPredicate predicate = container.getPredicate().getBiPredicate();
+            if (predicate == Compare.eq) {
+                expr += String.format("@.%s == %s", container.getKey(), valueExpr);
+            } else if (predicate == Compare.neq) {
+                expr += String.format("@.%s != %s", container.getKey(), valueExpr);
+            } else if (predicate == Compare.lt) {
+                expr += String.format("@.%s < %s", container.getKey(), valueExpr);
+            } else if (predicate == Compare.lte) {
+                expr += String.format("@.%s <= %s", container.getKey(), valueExpr);
+            } else if (predicate == Compare.gt) {
+                expr += String.format("@.%s > %s", container.getKey(), valueExpr);
+            } else if (predicate == Compare.gte) {
+                expr += String.format("@.%s >= %s", container.getKey(), valueExpr);
+            } else if (predicate == Contains.within) {
+                expr += String.format("@.%s within %s", container.getKey(), valueExpr);
+            } else if (predicate == Contains.without) {
+                expr += String.format("@.%s without %s", container.getKey(), valueExpr);
             } else {
-                expr += String.format("@.%s == %s", container.getKey(), value);
+                throw new OpArgIllegalException(OpArgIllegalException.Cause.UNSUPPORTED_TYPE, "predicate type is unsupported");
             }
         }
         return expr;
@@ -117,4 +131,29 @@ public class OpArgTransformFactory {
 
     public static Function<VertexStep, List> EDGE_LABELS_FROM_STEP = (VertexStep s1) ->
             Arrays.stream(s1.getEdgeLabels()).map(k -> irCoreLib.cstrAsNameOrId(k)).collect(Collectors.toList());
+
+    public static String getValueExpr(Object value) {
+        String valueExpr;
+        if (value instanceof String) {
+            valueExpr = String.format("\"%s\"", value);
+        } else if (value instanceof List) {
+            String content = "";
+            List values = (List) value;
+            for (int i = 0; i < values.size(); ++i) {
+                if (i != 0) {
+                    content += ", ";
+                }
+                Object v = values.get(i);
+                if (v instanceof List) {
+                    throw new OpArgIllegalException(OpArgIllegalException.Cause.UNSUPPORTED_TYPE,
+                            "nested list of predicate value is unsupported");
+                }
+                content += getValueExpr(v);
+            }
+            valueExpr = String.format("[%s]", content);
+        } else {
+            valueExpr = value.toString();
+        }
+        return valueExpr;
+    }
 }
