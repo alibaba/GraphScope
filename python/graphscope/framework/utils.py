@@ -25,7 +25,6 @@ import shutil
 import socket
 import string
 import subprocess
-import sys
 import tempfile
 import threading
 import time
@@ -77,18 +76,15 @@ class PipeWatcher(object):
     def drop(self, drop=True):
         self._drop = drop
 
-    def addFilter(self, func):
+    def add_filter(self, func):
         if not (func in self._filters):
             self._filters.append(func)
 
     def _filter(self, line):
-        rv = True
         for func in self._filters:
-            result = func(line)  # assume callable - will raise if not
-            if not result:
-                rv = False
-                break
-        return rv
+            if not func(line):  # assume callable - will raise if not
+                return False
+        return True
 
 
 class PipeMerger(object):

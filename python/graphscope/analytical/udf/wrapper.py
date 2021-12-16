@@ -59,7 +59,7 @@ def wrap_init(
         pass
 
     def call(self, graph, **kwargs):
-        app_assets = load_app(algo=module_name, gar=garfile.read_bytes())
+        app_assets = load_app(gar=garfile.read_bytes(), algo=module_name)
         return app_assets(graph, **kwargs)
 
     setattr(algo, "__decorated__", True)  # can't decorate on a decorated class

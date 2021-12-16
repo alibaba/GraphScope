@@ -141,7 +141,9 @@ class HostsClusterLauncher(Launcher):
         )
         stdout_watcher = PipeWatcher(process.stdout, sys.stdout)
         if not gs_config.show_log:
-            stdout_watcher.addFilter(lambda line: "Loading" in line and "it/s]" in line)
+            stdout_watcher.add_filter(
+                lambda line: "Loading" in line and "it/s]" in line
+            )
         setattr(process, "stdout_watcher", stdout_watcher)
         stderr_watcher = PipeWatcher(process.stderr, sys.stderr)
         setattr(process, "stderr_watcher", stderr_watcher)

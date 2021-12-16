@@ -450,7 +450,7 @@ def load_app(gar=None, algo=None, context=None, **kwargs):
         TypeError: File is not a zip file.
 
     Examples:
-        >>> sssp = load_app(algo='sssp', gar='./resource.gar')
+        >>> sssp = load_app(gar='./resource.gar', algo='sssp')
         >>> sssp(src=4)
 
         which will have following `.gs_conf.yaml` in resource.gar:
@@ -458,6 +458,7 @@ def load_app(gar=None, algo=None, context=None, **kwargs):
             - algo: sssp
               type: cpp_pie
               class_name: grape:SSSP
+              context_type: vertex_data
               src: sssp/sssp.h
               compatible_graph:
                 - gs::ArrowProjectedFragment
