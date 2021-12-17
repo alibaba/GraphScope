@@ -69,7 +69,7 @@ public class ScanFusionOpTest {
     public void idsTest() throws IOException {
         ScanFusionOp op = new ScanFusionOp();
         op.setScanOpt(new OpArg<>(FfiScanOpt.Vertex, Function.identity()));
-        List<FfiConst.ByValue> values = Arrays.asList(irCoreLib.int64AsConst(1L));
+        List<FfiConst.ByValue> values = Arrays.asList(irCoreLib.int64AsConst(1L), irCoreLib.int64AsConst(2L));
         op.setIds(new OpArg<List, List>(values, Function.identity()));
         irPlan.appendInterOp(op);
         String actual = irPlan.getPlanAsJson();

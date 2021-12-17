@@ -21,8 +21,6 @@ use crate::graph::ID;
 use crate::process::record::Record;
 use ir_common::error::{ParsePbError, ParsePbResult};
 use ir_common::generated::algebra as algebra_pb;
-use ir_common::generated::common::property;
-use ir_common::generated::common::value;
 use ir_common::NameOrId;
 use std::collections::HashMap;
 use std::convert::TryFrom;
@@ -52,20 +50,24 @@ impl SourceOperator {
         if let Some(opr) = source_pb.opr.take() {
             match opr {
                 algebra_pb::logical_plan::operator::Opr::Scan(scan) => {
-                    let mut source_op = SourceOperator::try_from(scan)?;
-                    source_op.set_partitions(job_workers, worker_index, partitioner);
-                    debug!("Runtime source op of scan {:?}", source_op);
-                    Ok(source_op)
-                }
-                algebra_pb::logical_plan::operator::Opr::IndexedScan(indexed_scan) => {
-                    let scan = indexed_scan
-                        .scan
-                        .ok_or("scan is missing in indexed_scan")?;
-                    let mut source_op = SourceOperator::try_from(scan)?;
-                    let global_ids = parse_indexed_kv_pairs(indexed_scan.or_kv_equiv_pairs)?;
-                    source_op.set_src(global_ids, job_workers, partitioner);
-                    debug!("Runtime source op of indexed_scan {:?}", source_op);
-                    Ok(source_op)
+                    if let Some(index_predicate) = &scan.idx_predicate {
+                        let ip = index_predicate.clone();
+                        let mut source_op = SourceOperator::try_from(scan)?;
+                        let global_ids: Vec<ID> = <Vec<i64>>::try_from(ip)?
+                            .into_iter()
+                            .map(|i| i as ID)
+                            .collect();
+                        if !global_ids.is_empty() {
+                            source_op.set_src(global_ids, job_workers, partitioner);
+                            debug!("Runtime source op of indexed scan {:?}", source_op);
+                        }
+                        Ok(source_op)
+                    } else {
+                        let mut source_op = SourceOperator::try_from(scan)?;
+                        source_op.set_partitions(job_workers, worker_index, partitioner);
+                        debug!("Runtime source op of scan {:?}", source_op);
+                        Ok(source_op)
+                    }
                 }
                 _ => Err(ParsePbError::NotSupported("Unsupported source op in pb_request".to_string()))?,
             }
@@ -160,37 +162,4 @@ impl TryFrom<algebra_pb::Scan> for SourceOperator {
 
         Ok(SourceOperator { query_params, src: None, alias, source_type })
     }
-}
-
-// TODO: we only support global-ids as index for now;
-fn parse_indexed_kv_pairs(
-    or_kv_equiv_pairs: Vec<algebra_pb::indexed_scan::KvEquivPairs>,
-) -> ParsePbResult<Vec<ID>> {
-    let mut global_ids = vec![];
-    for or_kv_pair in or_kv_equiv_pairs {
-        let kv_pair = or_kv_pair
-            .pairs
-            .get(0)
-            .ok_or("kv_equiv_pair is empty in indexed_scan")?;
-        let (key, value) = (kv_pair.key.as_ref(), kv_pair.value.as_ref());
-        let key = key.ok_or("key is empty in kv_pair in indexed_scan")?;
-        if let Some(property::Item::Id(_id_key)) = key.item.as_ref() {
-            let value = value
-                .ok_or("value is empty in kv_pair in indexed_scan")?
-                .value
-                .as_ref()
-                .ok_or("value is empty in kv_pair in indexed_scan")?;
-            // TODO(bingqing): confirm global id of i64?
-            if let Some(value::Item::I64(v)) = value.item {
-                global_ids.push(v as ID);
-            } else {
-                Err("Parse source_id from indexed_scan failed")?
-            }
-        } else {
-            Err(ParsePbError::NotSupported(
-                "Indexed field other than IdKey is not supported yet".to_string(),
-            ))?
-        }
-    }
-    Ok(global_ids)
 }

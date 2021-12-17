@@ -40,6 +40,7 @@ mod test {
                 predicate: None,
                 requirements: vec![],
             }),
+            idx_predicate: None,
         };
         let select_opr = pb::Select { predicate: Some(str_to_expr_pb("@.id == 1".to_string()).unwrap()) };
         let expand_opr = pb::EdgeExpand {

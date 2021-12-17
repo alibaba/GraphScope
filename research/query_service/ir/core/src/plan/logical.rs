@@ -314,7 +314,7 @@ impl LogicalPlan {
             let root_ref = root.borrow();
             if let Some(root_opr) = &root_ref.opr.opr {
                 match root_opr {
-                    Opr::Scan(_) | Opr::IndexedScan(_) => true,
+                    Opr::Scan(_) => true,
                     _ => false,
                 }
             } else {

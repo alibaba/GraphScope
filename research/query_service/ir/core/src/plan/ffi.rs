@@ -1146,66 +1146,9 @@ mod scan {
                 predicate: None,
                 requirements: vec![],
             }),
+            idx_predicate: None,
         });
         Box::into_raw(scan) as *const c_void
-    }
-
-    #[no_mangle]
-    pub extern "C" fn set_scan_limit(ptr_scan: *const c_void, lower: i32, upper: i32) -> ResultCode {
-        set_range(ptr_scan, lower, upper, Opr::Scan)
-    }
-
-    #[no_mangle]
-    pub extern "C" fn set_scan_predicate(
-        ptr_scan: *const c_void, cstr_predicate: *const c_char,
-    ) -> ResultCode {
-        set_predicate(ptr_scan, cstr_predicate, Opr::Scan)
-    }
-
-    #[no_mangle]
-    pub extern "C" fn add_scan_table_name(ptr_scan: *const c_void, table_name: FfiNameOrId) -> ResultCode {
-        process_params(ptr_scan, ParamsKey::Table, table_name, Opr::Scan)
-    }
-
-    /// Add a data field to be scanned from the data source (vertex, edge, or a relational table)
-    #[no_mangle]
-    pub extern "C" fn add_scan_column(ptr_scan: *const c_void, column: FfiNameOrId) -> ResultCode {
-        process_params(ptr_scan, ParamsKey::Column, column, Opr::Scan)
-    }
-
-    /// Set an alias for the data if it is a vertex/edge
-    #[no_mangle]
-    pub extern "C" fn set_scan_alias(ptr_scan: *const c_void, alias: FfiNameOrId) -> ResultCode {
-        set_alias(ptr_scan, alias, true, Opr::Scan)
-    }
-
-    /// Append a scan operator to the logical plan
-    #[no_mangle]
-    pub extern "C" fn append_scan_operator(
-        ptr_plan: *const c_void, ptr_scan: *const c_void, parent: i32, id: *mut i32,
-    ) -> ResultCode {
-        let scan = unsafe { Box::from_raw(ptr_scan as *mut pb::Scan) };
-        append_operator(ptr_plan, scan.as_ref().clone().into(), vec![parent], id)
-    }
-
-    #[no_mangle]
-    pub extern "C" fn destroy_scan_operator(ptr: *const c_void) {
-        destroy_ptr::<pb::Scan>(ptr)
-    }
-}
-
-mod idxscan {
-    use ir_common::generated::algebra::indexed_scan::{KvEquivPair, KvEquivPairs};
-
-    use super::*;
-
-    /// To initialize an indexed-scan operator from a scan operator
-    #[no_mangle]
-    pub extern "C" fn init_idxscan_operator(ptr_scan: *const c_void) -> *const c_void {
-        let scan = unsafe { Box::from_raw(ptr_scan as *mut pb::Scan) };
-        let indexed_scan =
-            Box::new(pb::IndexedScan { scan: Some(scan.as_ref().clone()), or_kv_equiv_pairs: vec![] });
-        Box::into_raw(indexed_scan) as *const c_void
     }
 
     #[derive(Clone, Copy)]
@@ -1313,57 +1256,113 @@ mod idxscan {
     }
 
     #[no_mangle]
-    pub extern "C" fn init_kv_equiv_pairs() -> *const c_void {
-        let pairs: Box<Vec<KvEquivPair>> = Box::new(vec![]);
-        Box::into_raw(pairs) as *const c_void
+    pub extern "C" fn init_index_predicate() -> *const c_void {
+        let predicate: Box<pb::IndexPredicate> = Box::new(pb::IndexPredicate { or_predicates: vec![] });
+        Box::into_raw(predicate) as *const c_void
+    }
+
+    fn parse_equiv_predicate(key: FfiProperty, value: FfiConst) -> FfiResult<pb::index_predicate::Triplet> {
+        Ok(pb::index_predicate::Triplet { key: key.try_into()?, value: Some(value.try_into()?), cmp: None })
     }
 
     #[no_mangle]
-    pub extern "C" fn and_kv_equiv_pair(
-        ptr_pairs: *const c_void, key: FfiProperty, value: FfiConst,
+    pub extern "C" fn and_equiv_predicate(
+        ptr_predicate: *const c_void, key: FfiProperty, value: FfiConst,
     ) -> ResultCode {
-        let mut return_code = ResultCode::Success;
-        let key_pb: FfiResult<Option<common_pb::Property>> = key.try_into();
-        let value_pb: FfiResult<common_pb::Const> = value.try_into();
-        if key_pb.is_err() {
-            return_code = key_pb.err().unwrap();
-        } else if value_pb.is_err() {
-            return_code = value_pb.err().unwrap();
+        let equiv_pred_result = parse_equiv_predicate(key, value);
+        if let Ok(equiv_pred) = equiv_pred_result {
+            let mut predicate = unsafe { Box::from_raw(ptr_predicate as *mut pb::IndexPredicate) };
+            if predicate.or_predicates.is_empty() {
+                predicate
+                    .or_predicates
+                    .push(pb::index_predicate::AndPredicate { predicates: vec![equiv_pred] });
+            } else {
+                predicate
+                    .or_predicates
+                    .last_mut()
+                    .unwrap()
+                    .predicates
+                    .push(equiv_pred)
+            }
+            std::mem::forget(predicate);
+
+            ResultCode::Success
         } else {
-            let mut kv_equiv_pairs = unsafe { Box::from_raw(ptr_pairs as *mut Vec<KvEquivPair>) };
-            kv_equiv_pairs.push(KvEquivPair { key: key_pb.unwrap(), value: value_pb.ok() });
-            std::mem::forget(kv_equiv_pairs)
+            equiv_pred_result.err().unwrap()
         }
-
-        return_code
     }
 
     #[no_mangle]
-    pub extern "C" fn add_idxscan_kv_equiv_pairs(
-        ptr_idxscan: *const c_void, ptr_pairs: *const c_void,
+    pub extern "C" fn or_equiv_predicate(
+        ptr_predicate: *const c_void, key: FfiProperty, value: FfiConst,
     ) -> ResultCode {
-        let mut idxscan = unsafe { Box::from_raw(ptr_idxscan as *mut pb::IndexedScan) };
-        let kv_equiv_pairs = unsafe { Box::from_raw(ptr_pairs as *mut Vec<KvEquivPair>) };
-        idxscan
-            .or_kv_equiv_pairs
-            .push(KvEquivPairs { pairs: kv_equiv_pairs.as_ref().clone() });
-        std::mem::forget(idxscan);
+        let equiv_pred_result = parse_equiv_predicate(key, value);
+        if let Ok(equiv_pred) = equiv_pred_result {
+            let mut predicate = unsafe { Box::from_raw(ptr_predicate as *mut pb::IndexPredicate) };
+            predicate
+                .or_predicates
+                .push(pb::index_predicate::AndPredicate { predicates: vec![equiv_pred] });
+            std::mem::forget(predicate);
+
+            ResultCode::Success
+        } else {
+            equiv_pred_result.err().unwrap()
+        }
+    }
+
+    #[no_mangle]
+    pub extern "C" fn add_scan_index_predicate(
+        ptr_scan: *const c_void, ptr_predicate: *const c_void,
+    ) -> ResultCode {
+        let mut scan = unsafe { Box::from_raw(ptr_scan as *mut pb::Scan) };
+        let predicate = unsafe { Box::from_raw(ptr_predicate as *mut pb::IndexPredicate) };
+        scan.idx_predicate = Some(predicate.as_ref().clone());
+        std::mem::forget(scan);
 
         ResultCode::Success
     }
 
-    /// Append an indexed scan operator to the logical plan
     #[no_mangle]
-    pub extern "C" fn append_idxscan_operator(
-        ptr_plan: *const c_void, ptr_idxscan: *const c_void, parent: i32, id: *mut i32,
-    ) -> ResultCode {
-        let idxscan = unsafe { Box::from_raw(ptr_idxscan as *mut pb::IndexedScan) };
-        append_operator(ptr_plan, idxscan.as_ref().clone().into(), vec![parent], id)
+    pub extern "C" fn set_scan_limit(ptr_scan: *const c_void, lower: i32, upper: i32) -> ResultCode {
+        set_range(ptr_scan, lower, upper, Opr::Scan)
     }
 
     #[no_mangle]
-    pub extern "C" fn destroy_idxscan_operator(ptr: *const c_void) {
-        destroy_ptr::<pb::IndexedScan>(ptr)
+    pub extern "C" fn set_scan_predicate(
+        ptr_scan: *const c_void, cstr_predicate: *const c_char,
+    ) -> ResultCode {
+        set_predicate(ptr_scan, cstr_predicate, Opr::Scan)
+    }
+
+    #[no_mangle]
+    pub extern "C" fn add_scan_table_name(ptr_scan: *const c_void, table_name: FfiNameOrId) -> ResultCode {
+        process_params(ptr_scan, ParamsKey::Table, table_name, Opr::Scan)
+    }
+
+    /// Add a data field to be scanned from the data source (vertex, edge, or a relational table)
+    #[no_mangle]
+    pub extern "C" fn add_scan_column(ptr_scan: *const c_void, column: FfiNameOrId) -> ResultCode {
+        process_params(ptr_scan, ParamsKey::Column, column, Opr::Scan)
+    }
+
+    /// Set an alias for the data if it is a vertex/edge
+    #[no_mangle]
+    pub extern "C" fn set_scan_alias(ptr_scan: *const c_void, alias: FfiNameOrId) -> ResultCode {
+        set_alias(ptr_scan, alias, true, Opr::Scan)
+    }
+
+    /// Append a scan operator to the logical plan
+    #[no_mangle]
+    pub extern "C" fn append_scan_operator(
+        ptr_plan: *const c_void, ptr_scan: *const c_void, parent: i32, id: *mut i32,
+    ) -> ResultCode {
+        let scan = unsafe { Box::from_raw(ptr_scan as *mut pb::Scan) };
+        append_operator(ptr_plan, scan.as_ref().clone().into(), vec![parent], id)
+    }
+
+    #[no_mangle]
+    pub extern "C" fn destroy_scan_operator(ptr: *const c_void) {
+        destroy_ptr::<pb::Scan>(ptr)
     }
 }
 

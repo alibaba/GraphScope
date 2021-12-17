@@ -23,7 +23,7 @@ use ir_common::error::{ParsePbError, ParsePbResult};
 use ir_common::generated::common as pb;
 use ir_common::NameOrId;
 use std::cell::RefCell;
-use std::convert::TryFrom;
+use std::convert::{TryFrom, TryInto};
 
 unsafe impl Sync for Evaluator {}
 
@@ -342,7 +342,7 @@ impl TryFrom<pb::ExprOpr> for InnerOpr {
                     Self::Logical(unsafe { std::mem::transmute::<_, pb::Logical>(logical) })
                 }
                 Arith(arith) => Self::Arith(unsafe { std::mem::transmute::<_, pb::Arithmetic>(arith) }),
-                Const(c) => Self::Const(c.into_object()?),
+                Const(c) => Self::Const(c.try_into()?),
                 Var(var) => {
                     let (_tag, _property) = (var.tag, var.property);
                     let tag = if let Some(tag) = _tag { Some(NameOrId::try_from(tag)?) } else { None };

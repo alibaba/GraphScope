@@ -47,7 +47,8 @@
                 ]
               },
               "requirements": []
-            }
+            },
+            "idx_predicate": null
           }
         }
       },

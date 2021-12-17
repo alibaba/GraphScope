@@ -19,11 +19,11 @@ mod common;
 
 #[cfg(test)]
 mod test {
+    use crate::common::test::into_index_predicate;
     use graph_proxy::{create_demo_graph, SimplePartition};
     use graph_store::common::DefaultId;
     use graph_store::ldbc::LDBCVertexParser;
     use ir_common::generated::algebra as pb;
-    use ir_common::generated::common as common_pb;
     use runtime::graph::element::GraphElement;
     use runtime::process::operator::source::SourceOperator;
     use runtime::process::record::Record;
@@ -40,21 +40,11 @@ mod test {
         source.gen_source(0).unwrap()
     }
 
-    fn idx_scan_gen(idx_scan_opr_pb: pb::IndexedScan) -> Box<dyn Iterator<Item = Record> + Send> {
-        create_demo_graph();
-        let mut source_opr_pb = pb::logical_plan::Operator {
-            opr: Some(pb::logical_plan::operator::Opr::IndexedScan(idx_scan_opr_pb)),
-        };
-        let source =
-            SourceOperator::new(&mut source_opr_pb, 1, 1, Arc::new(SimplePartition { num_servers: 1 }))
-                .unwrap();
-        source.gen_source(0).unwrap()
-    }
-
     // g.V()
     #[test]
     fn scan_test() {
-        let source_iter = scan_gen(pb::Scan { scan_opt: 0, alias: None, params: None });
+        let source_iter =
+            scan_gen(pb::Scan { scan_opt: 0, alias: None, params: None, idx_predicate: None });
         let mut result_ids = vec![];
         let v1: DefaultId = LDBCVertexParser::to_global_id(1, 0);
         let v2: DefaultId = LDBCVertexParser::to_global_id(2, 0);
@@ -86,6 +76,7 @@ mod test {
                 predicate: None,
                 requirements: vec![],
             }),
+            idx_predicate: None,
         });
         let mut result_ids = vec![];
         let v1: DefaultId = LDBCVertexParser::to_global_id(1, 0);
@@ -116,6 +107,7 @@ mod test {
                 predicate: None,
                 requirements: vec![],
             }),
+            idx_predicate: None,
         });
         let mut result_ids = vec![];
         let v1: DefaultId = LDBCVertexParser::to_global_id(1, 0);
@@ -138,18 +130,11 @@ mod test {
     // g.V(1)
     #[test]
     fn idx_scan_test() {
-        let source_iter = idx_scan_gen(pb::IndexedScan {
-            scan: Some(pb::Scan { scan_opt: 0, alias: None, params: None }),
-            or_kv_equiv_pairs: vec![pb::indexed_scan::KvEquivPairs {
-                pairs: vec![pb::indexed_scan::KvEquivPair {
-                    key: Some(common_pb::Property {
-                        item: Some(common_pb::property::Item::Id(common_pb::IdKey {})),
-                    }),
-                    value: Some(common_pb::Const {
-                        value: Some(common_pb::Value { item: Some(common_pb::value::Item::I64(1)) }),
-                    }),
-                }],
-            }],
+        let source_iter = scan_gen(pb::Scan {
+            scan_opt: 0,
+            alias: None,
+            params: None,
+            idx_predicate: Some(into_index_predicate(vec![1])),
         });
 
         let mut result_ids = vec![];
@@ -168,30 +153,11 @@ mod test {
     // g.V([1, 2])
     #[test]
     fn idx_scan_may_ids_test() {
-        let source_iter = idx_scan_gen(pb::IndexedScan {
-            scan: Some(pb::Scan { scan_opt: 0, alias: None, params: None }),
-            or_kv_equiv_pairs: vec![
-                pb::indexed_scan::KvEquivPairs {
-                    pairs: vec![pb::indexed_scan::KvEquivPair {
-                        key: Some(common_pb::Property {
-                            item: Some(common_pb::property::Item::Id(common_pb::IdKey {})),
-                        }),
-                        value: Some(common_pb::Const {
-                            value: Some(common_pb::Value { item: Some(common_pb::value::Item::I64(1)) }),
-                        }),
-                    }],
-                },
-                pb::indexed_scan::KvEquivPairs {
-                    pairs: vec![pb::indexed_scan::KvEquivPair {
-                        key: Some(common_pb::Property {
-                            item: Some(common_pb::property::Item::Id(common_pb::IdKey {})),
-                        }),
-                        value: Some(common_pb::Const {
-                            value: Some(common_pb::Value { item: Some(common_pb::value::Item::I64(2)) }),
-                        }),
-                    }],
-                },
-            ],
+        let source_iter = scan_gen(pb::Scan {
+            scan_opt: 0,
+            alias: None,
+            params: None,
+            idx_predicate: Some(into_index_predicate(vec![1, 2])),
         });
 
         let mut result_ids = vec![];

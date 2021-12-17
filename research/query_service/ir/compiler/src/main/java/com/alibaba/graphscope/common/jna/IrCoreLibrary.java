@@ -42,17 +42,16 @@ public interface IrCoreLibrary extends Library {
 
     ResultCode addScanTableName(Pointer scan, FfiNameOrId.ByValue tableName);
 
+    // set primary index
+    Pointer initIndexPredicate();
+
+    ResultCode andEquivPredicate(Pointer predicate, FfiProperty.ByValue key, FfiConst.ByValue value);
+
+    ResultCode orEquivPredicate(Pointer predicate, FfiProperty.ByValue key, FfiConst.ByValue value);
+
+    ResultCode addScanIndexPredicate(Pointer scan, Pointer predicate);
+
     ResultCode appendScanOperator(Pointer plan, Pointer scan, int parent, IntByReference oprIdx);
-
-    Pointer initIdxscanOperator(Pointer scan);
-
-    ResultCode appendIdxscanOperator(Pointer plan, Pointer idxScan, int parent, IntByReference oprIdx);
-
-    Pointer initKvEquivPairs();
-
-    ResultCode andKvEquivPair(Pointer pairs, FfiProperty.ByValue property, FfiConst.ByValue value);
-
-    ResultCode addIdxscanKvEquivPairs(Pointer idxScan, Pointer pairs);
 
     Pointer initExpandBase(FfiDirection direction);
 
