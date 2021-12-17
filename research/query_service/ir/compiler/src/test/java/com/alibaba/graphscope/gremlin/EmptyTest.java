@@ -23,6 +23,7 @@ import org.apache.tinkerpop.gremlin.process.traversal.Traversal;
 import org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.GraphTraversalSource;
 import org.apache.tinkerpop.gremlin.structure.Graph;
 import org.apache.tinkerpop.gremlin.tinkergraph.structure.TinkerFactory;
+import com.alibaba.graphscope.gremlin.InterOpCollectionBuilder.StepTransformFactory;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -36,7 +37,7 @@ public class EmptyTest {
         Traversal traversal = g.V();
         traversal.asAdmin().applyStrategies();
         Step step = traversal.asAdmin().getStartStep();
-        ScanFusionOp op = (ScanFusionOp) IrPlanBuidler.StepTransformFactory.TINKER_GRAPH_STEP.apply(step);
+        ScanFusionOp op = (ScanFusionOp) StepTransformFactory.TINKER_GRAPH_STEP.apply(step);
         Assert.assertEquals(false, op.getIds().isPresent());
     }
 
@@ -45,7 +46,7 @@ public class EmptyTest {
         Traversal traversal = g.V();
         traversal.asAdmin().applyStrategies();
         Step step = traversal.asAdmin().getStartStep();
-        ScanFusionOp op = (ScanFusionOp) IrPlanBuidler.StepTransformFactory.TINKER_GRAPH_STEP.apply(step);
+        ScanFusionOp op = (ScanFusionOp) StepTransformFactory.TINKER_GRAPH_STEP.apply(step);
         Assert.assertEquals(false, op.getPredicate().isPresent());
         Assert.assertEquals(false, op.getLabels().isPresent());
     }
@@ -55,7 +56,7 @@ public class EmptyTest {
         Traversal traversal = g.V().hasLabel("person");
         traversal.asAdmin().applyStrategies();
         Step step = traversal.asAdmin().getStartStep();
-        ScanFusionOp op = (ScanFusionOp) IrPlanBuidler.StepTransformFactory.TINKER_GRAPH_STEP.apply(step);
+        ScanFusionOp op = (ScanFusionOp) StepTransformFactory.TINKER_GRAPH_STEP.apply(step);
         Assert.assertEquals(false, op.getPredicate().isPresent());
         Assert.assertEquals(true, op.getLabels().isPresent());
     }
@@ -65,7 +66,7 @@ public class EmptyTest {
         Traversal traversal = g.V().has("id", 1);
         traversal.asAdmin().applyStrategies();
         Step step = traversal.asAdmin().getStartStep();
-        ScanFusionOp op = (ScanFusionOp) IrPlanBuidler.StepTransformFactory.TINKER_GRAPH_STEP.apply(step);
+        ScanFusionOp op = (ScanFusionOp) StepTransformFactory.TINKER_GRAPH_STEP.apply(step);
         Assert.assertEquals(true, op.getPredicate().isPresent());
         Assert.assertEquals(false, op.getLabels().isPresent());
     }
@@ -75,7 +76,7 @@ public class EmptyTest {
         Traversal traversal = g.V().out();
         traversal.asAdmin().applyStrategies();
         Step step = traversal.asAdmin().getEndStep();
-        ExpandOp op = (ExpandOp) IrPlanBuidler.StepTransformFactory.VERTEX_STEP.apply(step);
+        ExpandOp op = (ExpandOp) StepTransformFactory.VERTEX_STEP.apply(step);
         Assert.assertEquals(false, op.getLabels().isPresent());
     }
 }

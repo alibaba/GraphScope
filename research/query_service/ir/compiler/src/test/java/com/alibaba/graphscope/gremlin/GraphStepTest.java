@@ -16,6 +16,9 @@
 
 package com.alibaba.graphscope.gremlin;
 
+import com.alibaba.graphscope.common.intermediate.AliasArg;
+import com.alibaba.graphscope.common.intermediate.ArgUtils;
+import com.alibaba.graphscope.common.intermediate.operator.InterOpBase;
 import com.alibaba.graphscope.common.intermediate.operator.ScanFusionOp;
 import com.alibaba.graphscope.common.jna.type.FfiConst;
 import com.alibaba.graphscope.common.jna.type.FfiNameOrId;
@@ -25,6 +28,7 @@ import org.apache.tinkerpop.gremlin.process.traversal.Traversal;
 import org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.GraphTraversalSource;
 import org.apache.tinkerpop.gremlin.structure.Graph;
 import org.apache.tinkerpop.gremlin.tinkergraph.structure.TinkerFactory;
+import com.alibaba.graphscope.gremlin.InterOpCollectionBuilder.StepTransformFactory;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -38,7 +42,7 @@ public class GraphStepTest {
     public void g_V_test() {
         Traversal traversal = g.V();
         Step graphStep = traversal.asAdmin().getStartStep();
-        ScanFusionOp op = (ScanFusionOp) IrPlanBuidler.StepTransformFactory.GRAPH_STEP.apply(graphStep);
+        ScanFusionOp op = (ScanFusionOp) StepTransformFactory.GRAPH_STEP.apply(graphStep);
         Assert.assertEquals(FfiScanOpt.Vertex, op.getScanOpt().get().getArg());
     }
 
@@ -46,7 +50,7 @@ public class GraphStepTest {
     public void g_E_test() {
         Traversal traversal = g.E();
         Step graphStep = traversal.asAdmin().getStartStep();
-        ScanFusionOp op = (ScanFusionOp) IrPlanBuidler.StepTransformFactory.GRAPH_STEP.apply(graphStep);
+        ScanFusionOp op = (ScanFusionOp) StepTransformFactory.GRAPH_STEP.apply(graphStep);
         Assert.assertEquals(FfiScanOpt.Edge, op.getScanOpt().get().getArg());
     }
 
@@ -55,7 +59,7 @@ public class GraphStepTest {
         Traversal traversal = g.V().hasLabel("person");
         traversal.asAdmin().applyStrategies();
         Step graphStep = traversal.asAdmin().getStartStep();
-        ScanFusionOp op = (ScanFusionOp) IrPlanBuidler.StepTransformFactory.TINKER_GRAPH_STEP.apply(graphStep);
+        ScanFusionOp op = (ScanFusionOp) StepTransformFactory.TINKER_GRAPH_STEP.apply(graphStep);
         FfiNameOrId.ByValue ffiLabel = ((List<FfiNameOrId.ByValue>) op.getLabels().get().getArg()).get(0);
         Assert.assertEquals("person", ffiLabel.name);
     }
@@ -64,7 +68,7 @@ public class GraphStepTest {
     public void g_V_id_test() {
         Traversal traversal = g.V(1L);
         Step graphStep = traversal.asAdmin().getStartStep();
-        ScanFusionOp op = (ScanFusionOp) IrPlanBuidler.StepTransformFactory.GRAPH_STEP.apply(graphStep);
+        ScanFusionOp op = (ScanFusionOp) StepTransformFactory.GRAPH_STEP.apply(graphStep);
         FfiConst.ByValue ffiId = ((List<FfiConst.ByValue>) op.getIds().get().getArg()).get(0);
         Assert.assertEquals(1L, ffiId.int64);
     }
@@ -74,8 +78,28 @@ public class GraphStepTest {
         Traversal traversal = g.V().has("name", "marko");
         traversal.asAdmin().applyStrategies();
         Step graphStep = traversal.asAdmin().getStartStep();
-        ScanFusionOp op = (ScanFusionOp) IrPlanBuidler.StepTransformFactory.TINKER_GRAPH_STEP.apply(graphStep);
+        ScanFusionOp op = (ScanFusionOp) StepTransformFactory.TINKER_GRAPH_STEP.apply(graphStep);
         String expr = (String) op.getPredicate().get().getArg();
         Assert.assertEquals("@.name == \"marko\"", expr);
+    }
+
+    @Test
+    public void g_V_as_test() {
+        Traversal traversal = g.V().as("a");
+        ScanFusionOp op = (ScanFusionOp) generateInterOpFromBuilder(traversal, 0);
+        AliasArg expected = new AliasArg(ArgUtils.strAsNameId("a"));
+        Assert.assertEquals(expected, op.getAlias().get().getArg());
+    }
+
+    @Test
+    public void g_E_as_test() {
+        Traversal traversal = g.E().as("a");
+        ScanFusionOp op = (ScanFusionOp) generateInterOpFromBuilder(traversal, 0);
+        AliasArg expected = new AliasArg(ArgUtils.strAsNameId("a"));
+        Assert.assertEquals(expected, op.getAlias().get().getArg());
+    }
+
+    private InterOpBase generateInterOpFromBuilder(Traversal traversal, int idx) {
+        return (new InterOpCollectionBuilder(traversal)).build().unmodifiableCollection().get(idx);
     }
 }

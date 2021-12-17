@@ -14,23 +14,10 @@
  * limitations under the License.
  */
 
-package com.alibaba.graphscope.common.intermediate.operator;
+package com.alibaba.graphscope.common.intermediate.process;
 
-import java.util.Optional;
+import com.alibaba.graphscope.common.intermediate.InterOpCollection;
 
-public class ProjectOp extends InterOpBase {
-    // list of Pair<expr, AliasArg>
-    private Optional<OpArg> projectExprWithAlias;
-
-    public ProjectOp() {
-        projectExprWithAlias = Optional.empty();
-    }
-
-    public Optional<OpArg> getProjectExprWithAlias() {
-        return projectExprWithAlias;
-    }
-
-    public void setProjectExprWithAlias(OpArg projectExprWithAlias) {
-        this.projectExprWithAlias = Optional.of(projectExprWithAlias);
-    }
+public interface InterOpProcessor {
+    void process(InterOpCollection opCollection);
 }

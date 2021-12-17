@@ -14,45 +14,38 @@
  * limitations under the License.
  */
 
-package com.alibaba.graphscope.common.jna.type;
+package com.alibaba.graphscope.common.intermediate.process;
 
-import com.alibaba.graphscope.common.jna.IrTypeMapper;
 import com.google.common.base.Objects;
-import com.sun.jna.Structure;
 
-@Structure.FieldOrder({"opt", "key"})
-public class FfiProperty extends Structure {
-    public FfiProperty() {
-        super(IrTypeMapper.INSTANCE);
+import java.util.UUID;
+
+public class GraphElement {
+    // edge or vertex
+    private boolean isEdge;
+    // unique id, for hasCode in map
+    private UUID uniqueId;
+
+    public GraphElement(boolean isEdge) {
+        this.isEdge = isEdge;
+        this.uniqueId = UUID.randomUUID();
     }
 
-    public static class ByValue extends FfiProperty implements Structure.ByValue {
-        private static FfiProperty.ByValue NONE = new FfiProperty.ByValue();
-
-        public ByValue() {
-            opt = FfiPropertyOpt.None;
-        }
-
-        public boolean isNone() {
-            return this.equals(NONE);
-        }
+    public boolean isEdge() {
+        return isEdge;
     }
-
-    public FfiPropertyOpt opt;
-    public FfiNameOrId.ByValue key;
 
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
-        FfiProperty that = (FfiProperty) o;
-        return opt == that.opt &&
-                Objects.equal(key, that.key);
+        GraphElement that = (GraphElement) o;
+        return isEdge == that.isEdge &&
+                Objects.equal(uniqueId, that.uniqueId);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hashCode(opt, key);
+        return Objects.hashCode(isEdge, uniqueId);
     }
 }
-

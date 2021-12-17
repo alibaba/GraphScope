@@ -14,45 +14,45 @@
  * limitations under the License.
  */
 
-package com.alibaba.graphscope.common.jna.type;
+package com.alibaba.graphscope.common.intermediate;
 
-import com.alibaba.graphscope.common.jna.IrTypeMapper;
+import com.alibaba.graphscope.common.jna.type.FfiNameOrId;
 import com.google.common.base.Objects;
-import com.sun.jna.Structure;
 
-@Structure.FieldOrder({"opt", "key"})
-public class FfiProperty extends Structure {
-    public FfiProperty() {
-        super(IrTypeMapper.INSTANCE);
+public class AliasArg {
+    private FfiNameOrId.ByValue alias;
+    private boolean isQueryGiven;
+
+    public AliasArg(FfiNameOrId.ByValue alias) {
+        this.alias = alias;
+        // set true by default
+        this.isQueryGiven = true;
     }
 
-    public static class ByValue extends FfiProperty implements Structure.ByValue {
-        private static FfiProperty.ByValue NONE = new FfiProperty.ByValue();
-
-        public ByValue() {
-            opt = FfiPropertyOpt.None;
-        }
-
-        public boolean isNone() {
-            return this.equals(NONE);
-        }
+    public AliasArg(FfiNameOrId.ByValue alias, boolean isQueryGiven) {
+        this.alias = alias;
+        this.isQueryGiven = isQueryGiven;
     }
 
-    public FfiPropertyOpt opt;
-    public FfiNameOrId.ByValue key;
+    public FfiNameOrId.ByValue getAlias() {
+        return alias;
+    }
+
+    public boolean isQueryGiven() {
+        return isQueryGiven;
+    }
 
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
-        FfiProperty that = (FfiProperty) o;
-        return opt == that.opt &&
-                Objects.equal(key, that.key);
+        AliasArg aliasArg = (AliasArg) o;
+        return isQueryGiven == aliasArg.isQueryGiven &&
+                Objects.equal(alias, aliasArg.alias);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hashCode(opt, key);
+        return Objects.hashCode(alias, isQueryGiven);
     }
 }
-

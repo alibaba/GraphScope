@@ -42,6 +42,8 @@ public interface IrCoreLibrary extends Library {
 
     ResultCode addScanTableName(Pointer scan, FfiNameOrId.ByValue tableName);
 
+    ResultCode setScanAlias(Pointer scan, FfiNameOrId.ByValue alias);
+
     // set primary index
     Pointer initIndexPredicate();
 
@@ -88,6 +90,14 @@ public interface IrCoreLibrary extends Library {
     ResultCode addProjectExprAlias(Pointer project, String expr, FfiNameOrId.ByValue alias, boolean isQueryGiven);
 
     ResultCode appendProjectOperator(Pointer plan, Pointer project, int parent, IntByReference oprIdx);
+
+    Pointer initAuxiliaOperator();
+
+    ResultCode addAuxiliaProperty(Pointer auxilia, FfiNameOrId.ByValue property);
+
+    ResultCode setAuxiliaAlias(Pointer auxilia, FfiNameOrId.ByValue alias, boolean is_query_given);
+
+    ResultCode appendAuxiliaOperator(Pointer plan, Pointer auxilia, int parent, IntByReference oprIdx);
 
     FfiNameOrId.ByValue cstrAsNameOrId(String name);
 

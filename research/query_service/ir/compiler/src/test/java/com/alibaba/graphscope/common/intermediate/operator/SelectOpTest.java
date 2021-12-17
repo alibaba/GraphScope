@@ -14,10 +14,10 @@
  * limitations under the License.
  */
 
-package com.alibaba.graphscope.common;
+package com.alibaba.graphscope.common.intermediate.operator;
 
-import com.alibaba.graphscope.common.intermediate.operator.OpArg;
-import com.alibaba.graphscope.common.intermediate.operator.SelectOp;
+import com.alibaba.graphscope.common.IrPlan;
+import com.alibaba.graphscope.common.TestUtils;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Test;
