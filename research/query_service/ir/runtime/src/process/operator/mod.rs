@@ -49,11 +49,9 @@ impl TagKey {
             .clone();
         if let Some(key) = self.key.as_ref() {
             if let Some(element) = entry.as_graph_element() {
-                let details = element
-                    .details()
-                    .ok_or(FnExecError::get_tag_error(
-                        "Get key failed since get details from a graph element failed",
-                    ))?;
+                let details = element.details().ok_or(FnExecError::get_tag_error(
+                    "Get key failed since get details from a graph element failed",
+                ))?;
                 let properties = details
                     .get(key)
                     .ok_or(FnExecError::get_tag_error(
@@ -140,37 +138,22 @@ pub(crate) mod tests {
     use crate::graph::element::{GraphElement, Vertex};
     use crate::graph::property::{DefaultDetails, DynDetails};
     use crate::process::record::RecordElement;
+    use ir_common::KeyId;
 
     fn init_vertex1() -> Vertex {
-        let map1: HashMap<NameOrId, Object> = vec![
-            (NameOrId::from("id".to_string()), 1.into()),
-            (NameOrId::from("age".to_string()), 29.into()),
-            (NameOrId::from("name".to_string()), "marko".to_string().into()),
-        ]
-        .into_iter()
-        .collect();
-
-        Vertex::new(DynDetails::new(DefaultDetails::with_property(
-            1,
-            NameOrId::from("person".to_string()),
-            map1,
-        )))
+        let map1: HashMap<NameOrId, Object> =
+            vec![("id".into(), object!(1)), ("age".into(), object!(29)), ("name".into(), object!("marko"))]
+                .into_iter()
+                .collect();
+        Vertex::new(DynDetails::new(DefaultDetails::with_property(1, "person".into(), map1)))
     }
 
     fn init_vertex2() -> Vertex {
-        let map2: HashMap<NameOrId, Object> = vec![
-            (NameOrId::from("id".to_string()), 2.into()),
-            (NameOrId::from("age".to_string()), 27.into()),
-            (NameOrId::from("name".to_string()), "vadas".to_string().into()),
-        ]
-        .into_iter()
-        .collect();
-
-        Vertex::new(DynDetails::new(DefaultDetails::with_property(
-            2,
-            NameOrId::from("person".to_string()),
-            map2,
-        )))
+        let map2: HashMap<NameOrId, Object> =
+            vec![("id".into(), object!(2)), ("age".into(), object!(27)), ("name".into(), object!("vadas"))]
+                .into_iter()
+                .collect();
+        Vertex::new(DynDetails::new(DefaultDetails::with_property(2, "person".into(), map2)))
     }
 
     fn init_record() -> Record {
@@ -179,8 +162,8 @@ pub(crate) mod tests {
         let object3 = ObjectElement::Count(10);
 
         let mut record = Record::new(vertex1, None);
-        record.append(vertex2, Some(NameOrId::Id(0)));
-        record.append(object3, Some(NameOrId::Id(1)));
+        record.append(vertex2, Some((0 as KeyId).into()));
+        record.append(object3, Some((1 as KeyId).into()));
         record
     }
 
@@ -195,8 +178,8 @@ pub(crate) mod tests {
     pub fn init_source_with_tag() -> Vec<Record> {
         let v1 = init_vertex1();
         let v2 = init_vertex2();
-        let r1 = Record::new(v1, Some(NameOrId::from("a".to_string())));
-        let r2 = Record::new(v2, Some(NameOrId::from("a".to_string())));
+        let r1 = Record::new(v1, Some("a".into()));
+        let r2 = Record::new(v2, Some("a".into()));
         vec![r1, r2]
     }
 
@@ -215,7 +198,7 @@ pub(crate) mod tests {
 
     #[test]
     fn test_get_tag_entry() {
-        let tag_key = TagKey { tag: Some(NameOrId::Id(0)), key: None };
+        let tag_key = TagKey { tag: Some((0 as KeyId).into()), key: None };
         let expected = init_vertex2();
         let record = init_record();
         let entry = tag_key.get_entry(&record).unwrap();
@@ -228,10 +211,7 @@ pub(crate) mod tests {
 
     #[test]
     fn test_get_tag_key_entry() {
-        let tag_key = TagKey {
-            tag: Some(NameOrId::Id(0)),
-            key: Some(PropKey::Key(NameOrId::Str("age".to_string()))),
-        };
+        let tag_key = TagKey { tag: Some((0 as KeyId).into()), key: Some(PropKey::Key("age".into())) };
         let expected = 27;
         let record = init_record();
         let entry = tag_key.get_entry(&record).unwrap();
