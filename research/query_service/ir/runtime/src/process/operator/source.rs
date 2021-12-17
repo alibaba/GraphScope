@@ -21,8 +21,6 @@ use crate::graph::ID;
 use crate::process::record::Record;
 use ir_common::error::{ParsePbError, ParsePbResult};
 use ir_common::generated::algebra as algebra_pb;
-use ir_common::generated::common::property;
-use ir_common::generated::common::value;
 use ir_common::NameOrId;
 use std::collections::HashMap;
 use std::convert::TryFrom;
@@ -53,12 +51,15 @@ impl SourceOperator {
             match opr {
                 algebra_pb::logical_plan::operator::Opr::Scan(scan) => {
                     if let Some(index_predicate) = &scan.idx_predicate {
-                        let or_equiv_conds = index_predicate.or_conds.clone();
+                        let ip = index_predicate.clone();
                         let mut source_op = SourceOperator::try_from(scan)?;
-                        if !or_equiv_conds.is_empty() {
-                            let global_ids = parse_equiv_conds(or_equiv_conds)?;
+                        if !ip.or_conds.is_empty() {
+                            let global_ids: Vec<ID> = <Vec<i64>>::try_from(ip)?
+                                .into_iter()
+                                .map(|i| i as ID)
+                                .collect();
                             source_op.set_src(global_ids, job_workers, partitioner);
-                            debug!("Runtime source op of indexed_scan {:?}", source_op);
+                            debug!("Runtime source op of indexed scan {:?}", source_op);
                         }
                         Ok(source_op)
                     } else {
@@ -161,38 +162,4 @@ impl TryFrom<algebra_pb::Scan> for SourceOperator {
 
         Ok(SourceOperator { query_params, src: None, alias, source_type })
     }
-}
-
-// TODO: we only support global-ids as index for now;
-fn parse_equiv_conds(
-    or_equiv_conds: Vec<algebra_pb::index_predicate::AndCondition>,
-) -> ParsePbResult<Vec<ID>> {
-    let mut global_ids = vec![];
-    for and_cond in or_equiv_conds {
-        let cond = and_cond
-            .conds
-            .get(0)
-            .ok_or("EquivCond is empty in Scan")?;
-
-        let (key, value) = (cond.key.as_ref(), cond.value.as_ref());
-        let key = key.ok_or("key is empty in kv_pair in indexed_scan")?;
-        if let Some(property::Item::Id(_id_key)) = key.item.as_ref() {
-            let value = value
-                .ok_or("value is empty in kv_pair in indexed_scan")?
-                .value
-                .as_ref()
-                .ok_or("value is empty in kv_pair in indexed_scan")?;
-            // TODO(bingqing): confirm global id of i64?
-            if let Some(value::Item::I64(v)) = value.item {
-                global_ids.push(v as ID);
-            } else {
-                Err("Parse source_id from indexed_scan failed")?
-            }
-        } else {
-            Err(ParsePbError::NotSupported(
-                "Indexed field other than IdKey is not supported yet".to_string(),
-            ))?
-        }
-    }
-    Ok(global_ids)
 }

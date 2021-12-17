@@ -309,11 +309,12 @@ impl From<String> for common_pb::Variable {
     }
 }
 
-impl common_pb::Const {
-    #[allow(dead_code)]
-    pub fn into_object(self) -> ParsePbResult<Option<Object>> {
+impl TryFrom<common_pb::Const> for Option<Object> {
+    type Error = ParsePbError;
+
+    fn try_from(value: common_pb::Const) -> Result<Self, Self::Error> {
         use common_pb::value::Item::*;
-        if let Some(val) = &self.value {
+        if let Some(val) = &value.value {
             if let Some(item) = val.item.as_ref() {
                 return match item {
                     Boolean(b) => Ok(Some((*b).into())),
@@ -332,8 +333,8 @@ impl common_pb::Const {
                         let mut is_ok = true;
                         for item in pairs.item.clone().into_iter() {
                             let (key_obj_opt, val_obj_opt) = (
-                                common_pb::Const { value: item.key }.into_object()?,
-                                common_pb::Const { value: item.val }.into_object()?,
+                                <Option<Object>>::try_from(common_pb::Const { value: item.key })?,
+                                <Option<Object>>::try_from(common_pb::Const { value: item.val })?,
                             );
                             if key_obj_opt.is_none() || val_obj_opt.is_none() {
                                 is_ok = false;
@@ -353,6 +354,54 @@ impl common_pb::Const {
         }
 
         Err(ParsePbError::from("empty value provided"))
+    }
+}
+
+impl TryFrom<pb::IndexPredicate> for Vec<i64> {
+    type Error = ParsePbError;
+
+    fn try_from(value: pb::IndexPredicate) -> Result<Self, Self::Error> {
+        let mut global_ids = vec![];
+        for and_cond in value.or_conds {
+            let cond = and_cond
+                .conds
+                .get(0)
+                .ok_or(ParsePbError::EmptyFieldError("`AndCondition` is emtpy".to_string()))?;
+
+            let (key, value) = (cond.key.as_ref(), cond.value.as_ref());
+            let key = key.ok_or("key is empty in kv_pair in indexed_scan")?;
+            if let Some(common_pb::property::Item::Id(_id_key)) = key.item.as_ref() {
+                let value = value
+                    .ok_or("value is empty in kv_pair in indexed_scan")?
+                    .value
+                    .as_ref()
+                    .ok_or("value is empty in kv_pair in indexed_scan")?;
+
+                match &value.item {
+                    Some(common_pb::value::Item::I64(v)) => {
+                        global_ids.push(*v);
+                    }
+                    Some(common_pb::value::Item::I64Array(arr)) => {
+                        global_ids.extend(arr.item.iter().cloned())
+                    }
+                    Some(common_pb::value::Item::I32(v)) => {
+                        global_ids.push(*v as i64);
+                    }
+                    Some(common_pb::value::Item::I32Array(arr)) => {
+                        global_ids.extend(arr.item.iter().map(|i| *i as i64));
+                    }
+                    _ => Err(ParsePbError::NotSupported(
+                        "indexed value other than integer (I32, I64) and integer array is not supported"
+                            .to_string(),
+                    ))?,
+                }
+            } else {
+                Err(ParsePbError::NotSupported(
+                    "indexed field other than `IdKey` is not supported yet".to_string(),
+                ))?
+            }
+        }
+        Ok(global_ids)
     }
 }
 

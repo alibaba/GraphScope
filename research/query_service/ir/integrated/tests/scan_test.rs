@@ -19,11 +19,11 @@ mod common;
 
 #[cfg(test)]
 mod test {
+    use crate::common::test::into_index_predicate;
     use graph_proxy::{create_demo_graph, SimplePartition};
     use graph_store::common::DefaultId;
     use graph_store::ldbc::LDBCVertexParser;
     use ir_common::generated::algebra as pb;
-    use ir_common::generated::common as common_pb;
     use runtime::graph::element::GraphElement;
     use runtime::process::operator::source::SourceOperator;
     use runtime::process::record::Record;
@@ -134,18 +134,7 @@ mod test {
             scan_opt: 0,
             alias: None,
             params: None,
-            idx_predicate: Some(pb::IndexPredicate {
-                or_conds: vec![pb::index_predicate::AndCondition {
-                    conds: vec![pb::index_predicate::EquivCond {
-                        key: Some(common_pb::Property {
-                            item: Some(common_pb::property::Item::Id(common_pb::IdKey {})),
-                        }),
-                        value: Some(common_pb::Const {
-                            value: Some(common_pb::Value { item: Some(common_pb::value::Item::I64(1)) }),
-                        }),
-                    }],
-                }],
-            }),
+            idx_predicate: Some(into_index_predicate(vec![1])),
         });
 
         let mut result_ids = vec![];
@@ -168,34 +157,7 @@ mod test {
             scan_opt: 0,
             alias: None,
             params: None,
-            idx_predicate: Some(pb::IndexPredicate {
-                or_conds: vec![
-                    pb::index_predicate::AndCondition {
-                        conds: vec![pb::index_predicate::EquivCond {
-                            key: Some(common_pb::Property {
-                                item: Some(common_pb::property::Item::Id(common_pb::IdKey {})),
-                            }),
-                            value: Some(common_pb::Const {
-                                value: Some(common_pb::Value {
-                                    item: Some(common_pb::value::Item::I64(1)),
-                                }),
-                            }),
-                        }],
-                    },
-                    pb::index_predicate::AndCondition {
-                        conds: vec![pb::index_predicate::EquivCond {
-                            key: Some(common_pb::Property {
-                                item: Some(common_pb::property::Item::Id(common_pb::IdKey {})),
-                            }),
-                            value: Some(common_pb::Const {
-                                value: Some(common_pb::Value {
-                                    item: Some(common_pb::value::Item::I64(2)),
-                                }),
-                            }),
-                        }],
-                    },
-                ],
-            }),
+            idx_predicate: Some(into_index_predicate(vec![1, 2])),
         });
 
         let mut result_ids = vec![];
