@@ -17,16 +17,10 @@
 
 import os
 
-version_file_path = os.path.join(
-    os.path.dirname(os.path.abspath(__file__)), "..", "..", "VERSION"
-)
+version_file_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "VERSION")
 
-if os.path.isfile(version_file_path):
-    with open(version_file_path, "r", encoding="utf-8") as fp:
-        __version__ = fp.read().strip()
-    __version_tuple__ = (int(v) for v in __version__.split("."))
-else:
-    __version__ = "0.9.0"
-    __version_tuple__ = (0, 9, 0)
+with open(version_file_path, "r", encoding="utf-8") as fp:
+    __version__ = fp.read().strip()
+__version_tuple__ = (int(v) for v in __version__.split("."))
 
 del version_file_path
