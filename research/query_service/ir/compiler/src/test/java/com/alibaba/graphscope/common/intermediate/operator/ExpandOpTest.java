@@ -14,8 +14,10 @@
  * limitations under the License.
  */
 
-package com.alibaba.graphscope.common;
+package com.alibaba.graphscope.common.intermediate.operator;
 
+import com.alibaba.graphscope.common.IrPlan;
+import com.alibaba.graphscope.common.TestUtils;
 import com.alibaba.graphscope.common.intermediate.operator.ExpandOp;
 import com.alibaba.graphscope.common.intermediate.operator.OpArg;
 import com.alibaba.graphscope.common.jna.IrCoreLibrary;

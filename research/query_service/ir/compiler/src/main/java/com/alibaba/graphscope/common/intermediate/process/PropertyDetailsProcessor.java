@@ -2,6 +2,7 @@ package com.alibaba.graphscope.common.intermediate.process;
 
 import com.alibaba.graphscope.common.exception.InterOpIllegalArgException;
 import com.alibaba.graphscope.common.exception.InterOpUnsupportedException;
+import com.alibaba.graphscope.common.intermediate.AliasArg;
 import com.alibaba.graphscope.common.intermediate.ArgUtils;
 import com.alibaba.graphscope.common.intermediate.InterOpCollection;
 import com.alibaba.graphscope.common.intermediate.operator.*;
@@ -134,7 +135,8 @@ public class PropertyDetailsProcessor implements InterOpProcessor {
                 elementRecord.put(FfiNameOrId.ByValue.getHead(), output.get());
                 // set alias
                 if (op.getAlias().isPresent()) {
-                    elementRecord.put((FfiNameOrId.ByValue) op.getAlias().get().getArg(), output.get());
+                    AliasArg alias = (AliasArg) op.getAlias().get().getArg();
+                    elementRecord.put(alias.getAlias(), output.get());
                 }
             }
         }

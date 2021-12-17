@@ -1,5 +1,7 @@
-package com.alibaba.graphscope.common;
+package com.alibaba.graphscope.common.intermediate.operator;
 
+import com.alibaba.graphscope.common.IrPlan;
+import com.alibaba.graphscope.common.TestUtils;
 import com.alibaba.graphscope.common.intermediate.AliasArg;
 import com.alibaba.graphscope.common.intermediate.ArgUtils;
 import com.alibaba.graphscope.common.intermediate.operator.AuxiliaOp;
