@@ -90,7 +90,8 @@ def context_to_dict(func):
 
 @context_to_dict
 @project_to_simple
-def pagerank(G, alpha=0.85, max_iter=100, tol=1.0e-6):
+@not_implemented_for("multigraph")
+def pagerank(G, alpha=0.85, max_iter=100, tol=1.0e-6, weight="weight"):
     """Returns the PageRank of the nodes in the graph.
 
     PageRank computes a ranking of the nodes in the graph G based on
@@ -145,7 +146,7 @@ def pagerank(G, alpha=0.85, max_iter=100, tol=1.0e-6):
     return graphscope.pagerank_nx(G, alpha, max_iter, tol)
 
 
-@project_to_simple
+@not_implemented_for("multigraph")
 def hits(G, max_iter=100, tol=1.0e-8, normalized=True):
     """Returns HITS hubs and authorities values for nodes.
 
@@ -169,9 +170,7 @@ def hits(G, max_iter=100, tol=1.0e-8, normalized=True):
 
     Returns
     -------
-    (node, hubs,authorities) : three-column of dataframe
-        node containing the hub and authority
-       values.
+    two-tuple of dictionaries
 
 
     Examples
@@ -190,9 +189,27 @@ def hits(G, max_iter=100, tol=1.0e-8, normalized=True):
        doi:10.1145/324133.324140.
        http://www.cs.cornell.edu/home/kleinber/auth.pdf.
     """
-    ctx = graphscope.hits(G, tolerance=tol, max_round=max_iter, normalized=normalized)
-    df = ctx.to_dataframe({"id": "v.id", "auth": "r.auth", "hub": "r.hub"})
-    return (df.set_index("id")["hub"].to_dict(), df.set_index("id")["auth"].to_dict())
+    # TODO(@weibin): raise PowerIterationFailedConvergence if hits fails to converge
+    # within the specified number of iterations.
+    @project_to_simple
+    def _hits(G, max_iter=100, tol=1.0e-8, normalized=True):
+        ctx = graphscope.hits(
+            G, tolerance=tol, max_round=max_iter, normalized=normalized
+        )
+        df = ctx.to_dataframe({"id": "v.id", "auth": "r.auth", "hub": "r.hub"})
+        return (
+            df.set_index("id")["hub"].to_dict(),
+            df.set_index("id")["auth"].to_dict(),
+        )
+
+    if max_iter == 0:
+        raise nx.PowerIterationFailedConvergence(max_iter)
+    if len(G) == 0:
+        return {}, {}
+    return _hits(G, max_iter, tol, normalized)
+
+
+hits_scipy = hits
 
 
 @context_to_dict
@@ -219,7 +236,7 @@ def out_degree_centrality(G):
 
 
 @context_to_dict
-@project_to_simple
+@not_implemented_for("multigraph")
 def eigenvector_centrality(G, max_iter=100, tol=1e-06, weight=None):
     r"""Compute the eigenvector centrality for the graph `G`.
 
@@ -253,8 +270,8 @@ def eigenvector_centrality(G, max_iter=100, tol=1e-06, weight=None):
 
     Returns
     -------
-    nodes : dataframe
-       Dataframe of nodes with eigenvector centrality as the value.
+    nodes : dictionary
+       Dictionary of nodes with eigenvector centrality as the value.
 
     Examples
     --------
@@ -266,7 +283,19 @@ def eigenvector_centrality(G, max_iter=100, tol=1e-06, weight=None):
     eigenvector_centrality_numpy
     hits
     """
-    return graphscope.eigenvector_centrality(G, tolerance=tol, max_round=max_iter)
+    # TODO(@weibin): raise PowerIterationFailedConvergence if eigenvector fails to converge
+    # within the specified number of iterations.
+    @project_to_simple
+    def _eigenvector_centrality(G, max_iter=100, tol=1e-06, weight=None):
+        return graphscope.eigenvector_centrality(G, tolerance=tol, max_round=max_iter)
+
+    if max_iter == 0:
+        raise nx.PowerIterationFailedConvergence(max_iter)
+    if len(G) == 0:
+        raise nx.NetworkXPointlessConcept(
+            "cannot compute centrality for the null graph"
+        )
+    return _eigenvector_centrality(G, max_iter=max_iter, tol=tol, weight=weight)
 
 
 @context_to_dict
