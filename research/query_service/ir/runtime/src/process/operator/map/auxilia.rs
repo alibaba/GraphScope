@@ -38,33 +38,33 @@ impl FilterMapFunction<Record, Record> for AuxiliaOperator {
     fn exec(&self, mut input: Record) -> FnResult<Option<Record>> {
         let entry = input
             .get(self.tag.as_ref())
-            .ok_or(FnExecError::get_tag_error("get tag failed in GetVertexOperator"))?
+            .ok_or(FnExecError::get_tag_error("get tag failed in AuxiliaOperator"))?
             .clone();
         // Make sure there is anything to query with
         if self.query_params.is_queryable() {
-            let vertex_or_edge_opt = entry.as_graph_element();
             // If queryable, then turn into graph element and do the query
-            if let Some(vertex_or_edge) = vertex_or_edge_opt {
-                let graph = crate::get_graph().ok_or(FnExecError::NullGraphError)?;
-                let new_entry: Option<Entry> = match vertex_or_edge {
-                    VertexOrEdge::V(v) => {
-                        let mut result_iter = graph.get_vertex(&[v.id()], &self.query_params)?;
-                        result_iter.next().map(|vertex| vertex.into())
-                    }
-                    VertexOrEdge::E(e) => {
-                        let mut result_iter = graph.get_edge(&[e.id()], &self.query_params)?;
-                        result_iter.next().map(|edge| edge.into())
-                    }
-                };
-                if new_entry.is_some() {
-                    let arc_entry = Arc::new(new_entry.unwrap());
-                    input.append_arc_entry(arc_entry.clone(), self.tag.clone());
-                    if self.alias.is_some() {
-                        input.append_arc_entry(arc_entry, self.alias.clone());
-                    }
-                } else {
-                    return Ok(None);
+            let vertex_or_edge = entry
+                .as_graph_element()
+                .ok_or(FnExecError::unexpected_data_error("should be vertex_or_edge in AuxiliaOperator"))?;
+            let graph = crate::get_graph().ok_or(FnExecError::NullGraphError)?;
+            let new_entry: Option<Entry> = match vertex_or_edge {
+                VertexOrEdge::V(v) => {
+                    let mut result_iter = graph.get_vertex(&[v.id()], &self.query_params)?;
+                    result_iter.next().map(|vertex| vertex.into())
                 }
+                VertexOrEdge::E(e) => {
+                    let mut result_iter = graph.get_edge(&[e.id()], &self.query_params)?;
+                    result_iter.next().map(|edge| edge.into())
+                }
+            };
+            if new_entry.is_some() {
+                let arc_entry = Arc::new(new_entry.unwrap());
+                input.append_arc_entry(arc_entry.clone(), self.tag.clone());
+                if self.alias.is_some() {
+                    input.append_arc_entry(arc_entry, self.alias.clone());
+                }
+            } else {
+                return Ok(None);
             }
         } else {
             if self.alias.is_some() {
@@ -78,15 +78,9 @@ impl FilterMapFunction<Record, Record> for AuxiliaOperator {
 
 impl FilterMapFuncGen for algebra_pb::Auxilia {
     fn gen_filter_map(self) -> FnGenResult<Box<dyn FilterMapFunction<Record, Record>>> {
-        let start_tag = self
-            .tag
-            .map(|name_or_id| name_or_id.try_into())
-            .transpose()?;
+        let start_tag = self.tag.map(|name_or_id| name_or_id.try_into()).transpose()?;
         let query_params = self.params.try_into()?;
-        let alias = self
-            .alias
-            .map(|alias| alias.try_into())
-            .transpose()?;
+        let alias = self.alias.map(|alias| alias.try_into()).transpose()?;
         let auxilia_operator = AuxiliaOperator { tag: start_tag, query_params, alias };
         debug!("Runtime auxilia operator: {:?}", auxilia_operator);
         Ok(Box::new(auxilia_operator))
