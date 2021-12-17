@@ -18,7 +18,8 @@
               "limit": null,
               "predicate": null,
               "requirements": []
-            }
+            },
+            "idx_predicate": null
           }
         }
       },

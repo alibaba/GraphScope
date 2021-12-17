@@ -73,8 +73,7 @@ public class ScanFusionOpTest {
         op.setIds(new OpArg<List, List>(values, Function.identity()));
         irPlan.appendInterOp(op);
         String actual = irPlan.getPlanAsJson();
-        System.out.println(actual);
-        // Assert.assertEquals(TestUtils.readJsonFromResource("scan_ids.json"), actual);
+        Assert.assertEquals(TestUtils.readJsonFromResource("scan_ids.json"), actual);
     }
 
     @After
