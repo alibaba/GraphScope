@@ -79,30 +79,24 @@ public class IrPlan implements Closeable {
                                 "predicate", "setScanPredicate returns " + resultCode.name());
                     }
                 }
-                // todo: add predicates
-                // todo: add limit
+                // set index predicate
                 Optional<OpArg> ids = op.getIds();
                 if (ids.isPresent()) {
-                    Pointer pairs = irCoreLib.initKvEquivPairs();
+                    Pointer idsPredicate = irCoreLib.initIndexPredicate();
                     List<FfiConst.ByValue> ffiIds = (List<FfiConst.ByValue>) ids.get().getArg();
-                    scan = irCoreLib.initIdxscanOperator(scan);
                     for (int i = 0; i < ffiIds.size(); ++i) {
-                        if (i == 1) {
-                            logger.error("{}", "indexing based query can only support one argument, ignore others");
-                            break;
-                        }
-                        ResultCode resultCode = irCoreLib.andKvEquivPair(pairs, irCoreLib.asIdKey(), ffiIds.get(i));
+                        ResultCode resultCode = irCoreLib.orEquivPredicate(idsPredicate, irCoreLib.asIdKey(), ffiIds.get(i));
                         if (resultCode != ResultCode.Success) {
                             throw new InterOpIllegalArgException(baseOp.getClass(),
-                                    "ids", "andKvEquivPair returns " + resultCode.name());
-                        }
-                        resultCode = irCoreLib.addIdxscanKvEquivPairs(scan, pairs);
-                        if (resultCode != ResultCode.Success) {
-                            throw new InterOpIllegalArgException(baseOp.getClass(),
-                                    "ids", "addIdxscanKvEquivPairs returns " + resultCode.name());
+                                    "ids", "orEquivPredicate returns " + resultCode.name());
                         }
                     }
+                    if (!ffiIds.isEmpty()) {
+                        irCoreLib.addScanIndexPredicate(scan, idsPredicate);
+                    }
                 }
+                // todo: add other predicates
+                // todo: add limit
                 return scan;
             }
         },
@@ -265,11 +259,7 @@ public class IrPlan implements Closeable {
         ResultCode resultCode;
         if (base instanceof ScanFusionOp) {
             Pointer ptrScan = TransformFactory.SCAN_FUSION_OP.apply(base);
-            if (((ScanFusionOp) base).getIds().isPresent()) {
-                resultCode = irCoreLib.appendIdxscanOperator(ptrPlan, ptrScan, oprIdx.getValue(), oprIdx);
-            } else {
-                resultCode = irCoreLib.appendScanOperator(ptrPlan, ptrScan, oprIdx.getValue(), oprIdx);
-            }
+            resultCode = irCoreLib.appendScanOperator(ptrPlan, ptrScan, oprIdx.getValue(), oprIdx);
         } else if (base instanceof SelectOp) {
             Pointer ptrSelect = TransformFactory.SELECT_OP.apply(base);
             resultCode = irCoreLib.appendSelectOperator(ptrPlan, ptrSelect, oprIdx.getValue(), oprIdx);
