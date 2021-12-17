@@ -140,7 +140,7 @@ pub(crate) mod tests {
     use crate::process::record::RecordElement;
     use ir_common::KeyId;
 
-    fn init_vertex1() -> Vertex {
+    pub fn init_vertex1() -> Vertex {
         let map1: HashMap<NameOrId, Object> =
             vec![("id".into(), object!(1)), ("age".into(), object!(29)), ("name".into(), object!("marko"))]
                 .into_iter()
@@ -148,7 +148,7 @@ pub(crate) mod tests {
         Vertex::new(DynDetails::new(DefaultDetails::with_property(1, "person".into(), map1)))
     }
 
-    fn init_vertex2() -> Vertex {
+    pub fn init_vertex2() -> Vertex {
         let map2: HashMap<NameOrId, Object> =
             vec![("id".into(), object!(2)), ("age".into(), object!(27)), ("name".into(), object!("vadas"))]
                 .into_iter()
