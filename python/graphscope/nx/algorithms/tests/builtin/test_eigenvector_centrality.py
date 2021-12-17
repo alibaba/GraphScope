@@ -49,7 +49,7 @@ class TestEigenvectorCentrality(object):
         b = nx.eigenvector_centrality_numpy(G)
         for n in sorted(G):
             assert almost_equal(b[n], b_answer[n], places=4)
-        b = nx.eigenvector_centrality(G)
+        b = nx.builtin.eigenvector_centrality(G)
         for n in sorted(G):
             assert almost_equal(b[n], b_answer[n], places=4)
 

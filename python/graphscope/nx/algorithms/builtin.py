@@ -209,7 +209,8 @@ def hits(G, max_iter=100, tol=1.0e-8, normalized=True):
     return _hits(G, max_iter, tol, normalized)
 
 
-hits_scipy = hits
+def hits_scipy(G, max_iter=100, tol=1.0e-8, normalized=True):
+    return hits(G, max_iter=max_iter, tol=tol, normalized=normalized)
 
 
 @context_to_dict
@@ -238,68 +239,22 @@ def out_degree_centrality(G):
 @context_to_dict
 @not_implemented_for("multigraph")
 def eigenvector_centrality(G, max_iter=100, tol=1e-06, weight=None):
-    r"""Compute the eigenvector centrality for the graph `G`.
-
-    Eigenvector centrality computes the centrality for a node based on the
-    centrality of its neighbors. The eigenvector centrality for node $i$ is
-    the $i$-th element of the vector $x$ defined by the equation
-
-    .. math::
-
-        Ax = \lambda x
-
-    where $A$ is the adjacency matrix of the graph `G` with eigenvalue
-    $\lambda$. By virtue of the Perron–Frobenius theorem, there is a unique
-    solution $x$, all of whose entries are positive, if $\lambda$ is the
-    largest eigenvalue of the adjacency matrix $A$ ([2]_).
-
-    Parameters
-    ----------
-    G : graph
-      A networkx graph
-
-    max_iter : integer, optional (default=100)
-      Maximum number of iterations in power method.
-
-    tol : float, optional (default=1.0e-6)
-      Error tolerance used to check convergence in power method iteration.
-
-    weight : None or string, optional (default=None)
-      If None, that take it as edge attribute 'weight'
-      Otherwise holds the name of the edge attribute used as weight.
-
-    Returns
-    -------
-    nodes : dictionary
-       Dictionary of nodes with eigenvector centrality as the value.
-
-    Examples
-    --------
-    >>> G = nx.path_graph(4)
-    >>> centrality = nx.eigenvector_centrality(G)
-
-    See Also
-    --------
-    eigenvector_centrality_numpy
-    hits
-    """
     # TODO(@weibin): raise PowerIterationFailedConvergence if eigenvector fails to converge
     # within the specified number of iterations.
     @project_to_simple
     def _eigenvector_centrality(G, max_iter=100, tol=1e-06, weight=None):
         return graphscope.eigenvector_centrality(G, tolerance=tol, max_round=max_iter)
 
-    if max_iter == 0:
-        raise nx.PowerIterationFailedConvergence(max_iter)
     if len(G) == 0:
         raise nx.NetworkXPointlessConcept(
             "cannot compute centrality for the null graph"
         )
+    if max_iter == 0:
+        raise nx.PowerIterationFailedConvergence(max_iter)
     return _eigenvector_centrality(G, max_iter=max_iter, tol=tol, weight=weight)
 
 
 @context_to_dict
-@project_to_simple
 def katz_centrality(
     G,
     alpha=0.1,
@@ -309,81 +264,39 @@ def katz_centrality(
     normalized=True,
     weight=None,
 ):
-    r"""Compute the Katz centrality for the nodes of the graph G.
+    # TODO(@weibin): raise PowerIterationFailedConvergence if katz fails to converge
+    # within the specified number of iterations.
+    @project_to_simple
+    def _katz_centrality(
+        G,
+        alpha=0.1,
+        beta=1.0,
+        max_iter=100,
+        tol=1e-06,
+        normalized=True,
+        weight=None,
+    ):
+        return graphscope.katz_centrality(
+            G,
+            alpha=alpha,
+            beta=beta,
+            tolerance=tol,
+            max_round=max_iter,
+            normalized=normalized,
+        )
 
-    Katz centrality computes the centrality for a node based on the centrality
-    of its neighbors. It is a generalization of the eigenvector centrality. The
-    Katz centrality for node $i$ is
-
-    .. math::
-
-        x_i = \alpha \sum_{j} A_{ij} x_j + \beta,
-
-    where $A$ is the adjacency matrix of graph G with eigenvalues $\lambda$.
-
-    The parameter $\beta$ controls the initial centrality and
-
-    .. math::
-
-        \alpha < \frac{1}{\lambda_{\max}}.
-
-    Katz centrality computes the relative influence of a node within a
-    network by measuring the number of the immediate neighbors (first
-    degree nodes) and also all other nodes in the network that connect
-    to the node under consideration through these immediate neighbors.
-
-    Extra weight can be provided to immediate neighbors through the
-    parameter $\beta$.  Connections made with distant neighbors
-    are, however, penalized by an attenuation factor $\alpha$ which
-    should be strictly less than the inverse largest eigenvalue of the
-    adjacency matrix in order for the Katz centrality to be computed
-    correctly. More information is provided in [1]_.
-
-    Parameters
-    ----------
-    G : graph
-      A networkx graph.
-
-    alpha : float
-      Attenuation factor
-
-    beta : scalar or dictionary, optional (default=1.0)
-      Weight attributed to the immediate neighborhood. If not a scalar, the
-      dictionary must have an value for every node.
-
-    max_iter : integer, optional (default=1000)
-      Maximum number of iterations in power method.
-
-    tol : float, optional (default=1.0e-6)
-      Error tolerance used to check convergence in power method iteration.
-
-    normalized : bool, optional (default=True)
-      If True normalize the resulting values.
-
-    weight : None or string, optional (default=None)
-      If None, that take it as edge attribute 'weight'.
-      Otherwise holds the name of the edge attribute used as weight.
-
-    Returns
-    -------
-    nodes : dataframe
-       Dataframe of nodes with Katz centrality as the value.
-
-    Examples
-    --------
-    >>> import math
-    >>> G = nx.path_graph(4)
-    >>> phi = (1 + math.sqrt(5)) / 2.0  # largest eigenvalue of adj matrix
-    >>> centrality = nx.katz_centrality(G, 1 / phi - 0.01)
-
-    """
-    return graphscope.katz_centrality(
+    if len(G) == 0:
+        return {}
+    if max_iter == 0:
+        raise nx.PowerIterationFailedConvergence(max_iter)
+    return _katz_centrality(
         G,
         alpha=alpha,
         beta=beta,
-        tolerance=tol,
-        max_round=max_iter,
+        tol=tol,
+        max_iter=max_iter,
         normalized=normalized,
+        weight=weight,
     )
 
 

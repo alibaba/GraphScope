@@ -79,51 +79,28 @@ class EigenvectorCentrality
     return false;
   }
 
-  template <typename FRAG_T_, typename = void>
-  struct Pull {
-    void operator()(const fragment_t& frag, context_t& ctx,
-                    message_manager_t& messages) {
-      auto inner_vertices = frag.InnerVertices();
-      auto& x = ctx.x;
-      auto& x_last = ctx.x_last;
+  void Pull(const fragment_t& frag, context_t& ctx,
+            message_manager_t& messages) {
+    auto inner_vertices = frag.InnerVertices();
+    auto& x = ctx.x;
+    auto& x_last = ctx.x_last;
 
-      for (auto& v : inner_vertices) {
-        auto es = frag.GetIncomingAdjList(v);
-        x[v] = x_last[v];
-        for (auto& e : es) {
-          x[v] += x_last[e.get_neighbor()];
-        }
+    for (auto& v : inner_vertices) {
+      auto es = frag.directed() ? frag.GetIncomingAdjList(v) : frag.GetOutgoingAdjList(v);
+      for (auto& e : es) {
+        double edata = 1.0;
+        static_if<!std::is_same<edata_t, grape::EmptyType>{}>(
+            [&](auto& e, auto& data) {
+              data = static_cast<double>(e.get_data());
+            })(e, edata);
+        x[v] += x_last[e.get_neighbor()] * edata;
       }
     }
-  };
-
-  template <typename FRAG_T_>
-  struct Pull<FRAG_T_,
-              typename std::enable_if<!std::is_same<
-                  typename FRAG_T_::edata_t, grape::EmptyType>::value>::type> {
-    void operator()(const fragment_t& frag, context_t& ctx,
-                    message_manager_t& messages) {
-      auto inner_vertices = frag.InnerVertices();
-      auto& x = ctx.x;
-      auto& x_last = ctx.x_last;
-
-      for (auto& v : inner_vertices) {
-        auto es = frag.GetIncomingAdjList(v);
-        for (auto& e : es) {
-          double edata = 1.0;
-          static_if<!std::is_same<edata_t, grape::EmptyType>{}>(
-              [&](auto& e, auto& data) {
-                data = static_cast<double>(e.get_data());
-              })(e, edata);
-          x[v] += x_last[e.get_neighbor()] * edata;
-        }
-      }
-    }
-  };
+  }
 
   void PEval(const fragment_t& frag, context_t& ctx,
              message_manager_t& messages) {
-    Pull<fragment_t>{}(frag, ctx, messages);
+    Pull(frag, ctx, messages);
     auto inner_vertices = frag.InnerVertices();
 
     // call NormAndCheckTerm before send. because we normalize the vector 'x' in
@@ -157,7 +134,7 @@ class EigenvectorCentrality
 
     x_last.Swap(x);
 
-    Pull<fragment_t>{}(frag, ctx, messages);
+    Pull(frag, ctx, messages);
 
     if (NormAndCheckTerm(frag, ctx))
       return;

@@ -76,7 +76,7 @@ class KatzCentrality : public AppBase<FRAG_T, KatzCentralityContext<FRAG_T>>,
     auto& x_last = ctx.x_last;
 
     for (auto& v : inner_vertices) {
-      auto es = frag.GetIncomingAdjList(v);
+      auto es = frag.directed() ? frag.GetIncomingAdjList(v) : frag.GetOutgoingAdjList(v);
       x[v] = 0;
       for (auto& e : es) {
         // do the multiplication y^T = Alpha * x^T A - Beta
