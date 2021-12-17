@@ -362,13 +362,13 @@ impl TryFrom<pb::IndexPredicate> for Vec<i64> {
 
     fn try_from(value: pb::IndexPredicate) -> Result<Self, Self::Error> {
         let mut global_ids = vec![];
-        for and_cond in value.or_conds {
-            let cond = and_cond
-                .conds
+        for and_predicate in value.or_predicates {
+            let predicate = and_predicate
+                .predicates
                 .get(0)
                 .ok_or(ParsePbError::EmptyFieldError("`AndCondition` is emtpy".to_string()))?;
 
-            let (key, value) = (cond.key.as_ref(), cond.value.as_ref());
+            let (key, value) = (predicate.key.as_ref(), predicate.value.as_ref());
             let key = key.ok_or("key is empty in kv_pair in indexed_scan")?;
             if let Some(common_pb::property::Item::Id(_id_key)) = key.item.as_ref() {
                 let value = value

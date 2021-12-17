@@ -166,18 +166,19 @@ message Limit {
 // where the values referred by k1, k2, ... are indexed and hence the
 // predicate can be efficiently verified by leveraging the index.
 message IndexPredicate {
-  // A pair defines that a key must be **equal** to a given constant value.
-  // TODO(longbin) More comparators (gt, ge, lt, le, ne) other than equivalence (eq) may be required
-  message EquivCond {
+  // A triplet defines that a key must be **equal** to a given constant value.
+  message Triplet {
     common.Property key = 1;
     common.Const value = 2;
+    // TODO(longbin) More comparators (gt, ge, lt, le, ne) other than equivalence (eq) may be required
+    common.None cmp = 3;
   }
-  // A collection of `EquivCond` that forms a logical **AND** of all `Condition`s.
-  message AndCondition {
-    repeated EquivCond conds = 1;
+  // A collection of `Triplet` that forms a logical **AND** of all `Predicate`s.
+  message AndPredicate {
+    repeated Triplet predicates = 1;
   }
-  // A collection of `AndCondition` that forms a logical **OR** of all `AndCondition`s
-  repeated AndCondition or_conds = 1;
+  // A collection of `AndPredicate` that forms a logical **OR** of all `AndPredicate`s
+  repeated AndPredicate or_predicates = 1;
 }
 
 message QueryParams {

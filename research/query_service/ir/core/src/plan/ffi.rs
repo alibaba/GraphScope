@@ -1256,48 +1256,67 @@ mod scan {
     }
 
     #[no_mangle]
-    pub extern "C" fn init_equiv_conditions() -> *const c_void {
-        let conditions: Box<Vec<pb::index_predicate::EquivCond>> = Box::new(vec![]);
-        Box::into_raw(conditions) as *const c_void
+    pub extern "C" fn init_index_predicate() -> *const c_void {
+        let predicate: Box<pb::IndexPredicate> = Box::new(pb::IndexPredicate { or_predicates: vec![] });
+        Box::into_raw(predicate) as *const c_void
+    }
+
+    fn parse_equiv_predicate(key: FfiProperty, value: FfiConst) -> FfiResult<pb::index_predicate::Triplet> {
+        Ok(pb::index_predicate::Triplet { key: key.try_into()?, value: Some(value.try_into()?), cmp: None })
     }
 
     #[no_mangle]
-    pub extern "C" fn add_equiv_condition(
-        ptr_conditions: *const c_void, key: FfiProperty, value: FfiConst,
+    pub extern "C" fn and_equiv_predicate(
+        ptr_predicate: *const c_void, key: FfiProperty, value: FfiConst,
     ) -> ResultCode {
-        let mut return_code = ResultCode::Success;
-        let key_pb: FfiResult<Option<common_pb::Property>> = key.try_into();
-        let value_pb: FfiResult<common_pb::Const> = value.try_into();
-        if key_pb.is_err() {
-            return_code = key_pb.err().unwrap();
-        } else if value_pb.is_err() {
-            return_code = value_pb.err().unwrap();
-        } else {
-            let mut conditions =
-                unsafe { Box::from_raw(ptr_conditions as *mut Vec<pb::index_predicate::EquivCond>) };
-            conditions.push(pb::index_predicate::EquivCond { key: key_pb.unwrap(), value: value_pb.ok() });
-            std::mem::forget(conditions)
-        }
+        let equiv_pred_result = parse_equiv_predicate(key, value);
+        if let Ok(equiv_pred) = equiv_pred_result {
+            let mut predicate = unsafe { Box::from_raw(ptr_predicate as *mut pb::IndexPredicate) };
+            if predicate.or_predicates.is_empty() {
+                predicate
+                    .or_predicates
+                    .push(pb::index_predicate::AndPredicate { predicates: vec![equiv_pred] });
+            } else {
+                predicate
+                    .or_predicates
+                    .last_mut()
+                    .unwrap()
+                    .predicates
+                    .push(equiv_pred)
+            }
+            std::mem::forget(predicate);
 
-        return_code
+            ResultCode::Success
+        } else {
+            equiv_pred_result.err().unwrap()
+        }
     }
 
     #[no_mangle]
-    pub extern "C" fn add_scan_equiv_conditions(
-        ptr_scan: *const c_void, ptr_conditions: *const c_void,
+    pub extern "C" fn or_equiv_predicate(
+        ptr_predicate: *const c_void, key: FfiProperty, value: FfiConst,
+    ) -> ResultCode {
+        let equiv_pred_result = parse_equiv_predicate(key, value);
+        if let Ok(equiv_pred) = equiv_pred_result {
+            let mut predicate = unsafe { Box::from_raw(ptr_predicate as *mut pb::IndexPredicate) };
+            predicate
+                .or_predicates
+                .push(pb::index_predicate::AndPredicate { predicates: vec![equiv_pred] });
+            std::mem::forget(predicate);
+
+            ResultCode::Success
+        } else {
+            equiv_pred_result.err().unwrap()
+        }
+    }
+
+    #[no_mangle]
+    pub extern "C" fn add_scan_index_predicate(
+        ptr_scan: *const c_void, ptr_predicate: *const c_void,
     ) -> ResultCode {
         let mut scan = unsafe { Box::from_raw(ptr_scan as *mut pb::Scan) };
-        let conditions =
-            unsafe { Box::from_raw(ptr_conditions as *mut Vec<pb::index_predicate::EquivCond>) };
-        if let Some(idx_predicate) = &mut scan.idx_predicate {
-            idx_predicate
-                .or_conds
-                .push(pb::index_predicate::AndCondition { conds: conditions.as_ref().clone() });
-        } else {
-            scan.idx_predicate = Some(pb::IndexPredicate {
-                or_conds: vec![pb::index_predicate::AndCondition { conds: conditions.as_ref().clone() }],
-            })
-        }
+        let predicate = unsafe { Box::from_raw(ptr_predicate as *mut pb::IndexPredicate) };
+        scan.idx_predicate = Some(predicate.as_ref().clone());
         std::mem::forget(scan);
 
         ResultCode::Success

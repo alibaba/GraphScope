@@ -53,11 +53,11 @@ impl SourceOperator {
                     if let Some(index_predicate) = &scan.idx_predicate {
                         let ip = index_predicate.clone();
                         let mut source_op = SourceOperator::try_from(scan)?;
-                        if !ip.or_conds.is_empty() {
-                            let global_ids: Vec<ID> = <Vec<i64>>::try_from(ip)?
-                                .into_iter()
-                                .map(|i| i as ID)
-                                .collect();
+                        let global_ids: Vec<ID> = <Vec<i64>>::try_from(ip)?
+                            .into_iter()
+                            .map(|i| i as ID)
+                            .collect();
+                        if !global_ids.is_empty() {
                             source_op.set_src(global_ids, job_workers, partitioner);
                             debug!("Runtime source op of indexed scan {:?}", source_op);
                         }
