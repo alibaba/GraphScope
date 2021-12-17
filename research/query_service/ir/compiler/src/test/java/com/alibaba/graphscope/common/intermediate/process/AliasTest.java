@@ -4,7 +4,6 @@ import com.alibaba.graphscope.common.intermediate.InterOpCollection;
 import com.alibaba.graphscope.common.intermediate.operator.AuxiliaOp;
 import com.alibaba.graphscope.common.intermediate.operator.OpArg;
 import com.alibaba.graphscope.common.intermediate.operator.SelectOp;
-import com.alibaba.graphscope.common.intermediate.process.AliasProcessor;
 import com.alibaba.graphscope.common.jna.IrCoreLibrary;
 import com.alibaba.graphscope.common.jna.type.FfiNameOrId;
 import org.junit.Assert;

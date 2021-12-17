@@ -18,8 +18,6 @@ package com.alibaba.graphscope.common.intermediate.operator;
 
 import com.alibaba.graphscope.common.IrPlan;
 import com.alibaba.graphscope.common.TestUtils;
-import com.alibaba.graphscope.common.intermediate.operator.LimitOp;
-import com.alibaba.graphscope.common.intermediate.operator.OpArg;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Test;

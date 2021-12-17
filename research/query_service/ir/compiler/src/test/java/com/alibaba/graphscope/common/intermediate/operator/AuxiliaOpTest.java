@@ -20,8 +20,6 @@ import com.alibaba.graphscope.common.IrPlan;
 import com.alibaba.graphscope.common.TestUtils;
 import com.alibaba.graphscope.common.intermediate.AliasArg;
 import com.alibaba.graphscope.common.intermediate.ArgUtils;
-import com.alibaba.graphscope.common.intermediate.operator.AuxiliaOp;
-import com.alibaba.graphscope.common.intermediate.operator.OpArg;
 import com.google.common.collect.Sets;
 import org.junit.After;
 import org.junit.Assert;

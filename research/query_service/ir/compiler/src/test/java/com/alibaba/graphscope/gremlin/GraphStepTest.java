@@ -16,6 +16,9 @@
 
 package com.alibaba.graphscope.gremlin;
 
+import com.alibaba.graphscope.common.intermediate.AliasArg;
+import com.alibaba.graphscope.common.intermediate.ArgUtils;
+import com.alibaba.graphscope.common.intermediate.operator.InterOpBase;
 import com.alibaba.graphscope.common.intermediate.operator.ScanFusionOp;
 import com.alibaba.graphscope.common.jna.type.FfiConst;
 import com.alibaba.graphscope.common.jna.type.FfiNameOrId;
@@ -78,5 +81,25 @@ public class GraphStepTest {
         ScanFusionOp op = (ScanFusionOp) StepTransformFactory.TINKER_GRAPH_STEP.apply(graphStep);
         String expr = (String) op.getPredicate().get().getArg();
         Assert.assertEquals("@.name == \"marko\"", expr);
+    }
+
+    @Test
+    public void g_V_as_test() {
+        Traversal traversal = g.V().as("a");
+        ScanFusionOp op = (ScanFusionOp) generateInterOpFromBuilder(traversal, 0);
+        AliasArg expected = new AliasArg(ArgUtils.strAsNameId("a"));
+        Assert.assertEquals(expected, op.getAlias().get().getArg());
+    }
+
+    @Test
+    public void g_E_as_test() {
+        Traversal traversal = g.E().as("a");
+        ScanFusionOp op = (ScanFusionOp) generateInterOpFromBuilder(traversal, 0);
+        AliasArg expected = new AliasArg(ArgUtils.strAsNameId("a"));
+        Assert.assertEquals(expected, op.getAlias().get().getArg());
+    }
+
+    private InterOpBase generateInterOpFromBuilder(Traversal traversal, int idx) {
+        return (new InterOpCollectionBuilder(traversal)).build().unmodifiableCollection().get(idx);
     }
 }

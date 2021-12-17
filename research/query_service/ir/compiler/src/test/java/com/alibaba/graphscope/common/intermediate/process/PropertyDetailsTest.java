@@ -20,8 +20,6 @@ import com.alibaba.graphscope.common.intermediate.operator.OpArg;
 import com.alibaba.graphscope.common.intermediate.operator.OrderOp;
 import com.alibaba.graphscope.common.intermediate.operator.ProjectOp;
 import com.alibaba.graphscope.common.intermediate.operator.SelectOp;
-import com.alibaba.graphscope.common.intermediate.process.PropertyDetailsProcessor;
-import com.alibaba.graphscope.common.intermediate.process.TagRequiredProperties;
 import com.alibaba.graphscope.common.jna.IrCoreLibrary;
 import com.alibaba.graphscope.common.jna.type.FfiNameOrId;
 import com.alibaba.graphscope.common.jna.type.FfiOrderOpt;

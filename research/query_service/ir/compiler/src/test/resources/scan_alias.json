@@ -5,15 +5,13 @@
         "opr": {
           "Scan": {
             "scan_opt": 0,
-            "alias": null,
+            "alias": {
+              "item": {
+                "Name": "a"
+              }
+            },
             "params": {
-              "table_names": [
-                {
-                  "item": {
-                    "Name": "person"
-                  }
-                }
-              ],
+              "table_names": [],
               "columns": [],
               "limit": null,
               "predicate": null,

@@ -99,7 +99,8 @@ public class IrPlan implements Closeable {
 
                 Optional<OpArg> aliasOpt = baseOp.getAlias();
                 if (aliasOpt.isPresent()) {
-                    irCoreLib.setScanAlias(scan, (FfiNameOrId.ByValue) aliasOpt.get().getArg());
+                    AliasArg alias = (AliasArg) aliasOpt.get().getArg();
+                    irCoreLib.setScanAlias(scan, alias.getAlias());
                 }
                 return scan;
             }
@@ -155,7 +156,8 @@ public class IrPlan implements Closeable {
 
                 Optional<OpArg> aliasOpt = baseOp.getAlias();
                 if (aliasOpt.isPresent()) {
-                    irCoreLib.setEdgexpdAlias(expand, (FfiNameOrId.ByValue) aliasOpt.get().getArg());
+                    AliasArg alias = (AliasArg) aliasOpt.get().getArg();
+                    irCoreLib.setEdgexpdAlias(expand, alias.getAlias());
                 }
                 return expand;
             }

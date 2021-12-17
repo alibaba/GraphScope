@@ -16,7 +16,11 @@
               }
             },
             "is_edge": true,
-            "alias": null
+            "alias": {
+              "item": {
+                "Name": "a"
+              }
+            }
           }
         }
       },
