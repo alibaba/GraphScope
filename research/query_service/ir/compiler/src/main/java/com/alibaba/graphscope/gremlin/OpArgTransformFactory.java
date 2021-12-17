@@ -17,6 +17,7 @@
 package com.alibaba.graphscope.gremlin;
 
 import com.alibaba.graphscope.common.exception.OpArgIllegalException;
+import com.alibaba.graphscope.common.intermediate.AliasArg;
 import com.alibaba.graphscope.common.intermediate.ArgUtils;
 import com.alibaba.graphscope.common.jna.type.*;
 import com.alibaba.graphscope.common.jna.type.FfiDirection;
@@ -142,29 +143,26 @@ public class OpArgTransformFactory {
     public static Function<VertexStep, List<FfiNameOrId.ByValue>> EDGE_LABELS_FROM_STEP = (VertexStep s1) ->
             Arrays.stream(s1.getEdgeLabels()).map(k -> ArgUtils.strAsNameId(k)).collect(Collectors.toList());
 
-    public static Function<Map<String, Traversal.Admin>, List<Pair<String, FfiNameOrId.ByValue>>>
+    public static Function<Map<String, Traversal.Admin>, List<Pair<String, AliasArg>>>
             PROJECT_EXPR_FROM_BY_TRAVERSALS = (Map<String, Traversal.Admin> map) -> {
-        // return List<<expr, alias>>
-        List<Pair<String, FfiNameOrId.ByValue>> exprWithAlias = new ArrayList<>();
+        // return List<<expr, AliasArg>>
+        List<Pair<String, AliasArg>> exprWithAlias = new ArrayList<>();
         map.forEach((k, v) -> {
             String expr = "@" + k;
-            String alias = ArgUtils.asHiddenStr(expr);
             if (v == null || v instanceof IdentityTraversal) { // select(..)
-                exprWithAlias.add(Pair.with(expr, ArgUtils.strAsNameId(alias)));
+                exprWithAlias.add(makeProjectPair(expr));
             } else if (v instanceof ValueTraversal) {
                 expr = String.format("@%s.%s", k, ((ValueTraversal) v).getPropertyKey()); // select(..).by('name')
-                alias = ArgUtils.asHiddenStr(expr);
-                exprWithAlias.add(Pair.with(expr, ArgUtils.strAsNameId(alias)));
+                exprWithAlias.add(makeProjectPair(expr));
             } else if (v.getSteps().size() == 1 && v.getStartStep() instanceof PropertyMapStep) { // select(..).by(valueMap(''))
                 String[] mapKeys = ((PropertyMapStep) v.getStartStep()).getPropertyKeys();
                 if (mapKeys.length > 0) {
                     for (int i = 0; i < mapKeys.length; ++i) {
                         String e1 = String.format("@%s.%s", k, mapKeys[i]);
-                        String a1 = ArgUtils.asHiddenStr(e1);
-                        exprWithAlias.add(Pair.with(e1, ArgUtils.strAsNameId(a1)));
+                        exprWithAlias.add(makeProjectPair(e1));
                     }
                 } else {
-                    exprWithAlias.add(Pair.with(expr, ArgUtils.strAsNameId(alias)));
+                    exprWithAlias.add(makeProjectPair(expr));
                 }
             } else {
                 throw new OpArgIllegalException(OpArgIllegalException.Cause.UNSUPPORTED_TYPE,
@@ -173,6 +171,10 @@ public class OpArgTransformFactory {
         });
         return exprWithAlias;
     };
+
+    private static Pair<String, AliasArg> makeProjectPair(String expr) {
+        return Pair.with(expr, new AliasArg(ArgUtils.strAsNameId(expr), false));
+    }
 
     public static Function<List<Pair<Traversal.Admin, Comparator>>, List<Pair<FfiVariable.ByValue, FfiOrderOpt>>>
             ORDER_VAR_FROM_COMPARATORS = (List<Pair<Traversal.Admin, Comparator>> list) -> {
@@ -233,5 +235,6 @@ public class OpArgTransformFactory {
         return valueExpr;
     }
 
-    public static Function<String, FfiNameOrId.ByValue> STEP_TAG_TO_OP_ALIAS = (String tag) -> ArgUtils.strAsNameId(tag);
+    // isQueryGiven is set as true by default
+    public static Function<String, AliasArg> STEP_TAG_TO_OP_ALIAS = (String tag) -> new AliasArg(ArgUtils.strAsNameId(tag));
 }

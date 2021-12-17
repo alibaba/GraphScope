@@ -18,10 +18,12 @@ package com.alibaba.graphscope.gremlin;
 
 import com.alibaba.graphscope.common.exception.OpArgIllegalException;
 import com.alibaba.graphscope.common.intermediate.InterOpCollection;
+import com.alibaba.graphscope.common.jna.type.FfiNameIdOpt;
 import com.alibaba.graphscope.gremlin.exception.UnsupportedStepException;
 import com.alibaba.graphscope.common.intermediate.operator.*;
 import com.alibaba.graphscope.common.jna.type.FfiScanOpt;
 import com.google.common.collect.ImmutableMap;
+import javafx.util.Pair;
 import org.apache.tinkerpop.gremlin.process.traversal.Step;
 import org.apache.tinkerpop.gremlin.process.traversal.Traversal;
 import org.apache.tinkerpop.gremlin.process.traversal.step.filter.HasStep;

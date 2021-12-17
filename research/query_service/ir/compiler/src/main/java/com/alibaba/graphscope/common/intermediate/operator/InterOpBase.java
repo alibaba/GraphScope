@@ -20,6 +20,7 @@ import java.util.Optional;
 
 public abstract class InterOpBase {
     // set tag to store the intermediate result
+    // AliasArg
     private Optional<OpArg> alias;
 
     public InterOpBase() {

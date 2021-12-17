@@ -16,6 +16,7 @@
 
 package com.alibaba.graphscope.gremlin;
 
+import com.alibaba.graphscope.common.intermediate.AliasArg;
 import com.alibaba.graphscope.common.intermediate.ArgUtils;
 import com.alibaba.graphscope.common.intermediate.operator.ProjectOp;
 import org.apache.tinkerpop.gremlin.process.traversal.Step;
@@ -41,8 +42,9 @@ public class ValueMapTest {
         Step valueMapStep = traversal.asAdmin().getEndStep();
         ProjectOp op = (ProjectOp) StepTransformFactory.VALUE_MAP_STEP.apply(valueMapStep);
 
-        List<Pair> expected = Arrays.asList(Pair.with("@.name", ArgUtils.strAsNameId("~@.name")),
-                Pair.with("@.id", ArgUtils.strAsNameId("~@.id")));
+        List<Pair> expected = Arrays.asList(
+                Pair.with("@.name", new AliasArg(ArgUtils.strAsNameId("@.name"), false)),
+                Pair.with("@.id", new AliasArg(ArgUtils.strAsNameId("@.id"), false)));
         Assert.assertEquals(expected, op.getProjectExprWithAlias().get().getArg());
     }
 }

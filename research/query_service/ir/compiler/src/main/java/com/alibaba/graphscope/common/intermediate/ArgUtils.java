@@ -26,7 +26,6 @@ public class ArgUtils {
     private static IrCoreLibrary irCoreLib = IrCoreLibrary.INSTANCE;
     private static String LABEL = "~label";
     private static String ID = "~id";
-    private static final String HIDDEN_PREFIX = "~";
 
     public static FfiNameOrId.ByValue strAsNameId(String value) {
         return irCoreLib.cstrAsNameOrId(value);
@@ -56,14 +55,6 @@ public class ArgUtils {
 
     public static FfiVariable.ByValue asNoneVar() {
         return irCoreLib.asNoneVar();
-    }
-
-    public static String asHiddenStr(String value) {
-        return HIDDEN_PREFIX + value;
-    }
-
-    public static boolean isHiddenStr(String value) {
-        return value != null && value.startsWith(HIDDEN_PREFIX);
     }
 }
 
