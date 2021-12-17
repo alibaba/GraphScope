@@ -41,11 +41,11 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 
 // build IrPlan from gremlin traversal
-public class InterOpCollectionBuidler {
-    private static final Logger logger = LoggerFactory.getLogger(InterOpCollectionBuidler.class);
+public class InterOpCollectionBuilder {
+    private static final Logger logger = LoggerFactory.getLogger(InterOpCollectionBuilder.class);
     private Traversal traversal;
 
-    public InterOpCollectionBuidler(Traversal traversal) {
+    public InterOpCollectionBuilder(Traversal traversal) {
         this.traversal = traversal;
     }
 
