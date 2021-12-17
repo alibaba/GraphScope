@@ -13,11 +13,12 @@ use byteorder::{LittleEndian, ReadBytesExt, WriteBytesExt};
 use memmap::Mmap;
 use nohash_hasher::{BuildNoHashHasher, IntMap};
 
-use crate::graph::IdGraph;
+use crate::topo::IdTopo;
 
 pub mod graph;
+pub mod topo;
 
-pub type Graph = IdGraph<NeighborsBackend>;
+pub type Graph = IdTopo<NeighborsBackend>;
 
 pub fn extract_partition<P: AsRef<Path>>(
     path: P, partition: u64, partitions: usize,
@@ -30,7 +31,7 @@ pub fn partition<P: AsRef<Path>>(_path: P, _partitions: usize) -> std::io::Resul
     todo!()
 }
 
-pub fn load<P: AsRef<Path>>(path: P) -> std::io::Result<IdGraph<NeighborsBackend>> {
+pub fn load<P: AsRef<Path>>(path: P) -> std::io::Result<IdTopo<NeighborsBackend>> {
     if path.as_ref().extension() == Some(OsStr::new("bin")) {
         println!("start load binary ... ");
         let file = File::open(path)?;
@@ -69,7 +70,7 @@ fn load_bin(binary: Mmap) -> std::io::Result<Graph> {
     };
 
     let backend = NeighborsBackend::new(binary);
-    let graph = IdGraph::new(vertices, backend);
+    let graph = IdTopo::new(vertices, backend);
     println!(
         "load graph with {} vertices, {} edges, cost {:?}",
         graph.total_vertices(),

@@ -541,6 +541,7 @@ dependencies = [
 name = "pegasus_graph"
 version = "0.1.0"
 dependencies = [
+ "ahash",
  "byteorder",
  "lazy_static",
  "memmap",

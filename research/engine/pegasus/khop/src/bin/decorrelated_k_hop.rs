@@ -73,7 +73,7 @@ fn main() {
         }
         ids
     } else {
-        graph.sample_vertices(config.starts as usize)
+        graph.sample_vertices(config.starts as usize, 0.1)
     };
 
     let src = src
