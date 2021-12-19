@@ -63,3 +63,4 @@ from graphscope.nx.algorithms.builtin import in_degree_centrality
 from graphscope.nx.algorithms.builtin import katz_centrality
 from graphscope.nx.algorithms.builtin import node_boundary
 from graphscope.nx.algorithms.builtin import out_degree_centrality
+from graphscope.nx.algorithms.builtin import is_simple_path

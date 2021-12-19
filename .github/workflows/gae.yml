@@ -32,7 +32,8 @@ jobs:
   build-gae:
     runs-on: ubuntu-20.04
     container:
-      image: registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-vineyard:v0.3.12
+      # image: registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-vineyard:v0.3.12
+      image: registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-vineyard:mock_directed
       options:
         --shm-size 4096m
     steps:
