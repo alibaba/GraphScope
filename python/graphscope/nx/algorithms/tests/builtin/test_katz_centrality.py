@@ -15,6 +15,7 @@
 # NetworkX is distributed under a BSD license; see LICENSE.txt for more
 # information.
 #
+
 import math
 
 import pytest
@@ -64,6 +65,7 @@ class TestKatzCentrality(object):
         for n in sorted(G):
             assert almost_equal(b[n], b_answer[n], places=4)
 
+    @pytest.mark.skip(reason="not support beta as dict")
     def test_beta_as_dict(self):
         alpha = 0.1
         beta = {0: 1.0, 1: 1.0, 2: 1.0}
@@ -121,6 +123,7 @@ class TestKatzCentrality(object):
         e = nx.builtin.katz_centrality(nx.Graph(), 0.1)
         assert e == {}
 
+    @pytest.mark.skip(reason="not support beta as dict")
     def test_bad_beta(self):
         with pytest.raises(nx.NetworkXException):
             G = nx.Graph([(0, 1)])
@@ -322,19 +325,19 @@ class TestKatzCentralityDirected(object):
         G = self.G
         alpha = self.G.alpha
         p = nx.builtin.katz_centrality(G, alpha, weight="weight")
-        for (a, b) in zip(list(p.values()), self.G.evc):
+        for (a, b) in zip(list(dict(sorted(p.items())).values()), self.G.evc):
             assert almost_equal(a, b)
 
     def test_katz_centrality_unweighted(self):
         H = self.H
         alpha = self.H.alpha
         p = nx.builtin.katz_centrality(H, alpha, weight="weight")
-        for (a, b) in zip(list(p.values()), self.H.evc):
+        for (a, b) in zip(list(dict(sorted(p.items())).values()), self.H.evc):
             assert almost_equal(a, b)
 
 
 @pytest.mark.usefixtures("graphscope_session")
-@pytest.mark.skip(reason="wait to check.")
+@pytest.mark.skip(reason="not support katz_centrality_numpy")
 class TestKatzCentralityDirectedNumpy(TestKatzCentralityDirected):
     @classmethod
     def setup_class(cls):
@@ -358,7 +361,7 @@ class TestKatzCentralityDirectedNumpy(TestKatzCentralityDirected):
 
 
 @pytest.mark.usefixtures("graphscope_session")
-@pytest.mark.skip(reason="wait to check.")
+@pytest.mark.skip(reason="not support katz_centrality_numpy")
 class TestKatzEigenvectorVKatz(object):
     @classmethod
     def setup_class(cls):

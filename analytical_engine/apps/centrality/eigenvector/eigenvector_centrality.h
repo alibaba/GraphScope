@@ -85,15 +85,31 @@ class EigenvectorCentrality
     auto& x = ctx.x;
     auto& x_last = ctx.x_last;
 
-    for (auto& v : inner_vertices) {
-      auto es = frag.directed() ? frag.GetIncomingAdjList(v) : frag.GetOutgoingAdjList(v);
-      for (auto& e : es) {
-        double edata = 1.0;
-        static_if<!std::is_same<edata_t, grape::EmptyType>{}>(
-            [&](auto& e, auto& data) {
-              data = static_cast<double>(e.get_data());
-            })(e, edata);
-        x[v] += x_last[e.get_neighbor()] * edata;
+    if (frag.directed()) {
+      for (auto& v : inner_vertices) {
+        x[v] = x_last[v];
+        auto es = frag.GetIncomingAdjList(v);
+        for (auto& e : es) {
+          double edata = 1.0;
+          static_if<!std::is_same<edata_t, grape::EmptyType>{}>(
+              [&](auto& e, auto& data) {
+                data = static_cast<double>(e.get_data());
+              })(e, edata);
+          x[v] += x_last[e.get_neighbor()] * edata;
+        }
+      }
+    } else {
+      for (auto& v : inner_vertices) {
+        x[v] = x_last[v];
+        auto es = frag.GetOutgoingAdjList(v);
+        for (auto& e : es) {
+          double edata = 1.0;
+          static_if<!std::is_same<edata_t, grape::EmptyType>{}>(
+              [&](auto& e, auto& data) {
+                data = static_cast<double>(e.get_data());
+              })(e, edata);
+          x[v] += x_last[e.get_neighbor()] * edata;
+        }
       }
     }
   }

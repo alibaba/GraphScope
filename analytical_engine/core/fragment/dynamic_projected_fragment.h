@@ -627,14 +627,12 @@ class DynamicProjectedFragment {
     if (ie_pos == -1) {
       return adj_list_t();
     }
-    return adj_list_t(
-        fragment_->id_mask(), fragment_->ivnum(), e_prop_key_,
-        fragment_->inner_edge_space()[ie_pos].begin(),
-        fragment_->inner_edge_space()[ie_pos].end());
+    return adj_list_t(fragment_->id_mask(), fragment_->ivnum(), e_prop_key_,
+                      fragment_->inner_edge_space()[ie_pos].begin(),
+                      fragment_->inner_edge_space()[ie_pos].end());
   }
 
-  inline const_adj_list_t GetIncomingAdjList(
-      const vertex_t& v) const {
+  inline const_adj_list_t GetIncomingAdjList(const vertex_t& v) const {
     int32_t ie_pos;
     if (fragment_->duplicated() && fragment_->IsOuterVertex(v)) {
       ie_pos = fragment_->outer_ie_pos()[v.GetValue() - fragment_->ivnum()];
@@ -644,22 +642,20 @@ class DynamicProjectedFragment {
     if (ie_pos == -1) {
       return const_adj_list_t();
     }
-    return const_adj_list_t(
-        fragment_->id_mask(), fragment_->ivnum(), e_prop_key_,
-        fragment_->inner_edge_space()[ie_pos].cbegin(),
-        fragment_->inner_edge_space()[ie_pos].cend());
+    return const_adj_list_t(fragment_->id_mask(), fragment_->ivnum(),
+                            e_prop_key_,
+                            fragment_->inner_edge_space()[ie_pos].cbegin(),
+                            fragment_->inner_edge_space()[ie_pos].cend());
   }
 
-  inline adj_list_t GetIncomingInnerVertexAdjList(
-      const vertex_t& v) {
+  inline adj_list_t GetIncomingInnerVertexAdjList(const vertex_t& v) {
     auto ie_pos = fragment_->inner_ie_pos()[v.GetValue()];
     if (ie_pos == -1) {
       return adj_list_t();
     }
-    return adj_list_t(
-        fragment_->id_mask(), fragment_->ivnum(), e_prop_key_,
-        fragment_->inner_edge_space().InnerNbr(ie_pos).begin(),
-        fragment_->inner_edge_space().InnerNbr(ie_pos).end());
+    return adj_list_t(fragment_->id_mask(), fragment_->ivnum(), e_prop_key_,
+                      fragment_->inner_edge_space().InnerNbr(ie_pos).begin(),
+                      fragment_->inner_edge_space().InnerNbr(ie_pos).end());
   }
 
   inline const_adj_list_t GetIncomingInnerVertexAdjList(
@@ -674,16 +670,14 @@ class DynamicProjectedFragment {
         fragment_->inner_edge_space().InnerNbr(ie_pos).cend());
   }
 
-  inline adj_list_t GetIncomingOuterVertexAdjList(
-      const vertex_t& v) {
+  inline adj_list_t GetIncomingOuterVertexAdjList(const vertex_t& v) {
     auto ie_pos = fragment_->inner_ie_pos()[v.GetValue()];
     if (ie_pos == -1) {
       return adj_list_t();
     }
-    return adj_list_t(
-        fragment_->id_mask(), fragment_->ivnum(), e_prop_key_,
-        fragment_->inner_edge_space().OuterNbr(ie_pos).begin(),
-        fragment_->inner_edge_space().OuterNbr(ie_pos).end());
+    return adj_list_t(fragment_->id_mask(), fragment_->ivnum(), e_prop_key_,
+                      fragment_->inner_edge_space().OuterNbr(ie_pos).begin(),
+                      fragment_->inner_edge_space().OuterNbr(ie_pos).end());
   }
 
   inline const_adj_list_t GetIncomingOuterVertexAdjList(
@@ -708,14 +702,12 @@ class DynamicProjectedFragment {
     if (oe_pos == -1) {
       return adj_list_t();
     }
-    return adj_list_t(
-        fragment_->id_mask(), fragment_->ivnum(), e_prop_key_,
-        fragment_->inner_edge_space()[oe_pos].begin(),
-        fragment_->inner_edge_space()[oe_pos].end());
+    return adj_list_t(fragment_->id_mask(), fragment_->ivnum(), e_prop_key_,
+                      fragment_->inner_edge_space()[oe_pos].begin(),
+                      fragment_->inner_edge_space()[oe_pos].end());
   }
 
-  inline const_adj_list_t GetOutgoingAdjList(
-      const vertex_t& v) const {
+  inline const_adj_list_t GetOutgoingAdjList(const vertex_t& v) const {
     int32_t oe_pos;
     if (fragment_->duplicated() && fragment_->IsOuterVertex(v)) {
       oe_pos = fragment_->outer_oe_pos()[v.GetValue() - fragment_->ivnum()];
@@ -725,22 +717,20 @@ class DynamicProjectedFragment {
     if (oe_pos == -1) {
       return const_adj_list_t();
     }
-    return const_adj_list_t(
-        fragment_->id_mask(), fragment_->ivnum(), e_prop_key_,
-        fragment_->inner_edge_space()[oe_pos].cbegin(),
-        fragment_->inner_edge_space()[oe_pos].cend());
+    return const_adj_list_t(fragment_->id_mask(), fragment_->ivnum(),
+                            e_prop_key_,
+                            fragment_->inner_edge_space()[oe_pos].cbegin(),
+                            fragment_->inner_edge_space()[oe_pos].cend());
   }
 
-  inline adj_list_t GetOutgoingInnerVertexAdjList(
-      const vertex_t& v) {
+  inline adj_list_t GetOutgoingInnerVertexAdjList(const vertex_t& v) {
     auto oe_pos = fragment_->inner_oe_pos()[v.GetValue()];
     if (oe_pos == -1) {
       return adj_list_t();
     }
-    return adj_list_t(
-        fragment_->id_mask(), fragment_->ivnum(), e_prop_key_,
-        fragment_->inner_edge_space().InnerNbr(oe_pos).begin(),
-        fragment_->inner_edge_space().InnerNbr(oe_pos).end());
+    return adj_list_t(fragment_->id_mask(), fragment_->ivnum(), e_prop_key_,
+                      fragment_->inner_edge_space().InnerNbr(oe_pos).begin(),
+                      fragment_->inner_edge_space().InnerNbr(oe_pos).end());
   }
 
   inline const_adj_list_t GetOutgoingInnerVertexAdjList(
@@ -755,16 +745,14 @@ class DynamicProjectedFragment {
         fragment_->inner_edge_space().InnerNbr(oe_pos).cend());
   }
 
-  inline adj_list_t GetOutgoingOuterVertexAdjList(
-      const vertex_t& v) {
+  inline adj_list_t GetOutgoingOuterVertexAdjList(const vertex_t& v) {
     auto oe_pos = fragment_->inner_oe_pos()[v.GetValue()];
     if (oe_pos == -1) {
       return adj_list_t();
     }
-    return adj_list_t(
-        fragment_->id_mask(), fragment_->ivnum(), e_prop_key_,
-        fragment_->inner_edge_space().OuterNbr(oe_pos).begin(),
-        fragment_->inner_edge_space().OuterNbr(oe_pos).end());
+    return adj_list_t(fragment_->id_mask(), fragment_->ivnum(), e_prop_key_,
+                      fragment_->inner_edge_space().OuterNbr(oe_pos).begin(),
+                      fragment_->inner_edge_space().OuterNbr(oe_pos).end());
   }
 
   inline const_adj_list_t GetOutgoingOuterVertexAdjList(

@@ -1,19 +1,19 @@
-#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 #
-# Copyright 2020 Alibaba Group Holding Limited. All Rights Reserved.
+# This file is referred and derived from project NetworkX
 #
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
+# which has the following license:
 #
-#     http://www.apache.org/licenses/LICENSE-2.0
+# Copyright (C) 2004-2020, NetworkX Developers
+# Aric Hagberg <hagberg@lanl.gov>
+# Dan Schult <dschult@colgate.edu>
+# Pieter Swart <swart@lanl.gov>
+# All rights reserved.
 #
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
+# This file is part of NetworkX.
+#
+# NetworkX is distributed under a BSD license; see LICENSE.txt for more
+# information.
 #
 
 import functools
@@ -236,11 +236,11 @@ def out_degree_centrality(G):
     return graphscope.degree_centrality(G, centrality_type="out")
 
 
-@context_to_dict
 @not_implemented_for("multigraph")
 def eigenvector_centrality(G, max_iter=100, tol=1e-06, weight=None):
     # TODO(@weibin): raise PowerIterationFailedConvergence if eigenvector fails to converge
     # within the specified number of iterations.
+    @context_to_dict
     @project_to_simple
     def _eigenvector_centrality(G, max_iter=100, tol=1e-06, weight=None):
         return graphscope.eigenvector_centrality(G, tolerance=tol, max_round=max_iter)
@@ -254,7 +254,7 @@ def eigenvector_centrality(G, max_iter=100, tol=1e-06, weight=None):
     return _eigenvector_centrality(G, max_iter=max_iter, tol=tol, weight=weight)
 
 
-@context_to_dict
+@not_implemented_for("multigraph")
 def katz_centrality(
     G,
     alpha=0.1,
@@ -266,6 +266,7 @@ def katz_centrality(
 ):
     # TODO(@weibin): raise PowerIterationFailedConvergence if katz fails to converge
     # within the specified number of iterations.
+    @context_to_dict
     @project_to_simple
     def _katz_centrality(
         G,
@@ -287,6 +288,8 @@ def katz_centrality(
 
     if len(G) == 0:
         return {}
+    if not isinstance(beta, (int, float)):
+        raise nx.NetworkXError("beta should be number, not {}".format(type(beta)))
     if max_iter == 0:
         raise nx.PowerIterationFailedConvergence(max_iter)
     return _katz_centrality(
