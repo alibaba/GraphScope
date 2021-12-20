@@ -282,7 +282,7 @@ jobs:
     - name: Upload Coverage
       uses: codecov/codecov-action@v2
       with:
-        file: ./python/coverage.xml
+        file: ./coverage.xml
         fail_ci_if_error: true
 
   networkx-basic-test:
@@ -574,7 +574,7 @@ jobs:
       - name: Upload Coverage
         uses: codecov/codecov-action@v2
         with:
-          file: ./python/coverage.xml
+          file: ./coverage.xml
           fail_ci_if_error: true
 
       - name: Helm Test
