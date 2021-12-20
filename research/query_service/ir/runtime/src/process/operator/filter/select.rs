@@ -29,10 +29,7 @@ struct SelectOperator {
 
 impl FilterFunction<Record> for SelectOperator {
     fn test(&self, input: &Record) -> FnResult<bool> {
-        let res = self
-            .filter
-            .eval_bool(Some(input))
-            .map_err(|e| FnExecError::from(e))?;
+        let res = self.filter.eval_bool(Some(input)).map_err(|e| FnExecError::from(e))?;
         Ok(res)
     }
 }
@@ -52,7 +49,6 @@ impl FilterFuncGen for algebra_pb::Select {
 #[cfg(test)]
 mod tests {
     use ir_common::generated::algebra as pb;
-    use ir_common::NameOrId;
     use pegasus::api::{Filter, Sink};
     use pegasus::result::ResultStream;
     use pegasus::JobConf;
@@ -83,7 +79,7 @@ mod tests {
 
     // g.V().has("id",gt(1))
     #[test]
-    fn select_test_01() {
+    fn select_gt_test() {
         let select_opr_pb = pb::Select { predicate: Some(str_to_expr_pb("@.id > 1".to_string()).unwrap()) };
         let mut result = select_test(init_source(), select_opr_pb);
         let mut count = 0;
@@ -97,9 +93,25 @@ mod tests {
         assert_eq!(count, 1);
     }
 
+    // g.V().has("id",lt(2))
+    #[test]
+    fn select_lt_test() {
+        let select_opr_pb = pb::Select { predicate: Some(str_to_expr_pb("@.id < 2".to_string()).unwrap()) };
+        let mut result = select_test(init_source(), select_opr_pb);
+        let mut count = 0;
+        while let Some(Ok(record)) = result.next() {
+            if let Some(element) = record.get(None).unwrap().as_graph_element() {
+                assert!(element.id() < 2)
+            }
+            count += 1;
+        }
+
+        assert_eq!(count, 1);
+    }
+
     // g.V().has("name","marko")
     #[test]
-    fn select_test_02() {
+    fn select_eq_test() {
         let select_opr_pb =
             pb::Select { predicate: Some(str_to_expr_pb("@.name == \"marko\"".to_string()).unwrap()) };
         let mut result = select_test(init_source(), select_opr_pb);
@@ -111,7 +123,7 @@ mod tests {
                         element
                             .details()
                             .unwrap()
-                            .get_property(&NameOrId::Str("name".to_string()))
+                            .get_property(&"name".into())
                             .unwrap()
                             .try_to_owned()
                             .unwrap(),
