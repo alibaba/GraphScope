@@ -23,11 +23,11 @@ all: graphscope
 graphscope: install
 
 .PHONY: gsruntime-image
-gsruntime:
+gsruntime-image:
 	$(MAKE) -C $(WORKING_DIR)/k8s/ gsruntime-image VERSION=$(VERSION)
 
 .PHONY: gsvineyard-image
-gsvineyard:
+gsvineyard-image:
 	$(MAKE) -C $(WORKING_DIR)/k8s/ gsvineyard-image VERSION=$(VERSION)
 
 .PHONY: graphscope-image

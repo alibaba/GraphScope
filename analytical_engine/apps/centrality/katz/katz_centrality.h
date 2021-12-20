@@ -75,20 +75,38 @@ class KatzCentrality : public AppBase<FRAG_T, KatzCentralityContext<FRAG_T>>,
     auto& x = ctx.x;
     auto& x_last = ctx.x_last;
 
-    for (auto& v : inner_vertices) {
-      auto es = frag.GetIncomingAdjList(v);
-      x[v] = 0;
-      for (auto& e : es) {
-        // do the multiplication y^T = Alpha * x^T A - Beta
-        double edata = 1.0;
-        static_if<!std::is_same<edata_t, grape::EmptyType>{}>(
-            [&](auto& e, auto& data) {
-              data = static_cast<double>(e.get_data());
-            })(e, edata);
-        x[v] += x_last[e.get_neighbor()] * edata;
+    if (frag.directed()) {
+      for (auto& v : inner_vertices) {
+        auto es = frag.GetIncomingAdjList(v);
+        x[v] = 0;
+        for (auto& e : es) {
+          // do the multiplication y^T = Alpha * x^T A - Beta
+          double edata = 1.0;
+          static_if<!std::is_same<edata_t, grape::EmptyType>{}>(
+              [&](auto& e, auto& data) {
+                data = static_cast<double>(e.get_data());
+              })(e, edata);
+          x[v] += x_last[e.get_neighbor()] * edata;
+        }
+        x[v] = x[v] * ctx.alpha + ctx.beta;
+        messages.SendMsgThroughEdges(frag, v, ctx.x[v]);
       }
-      x[v] = x[v] * ctx.alpha + ctx.beta;
-      messages.SendMsgThroughEdges(frag, v, ctx.x[v]);
+    } else {
+      for (auto& v : inner_vertices) {
+        auto es = frag.GetOutgoingAdjList(v);
+        x[v] = 0;
+        for (auto& e : es) {
+          // do the multiplication y^T = Alpha * x^T A - Beta
+          double edata = 1.0;
+          static_if<!std::is_same<edata_t, grape::EmptyType>{}>(
+              [&](auto& e, auto& data) {
+                data = static_cast<double>(e.get_data());
+              })(e, edata);
+          x[v] += x_last[e.get_neighbor()] * edata;
+        }
+        x[v] = x[v] * ctx.alpha + ctx.beta;
+        messages.SendMsgThroughEdges(frag, v, ctx.x[v]);
+      }
     }
   }
 

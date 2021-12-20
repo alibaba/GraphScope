@@ -27,29 +27,16 @@ from graphscope.nx.tests.utils import almost_equal
 
 
 @pytest.mark.usefixtures("graphscope_session")
-class TestRunEigenvectorCentrality(object):
-    def test_run_eigenvector(self):
-        G1 = nx.complete_graph(10)
-        G = nx.Graph()
-        G.add_edges_from(G1.edges, weight=1)
-        nx.builtin.eigenvector_centrality(G)
-
-
-@pytest.mark.usefixtures("graphscope_session")
-@pytest.mark.skip(reason="output not ready, wait to check.")
 class TestEigenvectorCentrality(object):
     def test_K5(self):
         """Eigenvector centrality: K5"""
         G = nx.complete_graph(5)
-        b = nx.eigenvector_centrality(G)
+        b = nx.builtin.eigenvector_centrality(G)
         v = math.sqrt(1 / 5.0)
         b_answer = dict.fromkeys(G, v)
         for n in sorted(G):
             assert almost_equal(b[n], b_answer[n])
         nstart = dict([(n, 1) for n in G])
-        b = nx.eigenvector_centrality(G, nstart=nstart)
-        for n in sorted(G):
-            assert almost_equal(b[n], b_answer[n])
 
         b = nx.eigenvector_centrality_numpy(G)
         for n in sorted(G):
@@ -62,7 +49,7 @@ class TestEigenvectorCentrality(object):
         b = nx.eigenvector_centrality_numpy(G)
         for n in sorted(G):
             assert almost_equal(b[n], b_answer[n], places=4)
-        b = nx.eigenvector_centrality(G)
+        b = nx.builtin.eigenvector_centrality(G)
         for n in sorted(G):
             assert almost_equal(b[n], b_answer[n], places=4)
 
@@ -77,11 +64,10 @@ class TestEigenvectorCentrality(object):
     def test_maxiter(self):
         with pytest.raises(nx.PowerIterationFailedConvergence):
             G = nx.path_graph(3)
-            b = nx.eigenvector_centrality(G, max_iter=0)
+            b = nx.builtin.eigenvector_centrality(G, max_iter=0)
 
 
 @pytest.mark.usefixtures("graphscope_session")
-@pytest.mark.skip(reason="output not ready, wait to check.")
 class TestEigenvectorCentralityDirected(object):
     @classmethod
     def setup_class(cls):
@@ -157,35 +143,33 @@ class TestEigenvectorCentralityDirected(object):
 
     def test_eigenvector_centrality_weighted(self):
         G = self.G
-        p = nx.eigenvector_centrality(G)
-        for (a, b) in zip(list(p.values()), self.G.evc):
+        p = nx.builtin.eigenvector_centrality(G)
+        for (a, b) in zip(list(dict(sorted(p.items())).values()), self.G.evc):
             assert almost_equal(a, b, places=4)
 
     def test_eigenvector_centrality_weighted_numpy(self):
         G = self.G
-        p = nx.eigenvector_centrality_numpy(G)
-        for (a, b) in zip(list(p.values()), self.G.evc):
+        p = nx.eigenvector_centrality_numpy(G, weight="weight")
+        for (a, b) in zip(list(dict(sorted(p.items())).values()), self.G.evc):
             assert almost_equal(a, b)
 
     def test_eigenvector_centrality_unweighted(self):
         G = self.H
-        p = nx.eigenvector_centrality(G)
-        for (a, b) in zip(list(p.values()), self.G.evc):
+        p = nx.builtin.eigenvector_centrality(G)
+        for (a, b) in zip(list(dict(sorted(p.items())).values()), self.G.evc):
             assert almost_equal(a, b, places=4)
 
     def test_eigenvector_centrality_unweighted_numpy(self):
         G = self.H
         p = nx.eigenvector_centrality_numpy(G)
-        for (a, b) in zip(list(p.values()), self.G.evc):
+        for (a, b) in zip(list(dict(sorted(p.items())).values()), self.H.evc):
             assert almost_equal(a, b)
 
 
-@pytest.mark.usefixtures("graphscope_session")
-@pytest.mark.skip(reason="output not ready, wait to check.")
 class TestEigenvectorCentralityExceptions(object):
     def test_multigraph(self):
         with pytest.raises(nx.NetworkXException):
-            e = nx.eigenvector_centrality(nx.MultiGraph())
+            e = nx.builtin.eigenvector_centrality(nx.MultiGraph())
 
     def test_multigraph_numpy(self):
         with pytest.raises(nx.NetworkXException):

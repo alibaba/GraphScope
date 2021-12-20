@@ -1,19 +1,19 @@
-#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 #
-# Copyright 2020 Alibaba Group Holding Limited. All Rights Reserved.
+# This file is referred and derived from project NetworkX
 #
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
+# which has the following license:
 #
-#     http://www.apache.org/licenses/LICENSE-2.0
+# Copyright (C) 2004-2020, NetworkX Developers
+# Aric Hagberg <hagberg@lanl.gov>
+# Dan Schult <dschult@colgate.edu>
+# Pieter Swart <swart@lanl.gov>
+# All rights reserved.
 #
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
+# This file is part of NetworkX.
+#
+# NetworkX is distributed under a BSD license; see LICENSE.txt for more
+# information.
 #
 
 import functools
@@ -26,11 +26,9 @@ from networkx.utils.decorators import not_implemented_for
 import graphscope
 from graphscope import nx
 from graphscope.framework.app import AppAssets
-from graphscope.framework.app import not_compatible_for
 from graphscope.framework.errors import InvalidArgumentError
 from graphscope.nx.utils.compat import patch_docstring
 from graphscope.proto import graph_def_pb2
-from graphscope.proto import types_pb2
 
 
 # decorator function
@@ -48,6 +46,11 @@ def project_to_simple(func):
                 "weight" in inspect.getfullargspec(func)[0]
             ):  # func has 'weight' argument
                 weight = kwargs.get("weight", None)
+                try:
+                    e_label = graph.schema.vertex_labels[0]
+                    graph.schema.get_edge_property_id(e_label, weight)
+                except KeyError:
+                    weight = None
                 graph = graph._project_to_simple(e_prop=weight)
             elif "attribute" in inspect.getfullargspec(func)[0]:
                 attribute = kwargs.get("attribute", None)
@@ -87,7 +90,8 @@ def context_to_dict(func):
 
 @context_to_dict
 @project_to_simple
-def pagerank(G, alpha=0.85, max_iter=100, tol=1.0e-6):
+@not_implemented_for("multigraph")
+def pagerank(G, alpha=0.85, max_iter=100, tol=1.0e-6, weight="weight"):
     """Returns the PageRank of the nodes in the graph.
 
     PageRank computes a ranking of the nodes in the graph G based on
@@ -142,7 +146,7 @@ def pagerank(G, alpha=0.85, max_iter=100, tol=1.0e-6):
     return graphscope.pagerank_nx(G, alpha, max_iter, tol)
 
 
-@project_to_simple
+@not_implemented_for("multigraph")
 def hits(G, max_iter=100, tol=1.0e-8, normalized=True):
     """Returns HITS hubs and authorities values for nodes.
 
@@ -166,9 +170,7 @@ def hits(G, max_iter=100, tol=1.0e-8, normalized=True):
 
     Returns
     -------
-    (node, hubs,authorities) : three-column of dataframe
-        node containing the hub and authority
-       values.
+    two-tuple of dictionaries
 
 
     Examples
@@ -187,166 +189,72 @@ def hits(G, max_iter=100, tol=1.0e-8, normalized=True):
        doi:10.1145/324133.324140.
        http://www.cs.cornell.edu/home/kleinber/auth.pdf.
     """
-    ctx = graphscope.hits(G, tolerance=tol, max_round=max_iter, normalized=normalized)
-    df = ctx.to_dataframe({"id": "v.id", "auth": "r.auth", "hub": "r.hub"})
-    return (df.set_index("id")["hub"].to_dict(), df.set_index("id")["auth"].to_dict())
+    # TODO(@weibin): raise PowerIterationFailedConvergence if hits fails to converge
+    # within the specified number of iterations.
+    @project_to_simple
+    def _hits(G, max_iter=100, tol=1.0e-8, normalized=True):
+        ctx = graphscope.hits(
+            G, tolerance=tol, max_round=max_iter, normalized=normalized
+        )
+        df = ctx.to_dataframe({"id": "v.id", "auth": "r.auth", "hub": "r.hub"})
+        return (
+            df.set_index("id")["hub"].to_dict(),
+            df.set_index("id")["auth"].to_dict(),
+        )
+
+    if max_iter == 0:
+        raise nx.PowerIterationFailedConvergence(max_iter)
+    if len(G) == 0:
+        return {}, {}
+    return _hits(G, max_iter, tol, normalized)
+
+
+def hits_scipy(G, max_iter=100, tol=1.0e-8, normalized=True):
+    return hits(G, max_iter=max_iter, tol=tol, normalized=normalized)
 
 
 @context_to_dict
 @project_to_simple
+@patch_docstring(nxa.degree_centrality)
 def degree_centrality(G):
-    """Compute the degree centrality for nodes.
-
-    The degree centrality for a node v is the fraction of nodes it
-    is connected to.
-
-    Parameters
-    ----------
-    G : graph
-      A networkx graph
-
-    Returns
-    -------
-    nodes : dataframe
-       Dataframe of nodes with degree centrality as the value.
-
-    See Also
-    --------
-    eigenvector_centrality
-
-    Notes
-    -----
-    The degree centrality values are normalized by dividing by the maximum
-    possible degree in a simple graph n-1 where n is the number of nodes in G.
-    """
     return graphscope.degree_centrality(G, centrality_type="both")
 
 
-@not_implemented_for("undirected")
 @context_to_dict
 @project_to_simple
+@not_implemented_for("undirected")
+@patch_docstring(nxa.in_degree_centrality)
 def in_degree_centrality(G):
-    """Compute the in-degree centrality for nodes.
-
-    The in-degree centrality for a node v is the fraction of nodes its
-    incoming edges are connected to.
-
-    Parameters
-    ----------
-    G : graph
-        A networkx graph
-
-    Returns
-    -------
-    nodes : dataframe
-        Dataframe of nodes with in-degree centrality as values.
-
-    Raises
-    ------
-    NetworkXNotImplemented
-        If G is undirected.
-
-    See Also
-    --------
-    degree_centrality, out_degree_centrality
-
-    Notes
-    -----
-    The degree centrality values are normalized by dividing by the maximum
-    possible degree in a simple graph n-1 where n is the number of nodes in G.
-    """
     return graphscope.degree_centrality(G, centrality_type="in")
 
 
-@not_implemented_for("undirected")
 @context_to_dict
 @project_to_simple
+@not_implemented_for("undirected")
+@patch_docstring(nxa.out_degree_centrality)
 def out_degree_centrality(G):
-    """Compute the out-degree centrality for nodes.
-
-    The out-degree centrality for a node v is the fraction of nodes its
-    outgoing edges are connected to.
-
-    Parameters
-    ----------
-    G : graph
-        A networkx graph
-
-    Returns
-    -------
-    nodes : dataframe
-        Dataframe of nodes with out-degree centrality as values.
-
-    Raises
-    ------
-    NetworkXNotImplemented
-        If G is undirected.
-
-    See Also
-    --------
-    degree_centrality, in_degree_centrality
-
-    Notes
-    -----
-    The degree centrality values are normalized by dividing by the maximum
-    possible degree in a simple graph n-1 where n is the number of nodes in G.
-    """
     return graphscope.degree_centrality(G, centrality_type="out")
 
 
-@context_to_dict
-@project_to_simple
+@not_implemented_for("multigraph")
 def eigenvector_centrality(G, max_iter=100, tol=1e-06, weight=None):
-    r"""Compute the eigenvector centrality for the graph `G`.
+    # TODO(@weibin): raise PowerIterationFailedConvergence if eigenvector fails to converge
+    # within the specified number of iterations.
+    @context_to_dict
+    @project_to_simple
+    def _eigenvector_centrality(G, max_iter=100, tol=1e-06, weight=None):
+        return graphscope.eigenvector_centrality(G, tolerance=tol, max_round=max_iter)
 
-    Eigenvector centrality computes the centrality for a node based on the
-    centrality of its neighbors. The eigenvector centrality for node $i$ is
-    the $i$-th element of the vector $x$ defined by the equation
-
-    .. math::
-
-        Ax = \lambda x
-
-    where $A$ is the adjacency matrix of the graph `G` with eigenvalue
-    $\lambda$. By virtue of the Perron–Frobenius theorem, there is a unique
-    solution $x$, all of whose entries are positive, if $\lambda$ is the
-    largest eigenvalue of the adjacency matrix $A$ ([2]_).
-
-    Parameters
-    ----------
-    G : graph
-      A networkx graph
-
-    max_iter : integer, optional (default=100)
-      Maximum number of iterations in power method.
-
-    tol : float, optional (default=1.0e-6)
-      Error tolerance used to check convergence in power method iteration.
-
-    weight : None or string, optional (default=None)
-      If None, that take it as edge attribute 'weight'
-      Otherwise holds the name of the edge attribute used as weight.
-
-    Returns
-    -------
-    nodes : dataframe
-       Dataframe of nodes with eigenvector centrality as the value.
-
-    Examples
-    --------
-    >>> G = nx.path_graph(4)
-    >>> centrality = nx.eigenvector_centrality(G)
-
-    See Also
-    --------
-    eigenvector_centrality_numpy
-    hits
-    """
-    return graphscope.eigenvector_centrality(G, tolerance=tol, max_round=max_iter)
+    if len(G) == 0:
+        raise nx.NetworkXPointlessConcept(
+            "cannot compute centrality for the null graph"
+        )
+    if max_iter == 0:
+        raise nx.PowerIterationFailedConvergence(max_iter)
+    return _eigenvector_centrality(G, max_iter=max_iter, tol=tol, weight=weight)
 
 
-@context_to_dict
-@project_to_simple
+@not_implemented_for("multigraph")
 def katz_centrality(
     G,
     alpha=0.1,
@@ -356,98 +264,48 @@ def katz_centrality(
     normalized=True,
     weight=None,
 ):
-    r"""Compute the Katz centrality for the nodes of the graph G.
+    # TODO(@weibin): raise PowerIterationFailedConvergence if katz fails to converge
+    # within the specified number of iterations.
+    @context_to_dict
+    @project_to_simple
+    def _katz_centrality(
+        G,
+        alpha=0.1,
+        beta=1.0,
+        max_iter=100,
+        tol=1e-06,
+        normalized=True,
+        weight=None,
+    ):
+        return graphscope.katz_centrality(
+            G,
+            alpha=alpha,
+            beta=beta,
+            tolerance=tol,
+            max_round=max_iter,
+            normalized=normalized,
+        )
 
-    Katz centrality computes the centrality for a node based on the centrality
-    of its neighbors. It is a generalization of the eigenvector centrality. The
-    Katz centrality for node $i$ is
-
-    .. math::
-
-        x_i = \alpha \sum_{j} A_{ij} x_j + \beta,
-
-    where $A$ is the adjacency matrix of graph G with eigenvalues $\lambda$.
-
-    The parameter $\beta$ controls the initial centrality and
-
-    .. math::
-
-        \alpha < \frac{1}{\lambda_{\max}}.
-
-    Katz centrality computes the relative influence of a node within a
-    network by measuring the number of the immediate neighbors (first
-    degree nodes) and also all other nodes in the network that connect
-    to the node under consideration through these immediate neighbors.
-
-    Extra weight can be provided to immediate neighbors through the
-    parameter $\beta$.  Connections made with distant neighbors
-    are, however, penalized by an attenuation factor $\alpha$ which
-    should be strictly less than the inverse largest eigenvalue of the
-    adjacency matrix in order for the Katz centrality to be computed
-    correctly. More information is provided in [1]_.
-
-    Parameters
-    ----------
-    G : graph
-      A networkx graph.
-
-    alpha : float
-      Attenuation factor
-
-    beta : scalar or dictionary, optional (default=1.0)
-      Weight attributed to the immediate neighborhood. If not a scalar, the
-      dictionary must have an value for every node.
-
-    max_iter : integer, optional (default=1000)
-      Maximum number of iterations in power method.
-
-    tol : float, optional (default=1.0e-6)
-      Error tolerance used to check convergence in power method iteration.
-
-    normalized : bool, optional (default=True)
-      If True normalize the resulting values.
-
-    weight : None or string, optional (default=None)
-      If None, that take it as edge attribute 'weight'.
-      Otherwise holds the name of the edge attribute used as weight.
-
-    Returns
-    -------
-    nodes : dataframe
-       Dataframe of nodes with Katz centrality as the value.
-
-    Examples
-    --------
-    >>> import math
-    >>> G = nx.path_graph(4)
-    >>> phi = (1 + math.sqrt(5)) / 2.0  # largest eigenvalue of adj matrix
-    >>> centrality = nx.katz_centrality(G, 1 / phi - 0.01)
-
-    """
-    return graphscope.katz_centrality(
+    if len(G) == 0:
+        return {}
+    if not isinstance(beta, (int, float)):
+        raise nx.NetworkXError("beta should be number, not {}".format(type(beta)))
+    if max_iter == 0:
+        raise nx.PowerIterationFailedConvergence(max_iter)
+    return _katz_centrality(
         G,
         alpha=alpha,
         beta=beta,
-        tolerance=tol,
-        max_round=max_iter,
+        tol=tol,
+        max_iter=max_iter,
         normalized=normalized,
+        weight=weight,
     )
 
 
 @project_to_simple
+@patch_docstring(nxa.has_path)
 def has_path(G, source, target):
-    """Returns *True* if *G* has a path from *source* to *target*.
-
-    Parameters
-    ----------
-    G : networkx graph
-
-    source : node
-       Starting node for path
-
-    target : node
-       Ending node for path
-    """
     ctx = AppAssets(algo="sssp_has_path", context="tensor")(G, source, target)
     return ctx.to_numpy("r", axis=0)[0]
 
@@ -497,7 +355,6 @@ def single_source_dijkstra_path_length(G, source, weight=None):
     return AppAssets(algo="sssp_projected", context="vertex_data")(G, source)
 
 
-@project_to_simple
 def average_shortest_path_length(G, weight=None):
     """Returns the average shortest path length.
 
@@ -527,7 +384,25 @@ def average_shortest_path_length(G, weight=None):
     2.0
 
     """
-    return graphscope.average_shortest_path_length(G)
+
+    @project_to_simple
+    def _average_shortest_path_length(G, weight=None):
+        return graphscope.average_shortest_path_length(G)
+
+    n = len(G)
+    # For the specail case of the null graph. raise an exception, since
+    # there are no paths in the null graph.
+    if n == 0:
+        msg = (
+            "the null graph has no paths, thus there is no average"
+            "shortest path length"
+        )
+        raise nx.NetworkXPointlessConcept(msg)
+    # For the special case of the trivial graph, return zero immediately.
+    if n == 1:
+        return 0
+
+    return _average_shortest_path_length(G, weight=weight)
 
 
 @project_to_simple
@@ -985,99 +860,40 @@ def degree_assortativity_coefficient(G, x="out", y="in", weight=None):
     return graphscope.degree_assortativity_coefficient(G, x, y, weight)
 
 
-@project_to_simple
+@patch_docstring(nxa.node_boundary)
 def node_boundary(G, nbunch1, nbunch2=None):
-    """Returns the node boundary of `nbunch1`.
+    @project_to_simple
+    def _node_boundary(G, nbunch1, nbunch2=None):
+        n1json = json.dumps(list(nbunch1))
+        if nbunch2:
+            n2json = json.dumps(list(nbunch2))
+        else:
+            n2json = ""
+        ctx = AppAssets(algo="node_boundary", context="tensor")(G, n1json, n2json)
+        return ctx.to_numpy("r", axis=0).tolist()
 
-    The *node boundary* of a set *S* with respect to a set *T* is the
-    set of nodes *v* in *T* such that for some *u* in *S*, there is an
-    edge joining *u* to *v*. If *T* is not specified, it is assumed to
-    be the set of all nodes not in *S*.
-
-    Parameters
-    ----------
-    G : networkx graph
-
-    nbunch1 : iterable
-        Iterable of nodes in the graph representing the set of nodes
-        whose node boundary will be returned. (This is the set *S* from
-        the definition above.)
-
-    nbunch2 : iterable
-        Iterable of nodes representing the target (or "exterior") set of
-        nodes. (This is the set *T* from the definition above.) If not
-        specified, this is assumed to be the set of all nodes in `G`
-        not in `nbunch1`.
-
-    Returns
-    -------
-    list
-        The node boundary of `nbunch1` with respect to `nbunch2`.
-
-    Notes
-    -----
-    Any element of `nbunch` that is not in the graph `G` will be
-    ignored.
-
-    `nbunch1` and `nbunch2` are usually meant to be disjoint, but in
-    the interest of speed and generality, that is not required here.
-
-    """
-    n1json = json.dumps(list(nbunch1))
-    if nbunch2:
-        n2json = json.dumps(list(nbunch2))
-    else:
-        n2json = ""
-    ctx = AppAssets(algo="node_boundary", context="tensor")(G, n1json, n2json)
-    return ctx.to_numpy("r", axis=0).tolist()
+    if G.is_multigraph():
+        # forward to the NetworkX node_boundary
+        return nxa.node_boundary(G, nbunch1, nbunch2)
+    return _node_boundary(G, nbunch1, nbunch2)
 
 
-@project_to_simple
-def edge_boundary(G, nbunch1, nbunch2=None):
-    """Returns the edge boundary of `nbunch1`.
+@patch_docstring(nxa.edge_boundary)
+def edge_boundary(G, nbunch1, nbunch2=None, data=False, keys=False, default=None):
+    @project_to_simple
+    def _boundary(G, nbunch1, nbunch2=None):
+        n1json = json.dumps(list(nbunch1))
+        if nbunch2:
+            n2json = json.dumps(list(nbunch2))
+        else:
+            n2json = ""
+        ctx = AppAssets(algo="edge_boundary", context="tensor")(G, n1json, n2json)
+        return ctx.to_numpy("r", axis=0).tolist()
 
-    The *edge boundary* of a set *S* with respect to a set *T* is the
-    set of edges (*u*, *v*) such that *u* is in *S* and *v* is in *T*.
-    If *T* is not specified, it is assumed to be the set of all nodes
-    not in *S*.
-
-    Parameters
-    ----------
-    G : networkx graph
-
-    nbunch1 : iterable
-        Iterable of nodes in the graph representing the set of nodes
-        whose edge boundary will be returned. (This is the set *S* from
-        the definition above.)
-
-    nbunch2 : iterable
-        Iterable of nodes representing the target (or "exterior") set of
-        nodes. (This is the set *T* from the definition above.) If not
-        specified, this is assumed to be the set of all nodes in `G`
-        not in `nbunch1`.
-
-    Returns
-    -------
-    list
-        An list of the edges in the boundary of `nbunch1` with
-        respect to `nbunch2`.
-
-    Notes
-    -----
-    Any element of `nbunch` that is not in the graph `G` will be
-    ignored.
-
-    `nbunch1` and `nbunch2` are usually meant to be disjoint, but in
-    the interest of speed and generality, that is not required here.
-
-    """
-    n1json = json.dumps(list(nbunch1))
-    if nbunch2:
-        n2json = json.dumps(list(nbunch2))
-    else:
-        n2json = ""
-    ctx = AppAssets(algo="edge_boundary", context="tensor")(G, n1json, n2json)
-    return ctx.to_numpy("r", axis=0).tolist()
+    if G.is_multigraph():
+        # forward the NetworkX edge boundary
+        return nxa.edge_boundary(G, nbunch1, nbunch2, data, keys, default)
+    return _boundary(G, nbunch1, nbunch2)
 
 
 @project_to_simple
@@ -1226,58 +1042,8 @@ def numeric_assortativity_coefficient(G, attribute):
 
 
 @project_to_simple
+@patch_docstring(nxa.is_simple_path)
 def is_simple_path(G, nodes):
-    """Returns True if and only if `nodes` form a simple path in `G`.
-
-    A *simple path* in a graph is a nonempty sequence of nodes in which
-    no node appears more than once in the sequence, and each adjacent
-    pair of nodes in the sequence is adjacent in the graph.
-
-    Parameters
-    ----------
-    nodes : list
-        A list of one or more nodes in the graph `G`.
-
-    Returns
-    -------
-    bool
-        Whether the given list of nodes represents a simple path in `G`.
-
-    Notes
-    -----
-    An empty list of nodes is not a path but a list of one node is a
-    path. Here's an explanation why.
-
-    This function operates on *node paths*. One could also consider
-    *edge paths*. There is a bijection between node paths and edge
-    paths.
-
-    The *length of a path* is the number of edges in the path, so a list
-    of nodes of length *n* corresponds to a path of length *n* - 1.
-    Thus the smallest edge path would be a list of zero edges, the empty
-    path. This corresponds to a list of one node.
-
-    To convert between a node path and an edge path, you can use code
-    like the following::
-
-        >>> from networkx.utils import pairwise
-        >>> nodes = [0, 1, 2, 3]
-        >>> edges = list(pairwise(nodes))
-        >>> edges
-        [(0, 1), (1, 2), (2, 3)]
-        >>> nodes = [edges[0][0]] + [v for u, v in edges]
-        >>> nodes
-        [0, 1, 2, 3]
-
-    Examples
-    --------
-    >>> G = nx.cycle_graph(4)
-    >>> nx.is_simple_path(G, [2, 3, 0])
-    True
-    >>> nx.is_simple_path(G, [0, 2])
-    False
-
-    """
     return graphscope.is_simple_path(G, nodes)
 
 
@@ -1415,11 +1181,6 @@ def betweenness_centrality(
     G : graph
       A NetworkX graph.
 
-    k : int, optional (default=None)
-      If k is not None use k node samples to estimate betweenness.
-      The value of k <= n where n is the number of nodes in the graph.
-      Higher values give better approximation.
-
     normalized : bool, optional
       If True the betweenness values are normalized by `2/((n-1)(n-2))`
       for graphs, and `1/((n-1)(n-2))` for directed graphs where `n`
@@ -1433,11 +1194,6 @@ def betweenness_centrality(
 
     endpoints : bool, optional
       If True include the endpoints in the shortest path counts.
-
-    seed : integer, random_state, or None (default)
-        Indicator of random number generation state.
-        See :ref:`Randomness<randomness>`.
-        Note that this is only used if k is not None.
 
     Returns
     -------

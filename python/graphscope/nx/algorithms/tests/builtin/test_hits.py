@@ -27,27 +27,20 @@ from graphscope.nx.tests.utils import almost_equal
 
 @pytest.mark.usefixtures("graphscope_session")
 class TestHITS:
-    def setup_method(self):
+    def setup_class(cls):
 
         G = nx.DiGraph()
 
         edges = [(1, 3), (1, 5), (2, 1), (3, 5), (5, 4), (5, 3), (6, 5)]
 
         G.add_edges_from(edges, weight=1)
-        self.G = G
-        self.G.a = dict(
+        cls.G = G
+        cls.G.a = dict(
             zip(sorted(G), [0.000000, 0.000000, 0.366025, 0.133975, 0.500000, 0.000000])
         )
-        self.G.h = dict(
+        cls.G.h = dict(
             zip(sorted(G), [0.366025, 0.000000, 0.211325, 0.000000, 0.211325, 0.211325])
         )
-
-    def teardown_method(self):
-        del self.G
-
-    def test_run_hits(self):
-        G = self.G
-        nx.builtin.hits(G, tol=1.0e-08)
 
     def test_hits(self):
         G = self.G
@@ -73,7 +66,6 @@ class TestHITS:
         for n in G:
             assert almost_equal(a[n], G.a[n], places=4)
 
-    @pytest.mark.skip(reason="hits_scipy not implemented.")
     def test_hits_scipy(self):
         sp = pytest.importorskip("scipy")
         G = self.G
@@ -83,14 +75,9 @@ class TestHITS:
         for n in G:
             assert almost_equal(a[n], G.a[n], places=4)
 
-    @pytest.mark.skip(reason="hits_numpy not implemented.")
     def test_empty(self):
-        numpy = pytest.importorskip("numpy")
         G = nx.Graph()
-        assert nx.hits(G) == ({}, {})
-        assert nx.hits_numpy(G) == ({}, {})
-        assert nx.authority_matrix(G).shape == (0, 0)
-        assert nx.hub_matrix(G).shape == (0, 0)
+        assert nx.builtin.hits(G) == ({}, {})
 
     @pytest.mark.skip(reason="hits_scipy not implemented.")
     def test_empty_scipy(self):
@@ -98,7 +85,6 @@ class TestHITS:
         G = nx.Graph()
         assert nx.hits_scipy(G) == ({}, {})
 
-    @pytest.mark.skip(reason="Not support raise PowerIterationFailedConvergence yet.")
     def test_hits_not_convergent(self):
         with pytest.raises(nx.PowerIterationFailedConvergence):
             G = self.G

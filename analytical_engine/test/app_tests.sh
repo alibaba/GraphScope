@@ -345,8 +345,8 @@ declare -a apps=(
 
 # these algorithms need to check with directed flag
 declare -a apps_with_directed=(
-  "katz" 
-  "eigenvector" 
+  # "katz" 
+  # "eigenvector" 
   "degree_centrality" 
   "clustering"
 )
