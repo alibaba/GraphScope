@@ -44,10 +44,7 @@ impl KeyFunction<Record, RecordKey, Record> for KeySelector {
         let keys = self
             .keys
             .iter()
-            .map(|key| {
-                key.get_entry(&mut input)
-                    .map_err(|e| FnExecError::from(e))
-            })
+            .map(|key| key.get_entry(&mut input).map_err(|e| FnExecError::from(e)))
             .collect::<Result<Vec<_>, _>>()?;
         Ok((RecordKey::new(keys), input))
     }
@@ -57,10 +54,7 @@ impl KeyFunctionGen for algebra_pb::GroupBy {
     fn gen_key(self) -> FnGenResult<Box<dyn KeyFunction<Record, RecordKey, Record>>> {
         // TODO(bingqing) May be fixed according to protobuf change
         let key_selector = KeySelector::with(
-            self.mappings
-                .iter()
-                .map(|mapping| mapping.key.clone().unwrap())
-                .collect::<Vec<_>>(),
+            self.mappings.iter().map(|mapping| mapping.key.clone().unwrap()).collect::<Vec<_>>(),
         )?;
         debug!("Runtime group operator key_selector: {:?}", key_selector);
         Ok(Box::new(key_selector))
@@ -92,28 +86,13 @@ mod tests {
     use crate::process::record::Record;
 
     fn source_gen() -> Box<dyn Iterator<Item = Record> + Send> {
-        let p1: HashMap<NameOrId, Object> = vec![(NameOrId::from("age".to_string()), 27.into())]
-            .into_iter()
-            .collect();
-        let p2: HashMap<NameOrId, Object> = vec![(NameOrId::from("age".to_string()), 29.into())]
-            .into_iter()
-            .collect();
+        let p1: HashMap<NameOrId, Object> = vec![("age".into(), 27.into())].into_iter().collect();
+        let p2: HashMap<NameOrId, Object> = vec![("age".into(), 29.into())].into_iter().collect();
 
-        let v1 = Vertex::new(DynDetails::new(DefaultDetails::with_property(
-            1,
-            NameOrId::from("person".to_string()),
-            p1,
-        )));
-        let v2 = Vertex::new(DynDetails::new(DefaultDetails::with_property(
-            1,
-            NameOrId::from("person".to_string()),
-            p2.clone(),
-        )));
-        let v3 = Vertex::new(DynDetails::new(DefaultDetails::with_property(
-            3,
-            NameOrId::from("person".to_string()),
-            p2,
-        )));
+        let v1 = Vertex::new(DynDetails::new(DefaultDetails::with_property(1, "person".into(), p1)));
+        let v2 =
+            Vertex::new(DynDetails::new(DefaultDetails::with_property(1, "person".into(), p2.clone())));
+        let v3 = Vertex::new(DynDetails::new(DefaultDetails::with_property(3, "person".into(), p2)));
         let r1 = Record::new(v1, None);
         let r2 = Record::new(v2, None);
         let r3 = Record::new(v3, None);

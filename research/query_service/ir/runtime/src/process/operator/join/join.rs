@@ -45,7 +45,6 @@ mod tests {
     use ir_common::generated::algebra as pb;
     use ir_common::generated::algebra::join::JoinKind;
     use ir_common::generated::common as common_pb;
-    use ir_common::NameOrId;
     use pegasus::api::{Join, KeyBy, Map, PartitionByKey, Sink};
     use pegasus::JobConf;
 
@@ -55,16 +54,16 @@ mod tests {
     use crate::process::record::{HeadJoinOpt, Record};
 
     fn source_s1_gen() -> Box<dyn Iterator<Item = Record> + Send> {
-        let v1 = Vertex::new(DynDetails::new(DefaultDetails::new(1, NameOrId::from("person".to_string()))));
-        let v2 = Vertex::new(DynDetails::new(DefaultDetails::new(2, NameOrId::from("person".to_string()))));
+        let v1 = Vertex::new(DynDetails::new(DefaultDetails::new(1, "person".into())));
+        let v2 = Vertex::new(DynDetails::new(DefaultDetails::new(2, "person".into())));
         let r1 = Record::new(v1, None);
         let r2 = Record::new(v2, None);
         Box::new(vec![r1, r2].into_iter())
     }
 
     fn source_s2_gen() -> Box<dyn Iterator<Item = Record> + Send> {
-        let v3 = Vertex::new(DynDetails::new(DefaultDetails::new(1, NameOrId::from("person".to_string()))));
-        let v4 = Vertex::new(DynDetails::new(DefaultDetails::new(4, NameOrId::from("person".to_string()))));
+        let v3 = Vertex::new(DynDetails::new(DefaultDetails::new(1, "person".into())));
+        let v4 = Vertex::new(DynDetails::new(DefaultDetails::new(4, "person".into())));
         let r3 = Record::new(v3, None);
         let r4 = Record::new(v4, None);
         Box::new(vec![r3, r4].into_iter())
@@ -96,57 +95,43 @@ mod tests {
                 let stream = match join_kind {
                     JoinKind::Inner => left_stream
                         .inner_join(right_stream)?
-                        .map(|(left, right)| {
-                            Ok(left
-                                .value
-                                .join(right.value, Some(HeadJoinOpt::Left)))
-                        })?,
+                        .map(|(left, right)| Ok(left.value.join(right.value, Some(HeadJoinOpt::Left))))?,
                     JoinKind::LeftOuter => {
-                        left_stream
-                            .left_outer_join(right_stream)?
-                            .map(|(left, right)| {
-                                let left = left.unwrap();
-                                if let Some(right) = right {
-                                    Ok(left
-                                        .value
-                                        .join(right.value, Some(HeadJoinOpt::Left)))
-                                } else {
-                                    Ok(left.value)
-                                }
-                            })?
+                        left_stream.left_outer_join(right_stream)?.map(|(left, right)| {
+                            let left = left.unwrap();
+                            if let Some(right) = right {
+                                Ok(left.value.join(right.value, Some(HeadJoinOpt::Left)))
+                            } else {
+                                Ok(left.value)
+                            }
+                        })?
                     }
-                    JoinKind::RightOuter => left_stream
-                        .right_outer_join(right_stream)?
-                        .map(|(left, right)| {
+                    JoinKind::RightOuter => {
+                        left_stream.right_outer_join(right_stream)?.map(|(left, right)| {
                             let right = right.unwrap();
                             if let Some(left) = left {
-                                Ok(left
-                                    .value
-                                    .join(right.value, Some(HeadJoinOpt::Left)))
+                                Ok(left.value.join(right.value, Some(HeadJoinOpt::Left)))
                             } else {
                                 Ok(right.value)
                             }
-                        })?,
+                        })?
+                    }
                     JoinKind::FullOuter => {
-                        left_stream
-                            .full_outer_join(right_stream)?
-                            .map(|(left, right)| match (left, right) {
-                                (Some(left), Some(right)) => Ok(left
-                                    .value
-                                    .join(right.value, Some(HeadJoinOpt::Left))),
+                        left_stream.full_outer_join(right_stream)?.map(|(left, right)| {
+                            match (left, right) {
+                                (Some(left), Some(right)) => {
+                                    Ok(left.value.join(right.value, Some(HeadJoinOpt::Left)))
+                                }
                                 (Some(left), None) => Ok(left.value),
                                 (None, Some(right)) => Ok(right.value),
                                 (None, None) => {
                                     unreachable!()
                                 }
-                            })?
+                            }
+                        })?
                     }
-                    JoinKind::Semi => left_stream
-                        .semi_join(right_stream)?
-                        .map(|left| Ok(left.value))?,
-                    JoinKind::Anti => left_stream
-                        .anti_join(right_stream)?
-                        .map(|left| Ok(left.value))?,
+                    JoinKind::Semi => left_stream.semi_join(right_stream)?.map(|left| Ok(left.value))?,
+                    JoinKind::Anti => left_stream.anti_join(right_stream)?.map(|left| Ok(left.value))?,
                     JoinKind::Times => {
                         todo!()
                     }

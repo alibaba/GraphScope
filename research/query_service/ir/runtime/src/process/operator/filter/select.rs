@@ -29,10 +29,7 @@ struct SelectOperator {
 
 impl FilterFunction<Record> for SelectOperator {
     fn test(&self, input: &Record) -> FnResult<bool> {
-        let res = self
-            .filter
-            .eval_bool(Some(input))
-            .map_err(|e| FnExecError::from(e))?;
+        let res = self.filter.eval_bool(Some(input)).map_err(|e| FnExecError::from(e))?;
         Ok(res)
     }
 }
@@ -52,7 +49,6 @@ impl FilterFuncGen for algebra_pb::Select {
 #[cfg(test)]
 mod tests {
     use ir_common::generated::algebra as pb;
-    use ir_common::NameOrId;
     use pegasus::api::{Filter, Sink};
     use pegasus::result::ResultStream;
     use pegasus::JobConf;
@@ -111,7 +107,7 @@ mod tests {
                         element
                             .details()
                             .unwrap()
-                            .get_property(&NameOrId::Str("name".to_string()))
+                            .get_property(&"name".into())
                             .unwrap()
                             .try_to_owned()
                             .unwrap(),
