@@ -13,10 +13,11 @@
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 
-use crate::exp_store::ID_MASK;
 use pegasus::api::function::FnResult;
 use runtime::graph::partitioner::Partitioner;
 use runtime::graph::ID;
+
+use crate::exp_store::ID_MASK;
 
 /// A simple partition utility that one server contains a single graph partition
 pub struct SimplePartition {

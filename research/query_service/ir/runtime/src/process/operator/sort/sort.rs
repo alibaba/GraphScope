@@ -13,16 +13,18 @@
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 
+use std::cmp::Ordering;
+use std::convert::{TryFrom, TryInto};
+
+use ir_common::error::ParsePbError;
+use ir_common::generated::algebra as algebra_pb;
+use ir_common::generated::algebra::order_by::ordering_pair::Order;
+
 use crate::error::FnGenResult;
 use crate::process::functions::CompareFunction;
 use crate::process::operator::sort::CompareFunctionGen;
 use crate::process::operator::TagKey;
 use crate::process::record::Record;
-use ir_common::error::ParsePbError;
-use ir_common::generated::algebra as algebra_pb;
-use ir_common::generated::algebra::order_by::ordering_pair::Order;
-use std::cmp::Ordering;
-use std::convert::{TryFrom, TryInto};
 
 #[derive(Debug)]
 struct RecordCompare {
@@ -79,11 +81,8 @@ impl TryFrom<algebra_pb::OrderBy> for RecordCompare {
 
 #[cfg(test)]
 mod tests {
-    use crate::graph::element::{Element, GraphElement, Vertex};
-    use crate::graph::property::{DefaultDetails, Details, DynDetails};
-    use crate::process::operator::sort::CompareFunctionGen;
-    use crate::process::operator::tests::{init_source, init_source_with_tag};
-    use crate::process::record::Record;
+    use std::collections::HashMap;
+
     use dyn_type::Object;
     use ir_common::generated::algebra as pb;
     use ir_common::generated::common as common_pb;
@@ -91,7 +90,12 @@ mod tests {
     use pegasus::api::{Sink, SortBy};
     use pegasus::result::ResultStream;
     use pegasus::JobConf;
-    use std::collections::HashMap;
+
+    use crate::graph::element::{Element, GraphElement, Vertex};
+    use crate::graph::property::{DefaultDetails, Details, DynDetails};
+    use crate::process::operator::sort::CompareFunctionGen;
+    use crate::process::operator::tests::{init_source, init_source_with_tag};
+    use crate::process::record::Record;
 
     fn sort_test(source: Vec<Record>, sort_opr: pb::OrderBy) -> ResultStream<Record> {
         let conf = JobConf::new("sort_test");
@@ -210,8 +214,16 @@ mod tests {
             if let Some(element) = record.get(None).unwrap().as_graph_element() {
                 let details = element.details().unwrap();
                 result_name_ages.push((
-                    details.get_property(&"name".into()).unwrap().try_to_owned().unwrap(),
-                    details.get_property(&"age".into()).unwrap().try_to_owned().unwrap(),
+                    details
+                        .get_property(&"name".into())
+                        .unwrap()
+                        .try_to_owned()
+                        .unwrap(),
+                    details
+                        .get_property(&"age".into())
+                        .unwrap()
+                        .try_to_owned()
+                        .unwrap(),
                 ));
             }
         }
@@ -236,7 +248,11 @@ mod tests {
         let mut result = sort_test(init_source_with_tag(), sort_opr);
         let mut result_ids = vec![];
         while let Some(Ok(record)) = result.next() {
-            if let Some(element) = record.get(Some(&"a".into())).unwrap().as_graph_element() {
+            if let Some(element) = record
+                .get(Some(&"a".into()))
+                .unwrap()
+                .as_graph_element()
+            {
                 result_ids.push(element.id());
             }
         }
@@ -257,7 +273,11 @@ mod tests {
         let mut result = sort_test(init_source_with_tag(), sort_opr);
         let mut result_ids = vec![];
         while let Some(Ok(record)) = result.next() {
-            if let Some(element) = record.get(Some(&"a".into())).unwrap().as_graph_element() {
+            if let Some(element) = record
+                .get(Some(&"a".into()))
+                .unwrap()
+                .as_graph_element()
+            {
                 result_ids.push(element.id());
             }
         }

@@ -13,15 +13,17 @@
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 
-use crate::error::{FnExecError, FnGenResult};
-use crate::expr::eval::Evaluator;
-use crate::process::operator::map::MapFuncGen;
-use crate::process::record::{ObjectElement, Record};
+use std::convert::{TryFrom, TryInto};
+
 use ir_common::error::ParsePbError;
 use ir_common::generated::algebra as algebra_pb;
 use ir_common::NameOrId;
 use pegasus::api::function::{FnResult, MapFunction};
-use std::convert::{TryFrom, TryInto};
+
+use crate::error::{FnExecError, FnGenResult};
+use crate::expr::eval::Evaluator;
+use crate::process::operator::map::MapFuncGen;
+use crate::process::record::{ObjectElement, Record};
 
 #[derive(Debug)]
 struct ProjectOperator {
@@ -33,14 +35,18 @@ impl MapFunction<Record, Record> for ProjectOperator {
     fn exec(&self, mut input: Record) -> FnResult<Record> {
         if self.is_append {
             for (evaluator, alias) in self.projected_columns.iter() {
-                let projected_result = evaluator.eval(Some(&input)).map_err(|e| FnExecError::from(e))?;
+                let projected_result = evaluator
+                    .eval(Some(&input))
+                    .map_err(|e| FnExecError::from(e))?;
                 input.append(ObjectElement::Prop(projected_result), alias.clone());
             }
             Ok(input)
         } else {
             let mut new_record = Record::default();
             for (evaluator, alias) in self.projected_columns.iter() {
-                let projected_result = evaluator.eval(Some(&input)).map_err(|e| FnExecError::from(e))?;
+                let projected_result = evaluator
+                    .eval(Some(&input))
+                    .map_err(|e| FnExecError::from(e))?;
                 new_record.append(ObjectElement::Prop(projected_result), alias.clone());
             }
             Ok(new_record)
@@ -54,12 +60,17 @@ impl MapFuncGen for algebra_pb::Project {
         for expr_alias in self.mappings.into_iter() {
             // TODO: the tag_option of is_query_given may not necessary
             let (alias_pb, _is_given_tag) = {
-                let expr_alias =
-                    expr_alias.alias.ok_or(ParsePbError::from("expr alias is missing in project"))?;
+                let expr_alias = expr_alias
+                    .alias
+                    .ok_or(ParsePbError::from("expr alias is missing in project"))?;
                 (expr_alias.alias, expr_alias.is_query_given)
             };
-            let alias = alias_pb.map(|alias| alias.try_into()).transpose()?;
-            let expr = expr_alias.expr.ok_or(ParsePbError::from("expr eval is missing in project"))?;
+            let alias = alias_pb
+                .map(|alias| alias.try_into())
+                .transpose()?;
+            let expr = expr_alias
+                .expr
+                .ok_or(ParsePbError::from("expr eval is missing in project"))?;
             let evaluator = Evaluator::try_from(expr)?;
             projected_columns.push((evaluator, alias));
         }
@@ -71,6 +82,9 @@ impl MapFuncGen for algebra_pb::Project {
 
 #[cfg(test)]
 mod tests {
+    use std::collections::HashMap;
+
+    use dyn_type::Object;
     use ir_common::generated::algebra as pb;
     use ir_common::NameOrId;
     use pegasus::api::{Map, Sink};
@@ -83,8 +97,6 @@ mod tests {
     use crate::process::operator::map::MapFuncGen;
     use crate::process::operator::tests::{init_source, init_source_with_tag, init_vertex1, init_vertex2};
     use crate::process::record::{Entry, ObjectElement, Record, RecordElement};
-    use dyn_type::Object;
-    use std::collections::HashMap;
 
     fn project_test(source: Vec<Record>, project_opr_pb: pb::Project) -> ResultStream<Record> {
         let conf = JobConf::new("project_test");

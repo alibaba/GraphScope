@@ -13,14 +13,16 @@
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 
+use std::io;
+
+use dyn_type::BorrowObject;
+use ir_common::NameOrId;
+use pegasus_common::codec::{Decode, Encode, ReadExt, WriteExt};
+
 use crate::expr::eval::Context;
 use crate::graph::element::{Element, GraphElement};
 use crate::graph::property::{Details, DynDetails};
 use crate::graph::ID;
-use dyn_type::BorrowObject;
-use ir_common::NameOrId;
-use pegasus_common::codec::{Decode, Encode, ReadExt, WriteExt};
-use std::io;
 
 #[derive(Clone, Debug)]
 pub struct Vertex {

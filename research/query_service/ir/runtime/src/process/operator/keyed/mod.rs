@@ -15,12 +15,13 @@
 
 mod keyed;
 
-use crate::error::{FnGenError, FnGenResult};
-use crate::process::functions::KeyFunction;
-use crate::process::record::{Record, RecordKey};
 use ir_common::error::ParsePbError;
 use ir_common::generated::algebra as algebra_pb;
 pub use keyed::KeySelector;
+
+use crate::error::{FnGenError, FnGenResult};
+use crate::process::functions::KeyFunction;
+use crate::process::record::{Record, RecordKey};
 
 pub trait KeyFunctionGen {
     fn gen_key(self) -> FnGenResult<Box<dyn KeyFunction<Record, RecordKey, Record>>>;

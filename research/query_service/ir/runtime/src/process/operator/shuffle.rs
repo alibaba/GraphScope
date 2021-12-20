@@ -13,15 +13,17 @@
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 
-use crate::graph::element::GraphElement;
-use crate::graph::partitioner::Partitioner;
-use crate::process::record::{Entry, Record, RecordElement};
+use std::convert::TryInto;
+use std::sync::Arc;
+
 use ir_common::error::ParsePbError;
 use ir_common::generated::common as common_pb;
 use ir_common::NameOrId;
 use pegasus::api::function::{FnResult, RouteFunction};
-use std::convert::TryInto;
-use std::sync::Arc;
+
+use crate::graph::element::GraphElement;
+use crate::graph::partitioner::Partitioner;
+use crate::process::record::{Entry, Record, RecordElement};
 
 pub struct RecordRouter {
     p: Arc<dyn Partitioner>,

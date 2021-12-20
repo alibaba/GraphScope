@@ -19,6 +19,9 @@
 #[allow(dead_code)]
 #[allow(unused_imports)]
 pub mod test {
+    use std::convert::{TryFrom, TryInto};
+    use std::sync::Once;
+
     use graph_proxy::{InitializeJobCompiler, QueryExpGraph};
     use ir_common::generated::algebra as pb;
     use ir_common::generated::common as common_pb;
@@ -35,8 +38,6 @@ pub mod test {
     use runtime::graph::ID;
     use runtime::process::record::{Entry, Record, RecordElement};
     use runtime::IRJobCompiler;
-    use std::convert::{TryFrom, TryInto};
-    use std::sync::Once;
 
     static INIT: Once = Once::new();
 

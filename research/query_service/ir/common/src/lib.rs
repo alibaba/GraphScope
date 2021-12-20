@@ -13,16 +13,18 @@
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 
-use crate::error::{ParsePbError, ParsePbResult};
-use crate::generated::algebra as pb;
-use crate::generated::common as common_pb;
-use crate::generated::results as result_pb;
+use std::convert::TryFrom;
+use std::io;
+
 use dyn_type::object::RawType;
 use dyn_type::{BorrowObject, Object, Primitives};
 use pegasus_common::codec::{Decode, Encode, ReadExt, WriteExt};
 use prost::Message;
-use std::convert::TryFrom;
-use std::io;
+
+use crate::error::{ParsePbError, ParsePbResult};
+use crate::generated::algebra as pb;
+use crate::generated::common as common_pb;
+use crate::generated::results as result_pb;
 
 pub mod error;
 

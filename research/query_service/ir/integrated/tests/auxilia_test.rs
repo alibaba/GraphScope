@@ -19,6 +19,8 @@ mod common;
 
 #[cfg(test)]
 mod test {
+    use std::sync::Arc;
+
     use graph_proxy::{create_demo_graph, SimplePartition};
     use ir_common::generated::algebra as pb;
     use ir_common::generated::common as common_pb;
@@ -32,7 +34,6 @@ mod test {
     use runtime::process::operator::map::FilterMapFuncGen;
     use runtime::process::operator::source::SourceOperator;
     use runtime::process::record::Record;
-    use std::sync::Arc;
 
     // g.V()
     fn source_gen(alias: Option<common_pb::NameOrId>) -> Box<dyn Iterator<Item = Record> + Send> {

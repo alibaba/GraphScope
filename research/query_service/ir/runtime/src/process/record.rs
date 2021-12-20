@@ -13,9 +13,11 @@
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 
-use crate::expr::eval::Context;
-use crate::graph::element::{Edge, Element, GraphElement, Vertex, VertexOrEdge};
-use crate::graph::property::DynDetails;
+use std::cmp::Ordering;
+use std::convert::{TryFrom, TryInto};
+use std::hash::{Hash, Hasher};
+use std::sync::Arc;
+
 use dyn_type::{BorrowObject, Object};
 use indexmap::map::IndexMap;
 use ir_common::error::ParsePbError;
@@ -23,10 +25,10 @@ use ir_common::generated::results as result_pb;
 use ir_common::NameOrId;
 use pegasus::api::function::DynIter;
 use pegasus::codec::{Decode, Encode, ReadExt, WriteExt};
-use std::cmp::Ordering;
-use std::convert::{TryFrom, TryInto};
-use std::hash::{Hash, Hasher};
-use std::sync::Arc;
+
+use crate::expr::eval::Context;
+use crate::graph::element::{Edge, Element, GraphElement, Vertex, VertexOrEdge};
+use crate::graph::property::DynDetails;
 
 #[derive(Debug, Clone, PartialEq, PartialOrd)]
 pub enum ObjectElement {

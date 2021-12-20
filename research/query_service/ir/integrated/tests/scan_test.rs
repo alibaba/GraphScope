@@ -19,7 +19,8 @@ mod common;
 
 #[cfg(test)]
 mod test {
-    use crate::common::test::into_index_predicate;
+    use std::sync::Arc;
+
     use graph_proxy::{create_demo_graph, SimplePartition};
     use graph_store::common::DefaultId;
     use graph_store::ldbc::LDBCVertexParser;
@@ -27,7 +28,8 @@ mod test {
     use runtime::graph::element::GraphElement;
     use runtime::process::operator::source::SourceOperator;
     use runtime::process::record::Record;
-    use std::sync::Arc;
+
+    use crate::common::test::into_index_predicate;
 
     // g.V()
     fn scan_gen(scan_opr_pb: pb::Scan) -> Box<dyn Iterator<Item = Record> + Send> {

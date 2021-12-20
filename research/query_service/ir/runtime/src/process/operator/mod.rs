@@ -23,16 +23,18 @@ pub mod sink;
 pub mod sort;
 pub mod source;
 
-use crate::error::FnExecError;
-use crate::graph::element::Element;
-use crate::graph::property::{Details, PropKey};
-use crate::process::record::{Entry, ObjectElement, Record};
+use std::convert::TryFrom;
+use std::sync::Arc;
+
 use ir_common::error::ParsePbError;
 use ir_common::generated::common as common_pb;
 use ir_common::NameOrId;
 use pegasus::codec::{Decode, Encode, ReadExt, WriteExt};
-use std::convert::TryFrom;
-use std::sync::Arc;
+
+use crate::error::FnExecError;
+use crate::graph::element::Element;
+use crate::graph::property::{Details, PropKey};
+use crate::process::record::{Entry, ObjectElement, Record};
 
 #[derive(Clone, Debug, Default)]
 pub struct TagKey {
@@ -49,9 +51,11 @@ impl TagKey {
             .clone();
         if let Some(key) = self.key.as_ref() {
             if let Some(element) = entry.as_graph_element() {
-                let details = element.details().ok_or(FnExecError::get_tag_error(
-                    "Get key failed since get details from a graph element failed",
-                ))?;
+                let details = element
+                    .details()
+                    .ok_or(FnExecError::get_tag_error(
+                        "Get key failed since get details from a graph element failed",
+                    ))?;
                 let properties = details
                     .get(key)
                     .ok_or(FnExecError::get_tag_error(
@@ -133,12 +137,12 @@ pub(crate) mod tests {
     use std::collections::HashMap;
 
     use dyn_type::Object;
+    use ir_common::KeyId;
 
     use super::*;
     use crate::graph::element::{GraphElement, Vertex};
     use crate::graph::property::{DefaultDetails, DynDetails};
     use crate::process::record::RecordElement;
-    use ir_common::KeyId;
 
     pub fn init_vertex1() -> Vertex {
         let map1: HashMap<NameOrId, Object> =

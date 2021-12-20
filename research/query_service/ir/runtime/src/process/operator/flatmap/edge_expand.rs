@@ -13,16 +13,18 @@
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 
+use std::convert::{TryFrom, TryInto};
+
+use ir_common::error::ParsePbError;
+use ir_common::generated::algebra as algebra_pb;
+use ir_common::NameOrId;
+use pegasus::api::function::{DynIter, FlatMapFunction, FnResult};
+
 use crate::error::{FnExecError, FnGenError, FnGenResult};
 use crate::graph::element::{GraphElement, VertexOrEdge};
 use crate::graph::{Direction, QueryParams, Statement, ID};
 use crate::process::operator::flatmap::FlatMapFuncGen;
 use crate::process::record::{Record, RecordExpandIter};
-use ir_common::error::ParsePbError;
-use ir_common::generated::algebra as algebra_pb;
-use ir_common::NameOrId;
-use pegasus::api::function::{DynIter, FlatMapFunction, FnResult};
-use std::convert::{TryFrom, TryInto};
 
 pub struct EdgeExpandOperator<E: Into<VertexOrEdge>> {
     start_v_tag: Option<NameOrId>,

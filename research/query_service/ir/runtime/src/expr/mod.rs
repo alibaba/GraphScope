@@ -18,11 +18,13 @@ pub mod error;
 pub mod eval;
 pub mod token;
 
-use crate::expr::error::{ExprError, ExprResult};
-use crate::expr::token::{tokenize, Token};
+use std::convert::{TryFrom, TryInto};
+
 use ir_common::generated::common as pb;
 use ir_common::VAR_PREFIX;
-use std::convert::{TryFrom, TryInto};
+
+use crate::expr::error::{ExprError, ExprResult};
+use crate::expr::token::{tokenize, Token};
 
 impl TryFrom<Token> for pb::ExprOpr {
     type Error = ExprError;

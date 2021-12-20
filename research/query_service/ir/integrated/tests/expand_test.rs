@@ -19,6 +19,8 @@ mod common;
 
 #[cfg(test)]
 mod test {
+    use std::sync::Arc;
+
     use graph_proxy::{create_demo_graph, SimplePartition};
     use graph_store::ldbc::LDBCVertexParser;
     use graph_store::prelude::DefaultId;
@@ -34,7 +36,6 @@ mod test {
     use runtime::process::operator::map::MapFuncGen;
     use runtime::process::operator::source::SourceOperator;
     use runtime::process::record::Record;
-    use std::sync::Arc;
 
     // g.V()
     fn source_gen(alias: Option<common_pb::NameOrId>) -> Box<dyn Iterator<Item = Record> + Send> {

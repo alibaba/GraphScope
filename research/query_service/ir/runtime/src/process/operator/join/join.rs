@@ -13,12 +13,13 @@
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 
+use ir_common::generated::algebra as algebra_pb;
+use ir_common::generated::algebra::join::JoinKind;
+
 use crate::error::FnGenResult;
 use crate::process::functions::{JoinKeyGen, KeyFunction};
 use crate::process::operator::keyed::KeySelector;
 use crate::process::record::{Record, RecordKey};
-use ir_common::generated::algebra as algebra_pb;
-use ir_common::generated::algebra::join::JoinKind;
 
 impl JoinKeyGen<Record, RecordKey, Record> for algebra_pb::Join {
     fn gen_left_kv_fn(&self) -> FnGenResult<Box<dyn KeyFunction<Record, RecordKey, Record>>> {
@@ -95,43 +96,57 @@ mod tests {
                 let stream = match join_kind {
                     JoinKind::Inner => left_stream
                         .inner_join(right_stream)?
-                        .map(|(left, right)| Ok(left.value.join(right.value, Some(HeadJoinOpt::Left))))?,
+                        .map(|(left, right)| {
+                            Ok(left
+                                .value
+                                .join(right.value, Some(HeadJoinOpt::Left)))
+                        })?,
                     JoinKind::LeftOuter => {
-                        left_stream.left_outer_join(right_stream)?.map(|(left, right)| {
-                            let left = left.unwrap();
-                            if let Some(right) = right {
-                                Ok(left.value.join(right.value, Some(HeadJoinOpt::Left)))
-                            } else {
-                                Ok(left.value)
-                            }
-                        })?
+                        left_stream
+                            .left_outer_join(right_stream)?
+                            .map(|(left, right)| {
+                                let left = left.unwrap();
+                                if let Some(right) = right {
+                                    Ok(left
+                                        .value
+                                        .join(right.value, Some(HeadJoinOpt::Left)))
+                                } else {
+                                    Ok(left.value)
+                                }
+                            })?
                     }
-                    JoinKind::RightOuter => {
-                        left_stream.right_outer_join(right_stream)?.map(|(left, right)| {
+                    JoinKind::RightOuter => left_stream
+                        .right_outer_join(right_stream)?
+                        .map(|(left, right)| {
                             let right = right.unwrap();
                             if let Some(left) = left {
-                                Ok(left.value.join(right.value, Some(HeadJoinOpt::Left)))
+                                Ok(left
+                                    .value
+                                    .join(right.value, Some(HeadJoinOpt::Left)))
                             } else {
                                 Ok(right.value)
                             }
-                        })?
-                    }
+                        })?,
                     JoinKind::FullOuter => {
-                        left_stream.full_outer_join(right_stream)?.map(|(left, right)| {
-                            match (left, right) {
-                                (Some(left), Some(right)) => {
-                                    Ok(left.value.join(right.value, Some(HeadJoinOpt::Left)))
-                                }
+                        left_stream
+                            .full_outer_join(right_stream)?
+                            .map(|(left, right)| match (left, right) {
+                                (Some(left), Some(right)) => Ok(left
+                                    .value
+                                    .join(right.value, Some(HeadJoinOpt::Left))),
                                 (Some(left), None) => Ok(left.value),
                                 (None, Some(right)) => Ok(right.value),
                                 (None, None) => {
                                     unreachable!()
                                 }
-                            }
-                        })?
+                            })?
                     }
-                    JoinKind::Semi => left_stream.semi_join(right_stream)?.map(|left| Ok(left.value))?,
-                    JoinKind::Anti => left_stream.anti_join(right_stream)?.map(|left| Ok(left.value))?,
+                    JoinKind::Semi => left_stream
+                        .semi_join(right_stream)?
+                        .map(|left| Ok(left.value))?,
+                    JoinKind::Anti => left_stream
+                        .anti_join(right_stream)?
+                        .map(|left| Ok(left.value))?,
                     JoinKind::Times => {
                         todo!()
                     }

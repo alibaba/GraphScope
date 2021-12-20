@@ -13,16 +13,18 @@
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 
+use std::convert::TryInto;
+use std::sync::Arc;
+
+use ir_common::generated::algebra as algebra_pb;
+use ir_common::NameOrId;
+use pegasus::api::function::{FilterMapFunction, FnResult};
+
 use crate::error::{FnExecError, FnGenResult};
 use crate::graph::element::{GraphElement, VertexOrEdge};
 use crate::graph::QueryParams;
 use crate::process::operator::map::FilterMapFuncGen;
 use crate::process::record::{Entry, Record};
-use ir_common::generated::algebra as algebra_pb;
-use ir_common::NameOrId;
-use pegasus::api::function::{FilterMapFunction, FnResult};
-use std::convert::TryInto;
-use std::sync::Arc;
 
 /// An Auxilia operator to get extra information for the given entity.
 /// Specifically, we will replace the old entity with the new one with details,
@@ -78,9 +80,15 @@ impl FilterMapFunction<Record, Record> for AuxiliaOperator {
 
 impl FilterMapFuncGen for algebra_pb::Auxilia {
     fn gen_filter_map(self) -> FnGenResult<Box<dyn FilterMapFunction<Record, Record>>> {
-        let start_tag = self.tag.map(|name_or_id| name_or_id.try_into()).transpose()?;
+        let start_tag = self
+            .tag
+            .map(|name_or_id| name_or_id.try_into())
+            .transpose()?;
         let query_params = self.params.try_into()?;
-        let alias = self.alias.map(|alias| alias.try_into()).transpose()?;
+        let alias = self
+            .alias
+            .map(|alias| alias.try_into())
+            .transpose()?;
         let auxilia_operator = AuxiliaOperator { tag: start_tag, query_params, alias };
         debug!("Runtime auxilia operator: {:?}", auxilia_operator);
         Ok(Box::new(auxilia_operator))

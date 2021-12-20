@@ -13,16 +13,18 @@
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 
+use std::convert::TryFrom;
+
+use ir_common::error::ParsePbError;
+use ir_common::generated::algebra as algebra_pb;
+use ir_common::generated::common as common_pb;
+use pegasus::api::function::FnResult;
+
 use crate::error::{FnExecError, FnGenResult};
 use crate::process::functions::KeyFunction;
 use crate::process::operator::keyed::KeyFunctionGen;
 use crate::process::operator::TagKey;
 use crate::process::record::{Record, RecordKey};
-use ir_common::error::ParsePbError;
-use ir_common::generated::algebra as algebra_pb;
-use ir_common::generated::common as common_pb;
-use pegasus::api::function::FnResult;
-use std::convert::TryFrom;
 
 #[derive(Debug)]
 pub struct KeySelector {
@@ -44,7 +46,7 @@ impl KeyFunction<Record, RecordKey, Record> for KeySelector {
         let keys = self
             .keys
             .iter()
-            .map(|key| key.get_entry(&mut input).map_err(|e| FnExecError::from(e)))
+            .map(|key| key.get_entry(&mut input))
             .collect::<Result<Vec<_>, _>>()?;
         Ok((RecordKey::new(keys), input))
     }
@@ -54,7 +56,10 @@ impl KeyFunctionGen for algebra_pb::GroupBy {
     fn gen_key(self) -> FnGenResult<Box<dyn KeyFunction<Record, RecordKey, Record>>> {
         // TODO(bingqing) May be fixed according to protobuf change
         let key_selector = KeySelector::with(
-            self.mappings.iter().map(|mapping| mapping.key.clone().unwrap()).collect::<Vec<_>>(),
+            self.mappings
+                .iter()
+                .map(|mapping| mapping.key.clone().unwrap())
+                .collect::<Vec<_>>(),
         )?;
         debug!("Runtime group operator key_selector: {:?}", key_selector);
         Ok(Box::new(key_selector))
@@ -86,8 +91,12 @@ mod tests {
     use crate::process::record::Record;
 
     fn source_gen() -> Box<dyn Iterator<Item = Record> + Send> {
-        let p1: HashMap<NameOrId, Object> = vec![("age".into(), 27.into())].into_iter().collect();
-        let p2: HashMap<NameOrId, Object> = vec![("age".into(), 29.into())].into_iter().collect();
+        let p1: HashMap<NameOrId, Object> = vec![("age".into(), 27.into())]
+            .into_iter()
+            .collect();
+        let p2: HashMap<NameOrId, Object> = vec![("age".into(), 29.into())]
+            .into_iter()
+            .collect();
 
         let v1 = Vertex::new(DynDetails::new(DefaultDetails::with_property(1, "person".into(), p1)));
         let v2 =

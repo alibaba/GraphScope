@@ -131,9 +131,13 @@ impl From<Edge> for result_pb::Edge {
             id: e.id() as i64,
             label: e.label().map(|label| label.clone().into()),
             src_id: e.src_id as i64,
-            src_label: e.get_src_label().map(|label| label.clone().into()),
+            src_label: e
+                .get_src_label()
+                .map(|label| label.clone().into()),
             dst_id: e.dst_id as i64,
-            dst_label: e.get_dst_label().map(|label| label.clone().into()),
+            dst_label: e
+                .get_dst_label()
+                .map(|label| label.clone().into()),
             // TODO: return detached edge without property for now
             properties: vec![],
         }
