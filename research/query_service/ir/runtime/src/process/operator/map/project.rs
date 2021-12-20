@@ -384,43 +384,7 @@ mod tests {
         assert_eq!(b_results, expected_b_result);
     }
 
-    // g.V().as('a').select('a').by(valueMap('age')) with 'age' as 'b' and append 'b'
-    #[test]
-    fn project_single_mapping_appended_test() {
-        let project_opr_pb = pb::Project {
-            mappings: vec![pb::project::ExprAlias {
-                expr: Some(str_to_expr_pb("@a.age".to_string()).unwrap()),
-                alias: Some(pb::Alias {
-                    alias: Some(NameOrId::Str("b".to_string()).into()),
-                    is_query_given: false,
-                }),
-            }],
-            is_append: true,
-        };
-        let mut result = project_test(init_source_with_tag(), project_opr_pb);
-        let mut a_results = vec![];
-        let mut b_results = vec![];
-        while let Some(Ok(res)) = result.next() {
-            let a_entry = res.get(Some(&"a".into())).unwrap().as_ref();
-            let b_entry = res.get(Some(&"b".into())).unwrap().as_ref();
-            match (a_entry, b_entry) {
-                (
-                    Entry::Element(RecordElement::OnGraph(v)),
-                    Entry::Element(RecordElement::OffGraph(ObjectElement::Prop(val))),
-                ) => {
-                    a_results.push(v.id());
-                    b_results.push(val.clone());
-                }
-                _ => {}
-            }
-        }
-        let expected_a_result = vec![1, 2];
-        let expected_b_result = vec![object!(29), object!(27)];
-        assert_eq!(a_results, expected_a_result);
-        assert_eq!(b_results, expected_b_result);
-    }
-
-    // g.V().valueMap("") is not allowed
+    // None expr is not allowed
     #[test]
     fn project_empty_mapping_expr_test() {
         let project_opr_pb = pb::Project {
