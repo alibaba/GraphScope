@@ -21,7 +21,7 @@
 #include <utility>
 #include <vector>
 
-#include "boost/leaf/all.hpp"
+#include "boost/leaf.hpp"
 
 #include "vineyard/graph/utils/error.h"
 
