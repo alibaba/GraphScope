@@ -51,7 +51,7 @@ limitations under the License.
 
 #include "apps/bfs/bfs_generic.h"
 #include "apps/centrality/degree/degree_centrality.h"
-#include "apps/centrality/eigenvector/eigenvector_centrality.h"
+// #include "apps/centrality/eigenvector/eigenvector_centrality.h"
 #include "apps/centrality/katz/katz_centrality.h"
 #include "apps/clustering/avg_clustering.h"
 #include "apps/clustering/clustering.h"
@@ -352,15 +352,19 @@ void Run() {
         FLAGS_katz_centrality_alpha, FLAGS_katz_centrality_beta,
         FLAGS_katz_centrality_tolerance, FLAGS_katz_centrality_max_round,
         FLAGS_katz_centrality_normalized);
-  } else if (name == "eigenvector") {
-    using GraphType =
-        grape::ImmutableEdgecutFragment<OID_T, VID_T, VDATA_T, EDATA_T,
-                                        grape::LoadStrategy::kBothOutIn>;
-    using AppType = EigenvectorCentrality<GraphType>;
-    CreateAndQuery<GraphType, AppType>(comm_spec, efile, vfile, out_prefix,
-                                       FLAGS_datasource, fnum, spec,
-                                       FLAGS_eigenvector_centrality_tolerance,
-                                       FLAGS_eigenvector_centrality_max_round);
+    // TODO(@weibin): uncomment once immutable_edgecut_fragment support
+    // directed()
+    /*
+    } else if (name == "eigenvector") {
+      using GraphType =
+          grape::ImmutableEdgecutFragment<OID_T, VID_T, VDATA_T, EDATA_T,
+                                          grape::LoadStrategy::kBothOutIn>;
+      using AppType = EigenvectorCentrality<GraphType>;
+      CreateAndQuery<GraphType, AppType>(comm_spec, efile, vfile, out_prefix,
+                                         FLAGS_datasource, fnum, spec,
+                                         FLAGS_eigenvector_centrality_tolerance,
+                                         FLAGS_eigenvector_centrality_max_round);
+    */
   } else if (name == "bfs") {
     using GraphType =
         grape::ImmutableEdgecutFragment<OID_T, VID_T, VDATA_T, EDATA_T,
