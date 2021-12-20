@@ -23,7 +23,6 @@ import numpy as np
 import pandas as pd
 import pytest
 
-import graphscope
 from graphscope import nx
 from graphscope.nx.tests.utils import almost_equal
 from graphscope.nx.tests.utils import replace_with_inf
@@ -127,7 +126,7 @@ class TestBuiltInApp:
         cls.p2p_ev_ans = dict(
             pd.read_csv(
                 "{}/p2p-31-eigenvector".format(data_dir),
-                sep="\t",
+                sep=" ",
                 header=None,
                 prefix="",
             ).values
