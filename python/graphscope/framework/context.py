@@ -19,6 +19,7 @@
 import collections
 import hashlib
 import json
+import textwrap
 from copy import deepcopy
 from typing import Mapping
 
@@ -125,6 +126,10 @@ class BaseContextDAGNode(DAGNode):
     def _build_schema(self, result_properties):
         raise NotImplementedError()
 
+    def _format_hints(self, hints, prefix="    "):
+        ret = "\n".join([", ".join(sub_list) for sub_list in hints])
+        return textwrap.indent(ret, prefix)
+
     def to_numpy(self, selector, vertex_range=None, axis=0):
         """Get the context data as a numpy array.
 
@@ -170,7 +175,7 @@ class BaseContextDAGNode(DAGNode):
         check_argument(
             isinstance(selector, Mapping), "selector of to_dataframe must be a dict"
         )
-        for key, value in selector.items():
+        for _, value in selector.items():
             self._check_selector(value)
         selector = json.dumps(selector)
         vertex_range = utils.transform_vertex_range(vertex_range)
@@ -211,7 +216,7 @@ class BaseContextDAGNode(DAGNode):
                 isinstance(selector, Mapping),
                 "selector of to_vineyard_dataframe must be a dict",
             )
-            for key, value in selector.items():
+            for _, value in selector.items():
                 self._check_selector(value)
             selector = json.dumps(selector)
         vertex_range = utils.transform_vertex_range(vertex_range)
@@ -311,24 +316,20 @@ class VertexDataContextDAGNode(BaseContextDAGNode):
         if selector is None:
             raise InvalidArgumentError("Selector in vertex data context cannot be None")
         segments = selector.split(".")
-        if len(segments) > 2:
-            raise SyntaxError("Invalid selector: {0}".format(selector))
+        hints = self._format_hints([["v.id", "v.data"], ["r"]])
+        err_msg = f"Invalid selector: {selector}, choose from:\n{hints}"
         if segments[0] == "v":
-            if selector not in ("v.id", "v.data", "v.label_id"):
-                raise SyntaxError(
-                    "Selector of v must be 'v.id', 'v.data' or 'v.label_id'"
-                )
+            if selector not in ("v.id", "v.data"):
+                raise SyntaxError(err_msg)
         elif segments[0] == "e":
-            raise NotImplementedError("Selector of e not supported yet")
+            raise NotImplementedError("Selector of e is not supported yet")
             if selector not in ("e.src", "e.dst", "e.data"):
-                raise SyntaxError("Selector of e must be 'e.src', 'e.dst' or 'e.data'")
+                raise SyntaxError(err_msg)
         elif segments[0] == "r":
             if selector != "r":
-                raise SyntaxError("Selector of r must be 'r'")
+                raise SyntaxError(err_msg)
         else:
-            raise SyntaxError(
-                "Invalid selector: {0}, choose from v / e / r".format(selector)
-            )
+            raise SyntaxError(err_msg)
         return True
 
 
@@ -380,16 +381,25 @@ class LabeledVertexDataContextDAGNode(BaseContextDAGNode):
             raise InvalidArgumentError(
                 "Selector in labeled vertex data context cannot be None"
             )
-        stype, segments = selector.split(":")
-        if stype not in ("v", "e", "r"):
-            raise SyntaxError(
-                "Invalid selector: {0}, choose from v / e / r".format(selector)
-            )
-        if stype == "e":
-            raise NotImplementedError("Selector of e not supported yet")
+        segments = selector.split(":")
+        hints = self._format_hints(
+            [["v:label_name.id", "v:label_name.property_name"], ["r:label_name"]]
+        )
+        err_msg = f"Invalid selector: {selector}, choose from {hints}"
+        if len(segments) != 2:
+            raise SyntaxError(err_msg)
+        stype, segments = segments[0], segments[1]
         segments = segments.split(".")
-        if len(segments) > 2:
-            raise SyntaxError("Invalid selector: {0}".format(selector))
+        if stype == "v":
+            if len(segments) != 2:
+                raise SyntaxError(err_msg)
+        elif stype == "e":
+            raise NotImplementedError("Selector of e not supported yet")
+        elif stype == "r":
+            if len(segments) != 1:
+                raise SyntaxError(err_msg)
+        else:
+            raise SyntaxError(err_msg)
         return True
 
 
@@ -401,6 +411,7 @@ class VertexPropertyContextDAGNode(BaseContextDAGNode):
         - `v.id`: Get the Id of vertices
         - `v.data`: Get the data of vertices
             If there is any, means origin data on the graph, not results
+        - `v.lable_id`: Get the label ID of each vertex.
 
     - The syntax of selector of edge is (not supported yet):
         - `e.src`: Get the source Id of edges
@@ -446,13 +457,15 @@ class VertexPropertyContextDAGNode(BaseContextDAGNode):
                 "Selector in vertex property context cannot be None"
             )
         segments = selector.split(".")
+        hints = self._format_hints(
+            [["v.id", "v.data", "v.label_id"], ["r:column_name"]]
+        )
+        err_msg = f"Invalid selector: {selector}, choose from {hints}"
         if len(segments) != 2:
-            raise SyntaxError("Invalid selector: {0}".format(selector))
+            raise SyntaxError(err_msg)
         if segments[0] == "v":
             if selector not in ("v.id", "v.data", "v.label_id"):
-                raise SyntaxError(
-                    "Selector of v must be 'v.id', 'v.data' or 'v.label_id'"
-                )
+                raise SyntaxError(err_msg)
         elif segments[0] == "e":
             raise NotImplementedError("Selector of e not supported yet")
         elif segments[0] == "r":
@@ -460,9 +473,7 @@ class VertexPropertyContextDAGNode(BaseContextDAGNode):
             # So we will allow any str
             pass
         else:
-            raise SyntaxError(
-                "Invalid selector: {0}, choose from v / e / r".format(selector)
-            )
+            raise SyntaxError(err_msg)
         return True
 
 
@@ -526,16 +537,26 @@ class LabeledVertexPropertyContextDAGNode(BaseContextDAGNode):
             raise InvalidArgumentError(
                 "Selector in labeled vertex property context cannot be None"
             )
-        stype, segments = selector.split(":")
-        if stype not in ("v", "e", "r"):
-            raise SyntaxError(
-                "Invalid selector: {0}, choose from v / e / r".format(selector)
-            )
-        if stype == "e":
-            raise NotImplementedError("Selector of e not supported yet")
-        segments = segments.split(".")
+        segments = selector.split(":")
+        hints = self._format_hints(
+            [
+                ["v:label_name.id", "v:label_name.property_name"],
+                ["r:label_name.column_name"],
+            ]
+        )
+        err_msg = f"Invalid selector: {selector}, choose from {hints}"
         if len(segments) != 2:
-            raise SyntaxError("Invalid selector: {0}".format(selector))
+            raise SyntaxError(err_msg)
+        stype, segments = segments[0], segments[1]
+        segments = segments.split(".")
+        if stype == "v":
+            if len(segments) != 2:
+                raise SyntaxError(err_msg)
+        elif stype == "e":
+            raise NotImplementedError("Selector of e not supported yet")
+        elif stype == "r":
+            if len(segments) != 2:
+                raise SyntaxError(err_msg)
         return True
 
 
