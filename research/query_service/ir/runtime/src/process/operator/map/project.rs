@@ -78,7 +78,7 @@ mod tests {
     use pegasus::JobConf;
 
     use crate::expr::str_to_expr_pb;
-    use crate::graph::element::Vertex;
+    use crate::graph::element::{GraphElement, Vertex};
     use crate::graph::property::{DefaultDetails, DynDetails};
     use crate::process::operator::map::MapFuncGen;
     use crate::process::operator::tests::{init_source, init_source_with_tag, init_vertex1, init_vertex2};
@@ -105,7 +105,7 @@ mod tests {
 
     // g.V().valueMap("id")
     #[test]
-    fn project_test_01() {
+    fn project_single_mapping_test() {
         let project_opr_pb = pb::Project {
             mappings: vec![pb::project::ExprAlias {
                 expr: Some(str_to_expr_pb("@.id".to_string()).unwrap()),
@@ -127,9 +127,39 @@ mod tests {
         assert_eq!(object_result, expected_result);
     }
 
+    // g.V().as("a").select("a").by("name").as("b")
+    #[test]
+    fn project_tag_single_mapping_test() {
+        let project_opr_pb = pb::Project {
+            mappings: vec![pb::project::ExprAlias {
+                expr: Some(str_to_expr_pb("@a.name".to_string()).unwrap()),
+                alias: Some(pb::Alias {
+                    alias: Some(NameOrId::Str("b".to_string()).into()),
+                    is_query_given: false,
+                }),
+            }],
+            is_append: false,
+        };
+        let mut result = project_test(init_source_with_tag(), project_opr_pb);
+
+        let mut object_result = vec![];
+        while let Some(Ok(res)) = result.next() {
+            let a_entry = res.get(Some(&"a".into()));
+            assert_eq!(a_entry, None);
+            match res.get(Some(&"b".into())).unwrap().as_ref() {
+                Entry::Element(RecordElement::OffGraph(ObjectElement::Prop(val))) => {
+                    object_result.push(val.clone());
+                }
+                _ => {}
+            }
+        }
+        let expected_result = vec![object!("marko"), object!("vadas")];
+        assert_eq!(object_result, expected_result);
+    }
+
     // g.V().valueMap('age', 'name') with alias of 'age' as 'b' and 'name' as 'c'
     #[test]
-    fn project_test_02() {
+    fn project_multi_mapping_test() {
         let project_opr_pb = pb::Project {
             mappings: vec![
                 pb::project::ExprAlias {
@@ -168,37 +198,47 @@ mod tests {
         assert_eq!(object_result, expected_result);
     }
 
-    // g.V().as("a").select("a").by("name").as("b")
+    // g.V().valueMap('age', 'name') with alias of 'age' as 'b' and 'name' as 'None' (head)
     #[test]
-    fn project_test_03() {
+    fn project_multi_mapping_with_head_test() {
         let project_opr_pb = pb::Project {
-            mappings: vec![pb::project::ExprAlias {
-                expr: Some(str_to_expr_pb("@a.name".to_string()).unwrap()),
-                alias: Some(pb::Alias {
-                    alias: Some(NameOrId::Str("b".to_string()).into()),
-                    is_query_given: false,
-                }),
-            }],
+            mappings: vec![
+                pb::project::ExprAlias {
+                    expr: Some(str_to_expr_pb("@.age".to_string()).unwrap()),
+                    alias: Some(pb::Alias {
+                        alias: Some(NameOrId::Str("b".to_string()).into()),
+                        is_query_given: false,
+                    }),
+                },
+                pb::project::ExprAlias {
+                    expr: Some(str_to_expr_pb("@.name".to_string()).unwrap()),
+                    alias: Some(pb::Alias { alias: None, is_query_given: false }),
+                },
+            ],
             is_append: false,
         };
-        let mut result = project_test(init_source_with_tag(), project_opr_pb);
-
+        let mut result = project_test(init_source(), project_opr_pb);
         let mut object_result = vec![];
         while let Some(Ok(res)) = result.next() {
-            match res.get(Some(&"b".into())).unwrap().as_ref() {
-                Entry::Element(RecordElement::OffGraph(ObjectElement::Prop(val))) => {
-                    object_result.push(val.clone());
+            let age_val = res.get(Some(&"b".into())).unwrap();
+            let name_val = res.get(None).unwrap();
+            match (age_val.as_ref(), name_val.as_ref()) {
+                (
+                    Entry::Element(RecordElement::OffGraph(ObjectElement::Prop(age))),
+                    Entry::Element(RecordElement::OffGraph(ObjectElement::Prop(name))),
+                ) => {
+                    object_result.push((age.clone(), name.clone()));
                 }
                 _ => {}
             }
         }
-        let expected_result = vec![object!("marko"), object!("vadas")];
+        let expected_result = vec![(object!(29), object!("marko")), (object!(27), object!("vadas"))];
         assert_eq!(object_result, expected_result);
     }
 
     // g.V().as('a').select('a').by(valueMap('age', 'name')) with alias of 'age' as 'b' and 'name' as 'c'
     #[test]
-    fn project_test_04() {
+    fn project_tag_multi_mapping_test() {
         let project_opr_pb = pb::Project {
             mappings: vec![
                 pb::project::ExprAlias {
@@ -241,7 +281,7 @@ mod tests {
     // g.V().as('a').out().as('b').select('a', 'b').by(valueMap('age', 'name')).by('name'),
     // with alias of 'a.age' as 'c', 'a.name' as 'd' and 'b.name' as 'e'
     #[test]
-    fn project_test_05() {
+    fn project_multi_tag_multi_mapping() {
         // 1->3
         // 2->3
         let v1 = init_vertex1();
@@ -306,5 +346,111 @@ mod tests {
             (object!(27), object!("vadas"), object!("josh")),
         ];
         assert_eq!(object_result, expected_result);
+    }
+
+    // g.V().as('a').select('a').by(valueMap('age')) with 'age' as 'b' and append 'b'
+    #[test]
+    fn project_single_mapping_appended_test() {
+        let project_opr_pb = pb::Project {
+            mappings: vec![pb::project::ExprAlias {
+                expr: Some(str_to_expr_pb("@a.age".to_string()).unwrap()),
+                alias: Some(pb::Alias {
+                    alias: Some(NameOrId::Str("b".to_string()).into()),
+                    is_query_given: false,
+                }),
+            }],
+            is_append: true,
+        };
+        let mut result = project_test(init_source_with_tag(), project_opr_pb);
+        let mut a_results = vec![];
+        let mut b_results = vec![];
+        while let Some(Ok(res)) = result.next() {
+            let a_entry = res.get(Some(&"a".into())).unwrap().as_ref();
+            let b_entry = res.get(Some(&"b".into())).unwrap().as_ref();
+            match (a_entry, b_entry) {
+                (
+                    Entry::Element(RecordElement::OnGraph(v)),
+                    Entry::Element(RecordElement::OffGraph(ObjectElement::Prop(val))),
+                ) => {
+                    a_results.push(v.id());
+                    b_results.push(val.clone());
+                }
+                _ => {}
+            }
+        }
+        let expected_a_result = vec![1, 2];
+        let expected_b_result = vec![object!(29), object!(27)];
+        assert_eq!(a_results, expected_a_result);
+        assert_eq!(b_results, expected_b_result);
+    }
+
+    // g.V().as('a').select('a').by(valueMap('age')) with 'age' as 'b' and append 'b'
+    #[test]
+    fn project_single_mapping_appended_test() {
+        let project_opr_pb = pb::Project {
+            mappings: vec![pb::project::ExprAlias {
+                expr: Some(str_to_expr_pb("@a.age".to_string()).unwrap()),
+                alias: Some(pb::Alias {
+                    alias: Some(NameOrId::Str("b".to_string()).into()),
+                    is_query_given: false,
+                }),
+            }],
+            is_append: true,
+        };
+        let mut result = project_test(init_source_with_tag(), project_opr_pb);
+        let mut a_results = vec![];
+        let mut b_results = vec![];
+        while let Some(Ok(res)) = result.next() {
+            let a_entry = res.get(Some(&"a".into())).unwrap().as_ref();
+            let b_entry = res.get(Some(&"b".into())).unwrap().as_ref();
+            match (a_entry, b_entry) {
+                (
+                    Entry::Element(RecordElement::OnGraph(v)),
+                    Entry::Element(RecordElement::OffGraph(ObjectElement::Prop(val))),
+                ) => {
+                    a_results.push(v.id());
+                    b_results.push(val.clone());
+                }
+                _ => {}
+            }
+        }
+        let expected_a_result = vec![1, 2];
+        let expected_b_result = vec![object!(29), object!(27)];
+        assert_eq!(a_results, expected_a_result);
+        assert_eq!(b_results, expected_b_result);
+    }
+
+    // g.V().valueMap("") is not allowed
+    #[test]
+    fn project_empty_mapping_expr_test() {
+        let project_opr_pb = pb::Project {
+            mappings: vec![pb::project::ExprAlias {
+                expr: None,
+                alias: Some(pb::Alias { alias: None, is_query_given: false }),
+            }],
+            is_append: false,
+        };
+        let project_func = project_opr_pb.gen_map();
+        if let Err(_) = project_func {
+            assert!(true)
+        }
+    }
+
+    // None alias is not allowed.
+    // If no alias name is given, please specify alias as follows in project_pb:
+    //   alias: Some(pb::Alias { alias: None, is_query_given: false }),
+    #[test]
+    fn project_empty_mapping_alias_test() {
+        let project_opr_pb = pb::Project {
+            mappings: vec![pb::project::ExprAlias {
+                expr: Some(str_to_expr_pb("@.id".to_string()).unwrap()),
+                alias: None,
+            }],
+            is_append: true,
+        };
+        let project_func = project_opr_pb.gen_map();
+        if let Err(_) = project_func {
+            assert!(true)
+        }
     }
 }
