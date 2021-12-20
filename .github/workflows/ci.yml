@@ -280,7 +280,7 @@ jobs:
                                 $(dirname $(python3 -c "import graphscope; print(graphscope.__file__)"))/tests/unittest
 
     - name: Upload Coverage
-      uses: codecov/codecov-action@v1.0.5
+      uses: codecov/codecov-action@v2
       with:
         file: ./python/coverage.xml
         fail_ci_if_error: true
@@ -572,7 +572,7 @@ jobs:
                           ./graphscope/tests/kubernetes
 
       - name: Upload Coverage
-        uses: codecov/codecov-action@v1.0.5
+        uses: codecov/codecov-action@v2
         with:
           file: ./python/coverage.xml
           fail_ci_if_error: true
