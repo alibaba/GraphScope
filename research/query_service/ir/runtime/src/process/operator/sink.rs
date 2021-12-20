@@ -53,7 +53,9 @@ impl MapFunction<Record, result_pb::Results> for RecordSinkEncoder {
             sink_columns.push(column_pb);
         }
         let record_pb = result_pb::Record { columns: sink_columns };
-        Ok(result_pb::Results { inner: Some(result_pb::results::Inner::Record(record_pb)) })
+        let results = result_pb::Results { inner: Some(result_pb::results::Inner::Record(record_pb)) };
+        info!("results {:?}", results);
+        Ok(results)
     }
 }
 
@@ -129,13 +131,9 @@ impl From<Edge> for result_pb::Edge {
             id: e.id() as i64,
             label: e.label().map(|label| label.clone().into()),
             src_id: e.src_id as i64,
-            src_label: e
-                .get_src_label()
-                .map(|label| label.clone().into()),
+            src_label: e.get_src_label().map(|label| label.clone().into()),
             dst_id: e.dst_id as i64,
-            dst_label: e
-                .get_dst_label()
-                .map(|label| label.clone().into()),
+            dst_label: e.get_dst_label().map(|label| label.clone().into()),
             // TODO: return detached edge without property for now
             properties: vec![],
         }
