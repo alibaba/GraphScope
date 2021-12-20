@@ -280,9 +280,9 @@ jobs:
                                 $(dirname $(python3 -c "import graphscope; print(graphscope.__file__)"))/tests/unittest
 
     - name: Upload Coverage
-      uses: codecov/codecov-action@v1.0.5
+      uses: codecov/codecov-action@v2
       with:
-        file: ./python/coverage.xml
+        file: ./coverage.xml
         fail_ci_if_error: true
 
   networkx-basic-test:
@@ -549,7 +549,7 @@ jobs:
           python3 setup.py build_proto
 
           # install mars
-          python3 -m pip install git+https://github.com/mars-project/mars.git@d09e1e4c3e32ceb05f42d0b5b79775b1ebd299fb#egg=pymars
+          python3 -m pip install git+https://github.com/mars-project/mars.git@92d4959511ff9fa107b458239e7c1022baec3325#egg=pymars
 
           # install pytest
           python3 -m pip install pytest pytest-cov
@@ -572,7 +572,7 @@ jobs:
                           ./graphscope/tests/kubernetes
 
       - name: Upload Coverage
-        uses: codecov/codecov-action@v1.0.5
+        uses: codecov/codecov-action@v2
         with:
           file: ./python/coverage.xml
           fail_ci_if_error: true
