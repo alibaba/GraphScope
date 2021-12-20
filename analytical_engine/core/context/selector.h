@@ -23,7 +23,7 @@
 
 #include "boost/algorithm/string.hpp"
 #include "boost/foreach.hpp"
-#include "boost/leaf/all.hpp"
+#include "boost/leaf.hpp"
 #include "boost/lexical_cast.hpp"
 #include "boost/property_tree/json_parser.hpp"
 #include "boost/property_tree/ptree.hpp"
