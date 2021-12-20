@@ -17,11 +17,11 @@
 #
 
 import os
-from _pytest.config import _ensure_removed_sysmodule
 
 import networkx as nx
 import numpy as np
 import pytest
+from _pytest.config import _ensure_removed_sysmodule
 
 import graphscope
 from graphscope import bfs
