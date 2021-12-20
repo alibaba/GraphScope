@@ -79,7 +79,7 @@ mod tests {
 
     // g.V().has("id",gt(1))
     #[test]
-    fn select_test_01() {
+    fn select_gt_test() {
         let select_opr_pb = pb::Select { predicate: Some(str_to_expr_pb("@.id > 1".to_string()).unwrap()) };
         let mut result = select_test(init_source(), select_opr_pb);
         let mut count = 0;
@@ -93,9 +93,25 @@ mod tests {
         assert_eq!(count, 1);
     }
 
+    // g.V().has("id",lt(2))
+    #[test]
+    fn select_lt_test() {
+        let select_opr_pb = pb::Select { predicate: Some(str_to_expr_pb("@.id < 2".to_string()).unwrap()) };
+        let mut result = select_test(init_source(), select_opr_pb);
+        let mut count = 0;
+        while let Some(Ok(record)) = result.next() {
+            if let Some(element) = record.get(None).unwrap().as_graph_element() {
+                assert!(element.id() < 2)
+            }
+            count += 1;
+        }
+
+        assert_eq!(count, 1);
+    }
+
     // g.V().has("name","marko")
     #[test]
-    fn select_test_02() {
+    fn select_eq_test() {
         let select_opr_pb =
             pb::Select { predicate: Some(str_to_expr_pb("@.name == \"marko\"".to_string()).unwrap()) };
         let mut result = select_test(init_source(), select_opr_pb);

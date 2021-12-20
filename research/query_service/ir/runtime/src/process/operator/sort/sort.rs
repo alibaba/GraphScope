@@ -111,7 +111,7 @@ mod tests {
 
     // g.V().order()
     #[test]
-    fn sort_test_01() {
+    fn sort_simple_ascending_test() {
         let sort_opr = pb::OrderBy {
             pairs: vec![pb::order_by::OrderingPair {
                 key: Some(common_pb::Variable { tag: None, property: None }),
@@ -132,7 +132,7 @@ mod tests {
 
     // g.V().order().by(desc)
     #[test]
-    fn sort_test_02() {
+    fn sort_simple_descending_test() {
         let sort_opr = pb::OrderBy {
             pairs: vec![pb::order_by::OrderingPair {
                 key: Some(common_pb::Variable { tag: None, property: None }),
@@ -153,7 +153,7 @@ mod tests {
 
     // g.V().order().by('name',desc)
     #[test]
-    fn sort_test_03() {
+    fn sort_by_property_test() {
         let sort_opr = pb::OrderBy {
             pairs: vec![pb::order_by::OrderingPair {
                 key: Some(common_pb::Variable::from("@.name".to_string())),
@@ -182,7 +182,7 @@ mod tests {
 
     // g.V().order().by('name',asc).by('age', desc)
     #[test]
-    fn sort_test_04() {
+    fn sort_by_multi_property_test() {
         let map3: HashMap<NameOrId, Object> =
             vec![("id".into(), object!(3)), ("age".into(), object!(20)), ("name".into(), object!("marko"))]
                 .into_iter()
@@ -225,7 +225,7 @@ mod tests {
 
     // g.V().as("a").order().by(select('a'))
     #[test]
-    fn sort_test_05() {
+    fn sort_by_tag_test() {
         let sort_opr = pb::OrderBy {
             pairs: vec![pb::order_by::OrderingPair {
                 key: Some(common_pb::Variable::from("@a".to_string())),
@@ -241,6 +241,27 @@ mod tests {
             }
         }
         let expected_ids = vec![2, 1];
+        assert_eq!(result_ids, expected_ids);
+    }
+
+    // g.V().as("a").order().by(select('a').by('age'))
+    #[test]
+    fn sort_by_tag_property_test() {
+        let sort_opr = pb::OrderBy {
+            pairs: vec![pb::order_by::OrderingPair {
+                key: Some(common_pb::Variable::from("@a.age".to_string())),
+                order: 2, // descending
+            }],
+            limit: None,
+        };
+        let mut result = sort_test(init_source_with_tag(), sort_opr);
+        let mut result_ids = vec![];
+        while let Some(Ok(record)) = result.next() {
+            if let Some(element) = record.get(Some(&"a".into())).unwrap().as_graph_element() {
+                result_ids.push(element.id());
+            }
+        }
+        let expected_ids = vec![1, 2];
         assert_eq!(result_ids, expected_ids);
     }
 }

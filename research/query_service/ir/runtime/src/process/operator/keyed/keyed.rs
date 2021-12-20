@@ -128,7 +128,7 @@ mod tests {
 
     // g.V().dedup()
     #[test]
-    fn dedup_test_01() {
+    fn dedup_simple_test() {
         let key_str = "@".to_string();
         let expected_result = vec![1, 3];
         dedup_test(key_str, expected_result)
@@ -136,7 +136,7 @@ mod tests {
 
     // g.V().dedup().by('age')
     #[test]
-    fn dedup_test_02() {
+    fn dedup_by_property_test() {
         let key_str = "@.age".to_string();
         let expected_result = vec![1, 1];
         dedup_test(key_str, expected_result)
