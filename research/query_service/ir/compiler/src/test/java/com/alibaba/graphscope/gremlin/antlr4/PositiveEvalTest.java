@@ -270,24 +270,26 @@ public class PositiveEvalTest {
 
     @Test
     public void g_V_select_a_b_c_test() {
-        Assert.assertEquals(g.V().select("a", "b", "c"), eval("g.V().select('a', 'b', 'c')"));
+        Assert.assertEquals(g.V().as("a").out().as("b").out().as("c").select("a", "b", "c"),
+                eval("g.V().as(\"a\").out().as(\"b\").out().as(\"c\").select(\"a\", \"b\", \"c\")"));
     }
 
     @Test
     public void g_V_select_a_b_by_str_test() {
-        Assert.assertEquals(g.V().select("a", "b").by("name"), eval("g.V().select('a', 'b').by('name')"));
+        Assert.assertEquals(g.V().as("a").out().as("b").select("a", "b").by("name"),
+                eval("g.V().as(\"a\").out().as(\"b\").select(\"a\", \"b\").by(\"name\")"));
     }
 
     @Test
     public void g_V_select_a_b_by_valueMap_key_test() {
-        Assert.assertEquals(g.V().select("a", "b").by(__.valueMap("name")),
-                eval("g.V().select('a', 'b').by(valueMap('name'))"));
+        Assert.assertEquals(g.V().as("a").out().as("b").select("a", "b").by(__.valueMap("name")),
+                eval("g.V().as(\"a\").out().as(\"b\").select(\"a\", \"b\").by(valueMap(\"name\"))"));
     }
 
     @Test
     public void g_V_select_a_b_by_valueMap_keys_test() {
-        Assert.assertEquals(g.V().select("a", "b").by(__.valueMap("name", "id")).by(__.valueMap("age")),
-                eval("g.V().select('a', 'b').by(valueMap('name', 'id')).by(valueMap('age'))"));
+        Assert.assertEquals(g.V().as("a").out().as("b").select("a", "b").by(__.valueMap("name", "id")).by(__.valueMap("age")),
+                eval("g.V().as(\"a\").out().as(\"b\").select(\"a\", \"b\").by(valueMap(\"name\", \"id\")).by(valueMap(\"age\"))"));
     }
 
     @Test
@@ -384,5 +386,21 @@ public class PositiveEvalTest {
     @Test
     public void g_V_has_without_strs_test() {
         Assert.assertEquals(g.V().has("name", P.without("marko", "josh")), eval("g.V().has('name', without('marko', 'josh'))"));
+    }
+
+    @Test
+    public void g_V_as_test() {
+        Assert.assertEquals(g.V().as("a"), eval("g.V().as('a')"));
+    }
+
+    @Test
+    public void g_V_out_as_test() {
+        Assert.assertEquals(g.V().out().as("abc"), eval("g.V().out().as('abc'))"));
+    }
+
+    @Test
+    public void g_V_has_as_test() {
+        Assert.assertEquals(g.V().has("name", P.without("marko", "josh")).as("c"),
+                eval("g.V().has('name', without('marko', 'josh')).as('c')"));
     }
 }
