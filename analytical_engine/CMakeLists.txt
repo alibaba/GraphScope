@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.1)
 
-file(READ VERSION GRAPHSCOPE_ANALYTICAL_VERSION)
+file(READ ${CMAKE_CURRENT_SOURCE_DIR}/../VERSION GRAPHSCOPE_ANALYTICAL_VERSION)
 # Strip trailing newline
 string(REGEX REPLACE "\n$" "" GRAPHSCOPE_ANALYTICAL_VERSION "${GRAPHSCOPE_ANALYTICAL_VERSION}")
 
@@ -12,6 +12,10 @@ project(analytical_engine LANGUAGES C CXX VERSION ${GRAPHSCOPE_ANALYTICAL_VERSIO
 option(NETWORKX "networkx on?" ON)
 option(BUILD_TESTS "Build unit test" ON)
 option(ENABLE_JAVA_SDK "Build with support for java sdk" OFF)
+
+# Get system processor
+execute_process(COMMAND uname -m OUTPUT_VARIABLE SYSTEM_PROCESSOR)
+string(REGEX REPLACE "\n$" "" SYSTEM_PROCESSOR "${SYSTEM_PROCESSOR}")
 
 if (APPLE AND ENABLE_JAVA_SDK)
     message(FATAL_ERROR "Java SDK is currently not supported on macos.")
@@ -105,7 +109,23 @@ if (APPLE)
     if (POLICY CMP0056)
         cmake_policy(SET CMP0056 NEW)
     endif ()
-    set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -L/usr/local/lib")
+    if (SYSTEM_PROCESSOR MATCHES "arm64")
+        set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -L/opt/homebrew/lib")
+        if(CMAKE_C_COMPILER_ID MATCHES "Clang")
+            set(OpenMP_C "${CMAKE_C_COMPILER}" CACHE STRING "" FORCE)
+            set(OpenMP_C_FLAGS "-fopenmp=libomp -Wno-unused-command-line-argument" CACHE STRING "" FORCE)
+            set(OpenMP_C_LIB_NAMES "libomp" CACHE STRING "" FORCE)
+            set(OpenMP_libomp_LIBRARY "omp" CACHE STRING "" FORCE)
+        endif()
+        if(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+            set(OpenMP_CXX "${CMAKE_CXX_COMPILER}" CACHE STRING "" FORCE)
+            set(OpenMP_CXX_FLAGS "-fopenmp=libomp -Wno-unused-command-line-argument" CACHE STRING "" FORCE)
+            set(OpenMP_CXX_LIB_NAMES "libomp" CACHE STRING "" FORCE)
+            set(OpenMP_libomp_LIBRARY "omp" CACHE STRING "" FORCE)
+        endif()
+    else()
+        set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -L/usr/local/lib")
+    endif()
 endif ()
 find_package(OpenMP REQUIRED)
 
@@ -145,7 +165,7 @@ endif ()
 find_package(libgrapelite REQUIRED)
 include_directories(${LIBGRAPELITE_INCLUDE_DIRS})
 
-find_package(vineyard 0.3.12 REQUIRED)
+find_package(vineyard 0.3.13 REQUIRED)
 include_directories(${VINEYARD_INCLUDE_DIRS})
 add_compile_options(-DENABLE_SELECTOR)
 

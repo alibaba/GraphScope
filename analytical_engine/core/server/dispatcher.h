@@ -22,7 +22,7 @@
 #include <utility>
 #include <vector>
 
-#include "boost/leaf/handle_exception.hpp"
+#include "boost/leaf/handle_errors.hpp"
 
 #include "grape/util.h"
 #include "grape/worker/comm_spec.h"
