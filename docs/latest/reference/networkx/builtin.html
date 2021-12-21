@@ -164,11 +164,10 @@ Hubs estimates the node value based on outgoing links.</p>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
-<dd class="field-even"><p><strong>(node, hubs,authorities)</strong> –  node containing the hub and authority
-values.</p>
+<dd class="field-even"><p></p>
 </dd>
 <dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p>three-column of dataframe</p>
+<dd class="field-odd"><p>two-tuple of dictionaries</p>
 </dd>
 </dl>
 <p class="rubric">Examples</p>
@@ -204,19 +203,22 @@ is connected to.</p>
 <dd class="field-odd"><p><strong>G</strong> (<em>graph</em>) – A networkx graph</p>
 </dd>
 <dt class="field-even">Returns</dt>
-<dd class="field-even"><p><strong>nodes</strong> – Dataframe of nodes with degree centrality as the value.</p>
+<dd class="field-even"><p><strong>nodes</strong> – Dictionary of nodes with degree centrality as the value.</p>
 </dd>
 <dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p>dataframe</p>
+<dd class="field-odd"><p>dictionary</p>
 </dd>
 </dl>
 <div class="admonition seealso">
 <p class="admonition-title">See also</p>
-<p><a class="reference internal" href="#graphscope.nx.builtin.eigenvector_centrality" title="graphscope.nx.builtin.eigenvector_centrality"><code class="xref py py-obj docutils literal notranslate"><span class="pre">eigenvector_centrality</span></code></a></p>
+<p><code class="xref py py-obj docutils literal notranslate"><span class="pre">betweenness_centrality</span></code>, <code class="xref py py-obj docutils literal notranslate"><span class="pre">load_centrality</span></code>, <a class="reference internal" href="#graphscope.nx.builtin.eigenvector_centrality" title="graphscope.nx.builtin.eigenvector_centrality"><code class="xref py py-obj docutils literal notranslate"><span class="pre">eigenvector_centrality</span></code></a></p>
 </div>
 <p class="rubric">Notes</p>
 <p>The degree centrality values are normalized by dividing by the maximum
 possible degree in a simple graph n-1 where n is the number of nodes in G.</p>
+<p>For multigraphs or graphs with self loops the maximum degree might
+be higher than n-1 and values of degree centrality greater than 1
+are possible.</p>
 </dd></dl>
 
 <dl class="py function">
@@ -227,13 +229,13 @@ possible degree in a simple graph n-1 where n is the number of nodes in G.</p>
 incoming edges are connected to.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>G</strong> (<em>graph</em>) – A networkx graph</p>
+<dd class="field-odd"><p><strong>G</strong> (<em>graph</em>) – A NetworkX graph</p>
 </dd>
 <dt class="field-even">Returns</dt>
-<dd class="field-even"><p><strong>nodes</strong> – Dataframe of nodes with in-degree centrality as values.</p>
+<dd class="field-even"><p><strong>nodes</strong> – Dictionary of nodes with in-degree centrality as values.</p>
 </dd>
 <dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p>dataframe</p>
+<dd class="field-odd"><p>dictionary</p>
 </dd>
 <dt class="field-even">Raises</dt>
 <dd class="field-even"><p><strong>NetworkXNotImplemented</strong> – If G is undirected.</p>
@@ -246,6 +248,9 @@ incoming edges are connected to.</p>
 <p class="rubric">Notes</p>
 <p>The degree centrality values are normalized by dividing by the maximum
 possible degree in a simple graph n-1 where n is the number of nodes in G.</p>
+<p>For multigraphs or graphs with self loops the maximum degree might
+be higher than n-1 and values of degree centrality greater than 1
+are possible.</p>
 </dd></dl>
 
 <dl class="py function">
@@ -256,13 +261,13 @@ possible degree in a simple graph n-1 where n is the number of nodes in G.</p>
 outgoing edges are connected to.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>G</strong> (<em>graph</em>) – A networkx graph</p>
+<dd class="field-odd"><p><strong>G</strong> (<em>graph</em>) – A NetworkX graph</p>
 </dd>
 <dt class="field-even">Returns</dt>
-<dd class="field-even"><p><strong>nodes</strong> – Dataframe of nodes with out-degree centrality as values.</p>
+<dd class="field-even"><p><strong>nodes</strong> – Dictionary of nodes with out-degree centrality as values.</p>
 </dd>
 <dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p>dataframe</p>
+<dd class="field-odd"><p>dictionary</p>
 </dd>
 <dt class="field-even">Raises</dt>
 <dd class="field-even"><p><strong>NetworkXNotImplemented</strong> – If G is undirected.</p>
@@ -275,101 +280,20 @@ outgoing edges are connected to.</p>
 <p class="rubric">Notes</p>
 <p>The degree centrality values are normalized by dividing by the maximum
 possible degree in a simple graph n-1 where n is the number of nodes in G.</p>
+<p>For multigraphs or graphs with self loops the maximum degree might
+be higher than n-1 and values of degree centrality greater than 1
+are possible.</p>
 </dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="graphscope.nx.builtin.eigenvector_centrality">
 <span class="sig-prename descclassname"><span class="pre">graphscope.nx.builtin.</span></span><span class="sig-name descname"><span class="pre">eigenvector_centrality</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">G</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_iter</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">100</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tol</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1e-06</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">weight</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#graphscope.nx.builtin.eigenvector_centrality" title="Permalink to this definition"></a></dt>
-<dd><p>Compute the eigenvector centrality for the graph <cite>G</cite>.</p>
-<p>Eigenvector centrality computes the centrality for a node based on the
-centrality of its neighbors. The eigenvector centrality for node $i$ is
-the $i$-th element of the vector $x$ defined by the equation</p>
-<div class="math notranslate nohighlight">
-\[Ax = \lambda x\]</div>
-<p>where $A$ is the adjacency matrix of the graph <cite>G</cite> with eigenvalue
-$lambda$. By virtue of the Perron–Frobenius theorem, there is a unique
-solution $x$, all of whose entries are positive, if $lambda$ is the
-largest eigenvalue of the adjacency matrix $A$ (<a href="#id14"><span class="problematic" id="id3">[2]_</span></a>).</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>G</strong> (<em>graph</em>) – A networkx graph</p></li>
-<li><p><strong>max_iter</strong> (<em>integer</em><em>, </em><em>optional</em><em> (</em><em>default=100</em><em>)</em>) – Maximum number of iterations in power method.</p></li>
-<li><p><strong>tol</strong> (<em>float</em><em>, </em><em>optional</em><em> (</em><em>default=1.0e-6</em><em>)</em>) – Error tolerance used to check convergence in power method iteration.</p></li>
-<li><p><strong>weight</strong> (<em>None</em><em> or </em><em>string</em><em>, </em><em>optional</em><em> (</em><em>default=None</em><em>)</em>) – If None, that take it as edge attribute ‘weight’
-Otherwise holds the name of the edge attribute used as weight.</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p><strong>nodes</strong> – Dataframe of nodes with eigenvector centrality as the value.</p>
-</dd>
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p>dataframe</p>
-</dd>
-</dl>
-<p class="rubric">Examples</p>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">G</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">path_graph</span><span class="p">(</span><span class="mi">4</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">centrality</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">eigenvector_centrality</span><span class="p">(</span><span class="n">G</span><span class="p">)</span>
-</pre></div>
-</div>
-<div class="admonition seealso">
-<p class="admonition-title">See also</p>
-<p><code class="xref py py-obj docutils literal notranslate"><span class="pre">eigenvector_centrality_numpy</span></code>, <a class="reference internal" href="#graphscope.nx.builtin.hits" title="graphscope.nx.builtin.hits"><code class="xref py py-obj docutils literal notranslate"><span class="pre">hits</span></code></a></p>
-</div>
-</dd></dl>
+<dd></dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="graphscope.nx.builtin.katz_centrality">
 <span class="sig-prename descclassname"><span class="pre">graphscope.nx.builtin.</span></span><span class="sig-name descname"><span class="pre">katz_centrality</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">G</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">alpha</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">beta</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_iter</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">100</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tol</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1e-06</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">normalized</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">weight</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#graphscope.nx.builtin.katz_centrality" title="Permalink to this definition"></a></dt>
-<dd><p>Compute the Katz centrality for the nodes of the graph G.</p>
-<p>Katz centrality computes the centrality for a node based on the centrality
-of its neighbors. It is a generalization of the eigenvector centrality. The
-Katz centrality for node $i$ is</p>
-<div class="math notranslate nohighlight">
-\[x_i = \alpha \sum_{j} A_{ij} x_j + \beta,\]</div>
-<p>where $A$ is the adjacency matrix of graph G with eigenvalues $lambda$.</p>
-<p>The parameter $beta$ controls the initial centrality and</p>
-<div class="math notranslate nohighlight">
-\[\alpha &lt; \frac{1}{\lambda_{\max}}.\]</div>
-<p>Katz centrality computes the relative influence of a node within a
-network by measuring the number of the immediate neighbors (first
-degree nodes) and also all other nodes in the network that connect
-to the node under consideration through these immediate neighbors.</p>
-<p>Extra weight can be provided to immediate neighbors through the
-parameter $beta$.  Connections made with distant neighbors
-are, however, penalized by an attenuation factor $alpha$ which
-should be strictly less than the inverse largest eigenvalue of the
-adjacency matrix in order for the Katz centrality to be computed
-correctly. More information is provided in <a href="#id15"><span class="problematic" id="id4">[1]_</span></a>.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>G</strong> (<em>graph</em>) – A networkx graph.</p></li>
-<li><p><strong>alpha</strong> (<em>float</em>) – Attenuation factor</p></li>
-<li><p><strong>beta</strong> (<em>scalar</em><em> or </em><em>dictionary</em><em>, </em><em>optional</em><em> (</em><em>default=1.0</em><em>)</em>) – Weight attributed to the immediate neighborhood. If not a scalar, the
-dictionary must have an value for every node.</p></li>
-<li><p><strong>max_iter</strong> (<em>integer</em><em>, </em><em>optional</em><em> (</em><em>default=1000</em><em>)</em>) – Maximum number of iterations in power method.</p></li>
-<li><p><strong>tol</strong> (<em>float</em><em>, </em><em>optional</em><em> (</em><em>default=1.0e-6</em><em>)</em>) – Error tolerance used to check convergence in power method iteration.</p></li>
-<li><p><strong>normalized</strong> (<em>bool</em><em>, </em><em>optional</em><em> (</em><em>default=True</em><em>)</em>) – If True normalize the resulting values.</p></li>
-<li><p><strong>weight</strong> (<em>None</em><em> or </em><em>string</em><em>, </em><em>optional</em><em> (</em><em>default=None</em><em>)</em>) – If None, that take it as edge attribute ‘weight’.
-Otherwise holds the name of the edge attribute used as weight.</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p><strong>nodes</strong> – Dataframe of nodes with Katz centrality as the value.</p>
-</dd>
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p>dataframe</p>
-</dd>
-</dl>
-<p class="rubric">Examples</p>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">math</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">G</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">path_graph</span><span class="p">(</span><span class="mi">4</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">phi</span> <span class="o">=</span> <span class="p">(</span><span class="mi">1</span> <span class="o">+</span> <span class="n">math</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">5</span><span class="p">))</span> <span class="o">/</span> <span class="mf">2.0</span>  <span class="c1"># largest eigenvalue of adj matrix</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">centrality</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">katz_centrality</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="mi">1</span> <span class="o">/</span> <span class="n">phi</span> <span class="o">-</span> <span class="mf">0.01</span><span class="p">)</span>
-</pre></div>
-</div>
-</dd></dl>
+<dd></dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="graphscope.nx.builtin.has_path">
@@ -378,7 +302,7 @@ Otherwise holds the name of the edge attribute used as weight.</p></li>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>G</strong> (<em>networkx graph</em>) – </p></li>
+<li><p><strong>G</strong> (<em>NetworkX graph</em>) – </p></li>
 <li><p><strong>source</strong> (<em>node</em>) – Starting node for path</p></li>
 <li><p><strong>target</strong> (<em>node</em>) – Ending node for path</p></li>
 </ul>
@@ -468,7 +392,7 @@ this node.</p></li>
 </dl>
 <p class="rubric">References</p>
 <dl class="footnote brackets">
-<dt class="label" id="id5"><span class="brackets">1</span></dt>
+<dt class="label" id="id3"><span class="brackets">1</span></dt>
 <dd><p>An O(m) Algorithm for Cores Decomposition of Networks
 Vladimir Batagelj and Matjaz Zaversnik,  2003.
 <a class="reference external" href="https://arxiv.org/abs/cs.DS/0310049">https://arxiv.org/abs/cs.DS/0310049</a></p>
@@ -486,9 +410,9 @@ is the fraction of possible triangles through that node that exist,</p>
 \[c_u = \frac{2 T(u)}{deg(u)(deg(u)-1)},\]</div>
 <p>where <span class="math notranslate nohighlight">\(T(u)\)</span> is the number of triangles through node <span class="math notranslate nohighlight">\(u\)</span> and
 <span class="math notranslate nohighlight">\(deg(u)\)</span> is the degree of <span class="math notranslate nohighlight">\(u\)</span>.</p>
-<p>For weighted graphs, there are several ways to define clustering <a href="#id16"><span class="problematic" id="id6">[1]_</span></a>.
+<p>For weighted graphs, there are several ways to define clustering <a href="#id12"><span class="problematic" id="id4">[1]_</span></a>.
 the one used here is defined
-as the geometric average of the subgraph edge weights <a href="#id17"><span class="problematic" id="id7">[2]_</span></a>,</p>
+as the geometric average of the subgraph edge weights <a href="#id13"><span class="problematic" id="id5">[2]_</span></a>,</p>
 <div class="math notranslate nohighlight">
 \[c_u = \frac{1}{deg(u)(deg(u)-1))}
       \sum_{vw} (\hat{w}_{uv} \hat{w}_{uw} \hat{w}_{vw})^{1/3}.\]</div>
@@ -497,7 +421,7 @@ in the network <span class="math notranslate nohighlight">\(\hat{w}_{uv} = w_{uv
 <p>The value of <span class="math notranslate nohighlight">\(c_u\)</span> is assigned to 0 if <span class="math notranslate nohighlight">\(deg(u) &lt; 2\)</span>.</p>
 <p>For directed graphs, the clustering is similarly defined as the fraction
 of all possible directed triangles or geometric average of the subgraph
-edge weights for unweighted and weighted directed graph respectively <a class="footnote-reference brackets" href="#id11" id="id8">3</a>.</p>
+edge weights for unweighted and weighted directed graph respectively <a class="footnote-reference brackets" href="#id9" id="id6">3</a>.</p>
 <div class="math notranslate nohighlight">
 \[c_u = \frac{1}{deg^{tot}(u)(deg^{tot}(u)-1) - 2deg^{\leftrightarrow}(u)}
       T(u),\]</div>
@@ -523,18 +447,18 @@ edge weights for unweighted and weighted directed graph respectively <a class="f
 </div>
 <p class="rubric">References</p>
 <dl class="footnote brackets">
-<dt class="label" id="id9"><span class="brackets">1</span></dt>
+<dt class="label" id="id7"><span class="brackets">1</span></dt>
 <dd><p>Generalizations of the clustering coefficient to weighted
 complex networks by J. Saramäki, M. Kivelä, J.-P. Onnela,
 K. Kaski, and J. Kertész, Physical Review E, 75 027105 (2007).
 <a class="reference external" href="http://jponnela.com/web_documents/a9.pdf">http://jponnela.com/web_documents/a9.pdf</a></p>
 </dd>
-<dt class="label" id="id10"><span class="brackets">2</span></dt>
+<dt class="label" id="id8"><span class="brackets">2</span></dt>
 <dd><p>Intensity and coherence of motifs in weighted complex
 networks by J. P. Onnela, J. Saramäki, J. Kertész, and K. Kaski,
 Physical Review E, 71(6), 065103 (2005).</p>
 </dd>
-<dt class="label" id="id11"><span class="brackets"><a class="fn-backref" href="#id8">3</a></span></dt>
+<dt class="label" id="id9"><span class="brackets"><a class="fn-backref" href="#id6">3</a></span></dt>
 <dd><p>Clustering in complex directed networks by G. Fagiolo,
 Physical Review E, 76(2), 026107 (2007).</p>
 </dd>
@@ -599,13 +523,13 @@ to use the clustering function to get a list and then take the average.</p>
 <p>Self loops are ignored.</p>
 <p class="rubric">References</p>
 <dl class="footnote brackets">
-<dt class="label" id="id12"><span class="brackets">1</span></dt>
+<dt class="label" id="id10"><span class="brackets">1</span></dt>
 <dd><p>Generalizations of the clustering coefficient to weighted
 complex networks by J. Saramäki, M. Kivelä, J.-P. Onnela,
 K. Kaski, and J. Kertész, Physical Review E, 75 027105 (2007).
 <a class="reference external" href="http://jponnela.com/web_documents/a9.pdf">http://jponnela.com/web_documents/a9.pdf</a></p>
 </dd>
-<dt class="label" id="id13"><span class="brackets">2</span></dt>
+<dt class="label" id="id11"><span class="brackets">2</span></dt>
 <dd><p>Marcus Kaiser,  Mean clustering coefficients: the role of isolated
 nodes and leafs on clustering measures for small-world networks.
 <a class="reference external" href="https://arxiv.org/abs/0802.2512">https://arxiv.org/abs/0802.2512</a></p>
@@ -671,6 +595,16 @@ nodes and leafs on clustering measures for small-world networks.
             
               
                 <dd><a href="../../../index.html">stable</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../v0.9.1/index.html">v0.9.1</a></dd>
               
             
 
