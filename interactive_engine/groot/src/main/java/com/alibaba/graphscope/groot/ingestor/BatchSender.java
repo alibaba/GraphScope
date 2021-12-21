@@ -162,7 +162,9 @@ public class BatchSender implements MetricsAgent {
         while (!shouldStop && batchNeedSend.size() != 0) {
             batchNeedSend = parallelSend(batchNeedSend);
         }
-        this.totalRecords += task.operationBatch.getOperationCount();
+        if (!task.operationBatch.equals(IngestService.MARKER_BATCH)) {
+            this.totalRecords += task.operationBatch.getOperationCount();
+        }
     }
 
     private Map<Integer, StoreDataBatch> rebatch(SendTask task) {

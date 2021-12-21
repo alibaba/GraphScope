@@ -230,15 +230,17 @@ public class IngestProcessor implements MetricsAgent {
             }
         }
         long walCompleteTimeNano = System.nanoTime();
-        this.walBlockTimeNano += (walCompleteTimeNano - startTimeNano);
         if (shouldStop) {
             throw new IllegalStateException("ingestProcessor queue#[" + this.queueId + "] stopped");
         }
         this.batchSender.asyncSendWithRetry(
                 task.requestId, this.queueId, batchSnapshotId, walOffset, task.operationBatch);
         long storeCompleteTimeNano = System.nanoTime();
-        this.storeBlockTimeNano += (storeCompleteTimeNano - walCompleteTimeNano);
-        this.totalProcessed += task.operationBatch.getOperationCount();
+        if (!task.operationBatch.equals(IngestService.MARKER_BATCH)) {
+            this.walBlockTimeNano += (walCompleteTimeNano - startTimeNano);
+            this.storeBlockTimeNano += (storeCompleteTimeNano - walCompleteTimeNano);
+            this.totalProcessed += task.operationBatch.getOperationCount();
+        }
         return batchSnapshotId;
     }
 
