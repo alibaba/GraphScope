@@ -99,6 +99,8 @@ impl From<FnGenError> for BuildJobError {
     }
 }
 
+pub type FnExecResult<T> = Result<T, FnExecError>;
+
 /// Errors that occur when execute a udf in Runtime
 #[derive(Debug)]
 pub enum FnExecError {
@@ -112,6 +114,8 @@ pub enum FnExecError {
     ExprEvalError(ExprError),
     /// Unexpected data type error
     UnExpectedData(String),
+    /// Accumulate error
+    AccumError(String),
     /// Not supported error
     UnSupported(String),
 }
@@ -129,6 +133,10 @@ impl FnExecError {
         FnExecError::UnExpectedData(e.to_string())
     }
 
+    pub fn accum_error(e: &str) -> Self {
+        FnExecError::AccumError(e.to_string())
+    }
+
     pub fn unsupported_error(e: &str) -> Self {
         FnExecError::UnSupported(e.to_string())
     }
@@ -142,6 +150,7 @@ impl std::fmt::Display for FnExecError {
             FnExecError::GetTagError(e) => write!(f, "Get tag error in exec {}", e),
             FnExecError::ExprEvalError(e) => write!(f, "Eval expression error in exec {}", e),
             FnExecError::UnExpectedData(e) => write!(f, "Unexpected data type in exec {}", e),
+            FnExecError::AccumError(e) => write!(f, "Accum error in exec {}", e),
             FnExecError::UnSupported(e) => write!(f, "Op not supported error in exec {}", e),
         }
     }
@@ -175,6 +184,10 @@ impl From<FnExecError> for DynError {
                 err
             }
             FnExecError::UnExpectedData(_) => {
+                let err: Box<dyn std::error::Error + Send + Sync> = e.into();
+                err
+            }
+            FnExecError::AccumError(e) => {
                 let err: Box<dyn std::error::Error + Send + Sync> = e.into();
                 err
             }
