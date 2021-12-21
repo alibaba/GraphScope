@@ -384,6 +384,11 @@ public class PositiveEvalTest {
     }
 
     @Test
+    public void g_V_has_without_strs_test() {
+        Assert.assertEquals(g.V().has("name", P.without("marko", "josh")), eval("g.V().has('name', without('marko', 'josh'))"));
+    }
+
+    @Test
     public void g_V_as_test() {
         Assert.assertEquals(g.V().as("a"), eval("g.V().as('a')"));
     }
