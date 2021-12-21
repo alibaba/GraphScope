@@ -165,8 +165,8 @@
 <span class="kn">from</span> <span class="nn">graphscope.nx.classes.dicts</span> <span class="kn">import</span> <span class="n">NodeDict</span>
 <span class="kn">from</span> <span class="nn">graphscope.nx.convert</span> <span class="kn">import</span> <span class="n">to_networkx_graph</span>
 <span class="kn">from</span> <span class="nn">graphscope.nx.utils.compat</span> <span class="kn">import</span> <span class="n">patch_docstring</span>
-<span class="kn">from</span> <span class="nn">graphscope.nx.utils.misc</span> <span class="kn">import</span> <span class="n">check_node_is_legal</span>
 <span class="kn">from</span> <span class="nn">graphscope.nx.utils.misc</span> <span class="kn">import</span> <span class="n">empty_graph_in_engine</span>
+<span class="kn">from</span> <span class="nn">graphscope.nx.utils.misc</span> <span class="kn">import</span> <span class="n">json_encoder</span>
 <span class="kn">from</span> <span class="nn">graphscope.nx.utils.misc</span> <span class="kn">import</span> <span class="n">parse_ret_as_dict</span>
 <span class="kn">from</span> <span class="nn">graphscope.proto</span> <span class="kn">import</span> <span class="n">graph_def_pb2</span>
 <span class="kn">from</span> <span class="nn">graphscope.proto</span> <span class="kn">import</span> <span class="n">types_pb2</span>
@@ -606,12 +606,6 @@
     <span class="k">def</span> <span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span>
 
-    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="n">s</span> <span class="o">=</span> <span class="s2">&quot;graphscope.nx.Graph</span><span class="se">\n</span><span class="s2">&quot;</span>
-        <span class="n">s</span> <span class="o">+=</span> <span class="s2">&quot;type: &quot;</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">template_str</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;&lt;&quot;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span>
-        <span class="n">s</span> <span class="o">+=</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_schema</span><span class="p">)</span>
-        <span class="k">return</span> <span class="n">s</span>
-
     <span class="k">def</span> <span class="nf">__copy__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;override default __copy__&quot;&quot;&quot;</span>
         <span class="k">raise</span> <span class="n">NetworkXError</span><span class="p">(</span><span class="s2">&quot;graphscope.nx not support shallow copy.&quot;</span><span class="p">)</span>
@@ -782,19 +776,10 @@
                 <span class="n">nn</span><span class="p">,</span> <span class="n">dd</span> <span class="o">=</span> <span class="n">n</span>
                 <span class="n">data</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">dd</span><span class="p">)</span>
                 <span class="n">node</span> <span class="o">=</span> <span class="p">[</span><span class="n">nn</span><span class="p">,</span> <span class="n">data</span><span class="p">]</span>
-                <span class="n">n</span> <span class="o">=</span> <span class="n">nn</span>
             <span class="k">except</span> <span class="p">(</span><span class="ne">TypeError</span><span class="p">,</span> <span class="ne">ValueError</span><span class="p">):</span>
                 <span class="n">node</span> <span class="o">=</span> <span class="p">[</span><span class="n">n</span><span class="p">,</span> <span class="n">data</span><span class="p">]</span>
-            <span class="n">check_node_is_legal</span><span class="p">(</span><span class="n">n</span><span class="p">)</span>
             <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_schema</span><span class="o">.</span><span class="n">add_nx_vertex_properties</span><span class="p">(</span><span class="n">data</span><span class="p">):</span>
-                <span class="k">try</span><span class="p">:</span>
-                    <span class="n">nodes</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">node</span><span class="p">))</span>
-                <span class="k">except</span> <span class="ne">TypeError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
-                    <span class="k">raise</span> <span class="n">NetworkXError</span><span class="p">(</span>
-                        <span class="s2">&quot;The node and its </span><span class="si">{}</span><span class="s2"> data failed to be serialized by json.&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
-                            <span class="n">node</span>
-                        <span class="p">)</span>
-                    <span class="p">)</span> <span class="kn">from</span> <span class="nn">e</span>
+                <span class="n">nodes</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="n">json_encoder</span><span class="p">))</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_op</span> <span class="o">=</span> <span class="n">dag_utils</span><span class="o">.</span><span class="n">modify_vertices</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">types_pb2</span><span class="o">.</span><span class="n">NX_ADD_NODES</span><span class="p">,</span> <span class="n">nodes</span><span class="p">)</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_op</span><span class="o">.</span><span class="n">eval</span><span class="p">()</span></div>
 
@@ -861,8 +846,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_convert_arrow_to_dynamic</span><span class="p">()</span>
         <span class="n">nodes</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">nodes_for_removing</span><span class="p">:</span>
-            <span class="n">check_node_is_legal</span><span class="p">(</span><span class="n">n</span><span class="p">)</span>
-            <span class="n">nodes</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">([</span><span class="n">n</span><span class="p">]))</span>
+            <span class="n">nodes</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">([</span><span class="n">n</span><span class="p">],</span> <span class="n">default</span><span class="o">=</span><span class="n">json_encoder</span><span class="p">))</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_op</span> <span class="o">=</span> <span class="n">dag_utils</span><span class="o">.</span><span class="n">modify_vertices</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">types_pb2</span><span class="o">.</span><span class="n">NX_DEL_NODES</span><span class="p">,</span> <span class="n">nodes</span><span class="p">)</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_op</span><span class="o">.</span><span class="n">eval</span><span class="p">()</span></div>
 
@@ -906,10 +890,11 @@
 <span class="sd">        {}</span>
 
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">check_node_is_legal</span><span class="p">(</span><span class="n">n</span><span class="p">)</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">graph_type</span> <span class="o">==</span> <span class="n">graph_def_pb2</span><span class="o">.</span><span class="n">ARROW_PROPERTY</span><span class="p">:</span>
             <span class="n">n</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_convert_to_label_id_tuple</span><span class="p">(</span><span class="n">n</span><span class="p">)</span>
-        <span class="n">op</span> <span class="o">=</span> <span class="n">dag_utils</span><span class="o">.</span><span class="n">report_graph</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">types_pb2</span><span class="o">.</span><span class="n">NODE_DATA</span><span class="p">,</span> <span class="n">node</span><span class="o">=</span><span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">([</span><span class="n">n</span><span class="p">]))</span>
+        <span class="n">op</span> <span class="o">=</span> <span class="n">dag_utils</span><span class="o">.</span><span class="n">report_graph</span><span class="p">(</span>
+            <span class="bp">self</span><span class="p">,</span> <span class="n">types_pb2</span><span class="o">.</span><span class="n">NODE_DATA</span><span class="p">,</span> <span class="n">node</span><span class="o">=</span><span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">([</span><span class="n">n</span><span class="p">],</span> <span class="n">default</span><span class="o">=</span><span class="n">json_encoder</span><span class="p">)</span>
+        <span class="p">)</span>
         <span class="k">return</span> <span class="n">op</span><span class="o">.</span><span class="n">eval</span><span class="p">()</span>
 
 <div class="viewcode-block" id="Graph.number_of_nodes"><a class="viewcode-back" href="../../../../reference/networkx/graphs.html#graphscope.nx.Graph.number_of_nodes">[docs]</a>    <span class="k">def</span> <span class="nf">number_of_nodes</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
@@ -975,11 +960,12 @@
 
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">try</span><span class="p">:</span>
-            <span class="n">check_node_is_legal</span><span class="p">(</span><span class="n">n</span><span class="p">)</span>
             <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">graph_type</span> <span class="o">==</span> <span class="n">graph_def_pb2</span><span class="o">.</span><span class="n">ARROW_PROPERTY</span><span class="p">:</span>
                 <span class="n">n</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_convert_to_label_id_tuple</span><span class="p">(</span><span class="n">n</span><span class="p">)</span>
-            <span class="n">op</span> <span class="o">=</span> <span class="n">dag_utils</span><span class="o">.</span><span class="n">report_graph</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">types_pb2</span><span class="o">.</span><span class="n">HAS_NODE</span><span class="p">,</span> <span class="n">node</span><span class="o">=</span><span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">([</span><span class="n">n</span><span class="p">]))</span>
-            <span class="k">return</span> <span class="nb">int</span><span class="p">(</span><span class="n">op</span><span class="o">.</span><span class="n">eval</span><span class="p">())</span>
+            <span class="n">op</span> <span class="o">=</span> <span class="n">dag_utils</span><span class="o">.</span><span class="n">report_graph</span><span class="p">(</span>
+                <span class="bp">self</span><span class="p">,</span> <span class="n">types_pb2</span><span class="o">.</span><span class="n">HAS_NODE</span><span class="p">,</span> <span class="n">node</span><span class="o">=</span><span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">([</span><span class="n">n</span><span class="p">],</span> <span class="n">default</span><span class="o">=</span><span class="n">json_encoder</span><span class="p">)</span>
+            <span class="p">)</span>
+            <span class="k">return</span> <span class="nb">bool</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">op</span><span class="o">.</span><span class="n">eval</span><span class="p">()))</span>
         <span class="k">except</span> <span class="p">(</span><span class="ne">TypeError</span><span class="p">,</span> <span class="n">NetworkXError</span><span class="p">,</span> <span class="ne">KeyError</span><span class="p">):</span>
             <span class="k">return</span> <span class="kc">False</span></div>
 
@@ -1090,12 +1076,10 @@
                     <span class="s2">&quot;Edge tuple </span><span class="si">%s</span><span class="s2"> must be a 2-tuple or 3-tuple.&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">e</span><span class="p">,)</span>
                 <span class="p">)</span>
             <span class="c1"># FIXME: support dynamic data type in same property</span>
-            <span class="n">check_node_is_legal</span><span class="p">(</span><span class="n">u</span><span class="p">)</span>
-            <span class="n">check_node_is_legal</span><span class="p">(</span><span class="n">v</span><span class="p">)</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_schema</span><span class="o">.</span><span class="n">add_nx_edge_properties</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
             <span class="n">edge</span> <span class="o">=</span> <span class="p">[</span><span class="n">u</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="n">data</span><span class="p">]</span>
             <span class="k">try</span><span class="p">:</span>
-                <span class="n">edges</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">edge</span><span class="p">))</span>
+                <span class="n">edges</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">edge</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="n">json_encoder</span><span class="p">))</span>
             <span class="k">except</span> <span class="ne">TypeError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
                 <span class="k">raise</span> <span class="n">NetworkXError</span><span class="p">(</span>
                     <span class="s2">&quot;The edge and its data </span><span class="si">{}</span><span class="s2"> failed to be serialized by json.&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
@@ -1182,9 +1166,9 @@
             <span class="n">ne</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
             <span class="k">if</span> <span class="n">ne</span> <span class="o">&lt;</span> <span class="mi">2</span><span class="p">:</span>
                 <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Edge tuple </span><span class="si">%s</span><span class="s2"> must be a 2-tuple or 3-tuple.&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">e</span><span class="p">,))</span>
-            <span class="n">check_node_is_legal</span><span class="p">(</span><span class="n">e</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
-            <span class="n">check_node_is_legal</span><span class="p">(</span><span class="n">e</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
-            <span class="n">edges</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">e</span><span class="p">[:</span><span class="mi">2</span><span class="p">]))</span>  <span class="c1"># ignore edge data if present</span>
+            <span class="n">edges</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                <span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">e</span><span class="p">[:</span><span class="mi">2</span><span class="p">],</span> <span class="n">default</span><span class="o">=</span><span class="n">json_encoder</span><span class="p">)</span>
+            <span class="p">)</span>  <span class="c1"># ignore edge data if present</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_op</span> <span class="o">=</span> <span class="n">dag_utils</span><span class="o">.</span><span class="n">modify_edges</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">types_pb2</span><span class="o">.</span><span class="n">NX_DEL_EDGES</span><span class="p">,</span> <span class="n">edges</span><span class="p">)</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_op</span><span class="o">.</span><span class="n">eval</span><span class="p">()</span></div>
 
@@ -1216,18 +1200,9 @@
 <span class="sd">        {&#39;foo&#39;: &#39;bar&#39;}</span>
 
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">check_node_is_legal</span><span class="p">(</span><span class="n">u</span><span class="p">)</span>
-        <span class="n">check_node_is_legal</span><span class="p">(</span><span class="n">v</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_convert_arrow_to_dynamic</span><span class="p">()</span>
 
-        <span class="k">try</span><span class="p">:</span>
-            <span class="n">edge</span> <span class="o">=</span> <span class="p">[</span><span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">((</span><span class="n">u</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="n">data</span><span class="p">))]</span>
-        <span class="k">except</span> <span class="ne">TypeError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span>
-                <span class="s2">&quot;The edge and its data </span><span class="si">{}</span><span class="s2"> failed to be serialized by json.&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
-                    <span class="p">(</span><span class="n">u</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="n">data</span><span class="p">)</span>
-                <span class="p">)</span>
-            <span class="p">)</span> <span class="kn">from</span> <span class="nn">e</span>
+        <span class="n">edge</span> <span class="o">=</span> <span class="p">[</span><span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">((</span><span class="n">u</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="n">data</span><span class="p">),</span> <span class="n">default</span><span class="o">=</span><span class="n">json_encoder</span><span class="p">)]</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_schema</span><span class="o">.</span><span class="n">add_nx_edge_properties</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_op</span> <span class="o">=</span> <span class="n">dag_utils</span><span class="o">.</span><span class="n">modify_edges</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">types_pb2</span><span class="o">.</span><span class="n">NX_UPDATE_EDGES</span><span class="p">,</span> <span class="n">edge</span><span class="p">)</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_op</span><span class="o">.</span><span class="n">eval</span><span class="p">()</span></div>
@@ -1260,17 +1235,9 @@
 <span class="sd">        {&#39;weight&#39;: 3}</span>
 
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">check_node_is_legal</span><span class="p">(</span><span class="n">n</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_convert_arrow_to_dynamic</span><span class="p">()</span>
 
-        <span class="k">try</span><span class="p">:</span>
-            <span class="n">node</span> <span class="o">=</span> <span class="p">[</span><span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">((</span><span class="n">n</span><span class="p">,</span> <span class="n">data</span><span class="p">))]</span>
-        <span class="k">except</span> <span class="ne">TypeError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="n">NetworkXError</span><span class="p">(</span>
-                <span class="s2">&quot;The node and its data </span><span class="si">{}</span><span class="s2"> failed to be serialized by json.&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
-                    <span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">data</span><span class="p">)</span>
-                <span class="p">)</span>
-            <span class="p">)</span> <span class="kn">from</span> <span class="nn">e</span>
+        <span class="n">node</span> <span class="o">=</span> <span class="p">[</span><span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">((</span><span class="n">n</span><span class="p">,</span> <span class="n">data</span><span class="p">),</span> <span class="n">default</span><span class="o">=</span><span class="n">json_encoder</span><span class="p">)]</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_op</span> <span class="o">=</span> <span class="n">dag_utils</span><span class="o">.</span><span class="n">modify_vertices</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">types_pb2</span><span class="o">.</span><span class="n">NX_UPDATE_NODES</span><span class="p">,</span> <span class="n">node</span><span class="p">)</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_op</span><span class="o">.</span><span class="n">eval</span><span class="p">()</span></div>
 
@@ -1429,8 +1396,6 @@
 <span class="sd">        True</span>
 
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">check_node_is_legal</span><span class="p">(</span><span class="n">u</span><span class="p">)</span>
-        <span class="n">check_node_is_legal</span><span class="p">(</span><span class="n">v</span><span class="p">)</span>
         <span class="k">try</span><span class="p">:</span>
             <span class="k">return</span> <span class="n">v</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_adj</span><span class="p">[</span><span class="n">u</span><span class="p">]</span>
         <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
@@ -1474,7 +1439,6 @@
 <span class="sd">        &gt;&gt;&gt; [n for n in G[0]]</span>
 <span class="sd">        [1]</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">check_node_is_legal</span><span class="p">(</span><span class="n">n</span><span class="p">)</span>
         <span class="k">try</span><span class="p">:</span>
             <span class="k">return</span> <span class="nb">iter</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_adj</span><span class="p">[</span><span class="n">n</span><span class="p">])</span>
         <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
@@ -1583,7 +1547,10 @@
                 <span class="n">u</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_convert_to_label_id_tuple</span><span class="p">(</span><span class="n">u</span><span class="p">)</span>
                 <span class="n">v</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_convert_to_label_id_tuple</span><span class="p">(</span><span class="n">v</span><span class="p">)</span>
             <span class="n">op</span> <span class="o">=</span> <span class="n">dag_utils</span><span class="o">.</span><span class="n">report_graph</span><span class="p">(</span>
-                <span class="bp">self</span><span class="p">,</span> <span class="n">types_pb2</span><span class="o">.</span><span class="n">EDGE_DATA</span><span class="p">,</span> <span class="n">edge</span><span class="o">=</span><span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">((</span><span class="n">u</span><span class="p">,</span> <span class="n">v</span><span class="p">)),</span> <span class="n">key</span><span class="o">=</span><span class="s2">&quot;&quot;</span>
+                <span class="bp">self</span><span class="p">,</span>
+                <span class="n">types_pb2</span><span class="o">.</span><span class="n">EDGE_DATA</span><span class="p">,</span>
+                <span class="n">edge</span><span class="o">=</span><span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">((</span><span class="n">u</span><span class="p">,</span> <span class="n">v</span><span class="p">),</span> <span class="n">default</span><span class="o">=</span><span class="n">json_encoder</span><span class="p">),</span>
+                <span class="n">key</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">,</span>
             <span class="p">)</span>
             <span class="n">ret</span> <span class="o">=</span> <span class="n">op</span><span class="o">.</span><span class="n">eval</span><span class="p">()</span>
             <span class="k">return</span> <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">ret</span><span class="p">)</span>
@@ -1720,7 +1687,6 @@
             <span class="k">def</span> <span class="nf">bunch_iter</span><span class="p">(</span><span class="n">nlist</span><span class="p">,</span> <span class="n">adj</span><span class="p">):</span>
                 <span class="k">try</span><span class="p">:</span>
                     <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">nlist</span><span class="p">:</span>
-                        <span class="n">check_node_is_legal</span><span class="p">(</span><span class="n">n</span><span class="p">)</span>
                         <span class="k">if</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">adj</span><span class="p">:</span>
                             <span class="k">yield</span> <span class="n">n</span>
                 <span class="k">except</span> <span class="ne">TypeError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
@@ -1965,9 +1931,8 @@
 
         <span class="n">induced_nodes</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">nodes</span><span class="p">:</span>
-            <span class="n">check_node_is_legal</span><span class="p">(</span><span class="n">n</span><span class="p">)</span>
             <span class="k">try</span><span class="p">:</span>
-                <span class="n">induced_nodes</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">([</span><span class="n">n</span><span class="p">]))</span>
+                <span class="n">induced_nodes</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">([</span><span class="n">n</span><span class="p">],</span> <span class="n">default</span><span class="o">=</span><span class="n">json_encoder</span><span class="p">))</span>
             <span class="k">except</span> <span class="ne">TypeError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
                 <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span>
                     <span class="s2">&quot;The node </span><span class="si">{}</span><span class="s2"> failed to be serialized by json.&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">n</span><span class="p">)</span>
@@ -2018,10 +1983,8 @@
         <span class="n">induced_edges</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="k">for</span> <span class="n">e</span> <span class="ow">in</span> <span class="n">edges</span><span class="p">:</span>
             <span class="n">u</span><span class="p">,</span> <span class="n">v</span> <span class="o">=</span> <span class="n">e</span>
-            <span class="n">check_node_is_legal</span><span class="p">(</span><span class="n">u</span><span class="p">)</span>
-            <span class="n">check_node_is_legal</span><span class="p">(</span><span class="n">v</span><span class="p">)</span>
             <span class="k">try</span><span class="p">:</span>
-                <span class="n">induced_edges</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">((</span><span class="n">u</span><span class="p">,</span> <span class="n">v</span><span class="p">)))</span>
+                <span class="n">induced_edges</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">((</span><span class="n">u</span><span class="p">,</span> <span class="n">v</span><span class="p">),</span> <span class="n">default</span><span class="o">=</span><span class="n">json_encoder</span><span class="p">))</span>
             <span class="k">except</span> <span class="ne">TypeError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
                 <span class="k">raise</span> <span class="n">NetworkXError</span><span class="p">(</span>
                     <span class="s2">&quot;The edge </span><span class="si">{}</span><span class="s2"> failed to be serialized by json.&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">((</span><span class="n">u</span><span class="p">,</span> <span class="n">v</span><span class="p">))</span>
@@ -2111,7 +2074,9 @@
             <span class="k">raise</span> <span class="n">NetworkXError</span><span class="p">(</span><span class="s2">&quot;The node </span><span class="si">%s</span><span class="s2"> is not in the graph.&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">n</span><span class="p">,))</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">graph_type</span> <span class="o">==</span> <span class="n">graph_def_pb2</span><span class="o">.</span><span class="n">ARROW_PROPERTY</span><span class="p">:</span>
             <span class="n">n</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_convert_to_label_id_tuple</span><span class="p">(</span><span class="n">n</span><span class="p">)</span>
-        <span class="n">op</span> <span class="o">=</span> <span class="n">dag_utils</span><span class="o">.</span><span class="n">report_graph</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">report_type</span><span class="p">,</span> <span class="n">node</span><span class="o">=</span><span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">([</span><span class="n">n</span><span class="p">]))</span>
+        <span class="n">op</span> <span class="o">=</span> <span class="n">dag_utils</span><span class="o">.</span><span class="n">report_graph</span><span class="p">(</span>
+            <span class="bp">self</span><span class="p">,</span> <span class="n">report_type</span><span class="p">,</span> <span class="n">node</span><span class="o">=</span><span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">([</span><span class="n">n</span><span class="p">],</span> <span class="n">default</span><span class="o">=</span><span class="n">json_encoder</span><span class="p">)</span>
+        <span class="p">)</span>
         <span class="n">ret</span> <span class="o">=</span> <span class="n">op</span><span class="o">.</span><span class="n">eval</span><span class="p">()</span>
         <span class="k">return</span> <span class="n">ret</span>
 
@@ -2170,8 +2135,9 @@
 <span class="sd">        -----</span>
 <span class="sd">        Raise NetworkxError if node not in graph.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">check_node_is_legal</span><span class="p">(</span><span class="n">n</span><span class="p">)</span>
-        <span class="n">op</span> <span class="o">=</span> <span class="n">dag_utils</span><span class="o">.</span><span class="n">report_graph</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">report_type</span><span class="p">,</span> <span class="n">node</span><span class="o">=</span><span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">([</span><span class="n">n</span><span class="p">]),</span> <span class="n">key</span><span class="o">=</span><span class="n">weight</span><span class="p">)</span>
+        <span class="n">op</span> <span class="o">=</span> <span class="n">dag_utils</span><span class="o">.</span><span class="n">report_graph</span><span class="p">(</span>
+            <span class="bp">self</span><span class="p">,</span> <span class="n">report_type</span><span class="p">,</span> <span class="n">node</span><span class="o">=</span><span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">([</span><span class="n">n</span><span class="p">],</span> <span class="n">default</span><span class="o">=</span><span class="n">json_encoder</span><span class="p">),</span> <span class="n">key</span><span class="o">=</span><span class="n">weight</span>
+        <span class="p">)</span>
         <span class="n">degree</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">op</span><span class="o">.</span><span class="n">eval</span><span class="p">())</span>
         <span class="k">return</span> <span class="n">degree</span> <span class="k">if</span> <span class="n">weight</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="nb">int</span><span class="p">(</span><span class="n">degree</span><span class="p">)</span>
 
@@ -2434,6 +2400,16 @@
             
               
                 <dd><a href="../../../../index.html">stable</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../../v0.9.1/index.html">v0.9.1</a></dd>
               
             
 
