@@ -99,8 +99,8 @@ the latest main branch, using the following commands:
 
 [1]: https://github.com/alibaba/GraphScope/blob/main/LICENSE
 [2]: https://github.com/alibaba/GraphScope/blob/main/README.md
-[3]: https://github.com/alibaba/libvineyard/issues/new/new
-[4]: https://github.com/alibaba/libvineyard/pulls
+[3]: https://github.com/v6d-io/v6d/issues/new/new
+[4]: https://github.com/v6d-io/v6d/pulls
 [5]: https://cla-assistant.io/alibaba/GraphScope
 [6]: https://graphscope.io/docs
 [7]: https://github.com/pypa/manylinux

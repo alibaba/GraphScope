@@ -490,10 +490,10 @@ install_vineyard() {
     return 0
   fi
 
-  check_and_remove_dir "/tmp/libvineyard"
+  check_and_remove_dir "/tmp/v6d"
   git clone -b ${V6D_BRANCH} --single-branch --depth=1 \
-      https://github.com/alibaba/libvineyard.git /tmp/libvineyard
-  pushd /tmp/libvineyard
+      https://github.com/v6d-io/v6d.git /tmp/v6d
+  pushd /tmp/v6d
   git submodule update --init
   mkdir -p build && pushd build
   cmake .. -DCMAKE_INSTALL_PREFIX=${DEPS_PREFIX} \
@@ -503,7 +503,7 @@ install_vineyard() {
   sudo make install && popd
   popd
 
-  rm -fr /tmp/libvineyard
+  rm -fr /tmp/v6d
 }
 
 ##########################
