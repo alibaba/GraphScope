@@ -302,16 +302,15 @@ class VertexDataContextDAGNode(BaseContextDAGNode):
     def context_type(self):
         return "vertex_data"
 
-
-def _build_schema(self, result_properties):
-    v_items = [["v", "id"], ["v", "data"]]
-    r_items = [["r", ""]]
-    index = pd.MultiIndex.from_tuples(
-        itertools.chain(v_items, r_items), names=["type", "property"]
-    )
-    v_values = [f"{t}.{p}" for t, p in v_items]
-    r_values = [f"{t}" for t, _ in r_items]
-    return pd.Series(v_values + r_values, index=index, name="Context schema")
+    def _build_schema(self, result_properties):
+        v_items = [["v", "id"], ["v", "data"]]
+        r_items = [["r", ""]]
+        index = pd.MultiIndex.from_tuples(
+            itertools.chain(v_items, r_items), names=["type", "property"]
+        )
+        v_values = [f"{t}.{p}" for t, p in v_items]
+        r_values = [f"{t}" for t, _ in r_items]
+        return pd.Series(v_values + r_values, index=index, name="Context schema")
 
     def _check_selector(self, selector):
         """
@@ -534,14 +533,14 @@ class LabeledVertexPropertyContextDAGNode(BaseContextDAGNode):
 
         for label in schema.vertex_labels:
             label_id = schema.get_vertex_label_id(label)
-            props = label_property_dict.get(label_id, [])
+            props = label_property_dict.get(str(label_id), [])
             r_items.extend([["r", label, prop] for prop in props])
 
         index = pd.MultiIndex.from_tuples(
             itertools.chain(v_items, r_items), names=["type", "label", "property"]
         )
         v_values = [f"{t}:{l}.{p}" for t, l, p in v_items]
-        r_values = [f"{t}:{l}" for t, l, _ in r_items]
+        r_values = [f"{t}:{l}.{p}" for t, l, p in r_items]
         return pd.Series(v_values + r_values, index=index, name="Context schema")
 
     def _check_selector(self, selector):
