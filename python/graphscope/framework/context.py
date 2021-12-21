@@ -18,10 +18,13 @@
 
 import collections
 import hashlib
+import itertools
 import json
 import textwrap
 from copy import deepcopy
 from typing import Mapping
+
+import pandas as pd
 
 from graphscope.framework import dag_utils
 from graphscope.framework import utils
@@ -299,9 +302,16 @@ class VertexDataContextDAGNode(BaseContextDAGNode):
     def context_type(self):
         return "vertex_data"
 
-    def _build_schema(self, result_properties):
-        ret = {"v": ["id", "data"], "e": ["src", "dst", "data"], "r": []}
-        return json.dumps(ret, indent=4)
+
+def _build_schema(self, result_properties):
+    v_items = [["v", "id"], ["v", "data"]]
+    r_items = [["r", ""]]
+    index = pd.MultiIndex.from_tuples(
+        itertools.chain(v_items, r_items), names=["type", "property"]
+    )
+    v_values = [f"{t}.{p}" for t, p in v_items]
+    r_values = [f"{t}" for t, _ in r_items]
+    return pd.Series(v_values + r_values, index=index, name="Context schema")
 
     def _check_selector(self, selector):
         """
@@ -317,7 +327,7 @@ class VertexDataContextDAGNode(BaseContextDAGNode):
             raise InvalidArgumentError("Selector in vertex data context cannot be None")
         segments = selector.split(".")
         hints = self._format_hints([["v.id", "v.data"], ["r"]])
-        err_msg = f"Invalid selector: {selector}, choose from:\n{hints}"
+        err_msg = f"Invalid selector: `{selector}`, choose from\n{hints}"
         if segments[0] == "v":
             if selector not in ("v.id", "v.data"):
                 raise SyntaxError(err_msg)
@@ -360,12 +370,14 @@ class LabeledVertexDataContextDAGNode(BaseContextDAGNode):
 
     def _build_schema(self, result_properties):
         schema = self._graph.schema
-        ret = {
-            "v": _get_property_v_context_schema_str(schema),
-            "e": _get_property_e_context_schema_str(schema),
-            "r": schema.vertex_labels,
-        }
-        return json.dumps(ret, indent=4)
+        v_items = [["v"] + item for item in _get_property_v_context_schema(schema)]
+        r_items = [["r"] + [label, ""] for label in schema.vertex_labels]
+        index = pd.MultiIndex.from_tuples(
+            itertools.chain(v_items, r_items), names=["type", "label", "property"]
+        )
+        v_values = [f"{t}:{l}.{p}" for t, l, p in v_items]
+        r_values = [f"{t}:{l}" for t, l, _ in r_items]
+        return pd.Series(v_values + r_values, index=index, name="Context schema")
 
     def _check_selector(self, selector):
         """
@@ -385,7 +397,7 @@ class LabeledVertexDataContextDAGNode(BaseContextDAGNode):
         hints = self._format_hints(
             [["v:label_name.id", "v:label_name.property_name"], ["r:label_name"]]
         )
-        err_msg = f"Invalid selector: {selector}, choose from {hints}"
+        err_msg = f"Invalid selector: `{selector}`, choose from\n {hints}"
         if len(segments) != 2:
             raise SyntaxError(err_msg)
         stype, segments = segments[0], segments[1]
@@ -429,18 +441,14 @@ class VertexPropertyContextDAGNode(BaseContextDAGNode):
         return "vertex_property"
 
     def _build_schema(self, result_properties):
-        """Build context schema.
-
-        Args:
-            result_properties (str): Returned by c++,
-            example_format(str): "id,name,age,"
-
-        Returns:
-            str: return schema as human readable string
-        """
-        result_properties = [i for i in result_properties.split(",") if i]
-        ret = {"v": ["id", "data"], "e": ["src", "dst", "data"], "r": result_properties}
-        return json.dumps(ret, indent=4)
+        v_items = [["v", "id"], ["v", "data"]]
+        r_items = [["r", prop] for prop in result_properties.split(",") if prop]
+        index = pd.MultiIndex.from_tuples(
+            itertools.chain(v_items, r_items), names=["type", "property"]
+        )
+        v_values = [f"{t}.{p}" for t, p in v_items]
+        r_values = [f"{t}.{p}" for t, p in r_items]
+        return pd.Series(v_values + r_values, index=index, name="Context schema")
 
     def _check_selector(self, selector):
         """
@@ -460,7 +468,7 @@ class VertexPropertyContextDAGNode(BaseContextDAGNode):
         hints = self._format_hints(
             [["v.id", "v.data", "v.label_id"], ["r:column_name"]]
         )
-        err_msg = f"Invalid selector: {selector}, choose from {hints}"
+        err_msg = f"Invalid selector: `{selector}`, choose from\n {hints}"
         if len(segments) != 2:
             raise SyntaxError(err_msg)
         if segments[0] == "v":
@@ -516,21 +524,25 @@ class LabeledVertexPropertyContextDAGNode(BaseContextDAGNode):
             str: return schema as human readable string
         """
         schema = self._graph.schema
-        ret = {
-            "v": _get_property_v_context_schema_str(schema),
-            "e": _get_property_e_context_schema_str(schema),
-            "r": {},
-        }
+        v_items = [["v"] + item for item in _get_property_v_context_schema(schema)]
+        r_items = []
         result_properties = [i for i in result_properties.split("\n") if i]
         label_property_dict = {}
         for r_props in result_properties:
             label_id, props = r_props.split(":")
             label_property_dict[label_id] = [i for i in props.split(",") if i]
+
         for label in schema.vertex_labels:
             label_id = schema.get_vertex_label_id(label)
             props = label_property_dict.get(label_id, [])
-            ret["r"][label] = props
-        return json.dumps(ret, indent=4)
+            r_items.extend([["r", label, prop] for prop in props])
+
+        index = pd.MultiIndex.from_tuples(
+            itertools.chain(v_items, r_items), names=["type", "label", "property"]
+        )
+        v_values = [f"{t}:{l}.{p}" for t, l, p in v_items]
+        r_values = [f"{t}:{l}" for t, l, _ in r_items]
+        return pd.Series(v_values + r_values, index=index, name="Context schema")
 
     def _check_selector(self, selector):
         if selector is None:
@@ -544,7 +556,7 @@ class LabeledVertexPropertyContextDAGNode(BaseContextDAGNode):
                 ["r:label_name.column_name"],
             ]
         )
-        err_msg = f"Invalid selector: {selector}, choose from {hints}"
+        err_msg = f"Invalid selector: `{selector}`, choose from\n {hints}"
         if len(segments) != 2:
             raise SyntaxError(err_msg)
         stype, segments = segments[0], segments[1]
@@ -734,21 +746,22 @@ def create_context_node(context_type, bound_app, graph, *args, **kwargs):
         return BaseContextDAGNode(bound_app, graph, *args, **kwargs)
 
 
-def _get_property_v_context_schema_str(schema):
-    ret = {}
+def _get_property_v_context_schema(schema):
+    ret = []
     for label in schema.vertex_labels:
-        ret[label] = ["id"]
+        ret.append([label, "id"])
         for prop in schema.get_vertex_properties(label):
             if prop.name != "id":  # avoid property name duplicate
-                ret[label].append(prop.name)
+                ret.append([label, prop.name])
     return ret
 
 
-def _get_property_e_context_schema_str(schema):
-    ret = {}
+def _get_property_e_context_schema(schema):
+    ret = []
     for label in schema.edge_labels:
-        ret[label] = ["src", "dst"]
+        ret.append([label, "src"])
+        ret.append([label, "dst"])
         for prop in schema.get_edge_properties(label):
             if prop.name not in ("src", "dst"):
-                ret[label].append(prop.name)
+                ret.append([label, prop.name])
     return ret
