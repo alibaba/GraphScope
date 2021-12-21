@@ -16,9 +16,10 @@
 use std::cmp::Ordering;
 
 use ir_common::generated::algebra::join::JoinKind;
-use pegasus::api::function::FnResult;
+use pegasus::api::function::{FnResult, MapFunction};
 
 use crate::error::FnGenResult;
+use crate::process::operator::accum::RecordAccumulator;
 
 pub trait CompareFunction<D>: Send + 'static {
     fn compare(&self, left: &D, right: &D) -> Ordering;
@@ -34,6 +35,14 @@ pub trait JoinKeyGen<D, K, V>: Send + 'static {
     fn gen_right_kv_fn(&self) -> FnGenResult<Box<dyn KeyFunction<D, K, V>>>;
 
     fn get_join_kind(&self) -> JoinKind;
+}
+
+pub trait GroupGen<D, K, V>: Send + 'static {
+    fn gen_group_key(&self) -> FnGenResult<Box<dyn KeyFunction<D, K, V>>>;
+
+    fn gen_group_accum(&self) -> FnGenResult<RecordAccumulator>;
+
+    fn gen_group_map(&self) -> FnGenResult<Box<dyn MapFunction<(K, V), D>>>;
 }
 
 ///
@@ -65,6 +74,20 @@ mod box_impl {
 
         fn get_join_kind(&self) -> JoinKind {
             (**self).get_join_kind()
+        }
+    }
+
+    impl<D, K, V, F: GroupGen<D, K, V> + ?Sized> GroupGen<D, K, V> for Box<F> {
+        fn gen_group_key(&self) -> FnGenResult<Box<dyn KeyFunction<D, K, V>>> {
+            (**self).gen_group_key()
+        }
+
+        fn gen_group_accum(&self) -> FnGenResult<RecordAccumulator> {
+            (**self).gen_group_accum()
+        }
+
+        fn gen_group_map(&self) -> FnGenResult<Box<dyn MapFunction<(K, V), D>>> {
+            (**self).gen_group_map()
         }
     }
 }
