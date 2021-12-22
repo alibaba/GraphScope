@@ -158,20 +158,26 @@ def test_unload_app(sess):
     g = arrow_property_graph(sess)
 
     # case 1
-    a1 = AppDAGNode(g, AppAssets(algo="property_sssp", context="labeled_vertex_data"))
+    a1 = AppDAGNode(
+        g, AppAssets(algo="property_sssp", context="labeled_vertex_property")
+    )
     ua1 = a1.unload()
     assert sess.run(ua1) is None
 
     # case 2
     # unload app twice
-    a1 = AppDAGNode(g, AppAssets(algo="property_sssp", context="labeled_vertex_data"))
+    a1 = AppDAGNode(
+        g, AppAssets(algo="property_sssp", context="labeled_vertex_property")
+    )
     ua1 = a1.unload()
     assert sess.run(ua1) is None
     assert sess.run(ua1) is None
 
     # case 3
     # load app after unload
-    a1 = AppDAGNode(g, AppAssets(algo="property_sssp", context="labeled_vertex_data"))
+    a1 = AppDAGNode(
+        g, AppAssets(algo="property_sssp", context="labeled_vertex_property")
+    )
     ua1 = a1.unload()
     assert sess.run(ua1) is None
     c1 = a1(src=20)
