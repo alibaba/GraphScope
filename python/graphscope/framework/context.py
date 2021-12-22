@@ -562,6 +562,8 @@ class LabeledVertexPropertyContextDAGNode(BaseContextDAGNode):
         elif stype == "r":
             if len(segments) != 2:
                 raise SyntaxError(err_msg)
+        else:
+            raise SyntaxError(err_msg)
         return True
 
 
