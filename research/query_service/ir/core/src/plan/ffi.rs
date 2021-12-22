@@ -228,6 +228,22 @@ impl TryFrom<FfiVariable> for common_pb::Variable {
     }
 }
 
+#[repr(C)]
+#[derive(Default)]
+pub struct FfiAlias {
+    alias: FfiNameOrId,
+    is_query_given: bool,
+}
+
+impl TryFrom<FfiAlias> for pb::Alias {
+    type Error = ResultCode;
+
+    fn try_from(ffi: FfiAlias) -> Result<Self, Self::Error> {
+        let (alias, is_query_given) = (ffi.alias.try_into()?, ffi.is_query_given);
+        Ok(Self { alias, is_query_given })
+    }
+}
+
 /// Build a none-`NameOrId`
 #[no_mangle]
 pub extern "C" fn none_name_or_id() -> FfiNameOrId {
@@ -457,40 +473,39 @@ fn set_range(ptr: *const c_void, lower: i32, upper: i32, opr: Opr) -> ResultCode
     }
 }
 
-fn set_alias(ptr: *const c_void, alias: FfiNameOrId, is_query_given: bool, opr: Opr) -> ResultCode {
+fn set_alias(ptr: *const c_void, alias: FfiAlias, opr: Opr) -> ResultCode {
     let mut return_code = ResultCode::Success;
-    let alias_pb: FfiResult<Option<common_pb::NameOrId>> = alias.try_into();
+    let alias_pb: FfiResult<pb::Alias> = alias.try_into();
     if alias_pb.is_ok() {
         match &opr {
             Opr::Scan => {
                 let mut scan = unsafe { Box::from_raw(ptr as *mut pb::Scan) };
-                scan.alias = alias_pb.unwrap();
+                scan.alias = alias_pb.unwrap().alias;
                 std::mem::forget(scan);
             }
             Opr::EdgeExpand => {
                 let mut edgexpd = unsafe { Box::from_raw(ptr as *mut pb::EdgeExpand) };
-                edgexpd.alias = alias_pb.unwrap();
+                edgexpd.alias = alias_pb.unwrap().alias;
                 std::mem::forget(edgexpd);
             }
             Opr::PathExpand => {
                 let mut pathxpd = unsafe { Box::from_raw(ptr as *mut pb::PathExpand) };
-                pathxpd.alias = alias_pb.unwrap();
+                pathxpd.alias = alias_pb.unwrap().alias;
                 std::mem::forget(pathxpd);
             }
             Opr::GetV => {
                 let mut getv = unsafe { Box::from_raw(ptr as *mut pb::GetV) };
-                getv.alias = alias_pb.unwrap();
+                getv.alias = alias_pb.unwrap().alias;
                 std::mem::forget(getv);
             }
             Opr::Apply => {
                 let mut apply = unsafe { Box::from_raw(ptr as *mut pb::Apply) };
-                apply.subtask.as_mut().unwrap().alias =
-                    Some(pb::Alias { alias: alias_pb.unwrap(), is_query_given });
+                apply.subtask.as_mut().unwrap().alias = alias_pb.ok();
                 std::mem::forget(apply);
             }
             Opr::Auxilia => {
                 let mut auxilia = unsafe { Box::from_raw(ptr as *mut pb::Auxilia) };
-                auxilia.alias = alias_pb.unwrap();
+                auxilia.alias = alias_pb.unwrap().alias;
                 std::mem::forget(auxilia);
             }
             _ => unreachable!(),
@@ -654,20 +669,17 @@ mod project {
     /// expression, to a `NameOrId` parameter that represents an alias.
     #[no_mangle]
     pub extern "C" fn add_project_expr_alias(
-        ptr_project: *const c_void, cstr_expr: *const c_char, alias: FfiNameOrId, is_query_given: bool,
+        ptr_project: *const c_void, cstr_expr: *const c_char, alias: FfiAlias,
     ) -> ResultCode {
         let mut return_code = ResultCode::Success;
         let mut project = unsafe { Box::from_raw(ptr_project as *mut pb::Project) };
         let expr_pb = cstr_to_suffix_expr_pb(cstr_expr);
-        let alias_pb = Option::<common_pb::NameOrId>::try_from(alias);
+        let alias_pb = pb::Alias::try_from(alias);
 
         if !expr_pb.is_ok() || !alias_pb.is_ok() {
             return_code = expr_pb.err().unwrap();
         } else {
-            let attribute = pb::project::ExprAlias {
-                expr: expr_pb.ok(),
-                alias: Some(pb::Alias { alias: alias_pb.unwrap(), is_query_given }),
-            };
+            let attribute = pb::project::ExprAlias { expr: expr_pb.ok(), alias: alias_pb.ok() };
             project.mappings.push(attribute);
         }
         std::mem::forget(project);
@@ -872,7 +884,7 @@ mod groupby {
     pub struct FfiAggFn {
         vars: *const FfiVariable,
         aggregate: FfiAggOpt,
-        alias: FfiNameOrId,
+        alias: FfiAlias,
     }
 
     impl TryFrom<FfiAggFn> for pb::group_by::AggFunc {
@@ -889,7 +901,7 @@ mod groupby {
             for var in vars.into_iter() {
                 agg_fn_pb.vars.push(var.try_into()?)
             }
-            agg_fn_pb.alias = alias.try_into()?;
+            agg_fn_pb.alias = Some(alias.try_into()?);
 
             Ok(agg_fn_pb)
         }
@@ -900,7 +912,7 @@ mod groupby {
     /// TODO(longbin) Will provide the support for multiple grouping variables
     #[no_mangle]
     pub extern "C" fn build_agg_fn(
-        agg_var: FfiVariable, aggregate: FfiAggOpt, alias: FfiNameOrId,
+        agg_var: FfiVariable, aggregate: FfiAggOpt, alias: FfiAlias,
     ) -> FfiAggFn {
         let vars: Box<Vec<FfiVariable>> = Box::new(vec![agg_var]);
         FfiAggFn { vars: Box::into_raw(vars) as *const FfiVariable, aggregate, alias }
@@ -909,22 +921,17 @@ mod groupby {
     /// Add the key (and its alias if any) according to which the grouping is conducted
     #[no_mangle]
     pub extern "C" fn add_groupby_key_alias(
-        ptr_groupby: *const c_void, key: FfiVariable, alias: FfiNameOrId, is_query_given: bool,
+        ptr_groupby: *const c_void, key: FfiVariable, alias: FfiAlias,
     ) -> ResultCode {
         let mut return_code = ResultCode::Success;
         let mut group = unsafe { Box::from_raw(ptr_groupby as *mut pb::GroupBy) };
         let key_pb: FfiResult<common_pb::Variable> = key.try_into();
-        let alias_pb: FfiResult<Option<common_pb::NameOrId>> = alias.try_into();
+        let alias_pb: FfiResult<pb::Alias> = alias.try_into();
 
         if key_pb.is_ok() && alias_pb.is_ok() {
-            group.mappings.push(pb::group_by::KeyAlias {
-                key: key_pb.ok(),
-                alias: if let Some(alias) = alias_pb.unwrap() {
-                    Some(pb::Alias { alias: Some(alias), is_query_given })
-                } else {
-                    None
-                },
-            });
+            group
+                .mappings
+                .push(pb::group_by::KeyAlias { key: key_pb.ok(), alias: alias_pb.ok() });
         } else {
             return_code = key_pb.err().unwrap();
         }
@@ -1350,7 +1357,7 @@ mod scan {
     /// Set an alias for the data if it is a vertex/edge
     #[no_mangle]
     pub extern "C" fn set_scan_alias(ptr_scan: *const c_void, alias: FfiNameOrId) -> ResultCode {
-        set_alias(ptr_scan, alias, true, Opr::Scan)
+        set_alias(ptr_scan, FfiAlias { alias, is_query_given: true }, Opr::Scan)
     }
 
     /// Append a scan operator to the logical plan
@@ -1448,7 +1455,7 @@ mod auxilia {
     /// Set the alias of the entity to Auxilia
     #[no_mangle]
     pub extern "C" fn set_auxilia_alias(ptr_auxilia: *const c_void, alias: FfiNameOrId) -> ResultCode {
-        set_alias(ptr_auxilia, alias, true, Opr::Auxilia)
+        set_alias(ptr_auxilia, FfiAlias { alias, is_query_given: true }, Opr::Auxilia)
     }
 
     /// Append an Auxilia operator to the logical plan
@@ -1540,7 +1547,7 @@ mod graph {
     /// Set edge alias of this edge expansion
     #[no_mangle]
     pub extern "C" fn set_edgexpd_alias(ptr_edgexpd: *const c_void, alias: FfiNameOrId) -> ResultCode {
-        set_alias(ptr_edgexpd, alias, true, Opr::EdgeExpand)
+        set_alias(ptr_edgexpd, FfiAlias { alias, is_query_given: true }, Opr::EdgeExpand)
     }
 
     /// Append an edge expand operator to the logical plan
@@ -1585,7 +1592,7 @@ mod graph {
     /// Set vertex alias of this getting vertex
     #[no_mangle]
     pub extern "C" fn set_getv_alias(ptr_getv: *const c_void, alias: FfiNameOrId) -> ResultCode {
-        set_alias(ptr_getv, alias, true, Opr::GetV)
+        set_alias(ptr_getv, FfiAlias { alias, is_query_given: true }, Opr::GetV)
     }
 
     /// Append an edge expand operator to the logical plan
@@ -1619,7 +1626,7 @@ mod graph {
     /// Set path alias of this path expansion
     #[no_mangle]
     pub extern "C" fn set_pathxpd_alias(ptr_pathxpd: *const c_void, alias: FfiNameOrId) -> ResultCode {
-        set_alias(ptr_pathxpd, alias, true, Opr::PathExpand)
+        set_alias(ptr_pathxpd, FfiAlias { alias, is_query_given: true }, Opr::PathExpand)
     }
 
     /// Set the hop-range limitation of expanding path
@@ -1678,10 +1685,8 @@ mod subtask {
     }
 
     #[no_mangle]
-    pub extern "C" fn set_apply_alias(
-        ptr_apply: *const c_void, alias: FfiNameOrId, is_query_given: bool,
-    ) -> ResultCode {
-        set_alias(ptr_apply, alias, is_query_given, Opr::Apply)
+    pub extern "C" fn set_apply_alias(ptr_apply: *const c_void, alias: FfiAlias) -> ResultCode {
+        set_alias(ptr_apply, alias, Opr::Apply)
     }
 
     /// Append an apply operator to the logical plan.
