@@ -76,4 +76,11 @@ jobs:
         source ${GRAPHSCOPE_HOME}/conf/grape_jvm_opts
 
         cd ${GITHUB_WORKSPACE}/python
-        python3 -m pytest --exitfirst -s -v graphscope/tests/unittest/test_java_app.py
+        python3 -m pytest --cov=graphscope --cov-config=.coveragerc --cov-report=xml \
+          --cov-report --exitfirst -s -v graphscope/tests/unittest/test_java_app.py
+
+    - name: Upload Coverage
+      uses: codecov/codecov-action@v2
+      with:
+        file: ./python/coverage.xml
+        fail_ci_if_error: true
