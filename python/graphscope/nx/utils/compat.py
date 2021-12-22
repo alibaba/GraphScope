@@ -62,6 +62,8 @@ def copy_function(func, global_ctx=None):
         argdefs=func.__defaults__,
         closure=func.__closure__,
     )
+    # functools.update_wrapper would update all the metadata other then __kwdefaults__
+    fn.__kwdefaults__ = copy.copy(func.__kwdefaults__)
     return functools.update_wrapper(fn, func)
 
 

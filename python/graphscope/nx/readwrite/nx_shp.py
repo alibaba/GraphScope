@@ -16,8 +16,8 @@
 # limitations under the License.
 #
 
-import networkx.readwrite.nx_yaml
+import networkx.readwrite.nx_shp
 
 from graphscope.nx.utils.compat import import_as_graphscope_nx
 
-import_as_graphscope_nx(networkx.readwrite.nx_yaml)
+import_as_graphscope_nx(networkx.readwrite.nx_shp)

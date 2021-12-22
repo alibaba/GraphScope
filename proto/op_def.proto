@@ -42,12 +42,12 @@ message OpDef {
   // Operation-specific configuration.
   map<int32, AttrValue> attr = 6;
 
-  // arguments that served as application quering parameters.
+  // arguments that served as application querying parameters.
   // Such as source vertex id for SSSP.
   QueryArgs query_args = 7;
 
   // mark fetch op or not
-  bool fetch = 8; 
+  bool fetch = 8;
 };
 
 // Result of Op
@@ -67,7 +67,7 @@ message OpResult {
 
   // learning graph handle
   bytes handle = 6;
-  
+
   // learning graph config
   bytes config = 7;
 
