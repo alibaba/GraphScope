@@ -20,7 +20,6 @@ import collections
 import hashlib
 import itertools
 import json
-import textwrap
 from copy import deepcopy
 from typing import Mapping
 
@@ -128,10 +127,6 @@ class BaseContextDAGNode(DAGNode):
 
     def _build_schema(self, result_properties):
         raise NotImplementedError()
-
-    def _format_hints(self, hints, prefix="    "):
-        ret = "\n".join([", ".join(sub_list) for sub_list in hints])
-        return textwrap.indent(ret, prefix)
 
     def to_numpy(self, selector, vertex_range=None, axis=0):
         """Get the context data as a numpy array.
@@ -325,8 +320,10 @@ class VertexDataContextDAGNode(BaseContextDAGNode):
         if selector is None:
             raise InvalidArgumentError("Selector in vertex data context cannot be None")
         segments = selector.split(".")
-        hints = self._format_hints([["v.id", "v.data"], ["r"]])
-        err_msg = f"Invalid selector: `{selector}`, choose from\n{hints}"
+        err_msg = f"Invalid selector: `{selector}`. "
+        err_msg += (
+            "Please inspect the result with `ret.schema` and choose a valid selector."
+        )
         if segments[0] == "v":
             if selector not in ("v.id", "v.data"):
                 raise SyntaxError(err_msg)
@@ -393,10 +390,10 @@ class LabeledVertexDataContextDAGNode(BaseContextDAGNode):
                 "Selector in labeled vertex data context cannot be None"
             )
         segments = selector.split(":")
-        hints = self._format_hints(
-            [["v:label_name.id", "v:label_name.property_name"], ["r:label_name"]]
+        err_msg = f"Invalid selector: `{selector}`. "
+        err_msg += (
+            "Please inspect the result with `ret.schema` and choose a valid selector."
         )
-        err_msg = f"Invalid selector: `{selector}`, choose from\n {hints}"
         if len(segments) != 2:
             raise SyntaxError(err_msg)
         stype, segments = segments[0], segments[1]
@@ -464,10 +461,10 @@ class VertexPropertyContextDAGNode(BaseContextDAGNode):
                 "Selector in vertex property context cannot be None"
             )
         segments = selector.split(".")
-        hints = self._format_hints(
-            [["v.id", "v.data", "v.label_id"], ["r:column_name"]]
+        err_msg = f"Invalid selector: `{selector}`. "
+        err_msg += (
+            "Please inspect the result with `ret.schema` and choose a valid selector."
         )
-        err_msg = f"Invalid selector: `{selector}`, choose from\n {hints}"
         if len(segments) != 2:
             raise SyntaxError(err_msg)
         if segments[0] == "v":
@@ -549,13 +546,10 @@ class LabeledVertexPropertyContextDAGNode(BaseContextDAGNode):
                 "Selector in labeled vertex property context cannot be None"
             )
         segments = selector.split(":")
-        hints = self._format_hints(
-            [
-                ["v:label_name.id", "v:label_name.property_name"],
-                ["r:label_name.column_name"],
-            ]
+        err_msg = f"Invalid selector: `{selector}`. "
+        err_msg += (
+            "Please inspect the result with `ret.schema` and choose a valid selector."
         )
-        err_msg = f"Invalid selector: `{selector}`, choose from\n {hints}"
         if len(segments) != 2:
             raise SyntaxError(err_msg)
         stype, segments = segments[0], segments[1]
