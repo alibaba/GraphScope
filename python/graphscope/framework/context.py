@@ -419,7 +419,7 @@ class VertexPropertyContextDAGNode(BaseContextDAGNode):
         - `v.id`: Get the Id of vertices
         - `v.data`: Get the data of vertices
             If there is any, means origin data on the graph, not results
-        - `v.lable_id`: Get the label ID of each vertex.
+        - `v.label_id`: Get the label ID of each vertex.
 
     - The syntax of selector of edge is (not supported yet):
         - `e.src`: Get the source Id of edges
