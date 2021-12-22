@@ -18,8 +18,8 @@ sys.path.append(os.path.abspath('./'))
 # -- Project information -----------------------------------------------------
 
 project = 'GraphScope'
-copyright = '2020-2023, Damo Academy, Alibaba Inc.'
-author = 'Damo Academy, Alibaba Inc.'
+copyright = '2020-2023, DAMO Academy, Alibaba Inc.'
+author = 'DAMO Academy, Alibaba Inc.'
 
 master_doc = 'index'
 
@@ -72,6 +72,7 @@ html_context = {
     'github_user': 'alibaba',
     'github_repo': 'graphscope',
     'github_version': 'main/docs/',
+    'theme_vcs_pageview_mode': 'edit'
 }
 
 # Add any paths that contain custom static files (such as style sheets) here,
