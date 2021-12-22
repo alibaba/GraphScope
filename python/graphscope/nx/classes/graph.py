@@ -611,6 +611,7 @@ class Graph(_GraphBase):
         -----
         nx.Graph support int, float, str, tuple or bool object of nodes.
         """
+        self._convert_arrow_to_dynamic()
         if node_for_adding is None:
             raise ValueError("None cannot be a node")
         data = dict(attr)
@@ -923,6 +924,7 @@ class Graph(_GraphBase):
         >>> G[1][2].update({0: 5})
         >>> G.edges[1, 2].update({0: 5})
         """
+        self._convert_arrow_to_dynamic()
         if u_of_edge is None or v_of_edge is None:
             raise ValueError("None cannot be a node")
         data = dict(attr)
