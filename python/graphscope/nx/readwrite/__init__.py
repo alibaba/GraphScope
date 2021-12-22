@@ -27,6 +27,5 @@ from graphscope.nx.readwrite.json_graph import *
 from graphscope.nx.readwrite.leda import *
 from graphscope.nx.readwrite.multiline_adjlist import *
 from graphscope.nx.readwrite.nx_shp import *
-from graphscope.nx.readwrite.nx_yaml import *
 from graphscope.nx.readwrite.pajek import *
 from graphscope.nx.readwrite.sparse6 import *

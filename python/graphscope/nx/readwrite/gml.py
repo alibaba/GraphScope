@@ -16,31 +16,8 @@
 # limitations under the License.
 #
 
-from enum import Enum
-from typing import Any
-from typing import NamedTuple
-
 import networkx.readwrite.gml
 
 from graphscope.nx.utils.compat import import_as_graphscope_nx
 
 import_as_graphscope_nx(networkx.readwrite.gml)
-
-
-class Pattern(Enum):
-    """ encodes the index of each token-matching pattern in `tokenize`. """
-
-    KEYS = 0
-    REALS = 1
-    INTS = 2
-    STRINGS = 3
-    DICT_START = 4
-    DICT_END = 5
-    COMMENT_WHITESPACE = 6
-
-
-class Token(NamedTuple):
-    category: Pattern
-    value: Any
-    line: int
-    position: int
