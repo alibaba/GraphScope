@@ -1101,7 +1101,7 @@ def transform_labeled_vertex_property_data_selector(schema, selector):
 
 
 _transform_selector_func_map = {
-    "tensor": lambda _: None,
+    "tensor": lambda _, _2: None,
     "vertex_data": transform_vertex_data_selector,
     "labeled_vertex_data": transform_labeled_vertex_data_selector,
     "vertex_property": transform_vertex_property_data_selector,
