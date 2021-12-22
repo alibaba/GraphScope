@@ -47,9 +47,24 @@ except ImportError:
 
 
 @pytest.mark.usefixtures("graphscope_session")
-@with_graphscope_nx_context(test_margulis_gabber_galil_graph)
 def test_margulis_gabber_galil_graph():
-    pass
+    for n in 2, 3, 5, 6, 10:
+        g = margulis_gabber_galil_graph(n)
+        assert number_of_nodes(g) == n * n
+        for node in g:
+            assert g.degree(node) == 8
+            assert len(node) == 2
+            for i in node:
+                assert int(i) == i
+                assert 0 <= i < n
+
+    np = pytest.importorskip("numpy")
+    # scipy submodule has to import explicitly
+    linalg = pytest.importorskip("scipy.linalg")
+    # Eigenvalues are already sorted using the scipy eigvalsh,
+    # but the implementation in numpy does not guarantee order.
+    w = sorted(linalg.eigvalsh(adjacency_matrix(g).A))
+    assert w[-2] < 5 * np.sqrt(2)
 
 
 @pytest.mark.usefixtures("graphscope_session")
