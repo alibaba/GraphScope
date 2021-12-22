@@ -369,7 +369,7 @@ Documentation can be generated using Sphinx. Users can build the documentation u
 make graphscope-docs
 
 # to open preview on local
-open docs/_build/html/index.html
+open docs/_build/latest/html/index.html
 ```
 
 The latest version of online documentation can be found at https://graphscope.io/docs
