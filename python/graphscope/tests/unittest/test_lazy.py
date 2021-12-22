@@ -158,20 +158,26 @@ def test_unload_app(sess):
     g = arrow_property_graph(sess)
 
     # case 1
-    a1 = AppDAGNode(g, AppAssets(algo="property_sssp", context="labeled_vertex_data"))
+    a1 = AppDAGNode(
+        g, AppAssets(algo="property_sssp", context="labeled_vertex_property")
+    )
     ua1 = a1.unload()
     assert sess.run(ua1) is None
 
     # case 2
     # unload app twice
-    a1 = AppDAGNode(g, AppAssets(algo="property_sssp", context="labeled_vertex_data"))
+    a1 = AppDAGNode(
+        g, AppAssets(algo="property_sssp", context="labeled_vertex_property")
+    )
     ua1 = a1.unload()
     assert sess.run(ua1) is None
     assert sess.run(ua1) is None
 
     # case 3
     # load app after unload
-    a1 = AppDAGNode(g, AppAssets(algo="property_sssp", context="labeled_vertex_data"))
+    a1 = AppDAGNode(
+        g, AppAssets(algo="property_sssp", context="labeled_vertex_property")
+    )
     ua1 = a1.unload()
     assert sess.run(ua1) is None
     c1 = a1(src=20)
@@ -231,10 +237,10 @@ def test_error_selector_context(sess):
     c = property_sssp(g, 20)
     with pytest.raises(
         InvalidArgumentError,
-        match="Selector in labeled vertex data context cannot be None",
+        match="Selector in labeled vertex property context cannot be None",
     ):
         r = c.to_numpy(selector=None)
-    with pytest.raises(ValueError, match="not enough values to unpack"):
+    with pytest.raises(SyntaxError, match="Invalid selector"):
         # missing ":" in selectot
         r = c.to_numpy("r.v0.dist_0")
     with pytest.raises(SyntaxError, match="Invalid selector"):
@@ -248,9 +254,7 @@ def test_error_selector_context(sess):
     # vertex data context
     pg = g.project(vertices={"v0": ["id"]}, edges={"e0": ["weight"]})
     c = sssp(pg, 20)
-    with pytest.raises(
-        SyntaxError, match="Selector of v must be 'v.id', 'v.data' or 'v.label_id'"
-    ):
+    with pytest.raises(SyntaxError, match="Invalid selector"):
         r = c.to_dataframe({"id": "v.ID"})
     with pytest.raises(ValueError, match="selector of to_dataframe must be a dict"):
         r = c.to_dataframe("id")

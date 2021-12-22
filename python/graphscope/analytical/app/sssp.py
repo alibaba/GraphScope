@@ -68,4 +68,6 @@ def property_sssp(graph, src=0):
         :class:`graphscope.framework.context.LabeledVertexDataContext`:
             A context with each vertex assigned with the shortest distance from the src, evaluated in eager mode.
     """
-    return AppAssets(algo="property_sssp", context="labeled_vertex_data")(graph, src)
+    return AppAssets(algo="property_sssp", context="labeled_vertex_property")(
+        graph, src
+    )

@@ -957,45 +957,8 @@ def _pre_process_for_project_op(op, op_result_pool, key_to_op, **kwargs):
     del op.attr[types_pb2.EDGE_COLLECTIONS]
 
 
-def _tranform_numpy_selector(context_type, schema, selector):
-    if context_type == "tensor":
-        selector = None
-    if context_type == "vertex_data":
-        selector = transform_vertex_data_selector(selector)
-    if context_type == "labeled_vertex_data":
-        selector = transform_labeled_vertex_data_selector(schema, selector)
-    if context_type == "vertex_property":
-        selector = transform_vertex_property_data_selector(selector)
-    if context_type == "labeled_vertex_property":
-        selector = transform_labeled_vertex_property_data_selector(schema, selector)
-    return selector
-
-
-def _tranform_dataframe_selector(context_type, schema, selector):
-    selector = json.loads(selector)
-    if context_type == "tensor":
-        selector = {key: None for key, value in selector.items()}
-    if context_type == "vertex_data":
-        selector = {
-            key: transform_vertex_data_selector(value)
-            for key, value in selector.items()
-        }
-    if context_type == "labeled_vertex_data":
-        selector = {
-            key: transform_labeled_vertex_data_selector(schema, value)
-            for key, value in selector.items()
-        }
-    if context_type == "vertex_property":
-        selector = {
-            key: transform_vertex_property_data_selector(value)
-            for key, value in selector.items()
-        }
-    if context_type == "labeled_vertex_property":
-        selector = {
-            key: transform_labeled_vertex_property_data_selector(schema, value)
-            for key, value in selector.items()
-        }
-    return json.dumps(selector)
+# Below are selector transformation part, which will transform label / property
+# names to corresponding id.
 
 
 def _transform_vertex_data_v(selector):
@@ -1048,7 +1011,7 @@ def _transform_labeled_vertex_property_data_r(schema, label, prop):
     return f"label{label_id}.{prop}"
 
 
-def transform_vertex_data_selector(selector):
+def transform_vertex_data_selector(schema, selector):
     """Optional values:
     vertex selector: 'v.id', 'v.data'
     edge selector: 'e.src', 'e.dst', 'e.data'
@@ -1070,7 +1033,7 @@ def transform_vertex_data_selector(selector):
     return selector
 
 
-def transform_vertex_property_data_selector(selector):
+def transform_vertex_property_data_selector(schema, selector):
     """Optional values:
     vertex selector: 'v.id', 'v.data'
     edge selector: 'e.src', 'e.dst', 'e.data'
@@ -1135,6 +1098,26 @@ def transform_labeled_vertex_property_data_selector(schema, selector):
     elif ret_type == "r":
         ret = _transform_labeled_vertex_property_data_r(schema, *segments)
     return f"{ret_type}:{ret}"
+
+
+_transform_selector_func_map = {
+    "tensor": lambda _, _2: None,
+    "vertex_data": transform_vertex_data_selector,
+    "labeled_vertex_data": transform_labeled_vertex_data_selector,
+    "vertex_property": transform_vertex_property_data_selector,
+    "labeled_vertex_property": transform_labeled_vertex_property_data_selector,
+}
+
+
+def _tranform_numpy_selector(context_type, schema, selector):
+    return _transform_selector_func_map[context_type](schema, selector)
+
+
+def _tranform_dataframe_selector(context_type, schema, selector):
+    selector = json.loads(selector)
+    transform_func = _transform_selector_func_map[context_type]
+    selector = {key: transform_func(schema, value) for key, value in selector.items()}
+    return json.dumps(selector)
 
 
 def _extract_gar(app_dir: str, attr):

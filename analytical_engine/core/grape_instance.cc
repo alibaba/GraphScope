@@ -238,7 +238,6 @@ bl::result<std::string> GrapeInstance::query(const rpc::GSParams& params,
   std::string context_schema;
   if (ctx_wrapper != nullptr) {
     context_type = ctx_wrapper->context_type();
-    VLOG(0) << "context type: " << context_type;
     context_schema = ctx_wrapper->schema();
     BOOST_LEAF_CHECK(object_manager_.PutObject(ctx_wrapper));
   }
