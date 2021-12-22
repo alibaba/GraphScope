@@ -38,7 +38,7 @@ jobs:
         python3 -m pip install pytest-cov networkx==2.5
         cd ${GITHUB_WORKSPACE}/python
         python3 -m pytest --cov=graphscope --cov-config=.coveragerc --cov-report=xml \
-          --cov-report -s -v -m "not slow" graphscope/nx/algorithms/tests/forward
+          --cov-report=term -s -v -m "not slow" graphscope/nx/algorithms/tests/forward
 
     - name: Upload Coverage
       uses: codecov/codecov-action@v2
