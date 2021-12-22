@@ -49,6 +49,12 @@ jobs:
         # run test
         make unittest
 
+    - name: Upload Coverage
+      uses: codecov/codecov-action@v2
+      with:
+        file: ./python/coverage.xml
+        fail_ci_if_error: true
+
   build-gss-image:
     if: ${{ github.ref == 'refs/heads/main' && github.repository == 'alibaba/GraphScope' }}
     runs-on: ubuntu-20.04
