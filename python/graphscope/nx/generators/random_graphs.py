@@ -183,7 +183,7 @@ def gnm_random_graph(n, m, seed=None, directed=False):
         # generate random edge,u,v
         u = seed.choice(nlist)
         v = seed.choice(nlist)
-        if u == v or G.has_edge(u, v):
+        if u == v:
             continue
         else:
             G.add_edge(u, v)

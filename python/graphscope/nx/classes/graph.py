@@ -995,13 +995,10 @@ class Graph(_GraphBase):
             edge = [u, v, data]
             edges.append(json.dumps(edge, default=json_encoder))
 
-            if len(edges) > 10000:  # make sure messages size not larger than rpc max
-                self._op = dag_utils.modify_edges(self, types_pb2.NX_ADD_EDGES, edges)
-                self._op.eval()
-                edges.clear()
-        if len(edges) > 0:
+        if edges:
             self._op = dag_utils.modify_edges(self, types_pb2.NX_ADD_EDGES, edges)
             self._op.eval()
+            edges.clear()
 
     def add_weighted_edges_from(self, ebunch_to_add, weight="weight", **attr):
         """Add weighted edges in `ebunch_to_add` with specified weight attr
