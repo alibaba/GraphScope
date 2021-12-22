@@ -393,7 +393,7 @@ class GraphSchema:
 
     def get_relationships(self, label):
         if label not in self._e_label_index:
-            raise ValueError(f"{label} not exists.")
+            raise KeyError(f"{label} not exists.")
         label_id = self._e_label_index[label]
         if not self._valid_edges[label_id]:
             raise ValueError(f"{label} not exists.")
