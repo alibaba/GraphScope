@@ -16,6 +16,7 @@
 #ifndef ANALYTICAL_ENGINE_CORE_FLAGS_H_
 #define ANALYTICAL_ENGINE_CORE_FLAGS_H_
 
+#include <gflags/gflags.h>
 #include <gflags/gflags_declare.h>
 
 DECLARE_string(host);

@@ -19,11 +19,6 @@
 import os
 import sys
 
-# ensure graphscope.proto preponderate over outside `proto` directory.
-
-
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
-
 from . import attr_value_pb2
 from . import coordinator_service_pb2
 from . import coordinator_service_pb2_grpc
@@ -38,20 +33,3 @@ from . import message_pb2
 from . import op_def_pb2
 from . import query_args_pb2
 from . import types_pb2
-
-del attr_value_pb2
-del coordinator_service_pb2
-del coordinator_service_pb2_grpc
-del data_types_pb2
-del ddl_service_pb2
-del ddl_service_pb2_grpc
-del engine_service_pb2
-del engine_service_pb2_grpc
-del error_codes_pb2
-del graph_def_pb2
-del message_pb2
-del op_def_pb2
-del query_args_pb2
-del types_pb2
-
-sys.path.pop(0)

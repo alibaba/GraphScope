@@ -27,8 +27,8 @@ syntax = "proto3";
 
 package gs.rpc;
 
-import "proto/graph_def.proto";
-import "proto/types.proto";
+import "graphscope/proto/graph_def.proto";
+import "graphscope/proto/types.proto";
 
 // Comment indicates the corresponding attr type. Only the field matching the
 // attr type may be filled.

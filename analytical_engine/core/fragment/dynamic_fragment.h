@@ -52,7 +52,7 @@
 #include "core/io/dynamic_line_parser.h"
 #include "core/utils/mpi_utils.h"
 #include "core/vertex_map/global_vertex_map.h"
-#include "proto/types.pb.h"
+#include "proto/graphscope/proto/types.pb.h"
 
 namespace gs {
 

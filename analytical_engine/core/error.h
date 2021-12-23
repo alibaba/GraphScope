@@ -25,7 +25,7 @@
 
 #include "vineyard/graph/utils/error.h"
 
-#include "proto/error_codes.pb.h"
+#include "proto/graphscope/proto/error_codes.pb.h"
 #include "utils/mpi_utils.h"
 
 namespace gs {

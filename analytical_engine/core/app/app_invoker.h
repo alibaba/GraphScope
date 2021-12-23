@@ -28,8 +28,8 @@
 
 #include "core/config.h"
 #include "core/error.h"
-#include "proto/data_types.pb.h"
-#include "proto/query_args.pb.h"
+#include "proto/graphscope/proto/data_types.pb.h"
+#include "proto/graphscope/proto/query_args.pb.h"
 
 namespace gs {
 

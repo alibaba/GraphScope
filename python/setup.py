@@ -47,8 +47,8 @@ class BuildProto(Command):
         subprocess.check_call(
             [
                 sys.executable,
-                os.path.join(repo_root, "..", "proto", "proto_generator.py"),
-                os.path.join(repo_root, "graphscope"),
+                os.path.join(repo_root, "..", "proto", "graphscope", "proto", "proto_generator.py"),
+                repo_root,
                 "--python",
             ],
             env=os.environ.copy(),
@@ -203,6 +203,8 @@ def build_learning_engine():
     include_dirs.append(ROOT_PATH + "/third_party/glog/build")
     include_dirs.append(ROOT_PATH + "/third_party/protobuf/build/include")
     include_dirs.append(numpy.get_include())
+    # mac M1 support
+    include_dirs.append("/opt/homebrew/include")
 
     library_dirs.append(ROOT_PATH + "/built/lib")
 

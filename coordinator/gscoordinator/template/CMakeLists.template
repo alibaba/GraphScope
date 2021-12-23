@@ -128,6 +128,7 @@ include_directories("${ANALYTICAL_ENGINE_HOME}/openmpi/include"
                     "${ANALYTICAL_ENGINE_HOME}/include/vineyard"
                     "${ANALYTICAL_ENGINE_HOME}/include/graphscope"
                     "${ANALYTICAL_ENGINE_HOME}/include/graphscope/apps"
+                    "${ANALYTICAL_ENGINE_HOME}/include/graphscope/proto"
                     "${ANALYTICAL_ENGINE_HOME}/include/grape/analytical_apps")
 
 # find Threads------------------------------------------------------------------
