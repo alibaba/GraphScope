@@ -215,18 +215,10 @@ public class IngestProcessor implements MetricsAgent {
             try {
                 walOffset = logWriter.append(new LogEntry(batchSnapshotId, task.operationBatch));
                 break;
-            } catch (IOException e) {
+            } catch (Exception e) {
                 // write failed, just throw out to fail this task
                 logger.error("write WAL failed. requestId [" + task.requestId + "]", e);
                 throw e;
-            } catch (Exception e) {
-                // Timeout, uncertain error, etc
-                logger.error("unexpected logWriter exception, will retry after 100ms", e);
-                try {
-                    Thread.sleep(100L);
-                } catch (InterruptedException ie) {
-                    // Ignore
-                }
             }
         }
         long walCompleteTimeNano = System.nanoTime();
