@@ -865,12 +865,13 @@ def node_boundary(G, nbunch1, nbunch2=None):
     @project_to_simple
     def _node_boundary(G, nbunch1, nbunch2=None):
         n1json = json.dumps(list(nbunch1))
-        if nbunch2:
+        if nbunch2 is not None:
             n2json = json.dumps(list(nbunch2))
         else:
             n2json = ""
+        print("n2json", n2json)
         ctx = AppAssets(algo="node_boundary", context="tensor")(G, n1json, n2json)
-        return ctx.to_numpy("r", axis=0).tolist()
+        return set(ctx.to_numpy("r", axis=0).tolist())
 
     if G.is_multigraph():
         # forward to the NetworkX node_boundary
@@ -888,7 +889,9 @@ def edge_boundary(G, nbunch1, nbunch2=None, data=False, keys=False, default=None
         else:
             n2json = ""
         ctx = AppAssets(algo="edge_boundary", context="tensor")(G, n1json, n2json)
-        return ctx.to_numpy("r", axis=0).tolist()
+        ret = ctx.to_numpy("r", axis=0).tolist()
+        for e in ret:
+            yield (e[0], e[1])
 
     if G.is_multigraph():
         # forward the NetworkX edge boundary

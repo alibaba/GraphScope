@@ -359,6 +359,7 @@ def is_file(*args):
 
 def _context_protocol_to_numpy_dtype(dtype):
     dtype_map = {
+        0: np.dtype("void"),
         1: np.dtype("bool"),
         2: np.dtype("int32"),
         3: np.dtype("uint32"),
