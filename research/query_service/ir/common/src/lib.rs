@@ -27,6 +27,7 @@ use crate::generated::common as common_pb;
 use crate::generated::results as result_pb;
 
 pub mod error;
+pub mod expr_parse;
 
 #[macro_use]
 extern crate serde;

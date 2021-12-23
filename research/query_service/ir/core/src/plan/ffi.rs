@@ -56,12 +56,12 @@ use std::ffi::{c_void, CStr};
 use std::fs::File;
 use std::os::raw::c_char;
 
+use ir_common::expr_parse::str_to_expr_pb;
 use ir_common::generated::algebra as pb;
 use ir_common::generated::common as common_pb;
 use pegasus::BuildJobError;
 use pegasus_client::builder::JobBuilder;
 use prost::Message;
-use runtime::expr::str_to_expr_pb;
 
 use crate::plan::logical::LogicalPlan;
 use crate::plan::physical::{AsPhysical, PhysicalError};
@@ -114,7 +114,7 @@ pub(crate) fn cstr_to_string(cstr: *const c_char) -> FfiResult<String> {
     }
 }
 
-pub(crate) fn cstr_to_suffix_expr_pb(cstr: *const c_char) -> FfiResult<common_pb::SuffixExpr> {
+pub(crate) fn cstr_to_expr_pb(cstr: *const c_char) -> FfiResult<common_pb::Expression> {
     let str = cstr_to_string(cstr);
     if str.is_err() {
         Err(str.err().unwrap())
@@ -505,7 +505,7 @@ fn set_alias(ptr: *const c_void, alias: FfiNameOrId, is_query_given: bool, opr: 
 /// To set an operator's predicate.
 fn set_predicate(ptr: *const c_void, cstr_predicate: *const c_char, opr: Opr) -> ResultCode {
     let mut return_code = ResultCode::Success;
-    let predicate_pb = cstr_to_suffix_expr_pb(cstr_predicate);
+    let predicate_pb = cstr_to_expr_pb(cstr_predicate);
     if predicate_pb.is_err() {
         return_code = predicate_pb.err().unwrap()
     } else {
@@ -658,7 +658,7 @@ mod project {
     ) -> ResultCode {
         let mut return_code = ResultCode::Success;
         let mut project = unsafe { Box::from_raw(ptr_project as *mut pb::Project) };
-        let expr_pb = cstr_to_suffix_expr_pb(cstr_expr);
+        let expr_pb = cstr_to_expr_pb(cstr_expr);
         let alias_pb = Option::<common_pb::NameOrId>::try_from(alias);
 
         if !expr_pb.is_ok() || !alias_pb.is_ok() {

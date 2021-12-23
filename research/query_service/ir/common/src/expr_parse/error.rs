@@ -16,16 +16,13 @@
 
 use std::fmt::Display;
 
-use dyn_type::CastError;
-use ir_common::error::ParsePbError;
-
-use crate::expr::eval::OperatorDesc;
-use crate::expr::token::PartialToken;
+use crate::error::ParsePbError;
+use crate::expr_parse::token::PartialToken;
 
 pub type ExprResult<T> = Result<T, ExprError>;
 
 /// The error cases while parsing and evaluating expressions
-#[derive(Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq)]
 pub enum ExprError {
     /// The left brace may not be closed by a right brace
     UnmatchedLRBraces,
@@ -43,20 +40,7 @@ pub enum ExprError {
         /// partial token, or `None`, if `first` is the last partial token in the stream.
         second: Option<PartialToken>,
     },
-    /// The error while casting from different data types enabled by `dyn_type::object::Object`
-    CastError(CastError),
-    /// Missing context for the certain variable,
-    MissingContext(OperatorDesc),
-    /// The error of missing required operands in an arithmetic or logical expression.
-    /// e.g., the plus expression requires two operands, and it is an error if less than two provided.
-    MissingOperands(OperatorDesc),
-    /// An error where an empty expression is to be evaluated
-    EmptyExpression,
-    /// Try to evaluate a const value or a variable but obtain `None` value
-    NoneOperand(OperatorDesc),
-    /// Meant to evaluate a certain operator, but obtain a different one
-    UnmatchedOperator(OperatorDesc),
-    /// The error caused by parsing invalid protobuf
+    /// Parse from protobuf error
     ParsePbError(ParsePbError),
     /// Unsupported
     Unsupported(String),
@@ -74,14 +58,8 @@ impl Display for ExprError {
             UnmatchedPartialToken { first: s1, second: s2 } => {
                 write!(f, "partial token {:?} cannot be completed by {:?}", s1, s2)
             }
-            CastError(e) => write!(f, "casting error {:?}", e),
-            MissingContext(var) => write!(f, "missing context for {:?}", var),
-            ParsePbError(err) => write!(f, "parse protobuf error: {:?}", err),
-            MissingOperands(opr) => write!(f, "missing operands for {:?}", opr),
-            EmptyExpression => write!(f, "try to evaluate an empty expression"),
-            NoneOperand(opr) => write!(f, "try to evaluate {:?} but obtain `None` value", opr),
-            UnmatchedOperator(opr) => {
-                write!(f, "meant to evaluate a certain operator, but obtain a different one： {:?}", opr)
+            ParsePbError(e) => {
+                write!(f, "parse from pb error {:?}", e)
             }
             Unsupported(e) => write!(f, "unsupported: {}", e),
             OtherErr(e) => write!(f, "parse error {}", e),
@@ -104,12 +82,6 @@ impl ExprError {
 impl From<ParsePbError> for ExprError {
     fn from(error: ParsePbError) -> Self {
         Self::ParsePbError(error)
-    }
-}
-
-impl From<CastError> for ExprError {
-    fn from(error: CastError) -> Self {
-        Self::CastError(error)
     }
 }
 

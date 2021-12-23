@@ -20,7 +20,7 @@ use ir_common::generated::algebra as algebra_pb;
 use ir_common::generated::common as common_pb;
 use pegasus::api::function::FnResult;
 
-use crate::error::{FnExecError, FnGenResult};
+use crate::error::FnGenResult;
 use crate::process::functions::KeyFunction;
 use crate::process::operator::keyed::KeyFunctionGen;
 use crate::process::operator::TagKey;

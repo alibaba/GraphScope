@@ -88,7 +88,7 @@ impl QueryParams {
         Ok(self)
     }
 
-    fn with_filter(mut self, filter_pb: Option<common_pb::SuffixExpr>) -> Result<Self, ParsePbError> {
+    fn with_filter(mut self, filter_pb: Option<common_pb::Expression>) -> Result<Self, ParsePbError> {
         if let Some(filter_pb) = filter_pb {
             self.filter = Some(Arc::new(filter_pb.try_into()?));
         }
