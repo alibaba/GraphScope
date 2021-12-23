@@ -70,6 +70,10 @@
     - ``vineyard_shared_mem``: 存储数据集的内存。我们发现将其设置为数据集在磁盘上的大小的 5 倍通常是一个合理的值。 它相当于 graphscope 的 helm chart 中的 ``vineyard.shared_mem``。
 
     - ``k8s_engine_mem`: ``engine`` 容器的内存大小。一般将其设置为 ``vineyard_shared_mem`` 的同样大小。它相当于 graphscope 的 helm chart 中的 ``engines.resources.memory.requests`` 和 ``engines.resources.memory.requests``。
+
+10. 为什么在 Apple M1 python3.8 环境下安装 GraphScope 时出现 grpcio 编译失败的错误？
+
+    你可以通过 ``export GRPC_PYTHON_BUILD_SYSTEM_OPENSSL=True`` 来尝试使用系统安装的 ``openssl`` 编译 grpcio。详情可参考 `grpc issue <https://github.com/grpc/grpc/issues/25082>`_
     
 
 **其他问题**
