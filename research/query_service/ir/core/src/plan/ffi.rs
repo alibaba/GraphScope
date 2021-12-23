@@ -214,6 +214,7 @@ impl TryFrom<FfiProperty> for Option<common_pb::Property> {
 }
 
 #[repr(C)]
+#[derive(Default)]
 pub struct FfiVariable {
     tag: FfiNameOrId,
     property: FfiProperty,
@@ -262,6 +263,12 @@ pub extern "C" fn int_as_name_or_id(integer: i32) -> FfiNameOrId {
     FfiNameOrId { opt: FfiNameIdOpt::Id, name: std::ptr::null(), name_id: integer }
 }
 
+/// Build an `None` property
+#[no_mangle]
+pub extern "C" fn as_none_key() -> FfiProperty {
+    FfiProperty::default()
+}
+
 /// Build an id property
 #[no_mangle]
 pub extern "C" fn as_id_key() -> FfiProperty {
@@ -301,7 +308,7 @@ pub extern "C" fn as_var(tag: FfiNameOrId, property: FfiProperty) -> FfiVariable
 /// Build a default variable with `None` tag and property
 #[no_mangle]
 pub extern "C" fn as_none_var() -> FfiVariable {
-    FfiVariable { tag: FfiNameOrId::default(), property: FfiProperty::default() }
+    FfiVariable::default()
 }
 
 fn destroy_ptr<M>(ptr: *const c_void) {
@@ -907,15 +914,22 @@ mod groupby {
         }
     }
 
-    /// The group function actually requires a collection of variables. Right now we
-    /// provide the support of just one variable cause it suits for most cases already.
-    /// TODO(longbin) Will provide the support for multiple grouping variables
+    /// Initialize an aggregate function with empty value to aggregate.
+    /// To add value to aggregate, call `add_agg_value()`
     #[no_mangle]
-    pub extern "C" fn build_agg_fn(
-        agg_var: FfiVariable, aggregate: FfiAggOpt, alias: FfiAlias,
+    pub extern "C" fn init_agg_fn(
+        aggregate: FfiAggOpt, alias: FfiAlias,
     ) -> FfiAggFn {
-        let vars: Box<Vec<FfiVariable>> = Box::new(vec![agg_var]);
+        let vars: Box<Vec<FfiVariable>> = Box::new(vec![]);
         FfiAggFn { vars: Box::into_raw(vars) as *const FfiVariable, aggregate, alias }
+    }
+
+    #[no_mangle]
+    pub extern "C" fn add_agg_value(ptr_agg_fn: *const FfiAggFn, agg_var: FfiVariable) {
+        let agg_fn = unsafe { ptr_agg_fn.as_ref().unwrap() };
+        let mut vars = unsafe { Box::from_raw(agg_fn.vars as *mut Vec<FfiVariable>) };
+        vars.push(agg_var);
+        std::mem::forget(vars);
     }
 
     /// Add the key (and its alias if any) according to which the grouping is conducted
