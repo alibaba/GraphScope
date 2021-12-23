@@ -1356,8 +1356,8 @@ mod scan {
 
     /// Set an alias for the data if it is a vertex/edge
     #[no_mangle]
-    pub extern "C" fn set_scan_alias(ptr_scan: *const c_void, alias: FfiNameOrId) -> ResultCode {
-        set_alias(ptr_scan, FfiAlias { alias, is_query_given: true }, Opr::Scan)
+    pub extern "C" fn set_scan_alias(ptr_scan: *const c_void, alias: FfiAlias) -> ResultCode {
+        set_alias(ptr_scan, alias, Opr::Scan)
     }
 
     /// Append a scan operator to the logical plan
@@ -1454,8 +1454,8 @@ mod auxilia {
 
     /// Set the alias of the entity to Auxilia
     #[no_mangle]
-    pub extern "C" fn set_auxilia_alias(ptr_auxilia: *const c_void, alias: FfiNameOrId) -> ResultCode {
-        set_alias(ptr_auxilia, FfiAlias { alias, is_query_given: true }, Opr::Auxilia)
+    pub extern "C" fn set_auxilia_alias(ptr_auxilia: *const c_void, alias: FfiAlias) -> ResultCode {
+        set_alias(ptr_auxilia, alias, Opr::Auxilia)
     }
 
     /// Append an Auxilia operator to the logical plan
@@ -1546,8 +1546,8 @@ mod graph {
 
     /// Set edge alias of this edge expansion
     #[no_mangle]
-    pub extern "C" fn set_edgexpd_alias(ptr_edgexpd: *const c_void, alias: FfiNameOrId) -> ResultCode {
-        set_alias(ptr_edgexpd, FfiAlias { alias, is_query_given: true }, Opr::EdgeExpand)
+    pub extern "C" fn set_edgexpd_alias(ptr_edgexpd: *const c_void, alias: FfiAlias) -> ResultCode {
+        set_alias(ptr_edgexpd, alias, Opr::EdgeExpand)
     }
 
     /// Append an edge expand operator to the logical plan
@@ -1591,8 +1591,8 @@ mod graph {
 
     /// Set vertex alias of this getting vertex
     #[no_mangle]
-    pub extern "C" fn set_getv_alias(ptr_getv: *const c_void, alias: FfiNameOrId) -> ResultCode {
-        set_alias(ptr_getv, FfiAlias { alias, is_query_given: true }, Opr::GetV)
+    pub extern "C" fn set_getv_alias(ptr_getv: *const c_void, alias: FfiAlias) -> ResultCode {
+        set_alias(ptr_getv, alias, Opr::GetV)
     }
 
     /// Append an edge expand operator to the logical plan
@@ -1625,8 +1625,8 @@ mod graph {
 
     /// Set path alias of this path expansion
     #[no_mangle]
-    pub extern "C" fn set_pathxpd_alias(ptr_pathxpd: *const c_void, alias: FfiNameOrId) -> ResultCode {
-        set_alias(ptr_pathxpd, FfiAlias { alias, is_query_given: true }, Opr::PathExpand)
+    pub extern "C" fn set_pathxpd_alias(ptr_pathxpd: *const c_void, alias: FfiAlias) -> ResultCode {
+        set_alias(ptr_pathxpd, alias, Opr::PathExpand)
     }
 
     /// Set the hop-range limitation of expanding path
