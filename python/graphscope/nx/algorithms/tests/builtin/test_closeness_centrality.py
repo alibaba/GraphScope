@@ -200,7 +200,7 @@ class TestClosenessCentrality:
         ]
         XG = nx.Graph()
         XG.add_weighted_edges_from(edges)
-        c = nx.builtin.closeness_centrality(XG, weight="weight")
+        c = nx.builtin.closeness_centrality(XG, distance="weight")
         d = {"y": 0.200, "x": 0.286, "s": 0.138, "u": 0.235, "v": 0.200}
         for n in sorted(XG):
             assert almost_equal(c[n], d[n], places=3)
