@@ -31,8 +31,9 @@ def bfs(graph, src=0):
 
     Args:
         graph (:class:`Graph`): A simple graph.
-        src (optional): Source vertex of breadth first search. Defaults to 0.
-            Its type should be consistent with oid type of the `graph`.
+        src (optional): Source vertex of breadth first search. The type should be consistent
+            with the id type of the `graph`, that is, it's `int` or `str` depending
+            on the `oid_type` is `int64_t` or `string` of the `graph`. Defaults to 0.
 
     Returns:
         :class:`graphscope.framework.context.VertexDataContextDAGNode`:
@@ -59,8 +60,9 @@ def property_bfs(graph, src=0):
 
     Args:
         graph (:class:`Graph`): A property graph.
-        src (int, optional): Source vertex of breadth first search. Defaults to 0.
-            Its type should be consistent with oid type of the `graph`.
+        src (optional): Source vertex of breadth first search. The type should be consistent
+            with the id type of the `graph`, that is, it's `int` or `str` depending
+            on the `oid_type` is `int64_t` or `string` of the `graph`. Defaults to 0.
 
     Returns:
         :class:`graphscope.framework.context.LabeledVertexDataContextDAGNode`:
