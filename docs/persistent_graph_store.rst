@@ -216,7 +216,7 @@ Then we get the graph and graph schema
 
 .. code:: python
 
-    graph = gs_conn.g()
+    graph = conn.g()
     # Create schema
     schema = graph.schema()
 
@@ -264,7 +264,7 @@ It's simple just use one line to get the traversal source,
 
 .. code:: python
 
-    g = gs_conn.gremlin()
+    g = conn.gremlin()
     print(g.V().count().toList())
 
 The graph is empty for now, so the count should be 0. Let's write some data.
@@ -377,11 +377,11 @@ We give some examples to illustrate the usage, note when deleting edges or updat
     graph.insert_vertices(v_srcs)
     snapshot_id = graph.insert_vertices(v_dsts)
 
-    assert gs_conn.remote_flush(snapshot_id)
+    assert conn.remote_flush(snapshot_id)
 
     snapshot_id = graph.update_vertex_properties(*v_update)
 
-    assert gs_conn.remote_flush(snapshot_id)
+    assert conn.remote_flush(snapshot_id)
 
     assert (
         g.V().has("id", v_src[0].primary_key["id"]).values("name").toList()[0]
@@ -396,7 +396,7 @@ We give some examples to illustrate the usage, note when deleting edges or updat
     edge_update = [edge[0], {"date": "ci_edge_4000"}]
     snapshot_id = graph.insert_edge(*edge)
 
-    assert gs_conn.remote_flush(snapshot_id)
+    assert conn.remote_flush(snapshot_id)
 
     edge[0].eid = (
         g.V()
@@ -408,7 +408,7 @@ We give some examples to illustrate the usage, note when deleting edges or updat
 
     snapshot_id = graph.insert_edges(edges)
 
-    assert gs_conn.remote_flush(snapshot_id)
+    assert conn.remote_flush(snapshot_id)
 
     for e in edges:
         e[0].eid = (
@@ -420,7 +420,7 @@ We give some examples to illustrate the usage, note when deleting edges or updat
         )
     snapshot_id = graph.update_edge_properties(*edge_update)
 
-    assert gs_conn.remote_flush(snapshot_id)
+    assert conn.remote_flush(snapshot_id)
 
     assert (
         g.V()
@@ -439,7 +439,7 @@ We give some examples to illustrate the usage, note when deleting edges or updat
     graph.delete_vertices([key[0] for key in v_srcs])
     snapshot_id = graph.delete_vertices([key[0] for key in v_dsts])
 
-    assert gs_conn.remote_flush(snapshot_id)
+    assert conn.remote_flush(snapshot_id)
 
 
 Bulk Loading
