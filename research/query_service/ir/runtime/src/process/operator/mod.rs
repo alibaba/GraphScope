@@ -16,6 +16,7 @@
 pub mod accum;
 pub mod filter;
 pub mod flatmap;
+pub mod group;
 pub mod join;
 pub mod keyed;
 pub mod map;
