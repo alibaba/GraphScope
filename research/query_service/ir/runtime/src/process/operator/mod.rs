@@ -26,7 +26,6 @@ pub mod sort;
 pub mod source;
 
 use std::convert::TryFrom;
-use std::ops::Deref;
 use std::sync::Arc;
 
 use ir_common::error::ParsePbError;
@@ -53,45 +52,27 @@ impl TagKey {
             .ok_or(FnExecError::get_tag_error("Get tag failed since it refers to an empty entry"))?
             .clone();
         if let Some(key) = self.key.as_ref() {
-            self.get_property(entry, key)
-                .map(|entry| Arc::new(entry))
+            if let Some(element) = entry.as_graph_element() {
+                let details = element
+                    .details()
+                    .ok_or(FnExecError::get_tag_error(
+                        "Get key failed since get details from a graph element failed",
+                    ))?;
+                let properties = details
+                    .get(key)
+                    .ok_or(FnExecError::get_tag_error(
+                        "Get key failed since get prop_key from a graph element failed",
+                    ))?
+                    .try_to_owned()
+                    .ok_or(FnExecError::UnExpectedData("unable to own the `BorrowObject`".to_string()))?;
+                Ok(Arc::new(ObjectElement::Prop(properties).into()))
+            } else {
+                Err(FnExecError::get_tag_error(
+                    "Get key failed when attempt to get prop_key from a non-graph element",
+                ))
+            }
         } else {
             Ok(entry)
-        }
-    }
-
-    /// This is for Accum, which generate the Entry of the input Record according to the tag_key field
-    pub fn take_entry(&self, input: &Record) -> Result<Entry, FnExecError> {
-        let entry = input
-            .get(self.tag.as_ref())
-            .ok_or(FnExecError::get_tag_error("Get tag failed since it refers to an empty entry"))?
-            .clone();
-        if let Some(key) = self.key.as_ref() {
-            self.get_property(entry, key)
-        } else {
-            Ok(entry.deref().clone())
-        }
-    }
-
-    fn get_property(&self, entry: Arc<Entry>, key: &PropKey) -> Result<Entry, FnExecError> {
-        if let Some(element) = entry.as_graph_element() {
-            let details = element
-                .details()
-                .ok_or(FnExecError::get_tag_error(
-                    "Get key failed since get details from a graph element failed",
-                ))?;
-            let properties = details
-                .get(key)
-                .ok_or(FnExecError::get_tag_error(
-                    "Get key failed since get prop_key from a graph element failed",
-                ))?
-                .try_to_owned()
-                .ok_or(FnExecError::UnExpectedData("unable to own the `BorrowObject`".to_string()))?;
-            Ok(ObjectElement::Prop(properties).into())
-        } else {
-            Err(FnExecError::get_tag_error(
-                "Get key failed when attempt to get prop_key from a non-graph element",
-            ))
         }
     }
 }

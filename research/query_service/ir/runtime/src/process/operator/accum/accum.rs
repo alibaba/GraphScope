@@ -14,6 +14,7 @@
 //! limitations under the License.
 
 use std::convert::{TryFrom, TryInto};
+use std::sync::Arc;
 
 use ir_common::generated::algebra as algebra_pb;
 use ir_common::generated::algebra::group_by::agg_func::Aggregate;
@@ -29,8 +30,8 @@ use crate::process::record::{Entry, ObjectElement, Record};
 #[derive(Debug, Clone)]
 pub enum EntryAccumulator {
     // TODO(bingqing): more accum kind
-    ToCount(Count<Entry>),
-    ToList(ToList<Entry>),
+    ToCount(Count<Arc<Entry>>),
+    ToList(ToList<Arc<Entry>>),
 }
 
 #[derive(Debug, Clone)]
@@ -41,7 +42,7 @@ pub struct RecordAccumulator {
 impl Accumulator<Record, Record> for RecordAccumulator {
     fn accum(&mut self, mut next: Record) -> FnExecResult<()> {
         for (accumulator, tag_key, _) in self.accum_ops.iter_mut() {
-            let entry = tag_key.take_entry(&mut next)?;
+            let entry = tag_key.get_entry(&mut next)?;
             accumulator.accum(entry)?;
         }
         Ok(())
@@ -51,57 +52,38 @@ impl Accumulator<Record, Record> for RecordAccumulator {
         let mut record = Record::default();
         for (accumulator, _, alias) in self.accum_ops.iter_mut() {
             let entry = accumulator.finalize()?;
-            record.append(entry, alias.clone());
+            record.append_arc_entry(entry, alias.clone());
         }
         Ok(record)
     }
 }
 
-#[derive(Debug)]
-struct RecordSingleAccumulator {
-    accumulator: EntryAccumulator,
-    tag_key: TagKey,
-    alias: Option<NameOrId>,
-}
-
-impl Accumulator<Record, Record> for RecordSingleAccumulator {
-    fn accum(&mut self, mut next: Record) -> FnExecResult<()> {
-        let entry = self.tag_key.take_entry(&mut next)?;
-        self.accumulator.accum(entry)
-    }
-
-    fn finalize(&mut self) -> FnExecResult<Record> {
-        let result = self.accumulator.finalize()?;
-        Ok(Record::new(result, self.alias.clone()))
-    }
-}
-
-impl Accumulator<Entry, Entry> for EntryAccumulator {
-    fn accum(&mut self, next: Entry) -> FnExecResult<()> {
+impl Accumulator<Arc<Entry>, Arc<Entry>> for EntryAccumulator {
+    fn accum(&mut self, next: Arc<Entry>) -> FnExecResult<()> {
         match self {
             EntryAccumulator::ToCount(count) => count.accum(next),
             EntryAccumulator::ToList(list) => list.accum(next),
         }
     }
 
-    fn finalize(&mut self) -> FnExecResult<Entry> {
+    fn finalize(&mut self) -> FnExecResult<Arc<Entry>> {
         match self {
             EntryAccumulator::ToCount(count) => {
                 let cnt = count.finalize()?;
-                Ok(ObjectElement::Count(cnt).into())
+                Ok(Arc::new(ObjectElement::Count(cnt).into()))
             }
             EntryAccumulator::ToList(list) => {
                 let list_entry = list
                     .finalize()?
                     .into_iter()
-                    .map(|entry| match entry {
+                    .map(|entry| match entry.as_ref() {
                         Entry::Element(e) => Ok(e.clone()),
                         Entry::Collection(_) => {
                             Err(FnExecError::unsupported_error("fold collections is not supported yet"))
                         }
                     })
                     .collect::<Result<Vec<_>, _>>()?;
-                Ok(Entry::Collection(list_entry))
+                Ok(Arc::new(Entry::Collection(list_entry)))
             }
         }
     }
