@@ -394,11 +394,11 @@ class TestBuiltinCopyOnWrite:
 
     def test_node_boundary(self):
         ret = nx.builtin.node_boundary(self.SG, [1, 2])
-        assert ret == [3]
+        assert ret == {3}
 
     def test_edge_boundary(self):
         ret = nx.builtin.edge_boundary(self.SG, [1, 2])
-        assert ret == [[1, 3]]
+        assert list(ret) == [(1, 3)]
 
     def test_attribute_assortativity_coefficient(self):
         ret = nx.builtin.attribute_assortativity_coefficient(self.SG, attribute="attr")
