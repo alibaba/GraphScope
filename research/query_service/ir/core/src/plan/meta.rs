@@ -15,16 +15,124 @@
 
 use std::collections::HashMap;
 use std::io;
+use std::sync::RwLock;
 
 use ir_common::generated::common as common_pb;
-use ir_common::generated::common::name_or_id::Item;
 use ir_common::generated::schema as schema_pb;
 
 use crate::JsonIO;
 
+lazy_static! {
+    pub static ref META_DATA: RwLock<MetaData> = RwLock::new(MetaData::default());
+}
+
+pub fn set_schema<R: io::Read>(read: R) {
+    if let Ok(mut meta) = META_DATA.write() {
+        if let Ok(schema) = Schema::from_json(read) {
+            meta.schema = Some(schema);
+        }
+    }
+}
+
+pub fn reset_schema() {
+    if let Ok(mut meta) = META_DATA.write() {
+        meta.schema = None;
+    }
+}
+
 #[derive(Clone, Debug, Default)]
 pub struct MetaData {
     pub schema: Option<Schema>,
+}
+
+#[derive(Clone, Debug, Default)]
+pub struct Column {
+    name: String,
+    id: i32,
+    data_type: common_pb::DataType,
+}
+
+#[derive(Clone, Debug, Default)]
+pub struct Entity {
+    name: String,
+    id: i32,
+}
+
+#[derive(Clone, Debug, Default)]
+pub struct Relation {
+    src: Entity,
+    dst: Entity,
+    edge: Entity,
+}
+
+impl From<schema_pb::ColumnKey> for Column {
+    fn from(column_pb: schema_pb::ColumnKey) -> Self {
+        Column {
+            name: column_pb.name.clone(),
+            id: column_pb.id,
+            data_type: unsafe { std::mem::transmute::<i32, common_pb::DataType>(column_pb.data_type) },
+        }
+    }
+}
+
+fn into_entity(entity_pb: schema_pb::Entity) -> (Entity, Vec<Column>) {
+    let entity = Entity { name: entity_pb.name.clone(), id: entity_pb.id };
+    let columns = entity_pb
+        .columns
+        .into_iter()
+        .map(|col| col.into())
+        .collect();
+
+    (entity, columns)
+}
+
+fn into_entity_pb(tuple: (Entity, Vec<Column>)) -> schema_pb::Entity {
+    schema_pb::Entity {
+        id: tuple.0.id,
+        name: tuple.0.name.clone(),
+        columns: tuple
+            .1
+            .into_iter()
+            .map(|col| schema_pb::ColumnKey {
+                id: col.id,
+                name: col.name.clone(),
+                data_type: unsafe { std::mem::transmute::<common_pb::DataType, i32>(col.data_type) },
+            })
+            .collect(),
+    }
+}
+
+fn into_relation(rel_pb: schema_pb::Relation) -> (Relation, Vec<Column>) {
+    let src = Entity { name: rel_pb.src_name.clone(), id: rel_pb.src_id };
+    let dst = Entity { name: rel_pb.dst_name.clone(), id: rel_pb.dst_id };
+    let edge = Entity { name: rel_pb.name.clone(), id: rel_pb.id };
+    let columns = rel_pb
+        .columns
+        .into_iter()
+        .map(|col| col.into())
+        .collect();
+
+    (Relation { src, dst, edge }, columns)
+}
+
+fn into_relation_pb(tuple: (Relation, Vec<Column>)) -> schema_pb::Relation {
+    schema_pb::Relation {
+        src_id: tuple.0.src.id,
+        src_name: tuple.0.src.name.clone(),
+        dst_id: tuple.0.dst.id,
+        dst_name: tuple.0.dst.name.clone(),
+        id: tuple.0.edge.id,
+        name: tuple.0.edge.name.clone(),
+        columns: tuple
+            .1
+            .into_iter()
+            .map(|col| schema_pb::ColumnKey {
+                id: col.id,
+                name: col.name.clone(),
+                data_type: unsafe { std::mem::transmute::<common_pb::DataType, i32>(col.data_type) },
+            })
+            .collect(),
+    }
 }
 
 #[derive(Clone, Debug, Default)]
@@ -43,6 +151,23 @@ pub struct Schema {
     is_table_id: bool,
     /// Is the column name mapped as id
     is_column_id: bool,
+    /// Entities
+    entities: Vec<(Entity, Vec<Column>)>,
+    /// Relations
+    rels: Vec<(Relation, Vec<Column>)>,
+}
+
+impl From<Vec<(String, i32)>> for Schema {
+    fn from(data: Vec<(String, i32)>) -> Self {
+        let mut schema = Schema::default();
+        schema.is_table_id = true;
+        schema.is_column_id = false;
+        for (name, id) in data.into_iter() {
+            schema.table_map.insert(name.clone(), id);
+            schema.table_map_rev.insert(id, name);
+        }
+        schema
+    }
 }
 
 impl Schema {
@@ -52,8 +177,8 @@ impl Schema {
 
     pub fn get_table_id_from_pb(&self, name: &common_pb::NameOrId) -> Option<i32> {
         name.item.as_ref().and_then(|item| match item {
-            Item::Name(name) => self.get_table_id(name),
-            Item::Id(id) => Some(*id),
+            common_pb::name_or_id::Item::Name(name) => self.get_table_id(name),
+            common_pb::name_or_id::Item::Id(id) => Some(*id),
         })
     }
 
@@ -67,13 +192,21 @@ impl Schema {
 
     pub fn get_column_id_from_pb(&self, name: &common_pb::NameOrId) -> Option<i32> {
         name.item.as_ref().and_then(|item| match item {
-            Item::Name(name) => self.get_column_id(name),
-            Item::Id(id) => Some(*id),
+            common_pb::name_or_id::Item::Name(name) => self.get_column_id(name),
+            common_pb::name_or_id::Item::Id(id) => Some(*id),
         })
     }
 
     pub fn get_column_name(&self, id: i32) -> Option<&String> {
         self.column_map_rev.get(&id)
+    }
+
+    pub fn is_column_id(&self) -> bool {
+        self.is_column_id
+    }
+
+    pub fn is_table_id(&self) -> bool {
+        self.is_table_id
     }
 }
 
@@ -85,8 +218,25 @@ pub enum ColumnOrTable {
 }
 
 impl JsonIO for Schema {
-    fn into_json<W: io::Write>(self, _writer: W) -> io::Result<()> {
-        todo!()
+    fn into_json<W: io::Write>(self, writer: W) -> io::Result<()> {
+        let schema_pb = schema_pb::Schema {
+            entities: self
+                .entities
+                .clone()
+                .into_iter()
+                .map(|tuple| into_entity_pb(tuple))
+                .collect(),
+            rels: self
+                .rels
+                .clone()
+                .into_iter()
+                .map(|tuple| into_relation_pb(tuple))
+                .collect(),
+            is_table_id: self.is_table_id,
+            is_column_id: self.is_column_id,
+        };
+        serde_json::to_writer(writer, &schema_pb)?;
+        Ok(())
     }
 
     fn from_json<R: io::Read>(reader: R) -> io::Result<Self>
@@ -95,6 +245,18 @@ impl JsonIO for Schema {
     {
         let schema_pb = serde_json::from_reader::<_, schema_pb::Schema>(reader)?;
         let mut schema = Schema::default();
+        schema.entities = schema_pb
+            .entities
+            .clone()
+            .into_iter()
+            .map(|entity_pb| into_entity(entity_pb))
+            .collect();
+        schema.rels = schema_pb
+            .rels
+            .clone()
+            .into_iter()
+            .map(|rel_pb| into_relation(rel_pb))
+            .collect();
         schema.is_table_id = schema_pb.is_table_id;
         schema.is_column_id = schema_pb.is_column_id;
         for entity in schema_pb.entities {

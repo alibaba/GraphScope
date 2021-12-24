@@ -19,6 +19,9 @@ pub use crate::plan::ffi::*;
 
 pub mod plan;
 
+#[macro_use]
+extern crate lazy_static;
+
 pub trait JsonIO {
     /// Write the logical plan to a json via the given `writer`.
     fn into_json<W: io::Write>(self, writer: W) -> io::Result<()>;
