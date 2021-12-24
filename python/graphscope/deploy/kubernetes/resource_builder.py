@@ -1145,7 +1145,7 @@ class GSEtcdBuilder(object):
 
     def build_liveness_probe(self):
         liveness_cmd = self.build_probe_cmd()
-        return ExecProbeBuilder(liveness_cmd, timeout=15, failure_thresh=8)
+        return ExecProbeBuilder(liveness_cmd, timeout=15, period=10, failure_thresh=8)
 
     def build_readiness_probe(self):
         readiness_cmd = self.build_probe_cmd()
