@@ -278,7 +278,6 @@ jobs:
         python3 -m pytest -s -v --cov=graphscope --cov-config=python/.coveragerc \
                                 --cov-report=xml --cov-report=term --exitfirst \
                                 $(dirname $(python3 -c "import graphscope; print(graphscope.__file__)"))/tests/unittest
-        coverage report
 
     - name: Upload Coverage
       uses: codecov/codecov-action@v2
@@ -571,7 +570,6 @@ jobs:
                           --cov=graphscope --cov-config=.coveragerc --cov-report=xml \
                           --cov-report=term --exitfirst -s -vvv --log-cli-level=INFO \
                           ./graphscope/tests/kubernetes
-          coverage report
 
       - name: Upload Coverage
         uses: codecov/codecov-action@v2
