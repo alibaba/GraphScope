@@ -72,8 +72,13 @@ impl From<ExprError> for PhysicalError {
     }
 }
 
+/// A trait for building physical plan (pegasus) from the logical plan
 pub trait AsPhysical {
+    /// To add pegasus's `JobBuilder`
     fn add_job_builder(&self, builder: &mut JobBuilder) -> PhysicalResult<()>;
+
+    /// To conduct necessary post processing before transforming into a physical plan.
+    fn post_process(&mut self) -> PhysicalResult<()> { Ok(()) }
 }
 
 #[derive(PartialEq)]
@@ -109,53 +114,76 @@ fn expr_to_suffix_expr(expr: common_pb::Expression) -> ExprResult<common_pb::Exp
 impl AsPhysical for pb::Project {
     fn add_job_builder(&self, builder: &mut JobBuilder) -> PhysicalResult<()> {
         let mut project = self.clone();
-        for mapping in project.mappings.iter_mut() {
+        project.post_process()?;
+        simple_add_job_builder(builder, &pb::logical_plan::Operator::from(project), PegasusOpr::Map)
+    }
+
+    fn post_process(&mut self) -> PhysicalResult<()> {
+        for mapping in self.mappings.iter_mut() {
             if let Some(expr) = mapping.expr.as_mut() {
                 *expr = expr_to_suffix_expr(expr.clone())?;
             }
         }
 
-        simple_add_job_builder(builder, &pb::logical_plan::Operator::from(project), PegasusOpr::Map)
+        Ok(())
     }
 }
 
 impl AsPhysical for pb::Select {
     fn add_job_builder(&self, builder: &mut JobBuilder) -> PhysicalResult<()> {
         let mut select = self.clone();
-        if let Some(pred) = &mut select.predicate {
+        select.post_process()?;
+        simple_add_job_builder(builder, &pb::logical_plan::Operator::from(select), PegasusOpr::Filter)
+    }
+
+    fn post_process(&mut self) -> PhysicalResult<()> {
+        if let Some(pred) = &mut self.predicate {
             *pred = expr_to_suffix_expr(pred.clone())?;
         }
-        simple_add_job_builder(builder, &pb::logical_plan::Operator::from(select), PegasusOpr::Filter)
+
+        Ok(())
     }
 }
 
 impl AsPhysical for pb::Scan {
     fn add_job_builder(&self, builder: &mut JobBuilder) -> PhysicalResult<()> {
         let mut scan = self.clone();
-        if let Some(params) = &mut scan.params {
+        scan.post_process()?;
+        simple_add_job_builder(builder, &pb::logical_plan::Operator::from(scan), PegasusOpr::Source)
+    }
+
+    fn post_process(&mut self) -> PhysicalResult<()> {
+        if let Some(params) = &mut self.params {
             if let Some(pred) = &mut params.predicate {
                 *pred = expr_to_suffix_expr(pred.clone())?;
             }
         }
-        simple_add_job_builder(builder, &pb::logical_plan::Operator::from(scan), PegasusOpr::Source)
+
+        Ok(())
     }
 }
 
 impl AsPhysical for pb::EdgeExpand {
     fn add_job_builder(&self, builder: &mut JobBuilder) -> PhysicalResult<()> {
         let mut xpd = self.clone();
-        if let Some(base) = &mut xpd.base {
+        xpd.post_process()?;
+        simple_add_job_builder(
+            builder,
+            &pb::logical_plan::Operator::from(self.clone()),
+            PegasusOpr::Flatmap,
+        )
+    }
+
+    fn post_process(&mut self) -> PhysicalResult<()> {
+        if let Some(base) = &mut self.base {
             if let Some(params) = &mut base.params {
                 if let Some(pred) = &mut params.predicate {
                     *pred = expr_to_suffix_expr(pred.clone())?;
                 }
             }
         }
-        simple_add_job_builder(
-            builder,
-            &pb::logical_plan::Operator::from(self.clone()),
-            PegasusOpr::Flatmap,
-        )
+
+        Ok(())
     }
 }
 
@@ -168,12 +196,18 @@ impl AsPhysical for pb::GetV {
 impl AsPhysical for pb::Auxilia {
     fn add_job_builder(&self, builder: &mut JobBuilder) -> PhysicalResult<()> {
         let mut auxilia = self.clone();
-        if let Some(params) = auxilia.params.as_mut() {
+        auxilia.post_process()?;
+        simple_add_job_builder(builder, &pb::logical_plan::Operator::from(auxilia), PegasusOpr::FilterMap)
+    }
+
+    fn post_process(&mut self) -> PhysicalResult<()> {
+        if let Some(params) = self.params.as_mut() {
             if let Some(pred) = params.predicate.as_mut() {
                 *pred = expr_to_suffix_expr(pred.clone())?
             }
         }
-        simple_add_job_builder(builder, &pb::logical_plan::Operator::from(auxilia), PegasusOpr::FilterMap)
+
+        Ok(())
     }
 }
 

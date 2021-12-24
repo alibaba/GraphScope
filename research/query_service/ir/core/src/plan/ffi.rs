@@ -680,8 +680,8 @@ mod project {
     ) -> ResultCode {
         let mut return_code = ResultCode::Success;
         let mut project = unsafe { Box::from_raw(ptr_project as *mut pb::Project) };
-        let expr_pb = cstr_to_suffix_expr_pb(cstr_expr);
-        let alias_pb = Option::<common_pb::NameOrId>::try_from(alias);
+        let expr_pb = cstr_to_expr_pb(cstr_expr);
+        let alias_pb = pb::Alias::try_from(alias);
 
         if !expr_pb.is_ok() || !alias_pb.is_ok() {
             return_code = expr_pb.err().unwrap();
