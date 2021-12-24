@@ -16,6 +16,7 @@
 use std::convert::{TryFrom, TryInto};
 use std::sync::Arc;
 
+use ir_common::error::ParsePbError;
 use ir_common::generated::algebra as algebra_pb;
 use ir_common::generated::algebra::group_by::agg_func::Aggregate;
 use ir_common::NameOrId;
@@ -108,8 +109,8 @@ impl AccumFactoryGen for algebra_pb::GroupBy {
                 .unwrap_or(TagKey::default());
             let alias = agg_func
                 .alias
-                .map(|tag| tag.try_into())
-                .transpose()?;
+                .ok_or(ParsePbError::from("accum value alias is missing in group"))?
+                .try_into()?;
             let entry_accumulator = match agg_kind {
                 Aggregate::Count => EntryAccumulator::ToCount(Count { value: 0, _ph: Default::default() }),
                 Aggregate::ToList => EntryAccumulator::ToList(ToList { inner: vec![] }),
@@ -120,7 +121,7 @@ impl AccumFactoryGen for algebra_pb::GroupBy {
             };
             accum_ops.push((entry_accumulator, tag_key, alias));
         }
-
+        debug!("Runtime accumulator operator: {:?}", accum_ops);
         Ok(RecordAccumulator { accum_ops })
     }
 }
