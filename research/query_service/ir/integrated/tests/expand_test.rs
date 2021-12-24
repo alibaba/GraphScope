@@ -24,12 +24,12 @@ mod test {
     use graph_proxy::{create_demo_graph, SimplePartition};
     use graph_store::ldbc::LDBCVertexParser;
     use graph_store::prelude::DefaultId;
+    use ir_common::expr_parse::str_to_suffix_expr_pb;
     use ir_common::generated::algebra as pb;
     use ir_common::generated::common as common_pb;
     use pegasus::api::{Map, Sink};
     use pegasus::result::ResultStream;
     use pegasus::JobConf;
-    use runtime::expr::str_to_expr_pb;
     use runtime::graph::element::{Element, GraphElement, VertexOrEdge};
     use runtime::graph::property::Details;
     use runtime::process::operator::flatmap::FlatMapFuncGen;
@@ -257,7 +257,7 @@ mod test {
             table_names: vec!["knows".into()],
             columns: vec![],
             limit: None,
-            predicate: str_to_expr_pb("@.id == 2".to_string()).ok(),
+            predicate: str_to_suffix_expr_pb("@.id == 2".to_string()).ok(),
             requirements: vec![],
         };
         let edge_expand_base = pb::ExpandBase { v_tag: None, direction: 0, params: Some(query_param) };

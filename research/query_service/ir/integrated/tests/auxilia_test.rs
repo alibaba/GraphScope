@@ -22,12 +22,12 @@ mod test {
     use std::sync::Arc;
 
     use graph_proxy::{create_demo_graph, SimplePartition};
+    use ir_common::expr_parse::str_to_suffix_expr_pb;
     use ir_common::generated::algebra as pb;
     use ir_common::generated::common as common_pb;
     use ir_common::NameOrId;
     use pegasus::api::{Map, Sink};
     use pegasus::JobConf;
-    use runtime::expr::str_to_expr_pb;
     use runtime::graph::element::{Element, GraphElement};
     use runtime::graph::property::Details;
     use runtime::process::operator::flatmap::FlatMapFuncGen;
@@ -199,7 +199,7 @@ mod test {
                 table_names: vec![],
                 columns: vec![common_pb::NameOrId::from("name".to_string())],
                 limit: None,
-                predicate: str_to_expr_pb("@.name==\"vadas\"".to_string()).ok(),
+                predicate: str_to_suffix_expr_pb("@.name==\"vadas\"".to_string()).ok(),
                 requirements: vec![],
             }),
             alias: None,
@@ -265,7 +265,7 @@ mod test {
                 table_names: vec![],
                 columns: vec![common_pb::NameOrId::from("name".to_string())],
                 limit: None,
-                predicate: str_to_expr_pb("@.name==\"vadas\"".to_string()).ok(),
+                predicate: str_to_suffix_expr_pb("@.name==\"vadas\"".to_string()).ok(),
                 requirements: vec![],
             }),
             alias: Some(common_pb::NameOrId::from("a".to_string())),

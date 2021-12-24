@@ -21,6 +21,8 @@
 
 use std::fmt;
 
+use ir_common::expr_parse::error::{ExprError, ExprResult};
+use ir_common::expr_parse::to_suffix_expr;
 use ir_common::generated::algebra as pb;
 use ir_common::generated::algebra::join::JoinKind;
 use ir_common::generated::common as common_pb;
@@ -34,6 +36,7 @@ use crate::plan::logical::{LogicalPlan, NodeType};
 #[derive(Debug, Clone)]
 pub enum PhysicalError {
     PbEncodeError(EncodeError),
+    ExprParseError(ExprError),
     MissingDataError,
     InvalidRangeError(i32, i32),
     Unsupported,
@@ -45,6 +48,7 @@ impl fmt::Display for PhysicalError {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
             PhysicalError::PbEncodeError(err) => write!(f, "encoding protobuf error: {:?}", err),
+            PhysicalError::ExprParseError(err) => write!(f, "parse expression error: {:?}", err),
             PhysicalError::MissingDataError => write!(f, "missing necessary data."),
             PhysicalError::InvalidRangeError(lo, up) => {
                 write!(f, "invalid range ({:?}, {:?})", lo, up)
@@ -62,8 +66,21 @@ impl From<EncodeError> for PhysicalError {
     }
 }
 
+impl From<ExprError> for PhysicalError {
+    fn from(err: ExprError) -> Self {
+        Self::ExprParseError(err)
+    }
+}
+
+/// A trait for building physical plan (pegasus) from the logical plan
 pub trait AsPhysical {
+    /// To add pegasus's `JobBuilder`
     fn add_job_builder(&self, builder: &mut JobBuilder) -> PhysicalResult<()>;
+
+    /// To conduct necessary post processing before transforming into a physical plan.
+    fn post_process(&mut self) -> PhysicalResult<()> {
+        Ok(())
+    }
 }
 
 #[derive(PartialEq)]
@@ -91,31 +108,84 @@ fn simple_add_job_builder<M: Message>(
     Ok(())
 }
 
+fn expr_to_suffix_expr(expr: common_pb::Expression) -> ExprResult<common_pb::Expression> {
+    let operators = to_suffix_expr(expr.operators)?;
+    Ok(common_pb::Expression { operators })
+}
+
 impl AsPhysical for pb::Project {
     fn add_job_builder(&self, builder: &mut JobBuilder) -> PhysicalResult<()> {
-        simple_add_job_builder(builder, &pb::logical_plan::Operator::from(self.clone()), PegasusOpr::Map)
+        let mut project = self.clone();
+        project.post_process()?;
+        simple_add_job_builder(builder, &pb::logical_plan::Operator::from(project), PegasusOpr::Map)
+    }
+
+    fn post_process(&mut self) -> PhysicalResult<()> {
+        for mapping in self.mappings.iter_mut() {
+            if let Some(expr) = mapping.expr.as_mut() {
+                *expr = expr_to_suffix_expr(expr.clone())?;
+            }
+        }
+
+        Ok(())
     }
 }
 
 impl AsPhysical for pb::Select {
     fn add_job_builder(&self, builder: &mut JobBuilder) -> PhysicalResult<()> {
-        simple_add_job_builder(builder, &pb::logical_plan::Operator::from(self.clone()), PegasusOpr::Filter)
+        let mut select = self.clone();
+        select.post_process()?;
+        simple_add_job_builder(builder, &pb::logical_plan::Operator::from(select), PegasusOpr::Filter)
+    }
+
+    fn post_process(&mut self) -> PhysicalResult<()> {
+        if let Some(pred) = &mut self.predicate {
+            *pred = expr_to_suffix_expr(pred.clone())?;
+        }
+
+        Ok(())
     }
 }
 
 impl AsPhysical for pb::Scan {
     fn add_job_builder(&self, builder: &mut JobBuilder) -> PhysicalResult<()> {
-        simple_add_job_builder(builder, &pb::logical_plan::Operator::from(self.clone()), PegasusOpr::Source)
+        let mut scan = self.clone();
+        scan.post_process()?;
+        simple_add_job_builder(builder, &pb::logical_plan::Operator::from(scan), PegasusOpr::Source)
+    }
+
+    fn post_process(&mut self) -> PhysicalResult<()> {
+        if let Some(params) = &mut self.params {
+            if let Some(pred) = &mut params.predicate {
+                *pred = expr_to_suffix_expr(pred.clone())?;
+            }
+        }
+
+        Ok(())
     }
 }
 
 impl AsPhysical for pb::EdgeExpand {
     fn add_job_builder(&self, builder: &mut JobBuilder) -> PhysicalResult<()> {
+        let mut xpd = self.clone();
+        xpd.post_process()?;
         simple_add_job_builder(
             builder,
             &pb::logical_plan::Operator::from(self.clone()),
             PegasusOpr::Flatmap,
         )
+    }
+
+    fn post_process(&mut self) -> PhysicalResult<()> {
+        if let Some(base) = &mut self.base {
+            if let Some(params) = &mut base.params {
+                if let Some(pred) = &mut params.predicate {
+                    *pred = expr_to_suffix_expr(pred.clone())?;
+                }
+            }
+        }
+
+        Ok(())
     }
 }
 
@@ -127,11 +197,19 @@ impl AsPhysical for pb::GetV {
 
 impl AsPhysical for pb::Auxilia {
     fn add_job_builder(&self, builder: &mut JobBuilder) -> PhysicalResult<()> {
-        simple_add_job_builder(
-            builder,
-            &pb::logical_plan::Operator::from(self.clone()),
-            PegasusOpr::FilterMap,
-        )
+        let mut auxilia = self.clone();
+        auxilia.post_process()?;
+        simple_add_job_builder(builder, &pb::logical_plan::Operator::from(auxilia), PegasusOpr::FilterMap)
+    }
+
+    fn post_process(&mut self) -> PhysicalResult<()> {
+        if let Some(params) = self.params.as_mut() {
+            if let Some(pred) = params.predicate.as_mut() {
+                *pred = expr_to_suffix_expr(pred.clone())?
+            }
+        }
+
+        Ok(())
     }
 }
 
@@ -291,9 +369,10 @@ impl AsPhysical for LogicalPlan {
 
 #[cfg(test)]
 mod test {
+    use ir_common::expr_parse::{str_to_expr_pb, str_to_suffix_expr_pb};
     use ir_common::generated::algebra as pb;
+    use ir_common::generated::algebra::project::ExprAlias;
     use ir_common::generated::common as common_pb;
-    use runtime::expr::str_to_expr_pb;
 
     use super::*;
     use crate::plan::logical::Node;
@@ -334,7 +413,6 @@ mod test {
         let limit_opr =
             pb::logical_plan::Operator::from(pb::Limit { range: Some(pb::Range { lower: 10, upper: 11 }) });
         let source_opr_bytes = source_opr.encode_to_vec();
-        let select_opr_bytes = select_opr.encode_to_vec();
         let expand_opr_bytes = expand_opr.encode_to_vec();
 
         let mut logical_plan = LogicalPlan::with_root(Node::new(0, source_opr));
@@ -345,12 +423,68 @@ mod test {
         let _ = logical_plan.add_job_builder(&mut builder);
 
         let mut expected_builder = JobBuilder::default();
-        expected_builder.add_source(source_opr_bytes.clone());
-        expected_builder.filter(select_opr_bytes);
-        expected_builder.flat_map(expand_opr_bytes.clone());
+        let select_opr = pb::logical_plan::Operator::from(pb::Select {
+            predicate: Some(str_to_suffix_expr_pb("@.id == 10".to_string()).unwrap()),
+        });
+        expected_builder.add_source(source_opr_bytes);
+        expected_builder.filter(select_opr.encode_to_vec());
+        expected_builder.flat_map(expand_opr_bytes);
         expected_builder.limit(10);
         expected_builder.sink(vec![]);
 
+        assert_eq!(builder, expected_builder);
+    }
+
+    #[test]
+    fn test_project() {
+        let source_opr = pb::logical_plan::Operator::from(pb::Scan {
+            scan_opt: 0,
+            alias: None,
+            params: Some(pb::QueryParams {
+                table_names: vec![common_pb::NameOrId::from("person".to_string())],
+                columns: vec![],
+                limit: None,
+                predicate: None,
+                requirements: vec![],
+            }),
+            idx_predicate: None,
+        });
+
+        let project_opr = pb::logical_plan::Operator::from(pb::Project {
+            mappings: vec![
+                ExprAlias {
+                    expr: Some(str_to_expr_pb("10 * (@.class - 10)".to_string()).unwrap()),
+                    alias: None,
+                },
+                ExprAlias { expr: Some(str_to_expr_pb("@.age - 1".to_string()).unwrap()), alias: None },
+            ],
+            is_append: false,
+        });
+
+        let mut logical_plan = LogicalPlan::with_root(Node::new(0, source_opr.clone()));
+        logical_plan.append_operator_as_node(project_opr.clone(), vec![0]); // node 1
+        let mut builder = JobBuilder::default();
+        logical_plan
+            .add_job_builder(&mut builder)
+            .unwrap();
+
+        let mut expected_builder = JobBuilder::default();
+        let project_opr = pb::logical_plan::Operator::from(pb::Project {
+            mappings: vec![
+                ExprAlias {
+                    expr: Some(str_to_suffix_expr_pb("10 * (@.class - 10)".to_string()).unwrap()),
+                    alias: None,
+                },
+                ExprAlias {
+                    expr: Some(str_to_suffix_expr_pb("@.age - 1".to_string()).unwrap()),
+                    alias: None,
+                },
+            ],
+            is_append: false,
+        });
+
+        expected_builder.add_source(source_opr.encode_to_vec());
+        expected_builder.map(project_opr.encode_to_vec());
         assert_eq!(builder, expected_builder);
     }
 

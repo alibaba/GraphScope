@@ -107,16 +107,21 @@ message VariableKeys {
 
 // An operator of expression is one of Logical, Arithmetic, Const and Variable.
 message ExprOpr {
+  enum Brace {
+    LEFT = 0;
+    RIGHT = 1;
+  }
   oneof item {
     Logical logical = 2;
     Arithmetic arith = 3;
     Const const = 4;
     Variable var = 5;
+    Brace brace = 6;
   }
 }
 
-// A suffix representation of an expression
-message SuffixExpr {
+// An inner representation of an expression
+message Expression {
   repeated ExprOpr operators = 1;
 }
 
