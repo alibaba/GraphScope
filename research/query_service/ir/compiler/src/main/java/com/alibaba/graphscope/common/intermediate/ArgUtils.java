@@ -23,6 +23,8 @@ public class ArgUtils {
     private static IrCoreLibrary irCoreLib = IrCoreLibrary.INSTANCE;
     private static String LABEL = "~label";
     private static String ID = "~id";
+    public static String GROUP_KEYS = "~keys";
+    public static String GROUP_VALUES = "~values";
 
     public static FfiNameOrId.ByValue strAsNameId(String value) {
         return irCoreLib.cstrAsNameOrId(value);
@@ -60,6 +62,20 @@ public class ArgUtils {
         ffiAlias.alias = alias;
         ffiAlias.isQueryGiven = isQueryGiven;
         return ffiAlias;
+    }
+
+    public static FfiAlias.ByValue groupKeysAlias() {
+        return asFfiAlias(GROUP_KEYS, false);
+    }
+
+    public static FfiAlias.ByValue groupValuesAlias() {
+        return asFfiAlias(GROUP_VALUES, false);
+    }
+
+    public static FfiAggFn.ByValue asFfiAggFn(ArgAggFn aggFn) {
+        FfiAggFn.ByValue ffiAggFn = irCoreLib.initAggFn(aggFn.getAggregate(), aggFn.getAlias());
+        // todo: add var
+        return ffiAggFn;
     }
 }
 

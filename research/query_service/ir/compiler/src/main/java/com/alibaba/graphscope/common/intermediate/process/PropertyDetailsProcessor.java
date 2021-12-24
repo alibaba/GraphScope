@@ -102,6 +102,21 @@ public class PropertyDetailsProcessor implements InterOpProcessor {
                             requiredProperties.addTagProperty(var.tag, var.property);
                         }
                     });
+                } else if (interOpBase instanceof GroupOp) {
+                    GroupOp op = (GroupOp) interOpBase;
+                    if (!op.getGroupByKeys().isPresent()) {
+                        throw new InterOpIllegalArgException(interOpBase.getClass(), "groupKeys", "not present");
+                    }
+                    List<Pair> groupKeys = (List<Pair>) op.getGroupByKeys().get().getArg();
+                    if (groupKeys.isEmpty()) {
+                        throw new InterOpIllegalArgException(interOpBase.getClass(), "groupKeys", "should not be empty if present");
+                    }
+                    groupKeys.forEach(k -> {
+                        FfiVariable.ByValue groupKey = (FfiVariable.ByValue) k.getValue0();
+                        if (!groupKey.property.isNone()) {
+                            requiredProperties.addTagProperty(groupKey.tag, groupKey.property);
+                        }
+                    });
                 }
                 return requiredProperties;
             }
@@ -128,7 +143,7 @@ public class PropertyDetailsProcessor implements InterOpProcessor {
                 elementStartPos.put(output.get(), i);
             }
             // set required properties
-            if (op instanceof OrderOp || op instanceof SelectOp || op instanceof ProjectOp) {
+            if (op instanceof OrderOp || op instanceof SelectOp || op instanceof ProjectOp || op instanceof GroupOp) {
                 TagRequiredProperties properties = (TagRequiredProperties) PropertyDetailsFactory.REQUIRE.apply(op);
                 properties.getTags().forEach(tag -> {
                     Set<FfiProperty.ByValue> required = properties.getTagProperties(tag, true);
@@ -178,6 +193,8 @@ public class PropertyDetailsProcessor implements InterOpProcessor {
             return inputOpt;
         } else if (op instanceof ProjectOp) {
             return projectOneGraphElementOpt((ProjectOp) op, elementRecord);
+        } else if (op instanceof GroupOp) {
+            return Optional.empty();
         } else {
             throw new InterOpUnsupportedException(op.getClass(), "unsupported yet");
         }

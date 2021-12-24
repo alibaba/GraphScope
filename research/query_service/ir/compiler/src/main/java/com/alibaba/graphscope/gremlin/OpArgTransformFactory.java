@@ -17,6 +17,7 @@
 package com.alibaba.graphscope.gremlin;
 
 import com.alibaba.graphscope.common.exception.OpArgIllegalException;
+import com.alibaba.graphscope.common.intermediate.ArgAggFn;
 import com.alibaba.graphscope.common.intermediate.ArgUtils;
 import com.alibaba.graphscope.common.jna.type.*;
 import com.alibaba.graphscope.common.jna.type.FfiDirection;
@@ -28,14 +29,14 @@ import org.apache.tinkerpop.gremlin.process.traversal.Traversal;
 import org.apache.tinkerpop.gremlin.process.traversal.lambda.IdentityTraversal;
 import org.apache.tinkerpop.gremlin.process.traversal.lambda.ValueTraversal;
 import org.apache.tinkerpop.gremlin.process.traversal.Contains;
-import org.apache.tinkerpop.gremlin.process.traversal.step.map.GraphStep;
-import org.apache.tinkerpop.gremlin.process.traversal.step.map.PropertyMapStep;
-import org.apache.tinkerpop.gremlin.process.traversal.step.map.VertexStep;
+import org.apache.tinkerpop.gremlin.process.traversal.step.map.*;
 import org.apache.tinkerpop.gremlin.process.traversal.step.util.HasContainer;
 import org.apache.tinkerpop.gremlin.process.traversal.util.ConnectiveP;
 import org.apache.tinkerpop.gremlin.structure.Direction;
 import org.apache.tinkerpop.gremlin.structure.T;
 import org.javatuples.Pair;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.*;
 import java.util.function.BiPredicate;
@@ -46,6 +47,7 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 
 public class OpArgTransformFactory {
+    private static Logger logger = LoggerFactory.getLogger(OpArgTransformFactory.class);
 
     public static Function<GraphStep, FfiScanOpt> SCAN_OPT = (GraphStep s1) -> {
         if (s1.returnsVertex()) return FfiScanOpt.Vertex;
@@ -237,4 +239,72 @@ public class OpArgTransformFactory {
     // isQueryGiven is set as true by default
     public static Function<String, FfiAlias.ByValue> STEP_TAG_TO_OP_ALIAS = (String tag) ->
             ArgUtils.asFfiAlias(tag, true);
+
+    public static Function<Traversal.Admin, List<Pair<FfiVariable.ByValue, FfiAlias.ByValue>>>
+            GROUP_KEYS_FROM_TRAVERSAL = (Traversal.Admin admin) -> {
+        Pair<FfiVariable.ByValue, FfiAlias.ByValue> groupKey;
+        FfiAlias.ByValue alias = ArgUtils.groupKeysAlias();
+        if (admin == null || admin instanceof IdentityTraversal) { // group()
+            FfiVariable.ByValue variable = ArgUtils.asNoneVar();
+            groupKey = Pair.with(variable, alias);
+        } else if (admin instanceof ValueTraversal) { // group().by('name')
+            String propertyKey = ((ValueTraversal) admin).getPropertyKey();
+            FfiVariable.ByValue variable = ArgUtils.asVarPropertyOnly(ArgUtils.asFfiProperty(propertyKey));
+            groupKey = Pair.with(variable, alias);
+        } else if (admin.getSteps().size() == 1 && admin.getStartStep() instanceof PropertiesStep) { // values("name")
+            PropertiesStep valueStep = (PropertiesStep) admin.getStartStep();
+            String[] valueKeys = valueStep.getPropertyKeys();
+            if (valueKeys.length == 0) {
+                throw new OpArgIllegalException(OpArgIllegalException.Cause.UNSUPPORTED_TYPE, "values() is unsupported");
+            }
+            if (valueKeys.length > 1) {
+                logger.error("only one argument in values(...) is supported, ignore others");
+            }
+            FfiVariable.ByValue variable = ArgUtils.asVarPropertyOnly(ArgUtils.asFfiProperty(valueKeys[0]));
+            Set<String> queryAliases = valueStep.getLabels();
+            if (queryAliases != null && !queryAliases.isEmpty()) {
+                String queryLabel = queryAliases.iterator().next();
+                alias = ArgUtils.asFfiAlias(queryLabel, true);
+            }
+            groupKey = Pair.with(variable, alias);
+        } else {
+            throw new OpArgIllegalException(OpArgIllegalException.Cause.UNSUPPORTED_TYPE,
+                    "supported pattern is [group()] or [group().by('name') or [group().by(values('name'))]]");
+        }
+        return Collections.singletonList(groupKey);
+    };
+
+    public static Function<Traversal.Admin, List<ArgAggFn>> GROUP_VALUES_FROM_TRAVERSAL = (Traversal.Admin admin) -> {
+        ArgAggFn aggFn;
+        FfiAlias.ByValue alias = ArgUtils.groupValuesAlias();
+        String notice = "supported pattern is [group().by(..).by(count())] or [group().by(..).by(fold())]";
+        if (admin == null) { // group
+            aggFn = new ArgAggFn(FfiAggOpt.ToList, alias);
+        } else if (admin.getSteps().size() == 1) {
+            Set<String> labels = admin.getStartStep().getLabels();
+            if (labels != null && !labels.isEmpty()) {
+                String label = labels.iterator().next();
+                alias = ArgUtils.asFfiAlias(label, true);
+            }
+            if (admin.getStartStep() instanceof CountGlobalStep) { // group().by(..).by(count())
+                aggFn = new ArgAggFn(FfiAggOpt.Count, alias);
+            } else if (admin.getStartStep() instanceof FoldStep) { // group().by(..).by(fold())
+                aggFn = new ArgAggFn(FfiAggOpt.ToList, alias);
+            } else {
+                throw new OpArgIllegalException(OpArgIllegalException.Cause.UNSUPPORTED_TYPE, notice);
+            }
+        } else {
+            throw new OpArgIllegalException(OpArgIllegalException.Cause.UNSUPPORTED_TYPE, notice);
+        }
+        return Collections.singletonList(aggFn);
+    };
+
+    public static Function<Map<String, Traversal.Admin>, List<FfiVariable.ByValue>>
+            DEDUP_VARS_FROM_TRAVERSALS = (Map<String, Traversal.Admin> tagTraversals) -> {
+        if (tagTraversals.isEmpty()) { // only support dedup()
+            return Collections.singletonList(ArgUtils.asNoneVar());
+        } else {
+            throw new OpArgIllegalException(OpArgIllegalException.Cause.UNSUPPORTED_TYPE, "supported pattern is [dedup()]");
+        }
+    };
 }

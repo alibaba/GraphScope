@@ -403,4 +403,73 @@ public class PositiveEvalTest {
         Assert.assertEquals(g.V().has("name", P.without("marko", "josh")).as("c"),
                 eval("g.V().has('name', without('marko', 'josh')).as('c')"));
     }
+
+    @Test
+    public void g_V_group_test() {
+        Assert.assertEquals(g.V().group(), eval("g.V().group()"));
+    }
+
+    @Test
+    public void g_V_group_by_key_str_test() {
+        Assert.assertEquals(g.V().group().by("name"), eval("g.V().group().by(\"name\")"));
+    }
+
+    @Test
+    public void g_V_group_by_key_values_test() {
+        Assert.assertEquals(g.V().group().by(__.values("name")), eval("g.V().group().by(values(\"name\"))"));
+    }
+
+    @Test
+    public void g_V_group_by_key_values_as_test() {
+        Assert.assertEquals(g.V().group().by(__.values("name").as("name")),
+                eval("g.V().group().by(values(\"name\").as(\"name\"))"));
+    }
+
+    @Test
+    public void g_V_group_by_key_str_by_value_count_test() {
+        Assert.assertEquals(g.V().group().by("name").by(__.count()), eval("g.V().group().by(\"name\").by(count())"));
+    }
+
+    @Test
+    public void g_V_group_by_key_values_by_value_fold_test() {
+        Assert.assertEquals(g.V().group().by(__.values("name")).by(__.fold()),
+                eval("g.V().group().by(values(\"name\")).by(fold())"));
+    }
+
+    @Test
+    public void g_V_group_by_key_str_by_value_count_as_test() {
+        Assert.assertEquals(g.V().group().by("name").by(__.count().as("a")),
+                eval("g.V().group().by(\"name\").by(count().as(\"a\"))"));
+    }
+
+    @Test
+    public void g_V_group_by_key_values_by_value_fold_as_test() {
+        Assert.assertEquals(g.V().group().by(__.values("name")).by(__.fold().as("a")),
+                eval("g.V().group().by(values(\"name\")).by(fold().as(\"a\"))"));
+    }
+
+    @Test
+    public void g_V_groupCount_test() {
+        Assert.assertEquals(g.V().groupCount(), eval("g.V().groupCount()"));
+    }
+
+    @Test
+    public void g_V_groupCount_by_str_test() {
+        Assert.assertEquals(g.V().groupCount().by("name"), eval("g.V().groupCount().by(\"name\")"));
+    }
+
+    @Test
+    public void g_V_groupCount_by_values_test() {
+        Assert.assertEquals(g.V().groupCount().by(__.values("name")), eval("g.V().groupCount().by(values(\"name\"))"));
+    }
+
+    @Test
+    public void g_V_groupCount_by_values_as_test() {
+        Assert.assertEquals(g.V().groupCount().by(__.values("name").as("a")), eval("g.V().groupCount().by(values(\"name\")).as(\"a\")"));
+    }
+
+    @Test
+    public void g_V_dedup_test() {
+        Assert.assertEquals(g.V().dedup(), eval("g.V().dedup()"));
+    }
 }

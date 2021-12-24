@@ -20,6 +20,8 @@ import com.alibaba.graphscope.common.exception.AppendInterOpException;
 import com.alibaba.graphscope.common.exception.BuildPhysicalException;
 import com.alibaba.graphscope.common.exception.InterOpIllegalArgException;
 import com.alibaba.graphscope.common.exception.InterOpUnsupportedException;
+import com.alibaba.graphscope.common.intermediate.ArgAggFn;
+import com.alibaba.graphscope.common.intermediate.ArgUtils;
 import com.alibaba.graphscope.common.intermediate.operator.*;
 import com.alibaba.graphscope.common.jna.IrCoreLibrary;
 import com.alibaba.graphscope.common.jna.type.*;
@@ -259,6 +261,59 @@ public class IrPlan implements Closeable {
                 }
                 return ptrAuxilia;
             }
+        },
+        GROUP_OP {
+            @Override
+            public Pointer apply(InterOpBase baseOp) {
+                Pointer ptrGroup = irCoreLib.initGroupbyOperator();
+                GroupOp op = (GroupOp) baseOp;
+                Optional<OpArg> groupKeysOpt = op.getGroupByKeys();
+                if (!groupKeysOpt.isPresent()) {
+                    throw new InterOpIllegalArgException(baseOp.getClass(), "groupKeys", "not present");
+                }
+                Optional<OpArg> groupValuesOpt = op.getGroupByValues();
+                if (!groupValuesOpt.isPresent()) {
+                    throw new InterOpIllegalArgException(baseOp.getClass(), "groupValues", "not present");
+                }
+                List<Pair> groupKeys = (List<Pair>) groupKeysOpt.get().getArg();
+                if (groupKeys.isEmpty()) {
+                    throw new InterOpIllegalArgException(baseOp.getClass(), "groupKeys", "should not be empty if present");
+                }
+                // set group key
+                groupKeys.forEach(p -> {
+                    FfiVariable.ByValue key = (FfiVariable.ByValue) p.getValue0();
+                    FfiAlias.ByValue alias = (FfiAlias.ByValue) p.getValue1();
+                    irCoreLib.addGroupbyKeyAlias(ptrGroup, key, alias);
+                });
+                List<ArgAggFn> groupValues = (List<ArgAggFn>) groupValuesOpt.get().getArg();
+                if (groupValues.isEmpty()) {
+                    throw new InterOpIllegalArgException(baseOp.getClass(), "groupValues", "not present");
+                }
+                // set group value
+                groupValues.forEach(p -> {
+                    irCoreLib.addGroupbyAggFn(ptrGroup, ArgUtils.asFfiAggFn(p));
+                });
+                return ptrGroup;
+            }
+        },
+        DEDUP_OP {
+            @Override
+            public Pointer apply(InterOpBase baseOp) {
+                Pointer ptrDedup = irCoreLib.initDedupOperator();
+                DedupOp op = (DedupOp) baseOp;
+                Optional<OpArg> dedupKeysOpt = op.getDedupKeys();
+                if (!dedupKeysOpt.isPresent()) {
+                    throw new InterOpIllegalArgException(baseOp.getClass(), "dedupKeys", "not present");
+                }
+                List<FfiVariable.ByValue> dedupKeys = (List<FfiVariable.ByValue>) dedupKeysOpt.get().getArg();
+                if (dedupKeys.isEmpty()) {
+                    throw new InterOpIllegalArgException(baseOp.getClass(), "dedupKeys", "should not be empty if present");
+                }
+                dedupKeys.forEach(k -> {
+                    irCoreLib.addDedupKey(ptrDedup, k);
+                });
+                return ptrDedup;
+            }
         }
     }
 
@@ -314,6 +369,12 @@ public class IrPlan implements Closeable {
         } else if (base instanceof AuxiliaOp) {
             Pointer prtAuxilia = TransformFactory.AUXILIA_OP.apply(base);
             resultCode = irCoreLib.appendAuxiliaOperator(ptrPlan, prtAuxilia, oprIdx.getValue(), oprIdx);
+        } else if (base instanceof GroupOp) {
+            Pointer ptrGroup = TransformFactory.GROUP_OP.apply(base);
+            resultCode = irCoreLib.appendGroupbyOperator(ptrPlan, ptrGroup, oprIdx.getValue(), oprIdx);
+        } else if (base instanceof DedupOp) {
+            Pointer ptrDedup = TransformFactory.DEDUP_OP.apply(base);
+            resultCode = irCoreLib.appendDedupOperator(ptrPlan, ptrDedup, oprIdx.getValue(), oprIdx);
         } else {
             throw new InterOpUnsupportedException(base.getClass(), "unimplemented yet");
         }

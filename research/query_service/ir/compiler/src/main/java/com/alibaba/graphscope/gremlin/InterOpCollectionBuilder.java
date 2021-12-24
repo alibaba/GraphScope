@@ -24,6 +24,7 @@ import com.alibaba.graphscope.common.jna.type.FfiScanOpt;
 import com.google.common.collect.ImmutableMap;
 import org.apache.tinkerpop.gremlin.process.traversal.Step;
 import org.apache.tinkerpop.gremlin.process.traversal.Traversal;
+import org.apache.tinkerpop.gremlin.process.traversal.step.filter.DedupGlobalStep;
 import org.apache.tinkerpop.gremlin.process.traversal.step.filter.HasStep;
 import org.apache.tinkerpop.gremlin.process.traversal.step.filter.RangeGlobalStep;
 import org.apache.tinkerpop.gremlin.process.traversal.step.map.*;
@@ -34,9 +35,7 @@ import org.apache.tinkerpop.gremlin.tinkergraph.process.traversal.step.sideEffec
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -168,6 +167,82 @@ public class InterOpCollectionBuilder {
                 op.setProjectExprWithAlias(new OpArg(valueMap, OpArgTransformFactory.PROJECT_EXPR_FROM_BY_TRAVERSALS));
                 return op;
             }
+        },
+        GROUP_STEP {
+            @Override
+            public InterOpBase apply(Step step) {
+                GroupStep groupStep = (GroupStep) step;
+                Traversal.Admin key = getKeyTraversal(groupStep);
+                GroupOp op = new GroupOp();
+                op.setGroupByKeys(new OpArg(key, OpArgTransformFactory.GROUP_KEYS_FROM_TRAVERSAL));
+                Traversal.Admin value = getValueTraversal(groupStep);
+                op.setGroupByValues(new OpArg(value, OpArgTransformFactory.GROUP_VALUES_FROM_TRAVERSAL));
+                return op;
+            }
+
+            private Traversal.Admin getKeyTraversal(GroupStep step) {
+                return step.getKeyTraversal();
+            }
+
+            private Traversal.Admin getValueTraversal(GroupStep step) {
+                return step.getValueTraversal();
+            }
+        },
+        GROUP_COUNT_STEP {
+            @Override
+            public InterOpBase apply(Step step) {
+                GroupCountStep groupCountStep = (GroupCountStep) step;
+                Traversal.Admin key = getKeyTraversal(groupCountStep);
+                GroupOp op = new GroupOp();
+                op.setGroupByKeys(new OpArg(key, OpArgTransformFactory.GROUP_KEYS_FROM_TRAVERSAL));
+                Traversal.Admin value = getValueTraversal(groupCountStep);
+                op.setGroupByValues(new OpArg(value, OpArgTransformFactory.GROUP_VALUES_FROM_TRAVERSAL));
+                return op;
+            }
+
+            private Traversal.Admin getKeyTraversal(GroupCountStep step) {
+                List<Traversal.Admin> keyTraversals = step.getLocalChildren();
+                Traversal.Admin keyTraversal = (keyTraversals.isEmpty()) ? null : keyTraversals.get(0);
+                return keyTraversal;
+            }
+
+            private Traversal.Admin getValueTraversal(GroupCountStep step) {
+                Traversal.Admin countTraversal = new DefaultTraversal();
+                countTraversal.addStep(new CountGlobalStep(countTraversal));
+                countTraversal.setParent(step);
+                return countTraversal;
+            }
+        },
+        DEDUP_STEP {
+            @Override
+            public InterOpBase apply(Step step) {
+                DedupGlobalStep dedupStep = (DedupGlobalStep) step;
+                DedupOp op = new DedupOp();
+                Map<String, Traversal.Admin> tagTraversals = getDedupTagTraversal(dedupStep);
+                op.setDedupKeys(new OpArg(tagTraversals, OpArgTransformFactory.DEDUP_VARS_FROM_TRAVERSALS));
+                return op;
+            }
+
+            // dedup("a").by("name"): a -> "name"
+            private Map<String, Traversal.Admin> getDedupTagTraversal(DedupGlobalStep step) {
+                Set<String> dedupTags = step.getScopeKeys();
+                List<Traversal.Admin> dedupTraversals = step.getLocalChildren();
+                Map<String, Traversal.Admin> tagTraversals = new HashMap<>();
+                if (dedupTags.isEmpty() && dedupTraversals.isEmpty()) {
+                    return tagTraversals;
+                }
+                if (dedupTags.isEmpty()) {
+                    dedupTags = new HashSet<>();
+                    // set as head
+                    dedupTags.add("");
+                }
+                dedupTags.forEach(k -> {
+                    Traversal.Admin dedupTraversal = dedupTraversals.isEmpty() ? null : dedupTraversals.get(0);
+                    tagTraversals.put(k, dedupTraversal);
+                });
+                tagTraversals.entrySet().removeIf(e -> e.getKey().equals("") && e.getValue() == null);
+                return tagTraversals;
+            }
         }
     }
 
@@ -193,6 +268,12 @@ public class InterOpCollectionBuilder {
                 op = StepTransformFactory.ORDER_BY_STEP.apply(step);
             } else if (equalClass(step, PropertyMapStep.class)) {
                 op = StepTransformFactory.VALUE_MAP_STEP.apply(step);
+            } else if (equalClass(step, GroupStep.class)) {
+                op = StepTransformFactory.GROUP_STEP.apply(step);
+            } else if (equalClass(step, GroupCountStep.class)) {
+                op = StepTransformFactory.GROUP_COUNT_STEP.apply(step);
+            } else if (equalClass(step, DedupGlobalStep.class)) {
+                op = StepTransformFactory.DEDUP_STEP.apply(step);
             } else {
                 throw new UnsupportedStepException(step.getClass(), "unimplemented yet");
             }

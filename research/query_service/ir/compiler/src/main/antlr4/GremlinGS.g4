@@ -193,7 +193,8 @@ traversalMethod_dedup
 	;
 
 traversalMethod_group
-	: 'group' LPAREN RPAREN (DOT traversalMethod_group_keyby)? (DOT traversalMethod_group_valueby)?
+	: 'group' LPAREN RPAREN (DOT traversalMethod_group_keyby)?
+	| 'group' LPAREN RPAREN DOT traversalMethod_group_keyby DOT traversalMethod_group_valueby
 	;
 
 traversalMethod_groupCount
@@ -208,13 +209,11 @@ traversalMethod_group_keyby
     | 'by' LPAREN traversalMethod_values (DOT traversalMethod_as)? RPAREN
     ;
 
-// group().by(...).by() infers group().by(...).by(fold())
 // group().by(...).by(fold().as("value"))
 // group().by(...).by(count())
 // group().by(...).by(count().as("value"))
 traversalMethod_group_valueby
-    : 'by' LPAREN RPAREN
-    | 'by' LPAREN traversalMethod_aggregate_func (DOT traversalMethod_as)? RPAREN
+    : 'by' LPAREN traversalMethod_aggregate_func (DOT traversalMethod_as)? RPAREN
     ;
 
 traversalMethod_aggregate_func
@@ -230,7 +229,7 @@ traversalMethod_count
 // only one argument is permitted
 // values("name")
 traversalMethod_values
-    : 'values' LPAREN NonEmptyStringLiteral RPAREN
+    : 'values' LPAREN stringLiteral RPAREN
     ;
 
 // fold()
