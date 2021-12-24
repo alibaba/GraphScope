@@ -34,18 +34,10 @@ fn main() {
         total.push(res);
     }
     let elapsed = start.elapsed();
-    let mut cnt = 0;
-    for (i, r) in total.into_iter().enumerate() {
-        cnt += r;
-        if i < 10 || i > 99990 {
-            print!("{}, ", r);
-        } else {
-            print!(".")
-        }
-        if i % 10 == 0 {
-            println!()
-        }
-    }
-
-    println!("total found {} neighbors for {} vertices, used {:?}", cnt, config.start, elapsed)
+    total.sort();
+    println!("found neighbors for {} vertices, used {:?}", config.start, elapsed);
+    let cnt: usize = total.iter().sum();
+    let avg = cnt as f64 / config.start as f64;
+    let mid = total.len() / 2;
+    println!("min:{}\tavg:{}\tmid:{}\tmax:{}", total[0], avg, total[mid], total.last().unwrap())
 }
