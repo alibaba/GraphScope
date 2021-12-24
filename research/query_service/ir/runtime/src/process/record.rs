@@ -211,6 +211,9 @@ impl RecordKey {
     pub fn new(key_fields: Vec<Arc<Entry>>) -> Self {
         RecordKey { key_fields }
     }
+    pub fn take(self) -> Vec<Arc<Entry>> {
+        self.key_fields
+    }
 }
 
 impl Hash for RecordElement {
@@ -289,6 +292,8 @@ impl PartialOrd for Entry {
         }
     }
 }
+
+impl Eq for Entry {}
 
 pub struct RecordExpandIter<E> {
     tag: Option<NameOrId>,

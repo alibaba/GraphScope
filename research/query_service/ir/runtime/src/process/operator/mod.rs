@@ -13,8 +13,10 @@
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 
+pub mod accum;
 pub mod filter;
 pub mod flatmap;
+pub mod group;
 pub mod join;
 pub mod keyed;
 pub mod map;

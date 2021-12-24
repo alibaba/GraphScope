@@ -21,8 +21,8 @@ use ir_common::generated::common as common_pb;
 use ir_common::generated::results as result_pb;
 use pegasus::api::function::*;
 use pegasus::api::{
-    Collect, CorrelatedSubTask, Dedup, Filter, IterCondition, Iteration, Join, KeyBy, Limit, Map, Merge,
-    PartitionByKey, Sink, SortBy, SortLimitBy, Source,
+    Collect, CorrelatedSubTask, Dedup, Filter, FoldByKey, IterCondition, Iteration, Join, KeyBy, Limit,
+    Map, Merge, PartitionByKey, Sink, SortBy, SortLimitBy, Source,
 };
 use pegasus::result::ResultSink;
 use pegasus::stream::Stream;
@@ -34,9 +34,11 @@ use prost::Message;
 
 use crate::error::{FnExecError, FnGenResult};
 use crate::graph::partitioner::Partitioner;
-use crate::process::functions::{CompareFunction, JoinKeyGen, KeyFunction};
+use crate::process::functions::{CompareFunction, GroupGen, JoinKeyGen, KeyFunction};
+use crate::process::operator::accum::accumulator::Accumulator;
 use crate::process::operator::filter::FilterFuncGen;
 use crate::process::operator::flatmap::FlatMapFuncGen;
+use crate::process::operator::group::GroupFunctionGen;
 use crate::process::operator::join::JoinFunctionGen;
 use crate::process::operator::keyed::KeyFunctionGen;
 use crate::process::operator::map::{FilterMapFuncGen, MapFuncGen};
@@ -56,6 +58,7 @@ type RecordShuffle = Box<dyn RouteFunction<Record>>;
 type RecordCompare = Box<dyn CompareFunction<Record>>;
 type RecordJoin = Box<dyn JoinKeyGen<Record, RecordKey, Record>>;
 type RecordKeySelector = Box<dyn KeyFunction<Record, RecordKey, Record>>;
+type RecordGroup = Box<dyn GroupGen<Record, RecordKey, Record>>;
 type BinaryResource = Vec<u8>;
 
 pub struct IRJobCompiler {
@@ -114,6 +117,11 @@ impl FnGenerator {
     fn gen_cmp(&self, res: &BinaryResource) -> FnGenResult<RecordCompare> {
         let step = decode::<algebra_pb::logical_plan::Operator>(res)?;
         Ok(step.gen_cmp()?)
+    }
+
+    fn gen_group(&self, res: &BinaryResource) -> FnGenResult<RecordGroup> {
+        let step = decode::<algebra_pb::logical_plan::Operator>(res)?;
+        Ok(step.gen_group()?)
     }
 
     fn gen_subtask(&self, _res: &BinaryResource) -> FnGenResult<RecordLeftJoin> {
@@ -190,9 +198,31 @@ impl IRJobCompiler {
                     server_pb::operator_def::OpKind::Fold(_fold) => {
                         Err(BuildJobError::Unsupported("Fold is not supported yet".to_string()))?
                     }
-                    server_pb::operator_def::OpKind::Group(_group) => {
-                        Err(BuildJobError::Unsupported("Group is not supported yet".to_string()))?
+                    server_pb::operator_def::OpKind::Group(group) => {
+                        let group = self.udf_gen.gen_group(&group.resource)?;
+                        let group_key = group.gen_group_key()?;
+                        let group_accum = group.gen_group_accum()?;
+                        let group_map = group.gen_group_map()?;
+                        stream = stream
+                            .key_by(move |record| group_key.get_kv(record))?
+                            .fold_by_key(group_accum, || {
+                                |mut accumulator, next| {
+                                    accumulator.accum(next)?;
+                                    Ok(accumulator)
+                                }
+                            })?
+                            .unfold(|kv_map| {
+                                Ok(kv_map
+                                    .into_iter()
+                                    .map(|(key, mut accumulator)| {
+                                        accumulator.finalize().map(|value| (key, value))
+                                    })
+                                    .collect::<Result<Vec<_>, _>>()?
+                                    .into_iter())
+                            })?
+                            .map(move |key_value| group_map.exec(key_value))?;
                     }
+
                     server_pb::operator_def::OpKind::Dedup(dedup) => {
                         let selector = self.udf_gen.gen_key(&dedup.resource)?;
                         stream = stream
