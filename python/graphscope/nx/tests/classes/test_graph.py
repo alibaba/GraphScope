@@ -301,7 +301,7 @@ class TestGraph(_TestGraph):
         # test update
         for e in G.edges:
             G.edges[e]["weight"] = 2
-        ret = nx.builtin.closeness_centrality(G, instance="weight")
+        ret = nx.builtin.closeness_centrality(G, distance="weight")
         assert ret == {0: 0.5, 1: 0.5, 2: 0.5, 3: 0.5, 4: 0.5}
 
         # test copy
