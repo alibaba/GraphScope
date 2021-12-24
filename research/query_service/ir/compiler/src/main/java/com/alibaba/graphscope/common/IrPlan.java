@@ -20,7 +20,6 @@ import com.alibaba.graphscope.common.exception.AppendInterOpException;
 import com.alibaba.graphscope.common.exception.BuildPhysicalException;
 import com.alibaba.graphscope.common.exception.InterOpIllegalArgException;
 import com.alibaba.graphscope.common.exception.InterOpUnsupportedException;
-import com.alibaba.graphscope.common.intermediate.AliasArg;
 import com.alibaba.graphscope.common.intermediate.operator.*;
 import com.alibaba.graphscope.common.jna.IrCoreLibrary;
 import com.alibaba.graphscope.common.jna.type.*;
@@ -99,8 +98,8 @@ public class IrPlan implements Closeable {
 
                 Optional<OpArg> aliasOpt = baseOp.getAlias();
                 if (aliasOpt.isPresent()) {
-                    AliasArg alias = (AliasArg) aliasOpt.get().getArg();
-                    irCoreLib.setScanAlias(scan, alias.getAlias());
+                    FfiAlias.ByValue alias = (FfiAlias.ByValue) aliasOpt.get().getArg();
+                    irCoreLib.setScanAlias(scan, alias);
                 }
                 return scan;
             }
@@ -156,8 +155,8 @@ public class IrPlan implements Closeable {
 
                 Optional<OpArg> aliasOpt = baseOp.getAlias();
                 if (aliasOpt.isPresent()) {
-                    AliasArg alias = (AliasArg) aliasOpt.get().getArg();
-                    irCoreLib.setEdgexpdAlias(expand, alias.getAlias());
+                    FfiAlias.ByValue alias = (FfiAlias.ByValue) aliasOpt.get().getArg();
+                    irCoreLib.setEdgexpdAlias(expand, alias);
                 }
                 return expand;
             }
@@ -200,8 +199,8 @@ public class IrPlan implements Closeable {
                 Pointer ptrProject = irCoreLib.initProjectOperator(false);
                 exprList.forEach(pair -> {
                     String expr = (String) pair.getValue0();
-                    AliasArg alias = (AliasArg) pair.getValue1();
-                    irCoreLib.addProjectExprAlias(ptrProject, expr, alias.getAlias(), alias.isQueryGiven());
+                    FfiAlias.ByValue alias = (FfiAlias.ByValue) pair.getValue1();
+                    irCoreLib.addProjectExprAlias(ptrProject, expr, alias);
                 });
                 if (baseOp.getAlias().isPresent()) {
                     throw new InterOpIllegalArgException(baseOp.getClass(), "alias", "unimplemented yet");
@@ -255,8 +254,8 @@ public class IrPlan implements Closeable {
 
                 Optional<OpArg> aliasOpt = baseOp.getAlias();
                 if (aliasOpt.isPresent()) {
-                    AliasArg alias = (AliasArg) aliasOpt.get().getArg();
-                    irCoreLib.setAuxiliaAlias(ptrAuxilia, alias.getAlias(), alias.isQueryGiven());
+                    FfiAlias.ByValue alias = (FfiAlias.ByValue) aliasOpt.get().getArg();
+                    irCoreLib.setAuxiliaAlias(ptrAuxilia, alias);
                 }
                 return ptrAuxilia;
             }

@@ -16,10 +16,10 @@
 
 package com.alibaba.graphscope.gremlin;
 
-import com.alibaba.graphscope.common.intermediate.AliasArg;
 import com.alibaba.graphscope.common.intermediate.ArgUtils;
 import com.alibaba.graphscope.common.intermediate.operator.InterOpBase;
 import com.alibaba.graphscope.common.intermediate.operator.ScanFusionOp;
+import com.alibaba.graphscope.common.jna.type.FfiAlias;
 import com.alibaba.graphscope.common.jna.type.FfiConst;
 import com.alibaba.graphscope.common.jna.type.FfiNameOrId;
 import com.alibaba.graphscope.common.jna.type.FfiScanOpt;
@@ -87,7 +87,7 @@ public class GraphStepTest {
     public void g_V_as_test() {
         Traversal traversal = g.V().as("a");
         ScanFusionOp op = (ScanFusionOp) generateInterOpFromBuilder(traversal, 0);
-        AliasArg expected = new AliasArg(ArgUtils.strAsNameId("a"));
+        FfiAlias.ByValue expected = ArgUtils.asFfiAlias("a", true);
         Assert.assertEquals(expected, op.getAlias().get().getArg());
     }
 
@@ -95,7 +95,7 @@ public class GraphStepTest {
     public void g_E_as_test() {
         Traversal traversal = g.E().as("a");
         ScanFusionOp op = (ScanFusionOp) generateInterOpFromBuilder(traversal, 0);
-        AliasArg expected = new AliasArg(ArgUtils.strAsNameId("a"));
+        FfiAlias.ByValue expected = ArgUtils.asFfiAlias("a", true);
         Assert.assertEquals(expected, op.getAlias().get().getArg());
     }
 

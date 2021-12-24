@@ -18,8 +18,8 @@ package com.alibaba.graphscope.common.intermediate.operator;
 
 import com.alibaba.graphscope.common.IrPlan;
 import com.alibaba.graphscope.common.TestUtils;
-import com.alibaba.graphscope.common.intermediate.AliasArg;
 import com.alibaba.graphscope.common.intermediate.ArgUtils;
+import com.alibaba.graphscope.common.jna.type.FfiAlias;
 import com.google.common.collect.Sets;
 import org.junit.After;
 import org.junit.Assert;
@@ -45,7 +45,7 @@ public class AuxiliaOpTest {
     @Test
     public void auxiliaAliasTest() throws IOException {
         AuxiliaOp op = new AuxiliaOp();
-        AliasArg alias = new AliasArg(ArgUtils.strAsNameId("a"), true);
+        FfiAlias.ByValue alias = ArgUtils.asFfiAlias("a", true);
         op.setAlias(new OpArg(alias, Function.identity()));
         irPlan.appendInterOp(op);
         String actual = irPlan.getPlanAsJson();

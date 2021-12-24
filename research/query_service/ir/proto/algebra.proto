@@ -104,7 +104,7 @@ message GroupBy {
     // The aggregate function
     Aggregate aggregate = 2;
     // The alias for the aggregated value
-    common.NameOrId alias = 3;
+    Alias alias = 3;
   }
   message KeyAlias {
     // The key to perform grouping

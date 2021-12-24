@@ -17,7 +17,6 @@
 package com.alibaba.graphscope.gremlin;
 
 import com.alibaba.graphscope.common.exception.OpArgIllegalException;
-import com.alibaba.graphscope.common.intermediate.AliasArg;
 import com.alibaba.graphscope.common.intermediate.ArgUtils;
 import com.alibaba.graphscope.common.jna.type.*;
 import com.alibaba.graphscope.common.jna.type.FfiDirection;
@@ -143,10 +142,10 @@ public class OpArgTransformFactory {
     public static Function<VertexStep, List<FfiNameOrId.ByValue>> EDGE_LABELS_FROM_STEP = (VertexStep s1) ->
             Arrays.stream(s1.getEdgeLabels()).map(k -> ArgUtils.strAsNameId(k)).collect(Collectors.toList());
 
-    public static Function<Map<String, Traversal.Admin>, List<Pair<String, AliasArg>>>
+    public static Function<Map<String, Traversal.Admin>, List<Pair<String, FfiAlias.ByValue>>>
             PROJECT_EXPR_FROM_BY_TRAVERSALS = (Map<String, Traversal.Admin> map) -> {
-        // return List<<expr, AliasArg>>
-        List<Pair<String, AliasArg>> exprWithAlias = new ArrayList<>();
+        // return List<<expr, FfiAlias>>
+        List<Pair<String, FfiAlias.ByValue>> exprWithAlias = new ArrayList<>();
         map.forEach((k, v) -> {
             String expr = "@" + k;
             if (v == null || v instanceof IdentityTraversal) { // select(..)
@@ -172,8 +171,8 @@ public class OpArgTransformFactory {
         return exprWithAlias;
     };
 
-    private static Pair<String, AliasArg> makeProjectPair(String expr) {
-        return Pair.with(expr, new AliasArg(ArgUtils.strAsNameId(expr), false));
+    private static Pair<String, FfiAlias.ByValue> makeProjectPair(String expr) {
+        return Pair.with(expr, ArgUtils.asFfiAlias(expr, false));
     }
 
     public static Function<List<Pair<Traversal.Admin, Comparator>>, List<Pair<FfiVariable.ByValue, FfiOrderOpt>>>
@@ -236,5 +235,6 @@ public class OpArgTransformFactory {
     }
 
     // isQueryGiven is set as true by default
-    public static Function<String, AliasArg> STEP_TAG_TO_OP_ALIAS = (String tag) -> new AliasArg(ArgUtils.strAsNameId(tag));
+    public static Function<String, FfiAlias.ByValue> STEP_TAG_TO_OP_ALIAS = (String tag) ->
+            ArgUtils.asFfiAlias(tag, true);
 }
