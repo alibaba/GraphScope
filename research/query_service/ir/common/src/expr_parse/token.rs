@@ -14,7 +14,8 @@
 //! limitations under the License.
 //!
 
-use crate::expr::error::{ExprError, ExprResult};
+use crate::expr_parse::error::{ExprError, ExprResult};
+use crate::expr_parse::ExprToken;
 
 #[derive(Debug, PartialEq, Clone)]
 pub enum Token {
@@ -54,10 +55,10 @@ pub enum Token {
     StrArray(Vec<String>), // a string array
 }
 
-impl Token {
+impl ExprToken for Token {
     #[inline]
-    pub fn is_operand(&self) -> bool {
-        use crate::expr::token::Token::*;
+    fn is_operand(&self) -> bool {
+        use crate::expr_parse::token::Token::*;
         match self {
             Identifier(_) | Float(_) | Int(_) | Boolean(_) | String(_) | IntArray(_) | FloatArray(_)
             | StrArray(_) => true,
@@ -66,26 +67,24 @@ impl Token {
     }
 
     #[inline]
-    pub fn is_left_brace(&self) -> bool {
+    fn is_left_brace(&self) -> bool {
         self == &Token::LBrace
     }
 
     #[inline]
-    pub fn is_right_brace(&self) -> bool {
+    fn is_right_brace(&self) -> bool {
         self == &Token::RBrace
     }
 
     #[inline]
-    /// Returns the precedence of the operator.
-    /// A high precedence means that the operator has larger priority to get operated
-    pub fn precedence(&self) -> i32 {
-        use crate::expr::token::Token::*;
+    fn precedence(&self) -> i32 {
+        use crate::expr_parse::token::Token::*;
         match self {
             Plus | Minus => 95,
             Star | Slash | Percent => 100,
             Hat => 120,
 
-            Eq | Ne | Gt | Lt | Ge | Le => 80,
+            Eq | Ne | Gt | Lt | Ge | Le | Within | Without => 80,
             And => 75,
             Or => 70,
             Not => 110,

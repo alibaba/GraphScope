@@ -30,6 +30,11 @@
                   },
                   {
                     "item": {
+                      "Logical": 0
+                    }
+                  },
+                  {
+                    "item": {
                       "Const": {
                         "value": {
                           "item": {
@@ -37,11 +42,6 @@
                           }
                         }
                       }
-                    }
-                  },
-                  {
-                    "item": {
-                      "Logical": 0
                     }
                   }
                 ]

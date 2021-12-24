@@ -23,7 +23,6 @@ use std::rc::Rc;
 
 use ir_common::error::{ParsePbError, ParsePbResult};
 use ir_common::generated::algebra as pb;
-use ir_common::generated::algebra::logical_plan::operator::Opr;
 use vec_map::VecMap;
 
 /// An internal representation of the pb-[`Node`].
@@ -306,24 +305,6 @@ impl LogicalPlan {
             .iter()
             .next()
             .map(|(_, node)| node.clone())
-    }
-
-    /// Determine whether the logical plan is valid while checking the follows:
-    /// * The root operator must be a Scan operator
-    pub fn sanity_check(&self) -> bool {
-        if let Some(root) = self.root() {
-            let root_ref = root.borrow();
-            if let Some(root_opr) = &root_ref.opr.opr {
-                match root_opr {
-                    Opr::Scan(_) => true,
-                    _ => false,
-                }
-            } else {
-                false
-            }
-        } else {
-            false
-        }
     }
 
     /// Append branch plans to a certain node which has **no** children in this logical plan.

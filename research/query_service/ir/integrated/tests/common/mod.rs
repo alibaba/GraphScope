@@ -23,6 +23,7 @@ pub mod test {
     use std::sync::Once;
 
     use graph_proxy::{InitializeJobCompiler, QueryExpGraph};
+    use ir_common::expr_parse::str_to_suffix_expr_pb;
     use ir_common::generated::algebra as pb;
     use ir_common::generated::common as common_pb;
     use ir_common::generated::results as result_pb;
@@ -31,8 +32,6 @@ pub mod test {
     use pegasus::{run_opt, Configuration, JobConf, StartupError};
     use pegasus_server::service::JobParser;
     use pegasus_server::JobRequest;
-    use runtime::expr::to_suffix_expr_pb;
-    use runtime::expr::token::tokenize;
     use runtime::graph::element::{Edge, Vertex, VertexOrEdge};
     use runtime::graph::property::{DefaultDetails, DynDetails};
     use runtime::graph::ID;

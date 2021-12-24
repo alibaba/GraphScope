@@ -16,7 +16,7 @@
 pub type ParsePbResult<T> = Result<T, ParsePbError>;
 
 /// Errors that occur when parse a pb struct
-#[derive(Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq)]
 pub enum ParsePbError {
     /// Parse pb structure error
     ParseError(String),

@@ -79,13 +79,13 @@ mod tests {
     use std::collections::HashMap;
 
     use dyn_type::Object;
+    use ir_common::expr_parse::str_to_suffix_expr_pb;
     use ir_common::generated::algebra as pb;
     use ir_common::NameOrId;
     use pegasus::api::{Map, Sink};
     use pegasus::result::ResultStream;
     use pegasus::JobConf;
 
-    use crate::expr::str_to_expr_pb;
     use crate::graph::element::{GraphElement, Vertex};
     use crate::graph::property::{DefaultDetails, DynDetails};
     use crate::process::operator::map::MapFuncGen;
@@ -114,7 +114,7 @@ mod tests {
     fn project_single_mapping_test() {
         let project_opr_pb = pb::Project {
             mappings: vec![pb::project::ExprAlias {
-                expr: Some(str_to_expr_pb("@.id".to_string()).unwrap()),
+                expr: Some(str_to_suffix_expr_pb("@.id".to_string()).unwrap()),
                 alias: Some(pb::Alias { alias: None, is_query_given: false }),
             }],
             is_append: false,
@@ -138,7 +138,7 @@ mod tests {
     fn project_tag_single_mapping_test() {
         let project_opr_pb = pb::Project {
             mappings: vec![pb::project::ExprAlias {
-                expr: Some(str_to_expr_pb("@a.name".to_string()).unwrap()),
+                expr: Some(str_to_suffix_expr_pb("@a.name".to_string()).unwrap()),
                 alias: Some(pb::Alias {
                     alias: Some(NameOrId::Str("b".to_string()).into()),
                     is_query_given: false,
@@ -169,14 +169,14 @@ mod tests {
         let project_opr_pb = pb::Project {
             mappings: vec![
                 pb::project::ExprAlias {
-                    expr: Some(str_to_expr_pb("@.age".to_string()).unwrap()),
+                    expr: Some(str_to_suffix_expr_pb("@.age".to_string()).unwrap()),
                     alias: Some(pb::Alias {
                         alias: Some(NameOrId::Str("b".to_string()).into()),
                         is_query_given: false,
                     }),
                 },
                 pb::project::ExprAlias {
-                    expr: Some(str_to_expr_pb("@.name".to_string()).unwrap()),
+                    expr: Some(str_to_suffix_expr_pb("@.name".to_string()).unwrap()),
                     alias: Some(pb::Alias {
                         alias: Some(NameOrId::Str("c".to_string()).into()),
                         is_query_given: false,
@@ -210,14 +210,14 @@ mod tests {
         let project_opr_pb = pb::Project {
             mappings: vec![
                 pb::project::ExprAlias {
-                    expr: Some(str_to_expr_pb("@.age".to_string()).unwrap()),
+                    expr: Some(str_to_suffix_expr_pb("@.age".to_string()).unwrap()),
                     alias: Some(pb::Alias {
                         alias: Some(NameOrId::Str("b".to_string()).into()),
                         is_query_given: false,
                     }),
                 },
                 pb::project::ExprAlias {
-                    expr: Some(str_to_expr_pb("@.name".to_string()).unwrap()),
+                    expr: Some(str_to_suffix_expr_pb("@.name".to_string()).unwrap()),
                     alias: Some(pb::Alias { alias: None, is_query_given: false }),
                 },
             ],
@@ -248,14 +248,14 @@ mod tests {
         let project_opr_pb = pb::Project {
             mappings: vec![
                 pb::project::ExprAlias {
-                    expr: Some(str_to_expr_pb("@a.age".to_string()).unwrap()),
+                    expr: Some(str_to_suffix_expr_pb("@a.age".to_string()).unwrap()),
                     alias: Some(pb::Alias {
                         alias: Some(NameOrId::Str("b".to_string()).into()),
                         is_query_given: false,
                     }),
                 },
                 pb::project::ExprAlias {
-                    expr: Some(str_to_expr_pb("@a.name".to_string()).unwrap()),
+                    expr: Some(str_to_suffix_expr_pb("@a.name".to_string()).unwrap()),
                     alias: Some(pb::Alias {
                         alias: Some(NameOrId::Str("c".to_string()).into()),
                         is_query_given: false,
@@ -306,21 +306,21 @@ mod tests {
         let project_opr_pb = pb::Project {
             mappings: vec![
                 pb::project::ExprAlias {
-                    expr: Some(str_to_expr_pb("@a.age".to_string()).unwrap()),
+                    expr: Some(str_to_suffix_expr_pb("@a.age".to_string()).unwrap()),
                     alias: Some(pb::Alias {
                         alias: Some(NameOrId::Str("c".to_string()).into()),
                         is_query_given: false,
                     }),
                 },
                 pb::project::ExprAlias {
-                    expr: Some(str_to_expr_pb("@a.name".to_string()).unwrap()),
+                    expr: Some(str_to_suffix_expr_pb("@a.name".to_string()).unwrap()),
                     alias: Some(pb::Alias {
                         alias: Some(NameOrId::Str("d".to_string()).into()),
                         is_query_given: false,
                     }),
                 },
                 pb::project::ExprAlias {
-                    expr: Some(str_to_expr_pb("@b.name".to_string()).unwrap()),
+                    expr: Some(str_to_suffix_expr_pb("@b.name".to_string()).unwrap()),
                     alias: Some(pb::Alias {
                         alias: Some(NameOrId::Str("e".to_string()).into()),
                         is_query_given: false,
@@ -359,7 +359,7 @@ mod tests {
     fn project_single_mapping_appended_test() {
         let project_opr_pb = pb::Project {
             mappings: vec![pb::project::ExprAlias {
-                expr: Some(str_to_expr_pb("@a.age".to_string()).unwrap()),
+                expr: Some(str_to_suffix_expr_pb("@a.age".to_string()).unwrap()),
                 alias: Some(pb::Alias {
                     alias: Some(NameOrId::Str("b".to_string()).into()),
                     is_query_given: false,
@@ -413,7 +413,7 @@ mod tests {
     fn project_empty_mapping_alias_test() {
         let project_opr_pb = pb::Project {
             mappings: vec![pb::project::ExprAlias {
-                expr: Some(str_to_expr_pb("@.id".to_string()).unwrap()),
+                expr: Some(str_to_suffix_expr_pb("@.id".to_string()).unwrap()),
                 alias: None,
             }],
             is_append: true,

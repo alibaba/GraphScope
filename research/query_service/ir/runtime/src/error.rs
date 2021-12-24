@@ -18,7 +18,7 @@ use pegasus::api::function::DynError;
 use pegasus::BuildJobError;
 use prost::DecodeError;
 
-use crate::expr::error::ExprError;
+use crate::expr::ExprEvalError;
 
 pub type FnGenResult<T> = Result<T, FnGenError>;
 
@@ -111,7 +111,7 @@ pub enum FnExecError {
     /// Keyed error
     GetTagError(String),
     /// Evaluating expressions error
-    ExprEvalError(ExprError),
+    ExprEvalError(ExprEvalError),
     /// Unexpected data type error
     UnExpectedData(String),
     /// Accumulate error
@@ -158,8 +158,8 @@ impl std::fmt::Display for FnExecError {
 
 impl std::error::Error for FnExecError {}
 
-impl From<ExprError> for FnExecError {
-    fn from(e: ExprError) -> Self {
+impl From<ExprEvalError> for FnExecError {
+    fn from(e: ExprEvalError) -> Self {
         FnExecError::ExprEvalError(e)
     }
 }
