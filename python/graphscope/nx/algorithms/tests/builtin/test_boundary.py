@@ -65,13 +65,13 @@ class TestEdgeBoundary:
         assert list(nx.builtin.edge_boundary(P10, [0, 1, 2])) == [(2, 3)]
         assert sorted(nx.builtin.edge_boundary(P10, [3, 4, 5])) == [(3, 2), (5, 6)]
         assert sorted(nx.builtin.edge_boundary(P10, [2, 3, 4, 5, 6])) == [
-            [2, 1],
-            [6, 7],
+            (2, 1),
+            (6, 7),
         ]
         assert list(nx.builtin.edge_boundary(P10, [7, 8, 9])) == [(7, 6)]
         assert sorted(nx.builtin.edge_boundary(P10, [0, 1, 2], [2, 3, 4])) == [
-            [1, 2],
-            [2, 3],
+            (1, 2),
+            (2, 3),
         ]
 
     def test_complete_graph(self):
