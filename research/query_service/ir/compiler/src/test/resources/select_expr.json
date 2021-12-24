@@ -24,6 +24,11 @@
                 },
                 {
                   "item": {
+                    "Logical": 0
+                  }
+                },
+                {
+                  "item": {
                     "Const": {
                       "value": {
                         "item": {
@@ -35,7 +40,7 @@
                 },
                 {
                   "item": {
-                    "Logical": 0
+                    "Logical": 8
                   }
                 },
                 {
@@ -56,6 +61,11 @@
                 },
                 {
                   "item": {
+                    "Logical": 0
+                  }
+                },
+                {
+                  "item": {
                     "Const": {
                       "value": {
                         "item": {
@@ -63,16 +73,6 @@
                         }
                       }
                     }
-                  }
-                },
-                {
-                  "item": {
-                    "Logical": 0
-                  }
-                },
-                {
-                  "item": {
-                    "Logical": 8
                   }
                 }
               ]
