@@ -78,7 +78,9 @@ pub trait AsPhysical {
     fn add_job_builder(&self, builder: &mut JobBuilder) -> PhysicalResult<()>;
 
     /// To conduct necessary post processing before transforming into a physical plan.
-    fn post_process(&mut self) -> PhysicalResult<()> { Ok(()) }
+    fn post_process(&mut self) -> PhysicalResult<()> {
+        Ok(())
+    }
 }
 
 #[derive(PartialEq)]
@@ -462,7 +464,9 @@ mod test {
         let mut logical_plan = LogicalPlan::with_root(Node::new(0, source_opr.clone()));
         logical_plan.append_operator_as_node(project_opr.clone(), vec![0]); // node 1
         let mut builder = JobBuilder::default();
-        logical_plan.add_job_builder(&mut builder).unwrap();
+        logical_plan
+            .add_job_builder(&mut builder)
+            .unwrap();
 
         let mut expected_builder = JobBuilder::default();
         let project_opr = pb::logical_plan::Operator::from(pb::Project {

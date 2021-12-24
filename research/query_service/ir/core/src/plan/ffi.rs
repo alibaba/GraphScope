@@ -917,9 +917,7 @@ mod groupby {
     /// Initialize an aggregate function with empty value to aggregate.
     /// To add value to aggregate, call `add_agg_value()`
     #[no_mangle]
-    pub extern "C" fn init_agg_fn(
-        aggregate: FfiAggOpt, alias: FfiAlias,
-    ) -> FfiAggFn {
+    pub extern "C" fn init_agg_fn(aggregate: FfiAggOpt, alias: FfiAlias) -> FfiAggFn {
         let vars: Box<Vec<FfiVariable>> = Box::new(vec![]);
         FfiAggFn { vars: Box::into_raw(vars) as *const FfiVariable, aggregate, alias }
     }
