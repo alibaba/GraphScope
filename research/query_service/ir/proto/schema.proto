@@ -40,11 +40,11 @@ message Relation {
   // source label id
   int32 src_id = 1;
   // source label name
-  int32 src_name = 2;
+  string src_name = 2;
   // destination label id
   int32 dst_id = 3;
   // destination label name
-  int32 dst_name = 4;
+  string dst_name = 4;
   // edge label id
   int32 id = 5;
   // edge label name

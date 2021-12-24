@@ -27,7 +27,7 @@ use ir_common::generated::algebra::logical_plan::operator::Opr;
 use ir_common::generated::common as common_pb;
 use vec_map::VecMap;
 
-use crate::plan::meta::MetaData;
+use crate::plan::meta::{MetaData, META_DATA};
 use crate::JsonIO;
 
 /// Record any error while transforming ir to a pegasus physical plan
@@ -93,8 +93,6 @@ pub(crate) struct LogicalPlan {
     /// To record the total number of operators ever created in the logical plan,
     /// **ignorant of the removed nodes**
     pub total_size: usize,
-    /// The metadata including the storage schema that will affect the plan
-    pub meta: MetaData,
 }
 
 impl PartialEq for LogicalPlan {
@@ -162,7 +160,6 @@ impl TryFrom<pb::LogicalPlan> for LogicalPlan {
         let plan = LogicalPlan {
             total_size: nodes.len(),
             nodes: VecMap::from_iter(nodes.into_iter().enumerate()),
-            meta: MetaData::default(),
         };
 
         Ok(plan)
@@ -248,7 +245,7 @@ impl LogicalPlan {
     pub fn with_root(node: Node) -> Self {
         let mut nodes = VecMap::new();
         nodes.insert(node.id as usize, Rc::new(RefCell::new(node)));
-        Self { nodes, total_size: 1, meta: MetaData::default() }
+        Self { nodes, total_size: 1 }
     }
 
     /// Get a node reference from the logical plan
@@ -290,7 +287,9 @@ impl LogicalPlan {
     pub fn append_operator_as_node(
         &mut self, mut opr: pb::logical_plan::Operator, parent_ids: Vec<u32>,
     ) -> LogicalResult<i32> {
-        opr.preprocess(&self.meta)?;
+        if let Ok(meta) = META_DATA.read() {
+            opr.preprocess(&meta)?;
+        }
         Ok(self.append_node(Node::new(self.total_size as u32, opr), parent_ids))
     }
 
@@ -464,15 +463,17 @@ pub trait AsLogical {
 impl AsLogical for common_pb::Property {
     fn preprocess(&mut self, meta: &MetaData) -> LogicalResult<()> {
         if let Some(schema) = &meta.schema {
-            if let Some(prop_key) = &mut self.item {
-                match prop_key {
-                    common_pb::property::Item::Key(key) => {
-                        *key = schema
-                            .get_column_id_from_pb(key)
-                            .ok_or(LogicalError::ColumnNotExist)?
-                            .into();
+            if schema.is_column_id() {
+                if let Some(prop_key) = &mut self.item {
+                    match prop_key {
+                        common_pb::property::Item::Key(key) => {
+                            *key = schema
+                                .get_column_id_from_pb(key)
+                                .ok_or(LogicalError::ColumnNotExist)?
+                                .into();
+                        }
+                        _ => {}
                     }
-                    _ => {}
                 }
             }
         }
@@ -523,17 +524,21 @@ impl AsLogical for pb::QueryParams {
                 pred.preprocess(meta)?;
             }
             let schema = meta.schema.as_ref().unwrap();
-            for table in self.table_names.iter_mut() {
-                *table = schema
-                    .get_table_id_from_pb(table)
-                    .ok_or(LogicalError::TableNotExist)?
-                    .into();
+            if schema.is_table_id() {
+                for table in self.table_names.iter_mut() {
+                    *table = schema
+                        .get_table_id_from_pb(table)
+                        .ok_or(LogicalError::TableNotExist)?
+                        .into();
+                }
             }
-            for column in self.columns.iter_mut() {
-                *column = schema
-                    .get_column_id_from_pb(column)
-                    .ok_or(LogicalError::ColumnNotExist)?
-                    .into();
+            if schema.is_column_id() {
+                for column in self.columns.iter_mut() {
+                    *column = schema
+                        .get_column_id_from_pb(column)
+                        .ok_or(LogicalError::ColumnNotExist)?
+                        .into();
+                }
             }
         }
         Ok(())
