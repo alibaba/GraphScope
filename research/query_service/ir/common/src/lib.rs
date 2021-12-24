@@ -159,6 +159,21 @@ impl TryFrom<common_pb::NameOrId> for NameOrId {
     }
 }
 
+// TODO: is_query_given in pb::Alias is not used for now
+impl TryFrom<pb::Alias> for Option<NameOrId> {
+    type Error = ParsePbError;
+
+    fn try_from(alias_pb: pb::Alias) -> ParsePbResult<Self>
+    where
+        Self: Sized,
+    {
+        Ok(alias_pb
+            .alias
+            .map(|alias| NameOrId::try_from(alias))
+            .transpose()?)
+    }
+}
+
 impl From<NameOrId> for common_pb::NameOrId {
     fn from(tag: NameOrId) -> Self {
         let name_or_id = match tag {
