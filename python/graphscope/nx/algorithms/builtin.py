@@ -771,7 +771,6 @@ def node_boundary(G, nbunch1, nbunch2=None):
             n2json = json.dumps(list(nbunch2))
         else:
             n2json = ""
-        print("n2json", n2json)
         ctx = AppAssets(algo="node_boundary", context="tensor")(G, n1json, n2json)
         return set(ctx.to_numpy("r", axis=0).tolist())
 
