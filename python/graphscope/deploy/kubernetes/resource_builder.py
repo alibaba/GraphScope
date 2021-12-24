@@ -1115,7 +1115,7 @@ class GSEtcdBuilder(object):
                         ],
                         "volumeMounts": volumeMounts or None,
                         "livenessProbe": self.build_liveness_probe().build(),
-                        "readinessProbe": None,
+                        "readinessProbe": self.build_readiness_probe().build(),
                         "lifecycle": None,
                     }
                 )
@@ -1135,14 +1135,21 @@ class GSEtcdBuilder(object):
 
         return pods_builders, svc_builders
 
-    def build_liveness_probe(self):
-        liveness_cmd = [
+    def build_probe_cmd(self):
+        return [
             "/bin/sh",
             "-ec",
             "ETCDCTL_API=3 etcdctl --endpoints=http://[127.0.0.1]:%s get foo"
             % str(self._listen_client_service_port),
         ]
+
+    def build_liveness_probe(self):
+        liveness_cmd = self.build_probe_cmd()
         return ExecProbeBuilder(liveness_cmd, timeout=15, failure_thresh=8)
+
+    def build_readiness_probe(self):
+        readiness_cmd = self.build_probe_cmd()
+        return ExecProbeBuilder(readiness_cmd, timeout=15, period=10, failure_thresh=8)
 
 
 class GSGraphManagerBuilder(DeploymentBuilder):
