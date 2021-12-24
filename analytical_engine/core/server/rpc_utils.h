@@ -27,9 +27,9 @@
 #include "core/config.h"
 #include "core/error.h"
 #include "core/server/command_detail.h"
-#include "proto/attr_value.pb.h"
-#include "proto/op_def.pb.h"
-#include "proto/types.pb.h"
+#include "proto/graphscope/proto/attr_value.pb.h"
+#include "proto/graphscope/proto/op_def.pb.h"
+#include "proto/graphscope/proto/types.pb.h"
 
 namespace gs {
 namespace rpc {

@@ -40,7 +40,7 @@
 #include "core/object/i_fragment_wrapper.h"
 #include "core/object/projector.h"
 #include "core/server/rpc_utils.h"
-#include "proto/types.pb.h"
+#include "proto/graphscope/proto/types.pb.h"
 
 namespace gs {
 

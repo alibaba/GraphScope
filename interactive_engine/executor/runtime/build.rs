@@ -26,6 +26,7 @@ fn main() {
 
     println!("cargo:rustc-link-search=/usr/local/lib");
     println!("cargo:rustc-link-search=/usr/local/lib64");
+    println!("cargo:rustc-link-search=/opt/homebrew/lib");
     match env::var("VINEYARD_ROOT_DIR") {
         Ok(val) => {
             println!("cargo:rustc-link-search={}/lib", val);

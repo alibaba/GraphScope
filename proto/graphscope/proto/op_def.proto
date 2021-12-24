@@ -17,11 +17,11 @@ syntax = "proto3";
 
 package gs.rpc;
 
-import "proto/attr_value.proto";
-import "proto/error_codes.proto";
-import "proto/graph_def.proto";
-import "proto/types.proto";
-import "proto/query_args.proto";
+import "graphscope/proto/attr_value.proto";
+import "graphscope/proto/error_codes.proto";
+import "graphscope/proto/graph_def.proto";
+import "graphscope/proto/types.proto";
+import "graphscope/proto/query_args.proto";
 
 message OpDef {
   // The name given to this operator.

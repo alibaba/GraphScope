@@ -17,6 +17,7 @@
 #
 
 import os
+import platform
 import sys
 
 try:
@@ -24,7 +25,10 @@ try:
 
     import vineyard
 
-    with vineyard.envvars("VINEYARD_USE_LOCAL_REGISTRY", "TRUE"):
+    ctx = dict()
+    if platform.system() != "Darwin":
+        ctx["VINEYARD_USE_LOCAL_REGISTRY"] = "TRUE"
+    with vineyard.envvars(ctx):
         import graphlearn
 
     try:

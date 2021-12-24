@@ -58,6 +58,7 @@ include(CheckLibraryExists)
 include(CheckCXXSourceRuns)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 include_directories(${PROJECT_SOURCE_DIR})
+include_directories(${PROJECT_SOURCE_DIR}/proto)
 
 # Set flags
 set(CMAKE_CXX_STANDARD 14)
@@ -210,12 +211,12 @@ else ()
 endif ()
 
 # Generate proto
-execute_process(COMMAND python3 proto/proto_generator.py "${PROJECT_SOURCE_DIR}" --cpp
+execute_process(COMMAND python3 proto/graphscope/proto/proto_generator.py "${PROJECT_SOURCE_DIR}/proto" --cpp
         WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/..)
-execute_process(COMMAND python3 proto/proto_generator.py "${PROJECT_SOURCE_DIR}/../python/graphscope" --python
+execute_process(COMMAND python3 proto/graphscope/proto/proto_generator.py "${PROJECT_SOURCE_DIR}/../python" --python
         WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/..)
 
-file(GLOB PROTO_CPP_FILES "proto/*.cc")
+file(GLOB PROTO_CPP_FILES "proto/graphscope/proto/*.cc")
 file(GLOB CORE_GS_FILES "core/*.cc" "core/java/javasdk.cc")
 file(GLOB CORE_RPC_SRC_FILES "core/server/*.cc")
 

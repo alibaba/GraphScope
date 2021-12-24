@@ -33,9 +33,9 @@
 #include "vineyard/basic/ds/arrow_utils.h"
 
 #include "core/server/rpc_utils.h"
-#include "proto/attr_value.pb.h"
-#include "proto/op_def.pb.h"
-#include "proto/types.pb.h"
+#include "proto/graphscope/proto/attr_value.pb.h"
+#include "proto/graphscope/proto/op_def.pb.h"
+#include "proto/graphscope/proto/types.pb.h"
 
 template <typename Key, typename Value>
 using ProtobufMap = ::google::protobuf::Map<Key, Value>;
