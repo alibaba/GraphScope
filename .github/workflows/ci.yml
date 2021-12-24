@@ -275,7 +275,7 @@ jobs:
         # download dataset
         git clone -b master --single-branch --depth=1 https://github.com/7br/gstest.git ${GS_TEST_DIR}
 
-        python3 -m pytest -s -v --cov=graphscope --cov-config=.coveragerc \
+        python3 -m pytest -s -v --cov=graphscope --cov-config=python/.coveragerc \
                                 --cov-report=xml --cov-report=term --exitfirst \
                                 $(dirname $(python3 -c "import graphscope; print(graphscope.__file__)"))/tests/unittest
 

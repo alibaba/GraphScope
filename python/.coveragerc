@@ -1,5 +1,5 @@
 [run]
 omit =
-    graphscope/nx/*
-    jupyter/graphscope/node_modules/.*
-    /usr/*
+    */graphscope/learning/*
+    */graphscope/nx/*
+    */jupyter/graphscope/node_modules/.*
