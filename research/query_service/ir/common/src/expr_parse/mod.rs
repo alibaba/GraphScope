@@ -132,6 +132,7 @@ impl ExprToken for pb::ExprOpr {
                         pb::Logical::Not => 110,
                     }
                 }
+                &Brace(_) => 0,
                 _ => 200,
             }
         } else {
@@ -142,7 +143,7 @@ impl ExprToken for pb::ExprOpr {
 
 #[allow(dead_code)]
 /// Turn a sequence of tokens with bracket, into a suffix order
-pub fn to_suffix_expr<E: ExprToken>(expr: Vec<E>) -> ExprResult<Vec<E>> {
+pub fn to_suffix_expr<E: ExprToken + std::fmt::Debug>(expr: Vec<E>) -> ExprResult<Vec<E>> {
     let mut stack: Vec<E> = Vec::with_capacity(expr.len());
     let mut results: Vec<E> = Vec::with_capacity(expr.len());
 

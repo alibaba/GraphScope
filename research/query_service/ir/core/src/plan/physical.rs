@@ -109,20 +109,11 @@ fn expr_to_suffix_expr(expr: common_pb::Expression) -> ExprResult<common_pb::Exp
 impl AsPhysical for pb::Project {
     fn add_job_builder(&self, builder: &mut JobBuilder) -> PhysicalResult<()> {
         let mut project = self.clone();
-        let mappings = project.mappings.clone();
-        let mut new_mappings = Vec::with_capacity(mappings.len());
-
-        for mapping in mappings.into_iter() {
-            let (expr_opt, alias) = (mapping.expr, mapping.alias);
-            let new_mapping = if let Some(expr) = expr_opt {
-                pb::project::ExprAlias { expr: Some(expr_to_suffix_expr(expr)?), alias }
-            } else {
-                pb::project::ExprAlias { expr: expr_opt, alias }
-            };
-
-            new_mappings.push(new_mapping);
+        for mapping in project.mappings.iter_mut() {
+            if let Some(expr) = mapping.expr.as_mut() {
+                *expr = expr_to_suffix_expr(expr.clone())?;
+            }
         }
-        project.mappings = new_mappings;
 
         simple_add_job_builder(builder, &pb::logical_plan::Operator::from(project), PegasusOpr::Map)
     }
@@ -131,9 +122,8 @@ impl AsPhysical for pb::Project {
 impl AsPhysical for pb::Select {
     fn add_job_builder(&self, builder: &mut JobBuilder) -> PhysicalResult<()> {
         let mut select = self.clone();
-        if let Some(pred) = self.predicate.clone() {
-            let new_pred = expr_to_suffix_expr(pred)?;
-            select.predicate = Some(new_pred);
+        if let Some(pred) = &mut select.predicate {
+            *pred = expr_to_suffix_expr(pred.clone())?;
         }
         simple_add_job_builder(builder, &pb::logical_plan::Operator::from(select), PegasusOpr::Filter)
     }
@@ -141,12 +131,26 @@ impl AsPhysical for pb::Select {
 
 impl AsPhysical for pb::Scan {
     fn add_job_builder(&self, builder: &mut JobBuilder) -> PhysicalResult<()> {
-        simple_add_job_builder(builder, &pb::logical_plan::Operator::from(self.clone()), PegasusOpr::Source)
+        let mut scan = self.clone();
+        if let Some(params) = &mut scan.params {
+            if let Some(pred) = &mut params.predicate {
+                *pred = expr_to_suffix_expr(pred.clone())?;
+            }
+        }
+        simple_add_job_builder(builder, &pb::logical_plan::Operator::from(scan), PegasusOpr::Source)
     }
 }
 
 impl AsPhysical for pb::EdgeExpand {
     fn add_job_builder(&self, builder: &mut JobBuilder) -> PhysicalResult<()> {
+        let mut xpd = self.clone();
+        if let Some(base) = &mut xpd.base {
+            if let Some(params) = &mut base.params {
+                if let Some(pred) = &mut params.predicate {
+                    *pred = expr_to_suffix_expr(pred.clone())?;
+                }
+            }
+        }
         simple_add_job_builder(
             builder,
             &pb::logical_plan::Operator::from(self.clone()),
@@ -163,11 +167,13 @@ impl AsPhysical for pb::GetV {
 
 impl AsPhysical for pb::Auxilia {
     fn add_job_builder(&self, builder: &mut JobBuilder) -> PhysicalResult<()> {
-        simple_add_job_builder(
-            builder,
-            &pb::logical_plan::Operator::from(self.clone()),
-            PegasusOpr::FilterMap,
-        )
+        let mut auxilia = self.clone();
+        if let Some(params) = auxilia.params.as_mut() {
+            if let Some(pred) = params.predicate.as_mut() {
+                *pred = expr_to_suffix_expr(pred.clone())?
+            }
+        }
+        simple_add_job_builder(builder, &pb::logical_plan::Operator::from(auxilia), PegasusOpr::FilterMap)
     }
 }
 
@@ -329,6 +335,7 @@ impl AsPhysical for LogicalPlan {
 mod test {
     use ir_common::expr_parse::{str_to_expr_pb, str_to_suffix_expr_pb};
     use ir_common::generated::algebra as pb;
+    use ir_common::generated::algebra::project::ExprAlias;
     use ir_common::generated::common as common_pb;
 
     use super::*;
@@ -383,12 +390,63 @@ mod test {
         let select_opr = pb::logical_plan::Operator::from(pb::Select {
             predicate: Some(str_to_suffix_expr_pb("@.id == 10".to_string()).unwrap()),
         });
-        expected_builder.add_source(source_opr_bytes.clone());
+        expected_builder.add_source(source_opr_bytes);
         expected_builder.filter(select_opr.encode_to_vec());
-        expected_builder.flat_map(expand_opr_bytes.clone());
+        expected_builder.flat_map(expand_opr_bytes);
         expected_builder.limit(10);
         expected_builder.sink(vec![]);
 
+        assert_eq!(builder, expected_builder);
+    }
+
+    #[test]
+    fn test_project() {
+        let source_opr = pb::logical_plan::Operator::from(pb::Scan {
+            scan_opt: 0,
+            alias: None,
+            params: Some(pb::QueryParams {
+                table_names: vec![common_pb::NameOrId::from("person".to_string())],
+                columns: vec![],
+                limit: None,
+                predicate: None,
+                requirements: vec![],
+            }),
+            idx_predicate: None,
+        });
+
+        let project_opr = pb::logical_plan::Operator::from(pb::Project {
+            mappings: vec![
+                ExprAlias {
+                    expr: Some(str_to_expr_pb("10 * (@.class - 10)".to_string()).unwrap()),
+                    alias: None,
+                },
+                ExprAlias { expr: Some(str_to_expr_pb("@.age - 1".to_string()).unwrap()), alias: None },
+            ],
+            is_append: false,
+        });
+
+        let mut logical_plan = LogicalPlan::with_root(Node::new(0, source_opr.clone()));
+        logical_plan.append_operator_as_node(project_opr.clone(), vec![0]); // node 1
+        let mut builder = JobBuilder::default();
+        logical_plan.add_job_builder(&mut builder).unwrap();
+
+        let mut expected_builder = JobBuilder::default();
+        let project_opr = pb::logical_plan::Operator::from(pb::Project {
+            mappings: vec![
+                ExprAlias {
+                    expr: Some(str_to_suffix_expr_pb("10 * (@.class - 10)".to_string()).unwrap()),
+                    alias: None,
+                },
+                ExprAlias {
+                    expr: Some(str_to_suffix_expr_pb("@.age - 1".to_string()).unwrap()),
+                    alias: None,
+                },
+            ],
+            is_append: false,
+        });
+
+        expected_builder.add_source(source_opr.encode_to_vec());
+        expected_builder.map(project_opr.encode_to_vec());
         assert_eq!(builder, expected_builder);
     }
 
