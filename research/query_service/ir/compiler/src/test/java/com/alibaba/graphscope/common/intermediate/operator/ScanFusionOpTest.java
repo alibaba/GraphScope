@@ -18,7 +18,7 @@ package com.alibaba.graphscope.common.intermediate.operator;
 
 import com.alibaba.graphscope.common.IrPlan;
 import com.alibaba.graphscope.common.TestUtils;
-import com.alibaba.graphscope.common.intermediate.AliasArg;
+import com.alibaba.graphscope.common.intermediate.ArgUtils;
 import com.alibaba.graphscope.common.jna.IrCoreLibrary;
 import com.alibaba.graphscope.common.jna.type.FfiConst;
 import com.alibaba.graphscope.common.jna.type.FfiNameOrId;
@@ -81,7 +81,7 @@ public class ScanFusionOpTest {
     public void aliasTest() throws IOException {
         ScanFusionOp op = new ScanFusionOp();
         op.setScanOpt(new OpArg<>(FfiScanOpt.Vertex, Function.identity()));
-        op.setAlias(new OpArg(new AliasArg(irCoreLib.cstrAsNameOrId("a")), Function.identity()));
+        op.setAlias(new OpArg(ArgUtils.asFfiAlias("a", true), Function.identity()));
         irPlan.appendInterOp(op);
         String actual = irPlan.getPlanAsJson();
         Assert.assertEquals(TestUtils.readJsonFromResource("scan_alias.json"), actual);

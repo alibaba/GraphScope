@@ -1,11 +1,12 @@
 package com.alibaba.graphscope.common.intermediate.process;
 
+import com.alibaba.graphscope.common.intermediate.ArgUtils;
 import com.alibaba.graphscope.common.intermediate.InterOpCollection;
 import com.alibaba.graphscope.common.intermediate.operator.AuxiliaOp;
 import com.alibaba.graphscope.common.intermediate.operator.OpArg;
 import com.alibaba.graphscope.common.intermediate.operator.SelectOp;
 import com.alibaba.graphscope.common.jna.IrCoreLibrary;
-import com.alibaba.graphscope.common.jna.type.FfiNameOrId;
+import com.alibaba.graphscope.common.jna.type.FfiAlias;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -21,7 +22,7 @@ public class AliasTest {
 
         SelectOp op = new SelectOp();
         op.setPredicate(new OpArg("@.name == \"marko\"", Function.identity()));
-        FfiNameOrId.ByValue tag = irCoreLib.cstrAsNameOrId("a");
+        FfiAlias.ByValue tag = ArgUtils.asFfiAlias("a", true);
         op.setAlias(new OpArg(tag, Function.identity()));
         opCollection.appendInterOp(op);
 
@@ -36,7 +37,7 @@ public class AliasTest {
 
         SelectOp selectOp = new SelectOp();
         selectOp.setPredicate(new OpArg("@.name == \"marko\"", Function.identity()));
-        FfiNameOrId.ByValue tag = irCoreLib.cstrAsNameOrId("a");
+        FfiAlias.ByValue tag = ArgUtils.asFfiAlias("a", true);
         selectOp.setAlias(new OpArg(tag, Function.identity()));
         opCollection.appendInterOp(selectOp);
 

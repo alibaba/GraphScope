@@ -16,7 +16,6 @@
 
 package com.alibaba.graphscope.gremlin;
 
-import com.alibaba.graphscope.common.intermediate.AliasArg;
 import com.alibaba.graphscope.common.intermediate.ArgUtils;
 import com.alibaba.graphscope.common.intermediate.operator.ProjectOp;
 import org.apache.tinkerpop.gremlin.process.traversal.Step;
@@ -42,8 +41,8 @@ public class SelectStepTest {
         Step selectStep = traversal.asAdmin().getEndStep();
         ProjectOp op = (ProjectOp) StepTransformFactory.SELECT_BY_STEP.apply(selectStep);
         List<Pair> expected = Arrays.asList(
-                Pair.with("@a", new AliasArg(ArgUtils.strAsNameId("@a"), false)),
-                Pair.with("@b", new AliasArg(ArgUtils.strAsNameId("@b"), false)));
+                Pair.with("@a", ArgUtils.asFfiAlias("@a", false)),
+                Pair.with("@b", ArgUtils.asFfiAlias("@b", false)));
         Assert.assertEquals(expected, op.getProjectExprWithAlias().get().getArg());
     }
 
@@ -53,8 +52,8 @@ public class SelectStepTest {
         Step selectStep = traversal.asAdmin().getEndStep();
         ProjectOp op = (ProjectOp) StepTransformFactory.SELECT_BY_STEP.apply(selectStep);
         List<Pair> expected = Arrays.asList(
-                Pair.with("@a.name", new AliasArg(ArgUtils.strAsNameId("@a.name"), false)),
-                Pair.with("@b.name", new AliasArg(ArgUtils.strAsNameId("@b.name"), false)));
+                Pair.with("@a.name", ArgUtils.asFfiAlias("@a.name", false)),
+                Pair.with("@b.name", ArgUtils.asFfiAlias("@b.name", false)));
         Assert.assertEquals(expected, op.getProjectExprWithAlias().get().getArg());
     }
 }
