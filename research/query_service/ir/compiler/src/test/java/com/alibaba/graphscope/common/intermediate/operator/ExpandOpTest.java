@@ -18,7 +18,7 @@ package com.alibaba.graphscope.common.intermediate.operator;
 
 import com.alibaba.graphscope.common.IrPlan;
 import com.alibaba.graphscope.common.TestUtils;
-import com.alibaba.graphscope.common.intermediate.AliasArg;
+import com.alibaba.graphscope.common.intermediate.ArgUtils;
 import com.alibaba.graphscope.common.jna.IrCoreLibrary;
 import com.alibaba.graphscope.common.jna.type.FfiDirection;
 import com.alibaba.graphscope.common.jna.type.FfiNameOrId;
@@ -62,7 +62,7 @@ public class ExpandOpTest {
         ExpandOp op = new ExpandOp();
         op.setEdgeOpt(new OpArg<>(Boolean.valueOf(true), Function.identity()));
         op.setDirection(new OpArg<>(FfiDirection.Out, Function.identity()));
-        op.setAlias(new OpArg(new AliasArg(irCoreLib.cstrAsNameOrId("a")), Function.identity()));
+        op.setAlias(new OpArg(ArgUtils.asFfiAlias("a", true), Function.identity()));
         irPlan.appendInterOp(op);
         String actual = irPlan.getPlanAsJson();
         Assert.assertEquals(TestUtils.readJsonFromResource("expand_alias.json"), actual);

@@ -18,15 +18,11 @@ package com.alibaba.graphscope.common.intermediate.process;
 
 import com.alibaba.graphscope.common.exception.InterOpIllegalArgException;
 import com.alibaba.graphscope.common.exception.InterOpUnsupportedException;
-import com.alibaba.graphscope.common.intermediate.AliasArg;
 import com.alibaba.graphscope.common.intermediate.ArgUtils;
 import com.alibaba.graphscope.common.intermediate.InterOpCollection;
 import com.alibaba.graphscope.common.intermediate.operator.*;
 import com.alibaba.graphscope.common.jna.IrCoreLibrary;
-import com.alibaba.graphscope.common.jna.type.FfiNameOrId;
-import com.alibaba.graphscope.common.jna.type.FfiProperty;
-import com.alibaba.graphscope.common.jna.type.FfiScanOpt;
-import com.alibaba.graphscope.common.jna.type.FfiVariable;
+import com.alibaba.graphscope.common.jna.type.*;
 import org.javatuples.Pair;
 
 import java.util.*;
@@ -151,8 +147,8 @@ public class PropertyDetailsProcessor implements InterOpProcessor {
                 elementRecord.put(FfiNameOrId.ByValue.getHead(), output.get());
                 // set alias
                 if (op.getAlias().isPresent()) {
-                    AliasArg alias = (AliasArg) op.getAlias().get().getArg();
-                    elementRecord.put(alias.getAlias(), output.get());
+                    FfiAlias.ByValue alias = (FfiAlias.ByValue) op.getAlias().get().getArg();
+                    elementRecord.put(alias.alias, output.get());
                 }
             }
         }

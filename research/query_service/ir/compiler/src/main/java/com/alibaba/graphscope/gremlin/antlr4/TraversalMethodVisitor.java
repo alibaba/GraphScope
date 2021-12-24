@@ -213,4 +213,12 @@ public class TraversalMethodVisitor extends TraversalRootVisitor<GraphTraversal>
         }
         return graphTraversal;
     }
+
+    @Override
+    public Traversal visitTraversalMethod_as(GremlinGSParser.TraversalMethod_asContext ctx) {
+        if (ctx.getChildCount() == 4 && ctx.stringLiteral() != null) {
+            return graphTraversal.as(GenericLiteralVisitor.getStringLiteral(ctx.stringLiteral()));
+        }
+        throw new UnsupportedEvalException(ctx.getClass(), "supported pattern is [as('..')]");
+    }
 }

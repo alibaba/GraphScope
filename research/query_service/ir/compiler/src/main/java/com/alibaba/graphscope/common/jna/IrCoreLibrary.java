@@ -42,7 +42,7 @@ public interface IrCoreLibrary extends Library {
 
     ResultCode addScanTableName(Pointer scan, FfiNameOrId.ByValue tableName);
 
-    ResultCode setScanAlias(Pointer scan, FfiNameOrId.ByValue alias);
+    ResultCode setScanAlias(Pointer scan, FfiAlias.ByValue alias);
 
     // set primary index
     Pointer initIndexPredicate();
@@ -63,7 +63,7 @@ public interface IrCoreLibrary extends Library {
 
     ResultCode appendEdgexpdOperator(Pointer plan, Pointer edgeXpd, int parent, IntByReference oprIdx);
 
-    ResultCode setEdgexpdAlias(Pointer edgeXpd, FfiNameOrId.ByValue alias);
+    ResultCode setEdgexpdAlias(Pointer edgeXpd, FfiAlias.ByValue alias);
 
     Pointer initLimitOperator();
 
@@ -87,7 +87,7 @@ public interface IrCoreLibrary extends Library {
 
     Pointer initProjectOperator(boolean isAppend);
 
-    ResultCode addProjectExprAlias(Pointer project, String expr, FfiNameOrId.ByValue alias, boolean isQueryGiven);
+    ResultCode addProjectExprAlias(Pointer project, String expr, FfiAlias.ByValue alias);
 
     ResultCode appendProjectOperator(Pointer plan, Pointer project, int parent, IntByReference oprIdx);
 
@@ -95,7 +95,7 @@ public interface IrCoreLibrary extends Library {
 
     ResultCode addAuxiliaProperty(Pointer auxilia, FfiNameOrId.ByValue property);
 
-    ResultCode setAuxiliaAlias(Pointer auxilia, FfiNameOrId.ByValue alias, boolean is_query_given);
+    ResultCode setAuxiliaAlias(Pointer auxilia, FfiAlias.ByValue alias);
 
     ResultCode appendAuxiliaOperator(Pointer plan, Pointer auxilia, int parent, IntByReference oprIdx);
 

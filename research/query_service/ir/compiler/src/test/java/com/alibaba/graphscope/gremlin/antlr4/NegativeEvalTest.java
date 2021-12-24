@@ -257,7 +257,7 @@ public class NegativeEvalTest {
     @Test
     public void g_V_as_invalid_test() {
         try {
-            scriptEngine.eval("g.V().as('~a')", context);
+            scriptEngine.eval("g.V().as('a', 'b')", context);
         } catch (InvalidGremlinScriptException e) {
             // expected error
             return;

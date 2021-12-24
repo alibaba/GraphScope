@@ -79,7 +79,7 @@ traversalSourceSpawnMethod_E
     ;
 
 traversalMethod_as
-    : 'as' LPAREN asStringLiteral RPAREN
+    : 'as' LPAREN stringLiteral RPAREN
     ;
 
 // hasLabel('')
@@ -237,25 +237,6 @@ traversalMethod_values
 traversalMethod_fold
 	: 'fold' LPAREN RPAREN
 	;
-
-// escape alias starting with ~, reserved for the generated aliases
-asStringLiteral
-    : EscapeHiddenPrefixString
-    ;
-
-// skip ~
-fragment
-EscapeHiddenPrefix
-    :	~('"' | '\\' | '~')
-    |   JoinLineEscape
-    |	EscapeSequence
-    ;
-
-fragment
-EscapeHiddenPrefixString
-    :   '"' EscapeHiddenPrefix(DoubleQuotedStringCharacters)? '"'
-    |   '\'' EscapeHiddenPrefix(SingleQuotedStringCharacters)? '\''
-    ;
 
 // only permit non empty, \'\' or \"\" or \'null\' is meaningless as a parameter
 stringLiteral

@@ -17,10 +17,7 @@
 package com.alibaba.graphscope.common.intermediate;
 
 import com.alibaba.graphscope.common.jna.IrCoreLibrary;
-import com.alibaba.graphscope.common.jna.type.FfiConst;
-import com.alibaba.graphscope.common.jna.type.FfiNameOrId;
-import com.alibaba.graphscope.common.jna.type.FfiProperty;
-import com.alibaba.graphscope.common.jna.type.FfiVariable;
+import com.alibaba.graphscope.common.jna.type.*;
 
 public class ArgUtils {
     private static IrCoreLibrary irCoreLib = IrCoreLibrary.INSTANCE;
@@ -55,6 +52,14 @@ public class ArgUtils {
 
     public static FfiVariable.ByValue asNoneVar() {
         return irCoreLib.asNoneVar();
+    }
+
+    public static FfiAlias.ByValue asFfiAlias(String aliasName, boolean isQueryGiven) {
+        FfiNameOrId.ByValue alias = irCoreLib.cstrAsNameOrId(aliasName);
+        FfiAlias.ByValue ffiAlias = new FfiAlias.ByValue();
+        ffiAlias.alias = alias;
+        ffiAlias.isQueryGiven = isQueryGiven;
+        return ffiAlias;
     }
 }
 
