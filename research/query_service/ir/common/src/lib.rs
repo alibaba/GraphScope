@@ -40,6 +40,8 @@ pub mod generated {
     pub mod common;
     #[path = "results.rs"]
     pub mod results;
+    #[path = "schema.rs"]
+    pub mod schema;
 }
 
 #[cfg(not(feature = "proto_inplace"))]
@@ -52,6 +54,9 @@ pub mod generated {
     }
     pub mod results {
         tonic::include_proto!("results");
+    }
+    pub mod schema {
+        tonic::include_proto!("schema");
     }
 }
 

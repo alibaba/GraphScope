@@ -13,5 +13,18 @@
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 
+use std::io;
+
 pub use crate::plan::ffi::*;
+
 pub mod plan;
+
+pub trait JsonIO {
+    /// Write the logical plan to a json via the given `writer`.
+    fn into_json<W: io::Write>(self, writer: W) -> io::Result<()>;
+
+    /// Read the logical plan from a json via the given `reader`
+    fn from_json<R: io::Read>(reader: R) -> io::Result<Self>
+    where
+        Self: Sized;
+}

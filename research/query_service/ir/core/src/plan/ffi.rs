@@ -63,8 +63,9 @@ use pegasus::BuildJobError;
 use pegasus_client::builder::JobBuilder;
 use prost::Message;
 
-use crate::plan::logical::LogicalPlan;
+use crate::plan::logical::{LogicalError, LogicalPlan};
 use crate::plan::physical::{AsPhysical, PhysicalError};
+use crate::JsonIO;
 
 #[repr(i32)]
 #[derive(Clone, Copy, Debug, PartialEq)]
@@ -84,6 +85,8 @@ pub enum ResultCode {
     NegativeIndexError = 6,
     /// Build Physical Plan Error
     BuildJobError = 7,
+    /// Unsupported
+    UnSupported = 8,
 }
 
 impl std::fmt::Display for ResultCode {
@@ -97,11 +100,21 @@ impl std::fmt::Display for ResultCode {
             ResultCode::InvalidRangeError => write!(f, "the range is invalid"),
             ResultCode::NegativeIndexError => write!(f, "the given index is negative"),
             ResultCode::BuildJobError => write!(f, "build physical plan error"),
+            ResultCode::UnSupported => write!(f, "unsupported functionality"),
         }
     }
 }
 
 impl std::error::Error for ResultCode {}
+
+impl From<LogicalError> for ResultCode {
+    fn from(err: LogicalError) -> Self {
+        match err {
+            LogicalError::Unsupported => Self::UnSupported,
+            _ => Self::NotExistError,
+        }
+    }
+}
 
 pub(crate) type FfiResult<T> = Result<T, ResultCode>;
 
@@ -391,23 +404,29 @@ fn append_operator(
     ptr_plan: *const c_void, operator: pb::logical_plan::Operator, parent_ids: Vec<i32>, id: *mut i32,
 ) -> ResultCode {
     let mut plan = unsafe { Box::from_raw(ptr_plan as *mut LogicalPlan) };
-    let opr_id = plan.append_operator_as_node(
+    let result = plan.append_operator_as_node(
         operator,
         parent_ids
             .into_iter()
             .filter_map(|x| if x >= 0 { Some(x as u32) } else { None })
             .collect(),
     );
-    // Do not let rust drop the pointer before explicitly calling `destroy_logical_plan`
-    std::mem::forget(plan);
-    if opr_id >= 0 {
-        unsafe {
-            *id = opr_id;
-        }
-        ResultCode::Success
+    if result.is_err() {
+        std::mem::forget(plan);
+        return ResultCode::from(result.err().unwrap());
     } else {
-        // This must due to the query parent does not present
-        ResultCode::NotExistError
+        let opr_id = result.unwrap();
+        // Do not let rust drop the pointer before explicitly calling `destroy_logical_plan`
+        std::mem::forget(plan);
+        if opr_id >= 0 {
+            unsafe {
+                *id = opr_id;
+            }
+            ResultCode::Success
+        } else {
+            // This must due to the query parent does not present
+            ResultCode::NotExistError
+        }
     }
 }
 

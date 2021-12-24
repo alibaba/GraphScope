@@ -27,6 +27,7 @@ fn codegen_inplace() -> Result<(), Box<dyn std::error::Error>> {
     println!("cargo:rerun-if-changed=../proto/common.proto");
     println!("cargo:rerun-if-changed=../proto/expr.proto");
     println!("cargo:rerun-if-changed=../proto/algebra.proto");
+    println!("cargo:rerun-if-changed=../proto/schema.proto");
     println!("cargo:rerun-if-changed=../proto/results.proto");
     let out_dir = PathBuf::from(GEN_DIR);
     if out_dir.exists() {
@@ -35,12 +36,15 @@ fn codegen_inplace() -> Result<(), Box<dyn std::error::Error>> {
     let _ = std::fs::create_dir(GEN_DIR);
     prost_build::Config::new()
         .type_attribute(".", "#[derive(Serialize,Deserialize)]")
+        .type_attribute("common.NameOrId", "#[derive(Eq, Hash)]")
+        .type_attribute("common.NameOrId.item", "#[derive(Eq, Hash)]")
         .out_dir(&out_dir)
         .compile_protos(
             &[
                 "../proto/common.proto",
                 "../proto/expr.proto",
                 "../proto/algebra.proto",
+                "../proto/schema.proto",
                 "../proto/results.proto",
             ],
             &["../proto"],
@@ -58,6 +62,7 @@ fn codegen_inplace() -> Result<(), Box<dyn std::error::Error>> {
                 "../proto/common.proto",
                 "../proto/expr.proto",
                 "../proto/algebra.proto",
+                "../proto/schema.proto",
                 "../proto/results.proto",
             ],
             &["../proto"],
