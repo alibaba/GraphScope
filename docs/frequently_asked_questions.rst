@@ -73,10 +73,12 @@ If you don't find an answer to your question here, feel free to file a `Issues`_
 
     -  ``k8s_engine_mem``: The memory of the engine pods, can just be set equal to the value of ``vineyard_shared_mem``. Equivalent to ``engines.resources.memory.requests`` and ``engines.resources.memory.limits`` in graphscope helm charts.
 
-10. Compile grpcio failed during install GraphScope on Apple M1 with python3.8?
+10. Failed to install GraphScope on Apple M1 with python3.8?
 
-    You can try to use ``openssl`` from system by ``export GRPC_PYTHON_BUILD_SYSTEM_OPENSSL=True``. See more details in `grpc issue <https://github.com/grpc/grpc/issues/25082>`_.
-   
+    - Compile ``grpcio`` failed: You can try to use ``openssl`` from system by ``export GRPC_PYTHON_BUILD_SYSTEM_OPENSSL=True``. See more details in `grpc issue <https://github.com/grpc/grpc/issues/25082>`_.
+
+    - compile ``scipy`` failed: You can follow `this <https://stackoverflow.com/questions/65745683/how-to-install-scipy-on-apple-silicon-arm-m1>`_ to build scipy from source or try ``pip3 install --pre -i https://pypi.anaconda.org/scipy-wheels-nightly/simple scipy`` to workaround this problem.
+
 
 **I do have many other questions...**
 
