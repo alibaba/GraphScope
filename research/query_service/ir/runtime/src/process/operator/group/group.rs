@@ -38,11 +38,12 @@ impl GroupGen<Record, RecordKey, Record> for algebra_pb::GroupBy {
     fn gen_group_map(&self) -> FnGenResult<Box<dyn MapFunction<(RecordKey, Record), Record>>> {
         let mut key_aliases = Vec::with_capacity(self.mappings.len());
         for key_alias in self.mappings.iter() {
-            let alias = key_alias
+            let alias: Option<NameOrId> = key_alias
                 .alias
                 .clone()
                 .ok_or(ParsePbError::from("key alias is missing in group"))?
                 .try_into()?;
+            let alias = alias.ok_or(ParsePbError::from("key alias cannot be None in group"))?;
             key_aliases.push(alias);
         }
         let group_map = GroupMap { key_aliases };
@@ -54,7 +55,7 @@ impl GroupGen<Record, RecordKey, Record> for algebra_pb::GroupBy {
 #[derive(Debug)]
 struct GroupMap {
     /// aliases for group keys, if some key is not not required to be preserved, give None alias
-    key_aliases: Vec<Option<NameOrId>>,
+    key_aliases: Vec<NameOrId>,
 }
 
 impl MapFunction<(RecordKey, Record), Record> for GroupMap {
@@ -65,10 +66,11 @@ impl MapFunction<(RecordKey, Record), Record> for GroupMap {
                 "the number of group_keys and group_key_aliases should be equal",
             ))?
         }
-        for i in 0..group_key_entries.len() {
-            let group_key_entry = group_key_entries.get(i).unwrap().clone();
-            let group_key_alias = self.key_aliases.get(i).unwrap().clone();
-            group_value.append_arc_entry(group_key_entry, group_key_alias);
+        for (entry, alias) in group_key_entries
+            .iter()
+            .zip(self.key_aliases.iter())
+        {
+            group_value.append_arc_entry(entry.clone(), Some(alias.clone()));
         }
         Ok(group_value)
     }
@@ -141,13 +143,16 @@ mod tests {
         result
     }
 
-    // g.V().group() with key as 'a', value as None (head)
+    // g.V().group() with key as 'a', value as 'b'
     #[test]
     fn group_to_list_test() {
         let function = pb::group_by::AggFunc {
             vars: vec![common_pb::Variable::from("@".to_string())],
             aggregate: 5, // ToList
-            alias: Some(pb::Alias { alias: None, is_query_given: false }),
+            alias: Some(pb::Alias {
+                alias: Some(NameOrId::Str("b".to_string()).into()),
+                is_query_given: false,
+            }),
         };
         let key_alias = pb::group_by::KeyAlias {
             key: Some(common_pb::Variable::from("@".to_string())),
@@ -170,7 +175,7 @@ mod tests {
 
         while let Some(Ok(result)) = result.next() {
             let key = result.get(Some(&"a".into())).unwrap().as_ref();
-            let val = result.get(None).unwrap().as_ref();
+            let val = result.get(Some(&"b".into())).unwrap().as_ref();
             group_result.insert((key.clone(), val.clone()));
         }
         assert_eq!(group_result, expected_result);
@@ -222,13 +227,16 @@ mod tests {
         assert_eq!(group_result, expected_result);
     }
 
-    // g.V().group().by("id","name") with key of 'id' as 'a', 'name' as 'b', and value as None
+    // g.V().group().by("id","name") with key of 'id' as 'a', 'name' as 'b', and value as 'c'
     #[test]
     fn group_by_tuple_key_test() {
         let function = pb::group_by::AggFunc {
             vars: vec![common_pb::Variable::from("@".to_string())],
             aggregate: 5, // ToList
-            alias: Some(pb::Alias { alias: None, is_query_given: false }),
+            alias: Some(pb::Alias {
+                alias: Some(NameOrId::Str("c".to_string()).into()),
+                is_query_given: false,
+            }),
         };
         let key_alias_1 = pb::group_by::KeyAlias {
             key: Some(common_pb::Variable::from("@.id".to_string())),
@@ -269,13 +277,13 @@ mod tests {
         while let Some(Ok(result)) = result.next() {
             let key_1 = result.get(Some(&"a".into())).unwrap().as_ref();
             let key_2 = result.get(Some(&"b".into())).unwrap().as_ref();
-            let val = result.get(None).unwrap().as_ref();
+            let val = result.get(Some(&"c".into())).unwrap().as_ref();
             group_result.insert(((key_1.clone(), key_2.clone()), val.clone()));
         }
         assert_eq!(group_result, expected_result);
     }
 
-    // g.V().group().by().by(to_list().as("a"), count().as("b")) with key as None, value of list as 'a' and count as 'b';
+    // g.V().group().by().by(to_list().as("a"), count().as("b")) with key as "c", value of list as 'a' and count as 'b';
     #[test]
     fn group_multi_accum_test() {
         let function_1 = pb::group_by::AggFunc {
@@ -296,7 +304,10 @@ mod tests {
         };
         let key_alias = pb::group_by::KeyAlias {
             key: Some(common_pb::Variable::from("@".to_string())),
-            alias: Some(pb::Alias { alias: None, is_query_given: false }),
+            alias: Some(pb::Alias {
+                alias: Some(NameOrId::Str("c".to_string()).into()),
+                is_query_given: false,
+            }),
         };
         let group_opr_pb =
             pb::GroupBy { mappings: vec![key_alias], functions: vec![function_1, function_2] };
@@ -330,7 +341,7 @@ mod tests {
         .collect();
 
         while let Some(Ok(result)) = result.next() {
-            let key = result.get(None).unwrap().as_ref();
+            let key = result.get(Some(&"c".into())).unwrap().as_ref();
             let val_1 = result.get(Some(&"a".into())).unwrap().as_ref();
             let val_2 = result.get(Some(&"b".into())).unwrap().as_ref();
             group_result.insert((key.clone(), (val_1.clone(), val_2.clone())));

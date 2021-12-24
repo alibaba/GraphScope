@@ -37,7 +37,7 @@ pub enum EntryAccumulator {
 
 #[derive(Debug, Clone)]
 pub struct RecordAccumulator {
-    accum_ops: Vec<(EntryAccumulator, TagKey, Option<NameOrId>)>,
+    accum_ops: Vec<(EntryAccumulator, TagKey, NameOrId)>,
 }
 
 impl Accumulator<Record, Record> for RecordAccumulator {
@@ -53,7 +53,7 @@ impl Accumulator<Record, Record> for RecordAccumulator {
         let mut record = Record::default();
         for (accumulator, _, alias) in self.accum_ops.iter_mut() {
             let entry = accumulator.finalize()?;
-            record.append_arc_entry(entry, alias.clone());
+            record.append_arc_entry(entry, Some(alias.clone()));
         }
         Ok(record)
     }
@@ -107,10 +107,11 @@ impl AccumFactoryGen for algebra_pb::GroupBy {
                 .map(|v| TagKey::try_from(v.clone()))
                 .transpose()?
                 .unwrap_or(TagKey::default());
-            let alias = agg_func
+            let alias: Option<NameOrId> = agg_func
                 .alias
                 .ok_or(ParsePbError::from("accum value alias is missing in group"))?
                 .try_into()?;
+            let alias = alias.ok_or(ParsePbError::from("accum value alias cannot be None in group"))?;
             let entry_accumulator = match agg_kind {
                 Aggregate::Count => EntryAccumulator::ToCount(Count { value: 0, _ph: Default::default() }),
                 Aggregate::ToList => EntryAccumulator::ToList(ToList { inner: vec![] }),
