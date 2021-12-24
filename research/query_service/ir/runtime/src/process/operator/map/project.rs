@@ -58,16 +58,10 @@ impl MapFuncGen for algebra_pb::Project {
     fn gen_map(self) -> FnGenResult<Box<dyn MapFunction<Record, Record>>> {
         let mut projected_columns = Vec::with_capacity(self.mappings.len());
         for expr_alias in self.mappings.into_iter() {
-            // TODO: the tag_option of is_query_given may not necessary
-            let (alias_pb, _is_given_tag) = {
-                let expr_alias = expr_alias
-                    .alias
-                    .ok_or(ParsePbError::from("expr alias is missing in project"))?;
-                (expr_alias.alias, expr_alias.is_query_given)
-            };
-            let alias = alias_pb
-                .map(|alias| alias.try_into())
-                .transpose()?;
+            let alias = expr_alias
+                .alias
+                .ok_or(ParsePbError::from("expr alias is missing in project"))?
+                .try_into()?;
             let expr = expr_alias
                 .expr
                 .ok_or(ParsePbError::from("expr eval is missing in project"))?;
