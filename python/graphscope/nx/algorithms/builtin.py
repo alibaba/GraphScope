@@ -1165,8 +1165,8 @@ def betweenness_centrality(
        https://doi.org/10.2307/3033543
     """
 
-    @project_to_simple
     @context_to_dict
+    @project_to_simple
     def _betweenness_centrality(
         G, k=None, normalized=True, weight=None, endpoints=False, seed=None
     ):
