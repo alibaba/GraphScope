@@ -524,9 +524,9 @@ class TensorContextWrapper<
     if (data_type != folly::dynamic::INT64 &&
         data_type != folly::dynamic::DOUBLE &&
         data_type != folly::dynamic::NULLT) {
-      RETURN_GS_ERROR(
-          vineyard::ErrorCode::kInvalidOperationError,
-          "Only support folly::dynamic::INT64, folly::dynamic::DOUBLE or folly::dynamic::NULLT");
+      RETURN_GS_ERROR(vineyard::ErrorCode::kInvalidOperationError,
+                      "Only support folly::dynamic::INT64, "
+                      "folly::dynamic::DOUBLE or folly::dynamic::NULLT");
     }
 
     int64_t local_num = shape.empty() ? 0 : shape[axis], total_num;
