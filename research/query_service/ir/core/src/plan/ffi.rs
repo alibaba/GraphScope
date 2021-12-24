@@ -925,8 +925,7 @@ mod groupby {
     }
 
     #[no_mangle]
-    pub extern "C" fn add_agg_value(ptr_agg_fn: *const FfiAggFn, agg_var: FfiVariable) {
-        let agg_fn = unsafe { ptr_agg_fn.as_ref().unwrap() };
+    pub extern "C" fn add_agg_value(agg_fn: &mut FfiAggFn, agg_var: FfiVariable) {
         let mut vars = unsafe { Box::from_raw(agg_fn.vars as *mut Vec<FfiVariable>) };
         vars.push(agg_var);
         std::mem::forget(vars);
