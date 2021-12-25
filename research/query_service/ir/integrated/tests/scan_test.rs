@@ -29,8 +29,6 @@ mod test {
     use runtime::process::operator::source::SourceOperator;
     use runtime::process::record::Record;
 
-    use crate::common::test::into_index_predicate;
-
     // g.V()
     fn scan_gen(scan_opr_pb: pb::Scan) -> Box<dyn Iterator<Item = Record> + Send> {
         create_demo_graph();
@@ -136,7 +134,7 @@ mod test {
             scan_opt: 0,
             alias: None,
             params: None,
-            idx_predicate: Some(into_index_predicate(vec![1])),
+            idx_predicate: Some(vec![1].into()),
         });
 
         let mut result_ids = vec![];
@@ -159,7 +157,7 @@ mod test {
             scan_opt: 0,
             alias: None,
             params: None,
-            idx_predicate: Some(into_index_predicate(vec![1, 2])),
+            idx_predicate: Some(vec![1, 2].into()),
         });
 
         let mut result_ids = vec![];

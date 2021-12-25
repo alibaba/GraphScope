@@ -26,11 +26,19 @@ lazy_static! {
     pub static ref META_DATA: RwLock<MetaData> = RwLock::new(MetaData::default());
 }
 
-pub fn set_schema<R: io::Read>(read: R) {
+pub fn set_schema_from_json<R: io::Read>(read: R) {
     if let Ok(mut meta) = META_DATA.write() {
         if let Ok(schema) = Schema::from_json(read) {
             meta.schema = Some(schema);
         }
+    }
+}
+
+/// The simple schema, mapping either label or property name into id.
+pub fn set_schema_simple(tables: Vec<(String, i32)>, columns: Vec<(String, i32)>) {
+    if let Ok(mut meta) = META_DATA.write() {
+        let schema: Schema = (tables, columns).into();
+        meta.schema = Some(schema)
     }
 }
 
@@ -157,19 +165,6 @@ pub struct Schema {
     rels: Vec<(Relation, Vec<Column>)>,
 }
 
-impl From<Vec<(String, i32)>> for Schema {
-    fn from(data: Vec<(String, i32)>) -> Self {
-        let mut schema = Schema::default();
-        schema.is_table_id = true;
-        schema.is_column_id = false;
-        for (name, id) in data.into_iter() {
-            schema.table_map.insert(name.clone(), id);
-            schema.table_map_rev.insert(id, name);
-        }
-        schema
-    }
-}
-
 impl Schema {
     pub fn get_table_id(&self, name: &str) -> Option<i32> {
         self.table_map.get(name).cloned()
@@ -210,11 +205,28 @@ impl Schema {
     }
 }
 
-#[derive(PartialEq, Copy, Clone)]
-pub enum ColumnOrTable {
-    None = 0,
-    Table = 1,
-    Column = 2,
+impl From<(Vec<(String, i32)>, Vec<(String, i32)>)> for Schema {
+    fn from(tuple: (Vec<(String, i32)>, Vec<(String, i32)>)) -> Self {
+        let (tables, columns) = tuple;
+        let mut schema = Schema::default();
+        schema.is_table_id = !tables.is_empty();
+        schema.is_column_id = !columns.is_empty();
+
+        if schema.is_table_id {
+            for (name, id) in tables.into_iter() {
+                schema.table_map.insert(name.clone(), id);
+                schema.table_map_rev.insert(id, name);
+            }
+        }
+        if schema.is_column_id {
+            for (name, id) in columns.into_iter() {
+                schema.column_map.insert(name.clone(), id);
+                schema.column_map_rev.insert(id, name);
+            }
+        }
+
+        schema
+    }
 }
 
 impl JsonIO for Schema {

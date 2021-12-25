@@ -90,10 +90,6 @@ enum Arithmetic {
   EXP = 5;
 }
 
-message Const {
-  common.Value value = 1;
-}
-
 message Variable {
   // The alias of a graph relation, which is required for a variable
   NameOrId tag = 1;
@@ -114,7 +110,7 @@ message ExprOpr {
   oneof item {
     Logical logical = 2;
     Arithmetic arith = 3;
-    Const const = 4;
+    common.Value const = 4;
     Variable var = 5;
     Brace brace = 6;
   }

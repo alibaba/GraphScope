@@ -96,27 +96,4 @@ pub mod test {
             None
         }
     }
-
-    pub fn into_and_predicate(id: ID) -> pb::index_predicate::AndPredicate {
-        pb::index_predicate::AndPredicate {
-            predicates: vec![pb::index_predicate::Triplet {
-                key: Some(common_pb::Property {
-                    item: Some(common_pb::property::Item::Id(common_pb::IdKey {})),
-                }),
-                value: Some(common_pb::Const {
-                    value: Some(common_pb::Value { item: Some(common_pb::value::Item::I64(id as i64)) }),
-                }),
-                cmp: None,
-            }],
-        }
-    }
-
-    pub fn into_index_predicate(ids: Vec<ID>) -> pb::IndexPredicate {
-        let or_predicates: Vec<pb::index_predicate::AndPredicate> = ids
-            .into_iter()
-            .map(|id| into_and_predicate(id))
-            .collect();
-
-        pb::IndexPredicate { or_predicates }
-    }
 }
