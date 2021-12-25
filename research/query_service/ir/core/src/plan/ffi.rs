@@ -1228,24 +1228,20 @@ mod scan {
         }
     }
 
-    impl TryFrom<FfiConst> for common_pb::Const {
+    impl TryFrom<FfiConst> for common_pb::Value {
         type Error = ResultCode;
 
         fn try_from(ffi: FfiConst) -> Result<Self, Self::Error> {
             match &ffi.data_type {
                 FfiDataType::Unknown => Err(ResultCode::UnknownTypeError),
-                FfiDataType::Boolean => {
-                    Ok(common_pb::Const { value: Some(common_pb::Value::from(ffi.boolean)) })
-                }
-                FfiDataType::I32 => Ok(common_pb::Const { value: Some(common_pb::Value::from(ffi.int32)) }),
-                FfiDataType::I64 => Ok(common_pb::Const { value: Some(common_pb::Value::from(ffi.int64)) }),
-                FfiDataType::F64 => {
-                    Ok(common_pb::Const { value: Some(common_pb::Value::from(ffi.float64)) })
-                }
+                FfiDataType::Boolean => Ok(common_pb::Value::from(ffi.boolean)),
+                FfiDataType::I32 => Ok(common_pb::Value::from(ffi.int32)),
+                FfiDataType::I64 => Ok(common_pb::Value::from(ffi.int64)),
+                FfiDataType::F64 => Ok(common_pb::Value::from(ffi.float64)),
                 FfiDataType::Str => {
                     let str = cstr_to_string(ffi.cstr);
                     if str.is_ok() {
-                        Ok(common_pb::Const { value: str.ok().map(|s| common_pb::Value::from(s)) })
+                        Ok(common_pb::Value::from(str.unwrap()))
                     } else {
                         Err(str.err().unwrap())
                     }
