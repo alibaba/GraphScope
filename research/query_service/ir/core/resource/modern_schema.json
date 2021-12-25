@@ -1,0 +1,36 @@
+{
+  "entities": [
+    {
+      "id": 1,
+      "name": "software",
+      "columns": []
+    },
+    {
+      "id": 0,
+      "name": "person",
+      "columns": []
+    }
+  ],
+  "rels": [
+    {
+      "src_id": 0,
+      "src_name": "person",
+      "dst_id": 0,
+      "dst_name": "person",
+      "id": 0,
+      "name": "knows",
+      "columns": []
+    },
+    {
+      "src_id": 0,
+      "src_name": "person",
+      "dst_id": 1,
+      "dst_name": "software",
+      "id": 1,
+      "name": "created",
+      "columns": []
+    }
+  ],
+  "is_table_id": true,
+  "is_column_id": false
+}

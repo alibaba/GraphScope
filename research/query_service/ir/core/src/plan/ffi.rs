@@ -66,6 +66,7 @@ use prost::Message;
 use crate::plan::logical::{LogicalError, LogicalPlan};
 use crate::plan::physical::{AsPhysical, PhysicalError};
 use crate::JsonIO;
+use crate::plan::meta::set_schema_from_json;
 
 #[repr(i32)]
 #[derive(Clone, Copy, Debug, PartialEq)]
@@ -332,13 +333,27 @@ fn destroy_ptr<M>(ptr: *const c_void) {
     }
 }
 
+/// Set schema via a json-formatted cstring.
+#[no_mangle]
+pub extern "C" fn set_schema(cstr_json: *const c_char) -> ResultCode {
+    let result = cstr_to_string(cstr_json);
+    if let Ok(json) = result {
+        set_schema_from_json(json.as_bytes());
+
+        ResultCode::Success
+    } else {
+        result.err().unwrap()
+    }
+}
+
 /// Initialize a logical plan, which expose a pointer for c-like program to access the
 /// entry of the logical plan. This pointer, however, is owned by Rust, and the caller
 /// **must not** process any operation, which includes but not limited to deallocate it.
 /// We have provided  the [`destroy_logical_plan`] api for deallocating the pointer of the logical plan.
 #[no_mangle]
-pub extern "C" fn init_logical_plan() -> *const c_void {
-    let plan = Box::new(LogicalPlan::default());
+pub extern "C" fn init_logical_plan(is_preprocess: bool) -> *const c_void {
+    let mut plan = Box::new(LogicalPlan::default());
+    plan.is_preprocess = is_preprocess;
     Box::into_raw(plan) as *const c_void
 }
 

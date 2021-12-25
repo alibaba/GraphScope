@@ -1008,12 +1008,8 @@ mod test {
     #[test]
     fn test_preprocess_expression() {
         set_schema_simple(
-            vec![
-                ("person".to_string(), 0),
-                ("software".to_string(), 1),
-                ("knows".to_string(), 2),
-                ("creates".to_string(), 3),
-            ],
+            vec![("person".to_string(), 0), ("software".to_string(), 1)],
+            vec![("knows".to_string(), 0), ("creates".to_string(), 1)],
             vec![("id".to_string(), 0), ("name".to_string(), 1), ("age".to_string(), 2)],
         );
         let mut expression = str_to_expr_pb("@.~label == \"person\"".to_string()).unwrap();
@@ -1043,11 +1039,11 @@ mod test {
             },
             _ => panic!(),
         }
-        // "knows maps to 2"
+        // "knows maps to 0"
         let opr = expression.operators.get(8).unwrap().clone();
         match opr.item.unwrap() {
             common_pb::expr_opr::Item::Const(val) => match val.item.unwrap() {
-                common_pb::value::Item::I32(i) => assert_eq!(i, 2),
+                common_pb::value::Item::I32(i) => assert_eq!(i, 0),
                 _ => panic!(),
             },
             _ => panic!(),
@@ -1074,12 +1070,8 @@ mod test {
     #[test]
     fn test_preprocess_scan() {
         set_schema_simple(
-            vec![
-                ("person".to_string(), 0),
-                ("software".to_string(), 1),
-                ("knows".to_string(), 2),
-                ("creates".to_string(), 3),
-            ],
+            vec![("person".to_string(), 0), ("software".to_string(), 1)],
+            vec![("knows".to_string(), 0), ("creates".to_string(), 1)],
             vec![("id".to_string(), 0), ("name".to_string(), 1), ("age".to_string(), 2)],
         );
         let mut scan = pb::Scan {

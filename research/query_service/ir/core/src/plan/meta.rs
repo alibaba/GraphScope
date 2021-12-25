@@ -35,9 +35,11 @@ pub fn set_schema_from_json<R: io::Read>(read: R) {
 }
 
 /// The simple schema, mapping either label or property name into id.
-pub fn set_schema_simple(tables: Vec<(String, i32)>, columns: Vec<(String, i32)>) {
+pub fn set_schema_simple(
+    entities: Vec<(String, i32)>, relations: Vec<(String, i32)>, columns: Vec<(String, i32)>,
+) {
     if let Ok(mut meta) = META_DATA.write() {
-        let schema: Schema = (tables, columns).into();
+        let schema: Schema = (entities, relations, columns).into();
         meta.schema = Some(schema)
     }
 }
@@ -143,13 +145,25 @@ fn into_relation_pb(tuple: (Relation, Vec<Column>)) -> schema_pb::Relation {
     }
 }
 
+#[derive(Copy, Clone, Debug, Hash, PartialEq, Eq)]
+pub enum TableType {
+    Entity = 0,
+    Relation = 1,
+}
+
+impl Default for TableType {
+    fn default() -> Self {
+        Self::Entity
+    }
+}
+
 #[derive(Clone, Debug, Default)]
 pub struct Schema {
     /// A map from table name to its internally encoded id
     /// In the concept of graph database, this is also known as label
     table_map: HashMap<String, i32>,
     /// A reversed map of `table_map`
-    table_map_rev: HashMap<i32, String>,
+    table_map_rev: HashMap<(TableType, i32), String>,
     /// A map from column name to its internally encoded id
     /// In the concept of graph database, this is also known as property
     column_map: HashMap<String, i32>,
@@ -177,8 +191,8 @@ impl Schema {
         })
     }
 
-    pub fn get_table_name(&self, id: i32) -> Option<&String> {
-        self.table_map_rev.get(&id)
+    pub fn get_table_name(&self, id: i32, ty: TableType) -> Option<&String> {
+        self.table_map_rev.get(&(ty, id))
     }
 
     pub fn get_column_id(&self, name: &str) -> Option<i32> {
@@ -205,17 +219,25 @@ impl Schema {
     }
 }
 
-impl From<(Vec<(String, i32)>, Vec<(String, i32)>)> for Schema {
-    fn from(tuple: (Vec<(String, i32)>, Vec<(String, i32)>)) -> Self {
-        let (tables, columns) = tuple;
+impl From<(Vec<(String, i32)>, Vec<(String, i32)>, Vec<(String, i32)>)> for Schema {
+    fn from(tuple: (Vec<(String, i32)>, Vec<(String, i32)>, Vec<(String, i32)>)) -> Self {
+        let (entities, relations, columns) = tuple;
         let mut schema = Schema::default();
-        schema.is_table_id = !tables.is_empty();
+        schema.is_table_id = !entities.is_empty() || !relations.is_empty();
         schema.is_column_id = !columns.is_empty();
 
         if schema.is_table_id {
-            for (name, id) in tables.into_iter() {
+            for (name, id) in entities.into_iter() {
                 schema.table_map.insert(name.clone(), id);
-                schema.table_map_rev.insert(id, name);
+                schema
+                    .table_map_rev
+                    .insert((TableType::Entity, id), name);
+            }
+            for (name, id) in relations.into_iter() {
+                schema.table_map.insert(name.clone(), id);
+                schema
+                    .table_map_rev
+                    .insert((TableType::Relation, id), name);
             }
         }
         if schema.is_column_id {
@@ -231,23 +253,59 @@ impl From<(Vec<(String, i32)>, Vec<(String, i32)>)> for Schema {
 
 impl JsonIO for Schema {
     fn into_json<W: io::Write>(self, writer: W) -> io::Result<()> {
-        let schema_pb = schema_pb::Schema {
-            entities: self
+        let entities_pb: Vec<schema_pb::Entity> = if !self.entities.is_empty() {
+            self
                 .entities
                 .clone()
                 .into_iter()
                 .map(|tuple| into_entity_pb(tuple))
-                .collect(),
-            rels: self
+                .collect()
+        } else {
+            let mut entities = Vec::new();
+            for (&(ty, id), name) in &self.table_map_rev {
+                if ty == TableType::Entity {
+                    entities.push(schema_pb::Entity {
+                        id,
+                        name: name.clone(),
+                        columns: vec![]
+                    })
+                }
+            }
+            entities
+        };
+
+        let relations_pb: Vec<schema_pb::Relation> = if !self.rels.is_empty() {
+            self
                 .rels
                 .clone()
                 .into_iter()
                 .map(|tuple| into_relation_pb(tuple))
-                .collect(),
+                .collect()
+        } else {
+            let mut relations = Vec::new();
+            for (&(ty, id), name) in &self.table_map_rev {
+                if ty == TableType::Relation {
+                    relations.push(schema_pb::Relation {
+                        src_id: -1,
+                        src_name: "".to_string(),
+                        dst_id: -1,
+                        dst_name: "".to_string(),
+                        id,
+                        name: name.clone(),
+                        columns: vec![]
+                    })
+                }
+            }
+            relations
+        };
+
+        let schema_pb = schema_pb::Schema {
+            entities: entities_pb,
+            rels: relations_pb,
             is_table_id: self.is_table_id,
             is_column_id: self.is_column_id,
         };
-        serde_json::to_writer(writer, &schema_pb)?;
+        serde_json::to_writer_pretty(writer, &schema_pb)?;
         Ok(())
     }
 
@@ -278,7 +336,7 @@ impl JsonIO for Schema {
                     schema.table_map.insert(key.clone(), entity.id);
                     schema
                         .table_map_rev
-                        .insert(entity.id, key.clone());
+                        .insert((TableType::Entity, entity.id), key.clone());
                 }
             }
             if schema_pb.is_column_id {
@@ -287,7 +345,7 @@ impl JsonIO for Schema {
                     if !schema.column_map.contains_key(key) {
                         schema.column_map.insert(key.clone(), column.id);
                         schema
-                            .table_map_rev
+                            .column_map_rev
                             .insert(column.id, key.clone());
                     }
                 }
@@ -299,7 +357,7 @@ impl JsonIO for Schema {
                 let key = &rel.name;
                 if !schema.table_map.contains_key(key) {
                     schema.table_map.insert(key.clone(), rel.id);
-                    schema.table_map_rev.insert(rel.id, key.clone());
+                    schema.table_map_rev.insert((TableType::Relation, rel.id), key.clone());
                 }
             }
             if schema_pb.is_column_id {
@@ -308,7 +366,7 @@ impl JsonIO for Schema {
                     if !schema.column_map.contains_key(key) {
                         schema.column_map.insert(key.clone(), column.id);
                         schema
-                            .table_map_rev
+                            .column_map_rev
                             .insert(column.id, key.clone());
                     }
                 }
