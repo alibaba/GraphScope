@@ -51,6 +51,7 @@ class NodeBoundary : public AppBase<FRAG_T, NodeBoundaryContext<FRAG_T>>,
     std::set<vid_t> source_gid_set, target_gid_set;
     vid_t gid;
     vertex_t v;
+    bool no_target_set = true;
     for (const auto& node : source_array) {
       if (frag.Oid2Gid(dynamic_to_oid<oid_t>(node), gid)) {
         source_gid_set.insert(gid);
@@ -63,6 +64,7 @@ class NodeBoundary : public AppBase<FRAG_T, NodeBoundaryContext<FRAG_T>>,
           target_gid_set.insert(gid);
         }
       }
+      no_target_set = false;
     }
 
     // get the boundary
@@ -71,7 +73,7 @@ class NodeBoundary : public AppBase<FRAG_T, NodeBoundaryContext<FRAG_T>>,
         for (auto& e : frag.GetOutgoingAdjList(v)) {
           vid_t v_gid = frag.Vertex2Gid(e.get_neighbor());
           if (source_gid_set.find(v_gid) == source_gid_set.end() &&
-              (target_gid_set.empty() ||
+              (no_target_set ||
                target_gid_set.find(v_gid) != target_gid_set.end())) {
             ctx.boundary.insert(v_gid);
           }

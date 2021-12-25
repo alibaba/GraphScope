@@ -147,48 +147,8 @@ def pagerank(G, alpha=0.85, max_iter=100, tol=1.0e-6, weight="weight"):
 
 
 @not_implemented_for("multigraph")
-def hits(G, max_iter=100, tol=1.0e-8, normalized=True):
-    """Returns HITS hubs and authorities values for nodes.
-
-    The HITS algorithm computes two numbers for a node.
-    Authorities estimates the node value based on the incoming links.
-    Hubs estimates the node value based on outgoing links.
-
-    Parameters
-    ----------
-    G : graph
-      A networkx graph
-
-    max_iter : integer, optional
-      Maximum number of iterations in power method.
-
-    tol : float, optional
-      Error tolerance used to check convergence in power method iteration.
-
-    normalized : bool (default=True)
-       Normalize results by the sum of all of the values.
-
-    Returns
-    -------
-    two-tuple of dictionaries
-
-
-    Examples
-    --------
-    >>> G = nx.path_graph(4)
-    >>> nx.hits(G)
-
-    References
-    ----------
-    .. [1] A. Langville and C. Meyer,
-       "A survey of eigenvector methods of web information retrieval."
-       http://citeseer.ist.psu.edu/713792.html
-    .. [2] Jon Kleinberg,
-       Authoritative sources in a hyperlinked environment
-       Journal of the ACM 46 (5): 604-32, 1999.
-       doi:10.1145/324133.324140.
-       http://www.cs.cornell.edu/home/kleinber/auth.pdf.
-    """
+@patch_docstring(nxa.hits)
+def hits(G, max_iter=100, tol=1.0e-8, nstart=None, normalized=True):
     # TODO(@weibin): raise PowerIterationFailedConvergence if hits fails to converge
     # within the specified number of iterations.
     @project_to_simple
@@ -202,6 +162,9 @@ def hits(G, max_iter=100, tol=1.0e-8, normalized=True):
             df.set_index("id")["auth"].to_dict(),
         )
 
+    if nstart is not None:
+        # forward
+        return nxa.hits(G, max_iter, tol, nstart, normalized)
     if max_iter == 0:
         raise nx.PowerIterationFailedConvergence(max_iter)
     if len(G) == 0:
@@ -237,7 +200,8 @@ def out_degree_centrality(G):
 
 
 @not_implemented_for("multigraph")
-def eigenvector_centrality(G, max_iter=100, tol=1e-06, weight=None):
+@patch_docstring(nxa.eigenvector_centrality)
+def eigenvector_centrality(G, max_iter=100, tol=1e-06, nstart=None, weight=None):
     # TODO(@weibin): raise PowerIterationFailedConvergence if eigenvector fails to converge
     # within the specified number of iterations.
     @context_to_dict
@@ -245,6 +209,9 @@ def eigenvector_centrality(G, max_iter=100, tol=1e-06, weight=None):
     def _eigenvector_centrality(G, max_iter=100, tol=1e-06, weight=None):
         return graphscope.eigenvector_centrality(G, tolerance=tol, max_round=max_iter)
 
+    if nstart is not None:
+        # forward the nxa.eigenvector_centrality
+        return nxa.eigenvector_centrality(G, max_iter, tol, nstart, weight)
     if len(G) == 0:
         raise nx.NetworkXPointlessConcept(
             "cannot compute centrality for the null graph"
@@ -255,12 +222,14 @@ def eigenvector_centrality(G, max_iter=100, tol=1e-06, weight=None):
 
 
 @not_implemented_for("multigraph")
+@patch_docstring(nxa.katz_centrality)
 def katz_centrality(
     G,
     alpha=0.1,
     beta=1.0,
     max_iter=100,
     tol=1e-06,
+    nstart=None,
     normalized=True,
     weight=None,
 ):
@@ -286,6 +255,11 @@ def katz_centrality(
             normalized=normalized,
         )
 
+    if nstart is not None or isinstance(beta, dict):
+        # forward the nxa.katz_centrality
+        return nxa.katz_centrality(
+            G, alpha, beta, max_iter, tol, nstart, normalized, weight
+        )
     if len(G) == 0:
         return {}
     if not isinstance(beta, (int, float)):
@@ -355,40 +329,14 @@ def single_source_dijkstra_path_length(G, source, weight=None):
     return AppAssets(algo="sssp_projected", context="vertex_data")(G, source)
 
 
-def average_shortest_path_length(G, weight=None):
-    """Returns the average shortest path length.
-
-    The average shortest path length is
-
-    .. math::
-
-       a =\sum_{s,t \in V} \frac{d(s, t)}{n(n-1)}
-
-    where `V` is the set of nodes in `G`,
-    `d(s, t)` is the shortest path from `s` to `t`,
-    and `n` is the number of nodes in `G`.
-
-    Parameters
-    ----------
-    G : networkx graph
-
-    weight : None or string, optional (default = None)
-       If None, default take as 'weight'.
-       If a string, use this edge attribute as the edge weight.
-
-
-    Examples
-    --------
-    >>> G = nx.path_graph(5)
-    >>> nx.average_shortest_path_length(G)
-    2.0
-
-    """
-
+@patch_docstring(nxa.average_shortest_path_length)
+def average_shortest_path_length(G, weight=None, method=None):
     @project_to_simple
     def _average_shortest_path_length(G, weight=None):
         return graphscope.average_shortest_path_length(G)
 
+    if method is not None:
+        return nxa.average_shortest_path_length(G, weight, method)
     n = len(G)
     # For the specail case of the null graph. raise an exception, since
     # there are no paths in the null graph.
@@ -503,65 +451,19 @@ def all_pairs_shortest_path_length(G, weight=None):
     return AppAssets(algo="all_pairs_shortest_path_length", context="vertex_data")(G)
 
 
-@context_to_dict
-@project_to_simple
-def closeness_centrality(G, weight=None, wf_improved=True):
-    r"""Compute closeness centrality for nodes.
+@patch_docstring(nxa.closeness_centrality)
+def closeness_centrality(G, u=None, distance=None, wf_improved=True):
+    @context_to_dict
+    @project_to_simple
+    def _closeness_centrality(G, weight=None, wf_improved=True):
+        return AppAssets(algo="closeness_centrality", context="vertex_data")(
+            G, wf_improved
+        )
 
-    Closeness centrality [1]_ of a node `u` is the reciprocal of the
-    average shortest path distance to `u` over all `n-1` reachable nodes.
-
-    .. math::
-
-        C(u) = \frac{n - 1}{\sum_{v=1}^{n-1} d(v, u)},
-
-    where `d(v, u)` is the shortest-path distance between `v` and `u`,
-    and `n` is the number of nodes that can reach `u`. Notice that the
-    closeness distance function computes the incoming distance to `u`
-    for directed graphs. To use outward distance, act on `G.reverse()`.
-
-    Notice that higher values of closeness indicate higher centrality.
-
-    Wasserman and Faust propose an improved formula for graphs with
-    more than one connected component. The result is "a ratio of the
-    fraction of actors in the group who are reachable, to the average
-    distance" from the reachable actors [2]_. You might think this
-    scale factor is inverted but it is not. As is, nodes from small
-    components receive a smaller closeness value. Letting `N` denote
-    the number of nodes in the graph,
-
-    .. math::
-
-        C_{WF}(u) = \frac{n-1}{N-1} \frac{n - 1}{\sum_{v=1}^{n-1} d(v, u)},
-
-    Parameters
-    ----------
-    G : graph
-      A networkx graph
-
-    weight : edge attribute key, optional (default=None)
-      Use the specified edge attribute as the edge distance in shortest
-      path calculations, if None, every edge is assumed to be one.
-
-    wf_improved : bool, optional (default=True)
-      If True, scale by the fraction of nodes reachable. This gives the
-      Wasserman and Faust improved formula. For single component graphs
-      it is the same as the original formula.
-
-    Returns
-    -------
-    nodes: dataframe
-
-    References
-    ----------
-    .. [1] Linton C. Freeman: Centrality in networks: I.
-       Conceptual clarification. Social Networks 1:215-239, 1979.
-       http://leonidzhukov.ru/hse/2013/socialnetworks/papers/freeman79-centrality.pdf
-    .. [2] pg. 201 of Wasserman, S. and Faust, K.,
-       Social Network Analysis: Methods and Applications, 1994,
-       Cambridge University Press.
-    """
-    return AppAssets(algo="closeness_centrality", context="vertex_data")(G, wf_improved)
+    if u is not None:
+        # forward
+        return nxa.closeness_centrality(G, u, distance, wf_improved)
+    return _closeness_centrality(G, weight=distance, wf_improved=wf_improved)
 
 
 @patch_docstring(nxa.bfs_tree)
@@ -865,12 +767,12 @@ def node_boundary(G, nbunch1, nbunch2=None):
     @project_to_simple
     def _node_boundary(G, nbunch1, nbunch2=None):
         n1json = json.dumps(list(nbunch1))
-        if nbunch2:
+        if nbunch2 is not None:
             n2json = json.dumps(list(nbunch2))
         else:
             n2json = ""
         ctx = AppAssets(algo="node_boundary", context="tensor")(G, n1json, n2json)
-        return ctx.to_numpy("r", axis=0).tolist()
+        return set(ctx.to_numpy("r", axis=0).tolist())
 
     if G.is_multigraph():
         # forward to the NetworkX node_boundary
@@ -888,7 +790,9 @@ def edge_boundary(G, nbunch1, nbunch2=None, data=False, keys=False, default=None
         else:
             n2json = ""
         ctx = AppAssets(algo="edge_boundary", context="tensor")(G, n1json, n2json)
-        return ctx.to_numpy("r", axis=0).tolist()
+        ret = ctx.to_numpy("r", axis=0).tolist()
+        for e in ret:
+            yield (e[0], e[1])
 
     if G.is_multigraph():
         # forward the NetworkX edge boundary
@@ -1041,10 +945,16 @@ def numeric_assortativity_coefficient(G, attribute):
     return graphscope.numeric_assortativity_coefficient(G)
 
 
-@project_to_simple
 @patch_docstring(nxa.is_simple_path)
 def is_simple_path(G, nodes):
-    return graphscope.is_simple_path(G, nodes)
+    @project_to_simple
+    def _is_simple_path(G, nodes):
+        return graphscope.is_simple_path(G, nodes)
+
+    if G.is_multigraph():
+        # forward the networkx.is_simple_graph
+        return nxa.is_simple_path(G, nodes)
+    return _is_simple_path(G, nodes)
 
 
 def get_all_simple_paths(G, source, target_nodes, cutoff):
@@ -1156,8 +1066,6 @@ def all_simple_edge_paths(G, source, target_nodes, cutoff=None):
     return paths
 
 
-@context_to_dict
-@project_to_simple
 def betweenness_centrality(
     G, k=None, normalized=True, weight=None, endpoints=False, seed=None
 ):
@@ -1255,9 +1163,21 @@ def betweenness_centrality(
        Sociometry 40: 35–41, 1977
        https://doi.org/10.2307/3033543
     """
-    algorithm = "betweenness_centrality"
-    if weight is not None:
-        algorithm = "betweenness_centrality_generic"
-    return AppAssets(algo=algorithm, context="vertex_data")(
-        G, normalized=normalized, endpoints=endpoints
+
+    @context_to_dict
+    @project_to_simple
+    def _betweenness_centrality(
+        G, k=None, normalized=True, weight=None, endpoints=False, seed=None
+    ):
+        algorithm = "betweenness_centrality"
+        if weight is not None:
+            algorithm = "betweenness_centrality_generic"
+        return AppAssets(algo=algorithm, context="vertex_data")(
+            G, normalized=normalized, endpoints=endpoints
+        )
+
+    if not isinstance(G, nx.Graph):
+        return nxa.betweenness_centrality(G, k, normalized, weight, endpoints, seed)
+    return _betweenness_centrality(
+        G, k=k, normalized=normalized, weight=weight, endpoints=endpoints, seed=seed
     )
