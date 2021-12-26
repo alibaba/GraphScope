@@ -25,7 +25,7 @@ import "common.proto";
 message ColumnKey {
   int32 id = 1;
   string name = 2;
-  common.DataType dataType = 3;
+  common.DataType data_type = 3;
 }
 
 message Entity {
