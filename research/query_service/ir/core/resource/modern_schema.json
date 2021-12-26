@@ -3,12 +3,34 @@
     {
       "id": 1,
       "name": "software",
-      "columns": []
+      "columns": [
+        {
+          "id": 0,
+          "name": "name",
+          "data_type": 4
+        },
+        {
+          "id": 2,
+          "name": "lang",
+          "data_type": 4
+        }
+      ]
     },
     {
       "id": 0,
       "name": "person",
-      "columns": []
+      "columns": [
+        {
+          "id": 0,
+          "name": "name",
+          "data_type": 4
+        },
+        {
+          "id": 1,
+          "name": "age",
+          "data_type": 1
+        }
+      ]
     }
   ],
   "rels": [
@@ -19,7 +41,13 @@
       "dst_name": "person",
       "id": 0,
       "name": "knows",
-      "columns": []
+      "columns": [
+        {
+          "id": 3,
+          "name": "weight",
+          "data_type": 3
+        }
+      ]
     },
     {
       "src_id": 0,
@@ -28,7 +56,13 @@
       "dst_name": "software",
       "id": 1,
       "name": "created",
-      "columns": []
+      "columns": [
+        {
+          "id": 3,
+          "name": "weight",
+          "data_type": 3
+        }
+      ]
     }
   ],
   "is_table_id": true,
