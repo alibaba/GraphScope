@@ -307,6 +307,10 @@ impl AsPhysical for LogicalPlan {
                                 builder.repartition(key_pb.encode_to_vec());
                             }
                         }
+                        (Some(Vertex(_)), Some(Auxilia(_))) => {
+                            let key_pb = common_pb::NameOrIdKey { key: None };
+                            builder.repartition(key_pb.encode_to_vec());
+                        }
                         _ => {}
                     }
                 }
