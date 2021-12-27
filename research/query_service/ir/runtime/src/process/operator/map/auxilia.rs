@@ -43,6 +43,13 @@ impl FilterMapFunction<Record, Record> for AuxiliaOperator {
             .ok_or(FnExecError::get_tag_error("get tag failed in AuxiliaOperator"))?
             .clone();
         // Make sure there is anything to query with
+        // Note that we need to guarantee the requested column if it has any alias,
+        // e.g., for g.V().out().as("a").has("name", "marko"), we could compile as:
+        // (1) g.V().out(as("a")).auxilia()... where we give alias in out,
+        //     then we set tag="a" and alias=None in auxilia
+        // (2) g.V().out().auxilia(as("a"))... where we give alias in auxilia,
+        //     then we set tag=None and alias="a" in auxilia
+        // TODO: it seems that we do not really care about getting head from curr or "a", we only need to save the updated entry with expected alias "a"
         if self.query_params.is_queryable() {
             // If queryable, then turn into graph element and do the query
             let vertex_or_edge = entry

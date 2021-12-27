@@ -174,6 +174,146 @@ mod test {
         assert_eq!(result_ids_with_prop, expected_ids_with_prop)
     }
 
+    // g.V().out('knows').as("a").values('name')  // where we give alias "a" in out
+    #[test]
+    fn auxilia_get_property_with_none_tag_input_test_01() {
+        let expand_opr = pb::EdgeExpand {
+            base: Some(pb::ExpandBase {
+                v_tag: None,
+                direction: 0,
+                params: Some(pb::QueryParams {
+                    table_names: vec![common_pb::NameOrId::from("knows".to_string())],
+                    columns: vec![],
+                    limit: None,
+                    predicate: None,
+                    requirements: vec![],
+                }),
+            }),
+            is_edge: false,
+            alias: Some("a".to_string().into()),
+        };
+
+        let auxilia_opr = pb::Auxilia {
+            tag: Some("a".to_string().into()),
+            params: Some(pb::QueryParams {
+                table_names: vec![],
+                columns: vec![common_pb::NameOrId::from("name".to_string())],
+                limit: None,
+                predicate: None,
+                requirements: vec![],
+            }),
+            alias: None,
+        };
+
+        let conf = JobConf::new("auxilia_get_property_with_none_tag_input_test");
+        let mut result = pegasus::run(conf, || {
+            let expand = expand_opr.clone();
+            let auxilia = auxilia_opr.clone();
+            |input, output| {
+                let mut stream = input.input_from(source_gen(None))?;
+                let flatmap_func = expand.gen_flat_map().unwrap();
+                stream = stream.flat_map(move |input| flatmap_func.exec(input))?;
+                let filter_map_func = auxilia.gen_filter_map().unwrap();
+                stream = stream.filter_map(move |input| filter_map_func.exec(input))?;
+                stream.sink_into(output)
+            }
+        })
+        .expect("build job failure");
+
+        let expected_ids_with_prop = vec![(2, "vadas".to_string().into()), (4, "josh".to_string().into())];
+        let mut result_ids_with_prop = vec![];
+        while let Some(Ok(record)) = result.next() {
+            if let Some(element) = record
+                .get(Some(&NameOrId::Str("a".to_string())))
+                .unwrap()
+                .as_graph_element()
+            {
+                result_ids_with_prop.push((
+                    element.id(),
+                    element
+                        .details()
+                        .unwrap()
+                        .get_property(&NameOrId::Str("name".to_string()))
+                        .unwrap()
+                        .try_to_owned()
+                        .unwrap(),
+                ));
+            }
+        }
+        result_ids_with_prop.sort_by(|a, b| a.0.partial_cmp(&b.0).unwrap());
+        assert_eq!(result_ids_with_prop, expected_ids_with_prop)
+    }
+
+    // g.V().out('knows').as("a").values('name')   // where we give alias "a" in auxilia
+    #[test]
+    fn auxilia_get_property_with_none_tag_input_test_02() {
+        let expand_opr = pb::EdgeExpand {
+            base: Some(pb::ExpandBase {
+                v_tag: None,
+                direction: 0,
+                params: Some(pb::QueryParams {
+                    table_names: vec![common_pb::NameOrId::from("knows".to_string())],
+                    columns: vec![],
+                    limit: None,
+                    predicate: None,
+                    requirements: vec![],
+                }),
+            }),
+            is_edge: false,
+            alias: None,
+        };
+
+        let auxilia_opr = pb::Auxilia {
+            tag: None,
+            params: Some(pb::QueryParams {
+                table_names: vec![],
+                columns: vec![common_pb::NameOrId::from("name".to_string())],
+                limit: None,
+                predicate: None,
+                requirements: vec![],
+            }),
+            alias: Some("a".to_string().into()),
+        };
+
+        let conf = JobConf::new("auxilia_get_property_with_none_tag_input_test");
+        let mut result = pegasus::run(conf, || {
+            let expand = expand_opr.clone();
+            let auxilia = auxilia_opr.clone();
+            |input, output| {
+                let mut stream = input.input_from(source_gen(None))?;
+                let flatmap_func = expand.gen_flat_map().unwrap();
+                stream = stream.flat_map(move |input| flatmap_func.exec(input))?;
+                let filter_map_func = auxilia.gen_filter_map().unwrap();
+                stream = stream.filter_map(move |input| filter_map_func.exec(input))?;
+                stream.sink_into(output)
+            }
+        })
+        .expect("build job failure");
+
+        let expected_ids_with_prop = vec![(2, "vadas".to_string().into()), (4, "josh".to_string().into())];
+        let mut result_ids_with_prop = vec![];
+        while let Some(Ok(record)) = result.next() {
+            if let Some(element) = record
+                .get(Some(&NameOrId::Str("a".to_string())))
+                .unwrap()
+                .as_graph_element()
+            {
+                result_ids_with_prop.push((
+                    element.id(),
+                    element
+                        .details()
+                        .unwrap()
+                        .get_property(&NameOrId::Str("name".to_string()))
+                        .unwrap()
+                        .try_to_owned()
+                        .unwrap(),
+                ));
+            }
+        }
+        result_ids_with_prop.sort_by(|a, b| a.0.partial_cmp(&b.0).unwrap());
+        assert_eq!(result_ids_with_prop, expected_ids_with_prop)
+    }
+
     // g.V().out('knows').has('name', "vadas")
     #[test]
     fn auxilia_filter_test() {

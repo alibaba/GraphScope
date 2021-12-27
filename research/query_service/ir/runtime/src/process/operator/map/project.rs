@@ -163,6 +163,30 @@ mod tests {
         assert_eq!(object_result, expected_result);
     }
 
+    // g.V().as("a").valueMap("id")
+    #[test]
+    fn project_none_tag_single_mapping_test() {
+        let project_opr_pb = pb::Project {
+            mappings: vec![pb::project::ExprAlias {
+                expr: Some(str_to_suffix_expr_pb("@.id".to_string()).unwrap()),
+                alias: Some(pb::Alias { alias: None, is_query_given: false }),
+            }],
+            is_append: false,
+        };
+        let mut result = project_test(init_source_with_tag(), project_opr_pb);
+        let mut object_result = vec![];
+        while let Some(Ok(res)) = result.next() {
+            match res.get(None).unwrap().as_ref() {
+                Entry::Element(RecordElement::OffGraph(ObjectElement::Prop(val))) => {
+                    object_result.push(val.clone());
+                }
+                _ => {}
+            }
+        }
+        let expected_result = vec![object!(1), object!(2)];
+        assert_eq!(object_result, expected_result);
+    }
+
     // g.V().valueMap('age', 'name') with alias of 'age' as 'b' and 'name' as 'c'
     #[test]
     fn project_multi_mapping_test() {

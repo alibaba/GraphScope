@@ -250,6 +250,33 @@ mod test {
         assert_eq!(result_ids, expected_ids)
     }
 
+    // g.V().as("a").out()
+    #[test]
+    fn expand_outv_from_none_tag_test() {
+        let query_param = pb::QueryParams {
+            table_names: vec!["knows".into()],
+            columns: vec![],
+            limit: None,
+            predicate: None,
+            requirements: vec![],
+        };
+        let edge_expand_base = pb::ExpandBase { v_tag: None, direction: 0, params: Some(query_param) };
+        let expand_opr_pb = pb::EdgeExpand { base: Some(edge_expand_base), is_edge: false, alias: None };
+        let mut result = expand_test_with_source_tag("a".into(), expand_opr_pb);
+        let mut result_ids = vec![];
+        let v2: DefaultId = LDBCVertexParser::to_global_id(2, 0);
+        let v4: DefaultId = LDBCVertexParser::to_global_id(4, 0);
+        let mut expected_ids = vec![v2, v4];
+        while let Some(Ok(record)) = result.next() {
+            if let Some(element) = record.get(None).unwrap().as_graph_element() {
+                result_ids.push(element.id() as usize)
+            }
+        }
+        result_ids.sort();
+        expected_ids.sort();
+        assert_eq!(result_ids, expected_ids)
+    }
+
     // g.V().out('knows').has('id',2)
     #[test]
     fn expand_outv_filter_test() {

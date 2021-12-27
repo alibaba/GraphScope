@@ -190,16 +190,13 @@ pub(crate) mod tests {
     }
 
     #[test]
+    // None tag refers to the last appended entry;
     fn test_get_none_tag_entry() {
         let tag_key = TagKey { tag: None, key: None };
-        let expected = init_vertex1();
         let record = init_record();
+        let expected = ObjectElement::Count(10).into();
         let entry = tag_key.get_entry(&record).unwrap();
-        if let Some(element) = entry.as_graph_element() {
-            assert_eq!(element.id(), expected.id());
-        } else {
-            assert!(false);
-        }
+        assert_eq!(entry.as_ref().clone(), expected)
     }
 
     #[test]
