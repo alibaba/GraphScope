@@ -13,7 +13,7 @@ mod codegen {
 }
 
 pub use codegen::clickhouse_grpc::click_house_client::ClickHouseClient;
-pub use codegen::clickhouse_grpc::{QueryInfo, Compression};
+pub use codegen::clickhouse_grpc::{Compression, QueryInfo};
 
 // #[derive(Clone, Debug, PartialEq, Eq, Hash)]
 // pub enum CKHType {

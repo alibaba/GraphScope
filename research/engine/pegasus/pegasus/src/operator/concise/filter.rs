@@ -21,6 +21,8 @@ use crate::stream::Stream;
 use crate::Data;
 
 impl<D: Data> Filter<D> for Stream<D> {
+
+
     fn filter<F>(self, func: F) -> Result<Stream<D>, BuildJobError>
     where
         F: Fn(&D) -> FnResult<bool> + Send + 'static,

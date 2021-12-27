@@ -45,6 +45,28 @@ impl<D: Data> Iteration<D> for Stream<D> {
         feedback.feedback_to(index)?;
         leave.leave()
     }
+
+    fn iterate_emit<T, F>(self, until: IterCondition<D>, func: F) -> Result<(Stream<T>, Stream<D>), BuildJobError>
+    where
+        T: Data,
+        F: FnOnce(Stream<D>) -> Result<(Stream<T>, Stream<D>), BuildJobError>,
+    {
+        let max_iters = until.max_iters;
+        let (leave, enter) = self
+            .enter()?
+            .binary_branch_notify("switch", |info| SwitchOperator::<D>::new(info.scope_level, until))?;
+
+        let index = enter.get_upstream_port().index;
+        let (emit, re_enter) = func(enter)?;
+        let feedback: Stream<D> = re_enter
+            .sync_state()
+            .transform_notify("feedback", move |info| {
+                FeedbackOperator::<D>::new(info.scope_level, max_iters)
+            })?;
+        feedback.feedback_to(index)?;
+
+        Ok((emit.leave()?, leave.leave()?))
+    }
 }
 
 impl<D: 'static + Send> IterCondition<D> {

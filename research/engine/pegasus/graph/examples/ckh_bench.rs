@@ -48,6 +48,7 @@ async fn main() {
     let mut client = ClickHouseClient::connect("http://100.81.128.150:9010")
         .await
         .unwrap();
+    client = client.send_gzip().accept_gzip();
     let ids: Vec<u64> = vec![
         26388281136663,
         13194140916590,
@@ -90,7 +91,7 @@ async fn main() {
         format!("select p_personid from person where p_personid in {:?} and p_firstname = 'Chau'", ids);
     let mut settings = HashMap::new();
     settings.insert("max_block_size".to_string(), "1000000".to_string());
-    // let compression = Compression { algorithm: 1, level: 3};
+    let compression = Compression { algorithm: 2, level: 3 };
     let query = QueryInfo {
         query,
         query_id: "".to_string(),
@@ -108,13 +109,17 @@ async fn main() {
         session_timeout: 0,
         cancel: false,
         next_query_info: false,
-        result_compression: None,
+        result_compression: Some(compression),
         compression_type: "".to_string(),
         compression_level: 0,
     };
 
     let start = Instant::now();
-    let mut results = client.execute_query_with_stream_output(query).await.unwrap().into_inner();
+    let mut results = client
+        .execute_query_with_stream_output(query)
+        .await
+        .unwrap()
+        .into_inner();
     let mut result_binary = vec![];
     while let Some(res) = results.message().await.unwrap() {
         if let Some(err) = res.exception {
@@ -126,29 +131,32 @@ async fn main() {
             //println!("totals: bytes(len={})", res.totals.len());
             //println!("extremes: bytes(len={})", res.extremes.len());
             if let Some(ref progress) = res.progress {
-                println!("Progress(read_rows={}, read_bytes={}, total={})", progress.read_rows, progress.read_bytes, progress.total_rows_to_read)
+                println!(
+                    "Progress(read_rows={}, read_bytes={}, total={})",
+                    progress.read_rows, progress.read_bytes, progress.total_rows_to_read
+                )
             }
             if !res.output.is_empty() {
                 println!("output: bytes(len={})", res.output.len());
-            //     let mut bytes = res.output.as_slice();
-            //     let columns = read_var_uint(&mut bytes).unwrap();
-            //     let rows = read_var_uint(&mut bytes).unwrap();
-            //     println!("columns = {}, rows = {}", columns, rows);
-            //     for _ in 0..columns {
-            //         let name = read_string(&mut bytes).unwrap();
-            //         let type_name = read_string(&mut bytes).unwrap();
-            //         let type_ = Type::from_str(&*type_name).unwrap();
-            //         println!("read column {}, type {} {:?}", name, type_name, type_);
-            //         for _ in 0..rows {
-            //             let v = bytes.read_u64::<LittleEndian>().unwrap();
-            //             result_binary.push(v);
-            //         }
-            //     }
+                //     let mut bytes = res.output.as_slice();
+                //     let columns = read_var_uint(&mut bytes).unwrap();
+                //     let rows = read_var_uint(&mut bytes).unwrap();
+                //     println!("columns = {}, rows = {}", columns, rows);
+                //     for _ in 0..columns {
+                //         let name = read_string(&mut bytes).unwrap();
+                //         let type_name = read_string(&mut bytes).unwrap();
+                //         let type_ = Type::from_str(&*type_name).unwrap();
+                //         println!("read column {}, type {} {:?}", name, type_name, type_);
+                //         for _ in 0..rows {
+                //             let v = bytes.read_u64::<LittleEndian>().unwrap();
+                //             result_binary.push(v);
+                //         }
+                //     }
                 result_binary.push(res.output);
             }
         }
     }
-    println!("get {} records cost {:?}",  result_binary.len(), start.elapsed());
+    println!("get {} records cost {:?}", result_binary.len(), start.elapsed());
 }
 
 fn read_var_uint<R: Read>(reader: &mut R) -> std::io::Result<u64> {
