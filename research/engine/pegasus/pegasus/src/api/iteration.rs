@@ -98,7 +98,9 @@ pub trait Iteration<D: Data> {
     where
         F: FnOnce(Stream<D>) -> Result<Stream<D>, BuildJobError>;
 
-    fn iterate_emit<T, F>(self, until: IterCondition<D>, func: F) -> Result<(Stream<T>, Stream<D>), BuildJobError>
+    fn iterate_emit<T, F>(
+        self, until: IterCondition<D>, func: F,
+    ) -> Result<(Stream<T>, Stream<D>), BuildJobError>
     where
         T: Data,
         F: FnOnce(Stream<D>) -> Result<(Stream<T>, Stream<D>), BuildJobError>;

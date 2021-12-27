@@ -1,0 +1,24 @@
+[workspace]
+
+[package]
+name = "pegasus-ldbc"
+version = "0.1.0"
+edition = "2018"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+pegasus_graph = { path = "../graph" }
+pegasus = { path = "../pegasus" }
+pegasus_common = { path = "../common" }
+tonic = { version = "0.5", features = ["default", "compression"] }
+prost = "0.8"
+tokio = { version = "1.0", features = ["macros", "sync", "rt-multi-thread"] }
+
+
+[build-dependencies]
+tonic-build = { version = "0.5", features = ["default", "compression"] }
+
+[features]
+default = []
+gcip = []

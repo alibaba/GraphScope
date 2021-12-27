@@ -33,6 +33,10 @@ impl<T> Deref for Resource<T> {
     }
 }
 
+unsafe impl<T: Send> Send for Resource<T> {}
+
+unsafe impl<T: Send + Sync> Sync for Resource<T> {}
+
 pub struct ResourceMut<T> {
     ptr: *mut T,
 }
@@ -134,13 +138,24 @@ pub fn add_global_resource<T: Any + Send + Sync>(key: String, res: T) {
     store.insert(key, Box::new(res));
 }
 
-
-pub trait PartitionResource {
+pub trait PartitionableResource {
     type Res: Send + Sync + 'static;
 
     fn get_resource(&self, par: usize) -> Option<&Self::Res>;
 
     fn take_resource(&mut self, par: usize) -> Option<Self::Res>;
+}
+
+impl<T: ?Sized + Send + Sync + 'static> PartitionableResource for std::sync::Arc<T> {
+    type Res = std::sync::Arc<T>;
+
+    fn get_resource(&self, _par: usize) -> Option<&Self::Res> {
+        Some(&self)
+    }
+
+    fn take_resource(&mut self, _par: usize) -> Option<Self::Res> {
+        Some(self.clone())
+    }
 }
 
 pub struct DefaultParResource<T> {
@@ -162,7 +177,7 @@ impl<T> DefaultParResource<T> {
     }
 }
 
-impl<T: Send + Sync + 'static> PartitionResource for DefaultParResource<T> {
+impl<T: Send + Sync + 'static> PartitionableResource for DefaultParResource<T> {
     type Res = T;
 
     fn get_resource(&self, par: usize) -> Option<&Self::Res> {
