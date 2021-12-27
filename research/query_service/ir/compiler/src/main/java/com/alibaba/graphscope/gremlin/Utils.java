@@ -17,8 +17,12 @@
 package com.alibaba.graphscope.gremlin;
 
 import com.google.common.base.Preconditions;
+import org.apache.commons.io.FileUtils;
 
+import java.io.File;
+import java.io.IOException;
 import java.lang.reflect.Field;
+import java.nio.charset.StandardCharsets;
 
 public class Utils {
     /**
@@ -54,5 +58,9 @@ public class Utils {
             }
         }
         return copy;
+    }
+
+    public static String readStringFromFile(String filePath) throws IOException {
+        return FileUtils.readFileToString(new File(filePath), StandardCharsets.UTF_8);
     }
 }

@@ -138,4 +138,6 @@ public interface IrCoreLibrary extends Library {
     FfiAggFn.ByValue initAggFn(FfiAggOpt aggregate, FfiAlias.ByValue alias);
 
     void destroyJobBuffer(FfiJobBuffer value);
+
+    ResultCode setSchema(String schemaJson);
 }

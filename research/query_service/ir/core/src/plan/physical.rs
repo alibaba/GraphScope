@@ -84,26 +84,30 @@ pub trait AsPhysical {
 }
 
 #[derive(PartialEq)]
-enum PegasusOpr {
+enum SimpleOpr {
     Source,
     Map,
     FilterMap,
     Flatmap,
     Filter,
     SortBy,
+    Dedup,
+    GroupBy,
 }
 
 fn simple_add_job_builder<M: Message>(
-    builder: &mut JobBuilder, ir_opr: &M, opr: PegasusOpr,
+    builder: &mut JobBuilder, ir_opr: &M, opr: SimpleOpr,
 ) -> PhysicalResult<()> {
     let bytes = ir_opr.encode_to_vec();
     match opr {
-        PegasusOpr::Source => builder.add_source(bytes),
-        PegasusOpr::Map => builder.map(bytes),
-        PegasusOpr::FilterMap => builder.filter_map(bytes),
-        PegasusOpr::Flatmap => builder.flat_map(bytes),
-        PegasusOpr::Filter => builder.filter(bytes),
-        PegasusOpr::SortBy => builder.sort_by(bytes),
+        SimpleOpr::Source => builder.add_source(bytes),
+        SimpleOpr::Map => builder.map(bytes),
+        SimpleOpr::FilterMap => builder.filter_map(bytes),
+        SimpleOpr::Flatmap => builder.flat_map(bytes),
+        SimpleOpr::Filter => builder.filter(bytes),
+        SimpleOpr::SortBy => builder.sort_by(bytes),
+        SimpleOpr::Dedup => builder.dedup(bytes),
+        SimpleOpr::GroupBy => builder.group_by(pegasus_server::pb::AccumKind::Custom, bytes),
     };
     Ok(())
 }
@@ -117,7 +121,7 @@ impl AsPhysical for pb::Project {
     fn add_job_builder(&self, builder: &mut JobBuilder) -> PhysicalResult<()> {
         let mut project = self.clone();
         project.post_process()?;
-        simple_add_job_builder(builder, &pb::logical_plan::Operator::from(project), PegasusOpr::Map)
+        simple_add_job_builder(builder, &pb::logical_plan::Operator::from(project), SimpleOpr::Map)
     }
 
     fn post_process(&mut self) -> PhysicalResult<()> {
@@ -135,7 +139,7 @@ impl AsPhysical for pb::Select {
     fn add_job_builder(&self, builder: &mut JobBuilder) -> PhysicalResult<()> {
         let mut select = self.clone();
         select.post_process()?;
-        simple_add_job_builder(builder, &pb::logical_plan::Operator::from(select), PegasusOpr::Filter)
+        simple_add_job_builder(builder, &pb::logical_plan::Operator::from(select), SimpleOpr::Filter)
     }
 
     fn post_process(&mut self) -> PhysicalResult<()> {
@@ -151,7 +155,7 @@ impl AsPhysical for pb::Scan {
     fn add_job_builder(&self, builder: &mut JobBuilder) -> PhysicalResult<()> {
         let mut scan = self.clone();
         scan.post_process()?;
-        simple_add_job_builder(builder, &pb::logical_plan::Operator::from(scan), PegasusOpr::Source)
+        simple_add_job_builder(builder, &pb::logical_plan::Operator::from(scan), SimpleOpr::Source)
     }
 
     fn post_process(&mut self) -> PhysicalResult<()> {
@@ -169,11 +173,7 @@ impl AsPhysical for pb::EdgeExpand {
     fn add_job_builder(&self, builder: &mut JobBuilder) -> PhysicalResult<()> {
         let mut xpd = self.clone();
         xpd.post_process()?;
-        simple_add_job_builder(
-            builder,
-            &pb::logical_plan::Operator::from(self.clone()),
-            PegasusOpr::Flatmap,
-        )
+        simple_add_job_builder(builder, &pb::logical_plan::Operator::from(self.clone()), SimpleOpr::Flatmap)
     }
 
     fn post_process(&mut self) -> PhysicalResult<()> {
@@ -191,7 +191,7 @@ impl AsPhysical for pb::EdgeExpand {
 
 impl AsPhysical for pb::GetV {
     fn add_job_builder(&self, builder: &mut JobBuilder) -> PhysicalResult<()> {
-        simple_add_job_builder(builder, &pb::logical_plan::Operator::from(self.clone()), PegasusOpr::Map)
+        simple_add_job_builder(builder, &pb::logical_plan::Operator::from(self.clone()), SimpleOpr::Map)
     }
 }
 
@@ -199,7 +199,7 @@ impl AsPhysical for pb::Auxilia {
     fn add_job_builder(&self, builder: &mut JobBuilder) -> PhysicalResult<()> {
         let mut auxilia = self.clone();
         auxilia.post_process()?;
-        simple_add_job_builder(builder, &pb::logical_plan::Operator::from(auxilia), PegasusOpr::FilterMap)
+        simple_add_job_builder(builder, &pb::logical_plan::Operator::from(auxilia), SimpleOpr::FilterMap)
     }
 
     fn post_process(&mut self) -> PhysicalResult<()> {
@@ -232,7 +232,7 @@ impl AsPhysical for pb::OrderBy {
     fn add_job_builder(&self, builder: &mut JobBuilder) -> PhysicalResult<()> {
         let opr = pb::logical_plan::Operator::from(self.clone());
         if self.limit.is_none() {
-            simple_add_job_builder(builder, &opr, PegasusOpr::SortBy)
+            simple_add_job_builder(builder, &opr, SimpleOpr::SortBy)
         } else {
             let range = self.limit.clone().unwrap();
             if range.upper <= range.lower || range.lower < 0 || range.upper <= 0 {
@@ -243,6 +243,18 @@ impl AsPhysical for pb::OrderBy {
                 Ok(())
             }
         }
+    }
+}
+
+impl AsPhysical for pb::Dedup {
+    fn add_job_builder(&self, builder: &mut JobBuilder) -> PhysicalResult<()> {
+        simple_add_job_builder(builder, self, SimpleOpr::Dedup)
+    }
+}
+
+impl AsPhysical for pb::GroupBy {
+    fn add_job_builder(&self, builder: &mut JobBuilder) -> PhysicalResult<()> {
+        simple_add_job_builder(builder, self, SimpleOpr::GroupBy)
     }
 }
 
@@ -259,6 +271,8 @@ impl AsPhysical for pb::logical_plan::Operator {
                 Limit(limit) => limit.add_job_builder(builder),
                 OrderBy(orderby) => orderby.add_job_builder(builder),
                 Auxilia(auxilia) => auxilia.add_job_builder(builder),
+                Dedup(dedup) => dedup.add_job_builder(builder),
+                GroupBy(groupby) => groupby.add_job_builder(builder),
                 _ => Err(PhysicalError::Unsupported),
             }
         } else {
@@ -287,8 +301,8 @@ impl AsPhysical for LogicalPlan {
                             };
                             builder.repartition(key_pb.encode_to_vec());
                         }
-                        (Some(Edge(_)), Some(Vertex(getv))) => {
-                            let key_pb = common_pb::NameOrIdKey { key: getv.tag.clone() };
+                        (Some(Edge(_)), Some(Auxilia(auxilia))) => {
+                            let key_pb = common_pb::NameOrIdKey { key: auxilia.tag.clone() };
                             builder.repartition(key_pb.encode_to_vec());
                         }
                         _ => {}
@@ -416,9 +430,15 @@ mod test {
         let expand_opr_bytes = expand_opr.encode_to_vec();
 
         let mut logical_plan = LogicalPlan::with_root(Node::new(0, source_opr));
-        logical_plan.append_operator_as_node(select_opr.clone(), vec![0]); // node 1
-        logical_plan.append_operator_as_node(expand_opr.clone(), vec![1]); // node 2
-        logical_plan.append_operator_as_node(limit_opr.clone(), vec![2]); // node 3
+        logical_plan
+            .append_operator_as_node(select_opr.clone(), vec![0])
+            .unwrap(); // node 1
+        logical_plan
+            .append_operator_as_node(expand_opr.clone(), vec![1])
+            .unwrap(); // node 2
+        logical_plan
+            .append_operator_as_node(limit_opr.clone(), vec![2])
+            .unwrap(); // node 3
         let mut builder = JobBuilder::default();
         let _ = logical_plan.add_job_builder(&mut builder);
 
@@ -462,7 +482,9 @@ mod test {
         });
 
         let mut logical_plan = LogicalPlan::with_root(Node::new(0, source_opr.clone()));
-        logical_plan.append_operator_as_node(project_opr.clone(), vec![0]); // node 1
+        logical_plan
+            .append_operator_as_node(project_opr.clone(), vec![0])
+            .unwrap(); // node 1
         let mut builder = JobBuilder::default();
         logical_plan
             .add_job_builder(&mut builder)
@@ -515,8 +537,12 @@ mod test {
         let topby_opr_bytes = topby_opr.encode_to_vec();
 
         let mut logical_plan = LogicalPlan::with_root(Node::new(0, source_opr));
-        logical_plan.append_operator_as_node(orderby_opr.clone(), vec![0]); // node 1
-        logical_plan.append_operator_as_node(topby_opr.clone(), vec![1]); // node 2
+        logical_plan
+            .append_operator_as_node(orderby_opr.clone(), vec![0])
+            .unwrap(); // node 1
+        logical_plan
+            .append_operator_as_node(topby_opr.clone(), vec![1])
+            .unwrap(); // node 2
         let mut builder = JobBuilder::default();
         let _ = logical_plan.add_job_builder(&mut builder);
 
@@ -557,11 +583,21 @@ mod test {
         let join_opr_bytes = join_opr.encode_to_vec();
 
         let mut logical_plan = LogicalPlan::with_root(Node::new(0, source_opr));
-        logical_plan.append_operator_as_node(expand_opr.clone(), vec![0]); // node 1
-        logical_plan.append_operator_as_node(expand_opr.clone(), vec![0]); // node 2
-        logical_plan.append_operator_as_node(expand_opr.clone(), vec![2]); // node 3
-        logical_plan.append_operator_as_node(join_opr.clone(), vec![1, 3]); // node 4
-        logical_plan.append_operator_as_node(pb::logical_plan::Operator::from(limit_opr.clone()), vec![4]); // node 5
+        logical_plan
+            .append_operator_as_node(expand_opr.clone(), vec![0])
+            .unwrap(); // node 1
+        logical_plan
+            .append_operator_as_node(expand_opr.clone(), vec![0])
+            .unwrap(); // node 2
+        logical_plan
+            .append_operator_as_node(expand_opr.clone(), vec![2])
+            .unwrap(); // node 3
+        logical_plan
+            .append_operator_as_node(join_opr.clone(), vec![1, 3])
+            .unwrap(); // node 4
+        logical_plan
+            .append_operator_as_node(pb::logical_plan::Operator::from(limit_opr.clone()), vec![4])
+            .unwrap(); // node 5
         let mut builder = JobBuilder::default();
         let _ = logical_plan.add_job_builder(&mut builder);
 

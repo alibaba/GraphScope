@@ -24,10 +24,8 @@
                         }
                       },
                       "value": {
-                        "value": {
-                          "item": {
-                            "I64": 1
-                          }
+                        "item": {
+                          "I64": 1
                         }
                       },
                       "cmp": null
@@ -43,10 +41,8 @@
                         }
                       },
                       "value": {
-                        "value": {
-                          "item": {
-                            "I64": 2
-                          }
+                        "item": {
+                          "I64": 2
                         }
                       },
                       "cmp": null

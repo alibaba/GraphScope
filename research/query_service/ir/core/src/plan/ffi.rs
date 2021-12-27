@@ -63,8 +63,10 @@ use pegasus::BuildJobError;
 use pegasus_client::builder::JobBuilder;
 use prost::Message;
 
-use crate::plan::logical::LogicalPlan;
+use crate::plan::logical::{LogicalError, LogicalPlan};
+use crate::plan::meta::set_schema_from_json;
 use crate::plan::physical::{AsPhysical, PhysicalError};
+use crate::JsonIO;
 
 #[repr(i32)]
 #[derive(Clone, Copy, Debug, PartialEq)]
@@ -84,6 +86,8 @@ pub enum ResultCode {
     NegativeIndexError = 6,
     /// Build Physical Plan Error
     BuildJobError = 7,
+    /// Unsupported
+    UnSupported = 8,
 }
 
 impl std::fmt::Display for ResultCode {
@@ -97,11 +101,21 @@ impl std::fmt::Display for ResultCode {
             ResultCode::InvalidRangeError => write!(f, "the range is invalid"),
             ResultCode::NegativeIndexError => write!(f, "the given index is negative"),
             ResultCode::BuildJobError => write!(f, "build physical plan error"),
+            ResultCode::UnSupported => write!(f, "unsupported functionality"),
         }
     }
 }
 
 impl std::error::Error for ResultCode {}
+
+impl From<LogicalError> for ResultCode {
+    fn from(err: LogicalError) -> Self {
+        match err {
+            LogicalError::Unsupported => Self::UnSupported,
+            _ => Self::NotExistError,
+        }
+    }
+}
 
 pub(crate) type FfiResult<T> = Result<T, ResultCode>;
 
@@ -319,13 +333,131 @@ fn destroy_ptr<M>(ptr: *const c_void) {
     }
 }
 
+#[derive(Clone, Copy)]
+#[repr(i32)]
+pub enum FfiDataType {
+    Unknown = 0,
+    Boolean = 1,
+    I32 = 2,
+    I64 = 3,
+    F64 = 4,
+    Str = 5,
+    I32Array = 6,
+    I64Array = 7,
+    F64Array = 8,
+    StrArray = 9,
+}
+
+#[derive(Clone)]
+#[repr(C)]
+pub struct FfiConst {
+    data_type: FfiDataType,
+    boolean: bool,
+    int32: i32,
+    int64: i64,
+    float64: f64,
+    cstr: *const c_char,
+    raw: *const c_void,
+}
+
+impl Default for FfiConst {
+    fn default() -> Self {
+        FfiConst {
+            data_type: FfiDataType::Unknown,
+            boolean: false,
+            int32: 0,
+            int64: 0,
+            float64: 0.0,
+            cstr: std::ptr::null::<c_char>(),
+            raw: std::ptr::null::<c_void>(),
+        }
+    }
+}
+
+impl TryFrom<FfiConst> for common_pb::Value {
+    type Error = ResultCode;
+
+    fn try_from(ffi: FfiConst) -> Result<Self, Self::Error> {
+        match &ffi.data_type {
+            FfiDataType::Boolean => Ok(common_pb::Value::from(ffi.boolean)),
+            FfiDataType::I32 => Ok(common_pb::Value::from(ffi.int32)),
+            FfiDataType::I64 => Ok(common_pb::Value::from(ffi.int64)),
+            FfiDataType::F64 => Ok(common_pb::Value::from(ffi.float64)),
+            FfiDataType::Str => {
+                let str = cstr_to_string(ffi.cstr);
+                if str.is_ok() {
+                    Ok(common_pb::Value::from(str.unwrap()))
+                } else {
+                    Err(str.err().unwrap())
+                }
+            }
+            // TODO(longbin) add support for other type
+            _ => Err(ResultCode::UnknownTypeError),
+        }
+    }
+}
+
+#[no_mangle]
+pub extern "C" fn boolean_as_const(boolean: bool) -> FfiConst {
+    let mut ffi = FfiConst::default();
+    ffi.data_type = FfiDataType::Boolean;
+    ffi.boolean = boolean;
+    ffi
+}
+
+#[no_mangle]
+pub extern "C" fn int32_as_const(int32: i32) -> FfiConst {
+    let mut ffi = FfiConst::default();
+    ffi.data_type = FfiDataType::I32;
+    ffi.int32 = int32;
+    ffi
+}
+
+#[no_mangle]
+pub extern "C" fn int64_as_const(int64: i64) -> FfiConst {
+    let mut ffi = FfiConst::default();
+    ffi.data_type = FfiDataType::I64;
+    ffi.int64 = int64;
+    ffi
+}
+
+#[no_mangle]
+pub extern "C" fn f64_as_const(float64: f64) -> FfiConst {
+    let mut ffi = FfiConst::default();
+    ffi.data_type = FfiDataType::F64;
+    ffi.float64 = float64;
+    ffi
+}
+
+#[no_mangle]
+pub extern "C" fn cstr_as_const(cstr: *const c_char) -> FfiConst {
+    let mut ffi = FfiConst::default();
+    ffi.data_type = FfiDataType::Str;
+    ffi.cstr = cstr;
+    ffi
+}
+
+/// Set schema via a json-formatted cstring.
+#[no_mangle]
+pub extern "C" fn set_schema(cstr_json: *const c_char) -> ResultCode {
+    let result = cstr_to_string(cstr_json);
+    if let Ok(json) = result {
+        set_schema_from_json(json.as_bytes());
+
+        ResultCode::Success
+    } else {
+        result.err().unwrap()
+    }
+}
+
 /// Initialize a logical plan, which expose a pointer for c-like program to access the
 /// entry of the logical plan. This pointer, however, is owned by Rust, and the caller
 /// **must not** process any operation, which includes but not limited to deallocate it.
 /// We have provided  the [`destroy_logical_plan`] api for deallocating the pointer of the logical plan.
 #[no_mangle]
-pub extern "C" fn init_logical_plan() -> *const c_void {
-    let plan = Box::new(LogicalPlan::default());
+pub extern "C" fn init_logical_plan(is_preprocess: bool) -> *const c_void {
+    let mut plan = Box::new(LogicalPlan::default());
+    plan.is_preprocess = is_preprocess;
     Box::into_raw(plan) as *const c_void
 }
 
@@ -391,23 +523,29 @@ fn append_operator(
     ptr_plan: *const c_void, operator: pb::logical_plan::Operator, parent_ids: Vec<i32>, id: *mut i32,
 ) -> ResultCode {
     let mut plan = unsafe { Box::from_raw(ptr_plan as *mut LogicalPlan) };
-    let opr_id = plan.append_operator_as_node(
+    let result = plan.append_operator_as_node(
         operator,
         parent_ids
             .into_iter()
             .filter_map(|x| if x >= 0 { Some(x as u32) } else { None })
             .collect(),
     );
-    // Do not let rust drop the pointer before explicitly calling `destroy_logical_plan`
-    std::mem::forget(plan);
-    if opr_id >= 0 {
-        unsafe {
-            *id = opr_id;
-        }
-        ResultCode::Success
+    if result.is_err() {
+        std::mem::forget(plan);
+        return ResultCode::from(result.err().unwrap());
     } else {
-        // This must due to the query parent does not present
-        ResultCode::NotExistError
+        let opr_id = result.unwrap();
+        // Do not let rust drop the pointer before explicitly calling `destroy_logical_plan`
+        std::mem::forget(plan);
+        if opr_id >= 0 {
+            unsafe {
+                *id = opr_id;
+            }
+            ResultCode::Success
+        } else {
+            // This must due to the query parent does not present
+            ResultCode::NotExistError
+        }
     }
 }
 
@@ -1169,110 +1307,6 @@ mod scan {
             idx_predicate: None,
         });
         Box::into_raw(scan) as *const c_void
-    }
-
-    #[derive(Clone, Copy)]
-    #[repr(i32)]
-    pub enum FfiDataType {
-        Unknown = 0,
-        Boolean = 1,
-        I32 = 2,
-        I64 = 3,
-        F64 = 4,
-        Str = 5,
-        // TODO(longbin) More data type will be defined
-    }
-
-    #[derive(Clone)]
-    #[repr(C)]
-    pub struct FfiConst {
-        data_type: FfiDataType,
-        boolean: bool,
-        int32: i32,
-        int64: i64,
-        float64: f64,
-        cstr: *const c_char,
-        raw: *const c_void,
-    }
-
-    impl Default for FfiConst {
-        fn default() -> Self {
-            FfiConst {
-                data_type: FfiDataType::Unknown,
-                boolean: false,
-                int32: 0,
-                int64: 0,
-                float64: 0.0,
-                cstr: std::ptr::null::<c_char>(),
-                raw: std::ptr::null::<c_void>(),
-            }
-        }
-    }
-
-    impl TryFrom<FfiConst> for common_pb::Const {
-        type Error = ResultCode;
-
-        fn try_from(ffi: FfiConst) -> Result<Self, Self::Error> {
-            match &ffi.data_type {
-                FfiDataType::Unknown => Err(ResultCode::UnknownTypeError),
-                FfiDataType::Boolean => {
-                    Ok(common_pb::Const { value: Some(common_pb::Value::from(ffi.boolean)) })
-                }
-                FfiDataType::I32 => Ok(common_pb::Const { value: Some(common_pb::Value::from(ffi.int32)) }),
-                FfiDataType::I64 => Ok(common_pb::Const { value: Some(common_pb::Value::from(ffi.int64)) }),
-                FfiDataType::F64 => {
-                    Ok(common_pb::Const { value: Some(common_pb::Value::from(ffi.float64)) })
-                }
-                FfiDataType::Str => {
-                    let str = cstr_to_string(ffi.cstr);
-                    if str.is_ok() {
-                        Ok(common_pb::Const { value: str.ok().map(|s| common_pb::Value::from(s)) })
-                    } else {
-                        Err(str.err().unwrap())
-                    }
-                }
-            }
-        }
-    }
-
-    #[no_mangle]
-    pub extern "C" fn boolean_as_const(boolean: bool) -> FfiConst {
-        let mut ffi = FfiConst::default();
-        ffi.data_type = FfiDataType::Boolean;
-        ffi.boolean = boolean;
-        ffi
-    }
-
-    #[no_mangle]
-    pub extern "C" fn int32_as_const(int32: i32) -> FfiConst {
-        let mut ffi = FfiConst::default();
-        ffi.data_type = FfiDataType::I32;
-        ffi.int32 = int32;
-        ffi
-    }
-
-    #[no_mangle]
-    pub extern "C" fn int64_as_const(int64: i64) -> FfiConst {
-        let mut ffi = FfiConst::default();
-        ffi.data_type = FfiDataType::I64;
-        ffi.int64 = int64;
-        ffi
-    }
-
-    #[no_mangle]
-    pub extern "C" fn f64_as_const(float64: f64) -> FfiConst {
-        let mut ffi = FfiConst::default();
-        ffi.data_type = FfiDataType::F64;
-        ffi.float64 = float64;
-        ffi
-    }
-
-    #[no_mangle]
-    pub extern "C" fn cstr_as_const(cstr: *const c_char) -> FfiConst {
-        let mut ffi = FfiConst::default();
-        ffi.data_type = FfiDataType::Str;
-        ffi.cstr = cstr;
-        ffi
     }
 
     #[no_mangle]

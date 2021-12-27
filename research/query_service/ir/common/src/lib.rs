@@ -40,6 +40,8 @@ pub mod generated {
     pub mod common;
     #[path = "results.rs"]
     pub mod results;
+    #[path = "schema.rs"]
+    pub mod schema;
 }
 
 #[cfg(not(feature = "proto_inplace"))]
@@ -52,6 +54,9 @@ pub mod generated {
     }
     pub mod results {
         tonic::include_proto!("results");
+    }
+    pub mod schema {
+        tonic::include_proto!("schema");
     }
 }
 
@@ -204,8 +209,8 @@ impl From<common_pb::Logical> for common_pb::ExprOpr {
     }
 }
 
-impl From<common_pb::Const> for common_pb::ExprOpr {
-    fn from(const_val: common_pb::Const) -> Self {
+impl From<common_pb::Value> for common_pb::ExprOpr {
+    fn from(const_val: common_pb::Value) -> Self {
         common_pb::ExprOpr { item: Some(common_pb::expr_opr::Item::Const(const_val)) }
     }
 }
@@ -327,48 +332,94 @@ impl From<String> for common_pb::Variable {
     }
 }
 
-impl TryFrom<common_pb::Const> for Option<Object> {
+impl From<i64> for pb::index_predicate::AndPredicate {
+    fn from(id: i64) -> Self {
+        pb::index_predicate::AndPredicate {
+            predicates: vec![pb::index_predicate::Triplet {
+                key: Some(common_pb::Property {
+                    item: Some(common_pb::property::Item::Id(common_pb::IdKey {})),
+                }),
+                value: Some(id.into()),
+                cmp: None,
+            }],
+        }
+    }
+}
+
+impl From<Vec<i64>> for pb::IndexPredicate {
+    fn from(ids: Vec<i64>) -> Self {
+        let or_predicates: Vec<pb::index_predicate::AndPredicate> =
+            ids.into_iter().map(|id| id.into()).collect();
+
+        pb::IndexPredicate { or_predicates }
+    }
+}
+
+impl From<String> for pb::index_predicate::AndPredicate {
+    fn from(label: String) -> Self {
+        pb::index_predicate::AndPredicate {
+            predicates: vec![pb::index_predicate::Triplet {
+                key: Some(common_pb::Property {
+                    item: Some(common_pb::property::Item::Label(common_pb::LabelKey {})),
+                }),
+                value: Some(label.into()),
+                cmp: None,
+            }],
+        }
+    }
+}
+
+impl From<Vec<String>> for pb::IndexPredicate {
+    fn from(names: Vec<String>) -> Self {
+        let or_predicates: Vec<pb::index_predicate::AndPredicate> = names
+            .into_iter()
+            .map(|name| name.into())
+            .collect();
+
+        pb::IndexPredicate { or_predicates }
+    }
+}
+
+impl TryFrom<common_pb::Value> for Option<Object> {
     type Error = ParsePbError;
 
-    fn try_from(value: common_pb::Const) -> Result<Self, Self::Error> {
+    fn try_from(value: common_pb::Value) -> Result<Self, Self::Error> {
         use common_pb::value::Item::*;
-        if let Some(val) = &value.value {
-            if let Some(item) = val.item.as_ref() {
-                return match item {
-                    Boolean(b) => Ok(Some((*b).into())),
-                    I32(i) => Ok(Some((*i).into())),
-                    I64(i) => Ok(Some((*i).into())),
-                    F64(f) => Ok(Some((*f).into())),
-                    Str(s) => Ok(Some(s.clone().into())),
-                    Blob(blob) => Ok(Some(blob.clone().into())),
-                    None(_) => Ok(Option::None),
-                    I32Array(v) => Ok(Some(v.item.clone().into())),
-                    I64Array(v) => Ok(Some(v.item.clone().into())),
-                    F64Array(v) => Ok(Some(v.item.clone().into())),
-                    StrArray(v) => Ok(Some(v.item.clone().into())),
-                    PairArray(pairs) => {
-                        let mut vec = Vec::<(Object, Object)>::with_capacity(pairs.item.len());
-                        let mut is_ok = true;
-                        for item in pairs.item.clone().into_iter() {
-                            let (key_obj_opt, val_obj_opt) = (
-                                <Option<Object>>::try_from(common_pb::Const { value: item.key })?,
-                                <Option<Object>>::try_from(common_pb::Const { value: item.val })?,
-                            );
-                            if key_obj_opt.is_none() || val_obj_opt.is_none() {
-                                is_ok = false;
-                                break;
-                            } else {
-                                vec.push((key_obj_opt.unwrap(), val_obj_opt.unwrap()));
-                            }
-                        }
-                        if is_ok {
-                            Ok(Some(vec.into()))
+        if let Some(item) = value.item.as_ref() {
+            return match item {
+                Boolean(b) => Ok(Some((*b).into())),
+                I32(i) => Ok(Some((*i).into())),
+                I64(i) => Ok(Some((*i).into())),
+                F64(f) => Ok(Some((*f).into())),
+                Str(s) => Ok(Some(s.clone().into())),
+                Blob(blob) => Ok(Some(blob.clone().into())),
+                None(_) => Ok(Option::None),
+                I32Array(v) => Ok(Some(v.item.clone().into())),
+                I64Array(v) => Ok(Some(v.item.clone().into())),
+                F64Array(v) => Ok(Some(v.item.clone().into())),
+                StrArray(v) => Ok(Some(v.item.clone().into())),
+                PairArray(pairs) => {
+                    let mut vec = Vec::<(Object, Object)>::with_capacity(pairs.item.len());
+                    let mut is_ok = true;
+                    for item in pairs.item.clone().into_iter() {
+                        let (key_obj_opt, val_obj_opt) = (
+                            <Option<Object>>::try_from(item.key.unwrap())?,
+                            <Option<Object>>::try_from(item.val.unwrap())?,
+                        );
+                        if key_obj_opt.is_none() || val_obj_opt.is_none() {
+                            is_ok = false;
+                            break;
                         } else {
-                            Err(ParsePbError::from("empty value provided"))
+                            vec.push((key_obj_opt.unwrap(), val_obj_opt.unwrap()));
                         }
                     }
-                };
-            }
+                    if is_ok {
+                        Ok(Some(vec.into()))
+                    } else {
+                        Err(ParsePbError::from("empty value provided"))
+                    }
+                }
+            };
         }
 
         Err(ParsePbError::from("empty value provided"))
@@ -389,11 +440,7 @@ impl TryFrom<pb::IndexPredicate> for Vec<i64> {
             let (key, value) = (predicate.key.as_ref(), predicate.value.as_ref());
             let key = key.ok_or("key is empty in kv_pair in indexed_scan")?;
             if let Some(common_pb::property::Item::Id(_id_key)) = key.item.as_ref() {
-                let value = value
-                    .ok_or("value is empty in kv_pair in indexed_scan")?
-                    .value
-                    .as_ref()
-                    .ok_or("value is empty in kv_pair in indexed_scan")?;
+                let value = value.ok_or("value is empty in kv_pair in indexed_scan")?;
 
                 match &value.item {
                     Some(common_pb::value::Item::I64(v)) => {

@@ -1,0 +1,70 @@
+{
+  "entities": [
+    {
+      "id": 1,
+      "name": "software",
+      "columns": [
+        {
+          "id": 0,
+          "name": "name",
+          "data_type": 4
+        },
+        {
+          "id": 2,
+          "name": "lang",
+          "data_type": 4
+        }
+      ]
+    },
+    {
+      "id": 0,
+      "name": "person",
+      "columns": [
+        {
+          "id": 0,
+          "name": "name",
+          "data_type": 4
+        },
+        {
+          "id": 1,
+          "name": "age",
+          "data_type": 1
+        }
+      ]
+    }
+  ],
+  "rels": [
+    {
+      "src_id": 0,
+      "src_name": "person",
+      "dst_id": 0,
+      "dst_name": "person",
+      "id": 0,
+      "name": "knows",
+      "columns": [
+        {
+          "id": 3,
+          "name": "weight",
+          "data_type": 3
+        }
+      ]
+    },
+    {
+      "src_id": 0,
+      "src_name": "person",
+      "dst_id": 1,
+      "dst_name": "software",
+      "id": 1,
+      "name": "created",
+      "columns": [
+        {
+          "id": 3,
+          "name": "weight",
+          "data_type": 3
+        }
+      ]
+    }
+  ],
+  "is_table_id": true,
+  "is_column_id": false
+}
