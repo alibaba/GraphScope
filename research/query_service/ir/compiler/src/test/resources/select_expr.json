@@ -30,10 +30,8 @@
                 {
                   "item": {
                     "Const": {
-                      "value": {
-                        "item": {
-                          "I64": 1
-                        }
+                      "item": {
+                        "I64": 1
                       }
                     }
                   }
@@ -67,10 +65,8 @@
                 {
                   "item": {
                     "Const": {
-                      "value": {
-                        "item": {
-                          "Str": "marko"
-                        }
+                      "item": {
+                        "Str": "marko"
                       }
                     }
                   }

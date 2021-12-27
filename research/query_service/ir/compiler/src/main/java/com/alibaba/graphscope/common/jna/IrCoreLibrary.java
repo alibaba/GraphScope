@@ -122,4 +122,6 @@ public interface IrCoreLibrary extends Library {
     FfiVariable.ByValue asNoneVar();
 
     void destroyJobBuffer(FfiJobBuffer value);
+
+    ResultCode setSchema(String schemaJson);
 }

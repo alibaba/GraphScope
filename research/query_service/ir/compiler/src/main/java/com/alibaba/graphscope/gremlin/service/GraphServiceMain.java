@@ -18,15 +18,24 @@ package com.alibaba.graphscope.gremlin.service;
 
 import com.alibaba.graphscope.common.config.Configs;
 import com.alibaba.graphscope.common.config.FileLoadType;
+import com.alibaba.graphscope.common.config.GraphConfig;
+import com.alibaba.graphscope.common.jna.IrCoreLibrary;
+import com.alibaba.graphscope.gremlin.Utils;
 import com.alibaba.graphscope.gremlin.plugin.processor.IrOpLoader;
 import com.alibaba.graphscope.gremlin.plugin.processor.IrStandardOpProcessor;
 import org.apache.tinkerpop.gremlin.server.GremlinServer;
 import org.apache.tinkerpop.gremlin.server.Settings;
 
 public class GraphServiceMain {
+    private static IrCoreLibrary INSTANCE = IrCoreLibrary.INSTANCE;
+
     public static void main(String[] args) throws Exception {
         Configs configs = new Configs("conf/ir.compiler.properties", FileLoadType.RELATIVE_PATH);
         IrOpLoader.addProcessor("", new IrStandardOpProcessor(configs));
+
+        // set graph schema
+        String schemaFilePath = GraphConfig.GRAPH_SCHEMA.get(configs);
+        INSTANCE.setSchema(Utils.readStringFromFile(schemaFilePath));
 
         Settings settings = loadSettings();
         GremlinServer server = new GremlinServer(settings);
