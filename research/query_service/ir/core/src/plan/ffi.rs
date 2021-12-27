@@ -64,9 +64,9 @@ use pegasus_client::builder::JobBuilder;
 use prost::Message;
 
 use crate::plan::logical::{LogicalError, LogicalPlan};
+use crate::plan::meta::set_schema_from_json;
 use crate::plan::physical::{AsPhysical, PhysicalError};
 use crate::JsonIO;
-use crate::plan::meta::set_schema_from_json;
 
 #[repr(i32)]
 #[derive(Clone, Copy, Debug, PartialEq)]
@@ -331,6 +331,110 @@ fn destroy_ptr<M>(ptr: *const c_void) {
             let _ = Box::from_raw(ptr as *mut M);
         }
     }
+}
+
+#[derive(Clone, Copy)]
+#[repr(i32)]
+pub enum FfiDataType {
+    Unknown = 0,
+    Boolean = 1,
+    I32 = 2,
+    I64 = 3,
+    F64 = 4,
+    Str = 5,
+    I32Array = 6,
+    I64Array = 7,
+    F64Array = 8,
+    StrArray = 9,
+}
+
+#[derive(Clone)]
+#[repr(C)]
+pub struct FfiConst {
+    data_type: FfiDataType,
+    boolean: bool,
+    int32: i32,
+    int64: i64,
+    float64: f64,
+    cstr: *const c_char,
+    raw: *const c_void,
+}
+
+impl Default for FfiConst {
+    fn default() -> Self {
+        FfiConst {
+            data_type: FfiDataType::Unknown,
+            boolean: false,
+            int32: 0,
+            int64: 0,
+            float64: 0.0,
+            cstr: std::ptr::null::<c_char>(),
+            raw: std::ptr::null::<c_void>(),
+        }
+    }
+}
+
+impl TryFrom<FfiConst> for common_pb::Value {
+    type Error = ResultCode;
+
+    fn try_from(ffi: FfiConst) -> Result<Self, Self::Error> {
+        match &ffi.data_type {
+            FfiDataType::Boolean => Ok(common_pb::Value::from(ffi.boolean)),
+            FfiDataType::I32 => Ok(common_pb::Value::from(ffi.int32)),
+            FfiDataType::I64 => Ok(common_pb::Value::from(ffi.int64)),
+            FfiDataType::F64 => Ok(common_pb::Value::from(ffi.float64)),
+            FfiDataType::Str => {
+                let str = cstr_to_string(ffi.cstr);
+                if str.is_ok() {
+                    Ok(common_pb::Value::from(str.unwrap()))
+                } else {
+                    Err(str.err().unwrap())
+                }
+            }
+            // TODO(longbin) add support for other type
+            _ => Err(ResultCode::UnknownTypeError),
+        }
+    }
+}
+
+#[no_mangle]
+pub extern "C" fn boolean_as_const(boolean: bool) -> FfiConst {
+    let mut ffi = FfiConst::default();
+    ffi.data_type = FfiDataType::Boolean;
+    ffi.boolean = boolean;
+    ffi
+}
+
+#[no_mangle]
+pub extern "C" fn int32_as_const(int32: i32) -> FfiConst {
+    let mut ffi = FfiConst::default();
+    ffi.data_type = FfiDataType::I32;
+    ffi.int32 = int32;
+    ffi
+}
+
+#[no_mangle]
+pub extern "C" fn int64_as_const(int64: i64) -> FfiConst {
+    let mut ffi = FfiConst::default();
+    ffi.data_type = FfiDataType::I64;
+    ffi.int64 = int64;
+    ffi
+}
+
+#[no_mangle]
+pub extern "C" fn f64_as_const(float64: f64) -> FfiConst {
+    let mut ffi = FfiConst::default();
+    ffi.data_type = FfiDataType::F64;
+    ffi.float64 = float64;
+    ffi
+}
+
+#[no_mangle]
+pub extern "C" fn cstr_as_const(cstr: *const c_char) -> FfiConst {
+    let mut ffi = FfiConst::default();
+    ffi.data_type = FfiDataType::Str;
+    ffi.cstr = cstr;
+    ffi
 }
 
 /// Set schema via a json-formatted cstring.
@@ -1203,106 +1307,6 @@ mod scan {
             idx_predicate: None,
         });
         Box::into_raw(scan) as *const c_void
-    }
-
-    #[derive(Clone, Copy)]
-    #[repr(i32)]
-    pub enum FfiDataType {
-        Unknown = 0,
-        Boolean = 1,
-        I32 = 2,
-        I64 = 3,
-        F64 = 4,
-        Str = 5,
-        // TODO(longbin) More data type will be defined
-    }
-
-    #[derive(Clone)]
-    #[repr(C)]
-    pub struct FfiConst {
-        data_type: FfiDataType,
-        boolean: bool,
-        int32: i32,
-        int64: i64,
-        float64: f64,
-        cstr: *const c_char,
-        raw: *const c_void,
-    }
-
-    impl Default for FfiConst {
-        fn default() -> Self {
-            FfiConst {
-                data_type: FfiDataType::Unknown,
-                boolean: false,
-                int32: 0,
-                int64: 0,
-                float64: 0.0,
-                cstr: std::ptr::null::<c_char>(),
-                raw: std::ptr::null::<c_void>(),
-            }
-        }
-    }
-
-    impl TryFrom<FfiConst> for common_pb::Value {
-        type Error = ResultCode;
-
-        fn try_from(ffi: FfiConst) -> Result<Self, Self::Error> {
-            match &ffi.data_type {
-                FfiDataType::Unknown => Err(ResultCode::UnknownTypeError),
-                FfiDataType::Boolean => Ok(common_pb::Value::from(ffi.boolean)),
-                FfiDataType::I32 => Ok(common_pb::Value::from(ffi.int32)),
-                FfiDataType::I64 => Ok(common_pb::Value::from(ffi.int64)),
-                FfiDataType::F64 => Ok(common_pb::Value::from(ffi.float64)),
-                FfiDataType::Str => {
-                    let str = cstr_to_string(ffi.cstr);
-                    if str.is_ok() {
-                        Ok(common_pb::Value::from(str.unwrap()))
-                    } else {
-                        Err(str.err().unwrap())
-                    }
-                }
-            }
-        }
-    }
-
-    #[no_mangle]
-    pub extern "C" fn boolean_as_const(boolean: bool) -> FfiConst {
-        let mut ffi = FfiConst::default();
-        ffi.data_type = FfiDataType::Boolean;
-        ffi.boolean = boolean;
-        ffi
-    }
-
-    #[no_mangle]
-    pub extern "C" fn int32_as_const(int32: i32) -> FfiConst {
-        let mut ffi = FfiConst::default();
-        ffi.data_type = FfiDataType::I32;
-        ffi.int32 = int32;
-        ffi
-    }
-
-    #[no_mangle]
-    pub extern "C" fn int64_as_const(int64: i64) -> FfiConst {
-        let mut ffi = FfiConst::default();
-        ffi.data_type = FfiDataType::I64;
-        ffi.int64 = int64;
-        ffi
-    }
-
-    #[no_mangle]
-    pub extern "C" fn f64_as_const(float64: f64) -> FfiConst {
-        let mut ffi = FfiConst::default();
-        ffi.data_type = FfiDataType::F64;
-        ffi.float64 = float64;
-        ffi
-    }
-
-    #[no_mangle]
-    pub extern "C" fn cstr_as_const(cstr: *const c_char) -> FfiConst {
-        let mut ffi = FfiConst::default();
-        ffi.data_type = FfiDataType::Str;
-        ffi.cstr = cstr;
-        ffi
     }
 
     #[no_mangle]
