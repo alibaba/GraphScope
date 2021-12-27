@@ -99,6 +99,20 @@ public interface IrCoreLibrary extends Library {
 
     ResultCode appendAuxiliaOperator(Pointer plan, Pointer auxilia, int parent, IntByReference oprIdx);
 
+    Pointer initGroupbyOperator();
+
+    ResultCode addGroupbyKeyAlias(Pointer groupBy, FfiVariable.ByValue key, FfiAlias.ByValue alias);
+
+    ResultCode addGroupbyAggFn(Pointer groupBy, FfiAggFn.ByValue aggFn);
+
+    ResultCode appendGroupbyOperator(Pointer plan, Pointer groupBy, int parent, IntByReference oprIdx);
+
+    Pointer initDedupOperator();
+
+    ResultCode addDedupKey(Pointer dedup, FfiVariable.ByValue var);
+
+    ResultCode appendDedupOperator(Pointer plan, Pointer dedup, int parent, IntByReference oprIdx);
+
     FfiNameOrId.ByValue cstrAsNameOrId(String name);
 
     FfiConst.ByValue cstrAsConst(String value);
@@ -120,6 +134,8 @@ public interface IrCoreLibrary extends Library {
     FfiVariable.ByValue asVar(FfiNameOrId.ByValue tag, FfiProperty.ByValue property);
 
     FfiVariable.ByValue asNoneVar();
+
+    FfiAggFn.ByValue initAggFn(FfiAggOpt aggregate, FfiAlias.ByValue alias);
 
     void destroyJobBuffer(FfiJobBuffer value);
 }

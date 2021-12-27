@@ -42,8 +42,8 @@ public class ValueMapTest {
         ProjectOp op = (ProjectOp) StepTransformFactory.VALUE_MAP_STEP.apply(valueMapStep);
 
         List<Pair> expected = Arrays.asList(
-                Pair.with("@.name", ArgUtils.asFfiAlias("@.name", false)),
-                Pair.with("@.id", ArgUtils.asFfiAlias("@.id", false)));
+                Pair.with("@.name", ArgUtils.asFfiAlias("name", false)),
+                Pair.with("@.id", ArgUtils.asFfiAlias("id", false)));
         Assert.assertEquals(expected, op.getProjectExprWithAlias().get().getArg());
     }
 }

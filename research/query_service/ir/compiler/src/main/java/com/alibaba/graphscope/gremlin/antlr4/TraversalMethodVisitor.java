@@ -221,4 +221,102 @@ public class TraversalMethodVisitor extends TraversalRootVisitor<GraphTraversal>
         }
         throw new UnsupportedEvalException(ctx.getClass(), "supported pattern is [as('..')]");
     }
+
+    @Override
+    public Traversal visitTraversalMethod_group(GremlinGSParser.TraversalMethod_groupContext ctx) {
+        Traversal traversal = graphTraversal.group();
+        if (ctx.traversalMethod_group_keyby() != null) {
+            traversal = visitTraversalMethod_group_keyby(ctx.traversalMethod_group_keyby());
+        }
+        if (ctx.traversalMethod_group_valueby() != null) {
+            traversal = visitTraversalMethod_group_valueby(ctx.traversalMethod_group_valueby());
+        }
+        return traversal;
+    }
+
+    @Override
+    public Traversal visitTraversalMethod_groupCount(GremlinGSParser.TraversalMethod_groupCountContext ctx) {
+        Traversal traversal = graphTraversal.groupCount();
+        if (ctx.traversalMethod_group_keyby() != null) {
+            traversal = visitTraversalMethod_group_keyby(ctx.traversalMethod_group_keyby());
+        }
+        return traversal;
+    }
+
+    @Override
+    public Traversal visitTraversalMethod_group_keyby(GremlinGSParser.TraversalMethod_group_keybyContext ctx) {
+        int childCount = ctx.getChildCount();
+        if (childCount == 4 && ctx.stringLiteral() != null) {
+            return graphTraversal.by(GenericLiteralVisitor.getStringLiteral(ctx.stringLiteral()));
+        } else if (childCount == 4 && ctx.traversalMethod_values() != null) {
+            TraversalMethodVisitor nestedVisitor = new TraversalMethodVisitor(gvisitor,
+                    GremlinAntlrToJava.getTraversalSupplier().get());
+            Traversal nestedTraversal = nestedVisitor.visitTraversalMethod_values(ctx.traversalMethod_values());
+            return graphTraversal.by(nestedTraversal);
+        } else if (childCount == 6 && ctx.traversalMethod_values() != null && ctx.traversalMethod_as() != null) {
+            TraversalMethodVisitor nestedVisitor = new TraversalMethodVisitor(gvisitor,
+                    GremlinAntlrToJava.getTraversalSupplier().get());
+            nestedVisitor.visitTraversalMethod_values(ctx.traversalMethod_values());
+            Traversal nestedTraversal = nestedVisitor.visitTraversalMethod_as(ctx.traversalMethod_as());
+            return graphTraversal.by(nestedTraversal);
+        } else {
+            throw new UnsupportedEvalException(ctx.getClass(),
+                    "supported pattern is [group().by('..')] or [group().by(values('..'))] or [group().by(values('..')).as('..')]");
+        }
+    }
+
+    @Override
+    public Traversal visitTraversalMethod_group_valueby(GremlinGSParser.TraversalMethod_group_valuebyContext ctx) {
+        int childCount = ctx.getChildCount();
+        if (childCount == 4 && ctx.traversalMethod_aggregate_func() != null) {
+            TraversalMethodVisitor nestedVisitor = new TraversalMethodVisitor(gvisitor,
+                    GremlinAntlrToJava.getTraversalSupplier().get());
+            Traversal nestedTraversal = nestedVisitor.visitTraversalMethod_aggregate_func(ctx.traversalMethod_aggregate_func());
+            return graphTraversal.by(nestedTraversal);
+        } else if (childCount == 6 && ctx.traversalMethod_aggregate_func() != null && ctx.traversalMethod_as() != null) {
+            TraversalMethodVisitor nestedVisitor = new TraversalMethodVisitor(gvisitor,
+                    GremlinAntlrToJava.getTraversalSupplier().get());
+            nestedVisitor.visitTraversalMethod_aggregate_func(ctx.traversalMethod_aggregate_func());
+            Traversal nestedTraversal = nestedVisitor.visitTraversalMethod_as(ctx.traversalMethod_as());
+            return graphTraversal.by(nestedTraversal);
+        } else {
+            throw new UnsupportedEvalException(ctx.getClass(),
+                    "supported pattern is [group().by(..).by(count())] or [group().by(..).by(fold())]" +
+                            " or [group().by(..).by(count().as('..'))] or [group().by(..).by(fold().as('..'))]");
+        }
+    }
+
+    @Override
+    public Traversal visitTraversalMethod_aggregate_func(GremlinGSParser.TraversalMethod_aggregate_funcContext ctx) {
+        if (ctx.traversalMethod_count() != null) {
+            return visitTraversalMethod_count(ctx.traversalMethod_count());
+        } else if (ctx.traversalMethod_fold() != null) {
+            return visitTraversalMethod_fold(ctx.traversalMethod_fold());
+        } else {
+            throw new UnsupportedEvalException(ctx.getClass(), "supported pattern is [count()] or [fold()]");
+        }
+    }
+
+    @Override
+    public Traversal visitTraversalMethod_count(GremlinGSParser.TraversalMethod_countContext ctx) {
+        return graphTraversal.count();
+    }
+
+    @Override
+    public Traversal visitTraversalMethod_values(GremlinGSParser.TraversalMethod_valuesContext ctx) {
+        if (ctx.getChildCount() == 4 && ctx.stringLiteral() != null) {
+            return graphTraversal.values(GenericLiteralVisitor.getStringLiteral(ctx.stringLiteral()));
+        }
+        throw new UnsupportedEvalException(ctx.getClass(), "supported pattern is [values('..')]");
+    }
+
+    @Override
+    public Traversal visitTraversalMethod_fold(GremlinGSParser.TraversalMethod_foldContext ctx) {
+        return graphTraversal.fold();
+    }
+
+    @Override
+    public Traversal visitTraversalMethod_dedup(GremlinGSParser.TraversalMethod_dedupContext ctx) {
+        return graphTraversal.dedup();
+    }
 }

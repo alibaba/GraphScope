@@ -16,6 +16,7 @@
 
 package com.alibaba.graphscope.common.intermediate;
 
+import com.alibaba.graphscope.common.exception.OpArgIllegalException;
 import com.alibaba.graphscope.common.jna.IrCoreLibrary;
 import com.alibaba.graphscope.common.jna.type.*;
 
@@ -23,6 +24,8 @@ public class ArgUtils {
     private static IrCoreLibrary irCoreLib = IrCoreLibrary.INSTANCE;
     private static String LABEL = "~label";
     private static String ID = "~id";
+    private static String GROUP_KEYS = "keys";
+    private static String GROUP_VALUES = "values";
 
     public static FfiNameOrId.ByValue strAsNameId(String value) {
         return irCoreLib.cstrAsNameOrId(value);
@@ -46,6 +49,19 @@ public class ArgUtils {
         }
     }
 
+    public static String getPropertyName(FfiProperty.ByValue property) {
+        switch (property.opt) {
+            case Id:
+                return ID;
+            case Label:
+                return LABEL;
+            case Key:
+                return property.key.name;
+            default:
+                throw new OpArgIllegalException(OpArgIllegalException.Cause.INVALID_TYPE, "invalid type");
+        }
+    }
+
     public static FfiVariable.ByValue asVarPropertyOnly(FfiProperty.ByValue property) {
         return irCoreLib.asVarPropertyOnly(property);
     }
@@ -60,6 +76,20 @@ public class ArgUtils {
         ffiAlias.alias = alias;
         ffiAlias.isQueryGiven = isQueryGiven;
         return ffiAlias;
+    }
+
+    public static String groupKeys() {
+        return GROUP_KEYS;
+    }
+
+    public static String groupValues() {
+        return GROUP_VALUES;
+    }
+
+    public static FfiAggFn.ByValue asFfiAggFn(ArgAggFn aggFn) {
+        FfiAggFn.ByValue ffiAggFn = irCoreLib.initAggFn(aggFn.getAggregate(), aggFn.getAlias());
+        // todo: add var
+        return ffiAggFn;
     }
 }
 

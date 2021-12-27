@@ -16,28 +16,29 @@
 
 package com.alibaba.graphscope.common.jna.type;
 
-import com.google.common.base.Objects;
-import com.sun.jna.Structure;
+import com.alibaba.graphscope.common.jna.IntEnum;
 
-@Structure.FieldOrder({"alias", "isQueryGiven"})
-public class FfiAlias extends Structure {
-    public static class ByValue extends FfiAlias implements Structure.ByValue {
-    }
-
-    public FfiNameOrId.ByValue alias;
-    public boolean isQueryGiven;
+public enum FfiAggOpt implements IntEnum<FfiAggOpt> {
+    Sum,
+    Min,
+    Max,
+    Count,
+    CountDistinct,
+    ToList,
+    ToSet,
+    Avg;
 
     @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        FfiAlias ffiAlias = (FfiAlias) o;
-        return isQueryGiven == ffiAlias.isQueryGiven &&
-                Objects.equal(alias, ffiAlias.alias);
+    public int getInt() {
+        return this.ordinal();
     }
 
     @Override
-    public int hashCode() {
-        return Objects.hashCode(alias, isQueryGiven);
+    public FfiAggOpt getEnum(int i) {
+        FfiAggOpt opts[] = values();
+        if (i < opts.length && i >= 0) {
+            return opts[i];
+        }
+        return null;
     }
 }

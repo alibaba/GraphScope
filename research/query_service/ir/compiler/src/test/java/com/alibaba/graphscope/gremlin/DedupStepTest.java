@@ -17,43 +17,31 @@
 package com.alibaba.graphscope.gremlin;
 
 import com.alibaba.graphscope.common.intermediate.ArgUtils;
-import com.alibaba.graphscope.common.intermediate.operator.ProjectOp;
+import com.alibaba.graphscope.common.intermediate.operator.DedupOp;
+import com.alibaba.graphscope.common.jna.type.FfiVariable;
 import org.apache.tinkerpop.gremlin.process.traversal.Step;
 import org.apache.tinkerpop.gremlin.process.traversal.Traversal;
 import org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.GraphTraversalSource;
 import org.apache.tinkerpop.gremlin.structure.Graph;
 import org.apache.tinkerpop.gremlin.tinkergraph.structure.TinkerFactory;
 import com.alibaba.graphscope.gremlin.InterOpCollectionBuilder.StepTransformFactory;
-import org.javatuples.Pair;
 import org.junit.Assert;
 import org.junit.Test;
 
-import java.util.Arrays;
-import java.util.List;
+import java.util.Collections;
 
-public class SelectStepTest {
+public class DedupStepTest {
     private Graph graph = TinkerFactory.createModern();
     private GraphTraversalSource g = graph.traversal();
 
     @Test
-    public void g_V_select_test() {
-        Traversal traversal = g.V().select("a", "b");
-        Step selectStep = traversal.asAdmin().getEndStep();
-        ProjectOp op = (ProjectOp) StepTransformFactory.SELECT_BY_STEP.apply(selectStep);
-        List<Pair> expected = Arrays.asList(
-                Pair.with("@a", ArgUtils.asFfiAlias("a", false)),
-                Pair.with("@b", ArgUtils.asFfiAlias("b", false)));
-        Assert.assertEquals(expected, op.getProjectExprWithAlias().get().getArg());
-    }
+    public void g_V_dedup_test() {
+        Traversal traversal = g.V().dedup();
 
-    @Test
-    public void g_V_select_key_test() {
-        Traversal traversal = g.V().select("a", "b").by("name");
-        Step selectStep = traversal.asAdmin().getEndStep();
-        ProjectOp op = (ProjectOp) StepTransformFactory.SELECT_BY_STEP.apply(selectStep);
-        List<Pair> expected = Arrays.asList(
-                Pair.with("@a.name", ArgUtils.asFfiAlias("a_name", false)),
-                Pair.with("@b.name", ArgUtils.asFfiAlias("b_name", false)));
-        Assert.assertEquals(expected, op.getProjectExprWithAlias().get().getArg());
+        Step step = traversal.asAdmin().getEndStep();
+        DedupOp op = (DedupOp) StepTransformFactory.DEDUP_STEP.apply(step);
+
+        FfiVariable.ByValue expectedVar = ArgUtils.asNoneVar();
+        Assert.assertEquals(Collections.singletonList(expectedVar), op.getDedupKeys().get().getArg());
     }
 }

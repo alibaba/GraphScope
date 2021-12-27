@@ -1,0 +1,43 @@
+{
+  "nodes": [
+    {
+      "opr": {
+        "opr": {
+          "GroupBy": {
+            "mappings": [
+              {
+                "key": {
+                  "tag": null,
+                  "property": null
+                },
+                "alias": {
+                  "alias": {
+                    "item": {
+                      "Name": "keys"
+                    }
+                  },
+                  "is_query_given": false
+                }
+              }
+            ],
+            "functions": [
+              {
+                "vars": [],
+                "aggregate": 5,
+                "alias": {
+                  "alias": {
+                    "item": {
+                      "Name": "values"
+                    }
+                  },
+                  "is_query_given": false
+                }
+              }
+            ]
+          }
+        }
+      },
+      "children": []
+    }
+  ]
+}

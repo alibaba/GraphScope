@@ -34,7 +34,7 @@ public class TestUtils {
     public static String readJsonFromResource(String file) {
         try {
             URL url = TestUtils.class.getClassLoader().getResource(file);
-            return FileUtils.readFileToString(new File(url.toURI()));
+            return FileUtils.readFileToString(new File(url.toURI())).trim();
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
