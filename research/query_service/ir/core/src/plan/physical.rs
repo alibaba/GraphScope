@@ -295,7 +295,7 @@ impl AsPhysical for LogicalPlan {
                     let prev_ref = prev.borrow();
                     let node_ref = curr_node.borrow();
                     match (&prev_ref.opr.opr, &node_ref.opr.opr) {
-                        (Some(Edge(_)), Some(Edge(edgexpd))) => {
+                        (_, Some(Edge(edgexpd))) => {
                             let key_pb = common_pb::NameOrIdKey {
                                 key: edgexpd.base.as_ref().unwrap().v_tag.clone(),
                             };
@@ -307,6 +307,11 @@ impl AsPhysical for LogicalPlan {
                                 builder.repartition(key_pb.encode_to_vec());
                             }
                         }
+                        (Some(Vertex(_)), Some(Auxilia(_))) => {
+                            let key_pb = common_pb::NameOrIdKey { key: None };
+                            builder.repartition(key_pb.encode_to_vec());
+                        }
+                        // TODO: add more shuffle situations, e.g., auxilia after group/fold/limit etc.
                         _ => {}
                     }
                 }
