@@ -151,19 +151,22 @@ public class OpArgTransformFactory {
         map.forEach((k, v) -> {
             String expr = "@" + k;
             if (v == null || v instanceof IdentityTraversal) { // select(..)
-                exprWithAlias.add(makeProjectPair(expr));
+                String property = "";
+                exprWithAlias.add(makeProjectPair(expr, getVarAlias(k, property)));
             } else if (v instanceof ValueTraversal) {
-                expr = String.format("@%s.%s", k, ((ValueTraversal) v).getPropertyKey()); // select(..).by('name')
-                exprWithAlias.add(makeProjectPair(expr));
+                String property = ((ValueTraversal) v).getPropertyKey();
+                expr = String.format("@%s.%s", k, property); // select(..).by('name')
+                exprWithAlias.add(makeProjectPair(expr, getVarAlias(k, property)));
             } else if (v.getSteps().size() == 1 && v.getStartStep() instanceof PropertyMapStep) { // select(..).by(valueMap(''))
                 String[] mapKeys = ((PropertyMapStep) v.getStartStep()).getPropertyKeys();
                 if (mapKeys.length > 0) {
                     for (int i = 0; i < mapKeys.length; ++i) {
                         String e1 = String.format("@%s.%s", k, mapKeys[i]);
-                        exprWithAlias.add(makeProjectPair(e1));
+                        String a1 = getVarAlias(k, mapKeys[i]);
+                        exprWithAlias.add(makeProjectPair(e1, a1));
                     }
                 } else {
-                    exprWithAlias.add(makeProjectPair(expr));
+                    throw new OpArgIllegalException(OpArgIllegalException.Cause.UNSUPPORTED_TYPE, "valueMap() is unsupported");
                 }
             } else {
                 throw new OpArgIllegalException(OpArgIllegalException.Cause.UNSUPPORTED_TYPE,
@@ -173,8 +176,8 @@ public class OpArgTransformFactory {
         return exprWithAlias;
     };
 
-    private static Pair<String, FfiAlias.ByValue> makeProjectPair(String expr) {
-        return Pair.with(expr, ArgUtils.asFfiAlias(expr, false));
+    private static Pair<String, FfiAlias.ByValue> makeProjectPair(String expr, String alias) {
+        return Pair.with(expr, ArgUtils.asFfiAlias(alias, false));
     }
 
     public static Function<List<Pair<Traversal.Admin, Comparator>>, List<Pair<FfiVariable.ByValue, FfiOrderOpt>>>
@@ -242,15 +245,15 @@ public class OpArgTransformFactory {
 
     public static Function<Traversal.Admin, List<Pair<FfiVariable.ByValue, FfiAlias.ByValue>>>
             GROUP_KEYS_FROM_TRAVERSAL = (Traversal.Admin admin) -> {
-        Pair<FfiVariable.ByValue, FfiAlias.ByValue> groupKey;
-        FfiAlias.ByValue alias = ArgUtils.groupKeysAlias();
+        FfiVariable.ByValue variable;
+        FfiAlias.ByValue alias;
         if (admin == null || admin instanceof IdentityTraversal) { // group()
-            FfiVariable.ByValue variable = ArgUtils.asNoneVar();
-            groupKey = Pair.with(variable, alias);
+            variable = ArgUtils.asNoneVar();
+            alias = getGroupKeyAlias(variable);
         } else if (admin instanceof ValueTraversal) { // group().by('name')
             String propertyKey = ((ValueTraversal) admin).getPropertyKey();
-            FfiVariable.ByValue variable = ArgUtils.asVarPropertyOnly(ArgUtils.asFfiProperty(propertyKey));
-            groupKey = Pair.with(variable, alias);
+            variable = ArgUtils.asVarPropertyOnly(ArgUtils.asFfiProperty(propertyKey));
+            alias = getGroupKeyAlias(variable);
         } else if (admin.getSteps().size() == 1 && admin.getStartStep() instanceof PropertiesStep) { // values("name")
             PropertiesStep valueStep = (PropertiesStep) admin.getStartStep();
             String[] valueKeys = valueStep.getPropertyKeys();
@@ -260,44 +263,87 @@ public class OpArgTransformFactory {
             if (valueKeys.length > 1) {
                 logger.error("only one argument in values(...) is supported, ignore others");
             }
-            FfiVariable.ByValue variable = ArgUtils.asVarPropertyOnly(ArgUtils.asFfiProperty(valueKeys[0]));
+            variable = ArgUtils.asVarPropertyOnly(ArgUtils.asFfiProperty(valueKeys[0]));
+            alias = getGroupKeyAlias(variable);
             Set<String> queryAliases = valueStep.getLabels();
             if (queryAliases != null && !queryAliases.isEmpty()) {
                 String queryLabel = queryAliases.iterator().next();
                 alias = ArgUtils.asFfiAlias(queryLabel, true);
             }
-            groupKey = Pair.with(variable, alias);
         } else {
             throw new OpArgIllegalException(OpArgIllegalException.Cause.UNSUPPORTED_TYPE,
                     "supported pattern is [group()] or [group().by('name') or [group().by(values('name'))]]");
         }
-        return Collections.singletonList(groupKey);
+        return Collections.singletonList(Pair.with(variable, alias));
     };
 
     public static Function<Traversal.Admin, List<ArgAggFn>> GROUP_VALUES_FROM_TRAVERSAL = (Traversal.Admin admin) -> {
-        ArgAggFn aggFn;
-        FfiAlias.ByValue alias = ArgUtils.groupValuesAlias();
+        List<FfiVariable.ByValue> noneVars = Collections.emptyList();
+        FfiAggOpt aggOpt;
+        FfiAlias.ByValue alias;
         String notice = "supported pattern is [group().by(..).by(count())] or [group().by(..).by(fold())]";
         if (admin == null) { // group
-            aggFn = new ArgAggFn(FfiAggOpt.ToList, alias);
+            aggOpt = FfiAggOpt.ToList;
+            alias = getGroupValueAlias(noneVars, aggOpt);
         } else if (admin.getSteps().size() == 1) {
+            if (admin.getStartStep() instanceof CountGlobalStep) { // group().by(..).by(count())
+                aggOpt = FfiAggOpt.Count;
+                alias = getGroupValueAlias(noneVars, aggOpt);
+            } else if (admin.getStartStep() instanceof FoldStep) { // group().by(..).by(fold())
+                aggOpt = FfiAggOpt.ToList;
+                alias = getGroupValueAlias(noneVars, aggOpt);
+            } else {
+                throw new OpArgIllegalException(OpArgIllegalException.Cause.UNSUPPORTED_TYPE, notice);
+            }
             Set<String> labels = admin.getStartStep().getLabels();
             if (labels != null && !labels.isEmpty()) {
                 String label = labels.iterator().next();
                 alias = ArgUtils.asFfiAlias(label, true);
             }
-            if (admin.getStartStep() instanceof CountGlobalStep) { // group().by(..).by(count())
-                aggFn = new ArgAggFn(FfiAggOpt.Count, alias);
-            } else if (admin.getStartStep() instanceof FoldStep) { // group().by(..).by(fold())
-                aggFn = new ArgAggFn(FfiAggOpt.ToList, alias);
-            } else {
-                throw new OpArgIllegalException(OpArgIllegalException.Cause.UNSUPPORTED_TYPE, notice);
-            }
         } else {
             throw new OpArgIllegalException(OpArgIllegalException.Cause.UNSUPPORTED_TYPE, notice);
         }
-        return Collections.singletonList(aggFn);
+        return Collections.singletonList(new ArgAggFn(aggOpt, alias));
     };
+
+    // keys or keys_a or keys_name or keys_a_name
+    private static FfiAlias.ByValue getGroupKeyAlias(FfiVariable.ByValue key) {
+        FfiVariable.ByValue none = ArgUtils.asNoneVar();
+        String alias = "";
+        if ((!key.equals(none) && !key.tag.equals(FfiNameOrId.ByValue.getHead()))) {
+            alias = key.tag.name;
+        }
+        String property = "";
+        if (!key.equals(none) && !key.property.isNone()) {
+            property = ArgUtils.getPropertyName(key.property);
+        }
+        String varAlias = getVarAlias(alias, property);
+        String ffiAlias = (varAlias.isEmpty()) ? ArgUtils.groupKeys() : ArgUtils.groupKeys() + "_" + varAlias;
+        return ArgUtils.asFfiAlias(ffiAlias, false);
+    }
+
+    // values
+    private static FfiAlias.ByValue getGroupValueAlias(List<FfiVariable.ByValue> vars, FfiAggOpt aggOpt) {
+        String alias = ArgUtils.groupValues();
+        // todo: add var into alias name
+        if (!vars.isEmpty()) {
+            throw new OpArgIllegalException(OpArgIllegalException.Cause.UNSUPPORTED_TYPE, "aggregate by vars is unsupported");
+        }
+        return ArgUtils.asFfiAlias(alias, false);
+    }
+
+    // empty or a or name or a_name
+    private static String getVarAlias(String alias, String property) {
+        if (alias.equals("") && property.equals("")) {
+            return "";
+        } else if (alias.equals("")) {
+            return property;
+        } else if (property.equals("")) {
+            return alias;
+        } else {
+            return String.format("%s_%s", alias, property);
+        }
+    }
 
     public static Function<Map<String, Traversal.Admin>, List<FfiVariable.ByValue>>
             DEDUP_VARS_FROM_TRAVERSALS = (Map<String, Traversal.Admin> tagTraversals) -> {

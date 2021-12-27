@@ -36,10 +36,11 @@ public class GroupOpTest {
     @Test
     public void groupTest() throws IOException {
         GroupOp op = new GroupOp();
-        Pair<FfiVariable.ByValue, FfiAlias.ByValue> groupKey = Pair.with(ArgUtils.asNoneVar(), ArgUtils.groupKeysAlias());
+        Pair<FfiVariable.ByValue, FfiAlias.ByValue> groupKey = Pair.with(ArgUtils.asNoneVar(),
+                ArgUtils.asFfiAlias("keys", false));
         op.setGroupByKeys(new OpArg(Collections.singletonList(groupKey), Function.identity()));
 
-        ArgAggFn aggFn = new ArgAggFn(FfiAggOpt.ToList, ArgUtils.groupValuesAlias());
+        ArgAggFn aggFn = new ArgAggFn(FfiAggOpt.ToList, ArgUtils.asFfiAlias("values", false));
         op.setGroupByValues(new OpArg(Collections.singletonList(aggFn), Function.identity()));
 
         irPlan.appendInterOp(op);
@@ -50,10 +51,11 @@ public class GroupOpTest {
     public void groupByKeyTest() throws IOException {
         GroupOp op = new GroupOp();
         FfiProperty.ByValue keyP = ArgUtils.asFfiProperty("name");
-        Pair<FfiVariable.ByValue, FfiAlias.ByValue> groupKey = Pair.with((ArgUtils.asVarPropertyOnly(keyP)), ArgUtils.groupKeysAlias());
+        Pair<FfiVariable.ByValue, FfiAlias.ByValue> groupKey = Pair.with((ArgUtils.asVarPropertyOnly(keyP)),
+                ArgUtils.asFfiAlias("keys_name", false));
         op.setGroupByKeys(new OpArg(Collections.singletonList(groupKey), Function.identity()));
 
-        ArgAggFn aggFn = new ArgAggFn(FfiAggOpt.ToList, ArgUtils.groupValuesAlias());
+        ArgAggFn aggFn = new ArgAggFn(FfiAggOpt.ToList, ArgUtils.asFfiAlias("values", false));
         op.setGroupByValues(new OpArg(Collections.singletonList(aggFn), Function.identity()));
 
         irPlan.appendInterOp(op);
@@ -64,10 +66,11 @@ public class GroupOpTest {
     public void groupByKeyByCountTest() throws IOException {
         GroupOp op = new GroupOp();
         FfiProperty.ByValue keyP = ArgUtils.asFfiProperty("name");
-        Pair<FfiVariable.ByValue, FfiAlias.ByValue> groupKey = Pair.with((ArgUtils.asVarPropertyOnly(keyP)), ArgUtils.groupKeysAlias());
+        Pair<FfiVariable.ByValue, FfiAlias.ByValue> groupKey = Pair.with((ArgUtils.asVarPropertyOnly(keyP)),
+                ArgUtils.asFfiAlias("keys_name", false));
         op.setGroupByKeys(new OpArg(Collections.singletonList(groupKey), Function.identity()));
 
-        ArgAggFn aggFn = new ArgAggFn(FfiAggOpt.Count, ArgUtils.groupValuesAlias());
+        ArgAggFn aggFn = new ArgAggFn(FfiAggOpt.Count, ArgUtils.asFfiAlias("values", false));
         op.setGroupByValues(new OpArg(Collections.singletonList(aggFn), Function.identity()));
 
         irPlan.appendInterOp(op);

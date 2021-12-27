@@ -43,8 +43,9 @@ public class GroupStepTest {
         Step step = traversal.asAdmin().getEndStep();
         GroupOp op = (GroupOp) StepTransformFactory.GROUP_STEP.apply(step);
 
-        Pair<FfiVariable.ByValue, FfiAlias.ByValue> expectedKey = Pair.with(ArgUtils.asNoneVar(), ArgUtils.groupKeysAlias());
-        ArgAggFn expectedValue = new ArgAggFn(FfiAggOpt.ToList, ArgUtils.groupValuesAlias());
+        Pair<FfiVariable.ByValue, FfiAlias.ByValue> expectedKey = Pair.with(ArgUtils.asNoneVar(),
+                ArgUtils.asFfiAlias("keys", false));
+        ArgAggFn expectedValue = new ArgAggFn(FfiAggOpt.ToList, ArgUtils.asFfiAlias("values", false));
 
         Assert.assertEquals(Collections.singletonList(expectedKey), op.getGroupByKeys().get().getArg());
         Assert.assertEquals(Collections.singletonList(expectedValue), op.getGroupByValues().get().getArg());
@@ -57,8 +58,9 @@ public class GroupStepTest {
         GroupOp op = (GroupOp) StepTransformFactory.GROUP_STEP.apply(step);
 
         FfiProperty.ByValue keyProperty = ArgUtils.asFfiProperty("name");
-        Pair<FfiVariable.ByValue, FfiAlias.ByValue> expectedKey = Pair.with(ArgUtils.asVarPropertyOnly(keyProperty), ArgUtils.groupKeysAlias());
-        ArgAggFn expectedValue = new ArgAggFn(FfiAggOpt.ToList, ArgUtils.groupValuesAlias());
+        Pair<FfiVariable.ByValue, FfiAlias.ByValue> expectedKey = Pair.with(ArgUtils.asVarPropertyOnly(keyProperty),
+                ArgUtils.asFfiAlias("keys_name", false));
+        ArgAggFn expectedValue = new ArgAggFn(FfiAggOpt.ToList, ArgUtils.asFfiAlias("values", false));
 
         Assert.assertEquals(Collections.singletonList(expectedKey), op.getGroupByKeys().get().getArg());
         Assert.assertEquals(Collections.singletonList(expectedValue), op.getGroupByValues().get().getArg());
@@ -71,8 +73,9 @@ public class GroupStepTest {
         GroupOp op = (GroupOp) StepTransformFactory.GROUP_STEP.apply(step);
 
         FfiProperty.ByValue keyProperty = ArgUtils.asFfiProperty("name");
-        Pair<FfiVariable.ByValue, FfiAlias.ByValue> expectedKey = Pair.with(ArgUtils.asVarPropertyOnly(keyProperty), ArgUtils.groupKeysAlias());
-        ArgAggFn expectedValue = new ArgAggFn(FfiAggOpt.ToList, ArgUtils.groupValuesAlias());
+        Pair<FfiVariable.ByValue, FfiAlias.ByValue> expectedKey = Pair.with(ArgUtils.asVarPropertyOnly(keyProperty),
+                ArgUtils.asFfiAlias("keys_name", false));
+        ArgAggFn expectedValue = new ArgAggFn(FfiAggOpt.ToList, ArgUtils.asFfiAlias("values", false));
 
         Assert.assertEquals(Collections.singletonList(expectedKey), op.getGroupByKeys().get().getArg());
         Assert.assertEquals(Collections.singletonList(expectedValue), op.getGroupByValues().get().getArg());
@@ -85,8 +88,9 @@ public class GroupStepTest {
         GroupOp op = (GroupOp) StepTransformFactory.GROUP_STEP.apply(step);
 
         FfiProperty.ByValue keyProperty = ArgUtils.asFfiProperty("name");
-        Pair<FfiVariable.ByValue, FfiAlias.ByValue> expectedKey = Pair.with(ArgUtils.asVarPropertyOnly(keyProperty), ArgUtils.asFfiAlias("a", true));
-        ArgAggFn expectedValue = new ArgAggFn(FfiAggOpt.ToList, ArgUtils.groupValuesAlias());
+        Pair<FfiVariable.ByValue, FfiAlias.ByValue> expectedKey = Pair.with(ArgUtils.asVarPropertyOnly(keyProperty),
+                ArgUtils.asFfiAlias("a", true));
+        ArgAggFn expectedValue = new ArgAggFn(FfiAggOpt.ToList, ArgUtils.asFfiAlias("values", false));
 
         Assert.assertEquals(Collections.singletonList(expectedKey), op.getGroupByKeys().get().getArg());
         Assert.assertEquals(Collections.singletonList(expectedValue), op.getGroupByValues().get().getArg());
@@ -99,8 +103,9 @@ public class GroupStepTest {
         GroupOp op = (GroupOp) StepTransformFactory.GROUP_STEP.apply(step);
 
         FfiProperty.ByValue keyProperty = ArgUtils.asFfiProperty("name");
-        Pair<FfiVariable.ByValue, FfiAlias.ByValue> expectedKey = Pair.with(ArgUtils.asVarPropertyOnly(keyProperty), ArgUtils.groupKeysAlias());
-        ArgAggFn expectedValue = new ArgAggFn(FfiAggOpt.Count, ArgUtils.groupValuesAlias());
+        Pair<FfiVariable.ByValue, FfiAlias.ByValue> expectedKey = Pair.with(ArgUtils.asVarPropertyOnly(keyProperty),
+                ArgUtils.asFfiAlias("keys_name", false));
+        ArgAggFn expectedValue = new ArgAggFn(FfiAggOpt.Count, ArgUtils.asFfiAlias("values", false));
 
         Assert.assertEquals(Collections.singletonList(expectedKey), op.getGroupByKeys().get().getArg());
         Assert.assertEquals(Collections.singletonList(expectedValue), op.getGroupByValues().get().getArg());
@@ -113,7 +118,8 @@ public class GroupStepTest {
         GroupOp op = (GroupOp) StepTransformFactory.GROUP_STEP.apply(step);
 
         FfiProperty.ByValue keyProperty = ArgUtils.asFfiProperty("name");
-        Pair<FfiVariable.ByValue, FfiAlias.ByValue> expectedKey = Pair.with(ArgUtils.asVarPropertyOnly(keyProperty), ArgUtils.groupKeysAlias());
+        Pair<FfiVariable.ByValue, FfiAlias.ByValue> expectedKey = Pair.with(ArgUtils.asVarPropertyOnly(keyProperty),
+                ArgUtils.asFfiAlias("keys_name", false));
         ArgAggFn expectedValue = new ArgAggFn(FfiAggOpt.Count, ArgUtils.asFfiAlias("b", true));
 
         Assert.assertEquals(Collections.singletonList(expectedKey), op.getGroupByKeys().get().getArg());
@@ -127,8 +133,9 @@ public class GroupStepTest {
         GroupOp op = (GroupOp) StepTransformFactory.GROUP_STEP.apply(step);
 
         FfiProperty.ByValue keyProperty = ArgUtils.asFfiProperty("name");
-        Pair<FfiVariable.ByValue, FfiAlias.ByValue> expectedKey = Pair.with(ArgUtils.asVarPropertyOnly(keyProperty), ArgUtils.groupKeysAlias());
-        ArgAggFn expectedValue = new ArgAggFn(FfiAggOpt.ToList, ArgUtils.groupValuesAlias());
+        Pair<FfiVariable.ByValue, FfiAlias.ByValue> expectedKey = Pair.with(ArgUtils.asVarPropertyOnly(keyProperty),
+                ArgUtils.asFfiAlias("keys_name", false));
+        ArgAggFn expectedValue = new ArgAggFn(FfiAggOpt.ToList, ArgUtils.asFfiAlias("values", false));
 
         Assert.assertEquals(Collections.singletonList(expectedKey), op.getGroupByKeys().get().getArg());
         Assert.assertEquals(Collections.singletonList(expectedValue), op.getGroupByValues().get().getArg());
@@ -141,7 +148,8 @@ public class GroupStepTest {
         GroupOp op = (GroupOp) StepTransformFactory.GROUP_STEP.apply(step);
 
         FfiProperty.ByValue keyProperty = ArgUtils.asFfiProperty("name");
-        Pair<FfiVariable.ByValue, FfiAlias.ByValue> expectedKey = Pair.with(ArgUtils.asVarPropertyOnly(keyProperty), ArgUtils.groupKeysAlias());
+        Pair<FfiVariable.ByValue, FfiAlias.ByValue> expectedKey = Pair.with(ArgUtils.asVarPropertyOnly(keyProperty),
+                ArgUtils.asFfiAlias("keys_name", false));
         ArgAggFn expectedValue = new ArgAggFn(FfiAggOpt.ToList, ArgUtils.asFfiAlias("b", true));
 
         Assert.assertEquals(Collections.singletonList(expectedKey), op.getGroupByKeys().get().getArg());
@@ -155,8 +163,9 @@ public class GroupStepTest {
         Step step = traversal.asAdmin().getEndStep();
         GroupOp op = (GroupOp) StepTransformFactory.GROUP_COUNT_STEP.apply(step);
 
-        Pair<FfiVariable.ByValue, FfiAlias.ByValue> expectedKey = Pair.with(ArgUtils.asNoneVar(), ArgUtils.groupKeysAlias());
-        ArgAggFn expectedValue = new ArgAggFn(FfiAggOpt.Count, ArgUtils.groupValuesAlias());
+        Pair<FfiVariable.ByValue, FfiAlias.ByValue> expectedKey = Pair.with(ArgUtils.asNoneVar(),
+                ArgUtils.asFfiAlias("keys", false));
+        ArgAggFn expectedValue = new ArgAggFn(FfiAggOpt.Count, ArgUtils.asFfiAlias("values", false));
 
         Assert.assertEquals(Collections.singletonList(expectedKey), op.getGroupByKeys().get().getArg());
         Assert.assertEquals(Collections.singletonList(expectedValue), op.getGroupByValues().get().getArg());
@@ -169,8 +178,9 @@ public class GroupStepTest {
         GroupOp op = (GroupOp) StepTransformFactory.GROUP_COUNT_STEP.apply(step);
 
         FfiProperty.ByValue keyProperty = ArgUtils.asFfiProperty("name");
-        Pair<FfiVariable.ByValue, FfiAlias.ByValue> expectedKey = Pair.with(ArgUtils.asVarPropertyOnly(keyProperty), ArgUtils.groupKeysAlias());
-        ArgAggFn expectedValue = new ArgAggFn(FfiAggOpt.Count, ArgUtils.groupValuesAlias());
+        Pair<FfiVariable.ByValue, FfiAlias.ByValue> expectedKey = Pair.with(ArgUtils.asVarPropertyOnly(keyProperty),
+                ArgUtils.asFfiAlias("keys_name", false));
+        ArgAggFn expectedValue = new ArgAggFn(FfiAggOpt.Count, ArgUtils.asFfiAlias("values", false));
 
         Assert.assertEquals(Collections.singletonList(expectedKey), op.getGroupByKeys().get().getArg());
         Assert.assertEquals(Collections.singletonList(expectedValue), op.getGroupByValues().get().getArg());
@@ -183,8 +193,9 @@ public class GroupStepTest {
         GroupOp op = (GroupOp) StepTransformFactory.GROUP_COUNT_STEP.apply(step);
 
         FfiProperty.ByValue keyProperty = ArgUtils.asFfiProperty("name");
-        Pair<FfiVariable.ByValue, FfiAlias.ByValue> expectedKey = Pair.with(ArgUtils.asVarPropertyOnly(keyProperty), ArgUtils.groupKeysAlias());
-        ArgAggFn expectedValue = new ArgAggFn(FfiAggOpt.Count, ArgUtils.groupValuesAlias());
+        Pair<FfiVariable.ByValue, FfiAlias.ByValue> expectedKey = Pair.with(ArgUtils.asVarPropertyOnly(keyProperty),
+                ArgUtils.asFfiAlias("keys_name", false));
+        ArgAggFn expectedValue = new ArgAggFn(FfiAggOpt.Count, ArgUtils.asFfiAlias("values", false));
 
         Assert.assertEquals(Collections.singletonList(expectedKey), op.getGroupByKeys().get().getArg());
         Assert.assertEquals(Collections.singletonList(expectedValue), op.getGroupByValues().get().getArg());
@@ -197,8 +208,9 @@ public class GroupStepTest {
         GroupOp op = (GroupOp) StepTransformFactory.GROUP_COUNT_STEP.apply(step);
 
         FfiProperty.ByValue keyProperty = ArgUtils.asFfiProperty("name");
-        Pair<FfiVariable.ByValue, FfiAlias.ByValue> expectedKey = Pair.with(ArgUtils.asVarPropertyOnly(keyProperty), ArgUtils.asFfiAlias("a", true));
-        ArgAggFn expectedValue = new ArgAggFn(FfiAggOpt.Count, ArgUtils.groupValuesAlias());
+        Pair<FfiVariable.ByValue, FfiAlias.ByValue> expectedKey = Pair.with(ArgUtils.asVarPropertyOnly(keyProperty),
+                ArgUtils.asFfiAlias("a", true));
+        ArgAggFn expectedValue = new ArgAggFn(FfiAggOpt.Count,  ArgUtils.asFfiAlias("values", false));
 
         Assert.assertEquals(Collections.singletonList(expectedKey), op.getGroupByKeys().get().getArg());
         Assert.assertEquals(Collections.singletonList(expectedValue), op.getGroupByValues().get().getArg());

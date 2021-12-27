@@ -13,7 +13,7 @@
                 "alias": {
                   "alias": {
                     "item": {
-                      "Name": "~keys"
+                      "Name": "keys"
                     }
                   },
                   "is_query_given": false
@@ -27,7 +27,7 @@
                 "alias": {
                   "alias": {
                     "item": {
-                      "Name": "~values"
+                      "Name": "values"
                     }
                   },
                   "is_query_given": false

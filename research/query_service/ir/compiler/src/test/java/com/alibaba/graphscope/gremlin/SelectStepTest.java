@@ -41,8 +41,8 @@ public class SelectStepTest {
         Step selectStep = traversal.asAdmin().getEndStep();
         ProjectOp op = (ProjectOp) StepTransformFactory.SELECT_BY_STEP.apply(selectStep);
         List<Pair> expected = Arrays.asList(
-                Pair.with("@a", ArgUtils.asFfiAlias("@a", false)),
-                Pair.with("@b", ArgUtils.asFfiAlias("@b", false)));
+                Pair.with("@a", ArgUtils.asFfiAlias("a", false)),
+                Pair.with("@b", ArgUtils.asFfiAlias("b", false)));
         Assert.assertEquals(expected, op.getProjectExprWithAlias().get().getArg());
     }
 
@@ -52,8 +52,8 @@ public class SelectStepTest {
         Step selectStep = traversal.asAdmin().getEndStep();
         ProjectOp op = (ProjectOp) StepTransformFactory.SELECT_BY_STEP.apply(selectStep);
         List<Pair> expected = Arrays.asList(
-                Pair.with("@a.name", ArgUtils.asFfiAlias("@a.name", false)),
-                Pair.with("@b.name", ArgUtils.asFfiAlias("@b.name", false)));
+                Pair.with("@a.name", ArgUtils.asFfiAlias("a_name", false)),
+                Pair.with("@b.name", ArgUtils.asFfiAlias("b_name", false)));
         Assert.assertEquals(expected, op.getProjectExprWithAlias().get().getArg());
     }
 }
