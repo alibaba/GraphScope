@@ -97,31 +97,31 @@ public class TraversalMethodVisitor extends TraversalRootVisitor<GraphTraversal>
     }
 
     public Traversal visitTraversalMethod_outE(GremlinGSParser.TraversalMethod_outEContext ctx) {
-        GraphTraversal traversal = graphTraversal.outE(GenericLiteralVisitor.getStringLiteralList(ctx.stringLiteralList()));
+        String[] labels = GenericLiteralVisitor.getStringLiteralList(ctx.stringLiteralList());
         if (ctx.traversalMethod_inV() != null) {
-            return visitTraversalMethod_inV(ctx.traversalMethod_inV());
+            return graphTraversal.out(labels);
         } else {
-            return traversal;
+            return graphTraversal.outE(labels);
         }
     }
 
     @Override
     public Traversal visitTraversalMethod_inE(GremlinGSParser.TraversalMethod_inEContext ctx) {
-        GraphTraversal traversal = graphTraversal.inE(GenericLiteralVisitor.getStringLiteralList(ctx.stringLiteralList()));
+        String[] labels = GenericLiteralVisitor.getStringLiteralList(ctx.stringLiteralList());
         if (ctx.traversalMethod_outV() != null) {
-            return graphTraversal.outV();
+            return graphTraversal.in(labels);
         } else {
-            return traversal;
+            return graphTraversal.inE(labels);
         }
     }
 
     @Override
     public Traversal visitTraversalMethod_bothE(GremlinGSParser.TraversalMethod_bothEContext ctx) {
-        GraphTraversal traversal = graphTraversal.bothE(GenericLiteralVisitor.getStringLiteralList(ctx.stringLiteralList()));
+        String[] labels = GenericLiteralVisitor.getStringLiteralList(ctx.stringLiteralList());
         if (ctx.traversalMethod_otherV() != null) {
-            return graphTraversal.otherV();
+            return graphTraversal.both(labels);
         } else {
-            return traversal;
+            return graphTraversal.bothE(labels);
         }
     }
 
