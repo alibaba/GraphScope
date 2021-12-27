@@ -249,18 +249,16 @@ message GetV {
   common.NameOrId alias = 3;
 }
 
-// An operator that provides auxiliary functionalities given the tag-referred entity, which include:
+// An operator that provides auxiliary functionalities given the current entity, which include:
 // * To get certain properties/columns from the entity
 // * To filter out the entity based on the data
 // * To re-name the entity with other alias
 message Auxilia {
-  // The tag that refers to the entity where the details will be retrieved
-  common.NameOrId tag = 1;
   // The details (columns/properties) to be retrieved
-  QueryParams params = 2;
+  QueryParams params = 1;
   // The alias to give if any, this is especially helpful when the tag is `None`, and the entity
   // now refers to the head of the record
-  common.NameOrId alias = 3;
+  common.NameOrId alias = 2;
 }
 
 message EdgeExpand {
