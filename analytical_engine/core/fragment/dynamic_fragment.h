@@ -1878,7 +1878,7 @@ class DynamicFragment {
       addEdges(edges);
     }
     // initOuterVerticesOfFragment();
-    initMessageDestination(message_strategy_);
+    // initMessageDestination(message_strategy_);
   }
 
   void Update(std::vector<internal_vertex_t>& vertices,
@@ -1974,7 +1974,7 @@ class DynamicFragment {
       const std::vector<grape::Edge<vid_t, edata_t>>& edges) {
     deleteVertices(vertices);
     deleteEdges(edges);
-    initMessageDestination(message_strategy_);
+    // initMessageDestination(message_strategy_);
   }
 
   std::unordered_set<vid_t> allGatherDeadVertices(
@@ -2461,13 +2461,38 @@ class DynamicFragment {
 
   void deleteVertices(
       const std::vector<grape::internal::Vertex<vid_t, vdata_t>>& vertices) {
-    std::unordered_set<vid_t> to_remove_lid_set;
+    // std::unordered_set<vid_t> to_remove_lid_set;
     // remove vertices and attached edges
     for (auto& v : vertices) {
       if (is_iv_gid(v.vid())) {
         auto lid = iv_gid_to_lid(v.vid());
         CHECK(lid < ivnum_);
         if (inner_vertex_alive_[lid]) {
+          if (load_strategy_ == grape::LoadStrategy::kOnlyOut) {
+            auto oe_pos = inner_oe_pos_[lid];
+            if (oe_pos != -1) {
+              auto& elist = edge_space_[oe_pos];
+              for (auto& nei : elist) {
+                auto key = nei.first;
+                auto oe_pos_nei = inner_oe_pos_[key];
+                if (oe_pos_nei != -1) {
+                  oenum_ -= edge_space_.remove_edge(oe_pos_nei, lid);
+                }
+              }
+              oenum_ -= edge_space_[oe_pos].size();
+              edge_space_.remove_edges(oe_pos);
+              inner_oe_pos_[lid] = -1;
+            }
+          }
+          if (selfloops_vertices_.find(lid) != selfloops_vertices_.end()) {
+            deleteSelfLoop(lid);
+          }
+          inner_vertex_alive_[lid] = false;
+          alive_ivnum_--;
+        }
+      }
+    }
+    /*
           if (load_strategy_ == grape::LoadStrategy::kOnlyIn ||
               load_strategy_ == grape::LoadStrategy::kBothOutIn) {
             auto ie_pos = inner_ie_pos_[lid];
@@ -2576,6 +2601,7 @@ class DynamicFragment {
         }
       }
     }
+    */
   }
 
   void deleteEdges(const std::vector<grape::Edge<vid_t, edata_t>>& edges) {
