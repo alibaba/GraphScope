@@ -21,6 +21,8 @@
 
 import copy
 import json
+import time
+import pickle
 
 from networkx import freeze
 from networkx.classes.coreviews import AdjacencyView
@@ -330,6 +332,8 @@ class Graph(_GraphBase):
         # cache for add_node and add_edge
         self._nodes_for_adding = []
         self._edges_for_adding = []
+        self._nodes_for_deling = []
+        self._edges_for_deling = []
 
         create_empty_in_engine = attr.pop(
             "create_empty_in_engine", True
@@ -713,10 +717,8 @@ class Graph(_GraphBase):
 
         """
         self._clear_adding_cache()
-        if not self.has_node(n):
-            # NetworkXError if n not in self
-            raise NetworkXError("The node %s is not in the graph." % (n,))
-        return self.remove_nodes_from([n])
+        self._nodes_for_deling.append(json.dumps([n], default=json_encoder))
+        # self._nodes_for_deling.append(n)
 
     def remove_nodes_from(self, nodes_for_removing):
         """Remove multiple nodes.
@@ -924,14 +926,22 @@ class Graph(_GraphBase):
         >>> G[1][2].update({0: 5})
         >>> G.edges[1, 2].update({0: 5})
         """
+        t_dict = 0.0
+        t_append = 0.0
         self._convert_arrow_to_dynamic()
         if u_of_edge is None or v_of_edge is None:
             raise ValueError("None cannot be a node")
+        t = time.time()
         data = dict(attr)
+        t_dict = time.time() - t_dict
+        t = time.time()
         self._schema.add_nx_edge_properties(data)
         self._edges_for_adding.append(
             json.dumps((u_of_edge, v_of_edge, data), default=json_encoder)
         )
+        t_append = time.time() - t
+        # self._edges_for_adding.append((u_of_edge, v_of_edge, data))
+        return t_dict, t_append
 
     def add_edges_from(self, ebunch_to_add, **attr):
         """Add all the edges in ebunch_to_add.
@@ -1035,9 +1045,10 @@ class Graph(_GraphBase):
 
     @patch_docstring(RefGraph.remove_edge)
     def remove_edge(self, u, v):
-        if not self.has_edge(u, v):
-            raise NetworkXError("The edge %s-%s is not in the graph" % (u, v))
-        return self.remove_edges_from([(u, v)])
+        self._clear_adding_cache
+        self._edges_for_deling.append(json.dumps([u, v], default=json_encoder))
+        # self._edges_for_deling.append((u, v))
+        # return self.remove_edges_from([(u, v)])
 
     def remove_edges_from(self, ebunch):
         """Remove all edges specified in ebunch.
@@ -2245,6 +2256,20 @@ class Graph(_GraphBase):
             self._op.eval()
         self._nodes_for_adding.clear()
         self._edges_for_adding.clear()
+
+    def _clear_deling_cache(self):
+        if self._nodes_for_deling:
+            self._op = dag_utils.modify_vertices(
+                self, types_pb2.NX_DEL_NODES, self._nodes_for_deling
+            )
+            # self._op.eval()
+        if self._edges_for_deling:
+            self._op = dag_utils.modify_edges(
+                self, types_pb2.NX_DEL_EDGES, self._edges_for_deling
+            )
+            # self._op.eval()
+        self._nodes_for_deling.clear()
+        self._edges_for_deling.clear()
 
     def _convert_arrow_to_dynamic(self):
         """Try to convert the hosted graph from arrow_property to dynamic_property.
