@@ -14,7 +14,6 @@
 //! limitations under the License.
 
 use std::convert::TryInto;
-use std::sync::Arc;
 
 use ir_common::generated::algebra as algebra_pb;
 use ir_common::NameOrId;
@@ -26,12 +25,11 @@ use crate::graph::QueryParams;
 use crate::process::operator::map::FilterMapFuncGen;
 use crate::process::record::{Entry, Record};
 
-/// An Auxilia operator to get extra information for the given entity.
+/// An Auxilia operator to get extra information for the current entity.
 /// Specifically, we will replace the old entity with the new one with details,
 /// and set rename the entity, if `alias` has been set.
 #[derive(Debug)]
 struct AuxiliaOperator {
-    tag: Option<NameOrId>,
     query_params: QueryParams,
     alias: Option<NameOrId>,
 }
@@ -39,15 +37,13 @@ struct AuxiliaOperator {
 impl FilterMapFunction<Record, Record> for AuxiliaOperator {
     fn exec(&self, mut input: Record) -> FnResult<Option<Record>> {
         let entry = input
-            .get(self.tag.as_ref())
-            .ok_or(FnExecError::get_tag_error("get tag failed in AuxiliaOperator"))?
+            .get(None)
+            .ok_or(FnExecError::get_tag_error("get current entry failed in AuxiliaOperator"))?
             .clone();
         // Make sure there is anything to query with
         // Note that we need to guarantee the requested column if it has any alias,
-        // e.g., for g.V().out().as("a").has("name", "marko"), we could compile as:
-        // (1) g.V().out(as("a")).auxilia()... where we give alias in out,
-        //     then we set tag="a" and alias=None in auxilia
-        // (2) g.V().out().auxilia(as("a"))... where we give alias in auxilia,
+        // e.g., for g.V().out().as("a").has("name", "marko"), we should compile as:
+        // g.V().out().auxilia(as("a"))... where we give alias in auxilia,
         //     then we set tag=None and alias="a" in auxilia
         // TODO: it seems that we do not really care about getting head from curr or "a", we only need to save the updated entry with expected alias "a"
         if self.query_params.is_queryable() {
@@ -67,11 +63,7 @@ impl FilterMapFunction<Record, Record> for AuxiliaOperator {
                 }
             };
             if new_entry.is_some() {
-                let arc_entry = Arc::new(new_entry.unwrap());
-                input.append_arc_entry(arc_entry.clone(), self.tag.clone());
-                if self.alias.is_some() {
-                    input.append_arc_entry(arc_entry, self.alias.clone());
-                }
+                input.append(new_entry.unwrap(), self.alias.clone());
             } else {
                 return Ok(None);
             }
@@ -87,16 +79,12 @@ impl FilterMapFunction<Record, Record> for AuxiliaOperator {
 
 impl FilterMapFuncGen for algebra_pb::Auxilia {
     fn gen_filter_map(self) -> FnGenResult<Box<dyn FilterMapFunction<Record, Record>>> {
-        let start_tag = self
-            .tag
-            .map(|name_or_id| name_or_id.try_into())
-            .transpose()?;
         let query_params = self.params.try_into()?;
         let alias = self
             .alias
             .map(|alias| alias.try_into())
             .transpose()?;
-        let auxilia_operator = AuxiliaOperator { tag: start_tag, query_params, alias };
+        let auxilia_operator = AuxiliaOperator { query_params, alias };
         debug!("Runtime auxilia operator: {:?}", auxilia_operator);
         Ok(Box::new(auxilia_operator))
     }

@@ -135,17 +135,17 @@ public class PositiveEvalTest {
 
     @Test
     public void eval_g_V_outE_label_inV_test() {
-        Assert.assertEquals(g.V().outE("knows").inV(), eval("g.V().outE('knows').inV()"));
+        Assert.assertEquals(g.V().out("knows"), eval("g.V().outE('knows').inV()"));
     }
 
     @Test
     public void eval_g_V_inE_label_outV_test() {
-        Assert.assertEquals(g.V().inE("knows").outV(), eval("g.V().inE('knows').outV()"));
+        Assert.assertEquals(g.V().in("knows"), eval("g.V().inE('knows').outV()"));
     }
 
     @Test
     public void eval_g_V_bothE_label_otherV_test() {
-        Assert.assertEquals(g.V().bothE("knows").otherV(), eval("g.V().bothE('knows').otherV()"));
+        Assert.assertEquals(g.V().both("knows"), eval("g.V().bothE('knows').otherV()"));
     }
 
     // has

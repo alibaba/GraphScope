@@ -54,6 +54,7 @@ import org.slf4j.LoggerFactory;
 
 import javax.script.Bindings;
 import javax.script.SimpleBindings;
+import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.RejectedExecutionException;
@@ -152,6 +153,7 @@ public class IrStandardOpProcessor extends StandardOpProcessor {
                             InterOpCollection opCollection = (new InterOpCollectionBuilder((Traversal) o)).build();
                             IrPlan irPlan = opCollection.buildIrPlan();
 
+                            logger.info("{}", irPlan.getPlanAsJson());
                             byte[] physicalPlanBytes = irPlan.toPhysicalBytes();
                             irPlan.close();
 
@@ -186,6 +188,8 @@ public class IrStandardOpProcessor extends StandardOpProcessor {
                             ctx.writeAndFlush(builder.create());
                         }
                     } catch (InvalidProtocolBufferException e) {
+                        throw new RuntimeException(e);
+                    } catch (IOException e) {
                         throw new RuntimeException(e);
                     }
                 }).create();

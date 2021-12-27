@@ -739,7 +739,6 @@ fn process_params(ptr: *const c_void, key: ParamsKey, val: FfiNameOrId, opr: Opr
             Opr::Auxilia => {
                 let mut auxilia = unsafe { Box::from_raw(ptr as *mut pb::Auxilia) };
                 match key {
-                    ParamsKey::Tag => auxilia.tag = pb.unwrap(),
                     ParamsKey::Table => {
                         if let Some(label) = pb.unwrap() {
                             auxilia
@@ -760,6 +759,7 @@ fn process_params(ptr: *const c_void, key: ParamsKey, val: FfiNameOrId, opr: Opr
                                 .push(ppt)
                         }
                     }
+                    _ => unreachable!(),
                 }
                 std::mem::forget(auxilia);
             }
@@ -1456,7 +1456,6 @@ mod auxilia {
     #[no_mangle]
     pub extern "C" fn init_auxilia_operator() -> *const c_void {
         let auxilia = Box::new(pb::Auxilia {
-            tag: None,
             params: Some(pb::QueryParams {
                 table_names: vec![],
                 columns: vec![],
@@ -1468,12 +1467,6 @@ mod auxilia {
         });
 
         Box::into_raw(auxilia) as *const c_void
-    }
-
-    /// Set the tag of the entity to Auxilia
-    #[no_mangle]
-    pub extern "C" fn set_auxilia_tag(ptr_auxilia: *const c_void, tag: FfiNameOrId) -> ResultCode {
-        process_params(ptr_auxilia, ParamsKey::Tag, tag, Opr::Auxilia)
     }
 
     /// Set the size range limitation of Auxilia
