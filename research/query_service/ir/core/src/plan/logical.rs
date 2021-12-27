@@ -32,8 +32,8 @@ use crate::JsonIO;
 /// Record any error while transforming ir to a pegasus physical plan
 #[derive(Debug, Clone)]
 pub enum LogicalError {
-    TableNotExist,
-    ColumnNotExist,
+    TableNotExist(String),
+    ColumnNotExist(String),
     Unsupported,
 }
 
@@ -42,8 +42,8 @@ pub type LogicalResult<T> = Result<T, LogicalError>;
 impl fmt::Display for LogicalError {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
-            LogicalError::TableNotExist => write!(f, "the given table does not exist"),
-            LogicalError::ColumnNotExist => write!(f, "the given column does not exist"),
+            LogicalError::TableNotExist(s) => write!(f, "the given table(label): {:?} does not exist", s),
+            LogicalError::ColumnNotExist(s) => write!(f, "the given column: {:?} does not exist", s),
             LogicalError::Unsupported => write!(f, "the function has not been supported"),
         }
     }
@@ -473,7 +473,7 @@ impl AsLogical for common_pb::Property {
                         common_pb::property::Item::Key(key) => {
                             *key = schema
                                 .get_column_id_from_pb(key)
-                                .ok_or(LogicalError::ColumnNotExist)?
+                                .ok_or(LogicalError::ColumnNotExist(format!("{:?}", key)))?
                                 .into();
                         }
                         _ => {}
@@ -507,7 +507,7 @@ impl AsLogical for common_pb::Value {
                             *item = common_pb::value::Item::I32(
                                 schema
                                     .get_table_id(name)
-                                    .ok_or(LogicalError::TableNotExist)?,
+                                    .ok_or(LogicalError::TableNotExist(name.to_string()))?,
                             );
                         }
                         _ => {}
@@ -535,7 +535,7 @@ impl AsLogical for common_pb::Expression {
                                             if schema.is_column_id() {
                                                 *key = schema
                                                     .get_column_id_from_pb(key)
-                                                    .ok_or(LogicalError::ColumnNotExist)?
+                                                    .ok_or(LogicalError::ColumnNotExist(format!("{:?}", key)))?
                                                     .into();
                                             }
                                         }
@@ -583,7 +583,7 @@ impl AsLogical for pb::QueryParams {
                 for table in self.table_names.iter_mut() {
                     *table = schema
                         .get_table_id_from_pb(table)
-                        .ok_or(LogicalError::TableNotExist)?
+                        .ok_or(LogicalError::TableNotExist(format!("{:?}", table)))?
                         .into();
                 }
             }
@@ -591,7 +591,7 @@ impl AsLogical for pb::QueryParams {
                 for column in self.columns.iter_mut() {
                     *column = schema
                         .get_column_id_from_pb(column)
-                        .ok_or(LogicalError::ColumnNotExist)?
+                        .ok_or(LogicalError::ColumnNotExist(format!("{:?}", column)))?
                         .into();
                 }
             }
@@ -714,7 +714,7 @@ impl AsLogical for pb::IndexPredicate {
                                     if schema.is_column_id() {
                                         *key = schema
                                             .get_column_id_from_pb(key)
-                                            .ok_or(LogicalError::ColumnNotExist)?
+                                            .ok_or(LogicalError::ColumnNotExist(format!("{:?}", key)))?
                                             .into();
                                     }
                                 }
