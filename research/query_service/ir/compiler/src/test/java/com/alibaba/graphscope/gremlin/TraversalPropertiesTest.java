@@ -19,6 +19,7 @@ package com.alibaba.graphscope.gremlin;
 import com.alibaba.graphscope.common.intermediate.ArgUtils;
 import com.alibaba.graphscope.common.intermediate.InterOpCollection;
 import com.alibaba.graphscope.common.intermediate.operator.AuxiliaOp;
+import com.alibaba.graphscope.common.intermediate.process.AliasProcessor;
 import com.alibaba.graphscope.common.intermediate.process.PropertyDetailsProcessor;
 import com.google.common.collect.Sets;
 import org.apache.tinkerpop.gremlin.process.traversal.Order;
@@ -83,5 +84,33 @@ public class TraversalPropertiesTest {
         AuxiliaOp op2 = (AuxiliaOp) opCollection.unmodifiableCollection().get(3);
         Assert.assertEquals(Sets.newHashSet(ArgUtils.strAsNameId("name"), ArgUtils.strAsNameId("id"), ArgUtils.strAsNameId("age")),
                 op2.getPropertyDetails().get().getArg());
+    }
+
+    @Test
+    public void g_V_out_tag_has_test() {
+        Traversal traversal = g.V().out().as("a").has("name", "marko");
+        InterOpCollectionBuilder builder = new InterOpCollectionBuilder(traversal);
+        InterOpCollection opCollection = builder.build();
+
+        PropertyDetailsProcessor.INSTANCE.process(opCollection);
+        AliasProcessor.INSTANCE.process(opCollection);
+
+        AuxiliaOp op = (AuxiliaOp) opCollection.unmodifiableCollection().get(2);
+        Assert.assertEquals(Sets.newHashSet(ArgUtils.strAsNameId("name")), op.getPropertyDetails().get().getArg());
+        Assert.assertEquals(ArgUtils.asFfiAlias("a", true), op.getAlias().get().getArg());
+    }
+
+    @Test
+    public void g_V_tag_has_test() {
+        Traversal traversal = g.V().as("a").has("name", "marko");
+        InterOpCollectionBuilder builder = new InterOpCollectionBuilder(traversal);
+        InterOpCollection opCollection = builder.build();
+
+        PropertyDetailsProcessor.INSTANCE.process(opCollection);
+        AliasProcessor.INSTANCE.process(opCollection);
+
+        AuxiliaOp op = (AuxiliaOp) opCollection.unmodifiableCollection().get(1);
+        Assert.assertEquals(Sets.newHashSet(ArgUtils.strAsNameId("name")), op.getPropertyDetails().get().getArg());
+        Assert.assertEquals(ArgUtils.asFfiAlias("a", true), op.getAlias().get().getArg());
     }
 }

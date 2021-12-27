@@ -29,18 +29,19 @@ public class AliasProcessor implements InterOpProcessor {
 
     @Override
     public void process(InterOpCollection opCollection) {
+        List<InterOpBase> original = opCollection.unmodifiableCollection();
         List<InterOpBase> copy = new ArrayList<>(opCollection.unmodifiableCollection());
         for (int i = copy.size() - 1; i >= 0; --i) {
             InterOpBase op = copy.get(i);
-            if (op instanceof ScanFusionOp || op instanceof ExpandOp || op instanceof AuxiliaOp) {
+            if (op instanceof AuxiliaOp) continue;
+            if ((op instanceof ScanFusionOp || op instanceof ExpandOp) && nextAuxilia(original, i) == null) {
                 continue;
             }
             if (op instanceof ProjectOp && op.getAlias().isPresent()) {
                 throw new InterOpIllegalArgException(op.getClass(), "project alias", "unsupported yet");
             }
             if (op.getAlias().isPresent()) {
-                List<InterOpBase> original = opCollection.unmodifiableCollection();
-                InterOpBase next = (i + 1 < original.size() && original.get(i + 1) instanceof AuxiliaOp) ? original.get(i + 1) : null;
+                InterOpBase next = nextAuxilia(original, i);
                 if (next != null) {
                     next.setAlias(op.getAlias().get());
                 } else {
@@ -52,5 +53,10 @@ public class AliasProcessor implements InterOpProcessor {
                 op.clearAlias();
             }
         }
+    }
+
+    // return AuxiliaOp if next is, otherwise null
+    private InterOpBase nextAuxilia(List<InterOpBase> original, int i) {
+        return (i + 1 < original.size() && original.get(i + 1) instanceof AuxiliaOp) ? original.get(i + 1) : null;
     }
 }
