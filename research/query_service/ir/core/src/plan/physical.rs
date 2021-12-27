@@ -301,9 +301,11 @@ impl AsPhysical for LogicalPlan {
                             };
                             builder.repartition(key_pb.encode_to_vec());
                         }
-                        (Some(Edge(_)), Some(Auxilia(_auxilia))) => {
-                            // TODO(longbin): confirm if repartition(vec![]) means repartition by current entry?
-                            builder.repartition(vec![]);
+                        (Some(Edge(edge_expand)), Some(Auxilia(_))) => {
+                            if !edge_expand.is_edge {
+                                let key_pb = common_pb::NameOrIdKey { key: None };
+                                builder.repartition(key_pb.encode_to_vec());
+                            }
                         }
                         _ => {}
                     }
