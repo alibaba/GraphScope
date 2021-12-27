@@ -43,6 +43,9 @@ impl FilterMapFunction<Record, Record> for AuxiliaOperator {
             .ok_or(FnExecError::get_tag_error("get tag failed in AuxiliaOperator"))?
             .clone();
         // Make sure there is anything to query with
+        // Note that we need to guarantee the requested column if it has any alias,
+        // e.g., for g.V().out().as("a").has("name", "marko"),
+        // when adding auxilia after out() step, we should set tag=Some("a") in auxilia
         if self.query_params.is_queryable() {
             // If queryable, then turn into graph element and do the query
             let vertex_or_edge = entry

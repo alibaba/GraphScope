@@ -72,13 +72,12 @@ pub struct Record {
 
 impl Record {
     pub fn new<E: Into<Entry>>(entry: E, tag: Option<NameOrId>) -> Self {
+        let entry = Arc::new(entry.into());
         let mut columns = IndexMap::new();
         if let Some(tag) = tag {
-            columns.insert(tag, Arc::new(entry.into()));
-            Record { curr: None, columns }
-        } else {
-            Record { curr: Some(Arc::new(entry.into())), columns }
+            columns.insert(tag.clone(), entry.clone());
         }
+        Record { curr: Some(entry), columns }
     }
 
     // TODO: consider to maintain the record without any alias, which also needed to be stored;
@@ -88,10 +87,9 @@ impl Record {
     }
 
     pub fn append_arc_entry(&mut self, entry: Arc<Entry>, alias: Option<NameOrId>) {
+        self.curr = Some(entry.clone());
         if let Some(alias) = alias {
-            self.columns.insert(alias, entry);
-        } else {
-            self.curr = Some(entry);
+            self.columns.insert(alias.clone(), entry);
         }
     }
 
