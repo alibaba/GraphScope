@@ -63,16 +63,16 @@ pub struct Column {
 }
 
 #[derive(Clone, Debug, Default)]
-pub struct Entity {
+pub struct EntityPair {
     name: String,
     id: i32,
 }
 
 #[derive(Clone, Debug, Default)]
-pub struct Relation {
-    src: Entity,
-    dst: Entity,
-    edge: Entity,
+pub struct RelationTriplet {
+    src: EntityPair,
+    dst: EntityPair,
+    edge: EntityPair,
 }
 
 impl From<schema_pb::ColumnKey> for Column {
@@ -85,8 +85,8 @@ impl From<schema_pb::ColumnKey> for Column {
     }
 }
 
-fn into_entity(entity_pb: schema_pb::Entity) -> (Entity, Vec<Column>) {
-    let entity = Entity { name: entity_pb.name.clone(), id: entity_pb.id };
+fn into_entity(entity_pb: schema_pb::Entity) -> (EntityPair, Vec<Column>) {
+    let entity = EntityPair { name: entity_pb.name.clone(), id: entity_pb.id };
     let columns = entity_pb
         .columns
         .into_iter()
@@ -96,7 +96,7 @@ fn into_entity(entity_pb: schema_pb::Entity) -> (Entity, Vec<Column>) {
     (entity, columns)
 }
 
-fn into_entity_pb(tuple: (Entity, Vec<Column>)) -> schema_pb::Entity {
+fn into_entity_pb(tuple: (EntityPair, Vec<Column>)) -> schema_pb::Entity {
     schema_pb::Entity {
         id: tuple.0.id,
         name: tuple.0.name.clone(),
@@ -112,20 +112,20 @@ fn into_entity_pb(tuple: (Entity, Vec<Column>)) -> schema_pb::Entity {
     }
 }
 
-fn into_relation(rel_pb: schema_pb::Relation) -> (Relation, Vec<Column>) {
-    let src = Entity { name: rel_pb.src_name.clone(), id: rel_pb.src_id };
-    let dst = Entity { name: rel_pb.dst_name.clone(), id: rel_pb.dst_id };
-    let edge = Entity { name: rel_pb.name.clone(), id: rel_pb.id };
+fn into_relation(rel_pb: schema_pb::Relation) -> (RelationTriplet, Vec<Column>) {
+    let src = EntityPair { name: rel_pb.src_name.clone(), id: rel_pb.src_id };
+    let dst = EntityPair { name: rel_pb.dst_name.clone(), id: rel_pb.dst_id };
+    let edge = EntityPair { name: rel_pb.name.clone(), id: rel_pb.id };
     let columns = rel_pb
         .columns
         .into_iter()
         .map(|col| col.into())
         .collect();
 
-    (Relation { src, dst, edge }, columns)
+    (RelationTriplet { src, dst, edge }, columns)
 }
 
-fn into_relation_pb(tuple: (Relation, Vec<Column>)) -> schema_pb::Relation {
+fn into_relation_pb(tuple: (RelationTriplet, Vec<Column>)) -> schema_pb::Relation {
     schema_pb::Relation {
         src_id: tuple.0.src.id,
         src_name: tuple.0.src.name.clone(),
@@ -174,9 +174,9 @@ pub struct Schema {
     /// Is the column name mapped as id
     is_column_id: bool,
     /// Entities
-    entities: Vec<(Entity, Vec<Column>)>,
+    entities: Vec<(EntityPair, Vec<Column>)>,
     /// Relations
-    rels: Vec<(Relation, Vec<Column>)>,
+    rels: Vec<(RelationTriplet, Vec<Column>)>,
 }
 
 impl Schema {
@@ -254,8 +254,7 @@ impl From<(Vec<(String, i32)>, Vec<(String, i32)>, Vec<(String, i32)>)> for Sche
 impl JsonIO for Schema {
     fn into_json<W: io::Write>(self, writer: W) -> io::Result<()> {
         let entities_pb: Vec<schema_pb::Entity> = if !self.entities.is_empty() {
-            self
-                .entities
+            self.entities
                 .clone()
                 .into_iter()
                 .map(|tuple| into_entity_pb(tuple))
@@ -264,19 +263,14 @@ impl JsonIO for Schema {
             let mut entities = Vec::new();
             for (&(ty, id), name) in &self.table_map_rev {
                 if ty == TableType::Entity {
-                    entities.push(schema_pb::Entity {
-                        id,
-                        name: name.clone(),
-                        columns: vec![]
-                    })
+                    entities.push(schema_pb::Entity { id, name: name.clone(), columns: vec![] })
                 }
             }
             entities
         };
 
         let relations_pb: Vec<schema_pb::Relation> = if !self.rels.is_empty() {
-            self
-                .rels
+            self.rels
                 .clone()
                 .into_iter()
                 .map(|tuple| into_relation_pb(tuple))
@@ -292,7 +286,7 @@ impl JsonIO for Schema {
                         dst_name: "".to_string(),
                         id,
                         name: name.clone(),
-                        columns: vec![]
+                        columns: vec![],
                     })
                 }
             }
@@ -357,7 +351,9 @@ impl JsonIO for Schema {
                 let key = &rel.name;
                 if !schema.table_map.contains_key(key) {
                     schema.table_map.insert(key.clone(), rel.id);
-                    schema.table_map_rev.insert((TableType::Relation, rel.id), key.clone());
+                    schema
+                        .table_map_rev
+                        .insert((TableType::Relation, rel.id), key.clone());
                 }
             }
             if schema_pb.is_column_id {

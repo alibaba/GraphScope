@@ -507,7 +507,7 @@ impl AsLogical for common_pb::Value {
                             *item = common_pb::value::Item::I32(
                                 schema
                                     .get_table_id(name)
-                                    .ok_or(LogicalError::ColumnNotExist)?,
+                                    .ok_or(LogicalError::TableNotExist)?,
                             );
                         }
                         _ => {}
