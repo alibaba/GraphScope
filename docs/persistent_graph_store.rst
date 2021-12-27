@@ -226,7 +226,7 @@ The schema have defined several method
 
 .. code:: python
 
-    schema.add_vertex_label('v_label_name').partition_by('primary_key_name', 'property_type').property('property_name_1', 'property_type').property('property_name_2', 'property_type')
+    schema.add_vertex_label('v_label_name').add_primary_key('primary_key_name', 'property_type').property('property_name_1', 'property_type').property('property_name_2', 'property_type')
     schema.add_edge_label('e_label_name').from('source_label').to('destination_label').property('property_name_3', 'property_type')
     schema.update()
     schema.drop('label')
@@ -235,7 +235,7 @@ The schema have defined several method
 
 Here the `label_name`, `primary_key_name`, `property_type` is specified by user, the `property_type` can be one of `int`, `float`, `str`, and one label can have multiple `property` statement.
 
-For vertices, the `partitioned_by` is to specify the primary key of the label, also be called ID.
+For vertices, the `add_primary_key` is to specify the primary key of the label, also be called ID.
 
 For edges, the `from` and `to` will specify the source label and destination label of the edge kind, respectively.
 
