@@ -68,24 +68,10 @@ def test_simple_context_to_vineyard_dataframe(
     assert out is not None
 
 
-def test_property_context_to_numpy(property_context):
-    out = property_context.to_numpy("v:v0.dist")
-    assert out.shape == (40521,)
-    out = property_context.to_numpy("r:v1.dist_1")
-    assert out.shape == (40786,)
-
-
-def test_property_context_to_dataframe(property_context):
-    out = property_context.to_dataframe({"id": "v:v0.id", "result": "r:v0.dist_0"})
-    assert out.shape == (40521, 2)
-    out = property_context.to_dataframe({"id": "v:v1.id", "result": "r:v1.dist_1"})
-    assert out.shape == (40786, 2)
-
-
-def test_property_context_output(property_context, tmp_path):
+def test_context_output_to_client(simple_context, tmp_path):
     rlt = os.path.join(tmp_path, "r0")
-    property_context.output_to_client(
-        fd=rlt, selector={"id": "v:v0.id", "result": "r:v0.dist_0"}
+    simple_context.output_to_client(
+        fd=rlt, selector={"id": "v.id", "result": "r"}
     )
     out = pd.read_csv(rlt)
     assert out.shape == (40521, 2)

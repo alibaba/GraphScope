@@ -24,7 +24,6 @@ import pytest
 
 import graphscope
 import graphscope.nx as nx
-from graphscope import property_sssp
 from graphscope import sssp
 from graphscope.client.session import default_session
 from graphscope.dataset import load_ldbc
@@ -617,11 +616,6 @@ def triangles_result():
         dtype=np.int64,
     )
     yield ret
-
-
-@pytest.fixture(scope="module")
-def property_context(arrow_property_graph):
-    return property_sssp(arrow_property_graph, 20)
 
 
 @pytest.fixture(scope="module")

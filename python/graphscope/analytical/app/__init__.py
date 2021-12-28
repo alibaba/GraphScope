@@ -29,7 +29,6 @@ from graphscope.analytical.app.average_shortest_path_length import \
 
 # fmt: on
 from graphscope.analytical.app.bfs import bfs
-from graphscope.analytical.app.bfs import property_bfs
 from graphscope.analytical.app.cdlp import cdlp
 from graphscope.analytical.app.clustering import clustering
 
@@ -50,7 +49,6 @@ from graphscope.analytical.app.louvain import louvain
 from graphscope.analytical.app.lpa import lpa
 from graphscope.analytical.app.pagerank import pagerank
 from graphscope.analytical.app.pagerank_nx import pagerank_nx
-from graphscope.analytical.app.sssp import property_sssp
 from graphscope.analytical.app.sssp import sssp
 from graphscope.analytical.app.triangles import triangles
 from graphscope.analytical.app.wcc import wcc

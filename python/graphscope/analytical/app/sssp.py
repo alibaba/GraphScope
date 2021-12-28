@@ -22,7 +22,6 @@ from graphscope.framework.app import project_to_simple
 
 __all__ = [
     "sssp",
-    "property_sssp",
 ]
 
 
@@ -56,22 +55,3 @@ def sssp(graph, src=0):
 
     """
     return AppAssets(algo="sssp", context="vertex_data")(graph, src)
-
-
-@not_compatible_for("dynamic_property", "arrow_projected", "dynamic_projected")
-def property_sssp(graph, src=0):
-    """Compute single source shortest path on graph G.
-
-    Args:
-        graph (Graph): a property graph.
-        src (optional): The source vertex. The type should be consistent
-            with the id type of the `graph`, that is, it's `int` or `str` depending
-            on the `oid_type` is `int64_t` or `string` of the `graph`. Defaults to 0.
-
-    Returns:
-        :class:`graphscope.framework.context.LabeledVertexDataContext`:
-            A context with each vertex assigned with the shortest distance from the src, evaluated in eager mode.
-    """
-    return AppAssets(algo="property_sssp", context="labeled_vertex_property")(
-        graph, src
-    )
