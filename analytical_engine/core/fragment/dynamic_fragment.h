@@ -1471,7 +1471,7 @@ class DynamicFragment {
     return false;
   }
 
-  void ModifyEdges(const std::vector<std::string>& edges_to_modify,
+  void ModifyEdges(const folly::dynamic& edges_to_modify,
                    const rpc::ModifyType modify_type) {
     std::vector<internal_vertex_t> vertices;
     std::vector<edge_t> edges;
@@ -1486,8 +1486,9 @@ class DynamicFragment {
       fid_t src_fid, dst_fid;
       partitioner_t partitioner;
       partitioner.Init(fnum_);
+      /*
       auto line_parser_ptr = std::make_unique<DynamicLineParser>();
-      for (auto& line : edges_to_modify) {
+        for (auto& line : edges_to_modify) {
         if (line.empty() || line[0] == '#') {
           continue;
         }
@@ -1497,8 +1498,10 @@ class DynamicFragment {
           LOG(ERROR) << e.what() << " line: " << line;
           continue;
         }
-        src_fid = partitioner.GetPartitionId(src);
-        dst_fid = partitioner.GetPartitionId(dst);
+      */
+      for (const auto& e : edges_to_modify) {
+        src_fid = partitioner.GetPartitionId(e[0]);
+        dst_fid = partitioner.GetPartitionId(e[1]);
         if (modify_type == rpc::NX_ADD_EDGES) {
           vm_ptr_->AddVertex(src_fid, src, src_gid);
           vm_ptr_->AddVertex(dst_fid, dst, dst_gid);
@@ -1515,9 +1518,9 @@ class DynamicFragment {
           }
         }
         if (src_fid == fid_ || dst_fid == fid_ || duplicated()) {
-          edges.emplace_back(src_gid, dst_gid, e_data);
+          edges.emplace_back(src_gid, dst_gid, e[2]);
           if (!directed_ && src_gid != dst_gid) {
-            edges.emplace_back(dst_gid, src_gid, e_data);
+            edges.emplace_back(dst_gid, src_gid, e[2]);
           }
         }
       }

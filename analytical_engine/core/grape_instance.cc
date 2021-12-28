@@ -20,6 +20,8 @@
 
 #include "boost/algorithm/string.hpp"
 #include "boost/algorithm/string/split.hpp"
+#include "folly/dynamic.h"
+#include "folly/json.h"
 
 #include "vineyard/io/io/io_factory.h"
 
@@ -288,7 +290,7 @@ bl::result<void> GrapeInstance::modifyVertices(
 }
 
 bl::result<void> GrapeInstance::modifyEdges(
-    const rpc::GSParams& params, const std::vector<std::string>& edges) {
+    const rpc::GSParams& params, const folly::dynamic& edges) {
 #ifdef NETWORKX
   BOOST_LEAF_AUTO(modify_type, params.Get<rpc::ModifyType>(rpc::MODIFY_TYPE));
   BOOST_LEAF_AUTO(graph_name, params.Get<std::string>(rpc::GRAPH_NAME));
@@ -1093,12 +1095,16 @@ bl::result<std::shared_ptr<DispatchResult>> GrapeInstance::OnReceive(
   }
   case rpc::MODIFY_EDGES: {
 #ifdef NETWORKX
+    /*
     std::vector<std::string> edges_to_modify;
     int size = cmd.params.at(rpc::EDGES).list().s_size();
     edges_to_modify.reserve(size);
     for (int i = 0; i < size; ++i) {
       edges_to_modify.push_back(cmd.params.at(rpc::EDGES).list().s(i));
     }
+    */
+    BOOST_LEAF_AUTO(edges_json, params.Get<std::string>(rpc::EDGES));
+    folly::dynamic edges_to_modify = folly::parseJson(edges_json);
     BOOST_LEAF_CHECK(modifyEdges(params, edges_to_modify));
 #else
     RETURN_GS_ERROR(vineyard::ErrorCode::kInvalidOperationError,

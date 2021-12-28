@@ -104,7 +104,7 @@ class GrapeInstance : public Subscriber {
                                   const std::vector<std::string>& vertices);
 
   bl::result<void> modifyEdges(const rpc::GSParams& params,
-                               const std::vector<std::string>& edges);
+                               const folly::dynamic& edges);
 
   bl::result<void> clearEdges(const rpc::GSParams& params);
 

@@ -928,16 +928,14 @@ class Graph(_GraphBase):
         """
         t_dict = 0.0
         t_append = 0.0
-        self._convert_arrow_to_dynamic()
+        t = time.time()
         if u_of_edge is None or v_of_edge is None:
             raise ValueError("None cannot be a node")
-        t = time.time()
-        data = dict(attr)
         t_dict = time.time() - t_dict
         t = time.time()
-        self._schema.add_nx_edge_properties(data)
+        self._schema.add_nx_edge_properties(attr)
         self._edges_for_adding.append(
-            json.dumps((u_of_edge, v_of_edge, data), default=json_encoder)
+            json.dumps((u_of_edge, v_of_edge, attr), default=json_encoder)
         )
         t_append = time.time() - t
         # self._edges_for_adding.append((u_of_edge, v_of_edge, data))
@@ -2244,6 +2242,7 @@ class Graph(_GraphBase):
         self._graph_type = graph_def_pb2.ARROW_PROPERTY
 
     def _clear_adding_cache(self):
+        self._convert_arrow_to_dynamic()
         if self._nodes_for_adding:
             self._op = dag_utils.modify_vertices(
                 self, types_pb2.NX_ADD_NODES, self._nodes_for_adding
@@ -2258,6 +2257,7 @@ class Graph(_GraphBase):
         self._edges_for_adding.clear()
 
     def _clear_deling_cache(self):
+        self._convert_arrow_to_dynamic()
         if self._nodes_for_deling:
             self._op = dag_utils.modify_vertices(
                 self, types_pb2.NX_DEL_NODES, self._nodes_for_deling
