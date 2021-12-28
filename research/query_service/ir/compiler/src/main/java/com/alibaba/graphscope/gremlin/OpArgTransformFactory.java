@@ -174,7 +174,8 @@ public class OpArgTransformFactory {
                     throw new OpArgIllegalException(OpArgIllegalException.Cause.UNSUPPORTED_TYPE, "values() is unsupported");
                 }
                 if (mapKeys.length > 1) {
-                    logger.error("only one argument in values(...) is supported, ignore others");
+                    throw new OpArgIllegalException(OpArgIllegalException.Cause.UNSUPPORTED_TYPE,
+                            "use valueMap(..) instead if there are multiple project keys");
                 }
                 expr = String.format("@%s.%s", k, mapKeys[0]);
                 exprWithAlias.add(makeProjectPair(expr, getVarAlias(k, mapKeys[0])));
@@ -271,7 +272,8 @@ public class OpArgTransformFactory {
                 throw new OpArgIllegalException(OpArgIllegalException.Cause.UNSUPPORTED_TYPE, "values() is unsupported");
             }
             if (valueKeys.length > 1) {
-                logger.error("only one argument in values(...) is supported, ignore others");
+                throw new OpArgIllegalException(OpArgIllegalException.Cause.UNSUPPORTED_TYPE,
+                        "use valueMap(..) instead if there are multiple project keys");
             }
             variable = ArgUtils.asVarPropertyOnly(ArgUtils.asFfiProperty(valueKeys[0]));
             alias = getGroupKeyAlias(variable);
