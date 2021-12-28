@@ -21,6 +21,8 @@ import com.alibaba.graphscope.common.intermediate.operator.InterOpBase;
 import com.alibaba.graphscope.common.intermediate.process.AliasProcessor;
 import com.alibaba.graphscope.common.intermediate.process.InterOpProcessor;
 import com.alibaba.graphscope.common.intermediate.process.PropertyDetailsProcessor;
+import com.alibaba.graphscope.common.intermediate.strategy.InterOpStrategy;
+import com.alibaba.graphscope.common.intermediate.strategy.TopKStrategy;
 import org.apache.commons.collections.list.UnmodifiableList;
 
 import java.util.ArrayList;
@@ -30,6 +32,7 @@ import java.util.List;
 // collection of intermediate operators
 public class InterOpCollection {
     private List<InterOpBase> opCollection;
+    private static List<InterOpStrategy> strategies = Arrays.asList(TopKStrategy.INSTANCE);
     private static List<InterOpProcessor> processors = Arrays.asList(PropertyDetailsProcessor.INSTANCE, AliasProcessor.INSTANCE);
 
     public InterOpCollection() {
@@ -38,6 +41,7 @@ public class InterOpCollection {
     }
 
     public IrPlan buildIrPlan() {
+        applyStrategies();
         process();
         IrPlan irPlan = new IrPlan();
         unmodifiableCollection().forEach(k -> {
@@ -58,7 +62,15 @@ public class InterOpCollection {
         opCollection.add(i, op);
     }
 
+    public void removeInterOp(int i) {
+        opCollection.remove(i);
+    }
+
     private void process() {
         processors.forEach(k -> k.process(this));
+    }
+
+    private void applyStrategies() {
+        strategies.forEach(k -> k.apply(this));
     }
 }

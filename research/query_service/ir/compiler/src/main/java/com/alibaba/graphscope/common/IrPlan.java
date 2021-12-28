@@ -229,6 +229,12 @@ public class IrPlan implements Closeable {
                     FfiOrderOpt opt = (FfiOrderOpt) pair.getValue1();
                     irCoreLib.addOrderbyPair(ptrOrder, var, opt);
                 });
+                // top k
+                Optional<OpArg> lower = op.getLower();
+                Optional<OpArg> upper = op.getUpper();
+                if (lower.isPresent() && upper.isPresent()) {
+                    irCoreLib.setOrderbyLimit(ptrOrder, (Integer) lower.get().getArg(), (Integer) upper.get().getArg());
+                }
                 if (baseOp.getAlias().isPresent()) {
                     throw new InterOpIllegalArgException(baseOp.getClass(), "alias", "unimplemented yet");
                 }
