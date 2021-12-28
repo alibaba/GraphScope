@@ -392,6 +392,8 @@ class GraphSchema:
         return [entry.relations for entry in self._valid_edge_labels()]
 
     def get_relationships(self, label):
+        if label not in self._e_label_index:
+            raise KeyError(f"{label} not exists.")
         label_id = self._e_label_index[label]
         if not self._valid_edges[label_id]:
             raise ValueError(f"{label} not exists.")
@@ -412,12 +414,16 @@ class GraphSchema:
         return self._edge_labels[self.get_edge_label_id(label)].properties
 
     def get_vertex_label_id(self, label):
+        if label not in self._v_label_index:
+            raise KeyError(f"{label} not exists.")
         idx = self._v_label_index[label]
         if not self._valid_vertices[idx]:
             raise ValueError(f"Vertex {label} not exists in graph")
         return idx
 
     def get_edge_label_id(self, label):
+        if label not in self._e_label_index:
+            raise KeyError(f"{label} not exists.")
         idx = self._e_label_index[label]
         if not self._valid_edges[idx]:
             raise ValueError(f"Edge {label} not exists in graph")

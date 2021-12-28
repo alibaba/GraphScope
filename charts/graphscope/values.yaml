@@ -35,10 +35,10 @@ coordinator:
     tag: ""
   resources:
     requests:
-      cpu: 1.0
+      cpu: 4.0
       memory: 4Gi
     limits:
-      cpu: 1.0
+      cpu: 4.0
       memory: 4Gi
   extraEnv: {}
   readinessProbe:
@@ -62,11 +62,12 @@ engines:
     tag: ""
   resources:
     requests:
-      cpu: 0.5
+      cpu: 2.0
       memory: 4Gi
     limits:
-      cpu: 0.5
+      cpu: 2.0
       memory: 4Gi
+
 
 vineyard:
   # When `vineyard.daemonset` is set to the Helm release name, the coordinator will
@@ -87,7 +88,7 @@ vineyard:
       cpu: 0.5
       memory: 512Mi
   ## Init size of vineyard shared memory.
-  shared_mem: 4Gi
+  shared_mem: 8Gi
 
 
 etcd:
@@ -102,6 +103,7 @@ etcd:
     limits:
       cpu: 0.5
       memory: 128Mi
+
 
 withJupyter: true
 jupyter:

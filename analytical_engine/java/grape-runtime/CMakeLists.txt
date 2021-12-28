@@ -49,6 +49,7 @@ include_directories(${VINEYARD_INCLUDE_DIRS})
 # find graphscope analytical engine---------------------------------------------
 find_package(graphscope-analytical)
 include_directories(SYSTEM ${GRAPHSCOPE_ANALYTICAL_INCLUDE_DIRS})
+include_directories(SYSTEM ${GRAPHSCOPE_ANALYTICAL_INCLUDE_DIRS}/proto)
 
 find_package(Threads REQUIRED)
 

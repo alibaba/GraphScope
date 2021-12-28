@@ -29,13 +29,15 @@ __all__ = [
 @project_to_simple
 @not_compatible_for("arrow_property", "dynamic_property")
 def sssp(graph, src=0):
-    """Compute single source shortest path on the `graph`.
+    """Compute single source shortest path length on the `graph`.
 
     Note that SSSP requires an numerical property on the edge.
 
     Args:
         graph (:class:`Graph`): A projected simple graph.
-        src (int, optional): The source vertex. Defaults to 0.
+        src (optional): The source vertex. The type should be consistent
+            with the id type of the `graph`, that is, it's `int` or `str` depending
+            on the `oid_type` is `int64_t` or `string` of the `graph`. Defaults to 0.
 
     Returns:
         :class:`graphscope.framework.context.VertexDataContextDAGNode`:
@@ -62,10 +64,14 @@ def property_sssp(graph, src=0):
 
     Args:
         graph (Graph): a property graph.
-        src (int, optional): the source. Defaults to 0.
+        src (optional): The source vertex. The type should be consistent
+            with the id type of the `graph`, that is, it's `int` or `str` depending
+            on the `oid_type` is `int64_t` or `string` of the `graph`. Defaults to 0.
 
     Returns:
         :class:`graphscope.framework.context.LabeledVertexDataContext`:
             A context with each vertex assigned with the shortest distance from the src, evaluated in eager mode.
     """
-    return AppAssets(algo="property_sssp", context="labeled_vertex_data")(graph, src)
+    return AppAssets(algo="property_sssp", context="labeled_vertex_property")(
+        graph, src
+    )

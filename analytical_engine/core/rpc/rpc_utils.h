@@ -28,7 +28,7 @@
 #include "core/utils/grape_utils.h"
 
 #include "google/protobuf/util/json_util.h"
-#include "proto/op_def.pb.h"
+#include "proto/graphscope/proto/op_def.pb.h"
 
 namespace gs {
 namespace rpc {

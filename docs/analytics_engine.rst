@@ -358,7 +358,7 @@ Later, you can load your own algorithm from the gar package.
     g = graphscope.g()
 
     # load my algorithm from a gar package
-    my_app = load_app('SSSP_Pregel', 'file:///var/graphscope/udf/my_sssp_pregel.gar')
+    my_app = load_app('file:///var/graphscope/udf/my_sssp_pregel.gar')
 
     # run my algorithm over a graph and get the result.
     ret = my_app(g, src="0")

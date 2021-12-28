@@ -19,6 +19,7 @@
 import functools
 import hashlib
 import json
+import logging
 import os
 import zipfile
 from copy import deepcopy
@@ -35,6 +36,8 @@ from graphscope.framework.errors import InvalidArgumentError
 from graphscope.framework.errors import check_argument
 from graphscope.framework.utils import graph_type_to_cpp_class
 from graphscope.proto import graph_def_pb2
+
+logger = logging.getLogger("graphscope")
 
 DEFAULT_GS_CONFIG_FILE = ".gs_conf.yaml"
 
@@ -176,6 +179,10 @@ class AppAssets(DAGNode):
         fp = BytesIO(self._gar)
         archive = zipfile.ZipFile(fp, "r")
         config = yaml.safe_load(archive.read(DEFAULT_GS_CONFIG_FILE))
+        # default app will used if there is only one app in it
+        if self._algo is None and len(config["app"]) == 1:
+            self._algo = config["app"][0]["algo"]
+            logger.info("Default app %s will be used.", self._algo)
         for meta in config["app"]:
             if self._algo == meta["algo"]:
                 if "context_type" in meta:
@@ -423,13 +430,14 @@ class UnloadedApp(DAGNode):
         self._session.dag.add_op(self._op)
 
 
-def load_app(algo, gar=None, context=None, **kwargs):
+def load_app(gar=None, algo=None, context=None, **kwargs):
     """Load an app from gar.
     bytes or the resource of the specified path or bytes.
 
     Args:
         algo: str
-          Algo name inside resource.
+          Algo name inside resource. None will extract name from gar resource
+          if there is only one app in it.
         gar: bytes or BytesIO or str
           str represent the path of resource.
 
@@ -442,7 +450,7 @@ def load_app(algo, gar=None, context=None, **kwargs):
         TypeError: File is not a zip file.
 
     Examples:
-        >>> sssp = load_app('sssp', gar='./resource.gar')
+        >>> sssp = load_app(gar='./resource.gar', algo='sssp')
         >>> sssp(src=4)
 
         which will have following `.gs_conf.yaml` in resource.gar:
@@ -450,17 +458,18 @@ def load_app(algo, gar=None, context=None, **kwargs):
             - algo: sssp
               type: cpp_pie
               class_name: grape:SSSP
+              context_type: vertex_data
               src: sssp/sssp.h
               compatible_graph:
                 - gs::ArrowProjectedFragment
     """
     if isinstance(gar, (BytesIO, bytes)):
-        return AppAssets(str(algo), context, gar, **kwargs)
+        return AppAssets(algo, context, gar, **kwargs)
     elif isinstance(gar, str):
         with open(gar, "rb") as f:
             content = f.read()
         if not zipfile.is_zipfile(gar):
             raise InvalidArgumentError("{} is not a zip file.".format(gar))
-        return AppAssets(str(algo), context, content, **kwargs)
+        return AppAssets(algo, context, content, **kwargs)
     else:
         raise InvalidArgumentError("Wrong type with {}".format(gar))

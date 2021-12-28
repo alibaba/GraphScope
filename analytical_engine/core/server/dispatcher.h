@@ -22,7 +22,7 @@
 #include <utility>
 #include <vector>
 
-#include "boost/leaf/handle_exception.hpp"
+#include "boost/leaf/handle_errors.hpp"
 
 #include "grape/util.h"
 #include "grape/worker/comm_spec.h"
@@ -32,7 +32,7 @@
 #include "core/error.h"
 #include "core/server/command_detail.h"
 #include "core/utils/mpi_utils.h"
-#include "proto/graph_def.pb.h"
+#include "proto/graphscope/proto/graph_def.pb.h"
 
 namespace gs {
 

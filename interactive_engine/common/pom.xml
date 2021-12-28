@@ -159,11 +159,11 @@
           <execution>
             <id>graphscope</id>
             <configuration>
-              <protoSourceRoot>../..</protoSourceRoot>
+              <protoSourceRoot>../../proto</protoSourceRoot>
               <includes>
-                <include>proto/graph_def.proto</include>
-                <include>proto/ddl_service.proto</include>
-                <include>proto/write_service.proto</include>
+                <include>graphscope/proto/graph_def.proto</include>
+                <include>graphscope/proto/ddl_service.proto</include>
+                <include>graphscope/proto/write_service.proto</include>
               </includes>
             </configuration>
             <goals>

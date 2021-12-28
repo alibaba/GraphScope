@@ -22,9 +22,9 @@
 #include <utility>
 
 #include "core/server/dispatcher.h"
-#include "proto/engine_service.grpc.pb.h"
-#include "proto/graph_def.pb.h"
-#include "proto/op_def.pb.h"
+#include "proto/graphscope/proto/engine_service.grpc.pb.h"
+#include "proto/graphscope/proto/graph_def.pb.h"
+#include "proto/graphscope/proto/op_def.pb.h"
 
 namespace gs {
 namespace rpc {

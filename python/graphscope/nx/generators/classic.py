@@ -127,11 +127,12 @@ def barbell_graph(m1, m2, create_using=None):
 
 
 @patch_docstring(nxa.binomial_tree)
-def binomial_tree(n):
-    G = nx.empty_graph(1)
+def binomial_tree(n, create_using=None):
+    G = nx.empty_graph(1, create_using)
     N = 1
     for i in range(n):
-        edges = [(u + N, v + N) for (u, v) in G.edges]
+        # Use G.edges() to ensure 2-tuples. G.edges is 3-tuple for MultiGraph
+        edges = [(u + N, v + N) for (u, v) in G.edges()]
         G.add_edges_from(edges)
         G.add_edge(0, N)
         N *= 2

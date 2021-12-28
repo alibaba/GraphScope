@@ -129,6 +129,12 @@ spec:
             - name: config
               mountPath: /etc/graphscope-store/my.cnf.tpl
               subPath: my.cnf
+
+      securityContext:
+        runAsUser: 1001
+        runAsGroup: 1001
+        fsGroup: 1001
+
       volumes:
         - name: config
           configMap:

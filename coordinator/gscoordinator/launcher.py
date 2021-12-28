@@ -29,6 +29,7 @@ from abc import abstractmethod
 
 from graphscope.framework.utils import PipeWatcher
 from graphscope.framework.utils import get_free_port
+from graphscope.framework.utils import get_java_version
 from graphscope.framework.utils import get_tempdir
 from graphscope.framework.utils import is_free_port
 from graphscope.proto import types_pb2
@@ -38,7 +39,6 @@ from gscoordinator.utils import GRAPHSCOPE_HOME
 from gscoordinator.utils import INTERACTIVE_ENGINE_SCRIPT
 from gscoordinator.utils import WORKSPACE
 from gscoordinator.utils import ResolveMPICmdPrefix
-from gscoordinator.utils import get_java_version
 from gscoordinator.utils import get_timestamp
 from gscoordinator.utils import parse_as_glog_level
 
