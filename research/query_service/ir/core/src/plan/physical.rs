@@ -93,6 +93,7 @@ enum SimpleOpr {
     SortBy,
     Dedup,
     GroupBy,
+    Fold,
 }
 
 fn simple_add_job_builder<M: Message>(
@@ -108,6 +109,7 @@ fn simple_add_job_builder<M: Message>(
         SimpleOpr::SortBy => builder.sort_by(bytes),
         SimpleOpr::Dedup => builder.dedup(bytes),
         SimpleOpr::GroupBy => builder.group_by(pegasus_server::pb::AccumKind::Custom, bytes),
+        SimpleOpr::Fold => builder.fold_custom(pegasus_server::pb::AccumKind::Custom, bytes),
     };
     Ok(())
 }
@@ -251,10 +253,13 @@ impl AsPhysical for pb::Dedup {
         simple_add_job_builder(builder, self, SimpleOpr::Dedup)
     }
 }
-
 impl AsPhysical for pb::GroupBy {
     fn add_job_builder(&self, builder: &mut JobBuilder) -> PhysicalResult<()> {
-        simple_add_job_builder(builder, self, SimpleOpr::GroupBy)
+        if self.mappings.is_empty() {
+            simple_add_job_builder(builder, self, SimpleOpr::Fold)
+        } else {
+            simple_add_job_builder(builder, self, SimpleOpr::GroupBy)
+        }
     }
 }
 
