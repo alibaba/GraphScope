@@ -322,7 +322,10 @@ impl AsPhysical for LogicalPlan {
                     }
                 }
             }
-            curr_node.borrow().opr.add_job_builder(builder)?;
+            curr_node
+                .borrow()
+                .opr
+                .add_job_builder(builder)?;
             prev_node_opt = curr_node_opt.clone();
 
             if curr_node.borrow().children.is_empty() {
@@ -440,9 +443,15 @@ mod test {
         let expand_opr_bytes = expand_opr.encode_to_vec();
 
         let mut logical_plan = LogicalPlan::with_root(Node::new(0, source_opr));
-        logical_plan.append_operator_as_node(select_opr.clone(), vec![0]).unwrap(); // node 1
-        logical_plan.append_operator_as_node(expand_opr.clone(), vec![1]).unwrap(); // node 2
-        logical_plan.append_operator_as_node(limit_opr.clone(), vec![2]).unwrap(); // node 3
+        logical_plan
+            .append_operator_as_node(select_opr.clone(), vec![0])
+            .unwrap(); // node 1
+        logical_plan
+            .append_operator_as_node(expand_opr.clone(), vec![1])
+            .unwrap(); // node 2
+        logical_plan
+            .append_operator_as_node(limit_opr.clone(), vec![2])
+            .unwrap(); // node 3
         let mut builder = JobBuilder::default();
         let _ = logical_plan.add_job_builder(&mut builder);
 
@@ -486,9 +495,13 @@ mod test {
         });
 
         let mut logical_plan = LogicalPlan::with_root(Node::new(0, source_opr.clone()));
-        logical_plan.append_operator_as_node(project_opr.clone(), vec![0]).unwrap(); // node 1
+        logical_plan
+            .append_operator_as_node(project_opr.clone(), vec![0])
+            .unwrap(); // node 1
         let mut builder = JobBuilder::default();
-        logical_plan.add_job_builder(&mut builder).unwrap();
+        logical_plan
+            .add_job_builder(&mut builder)
+            .unwrap();
 
         let mut expected_builder = JobBuilder::default();
         let project_opr = pb::logical_plan::Operator::from(pb::Project {
@@ -537,8 +550,12 @@ mod test {
         let topby_opr_bytes = topby_opr.encode_to_vec();
 
         let mut logical_plan = LogicalPlan::with_root(Node::new(0, source_opr));
-        logical_plan.append_operator_as_node(orderby_opr.clone(), vec![0]).unwrap(); // node 1
-        logical_plan.append_operator_as_node(topby_opr.clone(), vec![1]).unwrap(); // node 2
+        logical_plan
+            .append_operator_as_node(orderby_opr.clone(), vec![0])
+            .unwrap(); // node 1
+        logical_plan
+            .append_operator_as_node(topby_opr.clone(), vec![1])
+            .unwrap(); // node 2
         let mut builder = JobBuilder::default();
         let _ = logical_plan.add_job_builder(&mut builder);
 
@@ -579,10 +596,18 @@ mod test {
         let join_opr_bytes = join_opr.encode_to_vec();
 
         let mut logical_plan = LogicalPlan::with_root(Node::new(0, source_opr));
-        logical_plan.append_operator_as_node(expand_opr.clone(), vec![0]).unwrap(); // node 1
-        logical_plan.append_operator_as_node(expand_opr.clone(), vec![0]).unwrap(); // node 2
-        logical_plan.append_operator_as_node(expand_opr.clone(), vec![2]).unwrap(); // node 3
-        logical_plan.append_operator_as_node(join_opr.clone(), vec![1, 3]).unwrap(); // node 4
+        logical_plan
+            .append_operator_as_node(expand_opr.clone(), vec![0])
+            .unwrap(); // node 1
+        logical_plan
+            .append_operator_as_node(expand_opr.clone(), vec![0])
+            .unwrap(); // node 2
+        logical_plan
+            .append_operator_as_node(expand_opr.clone(), vec![2])
+            .unwrap(); // node 3
+        logical_plan
+            .append_operator_as_node(join_opr.clone(), vec![1, 3])
+            .unwrap(); // node 4
         logical_plan
             .append_operator_as_node(pb::logical_plan::Operator::from(limit_opr.clone()), vec![4])
             .unwrap(); // node 5

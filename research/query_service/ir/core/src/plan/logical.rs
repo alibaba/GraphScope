@@ -535,7 +535,10 @@ impl AsLogical for common_pb::Expression {
                                             if schema.is_column_id() {
                                                 *key = schema
                                                     .get_column_id_from_pb(key)
-                                                    .ok_or(LogicalError::ColumnNotExist(format!("{:?}", key)))?
+                                                    .ok_or(LogicalError::ColumnNotExist(format!(
+                                                        "{:?}",
+                                                        key
+                                                    )))?
                                                     .into();
                                             }
                                         }
