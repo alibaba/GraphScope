@@ -26,6 +26,7 @@ mod generated {
     }
 }
 
+#[rustfmt::skip]
 #[cfg(feature = "gcip")]
 mod generated {
     #[path = "protocol.rs"]

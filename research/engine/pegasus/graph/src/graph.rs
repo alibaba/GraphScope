@@ -1,111 +1,135 @@
 use std::ops::Deref;
 
-use nohash_hasher::IntMap;
+use ahash::AHashMap;
 
-pub struct IdGraph<B: Deref<Target = [u64]>> {
-    vertices: IntMap<u64, (u64, u64)>,
-    neighbors: B,
+use crate::topo::IdTopo;
+
+#[derive(Copy, Clone, Debug, Eq, PartialEq)]
+pub enum Direction {
+    Out,
+    In,
+    Both,
 }
 
-impl<B: Deref<Target = [u64]>> IdGraph<B> {
-    pub fn new(vertices: IntMap<u64, (u64, u64)>, neighbors: B) -> Self {
-        IdGraph { vertices, neighbors }
-    }
-
-    pub fn total_vertices(&self) -> usize {
-        self.vertices.len()
-    }
-
-    pub fn total_edges(&self) -> usize {
-        self.neighbors.len()
-    }
-
-    pub fn vertices(&self) -> impl Iterator<Item = &u64> {
-        self.vertices.keys()
-    }
-
-    #[inline]
-    pub fn get_neighbors(&self, id: u64) -> Neighbors {
-        if let Some((offset, len)) = self.vertices.get(&id) {
-            if *len == 0 {
-                Neighbors::empty()
-            } else {
-                let start = *offset as usize;
-                let ptr = unsafe { self.neighbors.as_ptr().add(start) };
-                Neighbors::new(ptr, *len as usize)
-            }
-        } else {
-            Neighbors::empty()
-        }
-    }
-
-    #[inline]
-    pub fn count_neighbors(&self, id: u64) -> usize {
-        if let Some((_, len)) = self.vertices.get(&id) {
-            *len as usize
-        } else {
-            0
-        }
-    }
-
-    pub fn sample_vertices(&self, size: usize) -> Vec<u64> {
-        let mut sample = vec![];
-        if size > 0 {
-            for x in self.vertices.keys().take(size) {
-                sample.push(*x);
-            }
-        }
-        sample
-    }
+#[derive(Clone, Debug, Eq, PartialEq)]
+struct TopoMeta {
+    meta_id: usize,
+    src_type: String,
+    dst_type: String,
+    edge_type: String,
+    kind: Direction,
 }
 
-lazy_static! {
-    static ref EMPTY_VEC: Vec<u64> = vec![];
+pub struct LabeledTopoGraph<B: Deref<Target = [u64]>> {
+    v2e_lables: AHashMap<String, Vec<TopoMeta>>,
+    topos: Vec<IdTopo<B>>,
 }
 
-pub struct Neighbors {
-    ptr: *const u64,
-    len: usize,
-    next: usize,
-}
-
-unsafe impl Send for Neighbors {}
-
-impl Neighbors {
-    fn new(ptr: *const u64, len: usize) -> Self {
-        Neighbors { ptr, len, next: 0 }
+impl<B: Deref<Target = [u64]>> LabeledTopoGraph<B> {
+    pub fn add_out_topo(&mut self, src_type: String, edge_type: String, dst_type: String, topo: IdTopo<B>) {
+        let meta_id = self.topos.len();
+        let metas = self
+            .v2e_lables
+            .entry(src_type.clone())
+            .or_insert_with(Vec::new);
+        let meta = TopoMeta { meta_id, src_type, dst_type, edge_type, kind: Direction::Out };
+        metas.push(meta);
+        self.topos.push(topo);
     }
 
-    pub fn empty() -> Self {
-        let ptr = EMPTY_VEC.as_ptr();
-        Neighbors::new(ptr, 0)
+    pub fn add_in_topo(&mut self, src_type: String, edge_type: String, dst_type: String, topo: IdTopo<B>) {
+        let meta_id = self.topos.len();
+        let metas = self
+            .v2e_lables
+            .entry(dst_type.clone())
+            .or_insert_with(Vec::new);
+        let meta = TopoMeta { meta_id, src_type, dst_type, edge_type, kind: Direction::In };
+        metas.push(meta);
+        self.topos.push(topo);
     }
 
-    pub fn len(&self) -> usize {
-        self.len
+    pub fn add_nodirct_topo(&mut self, vtype: String, edge_type: String, topo: IdTopo<B>) {
+        let meta_id = self.topos.len();
+        let metas = self
+            .v2e_lables
+            .entry(vtype.clone())
+            .or_insert_with(Vec::new);
+        let meta = TopoMeta {
+            meta_id,
+            src_type: vtype.clone(),
+            dst_type: vtype,
+            edge_type,
+            kind: Direction::Both,
+        };
+        metas.push(meta);
+        self.topos.push(topo);
     }
-}
 
-impl Iterator for Neighbors {
-    type Item = u64;
-
-    fn next(&mut self) -> Option<Self::Item> {
-        if self.next >= self.len {
-            None
-        } else {
-            if self.ptr.is_null() {
-                panic!("null point error;")
-            }
-            let mut ptr = self.ptr;
-            let next = self.next;
-            self.next += 1;
-            Some(unsafe {
-                ptr = ptr.add(next);
-                if ptr.is_null() {
-                    panic!("null point error;")
+    pub fn count(&self, vid: u64, vtype: &str, dir: Direction) -> usize {
+        let mut count = 0;
+        if let Some(metas) = self.v2e_lables.get(vtype) {
+            for m in metas {
+                if m.kind == dir || m.kind == Direction::Both || dir == Direction::Both {
+                    count += self.topos[m.meta_id].count_neighbors(vid)
                 }
-                *ptr as u64
-            })
+            }
         }
+        count
+    }
+
+    pub fn count_label_of(&self, vid: u64, vtype: &str, edge_type: &str, dir: Direction) -> usize {
+        let mut count = 0;
+        if let Some(metas) = self.v2e_lables.get(vtype) {
+            for m in metas {
+                if (m.kind == dir || m.kind == Direction::Both || dir == Direction::Both)
+                    && m.edge_type == edge_type
+                {
+                    count += self.topos[m.meta_id].count_neighbors(vid)
+                }
+            }
+        }
+        count
+    }
+
+    pub fn count_label_with_in<F: Fn(&str) -> bool>(
+        &self, vid: u64, vtype: &str, dir: Direction, within: F,
+    ) -> usize {
+        let mut count = 0;
+        if let Some(metas) = self.v2e_lables.get(vtype) {
+            for m in metas {
+                if (m.kind == dir || m.kind == Direction::Both || dir == Direction::Both)
+                    && within(&m.edge_type)
+                {
+                    count += self.topos[m.meta_id].count_neighbors(vid)
+                }
+            }
+        }
+        count
+    }
+
+    pub fn batch_count(&self, vids: &[u64], vtype: &str, dir: Direction) -> usize {
+        let mut count = 0;
+        if let Some(metas) = self.v2e_lables.get(vtype) {
+            for m in metas {
+                if m.kind == dir || m.kind == Direction::Both || dir == Direction::Both {
+                    for vid in vids {
+                        count += self.topos[m.meta_id].count_neighbors(*vid)
+                    }
+                }
+            }
+        }
+        count
+    }
+
+    pub fn get_neighbors(&self, vid: u64, vtype: &str, dir: Direction) -> impl Iterator<Item = u64> {
+        let mut result = vec![];
+        if let Some(metas) = self.v2e_lables.get(vtype) {
+            for m in metas {
+                if m.kind == dir || m.kind == Direction::Both || dir == Direction::Both {
+                    result.push(self.topos[m.meta_id].get_neighbors(vid));
+                }
+            }
+        }
+        result.into_iter().flat_map(|n| n.into_iter())
     }
 }

@@ -64,7 +64,7 @@ fn main() {
         }
         ids
     } else {
-        graph.sample_vertices(config.starts as usize)
+        graph.sample_vertices(config.starts as usize, 0.1)
     };
 
     pegasus::wait_servers_ready(conf.servers());

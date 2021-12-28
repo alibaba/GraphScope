@@ -453,6 +453,7 @@ mod test {
     fn toml_config_test() {
         let content = r#"
             server_id = 0
+            servers_size = 2
             nonblocking = false
             read_timeout_ms = 8
             write_timeout_ms = 8

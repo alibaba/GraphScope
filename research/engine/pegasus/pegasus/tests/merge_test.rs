@@ -51,7 +51,7 @@ fn copy_merge_test_02() {
             s3.merge(s4)?.sink_into(output)
         }
     })
-        .expect("submit job failure");
+    .expect("submit job failure");
 
     let expected = vec![0, 0, 1, 1, 2, 2];
     let mut results = vec![];
