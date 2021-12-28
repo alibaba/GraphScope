@@ -256,16 +256,38 @@ public class PositiveEvalTest {
 
     @Test
     public void g_V_select_a_test() {
-        // SelectOneStep is integrated with SelectStep
-        Traversal expected = g.V().select("a");
-        expected.asAdmin().removeStep(1);
-        expected.asAdmin().addStep(new SelectStep(expected.asAdmin(), Pop.last, "a", ""));
-        Assert.assertEquals(expected, eval("g.V().select('a')"));
+        Traversal expected = g.V().as("a").select("a");
+        Assert.assertEquals(expected, eval("g.V().as(\"a\").select(\"a\")"));
+    }
+
+    @Test
+    public void g_V_select_a_by_str_test() {
+        Traversal expected = g.V().as("a").select("a").by("name");
+        Assert.assertEquals(expected, eval("g.V().as(\"a\").select(\"a\").by(\"name\")"));
+    }
+
+    @Test
+    public void g_V_select_a_by_valueMap_key_test() {
+        Traversal expected = g.V().as("a").select("a").by(__.valueMap("name"));
+        Assert.assertEquals(expected, eval("g.V().as(\"a\").select(\"a\").by(valueMap(\"name\"))"));
+    }
+
+    @Test
+    public void g_V_select_a_by_valueMap_keys_test() {
+        Traversal expected = g.V().as("a").select("a").by(__.valueMap("name", "id"));
+        Assert.assertEquals(expected, eval("g.V().as(\"a\").select(\"a\").by(valueMap(\"name\", \"id\"))"));
     }
 
     @Test
     public void g_V_select_a_b_test() {
-        Assert.assertEquals(g.V().select("a", "b"), eval("g.V().select('a', 'b')"));
+        Assert.assertEquals(g.V().as("a").out().as("b").select("a", "b"),
+                eval("g.V().as(\"a\").out().as(\"b\").select(\"a\", \"b\")"));
+    }
+
+    @Test
+    public void g_V_select_a_b_by_strs_test() {
+        Assert.assertEquals(g.V().as("a").out().as("b").select("a", "b").by("name").by("id"),
+                eval("g.V().as(\"a\").out().as(\"b\").select(\"a\", \"b\").by(\"name\").by(\"id\")"));
     }
 
     @Test

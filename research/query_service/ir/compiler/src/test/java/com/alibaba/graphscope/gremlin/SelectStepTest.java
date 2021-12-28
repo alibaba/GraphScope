@@ -21,6 +21,7 @@ import com.alibaba.graphscope.common.intermediate.operator.ProjectOp;
 import org.apache.tinkerpop.gremlin.process.traversal.Step;
 import org.apache.tinkerpop.gremlin.process.traversal.Traversal;
 import org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.GraphTraversalSource;
+import org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.__;
 import org.apache.tinkerpop.gremlin.structure.Graph;
 import org.apache.tinkerpop.gremlin.tinkergraph.structure.TinkerFactory;
 import com.alibaba.graphscope.gremlin.InterOpCollectionBuilder.StepTransformFactory;
@@ -54,6 +55,44 @@ public class SelectStepTest {
         List<Pair> expected = Arrays.asList(
                 Pair.with("@a.name", ArgUtils.asFfiAlias("a_name", false)),
                 Pair.with("@b.name", ArgUtils.asFfiAlias("b_name", false)));
+        Assert.assertEquals(expected, op.getProjectExprWithAlias().get().getArg());
+    }
+
+    @Test
+    public void g_V_select_one_test() {
+        Traversal traversal = g.V().select("a");
+        Step selectStep = traversal.asAdmin().getEndStep();
+        ProjectOp op = (ProjectOp) StepTransformFactory.SELECT_ONE_BY_STEP.apply(selectStep);
+        List<Pair> expected = Arrays.asList(Pair.with("@a", ArgUtils.asFfiAlias("a", false)));
+        Assert.assertEquals(expected, op.getProjectExprWithAlias().get().getArg());
+    }
+
+    @Test
+    public void g_V_select_one_by_key_test() {
+        Traversal traversal = g.V().select("a").by("name");
+        Step selectStep = traversal.asAdmin().getEndStep();
+        ProjectOp op = (ProjectOp) StepTransformFactory.SELECT_ONE_BY_STEP.apply(selectStep);
+        List<Pair> expected = Arrays.asList(Pair.with("@a.name", ArgUtils.asFfiAlias("a_name", false)));
+        Assert.assertEquals(expected, op.getProjectExprWithAlias().get().getArg());
+    }
+
+    @Test
+    public void g_V_select_one_by_valueMap_key_test() {
+        Traversal traversal = g.V().select("a").by(__.valueMap("name"));
+        Step selectStep = traversal.asAdmin().getEndStep();
+        ProjectOp op = (ProjectOp) StepTransformFactory.SELECT_ONE_BY_STEP.apply(selectStep);
+        List<Pair> expected = Arrays.asList(Pair.with("@a.name", ArgUtils.asFfiAlias("a_name", false)));
+        Assert.assertEquals(expected, op.getProjectExprWithAlias().get().getArg());
+    }
+
+    @Test
+    public void g_V_select_one_by_valueMap_keys_test() {
+        Traversal traversal = g.V().select("a").by(__.valueMap("name", "id"));
+        Step selectStep = traversal.asAdmin().getEndStep();
+        ProjectOp op = (ProjectOp) StepTransformFactory.SELECT_ONE_BY_STEP.apply(selectStep);
+        List<Pair> expected = Arrays.asList(
+                Pair.with("@a.name", ArgUtils.asFfiAlias("a_name", false)),
+                Pair.with("@a.id", ArgUtils.asFfiAlias("a_id", false)));
         Assert.assertEquals(expected, op.getProjectExprWithAlias().get().getArg());
     }
 }

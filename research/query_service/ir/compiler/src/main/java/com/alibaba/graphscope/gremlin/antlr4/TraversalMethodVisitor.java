@@ -24,8 +24,8 @@ import org.apache.tinkerpop.gremlin.process.traversal.Order;
 import org.apache.tinkerpop.gremlin.process.traversal.Traversal;
 import org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.GraphTraversal;
 import org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.GraphTraversalSource;
+import org.apache.tinkerpop.gremlin.process.traversal.step.ByModulating;
 import org.apache.tinkerpop.gremlin.process.traversal.step.map.OrderGlobalStep;
-import org.apache.tinkerpop.gremlin.process.traversal.step.map.SelectStep;
 
 public class TraversalMethodVisitor extends TraversalRootVisitor<GraphTraversal> {
     final GraphTraversal graphTraversal;
@@ -156,20 +156,20 @@ public class TraversalMethodVisitor extends TraversalRootVisitor<GraphTraversal>
         // set tags
         if (ctx.stringLiteralList() != null) {
             String[] tags = GenericLiteralVisitor.getStringLiteralList(ctx.stringLiteralList());
-            if (tags.length == 0) {
-                graphTraversal.select(tag, "");
+            if (tags.length == 0) { // select one tag
+                graphTraversal.select(tag);
             } else if (tags.length == 1) {
                 graphTraversal.select(tag, tags[0]);
             } else {
                 String[] otherTags = Utils.removeStringEle(0, tags);
                 graphTraversal.select(tag, tags[0], otherTags);
             }
-        } else {
-            graphTraversal.select(tag, "");
+        } else { // select one tag
+            graphTraversal.select(tag);
         }
         // set by traversal
         if (ctx.traversalMethod_selectby_list() != null) {
-            SelectStep step = (SelectStep) graphTraversal.asAdmin().getEndStep();
+            ByModulating step = (ByModulating) graphTraversal.asAdmin().getEndStep();
             int childCount = ctx.traversalMethod_selectby_list().getChildCount();
             for (int i = 0; i < childCount; ++i) {
                 GremlinGSParser.TraversalMethod_selectbyContext byCtx =
