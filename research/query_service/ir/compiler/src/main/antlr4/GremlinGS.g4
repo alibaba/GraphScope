@@ -68,6 +68,7 @@ traversalMethod
     | traversalMethod_group   // group()
     | traversalMethod_groupCount // groupCount()
     | traversalMethod_values    // values()
+    | traversalMethod_count // count()
     ;
 
 traversalSourceSpawnMethod_V
