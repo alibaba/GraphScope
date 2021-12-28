@@ -38,7 +38,7 @@ public class SelectStepTest {
 
     @Test
     public void g_V_select_test() {
-        Traversal traversal = g.V().select("a", "b");
+        Traversal traversal = g.V().as("a").out().as("b").select("a", "b");
         Step selectStep = traversal.asAdmin().getEndStep();
         ProjectOp op = (ProjectOp) StepTransformFactory.SELECT_BY_STEP.apply(selectStep);
         List<Pair> expected = Arrays.asList(
@@ -49,7 +49,7 @@ public class SelectStepTest {
 
     @Test
     public void g_V_select_key_test() {
-        Traversal traversal = g.V().select("a", "b").by("name");
+        Traversal traversal = g.V().as("a").out().as("b").select("a", "b").by("name");
         Step selectStep = traversal.asAdmin().getEndStep();
         ProjectOp op = (ProjectOp) StepTransformFactory.SELECT_BY_STEP.apply(selectStep);
         List<Pair> expected = Arrays.asList(
@@ -60,7 +60,7 @@ public class SelectStepTest {
 
     @Test
     public void g_V_select_one_test() {
-        Traversal traversal = g.V().select("a");
+        Traversal traversal = g.V().as("a").select("a");
         Step selectStep = traversal.asAdmin().getEndStep();
         ProjectOp op = (ProjectOp) StepTransformFactory.SELECT_ONE_BY_STEP.apply(selectStep);
         List<Pair> expected = Arrays.asList(Pair.with("@a", ArgUtils.asFfiAlias("a", false)));
@@ -69,7 +69,7 @@ public class SelectStepTest {
 
     @Test
     public void g_V_select_one_by_key_test() {
-        Traversal traversal = g.V().select("a").by("name");
+        Traversal traversal = g.V().as("a").select("a").by("name");
         Step selectStep = traversal.asAdmin().getEndStep();
         ProjectOp op = (ProjectOp) StepTransformFactory.SELECT_ONE_BY_STEP.apply(selectStep);
         List<Pair> expected = Arrays.asList(Pair.with("@a.name", ArgUtils.asFfiAlias("a_name", false)));
@@ -78,7 +78,7 @@ public class SelectStepTest {
 
     @Test
     public void g_V_select_one_by_valueMap_key_test() {
-        Traversal traversal = g.V().select("a").by(__.valueMap("name"));
+        Traversal traversal = g.V().as("a").select("a").by(__.valueMap("name"));
         Step selectStep = traversal.asAdmin().getEndStep();
         ProjectOp op = (ProjectOp) StepTransformFactory.SELECT_ONE_BY_STEP.apply(selectStep);
         List<Pair> expected = Arrays.asList(Pair.with("@a.name", ArgUtils.asFfiAlias("a_name", false)));
@@ -87,7 +87,7 @@ public class SelectStepTest {
 
     @Test
     public void g_V_select_one_by_valueMap_keys_test() {
-        Traversal traversal = g.V().select("a").by(__.valueMap("name", "id"));
+        Traversal traversal = g.V().as("a").select("a").by(__.valueMap("name", "id"));
         Step selectStep = traversal.asAdmin().getEndStep();
         ProjectOp op = (ProjectOp) StepTransformFactory.SELECT_ONE_BY_STEP.apply(selectStep);
         List<Pair> expected = Arrays.asList(
