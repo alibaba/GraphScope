@@ -15,6 +15,7 @@
 //!
 
 use std::cell::RefCell;
+use std::collections::BTreeMap;
 use std::convert::{TryFrom, TryInto};
 
 use dyn_type::arith::Exp;
@@ -26,7 +27,6 @@ use ir_common::NameOrId;
 use crate::expr::{ExprEvalError, ExprEvalResult};
 use crate::graph::element::Element;
 use crate::graph::property::{Details, PropKey};
-use std::collections::BTreeMap;
 
 /// The trait to define evaluating an expression
 pub trait Evaluate {
@@ -55,17 +55,44 @@ pub(crate) enum InnerOpr {
     VarMap(Vec<InnerOpr>),
 }
 
+fn get_object_key(opr: &InnerOpr) -> Object {
+    match opr {
+        InnerOpr::Var { tag, prop_key } => {
+            let mut obj1 = object!("");
+            let mut obj2 = object!("");
+            if let Some(t) = tag {
+                match t {
+                    NameOrId::Str(str) => obj1 = object!(str.as_str()),
+                    NameOrId::Id(id) => obj1 = object!(*id),
+                }
+            }
+            if let Some(prop) = prop_key {
+                match prop {
+                    PropKey::Id => obj2 = object!("~id"),
+                    PropKey::Label => obj2 = object!("~label"),
+                    PropKey::Key(key) => match key {
+                        NameOrId::Str(str) => obj2 = object!(str.as_str()),
+                        NameOrId::Id(id) => obj2 = object!(*id),
+                    },
+                }
+            }
+            object!(vec![obj1, obj2])
+        }
+        _ => unreachable!(),
+    }
+}
+
 impl ToString for InnerOpr {
     fn to_string(&self) -> String {
         match self {
             InnerOpr::Logical(logical) => format!("{:?}", logical),
             InnerOpr::Arith(arith) => format!("{:?}", arith),
-            InnerOpr::Const(c) => format!("{:?}", c),
+            InnerOpr::Const(c) => format!("Const ({:?})", c),
             InnerOpr::Var { tag, prop_key } => {
                 if let Some(p) = prop_key {
-                    format!("{:?}.{:?})", tag, p)
+                    format!("Var (tag: {:?}, prop_key: {:?})", tag, p)
                 } else {
-                    format!("{:?})", tag)
+                    format!("Var (tag: {:?})", tag)
                 }
             }
             InnerOpr::Vars(vars) => format!("Vars ({:?})", vars),
@@ -416,8 +443,7 @@ impl InnerOpr {
                 let mut map = BTreeMap::new();
                 for var in vars {
                     if let Some(obj) = var.eval_as_object(context)? {
-                        // TODO(may want to use other strings)
-                        map.insert(var.to_string().into(), obj);
+                        map.insert(get_object_key(var), obj);
                     } else {
                         return Ok(None);
                     }
@@ -652,7 +678,7 @@ mod tests {
                             @1.age + @1.birthday / 10000", // true
             "@0.hobbies within [\"football\", \"guitar\", \"chess\"]", // true
             "[@0.name, @0.age]",                           // [\"John\"", 31]
-            // "{@0.name, @0.age}"              // {"name": "John", "age": 31}
+            "{@0.name, @0.age}",                           // {"name": "John", "age": 31}
         ];
 
         let expected: Vec<Object> = vec![
@@ -667,8 +693,14 @@ mod tests {
             object!(true),
             object!(true),
             Object::Vector(vec![object!("John"), object!(31)]),
-            // Object::KV(vec![(object!("0.name"), object!("John")), (object!("0.age"), object!(31))]
-            //    .into_iter().collect())
+            Object::KV(
+                vec![
+                    (object!(vec![object!(0), object!("age")]), object!(31)),
+                    (object!(vec![object!(0), object!("name")]), object!("John")),
+                ]
+                .into_iter()
+                .collect(),
+            ),
         ];
 
         for (case, expected) in cases.into_iter().zip(expected.into_iter()) {

@@ -28,10 +28,7 @@ fn idents_to_vars(idents: Vec<String>) -> ExprResult<pb::VariableKeys> {
     let mut vars = Vec::with_capacity(idents.len());
     for ident in idents {
         if !ident.starts_with(VAR_PREFIX) {
-            return Err(format!(
-                "invalid variable token: {:?}, a variable must start with \"@\"",
-                ident
-            )
+            return Err(format!("invalid variable token: {:?}, a variable must start with \"@\"", ident)
                 .as_str()
                 .into());
         } else {
@@ -40,9 +37,7 @@ fn idents_to_vars(idents: Vec<String>) -> ExprResult<pb::VariableKeys> {
         }
     }
 
-    Ok(pb::VariableKeys {
-        keys: vars,
-    })
+    Ok(pb::VariableKeys { keys: vars })
 }
 
 impl TryFrom<Token> for pb::ExprOpr {
@@ -86,12 +81,8 @@ impl TryFrom<Token> for pb::ExprOpr {
                     Ok(var.into())
                 }
             }
-            Token::IdentArray(idents) => {
-                Ok((idents_to_vars(idents)?, false).into())
-            }
-            Token::IdentMap(idents) => {
-                Ok((idents_to_vars(idents)?, true).into())
-            }
+            Token::IdentArray(idents) => Ok((idents_to_vars(idents)?, false).into()),
+            Token::IdentMap(idents) => Ok((idents_to_vars(idents)?, true).into()),
         }
     }
 }
