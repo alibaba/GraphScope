@@ -22,38 +22,54 @@ use crate::graph::element::{Edge, GraphElement, Vertex, VertexOrEdge};
 use crate::process::record::{Entry, ObjectElement, Record, RecordElement};
 
 pub struct RecordSinkEncoder {
-    /// the given output fields; None means to output current entry;
+    /// the given column tags to sink;
     sink_keys: Vec<NameOrId>,
+    /// flag of sink head
     is_output_head: bool,
+    /// flag of sink all columns (head excluded)
+    is_output_all: bool,
 }
 
 // TODO(bingqing): gen RecordSinkEncoder from pb;
+// By default, we sink both head and all columns (may have a duplicated column if head is aliased)
 impl Default for RecordSinkEncoder {
     fn default() -> Self {
-        RecordSinkEncoder { sink_keys: vec![], is_output_head: true }
+        RecordSinkEncoder { sink_keys: vec![], is_output_head: true, is_output_all: true }
     }
 }
 
 impl MapFunction<Record, result_pb::Results> for RecordSinkEncoder {
-    fn exec(&self, mut input: Record) -> FnResult<result_pb::Results> {
-        info!("result record {:?}", input);
+    fn exec(&self, input: Record) -> FnResult<result_pb::Results> {
         let mut sink_columns = Vec::with_capacity(self.sink_keys.len());
+        if self.is_output_head {
+            let entry = input.get(None);
+            let entry_pb = entry.map(|entry| result_pb::Entry::from((**entry).clone()));
+            let column_pb = result_pb::Column { name_or_id: None, entry: entry_pb };
+            sink_columns.push(column_pb);
+        }
+        if self.is_output_all {
+            let all_entries = input.get_all();
+            for (tag, entry) in all_entries.iter() {
+                let entry_pb = result_pb::Entry::from((**entry).clone());
+                let column_pb = result_pb::Column {
+                    name_or_id: Some(common_pb::NameOrId::from(tag.clone())),
+                    entry: Some(entry_pb),
+                };
+                sink_columns.push(column_pb);
+            }
+        }
         for sink_key in self.sink_keys.iter() {
-            let entry = input.take(Some(sink_key));
-            let entry_pb = entry.map(|entry| result_pb::Entry::from((*entry).clone()));
+            let entry = input.get(Some(sink_key));
+            let entry_pb = entry.map(|entry| result_pb::Entry::from((**entry).clone()));
             let column_pb = result_pb::Column {
                 name_or_id: Some(common_pb::NameOrId::from(sink_key.clone())),
                 entry: entry_pb,
             };
             sink_columns.push(column_pb);
         }
-        if self.is_output_head {
-            let entry = input.take(None);
-            let entry_pb = entry.map(|entry| result_pb::Entry::from((*entry).clone()));
-            let column_pb = result_pb::Column { name_or_id: None, entry: entry_pb };
-            sink_columns.push(column_pb);
-        }
+
         let record_pb = result_pb::Record { columns: sink_columns };
+        info!("results {:?}", record_pb);
         let results = result_pb::Results { inner: Some(result_pb::results::Inner::Record(record_pb)) };
         Ok(results)
     }
