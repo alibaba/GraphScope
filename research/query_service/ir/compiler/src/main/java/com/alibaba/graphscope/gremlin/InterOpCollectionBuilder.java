@@ -266,6 +266,29 @@ public class InterOpCollectionBuilder {
                 return tagTraversals;
             }
         },
+        SELECT_ONE_BY_STEP {
+            @Override
+            public InterOpBase apply(Step step) {
+                Map<String, Traversal.Admin> byTraversals = getProjectTraversals((SelectOneStep) step);
+                ProjectOp op = new ProjectOp();
+                if (!byTraversals.isEmpty()) {
+                    op.setProjectExprWithAlias(new OpArg(byTraversals, OpArgTransformFactory.PROJECT_EXPR_FROM_BY_TRAVERSALS));
+                }
+                return op;
+            }
+
+            private Map<String, Traversal.Admin> getProjectTraversals(SelectOneStep step) {
+                Traversal.Admin selectTraversal = null;
+                List<Traversal.Admin> byTraversals = step.getLocalChildren();
+                if (!byTraversals.isEmpty()) {
+                    selectTraversal = byTraversals.get(0);
+                }
+                String selectKey = (String) step.getScopeKeys().iterator().next();
+                Map<String, Traversal.Admin> selectOneByTraversal = new HashMap<>();
+                selectOneByTraversal.put(selectKey, selectTraversal);
+                return selectOneByTraversal;
+            }
+        },
         COUNT_STEP {
             @Override
             public InterOpBase apply(Step step) {
@@ -313,6 +336,8 @@ public class InterOpCollectionBuilder {
                 op = StepTransformFactory.GROUP_COUNT_STEP.apply(step);
             } else if (equalClass(step, DedupGlobalStep.class)) {
                 op = StepTransformFactory.DEDUP_STEP.apply(step);
+            } else if (equalClass(step, SelectOneStep.class)) {
+                op = StepTransformFactory.SELECT_ONE_BY_STEP.apply(step);
             } else if (equalClass(step, CountGlobalStep.class)) {
                 op = StepTransformFactory.COUNT_STEP.apply(step);
             } else if (equalClass(step, PropertiesStep.class)) {
