@@ -24,6 +24,17 @@ RUN sed -i 's/archive.ubuntu.com/mirrors.ustc.edu.cn/g' /etc/apt/sources.list &&
       curl git openjdk-8-jdk python3-pip sudo && \
     apt clean && rm -fr /var/lib/apt/lists/*
 
+# install hadoop
+RUN cd /tmp && \
+    curl -LO https://archive.apache.org/dist/hadoop/core/hadoop-2.8.4/hadoop-2.8.4.tar.gz && \
+    tar zxf hadoop-2.8.4.tar.gz -C /usr/local && \
+    rm -rf hadoop-2.8.4.tar.gz
+
+ENV HADOOP_HOME /usr/local/hadoop-2.8.4
+ENV HADOOP_CONF_DIR $HADOOP_HOME/etc/hadoop
+ENV HADOOP_COMMON_LIB_NATIVE_DIR $HADOOP_HOME/lib/native
+ENV PATH $PATH:$HADOOP_HOME/bin
+
 # kubectl v1.19.2
 RUN cd /tmp && export KUBE_VER=v1.19.2 && \
     curl -LO https://storage.googleapis.com/kubernetes-release/release/${KUBE_VER}/bin/linux/amd64/kubectl && \
