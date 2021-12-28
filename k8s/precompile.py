@@ -244,7 +244,6 @@ def compile_cpp_pie_app():
         ("is_simple_path", pllul),
         ("louvain", pllul),
         ("sssp_has_path", pllul),
-        ("property_sssp", lu),
     ]
 
     if "NIGHTLY" in os.environ:

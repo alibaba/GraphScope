@@ -18,16 +18,17 @@ GraphScope 图分析引擎内置了许多常用的图分析算法，包括连通
 .. code:: python
 
     import graphscope
-    from graphscope import pagerank
-    from graphscope import lpa
+    from graphscope.dataset import load_p2p_network
 
-    g = graphscope.g()
-    # 定义在属性图上的算法可以直接调用。
-    result = lpa(g)
+    # 创建默认 session，并加载属性图
+    g = load_p2p_network()
 
-    # 其他一些算法可能只支持在简单图上进行计算，因此我们需要先通过顶点和边的类型来生成一个简单图。
-    simple_g = g.project(vertices={"users": []}, edges={"follows": []})
-    result_pr = pagerank(simple_g)
+    # 内置算法支持在简单图上进行计算，因此我们需要先通过顶点和边的类型来生成一个简单图
+    simple_g = g.project(vertices={"host": ["id"]}, edges={"connect": ["dist"]})
+
+    result_lpa = graphscope.lpa(simple_g, max_round=20)
+    result_sssp = graphscope.sssp(simple_g, src=20)
+
 
 内置算法的完整列表如下所示。具体某个算法是否支持属性图也在其文档进行了描述。
 
@@ -59,31 +60,27 @@ GraphScope 图分析引擎内置了许多常用的图分析算法，包括连通
 .. code:: python
 
     # 转化为相应数据类型
-    result_pr.to_numpy()
-    result_pr.to_dataframe()
+    result_lpa.to_numpy("r")
+    result_lpa.to_dataframe({"node": "v.id", "result": "r"})
 
     # 或写入 hdfs、oss， 或本地目录中（pod中的本地目录）
-    result_pr.output("hdfs://output")
-    result_pr.output("oss://id:key@endpoint/bucket/object")
-    result_pr.output("file:///tmp/path")
+    result_lpa.output("hdfs://output", {"node": "v.id", "result": "r"})
+    result_lpa.output("oss://id:key@endpoint/bucket/object", {"node": "v.id", "result": "r"})
+    result_lpa.output("file:///tmp/path", {"node": "v.id", "result": "r"})
 
-    # 或写入本地的client中
-    result_pr.output_to_client("local_filename")
+    # 或写入本地的 client 中
+    result_lpa.output_to_client("/tmp/lpa_result.txt", {"node": "v.id", "result": "r"})
 
-    # 或 seal to vineyard
-    result_pr.to_vineyard_dataframe()
-    result_pr.to_vineyard_numpy()
+    # 或写入 vineyard 数据结构
+    result_lpa.to_vineyard_dataframe({"node": "v.id", "result": "r"})
+    result_lpa.to_vineyard_tensor("r")
 
 此外，如 :ref:`快速上手` 中所示，用户可以将计算结果加回到该图数据中作为顶点（边）的新属性（列）。
 
 .. code:: python
 
-    simple_g = sub_graph.project(vertices={"paper": []}, edges={"cites": []})
-
-    ret = graphscope.kcore(simple_g, k=5)
-
-    # 将结果作为新列添加到citation图中
-    subgraph = sub_graph.add_column(ret, {'kcore': 'r'})
+    # 将结果作为新列添加回属性图，列名为 "lpa_result"，并生成一张新图
+    new_graph = g.add_column(result_lpa, {"lpa_result": "r"})
 
 用户可以通过选择器（ :ref:`Selector` ）来定义将计算结果中的哪些部分写回图数据。
 选择器指定了计算结果中的哪一部分会被处理。类似的，图数据也可以作为被处理数据的一部分，例如顶点ID。
@@ -93,13 +90,13 @@ GraphScope 图分析引擎内置了许多常用的图分析算法，包括连通
 .. code:: python
 
     # 获取顶点上的结果
-    result_pr.to_numpy('r')
+    result_lpa.to_numpy('r')
 
     # 转换为 dataframe,
     # 使用顶点的 `id` 作为名为 df_v 的列
     # 使用顶点的 `data` 作为名为 df_vd 的列
     # 使用结果列作为名为 df_result 的列
-    result_pr.to_dataframe({'df_v': 'v.id', 'df_vd': 'v.data', 'df_result': 'r'})
+    result_lpa.to_dataframe({'df_v': 'v.id', 'df_vd': 'v.data', 'df_result': 'r'})
 
     # using the property0 written on vertices with label0 as column `result`
     # 对于属性图的结果
@@ -128,10 +125,10 @@ GraphScope 图分析引擎内置了许多常用的图分析算法，包括连通
 
 .. code:: python
 
-    from graphscope.analytical.udf import pie
+    from graphscope.analytical.udf.decorators import pie
     from graphscope.framework.app import AppAssets
 
-    @pie
+    @pie(vd_type="double", md_type="double")
     class YourAlgorithm(AppAssets):
         @staticmethod
         def Init(frag, context):
@@ -147,13 +144,13 @@ GraphScope 图分析引擎内置了许多常用的图分析算法，包括连通
 
 如代码所示，用户需要实现一个以 ``@pie`` 装饰的类，并提供三个串行
 图算法函数。其中，`Initialize` 函数用于设置算法初始状态，`PEval` 函数定义算法的局部计算，
-``IncEval`` 函数定义对分区数据的增量计算。与 fragment 相关的完整 API 可以参考 :ref:`Cython SDK API`。
+``IncEval`` 函数定义对分区数据的增量计算。与 fragment 相关的完整 API 可以参考 :ref:`Cython SDK API`.
 
 以单源最短路径算法 SSSP 为例，用户在 PIE 模型中定义的 SSSP 算法可如下所示。
 
 .. code:: python
 
-    from graphscope.analytical.udf import pie
+    from graphscope.analytical.udf.decorators import pie
     from graphscope.framework.app import AppAssets
 
     @pie(vd_type="double", md_type="double")
@@ -190,6 +187,7 @@ GraphScope 图分析引擎内置了许多常用的图分析算法，包括连通
                 edges = frag.get_outgoing_edges(source, e_label_id)
                 for e in edges:
                     dst = e.neighbor()
+                    # 使用边上第三列数据作为两点之间的距离
                     distv = e.get_int(2)
                     if context.get_node_value(dst) > distv:
                         context.set_node_value(dst, distv)
@@ -223,7 +221,7 @@ GraphScope 图分析引擎内置了许多常用的图分析算法，包括连通
 
 .. code:: python
 
-    from graphscope.analytical.udf import pregel
+    from graphscope.analytical.udf.decorators import pregel
     from graphscope.framework.app import AppAssets
 
     @pregel(vd_type='double', md_type='double')
@@ -248,9 +246,8 @@ GraphScope 图分析引擎内置了许多常用的图分析算法，包括连通
 .. code:: python
 
     # 装饰器, 定义顶点数据和消息数据的类型
-    @pregel(vd_type='double', md_type='double')
+    @pregel(vd_type="double", md_type="double")
     class SSSP_Pregel(AppAssets):
-
         @staticmethod
         def Init(v, context):
             v.set_value(1000000000.0)
@@ -307,35 +304,34 @@ GraphScope 支持用户在自定义算法中通过 :code:`context.math` 上的�
 .. code:: python
 
     import graphscope
+    from graphscope.dataset import load_p2p_network
 
-    g = graphscope.g()
+    g = load_p2p_network()
 
     # 加载自己的算法
     my_app = SSSP_Pregel()
 
     # 在图上运行自己的算法，得到计算结果
     # 这里 `src` 是与 `context.get_config(b"src")` 相对应的
-    ret = my_app(g, src="0")
+    ret = my_app(g, src="6")
 
 在开发和测试之后，您可以通过 `to_gar` 方法将算法保存成 gar 包以备将来使用。
 
 .. code:: python
 
-    SSSP_Pregel.to_gar("file:///var/graphscope/udf/my_sssp_pregel.gar")
+    SSSP_Pregel.to_gar("/tmp/my_sssp_pregel.gar")
 
 在此之后，您可以从 gar 包加载自定义的算法。
 
 .. code:: python
 
-    import graphscope
-
-    g = graphscope.g()
+    from graphscope.framework.app import load_app
 
     # 从gar包中加载自己的算法
-    my_app = load_app('file:///var/graphscope/udf/my_sssp_pregel.gar')
+    my_app = load_app("/tmp/my_sssp_pregel.gar")
 
     # 在图上运行自己的算法，得到计算结果
-    ret = my_app(g, src="0")
+    ret = my_app(g, src="6")
 
 
 **相关论文**

@@ -16,25 +16,28 @@ Built-in Algorithms
 ---------------------
 
 GraphScope analytical engine provides many common used algorithms, 
-including connectivity and path
-analysis, community detection, centrality computations.
+including connectivity and path analysis, community detection, centrality computations.
 
 Built-in algorithms can be easily invoked over loaded graphs. For example, 
 
 .. code:: python
 
     import graphscope
-    from graphscope import pagerank
-    from graphscope import lpa
+    from graphscope.dataset import load_p2p_network
 
-    g = graphscope.g()
-    # algorithms defined on property graph can be invoked directly.
-    result = lpa(g)
+    graphscope.set_option(show_log=True)
 
-    # some other algorithms may only support evaluate on simple graph
+    # load property graph
+    g = load_p2p_network()
+
+    # Algorithms only support evaluate on simple graph
     # hence we need to generate one by selecting a kind of vertices and edges.
-    simple_g = g.project(vertices={"users": []}, edges={"follows": []})
-    result_pr = pagerank(simple_g)
+    simple_g = g.project(vertices={"host": ["id"]}, edges={"connect": ["dist"]})
+
+    # run builtin applications
+    result_lpa = graphscope.lpa(simple_g, max_round=20)
+    result_sssp = graphscope.sssp(simple_g, src=20)
+
 
 A full-list of builtin algorithms is shown as below. Whether an algorithm supports
 property graph or not is described in its docstring.
@@ -72,31 +75,28 @@ There is a list of supported method to retrieve the results.
 .. code:: python
 
     # fetch to data structures
-    result_pr.to_numpy()
-    result_pr.to_dataframe()
+    result_lpa.to_numpy("r")
+    result_lpa.to_dataframe({"node": "v.id", "result": "r"})
 
     # or write to hdfs or oss, or local (local means the path is relative to the pods)
-    result_pr.output("hdfs://output")
-    result_pr.output("oss://id:key@endpoint/bucket/object")
-    result_pr.output("file:///tmp/path")
+    result_lpa.output("hdfs://output", {"node": "v.id", "result": "r"})
+    result_lpa.output("oss://id:key@endpoint/bucket/object", {"node": "v.id", "result": "r"})
+    result_lpa.output("file:///tmp/path", {"node": "v.id", "result": "r"})
 
     # or write to client local
-    result_pr.output_to_client("local_filename")
+    result_lpa.output_to_client("/tmp/lpa_result.txt", {"node": "v.id", "result": "r"})
 
     # or seal to vineyard
-    result_pr.to_vineyard_dataframe()
-    result_pr.to_vineyard_numpy()
+    result_lpa.to_vineyard_dataframe({"node": "v.id", "result": "r"})
+    result_lpa.to_vineyard_tensor("r")
 
 In addition, as shown in the :ref:`Getting Started`, computation results can add back to 
 the graph as a new property (column) of the vertices(edges).
 
 .. code:: python
 
-    simple_g = g.project(vertices={"paper": []}, edges={"sites": []})
-    ret = graphscope.kcore(simple_g, k=5)
-
-    # add the results as new columns to the citation graph, the column name is 'kcore'
-    subgraph = sub_graph.add_column(ret, {'kcore': 'r'})
+    # add the results as new columns to the citation graph, the column name is 'lpa_result'
+    new_graph = g.add_column(result_lpa, {"lpa_result": "r"})
 
 
 Users may assign a :ref:`Selector` to define which parts of the results to write. A selector specifies
@@ -108,13 +108,13 @@ Here are some examples for selectors on result processing.
 .. code:: python
 
     # get the results on the vertex
-    result_pr.to_numpy('r')
+    result_lpa.to_numpy('r')
 
     # to dataframe,
     # using the `id` of vertices (`v.id`) as a column named df_v
     # using the `data` of v (`v.data`) as a column named df_vd
     # and using the result (`r`) as a column named df_result
-    result_pr.to_dataframe({'df_v': 'v.id', 'df_vd': 'v.data', 'df_result': 'r'})
+    result_lpa.to_dataframe({'df_v': 'v.id', 'df_vd': 'v.data', 'df_result': 'r'})
 
     # for results on property graph
     # using `:` as a label selector for v and e
@@ -144,10 +144,10 @@ To implement this, a user just need to fulfill this class.
 
 .. code:: python
 
-    from graphscope.analytical.udf import pie
+    from graphscope.analytical.udf.decorators import pie
     from graphscope.framework.app import AppAssets
 
-    @pie
+    @pie(vd_type="double", md_type="double")
     class YourAlgorithm(AppAssets):
         @staticmethod
         def Init(frag, context):
@@ -172,7 +172,7 @@ Let's take SSSP as example, a user defined SSSP in PIE model may be like this.
 
 .. code:: python
 
-    from graphscope.analytical.udf import pie
+    from graphscope.analytical.udf.decorators import pie
     from graphscope.framework.app import AppAssets
 
     @pie(vd_type="double", md_type="double")
@@ -206,6 +206,7 @@ Let's take SSSP as example, a user defined SSSP in PIE model may be like this.
                 edges = frag.get_outgoing_edges(source, e_label_id)
                 for e in edges:
                     dst = e.neighbor()
+                    # use the third column of edge data as the distance between two vertices
                     distv = e.get_int(2)
                     if context.get_node_value(dst) > distv:
                         context.set_node_value(dst, distv)
@@ -226,7 +227,6 @@ Let's take SSSP as example, a user defined SSSP in PIE model may be like this.
                             if context.get_node_value(u) > u_dist:
                                 context.set_node_value(u, u_dist)
 
-
 As shown in the code, users only need to design and implement sequential algorithm
 over a fragment, rather than considering the communication and message passing
 in the distributed setting. In this case, the classic dijkstra algorithm and its
@@ -235,14 +235,12 @@ incremental version works for large graphs partitioned on a cluster.
 Writing Algorithms in Pregel
 ----------------------------------------------
 
-In addition to the sub-graph based PIE model, 
-`graphscope` supports vertex-centric
-`Pregel` model as well. 
-You may develop an algorithms in `Pregel` model by implementing this.
+In addition to the sub-graph based PIE model, `graphscope` supports vertex-centric
+`Pregel` model as well. You may develop an algorithms in `Pregel` model by implementing this.
 
 .. code:: python
 
-    from graphscope.analytical.udf import pregel
+    from graphscope.analytical.udf.decorators import pregel
     from graphscope.framework.app import AppAssets
 
     @pregel(vd_type='double', md_type='double')
@@ -270,9 +268,8 @@ Take SSSP as example, the algorithm in Pregel model looks like this.
     from graphscope.framework.app import AppAssets
 
     # decorator, and assign the types for vertex data, message data.
-    @pregel(vd_type='double', md_type='double')
+    @pregel(vd_type="double", md_type="double")
     class SSSP_Pregel(AppAssets):
-
         @staticmethod
         def Init(v, context):
             v.set_value(1000000000.0)
@@ -329,38 +326,35 @@ To run your own algorithms, you may trigger it in place where you defined it.
 .. code:: python
 
     import graphscope
+    from graphscope.dataset import load_p2p_network
 
-    sess = graphscope.session()
-    g = sess.g()
+    g = load_p2p_network()
 
     # load my algorithm
     my_app = SSSP_Pregel()
 
     # run my algorithm over a graph and get the result.
     # Here the `src` is correspondent to the `context.get_config(b"src")`
-    ret = my_app(g, src="0")
+    ret = my_app(g, src="6")
 
 
 After developing and testing, you may want to save it for the future use.
 
 .. code:: python
 
-    SSSP_Pregel.to_gar("file:///var/graphscope/udf/my_sssp_pregel.gar")
-
+    SSSP_Pregel.to_gar("/tmp/my_sssp_pregel.gar")
 
 Later, you can load your own algorithm from the gar package.
 
 .. code:: python
 
-    import graphscope
-
-    g = graphscope.g()
+    from graphscope.framework.app import load_app
 
     # load my algorithm from a gar package
-    my_app = load_app('file:///var/graphscope/udf/my_sssp_pregel.gar')
+    my_app = load_app("/tmp/my_sssp_pregel.gar")
 
     # run my algorithm over a graph and get the result.
-    ret = my_app(g, src="0")
+    ret = my_app(g, src="6")
 
 Writing Your Own Algorithms In Java
 ----------------------------------------------
