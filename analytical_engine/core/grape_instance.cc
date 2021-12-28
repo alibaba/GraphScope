@@ -1095,6 +1095,7 @@ bl::result<std::shared_ptr<DispatchResult>> GrapeInstance::OnReceive(
   }
   case rpc::MODIFY_EDGES: {
 #ifdef NETWORKX
+    double start = grape::GetCurrentTime();
     /*
     std::vector<std::string> edges_to_modify;
     int size = cmd.params.at(rpc::EDGES).list().s_size();
@@ -1104,8 +1105,12 @@ bl::result<std::shared_ptr<DispatchResult>> GrapeInstance::OnReceive(
     }
     */
     BOOST_LEAF_AUTO(edges_json, params.Get<std::string>(rpc::EDGES));
+    LOG(INFO) << "Get from rpc time: " << grape::GetCurrentTime() - start;
+    double t = grape::GetCurrentTime();
     folly::dynamic edges_to_modify = folly::parseJson(edges_json);
+    LOG(INFO) << "parse Json time: " << grape::GetCurrentTime() - t;
     BOOST_LEAF_CHECK(modifyEdges(params, edges_to_modify));
+    LOG(INFO) << "Total modify edge time: " << grape::GetCurrentTime() - start;
 #else
     RETURN_GS_ERROR(vineyard::ErrorCode::kInvalidOperationError,
                     "GraphScope is built with NETWORKX=OFF, please recompile "

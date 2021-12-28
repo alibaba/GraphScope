@@ -1473,6 +1473,7 @@ class DynamicFragment {
 
   void ModifyEdges(const folly::dynamic& edges_to_modify,
                    const rpc::ModifyType modify_type) {
+    double start = grape::GetCurrentTime();
     std::vector<internal_vertex_t> vertices;
     std::vector<edge_t> edges;
 
@@ -1503,8 +1504,8 @@ class DynamicFragment {
         src_fid = partitioner.GetPartitionId(e[0]);
         dst_fid = partitioner.GetPartitionId(e[1]);
         if (modify_type == rpc::NX_ADD_EDGES) {
-          vm_ptr_->AddVertex(src_fid, src, src_gid);
-          vm_ptr_->AddVertex(dst_fid, dst, dst_gid);
+          vm_ptr_->AddVertex(src_fid, e[0], src_gid);
+          vm_ptr_->AddVertex(dst_fid, e[1], dst_gid);
           if (src_fid == fid_ || duplicated()) {
             vertices.emplace_back(src_gid, fake_data);
           }
@@ -1512,8 +1513,8 @@ class DynamicFragment {
             vertices.emplace_back(dst_gid, fake_data);
           }
         } else {
-          if (!vm_ptr_->GetGid(src_fid, src, src_gid) ||
-              !vm_ptr_->GetGid(dst_fid, dst, dst_gid)) {
+          if (!vm_ptr_->GetGid(src_fid, e[0], src_gid) ||
+              !vm_ptr_->GetGid(dst_fid, e[1], dst_gid)) {
             continue;
           }
         }
@@ -1525,6 +1526,8 @@ class DynamicFragment {
         }
       }
     }
+    LOG(INFO) << "Edge parsing time: " << grape::GetCurrentTime() - start;
+    start = grape::GetCurrentTime();
 
     switch (modify_type) {
     case rpc::NX_ADD_EDGES:
@@ -1539,6 +1542,8 @@ class DynamicFragment {
     default:
       CHECK(false);
     }
+    LOG(INFO) << "Edge inserting time: " << grape::GetCurrentTime() - start;
+
   }
 
   void ModifyVertices(const std::vector<std::string>& vertices_to_modify,

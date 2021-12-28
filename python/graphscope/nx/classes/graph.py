@@ -331,7 +331,9 @@ class Graph(_GraphBase):
 
         # cache for add_node and add_edge
         self._nodes_for_adding = []
-        self._edges_for_adding = []
+        self._edges_for_adding = [None] * 1000000
+        # self._edges_for_adding = []
+        self._edge_trace_counter = 0
         self._nodes_for_deling = []
         self._edges_for_deling = []
 
@@ -669,7 +671,7 @@ class Graph(_GraphBase):
 
         """
         self._convert_arrow_to_dynamic()
-        self._clear_adding_cache()
+        # self._clear_adding_cache()
         nodes = []
         for n in nodes_for_adding:
             data = dict(attr)
@@ -928,17 +930,29 @@ class Graph(_GraphBase):
         """
         t_dict = 0.0
         t_append = 0.0
+        # if u_of_edge is None or v_of_edge is None:
+        #     raise ValueError("None cannot be a node")
+        # t = time.time()
+        # self._schema.add_nx_edge_properties(attr)
+        """
+        for key, value in attr.items():
+            print("empty")
+            try:
+                prop_type = unify_type(type(value))
+                self._edge_labels[0].add_property(key, prop_type)
+            except TypeError:
+                pass
+        """
+        # t_dict = time.time() - t
         t = time.time()
-        if u_of_edge is None or v_of_edge is None:
-            raise ValueError("None cannot be a node")
-        t_dict = time.time() - t_dict
-        t = time.time()
-        self._schema.add_nx_edge_properties(attr)
-        self._edges_for_adding.append(
-            json.dumps((u_of_edge, v_of_edge, attr), default=json_encoder)
-        )
+        # self._edges_for_adding.append(
+        #     json.dumps((u_of_edge, v_of_edge, data), default=json_encoder)
+        # )
+        # self._edges_for_adding[self._edge_trace_counter] = json.dumps((u_of_edge, v_of_edge, attr), default=json_encoder)
+        # self._edges_for_adding.append((u_of_edge, v_of_edge, attr))
+        self._edges_for_adding[self._edge_trace_counter] = (u_of_edge, v_of_edge, attr)
+        self._edge_trace_counter = self._edge_trace_counter + 1
         t_append = time.time() - t
-        # self._edges_for_adding.append((u_of_edge, v_of_edge, data))
         return t_dict, t_append
 
     def add_edges_from(self, ebunch_to_add, **attr):
@@ -980,7 +994,7 @@ class Graph(_GraphBase):
         >>> G.add_edges_from([(3, 4), (1, 4)], label="WN2898")
         """
         self._convert_arrow_to_dynamic()
-        self._clear_adding_cache()
+        # self._clear_adding_cache()
 
         edges = []
         for e in ebunch_to_add:
@@ -1000,11 +1014,12 @@ class Graph(_GraphBase):
                 raise ValueError("None cannot be a node")
             # FIXME: support dynamic data type in same property
             self._schema.add_nx_edge_properties(data)
-            edge = [u, v, data]
-            edges.append(json.dumps(edge, default=json_encoder))
+            edges.append((u, v, data))
+            # edge = [u, v, data]
+            # edges.append(json.dumps(edge, default=json_encoder))
 
         if edges:
-            self._op = dag_utils.modify_edges(self, types_pb2.NX_ADD_EDGES, edges)
+            self._op = dag_utils.modify_edges(self, types_pb2.NX_ADD_EDGES, json.dumps(edges, default=json_encoder))
             self._op.eval()
             edges.clear()
 
@@ -2247,14 +2262,18 @@ class Graph(_GraphBase):
             self._op = dag_utils.modify_vertices(
                 self, types_pb2.NX_ADD_NODES, self._nodes_for_adding
             )
-            self._op.eval()
-        if self._edges_for_adding:
+            # self._op.eval()
+        if self._edge_trace_counter > 0:
+            edges_to_modify = json.dumps(self._edges_for_adding, default=json_encoder)
             self._op = dag_utils.modify_edges(
-                self, types_pb2.NX_ADD_EDGES, self._edges_for_adding
+                self, types_pb2.NX_ADD_EDGES, edges_to_modify
             )
+            t = time.time()
             self._op.eval()
+            print("OP eval time:", time.time() - t)
         self._nodes_for_adding.clear()
         self._edges_for_adding.clear()
+        self._edge_trace_counter = 0
 
     def _clear_deling_cache(self):
         self._convert_arrow_to_dynamic()
