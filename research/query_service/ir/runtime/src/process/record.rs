@@ -92,21 +92,16 @@ impl Record {
             self.columns.insert(alias.clone(), entry);
         }
     }
-
-    pub fn take(&mut self, tag: Option<&NameOrId>) -> Option<Arc<Entry>> {
-        if let Some(tag) = tag {
-            self.columns.remove(tag)
-        } else {
-            self.curr.take()
-        }
-    }
-
     pub fn get(&self, tag: Option<&NameOrId>) -> Option<&Arc<Entry>> {
         if let Some(tag) = tag {
             self.columns.get(tag)
         } else {
             self.curr.as_ref()
         }
+    }
+
+    pub fn get_all(&self) -> &IndexMap<NameOrId, Arc<Entry>> {
+        &self.columns
     }
 
     /// To join this record with `other` record. After the join, the columns

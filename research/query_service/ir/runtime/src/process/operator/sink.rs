@@ -13,6 +13,8 @@
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 
+use std::ops::Deref;
+
 use ir_common::generated::common as common_pb;
 use ir_common::generated::results as result_pb;
 use ir_common::NameOrId;
@@ -22,45 +24,61 @@ use crate::graph::element::{Edge, GraphElement, Vertex, VertexOrEdge};
 use crate::process::record::{Entry, ObjectElement, Record, RecordElement};
 
 pub struct RecordSinkEncoder {
-    /// the given output fields; None means to output current entry;
+    /// the given column tags to sink;
     sink_keys: Vec<NameOrId>,
+    /// flag of sink head
     is_output_head: bool,
+    /// flag of sink all columns (head excluded)
+    is_output_all: bool,
 }
 
 // TODO(bingqing): gen RecordSinkEncoder from pb;
+// By default, we sink both head and all columns (may have a duplicated column if head is aliased)
 impl Default for RecordSinkEncoder {
     fn default() -> Self {
-        RecordSinkEncoder { sink_keys: vec![], is_output_head: true }
+        RecordSinkEncoder { sink_keys: vec![], is_output_head: true, is_output_all: true }
     }
 }
 
 impl MapFunction<Record, result_pb::Results> for RecordSinkEncoder {
-    fn exec(&self, mut input: Record) -> FnResult<result_pb::Results> {
-        info!("result record {:?}", input);
+    fn exec(&self, input: Record) -> FnResult<result_pb::Results> {
         let mut sink_columns = Vec::with_capacity(self.sink_keys.len());
+        if self.is_output_head {
+            let entry = input.get(None);
+            let entry_pb = entry.map(|entry| result_pb::Entry::from(entry.deref()));
+            let column_pb = result_pb::Column { name_or_id: None, entry: entry_pb };
+            sink_columns.push(column_pb);
+        }
+        if self.is_output_all {
+            let all_entries = input.get_all();
+            for (tag, entry) in all_entries.iter() {
+                let entry_pb = result_pb::Entry::from(entry.deref());
+                let column_pb = result_pb::Column {
+                    name_or_id: Some(common_pb::NameOrId::from(tag.clone())),
+                    entry: Some(entry_pb),
+                };
+                sink_columns.push(column_pb);
+            }
+        }
         for sink_key in self.sink_keys.iter() {
-            let entry = input.take(Some(sink_key));
-            let entry_pb = entry.map(|entry| result_pb::Entry::from((*entry).clone()));
+            let entry = input.get(Some(sink_key));
+            let entry_pb = entry.map(|entry| result_pb::Entry::from(entry.deref()));
             let column_pb = result_pb::Column {
                 name_or_id: Some(common_pb::NameOrId::from(sink_key.clone())),
                 entry: entry_pb,
             };
             sink_columns.push(column_pb);
         }
-        if self.is_output_head {
-            let entry = input.take(None);
-            let entry_pb = entry.map(|entry| result_pb::Entry::from((*entry).clone()));
-            let column_pb = result_pb::Column { name_or_id: None, entry: entry_pb };
-            sink_columns.push(column_pb);
-        }
+
         let record_pb = result_pb::Record { columns: sink_columns };
+        info!("results {:?}", record_pb);
         let results = result_pb::Results { inner: Some(result_pb::results::Inner::Record(record_pb)) };
         Ok(results)
     }
 }
 
-impl From<Entry> for result_pb::Entry {
-    fn from(e: Entry) -> Self {
+impl From<&Entry> for result_pb::Entry {
+    fn from(e: &Entry) -> Self {
         let inner = match e {
             Entry::Element(element) => {
                 let element_pb = result_pb::Element::from(element);
@@ -81,8 +99,8 @@ impl From<Entry> for result_pb::Entry {
     }
 }
 
-impl From<RecordElement> for result_pb::Element {
-    fn from(e: RecordElement) -> Self {
+impl From<&RecordElement> for result_pb::Element {
+    fn from(e: &RecordElement) -> Self {
         let inner = match e {
             RecordElement::OnGraph(vertex_or_edge) => match vertex_or_edge {
                 VertexOrEdge::V(v) => {
@@ -97,11 +115,11 @@ impl From<RecordElement> for result_pb::Element {
             RecordElement::OffGraph(o) => match o {
                 ObjectElement::None => None,
                 ObjectElement::Prop(obj) | ObjectElement::Agg(obj) => {
-                    Some(result_pb::element::Inner::Object(obj.into()))
+                    Some(result_pb::element::Inner::Object(obj.clone().into()))
                 }
                 ObjectElement::Count(cnt) => {
-                    let item = if cnt <= (i64::MAX as u64) {
-                        common_pb::value::Item::I64(cnt as i64)
+                    let item = if *cnt <= (i64::MAX as u64) {
+                        common_pb::value::Item::I64(*cnt as i64)
                     } else {
                         common_pb::value::Item::Blob(cnt.to_be_bytes().to_vec())
                     };
@@ -114,8 +132,8 @@ impl From<RecordElement> for result_pb::Element {
     }
 }
 
-impl From<Vertex> for result_pb::Vertex {
-    fn from(v: Vertex) -> Self {
+impl From<&Vertex> for result_pb::Vertex {
+    fn from(v: &Vertex) -> Self {
         result_pb::Vertex {
             id: v.id() as i64,
             label: v.label().map(|label| label.clone().into()),
@@ -125,8 +143,8 @@ impl From<Vertex> for result_pb::Vertex {
     }
 }
 
-impl From<Edge> for result_pb::Edge {
-    fn from(e: Edge) -> Self {
+impl From<&Edge> for result_pb::Edge {
+    fn from(e: &Edge) -> Self {
         result_pb::Edge {
             id: e.id() as i64,
             label: e.label().map(|label| label.clone().into()),
