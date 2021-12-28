@@ -25,6 +25,7 @@ import vineyard
 
 import graphscope
 from graphscope import Graph
+from graphscope import lpa_u2i
 from graphscope import sssp
 from graphscope.dataset import load_ldbc
 from graphscope.dataset import load_modern_graph
@@ -180,6 +181,27 @@ def test_load_only_from_efile(
     assert r_out1.shape == (40521,)
     assert r_out1.shape == r_out2.shape
     assert sorted(r_out1) == sorted(r_out2)
+
+
+def test_error_on_add_column(arrow_property_graph_lpa_u2i):
+    property_context = lpa_u2i(arrow_property_graph_lpa_u2i, max_round=20)
+
+    with pytest.raises(KeyError, match="non_exist_label"):
+        out = arrow_property_graph.add_column(
+            property_context,
+            {"id": "v:non_exist_label.id", "result": "r:non_exist_label.age"},
+        )
+
+    with pytest.raises(KeyError, match="non_exist_prop"):
+        out = arrow_property_graph.add_column(
+            property_context, {"id": "v:v0.non_exist_prop"}
+        )
+
+    with pytest.raises(AssertionError, match="selector of add column must be a dict"):
+        out = arrow_property_graph.add_column(property_context, selector=None)
+
+    with pytest.raises(SyntaxError, match="Invalid selector"):
+        out = arrow_property_graph.add_column(property_context, {"id": "xxx:a.b"})
 
 
 @pytest.mark.skip(reason="Issue 366")
