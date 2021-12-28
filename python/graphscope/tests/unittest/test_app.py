@@ -24,7 +24,6 @@ import pytest
 
 import graphscope
 from graphscope import bfs
-from graphscope import cdlp
 from graphscope import clustering
 from graphscope import degree_centrality
 from graphscope import eigenvector_centrality
@@ -199,7 +198,7 @@ def test_app_on_undirected_graph(
     pagerank_result,
     bfs_result,
     wcc_result,
-    cdlp_result,
+    lpa_result,
     triangles_result,
     kshell_result,
 ):
@@ -313,14 +312,14 @@ def test_app_on_undirected_graph(
     )
     assert np.all(ctx8.to_numpy("r", vertex_range={"begin": 1, "end": 4}) == [1, 1, 1])
 
-    # cdlp
-    ctx9 = cdlp(p2p_project_undirected_graph, max_round=10)
+    # lpa
+    ctx9 = lpa(p2p_project_undirected_graph, max_round=10)
     r9 = (
         ctx9.to_dataframe({"node": "v.id", "r": "r"})
         .sort_values(by=["node"])
         .to_numpy(dtype=int)
     )
-    assert np.all(r9 == cdlp_result)
+    assert np.all(r9 == lpa_result)
     assert np.all(
         ctx9.to_dataframe(
             {"node": "v.id", "r": "r"}, vertex_range={"begin": 1, "end": 4}

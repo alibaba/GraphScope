@@ -23,7 +23,6 @@ import tempfile
 import pytest
 
 import graphscope
-
 from graphscope.dataset import load_p2p_network
 
 COORDINATOR_HOME = os.path.join(os.path.dirname(__file__), "../", "../coordinator")
@@ -134,7 +133,7 @@ def test_border_cases():
     assert graphscope.get_default_session() == s1
 
     g3 = load_p2p_network(s3)
-    pg3 = g3.project(vertices={'host': ['id']}, edges={'connect': ['dist']})
+    pg3 = g3.project(vertices={"host": ["id"]}, edges={"connect": ["dist"]})
 
     with pytest.raises(
         ValueError,

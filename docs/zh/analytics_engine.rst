@@ -36,7 +36,6 @@ GraphScope 图分析引擎内置了许多常用的图分析算法，包括连通
 .. autosummary::
 
 - :func:`bfs`
-- :func:`cdlp`
 - :func:`clustering`
 - :func:`degree_centrality`
 - :func:`eigenvector_centrality`

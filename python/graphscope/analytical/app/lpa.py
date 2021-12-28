@@ -19,12 +19,42 @@
 
 from graphscope.framework.app import AppAssets
 from graphscope.framework.app import not_compatible_for
+from graphscope.framework.app import project_to_simple
 
-__all__ = ["lpa"]
+__all__ = ["lpa", "cdlp", "lpa_u2i"]
+
+
+@project_to_simple
+@not_compatible_for("arrow_property", "dynamic_property")
+def lpa(graph, max_round=10):
+    """Evaluate Community Detection with Label Propagation.
+
+    Args:
+        graph (:class:`Graph`): A simple graph.
+        max_round (int, optional): Maximum rounds. Defaults to 10.
+
+    Returns:
+        :class:`graphscope.framework.context.VertexDataContextDAGNode`:
+            A context with each vertex assigned with a community ID, will be evaluated in eager mode.
+
+    Examples:
+
+    .. code:: python
+
+        import graphscope as gs
+        g = gs.g()
+        # Load some data, then project to a simple graph (if needed).
+        pg = g.project(vertices={"vlabel": []}, edges={"elabel": []})
+        r = gs.lpa(g, max_round=10)
+        s.close()
+
+    """
+    max_round = int(max_round)
+    return AppAssets(algo="cdlp", context="vertex_data")(graph, max_round)
 
 
 @not_compatible_for("dynamic_property", "arrow_projected", "dynamic_projected")
-def lpa(graph, max_round=10):
+def lpa_u2i(graph, max_round=10):
     """Evaluate (multi-) label propagation on a property graph.
 
     Args:
@@ -48,3 +78,6 @@ def lpa(graph, max_round=10):
     """
     max_round = int(max_round)
     return AppAssets(algo="lpau2i", context="labeled_vertex_property")(graph, max_round)
+
+
+cdlp = lpa

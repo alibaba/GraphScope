@@ -44,7 +44,6 @@ property graph or not is described in its docstring.
 .. autosummary::
 
 - :func:`bfs`
-- :func:`cdlp`
 - :func:`clustering`
 - :func:`degree_centrality`
 - :func:`eigenvector_centrality`

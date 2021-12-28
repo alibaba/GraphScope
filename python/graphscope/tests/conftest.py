@@ -384,7 +384,7 @@ def arrow_property_graph_undirected(graphscope_session):
 
 
 @pytest.fixture(scope="module")
-def arrow_property_graph_lpa(graphscope_session):
+def arrow_property_graph_lpa_u2i(graphscope_session):
     g = graphscope_session.g(generate_eid=False)
     g = g.add_vertices(f"{property_dir}/lpa_dataset/lpa_3000_v_0", "v0")
     g = g.add_vertices(f"{property_dir}/lpa_dataset/lpa_3000_v_1", "v1")
@@ -569,7 +569,7 @@ def bfs_result():
 
 
 @pytest.fixture(scope="module")
-def cdlp_result():
+def lpa_result():
     ret = np.loadtxt("{}/ldbc/p2p-31-CDLP".format(property_dir), dtype=int)
     yield ret
 

@@ -26,10 +26,10 @@ import vineyard
 import graphscope
 from graphscope import Graph
 from graphscope import sssp
-from graphscope.dataset import load_p2p_network
 from graphscope.dataset import load_ldbc
 from graphscope.dataset import load_modern_graph
 from graphscope.dataset import load_ogbn_mag
+from graphscope.dataset import load_p2p_network
 from graphscope.framework.errors import AnalyticalEngineInternalError
 from graphscope.framework.errors import GRPCError
 from graphscope.framework.errors import InvalidArgumentError
