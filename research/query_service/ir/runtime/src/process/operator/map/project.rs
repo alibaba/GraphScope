@@ -21,7 +21,7 @@ use ir_common::NameOrId;
 use pegasus::api::function::{FnResult, MapFunction};
 
 use crate::error::{FnExecError, FnGenResult};
-use crate::expr::eval::Evaluator;
+use crate::expr::eval::{Evaluate, Evaluator};
 use crate::process::operator::map::MapFuncGen;
 use crate::process::record::{ObjectElement, Record};
 

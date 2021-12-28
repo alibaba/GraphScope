@@ -26,6 +26,12 @@ use ir_common::NameOrId;
 use crate::expr::{ExprEvalError, ExprEvalResult};
 use crate::graph::element::Element;
 use crate::graph::property::{Details, PropKey};
+use std::collections::BTreeMap;
+
+/// The trait to define evaluating an expression
+pub trait Evaluate {
+    fn eval<E: Element, C: Context<E>>(&self, context: Option<&C>) -> ExprEvalResult<Object>;
+}
 
 #[derive(Debug)]
 pub struct Evaluator {
@@ -45,6 +51,8 @@ pub(crate) enum InnerOpr {
     Arith(pb::Arithmetic),
     Const(Option<Object>),
     Var { tag: Option<NameOrId>, prop_key: Option<PropKey> },
+    Vars(Vec<InnerOpr>),
+    VarMap(Vec<InnerOpr>),
 }
 
 impl ToString for InnerOpr {
@@ -52,14 +60,16 @@ impl ToString for InnerOpr {
         match self {
             InnerOpr::Logical(logical) => format!("{:?}", logical),
             InnerOpr::Arith(arith) => format!("{:?}", arith),
-            InnerOpr::Const(c) => format!("Const({:?})", c),
+            InnerOpr::Const(c) => format!("{:?}", c),
             InnerOpr::Var { tag, prop_key } => {
                 if let Some(p) = prop_key {
-                    format!("Var (tag: {:?}, prop_key: {:?})", tag, p)
+                    format!("{:?}.{:?})", tag, p)
                 } else {
-                    format!("Var (tag: {:?})", tag)
+                    format!("{:?})", tag)
                 }
             }
+            InnerOpr::Vars(vars) => format!("Vars ({:?})", vars),
+            InnerOpr::VarMap(vars) => format!("Vars' map ({:?})", vars),
         }
     }
 }
@@ -108,38 +118,29 @@ impl TryFrom<pb::Expression> for Evaluator {
 }
 
 fn apply_arith<'a>(
-    arith: &pb::Arithmetic, first: Option<BorrowObject<'a>>, second: Option<BorrowObject<'a>>,
+    arith: &pb::Arithmetic, a: BorrowObject<'a>, b: BorrowObject<'a>,
 ) -> ExprEvalResult<Object> {
     use pb::Arithmetic::*;
-    if first.is_some() && second.is_some() {
-        let a = first.unwrap();
-        let b = second.unwrap();
-        Ok(match arith {
-            Add => Object::Primitive(a.as_primitive()? + b.as_primitive()?),
-            Sub => Object::Primitive(a.as_primitive()? - b.as_primitive()?),
-            Mul => Object::Primitive(a.as_primitive()? * b.as_primitive()?),
-            Div => Object::Primitive(a.as_primitive()? / b.as_primitive()?),
-            Mod => Object::Primitive(a.as_primitive()? % b.as_primitive()?),
-            Exp => Object::Primitive(a.as_primitive()?.exp(b.as_primitive()?)),
-        })
-    } else {
-        Err(ExprEvalError::MissingOperands(InnerOpr::Arith(*arith).into()))
-    }
+    Ok(match arith {
+        Add => Object::Primitive(a.as_primitive()? + b.as_primitive()?),
+        Sub => Object::Primitive(a.as_primitive()? - b.as_primitive()?),
+        Mul => Object::Primitive(a.as_primitive()? * b.as_primitive()?),
+        Div => Object::Primitive(a.as_primitive()? / b.as_primitive()?),
+        Mod => Object::Primitive(a.as_primitive()? % b.as_primitive()?),
+        Exp => Object::Primitive(a.as_primitive()?.exp(b.as_primitive()?)),
+    })
 }
 
 fn apply_logical<'a>(
-    logical: &pb::Logical, first: Option<BorrowObject<'a>>, second: Option<BorrowObject<'a>>,
+    logical: &pb::Logical, a: BorrowObject<'a>, b_opt: Option<BorrowObject<'a>>,
 ) -> ExprEvalResult<Object> {
     use pb::Logical::*;
     if logical == &Not {
-        if let Some(a) = first {
-            return Ok((!a.as_bool()?).into());
-        }
+        return Ok((!a.as_bool()?).into());
     } else {
-        if first.is_some() && second.is_some() {
-            let a = first.unwrap();
-            let b = second.unwrap();
-            let rst = match logical {
+        if b_opt.is_some() {
+            let b = b_opt.unwrap();
+            match logical {
                 Eq => Ok((a == b).into()),
                 Ne => Ok((a != b).into()),
                 Lt => Ok((a < b).into()),
@@ -151,13 +152,11 @@ fn apply_logical<'a>(
                 Within => Ok(b.contains(&a).into()),
                 Without => Ok((!b.contains(&a)).into()),
                 Not => unreachable!(),
-            };
-
-            return rst;
+            }
+        } else {
+            Err(ExprEvalError::MissingOperands(InnerOpr::Logical(*logical).into()))
         }
     }
-
-    Err(ExprEvalError::MissingOperands(InnerOpr::Logical(*logical).into()))
 }
 
 // Private api
@@ -172,17 +171,12 @@ impl Evaluator {
         if self.suffix_tree.is_empty() {
             Err(ExprEvalError::EmptyExpression)
         } else if self.suffix_tree.len() == 1 {
-            let first = _first.unwrap();
-            Ok(first
-                .eval_as_borrow_object(context)?
-                .ok_or(ExprEvalError::NoneOperand(first.into()))?
-                .try_to_owned()
-                .ok_or(ExprEvalError::OtherErr("unable to own the `BorrowObject`".to_string()))?)
+            _first.unwrap().eval(context)
         } else if self.suffix_tree.len() == 2 {
             let first = _first.unwrap();
             let second = _second.unwrap();
             if let InnerOpr::Logical(logical) = second {
-                apply_logical(logical, first.eval_as_borrow_object(context)?, None)
+                apply_logical(logical, first.eval(context)?.as_borrow(), None)
             } else {
                 if !second.is_operand() {
                     Err(ExprEvalError::MissingOperands(second.into()))
@@ -198,15 +192,11 @@ impl Evaluator {
             if let InnerOpr::Logical(logical) = third {
                 apply_logical(
                     logical,
-                    first.eval_as_borrow_object(context)?,
-                    second.eval_as_borrow_object(context)?,
+                    first.eval(context)?.as_borrow(),
+                    Some(second.eval(context)?.as_borrow()),
                 )
             } else if let InnerOpr::Arith(arith) = third {
-                apply_arith(
-                    arith,
-                    first.eval_as_borrow_object(context)?,
-                    second.eval_as_borrow_object(context)?,
-                )
+                apply_arith(arith, first.eval(context)?.as_borrow(), second.eval(context)?.as_borrow())
             } else {
                 Err(ExprEvalError::OtherErr("invalid expression".to_string()))
             }
@@ -214,12 +204,7 @@ impl Evaluator {
     }
 }
 
-impl Evaluator {
-    /// Reset the status of the evaluator for further evaluation
-    pub fn reset(&self) {
-        self.stack.borrow_mut().clear();
-    }
-
+impl Evaluate for Evaluator {
     /// Evaluate an expression with an optional context. The context must implement the
     /// provided trait `[Context]`, that can get an `[crate::graph::element::Element]`
     /// using a given key.
@@ -229,7 +214,7 @@ impl Evaluator {
     /// ```
     /// # use dyn_type::Object;
     /// # use ir_common::NameOrId;
-    /// # use runtime::expr::eval::{Context, Evaluator};
+    /// # use runtime::expr::eval::{Context, Evaluator, Evaluate};
     /// # use runtime::graph::element::Vertex;
     /// # use runtime::graph::property::{DefaultDetails, DynDetails};
     /// # use std::collections::HashMap;
@@ -276,7 +261,7 @@ impl Evaluator {
     ///
     /// assert!(eval.eval::<_, _>(Some(&ctxt)).unwrap().as_bool().unwrap())
     /// ```
-    pub fn eval<E: Element, C: Context<E>>(&self, context: Option<&C>) -> ExprEvalResult<Object> {
+    fn eval<E: Element, C: Context<E>>(&self, context: Option<&C>) -> ExprEvalResult<Object> {
         let mut stack = self.stack.borrow_mut();
         if self.suffix_tree.len() <= 3 {
             return self.eval_without_stack(context);
@@ -284,37 +269,33 @@ impl Evaluator {
         stack.clear();
         for opr in &self.suffix_tree {
             if opr.is_operand() {
-                if let Some(obj) = opr.eval_as_borrow_object(context)? {
-                    stack.push(
-                        obj.try_to_owned()
-                            .ok_or(ExprEvalError::OtherErr(
-                                "unable to own the `BorrowObject`".to_string(),
-                            ))?,
-                    );
-                } else {
-                    return Err(ExprEvalError::NoneOperand(opr.into()));
-                }
+                stack.push(opr.eval(context)?);
             } else {
-                let first = stack.pop();
-                let first_borrow = first.as_ref().map(|obj| obj.as_borrow());
-                let rst = match opr {
-                    InnerOpr::Logical(logical) => {
-                        if logical == &pb::Logical::Not {
-                            apply_logical(logical, first_borrow, None)?
-                        } else {
-                            let second = stack.pop();
-                            let second_borrow = second.as_ref().map(|obj| obj.as_borrow());
-                            apply_logical(logical, second_borrow, first_borrow)?
+                if let Some(first) = stack.pop() {
+                    let first_borrow = first.as_borrow();
+                    let rst = match opr {
+                        InnerOpr::Logical(logical) => {
+                            if logical == &pb::Logical::Not {
+                                apply_logical(logical, first_borrow, None)
+                            } else {
+                                if let Some(second) = stack.pop() {
+                                    apply_logical(logical, second.as_borrow(), Some(first_borrow))
+                                } else {
+                                    Err(ExprEvalError::OtherErr("invalid expression".to_string()))
+                                }
+                            }
                         }
-                    }
-                    InnerOpr::Arith(arith) => {
-                        let second = stack.pop();
-                        let second_borrow = second.as_ref().map(|obj| obj.as_borrow());
-                        apply_arith(arith, second_borrow, first_borrow)?
-                    }
-                    _ => unreachable!(),
-                };
-                stack.push(rst.into());
+                        InnerOpr::Arith(arith) => {
+                            if let Some(second) = stack.pop() {
+                                apply_arith(arith, second.as_borrow(), first_borrow)
+                            } else {
+                                Err(ExprEvalError::OtherErr("invalid expression".to_string()))
+                            }
+                        }
+                        _ => unreachable!(),
+                    };
+                    stack.push((rst?).into());
+                }
             }
         }
 
@@ -323,6 +304,13 @@ impl Evaluator {
         } else {
             Err("invalid expression".into())
         }
+    }
+}
+
+impl Evaluator {
+    /// Reset the status of the evaluator for further evaluation
+    pub fn reset(&self) {
+        self.stack.borrow_mut().clear();
     }
 
     pub fn eval_bool<E: Element, C: Context<E>>(&self, context: Option<&C>) -> ExprEvalResult<bool> {
@@ -354,6 +342,24 @@ impl TryFrom<pb::ExprOpr> for InnerOpr {
                         Ok(Self::Var { tag, prop_key: None })
                     }
                 }
+                Vars(vars) => {
+                    let mut vec = Vec::with_capacity(vars.keys.len());
+                    for var in vars.keys {
+                        let var_opr: InnerOpr =
+                            pb::ExprOpr { item: Some(pb::expr_opr::Item::Var(var)) }.try_into()?;
+                        vec.push(var_opr);
+                    }
+                    Ok(Self::Vars(vec))
+                }
+                VarMap(vars) => {
+                    let mut vec = Vec::with_capacity(vars.keys.len());
+                    for var in vars.keys {
+                        let var_opr: InnerOpr =
+                            pb::ExprOpr { item: Some(pb::expr_opr::Item::Var(var)) }.try_into()?;
+                        vec.push(var_opr);
+                    }
+                    Ok(Self::VarMap(vec))
+                }
                 _ => Err(ParsePbError::ParseError("invalid operator of braces".to_string())),
             }
         } else {
@@ -362,22 +368,31 @@ impl TryFrom<pb::ExprOpr> for InnerOpr {
     }
 }
 
+impl Evaluate for InnerOpr {
+    fn eval<E: Element, C: Context<E>>(&self, context: Option<&C>) -> ExprEvalResult<Object> {
+        let obj_opt = self.eval_as_object(context)?;
+        obj_opt.ok_or(ExprEvalError::NoneOperand(OperatorDesc("evaluate object as `None`".to_string())))
+    }
+}
+
 impl InnerOpr {
-    pub fn eval_as_borrow_object<'a, E: Element + 'a, C: Context<E> + 'a>(
-        &'a self, context: Option<&'a C>,
-    ) -> ExprEvalResult<Option<BorrowObject<'a>>> {
+    pub fn eval_as_object<E: Element, C: Context<E>>(
+        &self, context: Option<&C>,
+    ) -> ExprEvalResult<Option<Object>> {
         match self {
-            Self::Const(c_opt) => Ok(if let Some(opt) = c_opt { Some(opt.as_borrow()) } else { None }),
+            Self::Const(c_opt) => Ok(if let Some(opt) = c_opt { Some(opt.clone()) } else { None }),
             Self::Var { tag, prop_key } => {
                 if let Some(ctxt) = context {
                     let mut result = Ok(None);
                     if let Some(element) = ctxt.get(tag.as_ref()) {
                         if let Some(property) = prop_key {
                             if let Some(details) = element.details() {
-                                result = Ok(details.get(property))
+                                result = Ok(details
+                                    .get(property)
+                                    .and_then(|obj| obj.try_to_owned()));
                             }
                         } else {
-                            result = Ok(Some(element.as_borrow_object()))
+                            result = Ok(element.as_borrow_object().try_to_owned())
                         }
                     }
 
@@ -386,13 +401,36 @@ impl InnerOpr {
                     Err(ExprEvalError::MissingContext(self.into()))
                 }
             }
+            Self::Vars(vars) => {
+                let mut vec = Vec::with_capacity(vars.len());
+                for var in vars {
+                    if let Some(obj) = var.eval_as_object(context)? {
+                        vec.push(obj);
+                    } else {
+                        return Ok(None);
+                    }
+                }
+                Ok(Some(Object::Vector(vec)))
+            }
+            Self::VarMap(vars) => {
+                let mut map = BTreeMap::new();
+                for var in vars {
+                    if let Some(obj) = var.eval_as_object(context)? {
+                        // TODO(may want to use other strings)
+                        map.insert(var.to_string().into(), obj);
+                    } else {
+                        return Ok(None);
+                    }
+                }
+                Ok(Some(Object::KV(map)))
+            }
             _ => Err(ExprEvalError::UnmatchedOperator(self.into())),
         }
     }
 
     pub fn is_operand(&self) -> bool {
         match self {
-            InnerOpr::Const(_) | InnerOpr::Var { .. } => true,
+            InnerOpr::Const(_) | InnerOpr::Var { .. } | InnerOpr::Vars(_) => true,
             _ => false,
         }
     }
@@ -613,6 +651,8 @@ mod tests {
             "@0.age + @0.birthday / 10000 == \
                             @1.age + @1.birthday / 10000", // true
             "@0.hobbies within [\"football\", \"guitar\", \"chess\"]", // true
+            "[@0.name, @0.age]",                           // [\"John\"", 31]
+            // "{@0.name, @0.age}"              // {"name": "John", "age": 31}
         ];
 
         let expected: Vec<Object> = vec![
@@ -626,6 +666,9 @@ mod tests {
             object!(false),
             object!(true),
             object!(true),
+            Object::Vector(vec![object!("John"), object!(31)]),
+            // Object::KV(vec![(object!("0.name"), object!("John")), (object!("0.age"), object!(31))]
+            //    .into_iter().collect())
         ];
 
         for (case, expected) in cases.into_iter().zip(expected.into_iter()) {
@@ -653,15 +696,9 @@ mod tests {
             // Evaluate variable without providing the context
             ExprEvalError::MissingContext(InnerOpr::Var { tag: Some(2.into()), prop_key: None }.into()),
             // obtain non-value from the context
-            ExprEvalError::NoneOperand(InnerOpr::Var { tag: Some(2.into()), prop_key: None }.into()),
+            ExprEvalError::NoneOperand(OperatorDesc("evaluate object as `None`".to_string())),
             // obtain non-value from the context
-            ExprEvalError::NoneOperand(
-                InnerOpr::Var {
-                    tag: Some(1.into()),
-                    prop_key: Some(PropKey::Key("nonexistent".to_string().into())),
-                }
-                .into(),
-            ),
+            ExprEvalError::NoneOperand(OperatorDesc("evaluate object as `None`".to_string())),
             // try to evaluate neither a variable nor a const
             ExprEvalError::UnmatchedOperator(InnerOpr::Arith(pb::Arithmetic::Add).into()),
             ExprEvalError::MissingOperands(InnerOpr::Arith(pb::Arithmetic::Add).into()),

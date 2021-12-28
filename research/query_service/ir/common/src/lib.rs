@@ -221,6 +221,17 @@ impl From<common_pb::Variable> for common_pb::ExprOpr {
     }
 }
 
+/// An indicator for whether it is a map
+impl From<(common_pb::VariableKeys, bool)> for common_pb::ExprOpr {
+    fn from(vars: (common_pb::VariableKeys, bool)) -> Self {
+        if !vars.1 {  // not a map
+            common_pb::ExprOpr { item: Some(common_pb::expr_opr::Item::Vars(vars.0)) }
+        } else {  // is a map
+            common_pb::ExprOpr { item: Some(common_pb::expr_opr::Item::VarMap(vars.0)) }
+        }
+    }
+}
+
 impl From<bool> for common_pb::Value {
     fn from(b: bool) -> Self {
         common_pb::Value { item: Some(common_pb::value::Item::Boolean(b)) }
