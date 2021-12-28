@@ -198,8 +198,8 @@ public class IrPlan implements Closeable {
                 if (exprList.isEmpty()) {
                     throw new InterOpIllegalArgException(baseOp.getClass(), "exprWithAlias", "should not be empty");
                 }
-                // todo: make append configurable
-                Pointer ptrProject = irCoreLib.initProjectOperator(false);
+                // append always and sink by parameters
+                Pointer ptrProject = irCoreLib.initProjectOperator(true);
                 exprList.forEach(pair -> {
                     String expr = (String) pair.getValue0();
                     FfiAlias.ByValue alias = (FfiAlias.ByValue) pair.getValue1();

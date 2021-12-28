@@ -329,10 +329,9 @@ traversalPredicate_without
     : 'without' LPAREN genericLiteralExpr RPAREN
     ;
 
+// incr and decr is unsupported in 3.5.1
 traversalOrder
-    : 'incr' | 'INCR'
-    | 'decr' | 'DECR'
-    | 'asc'  | 'ASC'
+    : 'asc'  | 'ASC'
     | 'desc' | 'DESC'
     // | 'shuffle' | 'SHUFFLE'
     ;

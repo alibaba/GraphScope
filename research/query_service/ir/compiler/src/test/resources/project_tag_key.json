@@ -1,0 +1,50 @@
+{
+  "nodes": [
+    {
+      "opr": {
+        "opr": {
+          "Project": {
+            "mappings": [
+              {
+                "expr": {
+                  "operators": [
+                    {
+                      "item": {
+                        "Var": {
+                          "tag": {
+                            "item": {
+                              "Name": "a"
+                            }
+                          },
+                          "property": {
+                            "item": {
+                              "Key": {
+                                "item": {
+                                  "Name": "name"
+                                }
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ]
+                },
+                "alias": {
+                  "alias": {
+                    "item": {
+                      "Name": "a_name"
+                    }
+                  },
+                  "is_query_given": false
+                }
+              }
+            ],
+            "is_append": true
+          }
+        }
+      },
+      "children": []
+    }
+  ]
+}
