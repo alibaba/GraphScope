@@ -22,8 +22,16 @@ public class OrderOp extends InterOpBase {
     // List of pair<var, orderOpt>
     private Optional<OpArg> orderVarWithOrder;
 
+    // top k
+    private Optional<OpArg> lower;
+
+    private Optional<OpArg> upper;
+
     public OrderOp() {
+        super();
         this.orderVarWithOrder = Optional.empty();
+        this.lower = Optional.empty();
+        this.upper = Optional.empty();
     }
 
     public Optional<OpArg> getOrderVarWithOrder() {
@@ -32,5 +40,21 @@ public class OrderOp extends InterOpBase {
 
     public void setOrderVarWithOrder(OpArg orderVarWithOrder) {
         this.orderVarWithOrder = Optional.of(orderVarWithOrder);
+    }
+
+    public Optional<OpArg> getLower() {
+        return lower;
+    }
+
+    public void setLower(OpArg lower) {
+        this.lower = Optional.of(lower);
+    }
+
+    public Optional<OpArg> getUpper() {
+        return upper;
+    }
+
+    public void setUpper(OpArg upper) {
+        this.upper = Optional.of(upper);
     }
 }

@@ -23,6 +23,7 @@ public class ProjectOp extends InterOpBase {
     private Optional<OpArg> projectExprWithAlias;
 
     public ProjectOp() {
+        super();
         projectExprWithAlias = Optional.empty();
     }
 
