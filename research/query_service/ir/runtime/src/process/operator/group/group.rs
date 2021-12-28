@@ -385,4 +385,40 @@ mod tests {
         }
         assert_eq!(group_result, expected_result);
     }
+
+    // g.V().groupCount().by('name') with key as 'a', value as "b"
+    #[test]
+    fn group_count_by_prop_test() {
+        let function = pb::group_by::AggFunc {
+            vars: vec![common_pb::Variable::from("@".to_string())],
+            aggregate: 3, // Count
+            alias: Some(pb::Alias {
+                alias: Some(NameOrId::Str("b".to_string()).into()),
+                is_query_given: false,
+            }),
+        };
+        let key_alias = pb::group_by::KeyAlias {
+            key: Some(common_pb::Variable::from("@.name".to_string())),
+            alias: Some(pb::Alias {
+                alias: Some(NameOrId::Str("a".to_string()).into()),
+                is_query_given: false,
+            }),
+        };
+        let group_opr_pb = pb::GroupBy { mappings: vec![key_alias], functions: vec![function] };
+        let mut result = group_test(group_opr_pb);
+        let mut group_result = HashSet::new();
+        let expected_result: HashSet<(Entry, Entry)> = [
+            (ObjectElement::Prop("marko".into()).into(), ObjectElement::Count(2).into()),
+            (ObjectElement::Prop("vadas".into()).into(), ObjectElement::Count(1).into()),
+        ]
+        .iter()
+        .cloned()
+        .collect();
+        while let Some(Ok(result)) = result.next() {
+            let key = result.get(Some(&"a".into())).unwrap().as_ref();
+            let val = result.get(Some(&"b".into())).unwrap().as_ref();
+            group_result.insert((key.clone(), val.clone()));
+        }
+        assert_eq!(group_result, expected_result);
+    }
 }

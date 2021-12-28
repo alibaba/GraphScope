@@ -36,6 +36,7 @@ impl Default for RecordSinkEncoder {
 
 impl MapFunction<Record, result_pb::Results> for RecordSinkEncoder {
     fn exec(&self, mut input: Record) -> FnResult<result_pb::Results> {
+        info!("result record {:?}", input);
         let mut sink_columns = Vec::with_capacity(self.sink_keys.len());
         for sink_key in self.sink_keys.iter() {
             let entry = input.take(Some(sink_key));
@@ -54,7 +55,6 @@ impl MapFunction<Record, result_pb::Results> for RecordSinkEncoder {
         }
         let record_pb = result_pb::Record { columns: sink_columns };
         let results = result_pb::Results { inner: Some(result_pb::results::Inner::Record(record_pb)) };
-        info!("results {:?}", results);
         Ok(results)
     }
 }

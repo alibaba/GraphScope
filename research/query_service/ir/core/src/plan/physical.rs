@@ -250,15 +250,16 @@ impl AsPhysical for pb::OrderBy {
 
 impl AsPhysical for pb::Dedup {
     fn add_job_builder(&self, builder: &mut JobBuilder) -> PhysicalResult<()> {
-        simple_add_job_builder(builder, self, SimpleOpr::Dedup)
+        simple_add_job_builder(builder, &pb::logical_plan::Operator::from(self.clone()), SimpleOpr::Dedup)
     }
 }
 impl AsPhysical for pb::GroupBy {
     fn add_job_builder(&self, builder: &mut JobBuilder) -> PhysicalResult<()> {
+        let opr = pb::logical_plan::Operator::from(self.clone());
         if self.mappings.is_empty() {
-            simple_add_job_builder(builder, self, SimpleOpr::Fold)
+            simple_add_job_builder(builder, &opr, SimpleOpr::Fold)
         } else {
-            simple_add_job_builder(builder, self, SimpleOpr::GroupBy)
+            simple_add_job_builder(builder, &opr, SimpleOpr::GroupBy)
         }
     }
 }
