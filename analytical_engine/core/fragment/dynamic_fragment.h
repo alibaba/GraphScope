@@ -34,6 +34,7 @@
 #include "flat_hash_map/flat_hash_map.hpp"
 #include "folly/dynamic.h"
 #include "folly/json.h"
+#include "nlohmann/json.hpp"
 
 #include "grape/config.h"
 #include "grape/fragment/immutable_edgecut_fragment.h"
@@ -1471,7 +1472,30 @@ class DynamicFragment {
     return false;
   }
 
-  void ModifyEdges(const folly::dynamic& edges_to_modify,
+  folly::dynamic jsonToDynamic(const nlohmann::json& json) {
+    if (json.is_boolean()) {
+      return folly::dynamic(json.get<bool>());
+    } else if (json.is_number()) {
+      return folly::dynamic(json.get<int>());
+    } else if (json.is_array()) {
+      folly::dynamic ret = folly::dynamic::array;
+      for (const auto& item : json) {
+        ret.push_back(jsonToDynamic(item));
+      }
+      return ret;
+    } else if (json.is_string()) {
+      return folly::dynamic(json.get<std::string>());
+    } else if (json.is_object()) {
+      folly::dynamic ret = folly::dynamic::object;
+      for (const auto& el : json.items()) {
+        ret[el.key()] = jsonToDynamic(el.value());
+      }
+      return ret;
+    }
+    return folly::dynamic();
+  }
+
+  void ModifyEdges(const nlohmann::json& edges_to_modify,
                    const rpc::ModifyType modify_type) {
     double start = grape::GetCurrentTime();
     std::vector<internal_vertex_t> vertices;
@@ -1501,11 +1525,14 @@ class DynamicFragment {
         }
       */
       for (const auto& e : edges_to_modify) {
-        src_fid = partitioner.GetPartitionId(e[0]);
-        dst_fid = partitioner.GetPartitionId(e[1]);
+        auto src = jsonToDynamic(e[0]);
+        auto dst = jsonToDynamic(e[1]);
+        auto data = jsonToDynamic(e[2]);
+        src_fid = partitioner.GetPartitionId(src);
+        dst_fid = partitioner.GetPartitionId(dst);
         if (modify_type == rpc::NX_ADD_EDGES) {
-          vm_ptr_->AddVertex(src_fid, e[0], src_gid);
-          vm_ptr_->AddVertex(dst_fid, e[1], dst_gid);
+          vm_ptr_->AddVertex(src_fid, src, src_gid);
+          vm_ptr_->AddVertex(dst_fid, dst, dst_gid);
           if (src_fid == fid_ || duplicated()) {
             vertices.emplace_back(src_gid, fake_data);
           }
@@ -1513,15 +1540,15 @@ class DynamicFragment {
             vertices.emplace_back(dst_gid, fake_data);
           }
         } else {
-          if (!vm_ptr_->GetGid(src_fid, e[0], src_gid) ||
-              !vm_ptr_->GetGid(dst_fid, e[1], dst_gid)) {
+          if (!vm_ptr_->GetGid(src_fid, src, src_gid) ||
+              !vm_ptr_->GetGid(dst_fid, dst, dst_gid)) {
             continue;
           }
         }
         if (src_fid == fid_ || dst_fid == fid_ || duplicated()) {
-          edges.emplace_back(src_gid, dst_gid, e[2]);
+          edges.emplace_back(src_gid, dst_gid, data);
           if (!directed_ && src_gid != dst_gid) {
-            edges.emplace_back(dst_gid, src_gid, e[2]);
+            edges.emplace_back(dst_gid, src_gid, data);
           }
         }
       }

@@ -28,6 +28,7 @@
 #include "boost/optional.hpp"
 #include "boost/property_tree/json_parser.hpp"
 #include "boost/property_tree/ptree.hpp"
+#include "nlohmann/json.hpp"
 
 #include "grape/app/vertex_data_context.h"
 #include "grape/communication/sync_comm.h"
@@ -104,7 +105,7 @@ class GrapeInstance : public Subscriber {
                                   const std::vector<std::string>& vertices);
 
   bl::result<void> modifyEdges(const rpc::GSParams& params,
-                               const folly::dynamic& edges);
+                               const nlohmann::json& edges);
 
   bl::result<void> clearEdges(const rpc::GSParams& params);
 
