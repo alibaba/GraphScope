@@ -49,7 +49,23 @@
     {
       "id": 11,
       "name": "COMPANY",
-      "columns": []
+      "columns": [
+        {
+          "id": 0,
+          "name": "id",
+          "data_type": 2
+        },
+        {
+          "id": 8,
+          "name": "name",
+          "data_type": 4
+        },
+        {
+          "id": 9,
+          "name": "url",
+          "data_type": 4
+        }
+      ]
     },
     {
       "id": 2,
@@ -63,6 +79,11 @@
         {
           "id": 6,
           "name": "content",
+          "data_type": 4
+        },
+        {
+          "id": 3,
+          "name": "locationIP",
           "data_type": 4
         },
         {
@@ -96,7 +117,23 @@
     {
       "id": 10,
       "name": "CONTINENT",
-      "columns": []
+      "columns": [
+        {
+          "id": 0,
+          "name": "id",
+          "data_type": 2
+        },
+        {
+          "id": 8,
+          "name": "name",
+          "data_type": 4
+        },
+        {
+          "id": 9,
+          "name": "url",
+          "data_type": 4
+        }
+      ]
     },
     {
       "id": 0,
@@ -231,17 +268,65 @@
     {
       "id": 9,
       "name": "CITY",
-      "columns": []
+      "columns": [
+        {
+          "id": 0,
+          "name": "id",
+          "data_type": 2
+        },
+        {
+          "id": 8,
+          "name": "name",
+          "data_type": 4
+        },
+        {
+          "id": 9,
+          "name": "url",
+          "data_type": 4
+        }
+      ]
     },
     {
       "id": 12,
       "name": "UNIVERSITY",
-      "columns": []
+      "columns": [
+        {
+          "id": 0,
+          "name": "id",
+          "data_type": 2
+        },
+        {
+          "id": 8,
+          "name": "name",
+          "data_type": 4
+        },
+        {
+          "id": 9,
+          "name": "url",
+          "data_type": 4
+        }
+      ]
     },
     {
       "id": 8,
       "name": "COUNTRY",
-      "columns": []
+      "columns": [
+        {
+          "id": 0,
+          "name": "id",
+          "data_type": 2
+        },
+        {
+          "id": 8,
+          "name": "name",
+          "data_type": 4
+        },
+        {
+          "id": 9,
+          "name": "url",
+          "data_type": 4
+        }
+      ]
     }
   ],
   "rels": [
