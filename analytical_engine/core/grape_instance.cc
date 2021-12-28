@@ -22,6 +22,7 @@
 #include "boost/algorithm/string/split.hpp"
 #include "folly/dynamic.h"
 #include "folly/json.h"
+#include "nlohmann/json.hpp"
 
 #include "vineyard/io/io/io_factory.h"
 
@@ -45,6 +46,8 @@
 #include "proto/graphscope/proto/types.pb.h"
 
 namespace gs {
+
+using json = nlohmann::json;
 
 GrapeInstance::GrapeInstance(const grape::CommSpec& comm_spec)
     : comm_spec_(comm_spec) {}
@@ -1107,8 +1110,11 @@ bl::result<std::shared_ptr<DispatchResult>> GrapeInstance::OnReceive(
     BOOST_LEAF_AUTO(edges_json, params.Get<std::string>(rpc::EDGES));
     LOG(INFO) << "Get from rpc time: " << grape::GetCurrentTime() - start;
     double t = grape::GetCurrentTime();
+    auto body = json::parse(edges_json);
+    LOG(INFO) << "nlohmann parse Json time: " << grape::GetCurrentTime() - t;
+    double t2 = grape::GetCurrentTime();
     folly::dynamic edges_to_modify = folly::parseJson(edges_json);
-    LOG(INFO) << "parse Json time: " << grape::GetCurrentTime() - t;
+    LOG(INFO) << "parse Json time: " << grape::GetCurrentTime() - t2;
     BOOST_LEAF_CHECK(modifyEdges(params, edges_to_modify));
     LOG(INFO) << "Total modify edge time: " << grape::GetCurrentTime() - start;
 #else
