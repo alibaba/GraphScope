@@ -138,12 +138,16 @@ public class InterOpCollectionBuilder {
             @Override
             public InterOpBase apply(Step step) {
                 SelectStep selectStep = (SelectStep) step;
-                Map<String, Traversal> byTraversals = selectStep.getByTraversals();
+                Map<String, Traversal.Admin> byTraversals = getProjectTraversals(selectStep);
                 ProjectOp op = new ProjectOp();
                 if (!byTraversals.isEmpty()) {
                     op.setProjectExprWithAlias(new OpArg(byTraversals, OpArgTransformFactory.PROJECT_EXPR_FROM_BY_TRAVERSALS));
                 }
                 return op;
+            }
+
+            private Map<String, Traversal.Admin> getProjectTraversals(SelectStep step) {
+                return step.getByTraversals();
             }
         },
         ORDER_BY_STEP {
@@ -162,10 +166,29 @@ public class InterOpCollectionBuilder {
             public InterOpBase apply(Step step) {
                 PropertyMapStep valueMapStep = (PropertyMapStep) step;
                 ProjectOp op = new ProjectOp();
-                Traversal.Admin valueTraversal = (new DefaultTraversal()).addStep(valueMapStep);
-                Map<String, Traversal.Admin> valueMap = ImmutableMap.of("", valueTraversal);
+                Map<String, Traversal.Admin> valueMap = getProjectTraversals(valueMapStep);
                 op.setProjectExprWithAlias(new OpArg(valueMap, OpArgTransformFactory.PROJECT_EXPR_FROM_BY_TRAVERSALS));
                 return op;
+            }
+
+            private Map<String, Traversal.Admin> getProjectTraversals(PropertyMapStep step) {
+                Traversal.Admin valueTraversal = (new DefaultTraversal()).addStep(step);
+                return ImmutableMap.of("", valueTraversal);
+            }
+        },
+        VALUES_STEP {
+            @Override
+            public InterOpBase apply(Step step) {
+                PropertiesStep valuesStep = (PropertiesStep) step;
+                ProjectOp op = new ProjectOp();
+                Map<String, Traversal.Admin> valueMap = getProjectTraversals(valuesStep);
+                op.setProjectExprWithAlias(new OpArg(valueMap, OpArgTransformFactory.PROJECT_EXPR_FROM_BY_TRAVERSALS));
+                return op;
+            }
+
+            private Map<String, Traversal.Admin> getProjectTraversals(PropertiesStep step) {
+                Traversal.Admin valueTraversal = (new DefaultTraversal()).addStep(step);
+                return ImmutableMap.of("", valueTraversal);
             }
         },
         GROUP_STEP {
@@ -209,7 +232,6 @@ public class InterOpCollectionBuilder {
             private Traversal.Admin getValueTraversal(GroupCountStep step) {
                 Traversal.Admin countTraversal = new DefaultTraversal();
                 countTraversal.addStep(new CountGlobalStep(countTraversal));
-                countTraversal.setParent(step);
                 return countTraversal;
             }
         },
@@ -243,6 +265,23 @@ public class InterOpCollectionBuilder {
                 tagTraversals.entrySet().removeIf(e -> e.getKey().equals("") && e.getValue() == null);
                 return tagTraversals;
             }
+        },
+        COUNT_STEP {
+            @Override
+            public InterOpBase apply(Step step) {
+                CountGlobalStep countStep = (CountGlobalStep) step;
+                GroupOp op = new GroupOp();
+                op.setGroupByKeys(new OpArg(countStep, OpArgTransformFactory.GROUP_KEYS_FROM_COUNT));
+                Traversal.Admin count = getValueTraversal(countStep);
+                op.setGroupByValues(new OpArg(count, OpArgTransformFactory.GROUP_VALUES_FROM_TRAVERSAL));
+                return op;
+            }
+
+            private Traversal.Admin getValueTraversal(CountGlobalStep step) {
+                Traversal.Admin countTraversal = new DefaultTraversal();
+                countTraversal.addStep(step);
+                return countTraversal;
+            }
         }
     }
 
@@ -274,6 +313,10 @@ public class InterOpCollectionBuilder {
                 op = StepTransformFactory.GROUP_COUNT_STEP.apply(step);
             } else if (equalClass(step, DedupGlobalStep.class)) {
                 op = StepTransformFactory.DEDUP_STEP.apply(step);
+            } else if (equalClass(step, CountGlobalStep.class)) {
+                op = StepTransformFactory.COUNT_STEP.apply(step);
+            } else if (equalClass(step, PropertiesStep.class)) {
+                op = StepTransformFactory.VALUES_STEP.apply(step);
             } else {
                 throw new UnsupportedStepException(step.getClass(), "unimplemented yet");
             }

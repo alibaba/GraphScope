@@ -472,4 +472,19 @@ public class PositiveEvalTest {
     public void g_V_dedup_test() {
         Assert.assertEquals(g.V().dedup(), eval("g.V().dedup()"));
     }
+
+    @Test
+    public void g_V_count_test() {
+        Assert.assertEquals(g.V().count(), eval("g.V().count()"));
+    }
+
+    @Test
+    public void g_V_count_as_test() {
+        Assert.assertEquals(g.V().count().as("a"), eval("g.V().count().as(\"a\")"));
+    }
+
+    @Test
+    public void g_V_values_test() {
+        Assert.assertEquals(g.V().values("name"), eval("g.V().values(\"name\")"));
+    }
 }

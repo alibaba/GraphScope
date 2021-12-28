@@ -168,6 +168,17 @@ public class OpArgTransformFactory {
                 } else {
                     throw new OpArgIllegalException(OpArgIllegalException.Cause.UNSUPPORTED_TYPE, "valueMap() is unsupported");
                 }
+            } else if (v.getSteps().size() == 1 && v.getStartStep() instanceof PropertiesStep) { // values("name")
+                String[] mapKeys = ((PropertiesStep) v.getStartStep()).getPropertyKeys();
+                if (mapKeys.length == 0) {
+                    throw new OpArgIllegalException(OpArgIllegalException.Cause.UNSUPPORTED_TYPE, "values() is unsupported");
+                }
+                if (mapKeys.length > 1) {
+                    throw new OpArgIllegalException(OpArgIllegalException.Cause.UNSUPPORTED_TYPE,
+                            "use valueMap(..) instead if there are multiple project keys");
+                }
+                expr = String.format("@%s.%s", k, mapKeys[0]);
+                exprWithAlias.add(makeProjectPair(expr, getVarAlias(k, mapKeys[0])));
             } else {
                 throw new OpArgIllegalException(OpArgIllegalException.Cause.UNSUPPORTED_TYPE,
                         "supported pattern is [select(..)] or [selecy(..).by('name')] or [select(..).by(valueMap(..))]");
@@ -261,7 +272,8 @@ public class OpArgTransformFactory {
                 throw new OpArgIllegalException(OpArgIllegalException.Cause.UNSUPPORTED_TYPE, "values() is unsupported");
             }
             if (valueKeys.length > 1) {
-                logger.error("only one argument in values(...) is supported, ignore others");
+                throw new OpArgIllegalException(OpArgIllegalException.Cause.UNSUPPORTED_TYPE,
+                        "use valueMap(..) instead if there are multiple project keys");
             }
             variable = ArgUtils.asVarPropertyOnly(ArgUtils.asFfiProperty(valueKeys[0]));
             alias = getGroupKeyAlias(variable);
@@ -276,6 +288,9 @@ public class OpArgTransformFactory {
         }
         return Collections.singletonList(Pair.with(variable, alias));
     };
+
+    // group key is empty list -> count globally
+    public static Function<CountGlobalStep, List> GROUP_KEYS_FROM_COUNT = (CountGlobalStep step) -> Collections.emptyList();
 
     public static Function<Traversal.Admin, List<ArgAggFn>> GROUP_VALUES_FROM_TRAVERSAL = (Traversal.Admin admin) -> {
         List<FfiVariable.ByValue> noneVars = Collections.emptyList();
