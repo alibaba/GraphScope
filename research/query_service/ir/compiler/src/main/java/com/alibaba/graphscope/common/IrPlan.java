@@ -28,6 +28,7 @@ import com.alibaba.graphscope.common.jna.type.*;
 import com.sun.jna.Pointer;
 import com.sun.jna.ptr.IntByReference;
 import org.apache.commons.io.FileUtils;
+import org.apache.tinkerpop.gremlin.process.traversal.step.map.CountGlobalStep;
 import org.javatuples.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -197,8 +198,8 @@ public class IrPlan implements Closeable {
                 if (exprList.isEmpty()) {
                     throw new InterOpIllegalArgException(baseOp.getClass(), "exprWithAlias", "should not be empty");
                 }
-                // todo: make append configurable
-                Pointer ptrProject = irCoreLib.initProjectOperator(false);
+                // append always and sink by parameters
+                Pointer ptrProject = irCoreLib.initProjectOperator(true);
                 exprList.forEach(pair -> {
                     String expr = (String) pair.getValue0();
                     FfiAlias.ByValue alias = (FfiAlias.ByValue) pair.getValue1();
@@ -275,10 +276,8 @@ public class IrPlan implements Closeable {
                 if (!groupValuesOpt.isPresent()) {
                     throw new InterOpIllegalArgException(baseOp.getClass(), "groupValues", "not present");
                 }
+                // groupKeys is empty -> count
                 List<Pair> groupKeys = (List<Pair>) groupKeysOpt.get().getArg();
-                if (groupKeys.isEmpty()) {
-                    throw new InterOpIllegalArgException(baseOp.getClass(), "groupKeys", "should not be empty if present");
-                }
                 // set group key
                 groupKeys.forEach(p -> {
                     FfiVariable.ByValue key = (FfiVariable.ByValue) p.getValue0();

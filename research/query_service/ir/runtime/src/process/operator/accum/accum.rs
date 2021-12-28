@@ -109,9 +109,10 @@ impl AccumFactoryGen for algebra_pb::GroupBy {
                 .unwrap_or(TagKey::default());
             let alias: Option<NameOrId> = agg_func
                 .alias
-                .ok_or(ParsePbError::from("accum value alias is missing in group"))?
+                .ok_or(ParsePbError::from("accum value alias is missing"))?
                 .try_into()?;
-            let alias = alias.ok_or(ParsePbError::from("accum value alias cannot be None in group"))?;
+            // TODO: accum value alias in fold can be None;
+            let alias = alias.ok_or(ParsePbError::from("accum value alias cannot be None"))?;
             let entry_accumulator = match agg_kind {
                 Aggregate::Count => EntryAccumulator::ToCount(Count { value: 0, _ph: Default::default() }),
                 Aggregate::ToList => EntryAccumulator::ToList(ToList { inner: vec![] }),
@@ -136,5 +137,144 @@ impl Encode for RecordAccumulator {
 impl Decode for RecordAccumulator {
     fn read_from<R: ReadExt>(_reader: &mut R) -> std::io::Result<Self> {
         todo!()
+    }
+}
+
+#[cfg(test)]
+mod tests {
+
+    use ir_common::generated::algebra as pb;
+    use ir_common::generated::common as common_pb;
+    use ir_common::NameOrId;
+    use pegasus::api::{Fold, Sink};
+    use pegasus::result::ResultStream;
+    use pegasus::JobConf;
+
+    use crate::process::operator::accum::accumulator::Accumulator;
+    use crate::process::operator::accum::AccumFactoryGen;
+    use crate::process::operator::tests::{init_source, init_vertex1, init_vertex2};
+    use crate::process::record::{Entry, ObjectElement, Record, RecordElement};
+
+    fn fold_test(source: Vec<Record>, fold_opr_pb: pb::GroupBy) -> ResultStream<Record> {
+        let conf = JobConf::new("fold_test");
+        let result = pegasus::run(conf, || {
+            let fold_opr_pb = fold_opr_pb.clone();
+            let source = source.clone();
+            move |input, output| {
+                let stream = input.input_from(source.into_iter())?;
+                let accum = fold_opr_pb.clone().gen_accum().unwrap();
+                let res_stream = stream
+                    .fold(accum, || {
+                        move |mut accumulator, next| {
+                            accumulator.accum(next)?;
+                            Ok(accumulator)
+                        }
+                    })?
+                    .map(|mut accum| Ok(accum.finalize()?))?
+                    .into_stream()?;
+                res_stream.sink_into(output)
+            }
+        })
+        .expect("build job failure");
+
+        result
+    }
+
+    // g.V().fold().as("a")
+    #[test]
+    fn fold_to_list_test() {
+        let function = pb::group_by::AggFunc {
+            vars: vec![common_pb::Variable::from("@".to_string())],
+            aggregate: 5, // to_list
+            alias: Some(pb::Alias {
+                alias: Some(NameOrId::Str("a".to_string()).into()),
+                is_query_given: false,
+            }),
+        };
+        let fold_opr_pb = pb::GroupBy { mappings: vec![], functions: vec![function] };
+        let mut result = fold_test(init_source(), fold_opr_pb);
+        let mut fold_result = Entry::Collection(vec![]);
+        let expected_result = Entry::Collection(vec![
+            RecordElement::OnGraph(init_vertex1().into()),
+            RecordElement::OnGraph(init_vertex2().into()),
+        ]);
+        if let Some(Ok(record)) = result.next() {
+            if let Some(entry) = record.get(Some(&"a".into())) {
+                fold_result = entry.as_ref().clone();
+            }
+        }
+        assert_eq!(fold_result, expected_result);
+    }
+
+    // g.V().count().as("a") // unoptimized version, use accumulator directly
+    #[test]
+    fn count_unopt_test() {
+        let function = pb::group_by::AggFunc {
+            vars: vec![common_pb::Variable::from("@".to_string())],
+            aggregate: 3, // count
+            alias: Some(pb::Alias {
+                alias: Some(NameOrId::Str("a".to_string()).into()),
+                is_query_given: false,
+            }),
+        };
+        let fold_opr_pb = pb::GroupBy { mappings: vec![], functions: vec![function] };
+        let mut result = fold_test(init_source(), fold_opr_pb);
+        let mut cnt = 0;
+        if let Some(Ok(record)) = result.next() {
+            if let Some(entry) = record.get(Some(&"a".into())) {
+                cnt = match entry.as_ref() {
+                    Entry::Element(RecordElement::OffGraph(ObjectElement::Count(cnt))) => *cnt,
+                    _ => {
+                        unreachable!()
+                    }
+                };
+            }
+        }
+        assert_eq!(cnt, 2);
+    }
+
+    // g.V().fold(to_list().as("a"), count().as("b"))
+    #[test]
+    fn fold_multi_accum_test() {
+        let function_1 = pb::group_by::AggFunc {
+            vars: vec![common_pb::Variable::from("@".to_string())],
+            aggregate: 5, // to_list
+            alias: Some(pb::Alias {
+                alias: Some(NameOrId::Str("a".to_string()).into()),
+                is_query_given: false,
+            }),
+        };
+        let function_2 = pb::group_by::AggFunc {
+            vars: vec![common_pb::Variable::from("@".to_string())],
+            aggregate: 3, // Count
+            alias: Some(pb::Alias {
+                alias: Some(NameOrId::Str("b".to_string()).into()),
+                is_query_given: false,
+            }),
+        };
+        let fold_opr_pb = pb::GroupBy { mappings: vec![], functions: vec![function_1, function_2] };
+        let mut result = fold_test(init_source(), fold_opr_pb);
+        let mut fold_result: (Entry, Entry) = (Entry::Collection(vec![]), ObjectElement::Count(0).into());
+        let expected_result: (Entry, Entry) = (
+            Entry::Collection(vec![
+                RecordElement::OnGraph(init_vertex1().into()),
+                RecordElement::OnGraph(init_vertex2().into()),
+            ]),
+            ObjectElement::Count(2).into(),
+        );
+        if let Some(Ok(record)) = result.next() {
+            let collection_entry = record
+                .get(Some(&"a".into()))
+                .unwrap()
+                .as_ref()
+                .clone();
+            let count_entry = record
+                .get(Some(&"b".into()))
+                .unwrap()
+                .as_ref()
+                .clone();
+            fold_result = (collection_entry, count_entry);
+        }
+        assert_eq!(fold_result, expected_result);
     }
 }

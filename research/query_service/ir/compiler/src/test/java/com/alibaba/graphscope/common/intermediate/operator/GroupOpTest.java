@@ -34,6 +34,28 @@ public class GroupOpTest {
     private IrPlan irPlan = new IrPlan();
 
     @Test
+    public void countTest() throws IOException {
+        GroupOp op = new GroupOp();
+        op.setGroupByKeys(new OpArg(Collections.emptyList(), Function.identity()));
+        ArgAggFn aggFn = new ArgAggFn(FfiAggOpt.Count, ArgUtils.asFfiAlias("values", false));
+        op.setGroupByValues(new OpArg(Collections.singletonList(aggFn), Function.identity()));
+
+        irPlan.appendInterOp(op);
+        Assert.assertEquals(TestUtils.readJsonFromResource("count.json"), irPlan.getPlanAsJson());
+    }
+
+    @Test
+    public void countAsTest() throws IOException {
+        GroupOp op = new GroupOp();
+        op.setGroupByKeys(new OpArg(Collections.emptyList(), Function.identity()));
+        ArgAggFn aggFn = new ArgAggFn(FfiAggOpt.Count, ArgUtils.asFfiAlias("a", true));
+        op.setGroupByValues(new OpArg(Collections.singletonList(aggFn), Function.identity()));
+
+        irPlan.appendInterOp(op);
+        Assert.assertEquals(TestUtils.readJsonFromResource("count_as.json"), irPlan.getPlanAsJson());
+    }
+
+    @Test
     public void groupTest() throws IOException {
         GroupOp op = new GroupOp();
         Pair<FfiVariable.ByValue, FfiAlias.ByValue> groupKey = Pair.with(ArgUtils.asNoneVar(),

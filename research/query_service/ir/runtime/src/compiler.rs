@@ -21,8 +21,8 @@ use ir_common::generated::common as common_pb;
 use ir_common::generated::results as result_pb;
 use pegasus::api::function::*;
 use pegasus::api::{
-    Collect, CorrelatedSubTask, Dedup, Filter, FoldByKey, IterCondition, Iteration, Join, KeyBy, Limit,
-    Map, Merge, PartitionByKey, Sink, SortBy, SortLimitBy, Source,
+    Collect, CorrelatedSubTask, Count, Dedup, Filter, Fold, FoldByKey, IterCondition, Iteration, Join,
+    KeyBy, Limit, Map, Merge, PartitionByKey, Sink, SortBy, SortLimitBy, Source,
 };
 use pegasus::result::ResultSink;
 use pegasus::stream::Stream;
@@ -34,11 +34,11 @@ use prost::Message;
 
 use crate::error::{FnExecError, FnGenResult};
 use crate::graph::partitioner::Partitioner;
-use crate::process::functions::{CompareFunction, GroupGen, JoinKeyGen, KeyFunction};
+use crate::process::functions::{CompareFunction, FoldGen, GroupGen, JoinKeyGen, KeyFunction};
 use crate::process::operator::accum::accumulator::Accumulator;
 use crate::process::operator::filter::FilterFuncGen;
 use crate::process::operator::flatmap::FlatMapFuncGen;
-use crate::process::operator::group::GroupFunctionGen;
+use crate::process::operator::group::{FoldFactoryGen, GroupFunctionGen};
 use crate::process::operator::join::JoinFunctionGen;
 use crate::process::operator::keyed::KeyFunctionGen;
 use crate::process::operator::map::{FilterMapFuncGen, MapFuncGen};
@@ -59,6 +59,7 @@ type RecordCompare = Box<dyn CompareFunction<Record>>;
 type RecordJoin = Box<dyn JoinKeyGen<Record, RecordKey, Record>>;
 type RecordKeySelector = Box<dyn KeyFunction<Record, RecordKey, Record>>;
 type RecordGroup = Box<dyn GroupGen<Record, RecordKey, Record>>;
+type RecordFold = Box<dyn FoldGen<u64, Record>>;
 type BinaryResource = Vec<u8>;
 
 pub struct IRJobCompiler {
@@ -122,6 +123,11 @@ impl FnGenerator {
     fn gen_group(&self, res: &BinaryResource) -> FnGenResult<RecordGroup> {
         let step = decode::<algebra_pb::logical_plan::Operator>(res)?;
         Ok(step.gen_group()?)
+    }
+
+    fn gen_fold(&self, res: &BinaryResource) -> FnGenResult<RecordFold> {
+        let step = decode::<algebra_pb::logical_plan::Operator>(res)?;
+        Ok(step.gen_fold()?)
     }
 
     fn gen_subtask(&self, _res: &BinaryResource) -> FnGenResult<RecordLeftJoin> {
@@ -195,8 +201,26 @@ impl IRJobCompiler {
                             stream = stream.sort_by(move |a, b| cmp.compare(a, b))?;
                         }
                     }
-                    server_pb::operator_def::OpKind::Fold(_fold) => {
-                        Err(BuildJobError::Unsupported("Fold is not supported yet".to_string()))?
+                    server_pb::operator_def::OpKind::Fold(fold) => {
+                        let fold = self.udf_gen.gen_fold(&fold.resource)?;
+                        if let server_pb::AccumKind::Cnt = fold.get_accum_kind() {
+                            let fold_map = fold.gen_fold_map()?;
+                            stream = stream
+                                .count()?
+                                .map(move |cnt| fold_map.exec(cnt))?
+                                .into_stream()?;
+                        } else {
+                            let fold_accum = fold.gen_fold_accum()?;
+                            stream = stream
+                                .fold(fold_accum, || {
+                                    |mut accumulator, next| {
+                                        accumulator.accum(next)?;
+                                        Ok(accumulator)
+                                    }
+                                })?
+                                .map(move |mut accum| Ok(accum.finalize()?))?
+                                .into_stream()?;
+                        }
                     }
                     server_pb::operator_def::OpKind::Group(group) => {
                         let group = self.udf_gen.gen_group(&group.resource)?;

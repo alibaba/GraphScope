@@ -46,4 +46,14 @@ public class ValueMapTest {
                 Pair.with("@.id", ArgUtils.asFfiAlias("id", false)));
         Assert.assertEquals(expected, op.getProjectExprWithAlias().get().getArg());
     }
+
+    @Test
+    public void g_V_values_str_test() {
+        Traversal traversal = g.V().values("name");
+        Step valueMapStep = traversal.asAdmin().getEndStep();
+        ProjectOp op = (ProjectOp) StepTransformFactory.VALUES_STEP.apply(valueMapStep);
+
+        List<Pair> expected = Arrays.asList(Pair.with("@.name", ArgUtils.asFfiAlias("name", false)));
+        Assert.assertEquals(expected, op.getProjectExprWithAlias().get().getArg());
+    }
 }

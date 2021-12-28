@@ -1,0 +1,28 @@
+{
+  "nodes": [
+    {
+      "opr": {
+        "opr": {
+          "GroupBy": {
+            "mappings": [],
+            "functions": [
+              {
+                "vars": [],
+                "aggregate": 3,
+                "alias": {
+                  "alias": {
+                    "item": {
+                      "Name": "values"
+                    }
+                  },
+                  "is_query_given": false
+                }
+              }
+            ]
+          }
+        }
+      },
+      "children": []
+    }
+  ]
+}
