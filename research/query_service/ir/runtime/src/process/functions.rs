@@ -17,6 +17,7 @@ use std::cmp::Ordering;
 
 use ir_common::generated::algebra::join::JoinKind;
 use pegasus::api::function::{FnResult, MapFunction};
+use pegasus_server::pb::AccumKind;
 
 use crate::error::FnGenResult;
 use crate::process::operator::accum::RecordAccumulator;
@@ -43,6 +44,17 @@ pub trait GroupGen<D, K, V>: Send + 'static {
     fn gen_group_accum(&self) -> FnGenResult<RecordAccumulator>;
 
     fn gen_group_map(&self) -> FnGenResult<Box<dyn MapFunction<(K, V), D>>>;
+}
+
+pub trait FoldGen<I, O>: Send + 'static {
+    // TODO(bingqing): get_accum_kind() and gen_fold_map() is for simple count optimization for tmp;
+    // This will be processed in gen_fold_accum() in a unified way later
+    fn get_accum_kind(&self) -> AccumKind;
+
+    fn gen_fold_map(&self) -> FnGenResult<Box<dyn MapFunction<I, O>>>;
+
+    // TODO(bingqing): enable fold_partition + fold_global optimization in RecordAccumulator
+    fn gen_fold_accum(&self) -> FnGenResult<RecordAccumulator>;
 }
 
 ///
@@ -88,6 +100,20 @@ mod box_impl {
 
         fn gen_group_map(&self) -> FnGenResult<Box<dyn MapFunction<(K, V), D>>> {
             (**self).gen_group_map()
+        }
+    }
+
+    impl<I, O, F: FoldGen<I, O> + ?Sized> FoldGen<I, O> for Box<F> {
+        fn get_accum_kind(&self) -> AccumKind {
+            (**self).get_accum_kind()
+        }
+
+        fn gen_fold_map(&self) -> FnGenResult<Box<dyn MapFunction<I, O>>> {
+            (**self).gen_fold_map()
+        }
+
+        fn gen_fold_accum(&self) -> FnGenResult<RecordAccumulator> {
+            (**self).gen_fold_accum()
         }
     }
 }
