@@ -54,7 +54,6 @@ impl KeyFunction<Record, RecordKey, Record> for KeySelector {
 
 impl KeyFunctionGen for algebra_pb::GroupBy {
     fn gen_key(self) -> FnGenResult<Box<dyn KeyFunction<Record, RecordKey, Record>>> {
-        // TODO(bingqing) May be fixed according to protobuf change
         let key_selector = KeySelector::with(
             self.mappings
                 .iter()
