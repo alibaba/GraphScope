@@ -1145,13 +1145,8 @@ class GSEtcdBuilder(object):
         return ExecProbeBuilder(liveness_cmd, timeout=15, period=10, failure_thresh=8)
 
     def build_readiness_probe(self):
-        return HttpProbeBuilder(
-            path="/health",
-            port=self._listen_peer_service_port,
-            http_headers=[],
-            timeout=15,
-            period=10,
-            failure_thresh=8,
+        return TcpProbeBuilder(
+            self._listen_peer_service_port, timeout=15, period=10, failure_thresh=8
         )
 
 
