@@ -130,7 +130,7 @@ def test_error_relationship_on_project_to_simple(arrow_modern_graph):
 def test_unload(graphscope_session):
     g = load_p2p_network(graphscope_session)
     assert g.loaded()
-    assert graph.vineyard_id is not None
+    assert g.vineyard_id is not None
     g.unload()
 
     assert not g.loaded()
@@ -187,21 +187,23 @@ def test_error_on_add_column(arrow_property_graph_lpa_u2i):
     property_context = lpa_u2i(arrow_property_graph_lpa_u2i, max_round=20)
 
     with pytest.raises(KeyError, match="non_exist_label"):
-        out = arrow_property_graph.add_column(
+        out = arrow_property_graph_lpa_u2i.add_column(
             property_context,
             {"id": "v:non_exist_label.id", "result": "r:non_exist_label.age"},
         )
 
     with pytest.raises(KeyError, match="non_exist_prop"):
-        out = arrow_property_graph.add_column(
+        out = arrow_property_graph_lpa_u2i.add_column(
             property_context, {"id": "v:v0.non_exist_prop"}
         )
 
     with pytest.raises(AssertionError, match="selector of add column must be a dict"):
-        out = arrow_property_graph.add_column(property_context, selector=None)
+        out = arrow_property_graph_lpa_u2i.add_column(property_context, selector=None)
 
     with pytest.raises(SyntaxError, match="Invalid selector"):
-        out = arrow_property_graph.add_column(property_context, {"id": "xxx:a.b"})
+        out = arrow_property_graph_lpa_u2i.add_column(
+            property_context, {"id": "xxx:a.b"}
+        )
 
 
 @pytest.mark.skip(reason="Issue 366")

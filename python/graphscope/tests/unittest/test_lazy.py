@@ -41,6 +41,7 @@ from graphscope.framework.loader import Loader
 test_repo_dir = os.path.expandvars("${GS_TEST_DIR}")
 prefix = os.path.join(test_repo_dir, "ogbn_mag_small")
 
+property_dir = os.path.join(test_repo_dir, "property")
 new_property_dir = os.path.join(test_repo_dir, "new_property", "v2_e2")
 
 
@@ -50,6 +51,17 @@ def sess():
     session.as_default()
     yield session
     session.close()
+
+
+@pytest.fixture(scope="module")
+def arrow_property_graph_lpa_u2i(sess):
+    g = sess.g(generate_eid=False)
+    g = g.add_vertices(f"{property_dir}/lpa_dataset/lpa_3000_v_0", "v0")
+    g = g.add_vertices(f"{property_dir}/lpa_dataset/lpa_3000_v_1", "v1")
+    g = g.add_edges(
+        f"{property_dir}/lpa_dataset/lpa_3000_e_0", "e0", ["weight"], "v0", "v1"
+    )
+    return g
 
 
 @pytest.fixture(scope="function")
@@ -138,31 +150,36 @@ def test_error_using_unload_graph(sess, student_v):
         sess.run([ug, g1])
 
 
-def test_unload_app(sess):
-    g = load_p2p_network(sess)
-    pg = g.project(vertices={"host": ["id"]}, edges={"connect": ["dist"]})
-
+def test_unload_app(sess, arrow_property_graph_lpa_u2i):
     # case 1
-    a1 = AppDAGNode(pg, AppAssets(algo="sssp", context="vertex_data"))
+    a1 = AppDAGNode(
+        arrow_property_graph_lpa_u2i,
+        AppAssets(algo="lpau2i", context="labeled_vertex_property"),
+    )
     ua1 = a1.unload()
     assert sess.run(ua1) is None
 
     # case 2
     # unload app twice
-    a1 = AppDAGNode(pg, AppAssets(algo="sssp", context="vertex_data"))
+    a1 = AppDAGNode(
+        arrow_property_graph_lpa_u2i,
+        AppAssets(algo="lpau2i", context="labeled_vertex_property"),
+    )
     ua1 = a1.unload()
     assert sess.run(ua1) is None
     assert sess.run(ua1) is None
 
     # case 3
     # load app after unload
-    a1 = AppDAGNode(pg, AppAssets(algo="sssp", context="vertex_data"))
+    a1 = AppDAGNode(
+        arrow_property_graph_lpa_u2i,
+        AppAssets(algo="lpau2i", context="labeled_vertex_property"),
+    )
     ua1 = a1.unload()
     assert sess.run(ua1) is None
-    c1 = a1(src=20)
-    r1 = c1.to_numpy("r")
+    c1 = a1(max_round=10)
+    r1 = c1.to_numpy("r:v0.label_0")
     r = sess.run(r1)
-    assert r.shape == (62586,)
 
 
 def test_graph_to_numpy(sess):

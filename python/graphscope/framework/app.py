@@ -312,7 +312,7 @@ class AppDAGNode(DAGNode):
         self._session.dag.add_op(self._op)
 
     def __repr__(self):
-        s = f"graphscope.App <type: {self._app_assets.type}, algorithm: {self._app_assets.algo}"
+        s = f"graphscope.App <type: {self._app_assets.type}, algorithm: {self._app_assets.algo} "
         s += f"bounded_graph: {str(self._graph)}>"
         return s
 
