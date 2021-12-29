@@ -94,6 +94,7 @@ public class RpcServer {
     }
 
     private static Executor createGrpcExecutor(int threadCount) {
+        logger.info("create grpc executor, thread count [" + threadCount + "]");
         return new ForkJoinPool(
                 threadCount,
                 new ForkJoinPool.ForkJoinWorkerThreadFactory() {
