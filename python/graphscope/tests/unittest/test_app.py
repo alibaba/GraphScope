@@ -24,7 +24,6 @@ import pytest
 
 import graphscope
 from graphscope import bfs
-from graphscope import cdlp
 from graphscope import clustering
 from graphscope import degree_centrality
 from graphscope import eigenvector_centrality
@@ -36,7 +35,6 @@ from graphscope import katz_centrality
 from graphscope import louvain
 from graphscope import lpa
 from graphscope import pagerank
-from graphscope import property_sssp
 from graphscope import sssp
 from graphscope import triangles
 from graphscope import wcc
@@ -45,14 +43,10 @@ from graphscope.framework.errors import InvalidArgumentError
 
 
 def test_create_app():
-    # builtin-ldbc compatible graph: arrow_projected dynamic_projected
-    # builtin-property compatible graph: arrow_property, append_only
-    # builtin-property app on property graph
-    a1 = AppAssets(algo="property_sssp", context="labeled_vertex_property")
     # builtin app on arrow projected graph
-    a2 = AppAssets(algo="sssp", context="vertex_data")
+    a1 = AppAssets(algo="sssp", context="vertex_data")
     # on dynamic projected graph
-    a3 = AppAssets(algo="sssp_has_path", context="tensor")
+    a2 = AppAssets(algo="sssp_has_path", context="tensor")
 
 
 def test_compatible_with_dynamic_graph(dynamic_property_graph):
@@ -204,7 +198,7 @@ def test_app_on_undirected_graph(
     pagerank_result,
     bfs_result,
     wcc_result,
-    cdlp_result,
+    lpa_result,
     triangles_result,
     kshell_result,
 ):
@@ -318,14 +312,14 @@ def test_app_on_undirected_graph(
     )
     assert np.all(ctx8.to_numpy("r", vertex_range={"begin": 1, "end": 4}) == [1, 1, 1])
 
-    # cdlp
-    ctx9 = cdlp(p2p_project_undirected_graph, max_round=10)
+    # lpa
+    ctx9 = lpa(p2p_project_undirected_graph, max_round=10)
     r9 = (
         ctx9.to_dataframe({"node": "v.id", "r": "r"})
         .sort_values(by=["node"])
         .to_numpy(dtype=int)
     )
-    assert np.all(r9 == cdlp_result)
+    assert np.all(r9 == lpa_result)
     assert np.all(
         ctx9.to_dataframe(
             {"node": "v.id", "r": "r"}, vertex_range={"begin": 1, "end": 4}

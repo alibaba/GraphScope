@@ -994,6 +994,26 @@ def test_get_schema(graphscope_session, arrow_property_graph):
 
 
 @pytest.mark.skipif("FULL-TEST-SUITE" not in os.environ, reason="Run in nightly CI")
+def test_property_context(graphscope_session, p2p_property_graph):
+    a1 = SSSP_Pregel()
+    ctx = a1(p2p_property_graph, src=6)
+    # property context to numpy
+    np_out = ctx.to_numpy("r:person")
+    # property context to tensor
+    df_out = ctx.to_dataframe({"result": "r:person"})
+    # property context to vineyard tensor
+    vt_out = ctx.to_vineyard_tensor("r:person")
+    assert vt_out is not None
+    # property context to vineyard dataframe
+    vdf_out = ctx.to_vineyard_dataframe({"node": "v:person.id", "r": "r:person"})
+    assert vdf_out is not None
+    # add column
+    g = p2p_property_graph.add_column(ctx1, {"result0": "r:person"})
+    g_out_df = g.to_dataframe({"result": "v:person.result0"})
+    assert g_out_df.equals(df_out)
+
+
+@pytest.mark.skipif("FULL-TEST-SUITE" not in os.environ, reason="Run in nightly CI")
 def test_run_cython_pregel_app(
     graphscope_session, p2p_property_graph, sssp_result, random_gar
 ):

@@ -75,37 +75,40 @@ class BaseContextDAGNode(DAGNode):
     .. code:: python
 
         >>> # lazy mode
-        >>> import graphscope as gs
-        >>> sess = gs.session(mode="lazy")
-        >>> g = arrow_property_graph(sess)
-        >>> c = property_sssp(g, 20)
-        >>> print(c) # <graphscope.framework.context.LabeledVertexDataContextDAGNode>
-        >>> r1 = c.to_numpy("r:v0.dist_0")
+        >>> import graphscope
+        >>> from graphscope.dataset import load_p2p_network
+        >>> sess = graphscope.session(cluster_type="hosts", mode="lazy")
+        >>> g = load_p2p_network(sess)
+        >>> sg = g.project(vertices={"host": ["id"]}, edges={"connect": ["dist"]})
+        >>> c = graphscope.sssp(sg, 20)
+        >>> print(c) # <graphscope.framework.context.VertexDataContextDAGNode>
+        >>> r1 = c.to_numpy("r")
         >>> print(r1) # <graphscope.ramework.context.ResultDAGNode>
-        >>> r2 = c.to_dataframe({"id": "v:v0.id", "result": "r:v0.dist_0"})
-        >>> r3 = c.to_vineyard_tensor("v:v0.id")
-        >>> r4 = c.to_vineyard_dataframe({"id": "v:v0.id", "data": "v:v0.dist", "result": "r:v0.dist_0"})
+        >>> r2 = c.to_dataframe({"id": "v.id", "result": "r"})
+        >>> r3 = c.to_vineyard_tensor("r")
+        >>> r4 = c.to_vineyard_dataframe({"id": "v.id", "result": "r"})
         >>> r = sess.run([r1, r2, r3, r4])
         >>> r[0].shape
-        (40521,)
+        (62586,)
         >>> r[1].shape
-        (40521, 2)
+        (62586, 2)
         >>> r[2] # return an object id
         >>> r[3] # return an object id
 
         >>> # eager mode
-        >>> import graphscope as gs
-        >>> sess = gs.session(mode="eager")
-        >>> g = arrow_property_graph(sess)
-        >>> sg = g.project(vertices={'person': ['id']}, edges={'knows': ['weight']})
+        >>> import graphscope
+        >>> from graphscope.dataset import load_p2p_network
+        >>> sess = graphscope.session(cluster_type="hosts", mode="eager")
+        >>> g = load_p2p_network(sess)
+        >>> sg = g.project(vertices={"host": ["id"]}, edges={"connect": ["dist"]})
         >>> c = sssp(sg, 20)
         >>> print(c) # <graphscope.framework.context.Context>
-        >>> r1 = c.to_numpy('r')
+        >>> r1 = c.to_numpy("r")
         >>> r1.shape
-        (20345,)
-        >>> r2 = c.to_dataframe({'id': 'v.id', 'result': 'r'})
+        (62586,)
+        >>> r2 = c.to_dataframe({"id": "v.id", "result": "r"})
         >>> r2.shape
-        (20345, 2)
+        (62586, 2)
         >>> r3 = c.to_vineyard_tensor() # return an object id
         >>> r4 = c.to_vineyard_dataframe() # return an object id
     """
