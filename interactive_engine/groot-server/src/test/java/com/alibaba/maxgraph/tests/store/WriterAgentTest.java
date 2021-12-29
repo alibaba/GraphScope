@@ -14,6 +14,7 @@
 package com.alibaba.maxgraph.tests.store;
 
 import com.alibaba.graphscope.groot.meta.MetaService;
+import com.alibaba.graphscope.groot.metrics.MetricsCollector;
 import com.alibaba.graphscope.groot.operation.StoreDataBatch;
 import com.alibaba.maxgraph.common.config.CommonConfig;
 import com.alibaba.maxgraph.common.config.Configs;
@@ -45,7 +46,12 @@ public class WriterAgentTest {
         SnapshotCommitter mockSnapshotCommitter = mock(SnapshotCommitter.class);
 
         WriterAgent writerAgent =
-                new WriterAgent(configs, mockStoreService, mockMetaService, mockSnapshotCommitter);
+                new WriterAgent(
+                        configs,
+                        mockStoreService,
+                        mockMetaService,
+                        mockSnapshotCommitter,
+                        new MetricsCollector(configs));
         writerAgent.init(0L);
 
         writerAgent.start();

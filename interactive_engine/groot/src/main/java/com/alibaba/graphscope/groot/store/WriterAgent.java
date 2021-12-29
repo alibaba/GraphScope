@@ -14,11 +14,15 @@
 package com.alibaba.graphscope.groot.store;
 
 import com.alibaba.graphscope.groot.meta.MetaService;
+import com.alibaba.graphscope.groot.metrics.MetricsAgent;
+import com.alibaba.graphscope.groot.metrics.MetricsCollector;
 import com.alibaba.graphscope.groot.operation.StoreDataBatch;
 import com.alibaba.maxgraph.common.config.CommonConfig;
 import com.alibaba.maxgraph.common.config.Configs;
 import com.alibaba.maxgraph.common.util.ThreadFactoryUtils;
 import com.alibaba.graphscope.groot.coordinator.SnapshotInfo;
+import java.util.HashMap;
+import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -35,8 +39,10 @@ import java.util.concurrent.atomic.AtomicReference;
  * store engine in the order of (snapshotId, queueId). WriterAgent will also send the ingest
  * progress to the SnapshotManager.
  */
-public class WriterAgent {
+public class WriterAgent implements MetricsAgent {
     private static final Logger logger = LoggerFactory.getLogger(WriterAgent.class);
+
+    public static final String STORE_BUFFER_BATCH_COUNT = "store.buffer.batch.count";
 
     private Configs configs;
     private int storeId;
@@ -59,7 +65,8 @@ public class WriterAgent {
             Configs configs,
             StoreService storeService,
             MetaService metaService,
-            SnapshotCommitter snapshotCommitter) {
+            SnapshotCommitter snapshotCommitter,
+            MetricsCollector metricsCollector) {
         this.configs = configs;
         this.storeId = CommonConfig.NODE_IDX.get(configs);
         this.queueCount = metaService.getQueueCount();
@@ -67,6 +74,7 @@ public class WriterAgent {
         this.metaService = metaService;
         this.snapshotCommitter = snapshotCommitter;
         this.availSnapshotInfoRef = new AtomicReference<>();
+        metricsCollector.register(this);
     }
 
     /** should be called once, before start */
@@ -226,5 +234,22 @@ public class WriterAgent {
             }
         }
         return false;
+    }
+
+    @Override
+    public void initMetrics() {}
+
+    @Override
+    public Map<String, String> getMetrics() {
+        return new HashMap<String, String>() {
+            {
+                put(STORE_BUFFER_BATCH_COUNT, String.valueOf(bufferQueue.size()));
+            }
+        };
+    }
+
+    @Override
+    public String[] getMetricKeys() {
+        return new String[] {STORE_BUFFER_BATCH_COUNT};
     }
 }

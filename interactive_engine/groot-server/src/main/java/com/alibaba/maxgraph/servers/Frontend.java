@@ -91,9 +91,14 @@ public class Frontend extends NodeBase {
         RoleClients<MetricsCollectClient> ingestorMetricsCollectClients =
                 new RoleClients<>(
                         this.channelManager, RoleType.INGESTOR, MetricsCollectClient::new);
+        RoleClients<MetricsCollectClient> storeMetricsCollectClients =
+                new RoleClients<>(this.channelManager, RoleType.STORE, MetricsCollectClient::new);
         MetricsAggregator metricsAggregator =
                 new MetricsAggregator(
-                        configs, frontendMetricsCollectClients, ingestorMetricsCollectClients);
+                        configs,
+                        frontendMetricsCollectClients,
+                        ingestorMetricsCollectClients,
+                        storeMetricsCollectClients);
         StoreIngestor storeIngestClients =
                 new StoreIngestClients(this.channelManager, RoleType.STORE, StoreIngestClient::new);
         SchemaWriter schemaWriter =
