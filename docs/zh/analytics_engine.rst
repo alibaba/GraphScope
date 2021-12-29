@@ -23,7 +23,7 @@ GraphScope 图分析引擎内置了许多常用的图分析算法，包括连通
     # 创建默认 session，并加载属性图
     g = load_p2p_network()
 
-    # 内置算法支持在简单图上进行计算，因此我们需要先通过顶点和边的类型来生成一个简单图
+    # 大多数内置算法只支持在简单图上进行计算，因此我们需要先通过顶点和边的类型来生成一个简单图
     simple_g = g.project(vertices={"host": ["id"]}, edges={"connect": ["dist"]})
 
     result_lpa = graphscope.lpa(simple_g, max_round=20)

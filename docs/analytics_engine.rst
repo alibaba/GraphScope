@@ -30,7 +30,7 @@ Built-in algorithms can be easily invoked over loaded graphs. For example,
     # load property graph
     g = load_p2p_network()
 
-    # Algorithms only support evaluate on simple graph
+    # many algorithms only support evaluate on simple graph
     # hence we need to generate one by selecting a kind of vertices and edges.
     simple_g = g.project(vertices={"host": ["id"]}, edges={"connect": ["dist"]})
 
