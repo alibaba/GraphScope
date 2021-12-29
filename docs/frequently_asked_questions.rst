@@ -79,7 +79,7 @@ If you don't find an answer to your question here, feel free to file a `Issues`_
 
     - compile ``scipy`` failed: You can follow `this <https://stackoverflow.com/questions/65745683/how-to-install-scipy-on-apple-silicon-arm-m1>`_ to build scipy from source or try ``pip3 install --pre -i https://pypi.anaconda.org/scipy-wheels-nightly/simple scipy`` to workaround this problem.
 
-11. How to resolve graphscope-store no permission on NFS volumes when allocating PV ?
+11. How to resolve the ``Permission denied`` error when allocating PV on NFS volumes?
 
     - ENV: Use helm to install graphscope-store, NFS to supply PV.
 
@@ -91,9 +91,9 @@ If you don't find an answer to your question here, feel free to file a `Issues`_
 
     - Solution: There are two slutions to solve this.
 
-        The brutal one is using ``chmod 777`` on all related PV directories, this is efficient but unsuggest.
+        The brutal one is using ``chmod 777`` on all related PV directories, this is efficient but not recommended in production environment.
 
-        The elegant one is creating ``graphscope`` user and user group first, and then permit the user ``graphscope`` access related NFS directories.
+        The elegant one is creating ``graphscope`` user and user group first, and then grant the access permission on ``graphscope`` to the related NFS directories.
 
 **I do have many other questions...**
 
