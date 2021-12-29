@@ -44,6 +44,7 @@ public class IngestProcessor implements MetricsAgent {
     public static final String WAL_BLOCK_TIME_MS = "wal.block.time.ms";
     public static final String STORE_BLOCK_TIME_MS = "store.block.time.ms";
     public static final String INGESTOR_REJECT_COUNT = "ingestor.reject.count";
+    public static final String INGEST_BUFFER_TASKS_COUNT = "ingest.buffer.tasks.count";
 
     private volatile boolean shouldStop = true;
     private volatile long tailOffset;
@@ -266,6 +267,7 @@ public class IngestProcessor implements MetricsAgent {
                 put(WAL_BLOCK_TIME_MS, String.valueOf(walBlockTimeNano / 1000000));
                 put(STORE_BLOCK_TIME_MS, String.valueOf(storeBlockTimeNano / 1000000));
                 put(INGESTOR_REJECT_COUNT, String.valueOf(ingestorRejectCount));
+                put(INGEST_BUFFER_TASKS_COUNT, String.valueOf(ingestBuffer.size()));
             }
         };
     }
@@ -277,7 +279,8 @@ public class IngestProcessor implements MetricsAgent {
             WRITE_RECORDS_TOTAL,
             WAL_BLOCK_TIME_MS,
             STORE_BLOCK_TIME_MS,
-            INGESTOR_REJECT_COUNT
+            INGESTOR_REJECT_COUNT,
+            INGEST_BUFFER_TASKS_COUNT
         };
     }
 

@@ -42,9 +42,9 @@ public class BatchSender implements MetricsAgent {
 
     public static final String SEND_BYTES_PER_SECOND = "send.bytes.per.second";
     public static final String SEND_BYTES_TOTAL = "send.bytes.total";
-
     public static final String SEND_RECORDS_PER_SECOND = "send.records.per.second";
     public static final String SEND_RECORDS_TOTAL = "send.records.total";
+    public static final String SEND_BUFFER_TASKS_COUNT = "send.buffer.tasks.count";
 
     private MetaService metaService;
     private StoreWriter storeWriter;
@@ -290,6 +290,7 @@ public class BatchSender implements MetricsAgent {
                 put(SEND_BYTES_TOTAL, String.valueOf(totalBytes));
                 put(SEND_RECORDS_PER_SECOND, String.valueOf(sendRecordsPerSecond));
                 put(SEND_RECORDS_TOTAL, String.valueOf(totalRecords));
+                put(SEND_BUFFER_TASKS_COUNT, String.valueOf(sendBuffer.size()));
             }
         };
     }
@@ -297,7 +298,11 @@ public class BatchSender implements MetricsAgent {
     @Override
     public String[] getMetricKeys() {
         return new String[] {
-            SEND_BYTES_PER_SECOND, SEND_BYTES_TOTAL, SEND_RECORDS_PER_SECOND, SEND_RECORDS_TOTAL
+            SEND_BYTES_PER_SECOND,
+            SEND_BYTES_TOTAL,
+            SEND_RECORDS_PER_SECOND,
+            SEND_RECORDS_TOTAL,
+            SEND_BUFFER_TASKS_COUNT
         };
     }
 
