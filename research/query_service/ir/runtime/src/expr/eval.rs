@@ -55,33 +55,6 @@ pub(crate) enum InnerOpr {
     VarMap(Vec<InnerOpr>),
 }
 
-fn get_object_key(opr: &InnerOpr) -> Object {
-    match opr {
-        InnerOpr::Var { tag, prop_key } => {
-            let mut obj1 = object!("");
-            let mut obj2 = object!("");
-            if let Some(t) = tag {
-                match t {
-                    NameOrId::Str(str) => obj1 = object!(str.as_str()),
-                    NameOrId::Id(id) => obj1 = object!(*id),
-                }
-            }
-            if let Some(prop) = prop_key {
-                match prop {
-                    PropKey::Id => obj2 = object!("~id"),
-                    PropKey::Label => obj2 = object!("~label"),
-                    PropKey::Key(key) => match key {
-                        NameOrId::Str(str) => obj2 = object!(str.as_str()),
-                        NameOrId::Id(id) => obj2 = object!(*id),
-                    },
-                }
-            }
-            object!(vec![obj1, obj2])
-        }
-        _ => unreachable!(),
-    }
-}
-
 impl ToString for InnerOpr {
     fn to_string(&self) -> String {
         match self {
@@ -443,7 +416,31 @@ impl InnerOpr {
                 let mut map = BTreeMap::new();
                 for var in vars {
                     if let Some(obj) = var.eval_as_object(context)? {
-                        map.insert(get_object_key(var), obj);
+                        let obj_key = match var {
+                            InnerOpr::Var { tag, prop_key } => {
+                                let mut obj1 = object!("");
+                                let mut obj2 = object!("");
+                                if let Some(t) = tag {
+                                    match t {
+                                        NameOrId::Str(str) => obj1 = object!(str.as_str()),
+                                        NameOrId::Id(id) => obj1 = object!(*id),
+                                    }
+                                }
+                                if let Some(prop) = prop_key {
+                                    match prop {
+                                        PropKey::Id => obj2 = object!("~id"),
+                                        PropKey::Label => obj2 = object!("~label"),
+                                        PropKey::Key(key) => match key {
+                                            NameOrId::Str(str) => obj2 = object!(str.as_str()),
+                                            NameOrId::Id(id) => obj2 = object!(*id),
+                                        },
+                                    }
+                                }
+                                Ok(object!(vec![obj1, obj2]))
+                            }
+                            _ => Err(ExprEvalError::Unsupported("evaluating `valueMap` on non-vars is not supported.".to_string())),
+                        }?;
+                        map.insert(obj_key, obj);
                     } else {
                         return Ok(None);
                     }
@@ -692,7 +689,7 @@ mod tests {
             object!(false),
             object!(true),
             object!(true),
-            Object::Vector(vec![object!("John"), object!(31)]),
+            object!(vec![object!("John"), object!(31)]),
             Object::KV(
                 vec![
                     (object!(vec![object!(0), object!("age")]), object!(31)),
