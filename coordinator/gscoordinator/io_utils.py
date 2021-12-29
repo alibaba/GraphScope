@@ -80,7 +80,6 @@ class StdStreamWrapper(object):
         total = len(LoadingProgressTracker.stubs) - 1
         if "PROGRESS--GRAPH-LOADING-DESCRIPTION-" in line:
             if LoadingProgressTracker.progbar is not None:
-                self._stream_backup.write("Error! Progress bar is not None!")
                 LoadingProgressTracker.progbar.close()
             desc = line.split("-")[-1].strip()
             LoadingProgressTracker.progbar = tqdm(
