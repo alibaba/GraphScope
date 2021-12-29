@@ -52,8 +52,7 @@ jobs:
         wget https://github.com/google/google-java-format/releases/download/v1.13.0/google-java-format-1.13.0-all-deps.jar
         # Enable check for analytical engine after pr(https://github.com/alibaba/GraphScope/pulls) merged
         # java -jar ${GITHUB_WORKSPACE}/google-java-format-1.13.0-all-deps.jar --aosp --skip-javadoc-formatting --set-exit-if-changed --dry-run $(git ls-files *.java)
-        java -jar ${GITHUB_WORKSPACE}/google-java-format-1.13.0-all-deps.jar --aosp --skip-javadoc-formatting --set-exit-if-changed --dry-run $(git ls-files research/*.java)
-        java -jar ${GITHUB_WORKSPACE}/google-java-format-1.13.0-all-deps.jar --aosp --skip-javadoc-formatting --set-exit-if-changed --dry-run $(git ls-files interactive_engine/*.java)
+        java -jar ${GITHUB_WORKSPACE}/google-java-format-1.13.0-all-deps.jar --aosp --skip-javadoc-formatting --set-exit-if-changed --dry-run $(git ls-files research/*.java interactive_engine/*.java)
 
     - name: Python Format and Lint Check
       run: |
