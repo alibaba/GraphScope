@@ -160,11 +160,20 @@ public class OpArgTransformFactory {
             } else if (v.getSteps().size() == 1 && v.getStartStep() instanceof PropertyMapStep) { // select(..).by(valueMap(''))
                 String[] mapKeys = ((PropertyMapStep) v.getStartStep()).getPropertyKeys();
                 if (mapKeys.length > 0) {
+                    StringBuilder builder = new StringBuilder();
+                    builder.append("{");
                     for (int i = 0; i < mapKeys.length; ++i) {
                         String e1 = String.format("@%s.%s", k, mapKeys[i]);
-                        String a1 = getVarAlias(k, mapKeys[i]);
-                        exprWithAlias.add(makeProjectPair(e1, a1));
+                        builder.append(e1);
+                        if (i != mapKeys.length - 1) {
+                            builder.append(", ");
+                        }
+                        // String a1 = getVarAlias(k, mapKeys[i]);
+                        // exprWithAlias.add(makeProjectPair(e1, a1));
                     }
+                    builder.append("}");
+                    // TODO() Currently no alias for valueMap
+                    exprWithAlias.add(makeProjectPair(builder.toString(), ""));
                 } else {
                     throw new OpArgIllegalException(OpArgIllegalException.Cause.UNSUPPORTED_TYPE, "valueMap() is unsupported");
                 }
