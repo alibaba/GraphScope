@@ -66,6 +66,7 @@ class StdStreamWrapper(object):
             return
         line = line.encode("ascii", "ignore").decode("ascii")
         self._stream_backup.write(line)
+        self._stream_backup.flush()
         if not self._drop:
             self._lines.put(line)
 

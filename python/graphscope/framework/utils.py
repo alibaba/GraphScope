@@ -61,6 +61,7 @@ class PipeWatcher(object):
                 if self._filter(line):
                     try:
                         self._sink.write(line)
+                        self._sink.flush()
                         if not self._drop:
                             self._lines.put(line)
                     except:  # noqa: E722

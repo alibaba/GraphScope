@@ -544,6 +544,10 @@ jobs:
           make graphscope-image
           sudo docker tag graphscope/graphscope:${SHORT_SHA} ${{ env.GS_IMAGE }}:${SHORT_SHA}
 
+          cd ${GITHUB_WORKSPACE}/python
+          pip3 install -r requirements.txt
+          pip3 install -r requirements-dev.txt
+
           # build python client proto
           cd ${GITHUB_WORKSPACE}/python
           python3 setup.py build_proto

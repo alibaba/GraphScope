@@ -111,7 +111,6 @@ def test_add_column(arrow_property_graph, property_context):
     assert "result_1" in [p.name for p in g2.schema.get_vertex_properties("v1")]
 
 
-@pytest.mark.skip(reason="waiting for vineyard_read_vineyard_dataframe in v6d package")
 def test_context_output(simple_context):
     simple_context.output(
         fd="file:///tmp/rlt.csv",

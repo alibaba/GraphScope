@@ -1407,7 +1407,6 @@ def launch_graphscope():
 
     # handle SIGTERM signal
     def terminate(signum, frame):
-        global coordinator_service_servicer
         coordinator_service_servicer._cleanup()
 
     signal.signal(signal.SIGTERM, terminate)
