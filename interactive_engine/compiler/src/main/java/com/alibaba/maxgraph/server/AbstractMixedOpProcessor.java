@@ -176,7 +176,7 @@ public abstract class AbstractMixedOpProcessor extends StandardOpProcessor {
                                 errorMessage =
                                         String.format(
                                                 "Response evaluation exceeded the configured"
-                                                    + " threshold for request [%s] - %s",
+                                                        + " threshold for request [%s] - %s",
                                                 msg, t.getMessage());
                                 logger.warn(errorMessage, t);
                                 ctx.writeAndFlush(
@@ -258,7 +258,7 @@ public abstract class AbstractMixedOpProcessor extends StandardOpProcessor {
                                 errorMessage =
                                         String.format(
                                                 "Response evaluation exceeded the configured"
-                                                    + " threshold for request [%s] - %s",
+                                                        + " threshold for request [%s] - %s",
                                                 msg, t.getMessage());
                                 logger.warn(errorMessage, tt);
                                 ctx.writeAndFlush(
@@ -375,7 +375,7 @@ public abstract class AbstractMixedOpProcessor extends StandardOpProcessor {
                                 logger.warn(
                                         String.format(
                                                 "Interruption during result iteration on request"
-                                                    + " [%s].",
+                                                        + " [%s].",
                                                 msg),
                                         var12);
                                 err = var12.getMessage();
@@ -476,7 +476,7 @@ public abstract class AbstractMixedOpProcessor extends StandardOpProcessor {
                     if (!warnOnce) {
                         logger.warn(
                                 "Pausing response writing as writeBufferHighWaterMark exceeded on"
-                                    + " {} - writing will continue once client has caught up",
+                                        + " {} - writing will continue once client has caught up",
                                 msg);
                         warnOnce = true;
                     }

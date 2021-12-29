@@ -105,7 +105,7 @@ public class GaiaGraphServer implements AbstractService {
                             t -> {
                                 logger.error(
                                         "Gremlin Server was unable to start and will now begin"
-                                            + " shutdown {}",
+                                                + " shutdown {}",
                                         t);
                                 server.stop().join();
                                 return null;

@@ -103,7 +103,7 @@ public class IngestProcessor implements MetricsAgent {
                                 } catch (Exception e) {
                                     logger.error(
                                             "error occurred before ingest process, will retry after"
-                                                + " 1s",
+                                                    + " 1s",
                                             e);
                                     try {
                                         Thread.sleep(1000L);

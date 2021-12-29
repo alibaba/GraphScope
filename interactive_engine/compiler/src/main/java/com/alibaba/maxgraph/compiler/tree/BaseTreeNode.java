@@ -167,7 +167,7 @@ public abstract class BaseTreeNode implements TreeNode {
                         if (startLabelList == null || startLabelList.isEmpty()) {
                             throw new IllegalArgumentException(
                                     "There's label start requirement but start label list is"
-                                        + " empty");
+                                            + " empty");
                         }
                         Message.Value.Builder valueBuilder = Message.Value.newBuilder();
                         for (String startLabel : startLabelList) {

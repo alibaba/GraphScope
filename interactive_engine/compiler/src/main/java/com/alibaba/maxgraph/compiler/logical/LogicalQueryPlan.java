@@ -588,7 +588,7 @@ public class LogicalQueryPlan {
         } catch (Exception e) {
             throw new IllegalArgumentException(
                     "use g.enableDebugLog() or g.config(\"query.debug.log.enable\", true) to open"
-                        + " debug log");
+                            + " debug log");
         }
     }
 
@@ -599,7 +599,7 @@ public class LogicalQueryPlan {
         } catch (Exception e) {
             throw new IllegalArgumentException(
                     "use g.timeout(milliSec) or g.timeoutSec(sec) or"
-                        + " g.config(\"query.timeout.millsec\", milliSec) to set timeout");
+                            + " g.config(\"query.timeout.millsec\", milliSec) to set timeout");
         }
     }
 
@@ -617,7 +617,7 @@ public class LogicalQueryPlan {
         } catch (Exception e) {
             throw new IllegalArgumentException(
                     "use g.scheduleVerySmall()/Small()/Medium()/Large()/VeryLarge() to set"
-                        + " scheduler batch lavel");
+                            + " scheduler batch lavel");
         }
     }
 

@@ -261,7 +261,7 @@ public abstract class AbstractMixedTraversalOpProcessor extends AbstractOpProces
                             if (null == sideEffects)
                                 logger.warn(
                                         "Request for side-effect keys on {} returned no"
-                                            + " side-effects in the cache",
+                                                + " side-effects in the cache",
                                         sideEffect.get());
 
                             handleIterator(
@@ -319,7 +319,7 @@ public abstract class AbstractMixedTraversalOpProcessor extends AbstractOpProces
                 final String msgInvalid =
                         String.format(
                                 "Message could not be parsed.  Check the format of the request."
-                                    + " [%s]",
+                                        + " [%s]",
                                 message);
                 throw new OpProcessorException(
                         msgInvalid,
@@ -352,7 +352,7 @@ public abstract class AbstractMixedTraversalOpProcessor extends AbstractOpProces
             final String msg =
                     String.format(
                             "The traversal source [%s] for alias [%s] is not configured on the"
-                                + " server.",
+                                    + " server.",
                             traversalSourceBindingForAlias, Tokens.VAL_TRAVERSAL_SOURCE_ALIAS);
             throw new OpProcessorException(
                     msg,
@@ -404,7 +404,7 @@ public abstract class AbstractMixedTraversalOpProcessor extends AbstractOpProces
             final String msg =
                     String.format(
                             "A message with [%s] op code requires the [%s] argument to be a Map"
-                                + " containing one alias assignment named '%s'.",
+                                    + " containing one alias assignment named '%s'.",
                             Tokens.OPS_BYTECODE,
                             Tokens.ARGS_ALIASES,
                             Tokens.VAL_TRAVERSAL_SOURCE_ALIAS);
@@ -472,7 +472,7 @@ public abstract class AbstractMixedTraversalOpProcessor extends AbstractOpProces
                                             final String errorMessage =
                                                     String.format(
                                                             "Could not find side-effect key for %s"
-                                                                + " in %s.",
+                                                                    + " in %s.",
                                                             sideEffectKey.get(), sideEffect.get());
                                             logger.warn(errorMessage);
                                             ctx.writeAndFlush(
@@ -493,7 +493,7 @@ public abstract class AbstractMixedTraversalOpProcessor extends AbstractOpProces
                                         logger.warn(
                                                 String.format(
                                                         "Exception processing a side-effect on"
-                                                            + " iteration for request [%s].",
+                                                                + " iteration for request [%s].",
                                                         msg.getRequestId()),
                                                 ex);
                                         ctx.writeAndFlush(
@@ -510,7 +510,7 @@ public abstract class AbstractMixedTraversalOpProcessor extends AbstractOpProces
                                     logger.warn(
                                             String.format(
                                                     "Exception processing a side-effect on request"
-                                                        + " [%s].",
+                                                            + " [%s].",
                                                     msg.getRequestId()),
                                             ex);
                                     ctx.writeAndFlush(
@@ -641,7 +641,7 @@ public abstract class AbstractMixedTraversalOpProcessor extends AbstractOpProces
                                         logger.warn(
                                                 String.format(
                                                         "Exception processing a Traversal on"
-                                                            + " iteration for request [%s].",
+                                                                + " iteration for request [%s].",
                                                         msg.getRequestId()),
                                                 ex);
                                         ctx.writeAndFlush(
@@ -656,7 +656,7 @@ public abstract class AbstractMixedTraversalOpProcessor extends AbstractOpProces
                                     logger.warn(
                                             String.format(
                                                     "Exception processing a Traversal on request"
-                                                        + " [%s].",
+                                                            + " [%s].",
                                                     msg.getRequestId()),
                                             ex);
                                     ctx.writeAndFlush(
@@ -898,7 +898,7 @@ public abstract class AbstractMixedTraversalOpProcessor extends AbstractOpProces
                 if (!warnOnce) {
                     logger.warn(
                             "Pausing response writing as writeBufferHighWaterMark exceeded on {} -"
-                                + " writing will continue once client has caught up",
+                                    + " writing will continue once client has caught up",
                             msg);
                     warnOnce = true;
                 }

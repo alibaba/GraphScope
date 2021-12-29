@@ -23,14 +23,14 @@ public class InstanceParamCheckUtil {
         Preconditions.checkArgument(
                 totalWorker % replicaCount == 0,
                 "Invalid total worker number and replica count for TimelyStylePartitionAssigner: %s"
-                    + " % %s != 0",
+                        + " % %s != 0",
                 totalPartition,
                 totalWorker);
 
         Preconditions.checkArgument(
                 totalPartition % (totalWorker / replicaCount) == 0,
                 "Invalid partition number and total worker number for TimelyStylePartitionAssigner:"
-                    + " %s % %s != 0",
+                        + " %s % %s != 0",
                 totalPartition,
                 totalWorker);
     }

@@ -374,7 +374,7 @@ public class BackupManager {
                                         future.completeExceptionally(
                                                 new BackupException(
                                                         "failed to persist backup info of new"
-                                                            + " created backup #["
+                                                                + " created backup #["
                                                                 + newGlobalBackupId
                                                                 + "], "
                                                                 + e.getMessage()));
@@ -383,7 +383,7 @@ public class BackupManager {
                                     future.completeExceptionally(
                                             new BackupException(
                                                     "got incorrect number of partition backupIds"
-                                                        + " when creating backup #["
+                                                            + " when creating backup #["
                                                             + newGlobalBackupId
                                                             + "], got "
                                                             + partitionToBackupId.size()

@@ -55,7 +55,7 @@ public class SourceCreateGraphTreeNode extends SourceTreeNode {
         if (StringUtils.isEmpty(graphType)) {
             throw new IllegalArgumentException(
                     "Graph type must be setted by g.createGraph(graphName).with('graphType',"
-                        + " '...')");
+                            + " '...')");
         }
         QueryFlowOuterClass.CreateGraphTypeProto createGraphType =
                 QueryFlowOuterClass.CreateGraphTypeProto.valueOf(StringUtils.upperCase(graphType));

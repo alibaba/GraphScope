@@ -338,7 +338,7 @@ public class MaxGraphHttpGremlinEndpointHandler extends HttpGremlinEndpointHandl
                     final String error =
                             String.format(
                                     "Could not rebind [%s] to [%s] as [%s] not in the Graph or"
-                                        + " TraversalSource global bindings",
+                                            + " TraversalSource global bindings",
                                     kv.getKey(), kv.getValue(), kv.getValue());
                     throw new IllegalStateException(error);
                 }
@@ -425,7 +425,7 @@ public class MaxGraphHttpGremlinEndpointHandler extends HttpGremlinEndpointHandl
                             if (future.isSuccess()) {
                                 logger.debug(
                                         "Preparing HTTP response for request with script [{}] and"
-                                            + " bindings of [{}] with result of [{}] on [{}]",
+                                                + " bindings of [{}] with result of [{}] on [{}]",
                                         requestArguments.getValue0(),
                                         requestArguments.getValue1(),
                                         resultHolder.get(),

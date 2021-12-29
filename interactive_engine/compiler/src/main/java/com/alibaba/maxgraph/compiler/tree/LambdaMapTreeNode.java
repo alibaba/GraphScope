@@ -50,7 +50,7 @@ public class LambdaMapTreeNode extends UnaryTreeNode {
                         || mapFunction instanceof RangeSumFunction
                         || null != lambdaIndex,
                 "lambdaIndex for LambdaMap can't be null unless it demands to write odps or fill"
-                    + " prop or range sum");
+                        + " prop or range sum");
         this.mapFunction = checkNotNull(mapFunction);
         this.lambdaIndex = lambdaIndex;
     }

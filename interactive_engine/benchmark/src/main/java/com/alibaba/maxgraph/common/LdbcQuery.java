@@ -93,11 +93,11 @@ public class LdbcQuery {
         if (subStrSet.length != singleParameter.size() + 1) {
             String errMsg =
                     "Illegal parameter and query, caused by the number of parameter is not suitable"
-                        + " of query";
+                            + " of query";
             System.out.println(errMsg);
             throw new RuntimeException(
                     "Illegal parameter and query, caused by the number of parameter is not suitable"
-                        + " of query");
+                            + " of query");
         }
 
         String gremlinQuery = subStrSet[0];

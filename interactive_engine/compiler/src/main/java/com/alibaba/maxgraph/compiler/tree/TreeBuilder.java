@@ -1570,7 +1570,7 @@ public class TreeBuilder {
                     checkArgument(
                             variantType == Message.VariantType.VT_STRING,
                             "Text and Regex predicate only support string output while current"
-                                + " value type=>"
+                                    + " value type=>"
                                     + variantType);
                     break;
                 }

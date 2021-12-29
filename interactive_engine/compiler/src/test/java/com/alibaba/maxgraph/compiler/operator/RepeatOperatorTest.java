@@ -119,8 +119,7 @@ public class RepeatOperatorTest extends AbstractOperatorTest {
     @Test
     public void testRepeatHundun() {
         executeTreeQuery(
-                g.V()
-                        .has("id", "1")
+                g.V().has("id", "1")
                         .repeat(
                                 bothE().has("id", "2")
                                         .otherV()

@@ -82,7 +82,7 @@ public class MetaException extends MaxGraphException {
         String msg =
                 MessageFormat.format(
                         "relationship: with srcLabel :{0}, edgeLabel: {1}, dstLabel: {2} is already"
-                            + " exist",
+                                + " exist",
                         srcLabel, edgeLabel, dstLabel);
         return new MetaException(ErrorCode.RelationShipAlreadyExist, msg);
     }

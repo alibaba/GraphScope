@@ -153,7 +153,7 @@ public class MaxGraphServer {
                         t -> {
                             LOG.error(
                                     "Gremlin Server was unable to start and will now begin"
-                                        + " shutdown: {}",
+                                            + " shutdown: {}",
                                     t.getMessage());
                             innerServer.stop().join();
                             return null;

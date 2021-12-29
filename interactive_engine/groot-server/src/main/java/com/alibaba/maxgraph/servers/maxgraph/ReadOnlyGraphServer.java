@@ -120,7 +120,7 @@ public class ReadOnlyGraphServer implements AbstractService {
                             t -> {
                                 logger.error(
                                         "Gremlin Server was unable to start and will now begin"
-                                            + " shutdown: {}",
+                                                + " shutdown: {}",
                                         t.getMessage());
                                 this.server.stop().join();
                                 return null;

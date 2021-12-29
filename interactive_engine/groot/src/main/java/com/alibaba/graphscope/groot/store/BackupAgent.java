@@ -212,7 +212,7 @@ public class BackupAgent {
             callback.onError(
                     new BackupException(
                             "doing store backup up gc with incorrect ready partitionBackupId"
-                                + " lists"));
+                                    + " lists"));
             return;
         }
         AtomicInteger counter = new AtomicInteger(this.idToPartitionBackup.size());
