@@ -227,7 +227,7 @@ The schema have defined several method
 .. code:: python
 
     schema.add_vertex_label('v_label_name').add_primary_key('primary_key_name', 'property_type').property('property_name_1', 'property_type').property('property_name_2', 'property_type')
-    schema.add_edge_label('e_label_name').from('source_label').to('destination_label').property('property_name_3', 'property_type')
+    schema.add_edge_label('e_label_name').source('source_label').destination('destination_label').property('property_name_3', 'property_type')
     schema.update()
     schema.drop('label')
     schema.drop('label', 'src_label', 'dst_label')
@@ -237,9 +237,9 @@ Here the `label_name`, `primary_key_name`, `property_type` is specified by user,
 
 For vertices, the `add_primary_key` is to specify the primary key of the label, also be called ID.
 
-For edges, the `from` and `to` will specify the source label and destination label of the edge kind, respectively.
+For edges, the `source` and `destination` will specify the source label and destination label of the edge kind, respectively.
 
-The `update()` method will issue a transction to the store.
+The `update()` method will issue a transaction to the store.
 
 The `drop()` method can drop a label from the store, Note for edge label you must drop all relations first by using the `src_label` and `dst_label`, then call the `drop(label)` to final drop the entire label.
 
