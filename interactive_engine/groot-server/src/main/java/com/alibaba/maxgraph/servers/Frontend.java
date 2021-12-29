@@ -127,7 +127,7 @@ public class Frontend extends NodeBase {
                         ingestorWriteClients,
                         metricsCollector);
         ClientWriteService clientWriteService =
-                new ClientWriteService(writeSessionGenerator, graphWriter, metricsCollector);
+                new ClientWriteService(writeSessionGenerator, graphWriter);
         RoleClients<BackupClient> backupClients =
                 new RoleClients<>(this.channelManager, RoleType.COORDINATOR, BackupClient::new);
         ClientBackupService clientBackupService = new ClientBackupService(backupClients);

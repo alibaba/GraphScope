@@ -1,36 +1,27 @@
 package com.alibaba.graphscope.groot.frontend;
 
-import com.alibaba.graphscope.groot.metrics.MetricsAgent;
-import com.alibaba.graphscope.groot.metrics.MetricsCollector;
 import com.alibaba.graphscope.proto.write.*;
 import com.alibaba.maxgraph.common.util.UuidUtils;
 import com.alibaba.graphscope.groot.frontend.write.GraphWriter;
 import com.alibaba.graphscope.groot.frontend.write.WriteRequest;
 import io.grpc.Status;
 import io.grpc.stub.StreamObserver;
-import java.util.Collections;
-import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.List;
 
-public class ClientWriteService extends ClientWriteGrpc.ClientWriteImplBase
-        implements MetricsAgent {
+public class ClientWriteService extends ClientWriteGrpc.ClientWriteImplBase {
     private static final Logger logger = LoggerFactory.getLogger(ClientWriteService.class);
 
     private WriteSessionGenerator writeSessionGenerator;
     private GraphWriter graphWriter;
 
     public ClientWriteService(
-            WriteSessionGenerator writeSessionGenerator,
-            GraphWriter graphWriter,
-            MetricsCollector metricsCollector) {
+            WriteSessionGenerator writeSessionGenerator, GraphWriter graphWriter) {
         this.writeSessionGenerator = writeSessionGenerator;
         this.graphWriter = graphWriter;
-        initMetrics();
-        metricsCollector.register(this, () -> updateMetrics());
     }
 
     @Override
@@ -100,19 +91,4 @@ public class ClientWriteService extends ClientWriteGrpc.ClientWriteImplBase
                     Status.INTERNAL.withDescription(e.getMessage()).asRuntimeException());
         }
     }
-
-    @Override
-    public void initMetrics() {}
-
-    @Override
-    public Map<String, String> getMetrics() {
-        return Collections.EMPTY_MAP;
-    }
-
-    @Override
-    public String[] getMetricKeys() {
-        return new String[0];
-    }
-
-    private void updateMetrics() {}
 }
