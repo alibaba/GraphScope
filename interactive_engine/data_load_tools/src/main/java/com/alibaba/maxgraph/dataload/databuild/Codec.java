@@ -1,12 +1,12 @@
 /**
  * Copyright 2020 Alibaba Group Holding Limited.
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -15,10 +15,11 @@
  */
 package com.alibaba.maxgraph.dataload.databuild;
 
+import com.alibaba.graphscope.groot.schema.PropertyValue;
 import com.alibaba.maxgraph.compiler.api.schema.DataType;
 import com.alibaba.maxgraph.compiler.api.schema.GraphElement;
 import com.alibaba.maxgraph.compiler.api.schema.GraphProperty;
-import com.alibaba.graphscope.groot.schema.PropertyValue;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -40,19 +41,20 @@ public class Codec {
         this.version = graphElement.getVersionId();
 
         List<GraphProperty> propertyList = graphElement.getPropertyList();
-        propertyList.sort((p1, p2) -> {
-            boolean p1Fix = p1.getDataType().isFixedLength();
-            boolean p2Fix = p2.getDataType().isFixedLength();
-            if (p1Fix ^ p2Fix) {
-                if (p1Fix) {
-                    return -1;
-                } else {
-                    return 1;
-                }
-            } else {
-                return Integer.compare(p1.getId(), p2.getId());
-            }
-        });
+        propertyList.sort(
+                (p1, p2) -> {
+                    boolean p1Fix = p1.getDataType().isFixedLength();
+                    boolean p2Fix = p2.getDataType().isFixedLength();
+                    if (p1Fix ^ p2Fix) {
+                        if (p1Fix) {
+                            return -1;
+                        } else {
+                            return 1;
+                        }
+                    } else {
+                        return Integer.compare(p1.getId(), p2.getId());
+                    }
+                });
         int nullBytesLen = (propertyList.size() + 7) / 8;
         this.nullBytesHolder = new byte[nullBytesLen];
         int offset = 4 + nullBytesLen;
@@ -82,7 +84,8 @@ public class Codec {
             if (propertyValue != null) {
                 writeBytes(scratch, this.offsets.get(i), propertyValue.getValBytes());
             } else if (propertyDef.getDefaultValue() != null) {
-                PropertyValue defaultValue = new PropertyValue(propertyDef.getDataType(), propertyDef.getDefaultValue());
+                PropertyValue defaultValue =
+                        new PropertyValue(propertyDef.getDataType(), propertyDef.getDefaultValue());
                 writeBytes(scratch, this.offsets.get(i), defaultValue.getValBytes());
             } else {
                 setNull(i, scratch);
@@ -101,7 +104,8 @@ public class Codec {
                 scratch.put(valBytes);
                 varEndOffset += valBytes.length;
             } else if (propertyDef.getDefaultValue() != null) {
-                PropertyValue defaultValue = new PropertyValue(propertyDef.getDataType(), propertyDef.getDefaultValue());
+                PropertyValue defaultValue =
+                        new PropertyValue(propertyDef.getDataType(), propertyDef.getDefaultValue());
                 byte[] valBytes = defaultValue.getValBytes();
                 scratch.put(valBytes);
                 varEndOffset += valBytes.length;
@@ -117,7 +121,7 @@ public class Codec {
     private void setNull(int idx, ByteBuffer output) {
         int byteOffset = idx / 8 + 4;
         int bitOffset = idx % 8;
-        byte flag = (byte)(output.get(byteOffset) | (1 << (7 - bitOffset)));
+        byte flag = (byte) (output.get(byteOffset) | (1 << (7 - bitOffset)));
         output.put(byteOffset, flag);
     }
 

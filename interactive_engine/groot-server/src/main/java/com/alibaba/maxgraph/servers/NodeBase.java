@@ -13,9 +13,9 @@
  */
 package com.alibaba.maxgraph.servers;
 
+import com.alibaba.maxgraph.common.RoleType;
 import com.alibaba.maxgraph.common.config.CommonConfig;
 import com.alibaba.maxgraph.common.config.Configs;
-import com.alibaba.maxgraph.common.RoleType;
 
 import java.io.Closeable;
 

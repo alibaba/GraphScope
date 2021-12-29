@@ -30,9 +30,11 @@ import com.google.common.cache.RemovalListener;
 import com.google.common.cache.RemovalNotification;
 import com.google.common.collect.Lists;
 import com.google.common.util.concurrent.MoreExecutors;
+
 import io.grpc.ManagedChannel;
 import io.grpc.netty.NegotiationType;
 import io.grpc.netty.NettyChannelBuilder;
+
 import org.apache.tinkerpop.gremlin.server.Context;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

@@ -42,13 +42,16 @@ public class StoreParamsBuider {
     }
 
     public StoreParamsBuider setExtraParams(Map<String, Common.Value> values) {
-        Gremlin.QueryParams.ExtraParams.Builder params = Gremlin.QueryParams.ExtraParams.newBuilder();
-        values.forEach((k, v) -> {
-            params.addParams(Gremlin.QueryParams.ExtraParams.Params.newBuilder()
-                    .setKey(k)
-                    .setValue(v)
-                    .build());
-        });
+        Gremlin.QueryParams.ExtraParams.Builder params =
+                Gremlin.QueryParams.ExtraParams.newBuilder();
+        values.forEach(
+                (k, v) -> {
+                    params.addParams(
+                            Gremlin.QueryParams.ExtraParams.Params.newBuilder()
+                                    .setKey(k)
+                                    .setValue(v)
+                                    .build());
+                });
         this.builder.setExtraParams(params);
         return this;
     }

@@ -14,8 +14,7 @@
 package com.alibaba.maxgraph.common.config;
 
 public class BackupConfig {
-    public static final Config<Boolean> BACKUP_ENABLE =
-            Config.boolConfig("backup.enable", false);
+    public static final Config<Boolean> BACKUP_ENABLE = Config.boolConfig("backup.enable", false);
 
     public static final Config<Integer> BACKUP_CREATION_BUFFER_MAX_COUNT =
             Config.intConfig("backup.creation.buffer.max.count", 16);

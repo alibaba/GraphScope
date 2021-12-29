@@ -13,20 +13,20 @@
  */
 package com.alibaba.maxgraph.compiler.tree;
 
+import static com.google.common.base.Preconditions.checkArgument;
+
 import com.alibaba.maxgraph.Message;
 import com.alibaba.maxgraph.compiler.api.schema.GraphSchema;
+import com.alibaba.maxgraph.compiler.logical.LogicalSubQueryPlan;
+import com.alibaba.maxgraph.compiler.optimizer.ContextManager;
 import com.alibaba.maxgraph.compiler.tree.value.MapValueType;
 import com.alibaba.maxgraph.compiler.tree.value.ValueType;
 import com.alibaba.maxgraph.compiler.tree.value.ValueValueType;
 import com.alibaba.maxgraph.compiler.tree.value.VarietyValueType;
-import com.alibaba.maxgraph.compiler.logical.LogicalSubQueryPlan;
-import com.alibaba.maxgraph.compiler.optimizer.ContextManager;
 import com.google.common.collect.Sets;
 
 import java.util.List;
 import java.util.Set;
-
-import static com.google.common.base.Preconditions.checkArgument;
 
 public class AggregationListTreeNode extends UnaryTreeNode {
     private List<String> aggNameList;

@@ -2,16 +2,17 @@ package com.alibaba.graphscope.gaia.plan.strategy.global.property.cache;
 
 import com.alibaba.graphscope.gaia.plan.meta.PropertiesMapMeta;
 import com.alibaba.graphscope.gaia.plan.meta.StepPropertiesMeta;
+import com.alibaba.graphscope.gaia.plan.meta.TraversalsMeta;
 import com.alibaba.graphscope.gaia.plan.meta.object.Edge;
 import com.alibaba.graphscope.gaia.plan.meta.object.GraphElement;
-import com.alibaba.graphscope.gaia.plan.strategy.PropertyIdentityStep;
-import com.alibaba.graphscope.gaia.plan.meta.TraversalsMeta;
 import com.alibaba.graphscope.gaia.plan.meta.object.StepId;
 import com.alibaba.graphscope.gaia.plan.meta.object.TraversalId;
+import com.alibaba.graphscope.gaia.plan.strategy.PropertyIdentityStep;
 import com.alibaba.graphscope.gaia.plan.strategy.global.GlobalTraversalStrategy;
 import com.alibaba.graphscope.gaia.plan.translator.TraversalMetaCollector;
 import com.alibaba.graphscope.gaia.plan.translator.builder.MetaConfig;
 import com.alibaba.graphscope.gaia.plan.translator.builder.TraversalMetaBuilder;
+
 import org.apache.tinkerpop.gremlin.process.traversal.Step;
 import org.apache.tinkerpop.gremlin.process.traversal.Traversal;
 import org.apache.tinkerpop.gremlin.process.traversal.step.TraversalParent;
@@ -26,8 +27,7 @@ import java.util.*;
 public class PreCachePropertyStrategy implements GlobalTraversalStrategy {
     private static final PreCachePropertyStrategy INSTANCE = new PreCachePropertyStrategy();
 
-    private PreCachePropertyStrategy() {
-    }
+    private PreCachePropertyStrategy() {}
 
     public static PreCachePropertyStrategy instance() {
         return INSTANCE;
@@ -37,7 +37,8 @@ public class PreCachePropertyStrategy implements GlobalTraversalStrategy {
     public void apply(Traversal.Admin<?, ?> traversal) {
         TraversalMetaBuilder root = createRootTraversalBuilder(traversal);
         new TraversalMetaCollector(root).translate();
-        PropertiesMapMeta propertiesMeta = (PropertiesMapMeta) root.getConfig(MetaConfig.ELEMENT_PROPERTIES);
+        PropertiesMapMeta propertiesMeta =
+                (PropertiesMapMeta) root.getConfig(MetaConfig.ELEMENT_PROPERTIES);
         transformPropertiesMeta(propertiesMeta);
         List<StepPropertiesMeta> stepPropertiesMetas = new ArrayList<>();
         for (GraphElement element : propertiesMeta.getAllObjects()) {
@@ -65,10 +66,16 @@ public class PreCachePropertyStrategy implements GlobalTraversalStrategy {
                 propertiesMapMeta.delete(element);
             } else {
                 // pre cache property before order step to guarantee order
-                if (orderStep != null && firstUsed.getTraversalId().equals(orderStep.getTraversalId()) && firstUsed.getStepId() > orderStep.getStepId()
-                        && (asStep == null || orderStep.getTraversalId().equals(asStep.getTraversalId()) && asStep.getStepId() >= orderStep.getStepId())) {
+                if (orderStep != null
+                        && firstUsed.getTraversalId().equals(orderStep.getTraversalId())
+                        && firstUsed.getStepId() > orderStep.getStepId()
+                        && (asStep == null
+                                || orderStep.getTraversalId().equals(asStep.getTraversalId())
+                                        && asStep.getStepId() >= orderStep.getStepId())) {
                     meta.setStepId(new StepId(orderStep.getTraversalId(), orderStep.getStepId()));
-                } else if (asStep == null || firstUsed.getTraversalId().equals(asStep.getTraversalId()) && firstUsed.getStepId() <= asStep.getStepId()) {
+                } else if (asStep == null
+                        || firstUsed.getTraversalId().equals(asStep.getTraversalId())
+                                && firstUsed.getStepId() <= asStep.getStepId()) {
                     // do nothing
                 } else {
                     meta.setStepId(new StepId(asStep.getTraversalId(), asStep.getStepId() + 1));
@@ -77,7 +84,10 @@ public class PreCachePropertyStrategy implements GlobalTraversalStrategy {
         }
     }
 
-    protected void addPreCachePropertiesStep(TraversalId traversalId, Traversal.Admin traversal, List<StepPropertiesMeta> stepPropertiesMetas) {
+    protected void addPreCachePropertiesStep(
+            TraversalId traversalId,
+            Traversal.Admin traversal,
+            List<StepPropertiesMeta> stepPropertiesMetas) {
         // skip other traversal
         if (!(traversal instanceof DefaultTraversal)) {
             return;
@@ -89,13 +99,15 @@ public class PreCachePropertyStrategy implements GlobalTraversalStrategy {
                 if (t instanceof RepeatStep || t instanceof UnionStep) {
                     int i = 0;
                     for (Traversal.Admin k : ((TraversalParent) t).getGlobalChildren()) {
-                        addPreCachePropertiesStep(traversalId.fork(stepId.getStepId(), i), k, stepPropertiesMetas);
+                        addPreCachePropertiesStep(
+                                traversalId.fork(stepId.getStepId(), i), k, stepPropertiesMetas);
                         ++i;
                     }
                 } else {
                     int i = 0;
                     for (Traversal.Admin k : ((TraversalParent) t).getLocalChildren()) {
-                        addPreCachePropertiesStep(traversalId.fork(stepId.getStepId(), i), k, stepPropertiesMetas);
+                        addPreCachePropertiesStep(
+                                traversalId.fork(stepId.getStepId(), i), k, stepPropertiesMetas);
                         ++i;
                     }
                 }
@@ -107,13 +119,15 @@ public class PreCachePropertyStrategy implements GlobalTraversalStrategy {
         while (!(t instanceof EmptyStep)) {
             StepId stepId = new StepId(traversalId, TraversalHelper.stepIndex(t, traversal));
             if (!(t instanceof PropertyIdentityStep)) {
-                StepPropertiesMeta stepPropertiesMeta = findStepPropertiesMeta(stepPropertiesMetas, stepId);
+                StepPropertiesMeta stepPropertiesMeta =
+                        findStepPropertiesMeta(stepPropertiesMetas, stepId);
                 if (stepPropertiesMeta != null) {
                     ToFetchProperties toFetch = stepPropertiesMeta.getProperties();
                     // dedup
                     toFetch.dedupProperties();
                     // add IdentityStep before this step
-                    traversal.addStep(stepId.getStepId(), new PropertyIdentityStep(traversal, toFetch));
+                    traversal.addStep(
+                            stepId.getStepId(), new PropertyIdentityStep(traversal, toFetch));
                 }
             }
             t = t.getPreviousStep();
@@ -121,7 +135,8 @@ public class PreCachePropertyStrategy implements GlobalTraversalStrategy {
         setLocked((DefaultTraversal) traversal, true);
     }
 
-    protected StepPropertiesMeta findStepPropertiesMeta(List<StepPropertiesMeta> stepPropertiesMetas, StepId stepId) {
+    protected StepPropertiesMeta findStepPropertiesMeta(
+            List<StepPropertiesMeta> stepPropertiesMetas, StepId stepId) {
         for (StepPropertiesMeta meta : stepPropertiesMetas) {
             if (meta.getStepId().equals(stepId)) {
                 return meta;

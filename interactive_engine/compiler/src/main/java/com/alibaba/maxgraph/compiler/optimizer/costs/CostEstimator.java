@@ -1,12 +1,12 @@
 /**
  * Copyright 2020 Alibaba Group Holding Limited.
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -44,7 +44,8 @@ public class CostEstimator {
         Costs costs = new Costs();
         if (vertex instanceof LogicalSourceVertex) {
             if (vertex instanceof LogicalSourceDelegateVertex) {
-                LogicalSourceDelegateVertex logicalSourceDelegateVertex = LogicalSourceDelegateVertex.class.cast(vertex);
+                LogicalSourceDelegateVertex logicalSourceDelegateVertex =
+                        LogicalSourceDelegateVertex.class.cast(vertex);
                 LogicalVertex delegateVertex = logicalSourceDelegateVertex.getDelegateVertex();
                 costs.setCpuCost(delegateVertex.getEstimatedNumRecords());
                 costs.setNetworkCost(delegateVertex.getEstimatedOutputSize());
@@ -61,20 +62,25 @@ public class CostEstimator {
             } else {
                 costs.setNetworkCost(0);
             }
-            costs.setCpuCost(inputVertex.getEstimatedNumRecords() * getOperatorFactor(vertex.getProcessorFunction()));
+            costs.setCpuCost(
+                    inputVertex.getEstimatedNumRecords()
+                            * getOperatorFactor(vertex.getProcessorFunction()));
         } else {
             LogicalBinaryVertex logicalBinaryVertex = LogicalBinaryVertex.class.cast(vertex);
             LogicalVertex leftVertex = logicalBinaryVertex.getLeftInput();
             double networkCost = 0;
-            if (queryPlan.getLogicalEdge(leftVertex, logicalBinaryVertex).getShuffleType() != EdgeShuffleType.FORWARD) {
+            if (queryPlan.getLogicalEdge(leftVertex, logicalBinaryVertex).getShuffleType()
+                    != EdgeShuffleType.FORWARD) {
                 networkCost += leftVertex.getEstimatedOutputSize();
             }
             LogicalVertex rightVertex = logicalBinaryVertex.getRightInput();
-            if (queryPlan.getLogicalEdge(rightVertex, logicalBinaryVertex).getShuffleType() != EdgeShuffleType.FORWARD) {
+            if (queryPlan.getLogicalEdge(rightVertex, logicalBinaryVertex).getShuffleType()
+                    != EdgeShuffleType.FORWARD) {
                 networkCost += rightVertex.getEstimatedOutputSize();
             }
             costs.setNetworkCost(networkCost);
-            costs.setCpuCost(leftVertex.getEstimatedNumRecords() * 2 + rightVertex.getEstimatedNumRecords());
+            costs.setCpuCost(
+                    leftVertex.getEstimatedNumRecords() * 2 + rightVertex.getEstimatedNumRecords());
         }
 
         return costs;
@@ -92,7 +98,8 @@ public class CostEstimator {
      * @param schema     The Schema
      * @return The costs of query plan
      */
-    public Costs costQueryPlan(LogicalQueryPlan queryPlan, DataStatistics statistics, GraphSchema schema) {
+    public Costs costQueryPlan(
+            LogicalQueryPlan queryPlan, DataStatistics statistics, GraphSchema schema) {
         List<LogicalVertex> logicalVertexList = queryPlan.getLogicalVertexList();
         Costs totalCosts = new Costs();
         for (LogicalVertex logicalVertex : logicalVertexList) {

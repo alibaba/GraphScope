@@ -19,6 +19,7 @@ import com.alibaba.graphscope.common.proto.Common;
 import com.alibaba.graphscope.common.proto.Gremlin;
 import com.alibaba.graphscope.gaia.idmaker.IdMaker;
 import com.alibaba.graphscope.gaia.plan.PlanUtils;
+
 import org.apache.commons.configuration.Configuration;
 import org.apache.commons.lang.StringUtils;
 import org.apache.tinkerpop.gremlin.process.traversal.Traversal;
@@ -72,37 +73,53 @@ public enum TagKeyExtractorFactory implements TagKeyExtractor {
             if (args.length > 1) {
                 ignoreTag = (boolean) args[1];
             }
-            if (orderBy != null && orderBy.getSteps().size() == 1 && orderBy.getStartStep() instanceof SelectOneStep) {
-                Map.Entry<String, Traversal.Admin> firstTagTraversal = PlanUtils.getFirstEntry(
-                        PlanUtils.getSelectTraversalMap(orderBy.getStartStep()));
+            if (orderBy != null
+                    && orderBy.getSteps().size() == 1
+                    && orderBy.getStartStep() instanceof SelectOneStep) {
+                Map.Entry<String, Traversal.Admin> firstTagTraversal =
+                        PlanUtils.getFirstEntry(
+                                PlanUtils.getSelectTraversalMap(orderBy.getStartStep()));
                 Gremlin.TagKey selectResult;
                 if (ignoreTag) {
-                    selectResult = Select.extractFrom(firstTagTraversal.getKey(), firstTagTraversal.getValue());
+                    selectResult =
+                            Select.extractFrom(
+                                    firstTagTraversal.getKey(), firstTagTraversal.getValue());
                 } else {
-                    selectResult = Select.extractFrom(firstTagTraversal.getKey(), firstTagTraversal.getValue(), false, args[2]);
+                    selectResult =
+                            Select.extractFrom(
+                                    firstTagTraversal.getKey(),
+                                    firstTagTraversal.getValue(),
+                                    false,
+                                    args[2]);
                 }
                 if (selectResult.getByKey().getItemCase() == Gremlin.ByKey.ItemCase.PROP_KEYS) {
-                    throw new UnsupportedOperationException("value map not support in order by step " + selectResult.getByKey().getPropKeys());
+                    throw new UnsupportedOperationException(
+                            "value map not support in order by step "
+                                    + selectResult.getByKey().getPropKeys());
                 }
                 return selectResult;
             } else if (super.isSimpleValue(orderBy)) {
                 Gremlin.TagKey.Builder tagKeyBuilder = Gremlin.TagKey.newBuilder();
                 Gremlin.ByKey byKey = modulateBy(orderBy);
                 if (byKey.getItemCase() == Gremlin.ByKey.ItemCase.PROP_KEYS) {
-                    throw new UnsupportedOperationException("value map not support in order by step " + byKey.getPropKeys());
+                    throw new UnsupportedOperationException(
+                            "value map not support in order by step " + byKey.getPropKeys());
                 }
                 if (byKey.getItemCase() != Gremlin.ByKey.ItemCase.ITEM_NOT_SET) {
                     tagKeyBuilder.setByKey(byKey);
                 }
                 return tagKeyBuilder.build();
             } else {
-                throw new UnsupportedOperationException("cannot support other order by traversal " + orderBy);
+                throw new UnsupportedOperationException(
+                        "cannot support other order by traversal " + orderBy);
             }
         }
 
         @Override
         public boolean isSimpleValue(Traversal.Admin value) {
-            return (value != null && value.getSteps().size() == 1 && value.getStartStep() instanceof SelectOneStep)
+            return (value != null
+                            && value.getSteps().size() == 1
+                            && value.getStartStep() instanceof SelectOneStep)
                     || super.isSimpleValue(value);
         }
     },
@@ -115,13 +132,21 @@ public enum TagKeyExtractorFactory implements TagKeyExtractor {
             if (args.length > 1) {
                 ignoreTag = (boolean) args[1];
             }
-            if (keyTraversal != null && keyTraversal.getSteps().size() == 1 && (keyTraversal.getStartStep() instanceof SelectOneStep)) {
-                Map.Entry<String, Traversal.Admin> firstTagTraversal = PlanUtils.getFirstEntry(
-                        PlanUtils.getSelectTraversalMap(keyTraversal.getStartStep()));
+            if (keyTraversal != null
+                    && keyTraversal.getSteps().size() == 1
+                    && (keyTraversal.getStartStep() instanceof SelectOneStep)) {
+                Map.Entry<String, Traversal.Admin> firstTagTraversal =
+                        PlanUtils.getFirstEntry(
+                                PlanUtils.getSelectTraversalMap(keyTraversal.getStartStep()));
                 if (ignoreTag) {
-                    return Select.extractFrom(firstTagTraversal.getKey(), firstTagTraversal.getValue());
+                    return Select.extractFrom(
+                            firstTagTraversal.getKey(), firstTagTraversal.getValue());
                 } else {
-                    return Select.extractFrom(firstTagTraversal.getKey(), firstTagTraversal.getValue(), false, args[2]);
+                    return Select.extractFrom(
+                            firstTagTraversal.getKey(),
+                            firstTagTraversal.getValue(),
+                            false,
+                            args[2]);
                 }
             } else if (super.isSimpleValue(keyTraversal)) {
                 Gremlin.TagKey.Builder tagKeyBuilder = Gremlin.TagKey.newBuilder();
@@ -131,13 +156,16 @@ public enum TagKeyExtractorFactory implements TagKeyExtractor {
                 }
                 return tagKeyBuilder.build();
             } else {
-                throw new UnsupportedOperationException("cannot support other group by traversal " + keyTraversal);
+                throw new UnsupportedOperationException(
+                        "cannot support other group by traversal " + keyTraversal);
             }
         }
 
         @Override
         public boolean isSimpleValue(Traversal.Admin value) {
-            return value != null && value.getSteps().size() == 1 && value.getStartStep() instanceof SelectOneStep
+            return value != null
+                            && value.getSteps().size() == 1
+                            && value.getStartStep() instanceof SelectOneStep
                     || super.isSimpleValue(value);
         }
     },
@@ -149,10 +177,14 @@ public enum TagKeyExtractorFactory implements TagKeyExtractor {
 
         @Override
         public boolean isSimpleValue(Traversal.Admin value) {
-            return value == null || value.getSteps().isEmpty()
+            return value == null
+                    || value.getSteps().isEmpty()
                     || value.getSteps().size() == 1 && value.getStartStep() instanceof FoldStep
-                    || value.getSteps().size() == 2 && PlanUtils.isIdentityTraversalMap(value.getStartStep()) && value.getEndStep() instanceof FoldStep
-                    || value.getSteps().size() == 1 && value.getStartStep() instanceof CountGlobalStep;
+                    || value.getSteps().size() == 2
+                            && PlanUtils.isIdentityTraversalMap(value.getStartStep())
+                            && value.getEndStep() instanceof FoldStep
+                    || value.getSteps().size() == 1
+                            && value.getStartStep() instanceof CountGlobalStep;
         }
     },
     WherePredicate {
@@ -179,7 +211,9 @@ public enum TagKeyExtractorFactory implements TagKeyExtractor {
                     builder.setName(key);
                 }
             }
-            return Gremlin.TagKey.newBuilder().setByKey(Gremlin.ByKey.newBuilder().setKey(builder)).build();
+            return Gremlin.TagKey.newBuilder()
+                    .setByKey(Gremlin.ByKey.newBuilder().setKey(builder))
+                    .build();
         }
     },
     TraversalMap {
@@ -196,7 +230,8 @@ public enum TagKeyExtractorFactory implements TagKeyExtractor {
                 }
                 return Gremlin.TagKey.newBuilder().setByKey(byKeyBuilder).build();
             } else {
-                throw new UnsupportedOperationException("cannot support other map traversal " + mapTraversal);
+                throw new UnsupportedOperationException(
+                        "cannot support other map traversal " + mapTraversal);
             }
         }
     }

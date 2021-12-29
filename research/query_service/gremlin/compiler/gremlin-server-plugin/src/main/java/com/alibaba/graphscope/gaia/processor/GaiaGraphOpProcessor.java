@@ -15,19 +15,19 @@
  */
 package com.alibaba.graphscope.gaia.processor;
 
+import com.alibaba.graphscope.gaia.broadcast.AbstractBroadcastProcessor;
 import com.alibaba.graphscope.gaia.config.GaiaConfig;
 import com.alibaba.graphscope.gaia.idmaker.TagIdMaker;
 import com.alibaba.graphscope.gaia.plan.PlanUtils;
+import com.alibaba.graphscope.gaia.plan.translator.TraversalTranslator;
+import com.alibaba.graphscope.gaia.plan.translator.builder.PlanConfig;
+import com.alibaba.graphscope.gaia.plan.translator.builder.TraversalBuilder;
 import com.alibaba.graphscope.gaia.result.DefaultResultParser;
 import com.alibaba.graphscope.gaia.result.GremlinResultProcessor;
 import com.alibaba.graphscope.gaia.store.GraphStoreService;
 import com.alibaba.graphscope.gaia.store.GraphType;
 import com.alibaba.pegasus.builder.AbstractBuilder;
-import com.alibaba.graphscope.gaia.broadcast.AbstractBroadcastProcessor;
-import com.alibaba.graphscope.gaia.broadcast.RpcBroadcastProcessor;
-import com.alibaba.graphscope.gaia.plan.translator.TraversalTranslator;
-import com.alibaba.graphscope.gaia.plan.translator.builder.PlanConfig;
-import com.alibaba.graphscope.gaia.plan.translator.builder.TraversalBuilder;
+
 import org.apache.tinkerpop.gremlin.driver.Tokens;
 import org.apache.tinkerpop.gremlin.driver.message.RequestMessage;
 import org.apache.tinkerpop.gremlin.driver.message.ResponseStatusCode;
@@ -39,66 +39,92 @@ import org.apache.tinkerpop.gremlin.server.op.OpProcessorException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.ArrayList;
 import java.util.function.Supplier;
 
 public class GaiaGraphOpProcessor extends AbstractGraphOpProcessor {
     private static final Logger logger = LoggerFactory.getLogger(GaiaGraphOpProcessor.class);
     private AbstractBroadcastProcessor broadcastProcessor;
 
-    public GaiaGraphOpProcessor(GaiaConfig config, GraphStoreService graphStore, AbstractBroadcastProcessor broadcastProcessor) {
+    public GaiaGraphOpProcessor(
+            GaiaConfig config,
+            GraphStoreService graphStore,
+            AbstractBroadcastProcessor broadcastProcessor) {
         super(config, graphStore);
         this.broadcastProcessor = broadcastProcessor;
     }
 
     @Override
-    protected GremlinExecutor.LifeCycle createLifeCycle(Context ctx, Supplier<GremlinExecutor> gremlinExecutorSupplier, BindingSupplier bindingsSupplier) {
+    protected GremlinExecutor.LifeCycle createLifeCycle(
+            Context ctx,
+            Supplier<GremlinExecutor> gremlinExecutorSupplier,
+            BindingSupplier bindingsSupplier) {
         final RequestMessage msg = ctx.getRequestMessage();
         final Settings settings = ctx.getSettings();
         final Map<String, Object> args = msg.getArgs();
-        final long seto = args.containsKey(Tokens.ARGS_SCRIPT_EVAL_TIMEOUT) ?
-                ((Number) args.get(Tokens.ARGS_SCRIPT_EVAL_TIMEOUT)).longValue() : settings.scriptEvaluationTimeout;
+        final long seto =
+                args.containsKey(Tokens.ARGS_SCRIPT_EVAL_TIMEOUT)
+                        ? ((Number) args.get(Tokens.ARGS_SCRIPT_EVAL_TIMEOUT)).longValue()
+                        : settings.scriptEvaluationTimeout;
         if (config.getGraphType() == GraphType.MAXGRAPH) {
             graphStore.updateSnapShotId();
         }
         return GremlinExecutor.LifeCycle.build()
                 .scriptEvaluationTimeoutOverride(seto)
-                .beforeEval(b -> {
-                    try {
-                        b.putAll(bindingsSupplier.get());
-                    } catch (OpProcessorException ope) {
-                        throw new RuntimeException(ope);
-                    }
-                })
-                .transformResult(o -> {
-                    if (o != null && o instanceof Traversal) {
-                        applyStrategy((Traversal) o, config, graphStore);
-                    }
-                    return o;
-                })
-                .withResult(o -> {
-                    if (o != null && o instanceof Traversal) {
-                        long queryId = (long) queryIdMaker.getId(o);
-                        TraversalBuilder traversalBuilder = new TraversalBuilder((Traversal.Admin) o)
-                                .addConfig(PlanConfig.QUERY_ID, queryId)
-                                .addConfig(PlanConfig.TAG_ID_MAKER, new TagIdMaker((Traversal.Admin) o))
-                                .addConfig(PlanConfig.QUERY_CONFIG, PlanUtils.getDefaultConfig(queryId, config));
-                        if (config.getGraphType() == GraphType.MAXGRAPH) {
-                            traversalBuilder.addConfig(PlanConfig.SNAPSHOT_ID, Long.valueOf(graphStore.getSnapShotId()));
-                        }
-                        AbstractBuilder jobReqBuilder = new TraversalTranslator(traversalBuilder).translate();
-                        PlanUtils.print(jobReqBuilder);
-                        broadcastProcessor.broadcast(jobReqBuilder.build(), new GremlinResultProcessor(ctx, new DefaultResultParser(traversalBuilder, graphStore, config)));
-                    } else {
-                        List<Object> results = new ArrayList<>();
-                        if (o != null) {
-                            results.add(o);
-                        }
-                        writeResultList(ctx, results, ResponseStatusCode.SUCCESS);
-                    }
-                }).create();
+                .beforeEval(
+                        b -> {
+                            try {
+                                b.putAll(bindingsSupplier.get());
+                            } catch (OpProcessorException ope) {
+                                throw new RuntimeException(ope);
+                            }
+                        })
+                .transformResult(
+                        o -> {
+                            if (o != null && o instanceof Traversal) {
+                                applyStrategy((Traversal) o, config, graphStore);
+                            }
+                            return o;
+                        })
+                .withResult(
+                        o -> {
+                            if (o != null && o instanceof Traversal) {
+                                long queryId = (long) queryIdMaker.getId(o);
+                                TraversalBuilder traversalBuilder =
+                                        new TraversalBuilder((Traversal.Admin) o)
+                                                .addConfig(PlanConfig.QUERY_ID, queryId)
+                                                .addConfig(
+                                                        PlanConfig.TAG_ID_MAKER,
+                                                        new TagIdMaker((Traversal.Admin) o))
+                                                .addConfig(
+                                                        PlanConfig.QUERY_CONFIG,
+                                                        PlanUtils.getDefaultConfig(
+                                                                queryId, config));
+                                if (config.getGraphType() == GraphType.MAXGRAPH) {
+                                    traversalBuilder.addConfig(
+                                            PlanConfig.SNAPSHOT_ID,
+                                            Long.valueOf(graphStore.getSnapShotId()));
+                                }
+                                AbstractBuilder jobReqBuilder =
+                                        new TraversalTranslator(traversalBuilder).translate();
+                                PlanUtils.print(jobReqBuilder);
+                                broadcastProcessor.broadcast(
+                                        jobReqBuilder.build(),
+                                        new GremlinResultProcessor(
+                                                ctx,
+                                                new DefaultResultParser(
+                                                        traversalBuilder, graphStore, config)));
+                            } else {
+                                List<Object> results = new ArrayList<>();
+                                if (o != null) {
+                                    results.add(o);
+                                }
+                                writeResultList(ctx, results, ResponseStatusCode.SUCCESS);
+                            }
+                        })
+                .create();
     }
 
     @Override

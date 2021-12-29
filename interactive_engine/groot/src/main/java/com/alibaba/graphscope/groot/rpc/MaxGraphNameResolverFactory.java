@@ -14,6 +14,7 @@
 package com.alibaba.graphscope.groot.rpc;
 
 import com.alibaba.graphscope.groot.discovery.NodeDiscovery;
+
 import io.grpc.NameResolver;
 
 import java.net.URI;

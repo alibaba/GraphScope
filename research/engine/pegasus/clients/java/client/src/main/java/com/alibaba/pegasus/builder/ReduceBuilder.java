@@ -15,9 +15,10 @@
  */
 package com.alibaba.pegasus.builder;
 
-import com.alibaba.pegasus.service.protocol.PegasusClient.Sink;
 import com.alibaba.pegasus.service.protocol.PegasusClient.JobConfig;
+import com.alibaba.pegasus.service.protocol.PegasusClient.Sink;
 import com.google.protobuf.ByteString;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

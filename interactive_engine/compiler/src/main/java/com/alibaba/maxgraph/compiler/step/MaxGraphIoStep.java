@@ -1,12 +1,12 @@
 /**
  * Copyright 2020 Alibaba Group Holding Limited.
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -47,7 +47,8 @@ public class MaxGraphIoStep<S> extends IoStep<S> {
 
             return EmptyTraverser.instance();
         } catch (IOException ioe) {
-            throw new IllegalStateException(String.format("Could not read file %s into graph", this.getFile()), ioe);
+            throw new IllegalStateException(
+                    String.format("Could not read file %s into graph", this.getFile()), ioe);
         }
     }
 
@@ -56,9 +57,9 @@ public class MaxGraphIoStep<S> extends IoStep<S> {
      * extension or simply uses configurations provided by the user on the parameters given to the step.
      */
     private GraphReader constructReader() {
-        final Object objectOrClass = super.getParameters().get(IO.reader, this::detectFileType).get(0);
-        if (objectOrClass instanceof GraphReader)
-            return (GraphReader) objectOrClass;
+        final Object objectOrClass =
+                super.getParameters().get(IO.reader, this::detectFileType).get(0);
+        if (objectOrClass instanceof GraphReader) return (GraphReader) objectOrClass;
         else if (objectOrClass instanceof String) {
             if (objectOrClass.equals(IO.graphson)) {
                 final GraphSONMapper.Builder builder = GraphSONMapper.build();
@@ -68,16 +69,20 @@ public class MaxGraphIoStep<S> extends IoStep<S> {
                 final GryoMapper.Builder builder = GryoMapper.build();
                 detectRegistries().forEach(builder::addRegistry);
                 return MaxGraphGryoReader.build().mapper(builder.create()).create();
-            } else if (objectOrClass.equals(IO.graphml))
-                return GraphMLReader.build().create();
+            } else if (objectOrClass.equals(IO.graphml)) return GraphMLReader.build().create();
             else {
                 try {
                     final Class<?> graphReaderClazz = Class.forName((String) objectOrClass);
                     final Method build = graphReaderClazz.getMethod("build");
-                    final GraphReader.ReaderBuilder builder = (GraphReader.ReaderBuilder) build.invoke(null);
+                    final GraphReader.ReaderBuilder builder =
+                            (GraphReader.ReaderBuilder) build.invoke(null);
                     return builder.create();
                 } catch (Exception ex) {
-                    throw new IllegalStateException(String.format("Could not construct the specified GraphReader of %s", objectOrClass), ex);
+                    throw new IllegalStateException(
+                            String.format(
+                                    "Could not construct the specified GraphReader of %s",
+                                    objectOrClass),
+                            ex);
                 }
             }
         } else {

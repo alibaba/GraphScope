@@ -21,6 +21,7 @@ import com.alibaba.graphscope.gaia.plan.strategy.global.property.cache.ToFetchPr
 import com.alibaba.graphscope.gaia.plan.translator.builder.StepBuilder;
 import com.alibaba.pegasus.builder.AbstractBuilder;
 import com.alibaba.pegasus.builder.JobBuilder;
+
 import org.apache.tinkerpop.gremlin.process.traversal.Step;
 
 import java.util.Collections;
@@ -35,14 +36,20 @@ public abstract class JobBuilderResource implements StepResource {
         buildJob(stepBuilder);
         if (!step.getLabels().isEmpty() && target instanceof JobBuilder) {
             // do nothing just as(tag)
-            Gremlin.QueryParams params = Gremlin.QueryParams.newBuilder()
-                    .setRequiredProperties(PlanUtils.convertFrom(new ToFetchProperties(false, Collections.EMPTY_LIST)))
-                    .build();
-            Gremlin.IdentityStep.Builder identityStep = Gremlin.IdentityStep.newBuilder()
-                    .setQueryParams(params);
-            ((JobBuilder) target).map(GremlinStepResource.createResourceBuilder(step, stepBuilder.getConf())
-                    .setIdentityStep(identityStep).build().toByteString());
-
+            Gremlin.QueryParams params =
+                    Gremlin.QueryParams.newBuilder()
+                            .setRequiredProperties(
+                                    PlanUtils.convertFrom(
+                                            new ToFetchProperties(false, Collections.EMPTY_LIST)))
+                            .build();
+            Gremlin.IdentityStep.Builder identityStep =
+                    Gremlin.IdentityStep.newBuilder().setQueryParams(params);
+            ((JobBuilder) target)
+                    .map(
+                            GremlinStepResource.createResourceBuilder(step, stepBuilder.getConf())
+                                    .setIdentityStep(identityStep)
+                                    .build()
+                                    .toByteString());
         }
     }
 }

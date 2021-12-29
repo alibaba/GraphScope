@@ -1,12 +1,12 @@
 /**
  * Copyright 2020 Alibaba Group Holding Limited.
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -15,13 +15,16 @@
  */
 package com.alibaba.maxgraph.frontendservice;
 
-import com.alibaba.maxgraph.sdkcommon.client.Endpoint;
+import static com.google.common.base.Preconditions.checkNotNull;
+
 import com.alibaba.maxgraph.common.cluster.InstanceConfig;
-import com.alibaba.maxgraph.sdkcommon.util.JSON;
 import com.alibaba.maxgraph.common.zookeeper.ZKPaths;
 import com.alibaba.maxgraph.coordinator.client.ServerDataApiClient;
+import com.alibaba.maxgraph.sdkcommon.client.Endpoint;
+import com.alibaba.maxgraph.sdkcommon.util.JSON;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+
 import org.apache.commons.lang3.StringUtils;
 import org.apache.curator.framework.recipes.cache.NodeCache;
 import org.slf4j.Logger;
@@ -37,8 +40,6 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
 
-import static com.google.common.base.Preconditions.checkNotNull;
-
 /**
  * 管理所有client,包括:
  * 1，SchemaApiClient: 处理ddl请求
@@ -50,12 +51,11 @@ public class ClientManager {
     private static final Logger LOG = LoggerFactory.getLogger(ClientManager.class);
     private AtomicBoolean isCoordinatorRelatedClientStarted = new AtomicBoolean(false);
     private InstanceConfig instanceConfig;
-//    private SchemaApiClient schemaApiClient;
+    //    private SchemaApiClient schemaApiClient;
     private ServerDataApiClient serverDataApiClient;
     private ConcurrentMap<Integer, Endpoint> executorEndpointMap = Maps.newConcurrentMap();
     private AtomicLong executorUpdateVersion = new AtomicLong(System.currentTimeMillis());
     private AtomicReference<List<List<Endpoint>>> endpointGroupsRef = new AtomicReference<>();
-
 
     public ClientManager(InstanceConfig instanceConfig) throws Exception {
         this.instanceConfig = instanceConfig;
@@ -75,26 +75,36 @@ public class ClientManager {
 
     private void startCoordinatorNodeCache() throws Exception {
         ExecutorService pool = Executors.newFixedThreadPool(1);
-        final NodeCache nodeCache = new NodeCache(this.serverDataApiClient.getZkNamingProxy().getZkClient(),
-                ZKPaths.getCoordinatorPath(instanceConfig.getGraphName()), false);
+        final NodeCache nodeCache =
+                new NodeCache(
+                        this.serverDataApiClient.getZkNamingProxy().getZkClient(),
+                        ZKPaths.getCoordinatorPath(instanceConfig.getGraphName()),
+                        false);
         nodeCache.start(true);
-        nodeCache.getListenable().addListener(
-                () -> {
-                    if (nodeCache.getCurrentData() == null || StringUtils.isEmpty(Arrays.toString(nodeCache.getCurrentData().getData()))) {
-                        LOG.info("coordinator node not exist in zk");
-                    } else {
-                        try {
-                            Endpoint newEndpoint = JSON.fromJson(new String(nodeCache.getCurrentData().getData()), Endpoint.class);
-                            LOG.info("current coordinator endpoint:{}", newEndpoint);
-                            startCoordinatorRelatedClient(newEndpoint);
-                        } catch (Exception e) {
-                            LOG.warn("{}", e);
-                        }
-
-                    }
-                },
-                pool
-        );
+        nodeCache
+                .getListenable()
+                .addListener(
+                        () -> {
+                            if (nodeCache.getCurrentData() == null
+                                    || StringUtils.isEmpty(
+                                            Arrays.toString(
+                                                    nodeCache.getCurrentData().getData()))) {
+                                LOG.info("coordinator node not exist in zk");
+                            } else {
+                                try {
+                                    Endpoint newEndpoint =
+                                            JSON.fromJson(
+                                                    new String(
+                                                            nodeCache.getCurrentData().getData()),
+                                                    Endpoint.class);
+                                    LOG.info("current coordinator endpoint:{}", newEndpoint);
+                                    startCoordinatorRelatedClient(newEndpoint);
+                                } catch (Exception e) {
+                                    LOG.warn("{}", e);
+                                }
+                            }
+                        },
+                        pool);
     }
 
     public boolean isCoordinatorRelatedClientNotReady() {
@@ -118,7 +128,9 @@ public class ClientManager {
     }
 
     public Endpoint getServiceExecutor() {
-        return checkNotNull(executorEndpointMap.get(1), "Get service executor fail from executor map=>" + executorEndpointMap);
+        return checkNotNull(
+                executorEndpointMap.get(1),
+                "Get service executor fail from executor map=>" + executorEndpointMap);
     }
 
     public int getExecutorCount() {
@@ -126,7 +138,9 @@ public class ClientManager {
     }
 
     public Endpoint getExecutor(int workerId) {
-        return checkNotNull(executorEndpointMap.get(workerId), "Get executor " +  workerId + " fail from executor map=>" + executorEndpointMap);
+        return checkNotNull(
+                executorEndpointMap.get(workerId),
+                "Get executor " + workerId + " fail from executor map=>" + executorEndpointMap);
     }
 
     public long getExecutorUpdateVersion() {
@@ -147,14 +161,14 @@ public class ClientManager {
         this.endpointGroupsRef.set(endpointGroups);
     }
 
-
     public List<List<Endpoint>> getEndpointGroups() {
         return this.endpointGroupsRef.get();
     }
 
     private Endpoint waitAndGetCoordinatorEndpoint() {
         Endpoint endpoint;
-        while ((endpoint = this.serverDataApiClient.getZkNamingProxy().getCoordinatorEndpoint()) == null) {
+        while ((endpoint = this.serverDataApiClient.getZkNamingProxy().getCoordinatorEndpoint())
+                == null) {
             try {
                 Thread.sleep(2000);
             } catch (InterruptedException e) {

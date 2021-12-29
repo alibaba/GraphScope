@@ -1,12 +1,12 @@
 /**
  * Copyright 2020 Alibaba Group Holding Limited.
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -23,6 +23,7 @@ import com.alibaba.maxgraph.tinkerpop.steps.EstimateCountStep;
 import com.alibaba.maxgraph.tinkerpop.steps.MaxGraphStep;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
+
 import org.apache.tinkerpop.gremlin.process.remote.RemoteConnection;
 import org.apache.tinkerpop.gremlin.process.remote.traversal.strategy.decoration.RemoteStrategy;
 import org.apache.tinkerpop.gremlin.process.traversal.TraversalStrategies;
@@ -50,7 +51,9 @@ public class MaxGraphTraversalSource extends GraphTraversalSource {
     }
 
     public MaxGraphTraversalSource(final RemoteConnection remoteConnection) {
-        this(EmptyGraph.instance(), TraversalStrategies.GlobalCache.getStrategies(EmptyGraph.class).clone());
+        this(
+                EmptyGraph.instance(),
+                TraversalStrategies.GlobalCache.getStrategies(EmptyGraph.class).clone());
         this.connection = remoteConnection;
         this.strategies.addStrategies(new RemoteStrategy(connection));
     }
@@ -58,8 +61,11 @@ public class MaxGraphTraversalSource extends GraphTraversalSource {
     public GraphTraversal<Vertex, Vertex> V(final Object... vertexIds) {
         final GraphTraversalSource clone = this.clone();
         clone.getBytecode().addStep(GraphTraversal.Symbols.V, vertexIds);
-        final GraphTraversal.Admin<Vertex, Vertex> traversal = new DefaultMaxGraphTraversal<>(clone);
-        MaxGraphStep maxGraphStep = new MaxGraphStep<>(this.removeQueryConfig(), traversal, Vertex.class, true, vertexIds);
+        final GraphTraversal.Admin<Vertex, Vertex> traversal =
+                new DefaultMaxGraphTraversal<>(clone);
+        MaxGraphStep maxGraphStep =
+                new MaxGraphStep<>(
+                        this.removeQueryConfig(), traversal, Vertex.class, true, vertexIds);
         return traversal.addStep(maxGraphStep);
     }
 
@@ -67,29 +73,38 @@ public class MaxGraphTraversalSource extends GraphTraversalSource {
         final GraphTraversalSource clone = this.clone();
         clone.getBytecode().addStep(GraphTraversal.Symbols.E, edgesIds);
         final GraphTraversal.Admin<Edge, Edge> traversal = new DefaultMaxGraphTraversal<>(clone);
-        MaxGraphStep maxGraphStep = new MaxGraphStep<>(this.removeQueryConfig(), traversal, Edge.class, true, edgesIds);
+        MaxGraphStep maxGraphStep =
+                new MaxGraphStep<>(this.removeQueryConfig(), traversal, Edge.class, true, edgesIds);
         return traversal.addStep(maxGraphStep);
     }
 
     public GraphTraversal<Vertex, Element> estimateVCount(final String... labels) {
         final GraphTraversalSource clone = this.clone();
         clone.getBytecode().addStep(CustomSymbols.graph_source);
-        final GraphTraversal.Admin<Vertex, Vertex> traversal = new DefaultMaxGraphTraversal<>(clone);
-        return (DefaultMaxGraphTraversal) traversal.addStep(new EstimateCountStep<>(traversal, true, Sets.newHashSet(labels)));
+        final GraphTraversal.Admin<Vertex, Vertex> traversal =
+                new DefaultMaxGraphTraversal<>(clone);
+        return (DefaultMaxGraphTraversal)
+                traversal.addStep(
+                        new EstimateCountStep<>(traversal, true, Sets.newHashSet(labels)));
     }
 
     public GraphTraversal<Edge, Element> estimateECount(final String... labels) {
         final GraphTraversalSource clone = this.clone();
         clone.getBytecode().addStep(CustomSymbols.graph_source);
-        final GraphTraversal.Admin<Vertex, Vertex> traversal = new DefaultMaxGraphTraversal<>(clone);
-        return (DefaultMaxGraphTraversal) traversal.addStep(new EstimateCountStep<>(traversal, false, Sets.newHashSet(labels)));
+        final GraphTraversal.Admin<Vertex, Vertex> traversal =
+                new DefaultMaxGraphTraversal<>(clone);
+        return (DefaultMaxGraphTraversal)
+                traversal.addStep(
+                        new EstimateCountStep<>(traversal, false, Sets.newHashSet(labels)));
     }
 
     public GraphTraversal<Element, Element> createGraph(final String graphName) {
         final GraphTraversalSource clone = this.clone();
         clone.getBytecode().addStep(CustomSymbols.graph_source);
-        final GraphTraversal.Admin<Vertex, Vertex> traversal = new DefaultMaxGraphTraversal<>(clone);
-        return (DefaultMaxGraphTraversal) traversal.addStep(new CreateGraphStep<>(traversal, graphName));
+        final GraphTraversal.Admin<Vertex, Vertex> traversal =
+                new DefaultMaxGraphTraversal<>(clone);
+        return (DefaultMaxGraphTraversal)
+                traversal.addStep(new CreateGraphStep<>(traversal, graphName));
     }
 
     private Map<String, Object> removeQueryConfig() {
@@ -119,23 +134,33 @@ public class MaxGraphTraversalSource extends GraphTraversalSource {
     }
 
     public MaxGraphTraversalSource scheduleVerySmall() {
-        return config(CompilerConstant.QUERY_SCHEDULE_GRANULARITY, QueryFlowOuterClass.InputBatchLevel.VerySmall.name());
+        return config(
+                CompilerConstant.QUERY_SCHEDULE_GRANULARITY,
+                QueryFlowOuterClass.InputBatchLevel.VerySmall.name());
     }
 
     public MaxGraphTraversalSource scheduleSmall() {
-        return config(CompilerConstant.QUERY_SCHEDULE_GRANULARITY, QueryFlowOuterClass.InputBatchLevel.Small.name());
+        return config(
+                CompilerConstant.QUERY_SCHEDULE_GRANULARITY,
+                QueryFlowOuterClass.InputBatchLevel.Small.name());
     }
 
     public MaxGraphTraversalSource scheduleMedium() {
-        return config(CompilerConstant.QUERY_SCHEDULE_GRANULARITY, QueryFlowOuterClass.InputBatchLevel.Medium.name());
+        return config(
+                CompilerConstant.QUERY_SCHEDULE_GRANULARITY,
+                QueryFlowOuterClass.InputBatchLevel.Medium.name());
     }
 
     public MaxGraphTraversalSource scheduleLarge() {
-        return config(CompilerConstant.QUERY_SCHEDULE_GRANULARITY, QueryFlowOuterClass.InputBatchLevel.Large.name());
+        return config(
+                CompilerConstant.QUERY_SCHEDULE_GRANULARITY,
+                QueryFlowOuterClass.InputBatchLevel.Large.name());
     }
 
     public MaxGraphTraversalSource scheduleVeryLarge() {
-        return config(CompilerConstant.QUERY_SCHEDULE_GRANULARITY, QueryFlowOuterClass.InputBatchLevel.VeryLarge.name());
+        return config(
+                CompilerConstant.QUERY_SCHEDULE_GRANULARITY,
+                QueryFlowOuterClass.InputBatchLevel.VeryLarge.name());
     }
 
     public MaxGraphTraversalSource enableDebugLog() {

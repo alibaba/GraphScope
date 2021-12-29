@@ -1,10 +1,10 @@
 package com.alibaba.maxgraph.servers.gaia;
 
 import com.alibaba.graphscope.groot.meta.MetaService;
-import com.alibaba.maxgraph.common.config.CommonConfig;
-import com.alibaba.maxgraph.common.config.Configs;
 import com.alibaba.graphscope.groot.store.GraphPartition;
 import com.alibaba.graphscope.groot.store.StoreService;
+import com.alibaba.maxgraph.common.config.CommonConfig;
+import com.alibaba.maxgraph.common.config.Configs;
 import com.alibaba.maxgraph.servers.AbstractService;
 
 public class GaiaService implements AbstractService {

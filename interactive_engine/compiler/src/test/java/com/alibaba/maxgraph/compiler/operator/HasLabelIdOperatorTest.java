@@ -1,12 +1,12 @@
 /**
  * Copyright 2020 Alibaba Group Holding Limited.
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -22,8 +22,7 @@ import org.junit.Test;
 import java.util.Collections;
 
 public class HasLabelIdOperatorTest extends AbstractOperatorTest {
-    public HasLabelIdOperatorTest() throws Exception {
-    }
+    public HasLabelIdOperatorTest() throws Exception {}
 
     @Test
     public void testHasSingleLabel() {
@@ -39,7 +38,8 @@ public class HasLabelIdOperatorTest extends AbstractOperatorTest {
 
     @Test
     public void testHasMultipleLabelWithId() {
-        GraphTraversal traversal = g.V().hasLabel("person", "post", "organisation").has("id", 123).out();
+        GraphTraversal traversal =
+                g.V().hasLabel("person", "post", "organisation").has("id", 123).out();
         executeTreeQuery(traversal);
     }
 
@@ -57,9 +57,8 @@ public class HasLabelIdOperatorTest extends AbstractOperatorTest {
 
     @Test
     public void testHasLabelIdMixed() {
-        GraphTraversal traversal = g.V()
-                .hasLabel("person", "post", "organisation")
-                .hasId(1, 2, 3).out();
+        GraphTraversal traversal =
+                g.V().hasLabel("person", "post", "organisation").hasId(1, 2, 3).out();
         executeTreeQuery(traversal);
     }
 
@@ -75,6 +74,7 @@ public class HasLabelIdOperatorTest extends AbstractOperatorTest {
 
     @Test
     public void testHasPropKeyValueCase() {
-        executeTreeQuery(g.V().both().properties().dedup().hasKey("age").hasValue(P.gt(30)).value());
+        executeTreeQuery(
+                g.V().both().properties().dedup().hasKey("age").hasValue(P.gt(30)).value());
     }
 }

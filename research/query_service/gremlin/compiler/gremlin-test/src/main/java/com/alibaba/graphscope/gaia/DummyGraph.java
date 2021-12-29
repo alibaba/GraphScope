@@ -30,7 +30,8 @@ public abstract class DummyGraph implements Graph {
     }
 
     @Override
-    public <C extends GraphComputer> C compute(Class<C> graphComputerClass) throws IllegalArgumentException {
+    public <C extends GraphComputer> C compute(Class<C> graphComputerClass)
+            throws IllegalArgumentException {
         throw new UnsupportedOperationException();
     }
 

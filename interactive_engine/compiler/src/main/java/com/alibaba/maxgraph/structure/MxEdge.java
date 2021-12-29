@@ -1,12 +1,12 @@
 /**
  * Copyright 2020 Alibaba Group Holding Limited.
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -15,12 +15,10 @@
  */
 package com.alibaba.maxgraph.structure;
 
-import java.util.Iterator;
-import java.util.Map;
-
 import com.alibaba.maxgraph.structure.graph.TinkerMaxGraph;
 import com.google.common.collect.Iterators;
 import com.google.common.collect.Lists;
+
 import org.apache.tinkerpop.gremlin.structure.Direction;
 import org.apache.tinkerpop.gremlin.structure.Edge;
 import org.apache.tinkerpop.gremlin.structure.Graph;
@@ -29,6 +27,9 @@ import org.apache.tinkerpop.gremlin.structure.Vertex;
 import org.apache.tinkerpop.gremlin.structure.util.ElementHelper;
 import org.apache.tinkerpop.gremlin.structure.util.StringFactory;
 import org.apache.tinkerpop.gremlin.structure.util.wrapped.WrappedEdge;
+
+import java.util.Iterator;
+import java.util.Map;
 
 public class MxEdge implements Edge, WrappedEdge<com.alibaba.maxgraph.structure.Edge> {
     private final com.alibaba.maxgraph.structure.Edge baseEdge;
@@ -43,14 +44,16 @@ public class MxEdge implements Edge, WrappedEdge<com.alibaba.maxgraph.structure.
     public Iterator<Vertex> vertices(Direction direction) {
         switch (direction) {
             case OUT:
-                return Iterators.singletonIterator(new MxVertex(baseEdge.getSrcVertex(), this.graph));
+                return Iterators.singletonIterator(
+                        new MxVertex(baseEdge.getSrcVertex(), this.graph));
             case IN:
-                return Iterators.singletonIterator(new MxVertex(baseEdge.getDstVertex(), this.graph));
+                return Iterators.singletonIterator(
+                        new MxVertex(baseEdge.getDstVertex(), this.graph));
             case BOTH:
                 return Lists.newArrayList(
-                        (Vertex) new MxVertex(baseEdge.getSrcVertex(), this.graph),
-                        (Vertex) new MxVertex(baseEdge.getDstVertex(), this.graph)
-                ).iterator();
+                                (Vertex) new MxVertex(baseEdge.getSrcVertex(), this.graph),
+                                (Vertex) new MxVertex(baseEdge.getDstVertex(), this.graph))
+                        .iterator();
             default:
                 throw new UnsupportedOperationException("not support direction: " + direction);
         }
@@ -79,7 +82,8 @@ public class MxEdge implements Edge, WrappedEdge<com.alibaba.maxgraph.structure.
 
     @Override
     public void remove() {
-        this.graph.getBaseGraph()
+        this.graph
+                .getBaseGraph()
                 .deleteEdge(
                         this.label(),
                         this.baseEdge.id.id(),
@@ -96,7 +100,9 @@ public class MxEdge implements Edge, WrappedEdge<com.alibaba.maxgraph.structure.
             kv = this.baseEdge.selectProperties(propertyKeys);
         }
 
-        return kv.entrySet().stream().map(e -> (Property<V>) new DefaultProperty(e.getKey(), e.getValue(), this)).iterator();
+        return kv.entrySet().stream()
+                .map(e -> (Property<V>) new DefaultProperty(e.getKey(), e.getValue(), this))
+                .iterator();
     }
 
     @Override

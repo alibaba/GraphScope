@@ -1,12 +1,12 @@
 /**
  * Copyright 2020 Alibaba Group Holding Limited.
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -28,8 +28,9 @@ public class DefaultRpcAddressFetcher implements RpcAddressFetcher {
     private DefaultRpcAddressFetcher(List<RpcAddress> rpcAddressList, RpcAddress serviceAddress) {
         this.rpcAddressList = rpcAddressList;
         this.serviceAddress = new ArrayList<>();
-        for(RpcAddress rpcAddress : rpcAddressList) {
-            this.serviceAddress.add(new Endpoint(serviceAddress.getHost(), serviceAddress.getPort()));
+        for (RpcAddress rpcAddress : rpcAddressList) {
+            this.serviceAddress.add(
+                    new Endpoint(serviceAddress.getHost(), serviceAddress.getPort()));
         }
     }
 
@@ -52,7 +53,8 @@ public class DefaultRpcAddressFetcher implements RpcAddressFetcher {
         return new DefaultRpcAddressFetcher(rpcAddressList, rpcAddressList.get(0));
     }
 
-    public static DefaultRpcAddressFetcher fromAddressList(List<RpcAddress> rpcAddressList, RpcAddress serviceAddress) {
+    public static DefaultRpcAddressFetcher fromAddressList(
+            List<RpcAddress> rpcAddressList, RpcAddress serviceAddress) {
         return new DefaultRpcAddressFetcher(rpcAddressList, serviceAddress);
     }
 
@@ -72,6 +74,5 @@ public class DefaultRpcAddressFetcher implements RpcAddressFetcher {
         }
 
         return fromAddressList(rpcAddressList, new RpcAddress(serviceHost));
-
     }
 }

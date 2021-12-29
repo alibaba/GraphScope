@@ -13,19 +13,21 @@
  */
 package com.alibaba.maxgraph.tests.store;
 
+import static org.mockito.Mockito.*;
+
 import com.alibaba.graphscope.groot.CompletionCallback;
 import com.alibaba.graphscope.groot.store.*;
 import com.alibaba.graphscope.groot.store.StoreBackupService;
 import com.alibaba.graphscope.groot.store.StoreSchemaService;
 import com.alibaba.graphscope.groot.store.StoreWriteService;
 import com.alibaba.maxgraph.proto.groot.*;
+
 import io.grpc.stub.StreamObserver;
+
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
 import java.util.*;
-
-import static org.mockito.Mockito.*;
 
 public class StoreRpcTest {
 
@@ -80,9 +82,8 @@ public class StoreRpcTest {
         storeBackupId.addPartitionBackupId(0, 6);
         storeBackupId.addPartitionBackupId(1, 6);
 
-        CreateStoreBackupRequest createRequest = CreateStoreBackupRequest.newBuilder()
-                .setGlobalBackupId(6)
-                .build();
+        CreateStoreBackupRequest createRequest =
+                CreateStoreBackupRequest.newBuilder().setGlobalBackupId(6).build();
         doAnswer(
                         invocation -> {
                             CompletionCallback<StoreBackupId> callback = invocation.getArgument(1);
@@ -93,15 +94,17 @@ public class StoreRpcTest {
                 .createNewStoreBackup(eq(6), any());
         StreamObserver<CreateStoreBackupResponse> mockCreateObserver = mock(StreamObserver.class);
         storeBackupService.createStoreBackup(createRequest, mockCreateObserver);
-        verify(mockCreateObserver).onNext(
-                CreateStoreBackupResponse.newBuilder()
-                        .setStoreBackupId(storeBackupId.toProto())
-                        .build());
+        verify(mockCreateObserver)
+                .onNext(
+                        CreateStoreBackupResponse.newBuilder()
+                                .setStoreBackupId(storeBackupId.toProto())
+                                .build());
         verify(mockCreateObserver).onCompleted();
 
-        VerifyStoreBackupRequest verifyRequest = VerifyStoreBackupRequest.newBuilder()
-                .setStoreBackupId(storeBackupId.toProto())
-                .build();
+        VerifyStoreBackupRequest verifyRequest =
+                VerifyStoreBackupRequest.newBuilder()
+                        .setStoreBackupId(storeBackupId.toProto())
+                        .build();
         doAnswer(
                         invocation -> {
                             CompletionCallback<Void> callback = invocation.getArgument(1);
@@ -115,10 +118,13 @@ public class StoreRpcTest {
         verify(mockVerifyObserver).onNext(VerifyStoreBackupResponse.newBuilder().build());
         verify(mockVerifyObserver).onCompleted();
 
-        ClearUnavailableStoreBackupsRequest clearRequest = ClearUnavailableStoreBackupsRequest.newBuilder()
-                .putPartitionToReadyBackupIds(0, PartitionBackupIdListPb.newBuilder().build())
-                .putPartitionToReadyBackupIds(1, PartitionBackupIdListPb.newBuilder().build())
-                .build();
+        ClearUnavailableStoreBackupsRequest clearRequest =
+                ClearUnavailableStoreBackupsRequest.newBuilder()
+                        .putPartitionToReadyBackupIds(
+                                0, PartitionBackupIdListPb.newBuilder().build())
+                        .putPartitionToReadyBackupIds(
+                                1, PartitionBackupIdListPb.newBuilder().build())
+                        .build();
         Map<Integer, List<Integer>> readyPartitionBackupIds = new HashMap<>();
         readyPartitionBackupIds.put(0, new ArrayList<>());
         readyPartitionBackupIds.put(1, new ArrayList<>());
@@ -130,15 +136,17 @@ public class StoreRpcTest {
                         })
                 .when(mockBackupAgent)
                 .clearUnavailableStoreBackups(eq(readyPartitionBackupIds), any());
-        StreamObserver<ClearUnavailableStoreBackupsResponse> mockClearObserver = mock(StreamObserver.class);
+        StreamObserver<ClearUnavailableStoreBackupsResponse> mockClearObserver =
+                mock(StreamObserver.class);
         storeBackupService.clearUnavailableStoreBackups(clearRequest, mockClearObserver);
         verify(mockClearObserver).onNext(ClearUnavailableStoreBackupsResponse.newBuilder().build());
         verify(mockClearObserver).onCompleted();
 
-        RestoreFromStoreBackupRequest restoreRequest = RestoreFromStoreBackupRequest.newBuilder()
-                .setStoreBackupId(storeBackupId.toProto())
-                .setRestoreRootPath("store_restore_path")
-                .build();
+        RestoreFromStoreBackupRequest restoreRequest =
+                RestoreFromStoreBackupRequest.newBuilder()
+                        .setStoreBackupId(storeBackupId.toProto())
+                        .setRestoreRootPath("store_restore_path")
+                        .build();
         doAnswer(
                         invocation -> {
                             CompletionCallback<Void> callback = invocation.getArgument(2);
@@ -147,7 +155,8 @@ public class StoreRpcTest {
                         })
                 .when(mockBackupAgent)
                 .restoreFromStoreBackup(eq(storeBackupId), eq("store_restore_path"), any());
-        StreamObserver<RestoreFromStoreBackupResponse> mockRestoreObserver = mock(StreamObserver.class);
+        StreamObserver<RestoreFromStoreBackupResponse> mockRestoreObserver =
+                mock(StreamObserver.class);
         storeBackupService.restoreFromStoreBackup(restoreRequest, mockRestoreObserver);
         verify(mockRestoreObserver).onNext(RestoreFromStoreBackupResponse.newBuilder().build());
         verify(mockRestoreObserver).onCompleted();

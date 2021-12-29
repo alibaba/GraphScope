@@ -15,24 +15,26 @@ package com.alibaba.maxgraph.servers;
 
 import com.alibaba.graphscope.groot.SnapshotCache;
 import com.alibaba.graphscope.groot.coordinator.*;
-import com.alibaba.graphscope.groot.meta.MetaStore;
-import com.alibaba.maxgraph.common.RoleType;
+import com.alibaba.graphscope.groot.discovery.*;
+import com.alibaba.graphscope.groot.frontend.IngestorWriteClient;
 import com.alibaba.graphscope.groot.meta.DefaultMetaService;
 import com.alibaba.graphscope.groot.meta.MetaService;
-import com.alibaba.maxgraph.common.config.CommonConfig;
-import com.alibaba.graphscope.groot.discovery.*;
-import com.alibaba.graphscope.groot.rpc.RoleClients;
-import com.alibaba.maxgraph.common.config.Configs;
-import com.alibaba.maxgraph.compiler.api.exception.MaxGraphException;
+import com.alibaba.graphscope.groot.meta.MetaStore;
 import com.alibaba.graphscope.groot.rpc.ChannelManager;
 import com.alibaba.graphscope.groot.rpc.MaxGraphNameResolverFactory;
+import com.alibaba.graphscope.groot.rpc.RoleClients;
 import com.alibaba.graphscope.groot.rpc.RpcServer;
-import com.alibaba.maxgraph.common.util.CuratorUtils;
+import com.alibaba.graphscope.groot.schema.ddl.DdlExecutors;
 import com.alibaba.graphscope.groot.wal.LogService;
 import com.alibaba.graphscope.groot.wal.kafka.KafkaLogService;
-import com.alibaba.graphscope.groot.schema.ddl.DdlExecutors;
-import com.alibaba.graphscope.groot.frontend.IngestorWriteClient;
+import com.alibaba.maxgraph.common.RoleType;
+import com.alibaba.maxgraph.common.config.CommonConfig;
+import com.alibaba.maxgraph.common.config.Configs;
+import com.alibaba.maxgraph.common.util.CuratorUtils;
+import com.alibaba.maxgraph.compiler.api.exception.MaxGraphException;
+
 import io.grpc.NameResolver;
+
 import org.apache.curator.framework.CuratorFramework;
 
 import java.io.IOException;
@@ -113,8 +115,13 @@ public class Coordinator extends NodeBase {
         SnapshotCache localSnapshotCache = new SnapshotCache();
         this.backupManager =
                 new BackupManager(
-                        configs, this.metaService, metaStore, this.snapshotManager, this.schemaManager,
-                        localSnapshotCache, storeBackupTaskSender);
+                        configs,
+                        this.metaService,
+                        metaStore,
+                        this.snapshotManager,
+                        this.schemaManager,
+                        localSnapshotCache,
+                        storeBackupTaskSender);
         BackupService backupService = new BackupService(this.backupManager);
         this.rpcServer =
                 new RpcServer(

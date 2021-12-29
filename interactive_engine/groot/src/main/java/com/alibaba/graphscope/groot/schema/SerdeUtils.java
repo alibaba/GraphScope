@@ -1,12 +1,12 @@
 /**
  * Copyright 2020 Alibaba Group Holding Limited.
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -36,70 +36,103 @@ public class SerdeUtils {
         try {
             switch (dataType) {
                 case BOOL:
-                    return new byte[]{(byte) ((Boolean) valObject ? 1 : 0)};
+                    return new byte[] {(byte) ((Boolean) valObject ? 1 : 0)};
                 case CHAR:
-                    return ByteBuffer.allocate(Character.BYTES).putChar((Character) valObject).array();
+                    return ByteBuffer.allocate(Character.BYTES)
+                            .putChar((Character) valObject)
+                            .array();
                 case SHORT:
-                    return ByteBuffer.allocate(Short.BYTES).putShort(Short.valueOf(valObject.toString())).array();
+                    return ByteBuffer.allocate(Short.BYTES)
+                            .putShort(Short.valueOf(valObject.toString()))
+                            .array();
                 case INT:
-                    return ByteBuffer.allocate(Integer.BYTES).putInt(Integer.valueOf(valObject.toString())).array();
+                    return ByteBuffer.allocate(Integer.BYTES)
+                            .putInt(Integer.valueOf(valObject.toString()))
+                            .array();
                 case LONG:
-                    return ByteBuffer.allocate(Long.BYTES).putLong(Long.valueOf(valObject.toString())).array();
+                    return ByteBuffer.allocate(Long.BYTES)
+                            .putLong(Long.valueOf(valObject.toString()))
+                            .array();
                 case FLOAT:
-                    return ByteBuffer.allocate(Float.BYTES).putFloat(Float.valueOf(valObject.toString())).array();
+                    return ByteBuffer.allocate(Float.BYTES)
+                            .putFloat(Float.valueOf(valObject.toString()))
+                            .array();
                 case DOUBLE:
-                    return ByteBuffer.allocate(Double.BYTES).putDouble(Double.valueOf(valObject.toString())).array();
+                    return ByteBuffer.allocate(Double.BYTES)
+                            .putDouble(Double.valueOf(valObject.toString()))
+                            .array();
                 case STRING:
                     return ((String) valObject).getBytes(StandardCharsets.UTF_8);
                 case BYTES:
                     return (byte[]) valObject;
                 case INT_LIST:
-                    List<Integer> intList = ((List<Object>) valObject).stream().map(o -> Integer.valueOf(o.toString()))
-                            .collect(Collectors.toList());
-                    return listToBytes(intList, (dos, e) -> {
-                        try {
-                            dos.writeInt(e);
-                        } catch (IOException ex) {
-                            throw new IllegalArgumentException("write to bytes failed", ex);
-                        }
-                        return null;
-                    });
+                    List<Integer> intList =
+                            ((List<Object>) valObject)
+                                    .stream()
+                                            .map(o -> Integer.valueOf(o.toString()))
+                                            .collect(Collectors.toList());
+                    return listToBytes(
+                            intList,
+                            (dos, e) -> {
+                                try {
+                                    dos.writeInt(e);
+                                } catch (IOException ex) {
+                                    throw new IllegalArgumentException("write to bytes failed", ex);
+                                }
+                                return null;
+                            });
                 case LONG_LIST:
-                    List<Long> longList = ((List<Object>) valObject).stream().map(o -> Long.valueOf(o.toString()))
-                            .collect(Collectors.toList());
-                    return listToBytes(longList, (dos, e) -> {
-                        try {
-                            dos.writeLong(e);
-                        } catch (IOException ex) {
-                            throw new IllegalArgumentException("write to bytes failed", ex);
-                        }
-                        return null;
-                    });
+                    List<Long> longList =
+                            ((List<Object>) valObject)
+                                    .stream()
+                                            .map(o -> Long.valueOf(o.toString()))
+                                            .collect(Collectors.toList());
+                    return listToBytes(
+                            longList,
+                            (dos, e) -> {
+                                try {
+                                    dos.writeLong(e);
+                                } catch (IOException ex) {
+                                    throw new IllegalArgumentException("write to bytes failed", ex);
+                                }
+                                return null;
+                            });
                 case FLOAT_LIST:
-                    List<Float> floatList = ((List<Object>) valObject).stream().map(o -> Float.valueOf(o.toString()))
-                            .collect(Collectors.toList());
-                    return listToBytes(floatList, (dos, e) -> {
-                        try {
-                            dos.writeFloat(e);
-                        } catch (IOException ex) {
-                            throw new IllegalArgumentException("write to bytes failed", ex);
-                        }
-                        return null;
-                    });
+                    List<Float> floatList =
+                            ((List<Object>) valObject)
+                                    .stream()
+                                            .map(o -> Float.valueOf(o.toString()))
+                                            .collect(Collectors.toList());
+                    return listToBytes(
+                            floatList,
+                            (dos, e) -> {
+                                try {
+                                    dos.writeFloat(e);
+                                } catch (IOException ex) {
+                                    throw new IllegalArgumentException("write to bytes failed", ex);
+                                }
+                                return null;
+                            });
                 case DOUBLE_LIST:
-                    List<Double> doubleList = ((List<Object>) valObject).stream().map(o -> Double.valueOf(o.toString()))
-                            .collect(Collectors.toList());
-                    return listToBytes(doubleList, (dos, e) -> {
-                        try {
-                            dos.writeDouble(e);
-                        } catch (IOException ex) {
-                            throw new IllegalArgumentException("write to bytes failed", ex);
-                        }
-                        return null;
-                    });
+                    List<Double> doubleList =
+                            ((List<Object>) valObject)
+                                    .stream()
+                                            .map(o -> Double.valueOf(o.toString()))
+                                            .collect(Collectors.toList());
+                    return listToBytes(
+                            doubleList,
+                            (dos, e) -> {
+                                try {
+                                    dos.writeDouble(e);
+                                } catch (IOException ex) {
+                                    throw new IllegalArgumentException("write to bytes failed", ex);
+                                }
+                                return null;
+                            });
                 case STRING_LIST:
-                    List<String> stringList = ((List<Object>) valObject).stream().map(o -> o.toString())
-                            .collect(Collectors.toList());
+                    List<String> stringList =
+                            ((List<Object>) valObject)
+                                    .stream().map(o -> o.toString()).collect(Collectors.toList());
                     ByteArrayOutputStream bos = new ByteArrayOutputStream();
                     DataOutputStream dos = new DataOutputStream(bos);
                     dos.writeInt(stringList.size());
@@ -120,12 +153,17 @@ public class SerdeUtils {
                     throw new IllegalStateException("Unexpected value: " + dataType);
             }
         } catch (Exception e) {
-            throw new IllegalArgumentException("unable to parse object to bytes. DataType [" + dataType +
-                    "], Object [" + valObject + "], class [" + valObject.getClass() + "]", e);
+            throw new IllegalArgumentException(
+                    "unable to parse object to bytes. DataType ["
+                            + dataType
+                            + "], Object ["
+                            + valObject
+                            + "], class ["
+                            + valObject.getClass()
+                            + "]",
+                    e);
         }
     }
-
-
 
     public static Object bytesToObject(DataType dataType, byte[] valBytes) {
         try {
@@ -159,40 +197,56 @@ public class SerdeUtils {
                     valObject = valBytes;
                     break;
                 case INT_LIST:
-                    valObject = parseListVal(valBytes, dis -> {
-                        try {
-                            return dis.readInt();
-                        } catch (IOException e) {
-                            throw new IllegalArgumentException("parse val failed", e);
-                        }
-                    });
+                    valObject =
+                            parseListVal(
+                                    valBytes,
+                                    dis -> {
+                                        try {
+                                            return dis.readInt();
+                                        } catch (IOException e) {
+                                            throw new IllegalArgumentException(
+                                                    "parse val failed", e);
+                                        }
+                                    });
                     break;
                 case LONG_LIST:
-                    valObject = parseListVal(valBytes, dis -> {
-                        try {
-                            return dis.readLong();
-                        } catch (IOException e) {
-                            throw new IllegalArgumentException("parse val failed", e);
-                        }
-                    });
+                    valObject =
+                            parseListVal(
+                                    valBytes,
+                                    dis -> {
+                                        try {
+                                            return dis.readLong();
+                                        } catch (IOException e) {
+                                            throw new IllegalArgumentException(
+                                                    "parse val failed", e);
+                                        }
+                                    });
                     break;
                 case FLOAT_LIST:
-                    valObject = parseListVal(valBytes, dis -> {
-                        try {
-                            return dis.readFloat();
-                        } catch (IOException e) {
-                            throw new IllegalArgumentException("parse val failed", e);
-                        }
-                    });
+                    valObject =
+                            parseListVal(
+                                    valBytes,
+                                    dis -> {
+                                        try {
+                                            return dis.readFloat();
+                                        } catch (IOException e) {
+                                            throw new IllegalArgumentException(
+                                                    "parse val failed", e);
+                                        }
+                                    });
                     break;
                 case DOUBLE_LIST:
-                    valObject = parseListVal(valBytes, dis -> {
-                        try {
-                            return dis.readDouble();
-                        } catch (IOException e) {
-                            throw new IllegalArgumentException("parse val failed", e);
-                        }
-                    });
+                    valObject =
+                            parseListVal(
+                                    valBytes,
+                                    dis -> {
+                                        try {
+                                            return dis.readDouble();
+                                        } catch (IOException e) {
+                                            throw new IllegalArgumentException(
+                                                    "parse val failed", e);
+                                        }
+                                    });
                     break;
                 case STRING_LIST:
                     DataInputStream dis = new DataInputStream(new ByteArrayInputStream(valBytes));
@@ -221,14 +275,14 @@ public class SerdeUtils {
         }
     }
 
-
     private static byte[] readBytes(DataInputStream dis, int len) throws IOException {
         byte[] bytes = new byte[len];
         dis.read(bytes);
         return bytes;
     }
 
-    private static <T> List<T> parseListVal(byte[] val, Function<DataInputStream, T> func) throws IOException {
+    private static <T> List<T> parseListVal(byte[] val, Function<DataInputStream, T> func)
+            throws IOException {
         DataInputStream dis = new DataInputStream(new ByteArrayInputStream(val));
         int size = dis.readInt();
         List<T> l = new ArrayList<>(size);
@@ -238,7 +292,8 @@ public class SerdeUtils {
         return l;
     }
 
-    private static <T> byte[] listToBytes(List<T> list, BiFunction<DataOutputStream, T, Void> f) throws IOException {
+    private static <T> byte[] listToBytes(List<T> list, BiFunction<DataOutputStream, T, Void> f)
+            throws IOException {
         ByteArrayOutputStream bos = new ByteArrayOutputStream();
         DataOutputStream dos = new DataOutputStream(bos);
         dos.writeInt(list.size());
@@ -247,5 +302,4 @@ public class SerdeUtils {
         }
         return bos.toByteArray();
     }
-
 }

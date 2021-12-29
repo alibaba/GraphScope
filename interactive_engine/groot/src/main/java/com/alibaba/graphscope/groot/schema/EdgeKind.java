@@ -13,8 +13,8 @@
  */
 package com.alibaba.graphscope.groot.schema;
 
-import com.alibaba.maxgraph.proto.groot.EdgeKindPb;
 import com.alibaba.graphscope.groot.operation.LabelId;
+import com.alibaba.maxgraph.proto.groot.EdgeKindPb;
 
 import java.util.Objects;
 

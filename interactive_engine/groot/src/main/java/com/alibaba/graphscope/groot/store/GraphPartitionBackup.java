@@ -21,7 +21,8 @@ public interface GraphPartitionBackup extends Closeable {
 
     int createNewPartitionBackup() throws IOException;
 
-    void restoreFromPartitionBackup(int partitionBackupId, String PartitionRestorePath) throws IOException;
+    void restoreFromPartitionBackup(int partitionBackupId, String PartitionRestorePath)
+            throws IOException;
 
     void verifyPartitionBackup(int partitionBackupId) throws IOException;
 

@@ -1,12 +1,12 @@
 /**
  * Copyright 2020 Alibaba Group Holding Limited.
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 package com.alibaba.maxgraph.sdkcommon.meta;
-
 
 import com.alibaba.maxgraph.sdkcommon.exception.MaxGraphException;
 import com.alibaba.maxgraph.sdkcommon.util.ExceptionUtils;
@@ -25,6 +24,7 @@ import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Objects;
+
 import org.apache.commons.lang3.StringUtils;
 
 /**
@@ -36,21 +36,19 @@ import org.apache.commons.lang3.StringUtils;
 public class DataType {
 
     // for compatible
-    public final static DataType BOOL = new DataType(InternalDataType.BOOL);
-    public final static DataType CHAR = new DataType(InternalDataType.CHAR);
-    public final static DataType SHORT = new DataType(InternalDataType.SHORT);
-    public final static DataType INT = new DataType(InternalDataType.INT);
-    public final static DataType LONG = new DataType(InternalDataType.LONG);
-    public final static DataType FLOAT = new DataType(InternalDataType.FLOAT);
-    public final static DataType DOUBLE = new DataType(InternalDataType.DOUBLE);
-    public final static DataType BYTES = new DataType(InternalDataType.BYTES);
-    public final static DataType STRING = new DataType(InternalDataType.STRING);
-    public final static DataType DATE = new DataType(InternalDataType.DATE);
+    public static final DataType BOOL = new DataType(InternalDataType.BOOL);
+    public static final DataType CHAR = new DataType(InternalDataType.CHAR);
+    public static final DataType SHORT = new DataType(InternalDataType.SHORT);
+    public static final DataType INT = new DataType(InternalDataType.INT);
+    public static final DataType LONG = new DataType(InternalDataType.LONG);
+    public static final DataType FLOAT = new DataType(InternalDataType.FLOAT);
+    public static final DataType DOUBLE = new DataType(InternalDataType.DOUBLE);
+    public static final DataType BYTES = new DataType(InternalDataType.BYTES);
+    public static final DataType STRING = new DataType(InternalDataType.STRING);
+    public static final DataType DATE = new DataType(InternalDataType.DATE);
 
-    @JsonProperty
-    private String expression;
-    @JsonProperty
-    private InternalDataType type;
+    @JsonProperty private String expression;
+    @JsonProperty private InternalDataType type;
 
     public DataType(InternalDataType internalDataType) {
         this.type = internalDataType;
@@ -65,7 +63,9 @@ public class DataType {
     }
 
     public boolean isInt() {
-        return this.type == InternalDataType.SHORT || this.type == InternalDataType.INT || this.type == InternalDataType.LONG;
+        return this.type == InternalDataType.SHORT
+                || this.type == InternalDataType.INT
+                || this.type == InternalDataType.LONG;
     }
 
     public void setExpression(String expression) throws MaxGraphException {
@@ -75,8 +75,11 @@ public class DataType {
         }
 
         if (!isValid(expression)) {
-            throw new MaxGraphException(ExceptionUtils.ErrorCode.DataTypeNotValid, "expression is not valid, subType " +
-                    "must be primitiveTypes: " + InternalDataType.primitiveTypes.toString());
+            throw new MaxGraphException(
+                    ExceptionUtils.ErrorCode.DataTypeNotValid,
+                    "expression is not valid, subType "
+                            + "must be primitiveTypes: "
+                            + InternalDataType.primitiveTypes.toString());
         }
         this.expression = expression;
     }
@@ -95,8 +98,9 @@ public class DataType {
     }
 
     @JsonValue
-    public String getJson(){
-      return this.type.name() + (StringUtils.isEmpty(this.expression) ? "" : "<" + this.expression + ">");
+    public String getJson() {
+        return this.type.name()
+                + (StringUtils.isEmpty(this.expression) ? "" : "<" + this.expression + ">");
     }
 
     public boolean isValid(String expression) {
@@ -123,8 +127,9 @@ public class DataType {
     }
 
     public boolean isPrimitiveType() {
-        return !(this.type == InternalDataType.LIST || this.type == InternalDataType.MAP || this.type ==
-                InternalDataType.SET);
+        return !(this.type == InternalDataType.LIST
+                || this.type == InternalDataType.MAP
+                || this.type == InternalDataType.SET);
     }
 
     public boolean isFixedLen() {
@@ -165,8 +170,8 @@ public class DataType {
         if (this == o) return true;
         if (!(o instanceof DataType)) return false;
         DataType dataType = (DataType) o;
-        return Objects.equal(getExpression(), dataType.getExpression()) &&
-                getType() == dataType.getType();
+        return Objects.equal(getExpression(), dataType.getExpression())
+                && getType() == dataType.getType();
     }
 
     @Override

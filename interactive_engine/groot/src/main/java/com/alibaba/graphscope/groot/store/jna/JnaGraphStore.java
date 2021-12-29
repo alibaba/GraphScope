@@ -13,14 +13,14 @@
  */
 package com.alibaba.graphscope.groot.store.jna;
 
-import com.alibaba.graphscope.groot.store.GraphPartitionBackup;
-import com.alibaba.maxgraph.common.config.BackupConfig;
-import com.alibaba.maxgraph.proto.groot.GraphDefPb;
 import com.alibaba.graphscope.groot.operation.OperationBatch;
+import com.alibaba.graphscope.groot.store.GraphPartition;
+import com.alibaba.graphscope.groot.store.GraphPartitionBackup;
 import com.alibaba.maxgraph.common.config.Configs;
 import com.alibaba.maxgraph.common.config.StoreConfig;
-import com.alibaba.graphscope.groot.store.GraphPartition;
+import com.alibaba.maxgraph.proto.groot.GraphDefPb;
 import com.sun.jna.Pointer;
+
 import org.apache.hadoop.fs.FileSystem;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

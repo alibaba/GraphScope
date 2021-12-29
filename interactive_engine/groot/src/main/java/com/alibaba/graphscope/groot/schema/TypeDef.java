@@ -13,12 +13,12 @@
  */
 package com.alibaba.graphscope.groot.schema;
 
+import com.alibaba.graphscope.groot.operation.LabelId;
 import com.alibaba.maxgraph.compiler.api.schema.GraphElement;
 import com.alibaba.maxgraph.compiler.api.schema.GraphProperty;
 import com.alibaba.maxgraph.compiler.api.schema.PrimaryKeyConstraint;
 import com.alibaba.maxgraph.proto.groot.PropertyDefPb;
 import com.alibaba.maxgraph.proto.groot.TypeDefPb;
-import com.alibaba.graphscope.groot.operation.LabelId;
 
 import java.util.ArrayList;
 import java.util.Collections;

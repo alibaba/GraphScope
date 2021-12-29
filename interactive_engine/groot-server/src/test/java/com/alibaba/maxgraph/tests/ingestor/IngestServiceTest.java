@@ -13,26 +13,27 @@
  */
 package com.alibaba.maxgraph.tests.ingestor;
 
-import com.alibaba.graphscope.groot.meta.MetaService;
-import com.alibaba.graphscope.groot.metrics.MetricsCollector;
-import com.alibaba.maxgraph.common.config.CommonConfig;
-import com.alibaba.maxgraph.common.config.Configs;
-import com.alibaba.maxgraph.common.config.IngestorConfig;
+import static org.mockito.Mockito.*;
+
 import com.alibaba.graphscope.groot.discovery.MaxGraphNode;
 import com.alibaba.graphscope.groot.discovery.NodeDiscovery;
-import com.alibaba.maxgraph.common.RoleType;
-import com.alibaba.graphscope.groot.wal.LogService;
 import com.alibaba.graphscope.groot.ingestor.IngestProcessor;
 import com.alibaba.graphscope.groot.ingestor.IngestProgressFetcher;
 import com.alibaba.graphscope.groot.ingestor.IngestService;
 import com.alibaba.graphscope.groot.ingestor.StoreWriter;
+import com.alibaba.graphscope.groot.meta.MetaService;
+import com.alibaba.graphscope.groot.metrics.MetricsCollector;
+import com.alibaba.graphscope.groot.wal.LogService;
+import com.alibaba.maxgraph.common.RoleType;
+import com.alibaba.maxgraph.common.config.CommonConfig;
+import com.alibaba.maxgraph.common.config.Configs;
+import com.alibaba.maxgraph.common.config.IngestorConfig;
+
 import org.junit.jupiter.api.Test;
 
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Map;
-
-import static org.mockito.Mockito.*;
 
 public class IngestServiceTest {
 

@@ -25,6 +25,7 @@ package com.alibaba.maxgraph.server;
 
 import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandlerContext;
+
 import org.apache.tinkerpop.gremlin.driver.message.RequestMessage;
 import org.apache.tinkerpop.gremlin.driver.message.ResponseMessage;
 import org.apache.tinkerpop.gremlin.driver.message.ResponseStatusCode;
@@ -53,8 +54,12 @@ public class MaxGraphOpSelectorHandler extends OpSelectorHandler {
     private final GremlinExecutor gremlinExecutor;
     private final ScheduledExecutorService scheduledExecutorService;
 
-    public MaxGraphOpSelectorHandler(final Settings settings, final GraphManager graphManager, final GremlinExecutor gremlinExecutor,
-                                     final ScheduledExecutorService scheduledExecutorService, final Channelizer channelizer) {
+    public MaxGraphOpSelectorHandler(
+            final Settings settings,
+            final GraphManager graphManager,
+            final GremlinExecutor gremlinExecutor,
+            final ScheduledExecutorService scheduledExecutorService,
+            final Channelizer channelizer) {
         super(settings, graphManager, gremlinExecutor, scheduledExecutorService, channelizer);
         this.settings = settings;
         this.graphManager = graphManager;
@@ -63,21 +68,35 @@ public class MaxGraphOpSelectorHandler extends OpSelectorHandler {
     }
 
     @Override
-    protected void decode(ChannelHandlerContext ctx, RequestMessage msg, List<Object> objects) throws Exception {
-        Context gremlinServerContext = new Context(msg, ctx, this.settings, this.graphManager, this.gremlinExecutor, this.scheduledExecutorService);
+    protected void decode(ChannelHandlerContext ctx, RequestMessage msg, List<Object> objects)
+            throws Exception {
+        Context gremlinServerContext =
+                new Context(
+                        msg,
+                        ctx,
+                        this.settings,
+                        this.graphManager,
+                        this.gremlinExecutor,
+                        this.scheduledExecutorService);
 
         try {
             Optional<OpProcessor> processor = MaxGraphOpLoader.getProcessor(msg.getProcessor());
             if (!processor.isPresent()) {
-                String errorMessage = String.format("Invalid OpProcessor requested [%s]", msg.getProcessor());
-                throw new OpProcessorException(errorMessage, ResponseMessage.build(msg).code(ResponseStatusCode.REQUEST_ERROR_INVALID_REQUEST_ARGUMENTS).statusMessage(errorMessage).create());
+                String errorMessage =
+                        String.format("Invalid OpProcessor requested [%s]", msg.getProcessor());
+                throw new OpProcessorException(
+                        errorMessage,
+                        ResponseMessage.build(msg)
+                                .code(ResponseStatusCode.REQUEST_ERROR_INVALID_REQUEST_ARGUMENTS)
+                                .statusMessage(errorMessage)
+                                .create());
             }
 
-            objects.add(Pair.with(msg, ((OpProcessor) processor.get()).select(gremlinServerContext)));
+            objects.add(
+                    Pair.with(msg, ((OpProcessor) processor.get()).select(gremlinServerContext)));
         } catch (OpProcessorException var7) {
             logger.warn(var7.getMessage(), var7);
             ctx.writeAndFlush(var7.getResponseMessage());
         }
-
     }
 }

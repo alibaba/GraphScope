@@ -2,6 +2,7 @@ package com.alibaba.graphscope.groot.schema;
 
 import com.alibaba.maxgraph.compiler.api.schema.EdgeRelation;
 import com.alibaba.maxgraph.compiler.api.schema.GraphVertex;
+
 import java.util.Objects;
 
 public class EdgeRelationImpl implements EdgeRelation {

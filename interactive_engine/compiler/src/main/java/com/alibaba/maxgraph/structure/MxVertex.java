@@ -13,14 +13,13 @@
  */
 package com.alibaba.maxgraph.structure;
 
-import java.util.Iterator;
-import java.util.Map;
+import static com.google.common.base.Preconditions.checkNotNull;
 
 import com.alibaba.maxgraph.sdkcommon.graph.CompositeId;
 import com.alibaba.maxgraph.structure.graph.TinkerMaxGraph;
 import com.alibaba.maxgraph.tinkerpop.Utils;
-
 import com.google.common.collect.Iterators;
+
 import org.apache.tinkerpop.gremlin.structure.Direction;
 import org.apache.tinkerpop.gremlin.structure.Edge;
 import org.apache.tinkerpop.gremlin.structure.Graph;
@@ -31,7 +30,8 @@ import org.apache.tinkerpop.gremlin.structure.util.ElementHelper;
 import org.apache.tinkerpop.gremlin.structure.util.StringFactory;
 import org.apache.tinkerpop.gremlin.structure.util.wrapped.WrappedVertex;
 
-import static com.google.common.base.Preconditions.checkNotNull;
+import java.util.Iterator;
+import java.util.Map;
 
 public class MxVertex implements Vertex, WrappedVertex<com.alibaba.maxgraph.structure.Vertex> {
 

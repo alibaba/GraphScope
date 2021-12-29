@@ -24,20 +24,21 @@
  */
 package com.alibaba.maxgraph.tinkerpop.traversal;
 
-import com.alibaba.maxgraph.tinkerpop.steps.ConnectedComponentsStep;
-import com.alibaba.maxgraph.tinkerpop.steps.LabelPropagationStep;
-import com.alibaba.maxgraph.tinkerpop.steps.OutputVineyardStep;
-import com.alibaba.maxgraph.tinkerpop.steps.PageRankStep;
-import com.alibaba.maxgraph.tinkerpop.steps.HitsStep;
-import com.alibaba.maxgraph.tinkerpop.steps.ShortestPathStep;
 import com.alibaba.maxgraph.tinkerpop.steps.AllPathStep;
+import com.alibaba.maxgraph.tinkerpop.steps.ConnectedComponentsStep;
 import com.alibaba.maxgraph.tinkerpop.steps.CustomVertexProgramStep;
 import com.alibaba.maxgraph.tinkerpop.steps.EdgeVertexWithByStep;
+import com.alibaba.maxgraph.tinkerpop.steps.HitsStep;
+import com.alibaba.maxgraph.tinkerpop.steps.HitsVertexProgramStep;
+import com.alibaba.maxgraph.tinkerpop.steps.LabelPropagationStep;
+import com.alibaba.maxgraph.tinkerpop.steps.LpaVertexProgramStep;
 import com.alibaba.maxgraph.tinkerpop.steps.OutputStep;
+import com.alibaba.maxgraph.tinkerpop.steps.OutputVineyardStep;
+import com.alibaba.maxgraph.tinkerpop.steps.PageRankStep;
+import com.alibaba.maxgraph.tinkerpop.steps.ShortestPathStep;
 import com.alibaba.maxgraph.tinkerpop.steps.VertexByModulatingStep;
 import com.alibaba.maxgraph.tinkerpop.steps.VertexWithByStep;
-import com.alibaba.maxgraph.tinkerpop.steps.LpaVertexProgramStep;
-import com.alibaba.maxgraph.tinkerpop.steps.HitsVertexProgramStep;
+
 import org.apache.tinkerpop.gremlin.process.computer.VertexProgram;
 import org.apache.tinkerpop.gremlin.process.traversal.Step;
 import org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.DefaultGraphTraversal;
@@ -66,39 +67,70 @@ public class DefaultMaxGraphTraversal<S, E> extends DefaultGraphTraversal<S, E> 
      */
     public GraphTraversal<S, Edge> outE(final String... edgeLabels) {
         this.asAdmin().getBytecode().addStep(GraphTraversal.Symbols.outE, edgeLabels);
-        return this.asAdmin().addStep(new VertexByModulatingStep<>(this.asAdmin(), Edge.class, Direction.OUT, edgeLabels));
+        return this.asAdmin()
+                .addStep(
+                        new VertexByModulatingStep<>(
+                                this.asAdmin(), Edge.class, Direction.OUT, edgeLabels));
     }
 
     public GraphTraversal<S, E> program(final VertexProgram vertexProgram) {
-        return this.asAdmin().addStep((Step<E, E>) new CustomVertexProgramStep(this.asAdmin(), vertexProgram));
+        return this.asAdmin()
+                .addStep((Step<E, E>) new CustomVertexProgramStep(this.asAdmin(), vertexProgram));
     }
 
     public GraphTraversal<S, E> cc(final String outPropId, int iteration) {
-        return this.asAdmin().addStep((Step<E, E>) new ConnectedComponentsStep(this.asAdmin(), outPropId, iteration));
+        return this.asAdmin()
+                .addStep(
+                        (Step<E, E>)
+                                new ConnectedComponentsStep(this.asAdmin(), outPropId, iteration));
     }
 
     public GraphTraversal<S, E> output(String path, String... properties) {
-        return this.asAdmin().addStep((Step<E, E>) new OutputStep(this.asAdmin(), path, properties));
+        return this.asAdmin()
+                .addStep((Step<E, E>) new OutputStep(this.asAdmin(), path, properties));
     }
 
     public GraphTraversal<S, E> outputVineyard(String graphName) {
-        return this.asAdmin().addStep((Step<E, E>) new OutputVineyardStep(this.asAdmin(), graphName));
+        return this.asAdmin()
+                .addStep((Step<E, E>) new OutputVineyardStep(this.asAdmin(), graphName));
     }
 
-    public GraphTraversal<S, E> lpa(final String direction, final String seedLabel, final String targetLabel, int iteration, final String... edgeLabels) {
-        return this.asAdmin().addStep((Step<E, E>) new LabelPropagationStep(this.asAdmin(), direction, seedLabel, targetLabel, iteration, edgeLabels));
+    public GraphTraversal<S, E> lpa(
+            final String direction,
+            final String seedLabel,
+            final String targetLabel,
+            int iteration,
+            final String... edgeLabels) {
+        return this.asAdmin()
+                .addStep(
+                        (Step<E, E>)
+                                new LabelPropagationStep(
+                                        this.asAdmin(),
+                                        direction,
+                                        seedLabel,
+                                        targetLabel,
+                                        iteration,
+                                        edgeLabels));
     }
 
     public GraphTraversal<S, E> lpa() {
         return this.asAdmin().addStep((Step<E, E>) new LpaVertexProgramStep(this.asAdmin()));
     }
 
-    public GraphTraversal<S, E> pageRank(final String outPropId, final double alpha, int iteration) {
-        return this.asAdmin().addStep((Step<E, E>) new PageRankStep(this.asAdmin(), outPropId, alpha, iteration));
+    public GraphTraversal<S, E> pageRank(
+            final String outPropId, final double alpha, int iteration) {
+        return this.asAdmin()
+                .addStep(
+                        (Step<E, E>) new PageRankStep(this.asAdmin(), outPropId, alpha, iteration));
     }
 
-    public GraphTraversal<S, E> hits(final String outPropAuthId, final String outPropHubId, int iteration) {
-        return this.asAdmin().addStep((Step<E, E>) new HitsStep(this.asAdmin(), outPropAuthId, outPropHubId, iteration));
+    public GraphTraversal<S, E> hits(
+            final String outPropAuthId, final String outPropHubId, int iteration) {
+        return this.asAdmin()
+                .addStep(
+                        (Step<E, E>)
+                                new HitsStep(
+                                        this.asAdmin(), outPropAuthId, outPropHubId, iteration));
     }
 
     public GraphTraversal<S, E> hits() {
@@ -115,8 +147,13 @@ public class DefaultMaxGraphTraversal<S, E> extends DefaultGraphTraversal<S, E> 
      * @return the traversal with a shortestPath
      *
      **/
-    public GraphTraversal<S, E> shortestPath(final Long sid, final String outPropId, final String labelPropId, int iteration) {
-        return this.asAdmin().addStep((Step<E, E>) new ShortestPathStep(this.asAdmin(), sid, outPropId, labelPropId, iteration));
+    public GraphTraversal<S, E> shortestPath(
+            final Long sid, final String outPropId, final String labelPropId, int iteration) {
+        return this.asAdmin()
+                .addStep(
+                        (Step<E, E>)
+                                new ShortestPathStep(
+                                        this.asAdmin(), sid, outPropId, labelPropId, iteration));
     }
 
     /**
@@ -129,8 +166,22 @@ public class DefaultMaxGraphTraversal<S, E> extends DefaultGraphTraversal<S, E> 
      * @param iteration iteration for algorithm
      *
      **/
-    public GraphTraversal<S, E> shortestPath(final Long sid, final String edgeWeightPropId, final String outPropId, final String labelPropId, int iteration) {
-        return this.asAdmin().addStep((Step<E, E>) new ShortestPathStep(this.asAdmin(), sid, edgeWeightPropId, outPropId, labelPropId, iteration));
+    public GraphTraversal<S, E> shortestPath(
+            final Long sid,
+            final String edgeWeightPropId,
+            final String outPropId,
+            final String labelPropId,
+            int iteration) {
+        return this.asAdmin()
+                .addStep(
+                        (Step<E, E>)
+                                new ShortestPathStep(
+                                        this.asAdmin(),
+                                        sid,
+                                        edgeWeightPropId,
+                                        outPropId,
+                                        labelPropId,
+                                        iteration));
     }
 
     /**
@@ -143,9 +194,22 @@ public class DefaultMaxGraphTraversal<S, E> extends DefaultGraphTraversal<S, E> 
      * @param iteration iteration for algorithm
      * @return
      */
-
-    public GraphTraversal<S, E> shortestPath(final Long sid, final Long tid, final String outPropId, final String labelPropId, int iteration) {
-        return this.asAdmin().addStep((Step<E, E>) new ShortestPathStep(this.asAdmin(),sid,tid, outPropId, labelPropId, iteration));
+    public GraphTraversal<S, E> shortestPath(
+            final Long sid,
+            final Long tid,
+            final String outPropId,
+            final String labelPropId,
+            int iteration) {
+        return this.asAdmin()
+                .addStep(
+                        (Step<E, E>)
+                                new ShortestPathStep(
+                                        this.asAdmin(),
+                                        sid,
+                                        tid,
+                                        outPropId,
+                                        labelPropId,
+                                        iteration));
     }
 
     /**
@@ -156,9 +220,13 @@ public class DefaultMaxGraphTraversal<S, E> extends DefaultGraphTraversal<S, E> 
      * @param iteration iteration for algorithm
      *
      **/
-
-    public GraphTraversal<S, E> shortestPath(final String outPropId, final String labelPropId, int iteration) {
-        return this.asAdmin().addStep((Step<E, E>) new ShortestPathStep(this.asAdmin(), outPropId, labelPropId, iteration));
+    public GraphTraversal<S, E> shortestPath(
+            final String outPropId, final String labelPropId, int iteration) {
+        return this.asAdmin()
+                .addStep(
+                        (Step<E, E>)
+                                new ShortestPathStep(
+                                        this.asAdmin(), outPropId, labelPropId, iteration));
     }
 
     /**
@@ -170,15 +238,29 @@ public class DefaultMaxGraphTraversal<S, E> extends DefaultGraphTraversal<S, E> 
      * @param iteration iteration for algorithm
      *
      **/
-    public GraphTraversal<S, E> shortestPath(final String edgeWeightPropId, final String outPropId, final String labelPropId, int iteration) {
-        return this.asAdmin().addStep((Step<E, E>) new ShortestPathStep(this.asAdmin(), edgeWeightPropId, outPropId, labelPropId, iteration));
+    public GraphTraversal<S, E> shortestPath(
+            final String edgeWeightPropId,
+            final String outPropId,
+            final String labelPropId,
+            int iteration) {
+        return this.asAdmin()
+                .addStep(
+                        (Step<E, E>)
+                                new ShortestPathStep(
+                                        this.asAdmin(),
+                                        edgeWeightPropId,
+                                        outPropId,
+                                        labelPropId,
+                                        iteration));
     }
 
     /**
      * s-t paths
      **/
-    public GraphTraversal<S, E> allPath(final Long sid, final Long tid, final int khop, final String outPropId) {
-        return this.asAdmin().addStep((Step<E, E>) new AllPathStep(this.asAdmin(), sid, tid, khop, outPropId));
+    public GraphTraversal<S, E> allPath(
+            final Long sid, final Long tid, final int khop, final String outPropId) {
+        return this.asAdmin()
+                .addStep((Step<E, E>) new AllPathStep(this.asAdmin(), sid, tid, khop, outPropId));
     }
 
     /**
@@ -190,7 +272,10 @@ public class DefaultMaxGraphTraversal<S, E> extends DefaultGraphTraversal<S, E> 
     @Override
     public GraphTraversal<S, Vertex> out(final String... edgeLabels) {
         this.asAdmin().getBytecode().addStep(GraphTraversal.Symbols.out, edgeLabels);
-        return this.asAdmin().addStep(new VertexWithByStep<>(this.asAdmin(), Vertex.class, Direction.OUT, edgeLabels));
+        return this.asAdmin()
+                .addStep(
+                        new VertexWithByStep<>(
+                                this.asAdmin(), Vertex.class, Direction.OUT, edgeLabels));
     }
 
     /**
@@ -202,7 +287,10 @@ public class DefaultMaxGraphTraversal<S, E> extends DefaultGraphTraversal<S, E> 
     @Override
     public GraphTraversal<S, Vertex> in(final String... edgeLabels) {
         this.asAdmin().getBytecode().addStep(GraphTraversal.Symbols.in, edgeLabels);
-        return this.asAdmin().addStep(new VertexWithByStep<>(this.asAdmin(), Vertex.class, Direction.IN, edgeLabels));
+        return this.asAdmin()
+                .addStep(
+                        new VertexWithByStep<>(
+                                this.asAdmin(), Vertex.class, Direction.IN, edgeLabels));
     }
 
     /**
@@ -214,7 +302,10 @@ public class DefaultMaxGraphTraversal<S, E> extends DefaultGraphTraversal<S, E> 
     @Override
     public GraphTraversal<S, Vertex> both(final String... edgeLabels) {
         this.asAdmin().getBytecode().addStep(GraphTraversal.Symbols.both, edgeLabels);
-        return this.asAdmin().addStep(new VertexWithByStep<>(this.asAdmin(), Vertex.class, Direction.BOTH, edgeLabels));
+        return this.asAdmin()
+                .addStep(
+                        new VertexWithByStep<>(
+                                this.asAdmin(), Vertex.class, Direction.BOTH, edgeLabels));
     }
 
     /**

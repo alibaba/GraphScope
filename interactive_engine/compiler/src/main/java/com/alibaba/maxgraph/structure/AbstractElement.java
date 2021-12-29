@@ -15,6 +15,7 @@ package com.alibaba.maxgraph.structure;
 
 import com.alibaba.maxgraph.sdkcommon.graph.ElementId;
 import com.alibaba.maxgraph.structure.graph.MaxGraph;
+
 import org.apache.commons.lang3.tuple.Pair;
 
 import java.util.Arrays;

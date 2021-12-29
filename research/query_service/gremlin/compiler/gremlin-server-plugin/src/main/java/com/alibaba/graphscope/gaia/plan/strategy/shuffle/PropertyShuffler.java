@@ -16,6 +16,7 @@
 package com.alibaba.graphscope.gaia.plan.strategy.shuffle;
 
 import com.alibaba.graphscope.gaia.plan.strategy.OrderGlobalLimitStep;
+
 import org.apache.tinkerpop.gremlin.process.traversal.Step;
 import org.apache.tinkerpop.gremlin.process.traversal.step.TraversalParent;
 import org.apache.tinkerpop.gremlin.process.traversal.step.filter.DedupGlobalStep;
@@ -95,8 +96,12 @@ public abstract class PropertyShuffler {
     }
 
     public static boolean isGlobalStep(Step step) {
-        return step instanceof RangeGlobalStep || step instanceof OrderGlobalStep || step instanceof OrderGlobalLimitStep
-                || step instanceof GroupCountStep || step instanceof GroupStep || step instanceof CountGlobalStep
+        return step instanceof RangeGlobalStep
+                || step instanceof OrderGlobalStep
+                || step instanceof OrderGlobalLimitStep
+                || step instanceof GroupCountStep
+                || step instanceof GroupStep
+                || step instanceof CountGlobalStep
                 || step instanceof DedupGlobalStep;
     }
 

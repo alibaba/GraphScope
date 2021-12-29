@@ -13,7 +13,8 @@ public class PropertiesMapMeta extends DefaultMapMeta<GraphElement, StepProperti
     @Override
     public void add(GraphElement object, StepPropertiesMeta data) {
         if (this.mapMeta.get(object) == null) {
-            this.mapMeta.put(object, new StepPropertiesMeta(data.getProperties(), data.getStepId()));
+            this.mapMeta.put(
+                    object, new StepPropertiesMeta(data.getProperties(), data.getStepId()));
         } else {
             this.mapMeta.get(object).addProperties(data.getProperties());
         }

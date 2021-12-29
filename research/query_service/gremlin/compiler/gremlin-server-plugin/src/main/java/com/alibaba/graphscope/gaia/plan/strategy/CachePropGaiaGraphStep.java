@@ -4,6 +4,7 @@ import com.alibaba.graphscope.common.proto.Gremlin;
 import com.alibaba.graphscope.gaia.plan.PlanUtils;
 import com.alibaba.graphscope.gaia.plan.strategy.global.property.cache.PropertiesCacheStep;
 import com.alibaba.graphscope.gaia.plan.strategy.global.property.cache.ToFetchProperties;
+
 import org.apache.tinkerpop.gremlin.process.traversal.step.util.HasContainer;
 import org.apache.tinkerpop.gremlin.structure.T;
 
@@ -27,7 +28,8 @@ public class CachePropGaiaGraphStep extends GaiaGraphStep implements PropertiesC
         List<String> keys = new ArrayList<>();
         List<HasContainer> containers = this.getHasContainers();
         for (HasContainer container : containers) {
-            if (!container.getKey().equals(T.label.getAccessor()) && !container.getKey().equals(T.id.getAccessor())) {
+            if (!container.getKey().equals(T.label.getAccessor())
+                    && !container.getKey().equals(T.id.getAccessor())) {
                 keys.add(container.getKey());
             }
         }

@@ -1,12 +1,12 @@
 /**
  * Copyright 2020 Alibaba Group Holding Limited.
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -51,7 +51,8 @@ public abstract class AbstractUseKeyNode extends UnaryTreeNode {
         return this.sourceVertex;
     }
 
-    protected QueryFlowOuterClass.OperatorType getUseKeyOperator(QueryFlowOuterClass.OperatorType operatorType) {
+    protected QueryFlowOuterClass.OperatorType getUseKeyOperator(
+            QueryFlowOuterClass.OperatorType operatorType) {
         if (this.useKeyFlag) {
             return QueryFlowOuterClass.OperatorType.valueOf(operatorType.name() + "_BY_KEY");
         } else {
@@ -68,20 +69,23 @@ public abstract class AbstractUseKeyNode extends UnaryTreeNode {
      * @param joinZeroFlag        The join zero flag
      * @return The output vertex after deal with join zero flag
      */
-    protected LogicalVertex processJoinZeroVertex(VertexIdManager vertexIdManager,
-                                                  LogicalSubQueryPlan logicalSubQueryPlan,
-                                                  LogicalVertex valueVertex,
-                                                  boolean joinZeroFlag) {
+    protected LogicalVertex processJoinZeroVertex(
+            VertexIdManager vertexIdManager,
+            LogicalSubQueryPlan logicalSubQueryPlan,
+            LogicalVertex valueVertex,
+            boolean joinZeroFlag) {
         LogicalVertex outputVertex = valueVertex;
         LogicalVertex leftVertex = getSourceVertex();
         if (joinZeroFlag && null != leftVertex) {
-            ProcessorFunction joinZeroFunction = new ProcessorFunction(QueryFlowOuterClass.OperatorType.JOIN_RIGHT_ZERO_JOIN);
-            LogicalBinaryVertex logicalBinaryVertex = new LogicalBinaryVertex(
-                    vertexIdManager.getId(),
-                    joinZeroFunction,
-                    false,
-                    leftVertex,
-                    valueVertex);
+            ProcessorFunction joinZeroFunction =
+                    new ProcessorFunction(QueryFlowOuterClass.OperatorType.JOIN_RIGHT_ZERO_JOIN);
+            LogicalBinaryVertex logicalBinaryVertex =
+                    new LogicalBinaryVertex(
+                            vertexIdManager.getId(),
+                            joinZeroFunction,
+                            false,
+                            leftVertex,
+                            valueVertex);
             logicalSubQueryPlan.addLogicalVertex(logicalBinaryVertex);
             logicalSubQueryPlan.addLogicalEdge(valueVertex, logicalBinaryVertex, new LogicalEdge());
             outputVertex = logicalBinaryVertex;

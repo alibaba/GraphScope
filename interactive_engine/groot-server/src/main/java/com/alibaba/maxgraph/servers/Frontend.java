@@ -13,6 +13,7 @@
  */
 package com.alibaba.maxgraph.servers;
 
+import com.alibaba.graphscope.groot.SnapshotCache;
 import com.alibaba.graphscope.groot.discovery.FileDiscovery;
 import com.alibaba.graphscope.groot.discovery.LocalNodeProvider;
 import com.alibaba.graphscope.groot.discovery.NodeDiscovery;
@@ -27,7 +28,6 @@ import com.alibaba.graphscope.groot.frontend.FrontendSnapshotService;
 import com.alibaba.graphscope.groot.frontend.IngestorWriteClient;
 import com.alibaba.graphscope.groot.frontend.SchemaClient;
 import com.alibaba.graphscope.groot.frontend.SchemaWriter;
-import com.alibaba.graphscope.groot.SnapshotCache;
 import com.alibaba.graphscope.groot.frontend.StoreIngestClient;
 import com.alibaba.graphscope.groot.frontend.StoreIngestClients;
 import com.alibaba.graphscope.groot.frontend.StoreIngestor;
@@ -52,9 +52,12 @@ import com.alibaba.maxgraph.common.config.Configs;
 import com.alibaba.maxgraph.common.util.CuratorUtils;
 import com.alibaba.maxgraph.compiler.api.exception.MaxGraphException;
 import com.google.common.annotations.VisibleForTesting;
+
 import io.grpc.NameResolver;
-import java.io.IOException;
+
 import org.apache.curator.framework.CuratorFramework;
+
+import java.io.IOException;
 
 public class Frontend extends NodeBase {
 

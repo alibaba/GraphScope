@@ -1,6 +1,7 @@
 package com.alibaba.graphscope.gaia.plan.extractor;
 
 import com.alibaba.graphscope.gaia.plan.strategy.global.property.cache.ToFetchProperties;
+
 import org.apache.tinkerpop.gremlin.process.traversal.Step;
 import org.apache.tinkerpop.gremlin.process.traversal.step.filter.HasStep;
 import org.apache.tinkerpop.gremlin.process.traversal.step.map.PropertiesStep;
@@ -22,7 +23,8 @@ public enum PropertyExtractorFactory implements PropertyExtractor {
             List<String> properties = new ArrayList<>();
             List<HasContainer> containerList = ((HasStep) step).getHasContainers();
             for (HasContainer container : containerList) {
-                if (!container.getKey().equals(T.id.getAccessor()) && !container.getKey().equals(T.label.getAccessor())) {
+                if (!container.getKey().equals(T.id.getAccessor())
+                        && !container.getKey().equals(T.label.getAccessor())) {
                     properties.add(container.getKey());
                 }
             }

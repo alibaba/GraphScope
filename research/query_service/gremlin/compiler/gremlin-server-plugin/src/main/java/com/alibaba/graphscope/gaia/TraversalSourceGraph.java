@@ -49,7 +49,8 @@ public class TraversalSourceGraph implements Graph {
     }
 
     @Override
-    public <C extends GraphComputer> C compute(Class<C> graphComputerClass) throws IllegalArgumentException {
+    public <C extends GraphComputer> C compute(Class<C> graphComputerClass)
+            throws IllegalArgumentException {
         throw new UnsupportedOperationException("compute not supported");
     }
 
@@ -140,8 +141,7 @@ public class TraversalSourceGraph implements Graph {
         }
 
         public abstract class EmptyGraphElementFeatures implements ElementFeatures {
-            public EmptyGraphElementFeatures() {
-            }
+            public EmptyGraphElementFeatures() {}
 
             public boolean supportsAddProperty() {
                 return false;
@@ -153,20 +153,19 @@ public class TraversalSourceGraph implements Graph {
         }
 
         public final class EmptyGraphEdgePropertyFeatures implements EdgePropertyFeatures {
-            public EmptyGraphEdgePropertyFeatures() {
-            }
+            public EmptyGraphEdgePropertyFeatures() {}
         }
 
         public final class EmptyGraphVertexPropertyFeatures implements VertexPropertyFeatures {
-            public EmptyGraphVertexPropertyFeatures() {
-            }
+            public EmptyGraphVertexPropertyFeatures() {}
 
             public boolean supportsRemoveProperty() {
                 return false;
             }
         }
 
-        public final class EmptyGraphEdgeFeatures extends EmptyGraphElementFeatures implements EdgeFeatures {
+        public final class EmptyGraphEdgeFeatures extends EmptyGraphElementFeatures
+                implements EdgeFeatures {
             public EmptyGraphEdgeFeatures() {
                 super();
             }
@@ -184,7 +183,8 @@ public class TraversalSourceGraph implements Graph {
             }
         }
 
-        public final class EmptyGraphVertexFeatures extends EmptyGraphElementFeatures implements VertexFeatures {
+        public final class EmptyGraphVertexFeatures extends EmptyGraphElementFeatures
+                implements VertexFeatures {
             public EmptyGraphVertexFeatures() {
                 super();
             }
@@ -207,8 +207,7 @@ public class TraversalSourceGraph implements Graph {
         }
 
         public final class EmptyGraphGraphFeatures implements GraphFeatures {
-            public EmptyGraphGraphFeatures() {
-            }
+            public EmptyGraphGraphFeatures() {}
 
             public boolean supportsPersistence() {
                 return false;

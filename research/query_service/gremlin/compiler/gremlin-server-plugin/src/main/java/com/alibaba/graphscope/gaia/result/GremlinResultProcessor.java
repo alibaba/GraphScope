@@ -16,11 +16,13 @@
 package com.alibaba.graphscope.gaia.result;
 
 import com.alibaba.graphscope.common.proto.GremlinResult;
+import com.alibaba.graphscope.gaia.processor.GaiaGraphOpProcessor;
 import com.alibaba.pegasus.intf.ResultProcessor;
 import com.alibaba.pegasus.service.protocol.PegasusClient;
-import com.alibaba.graphscope.gaia.processor.GaiaGraphOpProcessor;
 import com.google.protobuf.ByteString;
+
 import io.grpc.Status;
+
 import org.apache.tinkerpop.gremlin.driver.message.ResponseStatusCode;
 import org.apache.tinkerpop.gremlin.server.Context;
 import org.slf4j.Logger;
@@ -48,7 +50,8 @@ public class GremlinResultProcessor implements ResultProcessor {
             try {
                 if (!locked) {
                     logger.debug("start to process response");
-                    GremlinResult.Result resultData = GremlinResult.Result.parseFrom(response.getData());
+                    GremlinResult.Result resultData =
+                            GremlinResult.Result.parseFrom(response.getData());
                     if (resultData.toByteString().equals(ByteString.EMPTY)) {
                         logger.error("data is empty");
                     }
@@ -56,7 +59,10 @@ public class GremlinResultProcessor implements ResultProcessor {
                     resultCollectors.addAll(resultParser.parseFrom(resultData));
                 }
             } catch (Exception e) {
-                GaiaGraphOpProcessor.writeResultList(writeResult, Collections.singletonList(e.getMessage()), ResponseStatusCode.SERVER_ERROR);
+                GaiaGraphOpProcessor.writeResultList(
+                        writeResult,
+                        Collections.singletonList(e.getMessage()),
+                        ResponseStatusCode.SERVER_ERROR);
                 // cannot write to this context any more
                 locked = true;
                 throw new RuntimeException(e);
@@ -69,7 +75,8 @@ public class GremlinResultProcessor implements ResultProcessor {
         synchronized (this) {
             if (!locked) {
                 logger.debug("start finish");
-                GaiaGraphOpProcessor.writeResultList(writeResult, resultCollectors, ResponseStatusCode.SUCCESS);
+                GaiaGraphOpProcessor.writeResultList(
+                        writeResult, resultCollectors, ResponseStatusCode.SUCCESS);
                 locked = true;
             }
         }
@@ -80,7 +87,10 @@ public class GremlinResultProcessor implements ResultProcessor {
         synchronized (this) {
             if (!locked) {
                 logger.debug("start error");
-                GaiaGraphOpProcessor.writeResultList(writeResult, Collections.singletonList(status.toString()), ResponseStatusCode.SERVER_ERROR);
+                GaiaGraphOpProcessor.writeResultList(
+                        writeResult,
+                        Collections.singletonList(status.toString()),
+                        ResponseStatusCode.SERVER_ERROR);
                 locked = true;
             }
         }

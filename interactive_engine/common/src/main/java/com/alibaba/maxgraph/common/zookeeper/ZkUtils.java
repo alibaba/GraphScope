@@ -1,12 +1,12 @@
 /**
  * Copyright 2020 Alibaba Group Holding Limited.
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -17,6 +17,7 @@ package com.alibaba.maxgraph.common.zookeeper;
 
 import com.alibaba.maxgraph.common.cluster.InstanceConfig;
 import com.google.common.collect.ImmutableList;
+
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.curator.framework.CuratorFramework;
@@ -40,7 +41,6 @@ import java.util.concurrent.TimeUnit;
  * @author lvshuang.xjs@alibaba-inc.com
  * @create 2018-06-11 下午4:43
  **/
-
 public class ZkUtils implements AutoCloseable {
 
     private static final Logger LOG = LoggerFactory.getLogger(ZkUtils.class);
@@ -51,10 +51,18 @@ public class ZkUtils implements AutoCloseable {
         this(zkUrl, connectionTimeout, sessionTimeout, 0, false, null, null);
     }
 
-    public ZkUtils(String zkUrl, int connectionTimeout, int sessionTimeout, int maxWaitMS, boolean zkAuthEnable,
-                   String user, String password) {
-        this.zkUrl= zkUrl;
-        this.zkClient = new ZkClient(zkUrl, connectionTimeout, sessionTimeout, zkAuthEnable, user, password);
+    public ZkUtils(
+            String zkUrl,
+            int connectionTimeout,
+            int sessionTimeout,
+            int maxWaitMS,
+            boolean zkAuthEnable,
+            String user,
+            String password) {
+        this.zkUrl = zkUrl;
+        this.zkClient =
+                new ZkClient(
+                        zkUrl, connectionTimeout, sessionTimeout, zkAuthEnable, user, password);
         this.zkClient.start();
 
         try {
@@ -83,7 +91,7 @@ public class ZkUtils implements AutoCloseable {
             CuratorFramework zkClient = ZkConnectFactory.getZkClient(instanceConfig);
             return new ZkUtils(zkUrl, zkClient);
         } catch (Exception e) {
-            LOG.error("fail to create curator client: " +  zkUrl, e);
+            LOG.error("fail to create curator client: " + zkUrl, e);
             throw new RuntimeException(e);
         }
     }
@@ -184,8 +192,7 @@ public class ZkUtils implements AutoCloseable {
     }
 
     public void createPath(String path, byte[] data, CreateMode createMode) throws Exception {
-        zkClient.create().creatingParentsIfNeeded().withMode(createMode).
-                forPath(path, data);
+        zkClient.create().creatingParentsIfNeeded().withMode(createMode).forPath(path, data);
     }
 
     public Pair<String, Stat> readData(String path) throws Exception {
@@ -208,7 +215,8 @@ public class ZkUtils implements AutoCloseable {
         createOrUpdatePath(path, data, CreateMode.PERSISTENT);
     }
 
-    public void createOrUpdatePath(String path, byte[] data, CreateMode createMode) throws Exception {
+    public void createOrUpdatePath(String path, byte[] data, CreateMode createMode)
+            throws Exception {
         if (zkClient.checkExists().forPath(path) == null) {
             createPath(path, data, createMode);
         } else {
@@ -216,7 +224,8 @@ public class ZkUtils implements AutoCloseable {
         }
     }
 
-    public void createOrUpdatePath(String path, String data, CreateMode createMode) throws Exception {
+    public void createOrUpdatePath(String path, String data, CreateMode createMode)
+            throws Exception {
         createOrUpdatePath(path, data.getBytes(StandardCharsets.UTF_8), createMode);
     }
 
@@ -249,8 +258,10 @@ public class ZkUtils implements AutoCloseable {
         public SessionExpireListener(AbstractRegisterCallBack callBack) {
             this.callBack = callBack;
         }
+
         @Override
-        public void stateChanged(CuratorFramework curatorFramework, ConnectionState connectionState) {
+        public void stateChanged(
+                CuratorFramework curatorFramework, ConnectionState connectionState) {
             try {
                 if (ConnectionState.RECONNECTED.equals(connectionState)) {
                     callBack.register();
@@ -260,5 +271,4 @@ public class ZkUtils implements AutoCloseable {
             }
         }
     }
-
 }

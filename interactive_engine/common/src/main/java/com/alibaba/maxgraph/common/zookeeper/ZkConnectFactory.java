@@ -1,12 +1,12 @@
 /**
  * Copyright 2020 Alibaba Group Holding Limited.
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -17,6 +17,7 @@ package com.alibaba.maxgraph.common.zookeeper;
 
 import com.alibaba.maxgraph.common.cluster.InstanceConfig;
 import com.google.common.base.Preconditions;
+
 import org.apache.curator.framework.CuratorFramework;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -45,8 +46,9 @@ public class ZkConnectFactory {
      */
     static CuratorFramework getZkClient(final InstanceConfig instanceConfig) {
 
-        Preconditions.checkArgument(zkUrl == null || (zkUrl != null && zkUrl.equals(instanceConfig.getZkConnect())), "zkUrl " +
-                "change from " + zkUrl + " to " + instanceConfig.getZkConnect());
+        Preconditions.checkArgument(
+                zkUrl == null || (zkUrl != null && zkUrl.equals(instanceConfig.getZkConnect())),
+                "zkUrl " + "change from " + zkUrl + " to " + instanceConfig.getZkConnect());
 
         if (zkClient == null || zkClient.isClosed()) {
             synchronized (LOCK) {

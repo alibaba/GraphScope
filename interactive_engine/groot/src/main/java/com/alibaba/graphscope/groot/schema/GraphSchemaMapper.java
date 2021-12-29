@@ -16,16 +16,17 @@ package com.alibaba.graphscope.groot.schema;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.alibaba.graphscope.groot.schema.mapper.DefaultGraphSchema;
-import com.alibaba.maxgraph.compiler.api.schema.GraphEdge;
-import com.alibaba.maxgraph.compiler.api.schema.GraphSchema;
-import com.alibaba.maxgraph.compiler.api.schema.GraphVertex;
 import com.alibaba.graphscope.groot.schema.mapper.EdgeTypeMapper;
 import com.alibaba.graphscope.groot.schema.mapper.SchemaElementMapper;
 import com.alibaba.graphscope.groot.schema.mapper.VertexTypeMapper;
+import com.alibaba.maxgraph.compiler.api.schema.GraphEdge;
+import com.alibaba.maxgraph.compiler.api.schema.GraphSchema;
+import com.alibaba.maxgraph.compiler.api.schema.GraphVertex;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+
 import org.apache.commons.lang3.StringUtils;
 
 import java.util.List;

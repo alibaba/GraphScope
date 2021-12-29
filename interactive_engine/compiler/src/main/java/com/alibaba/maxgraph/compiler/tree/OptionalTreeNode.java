@@ -13,24 +13,24 @@
  */
 package com.alibaba.maxgraph.compiler.tree;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+
 import com.alibaba.maxgraph.QueryFlowOuterClass;
 import com.alibaba.maxgraph.compiler.api.schema.GraphSchema;
-import com.alibaba.maxgraph.compiler.logical.LogicalQueryPlan;
-import com.alibaba.maxgraph.compiler.tree.value.ValueType;
-import com.alibaba.maxgraph.compiler.tree.value.VarietyValueType;
 import com.alibaba.maxgraph.compiler.logical.LogicalBinaryVertex;
 import com.alibaba.maxgraph.compiler.logical.LogicalEdge;
+import com.alibaba.maxgraph.compiler.logical.LogicalQueryPlan;
 import com.alibaba.maxgraph.compiler.logical.LogicalSubQueryPlan;
 import com.alibaba.maxgraph.compiler.logical.LogicalVertex;
 import com.alibaba.maxgraph.compiler.logical.edge.EdgeShuffleType;
 import com.alibaba.maxgraph.compiler.logical.function.ProcessorFunction;
 import com.alibaba.maxgraph.compiler.optimizer.ContextManager;
+import com.alibaba.maxgraph.compiler.tree.value.ValueType;
+import com.alibaba.maxgraph.compiler.tree.value.VarietyValueType;
 import com.alibaba.maxgraph.compiler.utils.TreeNodeUtils;
 import com.google.common.collect.Sets;
 
 import java.util.Set;
-
-import static com.google.common.base.Preconditions.checkNotNull;
 
 public class OptionalTreeNode extends UnaryTreeNode {
     private TreeNode branchTreeNode;

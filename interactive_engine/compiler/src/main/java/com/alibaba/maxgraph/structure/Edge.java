@@ -1,12 +1,12 @@
 /**
  * Copyright 2020 Alibaba Group Holding Limited.
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -25,7 +25,13 @@ public class Edge extends AbstractElement {
     private final Vertex src;
     private final Vertex dst;
 
-    public Edge(ElementId id, String label, Map<String, Object> properties, Vertex src, Vertex dst, MaxGraph graph) {
+    public Edge(
+            ElementId id,
+            String label,
+            Map<String, Object> properties,
+            Vertex src,
+            Vertex dst,
+            MaxGraph graph) {
         super(id, label, properties, graph);
         this.src = src;
         this.dst = dst;
@@ -42,6 +48,7 @@ public class Edge extends AbstractElement {
     @Override
     public void addProperty(String key, Object value) {
         super.addProperty(key, value);
-        super.graph.updateEdge(getSrcVertex(), getDstVertex(), super.label, super.id.id(), super.getProperties());
+        super.graph.updateEdge(
+                getSrcVertex(), getDstVertex(), super.label, super.id.id(), super.getProperties());
     }
 }
