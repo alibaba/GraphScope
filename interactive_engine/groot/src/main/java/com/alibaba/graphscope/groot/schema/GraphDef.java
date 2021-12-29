@@ -13,13 +13,13 @@
  */
 package com.alibaba.graphscope.groot.schema;
 
+import com.alibaba.graphscope.groot.operation.LabelId;
 import com.alibaba.maxgraph.compiler.api.exception.GraphElementNotFoundException;
 import com.alibaba.maxgraph.compiler.api.exception.GraphPropertyNotFoundException;
-import com.alibaba.maxgraph.compiler.api.schema.*;
-import com.alibaba.maxgraph.proto.groot.*;
 import com.alibaba.maxgraph.compiler.api.exception.InvalidSchemaException;
 import com.alibaba.maxgraph.compiler.api.exception.TypeDefNotFoundException;
-import com.alibaba.graphscope.groot.operation.LabelId;
+import com.alibaba.maxgraph.compiler.api.schema.*;
+import com.alibaba.maxgraph.proto.groot.*;
 import com.google.common.collect.Sets;
 
 import java.util.ArrayList;
@@ -246,7 +246,6 @@ public class GraphDef implements GraphSchema {
         TypeDef typeDef = idToType.get(new LabelId(labelId));
         return convertVertexEdgeType(typeDef);
     }
-
 
     private GraphElement convertVertexEdgeType(TypeDef typeDef) {
         if (null == typeDef) {

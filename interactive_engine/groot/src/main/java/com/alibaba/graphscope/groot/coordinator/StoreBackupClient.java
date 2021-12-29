@@ -19,6 +19,7 @@ import com.alibaba.graphscope.groot.CompletionCallback;
 import com.alibaba.graphscope.groot.rpc.RpcClient;
 import com.alibaba.graphscope.groot.store.StoreBackupId;
 import com.alibaba.maxgraph.proto.groot.*;
+
 import io.grpc.ManagedChannel;
 import io.grpc.stub.StreamObserver;
 
@@ -40,98 +41,111 @@ public class StoreBackupClient extends RpcClient {
     }
 
     public void createStoreBackup(int globalBackupId, CompletionCallback<StoreBackupId> callback) {
-        CreateStoreBackupRequest req = CreateStoreBackupRequest.newBuilder()
-                .setGlobalBackupId(globalBackupId)
-                .build();
-        stub.createStoreBackup(req, new StreamObserver<CreateStoreBackupResponse>() {
-            @Override
-            public void onNext(CreateStoreBackupResponse response) {
-                StoreBackupIdPb finishedStoreBackupIdPb = response.getStoreBackupId();
-                callback.onCompleted(StoreBackupId.parseProto(finishedStoreBackupIdPb));
-            }
+        CreateStoreBackupRequest req =
+                CreateStoreBackupRequest.newBuilder().setGlobalBackupId(globalBackupId).build();
+        stub.createStoreBackup(
+                req,
+                new StreamObserver<CreateStoreBackupResponse>() {
+                    @Override
+                    public void onNext(CreateStoreBackupResponse response) {
+                        StoreBackupIdPb finishedStoreBackupIdPb = response.getStoreBackupId();
+                        callback.onCompleted(StoreBackupId.parseProto(finishedStoreBackupIdPb));
+                    }
 
-            @Override
-            public void onError(Throwable throwable) {
-                callback.onError(throwable);
-            }
+                    @Override
+                    public void onError(Throwable throwable) {
+                        callback.onError(throwable);
+                    }
 
-            @Override
-            public void onCompleted() {
-            }
-        });
+                    @Override
+                    public void onCompleted() {}
+                });
     }
 
-    public void clearUnavailableBackups(Map<Integer, List<Integer>> readyPartitionBackupIdsList,
-                                        CompletionCallback<Void> callback) {
+    public void clearUnavailableBackups(
+            Map<Integer, List<Integer>> readyPartitionBackupIdsList,
+            CompletionCallback<Void> callback) {
         Map<Integer, PartitionBackupIdListPb> partitionToBackupIdListPb =
                 new HashMap<>(readyPartitionBackupIdsList.size());
         for (Map.Entry<Integer, List<Integer>> entry : readyPartitionBackupIdsList.entrySet()) {
             partitionToBackupIdListPb.put(
                     entry.getKey(),
-                    PartitionBackupIdListPb.newBuilder().addAllReadyPartitionBackupIds(entry.getValue()).build());
+                    PartitionBackupIdListPb.newBuilder()
+                            .addAllReadyPartitionBackupIds(entry.getValue())
+                            .build());
         }
-        ClearUnavailableStoreBackupsRequest req = ClearUnavailableStoreBackupsRequest.newBuilder()
-                .putAllPartitionToReadyBackupIds(partitionToBackupIdListPb)
-                .build();
-        stub.clearUnavailableStoreBackups(req, new StreamObserver<ClearUnavailableStoreBackupsResponse>() {
-            @Override
-            public void onNext(ClearUnavailableStoreBackupsResponse clearUnavailableStoreBackupsResponse) {
-                callback.onCompleted(null);
-            }
+        ClearUnavailableStoreBackupsRequest req =
+                ClearUnavailableStoreBackupsRequest.newBuilder()
+                        .putAllPartitionToReadyBackupIds(partitionToBackupIdListPb)
+                        .build();
+        stub.clearUnavailableStoreBackups(
+                req,
+                new StreamObserver<ClearUnavailableStoreBackupsResponse>() {
+                    @Override
+                    public void onNext(
+                            ClearUnavailableStoreBackupsResponse
+                                    clearUnavailableStoreBackupsResponse) {
+                        callback.onCompleted(null);
+                    }
 
-            @Override
-            public void onError(Throwable throwable) {
-                callback.onError(throwable);
-            }
+                    @Override
+                    public void onError(Throwable throwable) {
+                        callback.onError(throwable);
+                    }
 
-            @Override
-            public void onCompleted() {
-            }
-        });
+                    @Override
+                    public void onCompleted() {}
+                });
     }
 
-    public void restoreFromStoreBackup(StoreBackupId storeBackupId, String storeRestoreRootPath,
-                                       CompletionCallback<Void> callback) {
-        RestoreFromStoreBackupRequest req = RestoreFromStoreBackupRequest.newBuilder()
-                .setStoreBackupId(storeBackupId.toProto())
-                .setRestoreRootPath(storeRestoreRootPath)
-                .build();
-        stub.restoreFromStoreBackup(req, new StreamObserver<RestoreFromStoreBackupResponse>() {
-            @Override
-            public void onNext(RestoreFromStoreBackupResponse restoreFromStoreBackupResponse) {
-                callback.onCompleted(null);
-            }
+    public void restoreFromStoreBackup(
+            StoreBackupId storeBackupId,
+            String storeRestoreRootPath,
+            CompletionCallback<Void> callback) {
+        RestoreFromStoreBackupRequest req =
+                RestoreFromStoreBackupRequest.newBuilder()
+                        .setStoreBackupId(storeBackupId.toProto())
+                        .setRestoreRootPath(storeRestoreRootPath)
+                        .build();
+        stub.restoreFromStoreBackup(
+                req,
+                new StreamObserver<RestoreFromStoreBackupResponse>() {
+                    @Override
+                    public void onNext(
+                            RestoreFromStoreBackupResponse restoreFromStoreBackupResponse) {
+                        callback.onCompleted(null);
+                    }
 
-            @Override
-            public void onError(Throwable throwable) {
-                callback.onError(throwable);
-            }
+                    @Override
+                    public void onError(Throwable throwable) {
+                        callback.onError(throwable);
+                    }
 
-            @Override
-            public void onCompleted() {
-            }
-        });
+                    @Override
+                    public void onCompleted() {}
+                });
     }
 
     public void verifyStoreBackup(StoreBackupId storeBackupId, CompletionCallback<Void> callback) {
-        VerifyStoreBackupRequest req = VerifyStoreBackupRequest.newBuilder()
-                .setStoreBackupId(storeBackupId.toProto())
-                .build();
-        stub.verifyStoreBackup(req, new StreamObserver<VerifyStoreBackupResponse>() {
-            @Override
-            public void onNext(VerifyStoreBackupResponse verifyStoreBackupResponse) {
-                callback.onCompleted(null);
-            }
+        VerifyStoreBackupRequest req =
+                VerifyStoreBackupRequest.newBuilder()
+                        .setStoreBackupId(storeBackupId.toProto())
+                        .build();
+        stub.verifyStoreBackup(
+                req,
+                new StreamObserver<VerifyStoreBackupResponse>() {
+                    @Override
+                    public void onNext(VerifyStoreBackupResponse verifyStoreBackupResponse) {
+                        callback.onCompleted(null);
+                    }
 
-            @Override
-            public void onError(Throwable throwable) {
-                callback.onError(throwable);
-            }
+                    @Override
+                    public void onError(Throwable throwable) {
+                        callback.onError(throwable);
+                    }
 
-            @Override
-            public void onCompleted() {
-
-            }
-        });
+                    @Override
+                    public void onCompleted() {}
+                });
     }
 }

@@ -14,11 +14,11 @@
 package com.alibaba.graphscope.groot.schema.mapper;
 
 import com.alibaba.fastjson.annotation.JSONField;
+import com.alibaba.graphscope.groot.schema.TypeEnum;
 import com.alibaba.maxgraph.compiler.api.schema.EdgeRelation;
 import com.alibaba.maxgraph.compiler.api.schema.GraphEdge;
 import com.alibaba.maxgraph.compiler.api.schema.GraphProperty;
 import com.alibaba.maxgraph.compiler.api.schema.GraphVertex;
-import com.alibaba.graphscope.groot.schema.TypeEnum;
 import com.google.common.collect.Lists;
 
 import java.util.List;

@@ -3,6 +3,7 @@ package com.alibaba.graphscope.groot.discovery;
 import com.alibaba.maxgraph.common.config.CommonConfig;
 import com.alibaba.maxgraph.common.config.Configs;
 import com.alibaba.maxgraph.common.util.CuratorUtils;
+
 import org.apache.curator.framework.CuratorFramework;
 
 public class DiscoveryFactory {

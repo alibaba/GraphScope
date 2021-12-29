@@ -13,6 +13,8 @@
  */
 package com.alibaba.maxgraph.compiler.tree;
 
+import static com.google.common.base.Preconditions.checkArgument;
+
 import com.alibaba.maxgraph.Message;
 import com.alibaba.maxgraph.Message.EdgeDirection;
 import com.alibaba.maxgraph.QueryFlowOuterClass.OperatorType;
@@ -23,8 +25,6 @@ import com.alibaba.maxgraph.compiler.optimizer.ContextManager;
 import com.alibaba.maxgraph.compiler.tree.value.ValueType;
 import com.alibaba.maxgraph.compiler.tree.value.VertexValueType;
 import com.alibaba.maxgraph.tinkerpop.steps.LabelPropagationStep;
-
-import static com.google.common.base.Preconditions.checkArgument;
 
 public class LabelPropagationTreeNode extends UnaryTreeNode {
     private final LabelPropagationStep step;

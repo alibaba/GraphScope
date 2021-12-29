@@ -1,12 +1,12 @@
 /**
  * Copyright 2020 Alibaba Group Holding Limited.
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -19,15 +19,16 @@ import com.alibaba.maxgraph.Message;
 import com.alibaba.maxgraph.QueryFlowOuterClass;
 import com.alibaba.maxgraph.compiler.api.schema.GraphSchema;
 import com.alibaba.maxgraph.compiler.logical.LogicalEdge;
-import com.alibaba.maxgraph.compiler.logical.edge.EdgeShuffleType;
-import com.alibaba.maxgraph.compiler.optimizer.ContextManager;
-import com.alibaba.maxgraph.compiler.tree.value.ValueType;
-import com.alibaba.maxgraph.compiler.tree.value.VertexValueType;
 import com.alibaba.maxgraph.compiler.logical.LogicalSubQueryPlan;
 import com.alibaba.maxgraph.compiler.logical.VertexIdManager;
+import com.alibaba.maxgraph.compiler.logical.edge.EdgeShuffleType;
 import com.alibaba.maxgraph.compiler.logical.function.ProcessorFunction;
+import com.alibaba.maxgraph.compiler.optimizer.ContextManager;
 import com.alibaba.maxgraph.compiler.tree.addition.CountFlagNode;
 import com.alibaba.maxgraph.compiler.tree.addition.SampleNode;
+import com.alibaba.maxgraph.compiler.tree.value.ValueType;
+import com.alibaba.maxgraph.compiler.tree.value.VertexValueType;
+
 import org.apache.tinkerpop.gremlin.structure.Direction;
 
 public class VertexTreeNode extends UnaryTreeNode implements CountFlagNode, SampleNode {
@@ -35,7 +36,8 @@ public class VertexTreeNode extends UnaryTreeNode implements CountFlagNode, Samp
     private String[] edgeLabels;
     private boolean countFlag = false;
 
-    public VertexTreeNode(TreeNode input, Direction direction, String[] edgeLabels, GraphSchema schema) {
+    public VertexTreeNode(
+            TreeNode input, Direction direction, String[] edgeLabels, GraphSchema schema) {
         super(input, NodeType.FLATMAP, schema);
         this.direction = direction;
         this.edgeLabels = edgeLabels;
@@ -51,11 +53,22 @@ public class VertexTreeNode extends UnaryTreeNode implements CountFlagNode, Samp
                 argumentBuilder.addIntValueList(schema.getElement(edgeLabel).getLabelId());
             }
         }
-        ProcessorFunction processorFunction = new ProcessorFunction(getCountOperator(QueryFlowOuterClass.OperatorType.valueOf(direction.name())), argumentBuilder, rangeLimit);
+        ProcessorFunction processorFunction =
+                new ProcessorFunction(
+                        getCountOperator(
+                                QueryFlowOuterClass.OperatorType.valueOf(direction.name())),
+                        argumentBuilder,
+                        rangeLimit);
         if (direction == Direction.OUT && getInputNode().isPropLocalFlag()) {
-            return parseSingleUnaryVertex(vertexIdManager, labelManager, processorFunction, contextManager, new LogicalEdge(EdgeShuffleType.FORWARD));
+            return parseSingleUnaryVertex(
+                    vertexIdManager,
+                    labelManager,
+                    processorFunction,
+                    contextManager,
+                    new LogicalEdge(EdgeShuffleType.FORWARD));
         } else {
-            return parseSingleUnaryVertex(vertexIdManager, labelManager, processorFunction, contextManager);
+            return parseSingleUnaryVertex(
+                    vertexIdManager, labelManager, processorFunction, contextManager);
         }
     }
 
@@ -66,7 +79,9 @@ public class VertexTreeNode extends UnaryTreeNode implements CountFlagNode, Samp
 
     @Override
     public boolean checkCountOptimize() {
-        return beforeRequirementList.isEmpty() && afterRequirementList.isEmpty() && null == rangeLimit;
+        return beforeRequirementList.isEmpty()
+                && afterRequirementList.isEmpty()
+                && null == rangeLimit;
     }
 
     @Override

@@ -15,8 +15,9 @@
  */
 package com.alibaba.graphscope.gaia.plan.resource;
 
-import com.alibaba.pegasus.builder.JobBuilder;
 import com.alibaba.graphscope.gaia.plan.translator.builder.StepBuilder;
+import com.alibaba.pegasus.builder.JobBuilder;
+
 import org.apache.tinkerpop.gremlin.process.traversal.Step;
 
 /**

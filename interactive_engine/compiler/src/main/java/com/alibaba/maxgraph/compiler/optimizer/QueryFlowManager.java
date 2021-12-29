@@ -1,12 +1,12 @@
 /**
  * Copyright 2020 Alibaba Group Holding Limited.
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -16,8 +16,8 @@
 package com.alibaba.maxgraph.compiler.optimizer;
 
 import com.alibaba.maxgraph.QueryFlowOuterClass;
-import com.alibaba.maxgraph.compiler.tree.value.ValueType;
 import com.alibaba.maxgraph.compiler.tree.TreeNodeLabelManager;
+import com.alibaba.maxgraph.compiler.tree.value.ValueType;
 
 public class QueryFlowManager {
     private QueryFlowOuterClass.QueryFlow.Builder queryFlow;
@@ -25,10 +25,11 @@ public class QueryFlowManager {
     private TreeNodeLabelManager treeNodeLabelManager;
     private ValueType resultValueType;
 
-    public QueryFlowManager(QueryFlowOuterClass.QueryFlow.Builder queryFlow,
-                            OperatorListManager operatorListManager,
-                            TreeNodeLabelManager treeNodeLabelManager,
-                            ValueType resultValueType) {
+    public QueryFlowManager(
+            QueryFlowOuterClass.QueryFlow.Builder queryFlow,
+            OperatorListManager operatorListManager,
+            TreeNodeLabelManager treeNodeLabelManager,
+            ValueType resultValueType) {
         this.queryFlow = queryFlow;
         this.operatorListManager = operatorListManager;
         this.treeNodeLabelManager = treeNodeLabelManager;
@@ -58,7 +59,8 @@ public class QueryFlowManager {
     public void validQueryFlow() {
         QueryFlowOuterClass.QueryFlow queryFlow = getQueryFlow().build();
         QueryFlowOuterClass.SourceOperator sourceOperator = queryFlow.getQueryPlan().getSourceOp();
-        if (sourceOperator.hasOdpsInput() && sourceOperator.getBase().getArgument().getIntValueListCount() != 1) {
+        if (sourceOperator.hasOdpsInput()
+                && sourceOperator.getBase().getArgument().getIntValueListCount() != 1) {
             throw new IllegalArgumentException("There must be one label argument for odps input");
         }
     }

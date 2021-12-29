@@ -1,12 +1,12 @@
 /**
  * Copyright 2020 Alibaba Group Holding Limited.
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -14,15 +14,6 @@
  * limitations under the License.
  */
 package com.alibaba.maxgraph.compiler.operator;
-
-import org.apache.tinkerpop.gremlin.process.traversal.Order;
-import org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.GraphTraversal;
-import org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.__;
-import org.apache.tinkerpop.gremlin.structure.Column;
-import org.apache.tinkerpop.gremlin.structure.T;
-import org.junit.Test;
-
-import java.io.IOException;
 
 import static org.apache.tinkerpop.gremlin.process.traversal.Scope.local;
 import static org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.__.both;
@@ -33,10 +24,17 @@ import static org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.__.select
 import static org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.__.valueMap;
 import static org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.__.values;
 
-public class GroupOperatorTest extends AbstractOperatorTest {
-    public GroupOperatorTest() throws IOException {
+import org.apache.tinkerpop.gremlin.process.traversal.Order;
+import org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.GraphTraversal;
+import org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.__;
+import org.apache.tinkerpop.gremlin.structure.Column;
+import org.apache.tinkerpop.gremlin.structure.T;
+import org.junit.Test;
 
-    }
+import java.io.IOException;
+
+public class GroupOperatorTest extends AbstractOperatorTest {
+    public GroupOperatorTest() throws IOException {}
 
     @Test
     public void testGroupCase() {
@@ -106,7 +104,8 @@ public class GroupOperatorTest extends AbstractOperatorTest {
 
     @Test
     public void testGroupConstantMaxCase() {
-        executeTreeQuery(g.V().both().hasLabel("person").group().by(constant(1)).by(values("name").max()));
+        executeTreeQuery(
+                g.V().both().hasLabel("person").group().by(constant(1)).by(values("name").max()));
     }
 
     @Test
@@ -137,22 +136,37 @@ public class GroupOperatorTest extends AbstractOperatorTest {
 
     @Test
     public void testGroupCountMax() {
-        executeTreeQuery(g.V().both().hasLabel("person").group().by(both().count()).by(values("id").max()));
+        executeTreeQuery(
+                g.V().both().hasLabel("person").group().by(both().count()).by(values("id").max()));
     }
 
     @Test
     public void testGroupByNameOutWeightSumCase() {
-        executeTreeQuery(g.V().hasLabel("person").group().by("name").by(__.outE().values("weight").sum()).order(local).by(Column.values));
+        executeTreeQuery(
+                g.V().hasLabel("person")
+                        .group()
+                        .by("name")
+                        .by(__.outE().values("weight").sum())
+                        .order(local)
+                        .by(Column.values));
     }
 
     @Test
     public void testGroupValuesOrderCase() {
-        executeTreeQuery(g.V().group().by(T.label).by(values("name").order().by(Order.desc).fold()));
+        executeTreeQuery(
+                g.V().group().by(T.label).by(values("name").order().by(Order.desc).fold()));
     }
 
     @Test
     public void testGroupLabelOrderLocalCase() {
-        executeTreeQuery(g.V().both().group().by(T.label).unfold().select(Column.values).order(local).by("name"));
+        executeTreeQuery(
+                g.V().both()
+                        .group()
+                        .by(T.label)
+                        .unfold()
+                        .select(Column.values)
+                        .order(local)
+                        .by("name"));
     }
 
     @Test
@@ -167,16 +181,32 @@ public class GroupOperatorTest extends AbstractOperatorTest {
 
     @Test
     public void testGroupBySelectLabelCase() {
-        executeTreeQuery(g.V().as("a").repeat(__.both()).times(3).emit().values("name").as("b").group().by(__.select("a")).by(__.select("b").dedup().order().fold()));
+        executeTreeQuery(
+                g.V().as("a")
+                        .repeat(__.both())
+                        .times(3)
+                        .emit()
+                        .values("name")
+                        .as("b")
+                        .group()
+                        .by(__.select("a"))
+                        .by(__.select("b").dedup().order().fold()));
     }
 
     @Test
     public void testGroupValueOrderFoldCase() {
-        executeTreeQuery(g.V().group().by(T.label).by(__.values("name").order().by(Order.desc).fold()));
+        executeTreeQuery(
+                g.V().group().by(T.label).by(__.values("name").order().by(Order.desc).fold()));
     }
 
     @Test
     public void testGroupByOutCountByNameCase() {
-        executeTreeQuery(g.V().hasLabel("person").as("p").out().group().by("name").by(__.select("p").values("age").sum()));
+        executeTreeQuery(
+                g.V().hasLabel("person")
+                        .as("p")
+                        .out()
+                        .group()
+                        .by("name")
+                        .by(__.select("p").values("age").sum()));
     }
 }

@@ -15,17 +15,18 @@ package com.alibaba.maxgraph.compiler.operator;
 
 import com.alibaba.maxgraph.compiler.api.schema.GraphSchema;
 import com.alibaba.maxgraph.compiler.cost.statistics.CostDataStatistics;
-import com.alibaba.maxgraph.compiler.schema.DefaultGraphSchema;
-import com.alibaba.maxgraph.compiler.schema.DefaultSchemaFetcher;
-import com.alibaba.maxgraph.sdkcommon.exception.MetaException;
 import com.alibaba.maxgraph.compiler.graph.DefaultMaxGraph;
 import com.alibaba.maxgraph.compiler.optimizer.CompilerConfig;
 import com.alibaba.maxgraph.compiler.optimizer.LogicalPlanOptimizer;
 import com.alibaba.maxgraph.compiler.optimizer.OptimizeConfig;
 import com.alibaba.maxgraph.compiler.optimizer.QueryFlowBuilder;
 import com.alibaba.maxgraph.compiler.optimizer.QueryFlowManager;
+import com.alibaba.maxgraph.compiler.schema.DefaultGraphSchema;
+import com.alibaba.maxgraph.compiler.schema.DefaultSchemaFetcher;
+import com.alibaba.maxgraph.sdkcommon.exception.MetaException;
 import com.alibaba.maxgraph.tinkerpop.traversal.MaxGraphTraversalSource;
 import com.google.protobuf.TextFormat;
+
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.GraphTraversal;

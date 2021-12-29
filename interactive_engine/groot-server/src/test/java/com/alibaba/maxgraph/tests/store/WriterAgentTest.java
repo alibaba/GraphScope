@@ -13,20 +13,21 @@
  */
 package com.alibaba.maxgraph.tests.store;
 
+import static org.mockito.Mockito.*;
+
 import com.alibaba.graphscope.groot.meta.MetaService;
 import com.alibaba.graphscope.groot.operation.StoreDataBatch;
-import com.alibaba.maxgraph.common.config.CommonConfig;
-import com.alibaba.maxgraph.common.config.Configs;
-import com.alibaba.maxgraph.common.config.StoreConfig;
 import com.alibaba.graphscope.groot.store.SnapshotCommitter;
 import com.alibaba.graphscope.groot.store.StoreService;
 import com.alibaba.graphscope.groot.store.WriterAgent;
+import com.alibaba.maxgraph.common.config.CommonConfig;
+import com.alibaba.maxgraph.common.config.Configs;
+import com.alibaba.maxgraph.common.config.StoreConfig;
+
 import org.junit.jupiter.api.Test;
 
 import java.util.Collections;
 import java.util.concurrent.ExecutionException;
-
-import static org.mockito.Mockito.*;
 
 public class WriterAgentTest {
 

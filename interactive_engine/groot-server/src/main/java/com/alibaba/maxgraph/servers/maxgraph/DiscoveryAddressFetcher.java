@@ -13,12 +13,12 @@
  */
 package com.alibaba.maxgraph.servers.maxgraph;
 
-import com.alibaba.maxgraph.common.rpc.RpcAddress;
-import com.alibaba.maxgraph.common.rpc.RpcAddressFetcher;
-import com.alibaba.maxgraph.sdkcommon.client.Endpoint;
 import com.alibaba.graphscope.groot.discovery.MaxGraphNode;
 import com.alibaba.graphscope.groot.discovery.NodeDiscovery;
 import com.alibaba.maxgraph.common.RoleType;
+import com.alibaba.maxgraph.common.rpc.RpcAddress;
+import com.alibaba.maxgraph.common.rpc.RpcAddressFetcher;
+import com.alibaba.maxgraph.sdkcommon.client.Endpoint;
 
 import java.util.ArrayList;
 import java.util.List;

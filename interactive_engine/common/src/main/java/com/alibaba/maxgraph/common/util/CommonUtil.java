@@ -23,6 +23,7 @@ import com.alibaba.maxgraph.sdkcommon.util.PropertyUtil;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.google.common.collect.Maps;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
+
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -44,16 +45,27 @@ public class CommonUtil {
     private static final Logger LOG = LoggerFactory.getLogger(CommonUtil.class);
     private static final String DATE_FORMAT = "yyyy-MM-dd HH:mm:ss,SSS";
 
-    private static Map<String, String> extractConfig(Class configClass, MaxGraphConfiguration conf) {
+    private static Map<String, String> extractConfig(
+            Class configClass, MaxGraphConfiguration conf) {
         return MaxGraphConfiguration.getAllStaticMembers(configClass).stream()
                 .filter(key -> conf.getOption(key).isPresent())
                 .collect(Collectors.toMap(x -> x, conf::getString));
     }
 
-    public static ThreadFactory createFactoryWithDefaultExceptionHandler(String serviceName, Logger LOG) {
-        return (new ThreadFactoryBuilder()).setNameFormat(serviceName + "-%d").setDaemon(true).setUncaughtExceptionHandler((t, e) -> {
-            LOG.error("exception in serviceName: " + serviceName + ", thread: " + t.getName());
-        }).build();
+    public static ThreadFactory createFactoryWithDefaultExceptionHandler(
+            String serviceName, Logger LOG) {
+        return (new ThreadFactoryBuilder())
+                .setNameFormat(serviceName + "-%d")
+                .setDaemon(true)
+                .setUncaughtExceptionHandler(
+                        (t, e) -> {
+                            LOG.error(
+                                    "exception in serviceName: "
+                                            + serviceName
+                                            + ", thread: "
+                                            + t.getName());
+                        })
+                .build();
     }
 
     public static void sleepSilently(long timeInMs) {
@@ -70,16 +82,18 @@ public class CommonUtil {
     }
 
     public static Map<String, String> getConfigFromSystemEnv() {
-        String workerParameters = Stream.of(System.getenv(SchedulerEnvs.YARN_WORKER_ENV))
-                .filter(org.apache.commons.lang3.StringUtils::isNotEmpty)
-                .findFirst()
-                .orElse(null);
+        String workerParameters =
+                Stream.of(System.getenv(SchedulerEnvs.YARN_WORKER_ENV))
+                        .filter(org.apache.commons.lang3.StringUtils::isNotEmpty)
+                        .findFirst()
+                        .orElse(null);
 
         if (StringUtils.isEmpty(workerParameters)) {
             return Maps.newHashMap();
         } else {
-            return JSON.fromJson(workerParameters.replace("\\", ""), new TypeReference<Map<String, String>>() {
-            });
+            return JSON.fromJson(
+                    workerParameters.replace("\\", ""),
+                    new TypeReference<Map<String, String>>() {});
         }
     }
 
@@ -95,7 +109,9 @@ public class CommonUtil {
             Properties properties = PropertyUtil.getProperties(args[0], false);
             config = new InstanceConfig(properties);
         } else {
-            String confPath = new File("").getCanonicalPath() + "/interactive_engine/src/assembly/conf/standalone.properties";
+            String confPath =
+                    new File("").getCanonicalPath()
+                            + "/interactive_engine/src/assembly/conf/standalone.properties";
             Properties properties = PropertyUtil.getProperties(confPath, false);
             config = new InstanceConfig(properties);
         }
@@ -113,9 +129,9 @@ public class CommonUtil {
         return new SimpleDateFormat(DATE_FORMAT).format(System.currentTimeMillis());
     }
 
-
     public static String getYarnLogDir() {
-//        String yarnLogDir = System.getenv(ApplicationConstants.Environment.LOG_DIRS.name());
+        //        String yarnLogDir =
+        // System.getenv(ApplicationConstants.Environment.LOG_DIRS.name());
         String yarnLogDir = StringUtils.EMPTY;
         if (StringUtils.isEmpty(yarnLogDir)) {
             return "/tmp";
@@ -136,7 +152,8 @@ public class CommonUtil {
 
                     @Override
                     public ForkJoinWorkerThread newThread(ForkJoinPool pool) {
-                        ForkJoinWorkerThread thread = ForkJoinPool.defaultForkJoinWorkerThreadFactory.newThread(pool);
+                        ForkJoinWorkerThread thread =
+                                ForkJoinPool.defaultForkJoinWorkerThreadFactory.newThread(pool);
                         thread.setDaemon(true);
                         thread.setName("grpc-worker-" + "-" + num.getAndIncrement());
                         return thread;

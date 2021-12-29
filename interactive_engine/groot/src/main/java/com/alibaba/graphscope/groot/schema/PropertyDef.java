@@ -1,12 +1,12 @@
 /**
  * Copyright 2020 Alibaba Group Holding Limited.
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -30,8 +30,14 @@ public class PropertyDef implements GraphProperty {
     private boolean pk;
     private String comment;
 
-    public PropertyDef(int id, int innerId, String name, DataType dataType, PropertyValue defaultValue, boolean pk,
-                       String comment) {
+    public PropertyDef(
+            int id,
+            int innerId,
+            String name,
+            DataType dataType,
+            PropertyValue defaultValue,
+            boolean pk,
+            String comment) {
         this.id = id;
         this.innerId = innerId;
         this.name = name;
@@ -110,16 +116,20 @@ public class PropertyDef implements GraphProperty {
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) { return true; }
-        if (o == null || getClass() != o.getClass()) { return false; }
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
         PropertyDef that = (PropertyDef) o;
-        return id == that.id &&
-                innerId == that.innerId &&
-                pk == that.pk &&
-                Objects.equals(name, that.name) &&
-                dataType == that.dataType &&
-                Objects.equals(defaultValue, that.defaultValue) &&
-                Objects.equals(comment, that.comment);
+        return id == that.id
+                && innerId == that.innerId
+                && pk == that.pk
+                && Objects.equals(name, that.name)
+                && dataType == that.dataType
+                && Objects.equals(defaultValue, that.defaultValue)
+                && Objects.equals(comment, that.comment);
     }
 
     public static Builder newBuilder() {

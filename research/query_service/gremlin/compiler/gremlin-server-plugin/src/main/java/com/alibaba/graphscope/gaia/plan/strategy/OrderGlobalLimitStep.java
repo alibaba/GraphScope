@@ -25,14 +25,15 @@ import org.apache.tinkerpop.gremlin.process.traversal.step.map.OrderGlobalStep;
 import org.apache.tinkerpop.gremlin.process.traversal.step.util.AbstractStep;
 import org.javatuples.Pair;
 
-import java.util.List;
-import java.util.Comparator;
-import java.util.Collections;
-import java.util.NoSuchElementException;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.List;
+import java.util.NoSuchElementException;
 import java.util.stream.Collectors;
 
-public class OrderGlobalLimitStep<S, C extends Comparable> extends AbstractStep implements ComparatorHolder<S, C>, TraversalParent {
+public class OrderGlobalLimitStep<S, C extends Comparable> extends AbstractStep
+        implements ComparatorHolder<S, C>, TraversalParent {
     private List<Pair<Traversal.Admin<S, C>, Comparator<C>>> comparators = new ArrayList();
     private int limit;
 
@@ -40,9 +41,13 @@ public class OrderGlobalLimitStep<S, C extends Comparable> extends AbstractStep 
         super(step.getTraversal());
         this.limit = limit;
         // this.comparators.addAll(step.getComparators());
-        step.getComparators().forEach(c -> {
-            this.addComparator((Traversal.Admin) ((Pair) c).getValue0(), (Comparator) ((Pair) c).getValue1());
-        });
+        step.getComparators()
+                .forEach(
+                        c -> {
+                            this.addComparator(
+                                    (Traversal.Admin) ((Pair) c).getValue0(),
+                                    (Comparator) ((Pair) c).getValue1());
+                        });
     }
 
     @Override
@@ -52,7 +57,9 @@ public class OrderGlobalLimitStep<S, C extends Comparable> extends AbstractStep 
 
     @Override
     public List<Pair<Traversal.Admin<S, C>, Comparator<C>>> getComparators() {
-        return this.comparators.isEmpty() ? Collections.singletonList(new Pair(new IdentityTraversal(), Order.asc)) : Collections.unmodifiableList(this.comparators);
+        return this.comparators.isEmpty()
+                ? Collections.singletonList(new Pair(new IdentityTraversal(), Order.asc))
+                : Collections.unmodifiableList(this.comparators);
     }
 
     @Override

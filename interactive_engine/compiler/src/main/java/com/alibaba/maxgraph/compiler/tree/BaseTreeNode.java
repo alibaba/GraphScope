@@ -1,12 +1,12 @@
 /**
  * Copyright 2020 Alibaba Group Holding Limited.
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -14,6 +14,9 @@
  * limitations under the License.
  */
 package com.alibaba.maxgraph.compiler.tree;
+
+import static com.alibaba.maxgraph.QueryFlowOuterClass.RequirementType.*;
+import static com.google.common.base.Preconditions.checkNotNull;
 
 import com.alibaba.maxgraph.Message;
 import com.alibaba.maxgraph.QueryFlowOuterClass;
@@ -25,6 +28,7 @@ import com.alibaba.maxgraph.compiler.utils.CompilerUtils;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
+
 import org.apache.tinkerpop.gremlin.process.traversal.step.util.HasContainer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -33,9 +37,6 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-
-import static com.alibaba.maxgraph.QueryFlowOuterClass.RequirementType.*;
-import static com.google.common.base.Preconditions.checkNotNull;
 
 public abstract class BaseTreeNode implements TreeNode {
     private static final Logger logger = LoggerFactory.getLogger(BaseTreeNode.class);
@@ -52,8 +53,8 @@ public abstract class BaseTreeNode implements TreeNode {
     /**
      * Early stop related argument
      */
-    protected QueryFlowOuterClass.EarlyStopArgument.Builder earlyStopArgument
-            = QueryFlowOuterClass.EarlyStopArgument.newBuilder();
+    protected QueryFlowOuterClass.EarlyStopArgument.Builder earlyStopArgument =
+            QueryFlowOuterClass.EarlyStopArgument.newBuilder();
 
     /**
      * If true, the output of this node can be added to path
@@ -106,10 +107,16 @@ public abstract class BaseTreeNode implements TreeNode {
     public void setFinishVertex(LogicalVertex vertex, TreeNodeLabelManager treeNodeLabelManager) {
         this.outputVertex = vertex;
         if (null != treeNodeLabelManager) {
-            hasContainerList.forEach(v -> {
-                Message.LogicalCompare logicalCompare = CompilerUtils.parseLogicalCompare(v, schema, treeNodeLabelManager.getLabelIndexList(), this instanceof SourceVertexTreeNode);
-                vertex.getProcessorFunction().getLogicalCompareList().add(logicalCompare);
-            });
+            hasContainerList.forEach(
+                    v -> {
+                        Message.LogicalCompare logicalCompare =
+                                CompilerUtils.parseLogicalCompare(
+                                        v,
+                                        schema,
+                                        treeNodeLabelManager.getLabelIndexList(),
+                                        this instanceof SourceVertexTreeNode);
+                        vertex.getProcessorFunction().getLogicalCompareList().add(logicalCompare);
+                    });
         }
     }
 
@@ -129,18 +136,23 @@ public abstract class BaseTreeNode implements TreeNode {
     }
 
     @Override
-    public List<QueryFlowOuterClass.RequirementValue.Builder> buildAfterRequirementList(TreeNodeLabelManager nodeLabelManager) {
-        return getRequirementList(afterRequirementList, Arrays.asList(LABEL_START), nodeLabelManager);
+    public List<QueryFlowOuterClass.RequirementValue.Builder> buildAfterRequirementList(
+            TreeNodeLabelManager nodeLabelManager) {
+        return getRequirementList(
+                afterRequirementList, Arrays.asList(LABEL_START), nodeLabelManager);
     }
 
     @Override
-    public List<QueryFlowOuterClass.RequirementValue.Builder> buildBeforeRequirementList(TreeNodeLabelManager nodeLabelManager) {
-        return getRequirementList(beforeRequirementList, Arrays.asList(PATH_ADD, LABEL_START), nodeLabelManager);
+    public List<QueryFlowOuterClass.RequirementValue.Builder> buildBeforeRequirementList(
+            TreeNodeLabelManager nodeLabelManager) {
+        return getRequirementList(
+                beforeRequirementList, Arrays.asList(PATH_ADD, LABEL_START), nodeLabelManager);
     }
 
-    private List<QueryFlowOuterClass.RequirementValue.Builder> getRequirementList(Map<RequirementType, Object> requirementMap,
-                                                                                  List<RequirementType> requirementTypes,
-                                                                                  TreeNodeLabelManager nodeLabelManager) {
+    private List<QueryFlowOuterClass.RequirementValue.Builder> getRequirementList(
+            Map<RequirementType, Object> requirementMap,
+            List<RequirementType> requirementTypes,
+            TreeNodeLabelManager nodeLabelManager) {
         List<QueryFlowOuterClass.RequirementValue.Builder> requirementList = Lists.newArrayList();
         for (RequirementType type : requirementTypes) {
             if (!requirementMap.containsKey(type)) {
@@ -149,30 +161,39 @@ public abstract class BaseTreeNode implements TreeNode {
             }
             Object conf = requirementMap.get(type);
             switch (type) {
-                case LABEL_START: {
-                    Set<String> startLabelList = (Set<String>) conf;
-                    if (startLabelList == null || startLabelList.isEmpty()) {
-                        throw new IllegalArgumentException("There's label start requirement but start label list is empty");
+                case LABEL_START:
+                    {
+                        Set<String> startLabelList = (Set<String>) conf;
+                        if (startLabelList == null || startLabelList.isEmpty()) {
+                            throw new IllegalArgumentException(
+                                    "There's label start requirement but start label list is"
+                                            + " empty");
+                        }
+                        Message.Value.Builder valueBuilder = Message.Value.newBuilder();
+                        for (String startLabel : startLabelList) {
+                            valueBuilder.addIntValueList(
+                                    nodeLabelManager.getLabelIndex(startLabel));
+                        }
+                        requirementList.add(
+                                QueryFlowOuterClass.RequirementValue.newBuilder()
+                                        .setReqArgument(valueBuilder)
+                                        .setReqType(type));
+                        break;
                     }
-                    Message.Value.Builder valueBuilder = Message.Value.newBuilder();
-                    for (String startLabel : startLabelList) {
-                        valueBuilder.addIntValueList(nodeLabelManager.getLabelIndex(startLabel));
+                case PATH_ADD:
+                    {
+                        Message.Value.Builder valueBuilder = Message.Value.newBuilder();
+                        requirementList.add(
+                                QueryFlowOuterClass.RequirementValue.newBuilder()
+                                        .setReqArgument(valueBuilder)
+                                        .setReqType(type));
+                        break;
                     }
-                    requirementList.add(QueryFlowOuterClass.RequirementValue.newBuilder()
-                            .setReqArgument(valueBuilder)
-                            .setReqType(type));
-                    break;
-                }
-                case PATH_ADD: {
-                    Message.Value.Builder valueBuilder = Message.Value.newBuilder();
-                    requirementList.add(QueryFlowOuterClass.RequirementValue.newBuilder()
-                            .setReqArgument(valueBuilder)
-                            .setReqType(type));
-                    break;
-                }
-                default: {
-                    throw new IllegalArgumentException(type + " can't exist in before requirement");
-                }
+                default:
+                    {
+                        throw new IllegalArgumentException(
+                                type + " can't exist in before requirement");
+                    }
             }
         }
         return requirementList;
@@ -208,9 +229,8 @@ public abstract class BaseTreeNode implements TreeNode {
 
     @Override
     public void setRangeLimit(long low, long high, boolean globalRangeFlag) {
-        this.rangeLimit = QueryFlowOuterClass.RangeLimit.newBuilder()
-                .setRangeStart(low)
-                .setRangeEnd(high);
+        this.rangeLimit =
+                QueryFlowOuterClass.RangeLimit.newBuilder().setRangeStart(low).setRangeEnd(high);
         this.globalRangeFlag = globalRangeFlag;
     }
 
@@ -266,7 +286,6 @@ public abstract class BaseTreeNode implements TreeNode {
                 .setDedupLocalFlag(dedupLocalFlag)
                 .setSubqueryFlag(subqueryNodeFlag);
     }
-
 
     /**
      * Enable global stop by global limit operator

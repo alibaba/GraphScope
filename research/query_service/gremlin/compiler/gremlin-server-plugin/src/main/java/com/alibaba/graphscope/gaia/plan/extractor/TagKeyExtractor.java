@@ -20,6 +20,7 @@ import com.alibaba.graphscope.common.proto.Gremlin;
 import com.alibaba.graphscope.gaia.plan.PlanUtils;
 import com.alibaba.graphscope.gaia.plan.strategy.PreBySubTraversal;
 import com.alibaba.graphscope.gaia.plan.strategy.global.property.cache.ToFetchProperties;
+
 import org.apache.commons.lang.StringUtils;
 import org.apache.tinkerpop.gremlin.process.traversal.Traversal;
 import org.apache.tinkerpop.gremlin.process.traversal.lambda.ColumnTraversal;
@@ -55,7 +56,8 @@ public interface TagKeyExtractor {
             } else if (token == T.id) {
                 builder.setKey(Common.Key.newBuilder().setId(Common.IdKey.newBuilder()));
             } else {
-                throw new UnsupportedOperationException("cannot support other T type " + token.name());
+                throw new UnsupportedOperationException(
+                        "cannot support other T type " + token.name());
             }
         } else if (value instanceof ColumnTraversal) {
             Column column = ((ColumnTraversal) value).getColumn();
@@ -64,16 +66,24 @@ public interface TagKeyExtractor {
             } else {
                 builder.setMapValues(Gremlin.MapValue.newBuilder());
             }
-        } else if (value != null && value.getSteps().size() == 1 && value.getStartStep() instanceof PropertyMapStep) {
+        } else if (value != null
+                && value.getSteps().size() == 1
+                && value.getStartStep() instanceof PropertyMapStep) {
             PropertyMapStep propertyMapStep = (PropertyMapStep) value.getStartStep();
             String[] propertyKeys = propertyMapStep.getPropertyKeys();
-            boolean needAllProps = (propertyKeys == null || propertyKeys.length == 0) ? true : false;
-            builder.setPropKeys(PlanUtils.convertFrom(new ToFetchProperties(needAllProps, Arrays.asList(propertyKeys))));
-        } else if (value != null && value.getSteps().size() == 1 && value.getStartStep() instanceof PropertiesStep) {
+            boolean needAllProps =
+                    (propertyKeys == null || propertyKeys.length == 0) ? true : false;
+            builder.setPropKeys(
+                    PlanUtils.convertFrom(
+                            new ToFetchProperties(needAllProps, Arrays.asList(propertyKeys))));
+        } else if (value != null
+                && value.getSteps().size() == 1
+                && value.getStartStep() instanceof PropertiesStep) {
             PropertiesStep propertiesStep = (PropertiesStep) value.getStartStep();
             // always add first from values(p1,p2)
             // todo: if value() -> fetch first from all properties (support by runtime)
-            if (propertiesStep.getPropertyKeys() != null && propertiesStep.getPropertyKeys().length > 0) {
+            if (propertiesStep.getPropertyKeys() != null
+                    && propertiesStep.getPropertyKeys().length > 0) {
                 String propertyKey = (propertiesStep.getPropertyKeys())[0];
                 if (StringUtils.isNumeric(propertyKey)) {
                     builder.setKey(Common.Key.newBuilder().setNameId(Integer.valueOf(propertyKey)));
@@ -83,7 +93,8 @@ public interface TagKeyExtractor {
             }
         } else if (value != null && value instanceof PreBySubTraversal) {
             builder.setComputed(Gremlin.SubValue.newBuilder());
-        } else if (value.getSteps().size() == 1 && value.getStartStep() instanceof TraversalMapStep) {
+        } else if (value.getSteps().size() == 1
+                && value.getStartStep() instanceof TraversalMapStep) {
             TraversalMapStep startStep = (TraversalMapStep) value.getStartStep();
             Traversal.Admin mapTraversal = (Traversal.Admin) startStep.getLocalChildren().get(0);
             if (!(mapTraversal instanceof ColumnTraversal)) {
@@ -91,7 +102,9 @@ public interface TagKeyExtractor {
             } else {
                 return modulateBy(mapTraversal);
             }
-        } else if (value.getSteps().size() == 2 && (value.getStartStep() instanceof TraversalMapStep && value.getEndStep() instanceof PropertiesStep)) {
+        } else if (value.getSteps().size() == 2
+                && (value.getStartStep() instanceof TraversalMapStep
+                        && value.getEndStep() instanceof PropertiesStep)) {
             TraversalMapStep startStep = (TraversalMapStep) value.getStartStep();
             Traversal.Admin mapTraversal = (Traversal.Admin) startStep.getLocalChildren().get(0);
             if (!(mapTraversal instanceof ColumnTraversal)) {
@@ -100,17 +113,29 @@ public interface TagKeyExtractor {
                 Gremlin.ByKey selectMap = modulateBy(mapTraversal);
                 PropertiesStep valuePropertiesStep = (PropertiesStep) value.getEndStep();
                 Traversal.Admin tmp = new DefaultTraversal();
-                tmp.addStep(new PropertiesStep(tmp, valuePropertiesStep.getReturnType(), valuePropertiesStep.getPropertyKeys()));
+                tmp.addStep(
+                        new PropertiesStep(
+                                tmp,
+                                valuePropertiesStep.getReturnType(),
+                                valuePropertiesStep.getPropertyKeys()));
                 // select(keys).values("xxx")
                 Gremlin.ByKey selectMapWithValue = modulateBy(tmp);
                 if (selectMap.getItemCase() == Gremlin.ByKey.ItemCase.MAP_KEYS) {
-                    return Gremlin.ByKey.newBuilder().setMapKeys(Gremlin.MapKey.newBuilder().setKey(selectMapWithValue.getKey())).build();
+                    return Gremlin.ByKey.newBuilder()
+                            .setMapKeys(
+                                    Gremlin.MapKey.newBuilder().setKey(selectMapWithValue.getKey()))
+                            .build();
                 } else {
-                    return Gremlin.ByKey.newBuilder().setMapValues(Gremlin.MapValue.newBuilder().setKey(selectMapWithValue.getKey())).build();
+                    return Gremlin.ByKey.newBuilder()
+                            .setMapValues(
+                                    Gremlin.MapValue.newBuilder()
+                                            .setKey(selectMapWithValue.getKey()))
+                            .build();
                 }
             }
         } else {
-            throw new UnsupportedOperationException("cannot support other value traversal " + value);
+            throw new UnsupportedOperationException(
+                    "cannot support other value traversal " + value);
         }
         return builder.build();
     }
@@ -125,13 +150,20 @@ public interface TagKeyExtractor {
      * @return
      */
     default boolean isSimpleValue(Traversal.Admin value) {
-        return value == null || value instanceof IdentityTraversal || value instanceof ElementValueTraversal
-                || value instanceof TokenTraversal || value instanceof ColumnTraversal || value instanceof PreBySubTraversal
-                || value.getSteps().size() == 1 && (value.getStartStep() instanceof PropertyMapStep || value.getStartStep() instanceof PropertiesStep)
-                || value.getSteps().size() == 2 && (value.getStartStep() instanceof TraversalMapStep && value.getEndStep() instanceof PropertiesStep)
+        return value == null
+                || value instanceof IdentityTraversal
+                || value instanceof ElementValueTraversal
+                || value instanceof TokenTraversal
+                || value instanceof ColumnTraversal
+                || value instanceof PreBySubTraversal
+                || value.getSteps().size() == 1
+                        && (value.getStartStep() instanceof PropertyMapStep
+                                || value.getStartStep() instanceof PropertiesStep)
+                || value.getSteps().size() == 2
+                        && (value.getStartStep() instanceof TraversalMapStep
+                                && value.getEndStep() instanceof PropertiesStep)
                 || value.getSteps().size() == 1 && value.getStartStep() instanceof TraversalMapStep;
     }
 
     Gremlin.TagKey extractFrom(Object... args);
 }
-

@@ -1,12 +1,12 @@
 /**
  * Copyright 2020 Alibaba Group Holding Limited.
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -16,6 +16,7 @@
 package com.alibaba.maxgraph.common.zookeeper;
 
 import com.alibaba.maxgraph.common.cluster.InstanceConfig;
+
 import org.apache.curator.CuratorZookeeperClient;
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.framework.CuratorFrameworkFactory;
@@ -47,14 +48,24 @@ public class ZkClient implements CuratorFramework {
     private final String zkUrl;
     private final AtomicInteger REFERENCE_COUNT = new AtomicInteger(0);
     private ExponentialBackoffRetry exponentialBackoffRetry = new ExponentialBackoffRetry(500, 3);
+
     public ZkClient(InstanceConfig instanceConfig) {
-        this(instanceConfig.getZkConnect(), instanceConfig.getZkConnectionTimeoutMs(), instanceConfig
-                        .getZkSessionTimeoutMs(), instanceConfig.getZkAuthEnable(), instanceConfig.getZkAuthUser(),
+        this(
+                instanceConfig.getZkConnect(),
+                instanceConfig.getZkConnectionTimeoutMs(),
+                instanceConfig.getZkSessionTimeoutMs(),
+                instanceConfig.getZkAuthEnable(),
+                instanceConfig.getZkAuthUser(),
                 instanceConfig.getZkAuthPassword());
     }
 
-    public ZkClient(String zkUrl, int connectionTimeout, int sessionTimeout, boolean zkAuthEnable, String user,
-                    String password) {
+    public ZkClient(
+            String zkUrl,
+            int connectionTimeout,
+            int sessionTimeout,
+            boolean zkAuthEnable,
+            String user,
+            String password) {
         this.zkUrl = zkUrl;
         CuratorFrameworkFactory.Builder builder = CuratorFrameworkFactory.builder();
         builder.connectString(zkUrl)
@@ -64,22 +75,22 @@ public class ZkClient implements CuratorFramework {
         if (zkAuthEnable) {
             String zkAuthString = user + ":" + password;
             builder.authorization("digest", zkAuthString.getBytes())
-                    .aclProvider(new ACLProvider() {
-                        @Override
-                        public List<ACL> getDefaultAcl() {
-                            return ZooDefs.Ids.CREATOR_ALL_ACL;
-                        }
+                    .aclProvider(
+                            new ACLProvider() {
+                                @Override
+                                public List<ACL> getDefaultAcl() {
+                                    return ZooDefs.Ids.CREATOR_ALL_ACL;
+                                }
 
-                        @Override
-                        public List<ACL> getAclForPath(String path) {
-                            return ZooDefs.Ids.CREATOR_ALL_ACL;
-                        }
-                    });
+                                @Override
+                                public List<ACL> getAclForPath(String path) {
+                                    return ZooDefs.Ids.CREATOR_ALL_ACL;
+                                }
+                            });
         }
 
         this.delegate = builder.build();
     }
-
 
     public void increaseRef() {
         REFERENCE_COUNT.getAndIncrement();
@@ -230,7 +241,8 @@ public class ZkClient implements CuratorFramework {
     }
 
     @Override
-    public boolean blockUntilConnected(int maxWaitTime, TimeUnit units) throws InterruptedException {
+    public boolean blockUntilConnected(int maxWaitTime, TimeUnit units)
+            throws InterruptedException {
         if (isClosed()) {
             throw new RuntimeException("Client has been closed");
         }

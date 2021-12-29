@@ -1,12 +1,12 @@
 /**
  * Copyright 2020 Alibaba Group Holding Limited.
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -22,6 +22,7 @@ import com.alibaba.maxgraph.sdkcommon.util.JSON;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.zookeeper.CreateMode;
@@ -36,7 +37,6 @@ import java.util.*;
  * @author lvshuang.xjs@alibaba-inc.com
  * @create 2018-06-12 上午10:21
  **/
-
 public class ZkNamingProxy {
 
     private static final Logger LOG = LoggerFactory.getLogger(ZkNamingProxy.class);
@@ -97,30 +97,40 @@ public class ZkNamingProxy {
     }
 
     public void createOrUpdateMasterRootNode() throws Exception {
-        zkUtils.createOrUpdatePath(ZKPaths.getMasterPath(graphName), "maxgraph master", CreateMode.PERSISTENT);
+        zkUtils.createOrUpdatePath(
+                ZKPaths.getMasterPath(graphName), "maxgraph master", CreateMode.PERSISTENT);
     }
 
     public void persistWorkerRoleInfo(Map<Integer, RoleType> roleTypeMap) throws Exception {
-        zkUtils.createOrUpdatePath(ZKPaths.getMasterWorkerRoleInfoPath(graphName), JSON.toJson(roleTypeMap), CreateMode.PERSISTENT);
+        zkUtils.createOrUpdatePath(
+                ZKPaths.getMasterWorkerRoleInfoPath(graphName),
+                JSON.toJson(roleTypeMap),
+                CreateMode.PERSISTENT);
         LOG.debug("persist worker role info into zk: {}", roleTypeMap);
     }
 
     public Map<Integer, RoleType> getWorkerRoleInfo() {
-        String workerRoleInfo = readStringValueFromZK(ZKPaths.getMasterWorkerRoleInfoPath(graphName));
+        String workerRoleInfo =
+                readStringValueFromZK(ZKPaths.getMasterWorkerRoleInfoPath(graphName));
         if (workerRoleInfo == null) {
             return Maps.newHashMap();
         }
-        return JSON.fromJson(workerRoleInfo, new TypeReference<Map<Integer, RoleType>>() {
-        });
+        return JSON.fromJson(workerRoleInfo, new TypeReference<Map<Integer, RoleType>>() {});
     }
 
     public void persistWorkerAliveIdInfo(Map<Integer, Long> aliveIdMap) throws Exception {
-        zkUtils.createOrUpdatePath(ZKPaths.getWorkerAliveIdInfo(graphName), JSON.toJson(aliveIdMap), CreateMode.PERSISTENT);
+        zkUtils.createOrUpdatePath(
+                ZKPaths.getWorkerAliveIdInfo(graphName),
+                JSON.toJson(aliveIdMap),
+                CreateMode.PERSISTENT);
         LOG.debug("persist worker alive id into zk: {}", aliveIdMap);
     }
 
     public void persistExecutorAddress(Map<Integer, String> executorAddress) throws Exception {
-        zkUtils.createOrUpdatePath(ZKPaths.getExecutorAddress(graphName), JSON.toJson(executorAddress), CreateMode.PERSISTENT);
+        zkUtils.createOrUpdatePath(
+                ZKPaths.getExecutorAddress(graphName),
+                JSON.toJson(executorAddress),
+                CreateMode.PERSISTENT);
     }
 
     public Map<Integer, String> getExecutorAddress() {
@@ -128,8 +138,7 @@ public class ZkNamingProxy {
         if (executorAddress == null) {
             return Maps.newHashMap();
         }
-        return JSON.fromJson(executorAddress, new TypeReference<Map<Integer, String>>() {
-        });
+        return JSON.fromJson(executorAddress, new TypeReference<Map<Integer, String>>() {});
     }
 
     public void deleteAliveIdInfo() {
@@ -141,23 +150,31 @@ public class ZkNamingProxy {
         if (workerAliveIdInfo == null) {
             return Maps.newHashMap();
         }
-        return JSON.fromJson(workerAliveIdInfo, new TypeReference<Map<Integer, Long>>() {
-        });
+        return JSON.fromJson(workerAliveIdInfo, new TypeReference<Map<Integer, Long>>() {});
     }
 
-    public void persistWorker2ContainerString(Map<Integer, String> roleContainerIdMap) throws Exception {
-        zkUtils.createOrUpdatePath(ZKPaths.getMasterWorkerContainerInfoPath(graphName), JSON.toJson(roleContainerIdMap), CreateMode.PERSISTENT);
+    public void persistWorker2ContainerString(Map<Integer, String> roleContainerIdMap)
+            throws Exception {
+        zkUtils.createOrUpdatePath(
+                ZKPaths.getMasterWorkerContainerInfoPath(graphName),
+                JSON.toJson(roleContainerIdMap),
+                CreateMode.PERSISTENT);
         LOG.info("persist worker container info into zk: {}", roleContainerIdMap);
     }
 
-    public void persistCompletedContainers(List<String> completedContainerIdString) throws Exception {
-        zkUtils.createOrUpdatePath(ZKPaths.getMasterCompletedContainersInfoPath(graphName), JSON.toJson(completedContainerIdString), CreateMode.PERSISTENT);
+    public void persistCompletedContainers(List<String> completedContainerIdString)
+            throws Exception {
+        zkUtils.createOrUpdatePath(
+                ZKPaths.getMasterCompletedContainersInfoPath(graphName),
+                JSON.toJson(completedContainerIdString),
+                CreateMode.PERSISTENT);
     }
 
     public List<String> getCompletedContainers() {
-        String completedContainersInfo = readStringValueFromZK(ZKPaths.getMasterCompletedContainersInfoPath(graphName));
-        List<String> completedContainerIdString = JSON.fromJson(completedContainersInfo, new TypeReference<List<String>>() {
-        });
+        String completedContainersInfo =
+                readStringValueFromZK(ZKPaths.getMasterCompletedContainersInfoPath(graphName));
+        List<String> completedContainerIdString =
+                JSON.fromJson(completedContainersInfo, new TypeReference<List<String>>() {});
         if (completedContainerIdString == null) {
             return Lists.newArrayList();
         }
@@ -165,22 +182,28 @@ public class ZkNamingProxy {
     }
 
     public void persistFrontEndEndpoints(String vpcEndpoint, String text) throws Exception {
-        zkUtils.createOrUpdatePath(ZKPaths.getFrontEndpointInfo(graphName), text + " " + vpcEndpoint, CreateMode.EPHEMERAL);
+        zkUtils.createOrUpdatePath(
+                ZKPaths.getFrontEndpointInfo(graphName),
+                text + " " + vpcEndpoint,
+                CreateMode.EPHEMERAL);
         LOG.info("persist frontend ips into zk: {}", text);
     }
 
     public Map<Integer, String> getWorker2ContainerString() {
-        String containerInfo = readStringValueFromZK(ZKPaths.getMasterWorkerContainerInfoPath(graphName));
-        Map<Integer, String> infoMap = JSON.fromJson(containerInfo, new TypeReference<Map<Integer, String>>() {
-        });
+        String containerInfo =
+                readStringValueFromZK(ZKPaths.getMasterWorkerContainerInfoPath(graphName));
+        Map<Integer, String> infoMap =
+                JSON.fromJson(containerInfo, new TypeReference<Map<Integer, String>>() {});
         if (infoMap == null) {
             return Maps.newHashMap();
         }
         return infoMap;
     }
 
-    public void persistentServerAssignment(Map<Integer, ServerAssignment> serverAssignment) throws Exception {
-        zkUtils.createPersistentPath(ZKPaths.getServerAssignmentPath(graphName), JSON.toJson(serverAssignment));
+    public void persistentServerAssignment(Map<Integer, ServerAssignment> serverAssignment)
+            throws Exception {
+        zkUtils.createPersistentPath(
+                ZKPaths.getServerAssignmentPath(graphName), JSON.toJson(serverAssignment));
     }
 
     public ZkUtils getZkUtils() {
@@ -194,5 +217,4 @@ public class ZkNamingProxy {
     public void close() throws IOException {
         this.zkUtils.close();
     }
-
 }

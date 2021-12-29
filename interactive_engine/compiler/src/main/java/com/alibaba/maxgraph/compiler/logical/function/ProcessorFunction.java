@@ -1,12 +1,12 @@
 /**
  * Copyright 2020 Alibaba Group Holding Limited.
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -14,6 +14,8 @@
  * limitations under the License.
  */
 package com.alibaba.maxgraph.compiler.logical.function;
+
+import static com.google.common.base.Preconditions.checkNotNull;
 
 import com.alibaba.maxgraph.Message;
 import com.alibaba.maxgraph.QueryFlowOuterClass;
@@ -24,8 +26,6 @@ import com.google.common.collect.Sets;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
-
-import static com.google.common.base.Preconditions.checkNotNull;
 
 public class ProcessorFunction {
     protected QueryFlowOuterClass.OperatorType operatorType;
@@ -38,15 +38,21 @@ public class ProcessorFunction {
         this(operatorType, null, null);
     }
 
-    public ProcessorFunction(QueryFlowOuterClass.OperatorType operatorType, QueryFlowOuterClass.RangeLimit.Builder rangeLimit) {
+    public ProcessorFunction(
+            QueryFlowOuterClass.OperatorType operatorType,
+            QueryFlowOuterClass.RangeLimit.Builder rangeLimit) {
         this(operatorType, null, rangeLimit);
     }
 
-    public ProcessorFunction(QueryFlowOuterClass.OperatorType operatorType, Message.Value.Builder argumentBuilder) {
+    public ProcessorFunction(
+            QueryFlowOuterClass.OperatorType operatorType, Message.Value.Builder argumentBuilder) {
         this(operatorType, argumentBuilder, null);
     }
 
-    public ProcessorFunction(QueryFlowOuterClass.OperatorType operatorType, Message.Value.Builder argumentBuilder, QueryFlowOuterClass.RangeLimit.Builder rangeLimit) {
+    public ProcessorFunction(
+            QueryFlowOuterClass.OperatorType operatorType,
+            Message.Value.Builder argumentBuilder,
+            QueryFlowOuterClass.RangeLimit.Builder rangeLimit) {
         this.operatorType = checkNotNull(operatorType);
         this.argumentBuilder = argumentBuilder;
         this.rangeLimit = rangeLimit;
@@ -70,9 +76,12 @@ public class ProcessorFunction {
      * @return The function label used list
      */
     public Set<Integer> getFunctionUsedLabelList() {
-        return usedLabelList
-                .stream()
-                .filter(v -> v <= TreeConstants.USER_LABEL_START && v > TreeConstants.MAGIC_LABEL_ID).collect(Collectors.toSet());
+        return usedLabelList.stream()
+                .filter(
+                        v ->
+                                v <= TreeConstants.USER_LABEL_START
+                                        && v > TreeConstants.MAGIC_LABEL_ID)
+                .collect(Collectors.toSet());
     }
 
     public QueryFlowOuterClass.RangeLimit.Builder getRangeLimit() {

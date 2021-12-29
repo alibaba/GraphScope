@@ -1,12 +1,12 @@
 /**
  * Copyright 2020 Alibaba Group Holding Limited.
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -16,19 +16,17 @@
 package com.alibaba.maxgraph.common;
 
 import com.alibaba.maxgraph.proto.*;
-
 import com.alibaba.maxgraph.sdkcommon.client.Endpoint;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 
 /**
  * @author lvshuang.xjs@alibaba-inc.com
  * @create 2018-06-07 下午4:05
  **/
-
 public class DataStatus {
 
     private static final Logger LOG = LoggerFactory.getLogger(DataStatus.class);
@@ -39,8 +37,7 @@ public class DataStatus {
     public long reportTimeStamp;
     private StoreStatus storeStatus;
 
-    @JsonIgnore
-    public RuntimeHBReq runtimeHBReq;
+    @JsonIgnore public RuntimeHBReq runtimeHBReq;
 
     public StoreStatus getStoreStatus() {
         return storeStatus;
@@ -54,8 +51,8 @@ public class DataStatus {
         this.storeStatus = storeStatus;
     }
 
-    public DataStatus(int serverId, Endpoint endpoint, StoreStatus storeStatus,
-                      RuntimeHBReq runtimeReq) {
+    public DataStatus(
+            int serverId, Endpoint endpoint, StoreStatus storeStatus, RuntimeHBReq runtimeReq) {
         this(serverId, endpoint, storeStatus);
         this.runtimeHBReq = runtimeReq;
     }
@@ -67,13 +64,18 @@ public class DataStatus {
 
     @Override
     public String toString() {
-        return "DataStatus{" +
-                "serverId=" + serverId +
-                ", endpoint=" + endpoint +
-                ", reportTimeStamp=" + reportTimeStamp +
-                ", storeStatus" + storeStatus.name() +
-                ", runtimeReq=" + runtimeHBReq +
-                '}';
+        return "DataStatus{"
+                + "serverId="
+                + serverId
+                + ", endpoint="
+                + endpoint
+                + ", reportTimeStamp="
+                + reportTimeStamp
+                + ", storeStatus"
+                + storeStatus.name()
+                + ", runtimeReq="
+                + runtimeHBReq
+                + '}';
     }
 
     public static DataStatus fromProto(ServerHBReq serverHBReq) {
@@ -94,5 +96,4 @@ public class DataStatus {
 
         return builder.build();
     }
-
 }

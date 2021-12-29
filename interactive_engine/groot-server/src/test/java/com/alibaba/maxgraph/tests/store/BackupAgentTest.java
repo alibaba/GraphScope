@@ -13,6 +13,8 @@
  */
 package com.alibaba.maxgraph.tests.store;
 
+import static org.mockito.Mockito.*;
+
 import com.alibaba.graphscope.groot.CompletionCallback;
 import com.alibaba.graphscope.groot.store.BackupAgent;
 import com.alibaba.graphscope.groot.store.GraphPartition;
@@ -23,7 +25,7 @@ import com.alibaba.graphscope.groot.store.jna.JnaGraphStore;
 import com.alibaba.maxgraph.common.config.BackupConfig;
 import com.alibaba.maxgraph.common.config.CommonConfig;
 import com.alibaba.maxgraph.common.config.Configs;
-import com.alibaba.maxgraph.common.config.StoreConfig;
+
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
@@ -32,8 +34,6 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
-import static org.mockito.Mockito.*;
 
 public class BackupAgentTest {
 
@@ -87,10 +87,10 @@ public class BackupAgentTest {
 
         CompletionCallback<Void> restoreCallback = mock(CompletionCallback.class);
         backupAgent.restoreFromStoreBackup(storeBackupId, "restore_root", restoreCallback);
-        verify(mockJnaBackupEngine0, timeout(5000L)).restoreFromPartitionBackup(
-                7, Paths.get("restore_root", "0").toString());
-        verify(mockJnaBackupEngine1, timeout(5000L)).restoreFromPartitionBackup(
-                6, Paths.get("restore_root", "1").toString());
+        verify(mockJnaBackupEngine0, timeout(5000L))
+                .restoreFromPartitionBackup(7, Paths.get("restore_root", "0").toString());
+        verify(mockJnaBackupEngine1, timeout(5000L))
+                .restoreFromPartitionBackup(6, Paths.get("restore_root", "1").toString());
         verify(restoreCallback, timeout(5000L)).onCompleted(null);
 
         backupAgent.stop();

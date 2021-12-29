@@ -17,8 +17,10 @@ package com.alibaba.graphscope.groot.frontend;
 
 import com.alibaba.graphscope.groot.rpc.RoleClients;
 import com.alibaba.maxgraph.proto.groot.*;
+
 import io.grpc.Status;
 import io.grpc.stub.StreamObserver;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -34,21 +36,25 @@ public class ClientBackupService extends ClientBackupGrpc.ClientBackupImplBase {
     }
 
     @Override
-    public void createNewGraphBackup(CreateNewGraphBackupRequest request,
-                                     StreamObserver<CreateNewGraphBackupResponse> responseObserver) {
+    public void createNewGraphBackup(
+            CreateNewGraphBackupRequest request,
+            StreamObserver<CreateNewGraphBackupResponse> responseObserver) {
         try {
             int newBackupId = backupClients.getClient(0).createNewBackup();
-            responseObserver.onNext(CreateNewGraphBackupResponse.newBuilder().setBackupId(newBackupId).build());
+            responseObserver.onNext(
+                    CreateNewGraphBackupResponse.newBuilder().setBackupId(newBackupId).build());
             responseObserver.onCompleted();
         } catch (Exception e) {
             logger.error("create new graph backup failed", e);
-            responseObserver.onError(Status.INTERNAL.withDescription(e.getMessage()).asRuntimeException());
+            responseObserver.onError(
+                    Status.INTERNAL.withDescription(e.getMessage()).asRuntimeException());
         }
     }
 
     @Override
-    public void deleteGraphBackup(DeleteGraphBackupRequest request,
-                                  StreamObserver<DeleteGraphBackupResponse> responseObserver) {
+    public void deleteGraphBackup(
+            DeleteGraphBackupRequest request,
+            StreamObserver<DeleteGraphBackupResponse> responseObserver) {
         int backupId = request.getBackupId();
         try {
             backupClients.getClient(0).deleteBackup(backupId);
@@ -56,13 +62,15 @@ public class ClientBackupService extends ClientBackupGrpc.ClientBackupImplBase {
             responseObserver.onCompleted();
         } catch (Exception e) {
             logger.error("delete graph backup #[" + backupId + "] failed", e);
-            responseObserver.onError(Status.INTERNAL.withDescription(e.getMessage()).asRuntimeException());
+            responseObserver.onError(
+                    Status.INTERNAL.withDescription(e.getMessage()).asRuntimeException());
         }
     }
 
     @Override
-    public void purgeOldGraphBackups(PurgeOldGraphBackupsRequest request,
-                                     StreamObserver<PurgeOldGraphBackupsResponse> responseObserver) {
+    public void purgeOldGraphBackups(
+            PurgeOldGraphBackupsRequest request,
+            StreamObserver<PurgeOldGraphBackupsResponse> responseObserver) {
         int keepAliveNum = request.getKeepAliveNumber();
         try {
             backupClients.getClient(0).purgeOldBackups(keepAliveNum);
@@ -70,52 +78,75 @@ public class ClientBackupService extends ClientBackupGrpc.ClientBackupImplBase {
             responseObserver.onCompleted();
         } catch (Exception e) {
             logger.error("purge old graph backups failed, keep alive num = " + keepAliveNum, e);
-            responseObserver.onError(Status.INTERNAL.withDescription(e.getMessage()).asRuntimeException());
+            responseObserver.onError(
+                    Status.INTERNAL.withDescription(e.getMessage()).asRuntimeException());
         }
     }
 
     @Override
-    public void restoreFromGraphBackup(RestoreFromGraphBackupRequest request,
-                                       StreamObserver<RestoreFromGraphBackupResponse> responseObserver) {
+    public void restoreFromGraphBackup(
+            RestoreFromGraphBackupRequest request,
+            StreamObserver<RestoreFromGraphBackupResponse> responseObserver) {
         int backupId = request.getBackupId();
         String metaRestorePath = request.getMetaRestorePath();
         String storeRestorePath = request.getStoreRestorePath();
         try {
-            backupClients.getClient(0).restoreFromBackup(backupId, metaRestorePath, storeRestorePath);
+            backupClients
+                    .getClient(0)
+                    .restoreFromBackup(backupId, metaRestorePath, storeRestorePath);
             responseObserver.onNext(RestoreFromGraphBackupResponse.newBuilder().build());
             responseObserver.onCompleted();
         } catch (Exception e) {
-            logger.error("restore from graph backup [" + backupId + "] failed, meta restore path ["
-                    + metaRestorePath + "], store restore path [" + storeRestorePath + "]", e);
-            responseObserver.onError(Status.INTERNAL.withDescription(e.getMessage()).asRuntimeException());
+            logger.error(
+                    "restore from graph backup ["
+                            + backupId
+                            + "] failed, meta restore path ["
+                            + metaRestorePath
+                            + "], store restore path ["
+                            + storeRestorePath
+                            + "]",
+                    e);
+            responseObserver.onError(
+                    Status.INTERNAL.withDescription(e.getMessage()).asRuntimeException());
         }
     }
 
     @Override
-    public void verifyGraphBackup(VerifyGraphBackupRequest request,
-                                  StreamObserver<VerifyGraphBackupResponse> responseObserver) {
+    public void verifyGraphBackup(
+            VerifyGraphBackupRequest request,
+            StreamObserver<VerifyGraphBackupResponse> responseObserver) {
         int backupId = request.getBackupId();
         try {
             backupClients.getClient(0).verifyBackup(backupId);
-            responseObserver.onNext(VerifyGraphBackupResponse.newBuilder().setIsOk(true).setErrMsg("").build());
+            responseObserver.onNext(
+                    VerifyGraphBackupResponse.newBuilder().setIsOk(true).setErrMsg("").build());
             responseObserver.onCompleted();
         } catch (Exception e) {
             logger.error("verification for backup #[" + backupId + "] failed", e);
-            responseObserver.onNext(VerifyGraphBackupResponse.newBuilder().setIsOk(false).setErrMsg(e.getMessage()).build());
+            responseObserver.onNext(
+                    VerifyGraphBackupResponse.newBuilder()
+                            .setIsOk(false)
+                            .setErrMsg(e.getMessage())
+                            .build());
             responseObserver.onCompleted();
         }
     }
 
     @Override
-    public void getGraphBackupInfo(GetGraphBackupInfoRequest request,
-                                   StreamObserver<GetGraphBackupInfoResponse> responseObserver) {
+    public void getGraphBackupInfo(
+            GetGraphBackupInfoRequest request,
+            StreamObserver<GetGraphBackupInfoResponse> responseObserver) {
         try {
             List<BackupInfoPb> infoPbList = backupClients.getClient(0).getBackupInfo();
-            responseObserver.onNext(GetGraphBackupInfoResponse.newBuilder().addAllBackupInfoList(infoPbList).build());
+            responseObserver.onNext(
+                    GetGraphBackupInfoResponse.newBuilder()
+                            .addAllBackupInfoList(infoPbList)
+                            .build());
             responseObserver.onCompleted();
         } catch (Exception e) {
             logger.error("get graph backup info failed", e);
-            responseObserver.onError(Status.INTERNAL.withDescription(e.getMessage()).asRuntimeException());
+            responseObserver.onError(
+                    Status.INTERNAL.withDescription(e.getMessage()).asRuntimeException());
         }
     }
 }

@@ -13,13 +13,14 @@
  */
 package com.alibaba.graphscope.groot.ingestor;
 
+import com.alibaba.graphscope.groot.CompletionCallback;
+import com.alibaba.graphscope.groot.operation.StoreDataBatch;
+import com.alibaba.graphscope.groot.rpc.RpcClient;
 import com.alibaba.maxgraph.proto.groot.StoreDataBatchPb;
 import com.alibaba.maxgraph.proto.groot.StoreWriteGrpc;
 import com.alibaba.maxgraph.proto.groot.WriteStoreRequest;
 import com.alibaba.maxgraph.proto.groot.WriteStoreResponse;
-import com.alibaba.graphscope.groot.CompletionCallback;
-import com.alibaba.graphscope.groot.operation.StoreDataBatch;
-import com.alibaba.graphscope.groot.rpc.RpcClient;
+
 import io.grpc.ManagedChannel;
 import io.grpc.stub.StreamObserver;
 

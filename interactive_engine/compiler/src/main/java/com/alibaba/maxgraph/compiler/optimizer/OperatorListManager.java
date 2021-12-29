@@ -1,12 +1,12 @@
 /**
  * Copyright 2020 Alibaba Group Holding Limited.
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -21,6 +21,7 @@ import com.alibaba.maxgraph.compiler.tree.TreeNodeLabelManager;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+
 import org.apache.commons.lang3.StringUtils;
 
 import java.util.List;
@@ -31,11 +32,14 @@ public class OperatorListManager {
 
     private final TreeNodeLabelManager labelManager;
 
-    private Map<Integer, QueryFlowOuterClass.OperatorBase.Builder> operatorBaseList = Maps.newHashMap();
+    private Map<Integer, QueryFlowOuterClass.OperatorBase.Builder> operatorBaseList =
+            Maps.newHashMap();
     private QueryFlowOuterClass.SourceOperator.Builder sourceBuilder = null;
     private QueryFlowOuterClass.OperatorBase.Builder sourceBaseBuilder = null;
-    private Map<Integer, QueryFlowOuterClass.UnaryOperator.Builder> unaryOperatorList = Maps.newHashMap();
-    private Map<Integer, QueryFlowOuterClass.BinaryOperator.Builder> binaryOperatorList = Maps.newHashMap();
+    private Map<Integer, QueryFlowOuterClass.UnaryOperator.Builder> unaryOperatorList =
+            Maps.newHashMap();
+    private Map<Integer, QueryFlowOuterClass.BinaryOperator.Builder> binaryOperatorList =
+            Maps.newHashMap();
     private List<PrepareEntity> prepareEntityList = Lists.newArrayList();
     private int argumentIndex = 1;
 
@@ -55,7 +59,9 @@ public class OperatorListManager {
         operatorBaseList.put(id, builder);
     }
 
-    public void setSource(QueryFlowOuterClass.SourceOperator.Builder builder, QueryFlowOuterClass.OperatorBase.Builder sourceBase) {
+    public void setSource(
+            QueryFlowOuterClass.SourceOperator.Builder builder,
+            QueryFlowOuterClass.OperatorBase.Builder sourceBase) {
         Preconditions.checkArgument(sourceBuilder == null);
         sourceBuilder = builder;
         sourceBaseBuilder = sourceBase;

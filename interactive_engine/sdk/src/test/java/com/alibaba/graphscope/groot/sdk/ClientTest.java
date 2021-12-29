@@ -13,9 +13,10 @@
  */
 package com.alibaba.graphscope.groot.sdk;
 
-import com.alibaba.maxgraph.compiler.api.schema.GraphSchema;
 import com.alibaba.graphscope.groot.schema.GraphDef;
+import com.alibaba.maxgraph.compiler.api.schema.GraphSchema;
 import com.alibaba.maxgraph.sdkcommon.common.DataLoadTarget;
+
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;

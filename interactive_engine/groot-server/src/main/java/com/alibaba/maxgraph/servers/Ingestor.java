@@ -13,21 +13,7 @@
  */
 package com.alibaba.maxgraph.servers;
 
-import com.alibaba.maxgraph.common.RoleType;
-import com.alibaba.graphscope.groot.meta.DefaultMetaService;
-import com.alibaba.graphscope.groot.meta.MetaService;
-import com.alibaba.maxgraph.common.config.CommonConfig;
 import com.alibaba.graphscope.groot.discovery.*;
-import com.alibaba.graphscope.groot.metrics.MetricsCollectService;
-import com.alibaba.graphscope.groot.metrics.MetricsCollector;
-import com.alibaba.maxgraph.common.config.Configs;
-import com.alibaba.maxgraph.compiler.api.exception.MaxGraphException;
-import com.alibaba.graphscope.groot.rpc.ChannelManager;
-import com.alibaba.graphscope.groot.rpc.MaxGraphNameResolverFactory;
-import com.alibaba.graphscope.groot.rpc.RpcServer;
-import com.alibaba.maxgraph.common.util.CuratorUtils;
-import com.alibaba.graphscope.groot.wal.LogService;
-import com.alibaba.graphscope.groot.wal.kafka.KafkaLogService;
 import com.alibaba.graphscope.groot.ingestor.IngestProgressFetcher;
 import com.alibaba.graphscope.groot.ingestor.IngestService;
 import com.alibaba.graphscope.groot.ingestor.IngestorSnapshotService;
@@ -36,7 +22,23 @@ import com.alibaba.graphscope.groot.ingestor.RemoteIngestProgressFetcher;
 import com.alibaba.graphscope.groot.ingestor.StoreWriteClient;
 import com.alibaba.graphscope.groot.ingestor.StoreWriteClients;
 import com.alibaba.graphscope.groot.ingestor.StoreWriter;
+import com.alibaba.graphscope.groot.meta.DefaultMetaService;
+import com.alibaba.graphscope.groot.meta.MetaService;
+import com.alibaba.graphscope.groot.metrics.MetricsCollectService;
+import com.alibaba.graphscope.groot.metrics.MetricsCollector;
+import com.alibaba.graphscope.groot.rpc.ChannelManager;
+import com.alibaba.graphscope.groot.rpc.MaxGraphNameResolverFactory;
+import com.alibaba.graphscope.groot.rpc.RpcServer;
+import com.alibaba.graphscope.groot.wal.LogService;
+import com.alibaba.graphscope.groot.wal.kafka.KafkaLogService;
+import com.alibaba.maxgraph.common.RoleType;
+import com.alibaba.maxgraph.common.config.CommonConfig;
+import com.alibaba.maxgraph.common.config.Configs;
+import com.alibaba.maxgraph.common.util.CuratorUtils;
+import com.alibaba.maxgraph.compiler.api.exception.MaxGraphException;
+
 import io.grpc.NameResolver;
+
 import org.apache.curator.framework.CuratorFramework;
 
 import java.io.IOException;

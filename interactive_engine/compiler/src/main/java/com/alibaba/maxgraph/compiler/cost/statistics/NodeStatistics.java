@@ -1,12 +1,12 @@
 /**
  * Copyright 2020 Alibaba Group Holding Limited.
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -46,7 +46,10 @@ public class NodeStatistics {
 
     public Map<String, Double> getVertexCountList() {
         if (vertexCountList.isEmpty() && elementCount > 0) {
-            Set<String> vertexLabelList = this.schema.getVertexList().stream().map(GraphElement::getLabel).collect(Collectors.toSet());
+            Set<String> vertexLabelList =
+                    this.schema.getVertexList().stream()
+                            .map(GraphElement::getLabel)
+                            .collect(Collectors.toSet());
             if (!vertexLabelList.isEmpty()) {
                 double vertexCount = elementCount / vertexLabelList.size();
                 for (String vertexLabel : vertexLabelList) {
@@ -60,7 +63,10 @@ public class NodeStatistics {
 
     public Map<String, Double> getEdgeCountList() {
         if (edgeCountList.isEmpty() && elementCount > 0) {
-            Set<String> edgeLabelList = this.schema.getEdgeList().stream().map(GraphElement::getLabel).collect(Collectors.toSet());
+            Set<String> edgeLabelList =
+                    this.schema.getEdgeList().stream()
+                            .map(GraphElement::getLabel)
+                            .collect(Collectors.toSet());
             if (!edgeLabelList.isEmpty()) {
                 double edgeCount = elementCount / edgeLabelList.size();
                 for (String edgeLabel : edgeLabelList) {

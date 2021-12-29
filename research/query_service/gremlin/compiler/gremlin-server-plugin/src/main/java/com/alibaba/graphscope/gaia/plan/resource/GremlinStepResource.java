@@ -18,13 +18,14 @@ package com.alibaba.graphscope.gaia.plan.resource;
 import com.alibaba.graphscope.common.proto.Gremlin;
 import com.alibaba.graphscope.common.proto.Gremlin.GremlinStep;
 import com.alibaba.graphscope.gaia.idmaker.IdMaker;
-import com.alibaba.graphscope.gaia.plan.strategy.global.RemovePathHistoryStep;
-import com.alibaba.pegasus.builder.AbstractBuilder;
-import com.alibaba.pegasus.builder.JobBuilder;
 import com.alibaba.graphscope.gaia.plan.PlanUtils;
+import com.alibaba.graphscope.gaia.plan.strategy.global.RemovePathHistoryStep;
 import com.alibaba.graphscope.gaia.plan.strategy.shuffle.ShuffleStrategy;
 import com.alibaba.graphscope.gaia.plan.translator.builder.StepBuilder;
+import com.alibaba.pegasus.builder.AbstractBuilder;
+import com.alibaba.pegasus.builder.JobBuilder;
 import com.google.protobuf.ByteString;
+
 import org.apache.commons.configuration.Configuration;
 import org.apache.tinkerpop.gremlin.process.traversal.Step;
 
@@ -45,14 +46,24 @@ public abstract class GremlinStepResource implements StepResource {
         GremlinStep.Builder builder = GremlinStep.newBuilder();
         IdMaker tagIdMaker = PlanUtils.getTagIdMaker(conf);
         if (!t.getLabels().isEmpty()) {
-            t.getLabels().forEach(k -> builder.addTags(Gremlin.StepTag.newBuilder().setTag((int) tagIdMaker.getId(k))));
+            t.getLabels()
+                    .forEach(
+                            k ->
+                                    builder.addTags(
+                                            Gremlin.StepTag.newBuilder()
+                                                    .setTag((int) tagIdMaker.getId(k))));
         }
         if (t.getNextStep() instanceof RemovePathHistoryStep) {
             RemovePathHistoryStep removeStep = (RemovePathHistoryStep) t.getNextStep();
             if (removeStep.getRemoveTags() != null) {
-                removeStep.getRemoveTags().forEach(k -> {
-                    builder.addRemoveTags(Gremlin.StepTag.newBuilder().setTag((int) tagIdMaker.getId(k)));
-                });
+                removeStep
+                        .getRemoveTags()
+                        .forEach(
+                                k -> {
+                                    builder.addRemoveTags(
+                                            Gremlin.StepTag.newBuilder()
+                                                    .setTag((int) tagIdMaker.getId(k)));
+                                });
             }
         }
         return builder;
@@ -103,7 +114,8 @@ public abstract class GremlinStepResource implements StepResource {
             builder.setTransformTraverserStep((Gremlin.TransformTraverserStep) stepResurce);
             target.map(builder.build().toByteString());
         } else {
-            throw new UnsupportedOperationException("operator " + t.getClass() + " not implemented");
+            throw new UnsupportedOperationException(
+                    "operator " + t.getClass() + " not implemented");
         }
     }
 }

@@ -1,12 +1,12 @@
 /**
  * Copyright 2020 Alibaba Group Holding Limited.
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -15,8 +15,11 @@
  */
 package com.alibaba.maxgraph.compiler.tree;
 
+import static com.google.common.base.Preconditions.checkArgument;
+
 import com.alibaba.maxgraph.Message;
 import com.alibaba.maxgraph.QueryFlowOuterClass;
+import com.alibaba.maxgraph.common.util.SchemaUtils;
 import com.alibaba.maxgraph.compiler.api.schema.GraphEdge;
 import com.alibaba.maxgraph.compiler.api.schema.GraphSchema;
 import com.alibaba.maxgraph.compiler.logical.LogicalSubQueryPlan;
@@ -25,10 +28,9 @@ import com.alibaba.maxgraph.compiler.logical.function.ProcessorFunction;
 import com.alibaba.maxgraph.compiler.optimizer.ContextManager;
 import com.alibaba.maxgraph.compiler.tree.value.ValueType;
 import com.alibaba.maxgraph.compiler.tree.value.VertexValueType;
-
 import com.alibaba.maxgraph.compiler.utils.MaxGraphUtils;
 import com.alibaba.maxgraph.compiler.utils.ReflectionUtils;
-import com.alibaba.maxgraph.common.util.SchemaUtils;
+
 import org.apache.tinkerpop.gremlin.process.computer.traversal.step.map.ShortestPathVertexProgramStep;
 import org.apache.tinkerpop.gremlin.process.traversal.Step;
 import org.apache.tinkerpop.gremlin.process.traversal.Traversal;
@@ -42,13 +44,11 @@ import org.apache.tinkerpop.gremlin.structure.Direction;
 
 import java.util.List;
 
-import static com.google.common.base.Preconditions.checkArgument;
-
 public class ShortestPathVertexProgramTreeNode extends UnaryTreeNode {
     private final ShortestPathVertexProgramStep step;
 
-
-    public ShortestPathVertexProgramTreeNode(TreeNode input, GraphSchema schema, ShortestPathVertexProgramStep step) {
+    public ShortestPathVertexProgramTreeNode(
+            TreeNode input, GraphSchema schema, ShortestPathVertexProgramStep step) {
         super(input, NodeType.FLATMAP, schema);
         this.step = step;
     }
@@ -57,24 +57,30 @@ public class ShortestPathVertexProgramTreeNode extends UnaryTreeNode {
     public LogicalSubQueryPlan buildLogicalQueryPlan(ContextManager contextManager) {
         TreeNodeLabelManager labelManager = contextManager.getTreeNodeLabelManager();
         VertexIdManager vertexIdManager = contextManager.getVertexIdManager();
-        ProcessorFunction processorFunction = new ProcessorFunction(
-                QueryFlowOuterClass.OperatorType.PROGRAM_GRAPH_SHORTESTPATH,
-                createOperatorArgument());
-        return parseSingleUnaryVertex(vertexIdManager, labelManager, processorFunction, contextManager);
+        ProcessorFunction processorFunction =
+                new ProcessorFunction(
+                        QueryFlowOuterClass.OperatorType.PROGRAM_GRAPH_SHORTESTPATH,
+                        createOperatorArgument());
+        return parseSingleUnaryVertex(
+                vertexIdManager, labelManager, processorFunction, contextManager);
     }
 
     private Message.Value.Builder createOperatorArgument() {
         Message.Value.Builder valueBuilder = Message.Value.newBuilder();
-        Message.VertexProgramShortestPathArg.Builder shortestPathArgBuilder = Message.VertexProgramShortestPathArg
-                .newBuilder();
+        Message.VertexProgramShortestPathArg.Builder shortestPathArgBuilder =
+                Message.VertexProgramShortestPathArg.newBuilder();
 
         List<Traversal.Admin<?, ?>> traversalSteps = step.getLocalChildren();
         Traversal.Admin<?, ?> targetVertexFilter = traversalSteps.get(0);
         Traversal.Admin<?, ?> edgeTraversal = traversalSteps.get(1);
         Traversal.Admin<?, ?> distanceTraversal = traversalSteps.get(2);
 
-        Number maxDistance = ReflectionUtils.getFieldValue(ShortestPathVertexProgramStep.class, step, "maxDistance");
-        boolean includeEdges = ReflectionUtils.getFieldValue(ShortestPathVertexProgramStep.class, step, "includeEdges");
+        Number maxDistance =
+                ReflectionUtils.getFieldValue(
+                        ShortestPathVertexProgramStep.class, step, "maxDistance");
+        boolean includeEdges =
+                ReflectionUtils.getFieldValue(
+                        ShortestPathVertexProgramStep.class, step, "includeEdges");
 
         // targetVertexFilter
         // only support .with(ShortestPath.target,__.has('name','peter')) or default case
@@ -105,8 +111,8 @@ public class ShortestPathVertexProgramTreeNode extends UnaryTreeNode {
                         propertyValueBuilder.setStrValue(value.toString());
                         break;
                     default:
-                        throw new IllegalArgumentException("value in with-step is not supported yet => " + hasStep
-                                .toString());
+                        throw new IllegalArgumentException(
+                                "value in with-step is not supported yet => " + hasStep.toString());
                 }
                 shortestPathArgBuilder.setTarget(propertyValueBuilder);
                 shortestPathArgBuilder.setHasTarget(true);
@@ -138,7 +144,8 @@ public class ShortestPathVertexProgramTreeNode extends UnaryTreeNode {
         checkArgument((int) maxDistance > 0, "iteration must > 0 for shortest path");
         shortestPathArgBuilder.setLoopLimit((int) maxDistance);
 
-        // edgeTraversal supports ".with(ShortestPath.edges, Direction.IN)", ".with(ShortestPath.edges, outE('edge'))
+        // edgeTraversal supports ".with(ShortestPath.edges, Direction.IN)",
+        // ".with(ShortestPath.edges, outE('edge'))
         // ", default as OUT
         List<Step> edgeTraversalSteps = edgeTraversal.getSteps();
         shortestPathArgBuilder.setWeightLb(0);
@@ -159,12 +166,15 @@ public class ShortestPathVertexProgramTreeNode extends UnaryTreeNode {
         for (int i = 1; i < edgeTraversalSteps.size(); ++i) {
             Step hasStep = edgeTraversalSteps.get(i);
             if (hasStep instanceof HasStep) {
-                HasContainer hasContainer = (HasContainer) ((HasStep) hasStep).getHasContainers().get(0);
+                HasContainer hasContainer =
+                        (HasContainer) ((HasStep) hasStep).getHasContainers().get(0);
                 String key = hasContainer.getKey();
                 Object value = hasContainer.getPredicate().getValue();
-                if (hasContainer.getPredicate().getBiPredicate().toString().equals("gt") && (value instanceof Number)) {
+                if (hasContainer.getPredicate().getBiPredicate().toString().equals("gt")
+                        && (value instanceof Number)) {
                     shortestPathArgBuilder.setWeightLb(((Number) value).doubleValue());
-                    shortestPathArgBuilder.setPropertyEdgeWeightId(SchemaUtils.getPropId(key, schema));
+                    shortestPathArgBuilder.setPropertyEdgeWeightId(
+                            SchemaUtils.getPropId(key, schema));
                 } else {
                     GraphEdge edgeType = (GraphEdge) schema.getElement(value.toString());
                     shortestPathArgBuilder.addEdgeLabels(edgeType.getLabelId());

@@ -1,12 +1,12 @@
 /**
  * Copyright 2020 Alibaba Group Holding Limited.
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -15,12 +15,17 @@
  */
 package com.alibaba.maxgraph.compiler.tree;
 
+import static com.alibaba.maxgraph.compiler.tree.TreeConstants.SYS_LABEL_START;
+import static com.alibaba.maxgraph.compiler.tree.TreeConstants.USER_LABEL_START;
+import static com.google.common.base.Preconditions.checkNotNull;
+
 import com.alibaba.maxgraph.QueryFlowOuterClass;
-import com.alibaba.maxgraph.compiler.tree.value.ValueType;
 import com.alibaba.maxgraph.compiler.logical.LogicalVertex;
+import com.alibaba.maxgraph.compiler.tree.value.ValueType;
 import com.alibaba.maxgraph.compiler.utils.CompilerUtils;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+
 import org.apache.tinkerpop.gremlin.process.traversal.Pop;
 import org.apache.tinkerpop.gremlin.structure.Column;
 import org.apache.tinkerpop.gremlin.structure.T;
@@ -30,10 +35,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
-
-import static com.alibaba.maxgraph.compiler.tree.TreeConstants.SYS_LABEL_START;
-import static com.alibaba.maxgraph.compiler.tree.TreeConstants.USER_LABEL_START;
-import static com.google.common.base.Preconditions.checkNotNull;
 
 public class TreeNodeLabelManager implements Serializable {
     private int userLabelId;
@@ -106,10 +107,11 @@ public class TreeNodeLabelManager implements Serializable {
     }
 
     public Set<String> getUserLabelList() {
-        return labelIndexList
-                .keySet()
-                .stream()
-                .filter(v -> labelIndexList.get(v) <= USER_LABEL_START && labelIndexList.get(v) > SYS_LABEL_START)
+        return labelIndexList.keySet().stream()
+                .filter(
+                        v ->
+                                labelIndexList.get(v) <= USER_LABEL_START
+                                        && labelIndexList.get(v) > SYS_LABEL_START)
                 .collect(Collectors.toSet());
     }
 
@@ -126,15 +128,17 @@ public class TreeNodeLabelManager implements Serializable {
             updateLabelIndexList(labelName, labelId);
 
             QueryFlowOuterClass.RequirementValue.Builder labelStartBuilder = null;
-            for (QueryFlowOuterClass.RequirementValue.Builder builder : logicalVertex.getAfterRequirementList()) {
+            for (QueryFlowOuterClass.RequirementValue.Builder builder :
+                    logicalVertex.getAfterRequirementList()) {
                 if (builder.getReqType() == QueryFlowOuterClass.RequirementType.LABEL_START) {
                     labelStartBuilder = builder;
                     break;
                 }
             }
             if (null == labelStartBuilder) {
-                labelStartBuilder = QueryFlowOuterClass.RequirementValue.newBuilder()
-                        .setReqType(QueryFlowOuterClass.RequirementType.LABEL_START);
+                labelStartBuilder =
+                        QueryFlowOuterClass.RequirementValue.newBuilder()
+                                .setReqType(QueryFlowOuterClass.RequirementType.LABEL_START);
                 logicalVertex.getAfterRequirementList().add(labelStartBuilder);
             }
             labelStartBuilder.getReqArgumentBuilder().addIntValueList(labelId);
@@ -160,15 +164,17 @@ public class TreeNodeLabelManager implements Serializable {
             updateLabelIndexList(labelName, labelId);
 
             QueryFlowOuterClass.RequirementValue.Builder labelStartBuilder = null;
-            for (QueryFlowOuterClass.RequirementValue.Builder builder : logicalVertex.getBeforeRequirementList()) {
+            for (QueryFlowOuterClass.RequirementValue.Builder builder :
+                    logicalVertex.getBeforeRequirementList()) {
                 if (builder.getReqType() == QueryFlowOuterClass.RequirementType.LABEL_START) {
                     labelStartBuilder = builder;
                     break;
                 }
             }
             if (null == labelStartBuilder) {
-                labelStartBuilder = QueryFlowOuterClass.RequirementValue.newBuilder()
-                        .setReqType(QueryFlowOuterClass.RequirementType.LABEL_START);
+                labelStartBuilder =
+                        QueryFlowOuterClass.RequirementValue.newBuilder()
+                                .setReqType(QueryFlowOuterClass.RequirementType.LABEL_START);
                 logicalVertex.getBeforeRequirementList().add(labelStartBuilder);
             }
             labelStartBuilder.getReqArgumentBuilder().addIntValueList(labelId);
@@ -210,7 +216,8 @@ public class TreeNodeLabelManager implements Serializable {
     public Map<Integer, String> getUserIndexLabelList() {
         Map<Integer, String> userIndexLabelList = Maps.newHashMap();
         for (Map.Entry<Integer, String> entry : indexLabelList.entrySet()) {
-            if (entry.getKey() <= TreeConstants.USER_LABEL_START && entry.getKey() > TreeConstants.SYS_LABEL_START) {
+            if (entry.getKey() <= TreeConstants.USER_LABEL_START
+                    && entry.getKey() > TreeConstants.SYS_LABEL_START) {
                 userIndexLabelList.put(entry.getKey(), entry.getValue());
             }
         }

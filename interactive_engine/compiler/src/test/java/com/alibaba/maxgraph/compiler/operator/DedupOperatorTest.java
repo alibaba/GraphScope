@@ -1,12 +1,12 @@
 /**
  * Copyright 2020 Alibaba Group Holding Limited.
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -15,22 +15,22 @@
  */
 package com.alibaba.maxgraph.compiler.operator;
 
+import static org.apache.tinkerpop.gremlin.process.traversal.P.neq;
+import static org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.__.outE;
+
 import org.apache.tinkerpop.gremlin.structure.T;
 import org.junit.Test;
 
 import java.io.IOException;
 
-import static org.apache.tinkerpop.gremlin.process.traversal.P.neq;
-import static org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.__.outE;
-
 public class DedupOperatorTest extends AbstractOperatorTest {
 
-    public DedupOperatorTest() throws IOException {
-    }
+    public DedupOperatorTest() throws IOException {}
 
     @Test
     public void testDedupByPropCase() {
-        executeTreeQuery(g.V().both().has(T.label, "person").dedup().by("firstname").values("lastname"));
+        executeTreeQuery(
+                g.V().both().has(T.label, "person").dedup().by("firstname").values("lastname"));
     }
 
     @Test

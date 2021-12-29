@@ -13,7 +13,10 @@
  */
 package com.alibaba.graphscope.groot.frontend;
 
+import com.alibaba.graphscope.groot.CompletionCallback;
 import com.alibaba.graphscope.groot.SnapshotCache;
+import com.alibaba.graphscope.groot.meta.MetaService;
+import com.alibaba.graphscope.groot.metrics.MetricsAggregator;
 import com.alibaba.graphscope.groot.schema.EdgeKind;
 import com.alibaba.graphscope.groot.schema.GraphDef;
 import com.alibaba.graphscope.groot.schema.GraphSchemaMapper;
@@ -21,18 +24,17 @@ import com.alibaba.graphscope.groot.schema.PropertyDef;
 import com.alibaba.graphscope.groot.schema.PropertyValue;
 import com.alibaba.graphscope.groot.schema.TypeDef;
 import com.alibaba.graphscope.groot.schema.TypeEnum;
+import com.alibaba.graphscope.groot.schema.request.*;
 import com.alibaba.maxgraph.compiler.api.schema.*;
 import com.alibaba.maxgraph.proto.DataLoadTargetPb;
 import com.alibaba.maxgraph.proto.groot.*;
 import com.alibaba.maxgraph.proto.groot.CommitDataLoadRequest;
 import com.alibaba.maxgraph.proto.groot.PrepareDataLoadRequest;
-import com.alibaba.graphscope.groot.CompletionCallback;
-import com.alibaba.graphscope.groot.meta.MetaService;
-import com.alibaba.graphscope.groot.metrics.MetricsAggregator;
-import com.alibaba.graphscope.groot.schema.request.*;
 import com.alibaba.maxgraph.sdkcommon.common.DataLoadTarget;
+
 import io.grpc.Status;
 import io.grpc.stub.StreamObserver;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -311,12 +313,14 @@ public class ClientService extends ClientGrpc.ClientImplBase {
     }
 
     @Override
-    public void getLoggerInfo(GetLoggerInfoRequest request, StreamObserver<GetLoggerInfoResponse> observer) {
-        GetLoggerInfoResponse response = GetLoggerInfoResponse.newBuilder()
-                .setLoggerServers(metaService.getLoggerServers())
-                .setLoggerTopic(metaService.getLoggerTopicName())
-                .setLoggerQueueCount(metaService.getQueueCount())
-                .build();
+    public void getLoggerInfo(
+            GetLoggerInfoRequest request, StreamObserver<GetLoggerInfoResponse> observer) {
+        GetLoggerInfoResponse response =
+                GetLoggerInfoResponse.newBuilder()
+                        .setLoggerServers(metaService.getLoggerServers())
+                        .setLoggerTopic(metaService.getLoggerTopicName())
+                        .setLoggerQueueCount(metaService.getQueueCount())
+                        .build();
         observer.onNext(response);
         observer.onCompleted();
     }

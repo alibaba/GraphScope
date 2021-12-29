@@ -13,17 +13,18 @@
  */
 package com.alibaba.maxgraph.tests.common.rpc;
 
-import com.alibaba.maxgraph.common.config.CommonConfig;
-import com.alibaba.maxgraph.common.config.Configs;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+
 import com.alibaba.graphscope.groot.discovery.LocalNodeProvider;
 import com.alibaba.graphscope.groot.discovery.MaxGraphNode;
-import com.alibaba.maxgraph.common.RoleType;
 import com.alibaba.graphscope.groot.rpc.RpcServer;
+import com.alibaba.maxgraph.common.RoleType;
+import com.alibaba.maxgraph.common.config.CommonConfig;
+import com.alibaba.maxgraph.common.config.Configs;
+
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
-
-import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class RpcServerTest {
 

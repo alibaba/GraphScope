@@ -13,15 +13,16 @@
  */
 package com.alibaba.maxgraph.tests.store;
 
-import com.alibaba.graphscope.groot.meta.MetaService;
-import com.alibaba.graphscope.groot.operation.StoreDataBatch;
-import com.alibaba.maxgraph.common.config.Configs;
-import com.alibaba.graphscope.groot.store.SnapshotSortQueue;
-import org.junit.jupiter.api.Test;
-
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
+
+import com.alibaba.graphscope.groot.meta.MetaService;
+import com.alibaba.graphscope.groot.operation.StoreDataBatch;
+import com.alibaba.graphscope.groot.store.SnapshotSortQueue;
+import com.alibaba.maxgraph.common.config.Configs;
+
+import org.junit.jupiter.api.Test;
 
 public class SnapshotSortQueueTest {
 

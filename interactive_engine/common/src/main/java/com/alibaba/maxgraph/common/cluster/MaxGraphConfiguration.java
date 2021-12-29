@@ -1,12 +1,12 @@
 /**
  * Copyright 2020 Alibaba Group Holding Limited.
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -21,6 +21,9 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.io.IOException;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
@@ -29,8 +32,6 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Properties;
 import java.util.concurrent.ConcurrentHashMap;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * MaxGraphConfiguration for MaxGraph
@@ -38,17 +39,16 @@ import org.slf4j.LoggerFactory;
  * @author lvshuang.xjs@alibaba-inc.com
  * @create 2018-05-08 上午11:19
  **/
-
 public class MaxGraphConfiguration {
 
     public static final Logger LOG = LoggerFactory.getLogger(MaxGraphConfiguration.class);
-    protected final ConcurrentHashMap<String, String> settings = new ConcurrentHashMap<String, String>();
+    protected final ConcurrentHashMap<String, String> settings =
+            new ConcurrentHashMap<String, String>();
 
     // common config
     public static final String CLUSTER_HADOOP_HOME = "executor.download.data.hadoop.home";
 
-    public MaxGraphConfiguration() {
-    }
+    public MaxGraphConfiguration() {}
 
     public MaxGraphConfiguration(Map<String, String> map) {
         for (Map.Entry<String, String> entry : map.entrySet()) {
@@ -189,7 +189,6 @@ public class MaxGraphConfiguration {
         this.settings.clear();
     }
 
-
     public Map<String, String> getProperties() {
         return ImmutableMap.copyOf(settings);
     }
@@ -197,7 +196,8 @@ public class MaxGraphConfiguration {
     /**
      * load the the galaxy conf from properties file
      */
-    public static MaxGraphConfiguration loadConf(String fileName, boolean resourcePath) throws IOException {
+    public static MaxGraphConfiguration loadConf(String fileName, boolean resourcePath)
+            throws IOException {
         Properties props = PropertyUtil.getProperties(fileName, resourcePath);
         return new MaxGraphConfiguration(props);
     }
@@ -236,7 +236,8 @@ public class MaxGraphConfiguration {
         try {
             fields = Class.forName(configClass.getCanonicalName()).getFields();
             for (Field field : fields) {
-                if ("String".equals(field.getType().getSimpleName()) && Modifier.isStatic(field.getModifiers())) {
+                if ("String".equals(field.getType().getSimpleName())
+                        && Modifier.isStatic(field.getModifiers())) {
                     keys.add(field.get(null).toString());
                 }
             }

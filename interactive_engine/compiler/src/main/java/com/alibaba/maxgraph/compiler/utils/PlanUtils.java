@@ -13,16 +13,17 @@
  */
 package com.alibaba.maxgraph.compiler.utils;
 
+import static com.google.common.base.Preconditions.checkArgument;
+
 import com.alibaba.maxgraph.compiler.logical.LogicalEdge;
 import com.alibaba.maxgraph.compiler.logical.LogicalVertex;
 import com.google.common.collect.Lists;
+
 import org.apache.commons.lang3.tuple.Pair;
 import org.jgrapht.Graph;
 
 import java.util.LinkedList;
 import java.util.List;
-
-import static com.google.common.base.Preconditions.checkArgument;
 
 public class PlanUtils {
 

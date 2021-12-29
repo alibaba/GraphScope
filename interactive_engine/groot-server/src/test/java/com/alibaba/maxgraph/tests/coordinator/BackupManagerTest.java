@@ -13,6 +13,12 @@
  */
 package com.alibaba.maxgraph.tests.coordinator;
 
+import static com.alibaba.graphscope.groot.coordinator.BackupManager.*;
+
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.*;
+
 import com.alibaba.graphscope.groot.CompletionCallback;
 import com.alibaba.graphscope.groot.SnapshotCache;
 import com.alibaba.graphscope.groot.SnapshotWithSchema;
@@ -26,36 +32,32 @@ import com.alibaba.maxgraph.common.config.CommonConfig;
 import com.alibaba.maxgraph.common.config.Configs;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+
 import org.apache.commons.io.FileUtils;
 import org.junit.jupiter.api.Test;
 
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
-import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.*;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
-
-import static com.alibaba.graphscope.groot.coordinator.BackupManager.*;
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.Mockito.*;
 
 public class BackupManagerTest {
 
     @Test
     void testBackupManager() throws IOException, InterruptedException {
         // init config
-        Configs configs = Configs.newBuilder()
-                .put(CommonConfig.STORE_NODE_COUNT.getKey(), "2")
-                .put(BackupConfig.BACKUP_ENABLE.getKey(), "true")
-                .put(BackupConfig.BACKUP_CREATION_BUFFER_MAX_COUNT.getKey(), "4")
-                .put(BackupConfig.BACKUP_GC_INTERVAL_HOURS.getKey(), "24")
-                .put(BackupConfig.BACKUP_AUTO_SUBMIT.getKey(), "false")
-                .put(BackupConfig.BACKUP_AUTO_SUBMIT_INTERVAL_HOURS.getKey(), "24")
-                .build();
+        Configs configs =
+                Configs.newBuilder()
+                        .put(CommonConfig.STORE_NODE_COUNT.getKey(), "2")
+                        .put(BackupConfig.BACKUP_ENABLE.getKey(), "true")
+                        .put(BackupConfig.BACKUP_CREATION_BUFFER_MAX_COUNT.getKey(), "4")
+                        .put(BackupConfig.BACKUP_GC_INTERVAL_HOURS.getKey(), "24")
+                        .put(BackupConfig.BACKUP_AUTO_SUBMIT.getKey(), "false")
+                        .put(BackupConfig.BACKUP_AUTO_SUBMIT_INTERVAL_HOURS.getKey(), "24")
+                        .build();
 
         // init data
         long querySnapshotId = 10L;
@@ -68,19 +70,29 @@ public class BackupManagerTest {
         Map<Integer, Integer> partitionToBackupId2 = new HashMap<>();
         partitionToBackupId2.put(0, 2);
         partitionToBackupId2.put(1, 2);
-        BackupInfo backupInfo1 = new BackupInfo(
-                1, querySnapshotId, graphDef.toProto().toByteArray(), queueOffsets, partitionToBackupId1);
-        BackupInfo backupInfo2 = new BackupInfo(
-                2, querySnapshotId, graphDef.toProto().toByteArray(), queueOffsets, partitionToBackupId2);
+        BackupInfo backupInfo1 =
+                new BackupInfo(
+                        1,
+                        querySnapshotId,
+                        graphDef.toProto().toByteArray(),
+                        queueOffsets,
+                        partitionToBackupId1);
+        BackupInfo backupInfo2 =
+                new BackupInfo(
+                        2,
+                        querySnapshotId,
+                        graphDef.toProto().toByteArray(),
+                        queueOffsets,
+                        partitionToBackupId2);
 
         // mock MetaStore behaviours
         ObjectMapper objectMapper = new ObjectMapper();
         MetaStore mockMetaStore = mock(MetaStore.class);
         when(mockMetaStore.exists(anyString())).thenReturn(true);
-        when(mockMetaStore.read(GLOBAL_BACKUP_ID_PATH)).thenReturn(
-                objectMapper.writeValueAsBytes(0));
-        when(mockMetaStore.read(BACKUP_INFO_PATH)).thenReturn(
-                objectMapper.writeValueAsBytes(new ArrayList<BackupInfo>()));
+        when(mockMetaStore.read(GLOBAL_BACKUP_ID_PATH))
+                .thenReturn(objectMapper.writeValueAsBytes(0));
+        when(mockMetaStore.read(BACKUP_INFO_PATH))
+                .thenReturn(objectMapper.writeValueAsBytes(new ArrayList<BackupInfo>()));
 
         // mock MetaService behaviours
         MetaService mockMetaService = mock(MetaService.class);
@@ -131,9 +143,15 @@ public class BackupManagerTest {
                 .when(mockStoreBackupTaskSender)
                 .verifyStoreBackup(anyInt(), any(), any());
 
-        BackupManager backupManager = new BackupManager(
-                configs, mockMetaService, mockMetaStore, mockSnapshotManager, mockSchemaManager, mockSnapshotCache,
-                mockStoreBackupTaskSender);
+        BackupManager backupManager =
+                new BackupManager(
+                        configs,
+                        mockMetaService,
+                        mockMetaStore,
+                        mockSnapshotManager,
+                        mockSchemaManager,
+                        mockSnapshotCache,
+                        mockStoreBackupTaskSender);
         backupManager.start();
         verify(mockSnapshotManager).addListener(any());
 
@@ -150,15 +168,19 @@ public class BackupManagerTest {
         doAnswer(
                         invocation -> {
                             byte[] backupInfoBytes = invocation.getArgument(1);
-                            List<BackupInfo> backupInfoList = objectMapper.readValue(backupInfoBytes,
-                                    new TypeReference<List<BackupInfo>>() {});
+                            List<BackupInfo> backupInfoList =
+                                    objectMapper.readValue(
+                                            backupInfoBytes,
+                                            new TypeReference<List<BackupInfo>>() {});
                             assertEquals(backupInfoList.size(), 1);
                             assertEquals(backupInfoList.get(0), backupInfo1);
                             updateBackupInfoByCreation1Latch.countDown();
                             return null;
                         })
                 .when(mockMetaStore)
-                .write(BACKUP_INFO_PATH, objectMapper.writeValueAsBytes(Collections.singletonList(backupInfo1)));
+                .write(
+                        BACKUP_INFO_PATH,
+                        objectMapper.writeValueAsBytes(Collections.singletonList(backupInfo1)));
         int backupId1 = backupManager.createNewBackup();
         assertEquals(backupId1, 1);
         assertTrue(updateBackupIdLatch1.await(5L, TimeUnit.SECONDS));
@@ -177,14 +199,17 @@ public class BackupManagerTest {
         doAnswer(
                         invocation -> {
                             byte[] backupInfoBytes = invocation.getArgument(1);
-                            List<BackupInfo> backupInfoList = objectMapper.readValue(backupInfoBytes,
-                                    new TypeReference<List<BackupInfo>>() {});
-                            backupInfoList.sort(new Comparator<BackupInfo>() {
-                                @Override
-                                public int compare(BackupInfo o1, BackupInfo o2) {
-                                    return o1.getGlobalBackupId() - o2.getGlobalBackupId();
-                                }
-                            });
+                            List<BackupInfo> backupInfoList =
+                                    objectMapper.readValue(
+                                            backupInfoBytes,
+                                            new TypeReference<List<BackupInfo>>() {});
+                            backupInfoList.sort(
+                                    new Comparator<BackupInfo>() {
+                                        @Override
+                                        public int compare(BackupInfo o1, BackupInfo o2) {
+                                            return o1.getGlobalBackupId() - o2.getGlobalBackupId();
+                                        }
+                                    });
                             assertEquals(backupInfoList.size(), 2);
                             assertEquals(backupInfoList.get(0), backupInfo1);
                             assertEquals(backupInfoList.get(1), backupInfo2);
@@ -192,7 +217,9 @@ public class BackupManagerTest {
                             return null;
                         })
                 .when(mockMetaStore)
-                .write(BACKUP_INFO_PATH, objectMapper.writeValueAsBytes(Arrays.asList(backupInfo1, backupInfo2)));
+                .write(
+                        BACKUP_INFO_PATH,
+                        objectMapper.writeValueAsBytes(Arrays.asList(backupInfo1, backupInfo2)));
         int backupId2 = backupManager.createNewBackup();
         assertEquals(backupId2, 2);
         assertTrue(updateBackupIdLatch2.await(5L, TimeUnit.SECONDS));
@@ -226,15 +253,19 @@ public class BackupManagerTest {
         doAnswer(
                         invocation -> {
                             byte[] backupInfoBytes = invocation.getArgument(1);
-                            List<BackupInfo> backupInfoList = objectMapper.readValue(backupInfoBytes,
-                                    new TypeReference<List<BackupInfo>>() {});
+                            List<BackupInfo> backupInfoList =
+                                    objectMapper.readValue(
+                                            backupInfoBytes,
+                                            new TypeReference<List<BackupInfo>>() {});
                             assertEquals(backupInfoList.size(), 1);
                             assertEquals(backupInfoList.get(0), backupInfo2);
                             updateBackupInfoByPurgingLatch.countDown();
                             return null;
                         })
                 .when(mockMetaStore)
-                .write(BACKUP_INFO_PATH, objectMapper.writeValueAsBytes(Collections.singletonList(backupInfo2)));
+                .write(
+                        BACKUP_INFO_PATH,
+                        objectMapper.writeValueAsBytes(Collections.singletonList(backupInfo2)));
         backupManager.purgeOldBackups(1);
         assertTrue(updateBackupInfoByPurgingLatch.await(5L, TimeUnit.SECONDS));
 
@@ -246,14 +277,18 @@ public class BackupManagerTest {
         doAnswer(
                         invocation -> {
                             byte[] backupInfoBytes = invocation.getArgument(1);
-                            List<BackupInfo> backupInfoList = objectMapper.readValue(backupInfoBytes,
-                                    new TypeReference<List<BackupInfo>>() {});
+                            List<BackupInfo> backupInfoList =
+                                    objectMapper.readValue(
+                                            backupInfoBytes,
+                                            new TypeReference<List<BackupInfo>>() {});
                             assertTrue(backupInfoList.isEmpty());
                             updateBackupInfoByDeletionLatch.countDown();
                             return null;
                         })
                 .when(mockMetaStore)
-                .write(BACKUP_INFO_PATH, objectMapper.writeValueAsBytes(new ArrayList<BackupInfo>()));
+                .write(
+                        BACKUP_INFO_PATH,
+                        objectMapper.writeValueAsBytes(new ArrayList<BackupInfo>()));
         backupManager.deleteBackup(2);
         assertTrue(updateBackupInfoByDeletionLatch.await(5L, TimeUnit.SECONDS));
 

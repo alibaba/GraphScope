@@ -13,12 +13,13 @@
  */
 package com.alibaba.graphscope.groot.store;
 
+import com.alibaba.graphscope.groot.coordinator.SnapshotInfo;
 import com.alibaba.graphscope.groot.meta.MetaService;
 import com.alibaba.graphscope.groot.operation.StoreDataBatch;
 import com.alibaba.maxgraph.common.config.CommonConfig;
 import com.alibaba.maxgraph.common.config.Configs;
 import com.alibaba.maxgraph.common.util.ThreadFactoryUtils;
-import com.alibaba.graphscope.groot.coordinator.SnapshotInfo;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

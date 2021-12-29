@@ -45,9 +45,9 @@ public class Costs implements Comparable<Costs>, Cloneable {
 
     public static final double UNKNOWN = -1;
 
-    private double networkCost;                // network cost, in transferred bytes
+    private double networkCost; // network cost, in transferred bytes
 
-    private double cpuCost;                    // CPU costs
+    private double cpuCost; // CPU costs
 
     private double heuristicNetworkCost;
 
@@ -58,8 +58,7 @@ public class Costs implements Comparable<Costs>, Cloneable {
     /**
      * Default constructor. Initializes all costs to 0;
      */
-    public Costs() {
-    }
+    public Costs() {}
 
     /**
      * Creates a new costs object using the given values for the network and storage cost.
@@ -143,8 +142,7 @@ public class Costs implements Comparable<Costs>, Cloneable {
      * @param cost The CPU cost to add.
      */
     public void addCpuCost(double cost) {
-        this.cpuCost =
-                (this.cpuCost < 0 || cost < 0) ? UNKNOWN : this.cpuCost + cost;
+        this.cpuCost = (this.cpuCost < 0 || cost < 0) ? UNKNOWN : this.cpuCost + cost;
     }
 
     // --------------------------------------------------------------------------------------------
@@ -286,17 +284,18 @@ public class Costs implements Comparable<Costs>, Cloneable {
     public void multiplyWith(int factor) {
         this.networkCost = this.networkCost < 0 ? -1 : this.networkCost * factor;
         this.cpuCost = this.cpuCost < 0 ? -1 : this.cpuCost * factor;
-        this.heuristicNetworkCost = this.heuristicNetworkCost < 0 ? -1 : this.heuristicNetworkCost * factor;
+        this.heuristicNetworkCost =
+                this.heuristicNetworkCost < 0 ? -1 : this.heuristicNetworkCost * factor;
         this.heuristicCpuCost = this.heuristicCpuCost < 0 ? -1 : this.heuristicCpuCost * factor;
     }
 
     public void divideBy(int factor) {
         this.networkCost = this.networkCost < 0 ? -1 : this.networkCost / factor;
         this.cpuCost = this.cpuCost < 0 ? -1 : this.cpuCost / factor;
-        this.heuristicNetworkCost = this.heuristicNetworkCost < 0 ? -1 : this.heuristicNetworkCost / factor;
+        this.heuristicNetworkCost =
+                this.heuristicNetworkCost < 0 ? -1 : this.heuristicNetworkCost / factor;
         this.heuristicCpuCost = this.heuristicCpuCost < 0 ? -1 : this.heuristicCpuCost / factor;
     }
-
 
     // --------------------------------------------------------------------------------------------
 
@@ -308,7 +307,8 @@ public class Costs implements Comparable<Costs>, Cloneable {
      */
     @Override
     public int compareTo(Costs o) {
-        // check the network cost. if we have actual costs on both, use them, otherwise use the heuristic costs.
+        // check the network cost. if we have actual costs on both, use them, otherwise use the
+        // heuristic costs.
         if (this.networkCost != UNKNOWN && o.networkCost != UNKNOWN) {
             if (this.networkCost != o.networkCost) {
                 return this.networkCost < o.networkCost ? -1 : 1;
@@ -319,7 +319,8 @@ public class Costs implements Comparable<Costs>, Cloneable {
             return 1;
         }
 
-        // next, check the disk cost. again, if we have actual costs on both, use them, otherwise use the heuristic costs.
+        // next, check the disk cost. again, if we have actual costs on both, use them, otherwise
+        // use the heuristic costs.
         if (this.cpuCost != UNKNOWN && o.cpuCost != UNKNOWN) {
             return this.cpuCost < o.cpuCost ? -1 : this.cpuCost > o.cpuCost ? 1 : 0;
         } else if (this.heuristicCpuCost < o.heuristicCpuCost) {
@@ -342,7 +343,9 @@ public class Costs implements Comparable<Costs>, Cloneable {
 
         result = prime * result + (int) (cpuCostBits ^ (cpuCostBits >>> 32));
         result = prime * result + (int) (heuristicCpuCostBits ^ (heuristicCpuCostBits >>> 32));
-        result = prime * result + (int) (heuristicNetworkCostBits ^ (heuristicNetworkCostBits >>> 32));
+        result =
+                prime * result
+                        + (int) (heuristicNetworkCostBits ^ (heuristicNetworkCostBits >>> 32));
         result = prime * result + (int) (networkCostBits ^ (networkCostBits >>> 32));
         return result;
     }
@@ -351,10 +354,10 @@ public class Costs implements Comparable<Costs>, Cloneable {
     public boolean equals(Object obj) {
         if (obj.getClass() == getClass()) {
             final Costs other = (Costs) obj;
-            return this.networkCost == other.networkCost &
-                    this.cpuCost == other.cpuCost &
-                    this.heuristicNetworkCost == other.heuristicNetworkCost &
-                    this.heuristicCpuCost == other.heuristicCpuCost;
+            return this.networkCost == other.networkCost
+                    & this.cpuCost == other.cpuCost
+                    & this.heuristicNetworkCost == other.heuristicNetworkCost
+                    & this.heuristicCpuCost == other.heuristicCpuCost;
         } else {
             return false;
         }
@@ -362,8 +365,15 @@ public class Costs implements Comparable<Costs>, Cloneable {
 
     @Override
     public String toString() {
-        return "Costs [networkCost=" + networkCost + ", cpuCost=" + cpuCost + ", heuristicNetworkCost=" + heuristicNetworkCost +
-                ", heuristicCpuCost=" + heuristicCpuCost + "]";
+        return "Costs [networkCost="
+                + networkCost
+                + ", cpuCost="
+                + cpuCost
+                + ", heuristicNetworkCost="
+                + heuristicNetworkCost
+                + ", heuristicCpuCost="
+                + heuristicCpuCost
+                + "]";
     }
 
     @Override
@@ -371,7 +381,7 @@ public class Costs implements Comparable<Costs>, Cloneable {
         try {
             return (Costs) super.clone();
         } catch (CloneNotSupportedException e) {
-            throw new RuntimeException(e);    // should never happen
+            throw new RuntimeException(e); // should never happen
         }
     }
 }

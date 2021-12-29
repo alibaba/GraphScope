@@ -1,12 +1,12 @@
 /**
  * Copyright 2020 Alibaba Group Holding Limited.
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -16,14 +16,13 @@
 package com.alibaba.maxgraph.compiler.cost;
 
 import com.google.common.collect.Lists;
+
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.LinkedList;
 import java.util.List;
-
-import static com.google.common.base.Preconditions.checkArgument;
 
 public class CostGraph {
     private static final Logger logger = LoggerFactory.getLogger(CostGraph.class);
@@ -70,10 +69,19 @@ public class CostGraph {
         for (CostRow costRow : costRowList) {
             if (pathList.isEmpty()) {
                 if (costRow.getFieldList().isEmpty()) {
-                    pathList.add(new CostPath(Lists.newArrayList(new RowFieldManager(RowField.emptyRowField(), costRow.getBirthFieldList()))));
+                    pathList.add(
+                            new CostPath(
+                                    Lists.newArrayList(
+                                            new RowFieldManager(
+                                                    RowField.emptyRowField(),
+                                                    costRow.getBirthFieldList()))));
                 } else {
                     for (RowField rowField : costRow.getFieldList()) {
-                        pathList.add(new CostPath(Lists.newArrayList(new RowFieldManager(rowField, costRow.getBirthFieldList()))));
+                        pathList.add(
+                                new CostPath(
+                                        Lists.newArrayList(
+                                                new RowFieldManager(
+                                                        rowField, costRow.getBirthFieldList()))));
                     }
                 }
             } else {
@@ -81,7 +89,9 @@ public class CostGraph {
                 for (CostPath costPath : pathList) {
                     if (costRow.getFieldList().isEmpty()) {
                         CostPath currPath = CostPath.fromCostPath(costPath);
-                        currPath.addRowFieldManager(new RowFieldManager(RowField.emptyRowField(), costRow.getBirthFieldList()));
+                        currPath.addRowFieldManager(
+                                new RowFieldManager(
+                                        RowField.emptyRowField(), costRow.getBirthFieldList()));
                         currPathList.add(currPath);
                     } else {
                         for (RowField rowField : costRow.getFieldList()) {
@@ -90,15 +100,23 @@ public class CostGraph {
                             boolean valid = true;
                             for (String field : rowField.getFieldList()) {
                                 String parent = costMappingManager.getValueParent(field);
-                                if (!(costRow.getBirthFieldList().contains(field) ||
-                                        lastRowFiend.getRowField().getFieldList().contains(field) ||
-                                        (!StringUtils.isEmpty(parent) && lastRowFiend.getRowField().getFieldList().contains(parent)))) {
+                                if (!(costRow.getBirthFieldList().contains(field)
+                                        || lastRowFiend.getRowField().getFieldList().contains(field)
+                                        || (!StringUtils.isEmpty(parent)
+                                                && lastRowFiend
+                                                        .getRowField()
+                                                        .getFieldList()
+                                                        .contains(parent)))) {
                                     valid = false;
                                     break;
                                 }
                             }
                             if (valid) {
-                                currPath.addRowFieldManager(new RowFieldManager(rowField, lastRowFiend, costRow.getBirthFieldList()));
+                                currPath.addRowFieldManager(
+                                        new RowFieldManager(
+                                                rowField,
+                                                lastRowFiend,
+                                                costRow.getBirthFieldList()));
                                 currPathList.add(currPath);
                             }
                         }
@@ -119,10 +137,12 @@ public class CostGraph {
         }
 
         CostPath bestPath = costPathList.get(0);
-        double costValue = bestPath.computeCost(stepCountList, shuffleThresholdList, costMappingManager);
+        double costValue =
+                bestPath.computeCost(stepCountList, shuffleThresholdList, costMappingManager);
         for (int i = 0; i < costPathList.size(); i++) {
             CostPath currPath = costPathList.get(i);
-            double currCostValue = currPath.computeCost(stepCountList, shuffleThresholdList, costMappingManager);
+            double currCostValue =
+                    currPath.computeCost(stepCountList, shuffleThresholdList, costMappingManager);
             if (currCostValue < costValue) {
                 bestPath = currPath;
                 costValue = currCostValue;

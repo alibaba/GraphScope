@@ -25,11 +25,11 @@ import org.apache.tinkerpop.gremlin.process.traversal.util.TraversalHelper;
 
 import java.util.List;
 
-public class PathLocalCountStrategy extends AbstractTraversalStrategy<TraversalStrategy.ProviderOptimizationStrategy> {
+public class PathLocalCountStrategy
+        extends AbstractTraversalStrategy<TraversalStrategy.ProviderOptimizationStrategy> {
     private static final PathLocalCountStrategy INSTANCE = new PathLocalCountStrategy();
 
-    private PathLocalCountStrategy() {
-    }
+    private PathLocalCountStrategy() {}
 
     public static PathLocalCountStrategy instance() {
         return INSTANCE;
@@ -41,7 +41,9 @@ public class PathLocalCountStrategy extends AbstractTraversalStrategy<TraversalS
         for (int i = 0; i < steps.size(); ++i) {
             Step step = steps.get(i);
             // path().count(local) -> PathLocalCount
-            if (step instanceof PathStep && step != traversal.getEndStep() && step.getNextStep() instanceof CountLocalStep) {
+            if (step instanceof PathStep
+                    && step != traversal.getEndStep()
+                    && step.getNextStep() instanceof CountLocalStep) {
                 Step newS = new PathLocalCountStep(traversal);
                 TraversalHelper.copyLabels(step.getNextStep(), newS, false);
                 traversal.removeStep(step);

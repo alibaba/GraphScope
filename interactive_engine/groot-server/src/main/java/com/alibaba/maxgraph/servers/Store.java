@@ -13,16 +13,17 @@
  */
 package com.alibaba.maxgraph.servers;
 
+import com.alibaba.graphscope.groot.discovery.*;
 import com.alibaba.graphscope.groot.meta.DefaultMetaService;
 import com.alibaba.graphscope.groot.meta.MetaService;
-import com.alibaba.graphscope.groot.store.*;
-import com.alibaba.maxgraph.common.config.Configs;
-import com.alibaba.graphscope.groot.discovery.*;
-import com.alibaba.maxgraph.compiler.api.exception.MaxGraphException;
 import com.alibaba.graphscope.groot.rpc.ChannelManager;
 import com.alibaba.graphscope.groot.rpc.MaxGraphNameResolverFactory;
 import com.alibaba.graphscope.groot.rpc.RpcServer;
+import com.alibaba.graphscope.groot.store.*;
+import com.alibaba.maxgraph.common.config.Configs;
+import com.alibaba.maxgraph.compiler.api.exception.MaxGraphException;
 import com.google.common.annotations.VisibleForTesting;
+
 import io.grpc.NameResolver;
 
 import java.io.IOException;

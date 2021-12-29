@@ -16,15 +16,16 @@
 package com.alibaba.graphscope.gaia.plan.strategy.shuffle;
 
 import com.alibaba.graphscope.gaia.plan.strategy.PropertyIdentityStep;
+
 import org.apache.tinkerpop.gremlin.process.traversal.Step;
 import org.apache.tinkerpop.gremlin.process.traversal.step.map.VertexStep;
 
 public class ShuffleStrategy {
     public static boolean needShuffle(Step step) {
         if (step instanceof VertexStep) return true;
-//        if (step instanceof HasStep) {
-//            return new HasStepProperty((HasStep) step).needShuffle();
-//        }
+        //        if (step instanceof HasStep) {
+        //            return new HasStepProperty((HasStep) step).needShuffle();
+        //        }
         else if (step instanceof PropertyIdentityStep) {
             return new IdentityProperty((PropertyIdentityStep) step).needShuffle();
         } else {

@@ -27,7 +27,5 @@ public interface Meta<O, D> {
 
     List<O> getAllObjects();
 
-    default void clear() {
-
-    }
+    default void clear() {}
 }
