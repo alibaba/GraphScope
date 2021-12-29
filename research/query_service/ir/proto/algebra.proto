@@ -249,16 +249,23 @@ message GetV {
   common.NameOrId alias = 3;
 }
 
-// An operator that provides auxiliary functionalities given the current entity, which include:
+// To tag the current data with an alias
+message As {
+  // The alias to give if any, this is especially helpful when the entity now refers to the head of the record
+  Alias alias = 1;
+}
+
+// An operator that provides auxiliary functionalities given the current entity.
+// Note this operator is not aware to the logical plan, and will be used while processing into logical plan.
+// The functionalities include:
 // * To get certain properties/columns from the entity
 // * To filter out the entity based on the data
 // * To re-name the entity with other alias
 message Auxilia {
   // The details (columns/properties) to be retrieved
   QueryParams params = 1;
-  // The alias to give if any, this is especially helpful when the tag is `None`, and the entity
-  // now refers to the head of the record
-  common.NameOrId alias = 2;
+  // The alias to give if any, which is especially helpful when the entity now refers to the head of the record
+  Alias alias = 2;
 }
 
 message EdgeExpand {
@@ -355,6 +362,7 @@ message LogicalPlan {
       Scan scan = 11;
       Limit limit = 13;
       Auxilia auxilia = 14;
+      As as = 15;
       // Saving the room for relational operators
       GetV vertex = 20;
       EdgeExpand edge = 21;

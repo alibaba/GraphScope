@@ -197,6 +197,17 @@ impl AsPhysical for pb::GetV {
     }
 }
 
+impl AsPhysical for pb::As {
+    fn add_job_builder(&self, builder: &mut JobBuilder) -> PhysicalResult<()> {
+        // Transform to `Auxilia` internally.
+        let auxilia = pb::Auxilia {
+            params: None,
+            alias: self.alias.clone()
+        };
+        simple_add_job_builder(builder, &pb::logical_plan::Operator::from(auxilia), SimpleOpr::Map)
+    }
+}
+
 impl AsPhysical for pb::Auxilia {
     fn add_job_builder(&self, builder: &mut JobBuilder) -> PhysicalResult<()> {
         let mut auxilia = self.clone();
@@ -277,6 +288,7 @@ impl AsPhysical for pb::logical_plan::Operator {
                 Limit(limit) => limit.add_job_builder(builder),
                 OrderBy(orderby) => orderby.add_job_builder(builder),
                 Auxilia(auxilia) => auxilia.add_job_builder(builder),
+                As(as_opr) => as_opr.add_job_builder(builder),
                 Dedup(dedup) => dedup.add_job_builder(builder),
                 GroupBy(groupby) => groupby.add_job_builder(builder),
                 _ => Err(PhysicalError::Unsupported),

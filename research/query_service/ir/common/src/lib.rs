@@ -561,6 +561,13 @@ impl From<pb::Auxilia> for pb::logical_plan::Operator {
     }
 }
 
+impl From<pb::As> for pb::logical_plan::Operator {
+    fn from(opr: pb::As) -> Self {
+        pb::logical_plan::Operator { opr: Some(pb::logical_plan::operator::Opr::As(opr)) }
+    }
+}
+
+
 impl From<pb::EdgeExpand> for pb::logical_plan::Operator {
     fn from(opr: pb::EdgeExpand) -> Self {
         pb::logical_plan::Operator { opr: Some(pb::logical_plan::operator::Opr::Edge(opr)) }

@@ -570,7 +570,7 @@ enum Opr {
     EdgeExpand,
     PathExpand,
     Limit,
-    Auxilia,
+    As,
     OrderBy,
     Apply,
 }
@@ -581,11 +581,6 @@ fn set_range(ptr: *const c_void, lower: i32, upper: i32, opr: Opr) -> ResultCode
         ResultCode::InvalidRangeError
     } else {
         match opr {
-            Opr::Auxilia => {
-                let mut auxilia = unsafe { Box::from_raw(ptr as *mut pb::Auxilia) };
-                auxilia.params.as_mut().unwrap().limit = Some(pb::Range { lower, upper });
-                std::mem::forget(auxilia);
-            }
             Opr::ExpandBase => {
                 let mut base = unsafe { Box::from_raw(ptr as *mut pb::ExpandBase) };
                 base.params.as_mut().unwrap().limit = Some(pb::Range { lower, upper });
@@ -648,10 +643,10 @@ fn set_alias(ptr: *const c_void, alias: FfiAlias, opr: Opr) -> ResultCode {
                 apply.subtask.as_mut().unwrap().alias = alias_pb.ok();
                 std::mem::forget(apply);
             }
-            Opr::Auxilia => {
-                let mut auxilia = unsafe { Box::from_raw(ptr as *mut pb::Auxilia) };
-                auxilia.alias = alias_pb.unwrap().alias;
-                std::mem::forget(auxilia);
+            Opr::As => {
+                let mut as_opr = unsafe { Box::from_raw(ptr as *mut pb::As) };
+                as_opr.alias = alias_pb.ok();
+                std::mem::forget(as_opr);
             }
             _ => unreachable!(),
         }
@@ -674,11 +669,6 @@ fn set_predicate(ptr: *const c_void, cstr_predicate: *const c_char, opr: Opr) ->
                 let mut select = unsafe { Box::from_raw(ptr as *mut pb::Select) };
                 select.predicate = predicate_pb.ok();
                 std::mem::forget(select);
-            }
-            Opr::Auxilia => {
-                let mut auxilia = unsafe { Box::from_raw(ptr as *mut pb::Auxilia) };
-                auxilia.params.as_mut().unwrap().predicate = predicate_pb.ok();
-                std::mem::forget(auxilia);
             }
             Opr::ExpandBase => {
                 let mut expand = unsafe { Box::from_raw(ptr as *mut pb::ExpandBase) };
@@ -735,33 +725,6 @@ fn process_params(ptr: *const c_void, key: ParamsKey, val: FfiNameOrId, opr: Opr
                     }
                 }
                 std::mem::forget(expand);
-            }
-            Opr::Auxilia => {
-                let mut auxilia = unsafe { Box::from_raw(ptr as *mut pb::Auxilia) };
-                match key {
-                    ParamsKey::Table => {
-                        if let Some(label) = pb.unwrap() {
-                            auxilia
-                                .params
-                                .as_mut()
-                                .unwrap()
-                                .table_names
-                                .push(label)
-                        }
-                    }
-                    ParamsKey::Column => {
-                        if let Some(ppt) = pb.unwrap() {
-                            auxilia
-                                .params
-                                .as_mut()
-                                .unwrap()
-                                .columns
-                                .push(ppt)
-                        }
-                    }
-                    _ => unreachable!(),
-                }
-                std::mem::forget(auxilia);
             }
             Opr::Scan => {
                 let mut scan = unsafe { Box::from_raw(ptr as *mut pb::Scan) };
@@ -1449,65 +1412,37 @@ mod limit {
     }
 }
 
-mod auxilia {
+mod as_opr {
     use super::*;
 
-    /// To initialize an auxilia operator
+    /// To initialize an As operator
     #[no_mangle]
-    pub extern "C" fn init_auxilia_operator() -> *const c_void {
-        let auxilia = Box::new(pb::Auxilia {
-            params: Some(pb::QueryParams {
-                table_names: vec![],
-                columns: vec![],
-                limit: None,
-                predicate: None,
-                requirements: vec![],
-            }),
+    pub extern "C" fn init_as_operator() -> *const c_void {
+        let as_opr = Box::new(pb::As {
             alias: None,
         });
 
-        Box::into_raw(auxilia) as *const c_void
+        Box::into_raw(as_opr) as *const c_void
     }
 
-    /// Set the size range limitation of Auxilia
+    /// Set the alias of the entity to As
     #[no_mangle]
-    pub extern "C" fn set_auxilia_limit(ptr_auxilia: *const c_void, lower: i32, upper: i32) -> ResultCode {
-        set_range(ptr_auxilia, lower, upper, Opr::Auxilia)
+    pub extern "C" fn set_as_alias(ptr_as: *const c_void, alias: FfiAlias) -> ResultCode {
+        set_alias(ptr_as, alias, Opr::As)
     }
 
-    /// Set the predicate of Auxilia
+    /// Append an As operator to the logical plan
     #[no_mangle]
-    pub extern "C" fn set_auxilia_predicate(
-        ptr_auxilia: *const c_void, cstr_predicate: *const c_char,
+    pub extern "C" fn append_as_operator(
+        ptr_plan: *const c_void, ptr_as: *const c_void, parent: i32, id: *mut i32,
     ) -> ResultCode {
-        set_predicate(ptr_auxilia, cstr_predicate, Opr::Auxilia)
+        let as_opr = unsafe { Box::from_raw(ptr_as as *mut pb::As) };
+        append_operator(ptr_plan, as_opr.as_ref().clone().into(), vec![parent], id)
     }
 
     #[no_mangle]
-    pub extern "C" fn add_auxilia_property(
-        ptr_auxilia: *const c_void, property: FfiNameOrId,
-    ) -> ResultCode {
-        process_params(ptr_auxilia, ParamsKey::Column, property, Opr::Auxilia)
-    }
-
-    /// Set the alias of the entity to Auxilia
-    #[no_mangle]
-    pub extern "C" fn set_auxilia_alias(ptr_auxilia: *const c_void, alias: FfiAlias) -> ResultCode {
-        set_alias(ptr_auxilia, alias, Opr::Auxilia)
-    }
-
-    /// Append an Auxilia operator to the logical plan
-    #[no_mangle]
-    pub extern "C" fn append_auxilia_operator(
-        ptr_plan: *const c_void, ptr_auxilia: *const c_void, parent: i32, id: *mut i32,
-    ) -> ResultCode {
-        let auxilia = unsafe { Box::from_raw(ptr_auxilia as *mut pb::Auxilia) };
-        append_operator(ptr_plan, auxilia.as_ref().clone().into(), vec![parent], id)
-    }
-
-    #[no_mangle]
-    pub extern "C" fn destroy_auxilia_operator(ptr: *const c_void) {
-        destroy_ptr::<pb::Auxilia>(ptr)
+    pub extern "C" fn destroy_as_operator(ptr: *const c_void) {
+        destroy_ptr::<pb::As>(ptr)
     }
 }
 

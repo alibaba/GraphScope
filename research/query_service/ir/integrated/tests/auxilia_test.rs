@@ -74,7 +74,7 @@ mod test {
                 predicate: None,
                 requirements: vec![],
             }),
-            alias: Some("a".to_string().into()),
+            alias: Some(pb::Alias { alias: Some("a".to_string().into()), is_query_given: false } ),
         };
 
         let conf = JobConf::new("auxilia_simple_alias_test");
@@ -199,7 +199,7 @@ mod test {
                 predicate: None,
                 requirements: vec![],
             }),
-            alias: Some("a".to_string().into()),
+            alias: Some(pb::Alias { alias: Some("a".to_string().into()), is_query_given: false } ),
         };
 
         let conf = JobConf::new("auxilia_get_property_with_none_tag_input_test");
@@ -333,7 +333,7 @@ mod test {
                 predicate: str_to_suffix_expr_pb("@.name==\"vadas\"".to_string()).ok(),
                 requirements: vec![],
             }),
-            alias: Some(common_pb::NameOrId::from("a".to_string())),
+            alias: Some(pb::Alias { alias: Some("a".to_string().into()), is_query_given: false } ),
         };
 
         let conf = JobConf::new("auxilia_alias_test");
