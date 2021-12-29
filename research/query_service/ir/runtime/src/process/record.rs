@@ -92,6 +92,15 @@ impl Record {
             self.columns.insert(alias.clone(), entry);
         }
     }
+
+    // append without moving curr entry
+    pub fn append_without_moving_curr<E: Into<Entry>>(&mut self, entry: E, alias: Option<NameOrId>) {
+        if let Some(alias) = alias {
+            self.columns
+                .insert(alias, Arc::new(entry.into()));
+        }
+    }
+
     pub fn get(&self, tag: Option<&NameOrId>) -> Option<&Arc<Entry>> {
         if let Some(tag) = tag {
             self.columns.get(tag)
