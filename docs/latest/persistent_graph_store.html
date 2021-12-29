@@ -149,7 +149,7 @@
       <li><a href="index.html" class="icon icon-home"></a> &raquo;</li>
       <li>Persistent Graph Store</li>
       <li class="wy-breadcrumbs-aside">
-            <a href="_sources/persistent_graph_store.rst.txt" rel="nofollow"> View page source</a>
+              <a href="https://github.com/alibaba/graphscope/edit/main/docs/persistent_graph_store.rst" class="fa fa-github"> Edit on GitHub</a>
       </li>
   </ul>
   <hr/>
@@ -406,23 +406,23 @@ $ <span class="nb">echo</span> <span class="s2">&quot;GREMLIN endpoint is: </spa
 </pre></div>
 </div>
 <p>Then we get the graph and graph schema</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">graph</span> <span class="o">=</span> <span class="n">gs_conn</span><span class="o">.</span><span class="n">g</span><span class="p">()</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">graph</span> <span class="o">=</span> <span class="n">conn</span><span class="o">.</span><span class="n">g</span><span class="p">()</span>
 <span class="c1"># Create schema</span>
 <span class="n">schema</span> <span class="o">=</span> <span class="n">graph</span><span class="o">.</span><span class="n">schema</span><span class="p">()</span>
 </pre></div>
 </div>
 <p>The schema have defined several method</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">schema</span><span class="o">.</span><span class="n">add_vertex_label</span><span class="p">(</span><span class="s1">&#39;v_label_name&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">partition_by</span><span class="p">(</span><span class="s1">&#39;primary_key_name&#39;</span><span class="p">,</span> <span class="s1">&#39;property_type&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">property</span><span class="p">(</span><span class="s1">&#39;property_name_1&#39;</span><span class="p">,</span> <span class="s1">&#39;property_type&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">property</span><span class="p">(</span><span class="s1">&#39;property_name_2&#39;</span><span class="p">,</span> <span class="s1">&#39;property_type&#39;</span><span class="p">)</span>
-<span class="n">schema</span><span class="o">.</span><span class="n">add_edge_label</span><span class="p">(</span><span class="s1">&#39;e_label_name&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">from</span><span class="p">(</span><span class="s1">&#39;source_label&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="s1">&#39;destination_label&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">property</span><span class="p">(</span><span class="s1">&#39;property_name_3&#39;</span><span class="p">,</span> <span class="s1">&#39;property_type&#39;</span><span class="p">)</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">schema</span><span class="o">.</span><span class="n">add_vertex_label</span><span class="p">(</span><span class="s1">&#39;v_label_name&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">add_primary_key</span><span class="p">(</span><span class="s1">&#39;primary_key_name&#39;</span><span class="p">,</span> <span class="s1">&#39;property_type&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">property</span><span class="p">(</span><span class="s1">&#39;property_name_1&#39;</span><span class="p">,</span> <span class="s1">&#39;property_type&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">property</span><span class="p">(</span><span class="s1">&#39;property_name_2&#39;</span><span class="p">,</span> <span class="s1">&#39;property_type&#39;</span><span class="p">)</span>
+<span class="n">schema</span><span class="o">.</span><span class="n">add_edge_label</span><span class="p">(</span><span class="s1">&#39;e_label_name&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">source</span><span class="p">(</span><span class="s1">&#39;source_label&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">destination</span><span class="p">(</span><span class="s1">&#39;destination_label&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">property</span><span class="p">(</span><span class="s1">&#39;property_name_3&#39;</span><span class="p">,</span> <span class="s1">&#39;property_type&#39;</span><span class="p">)</span>
 <span class="n">schema</span><span class="o">.</span><span class="n">update</span><span class="p">()</span>
 <span class="n">schema</span><span class="o">.</span><span class="n">drop</span><span class="p">(</span><span class="s1">&#39;label&#39;</span><span class="p">)</span>
 <span class="n">schema</span><span class="o">.</span><span class="n">drop</span><span class="p">(</span><span class="s1">&#39;label&#39;</span><span class="p">,</span> <span class="s1">&#39;src_label&#39;</span><span class="p">,</span> <span class="s1">&#39;dst_label&#39;</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>Here the <cite>label_name</cite>, <cite>primary_key_name</cite>, <cite>property_type</cite> is specified by user, the <cite>property_type</cite> can be one of <cite>int</cite>, <cite>float</cite>, <cite>str</cite>, and one label can have multiple <cite>property</cite> statement.</p>
-<p>For vertices, the <cite>partitioned_by</cite> is to specify the primary key of the label, also be called ID.</p>
-<p>For edges, the <cite>from</cite> and <cite>to</cite> will specify the source label and destination label of the edge kind, respectively.</p>
-<p>The <cite>update()</cite> method will issue a transction to the store.</p>
+<p>For vertices, the <cite>add_primary_key</cite> is to specify the primary key of the label, also be called ID.</p>
+<p>For edges, the <cite>source</cite> and <cite>destination</cite> will specify the source label and destination label of the edge kind, respectively.</p>
+<p>The <cite>update()</cite> method will issue a transaction to the store.</p>
 <p>The <cite>drop()</cite> method can drop a label from the store, Note for edge label you must drop all relations first by using the <cite>src_label</cite> and <cite>dst_label</cite>, then call the <cite>drop(label)</cite> to final drop the entire label.</p>
 <p>Here we give an example to define a simple <cite>person -&gt; knows &lt;- person</cite> schema.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">schema</span><span class="o">.</span><span class="n">add_vertex_label</span><span class="p">(</span><span class="s2">&quot;person&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">add_primary_key</span><span class="p">(</span><span class="s2">&quot;id&quot;</span><span class="p">,</span> <span class="s2">&quot;long&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">add_property</span><span class="p">(</span>
@@ -439,7 +439,7 @@ $ <span class="nb">echo</span> <span class="s2">&quot;GREMLIN endpoint is: </spa
 <h2>Running Gremlin Queries<a class="headerlink" href="#running-gremlin-queries" title="Permalink to this headline"></a></h2>
 <p>As we have the gremlin endpoint avaiable, we can do gremlin queries over the graph.
 It’s simple just use one line to get the traversal source,</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">g</span> <span class="o">=</span> <span class="n">gs_conn</span><span class="o">.</span><span class="n">gremlin</span><span class="p">()</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">g</span> <span class="o">=</span> <span class="n">conn</span><span class="o">.</span><span class="n">gremlin</span><span class="p">()</span>
 <span class="nb">print</span><span class="p">(</span><span class="n">g</span><span class="o">.</span><span class="n">V</span><span class="p">()</span><span class="o">.</span><span class="n">count</span><span class="p">()</span><span class="o">.</span><span class="n">toList</span><span class="p">())</span>
 </pre></div>
 </div>
@@ -541,11 +541,11 @@ It’s simple just use one line to get the traversal source,</p>
 <span class="n">graph</span><span class="o">.</span><span class="n">insert_vertices</span><span class="p">(</span><span class="n">v_srcs</span><span class="p">)</span>
 <span class="n">snapshot_id</span> <span class="o">=</span> <span class="n">graph</span><span class="o">.</span><span class="n">insert_vertices</span><span class="p">(</span><span class="n">v_dsts</span><span class="p">)</span>
 
-<span class="k">assert</span> <span class="n">gs_conn</span><span class="o">.</span><span class="n">remote_flush</span><span class="p">(</span><span class="n">snapshot_id</span><span class="p">)</span>
+<span class="k">assert</span> <span class="n">conn</span><span class="o">.</span><span class="n">remote_flush</span><span class="p">(</span><span class="n">snapshot_id</span><span class="p">)</span>
 
 <span class="n">snapshot_id</span> <span class="o">=</span> <span class="n">graph</span><span class="o">.</span><span class="n">update_vertex_properties</span><span class="p">(</span><span class="o">*</span><span class="n">v_update</span><span class="p">)</span>
 
-<span class="k">assert</span> <span class="n">gs_conn</span><span class="o">.</span><span class="n">remote_flush</span><span class="p">(</span><span class="n">snapshot_id</span><span class="p">)</span>
+<span class="k">assert</span> <span class="n">conn</span><span class="o">.</span><span class="n">remote_flush</span><span class="p">(</span><span class="n">snapshot_id</span><span class="p">)</span>
 
 <span class="k">assert</span> <span class="p">(</span>
     <span class="n">g</span><span class="o">.</span><span class="n">V</span><span class="p">()</span><span class="o">.</span><span class="n">has</span><span class="p">(</span><span class="s2">&quot;id&quot;</span><span class="p">,</span> <span class="n">v_src</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">primary_key</span><span class="p">[</span><span class="s2">&quot;id&quot;</span><span class="p">])</span><span class="o">.</span><span class="n">values</span><span class="p">(</span><span class="s2">&quot;name&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">toList</span><span class="p">()[</span><span class="mi">0</span><span class="p">]</span>
@@ -560,7 +560,7 @@ It’s simple just use one line to get the traversal source,</p>
 <span class="n">edge_update</span> <span class="o">=</span> <span class="p">[</span><span class="n">edge</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="p">{</span><span class="s2">&quot;date&quot;</span><span class="p">:</span> <span class="s2">&quot;ci_edge_4000&quot;</span><span class="p">}]</span>
 <span class="n">snapshot_id</span> <span class="o">=</span> <span class="n">graph</span><span class="o">.</span><span class="n">insert_edge</span><span class="p">(</span><span class="o">*</span><span class="n">edge</span><span class="p">)</span>
 
-<span class="k">assert</span> <span class="n">gs_conn</span><span class="o">.</span><span class="n">remote_flush</span><span class="p">(</span><span class="n">snapshot_id</span><span class="p">)</span>
+<span class="k">assert</span> <span class="n">conn</span><span class="o">.</span><span class="n">remote_flush</span><span class="p">(</span><span class="n">snapshot_id</span><span class="p">)</span>
 
 <span class="n">edge</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">eid</span> <span class="o">=</span> <span class="p">(</span>
     <span class="n">g</span><span class="o">.</span><span class="n">V</span><span class="p">()</span>
@@ -572,7 +572,7 @@ It’s simple just use one line to get the traversal source,</p>
 
 <span class="n">snapshot_id</span> <span class="o">=</span> <span class="n">graph</span><span class="o">.</span><span class="n">insert_edges</span><span class="p">(</span><span class="n">edges</span><span class="p">)</span>
 
-<span class="k">assert</span> <span class="n">gs_conn</span><span class="o">.</span><span class="n">remote_flush</span><span class="p">(</span><span class="n">snapshot_id</span><span class="p">)</span>
+<span class="k">assert</span> <span class="n">conn</span><span class="o">.</span><span class="n">remote_flush</span><span class="p">(</span><span class="n">snapshot_id</span><span class="p">)</span>
 
 <span class="k">for</span> <span class="n">e</span> <span class="ow">in</span> <span class="n">edges</span><span class="p">:</span>
     <span class="n">e</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">eid</span> <span class="o">=</span> <span class="p">(</span>
@@ -584,7 +584,7 @@ It’s simple just use one line to get the traversal source,</p>
     <span class="p">)</span>
 <span class="n">snapshot_id</span> <span class="o">=</span> <span class="n">graph</span><span class="o">.</span><span class="n">update_edge_properties</span><span class="p">(</span><span class="o">*</span><span class="n">edge_update</span><span class="p">)</span>
 
-<span class="k">assert</span> <span class="n">gs_conn</span><span class="o">.</span><span class="n">remote_flush</span><span class="p">(</span><span class="n">snapshot_id</span><span class="p">)</span>
+<span class="k">assert</span> <span class="n">conn</span><span class="o">.</span><span class="n">remote_flush</span><span class="p">(</span><span class="n">snapshot_id</span><span class="p">)</span>
 
 <span class="k">assert</span> <span class="p">(</span>
     <span class="n">g</span><span class="o">.</span><span class="n">V</span><span class="p">()</span>
@@ -603,7 +603,7 @@ It’s simple just use one line to get the traversal source,</p>
 <span class="n">graph</span><span class="o">.</span><span class="n">delete_vertices</span><span class="p">([</span><span class="n">key</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">v_srcs</span><span class="p">])</span>
 <span class="n">snapshot_id</span> <span class="o">=</span> <span class="n">graph</span><span class="o">.</span><span class="n">delete_vertices</span><span class="p">([</span><span class="n">key</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">v_dsts</span><span class="p">])</span>
 
-<span class="k">assert</span> <span class="n">gs_conn</span><span class="o">.</span><span class="n">remote_flush</span><span class="p">(</span><span class="n">snapshot_id</span><span class="p">)</span>
+<span class="k">assert</span> <span class="n">conn</span><span class="o">.</span><span class="n">remote_flush</span><span class="p">(</span><span class="n">snapshot_id</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -771,7 +771,7 @@ For an edge type, the mapping info should includes 1) label of the edge type, 2)
   <hr/>
 
   <div role="contentinfo">
-    <p>&#169; Copyright 2020-2023, Damo Academy, Alibaba Inc..</p>
+    <p>&#169; Copyright 2020-2023, DAMO Academy, Alibaba Inc..</p>
   </div>
 
   Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a

@@ -113,7 +113,7 @@
           <li><a href="index.html">GraphScope: 一站式图计算系统</a> &raquo;</li>
       <li>常见问题</li>
       <li class="wy-breadcrumbs-aside">
-            <a href="../_sources/zh/frequently_asked_questions.rst.txt" rel="nofollow"> View page source</a>
+              <a href="https://github.com/alibaba/graphscope/edit/main/docs/zh/frequently_asked_questions.rst" class="fa fa-github"> Edit on GitHub</a>
       </li>
   </ul>
   <hr/>
@@ -190,6 +190,12 @@ GraphScope 在支持以下环境中运行</p>
 <li><p><code class="docutils literal notranslate"><span class="pre">k8s_engine_mem`:</span> <span class="pre">``engine</span></code> 容器的内存大小。一般将其设置为 <code class="docutils literal notranslate"><span class="pre">vineyard_shared_mem</span></code> 的同样大小。它相当于 graphscope 的 helm chart 中的 <code class="docutils literal notranslate"><span class="pre">engines.resources.memory.requests</span></code> 和 <code class="docutils literal notranslate"><span class="pre">engines.resources.memory.requests</span></code>。</p></li>
 </ul>
 </li>
+<li><p>导致在 Apple M1 python3.8 环境下安装 GraphScope 失败的原因可能有哪些？</p>
+<ul class="simple">
+<li><p>编译 <code class="docutils literal notranslate"><span class="pre">grpcio</span></code> 失败: 你可以通过 <code class="docutils literal notranslate"><span class="pre">export</span> <span class="pre">GRPC_PYTHON_BUILD_SYSTEM_OPENSSL=True</span></code> 来尝试使用系统安装的 <code class="docutils literal notranslate"><span class="pre">openssl</span></code> 编译 grpcio。详情可参考 <a class="reference external" href="https://github.com/grpc/grpc/issues/25082">grpc issue</a></p></li>
+<li><p>编译 <code class="docutils literal notranslate"><span class="pre">scipy</span></code> 失败: 你可以根据 <a class="reference external" href="https://stackoverflow.com/questions/65745683/how-to-install-scipy-on-apple-silicon-arm-m1">此教程</a> 来源码编译，或尝试通过 <code class="docutils literal notranslate"><span class="pre">pip3</span> <span class="pre">install</span> <span class="pre">--pre</span> <span class="pre">-i</span> <span class="pre">https://pypi.anaconda.org/scipy-wheels-nightly/simple</span> <span class="pre">scipy</span></code> 来解决这个问题。</p></li>
+</ul>
+</li>
 </ol>
 <p><strong>其他问题</strong></p>
 <blockquote>
@@ -208,7 +214,7 @@ GraphScope 在支持以下环境中运行</p>
   <hr/>
 
   <div role="contentinfo">
-    <p>&#169; Copyright 2020-2023, Damo Academy, Alibaba Inc..</p>
+    <p>&#169; Copyright 2020-2023, DAMO Academy, Alibaba Inc..</p>
   </div>
 
   Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a

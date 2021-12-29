@@ -161,7 +161,7 @@
           <li><a href="../generators.html">Graph generators</a> &raquo;</li>
       <li>graphscope.nx.generators.classic.binomial_tree</li>
       <li class="wy-breadcrumbs-aside">
-            <a href="../../../_sources/reference/networkx/generated/graphscope.nx.generators.classic.binomial_tree.rst.txt" rel="nofollow"> View page source</a>
+              <a href="https://github.com/alibaba/graphscope/edit/main/docs/reference/networkx/generated/graphscope.nx.generators.classic.binomial_tree.rst" class="fa fa-github"> Edit on GitHub</a>
       </li>
   </ul>
   <hr/>
@@ -173,17 +173,20 @@
 <h1>graphscope.nx.generators.classic.binomial_tree<a class="headerlink" href="#graphscope-nx-generators-classic-binomial-tree" title="Permalink to this headline"></a></h1>
 <dl class="py function">
 <dt class="sig sig-object py" id="graphscope.nx.generators.classic.binomial_tree">
-<span class="sig-prename descclassname"><span class="pre">graphscope.nx.generators.classic.</span></span><span class="sig-name descname"><span class="pre">binomial_tree</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/graphscope/nx/generators/classic.html#binomial_tree"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#graphscope.nx.generators.classic.binomial_tree" title="Permalink to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="pre">graphscope.nx.generators.classic.</span></span><span class="sig-name descname"><span class="pre">binomial_tree</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">create_using</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/graphscope/nx/generators/classic.html#binomial_tree"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#graphscope.nx.generators.classic.binomial_tree" title="Permalink to this definition"></a></dt>
 <dd><p>Returns the Binomial Tree of order n.</p>
-<p>The binomial tree of order 0 consists of a single vertex. A binomial tree of order k
+<p>The binomial tree of order 0 consists of a single node. A binomial tree of order k
 is defined recursively by linking two binomial trees of order k-1: the root of one is
 the leftmost child of the root of the other.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>n</strong> (<em>int</em>) – Order of the binomial tree.</p>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>n</strong> (<em>int</em>) – Order of the binomial tree.</p></li>
+<li><p><strong>create_using</strong> (<em>NetworkX graph constructor</em><em>, </em><em>optional</em><em> (</em><em>default=nx.Graph</em><em>)</em>) – Graph type to create. If graph instance, then cleared before populated.</p></li>
+</ul>
 </dd>
 <dt class="field-even">Returns</dt>
-<dd class="field-even"><p><strong>G</strong> – A binomial tree of $2^n$ vertices and $2^n - 1$ edges.</p>
+<dd class="field-even"><p><strong>G</strong> – A binomial tree of $2^n$ nodes and $2^n - 1$ edges.</p>
 </dd>
 <dt class="field-odd">Return type</dt>
 <dd class="field-odd"><p>NetworkX graph</p>
@@ -204,7 +207,7 @@ the leftmost child of the root of the other.</p>
   <hr/>
 
   <div role="contentinfo">
-    <p>&#169; Copyright 2020-2023, Damo Academy, Alibaba Inc..</p>
+    <p>&#169; Copyright 2020-2023, DAMO Academy, Alibaba Inc..</p>
   </div>
 
   Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a

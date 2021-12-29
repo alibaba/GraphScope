@@ -76,7 +76,7 @@ interface of ``Nodes`` is shown as follows.
 
    @property
    def labels(self):
-   """ lable，numpy.ndarray(int32)，shape is ids.shape """
+   """ label，numpy.ndarray(int32)，shape is ids.shape """
 
 Compared to the ``Nodes`` interface, ``Edges`` does not have ``ids``
 interface. Instead, it has following four additional interfaces to
@@ -150,8 +150,8 @@ interfaces as follows.
 
 ## 2.1 Vertices Query We can get Nodes by traversing the graph, sampling
 or specifying the node id. Once we get the nodes, we can query their
-attributes, weights or lables. Query vertices with specified ids:
-``python def get_nodes(node_type, ids) ''' get the weights, lables and attributes by node type Args:   node_type(string): vertex type   ids(numpy.array): vertex id Return:   Nodes object '''``
+attributes, weights or labels. Query vertices with specified ids:
+``python def get_nodes(node_type, ids) ''' get the weights, labels and attributes by node type Args:   node_type(string): vertex type   ids(numpy.array): vertex id Return:   Nodes object '''``
 
 We use the following example to show the interface and usage
 ``get_nodes()``.

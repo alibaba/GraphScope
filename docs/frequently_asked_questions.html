@@ -114,7 +114,7 @@
       <li><a href="index.html" class="icon icon-home"></a> &raquo;</li>
       <li>Frequently Asked Questions</li>
       <li class="wy-breadcrumbs-aside">
-            <a href="_sources/frequently_asked_questions.rst.txt" rel="nofollow"> View page source</a>
+              <a href="https://github.com/alibaba/graphscope/edit/main/docs/frequently_asked_questions.rst" class="fa fa-github"> Edit on GitHub</a>
       </li>
   </ul>
   <hr/>
@@ -196,6 +196,12 @@ This case is observed when using GraphScope with helm. If users did not correctl
 </ul>
 </div></blockquote>
 </li>
+<li><p>Failed to install GraphScope on Apple M1 with python3.8?</p>
+<ul class="simple">
+<li><p>Compile <code class="docutils literal notranslate"><span class="pre">grpcio</span></code> failed: You can try to use <code class="docutils literal notranslate"><span class="pre">openssl</span></code> from system by <code class="docutils literal notranslate"><span class="pre">export</span> <span class="pre">GRPC_PYTHON_BUILD_SYSTEM_OPENSSL=True</span></code>. See more details in <a class="reference external" href="https://github.com/grpc/grpc/issues/25082">grpc issue</a>.</p></li>
+<li><p>compile <code class="docutils literal notranslate"><span class="pre">scipy</span></code> failed: You can follow <a class="reference external" href="https://stackoverflow.com/questions/65745683/how-to-install-scipy-on-apple-silicon-arm-m1">this</a> to build scipy from source or try <code class="docutils literal notranslate"><span class="pre">pip3</span> <span class="pre">install</span> <span class="pre">--pre</span> <span class="pre">-i</span> <span class="pre">https://pypi.anaconda.org/scipy-wheels-nightly/simple</span> <span class="pre">scipy</span></code> to workaround this problem.</p></li>
+</ul>
+</li>
 </ol>
 <p><strong>I do have many other questions…</strong></p>
 <blockquote>
@@ -214,7 +220,7 @@ This case is observed when using GraphScope with helm. If users did not correctl
   <hr/>
 
   <div role="contentinfo">
-    <p>&#169; Copyright 2020-2023, Damo Academy, Alibaba Inc..</p>
+    <p>&#169; Copyright 2020-2023, DAMO Academy, Alibaba Inc..</p>
   </div>
 
   Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a

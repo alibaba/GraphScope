@@ -161,7 +161,7 @@
           <li><a href="../generators.html">Graph generators</a> &raquo;</li>
       <li>graphscope.nx.generators.classic.complete_multipartite_graph</li>
       <li class="wy-breadcrumbs-aside">
-            <a href="../../../_sources/reference/networkx/generated/graphscope.nx.generators.classic.complete_multipartite_graph.rst.txt" rel="nofollow"> View page source</a>
+              <a href="https://github.com/alibaba/graphscope/edit/main/docs/reference/networkx/generated/graphscope.nx.generators.classic.complete_multipartite_graph.rst" class="fa fa-github"> Edit on GitHub</a>
       </li>
   </ul>
   <hr/>
@@ -179,7 +179,7 @@
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><p><strong>subset_sizes</strong> (<em>tuple of integers</em><em> or </em><em>tuple of node iterables</em>) – The arguments can either all be integer number of nodes or they
 can all be iterables of nodes. If integers, they represent the
-number of vertices in each subset of the multipartite graph.
+number of nodes in each subset of the multipartite graph.
 If iterables, each is used to create the nodes for that subset.
 The length of subset_sizes is the number of subsets.</p>
 </dd>
@@ -195,7 +195,7 @@ indicating which subset contains the node.</p>
 </dl>
 <p class="rubric">Examples</p>
 <p>Creating a complete tripartite graph, with subsets of one, two, and three
-vertices, respectively.</p>
+nodes, respectively.</p>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">G</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">complete_multipartite_graph</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="p">[</span><span class="n">G</span><span class="o">.</span><span class="n">nodes</span><span class="p">[</span><span class="n">u</span><span class="p">][</span><span class="s2">&quot;subset&quot;</span><span class="p">]</span> <span class="k">for</span> <span class="n">u</span> <span class="ow">in</span> <span class="n">G</span><span class="p">]</span>
 <span class="go">[0, 1, 1, 2, 2, 2]</span>
@@ -213,7 +213,7 @@ vertices, respectively.</p>
 </pre></div>
 </div>
 <p class="rubric">Notes</p>
-<p>This function generalizes several other graph generator functions.</p>
+<p>This function generalizes several other graph builder functions.</p>
 <ul class="simple">
 <li><p>If no subset sizes are given, this returns the null graph.</p></li>
 <li><p>If a single subset size <cite>n</cite> is given, this returns the empty graph on
@@ -242,7 +242,7 @@ bipartite graph on <cite>m + n</cite> nodes.</p></li>
   <hr/>
 
   <div role="contentinfo">
-    <p>&#169; Copyright 2020-2023, Damo Academy, Alibaba Inc..</p>
+    <p>&#169; Copyright 2020-2023, DAMO Academy, Alibaba Inc..</p>
   </div>
 
   Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a

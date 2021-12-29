@@ -7,7 +7,7 @@ GraphScope is tested and supported on the following 64-bit systems:
 - Python 3.6 - 3.9
 - Ubuntu 18.04 or later
 - CentOS 7 or later
-- macOS 11.2.1 (Big Sur) or later (Apple M1 is not support yet!)
+- macOS 11.2.1 (Big Sur) or later, with both Intel chip and Apple M1 chip
 
 
 Instal GraphScope locally without Kubernetes

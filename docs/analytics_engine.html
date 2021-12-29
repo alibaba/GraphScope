@@ -158,7 +158,7 @@
       <li><a href="index.html" class="icon icon-home"></a> &raquo;</li>
       <li>GraphScope Analytical Engine</li>
       <li class="wy-breadcrumbs-aside">
-            <a href="_sources/analytics_engine.rst.txt" rel="nofollow"> View page source</a>
+              <a href="https://github.com/alibaba/graphscope/edit/main/docs/analytics_engine.rst" class="fa fa-github"> Edit on GitHub</a>
       </li>
   </ul>
   <hr/>
@@ -181,21 +181,23 @@ variety and complexity from real-life graph applications.</p>
 <div class="section" id="built-in-algorithms">
 <h2>Built-in Algorithms<a class="headerlink" href="#built-in-algorithms" title="Permalink to this headline"></a></h2>
 <p>GraphScope analytical engine provides many common used algorithms,
-including connectivity and path
-analysis, community detection, centrality computations.</p>
+including connectivity and path analysis, community detection, centrality computations.</p>
 <p>Built-in algorithms can be easily invoked over loaded graphs. For example,</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">graphscope</span>
-<span class="kn">from</span> <span class="nn">graphscope</span> <span class="kn">import</span> <span class="n">pagerank</span>
-<span class="kn">from</span> <span class="nn">graphscope</span> <span class="kn">import</span> <span class="n">lpa</span>
+<span class="kn">from</span> <span class="nn">graphscope.dataset</span> <span class="kn">import</span> <span class="n">load_p2p_network</span>
 
-<span class="n">g</span> <span class="o">=</span> <span class="n">graphscope</span><span class="o">.</span><span class="n">g</span><span class="p">()</span>
-<span class="c1"># algorithms defined on property graph can be invoked directly.</span>
-<span class="n">result</span> <span class="o">=</span> <span class="n">lpa</span><span class="p">(</span><span class="n">g</span><span class="p">)</span>
+<span class="n">graphscope</span><span class="o">.</span><span class="n">set_option</span><span class="p">(</span><span class="n">show_log</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 
-<span class="c1"># some other algorithms may only support evaluate on simple graph</span>
+<span class="c1"># load property graph</span>
+<span class="n">g</span> <span class="o">=</span> <span class="n">load_p2p_network</span><span class="p">()</span>
+
+<span class="c1"># many algorithms only support evaluate on simple graph</span>
 <span class="c1"># hence we need to generate one by selecting a kind of vertices and edges.</span>
-<span class="n">simple_g</span> <span class="o">=</span> <span class="n">g</span><span class="o">.</span><span class="n">project</span><span class="p">(</span><span class="n">vertices</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;users&quot;</span><span class="p">:</span> <span class="p">[]},</span> <span class="n">edges</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;follows&quot;</span><span class="p">:</span> <span class="p">[]})</span>
-<span class="n">result_pr</span> <span class="o">=</span> <span class="n">pagerank</span><span class="p">(</span><span class="n">simple_g</span><span class="p">)</span>
+<span class="n">simple_g</span> <span class="o">=</span> <span class="n">g</span><span class="o">.</span><span class="n">project</span><span class="p">(</span><span class="n">vertices</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;host&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;id&quot;</span><span class="p">]},</span> <span class="n">edges</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;connect&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;dist&quot;</span><span class="p">]})</span>
+
+<span class="c1"># run builtin applications</span>
+<span class="n">result_lpa</span> <span class="o">=</span> <span class="n">graphscope</span><span class="o">.</span><span class="n">lpa</span><span class="p">(</span><span class="n">simple_g</span><span class="p">,</span> <span class="n">max_round</span><span class="o">=</span><span class="mi">20</span><span class="p">)</span>
+<span class="n">result_sssp</span> <span class="o">=</span> <span class="n">graphscope</span><span class="o">.</span><span class="n">sssp</span><span class="p">(</span><span class="n">simple_g</span><span class="p">,</span> <span class="n">src</span><span class="o">=</span><span class="mi">20</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>A full-list of builtin algorithms is shown as below. Whether an algorithm supports
@@ -210,7 +212,6 @@ property graph or not is described in its docstring.</p>
 </table>
 <ul class="simple">
 <li><p><a class="reference internal" href="reference/app.html#graphscope.bfs" title="graphscope.bfs"><code class="xref py py-func docutils literal notranslate"><span class="pre">bfs()</span></code></a></p></li>
-<li><p><a class="reference internal" href="reference/app.html#graphscope.cdlp" title="graphscope.cdlp"><code class="xref py py-func docutils literal notranslate"><span class="pre">cdlp()</span></code></a></p></li>
 <li><p><a class="reference internal" href="reference/app.html#graphscope.clustering" title="graphscope.clustering"><code class="xref py py-func docutils literal notranslate"><span class="pre">clustering()</span></code></a></p></li>
 <li><p><a class="reference internal" href="reference/app.html#graphscope.degree_centrality" title="graphscope.degree_centrality"><code class="xref py py-func docutils literal notranslate"><span class="pre">degree_centrality()</span></code></a></p></li>
 <li><p><a class="reference internal" href="reference/app.html#graphscope.eigenvector_centrality" title="graphscope.eigenvector_centrality"><code class="xref py py-func docutils literal notranslate"><span class="pre">eigenvector_centrality()</span></code></a></p></li>
@@ -232,29 +233,26 @@ and preserved on the distributed machines.</p>
 <p>Users may want to fetch the results to the client, or write to cloud storage or distributed file systems.</p>
 <p>There is a list of supported method to retrieve the results.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># fetch to data structures</span>
-<span class="n">result_pr</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">()</span>
-<span class="n">result_pr</span><span class="o">.</span><span class="n">to_dataframe</span><span class="p">()</span>
+<span class="n">result_lpa</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">(</span><span class="s2">&quot;r&quot;</span><span class="p">)</span>
+<span class="n">result_lpa</span><span class="o">.</span><span class="n">to_dataframe</span><span class="p">({</span><span class="s2">&quot;node&quot;</span><span class="p">:</span> <span class="s2">&quot;v.id&quot;</span><span class="p">,</span> <span class="s2">&quot;result&quot;</span><span class="p">:</span> <span class="s2">&quot;r&quot;</span><span class="p">})</span>
 
 <span class="c1"># or write to hdfs or oss, or local (local means the path is relative to the pods)</span>
-<span class="n">result_pr</span><span class="o">.</span><span class="n">output</span><span class="p">(</span><span class="s2">&quot;hdfs://output&quot;</span><span class="p">)</span>
-<span class="n">result_pr</span><span class="o">.</span><span class="n">output</span><span class="p">(</span><span class="s2">&quot;oss://id:key@endpoint/bucket/object&quot;</span><span class="p">)</span>
-<span class="n">result_pr</span><span class="o">.</span><span class="n">output</span><span class="p">(</span><span class="s2">&quot;file:///tmp/path&quot;</span><span class="p">)</span>
+<span class="n">result_lpa</span><span class="o">.</span><span class="n">output</span><span class="p">(</span><span class="s2">&quot;hdfs://output&quot;</span><span class="p">,</span> <span class="p">{</span><span class="s2">&quot;node&quot;</span><span class="p">:</span> <span class="s2">&quot;v.id&quot;</span><span class="p">,</span> <span class="s2">&quot;result&quot;</span><span class="p">:</span> <span class="s2">&quot;r&quot;</span><span class="p">})</span>
+<span class="n">result_lpa</span><span class="o">.</span><span class="n">output</span><span class="p">(</span><span class="s2">&quot;oss://id:key@endpoint/bucket/object&quot;</span><span class="p">,</span> <span class="p">{</span><span class="s2">&quot;node&quot;</span><span class="p">:</span> <span class="s2">&quot;v.id&quot;</span><span class="p">,</span> <span class="s2">&quot;result&quot;</span><span class="p">:</span> <span class="s2">&quot;r&quot;</span><span class="p">})</span>
+<span class="n">result_lpa</span><span class="o">.</span><span class="n">output</span><span class="p">(</span><span class="s2">&quot;file:///tmp/path&quot;</span><span class="p">,</span> <span class="p">{</span><span class="s2">&quot;node&quot;</span><span class="p">:</span> <span class="s2">&quot;v.id&quot;</span><span class="p">,</span> <span class="s2">&quot;result&quot;</span><span class="p">:</span> <span class="s2">&quot;r&quot;</span><span class="p">})</span>
 
 <span class="c1"># or write to client local</span>
-<span class="n">result_pr</span><span class="o">.</span><span class="n">output_to_client</span><span class="p">(</span><span class="s2">&quot;local_filename&quot;</span><span class="p">)</span>
+<span class="n">result_lpa</span><span class="o">.</span><span class="n">output_to_client</span><span class="p">(</span><span class="s2">&quot;/tmp/lpa_result.txt&quot;</span><span class="p">,</span> <span class="p">{</span><span class="s2">&quot;node&quot;</span><span class="p">:</span> <span class="s2">&quot;v.id&quot;</span><span class="p">,</span> <span class="s2">&quot;result&quot;</span><span class="p">:</span> <span class="s2">&quot;r&quot;</span><span class="p">})</span>
 
 <span class="c1"># or seal to vineyard</span>
-<span class="n">result_pr</span><span class="o">.</span><span class="n">to_vineyard_dataframe</span><span class="p">()</span>
-<span class="n">result_pr</span><span class="o">.</span><span class="n">to_vineyard_numpy</span><span class="p">()</span>
+<span class="n">result_lpa</span><span class="o">.</span><span class="n">to_vineyard_dataframe</span><span class="p">({</span><span class="s2">&quot;node&quot;</span><span class="p">:</span> <span class="s2">&quot;v.id&quot;</span><span class="p">,</span> <span class="s2">&quot;result&quot;</span><span class="p">:</span> <span class="s2">&quot;r&quot;</span><span class="p">})</span>
+<span class="n">result_lpa</span><span class="o">.</span><span class="n">to_vineyard_tensor</span><span class="p">(</span><span class="s2">&quot;r&quot;</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>In addition, as shown in the <a class="reference internal" href="getting_started.html#getting-started"><span class="std std-ref">Getting Started</span></a>, computation results can add back to
 the graph as a new property (column) of the vertices(edges).</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">simple_g</span> <span class="o">=</span> <span class="n">g</span><span class="o">.</span><span class="n">project</span><span class="p">(</span><span class="n">vertices</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;paper&quot;</span><span class="p">:</span> <span class="p">[]},</span> <span class="n">edges</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;sites&quot;</span><span class="p">:</span> <span class="p">[]})</span>
-<span class="n">ret</span> <span class="o">=</span> <span class="n">graphscope</span><span class="o">.</span><span class="n">kcore</span><span class="p">(</span><span class="n">simple_g</span><span class="p">,</span> <span class="n">k</span><span class="o">=</span><span class="mi">5</span><span class="p">)</span>
-
-<span class="c1"># add the results as new columns to the citation graph, the column name is &#39;kcore&#39;</span>
-<span class="n">subgraph</span> <span class="o">=</span> <span class="n">sub_graph</span><span class="o">.</span><span class="n">add_column</span><span class="p">(</span><span class="n">ret</span><span class="p">,</span> <span class="p">{</span><span class="s1">&#39;kcore&#39;</span><span class="p">:</span> <span class="s1">&#39;r&#39;</span><span class="p">})</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># add the results as new columns to the citation graph, the column name is &#39;lpa_result&#39;</span>
+<span class="n">new_graph</span> <span class="o">=</span> <span class="n">g</span><span class="o">.</span><span class="n">add_column</span><span class="p">(</span><span class="n">result_lpa</span><span class="p">,</span> <span class="p">{</span><span class="s2">&quot;lpa_result&quot;</span><span class="p">:</span> <span class="s2">&quot;r&quot;</span><span class="p">})</span>
 </pre></div>
 </div>
 <p>Users may assign a <a class="reference internal" href="reference/selector.html#selector"><span class="std std-ref">Selector</span></a> to define which parts of the results to write. A selector specifies
@@ -263,13 +261,13 @@ also be a part of the result, e.g., the vertex id. We reserve three keywords for
 <cite>r</cite> represents the result, <cite>v</cite> and <cite>e</cite> for vertices and edges, respectively.
 Here are some examples for selectors on result processing.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># get the results on the vertex</span>
-<span class="n">result_pr</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">(</span><span class="s1">&#39;r&#39;</span><span class="p">)</span>
+<span class="n">result_lpa</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">(</span><span class="s1">&#39;r&#39;</span><span class="p">)</span>
 
 <span class="c1"># to dataframe,</span>
 <span class="c1"># using the `id` of vertices (`v.id`) as a column named df_v</span>
 <span class="c1"># using the `data` of v (`v.data`) as a column named df_vd</span>
 <span class="c1"># and using the result (`r`) as a column named df_result</span>
-<span class="n">result_pr</span><span class="o">.</span><span class="n">to_dataframe</span><span class="p">({</span><span class="s1">&#39;df_v&#39;</span><span class="p">:</span> <span class="s1">&#39;v.id&#39;</span><span class="p">,</span> <span class="s1">&#39;df_vd&#39;</span><span class="p">:</span> <span class="s1">&#39;v.data&#39;</span><span class="p">,</span> <span class="s1">&#39;df_result&#39;</span><span class="p">:</span> <span class="s1">&#39;r&#39;</span><span class="p">})</span>
+<span class="n">result_lpa</span><span class="o">.</span><span class="n">to_dataframe</span><span class="p">({</span><span class="s1">&#39;df_v&#39;</span><span class="p">:</span> <span class="s1">&#39;v.id&#39;</span><span class="p">,</span> <span class="s1">&#39;df_vd&#39;</span><span class="p">:</span> <span class="s1">&#39;v.data&#39;</span><span class="p">,</span> <span class="s1">&#39;df_result&#39;</span><span class="p">:</span> <span class="s1">&#39;r&#39;</span><span class="p">})</span>
 
 <span class="c1"># for results on property graph</span>
 <span class="c1"># using `:` as a label selector for v and e</span>
@@ -289,10 +287,10 @@ algorithms in the <a class="reference external" href="https://dl.acm.org/doi/10.
 programming model in a pure Python mode.</p>
 <a class="reference internal image-reference" href="_images/pie.png"><img alt="Workflow of PIE" class="align-center" src="_images/pie.png" style="width: 600px;" /></a>
 <p>To implement this, a user just need to fulfill this class.</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">graphscope.analytical.udf</span> <span class="kn">import</span> <span class="n">pie</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">graphscope.analytical.udf.decorators</span> <span class="kn">import</span> <span class="n">pie</span>
 <span class="kn">from</span> <span class="nn">graphscope.framework.app</span> <span class="kn">import</span> <span class="n">AppAssets</span>
 
-<span class="nd">@pie</span>
+<span class="nd">@pie</span><span class="p">(</span><span class="n">vd_type</span><span class="o">=</span><span class="s2">&quot;double&quot;</span><span class="p">,</span> <span class="n">md_type</span><span class="o">=</span><span class="s2">&quot;double&quot;</span><span class="p">)</span>
 <span class="k">class</span> <span class="nc">YourAlgorithm</span><span class="p">(</span><span class="n">AppAssets</span><span class="p">):</span>
     <span class="nd">@staticmethod</span>
     <span class="k">def</span> <span class="nf">Init</span><span class="p">(</span><span class="n">frag</span><span class="p">,</span> <span class="n">context</span><span class="p">):</span>
@@ -314,7 +312,7 @@ a sequential method for partial evaluation, and <cite>IncEval</cite> is a sequen
 for incremental evaluation over the partitioned fragment. The full API of fragment
 can be found in <a class="reference internal" href="reference/cython_sdk.html#cython-sdk-api"><span class="std std-ref">Cython SDK API</span></a>.</p>
 <p>Let’s take SSSP as example, a user defined SSSP in PIE model may be like this.</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">graphscope.analytical.udf</span> <span class="kn">import</span> <span class="n">pie</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">graphscope.analytical.udf.decorators</span> <span class="kn">import</span> <span class="n">pie</span>
 <span class="kn">from</span> <span class="nn">graphscope.framework.app</span> <span class="kn">import</span> <span class="n">AppAssets</span>
 
 <span class="nd">@pie</span><span class="p">(</span><span class="n">vd_type</span><span class="o">=</span><span class="s2">&quot;double&quot;</span><span class="p">,</span> <span class="n">md_type</span><span class="o">=</span><span class="s2">&quot;double&quot;</span><span class="p">)</span>
@@ -348,6 +346,7 @@ can be found in <a class="reference internal" href="reference/cython_sdk.html#cy
             <span class="n">edges</span> <span class="o">=</span> <span class="n">frag</span><span class="o">.</span><span class="n">get_outgoing_edges</span><span class="p">(</span><span class="n">source</span><span class="p">,</span> <span class="n">e_label_id</span><span class="p">)</span>
             <span class="k">for</span> <span class="n">e</span> <span class="ow">in</span> <span class="n">edges</span><span class="p">:</span>
                 <span class="n">dst</span> <span class="o">=</span> <span class="n">e</span><span class="o">.</span><span class="n">neighbor</span><span class="p">()</span>
+                <span class="c1"># use the third column of edge data as the distance between two vertices</span>
                 <span class="n">distv</span> <span class="o">=</span> <span class="n">e</span><span class="o">.</span><span class="n">get_int</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
                 <span class="k">if</span> <span class="n">context</span><span class="o">.</span><span class="n">get_node_value</span><span class="p">(</span><span class="n">dst</span><span class="p">)</span> <span class="o">&gt;</span> <span class="n">distv</span><span class="p">:</span>
                     <span class="n">context</span><span class="o">.</span><span class="n">set_node_value</span><span class="p">(</span><span class="n">dst</span><span class="p">,</span> <span class="n">distv</span><span class="p">)</span>
@@ -376,11 +375,9 @@ incremental version works for large graphs partitioned on a cluster.</p>
 </div>
 <div class="section" id="writing-algorithms-in-pregel">
 <h2>Writing Algorithms in Pregel<a class="headerlink" href="#writing-algorithms-in-pregel" title="Permalink to this headline"></a></h2>
-<p>In addition to the sub-graph based PIE model,
-<cite>graphscope</cite> supports vertex-centric
-<cite>Pregel</cite> model as well.
-You may develop an algorithms in <cite>Pregel</cite> model by implementing this.</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">graphscope.analytical.udf</span> <span class="kn">import</span> <span class="n">pregel</span>
+<p>In addition to the sub-graph based PIE model, <cite>graphscope</cite> supports vertex-centric
+<cite>Pregel</cite> model as well. You may develop an algorithms in <cite>Pregel</cite> model by implementing this.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">graphscope.analytical.udf.decorators</span> <span class="kn">import</span> <span class="n">pregel</span>
 <span class="kn">from</span> <span class="nn">graphscope.framework.app</span> <span class="kn">import</span> <span class="n">AppAssets</span>
 
 <span class="nd">@pregel</span><span class="p">(</span><span class="n">vd_type</span><span class="o">=</span><span class="s1">&#39;double&#39;</span><span class="p">,</span> <span class="n">md_type</span><span class="o">=</span><span class="s1">&#39;double&#39;</span><span class="p">)</span>
@@ -406,9 +403,8 @@ Take SSSP as example, the algorithm in Pregel model looks like this.</p>
 <span class="kn">from</span> <span class="nn">graphscope.framework.app</span> <span class="kn">import</span> <span class="n">AppAssets</span>
 
 <span class="c1"># decorator, and assign the types for vertex data, message data.</span>
-<span class="nd">@pregel</span><span class="p">(</span><span class="n">vd_type</span><span class="o">=</span><span class="s1">&#39;double&#39;</span><span class="p">,</span> <span class="n">md_type</span><span class="o">=</span><span class="s1">&#39;double&#39;</span><span class="p">)</span>
+<span class="nd">@pregel</span><span class="p">(</span><span class="n">vd_type</span><span class="o">=</span><span class="s2">&quot;double&quot;</span><span class="p">,</span> <span class="n">md_type</span><span class="o">=</span><span class="s2">&quot;double&quot;</span><span class="p">)</span>
 <span class="k">class</span> <span class="nc">SSSP_Pregel</span><span class="p">(</span><span class="n">AppAssets</span><span class="p">):</span>
-
     <span class="nd">@staticmethod</span>
     <span class="k">def</span> <span class="nf">Init</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="n">context</span><span class="p">):</span>
         <span class="n">v</span><span class="o">.</span><span class="n">set_value</span><span class="p">(</span><span class="mf">1000000000.0</span><span class="p">)</span>
@@ -459,32 +455,30 @@ via the <code class="code docutils literal notranslate"><span class="pre">contex
 <h2>Run Your Own Algorithms<a class="headerlink" href="#run-your-own-algorithms" title="Permalink to this headline"></a></h2>
 <p>To run your own algorithms, you may trigger it in place where you defined it.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">graphscope</span>
+<span class="kn">from</span> <span class="nn">graphscope.dataset</span> <span class="kn">import</span> <span class="n">load_p2p_network</span>
 
-<span class="n">sess</span> <span class="o">=</span> <span class="n">graphscope</span><span class="o">.</span><span class="n">session</span><span class="p">()</span>
-<span class="n">g</span> <span class="o">=</span> <span class="n">sess</span><span class="o">.</span><span class="n">g</span><span class="p">()</span>
+<span class="n">g</span> <span class="o">=</span> <span class="n">load_p2p_network</span><span class="p">()</span>
 
 <span class="c1"># load my algorithm</span>
 <span class="n">my_app</span> <span class="o">=</span> <span class="n">SSSP_Pregel</span><span class="p">()</span>
 
 <span class="c1"># run my algorithm over a graph and get the result.</span>
 <span class="c1"># Here the `src` is correspondent to the `context.get_config(b&quot;src&quot;)`</span>
-<span class="n">ret</span> <span class="o">=</span> <span class="n">my_app</span><span class="p">(</span><span class="n">g</span><span class="p">,</span> <span class="n">src</span><span class="o">=</span><span class="s2">&quot;0&quot;</span><span class="p">)</span>
+<span class="n">ret</span> <span class="o">=</span> <span class="n">my_app</span><span class="p">(</span><span class="n">g</span><span class="p">,</span> <span class="n">src</span><span class="o">=</span><span class="s2">&quot;6&quot;</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>After developing and testing, you may want to save it for the future use.</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">SSSP_Pregel</span><span class="o">.</span><span class="n">to_gar</span><span class="p">(</span><span class="s2">&quot;file:///var/graphscope/udf/my_sssp_pregel.gar&quot;</span><span class="p">)</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">SSSP_Pregel</span><span class="o">.</span><span class="n">to_gar</span><span class="p">(</span><span class="s2">&quot;/tmp/my_sssp_pregel.gar&quot;</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>Later, you can load your own algorithm from the gar package.</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">graphscope</span>
-
-<span class="n">g</span> <span class="o">=</span> <span class="n">graphscope</span><span class="o">.</span><span class="n">g</span><span class="p">()</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">graphscope.framework.app</span> <span class="kn">import</span> <span class="n">load_app</span>
 
 <span class="c1"># load my algorithm from a gar package</span>
-<span class="n">my_app</span> <span class="o">=</span> <span class="n">load_app</span><span class="p">(</span><span class="s1">&#39;file:///var/graphscope/udf/my_sssp_pregel.gar&#39;</span><span class="p">)</span>
+<span class="n">my_app</span> <span class="o">=</span> <span class="n">load_app</span><span class="p">(</span><span class="s2">&quot;/tmp/my_sssp_pregel.gar&quot;</span><span class="p">)</span>
 
 <span class="c1"># run my algorithm over a graph and get the result.</span>
-<span class="n">ret</span> <span class="o">=</span> <span class="n">my_app</span><span class="p">(</span><span class="n">g</span><span class="p">,</span> <span class="n">src</span><span class="o">=</span><span class="s2">&quot;0&quot;</span><span class="p">)</span>
+<span class="n">ret</span> <span class="o">=</span> <span class="n">my_app</span><span class="p">(</span><span class="n">g</span><span class="p">,</span> <span class="n">src</span><span class="o">=</span><span class="s2">&quot;6&quot;</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -716,7 +710,7 @@ and you need to specify the app you want in this run.</p>
   <hr/>
 
   <div role="contentinfo">
-    <p>&#169; Copyright 2020-2023, Damo Academy, Alibaba Inc..</p>
+    <p>&#169; Copyright 2020-2023, DAMO Academy, Alibaba Inc..</p>
   </div>
 
   Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
