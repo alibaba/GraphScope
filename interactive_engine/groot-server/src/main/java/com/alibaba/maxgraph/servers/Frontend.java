@@ -116,9 +116,13 @@ public class Frontend extends NodeBase {
         EdgeIdGenerator edgeIdGenerator = new DefaultEdgeIdGenerator(configs, this.channelManager);
         GraphWriter graphWriter =
                 new GraphWriter(
-                        snapshotCache, edgeIdGenerator, this.metaService, ingestorWriteClients);
+                        snapshotCache,
+                        edgeIdGenerator,
+                        this.metaService,
+                        ingestorWriteClients,
+                        metricsCollector);
         ClientWriteService clientWriteService =
-                new ClientWriteService(writeSessionGenerator, graphWriter);
+                new ClientWriteService(writeSessionGenerator, graphWriter, metricsCollector);
         RoleClients<BackupClient> backupClients =
                 new RoleClients<>(this.channelManager, RoleType.COORDINATOR, BackupClient::new);
         ClientBackupService clientBackupService = new ClientBackupService(backupClients);

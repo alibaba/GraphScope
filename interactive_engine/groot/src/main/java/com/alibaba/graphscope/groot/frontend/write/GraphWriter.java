@@ -1,5 +1,7 @@
 package com.alibaba.graphscope.groot.frontend.write;
 
+import com.alibaba.graphscope.groot.metrics.MetricsAgent;
+import com.alibaba.graphscope.groot.metrics.MetricsCollector;
 import com.alibaba.graphscope.groot.operation.EdgeId;
 import com.alibaba.graphscope.groot.operation.LabelId;
 import com.alibaba.graphscope.groot.operation.OperationType;
@@ -29,7 +31,20 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 
-public class GraphWriter {
+public class GraphWriter implements MetricsAgent {
+
+    public static final String WRITE_REQUESTS_TOTAL = "write.requests.total";
+    public static final String WRITE_REQUESTS_PER_SECOND = "write.requests.per.second";
+    public static final String INGESTOR_BLOCK_TIME_MS = "ingestor.block.time.ms";
+    public static final String INGESTOR_BLOCK_TIME_PERCENT = "ingestor.block.time.percent";
+
+    private AtomicLong writeRequestsTotal;
+    private volatile long lastUpdateWriteRequestsTotal;
+    private volatile long writeRequestsPerSecond;
+    private volatile long lastUpdateTime;
+    private AtomicLong ingestorBlockTimeNano;
+    private volatile long ingestorBlockTimePercent;
+    private volatile long lastUpdateIngestorBlockTimeNano;
 
     private SnapshotCache snapshotCache;
     private EdgeIdGenerator edgeIdGenerator;
@@ -41,11 +56,14 @@ public class GraphWriter {
             SnapshotCache snapshotCache,
             EdgeIdGenerator edgeIdGenerator,
             MetaService metaService,
-            RoleClients<IngestorWriteClient> ingestWriteClients) {
+            RoleClients<IngestorWriteClient> ingestWriteClients,
+            MetricsCollector metricsCollector) {
         this.snapshotCache = snapshotCache;
         this.edgeIdGenerator = edgeIdGenerator;
         this.metaService = metaService;
         this.ingestWriteClients = ingestWriteClients;
+        initMetrics();
+        metricsCollector.register(this, () -> updateMetrics());
     }
 
     public long writeBatch(
@@ -82,12 +100,16 @@ public class GraphWriter {
         OperationBatch operationBatch = batchBuilder.build();
         int writeQueueId = getWriteQueueId(writeSession);
         int ingestorId = this.metaService.getIngestorIdForQueue(writeQueueId);
+        long startTimeNano = System.nanoTime();
         BatchId batchId =
                 this.ingestWriteClients
                         .getClient(ingestorId)
                         .writeIngestor(requestId, writeQueueId, operationBatch);
+        long ingestorCompleteTimeNano = System.nanoTime();
         long writeSnapshotId = batchId.getSnapshotId();
         this.lastWrittenSnapshotId.updateAndGet(x -> x < writeSnapshotId ? writeSnapshotId : x);
+        this.writeRequestsTotal.addAndGet(writeRequests.size());
+        this.ingestorBlockTimeNano.addAndGet(ingestorCompleteTimeNano - startTimeNano);
         return writeSnapshotId;
     }
 
@@ -328,5 +350,52 @@ public class GraphWriter {
             pks.add(valBytes);
         }
         return PkHashUtils.hash(labelId, pks);
+    }
+
+    @Override
+    public void initMetrics() {
+        this.lastUpdateTime = System.nanoTime();
+        this.writeRequestsTotal = new AtomicLong(0L);
+        this.writeRequestsPerSecond = 0L;
+        this.ingestorBlockTimeNano = new AtomicLong(0L);
+        this.lastUpdateIngestorBlockTimeNano = 0L;
+    }
+
+    @Override
+    public Map<String, String> getMetrics() {
+        return new HashMap<String, String>() {
+            {
+                put(WRITE_REQUESTS_TOTAL, String.valueOf(writeRequestsTotal.get()));
+                put(WRITE_REQUESTS_PER_SECOND, String.valueOf(writeRequestsPerSecond));
+                put(INGESTOR_BLOCK_TIME_MS, String.valueOf(ingestorBlockTimeNano.get() / 1000000));
+                put(INGESTOR_BLOCK_TIME_PERCENT, String.valueOf(ingestorBlockTimePercent));
+            }
+        };
+    }
+
+    @Override
+    public String[] getMetricKeys() {
+        return new String[] {
+            WRITE_REQUESTS_TOTAL,
+            WRITE_REQUESTS_PER_SECOND,
+            INGESTOR_BLOCK_TIME_MS,
+            INGESTOR_BLOCK_TIME_PERCENT
+        };
+    }
+
+    private void updateMetrics() {
+        long currentTime = System.nanoTime();
+        long writeRequests = this.writeRequestsTotal.get();
+        long ingestBlockTime = this.ingestorBlockTimeNano.get();
+
+        long interval = currentTime - this.lastUpdateTime;
+        this.writeRequestsPerSecond =
+                1000000000 * (writeRequests - this.lastUpdateWriteRequestsTotal) / interval;
+        this.ingestorBlockTimePercent =
+                100 * (ingestBlockTime - this.lastUpdateIngestorBlockTimeNano) / interval;
+
+        this.lastUpdateWriteRequestsTotal = writeRequests;
+        this.lastUpdateIngestorBlockTimeNano = ingestBlockTime;
+        this.lastUpdateTime = currentTime;
     }
 }
