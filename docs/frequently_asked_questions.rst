@@ -79,6 +79,21 @@ If you don't find an answer to your question here, feel free to file a `Issues`_
 
     - compile ``scipy`` failed: You can follow `this <https://stackoverflow.com/questions/65745683/how-to-install-scipy-on-apple-silicon-arm-m1>`_ to build scipy from source or try ``pip3 install --pre -i https://pypi.anaconda.org/scipy-wheels-nightly/simple scipy`` to workaround this problem.
 
+11. How to resolve graphscope-store no permission on NFS volumes when allocating PV ?
+
+    ENV: Use helm to install graphscope-store, NFS to supply PV.
+
+    Appearance: Pod `graphscope-store-kafka-0` , `graphscope-store-zookeeper-0` reports `CrashLoopBackOff` status.
+
+    Check: First use `kubectl logs graphscope-store-zookeeper-0` to check log. If the log shows `mkdir: cannot create directory '/bitnami/zookeeper/data': Permission denied`.
+
+    Reason: Normaly, the permission of NFS directories we created is `root 755`(depends on your sepcify environment), but the default user of graphscope-store is graphscope(1001), so these pods have no permission to write on NFS.
+
+    Solution: There are two slutions to solve this.
+
+        The brutal one is using `chmod 777` on all related PV directories, this is efficient but unsuggest.
+
+        The elegant one is creating `graphscope` user and user group first, and then permit the user `graphscope` access related NFS directories.
 
 **I do have many other questions...**
 
