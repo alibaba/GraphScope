@@ -81,15 +81,15 @@ If you don't find an answer to your question here, feel free to file a `Issues`_
 
 11. How to resolve graphscope-store no permission on NFS volumes when allocating PV ?
 
-    ENV: Use helm to install graphscope-store, NFS to supply PV.
+    - ENV: Use helm to install graphscope-store, NFS to supply PV.
 
-    Appearance: Pod `graphscope-store-kafka-0` , `graphscope-store-zookeeper-0` reports `CrashLoopBackOff` status.
+    - Appearance: Pod `graphscope-store-kafka-0` , `graphscope-store-zookeeper-0` reports `CrashLoopBackOff` status.
 
-    Check: First use `kubectl logs graphscope-store-zookeeper-0` to check log. If the log shows `mkdir: cannot create directory '/bitnami/zookeeper/data': Permission denied`.
+    - Check: First use `kubectl logs graphscope-store-zookeeper-0` to check log. If the log shows `mkdir: cannot create directory '/bitnami/zookeeper/data': Permission denied`.
 
-    Reason: Normaly, the permission of NFS directories we created is `root 755`(depends on your sepcify environment), but the default user of graphscope-store is graphscope(1001), so these pods have no permission to write on NFS.
+    - Reason: Normaly, the permission of NFS directories we created is `root 755`(depends on your sepcify environment), but the default user of graphscope-store is graphscope(1001), so these pods have no permission to write on NFS.
 
-    Solution: There are two slutions to solve this.
+    - Solution: There are two slutions to solve this.
 
         The brutal one is using `chmod 777` on all related PV directories, this is efficient but unsuggest.
 
