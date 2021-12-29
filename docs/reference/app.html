@@ -137,7 +137,7 @@
           <li><a href="python_index.html">Python API Reference</a> &raquo;</li>
       <li>Analytical App</li>
       <li class="wy-breadcrumbs-aside">
-            <a href="../_sources/reference/app.rst.txt" rel="nofollow"> View page source</a>
+              <a href="https://github.com/alibaba/graphscope/edit/main/docs/reference/app.rst" class="fa fa-github"> Edit on GitHub</a>
       </li>
   </ul>
   <hr/>
@@ -428,8 +428,9 @@ previous ones.</p>
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>graph</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">Graph</span></code>) – A simple graph.</p></li>
-<li><p><strong>src</strong> (<em>optional</em>) – Source vertex of breadth first search. Defaults to 0.
-Its type should be consistent with oid type of the <cite>graph</cite>.</p></li>
+<li><p><strong>src</strong> (<em>optional</em>) – Source vertex of breadth first search. The type should be consistent
+with the id type of the <cite>graph</cite>, that is, it’s <cite>int</cite> or <cite>str</cite> depending
+on the <cite>oid_type</cite> is <cite>int64_t</cite> or <cite>string</cite> of the <cite>graph</cite>. Defaults to 0.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
@@ -483,13 +484,15 @@ Its type should be consistent with oid type of the <cite>graph</cite>.</p></li>
 <dl class="py function">
 <dt class="sig sig-object py" id="graphscope.sssp">
 <span class="sig-prename descclassname"><span class="pre">graphscope.</span></span><span class="sig-name descname"><span class="pre">sssp</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">graph</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">src</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/graphscope/analytical/app/sssp.html#sssp"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#graphscope.sssp" title="Permalink to this definition"></a></dt>
-<dd><p>Compute single source shortest path on the <cite>graph</cite>.</p>
+<dd><p>Compute single source shortest path length on the <cite>graph</cite>.</p>
 <p>Note that SSSP requires an numerical property on the edge.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>graph</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">Graph</span></code>) – A projected simple graph.</p></li>
-<li><p><strong>src</strong> (<em>int</em><em>, </em><em>optional</em>) – The source vertex. Defaults to 0.</p></li>
+<li><p><strong>src</strong> (<em>optional</em>) – The source vertex. The type should be consistent
+with the id type of the <cite>graph</cite>, that is, it’s <cite>int</cite> or <cite>str</cite> depending
+on the <cite>oid_type</cite> is <cite>int64_t</cite> or <cite>string</cite> of the <cite>graph</cite>. Defaults to 0.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
@@ -531,35 +534,6 @@ Its type should be consistent with oid type of the <cite>graph</cite>.</p></li>
 <span class="c1"># Load some data, then project to a simple graph (if needed).</span>
 <span class="n">pg</span> <span class="o">=</span> <span class="n">g</span><span class="o">.</span><span class="n">project</span><span class="p">(</span><span class="n">vertices</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;vlabel&quot;</span><span class="p">:</span> <span class="p">[]},</span> <span class="n">edges</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;elabel&quot;</span><span class="p">:</span> <span class="p">[]})</span>
 <span class="n">r</span> <span class="o">=</span> <span class="n">gs</span><span class="o">.</span><span class="n">wcc</span><span class="p">(</span><span class="n">pg</span><span class="p">)</span>
-<span class="n">s</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
-</pre></div>
-</div>
-</dd></dl>
-
-<dl class="py function">
-<dt class="sig sig-object py" id="graphscope.cdlp">
-<span class="sig-prename descclassname"><span class="pre">graphscope.</span></span><span class="sig-name descname"><span class="pre">cdlp</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">graph</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_round</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/graphscope/analytical/app/cdlp.html#cdlp"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#graphscope.cdlp" title="Permalink to this definition"></a></dt>
-<dd><p>Evaluate Community Detection with Label Propagation.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>graph</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">Graph</span></code>) – A simple graph.</p></li>
-<li><p><strong>max_round</strong> (<em>int</em><em>, </em><em>optional</em>) – Maximum rounds. Defaults to 10.</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>A context with each vertex assigned with a community ID, will be evaluated in eager mode.</p>
-</dd>
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p><a class="reference internal" href="context.html#graphscope.framework.context.VertexDataContextDAGNode" title="graphscope.framework.context.VertexDataContextDAGNode"><code class="xref py py-class docutils literal notranslate"><span class="pre">graphscope.framework.context.VertexDataContextDAGNode</span></code></a></p>
-</dd>
-</dl>
-<p>Examples:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">graphscope</span> <span class="k">as</span> <span class="nn">gs</span>
-<span class="n">g</span> <span class="o">=</span> <span class="n">gs</span><span class="o">.</span><span class="n">g</span><span class="p">()</span>
-<span class="c1"># Load some data, then project to a simple graph (if needed).</span>
-<span class="n">pg</span> <span class="o">=</span> <span class="n">g</span><span class="o">.</span><span class="n">project</span><span class="p">(</span><span class="n">vertices</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;vlabel&quot;</span><span class="p">:</span> <span class="p">[]},</span> <span class="n">edges</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;elabel&quot;</span><span class="p">:</span> <span class="p">[]})</span>
-<span class="n">r</span> <span class="o">=</span> <span class="n">gs</span><span class="o">.</span><span class="n">cdlp</span><span class="p">(</span><span class="n">g</span><span class="p">,</span> <span class="n">max_round</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
 <span class="n">s</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
 </pre></div>
 </div>
@@ -763,26 +737,27 @@ all vertices of degree less than <cite>k</cite> have been removed.</p>
 <dl class="py function">
 <dt class="sig sig-object py" id="graphscope.lpa">
 <span class="sig-prename descclassname"><span class="pre">graphscope.</span></span><span class="sig-name descname"><span class="pre">lpa</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">graph</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_round</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/graphscope/analytical/app/lpa.html#lpa"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#graphscope.lpa" title="Permalink to this definition"></a></dt>
-<dd><p>Evaluate (multi-) label propagation on a property graph.</p>
+<dd><p>Evaluate Community Detection with Label Propagation.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>graph</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">Graph</span></code>) – A property graph.</p></li>
-<li><p><strong>max_round</strong> (<em>int</em><em>, </em><em>optional</em>) – Maximum number of rounds. Defaults to 10.</p></li>
+<li><p><strong>graph</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">Graph</span></code>) – A simple graph.</p></li>
+<li><p><strong>max_round</strong> (<em>int</em><em>, </em><em>optional</em>) – Maximum rounds. Defaults to 10.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
-<dd class="field-even"><p>A context with each vertex, following an array of propagated labels, evaluated in eager mode.</p>
+<dd class="field-even"><p>A context with each vertex assigned with a community ID, will be evaluated in eager mode.</p>
 </dd>
 <dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p><a class="reference internal" href="context.html#graphscope.framework.context.LabeledVertexPropertyContextDAGNode" title="graphscope.framework.context.LabeledVertexPropertyContextDAGNode"><code class="xref py py-class docutils literal notranslate"><span class="pre">graphscope.framework.context.LabeledVertexPropertyContextDAGNode</span></code></a></p>
+<dd class="field-odd"><p><a class="reference internal" href="context.html#graphscope.framework.context.VertexDataContextDAGNode" title="graphscope.framework.context.VertexDataContextDAGNode"><code class="xref py py-class docutils literal notranslate"><span class="pre">graphscope.framework.context.VertexDataContextDAGNode</span></code></a></p>
 </dd>
 </dl>
 <p>Examples:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">graphscope</span> <span class="k">as</span> <span class="nn">gs</span>
 <span class="n">g</span> <span class="o">=</span> <span class="n">gs</span><span class="o">.</span><span class="n">g</span><span class="p">()</span>
-<span class="c1"># Load some data</span>
-<span class="n">r</span> <span class="o">=</span> <span class="n">gs</span><span class="o">.</span><span class="n">lpa</span><span class="p">(</span><span class="n">g</span><span class="p">)</span>
+<span class="c1"># Load some data, then project to a simple graph (if needed).</span>
+<span class="n">pg</span> <span class="o">=</span> <span class="n">g</span><span class="o">.</span><span class="n">project</span><span class="p">(</span><span class="n">vertices</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;vlabel&quot;</span><span class="p">:</span> <span class="p">[]},</span> <span class="n">edges</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;elabel&quot;</span><span class="p">:</span> <span class="p">[]})</span>
+<span class="n">r</span> <span class="o">=</span> <span class="n">gs</span><span class="o">.</span><span class="n">lpa</span><span class="p">(</span><span class="n">g</span><span class="p">,</span> <span class="n">max_round</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
 <span class="n">s</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
 </pre></div>
 </div>
@@ -870,7 +845,7 @@ an InvalidArgumentError.</p>
   <hr/>
 
   <div role="contentinfo">
-    <p>&#169; Copyright 2020-2023, Damo Academy, Alibaba Inc..</p>
+    <p>&#169; Copyright 2020-2023, DAMO Academy, Alibaba Inc..</p>
   </div>
 
   Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a

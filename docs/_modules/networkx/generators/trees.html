@@ -125,98 +125,238 @@
 <span class="kn">from</span> <span class="nn">collections</span> <span class="kn">import</span> <span class="n">defaultdict</span>
 
 <span class="kn">import</span> <span class="nn">networkx</span> <span class="k">as</span> <span class="nn">nx</span>
-<span class="kn">from</span> <span class="nn">networkx.utils</span> <span class="kn">import</span> <span class="n">generate_unique_node</span>
 <span class="kn">from</span> <span class="nn">networkx.utils</span> <span class="kn">import</span> <span class="n">py_random_state</span>
 
-<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;prefix_tree&quot;</span><span class="p">,</span> <span class="s2">&quot;random_tree&quot;</span><span class="p">]</span>
-
-<span class="c1">#: The nil node, the only leaf node in a prefix tree.</span>
-<span class="c1">#:</span>
-<span class="c1">#: Each predecessor of the nil node corresponds to the end of a path</span>
-<span class="c1">#: used to generate the prefix tree.</span>
-<span class="n">NIL</span> <span class="o">=</span> <span class="s2">&quot;NIL&quot;</span>
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;prefix_tree&quot;</span><span class="p">,</span> <span class="s2">&quot;random_tree&quot;</span><span class="p">,</span> <span class="s2">&quot;prefix_tree_recursive&quot;</span><span class="p">]</span>
 
 
 <div class="viewcode-block" id="prefix_tree"><a class="viewcode-back" href="../../../reference/networkx/generated/graphscope.nx.generators.trees.prefix_tree.html#graphscope.nx.generators.trees.prefix_tree">[docs]</a><span class="k">def</span> <span class="nf">prefix_tree</span><span class="p">(</span><span class="n">paths</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Creates a directed prefix tree from the given list of iterables.</span>
+    <span class="sd">&quot;&quot;&quot;Creates a directed prefix tree from a list of paths.</span>
+
+<span class="sd">    Usually the paths are described as strings or lists of integers.</span>
+
+<span class="sd">    A &quot;prefix tree&quot; represents the prefix structure of the strings.</span>
+<span class="sd">    Each node represents a prefix of some string. The root represents</span>
+<span class="sd">    the empty prefix with children for the single letter prefixes which</span>
+<span class="sd">    in turn have children for each double letter prefix starting with</span>
+<span class="sd">    the single letter corresponding to the parent node, and so on.</span>
+
+<span class="sd">    More generally the prefixes do not need to be strings. A prefix refers</span>
+<span class="sd">    to the start of a sequence. The root has children for each one element</span>
+<span class="sd">    prefix and they have children for each two element prefix that starts</span>
+<span class="sd">    with the one element sequence of the parent, and so on.</span>
+
+<span class="sd">    Note that this implementation uses integer nodes with an attribute.</span>
+<span class="sd">    Each node has an attribute &quot;source&quot; whose value is the original element</span>
+<span class="sd">    of the path to which this node corresponds. For example, suppose `paths`</span>
+<span class="sd">    consists of one path: &quot;can&quot;. Then the nodes `[1, 2, 3]` which represent</span>
+<span class="sd">    this path have &quot;source&quot; values &quot;c&quot;, &quot;a&quot; and &quot;n&quot;.</span>
+
+<span class="sd">    All the descendants of a node have a common prefix in the sequence/path</span>
+<span class="sd">    associated with that node. From the returned tree, the prefix for each</span>
+<span class="sd">    node can be constructed by traversing the tree up to the root and</span>
+<span class="sd">    accumulating the &quot;source&quot; values along the way.</span>
+
+<span class="sd">    The root node is always `0` and has &quot;source&quot; attribute `None`.</span>
+<span class="sd">    The root is the only node with in-degree zero.</span>
+<span class="sd">    The nil node is always `-1` and has &quot;source&quot; attribute `&quot;NIL&quot;`.</span>
+<span class="sd">    The nil node is the only node with out-degree zero.</span>
+
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
-<span class="sd">    paths: iterable of lists</span>
-<span class="sd">        An iterable over &quot;paths&quot;, which are themselves lists of</span>
-<span class="sd">        nodes. Common prefixes among these paths are converted into</span>
-<span class="sd">        common initial segments in the generated tree.</span>
+<span class="sd">    paths: iterable of paths</span>
+<span class="sd">        An iterable of paths which are themselves sequences.</span>
+<span class="sd">        Matching prefixes among these sequences are identified with</span>
+<span class="sd">        nodes of the prefix tree. One leaf of the tree is associated</span>
+<span class="sd">        with each path. (Identical paths are associated with the same</span>
+<span class="sd">        leaf of the tree.)</span>
 
-<span class="sd">        Most commonly, this may be an iterable over lists of integers,</span>
-<span class="sd">        or an iterable over Python strings.</span>
 
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
-<span class="sd">    T: DiGraph</span>
+<span class="sd">    tree: DiGraph</span>
 <span class="sd">        A directed graph representing an arborescence consisting of the</span>
 <span class="sd">        prefix tree generated by `paths`. Nodes are directed &quot;downward&quot;,</span>
 <span class="sd">        from parent to child. A special &quot;synthetic&quot; root node is added</span>
 <span class="sd">        to be the parent of the first node in each path. A special</span>
-<span class="sd">        &quot;synthetic&quot; leaf node, the &quot;nil&quot; node, is added to be the child</span>
+<span class="sd">        &quot;synthetic&quot; leaf node, the &quot;nil&quot; node `-1`, is added to be the child</span>
 <span class="sd">        of all nodes representing the last element in a path. (The</span>
 <span class="sd">        addition of this nil node technically makes this not an</span>
 <span class="sd">        arborescence but a directed acyclic graph; removing the nil node</span>
 <span class="sd">        makes it an arborescence.)</span>
 
-<span class="sd">        Each node has an attribute &#39;source&#39; whose value is the original</span>
-<span class="sd">        element of the path to which this node corresponds. The &#39;source&#39;</span>
-<span class="sd">        of the root node is None, and the &#39;source&#39; of the nil node is</span>
-<span class="sd">        :data:`.NIL`.</span>
-
-<span class="sd">        The root node is the only node of in-degree zero in the graph,</span>
-<span class="sd">        and the nil node is the only node of out-degree zero.  For</span>
-<span class="sd">        convenience, the nil node can be accessed via the :data:`.NIL`</span>
-<span class="sd">        attribute; for example::</span>
-
-<span class="sd">            &gt;&gt;&gt; from networkx.generators.trees import NIL</span>
-<span class="sd">            &gt;&gt;&gt; paths = [&quot;ab&quot;, &quot;abs&quot;, &quot;ad&quot;]</span>
-<span class="sd">            &gt;&gt;&gt; T, root = nx.prefix_tree(paths)</span>
-<span class="sd">            &gt;&gt;&gt; T.predecessors(NIL)</span>
-<span class="sd">            &lt;dict_keyiterator object at 0x...&gt;</span>
-
-<span class="sd">    root : string</span>
-<span class="sd">        The randomly generated uuid of the root node.</span>
 
 <span class="sd">    Notes</span>
 <span class="sd">    -----</span>
 <span class="sd">    The prefix tree is also known as a *trie*.</span>
 
+
 <span class="sd">    Examples</span>
 <span class="sd">    --------</span>
-<span class="sd">    Create a prefix tree from a list of strings with some common</span>
-<span class="sd">    prefixes::</span>
+<span class="sd">    Create a prefix tree from a list of strings with common prefixes::</span>
 
-<span class="sd">        &gt;&gt;&gt; strings = [&quot;ab&quot;, &quot;abs&quot;, &quot;ad&quot;]</span>
-<span class="sd">        &gt;&gt;&gt; T, root = nx.prefix_tree(strings)</span>
+<span class="sd">        &gt;&gt;&gt; paths = [&quot;ab&quot;, &quot;abs&quot;, &quot;ad&quot;]</span>
+<span class="sd">        &gt;&gt;&gt; T = nx.prefix_tree(paths)</span>
+<span class="sd">        &gt;&gt;&gt; list(T.edges)</span>
+<span class="sd">        [(0, 1), (1, 2), (1, 4), (2, -1), (2, 3), (3, -1), (4, -1)]</span>
 
-<span class="sd">    Continuing the above example, to recover the original paths that</span>
-<span class="sd">    generated the prefix tree, traverse up the tree from the</span>
-<span class="sd">    :data:`.NIL` node to the root::</span>
+<span class="sd">    The leaf nodes can be obtained as predecessors of the nil node::</span>
 
-<span class="sd">        &gt;&gt;&gt; from networkx.generators.trees import NIL</span>
-<span class="sd">        &gt;&gt;&gt;</span>
-<span class="sd">        &gt;&gt;&gt; strings = [&quot;ab&quot;, &quot;abs&quot;, &quot;ad&quot;]</span>
-<span class="sd">        &gt;&gt;&gt; T, root = nx.prefix_tree(strings)</span>
+<span class="sd">        &gt;&gt;&gt; root, NIL = 0, -1</span>
+<span class="sd">        &gt;&gt;&gt; list(T.predecessors(NIL))</span>
+<span class="sd">        [2, 3, 4]</span>
+
+<span class="sd">    To recover the original paths that generated the prefix tree,</span>
+<span class="sd">    traverse up the tree from the node `-1` to the node `0`::</span>
+
 <span class="sd">        &gt;&gt;&gt; recovered = []</span>
 <span class="sd">        &gt;&gt;&gt; for v in T.predecessors(NIL):</span>
-<span class="sd">        ...     s = &quot;&quot;</span>
+<span class="sd">        ...     prefix = &quot;&quot;</span>
 <span class="sd">        ...     while v != root:</span>
-<span class="sd">        ...         # Prepend the character `v` to the accumulator `s`.</span>
-<span class="sd">        ...         s = str(T.nodes[v][&quot;source&quot;]) + s</span>
-<span class="sd">        ...         # Each non-nil, non-root node has exactly one parent.</span>
-<span class="sd">        ...         v = next(T.predecessors(v))</span>
-<span class="sd">        ...     recovered.append(s)</span>
+<span class="sd">        ...         prefix = str(T.nodes[v][&quot;source&quot;]) + prefix</span>
+<span class="sd">        ...         v = next(T.predecessors(v))  # only one predecessor</span>
+<span class="sd">        ...     recovered.append(prefix)</span>
 <span class="sd">        &gt;&gt;&gt; sorted(recovered)</span>
 <span class="sd">        [&#39;ab&#39;, &#39;abs&#39;, &#39;ad&#39;]</span>
-
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="nf">_helper</span><span class="p">(</span><span class="n">paths</span><span class="p">,</span> <span class="n">root</span><span class="p">,</span> <span class="n">B</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">get_children</span><span class="p">(</span><span class="n">parent</span><span class="p">,</span> <span class="n">paths</span><span class="p">):</span>
+        <span class="n">children</span> <span class="o">=</span> <span class="n">defaultdict</span><span class="p">(</span><span class="nb">list</span><span class="p">)</span>
+        <span class="c1"># Populate dictionary with key(s) as the child/children of the root and</span>
+        <span class="c1"># value(s) as the remaining paths of the corresponding child/children</span>
+        <span class="k">for</span> <span class="n">path</span> <span class="ow">in</span> <span class="n">paths</span><span class="p">:</span>
+            <span class="c1"># If path is empty, we add an edge to the NIL node.</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">path</span><span class="p">:</span>
+                <span class="n">tree</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="n">parent</span><span class="p">,</span> <span class="n">NIL</span><span class="p">)</span>
+                <span class="k">continue</span>
+            <span class="n">child</span><span class="p">,</span> <span class="o">*</span><span class="n">rest</span> <span class="o">=</span> <span class="n">path</span>
+            <span class="c1"># `child` may exist as the head of more than one path in `paths`.</span>
+            <span class="n">children</span><span class="p">[</span><span class="n">child</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">rest</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">children</span>
+
+    <span class="c1"># Initialize the prefix tree with a root node and a nil node.</span>
+    <span class="n">tree</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">DiGraph</span><span class="p">()</span>
+    <span class="n">root</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">tree</span><span class="o">.</span><span class="n">add_node</span><span class="p">(</span><span class="n">root</span><span class="p">,</span> <span class="n">source</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+    <span class="n">NIL</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span>
+    <span class="n">tree</span><span class="o">.</span><span class="n">add_node</span><span class="p">(</span><span class="n">NIL</span><span class="p">,</span> <span class="n">source</span><span class="o">=</span><span class="s2">&quot;NIL&quot;</span><span class="p">)</span>
+    <span class="n">children</span> <span class="o">=</span> <span class="n">get_children</span><span class="p">(</span><span class="n">root</span><span class="p">,</span> <span class="n">paths</span><span class="p">)</span>
+    <span class="n">stack</span> <span class="o">=</span> <span class="p">[(</span><span class="n">root</span><span class="p">,</span> <span class="nb">iter</span><span class="p">(</span><span class="n">children</span><span class="o">.</span><span class="n">items</span><span class="p">()))]</span>
+    <span class="k">while</span> <span class="n">stack</span><span class="p">:</span>
+        <span class="n">parent</span><span class="p">,</span> <span class="n">remaining_children</span> <span class="o">=</span> <span class="n">stack</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">child</span><span class="p">,</span> <span class="n">remaining_paths</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span><span class="n">remaining_children</span><span class="p">)</span>
+        <span class="c1"># Pop item off stack if there are no remaining children</span>
+        <span class="k">except</span> <span class="ne">StopIteration</span><span class="p">:</span>
+            <span class="n">stack</span><span class="o">.</span><span class="n">pop</span><span class="p">()</span>
+            <span class="k">continue</span>
+        <span class="c1"># We relabel each child with an unused name.</span>
+        <span class="n">new_name</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">tree</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span>
+        <span class="c1"># The &quot;source&quot; node attribute stores the original node name.</span>
+        <span class="n">tree</span><span class="o">.</span><span class="n">add_node</span><span class="p">(</span><span class="n">new_name</span><span class="p">,</span> <span class="n">source</span><span class="o">=</span><span class="n">child</span><span class="p">)</span>
+        <span class="n">tree</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="n">parent</span><span class="p">,</span> <span class="n">new_name</span><span class="p">)</span>
+        <span class="n">children</span> <span class="o">=</span> <span class="n">get_children</span><span class="p">(</span><span class="n">new_name</span><span class="p">,</span> <span class="n">remaining_paths</span><span class="p">)</span>
+        <span class="n">stack</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">new_name</span><span class="p">,</span> <span class="nb">iter</span><span class="p">(</span><span class="n">children</span><span class="o">.</span><span class="n">items</span><span class="p">())))</span>
+
+    <span class="k">return</span> <span class="n">tree</span></div>
+
+
+<span class="k">def</span> <span class="nf">prefix_tree_recursive</span><span class="p">(</span><span class="n">paths</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Recursively creates a directed prefix tree from a list of paths.</span>
+
+<span class="sd">    The original recursive version of prefix_tree for comparison. It is</span>
+<span class="sd">    the same algorithm but the recursion is unrolled onto a stack.</span>
+
+<span class="sd">    Usually the paths are described as strings or lists of integers.</span>
+
+<span class="sd">    A &quot;prefix tree&quot; represents the prefix structure of the strings.</span>
+<span class="sd">    Each node represents a prefix of some string. The root represents</span>
+<span class="sd">    the empty prefix with children for the single letter prefixes which</span>
+<span class="sd">    in turn have children for each double letter prefix starting with</span>
+<span class="sd">    the single letter corresponding to the parent node, and so on.</span>
+
+<span class="sd">    More generally the prefixes do not need to be strings. A prefix refers</span>
+<span class="sd">    to the start of a sequence. The root has children for each one element</span>
+<span class="sd">    prefix and they have children for each two element prefix that starts</span>
+<span class="sd">    with the one element sequence of the parent, and so on.</span>
+
+<span class="sd">    Note that this implementation uses integer nodes with an attribute.</span>
+<span class="sd">    Each node has an attribute &quot;source&quot; whose value is the original element</span>
+<span class="sd">    of the path to which this node corresponds. For example, suppose `paths`</span>
+<span class="sd">    consists of one path: &quot;can&quot;. Then the nodes `[1, 2, 3]` which represent</span>
+<span class="sd">    this path have &quot;source&quot; values &quot;c&quot;, &quot;a&quot; and &quot;n&quot;.</span>
+
+<span class="sd">    All the descendants of a node have a common prefix in the sequence/path</span>
+<span class="sd">    associated with that node. From the returned tree, ehe prefix for each</span>
+<span class="sd">    node can be constructed by traversing the tree up to the root and</span>
+<span class="sd">    accumulating the &quot;source&quot; values along the way.</span>
+
+<span class="sd">    The root node is always `0` and has &quot;source&quot; attribute `None`.</span>
+<span class="sd">    The root is the only node with in-degree zero.</span>
+<span class="sd">    The nil node is always `-1` and has &quot;source&quot; attribute `&quot;NIL&quot;`.</span>
+<span class="sd">    The nil node is the only node with out-degree zero.</span>
+
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    paths: iterable of paths</span>
+<span class="sd">        An iterable of paths which are themselves sequences.</span>
+<span class="sd">        Matching prefixes among these sequences are identified with</span>
+<span class="sd">        nodes of the prefix tree. One leaf of the tree is associated</span>
+<span class="sd">        with each path. (Identical paths are associated with the same</span>
+<span class="sd">        leaf of the tree.)</span>
+
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    tree: DiGraph</span>
+<span class="sd">        A directed graph representing an arborescence consisting of the</span>
+<span class="sd">        prefix tree generated by `paths`. Nodes are directed &quot;downward&quot;,</span>
+<span class="sd">        from parent to child. A special &quot;synthetic&quot; root node is added</span>
+<span class="sd">        to be the parent of the first node in each path. A special</span>
+<span class="sd">        &quot;synthetic&quot; leaf node, the &quot;nil&quot; node `-1`, is added to be the child</span>
+<span class="sd">        of all nodes representing the last element in a path. (The</span>
+<span class="sd">        addition of this nil node technically makes this not an</span>
+<span class="sd">        arborescence but a directed acyclic graph; removing the nil node</span>
+<span class="sd">        makes it an arborescence.)</span>
+
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    The prefix tree is also known as a *trie*.</span>
+
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    Create a prefix tree from a list of strings with common prefixes::</span>
+
+<span class="sd">        &gt;&gt;&gt; paths = [&quot;ab&quot;, &quot;abs&quot;, &quot;ad&quot;]</span>
+<span class="sd">        &gt;&gt;&gt; T = nx.prefix_tree(paths)</span>
+<span class="sd">        &gt;&gt;&gt; list(T.edges)</span>
+<span class="sd">        [(0, 1), (1, 2), (1, 4), (2, -1), (2, 3), (3, -1), (4, -1)]</span>
+
+<span class="sd">    The leaf nodes can be obtained as predecessors of the nil node.</span>
+
+<span class="sd">        &gt;&gt;&gt; root, NIL = 0, -1</span>
+<span class="sd">        &gt;&gt;&gt; list(T.predecessors(NIL))</span>
+<span class="sd">        [2, 3, 4]</span>
+
+<span class="sd">    To recover the original paths that generated the prefix tree,</span>
+<span class="sd">    traverse up the tree from the node `-1` to the node `0`::</span>
+
+<span class="sd">        &gt;&gt;&gt; recovered = []</span>
+<span class="sd">        &gt;&gt;&gt; for v in T.predecessors(NIL):</span>
+<span class="sd">        ...     prefix = &quot;&quot;</span>
+<span class="sd">        ...     while v != root:</span>
+<span class="sd">        ...         prefix = str(T.nodes[v][&quot;source&quot;]) + prefix</span>
+<span class="sd">        ...         v = next(T.predecessors(v))  # only one predecessor</span>
+<span class="sd">        ...     recovered.append(prefix)</span>
+<span class="sd">        &gt;&gt;&gt; sorted(recovered)</span>
+<span class="sd">        [&#39;ab&#39;, &#39;abs&#39;, &#39;ad&#39;]</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">_helper</span><span class="p">(</span><span class="n">paths</span><span class="p">,</span> <span class="n">root</span><span class="p">,</span> <span class="n">tree</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Recursively create a trie from the given list of paths.</span>
 
 <span class="sd">        `paths` is a list of paths, each of which is itself a list of</span>
@@ -227,46 +367,40 @@
 
 <span class="sd">        `root` is the parent of the node at index 0 in each path.</span>
 
-<span class="sd">        `B` is the &quot;accumulator&quot;, the :class:`networkx.DiGraph`</span>
+<span class="sd">        `tree` is the &quot;accumulator&quot;, the :class:`networkx.DiGraph`</span>
 <span class="sd">        representing the branching to which the new nodes and edges will</span>
 <span class="sd">        be added.</span>
 
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="c1"># Create a mapping from each head node to the list of tail paths</span>
-        <span class="c1"># remaining beneath that node.</span>
+        <span class="c1"># For each path, remove the first node and make it a child of root.</span>
+        <span class="c1"># Any remaining paths then get processed recursively.</span>
         <span class="n">children</span> <span class="o">=</span> <span class="n">defaultdict</span><span class="p">(</span><span class="nb">list</span><span class="p">)</span>
         <span class="k">for</span> <span class="n">path</span> <span class="ow">in</span> <span class="n">paths</span><span class="p">:</span>
-            <span class="c1"># If the path is the empty list, that represents the empty</span>
-            <span class="c1"># string, so we add an edge to the NIL node.</span>
+            <span class="c1"># If path is empty, we add an edge to the NIL node.</span>
             <span class="k">if</span> <span class="ow">not</span> <span class="n">path</span><span class="p">:</span>
-                <span class="n">B</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="n">root</span><span class="p">,</span> <span class="n">NIL</span><span class="p">)</span>
+                <span class="n">tree</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="n">root</span><span class="p">,</span> <span class="n">NIL</span><span class="p">)</span>
                 <span class="k">continue</span>
             <span class="n">child</span><span class="p">,</span> <span class="o">*</span><span class="n">rest</span> <span class="o">=</span> <span class="n">path</span>
             <span class="c1"># `child` may exist as the head of more than one path in `paths`.</span>
             <span class="n">children</span><span class="p">[</span><span class="n">child</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">rest</span><span class="p">)</span>
-        <span class="c1"># Add a node for each child found above and add edges from the</span>
-        <span class="c1"># root to each child. In this loop, `head` is the child and</span>
-        <span class="c1"># `tails` is the list of remaining paths under that child.</span>
-        <span class="k">for</span> <span class="n">head</span><span class="p">,</span> <span class="n">tails</span> <span class="ow">in</span> <span class="n">children</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
-            <span class="c1"># We need to relabel each child with a unique name. To do</span>
-            <span class="c1"># this we simply change each key in the dictionary to be a</span>
-            <span class="c1"># (key, uuid) pair.</span>
-            <span class="n">new_head</span> <span class="o">=</span> <span class="n">generate_unique_node</span><span class="p">()</span>
-            <span class="c1"># Ensure the new child knows the name of the old child so</span>
-            <span class="c1"># that the user can recover the mapping to the original</span>
-            <span class="c1"># nodes.</span>
-            <span class="n">B</span><span class="o">.</span><span class="n">add_node</span><span class="p">(</span><span class="n">new_head</span><span class="p">,</span> <span class="n">source</span><span class="o">=</span><span class="n">head</span><span class="p">)</span>
-            <span class="n">B</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="n">root</span><span class="p">,</span> <span class="n">new_head</span><span class="p">)</span>
-            <span class="n">_helper</span><span class="p">(</span><span class="n">tails</span><span class="p">,</span> <span class="n">new_head</span><span class="p">,</span> <span class="n">B</span><span class="p">)</span>
+        <span class="c1"># Add a node for each child, connect root, recurse to remaining paths</span>
+        <span class="k">for</span> <span class="n">child</span><span class="p">,</span> <span class="n">remaining_paths</span> <span class="ow">in</span> <span class="n">children</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="c1"># We relabel each child with an unused name.</span>
+            <span class="n">new_name</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">tree</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span>
+            <span class="c1"># The &quot;source&quot; node attribute stores the original node name.</span>
+            <span class="n">tree</span><span class="o">.</span><span class="n">add_node</span><span class="p">(</span><span class="n">new_name</span><span class="p">,</span> <span class="n">source</span><span class="o">=</span><span class="n">child</span><span class="p">)</span>
+            <span class="n">tree</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="n">root</span><span class="p">,</span> <span class="n">new_name</span><span class="p">)</span>
+            <span class="n">_helper</span><span class="p">(</span><span class="n">remaining_paths</span><span class="p">,</span> <span class="n">new_name</span><span class="p">,</span> <span class="n">tree</span><span class="p">)</span>
 
     <span class="c1"># Initialize the prefix tree with a root node and a nil node.</span>
-    <span class="n">T</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">DiGraph</span><span class="p">()</span>
-    <span class="n">root</span> <span class="o">=</span> <span class="n">generate_unique_node</span><span class="p">()</span>
-    <span class="n">T</span><span class="o">.</span><span class="n">add_node</span><span class="p">(</span><span class="n">root</span><span class="p">,</span> <span class="n">source</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
-    <span class="n">T</span><span class="o">.</span><span class="n">add_node</span><span class="p">(</span><span class="n">NIL</span><span class="p">,</span> <span class="n">source</span><span class="o">=</span><span class="n">NIL</span><span class="p">)</span>
+    <span class="n">tree</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">DiGraph</span><span class="p">()</span>
+    <span class="n">root</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">tree</span><span class="o">.</span><span class="n">add_node</span><span class="p">(</span><span class="n">root</span><span class="p">,</span> <span class="n">source</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+    <span class="n">NIL</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span>
+    <span class="n">tree</span><span class="o">.</span><span class="n">add_node</span><span class="p">(</span><span class="n">NIL</span><span class="p">,</span> <span class="n">source</span><span class="o">=</span><span class="s2">&quot;NIL&quot;</span><span class="p">)</span>
     <span class="c1"># Populate the tree.</span>
-    <span class="n">_helper</span><span class="p">(</span><span class="n">paths</span><span class="p">,</span> <span class="n">root</span><span class="p">,</span> <span class="n">T</span><span class="p">)</span>
-    <span class="k">return</span> <span class="n">T</span><span class="p">,</span> <span class="n">root</span></div>
+    <span class="n">_helper</span><span class="p">(</span><span class="n">paths</span><span class="p">,</span> <span class="n">root</span><span class="p">,</span> <span class="n">tree</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">tree</span>
 
 
 <span class="c1"># From the Wikipedia article on Prüfer sequences:</span>
@@ -276,7 +410,7 @@
 <span class="c1"># &gt; method of generating uniformly distributed random labelled trees.</span>
 <span class="c1">#</span>
 <div class="viewcode-block" id="random_tree"><a class="viewcode-back" href="../../../reference/networkx/generated/graphscope.nx.generators.trees.random_tree.html#graphscope.nx.generators.trees.random_tree">[docs]</a><span class="nd">@py_random_state</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
-<span class="k">def</span> <span class="nf">random_tree</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="k">def</span> <span class="nf">random_tree</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">create_using</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Returns a uniformly random tree on `n` nodes.</span>
 
 <span class="sd">    Parameters</span>
@@ -286,6 +420,8 @@
 <span class="sd">    seed : integer, random_state, or None (default)</span>
 <span class="sd">        Indicator of random number generation state.</span>
 <span class="sd">        See :ref:`Randomness&lt;randomness&gt;`.</span>
+<span class="sd">    create_using : NetworkX graph constructor, optional (default=nx.Graph)</span>
+<span class="sd">        Graph type to create. If graph instance, then cleared before populated.</span>
 
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
@@ -307,14 +443,58 @@
 <span class="sd">    *n* nodes, the tree is chosen uniformly at random from the set of</span>
 <span class="sd">    all trees on *n* nodes.</span>
 
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    &gt;&gt;&gt; tree = nx.random_tree(n=10, seed=0)</span>
+<span class="sd">    &gt;&gt;&gt; print(nx.forest_str(tree, sources=[0]))</span>
+<span class="sd">    ╙── 0</span>
+<span class="sd">        ├── 3</span>
+<span class="sd">        └── 4</span>
+<span class="sd">            ├── 6</span>
+<span class="sd">            │   ├── 1</span>
+<span class="sd">            │   ├── 2</span>
+<span class="sd">            │   └── 7</span>
+<span class="sd">            │       └── 8</span>
+<span class="sd">            │           └── 5</span>
+<span class="sd">            └── 9</span>
+
+<span class="sd">    &gt;&gt;&gt; tree = nx.random_tree(n=10, seed=0, create_using=nx.DiGraph)</span>
+<span class="sd">    &gt;&gt;&gt; print(nx.forest_str(tree))</span>
+<span class="sd">    ╙── 0</span>
+<span class="sd">        ├─╼ 3</span>
+<span class="sd">        └─╼ 4</span>
+<span class="sd">            ├─╼ 6</span>
+<span class="sd">            │   ├─╼ 1</span>
+<span class="sd">            │   ├─╼ 2</span>
+<span class="sd">            │   └─╼ 7</span>
+<span class="sd">            │       └─╼ 8</span>
+<span class="sd">            │           └─╼ 5</span>
+<span class="sd">            └─╼ 9</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">if</span> <span class="n">n</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
         <span class="k">raise</span> <span class="n">nx</span><span class="o">.</span><span class="n">NetworkXPointlessConcept</span><span class="p">(</span><span class="s2">&quot;the null graph is not a tree&quot;</span><span class="p">)</span>
     <span class="c1"># Cannot create a Prüfer sequence unless `n` is at least two.</span>
     <span class="k">if</span> <span class="n">n</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
-        <span class="k">return</span> <span class="n">nx</span><span class="o">.</span><span class="n">empty_graph</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
-    <span class="n">sequence</span> <span class="o">=</span> <span class="p">[</span><span class="n">seed</span><span class="o">.</span><span class="n">choice</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="n">n</span><span class="p">))</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n</span> <span class="o">-</span> <span class="mi">2</span><span class="p">)]</span>
-    <span class="k">return</span> <span class="n">nx</span><span class="o">.</span><span class="n">from_prufer_sequence</span><span class="p">(</span><span class="n">sequence</span><span class="p">)</span></div>
+        <span class="n">utree</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">empty_graph</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">create_using</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">sequence</span> <span class="o">=</span> <span class="p">[</span><span class="n">seed</span><span class="o">.</span><span class="n">choice</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="n">n</span><span class="p">))</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n</span> <span class="o">-</span> <span class="mi">2</span><span class="p">)]</span>
+        <span class="n">utree</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">from_prufer_sequence</span><span class="p">(</span><span class="n">sequence</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">create_using</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">tree</span> <span class="o">=</span> <span class="n">utree</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">tree</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">empty_graph</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">create_using</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">tree</span><span class="o">.</span><span class="n">is_directed</span><span class="p">():</span>
+            <span class="c1"># Use a arbitrary root node and dfs to define edge directions</span>
+            <span class="n">edges</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">dfs_edges</span><span class="p">(</span><span class="n">utree</span><span class="p">,</span> <span class="n">source</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">edges</span> <span class="o">=</span> <span class="n">utree</span><span class="o">.</span><span class="n">edges</span>
+
+        <span class="c1"># Populate the specified graph type</span>
+        <span class="n">tree</span><span class="o">.</span><span class="n">add_nodes_from</span><span class="p">(</span><span class="n">utree</span><span class="o">.</span><span class="n">nodes</span><span class="p">)</span>
+        <span class="n">tree</span><span class="o">.</span><span class="n">add_edges_from</span><span class="p">(</span><span class="n">edges</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">tree</span></div>
 </pre></div>
 
            </div>
@@ -324,7 +504,7 @@
   <hr/>
 
   <div role="contentinfo">
-    <p>&#169; Copyright 2020-2023, Damo Academy, Alibaba Inc..</p>
+    <p>&#169; Copyright 2020-2023, DAMO Academy, Alibaba Inc..</p>
   </div>
 
   Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a

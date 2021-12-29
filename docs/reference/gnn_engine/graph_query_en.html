@@ -112,7 +112,7 @@
       <li><a href="../../index.html" class="icon icon-home"></a> &raquo;</li>
       <li>Graph Query</li>
       <li class="wy-breadcrumbs-aside">
-            <a href="../../_sources/reference/gnn_engine/graph_query_en.rst.txt" rel="nofollow"> View page source</a>
+              <a href="https://github.com/alibaba/graphscope/edit/main/docs/reference/gnn_engine/graph_query_en.rst" class="fa fa-github"> Edit on GitHub</a>
       </li>
   </ul>
   <hr/>
@@ -185,7 +185,7 @@ interface of <code class="docutils literal notranslate"><span class="pre">Nodes<
 
 <span class="nd">@property</span>
 <span class="k">def</span> <span class="nf">labels</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-<span class="sd">&quot;&quot;&quot; lable，numpy.ndarray(int32)，shape is ids.shape &quot;&quot;&quot;</span>
+<span class="sd">&quot;&quot;&quot; label，numpy.ndarray(int32)，shape is ids.shape &quot;&quot;&quot;</span>
 </pre></div>
 </div>
 <p>Compared to the <code class="docutils literal notranslate"><span class="pre">Nodes</span></code> interface, <code class="docutils literal notranslate"><span class="pre">Edges</span></code> does not have <code class="docutils literal notranslate"><span class="pre">ids</span></code>
@@ -254,8 +254,8 @@ interfaces as follows.</p>
 </div>
 <p>## 2.1 Vertices Query We can get Nodes by traversing the graph, sampling
 or specifying the node id. Once we get the nodes, we can query their
-attributes, weights or lables. Query vertices with specified ids:
-<code class="docutils literal notranslate"><span class="pre">python</span> <span class="pre">def</span> <span class="pre">get_nodes(node_type,</span> <span class="pre">ids)</span> <span class="pre">'''</span> <span class="pre">get</span> <span class="pre">the</span> <span class="pre">weights,</span> <span class="pre">lables</span> <span class="pre">and</span> <span class="pre">attributes</span> <span class="pre">by</span> <span class="pre">node</span> <span class="pre">type</span> <span class="pre">Args:</span>&#160;&#160; <span class="pre">node_type(string):</span> <span class="pre">vertex</span> <span class="pre">type</span>&#160;&#160; <span class="pre">ids(numpy.array):</span> <span class="pre">vertex</span> <span class="pre">id</span> <span class="pre">Return:</span>&#160;&#160; <span class="pre">Nodes</span> <span class="pre">object</span> <span class="pre">'''</span></code></p>
+attributes, weights or labels. Query vertices with specified ids:
+<code class="docutils literal notranslate"><span class="pre">python</span> <span class="pre">def</span> <span class="pre">get_nodes(node_type,</span> <span class="pre">ids)</span> <span class="pre">'''</span> <span class="pre">get</span> <span class="pre">the</span> <span class="pre">weights,</span> <span class="pre">labels</span> <span class="pre">and</span> <span class="pre">attributes</span> <span class="pre">by</span> <span class="pre">node</span> <span class="pre">type</span> <span class="pre">Args:</span>&#160;&#160; <span class="pre">node_type(string):</span> <span class="pre">vertex</span> <span class="pre">type</span>&#160;&#160; <span class="pre">ids(numpy.array):</span> <span class="pre">vertex</span> <span class="pre">id</span> <span class="pre">Return:</span>&#160;&#160; <span class="pre">Nodes</span> <span class="pre">object</span> <span class="pre">'''</span></code></p>
 <p>We use the following example to show the interface and usage
 <code class="docutils literal notranslate"><span class="pre">get_nodes()</span></code>.</p>
 <p>Table1: user vertices</p>
@@ -506,7 +506,7 @@ sampling, we illustrate the interfaces and the usage of sparse objects.</p>
   <hr/>
 
   <div role="contentinfo">
-    <p>&#169; Copyright 2020-2023, Damo Academy, Alibaba Inc..</p>
+    <p>&#169; Copyright 2020-2023, DAMO Academy, Alibaba Inc..</p>
   </div>
 
   Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a

@@ -127,34 +127,6 @@
 <span class="kn">import</span> <span class="nn">networkx</span> <span class="k">as</span> <span class="nn">nx</span>
 <span class="kn">from</span> <span class="nn">networkx.utils</span> <span class="kn">import</span> <span class="n">py_random_state</span>
 
-<span class="c1"># Accommodates for both SciPy and non-SciPy implementations..</span>
-<span class="k">try</span><span class="p">:</span>
-    <span class="kn">from</span> <span class="nn">scipy.special</span> <span class="kn">import</span> <span class="n">zeta</span> <span class="k">as</span> <span class="n">_zeta</span>
-
-    <span class="k">def</span> <span class="nf">zeta</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">q</span><span class="p">,</span> <span class="n">tolerance</span><span class="p">):</span>
-        <span class="k">return</span> <span class="n">_zeta</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">q</span><span class="p">)</span>
-
-
-<span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
-
-    <span class="k">def</span> <span class="nf">zeta</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">q</span><span class="p">,</span> <span class="n">tolerance</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;The Hurwitz zeta function, or the Riemann zeta function of two</span>
-<span class="sd">        arguments.</span>
-
-<span class="sd">        ``x`` must be greater than one and ``q`` must be positive.</span>
-
-<span class="sd">        This function repeatedly computes subsequent partial sums until</span>
-<span class="sd">        convergence, as decided by ``tolerance``.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">z</span> <span class="o">=</span> <span class="mi">0</span>
-        <span class="n">z_prev</span> <span class="o">=</span> <span class="o">-</span><span class="nb">float</span><span class="p">(</span><span class="s2">&quot;inf&quot;</span><span class="p">)</span>
-        <span class="n">k</span> <span class="o">=</span> <span class="mi">0</span>
-        <span class="k">while</span> <span class="nb">abs</span><span class="p">(</span><span class="n">z</span> <span class="o">-</span> <span class="n">z_prev</span><span class="p">)</span> <span class="o">&gt;</span> <span class="n">tolerance</span><span class="p">:</span>
-            <span class="n">z_prev</span> <span class="o">=</span> <span class="n">z</span>
-            <span class="n">z</span> <span class="o">+=</span> <span class="mi">1</span> <span class="o">/</span> <span class="p">((</span><span class="n">k</span> <span class="o">+</span> <span class="n">q</span><span class="p">)</span> <span class="o">**</span> <span class="n">x</span><span class="p">)</span>
-            <span class="n">k</span> <span class="o">+=</span> <span class="mi">1</span>
-        <span class="k">return</span> <span class="n">z</span>
-
 
 <span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span>
     <span class="s2">&quot;caveman_graph&quot;</span><span class="p">,</span>
@@ -848,9 +820,34 @@
     <span class="k">raise</span> <span class="n">nx</span><span class="o">.</span><span class="n">ExceededMaxIterations</span><span class="p">(</span><span class="s2">&quot;Could not create power law sequence&quot;</span><span class="p">)</span>
 
 
-<span class="c1"># TODO Needs documentation.</span>
+<span class="k">def</span> <span class="nf">_hurwitz_zeta</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">q</span><span class="p">,</span> <span class="n">tolerance</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;The Hurwitz zeta function, or the Riemann zeta function of two arguments.</span>
+
+<span class="sd">    ``x`` must be greater than one and ``q`` must be positive.</span>
+
+<span class="sd">    This function repeatedly computes subsequent partial sums until</span>
+<span class="sd">    convergence, as decided by ``tolerance``.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">z</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">z_prev</span> <span class="o">=</span> <span class="o">-</span><span class="nb">float</span><span class="p">(</span><span class="s2">&quot;inf&quot;</span><span class="p">)</span>
+    <span class="n">k</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="k">while</span> <span class="nb">abs</span><span class="p">(</span><span class="n">z</span> <span class="o">-</span> <span class="n">z_prev</span><span class="p">)</span> <span class="o">&gt;</span> <span class="n">tolerance</span><span class="p">:</span>
+        <span class="n">z_prev</span> <span class="o">=</span> <span class="n">z</span>
+        <span class="n">z</span> <span class="o">+=</span> <span class="mi">1</span> <span class="o">/</span> <span class="p">((</span><span class="n">k</span> <span class="o">+</span> <span class="n">q</span><span class="p">)</span> <span class="o">**</span> <span class="n">x</span><span class="p">)</span>
+        <span class="n">k</span> <span class="o">+=</span> <span class="mi">1</span>
+    <span class="k">return</span> <span class="n">z</span>
+
+
 <span class="k">def</span> <span class="nf">_generate_min_degree</span><span class="p">(</span><span class="n">gamma</span><span class="p">,</span> <span class="n">average_degree</span><span class="p">,</span> <span class="n">max_degree</span><span class="p">,</span> <span class="n">tolerance</span><span class="p">,</span> <span class="n">max_iters</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Returns a minimum degree from the given average degree.&quot;&quot;&quot;</span>
+    <span class="c1"># Defines zeta function whether or not Scipy is available</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="kn">from</span> <span class="nn">scipy.special</span> <span class="kn">import</span> <span class="n">zeta</span>
+    <span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
+
+        <span class="k">def</span> <span class="nf">zeta</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">q</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">_hurwitz_zeta</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">q</span><span class="p">,</span> <span class="n">tolerance</span><span class="p">)</span>
+
     <span class="n">min_deg_top</span> <span class="o">=</span> <span class="n">max_degree</span>
     <span class="n">min_deg_bot</span> <span class="o">=</span> <span class="mi">1</span>
     <span class="n">min_deg_mid</span> <span class="o">=</span> <span class="p">(</span><span class="n">min_deg_top</span> <span class="o">-</span> <span class="n">min_deg_bot</span><span class="p">)</span> <span class="o">/</span> <span class="mi">2</span> <span class="o">+</span> <span class="n">min_deg_bot</span>
@@ -861,7 +858,7 @@
             <span class="k">raise</span> <span class="n">nx</span><span class="o">.</span><span class="n">ExceededMaxIterations</span><span class="p">(</span><span class="s2">&quot;Could not match average_degree&quot;</span><span class="p">)</span>
         <span class="n">mid_avg_deg</span> <span class="o">=</span> <span class="mi">0</span>
         <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">min_deg_mid</span><span class="p">),</span> <span class="n">max_degree</span> <span class="o">+</span> <span class="mi">1</span><span class="p">):</span>
-            <span class="n">mid_avg_deg</span> <span class="o">+=</span> <span class="p">(</span><span class="n">x</span> <span class="o">**</span> <span class="p">(</span><span class="o">-</span><span class="n">gamma</span> <span class="o">+</span> <span class="mi">1</span><span class="p">))</span> <span class="o">/</span> <span class="n">zeta</span><span class="p">(</span><span class="n">gamma</span><span class="p">,</span> <span class="n">min_deg_mid</span><span class="p">,</span> <span class="n">tolerance</span><span class="p">)</span>
+            <span class="n">mid_avg_deg</span> <span class="o">+=</span> <span class="p">(</span><span class="n">x</span> <span class="o">**</span> <span class="p">(</span><span class="o">-</span><span class="n">gamma</span> <span class="o">+</span> <span class="mi">1</span><span class="p">))</span> <span class="o">/</span> <span class="n">zeta</span><span class="p">(</span><span class="n">gamma</span><span class="p">,</span> <span class="n">min_deg_mid</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">mid_avg_deg</span> <span class="o">&gt;</span> <span class="n">average_degree</span><span class="p">:</span>
             <span class="n">min_deg_top</span> <span class="o">=</span> <span class="n">min_deg_mid</span>
             <span class="n">min_deg_mid</span> <span class="o">=</span> <span class="p">(</span><span class="n">min_deg_top</span> <span class="o">-</span> <span class="n">min_deg_bot</span><span class="p">)</span> <span class="o">/</span> <span class="mi">2</span> <span class="o">+</span> <span class="n">min_deg_bot</span>
@@ -985,7 +982,7 @@
 <span class="sd">        created graph. This value must be strictly greater than one.</span>
 
 <span class="sd">    mu : float</span>
-<span class="sd">        Fraction of intra-community edges incident to each node. This</span>
+<span class="sd">        Fraction of inter-community edges incident to each node. This</span>
 <span class="sd">        value must be in the interval [0, 1].</span>
 
 <span class="sd">    average_degree : float</span>
@@ -1104,7 +1101,7 @@
 <span class="sd">    .. [1] &quot;Benchmark graphs for testing community detection algorithms&quot;,</span>
 <span class="sd">           Andrea Lancichinetti, Santo Fortunato, and Filippo Radicchi,</span>
 <span class="sd">           Phys. Rev. E 78, 046110 2008</span>
-<span class="sd">    .. [2] http://santo.fortunato.googlepages.com/inthepress2</span>
+<span class="sd">    .. [2] https://www.santofortunato.net/resources</span>
 
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="c1"># Perform some basic parameter validation.</span>
@@ -1194,7 +1191,7 @@
   <hr/>
 
   <div role="contentinfo">
-    <p>&#169; Copyright 2020-2023, Damo Academy, Alibaba Inc..</p>
+    <p>&#169; Copyright 2020-2023, DAMO Academy, Alibaba Inc..</p>
   </div>
 
   Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a

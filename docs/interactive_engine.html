@@ -133,7 +133,7 @@
       <li><a href="index.html" class="icon icon-home"></a> &raquo;</li>
       <li>GraphScope Interactive Engine</li>
       <li class="wy-breadcrumbs-aside">
-            <a href="_sources/interactive_engine.rst.txt" rel="nofollow"> View page source</a>
+              <a href="https://github.com/alibaba/graphscope/edit/main/docs/interactive_engine.rst" class="fa fa-github"> Edit on GitHub</a>
       </li>
   </ul>
   <hr/>
@@ -250,7 +250,7 @@
 <p>GIE supports the property graph model and Gremlin traversal language defined by Apache TinkerPop, and provides a Gremlin <em>Websockets</em> server that supports TinkerPop version 3.3 and 3.4.  In this section, we provide an overview of the key differences between our implementation of Gremlin and the Apache TinkerPop specification.</p>
 <div class="section" id="property-graph-constraints">
 <h3>Property graph constraints<a class="headerlink" href="#property-graph-constraints" title="Permalink to this headline"></a></h3>
-<p>The current release (MaxGraph) leverages <a class="reference external" href="https://github.com/alibaba/libvineyard">Vineyard</a> to supply an in-memory store for <em>immutable</em> graph data that can be partitioned across multiple servers.  By design, it introduces the following constraints:</p>
+<p>The current release (MaxGraph) leverages <a class="reference external" href="https://github.com/v6d-io/v6d">Vineyard</a> to supply an in-memory store for <em>immutable</em> graph data that can be partitioned across multiple servers.  By design, it introduces the following constraints:</p>
 <ul class="simple">
 <li><p>Each graph has a schema comprised of the edge labels, property keys, and vertex labels used therein.</p></li>
 <li><p>Each vertex type or label has a primary key (property) defined by user.  The system will automatically generate a <code class="docutils literal notranslate"><span class="pre">String</span></code>-typed unique identifier for each vertex and edge, encoding both the label information as well as user-defined primary keys (for vertex).</p></li>
@@ -468,7 +468,7 @@ g.V().group().by().by(values(&quot;name&quot;)).select(values).unfold()
   <hr/>
 
   <div role="contentinfo">
-    <p>&#169; Copyright 2020-2023, Damo Academy, Alibaba Inc..</p>
+    <p>&#169; Copyright 2020-2023, DAMO Academy, Alibaba Inc..</p>
   </div>
 
   Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a

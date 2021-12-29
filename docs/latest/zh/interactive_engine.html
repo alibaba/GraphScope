@@ -132,7 +132,7 @@
           <li><a href="index.html">GraphScope: 一站式图计算系统</a> &raquo;</li>
       <li>图交互式分析引擎</li>
       <li class="wy-breadcrumbs-aside">
-            <a href="../_sources/zh/interactive_engine.rst.txt" rel="nofollow"> View page source</a>
+              <a href="https://github.com/alibaba/graphscope/edit/main/docs/zh/interactive_engine.rst" class="fa fa-github"> Edit on GitHub</a>
       </li>
   </ul>
   <hr/>
@@ -249,7 +249,7 @@
 <p>GIE支持Apache TinkerPop定义的属性图模型和Gremlin遍历查询，且实现了一个与TinkerPop 3.3和3.4版本兼容的 <em>Websockets</em> 服务接口。下面我们列出当前实现和Apache TinkerPop规范的主要差一点（其中一些差异会有机会消除、另一些是目前GraphScope定位的场景差异造成的不同设计选择）。</p>
 <div class="section" id="id11">
 <h3>属性图模型约束<a class="headerlink" href="#id11" title="Permalink to this headline"></a></h3>
-<p>目前的MaxGraph技术预览版利用了 <a class="reference external" href="https://github.com/alibaba/libvineyard">Vineyard</a> 项目提供的分布式内存存储作为输入图，它支持一次载入 <em>不可修改</em> 的图模型数据，和图分片存储在分布式集群。当前设计有下面的一些限制：</p>
+<p>目前的MaxGraph技术预览版利用了 <a class="reference external" href="https://github.com/v6d-io/v6d">Vineyard</a> 项目提供的分布式内存存储作为输入图，它支持一次载入 <em>不可修改</em> 的图模型数据，和图分片存储在分布式集群。当前设计有下面的一些限制：</p>
 <ul class="simple">
 <li><p>Schema（模式）约束：每个图的数据需要满足事先定义的Schema，包括点、边的类型名称（label）和属性名及值类型。</p></li>
 <li><p>主键约束：每个顶点类型需要包含一个用户可自定义的主键（属性），同时系统会为每个点和边对象，自动分配产生一个字符串类型的唯一标识（ID）。对于点来说，ID编码了类型（label）和用户自定义主键信息。</p></li>
@@ -467,7 +467,7 @@ g.V().group().by().by(values(&quot;name&quot;)).select(values).unfold()
   <hr/>
 
   <div role="contentinfo">
-    <p>&#169; Copyright 2020-2023, Damo Academy, Alibaba Inc..</p>
+    <p>&#169; Copyright 2020-2023, DAMO Academy, Alibaba Inc..</p>
   </div>
 
   Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
