@@ -178,6 +178,7 @@ class BaseContextDAGNode(DAGNode):
         )
         for _, value in selector.items():
             self._check_selector(value)
+        _ensure_consistent_label(self.context_type, selector)
         selector = json.dumps(selector)
         vertex_range = utils.transform_vertex_range(vertex_range)
         op = dag_utils.context_to_dataframe(self, selector, vertex_range)
@@ -219,6 +220,7 @@ class BaseContextDAGNode(DAGNode):
             )
             for _, value in selector.items():
                 self._check_selector(value)
+            _ensure_consistent_label(self.context_type, selector)
             selector = json.dumps(selector)
         vertex_range = utils.transform_vertex_range(vertex_range)
         op = dag_utils.to_vineyard_dataframe(self, selector, vertex_range)
@@ -763,3 +765,23 @@ def _get_property_e_context_schema(schema):
             if prop.name not in ("src", "dst"):
                 ret.append([label, prop.name])
     return ret
+
+
+def _ensure_consistent_label(context_type, selector):
+    """Ensure the labels in all selectors are same label.
+    Note this method assumes that the selector is valid.
+    """
+    if context_type in ("vertex_data", "vertex_property"):
+        return True
+    if context_type in ("labeled_vertex_data", "labeled_vertex_property"):
+        label_set = set()
+        for _, value in selector.items():
+            # The format is x:y or x:y.z
+            label = value.split(":")[1].split(".")[0]
+            if label_set and label not in label_set:
+                raise SyntaxError(
+                    f"Found different labels: {label_set.pop()} and {label}."
+                )
+            else:
+                label_set.add(label)
+    return True
