@@ -5,7 +5,7 @@ use std::ops::{Deref, DerefMut};
 
 use crossbeam_utils::sync::ShardedLock;
 
-use crate::JobConf;
+use crate::{JobConf, ServerConf};
 
 pub type ResourceMap = HashMap<TypeId, Box<dyn Any + Send>>;
 pub type KeyedResources = HashMap<String, Box<dyn Any + Send>>;
@@ -13,7 +13,8 @@ pub type SharedResourceMap = HashMap<TypeId, Box<dyn Any + Send + Sync>>;
 pub type SharedKeyedResourceMap = HashMap<String, Box<dyn Any + Send + Sync>>;
 
 lazy_static! {
-    pub static ref GLOBAL_RESOURCE_MAP: ShardedLock<SharedResourceMap> = ShardedLock::new(Default::default());
+    pub static ref GLOBAL_RESOURCE_MAP: ShardedLock<SharedResourceMap> =
+        ShardedLock::new(Default::default());
     pub static ref GLOBAL_KEYED_RESOURCES: ShardedLock<SharedKeyedResourceMap> =
         ShardedLock::new(Default::default());
 }
@@ -141,7 +142,7 @@ pub fn add_global_resource<T: Any + Send + Sync>(key: String, res: T) {
 }
 
 pub trait PartitionedResource {
-    type Res: Send  + 'static;
+    type Res: Send + 'static;
 
     fn get_resource(&self, par: usize) -> Option<&Self::Res>;
 
@@ -193,6 +194,67 @@ impl<T: Send + Sync + 'static> PartitionedResource for DefaultParResource<T> {
     fn take_resource(&mut self, par: usize) -> Option<Self::Res> {
         if par < self.partitions.len() {
             self.partitions[par].take()
+        } else {
+            None
+        }
+    }
+}
+
+pub struct DistributedParResource<T> {
+    partitions: Vec<Option<T>>,
+    start_index: usize,
+}
+
+impl<T> DistributedParResource<T> {
+    pub fn new(conf: &JobConf, res: Vec<T>) -> Result<Self, Vec<T>> {
+        if res.len() as u32 != conf.workers {
+            Err(res)
+        } else {
+            let mut partitions = Vec::with_capacity(res.len());
+            for r in res {
+                partitions.push(Some(r));
+            }
+            let server_conf = conf.servers();
+            let servers = match server_conf {
+                ServerConf::Local => vec![0],
+                ServerConf::Partial(ids) => ids.clone(),
+                ServerConf::All => crate::get_servers(),
+            };
+            let mut start_index = 0 as usize;
+            if !servers.is_empty() && (servers.len() > 1) {
+                if let Some(my_id) = crate::server_id() {
+                    let mut my_index = -1;
+                    for (index, id) in servers.iter().enumerate() {
+                        if *id == my_id {
+                            my_index = index as i64;
+                        }
+                    }
+                    println!("server id {}, get index {}", my_id, my_index);
+                    if my_index >= 0 {
+                        start_index = (conf.workers * (my_index as u32)) as usize;
+                    }
+                }
+            }
+            let pr = DistributedParResource { partitions, start_index };
+            Ok(pr)
+        }
+    }
+}
+
+impl<T: Send + Sync + 'static> PartitionedResource for DistributedParResource<T> {
+    type Res = T;
+
+    fn get_resource(&self, par: usize) -> Option<&Self::Res> {
+        if par < self.start_index + self.partitions.len() {
+            self.partitions[par - self.start_index].as_ref()
+        } else {
+            None
+        }
+    }
+
+    fn take_resource(&mut self, par: usize) -> Option<Self::Res> {
+        if par < self.start_index + self.partitions.len() {
+            self.partitions[par - self.start_index].take()
         } else {
             None
         }
