@@ -51,8 +51,36 @@ jobs:
       run: |
         wget https://github.com/google/google-java-format/releases/download/v1.13.0/google-java-format-1.13.0-all-deps.jar
         # Enable check for analytical engine after pr(https://github.com/alibaba/GraphScope/pulls) merged
-        # java -jar ${GITHUB_WORKSPACE}/google-java-format-1.13.0-all-deps.jar --aosp --skip-javadoc-formatting --set-exit-if-changed --dry-run $(git ls-files *.java)
-        java -jar ${GITHUB_WORKSPACE}/google-java-format-1.13.0-all-deps.jar --aosp --skip-javadoc-formatting --set-exit-if-changed --dry-run $(git ls-files research/*.java interactive_engine/*.java)
+
+        # files_to_format=$(git ls-files ./*.java)
+        files_to_format=$(git ls-files research/*.java interactive_engine/*.java)
+
+        # run formatter in-place
+        java -jar ${GITHUB_WORKSPACE}/google-java-format-1.13.0-all-deps.jar --aosp --skip-javadoc-formatting -i $files_to_format
+
+        # validate format
+        function prepend() { while read line; do echo "${1}${line}"; done; }
+
+        GIT_DIFF=$(git diff --ignore-submodules)
+        if [[ -n $GIT_DIFF ]]; then
+            echo "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
+            echo "| google-java-format failures found!"
+            echo "|"
+            echo "$GIT_DIFF" | prepend "| "
+            echo "|"
+            echo "| Run: "
+            echo "|"
+            echo '|    java -jar google-java-format-1.13.0-all-deps.jar --aosp --skip-javadoc-formatting -i $(git ls-files research/**/*.java interactive_engine/**/*.java)'
+            echo "|"
+            echo "| to fix this error."
+            echo "|"
+            echo "| Ensure you are working with google-java-format-1.13.0, which can be obtained from"
+            echo "|"
+            echo "|    https://github.com/google/google-java-format/releases/download/v1.13.0/google-java-format-1.13.0-all-deps.jar"
+            echo "|"
+            echo "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
+            exit -1
+        fi
 
     - name: Python Format and Lint Check
       run: |
