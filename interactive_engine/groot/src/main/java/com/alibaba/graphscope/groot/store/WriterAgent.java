@@ -320,7 +320,7 @@ public class WriterAgent implements MetricsAgent {
             STORE_BUFFER_BATCH_COUNT,
             STORE_QUEUE_BATCH_COUNT,
             POLL_LATENCY_MAX_MS,
-            POLL_LATENCY_MAX_MS,
+            POLL_LATENCY_AVG_MS,
             STORE_WRITE_PER_SECOND,
             STORE_WRITE_TOTAL
         };
