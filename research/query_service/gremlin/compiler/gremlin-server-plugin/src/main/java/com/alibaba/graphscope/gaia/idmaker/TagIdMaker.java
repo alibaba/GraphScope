@@ -63,7 +63,11 @@ public class TagIdMaker implements IdMaker<Integer, String> {
         List<Step> steps = admin.getSteps();
         for (int i = 0; i < steps.size(); ++i) {
             Step step = steps.get(i);
-            tags.addAll((Set) step.getLabels().stream().filter(k -> !isHiddenTag((String) k)).collect(Collectors.toSet()));
+            tags.addAll(
+                    (Set)
+                            step.getLabels().stream()
+                                    .filter(k -> !isHiddenTag((String) k))
+                                    .collect(Collectors.toSet()));
             if (step instanceof TraversalParent) {
                 Iterator var1 = ((TraversalParent) step).getLocalChildren().iterator();
                 while (var1.hasNext()) {

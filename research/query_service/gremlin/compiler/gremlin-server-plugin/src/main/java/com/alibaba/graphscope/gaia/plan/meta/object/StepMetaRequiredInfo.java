@@ -52,7 +52,8 @@ public class StepMetaRequiredInfo {
             return new Builder(false, Function.identity(), null);
         }
 
-        private Builder(boolean needPathHistory, Function traverserMapFunc, PropertyExtractor extractor) {
+        private Builder(
+                boolean needPathHistory, Function traverserMapFunc, PropertyExtractor extractor) {
             this.extractor = extractor;
             this.traverserMapFunc = traverserMapFunc;
             this.needPathHistory = needPathHistory;
@@ -63,7 +64,8 @@ public class StepMetaRequiredInfo {
             return this;
         }
 
-        public Builder setTraverserMapFunc(Function<StepTraverserElement, TraverserElement> traverserMapFunc) {
+        public Builder setTraverserMapFunc(
+                Function<StepTraverserElement, TraverserElement> traverserMapFunc) {
             this.traverserMapFunc = traverserMapFunc;
             return this;
         }

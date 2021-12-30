@@ -126,6 +126,16 @@ class TestDiGraph(BaseAttrDiGraphTester, TestGraph):
         with pytest.raises(nx.NetworkXError):
             R.remove_edge(1, 0)
 
+    # replace the nx
+    def test_to_undirected_as_view(self):
+        H = nx.path_graph(2, create_using=self.Graph)
+        H2 = H.to_undirected(as_view=True)
+        assert H is H2._graph
+        assert H2.has_edge(0, 1)
+        assert H2.has_edge(1, 0)
+        pytest.raises(nx.NetworkXError, H2.add_node, -1)
+        pytest.raises(nx.NetworkXError, H2.add_edge, 1, 2)
+
     # original test use function object as node, here we change to bool and int.
     def test_reverse_hashable(self):
         x = True

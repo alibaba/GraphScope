@@ -1,12 +1,12 @@
 /**
  * Copyright 2020 Alibaba Group Holding Limited.
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -15,17 +15,17 @@
  */
 package com.alibaba.maxgraph.compiler.operator;
 
+import static com.alibaba.maxgraph.sdkcommon.compiler.custom.program.Program.ratio;
+
+import static org.apache.tinkerpop.gremlin.process.traversal.P.gt;
+
 import org.apache.tinkerpop.gremlin.structure.T;
 import org.junit.Test;
 
 import java.io.IOException;
 
-import static com.alibaba.maxgraph.sdkcommon.compiler.custom.program.Program.ratio;
-import static org.apache.tinkerpop.gremlin.process.traversal.P.gt;
-
 public class OutInPathOperatorTest extends AbstractOperatorTest {
-    public OutInPathOperatorTest() throws IOException {
-    }
+    public OutInPathOperatorTest() throws IOException {}
 
     @Test
     public void testTree_V_out_in_out_case() {
@@ -39,7 +39,8 @@ public class OutInPathOperatorTest extends AbstractOperatorTest {
 
     @Test
     public void testTree_V_out_in_out_pathByIdName_case() {
-        executeTreeQuery(g.V().out().in("person_knows_person").out().path().by().by(T.id).by("firstname"));
+        executeTreeQuery(
+                g.V().out().in("person_knows_person").out().path().by().by(T.id).by("firstname"));
     }
 
     @Test

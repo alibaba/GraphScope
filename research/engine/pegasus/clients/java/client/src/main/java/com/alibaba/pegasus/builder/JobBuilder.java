@@ -1,12 +1,12 @@
 /**
  * Copyright 2020 Alibaba Group Holding Limited.
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -21,6 +21,7 @@ import com.alibaba.pegasus.service.protocol.PegasusClient.JobConfig;
 import com.alibaba.pegasus.service.protocol.PegasusClient.JobRequest;
 import com.alibaba.pegasus.service.protocol.PegasusClient.Sink;
 import com.google.protobuf.ByteString;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -186,22 +187,22 @@ public class JobBuilder extends AbstractBuilder {
     }
 
     public static void main(String[] args) {
-        JobConfig confPb = JobConfig.newBuilder().setJobId(1).setJobName("test").setWorkers(1).build();
+        JobConfig confPb =
+                JobConfig.newBuilder().setJobId(1).setJobName("test").setWorkers(1).build();
         ByteString opBody = ByteString.EMPTY; // should be converted from pb to bytes
         JobBuilder jobBuilder = new JobBuilder(confPb, opBody);
         // for nested task
         JobBuilder plan = new JobBuilder();
         // build JobReq
-        JobRequest jobReq = jobBuilder
-                .map(opBody)
-                .flatMap(opBody)
-                .repeat(3, plan
+        JobRequest jobReq =
+                jobBuilder
+                        .map(opBody)
                         .flatMap(opBody)
-                        .flatMap(opBody))
-                .count()
-                .unfold(opBody)
-                .count()
-                .build();
+                        .repeat(3, plan.flatMap(opBody).flatMap(opBody))
+                        .count()
+                        .unfold(opBody)
+                        .count()
+                        .build();
         logger.info("send job req: {}", jobReq.toString());
     }
 }

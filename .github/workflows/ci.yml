@@ -34,6 +34,7 @@ on:
       - '.github/workflows/gaia.yml'
       - '.github/workflows/gae.yml'
       - '.github/workflows/nightly.yml'
+      - '.github/workflows/release.yml'
       - '.github/workflows/networkx-forward-algo-nightly.yml'
       - '.github/workflows/build-graphscope-wheels-linux.yml'
       - '.github/workflows/build-graphscope-wheels-maos.yml'
@@ -41,6 +42,9 @@ on:
 concurrency:
   group: ${{ github.repository }}-${{ github.head_ref || github.sha }}-${{ github.workflow }}
   cancel-in-progress: true
+
+env:
+  GS_IMAGE: registry.cn-hongkong.aliyuncs.com/graphscope/graphscope
 
 jobs:
   # JOB to run change detection
@@ -135,6 +139,13 @@ jobs:
             exit -1
         fi
         python3 ./misc/cpplint.py --recursive ./apps ./benchmarks ./core ./frame ./test
+
+    - name: Java Format and Lint Check
+      run: |
+        wget https://github.com/google/google-java-format/releases/download/v1.13.0/google-java-format-1.13.0-all-deps.jar
+        # Enable check for analytical engine after pr(https://github.com/alibaba/GraphScope/pulls) merged
+        # java -jar ${GITHUB_WORKSPACE}/google-java-format-1.13.0-all-deps.jar --aosp --skip-javadoc-formatting --set-exit-if-changed --dry-run $(git ls-files *.java)
+        java -jar ${GITHUB_WORKSPACE}/google-java-format-1.13.0-all-deps.jar --aosp --skip-javadoc-formatting --set-exit-if-changed --dry-run $(git ls-files research/*.java interactive_engine/*.java)
 
     - name: Python Format and Lint Check
       run: |
@@ -271,14 +282,14 @@ jobs:
         # download dataset
         git clone -b master --single-branch --depth=1 https://github.com/7br/gstest.git ${GS_TEST_DIR}
 
-        python3 -m pytest -s -v --cov=graphscope --cov-config=.coveragerc \
+        python3 -m pytest -s -v --cov=graphscope --cov-config=python/.coveragerc \
                                 --cov-report=xml --cov-report=term --exitfirst \
                                 $(dirname $(python3 -c "import graphscope; print(graphscope.__file__)"))/tests/unittest
 
     - name: Upload Coverage
-      uses: codecov/codecov-action@v1.0.5
+      uses: codecov/codecov-action@v2
       with:
-        file: ./python/coverage.xml
+        file: ./coverage.xml
         fail_ci_if_error: true
 
   networkx-basic-test:
@@ -437,8 +448,10 @@ jobs:
 
     - name: Readwrite test
       if: steps.nx-filter.outputs.io == 'true'
+      env:
+        DEPLOYMENT: ${{ matrix.deployment }}
       run: |
-        python3 -m pytest --exitfirst -s -v \
+        python3 -m pytest --exitfirst -s -v -m "not slow" \
             $(dirname $(python3 -c "import graphscope; print(graphscope.__file__)"))/nx/readwrite/tests
 
   gie-test:
@@ -536,15 +549,18 @@ jobs:
           # build graphscope image
           cd ${GITHUB_WORKSPACE}
           make graphscope-image
-          sudo docker tag graphscope/graphscope:${SHORT_SHA} \
-              registry.cn-hongkong.aliyuncs.com/graphscope/graphscope:${SHORT_SHA}
+          sudo docker tag graphscope/graphscope:${SHORT_SHA} ${{ env.GS_IMAGE }}:${SHORT_SHA}
+
+          cd ${GITHUB_WORKSPACE}/python
+          pip3 install -r requirements.txt
+          pip3 install -r requirements-dev.txt
 
           # build python client proto
           cd ${GITHUB_WORKSPACE}/python
           python3 setup.py build_proto
 
           # install mars
-          python3 -m pip install git+https://github.com/mars-project/mars.git@d09e1e4c3e32ceb05f42d0b5b79775b1ebd299fb#egg=pymars
+          python3 -m pip install git+https://github.com/mars-project/mars.git@92d4959511ff9fa107b458239e7c1022baec3325#egg=pymars
 
           # install pytest
           python3 -m pip install pytest pytest-cov
@@ -558,7 +574,7 @@ jobs:
           git clone -b master --single-branch --depth=1 https://github.com/7br/gstest.git ${GS_TEST_DIR}
 
           # set GS_IMAGE
-          export GS_IMAGE=registry.cn-hongkong.aliyuncs.com/graphscope/graphscope:${SHORT_SHA}
+          export GS_IMAGE=${{ env.GS_IMAGE }}:${SHORT_SHA}
 
           cd ${GITHUB_WORKSPACE}/python
           python3 -m pytest --ignore=./graphscope/tests/kubernetes/test_store_service.py \
@@ -567,7 +583,7 @@ jobs:
                           ./graphscope/tests/kubernetes
 
       - name: Upload Coverage
-        uses: codecov/codecov-action@v1.0.5
+        uses: codecov/codecov-action@v2
         with:
           file: ./python/coverage.xml
           fail_ci_if_error: true
@@ -591,7 +607,7 @@ jobs:
           JAVA_HOME: /usr/lib/jvm/default-java
           GS_TEST_DIR: ${{ github.workspace }}/gstest
         run: |
-          export GS_IMAGE=registry.cn-hongkong.aliyuncs.com/graphscope/graphscope:${SHORT_SHA}
+          export GS_IMAGE=${{ env.GS_IMAGE }}:${SHORT_SHA}
 
           # install hadoop HDFS
           cd /tmp
@@ -623,6 +639,6 @@ jobs:
           HADOOP_SSH_OPTS="-o StrictHostKeyChecking=no" /tmp/hadoop-2.10.1/sbin/stop-dfs.sh || true
           rm -rf /tmp/hadoop* || true
           sudo docker rmi -f graphscope/graphscope:${SHORT_SHA} || true
-          sudo docker rmi -f registry.cn-hongkong.aliyuncs.com/graphscope/graphscope:${SHORT_SHA} || true
+          sudo docker rmi -f ${{ env.GS_IMAGE }}:${SHORT_SHA} || true
           helm uninstall graphscope || true
           kubectl delete pod graphscope-test-rpc-service --wait=false || true

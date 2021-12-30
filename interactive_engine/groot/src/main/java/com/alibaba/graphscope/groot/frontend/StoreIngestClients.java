@@ -14,9 +14,10 @@
 package com.alibaba.graphscope.groot.frontend;
 
 import com.alibaba.graphscope.groot.CompletionCallback;
-import com.alibaba.maxgraph.common.RoleType;
 import com.alibaba.graphscope.groot.rpc.ChannelManager;
 import com.alibaba.graphscope.groot.rpc.RoleClients;
+import com.alibaba.maxgraph.common.RoleType;
+
 import io.grpc.ManagedChannel;
 
 import java.util.function.Function;

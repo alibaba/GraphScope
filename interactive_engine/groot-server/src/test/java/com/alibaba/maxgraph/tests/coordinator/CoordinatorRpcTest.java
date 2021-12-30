@@ -13,26 +13,27 @@
  */
 package com.alibaba.maxgraph.tests.coordinator;
 
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
+
+import com.alibaba.graphscope.groot.CompletionCallback;
 import com.alibaba.graphscope.groot.coordinator.*;
 import com.alibaba.graphscope.groot.coordinator.BackupService;
 import com.alibaba.graphscope.groot.coordinator.SchemaService;
 import com.alibaba.graphscope.groot.coordinator.SnapshotCommitService;
-import com.alibaba.graphscope.groot.store.StoreBackupId;
-import com.alibaba.maxgraph.proto.groot.*;
-import com.alibaba.graphscope.groot.CompletionCallback;
+import com.alibaba.graphscope.groot.frontend.IngestorWriteClient;
 import com.alibaba.graphscope.groot.rpc.RoleClients;
 import com.alibaba.graphscope.groot.schema.GraphDef;
 import com.alibaba.graphscope.groot.schema.request.DdlException;
-import com.alibaba.graphscope.groot.frontend.IngestorWriteClient;
+import com.alibaba.graphscope.groot.store.StoreBackupId;
+import com.alibaba.maxgraph.proto.groot.*;
+
 import io.grpc.stub.StreamObserver;
+
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
 import java.util.*;
-import java.util.concurrent.ExecutionException;
-
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
 
 public class CoordinatorRpcTest {
 
@@ -185,18 +186,23 @@ public class CoordinatorRpcTest {
 
         when(mockBackupManger.createNewBackup()).thenReturn(6);
         StreamObserver<CreateNewBackupResponse> mockCreateObserver = mock(StreamObserver.class);
-        backupService.createNewBackup(CreateNewBackupRequest.newBuilder().build(), mockCreateObserver);
-        verify(mockCreateObserver).onNext(CreateNewBackupResponse.newBuilder().setGlobalBackupId(6).build());
+        backupService.createNewBackup(
+                CreateNewBackupRequest.newBuilder().build(), mockCreateObserver);
+        verify(mockCreateObserver)
+                .onNext(CreateNewBackupResponse.newBuilder().setGlobalBackupId(6).build());
         verify(mockCreateObserver).onCompleted();
 
         StreamObserver<DeleteBackupResponse> mockDeleteObserver = mock(StreamObserver.class);
-        backupService.deleteBackup(DeleteBackupRequest.newBuilder().setGlobalBackupId(8).build(), mockDeleteObserver);
+        backupService.deleteBackup(
+                DeleteBackupRequest.newBuilder().setGlobalBackupId(8).build(), mockDeleteObserver);
         verify(mockBackupManger).deleteBackup(8);
         verify(mockDeleteObserver).onNext(DeleteBackupResponse.newBuilder().build());
         verify(mockDeleteObserver).onCompleted();
 
         StreamObserver<PurgeOldBackupsResponse> mockPurgeObserver = mock(StreamObserver.class);
-        backupService.purgeOldBackups(PurgeOldBackupsRequest.newBuilder().setKeepAliveNumber(5).build(), mockPurgeObserver);
+        backupService.purgeOldBackups(
+                PurgeOldBackupsRequest.newBuilder().setKeepAliveNumber(5).build(),
+                mockPurgeObserver);
         verify(mockBackupManger).purgeOldBackups(5);
         verify(mockPurgeObserver).onNext(PurgeOldBackupsResponse.newBuilder().build());
         verify(mockPurgeObserver).onCompleted();
@@ -214,25 +220,36 @@ public class CoordinatorRpcTest {
         verify(mockRestoreObserver).onCompleted();
 
         StreamObserver<VerifyBackupResponse> mockVerifyObserver = mock(StreamObserver.class);
-        backupService.verifyBackup(VerifyBackupRequest.newBuilder().setGlobalBackupId(7).build(), mockVerifyObserver);
+        backupService.verifyBackup(
+                VerifyBackupRequest.newBuilder().setGlobalBackupId(7).build(), mockVerifyObserver);
         verify(mockBackupManger).verifyBackup(7);
         verify(mockVerifyObserver).onNext(VerifyBackupResponse.newBuilder().build());
         verify(mockVerifyObserver).onCompleted();
 
-        BackupInfo backupInfo1 = new BackupInfo(
-                1, 10L, GraphDef.newBuilder().setVersion(1L).build().toProto().toByteArray(),
-                new ArrayList<>(), new HashMap<>());
-        BackupInfo backupInfo2 = new BackupInfo(
-                2, 10L, GraphDef.newBuilder().setVersion(2L).build().toProto().toByteArray(),
-                new ArrayList<>(), new HashMap<>());
-        when(mockBackupManger.getBackupInfoList()).thenReturn(Arrays.asList(backupInfo1, backupInfo2));
+        BackupInfo backupInfo1 =
+                new BackupInfo(
+                        1,
+                        10L,
+                        GraphDef.newBuilder().setVersion(1L).build().toProto().toByteArray(),
+                        new ArrayList<>(),
+                        new HashMap<>());
+        BackupInfo backupInfo2 =
+                new BackupInfo(
+                        2,
+                        10L,
+                        GraphDef.newBuilder().setVersion(2L).build().toProto().toByteArray(),
+                        new ArrayList<>(),
+                        new HashMap<>());
+        when(mockBackupManger.getBackupInfoList())
+                .thenReturn(Arrays.asList(backupInfo1, backupInfo2));
         StreamObserver<GetBackupInfoResponse> mockGetInfoObserver = mock(StreamObserver.class);
         backupService.getBackupInfo(GetBackupInfoRequest.newBuilder().build(), mockGetInfoObserver);
-        verify(mockGetInfoObserver).onNext(
-                GetBackupInfoResponse.newBuilder()
-                        .addBackupInfoList(backupInfo1.toProto())
-                        .addBackupInfoList(backupInfo2.toProto())
-                        .build());
+        verify(mockGetInfoObserver)
+                .onNext(
+                        GetBackupInfoResponse.newBuilder()
+                                .addBackupInfoList(backupInfo1.toProto())
+                                .addBackupInfoList(backupInfo2.toProto())
+                                .build());
         verify(mockGetInfoObserver).onCompleted();
     }
 
@@ -252,7 +269,8 @@ public class CoordinatorRpcTest {
                         invocation -> {
                             CreateStoreBackupRequest request = invocation.getArgument(0);
                             assertEquals(request.getGlobalBackupId(), 3);
-                            StreamObserver<CreateStoreBackupResponse> observer = invocation.getArgument(1);
+                            StreamObserver<CreateStoreBackupResponse> observer =
+                                    invocation.getArgument(1);
                             observer.onNext(
                                     CreateStoreBackupResponse.newBuilder()
                                             .setStoreBackupId(storeBackupId.toProto())
@@ -267,8 +285,10 @@ public class CoordinatorRpcTest {
                             ClearUnavailableStoreBackupsRequest request = invocation.getArgument(0);
                             assertEquals(request.getPartitionToReadyBackupIdsCount(), 1);
                             assertTrue(request.getPartitionToReadyBackupIdsMap().containsKey(6));
-                            StreamObserver<ClearUnavailableStoreBackupsResponse> observer = invocation.getArgument(1);
-                            observer.onNext(ClearUnavailableStoreBackupsResponse.newBuilder().build());
+                            StreamObserver<ClearUnavailableStoreBackupsResponse> observer =
+                                    invocation.getArgument(1);
+                            observer.onNext(
+                                    ClearUnavailableStoreBackupsResponse.newBuilder().build());
                             observer.onError(null);
                             return null;
                         })
@@ -277,9 +297,12 @@ public class CoordinatorRpcTest {
         doAnswer(
                         invocation -> {
                             RestoreFromStoreBackupRequest request = invocation.getArgument(0);
-                            assertEquals(StoreBackupId.parseProto(request.getStoreBackupId()), storeBackupId);
+                            assertEquals(
+                                    StoreBackupId.parseProto(request.getStoreBackupId()),
+                                    storeBackupId);
                             assertEquals(request.getRestoreRootPath(), storeRestoreRootPath);
-                            StreamObserver<RestoreFromStoreBackupResponse> observer = invocation.getArgument(1);
+                            StreamObserver<RestoreFromStoreBackupResponse> observer =
+                                    invocation.getArgument(1);
                             observer.onNext(RestoreFromStoreBackupResponse.newBuilder().build());
                             observer.onError(null);
                             return null;
@@ -289,8 +312,11 @@ public class CoordinatorRpcTest {
         doAnswer(
                         invocation -> {
                             VerifyStoreBackupRequest request = invocation.getArgument(0);
-                            assertEquals(StoreBackupId.parseProto(request.getStoreBackupId()), storeBackupId);
-                            StreamObserver<VerifyStoreBackupResponse> observer = invocation.getArgument(1);
+                            assertEquals(
+                                    StoreBackupId.parseProto(request.getStoreBackupId()),
+                                    storeBackupId);
+                            StreamObserver<VerifyStoreBackupResponse> observer =
+                                    invocation.getArgument(1);
                             observer.onNext(VerifyStoreBackupResponse.newBuilder().build());
                             observer.onError(null);
                             return null;

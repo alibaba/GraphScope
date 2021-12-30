@@ -13,8 +13,11 @@
  */
 package com.alibaba.maxgraph.compiler.tree;
 
+import static com.google.common.base.Preconditions.checkArgument;
+
 import com.alibaba.maxgraph.Message;
 import com.alibaba.maxgraph.QueryFlowOuterClass.OperatorType;
+import com.alibaba.maxgraph.common.util.SchemaUtils;
 import com.alibaba.maxgraph.compiler.api.schema.GraphEdge;
 import com.alibaba.maxgraph.compiler.api.schema.GraphSchema;
 import com.alibaba.maxgraph.compiler.logical.LogicalSubQueryPlan;
@@ -23,7 +26,7 @@ import com.alibaba.maxgraph.compiler.optimizer.ContextManager;
 import com.alibaba.maxgraph.compiler.tree.value.ValueType;
 import com.alibaba.maxgraph.compiler.tree.value.VertexValueType;
 import com.alibaba.maxgraph.compiler.utils.ReflectionUtils;
-import com.alibaba.maxgraph.common.util.SchemaUtils;
+
 import org.apache.tinkerpop.gremlin.process.computer.clustering.connected.ConnectedComponentVertexProgram;
 import org.apache.tinkerpop.gremlin.process.computer.traversal.step.map.ConnectedComponentVertexProgramStep;
 import org.apache.tinkerpop.gremlin.process.traversal.Step;
@@ -38,8 +41,6 @@ import org.apache.tinkerpop.gremlin.structure.Vertex;
 
 import java.util.ArrayList;
 import java.util.List;
-
-import static com.google.common.base.Preconditions.checkArgument;
 
 public class ConnectComponetsVertexProgramTreeNode extends UnaryTreeNode {
     public static final String TIMES = "times";

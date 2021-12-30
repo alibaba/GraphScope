@@ -24,6 +24,7 @@ import com.alibaba.graphscope.gaia.plan.strategy.GaiaGraphStep;
 import com.alibaba.graphscope.gaia.plan.translator.TraversalMetaCollector;
 import com.alibaba.graphscope.gaia.plan.translator.builder.MetaConfig;
 import com.alibaba.graphscope.gaia.plan.translator.builder.TraversalMetaBuilder;
+
 import org.apache.tinkerpop.gremlin.process.traversal.Step;
 import org.apache.tinkerpop.gremlin.process.traversal.Traversal;
 import org.apache.tinkerpop.gremlin.process.traversal.step.TraversalParent;
@@ -45,8 +46,7 @@ public class PathHistoryStrategy implements GlobalTraversalStrategy {
     private static boolean isRemoveTagOn = false;
     private static boolean isLabelPathRequireOn = false;
 
-    private PathHistoryStrategy() {
-    }
+    private PathHistoryStrategy() {}
 
     public static PathHistoryStrategy instance() {
         return INSTANCE;
@@ -55,14 +55,18 @@ public class PathHistoryStrategy implements GlobalTraversalStrategy {
     @Override
     public void apply(Traversal.Admin<?, ?> traversal) {
         if (isRemoveTagOn && !isLabelPathRequireOn) {
-            logger.error("RemoveTag optimization can only be turned on when LabeledPathRequirement is in use.");
+            logger.error(
+                    "RemoveTag optimization can only be turned on when LabeledPathRequirement is in"
+                            + " use.");
             return;
         }
         setLocked((DefaultTraversal) traversal, false);
         TraversalMetaBuilder root = createRootTraversalBuilder(traversal);
         new TraversalMetaCollector(root).translate();
-        TraversalsMeta<TraversalId, LifetimeMeta> traversalsLife = (TraversalsMeta) root.getConfig(MetaConfig.TRAVERSALS_LIFETIME);
-        TraversalsMeta<TraversalId, TraverserRequirementMeta> traversalsRequire = (TraversalsMeta) root.getConfig(MetaConfig.TRAVERSALS_REQUIREMENT);
+        TraversalsMeta<TraversalId, LifetimeMeta> traversalsLife =
+                (TraversalsMeta) root.getConfig(MetaConfig.TRAVERSALS_LIFETIME);
+        TraversalsMeta<TraversalId, TraverserRequirementMeta> traversalsRequire =
+                (TraversalsMeta) root.getConfig(MetaConfig.TRAVERSALS_REQUIREMENT);
         Meta<StepId, Set<String>> removeTag = new DefaultMapMeta();
         Set<String> unUsedTags = new HashSet<>();
         if (traversalsLife != null) {
@@ -76,7 +80,8 @@ public class PathHistoryStrategy implements GlobalTraversalStrategy {
                         unUsedTags.add(lifetime.getLabel(key));
                     }
                     // remove tags
-                    if (value.getLastStepId() != null && value.getLastStepId() != StepId.KEEP_STEP_ID) {
+                    if (value.getLastStepId() != null
+                            && value.getLastStepId() != StepId.KEEP_STEP_ID) {
                         if (!removeTag.get(value.getLastStepId()).isPresent()) {
                             removeTag.add(value.getLastStepId(), new HashSet<>());
                         }
@@ -88,10 +93,18 @@ public class PathHistoryStrategy implements GlobalTraversalStrategy {
         if (traversalsRequire != null) {
             for (StepId stepId : removeTag.getAllObjects()) {
                 // delay remove tags after path
-                Optional<TraverserRequirementMeta> requirementMeta = traversalsRequire.get(stepId.getTraversalId());
-                if (requirementMeta.isPresent() && requirementMeta.get().getTraverserRequirement() == TraverserRequirement.PATH
-                        && requirementMeta.get().getPathStepId().getTraversalId().equals(stepId.getTraversalId())
-                        && requirementMeta.get().getPathStepId().getStepId() >= stepId.getStepId()) {
+                Optional<TraverserRequirementMeta> requirementMeta =
+                        traversalsRequire.get(stepId.getTraversalId());
+                if (requirementMeta.isPresent()
+                        && requirementMeta.get().getTraverserRequirement()
+                                == TraverserRequirement.PATH
+                        && requirementMeta
+                                .get()
+                                .getPathStepId()
+                                .getTraversalId()
+                                .equals(stepId.getTraversalId())
+                        && requirementMeta.get().getPathStepId().getStepId()
+                                >= stepId.getStepId()) {
                     requirementMeta.get().addAllRemoveTags(removeTag.get(stepId).get());
                     removeTag.delete(stepId);
                 }
@@ -105,15 +118,21 @@ public class PathHistoryStrategy implements GlobalTraversalStrategy {
 
         if (traversalsRequire != null && traversal.getStartStep() instanceof GaiaGraphStep) {
             // source
-            ((GaiaGraphStep) traversal.getStartStep()).setTraverserRequirement(traversalsRequire.get(TraversalId.root()).get().getTraverserRequirement());
+            ((GaiaGraphStep) traversal.getStartStep())
+                    .setTraverserRequirement(
+                            traversalsRequire
+                                    .get(TraversalId.root())
+                                    .get()
+                                    .getTraverserRequirement());
         }
         setLocked((DefaultTraversal) traversal, true);
     }
 
     protected TraversalMetaBuilder createRootTraversalBuilder(Traversal.Admin traversal) {
 
-        TraversalMetaBuilder builder = new TraversalMetaBuilder(traversal, null, TraversalId.root())
-                .addConfig(MetaConfig.TRAVERSALS_PATH, new TraversalsMeta());
+        TraversalMetaBuilder builder =
+                new TraversalMetaBuilder(traversal, null, TraversalId.root())
+                        .addConfig(MetaConfig.TRAVERSALS_PATH, new TraversalsMeta());
         if (isRemoveTagOn) {
             builder.addConfig(MetaConfig.TRAVERSALS_LIFETIME, new TraversalsMeta());
         }
@@ -123,8 +142,12 @@ public class PathHistoryStrategy implements GlobalTraversalStrategy {
         return builder;
     }
 
-    public void transformTraverser(TraversalId traversalId, Step t, TraversalsMeta<TraversalId, TraverserRequirementMeta> traversalsRequire,
-                                   Meta<StepId, Set<String>> removeTags, Set<String> unUsedTags) {
+    public void transformTraverser(
+            TraversalId traversalId,
+            Step t,
+            TraversalsMeta<TraversalId, TraverserRequirementMeta> traversalsRequire,
+            Meta<StepId, Set<String>> removeTags,
+            Set<String> unUsedTags) {
         Traversal.Admin traversal = t.getTraversal();
         // skip
         if (traversal instanceof EmptyTraversal) return;
@@ -133,14 +156,17 @@ public class PathHistoryStrategy implements GlobalTraversalStrategy {
         }
         StepId stepId = new StepId(traversalId, TraversalHelper.stepIndex(t, t.getTraversal()));
         setLocked((DefaultTraversal) traversal, false);
-        if (traversalsRequire != null && traversalsRequire.get(traversalId).isPresent()
-                && traversalsRequire.get(traversalId).get().getTraverserRequirement() == TraverserRequirement.PATH
+        if (traversalsRequire != null
+                && traversalsRequire.get(traversalId).isPresent()
+                && traversalsRequire.get(traversalId).get().getTraverserRequirement()
+                        == TraverserRequirement.PATH
                 && traversalsRequire.get(traversalId).get().getPathStepId().equals(stepId)) {
             Set<String> delayRemovetags = traversalsRequire.get(traversalId).get().getRemoveTags();
             int pathStepIdx = stepId.getStepId();
             // no need to remove tags at the end of traversal
             if (t != traversal.getEndStep()) {
-                Step transformStep = new TransformTraverserStep(traversal, TraverserRequirement.LABELED_PATH);
+                Step transformStep =
+                        new TransformTraverserStep(traversal, TraverserRequirement.LABELED_PATH);
                 // add TransformTraverserStep after path()
                 traversal.addStep(pathStepIdx + 1, transformStep);
                 updateRemoveTags(removeTags, pathStepIdx);
@@ -151,7 +177,9 @@ public class PathHistoryStrategy implements GlobalTraversalStrategy {
         }
         // add RemovePathHistoryStep after this step
         if (removeTags.get(stepId).isPresent()) {
-            traversal.addStep(stepId.getStepId() + 1, new RemovePathHistoryStep(traversal, removeTags.get(stepId).get()));
+            traversal.addStep(
+                    stepId.getStepId() + 1,
+                    new RemovePathHistoryStep(traversal, removeTags.get(stepId).get()));
             updateRemoveTags(removeTags, stepId.getStepId());
         }
         setLocked((DefaultTraversal) traversal, true);
@@ -161,7 +189,12 @@ public class PathHistoryStrategy implements GlobalTraversalStrategy {
                 for (Traversal.Admin k : ((TraversalParent) t).getGlobalChildren()) {
                     Step s = k.getStartStep();
                     do {
-                        transformTraverser(traversalId.fork(stepId.getStepId(), i), s, traversalsRequire, removeTags, unUsedTags);
+                        transformTraverser(
+                                traversalId.fork(stepId.getStepId(), i),
+                                s,
+                                traversalsRequire,
+                                removeTags,
+                                unUsedTags);
                         s = s.getNextStep();
                     } while (!(s instanceof EmptyStep));
                     ++i;
@@ -171,7 +204,12 @@ public class PathHistoryStrategy implements GlobalTraversalStrategy {
                 for (Traversal.Admin k : ((TraversalParent) t).getLocalChildren()) {
                     Step s = k.getStartStep();
                     do {
-                        transformTraverser(traversalId.fork(stepId.getStepId(), i), s, traversalsRequire, removeTags, unUsedTags);
+                        transformTraverser(
+                                traversalId.fork(stepId.getStepId(), i),
+                                s,
+                                traversalsRequire,
+                                removeTags,
+                                unUsedTags);
                         s = s.getNextStep();
                     } while (!(s instanceof EmptyStep));
                     ++i;
@@ -184,7 +222,9 @@ public class PathHistoryStrategy implements GlobalTraversalStrategy {
         Meta<StepId, Set<String>> replace = new DefaultMapMeta<>();
         for (StepId stepId : removeTagsMeta.getAllObjects()) {
             if (stepId.getStepId() > startPos) {
-                replace.add(new StepId(stepId.getTraversalId(), stepId.getStepId() + 1), removeTagsMeta.get(stepId).get());
+                replace.add(
+                        new StepId(stepId.getTraversalId(), stepId.getStepId() + 1),
+                        removeTagsMeta.get(stepId).get());
             } else {
                 replace.add(stepId, removeTagsMeta.get(stepId).get());
             }

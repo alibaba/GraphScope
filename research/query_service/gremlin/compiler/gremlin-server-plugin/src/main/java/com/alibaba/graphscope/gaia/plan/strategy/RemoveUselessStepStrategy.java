@@ -25,11 +25,12 @@ import org.apache.tinkerpop.gremlin.process.traversal.strategy.AbstractTraversal
 
 import java.util.List;
 
-public class RemoveUselessStepStrategy extends AbstractTraversalStrategy<TraversalStrategy.ProviderOptimizationStrategy> implements TraversalStrategy.ProviderOptimizationStrategy {
+public class RemoveUselessStepStrategy
+        extends AbstractTraversalStrategy<TraversalStrategy.ProviderOptimizationStrategy>
+        implements TraversalStrategy.ProviderOptimizationStrategy {
     private static final RemoveUselessStepStrategy INSTANCE = new RemoveUselessStepStrategy();
 
-    private RemoveUselessStepStrategy() {
-    }
+    private RemoveUselessStepStrategy() {}
 
     public static RemoveUselessStepStrategy instance() {
         return INSTANCE;
@@ -40,7 +41,9 @@ public class RemoveUselessStepStrategy extends AbstractTraversalStrategy<Travers
         List<Step> steps = traversal.getSteps();
         for (int i = 0; i < steps.size(); ++i) {
             Step step = steps.get(i);
-            if (step instanceof ComputerAwareStep.EndStep || step instanceof RepeatStep.RepeatEndStep || step instanceof NoOpBarrierStep) {
+            if (step instanceof ComputerAwareStep.EndStep
+                    || step instanceof RepeatStep.RepeatEndStep
+                    || step instanceof NoOpBarrierStep) {
                 traversal.removeStep(step);
             }
         }

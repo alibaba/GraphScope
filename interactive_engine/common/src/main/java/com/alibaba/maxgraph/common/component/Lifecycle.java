@@ -130,5 +130,4 @@ public class Lifecycle {
     public String toString() {
         return state.toString();
     }
-
 }

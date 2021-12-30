@@ -1,12 +1,12 @@
 /**
  * Copyright 2020 Alibaba Group Holding Limited.
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -62,7 +62,8 @@ public class ExecuteParam {
         return new ExecuteParam(null, null, null);
     }
 
-    public static ExecuteParam valueOf(Message.Value value, List<Message.LogicalCompare> logicalCompareList) {
+    public static ExecuteParam valueOf(
+            Message.Value value, List<Message.LogicalCompare> logicalCompareList) {
         return new ExecuteParam(value, logicalCompareList, null);
     }
 
@@ -70,7 +71,8 @@ public class ExecuteParam {
         return new ExecuteParam(null, logicalCompareList, null);
     }
 
-    public static ExecuteParam functionOf(List<QueryFlowOuterClass.OperatorBase> chainedFunctionList) {
+    public static ExecuteParam functionOf(
+            List<QueryFlowOuterClass.OperatorBase> chainedFunctionList) {
         return new ExecuteParam(null, null, chainedFunctionList);
     }
 

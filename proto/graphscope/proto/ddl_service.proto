@@ -15,7 +15,7 @@
 syntax = "proto3";
 package gs.rpc.ddl_service.v1;
 
-import "proto/graph_def.proto";
+import "graphscope/proto/graph_def.proto";
 
 option java_package = "com.alibaba.graphscope.proto.ddl";
 option java_multiple_files = true;

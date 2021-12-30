@@ -18,6 +18,7 @@ package com.alibaba.graphscope.gaia.store;
 import com.alibaba.graphscope.common.proto.GremlinResult;
 import com.alibaba.graphscope.gaia.JsonUtils;
 import com.fasterxml.jackson.core.type.TypeReference;
+
 import org.apache.commons.io.IOUtils;
 
 import java.io.InputStream;
@@ -34,10 +35,15 @@ public abstract class GraphStoreService extends GraphElementId {
     public GraphStoreService(String propertyResourceName) {
         try {
             // init properties from file under resources
-            InputStream inputStream = Thread.currentThread().getContextClassLoader().getResourceAsStream(propertyResourceName);
+            InputStream inputStream =
+                    Thread.currentThread()
+                            .getContextClassLoader()
+                            .getResourceAsStream(propertyResourceName);
             String propertiesJson = IOUtils.toString(inputStream, StandardCharsets.UTF_8);
-            this.cachedPropertyForTest = JsonUtils.fromJson(propertiesJson, new TypeReference<Map<String, Map<String, Map<String, Object>>>>() {
-            });
+            this.cachedPropertyForTest =
+                    JsonUtils.fromJson(
+                            propertiesJson,
+                            new TypeReference<Map<String, Map<String, Map<String, Object>>>>() {});
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
@@ -68,7 +74,8 @@ public abstract class GraphStoreService extends GraphElementId {
     public <P> Optional<P> getVertexProperty(BigInteger id, String key) {
         String idStr = String.valueOf(id);
         if (getVertexKeys(id).isEmpty()) return Optional.empty();
-        return Optional.ofNullable((P) cachedPropertyForTest.get("vertex_properties").get(idStr).get(key));
+        return Optional.ofNullable(
+                (P) cachedPropertyForTest.get("vertex_properties").get(idStr).get(key));
     }
 
     public Set<String> getVertexKeys(BigInteger id) {
@@ -82,7 +89,8 @@ public abstract class GraphStoreService extends GraphElementId {
         Object id = getCompositeId(edge);
         String idStr = String.valueOf(id);
         if (getEdgeKeys(edge).isEmpty()) return Optional.empty();
-        return Optional.ofNullable((P) cachedPropertyForTest.get("edge_properties").get(idStr).get(key));
+        return Optional.ofNullable(
+                (P) cachedPropertyForTest.get("edge_properties").get(idStr).get(key));
     }
 
     public Set<String> getEdgeKeys(GremlinResult.Edge edge) {

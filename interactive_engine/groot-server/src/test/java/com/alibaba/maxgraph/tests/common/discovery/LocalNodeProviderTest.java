@@ -13,16 +13,17 @@
  */
 package com.alibaba.maxgraph.tests.common.discovery;
 
-import com.alibaba.maxgraph.common.config.Configs;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+
 import com.alibaba.graphscope.groot.discovery.LocalNodeProvider;
 import com.alibaba.graphscope.groot.discovery.MaxGraphNode;
 import com.alibaba.maxgraph.common.RoleType;
+import com.alibaba.maxgraph.common.config.Configs;
 import com.alibaba.maxgraph.compiler.api.exception.MaxGraphException;
+
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
-
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
 
 public class LocalNodeProviderTest {
 

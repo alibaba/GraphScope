@@ -13,14 +13,16 @@
  */
 package com.alibaba.graphscope.groot.coordinator;
 
-import com.alibaba.maxgraph.proto.groot.AdvanceQuerySnapshotRequest;
-import com.alibaba.maxgraph.proto.groot.AdvanceQuerySnapshotResponse;
-import com.alibaba.maxgraph.proto.groot.FrontendSnapshotGrpc;
 import com.alibaba.graphscope.groot.CompletionCallback;
 import com.alibaba.graphscope.groot.rpc.RpcClient;
 import com.alibaba.graphscope.groot.schema.GraphDef;
+import com.alibaba.maxgraph.proto.groot.AdvanceQuerySnapshotRequest;
+import com.alibaba.maxgraph.proto.groot.AdvanceQuerySnapshotResponse;
+import com.alibaba.maxgraph.proto.groot.FrontendSnapshotGrpc;
+
 import io.grpc.ManagedChannel;
 import io.grpc.stub.StreamObserver;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

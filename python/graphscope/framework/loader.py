@@ -125,8 +125,8 @@ class Loader(object):
                 Defaults to True.
 
         Notes:
-            Data is resolved by drivers in `libvineyard <https://github.com/alibaba/libvineyard>`_ .
-            See more additional info in `Loading Graph` section of Docs, and implementations in `libvineyard`.
+            Data is resolved by drivers in `vineyard <https://github.com/v6d-io/v6d>`_ .
+            See more additional info in `Loading Graph` section of Docs, and implementations in `vineyard`.
         """
         self.protocol = ""
         # For numpy or pandas, source is the serialized raw bytes

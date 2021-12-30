@@ -13,35 +13,36 @@
  */
 package com.alibaba.maxgraph.tests.coordinator;
 
-import com.alibaba.maxgraph.compiler.api.schema.DataType;
-import com.alibaba.graphscope.groot.operation.BatchId;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.Mockito.*;
+
 import com.alibaba.graphscope.groot.CompletionCallback;
-import com.alibaba.graphscope.groot.meta.MetaService;
 import com.alibaba.graphscope.groot.SnapshotListener;
+import com.alibaba.graphscope.groot.coordinator.DdlWriter;
+import com.alibaba.graphscope.groot.coordinator.GraphDefFetcher;
+import com.alibaba.graphscope.groot.coordinator.SchemaManager;
+import com.alibaba.graphscope.groot.coordinator.SnapshotManager;
+import com.alibaba.graphscope.groot.meta.MetaService;
+import com.alibaba.graphscope.groot.operation.BatchId;
 import com.alibaba.graphscope.groot.schema.GraphDef;
 import com.alibaba.graphscope.groot.schema.PropertyDef;
 import com.alibaba.graphscope.groot.schema.PropertyValue;
 import com.alibaba.graphscope.groot.schema.TypeDef;
 import com.alibaba.graphscope.groot.schema.TypeEnum;
+import com.alibaba.graphscope.groot.schema.ddl.DdlExecutors;
 import com.alibaba.graphscope.groot.schema.request.CreateVertexTypeRequest;
 import com.alibaba.graphscope.groot.schema.request.DdlRequestBatch;
-import com.alibaba.graphscope.groot.schema.ddl.DdlExecutors;
-import com.alibaba.graphscope.groot.coordinator.DdlWriter;
-import com.alibaba.graphscope.groot.coordinator.GraphDefFetcher;
-import com.alibaba.graphscope.groot.coordinator.SchemaManager;
-import com.alibaba.graphscope.groot.coordinator.SnapshotManager;
+import com.alibaba.maxgraph.compiler.api.schema.DataType;
+
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
-
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyLong;
-import static org.mockito.Mockito.*;
 
 public class SchemaManagerTest {
 

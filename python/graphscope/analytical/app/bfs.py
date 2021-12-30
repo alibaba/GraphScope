@@ -21,7 +21,7 @@ from graphscope.framework.app import AppAssets
 from graphscope.framework.app import not_compatible_for
 from graphscope.framework.app import project_to_simple
 
-__all__ = ["bfs", "property_bfs"]
+__all__ = ["bfs"]
 
 
 @project_to_simple
@@ -31,8 +31,9 @@ def bfs(graph, src=0):
 
     Args:
         graph (:class:`Graph`): A simple graph.
-        src (optional): Source vertex of breadth first search. Defaults to 0.
-            Its type should be consistent with oid type of the `graph`.
+        src (optional): Source vertex of breadth first search. The type should be consistent
+            with the id type of the `graph`, that is, it's `int` or `str` depending
+            on the `oid_type` is `int64_t` or `string` of the `graph`. Defaults to 0.
 
     Returns:
         :class:`graphscope.framework.context.VertexDataContextDAGNode`:
@@ -51,30 +52,3 @@ def bfs(graph, src=0):
 
     """
     return AppAssets(algo="bfs", context="vertex_data")(graph, src)
-
-
-@not_compatible_for("dynamic_property", "arrow_projected", "dynamic_projected")
-def property_bfs(graph, src=0):
-    """Breath first search from the src on property graph.
-
-    Args:
-        graph (:class:`Graph`): A property graph.
-        src (int, optional): Source vertex of breadth first search. Defaults to 0.
-            Its type should be consistent with oid type of the `graph`.
-
-    Returns:
-        :class:`graphscope.framework.context.LabeledVertexDataContextDAGNode`:
-            A context with each vertex with a distance from the source, evaluated in eager mode.
-
-    Examples:
-
-    .. code:: python
-
-        import graphscope as gs
-        sess = gs.session()
-        g = sess.g()
-        r = gs.property_bfs(g, 6)  # use 6 as source vertex
-        s.close()
-
-    """
-    return AppAssets(algo="property_bfs", context="labeled_vertex_data")(graph, src)

@@ -1,12 +1,12 @@
 /**
  * Copyright 2020 Alibaba Group Holding Limited.
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -19,17 +19,18 @@ import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.alibaba.maxgraph.compiler.api.exception.GraphElementNotFoundException;
 import com.alibaba.maxgraph.compiler.api.exception.GraphPropertyNotFoundException;
+import com.alibaba.maxgraph.compiler.api.schema.DataType;
 import com.alibaba.maxgraph.compiler.api.schema.EdgeRelation;
 import com.alibaba.maxgraph.compiler.api.schema.GraphEdge;
 import com.alibaba.maxgraph.compiler.api.schema.GraphElement;
 import com.alibaba.maxgraph.compiler.api.schema.GraphProperty;
 import com.alibaba.maxgraph.compiler.api.schema.GraphSchema;
 import com.alibaba.maxgraph.compiler.api.schema.GraphVertex;
-import com.alibaba.maxgraph.compiler.api.schema.DataType;
 import com.alibaba.maxgraph.sdkcommon.exception.MaxGraphException;
 import com.alibaba.maxgraph.sdkcommon.meta.InternalDataType;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -44,7 +45,10 @@ public class DefaultGraphSchema implements GraphSchema {
     private Map<String, Integer> propNameToIdList;
     private Map<Integer, String> idToLabelList = Maps.newHashMap();
 
-    public DefaultGraphSchema(Map<String, GraphVertex> vertexList, Map<String, GraphEdge> edgeList, Map<String, Integer> propNameToIdList) {
+    public DefaultGraphSchema(
+            Map<String, GraphVertex> vertexList,
+            Map<String, GraphEdge> edgeList,
+            Map<String, Integer> propNameToIdList) {
         this.vertexList = vertexList;
         this.edgeList = edgeList;
         vertexList.forEach((key, value) -> idToLabelList.put(value.getLabelId(), key));
@@ -104,20 +108,22 @@ public class DefaultGraphSchema implements GraphSchema {
     @Override
     public Map<GraphElement, GraphProperty> getPropertyList(String propName) {
         Map<GraphElement, GraphProperty> elementPropertyList = Maps.newHashMap();
-        vertexList.forEach((key, value) -> {
-            for (GraphProperty property : value.getPropertyList()) {
-                if (StringUtils.equals(property.getName(), propName)) {
-                    elementPropertyList.put(value, property);
-                }
-            }
-        });
-        edgeList.forEach((key, value) -> {
-            for (GraphProperty property : value.getPropertyList()) {
-                if (StringUtils.equals(property.getName(), propName)) {
-                    elementPropertyList.put(value, property);
-                }
-            }
-        });
+        vertexList.forEach(
+                (key, value) -> {
+                    for (GraphProperty property : value.getPropertyList()) {
+                        if (StringUtils.equals(property.getName(), propName)) {
+                            elementPropertyList.put(value, property);
+                        }
+                    }
+                });
+        edgeList.forEach(
+                (key, value) -> {
+                    for (GraphProperty property : value.getPropertyList()) {
+                        if (StringUtils.equals(property.getName(), propName)) {
+                            elementPropertyList.put(value, property);
+                        }
+                    }
+                });
         return elementPropertyList;
     }
 
@@ -164,18 +170,26 @@ public class DefaultGraphSchema implements GraphSchema {
                         String propDataTypeString = propObject.getString("data_type");
                         com.alibaba.maxgraph.sdkcommon.meta.DataType dataType;
                         if (StringUtils.startsWith(propDataTypeString, "LIST")) {
-                            dataType = new com.alibaba.maxgraph.sdkcommon.meta.DataType(InternalDataType.LIST);
+                            dataType =
+                                    new com.alibaba.maxgraph.sdkcommon.meta.DataType(
+                                            InternalDataType.LIST);
                             try {
-                                dataType.setExpression(StringUtils.removeEnd(StringUtils.removeStart(propDataTypeString, "LIST<"), ">"));
+                                dataType.setExpression(
+                                        StringUtils.removeEnd(
+                                                StringUtils.removeStart(
+                                                        propDataTypeString, "LIST<"),
+                                                ">"));
                             } catch (MaxGraphException e) {
                                 throw new RuntimeException(e);
                             }
                         } else {
-                            dataType = com.alibaba.maxgraph.sdkcommon.meta.DataType.valueOf(propDataTypeString);
+                            dataType =
+                                    com.alibaba.maxgraph.sdkcommon.meta.DataType.valueOf(
+                                            propDataTypeString);
                         }
-                        GraphProperty property = new DefaultGraphProperty(currPropId,
-                                propName,
-                                DataType.parseFromDataType(dataType));
+                        GraphProperty property =
+                                new DefaultGraphProperty(
+                                        currPropId, propName, DataType.parseFromDataType(dataType));
                         propertyList.add(property);
                         namePropertyList.put(propName, property);
                         propNameToIdList.put(propName, currPropId);
@@ -192,14 +206,14 @@ public class DefaultGraphSchema implements GraphSchema {
                             JSONObject indexObject = indexArray.getJSONObject(k);
                             JSONArray priNameList = indexObject.getJSONArray("propertyNames");
                             for (int j = 0; j < priNameList.size(); j++) {
-                                primaryPropertyList.add(namePropertyList.get(priNameList.getString(j)));
+                                primaryPropertyList.add(
+                                        namePropertyList.get(priNameList.getString(j)));
                             }
                         }
                     }
-                    DefaultGraphVertex graphVertex = new DefaultGraphVertex(labelId,
-                            label,
-                            propertyList,
-                            primaryPropertyList);
+                    DefaultGraphVertex graphVertex =
+                            new DefaultGraphVertex(
+                                    labelId, label, propertyList, primaryPropertyList);
                     vertexList.put(label, graphVertex);
                 } else {
                     List<EdgeRelation> relationList = Lists.newArrayList();
@@ -209,15 +223,16 @@ public class DefaultGraphSchema implements GraphSchema {
                             JSONObject relationObject = relationArray.getJSONObject(k);
                             String sourceLabel = relationObject.getString("srcVertexLabel");
                             String targetLabel = relationObject.getString("dstVertexLabel");
-                            relationList.add(new DefaultEdgeRelation(vertexList.get(sourceLabel), vertexList.get(targetLabel)));
+                            relationList.add(
+                                    new DefaultEdgeRelation(
+                                            vertexList.get(sourceLabel),
+                                            vertexList.get(targetLabel)));
                         }
                     } else {
                         logger.warn("There's no relation def in edge " + label);
                     }
-                    DefaultGraphEdge graphEdge = new DefaultGraphEdge(labelId,
-                            label,
-                            propertyList,
-                            relationList);
+                    DefaultGraphEdge graphEdge =
+                            new DefaultGraphEdge(labelId, label, propertyList, relationList);
                     edgeList.put(label, graphEdge);
                 }
             }

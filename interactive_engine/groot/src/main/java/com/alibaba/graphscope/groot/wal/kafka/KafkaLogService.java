@@ -13,13 +13,14 @@
  */
 package com.alibaba.graphscope.groot.wal.kafka;
 
+import com.alibaba.graphscope.groot.wal.LogReader;
+import com.alibaba.graphscope.groot.wal.LogService;
+import com.alibaba.graphscope.groot.wal.LogWriter;
 import com.alibaba.maxgraph.common.config.CommonConfig;
 import com.alibaba.maxgraph.common.config.Configs;
 import com.alibaba.maxgraph.common.config.KafkaConfig;
 import com.alibaba.maxgraph.compiler.api.exception.MaxGraphException;
-import com.alibaba.graphscope.groot.wal.LogReader;
-import com.alibaba.graphscope.groot.wal.LogService;
-import com.alibaba.graphscope.groot.wal.LogWriter;
+
 import org.apache.kafka.clients.admin.AdminClient;
 import org.apache.kafka.clients.admin.DeleteRecordsResult;
 import org.apache.kafka.clients.admin.NewTopic;

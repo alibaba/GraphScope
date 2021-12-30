@@ -25,7 +25,6 @@ import shutil
 import socket
 import string
 import subprocess
-import sys
 import tempfile
 import threading
 import time
@@ -62,6 +61,7 @@ class PipeWatcher(object):
                 if self._filter(line):
                     try:
                         self._sink.write(line)
+                        self._sink.flush()
                         if not self._drop:
                             self._lines.put(line)
                     except:  # noqa: E722
@@ -77,18 +77,15 @@ class PipeWatcher(object):
     def drop(self, drop=True):
         self._drop = drop
 
-    def addFilter(self, func):
+    def add_filter(self, func):
         if not (func in self._filters):
             self._filters.append(func)
 
     def _filter(self, line):
-        rv = True
         for func in self._filters:
-            result = func(line)  # assume callable - will raise if not
-            if not result:
-                rv = False
-                break
-        return rv
+            if not func(line):  # assume callable - will raise if not
+                return False
+        return True
 
 
 class PipeMerger(object):
@@ -363,6 +360,7 @@ def is_file(*args):
 
 def _context_protocol_to_numpy_dtype(dtype):
     dtype_map = {
+        0: np.dtype("void"),
         1: np.dtype("bool"),
         2: np.dtype("int32"),
         3: np.dtype("uint32"),
@@ -476,11 +474,20 @@ def unify_type(t):
     elif isinstance(t, type):
         unify_types = {
             int: graph_def_pb2.LONG,
+            np.int32: graph_def_pb2.INT,
+            np.int64: graph_def_pb2.LONG,
+            np.uint32: graph_def_pb2.UINT,
+            np.uint64: graph_def_pb2.ULONG,
             float: graph_def_pb2.DOUBLE,
+            np.float32: graph_def_pb2.FLOAT,
+            np.float64: graph_def_pb2.DOUBLE,
             str: graph_def_pb2.STRING,
+            np.str_: graph_def_pb2.STRING,
             bool: graph_def_pb2.BOOL,
+            np.bool8: graph_def_pb2.BOOL,
             list: graph_def_pb2.INT_LIST,
             tuple: graph_def_pb2.INT_LIST,
+            dict: graph_def_pb2.DYNAMIC,
         }
         return unify_types[t]
     elif isinstance(t, int):  # graph_def_pb2.DataType

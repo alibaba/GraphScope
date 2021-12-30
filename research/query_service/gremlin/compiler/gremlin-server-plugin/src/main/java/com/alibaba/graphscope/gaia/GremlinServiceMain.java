@@ -21,6 +21,7 @@ import com.alibaba.graphscope.gaia.plan.PlanUtils;
 import com.alibaba.graphscope.gaia.processor.GaiaProcessorLoader;
 import com.alibaba.graphscope.gaia.store.ExperimentalGraphStore;
 import com.alibaba.graphscope.gaia.store.GraphStoreService;
+
 import org.apache.tinkerpop.gremlin.server.GremlinServer;
 import org.apache.tinkerpop.gremlin.server.Settings;
 import org.apache.tinkerpop.gremlin.structure.Graph;
@@ -43,19 +44,27 @@ public class GremlinServiceMain {
         GaiaProcessorLoader.load(gaiaConfig, storeService);
 
         // set global variables
-        Graph traversalGraph = server.getServerGremlinExecutor().getGraphManager().getGraph("graph");
+        Graph traversalGraph =
+                server.getServerGremlinExecutor().getGraphManager().getGraph("graph");
         GlobalEngineConf.setGlobalVariables(traversalGraph.variables());
 
         // bind g to traversal source
-        Bindings globalBindings = PlanUtils.getGlobalBindings(server.getServerGremlinExecutor().getGremlinExecutor());
+        Bindings globalBindings =
+                PlanUtils.getGlobalBindings(server.getServerGremlinExecutor().getGremlinExecutor());
         globalBindings.put("g", traversalGraph.traversal());
 
         // start gremlin server
-        server.start().exceptionally(t -> {
-            logger.error("Gremlin Server was unable to start and will now begin shutdown {}", t);
-            server.stop().join();
-            return null;
-        }).join();
+        server.start()
+                .exceptionally(
+                        t -> {
+                            logger.error(
+                                    "Gremlin Server was unable to start and will now begin shutdown"
+                                            + " {}",
+                                    t);
+                            server.stop().join();
+                            return null;
+                        })
+                .join();
     }
 
     public static Settings load() throws Exception {

@@ -16,12 +16,12 @@ package com.alibaba.maxgraph.compiler.tree.source;
 import com.alibaba.maxgraph.Message;
 import com.alibaba.maxgraph.QueryFlowOuterClass;
 import com.alibaba.maxgraph.compiler.api.schema.GraphSchema;
-import com.alibaba.maxgraph.compiler.optimizer.ContextManager;
-import com.alibaba.maxgraph.compiler.tree.value.EdgeValueType;
-import com.alibaba.maxgraph.compiler.tree.value.ValueType;
 import com.alibaba.maxgraph.compiler.logical.LogicalSubQueryPlan;
 import com.alibaba.maxgraph.compiler.logical.function.ProcessorSourceFunction;
+import com.alibaba.maxgraph.compiler.optimizer.ContextManager;
 import com.alibaba.maxgraph.compiler.tree.addition.CountFlagNode;
+import com.alibaba.maxgraph.compiler.tree.value.EdgeValueType;
+import com.alibaba.maxgraph.compiler.tree.value.ValueType;
 
 public class SourceEdgeTreeNode extends SourceTreeNode implements CountFlagNode {
     private boolean countFlag = false;

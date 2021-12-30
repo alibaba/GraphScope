@@ -1,16 +1,8 @@
 cmake_minimum_required(VERSION 3.1)
 
-if ("${GRAPHSCOPE_VERSION}" STREQUAL "")
-    set(GRAPHSCOPE_ANALYTICAL_MAJOR_VERSION 0)
-    set(GRAPHSCOPE_ANALYTICAL_MINOR_VERSION 9)
-    set(GRAPHSCOPE_ANALYTICAL_PATCH_VERSION 0)
-    set(GRAPHSCOPE_ANALYTICAL_VERSION ${GRAPHSCOPE_ANALYTICAL_MAJOR_VERSION}.${GRAPHSCOPE_ANALYTICAL_MINOR_VERSION}.${GRAPHSCOPE_ANALYTICAL_PATCH_VERSION})
-else ()
-    set(GRAPHSCOPE_ANALYTICAL_MAJOR_VERSION ${GRAPHSCOPE_MAJOR_VERSION})
-    set(GRAPHSCOPE_ANALYTICAL_MINOR_VERSION ${GRAPHSCOPE_MINOR_VERSION})
-    set(GRAPHSCOPE_ANALYTICAL_PATCH_VERSION ${GRAPHSCOPE_PATCH_VERSION})
-    set(GRAPHSCOPE_ANALYTICAL_VERSION ${GRAPHSCOPE_VERSION})
-endif ()
+file(READ ${CMAKE_CURRENT_SOURCE_DIR}/../VERSION GRAPHSCOPE_ANALYTICAL_VERSION)
+# Strip trailing newline
+string(REGEX REPLACE "\n$" "" GRAPHSCOPE_ANALYTICAL_VERSION "${GRAPHSCOPE_ANALYTICAL_VERSION}")
 
 if (POLICY CMP0048)
     cmake_policy(SET CMP0048 NEW)
@@ -20,6 +12,10 @@ project(analytical_engine LANGUAGES C CXX VERSION ${GRAPHSCOPE_ANALYTICAL_VERSIO
 option(NETWORKX "networkx on?" ON)
 option(BUILD_TESTS "Build unit test" ON)
 option(ENABLE_JAVA_SDK "Build with support for java sdk" OFF)
+
+# Get system processor
+execute_process(COMMAND uname -m OUTPUT_VARIABLE SYSTEM_PROCESSOR)
+string(REGEX REPLACE "\n$" "" SYSTEM_PROCESSOR "${SYSTEM_PROCESSOR}")
 
 if (APPLE AND ENABLE_JAVA_SDK)
     message(FATAL_ERROR "Java SDK is currently not supported on macos.")
@@ -62,6 +58,7 @@ include(CheckLibraryExists)
 include(CheckCXXSourceRuns)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 include_directories(${PROJECT_SOURCE_DIR})
+include_directories(${PROJECT_SOURCE_DIR}/proto)
 
 # Set flags
 set(CMAKE_CXX_STANDARD 14)
@@ -113,7 +110,23 @@ if (APPLE)
     if (POLICY CMP0056)
         cmake_policy(SET CMP0056 NEW)
     endif ()
-    set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -L/usr/local/lib")
+    if (SYSTEM_PROCESSOR MATCHES "arm64")
+        set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -L/opt/homebrew/lib")
+        if(CMAKE_C_COMPILER_ID MATCHES "Clang")
+            set(OpenMP_C "${CMAKE_C_COMPILER}" CACHE STRING "" FORCE)
+            set(OpenMP_C_FLAGS "-fopenmp=libomp -Wno-unused-command-line-argument" CACHE STRING "" FORCE)
+            set(OpenMP_C_LIB_NAMES "libomp" CACHE STRING "" FORCE)
+            set(OpenMP_libomp_LIBRARY "omp" CACHE STRING "" FORCE)
+        endif()
+        if(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+            set(OpenMP_CXX "${CMAKE_CXX_COMPILER}" CACHE STRING "" FORCE)
+            set(OpenMP_CXX_FLAGS "-fopenmp=libomp -Wno-unused-command-line-argument" CACHE STRING "" FORCE)
+            set(OpenMP_CXX_LIB_NAMES "libomp" CACHE STRING "" FORCE)
+            set(OpenMP_libomp_LIBRARY "omp" CACHE STRING "" FORCE)
+        endif()
+    else()
+        set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -L/usr/local/lib")
+    endif()
 endif ()
 find_package(OpenMP REQUIRED)
 
@@ -153,7 +166,7 @@ endif ()
 find_package(libgrapelite REQUIRED)
 include_directories(${LIBGRAPELITE_INCLUDE_DIRS})
 
-find_package(vineyard 0.3.12 REQUIRED)
+find_package(vineyard 0.3.15 REQUIRED)
 include_directories(${VINEYARD_INCLUDE_DIRS})
 add_compile_options(-DENABLE_SELECTOR)
 
@@ -198,12 +211,12 @@ else ()
 endif ()
 
 # Generate proto
-execute_process(COMMAND python3 proto/proto_generator.py "${PROJECT_SOURCE_DIR}" --cpp
+execute_process(COMMAND python3 proto/graphscope/proto/proto_generator.py "${PROJECT_SOURCE_DIR}/proto" --cpp
         WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/..)
-execute_process(COMMAND python3 proto/proto_generator.py "${PROJECT_SOURCE_DIR}/../python/graphscope" --python
+execute_process(COMMAND python3 proto/graphscope/proto/proto_generator.py "${PROJECT_SOURCE_DIR}/../python" --python
         WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/..)
 
-file(GLOB PROTO_CPP_FILES "proto/*.cc")
+file(GLOB PROTO_CPP_FILES "proto/graphscope/proto/*.cc")
 file(GLOB CORE_GS_FILES "core/*.cc" "core/java/javasdk.cc")
 file(GLOB CORE_RPC_SRC_FILES "core/server/*.cc")
 

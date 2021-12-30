@@ -13,14 +13,15 @@
  */
 package com.alibaba.maxgraph.servers;
 
+import com.alibaba.maxgraph.common.RoleType;
 import com.alibaba.maxgraph.common.config.CommonConfig;
 import com.alibaba.maxgraph.common.config.Configs;
 import com.alibaba.maxgraph.common.config.KafkaConfig;
 import com.alibaba.maxgraph.common.config.ZkConfig;
-import com.alibaba.maxgraph.common.RoleType;
 import com.alibaba.maxgraph.compiler.api.exception.MaxGraphException;
 import com.google.common.annotations.VisibleForTesting;
 import com.salesforce.kafka.test.KafkaTestCluster;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

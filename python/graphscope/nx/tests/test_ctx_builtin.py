@@ -23,7 +23,6 @@ import numpy as np
 import pandas as pd
 import pytest
 
-import graphscope
 from graphscope import nx
 from graphscope.nx.tests.utils import almost_equal
 from graphscope.nx.tests.utils import replace_with_inf
@@ -127,7 +126,7 @@ class TestBuiltInApp:
         cls.p2p_ev_ans = dict(
             pd.read_csv(
                 "{}/p2p-31-eigenvector".format(data_dir),
-                sep="\t",
+                sep=" ",
                 header=None,
                 prefix="",
             ).values
@@ -163,6 +162,7 @@ class TestBuiltInApp:
                 "{}/p2p-31-kcore".format(data_dir), sep=" ", header=None, prefix=""
             ).values
         )
+        cls.empty_pagerank_ans = {}
 
     def assert_result_almost_equal(self, r1, r2):
         assert len(r1) == len(r2)
@@ -340,3 +340,8 @@ class TestBuiltInApp:
         assert len(ans) == 1022
         ans = nx.builtin.all_simple_paths(self.p2p_undirected, 1, [4, 6], cutoff=5)
         assert len(ans) == 1675
+
+    def test_pagerank_on_empty(self):
+        eg = nx.null_graph()
+        ans = nx.builtin.pagerank(eg)
+        self.assert_result_almost_equal(ans, self.empty_pagerank_ans)

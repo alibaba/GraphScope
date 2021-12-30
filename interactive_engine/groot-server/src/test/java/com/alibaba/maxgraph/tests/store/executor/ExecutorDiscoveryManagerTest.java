@@ -13,14 +13,15 @@
  */
 package com.alibaba.maxgraph.tests.store.executor;
 
-import com.alibaba.maxgraph.common.config.Configs;
-import com.alibaba.maxgraph.common.config.ZkConfig;
 import com.alibaba.graphscope.groot.discovery.LocalNodeProvider;
 import com.alibaba.graphscope.groot.discovery.NodeDiscovery;
-import com.alibaba.maxgraph.common.RoleType;
 import com.alibaba.graphscope.groot.discovery.ZkDiscovery;
+import com.alibaba.maxgraph.common.RoleType;
+import com.alibaba.maxgraph.common.config.Configs;
+import com.alibaba.maxgraph.common.config.ZkConfig;
 import com.alibaba.maxgraph.common.util.CuratorUtils;
 import com.alibaba.maxgraph.servers.maxgraph.ExecutorDiscoveryManager;
+
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.test.TestingServer;
 import org.junit.jupiter.api.Test;

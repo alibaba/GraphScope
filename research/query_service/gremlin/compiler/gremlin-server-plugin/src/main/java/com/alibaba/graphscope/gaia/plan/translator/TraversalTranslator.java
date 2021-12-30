@@ -15,15 +15,16 @@
  */
 package com.alibaba.graphscope.gaia.plan.translator;
 
-import com.alibaba.pegasus.builder.AbstractBuilder;
-import com.alibaba.pegasus.builder.JobBuilder;
-import com.alibaba.pegasus.builder.ReduceBuilder;
-import com.alibaba.pegasus.service.protocol.PegasusClient;
 import com.alibaba.graphscope.gaia.plan.strategy.DummyStep;
 import com.alibaba.graphscope.gaia.plan.translator.builder.PlanConfig;
 import com.alibaba.graphscope.gaia.plan.translator.builder.StepBuilder;
 import com.alibaba.graphscope.gaia.plan.translator.builder.TraversalBuilder;
+import com.alibaba.pegasus.builder.AbstractBuilder;
+import com.alibaba.pegasus.builder.JobBuilder;
+import com.alibaba.pegasus.builder.ReduceBuilder;
+import com.alibaba.pegasus.service.protocol.PegasusClient;
 import com.google.protobuf.ByteString;
+
 import org.apache.tinkerpop.gremlin.process.traversal.Step;
 
 import java.util.*;
@@ -38,7 +39,8 @@ public class TraversalTranslator extends AttributeTranslator<TraversalBuilder, A
     protected Function<TraversalBuilder, AbstractBuilder> getApplyFunc() {
         return (TraversalBuilder t) -> {
             AbstractBuilder builder = new JobBuilder();
-            builder.setConf((PegasusClient.JobConfig) t.getConf().getProperty(PlanConfig.QUERY_CONFIG));
+            builder.setConf(
+                    (PegasusClient.JobConfig) t.getConf().getProperty(PlanConfig.QUERY_CONFIG));
             List<Step> steps = t.getAdmin().getSteps();
             for (Step s : steps) {
                 if (s instanceof DummyStep) continue;

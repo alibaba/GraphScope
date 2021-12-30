@@ -1,12 +1,12 @@
 /**
  * Copyright 2020 Alibaba Group Holding Limited.
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -15,9 +15,10 @@
  */
 package com.alibaba.graphscope.groot.wal.kafka;
 
-import com.alibaba.maxgraph.compiler.api.exception.MaxGraphException;
 import com.alibaba.graphscope.groot.wal.LogEntry;
 import com.alibaba.graphscope.groot.wal.LogWriter;
+import com.alibaba.maxgraph.compiler.api.exception.MaxGraphException;
+
 import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.Producer;
 import org.apache.kafka.clients.producer.ProducerRecord;
@@ -39,7 +40,8 @@ public class KafkaLogWriter implements LogWriter {
     private String topicName;
     private int partitionId;
 
-    public KafkaLogWriter(String servers, String topicName, int partitionId, Map<String, String> customConfigs) {
+    public KafkaLogWriter(
+            String servers, String topicName, int partitionId, Map<String, String> customConfigs) {
         this.topicName = topicName;
         this.partitionId = partitionId;
 
@@ -47,16 +49,18 @@ public class KafkaLogWriter implements LogWriter {
         producerConfig.put("bootstrap.servers", servers);
         producerConfig.put("enable.idempotence", true);
 
-        customConfigs.forEach((k, v) -> {
-            producerConfig.put(k, v);
-        });
+        customConfigs.forEach(
+                (k, v) -> {
+                    producerConfig.put(k, v);
+                });
         this.producer = new KafkaProducer<>(producerConfig, ser, ser);
     }
 
     @Override
     public long append(LogEntry logEntry) throws IOException {
-        Future<RecordMetadata> future = producer.send(new ProducerRecord<>(this.topicName, this.partitionId, null,
-                logEntry));
+        Future<RecordMetadata> future =
+                producer.send(
+                        new ProducerRecord<>(this.topicName, this.partitionId, null, logEntry));
         RecordMetadata recordMetadata;
         try {
             recordMetadata = future.get();

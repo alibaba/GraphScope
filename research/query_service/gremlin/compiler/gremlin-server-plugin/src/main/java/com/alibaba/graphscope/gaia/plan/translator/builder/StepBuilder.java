@@ -16,6 +16,7 @@
 package com.alibaba.graphscope.gaia.plan.translator.builder;
 
 import com.alibaba.pegasus.builder.AbstractBuilder;
+
 import org.apache.tinkerpop.gremlin.process.traversal.Step;
 
 public class StepBuilder extends ConfigBuilder<StepBuilder> {

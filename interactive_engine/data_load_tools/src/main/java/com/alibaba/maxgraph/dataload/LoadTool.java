@@ -8,22 +8,21 @@ public class LoadTool {
 
     public static void main(String[] args) throws ParseException, IOException {
         Options options = new Options();
-        options.addOption(Option.builder("c")
-                .longOpt("command")
-                .hasArg()
-                .argName("COMMAND")
-                .desc("supported COMMAND: ingest / commit")
-                .build());
-        options.addOption(Option.builder("d")
-                .longOpt("dir")
-                .hasArg()
-                .argName("HDFS_PATH")
-                .desc("data directory of HDFS. e.g., hdfs://1.2.3.4:9000/build_output")
-                .build());
-        options.addOption(Option.builder("h")
-                .longOpt("help")
-                .desc("print this message")
-                .build());
+        options.addOption(
+                Option.builder("c")
+                        .longOpt("command")
+                        .hasArg()
+                        .argName("COMMAND")
+                        .desc("supported COMMAND: ingest / commit")
+                        .build());
+        options.addOption(
+                Option.builder("d")
+                        .longOpt("dir")
+                        .hasArg()
+                        .argName("HDFS_PATH")
+                        .desc("data directory of HDFS. e.g., hdfs://1.2.3.4:9000/build_output")
+                        .build());
+        options.addOption(Option.builder("h").longOpt("help").desc("print this message").build());
         CommandLineParser parser = new DefaultParser();
         CommandLine commandLine = parser.parse(options, args);
         String command = commandLine.getOptionValue("command");

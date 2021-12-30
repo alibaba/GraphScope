@@ -16,6 +16,7 @@
 package com.alibaba.graphscope.gaia.plan.strategy.shuffle;
 
 import com.alibaba.graphscope.gaia.plan.strategy.PropertyIdentityStep;
+
 import org.apache.tinkerpop.gremlin.process.traversal.Step;
 import org.apache.tinkerpop.gremlin.process.traversal.Traversal;
 import org.apache.tinkerpop.gremlin.process.traversal.step.map.PropertiesStep;
@@ -36,7 +37,8 @@ public class ValueProperty extends PropertyShuffler {
         if (step instanceof PropertiesStep || step instanceof PropertyMapStep) {
             // todo: set properties
         } else {
-            throw new UnsupportedOperationException("cannot support other value step " + step.getClass());
+            throw new UnsupportedOperationException(
+                    "cannot support other value step " + step.getClass());
         }
     }
 
@@ -44,8 +46,12 @@ public class ValueProperty extends PropertyShuffler {
     protected boolean match() {
         Traversal.Admin traversal = step.getTraversal();
         // ignore by(values)/by(valueMap)/by(select(keys).values)
-        return !(traversal.getSteps().size() == 1 && (traversal.getStartStep() instanceof PropertyMapStep || traversal.getStartStep() instanceof PropertiesStep)
-                || traversal.getSteps().size() == 2 && traversal.getStartStep() instanceof TraversalMapStep && traversal.getEndStep() instanceof PropertiesStep);
+        return !(traversal.getSteps().size() == 1
+                        && (traversal.getStartStep() instanceof PropertyMapStep
+                                || traversal.getStartStep() instanceof PropertiesStep)
+                || traversal.getSteps().size() == 2
+                        && traversal.getStartStep() instanceof TraversalMapStep
+                        && traversal.getEndStep() instanceof PropertiesStep);
     }
 
     @Override

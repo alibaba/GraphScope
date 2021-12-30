@@ -28,7 +28,10 @@ public class FilterChainHelper {
             chain.getNodeBuilder(size - 1).setNext(Gremlin.Connect.AND);
         }
         if (hasConnect(add, Gremlin.Connect.OR)) {
-            Gremlin.FilterNode.Builder newone = Gremlin.FilterNode.newBuilder().setChain(add.toByteString()).setNext(Gremlin.Connect.OR);
+            Gremlin.FilterNode.Builder newone =
+                    Gremlin.FilterNode.newBuilder()
+                            .setChain(add.toByteString())
+                            .setNext(Gremlin.Connect.OR);
             chain.addNode(newone);
         } else {
             chain.addAllNode(add.getNodeList());
@@ -41,7 +44,10 @@ public class FilterChainHelper {
             chain.getNodeBuilder(size - 1).setNext(Gremlin.Connect.OR);
         }
         if (hasConnect(add, Gremlin.Connect.AND)) {
-            Gremlin.FilterNode.Builder newone = Gremlin.FilterNode.newBuilder().setChain(add.toByteString()).setNext(Gremlin.Connect.OR);
+            Gremlin.FilterNode.Builder newone =
+                    Gremlin.FilterNode.newBuilder()
+                            .setChain(add.toByteString())
+                            .setNext(Gremlin.Connect.OR);
             chain.addNode(newone);
         } else {
             chain.addAllNode(add.getNodeList());
@@ -55,5 +61,3 @@ public class FilterChainHelper {
         return false;
     }
 }
-
-

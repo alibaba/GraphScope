@@ -1,12 +1,12 @@
 /**
  * Copyright 2020 Alibaba Group Holding Limited.
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -17,6 +17,7 @@ package com.alibaba.maxgraph.compiler.prepare;
 
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Objects;
+
 import org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.GraphTraversal;
 
 public class PreparedTraversal {
@@ -41,8 +42,7 @@ public class PreparedTraversal {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         PreparedTraversal that = (PreparedTraversal) o;
-        return Objects.equal(prepareId, that.prepareId) &&
-                Objects.equal(traversal, that.traversal);
+        return Objects.equal(prepareId, that.prepareId) && Objects.equal(traversal, that.traversal);
     }
 
     @Override

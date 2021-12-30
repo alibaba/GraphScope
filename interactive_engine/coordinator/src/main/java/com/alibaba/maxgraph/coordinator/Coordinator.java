@@ -1,12 +1,12 @@
 /**
  * Copyright 2020 Alibaba Group Holding Limited.
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -14,6 +14,9 @@
  * limitations under the License.
  */
 package com.alibaba.maxgraph.coordinator;
+
+import static com.alibaba.maxgraph.common.MetricGetter.METRIC_SOURCE_LAST_READ_TIMESTAMP;
+import static com.alibaba.maxgraph.common.MetricGetter.METRIC_SOURCE_LAST_WRITE_TIMESTAMP;
 
 import com.alibaba.maxgraph.common.cluster.InstanceConfig;
 import com.alibaba.maxgraph.common.cluster.management.ClusterApplierService;
@@ -23,8 +26,10 @@ import com.alibaba.maxgraph.common.zookeeper.ZkNamingProxy;
 import com.alibaba.maxgraph.common.zookeeper.ZkUtils;
 import com.alibaba.maxgraph.coordinator.manager.*;
 import com.alibaba.maxgraph.coordinator.service.*;
+
 import io.grpc.Server;
 import io.grpc.netty.NettyServerBuilder;
+
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
@@ -36,14 +41,10 @@ import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.util.concurrent.CountDownLatch;
 
-import static com.alibaba.maxgraph.common.MetricGetter.METRIC_SOURCE_LAST_READ_TIMESTAMP;
-import static com.alibaba.maxgraph.common.MetricGetter.METRIC_SOURCE_LAST_WRITE_TIMESTAMP;
-
 /**
  * @author lvshuang.xjs@alibaba-inc.com
  * @create 2018-06-12 上午10:00
  **/
-
 public class Coordinator {
 
     private static final Logger LOG = LoggerFactory.getLogger(Coordinator.class);
@@ -71,24 +72,32 @@ public class Coordinator {
         this.zkUtils = ZkUtils.getZKUtils(instanceConfig);
         this.namingProxy = new ZkNamingProxy(graphName, zkUtils);
         this.clusterApplierService = new ClusterApplierService(instanceConfig);
-        this.serverDataManager = new ServerDataManager(instanceConfig, namingProxy, this.clusterApplierService);
+        this.serverDataManager =
+                new ServerDataManager(instanceConfig, namingProxy, this.clusterApplierService);
         this.hostName = InetAddress.getLocalHost().getHostAddress();
         int threadCount = instanceConfig.getCoordinatorGrpcThreadCount();
         LOG.info("rpc server thread count: " + threadCount);
-        this.serverBuilder = NettyServerBuilder
-                .forAddress(new InetSocketAddress(hostName, 0))
-                .executor(CommonUtil.getGrpcExecutor(threadCount))
-                .maxInboundMessageSize(Constants.MAXGRAPH_RPC_MAX_MESSAGE_SIZE);
+        this.serverBuilder =
+                NettyServerBuilder.forAddress(new InetSocketAddress(hostName, 0))
+                        .executor(CommonUtil.getGrpcExecutor(threadCount))
+                        .maxInboundMessageSize(Constants.MAXGRAPH_RPC_MAX_MESSAGE_SIZE);
 
         LoggerStore loggerStore = new ZkLoggerStore(instanceConfig, zkUtils);
-        this.masterService = new MasterService(instanceConfig, clusterApplierService, loggerStore,
-                serverDataManager.partitionManager);
+        this.masterService =
+                new MasterService(
+                        instanceConfig,
+                        clusterApplierService,
+                        loggerStore,
+                        serverDataManager.partitionManager);
         this.metricCollector = new MetricCollector();
         // executor
-        metricCollector.registerMetricProtoParser(EXECUTOR_DISK_UTIL, new DiskUtilMetricProtoParser());
+        metricCollector.registerMetricProtoParser(
+                EXECUTOR_DISK_UTIL, new DiskUtilMetricProtoParser());
         // ingest node
-        metricCollector.registerMetricProtoParser(METRIC_SOURCE_LAST_READ_TIMESTAMP, new CommonMetricProtoParser());
-        metricCollector.registerMetricProtoParser(METRIC_SOURCE_LAST_WRITE_TIMESTAMP, new CommonMetricProtoParser());
+        metricCollector.registerMetricProtoParser(
+                METRIC_SOURCE_LAST_READ_TIMESTAMP, new CommonMetricProtoParser());
+        metricCollector.registerMetricProtoParser(
+                METRIC_SOURCE_LAST_WRITE_TIMESTAMP, new CommonMetricProtoParser());
     }
 
     public void start() throws Exception {
@@ -141,12 +150,13 @@ public class Coordinator {
         this.workerManager = new WorkerManager(instanceConfig, serverDataManager);
 
         // server for DataStatus of Workers
-        ServerDataApiServer serverDataApiServer = new ServerDataApiServer(serverDataManager, masterService,
-                metricCollector);
+        ServerDataApiServer serverDataApiServer =
+                new ServerDataApiServer(serverDataManager, masterService, metricCollector);
         serverDataApiServer.init(serverBuilder);
 
-        CoordinatorRpcServer coordinatorRpcServer = new CoordinatorRpcServer(clusterApplierService, masterService,
-                serverDataManager, metricCollector);
+        CoordinatorRpcServer coordinatorRpcServer =
+                new CoordinatorRpcServer(
+                        clusterApplierService, masterService, serverDataManager, metricCollector);
         coordinatorRpcServer.init(serverBuilder);
 
         rpcServer = serverBuilder.build().start();
@@ -157,7 +167,8 @@ public class Coordinator {
         namingProxy.deleteCoordinatorInfo();
 
         // register to naming service
-        ControllerRegisterCallBack controllerRegisterCallBack = new ControllerRegisterCallBack(zkUtils);
+        ControllerRegisterCallBack controllerRegisterCallBack =
+                new ControllerRegisterCallBack(zkUtils);
         controllerRegisterCallBack.register();
     }
 

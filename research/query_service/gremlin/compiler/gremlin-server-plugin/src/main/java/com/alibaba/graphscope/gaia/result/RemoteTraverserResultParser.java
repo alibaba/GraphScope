@@ -20,6 +20,7 @@ import com.alibaba.graphscope.gaia.config.GaiaConfig;
 import com.alibaba.graphscope.gaia.plan.translator.builder.ConfigBuilder;
 import com.alibaba.graphscope.gaia.store.GraphStoreService;
 import com.google.common.collect.ImmutableMap;
+
 import org.apache.tinkerpop.gremlin.process.remote.traversal.DefaultRemoteTraverser;
 import org.apache.tinkerpop.gremlin.process.remote.traversal.RemoteTraverser;
 import org.apache.tinkerpop.gremlin.process.traversal.Path;
@@ -32,7 +33,8 @@ import java.util.*;
 public class RemoteTraverserResultParser extends DefaultResultParser {
     private static final Logger logger = LoggerFactory.getLogger(RemoteTraverserResultParser.class);
 
-    public RemoteTraverserResultParser(ConfigBuilder builder, GraphStoreService graphStore, GaiaConfig config) {
+    public RemoteTraverserResultParser(
+            ConfigBuilder builder, GraphStoreService graphStore, GaiaConfig config) {
         super(builder, graphStore, config);
     }
 
@@ -40,28 +42,51 @@ public class RemoteTraverserResultParser extends DefaultResultParser {
     public List<Object> parseFrom(GremlinResult.Result resultData) {
         List<Object> result = new ArrayList<>();
         if (resultData.getInnerCase() == GremlinResult.Result.InnerCase.PATHS) {
-            resultData.getPaths().getItemList().forEach(p -> {
-                result.add(transform(parsePath(p)));
-            });
+            resultData
+                    .getPaths()
+                    .getItemList()
+                    .forEach(
+                            p -> {
+                                result.add(transform(parsePath(p)));
+                            });
         } else if (resultData.getInnerCase() == GremlinResult.Result.InnerCase.ELEMENTS) {
-            resultData.getElements().getItemList().forEach(e -> {
-                result.add(transform(parseElement(e)));
-            });
+            resultData
+                    .getElements()
+                    .getItemList()
+                    .forEach(
+                            e -> {
+                                result.add(transform(parseElement(e)));
+                            });
         } else if (resultData.getInnerCase() == GremlinResult.Result.InnerCase.TAG_ENTRIES) {
-            resultData.getTagEntries().getItemList().forEach(e -> {
-                result.add(transform(parseTagPropertyValue(e)));
-            });
+            resultData
+                    .getTagEntries()
+                    .getItemList()
+                    .forEach(
+                            e -> {
+                                result.add(transform(parseTagPropertyValue(e)));
+                            });
         } else if (resultData.getInnerCase() == GremlinResult.Result.InnerCase.MAP_RESULT) {
-            resultData.getMapResult().getItemList().forEach(e -> {
-                Map entry = Collections.singletonMap(parsePairElement(e.getFirst()), parsePairElement(e.getSecond()));
-                result.add(transform(entry));
-            });
+            resultData
+                    .getMapResult()
+                    .getItemList()
+                    .forEach(
+                            e -> {
+                                Map entry =
+                                        Collections.singletonMap(
+                                                parsePairElement(e.getFirst()),
+                                                parsePairElement(e.getSecond()));
+                                result.add(transform(entry));
+                            });
         } else if (resultData.getInnerCase() == GremlinResult.Result.InnerCase.VALUE) {
             result.add(transform(parseValue(resultData.getValue())));
         } else if (resultData.getInnerCase() == GremlinResult.Result.InnerCase.VALUE_LIST) {
-            resultData.getValueList().getItemList().forEach(k -> {
-                result.add(transform(parseValue(k)));
-            });
+            resultData
+                    .getValueList()
+                    .getItemList()
+                    .forEach(
+                            k -> {
+                                result.add(transform(parseValue(k)));
+                            });
         } else {
             throw new UnsupportedOperationException("");
         }
@@ -71,9 +96,11 @@ public class RemoteTraverserResultParser extends DefaultResultParser {
     @Override
     protected Path parsePath(GremlinResult.Path pathPB) {
         Path path = MutablePath.make();
-        pathPB.getPathList().forEach(p -> {
-            path.extend(parseElement(p), Collections.EMPTY_SET);
-        });
+        pathPB.getPathList()
+                .forEach(
+                        p -> {
+                            path.extend(parseElement(p), Collections.EMPTY_SET);
+                        });
         return path;
     }
 
@@ -101,7 +128,10 @@ public class RemoteTraverserResultParser extends DefaultResultParser {
         for (String key : keys) {
             Optional propertyOpt = graphStore.getVertexProperty(extractVertexId(vertex), key);
             if (propertyOpt.isPresent()) {
-                result.put(key, Collections.singletonList(ImmutableMap.of("id", 1L, "value", propertyOpt.get())));
+                result.put(
+                        key,
+                        Collections.singletonList(
+                                ImmutableMap.of("id", 1L, "value", propertyOpt.get())));
             }
         }
         return result;

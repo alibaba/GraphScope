@@ -1,12 +1,12 @@
 /**
  * Copyright 2020 Alibaba Group Holding Limited.
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -22,6 +22,7 @@ import com.alibaba.maxgraph.compiler.logical.LogicalPlanBuilder;
 import com.alibaba.maxgraph.compiler.logical.LogicalQueryPlan;
 import com.alibaba.maxgraph.compiler.tree.TreeBuilder;
 import com.alibaba.maxgraph.compiler.tree.TreeManager;
+
 import org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.GraphTraversal;
 
 public class LogicalPlanOptimizer {
@@ -31,18 +32,20 @@ public class LogicalPlanOptimizer {
     private final long snapshotId;
     private final boolean lambdaEnableFlag;
 
-    public LogicalPlanOptimizer(OptimizeConfig optimizeConfig,
-                                boolean globalPullGraphFlag,
-                                GraphSchema schema,
-                                long snapshotId) {
+    public LogicalPlanOptimizer(
+            OptimizeConfig optimizeConfig,
+            boolean globalPullGraphFlag,
+            GraphSchema schema,
+            long snapshotId) {
         this(optimizeConfig, globalPullGraphFlag, schema, snapshotId, false);
     }
 
-    public LogicalPlanOptimizer(OptimizeConfig optimizeConfig,
-                                boolean globalPullGraphFlag,
-                                GraphSchema schema,
-                                long snapshotId,
-                                boolean lambdaEnableFlag) {
+    public LogicalPlanOptimizer(
+            OptimizeConfig optimizeConfig,
+            boolean globalPullGraphFlag,
+            GraphSchema schema,
+            long snapshotId,
+            boolean lambdaEnableFlag) {
         this.optimizeConfig = optimizeConfig;
         this.globalPullGraphFlag = globalPullGraphFlag;
         this.schema = schema;
@@ -51,10 +54,13 @@ public class LogicalPlanOptimizer {
     }
 
     public QueryFlowManager build(GraphTraversal traversal) {
-        TreeBuilder treeBuilder = TreeBuilder.newTreeBuilder(schema, optimizeConfig, lambdaEnableFlag);
+        TreeBuilder treeBuilder =
+                TreeBuilder.newTreeBuilder(schema, optimizeConfig, lambdaEnableFlag);
         TreeManager treeManager = treeBuilder.build(traversal);
         if (this.globalPullGraphFlag) {
-            treeManager.getQueryConfig().addProperty(CompilerConstant.QUERY_GRAPH_PULL_ENABLE, true);
+            treeManager
+                    .getQueryConfig()
+                    .addProperty(CompilerConstant.QUERY_GRAPH_PULL_ENABLE, true);
         }
         treeManager.optimizeTree();
 
@@ -62,7 +68,8 @@ public class LogicalPlanOptimizer {
         logicalQueryPlan = logicalQueryPlan.chainOptimize();
 
         QueryFlowBuilder queryFlowBuilder = new QueryFlowBuilder();
-        QueryFlowManager queryFlowManager = queryFlowBuilder.prepareQueryFlow(logicalQueryPlan, snapshotId);
+        QueryFlowManager queryFlowManager =
+                queryFlowBuilder.prepareQueryFlow(logicalQueryPlan, snapshotId);
         queryFlowManager.validQueryFlow();
 
         return queryFlowManager;
@@ -75,18 +82,22 @@ public class LogicalPlanOptimizer {
      * @return The result query flow
      */
     public QueryFlowManager build(DfsTraversal dfsTraversal) {
-        TreeBuilder treeBuilder = TreeBuilder.newTreeBuilder(schema, optimizeConfig, this.lambdaEnableFlag);
+        TreeBuilder treeBuilder =
+                TreeBuilder.newTreeBuilder(schema, optimizeConfig, this.lambdaEnableFlag);
         treeBuilder.setDisableBarrierOptimizer(true);
         TreeManager treeManager = dfsTraversal.buildDfsTree(treeBuilder, schema);
         if (this.globalPullGraphFlag) {
-            treeManager.getQueryConfig().addProperty(CompilerConstant.QUERY_GRAPH_PULL_ENABLE, true);
+            treeManager
+                    .getQueryConfig()
+                    .addProperty(CompilerConstant.QUERY_GRAPH_PULL_ENABLE, true);
         }
 
         LogicalQueryPlan logicalQueryPlan = LogicalPlanBuilder.newBuilder().build(treeManager);
         logicalQueryPlan = logicalQueryPlan.chainOptimize();
 
         QueryFlowBuilder queryFlowBuilder = new QueryFlowBuilder();
-        QueryFlowManager queryFlowManager = queryFlowBuilder.prepareQueryFlow(logicalQueryPlan, snapshotId);
+        QueryFlowManager queryFlowManager =
+                queryFlowBuilder.prepareQueryFlow(logicalQueryPlan, snapshotId);
         queryFlowManager.validQueryFlow();
 
         return queryFlowManager;

@@ -1,15 +1,16 @@
 package com.alibaba.maxgraph.servers.gaia;
 
+import com.alibaba.graphscope.groot.discovery.*;
+import com.alibaba.graphscope.groot.store.GraphPartition;
+import com.alibaba.graphscope.groot.store.jna.JnaGraphStore;
 import com.alibaba.maxgraph.common.RoleType;
 import com.alibaba.maxgraph.common.config.CommonConfig;
 import com.alibaba.maxgraph.common.config.Configs;
-import com.alibaba.graphscope.groot.discovery.*;
 import com.alibaba.maxgraph.compiler.api.exception.MaxGraphException;
-import com.alibaba.graphscope.groot.store.GraphPartition;
 import com.alibaba.maxgraph.servers.jna.GaiaLibrary;
 import com.alibaba.maxgraph.servers.jna.GaiaPortsResponse;
-import com.alibaba.graphscope.groot.store.jna.JnaGraphStore;
 import com.sun.jna.Pointer;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

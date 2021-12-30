@@ -522,10 +522,11 @@ class TensorContextWrapper<
     BOOST_LEAF_AUTO(data_type, get_dynamic_type(comm_spec, tensor));
 
     if (data_type != folly::dynamic::INT64 &&
-        data_type != folly::dynamic::DOUBLE) {
-      RETURN_GS_ERROR(
-          vineyard::ErrorCode::kInvalidOperationError,
-          "Only support folly::dynamic::INT64 or folly::dynamic::DOUBLE");
+        data_type != folly::dynamic::DOUBLE &&
+        data_type != folly::dynamic::NULLT) {
+      RETURN_GS_ERROR(vineyard::ErrorCode::kInvalidOperationError,
+                      "Only support folly::dynamic::INT64, "
+                      "folly::dynamic::DOUBLE or folly::dynamic::NULLT");
     }
 
     int64_t local_num = shape.empty() ? 0 : shape[axis], total_num;
@@ -795,10 +796,6 @@ class TensorContextWrapper<
         type = e;
         break;
       }
-    }
-    if (type == folly::dynamic::NULLT) {
-      RETURN_GS_ERROR(vineyard::ErrorCode::kInvalidOperationError,
-                      "All folly::dynamic are empty");
     }
 
     for (auto e : types) {

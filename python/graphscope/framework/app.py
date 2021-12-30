@@ -312,7 +312,7 @@ class AppDAGNode(DAGNode):
         self._session.dag.add_op(self._op)
 
     def __repr__(self):
-        s = f"graphscope.App <type: {self._app_assets.type}, algorithm: {self._app_assets.algo}"
+        s = f"graphscope.App <type: {self._app_assets.type}, algorithm: {self._app_assets.algo} "
         s += f"bounded_graph: {str(self._graph)}>"
         return s
 
@@ -450,7 +450,7 @@ def load_app(gar=None, algo=None, context=None, **kwargs):
         TypeError: File is not a zip file.
 
     Examples:
-        >>> sssp = load_app(algo='sssp', gar='./resource.gar')
+        >>> sssp = load_app(gar='./resource.gar', algo='sssp')
         >>> sssp(src=4)
 
         which will have following `.gs_conf.yaml` in resource.gar:
@@ -458,6 +458,7 @@ def load_app(gar=None, algo=None, context=None, **kwargs):
             - algo: sssp
               type: cpp_pie
               class_name: grape:SSSP
+              context_type: vertex_data
               src: sssp/sssp.h
               compatible_graph:
                 - gs::ArrowProjectedFragment

@@ -5,6 +5,7 @@ import com.alibaba.graphscope.gaia.JsonUtils;
 import com.alibaba.graphscope.gaia.plan.PlanUtils;
 import com.alibaba.graphscope.gaia.store.GraphType;
 import com.fasterxml.jackson.core.type.TypeReference;
+
 import org.apache.tinkerpop.gremlin.structure.Graph;
 
 import java.io.File;
@@ -34,11 +35,13 @@ public final class ExperimentalGaiaConfig implements GaiaConfig {
     public ExperimentalGaiaConfig(String confDir) {
         try {
             // init from file
-            String configInJson = PlanUtils.readJsonFromFile(confDir + File.separator + GAIA_ARGS_JSON);
-            this.gaiaArgsJson = JsonUtils.fromJson(configInJson, new TypeReference<Map<String, Object>>() {
-            });
+            String configInJson =
+                    PlanUtils.readJsonFromFile(confDir + File.separator + GAIA_ARGS_JSON);
+            this.gaiaArgsJson =
+                    JsonUtils.fromJson(configInJson, new TypeReference<Map<String, Object>>() {});
             this.graphProperties = new Properties();
-            this.graphProperties.load(new FileInputStream(new File(confDir + File.separator + GRAPH_PROPERTIES)));
+            this.graphProperties.load(
+                    new FileInputStream(new File(confDir + File.separator + GRAPH_PROPERTIES)));
             for (String key : gaiaArgsJson.keySet()) {
                 String sysVal = System.getProperty(key);
                 if (sysVal != null) {

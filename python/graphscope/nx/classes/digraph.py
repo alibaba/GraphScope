@@ -38,7 +38,6 @@ from graphscope.nx import NetworkXError
 from graphscope.nx.classes.graph import Graph
 from graphscope.nx.convert import to_networkx_graph
 from graphscope.nx.utils.compat import patch_docstring
-from graphscope.nx.utils.misc import check_node_is_legal
 from graphscope.nx.utils.misc import empty_graph_in_engine
 from graphscope.proto import graph_def_pb2
 from graphscope.proto import types_pb2
@@ -262,6 +261,10 @@ class DiGraph(Graph):
         self._schema = GraphSchema()
         self._schema.init_nx_schema()
 
+        # cache for add_node and add_edge
+        self._nodes_for_adding = []
+        self._edges_for_adding = []
+
         create_empty_in_engine = attr.pop(
             "create_empty_in_engine", True
         )  # a hidden parameter
@@ -289,15 +292,10 @@ class DiGraph(Graph):
         self.graph.update(attr)
         self._saved_signature = self.signature
 
-    def __repr__(self):
-        s = "graphscope.nx.DiGraph\n"
-        s += "type: " + self.template_str.split("<")[0]
-        s += str(self._schema)
-        return s
-
     @property
     @patch_docstring(RefDiGraph.adj)
     def adj(self):
+        self._clear_adding_cache()
         return AdjacencyView(self._succ)
 
     succ = adj
@@ -305,19 +303,22 @@ class DiGraph(Graph):
     @property
     @patch_docstring(RefDiGraph.pred)
     def pred(self):
+        self._clear_adding_cache()
         return AdjacencyView(self._pred)
 
     @patch_docstring(RefDiGraph.has_predecessor)
     def has_successor(self, u, v):
+        self._clear_adding_cache()
         return self.has_edge(u, v)
 
     @patch_docstring(RefDiGraph.has_predecessor)
     def has_predecessor(self, u, v):
+        self._clear_adding_cache()
         return self.has_edge(v, u)
 
     @patch_docstring(RefDiGraph.successors)
     def successors(self, n):
-        check_node_is_legal(n)
+        self._clear_adding_cache()
         try:
             return iter(self._succ[n])
         except KeyError:
@@ -328,7 +329,7 @@ class DiGraph(Graph):
 
     @patch_docstring(RefDiGraph.predecessors)
     def predecessors(self, n):
-        check_node_is_legal(n)
+        self._clear_adding_cache()
         try:
             return iter(self._pred[n])
         except KeyError:
@@ -395,6 +396,7 @@ class DiGraph(Graph):
         OutEdgeDataView([(0, 1)])
 
         """
+        self._clear_adding_cache()
         return OutEdgeView(self)
 
     # alias out_edges to edges
@@ -403,6 +405,7 @@ class DiGraph(Graph):
     @property
     @patch_docstring(RefDiGraph.in_edges)
     def in_edges(self):
+        self._clear_adding_cache()
         return InEdgeView(self)
 
     @property
@@ -450,16 +453,19 @@ class DiGraph(Graph):
         [(0, 1), (1, 2), (2, 2)]
 
         """
+        self._clear_adding_cache()
         return DiDegreeView(self)
 
     @property
     @patch_docstring(RefDiGraph.in_degree)
     def in_degree(self):
+        self._clear_adding_cache()
         return InDegreeView(self)
 
     @property
     @patch_docstring(RefDiGraph.out_degree)
     def out_degree(self):
+        self._clear_adding_cache()
         return OutDegreeView(self)
 
     @patch_docstring(RefDiGraph.is_directed)
@@ -473,6 +479,7 @@ class DiGraph(Graph):
     @patch_docstring(RefDiGraph.reverse)
     def reverse(self, copy=True):
         self._convert_arrow_to_dynamic()
+        self._clear_adding_cache()
 
         if not copy:
             g = self.__class__(create_empty_in_engine=False)

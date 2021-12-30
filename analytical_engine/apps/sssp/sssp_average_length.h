@@ -50,7 +50,7 @@ class SSSPAverageLength
       grape::LoadStrategy::kBothOutIn;
   using vertex_t = typename fragment_t::vertex_t;
   using vid_t = typename fragment_t::vid_t;
-  using edata_t = typename fragment_t::vid_t;
+  using edata_t = typename fragment_t::edata_t;
   // vertex msg: [source, v, sssp_length]
   // OR sum msg: [fid, fid, sssp_length_sum]
   using tuple_t = typename std::tuple<vid_t, vid_t, double>;

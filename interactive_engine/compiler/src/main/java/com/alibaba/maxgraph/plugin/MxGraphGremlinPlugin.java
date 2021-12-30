@@ -1,12 +1,12 @@
 /**
  * Copyright 2020 Alibaba Group Holding Limited.
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -43,25 +43,28 @@ public class MxGraphGremlinPlugin extends AbstractGremlinPlugin {
     private static final String NAME = "Alibaba.MaxGraph";
     private static final MxGraphGremlinPlugin instance = new MxGraphGremlinPlugin();
 
-    private static final ImportCustomizer imports = DefaultImportCustomizer.build()
-        .addClassImports(BigGraphFeatures.class,
-            BigGraphVariables.class,
-            DefaultProperty.class,
-            MxDetachedPath.class,
-            MxEdge.class,
-            MxGraphGremlinPlugin.class,
-            MxPath.class,
-            MxVertex.class,
-            MxVertexProperty.class,
-            TinkerMaxGraph.class,
-            MxEdgeVertexStep.class,
-            MxGraphStep.class,
-            MxGraphStepStrategy.class,
-            DataTypeDeserializer.class,
-            DataTypeSerializer.class,
-            InternalDataType.class,
-            Relationship.class,
-            DataType.class).create();
+    private static final ImportCustomizer imports =
+            DefaultImportCustomizer.build()
+                    .addClassImports(
+                            BigGraphFeatures.class,
+                            BigGraphVariables.class,
+                            DefaultProperty.class,
+                            MxDetachedPath.class,
+                            MxEdge.class,
+                            MxGraphGremlinPlugin.class,
+                            MxPath.class,
+                            MxVertex.class,
+                            MxVertexProperty.class,
+                            TinkerMaxGraph.class,
+                            MxEdgeVertexStep.class,
+                            MxGraphStep.class,
+                            MxGraphStepStrategy.class,
+                            DataTypeDeserializer.class,
+                            DataTypeSerializer.class,
+                            InternalDataType.class,
+                            Relationship.class,
+                            DataType.class)
+                    .create();
 
     public MxGraphGremlinPlugin() {
         super(NAME, imports, new ASTSecurityCustomizer(), new AnnotationCustomizer());

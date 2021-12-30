@@ -17,10 +17,11 @@ package com.alibaba.graphscope.gaia.plan.strategy.shuffle;
 
 import com.alibaba.graphscope.common.proto.Common;
 import com.alibaba.graphscope.common.proto.Gremlin;
-import com.alibaba.graphscope.gaia.plan.extractor.TagKeyExtractorFactory;
 import com.alibaba.graphscope.gaia.plan.PlanUtils;
+import com.alibaba.graphscope.gaia.plan.extractor.TagKeyExtractorFactory;
 import com.alibaba.graphscope.gaia.plan.strategy.OrderGlobalLimitStep;
 import com.alibaba.graphscope.gaia.plan.strategy.PropertyIdentityStep;
+
 import org.apache.tinkerpop.gremlin.process.traversal.Step;
 import org.apache.tinkerpop.gremlin.process.traversal.Traversal;
 import org.apache.tinkerpop.gremlin.process.traversal.step.ComparatorHolder;
@@ -37,7 +38,8 @@ public class GroupByProperty extends PropertyShuffler {
         if (step instanceof GroupCountStep || step instanceof GroupStep) {
             keyTraversal = PlanUtils.getKeyTraversal(step);
         } else {
-            throw new UnsupportedOperationException("cannot support other step in group property " + step.getClass());
+            throw new UnsupportedOperationException(
+                    "cannot support other step in group property " + step.getClass());
         }
     }
 
@@ -53,17 +55,22 @@ public class GroupByProperty extends PropertyShuffler {
                 p = p.getPreviousStep();
             }
         }
-        return isGroupByPropertyPattern(this.keyTraversal) || existAfterOrderNestedSelectWithValue(step);
+        return isGroupByPropertyPattern(this.keyTraversal)
+                || existAfterOrderNestedSelectWithValue(step);
     }
 
     // group().by("p1")/by(valueMap())
     // todo: group().by().by("p1")
     public static boolean isGroupByPropertyPattern(Traversal.Admin keyTraversal) {
         if (keyTraversal != null && TagKeyExtractorFactory.GroupKeyBy.isSimpleValue(keyTraversal)) {
-            Gremlin.TagKey tagKey = TagKeyExtractorFactory.GroupKeyBy.extractFrom(keyTraversal, true);
-            if (PlanUtils.isNotSet(tagKey.getTag()) && (tagKey.getByKey().getItemCase() == Gremlin.ByKey.ItemCase.KEY
-                    && tagKey.getByKey().getKey().getItemCase() == Common.Key.ItemCase.NAME
-                    || tagKey.getByKey().getItemCase() == Gremlin.ByKey.ItemCase.PROP_KEYS)) {
+            Gremlin.TagKey tagKey =
+                    TagKeyExtractorFactory.GroupKeyBy.extractFrom(keyTraversal, true);
+            if (PlanUtils.isNotSet(tagKey.getTag())
+                    && (tagKey.getByKey().getItemCase() == Gremlin.ByKey.ItemCase.KEY
+                                    && tagKey.getByKey().getKey().getItemCase()
+                                            == Common.Key.ItemCase.NAME
+                            || tagKey.getByKey().getItemCase()
+                                    == Gremlin.ByKey.ItemCase.PROP_KEYS)) {
                 return true;
             }
         }
@@ -83,7 +90,9 @@ public class GroupByProperty extends PropertyShuffler {
                 ComparatorHolder holder = (ComparatorHolder) s;
                 for (Pair pair : (List<Pair>) holder.getComparators()) {
                     Traversal.Admin sub = (Traversal.Admin) pair.getValue0();
-                    if (sub.getSteps().size() == 2 && sub.getStartStep() instanceof TraversalMapStep && sub.getEndStep() instanceof PropertiesStep) {
+                    if (sub.getSteps().size() == 2
+                            && sub.getStartStep() instanceof TraversalMapStep
+                            && sub.getEndStep() instanceof PropertiesStep) {
                         return true;
                     }
                 }

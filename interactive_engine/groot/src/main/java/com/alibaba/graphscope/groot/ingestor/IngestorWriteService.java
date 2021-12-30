@@ -13,10 +13,11 @@
  */
 package com.alibaba.graphscope.groot.ingestor;
 
+import com.alibaba.graphscope.groot.operation.OperationBatch;
 import com.alibaba.maxgraph.proto.groot.IngestorWriteGrpc;
 import com.alibaba.maxgraph.proto.groot.WriteIngestorRequest;
 import com.alibaba.maxgraph.proto.groot.WriteIngestorResponse;
-import com.alibaba.graphscope.groot.operation.OperationBatch;
+
 import io.grpc.stub.StreamObserver;
 
 public class IngestorWriteService extends IngestorWriteGrpc.IngestorWriteImplBase {

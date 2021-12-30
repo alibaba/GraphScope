@@ -20,16 +20,17 @@ import com.alibaba.graphscope.common.proto.Gremlin;
 import com.alibaba.graphscope.gaia.JsonUtils;
 import com.alibaba.graphscope.gaia.config.GaiaConfig;
 import com.alibaba.graphscope.gaia.idmaker.IdMaker;
+import com.alibaba.graphscope.gaia.plan.extractor.TagKeyExtractorFactory;
+import com.alibaba.graphscope.gaia.plan.strategy.BySubTaskStep;
 import com.alibaba.graphscope.gaia.plan.strategy.global.property.cache.ToFetchProperties;
+import com.alibaba.graphscope.gaia.plan.translator.builder.PlanConfig;
 import com.alibaba.graphscope.gaia.store.GraphStoreService;
 import com.alibaba.pegasus.builder.AbstractBuilder;
 import com.alibaba.pegasus.service.protocol.PegasusClient;
-import com.alibaba.graphscope.gaia.plan.extractor.TagKeyExtractorFactory;
-import com.alibaba.graphscope.gaia.plan.strategy.BySubTaskStep;
-import com.alibaba.graphscope.gaia.plan.translator.builder.PlanConfig;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.google.protobuf.ByteString;
 import com.google.protobuf.util.JsonFormat;
+
 import org.apache.commons.configuration.Configuration;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang.StringUtils;
@@ -48,13 +49,14 @@ import org.javatuples.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.script.Bindings;
 import java.io.File;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.stream.Collectors;
+
+import javax.script.Bindings;
 
 public class PlanUtils {
     private static final Logger logger = LoggerFactory.getLogger(PlanUtils.class);
@@ -90,16 +92,23 @@ public class PlanUtils {
         Gremlin.PropKeys.Builder keysBuilder = Gremlin.PropKeys.newBuilder();
         if (toFetchProperties.isAll()) {
             keysBuilder.setIsAll(true);
-        } else if (toFetchProperties.getProperties() != null && !toFetchProperties.getProperties().isEmpty()) {
+        } else if (toFetchProperties.getProperties() != null
+                && !toFetchProperties.getProperties().isEmpty()) {
             List<String> properties = toFetchProperties.getProperties();
             if (StringUtils.isNumeric(properties.get(0))) {
-                keysBuilder.addAllPropKeys(properties.stream()
-                        .map(k -> Common.PropertyKey.newBuilder().setNameId(Integer.valueOf(k)).build())
-                        .collect(Collectors.toList()));
+                keysBuilder.addAllPropKeys(
+                        properties.stream()
+                                .map(
+                                        k ->
+                                                Common.PropertyKey.newBuilder()
+                                                        .setNameId(Integer.valueOf(k))
+                                                        .build())
+                                .collect(Collectors.toList()));
             } else {
-                keysBuilder.addAllPropKeys(properties.stream()
-                        .map(k -> Common.PropertyKey.newBuilder().setName(k).build())
-                        .collect(Collectors.toList()));
+                keysBuilder.addAllPropKeys(
+                        properties.stream()
+                                .map(k -> Common.PropertyKey.newBuilder().setName(k).build())
+                                .collect(Collectors.toList()));
             }
         }
         return keysBuilder.build();
@@ -111,7 +120,8 @@ public class PlanUtils {
             return (List<String>) FieldUtils.readField(step, field, true);
             // return getPrivateField(step.getClass(), field);
         } catch (Exception e) {
-            throw new RuntimeException("field " + field + " not exist in step " + step.getClass(), e);
+            throw new RuntimeException(
+                    "field " + field + " not exist in step " + step.getClass(), e);
         }
     }
 
@@ -120,7 +130,8 @@ public class PlanUtils {
         try {
             return (Traversal.Admin) FieldUtils.readField(step, field, true);
         } catch (Exception e) {
-            throw new RuntimeException("field " + field + "not exist in step " + step.getClass(), e);
+            throw new RuntimeException(
+                    "field " + field + "not exist in step " + step.getClass(), e);
         }
     }
 
@@ -129,7 +140,8 @@ public class PlanUtils {
         try {
             return (Traversal.Admin) FieldUtils.readField(step, field, true);
         } catch (Exception e) {
-            throw new RuntimeException("field " + field + "not exist in step " + step.getClass(), e);
+            throw new RuntimeException(
+                    "field " + field + "not exist in step " + step.getClass(), e);
         }
     }
 
@@ -138,7 +150,8 @@ public class PlanUtils {
         try {
             return (Bindings) FieldUtils.readField(executor, field, true);
         } catch (Exception e) {
-            throw new RuntimeException("field " + field + "not exist in step " + executor.getClass(), e);
+            throw new RuntimeException(
+                    "field " + field + "not exist in step " + executor.getClass(), e);
         }
     }
 
@@ -147,21 +160,27 @@ public class PlanUtils {
         try {
             return (ServerGremlinExecutor) FieldUtils.readField(server, field, true);
         } catch (Exception e) {
-            throw new RuntimeException("field " + field + "not exist in step " + server.getClass(), e);
+            throw new RuntimeException(
+                    "field " + field + "not exist in step " + server.getClass(), e);
         }
     }
 
     public static Gremlin.OrderByStep constructFrom(ComparatorHolder holder, Configuration conf) {
         Gremlin.OrderByStep.Builder builder = Gremlin.OrderByStep.newBuilder();
-        holder.getComparators().forEach((k) -> {
-            Order order = (Order) ((Pair) k).getValue1();
-            Traversal.Admin orderByKey = (Traversal.Admin) ((Pair) k).getValue0();
-            Gremlin.OrderByComparePair.Builder pairs = Gremlin.OrderByComparePair.newBuilder()
-                    .setOrder(PlanUtils.convertFrom(order));
-            Gremlin.TagKey tagKey = TagKeyExtractorFactory.OrderBY.extractFrom(orderByKey, false, conf);
-            if (!isEmpty(tagKey)) pairs.setKey(tagKey);
-            builder.addPairs(pairs);
-        });
+        holder.getComparators()
+                .forEach(
+                        (k) -> {
+                            Order order = (Order) ((Pair) k).getValue1();
+                            Traversal.Admin orderByKey = (Traversal.Admin) ((Pair) k).getValue0();
+                            Gremlin.OrderByComparePair.Builder pairs =
+                                    Gremlin.OrderByComparePair.newBuilder()
+                                            .setOrder(PlanUtils.convertFrom(order));
+                            Gremlin.TagKey tagKey =
+                                    TagKeyExtractorFactory.OrderBY.extractFrom(
+                                            orderByKey, false, conf);
+                            if (!isEmpty(tagKey)) pairs.setKey(tagKey);
+                            builder.addPairs(pairs);
+                        });
         return builder.build();
     }
 
@@ -170,23 +189,28 @@ public class PlanUtils {
         if (groupByStep instanceof GroupStep || groupByStep instanceof GroupCountStep) {
             keyTraversal = PlanUtils.getKeyTraversal(groupByStep);
         } else {
-            throw new UnsupportedOperationException("cannot support traversal other than " + groupByStep.getClass());
+            throw new UnsupportedOperationException(
+                    "cannot support traversal other than " + groupByStep.getClass());
         }
         Gremlin.GroupByStep.Builder builder = Gremlin.GroupByStep.newBuilder();
-        Gremlin.TagKey tagKey = TagKeyExtractorFactory.GroupKeyBy.extractFrom(keyTraversal, false, conf);
+        Gremlin.TagKey tagKey =
+                TagKeyExtractorFactory.GroupKeyBy.extractFrom(keyTraversal, false, conf);
         if (!isEmpty(tagKey)) builder.setKey(tagKey);
         return builder.build();
     }
 
     public static boolean isEmpty(Gremlin.TagKey tagKey) {
-        return tagKey == null || isNotSet(tagKey.getTag()) && tagKey.getByKey().getItemCase() == Gremlin.ByKey.ItemCase.ITEM_NOT_SET;
+        return tagKey == null
+                || isNotSet(tagKey.getTag())
+                        && tagKey.getByKey().getItemCase() == Gremlin.ByKey.ItemCase.ITEM_NOT_SET;
     }
 
     public static boolean isNotSet(Gremlin.StepTag tag) {
         return tag.getItemCase() == Gremlin.StepTag.ItemCase.ITEM_NOT_SET;
     }
 
-    public static void setFinalStaticField(Class<?> className, String name, Object newValue) throws Exception {
+    public static void setFinalStaticField(Class<?> className, String name, Object newValue)
+            throws Exception {
         Field classField = FieldUtils.getField(className, name, true);
         Field modifiersField = FieldUtils.getField(Field.class, "modifiers", true);
         modifiersField.setInt(classField, classField.getModifiers() & ~Modifier.FINAL);
@@ -199,7 +223,8 @@ public class PlanUtils {
             results.add(Collections.singletonMap("source", printGremlinStep(job.getSource())));
             job.getPlan().getPlan().forEach(k -> results.add(printOpr(k)));
             logger.info("{}", JsonUtils.toJson(results));
-            // FileUtils.writeStringToFile(new File("plan.log"), JsonUtils.toJson(results), StandardCharsets.UTF_8, true);
+            // FileUtils.writeStringToFile(new File("plan.log"), JsonUtils.toJson(results),
+            // StandardCharsets.UTF_8, true);
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
@@ -208,8 +233,8 @@ public class PlanUtils {
     public static Map printGremlinStep(ByteString data) {
         try {
             Gremlin.GremlinStep step = Gremlin.GremlinStep.parseFrom(data);
-            return JsonUtils.fromJson(JsonFormat.printer().print(step.toBuilder()), new TypeReference<Map>() {
-            });
+            return JsonUtils.fromJson(
+                    JsonFormat.printer().print(step.toBuilder()), new TypeReference<Map>() {});
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
@@ -237,7 +262,10 @@ public class PlanUtils {
             } else if (op.getOpKindCase() == PegasusClient.OperatorDef.OpKindCase.UNION) {
                 for (int i = 0; i < op.getUnion().getBranchesList().size(); ++i) {
                     List<Object> branches = new ArrayList<>();
-                    op.getUnion().getBranches(i).getPlanList().forEach(p -> branches.add(printOpr(p)));
+                    op.getUnion()
+                            .getBranches(i)
+                            .getPlanList()
+                            .forEach(p -> branches.add(printOpr(p)));
                     results.put(String.format("branch-%d", i), branches);
                 }
             } else if (op.getOpKindCase() == PegasusClient.OperatorDef.OpKindCase.MAP) {
@@ -264,7 +292,8 @@ public class PlanUtils {
         return newTraversals;
     }
 
-    public static TraversalRing getTraversalRing(List<Traversal.Admin> traversals, boolean defaultId) {
+    public static TraversalRing getTraversalRing(
+            List<Traversal.Admin> traversals, boolean defaultId) {
         List<Traversal.Admin> modulateBy = new ArrayList<>();
         if (traversals != null) {
             modulateBy.addAll(traversals);
@@ -293,7 +322,9 @@ public class PlanUtils {
             modulateBy = getTraversalRing(((SelectStep) step).getLocalChildren(), false);
             selectTags = PlanUtils.getSelectKeysList(step);
         } else {
-            throw new UnsupportedOperationException("cannot support step other than SelectOneStep and SelectStep " + step.getClass());
+            throw new UnsupportedOperationException(
+                    "cannot support step other than SelectOneStep and SelectStep "
+                            + step.getClass());
         }
         Map<String, Traversal.Admin> tagTraversals = new HashMap<>();
         for (String tag : selectTags) {
@@ -311,26 +342,33 @@ public class PlanUtils {
         if (groupByStep instanceof GroupStep) {
             valueTraversal = PlanUtils.getValueTraversal(groupByStep);
             // default to list
-            if (valueTraversal == null || valueTraversal.getSteps().isEmpty()
-                    || valueTraversal.getSteps().size() == 1 && valueTraversal.getStartStep() instanceof FoldStep
-                    || valueTraversal.getSteps().size() == 2 && isIdentityTraversalMap(valueTraversal.getStartStep())
-                    && valueTraversal.getEndStep() instanceof FoldStep) {
+            if (valueTraversal == null
+                    || valueTraversal.getSteps().isEmpty()
+                    || valueTraversal.getSteps().size() == 1
+                            && valueTraversal.getStartStep() instanceof FoldStep
+                    || valueTraversal.getSteps().size() == 2
+                            && isIdentityTraversalMap(valueTraversal.getStartStep())
+                            && valueTraversal.getEndStep() instanceof FoldStep) {
                 return PegasusClient.AccumKind.TO_LIST;
-            } else if (valueTraversal.getSteps().size() == 1 && valueTraversal.getStartStep() instanceof CountGlobalStep) {
+            } else if (valueTraversal.getSteps().size() == 1
+                    && valueTraversal.getStartStep() instanceof CountGlobalStep) {
                 return PegasusClient.AccumKind.CNT;
             } else {
-                throw new UnsupportedOperationException("cannot support other value traversal " + valueTraversal);
+                throw new UnsupportedOperationException(
+                        "cannot support other value traversal " + valueTraversal);
             }
         } else if (groupByStep instanceof GroupCountStep) {
             return PegasusClient.AccumKind.CNT;
         } else {
-            throw new UnsupportedOperationException("cannot support step other than group by " + groupByStep.getClass());
+            throw new UnsupportedOperationException(
+                    "cannot support step other than group by " + groupByStep.getClass());
         }
     }
 
     public static boolean isIdentityTraversalMap(Step step) {
         if (step instanceof TraversalMapStep) {
-            Traversal.Admin mapTraversal = (Traversal.Admin) ((TraversalMapStep) step).getLocalChildren().get(0);
+            Traversal.Admin mapTraversal =
+                    (Traversal.Admin) ((TraversalMapStep) step).getLocalChildren().get(0);
             return mapTraversal != null && mapTraversal instanceof IdentityTraversal;
         } else {
             return false;
@@ -338,12 +376,19 @@ public class PlanUtils {
     }
 
     public static Gremlin.SubTaskJoiner getByJoiner(BySubTaskStep.JoinerType type) {
-        if (type == BySubTaskStep.JoinerType.GroupKeyBy || type == BySubTaskStep.JoinerType.OrderBy) {
-            return Gremlin.SubTaskJoiner.newBuilder().setByJoiner(Gremlin.ByJoiner.newBuilder()).build();
+        if (type == BySubTaskStep.JoinerType.GroupKeyBy
+                || type == BySubTaskStep.JoinerType.OrderBy) {
+            return Gremlin.SubTaskJoiner.newBuilder()
+                    .setByJoiner(Gremlin.ByJoiner.newBuilder())
+                    .build();
         } else if (type == BySubTaskStep.JoinerType.GroupValueBy) {
-            return Gremlin.SubTaskJoiner.newBuilder().setGroupValueJoiner(Gremlin.GroupValueJoiner.newBuilder()).build();
+            return Gremlin.SubTaskJoiner.newBuilder()
+                    .setGroupValueJoiner(Gremlin.GroupValueJoiner.newBuilder())
+                    .build();
         } else if (type == BySubTaskStep.JoinerType.Select) {
-            return Gremlin.SubTaskJoiner.newBuilder().setSelectByJoiner(Gremlin.SelectBySubJoin.newBuilder()).build();
+            return Gremlin.SubTaskJoiner.newBuilder()
+                    .setSelectByJoiner(Gremlin.SelectBySubJoin.newBuilder())
+                    .build();
         } else {
             throw new UnsupportedOperationException("cannot support other by joiner type " + type);
         }
@@ -367,7 +412,8 @@ public class PlanUtils {
             return (boolean) FieldUtils.readField(step, field, true);
             // return getPrivateField(step.getClass(), field);
         } catch (Exception e) {
-            throw new RuntimeException("field " + field + " not exist in step " + step.getClass(), e);
+            throw new RuntimeException(
+                    "field " + field + " not exist in step " + step.getClass(), e);
         }
     }
 

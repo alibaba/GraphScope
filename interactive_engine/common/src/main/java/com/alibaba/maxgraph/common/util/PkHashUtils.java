@@ -1,12 +1,12 @@
 /**
  * Copyright 2020 Alibaba Group Holding Limited.
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -30,8 +30,8 @@ import java.util.List;
  */
 public final class PkHashUtils {
 
-    private static final ThreadLocal<ByteBuffer> THREAD_BUFFER = ThreadLocal.withInitial(
-            () -> ByteBuffer.allocate(64 << 10));
+    private static final ThreadLocal<ByteBuffer> THREAD_BUFFER =
+            ThreadLocal.withInitial(() -> ByteBuffer.allocate(64 << 10));
 
     public static long hash(int labelId, List<byte[]> pks) {
         ByteBuffer buffer = THREAD_BUFFER.get();
@@ -63,14 +63,15 @@ public final class PkHashUtils {
 
         for (int i = 0; i < length8; i++) {
             final int i8 = i * 8;
-            long k = ((long) data[i8 + 0] & 0xff)
-                    + (((long) data[i8 + 1] & 0xff) << 8)
-                    + (((long) data[i8 + 2] & 0xff) << 16)
-                    + (((long) data[i8 + 3] & 0xff) << 24)
-                    + (((long) data[i8 + 4] & 0xff) << 32)
-                    + (((long) data[i8 + 5] & 0xff) << 40)
-                    + (((long) data[i8 + 6] & 0xff) << 48)
-                    + (((long) data[i8 + 7] & 0xff) << 56);
+            long k =
+                    ((long) data[i8 + 0] & 0xff)
+                            + (((long) data[i8 + 1] & 0xff) << 8)
+                            + (((long) data[i8 + 2] & 0xff) << 16)
+                            + (((long) data[i8 + 3] & 0xff) << 24)
+                            + (((long) data[i8 + 4] & 0xff) << 32)
+                            + (((long) data[i8 + 5] & 0xff) << 40)
+                            + (((long) data[i8 + 6] & 0xff) << 48)
+                            + (((long) data[i8 + 7] & 0xff) << 56);
 
             k *= m;
             k ^= k >>> r;
@@ -115,5 +116,4 @@ public final class PkHashUtils {
     private static long hash64(final byte[] data, int length) {
         return hash64(data, length, 0xc70f6907);
     }
-
 }

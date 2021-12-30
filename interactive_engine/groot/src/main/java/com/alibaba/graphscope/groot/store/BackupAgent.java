@@ -17,9 +17,9 @@ import com.alibaba.graphscope.groot.CompletionCallback;
 import com.alibaba.maxgraph.common.config.BackupConfig;
 import com.alibaba.maxgraph.common.config.CommonConfig;
 import com.alibaba.maxgraph.common.config.Configs;
-import com.alibaba.maxgraph.common.config.StoreConfig;
 import com.alibaba.maxgraph.common.util.ThreadFactoryUtils;
 import com.alibaba.maxgraph.compiler.api.exception.BackupException;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -56,13 +56,15 @@ public class BackupAgent {
             logger.info("store backup agent is disable, storeId [" + this.storeId + "]");
             return;
         }
-        this.backupExecutor = new ThreadPoolExecutor(
-                this.backupThreadCount,
-                this.backupThreadCount,
-                0L,
-                TimeUnit.MILLISECONDS,
-                new LinkedBlockingQueue<>(),
-                ThreadFactoryUtils.daemonThreadFactoryWithLogExceptionHandler("store-backup", logger));
+        this.backupExecutor =
+                new ThreadPoolExecutor(
+                        this.backupThreadCount,
+                        this.backupThreadCount,
+                        0L,
+                        TimeUnit.MILLISECONDS,
+                        new LinkedBlockingQueue<>(),
+                        ThreadFactoryUtils.daemonThreadFactoryWithLogExceptionHandler(
+                                "store-backup", logger));
         Map<Integer, GraphPartition> idToPartition = storeService.getIdToPartition();
         this.idToPartitionBackup = new HashMap<>(idToPartition.size());
         for (Map.Entry<Integer, GraphPartition> entry : idToPartition.entrySet()) {
@@ -75,21 +77,32 @@ public class BackupAgent {
         if (this.idToPartitionBackup != null) {
             CountDownLatch latch = new CountDownLatch(this.idToPartitionBackup.size());
             for (GraphPartitionBackup partitionBackup : this.idToPartitionBackup.values()) {
-                this.backupExecutor.execute(() -> {
-                    try {
-                        partitionBackup.close();
-                        logger.info("partition backup engine #[" + partitionBackup.getId() + "] closed");
-                    } catch (IOException e) {
-                        logger.error("partition backup engine #[" + partitionBackup.getId() + "] close failed", e);
-                    } finally {
-                        latch.countDown();
-                    }
-                });
+                this.backupExecutor.execute(
+                        () -> {
+                            try {
+                                partitionBackup.close();
+                                logger.info(
+                                        "partition backup engine #["
+                                                + partitionBackup.getId()
+                                                + "] closed");
+                            } catch (IOException e) {
+                                logger.error(
+                                        "partition backup engine #["
+                                                + partitionBackup.getId()
+                                                + "] close failed",
+                                        e);
+                            } finally {
+                                latch.countDown();
+                            }
+                        });
             }
             try {
                 long waitSeconds = 30L;
                 if (!latch.await(waitSeconds, TimeUnit.SECONDS)) {
-                    logger.warn("not all partition backup engines closed, waited [" + waitSeconds + "] seconds");
+                    logger.warn(
+                            "not all partition backup engines closed, waited ["
+                                    + waitSeconds
+                                    + "] seconds");
                 }
             } catch (InterruptedException e) {
                 // Ignore
@@ -107,7 +120,8 @@ public class BackupAgent {
         }
     }
 
-    public void createNewStoreBackup(int globalBackupId, CompletionCallback<StoreBackupId> callback) {
+    public void createNewStoreBackup(
+            int globalBackupId, CompletionCallback<StoreBackupId> callback) {
         try {
             checkEnable();
         } catch (BackupException e) {
@@ -118,24 +132,25 @@ public class BackupAgent {
         AtomicInteger counter = new AtomicInteger(this.idToPartitionBackup.size());
         AtomicBoolean finished = new AtomicBoolean(false);
         for (Map.Entry<Integer, GraphPartitionBackup> entry : this.idToPartitionBackup.entrySet()) {
-            this.backupExecutor.execute(() -> {
-                if (finished.get()) {
-                    return;
-                }
-                try {
-                    int partitionId = entry.getKey();
-                    int partitionBackupId = entry.getValue().createNewPartitionBackup();
-                    storeBackupId.addPartitionBackupId(partitionId, partitionBackupId);
-                    if (counter.decrementAndGet() == 0) {
-                        callback.onCompleted(storeBackupId);
-                    }
-                } catch (Exception e) {
-                    if (finished.getAndSet(true)) {
-                        return;
-                    }
-                    callback.onError(e);
-                }
-            });
+            this.backupExecutor.execute(
+                    () -> {
+                        if (finished.get()) {
+                            return;
+                        }
+                        try {
+                            int partitionId = entry.getKey();
+                            int partitionBackupId = entry.getValue().createNewPartitionBackup();
+                            storeBackupId.addPartitionBackupId(partitionId, partitionBackupId);
+                            if (counter.decrementAndGet() == 0) {
+                                callback.onCompleted(storeBackupId);
+                            }
+                        } catch (Exception e) {
+                            if (finished.getAndSet(true)) {
+                                return;
+                            }
+                            callback.onError(e);
+                        }
+                    });
         }
     }
 
@@ -147,36 +162,46 @@ public class BackupAgent {
             return;
         }
         if (storeBackupId.getPartitionToBackupId().size() != this.idToPartitionBackup.size()) {
-            callback.onError(new BackupException(
-                    "verifying from incorrect store backup id, globalBackupId #[" + storeBackupId.getGlobalBackupId() +
-                            "], storeId #[" + this.storeId + "]"));
+            callback.onError(
+                    new BackupException(
+                            "verifying from incorrect store backup id, globalBackupId #["
+                                    + storeBackupId.getGlobalBackupId()
+                                    + "], storeId #["
+                                    + this.storeId
+                                    + "]"));
             return;
         }
         AtomicInteger counter = new AtomicInteger(this.idToPartitionBackup.size());
         AtomicBoolean finished = new AtomicBoolean(false);
         for (Map.Entry<Integer, GraphPartitionBackup> entry : this.idToPartitionBackup.entrySet()) {
-            this.backupExecutor.execute(() -> {
-                if (finished.get()) {
-                    return;
-                }
-                try {
-                    int partitionId = entry.getKey();
-                    entry.getValue().verifyPartitionBackup(storeBackupId.getPartitionToBackupId().get(partitionId));
-                    if (counter.decrementAndGet() == 0) {
-                        callback.onCompleted(null);
-                    }
-                } catch (Exception e) {
-                    if (finished.getAndSet(true)) {
-                        return;
-                    }
-                    callback.onError(e);
-                }
-            });
+            this.backupExecutor.execute(
+                    () -> {
+                        if (finished.get()) {
+                            return;
+                        }
+                        try {
+                            int partitionId = entry.getKey();
+                            entry.getValue()
+                                    .verifyPartitionBackup(
+                                            storeBackupId
+                                                    .getPartitionToBackupId()
+                                                    .get(partitionId));
+                            if (counter.decrementAndGet() == 0) {
+                                callback.onCompleted(null);
+                            }
+                        } catch (Exception e) {
+                            if (finished.getAndSet(true)) {
+                                return;
+                            }
+                            callback.onError(e);
+                        }
+                    });
         }
     }
 
-    public void clearUnavailableStoreBackups(Map<Integer, List<Integer>> readyPartitionBackupIds,
-                                             CompletionCallback<Void> callback) {
+    public void clearUnavailableStoreBackups(
+            Map<Integer, List<Integer>> readyPartitionBackupIds,
+            CompletionCallback<Void> callback) {
         try {
             checkEnable();
         } catch (BackupException e) {
@@ -184,34 +209,41 @@ public class BackupAgent {
             return;
         }
         if (readyPartitionBackupIds.size() != this.idToPartitionBackup.size()) {
-            callback.onError(new BackupException("doing store backup up gc with incorrect ready partitionBackupId lists"));
+            callback.onError(
+                    new BackupException(
+                            "doing store backup up gc with incorrect ready partitionBackupId"
+                                    + " lists"));
             return;
         }
         AtomicInteger counter = new AtomicInteger(this.idToPartitionBackup.size());
         AtomicBoolean finished = new AtomicBoolean(false);
         for (Map.Entry<Integer, GraphPartitionBackup> entry : this.idToPartitionBackup.entrySet()) {
-            this.backupExecutor.execute(() -> {
-                if (finished.get()) {
-                    return;
-                }
-                try {
-                    int partitionId = entry.getKey();
-                    entry.getValue().partitionBackupGc(readyPartitionBackupIds.get(partitionId));
-                    if (counter.decrementAndGet() == 0) {
-                        callback.onCompleted(null);
-                    }
-                } catch (Exception e) {
-                    if (finished.getAndSet(true)) {
-                        return;
-                    }
-                    callback.onError(e);
-                }
-            });
+            this.backupExecutor.execute(
+                    () -> {
+                        if (finished.get()) {
+                            return;
+                        }
+                        try {
+                            int partitionId = entry.getKey();
+                            entry.getValue()
+                                    .partitionBackupGc(readyPartitionBackupIds.get(partitionId));
+                            if (counter.decrementAndGet() == 0) {
+                                callback.onCompleted(null);
+                            }
+                        } catch (Exception e) {
+                            if (finished.getAndSet(true)) {
+                                return;
+                            }
+                            callback.onError(e);
+                        }
+                    });
         }
     }
 
-    public void restoreFromStoreBackup(StoreBackupId storeBackupId, String restoreRootPath,
-                                       CompletionCallback<Void> callback) {
+    public void restoreFromStoreBackup(
+            StoreBackupId storeBackupId,
+            String restoreRootPath,
+            CompletionCallback<Void> callback) {
         try {
             checkEnable();
         } catch (BackupException e) {
@@ -219,42 +251,53 @@ public class BackupAgent {
             return;
         }
         if (storeBackupId.getPartitionToBackupId().size() != this.idToPartitionBackup.size()) {
-            callback.onError(new BackupException(
-                    "restoring from incorrect store backup id, globalBackupId #[" + storeBackupId.getGlobalBackupId() +
-                    "], restoreRootPath: " + restoreRootPath + ", storeId #[" + this.storeId + "]"));
+            callback.onError(
+                    new BackupException(
+                            "restoring from incorrect store backup id, globalBackupId #["
+                                    + storeBackupId.getGlobalBackupId()
+                                    + "], restoreRootPath: "
+                                    + restoreRootPath
+                                    + ", storeId #["
+                                    + this.storeId
+                                    + "]"));
             return;
         }
         AtomicInteger counter = new AtomicInteger(this.idToPartitionBackup.size());
         AtomicBoolean finished = new AtomicBoolean(false);
         for (Map.Entry<Integer, GraphPartitionBackup> entry : this.idToPartitionBackup.entrySet()) {
-            this.backupExecutor.execute(() -> {
-                if (finished.get()) {
-                    return;
-                }
-                try {
-                    int partitionId = entry.getKey();
-                    Path partitionRestorePath = Paths.get(restoreRootPath, "" + partitionId);
-                    if (!Files.isDirectory(partitionRestorePath)) {
-                        Files.createDirectories(partitionRestorePath);
-                    }
-                    entry.getValue().restoreFromPartitionBackup(
-                            storeBackupId.getPartitionToBackupId().get(partitionId), partitionRestorePath.toString());
-                    if (counter.decrementAndGet() == 0) {
-                        callback.onCompleted(null);
-                    }
-                } catch (Exception e) {
-                    if (finished.getAndSet(true)) {
-                        return;
-                    }
-                    callback.onError(e);
-                }
-            });
+            this.backupExecutor.execute(
+                    () -> {
+                        if (finished.get()) {
+                            return;
+                        }
+                        try {
+                            int partitionId = entry.getKey();
+                            Path partitionRestorePath =
+                                    Paths.get(restoreRootPath, "" + partitionId);
+                            if (!Files.isDirectory(partitionRestorePath)) {
+                                Files.createDirectories(partitionRestorePath);
+                            }
+                            entry.getValue()
+                                    .restoreFromPartitionBackup(
+                                            storeBackupId.getPartitionToBackupId().get(partitionId),
+                                            partitionRestorePath.toString());
+                            if (counter.decrementAndGet() == 0) {
+                                callback.onCompleted(null);
+                            }
+                        } catch (Exception e) {
+                            if (finished.getAndSet(true)) {
+                                return;
+                            }
+                            callback.onError(e);
+                        }
+                    });
         }
     }
 
     private void checkEnable() throws BackupException {
         if (!this.backupEnable) {
-            throw new BackupException("store backup agent is disable now, storeId [" + this.storeId + "]");
+            throw new BackupException(
+                    "store backup agent is disable now, storeId [" + this.storeId + "]");
         }
     }
 }

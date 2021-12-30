@@ -7,6 +7,8 @@ from graphscope.nx.utils.compat import with_graphscope_nx_context
 import_as_graphscope_nx(networkx.algorithms.shortest_paths.tests.test_generic,
                         decorators=pytest.mark.usefixtures("graphscope_session"))
 
+from networkx.algorithms.shortest_paths.tests.test_generic import \
+    TestAverageShortestPathLength
 from networkx.algorithms.shortest_paths.tests.test_generic import TestGenericPath
 from networkx.generators.lattice import grid_2d_graph
 
@@ -27,3 +29,16 @@ class TestGenericPath:
         cls.neg_weights.add_edge(0, 2, weight=3)
         cls.neg_weights.add_edge(1, 3, weight=1)
         cls.neg_weights.add_edge(2, 3, weight=-2)
+
+
+pytest.mark.usefixtures("graphscope_session")
+@with_graphscope_nx_context(TestAverageShortestPathLength)
+class TestAverageShortestPathLength:
+    @pytest.mark.skip(reason="builtin not check connected.")
+    def test_disconnected(self):
+        g = nx.Graph()
+        g.add_nodes_from(range(3))
+        g.add_edge(0, 1)
+        pytest.raises(nx.NetworkXError, nx.average_shortest_path_length, g)
+        g = g.to_directed()
+        pytest.raises(nx.NetworkXError, nx.average_shortest_path_length, g)

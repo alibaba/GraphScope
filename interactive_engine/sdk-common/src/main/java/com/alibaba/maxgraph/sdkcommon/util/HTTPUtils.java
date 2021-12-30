@@ -13,11 +13,10 @@
  */
 package com.alibaba.maxgraph.sdkcommon.util;
 
-import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
+
 import org.apache.commons.collections4.MapUtils;
 import org.apache.http.Header;
-import org.apache.http.HttpEntity;
 import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.methods.*;
 import org.apache.http.client.utils.URIBuilder;
@@ -31,8 +30,6 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.util.Map;
-
-import static java.net.URLDecoder.decode;
 
 public class HTTPUtils {
     private static Logger LOG = LoggerFactory.getLogger(HTTPUtils.class);

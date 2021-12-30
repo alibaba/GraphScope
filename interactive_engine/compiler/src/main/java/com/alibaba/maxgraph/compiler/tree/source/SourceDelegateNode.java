@@ -14,12 +14,12 @@
 package com.alibaba.maxgraph.compiler.tree.source;
 
 import com.alibaba.maxgraph.compiler.api.schema.GraphSchema;
-import com.alibaba.maxgraph.compiler.optimizer.ContextManager;
-import com.alibaba.maxgraph.compiler.tree.BaseTreeNode;
-import com.alibaba.maxgraph.compiler.tree.value.ValueType;
 import com.alibaba.maxgraph.compiler.logical.LogicalSubQueryPlan;
 import com.alibaba.maxgraph.compiler.logical.LogicalVertex;
+import com.alibaba.maxgraph.compiler.optimizer.ContextManager;
+import com.alibaba.maxgraph.compiler.tree.BaseTreeNode;
 import com.alibaba.maxgraph.compiler.tree.TreeNode;
+import com.alibaba.maxgraph.compiler.tree.value.ValueType;
 
 public class SourceDelegateNode extends SourceTreeNode {
     private TreeNode delegate;

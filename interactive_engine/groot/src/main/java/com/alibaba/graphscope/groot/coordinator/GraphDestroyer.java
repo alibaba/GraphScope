@@ -13,9 +13,10 @@
  */
 package com.alibaba.graphscope.groot.coordinator;
 
+import com.alibaba.graphscope.groot.wal.LogService;
 import com.alibaba.maxgraph.common.config.Configs;
 import com.alibaba.maxgraph.common.config.ZkConfig;
-import com.alibaba.graphscope.groot.wal.LogService;
+
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.zookeeper.data.Stat;
 import org.slf4j.Logger;

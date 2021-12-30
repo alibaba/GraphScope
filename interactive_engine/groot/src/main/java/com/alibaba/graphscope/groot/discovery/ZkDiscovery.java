@@ -16,8 +16,9 @@ package com.alibaba.graphscope.groot.discovery;
 import com.alibaba.maxgraph.common.RoleType;
 import com.alibaba.maxgraph.common.config.Configs;
 import com.alibaba.maxgraph.common.config.ZkConfig;
-import com.alibaba.maxgraph.compiler.api.exception.MaxGraphException;
 import com.alibaba.maxgraph.common.util.ThreadFactoryUtils;
+import com.alibaba.maxgraph.compiler.api.exception.MaxGraphException;
+
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.framework.state.ConnectionState;
 import org.apache.curator.utils.ZKPaths;

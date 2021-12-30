@@ -16,6 +16,7 @@
 package com.alibaba.graphscope.gaia.plan.strategy;
 
 import com.alibaba.graphscope.gaia.plan.strategy.shuffle.*;
+
 import org.apache.tinkerpop.gremlin.process.traversal.Step;
 import org.apache.tinkerpop.gremlin.process.traversal.Traversal;
 import org.apache.tinkerpop.gremlin.process.traversal.TraversalStrategy;
@@ -27,11 +28,11 @@ import org.apache.tinkerpop.gremlin.structure.T;
 
 import java.util.List;
 
-public class PropertyShuffleStrategy extends AbstractTraversalStrategy<TraversalStrategy.ProviderOptimizationStrategy> {
+public class PropertyShuffleStrategy
+        extends AbstractTraversalStrategy<TraversalStrategy.ProviderOptimizationStrategy> {
     private static final PropertyShuffleStrategy INSTANCE = new PropertyShuffleStrategy();
 
-    private PropertyShuffleStrategy() {
-    }
+    private PropertyShuffleStrategy() {}
 
     public static PropertyShuffleStrategy instance() {
         return INSTANCE;
@@ -66,14 +67,19 @@ public class PropertyShuffleStrategy extends AbstractTraversalStrategy<Traversal
         }
     }
 
-    protected void extractHasProperty(List<HasContainer> source, List<HasContainer> propertyList, List<HasContainer> schemaKeyList) {
-        source.forEach(h -> {
-            if (h.getKey().equals(T.label.getAccessor()) || h.getKey().equals(T.id.getAccessor())) {
-                schemaKeyList.add(h);
-            } else {
-                propertyList.add(h);
-            }
-        });
+    protected void extractHasProperty(
+            List<HasContainer> source,
+            List<HasContainer> propertyList,
+            List<HasContainer> schemaKeyList) {
+        source.forEach(
+                h -> {
+                    if (h.getKey().equals(T.label.getAccessor())
+                            || h.getKey().equals(T.id.getAccessor())) {
+                        schemaKeyList.add(h);
+                    } else {
+                        propertyList.add(h);
+                    }
+                });
     }
 
     protected HasContainer[] asArray(List<HasContainer> list) {

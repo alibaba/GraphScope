@@ -1,12 +1,12 @@
 /**
  * Copyright 2020 Alibaba Group Holding Limited.
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -15,9 +15,12 @@
  */
 package com.alibaba.maxgraph.sdkcommon.compiler.custom.map;
 
+import static com.google.common.base.Preconditions.checkArgument;
+
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Objects;
 import com.google.common.collect.Lists;
+
 import org.apache.commons.lang3.NotImplementedException;
 import org.apache.tinkerpop.gremlin.process.traversal.Traverser;
 
@@ -25,19 +28,17 @@ import java.io.Serializable;
 import java.util.List;
 import java.util.function.Function;
 
-import static com.google.common.base.Preconditions.checkArgument;
-
-public class MapPropFillFunction<VALUE> implements Function<Traverser<VALUE>, Traverser<VALUE>>, Serializable {
+public class MapPropFillFunction<VALUE>
+        implements Function<Traverser<VALUE>, Traverser<VALUE>>, Serializable {
     private static final long serialVersionUID = -26705062931264590L;
 
     private List<String> propNameList;
 
-    public MapPropFillFunction() {
+    public MapPropFillFunction() {}
 
-    }
-    
     public MapPropFillFunction(String[] propNameList) {
-        checkArgument(null != propNameList && propNameList.length > 0, "fill prop list can't be empty");
+        checkArgument(
+                null != propNameList && propNameList.length > 0, "fill prop list can't be empty");
         this.propNameList = Lists.newArrayList(propNameList);
     }
 
@@ -65,8 +66,6 @@ public class MapPropFillFunction<VALUE> implements Function<Traverser<VALUE>, Tr
 
     @Override
     public String toString() {
-        return MoreObjects.toStringHelper(this)
-                .add("propNameList", propNameList)
-                .toString();
+        return MoreObjects.toStringHelper(this).add("propNameList", propNameList).toString();
     }
 }

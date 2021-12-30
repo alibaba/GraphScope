@@ -38,12 +38,12 @@ spec:
       port: {{ .Values.frontend.service.gremlinPort }}
       protocol: TCP
       targetPort: gremlin
-      {{- if and (or (eq .Values.frontend.service.type "NodePort") (eq .Values.frontend.service.type "LoadBalancer")) (not (empty .Values.frontend.service.nodePorts.grpc)) }}
+      {{- if and (or (eq .Values.frontend.service.type "NodePort") (eq .Values.frontend.service.type "LoadBalancer")) (not (empty .Values.frontend.service.nodePorts.gremlin)) }}
       {{- if (not (empty .Values.frontend.service.nodePorts.gremlin)) }}
       nodePort: {{ .Values.frontend.service.nodePorts.gremlin }}
       {{- else if eq .Values.frontend.service.type "ClusterIP" }}
       nodePort: null
       {{- end }}
-    {{- end }}
+      {{- end }}
   selector: {{ include "graphscope-store.selectorLabels" . | nindent 4 }}
     app.kubernetes.io/component: frontend

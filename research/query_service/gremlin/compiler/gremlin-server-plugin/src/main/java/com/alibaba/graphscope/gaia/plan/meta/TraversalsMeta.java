@@ -17,5 +17,4 @@ package com.alibaba.graphscope.gaia.plan.meta;
 
 import com.alibaba.graphscope.gaia.plan.meta.object.TraversalId;
 
-public class TraversalsMeta<O extends TraversalId, D> extends DefaultMapMeta<TraversalId, D> {
-}
+public class TraversalsMeta<O extends TraversalId, D> extends DefaultMapMeta<TraversalId, D> {}

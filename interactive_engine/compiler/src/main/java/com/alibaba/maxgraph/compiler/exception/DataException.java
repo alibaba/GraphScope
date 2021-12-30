@@ -1,12 +1,12 @@
 /**
  * Copyright 2020 Alibaba Group Holding Limited.
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -20,7 +20,6 @@ import java.text.MessageFormat;
 public class DataException extends RuntimeException {
 
     public enum ErrorCode {
-
         TypeNotFound("{0} type not found.", 100),
         PKIncomplete("PK of {0} is in complete", 101),
         UNKNOWN("Unknown error. ", 200),
@@ -34,7 +33,7 @@ public class DataException extends RuntimeException {
             this.code = code;
         }
 
-        public String toString(String ...param) {
+        public String toString(String... param) {
             if (param != null) {
                 return MessageFormat.format(template, param);
             } else {
@@ -50,7 +49,7 @@ public class DataException extends RuntimeException {
         this.errorCode = code.code;
     }
 
-    public DataException(ErrorCode code, Throwable cause, String ...param) {
+    public DataException(ErrorCode code, Throwable cause, String... param) {
         super(code.toString(param), cause);
         this.errorCode = code.code;
     }
@@ -66,6 +65,7 @@ public class DataException extends RuntimeException {
     public static DataException invalidProperty(String propertyName, String cause) {
         return new DataException(ErrorCode.InvalidProperty, null, propertyName, cause);
     }
+
     public static DataException unknowError(Throwable e) {
         return new DataException(ErrorCode.UNKNOWN, e);
     }

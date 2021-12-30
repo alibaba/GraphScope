@@ -33,9 +33,9 @@
 #include "vineyard/basic/ds/arrow_utils.h"
 
 #include "core/server/rpc_utils.h"
-#include "proto/attr_value.pb.h"
-#include "proto/op_def.pb.h"
-#include "proto/types.pb.h"
+#include "proto/graphscope/proto/attr_value.pb.h"
+#include "proto/graphscope/proto/op_def.pb.h"
+#include "proto/graphscope/proto/types.pb.h"
 
 template <typename Key, typename Value>
 using ProtobufMap = ::google::protobuf::Map<Key, Value>;
@@ -317,9 +317,9 @@ inline std::vector<std::map<int, rpc::AttrValue>> DistributeGraph(
     for (const auto& item : items) {
       std::vector<AttrMap> vec;
       if (item.name() == "vertex") {
-        vec = std::move(DistributeVertex(item.attr(), num));
+        vec = DistributeVertex(item.attr(), num);
       } else if (item.name() == "edge") {
-        vec = std::move(DistributeEdge(item.attr(), num));
+        vec = DistributeEdge(item.attr(), num);
       }
       named_items.emplace_back(item.name(), std::move(vec));
     }

@@ -13,16 +13,16 @@
  */
 package com.alibaba.maxgraph.compiler.tree.source;
 
+import static com.google.common.base.Preconditions.checkArgument;
+
 import com.alibaba.maxgraph.Message;
 import com.alibaba.maxgraph.QueryFlowOuterClass;
 import com.alibaba.maxgraph.compiler.api.schema.GraphSchema;
+import com.alibaba.maxgraph.compiler.logical.LogicalSubQueryPlan;
+import com.alibaba.maxgraph.compiler.logical.function.ProcessorSourceFunction;
 import com.alibaba.maxgraph.compiler.optimizer.ContextManager;
 import com.alibaba.maxgraph.compiler.tree.value.DfsCmdValueType;
 import com.alibaba.maxgraph.compiler.tree.value.ValueType;
-import com.alibaba.maxgraph.compiler.logical.LogicalSubQueryPlan;
-import com.alibaba.maxgraph.compiler.logical.function.ProcessorSourceFunction;
-
-import static com.google.common.base.Preconditions.checkArgument;
 
 public class SourceDfsTreeNode extends SourceTreeNode {
     private long batchSize;

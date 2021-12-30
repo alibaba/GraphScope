@@ -25,11 +25,11 @@ import org.apache.tinkerpop.gremlin.process.traversal.util.TraversalHelper;
 
 import java.util.List;
 
-public class OrderGlobalLimitStrategy extends AbstractTraversalStrategy<TraversalStrategy.ProviderOptimizationStrategy> {
+public class OrderGlobalLimitStrategy
+        extends AbstractTraversalStrategy<TraversalStrategy.ProviderOptimizationStrategy> {
     private static final OrderGlobalLimitStrategy INSTANCE = new OrderGlobalLimitStrategy();
 
-    private OrderGlobalLimitStrategy() {
-    }
+    private OrderGlobalLimitStrategy() {}
 
     public static OrderGlobalLimitStrategy instance() {
         return INSTANCE;
@@ -42,7 +42,9 @@ public class OrderGlobalLimitStrategy extends AbstractTraversalStrategy<Traversa
             Step step = steps.get(i);
             if (step instanceof OrderGlobalStep && step.getNextStep() instanceof RangeGlobalStep) {
                 RangeGlobalStep nextStep = (RangeGlobalStep) step.getNextStep();
-                OrderGlobalLimitStep newStep = new OrderGlobalLimitStep((OrderGlobalStep) step, (int) nextStep.getHighRange());
+                OrderGlobalLimitStep newStep =
+                        new OrderGlobalLimitStep(
+                                (OrderGlobalStep) step, (int) nextStep.getHighRange());
                 TraversalHelper.copyLabels(step, newStep, false);
                 TraversalHelper.copyLabels(nextStep, newStep, false);
                 traversal.removeStep(step);

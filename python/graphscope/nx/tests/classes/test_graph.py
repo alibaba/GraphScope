@@ -301,7 +301,7 @@ class TestGraph(_TestGraph):
         # test update
         for e in G.edges:
             G.edges[e]["weight"] = 2
-        ret = nx.builtin.closeness_centrality(G, weight="weight")
+        ret = nx.builtin.closeness_centrality(G, distance="weight")
         assert ret == {0: 0.5, 1: 0.5, 2: 0.5, 3: 0.5, 4: 0.5}
 
         # test copy
@@ -350,6 +350,16 @@ class TestGraph(_TestGraph):
         else:
             for n in ret:
                 assert almost_equal(ret[n], expect2[n], places=4)
+
+    def test_to_directed_as_view(self):
+        H = nx.path_graph(2, create_using=self.Graph)
+        H2 = H.to_directed(as_view=True)
+        assert H is H2._graph
+        assert H2.has_edge(0, 1)
+        assert H2.has_edge(1, 0) or H.is_directed()
+        pytest.raises(nx.NetworkXError, H2.add_node, -1)
+        pytest.raises(nx.NetworkXError, H2.add_edge, 1, 2)
+        H.add_edge(1, 2)
 
 
 @pytest.mark.usefixtures("graphscope_session")

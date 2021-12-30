@@ -13,7 +13,6 @@
  */
 package com.alibaba.graphscope.groot.schema.ddl;
 
-import com.alibaba.maxgraph.proto.groot.TypeDefPb;
 import com.alibaba.graphscope.groot.operation.LabelId;
 import com.alibaba.graphscope.groot.operation.Operation;
 import com.alibaba.graphscope.groot.schema.GraphDef;
@@ -21,6 +20,7 @@ import com.alibaba.graphscope.groot.schema.PropertyDef;
 import com.alibaba.graphscope.groot.schema.TypeDef;
 import com.alibaba.graphscope.groot.schema.TypeEnum;
 import com.alibaba.graphscope.groot.schema.request.DdlException;
+import com.alibaba.maxgraph.proto.groot.TypeDefPb;
 import com.google.protobuf.ByteString;
 import com.google.protobuf.InvalidProtocolBufferException;
 

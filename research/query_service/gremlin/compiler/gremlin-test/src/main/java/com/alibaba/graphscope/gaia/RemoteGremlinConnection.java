@@ -38,17 +38,19 @@ public class RemoteGremlinConnection implements RemoteConnection {
     public static Cluster createCluster(String endpoint) throws Exception {
         String[] split = endpoint.split(":");
         MessageSerializer serializer = new GryoMessageSerializerV1d0();
-        Cluster cluster = Cluster.build()
-                .addContactPoint(split[0])
-                .port(Integer.valueOf(split[1]))
-                .credentials("admin", "admin")
-                .serializer(serializer)
-                .create();
+        Cluster cluster =
+                Cluster.build()
+                        .addContactPoint(split[0])
+                        .port(Integer.valueOf(split[1]))
+                        .credentials("admin", "admin")
+                        .serializer(serializer)
+                        .create();
         return cluster;
     }
 
     @Override
-    public <E> CompletableFuture<RemoteTraversal<?, E>> submitAsync(Bytecode bytecode) throws RemoteConnectionException {
+    public <E> CompletableFuture<RemoteTraversal<?, E>> submitAsync(Bytecode bytecode)
+            throws RemoteConnectionException {
         return remoteConnection.submitAsync(bytecode);
     }
 

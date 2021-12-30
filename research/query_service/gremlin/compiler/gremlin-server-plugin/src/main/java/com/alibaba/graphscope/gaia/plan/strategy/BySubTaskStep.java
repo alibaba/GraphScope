@@ -25,7 +25,8 @@ import java.util.Collections;
 import java.util.List;
 import java.util.NoSuchElementException;
 
-public class BySubTaskStep<S, E extends Element> extends AbstractStep<S, E> implements TraversalParent {
+public class BySubTaskStep<S, E extends Element> extends AbstractStep<S, E>
+        implements TraversalParent {
     public enum JoinerType {
         Select,
         GroupKeyBy,
@@ -36,7 +37,8 @@ public class BySubTaskStep<S, E extends Element> extends AbstractStep<S, E> impl
     private JoinerType joiner;
     private Traversal.Admin bySubTraversal;
 
-    public BySubTaskStep(Traversal.Admin traversal, Traversal.Admin bySubTraversal, JoinerType joiner) {
+    public BySubTaskStep(
+            Traversal.Admin traversal, Traversal.Admin bySubTraversal, JoinerType joiner) {
         super(traversal);
         this.joiner = joiner;
         this.bySubTraversal = bySubTraversal;

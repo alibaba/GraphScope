@@ -13,10 +13,11 @@
  */
 package com.alibaba.graphscope.groot.ingestor;
 
-import com.alibaba.maxgraph.proto.groot.IngestorSnapshotGrpc;
+import com.alibaba.graphscope.groot.CompletionCallback;
 import com.alibaba.maxgraph.proto.groot.AdvanceIngestSnapshotIdRequest;
 import com.alibaba.maxgraph.proto.groot.AdvanceIngestSnapshotIdResponse;
-import com.alibaba.graphscope.groot.CompletionCallback;
+import com.alibaba.maxgraph.proto.groot.IngestorSnapshotGrpc;
+
 import io.grpc.stub.StreamObserver;
 
 public class IngestorSnapshotService extends IngestorSnapshotGrpc.IngestorSnapshotImplBase {

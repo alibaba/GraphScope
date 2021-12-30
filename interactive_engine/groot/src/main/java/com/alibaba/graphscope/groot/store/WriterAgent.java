@@ -13,6 +13,7 @@
  */
 package com.alibaba.graphscope.groot.store;
 
+import com.alibaba.graphscope.groot.coordinator.SnapshotInfo;
 import com.alibaba.graphscope.groot.meta.MetaService;
 import com.alibaba.graphscope.groot.metrics.MetricsAgent;
 import com.alibaba.graphscope.groot.metrics.MetricsCollector;

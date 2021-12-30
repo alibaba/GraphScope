@@ -6,7 +6,7 @@ The analytical engine in GraphScope originated from **GRAPE**, a system that imp
 
 GRAPE differs from prior systems in its ability to parallelize sequential graph algorithms as a whole by following the PIE programming model from the paper. Sequential algorithms can be easily ["plugged into"](https://github.com/alibaba/libgrape-lite/blob/master/examples/analytical_apps/sssp/sssp_auto.h) **GRAPE** with only minor changes and get parallelized to handle large graphs efficiently. In addition to the ease of programming, **GRAPE** is designed to be [highly efficient](https://github.com/alibaba/libgrape-lite/blob/master/Performance.md) and [flexible](https://github.com/alibaba/libgrape-lite/blob/master/examples/gnn_sampler), to cope the scale, variety and complexity from real-life graph applications.
 
-A lightweight version of GRAPE is open-sourced as [libgrape-lite](https://github.com/alibaba/libgrape-lite/). The analytical engine extends libgrape-lite with features for mutable fragments, [vineyard](https://github.com/alibaba/libvineyard/) support, and the service mode for the engine, etc.
+A lightweight version of GRAPE is open-sourced as [libgrape-lite](https://github.com/alibaba/libgrape-lite/). The analytical engine extends libgrape-lite with features for mutable fragments, [vineyard](https://github.com/v6d-io/v6d) support, and the service mode for the engine, etc.
 
 ## Java PIE SDK
 

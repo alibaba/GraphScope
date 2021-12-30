@@ -1,12 +1,12 @@
 /**
  * Copyright 2020 Alibaba Group Holding Limited.
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -14,6 +14,12 @@
  * limitations under the License.
  */
 package com.alibaba.maxgraph.function.test.gremlin;
+
+import static org.apache.tinkerpop.gremlin.LoadGraphWith.GraphData.SINK;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.collection.IsIterableContainingInOrder.contains;
+import static org.hamcrest.core.Is.is;
+import static org.junit.Assert.assertEquals;
 
 import org.apache.tinkerpop.gremlin.LoadGraphWith;
 import org.apache.tinkerpop.gremlin.process.AbstractGremlinProcessTest;
@@ -26,14 +32,9 @@ import org.junit.Test;
 
 import java.util.List;
 
-import static org.apache.tinkerpop.gremlin.LoadGraphWith.GraphData.SINK;
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.collection.IsIterableContainingInOrder.contains;
-import static org.hamcrest.core.Is.is;
-import static org.junit.Assert.assertEquals;
-
 public abstract class SinkProcessTest extends AbstractGremlinProcessTest {
-    public abstract Traversal<Vertex, Path> get_g_V_hasXloop_name_loopX_repeatXinX_timesX5X_path_by_name();
+    public abstract Traversal<Vertex, Path>
+            get_g_V_hasXloop_name_loopX_repeatXinX_timesX5X_path_by_name();
 
     public abstract Traversal<Vertex, Edge> get_g_V_hasLabelXloopsX_bothEXselfX();
 
@@ -42,7 +43,8 @@ public abstract class SinkProcessTest extends AbstractGremlinProcessTest {
     @Test
     @LoadGraphWith(SINK)
     public void g_V_hasXloop_name_loopX_repeatXinX_timesX5X_path_by_name() {
-        final Traversal<Vertex, Path> traversal = get_g_V_hasXloop_name_loopX_repeatXinX_timesX5X_path_by_name();
+        final Traversal<Vertex, Path> traversal =
+                get_g_V_hasXloop_name_loopX_repeatXinX_timesX5X_path_by_name();
         printTraversalForm(traversal);
         final Path path = traversal.next();
         assertThat(path, contains("loop", "loop", "loop", "loop", "loop", "loop"));
@@ -78,7 +80,8 @@ public abstract class SinkProcessTest extends AbstractGremlinProcessTest {
         }
 
         @Override
-        public Traversal<Vertex, Path> get_g_V_hasXloop_name_loopX_repeatXinX_timesX5X_path_by_name() {
+        public Traversal<Vertex, Path>
+                get_g_V_hasXloop_name_loopX_repeatXinX_timesX5X_path_by_name() {
             return g.V().has("loops", "name", "loop").repeat(__.in()).times(5).path().by("name");
         }
 

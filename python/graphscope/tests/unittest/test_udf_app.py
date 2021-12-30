@@ -951,7 +951,11 @@ def test_load_app_from_gar(random_gar, not_exist_gar, non_zipfile_gar):
 
 
 def test_error_on_create_cython_app(
-    graphscope_session, dynamic_property_graph, random_gar, empty_gar
+    graphscope_session,
+    p2p_property_graph,
+    dynamic_property_graph,
+    random_gar,
+    empty_gar,
 ):
     SSSP_Pregel.to_gar(random_gar)
     with pytest.raises(InvalidArgumentError, match="App is uncompatible with graph"):
@@ -959,11 +963,11 @@ def test_error_on_create_cython_app(
         a1(dynamic_property_graph, src=4)
     # algo not found in gar resource
     with pytest.raises(InvalidArgumentError, match="App not found in gar: sssp"):
-        a2 = load_app(algo="sssp", gar=random_gar)
+        a2 = load_app(gar=random_gar, algo="sssp")
         a2(p2p_property_graph, src=6)
     # no `.gs_conf.yaml` in empty gar, raise KeyError exception
     with pytest.raises(KeyError):
-        a3 = load_app(algo="SSSP_Pregel", gar=empty_gar)
+        a3 = load_app(gar=empty_gar, algo="SSSP_Pregel")
         a3(p2p_property_graph, src=6)
 
 
@@ -987,6 +991,26 @@ def test_get_schema(graphscope_session, arrow_property_graph):
         "v0,v1,dist,DOUBLE,id,LONG,e0,weight,LONG,e1,weight,LONG,",
         "v0,v1,dist,DOUBLE,id,LONG,e0,weight,LONG,e1,weight,LONG,",
     ]
+
+
+@pytest.mark.skipif("FULL-TEST-SUITE" not in os.environ, reason="Run in nightly CI")
+def test_property_context(graphscope_session, p2p_property_graph):
+    a1 = SSSP_Pregel()
+    ctx = a1(p2p_property_graph, src=6)
+    # property context to numpy
+    np_out = ctx.to_numpy("r:person")
+    # property context to tensor
+    df_out = ctx.to_dataframe({"result": "r:person"})
+    # property context to vineyard tensor
+    vt_out = ctx.to_vineyard_tensor("r:person")
+    assert vt_out is not None
+    # property context to vineyard dataframe
+    vdf_out = ctx.to_vineyard_dataframe({"node": "v:person.id", "r": "r:person"})
+    assert vdf_out is not None
+    # add column
+    g = p2p_property_graph.add_column(ctx1, {"result0": "r:person"})
+    g_out_df = g.to_dataframe({"result": "v:person.result0"})
+    assert g_out_df.equals(df_out)
 
 
 @pytest.mark.skipif("FULL-TEST-SUITE" not in os.environ, reason="Run in nightly CI")

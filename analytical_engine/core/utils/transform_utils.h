@@ -882,6 +882,9 @@ class TransformUtils<
       return vineyard::TypeToInt<int64_t>::value;
     } else if (folly_type == folly::dynamic::STRING) {
       return vineyard::TypeToInt<std::string>::value;
+    } else {
+      // if is folly::NULLT, return 0, means np.dtype(void) in numpy
+      return 0;
     }
     return -1;
   }

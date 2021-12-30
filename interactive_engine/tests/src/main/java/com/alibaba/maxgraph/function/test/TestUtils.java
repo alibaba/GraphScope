@@ -1,12 +1,12 @@
 /**
  * Copyright 2020 Alibaba Group Holding Limited.
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -40,12 +40,13 @@ public class TestUtils {
      * @return json formatted
      * @throws Exception
      */
-    public static String curlHttp(String endpoint, String mode, Map<String, String> paras) throws GraphTestException {
+    public static String curlHttp(String endpoint, String mode, Map<String, String> paras)
+            throws GraphTestException {
         try {
-            List<String> valuePairs = paras.entrySet()
-                    .stream()
-                    .map(k -> new String(k.getKey() + "=" + k.getValue()))
-                    .collect(Collectors.toList());
+            List<String> valuePairs =
+                    paras.entrySet().stream()
+                            .map(k -> new String(k.getKey() + "=" + k.getValue()))
+                            .collect(Collectors.toList());
             String paraStr = String.join("&", valuePairs);
             System.out.println(String.format("http://%s/instance/%s?%s", endpoint, mode, paraStr));
             URL url = new URL(String.format("http://%s/instance/%s?%s", endpoint, mode, paraStr));

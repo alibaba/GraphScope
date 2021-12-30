@@ -38,10 +38,10 @@ public class MaxGraphFeatures implements Graph.Features {
 
     public class MaxGraphGraphFeatures implements GraphFeatures {
 
-        private VariableFeatures variableFeatures = new MaxGraphVariables.MaxGraphVariableFeatures();
+        private VariableFeatures variableFeatures =
+                new MaxGraphVariables.MaxGraphVariableFeatures();
 
-        MaxGraphGraphFeatures() {
-        }
+        MaxGraphGraphFeatures() {}
 
         @Override
         public boolean supportsTransactions() {
@@ -69,13 +69,13 @@ public class MaxGraphFeatures implements Graph.Features {
         }
     }
 
-    public class MaxGraphVertexFeatures extends MaxGraphFeatures.MaxGraphElementFeatures implements VertexFeatures {
+    public class MaxGraphVertexFeatures extends MaxGraphFeatures.MaxGraphElementFeatures
+            implements VertexFeatures {
 
-        private final VertexPropertyFeatures vertexPropertyFeatures = new MaxGraphFeatures.MaxGraphVertexPropertyFeatures();
+        private final VertexPropertyFeatures vertexPropertyFeatures =
+                new MaxGraphFeatures.MaxGraphVertexPropertyFeatures();
 
-        protected MaxGraphVertexFeatures() {
-        }
-
+        protected MaxGraphVertexFeatures() {}
 
         @Override
         public VertexProperty.Cardinality getCardinality(final String key) {
@@ -106,16 +106,15 @@ public class MaxGraphFeatures implements Graph.Features {
         public VertexPropertyFeatures properties() {
             return vertexPropertyFeatures;
         }
-
     }
 
-    public class MaxGraphEdgeFeatures extends MaxGraphFeatures.MaxGraphElementFeatures implements EdgeFeatures {
+    public class MaxGraphEdgeFeatures extends MaxGraphFeatures.MaxGraphElementFeatures
+            implements EdgeFeatures {
 
-        private final EdgePropertyFeatures edgePropertyFeatures = new MaxGraphFeatures.MaxGraphEdgePropertyFeatures();
+        private final EdgePropertyFeatures edgePropertyFeatures =
+                new MaxGraphFeatures.MaxGraphEdgePropertyFeatures();
 
-        MaxGraphEdgeFeatures() {
-        }
-
+        MaxGraphEdgeFeatures() {}
 
         @Override
         public boolean supportsAddEdges() {
@@ -135,8 +134,7 @@ public class MaxGraphFeatures implements Graph.Features {
 
     public class MaxGraphElementFeatures implements ElementFeatures {
 
-        MaxGraphElementFeatures() {
-        }
+        MaxGraphElementFeatures() {}
 
         @Override
         public boolean supportsAddProperty() {
@@ -184,10 +182,11 @@ public class MaxGraphFeatures implements Graph.Features {
         }
     }
 
-    public class MaxGraphVertexPropertyFeatures extends MaxGraphFeatures.MaxGraphEdgePropertyFeatures implements VertexPropertyFeatures {
+    public class MaxGraphVertexPropertyFeatures
+            extends MaxGraphFeatures.MaxGraphEdgePropertyFeatures
+            implements VertexPropertyFeatures {
 
-        MaxGraphVertexPropertyFeatures() {
-        }
+        MaxGraphVertexPropertyFeatures() {}
 
         @Override
         public boolean supportsRemoveProperty() {
@@ -243,13 +242,11 @@ public class MaxGraphFeatures implements Graph.Features {
         public boolean supportsUniformListValues() {
             return false;
         }
-
     }
 
     public class MaxGraphEdgePropertyFeatures implements EdgePropertyFeatures {
 
-        MaxGraphEdgePropertyFeatures() {
-        }
+        MaxGraphEdgePropertyFeatures() {}
 
         @Override
         public boolean supportsBooleanValues() {

@@ -39,10 +39,10 @@ public class BigGraphFeatures implements Features {
 
     public class BigGraphGraphFeatures implements GraphFeatures {
 
-        private VariableFeatures variableFeatures = new BigGraphVariables.BigGraphVariableFeatures();
+        private VariableFeatures variableFeatures =
+                new BigGraphVariables.BigGraphVariableFeatures();
 
-        BigGraphGraphFeatures() {
-        }
+        BigGraphGraphFeatures() {}
 
         @Override
         public boolean supportsTransactions() {
@@ -72,11 +72,10 @@ public class BigGraphFeatures implements Features {
 
     public class BigGraphVertexFeatures extends BigGraphElementFeatures implements VertexFeatures {
 
-        private final VertexPropertyFeatures vertexPropertyFeatures = new BigGraphVertexPropertyFeatures();
+        private final VertexPropertyFeatures vertexPropertyFeatures =
+                new BigGraphVertexPropertyFeatures();
 
-        protected BigGraphVertexFeatures() {
-        }
-
+        protected BigGraphVertexFeatures() {}
 
         @Override
         public VertexProperty.Cardinality getCardinality(final String key) {
@@ -107,16 +106,14 @@ public class BigGraphFeatures implements Features {
         public VertexPropertyFeatures properties() {
             return vertexPropertyFeatures;
         }
-
     }
 
     public class BigGraphEdgeFeatures extends BigGraphElementFeatures implements EdgeFeatures {
 
-        private final EdgePropertyFeatures edgePropertyFeatures = new BigGraphEdgePropertyFeatures();
+        private final EdgePropertyFeatures edgePropertyFeatures =
+                new BigGraphEdgePropertyFeatures();
 
-        BigGraphEdgeFeatures() {
-        }
-
+        BigGraphEdgeFeatures() {}
 
         @Override
         public boolean supportsAddEdges() {
@@ -136,8 +133,7 @@ public class BigGraphFeatures implements Features {
 
     public class BigGraphElementFeatures implements ElementFeatures {
 
-        BigGraphElementFeatures() {
-        }
+        BigGraphElementFeatures() {}
 
         @Override
         public boolean supportsAddProperty() {
@@ -185,10 +181,10 @@ public class BigGraphFeatures implements Features {
         }
     }
 
-    public class BigGraphVertexPropertyFeatures extends BigGraphEdgePropertyFeatures implements VertexPropertyFeatures {
+    public class BigGraphVertexPropertyFeatures extends BigGraphEdgePropertyFeatures
+            implements VertexPropertyFeatures {
 
-        BigGraphVertexPropertyFeatures() {
-        }
+        BigGraphVertexPropertyFeatures() {}
 
         @Override
         public boolean supportsRemoveProperty() {
@@ -244,13 +240,11 @@ public class BigGraphFeatures implements Features {
         public boolean supportsUniformListValues() {
             return false;
         }
-
     }
 
     public class BigGraphEdgePropertyFeatures implements EdgePropertyFeatures {
 
-        BigGraphEdgePropertyFeatures() {
-        }
+        BigGraphEdgePropertyFeatures() {}
 
         @Override
         public boolean supportsBooleanValues() {

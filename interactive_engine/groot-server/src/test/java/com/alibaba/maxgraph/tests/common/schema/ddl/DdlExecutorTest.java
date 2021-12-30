@@ -13,9 +13,8 @@
  */
 package com.alibaba.maxgraph.tests.common.schema.ddl;
 
-import com.alibaba.maxgraph.compiler.api.schema.DataType;
-import com.alibaba.maxgraph.proto.groot.DdlRequestBatchPb;
-import com.alibaba.maxgraph.proto.groot.GraphDefPb;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+
 import com.alibaba.graphscope.groot.operation.LabelId;
 import com.alibaba.graphscope.groot.operation.Operation;
 import com.alibaba.graphscope.groot.operation.ddl.AddEdgeKindOperation;
@@ -39,15 +38,17 @@ import com.alibaba.graphscope.groot.schema.request.DdlRequestBatch;
 import com.alibaba.graphscope.groot.schema.request.DropEdgeTypeRequest;
 import com.alibaba.graphscope.groot.schema.request.DropVertexTypeRequest;
 import com.alibaba.graphscope.groot.schema.request.RemoveEdgeKindRequest;
+import com.alibaba.maxgraph.compiler.api.schema.DataType;
+import com.alibaba.maxgraph.proto.groot.DdlRequestBatchPb;
+import com.alibaba.maxgraph.proto.groot.GraphDefPb;
 import com.google.protobuf.ByteString;
 import com.google.protobuf.InvalidProtocolBufferException;
+
 import org.junit.jupiter.api.Test;
 
 import java.nio.ByteBuffer;
 import java.util.Collections;
 import java.util.List;
-
-import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class DdlExecutorTest {
 

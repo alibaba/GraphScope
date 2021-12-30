@@ -345,6 +345,7 @@ class CoordinatorServiceServicer(
         request = message_pb2.RunStepRequest(
             session_id=self._session_id, dag_def=dag_def
         )
+        error = None  # n.b.: avoid raising deep nested error stack to users
         try:
             response = self._analytical_engine_stub.RunStep(request)
         except grpc.RpcError as e:
@@ -360,9 +361,11 @@ class CoordinatorServiceServicer(
                     msg = f"{e.details()[:3072]} ... [truncated]"
                 else:
                     msg = e.details()
-                raise AnalyticalEngineInternalError(msg)
+                error = AnalyticalEngineInternalError(msg)
             else:
                 raise
+        if error is not None:
+            raise error
         op_results.extend(response.results)
         for r in response.results:
             op = self._key_to_op[r.key]
@@ -594,6 +597,7 @@ class CoordinatorServiceServicer(
             register_request = message_pb2.RunStepRequest(
                 session_id=session_id, dag_def=dag_def
             )
+            error = None  # n.b.: avoid raising deep nested error stack to users
             try:
                 register_response = self._analytical_engine_stub.RunStep(
                     register_request
@@ -605,9 +609,11 @@ class CoordinatorServiceServicer(
                     e.details(),
                 )
                 if e.code() == grpc.StatusCode.INTERNAL:
-                    raise AnalyticalEngineInternalError(e.details())
+                    error = AnalyticalEngineInternalError(e.details())
                 else:
                     raise
+            if error is not None:
+                raise error
             self._object_manager.put(
                 graph_sig,
                 LibMeta(
@@ -630,7 +636,7 @@ class CoordinatorServiceServicer(
             except Exception as e:
                 info_message, error_message = "WARNING: failed to read log: %s" % e, ""
 
-            if info_message and error_message:
+            if info_message or error_message:
                 if self._streaming_logs:
                     yield message_pb2.FetchLogsResponse(
                         info_message=info_message, error_message=error_message
@@ -1053,6 +1059,7 @@ class CoordinatorServiceServicer(
         request = message_pb2.RunStepRequest(
             session_id=self._session_id, dag_def=dag_def
         )
+        error = None  # n.b.: avoid raising deep nested error stack to users
         try:
             response = self._analytical_engine_stub.RunStep(request)
         except grpc.RpcError as e:
@@ -1062,9 +1069,11 @@ class CoordinatorServiceServicer(
                 e.details(),
             )
             if e.code() == grpc.StatusCode.INTERNAL:
-                raise AnalyticalEngineInternalError(e.details())
+                error = AnalyticalEngineInternalError(e.details())
             else:
                 raise
+        if error is not None:
+            raise error
         config = json.loads(response.results[0].result.decode("utf-8"))
         config.update(self._launcher.get_engine_config())
         return config
@@ -1398,7 +1407,6 @@ def launch_graphscope():
 
     # handle SIGTERM signal
     def terminate(signum, frame):
-        global coordinator_service_servicer
         coordinator_service_servicer._cleanup()
 
     signal.signal(signal.SIGTERM, terminate)

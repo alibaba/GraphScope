@@ -16,7 +16,8 @@ public class GeneratePlanBinaryTool {
         Client client = null;
         try {
             if (args.length < 6) {
-                System.err.println("args: query_dir query_pattern binary_dir binary_pattern ip port");
+                System.err.println(
+                        "args: query_dir query_pattern binary_dir binary_pattern ip port");
                 System.exit(-1);
             }
             File queryDir = new File(args[0]);
@@ -35,19 +36,28 @@ public class GeneratePlanBinaryTool {
             }
 
             MessageSerializer serializer = new GraphBinaryMessageSerializerV1();
-            cluster = Cluster.build()
-                    .addContactPoint(host)
-                    .port(port)
-                    .credentials("admin", "admin")
-                    .serializer(serializer)
-                    .create();
+            cluster =
+                    Cluster.build()
+                            .addContactPoint(host)
+                            .port(port)
+                            .credentials("admin", "admin")
+                            .serializer(serializer)
+                            .create();
             client = cluster.connect();
 
             for (File queryF : queryDir.listFiles()) {
                 if (queryF.getName().endsWith(queryPattern)) {
-                    String outputFullPath = String.format("%s/%s%s", binaryDir.getAbsolutePath(), FilenameUtils.removeExtension(queryF.getName()), binaryPattern);
+                    String outputFullPath =
+                            String.format(
+                                    "%s/%s%s",
+                                    binaryDir.getAbsolutePath(),
+                                    FilenameUtils.removeExtension(queryF.getName()),
+                                    binaryPattern);
                     String query = FileUtils.readFileToString(queryF, StandardCharsets.UTF_8);
-                    FileUtils.writeStringToFile(new File(outputFullPath), generateBinary(client, query), StandardCharsets.ISO_8859_1);
+                    FileUtils.writeStringToFile(
+                            new File(outputFullPath),
+                            generateBinary(client, query),
+                            StandardCharsets.ISO_8859_1);
                 }
             }
         } finally {
@@ -57,9 +67,11 @@ public class GeneratePlanBinaryTool {
     }
 
     public static String generateBinary(Client client, String query) throws Exception {
-        RequestMessage request = RequestMessage
-                .build(Tokens.OPS_EVAL)
-                .add(Tokens.ARGS_GREMLIN, query).processor("plan").create();
+        RequestMessage request =
+                RequestMessage.build(Tokens.OPS_EVAL)
+                        .add(Tokens.ARGS_GREMLIN, query)
+                        .processor("plan")
+                        .create();
         CompletableFuture<ResultSet> results = client.submitAsync(request);
         while (!results.isDone()) {
             Thread.sleep(100);

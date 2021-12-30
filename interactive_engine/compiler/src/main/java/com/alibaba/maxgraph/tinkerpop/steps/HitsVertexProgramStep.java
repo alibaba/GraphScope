@@ -1,12 +1,12 @@
 /**
  * Copyright 2020 Alibaba Group Holding Limited.
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -16,6 +16,7 @@
 package com.alibaba.maxgraph.tinkerpop.steps;
 
 import com.google.common.collect.Lists;
+
 import org.apache.tinkerpop.gremlin.process.computer.Memory;
 import org.apache.tinkerpop.gremlin.process.computer.VertexProgram;
 import org.apache.tinkerpop.gremlin.process.computer.traversal.step.map.VertexProgramStep;
@@ -27,7 +28,8 @@ import org.apache.tinkerpop.gremlin.structure.Graph;
 
 import java.util.List;
 
-public class HitsVertexProgramStep extends VertexProgramStep implements TraversalParent, Configuring {
+public class HitsVertexProgramStep extends VertexProgramStep
+        implements TraversalParent, Configuring {
 
     public static final String AUTH_SCORE = "auth";
     public static final String HUB_SCORE = "hub";
@@ -43,9 +45,13 @@ public class HitsVertexProgramStep extends VertexProgramStep implements Traversa
         super(traversal);
     }
 
-    public String getAuthProp() { return authProp; }
+    public String getAuthProp() {
+        return authProp;
+    }
 
-    public String getHubProp() { return hubProp; }
+    public String getHubProp() {
+        return hubProp;
+    }
 
     public int getMaxIterations() {
         return maxIterations;
@@ -63,24 +69,22 @@ public class HitsVertexProgramStep extends VertexProgramStep implements Traversa
             if (!(value instanceof String)) {
                 throw new IllegalArgumentException("auth requires a String as its argument");
             }
-            this.authProp = (String)value;
-        }
-        else if (key.equals(Hits.HUB_PROP)) {
+            this.authProp = (String) value;
+        } else if (key.equals(Hits.HUB_PROP)) {
             if (!(value instanceof String)) {
                 throw new IllegalArgumentException("hub requires a String as its argument");
             }
-            this.hubProp = (String)value;
-        }
-        else if (key.equals(Hits.TIMES)) {
+            this.hubProp = (String) value;
+        } else if (key.equals(Hits.TIMES)) {
             if (!(value instanceof Integer)) {
                 throw new IllegalArgumentException("times requires an Integer as its argument");
             }
-            this.maxIterations = (int)value;
+            this.maxIterations = (int) value;
         } else if (key.equals(Hits.EDGES)) {
             if (!(value instanceof String)) {
                 throw new IllegalArgumentException("edges requires an String as its argument");
             }
-            this.edgeLabels = Lists.newArrayList((String)value);
+            this.edgeLabels = Lists.newArrayList((String) value);
         } else {
             this.parameters.set(this, keyValues);
         }
