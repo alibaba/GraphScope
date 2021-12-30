@@ -201,7 +201,10 @@ public class IrPlan implements Closeable {
                 }
                 // append always and sink by parameters
                 Pointer ptrProject = irCoreLib.initProjectOperator(true);
-                irCoreLib.addProjectExprAlias(ptrProject, expr, alias);
+                ResultCode resultCode = irCoreLib.addProjectExprAlias(ptrProject, expr, alias);
+                if (resultCode != ResultCode.Success) {
+                    throw new InterOpIllegalArgException(baseOp.getClass(), "singleExpr", "append returns " + resultCode.name());
+                }
                 return ptrProject;
             }
         },
