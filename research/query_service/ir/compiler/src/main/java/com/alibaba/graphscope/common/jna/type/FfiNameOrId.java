@@ -27,15 +27,6 @@ public class FfiNameOrId extends Structure {
     }
 
     public static class ByValue extends FfiNameOrId implements Structure.ByValue {
-        private static FfiNameOrId.ByValue NONE = new FfiNameOrId.ByValue();
-
-        public ByValue() {
-            opt = FfiNameIdOpt.None;
-        }
-
-        public static FfiNameOrId.ByValue getHead() {
-            return NONE;
-        }
     }
 
     public FfiNameIdOpt opt;

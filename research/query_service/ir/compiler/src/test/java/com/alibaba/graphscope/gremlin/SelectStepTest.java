@@ -25,12 +25,8 @@ import org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.__;
 import org.apache.tinkerpop.gremlin.structure.Graph;
 import org.apache.tinkerpop.gremlin.tinkergraph.structure.TinkerFactory;
 import com.alibaba.graphscope.gremlin.InterOpCollectionBuilder.StepTransformFactory;
-import org.javatuples.Pair;
 import org.junit.Assert;
 import org.junit.Test;
-
-import java.util.Arrays;
-import java.util.List;
 
 public class SelectStepTest {
     private Graph graph = TinkerFactory.createModern();
@@ -41,10 +37,7 @@ public class SelectStepTest {
         Traversal traversal = g.V().as("a").out().as("b").select("a", "b");
         Step selectStep = traversal.asAdmin().getEndStep();
         ProjectOp op = (ProjectOp) StepTransformFactory.SELECT_BY_STEP.apply(selectStep);
-        List<Pair> expected = Arrays.asList(
-                Pair.with("@a", ArgUtils.asFfiAlias("a", false)),
-                Pair.with("@b", ArgUtils.asFfiAlias("b", false)));
-        Assert.assertEquals(expected, op.getProjectExprWithAlias().get().getArg());
+        Assert.assertEquals("{@a, @b}", op.getSingleExpr().get().getArg());
     }
 
     @Test
@@ -52,10 +45,7 @@ public class SelectStepTest {
         Traversal traversal = g.V().as("a").out().as("b").select("a", "b").by("name");
         Step selectStep = traversal.asAdmin().getEndStep();
         ProjectOp op = (ProjectOp) StepTransformFactory.SELECT_BY_STEP.apply(selectStep);
-        List<Pair> expected = Arrays.asList(
-                Pair.with("@a.name", ArgUtils.asFfiAlias("a_name", false)),
-                Pair.with("@b.name", ArgUtils.asFfiAlias("b_name", false)));
-        Assert.assertEquals(expected, op.getProjectExprWithAlias().get().getArg());
+        Assert.assertEquals("{@a.name, @b.name}", op.getSingleExpr().get().getArg());
     }
 
     @Test
@@ -63,8 +53,7 @@ public class SelectStepTest {
         Traversal traversal = g.V().as("a").select("a");
         Step selectStep = traversal.asAdmin().getEndStep();
         ProjectOp op = (ProjectOp) StepTransformFactory.SELECT_ONE_BY_STEP.apply(selectStep);
-        List<Pair> expected = Arrays.asList(Pair.with("@a", ArgUtils.asFfiAlias("a", false)));
-        Assert.assertEquals(expected, op.getProjectExprWithAlias().get().getArg());
+        Assert.assertEquals("@a", op.getSingleExpr().get().getArg());
     }
 
     @Test
@@ -72,8 +61,7 @@ public class SelectStepTest {
         Traversal traversal = g.V().as("a").select("a").by("name");
         Step selectStep = traversal.asAdmin().getEndStep();
         ProjectOp op = (ProjectOp) StepTransformFactory.SELECT_ONE_BY_STEP.apply(selectStep);
-        List<Pair> expected = Arrays.asList(Pair.with("@a.name", ArgUtils.asFfiAlias("a_name", false)));
-        Assert.assertEquals(expected, op.getProjectExprWithAlias().get().getArg());
+        Assert.assertEquals("@a.name", op.getSingleExpr().get().getArg());
     }
 
     @Test
@@ -81,8 +69,7 @@ public class SelectStepTest {
         Traversal traversal = g.V().as("a").select("a").by(__.valueMap("name"));
         Step selectStep = traversal.asAdmin().getEndStep();
         ProjectOp op = (ProjectOp) StepTransformFactory.SELECT_ONE_BY_STEP.apply(selectStep);
-        List<Pair> expected = Arrays.asList(Pair.with("{@a.name}", ArgUtils.asFfiAlias("", false)));
-        Assert.assertEquals(expected, op.getProjectExprWithAlias().get().getArg());
+        Assert.assertEquals("{@a.name}", op.getSingleExpr().get().getArg());
     }
 
     @Test
@@ -90,8 +77,6 @@ public class SelectStepTest {
         Traversal traversal = g.V().as("a").select("a").by(__.valueMap("name", "id"));
         Step selectStep = traversal.asAdmin().getEndStep();
         ProjectOp op = (ProjectOp) StepTransformFactory.SELECT_ONE_BY_STEP.apply(selectStep);
-        List<Pair> expected = Arrays.asList(
-                Pair.with("{@a.name, @a.id}", ArgUtils.asFfiAlias("", false)));
-        Assert.assertEquals(expected, op.getProjectExprWithAlias().get().getArg());
+        Assert.assertEquals("{@a.name, @a.id}", op.getSingleExpr().get().getArg());
     }
 }

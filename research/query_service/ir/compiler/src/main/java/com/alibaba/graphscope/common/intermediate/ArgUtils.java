@@ -70,6 +70,21 @@ public class ArgUtils {
         return irCoreLib.asNoneVar();
     }
 
+    public static FfiNameOrId.ByValue asNoneNameOrId() {
+        return irCoreLib.noneNameOrId();
+    }
+
+    public static FfiProperty.ByValue asNoneProperty() {
+        return irCoreLib.asNoneKey();
+    }
+
+    public static FfiAlias.ByValue asNoneAlias() {
+        FfiAlias.ByValue ffiAlias = new FfiAlias.ByValue();
+        ffiAlias.isQueryGiven = false;
+        ffiAlias.alias = asNoneNameOrId();
+        return ffiAlias;
+    }
+
     public static FfiAlias.ByValue asFfiAlias(String aliasName, boolean isQueryGiven) {
         FfiNameOrId.ByValue alias = irCoreLib.cstrAsNameOrId(aliasName);
         FfiAlias.ByValue ffiAlias = new FfiAlias.ByValue();

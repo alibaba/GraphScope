@@ -27,15 +27,6 @@ public class FfiProperty extends Structure {
     }
 
     public static class ByValue extends FfiProperty implements Structure.ByValue {
-        private static FfiProperty.ByValue NONE = new FfiProperty.ByValue();
-
-        public ByValue() {
-            opt = FfiPropertyOpt.None;
-        }
-
-        public boolean isNone() {
-            return this.equals(NONE);
-        }
     }
 
     public FfiPropertyOpt opt;

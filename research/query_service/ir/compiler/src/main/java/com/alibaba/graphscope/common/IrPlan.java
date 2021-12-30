@@ -189,24 +189,19 @@ public class IrPlan implements Closeable {
             @Override
             public Pointer apply(InterOpBase baseOp) {
                 ProjectOp op = (ProjectOp) baseOp;
-                Optional<OpArg> exprWithAlias = op.getProjectExprWithAlias();
-                if (!exprWithAlias.isPresent()) {
-                    throw new InterOpIllegalArgException(baseOp.getClass(), "exprWithAlias", "not present");
+                Optional<OpArg> exprOpt = op.getSingleExpr();
+                if (!exprOpt.isPresent()) {
+                    throw new InterOpIllegalArgException(baseOp.getClass(), "singleExpr", "not present");
                 }
-                List<Pair> exprList = (List<Pair>) exprWithAlias.get().getArg();
-                if (exprList.isEmpty()) {
-                    throw new InterOpIllegalArgException(baseOp.getClass(), "exprWithAlias", "should not be empty");
+                String expr = (String) exprOpt.get().getArg();
+                FfiAlias.ByValue alias = ArgUtils.asNoneAlias();
+                Optional<OpArg> aliasOpt = baseOp.getAlias();
+                if (aliasOpt.isPresent()) {
+                    alias = (FfiAlias.ByValue) aliasOpt.get().getArg();
                 }
                 // append always and sink by parameters
                 Pointer ptrProject = irCoreLib.initProjectOperator(true);
-                exprList.forEach(pair -> {
-                    String expr = (String) pair.getValue0();
-                    FfiAlias.ByValue alias = (FfiAlias.ByValue) pair.getValue1();
-                    irCoreLib.addProjectExprAlias(ptrProject, expr, alias);
-                });
-                if (baseOp.getAlias().isPresent()) {
-                    throw new InterOpIllegalArgException(baseOp.getClass(), "alias", "unimplemented yet");
-                }
+                irCoreLib.addProjectExprAlias(ptrProject, expr, alias);
                 return ptrProject;
             }
         },
@@ -294,7 +289,7 @@ public class IrPlan implements Closeable {
     }
 
     public IrPlan() {
-        this.ptrPlan = irCoreLib.initLogicalPlan();
+        this.ptrPlan = irCoreLib.initLogicalPlan(true);
         this.oprIdx = new IntByReference(0);
     }
 
@@ -359,7 +354,7 @@ public class IrPlan implements Closeable {
     }
 
     private void setPostAlias(InterOpBase base) {
-        if (!(base instanceof ScanFusionOp || base instanceof ExpandOp) && base.getAlias().isPresent()) {
+        if (!(base instanceof ScanFusionOp || base instanceof ExpandOp || base instanceof ProjectOp) && base.getAlias().isPresent()) {
             FfiAlias.ByValue ffiAlias = (FfiAlias.ByValue) base.getAlias().get().getArg();
             Pointer ptrAs = irCoreLib.initAsOperator();
             ResultCode asResult = irCoreLib.setAsAlias(ptrAs, ffiAlias);

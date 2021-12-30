@@ -19,19 +19,19 @@ package com.alibaba.graphscope.common.intermediate.operator;
 import java.util.Optional;
 
 public class ProjectOp extends InterOpBase {
-    // list of Pair<expr, FfiAlias>
-    private Optional<OpArg> projectExprWithAlias;
+    // expr
+    private Optional<OpArg> singleExpr;
 
     public ProjectOp() {
         super();
-        projectExprWithAlias = Optional.empty();
+        singleExpr = Optional.empty();
     }
 
-    public Optional<OpArg> getProjectExprWithAlias() {
-        return projectExprWithAlias;
+    public Optional<OpArg> getSingleExpr() {
+        return singleExpr;
     }
 
-    public void setProjectExprWithAlias(OpArg projectExprWithAlias) {
-        this.projectExprWithAlias = Optional.of(projectExprWithAlias);
+    public void setSingleExpr(OpArg projectExpr) {
+        this.singleExpr = Optional.of(projectExpr);
     }
 }
