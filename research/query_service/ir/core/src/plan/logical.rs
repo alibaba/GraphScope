@@ -16,7 +16,7 @@
 use std::cell::RefCell;
 use std::collections::hash_map::Entry;
 use std::collections::{BTreeSet, HashMap};
-use std::convert::TryFrom;
+use std::convert::{TryFrom, TryInto};
 use std::fmt;
 use std::io;
 use std::iter::FromIterator;
@@ -25,6 +25,7 @@ use std::rc::Rc;
 use ir_common::error::{ParsePbError, ParsePbResult};
 use ir_common::generated::algebra as pb;
 use ir_common::generated::common as common_pb;
+use ir_common::NameOrId;
 use vec_map::VecMap;
 
 use crate::plan::meta::{StoreMeta, STORE_META};
@@ -35,7 +36,8 @@ use crate::JsonIO;
 pub enum LogicalError {
     TableNotExist(String),
     ColumnNotExist(String),
-    TagNotExist(common_pb::NameOrId),
+    TagNotExist(NameOrId),
+    ParsePbError(ParsePbError),
     Unsupported,
 }
 
@@ -47,12 +49,19 @@ impl fmt::Display for LogicalError {
             LogicalError::TableNotExist(s) => write!(f, "the given table(label): {:?} does not exist", s),
             LogicalError::ColumnNotExist(s) => write!(f, "the given column: {:?} does not exist", s),
             LogicalError::TagNotExist(tag) => write!(f, "the given tag: {:?} does not exist", tag),
+            LogicalError::ParsePbError(err) => write!(f, "parse pb error: {:?}", err),
             LogicalError::Unsupported => write!(f, "the function has not been supported"),
         }
     }
 }
 
 impl std::error::Error for LogicalError {}
+
+impl From<ParsePbError> for LogicalError {
+    fn from(err: ParsePbError) -> Self {
+        Self::ParsePbError(err)
+    }
+}
 
 /// An internal representation of the pb-[`Node`].
 ///
@@ -287,25 +296,29 @@ impl LogicalPlan {
         match &node_rc.borrow().opr.opr {
             Some(pb::logical_plan::operator::Opr::Scan(scan)) => {
                 if let Some(alias) = &scan.alias {
-                    self.plan_meta.add_tag_node(alias.clone(), id);
+                    self.plan_meta
+                        .add_tag_node(alias.clone().try_into().unwrap(), id);
                 }
                 self.plan_meta.update_curr_node(id);
             }
             Some(pb::logical_plan::operator::Opr::Vertex(vertex)) => {
                 if let Some(alias) = &vertex.alias {
-                    self.plan_meta.add_tag_node(alias.clone(), id);
+                    self.plan_meta
+                        .add_tag_node(alias.clone().try_into().unwrap(), id);
                 }
                 self.plan_meta.update_curr_node(id);
             }
             Some(pb::logical_plan::operator::Opr::Edge(edge)) => {
                 if let Some(alias) = &edge.alias {
-                    self.plan_meta.add_tag_node(alias.clone(), id);
+                    self.plan_meta
+                        .add_tag_node(alias.clone().try_into().unwrap(), id);
                 }
                 self.plan_meta.update_curr_node(id);
             }
             Some(pb::logical_plan::operator::Opr::Path(path)) => {
                 if let Some(alias) = &path.alias {
-                    self.plan_meta.add_tag_node(alias.clone(), id);
+                    self.plan_meta
+                        .add_tag_node(alias.clone().try_into().unwrap(), id);
                 }
                 self.plan_meta.update_curr_node(id);
             }
@@ -501,12 +514,12 @@ pub struct PlanMeta {
     /// information is critical in distributed processing, as the computation may not align
     /// with the storage to access the required column. Thus, such information can help
     /// the computation route and fetch columns.
-    node_cols: HashMap<u32, BTreeSet<common_pb::NameOrId>>,
+    node_cols: HashMap<u32, BTreeSet<NameOrId>>,
     /// The tag must refer to a valid node in the plan.
-    tag_nodes: HashMap<common_pb::NameOrId, u32>,
+    tag_nodes: HashMap<NameOrId, u32>,
     /// To ease the processing, tag may be transformed to an internal id.
     /// This maintains the mappings
-    tag_ids: HashMap<common_pb::NameOrId, common_pb::NameOrId>,
+    tag_ids: HashMap<NameOrId, NameOrId>,
     /// To record the current node's id in the logical plan. Note that nodes that have operators that
     /// of `As` or `Selection` does not alter curr_node.
     curr_node: u32,
@@ -524,9 +537,7 @@ impl PlanMeta {
         plan_meta
     }
 
-    pub fn insert(
-        &mut self, tag_opt: Option<common_pb::NameOrId>, column: common_pb::NameOrId,
-    ) -> LogicalResult<u32> {
+    pub fn insert(&mut self, tag_opt: Option<NameOrId>, column: NameOrId) -> LogicalResult<u32> {
         if let Some(tag) = tag_opt {
             if let Some(&node_id) = self.tag_nodes.get(&tag) {
                 self.node_cols
@@ -549,16 +560,16 @@ impl PlanMeta {
         }
     }
 
-    pub fn add_tag_node(&mut self, tag: common_pb::NameOrId, node: u32) {
+    pub fn add_tag_node(&mut self, tag: NameOrId, node: u32) {
         self.tag_nodes.entry(tag).or_insert(node);
     }
 
-    pub fn get_or_set_tag_id(&mut self, tag: common_pb::NameOrId) -> common_pb::NameOrId {
+    pub fn get_or_set_tag_id(&mut self, tag: NameOrId) -> NameOrId {
         let entry = self.tag_ids.entry(tag);
         match entry {
             Entry::Occupied(o) => o.into_mut().clone(),
             Entry::Vacant(v) => {
-                let new_tag_id: common_pb::NameOrId = self.max_tag_id.into();
+                let new_tag_id: NameOrId = self.max_tag_id.into();
                 self.max_tag_id += 1;
                 v.insert(new_tag_id).clone()
             }
@@ -591,7 +602,7 @@ impl AsLogical for common_pb::Property {
                                 .into();
                         }
                     }
-                    plan_meta.insert(None, key.clone())?;
+                    plan_meta.insert(None, key.clone().try_into()?)?;
                 }
                 _ => {}
             }
@@ -614,7 +625,13 @@ impl AsLogical for common_pb::Variable {
                                     .into();
                             }
                         }
-                        plan_meta.insert(self.tag.clone(), key.clone())?;
+                        plan_meta.insert(
+                            self.tag
+                                .clone()
+                                .map(|tag| tag.try_into())
+                                .transpose()?,
+                            key.clone().try_into()?,
+                        )?;
                     }
                     _ => {}
                 }
@@ -671,7 +688,13 @@ impl AsLogical for common_pb::Expression {
                                                     .into();
                                             }
                                         }
-                                        plan_meta.insert(var.tag.clone(), key.clone())?;
+                                        plan_meta.insert(
+                                            var.tag
+                                                .clone()
+                                                .map(|tag| tag.try_into())
+                                                .transpose()?,
+                                            key.clone().try_into()?,
+                                        )?;
                                     }
                                     common_pb::property::Item::Label(_) => count = 1,
                                     _ => count = 0,
@@ -735,7 +758,7 @@ impl AsLogical for pb::QueryParams {
                         .into();
                 }
             }
-            plan_meta.insert(None, column.clone())?;
+            plan_meta.insert(None, column.clone().try_into()?)?;
         }
         Ok(())
     }
@@ -836,7 +859,7 @@ impl AsLogical for pb::IndexPredicate {
                                             .into();
                                     }
                                 }
-                                plan_meta.insert(None, key.clone())?;
+                                plan_meta.insert(None, key.clone().try_into()?)?;
                             }
                             common_pb::property::Item::Label(_) => {
                                 if let Some(val) = pred.value.as_mut() {
@@ -899,7 +922,7 @@ impl AsLogical for pb::logical_plan::Operator {
                 Opr::OrderBy(opr) => opr.preprocess(meta, plan_meta)?,
                 Opr::Limit(opr) => opr.preprocess(meta, plan_meta)?,
                 Opr::Join(opr) => opr.preprocess(meta, plan_meta)?,
-                _ => {},
+                _ => {}
             }
         }
         Ok(())
@@ -1166,6 +1189,15 @@ mod test {
             _ => panic!(),
         }
 
+        // Assert whether the columns have been updated in PlanMeta
+        assert_eq!(
+            plan_meta.node_cols.get(&0).unwrap(),
+            // has a new column "name", which is mapped to 1
+            &vec![1.into()]
+                .into_iter()
+                .collect::<BTreeSet<_>>()
+        );
+
         // name maps to 1
         let mut expression = str_to_expr_pb("@a.name == \"John\"".to_string()).unwrap();
         expression
@@ -1182,6 +1214,15 @@ mod test {
             }
             _ => panic!(),
         }
+
+        // Assert whether the columns have been updated in PlanMeta
+        assert_eq!(
+            plan_meta.node_cols.get(&1).unwrap(),
+            // node1 with tag a has a new column "name", which is mapped to 1
+            &vec![1.into()]
+                .into_iter()
+                .collect::<BTreeSet<_>>()
+        );
 
         let mut expression = str_to_expr_pb("{@a.name, @b.id}".to_string()).unwrap();
         expression
@@ -1205,6 +1246,22 @@ mod test {
             }
             _ => panic!(),
         }
+
+        // Assert whether the columns have been updated in PlanMeta
+        assert_eq!(
+            plan_meta.node_cols.get(&0).unwrap(),
+            // node1 with tag a has a new column "name", which is mapped to 1
+            &vec![1.into()]
+                .into_iter()
+                .collect::<BTreeSet<_>>()
+        );
+        assert_eq!(
+            plan_meta.node_cols.get(&2).unwrap(),
+            // node2 with tag b has a new column "id", which is mapped to 0
+            &vec![0.into()]
+                .into_iter()
+                .collect::<BTreeSet<_>>()
+        );
     }
 
     #[test]

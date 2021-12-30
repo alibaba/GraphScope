@@ -36,8 +36,6 @@ fn codegen_inplace() -> Result<(), Box<dyn std::error::Error>> {
     let _ = std::fs::create_dir(GEN_DIR);
     prost_build::Config::new()
         .type_attribute(".", "#[derive(Serialize,Deserialize)]")
-        .type_attribute("common.NameOrId", "#[derive(Eq, Hash, PartialOrd, Ord)]")
-        .type_attribute("common.NameOrId.item", "#[derive(Eq, Hash, PartialOrd, Ord)]")
         .out_dir(&out_dir)
         .compile_protos(
             &[
@@ -57,8 +55,6 @@ fn codegen_inplace() -> Result<(), Box<dyn std::error::Error>> {
 fn codegen_inplace() -> Result<(), Box<dyn std::error::Error>> {
     prost_build::Config::new()
         .type_attribute(".", "#[derive(Serialize,Deserialize)]")
-        .type_attribute("common.NameOrId", "#[derive(Eq, Hash, PartialOrd, Ord)]")
-        .type_attribute("common.NameOrId.item", "#[derive(Eq, Hash, PartialOrd, Ord)]")
         .compile_protos(
             &[
                 "../proto/common.proto",

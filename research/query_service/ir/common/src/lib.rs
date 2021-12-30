@@ -65,7 +65,7 @@ pub const SPLITTER: &'static str = ".";
 pub const VAR_PREFIX: &'static str = "@";
 
 /// Refer to a key of a relation or a graph element, by either a string-type name or an identifier
-#[derive(Debug, PartialEq, Eq, Hash, Clone)]
+#[derive(Debug, PartialEq, Eq, Hash, Clone, PartialOrd, Ord)]
 pub enum NameOrId {
     Str(String),
     Id(KeyId),
