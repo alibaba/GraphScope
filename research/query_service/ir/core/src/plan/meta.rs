@@ -23,11 +23,11 @@ use ir_common::generated::schema as schema_pb;
 use crate::JsonIO;
 
 lazy_static! {
-    pub static ref META_DATA: RwLock<MetaData> = RwLock::new(MetaData::default());
+    pub static ref STORE_META: RwLock<StoreMeta> = RwLock::new(StoreMeta::default());
 }
 
 pub fn set_schema_from_json<R: io::Read>(read: R) {
-    if let Ok(mut meta) = META_DATA.write() {
+    if let Ok(mut meta) = STORE_META.write() {
         if let Ok(schema) = Schema::from_json(read) {
             meta.schema = Some(schema);
         }
@@ -38,20 +38,20 @@ pub fn set_schema_from_json<R: io::Read>(read: R) {
 pub fn set_schema_simple(
     entities: Vec<(String, i32)>, relations: Vec<(String, i32)>, columns: Vec<(String, i32)>,
 ) {
-    if let Ok(mut meta) = META_DATA.write() {
+    if let Ok(mut meta) = STORE_META.write() {
         let schema: Schema = (entities, relations, columns).into();
         meta.schema = Some(schema)
     }
 }
 
 pub fn reset_schema() {
-    if let Ok(mut meta) = META_DATA.write() {
+    if let Ok(mut meta) = STORE_META.write() {
         meta.schema = None;
     }
 }
 
 #[derive(Clone, Debug, Default)]
-pub struct MetaData {
+pub struct StoreMeta {
     pub schema: Option<Schema>,
 }
 

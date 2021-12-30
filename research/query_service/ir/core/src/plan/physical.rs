@@ -200,11 +200,8 @@ impl AsPhysical for pb::GetV {
 impl AsPhysical for pb::As {
     fn add_job_builder(&self, builder: &mut JobBuilder) -> PhysicalResult<()> {
         // Transform to `Auxilia` internally.
-        let auxilia = pb::Auxilia {
-            params: None,
-            alias: self.alias.clone()
-        };
-        simple_add_job_builder(builder, &pb::logical_plan::Operator::from(auxilia), SimpleOpr::Map)
+        let auxilia = pb::Auxilia { params: None, alias: self.alias.clone() };
+        simple_add_job_builder(builder, &pb::logical_plan::Operator::from(auxilia), SimpleOpr::FilterMap)
     }
 }
 

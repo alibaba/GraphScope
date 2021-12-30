@@ -457,7 +457,7 @@ pub extern "C" fn set_schema(cstr_json: *const c_char) -> ResultCode {
 #[no_mangle]
 pub extern "C" fn init_logical_plan(is_preprocess: bool) -> *const c_void {
     let mut plan = Box::new(LogicalPlan::default());
-    plan.is_preprocess = is_preprocess;
+    plan.plan_meta.set_preprocess(is_preprocess);
     Box::into_raw(plan) as *const c_void
 }
 
@@ -1418,9 +1418,7 @@ mod as_opr {
     /// To initialize an As operator
     #[no_mangle]
     pub extern "C" fn init_as_operator() -> *const c_void {
-        let as_opr = Box::new(pb::As {
-            alias: None,
-        });
+        let as_opr = Box::new(pb::As { alias: None });
 
         Box::into_raw(as_opr) as *const c_void
     }

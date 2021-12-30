@@ -438,7 +438,9 @@ impl InnerOpr {
                                 }
                                 Ok(object!(vec![obj1, obj2]))
                             }
-                            _ => Err(ExprEvalError::Unsupported("evaluating `valueMap` on non-vars is not supported.".to_string())),
+                            _ => Err(ExprEvalError::Unsupported(
+                                "evaluating `valueMap` on non-vars is not supported.".to_string(),
+                            )),
                         }?;
                         map.insert(obj_key, obj);
                     } else {
