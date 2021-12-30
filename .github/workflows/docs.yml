@@ -100,6 +100,7 @@ jobs:
       shell: bash
       run: |
         shopt -s extglob
+        rm google-java-format-1.13.0-all-deps.jar || true
 
         git config user.email github-actions@github.com
         git config user.name github-actions
