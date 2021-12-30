@@ -304,26 +304,15 @@ impl AsPhysical for LogicalPlan {
         let mut curr_node_opt = self.root();
 
         while curr_node_opt.is_some() {
-            let curr_node = curr_node_opt.as_ref().unwrap();
             if is_partition {
                 if let Some(prev) = &prev_node_opt {
                     let prev_ref = prev.borrow();
-                    let node_ref = curr_node.borrow();
+                    let node_ref = curr_node_opt.as_ref().unwrap().borrow();
                     match (&prev_ref.opr.opr, &node_ref.opr.opr) {
-                        (_, Some(Edge(edgexpd))) => {
+                        (Some(Edge(_)), Some(Edge(edgexpd))) => {
                             let key_pb = common_pb::NameOrIdKey {
                                 key: edgexpd.base.as_ref().unwrap().v_tag.clone(),
                             };
-                            builder.repartition(key_pb.encode_to_vec());
-                        }
-                        (Some(Edge(edge_expand)), Some(Auxilia(_))) => {
-                            if !edge_expand.is_edge {
-                                let key_pb = common_pb::NameOrIdKey { key: None };
-                                builder.repartition(key_pb.encode_to_vec());
-                            }
-                        }
-                        (Some(Vertex(_)), Some(Auxilia(_))) => {
-                            let key_pb = common_pb::NameOrIdKey { key: None };
                             builder.repartition(key_pb.encode_to_vec());
                         }
                         // TODO: add more shuffle situations, e.g., auxilia after group/fold/limit etc.
@@ -331,10 +320,70 @@ impl AsPhysical for LogicalPlan {
                     }
                 }
             }
+
+            let curr_node = curr_node_opt.as_ref().unwrap();
+            let curr_node_id = curr_node.borrow().id;
+            let mut auxilia = pb::Auxilia { params: None, alias: None };
+            let mut is_adding_auxilia = false;
+
+            match &mut curr_node.borrow_mut().opr.opr {
+                Some(Edge(edgexpd)) => {
+                    if let Some(base) = &mut edgexpd.base {
+                        if let Some(params) = &mut base.params {
+                            if let Some(columns) = self.plan_meta.get_node_columns(curr_node_id) {
+                                if !columns.is_empty() {
+                                    is_adding_auxilia = true;
+                                    // Will be added to Auxilia
+                                    params.columns.clear();
+                                    params.columns.extend(
+                                        columns
+                                            .iter()
+                                            .map(|tag| common_pb::NameOrId::from(tag.clone())),
+                                    );
+                                }
+                            }
+                            if !edgexpd.is_edge {
+                                // Vertex expansion
+                                // Move everything to Auxilia
+                                auxilia.params = Some(params.clone());
+                                auxilia.alias =
+                                    Some(pb::Alias { alias: edgexpd.alias.clone(), is_query_given: false });
+                                params.columns.clear();
+                                params.predicate = None;
+                                edgexpd.alias = None;
+                            } else {
+                                is_adding_auxilia = false;
+                            }
+                        }
+                    }
+                }
+                Some(Scan(scan)) => {
+                    if let Some(params) = scan.params.as_mut() {
+                        if let Some(columns) = self.plan_meta.get_node_columns(curr_node_id) {
+                            if !columns.is_empty() {
+                                params.columns.clear();
+                                params.columns.extend(
+                                    columns
+                                        .iter()
+                                        .map(|tag| common_pb::NameOrId::from(tag.clone())),
+                                )
+                            }
+                        }
+                    }
+                }
+                _ => {}
+            }
             curr_node
                 .borrow()
                 .opr
                 .add_job_builder(builder)?;
+            if is_adding_auxilia {
+                if is_partition {
+                    let key_pb = common_pb::NameOrIdKey { key: None };
+                    builder.repartition(key_pb.encode_to_vec());
+                }
+                pb::logical_plan::Operator::from(auxilia.clone()).add_job_builder(builder)?;
+            }
             prev_node_opt = curr_node_opt.clone();
 
             if curr_node.borrow().children.is_empty() {

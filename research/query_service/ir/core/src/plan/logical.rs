@@ -299,28 +299,24 @@ impl LogicalPlan {
                     self.plan_meta
                         .add_tag_node(alias.clone().try_into().unwrap(), id);
                 }
-                self.plan_meta.update_curr_node(id);
             }
             Some(pb::logical_plan::operator::Opr::Vertex(vertex)) => {
                 if let Some(alias) = &vertex.alias {
                     self.plan_meta
                         .add_tag_node(alias.clone().try_into().unwrap(), id);
                 }
-                self.plan_meta.update_curr_node(id);
             }
             Some(pb::logical_plan::operator::Opr::Edge(edge)) => {
                 if let Some(alias) = &edge.alias {
                     self.plan_meta
                         .add_tag_node(alias.clone().try_into().unwrap(), id);
                 }
-                self.plan_meta.update_curr_node(id);
             }
             Some(pb::logical_plan::operator::Opr::Path(path)) => {
                 if let Some(alias) = &path.alias {
                     self.plan_meta
                         .add_tag_node(alias.clone().try_into().unwrap(), id);
                 }
-                self.plan_meta.update_curr_node(id);
             }
             Some(pb::logical_plan::operator::Opr::As(as_opr)) => {
                 if let Some(alias_) = &as_opr.alias {
@@ -330,8 +326,7 @@ impl LogicalPlan {
                     }
                 }
             }
-            Some(pb::logical_plan::operator::Opr::Select(_)) => { /*donot change head*/ }
-            _ => self.plan_meta.update_curr_node(id),
+            _ => {}
         }
         self.total_size = id as usize + 1;
 
@@ -342,10 +337,23 @@ impl LogicalPlan {
     pub fn append_operator_as_node(
         &mut self, mut opr: pb::logical_plan::Operator, parent_ids: Vec<u32>,
     ) -> LogicalResult<i32> {
+        let old_curr_node = self.plan_meta.curr_node;
         if let Ok(meta) = STORE_META.read() {
+            match opr.opr {
+                Some(pb::logical_plan::operator::Opr::Select(_))
+                | Some(pb::logical_plan::operator::Opr::As(_)) => {}
+                _ => self
+                    .plan_meta
+                    .update_curr_node(self.total_size as u32),
+            }
             opr.preprocess(&meta, &mut self.plan_meta)?;
         }
-        Ok(self.append_node(Node::new(self.total_size as u32, opr), parent_ids))
+        let result = self.append_node(Node::new(self.total_size as u32, opr), parent_ids);
+        if result < 0 {
+            self.plan_meta.update_curr_node(old_curr_node);
+        }
+
+        Ok(result)
     }
 
     /// Remove a node from the logical plan, and do the following:
@@ -544,7 +552,9 @@ impl PlanMeta {
         plan_meta
     }
 
-    pub fn insert(&mut self, tag_opt: Option<NameOrId>, column: NameOrId) -> LogicalResult<u32> {
+    pub fn insert_tag_columns(
+        &mut self, tag_opt: Option<NameOrId>, column: NameOrId,
+    ) -> LogicalResult<u32> {
         if let Some(tag) = tag_opt {
             if let Some(&node_id) = self.tag_nodes.get(&tag) {
                 self.node_cols
@@ -565,6 +575,10 @@ impl PlanMeta {
 
             Ok(curr_node)
         }
+    }
+
+    pub fn get_node_columns(&self, id: u32) -> Option<&BTreeSet<NameOrId>> {
+        self.node_cols.get(&id)
     }
 
     pub fn add_tag_node(&mut self, tag: NameOrId, node: u32) {
@@ -609,7 +623,7 @@ impl AsLogical for common_pb::Property {
                                 .into();
                         }
                     }
-                    plan_meta.insert(None, key.clone().try_into()?)?;
+                    plan_meta.insert_tag_columns(None, key.clone().try_into()?)?;
                 }
                 _ => {}
             }
@@ -632,7 +646,7 @@ impl AsLogical for common_pb::Variable {
                                     .into();
                             }
                         }
-                        plan_meta.insert(
+                        plan_meta.insert_tag_columns(
                             self.tag
                                 .clone()
                                 .map(|tag| tag.try_into())
@@ -695,7 +709,7 @@ impl AsLogical for common_pb::Expression {
                                                     .into();
                                             }
                                         }
-                                        plan_meta.insert(
+                                        plan_meta.insert_tag_columns(
                                             var.tag
                                                 .clone()
                                                 .map(|tag| tag.try_into())
@@ -737,6 +751,7 @@ impl AsLogical for common_pb::Expression {
                 }
             }
         }
+
         Ok(())
     }
 }
@@ -765,7 +780,7 @@ impl AsLogical for pb::QueryParams {
                         .into();
                 }
             }
-            plan_meta.insert(None, column.clone().try_into()?)?;
+            plan_meta.insert_tag_columns(None, column.clone().try_into()?)?;
         }
         Ok(())
     }
@@ -866,7 +881,7 @@ impl AsLogical for pb::IndexPredicate {
                                             .into();
                                     }
                                 }
-                                plan_meta.insert(None, key.clone().try_into()?)?;
+                                plan_meta.insert_tag_columns(None, key.clone().try_into()?)?;
                             }
                             common_pb::property::Item::Label(_) => {
                                 if let Some(val) = pred.value.as_mut() {
@@ -1286,7 +1301,7 @@ mod test {
             alias: None,
             params: Some(pb::QueryParams {
                 table_names: vec!["person".into()],
-                columns: vec![],
+                columns: vec!["age".into(), "name".into()],
                 limit: None,
                 predicate: Some(
                     str_to_expr_pb("@a.~label > \"person\" && @a.age == 10".to_string()).unwrap(),
@@ -1332,6 +1347,199 @@ mod test {
             }
             _ => panic!(),
         }
+        // Assert whether the columns have been updated in PlanMeta
+        assert_eq!(
+            plan_meta.node_cols.get(&0).unwrap(),
+            &vec![1.into(), 2.into()]
+                .into_iter()
+                .collect::<BTreeSet<_>>()
+        );
+        assert_eq!(
+            plan_meta.node_cols.get(&1).unwrap(),
+            &vec![2.into()]
+                .into_iter()
+                .collect::<BTreeSet<_>>()
+        );
+    }
+
+    #[test]
+    fn test_tag_maintain() {
+        let mut plan = LogicalPlan::default();
+        plan.plan_meta.is_preprocess = false;
+
+        // g.V("person").has("name", "John").as('a').outE("knows").as('b')
+        //  .has("date", 20200101).inV().as('c').has('id', 10)
+        //  .select('a').by(valueMap('age', "name"))
+        //  .select('c').by(valueMap('id', "name"))
+
+        // g.V("person")
+        let scan = pb::Scan {
+            scan_opt: 0,
+            alias: None,
+            params: Some(pb::QueryParams {
+                table_names: vec!["person".into()],
+                columns: vec![],
+                limit: None,
+                predicate: None,
+                requirements: vec![],
+            }),
+            idx_predicate: None,
+        };
+        let mut opr_id = plan
+            .append_operator_as_node(scan.into(), vec![])
+            .unwrap();
+        assert_eq!(plan.plan_meta.curr_node, 0);
+
+        // .has("name", "John")
+        let select = pb::Select { predicate: str_to_expr_pb("@.name == \"John\"".to_string()).ok() };
+        opr_id = plan
+            .append_operator_as_node(select.into(), vec![opr_id as u32])
+            .unwrap();
+        assert_eq!(plan.plan_meta.curr_node, 0);
+        assert_eq!(
+            plan.plan_meta.node_cols.get(&0).unwrap(),
+            &vec!["name".into()]
+                .into_iter()
+                .collect::<BTreeSet<_>>()
+        );
+
+        // .as('a')
+        let as_opr = pb::As { alias: Some(pb::Alias { alias: Some("a".into()), is_query_given: false }) };
+        opr_id = plan
+            .append_operator_as_node(as_opr.into(), vec![opr_id as u32])
+            .unwrap();
+        assert_eq!(plan.plan_meta.curr_node, 0);
+        assert_eq!(
+            *plan
+                .plan_meta
+                .tag_nodes
+                .get(&"a".into())
+                .unwrap(),
+            0
+        );
+
+        // outE("knows").as('b').has("date", 20200101)
+        let expand = pb::EdgeExpand {
+            base: Some(pb::ExpandBase {
+                v_tag: Some("a".into()),
+                direction: 0,
+                params: Some(pb::QueryParams {
+                    table_names: vec!["knows".into()],
+                    columns: vec![],
+                    limit: None,
+                    predicate: str_to_expr_pb("@.date == 20200101".to_string()).ok(),
+                    requirements: vec![],
+                }),
+            }),
+            is_edge: true,
+            alias: Some("b".into()),
+        };
+        opr_id = plan
+            .append_operator_as_node(expand.into(), vec![opr_id as u32])
+            .unwrap();
+        assert_eq!(plan.plan_meta.curr_node, opr_id as u32);
+        assert_eq!(
+            plan.plan_meta
+                .node_cols
+                .get(&(opr_id as u32))
+                .unwrap(),
+            &vec!["date".into()]
+                .into_iter()
+                .collect::<BTreeSet<_>>()
+        );
+        assert_eq!(
+            *plan
+                .plan_meta
+                .tag_nodes
+                .get(&"b".into())
+                .unwrap(),
+            opr_id as u32
+        );
+
+        //.inV().as('c')
+        let getv = pb::GetV { tag: None, opt: 2, alias: Some("c".into()) };
+        opr_id = plan
+            .append_operator_as_node(getv.into(), vec![opr_id as u32])
+            .unwrap();
+        assert_eq!(plan.plan_meta.curr_node, opr_id as u32);
+        assert_eq!(
+            *plan
+                .plan_meta
+                .tag_nodes
+                .get(&"c".into())
+                .unwrap(),
+            opr_id as u32
+        );
+
+        // .has("id", 10)
+        let select = pb::Select { predicate: str_to_expr_pb("@.id == 10".to_string()).ok() };
+        opr_id = plan
+            .append_operator_as_node(select.into(), vec![opr_id as u32])
+            .unwrap();
+        assert_eq!(plan.plan_meta.curr_node, opr_id as u32 - 1);
+        assert_eq!(
+            plan.plan_meta
+                .node_cols
+                .get(&(opr_id as u32 - 1))
+                .unwrap(),
+            &vec!["id".into()]
+                .into_iter()
+                .collect::<BTreeSet<_>>()
+        );
+
+        // .select('a').by(valueMap('age', "name"))
+        let project = pb::Project {
+            mappings: vec![pb::project::ExprAlias {
+                expr: str_to_expr_pb("{@a.age, @a.name}".to_string()).ok(),
+                alias: None,
+            }],
+            is_append: true,
+        };
+        opr_id = plan
+            .append_operator_as_node(project.into(), vec![opr_id as u32])
+            .unwrap();
+        assert_eq!(plan.plan_meta.curr_node, opr_id as u32);
+        assert_eq!(
+            plan.plan_meta
+                .node_cols
+                .get(
+                    plan.plan_meta
+                        .tag_nodes
+                        .get(&"a".into())
+                        .unwrap()
+                )
+                .unwrap(),
+            &vec!["age".into(), "name".into()]
+                .into_iter()
+                .collect::<BTreeSet<_>>()
+        );
+
+        // .select('c').by(valueMap('age', "name"))
+        let project = pb::Project {
+            mappings: vec![pb::project::ExprAlias {
+                expr: str_to_expr_pb("{@c.age, @c.name}".to_string()).ok(),
+                alias: None,
+            }],
+            is_append: true,
+        };
+        opr_id = plan
+            .append_operator_as_node(project.into(), vec![opr_id as u32])
+            .unwrap();
+        assert_eq!(plan.plan_meta.curr_node, opr_id as u32);
+        assert_eq!(
+            plan.plan_meta
+                .node_cols
+                .get(
+                    plan.plan_meta
+                        .tag_nodes
+                        .get(&"c".into())
+                        .unwrap()
+                )
+                .unwrap(),
+            &vec!["age".into(), "id".into(), "name".into()]
+                .into_iter()
+                .collect::<BTreeSet<_>>()
+        );
     }
 
     // The plan looks like:
