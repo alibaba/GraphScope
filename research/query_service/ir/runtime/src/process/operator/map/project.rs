@@ -34,11 +34,15 @@ struct ProjectOperator {
 impl MapFunction<Record, Record> for ProjectOperator {
     fn exec(&self, mut input: Record) -> FnResult<Record> {
         if self.is_append {
-            for (evaluator, alias) in self.projected_columns.iter() {
+            for (idx, (evaluator, alias)) in self.projected_columns.iter().enumerate() {
                 let projected_result = evaluator
                     .eval(Some(&input))
                     .map_err(|e| FnExecError::from(e))?;
-                input.append(ObjectElement::Prop(projected_result), alias.clone());
+                if idx == (self.projected_columns.len() - 1) {
+                    input.append(ObjectElement::Prop(projected_result), alias.clone());
+                } else {
+                    input.append_without_moving_curr(ObjectElement::Prop(projected_result), alias.clone());
+                }
             }
             Ok(input)
         } else {
@@ -412,6 +416,47 @@ mod tests {
         let expected_b_result = vec![object!(29), object!(27)];
         assert_eq!(a_results, expected_a_result);
         assert_eq!(b_results, expected_b_result);
+    }
+
+    // g.V().valueMap('age', 'name') with alias of 'age' as 'b' and 'name' as 'c'
+    #[test]
+    fn project_multi_mapping_appended_test() {
+        let project_opr_pb = pb::Project {
+            mappings: vec![
+                pb::project::ExprAlias {
+                    expr: Some(str_to_suffix_expr_pb("@.age".to_string()).unwrap()),
+                    alias: Some(pb::Alias {
+                        alias: Some(NameOrId::Str("b".to_string()).into()),
+                        is_query_given: false,
+                    }),
+                },
+                pb::project::ExprAlias {
+                    expr: Some(str_to_suffix_expr_pb("@.name".to_string()).unwrap()),
+                    alias: Some(pb::Alias {
+                        alias: Some(NameOrId::Str("c".to_string()).into()),
+                        is_query_given: false,
+                    }),
+                },
+            ],
+            is_append: true,
+        };
+        let mut result = project_test(init_source(), project_opr_pb);
+        let mut object_result = vec![];
+        while let Some(Ok(res)) = result.next() {
+            let age_val = res.get(Some(&"b".into())).unwrap();
+            let name_val = res.get(Some(&"c".into())).unwrap();
+            match (age_val.as_ref(), name_val.as_ref()) {
+                (
+                    Entry::Element(RecordElement::OffGraph(ObjectElement::Prop(age))),
+                    Entry::Element(RecordElement::OffGraph(ObjectElement::Prop(name))),
+                ) => {
+                    object_result.push((age.clone(), name.clone()));
+                }
+                _ => {}
+            }
+        }
+        let expected_result = vec![(object!(29), object!("marko")), (object!(27), object!("vadas"))];
+        assert_eq!(object_result, expected_result);
     }
 
     // None expr is not allowed
