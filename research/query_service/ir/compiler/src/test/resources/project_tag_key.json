@@ -3,6 +3,31 @@
     {
       "opr": {
         "opr": {
+          "Scan": {
+            "scan_opt": 0,
+            "alias": {
+              "item": {
+                "Name": "a"
+              }
+            },
+            "params": {
+              "table_names": [],
+              "columns": [],
+              "limit": null,
+              "predicate": null,
+              "requirements": []
+            },
+            "idx_predicate": null
+          }
+        }
+      },
+      "children": [
+        1
+      ]
+    },
+    {
+      "opr": {
+        "opr": {
           "Project": {
             "mappings": [
               {
