@@ -107,6 +107,9 @@ public class MetricsAggregator {
 
                                             private void finish() {
                                                 try {
+                                                    aggregated.put(
+                                                            "timestamp",
+                                                            System.currentTimeMillis());
                                                     String jsonResult =
                                                             objectMapper.writeValueAsString(
                                                                     aggregated);

@@ -24,6 +24,8 @@ import com.alibaba.maxgraph.common.util.ThreadFactoryUtils;
 import com.alibaba.graphscope.groot.coordinator.SnapshotInfo;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicLong;
+import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -43,7 +45,12 @@ import java.util.concurrent.atomic.AtomicReference;
 public class WriterAgent implements MetricsAgent {
     private static final Logger logger = LoggerFactory.getLogger(WriterAgent.class);
 
+    public static final String POLL_LATENCY_MAX_MS = "poll.latency.max.ms";
+    public static final String POLL_LATENCY_AVG_MS = "poll.latency.avg.ms";
     public static final String STORE_BUFFER_BATCH_COUNT = "store.buffer.batch.count";
+    public static final String STORE_QUEUE_BATCH_COUNT = "store.queue.batch.count";
+    public static final String STORE_WRITE_PER_SECOND = "store.write.per.second";
+    public static final String STORE_WRITE_TOTAL = "store.write.total";
 
     private Configs configs;
     private int storeId;
@@ -62,6 +69,16 @@ public class WriterAgent implements MetricsAgent {
     private List<Long> consumedQueueOffsets;
     private Thread consumeThread;
 
+    private volatile long lastUpdateTime;
+    private volatile long totalWrite;
+    private volatile long writePerSecond;
+    private volatile long lastUpdateWrite;
+    private AtomicLong maxPollLatencyNano;
+    private volatile long maxPollLatencyMs;
+    private volatile long lastUpdatePollLatencyNano;
+    private volatile long totalPollLatencyNano;
+    private volatile long pollLatencyAvgMs;
+
     public WriterAgent(
             Configs configs,
             StoreService storeService,
@@ -75,7 +92,8 @@ public class WriterAgent implements MetricsAgent {
         this.metaService = metaService;
         this.snapshotCommitter = snapshotCommitter;
         this.availSnapshotInfoRef = new AtomicReference<>();
-        metricsCollector.register(this);
+        initMetrics();
+        metricsCollector.register(this, () -> updateMetrics());
     }
 
     /** should be called once, before start */
@@ -151,13 +169,31 @@ public class WriterAgent implements MetricsAgent {
     private void processBatches() {
         while (!shouldStop) {
             try {
+                long beforePollNano = System.nanoTime();
                 StoreDataBatch storeDataBatch = this.bufferQueue.poll();
+                long afterPollNano = System.nanoTime();
+                long pollNano = afterPollNano - beforePollNano;
+                this.totalPollLatencyNano += pollNano;
+                this.maxPollLatencyNano.updateAndGet(
+                        curMax -> (pollNano > curMax) ? pollNano : curMax);
                 if (storeDataBatch == null) {
                     continue;
                 }
                 long batchSnapshotId = storeDataBatch.getSnapshotId();
                 logger.debug("polled one batch [" + batchSnapshotId + "]");
                 boolean hasDdl = writeEngineWithRetry(storeDataBatch);
+                int writeCount =
+                        storeDataBatch.getDataBatch().stream()
+                                .collect(
+                                        Collectors.summingInt(
+                                                partitionToBatch ->
+                                                        partitionToBatch.values().stream()
+                                                                .collect(
+                                                                        Collectors.summingInt(
+                                                                                batch ->
+                                                                                        batch
+                                                                                                .getOperationCount()))));
+                this.totalWrite += writeCount;
                 if (this.consumeSnapshotId < batchSnapshotId) {
                     SnapshotInfo availSnapshotInfo = this.availSnapshotInfoRef.get();
                     long availDdlSnapshotId = availSnapshotInfo.getDdlSnapshotId();
@@ -238,19 +274,51 @@ public class WriterAgent implements MetricsAgent {
     }
 
     @Override
-    public void initMetrics() {}
+    public void initMetrics() {
+        totalWrite = 0L;
+        lastUpdateWrite = 0L;
+        maxPollLatencyNano = new AtomicLong(0L);
+        lastUpdatePollLatencyNano = 0L;
+        totalPollLatencyNano = 0L;
+    }
+
+    private void updateMetrics() {
+        long currentTime = System.nanoTime();
+        long write = this.totalWrite;
+        long interval = currentTime - this.lastUpdateTime;
+        this.writePerSecond = 1000000000 * (write - this.lastUpdateWrite) / interval;
+        this.maxPollLatencyMs = this.maxPollLatencyNano.getAndSet(0L) / 1000000;
+        long pollLatencyNano = this.totalPollLatencyNano;
+        this.pollLatencyAvgMs =
+                1000 * (pollLatencyNano - this.lastUpdatePollLatencyNano) / interval;
+        this.lastUpdatePollLatencyNano = pollLatencyNano;
+        this.lastUpdateWrite = write;
+        this.lastUpdateTime = currentTime;
+    }
 
     @Override
     public Map<String, String> getMetrics() {
         return new HashMap<String, String>() {
             {
                 put(STORE_BUFFER_BATCH_COUNT, String.valueOf(bufferQueue.size()));
+                put(STORE_QUEUE_BATCH_COUNT, String.valueOf(bufferQueue.innerQueueSizes()));
+                put(POLL_LATENCY_AVG_MS, String.valueOf(pollLatencyAvgMs));
+                put(POLL_LATENCY_MAX_MS, String.valueOf(maxPollLatencyMs));
+                put(STORE_WRITE_PER_SECOND, String.valueOf(writePerSecond));
+                put(STORE_WRITE_TOTAL, String.valueOf(totalWrite));
             }
         };
     }
 
     @Override
     public String[] getMetricKeys() {
-        return new String[] {STORE_BUFFER_BATCH_COUNT};
+        return new String[] {
+            STORE_BUFFER_BATCH_COUNT,
+            STORE_QUEUE_BATCH_COUNT,
+            POLL_LATENCY_MAX_MS,
+            POLL_LATENCY_MAX_MS,
+            STORE_WRITE_PER_SECOND,
+            STORE_WRITE_TOTAL
+        };
     }
 }

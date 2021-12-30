@@ -18,6 +18,7 @@ import com.alibaba.graphscope.groot.operation.StoreDataBatch;
 import com.alibaba.maxgraph.common.config.Configs;
 import com.alibaba.maxgraph.common.config.StoreConfig;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -134,5 +135,9 @@ public class SnapshotSortQueue {
 
     public int size() {
         return this.size.get();
+    }
+
+    public List<Integer> innerQueueSizes() {
+        return this.innerQueues.stream().map(q -> q.size()).collect(Collectors.toList());
     }
 }

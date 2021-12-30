@@ -36,14 +36,14 @@ public class GraphWriter implements MetricsAgent {
     public static final String WRITE_REQUESTS_TOTAL = "write.requests.total";
     public static final String WRITE_REQUESTS_PER_SECOND = "write.requests.per.second";
     public static final String INGESTOR_BLOCK_TIME_MS = "ingestor.block.time.ms";
-    public static final String INGESTOR_BLOCK_TIME_PERCENT = "ingestor.block.time.percent";
+    public static final String INGESTOR_BLOCK_TIME_AVG_MS = "ingestor.block.time.avg.ms";
 
     private AtomicLong writeRequestsTotal;
     private volatile long lastUpdateWriteRequestsTotal;
     private volatile long writeRequestsPerSecond;
     private volatile long lastUpdateTime;
     private AtomicLong ingestorBlockTimeNano;
-    private volatile long ingestorBlockTimePercent;
+    private volatile long ingestorBlockTimeAvgMs;
     private volatile long lastUpdateIngestorBlockTimeNano;
 
     private SnapshotCache snapshotCache;
@@ -368,7 +368,7 @@ public class GraphWriter implements MetricsAgent {
                 put(WRITE_REQUESTS_TOTAL, String.valueOf(writeRequestsTotal.get()));
                 put(WRITE_REQUESTS_PER_SECOND, String.valueOf(writeRequestsPerSecond));
                 put(INGESTOR_BLOCK_TIME_MS, String.valueOf(ingestorBlockTimeNano.get() / 1000000));
-                put(INGESTOR_BLOCK_TIME_PERCENT, String.valueOf(ingestorBlockTimePercent));
+                put(INGESTOR_BLOCK_TIME_AVG_MS, String.valueOf(ingestorBlockTimeAvgMs));
             }
         };
     }
@@ -379,7 +379,7 @@ public class GraphWriter implements MetricsAgent {
             WRITE_REQUESTS_TOTAL,
             WRITE_REQUESTS_PER_SECOND,
             INGESTOR_BLOCK_TIME_MS,
-            INGESTOR_BLOCK_TIME_PERCENT
+            INGESTOR_BLOCK_TIME_AVG_MS
         };
     }
 
@@ -391,8 +391,8 @@ public class GraphWriter implements MetricsAgent {
         long interval = currentTime - this.lastUpdateTime;
         this.writeRequestsPerSecond =
                 1000000000 * (writeRequests - this.lastUpdateWriteRequestsTotal) / interval;
-        this.ingestorBlockTimePercent =
-                100 * (ingestBlockTime - this.lastUpdateIngestorBlockTimeNano) / interval;
+        this.ingestorBlockTimeAvgMs =
+                1000 * (ingestBlockTime - this.lastUpdateIngestorBlockTimeNano) / interval;
 
         this.lastUpdateWriteRequestsTotal = writeRequests;
         this.lastUpdateIngestorBlockTimeNano = ingestBlockTime;
