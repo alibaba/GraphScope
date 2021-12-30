@@ -315,7 +315,6 @@ impl AsPhysical for LogicalPlan {
                             };
                             builder.repartition(key_pb.encode_to_vec());
                         }
-                        // TODO: add more shuffle situations, e.g., auxilia after group/fold/limit etc.
                         _ => {}
                     }
                 }
@@ -354,6 +353,26 @@ impl AsPhysical for LogicalPlan {
                             } else {
                                 is_adding_auxilia = false;
                             }
+                        }
+                    }
+                }
+                Some(Vertex(getv)) => {
+                    if let Some(columns) = self.plan_meta.get_node_columns(curr_node_id) {
+                        if !columns.is_empty() {
+                            getv.alias = None;
+                            auxilia.alias =
+                                Some(pb::Alias { alias: getv.alias.clone(), is_query_given: false });
+                            auxilia.params = Some(pb::QueryParams {
+                                table_names: vec![],
+                                columns: columns
+                                    .iter()
+                                    .map(|tag| common_pb::NameOrId::from(tag.clone()))
+                                    .collect(),
+                                limit: None,
+                                predicate: None,
+                                requirements: vec![],
+                            });
+                            is_adding_auxilia = true;
                         }
                     }
                 }
