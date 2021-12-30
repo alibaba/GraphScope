@@ -292,7 +292,7 @@ public class IrPlan implements Closeable {
     }
 
     public IrPlan() {
-        this.ptrPlan = irCoreLib.initLogicalPlan(true);
+        this.ptrPlan = irCoreLib.initLogicalPlan(false);
         this.oprIdx = new IntByReference(0);
     }
 

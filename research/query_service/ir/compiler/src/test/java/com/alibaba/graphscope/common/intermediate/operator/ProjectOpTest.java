@@ -19,6 +19,7 @@ package com.alibaba.graphscope.common.intermediate.operator;
 import com.alibaba.graphscope.common.IrPlan;
 import com.alibaba.graphscope.common.TestUtils;
 import com.alibaba.graphscope.common.intermediate.ArgUtils;
+import com.alibaba.graphscope.common.jna.type.FfiScanOpt;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Test;
@@ -40,11 +41,17 @@ public class ProjectOpTest {
 
     @Test
     public void projectAsTest() throws IOException {
+        ScanFusionOp scanOp = new ScanFusionOp();
+        scanOp.setScanOpt(new OpArg<>(FfiScanOpt.Vertex, Function.identity()));
+        scanOp.setAlias(new OpArg(ArgUtils.asFfiAlias("a", true), Function.identity()));
+        irPlan.appendInterOp(scanOp);
+
         ProjectOp op = new ProjectOp();
-        op.setAlias(new OpArg(ArgUtils.asFfiAlias("a", true), Function.identity()));
         String projectExpr = "@a";
+        op.setAlias(new OpArg(ArgUtils.asFfiAlias("b", true), Function.identity()));
         op.setSingleExpr(new OpArg(projectExpr, Function.identity()));
         irPlan.appendInterOp(op);
+
         Assert.assertEquals(TestUtils.readJsonFromResource("project_as.json"), irPlan.getPlanAsJson());
     }
 
@@ -59,19 +66,31 @@ public class ProjectOpTest {
 
     @Test
     public void projectTagKeyTest() throws IOException {
+        ScanFusionOp scanOp = new ScanFusionOp();
+        scanOp.setScanOpt(new OpArg<>(FfiScanOpt.Vertex, Function.identity()));
+        scanOp.setAlias(new OpArg(ArgUtils.asFfiAlias("a", true), Function.identity()));
+        irPlan.appendInterOp(scanOp);
+
         ProjectOp op = new ProjectOp();
         String projectExpr = "@a.name";
         op.setSingleExpr(new OpArg(projectExpr, Function.identity()));
         irPlan.appendInterOp(op);
+
         Assert.assertEquals(TestUtils.readJsonFromResource("project_tag_key.json"), irPlan.getPlanAsJson());
     }
 
     @Test
     public void projectTagKeysTest() throws IOException {
+        ScanFusionOp scanOp = new ScanFusionOp();
+        scanOp.setScanOpt(new OpArg<>(FfiScanOpt.Vertex, Function.identity()));
+        scanOp.setAlias(new OpArg(ArgUtils.asFfiAlias("a", true), Function.identity()));
+        irPlan.appendInterOp(scanOp);
+
         ProjectOp op = new ProjectOp();
-        String projectExpr = "{@a.name, @b.id}";
+        String projectExpr = "{@a.name, @a.id}";
         op.setSingleExpr(new OpArg(projectExpr, Function.identity()));
         irPlan.appendInterOp(op);
+
         Assert.assertEquals(TestUtils.readJsonFromResource("project_tag_keys.json"), irPlan.getPlanAsJson());
     }
 
