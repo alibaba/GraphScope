@@ -11,24 +11,24 @@
                     {
                       "item": {
                         "Var": {
-                          "tag": null,
-                          "property": {
+                          "tag": {
                             "item": {
-                              "Key": {
-                                "item": {
-                                  "Name": "name"
-                                }
-                              }
+                              "Name": "a"
                             }
-                          }
+                          },
+                          "property": null
                         }
                       }
                     }
                   ]
                 },
                 "alias": {
-                  "alias": null,
-                  "is_query_given": false
+                  "alias": {
+                    "item": {
+                      "Name": "a"
+                    }
+                  },
+                  "is_query_given": true
                 }
               }
             ],

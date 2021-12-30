@@ -141,7 +141,7 @@ public class InterOpCollectionBuilder {
                 Map<String, Traversal.Admin> byTraversals = getProjectTraversals(selectStep);
                 ProjectOp op = new ProjectOp();
                 if (!byTraversals.isEmpty()) {
-                    op.setProjectExprWithAlias(new OpArg(byTraversals, OpArgTransformFactory.PROJECT_EXPR_FROM_BY_TRAVERSALS));
+                    op.setSingleExpr(new OpArg(byTraversals, OpArgTransformFactory.PROJECT_EXPR_FROM_BY_TRAVERSALS));
                 }
                 return op;
             }
@@ -167,7 +167,7 @@ public class InterOpCollectionBuilder {
                 PropertyMapStep valueMapStep = (PropertyMapStep) step;
                 ProjectOp op = new ProjectOp();
                 Map<String, Traversal.Admin> valueMap = getProjectTraversals(valueMapStep);
-                op.setProjectExprWithAlias(new OpArg(valueMap, OpArgTransformFactory.PROJECT_EXPR_FROM_BY_TRAVERSALS));
+                op.setSingleExpr(new OpArg(valueMap, OpArgTransformFactory.PROJECT_EXPR_FROM_BY_TRAVERSALS));
                 return op;
             }
 
@@ -182,7 +182,7 @@ public class InterOpCollectionBuilder {
                 PropertiesStep valuesStep = (PropertiesStep) step;
                 ProjectOp op = new ProjectOp();
                 Map<String, Traversal.Admin> valueMap = getProjectTraversals(valuesStep);
-                op.setProjectExprWithAlias(new OpArg(valueMap, OpArgTransformFactory.PROJECT_EXPR_FROM_BY_TRAVERSALS));
+                op.setSingleExpr(new OpArg(valueMap, OpArgTransformFactory.PROJECT_EXPR_FROM_BY_TRAVERSALS));
                 return op;
             }
 
@@ -272,7 +272,7 @@ public class InterOpCollectionBuilder {
                 Map<String, Traversal.Admin> byTraversals = getProjectTraversals((SelectOneStep) step);
                 ProjectOp op = new ProjectOp();
                 if (!byTraversals.isEmpty()) {
-                    op.setProjectExprWithAlias(new OpArg(byTraversals, OpArgTransformFactory.PROJECT_EXPR_FROM_BY_TRAVERSALS));
+                    op.setSingleExpr(new OpArg(byTraversals, OpArgTransformFactory.PROJECT_EXPR_FROM_BY_TRAVERSALS));
                 }
                 return op;
             }

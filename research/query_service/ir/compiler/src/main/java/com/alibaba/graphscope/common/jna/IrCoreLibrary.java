@@ -28,7 +28,7 @@ public interface IrCoreLibrary extends Library {
             Library.OPTION_TYPE_MAPPER, IrTypeMapper.INSTANCE,
             Library.OPTION_FUNCTION_MAPPER, IrFunctionMapper.INSTANCE));
 
-    Pointer initLogicalPlan();
+    Pointer initLogicalPlan(boolean isPreprocess);
 
     void write_plan_to_json(Pointer plan, String jsonFile);
 
@@ -114,6 +114,8 @@ public interface IrCoreLibrary extends Library {
 
     ResultCode appendDedupOperator(Pointer plan, Pointer dedup, int parent, IntByReference oprIdx);
 
+    FfiNameOrId.ByValue noneNameOrId();
+
     FfiNameOrId.ByValue cstrAsNameOrId(String name);
 
     FfiConst.ByValue cstrAsConst(String value);
@@ -121,6 +123,8 @@ public interface IrCoreLibrary extends Library {
     FfiConst.ByValue int32AsConst(int value);
 
     FfiConst.ByValue int64AsConst(long value);
+
+    FfiProperty.ByValue asNoneKey();
 
     FfiProperty.ByValue asLabelKey();
 

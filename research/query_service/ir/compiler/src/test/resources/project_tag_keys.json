@@ -31,11 +31,7 @@
                   ]
                 },
                 "alias": {
-                  "alias": {
-                    "item": {
-                      "Name": "a_name"
-                    }
-                  },
+                  "alias": null,
                   "is_query_given": false
                 }
               },
@@ -65,11 +61,7 @@
                   ]
                 },
                 "alias": {
-                  "alias": {
-                    "item": {
-                      "Name": "b_id"
-                    }
-                  },
+                  "alias": null,
                   "is_query_given": false
                 }
               }
