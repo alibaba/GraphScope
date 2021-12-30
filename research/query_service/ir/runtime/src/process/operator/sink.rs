@@ -13,15 +13,23 @@
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 
+use std::convert::TryInto;
 use std::ops::Deref;
 
+use ir_common::error::ParsePbError;
+use ir_common::generated::algebra as algebra_pb;
 use ir_common::generated::common as common_pb;
 use ir_common::generated::results as result_pb;
 use ir_common::NameOrId;
 use pegasus::api::function::{FnResult, MapFunction};
 
+use crate::error::FnGenResult;
 use crate::graph::element::{Edge, GraphElement, Vertex, VertexOrEdge};
 use crate::process::record::{Entry, ObjectElement, Record, RecordElement};
+
+pub trait SinkFunctionGen {
+    fn gen_sink(self) -> FnGenResult<Box<dyn MapFunction<Record, result_pb::Results>>>;
+}
 
 pub struct RecordSinkEncoder {
     /// the given column tags to sink;
@@ -32,11 +40,36 @@ pub struct RecordSinkEncoder {
     is_output_all: bool,
 }
 
-// TODO(bingqing): gen RecordSinkEncoder from pb;
 // By default, we sink both head and all columns (may have a duplicated column if head is aliased)
 impl Default for RecordSinkEncoder {
     fn default() -> Self {
         RecordSinkEncoder { sink_keys: vec![], is_output_head: true, is_output_all: true }
+    }
+}
+
+impl SinkFunctionGen for algebra_pb::logical_plan::Operator {
+    fn gen_sink(self) -> FnGenResult<Box<dyn MapFunction<Record, result_pb::Results>>> {
+        if let Some(opr) = self.opr {
+            match opr {
+                algebra_pb::logical_plan::operator::Opr::Sink(sink) => sink.gen_sink(),
+                _ => Err(ParsePbError::from("algebra_pb op is not a sink op"))?,
+            }
+        } else {
+            Err(ParsePbError::EmptyFieldError("algebra op is empty".to_string()))?
+        }
+    }
+}
+
+impl SinkFunctionGen for algebra_pb::Sink {
+    fn gen_sink(self) -> FnGenResult<Box<dyn MapFunction<Record, result_pb::Results>>> {
+        let sink_keys = self
+            .tag
+            .into_iter()
+            .map(|tag| tag.try_into())
+            .collect::<Result<_, _>>()?;
+        let is_output_head = self.sink_current;
+        let is_output_all = self.sink_all;
+        Ok(Box::new(RecordSinkEncoder { sink_keys, is_output_head, is_output_all }))
     }
 }
 

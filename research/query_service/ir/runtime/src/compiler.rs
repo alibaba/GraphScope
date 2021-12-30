@@ -43,7 +43,7 @@ use crate::process::operator::join::JoinFunctionGen;
 use crate::process::operator::keyed::KeyFunctionGen;
 use crate::process::operator::map::{FilterMapFuncGen, MapFuncGen};
 use crate::process::operator::shuffle::RecordRouter;
-use crate::process::operator::sink::RecordSinkEncoder;
+use crate::process::operator::sink::{RecordSinkEncoder, SinkFunctionGen};
 use crate::process::operator::sort::CompareFunctionGen;
 use crate::process::operator::source::SourceOperator;
 use crate::process::record::{Record, RecordKey};
@@ -144,8 +144,14 @@ impl FnGenerator {
         Ok(step.gen_key()?)
     }
 
-    fn gen_sink(&self, _res: &BinaryResource) -> FnGenResult<RecordEncode> {
-        Ok(Box::new(RecordSinkEncoder::default()))
+    fn gen_sink(&self, res: &BinaryResource) -> FnGenResult<RecordEncode> {
+        if res.is_empty() {
+            // by default, we sink all aliased columns and head;
+            Ok(Box::new(RecordSinkEncoder::default()))
+        } else {
+            let step = decode::<algebra_pb::logical_plan::Operator>(res)?;
+            Ok(step.gen_sink()?)
+        }
     }
 }
 
@@ -412,12 +418,19 @@ impl JobParser<Record, result_pb::Results> for IRJobCompiler {
             } else {
                 source
             };
-            if let Some(_sinker) = plan.sink.as_ref() {
-                // TODO: specify the columns to sink in _sinker
-                let ec = self.udf_gen.gen_sink(&vec![])?;
-                stream
-                    .map(move |record| ec.exec(record))?
-                    .sink_into(output)
+            if let Some(sinker) = plan.sink.as_ref() {
+                let sink = sinker
+                    .sinker
+                    .as_ref()
+                    .ok_or("sinker in sink op is empty")?;
+                if let server_pb::sink::Sinker::Resource(sink_res) = sink {
+                    let ec = self.udf_gen.gen_sink(sink_res)?;
+                    stream
+                        .map(move |record| ec.exec(record))?
+                        .sink_into(output)
+                } else {
+                    Err("unreachable sink type")?
+                }
             } else {
                 Err("sink of job not found")?
             }
