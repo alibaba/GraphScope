@@ -42,8 +42,8 @@ public class IngestProcessor implements MetricsAgent {
 
     public static final String WRITE_RECORDS_PER_SECOND = "write.records.per.second";
     public static final String WRITE_RECORDS_TOTAL = "write.records.total";
-    public static final String WAL_BLOCK_TIME_MS = "wal.block.time.ms";
-    public static final String STORE_BLOCK_TIME_MS = "store.block.time.ms";
+    public static final String WAL_BLOCK_TIME_AVG_MS = "wal.block.time.avg.ms";
+    public static final String STORE_BLOCK_TIME_AVG_MS = "store.block.time.avg.ms";
     public static final String INGESTOR_REJECT_COUNT = "ingestor.reject.count";
     public static final String INGEST_BUFFER_TASKS_COUNT = "ingest.buffer.tasks.count";
 
@@ -68,6 +68,10 @@ public class IngestProcessor implements MetricsAgent {
     private volatile long walBlockTimeNano;
     private volatile long storeBlockTimeNano;
     private AtomicLong ingestorRejectCount;
+    private volatile long lastUpdateWalBlockTimeNano;
+    private volatile long walBlockTimeAvgMs;
+    private volatile long lastUpdateStoreBlockTimeNano;
+    private volatile long storeBlockTimeAvgMs;
 
     public IngestProcessor(
             Configs configs,
@@ -247,15 +251,26 @@ public class IngestProcessor implements MetricsAgent {
         this.walBlockTimeNano = 0L;
         this.storeBlockTimeNano = 0L;
         this.ingestorRejectCount = new AtomicLong(0L);
+        this.lastUpdateStoreBlockTimeNano = 0L;
+        this.walBlockTimeAvgMs = 0L;
+        this.lastUpdateStoreBlockTimeNano = 0L;
+        this.storeBlockTimeAvgMs = 0L;
     }
 
     private void updateMetrics() {
         long currentTime = System.nanoTime();
         long propcessed = this.totalProcessed;
+        long interval = currentTime - this.lastUpdateTime;
         this.writeRecordsPerSecond =
-                1000000000
-                        * (propcessed - this.lastUpdateProcessed)
-                        / (currentTime - this.lastUpdateTime);
+                1000000000 * (propcessed - this.lastUpdateProcessed) / interval;
+        long walBlockTime = this.walBlockTimeNano;
+        this.walBlockTimeAvgMs = 1000 * (walBlockTime - this.lastUpdateWalBlockTimeNano) / interval;
+        long storeBlockTime = this.storeBlockTimeNano;
+        this.storeBlockTimeAvgMs =
+                1000 * (storeBlockTime - this.lastUpdateStoreBlockTimeNano) / interval;
+
+        this.lastUpdateStoreBlockTimeNano = storeBlockTime;
+        this.lastUpdateWalBlockTimeNano = walBlockTime;
         this.lastUpdateProcessed = propcessed;
         this.lastUpdateTime = currentTime;
     }
@@ -266,8 +281,8 @@ public class IngestProcessor implements MetricsAgent {
             {
                 put(WRITE_RECORDS_PER_SECOND, String.valueOf(writeRecordsPerSecond));
                 put(WRITE_RECORDS_TOTAL, String.valueOf(totalProcessed));
-                put(WAL_BLOCK_TIME_MS, String.valueOf(walBlockTimeNano / 1000000));
-                put(STORE_BLOCK_TIME_MS, String.valueOf(storeBlockTimeNano / 1000000));
+                put(WAL_BLOCK_TIME_AVG_MS, String.valueOf(walBlockTimeAvgMs));
+                put(STORE_BLOCK_TIME_AVG_MS, String.valueOf(storeBlockTimeAvgMs));
                 put(INGESTOR_REJECT_COUNT, String.valueOf(ingestorRejectCount));
                 put(INGEST_BUFFER_TASKS_COUNT, String.valueOf(ingestBuffer.size()));
             }
@@ -279,8 +294,8 @@ public class IngestProcessor implements MetricsAgent {
         return new String[] {
             WRITE_RECORDS_PER_SECOND,
             WRITE_RECORDS_TOTAL,
-            WAL_BLOCK_TIME_MS,
-            STORE_BLOCK_TIME_MS,
+            WAL_BLOCK_TIME_AVG_MS,
+            STORE_BLOCK_TIME_AVG_MS,
             INGESTOR_REJECT_COUNT,
             INGEST_BUFFER_TASKS_COUNT
         };

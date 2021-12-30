@@ -275,11 +275,15 @@ public class WriterAgent implements MetricsAgent {
 
     @Override
     public void initMetrics() {
-        totalWrite = 0L;
-        lastUpdateWrite = 0L;
-        maxPollLatencyNano = new AtomicLong(0L);
-        lastUpdatePollLatencyNano = 0L;
-        totalPollLatencyNano = 0L;
+        this.lastUpdateTime = System.nanoTime();
+        this.totalWrite = 0L;
+        this.writePerSecond = 0L;
+        this.lastUpdateWrite = 0L;
+        this.maxPollLatencyNano = new AtomicLong(0L);
+        this.maxPollLatencyMs = 0L;
+        this.lastUpdatePollLatencyNano = 0L;
+        this.totalPollLatencyNano = 0L;
+        this.pollLatencyAvgMs = 0L;
     }
 
     private void updateMetrics() {
