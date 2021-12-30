@@ -214,7 +214,7 @@ store:
     ##   set, choosing the default provisioner.  (gp2 on AWS, standard on
     ##   GKE, AWS & OpenStack)
     ##
-    # storageClass: "-"
+    storageClass: ""
     ## Persistent Volume Claim annotations
     ##
     annotations: {}
@@ -620,7 +620,7 @@ coordinator:
     ##   set, choosing the default provisioner.  (gp2 on AWS, standard on
     ##   GKE, AWS & OpenStack)
     ##
-    # storageClass: "-"
+    storageClass: ""
     ## Persistent Volume Claim annotations
     ##
     annotations: {}
@@ -692,3 +692,6 @@ externalKafka:
   ## Server or list of external kafka servers to use.
   ##
   servers: []
+
+global:
+  storageClass: ""
