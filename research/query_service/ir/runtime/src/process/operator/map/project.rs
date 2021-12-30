@@ -447,4 +447,114 @@ mod tests {
             assert!(true)
         }
     }
+
+    // g.V().valueMap("age", "name") // by vec
+    #[test]
+    fn project_vec_mapping_test() {
+        let project_opr_pb = pb::Project {
+            mappings: vec![pb::project::ExprAlias {
+                expr: Some(str_to_suffix_expr_pb("[@.age,@.name]".to_string()).unwrap()),
+                alias: Some(pb::Alias { alias: None, is_query_given: false }),
+            }],
+            is_append: false,
+        };
+        let mut result = project_test(init_source(), project_opr_pb);
+        let mut object_result = vec![];
+        while let Some(Ok(res)) = result.next() {
+            match res.get(None).unwrap().as_ref() {
+                Entry::Element(RecordElement::OffGraph(ObjectElement::Prop(val))) => {
+                    object_result.push(val.clone());
+                }
+                _ => {}
+            }
+        }
+        let expected_result = vec![
+            object!(vec![object!(29), object!("marko")]),
+            object!(vec![object!(27), object!("vadas")]),
+        ];
+        assert_eq!(object_result, expected_result);
+    }
+
+    // g.V().valueMap("age", "name") // by map
+    #[test]
+    fn project_map_mapping_test() {
+        let project_opr_pb = pb::Project {
+            mappings: vec![pb::project::ExprAlias {
+                expr: Some(str_to_suffix_expr_pb("{@.age,@.name}".to_string()).unwrap()),
+                alias: Some(pb::Alias { alias: None, is_query_given: false }),
+            }],
+            is_append: false,
+        };
+        let mut result = project_test(init_source(), project_opr_pb);
+        let mut object_result = vec![];
+        while let Some(Ok(res)) = result.next() {
+            match res.get(None).unwrap().as_ref() {
+                Entry::Element(RecordElement::OffGraph(ObjectElement::Prop(val))) => {
+                    object_result.push(val.clone());
+                }
+                _ => {}
+            }
+        }
+        let expected_result = vec![
+            Object::KV(
+                vec![
+                    (object!(vec![object!(""), object!("age")]), object!(29)),
+                    (object!(vec![object!(""), object!("name")]), object!("marko")),
+                ]
+                .into_iter()
+                .collect(),
+            ),
+            Object::KV(
+                vec![
+                    (object!(vec![object!(""), object!("age")]), object!(27)),
+                    (object!(vec![object!(""), object!("name")]), object!("vadas")),
+                ]
+                .into_iter()
+                .collect(),
+            ),
+        ];
+        assert_eq!(object_result, expected_result);
+    }
+
+    // g.V().as("a").select("a").by(valueMap("age", "name")) // by map
+    #[test]
+    fn project_tag_map_mapping_test() {
+        let project_opr_pb = pb::Project {
+            mappings: vec![pb::project::ExprAlias {
+                expr: Some(str_to_suffix_expr_pb("{@a.age,@a.name}".to_string()).unwrap()),
+                alias: Some(pb::Alias { alias: None, is_query_given: false }),
+            }],
+            is_append: false,
+        };
+        let mut result = project_test(init_source_with_tag(), project_opr_pb);
+        let mut object_result = vec![];
+        while let Some(Ok(res)) = result.next() {
+            match res.get(None).unwrap().as_ref() {
+                Entry::Element(RecordElement::OffGraph(ObjectElement::Prop(val))) => {
+                    object_result.push(val.clone());
+                }
+                _ => {}
+            }
+        }
+
+        let expected_result = vec![
+            Object::KV(
+                vec![
+                    (object!(vec![object!("a"), object!("age")]), object!(29)),
+                    (object!(vec![object!("a"), object!("name")]), object!("marko")),
+                ]
+                .into_iter()
+                .collect(),
+            ),
+            Object::KV(
+                vec![
+                    (object!(vec![object!("a"), object!("age")]), object!(27)),
+                    (object!(vec![object!("a"), object!("name")]), object!("vadas")),
+                ]
+                .into_iter()
+                .collect(),
+            ),
+        ];
+        assert_eq!(object_result, expected_result);
+    }
 }
