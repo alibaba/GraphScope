@@ -322,8 +322,15 @@ impl LogicalPlan {
                 }
                 self.plan_meta.update_curr_node(id);
             }
-            Some(pb::logical_plan::operator::Opr::Select(_))
-            | Some(pb::logical_plan::operator::Opr::As(_)) => { /*donot change head*/ }
+            Some(pb::logical_plan::operator::Opr::As(as_opr)) => {
+                if let Some(alias_) = &as_opr.alias {
+                    if let Some(alias) = &alias_.alias {
+                        self.plan_meta
+                            .add_tag_node(alias.clone().try_into().unwrap(), self.plan_meta.curr_node);
+                    }
+                }
+            }
+            Some(pb::logical_plan::operator::Opr::Select(_)) => { /*donot change head*/ }
             _ => self.plan_meta.update_curr_node(id),
         }
         self.total_size = id as usize + 1;
