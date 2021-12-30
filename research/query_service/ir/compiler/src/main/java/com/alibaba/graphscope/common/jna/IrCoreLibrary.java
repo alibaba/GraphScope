@@ -91,13 +91,14 @@ public interface IrCoreLibrary extends Library {
 
     ResultCode appendProjectOperator(Pointer plan, Pointer project, int parent, IntByReference oprIdx);
 
-    Pointer initAuxiliaOperator();
+    /// To initialize an As operator
+    Pointer initAsOperator();
 
-    ResultCode addAuxiliaProperty(Pointer auxilia, FfiNameOrId.ByValue property);
+    /// Set the alias of the entity to As
+    ResultCode setAsAlias(Pointer as, FfiAlias.ByValue alias);
 
-    ResultCode setAuxiliaAlias(Pointer auxilia, FfiAlias.ByValue alias);
-
-    ResultCode appendAuxiliaOperator(Pointer plan, Pointer auxilia, int parent, IntByReference oprIdx);
+    /// Append an As operator to the logical plan
+    ResultCode appendAsOperator(Pointer plan, Pointer as, int parent, IntByReference oprIdx);
 
     Pointer initGroupbyOperator();
 

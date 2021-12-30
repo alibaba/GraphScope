@@ -28,7 +28,6 @@ import com.alibaba.graphscope.common.jna.type.*;
 import com.sun.jna.Pointer;
 import com.sun.jna.ptr.IntByReference;
 import org.apache.commons.io.FileUtils;
-import org.apache.tinkerpop.gremlin.process.traversal.step.map.CountGlobalStep;
 import org.javatuples.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -241,34 +240,6 @@ public class IrPlan implements Closeable {
                 return ptrOrder;
             }
         },
-        AUXILIA_OP {
-            @Override
-            public Pointer apply(InterOpBase baseOp) {
-                Pointer ptrAuxilia = irCoreLib.initAuxiliaOperator();
-                AuxiliaOp op = (AuxiliaOp) baseOp;
-                Optional<OpArg> propertyDetails = op.getPropertyDetails();
-
-                if (propertyDetails.isPresent()) {
-                    Set<FfiNameOrId.ByValue> properties = (Set<FfiNameOrId.ByValue>) propertyDetails.get().getArg();
-                    if (properties.isEmpty()) {
-                        throw new InterOpIllegalArgException(baseOp.getClass(), "propertyDetails", "should not be empty if present");
-                    }
-                    List<FfiNameOrId.ByValue> propertyList = new ArrayList<>(properties);
-                    // sort in ascending order of name
-                    propertyList.sort(Comparator.comparing(FfiNameOrId::hashCode));
-                    propertyList.forEach(k -> {
-                        irCoreLib.addAuxiliaProperty(ptrAuxilia, k);
-                    });
-                }
-
-                Optional<OpArg> aliasOpt = baseOp.getAlias();
-                if (aliasOpt.isPresent()) {
-                    FfiAlias.ByValue alias = (FfiAlias.ByValue) aliasOpt.get().getArg();
-                    irCoreLib.setAuxiliaAlias(ptrAuxilia, alias);
-                }
-                return ptrAuxilia;
-            }
-        },
         GROUP_OP {
             @Override
             public Pointer apply(InterOpBase baseOp) {
@@ -371,9 +342,6 @@ public class IrPlan implements Closeable {
         } else if (base instanceof OrderOp) {
             Pointer ptrOrder = TransformFactory.ORDER_OP.apply(base);
             resultCode = irCoreLib.appendOrderbyOperator(ptrPlan, ptrOrder, oprIdx.getValue(), oprIdx);
-        } else if (base instanceof AuxiliaOp) {
-            Pointer prtAuxilia = TransformFactory.AUXILIA_OP.apply(base);
-            resultCode = irCoreLib.appendAuxiliaOperator(ptrPlan, prtAuxilia, oprIdx.getValue(), oprIdx);
         } else if (base instanceof GroupOp) {
             Pointer ptrGroup = TransformFactory.GROUP_OP.apply(base);
             resultCode = irCoreLib.appendGroupbyOperator(ptrPlan, ptrGroup, oprIdx.getValue(), oprIdx);
@@ -385,6 +353,23 @@ public class IrPlan implements Closeable {
         }
         if (resultCode != null && resultCode != ResultCode.Success) {
             throw new AppendInterOpException(base.getClass(), resultCode);
+        }
+        // add alias after the op if necessary
+        setPostAlias(base);
+    }
+
+    private void setPostAlias(InterOpBase base) {
+        if (!(base instanceof ScanFusionOp || base instanceof ExpandOp) && base.getAlias().isPresent()) {
+            FfiAlias.ByValue ffiAlias = (FfiAlias.ByValue) base.getAlias().get().getArg();
+            Pointer ptrAs = irCoreLib.initAsOperator();
+            ResultCode asResult = irCoreLib.setAsAlias(ptrAs, ffiAlias);
+            if (asResult != null && asResult != ResultCode.Success) {
+                throw new AppendInterOpException(base.getClass(), asResult);
+            }
+            ResultCode appendResult = irCoreLib.appendAsOperator(ptrPlan, ptrAs, oprIdx.getValue(), oprIdx);
+            if (appendResult != null && appendResult != ResultCode.Success) {
+                throw new AppendInterOpException(base.getClass(), appendResult);
+            }
         }
     }
 
