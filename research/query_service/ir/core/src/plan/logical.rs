@@ -310,7 +310,7 @@ impl LogicalPlan {
                 self.plan_meta.update_curr_node(id);
             }
             Some(pb::logical_plan::operator::Opr::Select(_))
-            | Some(pb::logical_plan::operator::Opr::As(_)) => {}
+            | Some(pb::logical_plan::operator::Opr::As(_)) => { /*donot change head*/ }
             _ => self.plan_meta.update_curr_node(id),
         }
         self.total_size = id as usize + 1;
@@ -899,7 +899,7 @@ impl AsLogical for pb::logical_plan::Operator {
                 Opr::OrderBy(opr) => opr.preprocess(meta, plan_meta)?,
                 Opr::Limit(opr) => opr.preprocess(meta, plan_meta)?,
                 Opr::Join(opr) => opr.preprocess(meta, plan_meta)?,
-                _ => return Err(LogicalError::Unsupported),
+                _ => {},
             }
         }
         Ok(())
