@@ -21,8 +21,9 @@
 
 import copy
 import json
-import time
+from timeit import default_timer as timer
 import pickle
+import cProfile
 
 from networkx import freeze
 from networkx.classes.coreviews import AdjacencyView
@@ -928,8 +929,6 @@ class Graph(_GraphBase):
         >>> G[1][2].update({0: 5})
         >>> G.edges[1, 2].update({0: 5})
         """
-        t_dict = 0.0
-        t_append = 0.0
         # if u_of_edge is None or v_of_edge is None:
         #     raise ValueError("None cannot be a node")
         # t = time.time()
@@ -944,7 +943,6 @@ class Graph(_GraphBase):
                 pass
         """
         # t_dict = time.time() - t
-        t = time.time()
         # self._edges_for_adding.append(
         #     json.dumps((u_of_edge, v_of_edge, data), default=json_encoder)
         # )
@@ -952,8 +950,6 @@ class Graph(_GraphBase):
         # self._edges_for_adding.append((u_of_edge, v_of_edge, attr))
         self._edges_for_adding[self._edge_trace_counter] = (u_of_edge, v_of_edge, attr)
         self._edge_trace_counter = self._edge_trace_counter + 1
-        t_append = time.time() - t
-        return t_dict, t_append
 
     def add_edges_from(self, ebunch_to_add, **attr):
         """Add all the edges in ebunch_to_add.
@@ -2264,15 +2260,21 @@ class Graph(_GraphBase):
             )
             # self._op.eval()
         if self._edge_trace_counter > 0:
-            edges_to_modify = json.dumps(self._edges_for_adding, default=json_encoder)
+            begin = timer()
+            edges_to_modify = json.dumps(self._edges_for_adding)
+            end = timer()
+            print("json dumps time:", end - begin)
+            begin = timer()
             self._op = dag_utils.modify_edges(
                 self, types_pb2.NX_ADD_EDGES, edges_to_modify
             )
-            t = time.time()
+            end = timer()
+            print("puts to proto payload:", end - begin)
+            begin = timer()
             self._op.eval()
-            print("OP eval time:", time.time() - t)
-        self._nodes_for_adding.clear()
-        self._edges_for_adding.clear()
+            end = timer()
+            print("OP eval time:", end - begin)
+        self._edges_for_adding = [None] * 1000000
         self._edge_trace_counter = 0
 
     def _clear_deling_cache(self):
