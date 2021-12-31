@@ -519,6 +519,99 @@ mod test {
     use super::*;
     use crate::plan::logical::Node;
 
+    /*
+    #[test]
+    fn test_post_process_edgexpd {
+
+    }
+     */
+
+    #[test]
+    fn test_post_process_scan() {
+        let mut plan = LogicalPlan::default();
+        // g.V().hasLabel("person").has("age", 27)
+        let scan = pb::Scan {
+            scan_opt: 0,
+            alias: None,
+            params: Some(pb::QueryParams {
+                table_names: vec![],
+                columns: vec![],
+                limit: None,
+                predicate: None,
+                requirements: vec![],
+            }),
+            idx_predicate: None,
+        };
+        plan.append_operator_as_node(scan.into(), vec![])
+            .unwrap();
+        // .hasLabel("person")
+        let select = pb::Select { predicate: str_to_expr_pb("@.~label == \"person\"".to_string()).ok() };
+        plan.append_operator_as_node(select.into(), vec![0])
+            .unwrap();
+        // .has("age", 27)
+        let select = pb::Select { predicate: str_to_expr_pb("@.age == 27".to_string()).ok() };
+        plan.append_operator_as_node(select.into(), vec![1])
+            .unwrap();
+
+        let project = pb::Project {
+            mappings: vec![pb::project::ExprAlias {
+                expr: str_to_expr_pb("{@.name, @.age, @.id}".to_string()).ok(),
+                alias: None,
+            }],
+            is_append: false,
+        };
+        plan.append_operator_as_node(project.into(), vec![2])
+            .unwrap();
+
+        let mut job_builder = JobBuilder::default();
+        let mut plan_meta = plan.plan_meta.clone();
+        plan.add_job_builder(&mut job_builder, &mut plan_meta)
+            .unwrap();
+
+        let mut expected_builder = JobBuilder::default();
+        expected_builder.add_source(
+            pb::logical_plan::Operator::from(pb::Scan {
+                scan_opt: 0,
+                alias: None,
+                params: Some(pb::QueryParams {
+                    table_names: vec![],
+                    columns: vec!["age".into(), "id".into(), "name".into()],
+                    limit: None,
+                    predicate: None,
+                    requirements: vec![],
+                }),
+                idx_predicate: None,
+            })
+            .encode_to_vec(),
+        );
+
+        expected_builder.filter(
+            pb::logical_plan::Operator::from(pb::Select {
+                predicate: str_to_suffix_expr_pb("@.~label == \"person\"".to_string()).ok(),
+            })
+            .encode_to_vec(),
+        );
+        expected_builder.filter(
+            pb::logical_plan::Operator::from(pb::Select {
+                predicate: str_to_suffix_expr_pb("@.age == 27".to_string()).ok(),
+            })
+            .encode_to_vec(),
+        );
+        expected_builder.map(
+            pb::logical_plan::Operator::from(pb::Project {
+                mappings: vec![pb::project::ExprAlias {
+                    expr: str_to_suffix_expr_pb("{@.name, @.age, @.id}".to_string()).ok(),
+                    alias: None,
+                }],
+                is_append: false,
+            })
+            .encode_to_vec(),
+        );
+        expected_builder.sink(vec![]);
+
+        assert_eq!(job_builder, expected_builder);
+    }
+
     #[test]
     fn test_poc_plan() {
         // g.V().hasLabel("person").has("id", 10).out("knows").limit(10)

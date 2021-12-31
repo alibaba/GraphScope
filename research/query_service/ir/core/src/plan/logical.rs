@@ -338,22 +338,30 @@ impl LogicalPlan {
         &mut self, mut opr: pb::logical_plan::Operator, parent_ids: Vec<u32>,
     ) -> LogicalResult<i32> {
         let old_curr_node = self.plan_meta.curr_node;
+        let mut is_update_curr = false;
         if let Ok(meta) = STORE_META.read() {
             match opr.opr {
-                Some(pb::logical_plan::operator::Opr::Select(_))
-                | Some(pb::logical_plan::operator::Opr::As(_)) => {}
-                _ => self
-                    .plan_meta
-                    .update_curr_node(self.total_size as u32),
+                Some(pb::logical_plan::operator::Opr::Edge(_)) => {
+                    self.plan_meta
+                        .update_curr_node(self.total_size as u32);
+                }
+                Some(pb::logical_plan::operator::Opr::As(_))
+                | Some(pb::logical_plan::operator::Opr::Select(_)) => {}
+                _ => is_update_curr = true,
             }
             opr.preprocess(&meta, &mut self.plan_meta)?;
         }
-        let result = self.append_node(Node::new(self.total_size as u32, opr), parent_ids);
-        if result < 0 {
+        let new_curr_node = self.append_node(Node::new(self.total_size as u32, opr), parent_ids);
+        if new_curr_node < 0 {
             self.plan_meta.update_curr_node(old_curr_node);
+        } else {
+            if is_update_curr {
+                self.plan_meta
+                    .update_curr_node(new_curr_node as u32);
+            }
         }
 
-        Ok(result)
+        Ok(new_curr_node)
     }
 
     /// Remove a node from the logical plan, and do the following:
@@ -1367,7 +1375,66 @@ mod test {
     }
 
     #[test]
-    fn test_tag_maintain() {
+    fn test_tag_maintain_simple() {
+        let mut plan = LogicalPlan::default();
+        plan.plan_meta.is_preprocess = false;
+        // g.V().hasLabel("person").has("age", 27)
+
+        // g.V()
+        let scan = pb::Scan {
+            scan_opt: 0,
+            alias: None,
+            params: Some(pb::QueryParams {
+                table_names: vec![],
+                columns: vec![],
+                limit: None,
+                predicate: None,
+                requirements: vec![],
+            }),
+            idx_predicate: None,
+        };
+        plan.append_operator_as_node(scan.into(), vec![])
+            .unwrap();
+        assert_eq!(plan.plan_meta.curr_node, 0);
+
+        // .hasLabel("person")
+        let select = pb::Select { predicate: str_to_expr_pb("@.~label == \"person\"".to_string()).ok() };
+        plan.append_operator_as_node(select.into(), vec![0])
+            .unwrap();
+        assert_eq!(plan.plan_meta.curr_node, 0);
+
+        // .has("age", 27)
+        let select = pb::Select { predicate: str_to_expr_pb("@.age == 27".to_string()).ok() };
+        plan.append_operator_as_node(select.into(), vec![1])
+            .unwrap();
+        assert_eq!(plan.plan_meta.curr_node, 0);
+        assert_eq!(
+            plan.plan_meta.node_cols.get(&0).unwrap(),
+            &vec!["age".into()]
+                .into_iter()
+                .collect::<BTreeSet<_>>()
+        );
+
+        let project = pb::Project {
+            mappings: vec![pb::project::ExprAlias {
+                expr: str_to_expr_pb("{@.name, @.age, @.id}".to_string()).ok(),
+                alias: None,
+            }],
+            is_append: false,
+        };
+        plan.append_operator_as_node(project.into(), vec![2])
+            .unwrap();
+        assert_eq!(plan.plan_meta.curr_node, 3);
+        assert_eq!(
+            plan.plan_meta.node_cols.get(&0).unwrap(),
+            &vec!["age".into(), "id".into(), "name".into()]
+                .into_iter()
+                .collect::<BTreeSet<_>>()
+        );
+    }
+
+    #[test]
+    fn test_tag_maintain_complex() {
         let mut plan = LogicalPlan::default();
         plan.plan_meta.is_preprocess = false;
 
