@@ -19,6 +19,7 @@
 # information.
 #
 
+import types
 import copy
 import json
 from timeit import default_timer as timer
@@ -929,9 +930,6 @@ class Graph(_GraphBase):
         >>> G[1][2].update({0: 5})
         >>> G.edges[1, 2].update({0: 5})
         """
-        # if u_of_edge is None or v_of_edge is None:
-        #     raise ValueError("None cannot be a node")
-        # t = time.time()
         # self._schema.add_nx_edge_properties(attr)
         """
         for key, value in attr.items():
@@ -942,13 +940,12 @@ class Graph(_GraphBase):
             except TypeError:
                 pass
         """
-        # t_dict = time.time() - t
-        # self._edges_for_adding.append(
-        #     json.dumps((u_of_edge, v_of_edge, data), default=json_encoder)
-        # )
         # self._edges_for_adding[self._edge_trace_counter] = json.dumps((u_of_edge, v_of_edge, attr), default=json_encoder)
         # self._edges_for_adding.append((u_of_edge, v_of_edge, attr))
-        self._edges_for_adding[self._edge_trace_counter] = (u_of_edge, v_of_edge, attr)
+        if attr:
+            self._edges_for_adding[self._edge_trace_counter] = (u_of_edge, v_of_edge, attr)
+        else:
+            self._edges_for_adding[self._edge_trace_counter] = (u_of_edge, v_of_edge)
         self._edge_trace_counter = self._edge_trace_counter + 1
 
     def add_edges_from(self, ebunch_to_add, **attr):
@@ -992,6 +989,7 @@ class Graph(_GraphBase):
         self._convert_arrow_to_dynamic()
         # self._clear_adding_cache()
 
+        """
         edges = []
         for e in ebunch_to_add:
             ne = len(e)
@@ -1013,11 +1011,21 @@ class Graph(_GraphBase):
             edges.append((u, v, data))
             # edge = [u, v, data]
             # edges.append(json.dumps(edge, default=json_encoder))
-
-        if edges:
-            self._op = dag_utils.modify_edges(self, types_pb2.NX_ADD_EDGES, json.dumps(edges, default=json_encoder))
+        """
+        if ebunch_to_add:
+            start = timer()
+            if isinstance(ebunch_to_add, types.GeneratorType):
+                edges_json = json.dumps(list(ebunch_to_add), default=json_encoder)
+            else:
+                edges_json = json.dumps(ebunch_to_add, default=json_encoder)
+            end = timer()
+            print("Dumps time", end - start)
+            start = timer()
+            self._op = dag_utils.modify_edges(self, types_pb2.NX_ADD_EDGES, edges_json, json.dumps(attr, default=json_encoder))
+            print("Init op", timer() - start)
+            start = timer()
             self._op.eval()
-            edges.clear()
+            print("Eval op", timer() - start)
 
     def add_weighted_edges_from(self, ebunch_to_add, weight="weight", **attr):
         """Add weighted edges in `ebunch_to_add` with specified weight attr

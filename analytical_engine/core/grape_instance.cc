@@ -307,7 +307,9 @@ bl::result<void> GrapeInstance::modifyEdges(
 
   auto fragment =
       std::static_pointer_cast<DynamicFragment>(wrapper->fragment());
-  fragment->ModifyEdges(edges, modify_type);
+  BOOST_LEAF_AUTO(attr_json, params.Get<std::string>(rpc::EDGE_KEY));
+  auto common_attr = folly::parseJson(attr_json);
+  fragment->ModifyEdges(edges, common_attr, modify_type);
 #else
   RETURN_GS_ERROR(vineyard::ErrorCode::kUnimplementedMethod,
                   "GraphScope is built with NETWORKX=OFF, please recompile it "

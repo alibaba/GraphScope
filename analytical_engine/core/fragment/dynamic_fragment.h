@@ -1496,6 +1496,7 @@ class DynamicFragment {
   }
 
   void ModifyEdges(const nlohmann::json& edges_to_modify,
+                   const folly::dynamic& common_attrs,
                    const rpc::ModifyType modify_type) {
     double start = grape::GetCurrentTime();
     std::vector<internal_vertex_t> vertices;
@@ -1504,7 +1505,7 @@ class DynamicFragment {
     edges.reserve(edges_to_modify.size());
     invalidCache();
     {
-      edata_t e_data = folly::dynamic::object;
+      edata_t e_data;
       vdata_t fake_data = folly::dynamic::object;
       oid_t src, dst;
       vid_t src_gid, dst_gid;
@@ -1525,9 +1526,12 @@ class DynamicFragment {
         }
       */
       for (const auto& e : edges_to_modify) {
-        auto src = jsonToDynamic(e[0]);
-        auto dst = jsonToDynamic(e[1]);
-        auto data = jsonToDynamic(e[2]);
+        src = jsonToDynamic(e[0]);
+        dst = jsonToDynamic(e[1]);
+        e_data = common_attrs;
+        if (e.size() == 3) {
+          e_data.update(jsonToDynamic(e[2]));
+        }
         src_fid = partitioner.GetPartitionId(src);
         dst_fid = partitioner.GetPartitionId(dst);
         if (modify_type == rpc::NX_ADD_EDGES) {
@@ -1546,9 +1550,9 @@ class DynamicFragment {
           }
         }
         if (src_fid == fid_ || dst_fid == fid_ || duplicated()) {
-          edges.emplace_back(src_gid, dst_gid, data);
+          edges.emplace_back(src_gid, dst_gid, e_data);
           if (!directed_ && src_gid != dst_gid) {
-            edges.emplace_back(dst_gid, src_gid, data);
+            edges.emplace_back(dst_gid, src_gid, e_data);
           }
         }
       }

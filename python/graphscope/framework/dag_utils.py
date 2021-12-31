@@ -286,7 +286,7 @@ def arrow_to_dynamic(graph):
     return op
 
 
-def modify_edges(graph, modify_type, edges):
+def modify_edges(graph, modify_type, edges, attr):
     """Create modify edges operation for nx graph.
 
     Args:
@@ -301,12 +301,11 @@ def modify_edges(graph, modify_type, edges):
     config = {}
     config[types_pb2.GRAPH_NAME] = utils.s_to_attr(graph.key)
     config[types_pb2.MODIFY_TYPE] = utils.modify_type_to_attr(modify_type)
-    # config[types_pb2.EDGES] = utils.list_str_to_attr(edges)
-    # config[types_pb2.EDGES] = utils.s_to_attr(edges)
     if isinstance(edges, str):
         config[types_pb2.EDGES] = utils.s_to_attr(edges)
     else:
         config[types_pb2.EDGES] = utils.bytes_to_attr(edges)
+    config[types_pb2.EDGE_KEY] = utils.s_to_attr(attr)
     op = Operation(
         graph.session_id,
         types_pb2.MODIFY_EDGES,
