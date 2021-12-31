@@ -14,7 +14,7 @@ pegasus_common = { path = "../common" }
 tonic = { version = "0.5", features = ["default", "compression"] }
 prost = "0.8"
 tokio = { version = "1.0", features = ["macros", "sync", "rt-multi-thread"] }
-
+structopt = "0.3"
 
 [build-dependencies]
 tonic-build = { version = "0.5", features = ["default", "compression"] }
@@ -22,3 +22,19 @@ tonic-build = { version = "0.5", features = ["default", "compression"] }
 [features]
 default = []
 gcip = []
+
+[lib]
+name = "pegasus_benchmark"
+path = "src/lib.rs"
+
+[[bin]]
+name = "ssk"
+
+[[bin]]
+name = "spmsk"
+
+[[bin]]
+name = "amsk"
+
+[[bin]]
+name = "service"

@@ -1,6 +1,6 @@
 use pegasus_graph::graph::Direction;
 
-use crate::Graph;
+use crate::graph::Graph;
 
 mod multi_src;
 mod single_src;

@@ -176,3 +176,17 @@ impl Graph for TodoGraph {
         todo!()
     }
 }
+
+impl Graph for pegasus_graph::IdTopoGraph {
+    fn get_neighbor_ids(&self, src: u64, _label: &str, _dir: Direction) -> Box<dyn Iterator<Item=u64> + Send + 'static> {
+        Box::new(self.get_neighbors(src))
+    }
+
+    fn get_vertices_by_ids(&self, _ids: &[u64]) -> Vec<Vertex> {
+        unimplemented!()
+    }
+
+    fn prepare_filter_vertex<P: Debug>(&self, _p: P) -> Box<dyn FilterById> {
+        unimplemented!()
+    }
+}

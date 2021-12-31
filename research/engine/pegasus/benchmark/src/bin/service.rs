@@ -2,11 +2,11 @@ use std::sync::Arc;
 
 use pegasus::JobConf;
 
-use crate::graph::{Graph, TodoGraph};
+use pegasus_benchmark::graph::{Graph, TodoGraph};
+use pegasus_benchmark::queries;
 
-mod graph;
-mod queries;
 
+/// start rpc server to serve online queries;
 fn main() {
     // just for compile
     let graph = load_graph::<TodoGraph>();
@@ -18,5 +18,5 @@ fn main() {
 }
 
 fn load_graph<G: Graph>() -> Arc<G> {
-    unimplemented!()
+    unimplemented!("in building")
 }

@@ -7,7 +7,7 @@ use nohash_hasher::IntMap;
 use pegasus::api::{Fold, IterCondition, Iteration, Map, Reduce, Sink};
 use pegasus::resource::DefaultParResource;
 use pegasus::{Configuration, JobConf, ServerConf};
-use pegasus_graph::{topo::Neighbors, Graph};
+use pegasus_graph::{topo::Neighbors, IdTopoGraph};
 use structopt::StructOpt;
 
 #[derive(Debug, StructOpt)]
@@ -37,7 +37,7 @@ struct Config {
 
 struct PagesAndRanks {
     ranks: IntMap<u64, f64>,
-    graph: Arc<Graph>,
+    graph: Arc<IdTopoGraph>,
     damping_factor: f64,
     damping_value: f64,
     output: PathBuf,
@@ -45,7 +45,7 @@ struct PagesAndRanks {
 }
 
 impl PagesAndRanks {
-    fn new(total_pages: usize, graph: Graph, damping_factor: f64, output: PathBuf) -> Self {
+    fn new(total_pages: usize, graph: IdTopoGraph, damping_factor: f64, output: PathBuf) -> Self {
         println!("create partitions with {} vertices", graph.total_vertices());
         let init = 1.0 / total_pages as f64;
         let mut ranks: IntMap<u64, f64> = Default::default();
@@ -199,7 +199,7 @@ impl Iterator for NeighborsRankUpdate {
 struct ScatterItemIter {
     damping_factor: f64,
     pr: Arc<ArrayQueue<(u64, f64)>>,
-    graph: Arc<Graph>,
+    graph: Arc<IdTopoGraph>,
     iter: Option<NeighborsRankUpdate>,
 }
 

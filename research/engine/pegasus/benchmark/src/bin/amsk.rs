@@ -2,14 +2,13 @@ use std::path::PathBuf;
 use std::sync::Arc;
 use std::time::Instant;
 
-use pegasus::api::{CorrelatedSubTask, Count, Iteration, Map, Sink};
 use pegasus::{Configuration, JobConf, ServerConf};
 use structopt::StructOpt;
 
-/// Search and count khop neighbors for each vertex in a vertices list use only one job;
-/// A correlated subtask will be created for each vertex;
+/// Search and count k-hop neighbors for each vertex in a list using only one job;
+/// Do k-hop searching for each vertex in async mode;
 #[derive(Debug, StructOpt)]
-#[structopt(name = "correlated khop ", about = "Search khop neighbors on parallel dataflow")]
+#[structopt(name = "async multi-src k-hop ", about = "Search k-hop neighbors using parallel dataflow system")]
 struct Config {
     /// The number of hop this job will search;
     #[structopt(short = "k", default_value = "3")]
@@ -26,10 +25,12 @@ struct Config {
     /// the number of partitions to partition the local graph;
     #[structopt(short = "p", default_value = "1")]
     partitions: u32,
+    /// max number of searching in parallel
     #[structopt(short = "c", default_value = "32")]
     concurrent: u32,
     #[structopt(short = "b", default_value = "64")]
-    batch_width: u32,
+    batch_capacity: u32,
+    /// path of config file with server addresses
     #[structopt(short = "s", long = "servers")]
     servers: Option<PathBuf>,
 }
@@ -48,8 +49,7 @@ fn main() {
     // config job;
     let mut conf = JobConf::new("correlated_k_hop");
     conf.set_workers(config.partitions);
-    conf.scope_capacity = config.concurrent;
-    conf.batch_capacity = config.batch_width;
+    conf.batch_capacity = config.batch_capacity;
 
     if config.servers.is_some() {
         conf.reset_servers(ServerConf::All);
@@ -91,43 +91,7 @@ fn main() {
     pegasus::wait_servers_ready(conf.servers());
 
     let start = Instant::now();
-    let res = pegasus::run(conf.clone(), || {
-        let index = pegasus::get_current_worker().index;
-        let src = if index == 0 { src.clone() } else { vec![] };
-        let graph = graph.clone();
-        move |input, output| {
-            let stream = input.input_from(src)?;
-            stream
-                .repartition(|id| Ok(*id))
-                .apply(|sub| {
-                    if use_loop {
-                        sub.iterate(k_hop, |start| {
-                            let graph = graph.clone();
-                            start
-                                .repartition(|id| Ok(*id))
-                                .flat_map(move |id| Ok(graph.get_neighbors(id)))
-                        })?
-                    } else {
-                        let g = graph.clone();
-                        let mut stream = sub
-                            .repartition(|id| Ok(*id))
-                            .flat_map(move |id| Ok(g.get_neighbors(id)))?;
-
-                        for _i in 1..k_hop {
-                            let g = graph.clone();
-                            stream = stream
-                                .repartition(|id| Ok(*id))
-                                .flat_map(move |id| Ok(g.get_neighbors(id)))?;
-                        }
-                        stream
-                    }
-                    .count()
-                })?
-                .map(move |(id, cnt)| Ok((id, cnt, start.elapsed().as_millis() as u64)))?
-                .sink_into(output)
-        }
-    })
-    .expect("submit job failure");
+    let res = pegasus_benchmark::queries::khop::unpacked_multi_src_k_hop(src, k_hop, use_loop, conf, graph);
 
     let mut cnt_list = Vec::new();
     let mut elp_list = Vec::new();
@@ -136,7 +100,7 @@ fn main() {
     for x in res {
         let (id, cnt, elp) = x.unwrap();
         if n > 0 {
-            println!("{}\tfind khop\t{}\tneighbors, use {:?}us;", id, cnt, elp);
+            println!("{}\tfind k-hop\t{}\tneighbors, use {:?}us;", id, cnt, elp);
         }
         n -= 1;
         cnt_list.push(cnt);
@@ -149,21 +113,21 @@ fn main() {
 
     cnt_list.sort();
     let len = cnt_list.len();
-    println!("{} khop counts range from: [{} .. {}]", len, cnt_list[0], cnt_list[len - 1]);
+    println!("{} k-hop counts range from: [{} .. {}]", len, cnt_list[0], cnt_list[len - 1]);
     let len = len as f64;
     let mut i = (len * 0.99) as usize;
-    println!("99% khop count <= {}", cnt_list[i]);
+    println!("99% k-hop count <= {}", cnt_list[i]);
     i = (len * 0.90) as usize;
-    println!("90% khop count <= {}", cnt_list[i]);
+    println!("90% k-hop count <= {}", cnt_list[i]);
     i = (len * 0.5) as usize;
-    println!("50% khop count <= {}", cnt_list[i]);
+    println!("50% k-hop count <= {}", cnt_list[i]);
     let total: u64 = cnt_list.iter().sum();
-    println!("avg khop count {}", total as f64 / len);
+    println!("avg k-hop count {}", total as f64 / len);
 
     println!("==========================================================");
     elp_list.sort();
     let len = elp_list.len();
-    println!("{} khop elapses range from: [{} .. {}]", len, elp_list[0], elp_list[len - 1]);
+    println!("{} k-hop elapses range from: [{} .. {}]", len, elp_list[0], elp_list[len - 1]);
     let len = len as f64;
     let mut i = (len * 0.99) as usize;
     println!("99% elapse <= {} ms", elp_list[i]);

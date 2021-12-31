@@ -6,7 +6,7 @@ use pegasus::result::ResultStream;
 use pegasus::JobConf;
 
 use super::one_hop;
-use crate::Graph;
+use crate::graph::Graph;
 
 /// count k-hop neighbors for single source vertex;
 

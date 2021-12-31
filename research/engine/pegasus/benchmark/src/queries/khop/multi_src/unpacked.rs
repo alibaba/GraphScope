@@ -6,7 +6,7 @@ use pegasus::result::ResultStream;
 use pegasus::JobConf;
 
 use super::super::one_hop;
-use crate::Graph;
+use crate::graph::Graph;
 
 pub fn unpacked_multi_src_k_hop<G: Graph>(
     src: Vec<u64>, k_hop: u32, use_loop: bool, conf: JobConf, graph: Arc<G>,
