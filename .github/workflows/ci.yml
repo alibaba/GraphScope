@@ -560,7 +560,7 @@ jobs:
           python3 setup.py build_proto
 
           # install mars
-          python3 -m pip install git+https://github.com/mars-project/mars.git@92d4959511ff9fa107b458239e7c1022baec3325#egg=pymars
+          python3 -m pip install pymars==0.8.0
 
           # install pytest
           python3 -m pip install pytest pytest-cov

@@ -671,7 +671,8 @@ class GSEngineBuilder(ReplicaSetBuilder):
         vineyard_command = " ".join(
             [
                 sys.executable,
-                "-m" "vineyard",
+                "-m",
+                "vineyard",
                 "--size=%s" % str(shared_mem),
                 '--etcd_endpoint="%s"' % (";".join(etcd_endpoints),),
                 "--socket=%s" % self._ipc_socket_file,
@@ -829,7 +830,7 @@ class GSEngineBuilder(ReplicaSetBuilder):
             "mars.deploy.oscar.worker",
             "--endpoint=$MY_POD_IP:%s" % port,
             "--supervisors=%s" % scheduler_endpoint,
-            "--log-level=debug",
+            "--log-level=DEBUG",
             "--config-file=/tmp/mars-on-vineyard.yml",
         ]
         cmd = ["bash", "-c", " ".join(cmd)]
@@ -868,7 +869,9 @@ class GSEngineBuilder(ReplicaSetBuilder):
             )
         )
 
-    def add_mars_scheduler_container(self, name, image, cpu, mem, preemptive, port):
+    def add_mars_scheduler_container(
+        self, name, image, cpu, mem, preemptive, port, web_port
+    ):
         cmd = [
             "while ! ls $VINEYARD_IPC_SOCKET 2>/dev/null; do sleep 1 && echo -n .; done",
             ";",
@@ -888,7 +891,8 @@ class GSEngineBuilder(ReplicaSetBuilder):
             "-m",
             "mars.deploy.oscar.supervisor",
             "--endpoint=$MY_POD_IP:%s" % port,
-            "--log-level=debug",
+            "--web-port=%s" % web_port,
+            "--log-level=DEBUG",
             "--config-file=/tmp/mars-on-vineyard.yml",
         ]
         cmd = ["bash", "-c", " ".join(cmd)]
@@ -919,13 +923,15 @@ class GSEngineBuilder(ReplicaSetBuilder):
                     "imagePullPolicy": self._image_pull_policy,
                     "resources": dict((k, v) for k, v in resources_dict.items() if v)
                     or None,
-                    "ports": [PortBuilder(port).build()],
+                    "ports": [PortBuilder(port).build(), PortBuilder(web_port).build()],
                     "volumeMounts": volumeMounts or None,
                     "livenessProbe": None,
                     "readinessProbe": probe.build(),
                 }
             )
         )
+
+        super().add_annotation("kubectl.kubernetes.io/default-container", name)
 
 
 class PodBuilder(object):
