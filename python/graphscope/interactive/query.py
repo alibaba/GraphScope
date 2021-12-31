@@ -210,6 +210,7 @@ class InteractiveQuery(object):
 
         self._status = InteractiveQueryStatus.Initializing
         self._graph_url = None
+        self._conn = None
         # graph object id stored in vineyard
         self._object_id = object_id
         # interactive_query_node is None used for create a interative query
@@ -300,15 +301,24 @@ class InteractiveQuery(object):
             raise RuntimeError(
                 "Interactive query is unavailable with %s status.", str(self._status)
             )
-        ret = traversal().withRemote(DriverRemoteConnection(self._graph_url[0], "g"))
-        return ret
+        if self._conn is None:
+            self._conn = DriverRemoteConnection(self._graph_url[0], "g")
+        return traversal().withRemote(self._conn)
 
     def close(self):
         """Close interactive instance and release resources"""
-        if not self.closed() and not self._session.closed:
-            self._session._wrapper(self._interactive_query_node.close())
-            self._session._close_interactive_instance(self)
-            self._status = InteractiveQueryStatus.Closed
+        if not self.closed():
+            if self._conn is not None:
+                try:
+                    self._conn.close()
+                except Exception:
+                    pass  # be silent when closing
+                self._conn = None
+
+            if not self._session.closed:
+                self._session._wrapper(self._interactive_query_node.close())
+                self._session._close_interactive_instance(self)
+                self._status = InteractiveQueryStatus.Closed
 
 
 class ClosedInteractiveQuery(DAGNode):
