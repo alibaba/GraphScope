@@ -314,7 +314,11 @@ impl Evaluator {
     }
 
     pub fn eval_bool<E: Element, C: Context<E>>(&self, context: Option<&C>) -> ExprEvalResult<bool> {
-        Ok(self.eval(context)?.as_bool()?)
+        Ok(self
+            .eval(context)
+            .unwrap_or(false.into())
+            .as_bool()
+            .unwrap_or(false))
     }
 }
 
