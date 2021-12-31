@@ -202,35 +202,30 @@ impl Evaluator {
             let third = _third.unwrap();
 
             if let InnerOpr::Logical(logical) = third {
-                Ok(Some(apply_logical(
-                    logical,
-                    first
-                        .eval(context)?
-                        .ok_or(ExprEvalError::NoneOperand(OperatorDesc(format!(
-                            "evaluate {:?} as `None`",
-                            first
-                        ))))?
-                        .as_borrow(),
-                    second.eval(context)?.map(|obj| obj.as_borrow()),
-                )?))
+                let a = first
+                    .eval(context)?
+                    .ok_or(ExprEvalError::NoneOperand(OperatorDesc(format!(
+                        "evaluate {:?} as `None`",
+                        first
+                    ))))?;
+                let b = second.eval(context)?;
+
+                Ok(Some(apply_logical(logical, a.as_borrow(), b.map(|obj| obj.as_borrow()))?))
             } else if let InnerOpr::Arith(arith) = third {
-                Ok(Some(apply_arith(
-                    arith,
-                    first
-                        .eval(context)?
-                        .ok_or(ExprEvalError::NoneOperand(OperatorDesc(format!(
-                            "evaluate {:?} as `None`",
-                            first
-                        ))))?
-                        .as_borrow(),
-                    second
-                        .eval(context)?
-                        .ok_or(ExprEvalError::NoneOperand(OperatorDesc(format!(
-                            "evaluate {:?} as `None`",
-                            second
-                        ))))?
-                        .as_borrow(),
-                )?))
+                let a = first
+                    .eval(context)?
+                    .ok_or(ExprEvalError::NoneOperand(OperatorDesc(format!(
+                        "evaluate {:?} as `None`",
+                        first
+                    ))))?;
+                let b = second
+                    .eval(context)?
+                    .ok_or(ExprEvalError::NoneOperand(OperatorDesc(format!(
+                        "evaluate {:?} as `None`",
+                        second
+                    ))))?;
+
+                Ok(Some(apply_arith(arith, a.as_borrow(), b.as_borrow())?))
             } else {
                 Err(ExprEvalError::OtherErr("invalid expression".to_string()))
             }
