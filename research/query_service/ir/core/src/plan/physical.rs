@@ -529,7 +529,7 @@ mod test {
     #[test]
     fn test_post_process_scan() {
         let mut plan = LogicalPlan::default();
-        // g.V().hasLabel("person").has("age", 27)
+        // g.V().hasLabel("person").has("age", 27).valueMap("age", "name", "id")
         let scan = pb::Scan {
             scan_opt: 0,
             alias: None,

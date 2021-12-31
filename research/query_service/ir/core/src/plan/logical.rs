@@ -1378,7 +1378,7 @@ mod test {
     fn test_tag_maintain_simple() {
         let mut plan = LogicalPlan::default();
         plan.plan_meta.is_preprocess = false;
-        // g.V().hasLabel("person").has("age", 27)
+        // g.V().hasLabel("person").has("age", 27).valueMap("age", "name", "id")
 
         // g.V()
         let scan = pb::Scan {
@@ -1415,6 +1415,7 @@ mod test {
                 .collect::<BTreeSet<_>>()
         );
 
+        // .valueMap("age", "name", "id")
         let project = pb::Project {
             mappings: vec![pb::project::ExprAlias {
                 expr: str_to_expr_pb("{@.name, @.age, @.id}".to_string()).ok(),
