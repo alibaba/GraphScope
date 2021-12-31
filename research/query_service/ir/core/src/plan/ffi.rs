@@ -63,9 +63,10 @@ use pegasus::BuildJobError;
 use pegasus_client::builder::JobBuilder;
 use prost::Message;
 
-use crate::plan::logical::{LogicalError, LogicalPlan};
+use crate::error::IrError;
+use crate::plan::logical::LogicalPlan;
 use crate::plan::meta::set_schema_from_json;
-use crate::plan::physical::{AsPhysical, PhysicalError};
+use crate::plan::physical::AsPhysical;
 use crate::JsonIO;
 
 #[repr(i32)]
@@ -108,10 +109,10 @@ impl std::fmt::Display for ResultCode {
 
 impl std::error::Error for ResultCode {}
 
-impl From<LogicalError> for ResultCode {
-    fn from(err: LogicalError) -> Self {
+impl From<IrError> for ResultCode {
+    fn from(err: IrError) -> Self {
         match err {
-            LogicalError::Unsupported => Self::UnSupported,
+            IrError::Unsupported(_) => Self::UnSupported,
             _ => Self::NotExistError,
         }
     }
@@ -481,8 +482,8 @@ pub extern "C" fn destroy_job_buffer(buffer: FfiJobBuffer) {
     }
 }
 
-impl From<PhysicalError> for FfiJobBuffer {
-    fn from(_: PhysicalError) -> Self {
+impl From<IrError> for FfiJobBuffer {
+    fn from(_: IrError) -> Self {
         FfiJobBuffer { ptr: std::ptr::null_mut(), len: 0 }
     }
 }
@@ -497,8 +498,9 @@ impl From<BuildJobError> for FfiJobBuffer {
 #[no_mangle]
 pub extern "C" fn build_physical_plan(ptr_plan: *const c_void) -> FfiJobBuffer {
     let plan = unsafe { Box::from_raw(ptr_plan as *mut LogicalPlan) };
+    let mut plan_meta = plan.plan_meta.clone();
     let mut builder = JobBuilder::default();
-    let build_result = plan.add_job_builder(&mut builder);
+    let build_result = plan.add_job_builder(&mut builder, &mut plan_meta);
     let result = if build_result.is_ok() {
         let req_result = builder.build();
         if let Ok(req) = req_result {
