@@ -29,7 +29,8 @@ use pegasus_server::pb as server_pb;
 use prost::Message;
 
 use crate::error::{IrError, IrResult};
-use crate::plan::logical::{LogicalPlan, NodeType, PlanMeta};
+use crate::plan::logical::{LogicalPlan, NodeType};
+use crate::plan::meta::PlanMeta;
 
 /// A trait for building physical plan (pegasus) from the logical plan
 pub trait AsPhysical {
@@ -371,7 +372,7 @@ impl AsPhysical for pb::logical_plan::Operator {
 
 impl AsPhysical for NodeType {
     fn add_job_builder(&self, builder: &mut JobBuilder, plan_meta: &mut PlanMeta) -> IrResult<()> {
-        plan_meta.update_curr_node(self.borrow().id);
+        plan_meta.set_curr_node(self.borrow().id);
         self.borrow()
             .opr
             .add_job_builder(builder, plan_meta)
