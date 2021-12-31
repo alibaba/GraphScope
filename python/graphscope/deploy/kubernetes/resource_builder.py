@@ -18,6 +18,7 @@
 
 
 import logging
+import math
 import os
 import sys
 
@@ -640,9 +641,9 @@ class GSEngineBuilder(ReplicaSetBuilder):
     _engine_requests_mem = "1Gi"
 
     _mars_worker_requests_cpu = 0.2
-    _mars_worker_requests_mem = "512Mi"
+    _mars_worker_requests_mem = "1Gi"
     _mars_scheduler_requests_cpu = 0.2
-    _mars_scheduler_requests_mem = "512Mi"
+    _mars_scheduler_requests_mem = "1Gi"
 
     def __init__(self, name, labels, num_workers, image_pull_policy):
         self._name = name
@@ -810,6 +811,15 @@ class GSEngineBuilder(ReplicaSetBuilder):
     def add_mars_worker_container(
         self, name, image, cpu, mem, preemptive, port, scheduler_endpoint
     ):
+        # compute n cpu, to avoid mars worker launches too many actors
+        if isinstance(cpu, str) and cpu[-1] == 'm':
+            n_cpu = math.ceil(int("200m"[:-1]) / 1000)
+        if isinstance(cpu, (int, float)):
+            n_cpu = math.ceil(cpu)
+        else:
+            # by default: 1
+            n_cpu = 1
+
         cmd = [
             "while ! ls $VINEYARD_IPC_SOCKET 2>/dev/null; do sleep 1 && echo -n .; done",
             ";",
@@ -828,6 +838,7 @@ class GSEngineBuilder(ReplicaSetBuilder):
             "python3",
             "-m",
             "mars.deploy.oscar.worker",
+            "--n-cpu=%d" % n_cpu,
             "--endpoint=$MY_POD_IP:%s" % port,
             "--supervisors=%s" % scheduler_endpoint,
             "--log-level=DEBUG",

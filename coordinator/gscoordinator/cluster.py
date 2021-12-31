@@ -147,8 +147,8 @@ class KubernetesClusterLauncher(Launcher):
     _etcd_container_name = "etcd"
     _engine_container_name = "engine"  # fixed
 
-    _mars_scheduler_container_name = "marsscheduler"  # fixed
-    _mars_worker_container_name = "marsworker"  # fixed
+    _mars_scheduler_container_name = "mars"  # fixed
+    _mars_worker_container_name = "mars"  # fixed
     _mars_scheduler_name_prefix = "marsscheduler-"
     _mars_service_name_prefix = "mars-"
 
@@ -1009,7 +1009,7 @@ class KubernetesClusterLauncher(Launcher):
         logger.debug("vineyard rpc runs on %s", self._vineyard_service_endpoint)
         if self._saved_locals["with_mars"]:
             self._mars_service_endpoint = (
-                "https://" + self._get_mars_scheduler_service_endpoint()
+                "http://" + self._get_mars_scheduler_service_endpoint()
             )
             logger.debug("mars scheduler runs on %s", self._mars_service_endpoint)
         logger.info("GraphScope engines pod is ready.")
