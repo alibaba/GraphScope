@@ -209,8 +209,11 @@ impl Evaluator {
                         first
                     ))))?;
                 let b = second.eval(context)?;
-
-                Ok(Some(apply_logical(logical, a.as_borrow(), b.map(|obj| obj.as_borrow()))?))
+                if let Some(obj) = b {
+                    Ok(Some(apply_logical(logical, a.as_borrow(), Some(obj.as_borrow()))?))
+                } else {
+                    Ok(Some(apply_logical(logical, a.as_borrow(), None)?))
+                }
             } else if let InnerOpr::Arith(arith) = third {
                 let a = first
                     .eval(context)?
