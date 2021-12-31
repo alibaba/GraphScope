@@ -68,7 +68,7 @@ def gs_session():
     sess.close()
 
 
-@pytest.mark.skipif('WITH_MARS' is not os.environ, reason="Mars tests is not enabled.")
+@pytest.mark.skip(reason="Requires our runtime image has Python>=3.7.")
 def test_mars_session(gs_session):
     from mars import new_session
     from mars import tensor as mt

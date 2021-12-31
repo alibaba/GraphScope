@@ -159,8 +159,7 @@ class KubernetesClusterLauncher(Launcher):
 
     _vineyard_service_port = 9600  # fixed
     _mars_scheduler_port = 7103  # fixed
-    _mars_scheduler_web_port = 7104  # fixed
-    _mars_worker_port = 7105  # fixed
+    _mars_worker_port = 7104  # fixed
 
     def __init__(
         self,
@@ -433,7 +432,7 @@ class KubernetesClusterLauncher(Launcher):
         service_builder = ServiceBuilder(
             self._mars_service_name,
             service_type=self._saved_locals["service_type"],
-            port=[self._mars_scheduler_port, self._mars_scheduler_web_port],
+            port=self._mars_scheduler_port,
             selector=labels,
         )
         self._resource_object.append(
@@ -521,7 +520,6 @@ class KubernetesClusterLauncher(Launcher):
                 mem=self._saved_locals["mars_scheduler_mem"],
                 preemptive=self._saved_locals["preemptive"],
                 port=self._mars_scheduler_port,
-                web_port=self._mars_scheduler_web_port,
             )
         for name in self._image_pull_secrets:
             scheduler_builder.add_image_pull_secret(name)
@@ -792,7 +790,6 @@ class KubernetesClusterLauncher(Launcher):
             namespace=self._saved_locals["namespace"],
             name=self._mars_service_name,
             service_type=self._saved_locals["service_type"],
-            query_port=self._mars_scheduler_web_port,
         )
         return endpoints[0]
 
@@ -1008,9 +1005,7 @@ class KubernetesClusterLauncher(Launcher):
         self._vineyard_service_endpoint = self._get_vineyard_service_endpoint()
         logger.debug("vineyard rpc runs on %s", self._vineyard_service_endpoint)
         if self._saved_locals["with_mars"]:
-            self._mars_service_endpoint = (
-                "https://" + self._get_mars_scheduler_service_endpoint()
-            )
+            self._mars_service_endpoint = self._get_mars_scheduler_service_endpoint()
             logger.debug("mars scheduler runs on %s", self._mars_service_endpoint)
         logger.info("GraphScope engines pod is ready.")
 
