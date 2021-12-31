@@ -38,7 +38,8 @@ impl MapFunction<Record, Record> for ProjectOperator {
                 let projected_result = evaluator
                     .eval(Some(&input))
                     .map_err(|e| FnExecError::from(e))?;
-                input.append(ObjectElement::Prop(projected_result), alias.clone());
+                let entry = projected_result.map_or(ObjectElement::None, |prop| ObjectElement::Prop(prop));
+                input.append(entry, alias.clone());
             }
             Ok(input)
         } else {
@@ -47,7 +48,8 @@ impl MapFunction<Record, Record> for ProjectOperator {
                 let projected_result = evaluator
                     .eval(Some(&input))
                     .map_err(|e| FnExecError::from(e))?;
-                new_record.append(ObjectElement::Prop(projected_result), alias.clone());
+                let entry = projected_result.map_or(ObjectElement::None, |prop| ObjectElement::Prop(prop));
+                new_record.append(entry, alias.clone());
             }
             Ok(new_record)
         }
