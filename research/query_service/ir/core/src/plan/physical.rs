@@ -201,7 +201,6 @@ impl AsPhysical for pb::EdgeExpand {
                 if let Some(columns) = plan_meta.get_curr_node_columns() {
                     if !columns.is_empty() {
                         is_adding_auxilia = true;
-                        // Will be added to Auxilia
                         params.columns.clear();
                         params.columns.extend(
                             columns
@@ -215,12 +214,31 @@ impl AsPhysical for pb::EdgeExpand {
                     // Move everything to Auxilia
                     auxilia.params = Some(params.clone());
                     auxilia.alias = Some(pb::Alias { alias: self.alias.clone(), is_query_given: false });
-
                     params.columns.clear();
                     params.predicate = None;
                     self.alias = None;
                 } else {
                     is_adding_auxilia = false;
+                }
+            } else {
+                if let Some(columns) = plan_meta.get_curr_node_columns() {
+                    if !columns.is_empty() {
+                        if !self.is_edge {
+                            // Vertex expansion
+                            // Move everything to Auxilia
+                            auxilia.params = Some(pb::QueryParams {
+                                table_names: vec![],
+                                columns: columns
+                                    .iter()
+                                    .map(|tag| common_pb::NameOrId::from(tag.clone()))
+                                    .collect(),
+                                limit: None,
+                                predicate: None,
+                                requirements: vec![],
+                            });
+                            is_adding_auxilia = true;
+                        }
+                    }
                 }
             }
         }
