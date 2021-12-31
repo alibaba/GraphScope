@@ -30,7 +30,7 @@ use crate::graph::property::{Details, PropKey};
 
 /// The trait to define evaluating an expression
 pub trait Evaluate {
-    fn eval<E: Element, C: Context<E>>(&self, context: Option<&C>) -> ExprEvalResult<Object>;
+    fn eval<E: Element, C: Context<E>>(&self, context: Option<&C>) -> ExprEvalResult<Option<Object>>;
 }
 
 #[derive(Debug)]
@@ -163,7 +163,9 @@ fn apply_logical<'a>(
 impl Evaluator {
     /// Evaluate simple expression that contains less than three operators
     /// without using the stack.
-    fn eval_without_stack<E: Element, C: Context<E>>(&self, context: Option<&C>) -> ExprEvalResult<Object> {
+    fn eval_without_stack<E: Element, C: Context<E>>(
+        &self, context: Option<&C>,
+    ) -> ExprEvalResult<Option<Object>> {
         assert!(self.suffix_tree.len() <= 3);
         let _first = self.suffix_tree.get(0);
         let _second = self.suffix_tree.get(1);
@@ -176,7 +178,17 @@ impl Evaluator {
             let first = _first.unwrap();
             let second = _second.unwrap();
             if let InnerOpr::Logical(logical) = second {
-                apply_logical(logical, first.eval(context)?.as_borrow(), None)
+                Ok(Some(apply_logical(
+                    logical,
+                    first
+                        .eval(context)?
+                        .ok_or(ExprEvalError::NoneOperand(OperatorDesc(format!(
+                            "evaluate {:?} as `None`",
+                            first
+                        ))))?
+                        .as_borrow(),
+                    None,
+                )?))
             } else {
                 if !second.is_operand() {
                     Err(ExprEvalError::MissingOperands(second.into()))
@@ -190,13 +202,35 @@ impl Evaluator {
             let third = _third.unwrap();
 
             if let InnerOpr::Logical(logical) = third {
-                apply_logical(
+                Ok(Some(apply_logical(
                     logical,
-                    first.eval(context)?.as_borrow(),
-                    Some(second.eval(context)?.as_borrow()),
-                )
+                    first
+                        .eval(context)?
+                        .ok_or(ExprEvalError::NoneOperand(OperatorDesc(format!(
+                            "evaluate {:?} as `None`",
+                            first
+                        ))))?
+                        .as_borrow(),
+                    second.eval(context)?.map(|obj| obj.as_borrow()),
+                )?))
             } else if let InnerOpr::Arith(arith) = third {
-                apply_arith(arith, first.eval(context)?.as_borrow(), second.eval(context)?.as_borrow())
+                Ok(Some(apply_arith(
+                    arith,
+                    first
+                        .eval(context)?
+                        .ok_or(ExprEvalError::NoneOperand(OperatorDesc(format!(
+                            "evaluate {:?} as `None`",
+                            first
+                        ))))?
+                        .as_borrow(),
+                    second
+                        .eval(context)?
+                        .ok_or(ExprEvalError::NoneOperand(OperatorDesc(format!(
+                            "evaluate {:?} as `None`",
+                            second
+                        ))))?
+                        .as_borrow(),
+                )?))
             } else {
                 Err(ExprEvalError::OtherErr("invalid expression".to_string()))
             }
@@ -261,7 +295,7 @@ impl Evaluate for Evaluator {
     ///
     /// assert!(eval.eval::<_, _>(Some(&ctxt)).unwrap().as_bool().unwrap())
     /// ```
-    fn eval<E: Element, C: Context<E>>(&self, context: Option<&C>) -> ExprEvalResult<Object> {
+    fn eval<E: Element, C: Context<E>>(&self, context: Option<&C>) -> ExprEvalResult<Option<Object>> {
         let mut stack = self.stack.borrow_mut();
         if self.suffix_tree.len() <= 3 {
             return self.eval_without_stack(context);
@@ -269,7 +303,12 @@ impl Evaluate for Evaluator {
         stack.clear();
         for opr in &self.suffix_tree {
             if opr.is_operand() {
-                stack.push(opr.eval(context)?);
+                stack.push(
+                    opr.eval(context)?
+                        .ok_or(ExprEvalError::NoneOperand(OperatorDesc(
+                            "evaluate as `None` object".to_string(),
+                        )))?,
+                );
             } else {
                 if let Some(first) = stack.pop() {
                     let first_borrow = first.as_borrow();
@@ -300,7 +339,7 @@ impl Evaluate for Evaluator {
         }
 
         if stack.len() == 1 {
-            Ok(stack.pop().unwrap())
+            Ok(stack.pop())
         } else {
             Err("invalid expression".into())
         }
@@ -316,6 +355,7 @@ impl Evaluator {
     pub fn eval_bool<E: Element, C: Context<E>>(&self, context: Option<&C>) -> ExprEvalResult<bool> {
         Ok(self
             .eval(context)
+            .unwrap_or(Some(false.into()))
             .unwrap_or(false.into())
             .as_bool()
             .unwrap_or(false))
@@ -373,16 +413,7 @@ impl TryFrom<pb::ExprOpr> for InnerOpr {
 }
 
 impl Evaluate for InnerOpr {
-    fn eval<E: Element, C: Context<E>>(&self, context: Option<&C>) -> ExprEvalResult<Object> {
-        let obj_opt = self.eval_as_object(context)?;
-        obj_opt.ok_or(ExprEvalError::NoneOperand(OperatorDesc("evaluate object as `None`".to_string())))
-    }
-}
-
-impl InnerOpr {
-    pub fn eval_as_object<E: Element, C: Context<E>>(
-        &self, context: Option<&C>,
-    ) -> ExprEvalResult<Option<Object>> {
+    fn eval<E: Element, C: Context<E>>(&self, context: Option<&C>) -> ExprEvalResult<Option<Object>> {
         match self {
             Self::Const(c_opt) => Ok(if let Some(opt) = c_opt { Some(opt.clone()) } else { None }),
             Self::Var { tag, prop_key } => {
@@ -408,10 +439,11 @@ impl InnerOpr {
             Self::Vars(vars) => {
                 let mut vec = Vec::with_capacity(vars.len());
                 for var in vars {
-                    if let Some(obj) = var.eval_as_object(context)? {
+                    if let Some(obj) = var.eval(context)? {
                         vec.push(obj);
                     } else {
-                        return Ok(None);
+                        // Input a empty string-object
+                        vec.push(object!(""));
                     }
                 }
                 Ok(Some(Object::Vector(vec)))
@@ -419,36 +451,36 @@ impl InnerOpr {
             Self::VarMap(vars) => {
                 let mut map = BTreeMap::new();
                 for var in vars {
-                    if let Some(obj) = var.eval_as_object(context)? {
-                        let obj_key = match var {
-                            InnerOpr::Var { tag, prop_key } => {
-                                let mut obj1 = object!("");
-                                let mut obj2 = object!("");
-                                if let Some(t) = tag {
-                                    match t {
-                                        NameOrId::Str(str) => obj1 = object!(str.as_str()),
-                                        NameOrId::Id(id) => obj1 = object!(*id),
-                                    }
+                    let obj_key = match var {
+                        InnerOpr::Var { tag, prop_key } => {
+                            let mut obj1 = object!("");
+                            let mut obj2 = object!("");
+                            if let Some(t) = tag {
+                                match t {
+                                    NameOrId::Str(str) => obj1 = object!(str.as_str()),
+                                    NameOrId::Id(id) => obj1 = object!(*id),
                                 }
-                                if let Some(prop) = prop_key {
-                                    match prop {
-                                        PropKey::Id => obj2 = object!("~id"),
-                                        PropKey::Label => obj2 = object!("~label"),
-                                        PropKey::Key(key) => match key {
-                                            NameOrId::Str(str) => obj2 = object!(str.as_str()),
-                                            NameOrId::Id(id) => obj2 = object!(*id),
-                                        },
-                                    }
-                                }
-                                Ok(object!(vec![obj1, obj2]))
                             }
-                            _ => Err(ExprEvalError::Unsupported(
-                                "evaluating `valueMap` on non-vars is not supported.".to_string(),
-                            )),
-                        }?;
+                            if let Some(prop) = prop_key {
+                                match prop {
+                                    PropKey::Id => obj2 = object!("~id"),
+                                    PropKey::Label => obj2 = object!("~label"),
+                                    PropKey::Key(key) => match key {
+                                        NameOrId::Str(str) => obj2 = object!(str.as_str()),
+                                        NameOrId::Id(id) => obj2 = object!(*id),
+                                    },
+                                }
+                            }
+                            Ok(object!(vec![obj1, obj2]))
+                        }
+                        _ => Err(ExprEvalError::Unsupported(
+                            "evaluating `valueMap` on non-vars is not supported.".to_string(),
+                        )),
+                    }?;
+                    if let Some(obj) = var.eval(context)? {
                         map.insert(obj_key, obj);
                     } else {
-                        return Ok(None);
+                        map.insert(obj_key, object!(""));
                     }
                 }
                 Ok(Some(Object::KV(map)))
@@ -456,7 +488,9 @@ impl InnerOpr {
             _ => Err(ExprEvalError::UnmatchedOperator(self.into())),
         }
     }
+}
 
+impl InnerOpr {
     pub fn is_operand(&self) -> bool {
         match self {
             InnerOpr::Const(_) | InnerOpr::Var { .. } | InnerOpr::Vars(_) => true,
@@ -576,7 +610,12 @@ mod tests {
 
         for (case, expected) in cases.into_iter().zip(expected.into_iter()) {
             let eval = Evaluator::try_from(str_to_suffix_expr_pb(case.to_string()).unwrap()).unwrap();
-            assert_eq!(eval.eval::<(), NoneContext>(None).unwrap(), expected);
+            assert_eq!(
+                eval.eval::<(), NoneContext>(None)
+                    .unwrap()
+                    .unwrap(),
+                expected
+            );
         }
     }
 
@@ -616,7 +655,12 @@ mod tests {
 
         for (case, expected) in cases.into_iter().zip(expected.into_iter()) {
             let eval = Evaluator::try_from(str_to_suffix_expr_pb(case.to_string()).unwrap()).unwrap();
-            assert_eq!(eval.eval::<(), NoneContext>(None).unwrap(), expected);
+            assert_eq!(
+                eval.eval::<(), NoneContext>(None)
+                    .unwrap()
+                    .unwrap(),
+                expected
+            );
         }
     }
 
@@ -659,7 +703,12 @@ mod tests {
 
         for (case, expected) in cases.into_iter().zip(expected.into_iter()) {
             let eval = Evaluator::try_from(str_to_suffix_expr_pb(case.to_string()).unwrap()).unwrap();
-            assert_eq!(eval.eval::<(), NoneContext>(None).unwrap(), expected);
+            assert_eq!(
+                eval.eval::<(), NoneContext>(None)
+                    .unwrap()
+                    .unwrap(),
+                expected
+            );
         }
     }
 
@@ -708,7 +757,12 @@ mod tests {
 
         for (case, expected) in cases.into_iter().zip(expected.into_iter()) {
             let eval = Evaluator::try_from(str_to_suffix_expr_pb(case.to_string()).unwrap()).unwrap();
-            assert_eq!(eval.eval::<_, Vertices>(Some(&ctxt)).unwrap(), expected);
+            assert_eq!(
+                eval.eval::<_, Vertices>(Some(&ctxt))
+                    .unwrap()
+                    .unwrap(),
+                expected
+            );
         }
     }
 
