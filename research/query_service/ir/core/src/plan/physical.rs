@@ -30,7 +30,7 @@ use pegasus_client::builder::*;
 use pegasus_server::pb as server_pb;
 use prost::{EncodeError, Message};
 
-use crate::plan::logical::{LogicalPlan, NodeType};
+use crate::plan::logical::{LogicalPlan, NodeType, PlanMeta};
 
 /// Record any error while transforming ir to a pegasus physical plan
 #[derive(Debug, Clone)]
@@ -75,10 +75,10 @@ impl From<ExprError> for PhysicalError {
 /// A trait for building physical plan (pegasus) from the logical plan
 pub trait AsPhysical {
     /// To add pegasus's `JobBuilder`
-    fn add_job_builder(&self, builder: &mut JobBuilder) -> PhysicalResult<()>;
+    fn add_job_builder(&self, builder: &mut JobBuilder, plan_meta: &mut PlanMeta) -> PhysicalResult<()>;
 
     /// To conduct necessary post processing before transforming into a physical plan.
-    fn post_process(&mut self) -> PhysicalResult<()> {
+    fn post_process(&mut self, _builder: &mut JobBuilder, _plan_meta: &mut PlanMeta) -> PhysicalResult<()> {
         Ok(())
     }
 }
@@ -120,13 +120,13 @@ fn expr_to_suffix_expr(expr: common_pb::Expression) -> ExprResult<common_pb::Exp
 }
 
 impl AsPhysical for pb::Project {
-    fn add_job_builder(&self, builder: &mut JobBuilder) -> PhysicalResult<()> {
+    fn add_job_builder(&self, builder: &mut JobBuilder, plan_meta: &mut PlanMeta) -> PhysicalResult<()> {
         let mut project = self.clone();
-        project.post_process()?;
+        project.post_process(builder, plan_meta)?;
         simple_add_job_builder(builder, &pb::logical_plan::Operator::from(project), SimpleOpr::Map)
     }
 
-    fn post_process(&mut self) -> PhysicalResult<()> {
+    fn post_process(&mut self, _builder: &mut JobBuilder, _plan_meta: &mut PlanMeta) -> PhysicalResult<()> {
         for mapping in self.mappings.iter_mut() {
             if let Some(expr) = mapping.expr.as_mut() {
                 *expr = expr_to_suffix_expr(expr.clone())?;
@@ -138,13 +138,13 @@ impl AsPhysical for pb::Project {
 }
 
 impl AsPhysical for pb::Select {
-    fn add_job_builder(&self, builder: &mut JobBuilder) -> PhysicalResult<()> {
+    fn add_job_builder(&self, builder: &mut JobBuilder, plan_meta: &mut PlanMeta) -> PhysicalResult<()> {
         let mut select = self.clone();
-        select.post_process()?;
+        select.post_process(builder, plan_meta)?;
         simple_add_job_builder(builder, &pb::logical_plan::Operator::from(select), SimpleOpr::Filter)
     }
 
-    fn post_process(&mut self) -> PhysicalResult<()> {
+    fn post_process(&mut self, _builder: &mut JobBuilder, _plan_meta: &mut PlanMeta) -> PhysicalResult<()> {
         if let Some(pred) = &mut self.predicate {
             *pred = expr_to_suffix_expr(pred.clone())?;
         }
@@ -154,14 +154,24 @@ impl AsPhysical for pb::Select {
 }
 
 impl AsPhysical for pb::Scan {
-    fn add_job_builder(&self, builder: &mut JobBuilder) -> PhysicalResult<()> {
+    fn add_job_builder(&self, builder: &mut JobBuilder, plan_meta: &mut PlanMeta) -> PhysicalResult<()> {
         let mut scan = self.clone();
-        scan.post_process()?;
+        scan.post_process(builder, plan_meta)?;
         simple_add_job_builder(builder, &pb::logical_plan::Operator::from(scan), SimpleOpr::Source)
     }
 
-    fn post_process(&mut self) -> PhysicalResult<()> {
+    fn post_process(&mut self, _builder: &mut JobBuilder, plan_meta: &mut PlanMeta) -> PhysicalResult<()> {
         if let Some(params) = &mut self.params {
+            if let Some(columns) = plan_meta.get_curr_node_columns() {
+                if !columns.is_empty() {
+                    params.columns.clear();
+                    params.columns.extend(
+                        columns
+                            .iter()
+                            .map(|tag| common_pb::NameOrId::from(tag.clone())),
+                    )
+                }
+            }
             if let Some(pred) = &mut params.predicate {
                 *pred = expr_to_suffix_expr(pred.clone())?;
             }
@@ -172,19 +182,59 @@ impl AsPhysical for pb::Scan {
 }
 
 impl AsPhysical for pb::EdgeExpand {
-    fn add_job_builder(&self, builder: &mut JobBuilder) -> PhysicalResult<()> {
+    fn add_job_builder(&self, builder: &mut JobBuilder, plan_meta: &mut PlanMeta) -> PhysicalResult<()> {
         let mut xpd = self.clone();
-        xpd.post_process()?;
-        simple_add_job_builder(builder, &pb::logical_plan::Operator::from(self.clone()), SimpleOpr::Flatmap)
+        xpd.post_process(builder, plan_meta)
+        // simple_add_job_builder(builder, &pb::logical_plan::Operator::from(self.clone()), SimpleOpr::Flatmap)
     }
 
-    fn post_process(&mut self) -> PhysicalResult<()> {
+    fn post_process(&mut self, builder: &mut JobBuilder, plan_meta: &mut PlanMeta) -> PhysicalResult<()> {
+        let mut is_adding_auxilia = false;
+        let is_partition = builder.conf.workers > 1 || builder.conf.servers().len() > 1;
+
+        let mut auxilia = pb::Auxilia { params: None, alias: None };
         if let Some(base) = &mut self.base {
             if let Some(params) = &mut base.params {
                 if let Some(pred) = &mut params.predicate {
                     *pred = expr_to_suffix_expr(pred.clone())?;
                 }
+                if let Some(columns) = plan_meta.get_curr_node_columns() {
+                    if !columns.is_empty() {
+                        is_adding_auxilia = true;
+                        // Will be added to Auxilia
+                        params.columns.clear();
+                        params.columns.extend(
+                            columns
+                                .iter()
+                                .map(|tag| common_pb::NameOrId::from(tag.clone())),
+                        );
+                    }
+                }
+                if !self.is_edge {
+                    // Vertex expansion
+                    // Move everything to Auxilia
+                    auxilia.params = Some(params.clone());
+                    auxilia.alias = Some(pb::Alias { alias: self.alias.clone(), is_query_given: false });
+
+                    params.columns.clear();
+                    params.predicate = None;
+                    self.alias = None;
+                } else {
+                    is_adding_auxilia = false;
+                }
             }
+        }
+        simple_add_job_builder(
+            builder,
+            &pb::logical_plan::Operator::from(self.clone()),
+            SimpleOpr::Flatmap,
+        )?;
+        if is_adding_auxilia {
+            if is_partition {
+                let key_pb = common_pb::NameOrIdKey { key: None };
+                builder.repartition(key_pb.encode_to_vec());
+            }
+            pb::logical_plan::Operator::from(auxilia).add_job_builder(builder, plan_meta)?;
         }
 
         Ok(())
@@ -192,39 +242,66 @@ impl AsPhysical for pb::EdgeExpand {
 }
 
 impl AsPhysical for pb::GetV {
-    fn add_job_builder(&self, builder: &mut JobBuilder) -> PhysicalResult<()> {
-        simple_add_job_builder(builder, &pb::logical_plan::Operator::from(self.clone()), SimpleOpr::Map)
-    }
-}
-
-impl AsPhysical for pb::As {
-    fn add_job_builder(&self, builder: &mut JobBuilder) -> PhysicalResult<()> {
-        // Transform to `Auxilia` internally.
-        let auxilia = pb::Auxilia { params: None, alias: self.alias.clone() };
-        auxilia.add_job_builder(builder)
-    }
-}
-
-impl AsPhysical for pb::Auxilia {
-    fn add_job_builder(&self, builder: &mut JobBuilder) -> PhysicalResult<()> {
-        let mut auxilia = self.clone();
-        auxilia.post_process()?;
-        simple_add_job_builder(builder, &pb::logical_plan::Operator::from(auxilia), SimpleOpr::FilterMap)
+    fn add_job_builder(&self, builder: &mut JobBuilder, plan_meta: &mut PlanMeta) -> PhysicalResult<()> {
+        let mut getv = self.clone();
+        getv.post_process(builder, plan_meta)
+        // simple_add_job_builder(builder, &pb::logical_plan::Operator::from(getv), SimpleOpr::Map)
     }
 
-    fn post_process(&mut self) -> PhysicalResult<()> {
-        if let Some(params) = self.params.as_mut() {
-            if let Some(pred) = params.predicate.as_mut() {
-                *pred = expr_to_suffix_expr(pred.clone())?
+    fn post_process(&mut self, builder: &mut JobBuilder, plan_meta: &mut PlanMeta) -> PhysicalResult<()> {
+        let is_partition = builder.conf.workers > 1 || builder.conf.servers().len() > 1;
+        let mut is_adding_auxilia = false;
+        let mut auxilia = pb::Auxilia { params: None, alias: None };
+        if let Some(columns) = plan_meta.get_curr_node_columns() {
+            if !columns.is_empty() {
+                self.alias = None;
+                auxilia.alias = Some(pb::Alias { alias: self.alias.clone(), is_query_given: false });
+                auxilia.params = Some(pb::QueryParams {
+                    table_names: vec![],
+                    columns: columns
+                        .iter()
+                        .map(|tag| common_pb::NameOrId::from(tag.clone()))
+                        .collect(),
+                    limit: None,
+                    predicate: None,
+                    requirements: vec![],
+                });
+                is_adding_auxilia = true;
             }
+        }
+        simple_add_job_builder(builder, &pb::logical_plan::Operator::from(self.clone()), SimpleOpr::Map)?;
+        if is_adding_auxilia {
+            if is_partition {
+                let key_pb = common_pb::NameOrIdKey { key: None };
+                builder.repartition(key_pb.encode_to_vec());
+            }
+            pb::logical_plan::Operator::from(auxilia).add_job_builder(builder, plan_meta)?;
         }
 
         Ok(())
     }
 }
 
+impl AsPhysical for pb::As {
+    fn add_job_builder(&self, builder: &mut JobBuilder, plan_meta: &mut PlanMeta) -> PhysicalResult<()> {
+        // Transform to `Auxilia` internally.
+        let auxilia = pb::Auxilia { params: None, alias: self.alias.clone() };
+        auxilia.add_job_builder(builder, plan_meta)
+    }
+}
+
+impl AsPhysical for pb::Auxilia {
+    fn add_job_builder(&self, builder: &mut JobBuilder, _plan_meta: &mut PlanMeta) -> PhysicalResult<()> {
+        simple_add_job_builder(
+            builder,
+            &pb::logical_plan::Operator::from(self.clone()),
+            SimpleOpr::FilterMap,
+        )
+    }
+}
+
 impl AsPhysical for pb::Limit {
-    fn add_job_builder(&self, builder: &mut JobBuilder) -> PhysicalResult<()> {
+    fn add_job_builder(&self, builder: &mut JobBuilder, _plan_meta: &mut PlanMeta) -> PhysicalResult<()> {
         if let Some(range) = &self.range {
             if range.upper <= range.lower || range.lower < 0 || range.upper <= 0 {
                 Err(PhysicalError::InvalidRangeError(range.lower, range.upper))
@@ -239,7 +316,7 @@ impl AsPhysical for pb::Limit {
 }
 
 impl AsPhysical for pb::OrderBy {
-    fn add_job_builder(&self, builder: &mut JobBuilder) -> PhysicalResult<()> {
+    fn add_job_builder(&self, builder: &mut JobBuilder, _plan_meta: &mut PlanMeta) -> PhysicalResult<()> {
         let opr = pb::logical_plan::Operator::from(self.clone());
         if self.limit.is_none() {
             simple_add_job_builder(builder, &opr, SimpleOpr::SortBy)
@@ -257,12 +334,12 @@ impl AsPhysical for pb::OrderBy {
 }
 
 impl AsPhysical for pb::Dedup {
-    fn add_job_builder(&self, builder: &mut JobBuilder) -> PhysicalResult<()> {
+    fn add_job_builder(&self, builder: &mut JobBuilder, _plan_meta: &mut PlanMeta) -> PhysicalResult<()> {
         simple_add_job_builder(builder, &pb::logical_plan::Operator::from(self.clone()), SimpleOpr::Dedup)
     }
 }
 impl AsPhysical for pb::GroupBy {
-    fn add_job_builder(&self, builder: &mut JobBuilder) -> PhysicalResult<()> {
+    fn add_job_builder(&self, builder: &mut JobBuilder, _plan_meta: &mut PlanMeta) -> PhysicalResult<()> {
         let opr = pb::logical_plan::Operator::from(self.clone());
         if self.mappings.is_empty() {
             simple_add_job_builder(builder, &opr, SimpleOpr::Fold)
@@ -273,21 +350,21 @@ impl AsPhysical for pb::GroupBy {
 }
 
 impl AsPhysical for pb::logical_plan::Operator {
-    fn add_job_builder(&self, builder: &mut JobBuilder) -> PhysicalResult<()> {
+    fn add_job_builder(&self, builder: &mut JobBuilder, plan_meta: &mut PlanMeta) -> PhysicalResult<()> {
         use pb::logical_plan::operator::Opr::*;
         if let Some(opr) = &self.opr {
             match opr {
-                Project(project) => project.add_job_builder(builder),
-                Select(select) => select.add_job_builder(builder),
-                Vertex(getv) => getv.add_job_builder(builder),
-                Edge(edgexpd) => edgexpd.add_job_builder(builder),
-                Scan(scan) => scan.add_job_builder(builder),
-                Limit(limit) => limit.add_job_builder(builder),
-                OrderBy(orderby) => orderby.add_job_builder(builder),
-                Auxilia(auxilia) => auxilia.add_job_builder(builder),
-                As(as_opr) => as_opr.add_job_builder(builder),
-                Dedup(dedup) => dedup.add_job_builder(builder),
-                GroupBy(groupby) => groupby.add_job_builder(builder),
+                Project(project) => project.add_job_builder(builder, plan_meta),
+                Select(select) => select.add_job_builder(builder, plan_meta),
+                Vertex(getv) => getv.add_job_builder(builder, plan_meta),
+                Edge(edgexpd) => edgexpd.add_job_builder(builder, plan_meta),
+                Scan(scan) => scan.add_job_builder(builder, plan_meta),
+                Limit(limit) => limit.add_job_builder(builder, plan_meta),
+                OrderBy(orderby) => orderby.add_job_builder(builder, plan_meta),
+                Auxilia(auxilia) => auxilia.add_job_builder(builder, plan_meta),
+                As(as_opr) => as_opr.add_job_builder(builder, plan_meta),
+                Dedup(dedup) => dedup.add_job_builder(builder, plan_meta),
+                GroupBy(groupby) => groupby.add_job_builder(builder, plan_meta),
                 _ => Err(PhysicalError::Unsupported),
             }
         } else {
@@ -296,8 +373,17 @@ impl AsPhysical for pb::logical_plan::Operator {
     }
 }
 
+impl AsPhysical for NodeType {
+    fn add_job_builder(&self, builder: &mut JobBuilder, plan_meta: &mut PlanMeta) -> PhysicalResult<()> {
+        plan_meta.update_curr_node(self.borrow().id);
+        self.borrow()
+            .opr
+            .add_job_builder(builder, plan_meta)
+    }
+}
+
 impl AsPhysical for LogicalPlan {
-    fn add_job_builder(&self, builder: &mut JobBuilder) -> PhysicalResult<()> {
+    fn add_job_builder(&self, builder: &mut JobBuilder, plan_meta: &mut PlanMeta) -> PhysicalResult<()> {
         use pb::logical_plan::operator::Opr::*;
         let is_partition = builder.conf.workers as usize > 1 || builder.conf.servers().len() > 1;
         let mut prev_node_opt: Option<NodeType> = None;
@@ -321,88 +407,7 @@ impl AsPhysical for LogicalPlan {
             }
 
             let curr_node = curr_node_opt.as_ref().unwrap();
-            let curr_node_id = curr_node.borrow().id;
-            let mut auxilia = pb::Auxilia { params: None, alias: None };
-            let mut is_adding_auxilia = false;
-
-            match &mut curr_node.borrow_mut().opr.opr {
-                Some(Edge(edgexpd)) => {
-                    if let Some(base) = &mut edgexpd.base {
-                        if let Some(params) = &mut base.params {
-                            if let Some(columns) = self.plan_meta.get_node_columns(curr_node_id) {
-                                if !columns.is_empty() {
-                                    is_adding_auxilia = true;
-                                    // Will be added to Auxilia
-                                    params.columns.clear();
-                                    params.columns.extend(
-                                        columns
-                                            .iter()
-                                            .map(|tag| common_pb::NameOrId::from(tag.clone())),
-                                    );
-                                }
-                            }
-                            if !edgexpd.is_edge {
-                                // Vertex expansion
-                                // Move everything to Auxilia
-                                auxilia.params = Some(params.clone());
-                                auxilia.alias =
-                                    Some(pb::Alias { alias: edgexpd.alias.clone(), is_query_given: false });
-                                params.columns.clear();
-                                params.predicate = None;
-                                edgexpd.alias = None;
-                            } else {
-                                is_adding_auxilia = false;
-                            }
-                        }
-                    }
-                }
-                Some(Vertex(getv)) => {
-                    if let Some(columns) = self.plan_meta.get_node_columns(curr_node_id) {
-                        if !columns.is_empty() {
-                            getv.alias = None;
-                            auxilia.alias =
-                                Some(pb::Alias { alias: getv.alias.clone(), is_query_given: false });
-                            auxilia.params = Some(pb::QueryParams {
-                                table_names: vec![],
-                                columns: columns
-                                    .iter()
-                                    .map(|tag| common_pb::NameOrId::from(tag.clone()))
-                                    .collect(),
-                                limit: None,
-                                predicate: None,
-                                requirements: vec![],
-                            });
-                            is_adding_auxilia = true;
-                        }
-                    }
-                }
-                Some(Scan(scan)) => {
-                    if let Some(params) = scan.params.as_mut() {
-                        if let Some(columns) = self.plan_meta.get_node_columns(curr_node_id) {
-                            if !columns.is_empty() {
-                                params.columns.clear();
-                                params.columns.extend(
-                                    columns
-                                        .iter()
-                                        .map(|tag| common_pb::NameOrId::from(tag.clone())),
-                                )
-                            }
-                        }
-                    }
-                }
-                _ => {}
-            }
-            curr_node
-                .borrow()
-                .opr
-                .add_job_builder(builder)?;
-            if is_adding_auxilia {
-                if is_partition {
-                    let key_pb = common_pb::NameOrIdKey { key: None };
-                    builder.repartition(key_pb.encode_to_vec());
-                }
-                pb::logical_plan::Operator::from(auxilia.clone()).add_job_builder(builder)?;
-            }
+            curr_node.add_job_builder(builder, plan_meta)?;
             prev_node_opt = curr_node_opt.clone();
 
             if curr_node.borrow().children.is_empty() {
@@ -415,7 +420,7 @@ impl AsPhysical for LogicalPlan {
                 let mut plans: Vec<Plan> = vec![];
                 for subplan in subplans {
                     let mut bldr = JobBuilder::new(builder.conf.clone());
-                    subplan.add_job_builder(&mut bldr)?;
+                    subplan.add_job_builder(&mut bldr, plan_meta)?;
                     plans.push(bldr.take_plan());
                 }
 
@@ -530,7 +535,8 @@ mod test {
             .append_operator_as_node(limit_opr.clone(), vec![2])
             .unwrap(); // node 3
         let mut builder = JobBuilder::default();
-        let _ = logical_plan.add_job_builder(&mut builder);
+        let mut plan_meta = PlanMeta::default();
+        let _ = logical_plan.add_job_builder(&mut builder, &mut plan_meta);
 
         let mut expected_builder = JobBuilder::default();
         let select_opr = pb::logical_plan::Operator::from(pb::Select {
@@ -576,8 +582,9 @@ mod test {
             .append_operator_as_node(project_opr.clone(), vec![0])
             .unwrap(); // node 1
         let mut builder = JobBuilder::default();
+        let mut plan_meta = PlanMeta::default();
         logical_plan
-            .add_job_builder(&mut builder)
+            .add_job_builder(&mut builder, &mut plan_meta)
             .unwrap();
 
         let mut expected_builder = JobBuilder::default();
@@ -634,7 +641,8 @@ mod test {
             .append_operator_as_node(topby_opr.clone(), vec![1])
             .unwrap(); // node 2
         let mut builder = JobBuilder::default();
-        let _ = logical_plan.add_job_builder(&mut builder);
+        let mut plan_meta = PlanMeta::default();
+        let _ = logical_plan.add_job_builder(&mut builder, &mut plan_meta);
 
         let mut expected_builder = JobBuilder::default();
         expected_builder.add_source(source_opr_bytes);
@@ -689,7 +697,8 @@ mod test {
             .append_operator_as_node(pb::logical_plan::Operator::from(limit_opr.clone()), vec![4])
             .unwrap(); // node 5
         let mut builder = JobBuilder::default();
-        let _ = logical_plan.add_job_builder(&mut builder);
+        let mut plan_meta = PlanMeta::default();
+        let _ = logical_plan.add_job_builder(&mut builder, &mut plan_meta);
 
         let mut expected_builder = JobBuilder::default();
         expected_builder.add_source(source_opr_bytes);

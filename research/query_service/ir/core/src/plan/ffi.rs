@@ -497,8 +497,9 @@ impl From<BuildJobError> for FfiJobBuffer {
 #[no_mangle]
 pub extern "C" fn build_physical_plan(ptr_plan: *const c_void) -> FfiJobBuffer {
     let plan = unsafe { Box::from_raw(ptr_plan as *mut LogicalPlan) };
+    let mut plan_meta = plan.plan_meta.clone();
     let mut builder = JobBuilder::default();
-    let build_result = plan.add_job_builder(&mut builder);
+    let build_result = plan.add_job_builder(&mut builder, &mut plan_meta);
     let result = if build_result.is_ok() {
         let req_result = builder.build();
         if let Ok(req) = req_result {

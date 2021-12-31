@@ -581,6 +581,10 @@ impl PlanMeta {
         self.node_cols.get(&id)
     }
 
+    pub fn get_curr_node_columns(&self) -> Option<&BTreeSet<NameOrId>> {
+        self.node_cols.get(&self.curr_node)
+    }
+
     pub fn add_tag_node(&mut self, tag: NameOrId, node: u32) {
         self.tag_nodes.entry(tag).or_insert(node);
     }
