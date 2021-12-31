@@ -2,15 +2,13 @@ use std::cmp::Ordering;
 use std::collections::{HashMap, HashSet};
 use std::sync::Arc;
 
-use pegasus::api::{
-    Binary, Branch, IterCondition, Iteration, Map, Sink, Unary,
-};
+use pegasus::api::{Binary, Branch, IterCondition, Iteration, Map, Sink, Unary};
+use pegasus::result::ResultStream;
 use pegasus::tag::tools::map::TidyTagMap;
 use pegasus::JobConf;
-use pegasus::result::ResultStream;
 use pegasus_graph::graph::Direction;
-use crate::graph::{Graph, OrderBy};
 
+use crate::graph::{Graph, OrderBy};
 
 // g.V().hasLabel('person').has('person_id', $id)
 // .repeat(both('knows').has('firstName', $name).has('person_id', neq($id)).dedup()).emit().times(3)
@@ -19,8 +17,10 @@ use crate::graph::{Graph, OrderBy};
 // .fold()
 // .map{ 排序， 取属性 }
 
-pub fn ic1<G: Graph>(person_id: u64, first_name: String, graph: Arc<G>) -> ResultStream<Vec<u8>> {
-    pegasus::run_with_resources(JobConf::default(), graph, || {
+pub fn ic1<G: Graph>(
+    person_id: u64, first_name: String, conf: JobConf, graph: Arc<G>,
+) -> ResultStream<Vec<u8>> {
+    pegasus::run_with_resources(conf, graph, || {
         let first_name = first_name.clone();
         move |source, sink| {
             let stream = if source.get_worker_index() == 0 {
@@ -134,12 +134,8 @@ pub fn ic1<G: Graph>(person_id: u64, first_name: String, graph: Arc<G>) -> Resul
                         }
                         if batch.is_last() {
                             if !binary_end.insert(batch.tag().clone()) {
-                                let ids = collect
-                                    .keys()
-                                    .copied()
-                                    .collect::<Vec<_>>();
-                                let graph =
-                                    pegasus::resource::get_resource::<Arc<G>>().unwrap();
+                                let ids = collect.keys().copied().collect::<Vec<_>>();
+                                let graph = pegasus::resource::get_resource::<Arc<G>>().unwrap();
                                 let details = graph.get_vertices_by_ids(&ids);
                                 let mut with_dist = Vec::with_capacity(details.len());
                                 for v in details {
@@ -155,9 +151,7 @@ pub fn ic1<G: Graph>(person_id: u64, first_name: String, graph: Arc<G>) -> Resul
                                     }
                                 });
                                 let binary = encode_result(with_dist);
-                                output
-                                    .new_session(batch.tag())?
-                                    .give(binary)?;
+                                output.new_session(batch.tag())?.give(binary)?;
                             }
                         }
                         Ok(())
@@ -168,12 +162,8 @@ pub fn ic1<G: Graph>(person_id: u64, first_name: String, graph: Arc<G>) -> Resul
                         }
                         if batch.is_last() {
                             if !binary_end.insert(batch.tag().clone()) {
-                                let ids = collect
-                                    .keys()
-                                    .copied()
-                                    .collect::<Vec<_>>();
-                                let graph =
-                                    pegasus::resource::get_resource::<Arc<G>>().unwrap();
+                                let ids = collect.keys().copied().collect::<Vec<_>>();
+                                let graph = pegasus::resource::get_resource::<Arc<G>>().unwrap();
                                 let details = graph.get_vertices_by_ids(&ids);
                                 let mut with_dist = Vec::with_capacity(details.len());
                                 for v in details {
@@ -189,9 +179,7 @@ pub fn ic1<G: Graph>(person_id: u64, first_name: String, graph: Arc<G>) -> Resul
                                     }
                                 });
                                 let binary = encode_result(with_dist);
-                                output
-                                    .new_session(batch.tag())?
-                                    .give(binary)?;
+                                output.new_session(batch.tag())?.give(binary)?;
                             }
                         }
                         Ok(())

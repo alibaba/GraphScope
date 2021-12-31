@@ -1,7 +1,7 @@
 [workspace]
 
 [package]
-name = "pegasus-ldbc"
+name = "pegasus-benchmark"
 version = "0.1.0"
 edition = "2018"
 
