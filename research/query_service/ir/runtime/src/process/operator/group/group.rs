@@ -38,11 +38,13 @@ impl GroupGen<Record, RecordKey, Record> for algebra_pb::GroupBy {
     fn gen_group_map(&self) -> FnGenResult<Box<dyn MapFunction<(RecordKey, Record), Record>>> {
         let mut key_aliases = Vec::with_capacity(self.mappings.len());
         for key_alias in self.mappings.iter() {
-            let alias: Option<NameOrId> = key_alias
-                .alias
-                .clone()
-                .ok_or(ParsePbError::from("key alias is missing in group"))?
-                .try_into()?;
+            let alias: Option<NameOrId> = Some(
+                key_alias
+                    .alias
+                    .clone()
+                    .ok_or(ParsePbError::from("key alias is missing in group"))?
+                    .try_into()?,
+            );
             let alias = alias.ok_or(ParsePbError::from("key alias cannot be None in group"))?;
             key_aliases.push(alias);
         }
@@ -149,17 +151,11 @@ mod tests {
         let function = pb::group_by::AggFunc {
             vars: vec![common_pb::Variable::from("@".to_string())],
             aggregate: 5, // ToList
-            alias: Some(pb::Alias {
-                alias: Some(NameOrId::Str("b".to_string()).into()),
-                is_query_given: false,
-            }),
+            alias: Some(NameOrId::Str("b".to_string()).into()),
         };
         let key_alias = pb::group_by::KeyAlias {
             key: Some(common_pb::Variable::from("@".to_string())),
-            alias: Some(pb::Alias {
-                alias: Some(NameOrId::Str("a".to_string()).into()),
-                is_query_given: false,
-            }),
+            alias: Some(NameOrId::Str("a".to_string()).into()),
         };
         let group_opr_pb = pb::GroupBy { mappings: vec![key_alias], functions: vec![function] };
         let mut result = group_test(group_opr_pb);
@@ -187,17 +183,11 @@ mod tests {
         let function = pb::group_by::AggFunc {
             vars: vec![common_pb::Variable::from("@".to_string())],
             aggregate: 5, // ToList
-            alias: Some(pb::Alias {
-                alias: Some(NameOrId::Str("b".to_string()).into()),
-                is_query_given: false,
-            }),
+            alias: Some(NameOrId::Str("b".to_string()).into()),
         };
         let key_alias = pb::group_by::KeyAlias {
             key: Some(common_pb::Variable::from("@.name".to_string())),
-            alias: Some(pb::Alias {
-                alias: Some(NameOrId::Str("a".to_string()).into()),
-                is_query_given: false,
-            }),
+            alias: Some(NameOrId::Str("a".to_string()).into()),
         };
         let group_opr_pb = pb::GroupBy { mappings: vec![key_alias], functions: vec![function] };
         let mut result = group_test(group_opr_pb);
@@ -233,24 +223,15 @@ mod tests {
         let function = pb::group_by::AggFunc {
             vars: vec![common_pb::Variable::from("@".to_string())],
             aggregate: 5, // ToList
-            alias: Some(pb::Alias {
-                alias: Some(NameOrId::Str("c".to_string()).into()),
-                is_query_given: false,
-            }),
+            alias: Some("c".into()),
         };
         let key_alias_1 = pb::group_by::KeyAlias {
             key: Some(common_pb::Variable::from("@.id".to_string())),
-            alias: Some(pb::Alias {
-                alias: Some(NameOrId::Str("a".to_string()).into()),
-                is_query_given: false,
-            }),
+            alias: Some(NameOrId::Str("a".to_string()).into()),
         };
         let key_alias_2 = pb::group_by::KeyAlias {
             key: Some(common_pb::Variable::from("@.name".to_string())),
-            alias: Some(pb::Alias {
-                alias: Some(NameOrId::Str("b".to_string()).into()),
-                is_query_given: false,
-            }),
+            alias: Some(NameOrId::Str("b".to_string()).into()),
         };
         let group_opr_pb =
             pb::GroupBy { mappings: vec![key_alias_1, key_alias_2], functions: vec![function] };
@@ -289,25 +270,16 @@ mod tests {
         let function_1 = pb::group_by::AggFunc {
             vars: vec![common_pb::Variable::from("@".to_string())],
             aggregate: 5, // ToList
-            alias: Some(pb::Alias {
-                alias: Some(NameOrId::Str("a".to_string()).into()),
-                is_query_given: false,
-            }),
+            alias: Some(NameOrId::Str("a".to_string()).into()),
         };
         let function_2 = pb::group_by::AggFunc {
             vars: vec![common_pb::Variable::from("@".to_string())],
             aggregate: 3, // Count
-            alias: Some(pb::Alias {
-                alias: Some(NameOrId::Str("b".to_string()).into()),
-                is_query_given: false,
-            }),
+            alias: Some(NameOrId::Str("b".to_string()).into()),
         };
         let key_alias = pb::group_by::KeyAlias {
             key: Some(common_pb::Variable::from("@".to_string())),
-            alias: Some(pb::Alias {
-                alias: Some(NameOrId::Str("c".to_string()).into()),
-                is_query_given: false,
-            }),
+            alias: Some(NameOrId::Str("c".to_string()).into()),
         };
         let group_opr_pb =
             pb::GroupBy { mappings: vec![key_alias], functions: vec![function_1, function_2] };
@@ -355,17 +327,11 @@ mod tests {
         let function = pb::group_by::AggFunc {
             vars: vec![common_pb::Variable::from("@".to_string())],
             aggregate: 3, // Count
-            alias: Some(pb::Alias {
-                alias: Some(NameOrId::Str("b".to_string()).into()),
-                is_query_given: false,
-            }),
+            alias: Some(NameOrId::Str("b".to_string()).into()),
         };
         let key_alias = pb::group_by::KeyAlias {
             key: Some(common_pb::Variable::from("@".to_string())),
-            alias: Some(pb::Alias {
-                alias: Some(NameOrId::Str("a".to_string()).into()),
-                is_query_given: false,
-            }),
+            alias: Some(NameOrId::Str("a".to_string()).into()),
         };
         let group_opr_pb = pb::GroupBy { mappings: vec![key_alias], functions: vec![function] };
         let mut result = group_test(group_opr_pb);
@@ -392,17 +358,11 @@ mod tests {
         let function = pb::group_by::AggFunc {
             vars: vec![common_pb::Variable::from("@".to_string())],
             aggregate: 3, // Count
-            alias: Some(pb::Alias {
-                alias: Some(NameOrId::Str("b".to_string()).into()),
-                is_query_given: false,
-            }),
+            alias: Some("b".into()),
         };
         let key_alias = pb::group_by::KeyAlias {
             key: Some(common_pb::Variable::from("@.name".to_string())),
-            alias: Some(pb::Alias {
-                alias: Some(NameOrId::Str("a".to_string()).into()),
-                is_query_given: false,
-            }),
+            alias: Some("a".into()),
         };
         let group_opr_pb = pb::GroupBy { mappings: vec![key_alias], functions: vec![function] };
         let mut result = group_test(group_opr_pb);

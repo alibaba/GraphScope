@@ -291,7 +291,7 @@ impl Evaluate for Evaluator {
     /// let suffix_tree = str_to_suffix_expr_pb("@0.age == @1.age".to_string()).unwrap();
     /// let eval = Evaluator::try_from(suffix_tree).unwrap();
     ///
-    /// assert!(eval.eval::<_, _>(Some(&ctxt)).unwrap().as_bool().unwrap())
+    /// assert!(eval.eval_bool::<_, _>(Some(&ctxt)).unwrap())
     /// ```
     fn eval<E: Element, C: Context<E>>(&self, context: Option<&C>) -> ExprEvalResult<Option<Object>> {
         let mut stack = self.stack.borrow_mut();
@@ -348,6 +348,25 @@ impl Evaluator {
     /// Reset the status of the evaluator for further evaluation
     pub fn reset(&self) {
         self.stack.borrow_mut().clear();
+    }
+
+    /// Return the tag is there is a single tag in the expression.
+    pub fn extract_single_tag(&self) -> Option<NameOrId> {
+        if self.suffix_tree.len() != 1 {
+            return None;
+        } else {
+            let opr = self.suffix_tree.get(0).unwrap();
+            match opr {
+                InnerOpr::Var { tag, prop_key } => {
+                    if prop_key.is_some() {
+                        None
+                    } else {
+                        tag.clone()
+                    }
+                }
+                _ => None,
+            }
+        }
     }
 
     pub fn eval_bool<E: Element, C: Context<E>>(&self, context: Option<&C>) -> ExprEvalResult<bool> {
@@ -766,26 +785,13 @@ mod tests {
 
     #[test]
     fn test_eval_errors() {
-        let cases: Vec<&str> = vec![
-            "@2",
-            "@2",
-            "@1.nonexistent",
-            "+",
-            "1 + ",
-            "1 1",
-            "1 1 2",
-            "1 1 + 2",
-            "1 + @1.age * 1 1 - 1 - 5",
-        ];
+        let cases: Vec<&str> =
+            vec!["@2", "+", "1 + ", "1 1", "1 1 2", "1 1 + 2", "1 + @1.age * 1 1 - 1 - 5"];
         let ctxt = prepare_context();
 
         let expected: Vec<ExprEvalError> = vec![
             // Evaluate variable without providing the context
             ExprEvalError::MissingContext(InnerOpr::Var { tag: Some(2.into()), prop_key: None }.into()),
-            // obtain non-value from the context
-            ExprEvalError::NoneOperand(OperatorDesc("evaluate object as `None`".to_string())),
-            // obtain non-value from the context
-            ExprEvalError::NoneOperand(OperatorDesc("evaluate object as `None`".to_string())),
             // try to evaluate neither a variable nor a const
             ExprEvalError::UnmatchedOperator(InnerOpr::Arith(pb::Arithmetic::Add).into()),
             ExprEvalError::MissingOperands(InnerOpr::Arith(pb::Arithmetic::Add).into()),

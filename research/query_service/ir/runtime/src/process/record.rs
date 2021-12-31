@@ -92,6 +92,7 @@ impl Record {
             self.columns.insert(alias.clone(), entry);
         }
     }
+
     pub fn get(&self, tag: Option<&NameOrId>) -> Option<&Arc<Entry>> {
         if let Some(tag) = tag {
             self.columns.get(tag)

@@ -286,13 +286,9 @@ impl LogicalPlan {
                 }
             }
             Some(pb::logical_plan::operator::Opr::As(as_opr)) => {
-                if let Some(alias_) = &as_opr.alias {
-                    if let Some(alias) = &alias_.alias {
-                        self.plan_meta.insert_tag_node(
-                            alias.clone().try_into().unwrap(),
-                            self.plan_meta.get_curr_node(),
-                        );
-                    }
+                if let Some(alias) = &as_opr.alias {
+                    self.plan_meta
+                        .insert_tag_node(alias.clone().try_into().unwrap(), self.plan_meta.get_curr_node());
                 }
             }
             _ => {}
@@ -1349,7 +1345,7 @@ mod test {
         );
 
         // .as('a')
-        let as_opr = pb::As { alias: Some(pb::Alias { alias: Some("a".into()), is_query_given: false }) };
+        let as_opr = pb::As { alias: Some("a".into()) };
         opr_id = plan
             .append_operator_as_node(as_opr.into(), vec![opr_id as u32])
             .unwrap();

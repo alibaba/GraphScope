@@ -188,10 +188,7 @@ impl AsPhysical for pb::EdgeExpand {
                     // Vertex expansion
                     // Move everything to Auxilia
                     auxilia.params = Some(params.clone());
-                    auxilia.alias = self
-                        .alias
-                        .clone()
-                        .and_then(|alias| Some(pb::Alias { alias: Some(alias), is_query_given: false }));
+                    auxilia.alias = self.alias.clone();
                     params.columns.clear();
                     params.predicate = None;
                     self.alias = None;
@@ -248,10 +245,7 @@ impl AsPhysical for pb::GetV {
         let mut auxilia = pb::Auxilia { params: None, alias: None };
         if let Some(columns) = plan_meta.get_curr_node_columns() {
             if !columns.is_empty() {
-                auxilia.alias = self
-                    .alias
-                    .clone()
-                    .and_then(|alias| Some(pb::Alias { alias: Some(alias), is_query_given: false }));
+                auxilia.alias = self.alias.clone();
                 auxilia.params = Some(pb::QueryParams {
                     table_names: vec![],
                     columns: columns
@@ -738,7 +732,7 @@ mod test {
                     predicate: None,
                     requirements: vec![],
                 }),
-                alias: Some(pb::Alias { alias: Some("a".into()), is_query_given: false }),
+                alias: Some("a".into()),
             })
             .encode_to_vec(),
         );

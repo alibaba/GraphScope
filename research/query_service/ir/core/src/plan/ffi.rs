@@ -251,12 +251,11 @@ pub struct FfiAlias {
     is_query_given: bool,
 }
 
-impl TryFrom<FfiAlias> for pb::Alias {
+impl TryFrom<FfiAlias> for common_pb::NameOrId {
     type Error = ResultCode;
 
     fn try_from(ffi: FfiAlias) -> Result<Self, Self::Error> {
-        let (alias, is_query_given) = (ffi.alias.try_into()?, ffi.is_query_given);
-        Ok(Self { alias, is_query_given })
+        Option::<common_pb::NameOrId>::try_from(ffi.alias)?.ok_or(ResultCode::NotExistError)
     }
 }
 
@@ -617,27 +616,27 @@ fn set_range(ptr: *const c_void, lower: i32, upper: i32, opr: Opr) -> ResultCode
 
 fn set_alias(ptr: *const c_void, alias: FfiAlias, opr: Opr) -> ResultCode {
     let mut return_code = ResultCode::Success;
-    let alias_pb: FfiResult<pb::Alias> = alias.try_into();
+    let alias_pb: FfiResult<common_pb::NameOrId> = alias.try_into();
     if alias_pb.is_ok() {
         match &opr {
             Opr::Scan => {
                 let mut scan = unsafe { Box::from_raw(ptr as *mut pb::Scan) };
-                scan.alias = alias_pb.unwrap().alias;
+                scan.alias = alias_pb.ok();
                 std::mem::forget(scan);
             }
             Opr::EdgeExpand => {
                 let mut edgexpd = unsafe { Box::from_raw(ptr as *mut pb::EdgeExpand) };
-                edgexpd.alias = alias_pb.unwrap().alias;
+                edgexpd.alias = alias_pb.ok();
                 std::mem::forget(edgexpd);
             }
             Opr::PathExpand => {
                 let mut pathxpd = unsafe { Box::from_raw(ptr as *mut pb::PathExpand) };
-                pathxpd.alias = alias_pb.unwrap().alias;
+                pathxpd.alias = alias_pb.ok();
                 std::mem::forget(pathxpd);
             }
             Opr::GetV => {
                 let mut getv = unsafe { Box::from_raw(ptr as *mut pb::GetV) };
-                getv.alias = alias_pb.unwrap().alias;
+                getv.alias = alias_pb.ok();
                 std::mem::forget(getv);
             }
             Opr::Apply => {
@@ -784,7 +783,7 @@ mod project {
         let mut return_code = ResultCode::Success;
         let mut project = unsafe { Box::from_raw(ptr_project as *mut pb::Project) };
         let expr_pb = cstr_to_expr_pb(cstr_expr);
-        let alias_pb = pb::Alias::try_from(alias);
+        let alias_pb = common_pb::NameOrId::try_from(alias);
 
         if !expr_pb.is_ok() || !alias_pb.is_ok() {
             return_code = expr_pb.err().unwrap();
@@ -1040,7 +1039,7 @@ mod groupby {
         let mut return_code = ResultCode::Success;
         let mut group = unsafe { Box::from_raw(ptr_groupby as *mut pb::GroupBy) };
         let key_pb: FfiResult<common_pb::Variable> = key.try_into();
-        let alias_pb: FfiResult<pb::Alias> = alias.try_into();
+        let alias_pb: FfiResult<common_pb::NameOrId> = alias.try_into();
 
         if key_pb.is_ok() && alias_pb.is_ok() {
             group

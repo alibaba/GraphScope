@@ -107,10 +107,12 @@ impl AccumFactoryGen for algebra_pb::GroupBy {
                 .map(|v| TagKey::try_from(v.clone()))
                 .transpose()?
                 .unwrap_or(TagKey::default());
-            let alias: Option<NameOrId> = agg_func
-                .alias
-                .ok_or(ParsePbError::from("accum value alias is missing"))?
-                .try_into()?;
+            let alias = Some(
+                agg_func
+                    .alias
+                    .ok_or(ParsePbError::from("accum value alias is missing"))?
+                    .try_into()?,
+            );
             // TODO: accum value alias in fold can be None;
             let alias = alias.ok_or(ParsePbError::from("accum value alias cannot be None"))?;
             let entry_accumulator = match agg_kind {
@@ -145,7 +147,6 @@ mod tests {
 
     use ir_common::generated::algebra as pb;
     use ir_common::generated::common as common_pb;
-    use ir_common::NameOrId;
     use pegasus::api::{Fold, Sink};
     use pegasus::result::ResultStream;
     use pegasus::JobConf;
@@ -186,10 +187,7 @@ mod tests {
         let function = pb::group_by::AggFunc {
             vars: vec![common_pb::Variable::from("@".to_string())],
             aggregate: 5, // to_list
-            alias: Some(pb::Alias {
-                alias: Some(NameOrId::Str("a".to_string()).into()),
-                is_query_given: false,
-            }),
+            alias: Some("a".into()),
         };
         let fold_opr_pb = pb::GroupBy { mappings: vec![], functions: vec![function] };
         let mut result = fold_test(init_source(), fold_opr_pb);
@@ -212,10 +210,7 @@ mod tests {
         let function = pb::group_by::AggFunc {
             vars: vec![common_pb::Variable::from("@".to_string())],
             aggregate: 3, // count
-            alias: Some(pb::Alias {
-                alias: Some(NameOrId::Str("a".to_string()).into()),
-                is_query_given: false,
-            }),
+            alias: Some("a".into()),
         };
         let fold_opr_pb = pb::GroupBy { mappings: vec![], functions: vec![function] };
         let mut result = fold_test(init_source(), fold_opr_pb);
@@ -239,18 +234,12 @@ mod tests {
         let function_1 = pb::group_by::AggFunc {
             vars: vec![common_pb::Variable::from("@".to_string())],
             aggregate: 5, // to_list
-            alias: Some(pb::Alias {
-                alias: Some(NameOrId::Str("a".to_string()).into()),
-                is_query_given: false,
-            }),
+            alias: Some("a".into()),
         };
         let function_2 = pb::group_by::AggFunc {
             vars: vec![common_pb::Variable::from("@".to_string())],
             aggregate: 3, // Count
-            alias: Some(pb::Alias {
-                alias: Some(NameOrId::Str("b".to_string()).into()),
-                is_query_given: false,
-            }),
+            alias: Some("b".into()),
         };
         let fold_opr_pb = pb::GroupBy { mappings: vec![], functions: vec![function_1, function_2] };
         let mut result = fold_test(init_source(), fold_opr_pb);
