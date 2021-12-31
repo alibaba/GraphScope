@@ -19,66 +19,25 @@
 //! protobuf structure.
 //!
 
-use std::fmt;
-
-use ir_common::expr_parse::error::{ExprError, ExprResult};
+use ir_common::expr_parse::error::ExprResult;
 use ir_common::expr_parse::to_suffix_expr;
 use ir_common::generated::algebra as pb;
 use ir_common::generated::algebra::join::JoinKind;
 use ir_common::generated::common as common_pb;
 use pegasus_client::builder::*;
 use pegasus_server::pb as server_pb;
-use prost::{EncodeError, Message};
+use prost::Message;
 
+use crate::error::{IrError, IrResult};
 use crate::plan::logical::{LogicalPlan, NodeType, PlanMeta};
-
-/// Record any error while transforming ir to a pegasus physical plan
-#[derive(Debug, Clone)]
-pub enum PhysicalError {
-    PbEncodeError(EncodeError),
-    ExprParseError(ExprError),
-    MissingDataError,
-    InvalidRangeError(i32, i32),
-    Unsupported,
-}
-
-pub type PhysicalResult<T> = Result<T, PhysicalError>;
-
-impl fmt::Display for PhysicalError {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        match self {
-            PhysicalError::PbEncodeError(err) => write!(f, "encoding protobuf error: {:?}", err),
-            PhysicalError::ExprParseError(err) => write!(f, "parse expression error: {:?}", err),
-            PhysicalError::MissingDataError => write!(f, "missing necessary data."),
-            PhysicalError::InvalidRangeError(lo, up) => {
-                write!(f, "invalid range ({:?}, {:?})", lo, up)
-            }
-            PhysicalError::Unsupported => write!(f, "the function has not been supported"),
-        }
-    }
-}
-
-impl std::error::Error for PhysicalError {}
-
-impl From<EncodeError> for PhysicalError {
-    fn from(err: EncodeError) -> Self {
-        Self::PbEncodeError(err)
-    }
-}
-
-impl From<ExprError> for PhysicalError {
-    fn from(err: ExprError) -> Self {
-        Self::ExprParseError(err)
-    }
-}
 
 /// A trait for building physical plan (pegasus) from the logical plan
 pub trait AsPhysical {
     /// To add pegasus's `JobBuilder`
-    fn add_job_builder(&self, builder: &mut JobBuilder, plan_meta: &mut PlanMeta) -> PhysicalResult<()>;
+    fn add_job_builder(&self, builder: &mut JobBuilder, plan_meta: &mut PlanMeta) -> IrResult<()>;
 
     /// To conduct necessary post processing before transforming into a physical plan.
-    fn post_process(&mut self, _builder: &mut JobBuilder, _plan_meta: &mut PlanMeta) -> PhysicalResult<()> {
+    fn post_process(&mut self, _builder: &mut JobBuilder, _plan_meta: &mut PlanMeta) -> IrResult<()> {
         Ok(())
     }
 }
@@ -98,7 +57,7 @@ enum SimpleOpr {
 
 fn simple_add_job_builder<M: Message>(
     builder: &mut JobBuilder, ir_opr: &M, opr: SimpleOpr,
-) -> PhysicalResult<()> {
+) -> IrResult<()> {
     let bytes = ir_opr.encode_to_vec();
     match opr {
         SimpleOpr::Source => builder.add_source(bytes),
@@ -120,13 +79,13 @@ fn expr_to_suffix_expr(expr: common_pb::Expression) -> ExprResult<common_pb::Exp
 }
 
 impl AsPhysical for pb::Project {
-    fn add_job_builder(&self, builder: &mut JobBuilder, plan_meta: &mut PlanMeta) -> PhysicalResult<()> {
+    fn add_job_builder(&self, builder: &mut JobBuilder, plan_meta: &mut PlanMeta) -> IrResult<()> {
         let mut project = self.clone();
         project.post_process(builder, plan_meta)?;
         simple_add_job_builder(builder, &pb::logical_plan::Operator::from(project), SimpleOpr::Map)
     }
 
-    fn post_process(&mut self, _builder: &mut JobBuilder, _plan_meta: &mut PlanMeta) -> PhysicalResult<()> {
+    fn post_process(&mut self, _builder: &mut JobBuilder, _plan_meta: &mut PlanMeta) -> IrResult<()> {
         for mapping in self.mappings.iter_mut() {
             if let Some(expr) = mapping.expr.as_mut() {
                 *expr = expr_to_suffix_expr(expr.clone())?;
@@ -138,13 +97,13 @@ impl AsPhysical for pb::Project {
 }
 
 impl AsPhysical for pb::Select {
-    fn add_job_builder(&self, builder: &mut JobBuilder, plan_meta: &mut PlanMeta) -> PhysicalResult<()> {
+    fn add_job_builder(&self, builder: &mut JobBuilder, plan_meta: &mut PlanMeta) -> IrResult<()> {
         let mut select = self.clone();
         select.post_process(builder, plan_meta)?;
         simple_add_job_builder(builder, &pb::logical_plan::Operator::from(select), SimpleOpr::Filter)
     }
 
-    fn post_process(&mut self, _builder: &mut JobBuilder, _plan_meta: &mut PlanMeta) -> PhysicalResult<()> {
+    fn post_process(&mut self, _builder: &mut JobBuilder, _plan_meta: &mut PlanMeta) -> IrResult<()> {
         if let Some(pred) = &mut self.predicate {
             *pred = expr_to_suffix_expr(pred.clone())?;
         }
@@ -154,13 +113,13 @@ impl AsPhysical for pb::Select {
 }
 
 impl AsPhysical for pb::Scan {
-    fn add_job_builder(&self, builder: &mut JobBuilder, plan_meta: &mut PlanMeta) -> PhysicalResult<()> {
+    fn add_job_builder(&self, builder: &mut JobBuilder, plan_meta: &mut PlanMeta) -> IrResult<()> {
         let mut scan = self.clone();
         scan.post_process(builder, plan_meta)?;
         simple_add_job_builder(builder, &pb::logical_plan::Operator::from(scan), SimpleOpr::Source)
     }
 
-    fn post_process(&mut self, _builder: &mut JobBuilder, plan_meta: &mut PlanMeta) -> PhysicalResult<()> {
+    fn post_process(&mut self, _builder: &mut JobBuilder, plan_meta: &mut PlanMeta) -> IrResult<()> {
         if let Some(params) = &mut self.params {
             if let Some(columns) = plan_meta.get_curr_node_columns() {
                 if !columns.is_empty() {
@@ -197,13 +156,13 @@ impl AsPhysical for pb::Scan {
 }
 
 impl AsPhysical for pb::EdgeExpand {
-    fn add_job_builder(&self, builder: &mut JobBuilder, plan_meta: &mut PlanMeta) -> PhysicalResult<()> {
+    fn add_job_builder(&self, builder: &mut JobBuilder, plan_meta: &mut PlanMeta) -> IrResult<()> {
         let mut xpd = self.clone();
         xpd.post_process(builder, plan_meta)
         // simple_add_job_builder(builder, &pb::logical_plan::Operator::from(self.clone()), SimpleOpr::Flatmap)
     }
 
-    fn post_process(&mut self, builder: &mut JobBuilder, plan_meta: &mut PlanMeta) -> PhysicalResult<()> {
+    fn post_process(&mut self, builder: &mut JobBuilder, plan_meta: &mut PlanMeta) -> IrResult<()> {
         let mut is_adding_auxilia = false;
         let is_partition = builder.conf.workers > 1 || builder.conf.servers().len() > 1;
 
@@ -275,13 +234,13 @@ impl AsPhysical for pb::EdgeExpand {
 }
 
 impl AsPhysical for pb::GetV {
-    fn add_job_builder(&self, builder: &mut JobBuilder, plan_meta: &mut PlanMeta) -> PhysicalResult<()> {
+    fn add_job_builder(&self, builder: &mut JobBuilder, plan_meta: &mut PlanMeta) -> IrResult<()> {
         let mut getv = self.clone();
         getv.post_process(builder, plan_meta)
         // simple_add_job_builder(builder, &pb::logical_plan::Operator::from(getv), SimpleOpr::Map)
     }
 
-    fn post_process(&mut self, builder: &mut JobBuilder, plan_meta: &mut PlanMeta) -> PhysicalResult<()> {
+    fn post_process(&mut self, builder: &mut JobBuilder, plan_meta: &mut PlanMeta) -> IrResult<()> {
         let is_partition = builder.conf.workers > 1 || builder.conf.servers().len() > 1;
         let mut is_adding_auxilia = false;
         let mut auxilia = pb::Auxilia { params: None, alias: None };
@@ -316,7 +275,7 @@ impl AsPhysical for pb::GetV {
 }
 
 impl AsPhysical for pb::As {
-    fn add_job_builder(&self, builder: &mut JobBuilder, plan_meta: &mut PlanMeta) -> PhysicalResult<()> {
+    fn add_job_builder(&self, builder: &mut JobBuilder, plan_meta: &mut PlanMeta) -> IrResult<()> {
         // Transform to `Auxilia` internally.
         let auxilia = pb::Auxilia { params: None, alias: self.alias.clone() };
         auxilia.add_job_builder(builder, plan_meta)
@@ -324,7 +283,7 @@ impl AsPhysical for pb::As {
 }
 
 impl AsPhysical for pb::Auxilia {
-    fn add_job_builder(&self, builder: &mut JobBuilder, _plan_meta: &mut PlanMeta) -> PhysicalResult<()> {
+    fn add_job_builder(&self, builder: &mut JobBuilder, _plan_meta: &mut PlanMeta) -> IrResult<()> {
         simple_add_job_builder(
             builder,
             &pb::logical_plan::Operator::from(self.clone()),
@@ -334,29 +293,29 @@ impl AsPhysical for pb::Auxilia {
 }
 
 impl AsPhysical for pb::Limit {
-    fn add_job_builder(&self, builder: &mut JobBuilder, _plan_meta: &mut PlanMeta) -> PhysicalResult<()> {
+    fn add_job_builder(&self, builder: &mut JobBuilder, _plan_meta: &mut PlanMeta) -> IrResult<()> {
         if let Some(range) = &self.range {
             if range.upper <= range.lower || range.lower < 0 || range.upper <= 0 {
-                Err(PhysicalError::InvalidRangeError(range.lower, range.upper))
+                Err(IrError::InvalidRangeError(range.lower, range.upper))
             } else {
                 builder.limit((range.upper - 1) as u32);
                 Ok(())
             }
         } else {
-            Err(PhysicalError::MissingDataError)
+            Err(IrError::MissingDataError)
         }
     }
 }
 
 impl AsPhysical for pb::OrderBy {
-    fn add_job_builder(&self, builder: &mut JobBuilder, _plan_meta: &mut PlanMeta) -> PhysicalResult<()> {
+    fn add_job_builder(&self, builder: &mut JobBuilder, _plan_meta: &mut PlanMeta) -> IrResult<()> {
         let opr = pb::logical_plan::Operator::from(self.clone());
         if self.limit.is_none() {
             simple_add_job_builder(builder, &opr, SimpleOpr::SortBy)
         } else {
             let range = self.limit.clone().unwrap();
             if range.upper <= range.lower || range.lower < 0 || range.upper <= 0 {
-                Err(PhysicalError::InvalidRangeError(range.lower, range.upper))
+                Err(IrError::InvalidRangeError(range.lower, range.upper))
             } else {
                 let bytes = opr.encode_to_vec();
                 builder.sort_limit_by((range.upper - 1) as i64, bytes);
@@ -367,12 +326,12 @@ impl AsPhysical for pb::OrderBy {
 }
 
 impl AsPhysical for pb::Dedup {
-    fn add_job_builder(&self, builder: &mut JobBuilder, _plan_meta: &mut PlanMeta) -> PhysicalResult<()> {
+    fn add_job_builder(&self, builder: &mut JobBuilder, _plan_meta: &mut PlanMeta) -> IrResult<()> {
         simple_add_job_builder(builder, &pb::logical_plan::Operator::from(self.clone()), SimpleOpr::Dedup)
     }
 }
 impl AsPhysical for pb::GroupBy {
-    fn add_job_builder(&self, builder: &mut JobBuilder, _plan_meta: &mut PlanMeta) -> PhysicalResult<()> {
+    fn add_job_builder(&self, builder: &mut JobBuilder, _plan_meta: &mut PlanMeta) -> IrResult<()> {
         let opr = pb::logical_plan::Operator::from(self.clone());
         if self.mappings.is_empty() {
             simple_add_job_builder(builder, &opr, SimpleOpr::Fold)
@@ -383,7 +342,7 @@ impl AsPhysical for pb::GroupBy {
 }
 
 impl AsPhysical for pb::logical_plan::Operator {
-    fn add_job_builder(&self, builder: &mut JobBuilder, plan_meta: &mut PlanMeta) -> PhysicalResult<()> {
+    fn add_job_builder(&self, builder: &mut JobBuilder, plan_meta: &mut PlanMeta) -> IrResult<()> {
         use pb::logical_plan::operator::Opr::*;
         if let Some(opr) = &self.opr {
             match opr {
@@ -398,16 +357,16 @@ impl AsPhysical for pb::logical_plan::Operator {
                 As(as_opr) => as_opr.add_job_builder(builder, plan_meta),
                 Dedup(dedup) => dedup.add_job_builder(builder, plan_meta),
                 GroupBy(groupby) => groupby.add_job_builder(builder, plan_meta),
-                _ => Err(PhysicalError::Unsupported),
+                _ => Err(IrError::Unsupported(format!("the operator {:?}", self))),
             }
         } else {
-            Err(PhysicalError::MissingDataError)
+            Err(IrError::MissingDataError)
         }
     }
 }
 
 impl AsPhysical for NodeType {
-    fn add_job_builder(&self, builder: &mut JobBuilder, plan_meta: &mut PlanMeta) -> PhysicalResult<()> {
+    fn add_job_builder(&self, builder: &mut JobBuilder, plan_meta: &mut PlanMeta) -> IrResult<()> {
         plan_meta.update_curr_node(self.borrow().id);
         self.borrow()
             .opr
@@ -416,7 +375,7 @@ impl AsPhysical for NodeType {
 }
 
 impl AsPhysical for LogicalPlan {
-    fn add_job_builder(&self, builder: &mut JobBuilder, plan_meta: &mut PlanMeta) -> PhysicalResult<()> {
+    fn add_job_builder(&self, builder: &mut JobBuilder, plan_meta: &mut PlanMeta) -> IrResult<()> {
         use pb::logical_plan::operator::Opr::*;
         let is_partition = builder.conf.workers as usize > 1 || builder.conf.servers().len() > 1;
         let mut prev_node_opt: Option<NodeType> = None;
@@ -465,7 +424,7 @@ impl AsPhysical for LogicalPlan {
                         Some(Join(join_opr)) => {
                             if curr_node.borrow().children.len() > 2 {
                                 // For now we only support joining two branches
-                                return Err(PhysicalError::Unsupported);
+                                return Err(IrError::Unsupported("joining more than two branches".to_string()));
                             }
                             assert_eq!(plans.len(), 2);
                             let left_plan = plans.get(0).unwrap().clone();
@@ -487,7 +446,7 @@ impl AsPhysical for LogicalPlan {
 
                             builder.join(pegasus_join_kind, left_plan, right_plan, join_bytes);
                         }
-                        _ => return Err(PhysicalError::Unsupported),
+                        _ => return Err(IrError::Unsupported("operators other than `Union` and `Join`".to_string())),
                     }
                 }
                 curr_node_opt = merge_node_opt;

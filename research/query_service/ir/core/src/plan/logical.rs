@@ -28,40 +28,9 @@ use ir_common::generated::common as common_pb;
 use ir_common::NameOrId;
 use vec_map::VecMap;
 
+use crate::error::{IrError, IrResult};
 use crate::plan::meta::{StoreMeta, STORE_META};
 use crate::JsonIO;
-
-/// Record any error while transforming ir to a pegasus physical plan
-#[derive(Debug, Clone)]
-pub enum LogicalError {
-    TableNotExist(String),
-    ColumnNotExist(String),
-    TagNotExist(NameOrId),
-    ParsePbError(ParsePbError),
-    Unsupported,
-}
-
-pub type LogicalResult<T> = Result<T, LogicalError>;
-
-impl fmt::Display for LogicalError {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        match self {
-            LogicalError::TableNotExist(s) => write!(f, "the given table(label): {:?} does not exist", s),
-            LogicalError::ColumnNotExist(s) => write!(f, "the given column: {:?} does not exist", s),
-            LogicalError::TagNotExist(tag) => write!(f, "the given tag: {:?} does not exist", tag),
-            LogicalError::ParsePbError(err) => write!(f, "parse pb error: {:?}", err),
-            LogicalError::Unsupported => write!(f, "the function has not been supported"),
-        }
-    }
-}
-
-impl std::error::Error for LogicalError {}
-
-impl From<ParsePbError> for LogicalError {
-    fn from(err: ParsePbError) -> Self {
-        Self::ParsePbError(err)
-    }
-}
 
 /// An internal representation of the pb-[`Node`].
 ///
@@ -336,7 +305,7 @@ impl LogicalPlan {
     /// Append an operator into the logical plan, as a new node with `self.total_size` as its id.
     pub fn append_operator_as_node(
         &mut self, mut opr: pb::logical_plan::Operator, parent_ids: Vec<u32>,
-    ) -> LogicalResult<i32> {
+    ) -> IrResult<i32> {
         let old_curr_node = self.plan_meta.curr_node;
         let mut is_update_curr = false;
         if let Ok(meta) = STORE_META.read() {
@@ -560,9 +529,7 @@ impl PlanMeta {
         plan_meta
     }
 
-    pub fn insert_tag_columns(
-        &mut self, tag_opt: Option<NameOrId>, column: NameOrId,
-    ) -> LogicalResult<u32> {
+    pub fn insert_tag_columns(&mut self, tag_opt: Option<NameOrId>, column: NameOrId) -> IrResult<u32> {
         if let Some(tag) = tag_opt {
             if let Some(&node_id) = self.tag_nodes.get(&tag) {
                 self.node_cols
@@ -572,7 +539,7 @@ impl PlanMeta {
 
                 Ok(node_id)
             } else {
-                Err(LogicalError::TagNotExist(tag))
+                Err(IrError::TagNotExist(tag))
             }
         } else {
             let curr_node = self.curr_node;
@@ -619,11 +586,11 @@ impl PlanMeta {
 }
 
 pub trait AsLogical {
-    fn preprocess(&mut self, meta: &StoreMeta, plan_meta: &mut PlanMeta) -> LogicalResult<()>;
+    fn preprocess(&mut self, meta: &StoreMeta, plan_meta: &mut PlanMeta) -> IrResult<()>;
 }
 
 impl AsLogical for common_pb::Property {
-    fn preprocess(&mut self, meta: &StoreMeta, plan_meta: &mut PlanMeta) -> LogicalResult<()> {
+    fn preprocess(&mut self, meta: &StoreMeta, plan_meta: &mut PlanMeta) -> IrResult<()> {
         if let Some(prop_key) = &mut self.item {
             match prop_key {
                 common_pb::property::Item::Key(key) => {
@@ -631,7 +598,7 @@ impl AsLogical for common_pb::Property {
                         if plan_meta.is_preprocess && schema.is_column_id() {
                             *key = schema
                                 .get_column_id_from_pb(key)
-                                .ok_or(LogicalError::ColumnNotExist(format!("{:?}", key)))?
+                                .ok_or(IrError::ColumnNotExist(format!("{:?}", key)))?
                                 .into();
                         }
                     }
@@ -645,7 +612,7 @@ impl AsLogical for common_pb::Property {
 }
 
 impl AsLogical for common_pb::Variable {
-    fn preprocess(&mut self, meta: &StoreMeta, plan_meta: &mut PlanMeta) -> LogicalResult<()> {
+    fn preprocess(&mut self, meta: &StoreMeta, plan_meta: &mut PlanMeta) -> IrResult<()> {
         if let Some(property) = self.property.as_mut() {
             if let Some(key) = property.item.as_mut() {
                 match key {
@@ -654,7 +621,7 @@ impl AsLogical for common_pb::Variable {
                             if plan_meta.is_preprocess && schema.is_column_id() {
                                 *key = schema
                                     .get_column_id_from_pb(key)
-                                    .ok_or(LogicalError::ColumnNotExist(format!("{:?}", key)))?
+                                    .ok_or(IrError::ColumnNotExist(format!("{:?}", key)))?
                                     .into();
                             }
                         }
@@ -676,7 +643,7 @@ impl AsLogical for common_pb::Variable {
 }
 
 impl AsLogical for common_pb::Value {
-    fn preprocess(&mut self, meta: &StoreMeta, plan_meta: &mut PlanMeta) -> LogicalResult<()> {
+    fn preprocess(&mut self, meta: &StoreMeta, plan_meta: &mut PlanMeta) -> IrResult<()> {
         if let Some(schema) = &meta.schema {
             // A Const needs to be preprocessed only if it is while comparing a label (table)
             if plan_meta.is_preprocess && schema.is_table_id() {
@@ -686,7 +653,7 @@ impl AsLogical for common_pb::Value {
                             *item = common_pb::value::Item::I32(
                                 schema
                                     .get_table_id(name)
-                                    .ok_or(LogicalError::TableNotExist(name.to_string()))?,
+                                    .ok_or(IrError::TableNotExist(name.to_string()))?,
                             );
                         }
                         _ => {}
@@ -699,7 +666,7 @@ impl AsLogical for common_pb::Value {
 }
 
 impl AsLogical for common_pb::Expression {
-    fn preprocess(&mut self, meta: &StoreMeta, plan_meta: &mut PlanMeta) -> LogicalResult<()> {
+    fn preprocess(&mut self, meta: &StoreMeta, plan_meta: &mut PlanMeta) -> IrResult<()> {
         let mut count = 0;
         for opr in self.operators.iter_mut() {
             if let Some(item) = opr.item.as_mut() {
@@ -714,10 +681,7 @@ impl AsLogical for common_pb::Expression {
                                             if plan_meta.is_preprocess && schema.is_column_id() {
                                                 *key = schema
                                                     .get_column_id_from_pb(key)
-                                                    .ok_or(LogicalError::ColumnNotExist(format!(
-                                                        "{:?}",
-                                                        key
-                                                    )))?
+                                                    .ok_or(IrError::ColumnNotExist(format!("{:?}", key)))?
                                                     .into();
                                             }
                                         }
@@ -769,7 +733,7 @@ impl AsLogical for common_pb::Expression {
 }
 
 impl AsLogical for pb::QueryParams {
-    fn preprocess(&mut self, meta: &StoreMeta, plan_meta: &mut PlanMeta) -> LogicalResult<()> {
+    fn preprocess(&mut self, meta: &StoreMeta, plan_meta: &mut PlanMeta) -> IrResult<()> {
         if let Some(pred) = &mut self.predicate {
             pred.preprocess(meta, plan_meta)?;
         }
@@ -778,7 +742,7 @@ impl AsLogical for pb::QueryParams {
                 for table in self.table_names.iter_mut() {
                     *table = schema
                         .get_table_id_from_pb(table)
-                        .ok_or(LogicalError::TableNotExist(format!("{:?}", table)))?
+                        .ok_or(IrError::TableNotExist(format!("{:?}", table)))?
                         .into();
                 }
             }
@@ -788,7 +752,7 @@ impl AsLogical for pb::QueryParams {
                 if plan_meta.is_preprocess && schema.is_column_id() {
                     *column = schema
                         .get_column_id_from_pb(column)
-                        .ok_or(LogicalError::ColumnNotExist(format!("{:?}", column)))?
+                        .ok_or(IrError::ColumnNotExist(format!("{:?}", column)))?
                         .into();
                 }
             }
@@ -799,7 +763,7 @@ impl AsLogical for pb::QueryParams {
 }
 
 impl AsLogical for pb::Project {
-    fn preprocess(&mut self, meta: &StoreMeta, plan_meta: &mut PlanMeta) -> LogicalResult<()> {
+    fn preprocess(&mut self, meta: &StoreMeta, plan_meta: &mut PlanMeta) -> IrResult<()> {
         for mapping in self.mappings.iter_mut() {
             if let Some(expr) = &mut mapping.expr {
                 expr.preprocess(meta, plan_meta)?;
@@ -810,7 +774,7 @@ impl AsLogical for pb::Project {
 }
 
 impl AsLogical for pb::Select {
-    fn preprocess(&mut self, meta: &StoreMeta, plan_meta: &mut PlanMeta) -> LogicalResult<()> {
+    fn preprocess(&mut self, meta: &StoreMeta, plan_meta: &mut PlanMeta) -> IrResult<()> {
         if let Some(pred) = self.predicate.as_mut() {
             pred.preprocess(meta, plan_meta)?;
         }
@@ -819,7 +783,7 @@ impl AsLogical for pb::Select {
 }
 
 impl AsLogical for pb::Scan {
-    fn preprocess(&mut self, meta: &StoreMeta, plan_meta: &mut PlanMeta) -> LogicalResult<()> {
+    fn preprocess(&mut self, meta: &StoreMeta, plan_meta: &mut PlanMeta) -> IrResult<()> {
         if let Some(params) = self.params.as_mut() {
             params.preprocess(meta, plan_meta)?;
         }
@@ -831,7 +795,7 @@ impl AsLogical for pb::Scan {
 }
 
 impl AsLogical for pb::ExpandBase {
-    fn preprocess(&mut self, meta: &StoreMeta, plan_meta: &mut PlanMeta) -> LogicalResult<()> {
+    fn preprocess(&mut self, meta: &StoreMeta, plan_meta: &mut PlanMeta) -> IrResult<()> {
         if let Some(params) = self.params.as_mut() {
             params.preprocess(meta, plan_meta)?;
         }
@@ -840,7 +804,7 @@ impl AsLogical for pb::ExpandBase {
 }
 
 impl AsLogical for pb::EdgeExpand {
-    fn preprocess(&mut self, meta: &StoreMeta, plan_meta: &mut PlanMeta) -> LogicalResult<()> {
+    fn preprocess(&mut self, meta: &StoreMeta, plan_meta: &mut PlanMeta) -> IrResult<()> {
         if let Some(expand) = self.base.as_mut() {
             expand.preprocess(meta, plan_meta)?;
         }
@@ -849,19 +813,19 @@ impl AsLogical for pb::EdgeExpand {
 }
 
 impl AsLogical for pb::GetV {
-    fn preprocess(&mut self, _meta: &StoreMeta, _plan_meta: &mut PlanMeta) -> LogicalResult<()> {
+    fn preprocess(&mut self, _meta: &StoreMeta, _plan_meta: &mut PlanMeta) -> IrResult<()> {
         Ok(())
     }
 }
 
 impl AsLogical for pb::Dedup {
-    fn preprocess(&mut self, _meta: &StoreMeta, _plan_meta: &mut PlanMeta) -> LogicalResult<()> {
+    fn preprocess(&mut self, _meta: &StoreMeta, _plan_meta: &mut PlanMeta) -> IrResult<()> {
         Ok(())
     }
 }
 
 impl AsLogical for pb::GroupBy {
-    fn preprocess(&mut self, meta: &StoreMeta, plan_meta: &mut PlanMeta) -> LogicalResult<()> {
+    fn preprocess(&mut self, meta: &StoreMeta, plan_meta: &mut PlanMeta) -> IrResult<()> {
         for mapping in self.mappings.iter_mut() {
             if let Some(key) = &mut mapping.key {
                 key.preprocess(meta, plan_meta)?;
@@ -878,7 +842,7 @@ impl AsLogical for pb::GroupBy {
 }
 
 impl AsLogical for pb::IndexPredicate {
-    fn preprocess(&mut self, meta: &StoreMeta, plan_meta: &mut PlanMeta) -> LogicalResult<()> {
+    fn preprocess(&mut self, meta: &StoreMeta, plan_meta: &mut PlanMeta) -> IrResult<()> {
         for and_pred in self.or_predicates.iter_mut() {
             for pred in and_pred.predicates.iter_mut() {
                 if let Some(pred_key) = &mut pred.key {
@@ -889,7 +853,7 @@ impl AsLogical for pb::IndexPredicate {
                                     if plan_meta.is_preprocess && schema.is_column_id() {
                                         *key = schema
                                             .get_column_id_from_pb(key)
-                                            .ok_or(LogicalError::ColumnNotExist(format!("{:?}", key)))?
+                                            .ok_or(IrError::ColumnNotExist(format!("{:?}", key)))?
                                             .into();
                                     }
                                 }
@@ -912,7 +876,7 @@ impl AsLogical for pb::IndexPredicate {
 }
 
 impl AsLogical for pb::OrderBy {
-    fn preprocess(&mut self, meta: &StoreMeta, plan_meta: &mut PlanMeta) -> LogicalResult<()> {
+    fn preprocess(&mut self, meta: &StoreMeta, plan_meta: &mut PlanMeta) -> IrResult<()> {
         for pair in self.pairs.iter_mut() {
             if let Some(key) = &mut pair.key {
                 key.preprocess(meta, plan_meta)?;
@@ -924,13 +888,13 @@ impl AsLogical for pb::OrderBy {
 }
 
 impl AsLogical for pb::Limit {
-    fn preprocess(&mut self, _meta: &StoreMeta, _plan_meta: &mut PlanMeta) -> LogicalResult<()> {
+    fn preprocess(&mut self, _meta: &StoreMeta, _plan_meta: &mut PlanMeta) -> IrResult<()> {
         Ok(())
     }
 }
 
 impl AsLogical for pb::Join {
-    fn preprocess(&mut self, meta: &StoreMeta, plan_meta: &mut PlanMeta) -> LogicalResult<()> {
+    fn preprocess(&mut self, meta: &StoreMeta, plan_meta: &mut PlanMeta) -> IrResult<()> {
         for left_key in self.left_keys.iter_mut() {
             left_key.preprocess(meta, plan_meta)?
         }
@@ -942,7 +906,7 @@ impl AsLogical for pb::Join {
 }
 
 impl AsLogical for pb::logical_plan::Operator {
-    fn preprocess(&mut self, meta: &StoreMeta, plan_meta: &mut PlanMeta) -> LogicalResult<()> {
+    fn preprocess(&mut self, meta: &StoreMeta, plan_meta: &mut PlanMeta) -> IrResult<()> {
         use pb::logical_plan::operator::Opr;
         if let Some(opr) = self.opr.as_mut() {
             match opr {
