@@ -213,7 +213,7 @@ class KubernetesPodWatcher(object):
                 )
 
 
-def get_service_endpoints(
+def get_service_endpoints(  # noqa: C901
     api_client,
     namespace,
     name,
