@@ -183,11 +183,14 @@ impl AsPhysical for pb::EdgeExpand {
                         );
                     }
                 }
-                if !self.is_edge {
+                if is_partition && !self.is_edge {
                     // Vertex expansion
                     // Move everything to Auxilia
                     auxilia.params = Some(params.clone());
-                    auxilia.alias = Some(pb::Alias { alias: self.alias.clone(), is_query_given: false });
+                    auxilia.alias = self
+                        .alias
+                        .clone()
+                        .and_then(|alias| Some(pb::Alias { alias: Some(alias), is_query_given: false }));
                     params.columns.clear();
                     params.predicate = None;
                     self.alias = None;
@@ -222,10 +225,8 @@ impl AsPhysical for pb::EdgeExpand {
             SimpleOpr::Flatmap,
         )?;
         if is_adding_auxilia {
-            if is_partition {
-                let key_pb = common_pb::NameOrIdKey { key: None };
-                builder.repartition(key_pb.encode_to_vec());
-            }
+            let key_pb = common_pb::NameOrIdKey { key: None };
+            builder.repartition(key_pb.encode_to_vec());
             pb::logical_plan::Operator::from(auxilia).add_job_builder(builder, plan_meta)?;
         }
 
@@ -246,8 +247,10 @@ impl AsPhysical for pb::GetV {
         let mut auxilia = pb::Auxilia { params: None, alias: None };
         if let Some(columns) = plan_meta.get_curr_node_columns() {
             if !columns.is_empty() {
-                self.alias = None;
-                auxilia.alias = Some(pb::Alias { alias: self.alias.clone(), is_query_given: false });
+                auxilia.alias = self
+                    .alias
+                    .clone()
+                    .and_then(|alias| Some(pb::Alias { alias: Some(alias), is_query_given: false }));
                 auxilia.params = Some(pb::QueryParams {
                     table_names: vec![],
                     columns: columns
@@ -258,6 +261,7 @@ impl AsPhysical for pb::GetV {
                     predicate: None,
                     requirements: vec![],
                 });
+                self.alias = None;
                 is_adding_auxilia = true;
             }
         }
@@ -387,7 +391,7 @@ impl AsPhysical for LogicalPlan {
                     let prev_ref = prev.borrow();
                     let node_ref = curr_node_opt.as_ref().unwrap().borrow();
                     match (&prev_ref.opr.opr, &node_ref.opr.opr) {
-                        (Some(Edge(_)), Some(Edge(edgexpd))) => {
+                        (_, Some(Edge(edgexpd))) => {
                             let key_pb = common_pb::NameOrIdKey {
                                 key: edgexpd.base.as_ref().unwrap().v_tag.clone(),
                             };
@@ -424,7 +428,9 @@ impl AsPhysical for LogicalPlan {
                         Some(Join(join_opr)) => {
                             if curr_node.borrow().children.len() > 2 {
                                 // For now we only support joining two branches
-                                return Err(IrError::Unsupported("joining more than two branches".to_string()));
+                                return Err(IrError::Unsupported(
+                                    "joining more than two branches".to_string(),
+                                ));
                             }
                             assert_eq!(plans.len(), 2);
                             let left_plan = plans.get(0).unwrap().clone();
@@ -446,7 +452,11 @@ impl AsPhysical for LogicalPlan {
 
                             builder.join(pegasus_join_kind, left_plan, right_plan, join_bytes);
                         }
-                        _ => return Err(IrError::Unsupported("operators other than `Union` and `Join`".to_string())),
+                        _ => {
+                            return Err(IrError::Unsupported(
+                                "operators other than `Union` and `Join`".to_string(),
+                            ))
+                        }
                     }
                 }
                 curr_node_opt = merge_node_opt;
@@ -478,48 +488,282 @@ mod test {
     use super::*;
     use crate::plan::logical::Node;
 
-    /*
-    #[test]
-    fn test_post_process_edgexpd {
-
-    }
-     */
-
-    #[test]
-    fn test_post_process_scan() {
-        let mut plan = LogicalPlan::default();
-        // g.V().hasLabel("person").has("age", 27).valueMap("age", "name", "id")
-        let scan = pb::Scan {
+    #[allow(dead_code)]
+    fn build_scan(columns: Vec<common_pb::NameOrId>) -> pb::Scan {
+        pb::Scan {
             scan_opt: 0,
             alias: None,
             params: Some(pb::QueryParams {
                 table_names: vec![],
-                columns: vec![],
+                columns,
                 limit: None,
                 predicate: None,
                 requirements: vec![],
             }),
             idx_predicate: None,
-        };
-        plan.append_operator_as_node(scan.into(), vec![])
-            .unwrap();
-        // .hasLabel("person")
-        let select = pb::Select { predicate: str_to_expr_pb("@.~label == \"person\"".to_string()).ok() };
-        plan.append_operator_as_node(select.into(), vec![0])
-            .unwrap();
-        // .has("age", 27)
-        let select = pb::Select { predicate: str_to_expr_pb("@.age == 27".to_string()).ok() };
-        plan.append_operator_as_node(select.into(), vec![1])
-            .unwrap();
+        }
+    }
 
-        let project = pb::Project {
+    #[allow(dead_code)]
+    fn build_edgexpd(
+        is_edge: bool, columns: Vec<common_pb::NameOrId>, alias: Option<common_pb::NameOrId>,
+    ) -> pb::EdgeExpand {
+        pb::EdgeExpand {
+            base: Some(pb::ExpandBase {
+                v_tag: None,
+                direction: 0,
+                params: Some(pb::QueryParams {
+                    table_names: vec![],
+                    columns,
+                    limit: None,
+                    predicate: None,
+                    requirements: vec![],
+                }),
+            }),
+            is_edge,
+            alias,
+        }
+    }
+
+    #[allow(dead_code)]
+    fn build_getv() -> pb::GetV {
+        pb::GetV { tag: None, opt: 1, alias: None }
+    }
+
+    #[allow(dead_code)]
+    fn build_select(expr: &str, is_suffix: bool) -> pb::Select {
+        pb::Select {
+            predicate: if is_suffix {
+                str_to_suffix_expr_pb(expr.to_string()).ok()
+            } else {
+                str_to_expr_pb(expr.to_string()).ok()
+            },
+        }
+    }
+
+    #[allow(dead_code)]
+    fn build_project(expr: &str) -> pb::Project {
+        pb::Project {
             mappings: vec![pb::project::ExprAlias {
-                expr: str_to_expr_pb("{@.name, @.age, @.id}".to_string()).ok(),
+                expr: str_to_expr_pb(expr.to_string()).ok(),
                 alias: None,
             }],
             is_append: false,
-        };
-        plan.append_operator_as_node(project.into(), vec![2])
+        }
+    }
+
+    #[test]
+    fn test_post_process_edgexpd() {
+        // g.V().outE()
+        let mut plan = LogicalPlan::default();
+        plan.append_operator_as_node(build_scan(vec![]).into(), vec![])
+            .unwrap();
+        plan.append_operator_as_node(build_edgexpd(true, vec![], None).into(), vec![0])
+            .unwrap();
+        let mut job_builder = JobBuilder::default();
+        let mut plan_meta = plan.plan_meta.clone();
+        plan.add_job_builder(&mut job_builder, &mut plan_meta)
+            .unwrap();
+
+        let mut expected_builder = JobBuilder::default();
+        expected_builder.add_source(pb::logical_plan::Operator::from(build_scan(vec![])).encode_to_vec());
+        expected_builder
+            .flat_map(pb::logical_plan::Operator::from(build_edgexpd(true, vec![], None)).encode_to_vec());
+        expected_builder.sink(vec![]);
+
+        assert_eq!(job_builder, expected_builder);
+
+        let mut job_builder = JobBuilder::default();
+        job_builder.conf.workers = 2;
+        let mut plan_meta = plan.plan_meta.clone();
+        plan.add_job_builder(&mut job_builder, &mut plan_meta)
+            .unwrap();
+
+        let mut expected_builder = JobBuilder::default();
+        expected_builder.add_source(pb::logical_plan::Operator::from(build_scan(vec![])).encode_to_vec());
+        expected_builder.repartition(vec![]);
+        expected_builder
+            .flat_map(pb::logical_plan::Operator::from(build_edgexpd(true, vec![], None)).encode_to_vec());
+        expected_builder.sink(vec![]);
+
+        assert_eq!(job_builder, expected_builder);
+    }
+
+    #[test]
+    fn test_post_process_edgexpd_columns_no_auxilia() {
+        // g.V().outE().has("creationDate", 20220101)
+        let mut plan = LogicalPlan::default();
+        plan.append_operator_as_node(build_scan(vec![]).into(), vec![])
+            .unwrap();
+        plan.append_operator_as_node(build_edgexpd(true, vec![], None).into(), vec![0])
+            .unwrap();
+        plan.append_operator_as_node(build_select("@.creationDate == 20220101", false).into(), vec![1])
+            .unwrap();
+        let mut job_builder = JobBuilder::default();
+        job_builder.conf.workers = 2;
+        let mut plan_meta = plan.plan_meta.clone();
+        plan.add_job_builder(&mut job_builder, &mut plan_meta)
+            .unwrap();
+
+        let mut expected_builder = JobBuilder::default();
+        expected_builder.add_source(pb::logical_plan::Operator::from(build_scan(vec![])).encode_to_vec());
+        expected_builder.repartition(vec![]);
+        expected_builder.flat_map(
+            pb::logical_plan::Operator::from(build_edgexpd(true, vec!["creationDate".into()], None))
+                .encode_to_vec(),
+        );
+        expected_builder.filter(
+            pb::logical_plan::Operator::from(build_select("@.creationDate == 20220101", true))
+                .encode_to_vec(),
+        );
+        expected_builder.sink(vec![]);
+
+        assert_eq!(job_builder, expected_builder);
+    }
+
+    #[test]
+    fn test_post_process_edgexpd_columns_auxilia_shuffle() {
+        // g.V().out().has("creationDate", 20220101)
+        let mut plan = LogicalPlan::default();
+        plan.append_operator_as_node(build_scan(vec![]).into(), vec![])
+            .unwrap();
+        plan.append_operator_as_node(build_edgexpd(false, vec![], None).into(), vec![0])
+            .unwrap();
+        plan.append_operator_as_node(build_select("@.creationDate == 20220101", false).into(), vec![1])
+            .unwrap();
+        let mut job_builder = JobBuilder::default();
+        let mut plan_meta = plan.plan_meta.clone();
+        plan.add_job_builder(&mut job_builder, &mut plan_meta)
+            .unwrap();
+
+        let mut expected_builder = JobBuilder::default();
+        expected_builder.add_source(pb::logical_plan::Operator::from(build_scan(vec![])).encode_to_vec());
+        expected_builder.flat_map(
+            pb::logical_plan::Operator::from(build_edgexpd(false, vec!["creationDate".into()], None))
+                .encode_to_vec(),
+        );
+        expected_builder.filter(
+            pb::logical_plan::Operator::from(build_select("@.creationDate == 20220101", true))
+                .encode_to_vec(),
+        );
+        expected_builder.sink(vec![]);
+
+        assert_eq!(job_builder, expected_builder);
+
+        let mut job_builder = JobBuilder::default();
+        job_builder.conf.workers = 2;
+        let mut plan_meta = plan.plan_meta.clone();
+        plan.add_job_builder(&mut job_builder, &mut plan_meta)
+            .unwrap();
+
+        let mut expected_builder = JobBuilder::default();
+        expected_builder.add_source(pb::logical_plan::Operator::from(build_scan(vec![])).encode_to_vec());
+        expected_builder.repartition(vec![]);
+        expected_builder
+            .flat_map(pb::logical_plan::Operator::from(build_edgexpd(false, vec![], None)).encode_to_vec());
+        expected_builder.repartition(vec![]);
+        expected_builder.filter_map(
+            pb::logical_plan::Operator::from(pb::Auxilia {
+                params: Some(pb::QueryParams {
+                    table_names: vec![],
+                    columns: vec!["creationDate".into()],
+                    limit: None,
+                    predicate: None,
+                    requirements: vec![],
+                }),
+                alias: None,
+            })
+            .encode_to_vec(),
+        );
+        expected_builder.filter(
+            pb::logical_plan::Operator::from(build_select("@.creationDate == 20220101", true))
+                .encode_to_vec(),
+        );
+        expected_builder.sink(vec![]);
+
+        assert_eq!(job_builder, expected_builder);
+    }
+
+    #[test]
+    fn test_post_process_edgexpd_tag_auxilia_shuffle() {
+        // g.V().out().as('a').select('a').by(valueMap("name", "id", "age")
+        let mut plan = LogicalPlan::default();
+        plan.append_operator_as_node(build_scan(vec![]).into(), vec![])
+            .unwrap();
+        plan.append_operator_as_node(build_edgexpd(false, vec![], Some("a".into())).into(), vec![0])
+            .unwrap();
+        plan.append_operator_as_node(build_project("{@a.name, @a.id, @a.age}").into(), vec![1])
+            .unwrap();
+        let mut job_builder = JobBuilder::default();
+        let mut plan_meta = plan.plan_meta.clone();
+        plan.add_job_builder(&mut job_builder, &mut plan_meta)
+            .unwrap();
+
+        let mut expected_builder = JobBuilder::default();
+        expected_builder.add_source(pb::logical_plan::Operator::from(build_scan(vec![])).encode_to_vec());
+        expected_builder.flat_map(
+            pb::logical_plan::Operator::from(build_edgexpd(
+                false,
+                vec!["age".into(), "id".into(), "name".into()],
+                Some("a".into()),
+            ))
+            .encode_to_vec(),
+        );
+        expected_builder.map(
+            pb::logical_plan::Operator::from(build_project("{@a.name, @a.id, @a.age}")).encode_to_vec(),
+        );
+        expected_builder.sink(vec![]);
+
+        assert_eq!(job_builder, expected_builder);
+
+        let mut job_builder = JobBuilder::default();
+        job_builder.conf.workers = 2;
+        let mut plan_meta = plan.plan_meta.clone();
+        plan.add_job_builder(&mut job_builder, &mut plan_meta)
+            .unwrap();
+
+        let mut expected_builder = JobBuilder::default();
+        expected_builder.add_source(pb::logical_plan::Operator::from(build_scan(vec![])).encode_to_vec());
+        expected_builder.repartition(vec![]);
+        expected_builder
+            .flat_map(pb::logical_plan::Operator::from(build_edgexpd(false, vec![], None)).encode_to_vec());
+        expected_builder.repartition(vec![]);
+        expected_builder.filter_map(
+            pb::logical_plan::Operator::from(pb::Auxilia {
+                params: Some(pb::QueryParams {
+                    table_names: vec![],
+                    columns: vec!["age".into(), "id".into(), "name".into()],
+                    limit: None,
+                    predicate: None,
+                    requirements: vec![],
+                }),
+                alias: Some(pb::Alias { alias: Some("a".into()), is_query_given: false }),
+            })
+            .encode_to_vec(),
+        );
+        expected_builder.map(
+            pb::logical_plan::Operator::from(build_project("{@a.name, @a.id, @a.age}")).encode_to_vec(),
+        );
+        expected_builder.sink(vec![]);
+
+        assert_eq!(job_builder, expected_builder);
+    }
+
+    #[test]
+    fn test_post_process_scan() {
+        let mut plan = LogicalPlan::default();
+        // g.V().hasLabel("person").has("age", 27).valueMap("age", "name", "id")
+        plan.append_operator_as_node(build_scan(vec![]).into(), vec![])
+            .unwrap();
+        // .hasLabel("person")
+        plan.append_operator_as_node(build_select("@.~label == \"person\"", false).into(), vec![0])
+            .unwrap();
+        // .has("age", 27)
+        plan.append_operator_as_node(build_select("@.age == 27", false).into(), vec![1])
+            .unwrap();
+
+        // .valueMap("age", "name", "id")
+        plan.append_operator_as_node(build_project("{@.name, @.age, @.id}").into(), vec![2])
             .unwrap();
 
         let mut job_builder = JobBuilder::default();
@@ -529,43 +773,17 @@ mod test {
 
         let mut expected_builder = JobBuilder::default();
         expected_builder.add_source(
-            pb::logical_plan::Operator::from(pb::Scan {
-                scan_opt: 0,
-                alias: None,
-                params: Some(pb::QueryParams {
-                    table_names: vec![],
-                    columns: vec!["age".into(), "id".into(), "name".into()],
-                    limit: None,
-                    predicate: None,
-                    requirements: vec![],
-                }),
-                idx_predicate: None,
-            })
-            .encode_to_vec(),
+            pb::logical_plan::Operator::from(build_scan(vec!["age".into(), "id".into(), "name".into()]))
+                .encode_to_vec(),
         );
 
         expected_builder.filter(
-            pb::logical_plan::Operator::from(pb::Select {
-                predicate: str_to_suffix_expr_pb("@.~label == \"person\"".to_string()).ok(),
-            })
-            .encode_to_vec(),
+            pb::logical_plan::Operator::from(build_select("@.~label == \"person\"", true)).encode_to_vec(),
         );
-        expected_builder.filter(
-            pb::logical_plan::Operator::from(pb::Select {
-                predicate: str_to_suffix_expr_pb("@.age == 27".to_string()).ok(),
-            })
-            .encode_to_vec(),
-        );
-        expected_builder.map(
-            pb::logical_plan::Operator::from(pb::Project {
-                mappings: vec![pb::project::ExprAlias {
-                    expr: str_to_suffix_expr_pb("{@.name, @.age, @.id}".to_string()).ok(),
-                    alias: None,
-                }],
-                is_append: false,
-            })
-            .encode_to_vec(),
-        );
+        expected_builder
+            .filter(pb::logical_plan::Operator::from(build_select("@.age == 27", true)).encode_to_vec());
+        expected_builder
+            .map(pb::logical_plan::Operator::from(build_project("{@.name, @.age, @.id}")).encode_to_vec());
         expected_builder.sink(vec![]);
 
         assert_eq!(job_builder, expected_builder);
