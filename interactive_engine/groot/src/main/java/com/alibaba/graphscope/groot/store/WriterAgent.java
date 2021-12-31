@@ -174,6 +174,12 @@ public class WriterAgent implements MetricsAgent {
                 long afterPollNano = System.nanoTime();
                 long pollNano = afterPollNano - beforePollNano;
                 this.totalPollLatencyNano += pollNano;
+                logger.info(
+                        "pollNano ["
+                                + pollNano
+                                + "], maxPollLatencyNano ["
+                                + this.maxPollLatencyNano.get()
+                                + "]");
                 this.maxPollLatencyNano.updateAndGet(
                         curMax -> (pollNano > curMax) ? pollNano : curMax);
                 if (storeDataBatch == null) {
@@ -292,6 +298,7 @@ public class WriterAgent implements MetricsAgent {
         long interval = currentTime - this.lastUpdateTime;
         this.writePerSecond = 1000000000 * (write - this.lastUpdateWrite) / interval;
         this.maxPollLatencyMs = this.maxPollLatencyNano.getAndSet(0L) / 1000000;
+        logger.info("update metrics maxPollLatencyMs to [" + this.maxPollLatencyMs + "]");
         long pollLatencyNano = this.totalPollLatencyNano;
         this.pollLatencyAvgMs =
                 1000 * (pollLatencyNano - this.lastUpdatePollLatencyNano) / interval;
